@@ -1,5 +1,5 @@
 {
-  "operatorType": "PERLICA",
+  "id": "PERLICA",
   "name": "Perlica",
   "operatorRarity": 5,
   "operatorClassType": "CASTER",

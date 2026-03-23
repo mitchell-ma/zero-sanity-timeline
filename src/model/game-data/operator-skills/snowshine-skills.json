@@ -283,7 +283,7 @@
       "eventCategoryType": "BASIC_ATTACK"
     },
     "metadata": {
-      "originId": "snowshine"
+      "originId": "SNOWSHINE"
     }
   },
   "SATURATED_DEFENSE": {
@@ -311,7 +311,7 @@
       }
     ],
     "metadata": {
-      "originId": "snowshine"
+      "originId": "SNOWSHINE"
     },
     "segments": [
       {
@@ -702,7 +702,7 @@
       }
     ],
     "metadata": {
-      "originId": "snowshine"
+      "originId": "SNOWSHINE"
     },
     "onTriggerClause": [
       {
@@ -906,7 +906,7 @@
       }
     ],
     "metadata": {
-      "originId": "snowshine"
+      "originId": "SNOWSHINE"
     }
   },
   "HYPOTHERMIC_ASSAULT_FINISHER": {
@@ -920,7 +920,7 @@
       "eventCategoryType": "BASIC_ATTACK"
     },
     "metadata": {
-      "originId": "snowshine"
+      "originId": "SNOWSHINE"
     },
     "segments": [
       {
@@ -998,7 +998,7 @@
       "eventCategoryType": "BASIC_ATTACK"
     },
     "metadata": {
-      "originId": "snowshine"
+      "originId": "SNOWSHINE"
     },
     "segments": [
       {

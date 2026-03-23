@@ -1,5 +1,5 @@
 {
-  "operatorType": "ENDMINISTRATOR",
+  "id": "ENDMINISTRATOR",
   "name": "Endministrator",
   "operatorRarity": 6,
   "operatorClassType": "GUARD",

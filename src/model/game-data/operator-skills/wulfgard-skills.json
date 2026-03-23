@@ -498,7 +498,7 @@
       "eventCategoryType": "BASIC_ATTACK"
     },
     "metadata": {
-      "originId": "wulfgard"
+      "originId": "WULFGARD"
     }
   },
   "THERMITE_TRACERS": {
@@ -526,7 +526,7 @@
       }
     ],
     "metadata": {
-      "originId": "wulfgard"
+      "originId": "WULFGARD"
     },
     "segments": [
       {
@@ -1010,7 +1010,7 @@
       }
     ],
     "metadata": {
-      "originId": "wulfgard"
+      "originId": "WULFGARD"
     },
     "onTriggerClause": [
       {
@@ -1366,7 +1366,7 @@
       }
     ],
     "metadata": {
-      "originId": "wulfgard"
+      "originId": "WULFGARD"
     }
   },
   "THERMITE_TRACERS_EMPOWERED": {
@@ -1525,7 +1525,7 @@
       "eventCategoryType": "BASIC_ATTACK"
     },
     "metadata": {
-      "originId": "wulfgard"
+      "originId": "WULFGARD"
     },
     "segments": [
       {
@@ -1603,7 +1603,7 @@
       "eventCategoryType": "BASIC_ATTACK"
     },
     "metadata": {
-      "originId": "wulfgard"
+      "originId": "WULFGARD"
     },
     "segments": [
       {

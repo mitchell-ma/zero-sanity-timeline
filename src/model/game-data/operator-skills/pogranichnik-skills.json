@@ -713,7 +713,7 @@
       "eventCategoryType": "BASIC_ATTACK"
     },
     "metadata": {
-      "originId": "pogranichnik"
+      "originId": "POGRANICHNIK"
     }
   },
   "THE_PULVERIZING_FRONT": {
@@ -741,7 +741,7 @@
       }
     ],
     "metadata": {
-      "originId": "pogranichnik"
+      "originId": "POGRANICHNIK"
     },
     "segments": [
       {
@@ -1453,7 +1453,7 @@
       }
     ],
     "metadata": {
-      "originId": "pogranichnik"
+      "originId": "POGRANICHNIK"
     },
     "onTriggerClause": [
       {
@@ -1741,7 +1741,7 @@
       }
     ],
     "metadata": {
-      "originId": "pogranichnik"
+      "originId": "POGRANICHNIK"
     }
   },
   "ALL_OUT_OFFENSIVE_FINISHER": {
@@ -1755,7 +1755,7 @@
       "eventCategoryType": "BASIC_ATTACK"
     },
     "metadata": {
-      "originId": "pogranichnik"
+      "originId": "POGRANICHNIK"
     },
     "segments": [
       {
@@ -1833,7 +1833,7 @@
       "eventCategoryType": "BASIC_ATTACK"
     },
     "metadata": {
-      "originId": "pogranichnik"
+      "originId": "POGRANICHNIK"
     },
     "segments": [
       {

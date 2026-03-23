@@ -36,7 +36,7 @@ import {
   eventEndFrame,
   durationSegment,
 } from "../consts/viewTypes";
-import { MicroColumnController } from '../controller/timeline/microColumnController';
+import { computeMonotonicBounds } from '../controller/timeline/microColumnController';
 import type { Slot } from '../controller/timeline/columnBuilder';
 import { formatSegmentShortName } from '../dsl/semanticsTranslation';
 import { COMMON_COLUMN_IDS } from '../controller/slot/commonSlotController';
@@ -47,8 +47,7 @@ import {
   isDuplicatePlacementInResourceZone,
 } from '../controller/timeline/eventValidator';
 import { computeAllValidations } from '../controller/timeline/eventValidationController';
-import { computeSlotElementColors, computeEventPresentation } from '../controller/timeline/eventPresentationController';
-import { computeStatusViewOverrides } from '../controller/timeline/statusViewController';
+import { computeSlotElementColors, computeEventPresentation, computeTimelinePresentation } from '../controller/timeline/eventPresentationController';
 import {
   buildColumnContextMenu,
   buildEventAddItems,
@@ -484,8 +483,6 @@ export default function CombatPlanner({
   const GROUP_FR = 3;
   const COMMON_FR = 1;
   const ENEMY_FR = 2;
-  // Status columns are capped at 1/5 of the timeline width
-  const STATUS_MAX_FRACTION = 5;
 
   // Compute fr values for all columns
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -519,7 +516,6 @@ export default function CombatPlanner({
     : (outerRect?.width ?? 800);
   const totalFr = colFrValues.reduce((s, v) => s + v, 0);
   const pxPerFr = totalFr > 0 ? (containerWidth - TIME_AXIS_WIDTH) / totalFr : 0;
-  const statusMaxPx = (containerWidth - TIME_AXIS_WIDTH) / STATUS_MAX_FRACTION;
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const columnPositions = useMemo(() => {
@@ -776,21 +772,9 @@ export default function CombatPlanner({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedIds, selectedFrames, events, columns, dupMode, onRemoveEvent, onRemoveEvents, onRemoveFrame, onRemoveFrames, onSelectedFramesChange, onDuplicateEvents]);
 
-  // ─── Greedy micro-column slot assignments for reuseExpiredSlots columns ────
-  const greedySlotAssignments = useMemo(
-    () => MicroColumnController.greedySlotAssignments(events, columns),
-    [events, columns],
-  );
-
-  // ─── Precompute micro-column positions per event ────────────────────────────
-  const microColumnEventPositions = useMemo(
-    () => MicroColumnController.computeMicroColumnPixelPositions(events, columns, columnPositions, greedySlotAssignments, statusMaxPx),
-    [events, columns, columnPositions, greedySlotAssignments, statusMaxPx],
-  );
-
-  // ─── Precompute stack-aware status view overrides ──────────────────────────
-  const statusViewOverrides = useMemo(
-    () => computeStatusViewOverrides(events, columns),
+  // ─── Timeline presentation: column view models ──────────────────────────────
+  const columnViewModels = useMemo(
+    () => computeTimelinePresentation(events, columns),
     [events, columns],
   );
 
@@ -800,28 +784,41 @@ export default function CombatPlanner({
     const bodyTop = bodyTopRef.current ?? 0;
     const ids = new Set<string>();
     for (const ev of events) {
-      let colPos: { left: number; right: number } | undefined =
-        microColumnEventPositions.get(ev.uid) ??
-        columnPositions.get(`${ev.ownerId}-${ev.columnId}`);
-      if (!colPos) continue;
+      // Resolve pixel bounds: check micro-column position first, fall back to column
+      let evColPos: { left: number; right: number } | undefined;
+      const colBasePos = columnPositions.get(`${ev.ownerId}-${ev.columnId}`);
+      // Look up micro-position from the column view model
+      const vms = Array.from(columnViewModels.values());
+      for (let vi = 0; vi < vms.length; vi++) {
+        const mp = vms[vi].microPositions.get(ev.uid);
+        if (mp) {
+          const parentPos = columnPositions.get(vms[vi].column.key);
+          if (parentPos) {
+            const parentW = parentPos.right - parentPos.left;
+            evColPos = { left: parentPos.left + mp.leftFrac * parentW, right: parentPos.left + (mp.leftFrac + mp.widthFrac) * parentW };
+          }
+          break;
+        }
+      }
+      if (!evColPos) evColPos = colBasePos;
+      if (!evColPos) continue;
       const totalDur = computeSegmentsSpan(ev.segments);
       const evFrameStart = bodyTop + frameToPx(ev.startFrame, zoomRef.current);
       const evFrameEnd = evFrameStart + durationToPx(totalDur, zoomRef.current);
-      // In vertical: frame axis=Y, lane axis=X. In horizontal: frame axis=X, lane axis=Y
       if (isHorizontal) {
-        if (colPos.right > rect.top && colPos.left < rect.bottom &&
+        if (evColPos.right > rect.top && evColPos.left < rect.bottom &&
             evFrameEnd > rect.left && evFrameStart < rect.right) {
           ids.add(ev.uid);
         }
       } else {
-        if (colPos.right > rect.left && colPos.left < rect.right &&
+        if (evColPos.right > rect.left && evColPos.left < rect.right &&
             evFrameEnd > rect.top && evFrameStart < rect.bottom) {
           ids.add(ev.uid);
         }
       }
     }
     return ids;
-  }, [events, columnPositions, microColumnEventPositions, isHorizontal]);
+  }, [events, columnPositions, columnViewModels, isHorizontal]);
 
   /** Find all frame diamonds within a content-space rect. */
   const getFramesInRect = useCallback((rect: { left: number; top: number; right: number; bottom: number }): SelectedFrame[] => {
@@ -1174,8 +1171,8 @@ export default function CombatPlanner({
   }, [onBatchEnd, onEditEvent, onSelectedFramesChange]);
 
   // ─── Drag start (event move) ──────────────────────────────────────────────────
-  const computeMonotonicBounds = useCallback(
-    (draggedIds: string[]) => MicroColumnController.computeMonotonicBounds(draggedIds, events, columns, TOTAL_FRAMES),
+  const getMonotonicBounds = useCallback(
+    (draggedIds: string[]) => computeMonotonicBounds(draggedIds, events, columns, TOTAL_FRAMES),
     [events, columns],
   );
 
@@ -1214,7 +1211,7 @@ export default function CombatPlanner({
         : resourceZonesRef.current;
       const invalidSet = computeInvalidSet(draggedEvents, resourceZonesRef.current, eventsRef.current);
       const overlapInvalid = computeOverlapInvalidSet(draggedEvents, eventsRef.current);
-      dragRef.current = { primaryId: eventUid, eventUids: draggedIds, startMouseFrame: e[axis.clientFrame], startFrames, monotonicBounds: computeMonotonicBounds(draggedIds), lastAppliedDelta: 0, resourceZonesSnapshot: resZones, invalidAtDragStart: invalidSet, revalidated: new Set(), overlapInvalidAtDragStart: overlapInvalid, overlapRevalidated: new Set(), comboRevalidated: new Set() };
+      dragRef.current = { primaryId: eventUid, eventUids: draggedIds, startMouseFrame: e[axis.clientFrame], startFrames, monotonicBounds: getMonotonicBounds(draggedIds), lastAppliedDelta: 0, resourceZonesSnapshot: resZones, invalidAtDragStart: invalidSet, revalidated: new Set(), overlapInvalidAtDragStart: overlapInvalid, overlapRevalidated: new Set(), comboRevalidated: new Set() };
       setDraggingIds(dragSet);
       setDragZonesSnapshot(resZones);
     } else {
@@ -1230,12 +1227,12 @@ export default function CombatPlanner({
       const draggedEv = events.find((e) => e.uid === eventUid);
       const invalidSet = draggedEv ? computeInvalidSet([draggedEv], resourceZonesRef.current, eventsRef.current) : new Set<string>();
       const overlapInvalid = draggedEv ? computeOverlapInvalidSet([draggedEv], eventsRef.current) : new Set<string>();
-      dragRef.current = { primaryId: eventUid, eventUids: [eventUid], startMouseFrame: e[axis.clientFrame], startFrames, monotonicBounds: computeMonotonicBounds([eventUid]), lastAppliedDelta: 0, resourceZonesSnapshot: resZones, invalidAtDragStart: invalidSet, revalidated: new Set(), overlapInvalidAtDragStart: overlapInvalid, overlapRevalidated: new Set(), comboRevalidated: new Set() };
+      dragRef.current = { primaryId: eventUid, eventUids: [eventUid], startMouseFrame: e[axis.clientFrame], startFrames, monotonicBounds: getMonotonicBounds([eventUid]), lastAppliedDelta: 0, resourceZonesSnapshot: resZones, invalidAtDragStart: invalidSet, revalidated: new Set(), overlapInvalidAtDragStart: overlapInvalid, overlapRevalidated: new Set(), comboRevalidated: new Set() };
       setDraggingIds(dragSet);
       setDragZonesSnapshot(resZones);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedIds, events, computeMonotonicBounds, onEditEvent, onBatchStart, axis]);
+  }, [selectedIds, events, getMonotonicBounds, onEditEvent, onBatchStart, axis]);
 
   // ─── Frame diamond drag start ────────────────────────────────────────────────
   const handleFrameDragStart = useCallback((e: React.MouseEvent, eventUid: string, segmentIndex: number, frameIndex: number) => {
@@ -1828,62 +1825,14 @@ export default function CombatPlanner({
             const hasMicro = !!col.microColumns;
             const microCount = col.microColumns?.length ?? 0;
 
-            // Collect events belonging to this mini-timeline
-            // Events are already processed (refresh + consumption clamping)
-            // by the time they reach this component.
-            let colEvents: TimelineEvent[];
-            if (col.matchColumnIds) {
-              const matchSet = new Set(col.matchColumnIds);
-              colEvents = events.filter(
-                (ev) => ev.ownerId === col.ownerId && matchSet.has(ev.columnId),
-              );
-            } else if (hasMicro && col.microColumnAssignment === 'by-column-id') {
-              const mcIds = new Set(col.microColumns!.map((mc) => mc.id));
-              colEvents = events.filter(
-                (ev) => ev.ownerId === col.ownerId && mcIds.has(ev.columnId),
-              );
-            } else {
-              colEvents = events.filter(
-                (ev) => ev.ownerId === col.ownerId && ev.columnId === col.columnId,
-              );
-            }
-            // Sort by startFrame for micro-columns and derived columns (events may arrive out of order)
-            if (col.microColumnAssignment === 'by-order' || col.derived) {
-              colEvents.sort((a, b) => a.startFrame - b.startFrame);
-            }
-            // For derived (overlappable) columns, truncate each event's visual
-            // duration at the start of the next event in the same column.
-            // Skip for dynamic-split columns — their events overlap and share width.
-            if (col.derived && col.microColumnAssignment !== 'dynamic-split' && col.microColumnAssignment !== 'by-order' && !col.reuseExpiredSlots) {
-              for (let i = 0; i < colEvents.length - 1; i++) {
-                const cur = colEvents[i];
-                const next = colEvents[i + 1];
-                const curEnd = eventEndFrame(cur);
-                if (curEnd > next.startFrame) {
-                  const clampedTotal = next.startFrame - cur.startFrame;
-                  const clampedEvent = { ...cur, segments: cur.segments.map(s => ({ ...s })) };
-                  // Trim segments to fit within clampedTotal
-                  let remaining = clampedTotal;
-                  clampedEvent.segments = cur.segments.map(s => {
-                    if (remaining <= 0) return { ...s, properties: { ...s.properties, duration: 0 } };
-                    const dur = Math.min(s.properties.duration, remaining);
-                    remaining -= dur;
-                    return { ...s, properties: { ...s.properties, duration: dur } };
-                  }).filter(s => s.properties.duration > 0);
-                  if (clampedEvent.segments.length === 0) {
-                    clampedEvent.segments = [{ properties: { duration: clampedTotal } }];
-                  }
-                  colEvents[i] = clampedEvent;
-                }
-              }
-            }
+            // Events from pre-computed column view model (filtered, sorted, truncated)
+            const viewModel = columnViewModels.get(col.key);
+            const colEvents = viewModel?.events ?? [];
             // Viewport culling: only render events overlapping the visible frame range
             const visColEvents = colEvents.filter((ev) => {
               const evEnd = eventEndFrame(ev);
               return evEnd >= visibleRange.startFrame && ev.startFrame <= visibleRange.endFrame;
             });
-
-            const colPos = columnPositions.get(col.key);
 
             return (
               <div
@@ -2043,7 +1992,7 @@ export default function CombatPlanner({
                   }
                   const presentationOpts = {
                     slotElementColors, alwaysAvailableComboSlots, autoFinisherIds,
-                    validationMaps: mergedValidationMaps, interactionMode, statusViewOverrides, events,
+                    validationMaps: mergedValidationMaps, interactionMode, statusViewOverrides: viewModel?.statusOverrides, events,
                   };
 
                   const buildEventBlockProps = (ev: TimelineEvent, pres: import('../controller/timeline/eventPresentationController').EventPresentation) => ({
@@ -2077,59 +2026,12 @@ export default function CombatPlanner({
                   });
 
                   return hasMicro ? (
-                  // Micro-column events
-                  visColEvents.map((ev, i) => {
-                    let microColor: string;
-                    let leftPct: string;
-                    let widthPct: string;
-
-                    if (col.microColumnAssignment === 'dynamic-split') {
-                      // Overlap-aware greedy left-packing with fixed slot width.
-                      // Width: fixed at colW / totalActive (consistent across all events).
-                      // Index: overlap-aware — only count types that overlap THIS event,
-                      // so types slide left to fill gaps when neighbors aren't active.
-                      const evEnd = eventEndFrame(ev);
-                      const firstAppearance = new Map<string, number>();
-                      for (const e of colEvents) {
-                        const prev = firstAppearance.get(e.columnId);
-                        if (prev === undefined || e.startFrame < prev) firstAppearance.set(e.columnId, e.startFrame);
-                      }
-                      const totalActive = firstAppearance.size || 1;
-                      const overlapping = new Set<string>([ev.columnId]);
-                      for (const other of colEvents) {
-                        if (other.uid === ev.uid) continue;
-                        if (other.startFrame < evEnd && eventEndFrame(other) > ev.startFrame) {
-                          overlapping.add(other.columnId);
-                        }
-                      }
-                      const sorted = Array.from(overlapping).sort((a, b) =>
-                        (firstAppearance.get(a) ?? 0) - (firstAppearance.get(b) ?? 0),
-                      );
-                      const typeIdx = sorted.indexOf(ev.columnId);
-                      const colW = colPos ? colPos.right - colPos.left : 100;
-                      const slotW = statusMaxPx ? Math.min(statusMaxPx, colW / totalActive) : colW / totalActive;
-                      leftPct = `${(typeIdx * slotW / colW) * 100}%`;
-                      widthPct = `${(slotW / colW) * 100}%`;
-                      const mc = col.microColumns!.find((mc) => mc.id === ev.columnId);
-                      microColor = mc?.color ?? col.color;
-                    } else if (col.microColumnAssignment === 'by-order') {
-                      const microIdx = greedySlotAssignments.get(ev.uid) ?? Math.min(i, microCount - 1);
-                      const mcMatch = col.matchColumnIds
-                        ? col.microColumns!.find((mc) => mc.id === ev.columnId)
-                        : undefined;
-                      microColor = mcMatch?.color ?? col.microColumns![microIdx].color;
-                      const microW = 100 / microCount;
-                      leftPct = `${microIdx * microW}%`;
-                      widthPct = `${microW}%`;
-                    } else {
-                      let microIdx = col.microColumns!.findIndex((mc) => mc.id === ev.columnId);
-                      if (microIdx < 0) microIdx = 0;
-                      microColor = col.microColumns![microIdx].color;
-                      const microW = 100 / microCount;
-                      leftPct = `${microIdx * microW}%`;
-                      widthPct = `${microW}%`;
-                    }
-                    // Micro-column events use infliction warning only
+                  // Micro-column events — positions from column view model
+                  visColEvents.map((ev) => {
+                    const mp = viewModel?.microPositions.get(ev.uid);
+                    const leftPct = mp ? `${mp.leftFrac * 100}%` : '0%';
+                    const widthPct = mp ? `${mp.widthFrac * 100}%` : '100%';
+                    const microColor = mp?.color ?? col.color;
                     const microPres = computeEventPresentation(ev, col, presentationOpts);
                     return (
                       <div

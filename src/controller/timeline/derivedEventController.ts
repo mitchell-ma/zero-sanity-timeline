@@ -33,6 +33,7 @@ import type { UltimateEnergyController } from './ultimateEnergyController';
 import { collectNoGainWindowsForEvent } from './ultimateEnergyController';
 import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../slot/commonSlotController';
 import GENERAL_MECHANICS from '../../model/game-data/generalMechanics.json';
+import { genEventUid } from './inputEventController';
 
 /** Source metadata for event mutations. */
 interface EventSource {
@@ -496,7 +497,7 @@ export class DerivedEventController {
           // Emit a consumed copy of the incoming infliction so freeform raw
           // events can be replaced with their reacted state.
           const consumed: TimelineEvent = {
-            uid: options?.uid ?? `${columnId}-q-${this.idCounter++}`,
+            uid: options?.uid ?? `${columnId}-${genEventUid()}`,
             id: columnId,
             name: columnId,
             ownerId,
@@ -534,7 +535,7 @@ export class DerivedEventController {
     const rawDur = durationFrames;
     const extendedDuration = this.extendDuration(frame, rawDur);
     const ev: TimelineEvent = {
-      uid: options?.uid ?? `${columnId}-q-${this.idCounter++}`,
+      uid: options?.uid ?? `${columnId}-${genEventUid()}`,
       id: columnId,
       name: columnId,
       ownerId,
@@ -576,7 +577,7 @@ export class DerivedEventController {
     options?: { stacks?: number; forcedReaction?: boolean; uid?: string },
   ) {
     const ev: TimelineEvent = {
-      uid: options?.uid ?? `reaction-${columnId}-${this.idCounter++}`,
+      uid: options?.uid ?? `reaction-${columnId}-${genEventUid()}`,
       id: columnId,
       name: columnId,
       ownerId,
@@ -671,7 +672,7 @@ export class DerivedEventController {
     }
 
     const ev: TimelineEvent = {
-      uid: options?.uid ?? `${statusName.toLowerCase()}-q-${this.idCounter++}`,
+      uid: options?.uid ?? `${statusName.toLowerCase()}-${genEventUid()}`,
       id: statusName,
       name: statusName,
       ownerId,

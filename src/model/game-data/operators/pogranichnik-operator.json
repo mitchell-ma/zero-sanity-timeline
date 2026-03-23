@@ -1,5 +1,5 @@
 {
-  "operatorType": "POGRANICHNIK",
+  "id": "POGRANICHNIK",
   "name": "Pogranichnik",
   "operatorRarity": 6,
   "operatorClassType": "VANGUARD",

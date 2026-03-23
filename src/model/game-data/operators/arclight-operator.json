@@ -1,5 +1,5 @@
 {
-  "operatorType": "ARCLIGHT",
+  "id": "ARCLIGHT",
   "name": "Arclight",
   "operatorRarity": 5,
   "operatorClassType": "VANGUARD",

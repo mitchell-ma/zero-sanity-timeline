@@ -8,64 +8,64 @@
  * - Single events are never overridden
  */
 
-import { computeStatusViewOverrides } from '../../controller/timeline/statusViewController';
+import { computeStatusViewOverrides } from '../../controller/timeline/eventPresentationController';
 import { TimelineEvent, Column, MiniTimeline } from '../../consts/viewTypes';
-import { TimelineSourceType, UnitType } from '../../consts/enums';
-import { VerbType } from '../../dsl/semantics';
+import { TimelineSourceType } from '../../consts/enums';
 
-const mockStatusEvents: Record<string, Record<string, unknown>[]> = {
-  laevatain: [
-    {
-      id: 'MELTING_FLAME',
-      name: 'Melting Flame',
-      element: 'HEAT',
-      stacks: {
-        limit: { P0: 4, P1: 4, P2: 4, P3: 4, P4: 4, P5: 4 },
-        interactionType: 'NONE',
+jest.mock('../../model/event-frames/operatorJsonLoader', () => {
+  const mockStatusEvents: Record<string, Record<string, unknown>[]> = {
+    laevatain: [
+      {
+        id: 'MELTING_FLAME',
+        name: 'Melting Flame',
+        element: 'HEAT',
+        stacks: {
+          limit: { P0: 4, P1: 4, P2: 4, P3: 4, P4: 4, P5: 4 },
+          interactionType: 'NONE',
+        },
+        onTriggerClause: [],
       },
-      onTriggerClause: [],
-    },
-    {
-      id: 'SCORCHING_HEART_EFFECT',
-      name: 'Scorching Heart',
-      element: 'HEAT',
-      stacks: {
-        limit: { P0: 1, P1: 1, P2: 1, P3: 1, P4: 1, P5: 1 },
-        interactionType: 'RESET',
+      {
+        id: 'SCORCHING_HEART_EFFECT',
+        name: 'Scorching Heart',
+        element: 'HEAT',
+        stacks: {
+          limit: { P0: 1, P1: 1, P2: 1, P3: 1, P4: 1, P5: 1 },
+          interactionType: 'RESET',
+        },
+        onTriggerClause: [],
+        properties: { duration: { value: { verb: 'IS', value: 20 }, unit: 'SECOND' } },
       },
-      onTriggerClause: [],
-      properties: { duration: { value: { verb: VerbType.IS, value: 20 }, unit: UnitType.SECOND } },
-    },
-  ],
-  antal: [
-    {
-      id: 'FOCUS',
-      name: 'Focus',
-      stacks: {
-        limit: { P0: 1, P1: 1, P2: 1, P3: 1, P4: 1, P5: 1 },
-        interactionType: 'RESET',
+    ],
+    antal: [
+      {
+        id: 'FOCUS',
+        name: 'Focus',
+        stacks: {
+          limit: { P0: 1, P1: 1, P2: 1, P3: 1, P4: 1, P5: 1 },
+          interactionType: 'RESET',
+        },
+        onTriggerClause: [],
+        properties: { duration: { value: { verb: 'IS', value: 20 }, unit: 'SECOND' } },
       },
-      onTriggerClause: [],
-      properties: { duration: { value: { verb: VerbType.IS, value: 20 }, unit: UnitType.SECOND } },
+    ],
+  };
+  return {
+    getOperatorJson: (id: string) => {
+      const statuses = mockStatusEvents[id];
+      return statuses ? { statusEvents: statuses } : undefined;
     },
-  ],
-};
-
-jest.mock('../../model/event-frames/operatorJsonLoader', () => ({
-  getOperatorJson: (id: string) => {
-    const statuses = mockStatusEvents[id];
-    return statuses ? { statusEvents: statuses } : undefined;
-  },
-  getAllOperatorIds: () => Object.keys(mockStatusEvents),
-  getFrameSequences: () => [], getSkillIds: () => new Set(), getSkillTypeMap: () => ({}), resolveSkillType: () => null,
-  getSegmentLabels: () => undefined, getSkillTimings: () => undefined,
-  getUltimateEnergyCost: () => 0, getSkillGaugeGains: () => undefined,
-  getBattleSkillSpCost: () => undefined, getSkillCategoryData: () => undefined,
-  getBasicAttackDurations: () => undefined,
-  getComboTriggerClause: () => undefined,
-  getExchangeStatusConfig: () => ({}),
-  getExchangeStatusIds: () => new Set(),
-}));
+    getAllOperatorIds: () => Object.keys(mockStatusEvents),
+    getFrameSequences: () => [], getSkillIds: () => new Set(), getSkillTypeMap: () => ({}), resolveSkillType: () => null,
+    getSegmentLabels: () => undefined, getSkillTimings: () => undefined,
+    getUltimateEnergyCost: () => 0, getSkillGaugeGains: () => undefined,
+    getBattleSkillSpCost: () => undefined, getSkillCategoryData: () => undefined,
+    getBasicAttackDurations: () => undefined,
+    getComboTriggerClause: () => undefined,
+    getExchangeStatusConfig: () => ({}),
+    getExchangeStatusIds: () => new Set(),
+  };
+});
 jest.mock('../../model/game-data/weaponGameData', () => ({
   getSkillValues: () => [], getConditionalValues: () => [],
   getConditionalScalar: () => null, getBaseAttackForLevel: () => 0,

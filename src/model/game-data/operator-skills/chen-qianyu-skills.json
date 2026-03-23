@@ -517,7 +517,7 @@
       "eventCategoryType": "BASIC_ATTACK"
     },
     "metadata": {
-      "originId": "chenQianyu"
+      "originId": "CHEN_QIANYU"
     }
   },
   "ASCENDING_STRIKE": {
@@ -545,7 +545,7 @@
       }
     ],
     "metadata": {
-      "originId": "chenQianyu"
+      "originId": "CHEN_QIANYU"
     },
     "segments": [
       {
@@ -841,7 +841,7 @@
       }
     ],
     "metadata": {
-      "originId": "chenQianyu"
+      "originId": "CHEN_QIANYU"
     },
     "onTriggerClause": [
       {
@@ -1351,7 +1351,7 @@
       }
     ],
     "metadata": {
-      "originId": "chenQianyu"
+      "originId": "CHEN_QIANYU"
     }
   },
   "SOARING_BREAK_FINISHER": {
@@ -1365,7 +1365,7 @@
       "eventCategoryType": "BASIC_ATTACK"
     },
     "metadata": {
-      "originId": "chenQianyu"
+      "originId": "CHEN_QIANYU"
     },
     "segments": [
       {
@@ -1443,7 +1443,7 @@
       "eventCategoryType": "BASIC_ATTACK"
     },
     "metadata": {
-      "originId": "chenQianyu"
+      "originId": "CHEN_QIANYU"
     },
     "segments": [
       {

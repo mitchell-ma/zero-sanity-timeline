@@ -41,29 +41,7 @@
     },
     "metadata": {
       "originId": "SMOULDERING_FIRE"
-    },
-    "onTriggerClause": [
-      {
-        "conditions": [
-          {
-            "subjectDeterminer": "THIS",
-            "subject": "OPERATOR",
-            "verb": "PERFORM",
-            "object": "BATTLE_SKILL"
-          }
-        ]
-      },
-      {
-        "conditions": [
-          {
-            "subjectDeterminer": "THIS",
-            "subject": "OPERATOR",
-            "verb": "PERFORM",
-            "object": "COMBO_SKILL"
-          }
-        ]
-      }
-    ]
+    }
   },
   {
     "clause": [
@@ -146,7 +124,7 @@
       "eventCategoryType": "TALENT"
     },
     "metadata": {
-      "originId": "laevatain"
+      "originId": "LAEVATAIN"
     },
     "onTriggerClause": [
       {
@@ -227,7 +205,7 @@
       "eventCategoryType": "TALENT"
     },
     "metadata": {
-      "originId": "laevatain",
+      "originId": "LAEVATAIN",
       "dataSources": [
         "ENDFIELD_WIKI"
       ]

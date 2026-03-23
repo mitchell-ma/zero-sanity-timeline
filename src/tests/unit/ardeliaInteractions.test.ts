@@ -655,7 +655,7 @@ describe('F. Potentials', () => {
 
 describe('G. Operator Identity & Metadata', () => {
   test('G1: Operator type and name', () => {
-    expect(mockJson.operatorType).toBe('ARDELIA');
+    expect(mockJson.id).toBe('ARDELIA');
     expect(mockJson.name).toBe('Ardelia');
   });
 

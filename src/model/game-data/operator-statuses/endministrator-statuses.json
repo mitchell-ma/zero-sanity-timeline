@@ -16,7 +16,7 @@
       "eventCategoryType": "SKILL_STATUS"
     },
     "metadata": {
-      "originId": "endministrator",
+      "originId": "ENDMINISTRATOR",
       "dataSources": [
         "ENDFIELD_WIKI"
       ]
@@ -104,7 +104,7 @@
       "eventCategoryType": "TALENT"
     },
     "metadata": {
-      "originId": "endministrator",
+      "originId": "ENDMINISTRATOR",
       "dataSources": [
         "ENDFIELD_WIKI"
       ]
@@ -214,7 +214,7 @@
       "eventCategoryType": "TALENT_STATUS"
     },
     "metadata": {
-      "originId": "endministrator",
+      "originId": "ENDMINISTRATOR",
       "dataSources": [
         "ENDFIELD_WIKI"
       ]

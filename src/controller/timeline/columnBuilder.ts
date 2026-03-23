@@ -611,13 +611,11 @@ export function buildColumns(
         .slice()
         .sort((a, b) => (STATUS_SOURCE_ORDER[a.source] ?? 3) - (STATUS_SOURCE_ORDER[b.source] ?? 3));
       for (const def of ownDefs) {
-        const defLimit = (def.stacks?.limit as { value?: number } | undefined)?.value;
         statusMicroCols.push({
           id: def.columnId,
           label: def.label,
           color: def.color,
           statusType: def.statusType,
-          ...(defLimit != null && defLimit > 1 ? { maxEvents: defLimit } : {}),
           defaultEvent: {
             name: def.label,
             segments: [{ properties: { duration: def.duration } }],

@@ -24,6 +24,7 @@
 - **Probability-based effects** — status effects with activation chances (e.g. "30% chance to apply X on hit") are now supported with per-hit resolution
 - **Improved skill event display** — skill blocks on the timeline now show distinct visual styling for each phase (animation, active, stasis, cooldown) and display warning icons for validation issues
 - **Drag constraint improvements** — dragging events on the timeline now handles edge cases better, including overlapping events and resource zone boundaries
+- **Ultimate skill active segments now show their skill name** — the active phase of ultimates (Laevatain, Akekuri, Antal, Ardelia, Yvonne) now displays the skill name instead of a generic "Active" label
 - Updated skill data, status configs, and gear stats across all operators and equipment
 - Reorganized tests into unit and integration categories
 

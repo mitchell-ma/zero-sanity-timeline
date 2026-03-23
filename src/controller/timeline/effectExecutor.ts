@@ -27,6 +27,7 @@ import { COMMON_OWNER_ID } from '../slot/commonSlotController';
 import { evaluateConditions, ConditionContext } from './conditionEvaluator';
 import { activeEventsAtFrame, activeInflictionsOfElement } from './timelineQueries';
 import { LoadoutProperties } from '../../view/InformationPane';
+import { genEventUid } from './inputEventController';
 
 // ── Types ────────────────────────────────────────────────────────────────
 
@@ -200,7 +201,7 @@ function executeApply(effect: Effect, ctx: ExecutionContext): MutationSet {
     const duration = durationValue != null ? Math.round(durationValue * FPS) : FPS;
 
     const ev: TimelineEvent = {
-      uid: `infliction-${ctx.sourceOwnerId}-${ctx.idCounter++}`,
+      uid: `infliction-${genEventUid()}`,
       id: effect.objectId ?? String(effect.adjective),
       name: effect.objectId ?? String(effect.adjective),
       ownerId,
@@ -221,7 +222,7 @@ function executeApply(effect: Effect, ctx: ExecutionContext): MutationSet {
     const duration = durationValue != null ? Math.round(durationValue * FPS) : 2400;
 
     const ev: TimelineEvent = {
-      uid: `status-${effect.objectId?.toLowerCase() ?? 'unknown'}-${ctx.sourceOwnerId}-${ctx.idCounter++}`,
+      uid: `status-${genEventUid()}`,
       id: effect.objectId ?? 'UNKNOWN_STATUS',
       name: effect.objectId ?? 'UNKNOWN_STATUS',
       ownerId,
@@ -244,7 +245,7 @@ function executeApply(effect: Effect, ctx: ExecutionContext): MutationSet {
     const stacksValue = resolveWith(effect.with?.stacks, ctx);
 
     const ev: TimelineEvent = {
-      uid: `reaction-${ctx.sourceOwnerId}-${ctx.idCounter++}`,
+      uid: `reaction-${genEventUid()}`,
       id: String(effect.adjective),
       name: String(effect.adjective),
       ownerId,

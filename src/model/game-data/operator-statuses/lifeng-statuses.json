@@ -42,7 +42,7 @@
       "eventCategoryType": "TALENT_STATUS"
     },
     "metadata": {
-      "originId": "lifeng",
+      "originId": "LIFENG",
       "dataSources": [
         "ENDFIELD_WIKI"
       ]
@@ -91,7 +91,7 @@
       "eventCategoryType": "TALENT"
     },
     "metadata": {
-      "originId": "lifeng",
+      "originId": "LIFENG",
       "dataSources": [
         "ENDFIELD_WIKI"
       ]
@@ -122,7 +122,7 @@
       "eventCategoryType": "SKILL_STATUS"
     },
     "metadata": {
-      "originId": "lifeng",
+      "originId": "LIFENG",
       "dataSources": [
         "ENDFIELD_WIKI"
       ]
@@ -172,7 +172,7 @@
       "eventCategoryType": "TALENT"
     },
     "metadata": {
-      "originId": "lifeng",
+      "originId": "LIFENG",
       "dataSources": [
         "ENDFIELD_WIKI"
       ]
@@ -244,7 +244,7 @@
       "eventCategoryType": "POTENTIAL_STATUS"
     },
     "metadata": {
-      "originId": "lifeng",
+      "originId": "LIFENG",
       "dataSources": [
         "ENDFIELD_WIKI"
       ]

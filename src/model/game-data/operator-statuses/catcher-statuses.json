@@ -43,7 +43,7 @@
       "eventCategoryType": "TALENT_STATUS"
     },
     "metadata": {
-      "originId": "catcher",
+      "originId": "CATCHER",
       "dataSources": [
         "ENDFIELD_WIKI"
       ]
@@ -105,7 +105,7 @@
       "eventCategoryType": "TALENT"
     },
     "metadata": {
-      "originId": "catcher",
+      "originId": "CATCHER",
       "dataSources": [
         "ENDFIELD_WIKI"
       ]

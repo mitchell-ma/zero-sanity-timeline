@@ -351,7 +351,7 @@
       "eventCategoryType": "BASIC_ATTACK"
     },
     "metadata": {
-      "originId": "daPan"
+      "originId": "DA_PAN"
     }
   },
   "FLIP_DA_WOK": {
@@ -379,7 +379,7 @@
       }
     ],
     "metadata": {
-      "originId": "daPan"
+      "originId": "DA_PAN"
     },
     "segments": [
       {
@@ -710,7 +710,7 @@
       }
     ],
     "metadata": {
-      "originId": "daPan"
+      "originId": "DA_PAN"
     },
     "onTriggerClause": [
       {
@@ -1160,7 +1160,7 @@
       }
     ],
     "metadata": {
-      "originId": "daPan"
+      "originId": "DA_PAN"
     }
   },
   "ROLLING_CUT_FINISHER": {
@@ -1174,7 +1174,7 @@
       "eventCategoryType": "BASIC_ATTACK"
     },
     "metadata": {
-      "originId": "daPan"
+      "originId": "DA_PAN"
     },
     "segments": [
       {
@@ -1252,7 +1252,7 @@
       "eventCategoryType": "BASIC_ATTACK"
     },
     "metadata": {
-      "originId": "daPan"
+      "originId": "DA_PAN"
     },
     "segments": [
       {

@@ -283,7 +283,6 @@ export function findEventDefaults(
   name?: string;
   segments?: import('../consts/viewTypes').EventSegmentData[];
   skillPointCost?: number;
-  stacks?: Record<string, unknown>;
 } | null {
   const col = (columns as MiniTimeline[]).find(
     (c) =>
@@ -292,12 +291,25 @@ export function findEventDefaults(
       (c.columnId === ev.columnId || (c.matchColumnIds?.includes(ev.columnId) ?? false)),
   );
   if (!col) return null;
-  // For micro-column events, prefer the micro-column's defaultEvent (carries stacks config)
-  const mc = col.microColumns?.find((m) => m.id === ev.columnId);
-  if (mc?.defaultEvent) return mc.defaultEvent;
   const variant = col.eventVariants?.find((v) => v.name === ev.id);
   if (variant) return variant;
   return col.defaultEvent ?? null;
+}
+
+/** Look up stacks config from the micro-column matching an event's columnId. */
+function findMicroColumnStacks(
+  ev: TimelineEvent,
+  columns: (MiniTimeline | { type: 'placeholder' })[],
+): Record<string, unknown> | undefined {
+  const col = (columns as MiniTimeline[]).find(
+    (c) =>
+      c.type === 'mini-timeline' &&
+      c.ownerId === ev.ownerId &&
+      (c.columnId === ev.columnId || (c.matchColumnIds?.includes(ev.columnId) ?? false)),
+  );
+  if (!col?.microColumns) return undefined;
+  const mc = col.microColumns.find((m) => m.id === ev.columnId);
+  return mc?.defaultEvent?.stacks;
 }
 
 /**
@@ -329,7 +341,8 @@ export function attachDefaultSegments(
       if (ev.isPerfectDodge === undefined && ext.isPerfectDodge != null) props.isPerfectDodge = ext.isPerfectDodge as boolean;
       if (ev.timeStop === undefined && ext.timeStop != null) props.timeStop = ext.timeStop as number;
       if (ev.enhancementType === undefined && ext.enhancementType != null) props.enhancementType = ext.enhancementType as import('../consts/enums').EnhancementType;
-      const stackLimit = (defaults.stacks?.limit as { value?: number } | undefined)?.value ?? 1;
+      const stacks = findMicroColumnStacks(ev, columns);
+      const stackLimit = (stacks?.limit as { value?: number } | undefined)?.value ?? 1;
       if (ev.nonOverlappableRange === undefined && defaults.segments && stackLimit <= 1) {
         const span = defaults.segments.reduce((sum, s) => sum + s.properties.duration, 0);
         props.nonOverlappableRange = span;

@@ -400,7 +400,7 @@
       "eventCategoryType": "BASIC_ATTACK"
     },
     "metadata": {
-      "originId": "lastRite"
+      "originId": "LAST_RITE"
     }
   },
   "ESOTERIC_LEGACY": {
@@ -440,7 +440,7 @@
       }
     ],
     "metadata": {
-      "originId": "lastRite"
+      "originId": "LAST_RITE"
     },
     "segments": [
       {
@@ -822,7 +822,7 @@
       }
     ],
     "metadata": {
-      "originId": "lastRite"
+      "originId": "LAST_RITE"
     },
     "onTriggerClause": [
       {
@@ -1150,7 +1150,7 @@
       }
     ],
     "metadata": {
-      "originId": "lastRite"
+      "originId": "LAST_RITE"
     }
   },
   "DANCE_OF_RIME_FINISHER": {
@@ -1164,7 +1164,7 @@
       "eventCategoryType": "BASIC_ATTACK"
     },
     "metadata": {
-      "originId": "lastRite"
+      "originId": "LAST_RITE"
     },
     "segments": [
       {
@@ -1242,7 +1242,7 @@
       "eventCategoryType": "BASIC_ATTACK"
     },
     "metadata": {
-      "originId": "lastRite"
+      "originId": "LAST_RITE"
     },
     "segments": [
       {

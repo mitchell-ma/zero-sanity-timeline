@@ -548,7 +548,7 @@ async function parseOne(slug: string, roster: unknown[]) {
 
   // Determine operator key
   const operatorType = endAxisData?.operatorType
-    ?? (warfarinData as Record<string, unknown>)?.operatorType as string
+    ?? (warfarinData as Record<string, unknown>)?.id as string
     ?? gamedataId;
 
   // Load existing operator file
@@ -708,7 +708,7 @@ async function parseAll(roster: unknown[]) {
     ]);
 
     const operatorType = endAxisData?.operatorType
-      ?? (warfarinData as Record<string, unknown>)?.operatorType as string
+      ?? (warfarinData as Record<string, unknown>)?.id as string
       ?? gamedataId;
 
     const existing = loadOperator(operatorType);

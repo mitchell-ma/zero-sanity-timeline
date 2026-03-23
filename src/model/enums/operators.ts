@@ -1,5 +1,5 @@
 export enum OperatorInformationType {
-  OPERATOR_TYPE = "operatorType",
+  OPERATOR_TYPE = "id",
   NAME = "name",
   OPERATOR_RARITY = "operatorRarity",
   OPERATOR_CLASS_TYPE = "operatorClassType",

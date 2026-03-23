@@ -370,7 +370,7 @@
       "eventCategoryType": "BASIC_ATTACK"
     },
     "metadata": {
-      "originId": "yvonne"
+      "originId": "YVONNE"
     }
   },
   "BRR_BRR_BOMB": {
@@ -398,7 +398,7 @@
       }
     ],
     "metadata": {
-      "originId": "yvonne"
+      "originId": "YVONNE"
     },
     "segments": [
       {
@@ -660,7 +660,7 @@
       }
     ],
     "metadata": {
-      "originId": "yvonne"
+      "originId": "YVONNE"
     },
     "onTriggerClause": [
       {
@@ -736,13 +736,13 @@
             },
             "unit": "SECOND"
           },
-          "name": "Active"
+          "name": "Cryoblasting Pistolier"
         },
         "frames": []
       }
     ],
     "metadata": {
-      "originId": "yvonne"
+      "originId": "YVONNE"
     }
   },
   "EXUBERANT_TRIGGER_EMPOWERED": {
@@ -1917,7 +1917,7 @@
       "eventCategoryType": "BASIC_ATTACK"
     },
     "metadata": {
-      "originId": "yvonne"
+      "originId": "YVONNE"
     },
     "segments": [
       {
@@ -1995,7 +1995,7 @@
       "eventCategoryType": "BASIC_ATTACK"
     },
     "metadata": {
-      "originId": "yvonne"
+      "originId": "YVONNE"
     },
     "segments": [
       {

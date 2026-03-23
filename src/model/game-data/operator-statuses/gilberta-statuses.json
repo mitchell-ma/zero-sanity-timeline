@@ -81,7 +81,7 @@
       "eventCategoryType": "TALENT_STATUS"
     },
     "metadata": {
-      "originId": "gilberta",
+      "originId": "GILBERTA",
       "dataSources": [
         "ENDFIELD_WIKI"
       ]
@@ -144,7 +144,7 @@
       "eventCategoryType": "TALENT"
     },
     "metadata": {
-      "originId": "gilberta",
+      "originId": "GILBERTA",
       "dataSources": [
         "ENDFIELD_WIKI"
       ]

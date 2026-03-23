@@ -400,7 +400,7 @@
       "eventCategoryType": "BASIC_ATTACK"
     },
     "metadata": {
-      "originId": "lifeng"
+      "originId": "LIFENG"
     }
   },
   "TURBID_AVATAR": {
@@ -428,7 +428,7 @@
       }
     ],
     "metadata": {
-      "originId": "lifeng"
+      "originId": "LIFENG"
     },
     "segments": [
       {
@@ -884,7 +884,7 @@
       }
     ],
     "metadata": {
-      "originId": "lifeng"
+      "originId": "LIFENG"
     },
     "onTriggerClause": [
       {
@@ -1180,7 +1180,7 @@
       }
     ],
     "metadata": {
-      "originId": "lifeng"
+      "originId": "LIFENG"
     }
   },
   "RUINATION_FINISHER": {
@@ -1194,7 +1194,7 @@
       "eventCategoryType": "BASIC_ATTACK"
     },
     "metadata": {
-      "originId": "lifeng"
+      "originId": "LIFENG"
     },
     "segments": [
       {
@@ -1272,7 +1272,7 @@
       "eventCategoryType": "BASIC_ATTACK"
     },
     "metadata": {
-      "originId": "lifeng"
+      "originId": "LIFENG"
     },
     "segments": [
       {

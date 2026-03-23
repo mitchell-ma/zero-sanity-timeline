@@ -419,7 +419,7 @@
       "eventCategoryType": "BASIC_ATTACK"
     },
     "metadata": {
-      "originId": "avywenna"
+      "originId": "AVYWENNA"
     }
   },
   "THUNDERLANCE_INTERDICTION": {
@@ -447,7 +447,7 @@
       }
     ],
     "metadata": {
-      "originId": "avywenna"
+      "originId": "AVYWENNA"
     },
     "segments": [
       {
@@ -741,7 +741,7 @@
       }
     ],
     "metadata": {
-      "originId": "avywenna"
+      "originId": "AVYWENNA"
     },
     "onTriggerClause": [
       {
@@ -923,7 +923,7 @@
       }
     ],
     "metadata": {
-      "originId": "avywenna"
+      "originId": "AVYWENNA"
     }
   },
   "THUNDERLANCE_BLITZ_FINISHER": {
@@ -937,7 +937,7 @@
       "eventCategoryType": "BASIC_ATTACK"
     },
     "metadata": {
-      "originId": "avywenna"
+      "originId": "AVYWENNA"
     },
     "segments": [
       {
@@ -1015,7 +1015,7 @@
       "eventCategoryType": "BASIC_ATTACK"
     },
     "metadata": {
-      "originId": "avywenna"
+      "originId": "AVYWENNA"
     },
     "segments": [
       {

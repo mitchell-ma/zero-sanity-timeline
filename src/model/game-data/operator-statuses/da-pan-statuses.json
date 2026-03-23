@@ -31,7 +31,7 @@
       "eventCategoryType": "TALENT"
     },
     "metadata": {
-      "originId": "da-pan",
+      "originId": "DA_PAN",
       "dataSources": [
         "ENDFIELD_WIKI"
       ]
@@ -138,7 +138,7 @@
       "eventCategoryType": "TALENT_STATUS"
     },
     "metadata": {
-      "originId": "da-pan",
+      "originId": "DA_PAN",
       "dataSources": [
         "ENDFIELD_WIKI"
       ]
@@ -176,7 +176,7 @@
       "eventCategoryType": "POTENTIAL"
     },
     "metadata": {
-      "originId": "da-pan",
+      "originId": "DA_PAN",
       "dataSources": [
         "ENDFIELD_WIKI"
       ]

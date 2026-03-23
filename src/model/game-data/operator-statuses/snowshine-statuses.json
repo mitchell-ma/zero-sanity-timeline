@@ -45,7 +45,7 @@
       "eventCategoryType": "TALENT_STATUS"
     },
     "metadata": {
-      "originId": "snowshine",
+      "originId": "SNOWSHINE",
       "dataSources": [
         "ENDFIELD_WIKI"
       ]
@@ -94,7 +94,7 @@
       "eventCategoryType": "TALENT"
     },
     "metadata": {
-      "originId": "snowshine",
+      "originId": "SNOWSHINE",
       "dataSources": [
         "ENDFIELD_WIKI"
       ]

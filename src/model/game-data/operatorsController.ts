@@ -48,7 +48,7 @@ interface LevelEntry {
 // ── Validation ──────────────────────────────────────────────────────────────
 
 const VALID_TOP_KEYS = new Set([
-  'operatorType', 'name', 'operatorRarity', 'operatorClassType',
+  'id', 'name', 'operatorRarity', 'operatorClassType',
   'elementType', 'weaponTypes',
   'mainAttributeType', 'secondaryAttributeType',
   'potentials', 'statsByLevel', 'talents', 'talentEffects', 'metadata',
@@ -79,7 +79,7 @@ function checkKeys(obj: Record<string, unknown>, valid: Set<string>, path: strin
 export function validateOperator(json: Record<string, unknown>): string[] {
   const errors = checkKeys(json, VALID_TOP_KEYS, 'root');
 
-  if (typeof json.operatorType !== 'string') errors.push('root.operatorType: must be a string');
+  if (typeof json.id !== 'string') errors.push('root.id: must be a string');
   if (typeof json.name !== 'string') errors.push('root.name: must be a string');
   if (typeof json.operatorRarity !== 'number') errors.push('root.operatorRarity: must be a number');
   if (typeof json.operatorClassType !== 'string') errors.push('root.operatorClassType: must be a string');
@@ -120,7 +120,7 @@ export function validateOperator(json: Record<string, unknown>): string[] {
 
 /** An operator definition. Maps 1:1 to the JSON shape. */
 export class OperatorBase {
-  readonly operatorType: string;
+  readonly id: string;
   readonly name: string;
   readonly operatorRarity: number;
   readonly operatorClassType: string;
@@ -140,7 +140,7 @@ export class OperatorBase {
   constructor(json: Record<string, unknown>) {
     const meta = (json.metadata ?? {}) as Record<string, unknown>;
 
-    this.operatorType = (json.operatorType ?? '') as string;
+    this.id = (json.id ?? '') as string;
     this.name = (json.name ?? '') as string;
     this.operatorRarity = (json.operatorRarity ?? 0) as number;
     this.operatorClassType = (json.operatorClassType ?? '') as string;
@@ -177,7 +177,7 @@ export class OperatorBase {
   /** Serialize back to the JSON shape. */
   serialize(): Record<string, unknown> {
     return {
-      operatorType: this.operatorType,
+      id: this.id,
       name: this.name,
       operatorRarity: this.operatorRarity,
       operatorClassType: this.operatorClassType,
@@ -200,7 +200,7 @@ export class OperatorBase {
   static deserialize(json: Record<string, unknown>, source?: string): OperatorBase {
     const errors = validateOperator(json);
     if (errors.length > 0) {
-      const id = json.operatorType ?? json.name ?? 'unknown';
+      const id = json.id ?? json.name ?? 'unknown';
       console.warn(`[OperatorBase] Validation errors in ${source ?? id}:\n  ${errors.join('\n  ')}`);
     }
     return new OperatorBase(json);
@@ -259,11 +259,11 @@ for (const key of operatorContext.keys()) {
   const operatorId = filenameToCamelCase(filename);
   const json = operatorContext(key) as Record<string, unknown>;
   const operator = OperatorBase.deserialize(json, key);
-  if (operator.operatorType) {
+  if (operator.id) {
     operator.icon = resolveOperatorIcon(operator.name);
     operatorCache.set(operatorId, operator);
     operatorNameIndex.set(operator.name, operatorId);
-    operatorTypeIndex.set(operator.operatorType, operatorId);
+    operatorTypeIndex.set(operator.id, operatorId);
   }
 }
 
@@ -322,7 +322,7 @@ export function registerCustomOperatorBase(operatorId: string, json: Record<stri
   operator.icon = icon ?? resolveOperatorIcon(operator.name);
   customOperatorCache.set(operatorId, operator);
   operatorNameIndex.set(operator.name, operatorId);
-  operatorTypeIndex.set(operator.operatorType, operatorId);
+  operatorTypeIndex.set(operator.id, operatorId);
   return operator;
 }
 
@@ -335,9 +335,9 @@ export function deregisterCustomOperatorBase(operatorId: string): void {
       operatorNameIndex.delete(operator.name);
       operatorCache.forEach((o, id) => { if (o.name === operator.name) operatorNameIndex.set(o.name, id); });
     }
-    if (operatorTypeIndex.get(operator.operatorType) === operatorId) {
-      operatorTypeIndex.delete(operator.operatorType);
-      operatorCache.forEach((o, id) => { if (o.operatorType === operator.operatorType) operatorTypeIndex.set(o.operatorType, id); });
+    if (operatorTypeIndex.get(operator.id) === operatorId) {
+      operatorTypeIndex.delete(operator.id);
+      operatorCache.forEach((o, id) => { if (o.id === operator.id) operatorTypeIndex.set(o.id, id); });
     }
   }
 }

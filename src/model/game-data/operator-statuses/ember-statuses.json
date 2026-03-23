@@ -50,7 +50,7 @@
       "eventCategoryType": "TALENT"
     },
     "metadata": {
-      "originId": "ember",
+      "originId": "EMBER",
       "dataSources": [
         "ENDFIELD_WIKI"
       ]
@@ -138,7 +138,7 @@
       "eventCategoryType": "TALENT"
     },
     "metadata": {
-      "originId": "ember",
+      "originId": "EMBER",
       "dataSources": [
         "ENDFIELD_WIKI"
       ]
@@ -225,7 +225,7 @@
       "eventCategoryType": "SKILL_STATUS"
     },
     "metadata": {
-      "originId": "ember",
+      "originId": "EMBER",
       "dataSources": [
         "ENDFIELD_WIKI"
       ]
@@ -275,7 +275,7 @@
       "eventCategoryType": "POTENTIAL_STATUS"
     },
     "metadata": {
-      "originId": "ember",
+      "originId": "EMBER",
       "dataSources": [
         "ENDFIELD_WIKI"
       ]

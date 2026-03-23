@@ -449,7 +449,7 @@
       "eventCategoryType": "BASIC_ATTACK"
     },
     "metadata": {
-      "originId": "perlica"
+      "originId": "PERLICA"
     }
   },
   "PROTOCOL_OMEGA_STRIKE": {
@@ -477,7 +477,7 @@
       }
     ],
     "metadata": {
-      "originId": "perlica"
+      "originId": "PERLICA"
     },
     "segments": [
       {
@@ -735,7 +735,7 @@
       }
     ],
     "metadata": {
-      "originId": "perlica"
+      "originId": "PERLICA"
     },
     "onTriggerClause": [
       {
@@ -873,7 +873,7 @@
       }
     ],
     "metadata": {
-      "originId": "perlica"
+      "originId": "PERLICA"
     }
   },
   "PROTOCOL_ALPHA_BREACH_FINISHER": {
@@ -887,7 +887,7 @@
       "eventCategoryType": "BASIC_ATTACK"
     },
     "metadata": {
-      "originId": "perlica"
+      "originId": "PERLICA"
     },
     "segments": [
       {
@@ -965,7 +965,7 @@
       "eventCategoryType": "BASIC_ATTACK"
     },
     "metadata": {
-      "originId": "perlica"
+      "originId": "PERLICA"
     },
     "segments": [
       {

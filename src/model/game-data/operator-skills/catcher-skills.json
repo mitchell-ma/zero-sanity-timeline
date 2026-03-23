@@ -302,7 +302,7 @@
       "eventCategoryType": "BASIC_ATTACK"
     },
     "metadata": {
-      "originId": "catcher"
+      "originId": "CATCHER"
     }
   },
   "RIGID_INTERDICTION": {
@@ -330,7 +330,7 @@
       }
     ],
     "metadata": {
-      "originId": "catcher"
+      "originId": "CATCHER"
     },
     "segments": [
       {
@@ -709,7 +709,7 @@
       }
     ],
     "metadata": {
-      "originId": "catcher"
+      "originId": "CATCHER"
     },
     "onTriggerClause": [
       {
@@ -1017,7 +1017,7 @@
       }
     ],
     "metadata": {
-      "originId": "catcher"
+      "originId": "CATCHER"
     }
   },
   "RIGID_INTERDICTION_BASIC_FINISHER": {
@@ -1031,7 +1031,7 @@
       "eventCategoryType": "BASIC_ATTACK"
     },
     "metadata": {
-      "originId": "catcher"
+      "originId": "CATCHER"
     },
     "segments": [
       {
@@ -1109,7 +1109,7 @@
       "eventCategoryType": "BASIC_ATTACK"
     },
     "metadata": {
-      "originId": "catcher"
+      "originId": "CATCHER"
     },
     "segments": [
       {

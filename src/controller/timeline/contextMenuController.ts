@@ -12,7 +12,7 @@ import { t } from '../../locales/locale';
 import { SKILL_COLUMNS, OPERATOR_COLUMNS, ENEMY_OWNER_ID } from '../../model/channels';
 import { COMMON_OWNER_ID } from '../slot/commonSlotController';
 import { getLastController } from './eventQueueController';
-import { MicroColumnController } from './microColumnController';
+import { isColumnFull, isBeforeLastEvent } from './microColumnController';
 import {
   checkComboWindowAvailability,
   checkVariantAvailability,
@@ -136,8 +136,8 @@ export function buildColumnContextMenu(
   }
 
   if (col.microColumns && col.microColumnAssignment === 'by-order') {
-    const full = MicroColumnController.isColumnFull(col, events, atFrame);
-    const beforePrev = MicroColumnController.isBeforeLastEvent(col, events, atFrame);
+    const full = isColumnFull(col, events, atFrame);
+    const beforePrev = isBeforeLastEvent(col, events, atFrame);
     const matchSet = col.matchColumnIds ? new Set(col.matchColumnIds) : null;
     const existing = events.filter(
       (ev) => ev.ownerId === col.ownerId &&
@@ -339,8 +339,8 @@ export function buildEventAddItems(
   }
 
   // Single-column stacking (MF)
-  const full = MicroColumnController.isColumnFull(col, events, atFrame);
-  const beforePrev = MicroColumnController.isBeforeLastEvent(col, events, atFrame);
+  const full = isColumnFull(col, events, atFrame);
+  const beforePrev = isBeforeLastEvent(col, events, atFrame);
   const disabled = interactionMode === InteractionModeType.STRICT && (full || beforePrev);
   const matchSet = col.matchColumnIds ? new Set(col.matchColumnIds) : null;
   const existing = events.filter(

@@ -38,7 +38,7 @@ function customOperatorToJson(operator: CustomOperator): Record<string, unknown>
     ultimate: findSkill(skillArr, CombatSkillType.ULTIMATE),
   };
   const json: Record<string, unknown> = {
-    operatorType: operator.id.toUpperCase(),
+    id: operator.id.toUpperCase(),
     name: operator.name,
     operatorRarity: operator.operatorRarity,
     operatorClassType: operator.operatorClassType,

@@ -566,7 +566,7 @@
       "eventCategoryType": "BASIC_ATTACK"
     },
     "metadata": {
-      "originId": "endministrator"
+      "originId": "ENDMINISTRATOR"
     }
   },
   "CONSTRUCTIVE_SEQUENCE": {
@@ -594,7 +594,7 @@
       }
     ],
     "metadata": {
-      "originId": "endministrator"
+      "originId": "ENDMINISTRATOR"
     },
     "segments": [
       {
@@ -971,7 +971,7 @@
       }
     ],
     "metadata": {
-      "originId": "endministrator"
+      "originId": "ENDMINISTRATOR"
     },
     "onTriggerClause": [
       {
@@ -1161,7 +1161,7 @@
       }
     ],
     "metadata": {
-      "originId": "endministrator"
+      "originId": "ENDMINISTRATOR"
     }
   },
   "DESTRUCTIVE_SEQUENCE_FINISHER": {
@@ -1175,7 +1175,7 @@
       "eventCategoryType": "BASIC_ATTACK"
     },
     "metadata": {
-      "originId": "endministrator"
+      "originId": "ENDMINISTRATOR"
     },
     "segments": [
       {
@@ -1253,7 +1253,7 @@
       "eventCategoryType": "BASIC_ATTACK"
     },
     "metadata": {
-      "originId": "endministrator"
+      "originId": "ENDMINISTRATOR"
     },
     "segments": [
       {

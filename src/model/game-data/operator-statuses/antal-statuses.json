@@ -436,7 +436,7 @@
       "eventCategoryType": "TALENT"
     },
     "metadata": {
-      "originId": "antal",
+      "originId": "ANTAL",
       "dataSources": [
         "ENDFIELD_WIKI"
       ]

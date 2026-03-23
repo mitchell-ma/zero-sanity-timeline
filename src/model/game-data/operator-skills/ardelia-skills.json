@@ -449,7 +449,7 @@
       "eventCategoryType": "BASIC_ATTACK"
     },
     "metadata": {
-      "originId": "ardelia"
+      "originId": "ARDELIA"
     }
   },
   "DOLLY_RUSH": {
@@ -477,7 +477,7 @@
       }
     ],
     "metadata": {
-      "originId": "ardelia"
+      "originId": "ARDELIA"
     },
     "segments": [
       {
@@ -966,7 +966,7 @@
       }
     ],
     "metadata": {
-      "originId": "ardelia"
+      "originId": "ARDELIA"
     },
     "onTriggerClause": [
       {
@@ -1087,7 +1087,7 @@
             },
             "unit": "SECOND"
           },
-          "name": "Active"
+          "name": "Wooly Party"
         },
         "frames": [
           {
@@ -1536,7 +1536,7 @@
       }
     ],
     "metadata": {
-      "originId": "ardelia"
+      "originId": "ARDELIA"
     }
   },
   "DOLLY_RUSH_EMPOWERED": {
@@ -1690,7 +1690,7 @@
       "eventCategoryType": "BASIC_ATTACK"
     },
     "metadata": {
-      "originId": "ardelia"
+      "originId": "ARDELIA"
     },
     "segments": [
       {
@@ -1768,7 +1768,7 @@
       "eventCategoryType": "BASIC_ATTACK"
     },
     "metadata": {
-      "originId": "ardelia"
+      "originId": "ARDELIA"
     },
     "segments": [
       {

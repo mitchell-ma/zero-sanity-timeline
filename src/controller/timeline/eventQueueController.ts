@@ -26,6 +26,7 @@ import {
   collectEngineTriggerEntries,
 } from './statusTriggerCollector';
 import { statusNameToColumnId } from './triggerMatch';
+import { genEventUid } from '../timeline/inputEventController';
 import { getOperatorStatuses } from '../../model/game-data/operatorStatusesController';
 import {
   PRIORITY, MAX_INFLICTION_STACKS,
@@ -114,6 +115,34 @@ function collectFrameEffectEntries(
                     columnId: teamColumnId,
                     startFrame: absFrame,
                     segments: [{ properties: { duration: linkDuration } }],
+                    sourceOwnerId: event.ownerId,
+                    sourceSkillName: event.name,
+                  },
+                });
+              } else {
+                // Self-targeted operator status (e.g. Melting Flame from combo skill)
+                const statusColumnId = statusNameToColumnId(statusEffect.status);
+                const statusDuration = statusEffect.durationFrames || TOTAL_FRAMES;
+                entries.push({
+                  frame: absFrame,
+                  priority: PRIORITY.FRAME_EFFECT,
+                  type: 'FRAME_EFFECT',
+                  statusName: statusEffect.status,
+                  columnId: statusColumnId,
+                  ownerId: event.ownerId,
+                  sourceOwnerId: event.ownerId,
+                  sourceSkillName: event.name,
+                  maxStacks: 0,
+                  durationFrames: statusDuration,
+                  operatorSlotId: event.ownerId,
+                  derivedEvent: {
+                    uid: `${statusEffect.status.toLowerCase()}-${genEventUid()}`,
+                    id: statusEffect.status,
+                    name: statusEffect.status,
+                    ownerId: event.ownerId,
+                    columnId: statusColumnId,
+                    startFrame: absFrame,
+                    segments: [{ properties: { duration: statusDuration } }],
                     sourceOwnerId: event.ownerId,
                     sourceSkillName: event.name,
                   },

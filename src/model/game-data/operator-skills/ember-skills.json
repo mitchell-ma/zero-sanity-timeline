@@ -302,7 +302,7 @@
       "eventCategoryType": "BASIC_ATTACK"
     },
     "metadata": {
-      "originId": "ember"
+      "originId": "EMBER"
     }
   },
   "FORWARD_MARCH": {
@@ -330,7 +330,7 @@
       }
     ],
     "metadata": {
-      "originId": "ember"
+      "originId": "EMBER"
     },
     "segments": [
       {
@@ -654,7 +654,7 @@
       }
     ],
     "metadata": {
-      "originId": "ember"
+      "originId": "EMBER"
     },
     "onTriggerClause": [
       {
@@ -876,7 +876,7 @@
       }
     ],
     "metadata": {
-      "originId": "ember"
+      "originId": "EMBER"
     }
   },
   "SWORD_ART_OF_ASSAULT_FINISHER": {
@@ -890,7 +890,7 @@
       "eventCategoryType": "BASIC_ATTACK"
     },
     "metadata": {
-      "originId": "ember"
+      "originId": "EMBER"
     },
     "segments": [
       {
@@ -968,7 +968,7 @@
       "eventCategoryType": "BASIC_ATTACK"
     },
     "metadata": {
-      "originId": "ember"
+      "originId": "EMBER"
     },
     "segments": [
       {

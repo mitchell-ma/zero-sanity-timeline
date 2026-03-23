@@ -419,7 +419,7 @@
       "eventCategoryType": "BASIC_ATTACK"
     },
     "metadata": {
-      "originId": "arclight"
+      "originId": "ARCLIGHT"
     }
   },
   "TEMPESTUOUS_ARC": {
@@ -447,7 +447,7 @@
       }
     ],
     "metadata": {
-      "originId": "arclight"
+      "originId": "ARCLIGHT"
     },
     "segments": [
       {
@@ -830,7 +830,7 @@
       }
     ],
     "metadata": {
-      "originId": "arclight"
+      "originId": "ARCLIGHT"
     },
     "onTriggerClause": [
       {
@@ -1053,7 +1053,7 @@
       }
     ],
     "metadata": {
-      "originId": "arclight"
+      "originId": "ARCLIGHT"
     }
   },
   "TEMPESTUOUS_ARC_EMPOWERED": {
@@ -1192,7 +1192,7 @@
       "eventCategoryType": "BASIC_ATTACK"
     },
     "metadata": {
-      "originId": "arclight"
+      "originId": "ARCLIGHT"
     },
     "segments": [
       {
@@ -1270,7 +1270,7 @@
       "eventCategoryType": "BASIC_ATTACK"
     },
     "metadata": {
-      "originId": "arclight"
+      "originId": "ARCLIGHT"
     },
     "segments": [
       {

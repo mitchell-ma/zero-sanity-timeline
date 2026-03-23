@@ -18,6 +18,7 @@ import { evaluateInteraction, evaluateConditions, ConditionContext } from './con
 import { executeEffects, applyMutations } from './effectExecutor';
 import type { ExecutionContext } from './effectExecutor';
 import { VerbType } from '../../dsl/semantics';
+import { genEventUid } from './inputEventController';
 import type { Interaction, Effect as SemanticEffect, ValueNode } from '../../dsl/semantics';
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT, buildContextForSkillColumn } from '../calculation/valueResolver';
 import type { ValueResolutionContext } from '../calculation/valueResolver';
@@ -509,6 +510,12 @@ function deriveStatusEvents(
         .find(e => e.verb === 'APPLY' && e.object === 'STATUS' && e.objectId)
     : undefined;
   const applySubEffect = nestedApply ?? directApply;
+
+  // If trigger clauses have no effects and no output redirect, this def doesn't produce
+  // events on its own — another def (e.g. a talent) handles creation via its own effects.
+  const hasAnyEffects = (def.onTriggerClause ?? []).some(c => c.effects && c.effects.length > 0);
+  if (!applySubEffect && !hasAnyEffects) return empty;
+
   const applyToDeterminer = directApply?.toDeterminer ?? (nestedApply as unknown as Effect | undefined)?.toDeterminer;
   let outputDef = def;
   if (applySubEffect?.objectId) {
@@ -535,7 +542,6 @@ function deriveStatusEvents(
   const derived: TimelineEvent[] = [];
   const absorbedInflictions: AbsorbedInfliction[] = [];
   const absorbedIds = new Set<string>();
-  let idCounter = 0;
   const cooldownFrames = outputDef.properties.cooldownSeconds
     ? Math.round(outputDef.properties.cooldownSeconds * 120)
     : 0;
@@ -595,7 +601,7 @@ function deriveStatusEvents(
     }
 
     for (let ci = 0; ci < createCount; ci++) {
-      const evId = `${outputDef.properties.id.toLowerCase()}-${operatorSlotId}-${idCounter++}`;
+      const evId = `${outputDef.properties.id.toLowerCase()}-${genEventUid()}`;
 
       // For RESET stacks: clamp previous instances
       if (outputDef.properties.stacks?.interactionType === 'RESET' && derived.length > 0) {
@@ -725,7 +731,6 @@ function evaluateThresholdClauses(
 
   const maxStacks = getMaxStacks(def.properties.stacks.limit, ctx.potential);
   const thresholdDerived: TimelineEvent[] = [];
-  let idCounter = 0;
 
   for (const clause of def.clause) {
     // Check for HAVE STACKS EXACTLY MAX condition
@@ -799,7 +804,7 @@ function evaluateThresholdClauses(
           }
 
           thresholdDerived.push({
-            uid: `${targetStatusName.toLowerCase()}-${ctx.operatorSlotId}-${idCounter++}`,
+            uid: `${targetStatusName.toLowerCase()}-${genEventUid()}`,
             id: targetStatusName,
             name: targetStatusName,
             ownerId: targetOwnerId,
@@ -1208,6 +1213,11 @@ export function collectEngineTriggerEntries(
 
       if (!def.onTriggerClause || def.onTriggerClause.length === 0) continue;
 
+      // Skip defs whose trigger clauses have no effects — these define triggers for other
+      // defs (e.g. a talent) to use, they don't produce events on their own.
+      const hasEffects = def.onTriggerClause.some(c => c.effects && c.effects.length > 0);
+      if (!hasEffects && def.properties.type !== 'TALENT') continue;
+
       // Use the unified verb-handler registry to find trigger matches for ALL verb types.
       // HAVE conditions are extracted and deferred to queue-time evaluation — they must
       // be removed from the clauses before matching so they don't block trigger detection
@@ -1360,7 +1370,7 @@ export function evaluateEngineTrigger(
     ? COMMON_OWNER_ID : ownerId;
 
   const ev: TimelineEvent = {
-    uid: `${outputDef.properties.id.toLowerCase()}-${ctx.operatorSlotId}-q-${entry.frame}`,
+    uid: `${outputDef.properties.id.toLowerCase()}-${genEventUid()}`,
     id: outputDef.properties.id,
     name: outputDef.properties.id,
     ownerId: finalOwnerId,
@@ -1490,6 +1500,12 @@ function evaluateCompoundTrigger(
     const ownerId = produced.ownerId;
     const maxStacks = getMaxStacksForStatus(produced.id ?? produced.name, ctx);
     if (maxStacks != null && activeCountFn(columnId, ownerId, entry.frame) >= maxStacks) continue;
+
+    // The effect executor defaults STATUS duration to 2400 when with.duration
+    // is not specified. Override with the status definition's actual duration.
+    const statusDuration = getStatusDuration(produced.id ?? produced.name, ctx);
+    if (statusDuration != null) setEventDuration(produced, statusDuration);
+
     addEventFn(produced);
   }
 
@@ -1511,4 +1527,13 @@ function getMaxStacksForStatus(statusId: string, ctx: EngineTriggerContext): num
   const statusDef = (json.statusEvents as StatusEventDef[]).find(d => d.properties.id === statusId);
   if (!statusDef?.properties.stacks?.limit) return undefined;
   return getMaxStacks(statusDef.properties.stacks.limit, ctx.potential);
+}
+
+/** Resolve duration in frames for a status ID from operator JSON. */
+function getStatusDuration(statusId: string, ctx: EngineTriggerContext): number | undefined {
+  const json = getOperatorJson(ctx.operatorId);
+  if (!json?.statusEvents) return TOTAL_FRAMES;
+  const statusDef = (json.statusEvents as StatusEventDef[]).find(d => d.properties.id === statusId);
+  if (!statusDef) return undefined;
+  return statusDef.properties.duration ? getDurationFrames(statusDef.properties.duration) : TOTAL_FRAMES;
 }

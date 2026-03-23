@@ -41,7 +41,7 @@
       "eventCategoryType": "TALENT_STATUS"
     },
     "metadata": {
-      "originId": "fluorite",
+      "originId": "FLUORITE",
       "dataSources": [
         "ENDFIELD_WIKI"
       ]
@@ -84,7 +84,7 @@
       "eventCategoryType": "TALENT"
     },
     "metadata": {
-      "originId": "fluorite",
+      "originId": "FLUORITE",
       "dataSources": [
         "ENDFIELD_WIKI"
       ]

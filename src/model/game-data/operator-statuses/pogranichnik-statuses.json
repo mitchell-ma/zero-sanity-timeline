@@ -36,7 +36,7 @@
       "eventCategoryType": "TALENT"
     },
     "metadata": {
-      "originId": "pogranichnik",
+      "originId": "POGRANICHNIK",
       "dataSources": [
         "ENDFIELD_WIKI"
       ]

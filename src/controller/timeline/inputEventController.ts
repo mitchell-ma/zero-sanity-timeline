@@ -5,6 +5,7 @@
  * independently and keeps the view layer thin.
  */
 
+import { v4 as uuidv4 } from 'uuid';
 import { EnhancementType, EventFrameType } from '../../consts/enums';
 import { TimelineEvent, EventSegmentData, Operator, computeSegmentsSpan, getAnimationDuration, eventEndFrame, durationSegment } from '../../consts/viewTypes';
 import { ENEMY_OWNER_ID, REACTION_COLUMN_IDS, INFLICTION_COLUMN_IDS, SKILL_COLUMNS } from '../../model/channels';
@@ -55,7 +56,7 @@ export function hasSufficientSP(ownerId: string, frame: number): boolean {
 }
 
 export function genEventUid(): string {
-  return `ev-${_uid++}-${Math.random().toString(36).slice(2, 6)}`;
+  return `ev-${_uid++}-${uuidv4()}`;
 }
 
 export function setNextEventUid(id: number): void {

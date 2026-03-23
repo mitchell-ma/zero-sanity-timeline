@@ -1,5 +1,5 @@
 {
-  "operatorType": "CATCHER",
+  "id": "CATCHER",
   "name": "Catcher",
   "operatorRarity": 4,
   "operatorClassType": "DEFENDER",

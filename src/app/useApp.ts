@@ -484,6 +484,8 @@ export function useApp() {
 
   const processedEventsRef = useRef(allProcessedEvents);
   processedEventsRef.current = allProcessedEvents;
+  const columnsRef = useRef(columns);
+  columnsRef.current = columns;
 
   // Prune stale overrides when derived events change
   useEffect(() => {
@@ -913,9 +915,12 @@ export function useApp() {
           const ultActive = prev.some(
             (e) => {
               if (e.ownerId !== ownerId || e.columnId !== SKILL_COLUMNS.ULTIMATE) return false;
+              // Resolve segments from column defaults if the raw event has placeholder segments
+              const defaults = findEventDefaults(e, columnsRef.current);
+              const segs = (defaults?.segments && e.segments.length < (defaults.segments.length))
+                ? defaults.segments : e.segments;
               // Ultimate segments: [animation, statis, active, cooldown]
               // "Active" phase starts after animation + statis
-              const segs = e.segments;
               if (segs.length >= 3) {
                 const activationEnd = e.startFrame + segs[0].properties.duration + segs[1].properties.duration;
                 const activeEnd = activationEnd + segs[2].properties.duration;

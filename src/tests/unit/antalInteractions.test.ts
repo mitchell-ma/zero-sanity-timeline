@@ -675,7 +675,7 @@ describe('F. Resource Properties', () => {
 
 describe('G. Operator Identity', () => {
   test('G1: Operator type and name', () => {
-    expect(mockAntalJson.operatorType).toBe('ANTAL');
+    expect(mockAntalJson.id).toBe('ANTAL');
     expect(mockAntalJson.name).toBe('Antal');
   });
 

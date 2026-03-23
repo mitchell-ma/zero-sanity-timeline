@@ -428,7 +428,7 @@
       "eventCategoryType": "BASIC_ATTACK"
     },
     "metadata": {
-      "originId": "akekuri"
+      "originId": "AKEKURI"
     }
   },
   "BURST_OF_PASSION": {
@@ -456,7 +456,7 @@
       }
     ],
     "metadata": {
-      "originId": "akekuri"
+      "originId": "AKEKURI"
     },
     "segments": [
       {
@@ -793,7 +793,7 @@
       }
     ],
     "metadata": {
-      "originId": "akekuri"
+      "originId": "AKEKURI"
     },
     "onTriggerClause": [
       {
@@ -887,13 +887,13 @@
             },
             "unit": "SECOND"
           },
-          "name": "Active"
+          "name": "SQUAD! ON ME!"
         },
         "frames": []
       }
     ],
     "metadata": {
-      "originId": "akekuri"
+      "originId": "AKEKURI"
     }
   },
   "SWORD_OF_ASPIRATION_FINISHER": {
@@ -907,7 +907,7 @@
       "eventCategoryType": "BASIC_ATTACK"
     },
     "metadata": {
-      "originId": "akekuri"
+      "originId": "AKEKURI"
     },
     "segments": [
       {
@@ -985,7 +985,7 @@
       "eventCategoryType": "BASIC_ATTACK"
     },
     "metadata": {
-      "originId": "akekuri"
+      "originId": "AKEKURI"
     },
     "segments": [
       {

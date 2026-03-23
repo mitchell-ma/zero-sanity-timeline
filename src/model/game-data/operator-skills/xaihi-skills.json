@@ -419,7 +419,7 @@
       "eventCategoryType": "BASIC_ATTACK"
     },
     "metadata": {
-      "originId": "xaihi"
+      "originId": "XAIHI"
     }
   },
   "DISTRIBUTED_DOS": {
@@ -447,7 +447,7 @@
       }
     ],
     "metadata": {
-      "originId": "xaihi"
+      "originId": "XAIHI"
     },
     "segments": [
       {
@@ -640,7 +640,7 @@
       }
     ],
     "metadata": {
-      "originId": "xaihi"
+      "originId": "XAIHI"
     },
     "onTriggerClause": [
       {
@@ -728,7 +728,7 @@
       }
     ],
     "metadata": {
-      "originId": "xaihi"
+      "originId": "XAIHI"
     }
   },
   "BASIC_ATTACK_FINISHER": {
@@ -742,7 +742,7 @@
       "eventCategoryType": "BASIC_ATTACK"
     },
     "metadata": {
-      "originId": "xaihi"
+      "originId": "XAIHI"
     },
     "segments": [
       {
@@ -820,7 +820,7 @@
       "eventCategoryType": "BASIC_ATTACK"
     },
     "metadata": {
-      "originId": "xaihi"
+      "originId": "XAIHI"
     },
     "segments": [
       {

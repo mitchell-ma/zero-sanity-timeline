@@ -302,7 +302,7 @@
       "eventCategoryType": "BASIC_ATTACK"
     },
     "metadata": {
-      "originId": "fluorite"
+      "originId": "FLUORITE"
     }
   },
   "TINY_SURPRISE": {
@@ -330,7 +330,7 @@
       }
     ],
     "metadata": {
-      "originId": "fluorite"
+      "originId": "FLUORITE"
     },
     "segments": [
       {
@@ -705,7 +705,7 @@
       }
     ],
     "metadata": {
-      "originId": "fluorite"
+      "originId": "FLUORITE"
     },
     "onTriggerClause": [
       {
@@ -1013,7 +1013,7 @@
       }
     ],
     "metadata": {
-      "originId": "fluorite"
+      "originId": "FLUORITE"
     }
   },
   "SIGNATURE_GUN_KATA_FINISHER": {
@@ -1027,7 +1027,7 @@
       "eventCategoryType": "BASIC_ATTACK"
     },
     "metadata": {
-      "originId": "fluorite"
+      "originId": "FLUORITE"
     },
     "segments": [
       {
@@ -1105,7 +1105,7 @@
       "eventCategoryType": "BASIC_ATTACK"
     },
     "metadata": {
-      "originId": "fluorite"
+      "originId": "FLUORITE"
     },
     "segments": [
       {

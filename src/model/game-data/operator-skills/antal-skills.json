@@ -351,7 +351,7 @@
       "eventCategoryType": "BASIC_ATTACK"
     },
     "metadata": {
-      "originId": "antal"
+      "originId": "ANTAL"
     }
   },
   "SPECIFIED_RESEARCH_SUBJECT": {
@@ -379,7 +379,7 @@
       }
     ],
     "metadata": {
-      "originId": "antal"
+      "originId": "ANTAL"
     },
     "segments": [
       {
@@ -760,7 +760,7 @@
       }
     ],
     "metadata": {
-      "originId": "antal"
+      "originId": "ANTAL"
     },
     "onTriggerClause": [
       {
@@ -876,13 +876,13 @@
             },
             "unit": "SECOND"
           },
-          "name": "Active"
+          "name": "Overclocked Moment"
         },
         "frames": []
       }
     ],
     "metadata": {
-      "originId": "antal"
+      "originId": "ANTAL"
     }
   },
   "EXCHANGE_CURRENT_FINISHER": {
@@ -896,7 +896,7 @@
       "eventCategoryType": "BASIC_ATTACK"
     },
     "metadata": {
-      "originId": "antal"
+      "originId": "ANTAL"
     },
     "segments": [
       {
@@ -974,7 +974,7 @@
       "eventCategoryType": "BASIC_ATTACK"
     },
     "metadata": {
-      "originId": "antal"
+      "originId": "ANTAL"
     },
     "segments": [
       {

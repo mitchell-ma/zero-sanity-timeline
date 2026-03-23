@@ -1,5 +1,5 @@
 {
-  "operatorType": "TANGTANG",
+  "id": "TANGTANG",
   "name": "Tangtang",
   "operatorRarity": 6,
   "operatorClassType": "CASTER",

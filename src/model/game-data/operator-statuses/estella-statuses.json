@@ -31,7 +31,7 @@
       "eventCategoryType": "TALENT"
     },
     "metadata": {
-      "originId": "estella",
+      "originId": "ESTELLA",
       "dataSources": [
         "ENDFIELD_WIKI"
       ]
@@ -135,7 +135,7 @@
       "eventCategoryType": "TALENT"
     },
     "metadata": {
-      "originId": "estella",
+      "originId": "ESTELLA",
       "dataSources": [
         "ENDFIELD_WIKI"
       ]
@@ -196,7 +196,7 @@
       "eventCategoryType": "POTENTIAL_STATUS"
     },
     "metadata": {
-      "originId": "estella",
+      "originId": "ESTELLA",
       "dataSources": [
         "ENDFIELD_WIKI"
       ]
