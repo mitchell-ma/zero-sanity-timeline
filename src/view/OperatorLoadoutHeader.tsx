@@ -32,7 +32,8 @@ interface OperatorLoadoutHeaderProps {
   operatorWeaponTypes: string[];
   splash?: string;
   state: OperatorLoadoutState;
-  onEdit: () => void;
+  slotId: string;
+  onEdit: (slotId: string) => void;
 }
 
 /* ─── Shared filter bar for dropdown menus ────────────────────────────── */
@@ -188,13 +189,14 @@ export default React.memo(function OperatorLoadoutHeader({
   operatorWeaponTypes,
   splash,
   state,
+  slotId,
   onEdit,
 }: OperatorLoadoutHeaderProps) {
   return (
     <div
       className="lo-cell lo-splash--clickable"
       style={{ '--op-color': operatorColor } as React.CSSProperties}
-      onClick={onEdit}
+      onClick={() => onEdit(slotId)}
     >
       {/* Splash art — background layer */}
       {splash ? (

@@ -61,6 +61,7 @@ import { getAxisMap, type Orientation } from '../utils/axisMap';
 
 
 const MIN_SLOT_COLS = 4;
+const EMPTY_WEAPON_TYPES: string[] = [];
 
 
 interface MarqueeState {
@@ -421,21 +422,10 @@ export default function CombatPlanner({
   }, [selectedFrames]);
 
   // ── Event validation (controller) ─────────────────────────────────────────
-  // During drag, skip position-independent validators (empowered, enhanced,
-  // disabled variants, clause, infliction) by reusing previous results.
-  const prevValidationRef = useRef<import('../controller/timeline/eventValidationController').ValidationResult | null>(null);
-  const validationResult = useMemo(
-    () => {
-      const result = computeAllValidations(
-        events, slots, resourceGraphs, staggerBreaks, draggingIds, interactionMode,
-        draggingIds ? prevValidationRef.current : null,
-      );
-      if (!draggingIds) prevValidationRef.current = result;
-      return result;
-    },
+  const { maps: validationMaps, timeStopRegions, autoFinisherIds } = useMemo(
+    () => computeAllValidations(events, slots, resourceGraphs, staggerBreaks, draggingIds, interactionMode),
     [events, slots, resourceGraphs, staggerBreaks, draggingIds, interactionMode],
   );
-  const { maps: validationMaps, timeStopRegions, autoFinisherIds } = validationResult;
 
   const resourceInsufficiencyZones = useMemo(() => {
     // SP zones come from the controller; ultimate zones computed here
@@ -923,13 +913,7 @@ export default function CombatPlanner({
   );
 
   // ─── Pre-computed event presentations (avoids per-event computation in render) ─
-  // During drag, reuse cached presentations — labels/colors/flags don't change
-  // from position shifts alone. Only recompute when not dragging.
-  const prevEventPresentationsRef = useRef<Map<string, import('../controller/timeline/eventPresentationController').EventPresentation> | null>(null);
   const eventPresentations = useMemo(() => {
-    if (draggingIds && prevEventPresentationsRef.current) {
-      return prevEventPresentationsRef.current;
-    }
     const map = new Map<string, import('../controller/timeline/eventPresentationController').EventPresentation>();
     let mergedValidationMaps = validationMaps;
     if (dragResourceWarnings) {
@@ -947,10 +931,8 @@ export default function CombatPlanner({
         map.set(`${colKey}:${ev.uid}`, computeEventPresentation(ev, col, opts));
       }
     }
-    prevEventPresentationsRef.current = map;
     return map;
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [columnViewModels, validationMaps, dragResourceWarnings, slotElementColors, alwaysAvailableComboSlots, autoFinisherIds, interactionMode, events, draggingIds]);
+  }, [columnViewModels, validationMaps, dragResourceWarnings, slotElementColors, alwaysAvailableComboSlots, autoFinisherIds, interactionMode, events]);
 
   // ─── Marquee intersection helper ────────────────────────────────────────────
   // Rect coords: in vertical mode {left=lane, top=frame}, in horizontal mode {left=frame, top=lane}
@@ -1840,10 +1822,11 @@ export default function CombatPlanner({
                 <OperatorLoadoutHeader
                   operatorName={op?.name ?? 'EMPTY'}
                   operatorColor={op?.color ?? '#666'}
-                  operatorWeaponTypes={op?.weaponTypes ?? []}
+                  operatorWeaponTypes={op?.weaponTypes ?? EMPTY_WEAPON_TYPES}
                   splash={op?.splash}
                   state={loadouts[slot.slotId]}
-                  onEdit={() => onEditLoadout(slot.slotId)}
+                  slotId={slot.slotId}
+                  onEdit={onEditLoadout}
                 />
               </div>
             );

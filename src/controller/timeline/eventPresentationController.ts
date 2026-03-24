@@ -365,6 +365,8 @@ export interface ColumnViewModel {
 /**
  * Filter events belonging to a mini-timeline column.
  */
+// Used by external callers (e.g. tests, future incremental updates)
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function getEventsForColumn(col: MiniTimeline, events: TimelineEvent[]): TimelineEvent[] {
   if (col.matchColumnIds) {
     const matchSet = new Set(col.matchColumnIds);
@@ -381,6 +383,30 @@ function getEventsForColumn(col: MiniTimeline, events: TimelineEvent[]): Timelin
   return events.filter(
     (ev) => ev.ownerId === col.ownerId && ev.columnId === col.columnId,
   );
+}
+
+/** O(1) grouped lookup version of getEventsForColumn. */
+function getEventsForColumnGrouped(
+  col: MiniTimeline,
+  grouped: Map<string, TimelineEvent[]>,
+): TimelineEvent[] {
+  if (col.matchColumnIds) {
+    const result: TimelineEvent[] = [];
+    for (const cid of col.matchColumnIds) {
+      const arr = grouped.get(`${col.ownerId}\0${cid}`);
+      if (arr) result.push(...arr);
+    }
+    return result;
+  }
+  if (col.microColumns && col.microColumnAssignment === 'by-column-id') {
+    const result: TimelineEvent[] = [];
+    for (const mc of col.microColumns) {
+      const arr = grouped.get(`${col.ownerId}\0${mc.id}`);
+      if (arr) result.push(...arr);
+    }
+    return result;
+  }
+  return grouped.get(`${col.ownerId}\0${col.columnId}`) ?? [];
 }
 
 /**
@@ -633,20 +659,16 @@ function computeOverlapLanes(colEvents: TimelineEvent[]): Map<string, OverlapLan
 let _prevColumnViewModels: Map<string, ColumnViewModel> | null = null;
 
 /**
- * Build a fingerprint for a column's events — if the fingerprint matches
- * the previous run, reuse the cached ColumnViewModel (same reference).
- * This prevents React.memo from re-rendering unchanged columns.
+ * Check if a column's events match the previous run — same UIDs, positions, statuses.
+ * Uses direct comparison instead of string fingerprinting to avoid allocation.
  */
-function columnEventsFingerprint(events: TimelineEvent[]): string {
-  if (events.length === 0) return '';
-  let fp = '';
-  for (const ev of events) {
-    fp += ev.uid;
-    fp += ev.startFrame;
-    fp += ev.eventStatus ?? '';
-    fp += ',';
+function columnEventsMatch(current: TimelineEvent[], previous: TimelineEvent[]): boolean {
+  if (current.length !== previous.length) return false;
+  for (let i = 0; i < current.length; i++) {
+    const c = current[i], p = previous[i];
+    if (c.uid !== p.uid || c.startFrame !== p.startFrame || c.eventStatus !== p.eventStatus) return false;
   }
-  return fp;
+  return true;
 }
 
 export function computeTimelinePresentation(
@@ -655,6 +677,16 @@ export function computeTimelinePresentation(
 ): Map<string, ColumnViewModel> {
   const result = new Map<string, ColumnViewModel>();
 
+  // Pre-group events by ownerId:columnId for O(1) column lookups
+  // (replaces O(events × columns) filtering)
+  const eventsByOwnerColumn = new Map<string, TimelineEvent[]>();
+  for (const ev of events) {
+    const key = `${ev.ownerId}\0${ev.columnId}`;
+    let arr = eventsByOwnerColumn.get(key);
+    if (!arr) { arr = []; eventsByOwnerColumn.set(key, arr); }
+    arr.push(ev);
+  }
+
   // Pre-compute cross-column data
   const allStatusOverrides = computeStatusViewOverrides(events, columns);
   const allGreedySlots = computeGreedySlotAssignments(events, columns);
@@ -662,15 +694,14 @@ export function computeTimelinePresentation(
   for (const col of columns) {
     if (col.type !== 'mini-timeline') continue;
 
-    let colEvents = getEventsForColumn(col, events);
+    let colEvents = getEventsForColumnGrouped(col, eventsByOwnerColumn);
     colEvents = sortColumnEvents(col, colEvents);
     colEvents = truncateDerivedEvents(col, colEvents);
 
     // Check if this column's events are identical to the previous run.
     // If so, reuse the cached ColumnViewModel to preserve reference identity.
-    const fp = columnEventsFingerprint(colEvents);
     const prevVM = _prevColumnViewModels?.get(col.key);
-    if (prevVM && columnEventsFingerprint(prevVM.events) === fp) {
+    if (prevVM && columnEventsMatch(colEvents, prevVM.events)) {
       result.set(col.key, prevVM);
       continue;
     }

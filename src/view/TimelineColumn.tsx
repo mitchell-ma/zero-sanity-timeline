@@ -155,8 +155,6 @@ function TimelineColumn({
     derived: pres.derived,
     isAutoFinisher: pres.isAutoFinisher,
     skillElement: pres.skillElement,
-    allSegmentLabels: pres.allSegmentLabels,
-    allDefaultSegments: pres.allDefaultSegments,
     onDragStart: isDerivedCol || pres.passive ? noop3 : onDragStart,
     onContextMenu: isDerivedCol || pres.passive ? noop2 : onContextMenu,
     onSelect,

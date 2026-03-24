@@ -5,7 +5,7 @@ import { TimelineEvent, EventFrameMarker, EventSegmentData } from "../consts/vie
 import { ELEMENT_COLORS, ElementType, EventFrameType, SegmentType } from '../consts/enums';
 import { getStatusElementMap } from '../controller/gameDataStore';
 import type { EventLayout } from '../controller/timeline/timelineLayout';
-import { validateSegmentContiguity } from '../controller/timeline/eventValidator';
+// validateSegmentContiguity removed — no longer needed in render path
 import { VERTICAL_AXIS, segmentRadius, type AxisMap } from '../utils/axisMap';
 import { formatSegmentShortName } from '../dsl/semanticsTranslation';
 
@@ -124,10 +124,6 @@ interface EventBlockProps {
   notDraggable?: boolean;
   /** If true, event is derived (controller-generated) — shows default cursor. */
   derived?: boolean;
-  /** Full ordered segment labels from the column definition (for contiguity validation). */
-  allSegmentLabels?: string[];
-  /** Full default segments from the column definition (for frame contiguity validation). */
-  allDefaultSegments?: import('../consts/viewTypes').EventSegmentData[];
   /** Current hover-line real-frame. Diamonds near this frame get hover-selected styling. */
   hoverFrame?: number | null;
   /** Element type of the skill (e.g. "HEAT", "NATURE") for frame diamond coloring. */
@@ -170,8 +166,6 @@ function EventBlock({
   selectedFrames,
   notDraggable = false,
   derived = false,
-  allSegmentLabels,
-  allDefaultSegments,
   hoverFrame: hoverFrameProp,
   skillElement,
   passive = false,
@@ -233,7 +227,7 @@ function EventBlock({
 
   if (totalHeight <= 0) return null;
 
-  const warnings = validateSegmentContiguity(segments, allSegmentLabels, allDefaultSegments);
+  const warnings: string[] = [];
   const isSingleSegment = segments.length === 1;
 
   const wrapClass = `event-wrap${passive ? ' event-wrap--passive' : notDraggable ? ' event-wrap--static' : ''}${derived ? ' event-wrap--derived' : ''}${!passive && selected ? ' event-wrap--selected' : ''}${!passive && hovered && !selected ? ' event-wrap--hovered' : ''}`;
@@ -382,9 +376,7 @@ function eventBlockPropsEqual(prev: EventBlockProps, next: EventBlockProps): boo
     && prev.skillElement === next.skillElement
     && prev.selectedFrames === next.selectedFrames
     && prev.eventLayout === next.eventLayout
-    && prev.wrapStyle === next.wrapStyle
-    && prev.allSegmentLabels === next.allSegmentLabels
-    && prev.allDefaultSegments === next.allDefaultSegments;
+    && prev.wrapStyle === next.wrapStyle;
 }
 
 export default React.memo(EventBlock, eventBlockPropsEqual);
