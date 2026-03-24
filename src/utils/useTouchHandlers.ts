@@ -23,7 +23,7 @@ export function useTouchHandlers(opts: {
   onZoom: (deltaY: number) => void;
   onContextMenu: (state: ContextMenuState | null) => void;
   setHoverFrame: (frame: number | null) => void;
-  setHoverClientY: (y: number | null) => void;
+  updateHoverLineDOM: (clientPos: number | null) => void;
   outerRect: DOMRect | null;
   combinedHeaderHeight: number;
   axis?: AxisMap;
@@ -38,7 +38,7 @@ export function useTouchHandlers(opts: {
     onZoom,
     onContextMenu,
     setHoverFrame,
-    setHoverClientY,
+    updateHoverLineDOM,
     outerRect,
     combinedHeaderHeight,
     axis = VERTICAL_AXIS,
@@ -62,8 +62,8 @@ export function useTouchHandlers(opts: {
   onContextMenuRef.current = onContextMenu;
   const setHoverFrameRef = useRef(setHoverFrame);
   setHoverFrameRef.current = setHoverFrame;
-  const setHoverClientYRef = useRef(setHoverClientY);
-  setHoverClientYRef.current = setHoverClientY;
+  const updateHoverLineDOMRef = useRef(updateHoverLineDOM);
+  updateHoverLineDOMRef.current = updateHoverLineDOM;
 
   const clearLongPress = useCallback(() => {
     if (longPressTimerRef.current !== null) {
@@ -211,7 +211,7 @@ export function useTouchHandlers(opts: {
           const scrollFrame = scrollEl[axis.scrollPos];
           const snappedRel = frameToPx(newFrame, zoomRef.current);
           setHoverFrameRef.current(newFrame);
-          setHoverClientYRef.current(snappedRel - scrollFrame + rect[axis.rectFrameStart] + bodyTop);
+          updateHoverLineDOMRef.current(snappedRel - scrollFrame + rect[axis.rectFrameStart] + bodyTop);
         }
       }
     }
@@ -228,7 +228,7 @@ export function useTouchHandlers(opts: {
         if (!stillActive) {
           dragRef.current = null;
           setHoverFrameRef.current(null);
-          setHoverClientYRef.current(null);
+          updateHoverLineDOMRef.current(null);
         }
       }
 

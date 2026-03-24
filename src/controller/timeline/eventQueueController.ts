@@ -27,6 +27,41 @@ import type { HPController } from '../calculation/hpController';
 import type { OperatorLoadoutState } from '../../view/OperatorLoadoutHeader';
 import { resolveControlledOperator } from './controlledOperatorResolver';
 
+// ── TriggerIndex cache ──────────────────────────────────────────────────────
+// The trigger index is built from operator/weapon/gear configs + potentials.
+// It doesn't depend on event positions, so we cache it and only rebuild when
+// the loadout changes. This avoids a full config scan on every drag tick.
+
+let _cachedTriggerIndex: TriggerIndex | null = null;
+let _cachedSlotOperatorMap: Record<string, string> | undefined;
+let _cachedLoadoutProperties: Record<string, import('../../view/InformationPane').LoadoutProperties> | undefined;
+let _cachedSlotWeapons: Record<string, string | undefined> | undefined;
+let _cachedSlotGearSets: Record<string, string | undefined> | undefined;
+
+function getCachedTriggerIndex(
+  slotOperatorMap?: Record<string, string>,
+  loadoutProperties?: Record<string, import('../../view/InformationPane').LoadoutProperties>,
+  slotWeapons?: Record<string, string | undefined>,
+  slotGearSets?: Record<string, string | undefined>,
+  registeredEvents?: readonly TimelineEvent[],
+): TriggerIndex {
+  // Cache hit when all reference-identical inputs match (same objects = same loadout).
+  // During drag, these objects are stable — only event positions change.
+  if (_cachedTriggerIndex
+    && slotOperatorMap === _cachedSlotOperatorMap
+    && loadoutProperties === _cachedLoadoutProperties
+    && slotWeapons === _cachedSlotWeapons
+    && slotGearSets === _cachedSlotGearSets) {
+    return _cachedTriggerIndex;
+  }
+  _cachedTriggerIndex = TriggerIndex.build(slotOperatorMap, loadoutProperties, slotWeapons, slotGearSets, registeredEvents);
+  _cachedSlotOperatorMap = slotOperatorMap;
+  _cachedLoadoutProperties = loadoutProperties;
+  _cachedSlotWeapons = slotWeapons;
+  _cachedSlotGearSets = slotGearSets;
+  return _cachedTriggerIndex;
+}
+
 // ── Unified frame collection ────────────────────────────────────────────────
 
 /**
@@ -137,8 +172,10 @@ export function runEventQueue(
   const registeredEvents = state.getRegisteredEvents();
   const stops = state.getStops();
 
-  // Build trigger index from configs (config scan, not event scan)
-  const triggerIdx = TriggerIndex.build(slotOperatorMap, loadoutProperties, slotWeapons, slotGearSets, registeredEvents);
+  // Build trigger index from configs — cached when loadout hasn't changed.
+  // The index depends only on operator/weapon/gear configs + potentials,
+  // not on event positions, so it's safe to reuse during drag.
+  const triggerIdx = getCachedTriggerIndex(slotOperatorMap, loadoutProperties, slotWeapons, slotGearSets, registeredEvents);
 
   // Register talent events (permanent presence) before queue processing
   const talentEvents = triggerIdx.getAllTalentEvents();

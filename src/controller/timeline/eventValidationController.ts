@@ -47,6 +47,10 @@ export interface ValidationResult {
 /**
  * Runs all event validators in one pass. Returns all validation maps,
  * time-stop regions, and auto-finisher IDs.
+ *
+ * When `previousResult` is provided (drag in progress), position-independent
+ * validators reuse their cached results — only position-sensitive validators
+ * (combo, resource, time-stop, finisher-stagger) re-run.
  */
 export function computeAllValidations(
   events: TimelineEvent[],
@@ -55,28 +59,38 @@ export function computeAllValidations(
   staggerBreaks: readonly StaggerBreak[] | undefined,
   draggingIds: Set<string> | null,
   interactionMode?: InteractionModeType,
+  previousResult?: ValidationResult | null,
 ): ValidationResult {
   const timeStopRegions = computeTimeStopRegions(events);
 
+  // Position-sensitive validators — always re-run
+  const combo = validateComboWindows(events, slots, draggingIds);
+  const resource = resourceGraphs
+    ? validateResources(events, resourceGraphs, slots, draggingIds ?? undefined)
+    : new Map<string, string>();
+  const timeStop = validateTimeStops(events, timeStopRegions);
+  const finisherStagger = staggerBreaks
+    ? validateFinisherStaggerBreak(events, getEffectiveStaggerWindows(events, staggerBreaks))
+    : new Map<string, string>();
+
+  // Position-independent validators — reuse previous results during drag
+  const prev = previousResult?.maps;
+  const empowered = prev ? prev.empowered : validateEmpowered(events, slots);
+  const enhanced = prev ? prev.enhanced : validateEnhanced(events);
+  const regularBasic = prev ? prev.regularBasic : validateDisabledVariants(events);
+  const clause = prev ? prev.clause : validateVariantClauses(events, slots);
+  const infliction = prev ? prev.infliction : validateInflictionStacks(events);
+
   const maps: ValidationMaps = {
-    combo: validateComboWindows(events, slots, draggingIds),
-    resource: resourceGraphs
-      ? validateResources(events, resourceGraphs, slots, draggingIds ?? undefined)
-      : new Map(),
-    empowered: validateEmpowered(events, slots),
-    enhanced: validateEnhanced(events),
-    regularBasic: validateDisabledVariants(events),
-    clause: validateVariantClauses(events, slots),
-    finisherStagger: staggerBreaks
-      ? validateFinisherStaggerBreak(events, getEffectiveStaggerWindows(events, staggerBreaks))
-      : new Map(),
-    timeStop: validateTimeStops(events, timeStopRegions),
-    infliction: validateInflictionStacks(events),
+    combo, resource, empowered, enhanced, regularBasic, clause,
+    finisherStagger, timeStop, infliction,
   };
 
-  const autoFinisherIds = staggerBreaks
-    ? getAutoFinisherIds(events, getEffectiveStaggerWindows(events, staggerBreaks))
-    : new Set<string>();
+  const autoFinisherIds = previousResult
+    ? previousResult.autoFinisherIds
+    : staggerBreaks
+      ? getAutoFinisherIds(events, getEffectiveStaggerWindows(events, staggerBreaks))
+      : new Set<string>();
 
   return { maps, timeStopRegions, autoFinisherIds };
 }

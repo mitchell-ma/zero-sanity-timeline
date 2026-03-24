@@ -1,4 +1,4 @@
-import { ThemeType, NumberFormatType, InteractionModeType } from '../consts/enums';
+import { ThemeType, NumberFormatType, InteractionModeType, PerformanceMode } from '../consts/enums';
 import type { GlobalSettings } from '../consts/settings';
 import { t } from '../locales/locale';
 
@@ -100,6 +100,31 @@ export default function SettingsModal({ open, onClose, settings, onUpdate }: Set
                 onClick={() => onUpdate('numberFormat', NumberFormatType.PERCENTAGE)}
               >
                 {t('settings.numberFormat.percentage')}
+              </button>
+            </div>
+          </div>
+
+          {/* Performance Mode */}
+          <div className="settings-row">
+            <span className="settings-label">Performance</span>
+            <div className="settings-toggle-group">
+              <button
+                className={`settings-toggle-btn${settings.performanceMode === PerformanceMode.HIGH ? ' active' : ''}`}
+                onClick={() => onUpdate('performanceMode', PerformanceMode.HIGH)}
+              >
+                High
+              </button>
+              <button
+                className={`settings-toggle-btn${settings.performanceMode === PerformanceMode.BALANCED ? ' active' : ''}`}
+                onClick={() => onUpdate('performanceMode', PerformanceMode.BALANCED)}
+              >
+                Balanced
+              </button>
+              <button
+                className={`settings-toggle-btn${settings.performanceMode === PerformanceMode.LOW ? ' active' : ''}`}
+                onClick={() => onUpdate('performanceMode', PerformanceMode.LOW)}
+              >
+                Low
               </button>
             </div>
           </div>

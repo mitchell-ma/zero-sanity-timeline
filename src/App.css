@@ -2742,12 +2742,14 @@
 ══════════════════════════════════════════════════════════ */
 .event-wrap {
   position: absolute;
+  top: 0;
   left: 4px;
   right: 4px;
   z-index: 5;
   cursor: grab;
   user-select: none;
   touch-action: none;
+  will-change: transform;
 }
 
 .event-wrap:active {
@@ -3087,6 +3089,7 @@
   background: rgba(100, 200, 255, 0.55);
   box-shadow: 0 0 6px rgba(100, 200, 255, 0.35);
 }
+.hover-line--imperative { display: none; }
 
 .hover-line-label {
   position: absolute;

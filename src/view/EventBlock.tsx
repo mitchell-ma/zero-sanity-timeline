@@ -338,7 +338,7 @@ function EventBlock({
     <div
       className={wrapClass}
       data-event-uid={uid}
-      style={{ [axis.framePos]: topPx, [axis.frameSize]: totalHeight, ...wrapStyle } as React.CSSProperties}
+      style={{ transform: axis.framePos === 'top' ? `translateY(${topPx}px)` : `translateX(${topPx}px)`, [axis.frameSize]: totalHeight, ...wrapStyle } as React.CSSProperties}
       onContextMenu={(e) => onContextMenu(e, uid)}
       onMouseDown={(e) => {
         if (e.button === 0) { e.stopPropagation(); if (!notDraggable) onDragStart(e, uid, startFrame); }
@@ -357,4 +357,34 @@ function EventBlock({
   );
 }
 
-export default React.memo(EventBlock);
+/** Custom comparator — skip callback props (always stable via useCallback/noop).
+ *  Compare only data props that affect rendering output. */
+function eventBlockPropsEqual(prev: EventBlockProps, next: EventBlockProps): boolean {
+  // Fast identity check on the event object — covers no-change case
+  if (prev.event !== next.event) {
+    // Check if the event actually changed in a way that affects rendering
+    if (prev.event.uid !== next.event.uid ||
+        prev.event.startFrame !== next.event.startFrame ||
+        prev.event.segments !== next.event.segments) return false;
+  }
+  return prev.color === next.color
+    && prev.zoom === next.zoom
+    && prev.axis === next.axis
+    && prev.selected === next.selected
+    && prev.hovered === next.hovered
+    && prev.label === next.label
+    && prev.hoverFrame === next.hoverFrame
+    && prev.passive === next.passive
+    && prev.notDraggable === next.notDraggable
+    && prev.derived === next.derived
+    && prev.isAutoFinisher === next.isAutoFinisher
+    && prev.comboWarning === next.comboWarning
+    && prev.skillElement === next.skillElement
+    && prev.selectedFrames === next.selectedFrames
+    && prev.eventLayout === next.eventLayout
+    && prev.wrapStyle === next.wrapStyle
+    && prev.allSegmentLabels === next.allSegmentLabels
+    && prev.allDefaultSegments === next.allDefaultSegments;
+}
+
+export default React.memo(EventBlock, eventBlockPropsEqual);

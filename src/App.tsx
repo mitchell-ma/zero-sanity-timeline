@@ -304,6 +304,7 @@ export default function App() {
                     staggerBreaks={app.staggerBreaks}
                     contentFrames={app.contentFrames}
                     spInsufficiencyZones={app.spInsufficiencyZones}
+                    dragThrottle={app.dragThrottle}
                   />
                   {(app.hidePreview === 'left' || app.showPreview === 'left') && (
                     <div className="pane-hide-overlay">
@@ -387,7 +388,7 @@ export default function App() {
                     loadoutRowHeight={app.loadoutRowHeight}
                     headerRowHeight={app.headerRowHeight}
                     selectedFrames={app.selectedFrames}
-                    hoverFrame={app.hoverFrame}
+                    hoverFrameRef={app.hoverFrameRef}
                     onScrollRef={app.handleDmgScrollRef}
                     onScroll={app.handleSheetScroll}
                     onZoom={app.handleZoom}

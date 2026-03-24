@@ -3,7 +3,7 @@
  * for application-wide user preferences.
  */
 
-import { ThemeType, NumberFormatType, InteractionModeType } from './enums';
+import { ThemeType, NumberFormatType, InteractionModeType, PerformanceMode } from './enums';
 
 export interface GlobalSettings {
   theme: ThemeType;
@@ -11,6 +11,7 @@ export interface GlobalSettings {
   locale: string;
   decimalPlaces: number;
   numberFormat: NumberFormatType;
+  performanceMode: PerformanceMode;
 }
 
 export const DEFAULT_SETTINGS: GlobalSettings = {
@@ -19,6 +20,14 @@ export const DEFAULT_SETTINGS: GlobalSettings = {
   locale: 'en-US',
   decimalPlaces: 2,
   numberFormat: NumberFormatType.DECIMAL,
+  performanceMode: PerformanceMode.BALANCED,
+};
+
+/** Maps PerformanceMode to throttleByRAF `every` parameter (frames to skip). */
+export const PERFORMANCE_THROTTLE: Record<PerformanceMode, number> = {
+  [PerformanceMode.HIGH]: 1,
+  [PerformanceMode.BALANCED]: 2,
+  [PerformanceMode.LOW]: 3,
 };
 
 const SETTINGS_STORAGE_KEY = 'zst-settings';
@@ -36,6 +45,7 @@ export function loadSettings(): GlobalSettings {
           decimalPlaces: typeof parsed.decimalPlaces === 'number' && parsed.decimalPlaces >= 0 && parsed.decimalPlaces <= 6
             ? parsed.decimalPlaces : DEFAULT_SETTINGS.decimalPlaces,
           numberFormat: Object.values(NumberFormatType).includes(parsed.numberFormat) ? parsed.numberFormat : DEFAULT_SETTINGS.numberFormat,
+          performanceMode: Object.values(PerformanceMode).includes(parsed.performanceMode) ? parsed.performanceMode : DEFAULT_SETTINGS.performanceMode,
         };
       }
     }

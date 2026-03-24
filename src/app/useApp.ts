@@ -85,7 +85,7 @@ import {
 } from '../controller/appStateController';
 import { resolveGainEfficiencies } from '../controller/timeline/ultimateEnergyController';
 import { StatType, InteractionModeType, InfoLevel, CritMode, EnhancementType, ThemeType } from '../consts/enums';
-import { GlobalSettings, loadSettings, saveSettings, migrateLegacySettings } from '../consts/settings';
+import { GlobalSettings, loadSettings, saveSettings, migrateLegacySettings, PERFORMANCE_THROTTLE } from '../consts/settings';
 import { SKILL_COLUMNS, COMBO_WINDOW_COLUMN_ID } from '../model/channels';
 import type { SkillPointConsumptionHistory, ResourceZone } from '../controller/timeline/skillPointTimeline';
 
@@ -192,7 +192,11 @@ export function useApp() {
   const [infoPanePinned,   setInfoPanePinned]   = useState(false);
   const [infoPaneVerbose,  setInfoPaneVerbose]  = useState(InfoLevel.DETAILED);
   const [selectedFrames,   setSelectedFrames]   = useState<SelectedFrame[]>([]);
-  const [hoverFrame,       setHoverFrame]       = useState<number | null>(null);
+  // hoverFrame is a ref — it does NOT trigger re-renders at the App level.
+  // CombatPlanner manages its own local hoverFrame state; CombatSheet receives
+  // updates via the onHoverFrame callback and a local ref.
+  const hoverFrameRef = useRef<number | null>(null);
+  const setHoverFrame = useCallback((f: number | null) => { hoverFrameRef.current = f; }, []);
   const [scrollSynced,     setScrollSynced]     = useState(true);
   const [showRealTime,     setShowRealTime]     = useState(true);
   const [splitPct,         setSplitPct]         = useState(() => {
@@ -1755,7 +1759,7 @@ export function useApp() {
     zoom, contextMenu, editingEvent, processedEditingEvent, editingEventReadOnly, editingEventIsDerived, editContext,
     editingSlot, editingEnemyOpen, editingResourceCol, editingResourceConfig, editingResourceKey,
     editingDamageRow,
-    infoPaneClosing, infoPanePinned, infoPaneVerbose, selectedFrames, hoverFrame,
+    infoPaneClosing, infoPanePinned, infoPaneVerbose, selectedFrames, hoverFrameRef,
     scrollSynced, showRealTime, splitPct, interactionMode, lightMode, warningMessage, hiddenPane, hidePreview, showPreview, critMode, orientation,
     loadoutRowHeight, headerRowHeight, selectEventIds,
     settings, settingsOpen,
@@ -1805,6 +1809,9 @@ export function useApp() {
 
     // Custom skill links
     bumpCustomSkillVersion,
+
+    // Performance
+    dragThrottle: PERFORMANCE_THROTTLE[settings.performanceMode],
 
     // Constants
     allOperators: ALL_OPERATORS,

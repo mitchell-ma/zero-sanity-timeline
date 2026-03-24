@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   getWeapon,
   getGearPiece,
@@ -182,7 +182,7 @@ export function EquipmentSlots({ operatorWeaponTypes, state }: EquipmentSlotsPro
 
 /* ─── Main component ────────────────────────────────────────────────────── */
 
-export default function OperatorLoadoutHeader({
+export default React.memo(function OperatorLoadoutHeader({
   operatorName,
   operatorColor,
   operatorWeaponTypes,
@@ -216,4 +216,4 @@ export default function OperatorLoadoutHeader({
       </div>
     </div>
   );
-}
+});

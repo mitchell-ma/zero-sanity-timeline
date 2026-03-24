@@ -630,6 +630,25 @@ function computeOverlapLanes(colEvents: TimelineEvent[]): Map<string, OverlapLan
  * Viewport culling is NOT applied — the view layer should filter
  * ColumnViewModel.events by visible frame range before rendering.
  */
+let _prevColumnViewModels: Map<string, ColumnViewModel> | null = null;
+
+/**
+ * Build a fingerprint for a column's events — if the fingerprint matches
+ * the previous run, reuse the cached ColumnViewModel (same reference).
+ * This prevents React.memo from re-rendering unchanged columns.
+ */
+function columnEventsFingerprint(events: TimelineEvent[]): string {
+  if (events.length === 0) return '';
+  let fp = '';
+  for (const ev of events) {
+    fp += ev.uid;
+    fp += ev.startFrame;
+    fp += ev.eventStatus ?? '';
+    fp += ',';
+  }
+  return fp;
+}
+
 export function computeTimelinePresentation(
   events: TimelineEvent[],
   columns: Column[],
@@ -646,6 +665,15 @@ export function computeTimelinePresentation(
     let colEvents = getEventsForColumn(col, events);
     colEvents = sortColumnEvents(col, colEvents);
     colEvents = truncateDerivedEvents(col, colEvents);
+
+    // Check if this column's events are identical to the previous run.
+    // If so, reuse the cached ColumnViewModel to preserve reference identity.
+    const fp = columnEventsFingerprint(colEvents);
+    const prevVM = _prevColumnViewModels?.get(col.key);
+    if (prevVM && columnEventsFingerprint(prevVM.events) === fp) {
+      result.set(col.key, prevVM);
+      continue;
+    }
 
     // Collect status overrides for this column's events
     const colStatusOverrides = new Map<string, StatusViewOverride>();
@@ -671,5 +699,6 @@ export function computeTimelinePresentation(
     });
   }
 
+  _prevColumnViewModels = result;
   return result;
 }

@@ -246,7 +246,8 @@ interface CombatSheetProps {
   loadoutRowHeight: number;
   headerRowHeight?: number;
   selectedFrames?: SelectedFrame[];
-  hoverFrame?: number | null;
+  /** Ref-based hover frame — avoids re-renders on every mouse pixel move. */
+  hoverFrameRef?: React.RefObject<number | null>;
   onScrollRef?: (el: HTMLDivElement | null) => void;
   onScroll?: (scrollTop: number) => void;
   onZoom?: (deltaY: number) => void;
@@ -262,9 +263,9 @@ interface CombatSheetProps {
   resourceGraphs?: Map<string, { points: ReadonlyArray<ResourcePoint>; min: number; max: number }>;
 }
 
-export default function CombatSheet({
+export default React.memo(function CombatSheet({
   slots, events, columns, enemy, loadoutProperties, loadouts, zoom, loadoutRowHeight, headerRowHeight,
-  selectedFrames, hoverFrame, onScrollRef, onScroll: onScrollProp, onZoom,
+  selectedFrames, hoverFrameRef, onScrollRef, onScroll: onScrollProp, onZoom,
   staggerBreaks, compact, showRealTime = true, contentFrames: contentFramesProp, onDamageClick, onDamageRows,
   critMode = CritMode.NEVER, onCritModeChange, plannerHidden, resourceGraphs,
 }: CombatSheetProps) {
@@ -474,21 +475,54 @@ export default function CombatSheet({
     }
   }, [onScrollProp]);
 
-  // Find nearest row for hover highlighting
-  const hoveredRowKey = useMemo(() => {
-    if (hoverFrame == null || rows.length === 0) return null;
-    const toleranceFrames = Math.ceil(8 / pxPerFrame(zoom));
-    let best: DamageTableRow | null = null;
-    let bestDist = Infinity;
-    for (const row of rows) {
-      const dist = Math.abs(row.absoluteFrame - hoverFrame);
-      if (dist < bestDist && dist <= toleranceFrames) {
-        bestDist = dist;
-        best = row;
+  // Find nearest row for hover highlighting — imperative DOM updates via rAF
+  // to avoid React re-renders on every mouse pixel move.
+  const prevHoveredRowRef = useRef<HTMLElement | null>(null);
+  const hoverRafRef = useRef<number | null>(null);
+  useEffect(() => {
+    if (!hoverFrameRef) return;
+    let lastFrame: number | null | undefined = undefined;
+    const tick = () => {
+      const hf = hoverFrameRef.current;
+      if (hf !== lastFrame) {
+        lastFrame = hf;
+        // Remove previous highlight
+        if (prevHoveredRowRef.current) {
+          prevHoveredRowRef.current.classList.remove('dmg-row--hovered');
+          prevHoveredRowRef.current = null;
+        }
+        // Find nearest row
+        if (hf != null && rows.length > 0) {
+          const toleranceFrames = Math.ceil(8 / pxPerFrame(zoom));
+          let best: DamageTableRow | null = null;
+          let bestDist = Infinity;
+          for (const row of rows) {
+            const dist = Math.abs(row.absoluteFrame - hf);
+            if (dist < bestDist && dist <= toleranceFrames) {
+              bestDist = dist;
+              best = row;
+            }
+          }
+          if (best) {
+            const el = scrollRef.current?.querySelector(`[data-row-key="${best.key}"]`) as HTMLElement | null;
+            if (el) {
+              el.classList.add('dmg-row--hovered');
+              prevHoveredRowRef.current = el;
+            }
+          }
+        }
       }
-    }
-    return best?.key ?? null;
-  }, [hoverFrame, rows, zoom]);
+      hoverRafRef.current = requestAnimationFrame(tick);
+    };
+    hoverRafRef.current = requestAnimationFrame(tick);
+    return () => {
+      if (hoverRafRef.current !== null) cancelAnimationFrame(hoverRafRef.current);
+      if (prevHoveredRowRef.current) {
+        prevHoveredRowRef.current.classList.remove('dmg-row--hovered');
+        prevHoveredRowRef.current = null;
+      }
+    };
+  }, [hoverFrameRef, rows, zoom]);
 
   // ── Marquee selection ────────────────────────────────────────────────────
   const [marqueeSelectedKeys, setMarqueeSelectedKeys] = useState<Set<string>>(new Set());
@@ -859,7 +893,7 @@ export default function CombatSheet({
                 opInfo={opInfoMap.get(row.ownerId)}
                 top={top}
                 selectedFrames={selectedFrames}
-                hovered={row.key === hoveredRowKey}
+                hovered={false}
                 marqueeSelected={marqueeSelectedKeys.has(row.key)}
                 onDamageClick={onDamageClick}
                 onRowClick={handleRowClick}
@@ -892,11 +926,11 @@ export default function CombatSheet({
       </div>
     </div>
   );
-}
+});
 
 // ── Row component ───────────────────────────────────────────────────────────
 
-function FlatRow({ row, opInfo, top, selectedFrames, hovered, marqueeSelected, onDamageClick, onRowClick, visibleCols, bossMaxHp, formatTime, resourceGraphs }: {
+const FlatRow = React.memo(function FlatRow({ row, opInfo, top, selectedFrames, hovered, marqueeSelected, onDamageClick, onRowClick, visibleCols, bossMaxHp, formatTime, resourceGraphs }: {
   row: DamageTableRow;
   opInfo?: OperatorInfo;
   top: number;
@@ -919,7 +953,7 @@ function FlatRow({ row, opInfo, top, selectedFrames, hovered, marqueeSelected, o
   const cls = `dmg-row${selected ? ' dmg-row--selected' : ''}${hovered && !selected ? ' dmg-row--hovered' : ''}`;
 
   return (
-    <div className={cls} style={{ top }} onClick={(e) => onRowClick?.(row.key, e)}>
+    <div className={cls} data-row-key={row.key} style={{ top }} onClick={(e) => onRowClick?.(row.key, e)}>
       {visibleCols.map((def) => (
         <SheetCell
           key={def.id}
@@ -935,7 +969,7 @@ function FlatRow({ row, opInfo, top, selectedFrames, hovered, marqueeSelected, o
       ))}
     </div>
   );
-}
+});
 
 // ── Cell renderer ───────────────────────────────────────────────────────────
 

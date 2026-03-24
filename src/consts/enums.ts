@@ -524,6 +524,12 @@ export enum NumberFormatType {
   DECIMAL = 'DECIMAL',
 }
 
+export enum PerformanceMode {
+  HIGH = 'HIGH',
+  BALANCED = 'BALANCED',
+  LOW = 'LOW',
+}
+
 export enum CritMode {
   NEVER = 'NEVER',
   EXPECTED = 'EXPECTED',
