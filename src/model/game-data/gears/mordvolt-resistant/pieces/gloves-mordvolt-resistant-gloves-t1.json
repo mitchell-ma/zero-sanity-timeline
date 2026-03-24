@@ -83,5 +83,11 @@
     "name": "Mordvolt Resistant Gloves T1",
     "type": "GLOVES",
     "gearSet": "MORDVOLT_RESISTANT"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
   }
 }

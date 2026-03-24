@@ -83,5 +83,11 @@
     "name": "Frontiers Protection Suit",
     "type": "ARMOR",
     "gearSet": "FRONTIERS"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
   }
 }

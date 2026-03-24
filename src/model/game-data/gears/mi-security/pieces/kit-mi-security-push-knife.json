@@ -103,5 +103,11 @@
     "name": "Mi Security Push Knife",
     "type": "KIT",
     "gearSet": "MI_SECURITY"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
   }
 }

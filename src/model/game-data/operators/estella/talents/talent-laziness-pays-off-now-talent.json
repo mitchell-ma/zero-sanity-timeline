@@ -1,0 +1,20 @@
+{
+  "properties": {
+    "type": "TALENT",
+    "id": "LAZINESS_PAYS_OFF_NOW_TALENT",
+    "name": "Laziness Pays Off Now (Talent)",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
+    "eventType": "STATUS",
+    "eventCategoryType": "TALENT",
+    "description": "Ignores Cryo Infliction and takes -20% Cryo DMG.",
+    "maxLevel": 2
+  },
+  "metadata": {
+    "originId": "ESTELLA",
+    "dataSources": [
+      "WARFARIN"
+    ],
+    "icon": "skills/estella_talent_2_icon.png"
+  }
+}

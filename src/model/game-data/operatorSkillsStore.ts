@@ -129,7 +129,7 @@ export class OperatorSkill {
         eventType: this.eventType,
         ...(this.eventCategoryType ? { eventCategoryType: this.eventCategoryType } : {}),
       },
-      ...(this.originId ? { metadata: { originId: this.originId } } : {}),
+      ...(this.originId || this.icon ? { metadata: { ...(this.originId ? { originId: this.originId } : {}), ...(this.icon ? { icon: this.icon } : {}) } } : {}),
     };
   }
 

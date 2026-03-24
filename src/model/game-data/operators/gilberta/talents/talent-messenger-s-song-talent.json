@@ -1,0 +1,20 @@
+{
+  "properties": {
+    "type": "TALENT",
+    "id": "MESSENGER_S_SONG_TALENT",
+    "name": "Messenger's Song (Talent)",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
+    "eventType": "STATUS",
+    "eventCategoryType": "TALENT",
+    "description": "When fighting in the battlefield, all allied guards, casters, and supporters gain Ultimate Gain Efficiency +{add:0%}.",
+    "maxLevel": 2
+  },
+  "metadata": {
+    "originId": "GILBERTA",
+    "dataSources": [
+      "WARFARIN"
+    ],
+    "icon": "skills/gilberta_talent_1_icon.png"
+  }
+}

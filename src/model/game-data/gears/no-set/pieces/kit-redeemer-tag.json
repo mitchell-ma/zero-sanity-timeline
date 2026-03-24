@@ -63,5 +63,11 @@
     "name": "Redeemer Tag",
     "type": "KIT",
     "gearSet": "NONE"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
   }
 }

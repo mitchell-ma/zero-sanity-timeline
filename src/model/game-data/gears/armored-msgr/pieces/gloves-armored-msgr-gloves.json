@@ -83,5 +83,11 @@
     "name": "Armored Msgr Gloves",
     "type": "GLOVES",
     "gearSet": "ARMORED_MSGR"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
   }
 }

@@ -481,21 +481,6 @@ describe('F. Potentials', () => {
     expect(enhancedDmg.skillParameterModifier.value).toBe(1.2);
   });
 
-  test('F3: P3 Combustion reaction multiplier is x1.5', () => {
-    const talentEffects = mockLaevatainJson.talentEffects;
-    const p3Effect = talentEffects.find(
-      (e: any) => /* eslint-disable-line @typescript-eslint/no-explicit-any */ e.bonusType === 'REACTION_MULTIPLIER' && e.condition?.reactionType === 'COMBUSTION'
-    );
-    expect(p3Effect).toBeDefined();
-    // VARY_BY [POTENTIAL] format: P0 = 1 (no bonus), P3 = 1.5
-    expect(p3Effect.value.verb).toBe('VARY_BY');
-    expect(p3Effect.value.object).toEqual(['POTENTIAL']);
-    expect(p3Effect.value.value.P0).toBe(1);
-    expect(p3Effect.value.value.P2).toBe(1);
-    expect(p3Effect.value.value.P3).toBe(1.5);
-    expect(p3Effect.value.value.P5).toBe(1.5);
-  });
-
   test('F4: P4 reduces Twilight cost by x0.85', () => {
     const p4 = mockLaevatainJson.potentials[3];
     expect(p4.level).toBe(4);

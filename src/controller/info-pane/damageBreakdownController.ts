@@ -155,7 +155,6 @@ export function buildMultiplierEntries(params: DamageParams): MultiplierEntry[] 
         makeSubEntry('Skill DMG%', sub.skillDmgBonus, 'Generic skill damage bonus'),
         makeSubEntry('Arts DMG%', sub.artsDmgBonus, 'Arts damage bonus'),
         ...(sub.staggerDmgBonus > 0 ? [makeSubEntry('Stagger DMG%', sub.staggerDmgBonus, 'DMG Bonus vs. Staggered')] : []),
-        ...(sub.talentDmgDealBonus > 0 ? [makeSubEntry('Talent DMG%', sub.talentDmgDealBonus, 'Talent/potential conditional DMG bonus')] : []),
       ] : undefined,
     },
     {
@@ -254,9 +253,6 @@ export function buildMultiplierEntries(params: DamageParams): MultiplierEntry[] 
       value: params.specialMultiplier!,
       format: 'multiplier' as const,
       source: 'Operator talent conditional bonus',
-      subEntries: sub && sub.specialSources.length > 0 ? sub.specialSources.map((s) =>
-        makeSubEntry(s.label, s.value, 'Talent conditional', 'multiplier'),
-      ) : undefined,
     }] : []),
   ];
 

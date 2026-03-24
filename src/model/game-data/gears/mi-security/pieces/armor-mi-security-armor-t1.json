@@ -83,5 +83,11 @@
     "name": "Mi Security Armor T1",
     "type": "ARMOR",
     "gearSet": "MI_SECURITY"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
   }
 }

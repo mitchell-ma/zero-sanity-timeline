@@ -83,5 +83,11 @@
     "name": "Eternal Xiranite Power Core T1",
     "type": "KIT",
     "gearSet": "ETERNAL_XIRANITE"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
   }
 }

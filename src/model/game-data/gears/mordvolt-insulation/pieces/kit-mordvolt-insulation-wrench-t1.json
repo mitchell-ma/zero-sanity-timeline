@@ -83,5 +83,11 @@
     "name": "Mordvolt Insulation Wrench T1",
     "type": "KIT",
     "gearSet": "MORDVOLT_INSULATION"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
   }
 }

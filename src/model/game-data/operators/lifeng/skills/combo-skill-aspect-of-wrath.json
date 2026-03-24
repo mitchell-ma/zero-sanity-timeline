@@ -1,7 +1,7 @@
 {
   "properties": {
     "name": "Aspect of Wrath",
-    "description": "COMBO TRIGGER: When the controlled operator performs a Final Strike on an enemy with Physical Susceptibility or Breach. Unleashes an aspect that performs a spear thrust to deal Physical DMG and grants Link.",
+    "description": "When the controlled operator performs a Final Strike on an enemy with Physical Susceptibility or Breach. Unleashes an aspect that performs a spear thrust to deal Physical DMG and grants Link.",
     "windowFrames": 720,
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "COMBO_SKILL",

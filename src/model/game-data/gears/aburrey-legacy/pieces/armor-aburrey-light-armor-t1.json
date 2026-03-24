@@ -83,5 +83,11 @@
     "name": "Aburrey Light Armor T1",
     "type": "ARMOR",
     "gearSet": "ABURREY_LEGACY"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
   }
 }

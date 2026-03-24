@@ -1,0 +1,20 @@
+{
+  "properties": {
+    "type": "TALENT",
+    "id": "POLAR_SURVIVAL_TALENT",
+    "name": "Polar Survival (Talent)",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
+    "eventType": "STATUS",
+    "eventCategoryType": "TALENT",
+    "description": "Treatment Effect +25% for targets of 55% HP or below.",
+    "maxLevel": 2
+  },
+  "metadata": {
+    "originId": "SNOWSHINE",
+    "dataSources": [
+      "WARFARIN"
+    ],
+    "icon": "skills/snowshine_talent_1_icon.png"
+  }
+}

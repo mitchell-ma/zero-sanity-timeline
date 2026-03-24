@@ -83,5 +83,11 @@
     "name": "Lynx Connector",
     "type": "KIT",
     "gearSet": "LYNX"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
   }
 }

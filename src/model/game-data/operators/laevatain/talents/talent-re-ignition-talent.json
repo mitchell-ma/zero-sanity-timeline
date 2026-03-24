@@ -34,7 +34,8 @@
     "toDeterminer": "THIS",
     "eventType": "STATUS",
     "eventCategoryType": "TALENT",
-    "description": "When HP drops below 40%, gain 90% Protection and restore 5% Max HP per second for 4s. This effect triggers once every 120s."
+    "description": "When HP drops below 40%, gain 90% Protection and restore 5% Max HP per second for 4s. This effect triggers once every 120s.",
+    "maxLevel": 2
   },
   "metadata": {
     "originId": "LAEVATAIN",

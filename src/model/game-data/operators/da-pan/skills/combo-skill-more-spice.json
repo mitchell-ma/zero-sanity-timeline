@@ -1,7 +1,7 @@
 {
   "properties": {
     "name": "MORE SPICE!",
-    "description": "COMBO TRIGGER: When an enemy reaches 4 stacks of Vulnerability. Swings the wok at the enemy to deal massive Physical DMG and Crush. This Crush also deals more DMG.",
+    "description": "When an enemy reaches 4 stacks of Vulnerability. Swings the wok at the enemy to deal massive Physical DMG and Crush. This Crush also deals more DMG.",
     "windowFrames": 720,
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "COMBO_SKILL",

@@ -63,5 +63,11 @@
     "name": "Roving Msgr Gyro",
     "type": "KIT",
     "gearSet": "ROVING_MSGR"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
   }
 }

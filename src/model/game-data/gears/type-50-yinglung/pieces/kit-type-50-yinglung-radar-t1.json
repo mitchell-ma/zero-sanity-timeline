@@ -83,5 +83,11 @@
     "name": "Type 50 Yinglung Radar T1",
     "type": "KIT",
     "gearSet": "TYPE_50_YINGLUNG"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
   }
 }

@@ -83,5 +83,11 @@
     "name": "Catastrophe Heavy Armor",
     "type": "ARMOR",
     "gearSet": "CATASTROPHE"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
   }
 }

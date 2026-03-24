@@ -1,7 +1,7 @@
 {
   "properties": {
     "name": "RIVER, TO ME!",
-    "description": "COMBO TRIGGER: When applying Cryo Infliction or dealing Arts Burst DMG to an enemy.\nTangtang unleashes a powerful jet stream that penetrates all enemies in its path, deals Cryo DMG to them, and creates a Whirlpool.\nUp to 2 Whirlpools can exist in the battlefield at any time.",
+    "description": "When applying Cryo Infliction or dealing Arts Burst DMG to an enemy.\nTangtang unleashes a powerful jet stream that penetrates all enemies in its path, deals Cryo DMG to them, and creates a Whirlpool.\nUp to 2 Whirlpools can exist in the battlefield at any time.",
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "COMBO_SKILL",
     "element": "CRYO"

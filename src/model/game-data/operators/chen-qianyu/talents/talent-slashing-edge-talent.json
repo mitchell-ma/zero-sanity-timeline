@@ -31,7 +31,8 @@
     "toDeterminer": "THIS",
     "eventType": "STATUS",
     "eventCategoryType": "TALENT",
-    "description": "After hitting an enemy with skills, Chen gains ATK +4% for 10s. This effect can reach 5 stacks."
+    "description": "After hitting an enemy with skills, Chen gains ATK +4% for 10s. This effect can reach 5 stacks.",
+    "maxLevel": 2
   },
   "metadata": {
     "originId": "CHEN_QIANYU",

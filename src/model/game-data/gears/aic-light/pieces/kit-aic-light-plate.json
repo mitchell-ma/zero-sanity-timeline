@@ -63,5 +63,11 @@
     "name": "Aic Light Plate",
     "type": "KIT",
     "gearSet": "AIC_LIGHT"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
   }
 }

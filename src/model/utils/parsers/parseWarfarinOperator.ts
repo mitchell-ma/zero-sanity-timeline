@@ -749,7 +749,7 @@ const ATTRIBUTE_TYPE_TO_STAT: Record<number, string> = {
 function buildTalents(talentNodeMap: Record<string, WarfarinTalentNode>) {
   // nodeType 4 = passive skill (talents), nodeType 3 = attribute increase
   const passiveSkills: Record<number, { name: string; maxLevel: number }> = {};
-  let attributeIncrease: { name: string; attribute: string; maxLevel: number } | undefined;
+  let attributeIncrease: { name: string; attribute: string } | undefined;
 
   for (const node of Object.values(talentNodeMap)) {
     if (node.nodeType === 4) {
@@ -764,9 +764,8 @@ function buildTalents(talentNodeMap: Record<string, WarfarinTalentNode>) {
       if (!ai.title) continue;
       const stat = ATTRIBUTE_TYPE_TO_STAT[ai.attributeModifier.attrType] ?? String(ai.attributeModifier.attrType);
       if (!attributeIncrease) {
-        attributeIncrease = { name: ai.title, attribute: stat, maxLevel: 0 };
+        attributeIncrease = { name: ai.title, attribute: stat };
       }
-      attributeIncrease.maxLevel++;
     }
   }
 

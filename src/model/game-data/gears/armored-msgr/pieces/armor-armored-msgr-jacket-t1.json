@@ -83,5 +83,11 @@
     "name": "Armored Msgr Jacket T1",
     "type": "ARMOR",
     "gearSet": "ARMORED_MSGR"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
   }
 }

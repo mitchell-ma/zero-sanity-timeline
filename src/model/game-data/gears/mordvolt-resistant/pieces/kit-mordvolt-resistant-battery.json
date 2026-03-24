@@ -63,5 +63,11 @@
     "name": "Mordvolt Resistant Battery",
     "type": "KIT",
     "gearSet": "MORDVOLT_RESISTANT"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
   }
 }

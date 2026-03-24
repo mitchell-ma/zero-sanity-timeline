@@ -83,5 +83,11 @@
     "name": "Bonekrusha Mask T2",
     "type": "KIT",
     "gearSet": "BONEKRUSHA"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
   }
 }

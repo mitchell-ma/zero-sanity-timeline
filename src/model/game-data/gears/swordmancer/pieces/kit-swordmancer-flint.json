@@ -83,5 +83,11 @@
     "name": "Swordmancer Flint",
     "type": "KIT",
     "gearSet": "SWORDMANCER"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
   }
 }

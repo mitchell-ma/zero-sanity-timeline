@@ -1,7 +1,7 @@
 {
   "properties": {
     "name": "Seethe",
-    "description": "COMBO TRIGGER: When an enemy suffers Combustion or Corrosion. Fire erupts beneath the feet of any enemy with Combustion or Corrosion, dealing Heat DMG to them. If the skill hits the enemy, Laevatain gains 1 stack of Melting Flame and further gains Ultimate Energy per enemy hit.",
+    "description": "When an enemy suffers Combustion or Corrosion. Fire erupts beneath the feet of any enemy with Combustion or Corrosion, dealing Heat DMG to them. If the skill hits the enemy, Laevatain gains 1 stack of Melting Flame and further gains Ultimate Energy per enemy hit.",
     "windowFrames": 720,
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "COMBO_SKILL",

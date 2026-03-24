@@ -1,0 +1,20 @@
+{
+  "properties": {
+    "type": "TALENT",
+    "id": "FAM_OF_HONOR_TALENT",
+    "name": "Fam of Honor (Talent)",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
+    "eventType": "STATUS",
+    "eventCategoryType": "TALENT",
+    "description": "When within a 5-meter radius of a Whirlpool, allied operators gain 10% Haste while enemies suffer 20% Slow. These effects persist for 3s after leaving the area of effect.",
+    "maxLevel": 2
+  },
+  "metadata": {
+    "originId": "TANGTANG",
+    "dataSources": [
+      "WARFARIN"
+    ],
+    "icon": "skills/tangtang_talent_1_icon.png"
+  }
+}

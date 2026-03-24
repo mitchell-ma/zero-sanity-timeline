@@ -1,7 +1,7 @@
 {
   "properties": {
     "name": "Peal of Thunder",
-    "description": "COMBO TRIGGER: When an enemy suffers Electrification or after an enemy's Electrification is consumed. Blinks to the enemy's side to unleash a flurry of slashes that deals Physical DMG and recovers some SP.",
+    "description": "When an enemy suffers Electrification or after an enemy's Electrification is consumed. Blinks to the enemy's side to unleash a flurry of slashes that deals Physical DMG and recovers some SP.",
     "windowFrames": 720,
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "COMBO_SKILL",

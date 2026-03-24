@@ -84,7 +84,8 @@ import {
   getDefaultEnemyStats,
 } from '../controller/appStateController';
 import { resolveGainEfficiencies } from '../controller/timeline/ultimateEnergyController';
-import { StatType, InteractionModeType, InfoLevel, CritMode, EnhancementType } from '../consts/enums';
+import { StatType, InteractionModeType, InfoLevel, CritMode, EnhancementType, ThemeType } from '../consts/enums';
+import { GlobalSettings, loadSettings, saveSettings, migrateLegacySettings } from '../consts/settings';
 import { SKILL_COLUMNS, COMBO_WINDOW_COLUMN_ID } from '../model/channels';
 import type { SkillPointConsumptionHistory, ResourceZone } from '../controller/timeline/skillPointTimeline';
 
@@ -96,6 +97,7 @@ initCustomGearSets();
 initCustomOperators();
 
 const initialLoad = loadInitialState();
+const initialSettings = migrateLegacySettings(loadSettings());
 
 function initLoadouts() {
   let tree = loadLoadoutTree();
@@ -209,19 +211,31 @@ export function useApp() {
   const [showPreview, setShowPreview] = useState<'left' | 'right' | null>(null);
   const preDragSplitRef = useRef(65);
   const [devlogOpen,       setDevlogOpen]       = useState(false);
+  const [settingsOpen,     setSettingsOpen]     = useState(false);
   const [keysOpen,         setKeysOpen]         = useState(false);
-  const [clauseEditorOpen, setClauseEditorOpen] = useState(false);
-  const [statusEditorOpen, setStatusEditorOpen] = useState(false);
-  const [exprEditorOpen, setExprEditorOpen] = useState(false);
-  const [interactionMode, setInteractionMode] = useState<InteractionModeType>(() => {
-    try {
-      const stored = localStorage.getItem('zst-interaction-mode');
-      if (stored && Object.values(InteractionModeType).includes(stored as InteractionModeType)) return stored as InteractionModeType;
-      // Migrate legacy debug mode setting
-      if (localStorage.getItem('zst-debug-mode') === 'true') return InteractionModeType.FREEFORM;
-    } catch { /* ignore */ }
-    return InteractionModeType.STRICT;
-  });
+  const [exprEditorOpen,   setExprEditorOpen]   = useState(false);
+  // ─── Global settings ─────────────────────────────────────────────────
+  const [settings, setSettings] = useState<GlobalSettings>(initialSettings);
+  useEffect(() => {
+    saveSettings(settings);
+  }, [settings]);
+  const handleUpdateSetting = useCallback(<K extends keyof GlobalSettings>(key: K, value: GlobalSettings[K]) => {
+    setSettings((prev) => ({ ...prev, [key]: value }));
+  }, []);
+
+  const [interactionMode, setInteractionModeRaw] = useState<InteractionModeType>(initialSettings.interactionMode);
+  // Wrap setInteractionMode to sync both directions
+  const setInteractionMode = useCallback((action: InteractionModeType | ((prev: InteractionModeType) => InteractionModeType)) => {
+    setInteractionModeRaw((prev) => {
+      const next = typeof action === 'function' ? action(prev) : action;
+      setSettings((s) => s.interactionMode === next ? s : { ...s, interactionMode: next });
+      return next;
+    });
+  }, []);
+  // Sync from settings → interactionMode when changed via settings modal
+  useEffect(() => {
+    setInteractionModeRaw(settings.interactionMode);
+  }, [settings.interactionMode]);
   const [warningMessage,   setWarningMessage]   = useState<string | null>(initialLoad.error);
   const [loadoutRowHeight, setLoadoutRowHeight] = useState(LOADOUT_ROW_HEIGHT);
   const [headerRowHeight, setHeaderRowHeight] = useState(0);
@@ -243,21 +257,26 @@ export function useApp() {
     try { localStorage.setItem('zst-interaction-mode', interactionMode); } catch { /* ignore */ }
   }, [interactionMode]);
 
-  const [lightMode, setLightMode] = useState(() => {
-    try { return localStorage.getItem('zst-light-mode') === 'true'; } catch { return false; }
-  });
+  const lightMode = settings.theme === ThemeType.LIGHT;
+  const setLightMode = useCallback((action: boolean | ((prev: boolean) => boolean)) => {
+    setSettings((prev) => {
+      const cur = prev.theme === ThemeType.LIGHT;
+      const next = typeof action === 'function' ? action(cur) : action;
+      return next === cur ? prev : { ...prev, theme: next ? ThemeType.LIGHT : ThemeType.DARK };
+    });
+  }, []);
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', lightMode ? 'light' : 'dark');
+    const root = document.documentElement;
+    root.setAttribute('data-theme-transitioning', '');
+    root.setAttribute('data-theme', lightMode ? 'light' : 'dark');
     try { localStorage.setItem('zst-light-mode', String(lightMode)); } catch { /* ignore */ }
+    const timer = setTimeout(() => root.removeAttribute('data-theme-transitioning'), 900);
+    return () => clearTimeout(timer);
   }, [lightMode]);
 
   const handleToggleTheme = useCallback(() => {
-    const root = document.documentElement;
-    root.setAttribute('data-theme-transitioning', '');
     setLightMode((v) => !v);
-    const timer = setTimeout(() => root.removeAttribute('data-theme-transitioning'), 900);
-    return () => clearTimeout(timer);
-  }, []);
+  }, [setLightMode]);
 
   const [critMode, setCritMode] = useState<import('../consts/enums').CritMode>(() => {
     try {
@@ -1739,7 +1758,8 @@ export function useApp() {
     infoPaneClosing, infoPanePinned, infoPaneVerbose, selectedFrames, hoverFrame,
     scrollSynced, showRealTime, splitPct, interactionMode, lightMode, warningMessage, hiddenPane, hidePreview, showPreview, critMode, orientation,
     loadoutRowHeight, headerRowHeight, selectEventIds,
-    devlogOpen, keysOpen, clauseEditorOpen, statusEditorOpen, exprEditorOpen, exportModalOpen, confirmClearLoadout, confirmClearAll, saveFlash,
+    settings, settingsOpen,
+    devlogOpen, keysOpen, exprEditorOpen, exportModalOpen, confirmClearLoadout, confirmClearAll, saveFlash,
 
     // Loadout tree
     loadoutTree, activeLoadoutId, sidebarCollapsed,
@@ -1775,7 +1795,8 @@ export function useApp() {
     // Setters for simple inline handlers
     setContextMenu, setSelectedFrames, setLoadoutRowHeight, setHeaderRowHeight,
     setHoverFrame, setInfoPanePinned, setInfoPaneVerbose, setWarningMessage,
-    setDevlogOpen, setKeysOpen, setClauseEditorOpen, setStatusEditorOpen, setExprEditorOpen, setInteractionMode, setLightMode, setShowRealTime, setCritMode,
+    setDevlogOpen, setSettingsOpen, setKeysOpen, setExprEditorOpen, setInteractionMode, setLightMode, setShowRealTime, setCritMode,
+    handleUpdateSetting,
     setSplitPct, setSelectEventIds, setExportModalOpen,
     setConfirmClearLoadout, setConfirmClearAll,
 

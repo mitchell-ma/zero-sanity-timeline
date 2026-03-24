@@ -83,5 +83,11 @@
     "name": "Swordmancer Light Armor",
     "type": "ARMOR",
     "gearSet": "SWORDMANCER"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
   }
 }

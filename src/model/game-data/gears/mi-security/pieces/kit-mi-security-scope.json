@@ -83,5 +83,11 @@
     "name": "Mi Security Scope",
     "type": "KIT",
     "gearSet": "MI_SECURITY"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
   }
 }

@@ -18,7 +18,6 @@ import { OperatorLoadoutState, EMPTY_LOADOUT } from '../../view/OperatorLoadoutH
 import { aggregateLoadoutStats } from './loadoutAggregator';
 import { buildDamageTableRows, DamageTableRow } from './damageTableBuilder';
 import { getSkillMultiplier, getFrameMultiplier } from './jsonMultiplierEngine';
-import { evaluateTalentAttackBonus } from './talentBonusEngine';
 import { getModelEnemy } from './enemyRegistry';
 import {
   EventsQueryService,
@@ -82,15 +81,9 @@ export function precomputeDamageByFrame(
     const loadout = loadouts?.[slot.slotId] ?? EMPTY_LOADOUT;
     const agg = aggregateLoadoutStats(slot.operatorId, loadout, props);
     if (!agg) continue;
-    const { extraAttackPct } = evaluateTalentAttackBonus(slot.operatorId, {
-      talentOneLevel: props.operator.talentOneLevel,
-      talentTwoLevel: props.operator.talentTwoLevel,
-      potential: (props.operator.potential ?? 0) as Potential,
-      stats: agg.stats,
-    });
     const totalAttack = getTotalAttack(
       agg.operatorBaseAttack, agg.weaponBaseAttack,
-      agg.stats[StatType.ATTACK_BONUS] + extraAttackPct, agg.flatAttackBonuses,
+      agg.stats[StatType.ATTACK_BONUS], agg.flatAttackBonuses,
     );
     opData.set(slot.slotId, { totalAttack, attributeBonus: agg.attributeBonus, operatorId: slot.operatorId });
   }

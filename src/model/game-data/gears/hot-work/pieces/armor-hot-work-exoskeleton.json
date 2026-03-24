@@ -103,5 +103,11 @@
     "name": "Hot Work Exoskeleton",
     "type": "ARMOR",
     "gearSet": "HOT_WORK"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
   }
 }

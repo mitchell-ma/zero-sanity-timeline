@@ -83,5 +83,11 @@
     "name": "Hot Work Gloves",
     "type": "GLOVES",
     "gearSet": "HOT_WORK"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
   }
 }

@@ -63,5 +63,11 @@
     "name": "Armored Msgr Gyro",
     "type": "KIT",
     "gearSet": "ARMORED_MSGR"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
   }
 }

@@ -1,7 +1,7 @@
 {
   "properties": {
     "name": "Eruption Column",
-    "description": "COMBO TRIGGER: When the controlled operator performs a Final Strike on an enemy with no stacks of Vulnerability or Arts Infliction. Launches a homing Volcanic Cloud at a target enemy that deals Nature DMG when close enough to the target. The Volcanic Cloud explodes after a short delay, dealing half of the Nature DMG and forcibly applying temporary Corrosion to nearby enemies.",
+    "description": "When the controlled operator performs a Final Strike on an enemy with no stacks of Vulnerability or Arts Infliction. Launches a homing Volcanic Cloud at a target enemy that deals Nature DMG when close enough to the target. The Volcanic Cloud explodes after a short delay, dealing half of the Nature DMG and forcibly applying temporary Corrosion to nearby enemies.",
     "windowFrames": 720,
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "COMBO_SKILL",

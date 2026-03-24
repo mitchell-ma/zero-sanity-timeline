@@ -83,5 +83,11 @@
     "name": "Aburrey Heavy Armor",
     "type": "ARMOR",
     "gearSet": "ABURREY_LEGACY"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
   }
 }

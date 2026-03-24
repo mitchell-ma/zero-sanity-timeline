@@ -103,5 +103,11 @@
     "name": "Bonekrusha Heavy Armor T2",
     "type": "ARMOR",
     "gearSet": "BONEKRUSHA"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
   }
 }

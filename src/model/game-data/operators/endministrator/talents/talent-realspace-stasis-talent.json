@@ -1,0 +1,20 @@
+{
+  "properties": {
+    "type": "TALENT",
+    "id": "REALSPACE_STASIS_TALENT",
+    "name": "Realspace Stasis (Talent)",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
+    "eventType": "STATUS",
+    "eventCategoryType": "TALENT",
+    "description": "Enemies with attached Originium Crystals suffer Physical DMG Taken +{dmg:0%}.",
+    "maxLevel": 2
+  },
+  "metadata": {
+    "originId": "ENDMINISTRATOR",
+    "dataSources": [
+      "WARFARIN"
+    ],
+    "icon": "skills/endministrator_talent_2_icon.png"
+  }
+}

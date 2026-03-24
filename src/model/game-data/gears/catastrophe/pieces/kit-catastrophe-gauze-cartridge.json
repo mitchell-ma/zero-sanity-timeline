@@ -83,5 +83,11 @@
     "name": "Catastrophe Gauze Cartridge",
     "type": "KIT",
     "gearSet": "CATASTROPHE"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
   }
 }

@@ -1,7 +1,7 @@
 {
   "properties": {
     "name": "Flash and Dash",
-    "description": "COMBO TRIGGER: When an enemy becomes Staggered or hits a Stagger Node. Performs a returning dash with 2 thrust sequences, with each sequence dealing Physical DMG and recovering some SP.",
+    "description": "When an enemy becomes Staggered or hits a Stagger Node. Performs a returning dash with 2 thrust sequences, with each sequence dealing Physical DMG and recovering some SP.",
     "windowFrames": 720,
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "COMBO_SKILL",

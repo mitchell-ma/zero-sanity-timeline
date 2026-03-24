@@ -1,0 +1,20 @@
+{
+  "properties": {
+    "type": "TALENT",
+    "id": "CYCLE_PROTOCOL_TALENT",
+    "name": "Cycle Protocol (Talent)",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
+    "eventType": "STATUS",
+    "eventCategoryType": "TALENT",
+    "description": "Combo skill Instant Protocol: Chain improved: When hitting a Vulnerable enemy, the hit chains 1 more time.",
+    "maxLevel": 1
+  },
+  "metadata": {
+    "originId": "PERLICA",
+    "dataSources": [
+      "WARFARIN"
+    ],
+    "icon": "skills/perlica_talent_2_icon.png"
+  }
+}

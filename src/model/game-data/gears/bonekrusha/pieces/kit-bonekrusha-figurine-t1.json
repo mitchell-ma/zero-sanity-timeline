@@ -83,5 +83,11 @@
     "name": "Bonekrusha Figurine T1",
     "type": "KIT",
     "gearSet": "BONEKRUSHA"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
   }
 }

@@ -39,7 +39,8 @@
     "toDeterminer": "THIS",
     "eventType": "STATUS",
     "eventCategoryType": "TALENT",
-    "description": "Applying Knock Down also deals 100% ATK of Physical DMG."
+    "description": "Applying Knock Down also deals 100% ATK of Physical DMG.",
+    "maxLevel": 2
   },
   "metadata": {
     "originId": "LIFENG",

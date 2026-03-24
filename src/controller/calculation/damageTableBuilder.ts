@@ -11,8 +11,6 @@ import { SkillLevel, Potential } from '../../consts/types';
 import { StatusDamageParams } from '../../model/calculation/damageFormulas';
 import { getModelEnemy } from './enemyRegistry';
 import { getSkillMultiplier, getFrameMultiplier } from './jsonMultiplierEngine';
-import { evaluateTalentBonuses, evaluateTalentAttackBonus } from './talentBonusEngine';
-import { getOperatorBase } from '../gameDataStore';
 import { aggregateLoadoutStats } from './loadoutAggregator';
 import { OperatorLoadoutState, EMPTY_LOADOUT } from '../../view/OperatorLoadoutHeader';
 import {
@@ -183,17 +181,10 @@ function buildOperatorCalcData(
   const agg = aggregateLoadoutStats(operatorId, loadout, props);
   if (!agg) return null;
 
-  const { extraAttackPct } = evaluateTalentAttackBonus(operatorId, {
-    talentOneLevel: props.operator.talentOneLevel,
-    talentTwoLevel: props.operator.talentTwoLevel,
-    potential: (props.operator.potential ?? 0) as Potential,
-    stats: agg.stats,
-  });
-
   const totalAttack = getTotalAttack(
     agg.operatorBaseAttack,
     agg.weaponBaseAttack,
-    agg.stats[StatType.ATTACK_BONUS] + extraAttackPct,
+    agg.stats[StatType.ATTACK_BONUS],
     agg.flatAttackBonuses,
   );
   const attributeBonus = agg.attributeBonus;
@@ -207,7 +198,7 @@ function buildOperatorCalcData(
     element: agg.element,
     operatorBaseAttack: agg.operatorBaseAttack,
     weaponBaseAttack: agg.weaponBaseAttack,
-    atkBonusPct: agg.stats[StatType.ATTACK_BONUS] + extraAttackPct,
+    atkBonusPct: agg.stats[StatType.ATTACK_BONUS],
     flatAtkBonuses: agg.flatAttackBonuses,
     mainAttrType: agg.mainAttributeType,
     mainAttrValue: agg.stats[agg.mainAttributeType] ?? 0,
@@ -356,28 +347,6 @@ export function buildDamageTableRows(
                 const isArts = element !== ElementType.PHYSICAL && element !== ElementType.NONE;
                 const isStaggered = statusQuery?.isStaggered(absFrame) ?? false;
 
-                // ── Operator talent conditional bonuses ──────────────────────
-                const talentBonuses = evaluateTalentBonuses(
-                  operatorId,
-                  {
-                    talentOneLevel: props.operator.talentOneLevel,
-                    talentTwoLevel: props.operator.talentTwoLevel,
-                    potential,
-                    stats: opData.stats,
-                  },
-                  {
-                    absFrame,
-                    skillType,
-                    skillName: ev.name,
-                    isStaggered,
-                    statusQuery,
-                  },
-                );
-                const talentStaggerDmgBonus = talentBonuses.staggerDmgBonus;
-                const talentCritDmgBonus = talentBonuses.critDmgBonus;
-                const talentSpecialMultiplier = talentBonuses.specialMultiplier;
-                const talentDmgDealBonus = talentBonuses.dmgDealBonus;
-
                 // Damage Bonus sub-components
                 const allElementDmgBonuses = {
                   [ElementType.NONE]: opData.stats[StatType.PHYSICAL_DAMAGE_BONUS],
@@ -399,10 +368,10 @@ export function buildDamageTableRows(
                 const subSkillTypeDmg = opData.stats[skillTypeBonusStat];
                 const subSkillDmg = opData.stats[StatType.SKILL_DAMAGE_BONUS];
                 const subArtsDmg = isArts ? opData.stats[StatType.ARTS_DAMAGE_BONUS] : 0;
-                const subStaggerDmg = isStaggered ? (opData.stats[StatType.STAGGER_DAMAGE_BONUS] ?? 0) + talentStaggerDmgBonus : 0;
+                const subStaggerDmg = isStaggered ? (opData.stats[StatType.STAGGER_DAMAGE_BONUS] ?? 0) : 0;
 
                 const multiplierGroup = getDamageBonus(
-                  subElementDmg, subSkillTypeDmg, subSkillDmg, subArtsDmg, subStaggerDmg, talentDmgDealBonus,
+                  subElementDmg, subSkillTypeDmg, subSkillDmg, subArtsDmg, subStaggerDmg,
                 );
 
                 // Resistance (with corrosion reduction + ignored resistance)
@@ -433,17 +402,17 @@ export function buildDamageTableRows(
                 if (!canCrit) {
                   expectedCrit = 1;
                 } else if (critMode === CritMode.ALWAYS) {
-                  expectedCrit = getCritMultiplier(true, opData.critDamage + talentCritDmgBonus);
+                  expectedCrit = getCritMultiplier(true, opData.critDamage);
                 } else if (critMode === CritMode.NEVER) {
                   expectedCrit = 1;
                 } else if (critMode === CritMode.SIMULATION) {
                   frameCrit = Math.random() < opData.critRate;
                   frame.isCrit = frameCrit;
                   expectedCrit = frameCrit
-                    ? getCritMultiplier(true, opData.critDamage + talentCritDmgBonus)
+                    ? getCritMultiplier(true, opData.critDamage)
                     : 1;
                 } else {
-                  expectedCrit = getExpectedCritMultiplier(opData.critRate, opData.critDamage + talentCritDmgBonus);
+                  expectedCrit = getExpectedCritMultiplier(opData.critRate, opData.critDamage);
                 }
 
                 // Finisher: applies when the event is a finisher attack during stagger break
@@ -458,8 +427,6 @@ export function buildDamageTableRows(
                 const subDmgReductionEffects = statusQuery?.getDmgReductionEffects(absFrame) ?? [];
                 const subProtectionEffects = statusQuery?.getProtectionEffects(absFrame) ?? [];
                 const subFragilityBonus = statusQuery?.getFragilityBonus(absFrame, element) ?? 0;
-
-                const specialSources = talentBonuses.specialSources;
 
                 const sub: DamageSubComponents = {
                   operatorBaseAttack: opData.operatorBaseAttack,
@@ -477,10 +444,8 @@ export function buildDamageTableRows(
                   skillDmgBonus: subSkillDmg,
                   artsDmgBonus: subArtsDmg,
                   staggerDmgBonus: subStaggerDmg,
-                  talentDmgDealBonus,
                   critRate: opData.critRate,
                   critDamage: opData.critDamage,
-                  talentCritDmgBonus: talentCritDmgBonus,
                   baseResistance,
                   corrosionReduction: subCorrosionReduction,
                   ignoredResistance: subIgnoredRes,
@@ -491,7 +456,6 @@ export function buildDamageTableRows(
                   weakenEffects: subWeakenEffects,
                   dmgReductionEffects: subDmgReductionEffects,
                   protectionEffects: subProtectionEffects,
-                  specialSources,
                   segmentMultiplier: segmentMultiplier ?? undefined,
                   segmentFrameCount: (segmentMultiplier != null && maxFrames > 1) ? maxFrames : undefined,
                   isPerTickMultiplier: isPerTick,
@@ -514,7 +478,7 @@ export function buildDamageTableRows(
                   protectionMultiplier: getProtectionMultiplier(subProtectionEffects),
                   defenseMultiplier: defMultiplier,
                   resistanceMultiplier: resMultiplier,
-                  specialMultiplier: talentSpecialMultiplier !== 1 ? talentSpecialMultiplier : undefined,
+                  specialMultiplier: undefined,
                   sub,
                 };
 
@@ -543,82 +507,6 @@ export function buildDamageTableRows(
           }
         }
         segmentFrameOffset += seg.properties.duration;
-      }
-    }
-  }
-
-  // ── Data-driven additional damage strikes (from talentEffects) ──────────────
-  for (const ev of events) {
-    const oid = opIdCache.get(ev.ownerId);
-    if (!oid) continue;
-    const opData = opCache.get(ev.ownerId);
-    if (!opData) continue;
-    const evProps = loadoutStats[ev.ownerId] ?? DEFAULT_LOADOUT_PROPERTIES;
-    const evPotential = (evProps.operator.potential ?? 5) as Potential;
-
-    const opBase = getOperatorBase(oid);
-    const talentEffects = (opBase?.talentEffects ?? []) as { bonusType: string; name: string; label?: string; source: string; minPotential?: number; minLevel?: number; values: number[]; condition?: { skillType?: string | string[] }; waveCount?: number[] }[];
-    const evCategory = columnIdToSkillType(ev.columnId);
-
-    const col = colLookup.get(`${ev.ownerId}-${ev.columnId}`);
-    if (!col) continue;
-
-    for (const te of talentEffects) {
-      if (te.bonusType === 'ADDITIONAL_STRIKE') {
-        // Check condition
-        const allowedTypes = Array.isArray(te.condition?.skillType) ? te.condition.skillType : [te.condition?.skillType];
-        if (!allowedTypes.some((t) => evCategory === t)) continue;
-        // Check source level
-        if (te.source === 'POTENTIAL' && evPotential < (te.minPotential ?? 1)) continue;
-        if (te.source === 'TALENT_1' && evProps.operator.talentOneLevel < (te.minLevel ?? 1)) continue;
-        if (te.source === 'TALENT_2' && evProps.operator.talentTwoLevel < (te.minLevel ?? 1)) continue;
-
-        rows.push({
-          key: `${ev.uid}-${te.name.toLowerCase().replace(/\s+/g, '-')}`,
-          absoluteFrame: ev.startFrame,
-          label: `${getEventDisplayName(ev.name)} > ${te.label ?? te.name}`,
-          columnKey: col.key,
-          ownerId: ev.ownerId,
-          columnId: ev.columnId,
-          eventUid: ev.uid,
-          segmentIndex: 0,
-          frameIndex: 0,
-          damage: te.values[0],
-          multiplier: null,
-          segmentLabel: undefined,
-          skillName: ev.name,
-          hpRemaining: null,
-          params: null,
-        });
-      } else if (te.bonusType === 'SHOCKWAVE') {
-        const allowedType = te.condition?.skillType;
-        if (evCategory !== allowedType) continue;
-        const level = te.source === 'TALENT_2' ? evProps.operator.talentTwoLevel : evProps.operator.talentOneLevel;
-        if (level < (te.minLevel ?? 1)) continue;
-
-        const levelIdx = Math.min(level - 1, te.values.length - 1);
-        const waveMultiplier = te.values[levelIdx];
-        const waveCount = te.waveCount?.[levelIdx] ?? 2;
-        const waveDamage = opData.totalAttack * waveMultiplier * opData.attributeBonus;
-        for (let w = 0; w < waveCount; w++) {
-          rows.push({
-            key: `${ev.uid}-${te.name.toLowerCase().replace(/\s+/g, '-')}-${w}`,
-            absoluteFrame: ev.startFrame,
-            label: `${getEventDisplayName(ev.name)} > ${te.label ?? te.name} ${w + 1}`,
-            columnKey: col.key,
-            ownerId: ev.ownerId,
-            columnId: ev.columnId,
-            eventUid: ev.uid,
-            segmentIndex: 0,
-            frameIndex: w,
-            damage: waveDamage,
-            multiplier: waveMultiplier,
-            segmentLabel: undefined,
-            skillName: ev.name,
-            hpRemaining: null,
-            params: null,
-          });
-        }
       }
     }
   }

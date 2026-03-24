@@ -63,5 +63,11 @@
     "name": "Miner Turbine T1",
     "type": "KIT",
     "gearSet": "NONE"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
   }
 }

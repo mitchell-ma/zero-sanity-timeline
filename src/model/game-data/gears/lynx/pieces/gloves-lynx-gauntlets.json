@@ -83,5 +83,11 @@
     "name": "Lynx Gauntlets",
     "type": "GLOVES",
     "gearSet": "LYNX"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
   }
 }

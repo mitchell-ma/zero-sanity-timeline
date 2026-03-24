@@ -83,5 +83,11 @@
     "name": "Frontiers Blight Res Gloves",
     "type": "GLOVES",
     "gearSet": "FRONTIERS"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
   }
 }

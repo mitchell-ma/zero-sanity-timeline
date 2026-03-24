@@ -1,7 +1,7 @@
 {
   "properties": {
     "name": "Frag Grenade·β",
-    "description": "COMBO TRIGGER: When an Arts Infliction is applied to an enemy. Throws a frag grenade at the target's location that explodes upon hitting the ground, dealing Heat DMG and Heat Infliction to nearby enemies.",
+    "description": "When an Arts Infliction is applied to an enemy. Throws a frag grenade at the target's location that explodes upon hitting the ground, dealing Heat DMG and Heat Infliction to nearby enemies.",
     "windowFrames": 720,
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "COMBO_SKILL",

@@ -1,0 +1,20 @@
+{
+  "properties": {
+    "type": "TALENT",
+    "id": "MOUNTAINPEAK_SURFER_TALENT",
+    "name": "Mountainpeak Surfer (Talent)",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
+    "eventType": "STATUS",
+    "eventCategoryType": "TALENT",
+    "description": "Battle skill Dolly Rush improved: Triggering the additional effect while an enemy with Corrosion is nearby immediately casts the battle skill again. This effect only triggers once per active battle skill casting.",
+    "maxLevel": 1
+  },
+  "metadata": {
+    "originId": "ARDELIA",
+    "dataSources": [
+      "WARFARIN"
+    ],
+    "icon": "skills/ardelia_talent_2_icon.png"
+  }
+}

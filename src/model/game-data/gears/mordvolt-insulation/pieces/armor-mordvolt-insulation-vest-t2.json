@@ -83,5 +83,11 @@
     "name": "Mordvolt Insulation Vest T2",
     "type": "ARMOR",
     "gearSet": "MORDVOLT_INSULATION"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
   }
 }

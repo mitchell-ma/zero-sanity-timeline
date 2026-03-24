@@ -1,7 +1,7 @@
 {
   "properties": {
     "name": "Stress Testing",
-    "description": "COMBO TRIGGER: When the Auxiliary Crystal uses up its HP treatments. Quickly charges up the Auxiliary Crystal and launches it at the enemy to deal Cryo DMG and Cryo Infliction.",
+    "description": "When the Auxiliary Crystal uses up its HP treatments. Quickly charges up the Auxiliary Crystal and launches it at the enemy to deal Cryo DMG and Cryo Infliction.",
     "windowFrames": 720,
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "COMBO_SKILL",

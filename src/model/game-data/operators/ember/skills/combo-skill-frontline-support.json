@@ -1,7 +1,7 @@
 {
   "properties": {
     "name": "Frontline Support",
-    "description": "COMBO TRIGGER: When the controlled operator is attacked. Leaps at the target enemy and unleashes a heavy slam that deals Physical DMG and Knock Down while giving HP treatment to the controlled operator. The attribute of Will increases the amount of HP treatment.",
+    "description": "When the controlled operator is attacked. Leaps at the target enemy and unleashes a heavy slam that deals Physical DMG and Knock Down while giving HP treatment to the controlled operator. The attribute of Will increases the amount of HP treatment.",
     "windowFrames": 720,
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "COMBO_SKILL",

@@ -83,5 +83,11 @@
     "name": "Thertech Plating",
     "type": "ARMOR",
     "gearSet": "AETHERTECH"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
   }
 }

@@ -15,7 +15,6 @@
 import { DamageType, ElementType } from '../../consts/enums';
 import { StatusLevel } from '../../consts/types';
 import { TimelineEvent, eventEndFrame } from '../../consts/viewTypes';
-import { getOperatorBase } from '../gameDataStore';
 import {
   StatusDamageParams,
   calculateStatusDamage,
@@ -35,7 +34,6 @@ import { Enemy } from '../../model/enemies/enemy';
 import type { DamageTableRow } from './damageTableBuilder';
 import type { EventsQueryService } from '../timeline/eventsQueryService';
 import { FPS } from '../../utils/timeline';
-import { VerbType } from '../../dsl/semantics';
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
@@ -180,16 +178,9 @@ export function computeCombustionDamage(
   const stacks = getStacks(reactionEvent);
   const ticks: ReactionDamageTick[] = [];
 
-  // Talent reaction multiplier (e.g. Laevatain P3 — Fragments from the Past: Combustion DMG x1.5)
-  const reactionTalentMult = opCtx.operatorId
-    ? getReactionTalentMultiplier(opCtx.operatorId, opCtx.potential ?? 0, reactionEvent.columnId)
-    : 1;
 
   const initial = buildInitialTick(reactionEvent, 'Combustion', opCtx, modelEnemy, element, statusQuery);
   if (initial) {
-    if (reactionTalentMult !== 1) {
-      initial.damage = initial.damage * reactionTalentMult;
-    }
     ticks.push(initial);
   }
 
@@ -204,7 +195,7 @@ export function computeCombustionDamage(
     ticks.push({
       absoluteFrame: tickFrame,
       label: `Combustion > DoT Tick ${i}`,
-      damage: calculateStatusDamage(dotParams) * reactionTalentMult,
+      damage: calculateStatusDamage(dotParams),
       params: dotParams,
       damageType: DamageType.DAMAGE_OVER_TIME,
     });
@@ -342,98 +333,3 @@ export function buildReactionDamageRows(
   }));
 }
 
-// ── Data-driven reaction talent multiplier ──────────────────────────────────
-
-/** Reaction column ID → reaction type name mapping. */
-const REACTION_COLUMN_TO_TYPE: Record<string, string> = {
-  combustion: 'COMBUSTION',
-  solidification: 'SOLIDIFICATION',
-  corrosion: 'CORROSION',
-  electrification: 'ELECTRIFICATION',
-};
-
-/**
- * Get the talent-based reaction damage multiplier for an operator.
- * Reads from talentEffects with bonusType === 'REACTION_MULTIPLIER'.
- * Supports both legacy format (source/minPotential/values) and
- * VARY_BY format (value with multi-dimensional lookup).
- */
-function getReactionTalentMultiplier(operatorId: string, potential: number, reactionColumnId: string): number {
-  const base = getOperatorBase(operatorId);
-  if (!base?.talentEffects?.length) return 1;
-
-  const reactionType = REACTION_COLUMN_TO_TYPE[reactionColumnId];
-  if (!reactionType) return 1;
-
-  let multiplier = 1;
-  for (const effect of base.talentEffects as { bonusType: string; condition?: { reactionType?: string }; value?: { verb?: string; object?: string | string[]; value?: unknown } }[]) {
-    if (effect.bonusType !== 'REACTION_MULTIPLIER') continue;
-    if (effect.condition?.reactionType !== reactionType) continue;
-
-    if (effect.value?.verb === VerbType.VARY_BY) {
-      const resolved = resolveBasedOnValueForCalc(effect.value, { potential });
-      if (resolved != null) multiplier *= resolved;
-    }
-  }
-
-  return multiplier;
-}
-
-/**
- * Resolve a VARY_BY value block for damage calculation contexts.
- * Supports multi-dimensional lookups keyed by POTENTIAL, TALENT_LEVEL, SKILL_LEVEL.
- */
-function resolveBasedOnValueForCalc(
-  wp: { verb?: string; object?: string | string[]; value?: unknown },
-  ctx: { potential: number; talentLevel?: number; skillLevel?: number },
-): number | undefined {
-  if (wp.verb !== VerbType.VARY_BY) return typeof wp.value === 'number' ? wp.value : undefined;
-
-  const dims = wp.object;
-  const val = wp.value;
-
-  // Single dimension with flat array
-  if (typeof dims === 'string' && Array.isArray(val)) {
-    if (dims === 'POTENTIAL') {
-      // Shouldn't be an array for potential, but handle gracefully
-      return val[0];
-    }
-    const level = dims === 'TALENT_LEVEL' ? (ctx.talentLevel ?? 1)
-      : dims === 'SKILL_LEVEL' ? (ctx.skillLevel ?? 12) : 1;
-    return val[Math.min(level, val.length) - 1] ?? val[0];
-  }
-
-  // Multi-dimension with nested map
-  if (Array.isArray(dims) && typeof val === 'object' && !Array.isArray(val)) {
-    let current: unknown = val;
-    for (const dim of dims) {
-      if (typeof current !== 'object' || current === null) return undefined;
-      const currentObj = current as Record<string, unknown>;
-      const keys = Object.keys(currentObj);
-      let best: string | undefined;
-      let bestN = -1;
-
-      if (dim === 'POTENTIAL') {
-        for (const k of keys) {
-          const m = k.match(/^P(\d+)$/);
-          if (!m) continue;
-          const n = Number(m[1]);
-          if (n <= ctx.potential && n > bestN) { bestN = n; best = k; }
-        }
-      } else {
-        const level = dim === 'TALENT_LEVEL' ? (ctx.talentLevel ?? 1)
-          : dim === 'SKILL_LEVEL' ? (ctx.skillLevel ?? 12) : 1;
-        for (const k of keys) {
-          const n = Number(k);
-          if (!isNaN(n) && n <= level && n > bestN) { bestN = n; best = k; }
-        }
-      }
-
-      if (!best) return undefined;
-      current = currentObj[best];
-    }
-    return typeof current === 'number' ? current : undefined;
-  }
-
-  return undefined;
-}

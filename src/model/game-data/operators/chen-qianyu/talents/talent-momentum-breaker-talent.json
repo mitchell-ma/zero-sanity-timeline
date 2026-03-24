@@ -38,7 +38,8 @@
     "toDeterminer": "THIS",
     "eventType": "STATUS",
     "eventCategoryType": "TALENT",
-    "description": "Interrupting the enemy's charge up deals another 10 Stagger."
+    "description": "Interrupting the enemy's charge up deals another 10 Stagger.",
+    "maxLevel": 2
   },
   "metadata": {
     "originId": "CHEN_QIANYU",

@@ -9,130 +9,13 @@
   ],
   "mainAttributeType": "INTELLECT",
   "secondaryAttributeType": "WILL",
-  "potentials": [
-    {
-      "level": 1,
-      "name": "Crisis Handling",
-      "effects": [
-        {
-          "potentialEffectType": "SKILL_PARAMETER",
-          "skillParameterModifier": {
-            "skillType": "INSTANT_PROTOCOL_CHAIN",
-            "parameterKey": "DURATION",
-            "value": 1.75,
-            "parameterModifyType": "MULTIPLICATIVE"
-          }
-        }
-      ],
-      "description": "Combo skill Instant Protocol: Chain improved: Electrification duration +{duration-1:0%}."
-    },
-    {
-      "level": 2,
-      "name": "Negotiation Tactics",
-      "effects": [
-        {
-          "potentialEffectType": "SKILL_COST",
-          "skillCostModifier": {
-            "skillType": "PERLICA_PROTOCOL_EPSILON",
-            "parameterType": 1,
-            "value": 0.85
-          }
-        }
-      ],
-      "description": "Ultimate Protocol ε: 70.41K improved: Ultimate Energy cost -15%."
-    },
-    {
-      "level": 3,
-      "name": "Supervisory Duties",
-      "effects": [
-        {
-          "potentialEffectType": "BUFF_ATTACHMENT",
-          "buffAttachment": {
-            "parameters": [
-              {
-                "key": "atk_up",
-                "value": 0.2,
-                "valueStr": ""
-              },
-              {
-                "key": "atk_duration",
-                "value": 5,
-                "valueStr": ""
-              },
-              {
-                "key": "max_stack",
-                "value": 2,
-                "valueStr": ""
-              }
-            ],
-            "objectId": "PERLICA_POTENTIAL3_SUPERVISORY_DUTIES"
-          }
-        }
-      ],
-      "description": "After Perlica applies Electrification to the enemy, she gains ATK +20% for 5s. This effect can reach 2 stacks."
-    },
-    {
-      "level": 4,
-      "name": "Constant Guidance",
-      "effects": [
-        {
-          "potentialEffectType": "SKILL_PARAMETER",
-          "skillParameterModifier": {
-            "skillType": "INSTANT_PROTOCOL_CHAIN",
-            "parameterKey": "EXTRA_SCALING",
-            "value": 1.33,
-            "parameterModifyType": "UNIQUE_MULTIPLIER"
-          }
-        }
-      ],
-      "description": "Combo skill Instant Protocol: Chain improved: The Arts DMG Taken debuff effects on the enemy applied by the skill's Electrification are increased to {extra_scaling} times the original."
-    },
-    {
-      "level": 5,
-      "name": "Reentry Control",
-      "effects": [
-        {
-          "potentialEffectType": "SKILL_PARAMETER",
-          "skillParameterModifier": {
-            "skillType": "PROTOCOL_EPSILON",
-            "parameterKey": "crit",
-            "value": 0.3,
-            "parameterModifyType": "ADDITIVE"
-          }
-        }
-      ],
-      "description": "Ultimate Protocol ε: 70.41K improved: Critical Rate +30%."
-    }
-  ],
   "talents": {
-    "one": {
-      "id": "OBLITERATION_PROTOCOL",
-      "maxLevel": 2
-    },
-    "two": {
-      "name": "Cycle Protocol",
-      "maxLevel": 1
-    },
+    "one": "OBLITERATION_PROTOCOL_TALENT",
+    "two": "CYCLE_PROTOCOL_TALENT",
     "attributeIncrease": {
-      "id": "KEEN_MIND",
-      "maxLevel": 4
+      "id": "KEEN_MIND"
     }
   },
-  "talentEffects": [
-    {
-      "name": "Obliteration Protocol",
-      "source": "TALENT_1",
-      "minLevel": 1,
-      "bonusType": "DAMAGE_DEALT",
-      "values": [
-        0.2,
-        0.3
-      ],
-      "condition": {
-        "enemyState": "STAGGERED"
-      }
-    }
-  ],
   "statsByLevel": [
     {
       "level": 1,

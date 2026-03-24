@@ -18,27 +18,12 @@ interface TalentEntry {
 interface AttributeIncreaseEntry {
   name: string;
   attribute: string;
-  maxLevel?: number;
 }
 
 interface TalentsConfig {
   one?: TalentEntry;
   two?: TalentEntry;
   attributeIncrease?: AttributeIncreaseEntry;
-}
-
-interface TalentEffect {
-  name: string;
-  bonusType: string;
-  source?: string;
-  minPotential?: number;
-  minLevel?: number;
-  values?: number[];
-  value?: unknown;
-  condition?: Record<string, unknown>;
-  label?: string;
-  statSources?: unknown;
-  waveCount?: number;
 }
 
 interface LevelEntry {
@@ -53,17 +38,13 @@ const VALID_TOP_KEYS = new Set([
   'id', 'name', 'operatorRarity', 'operatorClassType',
   'elementType', 'weaponTypes',
   'mainAttributeType', 'secondaryAttributeType',
-  'potentials', 'statsByLevel', 'talents', 'talentEffects', 'metadata',
+  'potentials', 'statsByLevel', 'talents', 'metadata',
 ]);
 
 const VALID_TALENT_KEYS = new Set(['one', 'two', 'attributeIncrease']);
 const VALID_TALENT_ENTRY_KEYS = new Set(['id', 'name', 'description', 'maxLevel']);
-const VALID_ATTR_INCREASE_KEYS = new Set(['id', 'name', 'attribute', 'maxLevel']);
+const VALID_ATTR_INCREASE_KEYS = new Set(['id', 'name', 'attribute']);
 
-const VALID_TALENT_EFFECT_KEYS = new Set([
-  'name', 'bonusType', 'source', 'minPotential', 'minLevel',
-  'values', 'value', 'condition', 'label', 'statSources', 'waveCount',
-]);
 
 const VALID_LEVEL_ENTRY_KEYS = new Set(['level', 'operatorPromotionStage', 'attributes']);
 
@@ -91,14 +72,10 @@ export function validateOperator(json: Record<string, unknown>): string[] {
   if (json.talents) {
     const talents = json.talents as Record<string, unknown>;
     errors.push(...checkKeys(talents, VALID_TALENT_KEYS, 'talents'));
-    if (talents.one) errors.push(...checkKeys(talents.one as Record<string, unknown>, VALID_TALENT_ENTRY_KEYS, 'talents.one'));
-    if (talents.two) errors.push(...checkKeys(talents.two as Record<string, unknown>, VALID_TALENT_ENTRY_KEYS, 'talents.two'));
+    // talents.one and talents.two can be string IDs (resolved from talent files) or inline objects
+    if (talents.one && typeof talents.one === 'object') errors.push(...checkKeys(talents.one as Record<string, unknown>, VALID_TALENT_ENTRY_KEYS, 'talents.one'));
+    if (talents.two && typeof talents.two === 'object') errors.push(...checkKeys(talents.two as Record<string, unknown>, VALID_TALENT_ENTRY_KEYS, 'talents.two'));
     if (talents.attributeIncrease) errors.push(...checkKeys(talents.attributeIncrease as Record<string, unknown>, VALID_ATTR_INCREASE_KEYS, 'talents.attributeIncrease'));
-  }
-
-  if (json.talentEffects) {
-    if (!Array.isArray(json.talentEffects)) errors.push('root.talentEffects: must be an array');
-    else (json.talentEffects as Record<string, unknown>[]).forEach((te, i) => errors.push(...checkKeys(te, VALID_TALENT_EFFECT_KEYS, `talentEffects[${i}]`)));
   }
 
   const meta = json.metadata as Record<string, unknown> | undefined;
@@ -124,7 +101,6 @@ export class OperatorBase {
   readonly potentials: unknown[];
   readonly statsByLevel: LevelEntry[];
   readonly talents: TalentsConfig;
-  readonly talentEffects: TalentEffect[];
   readonly originId: string;
   readonly dataSources: string[];
   /** Resolved icon URL (set by loader after construction). */
@@ -144,7 +120,6 @@ export class OperatorBase {
     this.potentials = (json.potentials ?? []) as unknown[];
     this.statsByLevel = (json.statsByLevel ?? []) as LevelEntry[];
     this.talents = (json.talents ?? {}) as TalentsConfig;
-    this.talentEffects = (json.talentEffects ?? []) as TalentEffect[];
     this.originId = (meta.originId ?? '') as string;
     this.dataSources = (meta.dataSources ?? []) as string[];
   }
@@ -180,7 +155,6 @@ export class OperatorBase {
       secondaryAttributeType: this.secondaryAttributeType,
       ...(this.potentials.length > 0 ? { potentials: this.potentials } : {}),
       talents: this.talents,
-      ...(this.talentEffects.length > 0 ? { talentEffects: this.talentEffects } : {}),
       statsByLevel: this.statsByLevel,
       metadata: {
         originId: this.originId,
@@ -235,6 +209,153 @@ function filenameToCamelCase(filename: string): string {
   return filename.replace(/-([a-z])/g, (_, c: string) => c.toUpperCase());
 }
 
+// ── Potential file → consumer format conversion ─────────────────────────────
+
+interface PotentialEffect {
+  potentialEffectType: string;
+  skillParameterModifier?: { skillType: string; parameterKey: string; value: number; parameterModifyType: string };
+  skillCostModifier?: { skillType: string; parameterType: number; value: number };
+  statModifier?: { statType: string; value: number };
+  buffAttachment?: { objectId: string; parameters: unknown[] };
+}
+
+interface ResolvedPotential {
+  level: number;
+  name: string;
+  description?: string;
+  effects: PotentialEffect[];
+}
+
+function convertDslEffect(eff: Record<string, unknown>): PotentialEffect | null {
+  const verb = eff.verb as string;
+  const object = eff.object as string;
+  const w = (eff.with ?? {}) as Record<string, unknown>;
+  const valueNode = w.value as Record<string, unknown> | undefined;
+  const value = (valueNode?.value ?? 0) as number;
+
+  if (verb === 'MODIFY' && object === 'SKILL_PARAMETER') {
+    return {
+      potentialEffectType: 'SKILL_PARAMETER',
+      skillParameterModifier: {
+        skillType: eff.objectId as string,
+        parameterKey: w.parameterKey as string,
+        value,
+        parameterModifyType: w.parameterModifyType as string,
+      },
+    };
+  }
+  if (verb === 'MODIFY' && object === 'SKILL_COST') {
+    return {
+      potentialEffectType: 'SKILL_COST',
+      skillCostModifier: {
+        skillType: eff.objectId as string,
+        parameterType: (w.parameterType ?? 1) as number,
+        value,
+      },
+    };
+  }
+  if (verb === 'APPLY' && object === 'BUFF') {
+    // Convert parameters from {key: {verb: IS, value: X}} to [{key, value}]
+    const parameters: { key: string; value: number }[] = [];
+    for (const [k, v] of Object.entries(w)) {
+      if (k === 'value') continue;
+      const paramVal = v as Record<string, unknown>;
+      if (paramVal?.value != null) parameters.push({ key: k, value: paramVal.value as number });
+    }
+    return {
+      potentialEffectType: 'BUFF_ATTACHMENT',
+      buffAttachment: { objectId: (eff.objectId ?? '') as string, parameters },
+    };
+  }
+  if (verb === 'APPLY' && object === 'STATUS') {
+    return { potentialEffectType: 'IMPLEMENTED_IN_DSL' };
+  }
+  if (verb === 'APPLY' && eff.to === 'OPERATOR') {
+    return {
+      potentialEffectType: 'STAT_MODIFIER',
+      statModifier: { statType: object, value },
+    };
+  }
+  // Other complex types — mark as DSL-implemented
+  return { potentialEffectType: 'IMPLEMENTED_IN_DSL' };
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function loadPotentialsFromFiles(context: any, operatorDir: string): ResolvedPotential[] {
+  const potentials: ResolvedPotential[] = [];
+  for (const key of context.keys()) {
+    const match = key.match(new RegExp(`^\\./${operatorDir}/potentials/potential-(\\d+)-`));
+    if (!match) continue;
+    const json = context(key) as Record<string, unknown>;
+    const props = (json.properties ?? {}) as Record<string, unknown>;
+    const level = (props.level ?? parseInt(match[1])) as number;
+    if (!level) continue;
+
+    const allClauses = [
+      ...((json.clause ?? []) as { effects?: Record<string, unknown>[] }[]),
+      ...((json.onTriggerClause ?? []) as { effects?: Record<string, unknown>[] }[]),
+    ];
+    const effects: PotentialEffect[] = [];
+    for (const clause of allClauses) {
+      for (const eff of (clause.effects ?? [])) {
+        const converted = convertDslEffect(eff);
+        if (converted) effects.push(converted);
+      }
+    }
+
+    potentials.push({
+      level,
+      name: (props.name ?? '') as string,
+      ...(props.description ? { description: props.description as string } : {}),
+      effects,
+    });
+  }
+  return potentials.sort((a, b) => a.level - b.level);
+}
+
+// ── Talent file → TalentEntry resolution ────────────────────────────────────
+
+/** Build a map of talent ID → TalentEntry from talent JSON files for a given operator directory. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function loadTalentsFromFiles(context: any, operatorDir: string): Map<string, TalentEntry> {
+  const entries = new Map<string, TalentEntry>();
+  for (const key of context.keys()) {
+    const match = key.match(new RegExp(`^\\./${operatorDir}/talents/talent-`));
+    if (!match) continue;
+    const json = context(key) as Record<string, unknown>;
+    const props = (json.properties ?? {}) as Record<string, unknown>;
+    const id = props.id as string | undefined;
+    if (!id || props.maxLevel == null) continue;
+    const rawName = (props.name ?? '') as string;
+    entries.set(id, {
+      id,
+      name: rawName.replace(/ \(Talent\)$/, ''),
+      description: (props.description ?? undefined) as string | undefined,
+      maxLevel: props.maxLevel as number,
+    });
+  }
+  return entries;
+}
+
+/** Resolve talent string IDs in a raw JSON talents config using loaded talent files. */
+function resolveTalentRefs(
+  talents: Record<string, unknown>,
+  talentMap: Map<string, TalentEntry>,
+): void {
+  for (const slot of ['one', 'two'] as const) {
+    const val = talents[slot];
+    if (typeof val === 'string') {
+      const entry = talentMap.get(val);
+      if (entry) {
+        talents[slot] = entry;
+      } else {
+        console.warn(`[OperatorsStore] Talent ID "${val}" not found in talent files`);
+        talents[slot] = { id: val, maxLevel: 0 };
+      }
+    }
+  }
+}
+
 // ── Loader ──────────────────────────────────────────────────────────────────
 
 /** All operators indexed by camelCase ID (e.g. "laevatain"). */
@@ -257,7 +378,24 @@ for (const key of operatorContext.keys()) {
 
   const operatorId = filenameToCamelCase(match[1]);
   const json = operatorContext(key) as Record<string, unknown>;
-  const operator = OperatorBase.deserialize(json, key);
+
+  // Load potentials from separate files instead of inline data
+  const potentials = loadPotentialsFromFiles(operatorContext, match[1]);
+  if (potentials.length > 0) {
+    json.potentials = potentials;
+  }
+
+  // Resolve talent string IDs from talent JSON files
+  // Clone talents to avoid mutating the shared JSON module
+  let resolvedJson: Record<string, unknown> = json;
+  if (json.talents) {
+    const talentMap = loadTalentsFromFiles(operatorContext, match[1]);
+    const resolvedTalents = { ...(json.talents as Record<string, unknown>) };
+    resolveTalentRefs(resolvedTalents, talentMap);
+    resolvedJson = { ...json, talents: resolvedTalents };
+  }
+
+  const operator = OperatorBase.deserialize(resolvedJson, key);
   if (operator.id) {
     operator.icon = resolveOperatorIcon(operator.name);
     operatorCache.set(operatorId, operator);

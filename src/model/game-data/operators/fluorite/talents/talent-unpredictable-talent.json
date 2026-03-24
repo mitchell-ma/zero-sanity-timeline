@@ -33,7 +33,8 @@
     "toDeterminer": "THIS",
     "eventType": "STATUS",
     "eventCategoryType": "TALENT",
-    "description": "Grants {probability:0%} chance of Arts DMG immunity and grants Fluorite ATK +{atk_up:0%} for {duration:0}s. This effect cannot stack."
+    "description": "Grants {probability:0%} chance of Arts DMG immunity and grants Fluorite ATK +{atk_up:0%} for {duration:0}s. This effect cannot stack.",
+    "maxLevel": 2
   },
   "metadata": {
     "originId": "FLUORITE",

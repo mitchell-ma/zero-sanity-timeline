@@ -40,10 +40,9 @@ const CombatPlanner = lazy(() => import('./view/CombatPlanner'));
 const CombatSheet = lazy(() => import('./view/CombatSheet'));
 const InformationPane = lazy(() => import('./view/InformationPane'));
 const DevlogModal = lazy(() => import('./view/DevlogModal'));
+const SettingsModal = lazy(() => import('./view/SettingsModal'));
 const ExportModal = lazy(() => import('./view/ExportModal'));
 const KeyboardShortcutsModal = lazy(() => import('./view/KeyboardShortcutsModal'));
-const ClauseEditorModal = lazy(() => import('./view/custom/ClauseEditorModal'));
-const StatusEditorModal = lazy(() => import('./view/custom/StatusEditorModal'));
 const ExpressionEditorModal = lazy(() => import('./view/custom/ExpressionEditorModal'));
 const UnifiedCustomizer = lazy(() => import('./view/custom/UnifiedCustomizer'));
 
@@ -198,13 +197,12 @@ export default function App() {
           setWorkbenchOpen(true);
           setSidebarMode('workbench');
         }}
-        onClauseEditor={() => app.setClauseEditorOpen(true)}
-        onStatusEditor={() => app.setStatusEditorOpen(true)}
         onExprEditor={() => app.setExprEditorOpen(true)}
         interactionMode={app.interactionMode}
         onToggleInteractionMode={() => app.setInteractionMode(m => m === InteractionModeType.STRICT ? InteractionModeType.FREEFORM : InteractionModeType.STRICT)}
         lightMode={app.lightMode}
         onToggleTheme={app.handleToggleTheme}
+        onSettings={() => app.setSettingsOpen(true)}
       />
 
       <div ref={app.appBodyRef} className="app-body" style={{ '--tl-flex': `${app.splitPct} 0 0`, '--sheet-flex': `${100 - app.splitPct} 0 0` } as React.CSSProperties}>
@@ -522,8 +520,13 @@ export default function App() {
         ) : null}
 
         <DevlogModal open={app.devlogOpen} onClose={() => app.setDevlogOpen(false)} />
-        {app.clauseEditorOpen && <ClauseEditorModal onClose={() => app.setClauseEditorOpen(false)} />}
-        {app.statusEditorOpen && <StatusEditorModal onClose={() => app.setStatusEditorOpen(false)} />}
+        <SettingsModal
+          open={app.settingsOpen}
+          onClose={() => app.setSettingsOpen(false)}
+          settings={app.settings}
+          onUpdate={app.handleUpdateSetting}
+        />
+        {app.keysOpen && <KeyboardShortcutsModal onClose={() => app.setKeysOpen(false)} />}
         {app.exprEditorOpen && <ExpressionEditorModal
           value={{ verb: VerbType.IS, value: 0 }}
           onChange={(node) => {
@@ -532,8 +535,6 @@ export default function App() {
           }}
           onClose={() => app.setExprEditorOpen(false)}
         />}
-
-        {app.keysOpen && <KeyboardShortcutsModal onClose={() => app.setKeysOpen(false)} />}
 
         <ExportModal
           open={app.exportModalOpen}

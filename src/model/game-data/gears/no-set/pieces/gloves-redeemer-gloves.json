@@ -63,5 +63,11 @@
     "name": "Redeemer Gloves",
     "type": "GLOVES",
     "gearSet": "NONE"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
   }
 }

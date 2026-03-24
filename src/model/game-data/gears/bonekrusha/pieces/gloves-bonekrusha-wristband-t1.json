@@ -103,5 +103,11 @@
     "name": "Bonekrusha Wristband T1",
     "type": "GLOVES",
     "gearSet": "BONEKRUSHA"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
   }
 }

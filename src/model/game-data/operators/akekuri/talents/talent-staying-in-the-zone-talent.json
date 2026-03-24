@@ -1,0 +1,20 @@
+{
+  "properties": {
+    "type": "TALENT",
+    "id": "STAYING_IN_THE_ZONE_TALENT",
+    "name": "Staying in the Zone (Talent)",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
+    "eventType": "STATUS",
+    "eventCategoryType": "TALENT",
+    "description": "Ultimate SQUAD! ON ME! improved: When ultimate is active, gains Link.",
+    "maxLevel": 1
+  },
+  "metadata": {
+    "originId": "AKEKURI",
+    "dataSources": [
+      "WARFARIN"
+    ],
+    "icon": "skills/akekuri_talent_2_icon.png"
+  }
+}

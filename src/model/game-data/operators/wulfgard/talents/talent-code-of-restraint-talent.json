@@ -40,7 +40,8 @@
     "toDeterminer": "THIS",
     "eventType": "STATUS",
     "eventCategoryType": "TALENT",
-    "description": "Whenever the battle skill Thermite Tracers successfully consumes an Arts Reaction, return 10 SP."
+    "description": "Whenever the battle skill Thermite Tracers successfully consumes an Arts Reaction, return 10 SP.",
+    "maxLevel": 2
   },
   "metadata": {
     "originId": "WULFGARD",

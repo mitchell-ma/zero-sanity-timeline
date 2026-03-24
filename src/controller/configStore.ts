@@ -690,10 +690,12 @@ export function getGearEffectLabel(gearSetType: string): string | undefined {
 
 // ── Display helpers ─────────────────────────────────────────────────────────
 
-export function resolveTargetDisplay(def: { target?: string; targetDeterminer?: string }): string {
-  if (def.target === 'ENEMY') return 'enemy';
-  if (def.targetDeterminer === 'OTHER') return 'team';
-  return 'wielder';
+export function resolveTargetDisplay(def: { target?: string; targetDeterminer?: string; to?: string; toDeterminer?: string }): string {
+  const target = def.target ?? def.to;
+  const det = def.targetDeterminer ?? def.toDeterminer;
+  if (!target) return '';
+  const targetLabel = target.replace(/_/g, ' ').toLowerCase();
+  return det ? `${det.replace(/_/g, ' ').toLowerCase()} ${targetLabel}` : targetLabel;
 }
 
 export function resolveDurationSeconds(def: { properties?: { duration?: { value: ValueNode } } }): number {
@@ -751,6 +753,44 @@ for (const effect of getAllGearSetEffects()) {
       pieces: [],
       dataSources: effect.dataSources ?? [],
     };
+  }
+}
+
+// Populate pieces from gearPiecesStore
+for (const [id, setData] of Object.entries(GEAR_SET_DATA)) {
+  const gearPieces = getGearPiecesBySet(id);
+  for (const gp of gearPieces) {
+    // Extract stats from clause effects
+    const allLevels: Record<string, Record<string, number>> = {};
+    let defense = 0;
+    for (const c of gp.clause ?? []) {
+      for (const ef of (c as { effects?: { verb: string; object: string; with?: { value: { verb: string; value: number | number[]; object?: string } } }[] }).effects ?? []) {
+        const w = ef.with?.value;
+        if (!w) continue;
+        if (ef.object === 'BASE_DEFENSE' && w.verb === 'IS') {
+          defense = w.value as number;
+          continue;
+        }
+        const stat = ef.object;
+        if (w.verb === 'VARY_BY' && Array.isArray(w.value)) {
+          (w.value as number[]).forEach((v: number, ri: number) => {
+            const rank = String(ri + 1);
+            if (!allLevels[rank]) allLevels[rank] = {};
+            allLevels[rank][stat] = v;
+          });
+        } else if (w.verb === 'IS') {
+          if (!allLevels['1']) allLevels['1'] = {};
+          allLevels['1'][stat] = w.value as number;
+        }
+      }
+    }
+    setData.pieces.push({
+      gearType: gp.id,
+      name: gp.name,
+      gearCategory: gp.type,
+      defense,
+      allLevels,
+    });
   }
 }
 

@@ -83,5 +83,11 @@
     "name": "Frontiers Extra O2 Tube",
     "type": "KIT",
     "gearSet": "FRONTIERS"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
   }
 }

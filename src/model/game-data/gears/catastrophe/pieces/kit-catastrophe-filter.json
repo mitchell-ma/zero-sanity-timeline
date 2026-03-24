@@ -83,5 +83,11 @@
     "name": "Catastrophe Filter",
     "type": "KIT",
     "gearSet": "CATASTROPHE"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
   }
 }

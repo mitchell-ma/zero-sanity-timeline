@@ -83,5 +83,11 @@
     "name": "Eternal Xiranite Armor",
     "type": "ARMOR",
     "gearSet": "ETERNAL_XIRANITE"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
   }
 }

@@ -1,0 +1,20 @@
+{
+  "properties": {
+    "type": "TALENT",
+    "id": "SUBCONSCIOUS_ACT_TALENT",
+    "name": "Subconscious Act (Talent)",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
+    "eventType": "STATUS",
+    "eventCategoryType": "TALENT",
+    "description": "Gains 30% chance of Physical DMG immunity and restores HP of self by [45 + Strength×0.38].",
+    "maxLevel": 2
+  },
+  "metadata": {
+    "originId": "ANTAL",
+    "dataSources": [
+      "WARFARIN"
+    ],
+    "icon": "skills/antal_talent_2_icon.png"
+  }
+}

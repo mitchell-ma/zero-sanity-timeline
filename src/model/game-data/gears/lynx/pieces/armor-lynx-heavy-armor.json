@@ -83,5 +83,11 @@
     "name": "Lynx Heavy Armor",
     "type": "ARMOR",
     "gearSet": "LYNX"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
   }
 }

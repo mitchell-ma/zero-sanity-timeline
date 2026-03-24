@@ -1,0 +1,20 @@
+{
+  "properties": {
+    "type": "TALENT",
+    "id": "FREEZING_POINT_TALENT",
+    "name": "Freezing Point (Talent)",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
+    "eventType": "STATUS",
+    "eventCategoryType": "TALENT",
+    "description": "Against enemies with active Cryo Infliction, gains Critical DMG Dealt +{inflict_up:0%}. Effect is doubled against enemies with Solidification.",
+    "maxLevel": 2
+  },
+  "metadata": {
+    "originId": "YVONNE",
+    "dataSources": [
+      "WARFARIN"
+    ],
+    "icon": "skills/yvonne_talent_2_icon.png"
+  }
+}

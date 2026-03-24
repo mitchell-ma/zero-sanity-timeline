@@ -63,5 +63,11 @@
     "name": "Hot Work Pyrometer",
     "type": "KIT",
     "gearSet": "HOT_WORK"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
   }
 }

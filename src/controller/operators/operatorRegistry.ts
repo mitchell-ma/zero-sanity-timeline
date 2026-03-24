@@ -80,7 +80,7 @@ function buildViewOperatorFromJson(operatorId: string, opJson: Record<string, un
   const talents = opJson.talents as {
     one?: { name: string; maxLevel: number };
     two?: { name: string; maxLevel: number };
-    attributeIncrease?: { id: string; maxLevel: number };
+    attributeIncrease?: { id: string };
   } | undefined;
   const opSkills = opJson.skills as Record<string, Record<string, unknown>> | undefined;
 

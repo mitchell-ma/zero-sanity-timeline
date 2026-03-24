@@ -83,5 +83,11 @@
     "name": "Roving Msgr Flashlight T2",
     "type": "KIT",
     "gearSet": "ROVING_MSGR"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
   }
 }

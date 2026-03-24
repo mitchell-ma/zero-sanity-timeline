@@ -84,7 +84,8 @@
     "toDeterminer": "THIS",
     "eventType": "STATUS",
     "eventCategoryType": "TALENT",
-    "description": "When the Originium Crystals attached to the enemy are consumed, the Endministrator gains ATK +30% for 15s. This effect cannot stack."
+    "description": "When the Originium Crystals attached to the enemy are consumed, the Endministrator gains ATK +30% for 15s. This effect cannot stack.",
+    "maxLevel": 2
   },
   "metadata": {
     "originId": "ENDMINISTRATOR",

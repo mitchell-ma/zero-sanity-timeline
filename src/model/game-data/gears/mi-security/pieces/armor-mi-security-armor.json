@@ -83,5 +83,11 @@
     "name": "Mi Security Armor",
     "type": "ARMOR",
     "gearSet": "MI_SECURITY"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
   }
 }

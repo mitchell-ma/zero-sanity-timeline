@@ -83,5 +83,11 @@
     "name": "Mi Security Hands Ppe",
     "type": "GLOVES",
     "gearSet": "MI_SECURITY"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
   }
 }

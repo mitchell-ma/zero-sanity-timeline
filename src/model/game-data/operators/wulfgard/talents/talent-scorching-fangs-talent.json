@@ -1,0 +1,20 @@
+{
+  "properties": {
+    "type": "TALENT",
+    "id": "SCORCHING_FANGS_TALENT",
+    "name": "Scorching Fangs (Talent)",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
+    "eventType": "STATUS",
+    "eventCategoryType": "TALENT",
+    "description": "Whenever Wulfgard applies Combustion, he gains Scorching Fangs for 10s. This effect cannot stack. Scorching Fangs: While active, Wulfgard gains Heat DMG Dealt +30%.",
+    "maxLevel": 2
+  },
+  "metadata": {
+    "originId": "WULFGARD",
+    "dataSources": [
+      "WARFARIN"
+    ],
+    "icon": "skills/wulfgard_talent_1_icon.png"
+  }
+}

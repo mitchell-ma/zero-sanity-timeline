@@ -1,7 +1,7 @@
 {
   "properties": {
     "name": "Instant Protocol: Chain",
-    "description": "COMBO TRIGGER: When controlled operator performs a Final Strike on any enemy. Unleashes stored electro-magnetic energy to bombard the target, dealing Electric DMG and forcibly inflicting temporary Electrification.",
+    "description": "When controlled operator performs a Final Strike on any enemy. Unleashes stored electro-magnetic energy to bombard the target, dealing Electric DMG and forcibly inflicting temporary Electrification.",
     "windowFrames": 720,
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "COMBO_SKILL",

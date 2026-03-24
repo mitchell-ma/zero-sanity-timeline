@@ -514,6 +514,16 @@ export enum EnemyLocationType {
   AIRBORNE = "AIRBORNE",
 }
 
+export enum ThemeType {
+  DARK = 'DARK',
+  LIGHT = 'LIGHT',
+}
+
+export enum NumberFormatType {
+  PERCENTAGE = 'PERCENTAGE',
+  DECIMAL = 'DECIMAL',
+}
+
 export enum CritMode {
   NEVER = 'NEVER',
   EXPECTED = 'EXPECTED',

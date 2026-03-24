@@ -83,5 +83,11 @@
     "name": "Mordvolt Resistant Vest",
     "type": "ARMOR",
     "gearSet": "MORDVOLT_RESISTANT"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
   }
 }

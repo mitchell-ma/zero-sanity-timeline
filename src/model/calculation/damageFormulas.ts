@@ -58,9 +58,8 @@ export function getDamageBonus(
   skillDamageBonus: number,
   artsDamageBonus: number,
   staggerDamageBonus: number = 0,
-  talentDmgDealBonus: number = 0,
 ): number {
-  return 1 + elementDamageBonus + skillTypeDamageBonus + skillDamageBonus + artsDamageBonus + staggerDamageBonus + talentDmgDealBonus;
+  return 1 + elementDamageBonus + skillTypeDamageBonus + skillDamageBonus + artsDamageBonus + staggerDamageBonus;
 }
 
 /** Map an element to its corresponding damage bonus stat. */
@@ -452,11 +451,9 @@ export interface DamageSubComponents {
   skillDmgBonus: number;
   artsDmgBonus: number;
   staggerDmgBonus: number;
-  talentDmgDealBonus: number;
   // Critical sub-components
   critRate: number;
   critDamage: number;
-  talentCritDmgBonus: number;
   // Resistance sub-components
   baseResistance: number;
   corrosionReduction: number;
@@ -474,8 +471,6 @@ export interface DamageSubComponents {
   dmgReductionEffects: number[];
   // Protection sub-components
   protectionEffects: number[];
-  // Special multiplier sources
-  specialSources: MultiplierSource[];
   /** Raw segment multiplier before dividing by frame count (for display). */
   segmentMultiplier?: number;
   /** Number of frames the segment multiplier is spread across. */

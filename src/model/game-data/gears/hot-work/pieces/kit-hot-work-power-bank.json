@@ -83,5 +83,11 @@
     "name": "Hot Work Power Bank",
     "type": "KIT",
     "gearSet": "HOT_WORK"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
   }
 }

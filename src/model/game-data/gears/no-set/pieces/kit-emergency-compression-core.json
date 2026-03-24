@@ -43,5 +43,11 @@
     "name": "Emergency Compression Core",
     "type": "KIT",
     "gearSet": "NONE"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
   }
 }

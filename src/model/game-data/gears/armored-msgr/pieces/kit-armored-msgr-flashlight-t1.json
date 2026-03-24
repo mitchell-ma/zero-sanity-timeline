@@ -83,5 +83,11 @@
     "name": "Armored Msgr Flashlight T1",
     "type": "KIT",
     "gearSet": "ARMORED_MSGR"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
   }
 }

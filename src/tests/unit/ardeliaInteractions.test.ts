@@ -655,13 +655,10 @@ describe('G. Operator Identity & Metadata', () => {
     expect(mockJson.secondaryAttributeType).toBe('WILL');
   });
 
-  test('G4: Talent names and max levels', () => {
-    expect(mockJson.talents.one.id).toBe('FRIENDLY_PRESENCE_TALENT');
-    expect(mockJson.talents.one.maxLevel).toBe(3);
-    expect(mockJson.talents.two.name).toBe('Mountainpeak Surfer');
-    expect(mockJson.talents.two.maxLevel).toBe(1);
+  test('G4: Talent IDs and attribute increase', () => {
+    expect(mockJson.talents.one).toBe('FRIENDLY_PRESENCE_TALENT');
+    expect(mockJson.talents.two).toBe('MOUNTAINPEAK_SURFER_TALENT');
     expect(mockJson.talents.attributeIncrease.id).toBe('KEEN_MIND');
-    expect(mockJson.talents.attributeIncrease.maxLevel).toBe(4);
   });
 
   test('G5: Level table has entries from 1 to 99+', () => {

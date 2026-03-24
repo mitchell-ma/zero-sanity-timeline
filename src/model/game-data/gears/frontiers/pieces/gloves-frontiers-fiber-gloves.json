@@ -83,5 +83,11 @@
     "name": "Frontiers Fiber Gloves",
     "type": "GLOVES",
     "gearSet": "FRONTIERS"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
   }
 }

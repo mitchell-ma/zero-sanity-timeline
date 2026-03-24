@@ -103,5 +103,11 @@
     "name": "Hot Work Gauntlets T1",
     "type": "GLOVES",
     "gearSet": "HOT_WORK"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
   }
 }

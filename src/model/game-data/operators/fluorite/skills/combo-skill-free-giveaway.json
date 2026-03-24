@@ -1,7 +1,7 @@
 {
   "properties": {
     "name": "Free Giveaway",
-    "description": "COMBO TRIGGER: When an enemy has 2 or more stacks of Cryo Infliction or Nature Infliction. Shoots the target enemy to trigger a special explosion that deals Nature DMG and applies another Arts Infliction of the element already on the enemy.",
+    "description": "When an enemy has 2 or more stacks of Cryo Infliction or Nature Infliction. Shoots the target enemy to trigger a special explosion that deals Nature DMG and applies another Arts Infliction of the element already on the enemy.",
     "windowFrames": 720,
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "COMBO_SKILL",

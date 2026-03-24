@@ -1,7 +1,7 @@
 {
   "properties": {
     "name": "Arcane Staff: Matrix Displacement",
-    "description": "COMBO TRIGGER: When an Arts Reaction is applied to an enemy. A quick casting of the Arts that generates a gravity pull, which then deals Nature DMG and forcibly Lifts the target and nearby enemies.",
+    "description": "When an Arts Reaction is applied to an enemy. A quick casting of the Arts that generates a gravity pull, which then deals Nature DMG and forcibly Lifts the target and nearby enemies.",
     "windowFrames": 720,
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "COMBO_SKILL",

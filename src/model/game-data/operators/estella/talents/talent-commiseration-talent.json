@@ -28,7 +28,8 @@
     "toDeterminer": "THIS",
     "eventType": "STATUS",
     "eventCategoryType": "TALENT",
-    "description": "When triggering Shatter, the next battle skill Onomatopoeia cast returns 7.5 SP. This effect cannot stack."
+    "description": "When triggering Shatter, the next battle skill Onomatopoeia cast returns 7.5 SP. This effect cannot stack.",
+    "maxLevel": 2
   },
   "metadata": {
     "originId": "ESTELLA",

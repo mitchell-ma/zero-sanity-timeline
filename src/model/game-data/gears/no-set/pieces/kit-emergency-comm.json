@@ -43,5 +43,11 @@
     "name": "Emergency Comm",
     "type": "KIT",
     "gearSet": "NONE"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
   }
 }

@@ -63,5 +63,11 @@
     "name": "Aic Heavy Plate",
     "type": "KIT",
     "gearSet": "AIC_HEAVY"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
   }
 }

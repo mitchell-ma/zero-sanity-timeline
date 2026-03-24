@@ -9,115 +9,11 @@
   ],
   "mainAttributeType": "STRENGTH",
   "secondaryAttributeType": "WILL",
-  "potentials": [
-    {
-      "level": 1,
-      "name": "Cold Shelter",
-      "effects": [
-        {
-          "potentialEffectType": "SKILL_PARAMETER",
-          "skillParameterModifier": {
-            "skillType": "SATURATED_DEFENSE",
-            "parameterKey": "potential_1",
-            "value": 1,
-            "parameterModifyType": "UNIQUE_MULTIPLIER"
-          }
-        }
-      ],
-      "description": "Battle skill Saturated Defense improved: During the blocking effect, Arts Inflictions cannot be applied to allied operators with Protection."
-    },
-    {
-      "level": 2,
-      "name": "Storm Region",
-      "effects": [
-        {
-          "potentialEffectType": "SKILL_PARAMETER",
-          "skillParameterModifier": {
-            "skillType": "FRIGID_SNOWFIELD",
-            "parameterKey": "potential_2",
-            "value": 1,
-            "parameterModifyType": "UNIQUE_MULTIPLIER"
-          }
-        },
-        {
-          "potentialEffectType": "SKILL_PARAMETER",
-          "skillParameterModifier": {
-            "skillType": "FRIGID_SNOWFIELD",
-            "parameterKey": "potential_2_range",
-            "value": 0.2,
-            "parameterModifyType": "UNIQUE_MULTIPLIER"
-          }
-        }
-      ],
-      "description": "Ultimate Frigid Snowfield improved: Effect radius +20%."
-    },
-    {
-      "level": 3,
-      "name": "Polar Survival Guide",
-      "effects": [
-        {
-          "potentialEffectType": "SKILL_PARAMETER",
-          "skillParameterModifier": {
-            "skillType": "FRIGID_SNOWFIELD",
-            "parameterKey": "extra_duration",
-            "value": 2,
-            "parameterModifyType": "ADDITIVE"
-          }
-        }
-      ],
-      "description": "Ultimate Frigid Snowfield improved: Duration of the Solidification applied by the skill is increased by 2s."
-    },
-    {
-      "level": 4,
-      "name": "Tundra Aegis",
-      "effects": [
-        {
-          "potentialEffectType": "STAT_MODIFIER",
-          "statModifier": {
-            "statType": "BASE_DEFENSE",
-            "value": 20
-          }
-        },
-        {
-          "potentialEffectType": "STAT_MODIFIER",
-          "statModifier": {
-            "statType": "WILL",
-            "value": 20
-          }
-        }
-      ],
-      "description": "DEF +{Def:0}, Will +{Will:0}."
-    },
-    {
-      "level": 5,
-      "name": "Cold Disaster Specialist",
-      "effects": [
-        {
-          "potentialEffectType": "SKILL_PARAMETER",
-          "skillParameterModifier": {
-            "skillType": "SATURATED_DEFENSE",
-            "parameterKey": "potential_5_atb",
-            "value": 10,
-            "parameterModifyType": "UNIQUE_MULTIPLIER"
-          }
-        }
-      ],
-      "description": "Battle skill Saturated Defense improved: Successfully retaliating an enemy attack returns 10 SP."
-    }
-  ],
   "talents": {
-    "one": {
-      "id": "POLAR_SURVIVAL",
-      "maxLevel": 2
-    },
-    "two": {
-      "id": "SAR_PROFESSIONAL_TALENT",
-      "maxLevel": 2,
-      "description": "Battle skill Saturated Defense improved: After successfully retaliating an enemy attack, Snowshine gains another 10 Ultimate Energy."
-    },
+    "one": "POLAR_SURVIVAL_TALENT",
+    "two": "SAR_PROFESSIONAL_TALENT",
     "attributeIncrease": {
-      "id": "FORGED",
-      "maxLevel": 4
+      "id": "FORGED"
     }
   },
   "statsByLevel": [

@@ -83,5 +83,11 @@
     "name": "Aburrey Sensor Chip T1",
     "type": "KIT",
     "gearSet": "ABURREY_LEGACY"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
   }
 }

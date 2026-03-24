@@ -83,5 +83,11 @@
     "name": "Miner Gloves",
     "type": "GLOVES",
     "gearSet": "NONE"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
   }
 }

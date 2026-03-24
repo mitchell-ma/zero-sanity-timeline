@@ -83,5 +83,11 @@
     "name": "Thertech Stabilizer T1",
     "type": "KIT",
     "gearSet": "AETHERTECH"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
   }
 }

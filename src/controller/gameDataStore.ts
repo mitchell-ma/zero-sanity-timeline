@@ -250,6 +250,27 @@ export { getOperatorSkills, getOperatorSkill, getOperatorSkillIds, getAllOperato
 
 export { getOperatorStatuses, getAllOperatorStatusOriginIds, getAllOperatorStatuses };
 
+/** Get the `with` property keys that a specific status supports, derived from its clause effects. */
+export function getStatusWithProperties(statusId: string): string[] {
+  const allStatuses = getAllOperatorStatuses();
+  for (const status of allStatuses) {
+    if (status.id === statusId) {
+      const withKeys = new Set<string>();
+      const clauses = [...(status.clause ?? []), ...(status.onTriggerClause ?? [])];
+      for (const c of clauses) {
+        const predicate = c as { effects?: { with?: Record<string, unknown> }[] };
+        for (const ef of predicate.effects ?? []) {
+          if (ef.with) {
+            for (const key of Object.keys(ef.with)) withKeys.add(key);
+          }
+        }
+      }
+      return Array.from(withKeys);
+    }
+  }
+  return [];
+}
+
 // ── Operator JSON composition ───────────────────────────────────────────────
 
 export { buildMergedOperatorJson, getAllOperatorIds, getEnabledStatusEvents };

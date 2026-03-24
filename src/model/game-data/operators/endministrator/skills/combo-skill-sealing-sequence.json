@@ -1,7 +1,7 @@
 {
   "properties": {
     "name": "Sealing Sequence",
-    "description": "COMBO TRIGGER: When another operator in the team deals DMG with combo skills. Rushes to the enemy's side to deal Physical DMG and attach Originium Crystals that temporarily seal them. Applying Physical Status or Vulnerability to the sealed enemy consumes the Originium Crystals and deals additional Physical DMG.",
+    "description": "When another operator in the team deals DMG with combo skills. Rushes to the enemy's side to deal Physical DMG and attach Originium Crystals that temporarily seal them. Applying Physical Status or Vulnerability to the sealed enemy consumes the Originium Crystals and deals additional Physical DMG.",
     "windowFrames": 720,
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "COMBO_SKILL",

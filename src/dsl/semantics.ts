@@ -574,14 +574,15 @@ export type ValueNode = ValueLiteral | ValueVariable | ValueStat | ValueExpressi
 // ── Type guards ─────────────────────────────────────────────────────────────
 
 export function isValueLiteral(node: ValueNode): node is ValueLiteral {
-  return 'verb' in node && node.verb === VerbType.IS && !('object' in node) && !('valueType' in node);
+  return node != null && typeof node === 'object' && 'verb' in node && node.verb === VerbType.IS && !('object' in node) && !('valueType' in node);
 }
 
 export function isValueVariable(node: ValueNode): node is ValueVariable {
-  return 'verb' in node && node.verb === VerbType.VARY_BY;
+  return node != null && typeof node === 'object' && 'verb' in node && node.verb === VerbType.VARY_BY;
 }
 
 export function isValueStat(node: ValueNode): node is ValueStat {
+  if (node == null || typeof node !== 'object') return false;
   if (!('verb' in node) || node.verb !== VerbType.IS) return false;
   if ('object' in node && (node as ValueStat).object === NounType.STAT) return true;
   if ('valueType' in node && (node as ValueStat).valueType === NounType.STAT) return true;
@@ -589,7 +590,7 @@ export function isValueStat(node: ValueNode): node is ValueStat {
 }
 
 export function isValueExpression(node: ValueNode): node is ValueExpression {
-  return 'operation' in node;
+  return node != null && typeof node === 'object' && 'operation' in node;
 }
 
 // ── Legacy aliases ───────────────────────────────────────────────────────────

@@ -83,5 +83,11 @@
     "name": "Basic Ppe",
     "type": "ARMOR",
     "gearSet": "NONE"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
   }
 }

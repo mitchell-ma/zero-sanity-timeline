@@ -83,5 +83,11 @@
     "name": "Bonekrusha Heavy Armor T1",
     "type": "ARMOR",
     "gearSet": "BONEKRUSHA"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
   }
 }

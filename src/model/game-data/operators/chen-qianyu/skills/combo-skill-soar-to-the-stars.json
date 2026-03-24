@@ -1,7 +1,7 @@
 {
   "properties": {
     "name": "Soar to the Stars",
-    "description": "COMBO TRIGGER: When an enemy becomes Vulnerable. A slashing dash that passes through the target enemy and deals Physical DMG and Lift to all enemies along the way.",
+    "description": "When an enemy becomes Vulnerable. A slashing dash that passes through the target enemy and deals Physical DMG and Lift to all enemies along the way.",
     "windowFrames": 720,
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "COMBO_SKILL",

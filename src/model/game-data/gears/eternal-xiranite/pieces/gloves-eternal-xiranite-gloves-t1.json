@@ -83,5 +83,11 @@
     "name": "Eternal Xiranite Gloves T1",
     "type": "GLOVES",
     "gearSet": "ETERNAL_XIRANITE"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
   }
 }

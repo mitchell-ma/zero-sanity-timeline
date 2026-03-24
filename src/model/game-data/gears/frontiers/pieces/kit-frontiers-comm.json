@@ -83,5 +83,11 @@
     "name": "Frontiers Comm",
     "type": "KIT",
     "gearSet": "FRONTIERS"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
   }
 }

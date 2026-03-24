@@ -52,7 +52,8 @@
     "toDeterminer": "THIS",
     "eventType": "STATUS",
     "eventCategoryType": "TALENT",
-    "description": "Ultimate Textbook Assault improved: Final hit creates {talent_1+1:0} shockwave(s), each dealing 30% ATK of Physical DMG."
+    "description": "Ultimate Textbook Assault improved: Final hit creates {talent_1+1:0} shockwave(s), each dealing 30% ATK of Physical DMG.",
+    "maxLevel": 2
   },
   "metadata": {
     "originId": "CATCHER",

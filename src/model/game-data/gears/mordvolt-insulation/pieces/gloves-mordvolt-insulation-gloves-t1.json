@@ -83,5 +83,11 @@
     "name": "Mordvolt Insulation Gloves T1",
     "type": "GLOVES",
     "gearSet": "MORDVOLT_INSULATION"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
   }
 }

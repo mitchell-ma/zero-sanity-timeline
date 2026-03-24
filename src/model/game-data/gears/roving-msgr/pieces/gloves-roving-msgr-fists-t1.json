@@ -83,5 +83,11 @@
     "name": "Roving Msgr Fists T1",
     "type": "GLOVES",
     "gearSet": "ROVING_MSGR"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
   }
 }

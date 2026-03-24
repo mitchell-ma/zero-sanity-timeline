@@ -83,5 +83,11 @@
     "name": "Aic Heavy Armor",
     "type": "ARMOR",
     "gearSet": "AIC_HEAVY"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
   }
 }

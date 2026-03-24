@@ -1,0 +1,20 @@
+{
+  "properties": {
+    "type": "TALENT",
+    "id": "TACTICAL_INSTRUCTION_TALENT",
+    "name": "Tactical Instruction (Talent)",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
+    "eventType": "STATUS",
+    "eventCategoryType": "TALENT",
+    "description": "Ultimate Shieldguard Banner, Forward improved: Any operator triggering the ultimate's subsequent effects also gains Fervent Morale for 10s. Requires activation of talent: The Living Banner.",
+    "maxLevel": 2
+  },
+  "metadata": {
+    "originId": "POGRANICHNIK",
+    "dataSources": [
+      "WARFARIN"
+    ],
+    "icon": "skills/pogranichnik_talent_2_icon.png"
+  }
+}

@@ -9,135 +9,13 @@
   ],
   "mainAttributeType": "AGILITY",
   "secondaryAttributeType": "STRENGTH",
-  "potentials": [
-    {
-      "level": 1,
-      "name": "\"Shadowless\"",
-      "effects": [
-        {
-          "potentialEffectType": "IMPLEMENTED_IN_DSL"
-        }
-      ],
-      "description": "DMG Dealt +20% to enemies below 50% HP."
-    },
-    {
-      "level": 2,
-      "name": "Heirloom Martial Arts",
-      "effects": [
-        {
-          "potentialEffectType": "STAT_MODIFIER",
-          "statModifier": {
-            "statType": "AGILITY",
-            "value": 15
-          }
-        },
-        {
-          "potentialEffectType": "STAT_MODIFIER",
-          "statModifier": {
-            "statType": "PHYSICAL_DAMAGE_BONUS",
-            "value": 0.08
-          }
-        }
-      ],
-      "description": "Agility +{Agi:0}, Physical DMG Dealt +{PhysicalDamageIncrease:0%}."
-    },
-    {
-      "level": 3,
-      "name": "Dual-Wielding Swordmancer",
-      "effects": [
-        {
-          "potentialEffectType": "SKILL_PARAMETER",
-          "skillParameterModifier": {
-            "skillType": "BLADE_GALE",
-            "parameterKey": "DAMAGE_MULTIPLIER_MODIFIER",
-            "value": 1.1,
-            "parameterModifyType": "MULTIPLICATIVE"
-          }
-        },
-        {
-          "potentialEffectType": "SKILL_PARAMETER",
-          "skillParameterModifier": {
-            "skillType": "BLADE_GALE",
-            "parameterKey": "DAMAGE_MULTIPLIER_MODIFIER",
-            "value": 1.1,
-            "parameterModifyType": "MULTIPLICATIVE"
-          }
-        },
-        {
-          "potentialEffectType": "SKILL_PARAMETER",
-          "skillParameterModifier": {
-            "skillType": "ASCENDING_STRIKE",
-            "parameterKey": "DAMAGE_MULTIPLIER_MODIFIER",
-            "value": 1.1,
-            "parameterModifyType": "MULTIPLICATIVE"
-          }
-        },
-        {
-          "potentialEffectType": "SKILL_PARAMETER",
-          "skillParameterModifier": {
-            "skillType": "SOAR_TO_THE_STARS",
-            "parameterKey": "DAMAGE_MULTIPLIER_MODIFIER",
-            "value": 1.1,
-            "parameterModifyType": "MULTIPLICATIVE"
-          }
-        }
-      ],
-      "description": "Battle skill Ascending Strike, combo skill Soar to the Stars, and ultimate Blade Gale improved: DMG Multiplier is increased to 1.1 times the original."
-    },
-    {
-      "level": 4,
-      "name": "Improvised Chi Xiao",
-      "effects": [
-        {
-          "potentialEffectType": "SKILL_COST",
-          "skillCostModifier": {
-            "skillType": "CHEN_QIANYU_BLADE_GALE",
-            "parameterType": 1,
-            "value": 0.85
-          }
-        }
-      ],
-      "description": "Ultimate Blade Gale improved: Ultimate Energy cost -15%."
-    },
-    {
-      "level": 5,
-      "name": "Bonded with the World",
-      "effects": [
-        {
-          "potentialEffectType": "IMPLEMENTED_IN_DSL"
-        }
-      ],
-      "description": "Combo skill Soar to the Stars improved: Length of cooldown is now {coolDown:0}s."
-    }
-  ],
   "talents": {
-    "one": {
-      "id": "SLASHING_EDGE_TALENT",
-      "maxLevel": 2,
-      "description": "After hitting an enemy with skills, Chen gains ATK +4% for 10s. This effect can reach 5 stacks."
-    },
-    "two": {
-      "id": "MOMENTUM_BREAKER_TALENT",
-      "maxLevel": 2,
-      "description": "Interrupting the enemy's charge up deals another 10 Stagger."
-    },
+    "one": "SLASHING_EDGE_TALENT",
+    "two": "MOMENTUM_BREAKER_TALENT",
     "attributeIncrease": {
-      "id": "SKIRMISHER",
-      "maxLevel": 4
+      "id": "SKIRMISHER"
     }
   },
-  "talentEffects": [
-    {
-      "name": "Sweeping Blade",
-      "source": "POTENTIAL",
-      "minPotential": 1,
-      "bonusType": "DAMAGE_DEALT",
-      "values": [
-        0.2
-      ],
-      "condition": {}
-    }
-  ],
   "statsByLevel": [
     {
       "level": 1,

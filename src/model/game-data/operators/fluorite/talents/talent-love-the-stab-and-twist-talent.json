@@ -1,0 +1,20 @@
+{
+  "properties": {
+    "type": "TALENT",
+    "id": "LOVE_THE_STAB_AND_TWIST_TALENT",
+    "name": "Love the Stab and Twist (Talent)",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
+    "eventType": "STATUS",
+    "eventCategoryType": "TALENT",
+    "description": "Fluorite gains DMG Dealt +{dmg_up:0%} against Slowed targets.",
+    "maxLevel": 2
+  },
+  "metadata": {
+    "originId": "FLUORITE",
+    "dataSources": [
+      "WARFARIN"
+    ],
+    "icon": "skills/fluorite_talent_1_icon.png"
+  }
+}

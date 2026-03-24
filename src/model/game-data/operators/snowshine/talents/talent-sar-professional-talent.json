@@ -39,7 +39,8 @@
     "toDeterminer": "THIS",
     "eventType": "STATUS",
     "eventCategoryType": "TALENT",
-    "description": "Battle skill Saturated Defense improved: After successfully retaliating an enemy attack, Snowshine gains another 10 Ultimate Energy."
+    "description": "Battle skill Saturated Defense improved: After successfully retaliating an enemy attack, Snowshine gains another 10 Ultimate Energy.",
+    "maxLevel": 2
   },
   "metadata": {
     "originId": "SNOWSHINE",

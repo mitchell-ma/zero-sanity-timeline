@@ -9,95 +9,11 @@
   ],
   "mainAttributeType": "AGILITY",
   "secondaryAttributeType": "STRENGTH",
-  "potentials": [
-    {
-      "level": 1,
-      "name": "Final Awakening",
-      "effects": [
-        {
-          "potentialEffectType": "IMPLEMENTED_IN_DSL"
-        }
-      ],
-      "description": "Battle skill Constructive Sequence improved: Consuming Originium Crystals returns 50 SP."
-    },
-    {
-      "level": 2,
-      "name": "Reflection of Authority",
-      "effects": [
-        {
-          "potentialEffectType": "IMPLEMENTED_IN_DSL"
-        }
-      ],
-      "description": "Talent Essence Disintegration improved: When the Endministrator gains the ATK buff, other allied operators gain half of this ATK buff."
-    },
-    {
-      "level": 3,
-      "name": "???",
-      "effects": [
-        {
-          "potentialEffectType": "SKILL_PARAMETER",
-          "skillParameterModifier": {
-            "skillType": "chr_0002_endminm_combo_skill",
-            "parameterKey": "DAMAGE_MULTIPLIER_MODIFIER",
-            "value": 1.3,
-            "parameterModifyType": "MULTIPLICATIVE"
-          }
-        }
-      ],
-      "description": "???"
-    },
-    {
-      "level": 4,
-      "name": "???",
-      "effects": [
-        {
-          "potentialEffectType": "STAT_MODIFIER",
-          "statModifier": {
-            "statType": "BASE_HP",
-            "value": 0.1
-          }
-        },
-        {
-          "potentialEffectType": "STAT_MODIFIER",
-          "statModifier": {
-            "statType": "AETHER_RESISTANCE",
-            "value": -0.1
-          }
-        },
-        {
-          "potentialEffectType": "STAT_MODIFIER",
-          "statModifier": {
-            "statType": "AGILITY",
-            "value": 25
-          }
-        }
-      ],
-      "description": "???"
-    },
-    {
-      "level": 5,
-      "name": "???",
-      "effects": [
-        {
-          "potentialEffectType": "IMPLEMENTED_IN_DSL"
-        }
-      ],
-      "description": "???"
-    }
-  ],
   "talents": {
-    "one": {
-      "id": "ESSENCE_DISINTEGRATION_TALENT",
-      "maxLevel": 2,
-      "description": "When the Originium Crystals attached to the enemy are consumed, the Endministrator gains ATK +30% for 15s. This effect cannot stack."
-    },
-    "two": {
-      "id": "REALSPACE_STASIS",
-      "maxLevel": 2
-    },
+    "one": "ESSENCE_DISINTEGRATION_TALENT",
+    "two": "REALSPACE_STASIS_TALENT",
     "attributeIncrease": {
-      "id": "SKIRMISHER",
-      "maxLevel": 4
+      "id": "SKIRMISHER"
     }
   },
   "statsByLevel": [

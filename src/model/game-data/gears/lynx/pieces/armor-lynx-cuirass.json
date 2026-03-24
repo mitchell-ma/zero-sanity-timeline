@@ -83,5 +83,11 @@
     "name": "Lynx Cuirass",
     "type": "ARMOR",
     "gearSet": "LYNX"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
   }
 }

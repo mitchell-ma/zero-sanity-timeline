@@ -45,7 +45,7 @@ export interface OperatorStatConfig {
   talents?: {
     one?: { name: string; description?: string; maxLevel: number };
     two?: { name: string; description?: string; maxLevel: number };
-    attributeIncrease?: { id: string; maxLevel: number };
+    attributeIncrease?: { id: string };
   };
   /** Built-in operators: level entries with exact per-level stats. */
   statsByLevel?: { level: number; attributes: Record<string, number> }[];

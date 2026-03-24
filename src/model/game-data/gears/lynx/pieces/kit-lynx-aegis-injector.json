@@ -63,5 +63,11 @@
     "name": "Lynx Aegis Injector",
     "type": "KIT",
     "gearSet": "LYNX"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
   }
 }

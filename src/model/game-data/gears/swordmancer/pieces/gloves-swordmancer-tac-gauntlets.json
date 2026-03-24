@@ -83,5 +83,11 @@
     "name": "Swordmancer Tac Gauntlets",
     "type": "GLOVES",
     "gearSet": "SWORDMANCER"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
   }
 }

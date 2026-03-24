@@ -103,5 +103,11 @@
     "name": "Hanging River O2 Tube",
     "type": "KIT",
     "gearSet": "TIDE_SURGE"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
   }
 }

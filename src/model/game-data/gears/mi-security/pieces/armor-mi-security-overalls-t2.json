@@ -83,5 +83,11 @@
     "name": "Mi Security Overalls T2",
     "type": "ARMOR",
     "gearSet": "MI_SECURITY"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
   }
 }

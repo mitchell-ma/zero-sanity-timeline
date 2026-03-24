@@ -83,5 +83,11 @@
     "name": "Mi Security Gloves T1",
     "type": "GLOVES",
     "gearSet": "MI_SECURITY"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
   }
 }

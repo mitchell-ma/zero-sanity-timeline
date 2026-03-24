@@ -1,0 +1,20 @@
+{
+  "properties": {
+    "type": "TALENT",
+    "id": "CHEER_OF_VICTORY_TALENT",
+    "name": "Cheer of Victory (Talent)",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
+    "eventType": "STATUS",
+    "eventCategoryType": "TALENT",
+    "description": "Combo skill Flash and Dash improved: For every 10 points of Intellect, SP Recovery +1.5% (max: 75%).",
+    "maxLevel": 2
+  },
+  "metadata": {
+    "originId": "AKEKURI",
+    "dataSources": [
+      "WARFARIN"
+    ],
+    "icon": "skills/akekuri_talent_1_icon.png"
+  }
+}

@@ -83,5 +83,11 @@
     "name": "Thertech Gloves",
     "type": "GLOVES",
     "gearSet": "AETHERTECH"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
   }
 }

@@ -63,5 +63,11 @@
     "name": "Pulser Labs Calibrator",
     "type": "KIT",
     "gearSet": "PULSER_LABS"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
   }
 }

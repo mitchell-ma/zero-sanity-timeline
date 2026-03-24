@@ -661,13 +661,10 @@ describe('G. Operator Identity', () => {
     expect(mockAntalJson.secondaryAttributeType).toBe('STRENGTH');
   });
 
-  test('G4: Talent names/IDs and max levels', () => {
-    expect(mockAntalJson.talents.one.id).toBe('IMPROVISER_TALENT');
-    expect(mockAntalJson.talents.one.maxLevel).toBe(2);
-    expect(mockAntalJson.talents.two.name).toBe('Subconscious Act');
-    expect(mockAntalJson.talents.two.maxLevel).toBe(2);
+  test('G4: Talent IDs and attribute increase', () => {
+    expect(mockAntalJson.talents.one).toBe('IMPROVISER_TALENT');
+    expect(mockAntalJson.talents.two).toBe('SUBCONSCIOUS_ACT_TALENT');
     expect(mockAntalJson.talents.attributeIncrease.id).toBe('KEEN_MIND');
-    expect(mockAntalJson.talents.attributeIncrease.maxLevel).toBe(4);
   });
 
   test('G5: Level table has entries from 1 to 99', () => {

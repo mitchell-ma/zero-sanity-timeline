@@ -83,5 +83,11 @@
     "name": "Aburrey Uv Lamp",
     "type": "KIT",
     "gearSet": "ABURREY_LEGACY"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
   }
 }

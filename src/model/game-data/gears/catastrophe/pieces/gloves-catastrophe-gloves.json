@@ -83,5 +83,11 @@
     "name": "Catastrophe Gloves",
     "type": "GLOVES",
     "gearSet": "CATASTROPHE"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
   }
 }

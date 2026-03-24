@@ -764,13 +764,10 @@ describe('H. Operator Identity & Metadata', () => {
     expect(mockJson.secondaryAttributeType).toBe('AGILITY');
   });
 
-  test('H4: Talent names and max levels', () => {
-    expect(mockJson.talents.one.id).toBe('SCORCHING_FANGS');
-    expect(mockJson.talents.one.maxLevel).toBe(2);
-    expect(mockJson.talents.two.id).toBe('CODE_OF_RESTRAINT_TALENT');
-    expect(mockJson.talents.two.maxLevel).toBe(2);
+  test('H4: Talent IDs and attribute increase', () => {
+    expect(mockJson.talents.one).toBe('SCORCHING_FANGS_TALENT');
+    expect(mockJson.talents.two).toBe('CODE_OF_RESTRAINT_TALENT');
     expect(mockJson.talents.attributeIncrease.id).toBe('FORGED');
-    expect(mockJson.talents.attributeIncrease.maxLevel).toBe(4);
   });
 
   test('H5: Level table has entries from 1 to 99+', () => {

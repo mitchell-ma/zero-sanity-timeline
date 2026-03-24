@@ -32,15 +32,42 @@
       ]
     }
   ],
+  "onTriggerClause": [
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "DEFEAT",
+          "object": "ENEMY"
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "FINE_COOKING",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
+        }
+      ]
+    }
+  ],
   "properties": {
     "id": "DA-PAN_POTENTIAL_1",
     "name": "Fine Cooking",
     "level": 1,
+    "type": "POTENTIAL",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
     "eventType": "POTENTIAL_EVENT",
     "eventCategoryType": "POTENTIAL",
     "description": "Ultimate CHOP 'N DUNK! improved: If the ultimate defeats at least one enemy, Da Pan deals +30% Physical DMG for 15s. This effect cannot stack."
   },
   "metadata": {
-    "originId": "DA-PAN"
+    "originId": "DA_PAN",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ]
   }
 }

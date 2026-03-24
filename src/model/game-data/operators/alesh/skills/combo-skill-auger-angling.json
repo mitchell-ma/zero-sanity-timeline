@@ -1,7 +1,7 @@
 {
   "properties": {
     "name": "Auger Angling",
-    "description": "COMBO TRIGGER: When the Arts Reaction or Originium Crystals of a nearby target is consumed. Opens an angling hole beneath the enemy that deals Physical DMG and recovers some SP. The skill has a chance to hook a Rare Fin that greatly increases the DMG dealt and recovers some more SP.",
+    "description": "When the Arts Reaction or Originium Crystals of a nearby target is consumed. Opens an angling hole beneath the enemy that deals Physical DMG and recovers some SP. The skill has a chance to hook a Rare Fin that greatly increases the DMG dealt and recovers some more SP.",
     "windowFrames": 720,
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "COMBO_SKILL",

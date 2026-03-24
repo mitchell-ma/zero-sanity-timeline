@@ -1,0 +1,20 @@
+{
+  "properties": {
+    "type": "TALENT",
+    "id": "OBLITERATION_PROTOCOL_TALENT",
+    "name": "Obliteration Protocol (Talent)",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
+    "eventType": "STATUS",
+    "eventCategoryType": "TALENT",
+    "description": "DMG Dealt +30% to Staggered enemies.",
+    "maxLevel": 2
+  },
+  "metadata": {
+    "originId": "PERLICA",
+    "dataSources": [
+      "WARFARIN"
+    ],
+    "icon": "skills/perlica_talent_1_icon.png"
+  }
+}

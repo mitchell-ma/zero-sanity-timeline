@@ -1,0 +1,20 @@
+{
+  "properties": {
+    "type": "TALENT",
+    "id": "RESILIENT_DEFENSE_TALENT",
+    "name": "Resilient Defense (Talent)",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
+    "eventType": "STATUS",
+    "eventCategoryType": "TALENT",
+    "description": "For every 10 Will, DEF +1.2.",
+    "maxLevel": 2
+  },
+  "metadata": {
+    "originId": "CATCHER",
+    "dataSources": [
+      "WARFARIN"
+    ],
+    "icon": "skills/catcher_talent_1_icon.png"
+  }
+}

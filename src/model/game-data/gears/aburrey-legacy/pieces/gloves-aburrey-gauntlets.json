@@ -83,5 +83,11 @@
     "name": "Aburrey Gauntlets",
     "type": "GLOVES",
     "gearSet": "ABURREY_LEGACY"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
   }
 }

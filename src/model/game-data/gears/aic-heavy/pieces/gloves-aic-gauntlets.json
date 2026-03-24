@@ -83,5 +83,11 @@
     "name": "Aic Gauntlets",
     "type": "GLOVES",
     "gearSet": "AIC_HEAVY"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
   }
 }

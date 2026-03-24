@@ -1,0 +1,20 @@
+{
+  "properties": {
+    "type": "TALENT",
+    "id": "RIOT_BRINGER_TALENT",
+    "name": "Riot Bringer (Talent)",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
+    "eventType": "STATUS",
+    "eventCategoryType": "TALENT",
+    "description": "During OLDEN STARE, performing a dive attack with the controlled operator ends its evolution early and creates a Waterspout. All nearby Whirlpools are also consumed and converted into additional Waterspouts. Waterspouts created this way have the same effects as those created by the battle skill IMA WAVERIDAAH! and gain DMG Dealt +40%.",
+    "maxLevel": 2
+  },
+  "metadata": {
+    "originId": "TANGTANG",
+    "dataSources": [
+      "WARFARIN"
+    ],
+    "icon": "skills/tangtang_talent_2_icon.png"
+  }
+}

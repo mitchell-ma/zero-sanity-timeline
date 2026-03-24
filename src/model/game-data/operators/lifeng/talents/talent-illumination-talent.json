@@ -1,0 +1,20 @@
+{
+  "properties": {
+    "type": "TALENT",
+    "id": "ILLUMINATION_TALENT",
+    "name": "Illumination (Talent)",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
+    "eventType": "STATUS",
+    "eventCategoryType": "TALENT",
+    "description": "Every point of Intellect and Will further grants ATK +{atk_up:0.00%}.",
+    "maxLevel": 2
+  },
+  "metadata": {
+    "originId": "LIFENG",
+    "dataSources": [
+      "WARFARIN"
+    ],
+    "icon": "skills/lifeng_talent_1_icon.png"
+  }
+}

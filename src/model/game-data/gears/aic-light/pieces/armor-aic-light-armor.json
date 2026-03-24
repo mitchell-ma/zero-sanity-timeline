@@ -83,5 +83,11 @@
     "name": "Aic Light Armor",
     "type": "ARMOR",
     "gearSet": "AIC_LIGHT"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
   }
 }

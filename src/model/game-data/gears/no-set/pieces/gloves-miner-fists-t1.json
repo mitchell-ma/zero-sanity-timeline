@@ -83,5 +83,11 @@
     "name": "Miner Fists T1",
     "type": "GLOVES",
     "gearSet": "NONE"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
   }
 }

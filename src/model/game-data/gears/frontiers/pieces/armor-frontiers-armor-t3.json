@@ -83,5 +83,11 @@
     "name": "Frontiers Armor T3",
     "type": "ARMOR",
     "gearSet": "FRONTIERS"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
   }
 }

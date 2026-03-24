@@ -83,5 +83,11 @@
     "name": "Tide Fall Light Armor",
     "type": "ARMOR",
     "gearSet": "TIDE_SURGE"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
   }
 }

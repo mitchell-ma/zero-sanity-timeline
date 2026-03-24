@@ -1,0 +1,20 @@
+{
+  "properties": {
+    "type": "TALENT",
+    "id": "CRYOGENIC_EMBRITTLEMENT_TALENT",
+    "name": "Cryogenic Embrittlement (Talent)",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
+    "eventType": "STATUS",
+    "eventCategoryType": "TALENT",
+    "description": "Ultimate Vigil Services improved: When the ultimate deals DMG to an enemy with Cryo Susceptibility, the effect of that Cryo Susceptibility is 1.2 times the original.",
+    "maxLevel": 2
+  },
+  "metadata": {
+    "originId": "LAST_RITE",
+    "dataSources": [
+      "WARFARIN"
+    ],
+    "icon": "skills/lastrite_talent_2_icon.png"
+  }
+}

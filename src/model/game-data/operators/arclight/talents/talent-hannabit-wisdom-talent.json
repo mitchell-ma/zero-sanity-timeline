@@ -1,0 +1,20 @@
+{
+  "properties": {
+    "type": "TALENT",
+    "id": "HANNABIT_WISDOM_TALENT",
+    "name": "Hannabit Wisdom (Talent)",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
+    "eventType": "STATUS",
+    "eventCategoryType": "TALENT",
+    "description": "50% chance to ignore an Arts Infliction applied on her.",
+    "maxLevel": 2
+  },
+  "metadata": {
+    "originId": "ARCLIGHT",
+    "dataSources": [
+      "WARFARIN"
+    ],
+    "icon": "skills/arclight_talent_2_icon.png"
+  }
+}

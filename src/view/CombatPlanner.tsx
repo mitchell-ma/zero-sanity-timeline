@@ -473,6 +473,15 @@ export default function CombatPlanner({
   }
   const enemyColCount = columns.filter((c) => c.type === 'mini-timeline' && c.source === TimelineSourceType.ENEMY).length;
 
+  // Identify first column of each group (operator slots + enemy) for visual gap styling
+  const groupStartKeys = new Set<string>();
+  for (const group of slotGroups) {
+    const first = columns.find((c) => c.ownerId === group.slot.slotId);
+    if (first) groupStartKeys.add(first.key);
+  }
+  const firstEnemy = columns.find((c) => c.type === 'mini-timeline' && c.source === TimelineSourceType.ENEMY);
+  if (firstEnemy) groupStartKeys.add(firstEnemy.key);
+
   // Build fluid gridTemplateColumns: team:operator:enemy = 1:3:2
   // Pre-compute total weight per slot group
   const slotGroupWeights = slotGroups.map((g) => {
@@ -1655,7 +1664,7 @@ export default function CombatPlanner({
             return (
               <div
                 key={`lo-${slot.slotId}`}
-                className="tl-loadout-cell"
+                className="tl-loadout-cell tl-group-start"
                 style={{
                   [isHorizontal ? 'gridRow' : 'gridColumn']: `${group.startCol} / span ${group.columnCount}`,
                   '--op-color': op?.color ?? '#666',
@@ -1675,7 +1684,7 @@ export default function CombatPlanner({
 
           {enemyColCount > 0 && (
             <div
-              className="tl-loadout-cell tl-loadout-cell--enemy"
+              className="tl-loadout-cell tl-loadout-cell--enemy tl-group-start"
               style={{ [isHorizontal ? 'gridRow' : 'gridColumn']: `${colIdx} / span ${enemyColCount}` } as React.CSSProperties}
             >
               <div className="lo-cell lo-cell--enemy">
@@ -1756,7 +1765,7 @@ export default function CombatPlanner({
           {columns.map((col) => (
             <div
               key={`hdr-${col.key}`}
-              className={`tl-header-cell${col.type === 'mini-timeline' && col.headerVariant === 'infliction' ? ' enemy-header' : ''}${col.type === 'placeholder' ? ' tl-header-cell--empty' : ''}${hoverColKey === col.key ? ' tl-header-cell--col-hover' : ''}`}
+              className={`tl-header-cell${col.type === 'mini-timeline' && col.headerVariant === 'infliction' ? ' enemy-header' : ''}${col.type === 'placeholder' ? ' tl-header-cell--empty' : ''}${hoverColKey === col.key ? ' tl-header-cell--col-hover' : ''}${groupStartKeys.has(col.key) ? ' tl-group-start' : ''}`}
               style={{ '--op-color': col.color } as React.CSSProperties}
               onContextMenu={col.type === 'mini-timeline' && col.microColumns && col.microColumnAssignment === 'dynamic-split'
                 ? (e) => handleHeaderContextMenu(e, col)
@@ -1809,7 +1818,7 @@ export default function CombatPlanner({
               return (
                 <div
                   key={`col-${col.key}`}
-                  className={`tl-sub-timeline tl-sub-timeline--empty${hoverColKey === col.key ? ' tl-sub-timeline--col-hover' : ''}`}
+                  className={`tl-sub-timeline tl-sub-timeline--empty${hoverColKey === col.key ? ' tl-sub-timeline--col-hover' : ''}${groupStartKeys.has(col.key) ? ' tl-group-start' : ''}`}
                   style={{ [axis.frameSize]: tlHeight } as React.CSSProperties}
                   onMouseDown={handleTimelineMouseDown}
                 >
@@ -1840,7 +1849,7 @@ export default function CombatPlanner({
             return (
               <div
                 key={`col-${col.key}`}
-                className={`tl-sub-timeline${hasMicro ? ' tl-sub-timeline--mf' : ''}${hoverColKey === col.key ? ' tl-sub-timeline--col-hover' : ''}`}
+                className={`tl-sub-timeline${hasMicro ? ' tl-sub-timeline--mf' : ''}${hoverColKey === col.key ? ' tl-sub-timeline--col-hover' : ''}${groupStartKeys.has(col.key) ? ' tl-group-start' : ''}`}
                 style={{ [axis.frameSize]: tlHeight } as React.CSSProperties}
                 onContextMenu={(e) => handleSubTimelineContextMenu(e, col)}
                 onMouseDown={handleTimelineMouseDown}

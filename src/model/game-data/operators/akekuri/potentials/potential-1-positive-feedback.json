@@ -1,28 +1,21 @@
 {
-  "clause": [
+  "onTriggerClause": [
     {
-      "conditions": [],
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "RECOVER",
+          "object": "SKILL_POINT"
+        }
+      ],
       "effects": [
         {
           "verb": "APPLY",
-          "object": "BUFF",
-          "objectId": "AKEKURI_POTENTIAL1_POSITIVE_FEEDBACK",
+          "object": "STATUS",
+          "objectId": "POSITIVE_FEEDBACK",
           "toDeterminer": "THIS",
-          "to": "OPERATOR",
-          "with": {
-            "atk_up": {
-              "verb": "IS",
-              "value": 0.1
-            },
-            "duration": {
-              "verb": "IS",
-              "value": 10
-            },
-            "max_stack": {
-              "verb": "IS",
-              "value": 5
-            }
-          }
+          "to": "OPERATOR"
         }
       ]
     }
@@ -31,11 +24,17 @@
     "id": "AKEKURI_POTENTIAL_1",
     "name": "Positive Feedback",
     "level": 1,
+    "type": "POTENTIAL",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
     "eventType": "POTENTIAL_EVENT",
     "eventCategoryType": "POTENTIAL",
     "description": "After recovering SP with skills, Akekuri gains ATK +10% for 10s. This effect can reach 5 stacks."
   },
   "metadata": {
-    "originId": "AKEKURI"
+    "originId": "AKEKURI",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ]
   }
 }

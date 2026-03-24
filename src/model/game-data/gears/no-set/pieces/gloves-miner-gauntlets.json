@@ -83,5 +83,11 @@
     "name": "Miner Gauntlets",
     "type": "GLOVES",
     "gearSet": "NONE"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
   }
 }

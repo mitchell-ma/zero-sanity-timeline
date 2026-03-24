@@ -28,7 +28,8 @@
     "toDeterminer": "THIS",
     "eventType": "STATUS",
     "eventCategoryType": "TALENT",
-    "description": "Battle skill Brr-Brr-Bomb β improved: After applying Solidification, the next basic attack directly becomes a Final Strike with DMG Dealt +{dmg_up:0%}."
+    "description": "Battle skill Brr-Brr-Bomb β improved: After applying Solidification, the next basic attack directly becomes a Final Strike with DMG Dealt +{dmg_up:0%}.",
+    "maxLevel": 2
   },
   "metadata": {
     "originId": "YVONNE",

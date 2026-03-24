@@ -83,5 +83,11 @@
     "name": "Lynx Slab",
     "type": "KIT",
     "gearSet": "LYNX"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
   }
 }

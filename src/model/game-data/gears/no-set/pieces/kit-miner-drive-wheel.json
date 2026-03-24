@@ -63,5 +63,11 @@
     "name": "Miner Drive Wheel",
     "type": "KIT",
     "gearSet": "NONE"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
   }
 }

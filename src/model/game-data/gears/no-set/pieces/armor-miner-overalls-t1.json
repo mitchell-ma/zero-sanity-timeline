@@ -83,5 +83,11 @@
     "name": "Miner Overalls T1",
     "type": "ARMOR",
     "gearSet": "NONE"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
   }
 }

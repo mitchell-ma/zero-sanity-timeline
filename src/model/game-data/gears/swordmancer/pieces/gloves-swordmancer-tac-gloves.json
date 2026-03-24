@@ -83,5 +83,11 @@
     "name": "Swordmancer Tac Gloves",
     "type": "GLOVES",
     "gearSet": "SWORDMANCER"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
   }
 }

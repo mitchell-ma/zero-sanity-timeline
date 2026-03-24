@@ -443,13 +443,13 @@ describe('D. Ultimate (Squad on Me)', () => {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 describe('E. Potentials', () => {
-  test('E1: P1 — BUFF_ATTACHMENT (Positive Feedback)', () => {
+  test('E1: P1 — Positive Feedback (DSL on-trigger → status)', () => {
     const p1 = mockJson.potentials[0];
     expect(p1.level).toBe(1);
     expect(p1.name).toBe('Positive Feedback');
-    const buff = p1.effects[0];
-    expect(buff.potentialEffectType).toBe('BUFF_ATTACHMENT');
-    expect(buff.buffAttachment.objectId).toBe('AKEKURI_POTENTIAL1_POSITIVE_FEEDBACK');
+    // P1 uses onTriggerClause to apply POSITIVE_FEEDBACK status;
+    // the actual buff effect lives in statuses/status-positive-feedback.json
+    expect(p1.effects[0].potentialEffectType).toBe('IMPLEMENTED_IN_DSL');
   });
 
   test('E2: P2 — +10 AGILITY and +10 INTELLECT stat modifiers', () => {
@@ -554,13 +554,10 @@ describe('F. Operator Identity & Metadata', () => {
     expect(mockJson.secondaryAttributeType).toBe('INTELLECT');
   });
 
-  test('F4: Talent names and max levels', () => {
-    expect(mockJson.talents.one.name).toBe('Cheer of Victory');
-    expect(mockJson.talents.one.maxLevel).toBe(2);
-    expect(mockJson.talents.two.name).toBe('Staying in the Zone');
-    expect(mockJson.talents.two.maxLevel).toBe(1);
+  test('F4: Talent IDs and attribute increase', () => {
+    expect(mockJson.talents.one).toBe('CHEER_OF_VICTORY_TALENT');
+    expect(mockJson.talents.two).toBe('STAYING_IN_THE_ZONE_TALENT');
     expect(mockJson.talents.attributeIncrease.id).toBe('SKIRMISHER');
-    expect(mockJson.talents.attributeIncrease.maxLevel).toBe(4);
   });
 
   test('F5: Level table has entries from 1 to 99+', () => {

@@ -63,5 +63,11 @@
     "name": "Redeemer Plates",
     "type": "ARMOR",
     "gearSet": "NONE"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
   }
 }

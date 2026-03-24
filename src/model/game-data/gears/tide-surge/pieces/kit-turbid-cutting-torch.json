@@ -83,5 +83,11 @@
     "name": "Turbid Cutting Torch",
     "type": "KIT",
     "gearSet": "TIDE_SURGE"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
   }
 }

@@ -1,7 +1,7 @@
 {
   "properties": {
     "name": "EMP Test Site",
-    "description": "COMBO TRIGGER: When an enemy with active Focus suffers a Physical Status or Arts Infliction. Triggers 1 energy explosion on the enemy that deals Electric DMG and applies another stack of the same Physical Status or Arts Infliction.",
+    "description": "When an enemy with active Focus suffers a Physical Status or Arts Infliction. Triggers 1 energy explosion on the enemy that deals Electric DMG and applies another stack of the same Physical Status or Arts Infliction.",
     "windowFrames": 720,
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "COMBO_SKILL",

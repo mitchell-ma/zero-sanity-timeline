@@ -83,5 +83,11 @@
     "name": "Aic Tactical Gloves",
     "type": "GLOVES",
     "gearSet": "AIC_LIGHT"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
   }
 }

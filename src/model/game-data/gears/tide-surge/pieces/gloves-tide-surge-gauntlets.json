@@ -103,5 +103,11 @@
     "name": "Tide Surge Gauntlets",
     "type": "GLOVES",
     "gearSet": "TIDE_SURGE"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
   }
 }

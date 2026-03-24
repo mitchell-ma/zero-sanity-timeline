@@ -20,7 +20,6 @@ import type { LoadoutProperties } from '../../view/InformationPane';
 import type { OperatorLoadoutState } from '../../view/OperatorLoadoutHeader';
 import type { TalentLevel } from '../../consts/types';
 import { aggregateLoadoutStats } from '../../controller/calculation/loadoutAggregator';
-import { evaluateTalentAttackBonus } from '../../controller/calculation/talentBonusEngine';
 import { getSkillMultiplier, getFrameMultiplier } from '../../controller/calculation/jsonMultiplierEngine';
 import {
   calculateDamage,
@@ -137,17 +136,10 @@ function buildCalcContext(loadout: OperatorLoadoutState, loadoutProperties: Load
   const agg = aggregateLoadoutStats(OPERATOR_ID, loadout, loadoutProperties);
   if (!agg) throw new Error('aggregateLoadoutStats returned null');
 
-  const { extraAttackPct } = evaluateTalentAttackBonus(OPERATOR_ID, {
-    talentOneLevel: loadoutProperties.operator.talentOneLevel,
-    talentTwoLevel: loadoutProperties.operator.talentTwoLevel,
-    potential: POTENTIAL,
-    stats: agg.stats,
-  });
-
   const totalAttack = getTotalAttack(
     agg.operatorBaseAttack,
     agg.weaponBaseAttack,
-    agg.stats[StatType.ATTACK_BONUS] + extraAttackPct,
+    agg.stats[StatType.ATTACK_BONUS],
     agg.flatAttackBonuses,
   );
 

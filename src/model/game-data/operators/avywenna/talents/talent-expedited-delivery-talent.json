@@ -39,7 +39,8 @@
     "toDeterminer": "THIS",
     "eventType": "STATUS",
     "eventCategoryType": "TALENT",
-    "description": "After a thrown or returning Thunderlance or Thunderlance EX hits the enemy, Avywenna gains 3 Ultimate Energy."
+    "description": "After a thrown or returning Thunderlance or Thunderlance EX hits the enemy, Avywenna gains 3 Ultimate Energy.",
+    "maxLevel": 2
   },
   "metadata": {
     "originId": "AVYWENNA",

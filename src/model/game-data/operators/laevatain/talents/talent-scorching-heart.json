@@ -22,7 +22,8 @@
     "element": "HEAT",
     "eventType": "STATUS",
     "eventCategoryType": "TALENT",
-    "description": "After the controlled operator's Final Strike or Finisher hits the enemy, Laevatain absorbs Heat Infliction from nearby enemies. Every stack of Heat Infliction absorbed gives Laevatain 1 stack of Melting Flame (max stacks: 4). After reaching 4 stacks, DMG dealt by Laevatain ignores 15 Heat Resistance of the enemy for 20s. Laevatain also absorbs Heat Infliction from enemies defeated nearby."
+    "description": "After the controlled operator's Final Strike or Finisher hits the enemy, Laevatain absorbs Heat Infliction from nearby enemies. Every stack of Heat Infliction absorbed gives Laevatain 1 stack of Melting Flame (max stacks: 4). After reaching 4 stacks, DMG dealt by Laevatain ignores 15 Heat Resistance of the enemy for 20s. Laevatain also absorbs Heat Infliction from enemies defeated nearby.",
+    "maxLevel": 3
   },
   "metadata": {
     "originId": "LAEVATAIN",
