@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import ReactDOM from 'react-dom';
 import { frameToPx, durationToPx, pxPerFrame } from '../utils/timeline';
 import { TimelineEvent, EventFrameMarker, EventSegmentData } from "../consts/viewTypes";
@@ -10,7 +10,7 @@ import { VERTICAL_AXIS, segmentRadius, type AxisMap } from '../utils/axisMap';
 import { formatSegmentShortName } from '../dsl/semanticsTranslation';
 
 /** Warning icon with a fixed-position tooltip that escapes scroll overflow. */
-function WarningIcon({ messages }: { messages: string[] }) {
+const WarningIcon = React.memo(function WarningIcon({ messages }: { messages: string[] }) {
   const iconRef = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
 
@@ -44,7 +44,7 @@ function WarningIcon({ messages }: { messages: string[] }) {
       )}
     </div>
   );
-}
+});
 
 const ROMAN_RE = /^\d+$/;
 /** Convert bare numeric labels (legacy "1","2",...) to Roman numerals. */
@@ -201,6 +201,11 @@ function EventBlock({
     return axis.framePos === 'top' ? { top: px } : { left: px };
   };
 
+  const comboWarningMessages = useMemo(
+    () => comboWarning ? comboWarning.split('\n') : [],
+    [comboWarning],
+  );
+
   // ── Generic segment-driven renderer ─────────────────────────────────────────
   if (!segments || segments.length === 0) return null;
 
@@ -227,7 +232,6 @@ function EventBlock({
 
   if (totalHeight <= 0) return null;
 
-  const warnings: string[] = [];
   const isSingleSegment = segments.length === 1;
 
   const wrapClass = `event-wrap${passive ? ' event-wrap--passive' : notDraggable ? ' event-wrap--static' : ''}${derived ? ' event-wrap--derived' : ''}${!passive && selected ? ' event-wrap--selected' : ''}${!passive && hovered && !selected ? ' event-wrap--hovered' : ''}`;
@@ -342,8 +346,8 @@ function EventBlock({
       onMouseOut={() => onHover?.(null)}
       onTouchStart={(e) => !notDraggable && onTouchStart?.(e, uid, startFrame)}
     >
-      {(warnings.length > 0 || comboWarning) && (
-        <WarningIcon messages={[...warnings, ...(comboWarning ? [comboWarning] : [])]} />
+      {comboWarning && (
+        <WarningIcon messages={comboWarningMessages} />
       )}
       {segmentElements}
       {frameElements}
