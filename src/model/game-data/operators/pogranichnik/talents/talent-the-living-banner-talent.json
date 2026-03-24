@@ -1,0 +1,45 @@
+{
+  "onTriggerClause": [
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "RECOVER_SP",
+          "with": {
+            "threshold": {
+              "verb": "IS",
+              "value": 80
+            }
+          }
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "FERVENT_MORALE",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "THE_LIVING_BANNER_TALENT",
+    "name": "The Living Banner (Talent)",
+    "type": "TALENT",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
+    "eventType": "STATUS",
+    "eventCategoryType": "TALENT",
+    "description": "During battle, recovering {atb_gain:0} SP with his own skills grants Fervent Morale for {duration:0}s. Fervent Morale effects: ATK +{atk_up:0%} and Arts Intensity +{physpell_up:0}. This effect can reach 3 stacks. Duration of each stack is counted separately."
+  },
+  "metadata": {
+    "originId": "POGRANICHNIK",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ],
+    "icon": "skills/pogranichnik_talent_1_icon.png"
+  }
+}

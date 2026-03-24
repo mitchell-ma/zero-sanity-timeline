@@ -1,0 +1,85 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "MODIFY",
+          "object": "SKILL_PARAMETER",
+          "objectId": "FLASHFREEZER",
+          "with": {
+            "parameterKey": "has_potential1",
+            "value": {
+              "verb": "IS",
+              "value": 1
+            },
+            "parameterModifyType": "UNIQUE_MULTIPLIER"
+          }
+        },
+        {
+          "verb": "MODIFY",
+          "object": "SKILL_PARAMETER",
+          "objectId": "FLASHFREEZER",
+          "with": {
+            "parameterKey": "radius",
+            "value": {
+              "verb": "IS",
+              "value": 5
+            },
+            "parameterModifyType": "UNIQUE_MULTIPLIER"
+          }
+        },
+        {
+          "verb": "MODIFY",
+          "object": "SKILL_PARAMETER",
+          "objectId": "FLASHFREEZER",
+          "with": {
+            "parameterKey": "interval",
+            "value": {
+              "verb": "IS",
+              "value": 0.5
+            },
+            "parameterModifyType": "UNIQUE_MULTIPLIER"
+          }
+        },
+        {
+          "verb": "MODIFY",
+          "object": "SKILL_PARAMETER",
+          "objectId": "FLASHFREEZER",
+          "with": {
+            "parameterKey": "maxcnt",
+            "value": {
+              "verb": "IS",
+              "value": 6
+            },
+            "parameterModifyType": "UNIQUE_MULTIPLIER"
+          }
+        },
+        {
+          "verb": "MODIFY",
+          "object": "SKILL_PARAMETER",
+          "objectId": "FLASHFREEZER",
+          "with": {
+            "parameterKey": "usp_extra",
+            "value": {
+              "verb": "IS",
+              "value": 25
+            },
+            "parameterModifyType": "UNIQUE_MULTIPLIER"
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "YVONNE_POTENTIAL_1",
+    "name": "Flash Freezer",
+    "level": 1,
+    "eventType": "POTENTIAL_EVENT",
+    "eventCategoryType": "POTENTIAL",
+    "description": "Combo skill Flashfreezer υ37 improved: Effect radius +20%; releases energy 2 more times; and gains an additional 15 Ultimate Energy after dealing DMG."
+  },
+  "metadata": {
+    "originId": "YVONNE"
+  }
+}

@@ -1,0 +1,84 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "ARTS_INTENSITY",
+          "with": {
+            "value": {
+              "verb": "VARY_BY",
+              "object": "SKILL_LEVEL",
+              "value": [
+                30,
+                36,
+                42,
+                48,
+                54,
+                60,
+                66,
+                72,
+                84
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            }
+          }
+        },
+        {
+          "verb": "APPLY",
+          "object": "PHYSICAL_DAMAGE_BONUS",
+          "with": {
+            "value": {
+              "verb": "VARY_BY",
+              "object": "SKILL_LEVEL",
+              "value": [
+                0.36,
+                0.432,
+                0.504,
+                0.576,
+                0.648,
+                0.72,
+                0.792,
+                0.864,
+                1.008
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "GRAND_VISION_LONG_TIME_WISH",
+    "name": "Long Time Wish",
+    "description": "Phys DMG bonus on next battle/ult skill",
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": 20
+      },
+      "unit": "SECOND"
+    },
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 1
+      },
+      "interactionType": "RESET"
+    },
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
+    "eventType": "STATUS",
+    "eventCategoryType": "WEAPON_STATUS"
+  },
+  "metadata": {
+    "originId": "GRAND_VISION",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ]
+  }
+}

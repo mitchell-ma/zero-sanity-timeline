@@ -1,0 +1,14 @@
+{
+  "properties": {
+    "name": "Inspiring: Start of a Saga",
+    "description": "When the wielder's HP is above {hp_ratio_c:0%}, ATK +{atk_up:0.0%}.",
+    "id": "INSPIRING_START_OF_A_SAGA"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ],
+    "id": "INSPIRING_START_OF_A_SAGA"
+  }
+}

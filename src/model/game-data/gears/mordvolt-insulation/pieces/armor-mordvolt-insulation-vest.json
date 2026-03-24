@@ -1,0 +1,87 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "BASE_DEFENSE",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": 28.8
+            }
+          }
+        },
+        {
+          "verb": "APPLY",
+          "object": "INTELLECT",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "VARY_BY",
+              "object": "SKILL_LEVEL",
+              "value": [
+                44,
+                44,
+                44,
+                44
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            }
+          }
+        },
+        {
+          "verb": "APPLY",
+          "object": "STRENGTH",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "VARY_BY",
+              "object": "SKILL_LEVEL",
+              "value": [
+                29,
+                29,
+                29,
+                29
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            }
+          }
+        },
+        {
+          "verb": "APPLY",
+          "object": "BASE_ATTACK",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "VARY_BY",
+              "object": "SKILL_LEVEL",
+              "value": [
+                16.2,
+                16.2,
+                16.2,
+                16.2
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "MORDVOLT_INSULATION_VEST",
+    "name": "Mordvolt Insulation Vest",
+    "type": "ARMOR",
+    "gearSet": "MORDVOLT_INSULATION"
+  }
+}

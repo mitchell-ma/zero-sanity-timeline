@@ -1,0 +1,44 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "AGILITY",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": 10
+            }
+          }
+        },
+        {
+          "verb": "APPLY",
+          "object": "INTELLECT",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": 10
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "FLUORITE_POTENTIAL_1",
+    "name": "Ten-Finger Smith",
+    "level": 1,
+    "eventType": "POTENTIAL_EVENT",
+    "eventCategoryType": "POTENTIAL",
+    "description": "Agility +{Agi:0}, Intellect +10."
+  },
+  "metadata": {
+    "originId": "FLUORITE"
+  }
+}

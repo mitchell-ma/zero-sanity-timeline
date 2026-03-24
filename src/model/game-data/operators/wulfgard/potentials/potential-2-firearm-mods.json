@@ -1,0 +1,46 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "MODIFY",
+          "object": "SKILL_PARAMETER",
+          "objectId": "THERMITE_TRACERS",
+          "with": {
+            "parameterKey": "potential_skillpower",
+            "value": {
+              "verb": "IS",
+              "value": 10
+            },
+            "parameterModifyType": "UNIQUE_MULTIPLIER"
+          }
+        },
+        {
+          "verb": "MODIFY",
+          "object": "SKILL_PARAMETER",
+          "objectId": "THERMITE_TRACERS",
+          "with": {
+            "parameterKey": "potential_2",
+            "value": {
+              "verb": "IS",
+              "value": 1
+            },
+            "parameterModifyType": "UNIQUE_MULTIPLIER"
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "WULFGARD_POTENTIAL_2",
+    "name": "Firearm Mods",
+    "level": 2,
+    "eventType": "POTENTIAL_EVENT",
+    "eventCategoryType": "POTENTIAL",
+    "description": "Talent Code of Restraint improved: Returns 10 additional SP."
+  },
+  "metadata": {
+    "originId": "WULFGARD"
+  }
+}

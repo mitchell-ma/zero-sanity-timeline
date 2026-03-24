@@ -1,0 +1,24 @@
+{
+  "properties": {
+    "id": "ORIGINIUM_CRYSTAL",
+    "name": "Originium Crystal",
+    "type": "SKILL_STATUS",
+    "to": "ENEMY",
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 4
+      },
+      "interactionType": "NONE"
+    },
+    "eventType": "STATUS",
+    "eventCategoryType": "SKILL_STATUS",
+    "description": "A forceful burst of Originium Arts that attacks enemies within the area of effect. Deals Physical DMG and applies Crush."
+  },
+  "metadata": {
+    "originId": "ENDMINISTRATOR",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ]
+  }
+}

@@ -1,0 +1,436 @@
+{
+  "segments": [
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT",
+        "dataSources": [
+          "END_AXIS"
+        ]
+      },
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 0.467
+          },
+          "unit": "SECOND"
+        },
+        "element": "CRYO"
+      },
+      "frames": [
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "END_AXIS"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 0.33,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "adjective": "CRYO",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "DAMAGE_MULTIPLIER": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.15,
+                        0.17,
+                        0.18,
+                        0.2,
+                        0.21,
+                        0.23,
+                        0.24,
+                        0.26,
+                        0.27,
+                        0.29,
+                        0.31,
+                        0.34
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT",
+        "dataSources": [
+          "END_AXIS"
+        ]
+      },
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 0.6
+          },
+          "unit": "SECOND"
+        },
+        "element": "CRYO"
+      },
+      "frames": [
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "END_AXIS"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 0.23,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "adjective": "CRYO",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "DAMAGE_MULTIPLIER": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.16,
+                        0.18,
+                        0.19,
+                        0.21,
+                        0.22,
+                        0.24,
+                        0.26,
+                        0.27,
+                        0.29,
+                        0.31,
+                        0.33,
+                        0.36
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT",
+        "dataSources": [
+          "END_AXIS"
+        ]
+      },
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 0.5
+          },
+          "unit": "SECOND"
+        },
+        "element": "CRYO"
+      },
+      "frames": [
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "END_AXIS"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 0.267,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "adjective": "CRYO",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "DAMAGE_MULTIPLIER": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.21,
+                        0.23,
+                        0.25,
+                        0.27,
+                        0.29,
+                        0.32,
+                        0.34,
+                        0.36,
+                        0.38,
+                        0.4,
+                        0.44,
+                        0.47
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT",
+        "dataSources": [
+          "END_AXIS"
+        ]
+      },
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 0.73
+          },
+          "unit": "SECOND"
+        },
+        "element": "CRYO"
+      },
+      "frames": [
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "END_AXIS"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 0.23,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "adjective": "CRYO",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "DAMAGE_MULTIPLIER": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.17,
+                        0.18,
+                        0.2,
+                        0.21,
+                        0.23,
+                        0.25,
+                        0.26,
+                        0.28,
+                        0.3,
+                        0.32,
+                        0.34,
+                        0.37
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "END_AXIS"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 0.4,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "adjective": "CRYO",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "DAMAGE_MULTIPLIER": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.17,
+                        0.18,
+                        0.2,
+                        0.21,
+                        0.23,
+                        0.25,
+                        0.26,
+                        0.28,
+                        0.3,
+                        0.32,
+                        0.34,
+                        0.37
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT",
+        "dataSources": [
+          "END_AXIS"
+        ]
+      },
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 1.13
+          },
+          "unit": "SECOND"
+        },
+        "element": "CRYO"
+      },
+      "frames": [
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "END_AXIS"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 0.63,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "RECOVER",
+                  "object": "SKILL_POINT",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 15
+                    }
+                  }
+                },
+                {
+                  "verb": "DEAL",
+                  "object": "STAGGER",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 15
+                    }
+                  }
+                },
+                {
+                  "verb": "DEAL",
+                  "adjective": "CRYO",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "DAMAGE_MULTIPLIER": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.55,
+                        0.61,
+                        0.66,
+                        0.72,
+                        0.77,
+                        0.83,
+                        0.88,
+                        0.94,
+                        0.99,
+                        1.06,
+                        1.14,
+                        1.24
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                },
+                {
+                  "verb": "PERFORM",
+                  "object": "FINAL_STRIKE",
+                  "to": "ENEMY"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "name": "Cooldown",
+    "description": "An attack with up to 5 sequences that deals Cryo DMG. As the controlled operator, Final Strike also deals {poise:0} Stagger.",
+    "eventType": "COMBAT_SKILL",
+    "eventCategoryType": "BASIC_ATTACK",
+    "element": "CRYO"
+  },
+  "metadata": {
+    "originId": "XAIHI",
+    "id": "BASIC_ATTACK",
+    "icon": "skills/attack_orbiter.png"
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "ATTACK_BONUS",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": 0.1
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "THE_STEEL_OATH_EMPOWERED",
+    "name": "The Steel Oath (Empowered)",
+    "type": "POTENTIAL_STATUS",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": 10
+      },
+      "unit": "SECOND"
+    },
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 1
+      },
+      "interactionType": "RESET"
+    },
+    "eventType": "STATUS",
+    "eventCategoryType": "POTENTIAL_STATUS",
+    "description": "Ultimate Re-Ignited Oath improved: Shield effect is multiplied by ; while this shield is active, the wielder gains ATK +."
+  },
+  "metadata": {
+    "originId": "EMBER",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ]
+  }
+}

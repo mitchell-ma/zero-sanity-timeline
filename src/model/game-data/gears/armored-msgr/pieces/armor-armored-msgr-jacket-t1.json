@@ -1,0 +1,87 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "BASE_DEFENSE",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": 40
+            }
+          }
+        },
+        {
+          "verb": "APPLY",
+          "object": "STRENGTH",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "VARY_BY",
+              "object": "SKILL_LEVEL",
+              "value": [
+                61,
+                61,
+                61,
+                61
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            }
+          }
+        },
+        {
+          "verb": "APPLY",
+          "object": "WILL",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "VARY_BY",
+              "object": "SKILL_LEVEL",
+              "value": [
+                41,
+                41,
+                41,
+                41
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            }
+          }
+        },
+        {
+          "verb": "APPLY",
+          "object": "HP_BONUS",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "VARY_BY",
+              "object": "SKILL_LEVEL",
+              "value": [
+                0.147,
+                0.147,
+                0.147,
+                0.147
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "ARMORED_MSGR_JACKET_T1",
+    "name": "Armored Msgr Jacket T1",
+    "type": "ARMOR",
+    "gearSet": "ARMORED_MSGR"
+  }
+}

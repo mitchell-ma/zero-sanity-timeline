@@ -1,0 +1,87 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "BASE_DEFENSE",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": 56
+            }
+          }
+        },
+        {
+          "verb": "APPLY",
+          "object": "INTELLECT",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "VARY_BY",
+              "object": "SKILL_LEVEL",
+              "value": [
+                87,
+                95,
+                104,
+                113
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            }
+          }
+        },
+        {
+          "verb": "APPLY",
+          "object": "AGILITY",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "VARY_BY",
+              "object": "SKILL_LEVEL",
+              "value": [
+                58,
+                63,
+                69,
+                75
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            }
+          }
+        },
+        {
+          "verb": "APPLY",
+          "object": "ULTIMATE_GAIN_EFFICIENCY",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "VARY_BY",
+              "object": "SKILL_LEVEL",
+              "value": [
+                0.1232142857,
+                0.13553572,
+                0.14785714,
+                0.16017857
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "FRONTIERS_PROTECTION_SUIT",
+    "name": "Frontiers Protection Suit",
+    "type": "ARMOR",
+    "gearSet": "FRONTIERS"
+  }
+}

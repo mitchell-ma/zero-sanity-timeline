@@ -17,7 +17,7 @@ jest.mock('../../controller/operators/operatorRegistry', () => ({
   getOperatorConfig: (id: string) => {
     if (id !== 'laevatain') return undefined;
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    return require('../../model/game-data/operators/laevatain-operator.json');
+    return require('../../model/game-data/operators/laevatain/laevatain.json');
   },
   ALL_OPERATORS: [],
 }));
@@ -91,22 +91,6 @@ jest.mock('../../utils/loadoutRegistry', () => {
     TACTICALS: [],
   };
 });
-
-// Mock operatorJsonLoader to avoid require.context
-jest.mock('../../model/event-frames/operatorJsonLoader', () => ({
-  getOperatorJson: () => undefined,
-  getFrameSequences: () => [],
-  getSegmentLabels: () => undefined,
-  getSkillTimings: () => undefined,
-  getUltimateEnergyCost: () => 0,
-  getSkillGaugeGains: () => undefined,
-  getBattleSkillSpCost: () => undefined,
-  getSkillCategoryData: () => undefined,
-  getBasicAttackDurations: () => undefined,
-  getComboTriggerClause: () => undefined,
-  getExchangeStatusConfig: () => ({}),
-  getExchangeStatusIds: () => new Set(),
-}));
 
 // Mock weaponGameData to avoid require.context
 jest.mock('../../model/game-data/weaponGameData', () => ({

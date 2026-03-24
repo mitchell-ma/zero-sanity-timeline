@@ -17,4 +17,4 @@ export const VALID_VALUE_NODE_KEYS = new Set([
 
 export const VALID_CLAUSE_KEYS = new Set(['conditions', 'effects']);
 
-export const VALID_METADATA_KEYS = new Set(['originId', 'dataSources']);
+export const VALID_METADATA_KEYS = new Set(['originId', 'dataSources', 'icon']);

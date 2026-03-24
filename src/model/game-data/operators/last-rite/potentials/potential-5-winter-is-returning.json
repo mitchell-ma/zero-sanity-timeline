@@ -1,0 +1,53 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "MODIFY",
+          "object": "SKILL_PARAMETER",
+          "objectId": "ESOTERIC_LEGACY",
+          "with": {
+            "parameterKey": "SKILL_POINT",
+            "value": {
+              "verb": "IS",
+              "value": 5
+            },
+            "parameterModifyType": "ADDITIVE"
+          }
+        },
+        {
+          "verb": "MODIFY",
+          "object": "SKILL_PARAMETER",
+          "objectId": "ESOTERIC_LEGACY",
+          "with": {
+            "parameterKey": "DAMAGE_MULTIPLIER_MODIFIER",
+            "value": {
+              "verb": "IS",
+              "value": 1.2
+            },
+            "parameterModifyType": "MULTIPLICATIVE"
+          }
+        },
+        {
+          "verb": "APPLY",
+          "object": "BUFF",
+          "objectId": "LAST_RITE_POTENTIAL5_WINTER_IS_RETURNING",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "LAST-RITE_POTENTIAL_5",
+    "name": "Winter is Returning",
+    "level": 5,
+    "eventType": "POTENTIAL_EVENT",
+    "eventCategoryType": "POTENTIAL",
+    "description": "Battle skill Esoteric Legacy of Seš'qa improved: Amount of SP returned is increased by another 5; Mirage Additional ATK Multiplier is increased to 1.2 times the original."
+  },
+  "metadata": {
+    "originId": "LAST-RITE"
+  }
+}

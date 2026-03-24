@@ -1,0 +1,46 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "WILL",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "VARY_BY",
+              "object": "SKILL_LEVEL",
+              "value": [
+                20,
+                36,
+                52,
+                68,
+                84,
+                100,
+                116,
+                132,
+                156
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "name": "Will Boost [L]",
+    "description": "Will +",
+    "id": "WILL_BOOST_L"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ],
+    "id": "WILL_BOOST_L"
+  }
+}

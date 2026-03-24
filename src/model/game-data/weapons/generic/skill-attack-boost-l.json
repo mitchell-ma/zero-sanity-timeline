@@ -1,0 +1,46 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "ATTACK_BONUS",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "VARY_BY",
+              "object": "SKILL_LEVEL",
+              "value": [
+                0.05,
+                0.09,
+                0.13,
+                0.17,
+                0.21,
+                0.25,
+                0.29,
+                0.33,
+                0.39
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "name": "Attack Boost [L]",
+    "description": "Attack +",
+    "id": "ATTACK_BOOST_L"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ],
+    "id": "ATTACK_BOOST_L"
+  }
+}

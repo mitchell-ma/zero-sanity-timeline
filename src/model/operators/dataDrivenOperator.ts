@@ -15,15 +15,17 @@ import { DEFAULT_STATS } from '../../consts/stats';
 import { interpolateStats, ATTRIBUTE_INCREASE_VALUES } from './operator';
 import type { BaseStats } from './operator';
 import type { Potential, SkillLevel } from '../../consts/types';
-import genericStatuses from '../game-data/operator-statuses/generic-statuses.json';
+import { getOperatorStatuses } from '../game-data/operatorStatusesStore';
 
 /** Lookup from generic attribute-increase status ID → { name, attribute }. */
 export const ATTRIBUTE_INCREASE_LOOKUP: Record<string, { name: string; attribute: StatType }> = {};
-for (const entry of genericStatuses) {
-  const props = entry.properties;
-  const effect = entry.clause[0]?.effects[0];
+for (const status of getOperatorStatuses('generic')) {
+  const serialized = status.serialize();
+  const props = serialized.properties as Record<string, unknown>;
+  const clause = serialized.clause as Array<{ effects?: Array<{ objectId?: string }> }>;
+  const effect = clause?.[0]?.effects?.[0];
   if (props?.id && effect?.objectId) {
-    ATTRIBUTE_INCREASE_LOOKUP[props.id] = { name: props.name, attribute: effect.objectId as StatType };
+    ATTRIBUTE_INCREASE_LOOKUP[props.id as string] = { name: props.name as string, attribute: effect.objectId as StatType };
   }
 }
 
@@ -34,14 +36,15 @@ export interface OperatorStatConfig {
   secondaryAttributeType: string;
   potentials?: {
     level: number;
+    description?: string;
     effects: {
       potentialEffectType: string;
       statModifier?: { statType: string; value: number };
     }[];
   }[];
   talents?: {
-    one?: { name: string; maxLevel: number };
-    two?: { name: string; maxLevel: number };
+    one?: { name: string; description?: string; maxLevel: number };
+    two?: { name: string; description?: string; maxLevel: number };
     attributeIncrease?: { id: string; maxLevel: number };
   };
   /** Built-in operators: level entries with exact per-level stats. */
@@ -152,6 +155,22 @@ export class DataDrivenOperator {
   get attributeIncreaseName(): string {
     const aiId = this.config.talents?.attributeIncrease?.id;
     return (aiId ? ATTRIBUTE_INCREASE_LOOKUP[aiId]?.name : undefined) ?? '';
+  }
+
+  get potentialDescriptions(): string[] | undefined {
+    const pots = this.config.potentials as { description?: string }[] | undefined;
+    if (!pots?.length) return undefined;
+    const descs = pots.map(p => p.description ?? '');
+    return descs.some(d => d) ? descs : undefined;
+  }
+
+  get talentDescriptions(): Record<number, string[]> | undefined {
+    const t = this.config.talents;
+    if (!t) return undefined;
+    const result: Record<number, string[]> = {};
+    if (t.one?.description) result[1] = [t.one.description];
+    if (t.two?.description) result[2] = [t.two.description];
+    return Object.keys(result).length > 0 ? result : undefined;
   }
 
   // ── Private ──────────────────────────────────────────────────────────────

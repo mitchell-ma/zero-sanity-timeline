@@ -1,0 +1,248 @@
+{
+  "properties": {
+    "name": "Aspect of Wrath",
+    "description": "COMBO TRIGGER: When the controlled operator performs a Final Strike on an enemy with Physical Susceptibility or Breach. Unleashes an aspect that performs a spear thrust to deal Physical DMG and grants Link.",
+    "windowFrames": 720,
+    "eventType": "COMBAT_SKILL",
+    "eventCategoryType": "COMBO_SKILL",
+    "element": "PHYSICAL"
+  },
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "RECOVER",
+          "object": "ULTIMATE_ENERGY",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": 10
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT"
+      },
+      "properties": {
+        "segmentTypes": [
+          "ANIMATION"
+        ],
+        "name": "Animation",
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 0.5
+          },
+          "unit": "SECOND"
+        },
+        "timeDependency": "REAL_TIME",
+        "timeInteractionType": "TIME_STOP"
+      },
+      "frames": []
+    },
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT"
+      },
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 1.17
+          },
+          "unit": "SECOND"
+        },
+        "element": "PHYSICAL"
+      },
+      "frames": [
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "END_AXIS"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 0.13,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "adjective": "PHYSICAL",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "DAMAGE_MULTIPLIER": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.47,
+                        0.51,
+                        0.56,
+                        0.61,
+                        0.65,
+                        0.7,
+                        0.75,
+                        0.79,
+                        0.84,
+                        0.9,
+                        0.97,
+                        1.05
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                },
+                {
+                  "verb": "APPLY",
+                  "object": "LINK",
+                  "objectType": "STATUS",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "duration": {
+                      "value": {
+                        "verb": "IS",
+                        "value": 20
+                      },
+                      "unit": "SECOND"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "END_AXIS"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 1.1,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "object": "STAGGER",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 10
+                    }
+                  }
+                },
+                {
+                  "verb": "DEAL",
+                  "adjective": "PHYSICAL",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "DAMAGE_MULTIPLIER": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        1.67,
+                        1.83,
+                        2,
+                        2.17,
+                        2.33,
+                        2.5,
+                        2.67,
+                        2.83,
+                        3,
+                        3.21,
+                        3.46,
+                        3.75
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT"
+      },
+      "properties": {
+        "segmentTypes": [
+          "COOLDOWN",
+          "IMMEDIATE_COOLDOWN"
+        ],
+        "name": "Cooldown",
+        "duration": {
+          "value": {
+            "verb": "VARY_BY",
+            "object": "SKILL_LEVEL",
+            "value": [
+              16,
+              16,
+              16,
+              16,
+              16,
+              16,
+              16,
+              16,
+              16,
+              16,
+              16,
+              15
+            ],
+            "ofDeterminer": "THIS",
+            "of": "OPERATOR"
+          },
+          "unit": "SECOND"
+        },
+        "timeDependency": "REAL_TIME"
+      },
+      "frames": []
+    }
+  ],
+  "metadata": {
+    "originId": "LIFENG",
+    "id": "ASPECT_OF_WRATH",
+    "icon": "skills/combo_lifeng.png"
+  },
+  "onTriggerClause": [
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "PERFORM",
+          "object": "FINAL_STRIKE"
+        }
+      ]
+    }
+  ]
+}

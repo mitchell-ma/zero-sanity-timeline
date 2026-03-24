@@ -1,0 +1,44 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "DAMAGE_BONUS",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": 0.5
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "BARRAGE_OF_TECHNOLOGY",
+    "name": "Barrage of Technology",
+    "type": "STATUS",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 1
+      },
+      "interactionType": "CONSUME"
+    },
+    "eventType": "STATUS",
+    "eventCategoryType": "STATUS",
+    "description": "Battle skill Brr-Brr-Bomb β improved: After applying Solidification, the next basic attack directly becomes a Final Strike with DMG Dealt +{dmg_up:0%}."
+  },
+  "metadata": {
+    "originId": "BARRAGE_OF_TECHNOLOGY_TALENT",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ]
+  }
+}

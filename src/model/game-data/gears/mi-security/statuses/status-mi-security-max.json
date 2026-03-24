@@ -1,0 +1,46 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "CRITICAL_RATE",
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": 0.05
+            }
+          },
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "type": "GEAR_SET_STATUS",
+    "id": "MI_SECURITY_MAX",
+    "name": "MI Security (Max)",
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": 5
+      },
+      "unit": "SECOND"
+    },
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 1
+      },
+      "interactionType": "RESET"
+    },
+    "description": "Activates at 5 stacks",
+    "eventType": "STATUS",
+    "eventCategoryType": "GEAR_SET_STATUS"
+  },
+  "metadata": {
+    "originId": "MI_SECURITY"
+  }
+}

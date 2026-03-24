@@ -1,0 +1,84 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "ARTS_DAMAGE_BONUS",
+          "with": {
+            "value": {
+              "verb": "VARY_BY",
+              "object": "SKILL_LEVEL",
+              "value": [
+                0.12,
+                0.144,
+                0.168,
+                0.192,
+                0.216,
+                0.24,
+                0.264,
+                0.288,
+                0.336
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            }
+          }
+        },
+        {
+          "verb": "APPLY",
+          "object": "ARTS_INTENSITY",
+          "with": {
+            "value": {
+              "verb": "VARY_BY",
+              "object": "SKILL_LEVEL",
+              "value": [
+                25,
+                30,
+                35,
+                40,
+                45,
+                50,
+                55,
+                60,
+                70
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "WHITE_NIGHT_NOVA_WHITE_NIGHT_NOVA",
+    "name": "White Night Nova",
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": 15
+      },
+      "unit": "SECOND"
+    },
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 1
+      },
+      "interactionType": "RESET"
+    },
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
+    "eventType": "STATUS",
+    "eventCategoryType": "WEAPON_STATUS",
+    "description": "Arts DMG Dealt +{spell_dmg_up:0.0%}. After the wielder applies Combustion or Electrification, the wielder gains Arts DMG Dealt +{spell_dmg_up2:0.0%} and Arts Intensity +{phy_spell_up:0} for {duration:0}s. Effects of the same name cannot stack."
+  },
+  "metadata": {
+    "originId": "WHITE_NIGHT_NOVA",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ]
+  }
+}

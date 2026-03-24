@@ -1,0 +1,338 @@
+{
+  "properties": {
+    "name": "Eruption Column",
+    "description": "COMBO TRIGGER: When the controlled operator performs a Final Strike on an enemy with no stacks of Vulnerability or Arts Infliction. Launches a homing Volcanic Cloud at a target enemy that deals Nature DMG when close enough to the target. The Volcanic Cloud explodes after a short delay, dealing half of the Nature DMG and forcibly applying temporary Corrosion to nearby enemies.",
+    "windowFrames": 720,
+    "eventType": "COMBAT_SKILL",
+    "eventCategoryType": "COMBO_SKILL",
+    "element": "NATURE"
+  },
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "RECOVER",
+          "object": "ULTIMATE_ENERGY",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": 10
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT",
+        "dataSources": [
+          "SELF"
+        ]
+      },
+      "properties": {
+        "segmentTypes": [
+          "ANIMATION"
+        ],
+        "name": "Animation",
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 0.729
+          },
+          "unit": "SECOND"
+        },
+        "timeDependency": "REAL_TIME",
+        "timeInteractionType": "TIME_STOP"
+      },
+      "frames": []
+    },
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT"
+      },
+      "properties": {
+        "name": "Eruption Column",
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 0.041
+          },
+          "unit": "SECOND"
+        },
+        "element": "NATURE"
+      },
+      "frames": [
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "END_AXIS"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 0,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "adjective": "NATURE",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "atkScaleBoom": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        1.11,
+                        1.22,
+                        1.33,
+                        1.44,
+                        1.55,
+                        1.67,
+                        1.78,
+                        1.89,
+                        2,
+                        2.14,
+                        2.3,
+                        2.5
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    },
+                    "durationCorrupt": {
+                      "verb": "IS",
+                      "value": 7
+                    },
+                    "DAMAGE_MULTIPLIER": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.45,
+                        0.49,
+                        0.54,
+                        0.58,
+                        0.62,
+                        0.67,
+                        0.71,
+                        0.76,
+                        0.8,
+                        0.86,
+                        0.93,
+                        1
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "END_AXIS"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 1.671,
+              "unit": "SECOND"
+            }
+          },
+          "frameTypes": [
+            "GUARANTEED_HIT",
+            "PASSIVE"
+          ],
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "object": "STAGGER",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 10
+                    }
+                  }
+                },
+                {
+                  "verb": "APPLY",
+                  "object": "REACTION",
+                  "adjective": [
+                    "FORCED",
+                    "CORROSION"
+                  ],
+                  "to": "ENEMY",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    },
+                    "duration": {
+                      "verb": "IS",
+                      "value": 7
+                    }
+                  }
+                },
+                {
+                  "verb": "DEAL",
+                  "adjective": "NATURE",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "atkScaleBoom": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        1.11,
+                        1.22,
+                        1.33,
+                        1.44,
+                        1.55,
+                        1.67,
+                        1.78,
+                        1.89,
+                        2,
+                        2.14,
+                        2.3,
+                        2.5
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    },
+                    "DAMAGE_MULTIPLIER": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.45,
+                        0.49,
+                        0.54,
+                        0.58,
+                        0.62,
+                        0.67,
+                        0.71,
+                        0.76,
+                        0.8,
+                        0.86,
+                        0.93,
+                        1
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT"
+      },
+      "properties": {
+        "segmentTypes": [
+          "COOLDOWN",
+          "IMMEDIATE_COOLDOWN"
+        ],
+        "name": "Cooldown",
+        "duration": {
+          "value": {
+            "verb": "VARY_BY",
+            "object": "SKILL_LEVEL",
+            "value": [
+              18,
+              18,
+              18,
+              18,
+              18,
+              18,
+              18,
+              18,
+              18,
+              18,
+              18,
+              17
+            ],
+            "ofDeterminer": "THIS",
+            "of": "OPERATOR"
+          },
+          "unit": "SECOND"
+        },
+        "timeDependency": "REAL_TIME"
+      },
+      "frames": []
+    }
+  ],
+  "metadata": {
+    "originId": "ARDELIA",
+    "id": "ERUPTION_COLUMN",
+    "icon": "skills/combo_ardelia.png"
+  },
+  "onTriggerClause": [
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "ANY",
+          "subject": "OPERATOR",
+          "verb": "PERFORM",
+          "object": "FINAL_STRIKE"
+        },
+        {
+          "subject": "ENEMY",
+          "verb": "HAVE",
+          "object": "STATUS",
+          "objectId": "vulnerableInfliction",
+          "negated": true
+        },
+        {
+          "subject": "ENEMY",
+          "verb": "HAVE",
+          "object": "STATUS",
+          "objectId": "heatInfliction",
+          "negated": true
+        },
+        {
+          "subject": "ENEMY",
+          "verb": "HAVE",
+          "object": "STATUS",
+          "objectId": "cryoInfliction",
+          "negated": true
+        },
+        {
+          "subject": "ENEMY",
+          "verb": "HAVE",
+          "object": "STATUS",
+          "objectId": "natureInfliction",
+          "negated": true
+        },
+        {
+          "subject": "ENEMY",
+          "verb": "HAVE",
+          "object": "STATUS",
+          "objectId": "electricInfliction",
+          "negated": true
+        }
+      ]
+    }
+  ]
+}

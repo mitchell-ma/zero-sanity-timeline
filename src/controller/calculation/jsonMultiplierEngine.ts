@@ -6,7 +6,7 @@
  * potential-dependent modifiers from the potentials section.
  */
 import { Potential, SkillLevel } from '../../consts/types';
-import { getOperatorJson } from '../../model/event-frames/operatorJsonLoader';
+import { getOperatorSkill, getOperatorBase } from '../gameDataStore';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -107,13 +107,10 @@ function getAtk(frame: JsonFrame, level: number, key: string = 'DAMAGE_MULTIPLIE
 }
 
 function buildCategoryCache(operatorId: string, category: string): CategoryMultiplierCache | null {
-  const json = getOperatorJson(operatorId);
-  if (!json) return null;
+  const skill = getOperatorSkill(operatorId, category);
+  if (!skill) return null;
 
-  const skills = json.skills as Record<string, JsonSkillCategory> | undefined;
-  if (!skills?.[category]) return null;
-
-  const skillCat = skills[category];
+  const skillCat = skill.serialize() as unknown as JsonSkillCategory;
   const segments: { frames: JsonFrame[]; label?: string }[] = [];
 
   if (skillCat.segments) {
@@ -205,10 +202,10 @@ function getPotentialMultiplier(
 ): number {
   if (potential === 0) return 1;
 
-  const json = getOperatorJson(operatorId);
-  if (!json?.potentials) return 1;
+  const base = getOperatorBase(operatorId);
+  if (!base?.potentials?.length) return 1;
 
-  const potentials = json.potentials as JsonPotential[];
+  const potentials = base.potentials as JsonPotential[];
   let result = 1;
 
   for (const pot of potentials) {
@@ -241,13 +238,10 @@ function getPotentialMultiplier(
 
 /** Check if a skill ID exists in the operator's skills JSON (or its empowered base). */
 function resolveSkillKey(operatorId: string, skillName: string): string | null {
-  const json = getOperatorJson(operatorId);
-  if (!json?.skills) return null;
-  const skills = json.skills as Record<string, unknown>;
-  if (skills[skillName]) return skillName;
+  if (getOperatorSkill(operatorId, skillName)) return skillName;
   // Empowered variants may not have their own entry — resolve to base
   const fallback = getEmpoweredFallback(skillName);
-  if (fallback && skills[fallback]) return skillName;
+  if (fallback && getOperatorSkill(operatorId, fallback)) return skillName;
   return null;
 }
 

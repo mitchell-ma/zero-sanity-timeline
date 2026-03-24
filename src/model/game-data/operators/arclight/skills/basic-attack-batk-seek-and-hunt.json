@@ -1,0 +1,436 @@
+{
+  "segments": [
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT",
+        "dataSources": [
+          "END_AXIS"
+        ]
+      },
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 0.33
+          },
+          "unit": "SECOND"
+        },
+        "element": "PHYSICAL"
+      },
+      "frames": [
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "END_AXIS"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 0.17,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "adjective": "PHYSICAL",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "DAMAGE_MULTIPLIER": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.1,
+                        0.11,
+                        0.12,
+                        0.13,
+                        0.14,
+                        0.15,
+                        0.16,
+                        0.17,
+                        0.18,
+                        0.19,
+                        0.21,
+                        0.23
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT",
+        "dataSources": [
+          "END_AXIS"
+        ]
+      },
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 0.367
+          },
+          "unit": "SECOND"
+        },
+        "element": "PHYSICAL"
+      },
+      "frames": [
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "END_AXIS"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 0.17,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "adjective": "PHYSICAL",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "DAMAGE_MULTIPLIER": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.13,
+                        0.14,
+                        0.15,
+                        0.16,
+                        0.18,
+                        0.19,
+                        0.2,
+                        0.21,
+                        0.23,
+                        0.24,
+                        0.26,
+                        0.28
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT",
+        "dataSources": [
+          "END_AXIS"
+        ]
+      },
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 0.7
+          },
+          "unit": "SECOND"
+        },
+        "element": "PHYSICAL"
+      },
+      "frames": [
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "END_AXIS"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 0.23,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "adjective": "PHYSICAL",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "DAMAGE_MULTIPLIER": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.13,
+                        0.14,
+                        0.16,
+                        0.17,
+                        0.18,
+                        0.2,
+                        0.21,
+                        0.22,
+                        0.23,
+                        0.25,
+                        0.27,
+                        0.29
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "END_AXIS"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 0.43,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "adjective": "PHYSICAL",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "DAMAGE_MULTIPLIER": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.13,
+                        0.14,
+                        0.16,
+                        0.17,
+                        0.18,
+                        0.2,
+                        0.21,
+                        0.22,
+                        0.23,
+                        0.25,
+                        0.27,
+                        0.29
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT",
+        "dataSources": [
+          "END_AXIS"
+        ]
+      },
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 0.93
+          },
+          "unit": "SECOND"
+        },
+        "element": "PHYSICAL"
+      },
+      "frames": [
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "END_AXIS"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 0.17,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "adjective": "PHYSICAL",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "DAMAGE_MULTIPLIER": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.12,
+                        0.13,
+                        0.14,
+                        0.16,
+                        0.17,
+                        0.18,
+                        0.19,
+                        0.2,
+                        0.22,
+                        0.23,
+                        0.25,
+                        0.27
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT",
+        "dataSources": [
+          "END_AXIS"
+        ]
+      },
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 1
+          },
+          "unit": "SECOND"
+        },
+        "element": "PHYSICAL"
+      },
+      "frames": [
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "END_AXIS"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 0.4,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "RECOVER",
+                  "object": "SKILL_POINT",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 17
+                    }
+                  }
+                },
+                {
+                  "verb": "DEAL",
+                  "object": "STAGGER",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 16
+                    }
+                  }
+                },
+                {
+                  "verb": "DEAL",
+                  "adjective": "PHYSICAL",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "DAMAGE_MULTIPLIER": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.48,
+                        0.52,
+                        0.57,
+                        0.62,
+                        0.67,
+                        0.71,
+                        0.76,
+                        0.81,
+                        0.86,
+                        0.91,
+                        0.99,
+                        1.07
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                },
+                {
+                  "verb": "PERFORM",
+                  "object": "FINAL_STRIKE",
+                  "to": "ENEMY"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "name": "Seek and Hunt",
+    "description": "An attack with up to 5 sequences that deals Physical DMG. As the controlled operator, Final Strike also deals {poise:0} Stagger.",
+    "eventType": "COMBAT_SKILL",
+    "eventCategoryType": "BASIC_ATTACK",
+    "element": "PHYSICAL"
+  },
+  "metadata": {
+    "originId": "ARCLIGHT",
+    "id": "SEEK_AND_HUNT",
+    "icon": "skills/attack_sword.png"
+  }
+}

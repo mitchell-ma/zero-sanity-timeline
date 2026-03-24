@@ -1,0 +1,187 @@
+{
+  "properties": {
+    "name": "Thunderlance: Strike",
+    "description": "COMBO TRIGGER: When controlled operator performs a Final Strike on a target with active Electric Infliction or Electrification. Leaps into mid-air and throws 3 Thunderlances at the target, then deals 1 hit of Electric DMG to enemies in the area of effect.",
+    "windowFrames": 720,
+    "eventType": "COMBAT_SKILL",
+    "eventCategoryType": "COMBO_SKILL",
+    "element": "ELECTRIC"
+  },
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "RECOVER",
+          "object": "ULTIMATE_ENERGY",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": 10
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT"
+      },
+      "properties": {
+        "segmentTypes": [
+          "ANIMATION"
+        ],
+        "name": "Animation",
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 0.5
+          },
+          "unit": "SECOND"
+        },
+        "timeDependency": "REAL_TIME",
+        "timeInteractionType": "TIME_STOP"
+      },
+      "frames": []
+    },
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT"
+      },
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 0.2
+          },
+          "unit": "SECOND"
+        },
+        "element": "ELECTRIC"
+      },
+      "frames": [
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "END_AXIS"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 0,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "object": "STAGGER",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 10
+                    }
+                  }
+                },
+                {
+                  "verb": "DEAL",
+                  "adjective": "ELECTRIC",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "lanceDuration": {
+                      "verb": "IS",
+                      "value": 30
+                    },
+                    "DAMAGE_MULTIPLIER": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        1.69,
+                        1.86,
+                        2.03,
+                        2.19,
+                        2.36,
+                        2.53,
+                        2.7,
+                        2.87,
+                        3.04,
+                        3.25,
+                        3.5,
+                        3.8
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT"
+      },
+      "properties": {
+        "segmentTypes": [
+          "COOLDOWN",
+          "IMMEDIATE_COOLDOWN"
+        ],
+        "name": "Cooldown",
+        "duration": {
+          "value": {
+            "verb": "VARY_BY",
+            "object": "SKILL_LEVEL",
+            "value": [
+              13,
+              13,
+              13,
+              13,
+              13,
+              13,
+              13,
+              13,
+              13,
+              13,
+              13,
+              12
+            ],
+            "ofDeterminer": "THIS",
+            "of": "OPERATOR"
+          },
+          "unit": "SECOND"
+        },
+        "timeDependency": "REAL_TIME"
+      },
+      "frames": []
+    }
+  ],
+  "metadata": {
+    "originId": "AVYWENNA",
+    "id": "THUNDERLANCE_STRIKE",
+    "icon": "skills/combo_avywenna.png"
+  },
+  "onTriggerClause": [
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "PERFORM",
+          "object": "FINAL_STRIKE"
+        }
+      ]
+    }
+  ]
+}

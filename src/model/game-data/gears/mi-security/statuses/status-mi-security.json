@@ -1,0 +1,51 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "ATTACK_BONUS",
+          "with": {
+            "value": {
+              "verb": "VARY_BY",
+              "object": "STATUS_LEVEL",
+              "value": [
+                0.05
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            }
+          },
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "type": "GEAR_SET_STATUS",
+    "id": "MI_SECURITY",
+    "name": "MI Security",
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": 5
+      },
+      "unit": "SECOND"
+    },
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 5
+      },
+      "interactionType": "NONE"
+    },
+    "description": "ATK +5% for 5s after scoring a critical hit. Max 5 stacks.",
+    "eventType": "STATUS",
+    "eventCategoryType": "GEAR_SET_STATUS"
+  },
+  "metadata": {
+    "originId": "MI_SECURITY"
+  }
+}

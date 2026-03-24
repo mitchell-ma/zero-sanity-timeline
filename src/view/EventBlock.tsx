@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom';
 import { frameToPx, durationToPx, pxPerFrame } from '../utils/timeline';
 import { TimelineEvent, EventFrameMarker, EventSegmentData } from "../consts/viewTypes";
 import { ELEMENT_COLORS, ElementType, EventFrameType, SegmentType } from '../consts/enums';
-import { getStatusElementMap } from '../controller/gameDataController';
+import { getStatusElementMap } from '../controller/gameDataStore';
 import type { EventLayout } from '../controller/timeline/timelineLayout';
 import { validateSegmentContiguity } from '../controller/timeline/eventValidator';
 import { VERTICAL_AXIS, segmentRadius, type AxisMap } from '../utils/axisMap';
@@ -240,6 +240,7 @@ function EventBlock({
 
   let offsetFrames = 0;
   const segmentElements: React.ReactNode[] = [];
+  const frameElements: React.ReactNode[] = [];
 
   for (let i = 0; i < segments.length; i++) {
     const seg = segments[i];
@@ -303,32 +304,30 @@ function EventBlock({
         {(passive || segH > 14) && segLabel && (
           <span className="event-block-label" style={{ color: style.labelColor, ...segLabelHover }}>{segLabel}</span>
         )}
-        {/* Frame diamonds */}
-        {/* eslint-disable-next-line no-loop-func */}
-        {seg.frames?.map((f, fi) => {
-
-          const framePx = durationToPx(f.derivedOffsetFrame ?? f.offsetFrame, zoom);
-          const isSelected = selectedFrames?.some((sf) => sf.segmentIndex === i && sf.frameIndex === fi) ?? false;
-          // Hover highlight: compare absolute real-frame positions
-          const frameAbsReal = f.absoluteFrame ?? (startFrame + segOffset + f.offsetFrame);
-          const isHoverHighlight = !isSelected && isFrameHovered(frameAbsReal);
-          const elColor = getFrameElementColor(f, skillElement);
-          return (
-            <div
-              key={`f-${fi}`}
-              className={`event-frame-diamond${isSelected ? ' event-frame-diamond--selected' : ''}${isHoverHighlight ? ' event-frame-diamond--hover-hit' : ''}${(f.frameTypes ?? []).includes(EventFrameType.FINAL_STRIKE) ? ' event-frame-diamond--final-strike' : ''}${(f.frameTypes ?? []).includes(EventFrameType.FINISHER) ? ' event-frame-diamond--finisher' : ''}${(f.frameTypes ?? []).includes(EventFrameType.DIVE) ? ' event-frame-diamond--dive' : ''}${hasInflictionOrStatus(f) ? ' event-frame-diamond--infliction' : ''}${f.statusLabel ? ' event-frame-diamond--status' : ''}`}
-              style={{ [axis.framePos]: framePx, ...(elColor && !isSelected && !isHoverHighlight ? { background: elColor, boxShadow: `0 0 3px ${elColor}80` } : {}) } as React.CSSProperties}
-              title={f.statusLabel ?? undefined}
-              onMouseDown={(e) => { e.stopPropagation(); if (e.button === 0) onFrameDragStart?.(e, uid, i, fi); }}
-              onClick={(e) => { e.stopPropagation(); onFrameClick?.(e, uid, i, fi); }}
-              onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); onFrameContextMenu?.(e, uid, i, fi); }}
-              onMouseOver={(e) => { e.stopPropagation(); onHover?.(null); }}
-              onMouseOut={(e) => { e.stopPropagation(); }}
-            />
-          );
-        })}
       </div>,
     );
+
+    // Collect frame diamonds into a separate layer above all segments
+    seg.frames?.forEach((f, fi) => {
+      const framePx = segTopPx + durationToPx(f.derivedOffsetFrame ?? f.offsetFrame, zoom);
+      const isSelected = selectedFrames?.some((sf) => sf.segmentIndex === i && sf.frameIndex === fi) ?? false;
+      const frameAbsReal = f.absoluteFrame ?? (startFrame + segOffset + f.offsetFrame);
+      const isHoverHighlight = !isSelected && isFrameHovered(frameAbsReal);
+      const elColor = getFrameElementColor(f, skillElement);
+      frameElements.push(
+        <div
+          key={`f-${i}-${fi}`}
+          className={`event-frame-diamond${isSelected ? ' event-frame-diamond--selected' : ''}${isHoverHighlight ? ' event-frame-diamond--hover-hit' : ''}${(f.frameTypes ?? []).includes(EventFrameType.FINAL_STRIKE) ? ' event-frame-diamond--final-strike' : ''}${(f.frameTypes ?? []).includes(EventFrameType.FINISHER) ? ' event-frame-diamond--finisher' : ''}${(f.frameTypes ?? []).includes(EventFrameType.DIVE) ? ' event-frame-diamond--dive' : ''}${hasInflictionOrStatus(f) ? ' event-frame-diamond--infliction' : ''}${f.statusLabel ? ' event-frame-diamond--status' : ''}`}
+          style={{ [axis.framePos]: framePx, ...(elColor && !isSelected && !isHoverHighlight ? { background: elColor, boxShadow: `0 0 3px ${elColor}80` } : {}) } as React.CSSProperties}
+          title={f.statusLabel ?? undefined}
+          onMouseDown={(e) => { e.stopPropagation(); if (e.button === 0) onFrameDragStart?.(e, uid, i, fi); }}
+          onClick={(e) => { e.stopPropagation(); onFrameClick?.(e, uid, i, fi); }}
+          onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); onFrameContextMenu?.(e, uid, i, fi); }}
+          onMouseOver={(e) => { e.stopPropagation(); onHover?.(null); }}
+          onMouseOut={(e) => { e.stopPropagation(); }}
+        />,
+      );
+    });
 
     // Advance running offset
     if (seg.properties.offset == null) offsetFrames += seg.properties.duration;
@@ -353,6 +352,7 @@ function EventBlock({
         <WarningIcon messages={[...warnings, ...(comboWarning ? [comboWarning] : [])]} />
       )}
       {segmentElements}
+      {frameElements}
     </div>
   );
 }

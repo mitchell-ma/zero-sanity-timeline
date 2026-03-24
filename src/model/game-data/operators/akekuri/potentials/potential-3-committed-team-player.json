@@ -1,0 +1,46 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "MODIFY",
+          "object": "SKILL_PARAMETER",
+          "objectId": "SQUAD_ON_ME",
+          "with": {
+            "parameterKey": "potential_3",
+            "value": {
+              "verb": "IS",
+              "value": 1
+            },
+            "parameterModifyType": "UNIQUE_MULTIPLIER"
+          }
+        },
+        {
+          "verb": "MODIFY",
+          "object": "SKILL_PARAMETER",
+          "objectId": "SQUAD_ON_ME",
+          "with": {
+            "parameterKey": "atk",
+            "value": {
+              "verb": "IS",
+              "value": 0.1
+            },
+            "parameterModifyType": "UNIQUE_MULTIPLIER"
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "AKEKURI_POTENTIAL_3",
+    "name": "Committed Team Player",
+    "level": 3,
+    "eventType": "POTENTIAL_EVENT",
+    "eventCategoryType": "POTENTIAL",
+    "description": "Ultimate SQUAD! ON ME! improved: While ultimate is active, entire team gains ATK +10%."
+  },
+  "metadata": {
+    "originId": "AKEKURI"
+  }
+}

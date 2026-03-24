@@ -1,0 +1,49 @@
+{
+  "clause": [
+    {
+      "conditions": [
+        {
+          "subject": "ENEMY",
+          "verb": "HAVE",
+          "object": "STAGGER_STATUS"
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "DAMAGE_BONUS",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "VARY_BY",
+              "object": "TALENT_ONE_LEVEL",
+              "value": [
+                0.2,
+                0.3
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "OBLITERATION_PROTOCOL",
+    "name": "Obliteration Protocol",
+    "type": "STATUS",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
+    "eventType": "STATUS",
+    "eventCategoryType": "STATUS",
+    "description": "DMG Dealt bonus to Staggered enemies."
+  },
+  "metadata": {
+    "originId": "PERLICA",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ]
+  }
+}

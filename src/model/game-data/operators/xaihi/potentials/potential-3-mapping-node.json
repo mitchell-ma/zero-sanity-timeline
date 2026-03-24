@@ -1,0 +1,33 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "MODIFY",
+          "object": "SKILL_PARAMETER",
+          "objectId": "STRESS_TESTING",
+          "with": {
+            "parameterKey": "potential_3",
+            "value": {
+              "verb": "IS",
+              "value": 1
+            },
+            "parameterModifyType": "UNIQUE_MULTIPLIER"
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "XAIHI_POTENTIAL_3",
+    "name": "Mapping Node",
+    "level": 3,
+    "eventType": "POTENTIAL_EVENT",
+    "eventCategoryType": "POTENTIAL",
+    "description": "Combo skill Stress Testing improved: When hitting the target, the hit chains 1 time to 1 additional target nearby."
+  },
+  "metadata": {
+    "originId": "XAIHI"
+  }
+}

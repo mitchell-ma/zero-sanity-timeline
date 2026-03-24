@@ -3,14 +3,13 @@ import { DeterminerType, NounType, type Predicate } from '../../dsl/semantics';
 import { CombatSkillType, ELEMENT_COLORS, ElementType, EnhancementType, EventFrameType, SegmentType, StatusType, TimeDependency, TimelineSourceType } from '../../consts/enums';
 import { ENEMY_OWNER_ID, USER_ID, ENEMY_GROUP_COLUMNS, ENEMY_ACTION_COLUMN_ID, OPERATOR_COLUMNS, PHYSICAL_STATUS_COLUMNS, SKILL_COLUMN_ORDER as SKILL_ORDER, SKILL_COLUMNS, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID } from '../../model/channels';
 import { SKILL_LABELS, ColumnLabel, STATUS_LABELS, REACTION_MICRO_COLUMNS } from '../../consts/timelineColumnLabels';
-import { getWeaponEffectDefs, getGearEffectDefs } from '../../model/game-data/weaponGearEffectLoader';
-import { getTacticalEntry, getWeapon, getAllOperatorStatuses } from '../gameDataController';
+import { getTacticalEntry, getWeapon, getAllOperatorStatuses, getWeaponEffectDefs, getGearEffectDefs } from '../gameDataStore';
 import { Tactical } from '../../model/consumables/tactical';
 import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../slot/commonSlotController';
 import { FPS, TOTAL_FRAMES } from '../../utils/timeline';
 import GENERAL_MECHANICS from '../../model/game-data/generalMechanics.json';
 import { SkillSegmentBuilder } from '../events/basicAttackController';
-import { getFrameSequences, getSegmentLabels, getOperatorJson } from '../../model/event-frames/operatorJsonLoader';
+import { getFrameSequences, getSegmentLabels, getOperatorSkill, getRawSkillTypeMap, getEnabledStatusEvents } from '../gameDataStore';
 import { getLinksForSlot } from '../custom/customSkillLinkController';
 import { getCustomSkills } from '../custom/customSkillController';
 import { COMBAT_SKILL_LABELS } from '../../consts/timelineColumnLabels';
@@ -69,36 +68,29 @@ export function buildColumns(
 
   for (const s of slots) {
     if (!s.operator) continue;
-    const json = getOperatorJson(s.operator.id);
-    const statusEvents = json?.statusEvents as Record<string, unknown>[] | undefined;
-    if (statusEvents) {
+    const statusEvents = getEnabledStatusEvents(s.operator.id);
+    if (statusEvents.length) {
       for (const se of statusEvents) {
-        const seProps = se.properties as Record<string, unknown> | undefined;
-        const target = se.target ?? seProps?.target;
-        const targetDeterminer = se.targetDeterminer ?? seProps?.targetDeterminer;
-        const seId = se.id ?? seProps?.id;
-        if (target === NounType.OPERATOR && (!targetDeterminer || targetDeterminer === DeterminerType.THIS) && seId) {
-          const seStacks = seProps?.stacks as { limit?: { value?: number }; duration?: { value?: { value?: number } | number | number[] }; interactionType?: string } | undefined;
-          const seDur = (seProps?.duration ?? se.duration ?? seStacks?.duration) as { value?: { value?: number } | number | number[] } | undefined;
+        if (se.target === NounType.OPERATOR && (!se.targetDeterminer || se.targetDeterminer === DeterminerType.THIS) && se.id) {
+          const seDur = se.duration as { value?: { value?: number } | number | number[] } | undefined;
           const rawVal = seDur?.value;
           const durVal = typeof rawVal === 'object' && rawVal !== null && !Array.isArray(rawVal)
             ? (rawVal as { value?: number }).value
             : Array.isArray(rawVal) ? rawVal[0] : rawVal;
           const dur = durVal ?? -1;
           const durationFrames = dur === -1 ? TOTAL_FRAMES : dur > 0 ? Math.round(dur * FPS) : 10 * FPS;
-          const colId = (OPERATOR_COLUMNS as Record<string, string>)[seId as string]
-            ?? (seId as string).toLowerCase().replace(/_/g, '-');
-          const seType = (seProps?.type ?? se.type) as string | undefined;
+          const colId = (OPERATOR_COLUMNS as Record<string, string>)[se.id]
+            ?? se.id.toLowerCase().replace(/_/g, '-');
           const defs = operatorStatusMap.get(s.slotId) ?? [];
           defs.push({
-            statusName: seId as string,
-            label: STATUS_LABELS[seId as StatusType] ?? (seId as string),
+            statusName: se.id,
+            label: STATUS_LABELS[se.id as StatusType] ?? se.id,
             columnId: colId,
             duration: durationFrames,
             color: s.operator.color,
             source: 'talent',
-            statusType: seType ?? 'STATUS',
-            ...(seStacks ? { stacks: seStacks } : {}),
+            statusType: se.type ?? 'STATUS',
+            ...(se.stacks ? { stacks: se.stacks as unknown as Record<string, unknown> } : {}),
           });
           operatorStatusMap.set(s.slotId, defs);
         }
@@ -230,13 +222,11 @@ export function buildColumns(
 
   for (const slot of slots) {
     const op = slot.operator;
-    const opJson = op ? getOperatorJson(op.id) : null;
-    const opSkills = (opJson?.skills ?? {}) as Record<string, Record<string, unknown>>;
     // Detect variants by presence of _ENHANCED/_EMPOWERED skill ID suffixes
     const basicName = op?.skills.basic?.name;
     const battleName = op?.skills.battle?.name;
-    const hasBasicVariants = basicName && (!!opSkills[basicName + '_ENHANCED'] || !!opSkills[basicName + '_EMPOWERED']);
-    const hasBattleVariants = battleName && (!!opSkills[battleName + '_ENHANCED'] || !!opSkills[battleName + '_EMPOWERED']);
+    const hasBasicVariants = op && basicName && (!!getOperatorSkill(op.id, basicName + '_ENHANCED') || !!getOperatorSkill(op.id, basicName + '_EMPOWERED'));
+    const hasBattleVariants = op && battleName && (!!getOperatorSkill(op.id, battleName + '_ENHANCED') || !!getOperatorSkill(op.id, battleName + '_EMPOWERED'));
     let slotHasCols = false;
     // ── Aggregated stats for value resolution context ──
     const slotAggStats = op && slot.loadout && slot.loadoutProperties
@@ -320,7 +310,7 @@ export function buildColumns(
             // Auto-discover variant skill IDs
             for (const suffix of ['_ENHANCED', '_EMPOWERED']) {
               const varId = skill.name + suffix;
-              const varSkill = opSkills[varId];
+              const varSkill = op ? (getOperatorSkill(op.id, varId)?.serialize() ?? null) as Record<string, unknown> | null : null;
               if (!varSkill) continue;
               const variantSeqs = getFrameSequences(op.id, varId);
               if (variantSeqs?.length) {
@@ -337,7 +327,7 @@ export function buildColumns(
               }
             }
             // Finisher + Dive — built from per-operator skills JSON when available
-            const rawTypeMap = opJson?.skillTypeMap as Record<string, unknown> | undefined;
+            const rawTypeMap = op ? getRawSkillTypeMap(op.id) as Record<string, unknown> : undefined;
             const basicEntry = rawTypeMap?.BASIC_ATTACK as Record<string, string> | undefined;
             const finisherId = basicEntry?.FINISHER;
             const diveId = basicEntry?.DIVE;
@@ -380,7 +370,7 @@ export function buildColumns(
             // Auto-discover variant skill IDs
             for (const suffix of ['_ENHANCED', '_EMPOWERED', '_ENHANCED_EMPOWERED']) {
               const varId = skill.name + suffix;
-              const varSkill = opSkills[varId];
+              const varSkill = op ? (getOperatorSkill(op.id, varId)?.serialize() ?? null) as Record<string, unknown> | null : null;
               if (!varSkill) continue;
               const variantSeqs = getFrameSequences(op.id, varId);
               if (!variantSeqs?.length) continue;
@@ -469,7 +459,7 @@ export function buildColumns(
                 },
                 {
                   name: empoweredName,
-                  displayName: resolveVariantDisplayName(empoweredBattleId, opSkills[empoweredBattleId] ?? {}),
+                  displayName: resolveVariantDisplayName(empoweredBattleId, getOperatorSkill(op!.id, empoweredBattleId)?.serialize() ?? {}),
                   segments: empVarSegs,
                   triggerCondition: 'Requires: Empowered condition',
                 },
@@ -830,19 +820,18 @@ export function buildColumns(
       const seen = new Set<string>();
       return slots.flatMap(s => {
         if (!s.operator) return [];
-        const json = getOperatorJson(s.operator.id);
-        const statusEvents = json?.statusEvents as Record<string, unknown>[] | undefined;
-        if (!statusEvents) return [];
+        const statusEvents = getEnabledStatusEvents(s.operator.id);
+        if (!statusEvents.length) return [];
         return statusEvents
           .filter((se) => se.target === 'ENEMY')
           .filter((se) => {
-            const id = (se.id as string).toLowerCase().replace(/_/g, '-');
+            const id = se.id.toLowerCase().replace(/_/g, '-');
             if (seen.has(id)) return false;
             seen.add(id);
             return true;
           })
           .map((se) => ({
-            id: (se.id as string).toLowerCase().replace(/_/g, '-'),
+            id: se.id.toLowerCase().replace(/_/g, '-'),
             label: STATUS_LABELS[se.id as StatusType] ?? se.id,
             color: s.operator!.color,
           }));

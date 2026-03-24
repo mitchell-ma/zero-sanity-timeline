@@ -7,7 +7,7 @@ import { SubjectType, VerbType, ObjectType, CardinalityConstraintType, Determine
   VERB_LABELS, OBJECT_LABELS, SUBJECT_LABELS, DETERMINER_LABELS, CARDINALITY_LABELS, TARGET_LABELS, WITH_PROPERTY_LABELS, WITH_BOOLEAN_PROPERTIES,
   getInteractionFieldVisibility, getVerbsForSubject, getObjectsForConditionVerb, isValueLiteral } from '../../dsl/semantics';
 import type { Interaction, Effect, WithPreposition } from '../../dsl/semantics';
-import { getAllStatusIds, getAllInflictionIds, getAllReactionIds } from '../../model/event-frames/operatorJsonLoader';
+import { getAllStatusIds, getAllInflictionIds, getAllReactionIds } from '../../controller/gameDataStore';
 import SentenceSlot from './SentenceSlot';
 import CustomSelect from './CustomSelect';
 

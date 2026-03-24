@@ -16,35 +16,6 @@ import { PhysicalStatusType } from '../../consts/enums';
 
 // ── Mocks ──────────────────────────────────────────────────────────────
 
-jest.mock('../../model/event-frames/operatorJsonLoader', () => {
-  const { VerbType: MockVerbType } = jest.requireActual('../../dsl/semantics');
-  const { UnitType: MockUnitType } = jest.requireActual('../../consts/enums');
-  const statusEvents = [
-    {
-      name: 'FOCUS',
-      target: 'ENEMY',
-      stack: { max: { P0: 1 }, instances: 1, verb: 'NONE' },
-      onTriggerClause: [],
-      properties: { duration: { value: { verb: MockVerbType.IS, value: 60 }, unit: MockUnitType.SECOND } },
-    },
-    {
-      name: 'FOCUS_EMPOWERED',
-      target: 'ENEMY',
-      stack: { max: { P0: 1 }, instances: 1, verb: 'NONE' },
-      onTriggerClause: [],
-      properties: { duration: { value: { verb: MockVerbType.IS, value: 60 }, unit: MockUnitType.SECOND } },
-    },
-  ];
-  const mockJson = { statusEvents, skillTypeMap: {} };
-  return {
-    getOperatorJson: (id: string) => id === 'antal' ? mockJson : undefined,
-    getAllOperatorIds: () => ['antal'],
-    getSkillIds: () => new Set(['EXCHANGE_CURRENT', 'SPECIFIED_RESEARCH_SUBJECT']),
-    getSkillTypeMap: () => ({}),
-    getExchangeStatusConfig: () => ({}),
-    getExchangeStatusIds: () => new Set(),
-  };
-});
 jest.mock('../../model/game-data/weaponGameData', () => ({
   getSkillValues: () => [], getConditionalValues: () => [],
   getConditionalScalar: () => null, getBaseAttackForLevel: () => 0,

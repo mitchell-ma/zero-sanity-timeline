@@ -1,0 +1,188 @@
+{
+  "properties": {
+    "name": "Rigid Interdiction",
+    "description": "Raises a shield that can block attacks, grants Protection to self and nearby operators, and immediately returns some SP. \nWhen attacked while the said shield is raised, perform a retaliation bash that deals Physical DMG and applies 1 stack of Vulnerability to the attacking enemy.",
+    "eventType": "COMBAT_SKILL",
+    "eventCategoryType": "BATTLE_SKILL",
+    "element": "PHYSICAL"
+  },
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "CONSUME",
+          "object": "SKILL_POINT",
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": 100
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "originId": "CATCHER",
+    "id": "RIGID_INTERDICTION",
+    "icon": "skills/skill_catcher.png"
+  },
+  "segments": [
+    {
+      "frames": [
+        {
+          "metadata": {
+            "eventComponentType": "FRAME"
+          },
+          "properties": {
+            "offset": {
+              "value": 0,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "APPLY",
+                  "object": "PROTECTION",
+                  "objectType": "STATUS",
+                  "toDeterminer": "ALL",
+                  "to": "OPERATOR",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 0.9
+                    }
+                  }
+                },
+                {
+                  "verb": "RECOVER",
+                  "object": "SKILL_POINT",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 30
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "END_AXIS"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 2.77,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "object": "STAGGER",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 20
+                    }
+                  }
+                },
+                {
+                  "verb": "APPLY",
+                  "object": "VULNERABILITY",
+                  "objectType": "STATUS",
+                  "to": "ENEMY",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  }
+                },
+                {
+                  "verb": "DEAL",
+                  "adjective": "PHYSICAL",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "DAMAGE_MULTIPLIER": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        1.78,
+                        1.96,
+                        2.13,
+                        2.31,
+                        2.49,
+                        2.67,
+                        2.85,
+                        3.02,
+                        3.2,
+                        3.42,
+                        3.69,
+                        4
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "conditions": [
+                {
+                  "subjectDeterminer": "THIS",
+                  "subject": "OPERATOR",
+                  "verb": "HAVE",
+                  "object": "POTENTIAL",
+                  "with": {
+                    "value": {
+                      "verb": "AT_LEAST",
+                      "value": 5
+                    }
+                  }
+                }
+              ],
+              "effects": [
+                {
+                  "verb": "RECOVER",
+                  "object": "SKILL_POINT",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 10
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 3.17
+          },
+          "unit": "SECOND"
+        },
+        "element": "PHYSICAL"
+      }
+    }
+  ]
+}

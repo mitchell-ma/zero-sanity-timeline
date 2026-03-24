@@ -1,0 +1,13 @@
+{
+  "properties": {
+    "id": "LIFENG_POTENTIAL_5",
+    "name": "Unremitting",
+    "level": 5,
+    "eventType": "POTENTIAL_EVENT",
+    "eventCategoryType": "POTENTIAL",
+    "description": "Talent Subduer of Evil improved: Every 15s, the next effect triggered deals another 250% ATK of Physical DMG and 5 Stagger."
+  },
+  "metadata": {
+    "originId": "LIFENG"
+  }
+}

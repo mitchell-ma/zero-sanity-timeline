@@ -1,0 +1,38 @@
+{
+  "onTriggerClause": [
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "DEFEAT",
+          "object": "ENEMY"
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "FINE_COOKING",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "FINE_COOKING_POTENTIAL",
+    "name": "Fine Cooking (P1)",
+    "type": "POTENTIAL",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
+    "eventType": "STATUS",
+    "eventCategoryType": "POTENTIAL"
+  },
+  "metadata": {
+    "originId": "DA_PAN",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ]
+  }
+}

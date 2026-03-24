@@ -1,0 +1,187 @@
+{
+  "properties": {
+    "name": "One Monster Catch!",
+    "description": "Alesh hooks a fin of unbelievable size and slams it to deal Cryo DMG and apply Cryo Infliction to enemies in a large area of effect in front of him. He recovers some SP on hit, with additional SP gained for each target defeated.",
+    "eventType": "COMBAT_SKILL",
+    "eventCategoryType": "ULTIMATE_SKILL",
+    "element": "CRYO"
+  },
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "CONSUME",
+          "object": "ULTIMATE_ENERGY",
+          "with": {
+            "value": {
+              "verb": "VARY_BY",
+              "object": "POTENTIAL",
+              "value": [
+                100,
+                100,
+                100,
+                85,
+                85,
+                85
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT"
+      },
+      "properties": {
+        "segmentTypes": [
+          "ANIMATION"
+        ],
+        "name": "Animation",
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 2.583
+          },
+          "unit": "SECOND"
+        },
+        "timeDependency": "REAL_TIME",
+        "timeInteractionType": "TIME_STOP"
+      },
+      "frames": []
+    },
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT"
+      },
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 0.617
+          },
+          "unit": "SECOND"
+        },
+        "element": "CRYO"
+      },
+      "frames": [
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "END_AXIS"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 0.417,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "RECOVER",
+                  "object": "SKILL_POINT",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 20
+                    }
+                  }
+                },
+                {
+                  "verb": "DEAL",
+                  "object": "STAGGER",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 20
+                    }
+                  }
+                },
+                {
+                  "verb": "APPLY",
+                  "object": "INFLICTION",
+                  "adjective": "CRYO",
+                  "to": "ENEMY",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  }
+                },
+                {
+                  "verb": "DEAL",
+                  "adjective": "CRYO",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "atbUp": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        12,
+                        12,
+                        12,
+                        12,
+                        12,
+                        12,
+                        12,
+                        12,
+                        12,
+                        15,
+                        15,
+                        15
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    },
+                    "atbMax": {
+                      "verb": "IS",
+                      "value": 100
+                    },
+                    "DAMAGE_MULTIPLIER": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        4.36,
+                        4.79,
+                        5.23,
+                        5.66,
+                        6.1,
+                        6.53,
+                        6.97,
+                        7.41,
+                        7.84,
+                        8.39,
+                        9.04,
+                        9.8
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "originId": "ALESH",
+    "id": "ONE_MONSTER_CATCH",
+    "icon": "skills/ult_alesh.png"
+  }
+}

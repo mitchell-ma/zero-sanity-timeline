@@ -1,0 +1,56 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "BASE_HP",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": 0.1
+            }
+          }
+        },
+        {
+          "verb": "APPLY",
+          "object": "AETHER_RESISTANCE",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": -0.1
+            }
+          }
+        },
+        {
+          "verb": "APPLY",
+          "object": "AGILITY",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": 25
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "ENDMINISTRATOR_POTENTIAL_4",
+    "name": "???",
+    "level": 4,
+    "eventType": "POTENTIAL_EVENT",
+    "eventCategoryType": "POTENTIAL",
+    "description": "???"
+  },
+  "metadata": {
+    "originId": "ENDMINISTRATOR"
+  }
+}

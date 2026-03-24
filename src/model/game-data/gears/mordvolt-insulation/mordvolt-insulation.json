@@ -1,0 +1,15 @@
+{
+  "properties": {
+    "id": "MORDVOLT_INSULATION",
+    "name": "Mordvolt Insulation",
+    "rarity": 4,
+    "eventType": "STATUS",
+    "eventCategoryType": "GEAR_SET_EFFECT"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
+  }
+}

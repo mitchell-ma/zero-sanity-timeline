@@ -1,0 +1,207 @@
+{
+  "properties": {
+    "name": "Soar to the Stars",
+    "description": "COMBO TRIGGER: When an enemy becomes Vulnerable. A slashing dash that passes through the target enemy and deals Physical DMG and Lift to all enemies along the way.",
+    "windowFrames": 720,
+    "eventType": "COMBAT_SKILL",
+    "eventCategoryType": "COMBO_SKILL",
+    "element": "PHYSICAL"
+  },
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "RECOVER",
+          "object": "ULTIMATE_ENERGY",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": 10
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT"
+      },
+      "properties": {
+        "segmentTypes": [
+          "ANIMATION"
+        ],
+        "name": "Animation",
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 0.5
+          },
+          "unit": "SECOND"
+        },
+        "timeDependency": "REAL_TIME",
+        "timeInteractionType": "TIME_STOP"
+      },
+      "frames": []
+    },
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT"
+      },
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 0.27
+          },
+          "unit": "SECOND"
+        },
+        "element": "PHYSICAL"
+      },
+      "frames": [
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "END_AXIS"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 0.07,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "object": "STAGGER",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 10
+                    }
+                  }
+                },
+                {
+                  "verb": "APPLY",
+                  "object": "LIFT",
+                  "objectType": "STATUS",
+                  "to": "ENEMY"
+                },
+                {
+                  "verb": "DEAL",
+                  "adjective": "PHYSICAL",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "DAMAGE_MULTIPLIER": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        1.2,
+                        1.32,
+                        1.44,
+                        1.56,
+                        1.68,
+                        1.8,
+                        1.92,
+                        2.04,
+                        2.16,
+                        2.31,
+                        2.49,
+                        2.7
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT"
+      },
+      "properties": {
+        "segmentTypes": [
+          "COOLDOWN",
+          "IMMEDIATE_COOLDOWN"
+        ],
+        "name": "Cooldown",
+        "duration": {
+          "value": {
+            "verb": "VARY_BY",
+            "object": "SKILL_LEVEL",
+            "value": [
+              16,
+              16,
+              16,
+              16,
+              16,
+              16,
+              16,
+              16,
+              16,
+              16,
+              16,
+              15
+            ],
+            "ofDeterminer": "THIS",
+            "of": "OPERATOR"
+          },
+          "unit": "SECOND",
+          "modifier": {
+            "value": 3,
+            "verb": "SUBTRACT",
+            "unit": "SECOND",
+            "condition": {
+              "subjectDeterminer": "THIS",
+              "subject": "OPERATOR",
+              "verb": "HAVE",
+              "object": "POTENTIAL",
+              "with": {
+                "value": {
+                  "verb": "AT_LEAST",
+                  "value": 5
+                }
+              }
+            }
+          }
+        },
+        "timeDependency": "REAL_TIME"
+      },
+      "frames": []
+    }
+  ],
+  "metadata": {
+    "originId": "CHEN_QIANYU",
+    "id": "SOAR_TO_THE_STARS",
+    "icon": "skills/combo_chen_qianyu.png"
+  },
+  "onTriggerClause": [
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "VULNERABILITY"
+        }
+      ]
+    }
+  ]
+}

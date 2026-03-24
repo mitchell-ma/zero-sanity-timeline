@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { framesToSeconds, secondsToFrames, frameToDetailLabel, frameToTimeLabelPrecise, FPS, fmtN } from '../../utils/timeline';
 import { COMBAT_SKILL_LABELS, STATUS_LABELS } from '../../consts/timelineColumnLabels';
 import { CombatSkillType, ELEMENT_COLORS, ELEMENT_LABELS, ElementType, EventFrameType, EventStatusType, InfoLevel, InteractionModeType, SegmentType, StatusType } from '../../consts/enums';
-import { getStatusElementMap } from '../../controller/gameDataController';
+import { getStatusElementMap } from '../../controller/gameDataStore';
 import { TimelineEvent, Operator, Enemy, SelectedFrame, Column, MiniTimeline, computeSegmentsSpan, getAnimationDuration, eventDuration } from '../../consts/viewTypes';
 import { DurationField, StatField, SegmentDurationField, FrameOffsetField } from './SharedFields';
 import type { LoadoutProperties } from '../InformationPane';

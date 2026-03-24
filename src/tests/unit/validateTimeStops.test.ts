@@ -11,18 +11,6 @@ import { TimelineEvent } from '../../consts/viewTypes';
 import { validateTimeStops, TimeStopRegion } from '../../controller/timeline/eventValidator';
 import { SKILL_COLUMNS, INFLICTION_COLUMNS, REACTION_COLUMNS, OPERATOR_COLUMNS } from '../../model/channels';
 
-jest.mock('../../model/event-frames/operatorJsonLoader', () => ({
-  getOperatorJson: () => null,
-  getSkillIds: () => new Set(),
-  getAllOperatorIds: () => [],
-  getSkillTypeMap: () => ({}),
-  getExchangeStatusConfig: () => ({}),
-  getExchangeStatusIds: () => new Set(),
-}));
-jest.mock('../../model/game-data/weaponGearEffectLoader', () => ({
-  getWeaponEffectDefs: () => [],
-  getGearEffectDefs: () => [],
-}));
 jest.mock('../../model/game-data/weaponGameData', () => ({
   getSkillValues: () => [], getConditionalValues: () => [],
   getConditionalScalar: () => null, getBaseAttackForLevel: () => 0,

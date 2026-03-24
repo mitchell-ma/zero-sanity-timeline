@@ -1,0 +1,155 @@
+{
+  "properties": {
+    "name": "Thunderlance: Interdiction",
+    "description": "Leaps into mid-air to stir up a maelstrom with her lance, dealing some Electric DMG to nearby enemies while pulling back all Thunderlances and Thunderlance EX in the battlefield towards herself. \nThe returning Thunderlances pierce through all enemies along their paths and deal Electric DMG, while returning Thunderlances EX deal more Electric DMG and also apply Electric Infliction.",
+    "eventType": "COMBAT_SKILL",
+    "eventCategoryType": "BATTLE_SKILL",
+    "element": "ELECTRIC"
+  },
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "CONSUME",
+          "object": "SKILL_POINT",
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": 100
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "originId": "AVYWENNA",
+    "id": "THUNDERLANCE_INTERDICTION",
+    "icon": "skills/skill_avywenna.png"
+  },
+  "segments": [
+    {
+      "frames": [
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "END_AXIS"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 0.6,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "object": "STAGGER",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 5
+                    }
+                  }
+                },
+                {
+                  "verb": "DEAL",
+                  "adjective": "ELECTRIC",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "atkScaleLance": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.75,
+                        0.82,
+                        0.9,
+                        0.97,
+                        1.04,
+                        1.12,
+                        1.19,
+                        1.27,
+                        1.34,
+                        1.44,
+                        1.55,
+                        1.68
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    },
+                    "atkScaleLanceUlt": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        1.92,
+                        2.11,
+                        2.3,
+                        2.5,
+                        2.69,
+                        2.88,
+                        3.07,
+                        3.26,
+                        3.46,
+                        3.7,
+                        3.98,
+                        4.32
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    },
+                    "poiseLance": {
+                      "verb": "IS",
+                      "value": 5
+                    },
+                    "poiseLanceUlt": {
+                      "verb": "IS",
+                      "value": 10
+                    },
+                    "DAMAGE_MULTIPLIER": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.67,
+                        0.73,
+                        0.8,
+                        0.87,
+                        0.93,
+                        1,
+                        1.07,
+                        1.13,
+                        1.2,
+                        1.28,
+                        1.38,
+                        1.5
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 1.13
+          },
+          "unit": "SECOND"
+        },
+        "element": "ELECTRIC"
+      }
+    }
+  ]
+}

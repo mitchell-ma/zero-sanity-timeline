@@ -1,0 +1,43 @@
+{
+  "onTriggerClause": [
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "CONSUME",
+          "object": "VULNERABILITY",
+          "with": {
+            "stacks": "MAX"
+          }
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "REDUCE_AND_THICKEN",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "REDUCE_AND_THICKEN_TALENT",
+    "name": "Reduce and Thicken (Talent)",
+    "type": "TALENT",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
+    "eventType": "STATUS",
+    "eventCategoryType": "TALENT",
+    "description": "After consuming 1 Vulnerability stack, Da Pan gains Physical DMG Dealt +4% for 10s. This effect can reach 4 stacks."
+  },
+  "metadata": {
+    "originId": "DA_PAN",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ],
+    "icon": "skills/da_pan_talent_1_icon.png"
+  }
+}

@@ -11,7 +11,7 @@ import { getModelEnemy } from './calculation/enemyRegistry';
 import { BossEnemy } from '../model/enemies/bossEnemy';
 import { StatType } from '../consts/enums';
 import { DEFAULT_STATS } from '../consts/stats';
-import { getGearPiece } from './gameDataController';
+import { getGearPiece } from './gameDataStore';
 import { filterEventsOnOperatorChange } from './timeline/inputEventController';
 import GENERAL_MECHANICS from '../model/game-data/generalMechanics.json';
 import { GearSetType } from '../consts/enums';

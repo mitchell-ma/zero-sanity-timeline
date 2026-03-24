@@ -1,0 +1,32 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "MODIFY",
+          "object": "SKILL_COST",
+          "objectId": "CATCHER_TEXTBOOK_ASSAULT",
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": 0.9
+            },
+            "parameterType": 1
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "CATCHER_POTENTIAL_4",
+    "name": "Compensated Suffering",
+    "level": 4,
+    "eventType": "POTENTIAL_EVENT",
+    "eventCategoryType": "POTENTIAL",
+    "description": "Ultimate Textbook Assault improved: Ultimate Energy cost -{1-costValue:0%}."
+  },
+  "metadata": {
+    "originId": "CATCHER"
+  }
+}

@@ -1,0 +1,254 @@
+{
+  "properties": {
+    "name": "Polar Rescue",
+    "description": "COMBO TRIGGER: After controlled operator gets attacked and drops below {trigger_hp_ratio:0%} HP. Snowshine throws a Snowfield SAR Assistant at the controlled operator. Upon target contact, the Assistant gives massive instant HP Treatment to nearby operators as well as continuous HP Treatment to operators in the area of effect. The attribute of Will increases the amount of HP treatment.",
+    "windowFrames": 720,
+    "eventType": "COMBAT_SKILL",
+    "eventCategoryType": "COMBO_SKILL"
+  },
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "RECOVER",
+          "object": "ULTIMATE_ENERGY",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": 10
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT"
+      },
+      "properties": {
+        "segmentTypes": [
+          "ANIMATION"
+        ],
+        "name": "Animation",
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 0.5
+          },
+          "unit": "SECOND"
+        },
+        "timeDependency": "REAL_TIME",
+        "timeInteractionType": "TIME_STOP"
+      },
+      "frames": []
+    },
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT"
+      },
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 3
+          },
+          "unit": "SECOND"
+        }
+      },
+      "frames": [
+        {
+          "metadata": {
+            "eventComponentType": "FRAME"
+          },
+          "properties": {
+            "offset": {
+              "value": 0,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "APPLY",
+                  "object": "TREATMENT",
+                  "objectType": "STATUS",
+                  "toDeterminer": "ALL",
+                  "to": "OPERATOR",
+                  "with": {
+                    "healBase": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        96,
+                        115,
+                        134,
+                        154,
+                        163,
+                        173,
+                        182,
+                        192,
+                        202,
+                        206,
+                        211,
+                        216
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    },
+                    "willAdditive": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.22,
+                        0.27,
+                        0.31,
+                        0.36,
+                        0.38,
+                        0.4,
+                        0.43,
+                        0.45,
+                        0.47,
+                        0.48,
+                        0.49,
+                        0.5
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                },
+                {
+                  "verb": "APPLY",
+                  "object": "CONTINUOUS_TREATMENT",
+                  "objectType": "STATUS",
+                  "toDeterminer": "ALL",
+                  "to": "OPERATOR",
+                  "with": {
+                    "duration": {
+                      "value": {
+                        "verb": "IS",
+                        "value": 3
+                      },
+                      "unit": "SECOND"
+                    },
+                    "interval": {
+                      "verb": "IS",
+                      "value": 0.5,
+                      "unit": "SECOND"
+                    },
+                    "healBase": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        24,
+                        29,
+                        34,
+                        38,
+                        41,
+                        43,
+                        46,
+                        48,
+                        50,
+                        52,
+                        53,
+                        54
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    },
+                    "willAdditive": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.06,
+                        0.07,
+                        0.08,
+                        0.09,
+                        0.1,
+                        0.1,
+                        0.11,
+                        0.11,
+                        0.12,
+                        0.12,
+                        0.12,
+                        0.13
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT"
+      },
+      "properties": {
+        "segmentTypes": [
+          "COOLDOWN",
+          "IMMEDIATE_COOLDOWN"
+        ],
+        "name": "Cooldown",
+        "duration": {
+          "value": {
+            "verb": "VARY_BY",
+            "object": "SKILL_LEVEL",
+            "value": [
+              25,
+              25,
+              25,
+              25,
+              25,
+              25,
+              25,
+              25,
+              24,
+              24,
+              23,
+              23
+            ],
+            "ofDeterminer": "THIS",
+            "of": "OPERATOR"
+          },
+          "unit": "SECOND"
+        },
+        "timeDependency": "REAL_TIME"
+      },
+      "frames": []
+    }
+  ],
+  "metadata": {
+    "originId": "SNOWSHINE",
+    "id": "POLAR_RESCUE",
+    "icon": "skills/combo_snowshine.png"
+  },
+  "onTriggerClause": [
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "HAVE",
+          "object": "HP",
+          "cardinalityConstraint": "AT_MOST",
+          "value": {
+            "verb": "IS",
+            "value": 60
+          }
+        }
+      ]
+    }
+  ]
+}

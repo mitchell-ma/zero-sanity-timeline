@@ -1,0 +1,193 @@
+{
+  "properties": {
+    "name": "Arcane Staff: Matrix Displacement",
+    "description": "COMBO TRIGGER: When an Arts Reaction is applied to an enemy. A quick casting of the Arts that generates a gravity pull, which then deals Nature DMG and forcibly Lifts the target and nearby enemies.",
+    "windowFrames": 720,
+    "eventType": "COMBAT_SKILL",
+    "eventCategoryType": "COMBO_SKILL",
+    "element": "NATURE"
+  },
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "RECOVER",
+          "object": "ULTIMATE_ENERGY",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": 10
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT"
+      },
+      "properties": {
+        "segmentTypes": [
+          "ANIMATION"
+        ],
+        "name": "Animation",
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 0.5
+          },
+          "unit": "SECOND"
+        },
+        "timeDependency": "REAL_TIME",
+        "timeInteractionType": "TIME_STOP"
+      },
+      "frames": []
+    },
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT"
+      },
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 1.27
+          },
+          "unit": "SECOND"
+        },
+        "element": "NATURE"
+      },
+      "frames": [
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "END_AXIS"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 1.1,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "object": "STAGGER",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 5
+                    }
+                  }
+                },
+                {
+                  "verb": "DEAL",
+                  "adjective": "NATURE",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "DAMAGE_MULTIPLIER": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        1.4,
+                        1.54,
+                        1.68,
+                        1.82,
+                        1.96,
+                        2.1,
+                        2.24,
+                        2.38,
+                        2.52,
+                        2.7,
+                        2.91,
+                        3.15
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT"
+      },
+      "properties": {
+        "segmentTypes": [
+          "COOLDOWN",
+          "IMMEDIATE_COOLDOWN"
+        ],
+        "name": "Cooldown",
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 20
+          },
+          "unit": "SECOND"
+        },
+        "timeDependency": "REAL_TIME"
+      },
+      "frames": []
+    }
+  ],
+  "metadata": {
+    "originId": "GILBERTA",
+    "id": "MATRIX_DISPLACEMENT",
+    "icon": "skills/combo_gilberta.png"
+  },
+  "onTriggerClause": [
+    {
+      "conditions": [
+        {
+          "subject": "ENEMY",
+          "verb": "IS",
+          "object": "COMBUSTED"
+        }
+      ]
+    },
+    {
+      "conditions": [
+        {
+          "subject": "ENEMY",
+          "verb": "IS",
+          "object": "SOLIDIFIED"
+        }
+      ]
+    },
+    {
+      "conditions": [
+        {
+          "subject": "ENEMY",
+          "verb": "IS",
+          "object": "CORRODED"
+        }
+      ]
+    },
+    {
+      "conditions": [
+        {
+          "subject": "ENEMY",
+          "verb": "IS",
+          "object": "ELECTRIFIED"
+        }
+      ]
+    }
+  ]
+}

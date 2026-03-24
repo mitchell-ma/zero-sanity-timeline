@@ -7,17 +7,19 @@
 }
 
 :root {
-  --bg-root:      #08080a;
-  --bg-panel:     #111114;
-  --bg-card:      #1a1a1e;
-  --bg-elevated:  #242428;
-  --bg-hover:     #2c2c32;
-  --bg-inset:     #0e0e10;
+  --bg-root:      #050505;
+  --bg-panel:     #101010;
+  --bg-card:      #191919;
+  --bg-elevated:  #222222;
+  --bg-hover:     #2a2a2a;
+  --bg-inset:     #0a0a0a;
 
-  --border-dim:    rgba(255, 255, 255, 0.12);
-  --border-med:    rgba(255, 255, 255, 0.20);
-  --border-bright: rgba(255, 255, 255, 0.34);
+  --border-dim:    rgba(255, 255, 255, 0.10);
+  --border-med:    rgba(255, 255, 255, 0.18);
+  --border-bright: rgba(255, 255, 255, 0.30);
 
+  --accent:     #fffa00;
+  --accent-glow: rgba(255, 250, 0, 0.35);
   --blue:       #4c90ff;
   --blue-glow:  rgba(76, 144, 255, 0.28);
   --cyan:       #00d8cc;
@@ -26,10 +28,10 @@
   --purple:     #9464ec;
   --green:      #36d06a;
 
-  --text-bright:    #f0f0f2;
-  --text-primary:   #c8c8ce;
-  --text-secondary: #9898a0;
-  --text-muted:     #6c6c74;
+  --text-bright:    #ffffff;
+  --text-primary:   #d9d9d9;
+  --text-secondary: #999999;
+  --text-muted:     #666666;
 
   --overlay-02:  rgba(255, 255, 255, 0.03);
   --overlay-03:  rgba(255, 255, 255, 0.04);
@@ -62,29 +64,31 @@
 }
 
 [data-theme="light"] {
-  --bg-root:      #e8e8ec;
-  --bg-panel:     #f2f2f4;
+  --bg-root:      #fafafa;
+  --bg-panel:     #ffffff;
   --bg-card:      #ffffff;
-  --bg-elevated:  #dadade;
-  --bg-hover:     #d0d0d6;
-  --bg-inset:     #e2e2e6;
+  --bg-elevated:  #f2f2f2;
+  --bg-hover:     #ededed;
+  --bg-inset:     #f5f5f5;
 
-  --border-dim:    rgba(0, 0, 0, 0.12);
-  --border-med:    rgba(0, 0, 0, 0.22);
-  --border-bright: rgba(0, 0, 0, 0.36);
+  --border-dim:    rgba(0, 0, 0, 0.08);
+  --border-med:    rgba(0, 0, 0, 0.15);
+  --border-bright: rgba(0, 0, 0, 0.28);
 
+  --accent:     #eec800;
+  --accent-glow: rgba(238, 200, 0, 0.30);
   --blue:       #1a5cc8;
   --blue-glow:  rgba(26, 92, 200, 0.18);
   --cyan:       #008882;
-  --gold:       #a06810;
-  --red:        #b82828;
+  --gold:       #c07800;
+  --red:        #c02020;
   --purple:     #6030b0;
   --green:      #1a8838;
 
-  --text-bright:    #0a0a0a;
-  --text-primary:   #222228;
-  --text-secondary: #505058;
-  --text-muted:     #888890;
+  --text-bright:    #141414;
+  --text-primary:   #191919;
+  --text-secondary: #666666;
+  --text-muted:     #999999;
 
   --overlay-02:  rgba(0, 0, 0, 0.02);
   --overlay-03:  rgba(0, 0, 0, 0.04);

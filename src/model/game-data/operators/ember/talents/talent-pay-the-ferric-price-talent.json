@@ -1,0 +1,41 @@
+{
+  "onTriggerClause": [
+    {
+      "conditions": [
+        {
+          "subject": "ENEMY",
+          "verb": "DEAL",
+          "object": "DAMAGE",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "PAY_THE_FERRIC_PRICE",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "PAY_THE_FERRIC_PRICE_TALENT",
+    "name": "Pay the Ferric Price (Talent)",
+    "type": "TALENT",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
+    "eventType": "STATUS",
+    "eventCategoryType": "TALENT",
+    "description": "When Ember receives DMG from the enemy, she gains ATK +{attack:0%} for {duration:0}s. This effect can reach 3 stacks."
+  },
+  "metadata": {
+    "originId": "EMBER",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ],
+    "icon": "skills/ember_talent_2_icon.png"
+  }
+}

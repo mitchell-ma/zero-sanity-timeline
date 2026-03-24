@@ -1,0 +1,138 @@
+{
+  "properties": {
+    "name": "Ascending Strike",
+    "description": "Performs an uppercut slash at the target enemy, dealing Physical DMG and Lift.",
+    "eventType": "COMBAT_SKILL",
+    "eventCategoryType": "BATTLE_SKILL",
+    "element": "PHYSICAL"
+  },
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "CONSUME",
+          "object": "SKILL_POINT",
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": 100
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "originId": "CHEN_QIANYU",
+    "id": "ASCENDING_STRIKE",
+    "icon": "skills/skill_chen_qianyu.png"
+  },
+  "segments": [
+    {
+      "frames": [
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "END_AXIS"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 0.43,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "object": "STAGGER",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 10
+                    }
+                  }
+                },
+                {
+                  "verb": "APPLY",
+                  "object": "LIFT",
+                  "objectType": "STATUS",
+                  "to": "ENEMY",
+                  "with": {
+                    "duration": {
+                      "value": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          1,
+                          1,
+                          1,
+                          1,
+                          1,
+                          1.5,
+                          1.5,
+                          1.5,
+                          2,
+                          2,
+                          2,
+                          2.5
+                        ],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
+                      },
+                      "unit": "SECOND"
+                    }
+                  }
+                },
+                {
+                  "verb": "DEAL",
+                  "adjective": "PHYSICAL",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "DAMAGE_MULTIPLIER": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        1.69,
+                        1.86,
+                        2.03,
+                        2.19,
+                        2.36,
+                        2.53,
+                        2.7,
+                        2.87,
+                        3.04,
+                        3.25,
+                        3.5,
+                        3.8
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 0.83
+          },
+          "unit": "SECOND"
+        },
+        "element": "PHYSICAL"
+      }
+    }
+  ]
+}

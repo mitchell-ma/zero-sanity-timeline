@@ -15,23 +15,6 @@ import { applySheetData } from '../../app/sheetDefaults';
 
 // ── Mock require.context before importing modules that use it ────────────────
 
-jest.mock('../../model/event-frames/operatorJsonLoader', () => ({
-  getOperatorJson: () => null,
-  getAllOperatorIds: () => [],
-  getSkillIds: () => new Set(), getSkillTypeMap: () => ({}), resolveSkillType: () => null,
-  getFrameSequences: () => [],
-  getSegmentLabels: () => undefined,
-  getSkillTimings: () => undefined,
-  getUltimateEnergyCost: () => 0,
-  getSkillGaugeGains: () => undefined,
-  getBattleSkillSpCost: () => undefined,
-  getSkillCategoryData: () => undefined,
-  getBasicAttackDurations: () => undefined,
-  getComboTriggerClause: () => undefined,
-  getExchangeStatusConfig: () => ({}),
-  getExchangeStatusIds: () => new Set(),
-}));
-
 jest.mock('../../model/game-data/weaponGameData', () => ({
   getSkillValues: () => [],
   getConditionalValues: () => [],

@@ -1,0 +1,84 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "ATTACK_BONUS",
+          "with": {
+            "value": {
+              "verb": "VARY_BY",
+              "object": "SKILL_LEVEL",
+              "value": [
+                0.1,
+                0.12,
+                0.14,
+                0.16,
+                0.18,
+                0.2,
+                0.22,
+                0.24,
+                0.28
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            }
+          }
+        },
+        {
+          "verb": "APPLY",
+          "object": "STAGGER_EFFICIENCY_BONUS",
+          "with": {
+            "value": {
+              "verb": "VARY_BY",
+              "object": "SKILL_LEVEL",
+              "value": [
+                0.12,
+                0.144,
+                0.168,
+                0.192,
+                0.216,
+                0.24,
+                0.264,
+                0.288,
+                0.336
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "SUNDERED_PRINCE_PRINCELY_DETERRENCE",
+    "name": "Princely Deterrence",
+    "description": "ATK doubled when controlled (+20-56%)",
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": 8
+      },
+      "unit": "SECOND"
+    },
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 1
+      },
+      "interactionType": "RESET"
+    },
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
+    "eventType": "STATUS",
+    "eventCategoryType": "WEAPON_STATUS"
+  },
+  "metadata": {
+    "originId": "SUNDERED_PRINCE",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ]
+  }
+}

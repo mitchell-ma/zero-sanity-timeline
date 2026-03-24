@@ -1,0 +1,51 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "ATTACK_BONUS",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": 0.1
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "POSITIVE_FEEDBACK",
+    "name": "Positive Feedback",
+    "type": "POTENTIAL_STATUS",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": 10
+      },
+      "unit": "SECOND"
+    },
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 5
+      },
+      "interactionType": "RESET"
+    },
+    "eventType": "STATUS",
+    "eventCategoryType": "POTENTIAL_STATUS",
+    "description": "After recovering SP with skills, Akekuri gains ATK + for s. This effect can reach stacks."
+  },
+  "metadata": {
+    "originId": "POSITIVE_FEEDBACK_POTENTIAL",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ]
+  }
+}

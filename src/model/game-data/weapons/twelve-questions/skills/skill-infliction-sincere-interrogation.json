@@ -1,0 +1,67 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "SECONDARY_ATTRIBUTE_BONUS",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "multiplier": {
+              "verb": "VARY_BY",
+              "object": "SKILL_LEVEL",
+              "value": [
+                0.05,
+                0.06,
+                0.07,
+                0.08,
+                0.09,
+                0.1,
+                0.11,
+                0.12,
+                0.14
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "onTriggerClause": [
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "CONSUME",
+          "object": "REACTION",
+          "with": { "stacks": "MAX" }
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "TWELVE_QUESTIONS_SINCERE_INTERROGATION",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "name": "Infliction: Sincere Interrogation",
+    "description": "Secondary Attribute +{second_attr_up:0.0%}. After the wielder consumes an Arts Reaction, ATK +{atk_up:0.0%} for {duration:0}s. Max stacks for effects of the same name: {max_stack:0}. Duration of each stack is counted separately.",
+    "id": "INFLICTION_SINCERE_INTERROGATION"
+  },
+  "metadata": {
+    "originId": "TWELVE_QUESTIONS",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ]
+  }
+}

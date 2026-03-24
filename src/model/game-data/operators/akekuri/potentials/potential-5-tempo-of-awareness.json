@@ -1,0 +1,40 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "BUFF",
+          "objectId": "AKEKURI_POTENTIAL5_TEMPO_OF_AWARENESS",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
+        },
+        {
+          "verb": "MODIFY",
+          "object": "SKILL_PARAMETER",
+          "objectId": "SQUAD_ON_ME",
+          "with": {
+            "parameterKey": "potential_5_duration",
+            "value": {
+              "verb": "IS",
+              "value": 5
+            },
+            "parameterModifyType": "UNIQUE_MULTIPLIER"
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "AKEKURI_POTENTIAL_5",
+    "name": "Tempo of Awareness",
+    "level": 5,
+    "eventType": "POTENTIAL_EVENT",
+    "eventCategoryType": "POTENTIAL",
+    "description": "Talent Staying in the Zone improved: Even when the ultimate SQUAD! ON ME! ends, the Link buff persists for 5s."
+  },
+  "metadata": {
+    "originId": "AKEKURI"
+  }
+}

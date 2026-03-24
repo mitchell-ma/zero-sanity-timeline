@@ -1,0 +1,32 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "MODIFY",
+          "object": "SKILL_COST",
+          "objectId": "XAIHI_STACK_OVERFLOW",
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": 0.9
+            },
+            "parameterType": 1
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "XAIHI_POTENTIAL_2",
+    "name": "Link Aggregation",
+    "level": 2,
+    "eventType": "POTENTIAL_EVENT",
+    "eventCategoryType": "POTENTIAL",
+    "description": "Ultimate Stack Overflow improved: Ultimate Energy cost -10%."
+  },
+  "metadata": {
+    "originId": "XAIHI"
+  }
+}

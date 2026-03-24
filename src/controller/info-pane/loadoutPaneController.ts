@@ -7,13 +7,13 @@ import {
   getWeapon, getGearPiece, getConsumableEntry, getTacticalEntry,
   getGenericSkillStats, getNamedSkillPassiveStats,
   getGenericWeaponSkill, getNamedWeaponSkill,
-} from '../gameDataController';
+  getWeaponEffectDefs, resolveDurationSeconds,
+} from '../gameDataStore';
 import { aggregateLoadoutStats, AggregatedStats } from '../calculation/loadoutAggregator';
-import { getWeaponEffectDefs, resolveDurationSeconds } from '../../model/game-data/weaponGearEffectLoader';
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from '../calculation/valueResolver';
 import { fmtN } from '../../utils/timeline';
 import { getSkillMultiplier } from '../calculation/jsonMultiplierEngine';
-import { getSkillTypeMap, getRawSkillTypeMap, getComboTriggerInfo, getOperatorJson } from '../../model/event-frames/operatorJsonLoader';
+import { getSkillTypeMap, getRawSkillTypeMap, getComboTriggerInfo, getOperatorSkill } from '../gameDataStore';
 import { getUltimateEnergyCost, getUltimateEnergyCostForPotential } from '../operators/operatorRegistry';
 import type { Potential } from '../../consts/types';
 import type { SkillType } from '../../consts/viewTypes';
@@ -545,19 +545,16 @@ export function resolveSubSkills(operatorId: string, skillType: SkillType): SubS
   const mapping = rawMap[jsonKey];
   if (!mapping) return [];
 
-  const opJson = getOperatorJson(operatorId);
-  const skills = (opJson?.skills ?? {}) as Record<string, { name?: string; description?: string; clause?: Clause; segments?: unknown[]; frames?: unknown[] }>;
-
   if (typeof mapping === 'string') {
-    const data = skills[mapping];
+    const skill = getOperatorSkill(operatorId, mapping);
     return [{
       variantKey: skillType,
       variantLabel: '',
       skillId: mapping,
-      skillName: data?.name ?? mapping,
-      description: data?.description,
+      skillName: skill?.name ?? mapping,
+      description: skill?.description,
       detail: resolveSkillDetailForId(operatorId, mapping, 0),
-      clause: (data?.clause ?? []) as Clause,
+      clause: (skill?.clause ?? []) as Clause,
     }];
   }
 
@@ -567,16 +564,16 @@ export function resolveSubSkills(operatorId: string, skillType: SkillType): SubS
   for (const [variant, skillId] of Object.entries(mapping as Record<string, string>)) {
     if (seenIds.has(skillId)) continue;
     seenIds.add(skillId);
-    const data = skills[skillId];
-    if (!data) continue;
+    const skill = getOperatorSkill(operatorId, skillId);
+    if (!skill) continue;
     entries.push({
       variantKey: variant,
       variantLabel: BATK_VARIANT_LABELS[variant] ?? variant,
       skillId,
-      skillName: data.name ?? skillId,
-      description: data.description,
+      skillName: skill.name ?? skillId,
+      description: skill.description,
       detail: resolveSkillDetailForId(operatorId, skillId, 0),
-      clause: (data.clause ?? []) as Clause,
+      clause: (skill.clause ?? []) as Clause,
     });
   }
   return entries;
@@ -611,9 +608,8 @@ export function resolveSkillClause(operatorId: string, skillType: SkillType): Cl
   const jsonKey = ({ basic: 'BASIC_ATTACK', battle: 'BATTLE_SKILL', combo: 'COMBO_SKILL', ultimate: 'ULTIMATE' } as const)[skillType];
   const skillId = typeMap[jsonKey];
   if (!skillId) return [];
-  const opJson = getOperatorJson(operatorId);
-  const skills = (opJson?.skills ?? {}) as Record<string, { clause?: Clause }>;
-  return (skills[skillId]?.clause ?? []) as Clause;
+  const skill = getOperatorSkill(operatorId, skillId);
+  return (skill?.clause ?? []) as Clause;
 }
 
 /**

@@ -1,0 +1,176 @@
+{
+  "properties": {
+    "name": "Tiny Surprise",
+    "description": "Kicks an Improvised Explosive that sticks to the target, applying Slow and exploding after a short duration. The explosion deals Nature DMG and Nature Infliction to enemies in the area of effect. Defeating the target also sets off the Improvised Explosive immediately.\nOnly 1 Improvised Explosive can be present in the battlefield.",
+    "eventType": "COMBAT_SKILL",
+    "eventCategoryType": "BATTLE_SKILL",
+    "element": "NATURE"
+  },
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "CONSUME",
+          "object": "SKILL_POINT",
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": 100
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "originId": "FLUORITE",
+    "id": "TINY_SURPRISE",
+    "icon": "skills/skill_fluorite.png"
+  },
+  "segments": [
+    {
+      "frames": [
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "END_AXIS"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 0.33,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "adjective": "NATURE",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "duration": {
+                      "verb": "IS",
+                      "value": 3
+                    },
+                    "boomUp": {
+                      "verb": "IS",
+                      "value": 0.3
+                    },
+                    "DAMAGE_MULTIPLIER": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        1.87,
+                        2.06,
+                        2.24,
+                        2.43,
+                        2.62,
+                        2.8,
+                        2.99,
+                        3.18,
+                        3.36,
+                        3.6,
+                        3.88,
+                        4.2
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "END_AXIS"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 2.97,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "object": "STAGGER",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 10
+                    }
+                  }
+                },
+                {
+                  "verb": "APPLY",
+                  "object": "INFLICTION",
+                  "adjective": "NATURE",
+                  "to": "ENEMY",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  }
+                },
+                {
+                  "verb": "DEAL",
+                  "adjective": "NATURE",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "DAMAGE_MULTIPLIER": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        1.87,
+                        2.06,
+                        2.24,
+                        2.43,
+                        2.62,
+                        2.8,
+                        2.99,
+                        3.18,
+                        3.36,
+                        3.6,
+                        3.88,
+                        4.2
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 1.13
+          },
+          "unit": "SECOND"
+        },
+        "element": "NATURE"
+      }
+    }
+  ]
+}

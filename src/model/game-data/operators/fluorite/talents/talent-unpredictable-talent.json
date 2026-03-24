@@ -1,0 +1,45 @@
+{
+  "onTriggerClause": [
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "IS_HIT",
+          "with": {
+            "chance": {
+              "verb": "IS",
+              "value": 0.2
+            }
+          }
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "UNPREDICTABLE",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "UNPREDICTABLE_TALENT",
+    "name": "Unpredictable (Talent)",
+    "type": "TALENT",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
+    "eventType": "STATUS",
+    "eventCategoryType": "TALENT",
+    "description": "Grants {probability:0%} chance of Arts DMG immunity and grants Fluorite ATK +{atk_up:0%} for {duration:0}s. This effect cannot stack."
+  },
+  "metadata": {
+    "originId": "FLUORITE",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ],
+    "icon": "skills/fluorite_talent_2_icon.png"
+  }
+}

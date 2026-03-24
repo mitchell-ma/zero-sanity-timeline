@@ -1,0 +1,46 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "ARTS_INTENSITY",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "VARY_BY",
+              "object": "SKILL_LEVEL",
+              "value": [
+                10,
+                18,
+                26,
+                34,
+                42,
+                50,
+                58,
+                66,
+                78
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "name": "Arts Intensity Boost [L]",
+    "description": "Arts Intensity +",
+    "id": "ARTS_INTENSITY_BOOST_L"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ],
+    "id": "ARTS_INTENSITY_BOOST_L"
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "MODIFY",
+          "object": "SKILL_PARAMETER",
+          "objectId": "SMOULDERING_FIRE",
+          "with": {
+            "parameterKey": "SKILL_POINT",
+            "value": {
+              "verb": "IS",
+              "value": 20
+            },
+            "parameterModifyType": "ADDITIVE"
+          }
+        },
+        {
+          "verb": "MODIFY",
+          "object": "SKILL_PARAMETER",
+          "objectId": "SMOULDERING_FIRE_ENHANCED",
+          "with": {
+            "parameterKey": "SKILL_POINT",
+            "value": {
+              "verb": "IS",
+              "value": 20
+            },
+            "parameterModifyType": "ADDITIVE"
+          }
+        },
+        {
+          "verb": "MODIFY",
+          "object": "SKILL_PARAMETER",
+          "objectId": "SMOULDERING_FIRE_ENHANCED",
+          "with": {
+            "parameterKey": "DAMAGE_MULTIPLIER_MODIFIER",
+            "value": {
+              "verb": "IS",
+              "value": 1.2
+            },
+            "parameterModifyType": "UNIQUE_MULTIPLIER"
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "LAEVATAIN_POTENTIAL_1",
+    "name": "Heart of Melting Flame",
+    "level": 1,
+    "eventType": "POTENTIAL_EVENT",
+    "eventCategoryType": "POTENTIAL",
+    "description": "Battle skill Smouldering Fire improved: Additional attack multiplier is increased to 1.2 times the original, and scoring a hit returns 20 SP."
+  },
+  "metadata": {
+    "originId": "LAEVATAIN"
+  }
+}

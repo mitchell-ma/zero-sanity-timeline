@@ -1,0 +1,61 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "ARTS_DAMAGE_BONUS",
+          "with": {
+            "value": {
+              "verb": "VARY_BY",
+              "object": "SKILL_LEVEL",
+              "value": [
+                0.12,
+                0.144,
+                0.168,
+                0.192,
+                0.216,
+                0.24,
+                0.264,
+                0.288,
+                0.336
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "JET_ASTROPHYSICS",
+    "name": "Astrophysics",
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": 15
+      },
+      "unit": "SECOND"
+    },
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 1
+      },
+      "interactionType": "RESET"
+    },
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
+    "eventType": "STATUS",
+    "eventCategoryType": "WEAPON_STATUS",
+    "description": "Arts DMG Dealt +{spell_dmg_up:0.0%}. When the wielder casts a battle skill, the wielder gains Arts DMG Dealt +{spell_dmg_up2:0.0%} for {duration:0}s. When the wielder casts a combo skill, Arts DMG Dealt +{spell_dmg_up3:0.0%} for {duration2:0}s. The two effects apply separately and do not stack with themselves."
+  },
+  "metadata": {
+    "originId": "JET",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ]
+  }
+}

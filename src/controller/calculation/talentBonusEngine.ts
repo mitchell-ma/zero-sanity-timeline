@@ -6,7 +6,7 @@
  */
 import { CombatSkillType, ElementType, StatType } from '../../consts/enums';
 import { Potential } from '../../consts/types';
-import { getOperatorJson } from '../../model/event-frames/operatorJsonLoader';
+import { getOperatorBase } from '../gameDataStore';
 import type { EventsQueryService } from '../timeline/eventsQueryService';
 
 // ── JSON types ──────────────────────────────────────────────────────────────
@@ -75,8 +75,8 @@ const effectsCache = new Map<string, TalentEffect[]>();
 
 function getTalentEffects(operatorId: string): TalentEffect[] {
   if (effectsCache.has(operatorId)) return effectsCache.get(operatorId)!;
-  const json = getOperatorJson(operatorId);
-  const effects = (json?.talentEffects as TalentEffect[]) ?? [];
+  const base = getOperatorBase(operatorId);
+  const effects = (base?.talentEffects as TalentEffect[]) ?? [];
   effectsCache.set(operatorId, effects);
   return effects;
 }

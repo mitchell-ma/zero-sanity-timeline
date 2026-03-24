@@ -1,0 +1,82 @@
+{
+  "properties": {
+    "enhancementTypes": [
+      "DIVE"
+    ],
+    "name": "Signature Gun Kata (Dive)",
+    "description": "Basic attack performed in mid-air becomes a dive attack that deals Nature DMG to nearby enemies.",
+    "eventType": "COMBAT_SKILL",
+    "eventCategoryType": "BASIC_ATTACK",
+    "element": "NATURE"
+  },
+  "metadata": {
+    "originId": "FLUORITE",
+    "id": "SIGNATURE_GUN_KATA_DIVE",
+    "icon": "skills/attack_guns.png"
+  },
+  "segments": [
+    {
+      "frames": [
+        {
+          "metadata": {
+            "eventComponentType": "FRAME"
+          },
+          "properties": {
+            "offset": {
+              "value": 1,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "adjective": "NATURE",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "DAMAGE_MULTIPLIER": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.8,
+                        0.88,
+                        0.96,
+                        1.04,
+                        1.12,
+                        1.2,
+                        1.28,
+                        1.36,
+                        1.44,
+                        1.54,
+                        1.66,
+                        1.8
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "frameTypes": [
+            "DIVE"
+          ]
+        }
+      ],
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 1
+          },
+          "unit": "SECOND"
+        },
+        "element": "NATURE"
+      }
+    }
+  ]
+}

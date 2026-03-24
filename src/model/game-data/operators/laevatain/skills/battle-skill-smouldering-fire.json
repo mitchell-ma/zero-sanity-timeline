@@ -1,0 +1,711 @@
+{
+  "properties": {
+    "dependencyTypes": [
+      "PREVIOUS_FRAME"
+    ],
+    "name": "Smouldering Fire",
+    "description": "Summons a Magma Fragment to continuously attack enemies and deal Heat DMG. Hitting the enemy grants 1 stack of Melting Flame. \nIf Laevatain already has  stack(s) of Melting Flame when casting the skill, then consume all the stacks and perform 1 additional attack that deals Heat DMG and forcibly trigger temporary Combustion to all enemies in a large area.\nWhen the additional attack hits the enemy, restore additional Ultimate Energy.\nBattle skill effects are enhanced while Laevatain's ultimate is active.",
+    "eventType": "COMBAT_SKILL",
+    "eventCategoryType": "BATTLE_SKILL",
+    "element": "HEAT"
+  },
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "CONSUME",
+          "object": "SKILL_POINT",
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": 100
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "originId": "LAEVATAIN",
+    "id": "SMOULDERING_FIRE",
+    "icon": "skills/skill_laevatain.png"
+  },
+  "segments": [
+    {
+      "frames": [
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "END_AXIS"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 0.73,
+              "unit": "SECOND"
+            }
+          },
+          "frameTypes": [
+            "GUARANTEED_HIT",
+            "PASSIVE"
+          ],
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "MELTING_FLAME",
+                  "to": "OPERATOR",
+                  "toDeterminer": "THIS",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  }
+                },
+                {
+                  "verb": "DEAL",
+                  "object": "STAGGER",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 10
+                    }
+                  }
+                },
+                {
+                  "verb": "DEAL",
+                  "adjective": "HEAT",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "poiseExtra": {
+                      "verb": "IS",
+                      "value": 10
+                    },
+                    "count": {
+                      "verb": "IS",
+                      "value": 4
+                    },
+                    "extraUsp": {
+                      "verb": "IS",
+                      "value": 100
+                    },
+                    "DAMAGE_MULTIPLIER": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.62,
+                        0.68,
+                        0.75,
+                        0.81,
+                        0.87,
+                        0.93,
+                        0.99,
+                        1.06,
+                        1.12,
+                        1.2,
+                        1.29,
+                        1.4
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "SELF"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 0.85,
+              "unit": "SECOND"
+            },
+            "dependencyTypes": [
+              "PREVIOUS_FRAME"
+            ]
+          },
+          "frameTypes": [
+            "GUARANTEED_HIT",
+            "PASSIVE"
+          ],
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "adjective": "HEAT",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "poiseExtra": {
+                      "verb": "IS",
+                      "value": 10
+                    },
+                    "count": {
+                      "verb": "IS",
+                      "value": 4
+                    },
+                    "extraUsp": {
+                      "verb": "IS",
+                      "value": 100
+                    },
+                    "DAMAGE_MULTIPLIER": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.06,
+                        0.07,
+                        0.08,
+                        0.08,
+                        0.09,
+                        0.09,
+                        0.1,
+                        0.11,
+                        0.11,
+                        0.12,
+                        0.13,
+                        0.14
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "END_AXIS"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 0.967,
+              "unit": "SECOND"
+            },
+            "dependencyTypes": [
+              "PREVIOUS_FRAME"
+            ]
+          },
+          "frameTypes": [
+            "GUARANTEED_HIT",
+            "PASSIVE"
+          ],
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "adjective": "HEAT",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "DAMAGE_MULTIPLIER": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.06,
+                        0.07,
+                        0.08,
+                        0.08,
+                        0.09,
+                        0.09,
+                        0.1,
+                        0.11,
+                        0.11,
+                        0.12,
+                        0.13,
+                        0.14
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "END_AXIS"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 1.1,
+              "unit": "SECOND"
+            },
+            "dependencyTypes": [
+              "PREVIOUS_FRAME"
+            ]
+          },
+          "frameTypes": [
+            "GUARANTEED_HIT",
+            "PASSIVE"
+          ],
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "adjective": "HEAT",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "DAMAGE_MULTIPLIER": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.06,
+                        0.07,
+                        0.08,
+                        0.08,
+                        0.09,
+                        0.09,
+                        0.1,
+                        0.11,
+                        0.11,
+                        0.12,
+                        0.13,
+                        0.14
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "END_AXIS"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 1.23,
+              "unit": "SECOND"
+            },
+            "dependencyTypes": [
+              "PREVIOUS_FRAME"
+            ]
+          },
+          "frameTypes": [
+            "GUARANTEED_HIT",
+            "PASSIVE"
+          ],
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "adjective": "HEAT",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "DAMAGE_MULTIPLIER": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.06,
+                        0.07,
+                        0.08,
+                        0.08,
+                        0.09,
+                        0.09,
+                        0.1,
+                        0.11,
+                        0.11,
+                        0.12,
+                        0.13,
+                        0.14
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "END_AXIS"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 1.367,
+              "unit": "SECOND"
+            },
+            "dependencyTypes": [
+              "PREVIOUS_FRAME"
+            ]
+          },
+          "frameTypes": [
+            "GUARANTEED_HIT",
+            "PASSIVE"
+          ],
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "adjective": "HEAT",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "DAMAGE_MULTIPLIER": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.06,
+                        0.07,
+                        0.08,
+                        0.08,
+                        0.09,
+                        0.09,
+                        0.1,
+                        0.11,
+                        0.11,
+                        0.12,
+                        0.13,
+                        0.14
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "END_AXIS"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 1.5,
+              "unit": "SECOND"
+            },
+            "dependencyTypes": [
+              "PREVIOUS_FRAME"
+            ]
+          },
+          "frameTypes": [
+            "GUARANTEED_HIT",
+            "PASSIVE"
+          ],
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "adjective": "HEAT",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "DAMAGE_MULTIPLIER": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.06,
+                        0.07,
+                        0.08,
+                        0.08,
+                        0.09,
+                        0.09,
+                        0.1,
+                        0.11,
+                        0.11,
+                        0.12,
+                        0.13,
+                        0.14
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "END_AXIS"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 1.63,
+              "unit": "SECOND"
+            },
+            "dependencyTypes": [
+              "PREVIOUS_FRAME"
+            ]
+          },
+          "frameTypes": [
+            "GUARANTEED_HIT",
+            "PASSIVE"
+          ],
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "adjective": "HEAT",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "DAMAGE_MULTIPLIER": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.06,
+                        0.07,
+                        0.08,
+                        0.08,
+                        0.09,
+                        0.09,
+                        0.1,
+                        0.11,
+                        0.11,
+                        0.12,
+                        0.13,
+                        0.14
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "END_AXIS"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 1.8,
+              "unit": "SECOND"
+            },
+            "dependencyTypes": [
+              "PREVIOUS_FRAME"
+            ]
+          },
+          "frameTypes": [
+            "GUARANTEED_HIT",
+            "PASSIVE"
+          ],
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "adjective": "HEAT",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "DAMAGE_MULTIPLIER": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.06,
+                        0.07,
+                        0.08,
+                        0.08,
+                        0.09,
+                        0.09,
+                        0.1,
+                        0.11,
+                        0.11,
+                        0.12,
+                        0.13,
+                        0.14
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "END_AXIS"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 1.93,
+              "unit": "SECOND"
+            },
+            "dependencyTypes": [
+              "PREVIOUS_FRAME"
+            ]
+          },
+          "frameTypes": [
+            "GUARANTEED_HIT",
+            "PASSIVE"
+          ],
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "adjective": "HEAT",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "DAMAGE_MULTIPLIER": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.06,
+                        0.07,
+                        0.08,
+                        0.08,
+                        0.09,
+                        0.09,
+                        0.1,
+                        0.11,
+                        0.11,
+                        0.12,
+                        0.13,
+                        0.14
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "END_AXIS"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 2.067,
+              "unit": "SECOND"
+            },
+            "dependencyTypes": [
+              "PREVIOUS_FRAME"
+            ]
+          },
+          "frameTypes": [
+            "GUARANTEED_HIT",
+            "PASSIVE"
+          ],
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "adjective": "HEAT",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "DAMAGE_MULTIPLIER": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.06,
+                        0.07,
+                        0.08,
+                        0.08,
+                        0.09,
+                        0.09,
+                        0.1,
+                        0.11,
+                        0.11,
+                        0.12,
+                        0.13,
+                        0.14
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 2.2
+          },
+          "unit": "SECOND"
+        },
+        "element": "HEAT"
+      }
+    }
+  ]
+}

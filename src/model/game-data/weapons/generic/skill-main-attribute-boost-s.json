@@ -1,0 +1,46 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "MAIN_ATTRIBUTE",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "VARY_BY",
+              "object": "SKILL_LEVEL",
+              "value": [
+                10,
+                18,
+                26,
+                34,
+                42,
+                51,
+                59,
+                67,
+                79
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "name": "Main Attribute Boost [S]",
+    "description": "Main attribute +",
+    "id": "MAIN_ATTRIBUTE_BOOST_S"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ],
+    "id": "MAIN_ATTRIBUTE_BOOST_S"
+  }
+}

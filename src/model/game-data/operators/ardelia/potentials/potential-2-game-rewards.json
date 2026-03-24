@@ -1,0 +1,46 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "MODIFY",
+          "object": "SKILL_PARAMETER",
+          "objectId": "DOLLY_RUSH",
+          "with": {
+            "parameterKey": "potential2",
+            "value": {
+              "verb": "IS",
+              "value": 1
+            },
+            "parameterModifyType": "UNIQUE_MULTIPLIER"
+          }
+        },
+        {
+          "verb": "MODIFY",
+          "object": "SKILL_PARAMETER",
+          "objectId": "WOOLY_PARTY",
+          "with": {
+            "parameterKey": "potential2",
+            "value": {
+              "verb": "IS",
+              "value": 1
+            },
+            "parameterModifyType": "UNIQUE_MULTIPLIER"
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "ARDELIA_POTENTIAL_2",
+    "name": "Game Rewards",
+    "level": 2,
+    "eventType": "POTENTIAL_EVENT",
+    "eventCategoryType": "POTENTIAL",
+    "description": "Talent Friendly Presence improved: When the controlled operator touches the Shadow of Mr. Dolly, Ardelia also treats another allied operator with the lowest percentage HP with half of the treatment effects."
+  },
+  "metadata": {
+    "originId": "ARDELIA"
+  }
+}

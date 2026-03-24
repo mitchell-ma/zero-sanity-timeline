@@ -1,0 +1,188 @@
+{
+  "properties": {
+    "name": "Bombardment Sequence",
+    "description": "Bombards the ground with Originium Arts, dealing massive Physical DMG to all enemies within a fan-shaped area. If the enemy has Originium Crystals on them, this skill consumes the Originium Crystals and deals one more hit of Physical DMG.",
+    "eventType": "COMBAT_SKILL",
+    "eventCategoryType": "ULTIMATE_SKILL",
+    "element": "PHYSICAL"
+  },
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "CONSUME",
+          "object": "ULTIMATE_ENERGY",
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": 80
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT"
+      },
+      "properties": {
+        "segmentTypes": [
+          "ANIMATION"
+        ],
+        "name": "Animation",
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 1.467
+          },
+          "unit": "SECOND"
+        },
+        "timeDependency": "REAL_TIME",
+        "timeInteractionType": "TIME_STOP"
+      },
+      "frames": []
+    },
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT"
+      },
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 0.363
+          },
+          "unit": "SECOND"
+        },
+        "element": "PHYSICAL"
+      },
+      "frames": [
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "END_AXIS"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 0.203,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "CONSUME",
+                  "object": "STATUS",
+                  "objectId": "ORIGINIUM_CRYSTAL",
+                  "to": "ENEMY",
+                  "with": {
+                    "stacks": "MAX"
+                  }
+                },
+                {
+                  "verb": "DEAL",
+                  "object": "STAGGER",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 25
+                    }
+                  }
+                },
+                {
+                  "verb": "DEAL",
+                  "adjective": "PHYSICAL",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "DAMAGE_MULTIPLIER": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        3.56,
+                        3.91,
+                        4.27,
+                        4.62,
+                        4.98,
+                        5.33,
+                        5.69,
+                        6.04,
+                        6.4,
+                        6.84,
+                        7.38,
+                        8
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "conditions": [
+                {
+                  "subject": "ENEMY",
+                  "verb": "HAVE",
+                  "object": "ORIGINIUM_CRYSTAL"
+                }
+              ],
+              "effects": [
+                {
+                  "verb": "CONSUME",
+                  "object": "STATUS",
+                  "objectId": "ORIGINIUM_CRYSTAL",
+                  "to": "ENEMY",
+                  "with": {
+                    "stacks": "MAX"
+                  }
+                },
+                {
+                  "verb": "DEAL",
+                  "adjective": "PHYSICAL",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "DAMAGE_MULTIPLIER": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        2.67,
+                        2.94,
+                        3.2,
+                        3.47,
+                        3.74,
+                        4,
+                        4.27,
+                        4.54,
+                        4.8,
+                        5.14,
+                        5.54,
+                        6
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "originId": "ENDMINISTRATOR",
+    "id": "BOMBARDMENT_SEQUENCE",
+    "icon": "skills/ult_endministrator.png"
+  }
+}

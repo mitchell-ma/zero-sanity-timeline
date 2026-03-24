@@ -1,0 +1,51 @@
+{
+  "onTriggerClause": [
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "APPLY",
+          "object": "SOLIDIFICATION"
+        },
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "HAVE",
+          "object": "SURVIVAL_IS_A_WIN_P5",
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": "OFF_COOLDOWN"
+            }
+          }
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "SURVIVAL_IS_A_WIN_P5",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "SURVIVAL_IS_A_WIN_P5_TALENT",
+    "name": "Survival is a Win (P5)",
+    "type": "TALENT",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
+    "eventType": "STATUS",
+    "eventCategoryType": "TALENT",
+    "description": "After applying Solidification to an enemy, Estella gains 5 Ultimate Energy. Effect can only trigger once every 1s."
+  },
+  "metadata": {
+    "originId": "ESTELLA",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ]
+  }
+}

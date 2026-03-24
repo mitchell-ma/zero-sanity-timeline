@@ -15,7 +15,7 @@
 import { DamageType, ElementType } from '../../consts/enums';
 import { StatusLevel } from '../../consts/types';
 import { TimelineEvent, eventEndFrame } from '../../consts/viewTypes';
-import { getOperatorJson } from '../../model/event-frames/operatorJsonLoader';
+import { getOperatorBase } from '../gameDataStore';
 import {
   StatusDamageParams,
   calculateStatusDamage,
@@ -359,14 +359,14 @@ const REACTION_COLUMN_TO_TYPE: Record<string, string> = {
  * VARY_BY format (value with multi-dimensional lookup).
  */
 function getReactionTalentMultiplier(operatorId: string, potential: number, reactionColumnId: string): number {
-  const json = getOperatorJson(operatorId);
-  if (!json?.talentEffects) return 1;
+  const base = getOperatorBase(operatorId);
+  if (!base?.talentEffects?.length) return 1;
 
   const reactionType = REACTION_COLUMN_TO_TYPE[reactionColumnId];
   if (!reactionType) return 1;
 
   let multiplier = 1;
-  for (const effect of json.talentEffects as { bonusType: string; condition?: { reactionType?: string }; value?: { verb?: string; object?: string | string[]; value?: unknown } }[]) {
+  for (const effect of base.talentEffects as { bonusType: string; condition?: { reactionType?: string }; value?: { verb?: string; object?: string | string[]; value?: unknown } }[]) {
     if (effect.bonusType !== 'REACTION_MULTIPLIER') continue;
     if (effect.condition?.reactionType !== reactionType) continue;
 

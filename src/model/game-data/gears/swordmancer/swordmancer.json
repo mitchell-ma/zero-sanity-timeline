@@ -1,0 +1,36 @@
+{
+  "onTriggerClause": [
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "APPLY",
+          "object": "STATUS"
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "SWORDMANCER"
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "SWORDMANCER",
+    "name": "Swordmancer",
+    "rarity": 5,
+    "piecesRequired": 3,
+    "description": "3-piece set effect: Wearer's Stagger Efficiency Bonus +{poise_up:0%}. After the wearer applies a Physical Status, the wearer also performs 1 hit that deals {atk_scale:0%} ATK of Physical DMG and [{poise} Stagger]. Effect trigger cooldown: {duration}s.",
+    "eventType": "STATUS",
+    "eventCategoryType": "GEAR_SET_EFFECT"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
+  }
+}

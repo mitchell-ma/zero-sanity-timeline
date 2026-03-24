@@ -1,0 +1,72 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "MODIFY",
+          "object": "SKILL_PARAMETER",
+          "objectId": "BLADE_GALE",
+          "with": {
+            "parameterKey": "DAMAGE_MULTIPLIER_MODIFIER",
+            "value": {
+              "verb": "IS",
+              "value": 1.1
+            },
+            "parameterModifyType": "MULTIPLICATIVE"
+          }
+        },
+        {
+          "verb": "MODIFY",
+          "object": "SKILL_PARAMETER",
+          "objectId": "BLADE_GALE",
+          "with": {
+            "parameterKey": "DAMAGE_MULTIPLIER_MODIFIER",
+            "value": {
+              "verb": "IS",
+              "value": 1.1
+            },
+            "parameterModifyType": "MULTIPLICATIVE"
+          }
+        },
+        {
+          "verb": "MODIFY",
+          "object": "SKILL_PARAMETER",
+          "objectId": "ASCENDING_STRIKE",
+          "with": {
+            "parameterKey": "DAMAGE_MULTIPLIER_MODIFIER",
+            "value": {
+              "verb": "IS",
+              "value": 1.1
+            },
+            "parameterModifyType": "MULTIPLICATIVE"
+          }
+        },
+        {
+          "verb": "MODIFY",
+          "object": "SKILL_PARAMETER",
+          "objectId": "SOAR_TO_THE_STARS",
+          "with": {
+            "parameterKey": "DAMAGE_MULTIPLIER_MODIFIER",
+            "value": {
+              "verb": "IS",
+              "value": 1.1
+            },
+            "parameterModifyType": "MULTIPLICATIVE"
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "CHEN-QIANYU_POTENTIAL_3",
+    "name": "Dual-Wielding Swordmancer",
+    "level": 3,
+    "eventType": "POTENTIAL_EVENT",
+    "eventCategoryType": "POTENTIAL",
+    "description": "Battle skill Ascending Strike, combo skill Soar to the Stars, and ultimate Blade Gale improved: DMG Multiplier is increased to 1.1 times the original."
+  },
+  "metadata": {
+    "originId": "CHEN-QIANYU"
+  }
+}

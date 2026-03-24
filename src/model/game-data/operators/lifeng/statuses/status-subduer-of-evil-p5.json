@@ -1,0 +1,73 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "DEAL",
+          "adjective": "PHYSICAL",
+          "object": "DAMAGE",
+          "to": "ENEMY",
+          "with": {
+            "DAMAGE_MULTIPLIER": {
+              "verb": "IS",
+              "value": 2.5
+            }
+          }
+        },
+        {
+          "verb": "DEAL",
+          "object": "STAGGER",
+          "to": "ENEMY",
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": 5
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT"
+      },
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 15
+          },
+          "unit": "SECOND"
+        },
+        "timeDependency": "REAL_TIME"
+      },
+      "frames": []
+    }
+  ],
+  "properties": {
+    "id": "SUBDUER_OF_EVIL_P5",
+    "name": "Subduer of Evil (P5 Empowered)",
+    "type": "POTENTIAL_STATUS",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 1
+      },
+      "interactionType": "RESET"
+    },
+    "eventType": "STATUS",
+    "eventCategoryType": "POTENTIAL_STATUS",
+    "description": "Talent Subduer of Evil improved: Every 15s, the next effect triggered deals another 250% ATK of Physical DMG and 5 Stagger."
+  },
+  "metadata": {
+    "originId": "LIFENG",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ]
+  }
+}

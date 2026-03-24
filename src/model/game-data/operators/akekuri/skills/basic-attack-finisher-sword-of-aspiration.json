@@ -1,0 +1,82 @@
+{
+  "properties": {
+    "enhancementTypes": [
+      "FINISHER"
+    ],
+    "name": "Sword of Aspiration (Finisher)",
+    "description": "Basic attack performed near a Staggered enemy becomes a finisher that deals massive Physical DMG and recovers some SP.",
+    "eventType": "COMBAT_SKILL",
+    "eventCategoryType": "BASIC_ATTACK",
+    "element": "PHYSICAL"
+  },
+  "metadata": {
+    "originId": "AKEKURI",
+    "id": "SWORD_OF_ASPIRATION_FINISHER",
+    "icon": "skills/attack_sword.png"
+  },
+  "segments": [
+    {
+      "frames": [
+        {
+          "metadata": {
+            "eventComponentType": "FRAME"
+          },
+          "properties": {
+            "offset": {
+              "value": 1.5,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "adjective": "PHYSICAL",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "DAMAGE_MULTIPLIER": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        4,
+                        4.4,
+                        4.8,
+                        5.2,
+                        5.6,
+                        6,
+                        6.4,
+                        6.8,
+                        7.2,
+                        7.7,
+                        8.3,
+                        9
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "frameTypes": [
+            "FINISHER"
+          ]
+        }
+      ],
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 1.5
+          },
+          "unit": "SECOND"
+        },
+        "element": "PHYSICAL"
+      }
+    }
+  ]
+}

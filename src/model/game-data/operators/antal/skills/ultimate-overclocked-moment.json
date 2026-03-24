@@ -1,0 +1,89 @@
+{
+  "properties": {
+    "name": "Overclocked Moment",
+    "description": "Applies temporary Electric Amp and Heat Amp to the entire team.",
+    "eventType": "COMBAT_SKILL",
+    "eventCategoryType": "ULTIMATE_SKILL"
+  },
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "CONSUME",
+          "object": "ULTIMATE_ENERGY",
+          "with": {
+            "value": {
+              "verb": "VARY_BY",
+              "object": "POTENTIAL",
+              "value": [
+                100,
+                90,
+                90,
+                90,
+                90,
+                90
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            }
+          }
+        },
+        {
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "OVERCLOCKED_MOMENT_AMP",
+          "toDeterminer": "ALL",
+          "to": "OPERATOR"
+        }
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT"
+      },
+      "properties": {
+        "segmentTypes": [
+          "ANIMATION"
+        ],
+        "name": "Animation",
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 1.4
+          },
+          "unit": "SECOND"
+        },
+        "timeDependency": "REAL_TIME",
+        "timeInteractionType": "TIME_STOP"
+      },
+      "frames": []
+    },
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT"
+      },
+      "properties": {
+        "segmentTypes": [
+          "ACTIVE"
+        ],
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 0.47
+          },
+          "unit": "SECOND"
+        },
+        "name": "Overclocked Moment"
+      },
+      "frames": []
+    }
+  ],
+  "metadata": {
+    "originId": "ANTAL",
+    "id": "OVERCLOCKED_MOMENT",
+    "icon": "skills/ult_antal.png"
+  }
+}

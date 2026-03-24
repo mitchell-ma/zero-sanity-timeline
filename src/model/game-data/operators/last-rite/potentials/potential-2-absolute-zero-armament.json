@@ -1,0 +1,44 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STRENGTH",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": 20
+            }
+          }
+        },
+        {
+          "verb": "APPLY",
+          "object": "CRYO_DAMAGE_BONUS",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": 0.1
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "LAST-RITE_POTENTIAL_2",
+    "name": "Absolute Zero Armament",
+    "level": 2,
+    "eventType": "POTENTIAL_EVENT",
+    "eventCategoryType": "POTENTIAL",
+    "description": "Strength +{Str:0}, Cryo DMG Dealt +{CrystDamageIncrease:0%}."
+  },
+  "metadata": {
+    "originId": "LAST-RITE"
+  }
+}

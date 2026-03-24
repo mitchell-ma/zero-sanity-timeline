@@ -1,0 +1,61 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "ATTACK_BONUS",
+          "with": {
+            "value": {
+              "verb": "VARY_BY",
+              "object": "SKILL_LEVEL",
+              "value": [
+                0.1,
+                0.12,
+                0.14,
+                0.16,
+                0.18,
+                0.2,
+                0.22,
+                0.24,
+                0.28
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "THERMITE_CUTTER_THERMAL_RELEASE",
+    "name": "Thermal Release",
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": 20
+      },
+      "unit": "SECOND"
+    },
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 2
+      },
+      "interactionType": "NONE"
+    },
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
+    "eventType": "STATUS",
+    "eventCategoryType": "WEAPON_STATUS",
+    "description": "ATK +{atk_up:0.0%}. After the wielder's skill recovers SP or grants a Link state, the entire team gains ATK +{atk_up2:0.0%} for {duration:0}s. Max stacks for effects of the same name: {max_stack:0}. Duration of each stack is counted separately."
+  },
+  "metadata": {
+    "originId": "THERMITE_CUTTER",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ]
+  }
+}

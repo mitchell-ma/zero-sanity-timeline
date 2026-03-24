@@ -1,0 +1,149 @@
+{
+  "properties": {
+    "enhancementTypes": [
+      "EMPOWERED"
+    ],
+    "eventType": "COMBAT_SKILL",
+    "eventCategoryType": "BATTLE_SKILL",
+    "element": "NATURE"
+  },
+  "segments": [
+    {
+      "frames": [
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "END_AXIS"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 1.07,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [
+                {
+                  "subject": "ENEMY",
+                  "verb": "HAVE",
+                  "object": "REACTION",
+                  "objectId": "CORROSION"
+                }
+              ],
+              "effects": [
+                {
+                  "verb": "CONSUME",
+                  "object": "REACTION",
+                  "objectId": "CORROSION",
+                  "with": {
+                    "stacks": "MAX"
+                  }
+                },
+                {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "vulnerableInfliction",
+                  "to": "ENEMY",
+                  "with": {
+                    "duration": {
+                      "verb": "IS",
+                      "value": 30
+                    }
+                  },
+                  "susceptibility": {
+                    "PHYSICAL": [
+                      0.12,
+                      0.12,
+                      0.12,
+                      0.13,
+                      0.13,
+                      0.13,
+                      0.14,
+                      0.14,
+                      0.16,
+                      0.17,
+                      0.18,
+                      0.2
+                    ],
+                    "NATURE": [
+                      0.12,
+                      0.12,
+                      0.12,
+                      0.13,
+                      0.13,
+                      0.13,
+                      0.14,
+                      0.14,
+                      0.16,
+                      0.17,
+                      0.18,
+                      0.2
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "object": "STAGGER",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 10
+                    }
+                  }
+                },
+                {
+                  "verb": "DEAL",
+                  "object": "DAMAGE",
+                  "adjective": "NATURE",
+                  "to": "ENEMY",
+                  "with": {
+                    "multiplier": {
+                      "verb": "DEPEND_ON",
+                      "value": [
+                        1.42,
+                        1.56,
+                        1.71,
+                        1.85,
+                        1.99,
+                        2.13,
+                        2.28,
+                        2.42,
+                        2.56,
+                        2.74,
+                        2.95,
+                        3.2
+                      ]
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 1.57
+          },
+          "unit": "SECOND"
+        },
+        "element": "NATURE"
+      }
+    }
+  ],
+  "metadata": {
+    "id": "DOLLY_RUSH_EMPOWERED",
+    "icon": "skills/skill_ardelia.png"
+  }
+}

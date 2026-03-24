@@ -1,0 +1,33 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "MODIFY",
+          "object": "SKILL_PARAMETER",
+          "objectId": "SATURATED_DEFENSE",
+          "with": {
+            "parameterKey": "potential_5_atb",
+            "value": {
+              "verb": "IS",
+              "value": 10
+            },
+            "parameterModifyType": "UNIQUE_MULTIPLIER"
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "SNOWSHINE_POTENTIAL_5",
+    "name": "Cold Disaster Specialist",
+    "level": 5,
+    "eventType": "POTENTIAL_EVENT",
+    "eventCategoryType": "POTENTIAL",
+    "description": "Battle skill Saturated Defense improved: Successfully retaliating an enemy attack returns 10 SP."
+  },
+  "metadata": {
+    "originId": "SNOWSHINE"
+  }
+}

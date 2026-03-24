@@ -1,0 +1,194 @@
+{
+  "properties": {
+    "name": "Constructive Sequence",
+    "description": "A forceful burst of Originium Arts that attacks enemies within the area of effect. Deals Physical DMG and applies Crush.",
+    "eventType": "COMBAT_SKILL",
+    "eventCategoryType": "BATTLE_SKILL",
+    "element": "PHYSICAL"
+  },
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "CONSUME",
+          "object": "SKILL_POINT",
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": 100
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "originId": "ENDMINISTRATOR",
+    "id": "CONSTRUCTIVE_SEQUENCE",
+    "icon": "skills/skill_endministrator.png"
+  },
+  "segments": [
+    {
+      "frames": [
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "END_AXIS"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 0.37,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [
+                {
+                  "subject": "ENEMY",
+                  "verb": "HAVE",
+                  "object": "ORIGINIUM_CRYSTAL"
+                }
+              ],
+              "effects": [
+                {
+                  "verb": "CONSUME",
+                  "object": "STATUS",
+                  "objectId": "ORIGINIUM_CRYSTAL",
+                  "to": "ENEMY",
+                  "with": {
+                    "stacks": "MAX"
+                  }
+                },
+                {
+                  "verb": "RECOVER",
+                  "object": "SKILL_POINT",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 50
+                    }
+                  }
+                },
+                {
+                  "verb": "DEAL",
+                  "object": "STAGGER",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 10
+                    }
+                  }
+                },
+                {
+                  "verb": "DEAL",
+                  "adjective": "PHYSICAL",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "DAMAGE_MULTIPLIER": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        1.56,
+                        1.71,
+                        1.87,
+                        2.02,
+                        2.18,
+                        2.34,
+                        2.49,
+                        2.65,
+                        2.8,
+                        3,
+                        3.23,
+                        3.5
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                },
+                {
+                  "verb": "APPLY",
+                  "object": "CRUSH",
+                  "objectType": "STATUS",
+                  "to": "ENEMY"
+                }
+              ]
+            },
+            {
+              "conditions": [
+                {
+                  "subject": "ENEMY",
+                  "verb": "NOT_HAVE",
+                  "object": "ORIGINIUM_CRYSTAL"
+                }
+              ],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "object": "STAGGER",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 10
+                    }
+                  }
+                },
+                {
+                  "verb": "DEAL",
+                  "adjective": "PHYSICAL",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "DAMAGE_MULTIPLIER": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        1.56,
+                        1.71,
+                        1.87,
+                        2.02,
+                        2.18,
+                        2.34,
+                        2.49,
+                        2.65,
+                        2.8,
+                        3,
+                        3.23,
+                        3.5
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                },
+                {
+                  "verb": "APPLY",
+                  "object": "CRUSH",
+                  "objectType": "STATUS",
+                  "to": "ENEMY"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 0.8
+          },
+          "unit": "SECOND"
+        },
+        "element": "PHYSICAL"
+      }
+    }
+  ]
+}

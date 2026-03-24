@@ -27,8 +27,7 @@ import {
   type OperatorTalentFragility,
 } from '../timeline/eventsQueryService';
 import { getLastController } from '../timeline/eventQueueController';
-import { getWeaponEffectDefs, resolveTargetDisplay } from '../../model/game-data/weaponGearEffectLoader';
-import { getWeapon } from '../gameDataController';
+import { getWeapon, getWeaponEffectDefs, resolveTargetDisplay } from '../gameDataStore';
 import { INFLICTION_COLUMNS, OPERATOR_COLUMNS } from '../../model/channels';
 import { ENEMY_OWNER_ID } from '../../model/channels';
 import type { Slot } from '../timeline/columnBuilder';

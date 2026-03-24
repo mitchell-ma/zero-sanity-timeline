@@ -1,0 +1,33 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "MODIFY",
+          "object": "SKILL_PARAMETER",
+          "objectId": "FLIP_DA_WOK",
+          "with": {
+            "parameterKey": "potential_5_interval",
+            "value": {
+              "verb": "IS",
+              "value": 45
+            },
+            "parameterModifyType": "UNIQUE_MULTIPLIER"
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "DA-PAN_POTENTIAL_5",
+    "name": "Fire it Up",
+    "level": 5,
+    "eventType": "POTENTIAL_EVENT",
+    "eventCategoryType": "POTENTIAL",
+    "description": "Battle skill FLIP DA WOK! improved: If the skill hits only one enemy, apply 1 more stack of Vulnerability on the target. Effect only triggers once every 45s."
+  },
+  "metadata": {
+    "originId": "DA-PAN"
+  }
+}

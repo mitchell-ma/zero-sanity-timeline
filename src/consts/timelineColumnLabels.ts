@@ -1,6 +1,6 @@
 import { PhysicalStatusType, StatusType } from './enums';
 import { SkillType } from './viewTypes';
-import { getAllSkillLabels, getAllStatusLabels } from '../controller/gameDataController';
+import { getAllSkillLabels, getAllStatusLabels } from '../controller/gameDataStore';
 import { t } from '../locales/locale';
 
 // ── Column header labels ────────────────────────────────────────────────────

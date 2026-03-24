@@ -1,0 +1,32 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "MODIFY",
+          "object": "SKILL_COST",
+          "objectId": "PERLICA_PROTOCOL_EPSILON",
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": 0.85
+            },
+            "parameterType": 1
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "PERLICA_POTENTIAL_2",
+    "name": "Negotiation Tactics",
+    "level": 2,
+    "eventType": "POTENTIAL_EVENT",
+    "eventCategoryType": "POTENTIAL",
+    "description": "Ultimate Protocol ε: 70.41K improved: Ultimate Energy cost -15%."
+  },
+  "metadata": {
+    "originId": "PERLICA"
+  }
+}

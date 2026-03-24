@@ -1,0 +1,44 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "INTELLECT",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": 10
+            }
+          }
+        },
+        {
+          "verb": "APPLY",
+          "object": "BASE_HP",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": 0.1
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "ANTAL_POTENTIAL_4",
+    "name": "Granny's Reminder",
+    "level": 4,
+    "eventType": "POTENTIAL_EVENT",
+    "eventCategoryType": "POTENTIAL",
+    "description": "Intellect +10, Max HP +{MaxHp:0%}."
+  },
+  "metadata": {
+    "originId": "ANTAL"
+  }
+}

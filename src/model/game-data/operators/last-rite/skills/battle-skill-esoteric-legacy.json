@@ -1,0 +1,122 @@
+{
+  "properties": {
+    "name": "Esoteric Legacy of Seš'qa",
+    "description": "Performs a Hypothermic Perfusion on the controlled operator's weapon and returns some SP. \nThe next Final Strike performed by the currently controlled operator within a certain duration creates Last Rite's Mirages that unleash an additional attack at the target. This attack deals Cryo DMG and applies Cryo Infliction. \nWhen the controlled operator is Last Rite herself, casting this battle skill does not reset her basic attack sequence.",
+    "eventType": "COMBAT_SKILL",
+    "eventCategoryType": "BATTLE_SKILL",
+    "element": "CRYO"
+  },
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "CONSUME",
+          "object": "SKILL_POINT",
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": 100
+            }
+          }
+        },
+        {
+          "verb": "RECOVER",
+          "object": "ULTIMATE_ENERGY",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": 16
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "originId": "LAST_RITE",
+    "id": "ESOTERIC_LEGACY",
+    "icon": "skills/skill_lastrite.png"
+  },
+  "segments": [
+    {
+      "frames": [
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "END_AXIS"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 0.2,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "RECOVER",
+                  "object": "SKILL_POINT",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 30
+                    }
+                  }
+                },
+                {
+                  "verb": "DEAL",
+                  "adjective": "CRYO",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "duration": {
+                      "verb": "IS",
+                      "value": 15
+                    },
+                    "DAMAGE_MULTIPLIER": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        1.42,
+                        1.56,
+                        1.71,
+                        1.85,
+                        1.99,
+                        2.13,
+                        2.28,
+                        2.42,
+                        2.56,
+                        2.74,
+                        2.95,
+                        3.2
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 0.5
+          },
+          "unit": "SECOND"
+        },
+        "element": "CRYO"
+      }
+    }
+  ]
+}

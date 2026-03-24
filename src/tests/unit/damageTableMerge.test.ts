@@ -16,17 +16,7 @@ import { TimelineSourceType } from '../../consts/enums';
 import { OPERATOR_COLUMNS } from '../../model/channels';
 import { Slot } from '../../controller/timeline/columnBuilder';
 
-jest.mock('../../model/event-frames/operatorJsonLoader', () => ({
-  getOperatorJson: () => undefined, getAllOperatorIds: () => [],
-  getFrameSequences: () => [], getSkillIds: () => new Set(), getSkillTypeMap: () => ({}), resolveSkillType: () => null,
-  getSegmentLabels: () => undefined, getSkillTimings: () => undefined,
-  getUltimateEnergyCost: () => 0, getSkillGaugeGains: () => undefined,
-  getBattleSkillSpCost: () => undefined, getSkillCategoryData: () => undefined,
-  getBasicAttackDurations: () => undefined,
-  getComboTriggerClause: () => undefined,
-  getExchangeStatusConfig: () => ({}),
-  getExchangeStatusIds: () => new Set(),
-}));
+
 jest.mock('../../model/game-data/weaponGameData', () => ({
   getSkillValues: () => [], getConditionalValues: () => [],
   getConditionalScalar: () => null, getBaseAttackForLevel: () => 0,
@@ -41,13 +31,6 @@ jest.mock('../../controller/operators/operatorRegistry', () => ({
 }));
 jest.mock('../../utils/loadoutRegistry', () => ({
   OPERATORS: [], WEAPONS: [], GEARS: [], CONSUMABLES: [], TACTICALS: [],
-}));
-jest.mock('../../model/game-data/weaponGearEffectLoader', () => ({
-  getWeaponEffectDefs: () => [],
-  getGearEffectDefs: () => [],
-  resolveTargetDisplay: () => 'wielder',
-  resolveDurationSeconds: () => 0,
-  resolveTriggerInteractions: () => [],
 }));
 jest.mock('../../consts/gearSetEffects', () => ({
   getGearSetEffects: () => undefined,

@@ -1,0 +1,33 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "MODIFY",
+          "object": "SKILL_PARAMETER",
+          "objectId": "SATURATED_DEFENSE",
+          "with": {
+            "parameterKey": "potential_1",
+            "value": {
+              "verb": "IS",
+              "value": 1
+            },
+            "parameterModifyType": "UNIQUE_MULTIPLIER"
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "SNOWSHINE_POTENTIAL_1",
+    "name": "Cold Shelter",
+    "level": 1,
+    "eventType": "POTENTIAL_EVENT",
+    "eventCategoryType": "POTENTIAL",
+    "description": "Battle skill Saturated Defense improved: During the blocking effect, Arts Inflictions cannot be applied to allied operators with Protection."
+  },
+  "metadata": {
+    "originId": "SNOWSHINE"
+  }
+}

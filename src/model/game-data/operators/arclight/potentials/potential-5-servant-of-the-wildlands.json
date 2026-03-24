@@ -1,0 +1,40 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "MODIFY",
+          "object": "SKILL_PARAMETER",
+          "objectId": "TEMPESTUOUS_ARC",
+          "with": {
+            "parameterKey": "count",
+            "value": {
+              "verb": "IS",
+              "value": 2
+            },
+            "parameterModifyType": "UNIQUE_MULTIPLIER"
+          }
+        },
+        {
+          "verb": "APPLY",
+          "object": "BUFF",
+          "objectId": "ARCLIGHT_POTENTIAL5_SERVANT_OF_THE_WILDLANDS",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "ARCLIGHT_POTENTIAL_5",
+    "name": "Servant of the Wildlands",
+    "level": 5,
+    "eventType": "POTENTIAL_EVENT",
+    "eventCategoryType": "POTENTIAL",
+    "description": "Talent Wildland Trekker improved: Trigger requirement is reduced to 2 time(s)."
+  },
+  "metadata": {
+    "originId": "ARCLIGHT"
+  }
+}

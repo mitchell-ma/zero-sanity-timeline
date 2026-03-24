@@ -1,0 +1,61 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "ARTS_DAMAGE_BONUS",
+          "to": "ENEMY",
+          "with": {
+            "value": {
+              "verb": "VARY_BY",
+              "object": "SKILL_LEVEL",
+              "value": [
+                0.09,
+                0.108,
+                0.126,
+                0.144,
+                0.162,
+                0.18,
+                0.198,
+                0.216,
+                0.252
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "DETONATION_UNIT_IMPOSING_CHAMPION_ENEMY",
+    "name": "Imposing Champion (Enemy)",
+    "description": "Enemy Arts DMG Taken (Fragility)",
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": 15
+      },
+      "unit": "SECOND"
+    },
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 1
+      },
+      "interactionType": "RESET"
+    },
+    "to": "ENEMY",
+    "eventType": "STATUS",
+    "eventCategoryType": "WEAPON_STATUS"
+  },
+  "metadata": {
+    "originId": "DETONATION_UNIT",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ]
+  }
+}

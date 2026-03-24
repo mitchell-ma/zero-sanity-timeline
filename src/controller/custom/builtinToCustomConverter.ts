@@ -3,8 +3,7 @@
  * for the "Clone as Custom" feature.
  */
 import { WeaponType, GearSetType, GearCategory, ElementType } from '../../consts/enums';
-import { getWeapon, resolveWeaponId, getAllGearPieces, getGearSetEffect } from '../gameDataController';
-import { getWeaponEffectDefs, getGearEffectDefs, resolveTargetDisplay, resolveDurationSeconds, resolveTriggerInteractions } from '../../model/game-data/weaponGearEffectLoader';
+import { getWeapon, resolveWeaponId, getAllGearPieces, getGearSetEffect, getWeaponEffectDefs, getGearEffectDefs, resolveTargetDisplay, resolveDurationSeconds, resolveTriggerInteractions } from '../gameDataStore';
 import { getGearSetEffects } from '../../consts/gearSetEffects';
 import { ALL_OPERATORS } from '../operators/operatorRegistry';
 import { legacyTargetToObjectType, encodeLegacyTarget } from './bridgeUtils';
@@ -15,7 +14,7 @@ import { OperatorClassType } from '../../model/enums/operators';
 import type { CustomWeapon, CustomWeaponSkillDef } from '../../model/custom/customWeaponTypes';
 import type { CustomGearSet, CustomGearPiece, CustomGearSetEffect } from '../../model/custom/customGearTypes';
 import type { CustomOperator } from '../../model/custom/customOperatorTypes';
-import { getComboTriggerInfo } from '../../model/event-frames/operatorJsonLoader';
+import { getComboTriggerInfo } from '../gameDataStore';
 
 /** Convert a built-in weapon to CustomWeapon format. */
 export function weaponToCustomWeapon(weaponName: string): CustomWeapon | null {

@@ -1,0 +1,40 @@
+{
+  "onTriggerClause": [
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "APPLY",
+          "object": "SOLIDIFICATION"
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "BARRAGE_OF_TECHNOLOGY",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "BARRAGE_OF_TECHNOLOGY_TALENT",
+    "name": "Barrage of Technology (Talent)",
+    "type": "TALENT",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
+    "eventType": "STATUS",
+    "eventCategoryType": "TALENT",
+    "description": "Battle skill Brr-Brr-Bomb β improved: After applying Solidification, the next basic attack directly becomes a Final Strike with DMG Dealt +{dmg_up:0%}."
+  },
+  "metadata": {
+    "originId": "YVONNE",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ],
+    "icon": "skills/yvonne_talent_1_icon.png"
+  }
+}

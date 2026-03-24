@@ -3,11 +3,10 @@
  * so they appear alongside built-in weapons in loadout dropdowns
  * and the timeline pipeline.
  */
-import { registerCustomWeaponEffectDefs, deregisterCustomWeaponEffectDefs } from '../../model/game-data/weaponGearEffectLoader';
+import { registerCustomWeaponEffectDefs, deregisterCustomWeaponEffectDefs, registerCustomWeapon as registerInController, deregisterCustomWeapon as deregisterFromController } from '../gameDataStore';
 import type { CustomWeapon } from '../../model/custom/customWeaponTypes';
 import { UnitType } from '../../consts/enums';
 import { VerbType } from '../../dsl/semantics';
-import { registerCustomWeapon as registerInController, deregisterCustomWeapon as deregisterFromController } from '../../model/game-data/weaponsController';
 
 export function registerCustomWeapon(weapon: CustomWeapon): void {
   // Register in weaponsController

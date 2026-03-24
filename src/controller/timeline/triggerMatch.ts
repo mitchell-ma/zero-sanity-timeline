@@ -57,6 +57,7 @@ export interface TriggerSubEffect {
   fromObject?: string;
   to?: string;
   toDeterminer?: string;
+  with?: Record<string, unknown>;
 }
 
 export interface TriggerMatch {

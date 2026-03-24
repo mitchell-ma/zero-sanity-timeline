@@ -9,7 +9,7 @@ import {
   resolveGearPieceId,
   resolveConsumableId,
   resolveTacticalId,
-} from '../controller/gameDataController';
+} from '../controller/gameDataStore';
 
 const STORAGE_KEY = 'zst-sheet';
 const CURRENT_VERSION = 3;

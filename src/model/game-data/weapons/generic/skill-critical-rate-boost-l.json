@@ -1,0 +1,46 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "CRITICAL_RATE",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "VARY_BY",
+              "object": "SKILL_LEVEL",
+              "value": [
+                0.025,
+                0.045,
+                0.065,
+                0.085,
+                0.105,
+                0.125,
+                0.145,
+                0.165,
+                0.195
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "name": "Critical Rate Boost [L]",
+    "description": "Critical Rate +",
+    "id": "CRITICAL_RATE_BOOST_L"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ],
+    "id": "CRITICAL_RATE_BOOST_L"
+  }
+}

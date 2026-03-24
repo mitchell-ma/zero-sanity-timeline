@@ -4,7 +4,7 @@ import {
   getGearPiece,
   getConsumableEntry,
   getTacticalEntry,
-} from '../controller/gameDataController';
+} from '../controller/gameDataStore';
 
 export interface OperatorLoadoutState {
   weaponId:     string | null;

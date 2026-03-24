@@ -1,0 +1,44 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "BASE_DEFENSE",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": 20
+            }
+          }
+        },
+        {
+          "verb": "APPLY",
+          "object": "WILL",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": 10
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "CATCHER_POTENTIAL_2",
+    "name": "Bonus Spec Training",
+    "level": 2,
+    "eventType": "POTENTIAL_EVENT",
+    "eventCategoryType": "POTENTIAL",
+    "description": "DEF +{Def:0}, Will +{Will:0}."
+  },
+  "metadata": {
+    "originId": "CATCHER"
+  }
+}

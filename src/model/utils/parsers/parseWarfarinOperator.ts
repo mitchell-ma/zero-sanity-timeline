@@ -483,6 +483,7 @@ function buildPotentials(
     return {
       level: unlock.level,
       name: unlock.name,
+      description: effect.desc,
       effects: parsed,
     };
   });

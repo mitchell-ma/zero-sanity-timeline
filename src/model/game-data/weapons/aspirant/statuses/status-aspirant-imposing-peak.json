@@ -1,0 +1,61 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "PHYSICAL_DAMAGE_BONUS",
+          "with": {
+            "value": {
+              "verb": "VARY_BY",
+              "object": "SKILL_LEVEL",
+              "value": [
+                0.12,
+                0.144,
+                0.168,
+                0.192,
+                0.216,
+                0.24,
+                0.264,
+                0.288,
+                0.336
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "ASPIRANT_IMPOSING_PEAK",
+    "name": "Imposing Peak",
+    "description": "Phys DMG bonus on next ult skill",
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": 30
+      },
+      "unit": "SECOND"
+    },
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 3
+      },
+      "interactionType": "NONE"
+    },
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
+    "eventType": "STATUS",
+    "eventCategoryType": "WEAPON_STATUS"
+  },
+  "metadata": {
+    "originId": "ASPIRANT",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ]
+  }
+}

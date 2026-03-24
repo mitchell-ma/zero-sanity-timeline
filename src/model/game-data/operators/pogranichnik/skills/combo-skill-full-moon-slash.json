@@ -1,0 +1,530 @@
+{
+  "properties": {
+    "name": "Full Moon Slash",
+    "description": "COMBO TRIGGER: When Crush or Breach consumes the enemy's Vulnerability stack(s). Performs a number of slash sequences (up to 3) based on the max number of Vulnerability stacks consumed, dealing Physical DMG and recovering some SP. Each slash deals more DMG and gives better SP recovery. Consuming 4 stacks of Vulnerability enhances the 3rd slash sequence.",
+    "windowFrames": 720,
+    "eventType": "COMBAT_SKILL",
+    "eventCategoryType": "COMBO_SKILL",
+    "element": "PHYSICAL"
+  },
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "RECOVER",
+          "object": "ULTIMATE_ENERGY",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": 10
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT"
+      },
+      "properties": {
+        "segmentTypes": [
+          "ANIMATION"
+        ],
+        "name": "Animation",
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 0.5
+          },
+          "unit": "SECOND"
+        },
+        "timeDependency": "REAL_TIME",
+        "timeInteractionType": "TIME_STOP"
+      },
+      "frames": []
+    },
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT"
+      },
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 1.7
+          },
+          "unit": "SECOND"
+        },
+        "element": "PHYSICAL"
+      },
+      "frames": [
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "END_AXIS"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 0.27,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "RECOVER",
+                  "object": "SKILL_POINT",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 5
+                    }
+                  }
+                },
+                {
+                  "verb": "DEAL",
+                  "object": "STAGGER",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 3
+                    }
+                  }
+                },
+                {
+                  "verb": "DEAL",
+                  "adjective": "PHYSICAL",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "damageMultiplierIncrement": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.54,
+                        0.59,
+                        0.65,
+                        0.7,
+                        0.76,
+                        0.81,
+                        0.86,
+                        0.92,
+                        0.97,
+                        1.04,
+                        1.12,
+                        1.22
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    },
+                    "atkScale3": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.66,
+                        0.73,
+                        0.79,
+                        0.86,
+                        0.92,
+                        0.99,
+                        1.06,
+                        1.12,
+                        1.19,
+                        1.27,
+                        1.37,
+                        1.49
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    },
+                    "atkScale4": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        1.32,
+                        1.45,
+                        1.58,
+                        1.72,
+                        1.85,
+                        1.98,
+                        2.11,
+                        2.24,
+                        2.38,
+                        2.54,
+                        2.74,
+                        2.97
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    },
+                    "atb1": {
+                      "verb": "IS",
+                      "value": 5
+                    },
+                    "atb2": {
+                      "verb": "IS",
+                      "value": 7
+                    },
+                    "atb3": {
+                      "verb": "IS",
+                      "value": 13
+                    },
+                    "atb4": {
+                      "verb": "IS",
+                      "value": 23
+                    },
+                    "DAMAGE_MULTIPLIER": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.42,
+                        0.46,
+                        0.5,
+                        0.55,
+                        0.59,
+                        0.63,
+                        0.67,
+                        0.71,
+                        0.76,
+                        0.81,
+                        0.87,
+                        0.95
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "END_AXIS"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 0.73,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "RECOVER",
+                  "object": "SKILL_POINT",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 7
+                    }
+                  }
+                },
+                {
+                  "verb": "DEAL",
+                  "object": "STAGGER",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 3
+                    }
+                  }
+                },
+                {
+                  "verb": "DEAL",
+                  "adjective": "PHYSICAL",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "damageMultiplierIncrement": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.54,
+                        0.59,
+                        0.65,
+                        0.7,
+                        0.76,
+                        0.81,
+                        0.86,
+                        0.92,
+                        0.97,
+                        1.04,
+                        1.12,
+                        1.22
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    },
+                    "atkScale3": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.66,
+                        0.73,
+                        0.79,
+                        0.86,
+                        0.92,
+                        0.99,
+                        1.06,
+                        1.12,
+                        1.19,
+                        1.27,
+                        1.37,
+                        1.49
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    },
+                    "atkScale4": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        1.32,
+                        1.45,
+                        1.58,
+                        1.72,
+                        1.85,
+                        1.98,
+                        2.11,
+                        2.24,
+                        2.38,
+                        2.54,
+                        2.74,
+                        2.97
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    },
+                    "DAMAGE_MULTIPLIER": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.42,
+                        0.46,
+                        0.5,
+                        0.55,
+                        0.59,
+                        0.63,
+                        0.67,
+                        0.71,
+                        0.76,
+                        0.81,
+                        0.87,
+                        0.95
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "END_AXIS"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 1.53,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "RECOVER",
+                  "object": "SKILL_POINT",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 23
+                    }
+                  }
+                },
+                {
+                  "verb": "DEAL",
+                  "object": "STAGGER",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 9
+                    }
+                  }
+                },
+                {
+                  "verb": "DEAL",
+                  "adjective": "PHYSICAL",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "damageMultiplierIncrement": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.54,
+                        0.59,
+                        0.65,
+                        0.7,
+                        0.76,
+                        0.81,
+                        0.86,
+                        0.92,
+                        0.97,
+                        1.04,
+                        1.12,
+                        1.22
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    },
+                    "atkScale3": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.66,
+                        0.73,
+                        0.79,
+                        0.86,
+                        0.92,
+                        0.99,
+                        1.06,
+                        1.12,
+                        1.19,
+                        1.27,
+                        1.37,
+                        1.49
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    },
+                    "atkScale4": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        1.32,
+                        1.45,
+                        1.58,
+                        1.72,
+                        1.85,
+                        1.98,
+                        2.11,
+                        2.24,
+                        2.38,
+                        2.54,
+                        2.74,
+                        2.97
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    },
+                    "DAMAGE_MULTIPLIER": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.42,
+                        0.46,
+                        0.5,
+                        0.55,
+                        0.59,
+                        0.63,
+                        0.67,
+                        0.71,
+                        0.76,
+                        0.81,
+                        0.87,
+                        0.95
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT"
+      },
+      "properties": {
+        "segmentTypes": [
+          "COOLDOWN",
+          "IMMEDIATE_COOLDOWN"
+        ],
+        "name": "Cooldown",
+        "duration": {
+          "value": {
+            "verb": "VARY_BY",
+            "object": "SKILL_LEVEL",
+            "value": [
+              18,
+              18,
+              18,
+              18,
+              18,
+              18,
+              18,
+              18,
+              18,
+              18,
+              18,
+              17
+            ],
+            "ofDeterminer": "THIS",
+            "of": "OPERATOR"
+          },
+          "unit": "SECOND"
+        },
+        "timeDependency": "REAL_TIME"
+      },
+      "frames": []
+    }
+  ],
+  "metadata": {
+    "originId": "POGRANICHNIK",
+    "id": "FULL_MOON_SLASH",
+    "icon": "skills/combo_pogranichnik.png"
+  },
+  "onTriggerClause": [
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "PHYSICAL"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "TREATMENT_BONUS",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "VARY_BY",
+              "object": "TALENT_ONE_LEVEL",
+              "value": [
+                0.15,
+                0.25
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            },
+            "hpThreshold": {
+              "verb": "VARY_BY",
+              "object": "TALENT_ONE_LEVEL",
+              "value": [
+                0.45,
+                0.55
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "POLAR_SURVIVAL",
+    "name": "Polar Survival",
+    "type": "STATUS",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
+    "eventType": "STATUS",
+    "eventCategoryType": "STATUS",
+    "description": "Ultimate Frigid Snowfield improved: Duration of the Solidification applied by the skill is increased by s."
+  },
+  "metadata": {
+    "originId": "SNOWSHINE",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ]
+  }
+}

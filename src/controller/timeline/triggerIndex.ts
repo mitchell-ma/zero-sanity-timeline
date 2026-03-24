@@ -18,9 +18,9 @@ import type { Predicate, TriggerEffect } from './triggerMatch';
 import type { ValueNode } from '../../dsl/semantics';
 import { VerbType } from '../../dsl/semantics';
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from '../calculation/valueResolver';
-import { getAllOperatorIds, getOperatorJson, getSkillIds } from '../../model/event-frames/operatorJsonLoader';
-import { getWeaponEffectDefs, getGearEffectDefs } from '../../model/game-data/weaponGearEffectLoader';
-import type { NormalizedEffectDef } from '../../model/game-data/weaponGearEffectLoader';
+import { getAllOperatorIds, getSkillIds, getEnabledStatusEvents } from '../gameDataStore';
+import { getWeaponEffectDefs, getGearEffectDefs } from '../gameDataStore';
+import type { NormalizedEffectDef } from '../gameDataStore';
 import { ENEMY_OWNER_ID, SKILL_COLUMNS, REACTION_COLUMNS, INFLICTION_COLUMNS } from '../../model/channels';
 import { COMMON_OWNER_ID } from '../slot/commonSlotController';
 import { TOTAL_FRAMES, FPS } from '../../utils/timeline';
@@ -319,11 +319,11 @@ export class TriggerIndex {
 
     // Process operator status defs
     for (const opId of getAllOperatorIds()) {
-      const json = getOperatorJson(opId);
-      if (!json?.statusEvents) continue;
+      const defs = getEnabledStatusEvents(opId).map(s => s.serialize() as unknown as StatusEventDef);
+      if (!defs.length) continue;
       const slotId = operatorSlotMap[opId];
       if (!slotId) continue;
-      idx.processDefsForSlot(slotId, opId, json.statusEvents as StatusEventDef[], false, loadoutProperties, operatorSlotMap, registeredEvents);
+      idx.processDefsForSlot(slotId, opId, defs, false, loadoutProperties, operatorSlotMap, registeredEvents);
     }
 
     // Process weapon defs

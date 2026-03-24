@@ -64,20 +64,9 @@
  */
 import { TimelineEvent } from '../../consts/viewTypes';
 import { SKILL_COLUMNS } from '../../model/channels';
-import { buildSequencesFromOperatorJson, DataDrivenSkillEventSequence } from '../../model/event-frames/dataDrivenEventFrames';
+import { buildSequencesFromOperatorJson, DataDrivenSkillEventSequence } from '../../controller/gameDataStore';
 import { wouldOverlapSiblings } from '../../controller/timeline/eventValidator';
 
-jest.mock('../../model/event-frames/operatorJsonLoader', () => ({
-  getOperatorJson: () => undefined, getAllOperatorIds: () => [],
-  getFrameSequences: () => [], getSkillIds: () => new Set(), getSkillTypeMap: () => ({}), resolveSkillType: () => null,
-  getSegmentLabels: () => undefined, getSkillTimings: () => undefined,
-  getUltimateEnergyCost: () => 0, getSkillGaugeGains: () => undefined,
-  getBattleSkillSpCost: () => undefined, getSkillCategoryData: () => undefined,
-  getBasicAttackDurations: () => undefined,
-  getComboTriggerClause: () => undefined,
-  getExchangeStatusConfig: () => ({}),
-  getExchangeStatusIds: () => new Set(),
-}));
 jest.mock('../../model/game-data/weaponGameData', () => ({
   getSkillValues: () => [], getConditionalValues: () => [],
   getConditionalScalar: () => null, getBaseAttackForLevel: () => 0,
@@ -90,11 +79,11 @@ jest.mock('../../view/InformationPane', () => ({
 // applyPotentialEffects removed — P5 cooldown reset now handled via DSL RESET COOLDOWN verb
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const mockOperatorJson = require('../../model/game-data/operators/wulfgard-operator.json');
+const mockOperatorJson = require('../../model/game-data/operators/wulfgard/wulfgard.json');
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const mockSkillsJson = require('../../model/game-data/operator-skills/wulfgard-skills.json');
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const mockStatusesJson = require('../../model/game-data/operator-statuses/wulfgard-statuses.json');
+const { loadSkillsJson: _loadWulfgardSkills, loadStatusesJson: _loadWulfgardStatuses } = require('../helpers/loadGameData');
+const mockSkillsJson = _loadWulfgardSkills('wulfgard');
+const mockStatusesJson = _loadWulfgardStatuses('wulfgard');
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- JSON require() data
 const wulfgardSkillEntries = mockSkillsJson as Record<string, any>;

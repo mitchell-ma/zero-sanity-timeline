@@ -114,7 +114,7 @@ export abstract class StatusEvent extends Event implements Stacks {
     count?: number;
   }) {
     super({
-      eventType: EventType.STATUS_EVENT,
+      eventType: EventType.STATUS,
       eventOrigin: params.eventOrigin,
       name: params.name,
       target: params.target,

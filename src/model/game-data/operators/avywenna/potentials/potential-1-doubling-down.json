@@ -1,0 +1,59 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "MODIFY",
+          "object": "SKILL_PARAMETER",
+          "objectId": "THUNDERLANCE_INTERDICTION",
+          "with": {
+            "parameterKey": "talent0_usp",
+            "value": {
+              "verb": "IS",
+              "value": 2
+            },
+            "parameterModifyType": "ADDITIVE"
+          }
+        },
+        {
+          "verb": "MODIFY",
+          "object": "SKILL_PARAMETER",
+          "objectId": "THUNDERLANCE_STRIKE",
+          "with": {
+            "parameterKey": "talent0_usp",
+            "value": {
+              "verb": "IS",
+              "value": 2
+            },
+            "parameterModifyType": "ADDITIVE"
+          }
+        },
+        {
+          "verb": "MODIFY",
+          "object": "SKILL_PARAMETER",
+          "objectId": "THUNDERLANCE_FINAL_SHOCK",
+          "with": {
+            "parameterKey": "talent0_usp",
+            "value": {
+              "verb": "IS",
+              "value": 2
+            },
+            "parameterModifyType": "ADDITIVE"
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "AVYWENNA_POTENTIAL_1",
+    "name": "Doubling Down",
+    "level": 1,
+    "eventType": "POTENTIAL_EVENT",
+    "eventCategoryType": "POTENTIAL",
+    "description": "Talent Expedited Delivery improved: Ultimate Energy gain +2."
+  },
+  "metadata": {
+    "originId": "AVYWENNA"
+  }
+}

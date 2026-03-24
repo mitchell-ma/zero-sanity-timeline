@@ -3,9 +3,8 @@
  */
 import { ContentCategory, ContentBrowserItem } from '../../consts/contentBrowserTypes';
 import { ALL_OPERATORS } from '../operators/operatorRegistry';
-import { getAllWeapons, getAllGearPieces, getGearSetEffect } from '../gameDataController';
-import { getWeaponEffectDefs, getGearEffectDefs, getAllWeaponEffectNames, getAllGearEffectTypes, getGearEffectLabel } from '../../model/game-data/weaponGearEffectLoader';
-import { getGearSetData } from '../../model/game-data/gearSetDataLoader';
+import { getAllWeapons, getAllGearPieces, getGearSetEffect, getWeaponEffectDefs, getGearEffectDefs, getAllWeaponEffectNames, getAllGearEffectTypes, getGearEffectLabel } from '../gameDataStore';
+import { getGearSetData } from '../gameDataStore';
 import { getGearSetEffects } from '../../consts/gearSetEffects';
 import { COMBAT_SKILL_LABELS } from '../../consts/timelineColumnLabels';
 import { CombatSkillType } from '../../consts/enums';

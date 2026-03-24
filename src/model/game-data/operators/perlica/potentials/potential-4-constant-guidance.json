@@ -1,0 +1,33 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "MODIFY",
+          "object": "SKILL_PARAMETER",
+          "objectId": "INSTANT_PROTOCOL_CHAIN",
+          "with": {
+            "parameterKey": "EXTRA_SCALING",
+            "value": {
+              "verb": "IS",
+              "value": 1.33
+            },
+            "parameterModifyType": "UNIQUE_MULTIPLIER"
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "PERLICA_POTENTIAL_4",
+    "name": "Constant Guidance",
+    "level": 4,
+    "eventType": "POTENTIAL_EVENT",
+    "eventCategoryType": "POTENTIAL",
+    "description": "Combo skill Instant Protocol: Chain improved: The Arts DMG Taken debuff effects on the enemy applied by the skill's Electrification are increased to {extra_scaling} times the original."
+  },
+  "metadata": {
+    "originId": "PERLICA"
+  }
+}

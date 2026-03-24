@@ -1,0 +1,85 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "MODIFY",
+          "object": "SKILL_PARAMETER",
+          "objectId": "WINTERS_DEVOURER",
+          "with": {
+            "parameterKey": "atk_scale2",
+            "value": {
+              "verb": "IS",
+              "value": 1.15
+            },
+            "parameterModifyType": "MULTIPLICATIVE"
+          }
+        },
+        {
+          "verb": "MODIFY",
+          "object": "SKILL_PARAMETER",
+          "objectId": "WINTERS_DEVOURER",
+          "with": {
+            "parameterKey": "atk_scale3",
+            "value": {
+              "verb": "IS",
+              "value": 1.15
+            },
+            "parameterModifyType": "MULTIPLICATIVE"
+          }
+        },
+        {
+          "verb": "MODIFY",
+          "object": "SKILL_PARAMETER",
+          "objectId": "WINTERS_DEVOURER",
+          "with": {
+            "parameterKey": "DAMAGE_MULTIPLIER_MODIFIER",
+            "value": {
+              "verb": "IS",
+              "value": 1.15
+            },
+            "parameterModifyType": "MULTIPLICATIVE"
+          }
+        },
+        {
+          "verb": "MODIFY",
+          "object": "SKILL_PARAMETER",
+          "objectId": "VIGIL_SERVICES",
+          "with": {
+            "parameterKey": "DAMAGE_MULTIPLIER_MODIFIER",
+            "value": {
+              "verb": "IS",
+              "value": 1.15
+            },
+            "parameterModifyType": "MULTIPLICATIVE"
+          }
+        },
+        {
+          "verb": "MODIFY",
+          "object": "SKILL_PARAMETER",
+          "objectId": "VIGIL_SERVICES",
+          "with": {
+            "parameterKey": "atk_scale2",
+            "value": {
+              "verb": "IS",
+              "value": 1.15
+            },
+            "parameterModifyType": "MULTIPLICATIVE"
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "LAST-RITE_POTENTIAL_3",
+    "name": "Overlord of Winter",
+    "level": 3,
+    "eventType": "POTENTIAL_EVENT",
+    "eventCategoryType": "POTENTIAL",
+    "description": "Combo skill Winter's Devourer and ultimate Vigil Services improved: DMG multiplier increased to 1.15 times the original."
+  },
+  "metadata": {
+    "originId": "LAST-RITE"
+  }
+}

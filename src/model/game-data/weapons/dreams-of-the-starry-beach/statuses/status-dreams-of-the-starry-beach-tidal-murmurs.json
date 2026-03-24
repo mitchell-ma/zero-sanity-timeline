@@ -1,0 +1,61 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "WILL_BONUS",
+          "with": {
+            "value": {
+              "verb": "VARY_BY",
+              "object": "SKILL_LEVEL",
+              "value": [
+                0.16,
+                0.192,
+                0.224,
+                0.256,
+                0.288,
+                0.32,
+                0.352,
+                0.384,
+                0.448
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "DREAMS_OF_THE_STARRY_BEACH_TIDAL_MURMURS",
+    "name": "Tidal Murmurs",
+    "description": "Secondary attribute bonus",
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": 25
+      },
+      "unit": "SECOND"
+    },
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 1
+      },
+      "interactionType": "RESET"
+    },
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
+    "eventType": "STATUS",
+    "eventCategoryType": "WEAPON_STATUS"
+  },
+  "metadata": {
+    "originId": "DREAMS_OF_THE_STARRY_BEACH",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ]
+  }
+}

@@ -67,13 +67,6 @@ jest.mock('../../utils/loadoutRegistry', () => ({
   OPERATORS: [],
 }));
 
-jest.mock('../../controller/gameDataController', () => ({
-  getWeapon: () => null,
-  getGearPiece: () => null,
-  getConsumableEntry: () => null,
-  getTacticalEntry: () => null,
-}));
-
 jest.mock('../../locales/locale', () => ({
   t: (key: string) => key,
 }));

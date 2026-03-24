@@ -1,0 +1,92 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "MODIFY",
+          "object": "SKILL_PARAMETER",
+          "objectId": "CRYOBLASTING_PISTOLIER",
+          "with": {
+            "parameterKey": "has_potential5",
+            "value": {
+              "verb": "IS",
+              "value": 1
+            },
+            "parameterModifyType": "UNIQUE_MULTIPLIER"
+          }
+        },
+        {
+          "verb": "MODIFY",
+          "object": "SKILL_PARAMETER",
+          "objectId": "CRYOBLASTING_PISTOLIER",
+          "with": {
+            "parameterKey": "atk_up",
+            "value": {
+              "verb": "IS",
+              "value": 0.1
+            },
+            "parameterModifyType": "UNIQUE_MULTIPLIER"
+          }
+        },
+        {
+          "verb": "MODIFY",
+          "object": "SKILL_PARAMETER",
+          "objectId": "CRYOBLASTING_PISTOLIER",
+          "with": {
+            "parameterKey": "crit_dmg_up",
+            "value": {
+              "verb": "IS",
+              "value": 0.3
+            },
+            "parameterModifyType": "UNIQUE_MULTIPLIER"
+          }
+        },
+        {
+          "verb": "APPLY",
+          "object": "BUFF",
+          "objectId": "YVONNE_POTENTIAL5_EXPERT_MECHCRAFTER",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
+        },
+        {
+          "verb": "MODIFY",
+          "object": "SKILL_PARAMETER",
+          "objectId": "chr_0017_yvonne_ult_attack_end",
+          "with": {
+            "parameterKey": "crit_dmg_up",
+            "value": {
+              "verb": "IS",
+              "value": 0.3
+            },
+            "parameterModifyType": "UNIQUE_MULTIPLIER"
+          }
+        },
+        {
+          "verb": "MODIFY",
+          "object": "SKILL_PARAMETER",
+          "objectId": "chr_0017_yvonne_ult_attack_end",
+          "with": {
+            "parameterKey": "atk_up",
+            "value": {
+              "verb": "IS",
+              "value": 0.1
+            },
+            "parameterModifyType": "UNIQUE_MULTIPLIER"
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "YVONNE_POTENTIAL_5",
+    "name": "Expert Mechcrafter",
+    "level": 5,
+    "eventType": "POTENTIAL_EVENT",
+    "eventCategoryType": "POTENTIAL",
+    "description": "Ultimate Cryoblasting Pistolier improved: During the ultimate, ATK +10% and Critical DMG Dealt +30%."
+  },
+  "metadata": {
+    "originId": "YVONNE"
+  }
+}

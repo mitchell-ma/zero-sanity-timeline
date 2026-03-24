@@ -1,0 +1,51 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "BATTLE_SKILL_DAMAGE_BONUS",
+          "with": {
+            "value": {
+              "verb": "VARY_BY",
+              "object": "STATUS_LEVEL",
+              "value": [
+                0.3
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            }
+          },
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "type": "GEAR_SET_STATUS",
+    "id": "BONEKRUSHA",
+    "name": "Bonekrusha",
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": 0
+      },
+      "unit": "SECOND"
+    },
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 2
+      },
+      "interactionType": "NONE"
+    },
+    "description": "Consumed on next battle skill cast",
+    "eventType": "STATUS",
+    "eventCategoryType": "GEAR_SET_STATUS"
+  },
+  "metadata": {
+    "originId": "BONEKRUSHA"
+  }
+}

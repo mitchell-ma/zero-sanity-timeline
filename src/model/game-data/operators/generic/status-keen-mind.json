@@ -1,0 +1,40 @@
+{
+  "properties": {
+    "id": "KEEN_MIND",
+    "name": "Keen Mind",
+    "type": "STATUS",
+    "target": "OPERATOR",
+    "targetDeterminer": "THIS"
+  },
+  "metadata": {
+    "originId": "game"
+  },
+  "clause": [
+    {
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STAT",
+          "objectId": "INTELLECT",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "VARY_BY",
+              "object": "ATTRIBUTE_INCREASE_LEVEL",
+              "value": [
+                0,
+                10,
+                25,
+                40,
+                60
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

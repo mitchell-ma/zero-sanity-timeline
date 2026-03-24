@@ -1,0 +1,55 @@
+{
+  "onTriggerClause": [
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "VULNERABILITY"
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "AETHERTECH"
+        }
+      ]
+    },
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "VULNERABILITY"
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "AETHERTECH_MAX"
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "AETHERTECH",
+    "name": "Æthertech",
+    "rarity": 5,
+    "piecesRequired": 3,
+    "description": "3-piece set effect: Wearer's ATK +{atk_up:0%}. After the wearer applies Vulnerability, the wearer gains Physical DMG +{phy_dmg_up:0%} for {duration}s. This effect can reach {max_stack:0} stacks. If the target already has {stack_cond:0} stack(s) of Vulnerability, the wearer gains an additional Physical DMG +{phy_dmg_up2:0%} for {duration2}s. This effect cannot stack.",
+    "eventType": "STATUS",
+    "eventCategoryType": "GEAR_SET_EFFECT"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
+  }
+}

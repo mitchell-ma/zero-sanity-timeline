@@ -38,21 +38,23 @@ import { deleteCustomGearEffect } from '../../controller/custom/customGearEffect
 import { deleteCustomOperatorStatus } from '../../controller/custom/customOperatorStatusController';
 import { deleteCustomOperatorTalent } from '../../controller/custom/customOperatorTalentController';
 import { ALL_OPERATORS } from '../../controller/operators/operatorRegistry';
-import { getGearPiecesBySet, getWeapon, getWeaponIdByName } from '../../controller/gameDataController';
-import { getWeaponEffectDefs, getGearEffectDefs, resolveTargetDisplay, resolveDurationSeconds, resolveTriggerInteractions } from '../../model/game-data/weaponGearEffectLoader';
-import { getGearSetData } from '../../model/game-data/gearSetDataLoader';
-import type { GearPieceData } from '../../model/game-data/gearSetDataLoader';
+import { getGearPiecesBySet, getWeapon, getWeaponIdByName, getWeaponEffectDefs, getGearEffectDefs, resolveTargetDisplay, resolveDurationSeconds, resolveTriggerInteractions } from '../../controller/gameDataStore';
+import { getGearSetData } from '../../controller/gameDataStore';
+import type { GearPieceData } from '../../controller/gameDataStore';
 import { getGearSetEffects } from '../../consts/gearSetEffects';
-import { GearSetType, GearCategory, SegmentType } from '../../consts/enums';
-import type { SkillType, SkillDef } from '../../consts/viewTypes';
+import { GearSetType, GearCategory, SegmentType, ELEMENT_COLORS, ElementType } from '../../consts/enums';
+import type { SkillType, SkillDef, EventSegmentData, EventFrameMarker, TimelineEvent } from '../../consts/viewTypes';
 import { computeSegmentsSpan } from '../../consts/viewTypes';
 import { THRESHOLD_MAX } from '../../dsl/semantics';
 import type { Interaction, Effect, Predicate } from '../../dsl/semantics';
 import { getLeafValue } from '../../controller/calculation/valueResolver';
 import { operatorToCustomOperator, weaponToCustomWeapon, gearSetToCustomGearSet } from '../../controller/custom/builtinToCustomConverter';
-import { getOperatorJson } from '../../model/event-frames/operatorJsonLoader';
+import { getOperatorBase, getOperatorSkill, getOperatorSkills, getOperatorStatuses, getSkillTypeMap as getTypedSkillTypeMap } from '../../controller/gameDataStore';
 import { resolveComboTrigger, resolveUltimateEnergy } from '../../controller/info-pane/loadoutPaneController';
-import { buildSkillEntries, SkillEntrySection } from './OperatorEventEditor';
+import { buildSkillEntries } from './OperatorEventEditor';
+import EventBlock from '../EventBlock';
+import type { JsonSkillData } from './OperatorEventEditor';
+import ClauseEditor from './ClauseEditor';
 import { fmtN } from '../../utils/timeline';
 import type { CustomStatusEventDef } from '../../model/custom/customStatusEventTypes';
 import { t } from '../../locales/locale';
@@ -987,10 +989,11 @@ function BuiltinDataView({ item }: { item: ContentBrowserItem }) {
   }
 }
 
-function BuiltinOperatorSkillSection({ operatorId, skillType, skill }: {
+function BuiltinOperatorSkillSection({ operatorId, skillType, skill, onExpandedChange }: {
   operatorId: string;
   skillType: SkillType;
   skill: SkillDef;
+  onExpandedChange?: (entryId: string | null) => void;
 }) {
   const JSON_KEYS: Record<SkillType, string> = { basic: 'BASIC_ATTACK', battle: 'BATTLE_SKILL', combo: 'COMBO_SKILL', ultimate: 'ULTIMATE' };
   const skillEntries = useMemo(
@@ -998,6 +1001,19 @@ function BuiltinOperatorSkillSection({ operatorId, skillType, skill }: {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [operatorId, skillType],
   );
+
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+  const toggleEntry = useCallback((id: string) => {
+    setExpandedIds(prev => {
+      const isOpen = prev.has(id);
+      const next = isOpen ? new Set<string>() : new Set([id]);
+      onExpandedChange?.(isOpen ? null : id);
+      return next;
+    });
+  }, [onExpandedChange]);
+
+  // Reset expanded state when skill type changes
+  useEffect(() => { setExpandedIds(new Set()); onExpandedChange?.(null); }, [skillType, onExpandedChange]);
 
   const comboTrigger = useMemo(
     () => skillType === 'combo' ? resolveComboTrigger(operatorId) : null,
@@ -1009,109 +1025,597 @@ function BuiltinOperatorSkillSection({ operatorId, skillType, skill }: {
     [operatorId, skillType, skill.gaugeGain, skill.teamGaugeGain],
   );
 
-  // Compute timing values
-  const segs = skill.defaultSegments ?? [];
-  const totalDur = computeSegmentsSpan(segs);
-  const activeSeg = segs.find(s => s.properties.segmentTypes?.includes(SegmentType.ACTIVE));
-  const cooldownSeg = segs.find(s => s.properties.segmentTypes?.includes(SegmentType.COOLDOWN));
-  const activeDur = activeSeg?.properties.duration ?? 0;
-  const cooldownDur = cooldownSeg?.properties.duration ?? 0;
-  const activationDur = totalDur - cooldownDur;
 
   return (
     <>
       {skill.description && <div className="ops-empty" style={{ fontStyle: 'normal', color: 'var(--text-secondary)' }}>{skill.description}</div>}
 
-      {/* Combo trigger block */}
-      {comboTrigger && (
-        <div className="ops-combo-trigger-block">
-          <div className="ops-sub-header">
-            <span className="ops-sub-label">Combo Trigger</span>
-          </div>
-          <div className="ops-empty" style={{ fontStyle: 'normal', color: 'var(--text-secondary)' }}>{comboTrigger.description}</div>
-          <div className="ops-row" style={{ marginTop: '0.375rem' }}>
-            <ReadonlyField label="Window" value={`${fmtN(comboTrigger.windowSeconds)}s`} />
-          </div>
-        </div>
-      )}
-
-      {/* Skill entries as cards */}
-      {skillEntries.map((entry, i) => (
-        <div key={entry.id} className="ops-skill-card">
-          <div className="ops-skill-card-header">
-            <span className="ops-skill-card-index">{i + 1}</span>
-            <span className="ops-skill-card-name">{entry.label}</span>
-            {entry.subLabel && <span className="ev-type-badge">{entry.subLabel}</span>}
-          </div>
-          <div className="ops-skill-form">
-            {/* Row 1: Name + Element */}
-            <div className="ops-row">
-              <ReadonlyField label="Name" value={entry.data.properties?.name as string} />
-              {skill.element && <ReadonlyField label="Element" value={skill.element} />}
-            </div>
-
-            {/* Row 2: Timings */}
-            <div className="ops-row">
-              {activationDur > 0 && (
-                <div className="ops-field">
-                  <span className="ops-field-label">Duration</span>
-                  <div className="ops-input-unit">
-                    <span className="ops-field-value">{fmtN(activationDur / 120)}</span>
-                    <span className="ops-unit">s</span>
-                  </div>
-                </div>
-              )}
-              {cooldownDur > 0 && (
-                <div className="ops-field">
-                  <span className="ops-field-label">Cooldown</span>
-                  <div className="ops-input-unit">
-                    <span className="ops-field-value">{fmtN(cooldownDur / 120)}</span>
-                    <span className="ops-unit">s</span>
-                  </div>
-                </div>
-              )}
-              {activeDur > 0 && activeDur !== activationDur && (
-                <div className="ops-field">
-                  <span className="ops-field-label">Active</span>
-                  <div className="ops-input-unit">
-                    <span className="ops-field-value">{fmtN(activeDur / 120)}</span>
-                    <span className="ops-unit">s</span>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Row 3: Resources */}
-            <div className="ops-row">
-              {skill.skillPointCost != null && <ReadonlyField label="SP Cost" value={String(skill.skillPointCost)} />}
-              {ultEnergy && (
-                <>
-                  <ReadonlyField label="Energy Cost" value={String(ultEnergy.adjustedCost)} />
-                  {ultEnergy.gaugeGain != null && ultEnergy.gaugeGain > 0 && <ReadonlyField label="Gauge Gain" value={String(ultEnergy.gaugeGain)} />}
-                  {ultEnergy.teamGaugeGain != null && ultEnergy.teamGaugeGain > 0 && <ReadonlyField label="Team Gauge" value={String(ultEnergy.teamGaugeGain)} />}
-                </>
-              )}
-            </div>
-
-            {/* Segments + Frames via SkillEntrySection */}
-            <div className="ops-sub-section">
-              <div className="ops-sub-header">
-                <span className="ops-sub-label">Frame Data</span>
+      {/* Skill entries as collapsible pills */}
+      {skillEntries.map((entry, i) => {
+        const isOpen = expandedIds.has(entry.id);
+        return (
+          <div key={entry.id} className={`ops-skill-card${isOpen ? ' ops-skill-card--open' : ''}`} style={(() => {
+            const el = ((entry.data.properties as Record<string, unknown> | undefined)?.element as string) ?? skill.element;
+            const color = el ? ELEMENT_COLORS[el as ElementType] : undefined;
+            return color ? { '--accent': color, '--accent-glow': `color-mix(in srgb, ${color} 30%, transparent)` } as React.CSSProperties : undefined;
+          })()}>
+            <div className="ops-skill-card-header" onClick={() => toggleEntry(entry.id)}>
+              <div className="ops-skill-card-title-row">
+                <span className="ops-skill-card-index">{i + 1}</span>
+                <span className="ops-skill-card-name">{entry.label}</span>
+                <span className="ops-skill-card-chevron">{isOpen ? '\u25B4' : '\u25BE'}</span>
               </div>
-              <div className="oee">
-                <div className="oee-body">
-                  <SkillEntrySection entry={entry} readOnly defaultOpen />
-                </div>
-              </div>
+              {entry.data.properties?.description && (
+                <span className="ops-skill-card-desc">{entry.data.properties.description}</span>
+              )}
             </div>
+            {isOpen && (
+              <div className="ops-skill-form">
+                {/* Row 1: Name + Element */}
+                <div className="ops-row">
+                  <ReadonlyField label="Name" value={entry.data.properties?.name as string} />
+                  <ReadonlyField label="Element" value={((entry.data.properties as Record<string, unknown> | undefined)?.element as string) ?? skill.element} />
+                </div>
+
+                {/* Row 2: Timings — computed from actual JSON segments */}
+                <div className="ops-row">
+                  {(() => {
+                    const jsonSegs = (entry.data.segments ?? []) as { properties?: Record<string, unknown> }[];
+                    let activeSec = 0;
+                    let cdSec = 0;
+                    for (const seg of jsonSegs) {
+                      const dur = seg.properties?.duration as { value: unknown; unit: string } | undefined;
+                      const val = dur ? resolveLeaf(dur.value) : null;
+                      const sec = val != null ? (dur!.unit === 'FRAME' ? val / 120 : val) : 0;
+                      const types = (seg.properties?.segmentTypes ?? []) as string[];
+                      if (types.includes('COOLDOWN') || types.includes('IMMEDIATE_COOLDOWN')) {
+                        cdSec += sec;
+                      } else {
+                        activeSec += sec;
+                      }
+                    }
+                    return (
+                      <>
+                        {activeSec > 0 && (
+                          <div className="ops-field">
+                            <span className="ops-field-label">Duration</span>
+                            <div className="ops-input-unit">
+                              <span className="ops-field-value">{fmtN(activeSec)}</span>
+                              <span className="ops-unit">s</span>
+                            </div>
+                          </div>
+                        )}
+                        {cdSec > 0 && (
+                          <div className="ops-field">
+                            <span className="ops-field-label">Cooldown</span>
+                            <div className="ops-input-unit">
+                              <span className="ops-field-value">{fmtN(cdSec)}</span>
+                              <span className="ops-unit">s</span>
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    );
+                  })()}
+                </div>
+
+                {/* Combo trigger (only for combo skills) */}
+                {comboTrigger && i === 0 && (
+                  <div className="ops-combo-trigger-block">
+                    <div className="ops-sub-header">
+                      <span className="ops-sub-label">Combo Trigger</span>
+                    </div>
+                    <div className="ops-empty" style={{ fontStyle: 'normal', color: 'var(--text-secondary)' }}>{comboTrigger.description}</div>
+                  </div>
+                )}
+
+                {/* Row 3: Resources */}
+                <div className="ops-row">
+                  {skill.skillPointCost != null && <ReadonlyField label="SP Cost" value={String(skill.skillPointCost)} />}
+                  {ultEnergy && (
+                    <>
+                      <ReadonlyField label="Energy Cost" value={String(ultEnergy.adjustedCost)} />
+                      {ultEnergy.gaugeGain != null && ultEnergy.gaugeGain > 0 && <ReadonlyField label="Gauge Gain" value={String(ultEnergy.gaugeGain)} />}
+                      {ultEnergy.teamGaugeGain != null && ultEnergy.teamGaugeGain > 0 && <ReadonlyField label="Team Gauge" value={String(ultEnergy.teamGaugeGain)} />}
+                    </>
+                  )}
+                </div>
+
+                {/* Segments as tabs */}
+                <TabbedSegmentView entry={entry} />
+              </div>
+            )}
           </div>
-        </div>
-      ))}
+        );
+      })}
 
       {skillEntries.length === 0 && (
         <div className="ops-empty">No {VIEWER_SKILL_TAB_LABELS[skillType]?.toLowerCase()} skill data available</div>
       )}
     </>
+  );
+}
+
+const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
+function toRoman(n: number) { return ROMAN[n - 1] ?? String(n); }
+
+const JSON_SKILL_KEYS: Record<SkillType, string> = { basic: 'BASIC_ATTACK', battle: 'BATTLE_SKILL', combo: 'COMBO_SKILL', ultimate: 'ULTIMATE' };
+
+const FPS = 120;
+
+function buildMockEvent(entry: { id: string; label: string; data: JsonSkillData }, operatorId: string, skillType: string): TimelineEvent | null {
+  const jsonSegs = (entry.data.segments ?? []) as { properties?: Record<string, unknown>; frames?: Record<string, unknown>[] }[];
+  if (jsonSegs.length === 0) return null;
+
+  const eventSegs: EventSegmentData[] = jsonSegs.map((seg, si) => {
+    const dur = seg.properties?.duration as { value: unknown; unit: string } | undefined;
+    const durVal = dur ? resolveLeaf(dur.value) : null;
+    const durFrames = durVal != null ? (dur!.unit === 'FRAME' ? durVal : Math.round(durVal * FPS)) : 24;
+
+    const frames: EventFrameMarker[] = (seg.frames ?? []).map((f) => {
+      const off = (f.properties as Record<string, unknown> | undefined)?.offset as { value: unknown; unit: string } | undefined;
+      const offVal = off ? resolveLeaf(off.value) : null;
+      const offFrames = offVal != null ? (off!.unit === 'FRAME' ? offVal : Math.round(offVal * FPS)) : 0;
+      return { offsetFrame: offFrames };
+    });
+
+    return {
+      properties: { duration: durFrames, name: String(si + 1) },
+      frames,
+    };
+  });
+
+  return {
+    uid: `skill-preview-${operatorId}-${skillType}-${entry.id}`,
+    id: entry.id,
+    name: entry.label,
+    ownerId: operatorId,
+    columnId: 'preview',
+    startFrame: 0,
+    segments: eventSegs,
+  } as TimelineEvent;
+}
+
+function SkillTimeline({ operatorId, skillType, color, selectedEntryId }: { operatorId: string; skillType: SkillType; color: string; selectedEntryId?: string | null }) {
+  const entries = useMemo(() => buildSkillEntries(operatorId, JSON_SKILL_KEYS[skillType]), [operatorId, skillType]);
+  const [zoom, setZoom] = useState(1);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => { setZoom(1); }, [operatorId, skillType]);
+
+  const mockEvents = useMemo(() => {
+    const filtered = selectedEntryId ? entries.filter(e => e.id === selectedEntryId) : [];
+    return filtered.map(e => ({ entry: e, event: buildMockEvent(e, operatorId, skillType) })).filter(x => x.event != null) as { entry: typeof entries[0]; event: TimelineEvent }[];
+  }, [entries, operatorId, skillType, selectedEntryId]);
+
+  // Shift+wheel to zoom
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const handler = (e: WheelEvent) => {
+      if (e.shiftKey) {
+        e.preventDefault();
+        setZoom(prev => Math.max(0.5, Math.min(5, prev * (e.deltaY < 0 ? 1.15 : 0.87))));
+      }
+    };
+    el.addEventListener('wheel', handler, { passive: false });
+    return () => el.removeEventListener('wheel', handler);
+  }, []);
+
+  const noop = () => {};
+  const [containerH, setContainerH] = useState(400);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(([e]) => { if (e.contentRect.height > 0) setContainerH(e.contentRect.height); });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  if (mockEvents.length === 0) {
+    return <div className="ops-skill-timeline" ref={scrollRef} />;
+  }
+
+  const bufferFrames = Math.round(0.2 * FPS); // 0.2s buffer
+  const maxFrames = Math.max(...mockEvents.map(({ event }) => computeSegmentsSpan(event.segments)));
+  const targetH = containerH * 0.5;
+  const baseZoom = maxFrames > 0 ? targetH / maxFrames : 1;
+  const effectiveZoom = baseZoom * zoom;
+  const eventHeightPx = maxFrames * effectiveZoom;
+  const bufferPx = bufferFrames * effectiveZoom;
+  const totalHeightPx = eventHeightPx + bufferPx * 2;
+
+  // Time ticks (relative to event start, not buffer)
+  const totalSec = maxFrames / FPS;
+  const tickInterval = totalSec <= 1 ? 0.25 : totalSec <= 3 ? 0.5 : totalSec <= 8 ? 1 : 2;
+  const ticks: number[] = [];
+  for (let t = 0; t <= totalSec; t += tickInterval) ticks.push(t);
+
+  // Vertical offset to center
+  const topPad = (containerH - totalHeightPx) / 2;
+
+  return (
+    <div className="ops-skill-timeline" ref={scrollRef}>
+      <div className="ops-skill-timeline-content" style={{ paddingTop: Math.max(topPad, 0) }}>
+        <div className="ops-skill-timeline-row">
+          {/* Time axis — offset by buffer so ticks align with event */}
+          <div className="ops-skill-timeline-axis" style={{ height: totalHeightPx }}>
+            {ticks.map((t) => (
+              <div
+                key={t}
+                className="ops-skill-timeline-tick"
+                style={{ top: bufferPx + (totalSec > 0 ? (t / totalSec) * eventHeightPx : 0) }}
+              >
+                {fmtN(t)}s
+              </div>
+            ))}
+          </div>
+
+          {/* Event columns */}
+          {mockEvents.map(({ entry, event }) => {
+            const skillElement = ((entry.data.properties as Record<string, unknown> | undefined)?.element as string) ?? undefined;
+            const bufferedEvent = { ...event, startFrame: bufferFrames };
+            return (
+              <div key={entry.id} className="ops-skill-timeline-body" style={{ height: totalHeightPx }}>
+                <EventBlock
+                  event={bufferedEvent}
+                  color={color}
+                  zoom={effectiveZoom}
+                  onDragStart={noop}
+                  onContextMenu={noop}
+                  notDraggable
+                  skillElement={skillElement}
+                />
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function resolveLeaf(v: unknown): number | null {
+  if (typeof v === 'number') return v;
+  if (v && typeof v === 'object' && 'value' in v) return resolveLeaf((v as Record<string, unknown>).value);
+  return null;
+}
+
+function formatDuration(dur: { value: unknown; unit: string } | undefined): string {
+  if (!dur) return '';
+  const val = resolveLeaf(dur.value);
+  if (val == null) return '';
+  const unit = dur.unit === 'FRAME' ? 'f' : 's';
+  return `${val}${unit}`;
+}
+
+function TabbedSegmentView({ entry }: { entry: { id: string; label: string; data: JsonSkillData } }) {
+  const segments = entry.data.segments ?? [];
+  const topFrames = entry.data.frames ?? [];
+  const [activeSegTab, setActiveSegTab] = useState(0);
+  const [activeFrameTab, setActiveFrameTab] = useState<number | null>(null);
+
+  // Clicking a segment shows segment info (no frame selected)
+  const handleSegChange = useCallback((si: number) => {
+    setActiveSegTab(si);
+    setActiveFrameTab(null);
+  }, []);
+
+  if (segments.length === 0 && topFrames.length === 0) return null;
+
+  if (segments.length === 0) {
+    // Flat frames only
+    const flatFrame = activeFrameTab != null ? activeFrameTab : 0;
+    return (
+      <div className="ops-seg-view">
+        <div className="ops-conjoined-tabs">
+          <div className="ops-conjoined-row">
+            {topFrames.map((_f, fi) => (
+              <button
+                key={fi}
+                type="button"
+                className={`ops-conjoined-btn${flatFrame === fi ? ' ops-conjoined-btn--active' : ''}`}
+                onClick={() => setActiveFrameTab(fi)}
+              >
+                {toRoman(fi + 1)}
+              </button>
+            ))}
+          </div>
+        </div>
+        {topFrames[flatFrame] && (
+          <FrameDetail frame={topFrames[flatFrame]} label={`Frame ${toRoman(flatFrame + 1)}`} />
+        )}
+      </div>
+    );
+  }
+
+  const safeSeg = Math.min(activeSegTab, segments.length - 1);
+  const seg = segments[safeSeg];
+  const durStr = formatDuration(seg.properties?.duration ?? seg.duration as { value: unknown; unit: string } | undefined);
+  const segFrames = (seg.frames ?? []) as JsonSkillData[];
+  const segClause = (seg.clause ?? []) as typeof entry.data.clause;
+  const viewingFrame = activeFrameTab != null && activeFrameTab < segFrames.length;
+
+  return (
+    <div className="ops-seg-view">
+      {/* Conjoined two-row tab header */}
+      <div className="ops-conjoined-tabs">
+        {/* Row 1: Segments (equal width) */}
+        <div className="ops-conjoined-row ops-conjoined-row--seg">
+          {segments.map((s, si) => {
+            const isActiveSeg = safeSeg === si && !viewingFrame;
+            return (
+              <button
+                key={si}
+                type="button"
+                className={`ops-conjoined-seg${safeSeg === si ? ' ops-conjoined-seg--current' : ''}${isActiveSeg ? ' ops-conjoined-seg--active' : ''}`}
+                onClick={() => handleSegChange(si)}
+              >
+                {s.properties?.name || `Segment ${si + 1}`}
+              </button>
+            );
+          })}
+        </div>
+        {/* Row 2: Frame sub-buttons under their segment */}
+        <div className="ops-conjoined-row ops-conjoined-row--frame">
+          {segments.map((s, si) => {
+            const frames = (s.frames ?? []) as JsonSkillData[];
+            return (
+              <div key={si} className="ops-conjoined-frame-group">
+                {frames.length > 0 ? frames.map((_f, fi) => (
+                  <button
+                    key={fi}
+                    type="button"
+                    className={`ops-conjoined-btn${safeSeg === si && activeFrameTab === fi ? ' ops-conjoined-btn--active' : ''}`}
+                    onClick={() => { setActiveSegTab(si); setActiveFrameTab(fi); }}
+                  >
+                    {toRoman(fi + 1)}
+                  </button>
+                )) : (
+                  <span className="ops-conjoined-btn ops-conjoined-btn--empty" />
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Detail: segment info OR frame info */}
+      <div className="ops-seg-detail">
+        {viewingFrame ? (
+          <FrameDetail frame={segFrames[activeFrameTab!]} label={`Frame ${toRoman(activeFrameTab! + 1)}`} />
+        ) : (
+          <div className="ops-frame-detail ops-frame-detail--accented">
+            <div className="ops-frame-accent-label">{seg.properties?.name || `Segment ${safeSeg + 1}`}</div>
+            {durStr && (
+              <div className="ops-frame-prop">
+                <span className="ops-frame-prop-label">Duration</span>
+                <span className="ops-frame-prop-value">{durStr}</span>
+              </div>
+            )}
+            {segClause && segClause.length > 0 && (
+              <div className="ops-seg-clause">
+                <ClauseEditor initialValue={segClause} onChange={() => {}} readOnly />
+              </div>
+            )}
+            {segFrames.map((f, fi) => {
+              const fOffset = f.properties?.offset ?? f.offset as { value: unknown; unit: string } | undefined;
+              const fOffsetStr = formatDuration(fOffset);
+              const fClause = (f.clause ?? []) as unknown as { conditions?: unknown[]; effects?: Record<string, unknown>[] }[];
+              const fEffects: Record<string, unknown>[] = [];
+              for (const c of fClause) { if (c.effects) fEffects.push(...c.effects); }
+              return (
+                <div key={fi} className="ops-seg-inline-frame">
+                  <div className="ops-seg-inline-frame-name">Frame {toRoman(fi + 1)}</div>
+                  {fOffsetStr && (
+                    <div className="ops-frame-prop">
+                      <span className="ops-frame-prop-label">Offset</span>
+                      <span className="ops-frame-prop-value">{fOffsetStr}</span>
+                    </div>
+                  )}
+                  {fEffects.map((ef, ei) => {
+                    const verb = String(ef.verb ?? '').replace(/_/g, ' ');
+                    const adj = ef.adjective ? (Array.isArray(ef.adjective) ? (ef.adjective as string[]).join(' ') : String(ef.adjective)).replace(/_/g, ' ') : '';
+                    const obj = String(ef.object ?? '').replace(/_/g, ' ');
+                    const to = ef.to ? String(ef.to).replace(/_/g, ' ') : '';
+                    return (
+                      <div key={ei} className="ops-frame-effect-sentence">
+                        <span className="ops-frame-effect-verb">{verb}</span>
+                        {adj && <span className="ops-frame-effect-adj">{adj}</span>}
+                        <span className="ops-frame-effect-obj">{obj}</span>
+                        {to && <><span className="ops-frame-effect-prep">to</span><span className="ops-frame-effect-target">{to}</span></>}
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function formatWithValue(w: Record<string, unknown>): string {
+  if ('verb' in w && w.verb === 'VARY_BY') {
+    const vals = w.value as number[];
+    if (Array.isArray(vals) && vals.length > 0) {
+      const first = typeof vals[0] === 'number' ? vals[0] : 0;
+      const last = typeof vals[vals.length - 1] === 'number' ? vals[vals.length - 1] : 0;
+      return `${first}\u2013${last} (by ${String(w.object ?? 'level').replace(/_/g, ' ').toLowerCase()})`;
+    }
+    return String(w.value);
+  }
+  if ('verb' in w && w.verb === 'IS') return String(w.value);
+  if ('value' in w) {
+    const inner = w.value;
+    if (inner && typeof inner === 'object') return formatWithValue(inner as Record<string, unknown>);
+    return String(inner);
+  }
+  return JSON.stringify(w);
+}
+
+function FrameDetail({ frame, label }: { frame: JsonSkillData; label?: string }) {
+  const offset = frame.properties?.offset ?? frame.offset as { value: unknown; unit: string } | undefined;
+  const offsetStr = formatDuration(offset);
+  const clause = (frame.clause ?? []) as unknown as { conditions?: unknown[]; effects?: Record<string, unknown>[] }[];
+
+  // Collect extra properties (excluding offset/name/description)
+  const props: { label: string; value: string }[] = [];
+  const frameProps = frame.properties as Record<string, unknown> | undefined;
+  if (frameProps) {
+    for (const [k, v] of Object.entries(frameProps)) {
+      if (k === 'offset' || k === 'name' || k === 'description') continue;
+      if (v && typeof v === 'object' && 'value' in (v as Record<string, unknown>)) {
+        props.push({ label: k.replace(/_/g, ' '), value: formatWithValue(v as Record<string, unknown>) });
+      } else if (v != null) {
+        props.push({ label: k.replace(/_/g, ' '), value: String(v) });
+      }
+    }
+  }
+
+  // Collect conditions and effects from all clauses
+  const conditions: unknown[] = [];
+  const effects: Record<string, unknown>[] = [];
+  for (const c of clause) {
+    if (c.conditions && c.conditions.length > 0) conditions.push(...c.conditions);
+    if (c.effects) effects.push(...c.effects);
+  }
+
+  return (
+    <div className="ops-frame-detail ops-frame-detail--accented">
+      {/* Frame label */}
+      {label && <div className="ops-frame-accent-label">{label}</div>}
+
+      {/* Offset */}
+      {offsetStr && (
+        <div className="ops-frame-prop">
+          <span className="ops-frame-prop-label">Offset</span>
+          <span className="ops-frame-prop-value">{offsetStr}</span>
+        </div>
+      )}
+
+      {/* Extra properties */}
+      {props.length > 0 && (
+        <div className="ops-frame-props">
+          {props.map((p, i) => (
+            <div key={i} className="ops-frame-prop">
+              <span className="ops-frame-prop-label">{p.label}</span>
+              <span className="ops-frame-prop-value">{p.value}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Conditions (only if present) */}
+      {conditions.length > 0 && (
+        <div className="ops-frame-conditions">
+          <span className="ops-frame-section-label">Conditions</span>
+          {conditions.map((cond, ci) => {
+            const c = cond as Record<string, unknown>;
+            return <div key={ci} className="ops-frame-prop-value">{String(c.verb ?? '').replace(/_/g, ' ')} {String(c.object ?? '').replace(/_/g, ' ')}</div>;
+          })}
+        </div>
+      )}
+
+      {/* Effects */}
+      {effects.length > 0 ? (
+        <div className="ops-frame-effects">
+          {effects.map((ef, i) => {
+            const verb = String(ef.verb ?? '').replace(/_/g, ' ');
+            const adj = ef.adjective ? (Array.isArray(ef.adjective) ? (ef.adjective as string[]).join(' ') : String(ef.adjective)).replace(/_/g, ' ') : '';
+            const obj = String(ef.object ?? '').replace(/_/g, ' ');
+            const to = ef.to ? String(ef.to).replace(/_/g, ' ') : '';
+            const withProps = (ef.with ?? {}) as Record<string, unknown>;
+            const withEntries = Object.entries(withProps);
+
+            return (
+              <div key={i} className="ops-frame-effect">
+                <div className="ops-frame-effect-sentence">
+                  <span className="ops-frame-effect-verb">{verb}</span>
+                  {adj && <span className="ops-frame-effect-adj">{adj}</span>}
+                  <span className="ops-frame-effect-obj">{obj}</span>
+                  {to && <><span className="ops-frame-effect-prep">to</span><span className="ops-frame-effect-target">{to}</span></>}
+                </div>
+                {withEntries.length > 0 && (
+                  <div className="ops-frame-effect-with">
+                    {withEntries.map(([key, val]) => {
+                      const w = val && typeof val === 'object' ? val as Record<string, unknown> : null;
+                      const isVaryBy = w && w.verb === 'VARY_BY' && Array.isArray(w.value);
+                      const isTopLevel = key === 'value';
+                      const label = isTopLevel ? 'Value' : key.replace(/_/g, ' ');
+
+                      if (isVaryBy) {
+                        const vals = w!.value as number[];
+                        const byLabel = String(w!.object ?? 'LEVEL').replace(/_/g, ' ').toLowerCase();
+                        const rowLabel = label.toLowerCase().replace('damage ', '');
+                        return (
+                          <div key={key} className="ops-frame-vary">
+                            <table className="ops-frame-vary-table">
+                              <thead>
+                                <tr>
+                                  <th className="ops-frame-vary-header">{byLabel}</th>
+                                  {vals.map((_v, vi) => <th key={vi}>{vi + 1}</th>)}
+                                </tr>
+                              </thead>
+                              <tbody>
+                                <tr>
+                                  <td className="ops-frame-vary-header">{rowLabel}</td>
+                                  {vals.map((v, vi) => <td key={vi}>{v}</td>)}
+                                </tr>
+                              </tbody>
+                            </table>
+                          </div>
+                        );
+                      }
+
+                      const display = w ? formatWithValue(w) : String(val);
+                      return (
+                        <div key={key} className="ops-frame-prop">
+                          <span className="ops-frame-prop-label">{label}</span>
+                          <span className="ops-frame-prop-value">{display}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="ops-frame-empty">No effects</div>
+      )}
+    </div>
+  );
+}
+
+function BuiltinOperatorStatusesView({ operatorId }: { operatorId: string }) {
+  const statuses = useMemo(() => getOperatorStatuses(operatorId).map(s => s.serialize() as Record<string, unknown>), [operatorId]);
+
+  if (statuses.length === 0) return <div className="ops-empty">No status data available</div>;
+
+  return (
+    <div className="ops-statuses-list">
+      {statuses.map((s, i) => {
+        const props = s.properties as Record<string, unknown> | undefined;
+        const name = (props?.name as string) ?? (props?.id as string) ?? `Status ${i + 1}`;
+        const desc = props?.description as string | undefined;
+        return (
+          <div key={i} className="ops-skill-card">
+            <div className="ops-skill-card-header">
+              <div className="ops-skill-card-title-row">
+                <span className="ops-skill-card-index">{i + 1}</span>
+                <span className="ops-skill-card-name">{name}</span>
+              </div>
+              {desc && <span className="ops-skill-card-desc">{desc}</span>}
+            </div>
+          </div>
+        );
+      })}
+    </div>
   );
 }
 
@@ -1138,160 +1642,229 @@ function ReadonlySection({ label, children }: { label: string; children: React.R
 
 const VIEWER_SKILL_TYPES = ['basic', 'battle', 'combo', 'ultimate'] as const;
 const VIEWER_SKILL_TAB_LABELS: Record<string, string> = {
-  basic: 'Basic', battle: 'Battle', combo: 'Combo', ultimate: 'Ultimate',
+  basic: 'Basic Attack', battle: 'Battle Skill', combo: 'Combo Skill', ultimate: 'Ultimate',
 };
-const VIEWER_SKILL_TAB_ABBREV: Record<string, string> = {
-  basic: 'BATK', battle: 'BSKL', combo: 'CMB', ultimate: 'ULT',
-};
-
 function BuiltinOperatorView({ id }: { id: string }) {
   const op = ALL_OPERATORS.find((o) => o.id === id);
-  const opJson = useMemo(() => getOperatorJson(id), [id]);
+  const opBase = useMemo(() => getOperatorBase(id), [id]);
+  const [activeCategory, setActiveCategory] = useState<'skills' | 'potentials' | 'talents' | 'statuses'>('skills');
   const [activeSkillTab, setActiveSkillTab] = useState<string>('basic');
+  const [activePotentialTab, setActivePotentialTab] = useState(0);
+  const [activeTalentTab, setActiveTalentTab] = useState(0);
+  const [expandedEntryId, setExpandedEntryId] = useState<string | null>(null);
 
   if (!op) return null;
 
-  const statsByLevel = (opJson?.statsByLevel ?? []) as { level: number; operatorPromotionStage: number; attributes: Record<string, number> }[];
+  const statsByLevel = (opBase?.statsByLevel ?? []) as { level: number; operatorPromotionStage: number; attributes: Record<string, number> }[];
   const lv1Stats = statsByLevel.find((s) => s.level === 1 && s.operatorPromotionStage === 0)?.attributes ?? {};
   const lv90Stats = statsByLevel.find((s) => s.level === 90)?.attributes
     ?? statsByLevel[statsByLevel.length - 1]?.attributes ?? {};
-  const potentials = (opJson?.potentials ?? []) as { level: number; name: string; effects: unknown[] }[];
+  const potentials = (opBase?.potentials ?? []) as { level: number; name: string; effects: unknown[] }[];
 
   return (
-    <div className="ops-root ops-root--readonly">
-      {/* ── IDENTITY ── */}
-      <ReadonlySection label="IDENTITY">
-        <div className="ops-row">
-          <ReadonlyField label="Name" value={op.name} />
-          <div className="ops-field">
-            <span className="ops-field-label">Rarity</span>
-            <div className="ops-rarity-group">
-              {([4, 5, 6] as const).map((r) => (
-                <span
-                  key={r}
-                  className={`ops-rarity-btn${op.rarity === r ? ' ops-rarity-btn--active' : ''}`}
-                >
-                  {r}&#9733;
-                </span>
-              ))}
-            </div>
-          </div>
-        </div>
-        <div className="ops-row">
-          <ReadonlyField label="Class" value={op.role} />
-          <ReadonlyField label="Element" value={op.element} />
-        </div>
-        <div className="ops-weapon-row">
-          <span className="ops-field-label">Weapons</span>
-          <div className="ops-pill-group">
-            {(op.weaponTypes ?? []).map((w) => (
-              <span key={w} className="ops-pill ops-pill--active">{w.replace(/_/g, ' ')}</span>
-            ))}
-          </div>
-        </div>
-      </ReadonlySection>
-
-      {/* ── BASE STATS ── */}
-      <ReadonlySection label="BASE STATS">
-        <div className="ops-stats-pair">
-          <div className="ops-stat-block">
-            <div className="ops-stat-header"><span>Lv 1</span></div>
-            <div className="ops-stat-grid">
-              {Object.entries(lv1Stats).map(([key, val]) => (
-                <div key={key} className="ops-stat-row">
-                  <span className="ops-stat-name ops-stat-name--fixed">{key.replace(/_/g, ' ')}</span>
-                  <span className="ops-stat-value">{formatStatVal(key, val)}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div className="ops-stat-block">
-            <div className="ops-stat-header"><span>Lv 90</span></div>
-            <div className="ops-stat-grid">
-              {Object.entries(lv90Stats).map(([key, val]) => (
-                <div key={key} className="ops-stat-row">
-                  <span className="ops-stat-name ops-stat-name--fixed">{key.replace(/_/g, ' ')}</span>
-                  <span className="ops-stat-value">{formatStatVal(key, val)}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </ReadonlySection>
-
-      {/* ── SKILLS ── */}
-      <ReadonlySection label="SKILLS">
-        <div className="ops-skill-tabs">
-          {VIEWER_SKILL_TYPES.map((type) => {
-            const skill = op.skills[type];
-            const hasData = skill?.name;
-            return (
-              <button
-                key={type}
-                type="button"
-                className={`ops-skill-tab${activeSkillTab === type ? ' ops-skill-tab--active' : ''}`}
-                onClick={() => setActiveSkillTab(type)}
-              >
-                <span className="ops-skill-tab-abbrev">{VIEWER_SKILL_TAB_ABBREV[type]}</span>
-                <span className="ops-skill-tab-label">
-                  {VIEWER_SKILL_TAB_LABELS[type]}
-                  {hasData && <span className="ops-skill-tab-count">1</span>}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-        <BuiltinOperatorSkillSection
-          operatorId={id}
-          skillType={activeSkillTab as SkillType}
-          skill={op.skills[activeSkillTab as SkillType]}
-        />
-      </ReadonlySection>
-
-      {/* ── TALENTS ── */}
-      <ReadonlySection label="TALENTS">
-        {[1, 2].map((slot) => {
-          const name = slot === 1 ? op.talentOneName : op.talentTwoName;
-          const maxLvl = slot === 1 ? op.maxTalentOneLevel : op.maxTalentTwoLevel;
-          const descs = op.talentDescriptions?.[slot] ?? [];
-          if (!name) return null;
-          return (
-            <div key={slot} className="ops-talent-card">
-              <div className="ops-talent-name">{name}</div>
-              <div className="ops-row">
-                <ReadonlyField label="Max Level" value={String(maxLvl)} />
+    <div className="ops-root ops-root--readonly ops-root--split" style={{ '--op-accent': ELEMENT_COLORS[op.element as ElementType] ?? ELEMENT_COLORS[ElementType.NONE] } as React.CSSProperties}>
+      {/* ── LEFT HALF: Identity, Stats, Potentials, Talents ── */}
+      <div className="ops-split-left">
+        {/* ── IDENTITY ── */}
+        <ReadonlySection label="IDENTITY">
+          <div className="ops-row">
+            <ReadonlyField label="Name" value={op.name} />
+            <div className="ops-field">
+              <span className="ops-field-label">Rarity</span>
+              <div className="ops-rarity-group">
+                {([4, 5, 6] as const).map((r) => (
+                  <span
+                    key={r}
+                    className={`ops-rarity-btn${op.rarity === r ? ' ops-rarity-btn--active' : ''}`}
+                  >
+                    {r}&#9733;
+                  </span>
+                ))}
               </div>
-              {descs.map((desc: string, i: number) => (
-                <div key={i} className="ops-talent-row">
-                  <span className="ops-talent-lvl">Lv{i + 1}</span>
-                  <span className="ops-talent-desc">{desc}</span>
-                </div>
-              ))}
-            </div>
-          );
-        })}
-        {op.attributeIncreaseName && (
-          <div className="ops-talent-card">
-            <div className="ops-talent-name">{op.attributeIncreaseName}</div>
-            <div className="ops-row">
-              <ReadonlyField label="Attribute" value={op.attributeIncreaseAttribute} />
-              <ReadonlyField label="Max Level" value={String(op.maxAttributeIncreaseLevel)} />
             </div>
           </div>
-        )}
-      </ReadonlySection>
-
-      {/* ── POTENTIALS ── */}
-      {potentials.length > 0 && (
-        <ReadonlySection label="POTENTIALS">
-          {potentials.map((pot) => (
-            <div key={pot.level} className="ops-potential-row">
-              <span className="ops-potential-badge">P{pot.level}</span>
-              <span className="ops-potential-desc-text">{pot.name}</span>
+          <div className="ops-row">
+            <ReadonlyField label="Class" value={op.role} />
+            <ReadonlyField label="Element" value={op.element} />
+          </div>
+          <div className="ops-weapon-row">
+            <span className="ops-field-label">Weapons</span>
+            <div className="ops-pill-group">
+              {(op.weaponTypes ?? []).map((w) => (
+                <span key={w} className="ops-pill ops-pill--active">{w.replace(/_/g, ' ')}</span>
+              ))}
             </div>
-          ))}
+          </div>
         </ReadonlySection>
-      )}
+
+        {/* ── BASE STATS ── */}
+        <ReadonlySection label="BASE STATS">
+          <div className="ops-stats-pair">
+            <div className="ops-stat-block">
+              <div className="ops-stat-header"><span>Lv 1</span></div>
+              <div className="ops-stat-grid">
+                {Object.entries(lv1Stats).map(([key, val]) => (
+                  <div key={key} className="ops-stat-row">
+                    <span className="ops-stat-name ops-stat-name--fixed">{key.replace(/_/g, ' ')}</span>
+                    <span className="ops-stat-value">{formatStatVal(key, val)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="ops-stat-block">
+              <div className="ops-stat-header"><span>Lv 90</span></div>
+              <div className="ops-stat-grid">
+                {Object.entries(lv90Stats).map(([key, val]) => (
+                  <div key={key} className="ops-stat-row">
+                    <span className="ops-stat-name ops-stat-name--fixed">{key.replace(/_/g, ' ')}</span>
+                    <span className="ops-stat-value">{formatStatVal(key, val)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </ReadonlySection>
+      </div>
+
+      {/* ── MIDDLE: Skills / Potentials / Talents / Statuses ── */}
+      <div className="ops-split-right">
+        {/* Category tabs */}
+        <div className="ops-skill-tabs">
+          {(['skills', 'potentials', 'talents', 'statuses'] as const).map((cat) => (
+            <button
+              key={cat}
+              type="button"
+              className={`ops-skill-tab${activeCategory === cat ? ' ops-skill-tab--active' : ''}`}
+              onClick={() => setActiveCategory(cat)}
+            >
+              <span className="ops-skill-tab-label">{cat.charAt(0).toUpperCase() + cat.slice(1)}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Skills content */}
+        {activeCategory === 'skills' && (
+          <>
+            <div className="ops-skill-tabs ops-skill-tabs--sub">
+              {VIEWER_SKILL_TYPES.map((type) => (
+                <button
+                  key={type}
+                  type="button"
+                  className={`ops-skill-tab${activeSkillTab === type ? ' ops-skill-tab--active' : ''}`}
+                  onClick={() => setActiveSkillTab(type)}
+                >
+                  <span className="ops-skill-tab-label">{VIEWER_SKILL_TAB_LABELS[type]}</span>
+                </button>
+              ))}
+            </div>
+            <BuiltinOperatorSkillSection
+              operatorId={id}
+              skillType={activeSkillTab as SkillType}
+              skill={op.skills[activeSkillTab as SkillType]}
+              onExpandedChange={setExpandedEntryId}
+            />
+          </>
+        )}
+
+        {/* Potentials content */}
+        {activeCategory === 'potentials' && potentials.length > 0 && (
+          <>
+            <div className="ops-skill-tabs ops-skill-tabs--sub">
+              {potentials.map((pot, i) => (
+                <button
+                  key={pot.level}
+                  type="button"
+                  className={`ops-skill-tab${activePotentialTab === i ? ' ops-skill-tab--active' : ''}`}
+                  onClick={() => setActivePotentialTab(i)}
+                >
+                  <span className="ops-skill-tab-label">P{pot.level}</span>
+                </button>
+              ))}
+            </div>
+            {potentials[activePotentialTab] && (
+              <div className="ops-potential-detail">
+                <div className="ops-potential-desc-text">{potentials[activePotentialTab].name}</div>
+                {(potentials[activePotentialTab] as { level: number; name: string; description?: string }).description && (
+                  <div className="ops-potential-desc-body">{(potentials[activePotentialTab] as { level: number; name: string; description?: string }).description}</div>
+                )}
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Talents content */}
+        {activeCategory === 'talents' && (() => {
+          const talentTabs: { abbrev: string; content: React.ReactNode }[] = [];
+          for (const slot of [1, 2]) {
+            const name = slot === 1 ? op.talentOneName : op.talentTwoName;
+            const maxLvl = slot === 1 ? op.maxTalentOneLevel : op.maxTalentTwoLevel;
+            const descs = op.talentDescriptions?.[slot] ?? [];
+            if (!name) continue;
+            talentTabs.push({
+              abbrev: `Talent ${slot}`,
+              content: (
+                <div className="ops-talent-card">
+                  <div className="ops-talent-name">{name}</div>
+                  <div className="ops-row">
+                    <ReadonlyField label="Max Level" value={String(maxLvl)} />
+                  </div>
+                  {descs.map((desc: string, i: number) => (
+                    <div key={i} className="ops-talent-row">
+                      <span className="ops-talent-lvl">Lv{i + 1}</span>
+                      <span className="ops-talent-desc">{desc}</span>
+                    </div>
+                  ))}
+                </div>
+              ),
+            });
+          }
+          if (op.attributeIncreaseName) {
+            talentTabs.push({
+              abbrev: 'Attribute',
+              content: (
+                <div className="ops-talent-card">
+                  <div className="ops-talent-name">{op.attributeIncreaseName}</div>
+                  <div className="ops-row">
+                    <ReadonlyField label="Attribute" value={op.attributeIncreaseAttribute} />
+                    <ReadonlyField label="Max Level" value={String(op.maxAttributeIncreaseLevel)} />
+                  </div>
+                </div>
+              ),
+            });
+          }
+          const safeTab = Math.min(activeTalentTab, talentTabs.length - 1);
+          return (
+            <>
+              <div className="ops-skill-tabs ops-skill-tabs--sub">
+                {talentTabs.map((t, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    className={`ops-skill-tab${safeTab === i ? ' ops-skill-tab--active' : ''}`}
+                    onClick={() => setActiveTalentTab(i)}
+                  >
+                    <span className="ops-skill-tab-label">{t.abbrev}</span>
+                  </button>
+                ))}
+              </div>
+              {talentTabs[safeTab]?.content}
+            </>
+          );
+        })()}
+
+        {/* Statuses content */}
+        {activeCategory === 'statuses' && (
+          <BuiltinOperatorStatusesView operatorId={id} />
+        )}
+      </div>
+
+      {/* ── RIGHT: Timeline ── */}
+      <SkillTimeline
+        operatorId={id}
+        skillType={activeSkillTab as SkillType}
+        color={ELEMENT_COLORS[op.element as ElementType] ?? ELEMENT_COLORS[ElementType.NONE]}
+        selectedEntryId={expandedEntryId}
+      />
     </div>
   );
 }
@@ -1570,22 +2143,24 @@ function BuiltinSkillView({ id }: { id: string }) {
   const skill = op.skills?.[skillType];
   if (!skill) return null;
 
-  const opJson = getOperatorJson(opId);
   const jsonKey = SKILL_TYPE_TO_JSON_KEY[skillType];
-  const skillsMap = opJson?.skills as Record<string, Record<string, unknown>> | undefined;
-  const skillJson = skillsMap?.[jsonKey];
+  const typeMap = getTypedSkillTypeMap(opId);
+  const resolvedSkillId = typeMap[jsonKey] ?? jsonKey;
+  const skillObj = getOperatorSkill(opId, resolvedSkillId);
+  const skillJson = skillObj ? skillObj.serialize() as Record<string, unknown> : undefined;
 
   // Variants
   const variants: { key: string; data: Record<string, unknown> }[] = [];
-  if (skillsMap) {
-    for (const [k, v] of Object.entries(skillsMap)) {
-      if (k !== jsonKey && k.includes(jsonKey)) variants.push({ key: k, data: v });
-    }
+  const allSkills = getOperatorSkills(opId);
+  if (allSkills) {
+    allSkills.forEach((sk, k) => {
+      if (k !== resolvedSkillId && k.includes(resolvedSkillId)) variants.push({ key: k, data: sk.serialize() as Record<string, unknown> });
+    });
   }
 
-  const hasSegments = skillJson?.segments && Array.isArray(skillJson.segments) && skillJson.segments.length > 0;
-  const hasFrames = skillJson?.frames && Array.isArray(skillJson.frames) && skillJson.frames.length > 0;
-  const statusEvents = (opJson?.statusEvents ?? []) as Record<string, unknown>[];
+  const hasSegments = skillJson?.segments && Array.isArray(skillJson.segments) && (skillJson.segments as unknown[]).length > 0;
+  const hasFrames = skillJson?.frames && Array.isArray(skillJson.frames) && (skillJson.frames as unknown[]).length > 0;
+  const statusEvents = getOperatorStatuses(opId).map(s => s.serialize() as Record<string, unknown>);
 
   return (
     <>

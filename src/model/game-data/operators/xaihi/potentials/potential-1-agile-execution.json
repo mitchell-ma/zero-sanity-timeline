@@ -1,0 +1,33 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "MODIFY",
+          "object": "SKILL_PARAMETER",
+          "objectId": "DISTRIBUTED_DOS",
+          "with": {
+            "parameterKey": "atk_up",
+            "value": {
+              "verb": "IS",
+              "value": 0.05
+            },
+            "parameterModifyType": "ADDITIVE"
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "XAIHI_POTENTIAL_1",
+    "name": "Agile Execution",
+    "level": 1,
+    "eventType": "POTENTIAL_EVENT",
+    "eventCategoryType": "POTENTIAL",
+    "description": "Arts Amp granted by the Auxiliary Crystal is increased by another 5%."
+  },
+  "metadata": {
+    "originId": "XAIHI"
+  }
+}

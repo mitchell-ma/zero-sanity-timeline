@@ -1,0 +1,84 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "CRITICAL_RATE",
+          "with": {
+            "value": {
+              "verb": "VARY_BY",
+              "object": "SKILL_LEVEL",
+              "value": [
+                0.03,
+                0.036,
+                0.042,
+                0.048,
+                0.054,
+                0.06,
+                0.066,
+                0.072,
+                0.084
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            }
+          }
+        },
+        {
+          "verb": "APPLY",
+          "object": "ATTACK_BONUS",
+          "with": {
+            "value": {
+              "verb": "VARY_BY",
+              "object": "SKILL_LEVEL",
+              "value": [
+                0.15,
+                0.18,
+                0.21,
+                0.24,
+                0.27,
+                0.3,
+                0.33,
+                0.36,
+                0.42
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "CHIMERIC_JUSTICE_CEMENTED_FURY",
+    "name": "Cemented Fury",
+    "description": "On applying Vulnerability to 0-stack enemy",
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": 15
+      },
+      "unit": "SECOND"
+    },
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 1
+      },
+      "interactionType": "RESET"
+    },
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
+    "eventType": "STATUS",
+    "eventCategoryType": "WEAPON_STATUS"
+  },
+  "metadata": {
+    "originId": "CHIMERIC_JUSTICE",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ]
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "IGNORE",
+          "adjective": "HEAT",
+          "object": "RESISTANCE",
+          "to": "TARGET",
+          "with": {
+            "value": {
+              "verb": "VARY_BY",
+              "object": "TALENT_LEVEL",
+              "value": [
+                10,
+                15,
+                20
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "SCORCHING_HEART_EFFECT",
+    "name": "Scorching Heart",
+    "target": "OPERATOR",
+    "targetDeterminer": "THIS",
+    "element": "HEAT",
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 1
+      },
+      "interactionType": "RESET"
+    },
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": 20
+      },
+      "unit": "SECOND"
+    },
+    "eventType": "STATUS",
+    "type": "SKILL_STATUS",
+    "eventCategoryType": "SKILL_STATUS",
+    "description": "After the controlled operator's Final Strike or Finisher hits the enemy, Laevatain absorbs Heat Infliction from nearby enemies. Every stack of Heat Infliction absorbed gives Laevatain 1 stack of Melting Flame (max stacks: 4). After reaching 4 stacks, DMG dealt by Laevatain ignores 15 Heat Resistance of the enemy for 20s. Laevatain also absorbs Heat Infliction from enemies defeated nearby."
+  },
+  "metadata": {
+    "originId": "MELTING_FLAME"
+  }
+}

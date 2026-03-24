@@ -1,0 +1,46 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "MODIFY",
+          "object": "SKILL_PARAMETER",
+          "objectId": "TINY_SURPRISE",
+          "with": {
+            "parameterKey": "duration_potential",
+            "value": {
+              "verb": "IS",
+              "value": 6
+            },
+            "parameterModifyType": "UNIQUE_MULTIPLIER"
+          }
+        },
+        {
+          "verb": "MODIFY",
+          "object": "SKILL_PARAMETER",
+          "objectId": "TINY_SURPRISE",
+          "with": {
+            "parameterKey": "potential_lv",
+            "value": {
+              "verb": "IS",
+              "value": 3
+            },
+            "parameterModifyType": "UNIQUE_MULTIPLIER"
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "FLUORITE_POTENTIAL_3",
+    "name": "Triple Surprise",
+    "level": 3,
+    "eventType": "POTENTIAL_EVENT",
+    "eventCategoryType": "POTENTIAL",
+    "description": "Battle skill Tiny Surprise improved: After Improvised Explosive explodes, the slow effect is applied to all enemies hit and lasts 6s."
+  },
+  "metadata": {
+    "originId": "FLUORITE"
+  }
+}

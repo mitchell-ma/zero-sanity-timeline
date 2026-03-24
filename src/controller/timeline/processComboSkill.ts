@@ -3,7 +3,7 @@ import { EventFrameType } from '../../consts/enums';
 import { SKILL_COLUMNS, COMBO_WINDOW_COLUMN_ID } from '../../model/channels';
 import { TimeStopRegion, isTimeStopEvent, extendByTimeStops, foreignStopsFor } from './processTimeStop';
 import { findClauseTriggerMatches } from './triggerMatch';
-import { getComboTriggerClause, getComboTriggerInfo } from '../../model/event-frames/operatorJsonLoader';
+import { getComboTriggerClause, getComboTriggerInfo } from '../gameDataStore';
 import type { SlotTriggerWiring } from './eventQueueTypes';
 
 export { COMBO_WINDOW_COLUMN_ID } from '../../model/channels';

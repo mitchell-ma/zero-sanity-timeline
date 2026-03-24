@@ -1,0 +1,118 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "MODIFY",
+          "object": "SKILL_PARAMETER",
+          "objectId": "ULTIMATE",
+          "with": {
+            "parameterKey": "potential5",
+            "value": {
+              "verb": "IS",
+              "value": 1
+            },
+            "parameterModifyType": "UNIQUE_MULTIPLIER"
+          }
+        },
+        {
+          "verb": "MODIFY",
+          "object": "SKILL_PARAMETER",
+          "objectId": "COMBO_SKILL",
+          "with": {
+            "parameterKey": "potential5",
+            "value": {
+              "verb": "IS",
+              "value": 1
+            },
+            "parameterModifyType": "UNIQUE_MULTIPLIER"
+          }
+        },
+        {
+          "verb": "MODIFY",
+          "object": "SKILL_PARAMETER",
+          "objectId": "ULTIMATE",
+          "with": {
+            "parameterKey": "atk_scale_1",
+            "value": {
+              "verb": "IS",
+              "value": 1.15
+            },
+            "parameterModifyType": "MULTIPLICATIVE"
+          }
+        },
+        {
+          "verb": "MODIFY",
+          "object": "SKILL_PARAMETER",
+          "objectId": "ULTIMATE",
+          "with": {
+            "parameterKey": "atk_scale_2",
+            "value": {
+              "verb": "IS",
+              "value": 1.15
+            },
+            "parameterModifyType": "MULTIPLICATIVE"
+          }
+        },
+        {
+          "verb": "MODIFY",
+          "object": "SKILL_PARAMETER",
+          "objectId": "ULTIMATE",
+          "with": {
+            "parameterKey": "atk_scale_3",
+            "value": {
+              "verb": "IS",
+              "value": 1.15
+            },
+            "parameterModifyType": "MULTIPLICATIVE"
+          }
+        },
+        {
+          "verb": "MODIFY",
+          "object": "SKILL_PARAMETER",
+          "objectId": "COMBO_SKILL",
+          "with": {
+            "parameterKey": "dmg_up_water_ult",
+            "value": {
+              "verb": "IS",
+              "value": 0.8
+            },
+            "parameterModifyType": "ADDITIVE"
+          }
+        },
+        {
+          "verb": "MODIFY",
+          "object": "SKILL_PARAMETER",
+          "objectId": "ULTIMATE",
+          "with": {
+            "parameterKey": "dmg_up_water_ult",
+            "value": {
+              "verb": "IS",
+              "value": 0.8
+            },
+            "parameterModifyType": "ADDITIVE"
+          }
+        },
+        {
+          "verb": "APPLY",
+          "object": "BUFF",
+          "objectId": "buff_chr_0027_tangtang_potential_5_effect",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "TANGTANG_POTENTIAL_5",
+    "name": "Chief's All-Eldritch Gaze",
+    "level": 5,
+    "eventType": "POTENTIAL_EVENT",
+    "eventCategoryType": "POTENTIAL",
+    "description": "Ultimate DA CHIEF SEES YOU! improved: DMG Multiplier is increased to 1.15 times the original. Talent Riot Bringer improved: DMG effects of any Waterspout created by the ultimate DA CHIEF SEES YOU! are increased by +80%."
+  },
+  "metadata": {
+    "originId": "TANGTANG"
+  }
+}

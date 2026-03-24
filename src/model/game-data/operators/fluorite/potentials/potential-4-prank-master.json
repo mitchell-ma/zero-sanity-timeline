@@ -1,0 +1,32 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "MODIFY",
+          "object": "SKILL_COST",
+          "objectId": "FLUORITE_APEX_PRANKSTER",
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": 0.9
+            },
+            "parameterType": 1
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "FLUORITE_POTENTIAL_4",
+    "name": "Prank Master",
+    "level": 4,
+    "eventType": "POTENTIAL_EVENT",
+    "eventCategoryType": "POTENTIAL",
+    "description": "Ultimate Apex Prankster improved: Ultimate Energy cost -10%."
+  },
+  "metadata": {
+    "originId": "FLUORITE"
+  }
+}

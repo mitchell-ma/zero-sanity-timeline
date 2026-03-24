@@ -1,0 +1,78 @@
+{
+  "properties": {
+    "name": "Stack Overflow",
+    "description": "Applies temporary Cryo Amp and Nature Amp to the entire team. The attribute of Intellect increases the Amp effect.",
+    "eventType": "COMBAT_SKILL",
+    "eventCategoryType": "ULTIMATE_SKILL"
+  },
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "CONSUME",
+          "object": "ULTIMATE_ENERGY",
+          "with": {
+            "value": {
+              "verb": "VARY_BY",
+              "object": "POTENTIAL",
+              "value": [
+                80,
+                72,
+                72,
+                72,
+                72,
+                72
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT"
+      },
+      "properties": {
+        "segmentTypes": [
+          "ANIMATION"
+        ],
+        "name": "Animation",
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 1.467
+          },
+          "unit": "SECOND"
+        },
+        "timeDependency": "REAL_TIME",
+        "timeInteractionType": "TIME_STOP"
+      },
+      "frames": []
+    },
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT"
+      },
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 0.763
+          },
+          "unit": "SECOND"
+        }
+      },
+      "frames": []
+    }
+  ],
+  "metadata": {
+    "originId": "XAIHI",
+    "id": "STACK_OVERFLOW",
+    "icon": "skills/ult_xaihi.png"
+  }
+}

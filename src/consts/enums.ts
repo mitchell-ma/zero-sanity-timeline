@@ -135,12 +135,12 @@ export const ELEMENT_LABELS: Record<ElementType, string> = {
 };
 
 export const ELEMENT_COLORS: Record<ElementType, string> = {
-  [ElementType.NONE]:     '#cccccc',
-  [ElementType.PHYSICAL]: '#b0b8c0',
-  [ElementType.HEAT]:     '#e85535',
-  [ElementType.CRYO]:     '#55ccee',
-  [ElementType.NATURE]:   '#55cc55',
-  [ElementType.ELECTRIC]: '#e8c840',
+  [ElementType.NONE]:     '#999999',
+  [ElementType.PHYSICAL]: '#a0a8b0',
+  [ElementType.HEAT]:     '#e06030',
+  [ElementType.CRYO]:     '#40b8b0',
+  [ElementType.NATURE]:   '#60a840',
+  [ElementType.ELECTRIC]: '#f0b030',
   [ElementType.ARTS]:     '#c080e0',
 };
 
@@ -334,8 +334,8 @@ export enum GearSetEffectType {
 }
 
 export enum EventType {
-  COMBAT_SKILL_EVENT = "COMBAT_SKILL_EVENT",
-  STATUS_EVENT = "STATUS_EVENT",
+  COMBAT_SKILL = "COMBAT_SKILL",
+  STATUS = "STATUS",
 }
 
 export enum EventCategoryType {
@@ -353,6 +353,7 @@ export enum EventCategoryType {
   SKILL_STATUS = "SKILL_STATUS",
   WEAPON_STATUS = "WEAPON_STATUS",
   GEAR_STATUS = "GEAR_STATUS",
+  GEAR_SET_EFFECT = "GEAR_SET_EFFECT",
   GEAR_SET_STATUS = "GEAR_SET_STATUS",
 }
 

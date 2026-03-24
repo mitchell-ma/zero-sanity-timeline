@@ -1,0 +1,33 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "MODIFY",
+          "object": "SKILL_PARAMETER",
+          "objectId": "INSTANT_PROTOCOL_CHAIN",
+          "with": {
+            "parameterKey": "DURATION",
+            "value": {
+              "verb": "IS",
+              "value": 1.75
+            },
+            "parameterModifyType": "MULTIPLICATIVE"
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "PERLICA_POTENTIAL_1",
+    "name": "Crisis Handling",
+    "level": 1,
+    "eventType": "POTENTIAL_EVENT",
+    "eventCategoryType": "POTENTIAL",
+    "description": "Combo skill Instant Protocol: Chain improved: Electrification duration +{duration-1:0%}."
+  },
+  "metadata": {
+    "originId": "PERLICA"
+  }
+}

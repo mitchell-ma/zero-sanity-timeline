@@ -1,0 +1,32 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "MODIFY",
+          "object": "SKILL_COST",
+          "objectId": "LIFENG_HEART_OF_THE_UNMOVING",
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": 0.85
+            },
+            "parameterType": 1
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "LIFENG_POTENTIAL_4",
+    "name": "Brief Instant",
+    "level": 4,
+    "eventType": "POTENTIAL_EVENT",
+    "eventCategoryType": "POTENTIAL",
+    "description": "Ultimate Heart of the Unmoving improved: Ultimate Energy cost -15%."
+  },
+  "metadata": {
+    "originId": "LIFENG"
+  }
+}

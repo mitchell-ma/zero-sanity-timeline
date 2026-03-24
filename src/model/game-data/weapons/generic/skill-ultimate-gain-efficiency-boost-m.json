@@ -1,0 +1,46 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "ULTIMATE_GAIN_EFFICIENCY",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "VARY_BY",
+              "object": "SKILL_LEVEL",
+              "value": [
+                0.04761905,
+                0.08571429,
+                0.123809524,
+                0.16190477,
+                0.2,
+                0.23809524,
+                0.2761905,
+                0.31428573,
+                0.37142858
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "name": "Ultimate Gain Efficiency Boost [M]",
+    "description": "Ultimate Gain Efficiency +",
+    "id": "ULTIMATE_GAIN_EFFICIENCY_BOOST_M"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ],
+    "id": "ULTIMATE_GAIN_EFFICIENCY_BOOST_M"
+  }
+}

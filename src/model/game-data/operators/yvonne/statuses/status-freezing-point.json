@@ -1,0 +1,59 @@
+{
+  "clause": [
+    {
+      "conditions": [
+        {
+          "subject": "ENEMY",
+          "verb": "HAVE",
+          "object": "CRYO_INFLICTION"
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "CRITICAL_DAMAGE_BONUS",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "VARY_BY",
+              "object": "TALENT_TWO_LEVEL",
+              "value": [
+                0.1,
+                0.2
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            },
+            "vsSolidified": {
+              "verb": "VARY_BY",
+              "object": "TALENT_TWO_LEVEL",
+              "value": [
+                0.2,
+                0.4
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "FREEZING_POINT",
+    "name": "Freezing Point",
+    "type": "STATUS",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
+    "eventType": "STATUS",
+    "eventCategoryType": "STATUS",
+    "description": "Talent Freezing Point improved: Against enemies with Cryo Infliction, Critical DMG Dealt +; this effect is also doubled against enemies with Solidification."
+  },
+  "metadata": {
+    "originId": "YVONNE",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ]
+  }
+}

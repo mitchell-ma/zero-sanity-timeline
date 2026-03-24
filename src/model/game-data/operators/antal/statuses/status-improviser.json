@@ -1,0 +1,115 @@
+{
+  "segments": [
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT"
+      },
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 2
+          },
+          "unit": "SECOND"
+        }
+      },
+      "frames": [
+        {
+          "metadata": {
+            "eventComponentType": "FRAME"
+          },
+          "properties": {
+            "offset": {
+              "value": 0,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "RESTORE",
+                  "object": "HP",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "value": {
+                      "operation": "MULT",
+                      "left": {
+                        "verb": "VARY_BY",
+                        "object": "TALENT_ONE_LEVEL",
+                        "ofDeterminer": "SOURCE",
+                        "of": "OPERATOR",
+                        "value": [
+                          72,
+                          108
+                        ]
+                      },
+                      "right": {
+                        "operation": "MULT",
+                        "left": {
+                          "verb": "VARY_BY",
+                          "object": "TALENT_ONE_LEVEL",
+                          "ofDeterminer": "SOURCE",
+                          "of": "OPERATOR",
+                          "value": [
+                            0.6,
+                            0.9
+                          ]
+                        },
+                        "right": {
+                          "verb": "IS",
+                          "valueType": "STAT",
+                          "stat": "STRENGTH",
+                          "ofDeterminer": "SOURCE",
+                          "of": "OPERATOR"
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT"
+      },
+      "properties": {
+        "segmentTypes": [
+          "COOLDOWN"
+        ],
+        "name": "Cooldown",
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 30
+          },
+          "unit": "SECOND"
+        }
+      },
+      "frames": []
+    }
+  ],
+  "properties": {
+    "id": "IMPROVISER",
+    "name": "IMPROVISER",
+    "type": "STATUS",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
+    "eventType": "STATUS",
+    "eventCategoryType": "STATUS",
+    "description": "After an Amped teammate's skill deals DMG, Antal restores the said teammate's HP by [108 + Strength×0.9]. This HP restoring effect triggers 1 time every 30s for each operator."
+  },
+  "metadata": {
+    "isEnabled": false,
+    "originId": "IMPROVISER_TALENT",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ]
+  }
+}

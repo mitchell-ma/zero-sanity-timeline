@@ -13,18 +13,6 @@ import { clampDeltaByOverlap } from '../../controller/timeline/inputEventControl
 import type { ResourceZone } from '../../controller/timeline/skillPointTimeline';
 import { SKILL_COLUMNS, COMBO_WINDOW_COLUMN_ID } from '../../model/channels';
 
-jest.mock('../../model/event-frames/operatorJsonLoader', () => ({
-  getOperatorJson: () => null,
-  getSkillIds: () => new Set(),
-  getAllOperatorIds: () => [],
-  getSkillTypeMap: () => ({}),
-  getExchangeStatusConfig: () => ({}),
-  getExchangeStatusIds: () => new Set(),
-}));
-jest.mock('../../model/game-data/weaponGearEffectLoader', () => ({
-  getWeaponEffectDefs: () => [],
-  getGearEffectDefs: () => [],
-}));
 jest.mock('../../model/game-data/weaponGameData', () => ({
   getSkillValues: () => [], getConditionalValues: () => [],
   getConditionalScalar: () => null, getBaseAttackForLevel: () => 0,

@@ -15,40 +15,19 @@ import { findClauseTriggerMatches } from '../../controller/timeline/triggerMatch
 import {
   registerCustomWeaponEffectDefs, deregisterCustomWeaponEffectDefs,
   registerCustomGearEffectDefs, deregisterCustomGearEffectDefs,
-} from '../../model/game-data/weaponGearEffectLoader';
+} from '../../controller/gameDataStore';
 
 // ── Load real JSON configs ──────────────────────────────────────────────────
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const opusJson = require('../../model/game-data/weapons/weapon-effects/opus-the-living-effects.json');
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const formerFineryJson = require('../../model/game-data/weapons/weapon-effects/former-finery-effects.json');
-// Gear statuses are stored as plain arrays (new format) — wrap with gearSetType for test API
-const aicLightJson = { gearSetType: 'aic-light', statusEvents: require('../../model/game-data/gears/gear-statuses/aic-light-statuses.json') };
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const khravenggerJson = require('../../model/game-data/weapons/weapon-effects/khravengger-effects.json');
-const swordmancerJson = { gearSetType: 'swordmancer', statusEvents: require('../../model/game-data/gears/gear-statuses/swordmancer-statuses.json') };
+import { loadWeaponEffects, loadGearStatuses } from '../helpers/loadGameData';
+
+const opusJson = loadWeaponEffects('opus-the-living');
+const formerFineryJson = loadWeaponEffects('former-finery');
+const aicLightJson = loadGearStatuses('aic-light');
+const khravenggerJson = loadWeaponEffects('khravengger');
+const swordmancerJson = loadGearStatuses('swordmancer');
 
 // ── Mocks ───────────────────────────────────────────────────────────────────
-
-jest.mock('../../model/event-frames/operatorJsonLoader', () => ({
-  getOperatorJson: () => undefined,
-  getAllOperatorIds: () => [],
-  getSkillIds: () => new Set<string>(),
-  getSkillTypeMap: () => ({}),
-  resolveSkillType: () => null,
-  getFrameSequences: () => [],
-  getSegmentLabels: () => undefined,
-  getSkillTimings: () => undefined,
-  getUltimateEnergyCost: () => 0,
-  getSkillGaugeGains: () => undefined,
-  getBattleSkillSpCost: () => undefined,
-  getSkillCategoryData: () => undefined,
-  getBasicAttackDurations: () => undefined,
-  getComboTriggerClause: () => undefined,
-  getExchangeStatusConfig: () => ({}),
-  getExchangeStatusIds: () => new Set(),
-}));
 
 jest.mock('../../view/InformationPane', () => ({
   DEFAULT_LOADOUT_PROPERTIES: {},

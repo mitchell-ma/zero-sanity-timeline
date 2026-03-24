@@ -32,8 +32,7 @@ import {
   SKILL_COLUMNS,
 } from '../../model/channels';
 import { FPS, TOTAL_FRAMES } from '../../utils/timeline';
-import { getAllOperatorStatuses } from '../gameDataController';
-import { getOperatorStatuses } from '../../model/game-data/operatorStatusesController';
+import { getAllOperatorStatuses, getOperatorStatuses } from '../gameDataStore';
 import { STATUS_LABELS } from '../../consts/timelineColumnLabels';
 import { COMMON_OWNER_ID } from '../slot/commonSlotController';
 import { evaluateConditions } from './conditionEvaluator';
@@ -42,7 +41,7 @@ import { resolveSusceptibility } from './processInfliction';
 import { getPhysicalStatusBaseMultiplier } from '../../model/calculation/damageFormulas';
 import type { SlotTriggerWiring } from './eventQueueTypes';
 import { findClauseTriggerMatches, statusNameToColumnId } from './triggerMatch';
-import { getComboTriggerClause, getComboTriggerInfo } from '../../model/event-frames/operatorJsonLoader';
+import { getComboTriggerClause, getComboTriggerInfo } from '../gameDataStore';
 import { PRIORITY } from './eventQueueTypes';
 import { genEventUid } from './inputEventController';
 import { evaluateEngineTrigger } from './statusTriggerCollector';
@@ -343,9 +342,15 @@ export class EventInterpretorController {
       ctx, effect.fromDeterminer ?? effect.toDeterminer,
     );
     const source = { ownerId: ctx.sourceOwnerId, skillName: ctx.sourceSkillName };
-    const sv = this.resolveWith(effect.with?.stacks, ctx);
-    const count = typeof sv === 'number' ? sv : 1;
-    if (sv == null) console.warn(`[EventInterpretor] CONSUME: implicit stacks 1 — configs should have explicit with.stacks`);
+    const rawStacks = effect.with?.stacks as ValueNode | typeof THRESHOLD_MAX | number | undefined;
+    if (rawStacks == null) console.warn(
+      `[EventInterpretor] CONSUME ${effect.object} ${effect.objectId ?? effect.adjective ?? '?'}: missing with.stacks`,
+      `\n  source: ${ctx.sourceSkillName} (owner: ${ctx.sourceOwnerId}, frame: ${ctx.frame})`,
+      `\n  effect:`, JSON.stringify(effect, null, 2),
+    );
+    const isMax = rawStacks === THRESHOLD_MAX;
+    const sv = isMax ? undefined : this.resolveWith(rawStacks, ctx);
+    const count = isMax ? Infinity : (typeof sv === 'number' ? sv : 1);
 
     if (effect.object === 'INFLICTION') {
       const col = resolveInflictionColumnId(effect.adjective);
@@ -378,9 +383,10 @@ export class EventInterpretorController {
     return baseCtx;
   }
 
-  /** Resolve a WITH property ValueNode, returning undefined if absent. */
-  private resolveWith(node: ValueNode | undefined, ctx: InterpretContext): number | undefined {
-    if (!node) return undefined;
+  /** Resolve a WITH property ValueNode or raw number, returning undefined if absent. */
+  private resolveWith(node: ValueNode | number | undefined, ctx: InterpretContext): number | undefined {
+    if (node == null) return undefined;
+    if (typeof node === 'number') return node;
     return resolveValueNode(node, this.buildValueContext(ctx));
   }
 
@@ -1135,6 +1141,7 @@ export class EventInterpretorController {
             fromObject: se.fromObject as Effect['fromObject'],
             to: se.to as Effect['to'],
             toDeterminer: se.toDeterminer as Effect['toDeterminer'],
+            with: se.with as Effect['with'],
           })),
         };
         this.interpret(effect, interpretCtx);

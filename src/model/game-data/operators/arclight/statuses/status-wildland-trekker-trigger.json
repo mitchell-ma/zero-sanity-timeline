@@ -1,0 +1,73 @@
+{
+  "clause": [
+    {
+      "conditions": [
+        {
+          "subject": "EVENT",
+          "verb": "HAVE",
+          "object": "STACKS",
+          "cardinalityConstraint": "EXACTLY",
+          "value": "MAX"
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "WILDLAND_TREKKER_BUFF",
+          "toDeterminer": "ALL",
+          "to": "OPERATOR"
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "WILDLAND_TREKKER_TRIGGER",
+    "name": "Wildland Trekker Trigger",
+    "target": "OPERATOR",
+    "targetDeterminer": "THIS",
+    "element": "ELECTRIC",
+    "stacks": {
+      "limit": {
+        "verb": "VARY_BY",
+        "object": "POTENTIAL",
+        "value": [
+          3,
+          3,
+          3,
+          3,
+          2,
+          2
+        ],
+        "ofDeterminer": "THIS",
+        "of": "OPERATOR"
+      },
+      "interactionType": "NONE"
+    },
+    "eventType": "STATUS",
+    "type": "SKILL_STATUS",
+    "eventCategoryType": "SKILL_STATUS",
+    "description": "Instantly blinks to the enemy's side to deal 2 slashes that deal some Physical DMG. If the enemy has active Electrification, consume the Electrification to unleash an additional attack that deals Electric DMG and recovers some SP."
+  },
+  "metadata": {
+    "originId": "TEMPESTUOUS_ARC"
+  },
+  "onTriggerClause": [
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "PERFORM",
+          "object": "BATTLE_SKILL"
+        },
+        {
+          "subject": "ENEMY",
+          "verb": "HAVE",
+          "object": "STATUS",
+          "objectId": "ELECTRIFICATION"
+        }
+      ]
+    }
+  ]
+}

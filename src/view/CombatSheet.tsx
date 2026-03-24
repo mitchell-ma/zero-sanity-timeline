@@ -21,7 +21,7 @@ import {
   getGearPiece,
   getConsumableEntry,
   getTacticalEntry,
-} from '../controller/gameDataController';
+} from '../controller/gameDataStore';
 import { COMBAT_SKILL_LABELS, SKILL_LABELS } from '../consts/timelineColumnLabels';
 import { SkillType } from '../consts/viewTypes';
 import { t } from '../locales/locale';

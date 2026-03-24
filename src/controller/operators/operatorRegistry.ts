@@ -10,14 +10,15 @@ import { Operator as ViewOperator, SkillDef, EventSegmentData } from '../../cons
 import { CombatSkillType, ElementType, OperatorClassType, ELEMENT_COLORS, SegmentType, TimeDependency } from '../../consts/enums';
 import { Potential } from '../../consts/types';
 import {
-  getOperatorJson,
+  buildMergedOperatorJson,
   getAllOperatorIds,
+  getOperatorBase,
   getSkillTypeMap,
   getSkillTimings as loadSkillTimings,
   getSkillGaugeGains as loadSkillGaugeGains,
   getUltimateEnergyCost as loadUltimateEnergyCost,
   getBattleSkillSpCost as loadBattleSkillSpCost,
-} from '../../model/event-frames/operatorJsonLoader';
+} from '../gameDataStore';
 import { ATTRIBUTE_INCREASE_LOOKUP, type OperatorStatConfig } from '../../model/operators/dataDrivenOperator';
 import { loadCustomOperators } from '../../utils/customContentStorage';
 
@@ -224,7 +225,7 @@ export const operatorWarnings: { id: string; name: string; message: string; isBu
 
 export const ALL_OPERATORS: ViewOperator[] = [];
 for (const id of getAllOperatorIds()) {
-  const json = getOperatorJson(id);
+  const json = buildMergedOperatorJson(id);
   if (!json) {
     operatorWarnings.push({ id, name: id, isBuiltIn: true, message: `[game-data] ${id}: no JSON file found. Operator was registered but has no data.` });
     continue;
@@ -285,7 +286,7 @@ export function deregisterCustomOperatorById(operatorId: string): void {
 // ── Ultimate energy cost with potential modifiers ────────────────────────────
 
 export function getUltimateEnergyCost(operatorId: string): number {
-  const json = getOperatorJson(operatorId);
+  const json = buildMergedOperatorJson(operatorId);
   if (!json) return 0;
   return loadUltimateEnergyCost(json);
 }
@@ -295,12 +296,12 @@ export function getUltimateEnergyCostForPotential(
   operatorId: string,
   potential: Potential,
 ): number | null {
-  const opJson = getOperatorJson(operatorId);
-  if (!opJson) return null;
+  const base = getOperatorBase(operatorId);
+  if (!base) return null;
 
   let baseCost = getUltimateEnergyCost(operatorId);
 
-  const potentials = (opJson.potentials ?? []) as { level: number; effects: { potentialEffectType: string; skillCostModifier?: { skillType: string; value: number } }[] }[];
+  const potentials = (base.potentials ?? []) as { level: number; effects: { potentialEffectType: string; skillCostModifier?: { skillType: string; value: number } }[] }[];
   for (const pot of potentials) {
     if (pot.level > potential) break;
     for (const eff of pot.effects) {
@@ -326,9 +327,9 @@ export function getUltimateEnergyCostForPotential(
  * Checks built-in JSON first, then custom operators from localStorage.
  */
 export function getOperatorConfig(operatorId: string): OperatorStatConfig | null {
-  // Built-in operator JSON
-  const json = getOperatorJson(operatorId);
-  if (json) return json as unknown as OperatorStatConfig;
+  // Built-in operator — use typed OperatorBase directly
+  const base = getOperatorBase(operatorId);
+  if (base) return base.serialize() as unknown as OperatorStatConfig;
 
   // Custom operator (id stored as custom_<id>, strip prefix for lookup)
   const customId = operatorId.startsWith('custom_') ? operatorId.slice(7) : operatorId;

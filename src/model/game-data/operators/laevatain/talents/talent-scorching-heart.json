@@ -1,0 +1,74 @@
+{
+  "properties": {
+    "type": "TALENT",
+    "id": "SCORCHING_HEART",
+    "target": "OPERATOR",
+    "targetDeterminer": "THIS",
+    "name": "Scorching Heart (Talent)",
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": -1
+      },
+      "unit": "SECOND"
+    },
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 1
+      },
+      "interactionType": "NONE"
+    },
+    "element": "HEAT",
+    "eventType": "STATUS",
+    "eventCategoryType": "TALENT",
+    "description": "After the controlled operator's Final Strike or Finisher hits the enemy, Laevatain absorbs Heat Infliction from nearby enemies. Every stack of Heat Infliction absorbed gives Laevatain 1 stack of Melting Flame (max stacks: 4). After reaching 4 stacks, DMG dealt by Laevatain ignores 15 Heat Resistance of the enemy for 20s. Laevatain also absorbs Heat Infliction from enemies defeated nearby."
+  },
+  "metadata": {
+    "originId": "LAEVATAIN",
+    "icon": "skills/laevatain_talent_1_icon.png"
+  },
+  "onTriggerClause": [
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "ANY",
+          "subject": "OPERATOR",
+          "verb": "PERFORM",
+          "object": "FINAL_STRIKE"
+        },
+        {
+          "subject": "ENEMY",
+          "verb": "HAVE",
+          "object": "INFLICTION",
+          "objectId": "HEAT"
+        }
+      ],
+      "effects": [
+        {
+          "verb": "ALL",
+          "cardinalityConstraint": "AT_MOST",
+          "value": "MAX",
+          "effects": [
+            {
+              "verb": "CONSUME",
+              "object": "INFLICTION",
+              "adjective": "HEAT",
+              "fromObject": "ENEMY",
+              "with": {
+                "stacks": 1
+              }
+            },
+            {
+              "verb": "APPLY",
+              "object": "STATUS",
+              "objectId": "MELTING_FLAME",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

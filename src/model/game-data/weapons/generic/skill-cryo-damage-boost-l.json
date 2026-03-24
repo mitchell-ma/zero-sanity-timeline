@@ -1,0 +1,46 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "CRYO_DAMAGE_BONUS",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "VARY_BY",
+              "object": "SKILL_LEVEL",
+              "value": [
+                0.055555556,
+                0.1,
+                0.14444445,
+                0.18888889,
+                0.23333333,
+                0.2777778,
+                0.32222223,
+                0.36666667,
+                0.43333334
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "name": "Cryo DMG Boost [L]",
+    "description": "Cryo DMG Dealt +",
+    "id": "CRYO_DMG_BOOST_L"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ],
+    "id": "CRYO_DAMAGE_BOOST_L"
+  }
+}

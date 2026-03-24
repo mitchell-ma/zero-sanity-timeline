@@ -7,7 +7,7 @@
  */
 import { DataDrivenOperator } from "../model/operators/dataDrivenOperator";
 import { getOperatorConfig } from "../controller/operators/operatorRegistry";
-import { getOperatorJson, getAllOperatorIds } from "../model/event-frames/operatorJsonLoader";
+import { getOperatorBase, getAllOperatorIds } from "../controller/gameDataStore";
 
 // ─── Registry types ─────────────────────────────────────────────────────────
 
@@ -41,12 +41,12 @@ function getOperatorIcon(name: string): string | undefined {
 // ─── Operators ──────────────────────────────────────────────────────────────
 
 export const OPERATORS: RegistryEntry<DataDrivenOperator | null>[] = getAllOperatorIds().map(id => {
-  const json = getOperatorJson(id);
-  if (!json) throw new Error(`No JSON data for operator: ${id}`);
+  const base = getOperatorBase(id);
+  if (!base) throw new Error(`No JSON data for operator: ${id}`);
   return {
-    name: json.name as string,
-    icon: getOperatorIcon(json.name as string),
-    rarity: json.operatorRarity as number,
+    name: base.name,
+    icon: getOperatorIcon(base.name),
+    rarity: base.operatorRarity,
     create: () => {
       const config = getOperatorConfig(id);
       return config ? new DataDrivenOperator(config, 90) : null;

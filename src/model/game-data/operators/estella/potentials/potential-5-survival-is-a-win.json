@@ -1,0 +1,13 @@
+{
+  "properties": {
+    "id": "ESTELLA_POTENTIAL_5",
+    "name": "Survival is a Win",
+    "level": 5,
+    "eventType": "POTENTIAL_EVENT",
+    "eventCategoryType": "POTENTIAL",
+    "description": "After applying Solidification to an enemy, Estella gains 5 Ultimate Energy. Effect can only trigger once every 1s."
+  },
+  "metadata": {
+    "originId": "ESTELLA"
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "MODIFY",
+          "object": "SKILL_PARAMETER",
+          "objectId": "FRIGID_SNOWFIELD",
+          "with": {
+            "parameterKey": "extra_duration",
+            "value": {
+              "verb": "IS",
+              "value": 2
+            },
+            "parameterModifyType": "ADDITIVE"
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "SNOWSHINE_POTENTIAL_3",
+    "name": "Polar Survival Guide",
+    "level": 3,
+    "eventType": "POTENTIAL_EVENT",
+    "eventCategoryType": "POTENTIAL",
+    "description": "Ultimate Frigid Snowfield improved: Duration of the Solidification applied by the skill is increased by 2s."
+  },
+  "metadata": {
+    "originId": "SNOWSHINE"
+  }
+}

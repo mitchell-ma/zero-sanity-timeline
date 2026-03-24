@@ -1,0 +1,33 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "MODIFY",
+          "object": "SKILL_PARAMETER",
+          "objectId": "OVERCLOCKED_MOMENT",
+          "with": {
+            "parameterKey": "rate",
+            "value": {
+              "verb": "IS",
+              "value": 1.1
+            },
+            "parameterModifyType": "MULTIPLICATIVE"
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "ANTAL_POTENTIAL_1",
+    "name": "Arts Talent",
+    "level": 1,
+    "eventType": "POTENTIAL_EVENT",
+    "eventCategoryType": "POTENTIAL",
+    "description": "Ultimate Overclocked Moment improved: Electric Amp and Heat Amp effects are increased to 1.1 times the original."
+  },
+  "metadata": {
+    "originId": "ANTAL"
+  }
+}

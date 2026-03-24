@@ -1,0 +1,33 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "MODIFY",
+          "object": "SKILL_PARAMETER",
+          "objectId": "chr_0002_endminm_combo_skill",
+          "with": {
+            "parameterKey": "DAMAGE_MULTIPLIER_MODIFIER",
+            "value": {
+              "verb": "IS",
+              "value": 1.3
+            },
+            "parameterModifyType": "MULTIPLICATIVE"
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "ENDMINISTRATOR_POTENTIAL_3",
+    "name": "???",
+    "level": 3,
+    "eventType": "POTENTIAL_EVENT",
+    "eventCategoryType": "POTENTIAL",
+    "description": "???"
+  },
+  "metadata": {
+    "originId": "ENDMINISTRATOR"
+  }
+}

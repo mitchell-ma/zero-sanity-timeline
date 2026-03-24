@@ -1,0 +1,46 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "MODIFY",
+          "object": "SKILL_PARAMETER",
+          "objectId": "UNCONVENTIONAL_LURE",
+          "with": {
+            "parameterKey": "potential_1",
+            "value": {
+              "verb": "IS",
+              "value": 1
+            },
+            "parameterModifyType": "UNIQUE_MULTIPLIER"
+          }
+        },
+        {
+          "verb": "MODIFY",
+          "object": "SKILL_PARAMETER",
+          "objectId": "UNCONVENTIONAL_LURE",
+          "with": {
+            "parameterKey": "potential_1_atb",
+            "value": {
+              "verb": "IS",
+              "value": 10
+            },
+            "parameterModifyType": "ADDITIVE"
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "ALESH_POTENTIAL_1",
+    "name": "Super Salty Comeback",
+    "level": 1,
+    "eventType": "POTENTIAL_EVENT",
+    "eventCategoryType": "POTENTIAL",
+    "description": "Battle skill Unconventional Lure improved: SP Recovery grants an additional 10 SP."
+  },
+  "metadata": {
+    "originId": "ALESH"
+  }
+}

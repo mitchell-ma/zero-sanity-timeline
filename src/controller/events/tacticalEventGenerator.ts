@@ -1,5 +1,5 @@
 import { TimelineEvent, EventSegmentData } from '../../consts/viewTypes';
-import { getTacticalEntry } from '../gameDataController';
+import { getTacticalEntry } from '../gameDataStore';
 import { Tactical } from '../../model/consumables/tactical';
 import { StewMeeting } from '../../model/consumables/stewMeeting';
 import type { Interaction } from '../../dsl/semantics';

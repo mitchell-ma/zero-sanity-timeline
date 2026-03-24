@@ -1,0 +1,46 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "MODIFY",
+          "object": "SKILL_PARAMETER",
+          "objectId": "chr_0029_pograni_talent1",
+          "with": {
+            "parameterKey": "atb_gain",
+            "value": {
+              "verb": "IS",
+              "value": 60
+            },
+            "parameterModifyType": "UNIQUE_MULTIPLIER"
+          }
+        },
+        {
+          "verb": "MODIFY",
+          "object": "SKILL_PARAMETER",
+          "objectId": "chr_0029_pograni_talent1",
+          "with": {
+            "parameterKey": "max_stack_owner",
+            "value": {
+              "verb": "IS",
+              "value": 5
+            },
+            "parameterModifyType": "UNIQUE_MULTIPLIER"
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "POGRANICHNIK_POTENTIAL_3",
+    "name": "When the Banner Flutters",
+    "level": 3,
+    "eventType": "POTENTIAL_EVENT",
+    "eventCategoryType": "POTENTIAL",
+    "description": "Talent The Living Banner improved: Amount of SP recovery needed to gain Fervent Morale is reduced to 60. Max Fervent Morale stacks on self +{max_stack_owner-3}."
+  },
+  "metadata": {
+    "originId": "POGRANICHNIK"
+  }
+}

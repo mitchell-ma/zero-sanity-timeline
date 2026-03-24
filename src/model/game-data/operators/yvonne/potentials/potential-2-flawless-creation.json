@@ -1,0 +1,44 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "INTELLECT",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": 20
+            }
+          }
+        },
+        {
+          "verb": "APPLY",
+          "object": "CRITICAL_RATE",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": 0.07
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "YVONNE_POTENTIAL_2",
+    "name": "Flawless Creation",
+    "level": 2,
+    "eventType": "POTENTIAL_EVENT",
+    "eventCategoryType": "POTENTIAL",
+    "description": "Intellect +20, Critical Rate +{CriticalRate:0%}."
+  },
+  "metadata": {
+    "originId": "YVONNE"
+  }
+}

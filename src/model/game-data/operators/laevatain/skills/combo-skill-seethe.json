@@ -1,0 +1,213 @@
+{
+  "properties": {
+    "name": "Seethe",
+    "description": "COMBO TRIGGER: When an enemy suffers Combustion or Corrosion. Fire erupts beneath the feet of any enemy with Combustion or Corrosion, dealing Heat DMG to them. If the skill hits the enemy, Laevatain gains 1 stack of Melting Flame and further gains Ultimate Energy per enemy hit.",
+    "windowFrames": 720,
+    "eventType": "COMBAT_SKILL",
+    "eventCategoryType": "COMBO_SKILL",
+    "element": "HEAT"
+  },
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "RECOVER",
+          "object": "ULTIMATE_ENERGY",
+          "to": "OPERATOR",
+          "toDeterminer": "THIS",
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": 30
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT",
+        "dataSources": [
+          "SELF"
+        ]
+      },
+      "properties": {
+        "segmentTypes": [
+          "ANIMATION"
+        ],
+        "name": "Animation",
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 0.566
+          },
+          "unit": "SECOND"
+        },
+        "timeDependency": "REAL_TIME",
+        "timeInteractionType": "TIME_STOP"
+      },
+      "frames": []
+    },
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT"
+      },
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 0.804
+          },
+          "unit": "SECOND"
+        },
+        "element": "HEAT"
+      },
+      "frames": [
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "END_AXIS"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 1,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "object": "STAGGER",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 10
+                    }
+                  }
+                },
+                {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "MELTING_FLAME",
+                  "to": "OPERATOR",
+                  "toDeterminer": "THIS",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  }
+                },
+                {
+                  "verb": "RECOVER",
+                  "object": "ULTIMATE_ENERGY",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 25
+                    }
+                  }
+                },
+                {
+                  "verb": "DEAL",
+                  "adjective": "HEAT",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "usp_1Display": {
+                      "verb": "IS",
+                      "value": 25
+                    },
+                    "usp_2Display": {
+                      "verb": "IS",
+                      "value": 30
+                    },
+                    "usp_3Display": {
+                      "verb": "IS",
+                      "value": 35
+                    },
+                    "DAMAGE_MULTIPLIER": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        2.4,
+                        2.64,
+                        2.88,
+                        3.12,
+                        3.36,
+                        3.6,
+                        3.84,
+                        4.08,
+                        4.32,
+                        4.62,
+                        4.98,
+                        5.4
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT"
+      },
+      "properties": {
+        "segmentTypes": [
+          "COOLDOWN",
+          "IMMEDIATE_COOLDOWN"
+        ],
+        "name": "Cooldown",
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 10
+          },
+          "unit": "SECOND"
+        },
+        "timeDependency": "REAL_TIME"
+      },
+      "frames": []
+    }
+  ],
+  "metadata": {
+    "originId": "LAEVATAIN",
+    "id": "SEETHE",
+    "icon": "skills/combo_laevatain.png"
+  },
+  "onTriggerClause": [
+    {
+      "conditions": [
+        {
+          "subject": "ENEMY",
+          "verb": "IS",
+          "object": "COMBUSTED"
+        }
+      ]
+    },
+    {
+      "conditions": [
+        {
+          "subject": "ENEMY",
+          "verb": "IS",
+          "object": "CORRODED"
+        }
+      ]
+    }
+  ]
+}

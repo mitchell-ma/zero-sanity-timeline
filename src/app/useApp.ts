@@ -18,7 +18,7 @@ import type { DamageTableRow } from '../controller/calculation/damageTableBuilde
 import { getModelEnemy } from '../controller/calculation/enemyRegistry';
 import { processCombatSimulation } from '../controller/timeline/eventQueueController';
 import { SlotTriggerWiring } from '../controller/timeline/eventQueueTypes';
-import { getComboTriggerClause } from '../model/event-frames/operatorJsonLoader';
+import { getComboTriggerClause } from '../controller/gameDataStore';
 import { buildColumns } from '../controller/timeline/columnBuilder';
 import {
   createEvent,

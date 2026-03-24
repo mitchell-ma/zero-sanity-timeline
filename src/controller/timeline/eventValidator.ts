@@ -8,8 +8,8 @@ import { TimelineEvent, SkillType, EventSegmentData, computeSegmentsSpan, getAni
 import { CombatSkillType, EnhancementType, StatusType, TimeDependency } from '../../consts/enums';
 import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../slot/commonSlotController';
 import type { ResourceZone } from './skillPointTimeline';
-import { getOperatorJson, getComboTriggerClause } from '../../model/event-frames/operatorJsonLoader';
-import { getOperatorStatuses } from '../../model/game-data/operatorStatusesController';
+import { getOperatorSkill, getOperatorSkills, getComboTriggerClause } from '../gameDataStore';
+import { getOperatorStatuses } from '../gameDataStore';
 import { VerbType, SubjectType, DeterminerType } from '../../dsl/semantics';
 import type { Interaction, Predicate } from '../../dsl/semantics';
 import { extendByTimeStops } from './processTimeStop';
@@ -1112,30 +1112,30 @@ export function validateDisabledVariants(events: TimelineEvent[]): Map<string, s
  * Returns null if not found.
  */
 function getVariantEnhancementTypes(operatorId: string, variantName: string): string[] | null {
-  const json = getOperatorJson(operatorId);
-  if (!json?.skills) return null;
-  const skill = (json.skills as Record<string, { properties?: { enhancementTypes?: string[] } }>)[variantName];
-  return skill?.properties?.enhancementTypes ?? null;
+  const skill = getOperatorSkill(operatorId, variantName);
+  return skill?.enhancementTypes ?? null;
 }
 
 function getVariantClause(operatorId: string, variantName: string): Predicate[] | null {
-  const json = getOperatorJson(operatorId);
-  if (!json?.skills) return null;
-  const skills = json.skills as Record<string, { id?: string; clause?: Predicate[]; activationClause?: Predicate[]; segments?: { name?: string; clause?: Predicate[] }[] }>;
   // Check by skill key (e.g. "TWILIGHT", "THERMITE_TRACERS_EMPOWERED")
-  const direct = skills[variantName];
-  if (direct?.activationClause) return direct.activationClause;
-  for (const cat of Object.values(skills)) {
+  const direct = getOperatorSkill(operatorId, variantName);
+  if (direct?.activationClause?.length) return direct.activationClause as Predicate[];
+  const allSkills = getOperatorSkills(operatorId);
+  if (!allSkills) return null;
+  let found: Predicate[] | null = null;
+  allSkills.forEach(cat => {
+    if (found) return;
     // Check skill category-level clause (matched by id)
-    if (cat.id === variantName && cat.clause) return cat.clause;
+    if (cat.id === variantName && cat.activationClause?.length) { found = cat.activationClause as Predicate[]; return; }
     // Check segment-level clauses (matched by name, case-insensitive)
-    if (cat.segments) {
-      for (const seg of cat.segments) {
-        if (seg.clause && seg.name?.toUpperCase() === variantName) return seg.clause;
+    const segs = cat.segments as { name?: string; clause?: Predicate[] }[] | undefined;
+    if (segs) {
+      for (const seg of segs) {
+        if (seg.clause && seg.name?.toUpperCase() === variantName) { found = seg.clause; return; }
       }
     }
-  }
-  return null;
+  });
+  return found;
 }
 
 interface ClauseContext {

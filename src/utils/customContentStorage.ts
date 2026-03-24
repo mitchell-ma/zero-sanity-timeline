@@ -10,7 +10,7 @@ import type { CustomWeaponEffect } from '../model/custom/customWeaponEffectTypes
 import type { CustomGearEffect } from '../model/custom/customGearEffectTypes';
 import type { CustomOperatorStatus } from '../model/custom/customOperatorStatusTypes';
 import type { CustomOperatorTalent } from '../model/custom/customOperatorTalentTypes';
-import { getWeaponIdByName } from '../controller/gameDataController';
+import { getWeaponIdByName } from '../controller/gameDataStore';
 import { GearCategory } from '../consts/enums';
 
 const CUSTOM_WEAPONS_KEY = 'zst-custom-weapons';

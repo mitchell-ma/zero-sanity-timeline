@@ -1,0 +1,13 @@
+{
+  "properties": {
+    "id": "CHEN-QIANYU_POTENTIAL_1",
+    "name": "\"Shadowless\"",
+    "level": 1,
+    "eventType": "POTENTIAL_EVENT",
+    "eventCategoryType": "POTENTIAL",
+    "description": "DMG Dealt +20% to enemies below 50% HP."
+  },
+  "metadata": {
+    "originId": "CHEN-QIANYU"
+  }
+}

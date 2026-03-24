@@ -6,6 +6,12 @@
 - **Stackable statuses now overlap freely** — status effects with multiple stacks (like Melting Flame) no longer show false overlap warnings when placed near each other on the timeline
 - **Stack limits enforced on add** — attempting to place more stacks than an effect allows (e.g. a 5th Melting Flame) is now blocked, matching in-game behavior
 - **Undo preserves status state** — undoing an action that consumed status stacks (like an empowered battle skill) now correctly restores the stacks to their unconsumed state
+- **Expanded content browser** — the operator viewer now shows detailed skill breakdowns: per-segment timing, frame hit data, SP costs, combo triggers, cooldowns, and element-colored indicators for each skill variant
+- **Skill segment viewer** — browse individual segments of a skill with tabbed navigation, seeing frame-by-frame hit details, stagger values, inflictions, and status applications
+- **Frame diamonds render above segments** — hit-timing diamonds on the timeline now draw on top of all segments instead of inside them, so they're no longer clipped by adjacent phases
+- **Updated element colors** — element type indicators (Heat, Cryo, Nature, Electric) now use more distinct, saturated colors for better readability
+- **Talent icons** — operator talent icons are now displayed in the content browser
+- Reorganized game data files for operators, weapons, and gear into per-item directories for cleaner structure
 
 ## 2026-03-22
 - **Empowered skill activation conditions** — empowered skill variants (Arclight, Wulfgard, Yvonne) now show as disabled in the context menu until their activation condition is met (e.g. max Scorching Fangs stacks)

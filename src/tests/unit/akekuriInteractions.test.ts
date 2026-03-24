@@ -52,31 +52,9 @@
  */
 import { TimelineEvent } from '../../consts/viewTypes';
 import { SKILL_COLUMNS } from '../../model/channels';
-import { buildSequencesFromOperatorJson, DataDrivenSkillEventSequence } from '../../model/event-frames/dataDrivenEventFrames';
+import { buildSequencesFromOperatorJson, DataDrivenSkillEventSequence } from '../../controller/gameDataStore';
 import { wouldOverlapSiblings } from '../../controller/timeline/eventValidator';
 
-// Mock modules that use require.context (not available in Jest)
-jest.mock('../../model/event-frames/operatorJsonLoader', () => ({
-  getOperatorJson: () => undefined, getAllOperatorIds: () => [],
-  getFrameSequences: () => [], getSkillIds: () => new Set(), getSkillTypeMap: () => ({}), resolveSkillType: () => null,
-  getSegmentLabels: () => undefined, getSkillTimings: () => undefined,
-  getUltimateEnergyCost: () => 0, getSkillGaugeGains: () => undefined,
-  getBattleSkillSpCost: () => undefined, getSkillCategoryData: () => undefined,
-  getBasicAttackDurations: () => undefined,
-  getComboTriggerClause: (id: string) => {
-    const map: Record<string, { file: string; skillId: string }> = {
-      antal: { file: '../../model/game-data/operator-skills/antal-skills.json', skillId: 'EMP_TEST_SITE' },
-      laevatain: { file: '../../model/game-data/operator-skills/laevatain-skills.json', skillId: 'SEETHE' },
-      akekuri: { file: '../../model/game-data/operator-skills/akekuri-skills.json', skillId: 'FLASH_AND_DASH' },
-    };
-    const entry = map[id];
-    if (!entry) return undefined;
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    return require(entry.file)[entry.skillId]?.onTriggerClause;
-  },
-  getExchangeStatusConfig: () => ({}),
-  getExchangeStatusIds: () => new Set(),
-}));
 jest.mock('../../model/game-data/weaponGameData', () => ({
   getSkillValues: () => [], getConditionalValues: () => [],
   getConditionalScalar: () => null, getBaseAttackForLevel: () => 0,
@@ -88,9 +66,10 @@ jest.mock('../../view/InformationPane', () => ({
 
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const mockOperatorJson = require('../../model/game-data/operators/akekuri-operator.json');
+const mockOperatorJson = require('../../model/game-data/operators/akekuri/akekuri.json');
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const mockSkillsJson = require('../../model/game-data/operator-skills/akekuri-skills.json');
+const { loadSkillsJson: _loadAkekuriSkills } = require('../helpers/loadGameData');
+const mockSkillsJson = _loadAkekuriSkills('akekuri');
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- JSON require() data; downstream tests assert structure
 const akekuriSkills: Record<string, any> = {};

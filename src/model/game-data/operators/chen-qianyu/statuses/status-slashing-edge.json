@@ -1,0 +1,57 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "ATTACK_BONUS",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "VARY_BY",
+              "object": "TALENT_ONE_LEVEL",
+              "value": [
+                0.04,
+                0.08
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "SLASHING_EDGE",
+    "name": "Slashing Edge",
+    "type": "STATUS",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": 10
+      },
+      "unit": "SECOND"
+    },
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 5
+      },
+      "interactionType": "RESET"
+    },
+    "eventType": "STATUS",
+    "eventCategoryType": "STATUS",
+    "description": "After hitting an enemy with skills, Chen gains ATK +4% for 10s. This effect can reach 5 stacks."
+  },
+  "metadata": {
+    "originId": "SLASHING_EDGE_TALENT",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ]
+  }
+}

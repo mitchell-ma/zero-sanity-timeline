@@ -1,0 +1,33 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "MODIFY",
+          "object": "SKILL_PARAMETER",
+          "objectId": "PROTOCOL_EPSILON",
+          "with": {
+            "parameterKey": "crit",
+            "value": {
+              "verb": "IS",
+              "value": 0.3
+            },
+            "parameterModifyType": "ADDITIVE"
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "PERLICA_POTENTIAL_5",
+    "name": "Reentry Control",
+    "level": 5,
+    "eventType": "POTENTIAL_EVENT",
+    "eventCategoryType": "POTENTIAL",
+    "description": "Ultimate Protocol ε: 70.41K improved: Critical Rate +30%."
+  },
+  "metadata": {
+    "originId": "PERLICA"
+  }
+}

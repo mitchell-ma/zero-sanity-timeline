@@ -1,0 +1,337 @@
+{
+  "properties": {
+    "name": "Thermite Tracers",
+    "description": "Fires multiple shots at the target that deal some Heat DMG. The final shot also applies Heat Infliction. If the target has active Combustion or Electrification, do not apply Heat Infliction but instead consume the Arts Reaction to fire an additional shot that deals massive Heat DMG.",
+    "eventType": "COMBAT_SKILL",
+    "eventCategoryType": "BATTLE_SKILL",
+    "element": "HEAT"
+  },
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "CONSUME",
+          "object": "SKILL_POINT",
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": 100
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "originId": "WULFGARD",
+    "id": "THERMITE_TRACERS",
+    "icon": "skills/skill_wulfgard.png"
+  },
+  "segments": [
+    {
+      "frames": [
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "END_AXIS"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 0.2,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "adjective": "HEAT",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "atkScalePlus": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        3.78,
+                        4.15,
+                        4.53,
+                        4.91,
+                        5.29,
+                        5.66,
+                        6.04,
+                        6.42,
+                        6.8,
+                        7.27,
+                        7.84,
+                        8.5
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    },
+                    "atkScalePlusFail": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.36,
+                        0.4,
+                        0.43,
+                        0.47,
+                        0.5,
+                        0.54,
+                        0.58,
+                        0.61,
+                        0.65,
+                        0.69,
+                        0.75,
+                        0.81
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    },
+                    "DAMAGE_MULTIPLIER": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.34,
+                        0.37,
+                        0.41,
+                        0.44,
+                        0.48,
+                        0.51,
+                        0.54,
+                        0.58,
+                        0.61,
+                        0.65,
+                        0.71,
+                        0.77
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "END_AXIS"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 0.53,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "adjective": "HEAT",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "atkScalePlus": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        3.78,
+                        4.15,
+                        4.53,
+                        4.91,
+                        5.29,
+                        5.66,
+                        6.04,
+                        6.42,
+                        6.8,
+                        7.27,
+                        7.84,
+                        8.5
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    },
+                    "atkScalePlusFail": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.36,
+                        0.4,
+                        0.43,
+                        0.47,
+                        0.5,
+                        0.54,
+                        0.58,
+                        0.61,
+                        0.65,
+                        0.69,
+                        0.75,
+                        0.81
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    },
+                    "DAMAGE_MULTIPLIER": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.34,
+                        0.37,
+                        0.41,
+                        0.44,
+                        0.48,
+                        0.51,
+                        0.54,
+                        0.58,
+                        0.61,
+                        0.65,
+                        0.71,
+                        0.77
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "END_AXIS"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 0.767,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "object": "STAGGER",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 5
+                    }
+                  }
+                },
+                {
+                  "verb": "APPLY",
+                  "object": "INFLICTION",
+                  "adjective": "HEAT",
+                  "to": "ENEMY",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  }
+                },
+                {
+                  "verb": "DEAL",
+                  "adjective": "HEAT",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "atkScalePlus": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        3.78,
+                        4.15,
+                        4.53,
+                        4.91,
+                        5.29,
+                        5.66,
+                        6.04,
+                        6.42,
+                        6.8,
+                        7.27,
+                        7.84,
+                        8.5
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    },
+                    "atkScalePlusFail": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.36,
+                        0.4,
+                        0.43,
+                        0.47,
+                        0.5,
+                        0.54,
+                        0.58,
+                        0.61,
+                        0.65,
+                        0.69,
+                        0.75,
+                        0.81
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    },
+                    "DAMAGE_MULTIPLIER": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.34,
+                        0.37,
+                        0.41,
+                        0.44,
+                        0.48,
+                        0.51,
+                        0.54,
+                        0.58,
+                        0.61,
+                        0.65,
+                        0.71,
+                        0.77
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 1.07
+          },
+          "unit": "SECOND"
+        },
+        "element": "HEAT"
+      }
+    }
+  ]
+}

@@ -1,0 +1,52 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "MODIFY",
+          "object": "SKILL_COST",
+          "objectId": "POGRANICHNIK_FULL_MOON_SLASH",
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": -2
+            },
+            "parameterType": 2
+          }
+        },
+        {
+          "verb": "MODIFY",
+          "object": "SKILL_PARAMETER",
+          "objectId": "FULL_MOON_SLASH",
+          "with": {
+            "parameterKey": "atb_ratio",
+            "value": {
+              "verb": "IS",
+              "value": 1.2
+            },
+            "parameterModifyType": "UNIQUE_MULTIPLIER"
+          }
+        },
+        {
+          "verb": "APPLY",
+          "object": "BUFF",
+          "objectId": "POGRANICHNIK_POTENTIAL5_NEWLY_FORGED_BLADE",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "POGRANICHNIK_POTENTIAL_5",
+    "name": "Newly Forged Blade",
+    "level": 5,
+    "eventType": "POTENTIAL_EVENT",
+    "eventCategoryType": "POTENTIAL",
+    "description": "Combo skill Full Moon Slash improved: Length of cooldown {coolDown:0}s; SP recovery is increased to 1.2 times the original."
+  },
+  "metadata": {
+    "originId": "POGRANICHNIK"
+  }
+}

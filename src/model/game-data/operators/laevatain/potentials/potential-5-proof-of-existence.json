@@ -1,0 +1,50 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "BUFF",
+          "objectId": "LAEVATAIN_POTENTIAL5_PROOF_OF_EXISTENCE",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "extend_duration": {
+              "verb": "IS",
+              "value": 1
+            },
+            "max_duration": {
+              "verb": "IS",
+              "value": 7
+            }
+          }
+        },
+        {
+          "verb": "MODIFY",
+          "object": "SKILL_PARAMETER",
+          "objectId": "FLAMING_CINDERS_ENHANCED",
+          "with": {
+            "parameterKey": "DAMAGE_MULTIPLIER_MODIFIER",
+            "value": {
+              "verb": "IS",
+              "value": 1.2
+            },
+            "parameterModifyType": "UNIQUE_MULTIPLIER"
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "LAEVATAIN_POTENTIAL_5",
+    "name": "Proof of Existence",
+    "level": 5,
+    "eventType": "POTENTIAL_EVENT",
+    "eventCategoryType": "POTENTIAL",
+    "description": "Ultimate Twilight improved: Enhanced basic attack DMG multiplier is increased to 1.2 times the original; during the ultimate, every enemy defeated by Laevatain extends ultimate duration by +1s (max: +7s)."
+  },
+  "metadata": {
+    "originId": "LAEVATAIN"
+  }
+}

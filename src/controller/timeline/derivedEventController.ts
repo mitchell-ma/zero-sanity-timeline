@@ -26,15 +26,15 @@ import { getCorrosionBaseReduction, getCorrosionReductionMultiplier } from '../.
 import { MAX_INFLICTION_STACKS } from './eventQueueTypes';
 import type { SlotTriggerWiring } from './eventQueueTypes';
 import { findClauseTriggerMatches } from './triggerMatch';
-import { getComboTriggerClause, getComboTriggerInfo } from '../../model/event-frames/operatorJsonLoader';
-import type { TriggerAssociation } from '../gameDataController';
+import { getComboTriggerClause, getComboTriggerInfo } from '../gameDataStore';
+import type { TriggerAssociation } from '../gameDataStore';
 import type { SkillPointController } from '../slot/skillPointController';
 import type { UltimateEnergyController } from './ultimateEnergyController';
 import { collectNoGainWindowsForEvent } from './ultimateEnergyController';
 import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../slot/commonSlotController';
 import GENERAL_MECHANICS from '../../model/game-data/generalMechanics.json';
 import { genEventUid } from './inputEventController';
-import { getAllOperatorStatuses } from '../gameDataController';
+import { getAllOperatorStatuses } from '../gameDataStore';
 
 /** Source metadata for event mutations. */
 interface EventSource {

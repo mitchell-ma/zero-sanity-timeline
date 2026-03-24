@@ -18,198 +18,6 @@ import { processCombatSimulation } from '../../controller/timeline/eventQueueCon
 
 // ── Mock require.context before importing modules that use it ────────────────
 
-jest.mock('../../model/event-frames/operatorJsonLoader', () => {
-  const actual = jest.requireActual('../../model/event-frames/dataDrivenEventFrames');
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const mockOperatorJson = require('../../model/game-data/operators/laevatain-operator.json');
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const mockSkillsJson = require('../../model/game-data/operator-skills/laevatain-skills.json');
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const mockStatusesJson = require('../../model/game-data/operator-statuses/laevatain-statuses.json');
-  const KEY_EXPAND = { verb: 'verb', object: 'object', subject: 'subject', to: 'to', from: 'fromObject', on: 'onObject', with: 'with', for: 'for' } as Record<string, string>;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- key expansion
-  const expandKeys = (val: any): any => {
-    if (val == null || typeof val !== 'object') return val;
-    if (Array.isArray(val)) return val.map(expandKeys);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- key expansion
-    const out = {} as Record<string, any>;
-    for (const [k, v] of Object.entries(val)) {
-      out[KEY_EXPAND[k] ?? k] = expandKeys(v);
-    }
-    return out;
-  };
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- status normalization
-  const expandedStatuses = (mockStatusesJson as any[]).map((s: any) => expandKeys(s));
-
-  const mergedStatusEvents = [...expandedStatuses];
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- infer skillTypeMap from skill entries
-  function inferSkillTypeMap(skills: Record<string, any>): Record<string, any> {
-    const ids = Object.keys(skills);
-    const finishers = ids.filter(id => id.endsWith('_FINISHER'));
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- inferred map
-    const map: Record<string, any> = {};
-    for (const fId of finishers) {
-      const base = fId.replace(/_FINISHER$/, '');
-      if (skills[base]) {
-        const batk: Record<string, string> = { BATK: base, FINISHER: fId };
-        const diveId = ids.find(d => d === base + '_DIVE');
-        if (diveId) batk.DIVE = diveId;
-        map.BASIC_ATTACK = batk;
-        break;
-      }
-    }
-    const variantSuffixes = ['_FINISHER', '_DIVE', '_ENHANCED', '_EMPOWERED', '_ENHANCED_EMPOWERED'];
-    const baseSkills = ids.filter(id => {
-      const batkId = typeof map.BASIC_ATTACK === 'object' ? (map.BASIC_ATTACK as Record<string,string>).BATK : undefined;
-      if (id === batkId) return false;
-      return !variantSuffixes.some(s => id.endsWith(s));
-    });
-    for (const id of baseSkills) {
-      const skill = skills[id] as Record<string, unknown>;
-      if (skill?.onTriggerClause && (skill.onTriggerClause as unknown[]).length > 0) {
-        map.COMBO_SKILL = id;
-        break;
-      }
-    }
-    const remaining = baseSkills.filter(id => id !== map.COMBO_SKILL);
-    for (const id of remaining) {
-      const skill = skills[id] as Record<string, unknown>;
-      const segs = skill?.segments as { properties: { segmentTypes?: string[] } }[] | undefined;
-      if (segs?.some(s => s.properties.segmentTypes?.includes('ANIMATION'))) {
-        map.ULTIMATE = id;
-        break;
-      }
-    }
-    const battleCandidates = remaining.filter(id => id !== map.ULTIMATE);
-    if (battleCandidates.length === 1) map.BATTLE_SKILL = battleCandidates[0];
-    return map;
-  }
-
-  const skillEntries = { ...mockSkillsJson };
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- JSON require() data
-  const laevatainSkills = {} as Record<string, any>;
-  for (const [key, val] of Object.entries(skillEntries)) {
-    laevatainSkills[key] = { ...(val as Record<string, unknown>), id: key };
-  }
-  const skTypeMap = inferSkillTypeMap(laevatainSkills);
-  const variantSuffixes = ['ENHANCED', 'EMPOWERED', 'ENHANCED_EMPOWERED'];
-  for (const [category, value] of Object.entries(skTypeMap)) {
-    if (typeof value === 'string') {
-      if (laevatainSkills[value]) laevatainSkills[category] = laevatainSkills[value];
-      for (const suffix of variantSuffixes) {
-        const variantSkillId = `${value}_${suffix}`;
-        if (laevatainSkills[variantSkillId]) laevatainSkills[`${suffix}_${category}`] = laevatainSkills[variantSkillId];
-      }
-    } else if (typeof value === 'object' && value !== null) {
-      const batkId = (value as Record<string, string>).BATK;
-      if (batkId && laevatainSkills[batkId]) laevatainSkills[category] = laevatainSkills[batkId];
-      for (const [subKey, subId] of Object.entries(value as Record<string, string>)) {
-        if (laevatainSkills[subId]) laevatainSkills[subKey] = laevatainSkills[subId];
-      }
-      if (batkId) {
-        for (const suffix of variantSuffixes) {
-          const variantSkillId = `${batkId}_${suffix}`;
-          if (laevatainSkills[variantSkillId]) laevatainSkills[`${suffix}_${category}`] = laevatainSkills[variantSkillId];
-        }
-      }
-    }
-  }
-  const mockJson = { ...mockOperatorJson, skills: laevatainSkills, skillTypeMap: skTypeMap, ...(mergedStatusEvents.length > 0 ? { statusEvents: mergedStatusEvents } : {}) };
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- JSON require() data
-  const json = { laevatain: mockJson } as Record<string, any>;
-  const sequenceCache = new Map<string, unknown>();
-
-  return {
-    getOperatorJson: (id: string) => json[id],
-    getAllOperatorIds: () => Object.keys(json),
-    getSkillIds: (operatorId: string) => {
-      const opJson = json[operatorId];
-      if (!opJson?.skills) return new Set<string>();
-      const ids = new Set<string>(['FINISHER', 'DIVE']);
-      for (const key of Object.keys(opJson.skills)) {
-        if (key !== 'statusEvents' && key !== 'skillTypeMap') ids.add(key);
-      }
-      return ids;
-    },
-    getSkillTypeMap: (operatorId: string) => json[operatorId]?.skillTypeMap ?? {},
-    resolveSkillType: () => null,
-    getFrameSequences: (operatorId: string, skillId: string) => {
-      const cacheKey = `${operatorId}:${skillId}`;
-      const cached = sequenceCache.get(cacheKey);
-      if (cached) return cached;
-      const opJson = json[operatorId];
-      if (!opJson) return [];
-      const sequences = actual.buildSequencesFromOperatorJson(opJson, skillId);
-      sequenceCache.set(cacheKey, sequences);
-      return sequences;
-    },
-    getSegmentLabels: () => undefined,
-    getSkillTimings: () => undefined,
-    getUltimateEnergyCost: () => 0,
-    getSkillGaugeGains: () => undefined,
-    getBattleSkillSpCost: () => undefined,
-    getSkillCategoryData: () => undefined,
-    getBasicAttackDurations: () => undefined,
-  getComboTriggerClause: (id: string) => {
-    const map: Record<string, { file: string; skillId: string }> = {
-      antal: { file: '../../model/game-data/operator-skills/antal-skills.json', skillId: 'EMP_TEST_SITE' },
-      laevatain: { file: '../../model/game-data/operator-skills/laevatain-skills.json', skillId: 'SEETHE' },
-      akekuri: { file: '../../model/game-data/operator-skills/akekuri-skills.json', skillId: 'FLASH_AND_DASH' },
-    };
-    const entry = map[id];
-    if (!entry) return undefined;
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    return require(entry.file)[entry.skillId]?.onTriggerClause;
-  },
-  getExchangeStatusConfig: () => {
-      const OP_COLUMNS: Record<string, string> = { MELTING_FLAME: 'melting-flame', THUNDERLANCE: 'thunderlance' };
-      const TOTAL_FRAMES = 14400;
-      const config: Record<string, { columnId: string; durationFrames: number }> = {};
-      for (const status of expandedStatuses) {
-        const props = status.properties;
-        if (!props) continue;
-        // Exchange = stackable (limit > 1) + NONE interaction + APPLY STATUS effect at max
-        const sl = props.stacks;
-        const limitVal = sl?.limit?.value ?? 1;
-        const interaction = sl?.interactionType ?? 'NONE';
-        if (limitVal <= 1 || interaction !== 'NONE') continue;
-        const hasApplyStatus = (status.clause ?? []).some(
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (c: any) => (c.effects ?? []).some((e: any) => e.verb === 'APPLY' && e.object === 'STATUS')
-        );
-        if (!hasApplyStatus) continue;
-        const id = props.id as string;
-        const columnId = OP_COLUMNS[id] ?? id.toLowerCase().replace(/_/g, '-');
-        let durationFrames = TOTAL_FRAMES * 10;
-        if (props.duration) {
-          const val = Array.isArray(props.duration.value) ? props.duration.value[0] : props.duration.value;
-          if (val >= 0) durationFrames = props.duration.unit === 'SECOND' ? Math.round(val * 120) : val;
-        }
-        config[id] = { columnId, durationFrames };
-      }
-      return config;
-    },
-    getExchangeStatusIds: () => {
-      const ids = new Set<string>();
-      for (const status of expandedStatuses) {
-        const props = status.properties;
-        if (!props) continue;
-        const sl = props.stacks;
-        const limitVal = sl?.limit?.value ?? 1;
-        const interaction = sl?.interactionType ?? 'NONE';
-        if (limitVal <= 1 || interaction !== 'NONE') continue;
-        const hasApplyStatus = (status.clause ?? []).some(
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (c: any) => (c.effects ?? []).some((e: any) => e.verb === 'APPLY' && e.object === 'STATUS')
-        );
-        if (hasApplyStatus) ids.add(props.id);
-      }
-      return ids;
-    },
-  };
-});
-
 jest.mock('../../model/game-data/weaponGameData', () => ({
   getSkillValues: () => [],
   getConditionalValues: () => [],
@@ -232,9 +40,8 @@ let eventIdCounter = 0;
 function resetIdCounter() { eventIdCounter = 0; }
 
 function battleSkillEvent(startFrame: number): TimelineEvent {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const skillsJson = require('../../model/game-data/operator-skills/laevatain-skills.json');
-  const skillDef = skillsJson['SMOULDERING_FIRE'];
+  const { loadSkillById: _loadSkillById } = require('../helpers/loadGameData');
+  const skillDef = _loadSkillById('laevatain', 'SMOULDERING_FIRE');
   const seg = skillDef.segments[0];
   const duration = Math.round(seg.properties.duration.value * FPS);
   const frames: EventFrameMarker[] = [];
@@ -265,9 +72,8 @@ function battleSkillEvent(startFrame: number): TimelineEvent {
 }
 
 function empoweredBattleSkillEvent(startFrame: number): TimelineEvent {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const skillsJson = require('../../model/game-data/operator-skills/laevatain-skills.json');
-  const empDef = skillsJson['SMOULDERING_FIRE_EMPOWERED'];
+  const { loadSkillById: _loadSkillById2 } = require('../helpers/loadGameData');
+  const empDef = _loadSkillById2('laevatain', 'SMOULDERING_FIRE_EMPOWERED');
   const empSeg = empDef.segments[0];
   const duration = Math.round(empSeg.properties.duration.value * FPS);
   const segments: EventSegmentData[] = [];
@@ -1543,8 +1349,9 @@ describe('Combo skill effects — all operators', () => {
     startFrame: number,
     comboTriggerColumnId?: string,
   ): TimelineEvent {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const json = require(`../../model/game-data/operator-skills/${operatorFile}`);
+    const { loadSkillsJson: _loadComboSkills } = require('../helpers/loadGameData');
+    const operatorId = operatorFile.replace(/-skills\.json$/, '');
+    const json = _loadComboSkills(operatorId);
     // Infer combo skill: find the skill with onTriggerClause, or named COMBO_SKILL
     const varSuffixes = ['_FINISHER', '_DIVE', '_ENHANCED', '_EMPOWERED', '_ENHANCED_EMPOWERED'];
     const baseIds = Object.keys(json).filter(id => !varSuffixes.some(s => id.endsWith(s)));

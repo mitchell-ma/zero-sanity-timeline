@@ -11,8 +11,9 @@ import { CritMode, EventStatusType, StackInteractionType } from '../../consts/en
 import { COMMON_OWNER_ID } from '../slot/commonSlotController';
 import { ENEMY_OWNER_ID, ELEMENT_TO_INFLICTION_COLUMN, REACTION_COLUMNS, SKILL_COLUMNS } from '../../model/channels';
 import { FPS, TOTAL_FRAMES } from '../../utils/timeline';
-import { getOperatorJson, getSkillIds, getAllOperatorIds } from '../../model/event-frames/operatorJsonLoader';
-import { getWeaponEffectDefs, getGearEffectDefs, NormalizedEffectDef } from '../../model/game-data/weaponGearEffectLoader';
+import { getSkillIds, getAllOperatorIds, getEnabledStatusEvents } from '../gameDataStore';
+import { getWeaponEffectDefs, getGearEffectDefs } from '../gameDataStore';
+import type { NormalizedEffectDef } from '../gameDataStore';
 import { LoadoutProperties } from '../../view/InformationPane';
 import { evaluateInteraction, evaluateConditions, ConditionContext } from './conditionEvaluator';
 import { executeEffects, applyMutations } from './effectExecutor';
@@ -64,7 +65,7 @@ interface StatusProperties {
 
 export interface StatusEventDef {
   properties: StatusProperties;
-  metadata?: { originId?: string };
+  metadata?: { originId?: string; isEnabled?: boolean };
   onTriggerClause?: TriggerClause[];
   onEntryClause?: EffectClause[];
   clause?: EffectClause[];
@@ -110,6 +111,11 @@ interface ClauseEffectEntry {
 interface ResolvedClause {
   conditions: Predicate[];
   effects: ClauseEffectEntry[];
+}
+
+/** Get enabled status event defs for an operator, typed as StatusEventDef[]. */
+function getEnabledDefs(operatorId: string): StatusEventDef[] {
+  return getEnabledStatusEvents(operatorId).map(s => s.serialize() as unknown as StatusEventDef);
 }
 
 /** Build a ValueResolutionContext from DeriveContext for the talent owner. */
@@ -523,8 +529,7 @@ function deriveStatusEvents(
   const applyToDeterminer = directApply?.toDeterminer ?? (nestedApply as unknown as Effect | undefined)?.toDeterminer;
   let outputDef = def;
   if (applySubEffect?.objectId) {
-    const json = getOperatorJson(ctx.operatorId);
-    const targetDef = (json?.statusEvents as StatusEventDef[] ?? [])
+    const targetDef = getEnabledDefs(ctx.operatorId)
       .find(d => d.properties.id === applySubEffect.objectId);
     if (targetDef) outputDef = targetDef;
   }
@@ -772,8 +777,7 @@ function evaluateThresholdClauses(
           const targetStatusName = effect.objectId;
 
           // Look for the target status def in the same operator's statusEvents
-          const json = getOperatorJson(ctx.operatorId);
-          const targetDef = (json?.statusEvents as StatusEventDef[] ?? [])
+          const targetDef = getEnabledDefs(ctx.operatorId)
             .find(d => d.properties.id === targetStatusName);
 
           // Resolve owner from the target def's own target field (authoritative),
@@ -957,10 +961,7 @@ function resolveReceiveColumnId(cond: Predicate): string | undefined {
  * Built dynamically — any operator with statusEvents is automatically handled.
  */
 const ENGINE_HANDLED_OPERATORS = new Set(
-  getAllOperatorIds().filter(id => {
-    const json = getOperatorJson(id);
-    return json?.statusEvents;
-  })
+  getAllOperatorIds().filter(id => getEnabledDefs(id).length > 0)
 );
 
 /**
@@ -1004,8 +1005,8 @@ export function deriveStatusesFromEngine(
   }
 
   for (const operatorId of Array.from(ENGINE_HANDLED_OPERATORS)) {
-    const json = getOperatorJson(operatorId);
-    if (!json?.statusEvents) continue;
+    const defs = getEnabledDefs(operatorId);
+    if (!defs.length) continue;
 
     const slotId = operatorSlotMap[operatorId] ?? findOperatorSlot(result, operatorId);
     if (!slotId) continue;
@@ -1013,7 +1014,6 @@ export function deriveStatusesFromEngine(
     const props = loadoutProperties?.[slotId];
     const potential = props?.operator.potential ?? 0;
 
-    const defs = json.statusEvents as StatusEventDef[];
     for (const def of defs) {
       // Skip defs handled by the event queue (exchange statuses)
       if (skipDefNames?.has(def.properties.id)) continue;
@@ -1119,9 +1119,7 @@ export function deriveStatusesFromEngine(
   // and onTriggerClause on ALL status events (engine-created and frame-created).
   const allLifecycleDefs: StatusEventDef[] = [];
   for (const operatorId of getAllOperatorIds()) {
-    const json = getOperatorJson(operatorId);
-    if (!json?.statusEvents) continue;
-    for (const def of json.statusEvents as StatusEventDef[]) {
+    for (const def of getEnabledDefs(operatorId)) {
       if (def.onEntryClause?.length || def.onTriggerClause?.length) {
         allLifecycleDefs.push(def);
       }
@@ -1283,11 +1281,11 @@ export function collectEngineTriggerEntries(
   };
 
   for (const operatorId of Array.from(ENGINE_HANDLED_OPERATORS)) {
-    const json = getOperatorJson(operatorId);
-    if (!json?.statusEvents) continue;
+    const defs = getEnabledDefs(operatorId);
+    if (!defs.length) continue;
     const slotId = operatorSlotMap[operatorId] ?? findOperatorSlot(events, operatorId);
     if (!slotId) continue;
-    processDefsForSlot(slotId, operatorId, json.statusEvents as StatusEventDef[]);
+    processDefsForSlot(slotId, operatorId, defs);
   }
 
   if (slotWeapons) {
@@ -1454,8 +1452,7 @@ function resolveOutputDef(ctx: EngineTriggerContext): StatusEventDef {
     .flatMap(e => e.effects ?? [])
     .find(e => e.verb === 'APPLY' && e.object === 'STATUS' && e.objectId);
   if (applySubEffect?.objectId) {
-    const json = getOperatorJson(ctx.operatorId);
-    const targetDef = (json?.statusEvents as StatusEventDef[] ?? [])
+    const targetDef = getEnabledDefs(ctx.operatorId)
       .find(d => d.properties.id === applySubEffect.objectId);
     if (targetDef) return targetDef;
   }
@@ -1464,8 +1461,7 @@ function resolveOutputDef(ctx: EngineTriggerContext): StatusEventDef {
   const directApply = (ctx.triggerEffects as any[] ?? [])
     .find(e => e.verb === 'APPLY' && e.object === 'STATUS' && e.objectId);
   if (directApply?.objectId) {
-    const json = getOperatorJson(ctx.operatorId);
-    const targetDef = (json?.statusEvents as StatusEventDef[] ?? [])
+    const targetDef = getEnabledDefs(ctx.operatorId)
       .find(d => d.properties.id === directApply.objectId);
     if (targetDef) return targetDef;
   }
@@ -1541,18 +1537,16 @@ function evaluateCompoundTrigger(
 
 /** Resolve max stacks for a status ID from operator JSON. */
 function getMaxStacksForStatus(statusId: string, ctx: EngineTriggerContext): number | undefined {
-  const json = getOperatorJson(ctx.operatorId);
-  if (!json?.statusEvents) return undefined;
-  const statusDef = (json.statusEvents as StatusEventDef[]).find(d => d.properties.id === statusId);
+  const statusDef = getEnabledDefs(ctx.operatorId).find(d => d.properties.id === statusId);
   if (!statusDef?.properties.stacks?.limit) return undefined;
   return getMaxStacks(statusDef.properties.stacks.limit, ctx.potential);
 }
 
 /** Resolve duration in frames for a status ID from operator JSON. */
 function getStatusDuration(statusId: string, ctx: EngineTriggerContext): number | undefined {
-  const json = getOperatorJson(ctx.operatorId);
-  if (!json?.statusEvents) return TOTAL_FRAMES;
-  const statusDef = (json.statusEvents as StatusEventDef[]).find(d => d.properties.id === statusId);
+  const defs = getEnabledDefs(ctx.operatorId);
+  if (!defs.length) return TOTAL_FRAMES;
+  const statusDef = defs.find(d => d.properties.id === statusId);
   if (!statusDef) return undefined;
   return statusDef.properties.duration ? getDurationFrames(statusDef.properties.duration) : TOTAL_FRAMES;
 }

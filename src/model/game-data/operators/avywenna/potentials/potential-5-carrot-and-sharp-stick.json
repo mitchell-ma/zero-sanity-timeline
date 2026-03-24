@@ -1,0 +1,33 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "MODIFY",
+          "object": "SKILL_PARAMETER",
+          "objectId": "THUNDERLANCE_INTERDICTION",
+          "with": {
+            "parameterKey": "potential_5_rate",
+            "value": {
+              "verb": "IS",
+              "value": 1.15
+            },
+            "parameterModifyType": "UNIQUE_MULTIPLIER"
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "AVYWENNA_POTENTIAL_5",
+    "name": "Carrot and Sharp Stick",
+    "level": 5,
+    "eventType": "POTENTIAL_EVENT",
+    "eventCategoryType": "POTENTIAL",
+    "description": "When returning Thunderlances or Thunderlances EX hit an Electric Susceptible enemy, the DMG multipliers are increased to 1.15 times the original."
+  },
+  "metadata": {
+    "originId": "AVYWENNA"
+  }
+}

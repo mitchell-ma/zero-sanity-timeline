@@ -13,75 +13,6 @@ import { TimelineEvent, EventSegmentData } from '../../consts/viewTypes';
 import { SKILL_COLUMNS } from '../../model/channels';
 import { EnhancementType, SegmentType } from '../../consts/enums';
 
-// Mock operatorJsonLoader to handle require.context (loads real JSON data)
-jest.mock('../../model/event-frames/operatorJsonLoader', () => {
-  const actual = jest.requireActual('../../model/event-frames/dataDrivenEventFrames');
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const opJson = require('../../model/game-data/operators/laevatain-operator.json');
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const skillsJson = require('../../model/game-data/operator-skills/laevatain-skills.json');
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const statusesJson = require('../../model/game-data/operator-statuses/laevatain-statuses.json');
-  const { statusEvents: skStatusEvents, skillTypeMap: skTypeMap, ...skillEntries } = skillsJson;
-  const KEY_EXPAND: Record<string, string> = {
-    verb: 'verb', object: 'object', subject: 'subject',
-    to: 'to', from: 'fromObject',
-    on: 'onObject', with: 'with', for: 'for',
-  };
-  const expandKeys = (val: unknown): unknown => {
-    if (val == null || typeof val !== 'object') return val;
-    if (Array.isArray(val)) return val.map(expandKeys);
-    const out: Record<string, unknown> = {};
-    for (const [k, v] of Object.entries(val)) { out[KEY_EXPAND[k] ?? k] = expandKeys(v); }
-    return out;
-  };
-  const expandedStatuses = (statusesJson as unknown[]).map(expandKeys);
-  const mergedStatusEvents = [...expandedStatuses, ...(skStatusEvents ?? [])];
-  const skills: Record<string, unknown> = {};
-  for (const [key, val] of Object.entries(skillEntries as Record<string, unknown>)) {
-    skills[key] = { ...(val as Record<string, unknown>), id: key };
-  }
-  if (skTypeMap) {
-    for (const [category, skillId] of Object.entries(skTypeMap as Record<string, string>)) {
-      if (skills[skillId]) skills[category] = skills[skillId];
-      for (const suffix of ['ENHANCED', 'EMPOWERED', 'ENHANCED_EMPOWERED']) {
-        const vid = `${skillId}_${suffix}`;
-        if (skills[vid]) skills[`${suffix}_${category}`] = skills[vid];
-      }
-    }
-  }
-  const merged = { ...opJson, skills, skillTypeMap: skTypeMap, ...(mergedStatusEvents.length > 0 ? { statusEvents: mergedStatusEvents } : {}) };
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- JSON require() data
-  const json: Record<string, any> = { laevatain: merged };
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- sequence cache
-  const seqCache = new Map<string, any>();
-  return {
-    getOperatorJson: (id: string) => json[id],
-    getAllOperatorIds: () => Object.keys(json),
-    getSkillIds: () => new Set<string>(),
-    getSkillTypeMap: (id: string) => json[id]?.skillTypeMap ?? {},
-    resolveSkillType: () => null,
-    getFrameSequences: (opId: string, skillId: string) => {
-      const k = `${opId}:${skillId}`;
-      if (seqCache.has(k)) return seqCache.get(k);
-      const seqs = actual.buildSequencesFromOperatorJson(json[opId] ?? {}, skillId);
-      seqCache.set(k, seqs);
-      return seqs;
-    },
-    getSegmentLabels: () => undefined,
-    getSkillTimings: () => undefined,
-    getUltimateEnergyCost: () => 0,
-    getSkillGaugeGains: () => undefined,
-    getBattleSkillSpCost: () => undefined,
-    getSkillCategoryData: () => undefined,
-    getBasicAttackDurations: () => undefined,
-  getComboTriggerClause: () => undefined,
-    getDelayedHitLabel: () => undefined,
-    getExchangeStatusConfig: () => ({}),
-    getExchangeStatusIds: () => new Set(),
-  };
-});
-
 jest.mock('../../model/game-data/weaponGameData', () => ({
   getSkillValues: () => [], getConditionalValues: () => [], getConditionalScalar: () => null, getBaseAttackForLevel: () => 0,
 }));
@@ -358,7 +289,7 @@ function makeEvent(overrides: Partial<TimelineEvent> & { uid: string; ownerId: s
 // ── Helper to convert raw JSON segments to EventSegmentData ─────────────────
 const FPS = 120;
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const twilightSkill = require('../../model/game-data/operator-skills/laevatain-skills.json').TWILIGHT;
+const twilightSkill = require('../../model/game-data/operators/laevatain/skills/ultimate-twilight.json');
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function rawSegmentsToEventSegments(rawSegments: any[]): EventSegmentData[] {
   return rawSegments.map((seg) => ({

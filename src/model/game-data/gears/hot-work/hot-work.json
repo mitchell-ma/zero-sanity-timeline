@@ -1,0 +1,51 @@
+{
+  "onTriggerClause": [
+    {
+      "conditions": [
+        {
+          "subject": "ENEMY",
+          "verb": "IS",
+          "object": "COMBUSTED"
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "HOT_WORK_HEAT"
+        }
+      ]
+    },
+    {
+      "conditions": [
+        {
+          "subject": "ENEMY",
+          "verb": "IS",
+          "object": "CORRODED"
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "HOT_WORK_NATURE"
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "HOT_WORK",
+    "name": "Hot Work",
+    "rarity": 5,
+    "piecesRequired": 3,
+    "description": "3-piece set effect: Wearer's Arts Intensity +{phy_spell_up:0}. After the wearer applies Combustion, the wearer gains Heat DMG +{fire_dmg_up:0%} for {duration}s. After the wearer applies Corrosion, the wearer gains Nature DMG +{nature_dmg_up:0%} for {duration2}s. The aforementioned effects cannot stack.",
+    "eventType": "STATUS",
+    "eventCategoryType": "GEAR_SET_EFFECT"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
+  }
+}

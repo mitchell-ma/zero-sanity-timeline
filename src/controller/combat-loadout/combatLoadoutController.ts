@@ -1,8 +1,8 @@
 import { Operator } from '../../consts/viewTypes';
 import type { Slot } from '../timeline/columnBuilder';
-import { getWeapon } from '../gameDataController';
+import { getWeapon } from '../gameDataStore';
 import { CommonSlotController } from '../slot/commonSlotController';
-import { getComboTriggerClause, getTeamStatusIds } from '../../model/event-frames/operatorJsonLoader';
+import { getComboTriggerClause, getTeamStatusIds } from '../gameDataStore';
 
 const NUM_SLOTS = 4;
 

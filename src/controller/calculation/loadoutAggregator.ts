@@ -26,7 +26,7 @@ import {
   getNamedSkillPassiveStats,
   getConsumableEntry,
   getTacticalEntry,
-} from '../gameDataController';
+} from '../gameDataStore';
 
 // ── Result type ─────────────────────────────────────────────────────────
 

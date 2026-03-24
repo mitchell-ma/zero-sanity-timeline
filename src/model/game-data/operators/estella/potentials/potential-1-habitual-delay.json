@@ -1,0 +1,46 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "MODIFY",
+          "object": "SKILL_PARAMETER",
+          "objectId": "DISTORTION",
+          "with": {
+            "parameterKey": "has_potential1",
+            "value": {
+              "verb": "IS",
+              "value": 1
+            },
+            "parameterModifyType": "UNIQUE_MULTIPLIER"
+          }
+        },
+        {
+          "verb": "MODIFY",
+          "object": "SKILL_PARAMETER",
+          "objectId": "DISTORTION",
+          "with": {
+            "parameterKey": "rate_plus",
+            "value": {
+              "verb": "IS",
+              "value": 3
+            },
+            "parameterModifyType": "UNIQUE_MULTIPLIER"
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "ESTELLA_POTENTIAL_1",
+    "name": "Habitual Delay",
+    "level": 1,
+    "eventType": "POTENTIAL_EVENT",
+    "eventCategoryType": "POTENTIAL",
+    "description": "Combo skill Distortion improved: Physical Susceptibility duration +3s."
+  },
+  "metadata": {
+    "originId": "ESTELLA"
+  }
+}

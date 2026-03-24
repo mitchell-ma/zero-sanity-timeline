@@ -20,7 +20,7 @@ import { EventInterpretorController } from './eventInterpretorController';
 import { PriorityQueue } from './priorityQueue';
 import { TriggerIndex } from './triggerIndex';
 import { ENEMY_OWNER_ID, INFLICTION_COLUMN_IDS, REACTION_COLUMN_IDS, SKILL_COLUMNS } from '../../model/channels';
-import { getAllTriggerAssociations } from '../gameDataController';
+import { getAllTriggerAssociations } from '../gameDataStore';
 import { classifyEvents } from './inputEventController';
 import { initHpTracker, getEnemyHpPercentage, precomputeDamageByFrame } from '../calculation/calculationController';
 import type { HPController } from '../calculation/hpController';

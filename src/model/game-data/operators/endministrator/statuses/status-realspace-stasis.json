@@ -1,0 +1,55 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "PHYSICAL_DAMAGE_TAKEN_BONUS",
+          "to": "ENEMY",
+          "with": {
+            "value": {
+              "verb": "VARY_BY",
+              "object": "TALENT_TWO_LEVEL",
+              "value": [
+                0.1,
+                0.2
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "REALSPACE_STASIS",
+    "name": "Realspace Stasis",
+    "type": "STATUS",
+    "to": "ENEMY",
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": -1
+      },
+      "unit": "SECOND"
+    },
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 1
+      },
+      "interactionType": "RESET"
+    },
+    "eventType": "STATUS",
+    "eventCategoryType": "STATUS",
+    "description": "???"
+  },
+  "metadata": {
+    "originId": "ENDMINISTRATOR",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ]
+  }
+}

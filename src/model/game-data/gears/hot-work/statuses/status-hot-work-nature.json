@@ -1,0 +1,46 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "NATURE_DAMAGE_BONUS",
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": 0.5
+            }
+          },
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "type": "GEAR_SET_STATUS",
+    "id": "HOT_WORK_NATURE",
+    "name": "Hot Work (Nature)",
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": 10
+      },
+      "unit": "SECOND"
+    },
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 1
+      },
+      "interactionType": "RESET"
+    },
+    "description": "Nature DMG +50% for 10s after applying Corrosion. Cannot stack.",
+    "eventType": "STATUS",
+    "eventCategoryType": "GEAR_SET_STATUS"
+  },
+  "metadata": {
+    "originId": "HOT_WORK"
+  }
+}

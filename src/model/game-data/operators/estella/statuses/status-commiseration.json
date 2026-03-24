@@ -1,0 +1,55 @@
+{
+  "clause": [
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "CAST",
+          "object": "ONOMATOPOEIA"
+        }
+      ],
+      "effects": [
+        {
+          "verb": "RECOVER",
+          "object": "SKILL_POINT",
+          "with": {
+            "value": {
+              "verb": "VARY_BY",
+              "object": "TALENT_ONE_LEVEL",
+              "value": [
+                7.5,
+                15
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "COMMISERATION",
+    "name": "Commiseration",
+    "type": "STATUS",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 1
+      },
+      "interactionType": "CONSUME"
+    },
+    "eventType": "STATUS",
+    "eventCategoryType": "STATUS",
+    "description": "When triggering Shatter, the next battle skill Onomatopoeia cast returns 7.5 SP. This effect cannot stack."
+  },
+  "metadata": {
+    "originId": "COMMISERATION_TALENT",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ]
+  }
+}

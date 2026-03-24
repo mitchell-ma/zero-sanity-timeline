@@ -18,7 +18,7 @@ import { COMBAT_SKILL_LABELS, INFLICTION_EVENT_LABELS } from '../../consts/timel
 import { CombatSkillType } from '../../consts/enums';
 import { SKILL_COLUMNS, COMBO_WINDOW_COLUMN_ID, REACTION_COLUMNS } from '../../model/channels';
 import { formatSegmentShortName } from '../../dsl/semanticsTranslation';
-import { getOperatorJson, getAllOperatorIds } from '../../model/event-frames/operatorJsonLoader';
+import { getAllOperatorIds, getEnabledStatusEvents } from '../gameDataStore';
 
 import type { Slot } from './columnBuilder';
 import type { ValidationMaps } from './eventValidationController';
@@ -48,12 +48,10 @@ function getStatusStackInfo(statusName: string): StatusStackInfo | undefined {
   if (!statusStackCache) {
     statusStackCache = new Map();
     for (const opId of getAllOperatorIds()) {
-      const json = getOperatorJson(opId);
-      const statusEvents = json?.statusEvents as { id: string; stacks?: { limit?: { value?: number }; interactionType?: string } }[] | undefined;
-      if (!statusEvents) continue;
+      const statusEvents = getEnabledStatusEvents(opId);
       for (const se of statusEvents) {
-        if (statusStackCache.has(se.id)) continue;
-        const limit = se.stacks?.limit?.value ?? 1;
+        if (!se.id || statusStackCache.has(se.id)) continue;
+        const limit = (se.stacks?.limit as { value?: number } | undefined)?.value ?? 1;
         const verb = se.stacks?.interactionType ?? 'NONE';
         statusStackCache.set(se.id, { instances: limit, verb });
       }

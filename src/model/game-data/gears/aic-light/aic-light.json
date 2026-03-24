@@ -1,0 +1,36 @@
+{
+  "onTriggerClause": [
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "DEFEAT",
+          "object": "ENEMY"
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "AIC_LIGHT"
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "AIC_LIGHT",
+    "name": "AIC Light",
+    "rarity": 2,
+    "piecesRequired": 3,
+    "description": "3-piece set effect: Wearer's HP +{hp_up}. After the wearer defeats an enemy, the wearer gains ATK +{atk_up} for {duration}s.",
+    "eventType": "STATUS",
+    "eventCategoryType": "GEAR_SET_EFFECT"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
+  }
+}

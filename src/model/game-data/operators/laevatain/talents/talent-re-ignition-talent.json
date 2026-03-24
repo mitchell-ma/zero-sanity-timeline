@@ -1,0 +1,46 @@
+{
+  "onTriggerClause": [
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "HP_BELOW",
+          "object": "PERCENTAGE",
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": 40
+            }
+          }
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "RE_IGNITION",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "RE_IGNITION_TALENT",
+    "name": "Re-Ignition (Talent)",
+    "type": "TALENT",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
+    "eventType": "STATUS",
+    "eventCategoryType": "TALENT",
+    "description": "When HP drops below 40%, gain 90% Protection and restore 5% Max HP per second for 4s. This effect triggers once every 120s."
+  },
+  "metadata": {
+    "originId": "LAEVATAIN",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ],
+    "icon": "skills/laevatain_talent_2_icon.png"
+  }
+}

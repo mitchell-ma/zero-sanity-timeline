@@ -10,7 +10,7 @@ import {
   getGearSetEffect,
   getAllConsumableEntries,
   getAllTacticalEntries,
-} from '../../controller/gameDataController';
+} from '../../controller/gameDataStore';
 import { GearCategory } from '../../consts/enums';
 import { LoadoutProperties } from '../InformationPane';
 import { StatField } from './SharedFields';

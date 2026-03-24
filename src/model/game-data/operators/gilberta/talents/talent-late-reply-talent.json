@@ -1,0 +1,65 @@
+{
+  "onTriggerClause": [
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "DEAL",
+          "object": "DAMAGE",
+          "with": {
+            "source": "COMBO_SKILL_OR_BATTLE_SKILL_FINAL",
+            "enemiesHitThreshold": 2
+          }
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "TREATMENT",
+          "toDeterminer": "CONTROLLED",
+          "to": "OPERATOR",
+          "with": {
+            "healBase": {
+              "verb": "VARY_BY",
+              "object": "TALENT_TWO_LEVEL",
+              "value": [
+                72,
+                108
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            },
+            "intellectAdditive": {
+              "verb": "VARY_BY",
+              "object": "TALENT_TWO_LEVEL",
+              "value": [
+                0.6,
+                0.9
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "LATE_REPLY_TALENT",
+    "name": "Late Reply (Talent)",
+    "type": "TALENT",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
+    "eventType": "STATUS",
+    "eventCategoryType": "TALENT",
+    "description": "Battle skill Arcane Staff: Gravity Mode and combo skill Arcane Staff: Matrix Displacement improved: Hitting at least 2 enemies with either the combo skill or the last sequence of the battle skill restores [108 + Intellect×0.90] HP to the controlled operator. If the controlled operator is already at max HP, then restore the HP of the teammate with lowest percentage HP."
+  },
+  "metadata": {
+    "originId": "GILBERTA",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ],
+    "icon": "skills/gilberta_talent_2_icon.png"
+  }
+}

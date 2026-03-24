@@ -5,8 +5,7 @@ import { GearSetType, UnitType } from '../../consts/enums';
 import { GEAR_SET_EFFECTS } from '../../consts/gearSetEffects';
 import type { CustomGearSet } from '../../model/custom/customGearTypes';
 import { VerbType } from '../../dsl/semantics';
-import { registerCustomGearEffectDefs, deregisterCustomGearEffectDefs } from '../../model/game-data/weaponGearEffectLoader';
-import { registerCustomGearPiece as registerPieceInController, deregisterCustomGearPiece as deregisterPieceFromController } from '../../model/game-data/gearPiecesController';
+import { registerCustomGearEffectDefs, deregisterCustomGearEffectDefs, registerCustomGearPiece as registerPieceInController, deregisterCustomGearPiece as deregisterPieceFromController } from '../gameDataStore';
 
 // ── Registration ────────────────────────────────────────────────────────────
 

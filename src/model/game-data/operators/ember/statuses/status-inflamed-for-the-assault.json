@@ -1,0 +1,50 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "PROTECTION",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "VARY_BY",
+              "object": "TALENT_ONE_LEVEL",
+              "value": [
+                0.3,
+                0.5
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "INFLAMED_FOR_THE_ASSAULT",
+    "name": "Inflamed for the Assault",
+    "type": "STATUS",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 1
+      },
+      "interactionType": "RESET"
+    },
+    "eventType": "STATUS",
+    "eventCategoryType": "STATUS",
+    "description": "When casting the battle skill Forward March and the combo skill Frontline Support, Ember gains 50% Protection and is less likely to be interrupted."
+  },
+  "metadata": {
+    "originId": "INFLAMED_FOR_THE_ASSAULT_TALENT",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ]
+  }
+}

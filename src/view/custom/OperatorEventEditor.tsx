@@ -6,7 +6,7 @@
  * Stylistically matches the ClauseEditor tree layout.
  */
 import { useState, useCallback, useMemo } from 'react';
-import { getOperatorJson, getRawSkillTypeMap } from '../../model/event-frames/operatorJsonLoader';
+import { getOperatorSkills, getOperatorStatuses, getRawSkillTypeMap } from '../../controller/gameDataStore';
 import { ALL_OPERATORS } from '../../controller/operators/operatorRegistry';
 import { COMBAT_SKILL_LABELS } from '../../consts/timelineColumnLabels';
 import type { CombatSkillType } from '../../consts/enums';
@@ -73,9 +73,10 @@ export function buildSkillEntries(
   operatorId: string,
   categoryKey: string,
 ): SkillEntryData[] {
-  const opJson = getOperatorJson(operatorId);
-  if (!opJson) return [];
-  const skills = (opJson.skills ?? {}) as Record<string, JsonSkillData>;
+  const opSkills = getOperatorSkills(operatorId);
+  if (!opSkills) return [];
+  const skills: Record<string, JsonSkillData> = {};
+  opSkills.forEach((skill, skillId) => { skills[skillId] = skill.serialize() as JsonSkillData; });
   const skillTypeMap = getRawSkillTypeMap(operatorId);
   const mapping = skillTypeMap[categoryKey];
   if (!mapping) return [];
@@ -117,15 +118,21 @@ export function buildSkillEntries(
 
 export default function OperatorEventEditor({ operatorId, onBack }: Props) {
   const op = ALL_OPERATORS.find((o) => o.id === operatorId);
-  const opJson = useMemo(() => getOperatorJson(operatorId), [operatorId]);
+  const skills = useMemo(() => {
+    const opSkills = getOperatorSkills(operatorId);
+    if (!opSkills) return {} as Record<string, JsonSkillData>;
+    const result: Record<string, JsonSkillData> = {};
+    opSkills.forEach((skill, skillId) => { result[skillId] = skill.serialize() as JsonSkillData; });
+    return result;
+  }, [operatorId]);
+  const statusEvents = useMemo(() => {
+    return getOperatorStatuses(operatorId).map(s => s.serialize() as JsonSkillData);
+  }, [operatorId]);
   const skillTypeMap = useMemo(() => getRawSkillTypeMap(operatorId), [operatorId]);
 
-  if (!op || !opJson) {
+  if (!op || !Object.keys(skills).length) {
     return <div className="oee-empty">Operator not found</div>;
   }
-
-  const skills = (opJson.skills ?? {}) as Record<string, JsonSkillData>;
-  const statusEvents = (opJson.statusEvents ?? []) as JsonSkillData[];
 
   // Group skills by category using skillTypeMap
   const skillCategories = SKILL_CATEGORY_ORDER.map((cat) => {

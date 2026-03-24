@@ -12,7 +12,7 @@ import type { TranslatedEffect } from '../../dsl/semanticsTranslation';
 import { ENEMY_OWNER_ID, OPERATOR_COLUMNS, REACTION_COLUMNS, PHYSICAL_STATUS_COLUMNS, PHYSICAL_STATUS_COLUMN_IDS, FRAGILITY_COLUMN_PREFIX, SKILL_COLUMNS, INFLICTION_COLUMN_IDS, PHYSICAL_INFLICTION_COLUMN_IDS, COMBO_WINDOW_COLUMN_ID } from '../../model/channels';
 import { computeSpReturnSummary, SpReturnSummary } from '../calculation/frameCalculator';
 import { ELECTRIFICATION_ARTS_FRAGILITY, BREACH_PHYSICAL_FRAGILITY, DEFAULT_AMP_BONUS } from '../timeline/eventsQueryService';
-import { getOperatorJson, getComboTriggerInfo } from '../../model/event-frames/operatorJsonLoader';
+import { getOperatorSkill, getSkillTypeMap, getComboTriggerInfo } from '../gameDataStore';
 import { getLastController } from '../timeline/eventQueueController';
 
 // ── JSON Skill Data Shapes ──────────────────────────────────────────────────
@@ -595,13 +595,11 @@ export function resolveEventDsl(
   potential = 0,
 ): EventDslData | null {
   if (!operatorId) return null;
-  const json = getOperatorJson(operatorId);
-  if (!json?.skills) return null;
+  const skillObj = getOperatorSkill(operatorId, skillName);
+  if (!skillObj) return null;
 
-  // Look up skill data directly by skill ID
-  const skills = json.skills as Record<string, JsonSkill>;
-  const skillCat = skills[skillName] as JsonSkill | undefined;
-  if (!skillCat) return null;
+  // Serialize to get raw JSON shape for DSL resolution
+  const skillCat = skillObj.serialize() as unknown as JsonSkill;
 
   const predicates: ResolvedPredicate[] = [];
   const triggerPredicates: ResolvedPredicate[] = [];
@@ -739,20 +737,17 @@ export function resolveEventFullDetail(
   skillName: string,
 ): EventFullDetail | null {
   if (!operatorId) return null;
-  const json = getOperatorJson(operatorId);
-  if (!json?.skills) return null;
+  const skillObj = getOperatorSkill(operatorId, skillName);
+  if (!skillObj) return null;
 
-  const skills = json.skills as Record<string, JsonSkill> & { skillTypeMap?: Record<string, string> };
-  const skillCat = skills[skillName] as JsonSkill | undefined;
-  if (!skillCat) return null;
+  // Serialize to get raw JSON shape for full detail resolution
+  const skillCat = skillObj.serialize() as unknown as JsonSkill;
 
   // Find which skill type maps to this skill
-  const skillTypeMap = skills.skillTypeMap;
+  const typeMap = getSkillTypeMap(operatorId);
   let skillTypeMapping: string | null = null;
-  if (skillTypeMap) {
-    for (const [type, id] of Object.entries(skillTypeMap)) {
-      if (id === skillName) { skillTypeMapping = type; break; }
-    }
+  for (const [type, id] of Object.entries(typeMap)) {
+    if (id === skillName) { skillTypeMapping = type; break; }
   }
 
   const segments: EventFullDetail['segments'] = [];

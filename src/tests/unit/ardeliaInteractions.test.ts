@@ -60,32 +60,11 @@
 import { TimelineEvent } from '../../consts/viewTypes';
 import { SegmentType, TimeDependency } from '../../consts/enums';
 import { SKILL_COLUMNS, ENEMY_OWNER_ID, COMBO_WINDOW_COLUMN_ID } from '../../model/channels';
-import { buildSequencesFromOperatorJson, DataDrivenSkillEventSequence } from '../../model/event-frames/dataDrivenEventFrames';
+import { buildSequencesFromOperatorJson, DataDrivenSkillEventSequence } from '../../controller/gameDataStore';
 import { wouldOverlapSiblings } from '../../controller/timeline/eventValidator';
 import { processCombatSimulation } from '../../controller/timeline/eventQueueController';
 import { SlotTriggerWiring } from '../../controller/timeline/eventQueueTypes';
 
-jest.mock('../../model/event-frames/operatorJsonLoader', () => ({
-  getOperatorJson: () => undefined, getAllOperatorIds: () => [],
-  getFrameSequences: () => [], getSkillIds: () => new Set(), getSkillTypeMap: () => ({}), resolveSkillType: () => null,
-  getSegmentLabels: () => undefined, getSkillTimings: () => undefined,
-  getUltimateEnergyCost: () => 0, getSkillGaugeGains: () => undefined,
-  getBattleSkillSpCost: () => undefined, getSkillCategoryData: () => undefined,
-  getBasicAttackDurations: () => undefined,
-  getComboTriggerClause: (id: string) => id === 'ardelia'
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    ? require('../../model/game-data/operator-skills/ardelia-skills.json').ERUPTION_COLUMN.onTriggerClause
-    : undefined,
-  getComboTriggerInfo: (id: string) => {
-    if (id !== 'ardelia') return undefined;
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const skill = require('../../model/game-data/operator-skills/ardelia-skills.json').ERUPTION_COLUMN;
-    const onTriggerClause = skill.onTriggerClause;
-    return { onTriggerClause, description: skill.properties?.description ?? '', windowFrames: skill.properties?.windowFrames ?? 720 };
-  },
-  getExchangeStatusConfig: () => ({}),
-  getExchangeStatusIds: () => new Set(),
-}));
 jest.mock('../../model/game-data/weaponGameData', () => ({
   getSkillValues: () => [], getConditionalValues: () => [],
   getConditionalScalar: () => null, getBaseAttackForLevel: () => 0,
@@ -106,9 +85,10 @@ jest.mock('../../view/InformationPane', () => ({
 
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const mockOperatorJson = require('../../model/game-data/operators/ardelia-operator.json');
+const mockOperatorJson = require('../../model/game-data/operators/ardelia/ardelia.json');
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const mockSkillsJson = require('../../model/game-data/operator-skills/ardelia-skills.json');
+const { loadSkillsJson: _loadArdeliaSkills } = require('../helpers/loadGameData');
+const mockSkillsJson = _loadArdeliaSkills('ardelia');
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- JSON require() data; downstream tests assert structure
 const ardeliaSkills: Record<string, any> = {};

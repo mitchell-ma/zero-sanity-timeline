@@ -29,35 +29,6 @@ import { ComboSkillEventController } from '../../controller/timeline/comboSkillE
 import { processCombatSimulation } from '../../controller/timeline/eventQueueController';
 import { SlotTriggerWiring } from '../../controller/timeline/eventQueueTypes';
 
-function mockGetSkillFromJson(id: string) {
-  const map: Record<string, { file: string; skillId: string }> = {
-    antal: { file: '../../model/game-data/operator-skills/antal-skills.json', skillId: 'EMP_TEST_SITE' },
-    laevatain: { file: '../../model/game-data/operator-skills/laevatain-skills.json', skillId: 'SEETHE' },
-    akekuri: { file: '../../model/game-data/operator-skills/akekuri-skills.json', skillId: 'FLASH_AND_DASH' },
-  };
-  const entry = map[id];
-  if (!entry) return undefined;
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  return require(entry.file)[entry.skillId];
-}
-
-jest.mock('../../model/event-frames/operatorJsonLoader', () => ({
-  getOperatorJson: () => undefined, getAllOperatorIds: () => [],
-  getFrameSequences: () => [], getSkillIds: () => new Set(), getSkillTypeMap: () => ({}), resolveSkillType: () => null,
-  getSegmentLabels: () => undefined, getSkillTimings: () => undefined,
-  getUltimateEnergyCost: () => 0, getSkillGaugeGains: () => undefined,
-  getBattleSkillSpCost: () => undefined, getSkillCategoryData: () => undefined,
-  getBasicAttackDurations: () => undefined,
-  getComboTriggerClause: (id: string) => mockGetSkillFromJson(id)?.onTriggerClause,
-  getComboTriggerInfo: (id: string) => {
-    const skill = mockGetSkillFromJson(id);
-    const onTriggerClause = skill?.onTriggerClause;
-    if (!onTriggerClause?.length) return undefined;
-    return { onTriggerClause, description: skill?.properties?.description ?? '', windowFrames: skill?.properties?.windowFrames ?? 720 };
-  },
-  getExchangeStatusConfig: () => ({}),
-  getExchangeStatusIds: () => new Set(),
-}));
 jest.mock('../../model/game-data/weaponGameData', () => ({
   getSkillValues: () => [], getConditionalValues: () => [],
   getConditionalScalar: () => null, getBaseAttackForLevel: () => 0,

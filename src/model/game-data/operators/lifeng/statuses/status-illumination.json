@@ -1,0 +1,50 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "ATTACK_BONUS",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "VARY_BY",
+              "object": "TALENT_ONE_LEVEL",
+              "value": [
+                0.001,
+                0.0015
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            },
+            "scalingAttribute": {
+              "verb": "IS",
+              "value": [
+                "INTELLECT",
+                "WILL"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "ILLUMINATION",
+    "name": "Illumination",
+    "type": "STATUS",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
+    "eventType": "STATUS",
+    "eventCategoryType": "STATUS",
+    "description": "Talent Illumination improved: Every point in the attributes of Intellect and Will grants Lifeng an additional ATK +."
+  },
+  "metadata": {
+    "originId": "LIFENG",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ]
+  }
+}

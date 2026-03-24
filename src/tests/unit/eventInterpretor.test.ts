@@ -21,18 +21,6 @@ import type { Effect } from '../../dsl/semantics';
 
 // ── Mock require.context before importing modules that use it ────────────
 
-jest.mock('../../model/event-frames/operatorJsonLoader', () => ({
-  getOperatorJson: () => null,
-  getSkillIds: () => new Set(),
-  getAllOperatorIds: () => [],
-  getSkillTypeMap: () => ({}),
-  getExchangeStatusConfig: () => ({}),
-  getExchangeStatusIds: () => new Set(),
-}));
-jest.mock('../../model/game-data/weaponGearEffectLoader', () => ({
-  getWeaponEffectDefs: () => [],
-  getGearEffectDefs: () => [],
-}));
 jest.mock('../../model/game-data/weaponGameData', () => ({
   getSkillValues: () => [], getConditionalValues: () => [],
   getConditionalScalar: () => null, getBaseAttackForLevel: () => 0,
@@ -256,7 +244,10 @@ describe('EventInterpretorController: CONSUME', () => {
 
     interp.interpret(effect, ctx);
     expect(consoleSpy).toHaveBeenCalledWith(
-      expect.stringContaining('implicit stacks'),
+      expect.stringContaining('missing with.stacks'),
+      expect.any(String),
+      expect.any(String),
+      expect.any(String),
     );
     consoleSpy.mockRestore();
   });

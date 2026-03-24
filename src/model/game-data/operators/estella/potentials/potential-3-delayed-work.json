@@ -1,0 +1,46 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "MODIFY",
+          "object": "SKILL_PARAMETER",
+          "objectId": "ONOMATOPOEIA",
+          "with": {
+            "parameterKey": "distance",
+            "value": {
+              "verb": "IS",
+              "value": 12
+            },
+            "parameterModifyType": "UNIQUE_MULTIPLIER"
+          }
+        },
+        {
+          "verb": "MODIFY",
+          "object": "SKILL_PARAMETER",
+          "objectId": "ONOMATOPOEIA",
+          "with": {
+            "parameterKey": "dmg_up",
+            "value": {
+              "verb": "IS",
+              "value": 0.4
+            },
+            "parameterModifyType": "UNIQUE_MULTIPLIER"
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "ESTELLA_POTENTIAL_3",
+    "name": "Delayed Work",
+    "level": 3,
+    "eventType": "POTENTIAL_EVENT",
+    "eventCategoryType": "POTENTIAL",
+    "description": "Battle skill Onomatopoeia improved: Freezing sound wave range +50% and DMG Dealt +40% to the first enemy hit."
+  },
+  "metadata": {
+    "originId": "ESTELLA"
+  }
+}

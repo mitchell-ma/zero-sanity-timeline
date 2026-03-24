@@ -1,0 +1,88 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "ARTS_DAMAGE_BONUS",
+          "toDeterminer": "OTHER",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "VARY_BY",
+              "object": "SKILL_LEVEL",
+              "value": [
+                0.12,
+                0.144,
+                0.168,
+                0.192,
+                0.216,
+                0.24,
+                0.264,
+                0.288,
+                0.336
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            }
+          }
+        },
+        {
+          "verb": "APPLY",
+          "object": "NATURE_DAMAGE_BONUS",
+          "toDeterminer": "OTHER",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "VARY_BY",
+              "object": "SKILL_LEVEL",
+              "value": [
+                0.16,
+                0.192,
+                0.224,
+                0.256,
+                0.288,
+                0.32,
+                0.352,
+                0.384,
+                0.448
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "DELIVERY_GUARANTEED_DUTY_FULFILLED",
+    "name": "Duty Fulfilled",
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": 15
+      },
+      "unit": "SECOND"
+    },
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 1
+      },
+      "interactionType": "RESET"
+    },
+    "to": "OPERATOR",
+    "toDeterminer": "OTHER",
+    "eventType": "STATUS",
+    "eventCategoryType": "WEAPON_STATUS",
+    "description": "Nature DMG Dealt +{nature_dmg_up:0.0%}. After the wielder's combo skill applies Lifted, the team gains Arts DMG Dealt +{spell_dmg_up:0.0%} for {duration:0}s. For every enemy Lifted, the team gains bonus Arts DMG Dealt +{spell_dmg_up2:0.0%}, up to a max of +{spell_dmg_up2*max_stack:0.0%}. Effects of the same name cannot stack."
+  },
+  "metadata": {
+    "originId": "DELIVERY_GUARANTEED",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ]
+  }
+}

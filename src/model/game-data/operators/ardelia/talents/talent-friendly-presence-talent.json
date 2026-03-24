@@ -1,0 +1,61 @@
+{
+  "onTriggerClause": [
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "HIT_WITH",
+          "object": "BATTLE_SKILL"
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "TREATMENT",
+          "toDeterminer": "CONTROLLED",
+          "to": "OPERATOR",
+          "with": {
+            "healBase": {
+              "verb": "VARY_BY",
+              "object": "TALENT_ONE_LEVEL",
+              "value": [
+                63,
+                90
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            },
+            "willAdditive": {
+              "verb": "VARY_BY",
+              "object": "TALENT_ONE_LEVEL",
+              "value": [
+                0.53,
+                0.75
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "FRIENDLY_PRESENCE_TALENT",
+    "name": "Friendly Presence (Talent)",
+    "type": "TALENT",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
+    "eventType": "STATUS",
+    "eventCategoryType": "TALENT",
+    "description": "The battle skill Dolly Rush creates 3 Shadows of Mr. Dolly after hitting the enemy. The copies of Mr. Dolly scattered by the ultimate Wooly Party also have a 10% chance to create Shadows of Mr. Dolly when they fall to the ground. When the controlled operator touches a Shadow of Mr. Dolly, Ardelia restores the said operator's HP by [63 + Will×0.53]. If the controlled operator is already at max HP, then restore the HP of the teammate with lowest percentage HP. Shadows of Mr. Dolly last for 10s and up to 10 can exist in the battlefield."
+  },
+  "metadata": {
+    "originId": "ARDELIA",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ],
+    "icon": "skills/ardelia_talent_1_icon.png"
+  }
+}

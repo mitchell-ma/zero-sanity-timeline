@@ -1,0 +1,46 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "MODIFY",
+          "object": "SKILL_PARAMETER",
+          "objectId": "CHOP_N_DUNK",
+          "with": {
+            "parameterKey": "talent_1_stack",
+            "value": {
+              "verb": "IS",
+              "value": 1
+            },
+            "parameterModifyType": "ADDITIVE"
+          }
+        },
+        {
+          "verb": "MODIFY",
+          "object": "SKILL_PARAMETER",
+          "objectId": "CHOP_N_DUNK",
+          "with": {
+            "parameterKey": "talent_1_duration",
+            "value": {
+              "verb": "IS",
+              "value": 10
+            },
+            "parameterModifyType": "ADDITIVE"
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "DA-PAN_POTENTIAL_2",
+    "name": "Harmonized Flavors",
+    "level": 2,
+    "eventType": "POTENTIAL_EVENT",
+    "eventCategoryType": "POTENTIAL",
+    "description": "Talent Salty or Mild improved: Prep Ingredients buff duration +10s, max stacks +1."
+  },
+  "metadata": {
+    "originId": "DA-PAN"
+  }
+}

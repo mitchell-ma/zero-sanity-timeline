@@ -1,0 +1,33 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "MODIFY",
+          "object": "SKILL_PARAMETER",
+          "objectId": "TEMPESTUOUS_ARC",
+          "with": {
+            "parameterKey": "pulse_up",
+            "value": {
+              "verb": "IS",
+              "value": 1.3
+            },
+            "parameterModifyType": "MULTIPLICATIVE"
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "ARCLIGHT_POTENTIAL_3",
+    "name": "\"Hanna\"",
+    "level": 3,
+    "eventType": "POTENTIAL_EVENT",
+    "eventCategoryType": "POTENTIAL",
+    "description": "Talent Wildland Trekker improved: DMG Boost effect increased to 1.3 times the original."
+  },
+  "metadata": {
+    "originId": "ARCLIGHT"
+  }
+}

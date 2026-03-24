@@ -1,0 +1,232 @@
+{
+  "activationClause": [
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "IS",
+          "object": "CONTROLLED"
+        }
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT"
+      },
+      "properties": {
+        "segmentTypes": [
+          "ANIMATION"
+        ],
+        "name": "Animation",
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 2.07
+          },
+          "unit": "SECOND"
+        },
+        "timeDependency": "REAL_TIME",
+        "timeInteractionType": "TIME_STOP"
+      },
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "IGNORE",
+              "object": "ULTIMATE_ENERGY",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR"
+            },
+            {
+              "verb": "ENABLE",
+              "adjective": "ENHANCED",
+              "object": "BATK",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR"
+            },
+            {
+              "verb": "DISABLE",
+              "adjective": "NORMAL",
+              "object": "BATK",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR"
+            },
+            {
+              "verb": "DISABLE",
+              "object": "FINISHER",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR"
+            }
+          ]
+        }
+      ],
+      "frames": []
+    },
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT"
+      },
+      "properties": {
+        "segmentTypes": [
+          "STASIS"
+        ],
+        "name": "Stasis",
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 0.3
+          },
+          "unit": "SECOND"
+        }
+      },
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "ENABLE",
+              "adjective": "ENHANCED",
+              "object": "BATK",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR"
+            },
+            {
+              "verb": "DISABLE",
+              "adjective": "NORMAL",
+              "object": "BATK",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR"
+            },
+            {
+              "verb": "ENABLE",
+              "adjective": "ENHANCED",
+              "object": "BATTLE_SKILL",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR"
+            },
+            {
+              "verb": "DISABLE",
+              "adjective": "NORMAL",
+              "object": "BATTLE_SKILL",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR"
+            },
+            {
+              "verb": "DISABLE",
+              "adjective": "EMPOWERED",
+              "object": "BATTLE_SKILL",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR"
+            },
+            {
+              "verb": "DISABLE",
+              "object": "FINISHER",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR"
+            }
+          ]
+        }
+      ],
+      "frames": []
+    },
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT"
+      },
+      "properties": {
+        "segmentTypes": [
+          "ACTIVE"
+        ],
+        "name": "Twilight",
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 15
+          },
+          "unit": "SECOND"
+        }
+      },
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "ENABLE",
+              "adjective": "ENHANCED",
+              "object": "BATK",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR"
+            },
+            {
+              "verb": "DISABLE",
+              "adjective": "NORMAL",
+              "object": "BATK",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR"
+            },
+            {
+              "verb": "ENABLE",
+              "adjective": "ENHANCED",
+              "object": "BATTLE_SKILL",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR"
+            },
+            {
+              "verb": "DISABLE",
+              "adjective": "NORMAL",
+              "object": "BATTLE_SKILL",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR"
+            },
+            {
+              "verb": "DISABLE",
+              "adjective": "EMPOWERED",
+              "object": "BATTLE_SKILL",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR"
+            },
+            {
+              "verb": "DISABLE",
+              "object": "FINISHER",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR"
+            }
+          ]
+        }
+      ],
+      "frames": []
+    }
+  ],
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "CONSUME",
+          "object": "ULTIMATE_ENERGY",
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": 300
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "name": "Twilight",
+    "description": "Laevatain summons her Sviga Lævi and becomes the controlled operator. \nFor a certain duration, her basic attacks (BATK) are enhanced and the Sviga Lævi strikes together with Laevatain, with each attack dealing Heat DMG. BATK sequence 3 also applies Heat Infliction.",
+    "eventType": "COMBAT_SKILL",
+    "eventCategoryType": "ULTIMATE_SKILL"
+  },
+  "metadata": {
+    "originId": "LAEVATAIN",
+    "id": "TWILIGHT",
+    "icon": "skills/ult_laevatain.png"
+  }
+}

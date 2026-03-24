@@ -977,7 +977,7 @@ export function getWithProperties(verb: VerbType, object: ObjectType, objectId?:
   // For STATUS with a specific objectId, merge dynamic properties from configs
   if (object === ObjectType.STATUS && objectId) {
     // Lazy import to avoid circular deps
-    const { getStatusWithProperties } = require('../model/event-frames/operatorJsonLoader');
+    const { getStatusWithProperties } = require('../controller/gameDataStore');
     const dynamicProps = getStatusWithProperties(objectId) as string[];
     if (dynamicProps.length > 0) {
       const merged = new Set([...staticProps, ...dynamicProps]);

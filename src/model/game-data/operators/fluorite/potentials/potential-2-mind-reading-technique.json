@@ -1,0 +1,33 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "MODIFY",
+          "object": "SKILL_PARAMETER",
+          "objectId": "chr_0022_bounda_talent_2",
+          "with": {
+            "parameterKey": "probability",
+            "value": {
+              "verb": "IS",
+              "value": 0.1
+            },
+            "parameterModifyType": "ADDITIVE"
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "FLUORITE_POTENTIAL_2",
+    "name": "Mind Reading Technique",
+    "level": 2,
+    "eventType": "POTENTIAL_EVENT",
+    "eventCategoryType": "POTENTIAL",
+    "description": "Talent Unpredictable improved: Chance to ignore Arts DMG +10%."
+  },
+  "metadata": {
+    "originId": "FLUORITE"
+  }
+}

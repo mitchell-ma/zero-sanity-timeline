@@ -1,0 +1,13 @@
+{
+  "properties": {
+    "id": "ENDMINISTRATOR_POTENTIAL_5",
+    "name": "???",
+    "level": 5,
+    "eventType": "POTENTIAL_EVENT",
+    "eventCategoryType": "POTENTIAL",
+    "description": "???"
+  },
+  "metadata": {
+    "originId": "ENDMINISTRATOR"
+  }
+}

@@ -12,60 +12,6 @@ import { computeStatusViewOverrides } from '../../controller/timeline/eventPrese
 import { TimelineEvent, Column, MiniTimeline } from '../../consts/viewTypes';
 import { TimelineSourceType } from '../../consts/enums';
 
-jest.mock('../../model/event-frames/operatorJsonLoader', () => {
-  const mockStatusEvents: Record<string, Record<string, unknown>[]> = {
-    laevatain: [
-      {
-        id: 'MELTING_FLAME',
-        name: 'Melting Flame',
-        element: 'HEAT',
-        stacks: {
-          limit: { value: 4 },
-          interactionType: 'NONE',
-        },
-        onTriggerClause: [],
-      },
-      {
-        id: 'SCORCHING_HEART_EFFECT',
-        name: 'Scorching Heart',
-        element: 'HEAT',
-        stacks: {
-          limit: { value: 1 },
-          interactionType: 'RESET',
-        },
-        onTriggerClause: [],
-        properties: { duration: { value: { verb: 'IS', value: 20 }, unit: 'SECOND' } },
-      },
-    ],
-    antal: [
-      {
-        id: 'FOCUS',
-        name: 'Focus',
-        stacks: {
-          limit: { value: 1 },
-          interactionType: 'RESET',
-        },
-        onTriggerClause: [],
-        properties: { duration: { value: { verb: 'IS', value: 20 }, unit: 'SECOND' } },
-      },
-    ],
-  };
-  return {
-    getOperatorJson: (id: string) => {
-      const statuses = mockStatusEvents[id];
-      return statuses ? { statusEvents: statuses } : undefined;
-    },
-    getAllOperatorIds: () => Object.keys(mockStatusEvents),
-    getFrameSequences: () => [], getSkillIds: () => new Set(), getSkillTypeMap: () => ({}), resolveSkillType: () => null,
-    getSegmentLabels: () => undefined, getSkillTimings: () => undefined,
-    getUltimateEnergyCost: () => 0, getSkillGaugeGains: () => undefined,
-    getBattleSkillSpCost: () => undefined, getSkillCategoryData: () => undefined,
-    getBasicAttackDurations: () => undefined,
-    getComboTriggerClause: () => undefined,
-    getExchangeStatusConfig: () => ({}),
-    getExchangeStatusIds: () => new Set(),
-  };
-});
 jest.mock('../../model/game-data/weaponGameData', () => ({
   getSkillValues: () => [], getConditionalValues: () => [],
   getConditionalScalar: () => null, getBaseAttackForLevel: () => 0,

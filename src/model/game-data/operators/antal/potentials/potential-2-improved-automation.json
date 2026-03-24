@@ -1,0 +1,32 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "MODIFY",
+          "object": "SKILL_COST",
+          "objectId": "OVERCLOCKED_MOMENT",
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": 0.9
+            },
+            "parameterType": 1
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "ANTAL_POTENTIAL_2",
+    "name": "Improved Automation",
+    "level": 2,
+    "eventType": "POTENTIAL_EVENT",
+    "eventCategoryType": "POTENTIAL",
+    "description": "Ultimate Overclocked Moment improved: Ultimate Energy cost -10%."
+  },
+  "metadata": {
+    "originId": "ANTAL"
+  }
+}

@@ -12,7 +12,7 @@ import { StatusDamageParams } from '../../model/calculation/damageFormulas';
 import { getModelEnemy } from './enemyRegistry';
 import { getSkillMultiplier, getFrameMultiplier } from './jsonMultiplierEngine';
 import { evaluateTalentBonuses, evaluateTalentAttackBonus } from './talentBonusEngine';
-import { getOperatorJson } from '../../model/event-frames/operatorJsonLoader';
+import { getOperatorBase } from '../gameDataStore';
 import { aggregateLoadoutStats } from './loadoutAggregator';
 import { OperatorLoadoutState, EMPTY_LOADOUT } from '../../view/OperatorLoadoutHeader';
 import {
@@ -556,8 +556,8 @@ export function buildDamageTableRows(
     const evProps = loadoutStats[ev.ownerId] ?? DEFAULT_LOADOUT_PROPERTIES;
     const evPotential = (evProps.operator.potential ?? 5) as Potential;
 
-    const json = getOperatorJson(oid);
-    const talentEffects = (json?.talentEffects ?? []) as { bonusType: string; name: string; label?: string; source: string; minPotential?: number; minLevel?: number; values: number[]; condition?: { skillType?: string | string[] }; waveCount?: number[] }[];
+    const opBase = getOperatorBase(oid);
+    const talentEffects = (opBase?.talentEffects ?? []) as { bonusType: string; name: string; label?: string; source: string; minPotential?: number; minLevel?: number; values: number[]; condition?: { skillType?: string | string[] }; waveCount?: number[] }[];
     const evCategory = columnIdToSkillType(ev.columnId);
 
     const col = colLookup.get(`${ev.ownerId}-${ev.columnId}`);

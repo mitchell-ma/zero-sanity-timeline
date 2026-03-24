@@ -1,0 +1,46 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "MODIFY",
+          "object": "SKILL_PARAMETER",
+          "objectId": "TURBID_AVATAR",
+          "with": {
+            "parameterKey": "phy_resist_down",
+            "value": {
+              "verb": "IS",
+              "value": 0.05
+            },
+            "parameterModifyType": "ADDITIVE"
+          }
+        },
+        {
+          "verb": "MODIFY",
+          "object": "SKILL_PARAMETER",
+          "objectId": "TURBID_AVATAR",
+          "with": {
+            "parameterKey": "num",
+            "value": {
+              "verb": "IS",
+              "value": 2
+            },
+            "parameterModifyType": "UNIQUE_MULTIPLIER"
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "LIFENG_POTENTIAL_1",
+    "name": "Breaking the Obsession",
+    "level": 1,
+    "eventType": "POTENTIAL_EVENT",
+    "eventCategoryType": "POTENTIAL",
+    "description": "Battle skill Turbid Avatar improved: Physical Susceptibility +5%; also triggers this additional effect to enemies with no more than 2 Vulnerability stacks."
+  },
+  "metadata": {
+    "originId": "LIFENG"
+  }
+}

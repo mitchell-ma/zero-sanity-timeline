@@ -1,0 +1,51 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "DAMAGE_BONUS",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": 0.2
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "CHEN_QIANYU_POTENTIAL1_SHADOWLESS",
+    "name": "Shadowless",
+    "type": "POTENTIAL_STATUS",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": -1
+      },
+      "unit": "SECOND"
+    },
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 1
+      },
+      "interactionType": "RESET"
+    },
+    "eventType": "STATUS",
+    "eventCategoryType": "POTENTIAL_STATUS",
+    "description": "DMG Dealt +20% to enemies below 50% HP."
+  },
+  "metadata": {
+    "originId": "CHEN_QIANYU",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ]
+  }
+}

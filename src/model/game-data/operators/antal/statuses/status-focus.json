@@ -1,0 +1,105 @@
+{
+  "segments": [
+    {
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 60
+          },
+          "unit": "SECOND"
+        },
+        "name": "Focus"
+      },
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "adjective": "ELECTRIC",
+              "object": "SUSCEPTIBILITY",
+              "to": "TARGET",
+              "with": {
+                "value": {
+                  "verb": "VARY_BY",
+                  "object": "SKILL_LEVEL",
+                  "value": [
+                    0.05,
+                    0.05,
+                    0.06,
+                    0.06,
+                    0.07,
+                    0.07,
+                    0.08,
+                    0.08,
+                    0.08,
+                    0.09,
+                    0.09,
+                    0.1
+                  ],
+                  "ofDeterminer": "THIS",
+                  "of": "OPERATOR"
+                }
+              }
+            },
+            {
+              "verb": "APPLY",
+              "adjective": "HEAT",
+              "object": "SUSCEPTIBILITY",
+              "to": "TARGET",
+              "with": {
+                "value": {
+                  "verb": "VARY_BY",
+                  "object": "SKILL_LEVEL",
+                  "value": [
+                    0.05,
+                    0.05,
+                    0.06,
+                    0.06,
+                    0.07,
+                    0.07,
+                    0.08,
+                    0.08,
+                    0.08,
+                    0.09,
+                    0.09,
+                    0.1
+                  ],
+                  "ofDeterminer": "THIS",
+                  "of": "OPERATOR"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "FOCUS",
+    "name": "Focus",
+    "target": "ENEMY",
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 1
+      },
+      "interactionType": "RESET"
+    },
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": 60
+      },
+      "unit": "SECOND"
+    },
+    "eventType": "STATUS",
+    "type": "SKILL_STATUS",
+    "eventCategoryType": "SKILL_STATUS",
+    "description": "Applies Focus with a long duration on the enemy and deals Electric DMG. An enemy with an active Focus also suffers Electric Susceptibility and Heat Susceptibility. Focus can only be applied to 1 enemy at any given time."
+  },
+  "metadata": {
+    "originId": "SPECIFIED_RESEARCH_SUBJECT"
+  }
+}

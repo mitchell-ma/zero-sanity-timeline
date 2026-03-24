@@ -10,25 +10,6 @@ import { SKILL_COLUMNS } from '../../model/channels';
 import { FPS } from '../../utils/timeline';
 import { findClauseTriggerMatches } from '../../controller/timeline/triggerMatch';
 
-jest.mock('../../model/event-frames/operatorJsonLoader', () => ({
-  getOperatorJson: () => undefined,
-  getAllOperatorIds: () => [],
-  getSkillIds: () => new Set<string>(),
-  getSkillTypeMap: () => ({}),
-  resolveSkillType: () => null,
-  getFrameSequences: () => [],
-  getSegmentLabels: () => undefined,
-  getSkillTimings: () => undefined,
-  getUltimateEnergyCost: () => 0,
-  getSkillGaugeGains: () => undefined,
-  getBattleSkillSpCost: () => undefined,
-  getSkillCategoryData: () => undefined,
-  getBasicAttackDurations: () => undefined,
-  getComboTriggerClause: () => undefined,
-  getExchangeStatusConfig: () => ({}),
-  getExchangeStatusIds: () => new Set(),
-}));
-
 jest.mock('../../view/InformationPane', () => ({
   DEFAULT_LOADOUT_PROPERTIES: {},
   getDefaultLoadoutProperties: () => ({}),

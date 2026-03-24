@@ -1,0 +1,33 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "MODIFY",
+          "object": "SKILL_PARAMETER",
+          "objectId": "chr_0015_lifeng_talent_1",
+          "with": {
+            "parameterKey": "atk_up",
+            "value": {
+              "verb": "IS",
+              "value": 0.0005
+            },
+            "parameterModifyType": "ADDITIVE"
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "LIFENG_POTENTIAL_3",
+    "name": "Spiritual Cultivation",
+    "level": 3,
+    "eventType": "POTENTIAL_EVENT",
+    "eventCategoryType": "POTENTIAL",
+    "description": "Talent Illumination improved: Every point in the attributes of Intellect and Will grants Lifeng an additional ATK +0.05%."
+  },
+  "metadata": {
+    "originId": "LIFENG"
+  }
+}

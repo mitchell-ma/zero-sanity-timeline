@@ -1,0 +1,82 @@
+{
+  "properties": {
+    "enhancementTypes": [
+      "DIVE"
+    ],
+    "name": "Hypothermic Assault (Dive)",
+    "description": "Basic attack performed in mid-air becomes a dive attack that deals Physical DMG to nearby enemies.",
+    "eventType": "COMBAT_SKILL",
+    "eventCategoryType": "BASIC_ATTACK",
+    "element": "PHYSICAL"
+  },
+  "metadata": {
+    "originId": "SNOWSHINE",
+    "id": "HYPOTHERMIC_ASSAULT_DIVE",
+    "icon": "skills/attack_greatsword.png"
+  },
+  "segments": [
+    {
+      "frames": [
+        {
+          "metadata": {
+            "eventComponentType": "FRAME"
+          },
+          "properties": {
+            "offset": {
+              "value": 1,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "adjective": "PHYSICAL",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "DAMAGE_MULTIPLIER": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.8,
+                        0.88,
+                        0.96,
+                        1.04,
+                        1.12,
+                        1.2,
+                        1.28,
+                        1.36,
+                        1.44,
+                        1.54,
+                        1.66,
+                        1.8
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "frameTypes": [
+            "DIVE"
+          ]
+        }
+      ],
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 1
+          },
+          "unit": "SECOND"
+        },
+        "element": "PHYSICAL"
+      }
+    }
+  ]
+}

@@ -1,0 +1,70 @@
+{
+  "properties": {
+    "enhancementTypes": [
+      "EMPOWERED"
+    ],
+    "eventType": "COMBAT_SKILL",
+    "eventCategoryType": "BATTLE_SKILL"
+  },
+  "segments": [
+    {
+      "frames": [
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "END_AXIS"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 0.9,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "RECOVER",
+                  "object": "SKILL_POINT",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 10
+                    }
+                  }
+                },
+                {
+                  "verb": "DEAL",
+                  "object": "STAGGER",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 10
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 1.67
+          },
+          "unit": "SECOND"
+        }
+      }
+    }
+  ],
+  "metadata": {
+    "id": "UNCONVENTIONAL_LURE_EMPOWERED",
+    "icon": "skills/skill_alesh.png"
+  }
+}

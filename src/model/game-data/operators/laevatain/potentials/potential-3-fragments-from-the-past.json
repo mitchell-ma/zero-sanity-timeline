@@ -1,0 +1,72 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "MODIFY",
+          "object": "SKILL_PARAMETER",
+          "objectId": "SMOULDERING_FIRE",
+          "with": {
+            "parameterKey": "DURATION",
+            "value": {
+              "verb": "IS",
+              "value": 1.5
+            },
+            "parameterModifyType": "MULTIPLICATIVE"
+          }
+        },
+        {
+          "verb": "MODIFY",
+          "object": "SKILL_PARAMETER",
+          "objectId": "SMOULDERING_FIRE",
+          "with": {
+            "parameterKey": "EXTRA_SCALING",
+            "value": {
+              "verb": "IS",
+              "value": 1.5
+            },
+            "parameterModifyType": "UNIQUE_MULTIPLIER"
+          }
+        },
+        {
+          "verb": "MODIFY",
+          "object": "SKILL_PARAMETER",
+          "objectId": "SMOULDERING_FIRE_ENHANCED",
+          "with": {
+            "parameterKey": "DURATION",
+            "value": {
+              "verb": "IS",
+              "value": 1.5
+            },
+            "parameterModifyType": "MULTIPLICATIVE"
+          }
+        },
+        {
+          "verb": "MODIFY",
+          "object": "SKILL_PARAMETER",
+          "objectId": "SMOULDERING_FIRE_ENHANCED",
+          "with": {
+            "parameterKey": "EXTRA_SCALING",
+            "value": {
+              "verb": "IS",
+              "value": 1.5
+            },
+            "parameterModifyType": "UNIQUE_MULTIPLIER"
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "LAEVATAIN_POTENTIAL_3",
+    "name": "Fragments from the Past",
+    "level": 3,
+    "eventType": "POTENTIAL_EVENT",
+    "eventCategoryType": "POTENTIAL",
+    "description": "Battle skill Smouldering Fire improved: Duration of the Combustion applied by the skill is increased by {duration-1:0%}. DMG of the Combustion applied by the skills is increased to 1.5 times the original."
+  },
+  "metadata": {
+    "originId": "LAEVATAIN"
+  }
+}
