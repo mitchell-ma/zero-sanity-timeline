@@ -1,5 +1,13 @@
 # Devlog
 
+## 2026-03-24
+- Dragging events on the timeline is now significantly smoother — reduced lag and stutter during drag interactions
+- Hovering the mouse over the timeline no longer causes unnecessary UI recalculation
+- The damage sheet no longer re-renders when moving the mouse, reducing CPU usage
+- Added a Performance setting (High / Balanced / Low) to control drag responsiveness vs CPU trade-off
+- Timeline columns that aren't affected by a drag no longer update, saving processing time
+- Event blocks use GPU-accelerated positioning for smoother visual movement
+
 ## 2026-03-23
 - Skill descriptions, icons, and element types added for every operator — basic attacks, battle skills, combos, ultimates, and talents all show their in-game info
 - Potential descriptions added for all operators showing what each potential upgrade does
