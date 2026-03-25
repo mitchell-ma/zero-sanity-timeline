@@ -6,6 +6,7 @@
  * potential-dependent modifiers from the potentials section.
  */
 import { Potential, SkillLevel } from '../../consts/types';
+import { VerbType, NounType } from '../../dsl/semantics';
 import { getOperatorSkill, getOperatorBase } from '../gameDataStore';
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -63,14 +64,12 @@ interface JsonPotential {
 
 /**
  * Cached per-level multiplier data for a skill category.
- * segmentMultipliers[segmentIndex][levelIndex] = sum of DAMAGE_MULTIPLIER across frames in segment.
- * perFrameMultipliers[segmentIndex][frameIndex][levelIndex] = individual frame DAMAGE_MULTIPLIER.
+ * segmentMultipliers[segmentIndex][levelIndex] = sum of damage multiplier across frames in segment.
+ * perFrameMultipliers[segmentIndex][frameIndex][levelIndex] = individual frame damage multiplier.
  */
 interface CategoryMultiplierCache {
   segmentMultipliers: number[][];
   perFrameMultipliers: number[][][];
-  /** For ramping skills: DAMAGE_MULTIPLIER_INCREMENT per frame (the per-tick increment). */
-  perFrameScale2?: number[][][];
 }
 
 const cache = new Map<string, CategoryMultiplierCache>();
@@ -81,26 +80,19 @@ function getCacheKey(operatorId: string, category: string): string {
 
 // ── Build multiplier data from JSON ──────────────────────────────────────────
 
-/** Map multiplier key names to their equivalents in the DEAL effect's with block. */
-const MULTIPLIER_KEY_MAP: Record<string, string> = {
-  DAMAGE_MULTIPLIER: 'DAMAGE_MULTIPLIER',
-  DAMAGE_MULTIPLIER_INCREMENT: 'damageMultiplierIncrement',
-};
-
 function getDealEffect(frame: JsonFrame): JsonClauseEffect | undefined {
   for (const pred of (frame.clause ?? [])) {
     for (const ef of pred.effects) {
-      if (ef.verb === 'DEAL' && ef.object === 'DAMAGE') return ef;
+      if (ef.verb === VerbType.DEAL && ef.object === NounType.DAMAGE) return ef;
     }
   }
   return undefined;
 }
 
-function getAtk(frame: JsonFrame, level: number, key: string = 'DAMAGE_MULTIPLIER'): number {
+function getAtk(frame: JsonFrame, level: number, key: string = 'value'): number {
   const deal = getDealEffect(frame);
   if (!deal?.with) return 0;
-  const withKey = MULTIPLIER_KEY_MAP[key] ?? key.toLowerCase().replace(/_([a-z])/g, (_, c) => c.toUpperCase());
-  const wv = deal.with[withKey];
+  const wv = deal.with[key];
   if (!wv) return 0;
   if (Array.isArray(wv.value)) return wv.value[level - 1] ?? 0;
   return typeof wv.value === 'number' ? wv.value : 0;
@@ -128,44 +120,30 @@ function buildCategoryCache(operatorId: string, category: string): CategoryMulti
   const LEVELS = 12;
   const segmentMultipliers: number[][] = [];
   const perFrameMultipliers: number[][][] = [];
-  const perFrameScale2: number[][][] = [];
-  let hasScale2 = false;
 
   for (const seg of segments) {
     const segMults: number[] = new Array(LEVELS).fill(0);
     const frameMults: number[][] = [];
-    const frameScale2: number[][] = [];
 
     for (const frame of seg.frames) {
       const frameLevelMults: number[] = [];
-      const frameLevelScale2: number[] = [];
       for (let lvl = 1; lvl <= LEVELS; lvl++) {
         const atk = getAtk(frame, lvl);
         frameLevelMults.push(atk);
         segMults[lvl - 1] += atk;
-
-        const s2 = getAtk(frame, lvl, 'DAMAGE_MULTIPLIER_INCREMENT');
-        frameLevelScale2.push(s2);
-        if (s2 > 0) hasScale2 = true;
       }
       frameMults.push(frameLevelMults);
-      frameScale2.push(frameLevelScale2);
     }
 
     segmentMultipliers.push(segMults);
     perFrameMultipliers.push(frameMults);
-    perFrameScale2.push(frameScale2);
   }
 
   // If no frames had any multiplier data, treat as no data (allows empowered fallback)
   const hasAnyMultiplier = segmentMultipliers.some(seg => seg.some(m => m !== 0));
   if (!hasAnyMultiplier) return null;
 
-  return {
-    segmentMultipliers,
-    perFrameMultipliers,
-    ...(hasScale2 && { perFrameScale2 }),
-  };
+  return { segmentMultipliers, perFrameMultipliers };
 }
 
 function getCategoryCache(operatorId: string, category: string): CategoryMultiplierCache | null {
@@ -193,7 +171,7 @@ function getEmpoweredFallback(skillId: string): string | null {
 /**
  * Get the cumulative potential modifier for a skill.
  * Scans potentials[0..potential-1] for SKILL_PARAMETER effects
- * with parameterKey === 'DAMAGE_MULTIPLIER' matching the skill name.
+ * with parameterKey === 'damage multiplier' matching the skill name.
  */
 function getPotentialMultiplier(
   operatorId: string,
@@ -249,7 +227,7 @@ function resolveSkillKey(operatorId: string, skillName: string): string | null {
 
 /**
  * Get the segment-total skill multiplier.
- * This is the sum of DAMAGE_MULTIPLIER across all frames in the segment.
+ * This is the sum of damage multiplier across all frames in the segment.
  * The caller (damageTableBuilder) divides by frame count for uniform distribution.
  *
  * Returns null if operator/skill has no multiplier data or doesn't deal damage.
@@ -277,38 +255,3 @@ export function getSkillMultiplier(
   return baseMult * potMod;
 }
 
-/**
- * Get per-tick multiplier for skills with non-uniform per-frame damage.
- *
- * Supports ramping via DAMAGE_MULTIPLIER_INCREMENT (base + increment × tickIndex).
- *
- * Returns null for skills with uniform frame distribution (most skills).
- */
-export function getFrameMultiplier(
-  operatorId: string,
-  skillName: string,
-  level: SkillLevel,
-  potential: Potential,
-  frameIndex: number,
-): number | null {
-  const category = resolveSkillKey(operatorId, skillName);
-  if (!category) return null;
-
-  const data = getCategoryCache(operatorId, category);
-  if (!data) return null;
-
-  const segIdx = 0; // Per-tick is only used for single-segment skills
-  const potMod = getPotentialMultiplier(operatorId, skillName, potential);
-
-  if (data.perFrameScale2) {
-    const frameScale2 = data.perFrameScale2[segIdx];
-    if (frameScale2?.[0]?.[level - 1]) {
-      const baseAtk = data.perFrameMultipliers[segIdx][0][level - 1];
-      const increment = frameScale2[0][level - 1];
-      const tickMult = baseAtk + increment * frameIndex;
-      return tickMult * potMod;
-    }
-  }
-
-  return null;
-}

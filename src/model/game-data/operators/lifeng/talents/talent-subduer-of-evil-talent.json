@@ -6,7 +6,8 @@
           "subjectDeterminer": "THIS",
           "subject": "OPERATOR",
           "verb": "APPLY",
-          "object": "KNOCK_DOWN"
+          "object": "PHYSICAL_STATUS",
+          "objectId": "KNOCK_DOWN"
         }
       ],
       "effects": [
@@ -16,9 +17,9 @@
           "object": "DAMAGE",
           "to": "ENEMY",
           "with": {
-            "DAMAGE_MULTIPLIER": {
+            "value": {
               "verb": "VARY_BY",
-              "object": "TALENT_TWO_LEVEL",
+              "object": "TALENT_LEVEL",
               "value": [
                 0.5,
                 1

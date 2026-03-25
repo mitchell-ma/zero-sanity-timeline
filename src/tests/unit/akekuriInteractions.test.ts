@@ -146,7 +146,7 @@ function getFrameEffectValue(frame: Record<string, unknown>, verb: string, objec
   return undefined;
 }
 function getDamageMultipliers(frame: Record<string, unknown>): number[] {
-  return (getFrameEffectValue(frame, 'DEAL', 'DAMAGE', 'DAMAGE_MULTIPLIER') ?? []) as number[];
+  return (getFrameEffectValue(frame, 'DEAL', 'DAMAGE', 'value') ?? []) as number[];
 }
 
 /** Resolve a duration value that may be a plain number or a ValueNode { verb, value }. */

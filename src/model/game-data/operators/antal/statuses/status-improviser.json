@@ -38,7 +38,7 @@
                       "operation": "MULT",
                       "left": {
                         "verb": "VARY_BY",
-                        "object": "TALENT_ONE_LEVEL",
+                        "object": "TALENT_LEVEL",
                         "ofDeterminer": "SOURCE",
                         "of": "OPERATOR",
                         "value": [
@@ -50,7 +50,7 @@
                         "operation": "MULT",
                         "left": {
                           "verb": "VARY_BY",
-                          "object": "TALENT_ONE_LEVEL",
+                          "object": "TALENT_LEVEL",
                           "ofDeterminer": "SOURCE",
                           "of": "OPERATOR",
                           "value": [

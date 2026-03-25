@@ -41,8 +41,7 @@ const STAT_OPTIONS = Object.values(StatType).map((s) => ({
 const VARIABLE_OBJECT_OPTIONS = [
   { value: 'SKILL_LEVEL', label: 'Skill Level' },
   { value: 'POTENTIAL', label: 'Potential' },
-  { value: 'TALENT_ONE_LEVEL', label: 'Talent 1 Level' },
-  { value: 'TALENT_TWO_LEVEL', label: 'Talent 2 Level' },
+  { value: 'TALENT_LEVEL', label: 'Talent Level' },
   { value: 'ATTRIBUTE_INCREASE_LEVEL', label: 'Attr. Increase Level' },
 ];
 
@@ -50,16 +49,14 @@ const VARIABLE_OBJECT_OPTIONS = [
 const VARIABLE_START_INDEX: Record<string, number> = {
   SKILL_LEVEL: 1,
   POTENTIAL: 0,
-  TALENT_ONE_LEVEL: 0,
-  TALENT_TWO_LEVEL: 0,
+  TALENT_LEVEL: 0,
   ATTRIBUTE_INCREASE_LEVEL: 0,
 };
 
 const VARIABLE_ARRAY_LENGTHS: Record<string, number> = {
   SKILL_LEVEL: 12,
   POTENTIAL: 6,
-  TALENT_ONE_LEVEL: 3,
-  TALENT_TWO_LEVEL: 3,
+  TALENT_LEVEL: 3,
   ATTRIBUTE_INCREASE_LEVEL: 5,
 };
 

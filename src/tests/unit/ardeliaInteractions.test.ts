@@ -234,14 +234,14 @@ describe('A. Basic Attack (Rocky Whispers)', () => {
     const seg1Dmg = rawSegments[0].frames[0].clause[0].effects.find(
       (e: Record<string, unknown>) => e.object === 'DAMAGE'
     );
-    expect(seg1Dmg.with.DAMAGE_MULTIPLIER.value[0]).toBe(0.3);
-    expect(seg1Dmg.with.DAMAGE_MULTIPLIER.value[11]).toBe(0.68);
+    expect(seg1Dmg.with.value.value[0]).toBe(0.3);
+    expect(seg1Dmg.with.value.value[11]).toBe(0.68);
     // Final Strike (segment 4): 0.55 → 1.24
     const seg4Dmg = rawSegments[3].frames[0].clause[0].effects.find(
       (e: Record<string, unknown>) => e.object === 'DAMAGE'
     );
-    expect(seg4Dmg.with.DAMAGE_MULTIPLIER.value[0]).toBe(0.55);
-    expect(seg4Dmg.with.DAMAGE_MULTIPLIER.value[11]).toBe(1.24);
+    expect(seg4Dmg.with.value.value[0]).toBe(0.55);
+    expect(seg4Dmg.with.value.value[11]).toBe(1.24);
   });
 });
 
@@ -413,8 +413,8 @@ describe('C. Combo Skill (Eruption Column)', () => {
     const dmgEffect = mockJson.skills.COMBO_SKILL.segments[1].frames[0].clause[0].effects.find(
       (e: Record<string, unknown>) => e.object === 'DAMAGE'
     );
-    expect(dmgEffect.with.DAMAGE_MULTIPLIER.value[0]).toBe(0.45);
-    expect(dmgEffect.with.DAMAGE_MULTIPLIER.value[11]).toBe(1);
+    expect(dmgEffect.with.value.value[0]).toBe(0.45);
+    expect(dmgEffect.with.value.value[11]).toBe(1);
   });
 
   test('C11: Combo skill ID is ERUPTION_COLUMN', () => {
@@ -478,7 +478,7 @@ describe('D. Ultimate (Wooly Party)', () => {
     );
     expect(dmgFrame).toBeDefined();
     const dmgEffect = dmgFrame.clause[0].effects.find((e: Record<string, unknown>) => e.object === 'DAMAGE');
-    expect(dmgEffect.with.DAMAGE_MULTIPLIER.value[0]).toBe(0.73);
+    expect(dmgEffect.with.value.value[0]).toBe(0.73);
   });
 
   test('D7: Ultimate damage frame has duration parameter', () => {

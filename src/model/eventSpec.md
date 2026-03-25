@@ -16,15 +16,20 @@ Types are defined in `src/consts/semantics.ts`:
 
 Who is performing the action or being checked.
 
-| Value | Meaning |
-|-------|---------|
-| `THIS_OPERATOR` | The operator who owns this event/status |
-| `OTHER_OPERATOR` | Any single teammate (excludes this operator) |
-| `OTHER_OPERATORS` | All teammates except this operator |
-| `ALL_OPERATORS` | Entire team including this operator |
-| `ENEMY` | The enemy target |
-| `ANY_OPERATOR` | Any operator on the team (wildcard — matches any operator subject in interaction matching) |
-| `SYSTEM` | System-initiated (threshold effects, passive triggers) |
+Subjects use DeterminerType + NounType. e.g. `THIS OPERATOR`, `ANY OPERATOR`, `ENEMY`.
+
+| DeterminerType | NounType | Meaning |
+|----------------|----------|---------|
+| `THIS` | `OPERATOR` | The operator who owns this event/status |
+| `OTHER` | `OPERATOR` | Any single teammate (excludes this operator) |
+| `ALL_OTHER` | `OPERATOR` | All teammates except this operator |
+| `ALL` | `OPERATOR` | Entire team including this operator |
+| `ANY` | `OPERATOR` | Any operator on the team (wildcard for triggers) |
+| `CONTROLLED` | `OPERATOR` | The operator currently controlled by the player |
+| `SOURCE` | `OPERATOR` | The operator who owns the talent/status definition |
+| — | `ENEMY` | The enemy target |
+| — | `SYSTEM` | System-initiated (threshold effects, passive triggers) |
+| `THIS` | `EVENT` | The event/status that owns this clause |
 
 ### VerbType
 
@@ -48,8 +53,14 @@ Who is performing the action or being checked.
 | | `EXTEND` | Extend duration |
 | | `MERGE` | Newer subsumes older |
 | | `RESET` | Reset stacks or cooldown to 0 |
-| **State** | `HAVE` | Quantity/possession assertion (uses cardinality) |
+| **Stat** | `IGNORE` | Ignore a resistance/stat |
+| | `ENABLE` | Enable a skill variant tier |
+| | `DISABLE` | Disable a skill variant tier |
+| **Condition** | `HAVE` | Quantity/possession assertion (uses cardinality) |
 | | `IS` | State assertion (uses subjectProperty for possessive, optional `negated` for NOT) |
+| | `BECOME` | Transition assertion — subject just entered this state |
+| | `RECEIVE` | Target receives a status/infliction/reaction |
+| | `APPLY` | Subject applies something to a target (also an action verb; valid in conditions as trigger) |
 
 ### ObjectType
 
@@ -58,7 +69,7 @@ Who is performing the action or being checked.
 | **Skills** | `BASIC_ATTACK`, `BATTLE_SKILL`, `COMBO_SKILL`, `ULTIMATE`, `FINAL_STRIKE`, `CRITICAL_HIT` | Skill types and combat events |
 | **Statuses** | `STATUS`, `INFLICTION`, `REACTION`, `ARTS_REACTION`, `STACKS` | Status effects and stack counts |
 | **Resources** | `SKILL_POINT`, `ULTIMATE_ENERGY`, `STAGGER`, `COOLDOWN`, `HP` | Combat resources |
-| **Entities** | `THIS_OPERATOR`, `OTHER_OPERATOR`, `ALL_OTHER_OPERATORS`, `ALL_OPERATORS`, `ENEMY` | Targets (DeterminerType + NounType) |
+| **Entities** | `OPERATOR` (with DeterminerType), `TEAM`, `ENEMY`, `EVENT` | Targets (DeterminerType + NounType) |
 | **States** | `ACTIVE`, `LIFTED`, `KNOCKED_DOWN`, `BREACHED`, `CRUSHED`, `COMBUSTED`, `CORRODED`, `ELECTRIFIED`, `SOLIDIFIED` | For IS verb (with optional `negated: true` for NOT) |
 
 ### CardinalityConstraintType

@@ -1,5 +1,5 @@
 import { ElementType, EventFrameType, StatusType } from "../../consts/enums";
-import { DeterminerType, NounType } from "../../dsl/semantics";
+import { DeterminerType, NounType, VerbType, AdjectiveType } from "../../dsl/semantics";
 import type { DslTarget, ValueNode } from "../../dsl/semantics";
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT, type ValueResolutionContext } from "../../controller/calculation/valueResolver";
 import { REACTION_COLUMNS } from "../channels";
@@ -229,7 +229,7 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
   private readonly _consumeStatus: string | null;
   private readonly _damageElement: string | null;
   private readonly _consumeReaction: FrameReactionConsumption | null;
-  private readonly _duplicatesTriggerInfliction: boolean;
+  private readonly _duplicateTriggerSource: boolean;
   private readonly _clauses: readonly FrameClausePredicate[];
   private readonly _dealDamage: FrameDealDamage | null;
   private readonly _gaugeGain: number;
@@ -241,7 +241,7 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
     this._offsetSeconds = frame.properties!.offset!.value;
     this._damageElement = frame.damageElement ?? null;
     this._consumeReaction = null;
-    let duplicatesSource = false;
+    let duplicateSource = false;
     const frameTypes: EventFrameType[] = [];
 
     let sp = 0;
@@ -278,23 +278,23 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
         }
         const wp = ef.with;
         const adjectives = Array.isArray(ef.adjective) ? ef.adjective : ef.adjective ? [ef.adjective] : [];
-        const elementAdj = adjectives.find(a => ['HEAT', 'CRYO', 'NATURE', 'ELECTRIC', 'PHYSICAL'].includes(a));
-        const isForced = adjectives.includes('FORCED');
+        const elementAdj = adjectives.find(a => [AdjectiveType.HEAT, AdjectiveType.CRYO, AdjectiveType.NATURE, AdjectiveType.ELECTRIC, AdjectiveType.PHYSICAL].includes(a as AdjectiveType));
+        const isForced = adjectives.includes(AdjectiveType.FORCED);
         const isSource = adjectives.includes('TRIGGER');
-        const reactionAdj = adjectives.find(a => ['COMBUSTION', 'SOLIDIFICATION', 'CORROSION', 'ELECTRIFICATION'].includes(a));
+        const reactionAdj = adjectives.find(a => [AdjectiveType.COMBUSTION, AdjectiveType.SOLIDIFICATION, AdjectiveType.CORROSION, AdjectiveType.ELECTRIFICATION].includes(a as AdjectiveType));
 
         switch (ef.verb) {
-          case 'RECOVER':
-            if (ef.object === 'SKILL_POINT') { sp = withValue(wp?.value); clauseEffects.push({ type: 'recoverSP' }); }
-            if (ef.object === 'ULTIMATE_ENERGY') gaugeGain = withValue(wp?.value);
+          case VerbType.RECOVER:
+            if (ef.object === NounType.SKILL_POINT) { sp = withValue(wp?.value); clauseEffects.push({ type: 'recoverSP' }); }
+            if (ef.object === NounType.ULTIMATE_ENERGY) gaugeGain = withValue(wp?.value);
             break;
 
-          case 'APPLY':
-            if (isSource && (ef.object === 'INFLICTION' || ef.object === 'STATUS')) {
-              duplicatesSource = true;
-            } else if (ef.object === 'INFLICTION') {
+          case VerbType.APPLY:
+            if (isSource && (ef.object === NounType.INFLICTION || ef.object === NounType.STATUS || ef.object === NounType.PHYSICAL_STATUS)) {
+              duplicateSource = true;
+            } else if (ef.object === NounType.INFLICTION) {
               applyInfliction = { element: elementAdj!, stacks: withValue(wp?.stacks) || 1 };
-            } else if (ef.object === 'REACTION' && isForced) {
+            } else if (ef.object === NounType.REACTION && isForced) {
               const reactionName = reactionAdj ?? ef.objectId;
               const dur = wp?.duration;
               forcedReaction = {
@@ -302,7 +302,7 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
                 stacks: withValue(wp?.stacks) || 1,
                 ...(dur != null && { durationFrames: Math.round(withValue(dur) * 120) }),
               };
-            } else if (ef.object === 'STATUS') {
+            } else if (ef.object === NounType.STATUS) {
               const durRaw = wp?.duration;
               // Duration may be a flat JsonWithValue or a nested { value: JsonWithValue, unit } wrapper
               const durVal = durRaw?.value && typeof durRaw.value === 'object' && !Array.isArray(durRaw.value)
@@ -333,11 +333,18 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
               }
               applyStatuses.push(status);
               clauseEffects.push({ type: 'applyStatus', applyStatus: status });
+            } else if (ef.object === NounType.PHYSICAL_STATUS) {
+              const physType = ef.objectId ?? elementAdj ?? adjectives[0];
+              clauseEffects.push({
+                type: 'applyPhysicalStatus',
+                physicalStatusAdjective: physType,
+                physicalStatusIsForced: isForced || undefined,
+              });
             }
             break;
 
-          case 'CONSUME':
-            if (ef.object === 'INFLICTION') {
+          case VerbType.CONSUME:
+            if (ef.object === NounType.INFLICTION) {
               if (ef.conversion) {
                 absorbInfliction = {
                   element: elementAdj!,
@@ -348,9 +355,9 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
               } else {
                 consumeInfliction = { element: elementAdj!, stacks: withValue(wp?.stacks) || 1 };
               }
-            } else if (ef.object === 'STATUS') {
+            } else if (ef.object === NounType.STATUS) {
               consumeStatus = ef.objectId!;
-            } else if (ef.object === 'REACTION') {
+            } else if (ef.object === NounType.REACTION) {
               const cr: FrameReactionConsumption = {
                 columnId: DSL_REACTION_TO_COLUMN[reactionAdj ?? ef.objectId ?? ''] ?? (reactionAdj ?? ef.objectId ?? ''),
               };
@@ -372,9 +379,9 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
             }
             break;
 
-          case 'DEAL':
-            if (ef.object === 'DAMAGE') {
-              const multipliers = wp?.DAMAGE_MULTIPLIER ?? wp?.value;
+          case VerbType.DEAL:
+            if (ef.object === NounType.DAMAGE) {
+              const multipliers = wp?.value;
               const mulArr = multipliers && Array.isArray(multipliers.value) ? multipliers.value : [];
               const dd: FrameDealDamage = {
                 ...(elementAdj && { element: elementAdj }),
@@ -382,17 +389,17 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
               };
               dealDamage = dd;
               clauseEffects.push({ type: 'dealDamage', dealDamage: dd });
-            } else if (ef.object === 'STAGGER') {
+            } else if (ef.object === NounType.STAGGER) {
               stagger = withValue(wp?.value);
               clauseEffects.push({ type: 'applyStagger' });
             }
             break;
 
-          case 'PERFORM': {
+          case VerbType.PERFORM: {
             const PERFORM_TO_FRAME_TYPE: Record<string, EventFrameType> = {
-              FINAL_STRIKE: EventFrameType.FINAL_STRIKE,
-              FINISHER: EventFrameType.FINISHER,
-              DIVE_ATTACK: EventFrameType.DIVE,
+              [NounType.FINAL_STRIKE]: EventFrameType.FINAL_STRIKE,
+              [NounType.FINISHER]: EventFrameType.FINISHER,
+              [NounType.DIVE_ATTACK]: EventFrameType.DIVE,
             };
             const ft = PERFORM_TO_FRAME_TYPE[ef.object ?? ''];
             if (ft && !frameTypes.includes(ft)) frameTypes.push(ft);
@@ -415,7 +422,7 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
     this._applyStatuses = applyStatuses;
     if (consumeReaction) this._consumeReaction = consumeReaction;
     this._consumeStatus = consumeStatus;
-    this._duplicatesTriggerInfliction = duplicatesSource;
+    this._duplicateTriggerSource = duplicateSource;
     this._dependencyTypes = (frame.properties?.dependencyTypes ?? []) as string[];
     this._frameTypes = frameTypes;
   }
@@ -432,7 +439,7 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
   getConsumeReaction(): FrameReactionConsumption | null { return this._consumeReaction; }
   getConsumeStatus(): string | null { return this._consumeStatus; }
   getDamageElement(): string | null { return this._damageElement; }
-  getDuplicatesTriggerInfliction(): boolean { return this._duplicatesTriggerInfliction; }
+  getDuplicateTriggerSource(): boolean { return this._duplicateTriggerSource; }
   getClauses(): readonly FrameClausePredicate[] { return this._clauses; }
   getDealDamage(): FrameDealDamage | null { return this._dealDamage; }
   getGaugeGain(): number { return this._gaugeGain; }

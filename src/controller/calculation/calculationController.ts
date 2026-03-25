@@ -17,7 +17,7 @@ import { LoadoutProperties, DEFAULT_LOADOUT_PROPERTIES } from '../../view/Inform
 import { OperatorLoadoutState, EMPTY_LOADOUT } from '../../view/OperatorLoadoutHeader';
 import { aggregateLoadoutStats } from './loadoutAggregator';
 import { buildDamageTableRows, DamageTableRow } from './damageTableBuilder';
-import { getSkillMultiplier, getFrameMultiplier } from './jsonMultiplierEngine';
+import { getSkillMultiplier } from './jsonMultiplierEngine';
 import { getModelEnemy } from './enemyRegistry';
 import {
   EventsQueryService,
@@ -119,16 +119,10 @@ export function precomputeDamageByFrame(
             const idx = Math.min(skillLevel - 1, f.dealDamage.multipliers.length - 1);
             multiplier = f.dealDamage.multipliers[idx];
           } else {
-            // Per-tick multiplier
-            const perTick = getFrameMultiplier(op.operatorId, ev.name as CombatSkillType, skillLevel, potential, fi);
-            if (perTick != null) {
-              multiplier = perTick;
-            } else {
-              // Segment multiplier divided by frame count
-              const segMult = getSkillMultiplier(op.operatorId, ev.name as CombatSkillType, si, skillLevel, potential);
-              if (segMult != null) {
-                multiplier = maxFrames > 1 ? segMult / maxFrames : segMult;
-              }
+            // Segment multiplier divided by frame count
+            const segMult = getSkillMultiplier(op.operatorId, ev.name as CombatSkillType, si, skillLevel, potential);
+            if (segMult != null) {
+              multiplier = maxFrames > 1 ? segMult / maxFrames : segMult;
             }
           }
 

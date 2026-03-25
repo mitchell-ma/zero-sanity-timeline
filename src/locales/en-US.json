@@ -171,6 +171,9 @@
   "ctx.addSequence": "Add Sequence {name}",
   "ctx.addFrame": "Add Frame {number}",
   "ctx.addAt": "Add {item} at {location}",
+  "ctx.activationNotMet": "Activation condition not met",
+  "ctx.requiresControlled": "Operator must be the controlled operator",
+  "ctx.ultActiveBlocked": "Cannot be used while ultimate is active",
 
   "column.skillPoints": "SKILL POINTS",
   "column.teamStatus": "TEAM STATUS",
@@ -364,8 +367,7 @@
   "dsl.object.GAME_TIME": "game time",
   "dsl.object.REAL_TIME": "real time",
   "dsl.object.STAT": "stat",
-  "dsl.object.TALENT_ONE_LEVEL": "talent 1 level",
-  "dsl.object.TALENT_TWO_LEVEL": "talent 2 level",
+  "dsl.object.TALENT_LEVEL": "talent level",
   "dsl.object.ATTRIBUTE_INCREASE_LEVEL": "attribute increase level",
 
   "dsl.property.duration": "Duration",

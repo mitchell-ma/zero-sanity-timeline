@@ -1,4 +1,25 @@
 {
+  "onTriggerClause": [
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "DEFEAT",
+          "object": "ENEMY"
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "FINE_COOKING",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
+        }
+      ]
+    }
+  ],
   "clause": [
     {
       "conditions": [],
@@ -28,27 +49,6 @@
             },
             "parameterModifyType": "UNIQUE_MULTIPLIER"
           }
-        }
-      ]
-    }
-  ],
-  "onTriggerClause": [
-    {
-      "conditions": [
-        {
-          "subjectDeterminer": "THIS",
-          "subject": "OPERATOR",
-          "verb": "DEFEAT",
-          "object": "ENEMY"
-        }
-      ],
-      "effects": [
-        {
-          "verb": "APPLY",
-          "object": "STATUS",
-          "objectId": "FINE_COOKING",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR"
         }
       ]
     }

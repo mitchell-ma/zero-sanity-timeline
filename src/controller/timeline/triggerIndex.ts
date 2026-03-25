@@ -21,7 +21,7 @@ import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from '../calculation/valueRes
 import { getAllOperatorIds, getSkillIds, getEnabledStatusEvents } from '../gameDataStore';
 import { getWeaponEffectDefs, getGearEffectDefs } from '../gameDataStore';
 import type { NormalizedEffectDef } from '../gameDataStore';
-import { ENEMY_OWNER_ID, SKILL_COLUMNS, REACTION_COLUMNS, INFLICTION_COLUMNS } from '../../model/channels';
+import { ENEMY_OWNER_ID, SKILL_COLUMNS, REACTION_COLUMNS, INFLICTION_COLUMNS, PHYSICAL_STATUS_COLUMN_IDS } from '../../model/channels';
 import { COMMON_OWNER_ID } from '../slot/commonSlotController';
 import { TOTAL_FRAMES, FPS } from '../../utils/timeline';
 import { statusNameToColumnId } from './triggerMatch';
@@ -224,6 +224,7 @@ function resolveCategories(columnId: string): string[] {
   const inflictionColumns = new Set<string>(Object.values(INFLICTION_COLUMNS));
   if (reactionColumns.has(columnId)) categories.push('REACTION');
   if (inflictionColumns.has(columnId)) categories.push('INFLICTION');
+  if (PHYSICAL_STATUS_COLUMN_IDS.has(columnId)) categories.push('PHYSICAL_STATUS');
   if (!reactionColumns.has(columnId) && !inflictionColumns.has(columnId)) categories.push('STATUS');
   return categories;
 }
@@ -448,9 +449,38 @@ export class TriggerIndex {
         }
         if (!primaryVerb) continue;
 
-        const primaryCond = clause.conditions.find(c => c.verb === primaryVerb)!;
-        const haveConds = clause.conditions.filter((c: Predicate) => c.verb === 'HAVE');
-        const secondaryConds = clause.conditions.filter(c => c !== primaryCond && c.verb !== 'HAVE');
+        let primaryCond = clause.conditions.find(c => c.verb === primaryVerb)!;
+        const rawDeferredConds = clause.conditions.filter((c: Predicate) =>
+          c.verb === 'HAVE' || (c.verb === 'BECOME' && c.object === 'STACKS'),
+        );
+        const secondaryConds = clause.conditions.filter(c =>
+          c !== primaryCond && !rawDeferredConds.includes(c),
+        );
+
+        // Resolve abstract STACKS → concrete STATUS <self-id> for deferred conditions
+        const maxStacks = def.properties.stacks?.limit
+          ? getMaxStacks(def.properties.stacks.limit)
+          : 1;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const haveConds = rawDeferredConds.map((cond: any) => {
+          if (cond.object === 'STACKS') {
+            return {
+              ...cond,
+              object: 'STATUS',
+              objectId: def.properties.id,
+              value: cond.value === 'MAX' ? { verb: 'IS', value: maxStacks } : cond.value,
+            };
+          }
+          return cond;
+        });
+
+        // BECOME STACKS is self-referential: index under APPLY:{self-column} so it
+        // fires when this status receives a new stack. The BECOME condition is deferred
+        // to evaluation time for transition semantics (prev count ≠ current count).
+        if (primaryVerb === 'BECOME' && primaryCond.object === 'STACKS') {
+          primaryVerb = 'APPLY';
+          primaryCond = { verb: 'APPLY', object: 'STATUS', objectId: def.properties.id } as Predicate;
+        }
 
         const key = resolveTriggerKey(primaryVerb, primaryCond);
         const entry: TriggerDefEntry = {

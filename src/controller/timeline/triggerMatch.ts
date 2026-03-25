@@ -14,7 +14,7 @@ import {
   ELEMENT_TO_INFLICTION_COLUMN,
   ENEMY_OWNER_ID, ENEMY_ACTION_COLUMN_ID, OPERATOR_COLUMNS, REACTION_COLUMNS,
   REACTION_COLUMN_IDS, INFLICTION_COLUMN_IDS, SKILL_COLUMNS,
-  PHYSICAL_INFLICTION_COLUMNS,
+  PHYSICAL_INFLICTION_COLUMNS, PHYSICAL_STATUS_COLUMN_IDS,
 } from '../../model/channels';
 import { FPS, TOTAL_FRAMES } from '../../utils/timeline';
 import { getFinalStrikeTriggerFrame } from './processComboSkill';
@@ -189,6 +189,10 @@ function resolveColumns(cond: Predicate): Set<string> | undefined {
     case 'STATUS':
       if (cond.objectId) return new Set([statusNameToColumnId(cond.objectId)]);
       return undefined; // generic — needs fallback
+
+    case 'PHYSICAL_STATUS':
+      if (cond.objectId) return new Set([cond.objectId]); // objectId is the PhysicalStatusType enum value (LIFT, KNOCK_DOWN, etc.)
+      return new Set(PHYSICAL_STATUS_COLUMN_IDS);
 
     case 'STAGGER':
       return new Set(['node-stagger', 'full-stagger']);

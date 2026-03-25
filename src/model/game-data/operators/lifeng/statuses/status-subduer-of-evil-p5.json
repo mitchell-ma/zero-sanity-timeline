@@ -9,7 +9,7 @@
           "object": "DAMAGE",
           "to": "ENEMY",
           "with": {
-            "DAMAGE_MULTIPLIER": {
+            "value": {
               "verb": "IS",
               "value": 2.5
             }

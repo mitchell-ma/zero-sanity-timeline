@@ -118,10 +118,8 @@ export enum NounType {
   // Value resolution
   /** A raw operator stat reference (used in ValueStat). */
   STAT = "STAT",
-  /** Talent 1 level of an operator. */
-  TALENT_ONE_LEVEL = "TALENT_ONE_LEVEL",
-  /** Talent 2 level of an operator. */
-  TALENT_TWO_LEVEL = "TALENT_TWO_LEVEL",
+  /** Talent level of the current event's talent slot (resolved from operator's talent key-map). */
+  TALENT_LEVEL = "TALENT_LEVEL",
   /** Attribute increase level of an operator (0–4). */
   ATTRIBUTE_INCREASE_LEVEL = "ATTRIBUTE_INCREASE_LEVEL",
 }
@@ -282,7 +280,7 @@ export const ObjectType = { ...NounType, ...AdjectiveType } as typeof NounType &
  * Defines which NounType/ObjectType values each verb can take as its object.
  */
 export const VERB_OBJECTS: Partial<Record<VerbType, ObjectType[]>> = {
-  [VerbType.APPLY]:      [ObjectType.INFLICTION, ObjectType.REACTION, ObjectType.ARTS_BURST, ObjectType.PHYSICAL_STATUS, ObjectType.STATUS, ObjectType.STAGGER, ObjectType.TIME_STOP],
+  [VerbType.APPLY]:      [ObjectType.INFLICTION, ObjectType.REACTION, ObjectType.ARTS_BURST, ObjectType.PHYSICAL_STATUS, ObjectType.STATUS, ObjectType.STAGGER, ObjectType.TIME_STOP, ObjectType.EVENT],
   [VerbType.CONSUME]:    [ObjectType.INFLICTION, ObjectType.REACTION, ObjectType.STATUS, ObjectType.SKILL_POINT, ObjectType.ULTIMATE_ENERGY, ObjectType.COOLDOWN, ObjectType.STAGGER, ObjectType.STACKS],
   [VerbType.RECOVER]:    [ObjectType.SKILL_POINT, ObjectType.ULTIMATE_ENERGY, ObjectType.HP],
   [VerbType.RETURN]:     [ObjectType.SKILL_POINT],
@@ -300,7 +298,7 @@ export const VERB_OBJECTS: Partial<Record<VerbType, ObjectType[]>> = {
   [VerbType.EXPERIENCE]: [ObjectType.GAME_TIME, ObjectType.REAL_TIME],
   [VerbType.HAVE]:       [ObjectType.STATUS, ObjectType.INFLICTION, ObjectType.REACTION, ObjectType.STACKS, ObjectType.SKILL_POINT, ObjectType.ULTIMATE_ENERGY, ObjectType.HP],
   [VerbType.IS]:         [ObjectType.ACTIVE, ObjectType.CONTROLLED_STATE, ObjectType.LIFTED, ObjectType.KNOCKED_DOWN, ObjectType.CRUSHED, ObjectType.BREACHED, ObjectType.COMBUSTED, ObjectType.CORRODED, ObjectType.ELECTRIFIED, ObjectType.SOLIDIFIED, ObjectType.NODE_STAGGERED, ObjectType.FULL_STAGGERED],
-  [VerbType.BECOME]:     [ObjectType.ACTIVE, ObjectType.LIFTED, ObjectType.KNOCKED_DOWN, ObjectType.CRUSHED, ObjectType.BREACHED, ObjectType.COMBUSTED, ObjectType.CORRODED, ObjectType.ELECTRIFIED, ObjectType.SOLIDIFIED, ObjectType.NODE_STAGGERED, ObjectType.FULL_STAGGERED],
+  [VerbType.BECOME]:     [ObjectType.STACKS, ObjectType.ACTIVE, ObjectType.LIFTED, ObjectType.KNOCKED_DOWN, ObjectType.CRUSHED, ObjectType.BREACHED, ObjectType.COMBUSTED, ObjectType.CORRODED, ObjectType.ELECTRIFIED, ObjectType.SOLIDIFIED, ObjectType.NODE_STAGGERED, ObjectType.FULL_STAGGERED],
   [VerbType.RECEIVE]:    [ObjectType.STATUS, ObjectType.INFLICTION, ObjectType.REACTION, ObjectType.STAGGER],
   [VerbType.OVERHEAL]:   [ObjectType.HP],
   [VerbType.REDUCE]:     [ObjectType.COOLDOWN],
@@ -402,9 +400,9 @@ export const NOUN_QUALIFIER_MAPPING: Partial<Record<NounType, QualifierType[]>> 
  * e.g. "REDUCE COOLDOWN OF THIS OPERATOR", "REDUCE COOLDOWN OF EVENT".
  */
 export const NOUN_POSSESSOR_MAPPING: Partial<Record<NounType, NounType[]>> = {
+  [NounType.STACKS]: [NounType.EVENT],
   [NounType.COOLDOWN]: [NounType.OPERATOR, NounType.EVENT],
-  [NounType.TALENT_ONE_LEVEL]: [NounType.OPERATOR],
-  [NounType.TALENT_TWO_LEVEL]: [NounType.OPERATOR],
+  [NounType.TALENT_LEVEL]: [NounType.OPERATOR],
   [NounType.STAT]: [NounType.OPERATOR],
   [NounType.BASIC_ATTACK]: [NounType.OPERATOR],
   [NounType.BATK]: [NounType.OPERATOR],
@@ -1081,8 +1079,7 @@ export const OBJECT_LABELS: Record<string, string> = {
   [ObjectType.NORMAL_ATTACK]: 'Normal Attack',
   [ObjectType.ACTIVE]: 'Active',
   [ObjectType.STAT]: 'Stat',
-  [ObjectType.TALENT_ONE_LEVEL]: 'Talent 1 Level',
-  [ObjectType.TALENT_TWO_LEVEL]: 'Talent 2 Level',
+  [ObjectType.TALENT_LEVEL]: 'Talent Level',
 };
 
 export const ADJECTIVE_LABELS: Record<string, string> = Object.fromEntries(

@@ -386,6 +386,7 @@ export enum EnhancementType {
   NORMAL = "NORMAL",
   ENHANCED = "ENHANCED",
   EMPOWERED = "EMPOWERED",
+  MINOR = "MINOR",
 }
 
 /** The phase type of an event segment. */

@@ -79,7 +79,7 @@ export class SkillSegmentBuilder {
         if (consumeStatus) marker.consumeStatus = consumeStatus;
         const dmgEl = f.getDamageElement();
         if (dmgEl) marker.damageElement = dmgEl;
-        if (f.getDuplicatesTriggerInfliction()) marker.duplicatesTriggerInfliction = true;
+        if (f.getDuplicateTriggerSource()) marker.duplicateTriggerSource = true;
         const clauses = f.getClauses();
         if (clauses.length > 0) marker.clauses = clauses;
         const dd = f.getDealDamage();

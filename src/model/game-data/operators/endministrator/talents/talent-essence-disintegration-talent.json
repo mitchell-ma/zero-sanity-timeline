@@ -16,6 +16,7 @@
           "subject": "OPERATOR",
           "verb": "HAVE",
           "object": "POTENTIAL",
+          "cardinalityConstraint": "EXACTLY",
           "with": {
             "value": {
               "verb": "IS",
@@ -69,7 +70,7 @@
         {
           "verb": "APPLY",
           "object": "STATUS",
-          "objectId": "ESSENCE_DISINTEGRATION_SHARED",
+          "objectId": "ESSENCE_DISINTEGRATION_MINOR",
           "toDeterminer": "ALL_OTHER",
           "to": "OPERATOR"
         }

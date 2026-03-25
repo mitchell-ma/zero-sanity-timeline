@@ -649,7 +649,7 @@ describe('K. Scorching Heart absorbs Antal combo mirrored heat', () => {
       comboTriggerColumnId: 'heatInfliction',
       segments: [{
         properties: { duration: Math.round(0.8 * FPS) },
-        frames: [{ offsetFrame: Math.round(0.7 * FPS), duplicatesTriggerInfliction: true }],
+        frames: [{ offsetFrame: Math.round(0.7 * FPS), duplicateTriggerSource: true }],
       }],
     });
     // Laevatain final strike after both heat inflictions exist

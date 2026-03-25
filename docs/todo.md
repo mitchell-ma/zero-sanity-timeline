@@ -162,11 +162,11 @@ These sets have HP-threshold conditions but are metadata-only with zero clauses:
 
 1. **Akekuri "Staying in the Zone"** — talent two is `name`-only but wiki says "when ultimate is active, gains Link." This should be a TALENT trigger (THIS OPERATOR CAST ULTIMATE → APPLY LINK STATUS) or baked into the ult DSL as an APPLY LINK effect on the first frame. Currently neither exists.
 
-2. **Avywenna "Tactful Approach"** — talent two is `name`-only but wiki says the ult applies 6%/10% Electric Susceptibility for 10s. This should be baked into the ult frame as APPLY ELECTRIC_SUSCEPTIBILITY with VARY_BY TALENT_TWO_LEVEL [0.06, 0.10], duration 10s. Need to verify the ult DSL has this effect.
+2. **Avywenna "Tactful Approach"** — talent two is `name`-only but wiki says the ult applies 6%/10% Electric Susceptibility for 10s. This should be baked into the ult frame as APPLY ELECTRIC_SUSCEPTIBILITY with VARY_BY TALENT_LEVEL [0.06, 0.10], duration 10s. Need to verify the ult DSL has this effect.
 
 3. **Last Rite "Cryogenic Embrittlement"** — talent two is `name`-only. Wiki says "ultimate hits enemies with Cryo Susceptibility: multiply Cryo Susceptibility effectiveness ×1.2/×1.5." This modifier needs to live somewhere — either as a SKILL_PARAMETER in the operator JSON or baked into the ult DSL as a conditional clause (IF ENEMY HAVE CRYO_SUSCEPTIBILITY → APPLY CRYO_SUSCEPTIBILITY_MODIFIER [1.2, 1.5]).
 
-4. **Pogranichnik "Tactical Instruction"** — talent two is `name`-only. Wiki says "operators triggering ultimate's subsequent effects gain Fervent Morale for 5s/10s." Fervent Morale status already exists (from talent one The Living Banner). This should be baked into the ult DSL — when other operators benefit from the ult, they receive FERVENT_MORALE with duration VARY_BY TALENT_TWO_LEVEL [5, 10].
+4. **Pogranichnik "Tactical Instruction"** — talent two is `name`-only. Wiki says "operators triggering ultimate's subsequent effects gain Fervent Morale for 5s/10s." Fervent Morale status already exists (from talent one The Living Banner). This should be baked into the ult DSL — when other operators benefit from the ult, they receive FERVENT_MORALE with duration VARY_BY TALENT_LEVEL [5, 10].
 
 ## Fix laevatainDamageCalc.test.ts — broken after gameDataController mock removal
 

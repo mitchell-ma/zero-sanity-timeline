@@ -25,7 +25,7 @@ import { ElementType, EventFrameType, PhysicalStatusType, UnitType } from '../..
 import {
   BREACH_DURATION, ENEMY_OWNER_ID, ELEMENT_TO_INFLICTION_COLUMN,
   INFLICTION_COLUMN_IDS, INFLICTION_DURATION,
-  PHYSICAL_INFLICTION_COLUMNS, PHYSICAL_INFLICTION_DURATION, PHYSICAL_STATUS_COLUMNS,
+  PHYSICAL_INFLICTION_COLUMNS, PHYSICAL_INFLICTION_DURATION, PHYSICAL_STATUS_COLUMNS, PHYSICAL_STATUS_COLUMN_IDS,
   REACTION_COLUMNS, REACTION_COLUMN_IDS, REACTION_DURATION,
   FORCED_REACTION_COLUMN, FORCED_REACTION_DURATION,
   TEAM_STATUS_COLUMN, P5_LINK_EXTENSION_FRAMES,
@@ -754,14 +754,23 @@ export class EventInterpretorController {
       }
     }
 
-    // Combo trigger infliction mirroring
-    if (frame.duplicatesTriggerInfliction && event.comboTriggerColumnId) {
+    // Combo trigger source duplication — re-apply whatever triggered this combo
+    if (frame.duplicateTriggerSource && event.comboTriggerColumnId) {
       const triggerCol = event.comboTriggerColumnId;
       if (INFLICTION_COLUMN_IDS.has(triggerCol)) {
         this.controller.createInfliction(
           triggerCol, ENEMY_OWNER_ID, absFrame, INFLICTION_DURATION,
           source, { uid: `${event.uid}-combo-inflict-${si}-${fi}` },
         );
+        newEntries.push(...this.checkReactiveTriggers('APPLY', triggerCol, absFrame, event.ownerId, event.name));
+      } else if (PHYSICAL_STATUS_COLUMN_IDS.has(triggerCol)) {
+        const physEffect = {
+          verb: VerbType.APPLY,
+          object: 'PHYSICAL_STATUS',
+          adjective: triggerCol,
+          to: 'ENEMY',
+        } as Effect;
+        this.applyPhysicalStatus(physEffect, { frame: absFrame, sourceOwnerId: event.ownerId, sourceSkillName: event.name, allEvents: () => [...this.baseEvents, ...this.controller.output] });
         newEntries.push(...this.checkReactiveTriggers('APPLY', triggerCol, absFrame, event.ownerId, event.name));
       }
     }
@@ -871,8 +880,6 @@ export class EventInterpretorController {
     }
     if (frame.clauses) {
       for (const pred of frame.clauses) {
-        const consumeEf = pred.effects.find(e => e.type === 'consumeReaction');
-        if (!consumeEf?.consumeReaction) continue;
         if (pred.conditions.length > 0) {
           const condCtx: ConditionContext = {
             events: [...this.baseEvents, ...this.controller.output],
@@ -881,9 +888,24 @@ export class EventInterpretorController {
           };
           if (!evaluateConditions(pred.conditions as unknown as import('../../dsl/semantics').Interaction[], condCtx)) continue;
         }
-        const cr = consumeEf.consumeReaction;
-        this.controller.consumeReaction(cr.columnId, ENEMY_OWNER_ID, absFrame, source);
-        newEntries.push(...this.checkReactiveTriggers('CONSUME', cr.columnId, absFrame, event.ownerId, event.name));
+        for (const ef of pred.effects) {
+          if (ef.type === 'consumeReaction' && ef.consumeReaction) {
+            const cr = ef.consumeReaction;
+            this.controller.consumeReaction(cr.columnId, ENEMY_OWNER_ID, absFrame, source);
+            newEntries.push(...this.checkReactiveTriggers('CONSUME', cr.columnId, absFrame, event.ownerId, event.name));
+          }
+          if (ef.type === 'applyPhysicalStatus' && ef.physicalStatusAdjective) {
+            const physEffect = {
+              verb: VerbType.APPLY,
+              object: 'PHYSICAL_STATUS',
+              adjective: ef.physicalStatusAdjective,
+              to: 'ENEMY',
+              with: ef.physicalStatusIsForced ? { isForced: { verb: 'IS', value: 1 } } : undefined,
+            } as Effect;
+            this.applyPhysicalStatus(physEffect, { frame: absFrame, sourceOwnerId: event.ownerId, sourceSkillName: event.name, allEvents: () => [...this.baseEvents, ...this.controller.output] });
+            newEntries.push(...this.checkReactiveTriggers('APPLY', ef.physicalStatusAdjective, absFrame, event.ownerId, event.name));
+          }
+        }
       }
     }
 
@@ -971,7 +993,7 @@ export class EventInterpretorController {
 
     this.controller.setComboTriggerColumnId(combo.uid, triggerCol);
     // Mirrored inflictions are handled by PROCESS_FRAME when it encounters
-    // duplicatesTriggerInfliction on subsequent frame markers.
+    // duplicateTriggerSource on subsequent frame markers.
   }
 
   /** Handle COMBO_RESOLVE queue entry — deferred combo trigger resolution. */
@@ -1124,9 +1146,14 @@ export class EventInterpretorController {
 
 
 
+  private static readonly MAX_CASCADE_DEPTH = 10;
+
   private handleEngineTrigger(entry: QueueFrame): QueueFrame[] {
     const trigger = entry.engineTrigger;
     if (!trigger) return [];
+
+    const depth = entry.cascadeDepth ?? 0;
+    if (depth >= EventInterpretorController.MAX_CASCADE_DEPTH) return [];
 
     const { ctx } = trigger;
     const triggerEffects = ctx.triggerEffects ?? [];
@@ -1176,21 +1203,28 @@ export class EventInterpretorController {
       return [];
     }
 
-    // Simple triggers: use evaluateEngineTrigger
+    // Simple triggers: use evaluateEngineTrigger, then cascade reactive triggers
+    const cascadeFrames: QueueFrame[] = [];
     evaluateEngineTrigger(
       trigger, [...this.baseEvents, ...this.controller.output],
       (col, owner, frame) => this.controller.activeCount(col, owner, frame),
       (ev) => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { uid, name, ownerId, columnId, startFrame, segments, sourceOwnerId, sourceSkillName, stackingMode: sm, ...extraProps } = ev as any;
-        this.controller.createStatus(columnId, ownerId, startFrame, eventDuration(ev),
+        const created = this.controller.createStatus(columnId, ownerId, startFrame, eventDuration(ev),
           { ownerId: sourceOwnerId ?? '', skillName: sourceSkillName ?? '' },
           { statusName: name, uid, ...(sm ? { stackingMode: sm } : {}), event: { segments, ...extraProps } },
         );
+        if (created) {
+          const triggerObjectId = name || columnId;
+          const newFrames = this.checkReactiveTriggers('APPLY', triggerObjectId, entry.frame, entry.operatorSlotId, sourceSkillName ?? name);
+          for (const f of newFrames) f.cascadeDepth = depth + 1;
+          cascadeFrames.push(...newFrames);
+        }
       },
       this.getEnemyHpPercentage,
     );
-    return [];
+    return cascadeFrames;
   }
 
 

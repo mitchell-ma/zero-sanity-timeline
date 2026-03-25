@@ -20,7 +20,11 @@ import type { LoadoutProperties } from '../../view/InformationPane';
 import type { OperatorLoadoutState } from '../../view/OperatorLoadoutHeader';
 import type { TalentLevel } from '../../consts/types';
 import { aggregateLoadoutStats } from '../../controller/calculation/loadoutAggregator';
-import { getSkillMultiplier, getFrameMultiplier } from '../../controller/calculation/jsonMultiplierEngine';
+import { getSkillMultiplier } from '../../controller/calculation/jsonMultiplierEngine';
+
+// Stub for removed per-tick ramping mechanic — tests are skipped but TS still checks the body
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const getFrameMultiplier = (..._args: unknown[]): number | null => null;
 import {
   calculateDamage,
   getDefenseMultiplier,
@@ -199,7 +203,7 @@ describe.skip('Laevatain damage calculation — Flaming Cinders (basic attack)',
     })),
   );
 
-  test.each(cases)('$label', ({ segIndex, maxFrames, expected }) => {
+  test.skip.each(cases)('$label', ({ segIndex, maxFrames, expected }) => {
     const segMult = getSkillMultiplier(OPERATOR_ID, 'FLAMING_CINDERS', segIndex, SKILL_LEVEL, POTENTIAL);
     expect(segMult).not.toBeNull();
 
@@ -247,7 +251,7 @@ describe.skip('Laevatain damage calculation — Smouldering Fire (battle skill)'
     expected,
   }));
 
-  test.each(cases)('$label', ({ tickIndex, expected }) => {
+  test.skip.each(cases)('$label', ({ tickIndex, expected }) => {
     const perTickMult = getFrameMultiplier(OPERATOR_ID, 'SMOULDERING_FIRE', SKILL_LEVEL, POTENTIAL, tickIndex);
     expect(perTickMult).not.toBeNull();
 
@@ -345,7 +349,7 @@ describe.skip('Laevatain damage calculation — Enhanced basic attack (during ul
     })),
   );
 
-  test.each(cases)('$label', ({ segIndex, maxFrames, expected }) => {
+  test.skip.each(cases)('$label', ({ segIndex, maxFrames, expected }) => {
     const segMult = getSkillMultiplier(OPERATOR_ID, 'FLAMING_CINDERS_ENHANCED', segIndex, SKILL_LEVEL, POTENTIAL);
     expect(segMult).not.toBeNull();
 
@@ -404,7 +408,7 @@ describe.skip('Laevatain damage calculation — bare loadout (Tarr 11 lv1, no ge
     })),
   );
 
-  test.each(cases)('$label', ({ segIndex, maxFrames, expected }) => {
+  test.skip.each(cases)('$label', ({ segIndex, maxFrames, expected }) => {
     const segMult = getSkillMultiplier(OPERATOR_ID, 'FLAMING_CINDERS', segIndex, SKILL_LEVEL, POTENTIAL);
     expect(segMult).not.toBeNull();
 
@@ -431,7 +435,7 @@ describe.skip('Laevatain damage calculation — bare loadout (Tarr 11 lv1, no ge
     expected,
   }));
 
-  test.each(bsCases)('$label', ({ tickIndex, expected }) => {
+  test.skip.each(bsCases)('$label', ({ tickIndex, expected }) => {
     const perTickMult = getFrameMultiplier(OPERATOR_ID, 'SMOULDERING_FIRE', SKILL_LEVEL, POTENTIAL, tickIndex);
     expect(perTickMult).not.toBeNull();
 
@@ -531,7 +535,7 @@ describe.skip('Laevatain damage calculation — Enhanced battle skill (during ul
     defenseMultiplier = getDefenseMultiplier(100);
   });
 
-  it('hit 1 (DAMAGE_MULTIPLIER) → 19732', () => {
+  it.skip('hit 1 (DAMAGE_MULTIPLIER) → 19732', () => {
     const perTickMult = getFrameMultiplier(OPERATOR_ID, 'SMOULDERING_FIRE_ENHANCED', SKILL_LEVEL, POTENTIAL, 0);
     expect(perTickMult).not.toBeNull();
 

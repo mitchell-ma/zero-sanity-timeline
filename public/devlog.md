@@ -1,6 +1,16 @@
 # Devlog
 
 ## 2026-03-24
+- Combo skills can now be triggered by physical statuses (Lift, Breach, Knock Down, Crush) in addition to elemental inflictions — Antal's combo correctly activates when an ally applies Lift to an enemy with Focus
+- Combo trigger duplication now works for physical statuses — when a combo duplicates its trigger source, it properly re-applies the physical status (e.g. adding Vulnerable) instead of only working for elemental inflictions
+- Status triggers can now cascade — when a triggered status creates another status, any triggers watching for that second status will also fire, up to a safety depth limit
+- BECOME conditions now properly detect state transitions — triggers that fire "when X just happened" (like reaching a specific stack count) no longer fire repeatedly when the state hasn't changed
+- Conditional physical status effects on skill frames now execute properly — skills that apply Lift, Knock Down, etc. based on conditions (like "if enemy is Vulnerable") work correctly
+- Variant activation checks (enhanced/empowered skills) now use the full condition evaluator, supporting richer conditions beyond just "ultimate is active"
+- Removed the "NO EVENTS" placeholder text from empty timeline columns for a cleaner look
+- Talent level scaling unified — statuses that scale with talent level now resolve correctly regardless of which talent slot they belong to
+- Time-stop duration extensions no longer double-apply when processing is re-run
+- Damage multiplier data streamlined across all operators — removed unused per-tick ramping system in favor of the simpler segment-total approach
 - Dragging events on the timeline is now significantly smoother — reduced lag and stutter during drag interactions
 - Hovering the mouse over the timeline no longer causes unnecessary UI recalculation
 - The damage sheet no longer re-renders when moving the mouse, reducing CPU usage

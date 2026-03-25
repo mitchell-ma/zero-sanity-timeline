@@ -19,9 +19,9 @@
           "object": "DAMAGE",
           "to": "ENEMY",
           "with": {
-            "DAMAGE_MULTIPLIER": {
+            "value": {
               "verb": "VARY_BY",
-              "object": "TALENT_TWO_LEVEL",
+              "object": "TALENT_LEVEL",
               "value": [
                 0.3,
                 0.45
@@ -31,7 +31,7 @@
             },
             "hitCount": {
               "verb": "VARY_BY",
-              "object": "TALENT_TWO_LEVEL",
+              "object": "TALENT_LEVEL",
               "value": [
                 2,
                 3

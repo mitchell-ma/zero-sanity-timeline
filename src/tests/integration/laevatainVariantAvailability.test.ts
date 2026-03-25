@@ -135,11 +135,11 @@ describe('Laevatain variant availability — integration through useApp', () => 
       expect(r.disabled).toBe(false);
     });
 
-    it('enhanced battle skill is available during ultimate', () => {
+    it('enhanced battle skill requires 4 MF stacks (disabled without them even during ultimate)', () => {
       const { result } = renderHook(() => useApp());
       placeUltimate(result.current, ULT_START);
       const r = isAvailable(result.current, 'SMOULDERING_FIRE_ENHANCED', SKILL_COLUMNS.BATTLE, ACTIVE_FRAME, EnhancementType.ENHANCED);
-      expect(r.disabled).toBe(false);
+      expect(r.disabled).toBe(true);
     });
 
     it('normal basic attack is disabled during ultimate (DISABLE NORMAL)', () => {
@@ -232,6 +232,14 @@ describe('Laevatain variant availability — integration through useApp', () => 
       place4MfStacks(result.current, 2 * FPS);
       placeUltimate(result.current, ULT_START);
       const r = isAvailable(result.current, 'FLAMING_CINDERS_ENHANCED', SKILL_COLUMNS.BASIC, ACTIVE_FRAME, EnhancementType.ENHANCED);
+      expect(r.disabled).toBe(false);
+    });
+
+    it('enhanced battle skill is available (Ult + 4 MF)', () => {
+      const { result } = renderHook(() => useApp());
+      place4MfStacks(result.current, 2 * FPS);
+      placeUltimate(result.current, ULT_START);
+      const r = isAvailable(result.current, 'SMOULDERING_FIRE_ENHANCED', SKILL_COLUMNS.BATTLE, ACTIVE_FRAME, EnhancementType.ENHANCED);
       expect(r.disabled).toBe(false);
     });
 

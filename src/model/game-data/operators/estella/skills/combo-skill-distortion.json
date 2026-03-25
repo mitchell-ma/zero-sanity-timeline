@@ -100,8 +100,8 @@
                 },
                 {
                   "verb": "APPLY",
-                  "object": "LIFT",
-                  "objectType": "STATUS",
+                  "object": "PHYSICAL_STATUS",
+                  "objectId": "LIFT",
                   "to": "ENEMY"
                 },
                 {
@@ -110,7 +110,7 @@
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
-                    "DAMAGE_MULTIPLIER": {
+                    "value": {
                       "verb": "VARY_BY",
                       "object": "SKILL_LEVEL",
                       "value": [
@@ -156,8 +156,8 @@
                 },
                 {
                   "verb": "APPLY",
-                  "object": "LIFT",
-                  "objectType": "STATUS",
+                  "object": "PHYSICAL_STATUS",
+                  "objectId": "LIFT",
                   "to": "ENEMY"
                 },
                 {
@@ -166,7 +166,7 @@
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
-                    "DAMAGE_MULTIPLIER": {
+                    "value": {
                       "verb": "VARY_BY",
                       "object": "SKILL_LEVEL",
                       "value": [

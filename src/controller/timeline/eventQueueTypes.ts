@@ -57,6 +57,8 @@ export interface QueueFrame {
   // ── ENGINE_TRIGGER fields ─────────────────────────────────────────────
   /** Engine trigger context for ENGINE_TRIGGER entries. */
   engineTrigger?: import('./statusTriggerCollector').EngineTriggerEntry;
+  /** Cascade depth for ENGINE_TRIGGER chains (0 = top-level, capped at MAX_CASCADE_DEPTH). */
+  cascadeDepth?: number;
 
   // ── COMBO_RESOLVE fields ──────────────────────────────────────────────
   /** The combo event to resolve trigger column for. */

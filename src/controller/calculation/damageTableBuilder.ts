@@ -10,7 +10,7 @@ import { CombatSkillType, CritMode, DamageType, ElementType, EnemyTierType, Stat
 import { SkillLevel, Potential } from '../../consts/types';
 import { StatusDamageParams } from '../../model/calculation/damageFormulas';
 import { getModelEnemy } from './enemyRegistry';
-import { getSkillMultiplier, getFrameMultiplier } from './jsonMultiplierEngine';
+import { getSkillMultiplier } from './jsonMultiplierEngine';
 import { aggregateLoadoutStats } from './loadoutAggregator';
 import { OperatorLoadoutState, EMPTY_LOADOUT } from '../../view/OperatorLoadoutHeader';
 import {
@@ -301,34 +301,18 @@ export function buildDamageTableRows(
                 segmentMultiplier = null;
                 isPerTick = true;
               } else {
-                // Try per-tick multiplier first (for skills with ramping damage like Smouldering Fire)
-                const perTickMult = getFrameMultiplier(
+                multiplier = getSkillMultiplier(
                   operatorId,
                   ev.name as CombatSkillType,
+                  si,
                   skillLevel,
                   potential,
-                  fi,
                 );
 
-                if (perTickMult != null) {
-                  // Per-tick multiplier: use directly, no division needed
-                  multiplier = perTickMult;
-                  segmentMultiplier = null;
-                  isPerTick = true;
-                } else {
-                  multiplier = getSkillMultiplier(
-                    operatorId,
-                    ev.name as CombatSkillType,
-                    si,
-                    skillLevel,
-                    potential,
-                  );
-
-                  // Segment multiplier is for the entire segment; divide by max frame count
-                  segmentMultiplier = multiplier;
-                  if (multiplier != null && maxFrames > 1) {
-                    multiplier = multiplier / maxFrames;
-                  }
+                // Segment multiplier is for the entire segment; divide by max frame count
+                segmentMultiplier = multiplier;
+                if (multiplier != null && maxFrames > 1) {
+                  multiplier = multiplier / maxFrames;
                 }
               }
 

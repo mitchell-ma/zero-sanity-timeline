@@ -12,6 +12,9 @@ import { getOperatorSkill, getOperatorSkills, getComboTriggerClause } from '../g
 import { getOperatorStatuses } from '../gameDataStore';
 import { VerbType, SubjectType, DeterminerType } from '../../dsl/semantics';
 import type { Interaction, Predicate } from '../../dsl/semantics';
+import { evaluateConditions } from './conditionEvaluator';
+import type { ConditionContext } from './conditionEvaluator';
+import { t } from '../../locales/locale';
 import { extendByTimeStops } from './processTimeStop';
 import { ENEMY_OWNER_ID, INFLICTION_COLUMN_IDS, OPERATOR_COLUMNS, SKILL_COLUMNS, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID, COMBO_WINDOW_COLUMN_ID } from '../../model/channels';
 import { STATUS_LABELS } from '../../consts/timelineColumnLabels';
@@ -830,14 +833,11 @@ export function checkVariantAvailability(
   if (opId) {
     const clause = getVariantClause(opId, variantName);
     if (clause) {
-      const enhanceActive = enableObject ? hasEnableClauseAtFrame(events, ownerId, enableObject, atFrame) : false;
       const dec = getLastController();
-      const result = evaluateClause(clause, {
-        enhanceActive,
-        ownerId,
-        atFrame,
-        isControlledAt: dec ? (id, frame) => dec.isControlledAt(id, frame) : undefined,
-      });
+      const result = evaluateActivationClause(
+        clause, events, ownerId, atFrame,
+        dec ? (id, frame) => dec.isControlledAt(id, frame) : undefined,
+      );
       if (!result.pass) return { disabled: true, reason: result.reason };
     }
   }
@@ -845,7 +845,7 @@ export function checkVariantAvailability(
   // Enhanced variant: requires an active ENABLE clause for this skill type
   if (isEnhanced && enableObject && hasEnhancedVariants) {
     if (!hasEnableClauseAtFrame(events, ownerId, enableObject, atFrame)) {
-      return { disabled: true, reason: 'No active ENABLE effect' };
+      return { disabled: true, reason: t('ctx.activationNotMet') };
     }
   }
 
@@ -1138,55 +1138,47 @@ function getVariantClause(operatorId: string, variantName: string): Predicate[] 
   return found;
 }
 
-interface ClauseContext {
-  enhanceActive: boolean;
-  /** Owner slot ID of the event being evaluated. */
-  ownerId?: string;
-  /** Query which operator slot is controlled at a given frame. */
-  isControlledAt?: (ownerId: string, frame: number) => boolean;
-  /** Frame at which the event is placed. */
-  atFrame?: number;
-}
-
-/** Evaluate a single interaction condition against the current state. */
-function evaluateCondition(cond: Interaction, ctx: ClauseContext): boolean {
-  let result = true;
-  if (cond.verb === VerbType.IS && cond.object === 'ACTIVE') {
-    if (cond.subjectProperty === 'ULTIMATE') {
-      // "ULTIMATE IS ACTIVE" is equivalent to an active ENABLE clause
-      result = ctx.enhanceActive;
-    }
-  } else if (cond.verb === VerbType.IS && cond.object === 'CONTROLLED') {
-    // "THIS OPERATOR IS CONTROLLED" — check if this operator is the controlled operator
-    if (ctx.isControlledAt && ctx.ownerId != null && ctx.atFrame != null) {
-      result = ctx.isControlledAt(ctx.ownerId, ctx.atFrame);
-    } else {
-      result = false;
-    }
-  }
-  return cond.negated ? !result : result;
-}
-
 /**
- * Evaluate a clause (OR of predicates, each AND of conditions).
+ * Evaluate an activation clause (OR of predicates, each AND of conditions)
+ * using the shared conditionEvaluator.
  * Returns { pass: true } if any predicate's conditions all hold,
  * or { pass: false, reason } if none pass.
  */
-function evaluateClause(clause: Predicate[], ctx: ClauseContext): { pass: boolean; reason?: string } {
+function evaluateActivationClause(
+  clause: Predicate[],
+  events: readonly TimelineEvent[],
+  ownerId: string,
+  atFrame: number,
+  isControlledAt?: (id: string, frame: number) => boolean,
+): { pass: boolean; reason?: string } {
+  // Build unique owner IDs from events for controlled-slot resolution
+  const ownerIds = isControlledAt ? Array.from(new Set(events.map(ev => ev.ownerId))) : undefined;
+  const condCtx: ConditionContext = {
+    events,
+    frame: atFrame,
+    sourceOwnerId: ownerId,
+    getControlledSlotAtFrame: isControlledAt && ownerIds ? (frame) => {
+      for (const id of ownerIds) {
+        if (isControlledAt(id, frame)) return id;
+      }
+      return ownerId;
+    } : undefined,
+  };
+
   for (const pred of clause) {
     if (!pred.conditions?.length) continue;
-    const allMet = pred.conditions.every((c) => evaluateCondition(c, ctx));
-    if (allMet) return { pass: true };
+    if (evaluateConditions(pred.conditions as Interaction[], condCtx)) return { pass: true };
   }
+
   // Build reason from first predicate's failed conditions
-  const firstCond = clause[0]?.conditions?.[0];
+  const firstCond = clause[0]?.conditions?.[0] as Interaction | undefined;
   if (firstCond?.subjectProperty === 'ULTIMATE' && firstCond?.object === 'ACTIVE' && firstCond?.negated) {
-    return { pass: false, reason: 'Cannot be used while ultimate is active' };
+    return { pass: false, reason: t('ctx.ultActiveBlocked') };
   }
   if (firstCond?.verb === VerbType.IS && firstCond?.object === 'CONTROLLED') {
-    return { pass: false, reason: 'Operator must be the controlled operator' };
+    return { pass: false, reason: t('ctx.requiresControlled') };
   }
-  return { pass: false, reason: 'Activation condition not met' };
+  return { pass: false, reason: t('ctx.activationNotMet') };
 }
 
 export function validateVariantClauses(
@@ -1209,18 +1201,14 @@ export function validateVariantClauses(
     const clause = getVariantClause(operatorId, ev.name);
     if (!clause) continue;
 
-    const enableObject = COLUMN_TO_ENABLE_OBJECT[ev.columnId];
-    const enhanceActive = enableObject ? hasEnableClauseAtFrame(events, ev.ownerId, enableObject, ev.startFrame) : false;
     const dec = getLastController();
 
-    const result = evaluateClause(clause, {
-      enhanceActive,
-      ownerId: ev.ownerId,
-      atFrame: ev.startFrame,
-      isControlledAt: dec ? (id, frame) => dec.isControlledAt(id, frame) : undefined,
-    });
+    const result = evaluateActivationClause(
+      clause, events, ev.ownerId, ev.startFrame,
+      dec ? (id, frame) => dec.isControlledAt(id, frame) : undefined,
+    );
     if (!result.pass) {
-      map.set(ev.uid, result.reason ?? 'Activation condition not met');
+      map.set(ev.uid, result.reason ?? t('ctx.activationNotMet'));
     }
   }
   return map;

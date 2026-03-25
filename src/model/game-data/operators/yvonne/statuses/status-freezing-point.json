@@ -17,7 +17,7 @@
           "with": {
             "value": {
               "verb": "VARY_BY",
-              "object": "TALENT_TWO_LEVEL",
+              "object": "TALENT_LEVEL",
               "value": [
                 0.1,
                 0.2
@@ -27,7 +27,7 @@
             },
             "vsSolidified": {
               "verb": "VARY_BY",
-              "object": "TALENT_TWO_LEVEL",
+              "object": "TALENT_LEVEL",
               "value": [
                 0.2,
                 0.4

@@ -14,7 +14,7 @@ import { getLeafValue, resolveValueNode, DEFAULT_VALUE_CONTEXT } from '../../con
 import { ENEMY_OWNER_ID, OPERATOR_COLUMNS, REACTION_COLUMN_IDS, SKILL_COLUMNS, SKILL_COLUMN_ORDER } from '../../model/channels';
 import { getLastController, getReconcileStats } from '../../controller/timeline/eventQueueController';
 import { getPoolStats } from '../../controller/timeline/objectPool';
-import { getSkillMultiplier, getFrameMultiplier } from '../../controller/calculation/jsonMultiplierEngine';
+import { getSkillMultiplier } from '../../controller/calculation/jsonMultiplierEngine';
 import type { DamageTableRow } from '../../controller/calculation/damageTableBuilder';
 import type { SkillLevel, Potential } from '../../consts/types';
 import { type TranslatedEffect } from '../../dsl/semanticsTranslation';
@@ -70,7 +70,7 @@ function FrameDslEffects({ f }: { f: import('../../consts/viewTypes').EventFrame
           )}
         </div>
       )}
-      {f.duplicatesTriggerInfliction && (
+      {f.duplicateTriggerSource && (
         <div className="frame-dsl-effect" style={{ color: 'var(--text-muted)' }}>
           APPLY TRIGGER INFLICTION TO ENEMY
         </div>
@@ -114,7 +114,7 @@ function frameHasEffects(f: import('../../consts/viewTypes').EventFrameMarker, d
   return !!(
     f.applyArtsInfliction || f.absorbArtsInfliction || f.consumeArtsInfliction ||
     f.consumeStatus || f.applyStatus || f.applyStatuses?.length ||
-    f.applyForcedReaction || f.consumeReaction || f.duplicatesTriggerInfliction ||
+    f.applyForcedReaction || f.consumeReaction || f.duplicateTriggerSource ||
     (dslFrameEffects && dslFrameEffects.length > 0)
   );
 }
@@ -993,9 +993,6 @@ function EventPane({
           let overallMultiplier: number | null = null;
           let overallMaxFrames = 0;
           // Per-tick ramping multipliers (e.g. Smouldering Fire explosion)
-          let perTickBase: number | null = null;
-          let perTickIncrement = 0;
-          let perTickFrames = 0;
 
           // Look up default segments from column definition for max frame counts
           const miniCol = col && col.type !== 'placeholder' ? col as MiniTimeline : null;
@@ -1035,26 +1032,6 @@ function EventPane({
               if (overallMultiplier != null && defaultSegs) {
                 overallMaxFrames = defaultSegs.reduce((sum, s) => sum + (s.frames?.length ?? 0), 0);
               }
-              // Check if this skill has per-tick ramping multipliers
-              const tick0 = getFrameMultiplier(
-                operatorId,
-                event.name as CombatSkillType,
-                skillLevel as SkillLevel,
-                (stats?.operator.potential ?? 0) as Potential,
-                0,
-              );
-              if (tick0 != null && overallMaxFrames > 1) {
-                const tick1 = getFrameMultiplier(
-                  operatorId,
-                  event.name as CombatSkillType,
-                  skillLevel as SkillLevel,
-                  (stats?.operator.potential ?? 0) as Potential,
-                  1,
-                );
-                perTickBase = tick0;
-                perTickIncrement = tick1 != null ? tick1 - tick0 : 0;
-                perTickFrames = overallMaxFrames;
-              }
             }
           }
 
@@ -1064,7 +1041,7 @@ function EventPane({
           const skillDescription = skillDef?.description;
 
           const elColor = skillEl ? ELEMENT_COLORS[skillEl.toUpperCase() as ElementType] : undefined;
-          const hasMultiplier = overallMultiplier != null || segMultipliers.length > 0 || perTickBase != null;
+          const hasMultiplier = overallMultiplier != null || segMultipliers.length > 0;
           const hasInfo = skillEl || event.skillPointCost != null || hasMultiplier || skillDescription;
 
           if (!hasInfo) return null;
@@ -1091,7 +1068,7 @@ function EventPane({
                     <span style={{ fontFamily: 'var(--font-mono)' }}>{event.skillPointCost}</span>
                   </div>
                 )}
-                {overallMultiplier != null && perTickBase == null && (
+                {overallMultiplier != null && (
                   <div>
                     <span style={{ color: 'var(--text-muted)' }}>Multiplier: </span>
                     <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--gold)' }}>
@@ -1102,23 +1079,6 @@ function EventPane({
                         ({fmtN((overallMultiplier / overallMaxFrames) * 100)}% x{overallMaxFrames})
                       </span>
                     )}
-                    {skillLevel != null && (
-                      <span style={{ color: 'var(--text-muted)', fontSize: 10, marginLeft: 4 }}>
-                        Lv.{skillLevel}
-                      </span>
-                    )}
-                  </div>
-                )}
-                {perTickBase != null && (
-                  <div>
-                    <span style={{ color: 'var(--text-muted)' }}>Multiplier: </span>
-                    <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--gold)' }}>
-                      {fmtN(perTickBase * 100)}%
-                      {perTickIncrement > 0 && ` + ${fmtN(perTickIncrement * 100)}%/tick`}
-                    </span>
-                    <span style={{ color: 'var(--text-muted)', fontSize: 10, marginLeft: 4 }}>
-                      ({perTickFrames} ticks: {fmtN(perTickBase * 100)}%–{fmtN((perTickBase + perTickIncrement * (perTickFrames - 1)) * 100)}%)
-                    </span>
                     {skillLevel != null && (
                       <span style={{ color: 'var(--text-muted)', fontSize: 10, marginLeft: 4 }}>
                         Lv.{skillLevel}

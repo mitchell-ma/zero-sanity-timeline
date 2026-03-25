@@ -83,10 +83,14 @@ export interface FrameDealDamage {
 
 /** A single effect within a clause predicate. */
 export interface FrameClauseEffect {
-  type: 'consumeReaction' | 'applyStatus' | 'applyInfliction' | 'dealDamage' | 'recoverSP' | 'applyStagger';
+  type: 'consumeReaction' | 'applyStatus' | 'applyInfliction' | 'dealDamage' | 'recoverSP' | 'applyStagger' | 'applyPhysicalStatus';
   consumeReaction?: FrameReactionConsumption;
   applyStatus?: FrameApplyStatus;
   dealDamage?: FrameDealDamage;
+  /** Physical status adjective (LIFT, KNOCK_DOWN, CRUSH, BREACH) for applyPhysicalStatus. */
+  physicalStatusAdjective?: string;
+  /** Whether this physical status application is forced (bypasses Vulnerable gate). */
+  physicalStatusIsForced?: boolean;
 }
 
 /** A predicate: conditions (AND'd) → effects. Empty conditions = unconditional. */
@@ -134,7 +138,7 @@ export abstract class SkillEventFrame {
   getDamageElement(): string | null { return null; }
 
   /** Whether this frame duplicates the source infliction that triggered it. */
-  getDuplicatesTriggerInfliction(): boolean { return false; }
+  getDuplicateTriggerSource(): boolean { return false; }
 
   /** Frame clauses (DSL v2): conditional and unconditional effect groups. */
   getClauses(): readonly FrameClausePredicate[] { return []; }

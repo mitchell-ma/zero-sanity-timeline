@@ -6,7 +6,8 @@
           "subjectDeterminer": "THIS",
           "subject": "OPERATOR",
           "verb": "APPLY",
-          "object": "KNOCK_DOWN"
+          "object": "PHYSICAL_STATUS",
+          "objectId": "KNOCK_DOWN"
         },
         {
           "subjectDeterminer": "THIS",

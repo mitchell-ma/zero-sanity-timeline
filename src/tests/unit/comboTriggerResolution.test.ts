@@ -117,7 +117,7 @@ function makeAntalCombo(startFrame: number, comboTriggerColumnId: string): Timel
       { properties: { segmentTypes: [SegmentType.ANIMATION], duration: Math.round(0.5 * FPS), timeDependency: TimeDependency.REAL_TIME } },
       {
         properties: { duration: Math.round(0.8 * FPS) },
-        frames: [{ offsetFrame: Math.round(0.7 * FPS), duplicatesTriggerInfliction: true }],
+        frames: [{ offsetFrame: Math.round(0.7 * FPS), duplicateTriggerSource: true }],
       },
     ],
   });

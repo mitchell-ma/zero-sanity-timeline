@@ -151,4 +151,106 @@ describe('Basic attack time-stop extension — Akekuri basic + combo overlap', (
       }
     }
   });
+
+  it('hover frame within extended segment resolves to correct segment index', () => {
+    const { result } = renderHook(() => useApp());
+
+    const basicCol = findColumn(result.current, SLOT_AKEKURI, SKILL_COLUMNS.BASIC);
+    const comboCol = findColumn(result.current, SLOT_AKEKURI, SKILL_COLUMNS.COMBO);
+
+    act(() => {
+      result.current.handleAddEvent(
+        SLOT_AKEKURI, SKILL_COLUMNS.BASIC, 0, basicCol!.defaultEvent!,
+      );
+    });
+    act(() => {
+      result.current.setInteractionMode(InteractionModeType.FREEFORM);
+    });
+    act(() => {
+      result.current.handleAddEvent(
+        SLOT_AKEKURI, SKILL_COLUMNS.COMBO, Math.round(1.3 * FPS), comboCol!.defaultEvent!,
+      );
+    });
+
+    const basicEvent = result.current.allProcessedEvents.find(
+      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === SKILL_COLUMNS.BASIC,
+    )!;
+
+    // Build segment boundaries from processed event (same logic as EventBlock hover)
+    const boundaries: { start: number; end: number; name?: string }[] = [];
+    let offset = 0;
+    for (const seg of basicEvent.segments) {
+      const start = basicEvent.startFrame + offset;
+      const end = start + seg.properties.duration;
+      boundaries.push({ start, end, name: seg.properties.name });
+      offset += seg.properties.duration;
+    }
+
+    // The third segment (index 2) should be extended
+    const seg3 = boundaries[2];
+    const rawSeg3End = basicCol!.defaultEvent!.segments!
+      .slice(0, 3)
+      .reduce((sum, s) => sum + s.properties.duration, 0);
+
+    // Extended seg3 should end LATER than raw seg3
+    expect(seg3.end).toBeGreaterThan(rawSeg3End);
+
+    // A hover frame 1 frame before the extended seg3 end should resolve to seg3
+    const hoverInExtendedPortion = seg3.end - 1;
+    const resolvedSeg = boundaries.findIndex(
+      (b) => hoverInExtendedPortion >= b.start && hoverInExtendedPortion < b.end,
+    );
+    expect(resolvedSeg).toBe(2); // seg3 = index 2
+
+    // A hover frame at the raw seg3 end should STILL resolve to seg3 (not seg4)
+    const hoverAtRawEnd = rawSeg3End;
+    const resolvedAtRaw = boundaries.findIndex(
+      (b) => hoverAtRawEnd >= b.start && hoverAtRawEnd < b.end,
+    );
+    expect(resolvedAtRaw).toBe(2); // still seg3
+  });
+
+  it('segment durations do not double-extend across re-renders', () => {
+    const { result } = renderHook(() => useApp());
+
+    const basicCol = findColumn(result.current, SLOT_AKEKURI, SKILL_COLUMNS.BASIC);
+    const comboCol = findColumn(result.current, SLOT_AKEKURI, SKILL_COLUMNS.COMBO);
+
+    act(() => {
+      result.current.handleAddEvent(
+        SLOT_AKEKURI, SKILL_COLUMNS.BASIC, 0, basicCol!.defaultEvent!,
+      );
+    });
+    act(() => {
+      result.current.setInteractionMode(InteractionModeType.FREEFORM);
+    });
+    act(() => {
+      result.current.handleAddEvent(
+        SLOT_AKEKURI, SKILL_COLUMNS.COMBO, Math.round(1.3 * FPS), comboCol!.defaultEvent!,
+      );
+    });
+
+    const comboEvent = result.current.allProcessedEvents.find(
+      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === SKILL_COLUMNS.COMBO,
+    )!;
+    const animDur = getAnimationDuration(comboEvent);
+    const rawSeg3Duration = basicCol!.defaultEvent!.segments![2].properties.duration;
+
+    // Capture seg3 duration after first pipeline run
+    const seg3First = result.current.allProcessedEvents.find(
+      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === SKILL_COLUMNS.BASIC,
+    )!.segments[2];
+    expect(seg3First.properties.duration).toBe(rawSeg3Duration + animDur);
+
+    // Trigger a re-render by moving the combo slightly
+    act(() => {
+      result.current.handleMoveEvent(comboEvent.uid, Math.round(1.3 * FPS) + 1);
+    });
+
+    // Seg3 duration must still be rawDuration + animDur — NOT double-extended
+    const seg3Second = result.current.allProcessedEvents.find(
+      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === SKILL_COLUMNS.BASIC,
+    )!.segments[2];
+    expect(seg3Second.properties.duration).toBe(rawSeg3Duration + animDur);
+  });
 });

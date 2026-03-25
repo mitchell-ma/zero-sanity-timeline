@@ -97,7 +97,7 @@
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
-                    "DAMAGE_MULTIPLIER": {
+                    "value": {
                       "verb": "VARY_BY",
                       "object": "SKILL_LEVEL",
                       "value": [
@@ -121,8 +121,8 @@
                 },
                 {
                   "verb": "APPLY",
-                  "object": "CRUSH",
-                  "objectType": "STATUS",
+                  "object": "PHYSICAL_STATUS",
+                  "objectId": "CRUSH",
                   "to": "ENEMY",
                   "with": {
                     "ADDITIONAL_DAMAGE_MULTIPLIER": {

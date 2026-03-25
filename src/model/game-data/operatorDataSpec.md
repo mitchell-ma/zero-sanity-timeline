@@ -123,7 +123,7 @@ Attaches or modifies a buff (status effect).
     "statusType": "LAEVATAIN_POTENTIAL5_PROOF_OF_EXISTENCE",
     "parameters": [
       {
-        "parameterKey": "DAMAGE_MULTIPLIER",
+        "parameterKey": "value",
         "value": 1.15,
         "parameterModifyType": "UNIQUE_MULTIPLIER"
       }

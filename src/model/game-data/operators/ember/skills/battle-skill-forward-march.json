@@ -54,7 +54,7 @@
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
-                    "DAMAGE_MULTIPLIER": {
+                    "value": {
                       "verb": "VARY_BY",
                       "object": "SKILL_LEVEL",
                       "value": [
@@ -110,7 +110,8 @@
                 },
                 {
                   "verb": "APPLY",
-                  "object": "KNOCK_DOWN",
+                  "object": "PHYSICAL_STATUS",
+                  "objectId": "KNOCK_DOWN",
                   "to": "ENEMY"
                 },
                 {
@@ -119,7 +120,7 @@
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
-                    "DAMAGE_MULTIPLIER": {
+                    "value": {
                       "verb": "VARY_BY",
                       "object": "SKILL_LEVEL",
                       "value": [

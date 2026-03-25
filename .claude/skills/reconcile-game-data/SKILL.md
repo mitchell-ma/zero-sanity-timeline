@@ -103,6 +103,39 @@ INFO:
   Cross-reference coverage: N/N weapons fully linked
 ```
 
+### 6. Operator status — NORMAL vs MINOR enhancement distinction
+
+When an operator talent/potential applies a buff to **other** operators and the shared version has **weaker potency** than the self-buff, use `EnhancementType.MINOR` with a `_MINOR` suffix to distinguish it.
+
+**Pattern:**
+- `ESSENCE_DISINTEGRATION` — full ATK +30% to self → `EnhancementType.NORMAL` (default)
+- `ESSENCE_DISINTEGRATION_MINOR` — reduced ATK +15% to all other → `EnhancementType.MINOR`
+
+**Target semantics (do not conflate):**
+- `"to": "OPERATOR", "toDeterminer": "ALL"` — applies separate status instances to each individual operator's status column
+- `"to": "TEAM"` — applies one shared status to the team-status column (`COMMON_OWNER_ID`)
+- `"to": "OPERATOR", "toDeterminer": "ALL_OTHER"` — applies to each operator except the source
+
+**Checks:**
+- `_MINOR` suffix is only for statuses with **reduced potency** compared to the self-targeted version — not all shared/team statuses are MINOR
+- If the shared version has identical values to the self version, it is NOT MINOR — just a shared application of the same status
+- If a trigger clause applies both a self status and a weaker shared status, the shared should use the `_MINOR` suffixed ID
+
+### 7. Operator talent/potential → status trigger ownership
+
+The `onTriggerClause` belongs on the **talent/potential** file when the talent/potential description says it directly applies the effect. The status file holds the status properties and passive effects (`clause`). The talent/potential is the trigger owner; the status is the effect definition.
+
+**When `onTriggerClause` belongs on the status:**
+- Self-referential triggers (e.g. BECOME STACKS EXACTLY MAX → apply a derived status). The status watches its own state transitions.
+
+**When `onTriggerClause` belongs on the talent/potential:**
+- The talent/potential description says it directly causes the effect (e.g. "After consuming Vulnerability, gain Physical DMG +4%")
+- Compound triggers that involve multiple actions (e.g. ALL → CONSUME + APPLY)
+
+**Checks:**
+- No duplicate triggers: the same trigger conditions should not appear on both the talent and status files
+- If a status has `onTriggerClause`, verify it's a self-referential trigger (watching its own stacks/state), not a talent-originated trigger
+
 ## File locations
 
 | Config | Path | Format |

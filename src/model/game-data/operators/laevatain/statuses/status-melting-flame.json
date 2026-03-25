@@ -1,10 +1,11 @@
 {
-  "clause": [
+  "onTriggerClause": [
     {
       "conditions": [
         {
           "subject": "EVENT",
-          "verb": "HAVE",
+          "subjectDeterminer": "THIS",
+          "verb": "BECOME",
           "object": "STACKS",
           "cardinalityConstraint": "EXACTLY",
           "value": "MAX"
@@ -16,7 +17,10 @@
           "object": "STATUS",
           "objectId": "SCORCHING_HEART_EFFECT",
           "toDeterminer": "THIS",
-          "to": "OPERATOR"
+          "to": "OPERATOR",
+          "with": {
+            "stacks": { "verb": "IS", "value": 1 }
+          }
         }
       ]
     }

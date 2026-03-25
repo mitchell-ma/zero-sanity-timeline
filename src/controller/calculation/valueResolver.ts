@@ -18,8 +18,8 @@ import { SKILL_COLUMNS } from '../../model/channels';
 export interface ValueResolutionContext {
   skillLevel: number;
   potential: number;
-  talentOneLevel?: number;
-  talentTwoLevel?: number;
+  /** Talent level for the current event's talent slot (resolved from operator's talent key-map). */
+  talentLevel?: number;
   /** Aggregated operator stats keyed by StatType string. */
   stats: Partial<Record<string, number>>;
   /** Context for the SOURCE operator (talent owner), when different from the current operator. */
@@ -44,9 +44,7 @@ function getVariableArrayIndex(object: string, ctx: ValueResolutionContext): num
   switch (object) {
     case 'SKILL_LEVEL':       return ctx.skillLevel - 1;
     case 'POTENTIAL':         return ctx.potential;
-    case 'TALENT_LEVEL':
-    case 'TALENT_ONE_LEVEL':  return ctx.talentOneLevel ?? 0;
-    case 'TALENT_TWO_LEVEL':  return ctx.talentTwoLevel ?? 0;
+    case 'TALENT_LEVEL':      return ctx.talentLevel ?? 0;
     default:                  return undefined;
   }
 }
@@ -155,22 +153,28 @@ const SKILL_COLUMN_LEVEL_KEY: Record<string, keyof LoadoutProperties['skills']> 
   [SKILL_COLUMNS.ULTIMATE]: 'ultimateLevel',
 };
 
+/** Talent slot key — corresponds to the operator JSON `talents.one` / `talents.two` key-map. */
+export type TalentSlot = 'one' | 'two';
+
 /**
  * Build a ValueResolutionContext for a given skill column from loadout properties.
  * Falls back to DEFAULT_VALUE_CONTEXT when props is undefined.
+ *
+ * @param talentSlot — When resolving a talent/status, pass the talent slot ('one' or 'two')
+ *   so `TALENT_LEVEL` resolves to the correct talent level from the operator's loadout.
  */
 export function buildContextForSkillColumn(
   props: LoadoutProperties | undefined,
   skillColumn: string,
   stats?: Partial<Record<string, number>>,
+  talentSlot?: TalentSlot,
 ): ValueResolutionContext {
   if (!props) return { ...DEFAULT_VALUE_CONTEXT, stats: stats ?? {} };
   const levelKey = SKILL_COLUMN_LEVEL_KEY[skillColumn];
   return {
     skillLevel: levelKey ? props.skills[levelKey] : DEFAULT_VALUE_CONTEXT.skillLevel,
     potential: props.operator.potential,
-    talentOneLevel: props.operator.talentOneLevel,
-    talentTwoLevel: props.operator.talentTwoLevel,
+    talentLevel: talentSlot === 'two' ? props.operator.talentTwoLevel : props.operator.talentOneLevel,
     stats: stats ?? {},
   };
 }

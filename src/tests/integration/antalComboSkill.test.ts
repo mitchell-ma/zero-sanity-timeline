@@ -15,10 +15,11 @@
 
 import { renderHook, act } from '@testing-library/react';
 import { useApp } from '../../app/useApp';
-import { SKILL_COLUMNS, INFLICTION_COLUMNS, ENEMY_OWNER_ID } from '../../model/channels';
+import { SKILL_COLUMNS, INFLICTION_COLUMNS, PHYSICAL_INFLICTION_COLUMNS, PHYSICAL_STATUS_COLUMNS, ENEMY_OWNER_ID } from '../../model/channels';
 import { FPS } from '../../utils/timeline';
 import type { MiniTimeline } from '../../consts/viewTypes';
 
+const SLOT_CHEN = 'slot-1';
 const SLOT_AKEKURI = 'slot-1';
 const SLOT_ANTAL = 'slot-2';
 
@@ -131,5 +132,120 @@ describe('Antal combo skill — heat infliction mirroring after drag', () => {
       (ev) => ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerId === ENEMY_OWNER_ID,
     );
     expect(heatsAfterDrag).toHaveLength(1);
+  });
+});
+
+describe('Antal combo skill — physical status (Lift) trigger', () => {
+  it('combo window activates when Chen Qianyu applies Lift while enemy has Focus', () => {
+    const { result } = renderHook(() => useApp());
+
+    // Swap Chen Qianyu into slot-1 (replaces Akekuri)
+    act(() => {
+      result.current.handleSwapOperator(SLOT_CHEN, 'chenQianyu');
+    });
+
+    // 1. Antal uses battle skill — applies Focus to enemy
+    const antalBattleCol = findColumn(result.current, SLOT_ANTAL, SKILL_COLUMNS.BATTLE);
+    expect(antalBattleCol).toBeDefined();
+
+    act(() => {
+      result.current.handleAddEvent(
+        SLOT_ANTAL, SKILL_COLUMNS.BATTLE, 0, antalBattleCol!.defaultEvent!,
+      );
+    });
+
+    // 2. Chen uses battle skill twice — first adds Vulnerable, second triggers Lift
+    const chenBattleCol = findColumn(result.current, SLOT_CHEN, SKILL_COLUMNS.BATTLE);
+    expect(chenBattleCol).toBeDefined();
+
+    act(() => {
+      result.current.handleAddEvent(
+        SLOT_CHEN, SKILL_COLUMNS.BATTLE, 0, chenBattleCol!.defaultEvent!,
+      );
+    });
+    act(() => {
+      result.current.handleAddEvent(
+        SLOT_CHEN, SKILL_COLUMNS.BATTLE, 15 * FPS, chenBattleCol!.defaultEvent!,
+      );
+    });
+
+    // Verify: enemy has Lift status
+    const liftEvents = result.current.allProcessedEvents.filter(
+      (ev) => ev.columnId === PHYSICAL_STATUS_COLUMNS.LIFT && ev.ownerId === ENEMY_OWNER_ID,
+    );
+    expect(liftEvents).toHaveLength(1);
+
+    // 3. Antal uses combo skill — should be triggered by Lift (physical status)
+    const antalComboCol = findColumn(result.current, SLOT_ANTAL, SKILL_COLUMNS.COMBO);
+    expect(antalComboCol).toBeDefined();
+
+    act(() => {
+      result.current.handleAddEvent(
+        SLOT_ANTAL, SKILL_COLUMNS.COMBO, 16 * FPS, antalComboCol!.defaultEvent!,
+      );
+    });
+
+    // Verify: combo has a trigger pointing to the Lift column
+    const comboEvent = result.current.allProcessedEvents.find(
+      (ev) => ev.ownerId === SLOT_ANTAL && ev.columnId === SKILL_COLUMNS.COMBO,
+    );
+    expect(comboEvent).toBeDefined();
+    expect(comboEvent!.comboTriggerColumnId).toBe(PHYSICAL_STATUS_COLUMNS.LIFT);
+  });
+
+  it('combo duplicates Lift (adds Vulnerable), not infliction, when triggered by physical status', () => {
+    const { result } = renderHook(() => useApp());
+
+    // Swap Chen Qianyu into slot-1
+    act(() => {
+      result.current.handleSwapOperator(SLOT_CHEN, 'chenQianyu');
+    });
+
+    // Antal battle skill → Focus on enemy
+    const antalBattleCol = findColumn(result.current, SLOT_ANTAL, SKILL_COLUMNS.BATTLE);
+    act(() => {
+      result.current.handleAddEvent(
+        SLOT_ANTAL, SKILL_COLUMNS.BATTLE, 0, antalBattleCol!.defaultEvent!,
+      );
+    });
+
+    // Chen battle skill ×2 → Vulnerable + Lift
+    const chenBattleCol = findColumn(result.current, SLOT_CHEN, SKILL_COLUMNS.BATTLE);
+    act(() => {
+      result.current.handleAddEvent(
+        SLOT_CHEN, SKILL_COLUMNS.BATTLE, 0, chenBattleCol!.defaultEvent!,
+      );
+    });
+    act(() => {
+      result.current.handleAddEvent(
+        SLOT_CHEN, SKILL_COLUMNS.BATTLE, 15 * FPS, chenBattleCol!.defaultEvent!,
+      );
+    });
+
+    // Count Vulnerable stacks before combo (2 from Chen's two battle skills)
+    const vulnBefore = result.current.allProcessedEvents.filter(
+      (ev) => ev.columnId === PHYSICAL_INFLICTION_COLUMNS.VULNERABLE && ev.ownerId === ENEMY_OWNER_ID,
+    );
+    expect(vulnBefore).toHaveLength(2);
+
+    // Antal combo skill — triggered by Lift
+    const antalComboCol = findColumn(result.current, SLOT_ANTAL, SKILL_COLUMNS.COMBO);
+    act(() => {
+      result.current.handleAddEvent(
+        SLOT_ANTAL, SKILL_COLUMNS.COMBO, 16 * FPS, antalComboCol!.defaultEvent!,
+      );
+    });
+
+    // Combo should duplicate the trigger source (Lift → adds another Vulnerable stack)
+    const vulnAfter = result.current.allProcessedEvents.filter(
+      (ev) => ev.columnId === PHYSICAL_INFLICTION_COLUMNS.VULNERABLE && ev.ownerId === ENEMY_OWNER_ID,
+    );
+    expect(vulnAfter).toHaveLength(3);
+
+    // No heat infliction should be created (combo was not triggered by infliction)
+    const heatEvents = result.current.allProcessedEvents.filter(
+      (ev) => ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerId === ENEMY_OWNER_ID,
+    );
+    expect(heatEvents).toHaveLength(0);
   });
 });

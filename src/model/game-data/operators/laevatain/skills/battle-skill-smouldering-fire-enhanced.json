@@ -1,4 +1,19 @@
 {
+  "activationClause": [
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "HAVE",
+          "object": "STATUS",
+          "objectId": "MELTING_FLAME",
+          "cardinalityConstraint": "EXACTLY",
+          "value": { "verb": "IS", "value": 4 }
+        }
+      ]
+    }
+  ],
   "properties": {
     "enhancementTypes": [
       "ENHANCED"
@@ -95,9 +110,9 @@
                     },
                     "count": {
                       "verb": "IS",
-                      "value": 4
+                      "value": { "verb": "IS", "value": 4 }
                     },
-                    "DAMAGE_MULTIPLIER": {
+                    "value": {
                       "verb": "VARY_BY",
                       "object": "SKILL_LEVEL",
                       "value": [
@@ -197,7 +212,7 @@
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
                     },
-                    "DAMAGE_MULTIPLIER": {
+                    "value": {
                       "verb": "VARY_BY",
                       "object": "SKILL_LEVEL",
                       "value": [

@@ -996,7 +996,7 @@ describe('Freeform Inflictions', () => {
 });
 
 // ═════════════════════════════════════════════════════════════════════════════
-// Combo skill infliction — data-driven via duplicatesTriggerInfliction
+// Combo skill infliction — data-driven via duplicateTriggerSource
 // ═════════════════════════════════════════════════════════════════════════════
 
 describe('Combo skill infliction behavior', () => {
@@ -1034,7 +1034,7 @@ describe('Combo skill infliction behavior', () => {
         { properties: { segmentTypes: [SegmentType.ANIMATION], duration: Math.round(0.5 * FPS), timeDependency: TimeDependency.REAL_TIME } },
         {
           properties: { duration: Math.round(0.8 * FPS) },
-          frames: [{ offsetFrame: Math.round(0.7 * FPS), duplicatesTriggerInfliction: true }],
+          frames: [{ offsetFrame: Math.round(0.7 * FPS), duplicateTriggerSource: true }],
         },
       ],
     };
@@ -1074,7 +1074,7 @@ describe('Combo skill infliction behavior', () => {
     expect(enemyInflictions.length).toBe(0);
   });
 
-  test('G6: Combo without duplicatesTriggerInfliction does not mirror even with trigger column', () => {
+  test('G6: Combo without duplicateTriggerSource does not mirror even with trigger column', () => {
     // Wulfgard Frag Grenade Beta — has explicit APPLY HEAT INFLICTION (via applyArtsInfliction),
     // NOT TRIGGER mirroring. Simulated here as a combo without the flag.
     const combo: TimelineEvent = {
@@ -1089,7 +1089,7 @@ describe('Combo skill infliction behavior', () => {
         { properties: { segmentTypes: [SegmentType.ANIMATION], duration: Math.round(0.5 * FPS), timeDependency: TimeDependency.REAL_TIME } },
         {
           properties: { duration: Math.round(1.0 * FPS) },
-          // No duplicatesTriggerInfliction — has explicit applyArtsInfliction instead
+          // No duplicateTriggerSource — has explicit applyArtsInfliction instead
           frames: [{
             offsetFrame: Math.round(0.5 * FPS),
             applyArtsInfliction: { element: 'HEAT', stacks: 1 },
@@ -1387,7 +1387,7 @@ describe('Combo skill effects — all operators', () => {
         const elementAdj = adjectives.find((a: string) => ['HEAT', 'CRYO', 'NATURE', 'ELECTRIC'].includes(a));
 
         if (ef.verb === 'APPLY' && isSource && (ef.object === 'INFLICTION' || ef.object === 'STATUS')) {
-          marker.duplicatesTriggerInfliction = true;
+          marker.duplicateTriggerSource = true;
         }
         if (ef.verb === 'APPLY' && !isSource && ef.object === 'INFLICTION' && elementAdj) {
           marker.applyArtsInfliction = { element: elementAdj, stacks: 1 };
@@ -1494,7 +1494,7 @@ describe('Combo skill effects — all operators', () => {
     const combo = buildComboFromJson('wulfgard-skills.json', 'slot-wulfgard', 500, INFLICTION_COLUMNS.HEAT);
     const result = processCombatSimulation([combo]);
     const enemyCounts = enemyEventsByColumn(result);
-    // 1 from explicit APPLY HEAT INFLICTION, 0 from trigger mirroring (no duplicatesTriggerInfliction)
+    // 1 from explicit APPLY HEAT INFLICTION, 0 from trigger mirroring (no duplicateTriggerSource)
     expect(enemyCounts.get(INFLICTION_COLUMNS.HEAT) ?? 0).toBe(1);
     expect(enemyCounts.get(INFLICTION_COLUMNS.CRYO) ?? 0).toBe(0);
     expect(enemyCounts.get(INFLICTION_COLUMNS.ELECTRIC) ?? 0).toBe(0);

@@ -134,8 +134,8 @@ export interface EventFrameMarker {
   staggerValue?: number;
   /** Label for status-effect frames (e.g. "-12.0 Res"). Non-null marks this as a status frame rather than a damage frame. */
   statusLabel?: string;
-  /** Whether this frame duplicates the trigger infliction that caused it. */
-  duplicatesTriggerInfliction?: boolean;
+  /** Whether this frame re-applies the trigger source (infliction or physical status) that caused the combo. */
+  duplicateTriggerSource?: boolean;
   /** DSL v2 clause predicates (conditional + unconditional effect groups). */
   clauses?: readonly FrameClausePredicate[];
   /** Inline DEAL DAMAGE data (element + per-level multipliers). */

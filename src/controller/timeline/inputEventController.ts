@@ -36,6 +36,12 @@ export function classifyEvents(rawEvents: TimelineEvent[]): { inputEvents: Timel
       && (INFLICTION_COLUMN_IDS.has(ev.columnId) || REACTION_COLUMN_IDS.has(ev.columnId));
     const copy = isDerived ? allocDerivedEvent() : allocInputEvent();
     Object.assign(copy, ev);
+    // Deep-clone segment properties so pipeline mutations (time-stop duration
+    // extension) don't leak back to raw state and cause double-extension.
+    copy.segments = ev.segments.map(s => ({
+      ...s,
+      properties: { ...s.properties },
+    }));
     if (isDerived) {
       derivedEvents.push(copy);
     } else {

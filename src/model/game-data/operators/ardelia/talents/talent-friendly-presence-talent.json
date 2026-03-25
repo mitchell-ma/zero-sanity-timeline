@@ -18,7 +18,7 @@
           "with": {
             "healBase": {
               "verb": "VARY_BY",
-              "object": "TALENT_ONE_LEVEL",
+              "object": "TALENT_LEVEL",
               "value": [
                 63,
                 90
@@ -28,7 +28,7 @@
             },
             "willAdditive": {
               "verb": "VARY_BY",
-              "object": "TALENT_ONE_LEVEL",
+              "object": "TALENT_LEVEL",
               "value": [
                 0.53,
                 0.75

@@ -107,8 +107,7 @@ export const OBJECT_LABELS: Record<string, string> = {
   GAME_TIME: t('dsl.object.GAME_TIME'),
   REAL_TIME: t('dsl.object.REAL_TIME'),
   [NounType.STAT]: t('dsl.object.STAT'),
-  [NounType.TALENT_ONE_LEVEL]: t('dsl.object.TALENT_ONE_LEVEL'),
-  [NounType.TALENT_TWO_LEVEL]: t('dsl.object.TALENT_TWO_LEVEL'),
+  [NounType.TALENT_LEVEL]: t('dsl.object.TALENT_LEVEL'),
   [NounType.ATTRIBUTE_INCREASE_LEVEL]: t('dsl.object.ATTRIBUTE_INCREASE_LEVEL'),
 };
 

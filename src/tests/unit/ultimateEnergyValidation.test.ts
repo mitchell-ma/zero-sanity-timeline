@@ -510,7 +510,7 @@ describe('ENABLE/DISABLE clause variant validation', () => {
     const events = [ultEvent(0)];
     const result = checkVariantAvailability('FLAMING_CINDERS_ENHANCED', SLOT, events, totalDuration + 100, SKILL_COLUMNS.BASIC, undefined, EnhancementType.ENHANCED);
     expect(result.disabled).toBe(true);
-    expect(result.reason).toContain('ENABLE');
+    expect(result.reason).toContain('Activation condition not met');
   });
 
   test('enhanced variant is disabled when no ultimate placed', () => {

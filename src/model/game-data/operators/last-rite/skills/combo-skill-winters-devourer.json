@@ -134,7 +134,7 @@
                       "verb": "IS",
                       "value": 3
                     },
-                    "DAMAGE_MULTIPLIER": {
+                    "value": {
                       "verb": "VARY_BY",
                       "object": "SKILL_LEVEL",
                       "value": [
@@ -234,7 +234,7 @@
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
                     },
-                    "DAMAGE_MULTIPLIER": {
+                    "value": {
                       "verb": "VARY_BY",
                       "object": "SKILL_LEVEL",
                       "value": [

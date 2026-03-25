@@ -5,16 +5,67 @@
     "name": "Scorching Fangs (Talent)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
+    "duration": {
+      "value": { "verb": "IS", "value": 10 },
+      "unit": "SECOND"
+    },
+    "stacks": {
+      "limit": { "verb": "IS", "value": 1 },
+      "interactionType": "RESET"
+    },
     "eventType": "STATUS",
     "eventCategoryType": "TALENT",
-    "description": "Whenever Wulfgard applies Combustion, he gains Scorching Fangs for 10s. This effect cannot stack. Scorching Fangs: While active, Wulfgard gains Heat DMG Dealt +30%.",
+    "description": "Whenever Wulfgard applies Combustion, he gains Scorching Fangs for 10s. This effect cannot stack. Scorching Fangs: While active, Wulfgard gains Heat DMG Dealt +20%/+30%.",
     "maxLevel": 2
   },
   "metadata": {
     "originId": "WULFGARD",
-    "dataSources": [
-      "WARFARIN"
-    ],
+    "dataSources": ["WARFARIN"],
     "icon": "skills/wulfgard_talent_1_icon.png"
-  }
+  },
+  "onTriggerClause": [
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "APPLY",
+          "object": "REACTION",
+          "adjective": "COMBUSTION",
+          "to": "ENEMY"
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "EVENT",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
+        }
+      ]
+    }
+  ],
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "adjective": "HEAT",
+          "object": "AMP",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "VARY_BY",
+              "object": "TALENT_LEVEL",
+              "value": [0.2, 0.3],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            }
+          }
+        }
+      ]
+    }
+  ]
 }

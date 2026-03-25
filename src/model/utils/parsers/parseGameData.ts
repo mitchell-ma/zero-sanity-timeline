@@ -143,11 +143,9 @@ interface SkillCategoryData {
 
 /** Maps raw blackboard keys to codebase-standard names. */
 const MULTIPLIER_KEY_MAP: Record<string, string> = {
-  'atk_scale': 'DAMAGE_MULTIPLIER',
-  'atk_scale1': 'DAMAGE_MULTIPLIER',
-  'atk_scale_1': 'DAMAGE_MULTIPLIER',
-  'atk_scale_2': 'DAMAGE_MULTIPLIER_INCREMENT',
-  'atk_scale2': 'DAMAGE_MULTIPLIER_INCREMENT',
+  'atk_scale': 'value',
+  'atk_scale1': 'value',
+  'atk_scale_1': 'value',
   'poise': 'STAGGER',
   'attack_poise': 'STAGGER',
   'duration': 'DURATION',
@@ -416,9 +414,9 @@ function assignMultipliersToFrames(
 
       frame.multipliers = levelEntries.map(entry => {
         const mult: FlatMultiplierEntry = { level: entry.level };
-        // Positional scale key for this frame (normalized to DAMAGE_MULTIPLIER)
+        // Positional scale key for this frame (normalized to 'value')
         if (entry.blackboard[scaleKey] !== undefined) {
-          mult.DAMAGE_MULTIPLIER = entry.blackboard[scaleKey];
+          mult.value = entry.blackboard[scaleKey];
         }
         // Named scale variants on every frame (mapped to codebase names)
         for (const key of namedScaleKeys) {

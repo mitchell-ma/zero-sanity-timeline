@@ -52,7 +52,7 @@
                       "verb": "IS",
                       "value": 100
                     },
-                    "DAMAGE_MULTIPLIER": {
+                    "value": {
                       "verb": "VARY_BY",
                       "object": "SKILL_LEVEL",
                       "value": [
@@ -120,7 +120,7 @@
                       "verb": "IS",
                       "value": 100
                     },
-                    "DAMAGE_MULTIPLIER": {
+                    "value": {
                       "verb": "VARY_BY",
                       "object": "SKILL_LEVEL",
                       "value": [
@@ -176,7 +176,7 @@
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
-                    "DAMAGE_MULTIPLIER": {
+                    "value": {
                       "verb": "VARY_BY",
                       "object": "SKILL_LEVEL",
                       "value": [
@@ -232,7 +232,7 @@
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
-                    "DAMAGE_MULTIPLIER": {
+                    "value": {
                       "verb": "VARY_BY",
                       "object": "SKILL_LEVEL",
                       "value": [
@@ -288,7 +288,7 @@
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
-                    "DAMAGE_MULTIPLIER": {
+                    "value": {
                       "verb": "VARY_BY",
                       "object": "SKILL_LEVEL",
                       "value": [
@@ -344,7 +344,7 @@
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
-                    "DAMAGE_MULTIPLIER": {
+                    "value": {
                       "verb": "VARY_BY",
                       "object": "SKILL_LEVEL",
                       "value": [
@@ -400,7 +400,7 @@
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
-                    "DAMAGE_MULTIPLIER": {
+                    "value": {
                       "verb": "VARY_BY",
                       "object": "SKILL_LEVEL",
                       "value": [
@@ -455,7 +455,7 @@
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
-                    "DAMAGE_MULTIPLIER": {
+                    "value": {
                       "verb": "VARY_BY",
                       "object": "SKILL_LEVEL",
                       "value": [

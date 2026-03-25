@@ -961,7 +961,7 @@ In `operators/<slug>-operator.json`:
 
 1. Remove stale `BUFF_ATTACHMENT` entries (old Warfarin `OPERATOR_POTENTIALX_XYZ` refs)
 2. If the potential's effect is now baked into skill DSL or talent triggers, replace effects with `[{ "potentialEffectType": "IMPLEMENTED_IN_DSL" }]`
-3. Rename `parameterKey: "DAMAGE_MULTIPLIER"` → `"DAMAGE_MULTIPLIER_MODIFIER"` for multiplier-modifying potentials
+3. Rename `parameterKey: "value"` → `"DAMAGE_MULTIPLIER_MODIFIER"` for multiplier-modifying potentials
 4. Keep `STAT_MODIFIER`, `SKILL_PARAMETER`, `SKILL_COST` entries as-is — these are consumed directly by the engine
 
 Statuses and skills are auto-loaded by `require.context` from filename patterns (`*-statuses.json`, `*-skills.json`) — no explicit registration needed.

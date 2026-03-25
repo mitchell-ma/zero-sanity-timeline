@@ -337,12 +337,6 @@ function TimelineColumn({
         })
       )}
 
-      {colEvents.length === 0 && (
-        <div className="timeline-empty-state">
-          <div className="empty-state-title">NO EVENTS</div>
-          <div className="empty-state-hint">right-click to add</div>
-        </div>
-      )}
     </div>
   );
 }

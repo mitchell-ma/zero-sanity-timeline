@@ -22,7 +22,7 @@
           "with": {
             "healBase": {
               "verb": "VARY_BY",
-              "object": "TALENT_TWO_LEVEL",
+              "object": "TALENT_LEVEL",
               "value": [
                 72,
                 108
@@ -32,7 +32,7 @@
             },
             "intellectAdditive": {
               "verb": "VARY_BY",
-              "object": "TALENT_TWO_LEVEL",
+              "object": "TALENT_LEVEL",
               "value": [
                 0.6,
                 0.9

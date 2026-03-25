@@ -160,6 +160,14 @@ function evaluateIs(cond: Interaction, ctx: ConditionContext): boolean {
     return false;
   }
 
+  if (cond.object === 'CONTROLLED') {
+    // "THIS OPERATOR IS CONTROLLED" — check if this operator is the controlled operator at this frame
+    const ownerId = resolveOwnerId(cond.subject, ctx, cond.subjectDeterminer);
+    if (!ctx.getControlledSlotAtFrame || !ownerId) return false;
+    const result = ctx.getControlledSlotAtFrame(ctx.frame) === ownerId;
+    return cond.negated ? !result : result;
+  }
+
   const columnId = stateToColumn[cond.object];
   if (!columnId) return false;
 
@@ -167,6 +175,68 @@ function evaluateIs(cond: Interaction, ctx: ConditionContext): boolean {
   const active = activeEventsAtFrame(ctx.events, columnId, ownerId, ctx.frame);
   const result = active.length > 0;
   return cond.negated ? !result : result;
+}
+
+function evaluateBecome(cond: Interaction, ctx: ConditionContext): boolean {
+  // BECOME STACKS: count-based transition — current count meets cardinality AND differs from previous.
+  // e.g. MF III → MF IV triggers, MF IV → MF IV does not.
+  if (cond.object === 'STATUS' || cond.object === 'STACKS') {
+    const columnIds = resolveColumnIds(cond.object === 'STACKS' ? 'STATUS' : cond.object, cond.objectId, cond.element);
+    if (columnIds.length === 0) return false;
+    const ownerId = resolveOwnerId(cond.subject, ctx, cond.subjectDeterminer);
+    let countNow = 0;
+    let countBefore = 0;
+    for (const colId of columnIds) {
+      countNow += activeCountAtFrame(ctx.events, colId, ownerId, ctx.frame);
+      if (ctx.frame > 0) countBefore += activeCountAtFrame(ctx.events, colId, ownerId, ctx.frame - 1);
+    }
+    if (countNow === countBefore) return false;
+    if (cond.value != null) {
+      const target = getSimpleValue(cond.value) ?? 0;
+      switch (cond.cardinalityConstraint) {
+        case CardinalityConstraintType.EXACTLY: return countNow === target;
+        case CardinalityConstraintType.AT_LEAST: return countNow >= target;
+        case CardinalityConstraintType.AT_MOST: return countNow <= target;
+      }
+    }
+    return true;
+  }
+
+  // State transition: active at current frame AND not active at previous frame.
+  const stateToColumn: Record<string, string> = {
+    COMBUSTED: REACTION_COLUMNS.COMBUSTION,
+    SOLIDIFIED: REACTION_COLUMNS.SOLIDIFICATION,
+    CORRODED: REACTION_COLUMNS.CORROSION,
+    ELECTRIFIED: REACTION_COLUMNS.ELECTRIFICATION,
+    BREACHED: PHYSICAL_STATUS_COLUMNS.BREACH,
+    LIFTED: PHYSICAL_STATUS_COLUMNS.LIFT,
+    KNOCKED_DOWN: PHYSICAL_STATUS_COLUMNS.KNOCK_DOWN,
+    CRUSHED: PHYSICAL_STATUS_COLUMNS.CRUSH,
+    NODE_STAGGERED: NODE_STAGGER_COLUMN_ID,
+    FULL_STAGGERED: FULL_STAGGER_COLUMN_ID,
+  };
+
+  if (cond.object === 'ACTIVE') {
+    const ownerId = resolveOwnerId(cond.subject, ctx, cond.subjectDeterminer);
+    const activeNow = Object.values(SKILL_COLUMNS).some(
+      col => activeCountAtFrame(ctx.events, col, ownerId, ctx.frame) > 0,
+    );
+    if (!activeNow) return false;
+    const activeBefore = ctx.frame > 0 && Object.values(SKILL_COLUMNS).some(
+      col => activeCountAtFrame(ctx.events, col, ownerId, ctx.frame - 1) > 0,
+    );
+    return !activeBefore;
+  }
+
+  const columnId = stateToColumn[cond.object];
+  if (!columnId) return false;
+
+  const ownerId = resolveOwnerId(cond.subject, ctx, cond.subjectDeterminer);
+  const activeNow = activeEventsAtFrame(ctx.events, columnId, ownerId, ctx.frame).length > 0;
+  if (!activeNow) return false;
+  const activeBefore = ctx.frame > 0
+    && activeEventsAtFrame(ctx.events, columnId, ownerId, ctx.frame - 1).length > 0;
+  return !activeBefore;
 }
 
 function evaluateReceive(cond: Interaction, ctx: ConditionContext): boolean {
@@ -209,7 +279,7 @@ export function evaluateInteraction(cond: Interaction, ctx: ConditionContext): b
     case 'HAVE': result = evaluateHave(cond, ctx); break;
     case 'IS': result = evaluateIs(cond, ctx); break;
     case 'PERFORM': result = evaluatePerform(cond, ctx); break;
-    case 'BECOME': result = evaluateIs(cond, ctx); break;
+    case 'BECOME': result = evaluateBecome(cond, ctx); break;
     case 'RECEIVE': result = evaluateReceive(cond, ctx); break;
     default: result = false;
   }

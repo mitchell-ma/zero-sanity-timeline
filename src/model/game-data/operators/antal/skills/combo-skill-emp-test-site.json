@@ -100,7 +100,7 @@
                 {
                   "verb": "APPLY",
                   "adjective": "TRIGGER",
-                  "object": "STATUS",
+                  "object": "PHYSICAL_STATUS",
                   "to": "ENEMY"
                 },
                 {
@@ -109,7 +109,7 @@
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
-                    "DAMAGE_MULTIPLIER": {
+                    "value": {
                       "verb": "VARY_BY",
                       "object": "SKILL_LEVEL",
                       "value": [
@@ -171,8 +171,7 @@
           "subjectDeterminer": "ANY",
           "subject": "OPERATOR",
           "verb": "APPLY",
-          "object": "STATUS",
-          "objectId": "PHYSICAL"
+          "object": "PHYSICAL_STATUS"
         },
         {
           "subject": "ENEMY",

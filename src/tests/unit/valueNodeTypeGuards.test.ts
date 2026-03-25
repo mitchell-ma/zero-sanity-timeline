@@ -85,7 +85,7 @@ describe('ValueNode type guards', () => {
     it('matches VARY_BY with ofDeterminer', () => {
       const node = {
         verb: VerbType.VARY_BY,
-        object: 'TALENT_ONE_LEVEL',
+        object: 'TALENT_LEVEL',
         ofDeterminer: DeterminerType.SOURCE,
         of: 'OPERATOR',
         value: [72, 108],

@@ -33,9 +33,9 @@
  *
  * C2. Combo Skill Source Infliction Duplication
  *    - DSL effects: APPLY TRIGGER INFLICTION TO ENEMY + APPLY TRIGGER STATUS TO ENEMY
- *    - Frame class getDuplicatesTriggerInfliction() returns true (parsed from DSL)
+ *    - Frame class getDuplicateTriggerSource() returns true (parsed from DSL)
  *    - Basic attack and battle skill frames do NOT duplicate
- *    - No legacy duplicatesTriggerInfliction flag on JSON
+ *    - No legacy duplicateTriggerSource flag on JSON
  *
  * D. Ultimate (Overclocked Moment)
  *    - Energy cost: 90
@@ -223,14 +223,14 @@ describe('A. Basic Attack (Exchange Current)', () => {
     const seg1DmgEffect = rawSegments[0].frames[0].clause[0].effects.find(
       (e: Record<string, unknown>) => e.verb === 'DEAL' && e.object === 'DAMAGE'
     );
-    expect(seg1DmgEffect.with.DAMAGE_MULTIPLIER.value[0]).toBe(0.23);
-    expect(seg1DmgEffect.with.DAMAGE_MULTIPLIER.value[11]).toBe(0.52);
+    expect(seg1DmgEffect.with.value.value[0]).toBe(0.23);
+    expect(seg1DmgEffect.with.value.value[11]).toBe(0.52);
     // Segment 4 (Final Strike): 0.51 → 1.15
     const seg4DmgEffect = rawSegments[3].frames[0].clause[0].effects.find(
       (e: Record<string, unknown>) => e.verb === 'DEAL' && e.object === 'DAMAGE'
     );
-    expect(seg4DmgEffect.with.DAMAGE_MULTIPLIER.value[0]).toBe(0.51);
-    expect(seg4DmgEffect.with.DAMAGE_MULTIPLIER.value[11]).toBe(1.15);
+    expect(seg4DmgEffect.with.value.value[0]).toBe(0.51);
+    expect(seg4DmgEffect.with.value.value[11]).toBe(1.15);
   });
 
   test('A7: Segment 3 has 2 frames (double hit)', () => {
@@ -243,8 +243,8 @@ describe('A. Basic Attack (Exchange Current)', () => {
     const secondDmg = rawSegments[2].frames[1].clause[0].effects.find(
       (e: Record<string, unknown>) => e.verb === 'DEAL' && e.object === 'DAMAGE'
     );
-    const lv12First = firstDmg.with.DAMAGE_MULTIPLIER.value[11];
-    const lv12Second = secondDmg.with.DAMAGE_MULTIPLIER.value[11];
+    const lv12First = firstDmg.with.value.value[11];
+    const lv12Second = secondDmg.with.value.value[11];
     expect(lv12First).toBe(lv12Second);
   });
 });
@@ -303,8 +303,8 @@ describe('B. Battle Skill (Specified Research Subject)', () => {
     const dmgEffect = effects.find(
       (e: Record<string, unknown>) => e.verb === 'DEAL' && e.object === 'DAMAGE'
     );
-    expect(dmgEffect.with.DAMAGE_MULTIPLIER.value[0]).toBe(0.89);
-    expect(dmgEffect.with.DAMAGE_MULTIPLIER.value[11]).toBe(2);
+    expect(dmgEffect.with.value.value[0]).toBe(0.89);
+    expect(dmgEffect.with.value.value[11]).toBe(2);
   });
 
   test('B7: Battle skill duration is 1 second', () => {
@@ -336,8 +336,7 @@ describe('C. Combo Skill (EMP Test Site)', () => {
     expect(clause.conditions[0].subjectDeterminer).toBe('ANY');
     expect(clause.conditions[0].subject).toBe('OPERATOR');
     expect(clause.conditions[0].verb).toBe('APPLY');
-    expect(clause.conditions[0].object).toBe('STATUS');
-    expect(clause.conditions[0].objectId).toBe('PHYSICAL');
+    expect(clause.conditions[0].object).toBe('PHYSICAL_STATUS');
 
     // Condition 2: enemy has Focus
     expect(clause.conditions[1].subject).toBe('ENEMY');
@@ -410,8 +409,8 @@ describe('C. Combo Skill (EMP Test Site)', () => {
     const dmgEffect = effects.find(
       (e: Record<string, unknown>) => e.verb === 'DEAL' && e.object === 'DAMAGE'
     );
-    expect(dmgEffect.with.DAMAGE_MULTIPLIER.value[0]).toBe(1.51);
-    expect(dmgEffect.with.DAMAGE_MULTIPLIER.value[11]).toBe(3.4);
+    expect(dmgEffect.with.value.value[0]).toBe(1.51);
+    expect(dmgEffect.with.value.value[11]).toBe(3.4);
   });
 
   test('C10: Combo skill ID is ANTAL_EMP_TEST_SITE', () => {
@@ -434,29 +433,29 @@ describe('C2. Combo Skill Source Infliction Duplication', () => {
     expect(sourceInfliction.to).toBe('ENEMY');
   });
 
-  test('C2.2: Combo frame has APPLY TRIGGER STATUS DSL effect', () => {
+  test('C2.2: Combo frame has APPLY TRIGGER PHYSICAL_STATUS DSL effect', () => {
     const comboFrame = mockAntalJson.skills.COMBO_SKILL.segments[1].frames[0];
     const effects = comboFrame.clause[0].effects;
     const sourceStatus = effects.find(
-      (e: Record<string, unknown>) => e.verb === 'APPLY' && e.adjective === 'TRIGGER' && e.object === 'STATUS'
+      (e: Record<string, unknown>) => e.verb === 'APPLY' && e.adjective === 'TRIGGER' && e.object === 'PHYSICAL_STATUS'
     );
     expect(sourceStatus).toBeDefined();
     expect(sourceStatus.to).toBe('ENEMY');
   });
 
-  test('C2.3: Frame class reports getDuplicatesTriggerInfliction() as true from DSL', () => {
+  test('C2.3: Frame class reports getDuplicateTriggerSource() as true from DSL', () => {
     const sequences = getSequences('COMBO_SKILL');
     // segments[0] is ANIMATION (no frames), segments[1] has actual frames, segments[2] is COOLDOWN
     expect(sequences.length).toBeGreaterThanOrEqual(2);
     const frame = sequences[1].getFrames()[0];
-    expect(frame.getDuplicatesTriggerInfliction()).toBe(true);
+    expect(frame.getDuplicateTriggerSource()).toBe(true);
   });
 
   test('C2.4: Basic attack frames do NOT duplicate source infliction', () => {
     const sequences = getSequences('BASIC_ATTACK');
     for (const seq of sequences) {
       for (const frame of seq.getFrames()) {
-        expect(frame.getDuplicatesTriggerInfliction()).toBe(false);
+        expect(frame.getDuplicateTriggerSource()).toBe(false);
       }
     }
   });
@@ -465,14 +464,14 @@ describe('C2. Combo Skill Source Infliction Duplication', () => {
     const sequences = getSequences('BATTLE_SKILL');
     for (const seq of sequences) {
       for (const frame of seq.getFrames()) {
-        expect(frame.getDuplicatesTriggerInfliction()).toBe(false);
+        expect(frame.getDuplicateTriggerSource()).toBe(false);
       }
     }
   });
 
-  test('C2.6: No legacy duplicatesTriggerInfliction flag on combo frame', () => {
+  test('C2.6: No legacy duplicateTriggerSource flag on combo frame', () => {
     const comboFrame = mockAntalJson.skills.COMBO_SKILL.segments[1].frames[0];
-    expect(comboFrame.duplicatesTriggerInfliction).toBeUndefined();
+    expect(comboFrame.duplicateTriggerSource).toBeUndefined();
   });
 });
 
@@ -817,7 +816,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
         { properties: { segmentTypes: [SegmentType.ANIMATION], duration: Math.round(0.5 * FPS), timeDependency: TimeDependency.REAL_TIME } },
         {
           properties: { duration: Math.round(0.8 * FPS) },
-          frames: [{ offsetFrame: Math.round(0.7 * FPS), duplicatesTriggerInfliction: true }],
+          frames: [{ offsetFrame: Math.round(0.7 * FPS), duplicateTriggerSource: true }],
         },
       ],
     });

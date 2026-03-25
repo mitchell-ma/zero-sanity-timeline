@@ -28,15 +28,20 @@ describe('resolveValueNode', () => {
       expect(resolveValueNode(node, makeCtx({ skillLevel: 2 }))).toBe(20);
     });
 
-    it('indexes TALENT_ONE_LEVEL array (0-indexed)', () => {
-      const node: ValueNode = { verb: VerbType.VARY_BY, object: 'TALENT_ONE_LEVEL', value: [72, 108] };
-      expect(resolveValueNode(node, makeCtx({ talentOneLevel: 0 }))).toBe(72);
-      expect(resolveValueNode(node, makeCtx({ talentOneLevel: 1 }))).toBe(108);
+    it('indexes TALENT_LEVEL array (0-indexed)', () => {
+      const node: ValueNode = { verb: VerbType.VARY_BY, object: 'TALENT_LEVEL', value: [72, 108] };
+      expect(resolveValueNode(node, makeCtx({ talentLevel: 0 }))).toBe(72);
+      expect(resolveValueNode(node, makeCtx({ talentLevel: 1 }))).toBe(108);
+    });
+
+    it('defaults to 0 when talentLevel is not set', () => {
+      const node: ValueNode = { verb: VerbType.VARY_BY, object: 'TALENT_LEVEL', value: [72, 108] };
+      expect(resolveValueNode(node, makeCtx())).toBe(72);
     });
 
     it('clamps to last element when index exceeds array length', () => {
-      const node: ValueNode = { verb: VerbType.VARY_BY, object: 'TALENT_ONE_LEVEL', value: [72, 108] };
-      expect(resolveValueNode(node, makeCtx({ talentOneLevel: 5 }))).toBe(108);
+      const node: ValueNode = { verb: VerbType.VARY_BY, object: 'TALENT_LEVEL', value: [72, 108] };
+      expect(resolveValueNode(node, makeCtx({ talentLevel: 5 }))).toBe(108);
     });
   });
 
@@ -44,40 +49,40 @@ describe('resolveValueNode', () => {
     it('uses sourceContext talent level when ofDeterminer is SOURCE', () => {
       const node: ValueNode = {
         verb: VerbType.VARY_BY,
-        object: 'TALENT_ONE_LEVEL',
+        object: 'TALENT_LEVEL',
         ofDeterminer: DeterminerType.SOURCE,
         of: 'OPERATOR',
         value: [72, 108],
       } as ValueNode;
       const ctx = makeCtx({
-        talentOneLevel: 0,
-        sourceContext: makeCtx({ talentOneLevel: 1 }),
+        talentLevel: 0,
+        sourceContext: makeCtx({ talentLevel: 1 }),
       });
-      // Should use sourceContext (talentOneLevel=1) → 108, not main ctx (talentOneLevel=0) → 72
+      // Should use sourceContext (talentLevel=1) → 108, not main ctx (talentLevel=0) → 72
       expect(resolveValueNode(node, ctx)).toBe(108);
     });
 
     it('falls back to main context when sourceContext is absent', () => {
       const node: ValueNode = {
         verb: VerbType.VARY_BY,
-        object: 'TALENT_ONE_LEVEL',
+        object: 'TALENT_LEVEL',
         ofDeterminer: DeterminerType.SOURCE,
         of: 'OPERATOR',
         value: [72, 108],
       } as ValueNode;
-      const ctx = makeCtx({ talentOneLevel: 0 });
+      const ctx = makeCtx({ talentLevel: 0 });
       expect(resolveValueNode(node, ctx)).toBe(72);
     });
 
     it('uses main context when ofDeterminer is not SOURCE', () => {
       const node: ValueNode = {
         verb: VerbType.VARY_BY,
-        object: 'TALENT_ONE_LEVEL',
+        object: 'TALENT_LEVEL',
         value: [72, 108],
       };
       const ctx = makeCtx({
-        talentOneLevel: 0,
-        sourceContext: makeCtx({ talentOneLevel: 1 }),
+        talentLevel: 0,
+        sourceContext: makeCtx({ talentLevel: 1 }),
       });
       expect(resolveValueNode(node, ctx)).toBe(72);
     });
@@ -166,12 +171,12 @@ describe('resolveValueNode', () => {
 
   describe('IMPROVISER heal formula — nested MULT with SOURCE context', () => {
     it('resolves base * (scaling * STRENGTH) using SOURCE talent and stats', () => {
-      // Formula: MULT(VARY_BY TALENT_ONE_LEVEL [72,108], MULT(VARY_BY TALENT_ONE_LEVEL [0.6,0.9], STAT STRENGTH))
+      // Formula: MULT(VARY_BY TALENT_LEVEL [72,108], MULT(VARY_BY TALENT_LEVEL [0.6,0.9], STAT STRENGTH))
       const node: ValueNode = {
         operation: ValueOperation.MULT,
         left: {
           verb: VerbType.VARY_BY,
-          object: 'TALENT_ONE_LEVEL',
+          object: 'TALENT_LEVEL',
           ofDeterminer: DeterminerType.SOURCE,
           of: 'OPERATOR',
           value: [72, 108],
@@ -180,7 +185,7 @@ describe('resolveValueNode', () => {
           operation: ValueOperation.MULT,
           left: {
             verb: VerbType.VARY_BY,
-            object: 'TALENT_ONE_LEVEL',
+            object: 'TALENT_LEVEL',
             ofDeterminer: DeterminerType.SOURCE,
             of: 'OPERATOR',
             value: [0.6, 0.9],
@@ -194,7 +199,7 @@ describe('resolveValueNode', () => {
         },
       };
 
-      const sourceCtx = makeCtx({ talentOneLevel: 1, stats: { STRENGTH: 500 } });
+      const sourceCtx = makeCtx({ talentLevel: 1, stats: { STRENGTH: 500 } });
       const ctx = makeCtx({ sourceContext: sourceCtx });
 
       // 108 * (0.9 * 500) = 108 * 450 = 48600
@@ -206,7 +211,7 @@ describe('resolveValueNode', () => {
         operation: ValueOperation.MULT,
         left: {
           verb: VerbType.VARY_BY,
-          object: 'TALENT_ONE_LEVEL',
+          object: 'TALENT_LEVEL',
           ofDeterminer: DeterminerType.SOURCE,
           of: 'OPERATOR',
           value: [72, 108],
@@ -215,7 +220,7 @@ describe('resolveValueNode', () => {
           operation: ValueOperation.MULT,
           left: {
             verb: VerbType.VARY_BY,
-            object: 'TALENT_ONE_LEVEL',
+            object: 'TALENT_LEVEL',
             ofDeterminer: DeterminerType.SOURCE,
             of: 'OPERATOR',
             value: [0.6, 0.9],
@@ -229,7 +234,7 @@ describe('resolveValueNode', () => {
         },
       };
 
-      const sourceCtx = makeCtx({ talentOneLevel: 0, stats: { STRENGTH: 200 } });
+      const sourceCtx = makeCtx({ talentLevel: 0, stats: { STRENGTH: 200 } });
       const ctx = makeCtx({ sourceContext: sourceCtx });
 
       // 72 * (0.6 * 200) = 72 * 120 = 8640

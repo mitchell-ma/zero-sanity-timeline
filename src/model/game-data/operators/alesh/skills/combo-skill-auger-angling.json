@@ -175,7 +175,7 @@
                       "verb": "IS",
                       "value": 10
                     },
-                    "DAMAGE_MULTIPLIER": {
+                    "value": {
                       "verb": "VARY_BY",
                       "object": "SKILL_LEVEL",
                       "value": [

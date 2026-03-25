@@ -238,8 +238,8 @@ function mapSkillId(warfarinSkillId: string): string {
 
 const BB_KEY_MAP: Record<string, string> = {
   'atb': 'SKILL_POINT',
-  'ratio': 'DAMAGE_MULTIPLIER',
-  'atk_scale': 'DAMAGE_MULTIPLIER',
+  'ratio': 'value',
+  'atk_scale': 'value',
   'duration': 'DURATION',
   'extra_scaling': 'EXTRA_SCALING',
 };

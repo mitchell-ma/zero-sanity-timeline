@@ -42,13 +42,12 @@
  *    - Frame 4 recovers 20 SP and 5 Stagger
  *    - Frame 3 recovers 5 Stagger
  *
- * F. Scorching Fangs (Talent 1 — Status Event)
- *    - Target: THIS_OPERATOR (self-buff)
- *    - Element: HEAT
+ * F. Scorching Fangs (Talent 1)
+ *    - Target: THIS OPERATOR (self-buff)
  *    - Max 1 stack, RESET interaction
- *    - Two trigger clauses (OR): enemy has Combustion, OR self performs Battle Skill while having Scorching Fangs
- *    - Duration: 15s
- *    - P3 team share: 0.5× duration multiplier
+ *    - Trigger: THIS OPERATOR APPLY COMBUSTION REACTION TO ENEMY → APPLY EVENT TO THIS OPERATOR
+ *    - Effect clause: APPLY HEAT AMP TO THIS OPERATOR WITH VARY_BY TALENT_LEVEL [0.2, 0.3]
+ *    - Duration: 10s
  *
  * G. Potentials
  *    - P1: +15 STRENGTH, +15 AGILITY stat modifiers
@@ -239,7 +238,7 @@ function getFrameEffectValue(frame: Record<string, any>, verb: string, object: s
   return undefined;
 }
 function getDamageMultipliers(frame: Record<string, any>): number[] {
-  return (getFrameEffectValue(frame, 'DEAL', 'DAMAGE', 'DAMAGE_MULTIPLIER') ?? []) as number[];
+  return (getFrameEffectValue(frame, 'DEAL', 'DAMAGE', 'value') ?? []) as number[];
 }
 /* eslint-enable @typescript-eslint/no-explicit-any */
 
@@ -389,18 +388,12 @@ describe('B. Battle Skill (Thermite Tracers)', () => {
     expect(dmgValues[11]).toBe(0.77);
   });
 
-  test('B8: atk_scale_plus scales from 3.78 (lv1) to 8.5 (lv12)', () => {
-    const frame = mockJson.skills[mockJson.skillTypeMap.BATTLE_SKILL].segments[0].frames[0];
-    const atkScalePlus = getFrameEffectValue(frame, 'DEAL', 'DAMAGE', 'atkScalePlus');
-    expect(atkScalePlus[0]).toBe(3.78);
-    expect(atkScalePlus[11]).toBe(8.5);
-  });
-
-  test('B9: atkScalePlusFail parameters scale with skill level', () => {
-    const frame = mockJson.skills[mockJson.skillTypeMap.BATTLE_SKILL].segments[0].frames[0];
-    const atkScalePlusFail = getFrameEffectValue(frame, 'DEAL', 'DAMAGE', 'atkScalePlusFail');
-    expect(atkScalePlusFail[0]).toBe(0.36);
-    expect(atkScalePlusFail[11]).toBe(0.81);
+  test('B8: Empowered additional shot (frame 4) scales from 3.78 (lv1) to 8.5 (lv12)', () => {
+    const ebs = mockJson.skills.EMPOWERED_BATTLE_SKILL;
+    const frame4 = ebs.segments[0].frames[3];
+    const dmg = getDamageMultipliers(frame4);
+    expect(dmg[0]).toBe(3.78);
+    expect(dmg[11]).toBe(8.5);
   });
 
   test('B10: Battle skill duration is 1.07 seconds', () => {
@@ -558,89 +551,81 @@ describe('E. Empowered Battle Skill', () => {
     expect(stagger.with.value.value).toBe(5);
   });
 
-  test('E5: Frame 3 recovers 5 Stagger', () => {
+  test('E5: Frame 3 deals 5 Stagger, consumes Arts Reaction, and deals base damage', () => {
     const frame2 = mockJson.skills.EMPOWERED_BATTLE_SKILL.segments[0].frames[2];
     const stagger = frame2.clause[0].effects.find(
       (e: Record<string, unknown>) => e.object === 'STAGGER'
     );
+    const consume = frame2.clause[0].effects.find(
+      (e: Record<string, unknown>) => e.verb === 'CONSUME' && e.object === 'ARTS_REACTION'
+    );
+    const dmg = getDamageMultipliers(frame2);
     expect(stagger.with.value.value).toBe(5);
+    expect(consume).toBeDefined();
+    expect(dmg[0]).toBe(0.34);
   });
 
-  test('E6: Frames 1 and 2 have no SP or Stagger effects (zero-value effects removed)', () => {
+  test('E6: Frames 1 and 2 deal base damage (same as normal variant)', () => {
     for (let i = 0; i < 2; i++) {
       const frame = mockJson.skills.EMPOWERED_BATTLE_SKILL.segments[0].frames[i];
-      const sp = frame.clause[0].effects.find(
-        (e: Record<string, unknown>) => e.object === 'SKILL_POINT'
-      );
-      const stagger = frame.clause[0].effects.find(
-        (e: Record<string, unknown>) => e.object === 'STAGGER'
-      );
-      expect(sp).toBeUndefined();
-      expect(stagger).toBeUndefined();
+      const dmg = getDamageMultipliers(frame);
+      expect(dmg[0]).toBe(0.34);
+      expect(dmg[11]).toBe(0.77);
     }
   });
 });
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// Group F: Scorching Fangs (Talent 1 — Status Event)
+// Group F: Scorching Fangs (Talent 1)
 // ═══════════════════════════════════════════════════════════════════════════════
 
-describe('F. Scorching Fangs (Status Event)', () => {
-  test('F1: Scorching Fangs status event exists', () => {
-    const statusEvents = mockJson.statusEvents;
-    expect(statusEvents).toBeDefined();
-    expect(statusEvents.length).toBeGreaterThanOrEqual(1);
-    expect(statusEvents[0].id).toBe('SCORCHING_FANGS');
+describe('F. Scorching Fangs (Talent)', () => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const sf = mockJson.statusEvents.find((s: any) => s.id === 'SCORCHING_FANGS_TALENT');
+
+  test('F1: Scorching Fangs talent exists', () => {
+    expect(sf).toBeDefined();
   });
 
   test('F2: Target is THIS OPERATOR (self-buff)', () => {
-    const sf = mockJson.statusEvents[0];
     expect(sf.targetDeterminer).toBe('THIS');
     expect(sf.target).toBe('OPERATOR');
   });
 
-  test('F3: Element is HEAT', () => {
-    const sf = mockJson.statusEvents[0];
-    expect(sf.element).toBe('HEAT');
-  });
-
-  test('F4: Max 1 stack with RESET interaction', () => {
-    const sf = mockJson.statusEvents[0];
+  test('F3: Max 1 stack with RESET interaction', () => {
     expect(sf.stacks.interactionType).toBe('RESET');
     for (let p = 0; p <= 5; p++) {
       expect(sf.stacks.limit[`P${p}`]).toBe(1);
     }
   });
 
-  test('F5: Two trigger clauses (OR): Combustion on enemy OR self Battle Skill + already active', () => {
-    const sf = mockJson.statusEvents[0];
-    expect(sf.onTriggerClause.length).toBe(2);
-
-    // Clause 1: enemy has Combustion
-    const clause1 = sf.onTriggerClause[0];
-    expect(clause1.conditions.length).toBe(1);
-    expect(clause1.conditions[0].subject).toBe('ENEMY');
-    expect(clause1.conditions[0].verb).toBe('HAVE');
-    expect(clause1.conditions[0].object).toBe('STATUS');
-    expect(clause1.conditions[0].objectId).toBe('COMBUSTION');
-
-    // Clause 2: self performs Battle Skill AND self has Scorching Fangs
-    const clause2 = sf.onTriggerClause[1];
-    expect(clause2.conditions.length).toBe(2);
-    expect(clause2.conditions[0].subjectDeterminer).toBe('THIS');
-    expect(clause2.conditions[0].subject).toBe('OPERATOR');
-    expect(clause2.conditions[0].verb).toBe('PERFORM');
-    expect(clause2.conditions[0].object).toBe('BATTLE_SKILL');
-    expect(clause2.conditions[1].subjectDeterminer).toBe('THIS');
-    expect(clause2.conditions[1].subject).toBe('OPERATOR');
-    expect(clause2.conditions[1].verb).toBe('HAVE');
-    expect(clause2.conditions[1].object).toBe('STATUS');
-    expect(clause2.conditions[1].objectId).toBe('SCORCHING_FANGS');
+  test('F4: Trigger clause: THIS OPERATOR APPLY COMBUSTION REACTION TO ENEMY', () => {
+    expect(sf.onTriggerClause.length).toBe(1);
+    const clause = sf.onTriggerClause[0];
+    expect(clause.conditions.length).toBe(1);
+    expect(clause.conditions[0].subjectDeterminer).toBe('THIS');
+    expect(clause.conditions[0].subject).toBe('OPERATOR');
+    expect(clause.conditions[0].verb).toBe('APPLY');
+    expect(clause.conditions[0].object).toBe('REACTION');
+    expect(clause.conditions[0].adjective).toBe('COMBUSTION');
   });
 
-  test('F6: Duration is 15 seconds', () => {
-    const sf = mockJson.statusEvents[0];
-    expect(sf.properties.duration.value).toEqual([15]);
+  test('F5: Effect clause applies HEAT AMP to self with VARY_BY TALENT_LEVEL', () => {
+    expect(sf.clause).toBeDefined();
+    expect(sf.clause.length).toBe(1);
+    const effect = sf.clause[0].effects[0];
+    expect(effect.verb).toBe('APPLY');
+    expect(effect.adjective).toBe('HEAT');
+    expect(effect.object).toBe('AMP');
+    expect(effect.toDeterminer).toBe('THIS');
+    expect(effect.to).toBe('OPERATOR');
+    expect(effect.with.value.verb).toBe('VARY_BY');
+    expect(effect.with.value.object).toBe('TALENT_LEVEL');
+    expect(effect.with.value.value).toEqual([0.2, 0.3]);
+  });
+
+  test('F6: Duration is 10 seconds', () => {
+    expect(sf.properties.duration.value).toEqual([10]);
     expect(sf.properties.duration.unit).toBe('SECOND');
   });
 });

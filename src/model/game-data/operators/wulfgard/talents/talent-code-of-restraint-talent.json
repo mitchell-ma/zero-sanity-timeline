@@ -19,7 +19,7 @@
           "with": {
             "value": {
               "verb": "VARY_BY",
-              "object": "TALENT_TWO_LEVEL",
+              "object": "TALENT_LEVEL",
               "value": [
                 5,
                 10
