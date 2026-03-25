@@ -162,24 +162,19 @@ export function mergeReactions(events: TimelineEvent[]): TimelineEvent[] {
     if (clamp !== undefined) {
       // Truncate segments to fit the clamped duration
       const truncated = truncateSegments(ev.segments, clamp.duration);
-      return {
-        ...ev,
-        segments: truncated ?? [{ properties: { duration: clamp.duration } }],
-        eventStatus: EventStatusType.REFRESHED,
-        eventStatusOwnerId: clamp.source.ownerId,
-        eventStatusSkillName: clamp.source.skillName,
-      };
+      ev.segments = truncated ?? [{ properties: { duration: clamp.duration } }];
+      ev.eventStatus = EventStatusType.REFRESHED;
+      ev.eventStatusOwnerId = clamp.source.ownerId;
+      ev.eventStatusSkillName = clamp.source.skillName;
+      return ev;
     }
     if (merge !== undefined) {
       // Rebuild segments with merged stats (inherited max stacks)
-      const merged: TimelineEvent = {
-        ...ev,
-        segments: [{ properties: { duration: merge.duration } }],
-        stacks: merge.stacks,
-        reductionFloor: merge.reductionFloor,
-      };
-      const [rebuilt] = attachReactionFrames([merged]);
-      return rebuilt;
+      ev.segments = [{ properties: { duration: merge.duration } }];
+      ev.stacks = merge.stacks;
+      ev.reductionFloor = merge.reductionFloor;
+      attachReactionFrames([ev]);
+      return ev;
     }
     return ev;
   });
@@ -214,8 +209,6 @@ function truncateSegments(
 
 // ── Reaction frame attachment ─────────────────────────────────────────────
 
-const COMBUSTION_TICK_COUNT = 10; // 1 per second for 10 seconds
-
 /** Maps reaction columnId → damage element. */
 const REACTION_DAMAGE_ELEMENT: Record<string, ElementType> = {
   combustion:      ElementType.HEAT,
@@ -236,21 +229,20 @@ const REACTION_DAMAGE_ELEMENT: Record<string, ElementType> = {
  * Call before time-stop extension so frame positions get adjusted.
  */
 export function attachReactionFrames(events: TimelineEvent[]): TimelineEvent[] {
-  return events.map((ev) => {
-    if (ev.ownerId !== ENEMY_OWNER_ID || !REACTION_COLUMN_IDS.has(ev.columnId)) return ev;
+  for (const ev of events) {
+    if (ev.ownerId !== ENEMY_OWNER_ID || !REACTION_COLUMN_IDS.has(ev.columnId)) continue;
     // Skip if event already has rich segments (more than a single default duration segment)
-    if (ev.segments.length > 1 || ev.segments[0]?.frames) return ev;
+    if (ev.segments.length > 1 || ev.segments[0]?.frames) continue;
 
     if (ev.columnId === REACTION_COLUMNS.CORROSION) {
       const segments = buildCorrosionSegments(ev);
-      if (!segments) return ev;
-      return { ...ev, segments };
+      if (segments) ev.segments = segments;
+    } else {
+      const segment = buildReactionSegment(ev);
+      if (segment) ev.segments = [segment];
     }
-
-    const segment = buildReactionSegment(ev);
-    if (!segment) return ev;
-    return { ...ev, segments: [segment] };
-  });
+  }
+  return events;
 }
 
 /** Label lookup for reaction segments. */
@@ -261,9 +253,15 @@ const REACTION_SEGMENT_LABEL: Record<string, string> = {
   electrification: 'Electrification',
 };
 
-export function buildReactionSegment(ev: TimelineEvent): EventSegmentData | null {
+export function buildReactionSegment(ev: TimelineEvent, rawDuration?: number): EventSegmentData | null {
   const element = REACTION_DAMAGE_ELEMENT[ev.columnId];
   if (!element) return null;
+
+  const dur = eventDuration(ev);
+  // Use the smaller of the raw game-time duration and the current segment
+  // duration for tick generation.  Raw prevents time-stop extension from
+  // inflating tick count; current respects refresh clamping.
+  const tickDur = rawDuration != null ? Math.min(rawDuration, dur) : dur;
 
   const forced = ev.isForced || ev.forcedReaction;
   const frames: EventFrameMarker[] = [];
@@ -277,16 +275,14 @@ export function buildReactionSegment(ev: TimelineEvent): EventSegmentData | null
   if (ev.columnId === REACTION_COLUMNS.COMBUSTION) {
     // Initial hit also gets combustion frame types
     if (frames.length > 0) frames[0].frameTypes = COMBUSTION_FRAME_TYPES;
-    // DoT ticks at 1-second intervals
-    const dur = eventDuration(ev);
-    for (let i = 1; i <= COMBUSTION_TICK_COUNT; i++) {
-      const tickOffset = i * FPS;
-      if (tickOffset > dur) break;
-      frames.push({ offsetFrame: tickOffset, damageElement: element, frameTypes: COMBUSTION_FRAME_TYPES });
+    // DoT ticks at 1-second intervals, clamped to raw game-time duration
+    const tickCount = Math.floor(tickDur / FPS);
+    for (let i = 1; i <= tickCount; i++) {
+      frames.push({ offsetFrame: i * FPS, damageElement: element, frameTypes: COMBUSTION_FRAME_TYPES });
     }
   } else if (ev.columnId === REACTION_COLUMNS.SOLIDIFICATION) {
     // Shatter at the end of the duration
-    frames.push({ offsetFrame: eventDuration(ev), damageElement: element });
+    frames.push({ offsetFrame: dur, damageElement: element });
   }
   // Corrosion is handled separately in buildCorrosionSegments
   // Electrification: initial hit only (no additional frames)
@@ -296,7 +292,7 @@ export function buildReactionSegment(ev: TimelineEvent): EventSegmentData | null
   const roman = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX'][level - 1] ?? `${level}`;
 
   return {
-    properties: { duration: eventDuration(ev), name: `${baseName} ${roman}` },
+    properties: { duration: dur, name: `${baseName} ${roman}` },
     frames,
   };
 }

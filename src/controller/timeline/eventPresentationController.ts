@@ -666,7 +666,23 @@ function columnEventsMatch(current: TimelineEvent[], previous: TimelineEvent[]):
   if (current.length !== previous.length) return false;
   for (let i = 0; i < current.length; i++) {
     const c = current[i], p = previous[i];
-    if (c.uid !== p.uid || c.startFrame !== p.startFrame || c.eventStatus !== p.eventStatus) return false;
+    if (c.uid !== p.uid || c.startFrame !== p.startFrame || c.eventStatus !== p.eventStatus
+      || c.segments.length !== p.segments.length) return false;
+    // Per-segment duration check — total span can be unchanged (e.g. cooldown
+    // longer than active) while internal segments shift from time-stop extension.
+    for (let s = 0; s < c.segments.length; s++) {
+      if (c.segments[s].properties.duration !== p.segments[s].properties.duration) return false;
+      // Per-frame derivedOffsetFrame check — when a time-stop shifts position,
+      // segment durations stay the same but frame positions within them change.
+      const cFrames = c.segments[s].frames;
+      const pFrames = p.segments[s].frames;
+      if (cFrames !== pFrames) {
+        if (!cFrames || !pFrames || cFrames.length !== pFrames.length) return false;
+        for (let f = 0; f < cFrames.length; f++) {
+          if (cFrames[f].derivedOffsetFrame !== pFrames[f].derivedOffsetFrame) return false;
+        }
+      }
+    }
   }
   return true;
 }
@@ -705,6 +721,7 @@ export function computeTimelinePresentation(
       result.set(col.key, prevVM);
       continue;
     }
+
 
     // Collect status overrides for this column's events
     const colStatusOverrides = new Map<string, StatusViewOverride>();

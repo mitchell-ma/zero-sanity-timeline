@@ -1337,6 +1337,16 @@ export function validateTimeStops(
   const ultStops = timeStopRegions.filter((s) => s.sourceColumnId === SKILL_COLUMNS.ULTIMATE);
   const comboStops = timeStopRegions.filter((s) => s.sourceColumnId === SKILL_COLUMNS.COMBO);
   for (const ev of events) {
+    // Control swap cannot occur during any time-stop
+    if (ev.id === CombatSkillType.CONTROL) {
+      for (const stop of timeStopRegions) {
+        if (ev.startFrame > stop.startFrame && ev.startFrame < stop.startFrame + stop.durationFrames) {
+          map.set(ev.uid, 'Control swap cannot occur during time-stop');
+          break;
+        }
+      }
+      continue;
+    }
     // Only validate player-input skill columns — status/infliction/reaction events
     // are derived and can legitimately start at the same frame as a timestop
     const isBasic = ev.columnId === SKILL_COLUMNS.BASIC;

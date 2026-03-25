@@ -7,6 +7,11 @@
 - Added a Performance setting (High / Balanced / Low) to control drag responsiveness vs CPU trade-off
 - Timeline columns that aren't affected by a drag no longer update, saving processing time
 - Event blocks use GPU-accelerated positioning for smoother visual movement
+- Timeline processing engine now reuses internal objects between updates instead of rebuilding from scratch — noticeably faster when dragging or making rapid changes
+- Added output reconciliation: unchanged events keep their identity between updates, so only the parts of the timeline that actually changed get re-rendered
+- New settings for Object Pooling, Reconciler, and Event Pool Limit in the Performance section — turn them on/off to tune responsiveness
+- Event presentation caching: skill labels, colors, and visual properties are preserved when nothing changed, reducing unnecessary visual updates
+- Combo window lookups are now pre-indexed per operator instead of filtered each render
 
 ## 2026-03-23
 - Skill descriptions, icons, and element types added for every operator — basic attacks, battle skills, combos, ultimates, and talents all show their in-game info

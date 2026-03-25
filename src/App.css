@@ -2729,7 +2729,7 @@
 
 .mf-micro-slot .event-wrap {
   left: 0;
-  right: 5px;
+  right: 15%;
   width: auto;
 }
 
@@ -2743,8 +2743,8 @@
 .event-wrap {
   position: absolute;
   top: 0;
-  left: 4px;
-  right: 4px;
+  left: 15%;
+  right: 15%;
   z-index: 5;
   cursor: grab;
   user-select: none;
@@ -2863,6 +2863,8 @@
   opacity: 0.9;
   -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 10px), transparent);
   mask-image: linear-gradient(to bottom, #000 calc(100% - 10px), transparent);
+}
+.event-segment--hover-hit > .event-block-label {
   transition: top 0.35s ease-out, left 0.35s ease-out;
 }
 
@@ -8112,8 +8114,8 @@
 
 /* Event wrap: fill lane vertically (top/bottom margins), position along X via JS */
 .timeline-outer--horizontal .event-wrap {
-  top: 4px;
-  bottom: 4px;
+  top: 15%;
+  bottom: 15%;
   left: auto;
   right: auto;
 }
@@ -8144,18 +8146,26 @@
 .timeline-outer--horizontal .event-frame-diamond--selected {
   transform: translateX(-5px) rotate(45deg);
 }
+.timeline-outer--horizontal .event-frame-diamond::before {
+  top: -3px;
+  left: -8px;
+  right: -8px;
+  bottom: -3px;
+}
 
 /* Labels: horizontal text in horizontal mode */
 .timeline-outer--horizontal .event-block-label {
   writing-mode: horizontal-tb;
   top: 50%;
-  left: 4px;
-  right: 4px;
+  left: 15%;
+  right: 15%;
   bottom: auto;
   transform: translateY(-50%);
   text-align: left;
   -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 10px), transparent);
   mask-image: linear-gradient(to right, #000 calc(100% - 10px), transparent);
+}
+.timeline-outer--horizontal .event-segment--hover-hit > .event-block-label {
   transition: left 0.15s ease-out;
 }
 
@@ -8183,6 +8193,26 @@
 }
 .timeline-outer--horizontal .tl-tick-label {
   writing-mode: horizontal-tb;
+}
+
+/* MF micro-divider: horizontal divider instead of vertical */
+.timeline-outer--horizontal .mf-micro-divider {
+  top: auto;
+  bottom: auto;
+  left: 0;
+  right: 0;
+  width: auto;
+  height: 1px;
+}
+
+/* MF micro-slot: swap lane-axis padding */
+.timeline-outer--horizontal .mf-micro-slot .event-wrap {
+  left: auto;
+  right: auto;
+  top: 0;
+  bottom: 15%;
+  width: auto;
+  height: auto;
 }
 
 /* Warning icon: left side instead of top */

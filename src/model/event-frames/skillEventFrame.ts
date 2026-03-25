@@ -1,4 +1,4 @@
-import { ElementType, StatusType } from "../../consts/enums";
+import { ElementType, EventFrameType, StatusType } from "../../consts/enums";
 import type { DslTarget } from "../../dsl/semantics";
 
 /** Arts infliction applied by a frame tick. */
@@ -147,6 +147,9 @@ export abstract class SkillEventFrame {
 
   /** Frame dependency types. */
   getDependencyTypes(): readonly string[] { return []; }
+
+  /** Frame-level perform action types (FINAL_STRIKE, FINISHER, DIVE) parsed from clauses. */
+  getFrameTypes(): readonly EventFrameType[] { return []; }
 
   /** Whether this frame scored a critical hit (runtime state for simulation mode). */
   isCrit = false;

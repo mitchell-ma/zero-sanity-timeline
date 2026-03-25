@@ -35,6 +35,7 @@ import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../slot/commonSlotController
 import GENERAL_MECHANICS from '../../model/game-data/generalMechanics.json';
 import { genEventUid } from './inputEventController';
 import { getAllOperatorStatuses } from '../gameDataStore';
+import { allocInputEvent, allocDerivedEvent } from './objectPool';
 
 /** Source metadata for event mutations. */
 interface EventSource {
@@ -92,6 +93,32 @@ export class DerivedEventController {
     }
   }
 
+  /**
+   * Reset all internal state for reuse without deallocating containers.
+   * Call this instead of creating a new DerivedEventController each pipeline run.
+   */
+  reset(
+    triggerAssociations?: TriggerAssociation[],
+    slotWirings?: SlotTriggerWiring[],
+    spController?: SkillPointController,
+    ueController?: UltimateEnergyController,
+  ) {
+    this.stacks.clear();
+    this.registeredEvents.length = 0;
+    this.stops.length = 0;
+    this.registeredStopIds.clear();
+    this.rawDurations.clear();
+    this.extendedIds.clear();
+    this.comboStops.length = 0;
+    (this.output as TimelineEvent[]).length = 0;
+    this.idCounter = 0;
+    this.linkConsumptions.clear();
+    this.triggerAssociations = triggerAssociations ?? [];
+    this.slotWirings = slotWirings ?? [];
+    this.spController = spController ?? null;
+    this.ueController = ueController ?? null;
+  }
+
   private key(columnId: string, ownerId: string) {
     return `${columnId}:${ownerId}`;
   }
@@ -105,17 +132,17 @@ export class DerivedEventController {
    */
   seedControlledOperator(firstOccupiedSlotId: string | undefined) {
     if (!firstOccupiedSlotId) return;
-    this.registerEvents([{
-      uid: `controlled-seed-${firstOccupiedSlotId}`,
-      id: CombatSkillType.CONTROL,
-      name: CombatSkillType.CONTROL,
-      ownerId: firstOccupiedSlotId,
-      columnId: OPERATOR_COLUMNS.INPUT,
-      startFrame: 0,
-      segments: [{ properties: { duration: TOTAL_FRAMES } }],
-      sourceOwnerId: firstOccupiedSlotId,
-      sourceSkillName: CombatSkillType.CONTROL,
-    }]);
+    const ev = allocInputEvent();
+    ev.uid = `controlled-seed-${firstOccupiedSlotId}`;
+    ev.id = CombatSkillType.CONTROL;
+    ev.name = CombatSkillType.CONTROL;
+    ev.ownerId = firstOccupiedSlotId;
+    ev.columnId = OPERATOR_COLUMNS.INPUT;
+    ev.startFrame = 0;
+    ev.segments = [{ properties: { duration: TOTAL_FRAMES } }];
+    ev.sourceOwnerId = firstOccupiedSlotId;
+    ev.sourceSkillName = CombatSkillType.CONTROL;
+    this.registerEvents([ev]);
   }
 
   // ── Registration ──────────────────────────────────────────────────────────
@@ -143,10 +170,13 @@ export class DerivedEventController {
       if (REACTION_COLUMN_IDS.has(ev.columnId)) {
         if (ev.columnId === REACTION_COLUMNS.CORROSION) {
           const segs = buildCorrosionSegments(ev);
-          if (segs) ev = { ...ev, segments: segs };
+          if (segs) ev.segments = segs;
         } else {
-          const seg = buildReactionSegment(ev);
-          if (seg) ev = { ...ev, segments: [seg] };
+          // For already-extended events (re-registered from queue), use raw game-time
+          // duration so combustion ticks aren't inflated by time-stop extension.
+          const raw = this.rawDurations.get(ev.uid);
+          const seg = buildReactionSegment(ev, raw);
+          if (seg) ev.segments = [seg];
         }
       }
 
@@ -231,9 +261,9 @@ export class DerivedEventController {
       const merged = mergedBySlot.get(ev.ownerId);
       const match = merged?.find(w => ev.startFrame >= w.startFrame && ev.startFrame < w.endFrame);
       if (match?.sourceColumnId != null && match.sourceColumnId !== ev.comboTriggerColumnId) {
-        this.registeredEvents[i] = { ...ev, comboTriggerColumnId: match.sourceColumnId };
+        ev.comboTriggerColumnId = match.sourceColumnId;
       } else if (!match && ev.comboTriggerColumnId != null) {
-        this.registeredEvents[i] = { ...ev, comboTriggerColumnId: undefined };
+        ev.comboTriggerColumnId = undefined;
       }
     }
   }
@@ -325,30 +355,25 @@ export class DerivedEventController {
     if (!hasFrames) return ev;
 
     let cumulativeOffset = 0;
-    const newSegments = ev.segments.map(seg => {
+    for (const seg of ev.segments) {
       const segStart = cumulativeOffset;
       cumulativeOffset += seg.properties.duration;
-      if (!seg.frames) return seg;
+      if (!seg.frames) continue;
       const segAbsStart = ev.startFrame + segStart;
       if (this.stops.length === 0) {
-        return {
-          ...seg,
-          frames: seg.frames.map(f => ({
-            ...f,
-            derivedOffsetFrame: f.offsetFrame,
-            absoluteFrame: segAbsStart + f.offsetFrame,
-          })),
-        };
-      }
-      return {
-        ...seg,
-        frames: seg.frames.map(f => {
+        for (const f of seg.frames) {
+          f.derivedOffsetFrame = f.offsetFrame;
+          f.absoluteFrame = segAbsStart + f.offsetFrame;
+        }
+      } else {
+        for (const f of seg.frames) {
           const extOffset = extendByTimeStops(segAbsStart, f.offsetFrame, fStops);
-          return { ...f, derivedOffsetFrame: extOffset, absoluteFrame: segAbsStart + extOffset };
-        }),
-      };
-    });
-    return { ...ev, segments: newSegments };
+          f.derivedOffsetFrame = extOffset;
+          f.absoluteFrame = segAbsStart + extOffset;
+        }
+      }
+    }
+    return ev;
   }
 
 
@@ -383,10 +408,10 @@ export class DerivedEventController {
     }
 
     if (overlapIds.size > 0) {
-      this.registeredEvents = this.registeredEvents.map(ev => {
-        if (!overlapIds.has(ev.uid)) return ev;
-        return { ...ev, warnings: [...(ev.warnings ?? []), 'Overlaps with another event in the same column'] };
-      });
+      for (const ev of this.registeredEvents) {
+        if (!overlapIds.has(ev.uid)) continue;
+        ev.warnings = ev.warnings ? [...ev.warnings, 'Overlaps with another event in the same column'] : ['Overlaps with another event in the same column'];
+      }
     }
   }
 
@@ -514,20 +539,19 @@ export class DerivedEventController {
           });
           // Emit a consumed copy of the incoming infliction so freeform raw
           // events can be replaced with their reacted state.
-          const consumed: TimelineEvent = {
-            uid: options?.uid ?? `${columnId}-${genEventUid()}`,
-            id: columnId,
-            name: columnId,
-            ownerId,
-            columnId,
-            startFrame: frame,
-            segments: [{ properties: { duration: 0 } }],
-            sourceOwnerId: source.ownerId,
-            sourceSkillName: source.skillName,
-            eventStatus: EventStatusType.CONSUMED,
-            eventStatusOwnerId: source.ownerId,
-            eventStatusSkillName: source.skillName,
-          };
+          const consumed = allocDerivedEvent();
+          consumed.uid = options?.uid ?? `${columnId}-${genEventUid()}`;
+          consumed.id = columnId;
+          consumed.name = columnId;
+          consumed.ownerId = ownerId;
+          consumed.columnId = columnId;
+          consumed.startFrame = frame;
+          consumed.segments = [{ properties: { duration: 0 } }];
+          consumed.sourceOwnerId = source.ownerId;
+          consumed.sourceSkillName = source.skillName;
+          consumed.eventStatus = EventStatusType.CONSUMED;
+          consumed.eventStatusOwnerId = source.ownerId;
+          consumed.eventStatusSkillName = source.skillName;
           this.output.push(consumed);
           return;
         }
@@ -552,18 +576,17 @@ export class DerivedEventController {
 
     const rawDur = durationFrames;
     const extendedDuration = this.extendDuration(frame, rawDur);
-    const ev: TimelineEvent = {
-      uid: options?.uid ?? `${columnId}-${genEventUid()}`,
-      id: columnId,
-      name: columnId,
-      ownerId,
-      columnId,
-      startFrame: frame,
-      segments: [{ properties: { duration: extendedDuration } }],
-      sourceOwnerId: source.ownerId,
-      sourceSkillName: source.skillName,
-      ...(isArtsBurst && { isArtsBurst: true }),
-    };
+    const ev = allocDerivedEvent();
+    ev.uid = options?.uid ?? `${columnId}-${genEventUid()}`;
+    ev.id = columnId;
+    ev.name = columnId;
+    ev.ownerId = ownerId;
+    ev.columnId = columnId;
+    ev.startFrame = frame;
+    ev.segments = [{ properties: { duration: extendedDuration } }];
+    ev.sourceOwnerId = source.ownerId;
+    ev.sourceSkillName = source.skillName;
+    if (isArtsBurst) ev.isArtsBurst = true;
     this.rawDurations.set(ev.uid, rawDur);
     existing.push(ev);
     this.stacks.set(key, existing);
@@ -594,19 +617,18 @@ export class DerivedEventController {
     durationFrames: number, source: EventSource,
     options?: { stacks?: number; forcedReaction?: boolean; uid?: string },
   ) {
-    const ev: TimelineEvent = {
-      uid: options?.uid ?? `reaction-${columnId}-${genEventUid()}`,
-      id: columnId,
-      name: columnId,
-      ownerId,
-      columnId,
-      startFrame: frame,
-      segments: [{ properties: { duration: durationFrames } }],
-      sourceOwnerId: source.ownerId,
-      sourceSkillName: source.skillName,
-      stacks: options?.stacks,
-      forcedReaction: options?.forcedReaction,
-    };
+    const ev = allocDerivedEvent();
+    ev.uid = options?.uid ?? `reaction-${columnId}-${genEventUid()}`;
+    ev.id = columnId;
+    ev.name = columnId;
+    ev.ownerId = ownerId;
+    ev.columnId = columnId;
+    ev.startFrame = frame;
+    ev.segments = [{ properties: { duration: durationFrames } }];
+    ev.sourceOwnerId = source.ownerId;
+    ev.sourceSkillName = source.skillName;
+    ev.stacks = options?.stacks;
+    ev.forcedReaction = options?.forcedReaction;
 
     const rawDur = durationFrames;
     setEventDuration(ev, this.extendDuration(ev.startFrame, rawDur));
@@ -658,7 +680,7 @@ export class DerivedEventController {
       const segs = buildCorrosionSegments(ev);
       if (segs) ev.segments = segs;
     } else {
-      const seg = buildReactionSegment(ev);
+      const seg = buildReactionSegment(ev, rawDur);
       if (seg) ev.segments = [seg];
     }
 
@@ -690,18 +712,17 @@ export class DerivedEventController {
       if (active >= maxStacks) return false;
     }
 
-    const ev: TimelineEvent = {
-      uid: options?.uid ?? `${statusName.toLowerCase()}-${genEventUid()}`,
-      id: statusName,
-      name: statusName,
-      ownerId,
-      columnId,
-      startFrame: frame,
-      segments: [{ properties: { duration: durationFrames } }],
-      sourceOwnerId: source.ownerId,
-      sourceSkillName: source.skillName,
-      ...options?.event,
-    };
+    const ev = allocDerivedEvent();
+    ev.uid = options?.uid ?? `${statusName.toLowerCase()}-${genEventUid()}`;
+    ev.id = statusName;
+    ev.name = statusName;
+    ev.ownerId = ownerId;
+    ev.columnId = columnId;
+    ev.startFrame = frame;
+    ev.segments = [{ properties: { duration: durationFrames } }];
+    ev.sourceOwnerId = source.ownerId;
+    ev.sourceSkillName = source.skillName;
+    if (options?.event) Object.assign(ev, options.event);
 
     if (options?.stackingMode === StackInteractionType.MERGE) {
       // Subsume older: clamp all active, keep the new one
@@ -865,10 +886,7 @@ export class DerivedEventController {
     this.comboStops.sort((a, b) => a.startFrame - b.startFrame);
 
     if (changed) {
-      return {
-        ...ev,
-        segments: setAnimationSegmentDuration(ev.segments, animDur),
-      };
+      ev.segments = setAnimationSegmentDuration(ev.segments, animDur);
     }
     return ev;
   }
@@ -904,6 +922,9 @@ export class DerivedEventController {
    * Handles segmented events, 3-phase events, and time-stop events.
    */
   private extendSingleEvent(ev: TimelineEvent): TimelineEvent {
+    // Control status is not affected by time-stops — its timer keeps ticking
+    if (ev.id === CombatSkillType.CONTROL) return ev;
+
     const isOwn = isTimeStopEvent(ev);
     const animDur = getAnimationDuration(ev);
     const foreignStops = isOwn
@@ -916,18 +937,18 @@ export class DerivedEventController {
       let rawOffset = 0;
       let derivedOffset = 0;
       let changed = false;
-      const newSegments = ev.segments.map(seg => {
+      for (const seg of ev.segments) {
         const rawSegStart = rawOffset;
         rawOffset += seg.properties.duration;
 
         if (seg.properties.timeDependency === TimeDependency.REAL_TIME || seg.properties.duration === 0) {
           derivedOffset += seg.properties.duration;
-          return seg;
+          continue;
         }
 
         if (isOwn && animDur > 0 && rawSegStart + seg.properties.duration <= animDur) {
           derivedOffset += seg.properties.duration;
-          return seg;
+          continue;
         }
 
         let ext: number;
@@ -940,14 +961,15 @@ export class DerivedEventController {
         }
 
         derivedOffset += ext;
-        if (ext === seg.properties.duration) return seg;
-        changed = true;
-        return { ...seg, properties: { ...seg.properties, duration: ext } };
-      });
+        if (ext !== seg.properties.duration) {
+          changed = true;
+          seg.properties.duration = ext;
+        }
+      }
 
       if (!changed) return ev;
       this.extendedIds.add(ev.uid);
-      return { ...ev, segments: newSegments };
+      return ev;
     }
 
     // All events should have segments at this point
@@ -982,6 +1004,12 @@ export class DerivedEventController {
       const source = this.registeredEvents.find(e => e.uid === stop.eventUid);
       if (!source) continue;
 
+      // Control swap cannot occur during any time-stop (including dodge)
+      if (ev.id === CombatSkillType.CONTROL) {
+        warnings.push('Control swap cannot occur during time-stop');
+        continue;
+      }
+
       const sourceIsDodge = source.columnId === OPERATOR_COLUMNS.INPUT && !!source.isPerfectDodge;
       if (sourceIsDodge) continue;
 
@@ -994,7 +1022,8 @@ export class DerivedEventController {
       }
     }
     if (warnings.length === 0) return ev;
-    return { ...ev, warnings: [...(ev.warnings ?? []), ...warnings] };
+    ev.warnings = ev.warnings ? [...ev.warnings, ...warnings] : warnings;
+    return ev;
   }
 
   // ── Active event queries ─────────────────────────────────────────────────
@@ -1061,15 +1090,13 @@ export class DerivedEventController {
       if (this.registeredEvents[i].uid !== eventUid) continue;
       const ev = this.registeredEvents[i];
       let preCooldownDur = 0;
-      const newSegments = ev.segments.map(s => {
+      for (const s of ev.segments) {
         if (s.properties.name === 'Cooldown') {
-          const cooldownRemaining = Math.max(0, resetFrame - ev.startFrame - preCooldownDur);
-          return { ...s, properties: { ...s.properties, duration: cooldownRemaining } };
+          s.properties.duration = Math.max(0, resetFrame - ev.startFrame - preCooldownDur);
+        } else {
+          preCooldownDur += s.properties.duration;
         }
-        preCooldownDur += s.properties.duration;
-        return s;
-      });
-      this.registeredEvents[i] = { ...ev, segments: newSegments };
+      }
       return;
     }
   }
@@ -1077,14 +1104,11 @@ export class DerivedEventController {
   reduceCooldown(eventUid: string, newCooldownDuration: number) {
     for (let i = 0; i < this.registeredEvents.length; i++) {
       if (this.registeredEvents[i].uid !== eventUid) continue;
-      const ev = this.registeredEvents[i];
-      const newSegments = ev.segments.map(s => {
+      for (const s of this.registeredEvents[i].segments) {
         if (s.properties.name === 'Cooldown') {
-          return { ...s, properties: { ...s.properties, duration: Math.max(0, newCooldownDuration) } };
+          s.properties.duration = Math.max(0, newCooldownDuration);
         }
-        return s;
-      });
-      this.registeredEvents[i] = { ...ev, segments: newSegments };
+      }
       return;
     }
   }

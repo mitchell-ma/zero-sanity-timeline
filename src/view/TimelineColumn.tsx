@@ -184,7 +184,7 @@ function TimelineColumn({
         <div
           key={`mc-div-${i}`}
           className="mf-micro-divider"
-          style={{ left: `${((i + 1) / microCount) * 100}%` }}
+          style={{ [axis.lanePos]: `${((i + 1) / microCount) * 100}%` } as React.CSSProperties}
         />
       ))}
 
@@ -296,7 +296,13 @@ function TimelineColumn({
             <div
               key={ev.uid}
               className="mf-micro-slot"
-              style={{ position: 'absolute', top: 0, bottom: 0, left: leftPct, width: widthPct }}
+              style={{
+                position: 'absolute',
+                [axis.framePos]: 0,
+                [isHorizontal ? 'right' : 'bottom']: 0,
+                [axis.lanePos]: leftPct,
+                [axis.laneSize]: widthPct,
+              } as React.CSSProperties}
             >
               <EventBlock
                 {...buildEventBlockProps(ev, { ...microPres, color: microColor })}
@@ -312,13 +318,12 @@ function TimelineColumn({
           const isWindow = ev.columnId === COMBO_WINDOW_COLUMN_ID;
           const ol = viewModel?.overlapLanes.get(ev.uid);
           const laneStyle = ol && ol.laneCount > 1 ? {
-            left: `${(ol.lane / ol.laneCount) * 100}%`,
-            right: 'auto',
-            width: `${(1 / ol.laneCount) * 100}%`,
-            paddingLeft: 2,
-            paddingRight: 2,
+            [axis.lanePos]: `${(ol.lane / ol.laneCount) * 100}%`,
+            [axis.laneSize]: `${(1 / ol.laneCount) * 100}%`,
+            [isHorizontal ? 'paddingTop' : 'paddingLeft']: '15%',
+            [isHorizontal ? 'paddingBottom' : 'paddingRight']: '15%',
             boxSizing: 'border-box' as const,
-          } : undefined;
+          } as React.CSSProperties : undefined;
           return (
             <EventBlock
               key={ev.uid}

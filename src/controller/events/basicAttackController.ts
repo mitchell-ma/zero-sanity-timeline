@@ -88,6 +88,8 @@ export class SkillSegmentBuilder {
         if (gg) marker.gaugeGain = gg;
         const deps = f.getDependencyTypes();
         if (deps.length > 0) marker.dependencyTypes = [...deps];
+        const fts = f.getFrameTypes();
+        if (fts.length > 0) marker.frameTypes = [...fts];
         return marker;
       });
 
@@ -95,7 +97,9 @@ export class SkillSegmentBuilder {
       // SP recovery is granted only on the final strike
       if (isMulti && !customLabels && i === sequences.length - 1 && frames.length > 0) {
         const finalFrame = frames[frames.length - 1];
-        finalFrame.frameTypes = [EventFrameType.FINAL_STRIKE];
+        if (!finalFrame.frameTypes?.includes(EventFrameType.FINAL_STRIKE)) {
+          finalFrame.frameTypes = [EventFrameType.FINAL_STRIKE];
+        }
         finalFrame.skillPointRecovery = allSequenceTotalSP;
         finalFrame.templateFinalStrikeSP = allSequenceTotalSP;
         finalFrame.templateFinalStrikeStagger = finalFrame.stagger ?? 0;

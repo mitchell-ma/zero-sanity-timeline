@@ -1,4 +1,4 @@
-import { ElementType, StatusType } from "../../consts/enums";
+import { ElementType, EventFrameType, StatusType } from "../../consts/enums";
 import { DeterminerType, NounType } from "../../dsl/semantics";
 import type { DslTarget, ValueNode } from "../../dsl/semantics";
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT, type ValueResolutionContext } from "../../controller/calculation/valueResolver";
@@ -234,6 +234,7 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
   private readonly _dealDamage: FrameDealDamage | null;
   private readonly _gaugeGain: number;
   private readonly _dependencyTypes: readonly string[];
+  private readonly _frameTypes: readonly EventFrameType[];
 
   constructor(frame: JsonFrame) {
     super();
@@ -241,6 +242,7 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
     this._damageElement = frame.damageElement ?? null;
     this._consumeReaction = null;
     let duplicatesSource = false;
+    const frameTypes: EventFrameType[] = [];
 
     let sp = 0;
     let stagger = 0;
@@ -385,6 +387,17 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
               clauseEffects.push({ type: 'applyStagger' });
             }
             break;
+
+          case 'PERFORM': {
+            const PERFORM_TO_FRAME_TYPE: Record<string, EventFrameType> = {
+              FINAL_STRIKE: EventFrameType.FINAL_STRIKE,
+              FINISHER: EventFrameType.FINISHER,
+              DIVE_ATTACK: EventFrameType.DIVE,
+            };
+            const ft = PERFORM_TO_FRAME_TYPE[ef.object ?? ''];
+            if (ft && !frameTypes.includes(ft)) frameTypes.push(ft);
+            break;
+          }
         }
       }
       clauses.push({ conditions, effects: clauseEffects });
@@ -404,6 +417,7 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
     this._consumeStatus = consumeStatus;
     this._duplicatesTriggerInfliction = duplicatesSource;
     this._dependencyTypes = (frame.properties?.dependencyTypes ?? []) as string[];
+    this._frameTypes = frameTypes;
   }
 
   getOffsetSeconds(): number { return this._offsetSeconds; }
@@ -423,6 +437,7 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
   getDealDamage(): FrameDealDamage | null { return this._dealDamage; }
   getGaugeGain(): number { return this._gaugeGain; }
   getDependencyTypes(): readonly string[] { return this._dependencyTypes; }
+  getFrameTypes(): readonly EventFrameType[] { return this._frameTypes; }
 }
 
 // ── DataDrivenSkillEventSequence ────────────────────────────────────────────

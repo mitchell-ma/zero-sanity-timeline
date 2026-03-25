@@ -86,6 +86,7 @@ import {
 import { resolveGainEfficiencies } from '../controller/timeline/ultimateEnergyController';
 import { StatType, InteractionModeType, InfoLevel, CritMode, EnhancementType, ThemeType } from '../consts/enums';
 import { GlobalSettings, loadSettings, saveSettings, migrateLegacySettings, PERFORMANCE_THROTTLE } from '../consts/settings';
+import { configurePool } from '../controller/timeline/objectPool';
 import { SKILL_COLUMNS, COMBO_WINDOW_COLUMN_ID } from '../model/channels';
 import type { SkillPointConsumptionHistory, ResourceZone } from '../controller/timeline/skillPointTimeline';
 
@@ -98,6 +99,7 @@ initCustomOperators();
 
 const initialLoad = loadInitialState();
 const initialSettings = migrateLegacySettings(loadSettings());
+configurePool(initialSettings.enablePooling, initialSettings.eventPoolLimit, initialSettings.enableReconciler);
 
 function initLoadouts() {
   let tree = loadLoadoutTree();
@@ -222,6 +224,7 @@ export function useApp() {
   const [settings, setSettings] = useState<GlobalSettings>(initialSettings);
   useEffect(() => {
     saveSettings(settings);
+    configurePool(settings.enablePooling, settings.eventPoolLimit, settings.enableReconciler);
   }, [settings]);
   const handleUpdateSetting = useCallback(<K extends keyof GlobalSettings>(key: K, value: GlobalSettings[K]) => {
     setSettings((prev) => ({ ...prev, [key]: value }));

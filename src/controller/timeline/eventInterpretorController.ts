@@ -154,18 +154,45 @@ export interface InterpretContext {
 // ══════════════════════════════════════════════════════════════════════════
 
 export class EventInterpretorController {
-  readonly controller: DerivedEventController;
-  private readonly baseEvents: readonly TimelineEvent[];
-  private readonly loadoutProperties?: Record<string, LoadoutProperties>;
-  private readonly slotOperatorMap?: Record<string, string>;
-  private readonly slotWirings?: SlotTriggerWiring[];
-  private readonly getEnemyHpPercentage?: (frame: number) => number | null;
-  private readonly getControlledSlotAtFrame?: (frame: number) => string;
-  private readonly triggerIndex?: TriggerIndex;
+  controller!: DerivedEventController;
+  private baseEvents: readonly TimelineEvent[] = [];
+  private loadoutProperties?: Record<string, LoadoutProperties>;
+  private slotOperatorMap?: Record<string, string>;
+  private slotWirings?: SlotTriggerWiring[];
+  private getEnemyHpPercentage?: (frame: number) => number | null;
+  private getControlledSlotAtFrame?: (frame: number) => string;
+  private triggerIndex?: TriggerIndex;
   /** Dedup set for reactive triggers: prevents double-firing at the same frame. */
-  private readonly seenTriggers = new Set<string>();
+  private seenTriggers = new Set<string>();
 
   constructor(
+    controller?: DerivedEventController,
+    baseEvents?: readonly TimelineEvent[],
+    options?: {
+      loadoutProperties?: Record<string, LoadoutProperties>;
+      slotOperatorMap?: Record<string, string>;
+      slotWirings?: SlotTriggerWiring[];
+      getEnemyHpPercentage?: (frame: number) => number | null;
+      getControlledSlotAtFrame?: (frame: number) => string;
+      triggerIndex?: TriggerIndex;
+    },
+  ) {
+    if (controller) this.controller = controller;
+    if (baseEvents) this.baseEvents = baseEvents;
+    if (options) {
+      this.loadoutProperties = options.loadoutProperties;
+      this.slotOperatorMap = options.slotOperatorMap;
+      this.slotWirings = options.slotWirings;
+      this.getEnemyHpPercentage = options.getEnemyHpPercentage;
+      this.getControlledSlotAtFrame = options.getControlledSlotAtFrame;
+      this.triggerIndex = options.triggerIndex;
+    }
+  }
+
+  /**
+   * Reset for reuse without deallocating the seenTriggers Set.
+   */
+  resetWith(
     controller: DerivedEventController,
     baseEvents: readonly TimelineEvent[],
     options?: {
@@ -179,6 +206,7 @@ export class EventInterpretorController {
   ) {
     this.controller = controller;
     this.baseEvents = baseEvents;
+    this.seenTriggers.clear();
     this.loadoutProperties = options?.loadoutProperties;
     this.slotOperatorMap = options?.slotOperatorMap;
     this.slotWirings = options?.slotWirings;
@@ -880,9 +908,8 @@ export class EventInterpretorController {
   private checkPerformTriggers(performObject: string, event: TimelineEvent, absFrame: number): QueueFrame[] {
     if (!this.triggerIndex) return [];
     const results: QueueFrame[] = [];
-    for (const entry of this.triggerIndex.matchEvent(event.columnId)) {
+    for (const entry of this.triggerIndex.lookup(`PERFORM:${performObject}`)) {
       if (entry.primaryVerb !== 'PERFORM') continue;
-      if (entry.primaryCondition.object !== performObject) continue;
       const isAny = entry.primaryCondition.subjectDeterminer === 'ANY';
       if (!isAny && event.ownerId !== entry.operatorSlotId) continue;
       const defKey = `${entry.def.properties.id}:${entry.operatorSlotId}:${absFrame}`;

@@ -20,6 +20,8 @@ export interface AxisMap {
   laneSize: 'width' | 'height';
   /** DOM scroll property along frame axis */
   scrollPos: 'scrollTop' | 'scrollLeft';
+  /** DOM scroll property along lane axis */
+  scrollLane: 'scrollLeft' | 'scrollTop';
   /** Mouse event property along frame axis */
   clientFrame: 'clientY' | 'clientX';
   /** Mouse event property along lane axis */
@@ -44,6 +46,7 @@ export const VERTICAL_AXIS: AxisMap = {
   lanePos: 'left',
   laneSize: 'width',
   scrollPos: 'scrollTop',
+  scrollLane: 'scrollLeft',
   clientFrame: 'clientY',
   clientLane: 'clientX',
   viewportFrame: 'clientHeight',
@@ -60,6 +63,7 @@ export const HORIZONTAL_AXIS: AxisMap = {
   lanePos: 'top',
   laneSize: 'height',
   scrollPos: 'scrollLeft',
+  scrollLane: 'scrollTop',
   clientFrame: 'clientX',
   clientLane: 'clientY',
   viewportFrame: 'clientWidth',

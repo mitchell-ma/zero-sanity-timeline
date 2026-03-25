@@ -12,7 +12,8 @@ import type { Effect, Interaction, ValueNode } from '../../dsl/semantics';
 import { isValueLiteral, isValueVariable, isValueStat, isValueExpression, THRESHOLD_MAX } from '../../dsl/semantics';
 import { getLeafValue, resolveValueNode, DEFAULT_VALUE_CONTEXT } from '../../controller/calculation/valueResolver';
 import { ENEMY_OWNER_ID, OPERATOR_COLUMNS, REACTION_COLUMN_IDS, SKILL_COLUMNS, SKILL_COLUMN_ORDER } from '../../model/channels';
-import { getLastController } from '../../controller/timeline/eventQueueController';
+import { getLastController, getReconcileStats } from '../../controller/timeline/eventQueueController';
+import { getPoolStats } from '../../controller/timeline/objectPool';
 import { getSkillMultiplier, getFrameMultiplier } from '../../controller/calculation/jsonMultiplierEngine';
 import type { DamageTableRow } from '../../controller/calculation/damageTableBuilder';
 import type { SkillLevel, Potential } from '../../consts/types';
@@ -1838,6 +1839,9 @@ function DebugPane({ event, processedEvent, rawEvents, allProcessedEvents }: { e
       {/* Pipeline internals — DerivedEventController snapshot */}
       <PipelineTimeline />
 
+      {/* Object pool + reconciler stats */}
+      <PoolReconcilerStats />
+
       {/* Controller Objects — tree view */}
       {(rawEvents || allProcessedEvents) && (() => {
         const rawIds = rawEvents ? new Set(rawEvents.map((ev) => ev.uid)) : null;
@@ -2049,6 +2053,24 @@ function DebugDiffRow({ label, raw, derived }: { label: string; raw?: number; de
           {' '}(raw: {fmt(raw!)}, +{fmt(derived! - raw!)})
         </span>
       )}
+    </div>
+  );
+}
+
+// ── Pool + Reconciler stats ─────────────────────────────────────────────────
+
+function PoolReconcilerStats() {
+  const pool = getPoolStats();
+  const rec = getReconcileStats();
+  return (
+    <div style={{ marginTop: 8, paddingTop: 6, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+      <div style={{ color: 'var(--text-primary)', fontWeight: 600, marginBottom: 2 }}>Object Pool</div>
+      <div>Pooling: {pool.enabled ? 'ON' : 'OFF'}</div>
+      <div>Events: {pool.eventPoolUsed}/{pool.eventPoolSize} (limit {pool.eventPoolLimit})</div>
+      <div>QueueFrames: {pool.qfPoolUsed}/{pool.qfPoolSize}</div>
+      <div style={{ color: 'var(--text-primary)', fontWeight: 600, marginTop: 6, marginBottom: 2 }}>Reconciler</div>
+      <div>Total: {rec.total} | Reused: {rec.reused} | Fresh: {rec.fresh}</div>
+      <div>Cache: {rec.cacheSize}</div>
     </div>
   );
 }

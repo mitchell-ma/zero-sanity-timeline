@@ -6,7 +6,7 @@
  */
 
 import { v4 as uuidv4 } from 'uuid';
-import { EnhancementType, EventFrameType } from '../../consts/enums';
+import { CombatSkillType, EnhancementType, EventFrameType } from '../../consts/enums';
 import { TimelineEvent, EventSegmentData, Operator, computeSegmentsSpan, getAnimationDuration, eventEndFrame, durationSegment } from '../../consts/viewTypes';
 import { ENEMY_OWNER_ID, REACTION_COLUMN_IDS, INFLICTION_COLUMN_IDS, SKILL_COLUMNS } from '../../model/channels';
 import { USER_ID } from '../../model/channels';
@@ -14,6 +14,7 @@ import { TOTAL_FRAMES } from '../../utils/timeline';
 import { ComboSkillEventController } from './comboSkillEventController';
 import { hasEnableClauseAtFrame } from './eventValidator';
 import type { CombatLoadoutController } from '../combat-loadout/combatLoadoutController';
+import { allocInputEvent, allocDerivedEvent } from './objectPool';
 
 // ── Event classification ─────────────────────────────────────────────────────
 
@@ -28,10 +29,14 @@ export function classifyEvents(rawEvents: TimelineEvent[]): { inputEvents: Timel
   const inputEvents: TimelineEvent[] = [];
   const derivedEvents: TimelineEvent[] = [];
   for (const ev of rawEvents) {
-    // Clone to prevent engine mutations from leaking back to raw state
-    const copy = { ...ev, segments: ev.segments.map(s => ({ ...s, properties: { ...s.properties }, frames: s.frames?.map(f => ({ ...f })) })) };
-    if (copy.ownerId === ENEMY_OWNER_ID && copy.sourceOwnerId === USER_ID
-      && (INFLICTION_COLUMN_IDS.has(copy.columnId) || REACTION_COLUMN_IDS.has(copy.columnId))) {
+    // Clone to prevent engine mutations (eventStatus, stacks, segments
+    // reassignment) from leaking back to raw state. Uses object pool when
+    // pooling is enabled to avoid per-tick allocation churn.
+    const isDerived = ev.ownerId === ENEMY_OWNER_ID && ev.sourceOwnerId === USER_ID
+      && (INFLICTION_COLUMN_IDS.has(ev.columnId) || REACTION_COLUMN_IDS.has(ev.columnId));
+    const copy = isDerived ? allocDerivedEvent() : allocInputEvent();
+    Object.assign(copy, ev);
+    if (isDerived) {
       derivedEvents.push(copy);
     } else {
       inputEvents.push(copy);
@@ -175,6 +180,8 @@ export function clampDeltaByOverlap(
 ): number {
   const ev = allEvents.find((e) => e.uid === eventUid);
   if (!ev) return clampedDelta;
+  // Control events are passive state markers — no overlap constraints
+  if (ev.id === CombatSkillType.CONTROL) return clampedDelta;
   const evRange = getSibRange(ev, processedEvents);
   if (evRange === 0) return clampedDelta;
 
@@ -517,6 +524,9 @@ export function validateMove(
   overlapExemptIds?: Set<string>,
 ): number {
   let clamped = Math.max(0, Math.min(TOTAL_FRAMES - 1, newStartFrame));
+  // Control events are passive state markers — no overlap or animation-edge
+  // constraints apply. Only timeline bounds matter.
+  if (target.id === CombatSkillType.CONTROL) return clamped;
   // Combo events are constrained only by their activation window — no other
   // validator (overlap, ultimate edge, etc.) may override the window boundary.
   if (ComboSkillEventController.isCombo(target)) {

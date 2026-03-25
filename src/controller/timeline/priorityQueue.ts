@@ -12,6 +12,9 @@ export class PriorityQueue<T> {
 
   get size() { return this.heap.length; }
 
+  /** Clear all entries without deallocating the backing array. */
+  clear() { this.heap.length = 0; }
+
   insert(item: T) {
     this.heap.push(item);
     this.bubbleUp(this.heap.length - 1);

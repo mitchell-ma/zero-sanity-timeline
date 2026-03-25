@@ -28,6 +28,7 @@ import { evaluateConditions, ConditionContext } from './conditionEvaluator';
 import { activeEventsAtFrame, activeInflictionsOfElement } from './timelineQueries';
 import { LoadoutProperties } from '../../view/InformationPane';
 import { genEventUid } from './inputEventController';
+import { allocDerivedEvent } from './objectPool';
 
 // ── Types ────────────────────────────────────────────────────────────────
 
@@ -200,17 +201,16 @@ function executeApply(effect: Effect, ctx: ExecutionContext): MutationSet {
     const durationValue = resolveWith(effect.with?.duration, ctx);
     const duration = durationValue != null ? Math.round(durationValue * FPS) : FPS;
 
-    const ev: TimelineEvent = {
-      uid: `infliction-${genEventUid()}`,
-      id: effect.objectId ?? String(effect.adjective),
-      name: effect.objectId ?? String(effect.adjective),
-      ownerId,
-      columnId,
-      startFrame: ctx.frame,
-      segments: durationSegment(duration),
-      sourceOwnerId: ctx.sourceOwnerId,
-      sourceSkillName: ctx.sourceSkillName,
-    };
+    const ev = allocDerivedEvent();
+    ev.uid = `infliction-${genEventUid()}`;
+    ev.id = effect.objectId ?? String(effect.adjective);
+    ev.name = effect.objectId ?? String(effect.adjective);
+    ev.ownerId = ownerId;
+    ev.columnId = columnId;
+    ev.startFrame = ctx.frame;
+    ev.segments = durationSegment(duration);
+    ev.sourceOwnerId = ctx.sourceOwnerId;
+    ev.sourceSkillName = ctx.sourceSkillName;
     result.produced.push(ev);
     return result;
   }
@@ -221,17 +221,16 @@ function executeApply(effect: Effect, ctx: ExecutionContext): MutationSet {
     const durationValue = resolveWith(effect.with?.duration, ctx);
     const duration = durationValue != null ? Math.round(durationValue * FPS) : 2400;
 
-    const ev: TimelineEvent = {
-      uid: `status-${genEventUid()}`,
-      id: effect.objectId ?? 'UNKNOWN_STATUS',
-      name: effect.objectId ?? 'UNKNOWN_STATUS',
-      ownerId,
-      columnId,
-      startFrame: ctx.frame,
-      segments: durationSegment(duration),
-      sourceOwnerId: ctx.sourceOwnerId,
-      sourceSkillName: ctx.sourceSkillName,
-    };
+    const ev = allocDerivedEvent();
+    ev.uid = `status-${genEventUid()}`;
+    ev.id = effect.objectId ?? 'UNKNOWN_STATUS';
+    ev.name = effect.objectId ?? 'UNKNOWN_STATUS';
+    ev.ownerId = ownerId;
+    ev.columnId = columnId;
+    ev.startFrame = ctx.frame;
+    ev.segments = durationSegment(duration);
+    ev.sourceOwnerId = ctx.sourceOwnerId;
+    ev.sourceSkillName = ctx.sourceSkillName;
     result.produced.push(ev);
     return result;
   }
@@ -244,18 +243,17 @@ function executeApply(effect: Effect, ctx: ExecutionContext): MutationSet {
     const duration = durationValue != null ? Math.round(durationValue * FPS) : 2400;
     const stacksValue = resolveWith(effect.with?.stacks, ctx);
 
-    const ev: TimelineEvent = {
-      uid: `reaction-${genEventUid()}`,
-      id: String(effect.adjective),
-      name: String(effect.adjective),
-      ownerId,
-      columnId,
-      startFrame: ctx.frame,
-      segments: durationSegment(duration),
-      sourceOwnerId: ctx.sourceOwnerId,
-      sourceSkillName: ctx.sourceSkillName,
-      stacks: typeof stacksValue === 'number' ? stacksValue : undefined,
-    };
+    const ev = allocDerivedEvent();
+    ev.uid = `reaction-${genEventUid()}`;
+    ev.id = String(effect.adjective);
+    ev.name = String(effect.adjective);
+    ev.ownerId = ownerId;
+    ev.columnId = columnId;
+    ev.startFrame = ctx.frame;
+    ev.segments = durationSegment(duration);
+    ev.sourceOwnerId = ctx.sourceOwnerId;
+    ev.sourceSkillName = ctx.sourceSkillName;
+    ev.stacks = typeof stacksValue === 'number' ? stacksValue : undefined;
     result.produced.push(ev);
     return result;
   }
@@ -550,14 +548,11 @@ export function applyMutations(events: readonly TimelineEvent[], mutations: Muta
   const result = events.map(ev => {
     const clamp = mutations.clamped.get(ev.uid);
     if (!clamp) return ev;
-    const clamped = {
-      ...ev,
-      eventStatus: clamp.eventStatus,
-      eventStatusOwnerId: clamp.sourceOwnerId,
-      eventStatusSkillName: clamp.sourceSkillName,
-    };
-    setEventDuration(clamped, clamp.newDuration);
-    return clamped;
+    ev.eventStatus = clamp.eventStatus;
+    ev.eventStatusOwnerId = clamp.sourceOwnerId;
+    ev.eventStatusSkillName = clamp.sourceSkillName;
+    setEventDuration(ev, clamp.newDuration);
+    return ev;
   });
   result.push(...mutations.produced);
   return result;

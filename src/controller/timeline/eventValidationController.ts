@@ -44,9 +44,57 @@ export interface ValidationResult {
   autoFinisherIds: Set<string>;
 }
 
+// ── Structural equality helpers ──────────────────────────────────────────
+// Reuse previous Map/Set/array references when content hasn't changed,
+// so downstream useMemos keyed on these objects don't re-run needlessly.
+
+const EMPTY_MAP: Map<string, string> = new Map();
+const EMPTY_SET: Set<string> = new Set();
+
+function mapsEqual(a: Map<string, string>, b: Map<string, string>): boolean {
+  if (a.size !== b.size) return false;
+  let equal = true;
+  a.forEach((v, k) => { if (equal && b.get(k) !== v) equal = false; });
+  return equal;
+}
+
+function setsEqual(a: Set<string>, b: Set<string>): boolean {
+  if (a.size !== b.size) return false;
+  let equal = true;
+  a.forEach((v) => { if (equal && !b.has(v)) equal = false; });
+  return equal;
+}
+
+function timeStopRegionsEqual(a: TimeStopRegion[], b: TimeStopRegion[]): boolean {
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) {
+    if (a[i].startFrame !== b[i].startFrame || a[i].durationFrames !== b[i].durationFrames) return false;
+  }
+  return true;
+}
+
+/** Reuse prev if structurally equal, otherwise return next. */
+function stableMap(next: Map<string, string>, prev: Map<string, string> | undefined): Map<string, string> {
+  if (prev && mapsEqual(next, prev)) return prev;
+  return next;
+}
+
+function stableSet(next: Set<string>, prev: Set<string> | undefined): Set<string> {
+  if (prev && setsEqual(next, prev)) return prev;
+  return next;
+}
+
+// Module-level cache for previous result
+let _prevValidation: ValidationResult | null = null;
+
 /**
  * Runs all event validators in one pass. Returns all validation maps,
  * time-stop regions, and auto-finisher IDs.
+ *
+ * Uses structural equality: if a validation map's content hasn't changed
+ * since the last call, the previous Map reference is reused. This prevents
+ * downstream React useMemos from invalidating on every drag tick when the
+ * pipeline re-runs but most warnings stay the same.
  */
 export function computeAllValidations(
   events: TimelineEvent[],
@@ -56,50 +104,98 @@ export function computeAllValidations(
   draggingIds: Set<string> | null,
   interactionMode?: InteractionModeType,
 ): ValidationResult {
-  const timeStopRegions = computeTimeStopRegions(events);
+  const prev = _prevValidation;
+  const timeStopRegionsRaw = computeTimeStopRegions(events);
+  const timeStopRegions = prev && timeStopRegionsEqual(timeStopRegionsRaw, prev.timeStopRegions)
+    ? prev.timeStopRegions
+    : timeStopRegionsRaw;
 
   const maps: ValidationMaps = {
-    combo: validateComboWindows(events, slots, draggingIds),
+    combo: stableMap(validateComboWindows(events, slots, draggingIds), prev?.maps.combo),
     resource: resourceGraphs
-      ? validateResources(events, resourceGraphs, slots, draggingIds ?? undefined)
-      : new Map(),
-    empowered: validateEmpowered(events, slots),
-    enhanced: validateEnhanced(events),
-    regularBasic: validateDisabledVariants(events),
-    clause: validateVariantClauses(events, slots),
+      ? stableMap(validateResources(events, resourceGraphs, slots, draggingIds ?? undefined), prev?.maps.resource)
+      : (prev?.maps.resource?.size === 0 ? prev.maps.resource : EMPTY_MAP),
+    empowered: stableMap(validateEmpowered(events, slots), prev?.maps.empowered),
+    enhanced: stableMap(validateEnhanced(events), prev?.maps.enhanced),
+    regularBasic: stableMap(validateDisabledVariants(events), prev?.maps.regularBasic),
+    clause: stableMap(validateVariantClauses(events, slots), prev?.maps.clause),
     finisherStagger: staggerBreaks
-      ? validateFinisherStaggerBreak(events, getEffectiveStaggerWindows(events, staggerBreaks))
-      : new Map(),
-    timeStop: validateTimeStops(events, timeStopRegions),
-    infliction: validateInflictionStacks(events),
+      ? stableMap(validateFinisherStaggerBreak(events, getEffectiveStaggerWindows(events, staggerBreaks)), prev?.maps.finisherStagger)
+      : (prev?.maps.finisherStagger?.size === 0 ? prev.maps.finisherStagger : EMPTY_MAP),
+    timeStop: stableMap(validateTimeStops(events, timeStopRegions), prev?.maps.timeStop),
+    infliction: stableMap(validateInflictionStacks(events), prev?.maps.infliction),
   };
 
-  const autoFinisherIds = staggerBreaks
-    ? getAutoFinisherIds(events, getEffectiveStaggerWindows(events, staggerBreaks))
-    : new Set<string>();
+  // Reuse previous ValidationMaps object if all individual maps are reference-equal
+  const stableMaps = prev
+    && maps.combo === prev.maps.combo
+    && maps.resource === prev.maps.resource
+    && maps.empowered === prev.maps.empowered
+    && maps.enhanced === prev.maps.enhanced
+    && maps.regularBasic === prev.maps.regularBasic
+    && maps.clause === prev.maps.clause
+    && maps.finisherStagger === prev.maps.finisherStagger
+    && maps.timeStop === prev.maps.timeStop
+    && maps.infliction === prev.maps.infliction
+    ? prev.maps
+    : maps;
 
-  return { maps, timeStopRegions, autoFinisherIds };
+  const autoFinisherIdsRaw = staggerBreaks
+    ? getAutoFinisherIds(events, getEffectiveStaggerWindows(events, staggerBreaks))
+    : EMPTY_SET;
+  const autoFinisherIds = stableSet(autoFinisherIdsRaw, prev?.autoFinisherIds);
+
+  const result: ValidationResult = { maps: stableMaps, timeStopRegions, autoFinisherIds };
+  _prevValidation = result;
+  return result;
 }
 
 /**
  * Aggregates per-event warnings from all validation maps into a single
  * warning string (newline-separated) per event. Returns null for clean events.
+ *
+ * Cached: returns the same string reference if the underlying warnings
+ * haven't changed, avoiding array/join allocation on every call.
  */
+let _warningCache = new Map<string, { maps: ValidationMaps; result: string | null }>();
+
 export function aggregateEventWarnings(
   eventId: string,
   maps: ValidationMaps,
 ): string | null {
-  const warnings = [
-    maps.combo.get(eventId),
-    maps.resource.get(eventId),
-    maps.empowered.get(eventId),
-    maps.enhanced.get(eventId),
-    maps.regularBasic.get(eventId),
-    maps.clause.get(eventId),
-    maps.finisherStagger.get(eventId),
-    maps.timeStop.get(eventId),
-    maps.infliction.get(eventId),
-  ].filter(Boolean);
+  const cached = _warningCache.get(eventId);
+  if (cached && cached.maps === maps) return cached.result;
 
-  return warnings.length > 0 ? warnings.join('\n') : null;
+  let result: string | null = null;
+  const c = maps.combo.get(eventId);
+  const r = maps.resource.get(eventId);
+  const em = maps.empowered.get(eventId);
+  const en = maps.enhanced.get(eventId);
+  const rb = maps.regularBasic.get(eventId);
+  const cl = maps.clause.get(eventId);
+  const fs = maps.finisherStagger.get(eventId);
+  const ts = maps.timeStop.get(eventId);
+  const inf = maps.infliction.get(eventId);
+
+  if (c || r || em || en || rb || cl || fs || ts || inf) {
+    let s = '';
+    if (c) s += c;
+    if (r) s += (s ? '\n' : '') + r;
+    if (em) s += (s ? '\n' : '') + em;
+    if (en) s += (s ? '\n' : '') + en;
+    if (rb) s += (s ? '\n' : '') + rb;
+    if (cl) s += (s ? '\n' : '') + cl;
+    if (fs) s += (s ? '\n' : '') + fs;
+    if (ts) s += (s ? '\n' : '') + ts;
+    if (inf) s += (s ? '\n' : '') + inf;
+    result = s;
+  }
+
+  _warningCache.set(eventId, { maps, result });
+  return result;
+}
+
+/** Clear warning cache (call when validation maps are rebuilt). */
+export function clearWarningCache() {
+  _warningCache = new Map();
 }

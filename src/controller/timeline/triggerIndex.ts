@@ -184,11 +184,12 @@ function getDurationFrames(duration: { value: ValueNode; unit: string }): number
 /** Resolve primary verb key for indexing: verb + resolved column/object. */
 function resolveTriggerKey(verb: string, cond: Predicate): string {
   if (verb === 'PERFORM') {
-    const col = SKILL_OBJECT_TO_COLUMN[cond.object ?? ''] ?? cond.object;
-    // FINAL_STRIKE, FINISHER, DIVE_ATTACK all fire on the basic attack column
+    // Frame-level perform actions keep their own key so they are only matched
+    // by checkPerformTriggers (not by generic column-level reactive triggers).
     if (cond.object === 'FINAL_STRIKE' || cond.object === 'FINISHER' || cond.object === 'DIVE_ATTACK') {
-      return `PERFORM:${SKILL_COLUMNS.BASIC}`;
+      return `PERFORM:${cond.object}`;
     }
+    const col = SKILL_OBJECT_TO_COLUMN[cond.object ?? ''] ?? cond.object;
     return `PERFORM:${col}`;
   }
   if (verb === 'APPLY' || verb === 'CONSUME' || verb === 'RECEIVE') {

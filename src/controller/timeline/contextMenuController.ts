@@ -46,9 +46,16 @@ export interface ColumnContextMenuContext {
  * Returns null if no menu should be shown.
  */
 /** Build "Set as Controlled Operator" item for operator-owned columns. */
-export function controlledItem(ownerId: string, atFrame: number): ContextMenuItem | null {
+export function controlledItem(ownerId: string, atFrame: number, timeStopRegions?: TimeStopRegion[]): ContextMenuItem | null {
   if (ownerId === ENEMY_OWNER_ID || ownerId === COMMON_OWNER_ID) return null;
   const alreadyControlled = getLastController()?.isControlledAt(ownerId, atFrame) ?? false;
+  const inTimeStop = timeStopRegions?.some(
+    (stop) => atFrame > stop.startFrame && atFrame < stop.startFrame + stop.durationFrames,
+  ) ?? false;
+  const disabled = alreadyControlled || inTimeStop;
+  const disabledReason = alreadyControlled ? t('ctx.alreadyControlled')
+    : inTimeStop ? 'Control swap cannot occur during time-stop'
+    : undefined;
   return {
     label: t('ctx.setControlled'),
     actionId: 'addEvent',
@@ -58,8 +65,8 @@ export function controlledItem(ownerId: string, atFrame: number): ContextMenuIte
       atFrame,
       defaultSkill: { name: CombatSkillType.CONTROL, segments: [{ properties: { duration: TOTAL_FRAMES - atFrame, name: 'Control' } }] },
     },
-    disabled: alreadyControlled,
-    disabledReason: alreadyControlled ? t('ctx.alreadyControlled') : undefined,
+    disabled,
+    disabledReason,
   };
 }
 
@@ -74,7 +81,7 @@ export function buildColumnContextMenu(
 
   const { events, slots, resourceGraphs, alwaysAvailableComboSlots, timeStopRegions, staggerBreaks, columnPositions, interactionMode } = ctx;
 
-  const ctrlItem = controlledItem(col.ownerId, atFrame);
+  const ctrlItem = controlledItem(col.ownerId, atFrame, timeStopRegions);
 
   // Resource columns: show "Edit Resource" only
   if (col.noAdd && resourceGraphs?.has(col.key)) {

@@ -57,6 +57,45 @@ function hasInflictionOrStatus(f: EventFrameMarker): boolean {
 }
 
 
+const EMPTY_MESSAGES: string[] = [];
+
+// Cached border/shadow strings — avoids template literal allocation per segment per render.
+const _borderCache = new Map<string, string>();
+function cachedBorder(color: string, alpha: number): string {
+  const key = `${color}\0${alpha}`;
+  let cached = _borderCache.get(key);
+  if (!cached) { cached = `1px solid ${hexAlpha(color, alpha)}`; _borderCache.set(key, cached); }
+  return cached;
+}
+const _dashedBorderCache = new Map<string, string>();
+function cachedDashedBorder(color: string, alpha: number): string {
+  const key = `${color}\0${alpha}`;
+  let cached = _dashedBorderCache.get(key);
+  if (!cached) { cached = `1px dashed ${hexAlpha(color, alpha)}`; _dashedBorderCache.set(key, cached); }
+  return cached;
+}
+const _glowShadowCache = new Map<string, string>();
+function cachedGlowShadow(color: string): string {
+  let cached = _glowShadowCache.get(color);
+  if (!cached) { cached = `0 0 6px ${hexAlpha(color, 0.35)}, inset 0 1px 0 rgba(255,255,255,0.12)`; _glowShadowCache.set(color, cached); }
+  return cached;
+}
+
+// Cached element→color-mix mapping — avoids string allocation per frame per render.
+const _elementColorMixCache = new Map<string, string>();
+function getElementColorMix(el: string): string | undefined {
+  let cached = _elementColorMixCache.get(el);
+  if (cached !== undefined) return cached;
+  const base = ELEMENT_COLORS[el as ElementType];
+  if (!base) {
+    _elementColorMixCache.set(el, '');
+    return undefined;
+  }
+  cached = `color-mix(in srgb, ${base} 75%, #fff)`;
+  _elementColorMixCache.set(el, cached);
+  return cached;
+}
+
 function getFrameElementColor(f: EventFrameMarker, skillElement?: string): string | undefined {
   // If the frame has a specific action (infliction, absorption, status grant, etc.),
   // use that action's element. Don't fallthrough to skillElement — a Squad Buff grant
@@ -69,8 +108,7 @@ function getFrameElementColor(f: EventFrameMarker, skillElement?: string): strin
   else if (f.applyStatus) el = getStatusElementMap()[f.applyStatus.status];
   else el = f.damageElement ?? skillElement;
   if (!el) return undefined;
-  const base = ELEMENT_COLORS[el as ElementType];
-  return base ? `color-mix(in srgb, ${base} 75%, #fff)` : undefined;
+  return getElementColorMix(el) || undefined;
 }
 
 // ── Segment-type-aware styling ─────────────────────────────────────────────
@@ -82,22 +120,32 @@ interface SegmentStyle {
   glow: boolean;
 }
 
+// Pre-allocated style constants — avoids object creation per segment per render.
+const STYLE_COOLDOWN: SegmentStyle = { bgAlpha: 0.35, borderAlpha: 0.2, labelColor: 'rgba(180,180,180,0.7)', glow: false };
+const STYLE_STASIS: SegmentStyle = { bgAlpha: 0.7, borderAlpha: 0.85, labelColor: '#fff', glow: false };
+const STYLE_ACTIVE: SegmentStyle = { bgAlpha: 0.9, borderAlpha: 1.0, labelColor: '#fff', glow: true };
+const STYLE_PASSIVE: SegmentStyle = { bgAlpha: 0.15, borderAlpha: 0, labelColor: '#fff', glow: false };
+// Animation style depends on color — cache per color.
+const _animStyleCache = new Map<string, SegmentStyle>();
+
 function getSegmentStyle(seg: EventSegmentData, color: string): SegmentStyle {
   const types = seg.properties.segmentTypes;
   if (types?.includes(SegmentType.COOLDOWN) || types?.includes(SegmentType.IMMEDIATE_COOLDOWN)) {
-    return { bgAlpha: 0.35, borderAlpha: 0.2, labelColor: 'rgba(180,180,180,0.7)', glow: false };
+    return STYLE_COOLDOWN;
   }
   if (types?.includes(SegmentType.ANIMATION)) {
-    return { bgAlpha: 0.55, borderAlpha: 0.7, labelColor: hexAlpha(color, 0.9), glow: false };
+    let cached = _animStyleCache.get(color);
+    if (!cached) {
+      cached = { bgAlpha: 0.55, borderAlpha: 0.7, labelColor: hexAlpha(color, 0.9), glow: false };
+      _animStyleCache.set(color, cached);
+    }
+    return cached;
   }
   if (types?.includes(SegmentType.STASIS)) {
-    return { bgAlpha: 0.7, borderAlpha: 0.85, labelColor: '#fff', glow: false };
+    return STYLE_STASIS;
   }
-  if (types?.includes(SegmentType.ACTIVE)) {
-    return { bgAlpha: 0.9, borderAlpha: 1.0, labelColor: '#fff', glow: true };
-  }
-  // Default (no segmentTypes, NORMAL, or untyped active segments): solid active look
-  return { bgAlpha: 0.9, borderAlpha: 1.0, labelColor: '#fff', glow: true };
+  // Default (ACTIVE, NORMAL, or untyped): solid active look
+  return STYLE_ACTIVE;
 }
 
 interface EventBlockProps {
@@ -140,11 +188,18 @@ interface EventBlockProps {
   wrapStyle?: React.CSSProperties;
 }
 
+// Cached hex→rgba conversion — avoids string allocation for repeated color+alpha combos.
+const _hexAlphaCache = new Map<string, string>();
 function hexAlpha(hex: string, alpha: number): string {
+  const key = `${hex}\0${alpha}`;
+  let cached = _hexAlphaCache.get(key);
+  if (cached) return cached;
   const r = parseInt(hex.slice(1, 3), 16);
   const g = parseInt(hex.slice(3, 5), 16);
   const b = parseInt(hex.slice(5, 7), 16);
-  return `rgba(${r},${g},${b},${alpha})`;
+  cached = `rgba(${r},${g},${b},${alpha})`;
+  _hexAlphaCache.set(key, cached);
+  return cached;
 }
 
 function EventBlock({
@@ -202,7 +257,7 @@ function EventBlock({
   };
 
   const comboWarningMessages = useMemo(
-    () => comboWarning ? comboWarning.split('\n') : [],
+    () => comboWarning ? comboWarning.split('\n') : EMPTY_MESSAGES,
     [comboWarning],
   );
 
@@ -270,15 +325,19 @@ function EventBlock({
     const segLabelHover = segHover ? hoverLabelStyle(segAbsStart) : undefined;
 
     // Derive styling from segment types
-    const style = passive
-      ? { bgAlpha: 0.15, borderAlpha: 0, labelColor: '#fff', glow: false } as SegmentStyle
-      : getSegmentStyle(seg, color);
+    const style = passive ? STYLE_PASSIVE : getSegmentStyle(seg, color);
 
     // Segment label: use segment name if present, otherwise empty for multi-segment.
     // For single-segment events, fall back to the display label.
     const segLabel = seg.properties.name
       ? toDisplayLabel(seg.properties.name)
       : (isSingleSegment ? displayLabel : undefined);
+
+    // Build segment label style — always include explicit frame-axis position
+    // so the label never relies on CSS fallback (which can get clipped by overflow:hidden during re-render)
+    const labelStyle = segLabelHover
+      ? { color: style.labelColor, ...segLabelHover }
+      : { color: style.labelColor, [axis.framePos]: 4 };
 
     segmentElements.push(
       <div
@@ -288,10 +347,10 @@ function EventBlock({
           [axis.framePos]: segTopPx,
           [axis.frameSize]: segH,
           background: hexAlpha(color, style.bgAlpha),
-          border: passive ? 'none' : `1px solid ${hexAlpha(color, style.borderAlpha)}`,
-          borderTop: passive ? 'none' : isFirst ? undefined : `1px dashed ${hexAlpha(color, Math.min(style.borderAlpha, 0.5))}`,
+          border: passive ? 'none' : cachedBorder(color, style.borderAlpha),
+          [axis.framePos === 'top' ? 'borderTop' : 'borderLeft']: passive ? 'none' : isFirst ? undefined : cachedDashedBorder(color, Math.min(style.borderAlpha, 0.5)),
           borderRadius: passive ? '2px' : borderRadiusVal,
-          boxShadow: style.glow ? `0 0 6px ${hexAlpha(color, 0.35)}, inset 0 1px 0 rgba(255,255,255,0.12)` : undefined,
+          boxShadow: style.glow ? cachedGlowShadow(color) : undefined,
           zIndex: segments.length - i,
           padding: 0,
           margin: 0,
@@ -300,7 +359,7 @@ function EventBlock({
         onContextMenu={segments.length > 1 ? (e) => { e.preventDefault(); e.stopPropagation(); onSegmentContextMenu?.(e, uid, i); } : undefined}
       >
         {(passive || segH > 14) && segLabel && (
-          <span className="event-block-label" style={{ color: style.labelColor, ...segLabelHover }}>{segLabel}</span>
+          <span className="event-block-label" style={labelStyle}>{segLabel}</span>
         )}
       </div>,
     );
@@ -316,7 +375,9 @@ function EventBlock({
         <div
           key={`f-${i}-${fi}`}
           className={`event-frame-diamond${isSelected ? ' event-frame-diamond--selected' : ''}${isHoverHighlight ? ' event-frame-diamond--hover-hit' : ''}${(f.frameTypes ?? []).includes(EventFrameType.FINAL_STRIKE) ? ' event-frame-diamond--final-strike' : ''}${(f.frameTypes ?? []).includes(EventFrameType.FINISHER) ? ' event-frame-diamond--finisher' : ''}${(f.frameTypes ?? []).includes(EventFrameType.DIVE) ? ' event-frame-diamond--dive' : ''}${hasInflictionOrStatus(f) ? ' event-frame-diamond--infliction' : ''}${f.statusLabel ? ' event-frame-diamond--status' : ''}`}
-          style={{ [axis.framePos]: framePx, ...(elColor && !isSelected && !isHoverHighlight ? { background: elColor, boxShadow: `0 0 3px ${elColor}80` } : {}) } as React.CSSProperties}
+          style={elColor && !isSelected && !isHoverHighlight
+            ? { [axis.framePos]: framePx, background: elColor, boxShadow: `0 0 3px ${elColor}80` } as React.CSSProperties
+            : { [axis.framePos]: framePx } as React.CSSProperties}
           title={f.statusLabel ?? undefined}
           onMouseDown={(e) => { e.stopPropagation(); if (e.button === 0) onFrameDragStart?.(e, uid, i, fi); }}
           onClick={(e) => { e.stopPropagation(); onFrameClick?.(e, uid, i, fi); }}

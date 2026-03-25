@@ -1,5 +1,5 @@
 import { TimelineEvent, getAnimationDuration } from '../../consts/viewTypes';
-import { TimeDependency } from '../../consts/enums';
+import { CombatSkillType, TimeDependency } from '../../consts/enums';
 import { OPERATOR_COLUMNS, SKILL_COLUMNS } from '../../model/channels';
 import type { TimeStopRange } from './resourceTimeline';
 
@@ -124,6 +124,9 @@ export function applyTimeStopExtension(
   const result = events.map((ev) => {
     if (extended.has(ev.uid)) return ev;
 
+    // Control status is not affected by time-stops — its timer keeps ticking
+    if (ev.id === CombatSkillType.CONTROL) return ev;
+
     const isOwn = isTimeStopEvent(ev);
     const animDur = getAnimationDuration(ev);
 
@@ -138,19 +141,19 @@ export function applyTimeStopExtension(
       let rawOffset = 0;      // cumulative raw (base) offset — for animation boundary checks
       let derivedOffset = 0;  // cumulative derived offset — real start of next segment
       let changed = false;
-      const newSegments = ev.segments.map((seg) => {
+      for (const seg of ev.segments) {
         const rawSegStart = rawOffset;
         rawOffset += seg.properties.duration;
 
         if (seg.properties.timeDependency === TimeDependency.REAL_TIME || seg.properties.duration === 0) {
           derivedOffset += seg.properties.duration;
-          return seg;
+          continue;
         }
 
         // For time-stop events, segments within animation are not extended
         if (isOwn && animDur > 0 && rawSegStart + seg.properties.duration <= animDur) {
           derivedOffset += seg.properties.duration;
-          return seg;
+          continue;
         }
 
         let ext: number;
@@ -166,14 +169,15 @@ export function applyTimeStopExtension(
 
         derivedOffset += ext;
 
-        if (ext === seg.properties.duration) return seg;
-        changed = true;
-        return { ...seg, properties: { ...seg.properties, duration: ext } };
-      });
+        if (ext !== seg.properties.duration) {
+          changed = true;
+          seg.properties.duration = ext;
+        }
+      }
 
       if (!changed) return ev;
       extended.add(ev.uid);
-      return { ...ev, segments: newSegments };
+      return ev;
     }
 
     // All events should have segments at this point
@@ -194,47 +198,37 @@ export function resolveFramePositions(
 ): TimelineEvent[] {
   if (stops.length === 0) {
     // No time-stops: offsets unchanged, absoluteFrame = eventStart + cumulativeOffset + offsetFrame
-    return events.map((ev) => {
+    for (const ev of events) {
       let cumulativeOffset = 0;
-      const newSegments = ev.segments.map((seg) => {
+      for (const seg of ev.segments) {
         const segStart = cumulativeOffset;
         cumulativeOffset += seg.properties.duration;
-        if (!seg.frames) return seg;
-        return {
-          ...seg,
-          frames: seg.frames.map((f) => ({
-            ...f,
-            derivedOffsetFrame: f.offsetFrame,
-            absoluteFrame: ev.startFrame + segStart + f.offsetFrame,
-          })),
-        };
-      });
-      return { ...ev, segments: newSegments };
-    });
+        if (!seg.frames) continue;
+        for (const f of seg.frames) {
+          f.derivedOffsetFrame = f.offsetFrame;
+          f.absoluteFrame = ev.startFrame + segStart + f.offsetFrame;
+        }
+      }
+    }
+    return events;
   }
 
-  return events.map((ev) => {
+  for (const ev of events) {
     const fStops = foreignStopsFor(ev, stops);
     let cumulativeOffset = 0;
-    const newSegments = ev.segments.map((seg) => {
+    for (const seg of ev.segments) {
       const segStart = cumulativeOffset;
       cumulativeOffset += seg.properties.duration;
-      if (!seg.frames) return seg;
+      if (!seg.frames) continue;
       const segAbsStart = ev.startFrame + segStart;
-      return {
-        ...seg,
-        frames: seg.frames.map((f) => {
-          const extOffset = extendByTimeStops(segAbsStart, f.offsetFrame, fStops);
-          return {
-            ...f,
-            derivedOffsetFrame: extOffset,
-            absoluteFrame: segAbsStart + extOffset,
-          };
-        }),
-      };
-    });
-    return { ...ev, segments: newSegments };
-  });
+      for (const f of seg.frames) {
+        const extOffset = extendByTimeStops(segAbsStart, f.offsetFrame, fStops);
+        f.derivedOffsetFrame = extOffset;
+        f.absoluteFrame = segAbsStart + extOffset;
+      }
+    }
+  }
+  return events;
 }
 
 // ── Time-stop start validation ────────────────────────────────────────────
@@ -264,6 +258,12 @@ export function validateTimeStopStarts(
       const source = evByUid.get(stop.eventUid);
       if (!source) continue;
 
+      // Control swap cannot occur during any time-stop (including dodge)
+      if (ev.id === CombatSkillType.CONTROL) {
+        warnings.push(`Control swap cannot occur during time-stop`);
+        continue;
+      }
+
       const sourceIsUltimate = source.columnId === SKILL_COLUMNS.ULTIMATE;
       const sourceIsDodge = source.columnId === OPERATOR_COLUMNS.INPUT && !!source.isPerfectDodge;
 
@@ -286,6 +286,7 @@ export function validateTimeStopStarts(
     }
 
     if (warnings.length === 0) return ev;
-    return { ...ev, warnings: [...(ev.warnings ?? []), ...warnings] };
+    ev.warnings = ev.warnings ? [...ev.warnings, ...warnings] : warnings;
+    return ev;
   });
 }

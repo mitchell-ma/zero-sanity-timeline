@@ -26,6 +26,7 @@ import { initHpTracker, getEnemyHpPercentage, precomputeDamageByFrame } from '..
 import type { HPController } from '../calculation/hpController';
 import type { OperatorLoadoutState } from '../../view/OperatorLoadoutHeader';
 import { resolveControlledOperator } from './controlledOperatorResolver';
+import { allocQueueFrame, resetPools, isReconcilerEnabled } from './objectPool';
 
 // ── TriggerIndex cache ──────────────────────────────────────────────────────
 // The trigger index is built from operator/weapon/gear configs + potentials.
@@ -66,8 +67,7 @@ function getCachedTriggerIndex(
 
 /**
  * Collect one PROCESS_FRAME entry per frame marker on input skill events.
- * Each entry carries the full EventFrameMarker + parent event context.
- * The interpreter processes all effects sequentially in config order.
+ * Uses a pre-allocated object pool to avoid per-frame allocation on drag ticks.
  */
 function collectFrameEntries(
   events: readonly TimelineEvent[],
@@ -79,23 +79,22 @@ function collectFrameEntries(
     if (event.ownerId === ENEMY_OWNER_ID) continue;
 
     // Seed an event-start entry at the event's start frame (no frame marker)
-    // for event-level hooks: Link consumption, generic PERFORM triggers
-    entries.push({
-      frame: event.startFrame,
-      priority: PRIORITY.PROCESS_FRAME,
-      type: 'PROCESS_FRAME',
-      statusName: event.name,
-      columnId: event.columnId,
-      ownerId: event.ownerId,
-      sourceOwnerId: event.ownerId,
-      sourceSkillName: event.name,
-      maxStacks: 0,
-      durationFrames: 0,
-      operatorSlotId: event.ownerId,
-      sourceEvent: event,
-      segmentIndex: -1,
-      frameIndex: -1,
-    });
+    const start = allocQueueFrame();
+    start.frame = event.startFrame;
+    start.priority = PRIORITY.PROCESS_FRAME;
+    start.type = 'PROCESS_FRAME';
+    start.statusName = event.name;
+    start.columnId = event.columnId;
+    start.ownerId = event.ownerId;
+    start.sourceOwnerId = event.ownerId;
+    start.sourceSkillName = event.name;
+    start.maxStacks = 0;
+    start.durationFrames = 0;
+    start.operatorSlotId = event.ownerId;
+    start.sourceEvent = event;
+    start.segmentIndex = -1;
+    start.frameIndex = -1;
+    entries.push(start);
 
     const fStops = foreignStopsFor(event, stops);
     let cumulativeOffset = 0;
@@ -106,23 +105,23 @@ function collectFrameEntries(
           const frame = seg.frames[fi];
           const absFrame = absoluteFrame(event.startFrame, cumulativeOffset, frame.offsetFrame, fStops);
 
-          entries.push({
-            frame: absFrame,
-            priority: PRIORITY.PROCESS_FRAME,
-            type: 'PROCESS_FRAME',
-            statusName: event.name,
-            columnId: event.columnId,
-            ownerId: event.ownerId,
-            sourceOwnerId: event.ownerId,
-            sourceSkillName: event.name,
-            maxStacks: 0,
-            durationFrames: 0,
-            operatorSlotId: event.ownerId,
-            frameMarker: frame,
-            sourceEvent: event,
-            segmentIndex: si,
-            frameIndex: fi,
-          });
+          const qf = allocQueueFrame();
+          qf.frame = absFrame;
+          qf.priority = PRIORITY.PROCESS_FRAME;
+          qf.type = 'PROCESS_FRAME';
+          qf.statusName = event.name;
+          qf.columnId = event.columnId;
+          qf.ownerId = event.ownerId;
+          qf.sourceOwnerId = event.ownerId;
+          qf.sourceSkillName = event.name;
+          qf.maxStacks = 0;
+          qf.durationFrames = 0;
+          qf.operatorSlotId = event.ownerId;
+          qf.frameMarker = frame;
+          qf.sourceEvent = event;
+          qf.segmentIndex = si;
+          qf.frameIndex = fi;
+          entries.push(qf);
         }
       }
       cumulativeOffset += seg.properties.duration;
@@ -130,26 +129,44 @@ function collectFrameEntries(
 
     // Seed COMBO_RESOLVE for combo events (fires after engine triggers)
     if (event.columnId === SKILL_COLUMNS.COMBO && !event.comboTriggerColumnId) {
-      entries.push({
-        frame: event.startFrame,
-        priority: PRIORITY.COMBO_RESOLVE,
-        type: 'COMBO_RESOLVE',
-        statusName: event.name,
-        columnId: event.columnId,
-        ownerId: event.ownerId,
-        sourceOwnerId: event.ownerId,
-        sourceSkillName: event.name,
-        maxStacks: 0,
-        durationFrames: 0,
-        operatorSlotId: event.ownerId,
-        comboResolveEvent: event,
-      });
+      const combo = allocQueueFrame();
+      combo.frame = event.startFrame;
+      combo.priority = PRIORITY.COMBO_RESOLVE;
+      combo.type = 'COMBO_RESOLVE';
+      combo.statusName = event.name;
+      combo.columnId = event.columnId;
+      combo.ownerId = event.ownerId;
+      combo.sourceOwnerId = event.ownerId;
+      combo.sourceSkillName = event.name;
+      combo.maxStacks = 0;
+      combo.durationFrames = 0;
+      combo.operatorSlotId = event.ownerId;
+      combo.comboResolveEvent = event;
+      entries.push(combo);
     }
   }
 
   return entries;
 }
 
+
+// ── Reusable singletons for pipeline runs ────────────────────────────────
+// These are lazily created on first use to avoid circular dependency issues
+// at module initialization time. Once created, they are reused across ticks.
+
+let _queue: PriorityQueue<QueueFrame> | null = null;
+let _interpretor: EventInterpretorController | null = null;
+const _triggerSeen = new Set<string>();
+
+function getQueue(): PriorityQueue<QueueFrame> {
+  if (!_queue) _queue = new PriorityQueue<QueueFrame>((a, b) => a.frame !== b.frame ? a.frame - b.frame : a.priority - b.priority);
+  return _queue;
+}
+
+function getInterpretor(): EventInterpretorController {
+  if (!_interpretor) _interpretor = new EventInterpretorController();
+  return _interpretor;
+}
 
 /**
  * EventQueueController — seeds the priority queue and runs the interpreter.
@@ -181,14 +198,13 @@ export function runEventQueue(
   const talentEvents = triggerIdx.getAllTalentEvents();
   if (talentEvents.length > 0) state.registerEvents(talentEvents);
 
-  // ── Seed priority queue ───────────────────────────────────────────────────
-  const queue = new PriorityQueue<QueueFrame>((a, b) =>
-    a.frame !== b.frame ? a.frame - b.frame : a.priority - b.priority
-  );
-  const seed = (entries: QueueFrame[]) => { for (const e of entries) queue.insert(e); };
+  // ── Seed priority queue (reuse singleton) ──────────────────────────────
+  const queue = getQueue();
+  queue.clear();
 
-  // Create interpreter backed by the single DEC
-  const interpretor = new EventInterpretorController(state, registeredEvents, {
+  // Reset interpreter (reuse singleton)
+  const interpretor = getInterpretor();
+  interpretor.resetWith(state, registeredEvents, {
     loadoutProperties, slotOperatorMap, slotWirings, getEnemyHpPercentage,
     getControlledSlotAtFrame, triggerIndex: triggerIdx,
   });
@@ -231,18 +247,18 @@ export function runEventQueue(
 
   // Seed one PROCESS_FRAME entry per frame marker — all effects processed sequentially
   const frameEntries = collectFrameEntries(registeredEvents, stops);
-  seed(frameEntries);
+  for (const e of frameEntries) queue.insert(e);
 
   // Seed reactive triggers for freeform enemy events (reactions/inflictions/statuses
   // placed directly on the timeline — no frame markers, not handled by PROCESS_FRAME)
-  const triggerSeen = new Set<string>();
+  _triggerSeen.clear();
   for (const ev of registeredEvents) {
     if (ev.ownerId !== ENEMY_OWNER_ID) continue;
     for (const entry of triggerIdx.matchEvent(ev.columnId)) {
       if (entry.primaryVerb === 'PERFORM') continue; // PERFORM handled by PROCESS_FRAME
       const dedupKey = `${entry.def.properties.id}:${entry.operatorSlotId}:${ev.startFrame}`;
-      if (triggerSeen.has(dedupKey)) continue;
-      triggerSeen.add(dedupKey);
+      if (_triggerSeen.has(dedupKey)) continue;
+      _triggerSeen.add(dedupKey);
       // Target filtering for APPLY triggers
       const toTarget = entry.primaryCondition.to as string | undefined;
       if (toTarget === 'OPERATOR' && ev.ownerId === ENEMY_OWNER_ID) continue;
@@ -286,6 +302,8 @@ export function runEventQueue(
 
 // ── Pipeline entry point ─────────────────────────────────────────────────────
 
+// Lazily created DerivedEventController singleton — reset() clears all state.
+let _decSingleton: DerivedEventController | null = null;
 let _lastController: DerivedEventController | null = null;
 
 /** Get the DerivedEventController from the most recent processCombatSimulation run. */
@@ -324,7 +342,10 @@ export function processCombatSimulation(
   /** All slots' SP costs for insufficiency zone computation. */
   allSlotSpCosts?: ReadonlyMap<string, number>,
 ): TimelineEvent[] {
-  // ── 0. Initialize HP tracker for live HP% queries during queue processing ─
+  // ── 0. Reset object pools for this pipeline run ─────────────────────────
+  resetPools();
+
+  // ── 0a. Initialize HP tracker for live HP% queries during queue processing
   if (hpController) {
     hpController.initEnemyHp(bossMaxHp ?? null);
   } else {
@@ -338,9 +359,11 @@ export function processCombatSimulation(
   // ── 1. InputEventController: classify ─────────────────────────────────────
   const { inputEvents, derivedEvents } = classifyEvents(rawEvents);
 
-  // ── 2. DerivedEventController: register input events ──────────────────────
+  // ── 2. DerivedEventController: reset singleton and register input events ──
   const triggerAssociations = getAllTriggerAssociations();
-  const state = new DerivedEventController(undefined, triggerAssociations, slotWirings, spController, ueController);
+  if (!_decSingleton) _decSingleton = new DerivedEventController();
+  _decSingleton.reset(triggerAssociations, slotWirings, spController, ueController);
+  const state = _decSingleton;
   const slotIds = slotOperatorMap ? Object.keys(slotOperatorMap) : [];
   state.seedControlledOperator(slotIds[0]);
   state.registerEvents(inputEvents);
@@ -383,7 +406,114 @@ export function processCombatSimulation(
     hpController.finalize();
   }
 
-  // ── 6. Output ─────────────────────────────────────────────────────────────
+  // ── 6. Output — reconcile with previous to reuse objects ─────────────────
   _lastController = state;
-  return state.getProcessedEvents();
+  const freshEvents = state.getProcessedEvents();
+  return isReconcilerEnabled() ? reconcileEvents(freshEvents) : freshEvents;
+}
+
+// ── Event reconciliation ─────────────────────────────────────────────────────
+// Compares fresh pipeline output against previous output by UID.
+// - If an event is structurally identical: reuses the previous object reference
+//   (React memo comparators see same reference → skip re-render)
+// - If an event changed: uses the fresh object (new reference → triggers re-render)
+// - New/removed events: created/dropped naturally
+//
+// Reconciliation uses snapshots of scalar fields keyed by UID rather than
+// holding direct references to previous event objects. This is safe with
+// object pooling — pooled objects get recycled and overwritten, but the
+// snapshot captures the field values at the time they were stored.
+// If an event's snapshot matches the fresh output, we reuse the non-pooled
+// clone stored alongside it.
+
+interface EventSnapshot {
+  startFrame: number;
+  eventStatus?: string;
+  stacks?: number;
+  comboTriggerColumnId?: string;
+  reductionFloor?: number;
+  comboChainFreezeEnd?: number;
+  /** Reference to the segments array — if the pipeline rebuilt segments, this won't match. */
+  segmentsRef: readonly object[];
+  warnLen: number;
+}
+
+let _prevSnapshots = new Map<string, EventSnapshot>();
+// Non-pooled clones stored for reuse — these are safe to hold across ticks.
+let _prevClones = new Map<string, TimelineEvent>();
+
+function snapshotEvent(ev: TimelineEvent): EventSnapshot {
+  return {
+    startFrame: ev.startFrame,
+    eventStatus: ev.eventStatus,
+    stacks: ev.stacks,
+    comboTriggerColumnId: ev.comboTriggerColumnId,
+    reductionFloor: ev.reductionFloor,
+    comboChainFreezeEnd: ev.comboChainFreezeEnd,
+    segmentsRef: ev.segments,
+    warnLen: ev.warnings?.length ?? 0,
+  };
+}
+
+function snapshotMatches(snap: EventSnapshot, ev: TimelineEvent): boolean {
+  if (snap.startFrame !== ev.startFrame) return false;
+  if (snap.eventStatus !== ev.eventStatus) return false;
+  if (snap.stacks !== ev.stacks) return false;
+  if (snap.comboTriggerColumnId !== ev.comboTriggerColumnId) return false;
+  if (snap.reductionFloor !== ev.reductionFloor) return false;
+  if (snap.comboChainFreezeEnd !== ev.comboChainFreezeEnd) return false;
+  // Reference equality on segments — if the pipeline rebuilt segments
+  // (e.g. time-stop changed frame positions), the reference will differ.
+  if (snap.segmentsRef !== ev.segments) return false;
+  if (snap.warnLen !== (ev.warnings?.length ?? 0)) return false;
+  return true;
+}
+
+let _reconcileReused = 0;
+let _reconcileFresh = 0;
+let _reconcileTotal = 0;
+
+function reconcileEvents(freshEvents: TimelineEvent[]): TimelineEvent[] {
+  const prevSnaps = _prevSnapshots;
+  const prevClones = _prevClones;
+  const nextSnaps = new Map<string, EventSnapshot>();
+  const nextClones = new Map<string, TimelineEvent>();
+  const result: TimelineEvent[] = [];
+  let reused = 0;
+
+  for (let i = 0; i < freshEvents.length; i++) {
+    const fresh = freshEvents[i];
+    const snap = prevSnaps.get(fresh.uid);
+    const clone = prevClones.get(fresh.uid);
+
+    if (snap && clone && snapshotMatches(snap, fresh)) {
+      // Structurally identical — reuse the previous non-pooled clone
+      nextSnaps.set(fresh.uid, snap);
+      nextClones.set(fresh.uid, clone);
+      result.push(clone);
+      reused++;
+    } else {
+      // Changed or new — create a non-pooled clone to hold across ticks
+      const stable = { ...fresh, segments: fresh.segments };
+      nextSnaps.set(fresh.uid, snapshotEvent(fresh));
+      nextClones.set(fresh.uid, stable);
+      result.push(stable);
+    }
+  }
+
+  _prevSnapshots = nextSnaps;
+  _prevClones = nextClones;
+  _reconcileReused = reused;
+  _reconcileFresh = freshEvents.length - reused;
+  _reconcileTotal = freshEvents.length;
+  return result;
+}
+
+export function getReconcileStats() {
+  return {
+    total: _reconcileTotal,
+    reused: _reconcileReused,
+    fresh: _reconcileFresh,
+    cacheSize: _prevClones.size,
+  };
 }

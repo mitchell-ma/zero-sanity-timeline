@@ -62,6 +62,7 @@ import { getAxisMap, type Orientation } from '../utils/axisMap';
 
 const MIN_SLOT_COLS = 4;
 const EMPTY_WEAPON_TYPES: string[] = [];
+const EMPTY_COMBO_WINDOW_EVENTS: TimelineEvent[] = [];
 
 
 interface MarqueeState {
@@ -296,18 +297,12 @@ export default function CombatPlanner({
     const rect = outerRef.current?.getBoundingClientRect();
     if (!rect) { el.style.display = ''; return; }
     el.style.display = 'block';
-    if (orientation === 'horizontal') {
-      el.style.left = `${clientPos}px`;
-      el.style.top = `${rect.top}px`;
-      el.style.width = '1px';
-      el.style.height = `${rect.height}px`;
-    } else {
-      el.style.top = `${clientPos}px`;
-      el.style.left = `${rect.left}px`;
-      el.style.width = `${rect.width}px`;
-      el.style.height = '1px';
-    }
-  }, [orientation]);
+    el.style.top = el.style.left = el.style.width = el.style.height = '';
+    el.style[axis.framePos] = `${clientPos}px`;
+    el.style[axis.lanePos] = `${rect[axis.rectLaneStart]}px`;
+    el.style[axis.frameSize] = '1px';
+    el.style[axis.laneSize] = `${rect[axis.laneSize]}px`;
+  }, [axis]);
   /** Update hovered column highlight imperatively (no React state). */
   const prevHoverHeaderRef = useRef<Element | null>(null);
   const updateHoverColDOM = useCallback((colKey: string | null) => {
@@ -539,12 +534,15 @@ export default function CombatPlanner({
     if (enemyMenuOpen) { setEnemyMenuOpen(false); return; }
     if (enemyNameRef.current) {
       const rect = enemyNameRef.current.getBoundingClientRect();
-      setEnemyMenuPos({ top: rect.bottom + 2, left: rect.left });
+      setEnemyMenuPos(isHorizontal
+        ? { top: rect.top, left: rect.right + 2 }
+        : { top: rect.bottom + 2, left: rect.left },
+      );
     }
     setEnemySearch('');
     setEnemyActiveTiers(new Set(ENEMY_TIERS));
     setEnemyMenuOpen(true);
-  }, [enemyMenuOpen, allEnemies, onSwapEnemy]);
+  }, [enemyMenuOpen, allEnemies, onSwapEnemy, isHorizontal]);
 
   const pickEnemy = useCallback((id: string) => {
     onSwapEnemy?.(id);
@@ -913,7 +911,9 @@ export default function CombatPlanner({
   );
 
   // ─── Pre-computed event presentations (avoids per-event computation in render) ─
+  const prevEventPresentationsRef = useRef<Map<string, import('../controller/timeline/eventPresentationController').EventPresentation>>(new Map());
   const eventPresentations = useMemo(() => {
+    const prev = prevEventPresentationsRef.current;
     const map = new Map<string, import('../controller/timeline/eventPresentationController').EventPresentation>();
     let mergedValidationMaps = validationMaps;
     if (dragResourceWarnings) {
@@ -921,6 +921,7 @@ export default function CombatPlanner({
       dragResourceWarnings.forEach((v, k) => merged.set(k, v));
       mergedValidationMaps = { ...validationMaps, resource: merged };
     }
+    let allReused = prev.size > 0;
     for (const [colKey, vm] of Array.from(columnViewModels.entries())) {
       const col = vm.column;
       const opts = {
@@ -928,11 +929,48 @@ export default function CombatPlanner({
         validationMaps: mergedValidationMaps, interactionMode, statusViewOverrides: vm.statusOverrides, events,
       };
       for (const ev of vm.events) {
-        map.set(`${colKey}:${ev.uid}`, computeEventPresentation(ev, col, opts));
+        const key = `${colKey}:${ev.uid}`;
+        const next = computeEventPresentation(ev, col, opts);
+        // Reuse previous object if content is identical — preserves reference
+        // identity so TimelineColumn/EventBlock memo comparators can bail out.
+        const cached = prev.get(key);
+        if (cached
+          && cached.label === next.label
+          && cached.color === next.color
+          && cached.comboWarning === next.comboWarning
+          && cached.passive === next.passive
+          && cached.notDraggable === next.notDraggable
+          && cached.derived === next.derived
+          && cached.isAutoFinisher === next.isAutoFinisher
+          && cached.skillElement === next.skillElement
+          && cached.visualActivationDuration === next.visualActivationDuration
+        ) {
+          map.set(key, cached);
+        } else {
+          map.set(key, next);
+          allReused = false;
+        }
       }
     }
+    if (allReused && map.size === prev.size) {
+      // All entries reused and no entries added/removed — return previous Map reference
+      return prev;
+    }
+    prevEventPresentationsRef.current = map;
     return map;
   }, [columnViewModels, validationMaps, dragResourceWarnings, slotElementColors, alwaysAvailableComboSlots, autoFinisherIds, interactionMode, events]);
+
+  // ─── Pre-computed combo window events by owner (avoids per-column filter in render) ─
+  const comboWindowEventsByOwner = useMemo(() => {
+    const map = new Map<string, TimelineEvent[]>();
+    for (const ev of events) {
+      if (ev.columnId !== COMBO_WINDOW_COLUMN_ID) continue;
+      let arr = map.get(ev.ownerId);
+      if (!arr) { arr = []; map.set(ev.ownerId, arr); }
+      arr.push(ev);
+    }
+    return map;
+  }, [events]);
 
   // ─── Marquee intersection helper ────────────────────────────────────────────
   // Rect coords: in vertical mode {left=lane, top=frame}, in horizontal mode {left=frame, top=lane}
@@ -1457,7 +1495,9 @@ export default function CombatPlanner({
       const contentX = e.clientX - scrollRect.left + scroll.scrollLeft;
       const contentY = e.clientY - scrollRect.top + scroll.scrollTop;
       const bodyTop = bodyTopRef.current ?? 0;
-      if (contentY < bodyTop || contentX < TIME_AXIS_WIDTH) return;
+      const contentFrame = isHorizontal ? contentX : contentY;
+      const contentLane = isHorizontal ? contentY : contentX;
+      if (contentFrame < bodyTop || contentLane < TIME_AXIS_WIDTH) return;
       const ctrlKey = e.ctrlKey || e.metaKey;
       rmbMarqueeRef.current = {
         startX: contentX, startY: contentY, moved: false,
@@ -1480,7 +1520,9 @@ export default function CombatPlanner({
     const contentY = e.clientY - scrollRect.top + scroll.scrollTop;
     const bodyTop = bodyTopRef.current ?? 0;
     // Only start marquee in the timeline body area
-    if (contentY < bodyTop || contentX < TIME_AXIS_WIDTH) return;
+    const contentFrame = isHorizontal ? contentX : contentY;
+    const contentLane = isHorizontal ? contentY : contentX;
+    if (contentFrame < bodyTop || contentLane < TIME_AXIS_WIDTH) return;
 
     const ctrlKey = e.ctrlKey || e.metaKey;
     marqueeRef.current = {
@@ -1494,7 +1536,7 @@ export default function CombatPlanner({
       setSelectedIds(new Set());
       onSelectedFramesChange?.([]);
     }
-  }, [selectedIds, selectedFrames, onSelectedFramesChange, dupMode, dupValid, dupOffset, onDuplicateEvents]);
+  }, [selectedIds, selectedFrames, onSelectedFramesChange, dupMode, dupValid, dupOffset, onDuplicateEvents, isHorizontal]);
 
   // ─── Map controller menu items (actionId) to view callbacks ─────────────────
   const resolveMenuItemAction = useCallback((item: import('../consts/viewTypes').ContextMenuItem): import('../consts/viewTypes').ContextMenuItem => {
@@ -1540,7 +1582,7 @@ export default function CombatPlanner({
 
     // Compute relative click along lane axis for by-column-id micro-columns
     const colPos = columnPositions.get(col.key);
-    const relClickX = colPos ? e[axis.clientLane] - (rect[axis.rectLaneStart] - (scrollRef.current?.[isHorizontal ? 'scrollTop' : 'scrollLeft'] ?? 0)) - colPos.left : undefined;
+    const relClickX = colPos ? e[axis.clientLane] - (rect[axis.rectLaneStart] - (scrollRef.current?.[axis.scrollLane] ?? 0)) - colPos.left : undefined;
 
     const items = buildColumnContextMenu(col, atFrame, relClickX, {
       events, slots, resourceGraphs, alwaysAvailableComboSlots,
@@ -1628,7 +1670,7 @@ export default function CombatPlanner({
       ? buildEventAddItems(ev, columns, events, atFrame, label, 'addEvent', interactionMode).map(resolveMenuItemAction)
       : [];
 
-    const ctrlItem = ev ? controlledItem(ev.ownerId, atFrame) : null;
+    const ctrlItem = ev ? controlledItem(ev.ownerId, atFrame, timeStopRegions) : null;
     const ctrlItems = ctrlItem ? [{ separator: true } as const, resolveMenuItemAction(ctrlItem)] : [];
 
     if (selectedIds.has(eventUid) && selectedIds.size > 1) {
@@ -1970,8 +2012,8 @@ export default function CombatPlanner({
             }
 
             const comboWindowEvts = col.columnId === SKILL_COLUMNS.COMBO
-              ? events.filter((ev) => ev.columnId === COMBO_WINDOW_COLUMN_ID && ev.ownerId === col.ownerId)
-              : [];
+              ? (comboWindowEventsByOwner.get(col.ownerId) ?? EMPTY_COMBO_WINDOW_EVENTS)
+              : EMPTY_COMBO_WINDOW_EVENTS;
 
             return (
               <TimelineColumn
