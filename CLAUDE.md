@@ -70,5 +70,6 @@ Processes:
 - **"wrap up"** — End-of-session process:
   1. Summarize all changes done today (including earlier commits) and the current file changes; this will be the git commit message body.
   2. Update the devlog (`public/devlog.md`) for today's local date. **Devlog must be written for players, not developers.** Describe what changed for the user — new features, UI changes, behavior improvements. Never mention code structure, class names, refactors, file names, internal systems, or architecture. If a change is purely internal, either omit it or describe only its user-facing benefit.
-  3. Commit all changes and push to `main`.
+  3. Before committing, check for and remove any temporary files in the project root (screenshots, debug images, `.png`, `.jpg`, logs). These should never be committed — use `.claude-temp/` for throwaway files.
+  4. Commit all changes and push to `main`.
 - **"push to prod"** — Rebase `prod` onto `main` to pick up all new changes, then push `prod` to remote.
