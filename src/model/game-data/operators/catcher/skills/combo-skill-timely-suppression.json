@@ -61,9 +61,60 @@
           },
           "unit": "SECOND"
         },
-        "element": "PHYSICAL"
+        "element": "PHYSICAL",
+        "name": "Timely Suppression"
       },
       "frames": [
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "ENDFIELD_WIKI"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 0.03,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "objectQualifier": "PHYSICAL",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.25,
+                        0.27,
+                        0.30,
+                        0.32,
+                        0.34,
+                        0.37,
+                        0.39,
+                        0.42,
+                        0.44,
+                        0.47,
+                        0.51,
+                        0.55
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
+        },
         {
           "metadata": {
             "eventComponentType": "FRAME",
@@ -169,8 +220,66 @@
                     },
                     "duration": {
                       "value": {
-                        "verb": "IS",
-                        "value": 10
+                        "operation": "ADD",
+                        "left": { "verb": "IS", "value": 10 },
+                        "right": { "verb": "VARY_BY", "object": "POTENTIAL", "value": [0, 0, 0, 5, 5, 5], "ofDeterminer": "THIS", "of": "OPERATOR" }
+                      },
+                      "unit": "SECOND"
+                    }
+                  }
+                },
+                {
+                  "verb": "APPLY",
+                  "object": "SHIELD",
+                  "objectType": "STATUS",
+                  "toDeterminer": "CONTROLLED",
+                  "to": "OPERATOR",
+                  "with": {
+                    "shieldBase": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        360,
+                        432,
+                        504,
+                        576,
+                        612,
+                        648,
+                        684,
+                        720,
+                        756,
+                        774,
+                        792,
+                        810
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    },
+                    "defAdditive": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        2.25,
+                        2.7,
+                        3.15,
+                        3.6,
+                        3.825,
+                        4.05,
+                        4.275,
+                        4.5,
+                        4.725,
+                        4.84,
+                        4.95,
+                        5.06
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    },
+                    "duration": {
+                      "value": {
+                        "operation": "ADD",
+                        "left": { "verb": "IS", "value": 10 },
+                        "right": { "verb": "VARY_BY", "object": "POTENTIAL", "value": [0, 0, 0, 5, 5, 5], "ofDeterminer": "THIS", "of": "OPERATOR" }
                       },
                       "unit": "SECOND"
                     }
@@ -231,7 +340,30 @@
         {
           "subject": "ENEMY",
           "verb": "PERFORM",
-          "object": "NORMAL_ATTACK"
+          "object": "CHARGE"
+        }
+      ]
+    },
+    {
+      "conditions": [
+        {
+          "subject": "ENEMY",
+          "verb": "DEAL",
+          "object": "DAMAGE",
+          "toDeterminer": "CONTROLLED",
+          "to": "OPERATOR"
+        },
+        {
+          "subjectDeterminer": "CONTROLLED",
+          "subject": "OPERATOR",
+          "verb": "HAVE",
+          "object": "HP",
+          "with": {
+            "value": {
+              "verb": "AT_MOST",
+              "value": 0.4
+            }
+          }
         }
       ]
     }

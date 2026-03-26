@@ -89,8 +89,8 @@
               "effects": [
                 {
                   "verb": "APPLY",
-                  "object": "LINK",
-                  "objectType": "STATUS",
+                  "object": "STATUS",
+                  "objectId": "LINK",
                   "to": "TEAM",
                   "with": {
                     "duration": {

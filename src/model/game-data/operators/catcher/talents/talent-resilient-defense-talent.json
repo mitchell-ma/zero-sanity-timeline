@@ -1,4 +1,37 @@
 {
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "DEFENSE",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "VARY_BY",
+              "object": "TALENT_LEVEL",
+              "value": [
+                0.1,
+                0.12
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            },
+            "scalingAttribute": {
+              "verb": "IS",
+              "value": "WILL"
+            },
+            "scalingRate": {
+              "verb": "IS",
+              "value": 10
+            }
+          }
+        }
+      ]
+    }
+  ],
   "properties": {
     "id": "RESILIENT_DEFENSE_TALENT",
     "name": "Resilient Defense (Talent)",
@@ -12,8 +45,10 @@
   "metadata": {
     "originId": "CATCHER",
     "dataSources": [
-      "WARFARIN"
+      "WARFARIN",
+      "ENDFIELD_WIKI"
     ],
     "icon": "skills/catcher_talent_1_icon.png"
-  }
+  },
+  "clauseType": "ALL"
 }

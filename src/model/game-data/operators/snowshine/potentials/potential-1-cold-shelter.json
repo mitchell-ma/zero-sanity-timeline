@@ -1,24 +1,4 @@
 {
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "MODIFY",
-          "object": "SKILL_PARAMETER",
-          "objectId": "SATURATED_DEFENSE",
-          "with": {
-            "parameterKey": "potential_1",
-            "value": {
-              "verb": "IS",
-              "value": 1
-            },
-            "parameterModifyType": "UNIQUE_MULTIPLIER"
-          }
-        }
-      ]
-    }
-  ],
   "properties": {
     "id": "SNOWSHINE_POTENTIAL_1",
     "name": "Cold Shelter",
@@ -29,6 +9,5 @@
   },
   "metadata": {
     "originId": "SNOWSHINE"
-  },
-  "clauseType": "ALL"
+  }
 }

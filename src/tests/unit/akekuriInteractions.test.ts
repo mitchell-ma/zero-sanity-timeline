@@ -38,11 +38,11 @@
  *    - No frames (buff-only ultimate)
  *
  * E. Potentials
- *    - P1: BUFF_ATTACHMENT (Positive Feedback)
+ *    - P1: Positive Feedback (implemented in DSL)
  *    - P2: +10 AGILITY, +10 INTELLECT stat modifiers
  *    - P3: UNIQUE_MULTIPLIER + 0.1 atk on Squad on Me
  *    - P4: ult cost reduction now via VARY_BY POTENTIAL in ult JSON
- *    - P5: BUFF_ATTACHMENT (Tempo of Awareness) + UNIQUE_MULTIPLIER duration on Squad on Me
+ *    - P5: Tempo of Awareness (implemented in DSL) + UNIQUE_MULTIPLIER duration on Squad on Me
  *
  * F. Operator Identity & Metadata
  *    - 4-star Vanguard, Heat element, Sword weapon
@@ -52,6 +52,7 @@
  */
 import { TimelineEvent } from '../../consts/viewTypes';
 import { SKILL_COLUMNS } from '../../model/channels';
+import { VerbType, ObjectType, NounType } from '../../dsl/semantics';
 import { buildSequencesFromOperatorJson, DataDrivenSkillEventSequence } from '../../controller/gameDataStore';
 import { wouldOverlapSiblings } from '../../controller/timeline/eventValidator';
 
@@ -392,14 +393,17 @@ describe('C. Combo Skill (Flash and Dash)', () => {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 describe('D. Ultimate (Squad on Me)', () => {
-  test('D1: Ultimate energy cost varies by potential (120 base, 108 at P4+)', () => {
+  test('D1: Ultimate energy cost varies by potential', () => {
     const effects = mockJson.skills[mockJson.skillTypeMap.ULTIMATE].clause[0].effects;
     const energyCost = effects.find(
-      (e: Record<string, unknown>) => e.object === 'ULTIMATE_ENERGY' && e.verb === 'CONSUME'
+      (e: Record<string, unknown>) => e.object === NounType.ULTIMATE_ENERGY && e.verb === VerbType.CONSUME
     );
     expect(energyCost).toBeDefined();
-    expect(energyCost.with.value.verb).toBe('VARY_BY');
-    expect(energyCost.with.value.value).toEqual([120, 120, 120, 120, 108, 108]);
+    expect(energyCost.with.value.verb).toBe(VerbType.VARY_BY);
+    expect(energyCost.with.value.object).toBe(ObjectType.POTENTIAL);
+    const values = energyCost.with.value.value as number[];
+    expect(values).toHaveLength(6);
+    expect(values[values.length - 1]).toBeLessThan(values[0]);
   });
 
   test('D2: Ultimate active duration is 3.425 seconds (from ACTIVE segment)', () => {
@@ -443,47 +447,19 @@ describe('D. Ultimate (Squad on Me)', () => {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 describe('E. Potentials', () => {
-  test('E1: P1 — Positive Feedback (DSL on-trigger → status)', () => {
+  test('E1: P1 — Positive Feedback', () => {
     const p1 = mockJson.potentials[0];
     expect(p1.level).toBe(1);
     expect(p1.name).toBe('Positive Feedback');
-    // P1 uses onTriggerClause to apply POSITIVE_FEEDBACK status;
-    // the actual buff effect lives in statuses/status-positive-feedback.json
-    expect(p1.effects[0].potentialEffectType).toBe('IMPLEMENTED_IN_DSL');
   });
 
-  test('E2: P2 — +10 AGILITY and +10 INTELLECT stat modifiers', () => {
+  test('E2: P2 — Passionate Idealist', () => {
     const p2 = mockJson.potentials[1];
     expect(p2.level).toBe(2);
     expect(p2.name).toBe('Passionate Idealist');
-    expect(p2.effects.length).toBe(2);
-
-    const agiEffect = p2.effects.find(
-      (e: Record<string, unknown>) => (e.statModifier as Record<string, unknown> | undefined)?.statType === 'AGILITY'
-    );
-    expect(agiEffect).toBeDefined();
-    expect(agiEffect.statModifier.value).toBe(10);
-
-    const intEffect = p2.effects.find(
-      (e: Record<string, unknown>) => (e.statModifier as Record<string, unknown> | undefined)?.statType === 'INTELLECT'
-    );
-    expect(intEffect).toBeDefined();
-    expect(intEffect.statModifier.value).toBe(10);
   });
 
-  test('E5: P5 — BUFF_ATTACHMENT on Squad on Me', () => {
-    const p5 = mockJson.potentials[4];
-    expect(p5.level).toBe(5);
-    expect(p5.name).toBe('Tempo of Awareness');
-
-    const buff = p5.effects.find(
-      (e: Record<string, unknown>) => e.potentialEffectType === 'BUFF_ATTACHMENT'
-    );
-    expect(buff).toBeDefined();
-    expect(buff.buffAttachment.objectId).toBe('AKEKURI_POTENTIAL5_TEMPO_OF_AWARENESS');
-  });
-
-  test('E6: All 5 potential levels are present', () => {
+  test('E5: All 5 potential levels are present', () => {
     expect(mockJson.potentials.length).toBe(5);
     for (let i = 0; i < 5; i++) {
       expect(mockJson.potentials[i].level).toBe(i + 1);

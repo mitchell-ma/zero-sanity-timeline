@@ -66,44 +66,64 @@
                   "to": "ENEMY",
                   "with": {
                     "atkScaleLance": {
-                      "verb": "VARY_BY",
-                      "object": "SKILL_LEVEL",
-                      "value": [
-                        0.75,
-                        0.82,
-                        0.9,
-                        0.97,
-                        1.04,
-                        1.12,
-                        1.19,
-                        1.27,
-                        1.34,
-                        1.44,
-                        1.55,
-                        1.68
-                      ],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "operation": "MULT",
+                      "left": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.75,
+                          0.82,
+                          0.9,
+                          0.97,
+                          1.04,
+                          1.12,
+                          1.19,
+                          1.27,
+                          1.34,
+                          1.44,
+                          1.55,
+                          1.68
+                        ],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
+                      },
+                      "right": {
+                        "verb": "VARY_BY",
+                        "object": "POTENTIAL",
+                        "value": [1, 1, 1, 1, 1, 1.15],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
+                      }
                     },
                     "atkScaleLanceUlt": {
-                      "verb": "VARY_BY",
-                      "object": "SKILL_LEVEL",
-                      "value": [
-                        1.92,
-                        2.11,
-                        2.3,
-                        2.5,
-                        2.69,
-                        2.88,
-                        3.07,
-                        3.26,
-                        3.46,
-                        3.7,
-                        3.98,
-                        4.32
-                      ],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "operation": "MULT",
+                      "left": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          1.92,
+                          2.11,
+                          2.3,
+                          2.5,
+                          2.69,
+                          2.88,
+                          3.07,
+                          3.26,
+                          3.46,
+                          3.7,
+                          3.98,
+                          4.32
+                        ],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
+                      },
+                      "right": {
+                        "verb": "VARY_BY",
+                        "object": "POTENTIAL",
+                        "value": [1, 1, 1, 1, 1, 1.15],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
+                      }
                     },
                     "poiseLance": {
                       "verb": "IS",
@@ -114,24 +134,34 @@
                       "value": 10
                     },
                     "value": {
-                      "verb": "VARY_BY",
-                      "object": "SKILL_LEVEL",
-                      "value": [
-                        0.67,
-                        0.73,
-                        0.8,
-                        0.87,
-                        0.93,
-                        1,
-                        1.07,
-                        1.13,
-                        1.2,
-                        1.28,
-                        1.38,
-                        1.5
-                      ],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "operation": "MULT",
+                      "left": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.67,
+                          0.73,
+                          0.8,
+                          0.87,
+                          0.93,
+                          1,
+                          1.07,
+                          1.13,
+                          1.2,
+                          1.28,
+                          1.38,
+                          1.5
+                        ],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
+                      },
+                      "right": {
+                        "verb": "VARY_BY",
+                        "object": "POTENTIAL",
+                        "value": [1, 1, 1, 1, 1, 1.15],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
+                      }
                     }
                   }
                 }

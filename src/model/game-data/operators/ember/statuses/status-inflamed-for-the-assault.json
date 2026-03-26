@@ -10,14 +10,9 @@
           "to": "OPERATOR",
           "with": {
             "value": {
-              "verb": "VARY_BY",
-              "object": "TALENT_LEVEL",
-              "value": [
-                0.3,
-                0.5
-              ],
-              "ofDeterminer": "THIS",
-              "of": "OPERATOR"
+              "operation": "ADD",
+              "left": { "verb": "VARY_BY", "object": "TALENT_LEVEL", "value": [0.3, 0.5], "ofDeterminer": "THIS", "of": "OPERATOR" },
+              "right": { "verb": "VARY_BY", "object": "POTENTIAL", "value": [0, 0.2, 0.2, 0.2, 0.2, 0.2], "ofDeterminer": "THIS", "of": "OPERATOR" }
             }
           }
         }
@@ -29,6 +24,13 @@
     "name": "Inflamed for the Assault",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": 5
+      },
+      "unit": "SECOND"
+    },
     "stacks": {
       "limit": {
         "verb": "IS",

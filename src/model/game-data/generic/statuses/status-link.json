@@ -1,0 +1,30 @@
+{
+  "properties": {
+    "id": "LINK",
+    "name": "Link",
+    "to": "TEAM",
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": 20
+      },
+      "unit": "SECOND"
+    },
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 1
+      },
+      "interactionType": "RESET"
+    },
+    "eventType": "STATUS",
+    "eventCategoryType": "SKILL_STATUS",
+    "description": "When consumed by Heart of the Unmoving, deals an additional hit of massive Physical DMG."
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ]
+  }
+}

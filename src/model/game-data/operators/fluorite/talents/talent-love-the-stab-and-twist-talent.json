@@ -1,4 +1,35 @@
 {
+  "clause": [
+    {
+      "conditions": [
+        {
+          "subject": "ENEMY",
+          "verb": "HAVE",
+          "object": "SLOW"
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "DAMAGE_BONUS",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "VARY_BY",
+              "object": "TALENT_LEVEL",
+              "value": [
+                0.1,
+                0.2
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            }
+          }
+        }
+      ]
+    }
+  ],
   "properties": {
     "id": "LOVE_THE_STAB_AND_TWIST_TALENT",
     "name": "Love the Stab and Twist (Talent)",
@@ -12,8 +43,10 @@
   "metadata": {
     "originId": "FLUORITE",
     "dataSources": [
-      "WARFARIN"
+      "WARFARIN",
+      "ENDFIELD_WIKI"
     ],
     "icon": "skills/fluorite_talent_1_icon.png"
-  }
+  },
+  "clauseType": "ALL"
 }

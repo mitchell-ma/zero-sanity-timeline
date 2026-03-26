@@ -22,7 +22,7 @@
                 100,
                 100,
                 100,
-                85,
+                100,
                 85,
                 85
               ],
@@ -93,8 +93,11 @@
                   "object": "SKILL_POINT",
                   "with": {
                     "value": {
-                      "verb": "IS",
-                      "value": 20
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [20, 20, 20, 20, 20, 20, 20, 20, 20, 25, 25, 25],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
                     }
                   }
                 },

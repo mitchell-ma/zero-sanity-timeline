@@ -60,7 +60,8 @@
           },
           "unit": "SECOND"
         },
-        "element": "CRYO"
+        "element": "CRYO",
+        "name": "RIVER, TO ME!"
       },
       "frames": [
         {
@@ -102,24 +103,34 @@
                       "value": 30
                     },
                     "value": {
-                      "verb": "VARY_BY",
-                      "object": "SKILL_LEVEL",
-                      "value": [
-                        1.067,
-                        1.173,
-                        1.28,
-                        1.387,
-                        1.494,
-                        1.6,
-                        1.707,
-                        1.814,
-                        1.92,
-                        2.054,
-                        2.214,
-                        2.4
-                      ],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "operation": "MULT",
+                      "left": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          1.067,
+                          1.173,
+                          1.28,
+                          1.387,
+                          1.494,
+                          1.6,
+                          1.707,
+                          1.814,
+                          1.92,
+                          2.054,
+                          2.214,
+                          2.4
+                        ],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
+                      },
+                      "right": {
+                        "verb": "VARY_BY",
+                        "object": "POTENTIAL",
+                        "value": [1, 1.2, 1.2, 1.2, 1.2, 1.2],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
+                      }
                     }
                   }
                 }
@@ -142,30 +153,66 @@
         "name": "Cooldown",
         "duration": {
           "value": {
-            "verb": "VARY_BY",
-            "object": "SKILL_LEVEL",
-            "value": [
-              13,
-              13,
-              13,
-              13,
-              13,
-              13,
-              13,
-              13,
-              13,
-              13,
-              13,
-              12
-            ],
-            "ofDeterminer": "THIS",
-            "of": "OPERATOR"
+            "operation": "ADD",
+            "left": {
+              "verb": "VARY_BY",
+              "object": "SKILL_LEVEL",
+              "value": [
+                14,
+                14,
+                14,
+                14,
+                14,
+                14,
+                14,
+                14,
+                13,
+                13,
+                13,
+                12
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            },
+            "right": {
+              "verb": "VARY_BY",
+              "object": "POTENTIAL",
+              "value": [0, -2, -2, -2, -2, -2],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            }
           },
           "unit": "SECOND"
         },
         "timeDependency": "REAL_TIME"
       },
       "frames": []
+    }
+  ],
+  "onTriggerClause": [
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "ANY",
+          "subject": "OPERATOR",
+          "verb": "APPLY",
+          "object": "INFLICTION",
+          "objectQualifier": "CRYO",
+          "to": "ENEMY"
+        }
+      ]
+    },
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "ANY",
+          "subject": "OPERATOR",
+          "verb": "DEAL",
+          "objectQualifier": "ARTS_BURST",
+          "object": "DAMAGE",
+          "to": "ENEMY"
+        }
+      ]
     }
   ],
   "metadata": {

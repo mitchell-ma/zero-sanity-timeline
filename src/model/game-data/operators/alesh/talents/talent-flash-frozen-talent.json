@@ -5,7 +5,8 @@
         {
           "subject": "ENEMY",
           "verb": "RECEIVE",
-          "object": "SOLIDIFICATION"
+          "objectQualifier": "SOLIDIFICATION",
+          "object": "REACTION"
         }
       ],
       "effects": [
@@ -21,6 +22,68 @@
               "value": [
                 3,
                 4
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "conditions": [
+        {
+          "subject": "ENEMY",
+          "verb": "RECEIVE",
+          "object": "STATUS",
+          "objectId": "ORIGINIUM_CRYSTAL"
+        }
+      ],
+      "effects": [
+        {
+          "verb": "RECOVER",
+          "object": "ULTIMATE_ENERGY",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "VARY_BY",
+              "object": "TALENT_LEVEL",
+              "value": [
+                3,
+                4
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "APPLY",
+          "objectQualifier": "SOLIDIFICATION",
+          "object": "REACTION",
+          "to": "ENEMY"
+        }
+      ],
+      "effects": [
+        {
+          "verb": "RECOVER",
+          "object": "ULTIMATE_ENERGY",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "VARY_BY",
+              "object": "TALENT_LEVEL",
+              "value": [
+                6,
+                8
               ],
               "ofDeterminer": "THIS",
               "of": "OPERATOR"

@@ -1,28 +1,4 @@
 {
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "APPLY",
-          "object": "BUFF",
-          "objectId": "FLUORITE_POTENTIAL5_CRAVER_OF_CHAOS",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR",
-          "with": {
-            "CD": {
-              "verb": "IS",
-              "value": 1
-            },
-            "reduce": {
-              "verb": "IS",
-              "value": 1
-            }
-          }
-        }
-      ]
-    }
-  ],
   "properties": {
     "id": "FLUORITE_POTENTIAL_5",
     "name": "Craver of Chaos",
@@ -33,6 +9,5 @@
   },
   "metadata": {
     "originId": "FLUORITE"
-  },
-  "clauseType": "ALL"
+  }
 }

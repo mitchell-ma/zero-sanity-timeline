@@ -64,12 +64,15 @@
                   }
                 },
                 {
-                  "verb": "RECOVER",
+                  "verb": "RETURN",
                   "object": "SKILL_POINT",
                   "with": {
                     "value": {
-                      "verb": "IS",
-                      "value": 50
+                      "verb": "VARY_BY",
+                      "object": "POTENTIAL",
+                      "value": [0, 50, 50, 50, 50, 50],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
                     }
                   }
                 },
@@ -125,7 +128,8 @@
               "conditions": [
                 {
                   "subject": "ENEMY",
-                  "verb": "NOT_HAVE",
+                  "verb": "HAVE",
+                  "negated": true,
                   "object": "ORIGINIUM_CRYSTAL"
                 }
               ],

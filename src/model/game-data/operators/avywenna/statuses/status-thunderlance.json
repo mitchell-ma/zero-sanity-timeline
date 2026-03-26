@@ -13,8 +13,9 @@
     },
     "duration": {
       "value": {
-        "verb": "IS",
-        "value": 20
+        "operation": "ADD",
+        "left": { "verb": "IS", "value": 30 },
+        "right": { "verb": "VARY_BY", "object": "POTENTIAL", "value": [0, 0, 20, 20, 20, 20], "ofDeterminer": "THIS", "of": "OPERATOR" }
       },
       "unit": "SECOND"
     },

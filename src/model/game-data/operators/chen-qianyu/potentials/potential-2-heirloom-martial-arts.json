@@ -1,35 +1,4 @@
 {
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "APPLY",
-          "object": "AGILITY",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR",
-          "with": {
-            "value": {
-              "verb": "IS",
-              "value": 15
-            }
-          }
-        },
-        {
-          "verb": "APPLY",
-          "object": "PHYSICAL_DAMAGE_BONUS",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR",
-          "with": {
-            "value": {
-              "verb": "IS",
-              "value": 0.08
-            }
-          }
-        }
-      ]
-    }
-  ],
   "properties": {
     "id": "CHEN-QIANYU_POTENTIAL_2",
     "name": "Heirloom Martial Arts",
@@ -40,6 +9,5 @@
   },
   "metadata": {
     "originId": "CHEN-QIANYU"
-  },
-  "clauseType": "ALL"
+  }
 }

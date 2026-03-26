@@ -174,8 +174,10 @@ export class DerivedEventController {
         } else {
           // For already-extended events (re-registered from queue), use raw game-time
           // duration so combustion ticks aren't inflated by time-stop extension.
+          // Pass foreign stops so consumed durations are contracted to game-time.
           const raw = this.rawDurations.get(ev.uid);
-          const seg = buildReactionSegment(ev, raw);
+          const fStops = this.foreignStopsFor(ev);
+          const seg = buildReactionSegment(ev, raw, fStops);
           if (seg) ev.segments = [seg];
         }
       }
@@ -684,7 +686,8 @@ export class DerivedEventController {
       const segs = buildCorrosionSegments(ev);
       if (segs) ev.segments = segs;
     } else {
-      const seg = buildReactionSegment(ev, rawDur);
+      const fStops = this.foreignStopsFor(ev);
+      const seg = buildReactionSegment(ev, rawDur, fStops);
       if (seg) ev.segments = [seg];
     }
 

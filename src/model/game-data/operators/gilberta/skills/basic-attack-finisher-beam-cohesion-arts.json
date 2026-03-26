@@ -32,6 +32,16 @@
               "conditions": [],
               "effects": [
                 {
+                  "verb": "RECOVER",
+                  "object": "SKILL_POINT",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 15.38462
+                    }
+                  }
+                },
+                {
                   "verb": "DEAL",
                   "objectQualifier": "NATURE",
                   "object": "DAMAGE",

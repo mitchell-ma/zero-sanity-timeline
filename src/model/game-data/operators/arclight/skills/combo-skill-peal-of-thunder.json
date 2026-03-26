@@ -61,7 +61,8 @@
           },
           "unit": "SECOND"
         },
-        "element": "PHYSICAL"
+        "element": "PHYSICAL",
+        "name": "Peal of Thunder"
       },
       "frames": [
         {
@@ -186,8 +187,11 @@
                   "object": "SKILL_POINT",
                   "with": {
                     "value": {
-                      "verb": "IS",
-                      "value": 8
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [8, 8, 8, 8, 8, 9, 9, 9, 9, 10, 10, 10],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
                     }
                   }
                 },

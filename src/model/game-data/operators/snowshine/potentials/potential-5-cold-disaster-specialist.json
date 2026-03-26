@@ -1,24 +1,4 @@
 {
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "MODIFY",
-          "object": "SKILL_PARAMETER",
-          "objectId": "SATURATED_DEFENSE",
-          "with": {
-            "parameterKey": "potential_5_atb",
-            "value": {
-              "verb": "IS",
-              "value": 10
-            },
-            "parameterModifyType": "UNIQUE_MULTIPLIER"
-          }
-        }
-      ]
-    }
-  ],
   "properties": {
     "id": "SNOWSHINE_POTENTIAL_5",
     "name": "Cold Disaster Specialist",
@@ -29,6 +9,5 @@
   },
   "metadata": {
     "originId": "SNOWSHINE"
-  },
-  "clauseType": "ALL"
+  }
 }

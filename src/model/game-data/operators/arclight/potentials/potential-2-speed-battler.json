@@ -1,35 +1,4 @@
 {
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "APPLY",
-          "object": "AGILITY",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR",
-          "with": {
-            "value": {
-              "verb": "IS",
-              "value": 15
-            }
-          }
-        },
-        {
-          "verb": "APPLY",
-          "object": "INTELLECT",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR",
-          "with": {
-            "value": {
-              "verb": "IS",
-              "value": 15
-            }
-          }
-        }
-      ]
-    }
-  ],
   "properties": {
     "id": "ARCLIGHT_POTENTIAL_2",
     "name": "Speed Battler",
@@ -40,6 +9,5 @@
   },
   "metadata": {
     "originId": "ARCLIGHT"
-  },
-  "clauseType": "ALL"
+  }
 }

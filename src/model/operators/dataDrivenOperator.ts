@@ -13,6 +13,7 @@
 import { ElementType, StatType } from '../../consts/enums';
 import { DEFAULT_STATS } from '../../consts/stats';
 import { interpolateStats, ATTRIBUTE_INCREASE_VALUES } from './operator';
+import { getOperatorPotentialRaw } from '../game-data/operatorsStore';
 import type { BaseStats } from './operator';
 import type { Potential, SkillLevel } from '../../consts/types';
 import { getOperatorStatuses } from '../game-data/operatorStatusesStore';
@@ -31,16 +32,13 @@ for (const status of getOperatorStatuses('generic')) {
 
 /** Minimal operator config shape accepted by DataDrivenOperator. */
 export interface OperatorStatConfig {
+  id: string;
   elementType: string;
   mainAttributeType: string;
   secondaryAttributeType: string;
   potentials?: {
     level: number;
     description?: string;
-    effects: {
-      potentialEffectType: string;
-      statModifier?: { statType: string; value: number };
-    }[];
   }[];
   talents?: {
     one?: { name: string; description?: string; maxLevel: number };
@@ -118,18 +116,27 @@ export class DataDrivenOperator {
     return this.stats[StatType.BASE_ATTACK] ?? 0;
   }
 
-  /** Returns cumulative stat bonuses from potentials 1..potential. */
+  /** Returns cumulative stat bonuses from potentials 1..potential (e.g. +10 AGI from P2). */
   getPotentialStats(potential?: number): Partial<Record<StatType, number>> {
     const p = potential ?? this.potential;
     const result: Partial<Record<StatType, number>> = {};
-    if (!this.config.potentials) return result;
+    const rawPotentials = getOperatorPotentialRaw(this.config.id);
 
-    for (const pot of this.config.potentials) {
-      if (pot.level > p) continue;
-      for (const eff of pot.effects) {
-        if (eff.potentialEffectType === 'STAT_MODIFIER' && eff.statModifier) {
-          const stat = eff.statModifier.statType as StatType;
-          result[stat] = (result[stat] ?? 0) + eff.statModifier.value;
+    for (const raw of rawPotentials) {
+      const props = (raw.properties ?? {}) as Record<string, unknown>;
+      const level = (props.level ?? 0) as number;
+      if (level > p) continue;
+
+      const clauses = (raw.clause ?? []) as { conditions?: unknown[]; effects?: Record<string, unknown>[] }[];
+      for (const clause of clauses) {
+        if (clause.conditions && clause.conditions.length > 0) continue;
+        for (const eff of (clause.effects ?? [])) {
+          if (eff.verb === 'APPLY' && eff.to === 'OPERATOR' && eff.object !== 'BUFF' && eff.object !== 'STATUS') {
+            const w = (eff.with ?? {}) as Record<string, { value?: unknown }>;
+            const value = (w.value?.value ?? 0) as number;
+            const stat = eff.object as StatType;
+            result[stat] = (result[stat] ?? 0) + value;
+          }
         }
       }
     }

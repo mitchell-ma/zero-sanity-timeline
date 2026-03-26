@@ -546,7 +546,6 @@
   "dsl.verb.IS": "Is",
   "dsl.verb.BECOME": "Become",
   "dsl.verb.RECEIVE": "Receive",
-  "dsl.verb.MODIFY": "Modify",
 
   "dsl.object.STATUS": "Status",
   "dsl.object.INFLICTION": "Infliction",
@@ -566,7 +565,6 @@
   "dsl.object.ATTRIBUTE_INCREASE_LEVEL": "Attribute Increase Level",
   "dsl.object.EVENT": "Event",
   "dsl.object.STAT_MODIFIER": "Stat Modifier",
-  "dsl.object.SKILL_PARAMETER": "Skill Parameter",
   "dsl.object.ATTACK_BONUS": "Attack Bonus",
   "dsl.object.ARTS_REACTION": "Arts Reaction",
   "dsl.object.FINAL_STRIKE": "Final Strike",

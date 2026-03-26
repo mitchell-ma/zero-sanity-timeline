@@ -1,24 +1,4 @@
 {
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "MODIFY",
-          "object": "SKILL_PARAMETER",
-          "objectId": "INSTANT_PROTOCOL_CHAIN",
-          "with": {
-            "parameterKey": "DURATION",
-            "value": {
-              "verb": "IS",
-              "value": 1.75
-            },
-            "parameterModifyType": "MULTIPLICATIVE"
-          }
-        }
-      ]
-    }
-  ],
   "properties": {
     "id": "PERLICA_POTENTIAL_1",
     "name": "Crisis Handling",
@@ -29,6 +9,5 @@
   },
   "metadata": {
     "originId": "PERLICA"
-  },
-  "clauseType": "ALL"
+  }
 }

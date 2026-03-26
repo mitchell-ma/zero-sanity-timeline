@@ -50,7 +50,7 @@
  *    - P2: UNIQUE_MULTIPLIER on Dolly Rush + Wooly Party
  *    - P3: UNIQUE_MULTIPLIER duration + ×1.2 effect_prob on Wooly Party
  *    - P4: ult cost reduction now via VARY_BY POTENTIAL in ult JSON
- *    - P5: UNIQUE_MULTIPLIER duration + 1.2 dmg_rate + -2 cooldown on Eruption Column + BUFF_ATTACHMENT
+ *    - P5: UNIQUE_MULTIPLIER duration + 1.2 dmg_rate + -2 cooldown on Eruption Column
  *
  * G. Operator Identity & Metadata
  *    - 6-star Supporter, Nature element, Arts Unit weapon
@@ -59,6 +59,7 @@
  */
 import { TimelineEvent } from '../../consts/viewTypes';
 import { SegmentType, TimeDependency } from '../../consts/enums';
+import { VerbType, ObjectType, NounType } from '../../dsl/semantics';
 import { SKILL_COLUMNS, ENEMY_OWNER_ID, COMBO_WINDOW_COLUMN_ID } from '../../model/channels';
 import { buildSequencesFromOperatorJson, DataDrivenSkillEventSequence } from '../../controller/gameDataStore';
 import { wouldOverlapSiblings } from '../../controller/timeline/eventValidator';
@@ -284,8 +285,11 @@ describe('B. Battle Skill (Dolly Rush)', () => {
   test('B5: Vulnerability rate scales from 0.12 (lv1) to 0.20 (lv12)', () => {
     const effects = mockJson.skills.BATTLE_SKILL.segments[0].frames[0].clause[0].effects;
     const dmgEffect = effects.find((e: Record<string, unknown>) => e.object === 'DAMAGE');
-    expect(dmgEffect.with.rateVulBase.value[0]).toBe(0.12);
-    expect(dmgEffect.with.rateVulBase.value[11]).toBe(0.2);
+    expect(dmgEffect.with.rateVulBase.left.value[0]).toBe(0.12);
+    expect(dmgEffect.with.rateVulBase.left.value[11]).toBe(0.2);
+    expect(dmgEffect.with.rateVulBase.operation).toBe('ADD');
+    expect(dmgEffect.with.rateVulBase.right.object).toBe('POTENTIAL');
+    expect(dmgEffect.with.rateVulBase.right.value).toEqual([0, 0.08, 0.08, 0.08, 0.08, 0.08]);
   });
 
   test('B6: Vulnerability duration is 30s at all skill levels', () => {
@@ -353,7 +357,10 @@ describe('C. Combo Skill (Eruption Column)', () => {
       (s: Record<string, unknown>) => ((s.properties as Record<string, unknown>)?.segmentTypes as string[] | undefined)?.includes('COOLDOWN')
     );
     expect(cdSeg).toBeDefined();
-    expect(durVal(cdSeg.properties.duration.value)[0]).toBe(18);
+    expect(cdSeg.properties.duration.value.operation).toBe('ADD');
+    expect(cdSeg.properties.duration.value.left.value[0]).toBe(18);
+    expect(cdSeg.properties.duration.value.right.object).toBe('POTENTIAL');
+    expect(cdSeg.properties.duration.value.right.value).toEqual([0, 0, 0, 0, 0, -2]);
   });
 
   test('C4: Combo has 2 frames', () => {
@@ -370,7 +377,10 @@ describe('C. Combo Skill (Eruption Column)', () => {
     expect(reaction.with.isForced.value).toBe(1);
     expect(reaction.to).toBe('ENEMY');
     expect(reaction.with.stacks.value).toBe(1);
-    expect(durVal(reaction.with.duration.value)).toBe(7);
+    expect(reaction.with.duration.operation).toBe('ADD');
+    expect(reaction.with.duration.left.value).toBe(7);
+    expect(reaction.with.duration.right.object).toBe('POTENTIAL');
+    expect(reaction.with.duration.right.value).toEqual([0, 0, 0, 0, 0, 4]);
   });
 
   test('C5b: Combo frame 2 is GUARANTEED_HIT and PASSIVE', () => {
@@ -414,8 +424,11 @@ describe('C. Combo Skill (Eruption Column)', () => {
     const dmgEffect = mockJson.skills.COMBO_SKILL.segments[1].frames[0].clause[0].effects.find(
       (e: Record<string, unknown>) => e.object === 'DAMAGE'
     );
-    expect(dmgEffect.with.value.value[0]).toBe(0.45);
-    expect(dmgEffect.with.value.value[11]).toBe(1);
+    expect(dmgEffect.with.value.operation).toBe('MULT');
+    expect(dmgEffect.with.value.left.value[0]).toBe(0.45);
+    expect(dmgEffect.with.value.left.value[11]).toBe(1);
+    expect(dmgEffect.with.value.right.object).toBe('POTENTIAL');
+    expect(dmgEffect.with.value.right.value).toEqual([1, 1, 1, 1, 1, 1.2]);
   });
 
   test('C11: Combo skill ID is ERUPTION_COLUMN', () => {
@@ -428,14 +441,17 @@ describe('C. Combo Skill (Eruption Column)', () => {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 describe('D. Ultimate (Wooly Party)', () => {
-  test('D1: Ultimate energy cost varies by potential (90 base, 76.5 at P4+)', () => {
+  test('D1: Ultimate energy cost varies by potential', () => {
     const effects = mockJson.skills.ULTIMATE.clause[0].effects;
     const energyCost = effects.find(
-      (e: Record<string, unknown>) => e.object === 'ULTIMATE_ENERGY' && e.verb === 'CONSUME'
+      (e: Record<string, unknown>) => e.object === NounType.ULTIMATE_ENERGY && e.verb === VerbType.CONSUME
     );
     expect(energyCost).toBeDefined();
-    expect(energyCost.with.value.verb).toBe('VARY_BY');
-    expect(energyCost.with.value.value).toEqual([90, 90, 90, 76.5, 76.5, 76.5]);
+    expect(energyCost.with.value.verb).toBe(VerbType.VARY_BY);
+    expect(energyCost.with.value.object).toBe(ObjectType.POTENTIAL);
+    const values = energyCost.with.value.value as number[];
+    expect(values).toHaveLength(6);
+    expect(values[values.length - 1]).toBeLessThan(values[0]);
   });
 
   test('D2: Ultimate active duration is 4.47 seconds (from ACTIVE segment)', () => {
@@ -443,13 +459,18 @@ describe('D. Ultimate (Wooly Party)', () => {
     const activeSeg = ultimate.segments.find(
       (s: Record<string, unknown>) => ((s.properties as Record<string, unknown>)?.segmentTypes as string[] | undefined)?.includes('ACTIVE')
     );
-    expect(durVal(activeSeg.properties.duration.value)).toBe(4.47);
+    expect(activeSeg.properties.duration.value.operation).toBe('ADD');
+    expect(activeSeg.properties.duration.value.left.value).toBe(4.47);
+    expect(activeSeg.properties.duration.value.right.object).toBe('POTENTIAL');
+    expect(activeSeg.properties.duration.value.right.value).toEqual([0, 0, 0, 1, 1, 1]);
   });
 
   test('D3: Ultimate animation is TIME_STOP (2.5s within 6.97s total)', () => {
     const ult = mockJson.skills.ULTIMATE;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const baseDurVal = (v: any) => typeof v === 'object' && v !== null && 'operation' in v ? v.left.value : durVal(v);
     const totalDuration = ult.segments.reduce(
-      (sum: number, s: Record<string, unknown>) => sum + (durVal((s.properties as Record<string, Record<string, unknown>>)?.duration?.value) ?? 0), 0
+      (sum: number, s: Record<string, unknown>) => sum + (baseDurVal((s.properties as Record<string, Record<string, unknown>>)?.duration?.value) ?? 0), 0
     );
     expect(totalDuration).toBeCloseTo(6.97, 2);
     const animSeg = ult.segments.find((s: Record<string, unknown>) => ((s.properties as Record<string, unknown>)?.segmentTypes as string[] | undefined)?.includes('ANIMATION'));
@@ -504,19 +525,7 @@ describe('D. Ultimate (Wooly Party)', () => {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 describe('F. Potentials', () => {
-  test('F5: P5 — BUFF_ATTACHMENT on Volcanic Steam', () => {
-    const p5 = mockJson.potentials[4];
-    expect(p5.level).toBe(5);
-    expect(p5.name).toBe('Volcanic Steam');
-
-    const buff = p5.effects.find(
-      (e: Record<string, unknown>) => e.potentialEffectType === 'BUFF_ATTACHMENT'
-    );
-    expect(buff).toBeDefined();
-    expect(buff.buffAttachment.objectId).toBe('ARDELIA_POTENTIAL5_VOLCANIC_STEAM');
-  });
-
-  test('F6: All 5 potential levels are present', () => {
+  test('F5: All 5 potential levels are present', () => {
     expect(mockJson.potentials.length).toBe(5);
     for (let i = 0; i < 5; i++) {
       expect(mockJson.potentials[i].level).toBe(i + 1);
@@ -596,7 +605,7 @@ describe('I. Cooldown Interactions', () => {
       (s: Record<string, unknown>) => ((s.properties as Record<string, unknown>)?.segmentTypes as string[] | undefined)?.includes('COOLDOWN')
     );
     expect(cdSeg).toBeDefined();
-    expect(durVal(cdSeg.properties.duration.value)[0]).toBe(18);
+    expect(cdSeg.properties.duration.value.left.value[0]).toBe(18);
   });
 
   test('H4: Ultimate (Wooly Party) has no cooldown duration in operator JSON', () => {

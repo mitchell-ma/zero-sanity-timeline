@@ -104,6 +104,29 @@ export function extendByTimeStops(
 }
 
 /**
+ * Inverse of extendByTimeStops: given a real-time span starting at startFrame,
+ * compute how many game-time frames elapsed (subtracting overlapping time-stop
+ * durations). Used to convert consumed real-time durations back to game-time
+ * for tick-count calculations.
+ */
+export function contractByTimeStops(
+  startFrame: number,
+  realDuration: number,
+  stops: readonly TimeStopRegion[],
+): number {
+  if (realDuration <= 0 || stops.length === 0) return realDuration;
+  const endFrame = startFrame + realDuration;
+  let paused = 0;
+  for (const s of stops) {
+    const stopEnd = s.startFrame + s.durationFrames;
+    if (stopEnd <= startFrame) continue;
+    if (s.startFrame >= endFrame) break;
+    paused += Math.min(stopEnd, endFrame) - Math.max(s.startFrame, startFrame);
+  }
+  return realDuration - paused;
+}
+
+/**
  * Extends all event durations that overlap with foreign time-stop regions.
  * Events whose IDs are in `alreadyExtended` are skipped (prevents double extension).
  * Returns the updated events and adds newly extended IDs to the set.

@@ -10,7 +10,7 @@ import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../slot/commonSlotController
 import { FPS, TOTAL_FRAMES } from '../../utils/timeline';
 import GENERAL_MECHANICS from '../../model/game-data/generalMechanics.json';
 import { SkillSegmentBuilder } from '../events/basicAttackController';
-import { getFrameSequences, getSegmentLabels, getOperatorSkill, getRawSkillTypeMap, getEnabledStatusEvents } from '../gameDataStore';
+import { getFrameSequences, getSegmentLabels, getOperatorSkill, getOperatorSkills, getRawSkillTypeMap, getEnabledStatusEvents } from '../gameDataStore';
 import { getLinksForSlot } from '../custom/customSkillLinkController';
 import { getCustomSkills } from '../custom/customSkillController';
 import { COMBAT_SKILL_LABELS } from '../../consts/timelineColumnLabels';
@@ -55,7 +55,7 @@ export function buildColumns(
   const columns: Column[] = [];
 
   // Pre-scan: detect operators with team-shared status effects (e.g. Scorching Fangs)
-  type TeamStatusDef = { sourceSlot: Slot; statusName: string; label: string; duration: number; minPotentialForTeam: number };
+  type TeamStatusDef = { sourceSlot: Slot; statusName: string; label: string; duration: number };
   const teamStatusDefs: TeamStatusDef[] = [];
   // Pre-scan: collect THIS_OPERATOR status defs per operator for operator status column
   type OperatorStatusDef = { statusName: string; label: string; columnId: string; duration: number; color: string; source: 'talent' | 'weapon' | 'gear' | 'other'; statusType?: string; stacks?: Record<string, unknown> };
@@ -69,7 +69,7 @@ export function buildColumns(
 
   for (const s of slots) {
     if (!s.operator) continue;
-    const statusEvents = getEnabledStatusEvents(s.operator.id);
+    const statusEvents = [...getEnabledStatusEvents(s.operator.id), ...getEnabledStatusEvents('generic')];
     if (statusEvents.length) {
       for (const se of statusEvents) {
         if (getTeamStatusColumnId(se.id)) continue;
@@ -97,6 +97,46 @@ export function buildColumns(
           operatorStatusMap.set(s.slotId, defs);
         }
       }
+    }
+
+    // Scan skill frames for APPLY STATUS effects targeting THIS OPERATOR (e.g. Akekuri ult → LINK)
+    const skills = getOperatorSkills(s.operator.id);
+    if (skills) {
+      const seen = new Set(operatorStatusMap.get(s.slotId)?.map(d => d.statusName) ?? []);
+      skills.forEach((skill) => {
+        const serialized = skill.serialize() as Record<string, unknown>;
+        const segments = (serialized.segments ?? []) as { frames?: { clause?: { effects?: Record<string, unknown>[] }[] }[] }[];
+        for (const seg of segments) {
+          for (const frame of (seg.frames ?? [])) {
+            for (const clause of (frame.clause ?? [])) {
+              for (const eff of (clause.effects ?? [])) {
+                if (eff.verb !== 'APPLY' || eff.object !== 'STATUS') continue;
+                if (eff.to !== NounType.OPERATOR) continue;
+                const statusId = eff.objectId as string;
+                if (!statusId || seen.has(statusId)) continue;
+                seen.add(statusId);
+                // Look up status config for duration/stacks
+                const allStatuses = [...getEnabledStatusEvents(s.operator!.id), ...getEnabledStatusEvents('generic')];
+                const statusDef = allStatuses.find(st => st.id === statusId);
+                const colId = (OPERATOR_COLUMNS as Record<string, string>)[statusId]
+                  ?? statusId.toLowerCase().replace(/_/g, '-');
+                const defs = operatorStatusMap.get(s.slotId) ?? [];
+                defs.push({
+                  statusName: statusId,
+                  label: STATUS_LABELS[statusId as StatusType] ?? statusDef?.name ?? statusId,
+                  columnId: colId,
+                  duration: 10 * FPS,
+                  color: s.operator!.color,
+                  source: 'other',
+                  statusType: statusDef?.type ?? 'STATUS',
+                  ...(statusDef?.stacks ? { stacks: statusDef.stacks as unknown as Record<string, unknown> } : {}),
+                });
+                operatorStatusMap.set(s.slotId, defs);
+              }
+            }
+          }
+        }
+      });
     }
 
     // Scan weapon effect DSL defs
@@ -576,7 +616,7 @@ export function buildColumns(
       // Team-shared statuses from other operators (e.g. Scorching Fangs shared at P3)
       for (const tsd of teamStatusDefs) {
         const isSource = slot === tsd.sourceSlot;
-        if (!isSource && (tsd.sourceSlot.potential ?? 0) >= tsd.minPotentialForTeam) {
+        if (!isSource) {
           // Use statusName directly as ID — matches events from processStatus.ts
           statusMicroCols.push({
             id: tsd.statusName,

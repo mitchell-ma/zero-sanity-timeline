@@ -1,37 +1,4 @@
 {
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "MODIFY",
-          "object": "SKILL_PARAMETER",
-          "objectId": "GRAVITY_FIELD",
-          "with": {
-            "parameterKey": "potential2",
-            "value": {
-              "verb": "IS",
-              "value": 1
-            },
-            "parameterModifyType": "UNIQUE_MULTIPLIER"
-          }
-        },
-        {
-          "verb": "MODIFY",
-          "object": "SKILL_PARAMETER",
-          "objectId": "GRAVITY_FIELD",
-          "with": {
-            "parameterKey": "potential2_onceadd",
-            "value": {
-              "verb": "IS",
-              "value": 0.1
-            },
-            "parameterModifyType": "UNIQUE_MULTIPLIER"
-          }
-        }
-      ]
-    }
-  ],
   "properties": {
     "id": "GILBERTA_POTENTIAL_2",
     "name": "Wind Walker",
@@ -42,6 +9,5 @@
   },
   "metadata": {
     "originId": "GILBERTA"
-  },
-  "clauseType": "ALL"
+  }
 }

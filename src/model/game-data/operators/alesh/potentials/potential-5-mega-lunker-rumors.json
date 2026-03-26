@@ -1,50 +1,4 @@
 {
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "MODIFY",
-          "object": "SKILL_PARAMETER",
-          "objectId": "ONE_MONSTER_CATCH",
-          "with": {
-            "parameterKey": "potential_5",
-            "value": {
-              "verb": "IS",
-              "value": 1
-            },
-            "parameterModifyType": "UNIQUE_MULTIPLIER"
-          }
-        },
-        {
-          "verb": "MODIFY",
-          "object": "SKILL_PARAMETER",
-          "objectId": "ONE_MONSTER_CATCH",
-          "with": {
-            "parameterKey": "hp_tar",
-            "value": {
-              "verb": "IS",
-              "value": 0.5
-            },
-            "parameterModifyType": "UNIQUE_MULTIPLIER"
-          }
-        },
-        {
-          "verb": "MODIFY",
-          "object": "SKILL_PARAMETER",
-          "objectId": "ONE_MONSTER_CATCH",
-          "with": {
-            "parameterKey": "atk_up",
-            "value": {
-              "verb": "IS",
-              "value": 1.5
-            },
-            "parameterModifyType": "UNIQUE_MULTIPLIER"
-          }
-        }
-      ]
-    }
-  ],
   "properties": {
     "id": "ALESH_POTENTIAL_5",
     "name": "Mega Lunker Rumors",
@@ -55,6 +9,5 @@
   },
   "metadata": {
     "originId": "ALESH"
-  },
-  "clauseType": "ALL"
+  }
 }

@@ -4,13 +4,16 @@ import { ElementType, EventFrameType } from "../../consts/enums";
 
 /** A condition within a frame clause predicate. */
 export interface FrameCondition {
+  subjectDeterminer?: string;
   subject: string;
   verb: string;
   negated?: boolean;
+  objectQualifier?: string;
   object?: string;
   objectId?: string;
   cardinalityConstraint?: string;
   value?: unknown;
+  with?: Record<string, unknown>;
 }
 
 /** Inline damage data from a DEAL DAMAGE effect. */

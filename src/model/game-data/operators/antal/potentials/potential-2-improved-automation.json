@@ -1,23 +1,4 @@
 {
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "MODIFY",
-          "object": "SKILL_COST",
-          "objectId": "OVERCLOCKED_MOMENT",
-          "with": {
-            "value": {
-              "verb": "IS",
-              "value": 0.9
-            },
-            "parameterType": 1
-          }
-        }
-      ]
-    }
-  ],
   "properties": {
     "id": "ANTAL_POTENTIAL_2",
     "name": "Improved Automation",
@@ -28,6 +9,5 @@
   },
   "metadata": {
     "originId": "ANTAL"
-  },
-  "clauseType": "ALL"
+  }
 }

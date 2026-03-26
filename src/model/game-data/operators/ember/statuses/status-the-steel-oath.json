@@ -20,8 +20,54 @@
     },
     "eventType": "STATUS",
     "eventCategoryType": "SKILL_STATUS",
-    "description": "Ultimate Re-Ignited Oath improved: Shield effect is multiplied by ; while this shield is active, the wielder gains ATK +."
+    "description": "Grants every teammate a Shield based on 18%-25% of Ember's Max HP for 10s."
   },
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "SHIELD",
+          "toDeterminer": "ALL",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "operation": "MULT",
+              "left": {
+                "verb": "VARY_BY",
+                "object": "SKILL_LEVEL",
+                "value": [
+                  0.18,
+                  0.18,
+                  0.18,
+                  0.2,
+                  0.2,
+                  0.2,
+                  0.22,
+                  0.22,
+                  0.22,
+                  0.25,
+                  0.25,
+                  0.25
+                ],
+                "ofDeterminer": "THIS",
+                "of": "OPERATOR"
+              },
+              "right": {
+                "verb": "VARY_BY",
+                "object": "POTENTIAL",
+                "value": [1, 1, 1, 1, 1, 1.2],
+                "ofDeterminer": "THIS",
+                "of": "OPERATOR"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "clauseType": "ALL",
   "metadata": {
     "originId": "RE_IGNITED_OATH",
     "dataSources": [

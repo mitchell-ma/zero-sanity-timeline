@@ -8,7 +8,7 @@
 import { EventType, EventCategoryType } from '../../consts/enums';
 import type { ClauseEffect, ClausePredicate, StacksConfig, DurationConfig } from './weaponStatusesStore';
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from '../../controller/calculation/valueResolver';
-import { checkKeys, VALID_VALUE_NODE_KEYS, VALID_CLAUSE_KEYS, VALID_METADATA_KEYS } from './validationUtils';
+import { checkKeys, VALID_VALUE_NODE_KEYS, VALID_CLAUSE_KEYS, VALID_METADATA_KEYS, warnMissingEffectTarget } from './validationUtils';
 
 // ── Trigger clause type ─────────────────────────────────────────────────────
 
@@ -47,7 +47,7 @@ const VALID_TRIGGER_CONDITION_KEYS = new Set(['subjectDeterminer', 'subject', 'v
 const VALID_DURATION_KEYS = new Set(['value', 'unit', 'modifier']);
 const VALID_STATUS_LEVEL_KEYS = new Set(['limit', 'interactionType']);
 const VALID_SEGMENT_KEYS = new Set(['metadata', 'properties', 'clause', 'frames']);
-const VALID_PROPERTIES_KEYS = new Set(['id', 'name', 'description', 'type', 'element', 'target', 'targetDeterminer', 'to', 'toDeterminer', 'duration', 'stacks', 'enhancementTypes', 'minPotential', 'eventType', 'eventCategoryType']);
+const VALID_PROPERTIES_KEYS = new Set(['id', 'name', 'description', 'type', 'element', 'target', 'targetDeterminer', 'to', 'toDeterminer', 'duration', 'stacks', 'enhancementTypes', 'eventType', 'eventCategoryType']);
 const VALID_TOP_KEYS = new Set(['clause', 'clauseType', 'onTriggerClause', 'onEntryClause', 'onExitClause', 'segments', 'properties', 'metadata']);
 
 function validateValueNode(wv: Record<string, unknown>, path: string): string[] {
@@ -61,6 +61,7 @@ function validateEffect(ef: Record<string, unknown>, path: string): string[] {
   const errors = checkKeys(ef, VALID_EFFECT_KEYS, path);
   if (typeof ef.verb !== 'string') errors.push(`${path}.verb: must be a string`);
   if (typeof ef.object !== 'string') errors.push(`${path}.object: must be a string`);
+  errors.push(...warnMissingEffectTarget(ef, path));
   if (ef.with) {
     const w = ef.with as Record<string, unknown>;
     errors.push(...checkKeys(w, VALID_EFFECT_WITH_KEYS, `${path}.with`));
@@ -114,6 +115,9 @@ export function validateOperatorStatus(json: Record<string, unknown>): string[] 
   errors.push(...checkKeys(props, VALID_PROPERTIES_KEYS, 'properties'));
   if (typeof props.id !== 'string') errors.push('properties.id: must be a string');
 
+  // Status configs must specify a target — this determines default routing
+  if (!props.to && !props.target) errors.push('properties.to: required (TEAM, OPERATOR, or ENEMY)');
+
   if (props.duration) {
     const dur = props.duration as Record<string, unknown>;
     errors.push(...checkKeys(dur, VALID_DURATION_KEYS, 'properties.duration'));
@@ -152,7 +156,6 @@ export class OperatorStatus {
   readonly targetDeterminer?: string;
   readonly to: string;
   readonly toDeterminer?: string;
-  readonly minPotential?: number;
   readonly duration?: DurationConfig;
   readonly stacks?: StacksConfig;
   readonly enhancementTypes?: string[];
@@ -181,7 +184,6 @@ export class OperatorStatus {
     if (props.targetDeterminer ?? props.toDeterminer) this.targetDeterminer = (props.targetDeterminer ?? props.toDeterminer) as string;
     this.to = (props.to ?? props.target ?? 'OPERATOR') as string;
     if (props.toDeterminer) this.toDeterminer = props.toDeterminer as string;
-    if (props.minPotential != null) this.minPotential = props.minPotential as number;
     if (props.duration) {
       this.duration = props.duration as DurationConfig;
     }
@@ -226,7 +228,6 @@ export class OperatorStatus {
         ...(this.duration ? { duration: this.duration } : {}),
         ...(this.stacks ? { stacks: this.stacks } : {}),
         ...(this.enhancementTypes ? { enhancementTypes: this.enhancementTypes } : {}),
-        ...(this.minPotential != null ? { minPotential: this.minPotential } : {}),
         eventType: this.eventType,
         ...(this.eventCategoryType ? { eventCategoryType: this.eventCategoryType } : {}),
       },
@@ -283,10 +284,21 @@ for (const key of operatorStatusContext.keys()) {
   operatorStatusCache.get(operatorId)!.push(status);
 }
 
-// Load generic statuses from operators/generic/
+// Load generic statuses from operators/generic/ (flat) and generic/statuses/
 const genericStatusContext = require.context('./operators/generic', false, /\.json$/);
 for (const key of genericStatusContext.keys()) {
   const json = genericStatusContext(key) as Record<string, unknown>;
+  const status = OperatorStatus.deserialize(json, key);
+
+  if (!operatorStatusCache.has('generic')) {
+    operatorStatusCache.set('generic', []);
+  }
+  operatorStatusCache.get('generic')!.push(status);
+}
+
+const genericStatusDirContext = require.context('./generic/statuses', false, /\.json$/);
+for (const key of genericStatusDirContext.keys()) {
+  const json = genericStatusDirContext(key) as Record<string, unknown>;
   const status = OperatorStatus.deserialize(json, key);
 
   if (!operatorStatusCache.has('generic')) {

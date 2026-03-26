@@ -1,4 +1,31 @@
 {
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "ATTACK_BONUS",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "operation": "ADD",
+              "left": { "verb": "VARY_BY", "object": "TALENT_LEVEL", "value": [0.001, 0.0015], "ofDeterminer": "THIS", "of": "OPERATOR" },
+              "right": { "verb": "VARY_BY", "object": "POTENTIAL", "value": [0, 0, 0, 0.0005, 0.0005, 0.0005], "ofDeterminer": "THIS", "of": "OPERATOR" }
+            },
+            "scalingAttribute": {
+              "verb": "IS",
+              "value": [
+                "INTELLECT",
+                "WILL"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
   "properties": {
     "id": "ILLUMINATION_TALENT",
     "name": "Illumination (Talent)",
@@ -12,8 +39,10 @@
   "metadata": {
     "originId": "LIFENG",
     "dataSources": [
-      "WARFARIN"
+      "WARFARIN",
+      "ENDFIELD_WIKI"
     ],
     "icon": "skills/lifeng_talent_1_icon.png"
-  }
+  },
+  "clauseType": "ALL"
 }

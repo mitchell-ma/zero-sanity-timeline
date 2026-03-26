@@ -18,3 +18,11 @@ export const VALID_VALUE_NODE_KEYS = new Set([
 export const VALID_CLAUSE_KEYS = new Set(['conditions', 'effects']);
 
 export const VALID_METADATA_KEYS = new Set(['originId', 'dataSources', 'icon']);
+
+/** Warn if an APPLY STATUS/BUFF effect is missing a `to` target. */
+export function warnMissingEffectTarget(ef: Record<string, unknown>, path: string): string[] {
+  if (ef.verb !== 'APPLY') return [];
+  if (ef.object !== 'STATUS' && ef.object !== 'BUFF' && ef.object !== 'INFLICTION' && ef.object !== 'REACTION') return [];
+  if (!ef.to) return [`${path}: APPLY ${ef.object} missing "to" — should specify TEAM, OPERATOR, or ENEMY`];
+  return [];
+}

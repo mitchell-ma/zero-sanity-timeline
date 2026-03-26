@@ -1,24 +1,4 @@
 {
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "MODIFY",
-          "object": "SKILL_PARAMETER",
-          "objectId": "TIMELY_SUPPRESSION",
-          "with": {
-            "parameterKey": "potential3_duration",
-            "value": {
-              "verb": "IS",
-              "value": 5
-            },
-            "parameterModifyType": "UNIQUE_MULTIPLIER"
-          }
-        }
-      ]
-    }
-  ],
   "properties": {
     "id": "CATCHER_POTENTIAL_3",
     "name": "Unwavering Post",
@@ -29,6 +9,5 @@
   },
   "metadata": {
     "originId": "CATCHER"
-  },
-  "clauseType": "ALL"
+  }
 }

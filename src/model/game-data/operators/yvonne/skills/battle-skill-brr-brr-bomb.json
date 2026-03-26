@@ -44,7 +44,200 @@
               "unit": "SECOND"
             }
           },
+          "clauseType": "FIRST_MATCH",
           "clause": [
+            {
+              "conditions": [
+                { "subject": "ENEMY", "verb": "HAVE", "object": "INFLICTION", "objectQualifier": "CRYO" }
+              ],
+              "effects": [
+                { "verb": "CONSUME", "object": "INFLICTION", "objectQualifier": "ARTS", "of": "ENEMY" },
+                { "verb": "APPLY", "object": "STATUS", "objectId": "PHYSICAL", "objectQualifier": "SOLIDIFICATION", "to": "ENEMY" },
+                {
+                  "verb": "DEAL",
+                  "object": "STAGGER",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 10
+                    }
+                  }
+                },
+                {
+                  "verb": "DEAL",
+                  "objectQualifier": "CRYO",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "damageMultiplierIncrement": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.67,
+                        0.73,
+                        0.8,
+                        0.87,
+                        0.93,
+                        1,
+                        1.07,
+                        1.13,
+                        1.2,
+                        1.28,
+                        1.38,
+                        1.5
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    },
+                    "atkScaleLayer": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.89,
+                        0.98,
+                        1.07,
+                        1.16,
+                        1.24,
+                        1.33,
+                        1.42,
+                        1.51,
+                        1.6,
+                        1.71,
+                        1.85,
+                        2
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    },
+                    "uspBase": {
+                      "verb": "IS",
+                      "value": 10
+                    },
+                    "uspLayer": {
+                      "verb": "IS",
+                      "value": 30
+                    },
+                    "value": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        1.11,
+                        1.22,
+                        1.33,
+                        1.44,
+                        1.55,
+                        1.67,
+                        1.78,
+                        1.89,
+                        2,
+                        2.14,
+                        2.3,
+                        2.5
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "conditions": [
+                { "subject": "ENEMY", "verb": "HAVE", "object": "INFLICTION", "objectQualifier": "NATURE" }
+              ],
+              "effects": [
+                { "verb": "CONSUME", "object": "INFLICTION", "objectQualifier": "ARTS", "of": "ENEMY" },
+                { "verb": "APPLY", "object": "STATUS", "objectId": "PHYSICAL", "objectQualifier": "SOLIDIFICATION", "to": "ENEMY" },
+                {
+                  "verb": "DEAL",
+                  "object": "STAGGER",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 10
+                    }
+                  }
+                },
+                {
+                  "verb": "DEAL",
+                  "objectQualifier": "CRYO",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "damageMultiplierIncrement": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.67,
+                        0.73,
+                        0.8,
+                        0.87,
+                        0.93,
+                        1,
+                        1.07,
+                        1.13,
+                        1.2,
+                        1.28,
+                        1.38,
+                        1.5
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    },
+                    "atkScaleLayer": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.89,
+                        0.98,
+                        1.07,
+                        1.16,
+                        1.24,
+                        1.33,
+                        1.42,
+                        1.51,
+                        1.6,
+                        1.71,
+                        1.85,
+                        2
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    },
+                    "uspBase": {
+                      "verb": "IS",
+                      "value": 10
+                    },
+                    "uspLayer": {
+                      "verb": "IS",
+                      "value": 30
+                    },
+                    "value": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        1.11,
+                        1.22,
+                        1.33,
+                        1.44,
+                        1.55,
+                        1.67,
+                        1.78,
+                        1.89,
+                        2,
+                        2.14,
+                        2.3,
+                        2.5
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                }
+              ]
+            },
             {
               "conditions": [],
               "effects": [
@@ -137,8 +330,7 @@
                 }
               ]
             }
-          ],
-          "clauseType": "ALL"
+          ]
         }
       ],
       "properties": {

@@ -59,7 +59,7 @@
                   }
                 },
                 {
-                  "verb": "RECOVER",
+                  "verb": "RETURN",
                   "object": "SKILL_POINT",
                   "with": {
                     "value": {
@@ -153,6 +153,53 @@
                   "with": {
                     "value": {
                       "verb": "AT_LEAST",
+                      "value": 1
+                    }
+                  }
+                }
+              ],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "objectQualifier": "PHYSICAL",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "operation": "ADD",
+                      "left": {
+                        "verb": "IS",
+                        "value": 300
+                      },
+                      "right": {
+                        "operation": "MULT",
+                        "left": {
+                          "verb": "IS",
+                          "value": 5.0
+                        },
+                        "right": {
+                          "verb": "IS",
+                          "objectId": "BASE_DEFENSE",
+                          "object": "STAT",
+                          "ofDeterminer": "THIS",
+                          "of": "OPERATOR"
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "conditions": [
+                {
+                  "subjectDeterminer": "THIS",
+                  "subject": "OPERATOR",
+                  "verb": "HAVE",
+                  "object": "POTENTIAL",
+                  "with": {
+                    "value": {
+                      "verb": "AT_LEAST",
                       "value": 5
                     }
                   }
@@ -160,7 +207,7 @@
               ],
               "effects": [
                 {
-                  "verb": "RECOVER",
+                  "verb": "RETURN",
                   "object": "SKILL_POINT",
                   "with": {
                     "value": {

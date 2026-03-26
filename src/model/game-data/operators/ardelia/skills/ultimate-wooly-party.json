@@ -22,7 +22,7 @@
                 90,
                 90,
                 90,
-                76.5,
+                90,
                 76.5,
                 76.5
               ],
@@ -66,8 +66,9 @@
         ],
         "duration": {
           "value": {
-            "verb": "IS",
-            "value": 4.47
+            "operation": "ADD",
+            "left": { "verb": "IS", "value": 4.47 },
+            "right": { "verb": "VARY_BY", "object": "POTENTIAL", "value": [0, 0, 0, 1, 1, 1], "ofDeterminer": "THIS", "of": "OPERATOR" }
           },
           "unit": "SECOND"
         },

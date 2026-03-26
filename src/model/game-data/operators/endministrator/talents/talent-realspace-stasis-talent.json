@@ -1,9 +1,47 @@
 {
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "PHYSICAL_DAMAGE_TAKEN_BONUS",
+          "to": "ENEMY",
+          "with": {
+            "value": {
+              "verb": "VARY_BY",
+              "object": "TALENT_LEVEL",
+              "value": [
+                0.1,
+                0.2
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            }
+          }
+        }
+      ]
+    }
+  ],
   "properties": {
     "id": "REALSPACE_STASIS_TALENT",
     "name": "Realspace Stasis (Talent)",
-    "to": "OPERATOR",
+    "to": "ENEMY",
     "toDeterminer": "THIS",
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": -1
+      },
+      "unit": "SECOND"
+    },
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 1
+      },
+      "interactionType": "RESET"
+    },
     "eventType": "STATUS",
     "eventCategoryType": "TALENT",
     "description": "Enemies with attached Originium Crystals suffer Physical DMG Taken +{dmg:0%}.",
@@ -12,8 +50,10 @@
   "metadata": {
     "originId": "ENDMINISTRATOR",
     "dataSources": [
-      "WARFARIN"
+      "WARFARIN",
+      "ENDFIELD_WIKI"
     ],
     "icon": "skills/endministrator_talent_2_icon.png"
-  }
+  },
+  "clauseType": "ALL"
 }

@@ -5,7 +5,8 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "CRYO_DAMAGE_TAKEN_BONUS",
+          "object": "SUSCEPTIBILITY",
+          "objectQualifier": "CRYO",
           "to": "ENEMY",
           "with": {
             "value": {

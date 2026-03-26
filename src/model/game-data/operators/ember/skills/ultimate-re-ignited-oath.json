@@ -16,8 +16,11 @@
           "object": "ULTIMATE_ENERGY",
           "with": {
             "value": {
-              "verb": "IS",
-              "value": 100
+              "verb": "VARY_BY",
+              "object": "POTENTIAL",
+              "value": [100, 100, 100, 100, 85, 85],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
             }
           }
         }

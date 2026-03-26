@@ -22,7 +22,7 @@
                 100,
                 100,
                 100,
-                85,
+                100,
                 85,
                 85
               ],
@@ -88,6 +88,14 @@
             {
               "conditions": [],
               "effects": [
+                {
+                  "verb": "DEAL",
+                  "object": "STAGGER",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": { "verb": "VARY_BY", "object": "SKILL_LEVEL", "value": [15,15,15,15,15,15,15,15,15,20,20,20], "ofDeterminer": "THIS", "of": "OPERATOR" }
+                  }
+                },
                 {
                   "verb": "DEAL",
                   "objectQualifier": "ELECTRIC",

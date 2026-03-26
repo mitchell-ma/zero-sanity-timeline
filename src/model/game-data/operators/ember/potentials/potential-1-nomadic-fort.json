@@ -1,89 +1,4 @@
 {
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "MODIFY",
-          "object": "SKILL_PARAMETER",
-          "objectId": "FORWARD_MARCH",
-          "with": {
-            "parameterKey": "potential_1",
-            "value": {
-              "verb": "IS",
-              "value": 1
-            },
-            "parameterModifyType": "UNIQUE_MULTIPLIER"
-          }
-        },
-        {
-          "verb": "MODIFY",
-          "object": "SKILL_PARAMETER",
-          "objectId": "FORWARD_MARCH",
-          "with": {
-            "parameterKey": "extrashelter",
-            "value": {
-              "verb": "IS",
-              "value": 0.2
-            },
-            "parameterModifyType": "UNIQUE_MULTIPLIER"
-          }
-        },
-        {
-          "verb": "MODIFY",
-          "object": "SKILL_PARAMETER",
-          "objectId": "FORWARD_MARCH",
-          "with": {
-            "parameterKey": "extratime",
-            "value": {
-              "verb": "IS",
-              "value": 1.5
-            },
-            "parameterModifyType": "UNIQUE_MULTIPLIER"
-          }
-        },
-        {
-          "verb": "MODIFY",
-          "object": "SKILL_PARAMETER",
-          "objectId": "FRONTLINE_SUPPORT",
-          "with": {
-            "parameterKey": "potential_1",
-            "value": {
-              "verb": "IS",
-              "value": 1
-            },
-            "parameterModifyType": "UNIQUE_MULTIPLIER"
-          }
-        },
-        {
-          "verb": "MODIFY",
-          "object": "SKILL_PARAMETER",
-          "objectId": "FRONTLINE_SUPPORT",
-          "with": {
-            "parameterKey": "extrashelter",
-            "value": {
-              "verb": "IS",
-              "value": 0.2
-            },
-            "parameterModifyType": "UNIQUE_MULTIPLIER"
-          }
-        },
-        {
-          "verb": "MODIFY",
-          "object": "SKILL_PARAMETER",
-          "objectId": "FRONTLINE_SUPPORT",
-          "with": {
-            "parameterKey": "extratime",
-            "value": {
-              "verb": "IS",
-              "value": 1.5
-            },
-            "parameterModifyType": "UNIQUE_MULTIPLIER"
-          }
-        }
-      ]
-    }
-  ],
   "properties": {
     "id": "EMBER_POTENTIAL_1",
     "name": "Nomadic Fort",
@@ -94,6 +9,5 @@
   },
   "metadata": {
     "originId": "EMBER"
-  },
-  "clauseType": "ALL"
+  }
 }

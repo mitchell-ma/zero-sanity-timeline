@@ -19,8 +19,26 @@
           "to": "OPERATOR",
           "with": {
             "value": {
-              "verb": "IS",
-              "value": 85
+              "operation": "ADD",
+              "left": {
+                "verb": "IS",
+                "value": 40
+              },
+              "right": {
+                "operation": "MULT",
+                "left": {
+                  "verb": "IS",
+                  "value": 15
+                },
+                "right": {
+                  "verb": "IS",
+                  "objectQualifier": "CRYO",
+                  "objectId": "INFLICTION",
+                  "object": "STACKS",
+                  "ofDeterminer": "THIS",
+                  "of": "ENEMY"
+                }
+              }
             }
           }
         }
@@ -61,7 +79,8 @@
           },
           "unit": "SECOND"
         },
-        "element": "CRYO"
+        "element": "CRYO",
+        "name": "Winter's Devourer"
       },
       "frames": [
         {
@@ -136,24 +155,34 @@
                       "value": 3
                     },
                     "value": {
-                      "verb": "VARY_BY",
-                      "object": "SKILL_LEVEL",
-                      "value": [
-                        0.71,
-                        0.78,
-                        0.85,
-                        0.92,
-                        0.99,
-                        1.07,
-                        1.14,
-                        1.21,
-                        1.28,
-                        1.37,
-                        1.47,
-                        1.6
-                      ],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "operation": "MULT",
+                      "left": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.71,
+                          0.78,
+                          0.85,
+                          0.92,
+                          0.99,
+                          1.07,
+                          1.14,
+                          1.21,
+                          1.28,
+                          1.37,
+                          1.47,
+                          1.6
+                        ],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
+                      },
+                      "right": {
+                        "verb": "VARY_BY",
+                        "object": "POTENTIAL",
+                        "value": [1, 1, 1, 1.15, 1.15, 1.15],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
+                      }
                     }
                   }
                 }
@@ -237,24 +266,34 @@
                       "of": "OPERATOR"
                     },
                     "value": {
-                      "verb": "VARY_BY",
-                      "object": "SKILL_LEVEL",
-                      "value": [
-                        0.71,
-                        0.78,
-                        0.85,
-                        0.92,
-                        0.99,
-                        1.07,
-                        1.14,
-                        1.21,
-                        1.28,
-                        1.37,
-                        1.47,
-                        1.6
-                      ],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "operation": "MULT",
+                      "left": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.71,
+                          0.78,
+                          0.85,
+                          0.92,
+                          0.99,
+                          1.07,
+                          1.14,
+                          1.21,
+                          1.28,
+                          1.37,
+                          1.47,
+                          1.6
+                        ],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
+                      },
+                      "right": {
+                        "verb": "VARY_BY",
+                        "object": "POTENTIAL",
+                        "value": [1, 1, 1, 1.15, 1.15, 1.15],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
+                      }
                     }
                   }
                 }

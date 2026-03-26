@@ -20,7 +20,7 @@
               "object": "POTENTIAL",
               "value": [
                 80,
-                68,
+                80,
                 68,
                 68,
                 68,
@@ -111,6 +111,32 @@
                         9.23,
                         10
                       ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                },
+                {
+                  "verb": "DEAL",
+                  "object": "STAGGER",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 20
+                    }
+                  }
+                },
+                {
+                  "verb": "APPLY",
+                  "object": "CRITICAL_RATE",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "value": {
+                      "verb": "VARY_BY",
+                      "object": "POTENTIAL",
+                      "value": [0, 0, 0, 0, 0, 0.3],
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
                     }

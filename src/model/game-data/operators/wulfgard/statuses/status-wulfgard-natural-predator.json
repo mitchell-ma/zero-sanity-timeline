@@ -1,0 +1,58 @@
+{
+  "onTriggerClause": [
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "PERFORM",
+          "object": "ULTIMATE"
+        },
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "HAVE",
+          "object": "POTENTIAL",
+          "value": {
+            "verb": "IS",
+            "value": 5
+          }
+        }
+      ],
+      "effects": [
+        {
+          "verb": "RESET",
+          "object": "COOLDOWN",
+          "objectId": "COMBO_SKILL"
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "WULFGARD_P5_NATURAL_PREDATOR",
+    "name": "Natural Predator",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 1
+      },
+      "interactionType": "NONE"
+    },
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": -1
+      },
+      "unit": "SECOND"
+    },
+    "eventType": "STATUS",
+    "eventCategoryType": "SKILL_STATUS",
+    "description": "Casting the ultimate Wolven Fury immediately resets the cooldown of the combo skill Frag Grenade·β."
+  },
+  "metadata": {
+    "originId": "WULFGARD"
+  },
+  "clauseType": "ALL"
+}

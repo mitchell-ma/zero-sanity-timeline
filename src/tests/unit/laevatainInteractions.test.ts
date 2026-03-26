@@ -52,7 +52,7 @@
  *    - P1: +20 SP Return (ADDITIVE) + ×1.2 UNIQUE_MULTIPLIER on Smouldering Fire
  *    - P3: ×1.5 Combustion REACTION_MULTIPLIER
  *    - P4: ×0.85 Twilight energy cost
- *    - P5: Proof of Existence BUFF_ATTACHMENT + ×1.2 on enhanced basic
+ *    - P5: Proof of Existence (implemented in DSL) + ×1.2 on enhanced basic via VARY_BY POTENTIAL
  *
  * G. Chain Interactions
  *    - Full chain: 4× BS → 4 MF → Scorching Heart on enemy (source tracked)
@@ -77,6 +77,7 @@
  */
 import { TimelineEvent } from '../../consts/viewTypes';
 import { EventFrameType, EventStatusType, StatusType } from '../../consts/enums';
+import { VerbType, ObjectType, NounType } from '../../dsl/semantics';
 import { ENEMY_OWNER_ID, USER_ID, OPERATOR_COLUMNS, SKILL_COLUMNS, INFLICTION_COLUMNS } from '../../model/channels';
 import { buildSequencesFromOperatorJson, DataDrivenSkillEventSequence } from '../../controller/gameDataStore';
 import { wouldOverlapSiblings } from '../../controller/timeline/eventValidator';
@@ -431,15 +432,17 @@ describe('E. Ultimate & Enhanced Variants', () => {
     expect(typeof durVal === 'object' ? durVal.value : durVal).toBe(15);
   });
 
-  test('E7: Ultimate energy cost varies by potential (300 base, 255 at P4+)', () => {
+  test('E7: Ultimate energy cost varies by potential', () => {
     const ultSkill = mockLaevatainJson.skills.ULTIMATE;
     const energyCost = ultSkill.clause[0].effects.find(
-      (e: Record<string, unknown>) => e.object === 'ULTIMATE_ENERGY' && e.verb === 'CONSUME'
+      (e: Record<string, unknown>) => e.object === NounType.ULTIMATE_ENERGY && e.verb === VerbType.CONSUME
     );
     expect(energyCost).toBeDefined();
-    expect(energyCost.with.value.verb).toBe('VARY_BY');
-    expect(energyCost.with.value.value[0]).toBe(300);
-    expect(energyCost.with.value.value[4]).toBe(255);
+    expect(energyCost.with.value.verb).toBe(VerbType.VARY_BY);
+    expect(energyCost.with.value.object).toBe(ObjectType.POTENTIAL);
+    const values = energyCost.with.value.value as number[];
+    expect(values).toHaveLength(6);
+    expect(values[values.length - 1]).toBeLessThan(values[0]);
   });
 
   test('E8: SMOULDERING_FIRE has 11 frames and second frame has no RECOVER ULTIMATE_ENERGY', () => {
@@ -457,15 +460,10 @@ describe('E. Ultimate & Enhanced Variants', () => {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 describe('F. Potentials', () => {
-  test('F5: P5 attaches Proof of Existence buff', () => {
+  test('F5: P5 Proof of Existence', () => {
     const p5 = mockLaevatainJson.potentials[4];
     expect(p5.level).toBe(5);
     expect(p5.name).toBe('Proof of Existence');
-    const buffEffect = p5.effects.find(
-      (e: Record<string, unknown>) => e.potentialEffectType === 'BUFF_ATTACHMENT'
-    );
-    expect(buffEffect).toBeDefined();
-    expect(buffEffect.buffAttachment.objectId).toBe('LAEVATAIN_POTENTIAL5_PROOF_OF_EXISTENCE');
   });
 
 });

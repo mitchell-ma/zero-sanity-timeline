@@ -56,22 +56,20 @@
         "duration": {
           "value": {
             "verb": "IS",
-            "value": 0.13
+            "value": 2.5
           },
           "unit": "SECOND"
-        }
+        },
+        "name": "Flashfreezer υ37"
       },
       "frames": [
         {
           "metadata": {
-            "eventComponentType": "FRAME",
-            "dataSources": [
-              "END_AXIS"
-            ]
+            "eventComponentType": "FRAME"
           },
           "properties": {
             "offset": {
-              "value": 0.13,
+              "value": 0.5,
               "unit": "SECOND"
             }
           },
@@ -79,6 +77,172 @@
             {
               "conditions": [],
               "effects": [
+                {
+                  "verb": "DEAL",
+                  "objectQualifier": "CRYO",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.45, 0.49, 0.54, 0.58, 0.62, 0.67,
+                        0.71, 0.76, 0.80, 0.86, 0.93, 1.00
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
+        },
+        {
+          "metadata": {
+            "eventComponentType": "FRAME"
+          },
+          "properties": {
+            "offset": {
+              "value": 1.0,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "objectQualifier": "CRYO",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.45, 0.49, 0.54, 0.58, 0.62, 0.67,
+                        0.71, 0.76, 0.80, 0.86, 0.93, 1.00
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
+        },
+        {
+          "metadata": {
+            "eventComponentType": "FRAME"
+          },
+          "properties": {
+            "offset": {
+              "value": 1.5,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "objectQualifier": "CRYO",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.45, 0.49, 0.54, 0.58, 0.62, 0.67,
+                        0.71, 0.76, 0.80, 0.86, 0.93, 1.00
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
+        },
+        {
+          "metadata": {
+            "eventComponentType": "FRAME"
+          },
+          "properties": {
+            "offset": {
+              "value": 2.0,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "objectQualifier": "CRYO",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.45, 0.49, 0.54, 0.58, 0.62, 0.67,
+                        0.71, 0.76, 0.80, 0.86, 0.93, 1.00
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
+        },
+        {
+          "metadata": {
+            "eventComponentType": "FRAME"
+          },
+          "properties": {
+            "offset": {
+              "value": 2.5,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "objectQualifier": "CRYO",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.89, 0.98, 1.07, 1.16, 1.25, 1.34,
+                        1.42, 1.51, 1.60, 1.71, 1.85, 2.00
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                },
                 {
                   "verb": "DEAL",
                   "object": "STAGGER",
@@ -89,6 +253,13 @@
                       "value": 10
                     }
                   }
+                },
+                {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "PHYSICAL",
+                  "objectQualifier": "SOLIDIFICATION",
+                  "to": "ENEMY"
                 }
               ]
             }
@@ -112,18 +283,18 @@
             "verb": "VARY_BY",
             "object": "SKILL_LEVEL",
             "value": [
-              22,
-              22,
-              22,
-              22,
-              22,
-              22,
-              22,
-              22,
-              22,
-              22,
-              22,
-              21
+              20,
+              20,
+              20,
+              20,
+              20,
+              20,
+              20,
+              20,
+              19,
+              19,
+              19,
+              18
             ],
             "ofDeterminer": "THIS",
             "of": "OPERATOR"

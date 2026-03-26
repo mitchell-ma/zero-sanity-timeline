@@ -832,7 +832,6 @@ export interface StatusEventConfig {
     limit: ValueNode;
   };
   susceptibility?: Record<string, number[]>;
-  minPotential?: number;
   enhancementTypes?: string[];
   cooldownSeconds?: number;
   isEnabled?: boolean;
@@ -898,7 +897,6 @@ function parseStatusEvent(raw: Record<string, unknown>): StatusEventConfig {
       },
     } : {}),
     ...(props.susceptibility ? { susceptibility: props.susceptibility as Record<string, number[]> } : {}),
-    ...(props.minPotential != null ? { minPotential: props.minPotential as number } : {}),
     ...(props.enhancementTypes ? { enhancementTypes: props.enhancementTypes as string[] } : {}),
     ...(props.cooldownSeconds != null ? { cooldownSeconds: props.cooldownSeconds as number } : {}),
     ...(raw.onTriggerClause

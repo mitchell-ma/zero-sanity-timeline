@@ -1,76 +1,4 @@
 {
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "MODIFY",
-          "object": "SKILL_PARAMETER",
-          "objectId": "FLASHFREEZER",
-          "with": {
-            "parameterKey": "has_potential1",
-            "value": {
-              "verb": "IS",
-              "value": 1
-            },
-            "parameterModifyType": "UNIQUE_MULTIPLIER"
-          }
-        },
-        {
-          "verb": "MODIFY",
-          "object": "SKILL_PARAMETER",
-          "objectId": "FLASHFREEZER",
-          "with": {
-            "parameterKey": "radius",
-            "value": {
-              "verb": "IS",
-              "value": 5
-            },
-            "parameterModifyType": "UNIQUE_MULTIPLIER"
-          }
-        },
-        {
-          "verb": "MODIFY",
-          "object": "SKILL_PARAMETER",
-          "objectId": "FLASHFREEZER",
-          "with": {
-            "parameterKey": "interval",
-            "value": {
-              "verb": "IS",
-              "value": 0.5
-            },
-            "parameterModifyType": "UNIQUE_MULTIPLIER"
-          }
-        },
-        {
-          "verb": "MODIFY",
-          "object": "SKILL_PARAMETER",
-          "objectId": "FLASHFREEZER",
-          "with": {
-            "parameterKey": "maxcnt",
-            "value": {
-              "verb": "IS",
-              "value": 6
-            },
-            "parameterModifyType": "UNIQUE_MULTIPLIER"
-          }
-        },
-        {
-          "verb": "MODIFY",
-          "object": "SKILL_PARAMETER",
-          "objectId": "FLASHFREEZER",
-          "with": {
-            "parameterKey": "usp_extra",
-            "value": {
-              "verb": "IS",
-              "value": 25
-            },
-            "parameterModifyType": "UNIQUE_MULTIPLIER"
-          }
-        }
-      ]
-    }
-  ],
   "properties": {
     "id": "YVONNE_POTENTIAL_1",
     "name": "Flash Freezer",
@@ -81,6 +9,5 @@
   },
   "metadata": {
     "originId": "YVONNE"
-  },
-  "clauseType": "ALL"
+  }
 }

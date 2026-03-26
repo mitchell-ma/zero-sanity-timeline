@@ -17,14 +17,31 @@
           "to": "OPERATOR",
           "with": {
             "value": {
-              "verb": "VARY_BY",
-              "object": "TALENT_LEVEL",
-              "value": [
-                3,
-                4
-              ],
-              "ofDeterminer": "THIS",
-              "of": "OPERATOR"
+              "operation": "ADD",
+              "left": {
+                "verb": "VARY_BY",
+                "object": "TALENT_LEVEL",
+                "value": [
+                  3,
+                  4
+                ],
+                "ofDeterminer": "THIS",
+                "of": "OPERATOR"
+              },
+              "right": {
+                "verb": "VARY_BY",
+                "object": "POTENTIAL",
+                "value": [
+                  0,
+                  2,
+                  2,
+                  2,
+                  2,
+                  2
+                ],
+                "ofDeterminer": "THIS",
+                "of": "OPERATOR"
+              }
             }
           }
         }

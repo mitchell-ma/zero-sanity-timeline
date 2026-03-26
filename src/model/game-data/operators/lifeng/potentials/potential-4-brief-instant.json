@@ -1,23 +1,4 @@
 {
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "MODIFY",
-          "object": "SKILL_COST",
-          "objectId": "LIFENG_HEART_OF_THE_UNMOVING",
-          "with": {
-            "value": {
-              "verb": "IS",
-              "value": 0.85
-            },
-            "parameterType": 1
-          }
-        }
-      ]
-    }
-  ],
   "properties": {
     "id": "LIFENG_POTENTIAL_4",
     "name": "Brief Instant",
@@ -28,6 +9,5 @@
   },
   "metadata": {
     "originId": "LIFENG"
-  },
-  "clauseType": "ALL"
+  }
 }

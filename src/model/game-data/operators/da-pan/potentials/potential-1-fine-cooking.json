@@ -1,58 +1,4 @@
 {
-  "onTriggerClause": [
-    {
-      "conditions": [
-        {
-          "subjectDeterminer": "THIS",
-          "subject": "OPERATOR",
-          "verb": "DEFEAT",
-          "object": "ENEMY"
-        }
-      ],
-      "effects": [
-        {
-          "verb": "APPLY",
-          "object": "STATUS",
-          "objectId": "FINE_COOKING",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR"
-        }
-      ]
-    }
-  ],
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "MODIFY",
-          "object": "SKILL_PARAMETER",
-          "objectId": "CHOP_N_DUNK",
-          "with": {
-            "parameterKey": "potential_1_dmg_up",
-            "value": {
-              "verb": "IS",
-              "value": 0.3
-            },
-            "parameterModifyType": "UNIQUE_MULTIPLIER"
-          }
-        },
-        {
-          "verb": "MODIFY",
-          "object": "SKILL_PARAMETER",
-          "objectId": "CHOP_N_DUNK",
-          "with": {
-            "parameterKey": "potential_1_duration",
-            "value": {
-              "verb": "IS",
-              "value": 15
-            },
-            "parameterModifyType": "UNIQUE_MULTIPLIER"
-          }
-        }
-      ]
-    }
-  ],
   "properties": {
     "id": "DA-PAN_POTENTIAL_1",
     "name": "Fine Cooking",
@@ -68,6 +14,5 @@
     "dataSources": [
       "ENDFIELD_WIKI"
     ]
-  },
-  "clauseType": "ALL"
+  }
 }

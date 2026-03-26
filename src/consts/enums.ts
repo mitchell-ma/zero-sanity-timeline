@@ -57,6 +57,7 @@ export enum UnitType {
   FLAT = "FLAT",
   LEVEL = "LEVEL",
   MULTIPLIER = "MULTIPLIER",
+  STACK = "STACK",
 }
 
 export enum EventFrameType {
@@ -189,7 +190,7 @@ export const StatusType = { ..._StatusType, ...ReactionType } as typeof _StatusT
 /** Damage formula multiplier factor that a status contributes to. */
 export enum DamageFactorType {
   NONE = "NONE",
-  MULTIPLIER_GROUP = "MULTIPLIER_GROUP",
+  DAMAGE_BONUS = "DAMAGE_BONUS",
   AMP = "AMP",
   STAGGER = "STAGGER",
   LINK = "LINK",
@@ -239,7 +240,7 @@ export const STATUS_DAMAGE_FACTOR: Partial<Record<string, DamageFactorType>> = {
 export const NOUN_DAMAGE_FACTOR: Partial<Record<string, DamageFactorType>> = {
   AMP: DamageFactorType.AMP,
   STAGGER: DamageFactorType.STAGGER,
-  DAMAGE: DamageFactorType.MULTIPLIER_GROUP,
+  DAMAGE: DamageFactorType.DAMAGE_BONUS,
 };
 
 /** Arts inflictions — elemental inflictions that trigger arts reactions. */

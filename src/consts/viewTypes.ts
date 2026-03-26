@@ -205,6 +205,8 @@ export interface TimelineEvent {
   enemiesHit?: number;
   /** User-supplied parameters available as VARY_BY dimensions on this event. */
   suppliedParameters?: Record<string, { id: string; name: string; lowerRange: number; upperRange: number; default: number }[]>;
+  /** User-selected values for supplied parameters (set via context menu). Defaults to lowerRange if not set. */
+  parameterValues?: Record<string, number>;
   /** Susceptibility bonuses applied by this status event (e.g. Focus), keyed by ElementType → resolved percentage. */
   susceptibility?: Partial<Record<ElementType, number>>;
   /** For combo events: the trigger source's columnId (e.g. 'heatInfliction', 'BREACH'). */

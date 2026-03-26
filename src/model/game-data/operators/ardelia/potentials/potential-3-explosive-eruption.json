@@ -1,37 +1,4 @@
 {
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "MODIFY",
-          "object": "SKILL_PARAMETER",
-          "objectId": "WOOLY_PARTY",
-          "with": {
-            "parameterKey": "potential3_duration",
-            "value": {
-              "verb": "IS",
-              "value": 1
-            },
-            "parameterModifyType": "UNIQUE_MULTIPLIER"
-          }
-        },
-        {
-          "verb": "MODIFY",
-          "object": "SKILL_PARAMETER",
-          "objectId": "WOOLY_PARTY",
-          "with": {
-            "parameterKey": "effect_prob",
-            "value": {
-              "verb": "IS",
-              "value": 1.2
-            },
-            "parameterModifyType": "MULTIPLICATIVE"
-          }
-        }
-      ]
-    }
-  ],
   "properties": {
     "id": "ARDELIA_POTENTIAL_3",
     "name": "Explosive Eruption",
@@ -42,6 +9,5 @@
   },
   "metadata": {
     "originId": "ARDELIA"
-  },
-  "clauseType": "ALL"
+  }
 }

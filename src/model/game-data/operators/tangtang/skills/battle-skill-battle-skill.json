@@ -49,7 +49,7 @@
           "metadata": {
             "eventComponentType": "FRAME",
             "dataSources": [
-              "SELF"
+              "ENDFIELD_WIKI"
             ]
           },
           "properties": {
@@ -57,7 +57,54 @@
               "value": 0.9,
               "unit": "SECOND"
             }
-          }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "objectQualifier": "CRYO",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.8,
+                        0.88,
+                        0.96,
+                        1.04,
+                        1.12,
+                        1.2,
+                        1.28,
+                        1.36,
+                        1.44,
+                        1.54,
+                        1.66,
+                        1.8
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                },
+                {
+                  "verb": "DEAL",
+                  "object": "STAGGER",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 10
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
         },
         {
           "metadata": {
@@ -114,44 +161,64 @@
                       "value": 40
                     },
                     "rateSpellvulnerable": {
-                      "verb": "VARY_BY",
-                      "object": "SKILL_LEVEL",
-                      "value": [
-                        0.03,
-                        0.03,
-                        0.03,
-                        0.035,
-                        0.035,
-                        0.035,
-                        0.04,
-                        0.04,
-                        0.04,
-                        0.045,
-                        0.045,
-                        0.05
-                      ],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "operation": "ADD",
+                      "left": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.03,
+                          0.03,
+                          0.03,
+                          0.035,
+                          0.035,
+                          0.035,
+                          0.04,
+                          0.04,
+                          0.04,
+                          0.045,
+                          0.045,
+                          0.05
+                        ],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
+                      },
+                      "right": {
+                        "verb": "VARY_BY",
+                        "object": "POTENTIAL",
+                        "value": [0, 0, 0, 0.05, 0.05, 0.05],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
+                      }
                     },
                     "rateSpellvulnerable_02": {
-                      "verb": "VARY_BY",
-                      "object": "SKILL_LEVEL",
-                      "value": [
-                        0.06,
-                        0.06,
-                        0.06,
-                        0.07,
-                        0.07,
-                        0.07,
-                        0.08,
-                        0.08,
-                        0.08,
-                        0.09,
-                        0.09,
-                        0.1
-                      ],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "operation": "ADD",
+                      "left": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.06,
+                          0.06,
+                          0.06,
+                          0.07,
+                          0.07,
+                          0.07,
+                          0.08,
+                          0.08,
+                          0.08,
+                          0.09,
+                          0.09,
+                          0.1
+                        ],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
+                      },
+                      "right": {
+                        "verb": "VARY_BY",
+                        "object": "POTENTIAL",
+                        "value": [0, 0, 0, 0.05, 0.05, 0.05],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
+                      }
                     },
                     "durationSpellvulnerable": {
                       "verb": "IS",
@@ -162,24 +229,34 @@
                       "value": 3
                     },
                     "value": {
-                      "verb": "VARY_BY",
-                      "object": "SKILL_LEVEL",
-                      "value": [
-                        0.16,
-                        0.176,
-                        0.192,
-                        0.208,
-                        0.224,
-                        0.24,
-                        0.256,
-                        0.272,
-                        0.288,
-                        0.308,
-                        0.332,
-                        0.36
-                      ],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "operation": "MULT",
+                      "left": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.16,
+                          0.176,
+                          0.192,
+                          0.208,
+                          0.224,
+                          0.24,
+                          0.256,
+                          0.272,
+                          0.288,
+                          0.308,
+                          0.332,
+                          0.36
+                        ],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
+                      },
+                      "right": {
+                        "verb": "VARY_BY",
+                        "object": "POTENTIAL",
+                        "value": [1, 1, 1, 1.1, 1.1, 1.1],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
+                      }
                     }
                   }
                 }

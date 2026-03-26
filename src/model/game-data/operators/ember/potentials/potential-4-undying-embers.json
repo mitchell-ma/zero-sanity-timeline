@@ -1,23 +1,4 @@
 {
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "MODIFY",
-          "object": "SKILL_COST",
-          "objectId": "EMBER_RE_IGNITED_OATH",
-          "with": {
-            "value": {
-              "verb": "IS",
-              "value": 0.85
-            },
-            "parameterType": 1
-          }
-        }
-      ]
-    }
-  ],
   "properties": {
     "id": "EMBER_POTENTIAL_4",
     "name": "Undying Embers",
@@ -28,6 +9,5 @@
   },
   "metadata": {
     "originId": "EMBER"
-  },
-  "clauseType": "ALL"
+  }
 }

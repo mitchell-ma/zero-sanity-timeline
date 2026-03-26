@@ -1,9 +1,80 @@
 {
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "ULTIMATE_ENERGY_GAIN",
+          "toDeterminer": "ALL",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "VARY_BY",
+              "object": "TALENT_LEVEL",
+              "value": [
+                0.04,
+                0.07
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            },
+            "targetClasses": {
+              "verb": "IS",
+              "value": [
+                "GUARD",
+                "CASTER",
+                "SUPPORTER"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "HAVE",
+          "object": "POTENTIAL",
+          "with": {
+            "value": {
+              "verb": "AT_LEAST",
+              "value": 3
+            }
+          }
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "ULTIMATE_ENERGY_GAIN",
+          "toDeterminer": "ALL",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": 0.05
+            },
+            "targetClasses": {
+              "verb": "IS",
+              "value": [
+                "GUARD",
+                "CASTER",
+                "SUPPORTER"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
   "properties": {
     "id": "MESSENGER_S_SONG_TALENT",
     "name": "Messenger's Song (Talent)",
     "to": "OPERATOR",
-    "toDeterminer": "THIS",
+    "toDeterminer": "ALL",
     "eventType": "STATUS",
     "eventCategoryType": "TALENT",
     "description": "When fighting in the battlefield, all allied guards, casters, and supporters gain Ultimate Gain Efficiency +{add:0%}.",
@@ -12,8 +83,10 @@
   "metadata": {
     "originId": "GILBERTA",
     "dataSources": [
-      "WARFARIN"
+      "WARFARIN",
+      "ENDFIELD_WIKI"
     ],
     "icon": "skills/gilberta_talent_1_icon.png"
-  }
+  },
+  "clauseType": "ALL"
 }

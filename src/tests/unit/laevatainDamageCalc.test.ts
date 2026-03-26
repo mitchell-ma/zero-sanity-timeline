@@ -1,7 +1,3 @@
-// TODO: This entire test file is broken after the game-data directory restructure.
-// The mocks reference old file paths and the data shapes have changed.
-// Needs to be re-wired to the new Store-based architecture before re-enabling.
-
 /* eslint-disable jest/no-disabled-tests */
 
 /**
@@ -22,9 +18,7 @@ import type { TalentLevel } from '../../consts/types';
 import { aggregateLoadoutStats } from '../../controller/calculation/loadoutAggregator';
 import { getSkillMultiplier } from '../../controller/calculation/jsonMultiplierEngine';
 
-// Stub for removed per-tick ramping mechanic — tests are skipped but TS still checks the body
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const getFrameMultiplier = (..._args: unknown[]): number | null => null;
+import { getPerFrameMultiplier } from '../../controller/calculation/jsonMultiplierEngine';
 import {
   calculateDamage,
   getDefenseMultiplier,
@@ -50,7 +44,7 @@ import { Potential, SkillLevel } from '../../consts/types';
 
 jest.mock('../../controller/operators/operatorRegistry', () => ({
   getOperatorConfig: (id: string) => {
-    if (id !== 'LAEVATAIN') return undefined;
+    if (id !== OPERATOR_ID) return undefined;
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     return require('../../model/game-data/operators/laevatain/laevatain.json');
   },
@@ -94,14 +88,32 @@ jest.mock('../../view/InformationPane', () => ({
   LoadoutProperties: {},
 }));
 
+// ── IDs — must match JSON config properties.id ─────────────────────────────
+
+const OPERATOR_ID = 'LAEVATAIN';
+const SKILL_LEVEL = 12 as SkillLevel;
+const POTENTIAL = 5 as Potential;
+
+const SKILL_FLAMING_CINDERS = 'FLAMING_CINDERS';
+const SKILL_FLAMING_CINDERS_ENHANCED = 'FLAMING_CINDERS_ENHANCED';
+const SKILL_SMOULDERING_FIRE = 'SMOULDERING_FIRE';
+const SKILL_SMOULDERING_FIRE_ENHANCED = 'SMOULDERING_FIRE_ENHANCED';
+const SKILL_SEETHE = 'SEETHE';
+
+const WEAPON_FORGEBORN_SCATHE = 'FORGEBORN_SCATHE';
+const WEAPON_TARR_11 = 'TARR_11';
+const ARMOR_TIDE_FALL = 'TIDE_FALL_LIGHT_ARMOR';
+const GLOVES_HOT_WORK = 'HOT_WORK_GAUNTLETS';
+const KIT_REDEEMER_SEAL = 'REDEEMER_SEAL';
+
 // ── Shared loadout configs ──────────────────────────────────────────────────
 
 const FULL_LOADOUT = {
-  weaponId: 'FORGEBORN_SCATHE',
-  armorId: 'TIDE_FALL_LIGHT_ARMOR',
-  glovesId: 'HOT_WORK_GAUNTLETS',
-  kit1Id: 'REDEEMER_SEAL',
-  kit2Id: 'REDEEMER_SEAL',
+  weaponId: WEAPON_FORGEBORN_SCATHE,
+  armorId: ARMOR_TIDE_FALL,
+  glovesId: GLOVES_HOT_WORK,
+  kit1Id: KIT_REDEEMER_SEAL,
+  kit2Id: KIT_REDEEMER_SEAL,
   consumableId: null,
   tacticalId: null,
 };
@@ -114,7 +126,7 @@ const FULL_LOADOUT_PROPERTIES = {
 };
 
 const BARE_LOADOUT = {
-  weaponId: 'TARR_11',
+  weaponId: WEAPON_TARR_11,
   armorId: null,
   glovesId: null,
   kit1Id: null,
@@ -129,10 +141,6 @@ const BARE_LOADOUT_PROPERTIES = {
   weapon: { level: 1, skill1Level: 1, skill2Level: 4, skill3Level: 1 },
   gear: { armorRanks: {}, glovesRanks: {}, kit1Ranks: {}, kit2Ranks: {} },
 };
-
-const OPERATOR_ID = 'LAEVATAIN';
-const SKILL_LEVEL = 12 as SkillLevel;
-const POTENTIAL = 5 as Potential;
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -168,7 +176,7 @@ function neutralParams() {
 
 // ── Tests ────────────────────────────────────────────────────────────────────
 
-describe.skip('Laevatain damage calculation — Flaming Cinders (basic attack)', () => {
+describe('Laevatain damage calculation — Flaming Cinders (basic attack)', () => {
   // Expected per-frame damage for each segment (non-crit, vs Rhodagn DEF 100)
   const EXPECTED: [number, number, number[]][] = [
     [0, 1, [1952]],
@@ -203,8 +211,8 @@ describe.skip('Laevatain damage calculation — Flaming Cinders (basic attack)',
     })),
   );
 
-  test.skip.each(cases)('$label', ({ segIndex, maxFrames, expected }) => {
-    const segMult = getSkillMultiplier(OPERATOR_ID, 'FLAMING_CINDERS', segIndex, SKILL_LEVEL, POTENTIAL);
+  test.each(cases)('$label', ({ segIndex, maxFrames, expected }) => {
+    const segMult = getSkillMultiplier(OPERATOR_ID, SKILL_FLAMING_CINDERS, segIndex, SKILL_LEVEL, POTENTIAL);
     expect(segMult).not.toBeNull();
 
     const perFrameMult = segMult! / maxFrames;
@@ -222,76 +230,45 @@ describe.skip('Laevatain damage calculation — Flaming Cinders (basic attack)',
   });
 });
 
-describe.skip('Laevatain damage calculation — Smouldering Fire (battle skill)', () => {
-  const EXPECTED_PER_TICK = [
+describe('Laevatain damage calculation — Smouldering Fire (battle skill)', () => {
+  const EXPECTED_ROLLING_SUM = [
     6976, 7674, 8371, 9069, 9766, 10464, 11162, 11859, 12557, 13254, 13952,
   ];
 
-  let totalAttack: number;
-  let attributeBonus: number;
-  let multiplierGroup: number;
-  let defenseMultiplier: number;
-
-  beforeAll(() => {
+  it('rolling accumulated damage per tick matches expected', () => {
     const ctx = buildCalcContext(FULL_LOADOUT, FULL_LOADOUT_PROPERTIES);
-    totalAttack = ctx.totalAttack;
-    attributeBonus = ctx.agg.attributeBonus;
-    multiplierGroup = getDamageBonus(
+    const multiplierGroup = getDamageBonus(
       ctx.agg.stats[StatType.HEAT_DAMAGE_BONUS],
       ctx.agg.stats[StatType.BATTLE_SKILL_DAMAGE_BONUS] ?? 0,
       ctx.agg.stats[StatType.SKILL_DAMAGE_BONUS],
       ctx.agg.stats[StatType.ARTS_DAMAGE_BONUS],
     );
-    defenseMultiplier = getDefenseMultiplier(100);
-  });
+    const defenseMultiplier = getDefenseMultiplier(100);
 
-  const cases = EXPECTED_PER_TICK.map((expected, tickIndex) => ({
-    label: `tick ${tickIndex} → ${expected}`,
-    tickIndex,
-    expected,
-  }));
+    let accumulated = 0;
+    for (let tick = 0; tick < EXPECTED_ROLLING_SUM.length; tick++) {
+      const frameMult = getPerFrameMultiplier(OPERATOR_ID, SKILL_SMOULDERING_FIRE, 0, tick, SKILL_LEVEL, POTENTIAL);
+      expect(frameMult).not.toBeNull();
 
-  test.skip.each(cases)('$label', ({ tickIndex, expected }) => {
-    const perTickMult = getFrameMultiplier(OPERATOR_ID, 'SMOULDERING_FIRE', SKILL_LEVEL, POTENTIAL, tickIndex);
-    expect(perTickMult).not.toBeNull();
+      accumulated += calculateDamage({
+        attack: ctx.totalAttack,
+        baseMultiplier: frameMult!,
+        attributeBonus: ctx.agg.attributeBonus,
+        multiplierGroup,
+        defenseMultiplier,
+        ...neutralParams(),
+      });
 
-    const ownDamage = calculateDamage({
-      attack: totalAttack,
-      baseMultiplier: perTickMult!,
-      attributeBonus,
-      multiplierGroup,
-      defenseMultiplier,
-      ...neutralParams(),
-    });
-
-    // Accumulate previous frames' damage
-    let accumulated = ownDamage;
-    if (tickIndex > 0) {
-      // Recompute previous tick's accumulated damage (same params, so chain is additive)
-      let prevAccum = 0;
-      for (let i = 0; i <= tickIndex - 1; i++) {
-        const prevMult = getFrameMultiplier(OPERATOR_ID, 'SMOULDERING_FIRE', SKILL_LEVEL, POTENTIAL, i)!;
-        prevAccum += calculateDamage({
-          attack: totalAttack,
-          baseMultiplier: prevMult,
-          attributeBonus,
-          multiplierGroup,
-          defenseMultiplier,
-          ...neutralParams(),
-        });
-      }
-      accumulated = ownDamage + prevAccum;
+      expect(Math.round(accumulated)).toBe(EXPECTED_ROLLING_SUM[tick]);
     }
-
-    expect(Math.round(accumulated)).toBe(expected);
   });
 });
 
-describe.skip('Laevatain damage calculation — Seethe (combo skill)', () => {
+describe('Laevatain damage calculation — Seethe (combo skill)', () => {
   it('combo skill hit → 26908', () => {
     const ctx = buildCalcContext(FULL_LOADOUT, FULL_LOADOUT_PROPERTIES);
 
-    const segMult = getSkillMultiplier(OPERATOR_ID, 'SEETHE', undefined, SKILL_LEVEL, POTENTIAL);
+    const segMult = getSkillMultiplier(OPERATOR_ID, SKILL_SEETHE, undefined, SKILL_LEVEL, POTENTIAL);
     expect(segMult).not.toBeNull();
 
     const multiplierGroup = getDamageBonus(
@@ -314,9 +291,9 @@ describe.skip('Laevatain damage calculation — Seethe (combo skill)', () => {
   });
 });
 
-describe.skip('Laevatain damage calculation — Enhanced basic attack (during ultimate, full loadout)', () => {
+describe('Laevatain damage calculation — Enhanced basic attack (during ultimate, full loadout)', () => {
   // Twilight Blazing Wail adds +2.1 BASIC_ATTACK_DAMAGE_BONUS during ultimate.
-  // P4 Proof of Existence ×1.2 special multiplier on FLAMING_CINDERS_ENHANCED.
+  // P5 Proof of Existence ×1.2 is baked into FLAMING_CINDERS_ENHANCED JSON via VARY_BY POTENTIAL.
   const EXPECTED: [number, number, number[]][] = [
     [0, 1, [20304]],
     [1, 2, [12655, 12655]],
@@ -349,8 +326,8 @@ describe.skip('Laevatain damage calculation — Enhanced basic attack (during ul
     })),
   );
 
-  test.skip.each(cases)('$label', ({ segIndex, maxFrames, expected }) => {
-    const segMult = getSkillMultiplier(OPERATOR_ID, 'FLAMING_CINDERS_ENHANCED', segIndex, SKILL_LEVEL, POTENTIAL);
+  test.each(cases)('$label', ({ segIndex, maxFrames, expected }) => {
+    const segMult = getSkillMultiplier(OPERATOR_ID, SKILL_FLAMING_CINDERS_ENHANCED, segIndex, SKILL_LEVEL, POTENTIAL);
     expect(segMult).not.toBeNull();
 
     const perFrameMult = segMult! / maxFrames;
@@ -408,8 +385,8 @@ describe.skip('Laevatain damage calculation — bare loadout (Tarr 11 lv1, no ge
     })),
   );
 
-  test.skip.each(cases)('$label', ({ segIndex, maxFrames, expected }) => {
-    const segMult = getSkillMultiplier(OPERATOR_ID, 'FLAMING_CINDERS', segIndex, SKILL_LEVEL, POTENTIAL);
+  test.each(cases)('$label', ({ segIndex, maxFrames, expected }) => {
+    const segMult = getSkillMultiplier(OPERATOR_ID, SKILL_FLAMING_CINDERS, segIndex, SKILL_LEVEL, POTENTIAL);
     expect(segMult).not.toBeNull();
 
     const perFrameMult = segMult! / maxFrames;
@@ -435,8 +412,8 @@ describe.skip('Laevatain damage calculation — bare loadout (Tarr 11 lv1, no ge
     expected,
   }));
 
-  test.skip.each(bsCases)('$label', ({ tickIndex, expected }) => {
-    const perTickMult = getFrameMultiplier(OPERATOR_ID, 'SMOULDERING_FIRE', SKILL_LEVEL, POTENTIAL, tickIndex);
+  test.each(bsCases)('$label', ({ tickIndex, expected }) => {
+    const perTickMult = getPerFrameMultiplier(OPERATOR_ID, SKILL_SMOULDERING_FIRE, 0, tickIndex, SKILL_LEVEL, POTENTIAL);
     expect(perTickMult).not.toBeNull();
 
     const bsMultiplierGroup = getDamageBonus(0, 0, 0, 0);
@@ -456,7 +433,7 @@ describe.skip('Laevatain damage calculation — bare loadout (Tarr 11 lv1, no ge
     if (tickIndex > 0) {
       let prevAccum = 0;
       for (let i = 0; i <= tickIndex - 1; i++) {
-        const prevMult = getFrameMultiplier(OPERATOR_ID, 'SMOULDERING_FIRE', SKILL_LEVEL, POTENTIAL, i)!;
+        const prevMult = getPerFrameMultiplier(OPERATOR_ID, SKILL_SMOULDERING_FIRE, 0, i, SKILL_LEVEL, POTENTIAL)!;
         prevAccum += calculateDamage({ ...dmgParams, baseMultiplier: prevMult });
       }
       accumulated = ownDamage + prevAccum;
@@ -466,7 +443,7 @@ describe.skip('Laevatain damage calculation — bare loadout (Tarr 11 lv1, no ge
   });
 
   it('combo skill (Seethe) → 3068', () => {
-    const segMult = getSkillMultiplier(OPERATOR_ID, 'SEETHE', undefined, SKILL_LEVEL, POTENTIAL);
+    const segMult = getSkillMultiplier(OPERATOR_ID, SKILL_SEETHE, undefined, SKILL_LEVEL, POTENTIAL);
     expect(segMult).not.toBeNull();
 
     const comboMg = getDamageBonus(0, 0, 0, 0);
@@ -516,7 +493,7 @@ describe.skip('Laevatain damage calculation — bare loadout (Tarr 11 lv1, no ge
   });
 });
 
-describe.skip('Laevatain damage calculation — Enhanced battle skill (during ultimate, Scorching Heart active)', () => {
+describe('Laevatain damage calculation — Enhanced battle skill (during ultimate, Scorching Heart active)', () => {
   let totalAttack: number;
   let attributeBonus: number;
   let multiplierGroup: number;
@@ -535,8 +512,8 @@ describe.skip('Laevatain damage calculation — Enhanced battle skill (during ul
     defenseMultiplier = getDefenseMultiplier(100);
   });
 
-  it.skip('hit 1 (DAMAGE_MULTIPLIER) → 19732', () => {
-    const perTickMult = getFrameMultiplier(OPERATOR_ID, 'SMOULDERING_FIRE_ENHANCED', SKILL_LEVEL, POTENTIAL, 0);
+  it('hit 1 (DAMAGE_MULTIPLIER) → 19732', () => {
+    const perTickMult = getPerFrameMultiplier(OPERATOR_ID, SKILL_SMOULDERING_FIRE_ENHANCED, 0, 0, SKILL_LEVEL, POTENTIAL);
     expect(perTickMult).not.toBeNull();
 
     const damage = calculateDamage({
@@ -598,7 +575,7 @@ describe.skip('Laevatain damage calculation — Enhanced battle skill (during ul
   });
 });
 
-describe.skip('Laevatain damage calculation — Empowered additional hit + combustion (full loadout)', () => {
+describe('Laevatain damage calculation — Empowered additional hit + combustion (full loadout)', () => {
   let totalAttack: number;
   let attributeBonus: number;
   let heatMg: number;

@@ -1,56 +1,4 @@
 {
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "MODIFY",
-          "object": "SKILL_PARAMETER",
-          "objectId": "ERUPTION_COLUMN",
-          "with": {
-            "parameterKey": "potential5_duration",
-            "value": {
-              "verb": "IS",
-              "value": 4
-            },
-            "parameterModifyType": "UNIQUE_MULTIPLIER"
-          }
-        },
-        {
-          "verb": "MODIFY",
-          "object": "SKILL_PARAMETER",
-          "objectId": "ERUPTION_COLUMN",
-          "with": {
-            "parameterKey": "potential5_dmg_rate",
-            "value": {
-              "verb": "IS",
-              "value": 1.2
-            },
-            "parameterModifyType": "ADDITIVE"
-          }
-        },
-        {
-          "verb": "MODIFY",
-          "object": "SKILL_COST",
-          "objectId": "ARDELIA_ERUPTION_COLUMN",
-          "with": {
-            "value": {
-              "verb": "IS",
-              "value": -2
-            },
-            "parameterType": 2
-          }
-        },
-        {
-          "verb": "APPLY",
-          "object": "BUFF",
-          "objectId": "ARDELIA_POTENTIAL5_VOLCANIC_STEAM",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR"
-        }
-      ]
-    }
-  ],
   "properties": {
     "id": "ARDELIA_POTENTIAL_5",
     "name": "Volcanic Steam",
@@ -61,6 +9,5 @@
   },
   "metadata": {
     "originId": "ARDELIA"
-  },
-  "clauseType": "ALL"
+  }
 }

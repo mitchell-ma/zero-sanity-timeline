@@ -1,50 +1,4 @@
 {
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "MODIFY",
-          "object": "SKILL_PARAMETER",
-          "objectId": "SMOULDERING_FIRE",
-          "with": {
-            "parameterKey": "SKILL_POINT",
-            "value": {
-              "verb": "IS",
-              "value": 20
-            },
-            "parameterModifyType": "ADDITIVE"
-          }
-        },
-        {
-          "verb": "MODIFY",
-          "object": "SKILL_PARAMETER",
-          "objectId": "SMOULDERING_FIRE_ENHANCED",
-          "with": {
-            "parameterKey": "SKILL_POINT",
-            "value": {
-              "verb": "IS",
-              "value": 20
-            },
-            "parameterModifyType": "ADDITIVE"
-          }
-        },
-        {
-          "verb": "MODIFY",
-          "object": "SKILL_PARAMETER",
-          "objectId": "SMOULDERING_FIRE_ENHANCED",
-          "with": {
-            "parameterKey": "DAMAGE_MULTIPLIER_MODIFIER",
-            "value": {
-              "verb": "IS",
-              "value": 1.2
-            },
-            "parameterModifyType": "UNIQUE_MULTIPLIER"
-          }
-        }
-      ]
-    }
-  ],
   "properties": {
     "id": "LAEVATAIN_POTENTIAL_1",
     "name": "Heart of Melting Flame",
@@ -55,6 +9,5 @@
   },
   "metadata": {
     "originId": "LAEVATAIN"
-  },
-  "clauseType": "ALL"
+  }
 }

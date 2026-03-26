@@ -2,8 +2,8 @@
   "properties": {
     "id": "CRIT_STACKS",
     "name": "Crit Stacks",
-    "target": "OPERATOR",
-    "targetDeterminer": "THIS",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
     "element": "CRYO",
     "stacks": {
       "limit": {
@@ -23,6 +23,50 @@
     "eventCategoryType": "SKILL_STATUS",
     "description": "Immediately deploys the support bot Tink-a-Bella and makes Yvonne the controlled operator.\nTemporarily enhances Yvonne's basic attack (BATK). Each enhanced BATK sequence performed grants a stack of Critical Rate buff. After reaching max stacks, Yvonne also gains a Critical DMG buff. When the skill is about to end, Yvonne's last enhanced BATK becomes an enhanced Final Strike that deals massive Cryo DMG.\nIf the enemy is Solidified, Yvonne performs an additional attack that deals Cryo DMG and then consumes the enemy's Solidification."
   },
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "CRITICAL_RATE",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "operation": "MULT",
+              "left": { "verb": "IS", "value": 0.03 },
+              "right": { "verb": "IS", "objectId": "CRIT_STACKS", "object": "STACKS", "ofDeterminer": "THIS", "of": "OPERATOR" }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "HAVE",
+          "object": "STATUS",
+          "objectId": "CRIT_STACKS",
+          "with": { "stacks": { "verb": "AT_LEAST", "value": 10 } }
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "CRITICAL_DAMAGE",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": { "verb": "IS", "value": 0.6 }
+          }
+        }
+      ]
+    }
+  ],
+  "clauseType": "ALL",
   "metadata": {
     "originId": "CRYOBLASTING_PISTOLIER"
   }

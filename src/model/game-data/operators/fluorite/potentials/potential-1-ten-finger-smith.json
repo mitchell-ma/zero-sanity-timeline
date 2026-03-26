@@ -1,35 +1,4 @@
 {
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "APPLY",
-          "object": "AGILITY",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR",
-          "with": {
-            "value": {
-              "verb": "IS",
-              "value": 10
-            }
-          }
-        },
-        {
-          "verb": "APPLY",
-          "object": "INTELLECT",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR",
-          "with": {
-            "value": {
-              "verb": "IS",
-              "value": 10
-            }
-          }
-        }
-      ]
-    }
-  ],
   "properties": {
     "id": "FLUORITE_POTENTIAL_1",
     "name": "Ten-Finger Smith",
@@ -40,6 +9,5 @@
   },
   "metadata": {
     "originId": "FLUORITE"
-  },
-  "clauseType": "ALL"
+  }
 }

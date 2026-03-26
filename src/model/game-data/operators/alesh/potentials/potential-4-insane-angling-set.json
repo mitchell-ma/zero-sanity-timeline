@@ -1,23 +1,4 @@
 {
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "MODIFY",
-          "object": "SKILL_COST",
-          "objectId": "ALESH_ONE_MONSTER_CATCH",
-          "with": {
-            "value": {
-              "verb": "IS",
-              "value": 0.85
-            },
-            "parameterType": 1
-          }
-        }
-      ]
-    }
-  ],
   "properties": {
     "id": "ALESH_POTENTIAL_4",
     "name": "Insane Angling Set",
@@ -28,6 +9,5 @@
   },
   "metadata": {
     "originId": "ALESH"
-  },
-  "clauseType": "ALL"
+  }
 }

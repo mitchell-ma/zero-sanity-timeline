@@ -59,7 +59,8 @@
             "value": 3
           },
           "unit": "SECOND"
-        }
+        },
+        "name": "Polar Rescue"
       },
       "frames": [
         {

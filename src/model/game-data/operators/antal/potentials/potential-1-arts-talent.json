@@ -1,24 +1,4 @@
 {
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "MODIFY",
-          "object": "SKILL_PARAMETER",
-          "objectId": "OVERCLOCKED_MOMENT",
-          "with": {
-            "parameterKey": "rate",
-            "value": {
-              "verb": "IS",
-              "value": 1.1
-            },
-            "parameterModifyType": "MULTIPLICATIVE"
-          }
-        }
-      ]
-    }
-  ],
   "properties": {
     "id": "ANTAL_POTENTIAL_1",
     "name": "Arts Talent",
@@ -29,6 +9,5 @@
   },
   "metadata": {
     "originId": "ANTAL"
-  },
-  "clauseType": "ALL"
+  }
 }

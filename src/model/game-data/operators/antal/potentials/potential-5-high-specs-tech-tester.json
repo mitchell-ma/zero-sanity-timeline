@@ -1,50 +1,4 @@
 {
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "MODIFY",
-          "object": "SKILL_PARAMETER",
-          "objectId": "SPECIFIED_RESEARCH_SUBJECT",
-          "with": {
-            "parameterKey": "potential_5",
-            "value": {
-              "verb": "IS",
-              "value": 1
-            },
-            "parameterModifyType": "UNIQUE_MULTIPLIER"
-          }
-        },
-        {
-          "verb": "MODIFY",
-          "object": "SKILL_PARAMETER",
-          "objectId": "SPECIFIED_RESEARCH_SUBJECT",
-          "with": {
-            "parameterKey": "delay_time",
-            "value": {
-              "verb": "IS",
-              "value": 20
-            },
-            "parameterModifyType": "ADDITIVE"
-          }
-        },
-        {
-          "verb": "MODIFY",
-          "object": "SKILL_PARAMETER",
-          "objectId": "SPECIFIED_RESEARCH_SUBJECT",
-          "with": {
-            "parameterKey": "potential_5_rate",
-            "value": {
-              "verb": "IS",
-              "value": 0.04
-            },
-            "parameterModifyType": "ADDITIVE"
-          }
-        }
-      ]
-    }
-  ],
   "properties": {
     "id": "ANTAL_POTENTIAL_5",
     "name": "High Specs Tech Tester",
@@ -55,6 +9,5 @@
   },
   "metadata": {
     "originId": "ANTAL"
-  },
-  "clauseType": "ALL"
+  }
 }

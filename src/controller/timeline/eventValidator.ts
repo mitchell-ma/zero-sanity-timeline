@@ -867,30 +867,6 @@ export function checkVariantAvailability(
     }
   }
 
-  // Check operator status stacks for empowered variants (data-driven)
-  if (isEmpowered && opId) {
-    const statuses = getOperatorStatuses(opId);
-    const statusDef = statuses.find(
-      (s) => s.target === SubjectType.OPERATOR && (!s.targetDeterminer || s.targetDeterminer === DeterminerType.THIS) && s.stacks,
-    );
-    if (statusDef) {
-      const maxStacks = statusDef.maxStacks;
-      const colId = (OPERATOR_COLUMNS as Record<string, string>)[statusDef.id]
-        ?? statusDef.id.toLowerCase().replace(/_/g, '-');
-      const statusLabel = STATUS_LABELS[statusDef.id as StatusType] ?? statusDef.name ?? statusDef.id;
-      const activeCount = events.filter(
-        (ev) =>
-          ev.ownerId === ownerId &&
-          ev.columnId === colId &&
-          ev.startFrame <= atFrame &&
-          eventEndFrame(ev) > atFrame,
-      ).length;
-      if (activeCount < maxStacks) {
-        return { disabled: true, reason: `Requires max ${statusLabel} (${activeCount}/${maxStacks})` };
-      }
-    }
-  }
-
   return { disabled: false };
 }
 
@@ -1002,24 +978,17 @@ export function validateEmpowered(events: TimelineEvent[], slots: Slot[]): Map<s
     const slot = slots.find((s) => s.slotId === ev.ownerId);
     const opId = slot?.operator?.id;
     if (!opId) continue;
-    const statuses = getOperatorStatuses(opId);
-    const statusDef = statuses.find(
-      (s) => s.target === SubjectType.OPERATOR && (!s.targetDeterminer || s.targetDeterminer === DeterminerType.THIS) && s.stacks,
-    );
-    if (!statusDef) continue;
-    const maxStacks = statusDef.maxStacks;
-    const colId = (OPERATOR_COLUMNS as Record<string, string>)[statusDef.id]
-      ?? statusDef.id.toLowerCase().replace(/_/g, '-');
-    const statusLabel = STATUS_LABELS[statusDef.id as StatusType] ?? statusDef.name ?? statusDef.id;
-    const activeCount = events.filter(
-      (e) =>
-        e.ownerId === ev.ownerId &&
-        e.columnId === colId &&
-        e.startFrame <= ev.startFrame &&
-        eventEndFrame(e) > ev.startFrame,
-    ).length;
-    if (activeCount < maxStacks) {
-      map.set(ev.uid, `Requires max ${statusLabel} (${activeCount}/${maxStacks})`);
+    // Empowered activation is governed by activationClause on the skill JSON
+    const clause = getVariantClause(opId, ev.name);
+    if (clause) {
+      const dec = getLastController();
+      const result = evaluateActivationClause(
+        clause, events, ev.ownerId, ev.startFrame,
+        dec ? (id, frame) => dec.isControlledAt(id, frame) : undefined,
+      );
+      if (!result.pass) {
+        map.set(ev.uid, result.reason ?? t('ctx.activationNotMet'));
+      }
     }
   }
   return map;

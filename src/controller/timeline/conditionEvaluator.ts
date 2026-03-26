@@ -5,21 +5,14 @@
  * Conditions use verbs IS, HAVE, PERFORM, BECOME — they assert state,
  * they don't mutate it.
  */
-import { Interaction, CardinalityConstraintType, NounType, DeterminerType, VerbType } from '../../dsl/semantics';
+import { Interaction, CardinalityConstraintType, NounType, DeterminerType, VerbType, AdjectiveType, type ValueNode } from '../../dsl/semantics';
 import { getSimpleValue } from '../calculation/valueResolver';
 import { TimelineEvent } from '../../consts/viewTypes';
-import { ENEMY_OWNER_ID, INFLICTION_COLUMNS, PHYSICAL_STATUS_COLUMNS, REACTION_COLUMNS, SKILL_COLUMNS, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID } from '../../model/channels/index';
+import { ENEMY_OWNER_ID, INFLICTION_COLUMNS, PHYSICAL_STATUS_COLUMNS, REACTION_COLUMNS, REACTION_STATUS_TO_COLUMN, SKILL_COLUMNS, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID } from '../../model/channels/index';
 import { COMMON_OWNER_ID } from '../slot/commonSlotController';
 import { activeEventsAtFrame, activeCountAtFrame } from './timelineQueries';
 
 // ── Column ID resolution ─────────────────────────────────────────────────
-
-const REACTION_TO_COLUMN: Record<string, string> = {
-  COMBUSTION:       REACTION_COLUMNS.COMBUSTION,
-  SOLIDIFICATION:   REACTION_COLUMNS.SOLIDIFICATION,
-  CORROSION:        REACTION_COLUMNS.CORROSION,
-  ELECTRIFICATION:  REACTION_COLUMNS.ELECTRIFICATION,
-};
 
 const ELEMENT_TO_INFLICTION_COLUMN: Record<string, string> = {
   HEAT:     INFLICTION_COLUMNS.HEAT,
@@ -53,6 +46,12 @@ export interface ConditionContext {
   getControlledSlotAtFrame?: (frame: number) => string;
   /** Operator potential level (0–5) for HAVE POTENTIAL conditions. */
   potential?: number;
+  /** User-supplied parameter values (e.g. { ENEMY_HIT: 2 }). */
+  suppliedParameters?: Record<string, number>;
+  /** Get operator flat HP at frame. */
+  getOperatorFlatHp?: (operatorId: string, frame: number) => number;
+  /** Get operator HP as percentage (0–100) at frame. */
+  getOperatorPercentageHp?: (operatorId: string, frame: number) => number;
 }
 
 // ── Subject resolution ───────────────────────────────────────────────────
@@ -81,7 +80,7 @@ function resolveOwnerId(subject: string, ctx: ConditionContext, determiner?: str
 
 function resolveColumnIds(object: string, objectId?: string, element?: string): string[] {
   if (object === 'STATUS' && objectId) {
-    if (REACTION_TO_COLUMN[objectId]) return [REACTION_TO_COLUMN[objectId]];
+    if (REACTION_STATUS_TO_COLUMN[objectId]) return [REACTION_STATUS_TO_COLUMN[objectId]];
     // Status column IDs may be raw SCREAMING_CASE (e.g. "FOCUS") or kebab-case
     // (e.g. "melting-flame"). Return both forms so lookups match either convention.
     const kebab = objectId.toLowerCase().replace(/_/g, '-');
@@ -93,12 +92,28 @@ function resolveColumnIds(object: string, objectId?: string, element?: string): 
     return [];
   }
   if (object === 'REACTION' && objectId) {
-    const c = REACTION_TO_COLUMN[objectId]; return c ? [c] : [];
+    const c = REACTION_STATUS_TO_COLUMN[objectId]; return c ? [c] : [];
   }
   return [];
 }
 
 // ── Evaluators ───────────────────────────────────────────────────────────
+
+function evaluateParameter(cond: Interaction, ctx: ConditionContext): boolean {
+  const paramValue = ctx.suppliedParameters?.[cond.object as string] ?? 0;
+  // Target comes from cond.value (standard) or cond.with.value (extended form)
+  const withBlock = (cond as unknown as Record<string, unknown>).with as Record<string, unknown> | undefined;
+  const targetNode = cond.value ?? withBlock?.value;
+  const target = targetNode ? getSimpleValue(targetNode as unknown as ValueNode) : undefined;
+  if (target == null) return false;
+  const constraint = cond.cardinalityConstraint ?? cond.verb;
+  switch (constraint) {
+    case CardinalityConstraintType.AT_LEAST: return paramValue >= target;
+    case CardinalityConstraintType.AT_MOST: return paramValue <= target;
+    case CardinalityConstraintType.EXACTLY: return paramValue === target;
+  }
+  return paramValue >= target;
+}
 
 function evaluateHave(cond: Interaction, ctx: ConditionContext): boolean {
   // POTENTIAL: check operator potential level
@@ -113,8 +128,19 @@ function evaluateHave(cond: Interaction, ctx: ConditionContext): boolean {
     return pot >= target;
   }
 
+  // HP with FULL qualifier: check if operator is at max HP
+  if (cond.object === NounType.HP) {
+    const qualifier = (cond as unknown as Record<string, unknown>).objectQualifier as string | undefined;
+    if (qualifier === AdjectiveType.FULL) {
+      const ownerId = resolveOwnerId(cond.subject, ctx, cond.subjectDeterminer);
+      if (!ownerId || !ctx.getOperatorPercentageHp) return true; // default to full if no tracker
+      return ctx.getOperatorPercentageHp(ownerId, ctx.frame) >= 100;
+    }
+    return false;
+  }
+
   // PERCENTAGE_HP: query live HP% from calculationController
-  if (cond.object === 'PERCENTAGE_HP') {
+  if (cond.object === NounType.PERCENTAGE_HP) {
     if (!ctx.getEnemyHpPercentage) return false;
     const hpPct = ctx.getEnemyHpPercentage(ctx.frame);
     if (hpPct == null) return false;
@@ -286,11 +312,17 @@ function evaluatePerform(cond: Interaction, ctx: ConditionContext): boolean {
  * Evaluate a single interaction condition against the current timeline state.
  */
 export function evaluateInteraction(cond: Interaction, ctx: ConditionContext): boolean {
+  // PARAMETER conditions are subject-based, not verb-based
+  if ((cond.subject as string) === NounType.PARAMETER) {
+    const result = evaluateParameter(cond, ctx);
+    return cond.negated ? !result : result;
+  }
+
   let result: boolean;
 
   const verb = cond.verb as string;
   switch (verb) {
-    case 'HAVE': result = evaluateHave(cond, ctx); break;
+    case VerbType.HAVE: result = evaluateHave(cond, ctx); break;
     case 'IS': result = evaluateIs(cond, ctx); break;
     case 'PERFORM': result = evaluatePerform(cond, ctx); break;
     case 'BECOME': result = evaluateBecome(cond, ctx); break;

@@ -1,4 +1,22 @@
 {
+  "activationClause": [
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "HAVE",
+          "object": "STATUS",
+          "objectId": "MELTING_FLAME",
+          "cardinalityConstraint": "EXACTLY",
+          "value": {
+            "verb": "IS",
+            "value": 4
+          }
+        }
+      ]
+    }
+  ],
   "properties": {
     "enhancementTypes": [
       "EMPOWERED"

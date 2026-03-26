@@ -43,6 +43,13 @@ export enum StatType {
   ARTS_DAMAGE_BONUS = "ARTS_DAMAGE_BONUS",
   HP_BONUS = "HP_BONUS",
   FLAT_HP = "FLAT_HP",
+  // ── Damage factor stats ──────────────────────────────────────────────────────
+  /** Elemental/skill damage bonus (percentage). Qualified by element or skill type in DSL. */
+  DAMAGE_BONUS = "DAMAGE_BONUS",
+  /** Elemental damage amplification (percentage). Qualified by element in DSL. */
+  AMP = "AMP",
+  /** Arts/elemental susceptibility (percentage increase to arts damage taken). Qualified by element in DSL. */
+  SUSCEPTIBILITY = "SUSCEPTIBILITY",
   // ── Enemy stats ──────────────────────────────────────────────────────────────
   STAGGER_HP = "STAGGER_HP",
   STAGGER_RECOVERY = "STAGGER_RECOVERY",
@@ -106,6 +113,10 @@ export const STAT_ATTRIBUTION: Record<StatType, StatOwnerType[]> = {
   [StatType.STAGGER_DAMAGE_BONUS]: [StatOwnerType.OPERATOR],
   [StatType.SKILL_DAMAGE_BONUS]: [StatOwnerType.OPERATOR, StatOwnerType.SKILL],
   [StatType.ARTS_DAMAGE_BONUS]: [StatOwnerType.OPERATOR, StatOwnerType.WEAPON, StatOwnerType.SKILL],
+  // ── Damage factor stats ───────────────────────────────────────────────────
+  [StatType.DAMAGE_BONUS]: [StatOwnerType.OPERATOR, StatOwnerType.WEAPON, StatOwnerType.SKILL],
+  [StatType.AMP]: [StatOwnerType.OPERATOR],
+  [StatType.SUSCEPTIBILITY]: [StatOwnerType.ENEMY],
   // ── Enemy only ────────────────────────────────────────────────────────────
   [StatType.STAGGER_HP]: [StatOwnerType.ENEMY],
   [StatType.STAGGER_RECOVERY]: [StatOwnerType.ENEMY],

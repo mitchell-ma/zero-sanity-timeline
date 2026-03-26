@@ -51,14 +51,6 @@ function customOperatorToJson(operator: CustomOperator): Record<string, unknown>
     potentials: operator.potentials?.map(p => ({
       level: p.level,
       name: p.description,
-      effects: [
-        ...(p.statModifiers
-          ? Object.entries(p.statModifiers).map(([stat, value]) => ({
-            potentialEffectType: 'STAT_MODIFIER',
-            statModifier: { statType: stat, value },
-          }))
-          : []),
-      ],
     })) ?? [],
     talents: {},
     // Timing overrides from custom skill defs

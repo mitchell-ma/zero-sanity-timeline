@@ -62,8 +62,6 @@ interface StatusProperties {
   duration?: { value: ValueNode; unit: string };
   susceptibility?: Record<string, number[]>;
   cooldownSeconds?: number;
-  /** Minimum potential for this trigger to activate (e.g. 5 = requires P5). */
-  minPotential?: number;
 }
 
 export interface StatusEventDef {

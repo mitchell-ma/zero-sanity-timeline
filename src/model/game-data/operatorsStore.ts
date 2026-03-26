@@ -211,73 +211,10 @@ function filenameToCamelCase(filename: string): string {
 
 // ── Potential file → consumer format conversion ─────────────────────────────
 
-interface PotentialEffect {
-  potentialEffectType: string;
-  skillParameterModifier?: { skillType: string; parameterKey: string; value: number; parameterModifyType: string };
-  skillCostModifier?: { skillType: string; parameterType: number; value: number };
-  statModifier?: { statType: string; value: number };
-  buffAttachment?: { objectId: string; parameters: unknown[] };
-}
-
 interface ResolvedPotential {
   level: number;
   name: string;
   description?: string;
-  effects: PotentialEffect[];
-}
-
-function convertDslEffect(eff: Record<string, unknown>): PotentialEffect | null {
-  const verb = eff.verb as string;
-  const object = eff.object as string;
-  const w = (eff.with ?? {}) as Record<string, unknown>;
-  const valueNode = w.value as Record<string, unknown> | undefined;
-  const value = (valueNode?.value ?? 0) as number;
-
-  if (verb === 'MODIFY' && object === 'SKILL_PARAMETER') {
-    return {
-      potentialEffectType: 'SKILL_PARAMETER',
-      skillParameterModifier: {
-        skillType: eff.objectId as string,
-        parameterKey: w.parameterKey as string,
-        value,
-        parameterModifyType: w.parameterModifyType as string,
-      },
-    };
-  }
-  if (verb === 'MODIFY' && object === 'SKILL_COST') {
-    return {
-      potentialEffectType: 'SKILL_COST',
-      skillCostModifier: {
-        skillType: eff.objectId as string,
-        parameterType: (w.parameterType ?? 1) as number,
-        value,
-      },
-    };
-  }
-  if (verb === 'APPLY' && object === 'BUFF') {
-    // Convert parameters from {key: {verb: IS, value: X}} to [{key, value}]
-    const parameters: { key: string; value: number }[] = [];
-    for (const [k, v] of Object.entries(w)) {
-      if (k === 'value') continue;
-      const paramVal = v as Record<string, unknown>;
-      if (paramVal?.value != null) parameters.push({ key: k, value: paramVal.value as number });
-    }
-    return {
-      potentialEffectType: 'BUFF_ATTACHMENT',
-      buffAttachment: { objectId: (eff.objectId ?? '') as string, parameters },
-    };
-  }
-  if (verb === 'APPLY' && object === 'STATUS') {
-    return { potentialEffectType: 'IMPLEMENTED_IN_DSL' };
-  }
-  if (verb === 'APPLY' && eff.to === 'OPERATOR') {
-    return {
-      potentialEffectType: 'STAT_MODIFIER',
-      statModifier: { statType: object, value },
-    };
-  }
-  // Other complex types — mark as DSL-implemented
-  return { potentialEffectType: 'IMPLEMENTED_IN_DSL' };
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -294,23 +231,10 @@ function loadPotentialsFromFiles(context: any, operatorDir: string): { resolved:
 
     rawPotentials.push(json);
 
-    const allClauses = [
-      ...((json.clause ?? []) as { effects?: Record<string, unknown>[] }[]),
-      ...((json.onTriggerClause ?? []) as { effects?: Record<string, unknown>[] }[]),
-    ];
-    const effects: PotentialEffect[] = [];
-    for (const clause of allClauses) {
-      for (const eff of (clause.effects ?? [])) {
-        const converted = convertDslEffect(eff);
-        if (converted) effects.push(converted);
-      }
-    }
-
     potentials.push({
       level,
       name: (props.name ?? '') as string,
       ...(props.description ? { description: props.description as string } : {}),
-      effects,
     });
   }
   return {

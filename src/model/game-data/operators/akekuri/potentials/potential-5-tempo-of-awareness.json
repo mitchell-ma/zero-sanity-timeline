@@ -9,19 +9,6 @@
           "objectId": "AKEKURI_POTENTIAL5_TEMPO_OF_AWARENESS",
           "toDeterminer": "THIS",
           "to": "OPERATOR"
-        },
-        {
-          "verb": "MODIFY",
-          "object": "SKILL_PARAMETER",
-          "objectId": "SQUAD_ON_ME",
-          "with": {
-            "parameterKey": "potential_5_duration",
-            "value": {
-              "verb": "IS",
-              "value": 5
-            },
-            "parameterModifyType": "UNIQUE_MULTIPLIER"
-          }
         }
       ]
     }

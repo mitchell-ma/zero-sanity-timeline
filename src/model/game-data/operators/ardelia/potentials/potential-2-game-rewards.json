@@ -1,37 +1,4 @@
 {
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "MODIFY",
-          "object": "SKILL_PARAMETER",
-          "objectId": "DOLLY_RUSH",
-          "with": {
-            "parameterKey": "potential2",
-            "value": {
-              "verb": "IS",
-              "value": 1
-            },
-            "parameterModifyType": "UNIQUE_MULTIPLIER"
-          }
-        },
-        {
-          "verb": "MODIFY",
-          "object": "SKILL_PARAMETER",
-          "objectId": "WOOLY_PARTY",
-          "with": {
-            "parameterKey": "potential2",
-            "value": {
-              "verb": "IS",
-              "value": 1
-            },
-            "parameterModifyType": "UNIQUE_MULTIPLIER"
-          }
-        }
-      ]
-    }
-  ],
   "properties": {
     "id": "ARDELIA_POTENTIAL_2",
     "name": "Game Rewards",
@@ -42,6 +9,5 @@
   },
   "metadata": {
     "originId": "ARDELIA"
-  },
-  "clauseType": "ALL"
+  }
 }

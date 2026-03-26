@@ -1,24 +1,4 @@
 {
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "MODIFY",
-          "object": "SKILL_PARAMETER",
-          "objectId": "DOLLY_RUSH",
-          "with": {
-            "parameterKey": "rate_vul_base",
-            "value": {
-              "verb": "IS",
-              "value": 0.08
-            },
-            "parameterModifyType": "ADDITIVE"
-          }
-        }
-      ]
-    }
-  ],
   "properties": {
     "id": "ARDELIA_POTENTIAL_1",
     "name": "Dolly Paradise",
@@ -29,6 +9,5 @@
   },
   "metadata": {
     "originId": "ARDELIA"
-  },
-  "clauseType": "ALL"
+  }
 }

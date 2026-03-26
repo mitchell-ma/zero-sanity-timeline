@@ -97,6 +97,56 @@
           },
           "properties": {
             "offset": {
+              "value": 0.233,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "objectQualifier": "CRYO",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.13,
+                        0.14,
+                        0.15,
+                        0.16,
+                        0.18,
+                        0.19,
+                        0.2,
+                        0.21,
+                        0.23,
+                        0.24,
+                        0.26,
+                        0.28
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
+        },
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "END_AXIS"
+            ]
+          },
+          "properties": {
+            "offset": {
               "value": 0.467,
               "unit": "SECOND"
             }
@@ -167,7 +217,107 @@
           },
           "properties": {
             "offset": {
+              "value": 0.1,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "objectQualifier": "CRYO",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.11,
+                        0.12,
+                        0.13,
+                        0.14,
+                        0.15,
+                        0.16,
+                        0.17,
+                        0.18,
+                        0.19,
+                        0.2,
+                        0.22,
+                        0.24
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
+        },
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "END_AXIS"
+            ]
+          },
+          "properties": {
+            "offset": {
               "value": 0.2,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "objectQualifier": "CRYO",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.11,
+                        0.12,
+                        0.13,
+                        0.14,
+                        0.15,
+                        0.16,
+                        0.17,
+                        0.18,
+                        0.19,
+                        0.2,
+                        0.22,
+                        0.24
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
+        },
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "END_AXIS"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 0.3,
               "unit": "SECOND"
             }
           },

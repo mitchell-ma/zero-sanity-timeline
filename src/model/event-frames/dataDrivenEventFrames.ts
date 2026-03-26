@@ -21,9 +21,15 @@ interface JsonDuration {
 
 /** WITH preposition value: verb determines value shape (IS = single, VARY_BY = array by level/potential). */
 interface JsonWithValue {
-  verb: string; // "IS" | "VARY_BY"
+  verb?: string; // "IS" | "VARY_BY"
   object?: string;
-  value: number | number[];
+  value?: number | number[];
+  /** ValueExpression fields (operation + left/right). */
+  operation?: string;
+  left?: JsonWithValue;
+  right?: JsonWithValue;
+  ofDeterminer?: string;
+  of?: string;
 }
 
 /** DSL Effect: Verb-Object with optional object qualifier and prepositional phrases. */
@@ -69,13 +75,16 @@ interface JsonClausePredicate {
 }
 
 interface JsonClauseCondition {
+  subjectDeterminer?: string;
   subject: string;
   verb: string;
   negated?: boolean;
+  objectQualifier?: string;
   object?: string;
   objectId?: string;
   cardinalityConstraint?: string;
   value?: unknown;
+  with?: Record<string, unknown>;
 }
 
 interface JsonOffset {
@@ -151,10 +160,14 @@ function dslTargetToDslTarget(to?: string, toDeterminer?: string): DslTarget {
 function withValue(wv?: JsonWithValue, ctx?: ValueResolutionContext): number {
   if (!wv) return 0;
   if (typeof wv.value === 'number') return wv.value;
+  // ValueExpression (operation + left/right) — resolve via resolveValueNode
+  if (wv.operation) {
+    return resolveValueNode(wv as unknown as ValueNode, ctx ?? DEFAULT_VALUE_CONTEXT);
+  }
   if (ctx && Array.isArray(wv.value) && wv.object) {
     return resolveValueNode({ verb: wv.verb, object: wv.object, value: wv.value } as ValueNode, ctx);
   }
-  return wv.value[0] ?? 0;
+  return wv.value?.[0] ?? 0;
 }
 
 /**
@@ -239,15 +252,22 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
     let dealDamage: FrameDealDamage | null = null;
 
     for (const pred of (frame.clause ?? [])) {
-      const conditions: FrameCondition[] = (pred.conditions ?? []).map(c => ({
-        subject: c.subject,
-        verb: c.verb,
-        ...(c.negated != null && { negated: c.negated }),
-        ...(c.object && { object: c.object }),
-        ...(c.objectId && { objectId: c.objectId }),
-        ...(c.cardinalityConstraint && { cardinalityConstraint: c.cardinalityConstraint }),
-        ...(c.value != null && { value: c.value }),
-      }));
+      const conditions: FrameCondition[] = (pred.conditions ?? []).map(c => {
+        const isNegatedVerb = typeof c.verb === 'string' && c.verb.startsWith('NOT_');
+        const normalizedVerb = isNegatedVerb ? c.verb.slice(4) : c.verb;
+        return {
+          ...(c.subjectDeterminer && { subjectDeterminer: c.subjectDeterminer }),
+          subject: c.subject,
+          verb: normalizedVerb,
+          ...(((c.negated != null && c.negated) || isNegatedVerb) && { negated: true }),
+          ...(c.objectQualifier && { objectQualifier: c.objectQualifier }),
+          ...(c.object && { object: c.object }),
+          ...(c.objectId && { objectId: c.objectId }),
+          ...(c.cardinalityConstraint && { cardinalityConstraint: c.cardinalityConstraint }),
+          ...(c.value != null && { value: c.value }),
+          ...(c.with && { with: c.with }),
+        };
+      });
 
       const clauseEffects: FrameClauseEffect[] = [];
       for (const ef of pred.effects) {
@@ -261,7 +281,8 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
         switch (ef.verb) {
           case VerbType.RECOVER:
             if (ef.object === NounType.SKILL_POINT) { sp = withValue(wp?.value); clauseEffects.push({ type: 'recoverSP' }); }
-            if (ef.object === NounType.ULTIMATE_ENERGY) gaugeGain = withValue(wp?.value);
+            else if (ef.object === NounType.ULTIMATE_ENERGY) gaugeGain = withValue(wp?.value);
+            else if (ef.object === NounType.HP) clauseEffects.push({ type: 'dsl', dslEffect: ef as unknown as Effect });
             break;
 
           case VerbType.APPLY:

@@ -1,24 +1,4 @@
 {
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "MODIFY",
-          "object": "SKILL_PARAMETER",
-          "objectId": "chr_0015_lifeng_talent_1",
-          "with": {
-            "parameterKey": "atk_up",
-            "value": {
-              "verb": "IS",
-              "value": 0.0005
-            },
-            "parameterModifyType": "ADDITIVE"
-          }
-        }
-      ]
-    }
-  ],
   "properties": {
     "id": "LIFENG_POTENTIAL_3",
     "name": "Spiritual Cultivation",
@@ -29,6 +9,5 @@
   },
   "metadata": {
     "originId": "LIFENG"
-  },
-  "clauseType": "ALL"
+  }
 }

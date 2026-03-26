@@ -42,7 +42,36 @@
           "clause": [
             {
               "conditions": [],
-              "effects": []
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "objectQualifier": "PHYSICAL",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.45,
+                        0.5,
+                        0.54,
+                        0.59,
+                        0.63,
+                        0.68,
+                        0.72,
+                        0.77,
+                        0.81,
+                        0.87,
+                        0.93,
+                        1.01
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                }
+              ]
             }
           ],
           "clauseType": "ALL"
@@ -74,6 +103,34 @@
                       "value": 5
                     }
                   }
+                },
+                {
+                  "verb": "DEAL",
+                  "objectQualifier": "PHYSICAL",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.45,
+                        0.5,
+                        0.54,
+                        0.59,
+                        0.63,
+                        0.68,
+                        0.72,
+                        0.77,
+                        0.81,
+                        0.87,
+                        0.93,
+                        1.01
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
                 }
               ]
             }
@@ -98,12 +155,49 @@
               "conditions": [],
               "effects": [
                 {
+                  "verb": "CONSUME",
+                  "object": "STATUS",
+                  "objectId": "ELECTRIFICATION",
+                  "to": "ENEMY"
+                },
+                {
+                  "verb": "DEAL",
+                  "objectQualifier": "ELECTRIC",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        1.8,
+                        1.98,
+                        2.16,
+                        2.34,
+                        2.52,
+                        2.7,
+                        2.88,
+                        3.06,
+                        3.24,
+                        3.47,
+                        3.74,
+                        4.05
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                },
+                {
                   "verb": "RECOVER",
                   "object": "SKILL_POINT",
                   "with": {
                     "value": {
-                      "verb": "IS",
-                      "value": 30
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [30, 30, 30, 30, 30, 35, 35, 35, 35, 35, 40, 40],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
                     }
                   }
                 },

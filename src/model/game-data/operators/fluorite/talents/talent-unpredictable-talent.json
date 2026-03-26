@@ -8,8 +8,9 @@
           "verb": "IS_HIT",
           "with": {
             "chance": {
-              "verb": "IS",
-              "value": 0.2
+              "operation": "ADD",
+              "left": { "verb": "IS", "value": 0.2 },
+              "right": { "verb": "VARY_BY", "object": "POTENTIAL", "value": [0, 0, 0.1, 0.1, 0.1, 0.1], "ofDeterminer": "THIS", "of": "OPERATOR" }
             }
           }
         }

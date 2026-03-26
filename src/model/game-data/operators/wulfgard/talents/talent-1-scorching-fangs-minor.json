@@ -3,7 +3,7 @@
     "id": "WULFGARD_TALENT1_SCORCHING_FANGS_MINOR",
     "name": "Scorching Fangs (Minor)",
     "to": "OPERATOR",
-    "toDeterminer": "ALL_OTHER",
+    "toDeterminer": "THIS",
     "duration": {
       "value": {
         "verb": "IS",
@@ -19,7 +19,6 @@
       "interactionType": "RESET"
     },
     "enhancementType": "MINOR",
-    "minPotential": 3,
     "eventType": "STATUS",
     "eventCategoryType": "TALENT",
     "description": "P3: Grants other teammates Scorching Fangs with 50% of the base effects. Heat DMG Dealt +10%/+15%.",
@@ -40,7 +39,7 @@
           "verb": "APPLY",
           "object": "STAT_MODIFIER",
           "objectId": "HEAT_DAMAGE_BONUS",
-          "toDeterminer": "ALL_OTHER",
+          "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
             "value": {

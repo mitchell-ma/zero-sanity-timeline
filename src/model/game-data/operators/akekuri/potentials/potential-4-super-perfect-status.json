@@ -1,23 +1,4 @@
 {
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "MODIFY",
-          "object": "SKILL_COST",
-          "objectId": "AKEKURI_SQUAD_ON_ME",
-          "with": {
-            "value": {
-              "verb": "IS",
-              "value": 0.9
-            },
-            "parameterType": 1
-          }
-        }
-      ]
-    }
-  ],
   "properties": {
     "id": "AKEKURI_POTENTIAL_4",
     "name": "Super Perfect Status",
@@ -28,6 +9,5 @@
   },
   "metadata": {
     "originId": "AKEKURI"
-  },
-  "clauseType": "ALL"
+  }
 }

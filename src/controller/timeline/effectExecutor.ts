@@ -202,7 +202,8 @@ function executeApply(effect: Effect, ctx: ExecutionContext): MutationSet {
   }
 
   if (effect.object === 'STATUS') {
-    const columnId = statusNameToColumnId(effect.objectId ?? '');
+    const skipTeamCheck = effect.to != null && effect.to !== NounType.TEAM;
+    const columnId = statusNameToColumnId(effect.objectId ?? '', skipTeamCheck);
 
     const durationValue = resolveWith(effect.with?.duration, ctx);
     const duration = durationValue != null ? Math.round(durationValue * FPS) : 2400;
@@ -272,7 +273,8 @@ function executeConsume(effect: Effect, ctx: ExecutionContext): MutationSet {
   }
 
   if (effect.object === 'STATUS') {
-    const columnId = statusNameToColumnId(effect.objectId ?? '');
+    const skipTeamCheck = (effect.fromObject ?? effect.to) != null && (effect.fromObject ?? effect.to) !== NounType.TEAM;
+    const columnId = statusNameToColumnId(effect.objectId ?? '', skipTeamCheck);
     const targets = activeEventsAtFrame(ctx.events, columnId, ownerId, ctx.frame)
       .filter(ev => ev.eventStatus !== EventStatusType.CONSUMED)
       .sort((a, b) => a.startFrame - b.startFrame);
@@ -322,7 +324,8 @@ function executeReset(effect: Effect, ctx: ExecutionContext): MutationSet {
   const result = emptyMutationSet();
   // RESET STACKS or RESET COOLDOWN — clamp all active instances
   if (effect.object === 'STACKS' && effect.objectId) {
-    const columnId = statusNameToColumnId(effect.objectId ?? '');
+    const skipTeamCheck = effect.to != null && effect.to !== NounType.TEAM;
+    const columnId = statusNameToColumnId(effect.objectId ?? '', skipTeamCheck);
     const ownerId = resolveOwnerId(effect.to as string, ctx, effect.toDeterminer);
     const targets = activeEventsAtFrame(ctx.events, columnId, ownerId, ctx.frame)
       .filter(ev => ev.eventStatus !== EventStatusType.CONSUMED);

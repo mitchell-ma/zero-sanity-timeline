@@ -79,6 +79,8 @@ export enum NounType {
   FINISHER = "FINISHER",
   DIVE_ATTACK = "DIVE_ATTACK",
   CRITICAL_HIT = "CRITICAL_HIT",
+  /** Enemy skill charge-up action. */
+  CHARGE = "CHARGE",
 
   // Damage
   NORMAL_ATTACK = "NORMAL_ATTACK",
@@ -94,6 +96,12 @@ export enum NounType {
   ARTS_BURST = "ARTS_BURST",
   /** Self-referential stack count within a stack reaction. */
   STACKS = "STACKS",
+  /** Movement speed reduction (percentage, e.g. 0.8 = 80% slow). */
+  SLOW = "SLOW",
+  /** Arts/elemental susceptibility debuff on enemy. Qualified by element (ARTS = all arts elements). */
+  SUSCEPTIBILITY = "SUSCEPTIBILITY",
+  /** Elemental/skill damage bonus. Qualified by element or skill type. */
+  DAMAGE_BONUS = "DAMAGE_BONUS",
 
   // Time
   TIME_STOP = "TIME_STOP",
@@ -115,6 +123,10 @@ export enum NounType {
   ACTIVE = "ACTIVE",
   /** The operator is currently controlled by the player. */
   CONTROLLED_STATE = "CONTROLLED",
+
+  // Supplied parameters (user-input runtime values)
+  /** A user-supplied parameter (e.g. ENEMY_HIT). Used as condition subject. */
+  PARAMETER = "PARAMETER",
 
   // Value resolution
   /** A raw operator stat reference (used in ValueStat). */
@@ -273,6 +285,12 @@ export enum AdjectiveType {
   ENHANCED = "ENHANCED",
   EMPOWERED = "EMPOWERED",
   MINOR = "MINOR",
+
+  // Stat filter/threshold adjectives (RECOVER HP TO ANY OPERATOR WITH filter { LOWEST HP STAT })
+  LOWEST = "LOWEST",
+  HIGHEST = "HIGHEST",
+  /** At maximum capacity (e.g. CONTROLLED OPERATOR HAVE FULL HP). */
+  FULL = "FULL",
 }
 
 // ── Object ──────────────────────────────────────────────────────────────────
@@ -292,7 +310,7 @@ export const VERB_OBJECTS: Partial<Record<VerbType, ObjectType[]>> = {
   [VerbType.RECOVER]:    [ObjectType.SKILL_POINT, ObjectType.ULTIMATE_ENERGY, ObjectType.HP],
   [VerbType.RETURN]:     [ObjectType.SKILL_POINT],
   [VerbType.DEAL]:       [ObjectType.DAMAGE, ObjectType.STAGGER],
-  [VerbType.PERFORM]:    [ObjectType.BASIC_ATTACK, ObjectType.BATTLE_SKILL, ObjectType.COMBO_SKILL, ObjectType.ULTIMATE, ObjectType.FINAL_STRIKE, ObjectType.FINISHER, ObjectType.DIVE_ATTACK, ObjectType.NORMAL_ATTACK],
+  [VerbType.PERFORM]:    [ObjectType.BASIC_ATTACK, ObjectType.BATTLE_SKILL, ObjectType.COMBO_SKILL, ObjectType.ULTIMATE, ObjectType.FINAL_STRIKE, ObjectType.FINISHER, ObjectType.DIVE_ATTACK, ObjectType.NORMAL_ATTACK, ObjectType.CHARGE],
   [VerbType.HIT]:        [ObjectType.ENEMY],
   [VerbType.DEFEAT]:     [ObjectType.ENEMY],
   [VerbType.REFRESH]:    [ObjectType.STATUS, ObjectType.INFLICTION, ObjectType.REACTION],
@@ -373,8 +391,12 @@ export const NOUN_UNITS: Partial<Record<NounType, UnitType[]>> = {
   [NounType.STAGGER]: [UnitType.FLAT],
   [NounType.ULTIMATE_ENERGY]: [UnitType.FLAT, UnitType.PERCENTAGE],
   [NounType.SKILL_POINT]: [UnitType.FLAT],
-  [NounType.STACKS]: [UnitType.LEVEL],
+  [NounType.STACKS]: [UnitType.STACK],
+  [NounType.INFLICTION]: [UnitType.STACK],
   [NounType.DAMAGE]: [UnitType.FLAT, UnitType.PERCENTAGE, UnitType.MULTIPLIER],
+  [NounType.SLOW]: [UnitType.PERCENTAGE],
+  [NounType.SUSCEPTIBILITY]: [UnitType.PERCENTAGE],
+  [NounType.DAMAGE_BONUS]: [UnitType.PERCENTAGE],
 };
 
 /**
@@ -387,14 +409,25 @@ export type QualifierType = NounType | AdjectiveType | DeterminerType;
 export const NOUN_QUALIFIER_MAPPING: Partial<Record<NounType, QualifierType[]>> = {
   [NounType.COOLDOWN]: [NounType.ULTIMATE, NounType.COMBO_SKILL],
   [NounType.DAMAGE]: [AdjectiveType.HEAT, AdjectiveType.CRYO, AdjectiveType.NATURE, AdjectiveType.ELECTRIC, AdjectiveType.PHYSICAL],
-  [NounType.AMP]: [AdjectiveType.HEAT, AdjectiveType.CRYO, AdjectiveType.NATURE, AdjectiveType.ELECTRIC, AdjectiveType.PHYSICAL, DeterminerType.ANY],
+  [NounType.AMP]: [AdjectiveType.HEAT, AdjectiveType.CRYO, AdjectiveType.NATURE, AdjectiveType.ELECTRIC, AdjectiveType.PHYSICAL, AdjectiveType.ARTS, DeterminerType.ANY],
+  [NounType.SUSCEPTIBILITY]: [AdjectiveType.HEAT, AdjectiveType.CRYO, AdjectiveType.NATURE, AdjectiveType.ELECTRIC, AdjectiveType.ARTS],
+  [NounType.DAMAGE_BONUS]: [AdjectiveType.HEAT, AdjectiveType.CRYO, AdjectiveType.NATURE, AdjectiveType.ELECTRIC, AdjectiveType.PHYSICAL, AdjectiveType.ARTS, NounType.BASIC_ATTACK, NounType.BATTLE_SKILL, NounType.COMBO_SKILL, NounType.ULTIMATE, NounType.STAGGER],
   [NounType.BATK]: [AdjectiveType.NORMAL, AdjectiveType.ENHANCED, AdjectiveType.EMPOWERED],
   [NounType.BATTLE_SKILL]: [AdjectiveType.NORMAL, AdjectiveType.ENHANCED, AdjectiveType.EMPOWERED],
   [NounType.COMBO_SKILL]: [AdjectiveType.NORMAL, AdjectiveType.ENHANCED, AdjectiveType.EMPOWERED],
   [NounType.ULTIMATE]: [AdjectiveType.NORMAL, AdjectiveType.ENHANCED, AdjectiveType.EMPOWERED],
   [NounType.FINISHER]: [AdjectiveType.NORMAL, AdjectiveType.ENHANCED, AdjectiveType.EMPOWERED],
   [NounType.DIVE_ATTACK]: [AdjectiveType.NORMAL, AdjectiveType.ENHANCED, AdjectiveType.EMPOWERED],
+  [NounType.HP]: [AdjectiveType.LOWEST, AdjectiveType.HIGHEST, AdjectiveType.FULL],
 };
+
+/**
+ * Determiners that support a `filter` in the `with` block to narrow target selection.
+ * e.g. `RECOVER HP TO ANY OPERATOR WITH filter { objectQualifier: LOWEST, objectId: HP, object: STAT }`.
+ */
+export const DETERMINER_FILTER_SUPPORT: DeterminerType[] = [
+  DeterminerType.ANY,
+];
 
 /**
  * Valid "OF" object targets per noun.
@@ -494,6 +527,7 @@ export const VERB_PREPOSITION_MAPPING: Partial<Record<VerbType, PrepositionType[
   [VerbType.REDUCE]: [PrepositionType.BY],
   [VerbType.APPLY]: [PrepositionType.WITH],
   [VerbType.RECOVER]: [PrepositionType.BY],
+  [VerbType.EXTEND]: [PrepositionType.UNTIL],
 };
 
 // ── Value expression tree ────────────────────────────────────────────────────
@@ -1077,6 +1111,7 @@ export const OBJECT_LABELS: Record<string, string> = {
   [ObjectType.ULTIMATE]: 'Ultimate',
   [ObjectType.FINAL_STRIKE]: 'Final Strike',
   [ObjectType.NORMAL_ATTACK]: 'Normal Attack',
+  [ObjectType.CHARGE]: 'Charge',
   [ObjectType.ACTIVE]: 'Active',
   [ObjectType.STAT]: 'Stat',
   [ObjectType.TALENT_LEVEL]: 'Talent Level',

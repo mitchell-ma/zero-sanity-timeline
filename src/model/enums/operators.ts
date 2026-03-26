@@ -37,24 +37,6 @@ export enum OperatorType {
   ARCLIGHT = "ARCLIGHT",
 }
 
-/** How a potential effect modifies the operator. */
-export enum PotentialEffectType {
-  /** Flat stat bonus (e.g. Intellect +20). */
-  STAT_MODIFIER = "STAT_MODIFIER",
-  /** Attaches or modifies a buff. */
-  BUFF_ATTACHMENT = "BUFF_ATTACHMENT",
-}
-
-/** How a parameter value is applied to the base. */
-export enum ParameterModifyType {
-  /** Additive: base + value (e.g. SP +20). */
-  ADDITIVE = "ADDITIVE",
-  /** Multiplicative: base × value (e.g. duration ×1.5). */
-  MULTIPLICATIVE = "MULTIPLICATIVE",
-  /** Unique multiplier: multiplied with base value (e.g. damage multiplier ×1.2). */
-  UNIQUE_MULTIPLIER = "UNIQUE_MULTIPLIER",
-}
-
 export enum OperatorClassType {
   GUARD = "GUARD",
   CASTER = "CASTER",

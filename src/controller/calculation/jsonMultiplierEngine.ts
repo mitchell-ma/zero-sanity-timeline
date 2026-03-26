@@ -3,24 +3,21 @@
  *
  * Replaces skillMultiplierRegistry.ts and all combat-skills/*.ts classes.
  * Reads multiplier data directly from operator JSON frames.
- * Potential-dependent multipliers are baked into skill JSONs via VARY_BY arrays.
+ * Resolves ValueExpressions (VARY_BY SKILL_LEVEL, VARY_BY POTENTIAL, MULT expressions)
+ * via resolveValueNode.
  */
 import { Potential, SkillLevel } from '../../consts/types';
 import { VerbType, NounType } from '../../dsl/semantics';
+import type { ValueNode } from '../../dsl/semantics';
+import { resolveValueNode } from './valueResolver';
 import { getOperatorSkill } from '../gameDataStore';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
-interface JsonWithValue {
-  verb: string; // "IS" | "VARY_BY"
-  object?: string;
-  value: number | number[];
-}
-
 interface JsonClauseEffect {
   verb: string;
   object?: string;
-  with?: Record<string, JsonWithValue>;
+  with?: Record<string, ValueNode>;
 }
 
 interface JsonClausePredicate {
@@ -48,19 +45,19 @@ interface JsonSkillCategory {
 // ── Cache ────────────────────────────────────────────────────────────────────
 
 /**
- * Cached per-level multiplier data for a skill category.
- * segmentMultipliers[segmentIndex][levelIndex] = sum of damage multiplier across frames in segment.
- * perFrameMultipliers[segmentIndex][frameIndex][levelIndex] = individual frame damage multiplier.
+ * Cached multiplier data for a skill category at a specific level+potential.
+ * segmentMultipliers[segmentIndex] = sum of damage multiplier across frames in segment.
+ * perFrameMultipliers[segmentIndex][frameIndex] = individual frame damage multiplier.
  */
-interface CategoryMultiplierCache {
-  segmentMultipliers: number[][];
-  perFrameMultipliers: number[][][];
+interface ResolvedSkillMultipliers {
+  segmentMultipliers: number[];
+  perFrameMultipliers: number[][];
 }
 
-const cache = new Map<string, CategoryMultiplierCache>();
+const resolvedMultipliers = new Map<string, ResolvedSkillMultipliers>();
 
-function getCacheKey(operatorId: string, category: string): string {
-  return `${operatorId}:${category}`;
+function getResolvedKey(operatorId: string, category: string, level: SkillLevel, potential: Potential): string {
+  return `${operatorId}:${category}:${level}:${potential}`;
 }
 
 // ── Build multiplier data from JSON ──────────────────────────────────────────
@@ -74,16 +71,13 @@ function getDealEffect(frame: JsonFrame): JsonClauseEffect | undefined {
   return undefined;
 }
 
-function getAtk(frame: JsonFrame, level: number, key: string = 'value'): number {
+function resolveDamageValue(frame: JsonFrame, level: SkillLevel, potential: Potential): number {
   const deal = getDealEffect(frame);
-  if (!deal?.with) return 0;
-  const wv = deal.with[key];
-  if (!wv) return 0;
-  if (Array.isArray(wv.value)) return wv.value[level - 1] ?? 0;
-  return typeof wv.value === 'number' ? wv.value : 0;
+  if (!deal?.with?.value) return 0;
+  return resolveValueNode(deal.with.value, { skillLevel: level, potential, stats: {} });
 }
 
-function buildCategoryCache(operatorId: string, category: string): CategoryMultiplierCache | null {
+function buildCategoryCache(operatorId: string, category: string, level: SkillLevel, potential: Potential): ResolvedSkillMultipliers | null {
   const skill = getOperatorSkill(operatorId, category);
   if (!skill) return null;
 
@@ -102,45 +96,39 @@ function buildCategoryCache(operatorId: string, category: string): CategoryMulti
 
   if (segments.length === 0) return null;
 
-  const LEVELS = 12;
-  const segmentMultipliers: number[][] = [];
-  const perFrameMultipliers: number[][][] = [];
+  const segmentMultipliers: number[] = [];
+  const perFrameMultipliers: number[][] = [];
 
   for (const seg of segments) {
-    const segMults: number[] = new Array(LEVELS).fill(0);
-    const frameMults: number[][] = [];
+    let segSum = 0;
+    const frameMults: number[] = [];
 
     for (const frame of seg.frames) {
-      const frameLevelMults: number[] = [];
-      for (let lvl = 1; lvl <= LEVELS; lvl++) {
-        const atk = getAtk(frame, lvl);
-        frameLevelMults.push(atk);
-        segMults[lvl - 1] += atk;
-      }
-      frameMults.push(frameLevelMults);
+      const val = resolveDamageValue(frame, level, potential);
+      frameMults.push(val);
+      segSum += val;
     }
 
-    segmentMultipliers.push(segMults);
+    segmentMultipliers.push(segSum);
     perFrameMultipliers.push(frameMults);
   }
 
   // If no frames had any multiplier data, treat as no data (allows empowered fallback)
-  const hasAnyMultiplier = segmentMultipliers.some(seg => seg.some(m => m !== 0));
-  if (!hasAnyMultiplier) return null;
+  if (segmentMultipliers.every(m => m === 0)) return null;
 
   return { segmentMultipliers, perFrameMultipliers };
 }
 
-function getCategoryCache(operatorId: string, category: string): CategoryMultiplierCache | null {
-  const key = getCacheKey(operatorId, category);
-  if (cache.has(key)) return cache.get(key)!;
-  let data = buildCategoryCache(operatorId, category);
+function getCategoryCache(operatorId: string, category: string, level: SkillLevel, potential: Potential): ResolvedSkillMultipliers | null {
+  const key = getResolvedKey(operatorId, category, level, potential);
+  if (resolvedMultipliers.has(key)) return resolvedMultipliers.get(key)!;
+  let data = buildCategoryCache(operatorId, category, level, potential);
   // Empowered variants may lack multiplier data — fall back to base category
   if (!data) {
     const baseCategory = getEmpoweredFallback(category);
-    if (baseCategory) data = buildCategoryCache(operatorId, baseCategory);
+    if (baseCategory) data = buildCategoryCache(operatorId, baseCategory, level, potential);
   }
-  if (data) cache.set(key, data);
+  if (data) resolvedMultipliers.set(key, data);
   return data;
 }
 
@@ -169,9 +157,6 @@ function resolveSkillKey(operatorId: string, skillName: string): string | null {
  * This is the sum of damage multiplier across all frames in the segment.
  * The caller (damageTableBuilder) divides by frame count for uniform distribution.
  *
- * Potential-dependent multipliers are now baked into the skill JSONs via VARY_BY arrays,
- * so the potential parameter is accepted for API compatibility but not used here.
- *
  * Returns null if operator/skill has no multiplier data or doesn't deal damage.
  */
 export function getSkillMultiplier(
@@ -179,20 +164,45 @@ export function getSkillMultiplier(
   skillName: string,
   segmentIndex: number | undefined,
   level: SkillLevel,
-  _potential: Potential,
+  potential: Potential,
 ): number | null {
   const category = resolveSkillKey(operatorId, skillName);
   if (!category) return null;
 
-  const data = getCategoryCache(operatorId, category);
+  const data = getCategoryCache(operatorId, category, level, potential);
   if (!data) return null;
 
   const segIdx = segmentIndex ?? 0;
   if (segIdx >= data.segmentMultipliers.length) return null;
 
-  const baseMult = data.segmentMultipliers[segIdx][level - 1];
+  const baseMult = data.segmentMultipliers[segIdx];
   if (baseMult === 0) return null;
 
   return baseMult;
 }
 
+/**
+ * Get an individual frame's multiplier within a segment.
+ * Returns null if the frame/segment doesn't exist or has no damage data.
+ */
+export function getPerFrameMultiplier(
+  operatorId: string,
+  skillName: string,
+  segmentIndex: number,
+  frameIndex: number,
+  level: SkillLevel,
+  potential: Potential,
+): number | null {
+  const category = resolveSkillKey(operatorId, skillName);
+  if (!category) return null;
+
+  const data = getCategoryCache(operatorId, category, level, potential);
+  if (!data) return null;
+
+  if (segmentIndex >= data.perFrameMultipliers.length) return null;
+  const segFrames = data.perFrameMultipliers[segmentIndex];
+  if (frameIndex >= segFrames.length) return null;
+
+  const val = segFrames[frameIndex];
+  return val === 0 ? null : val;
+}

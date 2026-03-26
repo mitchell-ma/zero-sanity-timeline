@@ -2957,14 +2957,21 @@
 .event-segment-warning {
   position: absolute;
   top: -18px;
-  left: 50%;
-  transform: translateX(-50%);
+  left: 0;
+  right: 0;
   z-index: 16;
-  pointer-events: auto;
+  pointer-events: none;
   cursor: default;
   line-height: 0;
-  padding: 4px;
-  margin: -4px;
+  text-align: center;
+}
+
+.event-segment-warning > svg {
+  pointer-events: auto;
+  width: 60%;
+  max-width: 24px;
+  height: auto;
+  aspect-ratio: 1;
 }
 
 .event-segment-warning:hover svg {
@@ -8221,11 +8228,15 @@
   height: auto;
 }
 
-/* Warning icon: left side instead of top */
+/* Warning icon: left of event, vertically centered in horizontal mode */
 .timeline-outer--horizontal .event-segment-warning {
-  top: 50%;
+  top: 0;
+  bottom: 0;
   left: -18px;
-  transform: translateY(-50%);
+  right: auto;
+  text-align: unset;
+  display: flex;
+  align-items: center;
 }
 
 /* Hover line labels: repositioned for vertical hairline */
@@ -9509,6 +9520,62 @@
 .ops-frame-effect-target {
   color: var(--text-secondary);
 }
+/* ── Value expression tree ─────────────────────────── */
+.ops-value-tree-container {
+  margin-top: 0.25rem;
+}
+.ops-vt-expr {
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+.ops-vt-op {
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+.ops-vt-children {
+  padding-left: 0.25rem;
+}
+.ops-vt-branch {
+  position: relative;
+  padding-left: 1rem;
+}
+.ops-vt-branch::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 50%;
+  width: 0.625rem;
+  border-left: 1px solid var(--border-dim);
+  border-bottom: 1px solid var(--border-dim);
+}
+.ops-vt-branch--mid::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  bottom: 0;
+  border-left: 1px solid var(--border-dim);
+}
+.ops-vt-vary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.375rem;
+}
+.ops-vt-vary-desc {
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  padding: 0.125rem 0;
+}
+.ops-vt-leaf {
+  color: var(--text-secondary);
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+}
+
 .ops-frame-effect-with {
   display: flex;
   gap: 0.75rem;

@@ -1,37 +1,4 @@
 {
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "MODIFY",
-          "object": "SKILL_PARAMETER",
-          "objectId": "chr_0017_yvonne_talent_0",
-          "with": {
-            "parameterKey": "inflict_up",
-            "value": {
-              "verb": "IS",
-              "value": 0.1
-            },
-            "parameterModifyType": "ADDITIVE"
-          }
-        },
-        {
-          "verb": "MODIFY",
-          "object": "SKILL_PARAMETER",
-          "objectId": "chr_0017_yvonne_talent_0",
-          "with": {
-            "parameterKey": "status_up",
-            "value": {
-              "verb": "IS",
-              "value": 0.2
-            },
-            "parameterModifyType": "ADDITIVE"
-          }
-        }
-      ]
-    }
-  ],
   "properties": {
     "id": "YVONNE_POTENTIAL_3",
     "name": "Tink-a-Power",
@@ -42,6 +9,5 @@
   },
   "metadata": {
     "originId": "YVONNE"
-  },
-  "clauseType": "ALL"
+  }
 }

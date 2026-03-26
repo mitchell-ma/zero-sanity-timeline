@@ -90,84 +90,124 @@
                   "to": "ENEMY",
                   "with": {
                     "atb_1": {
-                      "verb": "VARY_BY",
-                      "object": "SKILL_LEVEL",
-                      "value": [
-                        10,
-                        10,
-                        10,
-                        10,
-                        10,
-                        10,
-                        10,
-                        10,
-                        10,
-                        15,
-                        15,
-                        15
-                      ],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "operation": "ADD",
+                      "left": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          10,
+                          10,
+                          10,
+                          10,
+                          10,
+                          10,
+                          10,
+                          10,
+                          10,
+                          15,
+                          15,
+                          15
+                        ],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
+                      },
+                      "right": {
+                        "verb": "VARY_BY",
+                        "object": "POTENTIAL",
+                        "value": [0, 10, 10, 10, 10, 10],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
+                      }
                     },
                     "atb_2": {
-                      "verb": "VARY_BY",
-                      "object": "SKILL_LEVEL",
-                      "value": [
-                        20,
-                        20,
-                        20,
-                        20,
-                        20,
-                        20,
-                        20,
-                        20,
-                        20,
-                        25,
-                        25,
-                        25
-                      ],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "operation": "ADD",
+                      "left": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          20,
+                          20,
+                          20,
+                          20,
+                          20,
+                          20,
+                          20,
+                          20,
+                          20,
+                          25,
+                          25,
+                          25
+                        ],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
+                      },
+                      "right": {
+                        "verb": "VARY_BY",
+                        "object": "POTENTIAL",
+                        "value": [0, 10, 10, 10, 10, 10],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
+                      }
                     },
                     "atb_3": {
-                      "verb": "VARY_BY",
-                      "object": "SKILL_LEVEL",
-                      "value": [
-                        30,
-                        30,
-                        30,
-                        30,
-                        30,
-                        30,
-                        30,
-                        30,
-                        30,
-                        35,
-                        35,
-                        35
-                      ],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "operation": "ADD",
+                      "left": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          30,
+                          30,
+                          30,
+                          30,
+                          30,
+                          30,
+                          30,
+                          30,
+                          30,
+                          35,
+                          35,
+                          35
+                        ],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
+                      },
+                      "right": {
+                        "verb": "VARY_BY",
+                        "object": "POTENTIAL",
+                        "value": [0, 10, 10, 10, 10, 10],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
+                      }
                     },
                     "atb_4": {
-                      "verb": "VARY_BY",
-                      "object": "SKILL_LEVEL",
-                      "value": [
-                        40,
-                        40,
-                        40,
-                        40,
-                        40,
-                        40,
-                        40,
-                        40,
-                        40,
-                        45,
-                        45,
-                        45
-                      ],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "operation": "ADD",
+                      "left": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          40,
+                          40,
+                          40,
+                          40,
+                          40,
+                          40,
+                          40,
+                          40,
+                          40,
+                          45,
+                          45,
+                          45
+                        ],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
+                      },
+                      "right": {
+                        "verb": "VARY_BY",
+                        "object": "POTENTIAL",
+                        "value": [0, 10, 10, 10, 10, 10],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
+                      }
                     },
                     "value": {
                       "verb": "VARY_BY",

@@ -1,35 +1,4 @@
 {
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "APPLY",
-          "object": "STRENGTH",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR",
-          "with": {
-            "value": {
-              "verb": "IS",
-              "value": 20
-            }
-          }
-        },
-        {
-          "verb": "APPLY",
-          "object": "WILL",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR",
-          "with": {
-            "value": {
-              "verb": "IS",
-              "value": 20
-            }
-          }
-        }
-      ]
-    }
-  ],
   "properties": {
     "id": "EMBER_POTENTIAL_2",
     "name": "Steel-Hardened Veteran",
@@ -40,6 +9,5 @@
   },
   "metadata": {
     "originId": "EMBER"
-  },
-  "clauseType": "ALL"
+  }
 }

@@ -11,7 +11,7 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import { OperatorInformationType, PotentialEffectType, ParameterModifyType } from '../../enums/operators';
+import { OperatorInformationType } from '../../enums/operators';
 import { WarfarinAttributeType, warfarinToStat } from './warfarin';
 
 const API_BASE = 'https://api.warfarin.wiki/v1/en/operators';
@@ -204,62 +204,8 @@ const WARFARIN_SKILL_ID_MAP: Record<string, string> = {
   'chr_0027_tangtang_ultimate_skill': 'ULTIMATE',
 };
 
-/** Maps warfarin buff IDs → StatusType enum values. */
-const BUFF_ID_TO_STATUS: Record<string, string> = {
-  'buff_chr_0016_laevat_potential_5': 'LAEVATAIN_POTENTIAL5_PROOF_OF_EXISTENCE',
-  'buff_chr_0019_karin_potential_1': 'AKEKURI_POTENTIAL1_POSITIVE_FEEDBACK',
-  'buff_chr_0019_karin_potential_5': 'AKEKURI_POTENTIAL5_TEMPO_OF_AWARENESS',
-  'buff_chr_0025_ardelia_potential5_vfx': 'ARDELIA_POTENTIAL5_VOLCANIC_STEAM',
-  'buff_chr_0003_endminf_potential1': 'ENDMINISTRATOR_POTENTIAL1_FINAL_AWAKENING',
-  'buff_chr_0003_endminf_potential2': 'ENDMINISTRATOR_POTENTIAL2_REFLECTION_OF_AUTHORITY',
-  'buff_chr_0003_endminf_potential5': 'ENDMINISTRATOR_POTENTIAL5',
-  'buff_chr_0005_chen_potential_1': 'CHEN_QIANYU_POTENTIAL1_SHADOWLESS',
-  'buff_chr_0013_aglina_potential_5': 'GILBERTA_POTENTIAL5_SPECIAL_MAIL',
-  'buff_chr_0015_lifeng_potential_5': 'LIFENG_POTENTIAL5_UNREMITTING',
-  'buff_chr_0015_lifeng_potential_5_vfx': 'LIFENG_POTENTIAL5_UNREMITTING',
-  'buff_chr_0009_azrila_potential_5': 'EMBER_POTENTIAL5_THE_STEEL_OATH',
-  'buff_chr_0004_pelica_potential_3': 'PERLICA_POTENTIAL3_SUPERVISORY_DUTIES',
-  'buff_chr_0007_ikut_finish_count_p5': 'ARCLIGHT_POTENTIAL5_SERVANT_OF_THE_WILDLANDS',
-  'buff_chr_0021_whiten_potential_5': 'ESTELLA_POTENTIAL5_SURVIVAL_IS_A_WIN',
-  'buff_chr_0020_meurs_potential_1': 'CATCHER_POTENTIAL1_MULTI_LAYERED_READINESS',
-  'buff_chr_0022_bounda_potential_5_auro': 'FLUORITE_POTENTIAL5_CRAVER_OF_CHAOS',
-  'buff_chr_0026_lastrite_potential5_vfx': 'LAST_RITE_POTENTIAL5_WINTER_IS_RETURNING',
-  'buff_chr_0017_yvonne_potential_5_effect': 'YVONNE_POTENTIAL5_EXPERT_MECHCRAFTER',
-  'buff_chr_0029_pograni_potential_5_effect': 'POGRANICHNIK_POTENTIAL5_NEWLY_FORGED_BLADE',
-};
 
-function mapBuffId(buffId: string): string {
-  return BUFF_ID_TO_STATUS[buffId] ?? buffId;
-}
 
-function mapSkillId(warfarinSkillId: string): string {
-  return WARFARIN_SKILL_ID_MAP[warfarinSkillId] ?? warfarinSkillId;
-}
-
-const BB_KEY_MAP: Record<string, string> = {
-  'atb': 'SKILL_POINT',
-  'ratio': 'value',
-  'atk_scale': 'value',
-  'duration': 'DURATION',
-  'extra_scaling': 'EXTRA_SCALING',
-};
-
-function mapBbKey(bbKey: string): string {
-  return BB_KEY_MAP[bbKey] ?? bbKey;
-}
-
-/** Maps warfarin outer modifyType → PotentialEffectType. */
-const POTENTIAL_EFFECT_TYPE_MAP: Record<number, PotentialEffectType> = {
-  4: PotentialEffectType.STAT_MODIFIER,
-  5: PotentialEffectType.BUFF_ATTACHMENT,
-};
-
-/** Maps warfarin inner parameter modifyType → ParameterModifyType. */
-const PARAMETER_MODIFY_TYPE_MAP: Record<number, ParameterModifyType> = {
-  1: ParameterModifyType.ADDITIVE,
-  2: ParameterModifyType.MULTIPLICATIVE,
-  3: ParameterModifyType.UNIQUE_MULTIPLIER,
-};
 
 // ── Warfarin API types ──────────────────────────────────────────────────────
 
@@ -434,45 +380,10 @@ function buildPotentials(
 ) {
   return unlocks.map(unlock => {
     const effect = effects[unlock.potentialEffectId];
-    if (!effect) return { level: unlock.level, name: unlock.name, effects: [] };
-
-    const parsed = effect.dataList.map(d => {
-      const effectType = POTENTIAL_EFFECT_TYPE_MAP[d.modifyType] ?? d.modifyType;
-      const result: Record<string, unknown> = { potentialEffectType: effectType };
-
-      // Stat modifier
-      if (d.attrModifier.attrType !== 0 || d.attrModifier.attrValue !== 0) {
-        result.statModifier = {
-          statType: mapAttrType(d.attrModifier.attrType),
-          value: d.attrModifier.attrValue,
-        };
-      }
-
-      // Skill cost modifier
-      if (d.skillParamModifier.skillId) {
-        result.skillCostModifier = {
-          skillType: mapSkillId(d.skillParamModifier.skillId),
-          parameterType: d.skillParamModifier.paramType,
-          value: d.skillParamModifier.paramValue,
-        };
-      }
-
-      // Buff attachment
-      if (d.attachBuff.buffId) {
-        result.buffAttachment = {
-          objectId: mapBuffId(d.attachBuff.buffId),
-          parameters: d.attachBuff.blackboard,
-        };
-      }
-
-      return result;
-    });
-
     return {
       level: unlock.level,
       name: unlock.name,
-      description: effect.desc,
-      effects: parsed,
+      ...(effect?.desc ? { description: effect.desc } : {}),
     };
   });
 }
@@ -863,7 +774,7 @@ async function main() {
   console.log(`  Lv90: ATK=${lv90.BASE_ATTACK}, HP=${lv90.BASE_HP}, STR=${lv90.STRENGTH?.toFixed(1)}, AGI=${lv90.AGILITY?.toFixed(1)}, INT=${lv90.INTELLECT?.toFixed(1)}, WILL=${lv90.WILL?.toFixed(1)}`);
   console.log(`  Potentials: ${entry[I.POTENTIALS].length}`);
   for (const p of entry[I.POTENTIALS]) {
-    console.log(`    P${p.level}: ${p.name} (${p.effects.length} effects)`);
+    console.log(`    P${p.level}: ${p.name}`);
   }
 }
 

@@ -61,7 +61,8 @@
           },
           "unit": "SECOND"
         },
-        "element": "HEAT"
+        "element": "HEAT",
+        "name": "Frag Grenade·β"
       },
       "frames": [
         {

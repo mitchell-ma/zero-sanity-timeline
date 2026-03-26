@@ -61,7 +61,8 @@
           },
           "unit": "SECOND"
         },
-        "element": "PHYSICAL"
+        "element": "PHYSICAL",
+        "name": "Frontline Support"
       },
       "frames": [
         {
@@ -126,6 +127,153 @@
                       "of": "OPERATOR"
                     }
                   }
+                },
+                {
+                  "verb": "RECOVER",
+                  "object": "HP",
+                  "toDeterminer": "CONTROLLED",
+                  "to": "OPERATOR",
+                  "with": {
+                    "value": {
+                      "operation": "ADD",
+                      "left": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          300,
+                          360,
+                          420,
+                          480,
+                          510,
+                          540,
+                          570,
+                          600,
+                          630,
+                          645,
+                          660,
+                          675
+                        ],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
+                      },
+                      "right": {
+                        "operation": "MULT",
+                        "left": {
+                          "verb": "VARY_BY",
+                          "object": "SKILL_LEVEL",
+                          "value": [
+                            0.7,
+                            0.84,
+                            0.98,
+                            1.12,
+                            1.19,
+                            1.26,
+                            1.33,
+                            1.4,
+                            1.47,
+                            1.51,
+                            1.54,
+                            1.58
+                          ],
+                          "ofDeterminer": "THIS",
+                          "of": "OPERATOR"
+                        },
+                        "right": {
+                          "verb": "IS",
+                          "objectId": "WILL",
+                          "object": "STAT",
+                          "ofDeterminer": "THIS",
+                          "of": "OPERATOR"
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "conditions": [
+                {
+                  "subjectDeterminer": "THIS",
+                  "subject": "OPERATOR",
+                  "verb": "HAVE",
+                  "object": "POTENTIAL",
+                  "with": {
+                    "value": {
+                      "verb": "AT_LEAST",
+                      "value": 3
+                    }
+                  }
+                }
+              ],
+              "effects": [
+                {
+                  "verb": "RECOVER",
+                  "object": "HP",
+                  "toDeterminer": "OTHER_LOWEST_HP",
+                  "to": "OPERATOR",
+                  "with": {
+                    "value": {
+                      "operation": "MULT",
+                      "left": {
+                        "verb": "IS",
+                        "value": 0.5
+                      },
+                      "right": {
+                        "operation": "ADD",
+                        "left": {
+                          "verb": "VARY_BY",
+                          "object": "SKILL_LEVEL",
+                          "value": [
+                            300,
+                            360,
+                            420,
+                            480,
+                            510,
+                            540,
+                            570,
+                            600,
+                            630,
+                            645,
+                            660,
+                            675
+                          ],
+                          "ofDeterminer": "THIS",
+                          "of": "OPERATOR"
+                        },
+                        "right": {
+                          "operation": "MULT",
+                          "left": {
+                            "verb": "VARY_BY",
+                            "object": "SKILL_LEVEL",
+                            "value": [
+                              0.7,
+                              0.84,
+                              0.98,
+                              1.12,
+                              1.19,
+                              1.26,
+                              1.33,
+                              1.4,
+                              1.47,
+                              1.51,
+                              1.54,
+                              1.58
+                            ],
+                            "ofDeterminer": "THIS",
+                            "of": "OPERATOR"
+                          },
+                          "right": {
+                            "verb": "IS",
+                            "objectId": "WILL",
+                            "object": "STAT",
+                            "ofDeterminer": "THIS",
+                            "of": "OPERATOR"
+                          }
+                        }
+                      }
+                    }
+                  }
                 }
               ]
             }
@@ -181,8 +329,10 @@
       "conditions": [
         {
           "subject": "ENEMY",
-          "verb": "PERFORM",
-          "object": "NORMAL_ATTACK"
+          "verb": "DEAL",
+          "object": "DAMAGE",
+          "toDeterminer": "CONTROLLED",
+          "to": "OPERATOR"
         }
       ]
     }

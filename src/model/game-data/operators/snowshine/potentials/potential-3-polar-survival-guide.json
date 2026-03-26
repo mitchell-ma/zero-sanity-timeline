@@ -1,24 +1,4 @@
 {
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "MODIFY",
-          "object": "SKILL_PARAMETER",
-          "objectId": "FRIGID_SNOWFIELD",
-          "with": {
-            "parameterKey": "extra_duration",
-            "value": {
-              "verb": "IS",
-              "value": 2
-            },
-            "parameterModifyType": "ADDITIVE"
-          }
-        }
-      ]
-    }
-  ],
   "properties": {
     "id": "SNOWSHINE_POTENTIAL_3",
     "name": "Polar Survival Guide",
@@ -29,6 +9,5 @@
   },
   "metadata": {
     "originId": "SNOWSHINE"
-  },
-  "clauseType": "ALL"
+  }
 }

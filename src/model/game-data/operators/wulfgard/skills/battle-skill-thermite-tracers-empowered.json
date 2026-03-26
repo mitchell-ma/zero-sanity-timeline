@@ -6,7 +6,7 @@
           "subject": "ENEMY",
           "verb": "HAVE",
           "object": "REACTION",
-          "objectQualifier": "COMBUSTION"
+          "objectId": "COMBUSTION"
         }
       ]
     },
@@ -16,7 +16,7 @@
           "subject": "ENEMY",
           "verb": "HAVE",
           "object": "REACTION",
-          "objectQualifier": "ELECTRIFICATION"
+          "objectId": "ELECTRIFICATION"
         }
       ]
     }
@@ -210,13 +210,68 @@
           },
           "clause": [
             {
-              "conditions": [],
+              "conditions": [
+                {
+                  "subject": "ENEMY",
+                  "verb": "HAVE",
+                  "object": "REACTION",
+                  "objectId": "COMBUSTION"
+                },
+                {
+                  "subject": "ENEMY",
+                  "verb": "HAVE",
+                  "object": "REACTION",
+                  "objectId": "ELECTRIFICATION"
+                }
+              ],
               "effects": [
                 {
                   "verb": "CONSUME",
-                  "object": "ARTS_REACTION",
+                  "object": "REACTION",
+                  "objectId": "COMBUSTION",
                   "fromDeterminer": "ENEMY"
-                },
+                }
+              ]
+            },
+            {
+              "conditions": [
+                {
+                  "subject": "ENEMY",
+                  "verb": "HAVE",
+                  "object": "REACTION",
+                  "objectId": "COMBUSTION"
+                }
+              ],
+              "effects": [
+                {
+                  "verb": "CONSUME",
+                  "object": "REACTION",
+                  "objectId": "COMBUSTION",
+                  "fromDeterminer": "ENEMY"
+                }
+              ]
+            },
+            {
+              "conditions": [
+                {
+                  "subject": "ENEMY",
+                  "verb": "HAVE",
+                  "object": "REACTION",
+                  "objectId": "ELECTRIFICATION"
+                }
+              ],
+              "effects": [
+                {
+                  "verb": "CONSUME",
+                  "object": "REACTION",
+                  "objectId": "ELECTRIFICATION",
+                  "fromDeterminer": "ENEMY"
+                }
+              ]
+            },
+            {
+              "conditions": [],
+              "effects": [
                 {
                   "verb": "DEAL",
                   "object": "STAGGER",
@@ -291,9 +346,63 @@
                   }
                 }
               ]
+            },
+            {
+              "conditions": [
+                {
+                  "subjectDeterminer": "THIS",
+                  "subject": "OPERATOR",
+                  "verb": "HAVE",
+                  "object": "STATUS",
+                  "objectId": "WULFGARD_TALENT1_SCORCHING_FANGS"
+                },
+                {
+                  "subjectDeterminer": "THIS",
+                  "subject": "OPERATOR",
+                  "verb": "HAVE",
+                  "object": "POTENTIAL",
+                  "value": 3
+                }
+              ],
+              "effects": [
+                {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "WULFGARD_TALENT1_SCORCHING_FANGS",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    },
+                    "duration": {
+                      "verb": "IS",
+                      "value": 10
+                    }
+                  }
+                },
+                {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "WULFGARD_TALENT1_SCORCHING_FANGS_MINOR",
+                  "toDeterminer": "ALL_OTHER",
+                  "to": "OPERATOR",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    },
+                    "duration": {
+                      "verb": "IS",
+                      "value": 10
+                    }
+                  }
+                }
+              ]
             }
           ],
-          "clauseType": "ALL"
+          "clauseType": "FIRST_MATCH"
         }
       ],
       "properties": {

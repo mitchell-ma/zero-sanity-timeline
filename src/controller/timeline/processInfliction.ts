@@ -7,6 +7,7 @@ import {
   ENEMY_OWNER_ID, REACTION_COLUMN_IDS, REACTION_COLUMNS,
 } from '../../model/channels';
 import { FPS } from '../../utils/timeline';
+import { contractByTimeStops, TimeStopRegion } from './processTimeStop';
 
 /** Maximum 0-based index for skill level arrays (12 levels → index 0–11). */
 const MAX_SKILL_LEVEL_INDEX = 11;
@@ -252,15 +253,18 @@ const REACTION_SEGMENT_LABEL: Record<string, string> = {
   shatter:         'Shatter',
 };
 
-export function buildReactionSegment(ev: TimelineEvent, rawDuration?: number): EventSegmentData | null {
+export function buildReactionSegment(ev: TimelineEvent, rawDuration?: number, foreignStops?: readonly TimeStopRegion[]): EventSegmentData | null {
   const element = REACTION_DAMAGE_ELEMENT[ev.columnId];
   if (!element) return null;
 
   const dur = eventDuration(ev);
-  // Use the smaller of the raw game-time duration and the current segment
-  // duration for tick generation.  Raw prevents time-stop extension from
-  // inflating tick count; current respects refresh clamping.
-  const tickDur = rawDuration != null ? Math.min(rawDuration, dur) : dur;
+  // Convert real-time duration to game-time (subtract time-stop gaps) so tick
+  // count reflects actual game seconds, not wall-clock frames.
+  const gameTimeDur = foreignStops && foreignStops.length > 0
+    ? contractByTimeStops(ev.startFrame, dur, foreignStops)
+    : dur;
+  // Clamp to raw game-time duration to prevent inflation from time-stop extension.
+  const tickDur = rawDuration != null ? Math.min(rawDuration, gameTimeDur) : gameTimeDur;
 
   const forced = ev.isForced || ev.forcedReaction;
   const frames: EventFrameMarker[] = [];

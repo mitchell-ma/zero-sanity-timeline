@@ -61,7 +61,8 @@
           },
           "unit": "SECOND"
         },
-        "element": "PHYSICAL"
+        "element": "PHYSICAL",
+        "name": "Full Moon Slash"
       },
       "frames": [
         {

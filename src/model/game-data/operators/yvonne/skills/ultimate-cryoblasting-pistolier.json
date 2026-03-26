@@ -16,7 +16,7 @@
           "with": {
             "value": {
               "verb": "IS",
-              "value": 200
+              "value": 220
             }
           }
         }
@@ -62,7 +62,110 @@
         },
         "name": "Cryoblasting Pistolier"
       },
-      "frames": []
+      "frames": [
+        {
+          "metadata": {
+            "eventComponentType": "FRAME"
+          },
+          "properties": {
+            "offset": {
+              "value": 6.5,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "objectQualifier": "CRYO",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        1.33, 1.47, 1.60, 1.73, 1.86, 2.00,
+                        2.13, 2.26, 2.40, 2.56, 2.76, 3.00
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                },
+                {
+                  "verb": "DEAL",
+                  "object": "STAGGER",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 10
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
+        },
+        {
+          "metadata": {
+            "eventComponentType": "FRAME"
+          },
+          "properties": {
+            "offset": {
+              "value": 7.0,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [
+                {
+                  "subject": "ENEMY",
+                  "verb": "IS",
+                  "object": "SOLIDIFIED"
+                }
+              ],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "objectQualifier": "CRYO",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        2.67, 2.94, 3.20, 3.47, 3.74, 4.00,
+                        4.27, 4.54, 4.80, 5.14, 5.54, 6.00
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                },
+                {
+                  "verb": "DEAL",
+                  "object": "STAGGER",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 10
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
+        }
+      ]
     }
   ],
   "metadata": {

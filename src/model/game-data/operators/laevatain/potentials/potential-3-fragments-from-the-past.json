@@ -1,63 +1,4 @@
 {
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "MODIFY",
-          "object": "SKILL_PARAMETER",
-          "objectId": "SMOULDERING_FIRE",
-          "with": {
-            "parameterKey": "DURATION",
-            "value": {
-              "verb": "IS",
-              "value": 1.5
-            },
-            "parameterModifyType": "MULTIPLICATIVE"
-          }
-        },
-        {
-          "verb": "MODIFY",
-          "object": "SKILL_PARAMETER",
-          "objectId": "SMOULDERING_FIRE",
-          "with": {
-            "parameterKey": "EXTRA_SCALING",
-            "value": {
-              "verb": "IS",
-              "value": 1.5
-            },
-            "parameterModifyType": "UNIQUE_MULTIPLIER"
-          }
-        },
-        {
-          "verb": "MODIFY",
-          "object": "SKILL_PARAMETER",
-          "objectId": "SMOULDERING_FIRE_ENHANCED",
-          "with": {
-            "parameterKey": "DURATION",
-            "value": {
-              "verb": "IS",
-              "value": 1.5
-            },
-            "parameterModifyType": "MULTIPLICATIVE"
-          }
-        },
-        {
-          "verb": "MODIFY",
-          "object": "SKILL_PARAMETER",
-          "objectId": "SMOULDERING_FIRE_ENHANCED",
-          "with": {
-            "parameterKey": "EXTRA_SCALING",
-            "value": {
-              "verb": "IS",
-              "value": 1.5
-            },
-            "parameterModifyType": "UNIQUE_MULTIPLIER"
-          }
-        }
-      ]
-    }
-  ],
   "properties": {
     "id": "LAEVATAIN_POTENTIAL_3",
     "name": "Fragments from the Past",
@@ -68,6 +9,5 @@
   },
   "metadata": {
     "originId": "LAEVATAIN"
-  },
-  "clauseType": "ALL"
+  }
 }

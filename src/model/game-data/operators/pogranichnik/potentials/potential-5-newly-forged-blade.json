@@ -4,31 +4,6 @@
       "conditions": [],
       "effects": [
         {
-          "verb": "MODIFY",
-          "object": "SKILL_COST",
-          "objectId": "POGRANICHNIK_FULL_MOON_SLASH",
-          "with": {
-            "value": {
-              "verb": "IS",
-              "value": -2
-            },
-            "parameterType": 2
-          }
-        },
-        {
-          "verb": "MODIFY",
-          "object": "SKILL_PARAMETER",
-          "objectId": "FULL_MOON_SLASH",
-          "with": {
-            "parameterKey": "atb_ratio",
-            "value": {
-              "verb": "IS",
-              "value": 1.2
-            },
-            "parameterModifyType": "UNIQUE_MULTIPLIER"
-          }
-        },
-        {
           "verb": "APPLY",
           "object": "BUFF",
           "objectId": "POGRANICHNIK_POTENTIAL5_NEWLY_FORGED_BLADE",

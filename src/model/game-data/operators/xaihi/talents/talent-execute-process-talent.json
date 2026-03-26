@@ -5,13 +5,38 @@
         {
           "subjectDeterminer": "THIS",
           "subject": "OPERATOR",
-          "verb": "HIT_WITH",
-          "object": "COMBO_SKILL"
+          "verb": "HIT",
+          "object": "ENEMY"
         },
         {
           "subject": "ENEMY",
           "verb": "HAVE",
-          "object": "CRYO_INFLICTION"
+          "object": "INFLICTION",
+          "objectQualifier": "CRYO"
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "EXECUTE_PROCESS",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
+        }
+      ]
+    },
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "HIT",
+          "object": "ENEMY"
+        },
+        {
+          "subject": "ENEMY",
+          "verb": "IS",
+          "object": "SOLIDIFIED"
         }
       ],
       "effects": [

@@ -1,37 +1,4 @@
 {
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "MODIFY",
-          "object": "SKILL_PARAMETER",
-          "objectId": "THE_PULVERIZING_FRONT",
-          "with": {
-            "parameterKey": "has_potential1",
-            "value": {
-              "verb": "IS",
-              "value": 1
-            },
-            "parameterModifyType": "UNIQUE_MULTIPLIER"
-          }
-        },
-        {
-          "verb": "MODIFY",
-          "object": "SKILL_PARAMETER",
-          "objectId": "THE_PULVERIZING_FRONT",
-          "with": {
-            "parameterKey": "atb_return",
-            "value": {
-              "verb": "IS",
-              "value": 15
-            },
-            "parameterModifyType": "UNIQUE_MULTIPLIER"
-          }
-        }
-      ]
-    }
-  ],
   "properties": {
     "id": "POGRANICHNIK_POTENTIAL_1",
     "name": "Frontline Sweep",
@@ -42,6 +9,5 @@
   },
   "metadata": {
     "originId": "POGRANICHNIK"
-  },
-  "clauseType": "ALL"
+  }
 }

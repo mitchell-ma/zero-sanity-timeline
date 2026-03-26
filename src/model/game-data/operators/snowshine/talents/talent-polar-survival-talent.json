@@ -1,4 +1,39 @@
 {
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "TREATMENT_BONUS",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "VARY_BY",
+              "object": "TALENT_LEVEL",
+              "value": [
+                0.15,
+                0.25
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            },
+            "hpThreshold": {
+              "verb": "VARY_BY",
+              "object": "TALENT_LEVEL",
+              "value": [
+                0.45,
+                0.55
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            }
+          }
+        }
+      ]
+    }
+  ],
   "properties": {
     "id": "POLAR_SURVIVAL_TALENT",
     "name": "Polar Survival (Talent)",
@@ -12,8 +47,10 @@
   "metadata": {
     "originId": "SNOWSHINE",
     "dataSources": [
-      "WARFARIN"
+      "WARFARIN",
+      "ENDFIELD_WIKI"
     ],
     "icon": "skills/snowshine_talent_1_icon.png"
-  }
+  },
+  "clauseType": "ALL"
 }

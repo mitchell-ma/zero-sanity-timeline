@@ -318,18 +318,13 @@ export function getOperatorConfig(operatorId: string): OperatorStatConfig | null
   const custom = customs.find(c => c.id === customId);
   if (custom) {
     return {
+      id: operatorId,
       elementType: custom.elementType,
       mainAttributeType: custom.mainAttributeType as string,
       secondaryAttributeType: (custom.secondaryAttributeType ?? custom.mainAttributeType) as string,
       baseStats: custom.baseStats as OperatorStatConfig['baseStats'],
-      potentials: custom.potentials
-        ?.filter(p => p.statModifiers && Object.keys(p.statModifiers).length > 0)
-        .map(p => ({
+      potentials: custom.potentials?.map(p => ({
           level: p.level,
-          effects: Object.entries(p.statModifiers!).map(([stat, value]) => ({
-            potentialEffectType: 'STAT_MODIFIER',
-            statModifier: { statType: stat, value: value as number },
-          })),
         })) ?? [],
     };
   }

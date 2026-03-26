@@ -61,7 +61,8 @@
           },
           "unit": "SECOND"
         },
-        "element": "CRYO"
+        "element": "CRYO",
+        "name": "Stress Testing"
       },
       "frames": [
         {

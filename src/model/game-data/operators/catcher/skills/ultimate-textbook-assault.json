@@ -22,7 +22,7 @@
                 80,
                 80,
                 80,
-                72,
+                80,
                 72,
                 72
               ],
@@ -163,6 +163,53 @@
                   }
                 }
               ]
+            },
+            {
+              "conditions": [
+                {
+                  "subjectDeterminer": "THIS",
+                  "subject": "OPERATOR",
+                  "verb": "HAVE",
+                  "object": "POTENTIAL",
+                  "with": {
+                    "value": {
+                      "verb": "AT_LEAST",
+                      "value": 1
+                    }
+                  }
+                }
+              ],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "objectQualifier": "PHYSICAL",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "operation": "ADD",
+                      "left": {
+                        "verb": "IS",
+                        "value": 300
+                      },
+                      "right": {
+                        "operation": "MULT",
+                        "left": {
+                          "verb": "IS",
+                          "value": 5.0
+                        },
+                        "right": {
+                          "verb": "IS",
+                          "objectId": "BASE_DEFENSE",
+                          "object": "STAT",
+                          "ofDeterminer": "THIS",
+                          "of": "OPERATOR"
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
             }
           ],
           "clauseType": "ALL"
@@ -220,6 +267,53 @@
                       ],
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "conditions": [
+                {
+                  "subjectDeterminer": "THIS",
+                  "subject": "OPERATOR",
+                  "verb": "HAVE",
+                  "object": "POTENTIAL",
+                  "with": {
+                    "value": {
+                      "verb": "AT_LEAST",
+                      "value": 1
+                    }
+                  }
+                }
+              ],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "objectQualifier": "PHYSICAL",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "operation": "ADD",
+                      "left": {
+                        "verb": "IS",
+                        "value": 300
+                      },
+                      "right": {
+                        "operation": "MULT",
+                        "left": {
+                          "verb": "IS",
+                          "value": 5.0
+                        },
+                        "right": {
+                          "verb": "IS",
+                          "objectId": "BASE_DEFENSE",
+                          "object": "STAT",
+                          "ofDeterminer": "THIS",
+                          "of": "OPERATOR"
+                        }
+                      }
                     }
                   }
                 }
@@ -288,6 +382,53 @@
                       ],
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "conditions": [
+                {
+                  "subjectDeterminer": "THIS",
+                  "subject": "OPERATOR",
+                  "verb": "HAVE",
+                  "object": "POTENTIAL",
+                  "with": {
+                    "value": {
+                      "verb": "AT_LEAST",
+                      "value": 1
+                    }
+                  }
+                }
+              ],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "objectQualifier": "PHYSICAL",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "operation": "ADD",
+                      "left": {
+                        "verb": "IS",
+                        "value": 300
+                      },
+                      "right": {
+                        "operation": "MULT",
+                        "left": {
+                          "verb": "IS",
+                          "value": 5.0
+                        },
+                        "right": {
+                          "verb": "IS",
+                          "objectId": "BASE_DEFENSE",
+                          "object": "STAT",
+                          "ofDeterminer": "THIS",
+                          "of": "OPERATOR"
+                        }
+                      }
                     }
                   }
                 }

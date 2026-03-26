@@ -1,50 +1,4 @@
 {
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "MODIFY",
-          "object": "SKILL_PARAMETER",
-          "objectId": "AUGER_ANGLING",
-          "with": {
-            "parameterKey": "potential_3",
-            "value": {
-              "verb": "IS",
-              "value": 1
-            },
-            "parameterModifyType": "UNIQUE_MULTIPLIER"
-          }
-        },
-        {
-          "verb": "MODIFY",
-          "object": "SKILL_PARAMETER",
-          "objectId": "AUGER_ANGLING",
-          "with": {
-            "parameterKey": "atk_up",
-            "value": {
-              "verb": "IS",
-              "value": 0.15
-            },
-            "parameterModifyType": "UNIQUE_MULTIPLIER"
-          }
-        },
-        {
-          "verb": "MODIFY",
-          "object": "SKILL_PARAMETER",
-          "objectId": "AUGER_ANGLING",
-          "with": {
-            "parameterKey": "Duration",
-            "value": {
-              "verb": "IS",
-              "value": 10
-            },
-            "parameterModifyType": "UNIQUE_MULTIPLIER"
-          }
-        }
-      ]
-    }
-  ],
   "properties": {
     "id": "ALESH_POTENTIAL_3",
     "name": "May the Willing Bite",
@@ -55,6 +9,5 @@
   },
   "metadata": {
     "originId": "ALESH"
-  },
-  "clauseType": "ALL"
+  }
 }

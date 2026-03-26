@@ -1,4 +1,45 @@
 {
+  "clause": [
+    {
+      "conditions": [
+        {
+          "subject": "ENEMY",
+          "verb": "HAVE",
+          "object": "CRYO_INFLICTION"
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "CRITICAL_DAMAGE_BONUS",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "VARY_BY",
+              "object": "TALENT_LEVEL",
+              "value": [
+                0.1,
+                0.2
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            },
+            "vsSolidified": {
+              "verb": "VARY_BY",
+              "object": "TALENT_LEVEL",
+              "value": [
+                0.2,
+                0.4
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            }
+          }
+        }
+      ]
+    }
+  ],
   "properties": {
     "id": "FREEZING_POINT_TALENT",
     "name": "Freezing Point (Talent)",
@@ -12,8 +53,10 @@
   "metadata": {
     "originId": "YVONNE",
     "dataSources": [
-      "WARFARIN"
+      "WARFARIN",
+      "ENDFIELD_WIKI"
     ],
     "icon": "skills/yvonne_talent_2_icon.png"
-  }
+  },
+  "clauseType": "ALL"
 }

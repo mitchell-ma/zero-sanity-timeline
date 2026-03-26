@@ -9,10 +9,41 @@
     "description": "During OLDEN STARE, performing a dive attack with the controlled operator ends its evolution early and creates a Waterspout. All nearby Whirlpools are also consumed and converted into additional Waterspouts. Waterspouts created this way have the same effects as those created by the battle skill IMA WAVERIDAAH! and gain DMG Dealt +40%.",
     "maxLevel": 2
   },
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "DAMAGE_BONUS",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "VARY_BY",
+              "object": "TALENT_LEVEL",
+              "value": [0.4, 0.6],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            },
+            "duration": {
+              "value": {
+                "verb": "IS",
+                "value": 3
+              },
+              "unit": "SECOND"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "clauseType": "ALL",
   "metadata": {
     "originId": "TANGTANG",
     "dataSources": [
-      "WARFARIN"
+      "WARFARIN",
+      "ENDFIELD_WIKI"
     ],
     "icon": "skills/tangtang_talent_2_icon.png"
   }

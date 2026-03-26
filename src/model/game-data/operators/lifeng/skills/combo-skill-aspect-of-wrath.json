@@ -61,7 +61,8 @@
           },
           "unit": "SECOND"
         },
-        "element": "PHYSICAL"
+        "element": "PHYSICAL",
+        "name": "Aspect of Wrath"
       },
       "frames": [
         {
@@ -111,8 +112,8 @@
                 },
                 {
                   "verb": "APPLY",
-                  "object": "LINK",
-                  "objectType": "STATUS",
+                  "object": "STATUS",
+                  "objectId": "LINK",
                   "toDeterminer": "THIS",
                   "to": "OPERATOR",
                   "with": {
@@ -239,10 +240,34 @@
     {
       "conditions": [
         {
-          "subjectDeterminer": "THIS",
+          "subjectDeterminer": "CONTROLLED",
           "subject": "OPERATOR",
           "verb": "PERFORM",
           "object": "FINAL_STRIKE"
+        },
+        {
+          "subject": "ENEMY",
+          "verb": "HAVE",
+          "object": "STATUS",
+          "objectId": "PHYSICAL",
+          "objectQualifier": "SUSCEPTIBILITY"
+        }
+      ]
+    },
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "CONTROLLED",
+          "subject": "OPERATOR",
+          "verb": "PERFORM",
+          "object": "FINAL_STRIKE"
+        },
+        {
+          "subject": "ENEMY",
+          "verb": "HAVE",
+          "object": "STATUS",
+          "objectId": "PHYSICAL",
+          "objectQualifier": "BREACH"
         }
       ]
     }

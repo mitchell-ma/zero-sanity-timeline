@@ -19,7 +19,7 @@
               "object": "POTENTIAL",
               "value": [
                 80,
-                72,
+                80,
                 72,
                 72,
                 72,
@@ -68,7 +68,80 @@
           "unit": "SECOND"
         }
       },
-      "frames": []
+      "frames": [
+        {
+          "metadata": {
+            "eventComponentType": "FRAME"
+          },
+          "properties": {
+            "offset": {
+              "value": 0,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "APPLY",
+                  "objectQualifier": "CRYO",
+                  "object": "AMP",
+                  "toDeterminer": "ALL",
+                  "to": "OPERATOR",
+                  "with": {
+                    "value": {
+                      "operation": "MULT",
+                      "left": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [0.11, 0.12, 0.13, 0.14, 0.15, 0.16, 0.17, 0.18, 0.19, 0.21, 0.22, 0.24],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
+                      },
+                      "right": {
+                        "verb": "VARY_BY",
+                        "object": "POTENTIAL",
+                        "value": [1, 1, 1, 1, 1, 1.1],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
+                      }
+                    },
+                    "duration": { "value": { "verb": "IS", "value": 12 }, "unit": "SECOND" }
+                  }
+                },
+                {
+                  "verb": "APPLY",
+                  "objectQualifier": "NATURE",
+                  "object": "AMP",
+                  "toDeterminer": "ALL",
+                  "to": "OPERATOR",
+                  "with": {
+                    "value": {
+                      "operation": "MULT",
+                      "left": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [0.11, 0.12, 0.13, 0.14, 0.15, 0.16, 0.17, 0.18, 0.19, 0.21, 0.22, 0.24],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
+                      },
+                      "right": {
+                        "verb": "VARY_BY",
+                        "object": "POTENTIAL",
+                        "value": [1, 1, 1, 1, 1, 1.1],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
+                      }
+                    },
+                    "duration": { "value": { "verb": "IS", "value": 12 }, "unit": "SECOND" }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
     }
   ],
   "metadata": {

@@ -1,52 +1,6 @@
 {
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "MODIFY",
-          "object": "SKILL_PARAMETER",
-          "objectId": "ESOTERIC_LEGACY",
-          "with": {
-            "parameterKey": "atk_up",
-            "value": {
-              "verb": "IS",
-              "value": 0.2
-            },
-            "parameterModifyType": "UNIQUE_MULTIPLIER"
-          }
-        },
-        {
-          "verb": "MODIFY",
-          "object": "SKILL_PARAMETER",
-          "objectId": "ESOTERIC_LEGACY",
-          "with": {
-            "parameterKey": "poise",
-            "value": {
-              "verb": "IS",
-              "value": 5
-            },
-            "parameterModifyType": "UNIQUE_MULTIPLIER"
-          }
-        },
-        {
-          "verb": "MODIFY",
-          "object": "SKILL_PARAMETER",
-          "objectId": "ESOTERIC_LEGACY",
-          "with": {
-            "parameterKey": "potential_1",
-            "value": {
-              "verb": "IS",
-              "value": 1
-            },
-            "parameterModifyType": "UNIQUE_MULTIPLIER"
-          }
-        }
-      ]
-    }
-  ],
   "properties": {
-    "id": "LAST-RITE_POTENTIAL_1",
+    "id": "LAST_RITE_POTENTIAL_1",
     "name": "Undertaker's Gift",
     "level": 1,
     "eventType": "POTENTIAL_EVENT",
@@ -54,7 +8,6 @@
     "description": "When the controlled operator with Hypothermic Perfusion performs a Final Strike that hits the enemy, it deals another 20% DMG and 5 Stagger."
   },
   "metadata": {
-    "originId": "LAST-RITE"
-  },
-  "clauseType": "ALL"
+    "originId": "LAST_RITE"
+  }
 }

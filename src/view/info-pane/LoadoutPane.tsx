@@ -70,6 +70,10 @@ const STAT_LABEL_KEYS: Record<StatType, string> = {
   [StatType.ARTS_DAMAGE_BONUS]: 'stat.ARTS_DAMAGE_BONUS',
   [StatType.HP_BONUS]: 'stat.HP_BONUS',
   [StatType.FLAT_HP]: 'stat.FLAT_HP',
+  // ── Damage factor stats ──────────────────────────────────────────────────────
+  [StatType.DAMAGE_BONUS]: 'stat.DAMAGE_BONUS',
+  [StatType.AMP]: 'stat.AMP',
+  [StatType.SUSCEPTIBILITY]: 'stat.SUSCEPTIBILITY',
   // ── Enemy stats ──────────────────────────────────────────────────────────────
   [StatType.STAGGER_HP]: 'stat.STAGGER_HP',
   [StatType.STAGGER_RECOVERY]: 'stat.STAGGER_RECOVERY',
@@ -255,15 +259,16 @@ function OperatorSelector({ operators, currentOperator, onSelect }: {
 // ── Item Selector (weapon/gear/consumable/tactical) ──────────────────────────
 
 interface SelectorEntry {
+  id: string;
   name: string;
   icon?: string;
   rarity: number;
 }
 
-function ItemSelector({ entries, selectedName, onSelect, placeholder }: {
+function ItemSelector({ entries, selectedId, onSelect, placeholder }: {
   entries: readonly SelectorEntry[];
-  selectedName: string | null;
-  onSelect: (name: string | null) => void;
+  selectedId: string | null;
+  onSelect: (id: string | null) => void;
   placeholder: string;
 }) {
   const [open, setOpen] = useState(false);
@@ -273,8 +278,8 @@ function ItemSelector({ entries, selectedName, onSelect, placeholder }: {
   const menuRef = useRef<HTMLDivElement>(null);
 
   const selected = useMemo(
-    () => selectedName ? entries.find((e) => e.name === selectedName) ?? null : null,
-    [entries, selectedName],
+    () => selectedId ? entries.find((e) => e.id === selectedId) ?? null : null,
+    [entries, selectedId],
   );
 
   const rarities = useMemo(() => {
@@ -327,8 +332,8 @@ function ItemSelector({ entries, selectedName, onSelect, placeholder }: {
     setOpen(true);
   }, [open, rarities]);
 
-  const pick = useCallback((name: string | null) => {
-    onSelect(name);
+  const pick = useCallback((id: string | null) => {
+    onSelect(id);
     setOpen(false);
   }, [onSelect]);
 
@@ -370,16 +375,16 @@ function ItemSelector({ entries, selectedName, onSelect, placeholder }: {
           </div>
           <div className="loadout-op-selector-scroll">
             <div
-              className={`loadout-item-option${selectedName === null ? ' loadout-item-option--selected' : ''}`}
+              className={`loadout-item-option${selectedId === null ? ' loadout-item-option--selected' : ''}`}
               onClick={() => pick(null)}
             >
               <span className="loadout-item-option-name" style={{ color: 'var(--text-muted)' }}>None</span>
             </div>
             {filtered.map((entry) => (
               <div
-                key={entry.name}
-                className={`loadout-item-option${entry.name === selectedName ? ' loadout-item-option--selected' : ''}`}
-                onClick={() => pick(entry.name)}
+                key={entry.id}
+                className={`loadout-item-option${entry.id === selectedId ? ' loadout-item-option--selected' : ''}`}
+                onClick={() => pick(entry.id)}
               >
                 <span className="loadout-item-option-name">{entry.name}</span>
                 {entry.icon && (
@@ -540,8 +545,8 @@ function LoadoutPane({ operatorId, slotId, operator, loadout, stats, onStatsChan
           {onLoadoutChange && (
             <ItemSelector
               entries={compatibleWeapons}
-              selectedName={loadout.weaponId}
-              onSelect={(name) => setLoadoutField('weaponId', name)}
+              selectedId={loadout.weaponId}
+              onSelect={(id) => setLoadoutField('weaponId', id)}
               placeholder="Weapon"
             />
           )}
@@ -630,6 +635,7 @@ function LoadoutPane({ operatorId, slotId, operator, loadout, stats, onStatsChan
           ] as const).map(({ gearCategory, loadoutKey, ranksKey, label }, i) => {
             const piece = gearData?.pieces.find((p) => p.ranksKey === ranksKey);
             const gearEntries: SelectorEntry[] = getGearPiecesByType(gearCategory).map((gp) => ({
+              id: gp.id,
               name: gp.name,
               icon: gp.icon,
               rarity: getGearSetEffect(gp.gearSet)?.rarity ?? 5,
@@ -641,8 +647,8 @@ function LoadoutPane({ operatorId, slotId, operator, loadout, stats, onStatsChan
                 {onLoadoutChange && (
                   <ItemSelector
                     entries={gearEntries}
-                    selectedName={loadout[loadoutKey]}
-                    onSelect={(name) => setLoadoutField(loadoutKey, name)}
+                    selectedId={loadout[loadoutKey]}
+                    onSelect={(id) => setLoadoutField(loadoutKey, id)}
                     placeholder={label}
                   />
                 )}
@@ -695,8 +701,8 @@ function LoadoutPane({ operatorId, slotId, operator, loadout, stats, onStatsChan
           {onLoadoutChange && (
             <ItemSelector
               entries={getAllConsumableEntries()}
-              selectedName={loadout.consumableId}
-              onSelect={(name) => setLoadoutField('consumableId', name)}
+              selectedId={loadout.consumableId}
+              onSelect={(id) => setLoadoutField('consumableId', id)}
               placeholder="Consumable"
             />
           )}
@@ -708,8 +714,8 @@ function LoadoutPane({ operatorId, slotId, operator, loadout, stats, onStatsChan
           {onLoadoutChange && (
             <ItemSelector
               entries={getAllTacticalEntries()}
-              selectedName={loadout.tacticalId}
-              onSelect={(name) => setLoadoutField('tacticalId', name)}
+              selectedId={loadout.tacticalId}
+              onSelect={(id) => setLoadoutField('tacticalId', id)}
               placeholder="Tactical"
             />
           )}

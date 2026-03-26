@@ -8,7 +8,7 @@
           "verb": "CONSUME",
           "object": "VULNERABILITY",
           "with": {
-            "stacks": "MAX"
+            "stacks": { "verb": "AT_LEAST", "value": 1 }
           }
         }
       ],

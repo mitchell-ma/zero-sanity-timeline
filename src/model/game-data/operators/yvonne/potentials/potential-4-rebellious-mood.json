@@ -1,37 +1,4 @@
 {
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "MODIFY",
-          "object": "SKILL_PARAMETER",
-          "objectId": "BRR_BRR_BOMB",
-          "with": {
-            "parameterKey": "atb_return",
-            "value": {
-              "verb": "IS",
-              "value": 10
-            },
-            "parameterModifyType": "UNIQUE_MULTIPLIER"
-          }
-        },
-        {
-          "verb": "MODIFY",
-          "object": "SKILL_PARAMETER",
-          "objectId": "BRR_BRR_BOMB",
-          "with": {
-            "parameterKey": "has_potential2",
-            "value": {
-              "verb": "IS",
-              "value": 1
-            },
-            "parameterModifyType": "UNIQUE_MULTIPLIER"
-          }
-        }
-      ]
-    }
-  ],
   "properties": {
     "id": "YVONNE_POTENTIAL_4",
     "name": "Rebellious Mood",
@@ -42,6 +9,5 @@
   },
   "metadata": {
     "originId": "YVONNE"
-  },
-  "clauseType": "ALL"
+  }
 }

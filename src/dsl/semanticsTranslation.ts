@@ -94,7 +94,6 @@ export const VERB_LABELS: Record<string, string> = {
   IS: t('dsl.verb.IS'),
   BECOME: t('dsl.verb.BECOME'),
   RECEIVE: t('dsl.verb.RECEIVE'),
-  MODIFY: t('dsl.verb.MODIFY'),
 };
 
 export const OBJECT_LABELS: Record<string, string> = {
@@ -113,7 +112,6 @@ export const OBJECT_LABELS: Record<string, string> = {
   REAL_TIME: t('dsl.object.REAL_TIME'),
   EVENT: t('dsl.object.EVENT'),
   STAT_MODIFIER: t('dsl.object.STAT_MODIFIER'),
-  SKILL_PARAMETER: t('dsl.object.SKILL_PARAMETER'),
   ATTACK_BONUS: t('dsl.object.ATTACK_BONUS'),
   ARTS_REACTION: t('dsl.object.ARTS_REACTION'),
   FINAL_STRIKE: t('dsl.object.FINAL_STRIKE'),

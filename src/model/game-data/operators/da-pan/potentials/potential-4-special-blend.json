@@ -1,25 +1,6 @@
 {
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "MODIFY",
-          "object": "SKILL_COST",
-          "objectId": "DA_PAN_CHOP_N_DUNK",
-          "with": {
-            "value": {
-              "verb": "IS",
-              "value": 0.85
-            },
-            "parameterType": 1
-          }
-        }
-      ]
-    }
-  ],
   "properties": {
-    "id": "DA-PAN_POTENTIAL_4",
+    "id": "DA_PAN_POTENTIAL_4",
     "name": "Special Blend",
     "level": 4,
     "eventType": "POTENTIAL_EVENT",
@@ -27,7 +8,6 @@
     "description": "Ultimate CHOP 'N DUNK! improved: Ultimate Energy cost -{1-costValue:0%}."
   },
   "metadata": {
-    "originId": "DA-PAN"
-  },
-  "clauseType": "ALL"
+    "originId": "DA_PAN"
+  }
 }

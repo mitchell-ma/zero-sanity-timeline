@@ -1,24 +1,4 @@
 {
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "MODIFY",
-          "object": "SKILL_PARAMETER",
-          "objectId": "INSTANT_PROTOCOL_CHAIN",
-          "with": {
-            "parameterKey": "EXTRA_SCALING",
-            "value": {
-              "verb": "IS",
-              "value": 1.33
-            },
-            "parameterModifyType": "UNIQUE_MULTIPLIER"
-          }
-        }
-      ]
-    }
-  ],
   "properties": {
     "id": "PERLICA_POTENTIAL_4",
     "name": "Constant Guidance",
@@ -29,6 +9,5 @@
   },
   "metadata": {
     "originId": "PERLICA"
-  },
-  "clauseType": "ALL"
+  }
 }

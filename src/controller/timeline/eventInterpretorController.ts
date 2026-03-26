@@ -41,6 +41,7 @@ import { COMMON_OWNER_ID } from '../slot/commonSlotController';
 import { evaluateConditions } from './conditionEvaluator';
 import type { ConditionContext } from './conditionEvaluator';
 import { resolveSusceptibility } from './processInfliction';
+import type { HPController } from '../calculation/hpController';
 import { getPhysicalStatusBaseMultiplier, getShatterBaseMultiplier } from '../../model/calculation/damageFormulas';
 import type { StatusLevel } from '../../consts/types';
 import type { SlotTriggerWiring } from './eventQueueTypes';
@@ -122,7 +123,7 @@ const LIFT_KNOCK_DOWN_DAMAGE_MULTIPLIER = 1.2;
 
 
 const NOOP_VERBS = new Set<string>([
-  VerbType.RECOVER, VerbType.RETURN, VerbType.DEAL, VerbType.HIT,
+  VerbType.RETURN, VerbType.DEAL, VerbType.HIT,
   VerbType.DEFEAT, VerbType.PERFORM, VerbType.IGNORE, VerbType.OVERHEAL,
   VerbType.EXPERIENCE, VerbType.MERGE, VerbType.RESET,
 ]);
@@ -234,6 +235,7 @@ export class EventInterpretorController {
   private getEnemyHpPercentage?: (frame: number) => number | null;
   private getControlledSlotAtFrame?: (frame: number) => string;
   private triggerIndex?: TriggerIndex;
+  private hpController?: HPController;
   /** Dedup set for reactive triggers: prevents double-firing at the same frame. */
   private seenTriggers = new Set<string>();
 
@@ -252,6 +254,7 @@ export class EventInterpretorController {
       getEnemyHpPercentage?: (frame: number) => number | null;
       getControlledSlotAtFrame?: (frame: number) => string;
       triggerIndex?: TriggerIndex;
+      hpController?: HPController;
     },
   ) {
     if (controller) this.controller = controller;
@@ -263,6 +266,7 @@ export class EventInterpretorController {
       this.getEnemyHpPercentage = options.getEnemyHpPercentage;
       this.getControlledSlotAtFrame = options.getControlledSlotAtFrame;
       this.triggerIndex = options.triggerIndex;
+      this.hpController = options.hpController;
     }
   }
 
@@ -279,6 +283,7 @@ export class EventInterpretorController {
       getEnemyHpPercentage?: (frame: number) => number | null;
       getControlledSlotAtFrame?: (frame: number) => string;
       triggerIndex?: TriggerIndex;
+      hpController?: HPController;
     },
   ) {
     this.controller = controller;
@@ -290,12 +295,14 @@ export class EventInterpretorController {
     this.getEnemyHpPercentage = options?.getEnemyHpPercentage;
     this.getControlledSlotAtFrame = options?.getControlledSlotAtFrame;
     this.triggerIndex = options?.triggerIndex;
+    this.hpController = options?.hpController;
   }
 
   // ── DSL Effect interpretation ──────────────────────────────────────────
 
   interpret(effect: Effect, ctx: InterpretContext): boolean {
-    if (!validateVerbObject(effect.verb, effect.object as string)) return false;
+    // RECOVER without object is valid (handled as no-op in doRecover for SP/UE)
+    if (effect.verb !== VerbType.RECOVER && !validateVerbObject(effect.verb, effect.object as string)) return false;
 
     switch (effect.verb) {
       case VerbType.ALL:     return this.doAll(effect, ctx);
@@ -306,8 +313,10 @@ export class EventInterpretorController {
       case VerbType.RESET:   return this.doReset(effect, ctx);
       case VerbType.REDUCE:  return this.doReduce(effect, ctx);
 
+      case VerbType.RECOVER: return this.doRecover(effect, ctx);
+
       case VerbType.REFRESH: case VerbType.EXTEND:
-      case VerbType.RECOVER: case VerbType.RETURN: case VerbType.DEAL:
+      case VerbType.RETURN: case VerbType.DEAL:
       case VerbType.HIT: case VerbType.DEFEAT: case VerbType.PERFORM:
       case VerbType.IGNORE: case VerbType.OVERHEAL: case VerbType.EXPERIENCE:
       case VerbType.MERGE:
@@ -372,8 +381,9 @@ export class EventInterpretorController {
           return col ? this.controller.canApplyInfliction(col, ownerId, ctx.frame) : false;
         }
         if (effect.object === 'STATUS') {
-          const col = statusNameToColumnId(effect.objectId ?? '');
-          const statusOwner = getTeamStatusColumnId(effect.objectId ?? '') ? COMMON_OWNER_ID : ownerId;
+          const skipTeam = effect.to != null && effect.to !== NounType.TEAM;
+          const col = statusNameToColumnId(effect.objectId ?? '', skipTeam);
+          const statusOwner = effect.to === NounType.TEAM ? COMMON_OWNER_ID : ownerId;
           const configLimit = effect.objectId ? getStatusStackLimit(effect.objectId) : undefined;
           return this.controller.canApplyStatus(col, statusOwner, ctx.frame, configLimit);
         }
@@ -387,13 +397,22 @@ export class EventInterpretorController {
           const col = resolveInflictionColumnId(effect.objectQualifier);
           return col ? this.controller.canConsumeInfliction(col, ownerId, ctx.frame) : false;
         }
-        if (effect.object === 'REACTION') {
-          const col = resolveReactionColumnId(effect.objectQualifier);
+        if (effect.object === NounType.REACTION) {
+          if (effect.objectId === AdjectiveType.ARTS) {
+            // ARTS = any arts reaction — check all reaction columns
+            let canConsumeAny = false;
+            REACTION_COLUMN_IDS.forEach(col => {
+              if (this.controller.canConsumeReaction(col, ownerId, ctx.frame)) canConsumeAny = true;
+            });
+            return canConsumeAny;
+          }
+          const col = resolveReactionColumnId(effect.objectQualifier) ?? resolveReactionColumnId(effect.objectId as AdjectiveType);
           return col ? this.controller.canConsumeReaction(col, ownerId, ctx.frame) : false;
         }
         if (effect.object === 'STATUS') {
-          const col = statusNameToColumnId(effect.objectId ?? '');
-          const statusOwner = getTeamStatusColumnId(effect.objectId ?? '') ? COMMON_OWNER_ID : ownerId;
+          const skipTeam = effect.to != null && effect.to !== NounType.TEAM;
+          const col = statusNameToColumnId(effect.objectId ?? '', skipTeam);
+          const statusOwner = effect.to === NounType.TEAM ? COMMON_OWNER_ID : ownerId;
           return this.controller.canConsumeStatus(col, statusOwner, ctx.frame);
         }
         return true;
@@ -416,16 +435,18 @@ export class EventInterpretorController {
     if (effect.object === 'STATUS') {
       // Physical status (APPLY LIFT STATUS TO ENEMY) → delegate to dedicated handler
       if (effect.objectId === 'PHYSICAL') return this.applyPhysicalStatus(effect, ctx);
-      const isTeamStatus = !!getTeamStatusColumnId(effect.objectId ?? '');
-      const statusOwnerId = isTeamStatus ? COMMON_OWNER_ID : ownerId;
-      // Team/operator statuses → resolve column via map; enemy statuses → use raw objectId as column
-      const columnId = isTeamStatus ? getTeamStatusColumnId(effect.objectId ?? '')!
+      const isTeamTarget = effect.to === NounType.TEAM;
+      // When effect explicitly targets non-TEAM, skip team-status column routing even if the
+      // status config defaults to TEAM — the effect's "to" is authoritative.
+      const effectOverridesTeam = effect.to != null && effect.to !== NounType.TEAM;
+      const statusOwnerId = isTeamTarget ? COMMON_OWNER_ID : ownerId;
+      // Team statuses → team-status column; enemy statuses → raw objectId; operator statuses → name-based column
+      const columnId = isTeamTarget ? getTeamStatusColumnId(effect.objectId ?? '') ?? statusNameToColumnId(effect.objectId ?? '')
         : statusOwnerId === ENEMY_OWNER_ID ? (effect.objectId ?? '')
-        : statusNameToColumnId(effect.objectId ?? '');
+        : statusNameToColumnId(effect.objectId ?? '', effectOverridesTeam);
       const cfg = getStatusConfig(effect.objectId);
       const def = getStatusDef(effect.objectId);
       const dv = this.resolveWith(effect.with?.duration, ctx);
-      const isTeamTarget = effect.to === NounType.TEAM || getTeamStatusColumnId(effect.objectId ?? '');
       const remainingDuration = ctx.parentEventEndFrame != null
         ? Math.max(0, ctx.parentEventEndFrame - ctx.frame)
         : undefined;
@@ -528,22 +549,23 @@ export class EventInterpretorController {
       if (!col) return false;
       return this.controller.consumeInfliction(col, ownerId, ctx.frame, count, source) > 0;
     }
-    if (effect.object === NounType.REACTION || effect.object === NounType.ARTS_REACTION) {
-      if (effect.objectId === 'ARTS' || effect.object === NounType.ARTS_REACTION) {
+    if (effect.object === NounType.REACTION) {
+      if (effect.objectId === AdjectiveType.ARTS) {
         // Consume any active arts reaction on the target
         REACTION_COLUMN_IDS.forEach(col => {
           this.controller.consumeReaction(col, ownerId, ctx.frame, source);
         });
         return true;
       }
-      const col = resolveReactionColumnId(effect.objectQualifier);
+      const col = resolveReactionColumnId(effect.objectQualifier) ?? resolveReactionColumnId(effect.objectId as AdjectiveType);
       if (!col) return false;
       this.controller.consumeReaction(col, ownerId, ctx.frame, source);
       return true;
     }
     if (effect.object === NounType.STATUS) {
-      const statusOwner = getTeamStatusColumnId(effect.objectId ?? '') ? COMMON_OWNER_ID : ownerId;
-      this.controller.consumeStatus(statusNameToColumnId(effect.objectId ?? ''), statusOwner, ctx.frame, source);
+      const skipTeam = effect.to != null && effect.to !== NounType.TEAM;
+      const statusOwner = effect.to === NounType.TEAM ? COMMON_OWNER_ID : ownerId;
+      this.controller.consumeStatus(statusNameToColumnId(effect.objectId ?? '', skipTeam), statusOwner, ctx.frame, source);
       return true;
     }
     return true;
@@ -682,6 +704,60 @@ export class EventInterpretorController {
       const newCooldownDuration = (ctx.frame - activeEnd) + newRemaining;
       this.controller.reduceCooldown(ev.uid, newCooldownDuration);
     }
+    return true;
+  }
+
+  private doRecover(effect: Effect, ctx: InterpretContext) {
+    // Only handle HP recovery — SP/UE handled elsewhere
+    if (effect.object !== NounType.HP) return true;
+    if (!this.hpController) return true;
+
+    const wp = effect.with as Record<string, unknown> | undefined;
+    if (!wp?.value) return true;
+
+    // Resolve heal amount from ValueExpression
+    const valueCtx = this.buildValueContext(ctx);
+    const rawHeal = resolveValueNode(wp.value as ValueNode, valueCtx);
+    if (!rawHeal || rawHeal <= 0) return true;
+
+    // Apply Treatment Bonus from source operator
+    const treatmentBonus = valueCtx.stats?.TREATMENT_BONUS ?? 0;
+
+    // Resolve target operator
+    const toDeterminer = (effect as unknown as Record<string, unknown>).toDeterminer as string | undefined;
+    const filter = wp.filter as { objectQualifier?: string; objectId?: string; object?: string } | undefined;
+    let targetOperatorId: string | undefined;
+
+    if (toDeterminer === DeterminerType.CONTROLLED) {
+      const controlledSlot = this.getControlledSlotAtFrame?.(ctx.frame);
+      targetOperatorId = controlledSlot ? this.resolveOperatorId(controlledSlot) : ctx.sourceOwnerId;
+    } else if (toDeterminer === DeterminerType.ANY && filter?.objectQualifier === AdjectiveType.LOWEST) {
+      // Find operator with lowest HP percentage; tie-break to controlled
+      const operatorIds = this.hpController.getOperatorIds();
+      const controlledSlot = this.getControlledSlotAtFrame?.(ctx.frame);
+      const controlledOpId = controlledSlot ? this.resolveOperatorId(controlledSlot) : undefined;
+      let lowestPct = Infinity;
+      targetOperatorId = controlledOpId; // default tie-breaker
+      for (const opId of operatorIds) {
+        const pct = this.hpController.getOperatorPercentageHp(opId, ctx.frame);
+        if (pct < lowestPct) {
+          lowestPct = pct;
+          targetOperatorId = opId;
+        }
+      }
+    } else {
+      targetOperatorId = ctx.sourceOwnerId;
+    }
+
+    if (!targetOperatorId) return true;
+
+    // Apply Treatment Received Bonus from target
+    const targetSlot = Object.entries(this.slotOperatorMap ?? {}).find(([, opId]) => opId === targetOperatorId)?.[0];
+    const targetCtx = targetSlot ? buildContextForSkillColumn(this.loadoutProperties?.[targetSlot], SKILL_COLUMNS.BATTLE) : undefined;
+    const treatmentReceivedBonus = targetCtx?.stats?.TREATMENT_RECEIVED_BONUS ?? 0;
+
+    const finalHeal = rawHeal * (1 + treatmentBonus) * (1 + treatmentReceivedBonus);
+    this.hpController.applyHeal(targetOperatorId, ctx.frame, finalHeal);
     return true;
   }
 
@@ -1035,11 +1111,25 @@ export class EventInterpretorController {
         potential: pot,
         parentEventEndFrame: event.startFrame + eventDuration(event),
       };
+      // Resolve supplied parameters: user-set values on event, or defaults from frame/event definitions
+      const resolvedParams: Record<string, number> = {};
+      const paramDefs = frame.suppliedParameters ?? event.suppliedParameters;
+      if (paramDefs) {
+        const userValues = (event as { parameterValues?: Record<string, number> }).parameterValues;
+        const varyByDefs = paramDefs.VARY_BY ?? (paramDefs as unknown as { id: string; lowerRange: number }[]);
+        const defs = Array.isArray(varyByDefs) ? varyByDefs : [];
+        for (const def of defs) {
+          resolvedParams[def.id] = userValues?.[def.id] ?? def.lowerRange;
+        }
+      }
       const condCtx: ConditionContext = {
         events: [...this.baseEvents, ...this.controller.output],
         frame: absFrame,
         sourceOwnerId: event.ownerId,
         potential: pot,
+        suppliedParameters: resolvedParams,
+        getControlledSlotAtFrame: this.getControlledSlotAtFrame,
+        getOperatorPercentageHp: this.hpController ? (opId, f) => this.hpController!.getOperatorPercentageHp(opId, f) : undefined,
       };
       const accepted = filterClauses(frame.clauses, frame.clauseType, pred =>
         evaluateConditions(pred.conditions as unknown as import('../../dsl/semantics').Interaction[], condCtx),
@@ -1348,16 +1438,13 @@ export class EventInterpretorController {
     const { ctx } = trigger;
     const triggerEffects = ctx.triggerEffects ?? [];
 
-    // Potential gate: potential-level triggers only fire at the required potential
-    const minPot = ctx.def.properties.minPotential;
-    if (minPot != null && ctx.potential < minPot) return [];
-
     // Check HAVE conditions first (deferred from collection time)
     if (ctx.haveConditions.length > 0) {
       const condCtx: ConditionContext = {
         events: [...this.baseEvents, ...this.controller.output],
         frame: entry.frame,
         sourceOwnerId: ctx.operatorSlotId,
+        potential: ctx.potential,
         getEnemyHpPercentage: this.getEnemyHpPercentage,
       };
       if (!evaluateConditions(ctx.haveConditions as unknown as import('../../dsl/semantics').Interaction[], condCtx)) return [];

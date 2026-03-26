@@ -56,34 +56,66 @@
                     }
                   },
                   "susceptibility": {
-                    "PHYSICAL": [
-                      0.12,
-                      0.12,
-                      0.12,
-                      0.13,
-                      0.13,
-                      0.13,
-                      0.14,
-                      0.14,
-                      0.16,
-                      0.17,
-                      0.18,
-                      0.2
-                    ],
-                    "NATURE": [
-                      0.12,
-                      0.12,
-                      0.12,
-                      0.13,
-                      0.13,
-                      0.13,
-                      0.14,
-                      0.14,
-                      0.16,
-                      0.17,
-                      0.18,
-                      0.2
-                    ]
+                    "PHYSICAL": {
+                      "operation": "ADD",
+                      "left": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.12,
+                          0.12,
+                          0.12,
+                          0.13,
+                          0.13,
+                          0.13,
+                          0.14,
+                          0.14,
+                          0.16,
+                          0.17,
+                          0.18,
+                          0.2
+                        ],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
+                      },
+                      "right": {
+                        "verb": "VARY_BY",
+                        "object": "POTENTIAL",
+                        "value": [0, 0.08, 0.08, 0.08, 0.08, 0.08],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
+                      }
+                    },
+                    "ARTS": {
+                      "operation": "ADD",
+                      "left": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.12,
+                          0.12,
+                          0.12,
+                          0.13,
+                          0.13,
+                          0.13,
+                          0.14,
+                          0.14,
+                          0.16,
+                          0.17,
+                          0.18,
+                          0.2
+                        ],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
+                      },
+                      "right": {
+                        "verb": "VARY_BY",
+                        "object": "POTENTIAL",
+                        "value": [0, 0.08, 0.08, 0.08, 0.08, 0.08],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
+                      }
+                    }
                   }
                 }
               ]
@@ -109,7 +141,8 @@
                   "to": "ENEMY",
                   "with": {
                     "multiplier": {
-                      "verb": "DEPEND_ON",
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
                       "value": [
                         1.42,
                         1.56,

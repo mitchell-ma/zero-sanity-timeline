@@ -79,15 +79,6 @@
               "conditions": [],
               "effects": [
                 {
-                  "verb": "CONSUME",
-                  "object": "STATUS",
-                  "objectId": "ORIGINIUM_CRYSTAL",
-                  "to": "ENEMY",
-                  "with": {
-                    "stacks": "MAX"
-                  }
-                },
-                {
                   "verb": "DEAL",
                   "object": "STAGGER",
                   "to": "ENEMY",

@@ -1567,9 +1567,7 @@ function TabbedSegmentView({ entry }: { entry: { id: string; label: string; data
             {segFrames.map((f, fi) => {
               const fOffset = f.properties?.offset ?? f.offset as { value: unknown; unit: string } | undefined;
               const fOffsetStr = formatDuration(fOffset);
-              const fClause = (f.clause ?? []) as unknown as { conditions?: unknown[]; effects?: Record<string, unknown>[] }[];
-              const fEffects: Record<string, unknown>[] = [];
-              for (const c of fClause) { if (c.effects) fEffects.push(...c.effects); }
+              const fClause = (f.clause ?? []) as unknown as Record<string, unknown>[];
               return (
                 <div key={fi} className="ops-seg-inline-frame">
                   <div className="ops-seg-inline-frame-name">Frame {toRoman(fi + 1)}</div>
@@ -1579,17 +1577,7 @@ function TabbedSegmentView({ entry }: { entry: { id: string; label: string; data
                       <span className="ops-frame-prop-value">{fOffsetStr}</span>
                     </div>
                   )}
-                  {fEffects.map((ef, ei) => {
-                    const { verb, object: objStr, target, fromTarget } = translateEffectParts(ef);
-                    return (
-                      <div key={ei} className="ops-frame-effect-sentence">
-                        <span className="ops-frame-effect-verb">{verb}</span>
-                        {objStr && <span className="ops-frame-effect-obj">{objStr}</span>}
-                        {target && <span className="ops-frame-effect-prep">{target}</span>}
-                        {fromTarget && <span className="ops-frame-effect-prep">{fromTarget}</span>}
-                      </div>
-                    );
-                  })}
+                  {fClause.length > 0 && <FrameClauseView clauses={fClause} />}
                 </div>
               );
             })}
@@ -1664,14 +1652,6 @@ function FrameDetail({ frame, label }: { frame: JsonSkillData; label?: string })
     }
   }
 
-  // Collect conditions and effects from all clauses
-  const conditions: unknown[] = [];
-  const effects: Record<string, unknown>[] = [];
-  for (const c of clause) {
-    if (c.conditions && c.conditions.length > 0) conditions.push(...c.conditions);
-    if (c.effects) effects.push(...c.effects);
-  }
-
   return (
     <div className="ops-frame-detail ops-frame-detail--accented">
       {/* Frame label */}
@@ -1697,69 +1677,93 @@ function FrameDetail({ frame, label }: { frame: JsonSkillData; label?: string })
         </div>
       )}
 
-      {/* Conditions (only if present) */}
-      {conditions.length > 0 && (
-        <div className="ops-frame-conditions">
-          <span className="ops-frame-section-label">Conditions</span>
-          {conditions.map((cond, ci) => (
-            <div key={ci} className="ops-frame-prop-value">{translateCondition(cond as Record<string, unknown>)}</div>
-          ))}
-        </div>
-      )}
-
-      {/* Effects */}
-      {effects.length > 0 ? (
+      {/* Clause predicates (conditions → effects) */}
+      {clause.length > 0 ? (
         <div className="ops-frame-effects">
-          {effects.map((ef, i) => {
-            const { verb, object: objStr, target, fromTarget } = translateEffectParts(ef);
-            const withProps = (ef.with ?? {}) as Record<string, unknown>;
-            const withEntries = Object.entries(withProps);
-
-            return (
-              <div key={i} className="ops-frame-effect">
-                <div className="ops-frame-effect-sentence">
-                  <span className="ops-frame-effect-verb">{verb}</span>
-                  {objStr && <span className="ops-frame-effect-obj">{objStr}</span>}
-                  {target && <span className="ops-frame-effect-prep">{target}</span>}
-                  {fromTarget && <span className="ops-frame-effect-prep">{fromTarget}</span>}
-                </div>
-                {withEntries.length > 0 && (
-                  <div className="ops-frame-effect-with">
-                    {withEntries.map(([key, val]) => {
-                      const w = val && typeof val === 'object' ? val as Record<string, unknown> : null;
-                      const isVaryBy = w && w.verb === 'VARY_BY' && Array.isArray(w.value);
-                      const isTopLevel = key === 'value';
-                      const label = isTopLevel ? 'Value' : key.replace(/_/g, ' ');
-
-                      if (isVaryBy) {
-                        const vals = w!.value as number[];
-                        const byLabel = String(w!.object ?? 'LEVEL').replace(/_/g, ' ').toLowerCase();
-                        const rowLabel = label.toLowerCase().replace('damage ', '');
-                        return (
-                          <div key={key} className="ops-frame-vary">
-                            <VaryTable headerLabel={byLabel} columnLabels={vals.map((_v, vi) => vi + 1)} rows={[{ label: rowLabel, values: vals }]} />
-                          </div>
-                        );
-                      }
-
-                      const display = w ? formatWithValue(w) : String(val);
-                      return (
-                        <div key={key} className="ops-frame-prop">
-                          <span className="ops-frame-prop-label">{label}</span>
-                          <span className="ops-frame-prop-value">{display}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            );
-          })}
+          <FrameClauseView clauses={clause as unknown as Record<string, unknown>[]} />
         </div>
       ) : (
         <div className="ops-frame-empty">No effects</div>
       )}
     </div>
+  );
+}
+
+/** Column labels for VARY_BY axes. */
+const VARY_AXIS_LABELS: Record<string, (i: number) => string> = {
+  POTENTIAL: (i) => `P${i}`,
+  TALENT_LEVEL: (i) => `T${i}`,
+};
+
+/** Render a VARY_BY leaf as a label + inline table. */
+function VaryByLeaf({ node, label }: { node: Record<string, unknown>; label?: string }) {
+  const vals = node.value as number[];
+  const axis = String(node.object ?? 'LEVEL').replace(/_/g, ' ').toLowerCase();
+  const of = node.ofDeterminer ? ` of ${String(node.ofDeterminer).toLowerCase()} ${String(node.of ?? 'OPERATOR').toLowerCase()}` : '';
+  const labelFn = VARY_AXIS_LABELS[String(node.object)] ?? ((i: number) => String(i + 1));
+
+  return (
+    <div className="ops-vt-vary">
+      {label && <span className="ops-frame-prop-label">{label}</span>}
+      <span className="ops-vt-vary-desc">vary by {axis}{of}</span>
+      <VaryTable
+        headerLabel={axis}
+        columnLabels={vals.map((_, i) => labelFn(i))}
+        rows={[{ label: '', values: vals }]}
+        style={{ marginTop: 2 }}
+      />
+    </div>
+  );
+}
+
+/** Render a leaf ValueNode (non-expression). */
+function ValueLeaf({ node, label }: { node: Record<string, unknown>; label?: string }) {
+  if (node.verb === 'IS' && node.object === 'STAT') {
+    const stat = String(node.objectId ?? node.stat ?? 'STAT').replace(/_/g, ' ');
+    const of = node.ofDeterminer ? ` of ${String(node.ofDeterminer).toLowerCase()} operator` : '';
+    return <span className="ops-vt-leaf">{stat}{of}</span>;
+  }
+  if (node.verb === 'IS') return <span className="ops-vt-leaf">{String(node.value)}</span>;
+  if (node.verb === 'VARY_BY' && Array.isArray(node.value)) return <VaryByLeaf node={node} label={label} />;
+  if (node.object && node.objectId) {
+    const of = node.ofDeterminer ? ` of ${String(node.ofDeterminer).toLowerCase()}` : '';
+    return <span className="ops-vt-leaf">{String(node.objectId).replace(/_/g, ' ')} {String(node.object).toLowerCase()} stacks{of}</span>;
+  }
+  if (node.object) return <span className="ops-vt-leaf">{String(node.object).toLowerCase()} stacks</span>;
+  return <span className="ops-vt-leaf">{JSON.stringify(node)}</span>;
+}
+
+/** Recursive expression tree renderer. */
+function ValueNodeTree({ node, depth = 0, label }: { node: Record<string, unknown>; depth?: number; label?: string }) {
+  if (!node.operation) return <ValueLeaf node={node} label={label} />;
+
+  const op = String(node.operation);
+  const left = node.left as Record<string, unknown>;
+  const right = node.right as Record<string, unknown>;
+
+  return (
+    <div className="ops-vt-expr">
+      <span className="ops-vt-op">{op}</span>
+      <div className="ops-vt-children">
+        <div className="ops-vt-branch ops-vt-branch--mid">
+          <ValueNodeTree node={left} depth={depth + 1} label={label} />
+        </div>
+        <div className="ops-vt-branch ops-vt-branch--last">
+          <ValueNodeTree node={right} depth={depth + 1} label={label} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** Render frame clauses: all predicates listed, conditional ones show their conditions. */
+function FrameClauseView({ clauses }: { clauses: Record<string, unknown>[] }) {
+  return (
+    <>
+      {clauses.map((pred, pi) => (
+        <ClausePredicateView key={pi} predicate={pred} />
+      ))}
+    </>
   );
 }
 
@@ -1782,6 +1786,26 @@ function ClausePredicateView({ predicate }: { predicate: Record<string, unknown>
         const withProps = (ef.with ?? {}) as Record<string, unknown>;
         const withEntries = Object.entries(withProps);
 
+        // Classify WITH entries as expression trees vs simple scalars
+        const withRendered: { key: string; label: string; node: Record<string, unknown> }[] = [];
+        const scalarProps: { label: string; display: string }[] = [];
+
+        for (const [key, val] of withEntries) {
+          let w = val && typeof val === 'object' ? val as Record<string, unknown> : null;
+          // Unwrap { value: ValueNode, unit } duration wrappers
+          if (w && w.unit && w.value && typeof w.value === 'object') w = w.value as Record<string, unknown>;
+          const label = key === 'value' ? 'Value' : key.replace(/_/g, ' ');
+          const isComplex = w && (w.operation || (w.verb === 'VARY_BY' && Array.isArray(w.value))
+            || (w.verb === 'IS' && w.object));
+
+          if (isComplex) {
+            withRendered.push({ key, label, node: w! });
+          } else {
+            const display = w ? formatWithValue(w) : String(val);
+            scalarProps.push({ label, display });
+          }
+        }
+
         return (
           <div key={ei} className="ops-frame-effect">
             <div className="ops-frame-effect-sentence">
@@ -1790,32 +1814,19 @@ function ClausePredicateView({ predicate }: { predicate: Record<string, unknown>
               {target && <span className="ops-frame-effect-prep">{target}</span>}
               {fromTarget && <span className="ops-frame-effect-prep">{fromTarget}</span>}
             </div>
-            {withEntries.length > 0 && (
+            {(withRendered.length > 0 || scalarProps.length > 0) && (
               <div className="ops-frame-effect-with">
-                {withEntries.map(([key, val]) => {
-                  const w = val && typeof val === 'object' ? val as Record<string, unknown> : null;
-                  const isVaryBy = w && w.verb === 'VARY_BY' && Array.isArray(w.value);
-                  const label = key === 'value' ? 'Value' : key.replace(/_/g, ' ');
-
-                  if (isVaryBy) {
-                    const vals = w!.value as number[];
-                    const byLabel = String(w!.object ?? 'LEVEL').replace(/_/g, ' ').toLowerCase();
-                    const rowLabel = label.toLowerCase().replace('damage ', '');
-                    return (
-                      <div key={key} className="ops-frame-vary">
-                        <VaryTable headerLabel={byLabel} columnLabels={vals.map((_v, vi) => vi + 1)} rows={[{ label: rowLabel, values: vals }]} />
-                      </div>
-                    );
-                  }
-
-                  const display = w ? formatWithValue(w) : String(val);
-                  return (
-                    <div key={key} className="ops-frame-prop">
-                      <span className="ops-frame-prop-label">{label}</span>
-                      <span className="ops-frame-prop-value">{display}</span>
-                    </div>
-                  );
-                })}
+                {scalarProps.map((p, si) => (
+                  <div key={si} className="ops-frame-prop">
+                    <span className="ops-frame-prop-label">{p.label}</span>
+                    <span className="ops-frame-prop-value">{p.display}</span>
+                  </div>
+                ))}
+                {withRendered.map(({ key: k, label: lbl, node }) => (
+                  <div key={k} className="ops-value-tree-container">
+                    <ValueNodeTree node={node} label={lbl} />
+                  </div>
+                ))}
               </div>
             )}
           </div>

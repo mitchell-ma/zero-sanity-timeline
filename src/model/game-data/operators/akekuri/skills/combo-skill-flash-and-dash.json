@@ -64,7 +64,8 @@
           },
           "unit": "SECOND"
         },
-        "element": "PHYSICAL"
+        "element": "PHYSICAL",
+        "name": "Flash and Dash"
       },
       "frames": [
         {

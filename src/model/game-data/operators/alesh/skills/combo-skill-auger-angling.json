@@ -19,8 +19,11 @@
           "to": "OPERATOR",
           "with": {
             "value": {
-              "verb": "IS",
-              "value": 10
+              "verb": "VARY_BY",
+              "object": "SKILL_LEVEL",
+              "value": [10, 10, 10, 10, 10, 12, 12, 12, 12, 13, 13, 15],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
             }
           }
         }
@@ -61,7 +64,8 @@
           },
           "unit": "SECOND"
         },
-        "element": "PHYSICAL"
+        "element": "PHYSICAL",
+        "name": "Auger Angling"
       },
       "frames": [
         {
@@ -169,12 +173,18 @@
                       "of": "OPERATOR"
                     },
                     "atbSp": {
-                      "verb": "IS",
-                      "value": 10
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [10, 10, 10, 10, 10, 12, 12, 12, 12, 13, 13, 15],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
                     },
                     "uspNormal": {
-                      "verb": "IS",
-                      "value": 10
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [10, 10, 10, 10, 10, 12, 12, 12, 12, 13, 13, 15],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
                     },
                     "value": {
                       "verb": "VARY_BY",
@@ -195,6 +205,75 @@
                       ],
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
+        }
+      ]
+    },
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT"
+      },
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 0
+          },
+          "unit": "SECOND"
+        },
+        "name": "Rare Fin Bonus"
+      },
+      "frames": [
+        {
+          "metadata": {
+            "eventComponentType": "FRAME"
+          },
+          "properties": {
+            "offset": {
+              "value": 0,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [
+                {
+                  "subjectDeterminer": "THIS",
+                  "subject": "OPERATOR",
+                  "verb": "HAVE",
+                  "object": "POTENTIAL",
+                  "with": {
+                    "value": {
+                      "verb": "AT_LEAST",
+                      "value": 3
+                    }
+                  }
+                }
+              ],
+              "effects": [
+                {
+                  "verb": "APPLY",
+                  "object": "DAMAGE_BONUS",
+                  "objectQualifier": "PHYSICAL",
+                  "toDeterminer": "ALL",
+                  "to": "OPERATOR",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 0.15
+                    },
+                    "duration": {
+                      "value": {
+                        "verb": "IS",
+                        "value": 10
+                      },
+                      "unit": "SECOND"
                     }
                   }
                 }
@@ -251,9 +330,24 @@
     {
       "conditions": [
         {
-          "subject": "ENEMY",
-          "verb": "IS",
-          "object": "SOLIDIFIED"
+          "subjectDeterminer": "ANY",
+          "subject": "OPERATOR",
+          "verb": "CONSUME",
+          "object": "REACTION",
+          "objectId": "ARTS",
+          "of": "ENEMY"
+        }
+      ]
+    },
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "ANY",
+          "subject": "OPERATOR",
+          "verb": "CONSUME",
+          "object": "STATUS",
+          "objectId": "ORIGINIUM_CRYSTAL",
+          "of": "ENEMY"
         }
       ]
     }

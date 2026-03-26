@@ -5,13 +5,13 @@
         {
           "subjectDeterminer": "THIS",
           "subject": "OPERATOR",
-          "verb": "CAST",
+          "verb": "PERFORM",
           "object": "ONOMATOPOEIA"
         }
       ],
       "effects": [
         {
-          "verb": "RECOVER",
+          "verb": "RETURN",
           "object": "SKILL_POINT",
           "with": {
             "value": {

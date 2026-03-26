@@ -1,23 +1,4 @@
 {
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "MODIFY",
-          "object": "SKILL_COST",
-          "objectId": "LAEVATAIN_TWILIGHT",
-          "with": {
-            "value": {
-              "verb": "IS",
-              "value": 0.85
-            },
-            "parameterType": 1
-          }
-        }
-      ]
-    }
-  ],
   "properties": {
     "id": "LAEVATAIN_POTENTIAL_4",
     "name": "Ice Cream Furnace",
@@ -28,6 +9,5 @@
   },
   "metadata": {
     "originId": "LAEVATAIN"
-  },
-  "clauseType": "ALL"
+  }
 }

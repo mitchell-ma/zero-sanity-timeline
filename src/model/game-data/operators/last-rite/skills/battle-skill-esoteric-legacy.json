@@ -61,12 +61,22 @@
               "conditions": [],
               "effects": [
                 {
-                  "verb": "RECOVER",
+                  "verb": "RETURN",
                   "object": "SKILL_POINT",
                   "with": {
                     "value": {
-                      "verb": "IS",
-                      "value": 30
+                      "operation": "ADD",
+                      "left": {
+                        "verb": "IS",
+                        "value": 30
+                      },
+                      "right": {
+                        "verb": "VARY_BY",
+                        "object": "POTENTIAL",
+                        "value": [0, 0, 0, 0, 0, 5],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
+                      }
                     }
                   }
                 },
@@ -81,24 +91,34 @@
                       "value": 15
                     },
                     "value": {
-                      "verb": "VARY_BY",
-                      "object": "SKILL_LEVEL",
-                      "value": [
-                        1.42,
-                        1.56,
-                        1.71,
-                        1.85,
-                        1.99,
-                        2.13,
-                        2.28,
-                        2.42,
-                        2.56,
-                        2.74,
-                        2.95,
-                        3.2
-                      ],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "operation": "MULT",
+                      "left": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          1.42,
+                          1.56,
+                          1.71,
+                          1.85,
+                          1.99,
+                          2.13,
+                          2.28,
+                          2.42,
+                          2.56,
+                          2.74,
+                          2.95,
+                          3.2
+                        ],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
+                      },
+                      "right": {
+                        "verb": "VARY_BY",
+                        "object": "POTENTIAL",
+                        "value": [1, 1, 1, 1, 1, 1.2],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
+                      }
                     }
                   }
                 }

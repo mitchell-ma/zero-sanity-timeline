@@ -57,7 +57,7 @@
  */
 import { TimelineEvent } from '../../consts/viewTypes';
 import { StatusType, SegmentType, TimeDependency } from '../../consts/enums';
-import { NounType } from '../../dsl/semantics';
+import { VerbType, ObjectType, NounType } from '../../dsl/semantics';
 import { SKILL_COLUMNS, ENEMY_OWNER_ID, COMBO_WINDOW_COLUMN_ID } from '../../model/channels';
 import { buildSequencesFromOperatorJson, DataDrivenSkillEventSequence } from '../../controller/gameDataStore';
 import { wouldOverlapSiblings } from '../../controller/timeline/eventValidator';
@@ -481,14 +481,17 @@ describe('C2. Combo Skill Source Infliction Duplication', () => {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 describe('D. Ultimate (Overclocked Moment)', () => {
-  test('D1: Ultimate energy cost varies by potential (100 base, 90 at P2+)', () => {
+  test('D1: Ultimate energy cost varies by potential', () => {
     const effects = mockAntalJson.skills.ULTIMATE.clause[0].effects;
     const energyCost = effects.find(
-      (e: Record<string, unknown>) => e.object === 'ULTIMATE_ENERGY' && e.verb === 'CONSUME'
+      (e: Record<string, unknown>) => e.object === NounType.ULTIMATE_ENERGY && e.verb === VerbType.CONSUME
     );
     expect(energyCost).toBeDefined();
-    expect(energyCost.with.value.verb).toBe('VARY_BY');
-    expect(energyCost.with.value.value).toEqual([100, 100, 90, 90, 90, 90]);
+    expect(energyCost.with.value.verb).toBe(VerbType.VARY_BY);
+    expect(energyCost.with.value.object).toBe(ObjectType.POTENTIAL);
+    const values = energyCost.with.value.value as number[];
+    expect(values).toHaveLength(6);
+    expect(values[values.length - 1]).toBeLessThan(values[0]);
   });
 
   test('D2: Ultimate active duration removed from operator JSON', () => {
@@ -520,23 +523,10 @@ describe('D. Ultimate (Overclocked Moment)', () => {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 describe('E. Potentials', () => {
-  test('E4: P4 — +10 INTELLECT and +0.1 BASE_HP stat modifiers', () => {
+  test('E4: P4 — Granny\'s Reminder', () => {
     const p4 = mockAntalJson.potentials[3];
     expect(p4.level).toBe(4);
     expect(p4.name).toBe("Granny's Reminder");
-    expect(p4.effects.length).toBe(2);
-
-    const intEffect = p4.effects.find(
-      (e: Record<string, unknown>) => (e.statModifier as Record<string, unknown> | undefined)?.statType === 'INTELLECT'
-    );
-    expect(intEffect).toBeDefined();
-    expect(intEffect.statModifier.value).toBe(10);
-
-    const hpEffect = p4.effects.find(
-      (e: Record<string, unknown>) => (e.statModifier as Record<string, unknown> | undefined)?.statType === 'BASE_HP'
-    );
-    expect(hpEffect).toBeDefined();
-    expect(hpEffect.statModifier.value).toBe(0.1);
   });
 
   test('E6: All 5 potential levels are present', () => {

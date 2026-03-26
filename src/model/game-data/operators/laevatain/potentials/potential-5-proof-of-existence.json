@@ -19,19 +19,6 @@
               "value": 7
             }
           }
-        },
-        {
-          "verb": "MODIFY",
-          "object": "SKILL_PARAMETER",
-          "objectId": "FLAMING_CINDERS_ENHANCED",
-          "with": {
-            "parameterKey": "DAMAGE_MULTIPLIER_MODIFIER",
-            "value": {
-              "verb": "IS",
-              "value": 1.2
-            },
-            "parameterModifyType": "UNIQUE_MULTIPLIER"
-          }
         }
       ]
     }

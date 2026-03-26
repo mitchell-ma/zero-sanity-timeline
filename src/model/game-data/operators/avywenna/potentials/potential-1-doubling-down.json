@@ -1,50 +1,4 @@
 {
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "MODIFY",
-          "object": "SKILL_PARAMETER",
-          "objectId": "THUNDERLANCE_INTERDICTION",
-          "with": {
-            "parameterKey": "talent0_usp",
-            "value": {
-              "verb": "IS",
-              "value": 2
-            },
-            "parameterModifyType": "ADDITIVE"
-          }
-        },
-        {
-          "verb": "MODIFY",
-          "object": "SKILL_PARAMETER",
-          "objectId": "THUNDERLANCE_STRIKE",
-          "with": {
-            "parameterKey": "talent0_usp",
-            "value": {
-              "verb": "IS",
-              "value": 2
-            },
-            "parameterModifyType": "ADDITIVE"
-          }
-        },
-        {
-          "verb": "MODIFY",
-          "object": "SKILL_PARAMETER",
-          "objectId": "THUNDERLANCE_FINAL_SHOCK",
-          "with": {
-            "parameterKey": "talent0_usp",
-            "value": {
-              "verb": "IS",
-              "value": 2
-            },
-            "parameterModifyType": "ADDITIVE"
-          }
-        }
-      ]
-    }
-  ],
   "properties": {
     "id": "AVYWENNA_POTENTIAL_1",
     "name": "Doubling Down",
@@ -55,6 +9,5 @@
   },
   "metadata": {
     "originId": "AVYWENNA"
-  },
-  "clauseType": "ALL"
+  }
 }

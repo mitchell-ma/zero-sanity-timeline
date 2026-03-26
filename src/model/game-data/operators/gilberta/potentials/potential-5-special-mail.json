@@ -4,31 +4,6 @@
       "conditions": [],
       "effects": [
         {
-          "verb": "MODIFY",
-          "object": "SKILL_COST",
-          "objectId": "GILBERTA_MATRIX_DISPLACEMENT",
-          "with": {
-            "value": {
-              "verb": "IS",
-              "value": -2
-            },
-            "parameterType": 2
-          }
-        },
-        {
-          "verb": "MODIFY",
-          "object": "SKILL_PARAMETER",
-          "objectId": "MATRIX_DISPLACEMENT",
-          "with": {
-            "parameterKey": "DAMAGE_MULTIPLIER_MODIFIER",
-            "value": {
-              "verb": "IS",
-              "value": 1.3
-            },
-            "parameterModifyType": "MULTIPLICATIVE"
-          }
-        },
-        {
           "verb": "APPLY",
           "object": "BUFF",
           "objectId": "GILBERTA_POTENTIAL5_SPECIAL_MAIL",

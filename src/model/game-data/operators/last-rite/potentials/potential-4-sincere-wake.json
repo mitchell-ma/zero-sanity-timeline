@@ -1,25 +1,6 @@
 {
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "MODIFY",
-          "object": "SKILL_COST",
-          "objectId": "LAST_RITE_VIGIL_SERVICES",
-          "with": {
-            "value": {
-              "verb": "IS",
-              "value": 0.85
-            },
-            "parameterType": 1
-          }
-        }
-      ]
-    }
-  ],
   "properties": {
-    "id": "LAST-RITE_POTENTIAL_4",
+    "id": "LAST_RITE_POTENTIAL_4",
     "name": "Sincere Wake",
     "level": 4,
     "eventType": "POTENTIAL_EVENT",
@@ -27,7 +8,6 @@
     "description": "Ultimate Vigil Services improved: Ultimate Energy cost -15%."
   },
   "metadata": {
-    "originId": "LAST-RITE"
-  },
-  "clauseType": "ALL"
+    "originId": "LAST_RITE"
+  }
 }

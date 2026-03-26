@@ -61,7 +61,8 @@
           },
           "unit": "SECOND"
         },
-        "element": "ELECTRIC"
+        "element": "ELECTRIC",
+        "name": "EMP Test Site"
       },
       "frames": [
         {
@@ -101,7 +102,8 @@
                 {
                   "verb": "APPLY",
                   "objectQualifier": "TRIGGER",
-                  "object": "STATUS", "objectId": "PHYSICAL",
+                  "object": "STATUS",
+                  "objectId": "PHYSICAL",
                   "to": "ENEMY"
                 },
                 {
@@ -172,7 +174,8 @@
           "subjectDeterminer": "ANY",
           "subject": "OPERATOR",
           "verb": "APPLY",
-          "object": "STATUS", "objectId": "PHYSICAL"
+          "object": "STATUS",
+          "objectId": "PHYSICAL"
         },
         {
           "subject": "ENEMY",

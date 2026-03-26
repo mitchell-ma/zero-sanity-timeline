@@ -1,37 +1,4 @@
 {
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "MODIFY",
-          "object": "SKILL_PARAMETER",
-          "objectId": "SPECIFIED_RESEARCH_SUBJECT",
-          "with": {
-            "parameterKey": "potential_3",
-            "value": {
-              "verb": "IS",
-              "value": 1
-            },
-            "parameterModifyType": "UNIQUE_MULTIPLIER"
-          }
-        },
-        {
-          "verb": "MODIFY",
-          "object": "SKILL_PARAMETER",
-          "objectId": "SPECIFIED_RESEARCH_SUBJECT",
-          "with": {
-            "parameterKey": "potential_3_atb",
-            "value": {
-              "verb": "IS",
-              "value": 15
-            },
-            "parameterModifyType": "ADDITIVE"
-          }
-        }
-      ]
-    }
-  ],
   "properties": {
     "id": "ANTAL_POTENTIAL_3",
     "name": "Applied Originium Theory",
@@ -42,6 +9,5 @@
   },
   "metadata": {
     "originId": "ANTAL"
-  },
-  "clauseType": "ALL"
+  }
 }

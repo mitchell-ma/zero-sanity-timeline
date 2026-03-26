@@ -1,24 +1,4 @@
 {
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "MODIFY",
-          "object": "SKILL_PARAMETER",
-          "objectId": "TEMPESTUOUS_ARC",
-          "with": {
-            "parameterKey": "SKILL_POINT",
-            "value": {
-              "verb": "IS",
-              "value": 10
-            },
-            "parameterModifyType": "ADDITIVE"
-          }
-        }
-      ]
-    }
-  ],
   "properties": {
     "id": "ARCLIGHT_POTENTIAL_1",
     "name": "Child of the Storm",
@@ -29,6 +9,5 @@
   },
   "metadata": {
     "originId": "ARCLIGHT"
-  },
-  "clauseType": "ALL"
+  }
 }

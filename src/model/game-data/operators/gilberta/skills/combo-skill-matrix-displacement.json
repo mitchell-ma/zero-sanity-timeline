@@ -6,7 +6,18 @@
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "COMBO_SKILL",
     "element": "NATURE",
-    "id": "MATRIX_DISPLACEMENT"
+    "id": "MATRIX_DISPLACEMENT",
+    "suppliedParameters": {
+      "VARY_BY": [
+        {
+          "id": "ENEMY_HIT",
+          "name": "Enemies Hit",
+          "lowerRange": 1,
+          "upperRange": 2,
+          "default": 1
+        }
+      ]
+    }
   },
   "clause": [
     {
@@ -61,7 +72,8 @@
           },
           "unit": "SECOND"
         },
-        "element": "NATURE"
+        "element": "NATURE",
+        "name": "Arcane Staff: Matrix Displacement"
       },
       "frames": [
         {
@@ -99,31 +111,153 @@
                   "to": "ENEMY",
                   "with": {
                     "value": {
-                      "verb": "VARY_BY",
-                      "object": "SKILL_LEVEL",
-                      "value": [
-                        1.4,
-                        1.54,
-                        1.68,
-                        1.82,
-                        1.96,
-                        2.1,
-                        2.24,
-                        2.38,
-                        2.52,
-                        2.7,
-                        2.91,
-                        3.15
-                      ],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "operation": "MULT",
+                      "left": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          1.4, 1.54, 1.68, 1.82, 1.96, 2.1,
+                          2.24, 2.38, 2.52, 2.7, 2.91, 3.15
+                        ],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
+                      },
+                      "right": {
+                        "verb": "VARY_BY",
+                        "object": "POTENTIAL",
+                        "value": [1, 1, 1, 1, 1, 1.3],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
+                      }
+                    }
+                  }
+                },
+                {
+                  "verb": "APPLY",
+                  "objectQualifier": "LIFT",
+                  "objectId": "PHYSICAL",
+                  "object": "STATUS",
+                  "to": "ENEMY",
+                  "with": {
+                    "isForced": true
+                  }
+                }
+              ]
+            },
+            {
+              "conditions": [
+                {
+                  "subject": "PARAMETER",
+                  "verb": "AT_LEAST",
+                  "object": "ENEMY_HIT",
+                  "with": { "value": { "verb": "IS", "value": 2 } }
+                },
+                {
+                  "subjectDeterminer": "CONTROLLED",
+                  "subject": "OPERATOR",
+                  "verb": "HAVE",
+                  "objectQualifier": "FULL",
+                  "object": "HP"
+                }
+              ],
+              "effects": [
+                {
+                  "verb": "RECOVER",
+                  "object": "HP",
+                  "toDeterminer": "ANY",
+                  "to": "OPERATOR",
+                  "with": {
+                    "filter": {
+                      "objectQualifier": "LOWEST",
+                      "objectId": "HP",
+                      "object": "STAT"
+                    },
+                    "value": {
+                      "operation": "ADD",
+                      "left": {
+                        "verb": "VARY_BY",
+                        "object": "TALENT_LEVEL",
+                        "value": [0, 72, 108],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
+                      },
+                      "right": {
+                        "operation": "MULT",
+                        "left": {
+                          "verb": "VARY_BY",
+                          "object": "TALENT_LEVEL",
+                          "value": [0, 0.6, 0.9],
+                          "ofDeterminer": "THIS",
+                          "of": "OPERATOR"
+                        },
+                        "right": {
+                          "verb": "IS",
+                          "object": "STAT",
+                          "objectId": "INTELLECT",
+                          "ofDeterminer": "THIS"
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "conditions": [
+                {
+                  "subject": "PARAMETER",
+                  "verb": "AT_LEAST",
+                  "object": "ENEMY_HIT",
+                  "with": { "value": { "verb": "IS", "value": 2 } }
+                },
+                {
+                  "subjectDeterminer": "CONTROLLED",
+                  "subject": "OPERATOR",
+                  "verb": "HAVE",
+                  "negated": true,
+                  "objectQualifier": "FULL",
+                  "object": "HP"
+                }
+              ],
+              "effects": [
+                {
+                  "verb": "RECOVER",
+                  "object": "HP",
+                  "toDeterminer": "CONTROLLED",
+                  "to": "OPERATOR",
+                  "with": {
+                    "value": {
+                      "operation": "ADD",
+                      "left": {
+                        "verb": "VARY_BY",
+                        "object": "TALENT_LEVEL",
+                        "value": [0, 72, 108],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
+                      },
+                      "right": {
+                        "operation": "MULT",
+                        "left": {
+                          "verb": "VARY_BY",
+                          "object": "TALENT_LEVEL",
+                          "value": [0, 0.6, 0.9],
+                          "ofDeterminer": "THIS",
+                          "of": "OPERATOR"
+                        },
+                        "right": {
+                          "verb": "IS",
+                          "object": "STAT",
+                          "objectId": "INTELLECT",
+                          "ofDeterminer": "THIS"
+                        }
+                      }
                     }
                   }
                 }
               ]
             }
           ],
-          "clauseType": "ALL"
+          "clauseType": "FIRST_MATCH"
         }
       ]
     },
@@ -139,8 +273,24 @@
         "name": "Cooldown",
         "duration": {
           "value": {
-            "verb": "IS",
-            "value": 20
+            "operation": "ADD",
+            "left": {
+              "verb": "VARY_BY",
+              "object": "SKILL_LEVEL",
+              "value": [
+                20, 20, 20, 20, 20, 20,
+                20, 20, 20, 20, 20, 19
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            },
+            "right": {
+              "verb": "VARY_BY",
+              "object": "POTENTIAL",
+              "value": [0, 0, 0, 0, 0, -2],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            }
           },
           "unit": "SECOND"
         },
@@ -157,36 +307,12 @@
     {
       "conditions": [
         {
-          "subject": "ENEMY",
-          "verb": "IS",
-          "object": "COMBUSTED"
-        }
-      ]
-    },
-    {
-      "conditions": [
-        {
-          "subject": "ENEMY",
-          "verb": "IS",
-          "object": "SOLIDIFIED"
-        }
-      ]
-    },
-    {
-      "conditions": [
-        {
-          "subject": "ENEMY",
-          "verb": "IS",
-          "object": "CORRODED"
-        }
-      ]
-    },
-    {
-      "conditions": [
-        {
-          "subject": "ENEMY",
-          "verb": "IS",
-          "object": "ELECTRIFIED"
+          "subjectDeterminer": "ANY",
+          "subject": "OPERATOR",
+          "verb": "APPLY",
+          "objectQualifier": "ARTS",
+          "object": "REACTION",
+          "to": "ENEMY"
         }
       ]
     }

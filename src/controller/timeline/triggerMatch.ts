@@ -104,8 +104,8 @@ interface VerbHandler {
 const PHYSICAL_STATUS_VALUES = new Set<string>(Object.values(PhysicalStatusType));
 
 /** Unified status name → column ID resolver. */
-export function statusNameToColumnId(name: string): string {
-  return getTeamStatusColumnId(name)
+export function statusNameToColumnId(name: string, skipTeamCheck?: boolean): string {
+  return (!skipTeamCheck ? getTeamStatusColumnId(name) : undefined)
     ?? REACTION_STATUS_TO_COLUMN[name]
     ?? (OPERATOR_COLUMNS as Record<string, string>)[name]
     ?? (PHYSICAL_INFLICTION_COLUMNS as Record<string, string>)[name]

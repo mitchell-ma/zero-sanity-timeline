@@ -1,62 +1,4 @@
 {
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "MODIFY",
-          "object": "SKILL_COST",
-          "objectId": "TANGTANG_COMBO_SKILL",
-          "with": {
-            "value": {
-              "verb": "IS",
-              "value": -2
-            },
-            "parameterType": 2
-          }
-        },
-        {
-          "verb": "MODIFY",
-          "object": "SKILL_PARAMETER",
-          "objectId": "COMBO_SKILL",
-          "with": {
-            "parameterKey": "potential1",
-            "value": {
-              "verb": "IS",
-              "value": 1
-            },
-            "parameterModifyType": "UNIQUE_MULTIPLIER"
-          }
-        },
-        {
-          "verb": "MODIFY",
-          "object": "SKILL_PARAMETER",
-          "objectId": "BATTLE_SKILL",
-          "with": {
-            "parameterKey": "atb_return",
-            "value": {
-              "verb": "IS",
-              "value": 5
-            },
-            "parameterModifyType": "ADDITIVE"
-          }
-        },
-        {
-          "verb": "MODIFY",
-          "object": "SKILL_PARAMETER",
-          "objectId": "COMBO_SKILL",
-          "with": {
-            "parameterKey": "DAMAGE_MULTIPLIER_MODIFIER",
-            "value": {
-              "verb": "IS",
-              "value": 1.2
-            },
-            "parameterModifyType": "MULTIPLICATIVE"
-          }
-        }
-      ]
-    }
-  ],
   "properties": {
     "id": "TANGTANG_POTENTIAL_1",
     "name": "Reserve Hoard",
@@ -67,6 +9,5 @@
   },
   "metadata": {
     "originId": "TANGTANG"
-  },
-  "clauseType": "ALL"
+  }
 }

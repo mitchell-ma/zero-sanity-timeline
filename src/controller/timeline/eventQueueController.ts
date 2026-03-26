@@ -184,6 +184,7 @@ export function runEventQueue(
   slotGearSets?: Record<string, string | undefined>,
   getEnemyHpPercentage?: (frame: number) => number | null,
   getControlledSlotAtFrame?: (frame: number) => string,
+  hpController?: HPController,
 ): void {
   const slotWirings = state.getSlotWirings();
   const registeredEvents = state.getRegisteredEvents();
@@ -206,7 +207,7 @@ export function runEventQueue(
   const interpretor = getInterpretor();
   interpretor.resetWith(state, registeredEvents, {
     loadoutProperties, slotOperatorMap, slotWirings, getEnemyHpPercentage,
-    getControlledSlotAtFrame, triggerIndex: triggerIdx,
+    getControlledSlotAtFrame, triggerIndex: triggerIdx, hpController,
   });
 
   // Seed derived events (freeform inflictions/reactions) — these go through the
@@ -392,7 +393,7 @@ export function processCombatSimulation(
     ? hpController.getEnemyHpPercentage
     : (bossMaxHp != null ? getEnemyHpPercentage : undefined);
   runEventQueue(state, derivedEvents, loadoutProperties, slotWeapons, slotOperatorMap, slotGearSets,
-    hpPercentageFn, getControlledSlotAtFrame);
+    hpPercentageFn, getControlledSlotAtFrame, hpController);
 
   // ── 5. Finalize resource controllers ──────────────────────────────────────
   if (spController) {

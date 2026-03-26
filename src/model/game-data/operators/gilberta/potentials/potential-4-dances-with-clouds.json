@@ -1,23 +1,4 @@
 {
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "MODIFY",
-          "object": "SKILL_COST",
-          "objectId": "GILBERTA_GRAVITY_FIELD",
-          "with": {
-            "value": {
-              "verb": "IS",
-              "value": 0.85
-            },
-            "parameterType": 1
-          }
-        }
-      ]
-    }
-  ],
   "properties": {
     "id": "GILBERTA_POTENTIAL_4",
     "name": "Dances with Clouds",
@@ -28,6 +9,5 @@
   },
   "metadata": {
     "originId": "GILBERTA"
-  },
-  "clauseType": "ALL"
+  }
 }

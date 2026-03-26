@@ -1,23 +1,4 @@
 {
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "MODIFY",
-          "object": "SKILL_COST",
-          "objectId": "ARCLIGHT_EXPLODING_BLITZ",
-          "with": {
-            "value": {
-              "verb": "IS",
-              "value": 0.85
-            },
-            "parameterType": 1
-          }
-        }
-      ]
-    }
-  ],
   "properties": {
     "id": "ARCLIGHT_POTENTIAL_4",
     "name": "Aldertone's Teachings",
@@ -28,6 +9,5 @@
   },
   "metadata": {
     "originId": "ARCLIGHT"
-  },
-  "clauseType": "ALL"
+  }
 }

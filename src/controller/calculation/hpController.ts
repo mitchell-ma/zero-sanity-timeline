@@ -118,7 +118,56 @@ export class HPController {
     return Math.max(0, (this.bossMaxHp - cumDamage) / this.bossMaxHp * 100);
   };
 
-  // ── Operator HP queries ────────────────────────────────────────────────
+  // ── Operator HP queries (by operatorId) ────────────────────────────────
+
+  /** Per-operator max HP, keyed by operator ID. */
+  private operatorMaxHp = new Map<string, number>();
+  /** Sorted heal ticks per operator for live HP queries. */
+  private operatorHealTicks = new Map<string, { frame: number; amount: number }[]>();
+
+  /** Initialize operator HP (call before pipeline). */
+  initOperatorHp(operatorId: string, maxHp: number) {
+    this.operatorMaxHp.set(operatorId, maxHp);
+  }
+
+  /** Record a heal on an operator at a frame. */
+  applyHeal(operatorId: string, frame: number, amount: number) {
+    const ticks = this.operatorHealTicks.get(operatorId) ?? [];
+    ticks.push({ frame, amount });
+    this.operatorHealTicks.set(operatorId, ticks);
+  }
+
+  /** Get current flat HP for an operator at a given frame. */
+  getOperatorFlatHp(operatorId: string, frame: number): number {
+    const maxHp = this.operatorMaxHp.get(operatorId);
+    if (maxHp == null) return 0;
+    // No damage tracking yet — start at maxHp, add heals (clamped)
+    let hp = maxHp;
+    const ticks = this.operatorHealTicks.get(operatorId);
+    if (ticks) {
+      for (const t of ticks) {
+        if (t.frame > frame) break;
+        hp = Math.min(maxHp, hp + t.amount);
+      }
+    }
+    return hp;
+  }
+
+  /** Get HP as percentage (0–100) for an operator at a given frame. */
+  getOperatorPercentageHp(operatorId: string, frame: number): number {
+    const maxHp = this.operatorMaxHp.get(operatorId);
+    if (!maxHp || maxHp <= 0) return 100;
+    return (this.getOperatorFlatHp(operatorId, frame) / maxHp) * 100;
+  }
+
+  /** Get all configured operator IDs. */
+  getOperatorIds(): string[] {
+    const ids: string[] = [];
+    this.operatorMaxHp.forEach((_, id) => ids.push(id));
+    return ids;
+  }
+
+  // ── Slot-based HP queries (legacy, for graphs) ────────────────────────
 
   /** Get HP graph for a slot (after finalize). */
   getSlotHpGraph(slotId: string): ReadonlyArray<ResourcePoint> {
@@ -177,6 +226,7 @@ export class HPController {
     this.healTicks = [];
     this.slotHpGraphs.clear();
     this.slotHealSummaries.clear();
-    // slotMaxHp intentionally kept — reconfigured before each pipeline run
+    this.operatorHealTicks.clear();
+    // slotMaxHp and operatorMaxHp intentionally kept — reconfigured before each pipeline run
   }
 }

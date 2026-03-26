@@ -1,50 +1,4 @@
 {
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "MODIFY",
-          "object": "SKILL_PARAMETER",
-          "objectId": "STACK_OVERFLOW",
-          "with": {
-            "parameterKey": "atk_up",
-            "value": {
-              "verb": "IS",
-              "value": 1.1
-            },
-            "parameterModifyType": "MULTIPLICATIVE"
-          }
-        },
-        {
-          "verb": "MODIFY",
-          "object": "SKILL_PARAMETER",
-          "objectId": "STACK_OVERFLOW",
-          "with": {
-            "parameterKey": "wisd_up",
-            "value": {
-              "verb": "IS",
-              "value": 1.1
-            },
-            "parameterModifyType": "MULTIPLICATIVE"
-          }
-        },
-        {
-          "verb": "MODIFY",
-          "object": "SKILL_PARAMETER",
-          "objectId": "STACK_OVERFLOW",
-          "with": {
-            "parameterKey": "wisd_max",
-            "value": {
-              "verb": "IS",
-              "value": 1.1
-            },
-            "parameterModifyType": "MULTIPLICATIVE"
-          }
-        }
-      ]
-    }
-  ],
   "properties": {
     "id": "XAIHI_POTENTIAL_5",
     "name": "Controlled Recursion",
@@ -55,6 +9,5 @@
   },
   "metadata": {
     "originId": "XAIHI"
-  },
-  "clauseType": "ALL"
+  }
 }

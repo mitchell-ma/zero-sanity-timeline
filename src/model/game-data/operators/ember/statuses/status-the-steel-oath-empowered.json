@@ -5,6 +5,41 @@
       "effects": [
         {
           "verb": "APPLY",
+          "object": "SHIELD",
+          "toDeterminer": "ALL",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "operation": "MULT",
+              "left": {
+                "verb": "VARY_BY",
+                "object": "SKILL_LEVEL",
+                "value": [
+                  0.18,
+                  0.18,
+                  0.18,
+                  0.2,
+                  0.2,
+                  0.2,
+                  0.22,
+                  0.22,
+                  0.22,
+                  0.25,
+                  0.25,
+                  0.25
+                ],
+                "ofDeterminer": "THIS",
+                "of": "OPERATOR"
+              },
+              "right": {
+                "verb": "IS",
+                "value": 1.2
+              }
+            }
+          }
+        },
+        {
+          "verb": "APPLY",
           "object": "ATTACK_BONUS",
           "toDeterminer": "THIS",
           "to": "OPERATOR",

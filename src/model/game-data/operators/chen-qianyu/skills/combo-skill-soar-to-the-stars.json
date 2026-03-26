@@ -61,7 +61,8 @@
           },
           "unit": "SECOND"
         },
-        "element": "PHYSICAL"
+        "element": "PHYSICAL",
+        "name": "Soar to the Stars"
       },
       "frames": [
         {
@@ -106,24 +107,34 @@
                   "to": "ENEMY",
                   "with": {
                     "value": {
-                      "verb": "VARY_BY",
-                      "object": "SKILL_LEVEL",
-                      "value": [
-                        1.2,
-                        1.32,
-                        1.44,
-                        1.56,
-                        1.68,
-                        1.8,
-                        1.92,
-                        2.04,
-                        2.16,
-                        2.31,
-                        2.49,
-                        2.7
-                      ],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "operation": "MULT",
+                      "left": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          1.2,
+                          1.32,
+                          1.44,
+                          1.56,
+                          1.68,
+                          1.8,
+                          1.92,
+                          2.04,
+                          2.16,
+                          2.31,
+                          2.49,
+                          2.7
+                        ],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
+                      },
+                      "right": {
+                        "verb": "VARY_BY",
+                        "object": "POTENTIAL",
+                        "value": [1, 1, 1, 1.1, 1.1, 1.1],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
+                      }
                     }
                   }
                 }

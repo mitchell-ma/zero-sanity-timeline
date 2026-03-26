@@ -158,15 +158,47 @@ These sets have HP-threshold conditions but are metadata-only with zero clauses:
 
 ## Operator talent/skill DSL reconciliation issues
 
-5 outstanding issues from the batch operator review:
+### Previously tracked (from earlier review)
 
-1. **Akekuri "Staying in the Zone"** — talent two is `name`-only but wiki says "when ultimate is active, gains Link." This should be a TALENT trigger (THIS OPERATOR CAST ULTIMATE → APPLY LINK STATUS) or baked into the ult DSL as an APPLY LINK effect on the first frame. Currently neither exists.
+1. **Akekuri "Staying in the Zone"** — talent two is `name`-only but wiki says "when ultimate is active, gains Link." The ultimate already has `APPLY LINK` on its first frame, so the Link application exists. The talent file itself just needs a clause or the TODO can be closed if the ult frame covers it. Also: the ult uses `objectType: "STATUS"` instead of `object: "STATUS", objectId: "LINK"` — same pattern fixed in Lifeng's combo.
 
-2. **Avywenna "Tactful Approach"** — talent two is `name`-only but wiki says the ult applies 6%/10% Electric Susceptibility for 10s. This should be baked into the ult frame as APPLY ELECTRIC_SUSCEPTIBILITY with VARY_BY TALENT_LEVEL [0.06, 0.10], duration 10s. Need to verify the ult DSL has this effect.
+2. **Last Rite "Cryogenic Embrittlement"** — talent two is `name`-only. Wiki says "ultimate hits enemies with Cryo Susceptibility: multiply Cryo Susceptibility effectiveness ×1.2/×1.5." This modifier needs to live somewhere — either as a SKILL_PARAMETER in the operator JSON or baked into the ult DSL as a conditional clause (IF ENEMY HAVE CRYO_SUSCEPTIBILITY → APPLY CRYO_SUSCEPTIBILITY_MODIFIER [1.2, 1.5]).
 
-3. **Last Rite "Cryogenic Embrittlement"** — talent two is `name`-only. Wiki says "ultimate hits enemies with Cryo Susceptibility: multiply Cryo Susceptibility effectiveness ×1.2/×1.5." This modifier needs to live somewhere — either as a SKILL_PARAMETER in the operator JSON or baked into the ult DSL as a conditional clause (IF ENEMY HAVE CRYO_SUSCEPTIBILITY → APPLY CRYO_SUSCEPTIBILITY_MODIFIER [1.2, 1.5]).
+3. **Pogranichnik "Tactical Instruction"** — talent two is `name`-only. Wiki says "operators triggering ultimate's subsequent effects gain Fervent Morale for 5s/10s." Fervent Morale status already exists (from talent one The Living Banner). This should be baked into the ult DSL — when other operators benefit from the ult, they receive FERVENT_MORALE with duration VARY_BY TALENT_LEVEL [5, 10].
 
-4. **Pogranichnik "Tactical Instruction"** — talent two is `name`-only. Wiki says "operators triggering ultimate's subsequent effects gain Fervent Morale for 5s/10s." Fervent Morale status already exists (from talent one The Living Banner). This should be baked into the ult DSL — when other operators benefit from the ult, they receive FERVENT_MORALE with duration VARY_BY TALENT_LEVEL [5, 10].
+### From 2026-03-26 batch reconciliation (18 operators)
+
+#### Missing VARY_BY POTENTIAL (needs engine support for HP conditions)
+
+4. **Alesh P5** — "Hitting a target below 50% HP increases the DMG Multiplier to 1.5 times the original." Needs enemy HP<50% condition on ultimate damage. Engine does not support HP threshold conditions yet.
+
+5. **Chen Qianyu P1** — Status `status-chen-qianyu-potential1-shadowless.json` applies +20% DAMAGE_BONUS unconditionally but wiki says "to enemies below 50% HP." Same HP condition gap as Alesh P5.
+
+6. **Ardelia P1** — Susceptibility +8% was baked in, but verify the `rateVulBase` ADD wrapper in the conditional DEAL DAMAGE clause is also applied (currently only the susceptibility arrays were wrapped).
+
+#### Missing Talent/Status Effects
+
+7. **Da Pan "Salty or Mild"** — Talent not implemented. Wiki: "Prep Ingredients stacks from ultimate final hit, combo cooldown reduction." Needs full talent clause modeling.
+
+8. **Snowshine RETALIATE** — `RETALIATE` verb used in SAR Professional talent is not defined in DSL `VerbType` enum. RETALIATE means "when the BS is active and the enemy deals damage to the operator." Needs a new VerbType or composite condition to implement.
+
+9. **Ember PROTECTION** — `PROTECTION` is used as a noun in APPLY effects (laevatain, ember, catcher, snowshine) but is not in `NounType` in `semantics.ts`. Needs to be added as a recognized NounType for DSL validation.
+
+#### Structural / Data Issues
+
+10. **Ardelia battle-skill-dolly-rush.json** — Unconditional DEAL NATURE DAMAGE clause uses `"multiplier"` key instead of `"value"` in the `with` block. Non-standard; verify engine handles it or change to `"value"`.
+
+11. **Arclight empowered battle skill** — Damage multiplier values [0.45...1.01] for the two Physical slashes were taken from the normal variant. Verify these are correct for the empowered version (wiki doesn't distinguish normal vs empowered BS multipliers for Arclight).
+
+12. **Endministrator basic attack SEQ 3/4** — Rounding discrepancies (1-2%) vs wiki at several skill levels due to per-hit division.
+
+13. **Arclight combo** — Total multiplier 1% over across all levels (156% vs wiki 155%). Per-hit values may need slight adjustment.
+
+14. **Yvonne empowered basic attack** — Segment 0 has 3 frames with empty `effects: []`. These serve no purpose and should be removed or populated.
+
+15. **Multiple operators** — Description template placeholders unresolved ({trigger_hp_ratio:0%}, {extra_scaling}, {duration-1:0%}, etc.). Cosmetic only but should be filled in.
+
+16. **Multiple operators** — Status descriptions copied from skill descriptions instead of describing the status itself (Arclight Wildland Trekker trigger/buff, Endministrator Originium Crystal, Avywenna Thunderlance).
 
 ## Fix laevatainDamageCalc.test.ts — broken after gameDataController mock removal
 

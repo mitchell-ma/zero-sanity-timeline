@@ -61,7 +61,8 @@
           },
           "unit": "SECOND"
         },
-        "element": "ELECTRIC"
+        "element": "ELECTRIC",
+        "name": "Thunderlance: Strike"
       },
       "frames": [
         {
@@ -177,10 +178,31 @@
     {
       "conditions": [
         {
-          "subjectDeterminer": "THIS",
+          "subjectDeterminer": "CONTROLLED",
           "subject": "OPERATOR",
           "verb": "PERFORM",
           "object": "FINAL_STRIKE"
+        },
+        {
+          "subject": "ENEMY",
+          "verb": "HAVE",
+          "object": "INFLICTION",
+          "objectQualifier": "ELECTRIC"
+        }
+      ]
+    },
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "CONTROLLED",
+          "subject": "OPERATOR",
+          "verb": "PERFORM",
+          "object": "FINAL_STRIKE"
+        },
+        {
+          "subject": "ENEMY",
+          "verb": "IS",
+          "object": "ELECTRIFIED"
         }
       ]
     }

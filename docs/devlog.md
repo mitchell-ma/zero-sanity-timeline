@@ -7,6 +7,18 @@
 - Potential-gated effects (like Antal's Empowered Focus at P5) now use the standard condition system instead of a special-case filter
 - Link (team buff from Ultimates) now correctly routes to the shared team status column and consumption works properly
 - Fixed several test alignment issues from previous data normalization changes
+- **Comprehensive data reconciliation across 18 operators** — every skill, talent, potential, and status was cross-referenced against in-game wiki descriptions to catch and fix errors:
+  - Fixed incorrect combo skill trigger conditions for Alesh, Ember, Fluorite, Avywenna, Catcher, Lifeng, Tangtang, and Xaihi — combos now activate under the correct in-game conditions
+  - Fixed SP recovery/return behavior for Snowshine, Last Rite, Endministrator, Estella, and Catcher — skills that "return" SP (conditional refund) are now correctly distinguished from natural SP recovery, which affects Ultimate energy generation
+  - Baked potential effects into skills for all 18 operators — damage multiplier bonuses, cooldown reductions, susceptibility buffs, and conditional strikes from potentials now properly scale when potentials are unlocked
+  - Added missing skill effects: Ember's combo now heals the controlled operator, Yvonne's battle skill now consumes infliction stacks and applies Solidification, Arclight's empowered battle skill now deals damage, Tangtang's battle skill has its shooting damage, and more
+  - Corrected wrong values: Fluorite's ultimate energy cost updated from 80 to 100 (post-patch), Yvonne's ultimate energy cost fixed to 220, multiple combo cooldowns corrected to match in-game values
+  - Added missing damage frames for Yvonne (Flashfreezer energy releases and ultimate), Arclight (basic attack sequence 4, empowered battle skill), and Catcher (combo sequence 1)
+  - Fixed talent effects: Perlica's Obliteration Protocol now correctly detects staggered enemies, Avywenna's Tactful Approach now applies Electric Susceptibility, Tangtang's Riot Bringer now grants the DMG Dealt buff
+  - Fluorite's combo and ultimate now re-apply the matching element's infliction when hitting enemies with 2+ stacks
+  - Yvonne's Crit Stacks status now grants Critical Rate per stack and Critical Damage at max stacks
+  - Last Rite's combo ultimate energy gain is now dynamic based on consumed Cryo Infliction stacks instead of a fixed value
+- Warning icon on combo skills placed outside their trigger window is now properly centered above the event block
 
 ## 2026-03-24
 - Combo skills can now be triggered by physical statuses (Lift, Breach, Knock Down, Crush) in addition to elemental inflictions — Antal's combo correctly activates when an ally applies Lift to an enemy with Focus

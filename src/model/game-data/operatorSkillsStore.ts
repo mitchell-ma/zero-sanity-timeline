@@ -7,7 +7,7 @@
  */
 import { EventType, EventCategoryType } from '../../consts/enums';
 import type { Interaction, ValueNode } from '../../dsl/semantics';
-import { checkKeys } from './validationUtils';
+import { checkKeys, warnMissingEffectTarget } from './validationUtils';
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -53,6 +53,31 @@ export function validateOperatorSkill(json: Record<string, unknown>, skillId: st
 
   if (json.onTriggerClause && !Array.isArray(json.onTriggerClause)) {
     errors.push(`${path}.onTriggerClause: must be an array`);
+  }
+
+  // Walk effects in clauses, segments, and frames to warn about missing targets
+  const walkEffects = (clauses: unknown[], clausePath: string) => {
+    if (!Array.isArray(clauses)) return;
+    for (let ci = 0; ci < clauses.length; ci++) {
+      const clause = clauses[ci] as Record<string, unknown>;
+      const effects = clause.effects as Record<string, unknown>[] | undefined;
+      if (!Array.isArray(effects)) continue;
+      for (let ei = 0; ei < effects.length; ei++) {
+        errors.push(...warnMissingEffectTarget(effects[ei], `${clausePath}[${ci}].effects[${ei}]`));
+      }
+    }
+  };
+  walkEffects(json.clause as unknown[] ?? [], `${path}.clause`);
+  walkEffects(json.onTriggerClause as unknown[] ?? [], `${path}.onTriggerClause`);
+  if (Array.isArray(json.segments)) {
+    for (let si = 0; si < (json.segments as unknown[]).length; si++) {
+      const seg = (json.segments as Record<string, unknown>[])[si];
+      const frames = seg.frames as Record<string, unknown>[] | undefined;
+      if (!Array.isArray(frames)) continue;
+      for (let fi = 0; fi < frames.length; fi++) {
+        walkEffects(frames[fi].clause as unknown[] ?? [], `${path}.segments[${si}].frames[${fi}].clause`);
+      }
+    }
   }
 
   const props = json.properties as Record<string, unknown> | undefined;

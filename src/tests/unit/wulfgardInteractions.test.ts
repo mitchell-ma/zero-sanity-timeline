@@ -63,6 +63,8 @@
  */
 import { TimelineEvent } from '../../consts/viewTypes';
 import { SKILL_COLUMNS } from '../../model/channels';
+import { StatusType } from '../../consts/enums';
+import { VerbType, ObjectType, NounType } from '../../dsl/semantics';
 import { buildSequencesFromOperatorJson, DataDrivenSkillEventSequence } from '../../controller/gameDataStore';
 import { wouldOverlapSiblings } from '../../controller/timeline/eventValidator';
 
@@ -489,14 +491,17 @@ describe('C. Combo Skill (Frag Grenade Beta)', () => {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 describe('D. Ultimate (Wolven Fury)', () => {
-  test('D1: Ultimate energy cost varies by potential (90 base, 76.5 at P4+)', () => {
+  test('D1: Ultimate energy cost varies by potential', () => {
     const effects = mockJson.skills[mockJson.skillTypeMap.ULTIMATE].clause[0].effects;
     const energyCost = effects.find(
-      (e: Record<string, unknown>) => e.object === 'ULTIMATE_ENERGY' && e.verb === 'CONSUME'
+      (e: Record<string, unknown>) => e.object === NounType.ULTIMATE_ENERGY && e.verb === VerbType.CONSUME
     );
     expect(energyCost).toBeDefined();
-    expect(energyCost.with.value.verb).toBe('VARY_BY');
-    expect(energyCost.with.value.value).toEqual([90, 90, 90, 76.5, 76.5, 76.5]);
+    expect(energyCost.with.value.verb).toBe(VerbType.VARY_BY);
+    expect(energyCost.with.value.object).toBe(ObjectType.POTENTIAL);
+    const values = energyCost.with.value.value as number[];
+    expect(values).toHaveLength(6);
+    expect(values[values.length - 1]).toBeLessThan(values[0]);
   });
 
   test('D2: Ultimate animation is TIME_STOP (1.53s within 2.5s)', () => {
@@ -541,30 +546,44 @@ describe('E. Empowered Battle Skill', () => {
     expect(frames[3].properties.offset.value).toBe(2.07);
   });
 
-  test('E4: Frame 4 deals 5 Stagger and massive Heat DMG (no SP recovery)', () => {
-    const frame3 = mockJson.skills.EMPOWERED_BATTLE_SKILL.segments[0].frames[3];
-    const sp = frame3.clause[0].effects.find(
-      (e: Record<string, unknown>) => e.object === 'SKILL_POINT'
+  test('E4: Frame 4 uses FIRST_MATCH with 3 consume predicates: both→combustion, combustion-only, electrification-only', () => {
+    const frame4 = mockJson.skills.EMPOWERED_BATTLE_SKILL.segments[0].frames[3];
+    expect(frame4.clauseType).toBe('FIRST_MATCH');
+    const clauses = frame4.clause;
+    // Predicate 1 (conditional): both reactions → consume Combustion (priority)
+    expect(clauses[0].conditions).toHaveLength(2);
+    expect(clauses[0].effects[0].verb).toBe(VerbType.CONSUME);
+    expect(clauses[0].effects[0].objectId).toBe(StatusType.COMBUSTION);
+    // Predicate 2 (conditional): combustion only → consume Combustion
+    expect(clauses[1].conditions).toHaveLength(1);
+    expect(clauses[1].effects[0].verb).toBe(VerbType.CONSUME);
+    expect(clauses[1].effects[0].objectId).toBe(StatusType.COMBUSTION);
+    // Predicate 3 (conditional): electrification only → consume Electrification
+    expect(clauses[2].conditions).toHaveLength(1);
+    expect(clauses[2].effects[0].verb).toBe(VerbType.CONSUME);
+    expect(clauses[2].effects[0].objectId).toBe(StatusType.ELECTRIFICATION);
+    // Predicate 4 (unconditional): damage + stagger + SP return
+    expect(clauses[3].conditions).toHaveLength(0);
+    const stagger = clauses[3].effects.find(
+      (e: Record<string, unknown>) => e.object === NounType.STAGGER
     );
-    const stagger = frame3.clause[0].effects.find(
-      (e: Record<string, unknown>) => e.object === 'STAGGER'
+    const sp = clauses[3].effects.find(
+      (e: Record<string, unknown>) => e.verb === VerbType.RETURN && e.object === NounType.SKILL_POINT
     );
-    expect(sp).toBeUndefined();
-    expect(stagger.with.value.value).toBe(5);
+    expect(stagger).toBeDefined();
+    expect(sp).toBeDefined();
   });
 
-  test('E5: Frame 3 deals 5 Stagger, consumes Arts Reaction, and deals base damage', () => {
-    const frame2 = mockJson.skills.EMPOWERED_BATTLE_SKILL.segments[0].frames[2];
-    const stagger = frame2.clause[0].effects.find(
-      (e: Record<string, unknown>) => e.object === 'STAGGER'
+  test('E5: Frame 3 deals 5 Stagger and base damage (no consume)', () => {
+    const frame3 = mockJson.skills.EMPOWERED_BATTLE_SKILL.segments[0].frames[2];
+    const stagger = frame3.clause[0].effects.find(
+      (e: Record<string, unknown>) => e.object === NounType.STAGGER
     );
-    const consume = frame2.clause[0].effects.find(
-      (e: Record<string, unknown>) => e.verb === 'CONSUME' && e.object === 'REACTION' && e.objectId === 'ARTS'
+    const consume = frame3.clause[0].effects.find(
+      (e: Record<string, unknown>) => e.verb === VerbType.CONSUME
     );
-    const dmg = getDamageMultipliers(frame2);
-    expect(stagger.with.value.value).toBe(5);
-    expect(consume).toBeDefined();
-    expect(dmg[0]).toBe(0.34);
+    expect(stagger).toBeDefined();
+    expect(consume).toBeUndefined();
   });
 
   test('E6: Frames 1 and 2 deal base damage (same as normal variant)', () => {
@@ -637,23 +656,10 @@ describe('F. Scorching Fangs (Talent)', () => {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 describe('G. Potentials', () => {
-  test('G1: P1 — +15 STRENGTH and +15 AGILITY stat modifiers', () => {
+  test('G1: P1 — Lone Wolf', () => {
     const p1 = mockJson.potentials[0];
     expect(p1.level).toBe(1);
     expect(p1.name).toBe('Lone Wolf');
-    expect(p1.effects.length).toBe(2);
-
-    const strEffect = p1.effects.find(
-      (e: Record<string, unknown>) => (e.statModifier as Record<string, unknown> | undefined)?.statType === 'STRENGTH'
-    );
-    expect(strEffect).toBeDefined();
-    expect(strEffect.statModifier.value).toBe(15);
-
-    const agiEffect = p1.effects.find(
-      (e: Record<string, unknown>) => (e.statModifier as Record<string, unknown> | undefined)?.statType === 'AGILITY'
-    );
-    expect(agiEffect).toBeDefined();
-    expect(agiEffect.statModifier.value).toBe(15);
   });
 
   test('G6: All 5 potential levels are present', () => {

@@ -168,6 +168,20 @@ const zones = result.current.spInsufficiencyZones.get(`${slotId}:${SKILL_COLUMNS
 const graphs = result.current.resourceGraphs; // Map<string, { points, min, max, wasted? }>
 ```
 
+## Event Placement Mode Scenarios
+
+Tests should cover three categories of event placement to ensure the full pipeline handles all interaction modes correctly:
+
+1. **Strict-mode only** — All events placed via `handleAddEvent` with `defaultEvent` templates in the default strict interaction mode. Tests validation rules (overlap, SP, stack limits) and derived event generation from validated placements.
+
+2. **Freeform-mode only** — All events placed after switching to `InteractionModeType.FREEFORM`. Tests that user-created arbitrary events (e.g. manually placed enemy inflictions, statuses at arbitrary frames) are processed correctly through the pipeline without validation gates.
+
+3. **Mixed strict + freeform** — Some events placed in strict mode (e.g. operator skills) and others in freeform mode (e.g. enemy inflictions, manual status placements). Tests that derived events, triggers, and interactions work correctly when strict-validated and freeform events coexist on the timeline. This is the most common real-world usage pattern.
+
+Each test file should have scenarios covering **all three** categories. The same interactions should be verified with strict-only, freeform-only, and mixed placement to ensure consistent behavior regardless of how events were placed.
+
+Additionally, include **freeform-exclusive** scenarios that test placements impossible in strict mode (e.g. overlapping events, events placed during SP insufficiency, manually placed enemy statuses with arbitrary timing). These verify that the pipeline handles edge cases that only freeform users can create.
+
 ## Rules
 
 1. **Never mock game-data configs.** Integration tests use the real JSON data via `operatorJsonLoader`. Mock `require.context` if needed, but load actual JSON files.

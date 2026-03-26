@@ -1,4 +1,35 @@
 {
+  "clause": [
+    {
+      "conditions": [
+        {
+          "subject": "ENEMY",
+          "verb": "IS",
+          "object": "NODE_STAGGERED"
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "DAMAGE_BONUS",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "VARY_BY",
+              "object": "TALENT_LEVEL",
+              "value": [
+                0.2,
+                0.3
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            }
+          }
+        }
+      ]
+    }
+  ],
   "properties": {
     "id": "OBLITERATION_PROTOCOL_TALENT",
     "name": "Obliteration Protocol (Talent)",
@@ -12,8 +43,10 @@
   "metadata": {
     "originId": "PERLICA",
     "dataSources": [
-      "WARFARIN"
+      "WARFARIN",
+      "ENDFIELD_WIKI"
     ],
     "icon": "skills/perlica_talent_1_icon.png"
-  }
+  },
+  "clauseType": "ALL"
 }
