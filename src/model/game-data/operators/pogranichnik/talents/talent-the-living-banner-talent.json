@@ -28,7 +28,6 @@
   "properties": {
     "id": "THE_LIVING_BANNER_TALENT",
     "name": "The Living Banner (Talent)",
-    "type": "TALENT",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",

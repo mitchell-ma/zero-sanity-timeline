@@ -4,7 +4,8 @@
     "description": "Raises a shield that can block attacks, grants Protection to self and nearby operators, and immediately returns some SP. \nWhen attacked while the said shield is raised, perform a retaliation bash that deals Cryo DMG and applies Cryo Infliction on the attacker.",
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "BATTLE_SKILL",
-    "element": "CRYO"
+    "element": "CRYO",
+    "id": "SATURATED_DEFENSE"
   },
   "clause": [
     {
@@ -25,7 +26,6 @@
   ],
   "metadata": {
     "originId": "SNOWSHINE",
-    "id": "SATURATED_DEFENSE",
     "icon": "skills/skill_snowshine.png"
   },
   "segments": [
@@ -70,7 +70,8 @@
                 }
               ]
             }
-          ]
+          ],
+          "clauseType": "ALL"
         },
         {
           "metadata": {
@@ -114,7 +115,7 @@
                 },
                 {
                   "verb": "DEAL",
-                  "adjective": "CRYO",
+                  "objectQualifier": "CRYO",
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
@@ -170,7 +171,8 @@
                 }
               ]
             }
-          ]
+          ],
+          "clauseType": "ALL"
         }
       ],
       "properties": {
@@ -184,5 +186,6 @@
         "element": "CRYO"
       }
     }
-  ]
+  ],
+  "clauseType": "ALL"
 }

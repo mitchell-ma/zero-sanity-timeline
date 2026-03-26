@@ -5,7 +5,8 @@
     "windowFrames": 720,
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "COMBO_SKILL",
-    "element": "PHYSICAL"
+    "element": "PHYSICAL",
+    "id": "FRONTLINE_SUPPORT"
   },
   "clause": [
     {
@@ -99,7 +100,7 @@
                 },
                 {
                   "verb": "DEAL",
-                  "adjective": "PHYSICAL",
+                  "objectQualifier": "PHYSICAL",
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
@@ -127,7 +128,8 @@
                 }
               ]
             }
-          ]
+          ],
+          "clauseType": "ALL"
         }
       ]
     },
@@ -171,7 +173,6 @@
   ],
   "metadata": {
     "originId": "EMBER",
-    "id": "FRONTLINE_SUPPORT",
     "icon": "skills/combo_ember.png"
   },
   "onTriggerClause": [
@@ -184,5 +185,6 @@
         }
       ]
     }
-  ]
+  ],
+  "clauseType": "ALL"
 }

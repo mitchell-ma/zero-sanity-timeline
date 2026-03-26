@@ -4,7 +4,8 @@
     "description": "Leaps into mid-air to stir up a maelstrom with her lance, dealing some Electric DMG to nearby enemies while pulling back all Thunderlances and Thunderlance EX in the battlefield towards herself. \nThe returning Thunderlances pierce through all enemies along their paths and deal Electric DMG, while returning Thunderlances EX deal more Electric DMG and also apply Electric Infliction.",
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "BATTLE_SKILL",
-    "element": "ELECTRIC"
+    "element": "ELECTRIC",
+    "id": "THUNDERLANCE_INTERDICTION"
   },
   "clause": [
     {
@@ -25,7 +26,6 @@
   ],
   "metadata": {
     "originId": "AVYWENNA",
-    "id": "THUNDERLANCE_INTERDICTION",
     "icon": "skills/skill_avywenna.png"
   },
   "segments": [
@@ -61,7 +61,7 @@
                 },
                 {
                   "verb": "DEAL",
-                  "adjective": "ELECTRIC",
+                  "objectQualifier": "ELECTRIC",
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
@@ -137,7 +137,8 @@
                 }
               ]
             }
-          ]
+          ],
+          "clauseType": "ALL"
         }
       ],
       "properties": {
@@ -151,5 +152,6 @@
         "element": "ELECTRIC"
       }
     }
-  ]
+  ],
+  "clauseType": "ALL"
 }

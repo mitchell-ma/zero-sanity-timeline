@@ -32,6 +32,12 @@ Commands:
 - `npx eslint src/` — run linter
 
 Rules:
+- **NEVER run destructive git commands:** `git reset --hard`, `git checkout .`, `git checkout -- <file>`, `git restore .`, `git restore <file>`, `git clean -f`, `git stash` (without explicit user request). Multiple agents may be working on the repo concurrently — destructive git operations will silently destroy other agents' in-progress work. If you encounter merge conflicts, unexpected state, or failing tests due to other changes, stop and ask the user rather than resetting.
+- **Concurrent agent coordination:** Before starting work, read the current state of files you plan to modify — don't assume they match what you last saw. Before running tests or type-checking, pull in the latest worktree state with `git diff` to understand what other agents may have changed. If a file you need to edit has unexpected changes from another agent, work with those changes rather than reverting them.
+- **Only stage your own files.** Never use `git add .`, `git add -A`, or `git add -u`. Always stage files by explicit path, and only files you personally modified in this session.
+- **Scope lint and type-checks to your own changes.** Run `npx tsc --noEmit` and `npx eslint` only on files you changed — not the entire `src/` tree. If you see errors in files you didn't touch, ignore them — another agent is likely mid-edit. Use `npx eslint <file1> <file2> ...` and `npx tsc --noEmit` with awareness that global errors may not be yours.
+- **Never run `npm install` or modify `package.json`** without explicit user approval — concurrent installs corrupt `node_modules`.
+- **If a file you need to edit has been modified since you last read it**, re-read it before editing. If the changes conflict with your task, stop and ask the user how to proceed rather than overwriting the other agent's work.
 - Never write temporary files (screenshots, debug images, logs) to the project root. Use `.claude-temp/` for all throwaway files.
 - Always run `npx eslint src/` after making code changes and fix any warnings before finishing.
 - After completing any task, run `npx tsc --noEmit` and fix all compilation errors in changed files before reporting done.

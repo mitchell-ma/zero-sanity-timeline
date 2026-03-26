@@ -23,7 +23,6 @@
   "properties": {
     "id": "BARRAGE_OF_TECHNOLOGY_TALENT",
     "name": "Barrage of Technology (Talent)",
-    "type": "TALENT",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",

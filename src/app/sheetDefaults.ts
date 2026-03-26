@@ -17,7 +17,7 @@ import { IS_DEV } from '../consts/devFlags';
 export const NUM_SLOTS = 4;
 export const SLOT_IDS = Array.from({ length: NUM_SLOTS }, (_, i) => `slot-${i}`);
 
-const DEFAULT_OP_IDS = ['laevatain', 'akekuri', 'antal', 'ardelia'];
+const DEFAULT_OP_IDS = ['LAEVATAIN', 'AKEKURI', 'ANTAL', 'ARDELIA'];
 export const INITIAL_OPERATORS: (Operator | null)[] = DEFAULT_OP_IDS.map(
   (id) => ALL_OPERATORS.find((op) => op.id === id) ?? null,
 );

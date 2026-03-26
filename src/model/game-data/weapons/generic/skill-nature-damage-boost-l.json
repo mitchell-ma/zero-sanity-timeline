@@ -40,7 +40,6 @@
     "originId": "game",
     "dataSources": [
       "ENDFIELD_WIKI"
-    ],
-    "id": "NATURE_DAMAGE_BOOST_L"
+    ]
   }
 }

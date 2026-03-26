@@ -40,7 +40,6 @@
     "originId": "game",
     "dataSources": [
       "ENDFIELD_WIKI"
-    ],
-    "id": "STRENGTH_BOOST_S"
+    ]
   }
 }

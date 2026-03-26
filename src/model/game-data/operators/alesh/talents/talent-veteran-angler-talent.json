@@ -1,6 +1,5 @@
 {
   "properties": {
-    "type": "TALENT",
     "id": "VETERAN_ANGLER_TALENT",
     "name": "Veteran Angler (Talent)",
     "to": "OPERATOR",

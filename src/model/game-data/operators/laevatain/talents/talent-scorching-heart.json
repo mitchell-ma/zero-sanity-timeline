@@ -1,6 +1,5 @@
 {
   "properties": {
-    "type": "TALENT",
     "id": "SCORCHING_HEART",
     "target": "OPERATOR",
     "targetDeterminer": "THIS",
@@ -54,7 +53,7 @@
             {
               "verb": "CONSUME",
               "object": "INFLICTION",
-              "adjective": "HEAT",
+              "objectQualifier": "HEAT",
               "fromObject": "ENEMY",
               "with": {
                 "stacks": 1

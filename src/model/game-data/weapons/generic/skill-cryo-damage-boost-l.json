@@ -40,7 +40,6 @@
     "originId": "game",
     "dataSources": [
       "ENDFIELD_WIKI"
-    ],
-    "id": "CRYO_DAMAGE_BOOST_L"
+    ]
   }
 }

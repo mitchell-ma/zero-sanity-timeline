@@ -34,7 +34,6 @@
   "properties": {
     "id": "EXPEDITED_DELIVERY_TALENT",
     "name": "EXPEDITED DELIVERY (Talent)",
-    "type": "TALENT",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",

@@ -26,7 +26,6 @@
   "properties": {
     "id": "SLASHING_EDGE_TALENT",
     "name": "Slashing Edge (Talent)",
-    "type": "TALENT",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",

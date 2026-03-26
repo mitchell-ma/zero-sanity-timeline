@@ -33,7 +33,6 @@
   "properties": {
     "id": "OBLITERATION_PROTOCOL",
     "name": "Obliteration Protocol",
-    "type": "STATUS",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
@@ -45,5 +44,6 @@
     "dataSources": [
       "ENDFIELD_WIKI"
     ]
-  }
+  },
+  "clauseType": "ALL"
 }

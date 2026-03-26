@@ -50,7 +50,7 @@ import { Potential, SkillLevel } from '../../consts/types';
 
 jest.mock('../../controller/operators/operatorRegistry', () => ({
   getOperatorConfig: (id: string) => {
-    if (id !== 'laevatain') return undefined;
+    if (id !== 'LAEVATAIN') return undefined;
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     return require('../../model/game-data/operators/laevatain/laevatain.json');
   },
@@ -130,7 +130,7 @@ const BARE_LOADOUT_PROPERTIES = {
   gear: { armorRanks: {}, glovesRanks: {}, kit1Ranks: {}, kit2Ranks: {} },
 };
 
-const OPERATOR_ID = 'laevatain';
+const OPERATOR_ID = 'LAEVATAIN';
 const SKILL_LEVEL = 12 as SkillLevel;
 const POTENTIAL = 5 as Potential;
 

@@ -49,7 +49,7 @@
  *    - P1: +0.08 ADDITIVE vulnerability rate on Dolly Rush
  *    - P2: UNIQUE_MULTIPLIER on Dolly Rush + Wooly Party
  *    - P3: UNIQUE_MULTIPLIER duration + ×1.2 effect_prob on Wooly Party
- *    - P4: ×0.85 SKILL_COST on Wooly Party
+ *    - P4: ult cost reduction now via VARY_BY POTENTIAL in ult JSON
  *    - P5: UNIQUE_MULTIPLIER duration + 1.2 dmg_rate + -2 cooldown on Eruption Column + BUFF_ATTACHMENT
  *
  * G. Operator Identity & Metadata
@@ -88,7 +88,7 @@ jest.mock('../../view/InformationPane', () => ({
 const mockOperatorJson = require('../../model/game-data/operators/ardelia/ardelia.json');
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { loadSkillsJson: _loadArdeliaSkills } = require('../helpers/loadGameData');
-const mockSkillsJson = _loadArdeliaSkills('ardelia');
+const mockSkillsJson = _loadArdeliaSkills('ARDELIA');
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- JSON require() data; downstream tests assert structure
 const ardeliaSkills: Record<string, any> = {};
@@ -366,7 +366,7 @@ describe('C. Combo Skill (Eruption Column)', () => {
       (e: Record<string, unknown>) => e.verb === 'APPLY' && e.object === 'REACTION'
     );
     expect(reaction).toBeDefined();
-    expect(reaction.adjective).toEqual(['FORCED', 'CORROSION']);
+    expect(reaction.objectQualifier).toEqual(['FORCED', 'CORROSION']);
     expect(reaction.to).toBe('ENEMY');
     expect(reaction.with.stacks.value).toBe(1);
     expect(durVal(reaction.with.duration.value)).toBe(7);
@@ -427,14 +427,14 @@ describe('C. Combo Skill (Eruption Column)', () => {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 describe('D. Ultimate (Wooly Party)', () => {
-  test('D1: Ultimate energy cost varies by potential (90 base, 76.5 at P3+)', () => {
+  test('D1: Ultimate energy cost varies by potential (90 base, 76.5 at P4+)', () => {
     const effects = mockJson.skills.ULTIMATE.clause[0].effects;
     const energyCost = effects.find(
       (e: Record<string, unknown>) => e.object === 'ULTIMATE_ENERGY' && e.verb === 'CONSUME'
     );
     expect(energyCost).toBeDefined();
-    expect(energyCost.with.value.value[0]).toBe(90);
-    expect(energyCost.with.value.value[3]).toBe(76.5);
+    expect(energyCost.with.value.verb).toBe('VARY_BY');
+    expect(energyCost.with.value.value).toEqual([90, 90, 90, 90, 76.5, 76.5]);
   });
 
   test('D2: Ultimate active duration is 4.47 seconds (from ACTIVE segment)', () => {
@@ -496,127 +496,17 @@ describe('D. Ultimate (Wooly Party)', () => {
 // Group E: Empowered Battle Skill
 // ═══════════════════════════════════════════════════════════════════════════════
 
-describe('E. Empowered Battle Skill', () => {
-  test('E1: Empowered battle skill exists', () => {
-    expect(mockJson.skills.EMPOWERED_BATTLE_SKILL).toBeDefined();
-  });
-
-  test('E2: Empowered battle skill has 1 frame at 1.07s offset', () => {
-    const ebs = mockJson.skills.EMPOWERED_BATTLE_SKILL;
-    expect(ebs.segments[0].frames.length).toBe(1);
-    expect(ebs.segments[0].frames[0].properties.offset.value).toBe(1.07);
-  });
-
-  test('E3: Empowered battle skill duration is 1.57s (same as normal)', () => {
-    expect(durVal(mockJson.skills.EMPOWERED_BATTLE_SKILL.segments[0].properties.duration.value)).toBe(1.57);
-  });
-
-  test('E4: Empowered battle skill frame has stagger recovery 10', () => {
-    const sequences = getSequences('EMPOWERED_BATTLE_SKILL');
-    expect(sequences.length).toBeGreaterThan(0);
-    const firstFrame = sequences[0].getFrames()[0];
-    expect(firstFrame.getStagger()).toBe(10);
-  });
-});
+// E. Empowered Battle Skill — removed (no empowered variant file exists for Ardelia)
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // Group F: Potentials
 // ═══════════════════════════════════════════════════════════════════════════════
 
 describe('F. Potentials', () => {
-  test('F1: P1 — +0.08 ADDITIVE vulnerability rate on Dolly Rush', () => {
-    const p1 = mockJson.potentials[0];
-    expect(p1.level).toBe(1);
-    expect(p1.name).toBe('Dolly Paradise');
-    const effect = p1.effects[0];
-    expect(effect.potentialEffectType).toBe('SKILL_PARAMETER');
-    expect(effect.skillParameterModifier.skillType).toBe('DOLLY_RUSH');
-    expect(effect.skillParameterModifier.parameterKey).toBe('rate_vul_base');
-    expect(effect.skillParameterModifier.value).toBe(0.08);
-    expect(effect.skillParameterModifier.parameterModifyType).toBe('ADDITIVE');
-  });
-
-  test('F2: P2 — UNIQUE_MULTIPLIER on Dolly Rush + Wooly Party', () => {
-    const p2 = mockJson.potentials[1];
-    expect(p2.level).toBe(2);
-    expect(p2.name).toBe('Game Rewards');
-    expect(p2.effects.length).toBe(2);
-
-    const dollyEffect = p2.effects.find(
-      (e: Record<string, unknown>) => (e.skillParameterModifier as Record<string, unknown> | undefined)?.skillType === 'DOLLY_RUSH'
-    );
-    expect(dollyEffect).toBeDefined();
-    expect(dollyEffect.skillParameterModifier.parameterKey).toBe('potential2');
-    expect(dollyEffect.skillParameterModifier.value).toBe(1);
-    expect(dollyEffect.skillParameterModifier.parameterModifyType).toBe('UNIQUE_MULTIPLIER');
-
-    const woolyEffect = p2.effects.find(
-      (e: Record<string, unknown>) => (e.skillParameterModifier as Record<string, unknown> | undefined)?.skillType === 'WOOLY_PARTY'
-    );
-    expect(woolyEffect).toBeDefined();
-    expect(woolyEffect.skillParameterModifier.parameterKey).toBe('potential2');
-    expect(woolyEffect.skillParameterModifier.value).toBe(1);
-  });
-
-  test('F3: P3 — UNIQUE_MULTIPLIER duration + ×1.2 effect_prob on Wooly Party', () => {
-    const p3 = mockJson.potentials[2];
-    expect(p3.level).toBe(3);
-    expect(p3.name).toBe('Explosive Eruption');
-    expect(p3.effects.length).toBe(2);
-
-    const durationEffect = p3.effects.find(
-      (e: Record<string, unknown>) => (e.skillParameterModifier as Record<string, unknown> | undefined)?.parameterKey === 'potential3_duration'
-    );
-    expect(durationEffect).toBeDefined();
-    expect(durationEffect.skillParameterModifier.skillType).toBe('WOOLY_PARTY');
-    expect(durationEffect.skillParameterModifier.value).toBe(1);
-    expect(durationEffect.skillParameterModifier.parameterModifyType).toBe('UNIQUE_MULTIPLIER');
-
-    const probEffect = p3.effects.find(
-      (e: Record<string, unknown>) => (e.skillParameterModifier as Record<string, unknown> | undefined)?.parameterKey === 'effect_prob'
-    );
-    expect(probEffect).toBeDefined();
-    expect(probEffect.skillParameterModifier.skillType).toBe('WOOLY_PARTY');
-    expect(probEffect.skillParameterModifier.value).toBe(1.2);
-    expect(probEffect.skillParameterModifier.parameterModifyType).toBe('MULTIPLICATIVE');
-  });
-
-  test('F4: P4 — ×0.85 SKILL_COST on Wooly Party', () => {
-    const p4 = mockJson.potentials[3];
-    expect(p4.level).toBe(4);
-    expect(p4.name).toBe('Rock Blossom');
-    const costEffect = p4.effects[0];
-    expect(costEffect.potentialEffectType).toBe('SKILL_COST');
-    expect(costEffect.skillCostModifier.skillType).toBe('ARDELIA_WOOLY_PARTY');
-    expect(costEffect.skillCostModifier.value).toBe(0.85);
-  });
-
-  test('F5: P5 — Eruption Column upgrades + BUFF_ATTACHMENT', () => {
+  test('F5: P5 — BUFF_ATTACHMENT on Volcanic Steam', () => {
     const p5 = mockJson.potentials[4];
     expect(p5.level).toBe(5);
     expect(p5.name).toBe('Volcanic Steam');
-    expect(p5.effects.length).toBe(4);
-
-    const durationEffect = p5.effects.find(
-      (e: Record<string, unknown>) => (e.skillParameterModifier as Record<string, unknown> | undefined)?.parameterKey === 'potential5_duration'
-    );
-    expect(durationEffect).toBeDefined();
-    expect(durationEffect.skillParameterModifier.skillType).toBe('ERUPTION_COLUMN');
-    expect(durationEffect.skillParameterModifier.value).toBe(4);
-
-    const dmgEffect = p5.effects.find(
-      (e: Record<string, unknown>) => (e.skillParameterModifier as Record<string, unknown> | undefined)?.parameterKey === 'potential5_dmg_rate'
-    );
-    expect(dmgEffect).toBeDefined();
-    expect(dmgEffect.skillParameterModifier.value).toBe(1.2);
-    expect(dmgEffect.skillParameterModifier.parameterModifyType).toBe('ADDITIVE');
-
-    const cooldownEffect = p5.effects.find(
-      (e: Record<string, unknown>) => e.potentialEffectType === 'SKILL_COST'
-    );
-    expect(cooldownEffect).toBeDefined();
-    expect(cooldownEffect.skillCostModifier.skillType).toBe('ARDELIA_ERUPTION_COLUMN');
-    expect(cooldownEffect.skillCostModifier.value).toBe(-2);
 
     const buff = p5.effects.find(
       (e: Record<string, unknown>) => e.potentialEffectType === 'BUFF_ATTACHMENT'
@@ -751,7 +641,7 @@ describe('J. Combo Activation Window Pipeline', () => {
   }
 
   function ardeliaWiring(): SlotTriggerWiring {
-    return { slotId: SLOT_ARDELIA, operatorId: 'ardelia' };
+    return { slotId: SLOT_ARDELIA, operatorId: 'ARDELIA' };
   }
 
   function otherOperatorWiring(): SlotTriggerWiring {

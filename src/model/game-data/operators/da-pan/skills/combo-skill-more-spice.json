@@ -5,7 +5,8 @@
     "windowFrames": 720,
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "COMBO_SKILL",
-    "element": "PHYSICAL"
+    "element": "PHYSICAL",
+    "id": "MORE_SPICE"
   },
   "clause": [
     {
@@ -93,7 +94,7 @@
                 },
                 {
                   "verb": "DEAL",
-                  "adjective": "PHYSICAL",
+                  "objectQualifier": "PHYSICAL",
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
@@ -149,7 +150,8 @@
                 }
               ]
             }
-          ]
+          ],
+          "clauseType": "ALL"
         }
       ]
     },
@@ -193,7 +195,6 @@
   ],
   "metadata": {
     "originId": "DA_PAN",
-    "id": "MORE_SPICE",
     "icon": "skills/combo_da_pan.png"
   },
   "onTriggerClause": [
@@ -208,5 +209,6 @@
         }
       ]
     }
-  ]
+  ],
+  "clauseType": "ALL"
 }

@@ -6,7 +6,7 @@
         {
           "verb": "DEAL",
           "object": "DAMAGE",
-          "adjective": "PHYSICAL",
+          "objectQualifier": "PHYSICAL",
           "toDeterminer": "THIS",
           "to": "ENEMY",
           "with": {

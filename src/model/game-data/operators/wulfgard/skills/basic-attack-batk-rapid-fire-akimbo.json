@@ -37,7 +37,7 @@
               "effects": [
                 {
                   "verb": "DEAL",
-                  "adjective": "HEAT",
+                  "objectQualifier": "HEAT",
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
@@ -65,7 +65,8 @@
                 }
               ]
             }
-          ]
+          ],
+          "clauseType": "ALL"
         },
         {
           "metadata": {
@@ -86,7 +87,7 @@
               "effects": [
                 {
                   "verb": "DEAL",
-                  "adjective": "HEAT",
+                  "objectQualifier": "HEAT",
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
@@ -114,7 +115,8 @@
                 }
               ]
             }
-          ]
+          ],
+          "clauseType": "ALL"
         }
       ]
     },
@@ -155,7 +157,7 @@
               "effects": [
                 {
                   "verb": "DEAL",
-                  "adjective": "HEAT",
+                  "objectQualifier": "HEAT",
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
@@ -183,7 +185,8 @@
                 }
               ]
             }
-          ]
+          ],
+          "clauseType": "ALL"
         },
         {
           "metadata": {
@@ -204,7 +207,7 @@
               "effects": [
                 {
                   "verb": "DEAL",
-                  "adjective": "HEAT",
+                  "objectQualifier": "HEAT",
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
@@ -232,7 +235,8 @@
                 }
               ]
             }
-          ]
+          ],
+          "clauseType": "ALL"
         }
       ]
     },
@@ -273,7 +277,7 @@
               "effects": [
                 {
                   "verb": "DEAL",
-                  "adjective": "HEAT",
+                  "objectQualifier": "HEAT",
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
@@ -301,7 +305,8 @@
                 }
               ]
             }
-          ]
+          ],
+          "clauseType": "ALL"
         },
         {
           "metadata": {
@@ -322,7 +327,7 @@
               "effects": [
                 {
                   "verb": "DEAL",
-                  "adjective": "HEAT",
+                  "objectQualifier": "HEAT",
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
@@ -350,7 +355,8 @@
                 }
               ]
             }
-          ]
+          ],
+          "clauseType": "ALL"
         },
         {
           "metadata": {
@@ -371,7 +377,7 @@
               "effects": [
                 {
                   "verb": "DEAL",
-                  "adjective": "HEAT",
+                  "objectQualifier": "HEAT",
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
@@ -399,7 +405,8 @@
                 }
               ]
             }
-          ]
+          ],
+          "clauseType": "ALL"
         }
       ]
     },
@@ -461,7 +468,7 @@
                 },
                 {
                   "verb": "DEAL",
-                  "adjective": "HEAT",
+                  "objectQualifier": "HEAT",
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
@@ -494,7 +501,8 @@
                 }
               ]
             }
-          ]
+          ],
+          "clauseType": "ALL"
         }
       ]
     }
@@ -504,11 +512,11 @@
     "description": "An attack with up to 4 sequences that deals Heat DMG. As the controlled operator, Final Strike also deals {poise:0} Stagger.",
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "BASIC_ATTACK",
-    "element": "HEAT"
+    "element": "HEAT",
+    "id": "RAPID_FIRE_AKIMBO"
   },
   "metadata": {
     "originId": "WULFGARD",
-    "id": "RAPID_FIRE_AKIMBO",
     "icon": "skills/attack_guns.png"
   }
 }

@@ -26,7 +26,6 @@
   "properties": {
     "id": "REALSPACE_STASIS",
     "name": "Realspace Stasis",
-    "type": "STATUS",
     "to": "ENEMY",
     "duration": {
       "value": {
@@ -51,5 +50,6 @@
     "dataSources": [
       "ENDFIELD_WIKI"
     ]
-  }
+  },
+  "clauseType": "ALL"
 }

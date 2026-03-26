@@ -66,15 +66,15 @@ export function hasEnableClauseAtFrame(
 
 /**
  * Check if any overlapping segment has a DISABLE clause matching the specified
- * object and adjective at the given frame.
- * When adjective is undefined, matches DISABLE effects with no adjective (e.g. DISABLE FINISHER).
- * When adjective is provided, matches DISABLE effects with that exact adjective (e.g. DISABLE NORMAL BATK).
+ * object and objectQualifier at the given frame.
+ * When objectQualifier is undefined, matches DISABLE effects with no objectQualifier (e.g. DISABLE FINISHER).
+ * When objectQualifier is provided, matches DISABLE effects with that exact objectQualifier (e.g. DISABLE NORMAL BATK).
  */
 function hasDisableAtFrame(
   events: readonly TimelineEvent[],
   ownerId: string,
   disableObject: string,
-  adjective: string | undefined,
+  objectQualifier: string | undefined,
   atFrame: number,
 ): boolean {
   for (const ev of events) {
@@ -85,7 +85,7 @@ function hasDisableAtFrame(
       if (atFrame >= cursor && atFrame < segEnd && seg.clause) {
         if (seg.clause.some(c => c.effects.some(e =>
           e.verb === 'DISABLE' && e.object === disableObject
-          && (adjective === undefined ? !e.adjective : e.adjective === adjective),
+          && (objectQualifier === undefined ? !e.objectQualifier : e.objectQualifier === objectQualifier),
         ))) {
           return true;
         }

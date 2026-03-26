@@ -4,7 +4,8 @@
     "description": "Kicks an Improvised Explosive that sticks to the target, applying Slow and exploding after a short duration. The explosion deals Nature DMG and Nature Infliction to enemies in the area of effect. Defeating the target also sets off the Improvised Explosive immediately.\nOnly 1 Improvised Explosive can be present in the battlefield.",
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "BATTLE_SKILL",
-    "element": "NATURE"
+    "element": "NATURE",
+    "id": "TINY_SURPRISE"
   },
   "clause": [
     {
@@ -25,7 +26,6 @@
   ],
   "metadata": {
     "originId": "FLUORITE",
-    "id": "TINY_SURPRISE",
     "icon": "skills/skill_fluorite.png"
   },
   "segments": [
@@ -50,7 +50,7 @@
               "effects": [
                 {
                   "verb": "DEAL",
-                  "adjective": "NATURE",
+                  "objectQualifier": "NATURE",
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
@@ -86,7 +86,8 @@
                 }
               ]
             }
-          ]
+          ],
+          "clauseType": "ALL"
         },
         {
           "metadata": {
@@ -119,7 +120,7 @@
                 {
                   "verb": "APPLY",
                   "object": "INFLICTION",
-                  "adjective": "NATURE",
+                  "objectQualifier": "NATURE",
                   "to": "ENEMY",
                   "with": {
                     "stacks": {
@@ -130,7 +131,7 @@
                 },
                 {
                   "verb": "DEAL",
-                  "adjective": "NATURE",
+                  "objectQualifier": "NATURE",
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
@@ -158,7 +159,8 @@
                 }
               ]
             }
-          ]
+          ],
+          "clauseType": "ALL"
         }
       ],
       "properties": {
@@ -172,5 +174,6 @@
         "element": "NATURE"
       }
     }
-  ]
+  ],
+  "clauseType": "ALL"
 }

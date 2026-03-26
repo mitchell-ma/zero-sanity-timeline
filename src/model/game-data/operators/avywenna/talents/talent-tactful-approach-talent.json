@@ -1,6 +1,5 @@
 {
   "properties": {
-    "type": "TALENT",
     "id": "TACTFUL_APPROACH_TALENT",
     "name": "Tactful Approach (Talent)",
     "to": "OPERATOR",

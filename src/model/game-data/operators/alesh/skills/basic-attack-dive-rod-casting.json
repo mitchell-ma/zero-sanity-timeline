@@ -7,11 +7,11 @@
     "description": "Basic attack performed in mid-air becomes a dive attack that deals Physical DMG to nearby enemies.",
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "BASIC_ATTACK",
-    "element": "PHYSICAL"
+    "element": "PHYSICAL",
+    "id": "ROD_CASTING_DIVE"
   },
   "metadata": {
     "originId": "ALESH",
-    "id": "ROD_CASTING_DIVE",
     "icon": "skills/attack_sword.png"
   },
   "segments": [
@@ -33,7 +33,7 @@
               "effects": [
                 {
                   "verb": "DEAL",
-                  "adjective": "PHYSICAL",
+                  "objectQualifier": "PHYSICAL",
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
@@ -64,7 +64,8 @@
           ],
           "frameTypes": [
             "DIVE"
-          ]
+          ],
+          "clauseType": "ALL"
         }
       ],
       "properties": {

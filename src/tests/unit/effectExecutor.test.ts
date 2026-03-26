@@ -62,7 +62,7 @@ describe('APPLY effects', () => {
     const effect: Effect = {
       verb: VerbType.APPLY,
       object: NounType.INFLICTION,
-      adjective: AdjectiveType.HEAT,
+      objectQualifier: AdjectiveType.HEAT,
       to: NounType.ENEMY,
       with: {
         duration: { verb: VerbType.IS, value: 10 },
@@ -150,7 +150,7 @@ describe('APPLY effects', () => {
     const effect: Effect = {
       verb: VerbType.APPLY,
       object: NounType.REACTION,
-      adjective: AdjectiveType.COMBUSTION,
+      objectQualifier: AdjectiveType.COMBUSTION,
       to: NounType.ENEMY,
       with: {
         duration: { verb: VerbType.IS, value: 5 },
@@ -182,7 +182,7 @@ describe('CONSUME effects', () => {
     const effect: Effect = {
       verb: VerbType.CONSUME,
       object: NounType.INFLICTION,
-      adjective: AdjectiveType.HEAT,
+      objectQualifier: AdjectiveType.HEAT,
       fromObject: NounType.ENEMY,
     };
     const ctx = makeCtx({ events: [infliction] });
@@ -199,7 +199,7 @@ describe('CONSUME effects', () => {
     const effect: Effect = {
       verb: VerbType.CONSUME,
       object: NounType.INFLICTION,
-      adjective: AdjectiveType.HEAT,
+      objectQualifier: AdjectiveType.HEAT,
       fromObject: NounType.ENEMY,
     };
     const ctx = makeCtx({ events: [] });
@@ -276,7 +276,7 @@ describe('ALL compound effects', () => {
           {
             verb: VerbType.CONSUME,
             object: NounType.INFLICTION,
-            adjective: AdjectiveType.HEAT,
+            objectQualifier: AdjectiveType.HEAT,
             fromObject: NounType.ENEMY,
           },
           {
@@ -315,7 +315,7 @@ describe('ALL compound effects', () => {
           {
             verb: VerbType.CONSUME,
             object: NounType.INFLICTION,
-            adjective: AdjectiveType.HEAT,
+            objectQualifier: AdjectiveType.HEAT,
             fromObject: NounType.ENEMY,
           },
           {
@@ -361,7 +361,7 @@ describe('ALL compound effects', () => {
           {
             verb: VerbType.CONSUME,
             object: NounType.INFLICTION,
-            adjective: AdjectiveType.HEAT,
+            objectQualifier: AdjectiveType.HEAT,
             fromObject: NounType.ENEMY,
           },
           {
@@ -725,7 +725,7 @@ describe('Edge cases', () => {
       {
         verb: VerbType.CONSUME,
         object: NounType.INFLICTION,
-        adjective: AdjectiveType.HEAT,
+        objectQualifier: AdjectiveType.HEAT,
         fromObject: NounType.ENEMY,
       },
       {
@@ -959,7 +959,7 @@ describe('resolveOwnerId — determiner-based target resolution', () => {
     const effect: Effect = {
       verb: VerbType.CONSUME,
       object: NounType.INFLICTION,
-      adjective: AdjectiveType.HEAT,
+      objectQualifier: AdjectiveType.HEAT,
       fromObject: NounType.ENEMY,
     };
     const ctx = makeCtx({ events: [infliction] });
@@ -989,7 +989,7 @@ describe('CHANCE compound effects', () => {
   const applyInflictionWithDuration = (durationSec: number): Effect => ({
     verb: VerbType.APPLY,
     object: NounType.INFLICTION,
-    adjective: AdjectiveType.HEAT,
+    objectQualifier: AdjectiveType.HEAT,
     to: NounType.ENEMY,
     with: { duration: { verb: VerbType.IS, value: durationSec } },
   });
@@ -1139,7 +1139,7 @@ describe('CHANCE compound effects', () => {
     const effect = chanceEffect(1.0, [{
       verb: VerbType.CONSUME,
       object: NounType.INFLICTION,
-      adjective: AdjectiveType.HEAT,
+      objectQualifier: AdjectiveType.HEAT,
       fromObject: NounType.ENEMY,
     }]);
     const ctx = makeCtx({ critMode: CritMode.ALWAYS, events: [] });

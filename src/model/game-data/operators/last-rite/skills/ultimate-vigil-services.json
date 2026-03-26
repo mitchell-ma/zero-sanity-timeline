@@ -4,7 +4,8 @@
     "description": "Last Rite encases herself in frost armor, creates an ice scythe to perform 3 slashes, and gains immunity to all damages while this state is active. \nEach slash deals massive Cryo DMG. \nLast Rite can only gain Ultimate Energy from her own battle skills and combo skills.",
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "ULTIMATE_SKILL",
-    "element": "CRYO"
+    "element": "CRYO",
+    "id": "VIGIL_SERVICES"
   },
   "clause": [
     {
@@ -100,7 +101,7 @@
                 },
                 {
                   "verb": "DEAL",
-                  "adjective": "CRYO",
+                  "objectQualifier": "CRYO",
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
@@ -148,7 +149,8 @@
                 }
               ]
             }
-          ]
+          ],
+          "clauseType": "ALL"
         },
         {
           "metadata": {
@@ -180,7 +182,7 @@
                 },
                 {
                   "verb": "DEAL",
-                  "adjective": "CRYO",
+                  "objectQualifier": "CRYO",
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
@@ -228,7 +230,8 @@
                 }
               ]
             }
-          ]
+          ],
+          "clauseType": "ALL"
         },
         {
           "metadata": {
@@ -260,7 +263,7 @@
                 },
                 {
                   "verb": "DEAL",
-                  "adjective": "CRYO",
+                  "objectQualifier": "CRYO",
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
@@ -308,14 +311,15 @@
                 }
               ]
             }
-          ]
+          ],
+          "clauseType": "ALL"
         }
       ]
     }
   ],
   "metadata": {
     "originId": "LAST_RITE",
-    "id": "VIGIL_SERVICES",
     "icon": "skills/ult_lastrite.png"
-  }
+  },
+  "clauseType": "ALL"
 }

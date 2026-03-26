@@ -43,14 +43,14 @@
             },
             {
               "verb": "ENABLE",
-              "adjective": "ENHANCED",
+              "objectQualifier": "ENHANCED",
               "object": "BATK",
               "toDeterminer": "THIS",
               "to": "OPERATOR"
             },
             {
               "verb": "DISABLE",
-              "adjective": "NORMAL",
+              "objectQualifier": "NORMAL",
               "object": "BATK",
               "toDeterminer": "THIS",
               "to": "OPERATOR"
@@ -64,7 +64,8 @@
           ]
         }
       ],
-      "frames": []
+      "frames": [],
+      "clauseType": "ALL"
     },
     {
       "metadata": {
@@ -89,35 +90,35 @@
           "effects": [
             {
               "verb": "ENABLE",
-              "adjective": "ENHANCED",
+              "objectQualifier": "ENHANCED",
               "object": "BATK",
               "toDeterminer": "THIS",
               "to": "OPERATOR"
             },
             {
               "verb": "DISABLE",
-              "adjective": "NORMAL",
+              "objectQualifier": "NORMAL",
               "object": "BATK",
               "toDeterminer": "THIS",
               "to": "OPERATOR"
             },
             {
               "verb": "ENABLE",
-              "adjective": "ENHANCED",
+              "objectQualifier": "ENHANCED",
               "object": "BATTLE_SKILL",
               "toDeterminer": "THIS",
               "to": "OPERATOR"
             },
             {
               "verb": "DISABLE",
-              "adjective": "NORMAL",
+              "objectQualifier": "NORMAL",
               "object": "BATTLE_SKILL",
               "toDeterminer": "THIS",
               "to": "OPERATOR"
             },
             {
               "verb": "DISABLE",
-              "adjective": "EMPOWERED",
+              "objectQualifier": "EMPOWERED",
               "object": "BATTLE_SKILL",
               "toDeterminer": "THIS",
               "to": "OPERATOR"
@@ -131,7 +132,8 @@
           ]
         }
       ],
-      "frames": []
+      "frames": [],
+      "clauseType": "ALL"
     },
     {
       "metadata": {
@@ -156,35 +158,35 @@
           "effects": [
             {
               "verb": "ENABLE",
-              "adjective": "ENHANCED",
+              "objectQualifier": "ENHANCED",
               "object": "BATK",
               "toDeterminer": "THIS",
               "to": "OPERATOR"
             },
             {
               "verb": "DISABLE",
-              "adjective": "NORMAL",
+              "objectQualifier": "NORMAL",
               "object": "BATK",
               "toDeterminer": "THIS",
               "to": "OPERATOR"
             },
             {
               "verb": "ENABLE",
-              "adjective": "ENHANCED",
+              "objectQualifier": "ENHANCED",
               "object": "BATTLE_SKILL",
               "toDeterminer": "THIS",
               "to": "OPERATOR"
             },
             {
               "verb": "DISABLE",
-              "adjective": "NORMAL",
+              "objectQualifier": "NORMAL",
               "object": "BATTLE_SKILL",
               "toDeterminer": "THIS",
               "to": "OPERATOR"
             },
             {
               "verb": "DISABLE",
-              "adjective": "EMPOWERED",
+              "objectQualifier": "EMPOWERED",
               "object": "BATTLE_SKILL",
               "toDeterminer": "THIS",
               "to": "OPERATOR"
@@ -198,7 +200,8 @@
           ]
         }
       ],
-      "frames": []
+      "frames": [],
+      "clauseType": "ALL"
     }
   ],
   "clause": [
@@ -210,8 +213,18 @@
           "object": "ULTIMATE_ENERGY",
           "with": {
             "value": {
-              "verb": "IS",
-              "value": 300
+              "verb": "VARY_BY",
+              "object": "POTENTIAL",
+              "value": [
+                300,
+                300,
+                300,
+                300,
+                255,
+                255
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
             }
           }
         }
@@ -222,11 +235,12 @@
     "name": "Twilight",
     "description": "Laevatain summons her Sviga Lævi and becomes the controlled operator. \nFor a certain duration, her basic attacks (BATK) are enhanced and the Sviga Lævi strikes together with Laevatain, with each attack dealing Heat DMG. BATK sequence 3 also applies Heat Infliction.",
     "eventType": "COMBAT_SKILL",
-    "eventCategoryType": "ULTIMATE_SKILL"
+    "eventCategoryType": "ULTIMATE_SKILL",
+    "id": "TWILIGHT"
   },
   "metadata": {
     "originId": "LAEVATAIN",
-    "id": "TWILIGHT",
     "icon": "skills/ult_laevatain.png"
-  }
+  },
+  "clauseType": "ALL"
 }

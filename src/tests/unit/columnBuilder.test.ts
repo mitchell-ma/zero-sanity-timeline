@@ -69,7 +69,7 @@ const findStatusColumn = (columns: ReturnType<typeof buildColumns>, slotId: stri
 
 describe('buildColumns — operator status columns', () => {
   it('creates status column for Laevatain with MELTING_FLAME and SCORCHING_HEART_EFFECT micro-columns', () => {
-    const op = findOperator('laevatain');
+    const op = findOperator('LAEVATAIN');
     const slot = makeSlot('slot1', op);
     const columns = buildColumns([slot], ENEMY, allSkillsVisible('slot1'));
     const statusCol = findStatusColumn(columns, 'slot1');
@@ -80,7 +80,7 @@ describe('buildColumns — operator status columns', () => {
   });
 
   it('creates status column for Laevatain with SCORCHING_HEART talent micro-column', () => {
-    const op = findOperator('laevatain');
+    const op = findOperator('LAEVATAIN');
     const slot = makeSlot('slot1', op);
     const columns = buildColumns([slot], ENEMY, allSkillsVisible('slot1'));
     const statusCol = findStatusColumn(columns, 'slot1');
@@ -90,7 +90,7 @@ describe('buildColumns — operator status columns', () => {
   });
 
   it('creates status column for Wulfgard with SCORCHING_FANGS_TALENT', () => {
-    const op = findOperator('wulfgard');
+    const op = findOperator('WULFGARD');
     const slot = makeSlot('slot1', op);
     const columns = buildColumns([slot], ENEMY, allSkillsVisible('slot1'));
     const statusCol = findStatusColumn(columns, 'slot1');
@@ -100,7 +100,7 @@ describe('buildColumns — operator status columns', () => {
   });
 
   it('creates status column for Yvonne with CRIT_STACKS', () => {
-    const op = findOperator('yvonne');
+    const op = findOperator('YVONNE');
     const slot = makeSlot('slot1', op);
     const columns = buildColumns([slot], ENEMY, allSkillsVisible('slot1'));
     const statusCol = findStatusColumn(columns, 'slot1');
@@ -112,7 +112,7 @@ describe('buildColumns — operator status columns', () => {
 
 describe('buildColumns — enemy-targeted statuses excluded from operator status column', () => {
   it('does not include FOCUS in operator status column for Antal (targets ENEMY)', () => {
-    const op = findOperator('antal');
+    const op = findOperator('ANTAL');
     const slot = makeSlot('slot1', op);
     const columns = buildColumns([slot], ENEMY, allSkillsVisible('slot1'));
     const statusCol = findStatusColumn(columns, 'slot1');
@@ -122,7 +122,7 @@ describe('buildColumns — enemy-targeted statuses excluded from operator status
   });
 
   it('does not include ORIGINIUM_CRYSTAL in operator status column for Endministrator (targets ENEMY)', () => {
-    const op = findOperator('endministrator');
+    const op = findOperator('ENDMINISTRATOR');
     const slot = makeSlot('slot1', op);
     const columns = buildColumns([slot], ENEMY, allSkillsVisible('slot1'));
     const statusCol = findStatusColumn(columns, 'slot1');
@@ -133,7 +133,7 @@ describe('buildColumns — enemy-targeted statuses excluded from operator status
 
 describe('buildColumns — matchColumnIds covers both kebab-case and StatusType forms', () => {
   it('Laevatain status column matchColumnIds includes both forms for MELTING_FLAME', () => {
-    const op = findOperator('laevatain');
+    const op = findOperator('LAEVATAIN');
     const slot = makeSlot('slot1', op);
     const columns = buildColumns([slot], ENEMY, allSkillsVisible('slot1'));
     const statusCol = findStatusColumn(columns, 'slot1');

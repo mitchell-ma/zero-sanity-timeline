@@ -26,7 +26,6 @@
   "properties": {
     "id": "REDUCE_AND_THICKEN_TALENT",
     "name": "Reduce and Thicken (Talent)",
-    "type": "TALENT",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",

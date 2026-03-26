@@ -23,16 +23,16 @@ interface TriggerClause {
 // ── Validation ──────────────────────────────────────────────────────────────
 
 const VALID_SKILL_ENTRY_KEYS = new Set([
-  'segments', 'clause', 'onTriggerClause', 'activationClause', 'properties', 'metadata',
+  'segments', 'clause', 'clauseType', 'onTriggerClause', 'activationClause', 'properties', 'metadata',
 ]);
 
 const VALID_SKILL_PROPERTIES_KEYS = new Set([
-  'name', 'description', 'duration', 'windowFrames',
-  'enhancementTypes', 'dependencyTypes',
-  'eventType', 'eventCategoryType',
+  'id', 'name', 'description', 'duration', 'windowFrames',
+  'enhancementTypes', 'dependencyTypes', 'element',
+  'eventType', 'eventCategoryType', 'suppliedParameters',
 ]);
 
-const VALID_SKILL_METADATA_KEYS = new Set(['originId', 'id', 'eventComponentType', 'dataSources', 'icon']);
+const VALID_SKILL_METADATA_KEYS = new Set(['originId', 'eventComponentType', 'dataSources', 'icon']);
 
 /** Validate a single skill entry. Returns an array of error messages (empty = valid). */
 export function validateOperatorSkill(json: Record<string, unknown>, skillId: string): string[] {
@@ -149,24 +149,35 @@ function filenameToCamelCase(filename: string): string {
   return filename.replace(/-([a-z])/g, (_, c: string) => c.toUpperCase());
 }
 
+// ── Directory → JSON-ID map ──────────────────────────────────────────────────
+
+// Build directory→JSON-ID map from operator JSON files (independent of operatorsStore init order)
+const _dirToId = new Map<string, string>();
+const _opContext = require.context('./operators', true, /\/[^/]+\/[^/]+\.json$/);
+for (const k of _opContext.keys()) {
+  const m = k.match(/^\.\/([^/]+)\/[^/]+\.json$/);
+  if (!m || m[1] === 'generic' || k.includes('/potentials/') || k.includes('/skills/') || k.includes('/statuses/') || k.includes('/talents/')) continue;
+  const j = _opContext(k) as Record<string, unknown>;
+  if (typeof j.id === 'string') _dirToId.set(m[1], j.id);
+}
+
 // ── Loader ──────────────────────────────────────────────────────────────────
 
-/** All operator skills indexed by operator camelCase ID → skill ID → OperatorSkill. */
+/** All operator skills indexed by operator JSON ID → skill ID → OperatorSkill. */
 const skillCache = new Map<string, Map<string, OperatorSkill>>();
 
 const skillContext = require.context('./operators', true, /\/skills\/[^/]+\.json$/);
 for (const key of skillContext.keys()) {
-  // Extract operatorId from path: ./laevatain/skills/basic-attack-batk-flaming-cinders.json → laevatain
+  // Extract operatorId from path: ./laevatain/skills/basic-attack-batk-flaming-cinders.json → LAEVATAIN
   const match = key.match(/^\.\/([^/]+)\/skills\/[^/]+\.json$/);
   if (!match) continue;
-  const operatorId = filenameToCamelCase(match[1]);
+  const operatorId = _dirToId.get(match[1]) ?? match[1];
 
   const json = skillContext(key) as Record<string, unknown>;
-  // Each file is a single skill; read ID from metadata.id
-  const meta = json.metadata as Record<string, unknown> | undefined;
-  const skillId = (meta?.id ?? '') as string;
+  const props = json.properties as Record<string, unknown> | undefined;
+  const skillId = (props?.id ?? '') as string;
   if (!skillId) {
-    console.warn(`[OperatorSkillsController] Missing metadata.id in ${key}`);
+    console.warn(`[OperatorSkillsController] Missing properties.id in ${key}`);
     continue;
   }
 

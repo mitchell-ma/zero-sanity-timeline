@@ -250,8 +250,6 @@ function mapBbKey(bbKey: string): string {
 
 /** Maps warfarin outer modifyType → PotentialEffectType. */
 const POTENTIAL_EFFECT_TYPE_MAP: Record<number, PotentialEffectType> = {
-  2: PotentialEffectType.SKILL_COST,
-  3: PotentialEffectType.SKILL_PARAMETER,
   4: PotentialEffectType.STAT_MODIFIER,
   5: PotentialEffectType.BUFF_ATTACHMENT,
 };
@@ -447,16 +445,6 @@ function buildPotentials(
         result.statModifier = {
           statType: mapAttrType(d.attrModifier.attrType),
           value: d.attrModifier.attrValue,
-        };
-      }
-
-      // Skill parameter modifier
-      if (d.skillBbModifier.bbKey) {
-        result.skillParameterModifier = {
-          skillType: mapSkillId(d.skillBbModifier.skillId),
-          parameterKey: mapBbKey(d.skillBbModifier.bbKey),
-          value: d.skillBbModifier.floatValue,
-          parameterModifyType: PARAMETER_MODIFY_TYPE_MAP[d.skillBbModifier.modifyType] ?? d.skillBbModifier.modifyType,
         };
       }
 

@@ -15,7 +15,7 @@ import type { OperatorLoadoutState } from '../../view/OperatorLoadoutHeader';
 // Mock operatorRegistry to avoid require.context for splash art assets
 jest.mock('../../controller/operators/operatorRegistry', () => ({
   getOperatorConfig: (id: string) => {
-    if (id !== 'laevatain') return undefined;
+    if (id !== 'LAEVATAIN') return undefined;
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     return require('../../model/game-data/operators/laevatain/laevatain.json');
   },
@@ -110,7 +110,7 @@ jest.mock('../../model/game-data/weaponGameData', () => ({
 }));
 
 describe('loadoutAggregator — Laevatain maxed loadout', () => {
-  const OPERATOR_ID = 'laevatain';
+  const OPERATOR_ID = 'LAEVATAIN';
 
   const loadout = {
     weaponId: 'FORGEBORN_SCATHE',

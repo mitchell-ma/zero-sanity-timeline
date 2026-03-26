@@ -22,8 +22,8 @@ import {
   getAllOperatorBaseIds,
   getOperatorBasesByClass,
   getOperatorBasesByElement,
-  getOperatorBaseByType,
   getOperatorIdByName,
+  getOperatorPotentialRaw,
   registerCustomOperatorBase,
   deregisterCustomOperatorBase,
   type OperatorBase,
@@ -125,8 +125,9 @@ export type {
 
 // Operators
 export { getOperatorBase, getAllOperatorBases, getAllOperatorBaseIds };
-export { getOperatorBasesByClass, getOperatorBasesByElement, getOperatorBaseByType, getOperatorIdByName };
+export { getOperatorBasesByClass, getOperatorBasesByElement, getOperatorIdByName };
 export { registerCustomOperatorBase, deregisterCustomOperatorBase };
+export { getOperatorPotentialRaw };
 
 // Operator skills
 export { getOperatorSkills, getOperatorSkill, getOperatorSkillIds, getAllOperatorSkillSetIds };
@@ -343,7 +344,7 @@ export interface TriggerCondition {
   cardinalityConstraint?: string;
   value?: number | string | Record<string, unknown>;
   element?: string;
-  adjective?: string;
+  objectQualifier?: string;
   subjectDeterminer?: string;
   to?: string;
   toDeterminer?: string;
@@ -462,8 +463,8 @@ export function getTeamStatusIds(operatorId: string): string[] {
       for (const frame of seg.frames ?? []) {
         for (const pred of frame.clause ?? []) {
           for (const ef of pred.effects ?? []) {
-            if (ef.to === 'TEAM' && ef.objectType === 'STATUS' && ef.object) {
-              ids.add(ef.object as string);
+            if (ef.to === 'TEAM' && ef.object === 'STATUS' && ef.objectId) {
+              ids.add(ef.objectId as string);
             }
           }
         }
@@ -887,7 +888,7 @@ function parseStatusEvent(raw: Record<string, unknown>): StatusEventConfig {
     ...(metadata.isEnabled === false ? { isEnabled: false } : {}),
     target: (props.target ?? raw.target ?? 'OPERATOR') as string,
     targetDeterminer: (props.targetDeterminer ?? raw.targetDeterminer ?? 'THIS') as string,
-    type: props.type as string | undefined,
+    type: (props.eventCategoryType ?? props.type) as string | undefined,
     element: props.element as string | undefined,
     duration: parseDurationFrames(props),
     ...(sl ? {

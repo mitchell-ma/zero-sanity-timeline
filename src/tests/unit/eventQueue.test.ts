@@ -11,8 +11,8 @@
  * - Shuffled event order produces identical results (drag invariance)
  */
 import { TimelineEvent, EventSegmentData, EventFrameMarker, eventDuration } from '../../consts/viewTypes';
-import { EventStatusType, SegmentType, TimeDependency } from '../../consts/enums';
-import { OPERATOR_COLUMNS, SKILL_COLUMNS, INFLICTION_COLUMNS, REACTION_COLUMNS, ENEMY_OWNER_ID, USER_ID } from '../../model/channels';
+import { EventStatusType, PhysicalStatusType, SegmentType, TimeDependency } from '../../consts/enums';
+import { OPERATOR_COLUMNS, SKILL_COLUMNS, INFLICTION_COLUMNS, REACTION_COLUMNS, ENEMY_OWNER_ID, USER_ID, SHATTER_DURATION } from '../../model/channels';
 import { PriorityQueue } from '../../controller/timeline/priorityQueue';
 import { processCombatSimulation } from '../../controller/timeline/eventQueueController';
 
@@ -223,7 +223,7 @@ describe('MF Stacking (Queue Pipeline)', () => {
     const result = processCombatSimulation(events);
     const shEvents = filterByColumn(result, 'scorching-heart-effect');
     expect(shEvents.length).toBe(1);
-    expect(shEvents[0].sourceOwnerId).toBe(SLOT_ID);
+    expect(shEvents[0].sourceOwnerId).toBe('LAEVATAIN');
   });
 
   test('Q6: Scorching Heart Effect re-activates after consume + re-accumulation', () => {
@@ -826,7 +826,7 @@ describe('Freeform Inflictions', () => {
     expect(frames.some(f => f.offsetFrame === 120)).toBe(true);
   });
 
-  test('F22: Freeform solidification auto-builds shatter frame at end', () => {
+  test('F22: Freeform solidification has initial hit only (no auto-shatter at end)', () => {
     const solidification: TimelineEvent = {
       uid: 'seg-solid',
       id: REACTION_COLUMNS.SOLIDIFICATION,
@@ -844,9 +844,106 @@ describe('Freeform Inflictions', () => {
     expect(ev).toBeDefined();
 
     const frames = ev!.segments?.flatMap(s => s.frames ?? []) ?? [];
-    // Solidification: initial hit at 0, shatter at event end
+    // Solidification: initial hit at 0 only — shatter is triggered by physical status consumption
     expect(frames.some(f => f.offsetFrame === 0)).toBe(true);
-    expect(frames.some(f => f.offsetFrame === 2400)).toBe(true);
+    expect(frames.some(f => f.offsetFrame === 2400)).toBe(false);
+  });
+
+  test('F22a: Physical status applied with active solidification consumes it and creates shatter', () => {
+    const SLOT = 'slot-0';
+    // Freeform solidification on enemy (stacks = 2)
+    const solidification: TimelineEvent = {
+      uid: 'solid-consume',
+      id: REACTION_COLUMNS.SOLIDIFICATION,
+      name: REACTION_COLUMNS.SOLIDIFICATION,
+      ownerId: ENEMY_OWNER_ID,
+      columnId: REACTION_COLUMNS.SOLIDIFICATION,
+      startFrame: 0,
+      stacks: 2,
+      segments: [{ properties: { duration: 840 } }], // 7s level 2
+      sourceOwnerId: USER_ID,
+      sourceSkillName: 'Freeform',
+    };
+
+    // Skill event with physical status (LIFT) at frame 300
+    const skillWithLift: TimelineEvent = {
+      uid: 'skill-lift',
+      id: 'test-skill',
+      name: 'test-skill',
+      ownerId: SLOT,
+      columnId: SKILL_COLUMNS.BASIC,
+      startFrame: 300,
+      segments: [{
+        properties: { duration: 120 },
+        frames: [{
+          offsetFrame: 0,
+          clauses: [{
+            conditions: [],
+            effects: [{
+              type: 'applyPhysicalStatus' as const,
+              physicalStatusQualifier: PhysicalStatusType.LIFT,
+            }],
+          }],
+        }],
+      }],
+    };
+
+    const result = processCombatSimulation([solidification, skillWithLift]);
+
+    // Solidification should be consumed
+    const solidEvents = filterByColumn(result, REACTION_COLUMNS.SOLIDIFICATION);
+    const consumed = solidEvents.filter(ev => ev.eventStatus === EventStatusType.CONSUMED);
+    expect(consumed.length).toBe(1);
+
+    // Shatter should be created
+    const shatterEvents = filterByColumn(result, REACTION_COLUMNS.SHATTER);
+    expect(shatterEvents.length).toBe(1);
+    const shatter = shatterEvents[0];
+    expect(shatter.startFrame).toBe(300);
+    expect(shatter.stacks).toBe(2);
+    expect(eventDuration(shatter)).toBe(SHATTER_DURATION);
+
+    // Shatter segment should have the correct label
+    const segName = shatter.segments[0]?.properties?.name;
+    expect(segName).toBe('Shatter II');
+
+    // Shatter should have a physical damage frame at offset 0
+    const frames = shatter.segments.flatMap(s => s.frames ?? []);
+    expect(frames.length).toBeGreaterThanOrEqual(1);
+    expect(frames[0].offsetFrame).toBe(0);
+    expect(frames[0].damageElement).toBe('PHYSICAL');
+  });
+
+  test('F22b: Physical status without active solidification does not create shatter', () => {
+    const SLOT = 'slot-0';
+    // Skill event with physical status (LIFT) at frame 300, no solidification
+    const skillWithLift: TimelineEvent = {
+      uid: 'skill-lift-no-solid',
+      id: 'test-skill',
+      name: 'test-skill',
+      ownerId: SLOT,
+      columnId: SKILL_COLUMNS.BASIC,
+      startFrame: 300,
+      segments: [{
+        properties: { duration: 120 },
+        frames: [{
+          offsetFrame: 0,
+          clauses: [{
+            conditions: [],
+            effects: [{
+              type: 'applyPhysicalStatus' as const,
+              physicalStatusQualifier: PhysicalStatusType.LIFT,
+            }],
+          }],
+        }],
+      }],
+    };
+
+    const result = processCombatSimulation([skillWithLift]);
+
+    // No shatter should be created
+    const shatterEvents = filterByColumn(result, REACTION_COLUMNS.SHATTER);
+    expect(shatterEvents.length).toBe(0);
   });
 
   test('F23: Freeform reaction does not duplicate (single event in output)', () => {
@@ -1382,15 +1479,15 @@ describe('Combo skill effects — all operators', () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const effects = ((f.clause as any)?.[0]?.effects ?? []) as any[];
       for (const ef of effects) {
-        const adjectives = Array.isArray(ef.adjective) ? ef.adjective : ef.adjective ? [ef.adjective] : [];
-        const isSource = adjectives.includes('TRIGGER');
-        const elementAdj = adjectives.find((a: string) => ['HEAT', 'CRYO', 'NATURE', 'ELECTRIC'].includes(a));
+        const qualifiers = Array.isArray(ef.objectQualifier) ? ef.objectQualifier : ef.objectQualifier ? [ef.objectQualifier] : [];
+        const isSource = qualifiers.includes('TRIGGER');
+        const elementQualifier = qualifiers.find((a: string) => ['HEAT', 'CRYO', 'NATURE', 'ELECTRIC'].includes(a));
 
         if (ef.verb === 'APPLY' && isSource && (ef.object === 'INFLICTION' || ef.object === 'STATUS')) {
           marker.duplicateTriggerSource = true;
         }
-        if (ef.verb === 'APPLY' && !isSource && ef.object === 'INFLICTION' && elementAdj) {
-          marker.applyArtsInfliction = { element: elementAdj, stacks: 1 };
+        if (ef.verb === 'APPLY' && !isSource && ef.object === 'INFLICTION' && elementQualifier) {
+          marker.applyArtsInfliction = { element: elementQualifier, stacks: 1 };
         }
       }
       return marker;

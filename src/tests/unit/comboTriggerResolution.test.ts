@@ -55,8 +55,8 @@ function makeEvent(overrides: Partial<TimelineEvent> & { uid: string; columnId: 
 /** Standard wirings: Laevatain (slot-0) + Antal (slot-1) */
 function standardWirings(): SlotTriggerWiring[] {
   return [
-    { slotId: SLOT_LAEV, operatorId: 'laevatain' },
-    { slotId: SLOT_ANTAL, operatorId: 'antal' },
+    { slotId: SLOT_LAEV, operatorId: 'LAEVATAIN' },
+    { slotId: SLOT_ANTAL, operatorId: 'ANTAL' },
   ];
 }
 
@@ -349,8 +349,8 @@ describe('D. Antal battle skill → Focus, Akekuri battle skill → infliction t
 
   function akekuriAntalWirings(): SlotTriggerWiring[] {
     return [
-      { slotId: SLOT_AKEKURI, operatorId: 'akekuri' },
-      { slotId: ANTAL_SLOT, operatorId: 'antal' },
+      { slotId: SLOT_AKEKURI, operatorId: 'AKEKURI' },
+      { slotId: ANTAL_SLOT, operatorId: 'ANTAL' },
     ];
   }
 

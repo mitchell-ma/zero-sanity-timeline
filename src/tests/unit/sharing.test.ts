@@ -64,10 +64,10 @@ jest.mock('../../model/game-data/weaponGameData', () => ({
 
 jest.mock('../../controller/operators/operatorRegistry', () => ({
   ALL_OPERATORS: [
-    { id: 'laevatain', name: 'Laevatain', rarity: 6, maxTalentOneLevel: 3, maxTalentTwoLevel: 3 },
-    { id: 'akekuri', name: 'Akekuri', rarity: 6, maxTalentOneLevel: 3, maxTalentTwoLevel: 3 },
-    { id: 'antal', name: 'Antal', rarity: 6, maxTalentOneLevel: 3, maxTalentTwoLevel: 3 },
-    { id: 'ardelia', name: 'Ardelia', rarity: 6, maxTalentOneLevel: 3, maxTalentTwoLevel: 3 },
+    { id: 'LAEVATAIN', name: 'Laevatain', rarity: 6, maxTalentOneLevel: 3, maxTalentTwoLevel: 3 },
+    { id: 'AKEKURI', name: 'Akekuri', rarity: 6, maxTalentOneLevel: 3, maxTalentTwoLevel: 3 },
+    { id: 'ANTAL', name: 'Antal', rarity: 6, maxTalentOneLevel: 3, maxTalentTwoLevel: 3 },
+    { id: 'ARDELIA', name: 'Ardelia', rarity: 6, maxTalentOneLevel: 3, maxTalentTwoLevel: 3 },
   ],
   operatorWarnings: () => [],
 }));
@@ -101,7 +101,7 @@ const { eventDuration } = require('../../consts/viewTypes');
 function makeSheetData(overrides) {
   return {
     version: 2,
-    operatorIds: ['laevatain', 'akekuri', 'antal', 'ardelia'],
+    operatorIds: ['LAEVATAIN', 'AKEKURI', 'ANTAL', 'ARDELIA'],
     enemyId: 'training_dummy',
     events: [],
     loadouts: {
@@ -268,16 +268,16 @@ describe('embedCodec', () => {
 
     test('unknown operator IDs become null', async () => {
       const original = makeSheetData({
-        operatorIds: ['laevatain', 'FAKE_OPERATOR', null, 'akekuri'],
+        operatorIds: ['LAEVATAIN', 'FAKE_OPERATOR', null, 'AKEKURI'],
       });
 
       const encoded = await encodeEmbed(original, []);
       const decoded = await decodeEmbed(encoded, []);
 
-      expect(decoded.operatorIds[0]).toBe('laevatain');
+      expect(decoded.operatorIds[0]).toBe('LAEVATAIN');
       expect(decoded.operatorIds[1]).toBeNull();
       expect(decoded.operatorIds[2]).toBeNull();
-      expect(decoded.operatorIds[3]).toBe('akekuri');
+      expect(decoded.operatorIds[3]).toBe('AKEKURI');
     });
 
     test('event frames are clamped to valid range', async () => {
@@ -871,7 +871,7 @@ describe('full state round-trip (current state → share → load → assert equ
     expect(decodedRaw.loadouts['slot-0'].armorId).toBe('TIDE_FALL');
 
     // ── Assertions: operator and enemy IDs ──────────────────────────────
-    expect(decodedRaw.operatorIds).toEqual(['laevatain', 'akekuri', 'antal', 'ardelia']);
+    expect(decodedRaw.operatorIds).toEqual(['LAEVATAIN', 'AKEKURI', 'ANTAL', 'ARDELIA']);
     expect(decodedRaw.enemyId).toBe('training_dummy');
   });
 });

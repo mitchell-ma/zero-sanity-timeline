@@ -7,11 +7,11 @@
     "description": "Basic attack performed near a Staggered enemy becomes a finisher that deals massive Physical DMG and recovers some SP.",
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "BASIC_ATTACK",
-    "element": "PHYSICAL"
+    "element": "PHYSICAL",
+    "id": "ALL_OUT_OFFENSIVE_FINISHER"
   },
   "metadata": {
     "originId": "POGRANICHNIK",
-    "id": "ALL_OUT_OFFENSIVE_FINISHER",
     "icon": "skills/attack_sword.png"
   },
   "segments": [
@@ -33,7 +33,7 @@
               "effects": [
                 {
                   "verb": "DEAL",
-                  "adjective": "PHYSICAL",
+                  "objectQualifier": "PHYSICAL",
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
@@ -64,7 +64,8 @@
           ],
           "frameTypes": [
             "FINISHER"
-          ]
+          ],
+          "clauseType": "ALL"
         }
       ],
       "properties": {

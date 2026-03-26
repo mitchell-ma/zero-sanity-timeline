@@ -23,7 +23,7 @@
  *    - Damage multiplier: 0.34 (lv1) → 0.77 (lv12)
  *
  * C. Combo Skill (Frag Grenade Beta)
- *    - Trigger: enemy is Combusted (single clause)
+ *    - Trigger: ANY OPERATOR APPLY ARTS_INFLICTION TO ENEMY
  *    - Activation window: 720 frames (6s)
  *    - Cooldown: 20s
  *    - 1 frame: 10 Stagger + Heat infliction to enemy
@@ -39,21 +39,21 @@
  * E. Empowered Battle Skill
  *    - 4 frames with escalating offsets
  *    - Duration: 2.07s
- *    - Frame 4 recovers 20 SP and 5 Stagger
+ *    - Frame 4 deals 5 Stagger + massive Heat DMG (no SP recovery)
  *    - Frame 3 recovers 5 Stagger
  *
  * F. Scorching Fangs (Talent 1)
  *    - Target: THIS OPERATOR (self-buff)
  *    - Max 1 stack, RESET interaction
  *    - Trigger: THIS OPERATOR APPLY COMBUSTION REACTION TO ENEMY → APPLY EVENT TO THIS OPERATOR
- *    - Effect clause: APPLY HEAT AMP TO THIS OPERATOR WITH VARY_BY TALENT_LEVEL [0.2, 0.3]
+ *    - Effect clause: APPLY STAT_MODIFIER HEAT_DAMAGE_BONUS TO THIS OPERATOR WITH VARY_BY TALENT_LEVEL [0.2, 0.3]
  *    - Duration: 10s
  *
  * G. Potentials
  *    - P1: +15 STRENGTH, +15 AGILITY stat modifiers
  *    - P2: UNIQUE_MULTIPLIER potential_skillpower + potential_2 on Thermite Tracers
  *    - P3: UNIQUE_MULTIPLIER potential_3 + teammate_percent on Thermite Tracers
- *    - P4: ×0.85 SKILL_COST on Wolven Fury
+ *    - P4: ult cost reduction now via VARY_BY POTENTIAL in ult JSON
  *    - P5: UNIQUE_MULTIPLIER potential_5 on Wolven Fury
  *
  * H. Operator Identity & Metadata
@@ -81,8 +81,8 @@ jest.mock('../../view/InformationPane', () => ({
 const mockOperatorJson = require('../../model/game-data/operators/wulfgard/wulfgard.json');
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { loadSkillsJson: _loadWulfgardSkills, loadStatusesJson: _loadWulfgardStatuses } = require('../helpers/loadGameData');
-const mockSkillsJson = _loadWulfgardSkills('wulfgard');
-const mockStatusesJson = _loadWulfgardStatuses('wulfgard');
+const mockSkillsJson = _loadWulfgardSkills('WULFGARD');
+const mockStatusesJson = _loadWulfgardStatuses('WULFGARD');
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- JSON require() data
 const wulfgardSkillEntries = mockSkillsJson as Record<string, any>;
@@ -368,7 +368,7 @@ describe('B. Battle Skill (Thermite Tracers)', () => {
       (e: Record<string, unknown>) => e.verb === 'APPLY' && e.object === 'INFLICTION'
     );
     expect(infliction).toBeDefined();
-    expect(infliction.adjective).toBe('HEAT');
+    expect(infliction.objectQualifier).toBe('HEAT');
     expect(infliction.to).toBe('ENEMY');
   });
 
@@ -412,12 +412,14 @@ describe('B. Battle Skill (Thermite Tracers)', () => {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 describe('C. Combo Skill (Frag Grenade Beta)', () => {
-  test('C1: Combo trigger requires enemy is Combusted (single clause)', () => {
+  test('C1: Combo trigger requires any operator applies arts infliction (single clause)', () => {
     const comboSkill = mockJson.skills[mockJson.skillTypeMap.COMBO_SKILL];
     expect(comboSkill.onTriggerClause.length).toBe(1);
-    expect(comboSkill.onTriggerClause[0].conditions[0].subject).toBe('ENEMY');
-    expect(comboSkill.onTriggerClause[0].conditions[0].verb).toBe('IS');
-    expect(comboSkill.onTriggerClause[0].conditions[0].object).toBe('COMBUSTED');
+    expect(comboSkill.onTriggerClause[0].conditions[0].subjectDeterminer).toBe('ANY');
+    expect(comboSkill.onTriggerClause[0].conditions[0].subject).toBe('OPERATOR');
+    expect(comboSkill.onTriggerClause[0].conditions[0].verb).toBe('APPLY');
+    expect(comboSkill.onTriggerClause[0].conditions[0].object).toBe('ARTS_INFLICTION');
+    expect(comboSkill.onTriggerClause[0].conditions[0].to).toBe('ENEMY');
   });
 
   test('C2: Combo activation window is 720 frames (6 seconds)', () => {
@@ -446,7 +448,7 @@ describe('C. Combo Skill (Frag Grenade Beta)', () => {
       (e: Record<string, unknown>) => e.verb === 'APPLY' && e.object === 'INFLICTION'
     );
     expect(infliction).toBeDefined();
-    expect(infliction.adjective).toBe('HEAT');
+    expect(infliction.objectQualifier).toBe('HEAT');
     expect(infliction.to).toBe('ENEMY');
   });
 
@@ -487,14 +489,14 @@ describe('C. Combo Skill (Frag Grenade Beta)', () => {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 describe('D. Ultimate (Wolven Fury)', () => {
-  test('D1: Ultimate energy cost varies by potential (90 base, 76.5 at P3+)', () => {
+  test('D1: Ultimate energy cost varies by potential (90 base, 76.5 at P4+)', () => {
     const effects = mockJson.skills[mockJson.skillTypeMap.ULTIMATE].clause[0].effects;
     const energyCost = effects.find(
       (e: Record<string, unknown>) => e.object === 'ULTIMATE_ENERGY' && e.verb === 'CONSUME'
     );
     expect(energyCost).toBeDefined();
-    expect(energyCost.with.value.value[0]).toBe(90);
-    expect(energyCost.with.value.value[3]).toBe(76.5);
+    expect(energyCost.with.value.verb).toBe('VARY_BY');
+    expect(energyCost.with.value.value).toEqual([90, 90, 90, 90, 76.5, 76.5]);
   });
 
   test('D2: Ultimate animation is TIME_STOP (1.53s within 2.5s)', () => {
@@ -539,7 +541,7 @@ describe('E. Empowered Battle Skill', () => {
     expect(frames[3].properties.offset.value).toBe(2.07);
   });
 
-  test('E4: Frame 4 recovers 20 SP and 5 Stagger', () => {
+  test('E4: Frame 4 deals 5 Stagger and massive Heat DMG (no SP recovery)', () => {
     const frame3 = mockJson.skills.EMPOWERED_BATTLE_SKILL.segments[0].frames[3];
     const sp = frame3.clause[0].effects.find(
       (e: Record<string, unknown>) => e.object === 'SKILL_POINT'
@@ -547,7 +549,7 @@ describe('E. Empowered Battle Skill', () => {
     const stagger = frame3.clause[0].effects.find(
       (e: Record<string, unknown>) => e.object === 'STAGGER'
     );
-    expect(sp.with.value.value).toBe(20);
+    expect(sp).toBeUndefined();
     expect(stagger.with.value.value).toBe(5);
   });
 
@@ -557,7 +559,7 @@ describe('E. Empowered Battle Skill', () => {
       (e: Record<string, unknown>) => e.object === 'STAGGER'
     );
     const consume = frame2.clause[0].effects.find(
-      (e: Record<string, unknown>) => e.verb === 'CONSUME' && e.object === 'ARTS_REACTION'
+      (e: Record<string, unknown>) => e.verb === 'CONSUME' && e.object === 'REACTION' && e.objectId === 'ARTS'
     );
     const dmg = getDamageMultipliers(frame2);
     expect(stagger.with.value.value).toBe(5);
@@ -607,16 +609,16 @@ describe('F. Scorching Fangs (Talent)', () => {
     expect(clause.conditions[0].subject).toBe('OPERATOR');
     expect(clause.conditions[0].verb).toBe('APPLY');
     expect(clause.conditions[0].object).toBe('REACTION');
-    expect(clause.conditions[0].adjective).toBe('COMBUSTION');
+    expect(clause.conditions[0].objectQualifier).toBe('COMBUSTION');
   });
 
-  test('F5: Effect clause applies HEAT AMP to self with VARY_BY TALENT_LEVEL', () => {
+  test('F5: Effect clause applies HEAT_DAMAGE_BONUS stat modifier to self with VARY_BY TALENT_LEVEL', () => {
     expect(sf.clause).toBeDefined();
     expect(sf.clause.length).toBe(1);
     const effect = sf.clause[0].effects[0];
     expect(effect.verb).toBe('APPLY');
-    expect(effect.adjective).toBe('HEAT');
-    expect(effect.object).toBe('AMP');
+    expect(effect.object).toBe('STAT_MODIFIER');
+    expect(effect.objectId).toBe('HEAT_DAMAGE_BONUS');
     expect(effect.toDeterminer).toBe('THIS');
     expect(effect.to).toBe('OPERATOR');
     expect(effect.with.value.verb).toBe('VARY_BY');
@@ -652,71 +654,6 @@ describe('G. Potentials', () => {
     );
     expect(agiEffect).toBeDefined();
     expect(agiEffect.statModifier.value).toBe(15);
-  });
-
-  test('G2: P2 — UNIQUE_MULTIPLIER potential_skillpower + potential_2 on Thermite Tracers', () => {
-    const p2 = mockJson.potentials[1];
-    expect(p2.level).toBe(2);
-    expect(p2.name).toBe('Firearm Mods');
-    expect(p2.effects.length).toBe(2);
-
-    const spEffect = p2.effects.find(
-      (e: Record<string, unknown>) => (e.skillParameterModifier as Record<string, unknown> | undefined)?.parameterKey === 'potential_skillpower'
-    );
-    expect(spEffect).toBeDefined();
-    expect(spEffect.skillParameterModifier.skillType).toBe('THERMITE_TRACERS');
-    expect(spEffect.skillParameterModifier.value).toBe(10);
-    expect(spEffect.skillParameterModifier.parameterModifyType).toBe('UNIQUE_MULTIPLIER');
-
-    const p2Effect = p2.effects.find(
-      (e: Record<string, unknown>) => (e.skillParameterModifier as Record<string, unknown> | undefined)?.parameterKey === 'potential_2'
-    );
-    expect(p2Effect).toBeDefined();
-    expect(p2Effect.skillParameterModifier.value).toBe(1);
-    expect(p2Effect.skillParameterModifier.parameterModifyType).toBe('UNIQUE_MULTIPLIER');
-  });
-
-  test('G3: P3 — UNIQUE_MULTIPLIER potential_3 + teammate_percent on Thermite Tracers', () => {
-    const p3 = mockJson.potentials[2];
-    expect(p3.level).toBe(3);
-    expect(p3.name).toBe('Hunting Hour');
-    expect(p3.effects.length).toBe(2);
-
-    const p3Effect = p3.effects.find(
-      (e: Record<string, unknown>) => (e.skillParameterModifier as Record<string, unknown> | undefined)?.parameterKey === 'potential_3'
-    );
-    expect(p3Effect).toBeDefined();
-    expect(p3Effect.skillParameterModifier.value).toBe(1);
-    expect(p3Effect.skillParameterModifier.parameterModifyType).toBe('UNIQUE_MULTIPLIER');
-
-    const teamEffect = p3.effects.find(
-      (e: Record<string, unknown>) => (e.skillParameterModifier as Record<string, unknown> | undefined)?.parameterKey === 'teammate_percent'
-    );
-    expect(teamEffect).toBeDefined();
-    expect(teamEffect.skillParameterModifier.value).toBe(0.5);
-    expect(teamEffect.skillParameterModifier.parameterModifyType).toBe('UNIQUE_MULTIPLIER');
-  });
-
-  test('G4: P4 — ×0.85 SKILL_COST on Wolven Fury', () => {
-    const p4 = mockJson.potentials[3];
-    expect(p4.level).toBe(4);
-    expect(p4.name).toBe('Will of the Pack');
-    const costEffect = p4.effects[0];
-    expect(costEffect.potentialEffectType).toBe('SKILL_COST');
-    expect(costEffect.skillCostModifier.skillType).toBe('WULFGARD_WOLVEN_FURY');
-    expect(costEffect.skillCostModifier.value).toBe(0.85);
-  });
-
-  test('G5: P5 — UNIQUE_MULTIPLIER potential_5 on Wolven Fury', () => {
-    const p5 = mockJson.potentials[4];
-    expect(p5.level).toBe(5);
-    expect(p5.name).toBe('Natural Predator');
-    const effect = p5.effects[0];
-    expect(effect.potentialEffectType).toBe('SKILL_PARAMETER');
-    expect(effect.skillParameterModifier.skillType).toBe('WOLVEN_FURY');
-    expect(effect.skillParameterModifier.parameterKey).toBe('potential_5');
-    expect(effect.skillParameterModifier.value).toBe(1);
-    expect(effect.skillParameterModifier.parameterModifyType).toBe('UNIQUE_MULTIPLIER');
   });
 
   test('G6: All 5 potential levels are present', () => {

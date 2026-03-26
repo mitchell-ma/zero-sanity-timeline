@@ -137,7 +137,7 @@ function evaluateHave(cond: Interaction, ctx: ConditionContext): boolean {
 
 function evaluateIs(cond: Interaction, ctx: ConditionContext): boolean {
   // State assertions: check if the subject is in the specified state.
-  // Map adjective states to their corresponding status columns.
+  // Map object qualifier states to their corresponding status columns.
   const stateToColumn: Record<string, string> = {
     COMBUSTED: REACTION_COLUMNS.COMBUSTION,
     SOLIDIFIED: REACTION_COLUMNS.SOLIDIFICATION,

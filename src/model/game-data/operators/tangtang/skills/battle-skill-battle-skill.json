@@ -4,7 +4,8 @@
     "description": "Tangtang jumps out from the water and fires a point-blank shot that deals Cryo DMG to the enemy and creates a Waterspout.\nCasting the battle skill also consumes all nearby Whirlpools to create additional Waterspouts and return some SP based on the number of Waterspouts created.\nWaterspout: Applies 1 stack of Cryo Infliction on enemies within range and deals Cryo DMG over time. If the battle skill creates multiple Waterspouts, they also apply Arts Susceptibility to enemies (but not another stack of Cryo Infliction).\nDMG dealt by the Waterspout is treated as Battle Skill DMG.",
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "BATTLE_SKILL",
-    "element": "CRYO"
+    "element": "CRYO",
+    "id": "BATTLE_SKILL"
   },
   "clause": [
     {
@@ -25,7 +26,6 @@
   ],
   "metadata": {
     "originId": "TANGTANG",
-    "id": "BATTLE_SKILL",
     "icon": "skills/skill_tangtang.png"
   },
   "segments": [
@@ -90,7 +90,7 @@
                 {
                   "verb": "APPLY",
                   "object": "INFLICTION",
-                  "adjective": "CRYO",
+                  "objectQualifier": "CRYO",
                   "to": "ENEMY",
                   "with": {
                     "stacks": {
@@ -101,7 +101,7 @@
                 },
                 {
                   "verb": "DEAL",
-                  "adjective": "CRYO",
+                  "objectQualifier": "CRYO",
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
@@ -185,7 +185,8 @@
                 }
               ]
             }
-          ]
+          ],
+          "clauseType": "ALL"
         }
       ],
       "properties": {
@@ -199,5 +200,6 @@
         "element": "CRYO"
       }
     }
-  ]
+  ],
+  "clauseType": "ALL"
 }

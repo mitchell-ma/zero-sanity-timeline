@@ -24,7 +24,6 @@
     "id": "AKEKURI_POTENTIAL_1",
     "name": "Positive Feedback",
     "level": 1,
-    "type": "POTENTIAL",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "POTENTIAL_EVENT",

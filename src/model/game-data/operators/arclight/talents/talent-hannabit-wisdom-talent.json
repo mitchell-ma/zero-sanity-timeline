@@ -1,6 +1,5 @@
 {
   "properties": {
-    "type": "TALENT",
     "id": "HANNABIT_WISDOM_TALENT",
     "name": "Hannabit Wisdom (Talent)",
     "to": "OPERATOR",

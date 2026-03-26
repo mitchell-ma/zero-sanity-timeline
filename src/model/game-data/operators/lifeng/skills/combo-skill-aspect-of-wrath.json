@@ -5,7 +5,8 @@
     "windowFrames": 720,
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "COMBO_SKILL",
-    "element": "PHYSICAL"
+    "element": "PHYSICAL",
+    "id": "ASPECT_OF_WRATH"
   },
   "clause": [
     {
@@ -82,7 +83,7 @@
               "effects": [
                 {
                   "verb": "DEAL",
-                  "adjective": "PHYSICAL",
+                  "objectQualifier": "PHYSICAL",
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
@@ -126,7 +127,8 @@
                 }
               ]
             }
-          ]
+          ],
+          "clauseType": "ALL"
         },
         {
           "metadata": {
@@ -158,7 +160,7 @@
                 },
                 {
                   "verb": "DEAL",
-                  "adjective": "PHYSICAL",
+                  "objectQualifier": "PHYSICAL",
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
@@ -186,7 +188,8 @@
                 }
               ]
             }
-          ]
+          ],
+          "clauseType": "ALL"
         }
       ]
     },
@@ -230,7 +233,6 @@
   ],
   "metadata": {
     "originId": "LIFENG",
-    "id": "ASPECT_OF_WRATH",
     "icon": "skills/combo_lifeng.png"
   },
   "onTriggerClause": [
@@ -244,5 +246,6 @@
         }
       ]
     }
-  ]
+  ],
+  "clauseType": "ALL"
 }

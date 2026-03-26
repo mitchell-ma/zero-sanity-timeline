@@ -20,7 +20,6 @@
     },
     "minPotential": 5,
     "eventType": "STATUS",
-    "type": "SKILL_STATUS",
     "eventCategoryType": "SKILL_STATUS",
     "description": "Casting the ultimate Wolven Fury immediately resets the cooldown of the combo skill Frag Grenade·β."
   },
@@ -50,5 +49,6 @@
         }
       ]
     }
-  ]
+  ],
+  "clauseType": "ALL"
 }

@@ -22,7 +22,7 @@ import type { ValueResolutionContext } from '../calculation/valueResolver';
 import { TimelineEvent, durationSegment, setEventDuration } from '../../consts/viewTypes';
 import { FPS } from '../../utils/timeline';
 import { CritMode, EventStatusType, PhysicalStatusType } from '../../consts/enums';
-import { ENEMY_OWNER_ID, INFLICTION_COLUMNS, REACTION_COLUMNS, SKILL_COLUMNS } from '../../model/channels/index';
+import { ENEMY_OWNER_ID, INFLICTION_COLUMNS, REACTION_COLUMNS, SKILL_COLUMNS, TEAM_STATUS_COLUMN } from '../../model/channels/index';
 import { COMMON_OWNER_ID } from '../slot/commonSlotController';
 import { evaluateConditions, ConditionContext } from './conditionEvaluator';
 import { activeEventsAtFrame, activeInflictionsOfElement } from './timelineQueries';
@@ -171,19 +171,20 @@ const PHYSICAL_STATUS_VALUES = new Set<string>(Object.values(PhysicalStatusType)
 
 function resolveStatusColumnId(objectId?: string): string {
   if (!objectId) return 'unknown-status';
+  if (TEAM_STATUS_COLUMN[objectId]) return TEAM_STATUS_COLUMN[objectId];
   if (REACTION_TO_COLUMN[objectId]) return REACTION_TO_COLUMN[objectId];
   if (PHYSICAL_STATUS_VALUES.has(objectId)) return objectId;
   return objectId.toLowerCase().replace(/_/g, '-');
 }
 
-function resolveInflictionColumnId(adjective?: AdjectiveType | AdjectiveType[]): string | undefined {
-  const adj = Array.isArray(adjective) ? adjective[0] : adjective;
+function resolveInflictionColumnId(objectQualifier?: AdjectiveType | AdjectiveType[]): string | undefined {
+  const adj = Array.isArray(objectQualifier) ? objectQualifier[0] : objectQualifier;
   if (!adj) return undefined;
   return ELEMENT_TO_INFLICTION_COLUMN[adj];
 }
 
-function resolveReactionColumnId(adjective?: AdjectiveType | AdjectiveType[]): string | undefined {
-  const adj = Array.isArray(adjective) ? adjective[0] : adjective;
+function resolveReactionColumnId(objectQualifier?: AdjectiveType | AdjectiveType[]): string | undefined {
+  const adj = Array.isArray(objectQualifier) ? objectQualifier[0] : objectQualifier;
   if (!adj) return undefined;
   return REACTION_TO_COLUMN[adj];
 }
@@ -195,7 +196,7 @@ function executeApply(effect: Effect, ctx: ExecutionContext): MutationSet {
   const ownerId = resolveOwnerId(effect.to as string, ctx, effect.toDeterminer);
 
   if (effect.object === 'INFLICTION') {
-    const columnId = resolveInflictionColumnId(effect.adjective);
+    const columnId = resolveInflictionColumnId(effect.objectQualifier);
     if (!columnId) { result.failed = true; return result; }
 
     const durationValue = resolveWith(effect.with?.duration, ctx);
@@ -203,8 +204,8 @@ function executeApply(effect: Effect, ctx: ExecutionContext): MutationSet {
 
     const ev = allocDerivedEvent();
     ev.uid = `infliction-${genEventUid()}`;
-    ev.id = effect.objectId ?? String(effect.adjective);
-    ev.name = effect.objectId ?? String(effect.adjective);
+    ev.id = effect.objectId ?? String(effect.objectQualifier);
+    ev.name = effect.objectId ?? String(effect.objectQualifier);
     ev.ownerId = ownerId;
     ev.columnId = columnId;
     ev.startFrame = ctx.frame;
@@ -236,7 +237,7 @@ function executeApply(effect: Effect, ctx: ExecutionContext): MutationSet {
   }
 
   if (effect.object === 'REACTION') {
-    const columnId = resolveReactionColumnId(effect.adjective);
+    const columnId = resolveReactionColumnId(effect.objectQualifier);
     if (!columnId) { result.failed = true; return result; }
 
     const durationValue = resolveWith(effect.with?.duration, ctx);
@@ -245,8 +246,8 @@ function executeApply(effect: Effect, ctx: ExecutionContext): MutationSet {
 
     const ev = allocDerivedEvent();
     ev.uid = `reaction-${genEventUid()}`;
-    ev.id = String(effect.adjective);
-    ev.name = String(effect.adjective);
+    ev.id = String(effect.objectQualifier);
+    ev.name = String(effect.objectQualifier);
     ev.ownerId = ownerId;
     ev.columnId = columnId;
     ev.startFrame = ctx.frame;
@@ -268,7 +269,7 @@ function executeConsume(effect: Effect, ctx: ExecutionContext): MutationSet {
   const ownerId = resolveOwnerId(effect.fromObject as string ?? effect.to as string, ctx, effect.fromDeterminer ?? effect.toDeterminer);
 
   if (effect.object === 'INFLICTION') {
-    const columnId = resolveInflictionColumnId(effect.adjective);
+    const columnId = resolveInflictionColumnId(effect.objectQualifier);
     if (!columnId) { result.failed = true; return result; }
 
     const targets = activeInflictionsOfElement(ctx.events, columnId, ctx.frame);
@@ -309,7 +310,7 @@ function executeConsume(effect: Effect, ctx: ExecutionContext): MutationSet {
   }
 
   if (effect.object === 'REACTION') {
-    const columnId = resolveReactionColumnId(effect.adjective);
+    const columnId = resolveReactionColumnId(effect.objectQualifier);
     if (!columnId) { result.failed = true; return result; }
 
     const targets = activeEventsAtFrame(ctx.events, columnId, ownerId, ctx.frame)

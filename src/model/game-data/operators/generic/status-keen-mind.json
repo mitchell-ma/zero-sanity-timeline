@@ -2,9 +2,9 @@
   "properties": {
     "id": "KEEN_MIND",
     "name": "Keen Mind",
-    "type": "STATUS",
     "target": "OPERATOR",
-    "targetDeterminer": "THIS"
+    "targetDeterminer": "THIS",
+    "eventCategoryType": "STATUS"
   },
   "metadata": {
     "originId": "game"
@@ -36,5 +36,6 @@
         }
       ]
     }
-  ]
+  ],
+  "clauseType": "ALL"
 }

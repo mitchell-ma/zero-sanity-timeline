@@ -4,7 +4,8 @@
     "description": "A lance thrust that fires a stream of freezing sound waves that deal Cryo DMG and apply Cryo Infliction to all enemies along its straight path.",
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "BATTLE_SKILL",
-    "element": "CRYO"
+    "element": "CRYO",
+    "id": "ONOMATOPOEIA"
   },
   "clause": [
     {
@@ -25,7 +26,6 @@
   ],
   "metadata": {
     "originId": "ESTELLA",
-    "id": "ONOMATOPOEIA",
     "icon": "skills/skill_estella.png"
   },
   "segments": [
@@ -62,7 +62,7 @@
                 {
                   "verb": "APPLY",
                   "object": "INFLICTION",
-                  "adjective": "CRYO",
+                  "objectQualifier": "CRYO",
                   "to": "ENEMY",
                   "with": {
                     "stacks": {
@@ -73,7 +73,7 @@
                 },
                 {
                   "verb": "DEAL",
-                  "adjective": "CRYO",
+                  "objectQualifier": "CRYO",
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
@@ -101,7 +101,8 @@
                 }
               ]
             }
-          ]
+          ],
+          "clauseType": "ALL"
         }
       ],
       "properties": {
@@ -115,5 +116,6 @@
         "element": "CRYO"
       }
     }
-  ]
+  ],
+  "clauseType": "ALL"
 }

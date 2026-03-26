@@ -5,7 +5,8 @@
     "windowFrames": 720,
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "COMBO_SKILL",
-    "element": "PHYSICAL"
+    "element": "PHYSICAL",
+    "id": "PEAL_OF_THUNDER"
   },
   "clause": [
     {
@@ -82,7 +83,7 @@
               "effects": [
                 {
                   "verb": "DEAL",
-                  "adjective": "PHYSICAL",
+                  "objectQualifier": "PHYSICAL",
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
@@ -110,7 +111,8 @@
                 }
               ]
             }
-          ]
+          ],
+          "clauseType": "ALL"
         },
         {
           "metadata": {
@@ -131,7 +133,7 @@
               "effects": [
                 {
                   "verb": "DEAL",
-                  "adjective": "PHYSICAL",
+                  "objectQualifier": "PHYSICAL",
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
@@ -159,7 +161,8 @@
                 }
               ]
             }
-          ]
+          ],
+          "clauseType": "ALL"
         },
         {
           "metadata": {
@@ -201,7 +204,7 @@
                 },
                 {
                   "verb": "DEAL",
-                  "adjective": "PHYSICAL",
+                  "objectQualifier": "PHYSICAL",
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
@@ -229,7 +232,8 @@
                 }
               ]
             }
-          ]
+          ],
+          "clauseType": "ALL"
         }
       ]
     },
@@ -257,7 +261,6 @@
   ],
   "metadata": {
     "originId": "ARCLIGHT",
-    "id": "PEAL_OF_THUNDER",
     "icon": "skills/combo_arclight.png"
   },
   "onTriggerClause": [
@@ -270,5 +273,6 @@
         }
       ]
     }
-  ]
+  ],
+  "clauseType": "ALL"
 }

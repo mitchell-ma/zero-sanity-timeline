@@ -1,6 +1,5 @@
 {
   "properties": {
-    "type": "TALENT",
     "id": "OBLITERATION_PROTOCOL_TALENT",
     "name": "Obliteration Protocol (Talent)",
     "to": "OPERATOR",

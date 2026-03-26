@@ -19,7 +19,6 @@
       "unit": "SECOND"
     },
     "eventType": "STATUS",
-    "type": "SKILL_STATUS",
     "eventCategoryType": "SKILL_STATUS",
     "description": "BASIC ATTACK: \nAn attack with up to 5 sequences that deals Physical DMG. As the controlled operator, Final Strike also deals  Stagger. \n\nDIVE ATTACK: \nBasic attack performed in mid-air becomes a dive attack that deals Physical DMG to nearby enemies. \n\nFINISHER: \nBasic attack performed near a Staggered enemy becomes a finisher attack that deals massive Physical DMG and recovers some SP."
   },

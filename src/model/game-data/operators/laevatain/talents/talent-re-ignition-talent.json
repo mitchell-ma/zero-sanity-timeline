@@ -29,7 +29,6 @@
   "properties": {
     "id": "RE_IGNITION_TALENT",
     "name": "Re-Ignition (Talent)",
-    "type": "TALENT",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",

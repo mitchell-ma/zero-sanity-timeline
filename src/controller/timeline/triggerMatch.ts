@@ -33,7 +33,7 @@ export interface Predicate {
   cardinalityConstraint?: string;
   value?: number | string | Record<string, unknown>;
   element?: string;
-  adjective?: string;
+  objectQualifier?: string;
   subjectDeterminer?: string;
   to?: string;
   toDeterminer?: string;
@@ -45,6 +45,16 @@ export interface TriggerEffect {
   cardinalityConstraint?: string;
   value?: number | string | Record<string, unknown>;
   effects?: TriggerSubEffect[];
+  /** Direct effect fields (same shape as TriggerSubEffect) for non-compound effects. */
+  object?: string;
+  objectId?: string;
+  objectDeterminer?: string;
+  element?: string;
+  objectQualifier?: string;
+  fromObject?: string;
+  to?: string;
+  toDeterminer?: string;
+  with?: Record<string, unknown>;
 }
 
 export interface TriggerSubEffect {
@@ -53,7 +63,7 @@ export interface TriggerSubEffect {
   object?: string;
   objectId?: string;
   element?: string;
-  adjective?: string;
+  objectQualifier?: string;
   fromObject?: string;
   to?: string;
   toDeterminer?: string;
@@ -160,16 +170,15 @@ const SKIP_COLUMNS = new Set<string>([
 ]);
 
 /**
- * Resolve which timeline columns to scan for a given object + element/adjective + objectId.
+ * Resolve which timeline columns to scan for a given object + element/objectQualifier + objectId.
  * Returns undefined for generic STATUS (needs fallback scan logic).
  */
 function resolveColumns(cond: Predicate): Set<string> | undefined {
-  const el = cond.element ?? cond.adjective;
+  const el = cond.element ?? cond.objectQualifier;
 
   switch (cond.object) {
     case 'REACTION':
-    case 'ARTS_REACTION':
-      if (cond.objectId) {
+      if (cond.objectId && cond.objectId !== 'ARTS') {
         const colId = (REACTION_COLUMNS as Record<string, string>)[cond.objectId];
         return colId ? new Set([colId]) : new Set();
       }

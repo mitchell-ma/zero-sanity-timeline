@@ -32,14 +32,13 @@ interface JsonWithValue {
   value: number | number[];
 }
 
-/** DSL Effect: Verb-Object with optional adjective and prepositional phrases. */
+/** DSL Effect: Verb-Object with optional object qualifier and prepositional phrases. */
 interface JsonEffect {
   verb: string;
   object?: string;
   objectId?: string;
-  /** When present, object holds the specific ID and objectType holds the category (e.g. "STATUS"). */
   objectType?: string;
-  adjective?: string | string[];
+  objectQualifier?: string | string[];
   toDeterminer?: string;
   to?: string;
   fromDeterminer?: string;
@@ -94,15 +93,16 @@ interface JsonOffset {
 
 interface JsonFrame {
   metadata?: { eventComponentType?: string; dataSources?: string[] };
-  properties?: { offset?: JsonOffset; dependencyTypes?: string[] };
+  properties?: { offset?: JsonOffset; dependencyTypes?: string[]; suppliedParameters?: Record<string, { id: string; name: string; lowerRange: number; upperRange: number; default: number }[]> };
   clause?: JsonClausePredicate[];
+  clauseType?: string;
   damageElement?: string;
 }
 
 interface JsonSegment {
   metadata?: { eventComponentType?: string; dataSources?: string[] };
-  properties: { segmentTypes?: string[]; duration?: JsonDuration; name?: string; timeDependency?: string; timeInteractionType?: string };
-  clause?: { conditions: JsonClauseCondition[]; effects: { verb: string; adjective?: string; object: string; toDeterminer?: string; to?: string }[] }[];
+  properties: { segmentTypes?: string[]; duration?: JsonDuration; name?: string; delayedHitLabel?: string; timeDependency?: string; timeInteractionType?: string; suppliedParameters?: Record<string, { id: string; name: string; lowerRange: number; upperRange: number; default: number }[]> };
+  clause?: { conditions: JsonClauseCondition[]; effects: { verb: string; objectQualifier?: string; object: string; toDeterminer?: string; to?: string }[] }[];
   frames: JsonFrame[];
 }
 
@@ -116,6 +116,7 @@ interface JsonSkillCategory {
     delayedHitLabel?: string;
     enhancementTypes?: string[];
     dependencyTypes?: string[];
+    suppliedParameters?: Record<string, { id: string; name: string; lowerRange: number; upperRange: number; default: number }[]>;
   };
   clause?: JsonClausePredicate[];
   frames?: JsonFrame[];
@@ -127,7 +128,7 @@ interface JsonSkillCategory {
 
 // ── DSL effects → target mapping ─────────────────────────────────────────────
 
-/** Map DSL reaction adjective to reaction column ID constant. */
+/** Map DSL reaction qualifier to reaction column ID constant. */
 const DSL_REACTION_TO_COLUMN: Record<string, string> = {
   COMBUSTION:       REACTION_COLUMNS.COMBUSTION,
   SOLIDIFICATION:   REACTION_COLUMNS.SOLIDIFICATION,
@@ -231,6 +232,7 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
   private readonly _consumeReaction: FrameReactionConsumption | null;
   private readonly _duplicateTriggerSource: boolean;
   private readonly _clauses: readonly FrameClausePredicate[];
+  private readonly _clauseType: string | undefined;
   private readonly _dealDamage: FrameDealDamage | null;
   private readonly _gaugeGain: number;
   private readonly _dependencyTypes: readonly string[];
@@ -271,17 +273,13 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
       }));
 
       const clauseEffects: FrameClauseEffect[] = [];
-      for (let ef of pred.effects) {
-        // Normalize objectType shorthand: { object: "LINK", objectType: "STATUS" } → { object: "STATUS", objectId: "LINK" }
-        if (ef.objectType && !ef.objectId) {
-          ef = { ...ef, objectId: ef.object, object: ef.objectType, objectType: undefined };
-        }
+      for (const ef of pred.effects) {
         const wp = ef.with;
-        const adjectives = Array.isArray(ef.adjective) ? ef.adjective : ef.adjective ? [ef.adjective] : [];
-        const elementAdj = adjectives.find(a => [AdjectiveType.HEAT, AdjectiveType.CRYO, AdjectiveType.NATURE, AdjectiveType.ELECTRIC, AdjectiveType.PHYSICAL].includes(a as AdjectiveType));
-        const isForced = adjectives.includes(AdjectiveType.FORCED);
-        const isSource = adjectives.includes('TRIGGER');
-        const reactionAdj = adjectives.find(a => [AdjectiveType.COMBUSTION, AdjectiveType.SOLIDIFICATION, AdjectiveType.CORROSION, AdjectiveType.ELECTRIFICATION].includes(a as AdjectiveType));
+        const qualifiers = Array.isArray(ef.objectQualifier) ? ef.objectQualifier : ef.objectQualifier ? [ef.objectQualifier] : [];
+        const elementQualifier = qualifiers.find(a => [AdjectiveType.HEAT, AdjectiveType.CRYO, AdjectiveType.NATURE, AdjectiveType.ELECTRIC, AdjectiveType.PHYSICAL].includes(a as AdjectiveType));
+        const isForced = qualifiers.includes(AdjectiveType.FORCED);
+        const isSource = qualifiers.includes('TRIGGER');
+        const reactionQualifier = qualifiers.find(a => [AdjectiveType.COMBUSTION, AdjectiveType.SOLIDIFICATION, AdjectiveType.CORROSION, AdjectiveType.ELECTRIFICATION].includes(a as AdjectiveType));
 
         switch (ef.verb) {
           case VerbType.RECOVER:
@@ -293,24 +291,26 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
             if (isSource && (ef.object === NounType.INFLICTION || ef.object === NounType.STATUS || ef.object === NounType.PHYSICAL_STATUS)) {
               duplicateSource = true;
             } else if (ef.object === NounType.INFLICTION) {
-              applyInfliction = { element: elementAdj!, stacks: withValue(wp?.stacks) || 1 };
+              applyInfliction = { element: elementQualifier!, stacks: withValue(wp?.stacks) || 1 };
             } else if (ef.object === NounType.REACTION && isForced) {
-              const reactionName = reactionAdj ?? ef.objectId;
+              const reactionName = reactionQualifier ?? ef.objectId;
               const dur = wp?.duration;
               forcedReaction = {
                 reaction: reactionName as StatusType,
                 stacks: withValue(wp?.stacks) || 1,
                 ...(dur != null && { durationFrames: Math.round(withValue(dur) * 120) }),
               };
-            } else if (ef.object === NounType.STATUS) {
+            } else if (ef.object === NounType.STATUS || ef.objectType === NounType.STATUS) {
               const durRaw = wp?.duration;
               // Duration may be a flat JsonWithValue or a nested { value: JsonWithValue, unit } wrapper
               const durVal = durRaw?.value && typeof durRaw.value === 'object' && !Array.isArray(durRaw.value)
                 ? durRaw.value as JsonWithValue : durRaw;
               const isStandardTarget = ['OPERATOR', 'ENEMY', 'TEAM'].includes(ef.to ?? '');
+              // Normalize: objectType=STATUS with object=<id> → objectId=<id>
+              const statusObjectId = ef.object === NounType.STATUS ? ef.objectId : ef.object;
               const status: FrameApplyStatus = {
-                target: dslTargetToDslTarget(ef.to),
-                status: ef.objectId!,
+                target: dslTargetToDslTarget(ef.to, ef.toDeterminer),
+                status: statusObjectId!,
                 stacks: withValue(wp?.stacks) || 1,
                 durationFrames: durVal != null ? Math.round(withValue(durVal) * 120) : 0,
               };
@@ -334,10 +334,10 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
               applyStatuses.push(status);
               clauseEffects.push({ type: 'applyStatus', applyStatus: status });
             } else if (ef.object === NounType.PHYSICAL_STATUS) {
-              const physType = ef.objectId ?? elementAdj ?? adjectives[0];
+              const physType = ef.objectId ?? elementQualifier ?? qualifiers[0];
               clauseEffects.push({
                 type: 'applyPhysicalStatus',
-                physicalStatusAdjective: physType,
+                physicalStatusQualifier: physType,
                 physicalStatusIsForced: isForced || undefined,
               });
             }
@@ -347,19 +347,19 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
             if (ef.object === NounType.INFLICTION) {
               if (ef.conversion) {
                 absorbInfliction = {
-                  element: elementAdj!,
+                  element: elementQualifier!,
                   stacks: withValue(wp?.stacks) || 1,
                   exchangeStatus: (ef.conversion.objectId as string) ?? 'MELTING_FLAME',
                   ratio: '1:1',
                 };
               } else {
-                consumeInfliction = { element: elementAdj!, stacks: withValue(wp?.stacks) || 1 };
+                consumeInfliction = { element: elementQualifier!, stacks: withValue(wp?.stacks) || 1 };
               }
-            } else if (ef.object === NounType.STATUS) {
-              consumeStatus = ef.objectId!;
-            } else if (ef.object === NounType.REACTION) {
+            } else if (ef.object === NounType.STATUS || ef.objectType === NounType.STATUS) {
+              consumeStatus = (ef.object === NounType.STATUS ? ef.objectId : ef.object)!;
+            } else if (ef.object === NounType.REACTION && ef.objectId !== 'ARTS') {
               const cr: FrameReactionConsumption = {
-                columnId: DSL_REACTION_TO_COLUMN[reactionAdj ?? ef.objectId ?? ''] ?? (reactionAdj ?? ef.objectId ?? ''),
+                columnId: DSL_REACTION_TO_COLUMN[reactionQualifier ?? ef.objectId ?? ''] ?? (reactionQualifier ?? ef.objectId ?? ''),
               };
               if (ef.applyOnConsume) {
                 const aoc = ef.applyOnConsume;
@@ -376,6 +376,9 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
               }
               consumeReaction = cr;
               clauseEffects.push({ type: 'consumeReaction', consumeReaction: cr });
+            } else {
+              // Unhandled CONSUME variant (e.g. REACTION objectId:ARTS) — pass through as raw DSL effect
+              clauseEffects.push({ type: 'dsl', dslEffect: ef as unknown as import('../../dsl/semantics').Effect });
             }
             break;
 
@@ -384,7 +387,7 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
               const multipliers = wp?.value;
               const mulArr = multipliers && Array.isArray(multipliers.value) ? multipliers.value : [];
               const dd: FrameDealDamage = {
-                ...(elementAdj && { element: elementAdj }),
+                ...(elementQualifier && { element: elementQualifier }),
                 multipliers: mulArr,
               };
               dealDamage = dd;
@@ -411,6 +414,7 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
     }
 
     this._clauses = clauses;
+    this._clauseType = frame.clauseType;
     this._dealDamage = dealDamage;
     this._gaugeGain = gaugeGain;
     this._skillPointRecovery = sp;
@@ -441,6 +445,7 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
   getDamageElement(): string | null { return this._damageElement; }
   getDuplicateTriggerSource(): boolean { return this._duplicateTriggerSource; }
   getClauses(): readonly FrameClausePredicate[] { return this._clauses; }
+  getClauseType(): string | undefined { return this._clauseType; }
   getDealDamage(): FrameDealDamage | null { return this._dealDamage; }
   getGaugeGain(): number { return this._gaugeGain; }
   getDependencyTypes(): readonly string[] { return this._dependencyTypes; }
@@ -457,6 +462,7 @@ export class DataDrivenSkillEventSequence extends SkillEventSequence {
   readonly segmentTypes?: string[];
   readonly timeDependency?: string;
   readonly timeInteractionType?: string;
+  readonly delayedHitLabel?: string;
   readonly clause?: { effects: { verb: string; object: string; toDeterminer?: string; to?: string }[] }[];
 
   constructor(segment: JsonSegment) {
@@ -466,6 +472,7 @@ export class DataDrivenSkillEventSequence extends SkillEventSequence {
     this._frames = segment.frames.map(f => new DataDrivenSkillEventFrame(f));
     this.segmentName = segment.properties?.name;
     this.segmentTypes = segment.properties.segmentTypes;
+    if (segment.properties?.delayedHitLabel) this.delayedHitLabel = segment.properties.delayedHitLabel;
     this.timeDependency = segment.properties?.timeDependency;
     this.timeInteractionType = segment.properties?.timeInteractionType;
     this.clause = segment.clause;

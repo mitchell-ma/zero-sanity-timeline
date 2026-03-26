@@ -83,14 +83,16 @@ export interface FrameDealDamage {
 
 /** A single effect within a clause predicate. */
 export interface FrameClauseEffect {
-  type: 'consumeReaction' | 'applyStatus' | 'applyInfliction' | 'dealDamage' | 'recoverSP' | 'applyStagger' | 'applyPhysicalStatus';
+  type: 'consumeReaction' | 'applyStatus' | 'applyInfliction' | 'dealDamage' | 'recoverSP' | 'applyStagger' | 'applyPhysicalStatus' | 'dsl';
   consumeReaction?: FrameReactionConsumption;
   applyStatus?: FrameApplyStatus;
   dealDamage?: FrameDealDamage;
-  /** Physical status adjective (LIFT, KNOCK_DOWN, CRUSH, BREACH) for applyPhysicalStatus. */
-  physicalStatusAdjective?: string;
+  /** Physical status object qualifier (LIFT, KNOCK_DOWN, CRUSH, BREACH) for applyPhysicalStatus. */
+  physicalStatusQualifier?: string;
   /** Whether this physical status application is forced (bypasses Vulnerable gate). */
   physicalStatusIsForced?: boolean;
+  /** Raw DSL effect for verbs routed through interpret(). */
+  dslEffect?: import('../../dsl/semantics').Effect;
 }
 
 /** A predicate: conditions (AND'd) → effects. Empty conditions = unconditional. */
@@ -142,6 +144,9 @@ export abstract class SkillEventFrame {
 
   /** Frame clauses (DSL v2): conditional and unconditional effect groups. */
   getClauses(): readonly FrameClausePredicate[] { return []; }
+
+  /** Clause evaluation mode: 'FIRST_MATCH' stops after first matching conditional clause; default is 'ALL'. */
+  getClauseType(): string | undefined { return undefined; }
 
   /** Inline DEAL DAMAGE data (element + per-level multiplier array), or null. */
   getDealDamage(): FrameDealDamage | null { return null; }

@@ -15,7 +15,7 @@
       "effects": [
         {
           "verb": "DEAL",
-          "adjective": "PHYSICAL",
+          "objectQualifier": "PHYSICAL",
           "object": "DAMAGE",
           "to": "ENEMY",
           "with": {
@@ -47,7 +47,6 @@
   "properties": {
     "id": "COMPREHENSIVE_MINDSET_TALENT",
     "name": "Comprehensive Mindset (Talent)",
-    "type": "TALENT",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",

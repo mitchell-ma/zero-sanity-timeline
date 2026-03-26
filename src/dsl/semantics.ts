@@ -7,7 +7,7 @@
  * See src/model/eventSpec.md for the full specification.
  */
 
-import { UnitType, EnhancementType } from '../consts/enums';
+import { UnitType } from '../consts/enums';
 import { Reaction } from '../model/combat-statuses/reaction';
 
 // ── Sentinels ───────────────────────────────────────────────────────────────
@@ -266,6 +266,12 @@ export enum AdjectiveType {
   COMBO = "COMBO",
   DODGE = "DODGE",
   ANIMATION = "ANIMATION",
+
+  // Enhancement qualifiers (ENABLE ENHANCED BATK, PERFORM EMPOWERED BATTLE_SKILL)
+  NORMAL = "NORMAL",
+  ENHANCED = "ENHANCED",
+  EMPOWERED = "EMPOWERED",
+  MINOR = "MINOR",
 }
 
 // ── Object ──────────────────────────────────────────────────────────────────
@@ -310,8 +316,8 @@ export const EXPERIENCE_OBJECTS: ObjectType[] = [
   ObjectType.REAL_TIME,
 ];
 
-/** Valid adjectives per object type (noun adjuncts like NORMAL_ATTACK, FINAL_STRIKE handled separately). */
-export const OBJECT_ADJECTIVES: Partial<Record<ObjectType, AdjectiveType[]>> = {
+/** Valid object qualifiers per object type (noun adjuncts like NORMAL_ATTACK, FINAL_STRIKE handled separately). */
+export const OBJECT_QUALIFIERS: Partial<Record<ObjectType, AdjectiveType[]>> = {
   [ObjectType.DAMAGE]: [
     // Element prefix: DEAL HEAT DAMAGE, DEAL PHYSICAL DAMAGE
     AdjectiveType.HEAT, AdjectiveType.CRYO, AdjectiveType.NATURE, AdjectiveType.ELECTRIC, AdjectiveType.PHYSICAL,
@@ -351,11 +357,11 @@ export const OBJECT_ADJECTIVES: Partial<Record<ObjectType, AdjectiveType[]>> = {
   ],
 };
 
-/** Objects whose adjective is required (no empty "—" option in dropdown). */
-export const OBJECT_REQUIRED_ADJECTIVE = new Set<string>([ObjectType.DAMAGE]);
+/** Objects whose object qualifier is required (no empty "—" option in dropdown). */
+export const OBJECT_REQUIRED_QUALIFIER = new Set<string>([ObjectType.DAMAGE]);
 
-/** Default adjective for objects that require one. */
-export const OBJECT_DEFAULT_ADJECTIVE: Partial<Record<ObjectType, AdjectiveType>> = {
+/** Default object qualifier for objects that require one. */
+export const OBJECT_DEFAULT_QUALIFIER: Partial<Record<ObjectType, AdjectiveType>> = {
   [ObjectType.DAMAGE]: AdjectiveType.PHYSICAL,
 };
 
@@ -380,18 +386,18 @@ export const NOUN_UNITS: Partial<Record<NounType, UnitType[]>> = {
  * Maps nouns to the NounType or AdjectiveType values that can appear in qualifier position.
  * e.g. "ULTIMATE COOLDOWN", "COMBO_SKILL COOLDOWN", "HEAT DAMAGE".
  */
-export type QualifierType = NounType | AdjectiveType | EnhancementType | DeterminerType;
+export type QualifierType = NounType | AdjectiveType | DeterminerType;
 
 export const NOUN_QUALIFIER_MAPPING: Partial<Record<NounType, QualifierType[]>> = {
   [NounType.COOLDOWN]: [NounType.ULTIMATE, NounType.COMBO_SKILL],
   [NounType.DAMAGE]: [AdjectiveType.HEAT, AdjectiveType.CRYO, AdjectiveType.NATURE, AdjectiveType.ELECTRIC, AdjectiveType.PHYSICAL],
   [NounType.AMP]: [AdjectiveType.HEAT, AdjectiveType.CRYO, AdjectiveType.NATURE, AdjectiveType.ELECTRIC, AdjectiveType.PHYSICAL, DeterminerType.ANY],
-  [NounType.BATK]: [EnhancementType.NORMAL, EnhancementType.ENHANCED, EnhancementType.EMPOWERED],
-  [NounType.BATTLE_SKILL]: [EnhancementType.NORMAL, EnhancementType.ENHANCED, EnhancementType.EMPOWERED],
-  [NounType.COMBO_SKILL]: [EnhancementType.NORMAL, EnhancementType.ENHANCED, EnhancementType.EMPOWERED],
-  [NounType.ULTIMATE]: [EnhancementType.NORMAL, EnhancementType.ENHANCED, EnhancementType.EMPOWERED],
-  [NounType.FINISHER]: [EnhancementType.NORMAL, EnhancementType.ENHANCED, EnhancementType.EMPOWERED],
-  [NounType.DIVE_ATTACK]: [EnhancementType.NORMAL, EnhancementType.ENHANCED, EnhancementType.EMPOWERED],
+  [NounType.BATK]: [AdjectiveType.NORMAL, AdjectiveType.ENHANCED, AdjectiveType.EMPOWERED],
+  [NounType.BATTLE_SKILL]: [AdjectiveType.NORMAL, AdjectiveType.ENHANCED, AdjectiveType.EMPOWERED],
+  [NounType.COMBO_SKILL]: [AdjectiveType.NORMAL, AdjectiveType.ENHANCED, AdjectiveType.EMPOWERED],
+  [NounType.ULTIMATE]: [AdjectiveType.NORMAL, AdjectiveType.ENHANCED, AdjectiveType.EMPOWERED],
+  [NounType.FINISHER]: [AdjectiveType.NORMAL, AdjectiveType.ENHANCED, AdjectiveType.EMPOWERED],
+  [NounType.DIVE_ATTACK]: [AdjectiveType.NORMAL, AdjectiveType.ENHANCED, AdjectiveType.EMPOWERED],
 };
 
 /**
@@ -614,12 +620,12 @@ export type WithPreposition = Record<string, ValueNode>;
 // ── Effect ──────────────────────────────────────────────────────────────────
 
 /**
- * A Verb-Object sentence with optional adjective and prepositional phrases.
+ * A Verb-Object sentence with optional object qualifier and prepositional phrases.
  *
  * Used for effects within predicates and on frames.
  * No subject — the actor is implicit (the system/event owner).
  *
- * Grammar: VERB [adjective] OBJECT [prepositions...]
+ * Grammar: VERB [objectQualifier] OBJECT [prepositions...]
  *
  * Examples:
  *   PERFORM HEAT DAMAGE TO ENEMY WITH MULTIPLIER VARY_BY SKILL_LEVEL [0.5, ...]
@@ -640,10 +646,10 @@ export interface Effect {
   object?: ObjectType;
   /** Specific identifier (StatusType, skill name, etc.). */
   objectId?: string;
-  /** Adjective(s) — modifies the object. Can stack: e.g. [FORCED, COMBUSTION] REACTION, [HEAT] DAMAGE. */
-  adjective?: AdjectiveType | AdjectiveType[];
-  /** Noun adjunct — a qualifier modifying the object: "REDUCE ULTIMATE COOLDOWN", "ENABLE ENHANCED BATK". */
-  nounAdjunct?: QualifierType;
+  /** Object qualifier(s) — modifies the object. Can stack: e.g. [FORCED, COMBUSTION] REACTION, [HEAT] DAMAGE. */
+  objectQualifier?: AdjectiveType | AdjectiveType[];
+  /** Noun qualifier — modifies the object: "REDUCE ULTIMATE COOLDOWN", "ENABLE ENHANCED BATK". */
+  nounQualifier?: QualifierType;
   /** Constraint on cardinality (AT_MOST, AT_LEAST, EXACTLY) — for compound ALL/ANY grouping. */
   cardinalityConstraint?: CardinalityConstraintType;
   /** Value for compound constraints (e.g. ALL AT_MOST MAX). */
@@ -726,7 +732,7 @@ export type Clause = Predicate[];
  *   If required omits objectId, any published objectId matches (parent/wildcard).
  *   e.g. required {APPLY INFLICTION} matches published {APPLY INFLICTION objectId:HEAT}.
  * - Element: same wildcard logic as objectId.
- * - Adjective: if required specifies adjective, published must include it.
+ * - ObjectQualifier: if required specifies objectQualifier, published must include it.
  * - Negated: must match.
  * - Cardinality: ignored for matching (cardinality is an assertion, not a filter).
  */
@@ -858,8 +864,8 @@ const NEEDS_DURATION = new Set([VerbType.APPLY]);
 /** Which fields are visible in the effect builder. */
 export interface EffectFieldVisibility {
   showCardinality: boolean;
-  showAdjective: boolean;
-  showNounAdjunct: boolean;
+  showObjectQualifier: boolean;
+  showNounQualifier: boolean;
   showObjectId: boolean;
   showObjectIdIsStatus: boolean;
   showObjectIdIsInfliction: boolean;
@@ -872,14 +878,14 @@ export interface EffectFieldVisibility {
   showDuration: boolean;
   showUntilEnd: boolean;
   showQualifierRow: boolean;
-  nounAdjuncts: QualifierType[];
+  nounQualifiers: QualifierType[];
   withProperties: string[];
 }
 
 /** Compute effect field visibility based on current effect state. */
 export function getEffectFieldVisibility(value: Effect): EffectFieldVisibility {
-  const adjectives = value.object ? (OBJECT_ADJECTIVES[value.object] ?? []) : [];
-  const nounAdjuncts = value.object ? (NOUN_QUALIFIER_MAPPING[value.object as NounType] ?? []) : [];
+  const qualifiers = value.object ? (OBJECT_QUALIFIERS[value.object] ?? []) : [];
+  const nounQualifiers = value.object ? (NOUN_QUALIFIER_MAPPING[value.object as NounType] ?? []) : [];
   const showObjectId = NEEDS_OBJECT_ID.has(value.object ?? '');
   const showTo = NEEDS_TO.has(value.verb);
   const showFrom = NEEDS_FROM.has(value.verb);
@@ -892,8 +898,8 @@ export function getEffectFieldVisibility(value: Effect): EffectFieldVisibility {
 
   return {
     showCardinality: new Set([VerbType.APPLY, VerbType.CONSUME, VerbType.RECOVER, VerbType.RETURN]).has(value.verb),
-    showAdjective: adjectives.length > 0 && value.object !== ObjectType.STATUS,
-    showNounAdjunct: nounAdjuncts.length > 0,
+    showObjectQualifier: qualifiers.length > 0 && value.object !== ObjectType.STATUS,
+    showNounQualifier: nounQualifiers.length > 0,
     showObjectId,
     showObjectIdIsStatus: value.object === ObjectType.STATUS,
     showObjectIdIsInfliction: value.object === ObjectType.INFLICTION,
@@ -906,7 +912,7 @@ export function getEffectFieldVisibility(value: Effect): EffectFieldVisibility {
     showDuration,
     showUntilEnd,
     showQualifierRow: showTo || showFrom || showOn || showOf || showBy || showDuration || showUntilEnd,
-    nounAdjuncts,
+    nounQualifiers,
     withProperties: value.object ? getWithProperties(value.verb, value.object, value.objectId) : [],
   };
 }
@@ -1082,7 +1088,7 @@ export const OBJECT_LABELS: Record<string, string> = {
   [ObjectType.TALENT_LEVEL]: 'Talent Level',
 };
 
-export const ADJECTIVE_LABELS: Record<string, string> = Object.fromEntries(
+export const OBJECT_QUALIFIER_LABELS: Record<string, string> = Object.fromEntries(
   Object.values(AdjectiveType).filter((v) => v !== AdjectiveType.NONE).map((v) => [v, titleCase(v)])
 );
 

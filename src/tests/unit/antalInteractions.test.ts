@@ -45,7 +45,7 @@
  *
  * E. Potentials
  *    - P1: ×1.1 MULTIPLICATIVE on Overclocked Moment rate
- *    - P2: ×0.9 SKILL_COST on Overclocked Moment
+ *    - P2: ult cost reduction now via VARY_BY POTENTIAL in ult JSON
  *    - P3: UNIQUE_MULTIPLIER + 15 ADDITIVE on Specified Research Subject
  *    - P4: +10 INTELLECT, +0.1 BASE_HP stat modifiers
  *    - P5: UNIQUE_MULTIPLIER + 20 delay_time + 0.04 rate on Specified Research Subject
@@ -78,7 +78,7 @@ jest.mock('../../view/InformationPane', () => ({
 const mockOperatorJson = require('../../model/game-data/operators/antal/antal.json');
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { loadSkillsJson: _loadAntalSkills } = require('../helpers/loadGameData');
-const mockSkillsJson = _loadAntalSkills('antal');
+const mockSkillsJson = _loadAntalSkills('ANTAL');
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- JSON require() data; downstream tests assert structure
 const antalSkills: Record<string, any> = {};
@@ -427,7 +427,7 @@ describe('C2. Combo Skill Source Infliction Duplication', () => {
     const comboFrame = mockAntalJson.skills.COMBO_SKILL.segments[1].frames[0];
     const effects = comboFrame.clause[0].effects;
     const sourceInfliction = effects.find(
-      (e: Record<string, unknown>) => e.verb === 'APPLY' && e.adjective === 'TRIGGER' && e.object === 'INFLICTION'
+      (e: Record<string, unknown>) => e.verb === 'APPLY' && e.objectQualifier === 'TRIGGER' && e.object === 'INFLICTION'
     );
     expect(sourceInfliction).toBeDefined();
     expect(sourceInfliction.to).toBe('ENEMY');
@@ -437,7 +437,7 @@ describe('C2. Combo Skill Source Infliction Duplication', () => {
     const comboFrame = mockAntalJson.skills.COMBO_SKILL.segments[1].frames[0];
     const effects = comboFrame.clause[0].effects;
     const sourceStatus = effects.find(
-      (e: Record<string, unknown>) => e.verb === 'APPLY' && e.adjective === 'TRIGGER' && e.object === 'PHYSICAL_STATUS'
+      (e: Record<string, unknown>) => e.verb === 'APPLY' && e.objectQualifier === 'TRIGGER' && e.object === 'PHYSICAL_STATUS'
     );
     expect(sourceStatus).toBeDefined();
     expect(sourceStatus.to).toBe('ENEMY');
@@ -480,15 +480,14 @@ describe('C2. Combo Skill Source Infliction Duplication', () => {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 describe('D. Ultimate (Overclocked Moment)', () => {
-  test('D1: Ultimate energy cost is 100 at P0 (varies by potential)', () => {
+  test('D1: Ultimate energy cost varies by potential (100 base, 90 at P2+)', () => {
     const effects = mockAntalJson.skills.ULTIMATE.clause[0].effects;
     const energyCost = effects.find(
       (e: Record<string, unknown>) => e.object === 'ULTIMATE_ENERGY' && e.verb === 'CONSUME'
     );
     expect(energyCost).toBeDefined();
-    // Cost now varies by potential: [100, 90, 90, 90, 90, 90]
-    expect(energyCost.with.value.value[0]).toBe(100);
-    expect(energyCost.with.value.value[1]).toBe(90);
+    expect(energyCost.with.value.verb).toBe('VARY_BY');
+    expect(energyCost.with.value.value).toEqual([100, 100, 90, 90, 90, 90]);
   });
 
   test('D2: Ultimate active duration removed from operator JSON', () => {
@@ -520,47 +519,6 @@ describe('D. Ultimate (Overclocked Moment)', () => {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 describe('E. Potentials', () => {
-  test('E1: P1 — ×1.1 MULTIPLICATIVE on Overclocked Moment rate', () => {
-    const p1 = mockAntalJson.potentials[0];
-    expect(p1.level).toBe(1);
-    expect(p1.name).toBe('Arts Talent');
-
-    const effect = p1.effects[0];
-    expect(effect.potentialEffectType).toBe('SKILL_PARAMETER');
-    expect(effect.skillParameterModifier.skillType).toBe('OVERCLOCKED_MOMENT');
-    expect(effect.skillParameterModifier.parameterKey).toBe('rate');
-    expect(effect.skillParameterModifier.value).toBe(1.1);
-    expect(effect.skillParameterModifier.parameterModifyType).toBe('MULTIPLICATIVE');
-  });
-
-  test('E2: P2 — ×0.9 SKILL_COST on Overclocked Moment', () => {
-    const p2 = mockAntalJson.potentials[1];
-    expect(p2.level).toBe(2);
-    expect(p2.name).toBe('Improved Automation');
-
-    const effect = p2.effects[0];
-    expect(effect.potentialEffectType).toBe('SKILL_COST');
-    expect(effect.skillCostModifier.skillType).toBe('OVERCLOCKED_MOMENT');
-    expect(effect.skillCostModifier.value).toBe(0.9);
-  });
-
-  test('E3: P3 — UNIQUE_MULTIPLIER + 15 ADDITIVE on Specified Research Subject', () => {
-    const p3 = mockAntalJson.potentials[2];
-    expect(p3.level).toBe(3);
-    expect(p3.name).toBe('Applied Originium Theory');
-    expect(p3.effects.length).toBe(2);
-
-    const uniqueMult = p3.effects[0];
-    expect(uniqueMult.skillParameterModifier.skillType).toBe('SPECIFIED_RESEARCH_SUBJECT');
-    expect(uniqueMult.skillParameterModifier.value).toBe(1);
-    expect(uniqueMult.skillParameterModifier.parameterModifyType).toBe('UNIQUE_MULTIPLIER');
-
-    const additive = p3.effects[1];
-    expect(additive.skillParameterModifier.skillType).toBe('SPECIFIED_RESEARCH_SUBJECT');
-    expect(additive.skillParameterModifier.value).toBe(15);
-    expect(additive.skillParameterModifier.parameterModifyType).toBe('ADDITIVE');
-  });
-
   test('E4: P4 — +10 INTELLECT and +0.1 BASE_HP stat modifiers', () => {
     const p4 = mockAntalJson.potentials[3];
     expect(p4.level).toBe(4);
@@ -578,34 +536,6 @@ describe('E. Potentials', () => {
     );
     expect(hpEffect).toBeDefined();
     expect(hpEffect.statModifier.value).toBe(0.1);
-  });
-
-  test('E5: P5 — UNIQUE_MULTIPLIER + 20 delay_time + 0.04 rate on Research Subject', () => {
-    const p5 = mockAntalJson.potentials[4];
-    expect(p5.level).toBe(5);
-    expect(p5.name).toBe('High Specs Tech Tester');
-    expect(p5.effects.length).toBe(3);
-
-    const uniqueMult = p5.effects.find(
-      (e: Record<string, unknown>) => (e.skillParameterModifier as Record<string, unknown> | undefined)?.parameterKey === 'potential_5'
-    );
-    expect(uniqueMult).toBeDefined();
-    expect(uniqueMult.skillParameterModifier.value).toBe(1);
-    expect(uniqueMult.skillParameterModifier.parameterModifyType).toBe('UNIQUE_MULTIPLIER');
-
-    const delayTime = p5.effects.find(
-      (e: Record<string, unknown>) => (e.skillParameterModifier as Record<string, unknown> | undefined)?.parameterKey === 'delay_time'
-    );
-    expect(delayTime).toBeDefined();
-    expect(delayTime.skillParameterModifier.value).toBe(20);
-    expect(delayTime.skillParameterModifier.parameterModifyType).toBe('ADDITIVE');
-
-    const rate = p5.effects.find(
-      (e: Record<string, unknown>) => (e.skillParameterModifier as Record<string, unknown> | undefined)?.parameterKey === 'potential_5_rate'
-    );
-    expect(rate).toBeDefined();
-    expect(rate.skillParameterModifier.value).toBe(0.04);
-    expect(rate.skillParameterModifier.parameterModifyType).toBe('ADDITIVE');
   });
 
   test('E6: All 5 potential levels are present', () => {
@@ -779,11 +709,11 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
   }
 
   function antalWiring(): SlotTriggerWiring {
-    return { slotId: SLOT_ANTAL, operatorId: 'antal' };
+    return { slotId: SLOT_ANTAL, operatorId: 'ANTAL' };
   }
 
   function laevWiring(): SlotTriggerWiring {
-    return { slotId: SLOT_LAEV, operatorId: 'laevatain' };
+    return { slotId: SLOT_LAEV, operatorId: 'LAEVATAIN' };
   }
 
   function makeFocus(startFrame: number, duration: number): TimelineEvent {
@@ -927,7 +857,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
     // Antal places combo within the activation window, with comboTriggerColumnId resolved
     const antalCombo = makeAntalCombo(300, 'heatInfliction');
 
-    const akekuriWiring: SlotTriggerWiring = { slotId: SLOT_AKEKURI, operatorId: 'akekuri' };
+    const akekuriWiring: SlotTriggerWiring = { slotId: SLOT_AKEKURI, operatorId: 'AKEKURI' };
     const wirings = [akekuriWiring, antalWiring()];
 
     const processed = processCombatSimulation(
@@ -965,7 +895,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
     // Antal combo placed WITHOUT comboTriggerColumnId (simulating first pass failing)
     const antalCombo = makeAntalCombo(300);
 
-    const akekuriWiring: SlotTriggerWiring = { slotId: SLOT_AKEKURI, operatorId: 'akekuri' };
+    const akekuriWiring: SlotTriggerWiring = { slotId: SLOT_AKEKURI, operatorId: 'AKEKURI' };
     const wirings = [akekuriWiring, antalWiring()];
 
     const processed = processCombatSimulation(
@@ -1035,7 +965,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
       columnId: 'heatInfliction', startFrame: 200, segments: [{ properties: { duration: 20 * FPS } }],
       sourceOwnerId: 'slot-0', sourceSkillName: 'BURST_OF_PASSION',
     });
-    const akekuriWiring: SlotTriggerWiring = { slotId: 'slot-0', operatorId: 'akekuri' };
+    const akekuriWiring: SlotTriggerWiring = { slotId: 'slot-0', operatorId: 'AKEKURI' };
     const wirings = [akekuriWiring, antalWiring()];
 
     const processed = processCombatSimulation(
@@ -1060,7 +990,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
     // Combo still has a stale comboTriggerColumnId from initial placement.
     const antalCombo = makeAntalCombo(300, 'heatInfliction');
 
-    const akekuriWiring: SlotTriggerWiring = { slotId: 'slot-0', operatorId: 'akekuri' };
+    const akekuriWiring: SlotTriggerWiring = { slotId: 'slot-0', operatorId: 'AKEKURI' };
     const wirings = [akekuriWiring, antalWiring()];
 
     // No Akekuri battle event in the events list — it was removed/dragged away
@@ -1119,7 +1049,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
     // Antal combo — no comboTriggerColumnId (Phase 2 will fail, deferred resolves it)
     const antalCombo = makeAntalCombo(300);
 
-    const akekuriWiring: SlotTriggerWiring = { slotId: SLOT_AKEKURI, operatorId: 'akekuri' };
+    const akekuriWiring: SlotTriggerWiring = { slotId: SLOT_AKEKURI, operatorId: 'AKEKURI' };
     const wirings = [akekuriWiring, antalWiring()];
 
     const processed = processCombatSimulation(
@@ -1187,7 +1117,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
     const comboStart = 240;
     const antalCombo = makeAntalCombo(comboStart);
 
-    const akekuriWiring: SlotTriggerWiring = { slotId: SLOT_AKEKURI, operatorId: 'akekuri' };
+    const akekuriWiring: SlotTriggerWiring = { slotId: SLOT_AKEKURI, operatorId: 'AKEKURI' };
     const wirings = [akekuriWiring, antalWiring()];
 
     const processed = processCombatSimulation(
@@ -1247,7 +1177,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
     const comboStart = Math.round(0.67 * FPS);
     const antalCombo = makeAntalCombo(comboStart);
 
-    const akekuriWiring: SlotTriggerWiring = { slotId: SLOT_AKEKURI, operatorId: 'akekuri' };
+    const akekuriWiring: SlotTriggerWiring = { slotId: SLOT_AKEKURI, operatorId: 'AKEKURI' };
     const wirings = [akekuriWiring, antalWiring()];
 
     const processed = processCombatSimulation(

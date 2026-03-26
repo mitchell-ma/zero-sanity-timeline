@@ -4,7 +4,8 @@
     "description": "Fluorite quickly moves in an arc and rapidly fires at the target within the arc to deal 4 sequences of Nature DMG. If an Improvised Explosive has been stuck to the target, the skill detonates it immediately and increases the DMG and size of the explosion.\nIf the final DMG sequence hits a target with at least 2 stacks of Cryo Infliction or Nature Infliction, then apply the same Arts Infliction again.",
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "ULTIMATE_SKILL",
-    "element": "NATURE"
+    "element": "NATURE",
+    "id": "APEX_PRANKSTER"
   },
   "clause": [
     {
@@ -89,7 +90,7 @@
               "effects": [
                 {
                   "verb": "DEAL",
-                  "adjective": "NATURE",
+                  "objectQualifier": "NATURE",
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
@@ -121,7 +122,8 @@
                 }
               ]
             }
-          ]
+          ],
+          "clauseType": "ALL"
         },
         {
           "metadata": {
@@ -142,7 +144,7 @@
               "effects": [
                 {
                   "verb": "DEAL",
-                  "adjective": "NATURE",
+                  "objectQualifier": "NATURE",
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
@@ -170,7 +172,8 @@
                 }
               ]
             }
-          ]
+          ],
+          "clauseType": "ALL"
         },
         {
           "metadata": {
@@ -191,7 +194,7 @@
               "effects": [
                 {
                   "verb": "DEAL",
-                  "adjective": "NATURE",
+                  "objectQualifier": "NATURE",
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
@@ -219,7 +222,8 @@
                 }
               ]
             }
-          ]
+          ],
+          "clauseType": "ALL"
         },
         {
           "metadata": {
@@ -251,7 +255,7 @@
                 },
                 {
                   "verb": "DEAL",
-                  "adjective": "NATURE",
+                  "objectQualifier": "NATURE",
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
@@ -279,14 +283,15 @@
                 }
               ]
             }
-          ]
+          ],
+          "clauseType": "ALL"
         }
       ]
     }
   ],
   "metadata": {
     "originId": "FLUORITE",
-    "id": "APEX_PRANKSTER",
     "icon": "skills/ult_fluorite.png"
-  }
+  },
+  "clauseType": "ALL"
 }

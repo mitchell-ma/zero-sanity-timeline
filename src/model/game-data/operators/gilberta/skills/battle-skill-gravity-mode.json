@@ -3,7 +3,8 @@
     "name": "Arcane Staff: Gravity Mode",
     "description": "Initiates Arts channeling that creates a gravity well. The gravity well pulls in nearby enemies and deals Nature DMG to them. When channeling ends, the gravity well implodes to deal Nature DMG and Nature Infliction to enemies in the area of effect.",
     "eventType": "COMBAT_SKILL",
-    "eventCategoryType": "BATTLE_SKILL"
+    "eventCategoryType": "BATTLE_SKILL",
+    "id": "GRAVITY_MODE"
   },
   "clause": [
     {
@@ -24,7 +25,6 @@
   ],
   "metadata": {
     "originId": "GILBERTA",
-    "id": "GRAVITY_MODE",
     "icon": "skills/skill_gilberta.png"
   },
   "segments": [
@@ -48,7 +48,8 @@
               "conditions": [],
               "effects": []
             }
-          ]
+          ],
+          "clauseType": "ALL"
         },
         {
           "metadata": {
@@ -68,7 +69,8 @@
               "conditions": [],
               "effects": []
             }
-          ]
+          ],
+          "clauseType": "ALL"
         },
         {
           "metadata": {
@@ -88,7 +90,8 @@
               "conditions": [],
               "effects": []
             }
-          ]
+          ],
+          "clauseType": "ALL"
         },
         {
           "metadata": {
@@ -108,7 +111,8 @@
               "conditions": [],
               "effects": []
             }
-          ]
+          ],
+          "clauseType": "ALL"
         },
         {
           "metadata": {
@@ -141,7 +145,7 @@
                 {
                   "verb": "APPLY",
                   "object": "INFLICTION",
-                  "adjective": "NATURE",
+                  "objectQualifier": "NATURE",
                   "to": "ENEMY",
                   "with": {
                     "stacks": {
@@ -152,7 +156,8 @@
                 }
               ]
             }
-          ]
+          ],
+          "clauseType": "ALL"
         }
       ],
       "properties": {
@@ -165,5 +170,6 @@
         }
       }
     }
-  ]
+  ],
+  "clauseType": "ALL"
 }

@@ -4,7 +4,8 @@
     "description": "Slams the ground to deal Heat DMG to nearby enemies, while granting every teammate a Shield based on Ember's Max HP.",
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "ULTIMATE_SKILL",
-    "element": "HEAT"
+    "element": "HEAT",
+    "id": "RE_IGNITED_OATH"
   },
   "clause": [
     {
@@ -79,7 +80,7 @@
               "effects": [
                 {
                   "verb": "DEAL",
-                  "adjective": "HEAT",
+                  "objectQualifier": "HEAT",
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
@@ -202,14 +203,15 @@
                 }
               ]
             }
-          ]
+          ],
+          "clauseType": "ALL"
         }
       ]
     }
   ],
   "metadata": {
     "originId": "EMBER",
-    "id": "RE_IGNITED_OATH",
     "icon": "skills/ult_ember.png"
-  }
+  },
+  "clauseType": "ALL"
 }

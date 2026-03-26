@@ -28,7 +28,6 @@
   "properties": {
     "id": "EXECUTE_PROCESS_TALENT",
     "name": "Execute Process (Talent)",
-    "type": "TALENT",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",

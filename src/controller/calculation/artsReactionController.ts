@@ -46,6 +46,7 @@ const REACTION_ELEMENT: Record<string, ElementType> = {
   solidification:  ElementType.CRYO,
   corrosion:       ElementType.NATURE,
   electrification: ElementType.ELECTRIC,
+  shatter:         ElementType.PHYSICAL,
 };
 
 // ── Operator context for reaction damage ─────────────────────────────────────
@@ -207,8 +208,8 @@ export function computeCombustionDamage(
 // ── Solidification ──────────────────────────────────────────────────────────
 
 /**
- * Solidification: initial hit + shatter damage at the end of the duration.
- * Shatter = 120% + 120% ATK per stack.
+ * Solidification: initial hit only. Shatter is a separate reaction triggered
+ * by physical status consumption of solidification.
  */
 export function computeSolidificationDamage(
   reactionEvent: TimelineEvent,
@@ -217,25 +218,36 @@ export function computeSolidificationDamage(
   statusQuery?: EventsQueryService,
 ): ReactionDamageTick[] {
   const element = REACTION_ELEMENT[reactionEvent.columnId] ?? ElementType.CRYO;
-  const stacks = getStacks(reactionEvent);
   const ticks: ReactionDamageTick[] = [];
 
   const initial = buildInitialTick(reactionEvent, 'Solidification', opCtx, modelEnemy, element, statusQuery);
   if (initial) ticks.push(initial);
 
-  // Shatter at the end of the reaction duration
-  const shatterFrame = eventEndFrame(reactionEvent);
-  const shatterMultiplier = getShatterBaseMultiplier(stacks);
-  const shatterBase = buildBaseParams(opCtx, modelEnemy, element, statusQuery, shatterFrame, reactionEvent.sourceOwnerId);
-  const shatterParams: StatusDamageParams = { ...shatterBase, statusBaseMultiplier: shatterMultiplier };
-  ticks.push({
-    absoluteFrame: shatterFrame,
-    label: 'Solidification > Shatter',
-    damage: calculateStatusDamage(shatterParams),
-    params: shatterParams,
-  });
-
   return ticks;
+}
+
+/**
+ * Shatter: single physical damage tick at frame 0.
+ * Multiplier = 120% + 120% per solidification stack level (240%/360%/480%/600%).
+ * Uses the trigger operator's stats (sourceOwnerId on the shatter event).
+ */
+export function computeShatterDamage(
+  reactionEvent: TimelineEvent,
+  opCtx: ReactionOperatorContext,
+  modelEnemy: Enemy,
+  statusQuery?: EventsQueryService,
+): ReactionDamageTick[] {
+  const element = REACTION_ELEMENT[reactionEvent.columnId] ?? ElementType.PHYSICAL;
+  const stacks = getStacks(reactionEvent);
+  const shatterMultiplier = getShatterBaseMultiplier(stacks);
+  const base = buildBaseParams(opCtx, modelEnemy, element, statusQuery, reactionEvent.startFrame, reactionEvent.sourceOwnerId);
+  const params: StatusDamageParams = { ...base, statusBaseMultiplier: shatterMultiplier };
+  return [{
+    absoluteFrame: reactionEvent.startFrame,
+    label: 'Shatter',
+    damage: calculateStatusDamage(params),
+    params,
+  }];
 }
 
 // ── Corrosion ───────────────────────────────────────────────────────────────
@@ -294,6 +306,7 @@ export function computeReactionDamage(
     case 'solidification':  return computeSolidificationDamage(reactionEvent, opCtx, modelEnemy, statusQuery);
     case 'corrosion':       return computeCorrosionDamage(reactionEvent, opCtx, modelEnemy, statusQuery);
     case 'electrification': return computeElectrificationDamage(reactionEvent, opCtx, modelEnemy, statusQuery);
+    case 'shatter':         return computeShatterDamage(reactionEvent, opCtx, modelEnemy, statusQuery);
     default:                return [];
   }
 }

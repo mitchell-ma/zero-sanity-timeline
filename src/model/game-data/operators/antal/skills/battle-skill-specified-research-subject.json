@@ -4,7 +4,8 @@
     "description": "Applies Focus with a long duration on the enemy and deals Electric DMG. An enemy with an active Focus also suffers Electric Susceptibility and Heat Susceptibility. Focus can only be applied to 1 enemy at any given time.",
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "BATTLE_SKILL",
-    "element": "ELECTRIC"
+    "element": "ELECTRIC",
+    "id": "SPECIFIED_RESEARCH_SUBJECT"
   },
   "clause": [
     {
@@ -25,7 +26,6 @@
   ],
   "metadata": {
     "originId": "ANTAL",
-    "id": "SPECIFIED_RESEARCH_SUBJECT",
     "icon": "skills/skill_antal.png"
   },
   "segments": [
@@ -180,7 +180,7 @@
                 },
                 {
                   "verb": "DEAL",
-                  "adjective": "ELECTRIC",
+                  "objectQualifier": "ELECTRIC",
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
@@ -232,7 +232,8 @@
                 }
               ]
             }
-          ]
+          ],
+          "clauseType": "ALL"
         }
       ],
       "properties": {
@@ -246,5 +247,6 @@
         "element": "ELECTRIC"
       }
     }
-  ]
+  ],
+  "clauseType": "ALL"
 }

@@ -4,7 +4,8 @@
     "description": "Performs an uppercut slash at the target enemy, dealing Physical DMG and Lift.",
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "BATTLE_SKILL",
-    "element": "PHYSICAL"
+    "element": "PHYSICAL",
+    "id": "ASCENDING_STRIKE"
   },
   "clause": [
     {
@@ -25,7 +26,6 @@
   ],
   "metadata": {
     "originId": "CHEN_QIANYU",
-    "id": "ASCENDING_STRIKE",
     "icon": "skills/skill_chen_qianyu.png"
   },
   "segments": [
@@ -92,7 +92,7 @@
                 },
                 {
                   "verb": "DEAL",
-                  "adjective": "PHYSICAL",
+                  "objectQualifier": "PHYSICAL",
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
@@ -120,7 +120,8 @@
                 }
               ]
             }
-          ]
+          ],
+          "clauseType": "ALL"
         }
       ],
       "properties": {
@@ -134,5 +135,6 @@
         "element": "PHYSICAL"
       }
     }
-  ]
+  ],
+  "clauseType": "ALL"
 }

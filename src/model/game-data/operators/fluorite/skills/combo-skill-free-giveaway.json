@@ -5,7 +5,8 @@
     "windowFrames": 720,
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "COMBO_SKILL",
-    "element": "NATURE"
+    "element": "NATURE",
+    "id": "FREE_GIVEAWAY"
   },
   "clause": [
     {
@@ -93,7 +94,7 @@
                 },
                 {
                   "verb": "DEAL",
-                  "adjective": "NATURE",
+                  "objectQualifier": "NATURE",
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
@@ -201,7 +202,8 @@
                 }
               ]
             }
-          ]
+          ],
+          "clauseType": "ALL"
         }
       ]
     },
@@ -229,7 +231,6 @@
   ],
   "metadata": {
     "originId": "FLUORITE",
-    "id": "FREE_GIVEAWAY",
     "icon": "skills/combo_fluorite.png"
   },
   "onTriggerClause": [
@@ -251,5 +252,6 @@
         }
       ]
     }
-  ]
+  ],
+  "clauseType": "ALL"
 }

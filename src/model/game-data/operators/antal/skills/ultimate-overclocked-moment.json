@@ -3,7 +3,8 @@
     "name": "Overclocked Moment",
     "description": "Applies temporary Electric Amp and Heat Amp to the entire team.",
     "eventType": "COMBAT_SKILL",
-    "eventCategoryType": "ULTIMATE_SKILL"
+    "eventCategoryType": "ULTIMATE_SKILL",
+    "id": "OVERCLOCKED_MOMENT"
   },
   "clause": [
     {
@@ -18,7 +19,7 @@
               "object": "POTENTIAL",
               "value": [
                 100,
-                90,
+                100,
                 90,
                 90,
                 90,
@@ -83,7 +84,7 @@
   ],
   "metadata": {
     "originId": "ANTAL",
-    "id": "OVERCLOCKED_MOMENT",
     "icon": "skills/ult_antal.png"
-  }
+  },
+  "clauseType": "ALL"
 }

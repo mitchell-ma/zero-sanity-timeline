@@ -73,7 +73,6 @@
   "properties": {
     "id": "MESSENGERS_SONG",
     "name": "Messenger's Song",
-    "type": "STATUS",
     "to": "OPERATOR",
     "toDeterminer": "ALL",
     "eventType": "STATUS",
@@ -85,5 +84,6 @@
     "dataSources": [
       "ENDFIELD_WIKI"
     ]
-  }
+  },
+  "clauseType": "ALL"
 }

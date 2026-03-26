@@ -1,6 +1,5 @@
 {
   "properties": {
-    "type": "TALENT",
     "id": "WILDLAND_TREKKER_TALENT",
     "name": "Wildland Trekker (Talent)",
     "to": "OPERATOR",

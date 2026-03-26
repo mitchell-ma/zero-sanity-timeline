@@ -26,7 +26,6 @@
   "properties": {
     "id": "EXECUTE_PROCESS",
     "name": "Execute Process",
-    "type": "STATUS",
     "to": "ENEMY",
     "duration": {
       "value": {
@@ -51,5 +50,6 @@
     "dataSources": [
       "ENDFIELD_WIKI"
     ]
-  }
+  },
+  "clauseType": "ALL"
 }

@@ -41,14 +41,14 @@ interface StatusSegment {
 
 // ── Validation ──────────────────────────────────────────────────────────────
 
-const VALID_EFFECT_KEYS = new Set(['verb', 'object', 'objectId', 'objectType', 'adjective', 'to', 'toDeterminer', 'with', 'value', 'cardinalityConstraint', 'effects']);
+const VALID_EFFECT_KEYS = new Set(['verb', 'object', 'objectId', 'objectType', 'objectQualifier', 'to', 'toDeterminer', 'with', 'value', 'cardinalityConstraint', 'effects']);
 const VALID_EFFECT_WITH_KEYS = new Set(['value', 'duration']);
 const VALID_TRIGGER_CONDITION_KEYS = new Set(['subjectDeterminer', 'subject', 'verb', 'object', 'objectId', 'value', 'cardinalityConstraint', 'to', 'toDeterminer', 'with']);
 const VALID_DURATION_KEYS = new Set(['value', 'unit', 'modifier']);
 const VALID_STATUS_LEVEL_KEYS = new Set(['limit', 'interactionType']);
 const VALID_SEGMENT_KEYS = new Set(['metadata', 'properties', 'clause', 'frames']);
 const VALID_PROPERTIES_KEYS = new Set(['id', 'name', 'description', 'type', 'element', 'target', 'targetDeterminer', 'to', 'toDeterminer', 'duration', 'stacks', 'enhancementTypes', 'minPotential', 'eventType', 'eventCategoryType']);
-const VALID_TOP_KEYS = new Set(['clause', 'onTriggerClause', 'onEntryClause', 'onExitClause', 'segments', 'properties', 'metadata']);
+const VALID_TOP_KEYS = new Set(['clause', 'clauseType', 'onTriggerClause', 'onEntryClause', 'onExitClause', 'segments', 'properties', 'metadata']);
 
 function validateValueNode(wv: Record<string, unknown>, path: string): string[] {
   const errors = checkKeys(wv, VALID_VALUE_NODE_KEYS, path);
@@ -250,18 +250,29 @@ export class OperatorStatus {
   }
 }
 
+// ── Directory → JSON-ID map ──────────────────────────────────────────────────
+
+const _dirToId = new Map<string, string>();
+const _opCtx = require.context('./operators', true, /\/[^/]+\/[^/]+\.json$/);
+for (const k of _opCtx.keys()) {
+  const m = k.match(/^\.\/([^/]+)\/[^/]+\.json$/);
+  if (!m || m[1] === 'generic' || k.includes('/potentials/') || k.includes('/skills/') || k.includes('/statuses/') || k.includes('/talents/')) continue;
+  const j = _opCtx(k) as Record<string, unknown>;
+  if (typeof j.id === 'string') _dirToId.set(m[1], j.id);
+}
+
 // ── Loader ──────────────────────────────────────────────────────────────────
 
-/** All operator statuses indexed by originId (operator camelCase ID). */
+/** All operator statuses indexed by operator JSON ID. */
 const operatorStatusCache = new Map<string, OperatorStatus[]>();
 
 // Load individual status/talent files from operator subdirectories
 const operatorStatusContext = require.context('./operators', true, /\/(statuses|talents)\/[^/]+\.json$/);
 for (const key of operatorStatusContext.keys()) {
-  // Extract operatorId from path: ./laevatain/statuses/status-melting-flame.json → laevatain
+  // Extract operatorId from path: ./laevatain/statuses/status-melting-flame.json → LAEVATAIN
   const match = key.match(/^\.\/([^/]+)\/(statuses|talents)\/[^/]+\.json$/);
   if (!match || match[1] === 'generic') continue;
-  const operatorId = match[1];
+  const operatorId = _dirToId.get(match[1]) ?? match[1];
 
   const json = operatorStatusContext(key) as Record<string, unknown>;
   const status = OperatorStatus.deserialize(json, key);

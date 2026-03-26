@@ -36,7 +36,6 @@
   "properties": {
     "id": "SUBDUER_OF_EVIL_P5_TALENT",
     "name": "Subduer of Evil (P5)",
-    "type": "TALENT",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",

@@ -13,7 +13,7 @@
       "effects": [
         {
           "verb": "DEAL",
-          "adjective": "PHYSICAL",
+          "objectQualifier": "PHYSICAL",
           "object": "DAMAGE",
           "to": "ENEMY",
           "with": {
@@ -35,7 +35,6 @@
   "properties": {
     "id": "SUBDUER_OF_EVIL_TALENT",
     "name": "Subduer of Evil (Talent)",
-    "type": "TALENT",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",

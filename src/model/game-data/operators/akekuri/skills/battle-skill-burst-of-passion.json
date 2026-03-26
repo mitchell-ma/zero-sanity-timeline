@@ -4,7 +4,8 @@
     "description": "A frontal slash that deals Heat DMG and applies Heat Infliction.",
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "BATTLE_SKILL",
-    "element": "HEAT"
+    "element": "HEAT",
+    "id": "BURST_OF_PASSION"
   },
   "clause": [
     {
@@ -25,7 +26,6 @@
   ],
   "metadata": {
     "originId": "AKEKURI",
-    "id": "BURST_OF_PASSION",
     "icon": "skills/skill_akekuri.png"
   },
   "segments": [
@@ -62,7 +62,7 @@
                 {
                   "verb": "APPLY",
                   "object": "INFLICTION",
-                  "adjective": "HEAT",
+                  "objectQualifier": "HEAT",
                   "to": "ENEMY",
                   "with": {
                     "stacks": {
@@ -73,7 +73,7 @@
                 },
                 {
                   "verb": "DEAL",
-                  "adjective": "HEAT",
+                  "objectQualifier": "HEAT",
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
@@ -101,7 +101,8 @@
                 }
               ]
             }
-          ]
+          ],
+          "clauseType": "ALL"
         }
       ],
       "properties": {
@@ -115,5 +116,6 @@
         "element": "HEAT"
       }
     }
-  ]
+  ],
+  "clauseType": "ALL"
 }

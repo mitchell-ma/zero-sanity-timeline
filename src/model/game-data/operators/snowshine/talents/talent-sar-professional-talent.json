@@ -34,7 +34,6 @@
   "properties": {
     "id": "SAR_PROFESSIONAL_TALENT",
     "name": "SAR Professional (Talent)",
-    "type": "TALENT",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",

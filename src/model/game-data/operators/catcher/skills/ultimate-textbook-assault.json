@@ -4,7 +4,8 @@
     "description": "Swings the greatsword to perform 2 consecutive slashes to deal Physical DMG and apply Weaken, followed by a powerful downward slam that deals massive Physical DMG and applies Knock Down to all enemies within the area of effect.",
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "ULTIMATE_SKILL",
-    "element": "PHYSICAL"
+    "element": "PHYSICAL",
+    "id": "TEXTBOOK_ASSAULT"
   },
   "clause": [
     {
@@ -100,7 +101,7 @@
                 },
                 {
                   "verb": "DEAL",
-                  "adjective": "PHYSICAL",
+                  "objectQualifier": "PHYSICAL",
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
@@ -163,7 +164,8 @@
                 }
               ]
             }
-          ]
+          ],
+          "clauseType": "ALL"
         },
         {
           "metadata": {
@@ -195,7 +197,7 @@
                 },
                 {
                   "verb": "DEAL",
-                  "adjective": "PHYSICAL",
+                  "objectQualifier": "PHYSICAL",
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
@@ -223,7 +225,8 @@
                 }
               ]
             }
-          ]
+          ],
+          "clauseType": "ALL"
         },
         {
           "metadata": {
@@ -261,7 +264,7 @@
                 },
                 {
                   "verb": "DEAL",
-                  "adjective": "PHYSICAL",
+                  "objectQualifier": "PHYSICAL",
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
@@ -289,14 +292,15 @@
                 }
               ]
             }
-          ]
+          ],
+          "clauseType": "ALL"
         }
       ]
     }
   ],
   "metadata": {
     "originId": "CATCHER",
-    "id": "TEXTBOOK_ASSAULT",
     "icon": "skills/ult_catcher.png"
-  }
+  },
+  "clauseType": "ALL"
 }

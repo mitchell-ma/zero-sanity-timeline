@@ -33,7 +33,6 @@
   "properties": {
     "id": "FLASH_FROZEN_TALENT",
     "name": "Flash-frozen for Freshness (Talent)",
-    "type": "TALENT",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",

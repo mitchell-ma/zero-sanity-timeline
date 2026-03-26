@@ -7,7 +7,7 @@
  * queue entry construction.
  */
 import { TimelineEvent, EventSegmentData, eventEndFrame, durationSegment, setEventDuration } from '../../consts/viewTypes';
-import { CritMode, EventStatusType, StackInteractionType } from '../../consts/enums';
+import { CritMode, EventStatusType } from '../../consts/enums';
 import { COMMON_OWNER_ID } from '../slot/commonSlotController';
 import { ENEMY_OWNER_ID, ELEMENT_TO_INFLICTION_COLUMN, REACTION_COLUMNS, SKILL_COLUMNS } from '../../model/channels';
 import { FPS, TOTAL_FRAMES } from '../../utils/timeline';
@@ -15,7 +15,7 @@ import { getSkillIds, getAllOperatorIds, getEnabledStatusEvents } from '../gameD
 import { getWeaponEffectDefs, getGearEffectDefs } from '../gameDataStore';
 import type { NormalizedEffectDef } from '../gameDataStore';
 import { LoadoutProperties } from '../../view/InformationPane';
-import { evaluateInteraction, evaluateConditions, ConditionContext } from './conditionEvaluator';
+import { evaluateConditions, ConditionContext } from './conditionEvaluator';
 import { executeEffects, applyMutations } from './effectExecutor';
 import type { ExecutionContext } from './effectExecutor';
 import { VerbType } from '../../dsl/semantics';
@@ -49,6 +49,7 @@ interface StatusProperties {
   id: string;
   name?: string;
   type?: string;
+  eventCategoryType?: string;
   element?: string;
   target?: string;
   targetDeterminer?: string;
@@ -61,6 +62,8 @@ interface StatusProperties {
   duration?: { value: ValueNode; unit: string };
   susceptibility?: Record<string, number[]>;
   cooldownSeconds?: number;
+  /** Minimum potential for this trigger to activate (e.g. 5 = requires P5). */
+  minPotential?: number;
 }
 
 export interface StatusEventDef {
@@ -99,11 +102,11 @@ interface ClauseWithValue {
   value: number | number[] | Record<string, unknown>;
 }
 
-/** Effect shape inside clause arrays: supports adjective + with block. */
+/** Effect shape inside clause arrays: supports objectQualifier + with block. */
 interface ClauseEffectEntry {
   verb: string;
   object: string;
-  adjective?: string;
+  objectQualifier?: string;
   with?: { value: ClauseWithValue };
 }
 
@@ -211,7 +214,7 @@ function resolveClauseEffectsFromClauses(
     for (const effect of clause.effects) {
       const verb = effect.verb ?? effect.verb;
       const object = effect.object ?? effect.object;
-      const adjective = effect.adjective;
+      const objectQualifier = effect.objectQualifier;
       const withBlock = effect.with ?? effect.with;
       const wp = withBlock?.value;
       if (!wp) continue;
@@ -254,11 +257,11 @@ function resolveClauseEffectsFromClauses(
         return undefined;
       };
 
-      if (verb === 'APPLY' && object === 'SUSCEPTIBILITY' && adjective) {
+      if (verb === 'APPLY' && object === 'SUSCEPTIBILITY' && objectQualifier) {
         const val = resolveValue();
         if (val != null) {
           if (!ev.susceptibility) ev.susceptibility = {};
-          (ev.susceptibility as Record<string, number>)[adjective] = val;
+          (ev.susceptibility as Record<string, number>)[objectQualifier] = val;
         }
       }
 
@@ -279,7 +282,7 @@ function resolveClauseEffectsFromClauses(
  * Resolve clause effects into timeline event properties.
  * Delegates to resolveClauseEffectsFromClauses with the def's own clauses.
  */
-function resolveClauseEffects(ev: TimelineEvent, def: StatusEventDef, ctx: DeriveContext): void {
+export function resolveClauseEffects(ev: TimelineEvent, def: StatusEventDef, ctx: DeriveContext): void {
   const clauses = def.clause as ResolvedClause[] | undefined;
   if (!clauses) return;
   resolveClauseEffectsFromClauses(ev, clauses, ctx, def);
@@ -408,7 +411,7 @@ function getMaxStacks(limit: ValueNode, _potential: number): number {
 
 // ── Duration resolution ─────────────────────────────────────────────────────
 
-function getDurationFrames(duration: { value: ValueNode; unit: string }): number {
+export function getDurationFrames(duration: { value: ValueNode; unit: string }): number {
   // Handle bare arrays (e.g. [20] from weapon/gear JSON) and bare numbers
   const raw = duration.value;
   const val = Array.isArray(raw) ? (raw as number[])[0] ?? 0
@@ -433,45 +436,6 @@ interface DeriveResult {
   absorbedInflictions: AbsorbedInfliction[];
 }
 
-/**
- * Normalize a PERCENTAGE_HP predicate's with.value block into standard value fields.
- * JSON format: { verb: "HAVE", object: "PERCENTAGE_HP", with: { value: { verb: "BELOW", value: 50 } } }
- * Normalized:  { verb: "HAVE", object: "PERCENTAGE_HP", cardinalityConstraint: "AT_MOST", value: 50 }
- */
-function normalizePercentageHpPredicate(pred: Predicate): Predicate {
-  if (pred.object !== 'PERCENTAGE_HP' || pred.cardinalityConstraint) return pred;
-  const w = pred.with as { value?: { verb?: string; value?: number } } | undefined;
-  if (!w?.value) return pred;
-  const { verb, value } = w.value;
-  if (verb === 'BELOW' && value != null) {
-    return { ...pred, cardinalityConstraint: 'AT_MOST', value };
-  }
-  if (verb === 'ABOVE' && value != null) {
-    return { ...pred, cardinalityConstraint: 'AT_LEAST', value };
-  }
-  return pred;
-}
-
-/**
- * Evaluate a single predicate (condition) at a given frame using the shared condition evaluator.
- */
-function checkPredicate(
-  pred: Predicate,
-  events: TimelineEvent[],
-  operatorSlotId: string,
-  candidateFrame: number,
-  getEnemyHpPercentage?: (frame: number) => number | null,
-): boolean {
-  const normalized = normalizePercentageHpPredicate(pred);
-  const ctx: ConditionContext = {
-    events,
-    frame: candidateFrame,
-    sourceOwnerId: operatorSlotId,
-    getEnemyHpPercentage,
-  };
-  return evaluateInteraction(normalized as unknown as Interaction, ctx);
-}
-
 // ── findTriggerMatches ───────────────────────────────────────────────────────
 
 function findTriggerMatches(
@@ -484,7 +448,7 @@ function findTriggerMatches(
 
 // ── Derive events ───────────────────────────────────────────────────────────
 
-interface DeriveContext {
+export interface DeriveContext {
   events: TimelineEvent[];
   operatorId: string;
   operatorSlotId: string;
@@ -514,7 +478,7 @@ function deriveStatusEvents(
     .flatMap(e => e.effects ?? [])
     .find(e => e.verb === 'APPLY' && e.object === 'STATUS' && e.objectId);
   // For TALENT-type defs, also check direct APPLY STATUS effects (e.g. IMPROVISER_TALENT → IMPROVISER)
-  const directApply = !nestedApply && def.properties.type === 'TALENT'
+  const directApply = !nestedApply && (def.properties.eventCategoryType ?? def.properties.type) === 'TALENT'
     ? (def.onTriggerClause ?? [])
         .flatMap(c => (c.effects ?? []) as unknown as Effect[])
         .find(e => e.verb === 'APPLY' && e.object === 'STATUS' && e.objectId)
@@ -636,7 +600,7 @@ function deriveStatusEvents(
         columnId,
         startFrame: trigger.frame,
         segments: durationSegment(durationFrames),
-        sourceOwnerId: operatorSlotId,
+        sourceOwnerId: ctx.operatorId,
         sourceSkillName: trigger.sourceSkillName,
       };
 
@@ -819,7 +783,7 @@ function evaluateThresholdClauses(
             columnId: targetColumnId,
             startFrame: ev.startFrame,
             segments: durationSegment(duration),
-            sourceOwnerId: ctx.operatorSlotId,
+            sourceOwnerId: ctx.operatorId,
             sourceSkillName: def.properties.id,
           });
         }
@@ -1031,7 +995,7 @@ export function deriveStatusesFromEngine(
 
       // TALENT type: create a permanent presence event on the operator's timeline.
       // The talent event is separate from the trigger effects (e.g. absorption → MF).
-      if (def.properties.type === 'TALENT') {
+      if ((def.properties.eventCategoryType ?? def.properties.type) === 'TALENT') {
         const talentDuration = def.properties.duration;
         const talentDurationFrames = talentDuration ? getDurationFrames(talentDuration) : TOTAL_FRAMES;
         const talentOwnerId = resolveOwnerId(def.properties.target, slotId, operatorSlotMap, def.properties.targetDeterminer);
@@ -1046,7 +1010,7 @@ export function deriveStatusesFromEngine(
             columnId: talentColumnId,
             startFrame: 0,
             segments: durationSegment(talentDurationFrames),
-            sourceOwnerId: slotId,
+            sourceOwnerId: operatorId,
             sourceSkillName: def.properties.id,
           });
         }
@@ -1151,6 +1115,8 @@ export interface EngineTriggerEntry {
   frame: number;
   sourceOwnerId: string;
   sourceSkillName: string;
+  /** Slot ID of the operator that triggered this entry (for TRIGGER determiner resolution). */
+  triggerSlotId?: string;
   ctx: EngineTriggerContext;
   isEquip: boolean;
 }
@@ -1193,7 +1159,7 @@ export function collectEngineTriggerEntries(
       if (skipDefNames?.has(def.properties.id)) continue;
 
       // TALENT type: permanent presence event (check BEFORE final-strike skip)
-      if (def.properties.type === 'TALENT') {
+      if ((def.properties.eventCategoryType ?? def.properties.type) === 'TALENT') {
         const talentDuration = def.properties.duration;
         const talentDurationFrames = talentDuration ? getDurationFrames(talentDuration) : TOTAL_FRAMES;
         const talentOwnerId = resolveOwnerId(def.properties.target, slotId, operatorSlotMap, def.properties.targetDeterminer);
@@ -1207,7 +1173,7 @@ export function collectEngineTriggerEntries(
             columnId: talentColumnId,
             startFrame: 0,
             segments: durationSegment(talentDurationFrames),
-            sourceOwnerId: slotId,
+            sourceOwnerId: operatorId,
             sourceSkillName: def.properties.id,
           });
         }
@@ -1220,7 +1186,7 @@ export function collectEngineTriggerEntries(
       // Weapon/gear defs often have output effects in `clause` rather than `onTriggerClause[].effects`.
       const hasEffects = def.onTriggerClause.some(c => c.effects && c.effects.length > 0);
       const hasClauseEffects = (def.clause as { effects?: unknown[] }[] | undefined)?.some(c => c.effects && c.effects.length > 0);
-      if (!hasEffects && !hasClauseEffects && def.properties.type !== 'TALENT') continue;
+      if (!hasEffects && !hasClauseEffects && (def.properties.eventCategoryType ?? def.properties.type) !== 'TALENT') continue;
 
       // Use the unified verb-handler registry to find trigger matches for ALL verb types.
       // HAVE conditions are extracted and deferred to queue-time evaluation — they must
@@ -1255,8 +1221,9 @@ export function collectEngineTriggerEntries(
         for (let frame = 0; frame < TOTAL_FRAMES; frame += FPS) {
           entries.push({
             frame,
-            sourceOwnerId: slotId,
+            sourceOwnerId: operatorId,
             sourceSkillName: def.properties.id,
+            triggerSlotId: slotId,
             ctx: triggerCtx,
             isEquip,
           });
@@ -1270,8 +1237,9 @@ export function collectEngineTriggerEntries(
           };
           entries.push({
             frame: match.frame,
-            sourceOwnerId: match.sourceOwnerId,
+            sourceOwnerId: operatorId,
             sourceSkillName: match.sourceSkillName,
+            triggerSlotId: match.sourceOwnerId,
             ctx: triggerCtx,
             isEquip,
           });
@@ -1312,241 +1280,4 @@ export function collectEngineTriggerEntries(
   });
 
   return { entries: deduped.sort((a, b) => a.frame - b.frame), talentEvents };
-}
-
-/**
- * Evaluate an ENGINE_TRIGGER at queue time: check HAVE conditions against
- * DerivedEventController, enforce stack caps, and create the derived status event.
- *
- * Compound trigger effects (ALL AT_MOST MAX with CONSUME + APPLY) are executed
- * through the effect executor for proper multi-iteration handling.
- */
-export function evaluateEngineTrigger(
-  entry: EngineTriggerEntry,
-  events: TimelineEvent[],
-  activeCountFn: (columnId: string, ownerId: string, frame: number) => number,
-  addEventFn: (ev: TimelineEvent) => void,
-  getEnemyHpPercentage?: (frame: number) => number | null,
-) {
-  const { ctx } = entry;
-  const { def } = ctx;
-
-  if (ctx.haveConditions.length > 0) {
-    const allMet = ctx.haveConditions.every(hc =>
-      checkPredicate(hc, events, ctx.operatorSlotId, entry.frame, getEnemyHpPercentage)
-    );
-    if (!allMet) return;
-  }
-
-  // Check if trigger effects contain compound verbs (ALL/ANY) with child effects.
-  // If so, delegate to the effect executor for proper multi-iteration execution.
-  const compoundEffects = (ctx.triggerEffects ?? []).filter(
-    e => (e.verb === 'ALL' || e.verb === 'ANY') && e.effects && e.effects.length > 0,
-  );
-  if (compoundEffects.length > 0) {
-    evaluateCompoundTrigger(entry, events, activeCountFn, addEventFn);
-    return;
-  }
-
-  // Simple trigger path: resolve output def and create a single derived event.
-  const outputDef = resolveOutputDef(ctx);
-  const durationFrames = outputDef.properties.duration ? getDurationFrames(outputDef.properties.duration) : TOTAL_FRAMES;
-  const ownerId = resolveOwnerId(outputDef.properties.target, ctx.operatorSlotId, ctx.operatorSlotMap, outputDef.properties.targetDeterminer);
-  const eqStatusId = outputDef.properties.id ?? outputDef.properties.name;
-  if (!eqStatusId) return;
-  const columnId = statusNameToColumnId(eqStatusId);
-  const eqLimitMap = outputDef.properties.stacks?.limit;
-  const maxStacks = eqLimitMap ? getMaxStacks(eqLimitMap, ctx.potential) : 1;
-  // RESET stacking replaces existing — bypass cap check
-  const stackingMode = outputDef.properties.stacks?.interactionType;
-  if (stackingMode !== StackInteractionType.RESET && activeCountFn(columnId, ownerId, entry.frame) >= maxStacks) return;
-
-  // Enforce cooldown: skip if within cooldownSeconds of the last proc
-  const cdSecs = outputDef.properties.cooldownSeconds;
-  if (cdSecs && cdSecs > 0) {
-    const cdFrames = Math.round(cdSecs * 120);
-    const lastProc = events
-      .filter(ev => ev.columnId === columnId && ev.ownerId === ownerId)
-      .reduce((latest, ev) => Math.max(latest, ev.startFrame), -Infinity);
-    if (lastProc >= 0 && entry.frame < lastProc + cdFrames) return;
-  }
-
-  const finalOwnerId = entry.isEquip && outputDef.properties.targetDeterminer === 'OTHER'
-    ? COMMON_OWNER_ID : ownerId;
-
-  const ev: TimelineEvent = {
-    uid: `${outputDef.properties.id.toLowerCase()}-${genEventUid()}`,
-    id: outputDef.properties.id,
-    name: outputDef.properties.id,
-    ownerId: finalOwnerId,
-    columnId,
-    startFrame: entry.frame,
-    segments: durationSegment(durationFrames),
-    sourceOwnerId: ctx.operatorSlotId,
-    sourceSkillName: entry.sourceSkillName,
-    ...(stackingMode ? { stackingMode } : {}),
-  } as TimelineEvent;
-
-  const deriveCtx: DeriveContext = {
-    events, operatorId: ctx.operatorId, operatorSlotId: ctx.operatorSlotId,
-    potential: ctx.potential, operatorSlotMap: ctx.operatorSlotMap, loadoutProperties: ctx.loadoutProperties,
-  };
-  resolveClauseEffects(ev, outputDef, deriveCtx);
-
-  if (outputDef.segments && outputDef.segments.length > 0) {
-    const segments: EventSegmentData[] = [];
-    for (const seg of outputDef.segments) {
-      const segDuration = seg.properties?.duration ? getDurationFrames(seg.properties.duration) : durationFrames;
-      const segData: EventSegmentData = { properties: { duration: segDuration, name: seg.properties?.name } };
-      if (seg.clause) {
-        const segEv: TimelineEvent = { ...ev, susceptibility: undefined };
-        resolveClauseEffectsFromClauses(segEv, seg.clause as ResolvedClause[], deriveCtx, def, false);
-        if (segEv.susceptibility) segData.unknown = { ...segData.unknown, susceptibility: segEv.susceptibility };
-      }
-      // Resolve frame effects (e.g. RESTORE HP)
-      if (seg.frames && seg.frames.length > 0) {
-        const valueCtx = buildDeriveValueContext(deriveCtx);
-        valueCtx.sourceContext = valueCtx;
-        for (const frame of seg.frames) {
-          if (!frame.clause) continue;
-          for (const clause of frame.clause) {
-            for (const effect of (clause as unknown as { effects: Effect[] }).effects ?? []) {
-              if (effect.verb === 'RESTORE' && effect.object === 'HP') {
-                const withBlock = (effect as unknown as { with?: { value?: ValueNode } }).with;
-                if (withBlock?.value) {
-                  const healValue = resolveValueNode(withBlock.value, valueCtx);
-                  segData.unknown = { ...segData.unknown, healValue };
-                }
-              }
-            }
-          }
-        }
-      }
-      if (seg.properties?.segmentTypes) {
-        segData.unknown = { ...segData.unknown, segmentTypes: seg.properties.segmentTypes };
-      }
-      segments.push(segData);
-    }
-    ev.segments = segments;
-    if (!ev.susceptibility && segments[0]?.unknown?.susceptibility) ev.susceptibility = segments[0].unknown.susceptibility as TimelineEvent['susceptibility'];
-  }
-
-  if (!ev.susceptibility && outputDef.properties.susceptibility) {
-    const resolved: Record<string, number> = {};
-    for (const [element, values] of Object.entries(outputDef.properties.susceptibility)) {
-      const arr = values as number[];
-      const tl = 1; // TODO: resolve talent level from DSL
-      resolved[element] = arr[Math.min(tl, arr.length) - 1] ?? arr[0];
-    }
-    ev.susceptibility = resolved;
-  }
-
-  addEventFn(ev);
-}
-
-/** Resolve the output status def from trigger effects (follows APPLY STATUS redirects). */
-function resolveOutputDef(ctx: EngineTriggerContext): StatusEventDef {
-  // Check ALL → APPLY STATUS (compound trigger path)
-  const applySubEffect = (ctx.triggerEffects ?? [])
-    .filter(e => e.verb === 'ALL')
-    .flatMap(e => e.effects ?? [])
-    .find(e => e.verb === 'APPLY' && e.object === 'STATUS' && e.objectId);
-  if (applySubEffect?.objectId) {
-    const targetDef = getEnabledDefs(ctx.operatorId)
-      .find(d => d.properties.id === applySubEffect.objectId);
-    if (targetDef) return targetDef;
-  }
-  // Check direct APPLY STATUS (lifecycle clause path — effects may have object/objectId)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const directApply = (ctx.triggerEffects as any[] ?? [])
-    .find(e => e.verb === 'APPLY' && e.object === 'STATUS' && e.objectId);
-  if (directApply?.objectId) {
-    const targetDef = getEnabledDefs(ctx.operatorId)
-      .find(d => d.properties.id === directApply.objectId);
-    if (targetDef) return targetDef;
-  }
-  return ctx.def;
-}
-
-/**
- * Evaluate compound trigger effects (ALL AT_MOST MAX with CONSUME + APPLY)
- * through the effect executor for proper multi-iteration handling.
- */
-function evaluateCompoundTrigger(
-  entry: EngineTriggerEntry,
-  events: TimelineEvent[],
-  activeCountFn: (columnId: string, ownerId: string, frame: number) => number,
-  addEventFn: (ev: TimelineEvent) => void,
-) {
-  const { ctx } = entry;
-
-  // Convert TriggerEffect[] → SemanticEffect[] for the effect executor
-  const semanticEffects: SemanticEffect[] = (ctx.triggerEffects ?? []).map(te => ({
-    verb: te.verb as VerbType,
-    cardinalityConstraint: te.cardinalityConstraint as SemanticEffect['cardinalityConstraint'],
-    value: te.value === 'MAX' ? ('MAX' as const) : te.value as SemanticEffect['value'],
-    effects: te.effects?.map(se => ({
-      verb: se.verb as VerbType,
-      object: se.object as SemanticEffect['object'],
-      objectId: se.objectId,
-      adjective: (se.adjective ?? se.element) as SemanticEffect['adjective'],
-      fromObject: se.fromObject as SemanticEffect['fromObject'],
-      to: se.to as SemanticEffect['to'],
-      toDeterminer: se.toDeterminer as SemanticEffect['toDeterminer'],
-    })),
-  }));
-
-  const execCtx: ExecutionContext = {
-    events,
-    frame: entry.frame,
-    sourceOwnerId: ctx.operatorSlotId,
-    sourceSkillName: entry.sourceSkillName,
-    loadoutProperties: ctx.loadoutProperties ? { [ctx.operatorSlotId]: ctx.loadoutProperties } : undefined,
-    operatorSlotMap: ctx.operatorSlotMap,
-    potential: ctx.potential,
-    idCounter: 0,
-  };
-
-  const mutations = executeEffects(semanticEffects, execCtx);
-
-  // Apply produced events (respecting stack caps)
-  for (const produced of mutations.produced) {
-    const columnId = produced.columnId;
-    const ownerId = produced.ownerId;
-    const maxStacks = getMaxStacksForStatus(produced.id ?? produced.name, ctx);
-    if (maxStacks != null && activeCountFn(columnId, ownerId, entry.frame) >= maxStacks) continue;
-
-    // The effect executor defaults STATUS duration to 2400 when with.duration
-    // is not specified. Override with the status definition's actual duration.
-    const statusDuration = getStatusDuration(produced.id ?? produced.name, ctx);
-    if (statusDuration != null) setEventDuration(produced, statusDuration);
-
-    addEventFn(produced);
-  }
-
-  // Apply clamps (consumed inflictions)
-  mutations.clamped.forEach((clampInfo, uid) => {
-    const target = events.find(ev => ev.uid === uid);
-    if (!target) return;
-    setEventDuration(target, clampInfo.newDuration);
-    if (clampInfo.eventStatus) target.eventStatus = clampInfo.eventStatus;
-    if (clampInfo.sourceOwnerId) target.eventStatusOwnerId = clampInfo.sourceOwnerId;
-    if (clampInfo.sourceSkillName) target.eventStatusSkillName = clampInfo.sourceSkillName;
-  });
-}
-
-/** Resolve max stacks for a status ID from operator JSON. */
-function getMaxStacksForStatus(statusId: string, ctx: EngineTriggerContext): number | undefined {
-  const statusDef = getEnabledDefs(ctx.operatorId).find(d => d.properties.id === statusId);
-  if (!statusDef?.properties.stacks?.limit) return undefined;
-  return getMaxStacks(statusDef.properties.stacks.limit, ctx.potential);
-}
-
-/** Resolve duration in frames for a status ID from operator JSON. */
-function getStatusDuration(statusId: string, ctx: EngineTriggerContext): number | undefined {
-  const defs = getEnabledDefs(ctx.operatorId);
-  if (!defs.length) return TOTAL_FRAMES;
-  const statusDef = defs.find(d => d.properties.id === statusId);
-  if (!statusDef) return undefined;
-  return statusDef.properties.duration ? getDurationFrames(statusDef.properties.duration) : TOTAL_FRAMES;
 }

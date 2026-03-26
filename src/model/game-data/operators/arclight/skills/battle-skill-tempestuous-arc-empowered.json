@@ -19,7 +19,8 @@
       "EMPOWERED"
     ],
     "eventType": "COMBAT_SKILL",
-    "eventCategoryType": "BATTLE_SKILL"
+    "eventCategoryType": "BATTLE_SKILL",
+    "id": "TEMPESTUOUS_ARC_EMPOWERED"
   },
   "segments": [
     {
@@ -42,7 +43,8 @@
               "conditions": [],
               "effects": []
             }
-          ]
+          ],
+          "clauseType": "ALL"
         },
         {
           "metadata": {
@@ -74,7 +76,8 @@
                 }
               ]
             }
-          ]
+          ],
+          "clauseType": "ALL"
         },
         {
           "metadata": {
@@ -116,7 +119,8 @@
                 }
               ]
             }
-          ]
+          ],
+          "clauseType": "ALL"
         }
       ],
       "properties": {
@@ -131,7 +135,6 @@
     }
   ],
   "metadata": {
-    "id": "TEMPESTUOUS_ARC_EMPOWERED",
     "icon": "skills/skill_arclight.png"
   }
 }

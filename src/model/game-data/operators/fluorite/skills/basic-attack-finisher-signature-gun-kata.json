@@ -7,11 +7,11 @@
     "description": "Basic attack performed near a Staggered enemy becomes a finisher that deals massive Nature DMG and recovers some SP.",
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "BASIC_ATTACK",
-    "element": "NATURE"
+    "element": "NATURE",
+    "id": "SIGNATURE_GUN_KATA_FINISHER"
   },
   "metadata": {
     "originId": "FLUORITE",
-    "id": "SIGNATURE_GUN_KATA_FINISHER",
     "icon": "skills/attack_guns.png"
   },
   "segments": [
@@ -33,7 +33,7 @@
               "effects": [
                 {
                   "verb": "DEAL",
-                  "adjective": "NATURE",
+                  "objectQualifier": "NATURE",
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
@@ -64,7 +64,8 @@
           ],
           "frameTypes": [
             "FINISHER"
-          ]
+          ],
+          "clauseType": "ALL"
         }
       ],
       "properties": {

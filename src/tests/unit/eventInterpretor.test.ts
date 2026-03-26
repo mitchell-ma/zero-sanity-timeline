@@ -82,7 +82,7 @@ describe('EventInterpretorController: APPLY', () => {
     const effect: Effect = {
       verb: VerbType.APPLY,
       object: ObjectType.INFLICTION,
-      adjective: AdjectiveType.HEAT,
+      objectQualifier: AdjectiveType.HEAT,
       to: NounType.ENEMY,
     };
 
@@ -123,7 +123,7 @@ describe('EventInterpretorController: APPLY', () => {
     const effect: Effect = {
       verb: VerbType.APPLY,
       object: ObjectType.REACTION,
-      adjective: AdjectiveType.COMBUSTION,
+      objectQualifier: AdjectiveType.COMBUSTION,
       to: NounType.ENEMY,
       with: {
         stacks: { verb: VerbType.IS, value: 2 },
@@ -168,7 +168,7 @@ describe('EventInterpretorController: CONSUME', () => {
     const effect: Effect = {
       verb: VerbType.CONSUME,
       object: ObjectType.INFLICTION,
-      adjective: AdjectiveType.HEAT,
+      objectQualifier: AdjectiveType.HEAT,
       fromObject: NounType.ENEMY,
       with: {
         stacks: { verb: VerbType.IS, value: 1 },
@@ -189,7 +189,7 @@ describe('EventInterpretorController: CONSUME', () => {
     const effect: Effect = {
       verb: VerbType.CONSUME,
       object: ObjectType.INFLICTION,
-      adjective: AdjectiveType.HEAT,
+      objectQualifier: AdjectiveType.HEAT,
       fromObject: NounType.ENEMY,
       with: {
         stacks: { verb: VerbType.IS, value: 1 },
@@ -237,7 +237,7 @@ describe('EventInterpretorController: CONSUME', () => {
     const effect: Effect = {
       verb: VerbType.CONSUME,
       object: ObjectType.INFLICTION,
-      adjective: AdjectiveType.HEAT,
+      objectQualifier: AdjectiveType.HEAT,
       fromObject: NounType.ENEMY,
       // No with.stacks — should warn
     };
@@ -277,7 +277,7 @@ describe('EventInterpretorController: ALL', () => {
           {
             verb: VerbType.CONSUME,
             object: ObjectType.INFLICTION,
-            adjective: AdjectiveType.HEAT,
+            objectQualifier: AdjectiveType.HEAT,
             fromObject: NounType.ENEMY,
             with: { stacks: { verb: VerbType.IS, value: 1 } },
           },
@@ -325,7 +325,7 @@ describe('EventInterpretorController: ALL', () => {
           {
             verb: VerbType.CONSUME,
             object: ObjectType.INFLICTION,
-            adjective: AdjectiveType.HEAT,
+            objectQualifier: AdjectiveType.HEAT,
             fromObject: NounType.ENEMY,
             with: { stacks: { verb: VerbType.IS, value: 1 } },
           },
@@ -363,7 +363,7 @@ describe('EventInterpretorController: ALL', () => {
           {
             verb: VerbType.CONSUME,
             object: ObjectType.INFLICTION,
-            adjective: AdjectiveType.HEAT,
+            objectQualifier: AdjectiveType.HEAT,
             fromObject: NounType.ENEMY,
             with: { stacks: { verb: VerbType.IS, value: 1 } },
           },
@@ -524,13 +524,13 @@ describe('EventInterpretorController: interpretEffects', () => {
       {
         verb: VerbType.APPLY,
         object: ObjectType.INFLICTION,
-        adjective: AdjectiveType.HEAT,
+        objectQualifier: AdjectiveType.HEAT,
         to: NounType.ENEMY,
       },
       {
         verb: VerbType.APPLY,
         object: ObjectType.INFLICTION,
-        adjective: AdjectiveType.HEAT,
+        objectQualifier: AdjectiveType.HEAT,
         to: NounType.ENEMY,
       },
     ];
@@ -549,7 +549,7 @@ describe('EventInterpretorController: APPLY LIFT PHYSICAL_STATUS', () => {
   const liftEffect: Effect = {
     verb: VerbType.APPLY,
     object: ObjectType.PHYSICAL_STATUS,
-    adjective: AdjectiveType.LIFT,
+    objectQualifier: AdjectiveType.LIFT,
     to: NounType.ENEMY,
   };
 
@@ -705,7 +705,7 @@ describe('EventInterpretorController: APPLY KNOCK_DOWN PHYSICAL_STATUS', () => {
   const knockDownEffect: Effect = {
     verb: VerbType.APPLY,
     object: ObjectType.PHYSICAL_STATUS,
-    adjective: AdjectiveType.KNOCK_DOWN,
+    objectQualifier: AdjectiveType.KNOCK_DOWN,
     to: NounType.ENEMY,
   };
 
@@ -851,7 +851,7 @@ describe('EventInterpretorController: APPLY CRUSH PHYSICAL_STATUS', () => {
   const crushEffect: Effect = {
     verb: VerbType.APPLY,
     object: ObjectType.PHYSICAL_STATUS,
-    adjective: AdjectiveType.CRUSH,
+    objectQualifier: AdjectiveType.CRUSH,
     to: NounType.ENEMY,
   };
 
@@ -1019,7 +1019,7 @@ describe('EventInterpretorController: APPLY BREACH PHYSICAL_STATUS', () => {
   const breachEffect: Effect = {
     verb: VerbType.APPLY,
     object: ObjectType.PHYSICAL_STATUS,
-    adjective: AdjectiveType.BREACH,
+    objectQualifier: AdjectiveType.BREACH,
     to: NounType.ENEMY,
   };
 

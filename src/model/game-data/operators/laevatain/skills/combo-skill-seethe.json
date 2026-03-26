@@ -5,7 +5,8 @@
     "windowFrames": 720,
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "COMBO_SKILL",
-    "element": "HEAT"
+    "element": "HEAT",
+    "id": "SEETHE"
   },
   "clause": [
     {
@@ -119,7 +120,7 @@
                 },
                 {
                   "verb": "DEAL",
-                  "adjective": "HEAT",
+                  "objectQualifier": "HEAT",
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
@@ -159,7 +160,8 @@
                 }
               ]
             }
-          ]
+          ],
+          "clauseType": "ALL"
         }
       ]
     },
@@ -187,7 +189,6 @@
   ],
   "metadata": {
     "originId": "LAEVATAIN",
-    "id": "SEETHE",
     "icon": "skills/combo_laevatain.png"
   },
   "onTriggerClause": [
@@ -209,5 +210,6 @@
         }
       ]
     }
-  ]
+  ],
+  "clauseType": "ALL"
 }

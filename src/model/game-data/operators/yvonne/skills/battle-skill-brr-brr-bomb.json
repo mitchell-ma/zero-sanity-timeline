@@ -4,7 +4,8 @@
     "description": "Throws a freezing bomb. The bomb explodes when it hits the enemy to deal Cryo DMG. If hitting an enemy with Cryo Infliction or Nature Infliction, then consume all Arts Infliction stacks, forcibly apply Solidification, and deal Cryo DMG to the target based on the number of stacks consumed.\nAfter the battle skill successfully applies Solidification, Yvonne gains additional Ultimate Energy based on the number of stacks consumed. This Ultimate Energy Gain effect can only trigger 1 time, even if the skill hits multiple enemies.",
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "BATTLE_SKILL",
-    "element": "CRYO"
+    "element": "CRYO",
+    "id": "BRR_BRR_BOMB"
   },
   "clause": [
     {
@@ -25,7 +26,6 @@
   ],
   "metadata": {
     "originId": "YVONNE",
-    "id": "BRR_BRR_BOMB",
     "icon": "skills/skill_yvonne.png"
   },
   "segments": [
@@ -61,7 +61,7 @@
                 },
                 {
                   "verb": "DEAL",
-                  "adjective": "CRYO",
+                  "objectQualifier": "CRYO",
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
@@ -137,7 +137,8 @@
                 }
               ]
             }
-          ]
+          ],
+          "clauseType": "ALL"
         }
       ],
       "properties": {
@@ -151,5 +152,6 @@
         "element": "CRYO"
       }
     }
-  ]
+  ],
+  "clauseType": "ALL"
 }

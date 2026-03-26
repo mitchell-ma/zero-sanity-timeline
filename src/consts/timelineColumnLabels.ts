@@ -127,6 +127,7 @@ export const REACTION_LABELS: Record<string, { label: string; color: string }> =
   solidification:  { label: t('reaction.solidification'),  color: '#88ddff' },
   corrosion:       { label: t('reaction.corrosion'),       color: '#33cc66' },
   electrification: { label: t('reaction.electrification'), color: '#e8c840' },
+  shatter:         { label: t('reaction.shatter'),         color: '#88ddff' },
 };
 
 export const REACTION_MICRO_COLUMNS = [
@@ -134,6 +135,7 @@ export const REACTION_MICRO_COLUMNS = [
   { id: 'solidification',  label: t('reaction.micro.solidification'), color: '#88ddff' },
   { id: 'corrosion',       label: t('reaction.micro.corrosion'),  color: '#33cc66' },
   { id: 'electrification', label: t('reaction.micro.electrification'),  color: '#e8c840' },
+  { id: 'shatter',         label: t('reaction.micro.shatter'),    color: '#88ddff' },
 ];
 
 // ── Physical infliction / status labels ──────────────────────────────────────

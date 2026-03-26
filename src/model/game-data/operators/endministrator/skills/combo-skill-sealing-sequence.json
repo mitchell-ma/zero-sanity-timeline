@@ -5,7 +5,8 @@
     "windowFrames": 720,
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "COMBO_SKILL",
-    "element": "PHYSICAL"
+    "element": "PHYSICAL",
+    "id": "SEALING_SEQUENCE"
   },
   "clause": [
     {
@@ -93,7 +94,7 @@
                 },
                 {
                   "verb": "DEAL",
-                  "adjective": "PHYSICAL",
+                  "objectQualifier": "PHYSICAL",
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
@@ -172,7 +173,8 @@
                 }
               ]
             }
-          ]
+          ],
+          "clauseType": "ALL"
         }
       ]
     },
@@ -216,7 +218,6 @@
   ],
   "metadata": {
     "originId": "ENDMINISTRATOR",
-    "id": "SEALING_SEQUENCE",
     "icon": "skills/combo_endministrator.png"
   },
   "onTriggerClause": [
@@ -230,5 +231,6 @@
         }
       ]
     }
-  ]
+  ],
+  "clauseType": "ALL"
 }

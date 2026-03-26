@@ -47,9 +47,10 @@ import type { SkillType, SkillDef, EventSegmentData, EventFrameMarker, TimelineE
 import { computeSegmentsSpan } from '../../consts/viewTypes';
 import { THRESHOLD_MAX } from '../../dsl/semantics';
 import type { Interaction, Effect, Predicate } from '../../dsl/semantics';
+import { translateCondition, translateEffectParts, translateNounPhrase } from '../../dsl/semanticsTranslation';
 import { getLeafValue } from '../../controller/calculation/valueResolver';
 import { operatorToCustomOperator, weaponToCustomWeapon, gearSetToCustomGearSet } from '../../controller/custom/builtinToCustomConverter';
-import { getOperatorBase, getOperatorSkill, getOperatorSkills, getOperatorStatuses, getSkillTypeMap as getTypedSkillTypeMap } from '../../controller/gameDataStore';
+import { getOperatorBase, getOperatorPotentialRaw, getOperatorSkill, getOperatorSkills, getOperatorStatuses, getSkillTypeMap as getTypedSkillTypeMap } from '../../controller/gameDataStore';
 import { resolveComboTrigger, resolveUltimateEnergy } from '../../controller/info-pane/loadoutPaneController';
 import { buildSkillEntries } from './OperatorEventEditor';
 import EventBlock from '../EventBlock';
@@ -598,8 +599,8 @@ function effectToText(e: Effect): string {
   const parts: string[] = [];
   parts.push(e.verb.replace(/_/g, ' '));
   if (e.value != null) parts.push(e.value === THRESHOLD_MAX ? 'MAX' : (typeof e.value === 'object' && 'value' in e.value ? String(e.value.value) : String(e.value)));
-  if (e.adjective) {
-    const adjs = Array.isArray(e.adjective) ? e.adjective : [e.adjective];
+  if (e.objectQualifier) {
+    const adjs = Array.isArray(e.objectQualifier) ? e.objectQualifier : [e.objectQualifier];
     parts.push(adjs.map((a) => a.replace(/_/g, ' ')).join(' '));
   }
   if (e.object) parts.push(e.object.replace(/_/g, ' '));
@@ -1063,34 +1064,7 @@ function BuiltinOperatorSkillSection({ operatorId, skillType, skill, onExpandedC
               </div>
             </div>
             {isOpen && (
-              <div className="ops-skill-form">
-                {/* Properties */}
-                <ReadonlyField label="Name" value={entry.data.properties?.name as string} />
-                <ReadonlyField label="Element" value={((entry.data.properties as Record<string, unknown> | undefined)?.element as string) ?? skill.element} />
-                {(() => {
-                  const jsonSegs = (entry.data.segments ?? []) as { properties?: Record<string, unknown> }[];
-                  let activeSec = 0;
-                  let cdSec = 0;
-                  for (const seg of jsonSegs) {
-                    const dur = seg.properties?.duration as { value: unknown; unit: string } | undefined;
-                    const val = dur ? resolveLeaf(dur.value) : null;
-                    const sec = val != null ? (dur!.unit === 'FRAME' ? val / 120 : val) : 0;
-                    const types = (seg.properties?.segmentTypes ?? []) as string[];
-                    if (types.includes('COOLDOWN') || types.includes('IMMEDIATE_COOLDOWN')) {
-                      cdSec += sec;
-                    } else {
-                      activeSec += sec;
-                    }
-                  }
-                  return (
-                    <>
-                      {activeSec > 0 && <ReadonlyField label="Duration" value={`${fmtN(activeSec)}s`} />}
-                      {cdSec > 0 && <ReadonlyField label="Cooldown" value={`${fmtN(cdSec)}s`} />}
-                    </>
-                  );
-                })()}
-
-                {/* Combo trigger (only for combo skills) */}
+              <DataCardBody data={entry.data as unknown as Record<string, unknown>} extraFields={<>
                 {comboTrigger && i === 0 && (
                   <div className="ops-combo-trigger-block">
                     <div className="ops-sub-header">
@@ -1099,8 +1073,6 @@ function BuiltinOperatorSkillSection({ operatorId, skillType, skill, onExpandedC
                     <div className="ops-empty" style={{ fontStyle: 'normal', color: 'var(--text-secondary)' }}>{comboTrigger.description}</div>
                   </div>
                 )}
-
-                {/* Resources */}
                 {skill.skillPointCost != null && <ReadonlyField label="SP Cost" value={String(skill.skillPointCost)} />}
                 {ultEnergy && (
                   <>
@@ -1109,10 +1081,7 @@ function BuiltinOperatorSkillSection({ operatorId, skillType, skill, onExpandedC
                     {ultEnergy.teamGaugeGain != null && ultEnergy.teamGaugeGain > 0 && <ReadonlyField label="Team Gauge" value={String(ultEnergy.teamGaugeGain)} />}
                   </>
                 )}
-
-                {/* Segments as tabs */}
-                <TabbedSegmentView entry={entry} />
-              </div>
+              </>} />
             )}
           </div>
         );
@@ -1267,7 +1236,21 @@ function SkillTimeline({ operatorId, skillType, color, selectedEntryId }: { oper
 
 function resolveLeaf(v: unknown): number | null {
   if (typeof v === 'number') return v;
-  if (v && typeof v === 'object' && 'value' in v) return resolveLeaf((v as Record<string, unknown>).value);
+  if (v && typeof v === 'object' && 'value' in v) {
+    const inner = (v as Record<string, unknown>).value;
+    if (Array.isArray(inner)) return inner.length > 0 ? (inner[0] as number) : null;
+    return resolveLeaf(inner);
+  }
+  return null;
+}
+
+function resolveLeafRange(v: unknown): number[] | null {
+  if (typeof v === 'number') return [v];
+  if (v && typeof v === 'object' && 'value' in v) {
+    const inner = (v as Record<string, unknown>).value;
+    if (Array.isArray(inner)) return inner as number[];
+    return resolveLeafRange(inner);
+  }
   return null;
 }
 
@@ -1276,7 +1259,167 @@ function formatDuration(dur: { value: unknown; unit: string } | undefined): stri
   const val = resolveLeaf(dur.value);
   if (val == null) return '';
   const unit = dur.unit === 'FRAME' ? 'f' : 's';
-  return `${val}${unit}`;
+  return `${fmtN(val)}${unit}`;
+}
+
+/** Unified card body for skills, potentials, talents, and statuses. */
+function DataCardBody({ data, extraFields }: {
+  data: Record<string, unknown>;
+  extraFields?: React.ReactNode;
+}) {
+  const props = (data.properties ?? {}) as Record<string, unknown>;
+  const clause = (data.clause ?? []) as unknown[];
+  const onTrigger = (data.onTriggerClause ?? []) as unknown[];
+  const onEntry = (data.onEntryClause ?? []) as unknown[];
+  const onExit = (data.onExitClause ?? []) as unknown[];
+  const segments = (data.segments ?? []) as unknown[];
+  const hasClauses = clause.length > 0 || onTrigger.length > 0 || onEntry.length > 0 || onExit.length > 0;
+
+  const id = props.id as string | undefined;
+  const name = (props.name ?? '') as string;
+  const element = props.element as string | undefined;
+  const desc = props.description as string | undefined;
+
+  return (
+    <div className="ops-skill-form">
+      {id && <ReadonlyField label="ID" value={id} />}
+      {name && <ReadonlyField label="Name" value={name} />}
+      {element && <ReadonlyField label="Element" value={element} />}
+      {desc && <ReadonlyField label="Description" value={desc} />}
+      <PropertiesView props={props} />
+      {extraFields}
+      {hasClauses && (
+        <ClauseTabs clause={clause} onTrigger={onTrigger} onEntry={onEntry} onExit={onExit} />
+      )}
+      {segments.length > 0 && (
+        <TabbedSegmentView entry={{ id: id ?? 'entry', label: name, data: data as JsonSkillData }} />
+      )}
+    </div>
+  );
+}
+
+const VARY_HEADER_WEIGHT = 3;
+
+/** Keys already rendered explicitly or not useful as standalone property fields. */
+const OMIT_PROPERTY_KEYS = new Set([
+  'id', 'name', 'description', 'eventType', 'eventCategoryType', 'element',
+  'enhancementTypes', 'dependencyTypes', 'segmentTypes', 'windowFrames', 'level',
+  // Determiners are combined with their noun in COMBINED_NOUN_PAIRS
+  'toDeterminer', 'targetDeterminer', 'fromDeterminer',
+]);
+
+/** Noun keys that should be combined with their determiner into a single field. */
+const COMBINED_NOUN_PAIRS: { noun: string; determiner: string; label: string }[] = [
+  { noun: 'to', determiner: 'toDeterminer', label: 'Target' },
+  { noun: 'target', determiner: 'targetDeterminer', label: 'Target' },
+];
+
+function formatPropertyValue(val: unknown): string {
+  if (val == null) return '';
+  if (typeof val === 'string') return val.replace(/_/g, ' ');
+  if (typeof val === 'number' || typeof val === 'boolean') return String(val);
+  if (Array.isArray(val)) return val.map(v => formatPropertyValue(v)).join(', ');
+  if (typeof val === 'object') {
+    const obj = val as Record<string, unknown>;
+    if ('verb' in obj) return formatWithValue(obj);
+    // Duration-like { value, unit }
+    if ('value' in obj && 'unit' in obj) {
+      const inner = formatPropertyValue(obj.value);
+      return `${inner} ${String(obj.unit).replace(/_/g, ' ').toLowerCase()}`;
+    }
+    // Stacks-like { limit, interactionType }
+    const parts: string[] = [];
+    for (const [k, v] of Object.entries(obj)) {
+      parts.push(`${k.replace(/([A-Z])/g, ' $1').toLowerCase().trim()}: ${formatPropertyValue(v)}`);
+    }
+    return parts.join(', ');
+  }
+  return String(val);
+}
+
+function PropertiesView({ props }: { props: Record<string, unknown> }) {
+  const entries = Object.entries(props).filter(([k]) => !OMIT_PROPERTY_KEYS.has(k));
+  if (entries.length === 0) return null;
+
+  // Pre-render combined noun phrases (e.g. to + toDeterminer → "this Operator")
+  const renderedNounKeys = new Set<string>();
+  const combinedFields: { key: string; label: string; value: string }[] = [];
+  for (const { noun, determiner, label } of COMBINED_NOUN_PAIRS) {
+    if (typeof props[noun] === 'string') {
+      combinedFields.push({ key: noun, label, value: translateNounPhrase(props[noun] as string, props[determiner] as string | undefined) });
+      renderedNounKeys.add(noun);
+    }
+  }
+
+  return (
+    <>
+      {combinedFields.map(({ key, label, value }) => (
+        <ReadonlyField key={key} label={label} value={value} />
+      ))}
+      {entries.filter(([k]) => !renderedNounKeys.has(k)).map(([key, val]) => {
+        if (val == null) return null;
+        const label = key.replace(/([A-Z])/g, ' $1').replace(/^./, c => c.toUpperCase()).trim();
+        // VARY_BY tables
+        if (val && typeof val === 'object' && !Array.isArray(val)) {
+          const obj = val as Record<string, unknown>;
+          if (obj.verb === 'VARY_BY' && Array.isArray(obj.value)) {
+            const vals = obj.value as number[];
+            const byLabel = String(obj.object ?? 'LEVEL').replace(/_/g, ' ').toLowerCase();
+            return (
+              <div key={key} className="ops-frame-effect">
+                <div className="ops-frame-effect-sentence"><span className="ops-frame-effect-verb">{label}</span></div>
+                <div className="ops-frame-effect-with"><div className="ops-frame-vary">
+                  <VaryTable headerLabel={byLabel} columnLabels={vals.map((_v, vi) => vi + 1)} rows={[{ label: 'value', values: vals }]} />
+                </div></div>
+              </div>
+            );
+          }
+          // Duration with nested VARY_BY
+          if ('value' in obj && typeof obj.value === 'object' && obj.value && (obj.value as Record<string, unknown>).verb === 'VARY_BY') {
+            const inner = obj.value as Record<string, unknown>;
+            const vals = inner.value as number[];
+            if (Array.isArray(vals)) {
+              const byLabel = String(inner.object ?? 'LEVEL').replace(/_/g, ' ').toLowerCase();
+              const unit = typeof obj.unit === 'string' ? obj.unit.replace(/_/g, ' ').toLowerCase() : '';
+              return (
+                <div key={key} className="ops-frame-effect">
+                  <div className="ops-frame-effect-sentence"><span className="ops-frame-effect-verb">{label}</span></div>
+                  <div className="ops-frame-effect-with"><div className="ops-frame-vary">
+                    <VaryTable headerLabel={byLabel} columnLabels={vals.map((_v, vi) => vi + 1)} rows={[{ label: unit, values: vals }]} />
+                  </div></div>
+                </div>
+              );
+            }
+          }
+        }
+        return <ReadonlyField key={key} label={label} value={formatPropertyValue(val)} />;
+      })}
+    </>
+  );
+}
+
+function VaryTable({ headerLabel, columnLabels, rows, style }: {
+  headerLabel: string;
+  columnLabels: (string | number)[];
+  rows: { label: string; values: (string | number)[] }[];
+  style?: React.CSSProperties;
+}) {
+  const dataCols = columnLabels.length;
+  const totalWeight = VARY_HEADER_WEIGHT + dataCols;
+  const headerPct = `${(VARY_HEADER_WEIGHT / totalWeight) * 100}%`;
+  const dataPct = `${(1 / totalWeight) * 100}%`;
+  return (
+    <table className="ops-frame-vary-table" style={style}>
+      <colgroup>
+        <col style={{ width: headerPct }} />
+        {columnLabels.map((_, i) => <col key={i} style={{ width: dataPct }} />)}
+      </colgroup>
+      <thead><tr><th className="ops-frame-vary-header">{headerLabel}</th>{columnLabels.map((l, i) => <th key={i}>{l}</th>)}</tr></thead>
+      <tbody>{rows.map((r, ri) => (
+        <tr key={ri}><td className="ops-frame-vary-header">{r.label}</td>{r.values.map((v, vi) => <td key={vi}>{v}</td>)}</tr>
+      ))}</tbody>
+    </table>
+  );
 }
 
 function TabbedSegmentView({ entry }: { entry: { id: string; label: string; data: JsonSkillData } }) {
@@ -1377,12 +1520,44 @@ function TabbedSegmentView({ entry }: { entry: { id: string; label: string; data
         ) : (
           <div className="ops-frame-detail ops-frame-detail--accented">
             <div className="ops-frame-accent-label">{seg.properties?.name || `Segment ${safeSeg + 1}`}</div>
-            {durStr && (
-              <div className="ops-frame-prop">
-                <span className="ops-frame-prop-label">Duration</span>
-                <span className="ops-frame-prop-value">{durStr}</span>
-              </div>
-            )}
+            {(() => {
+              const segDur = seg.properties?.duration ?? seg.duration as { value: unknown; unit: string } | undefined;
+              if (!segDur) return null;
+              const range = resolveLeafRange((segDur as { value: unknown }).value);
+              const unit = (segDur as { unit: string }).unit === 'FRAME' ? 'f' : 's';
+              if (range && range.length > 1 && new Set(range).size > 1) {
+                return (
+                  <div className="ops-frame-effect">
+                    <div className="ops-frame-effect-sentence">
+                      <span className="ops-frame-effect-verb">Duration</span>
+                    </div>
+                    <div className="ops-frame-effect-with"><div className="ops-frame-vary">
+                      <VaryTable headerLabel="skill level" columnLabels={range.map((_v, vi) => vi + 1)} rows={[{ label: unit, values: range.map(fmtN) }]} />
+                    </div></div>
+                  </div>
+                );
+              }
+              return durStr ? (
+                <div className="ops-frame-prop">
+                  <span className="ops-frame-prop-label">Duration</span>
+                  <span className="ops-frame-prop-value">{durStr}</span>
+                </div>
+              ) : null;
+            })()}
+            {segFrames.length > 0 && (() => {
+              const totals = sumFrameMultipliers(segFrames);
+              if (totals) return (
+                <div className="ops-frame-effect">
+                  <div className="ops-frame-effect-sentence">
+                    <span className="ops-frame-effect-verb">Total Multiplier</span>
+                  </div>
+                  <div className="ops-frame-effect-with"><div className="ops-frame-vary">
+                    <VaryTable headerLabel="skill level" columnLabels={totals.map((_v, vi) => vi + 1)} rows={[{ label: 'value', values: totals.map(v => Math.round(v * 1000) / 1000) }]} />
+                  </div></div>
+                </div>
+              );
+              return null;
+            })()}
             {segClause && segClause.length > 0 && (
               <div className="ops-seg-clause">
                 <ClauseEditor initialValue={segClause} onChange={() => {}} readOnly />
@@ -1405,7 +1580,7 @@ function TabbedSegmentView({ entry }: { entry: { id: string; label: string; data
                   )}
                   {fEffects.map((ef, ei) => {
                     const verb = String(ef.verb ?? '').replace(/_/g, ' ');
-                    const adj = ef.adjective ? (Array.isArray(ef.adjective) ? (ef.adjective as string[]).join(' ') : String(ef.adjective)).replace(/_/g, ' ') : '';
+                    const adj = ef.objectQualifier ? (Array.isArray(ef.objectQualifier) ? (ef.objectQualifier as string[]).join(' ') : String(ef.objectQualifier)).replace(/_/g, ' ') : '';
                     const obj = String(ef.object ?? '').replace(/_/g, ' ');
                     const to = ef.to ? String(ef.to).replace(/_/g, ' ') : '';
                     return (
@@ -1425,6 +1600,32 @@ function TabbedSegmentView({ entry }: { entry: { id: string; label: string; data
       </div>
     </div>
   );
+}
+
+/** Sum all VARY_BY multiplier arrays across frames in a segment. Returns null if no multipliers found. */
+function sumFrameMultipliers(frames: JsonSkillData[]): number[] | null {
+  let totals: number[] | null = null;
+  for (const f of frames) {
+    const clause = (f.clause ?? []) as unknown as { effects?: Record<string, unknown>[] }[];
+    for (const c of clause) {
+      for (const ef of c.effects ?? []) {
+        const withProps = (ef.with ?? {}) as Record<string, unknown>;
+        for (const val of Object.values(withProps)) {
+          const w = val && typeof val === 'object' ? val as Record<string, unknown> : null;
+          if (w && w.verb === 'VARY_BY' && Array.isArray(w.value)) {
+            const vals = w.value as number[];
+            if (!totals) {
+              totals = new Array(vals.length).fill(0);
+            }
+            for (let i = 0; i < vals.length && i < totals.length; i++) {
+              totals[i] += vals[i];
+            }
+          }
+        }
+      }
+    }
+  }
+  return totals;
 }
 
 function formatWithValue(w: Record<string, unknown>): string {
@@ -1502,10 +1703,9 @@ function FrameDetail({ frame, label }: { frame: JsonSkillData; label?: string })
       {conditions.length > 0 && (
         <div className="ops-frame-conditions">
           <span className="ops-frame-section-label">Conditions</span>
-          {conditions.map((cond, ci) => {
-            const c = cond as Record<string, unknown>;
-            return <div key={ci} className="ops-frame-prop-value">{String(c.verb ?? '').replace(/_/g, ' ')} {String(c.object ?? '').replace(/_/g, ' ')}</div>;
-          })}
+          {conditions.map((cond, ci) => (
+            <div key={ci} className="ops-frame-prop-value">{translateCondition(cond as Record<string, unknown>)}</div>
+          ))}
         </div>
       )}
 
@@ -1513,10 +1713,7 @@ function FrameDetail({ frame, label }: { frame: JsonSkillData; label?: string })
       {effects.length > 0 ? (
         <div className="ops-frame-effects">
           {effects.map((ef, i) => {
-            const verb = String(ef.verb ?? '').replace(/_/g, ' ');
-            const adj = ef.adjective ? (Array.isArray(ef.adjective) ? (ef.adjective as string[]).join(' ') : String(ef.adjective)).replace(/_/g, ' ') : '';
-            const obj = String(ef.object ?? '').replace(/_/g, ' ');
-            const to = ef.to ? String(ef.to).replace(/_/g, ' ') : '';
+            const { verb, object: objStr, target, fromTarget } = translateEffectParts(ef);
             const withProps = (ef.with ?? {}) as Record<string, unknown>;
             const withEntries = Object.entries(withProps);
 
@@ -1524,9 +1721,9 @@ function FrameDetail({ frame, label }: { frame: JsonSkillData; label?: string })
               <div key={i} className="ops-frame-effect">
                 <div className="ops-frame-effect-sentence">
                   <span className="ops-frame-effect-verb">{verb}</span>
-                  {adj && <span className="ops-frame-effect-adj">{adj}</span>}
-                  <span className="ops-frame-effect-obj">{obj}</span>
-                  {to && <><span className="ops-frame-effect-prep">to</span><span className="ops-frame-effect-target">{to}</span></>}
+                  {objStr && <span className="ops-frame-effect-obj">{objStr}</span>}
+                  {target && <span className="ops-frame-effect-prep">{target}</span>}
+                  {fromTarget && <span className="ops-frame-effect-prep">{fromTarget}</span>}
                 </div>
                 {withEntries.length > 0 && (
                   <div className="ops-frame-effect-with">
@@ -1542,20 +1739,7 @@ function FrameDetail({ frame, label }: { frame: JsonSkillData; label?: string })
                         const rowLabel = label.toLowerCase().replace('damage ', '');
                         return (
                           <div key={key} className="ops-frame-vary">
-                            <table className="ops-frame-vary-table">
-                              <thead>
-                                <tr>
-                                  <th className="ops-frame-vary-header">{byLabel}</th>
-                                  {vals.map((_v, vi) => <th key={vi}>{vi + 1}</th>)}
-                                </tr>
-                              </thead>
-                              <tbody>
-                                <tr>
-                                  <td className="ops-frame-vary-header">{rowLabel}</td>
-                                  {vals.map((v, vi) => <td key={vi}>{v}</td>)}
-                                </tr>
-                              </tbody>
-                            </table>
+                            <VaryTable headerLabel={byLabel} columnLabels={vals.map((_v, vi) => vi + 1)} rows={[{ label: rowLabel, values: vals }]} />
                           </div>
                         );
                       }
@@ -1590,20 +1774,13 @@ function ClausePredicateView({ predicate }: { predicate: Record<string, unknown>
       {conditions.length > 0 && (
         <div className="ops-clause-conditions">
           <span className="ops-frame-prop-label">When</span>
-          {conditions.map((c, ci) => {
-            const parts = [c.subject, c.verb, c.adjective, c.object].filter(Boolean).map(v => String(v).replace(/_/g, ' ')).join(' ');
-            const constraint = c.cardinalityConstraint ? `${String(c.cardinalityConstraint).replace(/_/g, ' ')} ${c.value ?? ''}` : '';
-            return <div key={ci} className="ops-clause-condition-text">{parts}{constraint ? ` ${constraint}` : ''}</div>;
-          })}
+          {conditions.map((c, ci) => (
+            <div key={ci} className="ops-clause-condition-text">{translateCondition(c)}</div>
+          ))}
         </div>
       )}
       {effects.map((ef, ei) => {
-        const verb = String(ef.verb ?? '').replace(/_/g, ' ');
-        const adj = ef.adjective ? (Array.isArray(ef.adjective) ? (ef.adjective as string[]).join(' ') : String(ef.adjective)).replace(/_/g, ' ') : '';
-        const obj = String(ef.object ?? '').replace(/_/g, ' ');
-        const objId = ef.objectId ? String(ef.objectId).replace(/_/g, ' ') : '';
-        const to = ef.to ? String(ef.to).replace(/_/g, ' ') : '';
-        const toDet = ef.toDeterminer ? String(ef.toDeterminer).replace(/_/g, ' ') : '';
+        const { verb, object: objStr, target, fromTarget } = translateEffectParts(ef);
         const withProps = (ef.with ?? {}) as Record<string, unknown>;
         const withEntries = Object.entries(withProps);
 
@@ -1611,9 +1788,9 @@ function ClausePredicateView({ predicate }: { predicate: Record<string, unknown>
           <div key={ei} className="ops-frame-effect">
             <div className="ops-frame-effect-sentence">
               <span className="ops-frame-effect-verb">{verb}</span>
-              {adj && <span className="ops-frame-effect-adj">{adj}</span>}
-              <span className="ops-frame-effect-obj">{objId || obj}</span>
-              {to && <><span className="ops-frame-effect-prep">{toDet ? `to ${toDet.toLowerCase()}` : 'to'}</span><span className="ops-frame-effect-target">{to}</span></>}
+              {objStr && <span className="ops-frame-effect-obj">{objStr}</span>}
+              {target && <span className="ops-frame-effect-prep">{target}</span>}
+              {fromTarget && <span className="ops-frame-effect-prep">{fromTarget}</span>}
             </div>
             {withEntries.length > 0 && (
               <div className="ops-frame-effect-with">
@@ -1628,10 +1805,7 @@ function ClausePredicateView({ predicate }: { predicate: Record<string, unknown>
                     const rowLabel = label.toLowerCase().replace('damage ', '');
                     return (
                       <div key={key} className="ops-frame-vary">
-                        <table className="ops-frame-vary-table">
-                          <thead><tr><th className="ops-frame-vary-header">{byLabel}</th>{vals.map((_v, vi) => <th key={vi}>{vi + 1}</th>)}</tr></thead>
-                          <tbody><tr><td className="ops-frame-vary-header">{rowLabel}</td>{vals.map((v, vi) => <td key={vi}>{v}</td>)}</tr></tbody>
-                        </table>
+                        <VaryTable headerLabel={byLabel} columnLabels={vals.map((_v, vi) => vi + 1)} rows={[{ label: rowLabel, values: vals }]} />
                       </div>
                     );
                   }
@@ -1717,11 +1891,6 @@ function BuiltinOperatorStatusesView({ operatorId }: { operatorId: string }) {
         const name = (props?.name as string) ?? (props?.id as string) ?? `Status ${i + 1}`;
         const desc = props?.description as string | undefined;
         const isOpen = openIdxSet.has(i);
-        const clause = (s.clause ?? []) as unknown[];
-        const onTrigger = (s.onTriggerClause ?? []) as unknown[];
-        const onEntry = (s.onEntryClause ?? []) as unknown[];
-        const onExit = (s.onExitClause ?? []) as unknown[];
-        const hasClauses = clause.length > 0 || onTrigger.length > 0 || onEntry.length > 0 || onExit.length > 0;
         return (
           <div key={i} className={`ops-skill-card${isOpen ? ' ops-skill-card--open' : ''}`}>
             <div className="ops-skill-card-header" onClick={() => setOpenIdxSet(prev => { const next = new Set(prev); if (next.has(i)) next.delete(i); else next.add(i); return next; })}>
@@ -1734,16 +1903,7 @@ function BuiltinOperatorStatusesView({ operatorId }: { operatorId: string }) {
                 {desc && <span className="ops-skill-card-desc">{desc}</span>}
               </div>
             </div>
-            {isOpen && (
-              <div className="ops-skill-form">
-                <ReadonlyField label="Name" value={name} />
-                {typeof props?.element === 'string' && <ReadonlyField label="Element" value={props.element} />}
-                {desc && <ReadonlyField label="Description" value={desc} />}
-                {hasClauses && (
-                  <ClauseTabs clause={clause} onTrigger={onTrigger} onEntry={onEntry} onExit={onExit} />
-                )}
-              </div>
-            )}
+            {isOpen && <DataCardBody data={s} />}
           </div>
         );
       })}
@@ -1779,6 +1939,7 @@ const VIEWER_SKILL_TAB_LABELS: Record<string, string> = {
 function BuiltinOperatorView({ id }: { id: string }) {
   const op = ALL_OPERATORS.find((o) => o.id === id);
   const opBase = useMemo(() => getOperatorBase(id), [id]);
+  const rawPotentials = useMemo(() => getOperatorPotentialRaw(id), [id]);
   const [activeCategory, setActiveCategory] = useState<'skills' | 'potentials' | 'talents' | 'statuses'>('skills');
   const [activeSkillTab, setActiveSkillTab] = useState<string>('basic');
   const [openPotentials, setOpenPotentials] = useState<Set<number>>(new Set());
@@ -1924,13 +2085,10 @@ function BuiltinOperatorView({ id }: { id: string }) {
                     )}
                   </div>
                 </div>
-                {isOpen && (
-                  <div className="ops-skill-form">
-                    <ReadonlyField label="Name" value={pot.name} />
-                    <ReadonlyField label="Level" value={`P${pot.level}`} />
-                    {potTyped.description && <ReadonlyField label="Description" value={potTyped.description} />}
-                  </div>
-                )}
+                {isOpen && (() => {
+                  const raw = rawPotentials[i] as Record<string, unknown> | undefined;
+                  return raw ? <DataCardBody data={raw} /> : null;
+                })()}
               </div>
             );
           }) : <div className="ops-empty">No potential data available</div>
@@ -1946,11 +2104,6 @@ function BuiltinOperatorView({ id }: { id: string }) {
             const name = (props.name as string) ?? (props.id as string) ?? `Talent ${i + 1}`;
             const desc = props.description as string | undefined;
             const isOpen = openTalents.has(i);
-            const clause = (s.clause ?? []) as unknown[];
-            const onTrigger = (s.onTriggerClause ?? []) as unknown[];
-            const onEntry = (s.onEntryClause ?? []) as unknown[];
-            const onExit = (s.onExitClause ?? []) as unknown[];
-            const hasClauses = clause.length > 0 || onTrigger.length > 0 || onEntry.length > 0 || onExit.length > 0;
             return (
               <div key={i} className={`ops-skill-card${isOpen ? ' ops-skill-card--open' : ''}`}>
                 <div className="ops-skill-card-header" onClick={() => setOpenTalents(prev => { const next = new Set(prev); if (next.has(i)) next.delete(i); else next.add(i); return next; })}>
@@ -1963,16 +2116,7 @@ function BuiltinOperatorView({ id }: { id: string }) {
                     {desc && <span className="ops-skill-card-desc">{desc}</span>}
                   </div>
                 </div>
-                {isOpen && (
-                  <div className="ops-skill-form">
-                    <ReadonlyField label="Name" value={name} />
-                    {typeof props.element === 'string' && <ReadonlyField label="Element" value={props.element} />}
-                    {desc && <ReadonlyField label="Description" value={desc} />}
-                    {hasClauses && (
-                      <ClauseTabs clause={clause} onTrigger={onTrigger} onEntry={onEntry} onExit={onExit} />
-                    )}
-                  </div>
-                )}
+                {isOpen && <DataCardBody data={s} />}
               </div>
             );
           }) : <div className="ops-empty">No talent data available</div>;
@@ -2284,22 +2428,12 @@ function BuiltinGearSetView({ id }: { id: string }) {
                 <div className="ops-skill-form">
                   <ReadonlyField label="Defense" value={String(p.defense)} />
                   {statKeys.length > 0 && (
-                    <table className="ops-frame-vary-table" style={{ marginTop: '0.25rem' }}>
-                      <thead>
-                        <tr>
-                          <th className="ops-frame-vary-header">Rank</th>
-                          {ranks.map(r => <th key={r}>R{r}</th>)}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {statKeys.map(stat => (
-                          <tr key={stat}>
-                            <td className="ops-frame-vary-header">{stat.replace(/_/g, ' ')}</td>
-                            {ranks.map(r => <td key={r}>{formatStatVal(stat, p.allLevels[r][stat])}</td>)}
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                    <VaryTable
+                      style={{ marginTop: '0.25rem' }}
+                      headerLabel="Rank"
+                      columnLabels={ranks.map(r => `R${r}`)}
+                      rows={statKeys.map(stat => ({ label: stat.replace(/_/g, ' '), values: ranks.map(r => formatStatVal(stat, p.allLevels[r][stat])) }))}
+                    />
                   )}
                 </div>
               )}

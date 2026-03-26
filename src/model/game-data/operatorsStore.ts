@@ -281,8 +281,9 @@ function convertDslEffect(eff: Record<string, unknown>): PotentialEffect | null 
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function loadPotentialsFromFiles(context: any, operatorDir: string): ResolvedPotential[] {
+function loadPotentialsFromFiles(context: any, operatorDir: string): { resolved: ResolvedPotential[]; raw: Record<string, unknown>[] } {
   const potentials: ResolvedPotential[] = [];
+  const rawPotentials: Record<string, unknown>[] = [];
   for (const key of context.keys()) {
     const match = key.match(new RegExp(`^\\./${operatorDir}/potentials/potential-(\\d+)-`));
     if (!match) continue;
@@ -290,6 +291,8 @@ function loadPotentialsFromFiles(context: any, operatorDir: string): ResolvedPot
     const props = (json.properties ?? {}) as Record<string, unknown>;
     const level = (props.level ?? parseInt(match[1])) as number;
     if (!level) continue;
+
+    rawPotentials.push(json);
 
     const allClauses = [
       ...((json.clause ?? []) as { effects?: Record<string, unknown>[] }[]),
@@ -310,7 +313,10 @@ function loadPotentialsFromFiles(context: any, operatorDir: string): ResolvedPot
       effects,
     });
   }
-  return potentials.sort((a, b) => a.level - b.level);
+  return {
+    resolved: potentials.sort((a, b) => a.level - b.level),
+    raw: rawPotentials.sort((a, b) => ((a.properties as Record<string, unknown>)?.level as number ?? 0) - ((b.properties as Record<string, unknown>)?.level as number ?? 0)),
+  };
 }
 
 // ── Talent file → TalentEntry resolution ────────────────────────────────────
@@ -358,14 +364,16 @@ function resolveTalentRefs(
 
 // ── Loader ──────────────────────────────────────────────────────────────────
 
-/** All operators indexed by camelCase ID (e.g. "laevatain"). */
+/** All operators indexed by JSON id (e.g. "LAEVATAIN"). */
 const operatorCache = new Map<string, OperatorBase>();
 /** Name → ID index. */
 const operatorNameIndex = new Map<string, string>();
-/** OperatorType (UPPER_CASE) → camelCase ID index. */
-const operatorTypeIndex = new Map<string, string>();
+/** Directory name (kebab-case) → JSON id mapping for cross-store resolution. */
+const dirToIdIndex = new Map<string, string>();
 /** Custom operator overlay (takes priority over built-in). */
 const customOperatorCache = new Map<string, OperatorBase>();
+/** Raw potential JSON data indexed by operator JSON id. */
+const potentialRawCache = new Map<string, Record<string, unknown>[]>();
 
 const operatorContext = require.context('./operators', true, /\/[^/]+\/[^/]+\.json$/);
 for (const key of operatorContext.keys()) {
@@ -376,11 +384,11 @@ for (const key of operatorContext.keys()) {
   // Skip subdirectory files (potentials, skills, statuses, talents)
   if (key.includes('/potentials/') || key.includes('/skills/') || key.includes('/statuses/') || key.includes('/talents/')) continue;
 
-  const operatorId = filenameToCamelCase(match[1]);
+  const dirName = match[1];
   const json = operatorContext(key) as Record<string, unknown>;
 
   // Load potentials from separate files instead of inline data
-  const potentials = loadPotentialsFromFiles(operatorContext, match[1]);
+  const { resolved: potentials, raw: rawPotentials } = loadPotentialsFromFiles(operatorContext, dirName);
   if (potentials.length > 0) {
     json.potentials = potentials;
   }
@@ -389,7 +397,7 @@ for (const key of operatorContext.keys()) {
   // Clone talents to avoid mutating the shared JSON module
   let resolvedJson: Record<string, unknown> = json;
   if (json.talents) {
-    const talentMap = loadTalentsFromFiles(operatorContext, match[1]);
+    const talentMap = loadTalentsFromFiles(operatorContext, dirName);
     const resolvedTalents = { ...(json.talents as Record<string, unknown>) };
     resolveTalentRefs(resolvedTalents, talentMap);
     resolvedJson = { ...json, talents: resolvedTalents };
@@ -397,23 +405,35 @@ for (const key of operatorContext.keys()) {
 
   const operator = OperatorBase.deserialize(resolvedJson, key);
   if (operator.id) {
+    const operatorId = operator.id;
     operator.icon = resolveOperatorIcon(operator.name);
     operatorCache.set(operatorId, operator);
     operatorNameIndex.set(operator.name, operatorId);
-    operatorTypeIndex.set(operator.id, operatorId);
+    dirToIdIndex.set(dirName, operatorId);
+    if (rawPotentials.length > 0) {
+      potentialRawCache.set(operatorId, rawPotentials);
+    }
   }
 }
 
-/** Get an operator by camelCase ID (e.g. "laevatain"). Checks custom first. */
+/** Get an operator by JSON id (e.g. "LAEVATAIN"). Checks custom first. */
 export function getOperatorBase(operatorId: string): OperatorBase | undefined {
   return customOperatorCache.get(operatorId) ?? operatorCache.get(operatorId);
 }
 
-/** Get an operator by UPPER_CASE operatorType (e.g. "LAEVATAIN"). */
+/** Get raw potential JSON data for an operator by JSON id. */
+export function getOperatorPotentialRaw(operatorId: string): readonly Record<string, unknown>[] {
+  return potentialRawCache.get(operatorId) ?? [];
+}
+
+/** Resolve a directory name (kebab-case) to JSON operator id. */
+export function resolveOperatorDirToId(dirName: string): string | undefined {
+  return dirToIdIndex.get(dirName);
+}
+
+/** @deprecated Use getOperatorBase — operator IDs are now JSON ids. */
 export function getOperatorBaseByType(operatorType: string): OperatorBase | undefined {
-  const id = operatorTypeIndex.get(operatorType);
-  if (!id) return undefined;
-  return getOperatorBase(id);
+  return getOperatorBase(operatorType);
 }
 
 /** Get operator ID by display name. */
@@ -459,7 +479,6 @@ export function registerCustomOperatorBase(operatorId: string, json: Record<stri
   operator.icon = icon ?? resolveOperatorIcon(operator.name);
   customOperatorCache.set(operatorId, operator);
   operatorNameIndex.set(operator.name, operatorId);
-  operatorTypeIndex.set(operator.id, operatorId);
   return operator;
 }
 
@@ -471,10 +490,6 @@ export function deregisterCustomOperatorBase(operatorId: string): void {
     if (operatorNameIndex.get(operator.name) === operatorId) {
       operatorNameIndex.delete(operator.name);
       operatorCache.forEach((o, id) => { if (o.name === operator.name) operatorNameIndex.set(o.name, id); });
-    }
-    if (operatorTypeIndex.get(operator.id) === operatorId) {
-      operatorTypeIndex.delete(operator.id);
-      operatorCache.forEach((o, id) => { if (o.id === operator.id) operatorTypeIndex.set(o.id, id); });
     }
   }
 }

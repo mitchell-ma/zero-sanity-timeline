@@ -207,7 +207,7 @@ function InteractionLine({ interaction }: { interaction: Interaction }) {
 /** Renders a single Effect with syntax coloring, including nested child effects. */
 function EffectLine({ effect, depth = 0 }: { effect: Effect; depth?: number }) {
   const fmt = (s: string) => s.replace(/_/g, ' ');
-  const adjs = effect.adjective ? (Array.isArray(effect.adjective) ? effect.adjective : [effect.adjective]) : [];
+  const adjs = effect.objectQualifier ? (Array.isArray(effect.objectQualifier) ? effect.objectQualifier : [effect.objectQualifier]) : [];
 
   return (
     <div style={{ paddingLeft: 8 + depth * 10 }}>

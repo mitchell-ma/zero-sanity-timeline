@@ -10,6 +10,7 @@
 
 import { PhysicalStatusType, StatusType } from '../../consts/enums';
 import { SkillType } from '../../consts/viewTypes';
+import { FPS } from '../../utils/timeline';
 
 // ── Owner IDs ─────────────────────────────────────────────────────────────
 
@@ -50,6 +51,7 @@ export const REACTION_COLUMNS = {
   SOLIDIFICATION:   'solidification',
   CORROSION:        'corrosion',
   ELECTRIFICATION:  'electrification',
+  SHATTER:          'shatter',
 } as const;
 
 /** Maps infliction columnId → arts reaction columnId. */
@@ -60,7 +62,7 @@ export const INFLICTION_TO_REACTION: Record<string, string> = {
   [INFLICTION_COLUMNS.ELECTRIC]: REACTION_COLUMNS.ELECTRIFICATION,
 };
 
-export const REACTION_COLUMN_IDS = new Set(Object.values(INFLICTION_TO_REACTION));
+export const REACTION_COLUMN_IDS = new Set([...Object.values(INFLICTION_TO_REACTION), REACTION_COLUMNS.SHATTER]);
 
 // ── Physical infliction columns ───────────────────────────────────────────
 
@@ -146,6 +148,7 @@ export const FORCED_REACTION_COLUMN: Record<string, string> = {
 export const TEAM_STATUS_COLUMN: Record<string, string> = {
   SQUAD_BUFF: 'team-status',
   [StatusType.LINK]: 'team-status',
+  OVERCLOCKED_MOMENT_AMP: 'team-status',
 };
 
 /** Default active duration for derived reaction events (20s at 120fps). */
@@ -175,5 +178,8 @@ export const PHYSICAL_INFLICTION_DURATION = 2400;
 
 /** P5 link extension: extra frames added to link duration when operator potential >= 5. */
 export const P5_LINK_EXTENSION_FRAMES = 600; // 5s at 120fps
+
+/** Shatter reaction duration (2s at 120fps). */
+export const SHATTER_DURATION = 2 * FPS;
 
 

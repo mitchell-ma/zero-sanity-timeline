@@ -4,7 +4,8 @@
     "description": "After controlled operator gets attacked and drops below {trigger_hp_ratio:0%} HP. Snowshine throws a Snowfield SAR Assistant at the controlled operator. Upon target contact, the Assistant gives massive instant HP Treatment to nearby operators as well as continuous HP Treatment to operators in the area of effect. The attribute of Will increases the amount of HP treatment.",
     "windowFrames": 720,
     "eventType": "COMBAT_SKILL",
-    "eventCategoryType": "COMBO_SKILL"
+    "eventCategoryType": "COMBO_SKILL",
+    "id": "POLAR_RESCUE"
   },
   "clause": [
     {
@@ -187,7 +188,8 @@
                 }
               ]
             }
-          ]
+          ],
+          "clauseType": "ALL"
         }
       ]
     },
@@ -231,7 +233,6 @@
   ],
   "metadata": {
     "originId": "SNOWSHINE",
-    "id": "POLAR_RESCUE",
     "icon": "skills/combo_snowshine.png"
   },
   "onTriggerClause": [
@@ -250,5 +251,6 @@
         }
       ]
     }
-  ]
+  ],
+  "clauseType": "ALL"
 }

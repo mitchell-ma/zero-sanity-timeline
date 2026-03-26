@@ -4,7 +4,8 @@
     "description": "Alesh hooks a fin of unbelievable size and slams it to deal Cryo DMG and apply Cryo Infliction to enemies in a large area of effect in front of him. He recovers some SP on hit, with additional SP gained for each target defeated.",
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "ULTIMATE_SKILL",
-    "element": "CRYO"
+    "element": "CRYO",
+    "id": "ONE_MONSTER_CATCH"
   },
   "clause": [
     {
@@ -111,7 +112,7 @@
                 {
                   "verb": "APPLY",
                   "object": "INFLICTION",
-                  "adjective": "CRYO",
+                  "objectQualifier": "CRYO",
                   "to": "ENEMY",
                   "with": {
                     "stacks": {
@@ -122,7 +123,7 @@
                 },
                 {
                   "verb": "DEAL",
-                  "adjective": "CRYO",
+                  "objectQualifier": "CRYO",
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
@@ -174,14 +175,15 @@
                 }
               ]
             }
-          ]
+          ],
+          "clauseType": "ALL"
         }
       ]
     }
   ],
   "metadata": {
     "originId": "ALESH",
-    "id": "ONE_MONSTER_CATCH",
     "icon": "skills/ult_alesh.png"
-  }
+  },
+  "clauseType": "ALL"
 }

@@ -16,7 +16,7 @@ import { checkKeys, VALID_VALUE_NODE_KEYS, VALID_CLAUSE_KEYS, VALID_METADATA_KEY
 export interface ClauseEffect {
   verb: string;
   object: string;
-  adjective?: string;
+  objectQualifier?: string;
   to?: string;
   toDeterminer?: string;
   with?: Record<string, ValueNode>;
@@ -39,12 +39,12 @@ export interface DurationConfig {
 
 // ── Validation ──────────────────────────────────────────────────────────────
 
-const VALID_EFFECT_KEYS = new Set(['verb', 'object', 'adjective', 'to', 'toDeterminer', 'with', 'objectId']);
+const VALID_EFFECT_KEYS = new Set(['verb', 'object', 'objectQualifier', 'to', 'toDeterminer', 'with', 'objectId']);
 const VALID_EFFECT_WITH_KEYS = new Set(['value']);
 const VALID_DURATION_KEYS = new Set(['value', 'unit']);
 const VALID_STATUS_LEVEL_KEYS = new Set(['limit', 'interactionType']);
 const VALID_PROPERTIES_KEYS = new Set(['id', 'name', 'description', 'to', 'toDeterminer', 'duration', 'stacks', 'eventType', 'eventCategoryType']);
-const VALID_TOP_KEYS = new Set(['clause', 'properties', 'metadata']);
+const VALID_TOP_KEYS = new Set(['clause', 'clauseType', 'properties', 'metadata']);
 
 function validateValueNode(wv: Record<string, unknown>, path: string): string[] {
   const errors = checkKeys(wv, VALID_VALUE_NODE_KEYS, path);

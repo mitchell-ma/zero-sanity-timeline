@@ -5,7 +5,8 @@
     "windowFrames": 720,
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "COMBO_SKILL",
-    "element": "PHYSICAL"
+    "element": "PHYSICAL",
+    "id": "TIMELY_SUPPRESSION"
   },
   "clause": [
     {
@@ -93,7 +94,7 @@
                 },
                 {
                   "verb": "DEAL",
-                  "adjective": "PHYSICAL",
+                  "objectQualifier": "PHYSICAL",
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
@@ -177,7 +178,8 @@
                 }
               ]
             }
-          ]
+          ],
+          "clauseType": "ALL"
         }
       ]
     },
@@ -221,7 +223,6 @@
   ],
   "metadata": {
     "originId": "CATCHER",
-    "id": "TIMELY_SUPPRESSION",
     "icon": "skills/combo_catcher.png"
   },
   "onTriggerClause": [
@@ -234,5 +235,6 @@
         }
       ]
     }
-  ]
+  ],
+  "clauseType": "ALL"
 }

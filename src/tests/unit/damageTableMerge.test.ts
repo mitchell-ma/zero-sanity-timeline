@@ -202,8 +202,8 @@ describe('buildCollapsedColumns', () => {
       { key: 's2-basic', label: 'BASIC', ownerId: 'slot2', columnId: 'basic', color: '#0f0' },
     ];
     const slots = [
-      { slotId: 'slot1', operator: { id: 'laevatain', name: 'Laevatain', color: '#f00' } },
-      { slotId: 'slot2', operator: { id: 'akekuri', name: 'Akekuri', color: '#0f0' } },
+      { slotId: 'slot1', operator: { id: 'LAEVATAIN', name: 'Laevatain', color: '#f00' } },
+      { slotId: 'slot2', operator: { id: 'AKEKURI', name: 'Akekuri', color: '#0f0' } },
     ] as Slot[];
 
     const collapsed = buildCollapsedColumns(tableColumns, slots);
@@ -220,8 +220,8 @@ describe('buildCollapsedColumns', () => {
       { key: 's1-basic', label: 'BASIC', ownerId: 'slot1', columnId: 'basic', color: '#f00' },
     ];
     const slots = [
-      { slotId: 'slot1', operator: { id: 'laevatain', name: 'Laevatain', color: '#f00' } },
-      { slotId: 'slot2', operator: { id: 'akekuri', name: 'Akekuri', color: '#0f0' } },
+      { slotId: 'slot1', operator: { id: 'LAEVATAIN', name: 'Laevatain', color: '#f00' } },
+      { slotId: 'slot2', operator: { id: 'AKEKURI', name: 'Akekuri', color: '#0f0' } },
     ] as Slot[];
 
     const collapsed = buildCollapsedColumns(tableColumns, slots);

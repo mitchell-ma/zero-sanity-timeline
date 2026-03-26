@@ -5,7 +5,8 @@
     ],
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "BATTLE_SKILL",
-    "element": "NATURE"
+    "element": "NATURE",
+    "id": "DOLLY_RUSH_EMPOWERED"
   },
   "segments": [
     {
@@ -103,7 +104,7 @@
                 {
                   "verb": "DEAL",
                   "object": "DAMAGE",
-                  "adjective": "NATURE",
+                  "objectQualifier": "NATURE",
                   "to": "ENEMY",
                   "with": {
                     "multiplier": {
@@ -127,7 +128,8 @@
                 }
               ]
             }
-          ]
+          ],
+          "clauseType": "ALL"
         }
       ],
       "properties": {
@@ -143,7 +145,6 @@
     }
   ],
   "metadata": {
-    "id": "DOLLY_RUSH_EMPOWERED",
     "icon": "skills/skill_ardelia.png"
   }
 }

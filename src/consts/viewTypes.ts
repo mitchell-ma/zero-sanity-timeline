@@ -138,12 +138,16 @@ export interface EventFrameMarker {
   duplicateTriggerSource?: boolean;
   /** DSL v2 clause predicates (conditional + unconditional effect groups). */
   clauses?: readonly FrameClausePredicate[];
+  /** Clause evaluation mode: 'FIRST_MATCH' stops after first matching conditional; default 'ALL'. */
+  clauseType?: string;
   /** Inline DEAL DAMAGE data (element + per-level multipliers). */
   dealDamage?: FrameDealDamage;
   /** Frame type classifications (defaults to [NORMAL]). */
   frameTypes?: EventFrameType[];
   /** Frame dependency types. */
   dependencyTypes?: string[];
+  /** User-supplied parameters available as VARY_BY dimensions on this frame (e.g. { VARY_BY: ['ENEMY_HIT'] }). */
+  suppliedParameters?: Record<string, { id: string; name: string; lowerRange: number; upperRange: number; default: number }[]>;
   /** Whether this frame scored a critical hit (runtime state for simulation mode). */
   isCrit?: boolean;
   /** Template SP recovery for this frame when it is the final strike (from model data). */
@@ -187,11 +191,13 @@ export interface EventSegmentData {
     timeDependency?: TimeDependency;
     /** How this segment interacts with other timelines (e.g. TIME_STOP). */
     timeInteractionType?: string;
+    /** User-supplied parameters available as VARY_BY dimensions on this segment. */
+    suppliedParameters?: Record<string, { id: string; name: string; lowerRange: number; upperRange: number; default: number }[]>;
   };
   /** Damage frame markers within this segment. */
   frames?: EventFrameMarker[];
   /** Clause effects active during this segment (from JSON clause data). */
-  clause?: { conditions: Record<string, unknown>[]; effects: { verb: string; adjective?: string; object: string; nounAdjunct?: string; toDeterminer?: string; to?: string; ofDeterminer?: string; ofObject?: string }[] }[];
+  clause?: { conditions: Record<string, unknown>[]; effects: { verb: string; objectQualifier?: string; object: string; nounQualifier?: string; toDeterminer?: string; to?: string; ofDeterminer?: string; ofObject?: string }[] }[];
   /** Catch-all for domain-specific fields not part of the core segment model. */
   unknown?: Record<string, unknown>;
 }
@@ -226,6 +232,8 @@ export interface TimelineEvent {
   gaugeGainByEnemies?: Record<number, number>;
   /** Number of enemies hit (selectable in info pane when gaugeGainByEnemies exists). */
   enemiesHit?: number;
+  /** User-supplied parameters available as VARY_BY dimensions on this event. */
+  suppliedParameters?: Record<string, { id: string; name: string; lowerRange: number; upperRange: number; default: number }[]>;
   /** Susceptibility bonuses applied by this status event (e.g. Focus), keyed by ElementType → resolved percentage. */
   susceptibility?: Partial<Record<ElementType, number>>;
   /** For combo events: the trigger source's columnId (e.g. 'heatInfliction', 'BREACH'). */

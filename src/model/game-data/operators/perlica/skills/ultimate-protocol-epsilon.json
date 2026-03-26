@@ -4,7 +4,8 @@
     "description": "Tele-protocols a massive piece of orbital debris into the battlefield with devastating impact. All enemies in the area of effect suffer massive Electric DMG.",
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "ULTIMATE_SKILL",
-    "element": "ELECTRIC"
+    "element": "ELECTRIC",
+    "id": "PROTOCOL_EPSILON"
   },
   "clause": [
     {
@@ -89,7 +90,7 @@
               "effects": [
                 {
                   "verb": "DEAL",
-                  "adjective": "ELECTRIC",
+                  "objectQualifier": "ELECTRIC",
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
@@ -117,14 +118,15 @@
                 }
               ]
             }
-          ]
+          ],
+          "clauseType": "ALL"
         }
       ]
     }
   ],
   "metadata": {
     "originId": "PERLICA",
-    "id": "PROTOCOL_EPSILON",
     "icon": "skills/ult_perlica.png"
-  }
+  },
+  "clauseType": "ALL"
 }

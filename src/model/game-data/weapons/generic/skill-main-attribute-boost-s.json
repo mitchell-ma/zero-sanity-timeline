@@ -40,7 +40,6 @@
     "originId": "game",
     "dataSources": [
       "ENDFIELD_WIKI"
-    ],
-    "id": "MAIN_ATTRIBUTE_BOOST_S"
+    ]
   }
 }

@@ -5,7 +5,8 @@
     "windowFrames": 720,
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "COMBO_SKILL",
-    "element": "PHYSICAL"
+    "element": "PHYSICAL",
+    "id": "FLASH_AND_DASH"
   },
   "clause": [
     {
@@ -106,7 +107,7 @@
                 },
                 {
                   "verb": "DEAL",
-                  "adjective": "PHYSICAL",
+                  "objectQualifier": "PHYSICAL",
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
@@ -134,7 +135,8 @@
                 }
               ]
             }
-          ]
+          ],
+          "clauseType": "ALL"
         },
         {
           "metadata": {
@@ -176,7 +178,7 @@
                 },
                 {
                   "verb": "DEAL",
-                  "adjective": "PHYSICAL",
+                  "objectQualifier": "PHYSICAL",
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
@@ -204,7 +206,8 @@
                 }
               ]
             }
-          ]
+          ],
+          "clauseType": "ALL"
         }
       ]
     },
@@ -248,7 +251,6 @@
   ],
   "metadata": {
     "originId": "AKEKURI",
-    "id": "FLASH_AND_DASH",
     "icon": "skills/combo_akekuri.png"
   },
   "onTriggerClause": [
@@ -270,5 +272,6 @@
         }
       ]
     }
-  ]
+  ],
+  "clauseType": "ALL"
 }

@@ -7,11 +7,11 @@
     "description": "Basic attack performed near a Staggered enemy becomes a finisher that deals massive Nature DMG and recovers some SP.",
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "BASIC_ATTACK",
-    "element": "NATURE"
+    "element": "NATURE",
+    "id": "BEAM_COHESION_ARTS_FINISHER"
   },
   "metadata": {
     "originId": "GILBERTA",
-    "id": "BEAM_COHESION_ARTS_FINISHER",
     "icon": "skills/attack_orbiter.png"
   },
   "segments": [
@@ -33,7 +33,7 @@
               "effects": [
                 {
                   "verb": "DEAL",
-                  "adjective": "NATURE",
+                  "objectQualifier": "NATURE",
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
@@ -64,7 +64,8 @@
           ],
           "frameTypes": [
             "FINISHER"
-          ]
+          ],
+          "clauseType": "ALL"
         }
       ],
       "properties": {

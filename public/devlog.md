@@ -1,5 +1,8 @@
 # Devlog
 
+## 2026-03-25
+- Internal data format cleanup — skill and status data across all operators now uses consistent field naming, improving reliability of effect resolution and display
+
 ## 2026-03-24
 - Combo skills can now be triggered by physical statuses (Lift, Breach, Knock Down, Crush) in addition to elemental inflictions — Antal's combo correctly activates when an ally applies Lift to an enemy with Focus
 - Combo trigger duplication now works for physical statuses — when a combo duplicates its trigger source, it properly re-applies the physical status (e.g. adding Vulnerable) instead of only working for elemental inflictions

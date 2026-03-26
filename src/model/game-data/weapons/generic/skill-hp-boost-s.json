@@ -40,7 +40,6 @@
     "originId": "game",
     "dataSources": [
       "ENDFIELD_WIKI"
-    ],
-    "id": "HP_BOOST_S"
+    ]
   }
 }

@@ -7,11 +7,11 @@
     "description": "Basic attack performed near a Staggered enemy becomes a finisher that deals massive Heat DMG and recovers some SP.",
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "BASIC_ATTACK",
-    "element": "HEAT"
+    "element": "HEAT",
+    "id": "RAPID_FIRE_AKIMBO_FINISHER"
   },
   "metadata": {
     "originId": "WULFGARD",
-    "id": "RAPID_FIRE_AKIMBO_FINISHER",
     "icon": "skills/attack_guns.png"
   },
   "segments": [
@@ -33,7 +33,7 @@
               "effects": [
                 {
                   "verb": "DEAL",
-                  "adjective": "HEAT",
+                  "objectQualifier": "HEAT",
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
@@ -64,7 +64,8 @@
           ],
           "frameTypes": [
             "FINISHER"
-          ]
+          ],
+          "clauseType": "ALL"
         }
       ],
       "properties": {

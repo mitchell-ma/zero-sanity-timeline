@@ -106,36 +106,46 @@ export function computeStatusViewOverrides(
     for (const [columnId, typeEvents] of Array.from(byType.entries())) {
       if (REACTION_COLUMN_IDS.has(columnId)) continue;
 
-      // Exclude consumed events — they already have correct durations and
-      // should not cause visual truncation of active events before them.
       const active = typeEvents.filter((ev) => ev.eventStatus !== EventStatusType.CONSUMED);
-      const sorted = [...active].sort((a, b) => a.startFrame - b.startFrame || a.uid.localeCompare(b.uid));
-      if (sorted.length === 0) continue;
-      const baseName = INFLICTION_EVENT_LABELS[columnId] ?? INFLICTION_EVENT_LABELS[sorted[0].name] ?? sorted[0].name;
+      // Include all events (including consumed) for labeling — consumed events
+      // with recorded stacks still need their stack label for display.
+      const allSorted = [...typeEvents].sort((a, b) => a.startFrame - b.startFrame || a.uid.localeCompare(b.uid));
+      const activeSorted = [...active].sort((a, b) => a.startFrame - b.startFrame || a.uid.localeCompare(b.uid));
+      if (allSorted.length === 0) continue;
+      const baseName = INFLICTION_EVENT_LABELS[columnId] ?? INFLICTION_EVENT_LABELS[allSorted[0].name] ?? allSorted[0].name;
 
-      const singleInstance = isSingleInstanceStatus(sorted[0].name);
-      const stackable = isStackableStatus(sorted[0].name);
+      const singleInstance = isSingleInstanceStatus(allSorted[0].name);
+      const stackable = isStackableStatus(allSorted[0].name);
 
-      if (sorted.length <= 1 && !stackable) continue;
+      const hasRecordedStacks = allSorted.some((ev) => ev.stacks != null);
+      if (allSorted.length <= 1 && !stackable && !hasRecordedStacks) continue;
 
-      for (let i = 0; i < sorted.length; i++) {
-        const ev = sorted[i];
-        let activeEarlier = 0;
-        for (let j = 0; j < i; j++) {
-          const prev = sorted[j];
-          const prevEnd = eventEndFrame(prev);
-          if (prevEnd > ev.startFrame) activeEarlier++;
+      for (const ev of allSorted) {
+        // Use stacks recorded at creation time; fall back to dynamic position from active events
+        let position: number;
+        if (ev.stacks != null) {
+          position = ev.stacks;
+        } else {
+          let activeEarlier = 0;
+          for (const prev of activeSorted) {
+            if (prev.uid === ev.uid) break;
+            if (eventEndFrame(prev) > ev.startFrame) activeEarlier++;
+          }
+          position = activeEarlier + 1;
         }
-        const position = activeEarlier + 1;
 
         const override: StatusViewOverride = {
           label: singleInstance ? baseName : `${baseName} ${stackLabel(position)}`,
         };
 
-        if (i < sorted.length - 1) {
-          const nextStart = sorted[i + 1].startFrame;
-          const totalDur = eventEndFrame(ev) - ev.startFrame;
-          const evEnd = ev.startFrame + totalDur;
+        // Visual truncation: truncate at the next event's start frame so
+        // stacking events tile without overlapping wrappers.  Applies to all
+        // events (including consumed) because consumed inflictions can be
+        // extended before eviction and their tall wrappers overlap later events.
+        const allIdx = allSorted.indexOf(ev);
+        if (allIdx >= 0 && allIdx < allSorted.length - 1) {
+          const nextStart = allSorted[allIdx + 1].startFrame;
+          const evEnd = eventEndFrame(ev);
           if (nextStart < evEnd) {
             const visualDur = nextStart - ev.startFrame;
             if (visualDur >= 0) {

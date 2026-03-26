@@ -80,7 +80,6 @@
   "properties": {
     "id": "ESSENCE_DISINTEGRATION_TALENT",
     "name": "Essence Disintegration (Talent)",
-    "type": "TALENT",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",

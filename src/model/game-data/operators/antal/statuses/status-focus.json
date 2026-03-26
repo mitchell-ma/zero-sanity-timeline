@@ -17,7 +17,7 @@
           "effects": [
             {
               "verb": "APPLY",
-              "adjective": "ELECTRIC",
+              "objectQualifier": "ELECTRIC",
               "object": "SUSCEPTIBILITY",
               "to": "TARGET",
               "with": {
@@ -45,7 +45,7 @@
             },
             {
               "verb": "APPLY",
-              "adjective": "HEAT",
+              "objectQualifier": "HEAT",
               "object": "SUSCEPTIBILITY",
               "to": "TARGET",
               "with": {
@@ -73,7 +73,8 @@
             }
           ]
         }
-      ]
+      ],
+      "clauseType": "ALL"
     }
   ],
   "properties": {
@@ -95,7 +96,6 @@
       "unit": "SECOND"
     },
     "eventType": "STATUS",
-    "type": "SKILL_STATUS",
     "eventCategoryType": "SKILL_STATUS",
     "description": "Applies Focus with a long duration on the enemy and deals Electric DMG. An enemy with an active Focus also suffers Electric Susceptibility and Heat Susceptibility. Focus can only be applied to 1 enemy at any given time."
   },

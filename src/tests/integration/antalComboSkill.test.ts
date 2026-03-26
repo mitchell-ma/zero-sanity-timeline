@@ -141,7 +141,7 @@ describe('Antal combo skill — physical status (Lift) trigger', () => {
 
     // Swap Chen Qianyu into slot-1 (replaces Akekuri)
     act(() => {
-      result.current.handleSwapOperator(SLOT_CHEN, 'chenQianyu');
+      result.current.handleSwapOperator(SLOT_CHEN, 'CHEN_QIANYU');
     });
 
     // 1. Antal uses battle skill — applies Focus to enemy
@@ -198,7 +198,7 @@ describe('Antal combo skill — physical status (Lift) trigger', () => {
 
     // Swap Chen Qianyu into slot-1
     act(() => {
-      result.current.handleSwapOperator(SLOT_CHEN, 'chenQianyu');
+      result.current.handleSwapOperator(SLOT_CHEN, 'CHEN_QIANYU');
     });
 
     // Antal battle skill → Focus on enemy

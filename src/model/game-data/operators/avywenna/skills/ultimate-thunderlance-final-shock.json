@@ -4,7 +4,8 @@
     "description": "Throws a Thunderlance EX at the target area that deals massive Electric DMG to enemies nearby.",
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "ULTIMATE_SKILL",
-    "element": "ELECTRIC"
+    "element": "ELECTRIC",
+    "id": "THUNDERLANCE_FINAL_SHOCK"
   },
   "clause": [
     {
@@ -89,7 +90,7 @@
               "effects": [
                 {
                   "verb": "DEAL",
-                  "adjective": "ELECTRIC",
+                  "objectQualifier": "ELECTRIC",
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
@@ -161,14 +162,15 @@
                 }
               ]
             }
-          ]
+          ],
+          "clauseType": "ALL"
         }
       ]
     }
   ],
   "metadata": {
     "originId": "AVYWENNA",
-    "id": "THUNDERLANCE_FINAL_SHOCK",
     "icon": "skills/ult_avywenna.png"
-  }
+  },
+  "clauseType": "ALL"
 }

@@ -1,6 +1,5 @@
 {
   "properties": {
-    "type": "TALENT",
     "id": "MESSENGER_S_SONG_TALENT",
     "name": "Messenger's Song (Talent)",
     "to": "OPERATOR",

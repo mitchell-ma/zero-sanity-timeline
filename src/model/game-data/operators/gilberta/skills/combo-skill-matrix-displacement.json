@@ -5,7 +5,8 @@
     "windowFrames": 720,
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "COMBO_SKILL",
-    "element": "NATURE"
+    "element": "NATURE",
+    "id": "MATRIX_DISPLACEMENT"
   },
   "clause": [
     {
@@ -93,7 +94,7 @@
                 },
                 {
                   "verb": "DEAL",
-                  "adjective": "NATURE",
+                  "objectQualifier": "NATURE",
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
@@ -121,7 +122,8 @@
                 }
               ]
             }
-          ]
+          ],
+          "clauseType": "ALL"
         }
       ]
     },
@@ -149,7 +151,6 @@
   ],
   "metadata": {
     "originId": "GILBERTA",
-    "id": "MATRIX_DISPLACEMENT",
     "icon": "skills/combo_gilberta.png"
   },
   "onTriggerClause": [
@@ -189,5 +190,6 @@
         }
       ]
     }
-  ]
+  ],
+  "clauseType": "ALL"
 }

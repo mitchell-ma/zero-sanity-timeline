@@ -1,6 +1,5 @@
 {
   "properties": {
-    "type": "TALENT",
     "id": "CHEER_OF_VICTORY_TALENT",
     "name": "Cheer of Victory (Talent)",
     "to": "OPERATOR",

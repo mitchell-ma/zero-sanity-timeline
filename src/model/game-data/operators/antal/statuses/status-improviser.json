@@ -71,7 +71,8 @@
                 }
               ]
             }
-          ]
+          ],
+          "clauseType": "ALL"
         }
       ]
     },
@@ -98,7 +99,6 @@
   "properties": {
     "id": "IMPROVISER",
     "name": "IMPROVISER",
-    "type": "STATUS",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",

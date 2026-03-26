@@ -16,8 +16,8 @@ import {
   getAllOperatorBaseIds,
   getOperatorBasesByClass,
   getOperatorBasesByElement,
-  getOperatorBaseByType,
   getOperatorIdByName,
+  getOperatorPotentialRaw,
   registerCustomOperatorBase,
   deregisterCustomOperatorBase,
   type OperatorBase,
@@ -239,7 +239,8 @@ export { getGearEffectLabel, resolveTargetDisplay, resolveDurationSeconds, resol
 // ── Operator base ───────────────────────────────────────────────────────
 
 export { getOperatorBase, getAllOperatorBases, getAllOperatorBaseIds };
-export { getOperatorBasesByClass, getOperatorBasesByElement, getOperatorBaseByType, getOperatorIdByName };
+export { getOperatorBasesByClass, getOperatorBasesByElement, getOperatorIdByName };
+export { getOperatorPotentialRaw };
 export { registerCustomOperatorBase, deregisterCustomOperatorBase };
 
 // ── Operator skills ─────────────────────────────────────────────────────

@@ -289,7 +289,7 @@ function EventBlock({
 
   const isSingleSegment = segments.length === 1;
 
-  const wrapClass = `event-wrap${passive ? ' event-wrap--passive' : notDraggable ? ' event-wrap--static' : ''}${derived ? ' event-wrap--derived' : ''}${!passive && selected ? ' event-wrap--selected' : ''}${!passive && hovered && !selected ? ' event-wrap--hovered' : ''}`;
+  const wrapClass = `event-wrap${passive ? ' event-wrap--passive' : notDraggable ? ' event-wrap--static' : ''}${derived ? ' event-wrap--derived' : ''}${!passive && selected ? ' event-wrap--selected' : ''}${!passive && hovered && !selected ? ' event-wrap--hovered' : ''}${comboWarning ? ' event-wrap--has-warning' : ''}`;
 
   let offsetFrames = 0;
   const segmentElements: React.ReactNode[] = [];
@@ -333,11 +333,19 @@ function EventBlock({
       ? toDisplayLabel(seg.properties.name)
       : (isSingleSegment ? displayLabel : undefined);
 
+    // For IMMEDIATE_COOLDOWN segments that start at offset 0, push the label below
+    // where the active segments end so it doesn't overlap with active segment text.
+    const isCooldownOverlap = seg.properties.segmentTypes?.includes(SegmentType.IMMEDIATE_COOLDOWN) && segOffset === 0;
+    const cooldownLabelOffset = isCooldownOverlap
+      ? Math.max(4, durationToPx(offsetFrames, zoom) - segTopPx + 4)
+      : 4;
+
     // Build segment label style — always include explicit frame-axis position
     // so the label never relies on CSS fallback (which can get clipped by overflow:hidden during re-render)
+    // For cooldown overlaps, clamp the hover position so it doesn't go above the adjusted start
     const labelStyle = segLabelHover
-      ? { color: style.labelColor, ...segLabelHover }
-      : { color: style.labelColor, [axis.framePos]: 4 };
+      ? { color: style.labelColor, ...segLabelHover, ...(isCooldownOverlap && typeof segLabelHover[axis.framePos] === 'number' && (segLabelHover[axis.framePos] as number) < cooldownLabelOffset ? { [axis.framePos]: cooldownLabelOffset } : {}) }
+      : { color: style.labelColor, [axis.framePos]: cooldownLabelOffset };
 
     segmentElements.push(
       <div
@@ -407,11 +415,11 @@ function EventBlock({
       onMouseOut={() => onHover?.(null)}
       onTouchStart={(e) => !notDraggable && onTouchStart?.(e, uid, startFrame)}
     >
+      {segmentElements}
+      {frameElements}
       {comboWarning && (
         <WarningIcon messages={comboWarningMessages} />
       )}
-      {segmentElements}
-      {frameElements}
     </div>
   );
 }

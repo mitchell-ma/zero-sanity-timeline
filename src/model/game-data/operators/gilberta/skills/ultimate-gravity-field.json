@@ -4,7 +4,8 @@
     "description": "Creates an Anomalous Gravity Field that instantly deals 1 hit of Nature DMG and applies Nature Infliction to enemies caught in the field. Targets in the Anomalous Gravity Field also suffer from Slow and Arts Susceptibility. The effect of Arts Susceptibility is further increased based on the number of active Vulnerability stacks on the target. \nIf a target in the field is Lifted, the Lifted status will persist until the field wears off.",
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "ULTIMATE_SKILL",
-    "element": "NATURE"
+    "element": "NATURE",
+    "id": "GRAVITY_FIELD"
   },
   "clause": [
     {
@@ -91,7 +92,7 @@
                 {
                   "verb": "APPLY",
                   "object": "INFLICTION",
-                  "adjective": "NATURE",
+                  "objectQualifier": "NATURE",
                   "to": "ENEMY",
                   "with": {
                     "stacks": {
@@ -130,7 +131,7 @@
                 },
                 {
                   "verb": "DEAL",
-                  "adjective": "NATURE",
+                  "objectQualifier": "NATURE",
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
@@ -158,14 +159,15 @@
                 }
               ]
             }
-          ]
+          ],
+          "clauseType": "ALL"
         }
       ]
     }
   ],
   "metadata": {
     "originId": "GILBERTA",
-    "id": "GRAVITY_FIELD",
     "icon": "skills/ult_gilberta.png"
-  }
+  },
+  "clauseType": "ALL"
 }

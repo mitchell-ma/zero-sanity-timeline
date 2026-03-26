@@ -5,7 +5,8 @@
     "windowFrames": 720,
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "COMBO_SKILL",
-    "element": "PHYSICAL"
+    "element": "PHYSICAL",
+    "id": "SOAR_TO_THE_STARS"
   },
   "clause": [
     {
@@ -99,7 +100,7 @@
                 },
                 {
                   "verb": "DEAL",
-                  "adjective": "PHYSICAL",
+                  "objectQualifier": "PHYSICAL",
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
@@ -127,7 +128,8 @@
                 }
               ]
             }
-          ]
+          ],
+          "clauseType": "ALL"
         }
       ]
     },
@@ -188,7 +190,6 @@
   ],
   "metadata": {
     "originId": "CHEN_QIANYU",
-    "id": "SOAR_TO_THE_STARS",
     "icon": "skills/combo_chen_qianyu.png"
   },
   "onTriggerClause": [
@@ -203,5 +204,6 @@
         }
       ]
     }
-  ]
+  ],
+  "clauseType": "ALL"
 }

@@ -1,6 +1,5 @@
 {
   "properties": {
-    "type": "TALENT",
     "id": "RIOT_BRINGER_TALENT",
     "name": "Riot Bringer (Talent)",
     "to": "OPERATOR",

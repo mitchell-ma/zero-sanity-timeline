@@ -40,7 +40,6 @@
     "originId": "game",
     "dataSources": [
       "ENDFIELD_WIKI"
-    ],
-    "id": "PHYSICAL_DAMAGE_BOOST_M"
+    ]
   }
 }

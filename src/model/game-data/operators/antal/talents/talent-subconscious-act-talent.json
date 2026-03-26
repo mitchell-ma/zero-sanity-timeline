@@ -1,6 +1,5 @@
 {
   "properties": {
-    "type": "TALENT",
     "id": "SUBCONSCIOUS_ACT_TALENT",
     "name": "Subconscious Act (Talent)",
     "to": "OPERATOR",

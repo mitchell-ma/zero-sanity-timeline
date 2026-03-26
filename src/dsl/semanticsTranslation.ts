@@ -32,13 +32,13 @@ export const SUBJECT_LABELS: Record<string, string> = {
   SYSTEM: t('dsl.subject.SYSTEM'),
 };
 
-export const ADJECTIVE_LABELS: Record<string, string> = {
-  HEAT: t('dsl.adjective.HEAT'), CRYO: t('dsl.adjective.CRYO'), NATURE: t('dsl.adjective.NATURE'), ELECTRIC: t('dsl.adjective.ELECTRIC'), PHYSICAL: t('dsl.adjective.PHYSICAL'),
-  COMBUSTION: t('dsl.adjective.COMBUSTION'), SOLIDIFICATION: t('dsl.adjective.SOLIDIFICATION'), CORROSION: t('dsl.adjective.CORROSION'), ELECTRIFICATION: t('dsl.adjective.ELECTRIFICATION'),
-  LIFT: t('dsl.adjective.LIFT'), KNOCK_DOWN: t('dsl.adjective.KNOCK_DOWN'), BREACH: t('dsl.adjective.BREACH'), CRUSH: t('dsl.adjective.CRUSH'),
-  FORCED: t('dsl.adjective.FORCED'),
-  NODE_STAGGERED: t('dsl.adjective.NODE_STAGGERED'), FULL_STAGGERED: t('dsl.adjective.FULL_STAGGERED'),
-  COMBO: t('dsl.adjective.COMBO'), DODGE: t('dsl.adjective.DODGE'), ANIMATION: t('dsl.adjective.ANIMATION'),
+export const OBJECT_QUALIFIER_LABELS: Record<string, string> = {
+  HEAT: t('dsl.objectQualifier.HEAT'), CRYO: t('dsl.objectQualifier.CRYO'), NATURE: t('dsl.objectQualifier.NATURE'), ELECTRIC: t('dsl.objectQualifier.ELECTRIC'), PHYSICAL: t('dsl.objectQualifier.PHYSICAL'),
+  COMBUSTION: t('dsl.objectQualifier.COMBUSTION'), SOLIDIFICATION: t('dsl.objectQualifier.SOLIDIFICATION'), CORROSION: t('dsl.objectQualifier.CORROSION'), ELECTRIFICATION: t('dsl.objectQualifier.ELECTRIFICATION'),
+  LIFT: t('dsl.objectQualifier.LIFT'), KNOCK_DOWN: t('dsl.objectQualifier.KNOCK_DOWN'), BREACH: t('dsl.objectQualifier.BREACH'), CRUSH: t('dsl.objectQualifier.CRUSH'),
+  FORCED: t('dsl.objectQualifier.FORCED'),
+  NODE_STAGGERED: t('dsl.objectQualifier.NODE_STAGGERED'), FULL_STAGGERED: t('dsl.objectQualifier.FULL_STAGGERED'),
+  COMBO: t('dsl.objectQualifier.COMBO'), DODGE: t('dsl.objectQualifier.DODGE'), ANIMATION: t('dsl.objectQualifier.ANIMATION'),
 };
 
 export const CARDINALITY_LABELS: Record<string, string> = {
@@ -51,12 +51,17 @@ export const DETERMINER_LABELS: Record<string, string> = {
   THIS: t('dsl.determiner.THIS'),
   OTHER: t('dsl.determiner.OTHER'),
   ALL: t('dsl.determiner.ALL'),
+  ALL_OTHER: t('dsl.determiner.ALL_OTHER'),
   ANY: t('dsl.determiner.ANY'),
+  CONTROLLED: t('dsl.determiner.CONTROLLED'),
+  TRIGGER: t('dsl.determiner.TRIGGER'),
+  SOURCE: t('dsl.determiner.SOURCE'),
 };
 
 export const TARGET_LABELS: Record<string, string> = {
   ENEMY: t('dsl.target.ENEMY'),
   OPERATOR: t('dsl.target.OPERATOR'),
+  TEAM: t('dsl.target.TEAM'),
 };
 
 export const VERB_LABELS: Record<string, string> = {
@@ -89,13 +94,13 @@ export const VERB_LABELS: Record<string, string> = {
   IS: t('dsl.verb.IS'),
   BECOME: t('dsl.verb.BECOME'),
   RECEIVE: t('dsl.verb.RECEIVE'),
+  MODIFY: t('dsl.verb.MODIFY'),
 };
 
 export const OBJECT_LABELS: Record<string, string> = {
   STATUS: t('dsl.object.STATUS'),
   INFLICTION: t('dsl.object.INFLICTION'),
   REACTION: t('dsl.object.REACTION'),
-  ARTS_REACTION: t('dsl.object.ARTS_REACTION'),
   STACKS: t('dsl.object.STACKS'),
   SKILL_POINT: t('dsl.object.SKILL_POINT'),
   ULTIMATE_ENERGY: t('dsl.object.ULTIMATE_ENERGY'),
@@ -106,6 +111,13 @@ export const OBJECT_LABELS: Record<string, string> = {
   TIME_STOP: t('dsl.object.TIME_STOP'),
   GAME_TIME: t('dsl.object.GAME_TIME'),
   REAL_TIME: t('dsl.object.REAL_TIME'),
+  EVENT: t('dsl.object.EVENT'),
+  STAT_MODIFIER: t('dsl.object.STAT_MODIFIER'),
+  SKILL_PARAMETER: t('dsl.object.SKILL_PARAMETER'),
+  ATTACK_BONUS: t('dsl.object.ATTACK_BONUS'),
+  ARTS_REACTION: t('dsl.object.ARTS_REACTION'),
+  PHYSICAL_STATUS: t('dsl.object.PHYSICAL_STATUS'),
+  FINAL_STRIKE: t('dsl.object.FINAL_STRIKE'),
   [NounType.STAT]: t('dsl.object.STAT'),
   [NounType.TALENT_LEVEL]: t('dsl.object.TALENT_LEVEL'),
   [NounType.ATTRIBUTE_INCREASE_LEVEL]: t('dsl.object.ATTRIBUTE_INCREASE_LEVEL'),
@@ -122,6 +134,107 @@ const PROPERTY_LABELS: Record<string, string> = {
 const PROPERTY_UNITS: Record<string, string> = {
   duration: 's',
 };
+
+// ── Combined noun+determiner translation ─────────────────────────────────────
+
+/**
+ * Translate a determiner+noun pair into a human-readable string.
+ * e.g. ("THIS", "OPERATOR") → "this Operator", ("ENEMY", undefined) → "Enemy"
+ */
+export function translateNounPhrase(noun: string, determiner?: string): string {
+  const nounLabel = TARGET_LABELS[noun] ?? OBJECT_LABELS[noun] ?? titleCase(noun);
+  if (!determiner) return nounLabel;
+  const detLabel = DETERMINER_LABELS[determiner] ?? determiner.toLowerCase();
+  return `${detLabel} ${nounLabel}`;
+}
+
+// ── Generic token translation ────────────────────────────────────────────────
+
+const ALL_TOKEN_LABELS: Record<string, string> = {
+  ...VERB_LABELS, ...OBJECT_LABELS, ...SUBJECT_LABELS, ...OBJECT_QUALIFIER_LABELS,
+  ...DETERMINER_LABELS, ...TARGET_LABELS, ...CARDINALITY_LABELS,
+};
+
+/** Translate a single DSL token (verb, noun, object qualifier, determiner, etc.) to its display label. */
+export function translateDslToken(token: string): string {
+  return ALL_TOKEN_LABELS[token] ?? titleCase(token);
+}
+
+/**
+ * Translate a condition (Interaction) JSON object into a human-readable string.
+ * Handles subjectDeterminer, subject, verb, objectQualifier, object, objectId, to, toDeterminer, cardinality.
+ */
+export function translateCondition(c: Record<string, unknown>): string {
+  const parts: string[] = [];
+  if (c.subjectDeterminer) parts.push(translateDslToken(String(c.subjectDeterminer)).toLowerCase());
+  if (c.subject) parts.push(translateDslToken(String(c.subject)));
+  if (c.verb) parts.push(translateDslToken(String(c.verb)));
+  if (c.objectQualifier) {
+    const adj = Array.isArray(c.objectQualifier) ? c.objectQualifier : [c.objectQualifier];
+    parts.push(...adj.map(a => translateDslToken(String(a))));
+  }
+  if (c.objectId) {
+    parts.push(titleCase(String(c.objectId)));
+    if (c.object) parts.push(translateDslToken(String(c.object)).toLowerCase());
+  } else if (c.object) {
+    parts.push(translateDslToken(String(c.object)));
+  }
+  if (c.to || c.toDeterminer) {
+    parts.push('to');
+    if (c.toDeterminer) parts.push(translateDslToken(String(c.toDeterminer)).toLowerCase());
+    if (c.to) parts.push(translateDslToken(String(c.to)));
+  }
+  if (c.cardinalityConstraint) {
+    parts.push(translateDslToken(String(c.cardinalityConstraint)).toLowerCase());
+    if (c.value != null) parts.push(String(c.value));
+  }
+  return parts.join(' ');
+}
+
+/**
+ * Build structured parts from an effect JSON object for rendering.
+ * Returns { verb, object, target, withEntries } for flexible rendering.
+ */
+export function translateEffectParts(ef: Record<string, unknown>): {
+  verb: string;
+  object: string;
+  target: string;
+  fromTarget: string;
+} {
+  const verb = ef.verb ? translateDslToken(String(ef.verb)) : '';
+
+  // Object with objectQualifier and objectId
+  const adjParts: string[] = [];
+  if (ef.objectQualifier) {
+    const adj = Array.isArray(ef.objectQualifier) ? ef.objectQualifier : [ef.objectQualifier];
+    adjParts.push(...adj.map(a => translateDslToken(String(a))));
+  }
+
+  let objectStr = '';
+  if (ef.objectId) {
+    objectStr = `${[...adjParts, titleCase(String(ef.objectId))].join(' ')} ${ef.object ? translateDslToken(String(ef.object)).toLowerCase() : ''}`.trim();
+  } else if (ef.object) {
+    objectStr = [...adjParts, translateDslToken(String(ef.object))].join(' ');
+  } else {
+    objectStr = adjParts.join(' ');
+  }
+
+  // Target (to)
+  const targetParts: string[] = [];
+  if (ef.to || ef.toDeterminer) {
+    if (ef.toDeterminer) targetParts.push(translateDslToken(String(ef.toDeterminer)).toLowerCase());
+    if (ef.to) targetParts.push(translateDslToken(String(ef.to)));
+  }
+  const target = targetParts.length > 0 ? `to ${targetParts.join(' ')}` : '';
+
+  // From
+  const fromParts: string[] = [];
+  if (ef.fromDeterminer) fromParts.push(translateDslToken(String(ef.fromDeterminer)).toLowerCase());
+  if (ef.fromObject ?? ef.from) fromParts.push(translateDslToken(String(ef.fromObject ?? ef.from)));
+  const fromTarget = fromParts.length > 0 ? `from ${fromParts.join(' ')}` : '';
+
+  return { verb, object: objectStr, target, fromTarget };
+}
 
 // ── Translation ─────────────────────────────────────────────────────────────
 
@@ -154,8 +267,8 @@ function formatWithValue(key: string, node: ValueNode): string {
 }
 
 function formatObject(e: Effect): string {
-  const adjs = e.adjective
-    ? (Array.isArray(e.adjective) ? e.adjective : [e.adjective])
+  const adjs = e.objectQualifier
+    ? (Array.isArray(e.objectQualifier) ? e.objectQualifier : [e.objectQualifier])
     : [];
 
   const adjStr = adjs.length > 0
@@ -339,12 +452,12 @@ export function interactionToJson(i: Interaction): Record<string, unknown> {
 
 /**
  * Serialize an Effect to short-key JSON format with natural ordering.
- * Key order: verb, adjective, object, objectId, to, from, on, with, for, predicates, effects
+ * Key order: verb, objectQualifier, object, objectId, to, from, on, with, for, predicates, effects
  */
 export function effectToJson(e: Effect): Record<string, unknown> {
   const out: Record<string, unknown> = {};
   out.verb = e.verb;
-  if (e.adjective) out.adjective = e.adjective;
+  if (e.objectQualifier) out.objectQualifier = e.objectQualifier;
   if (e.object) out.object = e.object;
   if (e.objectId) out.objectId = e.objectId;
   if (e.cardinalityConstraint) out.cardinalityConstraint = e.cardinalityConstraint;

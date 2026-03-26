@@ -27,7 +27,6 @@
   "properties": {
     "id": "INFLAMED_FOR_THE_ASSAULT",
     "name": "Inflamed for the Assault",
-    "type": "STATUS",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "stacks": {
@@ -46,5 +45,6 @@
     "dataSources": [
       "ENDFIELD_WIKI"
     ]
-  }
+  },
+  "clauseType": "ALL"
 }

@@ -20,6 +20,7 @@
 
   --accent:     #fffa00;
   --accent-glow: rgba(255, 250, 0, 0.35);
+  --accent-thickness: 4px;
   --blue:       #4c90ff;
   --blue-glow:  rgba(76, 144, 255, 0.28);
   --cyan:       #00d8cc;

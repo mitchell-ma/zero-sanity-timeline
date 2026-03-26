@@ -35,7 +35,6 @@
   "properties": {
     "id": "SURVIVAL_IS_A_WIN_P5_TALENT",
     "name": "Survival is a Win (P5)",
-    "type": "TALENT",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",

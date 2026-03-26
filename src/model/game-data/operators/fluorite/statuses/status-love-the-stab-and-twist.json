@@ -33,7 +33,6 @@
   "properties": {
     "id": "LOVE_THE_STAB_AND_TWIST",
     "name": "Love the Stab and Twist",
-    "type": "STATUS",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
@@ -45,5 +44,6 @@
     "dataSources": [
       "ENDFIELD_WIKI"
     ]
-  }
+  },
+  "clauseType": "ALL"
 }

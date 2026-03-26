@@ -1,6 +1,5 @@
 {
   "properties": {
-    "type": "TALENT",
     "id": "STAYING_IN_THE_ZONE_TALENT",
     "name": "Staying in the Zone (Talent)",
     "to": "OPERATOR",

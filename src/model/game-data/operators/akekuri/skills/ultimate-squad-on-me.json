@@ -3,7 +3,8 @@
     "name": "SQUAD! ON ME!",
     "description": "Enters a channeling state and fires 3 Rallying Flares. Each firing recovers some SP.",
     "eventType": "COMBAT_SKILL",
-    "eventCategoryType": "ULTIMATE_SKILL"
+    "eventCategoryType": "ULTIMATE_SKILL",
+    "id": "SQUAD_ON_ME"
   },
   "clause": [
     {
@@ -20,7 +21,7 @@
                 120,
                 120,
                 120,
-                108,
+                120,
                 108,
                 108
               ],
@@ -103,7 +104,8 @@
                 }
               ]
             }
-          ]
+          ],
+          "clauseType": "ALL"
         },
         {
           "metadata": {
@@ -147,7 +149,8 @@
                 }
               ]
             }
-          ]
+          ],
+          "clauseType": "ALL"
         },
         {
           "metadata": {
@@ -191,7 +194,8 @@
                 }
               ]
             }
-          ]
+          ],
+          "clauseType": "ALL"
         },
         {
           "metadata": {
@@ -235,14 +239,15 @@
                 }
               ]
             }
-          ]
+          ],
+          "clauseType": "ALL"
         }
       ]
     }
   ],
   "metadata": {
     "originId": "AKEKURI",
-    "id": "SQUAD_ON_ME",
     "icon": "skills/ult_akekuri.png"
-  }
+  },
+  "clauseType": "ALL"
 }

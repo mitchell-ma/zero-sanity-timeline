@@ -4,7 +4,8 @@
     "description": "Raises a shield that can block attacks, grants Protection to self and nearby operators, and immediately returns some SP. \nWhen attacked while the said shield is raised, perform a retaliation bash that deals Physical DMG and applies 1 stack of Vulnerability to the attacking enemy.",
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "BATTLE_SKILL",
-    "element": "PHYSICAL"
+    "element": "PHYSICAL",
+    "id": "RIGID_INTERDICTION"
   },
   "clause": [
     {
@@ -25,7 +26,6 @@
   ],
   "metadata": {
     "originId": "CATCHER",
-    "id": "RIGID_INTERDICTION",
     "icon": "skills/skill_catcher.png"
   },
   "segments": [
@@ -70,7 +70,8 @@
                 }
               ]
             }
-          ]
+          ],
+          "clauseType": "ALL"
         },
         {
           "metadata": {
@@ -114,7 +115,7 @@
                 },
                 {
                   "verb": "DEAL",
-                  "adjective": "PHYSICAL",
+                  "objectQualifier": "PHYSICAL",
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
@@ -170,7 +171,8 @@
                 }
               ]
             }
-          ]
+          ],
+          "clauseType": "ALL"
         }
       ],
       "properties": {
@@ -184,5 +186,6 @@
         "element": "PHYSICAL"
       }
     }
-  ]
+  ],
+  "clauseType": "ALL"
 }

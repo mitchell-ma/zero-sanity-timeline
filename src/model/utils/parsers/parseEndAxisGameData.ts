@@ -28,7 +28,7 @@ interface Duration {
 interface Effect {
   verb: string;
   object: string;
-  adjective?: string | string[];
+  objectQualifier?: string | string[];
   toDeterminer?: string;
   to?: string;
   with?: {
@@ -186,25 +186,25 @@ const GAMEDATA_ID_TO_OPERATOR: Record<string, string> = {
 interface AnomalyMapping {
   verb: string;
   object: string;
-  adjective?: string | string[];
+  objectQualifier?: string | string[];
   isForced?: boolean;
   stacks?: number;
   conversion?: { statusType: string; ratio: string };
 }
 
 const ANOMALY_TYPE_MAP: Record<string, AnomalyMapping | null> = {
-  blaze_attach:   { verb: 'APPLY', object: 'INFLICTION', adjective: 'HEAT' },
-  cold_attach:    { verb: 'APPLY', object: 'INFLICTION', adjective: 'CRYO' },
-  emag_attach:    { verb: 'APPLY', object: 'INFLICTION', adjective: 'ELECTRIC' },
-  nature_attach:  { verb: 'APPLY', object: 'INFLICTION', adjective: 'NATURE' },
-  magma_0:        { verb: 'APPLY', object: 'REACTION', adjective: ['FORCED', 'COMBUSTION'], isForced: true, stacks: 1 },
-  magma_1:        { verb: 'APPLY', object: 'INFLICTION', adjective: 'MELTING_FLAME' },
-  magma_2:        { verb: 'APPLY', object: 'INFLICTION', adjective: 'MELTING_FLAME' },
-  magma_3:        { verb: 'APPLY', object: 'INFLICTION', adjective: 'MELTING_FLAME' },
-  magma_4:        { verb: 'CONSUME', object: 'INFLICTION', adjective: 'HEAT', conversion: { statusType: 'MELTING_FLAME', ratio: '1:1' } },
-  blaze_burst:    { verb: 'APPLY', object: 'REACTION', adjective: 'COMBUSTION' },
-  burning:        { verb: 'APPLY', object: 'REACTION', adjective: 'COMBUSTION' },
-  corrosion:      { verb: 'APPLY', object: 'REACTION', adjective: 'CORROSION', isForced: true },
+  blaze_attach:   { verb: 'APPLY', object: 'INFLICTION', objectQualifier: 'HEAT' },
+  cold_attach:    { verb: 'APPLY', object: 'INFLICTION', objectQualifier: 'CRYO' },
+  emag_attach:    { verb: 'APPLY', object: 'INFLICTION', objectQualifier: 'ELECTRIC' },
+  nature_attach:  { verb: 'APPLY', object: 'INFLICTION', objectQualifier: 'NATURE' },
+  magma_0:        { verb: 'APPLY', object: 'REACTION', objectQualifier: ['FORCED', 'COMBUSTION'], isForced: true, stacks: 1 },
+  magma_1:        { verb: 'APPLY', object: 'INFLICTION', objectQualifier: 'MELTING_FLAME' },
+  magma_2:        { verb: 'APPLY', object: 'INFLICTION', objectQualifier: 'MELTING_FLAME' },
+  magma_3:        { verb: 'APPLY', object: 'INFLICTION', objectQualifier: 'MELTING_FLAME' },
+  magma_4:        { verb: 'CONSUME', object: 'INFLICTION', objectQualifier: 'HEAT', conversion: { statusType: 'MELTING_FLAME', ratio: '1:1' } },
+  blaze_burst:    { verb: 'APPLY', object: 'REACTION', objectQualifier: 'COMBUSTION' },
+  burning:        { verb: 'APPLY', object: 'REACTION', objectQualifier: 'COMBUSTION' },
+  corrosion:      { verb: 'APPLY', object: 'REACTION', objectQualifier: 'CORROSION', isForced: true },
 };
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -267,7 +267,7 @@ function convertTick(
     const effect: Effect = {
       verb: mapping.verb,
       object: mapping.object,
-      adjective: mapping.adjective,
+      objectQualifier: mapping.objectQualifier,
       to: 'ENEMY',
     };
 

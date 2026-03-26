@@ -11,6 +11,22 @@ import * as fs from 'fs';
 
 const GAME_DATA_ROOT = path.resolve(__dirname, '../../model/game-data');
 
+// Build JSON-ID → directory-name map by scanning each operator directory for a JSON with an `id` field.
+const _idToDirMap = new Map<string, string>();
+for (const entry of fs.readdirSync(path.join(GAME_DATA_ROOT, 'operators'), { withFileTypes: true })) {
+  if (!entry.isDirectory() || entry.name === 'generic') continue;
+  const dirPath = path.join(GAME_DATA_ROOT, 'operators', entry.name);
+  for (const file of fs.readdirSync(dirPath).filter(f => f.endsWith('.json'))) {
+    const j = JSON.parse(fs.readFileSync(path.join(dirPath, file), 'utf8'));
+    if (typeof j.id === 'string') { _idToDirMap.set(j.id, entry.name); break; }
+  }
+}
+
+/** Resolve operator ID to directory name. Accepts both JSON IDs and directory names. */
+function resolveDir(operatorId: string): string {
+  return _idToDirMap.get(operatorId) ?? operatorId;
+}
+
 // ── Operator Skills ─────────────────────────────────────────────────────────
 
 /**
@@ -18,11 +34,11 @@ const GAME_DATA_ROOT = path.resolve(__dirname, '../../model/game-data');
  * keyed-object format: `{ SKILL_ID: skillData, ... }`.
  */
 export function loadSkillsJson(operatorId: string): Record<string, any> {
-  const dir = path.join(GAME_DATA_ROOT, 'operators', operatorId, 'skills');
+  const dir = path.join(GAME_DATA_ROOT, 'operators', resolveDir(operatorId), 'skills');
   const obj: Record<string, any> = {};
   for (const file of fs.readdirSync(dir).filter(f => f.endsWith('.json'))) {
     const skill = JSON.parse(fs.readFileSync(path.join(dir, file), 'utf8'));
-    const id = skill.metadata?.id;
+    const id = skill.properties?.id;
     if (id) obj[id] = skill;
   }
   return obj;
@@ -45,7 +61,7 @@ export function loadSkillById(operatorId: string, skillId: string): any {
 export function loadStatusesJson(operatorId: string): any[] {
   const arr: any[] = [];
   for (const subdir of ['statuses', 'talents']) {
-    const dir = path.join(GAME_DATA_ROOT, 'operators', operatorId, subdir);
+    const dir = path.join(GAME_DATA_ROOT, 'operators', resolveDir(operatorId), subdir);
     if (!fs.existsSync(dir)) continue;
     for (const file of fs.readdirSync(dir).filter(f => f.endsWith('.json'))) {
       arr.push(JSON.parse(fs.readFileSync(path.join(dir, file), 'utf8')));
@@ -64,7 +80,7 @@ export function loadGenericWeaponSkills(): Record<string, any> {
   const obj: Record<string, any> = {};
   for (const file of fs.readdirSync(dir).filter(f => f.endsWith('.json'))) {
     const skill = JSON.parse(fs.readFileSync(path.join(dir, file), 'utf8'));
-    const id = skill.metadata?.id;
+    const id = skill.properties?.id;
     if (id) obj[id] = skill;
   }
   return obj;

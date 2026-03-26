@@ -37,7 +37,7 @@ const SKILL_OBJECT_TO_COLUMN: Record<string, string> = {
   ULTIMATE_SKILL: SKILL_COLUMNS.ULTIMATE,
 };
 
-/** Maps IS/BECOME state adjectives to reaction column IDs for index keying. */
+/** Maps IS/BECOME state qualifiers to reaction column IDs for index keying. */
 const STATE_TO_COLUMN: Record<string, string> = {
   COMBUSTED: REACTION_COLUMNS.COMBUSTION,
   SOLIDIFIED: REACTION_COLUMNS.SOLIDIFICATION,
@@ -45,7 +45,7 @@ const STATE_TO_COLUMN: Record<string, string> = {
   ELECTRIFIED: REACTION_COLUMNS.ELECTRIFICATION,
 };
 
-/** Maps APPLY INFLICTION element adjectives to infliction column IDs. */
+/** Maps APPLY INFLICTION element qualifiers to infliction column IDs. */
 const ELEMENT_TO_INFLICTION: Record<string, string> = {
   HEAT: INFLICTION_COLUMNS.HEAT,
   CRYO: INFLICTION_COLUMNS.CRYO,
@@ -197,7 +197,7 @@ function resolveTriggerKey(verb: string, cond: Predicate): string {
       const col = statusNameToColumnId(cond.objectId);
       return `${verb}:${col}`;
     }
-    // INFLICTION with element adjective → resolve to infliction column
+    // INFLICTION with element qualifier → resolve to infliction column
     if (cond.object === 'INFLICTION' && cond.element) {
       const inflCol = ELEMENT_TO_INFLICTION[cond.element];
       if (inflCol) return `${verb}:${inflCol}`;
@@ -205,7 +205,7 @@ function resolveTriggerKey(verb: string, cond: Predicate): string {
     return `${verb}:${cond.object ?? '*'}`;
   }
   if (verb === 'IS' || verb === 'BECOME') {
-    // Map state adjectives (COMBUSTED) to column IDs (combustion) for matching
+    // Map state qualifiers (COMBUSTED) to column IDs (combustion) for matching
     const stateCol = STATE_TO_COLUMN[cond.object ?? ''];
     return `${verb}:${stateCol ?? cond.object ?? '*'}`;
   }
@@ -366,7 +366,7 @@ export class TriggerIndex {
 
     for (const def of defs) {
       // ── Talent defs ──────────────────────────────────────────────────
-      if (def.properties.type === 'TALENT') {
+      if ((def.properties.eventCategoryType ?? def.properties.type) === 'TALENT') {
         const talentDuration = def.properties.duration;
         const talentDurationFrames = talentDuration ? getDurationFrames(talentDuration) : TOTAL_FRAMES;
         const talentOwnerId = resolveTargetOwnerId(def.properties.target, slotId, opSlotMap, def.properties.targetDeterminer);
@@ -382,7 +382,7 @@ export class TriggerIndex {
           columnId: talentColumnId,
           startFrame: 0,
           segments: durationSegment(talentDurationFrames),
-          sourceOwnerId: slotId,
+          sourceOwnerId: operatorId,
           sourceSkillName: def.properties.id,
         };
 
@@ -434,7 +434,7 @@ export class TriggerIndex {
 
       const hasEffects = def.onTriggerClause.some(c => c.effects && c.effects.length > 0);
       const hasClauseEffects = (def.clause as { effects?: unknown[] }[] | undefined)?.some(c => c.effects && c.effects.length > 0);
-      if (!hasEffects && !hasClauseEffects && def.properties.type !== 'TALENT') continue;
+      if (!hasEffects && !hasClauseEffects && (def.properties.eventCategoryType ?? def.properties.type) !== 'TALENT') continue;
 
       for (const clause of def.onTriggerClause) {
         // Find primary verb (lowest priority)

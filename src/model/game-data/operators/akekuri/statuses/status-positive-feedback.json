@@ -21,7 +21,6 @@
   "properties": {
     "id": "POSITIVE_FEEDBACK",
     "name": "Positive Feedback",
-    "type": "POTENTIAL_STATUS",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "duration": {
@@ -47,5 +46,6 @@
     "dataSources": [
       "ENDFIELD_WIKI"
     ]
-  }
+  },
+  "clauseType": "ALL"
 }

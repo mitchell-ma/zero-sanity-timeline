@@ -1,6 +1,5 @@
 {
   "properties": {
-    "type": "TALENT",
     "id": "REALSPACE_STASIS_TALENT",
     "name": "Realspace Stasis (Talent)",
     "to": "OPERATOR",

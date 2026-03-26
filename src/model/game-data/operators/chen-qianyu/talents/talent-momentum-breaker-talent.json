@@ -33,7 +33,6 @@
   "properties": {
     "id": "MOMENTUM_BREAKER_TALENT",
     "name": "Momentum Breaker (Talent)",
-    "type": "TALENT",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",

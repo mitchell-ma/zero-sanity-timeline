@@ -42,7 +42,6 @@
   "properties": {
     "id": "INFLAMED_FOR_THE_ASSAULT_TALENT",
     "name": "Inflamed for the Assault (Talent)",
-    "type": "TALENT",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",

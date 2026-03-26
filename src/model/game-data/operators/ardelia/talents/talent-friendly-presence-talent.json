@@ -44,7 +44,6 @@
   "properties": {
     "id": "FRIENDLY_PRESENCE_TALENT",
     "name": "Friendly Presence (Talent)",
-    "type": "TALENT",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",

@@ -1,6 +1,5 @@
 {
   "properties": {
-    "type": "TALENT",
     "id": "CYCLE_PROTOCOL_TALENT",
     "name": "Cycle Protocol (Talent)",
     "to": "OPERATOR",

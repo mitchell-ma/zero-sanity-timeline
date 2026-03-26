@@ -57,7 +57,6 @@
     "id": "DA-PAN_POTENTIAL_1",
     "name": "Fine Cooking",
     "level": 1,
-    "type": "POTENTIAL",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "POTENTIAL_EVENT",
@@ -69,5 +68,6 @@
     "dataSources": [
       "ENDFIELD_WIKI"
     ]
-  }
+  },
+  "clauseType": "ALL"
 }

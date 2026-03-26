@@ -8,7 +8,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import { CombatSkillType, EnhancementType, EventFrameType } from '../../consts/enums';
 import { TimelineEvent, EventSegmentData, Operator, computeSegmentsSpan, getAnimationDuration, eventEndFrame, durationSegment } from '../../consts/viewTypes';
-import { ENEMY_OWNER_ID, REACTION_COLUMN_IDS, INFLICTION_COLUMN_IDS, SKILL_COLUMNS } from '../../model/channels';
+import { ENEMY_OWNER_ID, REACTION_COLUMN_IDS, INFLICTION_COLUMN_IDS, PHYSICAL_INFLICTION_COLUMN_IDS, SKILL_COLUMNS } from '../../model/channels';
 import { USER_ID } from '../../model/channels';
 import { TOTAL_FRAMES } from '../../utils/timeline';
 import { ComboSkillEventController } from './comboSkillEventController';
@@ -33,7 +33,7 @@ export function classifyEvents(rawEvents: TimelineEvent[]): { inputEvents: Timel
     // reassignment) from leaking back to raw state. Uses object pool when
     // pooling is enabled to avoid per-tick allocation churn.
     const isDerived = ev.ownerId === ENEMY_OWNER_ID && ev.sourceOwnerId === USER_ID
-      && (INFLICTION_COLUMN_IDS.has(ev.columnId) || REACTION_COLUMN_IDS.has(ev.columnId));
+      && (INFLICTION_COLUMN_IDS.has(ev.columnId) || PHYSICAL_INFLICTION_COLUMN_IDS.has(ev.columnId) || REACTION_COLUMN_IDS.has(ev.columnId));
     const copy = isDerived ? allocDerivedEvent() : allocInputEvent();
     Object.assign(copy, ev);
     // Deep-clone segment properties so pipeline mutations (time-stop duration

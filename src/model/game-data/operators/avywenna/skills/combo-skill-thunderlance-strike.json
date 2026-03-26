@@ -5,7 +5,8 @@
     "windowFrames": 720,
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "COMBO_SKILL",
-    "element": "ELECTRIC"
+    "element": "ELECTRIC",
+    "id": "THUNDERLANCE_STRIKE"
   },
   "clause": [
     {
@@ -93,7 +94,7 @@
                 },
                 {
                   "verb": "DEAL",
-                  "adjective": "ELECTRIC",
+                  "objectQualifier": "ELECTRIC",
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
@@ -125,7 +126,8 @@
                 }
               ]
             }
-          ]
+          ],
+          "clauseType": "ALL"
         }
       ]
     },
@@ -169,7 +171,6 @@
   ],
   "metadata": {
     "originId": "AVYWENNA",
-    "id": "THUNDERLANCE_STRIKE",
     "icon": "skills/combo_avywenna.png"
   },
   "onTriggerClause": [
@@ -183,5 +184,6 @@
         }
       ]
     }
-  ]
+  ],
+  "clauseType": "ALL"
 }

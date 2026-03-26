@@ -484,8 +484,8 @@ export function effectToText(e: Effect): string {
     const resolved = e.value === THRESHOLD_MAX ? 'MAX' : getSimpleValue(e.value);
     parts.push(String(resolved ?? '?'));
   }
-  if (e.adjective) {
-    const adjs = Array.isArray(e.adjective) ? e.adjective : [e.adjective];
+  if (e.objectQualifier) {
+    const adjs = Array.isArray(e.objectQualifier) ? e.objectQualifier : [e.objectQualifier];
     parts.push(adjs.map((a) => a.replace(/_/g, ' ')).join(' '));
   }
   if (e.object) parts.push(String(e.object).replace(/_/g, ' '));

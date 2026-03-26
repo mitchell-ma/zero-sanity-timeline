@@ -44,7 +44,6 @@
   "properties": {
     "id": "FAM_OF_HONOR",
     "name": "Fam of Honor",
-    "type": "STATUS",
     "to": "OPERATOR",
     "toDeterminer": "ALL",
     "eventType": "STATUS",
@@ -56,5 +55,6 @@
     "dataSources": [
       "ENDFIELD_WIKI"
     ]
-  }
+  },
+  "clauseType": "ALL"
 }

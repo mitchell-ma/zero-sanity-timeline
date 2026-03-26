@@ -1,6 +1,5 @@
 {
   "properties": {
-    "type": "TALENT",
     "id": "ILLUMINATION_TALENT",
     "name": "Illumination (Talent)",
     "to": "OPERATOR",

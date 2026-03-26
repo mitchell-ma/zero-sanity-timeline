@@ -2817,12 +2817,12 @@
 }
 
 .event-segment--sequenced:hover {
-  filter: brightness(1.25);
+  filter: brightness(1.18);
   z-index: 2;
 }
 
 .event-segment--hover-hit {
-  filter: brightness(1.2);
+  filter: brightness(1.13);
   z-index: 1;
 }
 
@@ -2963,6 +2963,8 @@
   pointer-events: auto;
   cursor: default;
   line-height: 0;
+  padding: 4px;
+  margin: -4px;
 }
 
 .event-segment-warning:hover svg {
@@ -3009,8 +3011,12 @@
 }
 
 .event-wrap--hovered {
-  filter: brightness(1.15);
+  filter: brightness(1.1);
   z-index: 8;
+}
+
+.event-wrap--has-warning {
+  z-index: 9;
 }
 
 .event-wrap--selected {
@@ -4805,7 +4811,7 @@
   border-color: var(--border-med);
 }
 .custom-list-item--custom {
-  border-left: 3px solid var(--accent);
+  border-left: var(--accent-thickness) solid var(--accent);
 }
 
 .custom-list-dot {
@@ -8278,7 +8284,7 @@
   justify-content: center;
   background: none;
   border: none;
-  border-left: 3px solid transparent;
+  border-left: var(--accent-thickness) solid transparent;
   color: var(--text-muted);
   font-family: var(--font-display);
   font-size: 0.6875rem;
@@ -8374,7 +8380,7 @@
 .uc-list-item--active {
   background: var(--bg-elevated);
   color: var(--text-bright);
-  border-left: 3px solid var(--accent);
+  border-left: var(--accent-thickness) solid var(--accent);
 }
 .uc-list-dot {
   width: 6px;
@@ -8810,7 +8816,7 @@
   gap: 0.625rem;
   padding: 0.25rem 0;
   margin-bottom: 0.625rem;
-  border-bottom: 4px solid var(--accent);
+  border-bottom: var(--accent-thickness) solid var(--accent);
 }
 .ops-section-label {
   font-family: var(--font-display);
@@ -9117,7 +9123,7 @@
   display: flex;
   gap: 0;
   margin-bottom: 0.625rem;
-  border-bottom: 3px solid var(--border-dim);
+  border-bottom: var(--accent-thickness) solid var(--border-dim);
 }
 .ops-skill-tab {
   flex: 1;
@@ -9128,7 +9134,7 @@
   padding: 0.375rem 0.5rem;
   background: none;
   border: none;
-  border-bottom: 4px solid transparent;
+  border-bottom: var(--accent-thickness) solid transparent;
   color: var(--text-muted);
   cursor: pointer;
   transition: all 0.12s;
@@ -9145,11 +9151,17 @@
 }
 /* Sub-tabs (nested level) */
 .ops-skill-tabs--sub {
-  border-bottom-width: 2px;
+  border-bottom: none;
 }
 .ops-skill-tabs--sub .ops-skill-tab {
-  border-bottom-width: 2px;
+  border-bottom: none;
+  border-left: var(--accent-thickness) solid transparent;
   padding: 0.25rem 0.375rem;
+}
+.ops-skill-tabs--sub .ops-skill-tab--active {
+  border-left-color: var(--accent);
+  border-bottom-color: transparent;
+  box-shadow: inset 4px 0 8px -4px var(--accent-glow);
 }
 .ops-skill-tabs--sub .ops-skill-tab-label {
   font-size: 0.6875rem;
@@ -9294,7 +9306,7 @@
 
 /* ── Tabbed segment view ─────────────────────────────── */
 .ops-seg-view {
-  margin-top: 0.375rem;
+  margin-top: 1rem;
 }
 .ops-seg-detail {
   padding: 0.375rem 0;
@@ -9507,6 +9519,7 @@
 /* ── Vary-by level table ──────────────────────────────── */
 .ops-frame-vary {
   width: 100%;
+  overflow-x: auto;
 }
 .ops-frame-vary-by {
   font-weight: 400;
@@ -9517,10 +9530,13 @@
 .ops-frame-vary-table {
   margin-top: 0.25rem;
   border-collapse: collapse;
+  table-layout: fixed;
   font-family: var(--font-display);
   font-size: 0.8125rem;
   color: var(--text-bright);
   width: 100%;
+}
+.ops-frame-vary-table .ops-frame-vary-header {
 }
 .ops-frame-vary-table th,
 .ops-frame-vary-table td {
@@ -9618,7 +9634,7 @@
 /* ── Skill form ──────────────────────────────────────── */
 /* ── Clause tabs ─────────────────────────────────────── */
 .ops-clause-tabs {
-  margin-top: 0.5rem;
+  margin-top: 1rem;
 }
 .ops-clause-content {
   padding: 0.375rem 0;

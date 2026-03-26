@@ -4,7 +4,8 @@
     "description": "Unleashes a bolt of electro-magnetic energy that deals Electric DMG and Electric Infliction to enemies in a small area.",
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "BATTLE_SKILL",
-    "element": "ELECTRIC"
+    "element": "ELECTRIC",
+    "id": "PROTOCOL_OMEGA_STRIKE"
   },
   "clause": [
     {
@@ -25,7 +26,6 @@
   ],
   "metadata": {
     "originId": "PERLICA",
-    "id": "PROTOCOL_OMEGA_STRIKE",
     "icon": "skills/skill_perlica.png"
   },
   "segments": [
@@ -62,7 +62,7 @@
                 {
                   "verb": "APPLY",
                   "object": "INFLICTION",
-                  "adjective": "ELECTRIC",
+                  "objectQualifier": "ELECTRIC",
                   "to": "ENEMY",
                   "with": {
                     "stacks": {
@@ -73,7 +73,7 @@
                 },
                 {
                   "verb": "DEAL",
-                  "adjective": "ELECTRIC",
+                  "objectQualifier": "ELECTRIC",
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
@@ -101,7 +101,8 @@
                 }
               ]
             }
-          ]
+          ],
+          "clauseType": "ALL"
         }
       ],
       "properties": {
@@ -115,5 +116,6 @@
         "element": "ELECTRIC"
       }
     }
-  ]
+  ],
+  "clauseType": "ALL"
 }

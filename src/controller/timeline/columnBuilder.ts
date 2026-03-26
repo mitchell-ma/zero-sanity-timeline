@@ -1,7 +1,7 @@
 import { Column, MiniTimeline, Operator, Enemy, VisibleSkills } from '../../consts/viewTypes';
 import { DeterminerType, NounType, type Predicate } from '../../dsl/semantics';
 import { CombatSkillType, ELEMENT_COLORS, ElementType, EnhancementType, EventFrameType, SegmentType, StatusType, TimeDependency, TimelineSourceType } from '../../consts/enums';
-import { ENEMY_OWNER_ID, USER_ID, ENEMY_GROUP_COLUMNS, ENEMY_ACTION_COLUMN_ID, OPERATOR_COLUMNS, PHYSICAL_STATUS_COLUMNS, SKILL_COLUMN_ORDER as SKILL_ORDER, SKILL_COLUMNS, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID } from '../../model/channels';
+import { ENEMY_OWNER_ID, USER_ID, ENEMY_GROUP_COLUMNS, ENEMY_ACTION_COLUMN_ID, OPERATOR_COLUMNS, PHYSICAL_STATUS_COLUMNS, SKILL_COLUMN_ORDER as SKILL_ORDER, SKILL_COLUMNS, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID, TEAM_STATUS_COLUMN } from '../../model/channels';
 import { SKILL_LABELS, ColumnLabel, STATUS_LABELS, REACTION_MICRO_COLUMNS } from '../../consts/timelineColumnLabels';
 import { getTacticalEntry, getWeapon, getAllOperatorStatuses, getWeaponEffectDefs, getGearEffectDefs } from '../gameDataStore';
 import { Tactical } from '../../model/consumables/tactical';
@@ -71,6 +71,7 @@ export function buildColumns(
     const statusEvents = getEnabledStatusEvents(s.operator.id);
     if (statusEvents.length) {
       for (const se of statusEvents) {
+        if (TEAM_STATUS_COLUMN[se.id]) continue;
         if (se.target === NounType.OPERATOR && (!se.targetDeterminer || se.targetDeterminer === DeterminerType.THIS) && se.id) {
           const seDur = se.duration as { value?: { value?: number } | number | number[] } | undefined;
           const rawVal = seDur?.value;
@@ -169,6 +170,7 @@ export function buildColumns(
   // ── Team-targeted status columns (derived from skill configs) ─────────────
   const allStatuses = getAllOperatorStatuses();
   for (const statusId of Array.from(teamStatusIds ?? [])) {
+    if (TEAM_STATUS_COLUMN[statusId]) continue;
     const cfg = allStatuses.find(s => s.id === statusId);
     const label = STATUS_LABELS[statusId as StatusType] ?? cfg?.name ?? statusId;
     const colId = statusId.toLowerCase().replace(/_/g, '-');
@@ -630,12 +632,12 @@ export function buildColumns(
   }
 
   // ── Enemy action timeline ──────────────────────────────────────────────────
-  const ENEMY_AOE_ELEMENTS: { element: ElementType; adjective: string }[] = [
-    { element: ElementType.PHYSICAL, adjective: 'PHYSICAL' },
-    { element: ElementType.HEAT,     adjective: 'HEAT' },
-    { element: ElementType.CRYO,     adjective: 'CRYO' },
-    { element: ElementType.NATURE,   adjective: 'NATURE' },
-    { element: ElementType.ELECTRIC, adjective: 'ELECTRIC' },
+  const ENEMY_AOE_ELEMENTS: { element: ElementType; objectQualifier: string }[] = [
+    { element: ElementType.PHYSICAL, objectQualifier: 'PHYSICAL' },
+    { element: ElementType.HEAT,     objectQualifier: 'HEAT' },
+    { element: ElementType.CRYO,     objectQualifier: 'CRYO' },
+    { element: ElementType.NATURE,   objectQualifier: 'NATURE' },
+    { element: ElementType.ELECTRIC, objectQualifier: 'ELECTRIC' },
   ];
   columns.push({
     key: `enemy-${ENEMY_ACTION_COLUMN_ID}`,
@@ -646,15 +648,15 @@ export function buildColumns(
     label: ColumnLabel.ACTION,
     color: '#cc4444',
     headerVariant: 'skill',
-    eventVariants: ENEMY_AOE_ELEMENTS.map(({ element, adjective }) => ({
-      name: `AOE_${adjective}`,
-      displayName: `Deal ${adjective} damage`,
+    eventVariants: ENEMY_AOE_ELEMENTS.map(({ element, objectQualifier }) => ({
+      name: `AOE_${objectQualifier}`,
+      displayName: `Deal ${objectQualifier} damage`,
       segments: [{
-        properties: { duration: 240, name: `Deal ${adjective} DMG` },
+        properties: { duration: 240, name: `Deal ${objectQualifier} DMG` },
         frames: [{ offsetFrame: 0, damageElement: element }],
         clause: [{
           conditions: [],
-          effects: [{ verb: 'DEAL', adjective, object: 'DAMAGE', toDeterminer: 'ALL', to: 'OPERATOR' }],
+          effects: [{ verb: 'DEAL', objectQualifier, object: 'DAMAGE', toDeterminer: 'ALL', to: 'OPERATOR' }],
         }],
       }],
     })),

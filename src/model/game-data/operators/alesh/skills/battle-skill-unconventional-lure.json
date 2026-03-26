@@ -4,7 +4,8 @@
     "description": "Hooks a block of ice and slams it to deal Physical DMG to the enemy target. When hitting a target with Cryo Infliction, Alesh consumes all of the target's Cryo Infliction stacks, forcibly applies Solidification to the target, and recovers some SP based on the number of stacks consumed. This SP recovery effect can only trigger 1 time, even if the skill hits multiple enemies.",
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "BATTLE_SKILL",
-    "element": "PHYSICAL"
+    "element": "PHYSICAL",
+    "id": "UNCONVENTIONAL_LURE"
   },
   "clause": [
     {
@@ -49,7 +50,6 @@
   ],
   "metadata": {
     "originId": "ALESH",
-    "id": "UNCONVENTIONAL_LURE",
     "icon": "skills/skill_alesh.png"
   },
   "segments": [
@@ -85,7 +85,7 @@
                 },
                 {
                   "verb": "DEAL",
-                  "adjective": "PHYSICAL",
+                  "objectQualifier": "PHYSICAL",
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
@@ -193,7 +193,8 @@
                 }
               ]
             }
-          ]
+          ],
+          "clauseType": "ALL"
         }
       ],
       "properties": {
@@ -207,5 +208,6 @@
         "element": "PHYSICAL"
       }
     }
-  ]
+  ],
+  "clauseType": "ALL"
 }

@@ -43,7 +43,7 @@ describe('Chen Qianyu — Vulnerable → Lift physical status', () => {
 
     // Swap Chen Qianyu into slot-0
     act(() => {
-      result.current.handleSwapOperator(SLOT_CHEN, 'chenQianyu');
+      result.current.handleSwapOperator(SLOT_CHEN, 'CHEN_QIANYU');
     });
 
     const battleCol = findColumn(result.current, SLOT_CHEN, SKILL_COLUMNS.BATTLE);

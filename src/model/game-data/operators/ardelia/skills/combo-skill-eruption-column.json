@@ -5,7 +5,8 @@
     "windowFrames": 720,
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "COMBO_SKILL",
-    "element": "NATURE"
+    "element": "NATURE",
+    "id": "ERUPTION_COLUMN"
   },
   "clause": [
     {
@@ -86,7 +87,7 @@
               "effects": [
                 {
                   "verb": "DEAL",
-                  "adjective": "NATURE",
+                  "objectQualifier": "NATURE",
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
@@ -138,7 +139,8 @@
                 }
               ]
             }
-          ]
+          ],
+          "clauseType": "ALL"
         },
         {
           "metadata": {
@@ -175,7 +177,7 @@
                 {
                   "verb": "APPLY",
                   "object": "REACTION",
-                  "adjective": [
+                  "objectQualifier": [
                     "FORCED",
                     "CORROSION"
                   ],
@@ -193,7 +195,7 @@
                 },
                 {
                   "verb": "DEAL",
-                  "adjective": "NATURE",
+                  "objectQualifier": "NATURE",
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
@@ -241,7 +243,8 @@
                 }
               ]
             }
-          ]
+          ],
+          "clauseType": "ALL"
         }
       ]
     },
@@ -285,7 +288,6 @@
   ],
   "metadata": {
     "originId": "ARDELIA",
-    "id": "ERUPTION_COLUMN",
     "icon": "skills/combo_ardelia.png"
   },
   "onTriggerClause": [
@@ -334,5 +336,6 @@
         }
       ]
     }
-  ]
+  ],
+  "clauseType": "ALL"
 }

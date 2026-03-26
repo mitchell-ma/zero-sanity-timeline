@@ -5,7 +5,8 @@
     "windowFrames": 720,
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "COMBO_SKILL",
-    "element": "ELECTRIC"
+    "element": "ELECTRIC",
+    "id": "EMP_TEST_SITE"
   },
   "clause": [
     {
@@ -93,19 +94,19 @@
                 },
                 {
                   "verb": "APPLY",
-                  "adjective": "TRIGGER",
+                  "objectQualifier": "TRIGGER",
                   "object": "INFLICTION",
                   "to": "ENEMY"
                 },
                 {
                   "verb": "APPLY",
-                  "adjective": "TRIGGER",
+                  "objectQualifier": "TRIGGER",
                   "object": "PHYSICAL_STATUS",
                   "to": "ENEMY"
                 },
                 {
                   "verb": "DEAL",
-                  "adjective": "ELECTRIC",
+                  "objectQualifier": "ELECTRIC",
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
@@ -133,7 +134,8 @@
                 }
               ]
             }
-          ]
+          ],
+          "clauseType": "ALL"
         }
       ]
     },
@@ -161,7 +163,6 @@
   ],
   "metadata": {
     "originId": "ANTAL",
-    "id": "EMP_TEST_SITE",
     "icon": "skills/combo_antal.png"
   },
   "onTriggerClause": [
@@ -197,5 +198,6 @@
         }
       ]
     }
-  ]
+  ],
+  "clauseType": "ALL"
 }

@@ -1,6 +1,5 @@
 {
   "properties": {
-    "type": "TALENT",
     "id": "FAM_OF_HONOR_TALENT",
     "name": "Fam of Honor (Talent)",
     "to": "OPERATOR",

@@ -137,7 +137,7 @@ describe('New Loadout State Isolation', () => {
       'stagger-frailty-node-2-6720': { startFrame: 6800 },
     };
     const previousSheet = serializeSheet(
-      ['laevatain', 'akekuri', 'antal', 'ardelia'],
+      ['LAEVATAIN', 'AKEKURI', 'ANTAL', 'ARDELIA'],
       'rhodagn',
       undefined,
       [{ uid: 'e1', id: 'test', name: 'test', ownerId: 'slot-0', columnId: 'battle', startFrame: 0, segments: [{ properties: { duration: 264 } }] }],
@@ -152,7 +152,7 @@ describe('New Loadout State Isolation', () => {
 
     // Simulate: create new loadout (no overrides passed)
     const newSheet = serializeSheet(
-      ['laevatain', 'akekuri', 'antal', 'ardelia'],
+      ['LAEVATAIN', 'AKEKURI', 'ANTAL', 'ARDELIA'],
       'rhodagn',
       undefined,
       [],

@@ -1,6 +1,5 @@
 {
   "properties": {
-    "type": "TALENT",
     "id": "FREEZE_PROTOCOL_TALENT",
     "name": "Freeze Protocol (Talent)",
     "to": "OPERATOR",

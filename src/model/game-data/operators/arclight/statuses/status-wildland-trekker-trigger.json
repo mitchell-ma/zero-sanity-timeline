@@ -45,7 +45,6 @@
       "interactionType": "NONE"
     },
     "eventType": "STATUS",
-    "type": "SKILL_STATUS",
     "eventCategoryType": "SKILL_STATUS",
     "description": "Instantly blinks to the enemy's side to deal 2 slashes that deal some Physical DMG. If the enemy has active Electrification, consume the Electrification to unleash an additional attack that deals Electric DMG and recovers some SP."
   },
@@ -69,5 +68,6 @@
         }
       ]
     }
-  ]
+  ],
+  "clauseType": "ALL"
 }

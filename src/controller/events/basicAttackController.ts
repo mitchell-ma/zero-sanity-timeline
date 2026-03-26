@@ -81,7 +81,11 @@ export class SkillSegmentBuilder {
         if (dmgEl) marker.damageElement = dmgEl;
         if (f.getDuplicateTriggerSource()) marker.duplicateTriggerSource = true;
         const clauses = f.getClauses();
-        if (clauses.length > 0) marker.clauses = clauses;
+        if (clauses.length > 0) {
+          marker.clauses = clauses;
+          const ct = f.getClauseType();
+          if (ct) marker.clauseType = ct;
+        }
         const dd = f.getDealDamage();
         if (dd) marker.dealDamage = dd;
         const gg = f.getGaugeGain();
@@ -151,8 +155,9 @@ export class SkillSegmentBuilder {
         // Re-base offsets relative to the new segment's start (= end of the parent segment)
         const rebased = outOfBound.map(f => ({ ...f, offsetFrame: f.offsetFrame - durationFrames }));
         const impliedDuration = Math.max(...rebased.map(f => f.offsetFrame)) + 1;
+        const seqDelayLabel = 'delayedHitLabel' in seq ? (seq as SkillEventSequence & { delayedHitLabel?: string }).delayedHitLabel : undefined;
         segments.push({
-          properties: { duration: impliedDuration, name: options?.delayedHitLabel ?? 'Delay' },
+          properties: { duration: impliedDuration, name: seqDelayLabel ?? options?.delayedHitLabel ?? 'Delay' },
           frames: rebased,
         });
         totalDurationFrames += impliedDuration;

@@ -1,16 +1,21 @@
 {
   "properties": {
-    "type": "TALENT",
     "id": "SCORCHING_FANGS_TALENT",
     "name": "Scorching Fangs (Talent)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "duration": {
-      "value": { "verb": "IS", "value": 10 },
+      "value": {
+        "verb": "IS",
+        "value": 10
+      },
       "unit": "SECOND"
     },
     "stacks": {
-      "limit": { "verb": "IS", "value": 1 },
+      "limit": {
+        "verb": "IS",
+        "value": 1
+      },
       "interactionType": "RESET"
     },
     "eventType": "STATUS",
@@ -20,7 +25,9 @@
   },
   "metadata": {
     "originId": "WULFGARD",
-    "dataSources": ["WARFARIN"],
+    "dataSources": [
+      "WARFARIN"
+    ],
     "icon": "skills/wulfgard_talent_1_icon.png"
   },
   "onTriggerClause": [
@@ -31,7 +38,7 @@
           "subject": "OPERATOR",
           "verb": "APPLY",
           "object": "REACTION",
-          "adjective": "COMBUSTION",
+          "objectQualifier": "COMBUSTION",
           "to": "ENEMY"
         }
       ],
@@ -51,7 +58,7 @@
       "effects": [
         {
           "verb": "APPLY",
-          "adjective": "HEAT",
+          "objectQualifier": "HEAT",
           "object": "AMP",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
@@ -59,7 +66,10 @@
             "value": {
               "verb": "VARY_BY",
               "object": "TALENT_LEVEL",
-              "value": [0.2, 0.3],
+              "value": [
+                0.2,
+                0.3
+              ],
               "ofDeterminer": "THIS",
               "of": "OPERATOR"
             }
@@ -67,5 +77,6 @@
         }
       ]
     }
-  ]
+  ],
+  "clauseType": "ALL"
 }

@@ -48,7 +48,6 @@
   "properties": {
     "id": "LATE_REPLY_TALENT",
     "name": "Late Reply (Talent)",
-    "type": "TALENT",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",

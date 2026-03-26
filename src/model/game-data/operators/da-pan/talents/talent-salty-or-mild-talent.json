@@ -1,6 +1,5 @@
 {
   "properties": {
-    "type": "TALENT",
     "id": "SALTY_OR_MILD_TALENT",
     "name": "Salty or Mild (Talent)",
     "to": "OPERATOR",

@@ -4,7 +4,8 @@
     "description": "Leaps into mid-air with a jetpack before slamming down with her shield to deal massive Cryo DMG to enemies in the area of effect. Also generates a Snow Zone (lasting several seconds) that deals Cryo DMG over time to enemies. The Snow Zone forcibly applies Solidification to enemies caught within it for a certain duration.",
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "ULTIMATE_SKILL",
-    "element": "CRYO"
+    "element": "CRYO",
+    "id": "FRIGID_SNOWFIELD"
   },
   "clause": [
     {
@@ -106,7 +107,7 @@
                 },
                 {
                   "verb": "DEAL",
-                  "adjective": "CRYO",
+                  "objectQualifier": "CRYO",
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
@@ -178,14 +179,15 @@
                 }
               ]
             }
-          ]
+          ],
+          "clauseType": "ALL"
         }
       ]
     }
   ],
   "metadata": {
     "originId": "SNOWSHINE",
-    "id": "FRIGID_SNOWFIELD",
     "icon": "skills/ult_snowshine.png"
-  }
+  },
+  "clauseType": "ALL"
 }

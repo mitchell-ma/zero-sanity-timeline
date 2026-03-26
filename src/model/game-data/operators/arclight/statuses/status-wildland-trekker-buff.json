@@ -5,7 +5,7 @@
       "effects": [
         {
           "verb": "APPLY",
-          "adjective": "ELECTRIC",
+          "objectQualifier": "ELECTRIC",
           "object": "DAMAGE_BONUS",
           "to": "TARGET",
           "with": {
@@ -70,11 +70,11 @@
       "unit": "SECOND"
     },
     "eventType": "STATUS",
-    "type": "SKILL_STATUS",
     "eventCategoryType": "SKILL_STATUS",
     "description": "Talent Wildland Trekker improved: DMG Boost effect increased to times the original."
   },
   "metadata": {
     "originId": "WILDLAND_TREKKER_TRIGGER"
-  }
+  },
+  "clauseType": "ALL"
 }

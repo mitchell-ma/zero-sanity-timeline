@@ -12,7 +12,7 @@ import { checkKeys, VALID_VALUE_NODE_KEYS, VALID_CLAUSE_KEYS, VALID_METADATA_KEY
 
 // ── Validation ──────────────────────────────────────────────────────────────
 
-const VALID_EFFECT_KEYS = new Set(['verb', 'object', 'adjective', 'objectId', 'to', 'toDeterminer', 'with']);
+const VALID_EFFECT_KEYS = new Set(['verb', 'object', 'objectQualifier', 'objectId', 'to', 'toDeterminer', 'with']);
 const VALID_EFFECT_WITH_KEYS = new Set(['multiplier', 'value']);
 const VALID_TRIGGER_CONDITION_KEYS = new Set(['subjectDeterminer', 'subject', 'verb', 'object', 'objectId', 'element']);
 const VALID_PROPERTIES_KEYS = new Set(['id', 'name', 'description']);
@@ -168,10 +168,10 @@ const namedSkillCache = new Map<string, WeaponSkill>();
 const genericContext = require.context('./weapons/generic', false, /^\.\/skill-.*\.json$/);
 for (const key of genericContext.keys()) {
   const json = genericContext(key) as Record<string, unknown>;
-  const meta = json.metadata as Record<string, unknown> | undefined;
-  const skillId = (meta?.id ?? '') as string;
+  const props = json.properties as Record<string, unknown> | undefined;
+  const skillId = (props?.id ?? '') as string;
   if (!skillId) {
-    console.warn(`[WeaponSkillsController] Missing metadata.id in generic ${key}`);
+    console.warn(`[WeaponSkillsController] Missing properties.id in generic ${key}`);
     continue;
   }
   genericSkillCache.set(skillId, WeaponSkill.deserialize(json, `generic:${skillId}`));

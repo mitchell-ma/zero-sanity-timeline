@@ -44,7 +44,6 @@
   "properties": {
     "id": "HYPOTHERMIA_TALENT",
     "name": "Hypothermia (Talent)",
-    "type": "TALENT",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",

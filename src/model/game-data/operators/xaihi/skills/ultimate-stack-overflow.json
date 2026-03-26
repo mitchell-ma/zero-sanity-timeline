@@ -3,7 +3,8 @@
     "name": "Stack Overflow",
     "description": "Applies temporary Cryo Amp and Nature Amp to the entire team. The attribute of Intellect increases the Amp effect.",
     "eventType": "COMBAT_SKILL",
-    "eventCategoryType": "ULTIMATE_SKILL"
+    "eventCategoryType": "ULTIMATE_SKILL",
+    "id": "STACK_OVERFLOW"
   },
   "clause": [
     {
@@ -72,7 +73,7 @@
   ],
   "metadata": {
     "originId": "XAIHI",
-    "id": "STACK_OVERFLOW",
     "icon": "skills/ult_xaihi.png"
-  }
+  },
+  "clauseType": "ALL"
 }

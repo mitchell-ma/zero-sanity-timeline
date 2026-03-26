@@ -5,9 +5,9 @@
  */
 import { useState } from 'react';
 import { VerbType, ObjectType, SubjectType, DeterminerType, THRESHOLD_MAX, DURATION_END,
-  VERB_LABELS, ADJECTIVE_LABELS, OBJECT_LABELS, TARGET_LABELS, DETERMINER_LABELS, OBJECT_ADJECTIVES,
+  VERB_LABELS, OBJECT_QUALIFIER_LABELS, OBJECT_LABELS, TARGET_LABELS, DETERMINER_LABELS, OBJECT_QUALIFIERS,
   EFFECT_VERBS, getObjectsForEffectVerb, getEffectFieldVisibility, WITH_PROPERTY_LABELS,
-  OBJECT_REQUIRED_ADJECTIVE, OBJECT_DEFAULT_ADJECTIVE,
+  OBJECT_REQUIRED_QUALIFIER, OBJECT_DEFAULT_QUALIFIER,
   isValueLiteral, isValueVariable, isValueStat, isValueExpression, ValueOperation } from '../../dsl/semantics';
 import type { Effect, ValueNode } from '../../dsl/semantics';
 import { StatusIdSelect, InflictionIdSelect, ReactionIdSelect } from './InteractionBuilder';
@@ -26,7 +26,7 @@ interface EffectBuilderProps {
 
 export default function EffectBuilder({ value, onChange, onRemove, compact }: EffectBuilderProps) {
   const objects = getObjectsForEffectVerb(value.verb);
-  const adjectives = value.object ? (OBJECT_ADJECTIVES[value.object] ?? []) : [];
+  const adjectives = value.object ? (OBJECT_QUALIFIERS[value.object] ?? []) : [];
   const vis = getEffectFieldVisibility(value);
   const isMax = value.value === THRESHOLD_MAX;
 
@@ -68,16 +68,16 @@ export default function EffectBuilder({ value, onChange, onRemove, compact }: Ef
         </SentenceSlot>
 
         {/* Adjective — slides in when object type has adjectives (hidden for STATUS) */}
-        <SentenceSlot active={vis.showAdjective}>
+        <SentenceSlot active={vis.showObjectQualifier}>
           <CustomSelect
-            value={Array.isArray(value.adjective) ? value.adjective[0] ?? '' : value.adjective ?? ''}
+            value={Array.isArray(value.objectQualifier) ? value.objectQualifier[0] ?? '' : value.objectQualifier ?? ''}
             options={[
-              ...(OBJECT_REQUIRED_ADJECTIVE.has(value.object ?? '') ? [] : [{ value: '', label: '—' }]),
-              ...adjectives.map((a) => ({ value: a, label: ADJECTIVE_LABELS[a] })),
+              ...(OBJECT_REQUIRED_QUALIFIER.has(value.object ?? '') ? [] : [{ value: '', label: '—' }]),
+              ...adjectives.map((a) => ({ value: a, label: OBJECT_QUALIFIER_LABELS[a] })),
             ]}
             onChange={(v) => {
-              const adj = (v || OBJECT_DEFAULT_ADJECTIVE[value.object as ObjectType] || undefined) as AdjectiveType | undefined;
-              update({ adjective: adj });
+              const adj = (v || OBJECT_DEFAULT_QUALIFIER[value.object as ObjectType] || undefined) as AdjectiveType | undefined;
+              update({ objectQualifier: adj });
             }}
           />
         </SentenceSlot>
@@ -109,9 +109,9 @@ export default function EffectBuilder({ value, onChange, onRemove, compact }: Ef
           onChange={(v) => {
             const newObj = v as ObjectType;
             if (newObj === ObjectType.STATUS) {
-              update({ object: newObj, adjective: undefined });
-            } else if (OBJECT_DEFAULT_ADJECTIVE[newObj]) {
-              update({ object: newObj, adjective: value.adjective || OBJECT_DEFAULT_ADJECTIVE[newObj] });
+              update({ object: newObj, objectQualifier: undefined });
+            } else if (OBJECT_DEFAULT_QUALIFIER[newObj]) {
+              update({ object: newObj, objectQualifier: value.objectQualifier || OBJECT_DEFAULT_QUALIFIER[newObj] });
             } else {
               update({ object: newObj });
             }

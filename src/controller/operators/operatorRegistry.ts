@@ -283,7 +283,7 @@ export function deregisterCustomOperatorById(operatorId: string): void {
   if (idx >= 0) ALL_OPERATORS.splice(idx, 1);
 }
 
-// ── Ultimate energy cost with potential modifiers ────────────────────────────
+// ── Ultimate energy cost ─────────────────────────────────────────────────────
 
 export function getUltimateEnergyCost(operatorId: string): number {
   const json = buildMergedOperatorJson(operatorId);
@@ -296,28 +296,9 @@ export function getUltimateEnergyCostForPotential(
   operatorId: string,
   potential: Potential,
 ): number | null {
-  const base = getOperatorBase(operatorId);
-  if (!base) return null;
-
-  let baseCost = getUltimateEnergyCost(operatorId);
-
-  const potentials = (base.potentials ?? []) as { level: number; effects: { potentialEffectType: string; skillCostModifier?: { skillType: string; value: number } }[] }[];
-  for (const pot of potentials) {
-    if (pot.level > potential) break;
-    for (const eff of pot.effects) {
-      if (eff.potentialEffectType === 'SKILL_COST' && eff.skillCostModifier) {
-        const mod = eff.skillCostModifier;
-        const tm = getSkillTypeMap(operatorId);
-        const ultBaseId = tm['ULTIMATE'];
-        const modSkill = mod.skillType;
-        if (ultBaseId && (modSkill === ultBaseId || modSkill.endsWith(ultBaseId))) {
-          baseCost = Math.round(baseCost * mod.value);
-        }
-      }
-    }
-  }
-
-  return baseCost;
+  const json = buildMergedOperatorJson(operatorId);
+  if (!json) return null;
+  return loadUltimateEnergyCost(json, { skillLevel: 12, potential, stats: {} });
 }
 
 // ── Unified operator config lookup ──────────────────────────────────────────

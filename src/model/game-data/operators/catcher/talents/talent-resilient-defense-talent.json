@@ -1,6 +1,5 @@
 {
   "properties": {
-    "type": "TALENT",
     "id": "RESILIENT_DEFENSE_TALENT",
     "name": "Resilient Defense (Talent)",
     "to": "OPERATOR",

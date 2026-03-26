@@ -104,8 +104,8 @@ jest.mock('../../view/InformationPane', () => ({
 const laevatainOperatorJson = require('../../model/game-data/operators/laevatain/laevatain.json');
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { loadSkillsJson: _loadLaevatainSkills, loadStatusesJson: _loadLaevatainStatuses } = require('../helpers/loadGameData');
-const laevatainSkillsJson = _loadLaevatainSkills('laevatain');
-const laevatainStatusesJson = _loadLaevatainStatuses('laevatain');
+const laevatainSkillsJson = _loadLaevatainSkills('LAEVATAIN');
+const laevatainStatusesJson = _loadLaevatainStatuses('LAEVATAIN');
 const _KEY_EXPAND: Record<string, string> = {
   verb: 'verb', object: 'object', subject: 'subject',
   to: 'to',
@@ -337,9 +337,9 @@ describe('C. Empowered Battle Skill & Combustion', () => {
       (e: Record<string, unknown>) => e.verb === 'APPLY' && e.object === 'REACTION'
     );
     expect(applyReaction).toBeDefined();
-    const adjectives = Array.isArray(applyReaction.adjective) ? applyReaction.adjective : [applyReaction.adjective];
-    expect(adjectives).toContain('FORCED');
-    expect(adjectives).toContain('COMBUSTION');
+    const qualifiers = Array.isArray(applyReaction.objectQualifier) ? applyReaction.objectQualifier : [applyReaction.objectQualifier];
+    expect(qualifiers).toContain('FORCED');
+    expect(qualifiers).toContain('COMBUSTION');
   });
 });
 
@@ -431,13 +431,15 @@ describe('E. Ultimate & Enhanced Variants', () => {
     expect(typeof durVal === 'object' ? durVal.value : durVal).toBe(15);
   });
 
-  test('E7: Ultimate energy cost is 300', () => {
+  test('E7: Ultimate energy cost varies by potential (300 base, 255 at P4+)', () => {
     const ultSkill = mockLaevatainJson.skills.ULTIMATE;
     const energyCost = ultSkill.clause[0].effects.find(
       (e: Record<string, unknown>) => e.object === 'ULTIMATE_ENERGY' && e.verb === 'CONSUME'
     );
     expect(energyCost).toBeDefined();
-    expect(energyCost.with.value.value).toBe(300);
+    expect(energyCost.with.value.verb).toBe('VARY_BY');
+    expect(energyCost.with.value.value[0]).toBe(300);
+    expect(energyCost.with.value.value[4]).toBe(255);
   });
 
   test('E8: SMOULDERING_FIRE has 11 frames and second frame has no RECOVER ULTIMATE_ENERGY', () => {
@@ -455,44 +457,6 @@ describe('E. Ultimate & Enhanced Variants', () => {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 describe('F. Potentials', () => {
-  test('F1: P1 adds SP Return (+20) to Smouldering Fire variants', () => {
-    const p1 = mockLaevatainJson.potentials[0];
-    expect(p1.level).toBe(1);
-    expect(p1.name).toBe('Heart of Melting Flame');
-
-    const spEffects = p1.effects.filter(
-      (e: any) => /* eslint-disable-line @typescript-eslint/no-explicit-any */ e.potentialEffectType === 'SKILL_PARAMETER' &&
-        e.skillParameterModifier.parameterKey === 'SKILL_POINT'
-    );
-    expect(spEffects.length).toBe(2); // Normal and Enhanced
-    expect(spEffects[0].skillParameterModifier.value).toBe(20);
-    expect(spEffects[0].skillParameterModifier.parameterModifyType).toBe('ADDITIVE');
-  });
-
-  test('F2: P0 adds x1.2 DAMAGE_MULTIPLIER_MODIFIER to Smouldering Fire Enhanced', () => {
-    const p0 = mockLaevatainJson.potentials[0];
-    // Enhanced: ×1.2 on DAMAGE_MULTIPLIER_MODIFIER
-    const enhancedDmg = p0.effects.find(
-      (e: any) => /* eslint-disable-line @typescript-eslint/no-explicit-any */ e.potentialEffectType === 'SKILL_PARAMETER' &&
-        e.skillParameterModifier.skillType === 'SMOULDERING_FIRE_ENHANCED' &&
-        e.skillParameterModifier.parameterKey === 'DAMAGE_MULTIPLIER_MODIFIER'
-    );
-    expect(enhancedDmg).toBeDefined();
-    expect(enhancedDmg.skillParameterModifier.value).toBe(1.2);
-  });
-
-  test('F4: P4 reduces Twilight cost by x0.85', () => {
-    const p4 = mockLaevatainJson.potentials[3];
-    expect(p4.level).toBe(4);
-    expect(p4.name).toBe('Ice Cream Furnace');
-    const costEffect = p4.effects.find(
-      (e: Record<string, unknown>) => e.potentialEffectType === 'SKILL_COST'
-    );
-    expect(costEffect).toBeDefined();
-    expect(costEffect.skillCostModifier.skillType).toBe('LAEVATAIN_TWILIGHT');
-    expect(costEffect.skillCostModifier.value).toBe(0.85);
-  });
-
   test('F5: P5 attaches Proof of Existence buff', () => {
     const p5 = mockLaevatainJson.potentials[4];
     expect(p5.level).toBe(5);
@@ -504,20 +468,6 @@ describe('F. Potentials', () => {
     expect(buffEffect.buffAttachment.objectId).toBe('LAEVATAIN_POTENTIAL5_PROOF_OF_EXISTENCE');
   });
 
-  test('F6: P5 adds x1.2 damage multiplier to Flaming Cinders Enhanced', () => {
-    const p5 = mockLaevatainJson.potentials[4];
-    const dmgEffects = p5.effects.filter(
-      (e: any) => /* eslint-disable-line @typescript-eslint/no-explicit-any */ e.potentialEffectType === 'SKILL_PARAMETER' &&
-        e.skillParameterModifier.parameterKey === 'DAMAGE_MULTIPLIER_MODIFIER' &&
-        e.skillParameterModifier.skillType === 'FLAMING_CINDERS_ENHANCED'
-    );
-    // P5 has two UNIQUE_MULTIPLIER entries for enhanced basic (multiplicative stacking)
-    expect(dmgEffects.length).toBeGreaterThanOrEqual(1);
-    for (const eff of dmgEffects) {
-      expect(eff.skillParameterModifier.value).toBe(1.2);
-      expect(eff.skillParameterModifier.parameterModifyType).toBe('UNIQUE_MULTIPLIER');
-    }
-  });
 });
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -613,15 +563,15 @@ describe('K. Scorching Heart absorbs Antal combo mirrored heat', () => {
   }
 
   function laevWiring(): SlotTriggerWiring {
-    return { slotId: SLOT_LAEV, operatorId: 'laevatain' };
+    return { slotId: SLOT_LAEV, operatorId: 'LAEVATAIN' };
   }
 
   function antalWiring(): SlotTriggerWiring {
-    return { slotId: SLOT_ANTAL, operatorId: 'antal' };
+    return { slotId: SLOT_ANTAL, operatorId: 'ANTAL' };
   }
 
   function akekuriWiring(): SlotTriggerWiring {
-    return { slotId: SLOT_AKEKURI, operatorId: 'akekuri' };
+    return { slotId: SLOT_AKEKURI, operatorId: 'AKEKURI' };
   }
 
   test('K1: Laevatain final strike absorbs both original and mirrored heat inflictions', () => {
@@ -699,7 +649,7 @@ describe('L. Freeform infliction + Final Strike absorption', () => {
   const LAEV_SLOT = 'slot-0';
 
   test('L1: Single freeform heat infliction + basic attack produces exactly 1 MF stack', () => {
-    const wirings: SlotTriggerWiring[] = [{ slotId: LAEV_SLOT, operatorId: 'laevatain' }];
+    const wirings: SlotTriggerWiring[] = [{ slotId: LAEV_SLOT, operatorId: 'LAEVATAIN' }];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- partial loadout for test
     const loadoutProps: Record<string, any> = {
       [LAEV_SLOT]: { operator: { talentOneLevel: 1, talentTwoLevel: 0, potential: 0 } },
@@ -748,7 +698,7 @@ describe('M. Normal basic attack without external infliction', () => {
   const LAEV_SLOT = 'slot-0';
 
   test('M1: Normal basic attack alone produces no heat infliction or MF', () => {
-    const wirings: SlotTriggerWiring[] = [{ slotId: LAEV_SLOT, operatorId: 'laevatain' }];
+    const wirings: SlotTriggerWiring[] = [{ slotId: LAEV_SLOT, operatorId: 'LAEVATAIN' }];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- partial loadout for test
     const loadoutProps: Record<string, any> = {
       [LAEV_SLOT]: { operator: { talentOneLevel: 1, talentTwoLevel: 0, potential: 0 } },
@@ -790,12 +740,12 @@ describe('N. Scorching Heart talent presence', () => {
   const LAEV_SLOT = 'slot-0';
 
   test('N1: SCORCHING_HEART talent event exists at frame 0 with full timeline duration', () => {
-    const wirings: SlotTriggerWiring[] = [{ slotId: LAEV_SLOT, operatorId: 'laevatain' }];
+    const wirings: SlotTriggerWiring[] = [{ slotId: LAEV_SLOT, operatorId: 'LAEVATAIN' }];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- partial loadout for test
     const loadoutProps: Record<string, any> = {
       [LAEV_SLOT]: { operator: { talentOneLevel: 1, talentTwoLevel: 0, potential: 0 } },
     };
-    const slotOpMap: Record<string, string> = { [LAEV_SLOT]: 'laevatain' };
+    const slotOpMap: Record<string, string> = { [LAEV_SLOT]: 'LAEVATAIN' };
 
     // Even with no skill events, the talent should be created
     const processed = processCombatSimulation(

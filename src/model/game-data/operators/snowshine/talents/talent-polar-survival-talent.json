@@ -1,6 +1,5 @@
 {
   "properties": {
-    "type": "TALENT",
     "id": "POLAR_SURVIVAL_TALENT",
     "name": "Polar Survival (Talent)",
     "to": "OPERATOR",

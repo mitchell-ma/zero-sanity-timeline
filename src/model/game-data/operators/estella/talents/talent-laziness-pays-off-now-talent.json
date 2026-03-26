@@ -1,6 +1,5 @@
 {
   "properties": {
-    "type": "TALENT",
     "id": "LAZINESS_PAYS_OFF_NOW_TALENT",
     "name": "Laziness Pays Off Now (Talent)",
     "to": "OPERATOR",

@@ -1,6 +1,5 @@
 {
   "properties": {
-    "type": "TALENT",
     "id": "FREEZING_POINT_TALENT",
     "name": "Freezing Point (Talent)",
     "to": "OPERATOR",

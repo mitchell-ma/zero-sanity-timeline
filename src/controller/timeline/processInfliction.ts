@@ -251,6 +251,7 @@ const REACTION_SEGMENT_LABEL: Record<string, string> = {
   solidification:  'Solidification',
   corrosion:       'Corrosion',
   electrification: 'Electrification',
+  shatter:         'Shatter',
 };
 
 export function buildReactionSegment(ev: TimelineEvent, rawDuration?: number): EventSegmentData | null {
@@ -280,12 +281,11 @@ export function buildReactionSegment(ev: TimelineEvent, rawDuration?: number): E
     for (let i = 1; i <= tickCount; i++) {
       frames.push({ offsetFrame: i * FPS, damageElement: element, frameTypes: COMBUSTION_FRAME_TYPES });
     }
-  } else if (ev.columnId === REACTION_COLUMNS.SOLIDIFICATION) {
-    // Shatter at the end of the duration
-    frames.push({ offsetFrame: dur, damageElement: element });
   }
-  // Corrosion is handled separately in buildCorrosionSegments
+  // Solidification: initial hit only — shatter is triggered by physical status consumption
+  // Corrosion: handled separately in buildCorrosionSegments
   // Electrification: initial hit only (no additional frames)
+  // Shatter: frames are set at creation time in eventInterpretorController
 
   const baseName = REACTION_SEGMENT_LABEL[ev.columnId] ?? ev.columnId;
   const level = ev.stacks ?? 1;

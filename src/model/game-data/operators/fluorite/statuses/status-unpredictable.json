@@ -27,7 +27,6 @@
   "properties": {
     "id": "UNPREDICTABLE",
     "name": "Unpredictable",
-    "type": "STATUS",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "duration": {
@@ -53,5 +52,6 @@
     "dataSources": [
       "ENDFIELD_WIKI"
     ]
-  }
+  },
+  "clauseType": "ALL"
 }

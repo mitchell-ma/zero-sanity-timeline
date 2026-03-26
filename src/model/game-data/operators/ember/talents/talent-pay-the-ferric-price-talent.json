@@ -24,7 +24,6 @@
   "properties": {
     "id": "PAY_THE_FERRIC_PRICE_TALENT",
     "name": "Pay the Ferric Price (Talent)",
-    "type": "TALENT",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",

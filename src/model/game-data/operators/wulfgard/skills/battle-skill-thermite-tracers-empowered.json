@@ -20,31 +20,57 @@
     }
   ],
   "properties": {
-    "enhancementTypes": ["EMPOWERED"],
+    "enhancementTypes": [
+      "EMPOWERED"
+    ],
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "BATTLE_SKILL",
-    "element": "HEAT"
+    "element": "HEAT",
+    "id": "THERMITE_TRACERS_EMPOWERED"
   },
   "segments": [
     {
       "frames": [
         {
-          "metadata": { "eventComponentType": "FRAME", "dataSources": ["END_AXIS"] },
-          "properties": { "offset": { "value": 0.2, "unit": "SECOND" } },
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "END_AXIS"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 0.2,
+              "unit": "SECOND"
+            }
+          },
           "clause": [
             {
               "conditions": [],
               "effects": [
                 {
                   "verb": "DEAL",
-                  "adjective": "HEAT",
+                  "objectQualifier": "HEAT",
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
                     "value": {
                       "verb": "VARY_BY",
                       "object": "SKILL_LEVEL",
-                      "value": [0.34, 0.37, 0.41, 0.44, 0.48, 0.51, 0.54, 0.58, 0.61, 0.65, 0.71, 0.77],
+                      "value": [
+                        0.34,
+                        0.37,
+                        0.41,
+                        0.44,
+                        0.48,
+                        0.51,
+                        0.54,
+                        0.58,
+                        0.61,
+                        0.65,
+                        0.71,
+                        0.77
+                      ],
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
                     }
@@ -52,25 +78,49 @@
                 }
               ]
             }
-          ]
+          ],
+          "clauseType": "ALL"
         },
         {
-          "metadata": { "eventComponentType": "FRAME", "dataSources": ["END_AXIS"] },
-          "properties": { "offset": { "value": 0.53, "unit": "SECOND" } },
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "END_AXIS"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 0.53,
+              "unit": "SECOND"
+            }
+          },
           "clause": [
             {
               "conditions": [],
               "effects": [
                 {
                   "verb": "DEAL",
-                  "adjective": "HEAT",
+                  "objectQualifier": "HEAT",
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
                     "value": {
                       "verb": "VARY_BY",
                       "object": "SKILL_LEVEL",
-                      "value": [0.34, 0.37, 0.41, 0.44, 0.48, 0.51, 0.54, 0.58, 0.61, 0.65, 0.71, 0.77],
+                      "value": [
+                        0.34,
+                        0.37,
+                        0.41,
+                        0.44,
+                        0.48,
+                        0.51,
+                        0.54,
+                        0.58,
+                        0.61,
+                        0.65,
+                        0.71,
+                        0.77
+                      ],
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
                     }
@@ -78,11 +128,22 @@
                 }
               ]
             }
-          ]
+          ],
+          "clauseType": "ALL"
         },
         {
-          "metadata": { "eventComponentType": "FRAME", "dataSources": ["END_AXIS"] },
-          "properties": { "offset": { "value": 0.767, "unit": "SECOND" } },
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "END_AXIS"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 0.767,
+              "unit": "SECOND"
+            }
+          },
           "clause": [
             {
               "conditions": [],
@@ -91,7 +152,12 @@
                   "verb": "DEAL",
                   "object": "STAGGER",
                   "to": "ENEMY",
-                  "with": { "value": { "verb": "IS", "value": 5 } }
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 5
+                    }
+                  }
                 },
                 {
                   "verb": "CONSUME",
@@ -100,14 +166,27 @@
                 },
                 {
                   "verb": "DEAL",
-                  "adjective": "HEAT",
+                  "objectQualifier": "HEAT",
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
                     "value": {
                       "verb": "VARY_BY",
                       "object": "SKILL_LEVEL",
-                      "value": [0.34, 0.37, 0.41, 0.44, 0.48, 0.51, 0.54, 0.58, 0.61, 0.65, 0.71, 0.77],
+                      "value": [
+                        0.34,
+                        0.37,
+                        0.41,
+                        0.44,
+                        0.48,
+                        0.51,
+                        0.54,
+                        0.58,
+                        0.61,
+                        0.65,
+                        0.71,
+                        0.77
+                      ],
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
                     }
@@ -115,11 +194,22 @@
                 }
               ]
             }
-          ]
+          ],
+          "clauseType": "ALL"
         },
         {
-          "metadata": { "eventComponentType": "FRAME", "dataSources": ["END_AXIS"] },
-          "properties": { "offset": { "value": 2.07, "unit": "SECOND" } },
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "END_AXIS"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 2.07,
+              "unit": "SECOND"
+            }
+          },
           "clause": [
             {
               "conditions": [],
@@ -127,24 +217,47 @@
                 {
                   "verb": "RECOVER",
                   "object": "SKILL_POINT",
-                  "with": { "value": { "verb": "IS", "value": 20 } }
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 20
+                    }
+                  }
                 },
                 {
                   "verb": "DEAL",
                   "object": "STAGGER",
                   "to": "ENEMY",
-                  "with": { "value": { "verb": "IS", "value": 5 } }
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 5
+                    }
+                  }
                 },
                 {
                   "verb": "DEAL",
-                  "adjective": "HEAT",
+                  "objectQualifier": "HEAT",
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
                     "value": {
                       "verb": "VARY_BY",
                       "object": "SKILL_LEVEL",
-                      "value": [3.78, 4.15, 4.53, 4.91, 5.29, 5.66, 6.04, 6.42, 6.8, 7.27, 7.84, 8.5],
+                      "value": [
+                        3.78,
+                        4.15,
+                        4.53,
+                        4.91,
+                        5.29,
+                        5.66,
+                        6.04,
+                        6.42,
+                        6.8,
+                        7.27,
+                        7.84,
+                        8.5
+                      ],
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
                     }
@@ -152,12 +265,16 @@
                 }
               ]
             }
-          ]
+          ],
+          "clauseType": "ALL"
         }
       ],
       "properties": {
         "duration": {
-          "value": { "verb": "IS", "value": 2.07 },
+          "value": {
+            "verb": "IS",
+            "value": 2.07
+          },
           "unit": "SECOND"
         },
         "element": "HEAT"
@@ -165,7 +282,6 @@
     }
   ],
   "metadata": {
-    "id": "THERMITE_TRACERS_EMPOWERED",
     "icon": "skills/skill_wulfgard.png"
   }
 }

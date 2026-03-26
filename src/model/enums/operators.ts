@@ -39,10 +39,6 @@ export enum OperatorType {
 
 /** How a potential effect modifies the operator. */
 export enum PotentialEffectType {
-  /** Modifies a skill's cost parameter (e.g. energy cost). */
-  SKILL_COST = "SKILL_COST",
-  /** Modifies a skill's tunable parameter (e.g. SP return, damage ratio, duration). */
-  SKILL_PARAMETER = "SKILL_PARAMETER",
   /** Flat stat bonus (e.g. Intellect +20). */
   STAT_MODIFIER = "STAT_MODIFIER",
   /** Attaches or modifies a buff. */

@@ -16,7 +16,7 @@ import { checkKeys, VALID_VALUE_NODE_KEYS, VALID_CLAUSE_KEYS, VALID_METADATA_KEY
 
 // ── Shared validation helpers ───────────────────────────────────────────────
 
-const VALID_EFFECT_KEYS = new Set(['verb', 'object', 'adjective', 'objectId', 'to', 'toDeterminer', 'with']);
+const VALID_EFFECT_KEYS = new Set(['verb', 'object', 'objectQualifier', 'objectId', 'to', 'toDeterminer', 'with']);
 const VALID_EFFECT_WITH_KEYS = new Set(['value', 'multiplier', 'staggerValue']);
 const VALID_TRIGGER_CLAUSE_KEYS = new Set(['conditions', 'effects']);
 

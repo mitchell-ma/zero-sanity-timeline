@@ -5,7 +5,8 @@
     "windowFrames": 720,
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "COMBO_SKILL",
-    "element": "CRYO"
+    "element": "CRYO",
+    "id": "WINTERS_DEVOURER"
   },
   "clause": [
     {
@@ -82,7 +83,7 @@
               "effects": [
                 {
                   "verb": "DEAL",
-                  "adjective": "CRYO",
+                  "objectQualifier": "CRYO",
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
@@ -158,7 +159,8 @@
                 }
               ]
             }
-          ]
+          ],
+          "clauseType": "ALL"
         },
         {
           "metadata": {
@@ -190,7 +192,7 @@
                 },
                 {
                   "verb": "DEAL",
-                  "adjective": "CRYO",
+                  "objectQualifier": "CRYO",
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
@@ -258,7 +260,8 @@
                 }
               ]
             }
-          ]
+          ],
+          "clauseType": "ALL"
         }
       ]
     },
@@ -302,7 +305,6 @@
   ],
   "metadata": {
     "originId": "LAST_RITE",
-    "id": "WINTERS_DEVOURER",
     "icon": "skills/combo_lastrite.png"
   },
   "onTriggerClause": [
@@ -315,5 +317,6 @@
         }
       ]
     }
-  ]
+  ],
+  "clauseType": "ALL"
 }

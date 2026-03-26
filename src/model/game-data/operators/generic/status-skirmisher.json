@@ -2,9 +2,9 @@
   "properties": {
     "id": "SKIRMISHER",
     "name": "Skirmisher",
-    "type": "STATUS",
     "target": "OPERATOR",
-    "targetDeterminer": "THIS"
+    "targetDeterminer": "THIS",
+    "eventCategoryType": "STATUS"
   },
   "metadata": {
     "originId": "game"
@@ -36,5 +36,6 @@
         }
       ]
     }
-  ]
+  ],
+  "clauseType": "ALL"
 }

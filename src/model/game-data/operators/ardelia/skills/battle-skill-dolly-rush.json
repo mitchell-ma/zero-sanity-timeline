@@ -4,7 +4,8 @@
     "description": "Hops on Mr. Dolly and rams the target to deal Nature DMG. If the target has Corrosion, then consume the Corrosion and apply Physical Susceptibility and Arts Susceptibility to the target.",
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "BATTLE_SKILL",
-    "element": "NATURE"
+    "element": "NATURE",
+    "id": "DOLLY_RUSH"
   },
   "clause": [
     {
@@ -25,7 +26,6 @@
   ],
   "metadata": {
     "originId": "ARDELIA",
-    "id": "DOLLY_RUSH",
     "icon": "skills/skill_ardelia.png"
   },
   "segments": [
@@ -107,7 +107,7 @@
                 },
                 {
                   "verb": "DEAL",
-                  "adjective": "PHYSICAL",
+                  "objectQualifier": "PHYSICAL",
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
@@ -196,7 +196,7 @@
                 {
                   "verb": "DEAL",
                   "object": "DAMAGE",
-                  "adjective": "NATURE",
+                  "objectQualifier": "NATURE",
                   "to": "ENEMY",
                   "with": {
                     "multiplier": {
@@ -220,7 +220,8 @@
                 }
               ]
             }
-          ]
+          ],
+          "clauseType": "ALL"
         }
       ],
       "properties": {
@@ -234,5 +235,6 @@
         "element": "NATURE"
       }
     }
-  ]
+  ],
+  "clauseType": "ALL"
 }

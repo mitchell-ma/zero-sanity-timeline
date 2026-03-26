@@ -1,6 +1,5 @@
 {
   "properties": {
-    "type": "TALENT",
     "id": "MOUNTAINPEAK_SURFER_TALENT",
     "name": "Mountainpeak Surfer (Talent)",
     "to": "OPERATOR",

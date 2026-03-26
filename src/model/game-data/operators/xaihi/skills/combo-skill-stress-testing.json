@@ -5,7 +5,8 @@
     "windowFrames": 720,
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "COMBO_SKILL",
-    "element": "CRYO"
+    "element": "CRYO",
+    "id": "STRESS_TESTING"
   },
   "clause": [
     {
@@ -94,7 +95,7 @@
                 {
                   "verb": "APPLY",
                   "object": "INFLICTION",
-                  "adjective": "CRYO",
+                  "objectQualifier": "CRYO",
                   "to": "ENEMY",
                   "with": {
                     "stacks": {
@@ -105,7 +106,7 @@
                 },
                 {
                   "verb": "DEAL",
-                  "adjective": "CRYO",
+                  "objectQualifier": "CRYO",
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
@@ -133,7 +134,8 @@
                 }
               ]
             }
-          ]
+          ],
+          "clauseType": "ALL"
         }
       ]
     },
@@ -177,7 +179,6 @@
   ],
   "metadata": {
     "originId": "XAIHI",
-    "id": "STRESS_TESTING",
     "icon": "skills/combo_xaihi.png"
   },
   "onTriggerClause": [
@@ -191,5 +192,6 @@
         }
       ]
     }
-  ]
+  ],
+  "clauseType": "ALL"
 }

@@ -130,7 +130,7 @@ export class DerivedEventController {
    * Must be called before registerEvents so that user-placed swaps clamp
    * this seed during registration. No-op if no slots are occupied.
    */
-  seedControlledOperator(firstOccupiedSlotId: string | undefined) {
+  seedControlledOperator(firstOccupiedSlotId: string | undefined, operatorId?: string) {
     if (!firstOccupiedSlotId) return;
     const ev = allocInputEvent();
     ev.uid = `controlled-seed-${firstOccupiedSlotId}`;
@@ -140,7 +140,7 @@ export class DerivedEventController {
     ev.columnId = OPERATOR_COLUMNS.INPUT;
     ev.startFrame = 0;
     ev.segments = [{ properties: { duration: TOTAL_FRAMES } }];
-    ev.sourceOwnerId = firstOccupiedSlotId;
+    ev.sourceOwnerId = operatorId ?? firstOccupiedSlotId;
     ev.sourceSkillName = CombatSkillType.CONTROL;
     this.registerEvents([ev]);
   }
@@ -592,9 +592,13 @@ export class DerivedEventController {
     this.stacks.set(key, existing);
     this.output.push(ev);
 
+    // Record the stack position at creation time so it survives consumed-event filtering
+    const activeAfterCreation = this.activeEventsIn(columnId, ownerId, frame);
+    ev.stacks = activeAfterCreation.length;
+
     // Extend co-active inflictions to match the new one's end
     const newEnd = frame + extendedDuration;
-    const remainingActive = this.activeEventsIn(columnId, ownerId, frame);
+    const remainingActive = activeAfterCreation;
     for (const act of remainingActive) {
       if (act.uid === ev.uid) continue;
       const actEnd = act.startFrame + eventDuration(act);

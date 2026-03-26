@@ -130,7 +130,7 @@
                 },
                 {
                   "verb": "DEAL",
-                  "adjective": "CRYO",
+                  "objectQualifier": "CRYO",
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
@@ -163,7 +163,8 @@
                 }
               ]
             }
-          ]
+          ],
+          "clauseType": "ALL"
         }
       ]
     }
@@ -173,11 +174,11 @@
     "description": "An attack with up to 5 sequences that deals Cryo DMG. As the controlled operator, Final Strike also deals {poise:0} Stagger.",
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "BASIC_ATTACK",
-    "element": "CRYO"
+    "element": "CRYO",
+    "id": "BASIC_ATTACK"
   },
   "metadata": {
     "originId": "TANGTANG",
-    "id": "BASIC_ATTACK",
     "icon": "skills/attack_guns.png"
   }
 }

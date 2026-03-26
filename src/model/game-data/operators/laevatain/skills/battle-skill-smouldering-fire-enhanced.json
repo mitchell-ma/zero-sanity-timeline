@@ -9,7 +9,10 @@
           "object": "STATUS",
           "objectId": "MELTING_FLAME",
           "cardinalityConstraint": "EXACTLY",
-          "value": { "verb": "IS", "value": 4 }
+          "value": {
+            "verb": "IS",
+            "value": 4
+          }
         }
       ]
     }
@@ -20,11 +23,11 @@
     ],
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "BATTLE_SKILL",
-    "element": "HEAT"
+    "element": "HEAT",
+    "id": "SMOULDERING_FIRE_ENHANCED"
   },
   "metadata": {
     "originId": "LAEVATAIN",
-    "id": "SMOULDERING_FIRE_ENHANCED",
     "icon": "skills/skill_laevatain.png"
   },
   "segments": [
@@ -60,7 +63,7 @@
                 },
                 {
                   "verb": "DEAL",
-                  "adjective": "HEAT",
+                  "objectQualifier": "HEAT",
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
@@ -110,7 +113,10 @@
                     },
                     "count": {
                       "verb": "IS",
-                      "value": { "verb": "IS", "value": 4 }
+                      "value": {
+                        "verb": "IS",
+                        "value": 4
+                      }
                     },
                     "value": {
                       "verb": "VARY_BY",
@@ -136,7 +142,8 @@
                 }
               ]
             }
-          ]
+          ],
+          "clauseType": "ALL"
         },
         {
           "metadata": {
@@ -168,7 +175,7 @@
                 },
                 {
                   "verb": "DEAL",
-                  "adjective": "HEAT",
+                  "objectQualifier": "HEAT",
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
@@ -236,7 +243,8 @@
                 }
               ]
             }
-          ]
+          ],
+          "clauseType": "ALL"
         }
       ],
       "properties": {

@@ -19,7 +19,7 @@ import type { QueueFrame } from './eventQueueTypes';
 import { EventInterpretorController } from './eventInterpretorController';
 import { PriorityQueue } from './priorityQueue';
 import { TriggerIndex } from './triggerIndex';
-import { ENEMY_OWNER_ID, INFLICTION_COLUMN_IDS, REACTION_COLUMN_IDS, SKILL_COLUMNS } from '../../model/channels';
+import { ENEMY_OWNER_ID, INFLICTION_COLUMN_IDS, PHYSICAL_INFLICTION_COLUMN_IDS, REACTION_COLUMN_IDS, SKILL_COLUMNS } from '../../model/channels';
 import { getAllTriggerAssociations } from '../gameDataStore';
 import { classifyEvents } from './inputEventController';
 import { initHpTracker, getEnemyHpPercentage, precomputeDamageByFrame } from '../calculation/calculationController';
@@ -212,7 +212,7 @@ export function runEventQueue(
   // Seed derived events (freeform inflictions/reactions) — these go through the
   // queue so they're processed at the correct priority (not into registeredEvents)
   for (const ev of derivedEvents) {
-    if (INFLICTION_COLUMN_IDS.has(ev.columnId)) {
+    if (INFLICTION_COLUMN_IDS.has(ev.columnId) || PHYSICAL_INFLICTION_COLUMN_IDS.has(ev.columnId)) {
       queue.insert({
         frame: ev.startFrame,
         priority: PRIORITY.INFLICTION_CREATE,
@@ -274,7 +274,7 @@ export function runEventQueue(
         statusName: entry.def.properties.id, columnId: '', ownerId: entry.operatorSlotId,
         sourceOwnerId: ev.ownerId, sourceSkillName: ev.name,
         maxStacks: 0, durationFrames: 0, operatorSlotId: entry.operatorSlotId,
-        engineTrigger: { frame: ev.startFrame, sourceOwnerId: ev.ownerId, sourceSkillName: ev.name, ctx: triggerCtx, isEquip: entry.isEquip },
+        engineTrigger: { frame: ev.startFrame, sourceOwnerId: entry.operatorId, triggerSlotId: ev.ownerId, sourceSkillName: ev.name, ctx: triggerCtx, isEquip: entry.isEquip },
       });
     }
   }
@@ -365,7 +365,8 @@ export function processCombatSimulation(
   _decSingleton.reset(triggerAssociations, slotWirings, spController, ueController);
   const state = _decSingleton;
   const slotIds = slotOperatorMap ? Object.keys(slotOperatorMap) : [];
-  state.seedControlledOperator(slotIds[0]);
+  const firstSlotOperatorId = slotIds[0] && slotOperatorMap ? slotOperatorMap[slotIds[0]] : undefined;
+  state.seedControlledOperator(slotIds[0], firstSlotOperatorId);
   state.registerEvents(inputEvents);
 
   // ── 3. SP recovery + talent events ────────────────────────────────────────

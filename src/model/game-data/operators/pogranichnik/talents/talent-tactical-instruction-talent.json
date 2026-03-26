@@ -1,6 +1,5 @@
 {
   "properties": {
-    "type": "TALENT",
     "id": "TACTICAL_INSTRUCTION_TALENT",
     "name": "Tactical Instruction (Talent)",
     "to": "OPERATOR",

@@ -2,12 +2,12 @@
  * Generic JSON-driven multiplier engine.
  *
  * Replaces skillMultiplierRegistry.ts and all combat-skills/*.ts classes.
- * Reads multiplier data directly from operator JSON frames, applying
- * potential-dependent modifiers from the potentials section.
+ * Reads multiplier data directly from operator JSON frames.
+ * Potential-dependent multipliers are baked into skill JSONs via VARY_BY arrays.
  */
 import { Potential, SkillLevel } from '../../consts/types';
 import { VerbType, NounType } from '../../dsl/semantics';
-import { getOperatorSkill, getOperatorBase } from '../gameDataStore';
+import { getOperatorSkill } from '../gameDataStore';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -43,21 +43,6 @@ interface JsonSkillCategory {
   segments?: JsonSegment[];
   frames?: JsonFrame[];
   properties?: { dependencyTypes?: string[] };
-}
-
-interface JsonPotentialEffect {
-  potentialEffectType: string;
-  skillParameterModifier?: {
-    skillType: string;
-    parameterKey: string;
-    value: number;
-    parameterModifyType: string;
-  };
-}
-
-interface JsonPotential {
-  level: number;
-  effects: JsonPotentialEffect[];
 }
 
 // ── Cache ────────────────────────────────────────────────────────────────────
@@ -166,52 +151,6 @@ function getEmpoweredFallback(skillId: string): string | null {
   return null;
 }
 
-// ── Potential modifier application ──────────────────────────────────────────
-
-/**
- * Get the cumulative potential modifier for a skill.
- * Scans potentials[0..potential-1] for SKILL_PARAMETER effects
- * with parameterKey === 'damage multiplier' matching the skill name.
- */
-function getPotentialMultiplier(
-  operatorId: string,
-  skillName: string,
-  potential: Potential,
-): number {
-  if (potential === 0) return 1;
-
-  const base = getOperatorBase(operatorId);
-  if (!base?.potentials?.length) return 1;
-
-  const potentials = base.potentials as JsonPotential[];
-  let result = 1;
-
-  for (const pot of potentials) {
-    if (pot.level > potential) break;
-    for (const eff of pot.effects) {
-      if (eff.potentialEffectType !== 'SKILL_PARAMETER') continue;
-      const mod = eff.skillParameterModifier;
-      if (!mod || mod.parameterKey !== 'DAMAGE_MULTIPLIER_MODIFIER') continue;
-      const modSkill = mod.skillType;
-      if (modSkill === skillName) {
-        switch (mod.parameterModifyType) {
-          case 'UNIQUE_MULTIPLIER':
-            result *= mod.value;
-            break;
-          case 'MULTIPLICATIVE':
-            result *= mod.value;
-            break;
-          case 'ADDITIVE':
-            result += mod.value;
-            break;
-        }
-      }
-    }
-  }
-
-  return result;
-}
-
 // ── Skill ID resolution ─────────────────────────────────────────────────────
 
 /** Check if a skill ID exists in the operator's skills JSON (or its empowered base). */
@@ -230,6 +169,9 @@ function resolveSkillKey(operatorId: string, skillName: string): string | null {
  * This is the sum of damage multiplier across all frames in the segment.
  * The caller (damageTableBuilder) divides by frame count for uniform distribution.
  *
+ * Potential-dependent multipliers are now baked into the skill JSONs via VARY_BY arrays,
+ * so the potential parameter is accepted for API compatibility but not used here.
+ *
  * Returns null if operator/skill has no multiplier data or doesn't deal damage.
  */
 export function getSkillMultiplier(
@@ -237,7 +179,7 @@ export function getSkillMultiplier(
   skillName: string,
   segmentIndex: number | undefined,
   level: SkillLevel,
-  potential: Potential,
+  _potential: Potential,
 ): number | null {
   const category = resolveSkillKey(operatorId, skillName);
   if (!category) return null;
@@ -251,7 +193,6 @@ export function getSkillMultiplier(
   const baseMult = data.segmentMultipliers[segIdx][level - 1];
   if (baseMult === 0) return null;
 
-  const potMod = getPotentialMultiplier(operatorId, skillName, potential);
-  return baseMult * potMod;
+  return baseMult;
 }
 

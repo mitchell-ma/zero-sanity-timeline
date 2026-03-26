@@ -23,7 +23,6 @@
   "properties": {
     "id": "COMMISERATION_TALENT",
     "name": "Commiseration (Talent)",
-    "type": "TALENT",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
