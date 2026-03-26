@@ -320,7 +320,6 @@ export function buildDamageTableRows(
                 // Get element from inline DEAL DAMAGE, frame marker, or skill column
                 const frameElement = frame.dealDamage?.element
                   ?? frame.damageElement
-                  ?? frame.applyArtsInfliction?.element
                   ?? col.skillElement;
                 const element = (frameElement as ElementType) ?? opData.element;
 

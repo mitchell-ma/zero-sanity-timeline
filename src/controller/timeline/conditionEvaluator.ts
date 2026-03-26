@@ -51,6 +51,8 @@ export interface ConditionContext {
   getEnemyHpPercentage?: (frame: number) => number | null;
   /** Query which operator slot is controlled at a given frame. */
   getControlledSlotAtFrame?: (frame: number) => string;
+  /** Operator potential level (0–5) for HAVE POTENTIAL conditions. */
+  potential?: number;
 }
 
 // ── Subject resolution ───────────────────────────────────────────────────
@@ -99,6 +101,18 @@ function resolveColumnIds(object: string, objectId?: string, element?: string): 
 // ── Evaluators ───────────────────────────────────────────────────────────
 
 function evaluateHave(cond: Interaction, ctx: ConditionContext): boolean {
+  // POTENTIAL: check operator potential level
+  if (cond.object === NounType.POTENTIAL) {
+    const pot = ctx.potential ?? 0;
+    const target = (cond.value ? getSimpleValue(cond.value) : undefined) ?? 0;
+    switch (cond.cardinalityConstraint) {
+      case CardinalityConstraintType.AT_LEAST: return pot >= target;
+      case CardinalityConstraintType.AT_MOST: return pot <= target;
+      case CardinalityConstraintType.EXACTLY: return pot === target;
+    }
+    return pot >= target;
+  }
+
   // PERCENTAGE_HP: query live HP% from calculationController
   if (cond.object === 'PERCENTAGE_HP') {
     if (!ctx.getEnemyHpPercentage) return false;

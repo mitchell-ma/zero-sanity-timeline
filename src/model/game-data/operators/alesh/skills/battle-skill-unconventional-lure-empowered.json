@@ -5,7 +5,8 @@
     ],
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "BATTLE_SKILL",
-    "id": "UNCONVENTIONAL_LURE_EMPOWERED"
+    "id": "UNCONVENTIONAL_LURE_EMPOWERED",
+    "name": "Unconventional Lure (Empowered)"
   },
   "segments": [
     {
@@ -66,6 +67,7 @@
     }
   ],
   "metadata": {
+    "originId": "ALESH",
     "icon": "skills/skill_alesh.png"
   }
 }

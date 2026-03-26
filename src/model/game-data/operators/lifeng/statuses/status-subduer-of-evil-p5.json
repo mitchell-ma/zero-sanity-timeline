@@ -64,7 +64,7 @@
     "description": "Talent Subduer of Evil improved: Every 15s, the next effect triggered deals another 250% ATK of Physical DMG and 5 Stagger."
   },
   "metadata": {
-    "originId": "LIFENG",
+    "originId": "SUBDUER_OF_EVIL_P5_TALENT",
     "dataSources": [
       "ENDFIELD_WIKI"
     ]

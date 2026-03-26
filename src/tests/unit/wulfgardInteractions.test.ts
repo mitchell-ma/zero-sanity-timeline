@@ -293,7 +293,7 @@ describe('A. Basic Attack (Rapid Fire Akimbo)', () => {
     const sequences = getSequences('BASIC_ATTACK');
     for (const seq of sequences) {
       for (const frame of seq.getFrames()) {
-        expect(frame.getApplyArtsInfliction()).toBeNull();
+        expect(frame.getClauses().flatMap(c => c.effects).find(e => e.dslEffect?.verb === 'APPLY' && e.dslEffect?.object === 'INFLICTION')).toBeUndefined();
       }
     }
   });
@@ -418,7 +418,7 @@ describe('C. Combo Skill (Frag Grenade Beta)', () => {
     expect(comboSkill.onTriggerClause[0].conditions[0].subjectDeterminer).toBe('ANY');
     expect(comboSkill.onTriggerClause[0].conditions[0].subject).toBe('OPERATOR');
     expect(comboSkill.onTriggerClause[0].conditions[0].verb).toBe('APPLY');
-    expect(comboSkill.onTriggerClause[0].conditions[0].object).toBe('ARTS_INFLICTION');
+    expect(comboSkill.onTriggerClause[0].conditions[0].object).toBe('INFLICTION');
     expect(comboSkill.onTriggerClause[0].conditions[0].to).toBe('ENEMY');
   });
 
@@ -496,7 +496,7 @@ describe('D. Ultimate (Wolven Fury)', () => {
     );
     expect(energyCost).toBeDefined();
     expect(energyCost.with.value.verb).toBe('VARY_BY');
-    expect(energyCost.with.value.value).toEqual([90, 90, 90, 90, 76.5, 76.5]);
+    expect(energyCost.with.value.value).toEqual([90, 90, 90, 76.5, 76.5, 76.5]);
   });
 
   test('D2: Ultimate animation is TIME_STOP (1.53s within 2.5s)', () => {
@@ -583,7 +583,7 @@ describe('E. Empowered Battle Skill', () => {
 
 describe('F. Scorching Fangs (Talent)', () => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const sf = mockJson.statusEvents.find((s: any) => s.id === 'SCORCHING_FANGS_TALENT');
+  const sf = mockJson.statusEvents.find((s: any) => s.id === 'WULFGARD_TALENT1_SCORCHING_FANGS');
 
   test('F1: Scorching Fangs talent exists', () => {
     expect(sf).toBeDefined();
@@ -687,8 +687,8 @@ describe('H. Operator Identity & Metadata', () => {
   });
 
   test('H4: Talent IDs and attribute increase', () => {
-    expect(mockJson.talents.one).toBe('SCORCHING_FANGS_TALENT');
-    expect(mockJson.talents.two).toBe('CODE_OF_RESTRAINT_TALENT');
+    expect(mockJson.talents.one).toBe('WULFGARD_TALENT1_SCORCHING_FANGS');
+    expect(mockJson.talents.two).toBe('WULFGARD_TALENT2_CODE_OF_RESTRAINT');
     expect(mockJson.talents.attributeIncrease.id).toBe('FORGED');
   });
 

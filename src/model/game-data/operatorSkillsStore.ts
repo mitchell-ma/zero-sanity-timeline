@@ -119,6 +119,7 @@ export class OperatorSkill {
       ...(this.activationClause.length > 0 ? { activationClause: this.activationClause } : {}),
       ...(this.onTriggerClause.length > 0 ? { onTriggerClause: this.onTriggerClause } : {}),
       properties: {
+        id: this.id,
         name: this.name,
         ...(this.description ? { description: this.description } : {}),
         ...(this.duration ? { duration: this.duration } : {}),

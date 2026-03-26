@@ -17,7 +17,7 @@ import { getPoolStats } from '../../controller/timeline/objectPool';
 import { getSkillMultiplier } from '../../controller/calculation/jsonMultiplierEngine';
 import type { DamageTableRow } from '../../controller/calculation/damageTableBuilder';
 import type { SkillLevel, Potential } from '../../consts/types';
-import { type TranslatedEffect } from '../../dsl/semanticsTranslation';
+import { type TranslatedEffect, translateEffect } from '../../dsl/semanticsTranslation';
 
 function formatSegNum(index: number): string {
   return `Seg ${index + 1}`;
@@ -28,47 +28,21 @@ const SKILL_COLUMN_SET = new Set<string>(SKILL_COLUMN_ORDER);
 
 // ── Frame DSL effects display ───────────────────────────────────────────────
 
-/** Renders DSL effect lines for a frame marker (infliction, absorption, status, etc.). */
+/** Renders DSL effect lines for a frame marker from clause data. */
 function FrameDslEffects({ f }: { f: import('../../consts/viewTypes').EventFrameMarker }) {
+  if (!f.clauses && !f.duplicateTriggerSource) return null;
   return (
     <>
-      {f.applyArtsInfliction && (
-        <div className="frame-dsl-effect" style={{ color: ELEMENT_COLORS[f.applyArtsInfliction.element as ElementType] ?? '#f07030' }}>
-          APPLY {f.applyArtsInfliction.stacks} {f.applyArtsInfliction.element.toUpperCase()} INFLICTION TO ENEMY
-        </div>
-      )}
-      {f.absorbArtsInfliction && (
-        <div className="frame-dsl-effect" style={{ color: ELEMENT_COLORS[f.absorbArtsInfliction.element as ElementType] ?? '#f0a040' }}>
-          {(() => { const [a, b] = f.absorbArtsInfliction!.ratio.split(':').map(Number); const el = f.absorbArtsInfliction!.element.toUpperCase(); const status = f.absorbArtsInfliction!.exchangeStatus; return `CONSUME ${a} ${el} INFLICTION FROM ENEMY → APPLY ${b} ${status.replace(/_/g, ' ')} STATUS TO THIS OPERATOR (max ${f.absorbArtsInfliction!.stacks})`; })()}
-        </div>
-      )}
-      {f.consumeArtsInfliction && (
-        <div className="frame-dsl-effect" style={{ color: ELEMENT_COLORS[f.consumeArtsInfliction.element as ElementType] ?? '#f0a040' }}>
-          CONSUME {f.consumeArtsInfliction.stacks} {f.consumeArtsInfliction.element.toUpperCase()} INFLICTION FROM ENEMY
-        </div>
-      )}
-      {f.consumeStatus && (
-        <div className="frame-dsl-effect" style={{ color: 'var(--gold)' }}>
-          CONSUME ALL {(STATUS_LABELS[f.consumeStatus as StatusType] ?? f.consumeStatus).toUpperCase().replace(/ /g, '_')} STACKS
-        </div>
-      )}
-      {f.applyStatus && !(f.applyStatuses && f.applyStatuses.every(s => s.potentialMin != null || s.potentialMax != null)) && (
-        <div className="frame-dsl-effect" style={{ color: ELEMENT_COLORS[getStatusElementMap()[f.applyStatus.status] as ElementType] ?? '#55aadd' }}>
-          APPLY {f.applyStatus.stacks > 0 ? `${f.applyStatus.stacks} ` : ''}{(STATUS_LABELS[f.applyStatus.status as StatusType] ?? f.applyStatus.status).toUpperCase().replace(/ /g, '_')} STATUS TO {f.applyStatus.target.noun === 'ENEMY' ? 'ENEMY' : `${f.applyStatus.target.determiner ?? 'THIS'} OPERATOR`}
-        </div>
-      )}
-      {f.applyForcedReaction && (
-        <div className="frame-dsl-effect" style={{ color: ELEMENT_COLORS[getStatusElementMap()[f.applyForcedReaction.reaction] as ElementType] ?? '#ff5522' }}>
-          APPLY FORCED {(STATUS_LABELS[f.applyForcedReaction.reaction as StatusType] ?? f.applyForcedReaction.reaction).toUpperCase().replace(/ /g, '_')} REACTION TO ENEMY (Lv.{f.applyForcedReaction.stacks})
-        </div>
-      )}
-      {f.consumeReaction && (
-        <div className="frame-dsl-effect" style={{ color: 'var(--gold)' }}>
-          CONSUME {f.consumeReaction.columnId.toUpperCase().replace(/ /g, '_')} REACTION FROM ENEMY
-          {f.consumeReaction.applyStatus && (
-            <> → APPLY {f.consumeReaction.applyStatus.stacks > 0 ? `${f.consumeReaction.applyStatus.stacks} ` : ''}{(STATUS_LABELS[f.consumeReaction.applyStatus.status as StatusType] ?? f.consumeReaction.applyStatus.status).toUpperCase().replace(/ /g, '_')} STATUS</>
-          )}
-        </div>
+      {f.clauses?.flatMap((pred, pi) =>
+        pred.effects.filter(ef => ef.dslEffect).map((ef, ei) => {
+          const e = ef.dslEffect!;
+          const translated = translateEffect(e);
+          return (
+            <div key={`${pi}-${ei}`} className="frame-dsl-effect" style={{ color: '#55aadd' }}>
+              {translated.sentence}
+            </div>
+          );
+        })
       )}
       {f.duplicateTriggerSource && (
         <div className="frame-dsl-effect" style={{ color: 'var(--text-muted)' }}>
@@ -112,9 +86,8 @@ function PredicateDisplay({ predicates, label }: { predicates: ResolvedPredicate
 /** Check if a frame marker has any effects to display. */
 function frameHasEffects(f: import('../../consts/viewTypes').EventFrameMarker, dslFrameEffects?: TranslatedEffect[]) {
   return !!(
-    f.applyArtsInfliction || f.absorbArtsInfliction || f.consumeArtsInfliction ||
-    f.consumeStatus || f.applyStatus || f.applyStatuses?.length ||
-    f.applyForcedReaction || f.consumeReaction || f.duplicateTriggerSource ||
+    f.duplicateTriggerSource ||
+    f.clauses?.some(p => p.effects.some(e => e.dslEffect)) ||
     (dslFrameEffects && dslFrameEffects.length > 0)
   );
 }
@@ -1768,15 +1741,6 @@ function DebugPane({ event, processedEvent, rawEvents, allProcessedEvents }: { e
                           )}
                           {dFrame.skillPointRecovery != null && <div>sp: {dFrame.skillPointRecovery}</div>}
                           {dFrame.stagger != null && <div>stagger: {dFrame.stagger}</div>}
-                          {dFrame.applyArtsInfliction && (
-                            <div>inflict: {dFrame.applyArtsInfliction.element}x{dFrame.applyArtsInfliction.stacks}</div>
-                          )}
-                          {dFrame.absorbArtsInfliction && (
-                            <div>absorb: {dFrame.absorbArtsInfliction.element}x{dFrame.absorbArtsInfliction.stacks}</div>
-                          )}
-                          {dFrame.applyStatus && (
-                            <div>status: {dFrame.applyStatus.status}</div>
-                          )}
                           {dFrame.gaugeGain != null && <div>gauge: {dFrame.gaugeGain}</div>}
                         </div>
                       );

@@ -47,10 +47,10 @@ let linkIdCounter = 0;
 function linkEvent(startFrame: number, durationFrames: number): TimelineEvent {
   return {
     uid: `link-integ-${linkIdCounter++}`,
-    id: StatusType.LINK,
-    name: StatusType.LINK,
+    id: 'team-status',
+    name: 'team-status',
     ownerId: COMMON_OWNER_ID,
-    columnId: StatusType.LINK,
+    columnId: 'team-status',
     startFrame,
     segments: [{ properties: { duration: durationFrames } }],
     sourceOwnerId: SLOT_LAEVATAIN,
@@ -242,7 +242,7 @@ describe('Link Consumption — Integration', () => {
     const rawBattle = cloneEvent(battleEvents[0]);
 
     const result2 = processCombatSimulation([link, rawBattle]);
-    const linkEvents = result2.filter((ev) => ev.columnId === StatusType.LINK);
+    const linkEvents = result2.filter((ev) => ev.columnId === 'team-status');
     expect(linkEvents).toHaveLength(1);
     expect(linkEvents[0].eventStatus).toBe(EventStatusType.CONSUMED);
     // Link duration should be clamped to battle skill start (3s = 360 frames)

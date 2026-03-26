@@ -10,7 +10,7 @@ import { PhysicalStatus } from "./physicalStatus";
  * - Stagger: 10 × (1 + ArtsIntensity / 200)
  *
  * The actual Lift mechanic is hardcoded in the engine (eventInterpretor):
- * APPLY LIFT PHYSICAL_STATUS → if enemy has Vulnerable or isForced,
+ * APPLY LIFT STATUS (PHYSICAL) → if enemy has Vulnerable or isForced,
  * add 1 Vulnerable stack + create Lift status with damage + stagger.
  * Otherwise just add 1 Vulnerable stack.
  */

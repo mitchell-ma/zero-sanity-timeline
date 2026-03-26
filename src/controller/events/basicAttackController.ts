@@ -42,41 +42,6 @@ export class SkillSegmentBuilder {
           skillPointRecovery: 0,
           stagger: f.getStagger(),
         };
-        const apply = f.getApplyArtsInfliction();
-        if (apply) marker.applyArtsInfliction = { element: apply.element, stacks: apply.stacks };
-        const absorb = f.getAbsorbArtsInfliction();
-        if (absorb) marker.absorbArtsInfliction = {
-          element: absorb.element,
-          stacks: absorb.stacks,
-          exchangeStatus: absorb.exchangeStatus,
-          ratio: absorb.ratio,
-        };
-        const consume = f.getConsumeArtsInfliction();
-        if (consume) marker.consumeArtsInfliction = { element: consume.element, stacks: consume.stacks };
-        const forced = f.getApplyForcedReaction();
-        if (forced) marker.applyForcedReaction = {
-          reaction: forced.reaction,
-          stacks: forced.stacks,
-          ...(forced.durationFrames != null && { durationFrames: forced.durationFrames }),
-        };
-        const statuses = f.getApplyStatuses();
-        if (statuses.length > 0) {
-          const mapStatus = (s: typeof statuses[number]) => ({
-            target: s.target, status: s.status, stacks: s.stacks, durationFrames: s.durationFrames,
-            ...(s.susceptibility && { susceptibility: s.susceptibility }),
-            ...(s.stackingInteraction && { stackingInteraction: s.stackingInteraction }),
-            ...(s.potentialMin != null && { potentialMin: s.potentialMin }),
-            ...(s.potentialMax != null && { potentialMax: s.potentialMax }),
-            ...(s.segments && { segments: s.segments }),
-            ...(s.eventName && { eventName: s.eventName }),
-          });
-          marker.applyStatus = mapStatus(statuses[0]);
-          if (statuses.length > 1) marker.applyStatuses = statuses.map(mapStatus);
-        }
-        const consumeReaction = f.getConsumeReaction();
-        if (consumeReaction) marker.consumeReaction = { columnId: consumeReaction.columnId, ...(consumeReaction.applyStatus && { applyStatus: { target: consumeReaction.applyStatus.target, status: consumeReaction.applyStatus.status, stacks: consumeReaction.applyStatus.stacks, durationFrames: consumeReaction.applyStatus.durationFrames, ...(consumeReaction.applyStatus.susceptibility && { susceptibility: consumeReaction.applyStatus.susceptibility }), ...(consumeReaction.applyStatus.eventName && { eventName: consumeReaction.applyStatus.eventName }) } }) };
-        const consumeStatus = f.getConsumeStatus();
-        if (consumeStatus) marker.consumeStatus = consumeStatus;
         const dmgEl = f.getDamageElement();
         if (dmgEl) marker.damageElement = dmgEl;
         if (f.getDuplicateTriggerSource()) marker.duplicateTriggerSource = true;

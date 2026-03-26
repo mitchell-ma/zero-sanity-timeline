@@ -80,19 +80,6 @@ export interface Enemy {
   staggerBreakDurationSeconds: number;
 }
 
-/** Arts infliction applied or absorbed by a frame. */
-export interface FrameInflictionMarker {
-  element: string;
-  stacks: number;
-}
-
-/** Arts infliction absorption with conversion (e.g. Scorching Heart). */
-export interface FrameAbsorptionMarker {
-  element: string;
-  stacks: number;
-  exchangeStatus: string;
-  ratio: string;
-}
 
 /** A damage frame marker within a segment. */
 export interface EventFrameMarker {
@@ -108,22 +95,6 @@ export interface EventFrameMarker {
   skillPointRecovery?: number;
   /** Stagger dealt on this frame hit. */
   stagger?: number;
-  /** Arts infliction applied on this frame hit. */
-  applyArtsInfliction?: FrameInflictionMarker;
-  /** Arts infliction absorbed on this frame hit. */
-  absorbArtsInfliction?: FrameAbsorptionMarker;
-  /** Arts infliction consumed on this frame hit (removed without exchange). */
-  consumeArtsInfliction?: { element: string; stacks: number };
-  /** Forced arts reaction applied on this frame hit (bypasses infliction stacks). */
-  applyForcedReaction?: { reaction: string; stacks: number; durationFrames?: number };
-  /** Status applied by this frame to a target (self or enemy). */
-  applyStatus?: { target: DslTarget; status: string; stacks: number; durationFrames: number; susceptibility?: Partial<Record<ElementType, readonly number[]>>; stackingInteraction?: string; potentialMin?: number; potentialMax?: number; segments?: { name: string; durationFrames: number; susceptibility?: Partial<Record<ElementType, readonly number[]>> }[]; eventName?: string };
-  /** Multiple status applications on this frame (conditional on potential). */
-  applyStatuses?: { target: DslTarget; status: string; stacks: number; durationFrames: number; susceptibility?: Partial<Record<ElementType, readonly number[]>>; stackingInteraction?: string; potentialMin?: number; potentialMax?: number; segments?: { name: string; durationFrames: number; susceptibility?: Partial<Record<ElementType, readonly number[]>> }[]; eventName?: string }[];
-  /** Consume an active reaction on the enemy; if successful, conditionally apply a status. */
-  consumeReaction?: { columnId: string; applyStatus?: { target: DslTarget; status: string; stacks: number; durationFrames: number; susceptibility?: Partial<Record<ElementType, readonly number[]>>; eventName?: string } };
-  /** Operator status consumed by this frame (e.g. Thunderlance consumed by ultimate). */
-  consumeStatus?: string;
   /** Damage type: NORMAL (default) or DAMAGE_OVER_TIME (cannot crit). */
   damageType?: DamageType;
   /** Element of damage dealt by this frame (for coloring when no infliction). */

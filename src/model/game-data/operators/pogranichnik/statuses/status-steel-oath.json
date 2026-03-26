@@ -28,7 +28,8 @@
           "subjectDeterminer": "ANY",
           "subject": "OPERATOR",
           "verb": "APPLY",
-          "object": "PHYSICAL_STATUS"
+          "object": "STATUS",
+          "objectId": "PHYSICAL"
         },
         {
           "subjectDeterminer": "THIS",
@@ -110,7 +111,8 @@
           "subjectDeterminer": "ANY",
           "subject": "OPERATOR",
           "verb": "APPLY",
-          "object": "PHYSICAL_STATUS"
+          "object": "STATUS",
+          "objectId": "PHYSICAL"
         }
       ],
       "effects": [
@@ -165,7 +167,7 @@
   ],
   "clauseType": "FIRST_MATCH",
   "metadata": {
-    "originId": "POGRANICHNIK",
+    "originId": "SHIELDGUARD_BANNER",
     "dataSources": [
       "ENDFIELD_WIKI"
     ]

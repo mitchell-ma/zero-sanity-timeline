@@ -9,7 +9,8 @@
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "BATTLE_SKILL",
     "element": "HEAT",
-    "id": "SMOULDERING_FIRE_EMPOWERED"
+    "id": "SMOULDERING_FIRE_EMPOWERED",
+    "name": "Smouldering Fire (Empowered)"
   },
   "segments": [
     {
@@ -498,14 +499,15 @@
                 {
                   "verb": "APPLY",
                   "object": "REACTION",
-                  "objectQualifier": [
-                    "FORCED",
-                    "COMBUSTION"
-                  ],
+                  "objectQualifier": "COMBUSTION",
                   "to": "OPERATOR",
                   "toDeterminer": "THIS",
                   "with": {
                     "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    },
+                    "isForced": {
                       "verb": "IS",
                       "value": 1
                     }
@@ -540,6 +542,7 @@
     }
   ],
   "metadata": {
+    "originId": "LAEVATAIN",
     "icon": "skills/skill_laevatain.png"
   }
 }

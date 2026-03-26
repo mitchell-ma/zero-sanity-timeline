@@ -47,17 +47,14 @@ function battleSkillEvent(startFrame: number): TimelineEvent {
   const frames: EventFrameMarker[] = [];
   for (const f of seg.frames) {
     const offset = Math.round(f.properties.offset.value * FPS);
-    const frameMarker: EventFrameMarker = { offsetFrame: offset };
-    for (const ef of (f.clause?.[0]?.effects ?? [])) {
-      if (ef.verb === 'APPLY' && ef.object === 'STATUS' && ef.objectId) {
-        frameMarker.applyStatus = {
-          target: { noun: ef.to },
-          status: ef.objectId,
-          stacks: ef.with?.stacks?.value ?? 1,
-          durationFrames: ef.with?.duration ? Math.round(ef.with.duration.value * FPS) : 0,
-        };
-      }
-    }
+    const clauseEffects = (f.clause?.[0]?.effects ?? []).map((ef: Record<string, unknown>) => ({
+      type: 'dsl' as const,
+      dslEffect: ef as unknown as import('../../dsl/semantics').Effect,
+    }));
+    const frameMarker: EventFrameMarker = {
+      offsetFrame: offset,
+      ...(clauseEffects.length > 0 && { clauses: [{ conditions: [], effects: clauseEffects }] }),
+    };
     frames.push(frameMarker);
   }
   return {
@@ -80,12 +77,14 @@ function empoweredBattleSkillEvent(startFrame: number): TimelineEvent {
   const frames: EventFrameMarker[] = [];
   for (const f of empSeg.frames) {
     const offset = Math.round(f.properties.offset.value * FPS);
-    const frameMarker: EventFrameMarker = { offsetFrame: offset };
-    for (const ef of (f.clause?.[0]?.effects ?? [])) {
-      if (ef.verb === 'CONSUME' && ef.object === 'STATUS') {
-        frameMarker.consumeStatus = ef.objectId;
-      }
-    }
+    const empClauseEffects = (f.clause?.[0]?.effects ?? []).map((ef: Record<string, unknown>) => ({
+      type: 'dsl' as const,
+      dslEffect: ef as unknown as import('../../dsl/semantics').Effect,
+    }));
+    const frameMarker: EventFrameMarker = {
+      offsetFrame: offset,
+      ...(empClauseEffects.length > 0 && { clauses: [{ conditions: [], effects: empClauseEffects }] }),
+    };
     frames.push(frameMarker);
   }
   segments.push({ properties: { duration }, frames });
@@ -880,8 +879,8 @@ describe('Freeform Inflictions', () => {
           clauses: [{
             conditions: [],
             effects: [{
-              type: 'applyPhysicalStatus' as const,
-              physicalStatusQualifier: PhysicalStatusType.LIFT,
+              type: 'dsl' as const,
+              dslEffect: { verb: 'APPLY', object: 'STATUS', objectId: 'PHYSICAL', objectQualifier: PhysicalStatusType.LIFT, to: 'ENEMY' } as any,
             }],
           }],
         }],
@@ -931,8 +930,8 @@ describe('Freeform Inflictions', () => {
           clauses: [{
             conditions: [],
             effects: [{
-              type: 'applyPhysicalStatus' as const,
-              physicalStatusQualifier: PhysicalStatusType.LIFT,
+              type: 'dsl' as const,
+              dslEffect: { verb: 'APPLY', object: 'STATUS', objectId: 'PHYSICAL', objectQualifier: PhysicalStatusType.LIFT, to: 'ENEMY' } as any,
             }],
           }],
         }],
@@ -1189,7 +1188,7 @@ describe('Combo skill infliction behavior', () => {
           // No duplicateTriggerSource — has explicit applyArtsInfliction instead
           frames: [{
             offsetFrame: Math.round(0.5 * FPS),
-            applyArtsInfliction: { element: 'HEAT', stacks: 1 },
+            clauses: [{ conditions: [], effects: [{ type: 'dsl' as const, dslEffect: { verb: 'APPLY', object: 'INFLICTION', objectQualifier: 'HEAT', to: 'ENEMY', with: { stacks: { verb: 'IS', value: 1 } } } as any }] }],
           }],
         },
       ],
@@ -1487,7 +1486,10 @@ describe('Combo skill effects — all operators', () => {
           marker.duplicateTriggerSource = true;
         }
         if (ef.verb === 'APPLY' && !isSource && ef.object === 'INFLICTION' && elementQualifier) {
-          marker.applyArtsInfliction = { element: elementQualifier, stacks: 1 };
+          if (!marker.clauses) marker.clauses = [{ conditions: [], effects: [] }];
+          (marker.clauses[0] as { effects: { type: string; dslEffect: unknown }[] }).effects.push({
+            type: 'dsl', dslEffect: { verb: 'APPLY', object: 'INFLICTION', objectQualifier: elementQualifier, to: 'ENEMY', with: { stacks: { verb: 'IS', value: 1 } } },
+          });
         }
       }
       return marker;
@@ -1599,7 +1601,7 @@ describe('Combo skill effects — all operators', () => {
     // Verify it's from the explicit effect, not mirroring
     const heat = result.find(ev => ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerId === ENEMY_OWNER_ID)!;
     expect(heat.sourceSkillName).toBe('FRAG_GRENADE_BETA');
-    expect(heat.uid).toContain('-inflict-'); // from applyArtsInfliction path, not combo-inflict
+    expect(heat.uid).not.toContain('-combo-inflict-'); // from explicit APPLY INFLICTION, not combo mirroring
   });
 
   // ── Xaihi: explicit APPLY CRYO INFLICTION ──

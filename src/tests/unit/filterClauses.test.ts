@@ -24,7 +24,7 @@ import type { FrameClausePredicate } from '../../model/event-frames/skillEventFr
 function cond(tag: string): FrameClausePredicate {
   return {
     conditions: [{ subject: 'TEST', verb: 'HAVE', object: tag }],
-    effects: [{ type: 'applyPhysicalStatus', physicalStatusQualifier: tag }],
+    effects: [{ type: 'dsl', dslEffect: { verb: 'APPLY' as never, object: tag } as never }],
   };
 }
 
@@ -32,13 +32,13 @@ function cond(tag: string): FrameClausePredicate {
 function uncond(tag: string): FrameClausePredicate {
   return {
     conditions: [],
-    effects: [{ type: 'applyPhysicalStatus', physicalStatusQualifier: tag }],
+    effects: [{ type: 'dsl', dslEffect: { verb: 'APPLY' as never, object: tag } as never }],
   };
 }
 
 /** Extract the tag from each accepted clause for assertion. */
 function tags(clauses: readonly FrameClausePredicate[]): string[] {
-  return clauses.map(c => c.effects[0].physicalStatusQualifier!);
+  return clauses.map(c => (c.effects[0].dslEffect as { object: string })?.object);
 }
 
 // ── Condition truth table: A=false, C=true, E=true ──────────────────────

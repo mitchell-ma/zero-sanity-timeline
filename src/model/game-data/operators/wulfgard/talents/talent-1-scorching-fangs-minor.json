@@ -1,6 +1,6 @@
 {
   "properties": {
-    "id": "SCORCHING_FANGS_TALENT_MINOR",
+    "id": "WULFGARD_TALENT1_SCORCHING_FANGS_MINOR",
     "name": "Scorching Fangs (Minor)",
     "to": "OPERATOR",
     "toDeterminer": "ALL_OTHER",

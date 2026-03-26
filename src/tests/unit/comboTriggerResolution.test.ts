@@ -84,7 +84,7 @@ function makeLaevBattle(startFrame: number): TimelineEvent {
       properties: { duration: FPS },
       frames: [{
         offsetFrame: Math.round(0.67 * FPS),
-        applyArtsInfliction: { element: 'HEAT', stacks: 1 },
+        clauses: [{ conditions: [], effects: [{ type: 'dsl' as const, dslEffect: { verb: 'APPLY', object: 'INFLICTION', objectQualifier: 'HEAT', to: 'ENEMY', with: { stacks: { verb: 'IS', value: 1 } } } as any }] }],
       }],
     }],
   });

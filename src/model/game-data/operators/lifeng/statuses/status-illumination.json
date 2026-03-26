@@ -41,7 +41,7 @@
     "description": "Talent Illumination improved: Every point in the attributes of Intellect and Will grants Lifeng an additional ATK +."
   },
   "metadata": {
-    "originId": "LIFENG",
+    "originId": "ILLUMINATION_TALENT",
     "dataSources": [
       "ENDFIELD_WIKI"
     ]

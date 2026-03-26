@@ -26,7 +26,7 @@ import { getCorrosionBaseReduction, getCorrosionReductionMultiplier } from '../.
 import { MAX_INFLICTION_STACKS } from './eventQueueTypes';
 import type { SlotTriggerWiring } from './eventQueueTypes';
 import { findClauseTriggerMatches } from './triggerMatch';
-import { getComboTriggerClause, getComboTriggerInfo } from '../gameDataStore';
+import { getComboTriggerClause, getComboTriggerInfo, getTeamStatusColumnId } from '../gameDataStore';
 import type { TriggerAssociation } from '../gameDataStore';
 import type { SkillPointController } from '../slot/skillPointController';
 import type { UltimateEnergyController } from './ultimateEnergyController';
@@ -796,9 +796,10 @@ export class DerivedEventController {
    * Returns the number of stacks consumed (0 if none).
    */
   consumeLink(eventUid: string, frame: number, source: EventSource): number {
-    const stacks = this.activeCount(StatusType.LINK, COMMON_OWNER_ID, frame);
+    const linkColumnId = getTeamStatusColumnId(StatusType.LINK) ?? StatusType.LINK;
+    const stacks = this.activeCount(linkColumnId, COMMON_OWNER_ID, frame);
     if (stacks === 0) return 0;
-    this.consumeStatus(StatusType.LINK, COMMON_OWNER_ID, frame, source);
+    this.consumeStatus(linkColumnId, COMMON_OWNER_ID, frame, source);
     const clampedStacks = Math.min(stacks, 4);
     this.linkConsumptions.set(eventUid, clampedStacks);
     return clampedStacks;

@@ -9,7 +9,7 @@
  * estimated damage per frame from registered skill events, stores cumulative
  * damage by frame, and exposes getEnemyHpPercentage() for HP threshold predicates.
  */
-import { CritMode, CombatSkillType, ElementType, PhysicalStatusType, StatType } from '../../consts/enums';
+import { CritMode, CombatSkillType, PhysicalStatusType, StatType } from '../../consts/enums';
 import { TimelineEvent, Column, Enemy as ViewEnemy } from '../../consts/viewTypes';
 import { PHYSICAL_STATUS_COLUMN_IDS, SKILL_COLUMNS } from '../../model/channels';
 import { getPhysicalStatusStagger, getDefenseMultiplier, getTotalAttack } from '../../model/calculation/damageFormulas';
@@ -27,7 +27,6 @@ import {
 } from '../timeline/eventsQueryService';
 import { getLastController } from '../timeline/eventQueueController';
 import { getWeapon, getWeaponEffectDefs, resolveTargetDisplay } from '../gameDataStore';
-import { INFLICTION_COLUMNS, OPERATOR_COLUMNS } from '../../model/channels';
 import { ENEMY_OWNER_ID } from '../../model/channels';
 import type { Slot } from '../timeline/columnBuilder';
 import type { StaggerBreak } from '../timeline/staggerTimeline';
@@ -247,26 +246,12 @@ export function buildWeaponFragility(
   return result;
 }
 
-/** Build operator talent fragility effects. */
+/** Build operator talent fragility effects — stub, to be data-driven from operator configs. */
 export function buildTalentFragility(
-  slots: Slot[],
-  loadoutProperties: Record<string, LoadoutProperties>,
+  _slots: Slot[],
+  _loadoutProperties: Record<string, LoadoutProperties>,
 ): OperatorTalentFragility[] {
-  const effects: OperatorTalentFragility[] = [];
-  for (const slot of slots) {
-    if (!slot.operator) continue;
-    const stats = loadoutProperties[slot.slotId];
-    if (!stats) continue;
-    if (slot.operator.id === 'xaihi' && stats.operator.talentOneLevel >= 1) {
-      const bonus = stats.operator.talentOneLevel >= 2 ? 0.10 : 0.07;
-      effects.push({ elements: [ElementType.CRYO], bonus, requiredColumnId: INFLICTION_COLUMNS.CRYO });
-    }
-    if (slot.operator.id === 'endministrator' && stats.operator.talentTwoLevel >= 1) {
-      const bonus = stats.operator.talentTwoLevel >= 2 ? 0.20 : 0.10;
-      effects.push({ elements: [ElementType.PHYSICAL], bonus, requiredColumnId: OPERATOR_COLUMNS.ORIGINIUM_CRYSTAL });
-    }
-  }
-  return effects;
+  return [];
 }
 
 // ── Physical status stagger resolution ────────────────────────────────────────

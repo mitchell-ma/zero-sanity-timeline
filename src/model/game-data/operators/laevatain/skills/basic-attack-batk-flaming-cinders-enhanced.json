@@ -421,9 +421,11 @@
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "BASIC_ATTACK",
     "element": "HEAT",
-    "id": "FLAMING_CINDERS_ENHANCED"
+    "id": "FLAMING_CINDERS_ENHANCED",
+    "name": "Flaming Cinders (Enhanced)"
   },
   "metadata": {
+    "originId": "LAEVATAIN",
     "icon": "skills/attack_sword.png"
   }
 }

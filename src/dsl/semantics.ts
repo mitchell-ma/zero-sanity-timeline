@@ -92,7 +92,6 @@ export enum NounType {
   ARTS_REACTION = "ARTS_REACTION",
   /** Same-element infliction stacking. Not directly applicable — triggered automatically. */
   ARTS_BURST = "ARTS_BURST",
-  PHYSICAL_STATUS = "PHYSICAL_STATUS",
   /** Self-referential stack count within a stack reaction. */
   STACKS = "STACKS",
 
@@ -109,6 +108,8 @@ export enum NounType {
   HP = "HP",
   /** Enemy HP as a percentage of max HP (0–100). Used with HAVE for threshold conditions. */
   PERCENTAGE_HP = "PERCENTAGE_HP",
+  /** Operator potential level (0–5). Used with HAVE for potential-gated effects. */
+  POTENTIAL = "POTENTIAL",
 
   // States (for IS/BECOME verbs)
   ACTIVE = "ACTIVE",
@@ -286,7 +287,7 @@ export const ObjectType = { ...NounType, ...AdjectiveType } as typeof NounType &
  * Defines which NounType/ObjectType values each verb can take as its object.
  */
 export const VERB_OBJECTS: Partial<Record<VerbType, ObjectType[]>> = {
-  [VerbType.APPLY]:      [ObjectType.INFLICTION, ObjectType.REACTION, ObjectType.ARTS_BURST, ObjectType.PHYSICAL_STATUS, ObjectType.STATUS, ObjectType.STAGGER, ObjectType.TIME_STOP, ObjectType.EVENT],
+  [VerbType.APPLY]:      [ObjectType.INFLICTION, ObjectType.REACTION, ObjectType.ARTS_BURST, ObjectType.STATUS, ObjectType.STAGGER, ObjectType.TIME_STOP, ObjectType.EVENT],
   [VerbType.CONSUME]:    [ObjectType.INFLICTION, ObjectType.REACTION, ObjectType.STATUS, ObjectType.SKILL_POINT, ObjectType.ULTIMATE_ENERGY, ObjectType.COOLDOWN, ObjectType.STAGGER, ObjectType.STACKS],
   [VerbType.RECOVER]:    [ObjectType.SKILL_POINT, ObjectType.ULTIMATE_ENERGY, ObjectType.HP],
   [VerbType.RETURN]:     [ObjectType.SKILL_POINT],
@@ -302,7 +303,7 @@ export const VERB_OBJECTS: Partial<Record<VerbType, ObjectType[]>> = {
   [VerbType.ENABLE]:     [ObjectType.BATK, ObjectType.BATTLE_SKILL, ObjectType.COMBO_SKILL, ObjectType.ULTIMATE, ObjectType.FINISHER, ObjectType.DIVE_ATTACK],
   [VerbType.DISABLE]:    [ObjectType.BATK, ObjectType.BATTLE_SKILL, ObjectType.COMBO_SKILL, ObjectType.ULTIMATE, ObjectType.FINISHER, ObjectType.DIVE_ATTACK],
   [VerbType.EXPERIENCE]: [ObjectType.GAME_TIME, ObjectType.REAL_TIME],
-  [VerbType.HAVE]:       [ObjectType.STATUS, ObjectType.INFLICTION, ObjectType.REACTION, ObjectType.STACKS, ObjectType.SKILL_POINT, ObjectType.ULTIMATE_ENERGY, ObjectType.HP],
+  [VerbType.HAVE]:       [ObjectType.STATUS, ObjectType.INFLICTION, ObjectType.REACTION, ObjectType.STACKS, ObjectType.SKILL_POINT, ObjectType.ULTIMATE_ENERGY, ObjectType.HP, ObjectType.POTENTIAL],
   [VerbType.IS]:         [ObjectType.ACTIVE, ObjectType.CONTROLLED_STATE, ObjectType.LIFTED, ObjectType.KNOCKED_DOWN, ObjectType.CRUSHED, ObjectType.BREACHED, ObjectType.COMBUSTED, ObjectType.CORRODED, ObjectType.ELECTRIFIED, ObjectType.SOLIDIFIED, ObjectType.NODE_STAGGERED, ObjectType.FULL_STAGGERED],
   [VerbType.BECOME]:     [ObjectType.STACKS, ObjectType.ACTIVE, ObjectType.LIFTED, ObjectType.KNOCKED_DOWN, ObjectType.CRUSHED, ObjectType.BREACHED, ObjectType.COMBUSTED, ObjectType.CORRODED, ObjectType.ELECTRIFIED, ObjectType.SOLIDIFIED, ObjectType.NODE_STAGGERED, ObjectType.FULL_STAGGERED],
   [VerbType.RECEIVE]:    [ObjectType.STATUS, ObjectType.INFLICTION, ObjectType.REACTION, ObjectType.STAGGER],
@@ -330,14 +331,9 @@ export const OBJECT_QUALIFIERS: Partial<Record<ObjectType, AdjectiveType[]>> = {
     AdjectiveType.COMBUSTION, AdjectiveType.SOLIDIFICATION, AdjectiveType.CORROSION, AdjectiveType.ELECTRIFICATION,
     // Physical reactions
     AdjectiveType.LIFT, AdjectiveType.KNOCK_DOWN, AdjectiveType.BREACH, AdjectiveType.CRUSH,
-    // Modifier
-    AdjectiveType.FORCED,
   ],
   [ObjectType.STATUS]: [
     // Physical statuses (APPLY LIFT STATUS TO ENEMY)
-    AdjectiveType.LIFT, AdjectiveType.KNOCK_DOWN, AdjectiveType.BREACH, AdjectiveType.CRUSH,
-  ],
-  [ObjectType.PHYSICAL_STATUS]: [
     AdjectiveType.LIFT, AdjectiveType.KNOCK_DOWN, AdjectiveType.BREACH, AdjectiveType.CRUSH,
   ],
   [ObjectType.TIME_STOP]: [
@@ -613,7 +609,7 @@ export type WithValue = ValueLiteral | ValueVariable | ValueStat;
  *   multiplier       — damage multiplier (VARY_BY SKILL_LEVEL → per-level array)
  *   staggerValue     — stagger amount
  *   skillPoint       — SP value
- *   stacks           — stack count (STATUS, INFLICTION, ARTS_REACTION, PHYSICAL_STATUS)
+ *   stacks           — stack count (STATUS, INFLICTION, ARTS_REACTION)
  */
 export type WithPreposition = Record<string, ValueNode>;
 
@@ -940,7 +936,6 @@ export const OBJECT_FORCED_TARGET: Partial<Record<ObjectType, SubjectType>> = {
   [ObjectType.INFLICTION]:     SubjectType.ENEMY,
   [ObjectType.REACTION]:       SubjectType.ENEMY,
   [ObjectType.ARTS_BURST]:     SubjectType.ENEMY,
-  [ObjectType.PHYSICAL_STATUS]: SubjectType.ENEMY,
 };
 
 /**
@@ -952,7 +947,6 @@ export const VERB_OBJECT_WITH_PROPERTIES: Record<string, Record<string, string[]
     [ObjectType.STATUS]:          ['duration', 'stacks'],
     [ObjectType.INFLICTION]:      ['stacks'],
     [ObjectType.REACTION]:        [...Reaction.EDITABLE_PROPERTIES],
-    [ObjectType.PHYSICAL_STATUS]: [...Reaction.EDITABLE_PROPERTIES],
     [ObjectType.TIME_STOP]:       ['duration'],
     [ObjectType.STAGGER]:         ['value'],
   },

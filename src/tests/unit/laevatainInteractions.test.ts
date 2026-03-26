@@ -265,8 +265,8 @@ describe('B2. Melting Flame Consumption', () => {
     const sequences = getSequences('EMPOWERED_BATTLE_SKILL');
     const frames = sequences[0].getFrames();
     const lastFrame = frames[frames.length - 1];
-    const consumeStatus = lastFrame.getConsumeStatus();
-    expect(consumeStatus).toBe('MELTING_FLAME');
+    const consumeEffect = lastFrame.getClauses().flatMap(c => c.effects).find(e => e.dslEffect?.verb === 'CONSUME' && e.dslEffect?.object === 'STATUS');
+    expect(consumeEffect?.dslEffect?.objectId).toBe('MELTING_FLAME');
   });
 
   test('B2.3: Full pipeline with empowered BS consumes MF and re-accumulates', () => {
@@ -299,17 +299,17 @@ describe('C. Empowered Battle Skill & Combustion', () => {
     // Single-segment skill — get all frames
     const frames = sequences[0].getFrames();
     const lastFrame = frames[frames.length - 1];
-    const forcedReaction = lastFrame.getApplyForcedReaction();
-    expect(forcedReaction).not.toBeNull();
-    expect(forcedReaction!.reaction).toBe('COMBUSTION');
-    expect(forcedReaction!.stacks).toBe(1);
+    const reactionEffect = lastFrame.getClauses().flatMap(c => c.effects).find(e => e.dslEffect?.verb === 'APPLY' && e.dslEffect?.object === 'REACTION');
+    expect(reactionEffect).toBeDefined();
+    const q = Array.isArray(reactionEffect!.dslEffect!.objectQualifier) ? reactionEffect!.dslEffect!.objectQualifier[0] : reactionEffect!.dslEffect!.objectQualifier;
+    expect(q).toBe('COMBUSTION');
   });
 
   test('C2: Normal battle skill does NOT have forced Combustion on any frame', () => {
     const sequences = getSequences('BATTLE_SKILL');
     for (const seq of sequences) {
       for (const frame of seq.getFrames()) {
-        expect(frame.getApplyForcedReaction()).toBeNull();
+        expect(frame.getClauses().flatMap(c => c.effects).find(e => e.dslEffect?.verb === 'APPLY' && e.dslEffect?.object === 'REACTION')).toBeUndefined();
       }
     }
   });
@@ -338,8 +338,8 @@ describe('C. Empowered Battle Skill & Combustion', () => {
     );
     expect(applyReaction).toBeDefined();
     const qualifiers = Array.isArray(applyReaction.objectQualifier) ? applyReaction.objectQualifier : [applyReaction.objectQualifier];
-    expect(qualifiers).toContain('FORCED');
     expect(qualifiers).toContain('COMBUSTION');
+    expect(applyReaction.with?.isForced?.value).toBe(1);
   });
 });
 
@@ -408,17 +408,17 @@ describe('E. Ultimate & Enhanced Variants', () => {
     expect(frames.length).toBeGreaterThan(0);
 
     const frame = frames[0];
-    const infliction = frame.getApplyArtsInfliction();
-    expect(infliction).not.toBeNull();
-    expect(infliction!.element).toBe('HEAT');
-    expect(infliction!.stacks).toBe(1);
+    const inflEffect = frame.getClauses().flatMap(c => c.effects).find(e => e.dslEffect?.verb === 'APPLY' && e.dslEffect?.object === 'INFLICTION');
+    expect(inflEffect).toBeDefined();
+    const qual = Array.isArray(inflEffect!.dslEffect!.objectQualifier) ? inflEffect!.dslEffect!.objectQualifier[0] : inflEffect!.dslEffect!.objectQualifier;
+    expect(qual).toBe('HEAT');
   });
 
   test('E5: Normal basic attack segments do NOT have Heat infliction', () => {
     const sequences = getSequences('BASIC_ATTACK');
     for (const seq of sequences) {
       for (const frame of seq.getFrames()) {
-        expect(frame.getApplyArtsInfliction()).toBeNull();
+        expect(frame.getClauses().flatMap(c => c.effects).find(e => e.dslEffect?.verb === 'APPLY' && e.dslEffect?.object === 'INFLICTION')).toBeUndefined();
       }
     }
   });

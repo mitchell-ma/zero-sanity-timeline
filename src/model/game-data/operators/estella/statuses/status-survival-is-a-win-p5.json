@@ -53,7 +53,7 @@
     "description": "After applying Solidification to an enemy, Estella gains 5 Ultimate Energy. Effect can only trigger once every 1s."
   },
   "metadata": {
-    "originId": "ESTELLA",
+    "originId": "SURVIVAL_IS_A_WIN_P5_TALENT",
     "dataSources": [
       "ENDFIELD_WIKI"
     ]

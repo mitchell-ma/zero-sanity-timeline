@@ -543,12 +543,12 @@ describe('EventInterpretorController: interpretEffects', () => {
   });
 });
 
-// ── APPLY LIFT PHYSICAL_STATUS tests ──────────────────────────────────────
+// ── APPLY LIFT STATUS (PHYSICAL) tests ──────────────────────────────────────
 
-describe('EventInterpretorController: APPLY LIFT PHYSICAL_STATUS', () => {
+describe('EventInterpretorController: APPLY LIFT STATUS (PHYSICAL)', () => {
   const liftEffect: Effect = {
     verb: VerbType.APPLY,
-    object: ObjectType.PHYSICAL_STATUS,
+    object: ObjectType.STATUS, objectId: 'PHYSICAL',
     objectQualifier: AdjectiveType.LIFT,
     to: NounType.ENEMY,
   };
@@ -699,12 +699,12 @@ describe('EventInterpretorController: APPLY LIFT PHYSICAL_STATUS', () => {
   });
 });
 
-// ── APPLY KNOCK_DOWN PHYSICAL_STATUS tests ────────────────────────────────
+// ── APPLY KNOCK_DOWN STATUS (PHYSICAL) tests ────────────────────────────────
 
-describe('EventInterpretorController: APPLY KNOCK_DOWN PHYSICAL_STATUS', () => {
+describe('EventInterpretorController: APPLY KNOCK_DOWN STATUS (PHYSICAL)', () => {
   const knockDownEffect: Effect = {
     verb: VerbType.APPLY,
-    object: ObjectType.PHYSICAL_STATUS,
+    object: ObjectType.STATUS, objectId: 'PHYSICAL',
     objectQualifier: AdjectiveType.KNOCK_DOWN,
     to: NounType.ENEMY,
   };
@@ -845,12 +845,12 @@ describe('EventInterpretorController: APPLY KNOCK_DOWN PHYSICAL_STATUS', () => {
   });
 });
 
-// ── APPLY CRUSH PHYSICAL_STATUS tests ─────────────────────────────────────
+// ── APPLY CRUSH STATUS (PHYSICAL) tests ─────────────────────────────────────
 
-describe('EventInterpretorController: APPLY CRUSH PHYSICAL_STATUS', () => {
+describe('EventInterpretorController: APPLY CRUSH STATUS (PHYSICAL)', () => {
   const crushEffect: Effect = {
     verb: VerbType.APPLY,
-    object: ObjectType.PHYSICAL_STATUS,
+    object: ObjectType.STATUS, objectId: 'PHYSICAL',
     objectQualifier: AdjectiveType.CRUSH,
     to: NounType.ENEMY,
   };
@@ -1013,12 +1013,12 @@ describe('EventInterpretorController: APPLY CRUSH PHYSICAL_STATUS', () => {
   });
 });
 
-// ── APPLY BREACH PHYSICAL_STATUS tests ────────────────────────────────────
+// ── APPLY BREACH STATUS (PHYSICAL) tests ────────────────────────────────────
 
-describe('EventInterpretorController: APPLY BREACH PHYSICAL_STATUS', () => {
+describe('EventInterpretorController: APPLY BREACH STATUS (PHYSICAL)', () => {
   const breachEffect: Effect = {
     verb: VerbType.APPLY,
-    object: ObjectType.PHYSICAL_STATUS,
+    object: ObjectType.STATUS, objectId: 'PHYSICAL',
     objectQualifier: AdjectiveType.BREACH,
     to: NounType.ENEMY,
   };

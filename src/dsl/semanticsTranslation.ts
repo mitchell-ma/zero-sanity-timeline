@@ -116,7 +116,6 @@ export const OBJECT_LABELS: Record<string, string> = {
   SKILL_PARAMETER: t('dsl.object.SKILL_PARAMETER'),
   ATTACK_BONUS: t('dsl.object.ATTACK_BONUS'),
   ARTS_REACTION: t('dsl.object.ARTS_REACTION'),
-  PHYSICAL_STATUS: t('dsl.object.PHYSICAL_STATUS'),
   FINAL_STRIKE: t('dsl.object.FINAL_STRIKE'),
   [NounType.STAT]: t('dsl.object.STAT'),
   [NounType.TALENT_LEVEL]: t('dsl.object.TALENT_LEVEL'),

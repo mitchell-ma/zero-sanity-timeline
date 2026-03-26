@@ -114,8 +114,9 @@
                 },
                 {
                   "verb": "APPLY",
-                  "object": "PHYSICAL_STATUS",
-                  "objectId": "CRUSH",
+                  "object": "STATUS",
+                  "objectId": "PHYSICAL",
+                  "objectQualifier": "CRUSH",
                   "to": "ENEMY"
                 }
               ]
@@ -170,8 +171,9 @@
                 },
                 {
                   "verb": "APPLY",
-                  "object": "PHYSICAL_STATUS",
-                  "objectId": "CRUSH",
+                  "object": "STATUS",
+                  "objectId": "PHYSICAL",
+                  "objectQualifier": "CRUSH",
                   "to": "ENEMY"
                 }
               ]

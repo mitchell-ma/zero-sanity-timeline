@@ -1,6 +1,6 @@
 {
   "properties": {
-    "id": "SCORCHING_FANGS_TALENT",
+    "id": "WULFGARD_TALENT1_SCORCHING_FANGS",
     "name": "Scorching Fangs (Talent)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
@@ -58,8 +58,8 @@
       "effects": [
         {
           "verb": "APPLY",
-          "objectQualifier": "HEAT",
-          "object": "AMP",
+          "object": "STAT_MODIFIER",
+          "objectId": "HEAT_DAMAGE_BONUS",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {

@@ -10,12 +10,14 @@
 import { TimelineEvent, computeSegmentsSpan } from '../../consts/viewTypes';
 import { CombatSkillType } from '../../consts/enums';
 import { COMMON_OWNER_ID } from '../slot/commonSlotController';
+import { PhysicalStatusType } from '../../consts/enums';
 import {
   ELEMENT_TO_INFLICTION_COLUMN,
   ENEMY_OWNER_ID, ENEMY_ACTION_COLUMN_ID, OPERATOR_COLUMNS, REACTION_COLUMNS,
-  REACTION_COLUMN_IDS, INFLICTION_COLUMN_IDS, SKILL_COLUMNS,
+  REACTION_COLUMN_IDS, REACTION_STATUS_TO_COLUMN, INFLICTION_COLUMN_IDS, SKILL_COLUMNS,
   PHYSICAL_INFLICTION_COLUMNS, PHYSICAL_STATUS_COLUMN_IDS,
 } from '../../model/channels';
+import { getTeamStatusColumnId } from '../gameDataStore';
 import { FPS, TOTAL_FRAMES } from '../../utils/timeline';
 import { getFinalStrikeTriggerFrame } from './processComboSkill';
 import { evaluateInteraction } from './conditionEvaluator';
@@ -99,17 +101,15 @@ interface VerbHandler {
 
 // ── Column ID mapping ─────────────────────────────────────────────────────────
 
-const REACTION_STATUS_TO_COLUMN: Record<string, string> = {
-  COMBUSTION: REACTION_COLUMNS.COMBUSTION,
-  SOLIDIFICATION: REACTION_COLUMNS.SOLIDIFICATION,
-  CORROSION: REACTION_COLUMNS.CORROSION,
-  ELECTRIFICATION: REACTION_COLUMNS.ELECTRIFICATION,
-};
+const PHYSICAL_STATUS_VALUES = new Set<string>(Object.values(PhysicalStatusType));
 
+/** Unified status name → column ID resolver. */
 export function statusNameToColumnId(name: string): string {
-  return REACTION_STATUS_TO_COLUMN[name]
+  return getTeamStatusColumnId(name)
+    ?? REACTION_STATUS_TO_COLUMN[name]
     ?? (OPERATOR_COLUMNS as Record<string, string>)[name]
     ?? (PHYSICAL_INFLICTION_COLUMNS as Record<string, string>)[name]
+    ?? (PHYSICAL_STATUS_VALUES.has(name) ? name : undefined)
     ?? name.toLowerCase().replace(/_/g, '-');
 }
 
@@ -196,12 +196,13 @@ function resolveColumns(cond: Predicate): Set<string> | undefined {
       return new Set(INFLICTION_COLUMN_IDS);
 
     case 'STATUS':
+      if (cond.objectId === 'PHYSICAL') {
+        // APPLY PHYSICAL STATUS — resolve qualifier to specific column, or all physical columns
+        if (cond.objectQualifier) return new Set([Array.isArray(cond.objectQualifier) ? cond.objectQualifier[0] : cond.objectQualifier]);
+        return new Set(PHYSICAL_STATUS_COLUMN_IDS);
+      }
       if (cond.objectId) return new Set([statusNameToColumnId(cond.objectId)]);
       return undefined; // generic — needs fallback
-
-    case 'PHYSICAL_STATUS':
-      if (cond.objectId) return new Set([cond.objectId]); // objectId is the PhysicalStatusType enum value (LIFT, KNOCK_DOWN, etc.)
-      return new Set(PHYSICAL_STATUS_COLUMN_IDS);
 
     case 'STAGGER':
       return new Set(['node-stagger', 'full-stagger']);

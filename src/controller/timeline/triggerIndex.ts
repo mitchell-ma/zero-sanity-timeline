@@ -224,8 +224,8 @@ function resolveCategories(columnId: string): string[] {
   const inflictionColumns = new Set<string>(Object.values(INFLICTION_COLUMNS));
   if (reactionColumns.has(columnId)) categories.push('REACTION');
   if (inflictionColumns.has(columnId)) categories.push('INFLICTION');
-  if (PHYSICAL_STATUS_COLUMN_IDS.has(columnId)) categories.push('PHYSICAL_STATUS');
-  if (!reactionColumns.has(columnId) && !inflictionColumns.has(columnId)) categories.push('STATUS');
+  if (PHYSICAL_STATUS_COLUMN_IDS.has(columnId)) categories.push('STATUS');
+  else if (!reactionColumns.has(columnId) && !inflictionColumns.has(columnId)) categories.push('STATUS');
   return categories;
 }
 

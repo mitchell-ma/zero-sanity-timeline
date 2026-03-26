@@ -308,6 +308,10 @@
                     "stacks": {
                       "verb": "IS",
                       "value": 1
+                    },
+                    "isForced": {
+                      "verb": "IS",
+                      "value": 1
                     }
                   }
                 },

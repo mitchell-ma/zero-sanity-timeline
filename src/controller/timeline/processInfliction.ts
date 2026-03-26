@@ -16,12 +16,10 @@ export {
   ELEMENT_TO_INFLICTION_COLUMN,
   FORCED_REACTION_COLUMN,
   FORCED_REACTION_DURATION,
-  TEAM_STATUS_COLUMN,
   REACTION_DURATION,
   INFLICTION_DURATION,
   BREACH_DURATION,
   PHYSICAL_INFLICTION_DURATION,
-  P5_LINK_EXTENSION_FRAMES,
 } from '../../model/channels';
 
 /** Source information for event status changes (consumed/refreshed). */

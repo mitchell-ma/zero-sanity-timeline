@@ -4,8 +4,9 @@
       "conditions": [
         {
           "subject": "ENEMY",
-          "verb": "IS",
-          "object": "COMBUSTED"
+          "verb": "HAVE",
+          "object": "REACTION",
+          "objectQualifier": "COMBUSTION"
         }
       ]
     },
@@ -13,8 +14,9 @@
       "conditions": [
         {
           "subject": "ENEMY",
-          "verb": "IS",
-          "object": "ELECTRIFIED"
+          "verb": "HAVE",
+          "object": "REACTION",
+          "objectQualifier": "ELECTRIFICATION"
         }
       ]
     }
@@ -26,7 +28,8 @@
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "BATTLE_SKILL",
     "element": "HEAT",
-    "id": "THERMITE_TRACERS_EMPOWERED"
+    "id": "THERMITE_TRACERS_EMPOWERED",
+    "name": "Thermite Tracers (Empowered)"
   },
   "segments": [
     {
@@ -160,11 +163,6 @@
                   }
                 },
                 {
-                  "verb": "CONSUME",
-                  "object": "ARTS_REACTION",
-                  "fromDeterminer": "ENEMY"
-                },
-                {
                   "verb": "DEAL",
                   "objectQualifier": "HEAT",
                   "object": "DAMAGE",
@@ -215,14 +213,9 @@
               "conditions": [],
               "effects": [
                 {
-                  "verb": "RECOVER",
-                  "object": "SKILL_POINT",
-                  "with": {
-                    "value": {
-                      "verb": "IS",
-                      "value": 20
-                    }
-                  }
+                  "verb": "CONSUME",
+                  "object": "ARTS_REACTION",
+                  "fromDeterminer": "ENEMY"
                 },
                 {
                   "verb": "DEAL",
@@ -262,6 +255,40 @@
                       "of": "OPERATOR"
                     }
                   }
+                },
+                {
+                  "verb": "RETURN",
+                  "object": "SKILL_POINT",
+                  "with": {
+                    "value": {
+                      "operation": "ADD",
+                      "left": {
+                        "verb": "VARY_BY",
+                        "object": "TALENT_LEVEL",
+                        "value": [
+                          0,
+                          5,
+                          10
+                        ],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
+                      },
+                      "right": {
+                        "verb": "VARY_BY",
+                        "object": "POTENTIAL",
+                        "value": [
+                          0,
+                          0,
+                          10,
+                          10,
+                          10,
+                          10
+                        ],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
+                      }
+                    }
+                  }
                 }
               ]
             }
@@ -282,6 +309,7 @@
     }
   ],
   "metadata": {
+    "originId": "WULFGARD",
     "icon": "skills/skill_wulfgard.png"
   }
 }

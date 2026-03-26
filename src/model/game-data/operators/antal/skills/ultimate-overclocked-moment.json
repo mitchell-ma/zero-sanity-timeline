@@ -34,8 +34,7 @@
           "verb": "APPLY",
           "object": "STATUS",
           "objectId": "OVERCLOCKED_MOMENT_AMP",
-          "toDeterminer": "ALL",
-          "to": "OPERATOR"
+          "to": "TEAM"
         }
       ]
     }
@@ -79,7 +78,33 @@
         },
         "name": "Overclocked Moment"
       },
-      "frames": []
+      "frames": [
+        {
+          "metadata": {
+            "eventComponentType": "FRAME"
+          },
+          "properties": {
+            "offset": {
+              "value": 0,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "OVERCLOCKED_MOMENT_AMP",
+                  "to": "TEAM"
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
+        }
+      ]
     }
   ],
   "metadata": {

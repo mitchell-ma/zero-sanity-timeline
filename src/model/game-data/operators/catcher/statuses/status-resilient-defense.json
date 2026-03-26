@@ -42,7 +42,7 @@
     "description": "For every 10 Will, DEF increases."
   },
   "metadata": {
-    "originId": "CATCHER",
+    "originId": "RESILIENT_DEFENSE_TALENT",
     "dataSources": [
       "ENDFIELD_WIKI"
     ]

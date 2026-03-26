@@ -1,7 +1,8 @@
 import { Column, MiniTimeline, Operator, Enemy, VisibleSkills } from '../../consts/viewTypes';
 import { DeterminerType, NounType, type Predicate } from '../../dsl/semantics';
 import { CombatSkillType, ELEMENT_COLORS, ElementType, EnhancementType, EventFrameType, SegmentType, StatusType, TimeDependency, TimelineSourceType } from '../../consts/enums';
-import { ENEMY_OWNER_ID, USER_ID, ENEMY_GROUP_COLUMNS, ENEMY_ACTION_COLUMN_ID, OPERATOR_COLUMNS, PHYSICAL_STATUS_COLUMNS, SKILL_COLUMN_ORDER as SKILL_ORDER, SKILL_COLUMNS, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID, TEAM_STATUS_COLUMN } from '../../model/channels';
+import { ENEMY_OWNER_ID, USER_ID, ENEMY_GROUP_COLUMNS, ENEMY_ACTION_COLUMN_ID, OPERATOR_COLUMNS, PHYSICAL_STATUS_COLUMNS, SKILL_COLUMN_ORDER as SKILL_ORDER, SKILL_COLUMNS, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID } from '../../model/channels';
+import { getTeamStatusColumnId } from '../gameDataStore';
 import { SKILL_LABELS, ColumnLabel, STATUS_LABELS, REACTION_MICRO_COLUMNS } from '../../consts/timelineColumnLabels';
 import { getTacticalEntry, getWeapon, getAllOperatorStatuses, getWeaponEffectDefs, getGearEffectDefs } from '../gameDataStore';
 import { Tactical } from '../../model/consumables/tactical';
@@ -71,7 +72,7 @@ export function buildColumns(
     const statusEvents = getEnabledStatusEvents(s.operator.id);
     if (statusEvents.length) {
       for (const se of statusEvents) {
-        if (TEAM_STATUS_COLUMN[se.id]) continue;
+        if (getTeamStatusColumnId(se.id)) continue;
         if (se.target === NounType.OPERATOR && (!se.targetDeterminer || se.targetDeterminer === DeterminerType.THIS) && se.id) {
           const seDur = se.duration as { value?: { value?: number } | number | number[] } | undefined;
           const rawVal = seDur?.value;
@@ -170,7 +171,7 @@ export function buildColumns(
   // ── Team-targeted status columns (derived from skill configs) ─────────────
   const allStatuses = getAllOperatorStatuses();
   for (const statusId of Array.from(teamStatusIds ?? [])) {
-    if (TEAM_STATUS_COLUMN[statusId]) continue;
+    if (getTeamStatusColumnId(statusId)) continue;
     const cfg = allStatuses.find(s => s.id === statusId);
     const label = STATUS_LABELS[statusId as StatusType] ?? cfg?.name ?? statusId;
     const colId = statusId.toLowerCase().replace(/_/g, '-');
@@ -389,11 +390,6 @@ export function buildColumns(
                   if (frame) {
                     if (fm.stagger != null) frame.stagger = fm.stagger;
                     if (fm.gaugeGain != null) frame.gaugeGain = fm.gaugeGain;
-                    if (fm.consumeStatus) frame.consumeStatus = fm.consumeStatus;
-                    if (fm.removeConsumeArtsInfliction) delete frame.consumeArtsInfliction;
-                    if (fm.spReturnP1 != null && (slot.potential ?? 0) >= 1) {
-                      frame.skillPointRecovery = fm.spReturnP1;
-                    }
                   }
                 }
               }

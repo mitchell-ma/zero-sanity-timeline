@@ -177,13 +177,14 @@
                 {
                   "verb": "APPLY",
                   "object": "REACTION",
-                  "objectQualifier": [
-                    "FORCED",
-                    "CORROSION"
-                  ],
+                  "objectQualifier": "CORROSION",
                   "to": "ENEMY",
                   "with": {
                     "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    },
+                    "isForced": {
                       "verb": "IS",
                       "value": 1
                     },

@@ -25,7 +25,8 @@
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "BATTLE_SKILL",
     "element": "HEAT",
-    "id": "SMOULDERING_FIRE_ENHANCED_EMPOWERED"
+    "id": "SMOULDERING_FIRE_ENHANCED_EMPOWERED",
+    "name": "Smouldering Fire (Enhanced + Empowered)"
   },
   "segments": [
     {
@@ -300,6 +301,7 @@
     }
   ],
   "metadata": {
+    "originId": "LAEVATAIN",
     "icon": "skills/skill_laevatain.png"
   }
 }

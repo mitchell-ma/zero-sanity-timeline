@@ -21,8 +21,9 @@ import type { ValueNode } from '../../dsl/semantics';
 import type { ValueResolutionContext } from '../calculation/valueResolver';
 import { TimelineEvent, durationSegment, setEventDuration } from '../../consts/viewTypes';
 import { FPS } from '../../utils/timeline';
-import { CritMode, EventStatusType, PhysicalStatusType } from '../../consts/enums';
-import { ENEMY_OWNER_ID, INFLICTION_COLUMNS, REACTION_COLUMNS, SKILL_COLUMNS, TEAM_STATUS_COLUMN } from '../../model/channels/index';
+import { CritMode, EventStatusType } from '../../consts/enums';
+import { ENEMY_OWNER_ID, INFLICTION_COLUMNS, REACTION_STATUS_TO_COLUMN, SKILL_COLUMNS } from '../../model/channels/index';
+import { statusNameToColumnId } from './triggerMatch';
 import { COMMON_OWNER_ID } from '../slot/commonSlotController';
 import { evaluateConditions, ConditionContext } from './conditionEvaluator';
 import { activeEventsAtFrame, activeInflictionsOfElement } from './timelineQueries';
@@ -160,22 +161,6 @@ const ELEMENT_TO_INFLICTION_COLUMN: Record<string, string> = {
   ELECTRIC: INFLICTION_COLUMNS.ELECTRIC,
 };
 
-const REACTION_TO_COLUMN: Record<string, string> = {
-  COMBUSTION:       REACTION_COLUMNS.COMBUSTION,
-  SOLIDIFICATION:   REACTION_COLUMNS.SOLIDIFICATION,
-  CORROSION:        REACTION_COLUMNS.CORROSION,
-  ELECTRIFICATION:  REACTION_COLUMNS.ELECTRIFICATION,
-};
-
-const PHYSICAL_STATUS_VALUES = new Set<string>(Object.values(PhysicalStatusType));
-
-function resolveStatusColumnId(objectId?: string): string {
-  if (!objectId) return 'unknown-status';
-  if (TEAM_STATUS_COLUMN[objectId]) return TEAM_STATUS_COLUMN[objectId];
-  if (REACTION_TO_COLUMN[objectId]) return REACTION_TO_COLUMN[objectId];
-  if (PHYSICAL_STATUS_VALUES.has(objectId)) return objectId;
-  return objectId.toLowerCase().replace(/_/g, '-');
-}
 
 function resolveInflictionColumnId(objectQualifier?: AdjectiveType | AdjectiveType[]): string | undefined {
   const adj = Array.isArray(objectQualifier) ? objectQualifier[0] : objectQualifier;
@@ -186,7 +171,7 @@ function resolveInflictionColumnId(objectQualifier?: AdjectiveType | AdjectiveTy
 function resolveReactionColumnId(objectQualifier?: AdjectiveType | AdjectiveType[]): string | undefined {
   const adj = Array.isArray(objectQualifier) ? objectQualifier[0] : objectQualifier;
   if (!adj) return undefined;
-  return REACTION_TO_COLUMN[adj];
+  return REACTION_STATUS_TO_COLUMN[adj];
 }
 
 // ── Verb Handlers ────────────────────────────────────────────────────────
@@ -217,7 +202,7 @@ function executeApply(effect: Effect, ctx: ExecutionContext): MutationSet {
   }
 
   if (effect.object === 'STATUS') {
-    const columnId = resolveStatusColumnId(effect.objectId);
+    const columnId = statusNameToColumnId(effect.objectId ?? '');
 
     const durationValue = resolveWith(effect.with?.duration, ctx);
     const duration = durationValue != null ? Math.round(durationValue * FPS) : 2400;
@@ -287,7 +272,7 @@ function executeConsume(effect: Effect, ctx: ExecutionContext): MutationSet {
   }
 
   if (effect.object === 'STATUS') {
-    const columnId = resolveStatusColumnId(effect.objectId);
+    const columnId = statusNameToColumnId(effect.objectId ?? '');
     const targets = activeEventsAtFrame(ctx.events, columnId, ownerId, ctx.frame)
       .filter(ev => ev.eventStatus !== EventStatusType.CONSUMED)
       .sort((a, b) => a.startFrame - b.startFrame);
@@ -337,7 +322,7 @@ function executeReset(effect: Effect, ctx: ExecutionContext): MutationSet {
   const result = emptyMutationSet();
   // RESET STACKS or RESET COOLDOWN — clamp all active instances
   if (effect.object === 'STACKS' && effect.objectId) {
-    const columnId = resolveStatusColumnId(effect.objectId);
+    const columnId = statusNameToColumnId(effect.objectId ?? '');
     const ownerId = resolveOwnerId(effect.to as string, ctx, effect.toDeterminer);
     const targets = activeEventsAtFrame(ctx.events, columnId, ownerId, ctx.frame)
       .filter(ev => ev.eventStatus !== EventStatusType.CONSUMED);

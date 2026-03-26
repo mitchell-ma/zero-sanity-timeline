@@ -336,7 +336,7 @@ describe('E. Scorching Fangs (Talent 1)', () => {
 
     // Scorching Fangs should appear as a status on Wulfgard
     const sfEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.name === 'SCORCHING_FANGS_TALENT',
+      ev => ev.ownerId === SLOT_WULFGARD && ev.name === 'WULFGARD_TALENT1_SCORCHING_FANGS',
     );
     expect(sfEvents.length).toBeGreaterThanOrEqual(1);
   });
@@ -368,7 +368,7 @@ describe('F. Code of Restraint (Talent 2)', () => {
 
     // Code of Restraint should fire — look for a trigger-related event
     const triggerEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.name === 'CODE_OF_RESTRAINT_TALENT',
+      ev => ev.ownerId === SLOT_WULFGARD && ev.name === 'WULFGARD_TALENT2_CODE_OF_RESTRAINT',
     );
     expect(triggerEvents.length).toBeGreaterThanOrEqual(1);
   });
@@ -518,7 +518,7 @@ describe('H. Cross-Mechanic Chains', () => {
 
     // Verify: Scorching Fangs on Wulfgard
     const sfEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.name === 'SCORCHING_FANGS_TALENT',
+      ev => ev.ownerId === SLOT_WULFGARD && ev.name === 'WULFGARD_TALENT1_SCORCHING_FANGS',
     );
     expect(sfEvents.length).toBeGreaterThanOrEqual(1);
 
@@ -587,7 +587,7 @@ describe('H. Cross-Mechanic Chains', () => {
 
     // Verify Scorching Fangs triggered from ult Combustion
     const sfBefore = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.name === 'SCORCHING_FANGS_TALENT',
+      ev => ev.ownerId === SLOT_WULFGARD && ev.name === 'WULFGARD_TALENT1_SCORCHING_FANGS',
     );
     expect(sfBefore.length).toBeGreaterThanOrEqual(1);
 
@@ -605,13 +605,13 @@ describe('H. Cross-Mechanic Chains', () => {
 
     // Verify: Scorching Fangs on self should have been re-applied (reset duration)
     const sfAfter = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.name === 'SCORCHING_FANGS_TALENT',
+      ev => ev.ownerId === SLOT_WULFGARD && ev.name === 'WULFGARD_TALENT1_SCORCHING_FANGS',
     );
     expect(sfAfter.length).toBeGreaterThanOrEqual(1);
 
     // Verify: Scorching Fangs Minor applied to other operators
     const sfMinor = result.current.allProcessedEvents.filter(
-      ev => ev.name === 'SCORCHING_FANGS_TALENT_MINOR' && ev.ownerId !== SLOT_WULFGARD,
+      ev => ev.name === 'WULFGARD_TALENT1_SCORCHING_FANGS_MINOR' && ev.ownerId !== SLOT_WULFGARD,
     );
     expect(sfMinor.length).toBeGreaterThanOrEqual(1);
   });

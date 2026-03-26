@@ -213,7 +213,7 @@ describe('A. Basic Attack (Rocky Whispers)', () => {
     const sequences = getSequences('BASIC_ATTACK');
     for (const seq of sequences) {
       for (const frame of seq.getFrames()) {
-        expect(frame.getApplyArtsInfliction()).toBeNull();
+        expect(frame.getClauses().flatMap(c => c.effects).find(e => e.dslEffect?.verb === 'APPLY' && e.dslEffect?.object === 'INFLICTION')).toBeUndefined();
       }
     }
   });
@@ -366,7 +366,8 @@ describe('C. Combo Skill (Eruption Column)', () => {
       (e: Record<string, unknown>) => e.verb === 'APPLY' && e.object === 'REACTION'
     );
     expect(reaction).toBeDefined();
-    expect(reaction.objectQualifier).toEqual(['FORCED', 'CORROSION']);
+    expect(reaction.objectQualifier).toBe('CORROSION');
+    expect(reaction.with.isForced.value).toBe(1);
     expect(reaction.to).toBe('ENEMY');
     expect(reaction.with.stacks.value).toBe(1);
     expect(durVal(reaction.with.duration.value)).toBe(7);
@@ -434,7 +435,7 @@ describe('D. Ultimate (Wooly Party)', () => {
     );
     expect(energyCost).toBeDefined();
     expect(energyCost.with.value.verb).toBe('VARY_BY');
-    expect(energyCost.with.value.value).toEqual([90, 90, 90, 90, 76.5, 76.5]);
+    expect(energyCost.with.value.value).toEqual([90, 90, 90, 76.5, 76.5, 76.5]);
   });
 
   test('D2: Ultimate active duration is 4.47 seconds (from ACTIVE segment)', () => {

@@ -1,16 +1,10 @@
-import { ElementType, EventFrameType, StatusType } from "../../consts/enums";
+import { ElementType, EventFrameType } from "../../consts/enums";
 import { DeterminerType, NounType, VerbType, AdjectiveType } from "../../dsl/semantics";
-import type { DslTarget, ValueNode } from "../../dsl/semantics";
+import type { DslTarget, Effect, ValueNode } from "../../dsl/semantics";
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT, type ValueResolutionContext } from "../../controller/calculation/valueResolver";
 import { REACTION_COLUMNS } from "../channels";
 import {
   SkillEventFrame,
-  FrameArtsInfliction,
-  FrameArtsAbsorption,
-  FrameArtsConsumption,
-  FrameForcedReaction,
-  FrameApplyStatus,
-  FrameReactionConsumption,
   FrameClausePredicate,
   FrameClauseEffect,
   FrameCondition,
@@ -53,8 +47,6 @@ interface JsonEffect {
   eventName?: string;
   susceptibility?: Record<string, number[]>;
   stackingInteraction?: string;
-  potentialMin?: number;
-  potentialMax?: number;
   segments?: { name: string; duration: number; susceptibility?: Record<string, number[]> }[];
   conversion?: { object: string; objectId?: string };
   conditions?: { enemiesHitThreshold: number };
@@ -222,14 +214,7 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
   private readonly _offsetSeconds: number;
   private readonly _skillPointRecovery: number;
   private readonly _stagger: number;
-  private readonly _applyArtsInfliction: FrameArtsInfliction | null;
-  private readonly _absorbArtsInfliction: FrameArtsAbsorption | null;
-  private readonly _consumeArtsInfliction: FrameArtsConsumption | null;
-  private readonly _applyForcedReaction: FrameForcedReaction | null;
-  private readonly _applyStatuses: FrameApplyStatus[];
-  private readonly _consumeStatus: string | null;
   private readonly _damageElement: string | null;
-  private readonly _consumeReaction: FrameReactionConsumption | null;
   private readonly _duplicateTriggerSource: boolean;
   private readonly _clauses: readonly FrameClausePredicate[];
   private readonly _clauseType: string | undefined;
@@ -242,20 +227,12 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
     super();
     this._offsetSeconds = frame.properties!.offset!.value;
     this._damageElement = frame.damageElement ?? null;
-    this._consumeReaction = null;
     let duplicateSource = false;
     const frameTypes: EventFrameType[] = [];
 
     let sp = 0;
     let stagger = 0;
     let gaugeGain = 0;
-    let applyInfliction: FrameArtsInfliction | null = null;
-    let absorbInfliction: FrameArtsAbsorption | null = null;
-    let consumeInfliction: FrameArtsConsumption | null = null;
-    let forcedReaction: FrameForcedReaction | null = null;
-    const applyStatuses: FrameApplyStatus[] = [];
-    let consumeStatus: string | null = null;
-    let consumeReaction: FrameReactionConsumption | null = null;
 
     // ── Clause parsing ─────────────────────────────────────────────────────
     const clauses: FrameClausePredicate[] = [];
@@ -288,97 +265,29 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
             break;
 
           case VerbType.APPLY:
-            if (isSource && (ef.object === NounType.INFLICTION || ef.object === NounType.STATUS || ef.object === NounType.PHYSICAL_STATUS)) {
+            if (isSource && (ef.object === NounType.INFLICTION || ef.object === NounType.STATUS)) {
               duplicateSource = true;
-            } else if (ef.object === NounType.INFLICTION) {
-              applyInfliction = { element: elementQualifier!, stacks: withValue(wp?.stacks) || 1 };
-            } else if (ef.object === NounType.REACTION && isForced) {
-              const reactionName = reactionQualifier ?? ef.objectId;
-              const dur = wp?.duration;
-              forcedReaction = {
-                reaction: reactionName as StatusType,
-                stacks: withValue(wp?.stacks) || 1,
-                ...(dur != null && { durationFrames: Math.round(withValue(dur) * 120) }),
-              };
+            } else if (ef.object === NounType.INFLICTION || ef.object === NounType.REACTION) {
+              clauseEffects.push({ type: 'dsl', dslEffect: ef as unknown as Effect });
             } else if (ef.object === NounType.STATUS || ef.objectType === NounType.STATUS) {
-              const durRaw = wp?.duration;
-              // Duration may be a flat JsonWithValue or a nested { value: JsonWithValue, unit } wrapper
-              const durVal = durRaw?.value && typeof durRaw.value === 'object' && !Array.isArray(durRaw.value)
-                ? durRaw.value as JsonWithValue : durRaw;
-              const isStandardTarget = ['OPERATOR', 'ENEMY', 'TEAM'].includes(ef.to ?? '');
-              // Normalize: objectType=STATUS with object=<id> → objectId=<id>
-              const statusObjectId = ef.object === NounType.STATUS ? ef.objectId : ef.object;
-              const status: FrameApplyStatus = {
-                target: dslTargetToDslTarget(ef.to, ef.toDeterminer),
-                status: statusObjectId!,
-                stacks: withValue(wp?.stacks) || 1,
-                durationFrames: durVal != null ? Math.round(withValue(durVal) * 120) : 0,
-              };
-              if (ef.to && !isStandardTarget) {
-                status.targetOperatorId = ef.to;
-              }
-              if (ef.susceptibility) {
-                status.susceptibility = ef.susceptibility as Partial<Record<ElementType, readonly number[]>>;
-              }
-              if (ef.eventName) status.eventName = ef.eventName;
-              if (ef.stackingInteraction) status.stackingInteraction = ef.stackingInteraction;
-              if (ef.potentialMin != null) status.potentialMin = ef.potentialMin;
-              if (ef.potentialMax != null) status.potentialMax = ef.potentialMax;
-              if (ef.segments) {
-                status.segments = ef.segments.map(s => ({
-                  name: s.name,
-                  durationFrames: Math.round(s.duration * 120),
-                  ...(s.susceptibility && { susceptibility: s.susceptibility as Partial<Record<ElementType, readonly number[]>> }),
-                }));
-              }
-              applyStatuses.push(status);
-              clauseEffects.push({ type: 'applyStatus', applyStatus: status });
-            } else if (ef.object === NounType.PHYSICAL_STATUS) {
-              const physType = ef.objectId ?? elementQualifier ?? qualifiers[0];
-              clauseEffects.push({
-                type: 'applyPhysicalStatus',
-                physicalStatusQualifier: physType,
-                physicalStatusIsForced: isForced || undefined,
-              });
+              // Normalize: objectType=STATUS with object=<id> → object: STATUS, objectId: <id>
+              const normalizedEffect = ef.objectType === NounType.STATUS && ef.object !== NounType.STATUS
+                ? { ...ef, object: NounType.STATUS, objectId: ef.object } as unknown as Effect
+                : ef as unknown as Effect;
+              clauseEffects.push({ type: 'dsl', dslEffect: normalizedEffect });
             }
             break;
 
           case VerbType.CONSUME:
-            if (ef.object === NounType.INFLICTION) {
-              if (ef.conversion) {
-                absorbInfliction = {
-                  element: elementQualifier!,
-                  stacks: withValue(wp?.stacks) || 1,
-                  exchangeStatus: (ef.conversion.objectId as string) ?? 'MELTING_FLAME',
-                  ratio: '1:1',
-                };
-              } else {
-                consumeInfliction = { element: elementQualifier!, stacks: withValue(wp?.stacks) || 1 };
-              }
+            if (ef.object === NounType.INFLICTION && ef.conversion) {
+              // Absorb/exchange — no engine handler yet, skip
             } else if (ef.object === NounType.STATUS || ef.objectType === NounType.STATUS) {
-              consumeStatus = (ef.object === NounType.STATUS ? ef.objectId : ef.object)!;
-            } else if (ef.object === NounType.REACTION && ef.objectId !== 'ARTS') {
-              const cr: FrameReactionConsumption = {
-                columnId: DSL_REACTION_TO_COLUMN[reactionQualifier ?? ef.objectId ?? ''] ?? (reactionQualifier ?? ef.objectId ?? ''),
-              };
-              if (ef.applyOnConsume) {
-                const aoc = ef.applyOnConsume;
-                cr.applyStatus = {
-                  target: dslTargetToDslTarget(aoc.target),
-                  status: aoc.status,
-                  stacks: 1,
-                  durationFrames: Math.round(aoc.durationSeconds * 120),
-                  ...(aoc.eventName && { eventName: aoc.eventName }),
-                  ...(aoc.susceptibility && {
-                    susceptibility: aoc.susceptibility as Partial<Record<ElementType, readonly number[]>>,
-                  }),
-                };
-              }
-              consumeReaction = cr;
-              clauseEffects.push({ type: 'consumeReaction', consumeReaction: cr });
+              const normalizedConsumeEffect = ef.objectType === NounType.STATUS && ef.object !== NounType.STATUS
+                ? { ...ef, object: NounType.STATUS, objectId: ef.object } as unknown as Effect
+                : ef as unknown as Effect;
+              clauseEffects.push({ type: 'dsl', dslEffect: normalizedConsumeEffect });
             } else {
-              // Unhandled CONSUME variant (e.g. REACTION objectId:ARTS) — pass through as raw DSL effect
-              clauseEffects.push({ type: 'dsl', dslEffect: ef as unknown as import('../../dsl/semantics').Effect });
+              clauseEffects.push({ type: 'dsl', dslEffect: ef as unknown as Effect });
             }
             break;
 
@@ -419,13 +328,6 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
     this._gaugeGain = gaugeGain;
     this._skillPointRecovery = sp;
     this._stagger = stagger;
-    this._applyArtsInfliction = applyInfliction;
-    this._absorbArtsInfliction = absorbInfliction;
-    this._consumeArtsInfliction = consumeInfliction;
-    this._applyForcedReaction = forcedReaction;
-    this._applyStatuses = applyStatuses;
-    if (consumeReaction) this._consumeReaction = consumeReaction;
-    this._consumeStatus = consumeStatus;
     this._duplicateTriggerSource = duplicateSource;
     this._dependencyTypes = (frame.properties?.dependencyTypes ?? []) as string[];
     this._frameTypes = frameTypes;
@@ -434,14 +336,6 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
   getOffsetSeconds(): number { return this._offsetSeconds; }
   getSkillPointRecovery(): number { return this._skillPointRecovery; }
   getStagger(): number { return this._stagger; }
-  getApplyArtsInfliction(): FrameArtsInfliction | null { return this._applyArtsInfliction; }
-  getAbsorbArtsInfliction(): FrameArtsAbsorption | null { return this._absorbArtsInfliction; }
-  getConsumeArtsInfliction(): FrameArtsConsumption | null { return this._consumeArtsInfliction; }
-  getApplyForcedReaction(): FrameForcedReaction | null { return this._applyForcedReaction; }
-  getApplyStatus(): FrameApplyStatus | null { return this._applyStatuses[0] ?? null; }
-  getApplyStatuses(): readonly FrameApplyStatus[] { return this._applyStatuses; }
-  getConsumeReaction(): FrameReactionConsumption | null { return this._consumeReaction; }
-  getConsumeStatus(): string | null { return this._consumeStatus; }
   getDamageElement(): string | null { return this._damageElement; }
   getDuplicateTriggerSource(): boolean { return this._duplicateTriggerSource; }
   getClauses(): readonly FrameClausePredicate[] { return this._clauses; }

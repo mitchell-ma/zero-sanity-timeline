@@ -41,10 +41,10 @@ function resetIdCounter() { eventIdCounter = 0; }
 function linkStatusEvent(startFrame: number, durationFrames: number): TimelineEvent {
   return {
     uid: `link-${eventIdCounter++}`,
-    id: StatusType.LINK,
-    name: StatusType.LINK,
+    id: 'team-status',
+    name: 'team-status',
     ownerId: COMMON_OWNER_ID,
-    columnId: StatusType.LINK,
+    columnId: 'team-status',
     startFrame,
     segments: [{ properties: { duration: durationFrames } }],
     sourceOwnerId: SLOT_ID,
@@ -121,7 +121,7 @@ describe('Link Consumption — Battle Skill', () => {
     const link = linkStatusEvent(0, 10 * FPS);
     const battle = simpleBattleSkill(2 * FPS);
     const result = processCombatSimulation([link, battle]);
-    const linkEvents = filterByColumn(result, StatusType.LINK);
+    const linkEvents = filterByColumn(result, 'team-status');
     expect(linkEvents.length).toBe(1);
     expect(linkEvents[0].eventStatus).toBe(EventStatusType.CONSUMED);
   });
@@ -155,7 +155,7 @@ describe('Link Consumption — Battle Skill', () => {
     const link = linkStatusEvent(0, 10 * FPS);
     const battle = simpleBattleSkill(2 * FPS);
     const result = processCombatSimulation([link, battle]);
-    const linkEvents = filterByColumn(result, StatusType.LINK);
+    const linkEvents = filterByColumn(result, 'team-status');
     expect(linkEvents.length).toBe(1);
     expect(eventDuration(linkEvents[0])).toBe(2 * FPS);
   });
@@ -170,7 +170,7 @@ describe('Link Consumption — Ultimate', () => {
     const link = linkStatusEvent(0, 10 * FPS);
     const ult = simpleUltimate(2 * FPS);
     const result = processCombatSimulation([link, ult]);
-    const linkEvents = filterByColumn(result, StatusType.LINK);
+    const linkEvents = filterByColumn(result, 'team-status');
     expect(linkEvents.length).toBe(1);
     expect(linkEvents[0].eventStatus).toBe(EventStatusType.CONSUMED);
   });
@@ -193,7 +193,7 @@ describe('Link NOT consumed by non-qualifying skills', () => {
     const link = linkStatusEvent(0, 10 * FPS);
     const basic = simpleBasicAttack(2 * FPS);
     const result = processCombatSimulation([link, basic]);
-    const linkEvents = filterByColumn(result, StatusType.LINK);
+    const linkEvents = filterByColumn(result, 'team-status');
     expect(linkEvents.length).toBe(1);
     expect(linkEvents[0].eventStatus).toBeUndefined();
     const controller = getLastController();
@@ -204,7 +204,7 @@ describe('Link NOT consumed by non-qualifying skills', () => {
     const link = linkStatusEvent(0, 10 * FPS);
     const combo = simpleComboSkill(2 * FPS);
     const result = processCombatSimulation([link, combo]);
-    const linkEvents = filterByColumn(result, StatusType.LINK);
+    const linkEvents = filterByColumn(result, 'team-status');
     expect(linkEvents.length).toBe(1);
     expect(linkEvents[0].eventStatus).toBeUndefined();
     const controller = getLastController();
@@ -223,7 +223,7 @@ describe('Link NOT consumed by non-qualifying skills', () => {
       segments: [{ properties: { duration: FPS }, frames: [{ offsetFrame: 0 }] }],
     };
     const result = processCombatSimulation([link, finisher]);
-    const linkEvents = filterByColumn(result, StatusType.LINK);
+    const linkEvents = filterByColumn(result, 'team-status');
     expect(linkEvents.length).toBe(1);
     expect(linkEvents[0].eventStatus).toBeUndefined();
     const controller = getLastController();
@@ -242,7 +242,7 @@ describe('Link NOT consumed by non-qualifying skills', () => {
       segments: [{ properties: { duration: FPS }, frames: [{ offsetFrame: 0 }] }],
     };
     const result = processCombatSimulation([link, dive]);
-    const linkEvents = filterByColumn(result, StatusType.LINK);
+    const linkEvents = filterByColumn(result, 'team-status');
     expect(linkEvents.length).toBe(1);
     expect(linkEvents[0].eventStatus).toBeUndefined();
     const controller = getLastController();
@@ -266,7 +266,7 @@ describe('Link Consumption — Edge Cases', () => {
     const link = linkStatusEvent(0, FPS); // expires at frame 120
     const battle = simpleBattleSkill(2 * FPS); // starts at frame 240
     const result = processCombatSimulation([link, battle]);
-    const linkEvents = filterByColumn(result, StatusType.LINK);
+    const linkEvents = filterByColumn(result, 'team-status');
     expect(linkEvents.length).toBe(1);
     expect(linkEvents[0].eventStatus).toBeUndefined();
     const controller = getLastController();
@@ -291,7 +291,7 @@ describe('Link Consumption — Edge Cases', () => {
     const controller = getLastController();
     expect(controller.getLinkStacks(battle.uid)).toBe(0);
     // Link should remain unconsumed
-    const linkEvents = filterByColumn(result, StatusType.LINK);
+    const linkEvents = filterByColumn(result, 'team-status');
     expect(linkEvents.length).toBe(1);
     expect(linkEvents[0].eventStatus).toBeUndefined();
   });
@@ -302,7 +302,7 @@ describe('Link Consumption — Edge Cases', () => {
     const result = processCombatSimulation([link, ult]);
     const controller = getLastController();
     expect(controller.getLinkStacks(ult.uid)).toBe(0);
-    const linkEvents = filterByColumn(result, StatusType.LINK);
+    const linkEvents = filterByColumn(result, 'team-status');
     expect(linkEvents.length).toBe(1);
     expect(linkEvents[0].eventStatus).toBeUndefined();
   });
@@ -454,7 +454,7 @@ describe('Link Consumption — Mixed Interactions', () => {
     expect(controller.getLinkStacks(basic2.uid)).toBe(0);
     expect(controller.getLinkStacks(battle.uid)).toBe(1);
     // Link should be consumed at battle start (8s)
-    const linkEvents = filterByColumn(result, StatusType.LINK);
+    const linkEvents = filterByColumn(result, 'team-status');
     expect(linkEvents[0].eventStatus).toBe(EventStatusType.CONSUMED);
     expect(eventDuration(linkEvents[0])).toBe(8 * FPS);
   });

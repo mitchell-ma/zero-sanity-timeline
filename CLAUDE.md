@@ -52,6 +52,7 @@ Game data:
 - All skill data (frames, multipliers, effects, properties, animation timings) lives in `src/model/game-data/operator-skills/*-skills.json`. Operator JSONs (`src/model/game-data/operators/*-operator.json`) store only operator-level data (stats, potentials, talents, metadata) — never skill frames or overrides.
 - When debugging missing/wrong skill data in the UI, always check the skills JSON first — that is the single source of truth. There is no override mechanism in operator JSONs.
 - When showing JSON configs to the user, always show the full raw JSON — never abbreviate or summarize into pseudo-JSON.
+- **SP verbs: `RECOVER` vs `RETURN` are distinct in the engine.** `RECOVER` is natural SP gain (regen, basic attack finisher) — battle skills that consume naturally-recovered SP generate ultimate energy. `RETURN` is conditional SP refund (e.g. Code of Restraint returning SP on reaction consume) — battle skills that consume returned SP do NOT generate ultimate energy. Use whichever verb the in-game description specifies.
 - **`"to": "TEAM"` and `"to": "OPERATOR", "toDeterminer": "ALL"` are semantically distinct.** `"to": "TEAM"` applies one shared status to the team-status column (`COMMON_OWNER_ID`). `"to": "OPERATOR", "toDeterminer": "ALL"` applies separate status instances to each individual operator's status column. Never conflate or normalize one into the other.
 
 Processes:

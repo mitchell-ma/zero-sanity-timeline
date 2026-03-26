@@ -9,7 +9,7 @@
  *
  * A. Operator status columns
  *    - Laevatain: MELTING_FLAME + SCORCHING_HEART_EFFECT (OPERATOR/THIS)
- *    - Wulfgard: SCORCHING_FANGS_TALENT (OPERATOR/THIS)
+ *    - Wulfgard: WULFGARD_TALENT1_SCORCHING_FANGS (OPERATOR/THIS)
  *    - Yvonne: CRIT_STACKS (OPERATOR/THIS)
  *
  * B. Enemy-targeted statuses do NOT create operator status columns
@@ -89,14 +89,14 @@ describe('buildColumns — operator status columns', () => {
     expect(microIds).toContain('scorching-heart');
   });
 
-  it('creates status column for Wulfgard with SCORCHING_FANGS_TALENT', () => {
+  it('creates status column for Wulfgard with WULFGARD_TALENT1_SCORCHING_FANGS', () => {
     const op = findOperator('WULFGARD');
     const slot = makeSlot('slot1', op);
     const columns = buildColumns([slot], ENEMY, allSkillsVisible('slot1'));
     const statusCol = findStatusColumn(columns, 'slot1');
     expect(statusCol).toBeDefined();
     const microIds = statusCol!.microColumns!.map(mc => mc.id);
-    expect(microIds).toContain('scorching-fangs-talent');
+    expect(microIds).toContain('wulfgard-talent1-scorching-fangs');
   });
 
   it('creates status column for Yvonne with CRIT_STACKS', () => {

@@ -1,7 +1,12 @@
 # Devlog
 
 ## 2026-03-25
-- Internal data format cleanup — skill and status data across all operators now uses consistent field naming, improving reliability of effect resolution and display
+- Unified how all skill effects are processed — inflictions, status applications, reactions, and physical statuses now all flow through a single pipeline instead of separate legacy paths, making behavior more consistent
+- Forced reactions (like Wulfgard's Ultimate applying Combustion or Ardelia's Combo applying Corrosion) are now expressed more cleanly in the data and process correctly through the unified pipeline
+- Physical status effects (Lift, Knock Down, Crush, Breach) are now treated as a subtype of Status in the effect grammar rather than their own separate category
+- Potential-gated effects (like Antal's Empowered Focus at P5) now use the standard condition system instead of a special-case filter
+- Link (team buff from Ultimates) now correctly routes to the shared team status column and consumption works properly
+- Fixed several test alignment issues from previous data normalization changes
 
 ## 2026-03-24
 - Combo skills can now be triggered by physical statuses (Lift, Breach, Knock Down, Crush) in addition to elemental inflictions — Antal's combo correctly activates when an ally applies Lift to an enemy with Focus

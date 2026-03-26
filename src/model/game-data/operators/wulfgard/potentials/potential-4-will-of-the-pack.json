@@ -1,25 +1,6 @@
 {
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "MODIFY",
-          "object": "SKILL_COST",
-          "objectId": "WULFGARD_WOLVEN_FURY",
-          "with": {
-            "value": {
-              "verb": "IS",
-              "value": 0.85
-            },
-            "parameterType": 1
-          }
-        }
-      ]
-    }
-  ],
   "properties": {
-    "id": "WULFGARD_POTENTIAL_4",
+    "id": "WULFGARD_P4_WILL_OF_THE_PACK",
     "name": "Will of the Pack",
     "level": 4,
     "eventType": "POTENTIAL_EVENT",
@@ -28,6 +9,5 @@
   },
   "metadata": {
     "originId": "WULFGARD"
-  },
-  "clauseType": "ALL"
+  }
 }

@@ -87,8 +87,9 @@
               "effects": [
                 {
                   "verb": "APPLY",
-                  "object": "PHYSICAL_STATUS",
-                  "objectId": "LIFT",
+                  "object": "STATUS",
+                  "objectId": "PHYSICAL",
+                  "objectQualifier": "LIFT",
                   "to": "ENEMY",
                   "with": {
                     "isForced": true
@@ -400,8 +401,9 @@
               "effects": [
                 {
                   "verb": "APPLY",
-                  "object": "PHYSICAL_STATUS",
-                  "objectId": "KNOCK_DOWN",
+                  "object": "STATUS",
+                  "objectId": "PHYSICAL",
+                  "objectQualifier": "KNOCK_DOWN",
                   "to": "ENEMY",
                   "with": {
                     "isForced": true

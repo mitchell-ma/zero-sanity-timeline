@@ -17,10 +17,8 @@ import { getLastController } from '../timeline/eventQueueController';
 
 // ── JSON Skill Data Shapes ──────────────────────────────────────────────────
 
-/** Effect with optional potential gates and display name from JSON skill data. */
+/** Effect with optional display name from JSON skill data. */
 interface JsonEffect extends Effect {
-  potentialMin?: number;
-  potentialMax?: number;
   eventName?: string;
 }
 
@@ -555,14 +553,13 @@ function isRedundantEffect(e: Effect): boolean {
 }
 
 /**
- * Resolve frame effects, filtering by operator potential when effects have
- * potentialMin/potentialMax gates. Uses eventName for display when available.
+ * Resolve frame effects for display. Uses eventName for display when available.
  * Returns structured TranslatedEffect objects for natural-language rendering.
  */
 function resolveFrameEffects(
   effects: JsonEffect[],
   key: string,
-  potential: number,
+  _potential: number,
   outEffects: Record<string, TranslatedEffect[]>,
 ) {
   const resolved: TranslatedEffect[] = [];
@@ -570,9 +567,6 @@ function resolveFrameEffects(
   for (const e of effects) {
     // Filter redundant/zero-value effects
     if (isRedundantEffect(e)) continue;
-    // Filter by potential gate
-    if (e.potentialMin != null && potential < e.potentialMin) continue;
-    if (e.potentialMax != null && potential > e.potentialMax) continue;
 
     // Use eventName for display when it differs from objectId
     const displayEffect: Effect = e.eventName && e.eventName !== e.objectId

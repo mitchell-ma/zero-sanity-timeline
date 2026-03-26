@@ -111,8 +111,9 @@
                 },
                 {
                   "verb": "APPLY",
-                  "object": "PHYSICAL_STATUS",
-                  "objectId": "KNOCK_DOWN",
+                  "object": "STATUS",
+                  "objectId": "PHYSICAL",
+                  "objectQualifier": "KNOCK_DOWN",
                   "to": "ENEMY"
                 },
                 {

@@ -185,9 +185,12 @@
     {
       "conditions": [
         {
-          "subject": "ENEMY",
-          "verb": "IS",
-          "object": "COMBUSTED"
+          "subjectDeterminer": "ANY",
+          "subject": "OPERATOR",
+          "verb": "APPLY",
+          "object": "INFLICTION",
+          "objectId": "ARTS",
+          "to": "ENEMY"
         }
       ]
     }

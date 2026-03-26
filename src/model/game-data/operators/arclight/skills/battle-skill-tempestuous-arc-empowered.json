@@ -20,7 +20,8 @@
     ],
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "BATTLE_SKILL",
-    "id": "TEMPESTUOUS_ARC_EMPOWERED"
+    "id": "TEMPESTUOUS_ARC_EMPOWERED",
+    "name": "Tempestuous Arc (Empowered)"
   },
   "segments": [
     {
@@ -135,6 +136,7 @@
     }
   ],
   "metadata": {
+    "originId": "ARCLIGHT",
     "icon": "skills/skill_arclight.png"
   }
 }

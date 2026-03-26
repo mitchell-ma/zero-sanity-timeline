@@ -216,7 +216,7 @@ describe('A. Basic Attack (Sword of Aspiration)', () => {
     const sequences = getSequences('BASIC_ATTACK');
     for (const seq of sequences) {
       for (const frame of seq.getFrames()) {
-        expect(frame.getApplyArtsInfliction()).toBeNull();
+        expect(frame.getClauses().flatMap(c => c.effects).find(e => e.dslEffect?.verb === 'APPLY' && e.dslEffect?.object === 'INFLICTION')).toBeUndefined();
       }
     }
   });

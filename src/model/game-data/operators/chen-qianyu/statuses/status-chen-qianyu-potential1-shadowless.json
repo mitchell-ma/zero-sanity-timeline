@@ -42,7 +42,7 @@
     "description": "DMG Dealt +20% to enemies below 50% HP."
   },
   "metadata": {
-    "originId": "CHEN_QIANYU",
+    "originId": "CHEN_QIANYU_POTENTIAL1",
     "dataSources": [
       "ENDFIELD_WIKI"
     ]

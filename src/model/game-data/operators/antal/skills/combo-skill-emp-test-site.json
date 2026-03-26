@@ -101,7 +101,7 @@
                 {
                   "verb": "APPLY",
                   "objectQualifier": "TRIGGER",
-                  "object": "PHYSICAL_STATUS",
+                  "object": "STATUS", "objectId": "PHYSICAL",
                   "to": "ENEMY"
                 },
                 {
@@ -172,7 +172,7 @@
           "subjectDeterminer": "ANY",
           "subject": "OPERATOR",
           "verb": "APPLY",
-          "object": "PHYSICAL_STATUS"
+          "object": "STATUS", "objectId": "PHYSICAL"
         },
         {
           "subject": "ENEMY",

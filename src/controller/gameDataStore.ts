@@ -275,6 +275,29 @@ export function getStatusWithProperties(statusId: string): string[] {
 // ── Operator JSON composition ───────────────────────────────────────────────
 
 export { buildMergedOperatorJson, getAllOperatorIds, getEnabledStatusEvents };
+
+// ── Team status resolution (data-driven from status JSON configs) ──────────
+
+let _teamStatusIds: Set<string> | null = null;
+
+/** Build the set of status IDs that target the team (to === 'TEAM'). */
+function buildTeamStatusIds(): Set<string> {
+  if (_teamStatusIds) return _teamStatusIds;
+  const ids = new Set<string>();
+  for (const s of getAllOperatorStatuses()) {
+    if (s.to === 'TEAM' && s.id) ids.add(s.id);
+  }
+  _teamStatusIds = ids;
+  return ids;
+}
+
+/**
+ * If `statusId` is a team-targeting status (to === 'TEAM' in its JSON config),
+ * returns the team-status column ID. Otherwise returns undefined.
+ */
+export function getTeamStatusColumnId(statusId: string): string | undefined {
+  return buildTeamStatusIds().has(statusId) ? 'team-status' : undefined;
+}
 export { getSkillIds, getSkillTypeMap, getRawSkillTypeMap, resolveSkillType };
 export { getFrameSequences, getSegmentLabels };
 export { getComboTriggerClause, getComboTriggerInfo };

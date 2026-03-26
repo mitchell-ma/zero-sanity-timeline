@@ -44,55 +44,13 @@
               "unit": "SECOND"
             }
           },
+          "clauseType": "FIRST_MATCH",
           "clause": [
             {
-              "conditions": [],
+              "conditions": [
+                { "subject": "OPERATOR", "verb": "HAVE", "object": "POTENTIAL", "cardinalityConstraint": "AT_LEAST", "value": 5 }
+              ],
               "effects": [
-                {
-                  "verb": "APPLY",
-                  "object": "STATUS",
-                  "objectId": "FOCUS",
-                  "to": "ENEMY",
-                  "eventName": "Focus",
-                  "stackingInteraction": "RESET",
-                  "potentialMax": 4,
-                  "with": {
-                    "duration": {
-                      "verb": "IS",
-                      "value": 60
-                    }
-                  },
-                  "susceptibility": {
-                    "ELECTRIC": [
-                      0.05,
-                      0.05,
-                      0.06,
-                      0.06,
-                      0.07,
-                      0.07,
-                      0.08,
-                      0.08,
-                      0.08,
-                      0.09,
-                      0.09,
-                      0.1
-                    ],
-                    "HEAT": [
-                      0.05,
-                      0.05,
-                      0.06,
-                      0.06,
-                      0.07,
-                      0.07,
-                      0.08,
-                      0.08,
-                      0.08,
-                      0.09,
-                      0.09,
-                      0.1
-                    ]
-                  }
-                },
                 {
                   "verb": "APPLY",
                   "object": "STATUS",
@@ -100,7 +58,6 @@
                   "to": "ENEMY",
                   "eventName": "Empowered Focus",
                   "stackingInteraction": "RESET",
-                  "potentialMin": 5,
                   "with": {
                     "duration": {
                       "verb": "IS",
@@ -177,7 +134,63 @@
                       }
                     }
                   ]
-                },
+                }
+              ]
+            },
+            {
+              "conditions": [
+                { "subject": "OPERATOR", "verb": "HAVE", "object": "POTENTIAL", "cardinalityConstraint": "AT_MOST", "value": 4 }
+              ],
+              "effects": [
+                {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "FOCUS",
+                  "to": "ENEMY",
+                  "eventName": "Focus",
+                  "stackingInteraction": "RESET",
+                  "with": {
+                    "duration": {
+                      "verb": "IS",
+                      "value": 60
+                    }
+                  },
+                  "susceptibility": {
+                    "ELECTRIC": [
+                      0.05,
+                      0.05,
+                      0.06,
+                      0.06,
+                      0.07,
+                      0.07,
+                      0.08,
+                      0.08,
+                      0.08,
+                      0.09,
+                      0.09,
+                      0.1
+                    ],
+                    "HEAT": [
+                      0.05,
+                      0.05,
+                      0.06,
+                      0.06,
+                      0.07,
+                      0.07,
+                      0.08,
+                      0.08,
+                      0.08,
+                      0.09,
+                      0.09,
+                      0.1
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "conditions": [],
+              "effects": [
                 {
                   "verb": "DEAL",
                   "objectQualifier": "ELECTRIC",

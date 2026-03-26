@@ -94,8 +94,9 @@
                 },
                 {
                   "verb": "APPLY",
-                  "object": "PHYSICAL_STATUS",
-                  "objectId": "LIFT",
+                  "object": "STATUS",
+                  "objectId": "PHYSICAL",
+                  "objectQualifier": "LIFT",
                   "to": "ENEMY"
                 },
                 {

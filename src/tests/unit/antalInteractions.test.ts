@@ -212,7 +212,7 @@ describe('A. Basic Attack (Exchange Current)', () => {
     const sequences = getSequences('BASIC_ATTACK');
     for (const seq of sequences) {
       for (const frame of seq.getFrames()) {
-        expect(frame.getApplyArtsInfliction()).toBeNull();
+        expect(frame.getClauses().flatMap(c => c.effects).find(e => e.dslEffect?.verb === 'APPLY' && e.dslEffect?.object === 'INFLICTION')).toBeUndefined();
       }
     }
   });
@@ -281,7 +281,7 @@ describe('B. Battle Skill (Specified Research Subject)', () => {
   });
 
   test('B4: Focus duration is 60s at all skill levels', () => {
-    const effects = mockAntalJson.skills.BATTLE_SKILL.segments[0].frames[0].clause[0].effects;
+    const effects = mockAntalJson.skills.BATTLE_SKILL.segments[0].frames[0].clause.flatMap((c: { effects: unknown[] }) => c.effects);
     const focusEffect = effects.find(
       (e: Record<string, unknown>) => e.verb === 'APPLY' && e.object === 'STATUS' && e.objectId === 'FOCUS'
     );
@@ -290,7 +290,7 @@ describe('B. Battle Skill (Specified Research Subject)', () => {
   });
 
   test('B5: Susceptibility rate scales from 0.05 (lv1) to 0.10 (lv12)', () => {
-    const effects = mockAntalJson.skills.BATTLE_SKILL.segments[0].frames[0].clause[0].effects;
+    const effects = mockAntalJson.skills.BATTLE_SKILL.segments[0].frames[0].clause.flatMap((c: { effects: unknown[] }) => c.effects);
     const dmgEffect = effects.find(
       (e: Record<string, unknown>) => e.verb === 'DEAL' && e.object === 'DAMAGE'
     );
@@ -299,7 +299,7 @@ describe('B. Battle Skill (Specified Research Subject)', () => {
   });
 
   test('B6: Damage multiplier scales from 0.89 (lv1) to 2.0 (lv12)', () => {
-    const effects = mockAntalJson.skills.BATTLE_SKILL.segments[0].frames[0].clause[0].effects;
+    const effects = mockAntalJson.skills.BATTLE_SKILL.segments[0].frames[0].clause.flatMap((c: { effects: unknown[] }) => c.effects);
     const dmgEffect = effects.find(
       (e: Record<string, unknown>) => e.verb === 'DEAL' && e.object === 'DAMAGE'
     );
@@ -336,7 +336,8 @@ describe('C. Combo Skill (EMP Test Site)', () => {
     expect(clause.conditions[0].subjectDeterminer).toBe('ANY');
     expect(clause.conditions[0].subject).toBe('OPERATOR');
     expect(clause.conditions[0].verb).toBe('APPLY');
-    expect(clause.conditions[0].object).toBe('PHYSICAL_STATUS');
+    expect(clause.conditions[0].object).toBe('STATUS');
+    expect(clause.conditions[0].objectId).toBe('PHYSICAL');
 
     // Condition 2: enemy has Focus
     expect(clause.conditions[1].subject).toBe('ENEMY');
@@ -433,11 +434,11 @@ describe('C2. Combo Skill Source Infliction Duplication', () => {
     expect(sourceInfliction.to).toBe('ENEMY');
   });
 
-  test('C2.2: Combo frame has APPLY TRIGGER PHYSICAL_STATUS DSL effect', () => {
+  test('C2.2: Combo frame has APPLY TRIGGER PHYSICAL STATUS DSL effect', () => {
     const comboFrame = mockAntalJson.skills.COMBO_SKILL.segments[1].frames[0];
     const effects = comboFrame.clause[0].effects;
     const sourceStatus = effects.find(
-      (e: Record<string, unknown>) => e.verb === 'APPLY' && e.objectQualifier === 'TRIGGER' && e.object === 'PHYSICAL_STATUS'
+      (e: Record<string, unknown>) => e.verb === 'APPLY' && e.objectQualifier === 'TRIGGER' && e.object === 'STATUS' && e.objectId === 'PHYSICAL'
     );
     expect(sourceStatus).toBeDefined();
     expect(sourceStatus.to).toBe('ENEMY');
@@ -728,7 +729,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
         properties: { duration: FPS },
         frames: [{
           offsetFrame: Math.round(0.67 * FPS),
-          applyArtsInfliction: { element: 'HEAT', stacks: 1 },
+          clauses: [{ conditions: [], effects: [{ type: 'dsl' as const, dslEffect: { verb: 'APPLY', object: 'INFLICTION', objectQualifier: 'HEAT', to: 'ENEMY', with: { stacks: { verb: 'IS', value: 1 } } } as any }] }],
         }],
       }],
     });
@@ -801,7 +802,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
         properties: { duration: FPS },
         frames: [{
           offsetFrame: Math.round(0.67 * FPS),
-          applyArtsInfliction: { element: 'ELECTRIC', stacks: 1 },
+          clauses: [{ conditions: [], effects: [{ type: 'dsl' as const, dslEffect: { verb: 'APPLY', object: 'INFLICTION', objectQualifier: 'ELECTRIC', to: 'ENEMY', with: { stacks: { verb: 'IS', value: 1 } } } as any }] }],
         }],
       }],
     });
@@ -953,10 +954,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
         properties: { duration: FPS },
         frames: [{
           offsetFrame: Math.round(0.67 * FPS),
-          applyStatus: {
-            target: { noun: NounType.ENEMY }, status: StatusType.FOCUS, stacks: 1,
-            durationFrames: 60 * FPS, stackingInteraction: 'RESET',
-          },
+          clauses: [{ conditions: [], effects: [{ type: 'dsl' as const, dslEffect: { verb: 'APPLY', object: 'STATUS', objectId: 'FOCUS', to: 'ENEMY', stackingInteraction: 'RESET', with: { duration: { verb: 'IS', value: 60 }, stacks: { verb: 'IS', value: 1 } } } as any }] }],
         }],
       }],
     });
@@ -1025,10 +1023,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
         properties: { duration: FPS },
         frames: [{
           offsetFrame: Math.round(0.67 * FPS),
-          applyStatus: {
-            target: { noun: NounType.ENEMY }, status: StatusType.FOCUS, stacks: 1,
-            durationFrames: 60 * FPS, stackingInteraction: 'RESET',
-          },
+          clauses: [{ conditions: [], effects: [{ type: 'dsl' as const, dslEffect: { verb: 'APPLY', object: 'STATUS', objectId: 'FOCUS', to: 'ENEMY', stackingInteraction: 'RESET', with: { duration: { verb: 'IS', value: 60 }, stacks: { verb: 'IS', value: 1 } } } as any }] }],
         }],
       }],
     });
@@ -1041,7 +1036,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
         properties: { duration: FPS },
         frames: [{
           offsetFrame: Math.round(0.67 * FPS),
-          applyArtsInfliction: { element: 'HEAT', stacks: 1 },
+          clauses: [{ conditions: [], effects: [{ type: 'dsl' as const, dslEffect: { verb: 'APPLY', object: 'INFLICTION', objectQualifier: 'HEAT', to: 'ENEMY', with: { stacks: { verb: 'IS', value: 1 } } } as any }] }],
         }],
       }],
     });
@@ -1091,10 +1086,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
         properties: { duration: FPS },
         frames: [{
           offsetFrame: Math.round(0.67 * FPS),
-          applyStatus: {
-            target: { noun: NounType.ENEMY }, status: StatusType.FOCUS, stacks: 1,
-            durationFrames: 60 * FPS, stackingInteraction: 'RESET',
-          },
+          clauses: [{ conditions: [], effects: [{ type: 'dsl' as const, dslEffect: { verb: 'APPLY', object: 'STATUS', objectId: 'FOCUS', to: 'ENEMY', stackingInteraction: 'RESET', with: { duration: { verb: 'IS', value: 60 }, stacks: { verb: 'IS', value: 1 } } } as any }] }],
         }],
       }],
     });
@@ -1108,7 +1100,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
         properties: { duration: akekuriBattleDur },
         frames: [{
           offsetFrame: Math.round(0.67 * FPS),
-          applyArtsInfliction: { element: 'HEAT', stacks: 1 },
+          clauses: [{ conditions: [], effects: [{ type: 'dsl' as const, dslEffect: { verb: 'APPLY', object: 'INFLICTION', objectQualifier: 'HEAT', to: 'ENEMY', with: { stacks: { verb: 'IS', value: 1 } } } as any }] }],
         }],
       }],
     });
@@ -1153,10 +1145,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
         properties: { duration: FPS },
         frames: [{
           offsetFrame: Math.round(0.67 * FPS), // Focus at frame 80
-          applyStatus: {
-            target: { noun: NounType.ENEMY }, status: StatusType.FOCUS, stacks: 1,
-            durationFrames: 60 * FPS, stackingInteraction: 'RESET',
-          },
+          clauses: [{ conditions: [], effects: [{ type: 'dsl' as const, dslEffect: { verb: 'APPLY', object: 'STATUS', objectId: 'FOCUS', to: 'ENEMY', stackingInteraction: 'RESET', with: { duration: { verb: 'IS', value: 60 }, stacks: { verb: 'IS', value: 1 } } } as any }] }],
         }],
       }],
     });
@@ -1168,7 +1157,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
         properties: { duration: Math.round(1.33 * FPS) },
         frames: [{
           offsetFrame: Math.round(0.67 * FPS), // Heat infliction at frame 80
-          applyArtsInfliction: { element: 'HEAT', stacks: 1 },
+          clauses: [{ conditions: [], effects: [{ type: 'dsl' as const, dslEffect: { verb: 'APPLY', object: 'INFLICTION', objectQualifier: 'HEAT', to: 'ENEMY', with: { stacks: { verb: 'IS', value: 1 } } } as any }] }],
         }],
       }],
     });

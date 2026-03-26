@@ -6,7 +6,8 @@
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "BATTLE_SKILL",
     "element": "NATURE",
-    "id": "DOLLY_RUSH_EMPOWERED"
+    "id": "DOLLY_RUSH_EMPOWERED",
+    "name": "Dolly Rush (Empowered)"
   },
   "segments": [
     {
@@ -145,6 +146,7 @@
     }
   ],
   "metadata": {
+    "originId": "ARDELIA",
     "icon": "skills/skill_ardelia.png"
   }
 }

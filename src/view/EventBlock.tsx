@@ -52,8 +52,16 @@ const toDisplayLabel = (label: string | undefined) =>
   label && ROMAN_RE.test(label) ? formatSegmentShortName(undefined, Number(label) - 1) : label;
 
 function hasInflictionOrStatus(f: EventFrameMarker): boolean {
-  return !!(f.applyArtsInfliction || f.absorbArtsInfliction || f.consumeArtsInfliction ||
-    f.applyForcedReaction || f.applyStatus || f.consumeStatus);
+  if (!f.clauses) return false;
+  for (const pred of f.clauses) {
+    for (const ef of pred.effects) {
+      if (ef.dslEffect) {
+        const v = ef.dslEffect.verb;
+        if (v === 'APPLY' || v === 'CONSUME') return true;
+      }
+    }
+  }
+  return false;
 }
 
 
@@ -97,16 +105,25 @@ function getElementColorMix(el: string): string | undefined {
 }
 
 function getFrameElementColor(f: EventFrameMarker, skillElement?: string): string | undefined {
-  // If the frame has a specific action (infliction, absorption, status grant, etc.),
-  // use that action's element. Don't fallthrough to skillElement — a Squad Buff grant
-  // on a Heat operator shouldn't render as a Heat diamond.
+  // Extract element from clause effects (first APPLY/CONSUME with an element qualifier or status element).
   let el: string | undefined;
-  if (f.applyArtsInfliction) el = f.applyArtsInfliction.element;
-  else if (f.absorbArtsInfliction) el = f.absorbArtsInfliction.element;
-  else if (f.consumeArtsInfliction) el = f.consumeArtsInfliction.element;
-  else if (f.applyForcedReaction) el = getStatusElementMap()[f.applyForcedReaction.reaction];
-  else if (f.applyStatus) el = getStatusElementMap()[f.applyStatus.status];
-  else el = f.damageElement ?? skillElement;
+  if (f.clauses) {
+    for (const pred of f.clauses) {
+      if (el) break;
+      for (const ef of pred.effects) {
+        if (!ef.dslEffect) continue;
+        const q = Array.isArray(ef.dslEffect.objectQualifier) ? ef.dslEffect.objectQualifier[0] : ef.dslEffect.objectQualifier;
+        if (ef.dslEffect.verb === 'APPLY' || ef.dslEffect.verb === 'CONSUME') {
+          if (ef.dslEffect.object === 'INFLICTION' && q) { el = q; break; }
+          if (ef.dslEffect.object === 'REACTION' && q) { el = getStatusElementMap()[q]; break; }
+          if (ef.dslEffect.object === 'STATUS' && ef.dslEffect.objectId && ef.dslEffect.objectId !== 'PHYSICAL') {
+            el = getStatusElementMap()[ef.dslEffect.objectId]; break;
+          }
+        }
+      }
+    }
+  }
+  if (!el) el = f.damageElement ?? skillElement;
   if (!el) return undefined;
   return getElementColorMix(el) || undefined;
 }

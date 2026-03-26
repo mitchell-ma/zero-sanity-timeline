@@ -50,7 +50,7 @@
     "description": "Talent Freezing Point improved: Against enemies with Cryo Infliction, Critical DMG Dealt +; this effect is also doubled against enemies with Solidification."
   },
   "metadata": {
-    "originId": "YVONNE",
+    "originId": "FREEZING_POINT_TALENT",
     "dataSources": [
       "ENDFIELD_WIKI"
     ]

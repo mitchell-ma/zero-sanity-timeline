@@ -1312,6 +1312,7 @@ const OMIT_PROPERTY_KEYS = new Set([
 const COMBINED_NOUN_PAIRS: { noun: string; determiner: string; label: string }[] = [
   { noun: 'to', determiner: 'toDeterminer', label: 'Target' },
   { noun: 'target', determiner: 'targetDeterminer', label: 'Target' },
+  { noun: 'from', determiner: 'fromDeterminer', label: 'From' },
 ];
 
 function formatPropertyValue(val: unknown): string {
@@ -1579,16 +1580,13 @@ function TabbedSegmentView({ entry }: { entry: { id: string; label: string; data
                     </div>
                   )}
                   {fEffects.map((ef, ei) => {
-                    const verb = String(ef.verb ?? '').replace(/_/g, ' ');
-                    const adj = ef.objectQualifier ? (Array.isArray(ef.objectQualifier) ? (ef.objectQualifier as string[]).join(' ') : String(ef.objectQualifier)).replace(/_/g, ' ') : '';
-                    const obj = String(ef.object ?? '').replace(/_/g, ' ');
-                    const to = ef.to ? String(ef.to).replace(/_/g, ' ') : '';
+                    const { verb, object: objStr, target, fromTarget } = translateEffectParts(ef);
                     return (
                       <div key={ei} className="ops-frame-effect-sentence">
                         <span className="ops-frame-effect-verb">{verb}</span>
-                        {adj && <span className="ops-frame-effect-adj">{adj}</span>}
-                        <span className="ops-frame-effect-obj">{obj}</span>
-                        {to && <><span className="ops-frame-effect-prep">to</span><span className="ops-frame-effect-target">{to}</span></>}
+                        {objStr && <span className="ops-frame-effect-obj">{objStr}</span>}
+                        {target && <span className="ops-frame-effect-prep">{target}</span>}
+                        {fromTarget && <span className="ops-frame-effect-prep">{fromTarget}</span>}
                       </div>
                     );
                   })}
@@ -1853,7 +1851,7 @@ function ClauseTabs({ clause, onTrigger, onEntry, onExit }: { clause: unknown[];
 
   return (
     <div className="ops-clause-tabs">
-      <div className="ops-skill-tabs ops-skill-tabs--sub">
+      <div className="ops-skill-tabs">
         {tabs.map((t, i) => (
           <button
             key={i}

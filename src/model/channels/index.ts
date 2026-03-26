@@ -144,11 +144,19 @@ export const FORCED_REACTION_COLUMN: Record<string, string> = {
   [StatusType.ELECTRIFICATION]: REACTION_COLUMNS.ELECTRIFICATION,
 };
 
-/** Maps status name → team-level column ID for team-wide buff display. */
-export const TEAM_STATUS_COLUMN: Record<string, string> = {
-  SQUAD_BUFF: 'team-status',
-  [StatusType.LINK]: 'team-status',
-  OVERCLOCKED_MOMENT_AMP: 'team-status',
+/** Maps reaction status name → reaction column ID. */
+export const REACTION_STATUS_TO_COLUMN: Record<string, string> = {
+  COMBUSTION:       REACTION_COLUMNS.COMBUSTION,
+  SOLIDIFICATION:   REACTION_COLUMNS.SOLIDIFICATION,
+  CORROSION:        REACTION_COLUMNS.CORROSION,
+  ELECTRIFICATION:  REACTION_COLUMNS.ELECTRIFICATION,
+};
+
+/** Maps skill noun type → skill column ID. */
+export const SKILL_NOUN_TO_COLUMN: Record<string, string> = {
+  COMBO_SKILL:  SKILL_COLUMNS.COMBO,
+  BATTLE_SKILL: SKILL_COLUMNS.BATTLE,
+  ULTIMATE:     SKILL_COLUMNS.ULTIMATE,
 };
 
 /** Default active duration for derived reaction events (20s at 120fps). */
@@ -175,9 +183,6 @@ export const BREACH_DURATION: Record<number, number> = {
 
 /** Default active duration for derived physical infliction events (20s at 120fps). */
 export const PHYSICAL_INFLICTION_DURATION = 2400;
-
-/** P5 link extension: extra frames added to link duration when operator potential >= 5. */
-export const P5_LINK_EXTENSION_FRAMES = 600; // 5s at 120fps
 
 /** Shatter reaction duration (2s at 120fps). */
 export const SHATTER_DURATION = 2 * FPS;
