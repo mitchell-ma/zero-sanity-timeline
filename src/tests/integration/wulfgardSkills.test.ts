@@ -45,9 +45,9 @@ function eventDuration(ev: { segments: { properties: { duration: number } }[] })
 
 /** Set up a fresh hook with Wulfgard in slot-0. Returns result after swap. */
 function setupWulfgard() {
-  const hook = renderHook(() => useApp());
-  act(() => { hook.result.current.handleSwapOperator(SLOT_WULFGARD, 'WULFGARD'); });
-  return hook;
+  const view = renderHook(() => useApp());
+  act(() => { view.result.current.handleSwapOperator(SLOT_WULFGARD, 'WULFGARD'); });
+  return view;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════

@@ -24,6 +24,7 @@
 import { TimelineEvent, eventDuration } from '../../consts/viewTypes';
 import { StatusType, SegmentType, TimeDependency } from '../../consts/enums';
 import { SKILL_COLUMNS, INFLICTION_COLUMNS, ENEMY_OWNER_ID, COMBO_WINDOW_COLUMN_ID } from '../../model/channels';
+import type { Effect } from '../../dsl/semantics';
 import { resolveComboTriggerColumns } from '../../controller/timeline/processComboSkill';
 import { ComboSkillEventController } from '../../controller/timeline/comboSkillEventController';
 import { processCombatSimulation } from '../../controller/timeline/eventQueueController';
@@ -84,7 +85,7 @@ function makeLaevBattle(startFrame: number): TimelineEvent {
       properties: { duration: FPS },
       frames: [{
         offsetFrame: Math.round(0.67 * FPS),
-        clauses: [{ conditions: [], effects: [{ type: 'dsl' as const, dslEffect: { verb: 'APPLY', object: 'INFLICTION', objectQualifier: 'HEAT', to: 'ENEMY', with: { stacks: { verb: 'IS', value: 1 } } } as any }] }],
+        clauses: [{ conditions: [], effects: [{ type: 'dsl' as const, dslEffect: { verb: 'APPLY', object: 'INFLICTION', objectQualifier: 'HEAT', to: 'ENEMY', with: { stacks: { verb: 'IS', value: 1 } } } as unknown as Effect }] }],
       }],
     }],
   });

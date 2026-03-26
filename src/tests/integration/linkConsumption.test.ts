@@ -20,7 +20,7 @@
 import { renderHook, act } from '@testing-library/react';
 import { useApp } from '../../app/useApp';
 import { SKILL_COLUMNS } from '../../model/channels';
-import { StatusType, EventStatusType, InteractionModeType } from '../../consts/enums';
+import { EventStatusType, InteractionModeType } from '../../consts/enums';
 import { FPS } from '../../utils/timeline';
 import { eventDuration } from '../../consts/viewTypes';
 import type { TimelineEvent, MiniTimeline } from '../../consts/viewTypes';

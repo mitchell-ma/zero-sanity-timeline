@@ -203,12 +203,6 @@ function resolveOperatorIcon(name: string): string | undefined {
   return undefined;
 }
 
-// ── Filename → camelCase ID ─────────────────────────────────────────────────
-
-function filenameToCamelCase(filename: string): string {
-  return filename.replace(/-([a-z])/g, (_, c: string) => c.toUpperCase());
-}
-
 // ── Potential file → consumer format conversion ─────────────────────────────
 
 interface ResolvedPotential {

@@ -10,7 +10,7 @@
  * controller can apply the Link multiplier to all frames of the consuming event.
  */
 import { TimelineEvent, eventDuration } from '../../consts/viewTypes';
-import { EventStatusType, StatusType } from '../../consts/enums';
+import { EventStatusType } from '../../consts/enums';
 import { SKILL_COLUMNS } from '../../model/channels';
 import { processCombatSimulation, getLastController } from '../../controller/timeline/eventQueueController';
 import { COMMON_OWNER_ID } from '../../controller/slot/commonSlotController';

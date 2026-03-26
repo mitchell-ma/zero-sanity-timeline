@@ -5,19 +5,17 @@
  * empowered skill prerequisites, and time-stop overlap constraints.
  */
 import { TimelineEvent, SkillType, EventSegmentData, computeSegmentsSpan, getAnimationDuration, eventDuration, eventEndFrame } from '../../consts/viewTypes';
-import { CombatSkillType, EnhancementType, StatusType, TimeDependency } from '../../consts/enums';
+import { CombatSkillType, EnhancementType, TimeDependency } from '../../consts/enums';
 import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../slot/commonSlotController';
 import type { ResourceZone } from './skillPointTimeline';
 import { getOperatorSkill, getOperatorSkills, getComboTriggerClause } from '../gameDataStore';
-import { getOperatorStatuses } from '../gameDataStore';
-import { VerbType, SubjectType, DeterminerType } from '../../dsl/semantics';
+import { VerbType } from '../../dsl/semantics';
 import type { Interaction, Predicate } from '../../dsl/semantics';
 import { evaluateConditions } from './conditionEvaluator';
 import type { ConditionContext } from './conditionEvaluator';
 import { t } from '../../locales/locale';
 import { extendByTimeStops } from './processTimeStop';
 import { ENEMY_OWNER_ID, INFLICTION_COLUMN_IDS, OPERATOR_COLUMNS, SKILL_COLUMNS, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID, COMBO_WINDOW_COLUMN_ID } from '../../model/channels';
-import { STATUS_LABELS } from '../../consts/timelineColumnLabels';
 import type { Slot } from './columnBuilder';
 import type { ResourceGraphData } from '../../app/useResourceGraphs';
 import { isClauseAlwaysAvailable } from './triggerMatch';

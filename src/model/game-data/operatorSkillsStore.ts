@@ -169,12 +169,6 @@ export class OperatorSkill {
   }
 }
 
-// ── Filename → camelCase ID ─────────────────────────────────────────────────
-
-function filenameToCamelCase(filename: string): string {
-  return filename.replace(/-([a-z])/g, (_, c: string) => c.toUpperCase());
-}
-
 // ── Directory → JSON-ID map ──────────────────────────────────────────────────
 
 // Build directory→JSON-ID map from operator JSON files (independent of operatorsStore init order)

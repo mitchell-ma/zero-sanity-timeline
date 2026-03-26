@@ -1,8 +1,7 @@
-import { ElementType, EventFrameType } from "../../consts/enums";
-import { DeterminerType, NounType, VerbType, AdjectiveType } from "../../dsl/semantics";
-import type { DslTarget, Effect, ValueNode } from "../../dsl/semantics";
+import { EventFrameType } from "../../consts/enums";
+import { NounType, VerbType, AdjectiveType } from "../../dsl/semantics";
+import type { Effect, ValueNode } from "../../dsl/semantics";
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT, type ValueResolutionContext } from "../../controller/calculation/valueResolver";
-import { REACTION_COLUMNS } from "../channels";
 import {
   SkillEventFrame,
   FrameClausePredicate,
@@ -129,14 +128,6 @@ interface JsonSkillCategory {
 
 // ── DSL effects → target mapping ─────────────────────────────────────────────
 
-/** Map DSL reaction qualifier to reaction column ID constant. */
-const DSL_REACTION_TO_COLUMN: Record<string, string> = {
-  COMBUSTION:       REACTION_COLUMNS.COMBUSTION,
-  SOLIDIFICATION:   REACTION_COLUMNS.SOLIDIFICATION,
-  CORROSION:        REACTION_COLUMNS.CORROSION,
-  ELECTRIFICATION:  REACTION_COLUMNS.ELECTRIFICATION,
-};
-
 /** Map DSL to + toDeterminer to target string. */
 function dslTargetToLegacy(to?: string, toDeterminer?: string): string | undefined {
   if (to === 'TEAM') return 'TEAM';
@@ -145,13 +136,6 @@ function dslTargetToLegacy(to?: string, toDeterminer?: string): string | undefin
   }
   if (to === 'ENEMY') return 'ENEMY';
   return undefined;
-}
-
-/** Map DSL to/toDeterminer to DslTarget. */
-function dslTargetToDslTarget(to?: string, toDeterminer?: string): DslTarget {
-  if (to === 'ENEMY') return { noun: NounType.ENEMY };
-  if (to === 'TEAM') return { noun: NounType.TEAM };
-  return { determiner: (toDeterminer as DeterminerType) ?? DeterminerType.THIS, noun: NounType.OPERATOR };
 }
 
 // ── DSL effects → legacy resource interaction bridging ──────────────────────
@@ -274,9 +258,7 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
         const wp = ef.with;
         const qualifiers = Array.isArray(ef.objectQualifier) ? ef.objectQualifier : ef.objectQualifier ? [ef.objectQualifier] : [];
         const elementQualifier = qualifiers.find(a => [AdjectiveType.HEAT, AdjectiveType.CRYO, AdjectiveType.NATURE, AdjectiveType.ELECTRIC, AdjectiveType.PHYSICAL].includes(a as AdjectiveType));
-        const isForced = qualifiers.includes(AdjectiveType.FORCED);
         const isSource = qualifiers.includes('TRIGGER');
-        const reactionQualifier = qualifiers.find(a => [AdjectiveType.COMBUSTION, AdjectiveType.SOLIDIFICATION, AdjectiveType.CORROSION, AdjectiveType.ELECTRIFICATION].includes(a as AdjectiveType));
 
         switch (ef.verb) {
           case VerbType.RECOVER:

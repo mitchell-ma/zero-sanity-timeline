@@ -1,5 +1,4 @@
 import { DamageFactorType, DamageType, ElementType, EnhancementType, EventFrameType, EventStatusType, SegmentType, TimeDependency } from './enums';
-import type { DslTarget } from '../dsl/semantics';
 import type { FrameClausePredicate, FrameDealDamage } from '../model/event-frames/skillEventFrame';
 
 /** String union for the four operator combat skills, matching the data keys in operators.ts. */

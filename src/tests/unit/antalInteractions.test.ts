@@ -58,6 +58,7 @@
 import { TimelineEvent } from '../../consts/viewTypes';
 import { StatusType, SegmentType, TimeDependency } from '../../consts/enums';
 import { VerbType, ObjectType, NounType } from '../../dsl/semantics';
+import type { Effect } from '../../dsl/semantics';
 import { SKILL_COLUMNS, ENEMY_OWNER_ID, COMBO_WINDOW_COLUMN_ID } from '../../model/channels';
 import { buildSequencesFromOperatorJson, DataDrivenSkillEventSequence } from '../../controller/gameDataStore';
 import { wouldOverlapSiblings } from '../../controller/timeline/eventValidator';
@@ -719,7 +720,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
         properties: { duration: FPS },
         frames: [{
           offsetFrame: Math.round(0.67 * FPS),
-          clauses: [{ conditions: [], effects: [{ type: 'dsl' as const, dslEffect: { verb: 'APPLY', object: 'INFLICTION', objectQualifier: 'HEAT', to: 'ENEMY', with: { stacks: { verb: 'IS', value: 1 } } } as any }] }],
+          clauses: [{ conditions: [], effects: [{ type: 'dsl' as const, dslEffect: { verb: 'APPLY', object: 'INFLICTION', objectQualifier: 'HEAT', to: 'ENEMY', with: { stacks: { verb: 'IS', value: 1 } } } as unknown as Effect }] }],
         }],
       }],
     });
@@ -792,7 +793,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
         properties: { duration: FPS },
         frames: [{
           offsetFrame: Math.round(0.67 * FPS),
-          clauses: [{ conditions: [], effects: [{ type: 'dsl' as const, dslEffect: { verb: 'APPLY', object: 'INFLICTION', objectQualifier: 'ELECTRIC', to: 'ENEMY', with: { stacks: { verb: 'IS', value: 1 } } } as any }] }],
+          clauses: [{ conditions: [], effects: [{ type: 'dsl' as const, dslEffect: { verb: 'APPLY', object: 'INFLICTION', objectQualifier: 'ELECTRIC', to: 'ENEMY', with: { stacks: { verb: 'IS', value: 1 } } } as unknown as Effect }] }],
         }],
       }],
     });
@@ -944,7 +945,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
         properties: { duration: FPS },
         frames: [{
           offsetFrame: Math.round(0.67 * FPS),
-          clauses: [{ conditions: [], effects: [{ type: 'dsl' as const, dslEffect: { verb: 'APPLY', object: 'STATUS', objectId: 'FOCUS', to: 'ENEMY', stackingInteraction: 'RESET', with: { duration: { verb: 'IS', value: 60 }, stacks: { verb: 'IS', value: 1 } } } as any }] }],
+          clauses: [{ conditions: [], effects: [{ type: 'dsl' as const, dslEffect: { verb: 'APPLY', object: 'STATUS', objectId: 'FOCUS', to: 'ENEMY', stackingInteraction: 'RESET', with: { duration: { verb: 'IS', value: 60 }, stacks: { verb: 'IS', value: 1 } } } as unknown as Effect }] }],
         }],
       }],
     });
@@ -1013,7 +1014,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
         properties: { duration: FPS },
         frames: [{
           offsetFrame: Math.round(0.67 * FPS),
-          clauses: [{ conditions: [], effects: [{ type: 'dsl' as const, dslEffect: { verb: 'APPLY', object: 'STATUS', objectId: 'FOCUS', to: 'ENEMY', stackingInteraction: 'RESET', with: { duration: { verb: 'IS', value: 60 }, stacks: { verb: 'IS', value: 1 } } } as any }] }],
+          clauses: [{ conditions: [], effects: [{ type: 'dsl' as const, dslEffect: { verb: 'APPLY', object: 'STATUS', objectId: 'FOCUS', to: 'ENEMY', stackingInteraction: 'RESET', with: { duration: { verb: 'IS', value: 60 }, stacks: { verb: 'IS', value: 1 } } } as unknown as Effect }] }],
         }],
       }],
     });
@@ -1026,7 +1027,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
         properties: { duration: FPS },
         frames: [{
           offsetFrame: Math.round(0.67 * FPS),
-          clauses: [{ conditions: [], effects: [{ type: 'dsl' as const, dslEffect: { verb: 'APPLY', object: 'INFLICTION', objectQualifier: 'HEAT', to: 'ENEMY', with: { stacks: { verb: 'IS', value: 1 } } } as any }] }],
+          clauses: [{ conditions: [], effects: [{ type: 'dsl' as const, dslEffect: { verb: 'APPLY', object: 'INFLICTION', objectQualifier: 'HEAT', to: 'ENEMY', with: { stacks: { verb: 'IS', value: 1 } } } as unknown as Effect }] }],
         }],
       }],
     });
@@ -1076,7 +1077,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
         properties: { duration: FPS },
         frames: [{
           offsetFrame: Math.round(0.67 * FPS),
-          clauses: [{ conditions: [], effects: [{ type: 'dsl' as const, dslEffect: { verb: 'APPLY', object: 'STATUS', objectId: 'FOCUS', to: 'ENEMY', stackingInteraction: 'RESET', with: { duration: { verb: 'IS', value: 60 }, stacks: { verb: 'IS', value: 1 } } } as any }] }],
+          clauses: [{ conditions: [], effects: [{ type: 'dsl' as const, dslEffect: { verb: 'APPLY', object: 'STATUS', objectId: 'FOCUS', to: 'ENEMY', stackingInteraction: 'RESET', with: { duration: { verb: 'IS', value: 60 }, stacks: { verb: 'IS', value: 1 } } } as unknown as Effect }] }],
         }],
       }],
     });
@@ -1090,7 +1091,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
         properties: { duration: akekuriBattleDur },
         frames: [{
           offsetFrame: Math.round(0.67 * FPS),
-          clauses: [{ conditions: [], effects: [{ type: 'dsl' as const, dslEffect: { verb: 'APPLY', object: 'INFLICTION', objectQualifier: 'HEAT', to: 'ENEMY', with: { stacks: { verb: 'IS', value: 1 } } } as any }] }],
+          clauses: [{ conditions: [], effects: [{ type: 'dsl' as const, dslEffect: { verb: 'APPLY', object: 'INFLICTION', objectQualifier: 'HEAT', to: 'ENEMY', with: { stacks: { verb: 'IS', value: 1 } } } as unknown as Effect }] }],
         }],
       }],
     });
@@ -1135,7 +1136,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
         properties: { duration: FPS },
         frames: [{
           offsetFrame: Math.round(0.67 * FPS), // Focus at frame 80
-          clauses: [{ conditions: [], effects: [{ type: 'dsl' as const, dslEffect: { verb: 'APPLY', object: 'STATUS', objectId: 'FOCUS', to: 'ENEMY', stackingInteraction: 'RESET', with: { duration: { verb: 'IS', value: 60 }, stacks: { verb: 'IS', value: 1 } } } as any }] }],
+          clauses: [{ conditions: [], effects: [{ type: 'dsl' as const, dslEffect: { verb: 'APPLY', object: 'STATUS', objectId: 'FOCUS', to: 'ENEMY', stackingInteraction: 'RESET', with: { duration: { verb: 'IS', value: 60 }, stacks: { verb: 'IS', value: 1 } } } as unknown as Effect }] }],
         }],
       }],
     });
@@ -1147,7 +1148,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
         properties: { duration: Math.round(1.33 * FPS) },
         frames: [{
           offsetFrame: Math.round(0.67 * FPS), // Heat infliction at frame 80
-          clauses: [{ conditions: [], effects: [{ type: 'dsl' as const, dslEffect: { verb: 'APPLY', object: 'INFLICTION', objectQualifier: 'HEAT', to: 'ENEMY', with: { stacks: { verb: 'IS', value: 1 } } } as any }] }],
+          clauses: [{ conditions: [], effects: [{ type: 'dsl' as const, dslEffect: { verb: 'APPLY', object: 'INFLICTION', objectQualifier: 'HEAT', to: 'ENEMY', with: { stacks: { verb: 'IS', value: 1 } } } as unknown as Effect }] }],
         }],
       }],
     });

@@ -1,4 +1,4 @@
-import { ElementType, EventFrameType } from "../../consts/enums";
+import { EventFrameType } from "../../consts/enums";
 
 // ── Clause/predicate types (DSL v2) ──────────────────────────────────────────
 

@@ -13,6 +13,7 @@
 import { TimelineEvent, EventSegmentData, EventFrameMarker, eventDuration } from '../../consts/viewTypes';
 import { EventStatusType, PhysicalStatusType, SegmentType, TimeDependency } from '../../consts/enums';
 import { OPERATOR_COLUMNS, SKILL_COLUMNS, INFLICTION_COLUMNS, REACTION_COLUMNS, ENEMY_OWNER_ID, USER_ID, SHATTER_DURATION } from '../../model/channels';
+import type { Effect } from '../../dsl/semantics';
 import { PriorityQueue } from '../../controller/timeline/priorityQueue';
 import { processCombatSimulation } from '../../controller/timeline/eventQueueController';
 
@@ -880,7 +881,7 @@ describe('Freeform Inflictions', () => {
             conditions: [],
             effects: [{
               type: 'dsl' as const,
-              dslEffect: { verb: 'APPLY', object: 'STATUS', objectId: 'PHYSICAL', objectQualifier: PhysicalStatusType.LIFT, to: 'ENEMY' } as any,
+              dslEffect: { verb: 'APPLY', object: 'STATUS', objectId: 'PHYSICAL', objectQualifier: PhysicalStatusType.LIFT, to: 'ENEMY' } as unknown as Effect,
             }],
           }],
         }],
@@ -931,7 +932,7 @@ describe('Freeform Inflictions', () => {
             conditions: [],
             effects: [{
               type: 'dsl' as const,
-              dslEffect: { verb: 'APPLY', object: 'STATUS', objectId: 'PHYSICAL', objectQualifier: PhysicalStatusType.LIFT, to: 'ENEMY' } as any,
+              dslEffect: { verb: 'APPLY', object: 'STATUS', objectId: 'PHYSICAL', objectQualifier: PhysicalStatusType.LIFT, to: 'ENEMY' } as unknown as Effect,
             }],
           }],
         }],
@@ -1188,7 +1189,7 @@ describe('Combo skill infliction behavior', () => {
           // No duplicateTriggerSource — has explicit applyArtsInfliction instead
           frames: [{
             offsetFrame: Math.round(0.5 * FPS),
-            clauses: [{ conditions: [], effects: [{ type: 'dsl' as const, dslEffect: { verb: 'APPLY', object: 'INFLICTION', objectQualifier: 'HEAT', to: 'ENEMY', with: { stacks: { verb: 'IS', value: 1 } } } as any }] }],
+            clauses: [{ conditions: [], effects: [{ type: 'dsl' as const, dslEffect: { verb: 'APPLY', object: 'INFLICTION', objectQualifier: 'HEAT', to: 'ENEMY', with: { stacks: { verb: 'IS', value: 1 } } } as unknown as Effect }] }],
           }],
         },
       ],

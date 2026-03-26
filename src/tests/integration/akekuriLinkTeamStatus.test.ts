@@ -14,7 +14,7 @@
 import { renderHook, act } from '@testing-library/react';
 import { useApp } from '../../app/useApp';
 import { SKILL_COLUMNS } from '../../model/channels';
-import { InteractionModeType, StatusType } from '../../consts/enums';
+import { InteractionModeType } from '../../consts/enums';
 import { FPS } from '../../utils/timeline';
 import type { MiniTimeline } from '../../consts/viewTypes';
 import { COMMON_OWNER_ID } from '../../controller/slot/commonSlotController';
@@ -34,14 +34,6 @@ function findColumn(app: ReturnType<typeof useApp>, slotId: string, columnId: st
   );
 }
 
-function findCommonColumn(app: ReturnType<typeof useApp>, columnId: string) {
-  return app.columns.find(
-    (c): c is MiniTimeline =>
-      c.type === 'mini-timeline' &&
-      c.ownerId === COMMON_OWNER_ID &&
-      c.columnId === columnId,
-  );
-}
 
 // ═════════════════════════════════════════════════════════════════════════════
 // Akekuri Ultimate produces Link
