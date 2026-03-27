@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { framesToSeconds, secondsToFrames, frameToDetailLabel, frameToTimeLabelPrecise, FPS, fmtN } from '../../utils/timeline';
 import { COMBAT_SKILL_LABELS, STATUS_LABELS } from '../../consts/timelineColumnLabels';
 import { CombatSkillType, ELEMENT_COLORS, ELEMENT_LABELS, ElementType, EventFrameType, EventStatusType, InfoLevel, InteractionModeType, SegmentType, StatusType } from '../../consts/enums';
-import { getStatusElementMap } from '../../controller/gameDataStore';
+import { getStatusElementMap, getStatusById } from '../../controller/gameDataStore';
 import { TimelineEvent, Operator, Enemy, SelectedFrame, Column, MiniTimeline, computeSegmentsSpan, getAnimationDuration, eventDuration } from '../../consts/viewTypes';
 import { DurationField, StatField, SegmentDurationField, FrameOffsetField } from './SharedFields';
 import type { LoadoutProperties } from '../InformationPane';
@@ -485,16 +485,17 @@ function EventPane({
   /** Format a real-time frame as a precise label. */
   const dualTimePrecise = (frame: number) => frameToTimeLabelPrecise(frame);
 
-  /** Format a duration (game-time metadata), with optional time-stop adjusted value on a separate line. */
+  /** Format a duration (game-time metadata), with optional adjusted value on a separate line. */
   const dualDuration = (_startFrame: number, durationFrames: number, label?: string, processedDurationFrames?: number): React.ReactNode => {
-    const hasTimeStop = processedDurationFrames != null && processedDurationFrames !== durationFrames;
+    const hasDiff = processedDurationFrames != null && processedDurationFrames !== durationFrames;
     const baseStr = `${framesToSeconds(durationFrames)}s (${durationFrames}f)`;
-    const baseLabel = label ? `${label}${hasTimeStop ? ' (base)' : ''}` : (hasTimeStop ? '(base)' : '');
-    const tsLabel = label ? `${label} (time stop)` : '(time stop)';
+    const baseLabel = label ? `${label}${hasDiff ? ' (base)' : ''}` : (hasDiff ? '(base)' : '');
+    const diffReason = processedEvent?.eventStatus ?? 'time stop';
+    const diffLabel = label ? `${label} (${diffReason})` : `(${diffReason})`;
     return <>
       <div>{baseLabel ? `${baseLabel}: ` : ''}{baseStr}</div>
-      {hasTimeStop && (
-        <div>{tsLabel}: {framesToSeconds(processedDurationFrames!)}s ({processedDurationFrames}f)</div>
+      {hasDiff && (
+        <div>{diffLabel}: {framesToSeconds(processedDurationFrames!)}s ({processedDurationFrames}f)</div>
       )}
     </>;
   };
@@ -907,42 +908,61 @@ function EventPane({
         })()}
 
         {/* ── Status Properties (non-reaction status events: buffs, debuffs) ─── */}
-        {isDerived && !(event.ownerId === ENEMY_OWNER_ID && REACTION_COLUMN_IDS.has(event.columnId)) && (
-          event.stacks != null || event.statusValue != null
-        ) && (
-          <div className="edit-panel-section">
-            <span className="edit-section-label">Status Properties</span>
-            {event.stacks != null && (
-              <StatField
-                label="Stacks"
-                value={event.stacks}
-                min={1}
-                max={4}
-                step={1}
-                onChange={(v) => onUpdate(event.uid, { stacks: v })}
-              />
-            )}
-            {event.statusValue != null && (
-              <div className="edit-field">
-                <span className="edit-field-label">Status Value</span>
-                <div className="edit-field-row">
-                  <input
-                    className="edit-input"
-                    type="text"
-                    inputMode="numeric"
-                    style={{ width: 60 }}
-                    value={fmtN(event.statusValue * 100)}
-                    onChange={(e) => {
-                      const pct = parseFloat(e.target.value);
-                      if (!isNaN(pct)) onUpdate(event.uid, { statusValue: pct / 100 });
-                    }}
-                  />
-                  <span className="edit-input-unit">%</span>
+        {isDerived && !(event.ownerId === ENEMY_OWNER_ID && REACTION_COLUMN_IDS.has(event.columnId)) && (() => {
+          const statusDef = getStatusById(event.name);
+          const hasStackInfo = event.stacks != null || statusDef?.stacks;
+          if (!hasStackInfo && event.statusValue == null) return null;
+          return (
+            <div className="edit-panel-section">
+              <span className="edit-section-label">Status Properties</span>
+              {hasStackInfo && (
+                <>
+                  {event.stacks != null && (
+                    <StatField
+                      label="Active Stacks"
+                      value={event.stacks}
+                      min={1}
+                      max={statusDef?.maxStacks ?? 4}
+                      step={1}
+                      onChange={(v) => onUpdate(event.uid, { stacks: v })}
+                    />
+                  )}
+                  {statusDef?.stacks && (
+                    <>
+                      <div className="edit-field">
+                        <span className="edit-field-label">Stack Limit</span>
+                        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{statusDef.maxStacks}</span>
+                      </div>
+                      <div className="edit-field">
+                        <span className="edit-field-label">Interaction</span>
+                        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{statusDef.stacks.interactionType}</span>
+                      </div>
+                    </>
+                  )}
+                </>
+              )}
+              {event.statusValue != null && (
+                <div className="edit-field">
+                  <span className="edit-field-label">Status Value</span>
+                  <div className="edit-field-row">
+                    <input
+                      className="edit-input"
+                      type="text"
+                      inputMode="numeric"
+                      style={{ width: 60 }}
+                      value={fmtN(event.statusValue * 100)}
+                      onChange={(e) => {
+                        const pct = parseFloat(e.target.value);
+                        if (!isNaN(pct)) onUpdate(event.uid, { statusValue: pct / 100 });
+                      }}
+                    />
+                    <span className="edit-input-unit">%</span>
+                  </div>
                 </div>
-              </div>
-            )}
-          </div>
-        )}
+              )}
+            </div>
+          );
+        })()}
 
         {(() => {
           // Skill info: element, SP cost, multiplier
@@ -969,7 +989,7 @@ function EventPane({
 
           // Look up default segments from column definition for max frame counts
           const miniCol = col && col.type !== 'placeholder' ? col as MiniTimeline : null;
-          const defaultSegs = miniCol?.eventVariants?.find((v) => v.name === event.name)?.segments
+          const defaultSegs = miniCol?.eventVariants?.find((v) => v.id === event.id)?.segments
             ?? miniCol?.defaultEvent?.segments;
 
           if (operatorId && skillLevel != null) {

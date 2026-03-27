@@ -16,6 +16,7 @@ import {
   ObjectType,
   VERB_OBJECTS,
   THRESHOLD_MAX,
+  ClauseEvaluationType,
 } from '../../dsl/semantics';
 import type { ValueNode } from '../../dsl/semantics';
 import { resolveValueNode, getSimpleValue, buildContextForSkillColumn } from '../calculation/valueResolver';
@@ -44,7 +45,7 @@ import type { HPController } from '../calculation/hpController';
 import { getPhysicalStatusBaseMultiplier, getShatterBaseMultiplier } from '../../model/calculation/damageFormulas';
 import type { StatusLevel } from '../../consts/types';
 import type { SlotTriggerWiring } from './eventQueueTypes';
-import { findClauseTriggerMatches, statusNameToColumnId } from './triggerMatch';
+import { findClauseTriggerMatches, statusIdToColumnId } from './triggerMatch';
 import { getComboTriggerClause, getComboTriggerInfo } from '../gameDataStore';
 import { PRIORITY } from './eventQueueTypes';
 import { resolveClauseEffects, getDurationFrames } from './statusTriggerCollector';
@@ -220,6 +221,11 @@ export interface InterpretContext {
   potential?: number;
   parentEventEndFrame?: number;
   targetOwnerId?: string;
+  /** Status ID of the parent status def when processing ENGINE_TRIGGER effects.
+   *  Used by CONSUME THIS EVENT to identify which status to consume. */
+  parentStatusId?: string;
+  /** Owner ID of the parent status (for column resolution). */
+  parentStatusOwnerId?: string;
 }
 
 // ══════════════════════════════════════════════════════════════════════════
@@ -380,7 +386,7 @@ export class EventInterpretorController {
         }
         if (effect.object === 'STATUS') {
           const skipTeam = effect.to != null && effect.to !== NounType.TEAM;
-          const col = statusNameToColumnId(effect.objectId ?? '', skipTeam);
+          const col = statusIdToColumnId(effect.objectId ?? '', skipTeam);
           const statusOwner = effect.to === NounType.TEAM ? COMMON_OWNER_ID : ownerId;
           const configLimit = effect.objectId ? getStatusStackLimit(effect.objectId) : undefined;
           return this.controller.canApplyStatus(col, statusOwner, ctx.frame, configLimit);
@@ -409,7 +415,7 @@ export class EventInterpretorController {
         }
         if (effect.object === 'STATUS') {
           const skipTeam = effect.to != null && effect.to !== NounType.TEAM;
-          const col = statusNameToColumnId(effect.objectId ?? '', skipTeam);
+          const col = statusIdToColumnId(effect.objectId ?? '', skipTeam);
           const statusOwner = effect.to === NounType.TEAM ? COMMON_OWNER_ID : ownerId;
           return this.controller.canConsumeStatus(col, statusOwner, ctx.frame);
         }
@@ -439,9 +445,9 @@ export class EventInterpretorController {
       const effectOverridesTeam = effect.to != null && effect.to !== NounType.TEAM;
       const statusOwnerId = isTeamTarget ? COMMON_OWNER_ID : ownerId;
       // Team statuses → team-status column; enemy statuses → raw objectId; operator statuses → name-based column
-      const columnId = isTeamTarget ? getTeamStatusColumnId(effect.objectId ?? '') ?? statusNameToColumnId(effect.objectId ?? '')
+      const columnId = isTeamTarget ? getTeamStatusColumnId(effect.objectId ?? '') ?? statusIdToColumnId(effect.objectId ?? '')
         : statusOwnerId === ENEMY_OWNER_ID ? (effect.objectId ?? '')
-        : statusNameToColumnId(effect.objectId ?? '', effectOverridesTeam);
+        : statusIdToColumnId(effect.objectId ?? '', effectOverridesTeam);
       const cfg = getStatusConfig(effect.objectId);
       const def = getStatusDef(effect.objectId);
       const dv = this.resolveWith(effect.with?.duration, ctx);
@@ -449,8 +455,9 @@ export class EventInterpretorController {
         ? Math.max(0, ctx.parentEventEndFrame - ctx.frame)
         : undefined;
       const duration = typeof dv === 'number' ? Math.round(dv * FPS)
+        : cfg?.duration != null ? cfg.duration
         : (isTeamTarget && remainingDuration != null ? remainingDuration
-          : (cfg?.duration ?? TOTAL_FRAMES));
+          : TOTAL_FRAMES);
 
       // Resolve clause effects (susceptibility, statusValue) from the status def
       const eventProps: Partial<TimelineEvent> = {};
@@ -495,12 +502,18 @@ export class EventInterpretorController {
         if (lastProc >= 0 && ctx.frame < lastProc + cfg.cooldownFrames) return true;
       }
 
-      this.controller.createStatus(columnId, statusOwnerId, ctx.frame, duration, source, {
-        statusName: effect.objectId,
-        ...(cfg?.stackingMode ? { stackingMode: cfg.stackingMode } : {}),
-        ...(cfg?.maxStacks != null ? { maxStacks: cfg.maxStacks } : {}),
-        ...(Object.keys(eventProps).length > 0 ? { event: eventProps } : {}),
-      });
+      // Resolve stack count from effect (e.g. "with": { "stacks": { "verb": "IS", "value": 5 } })
+      const sv = this.resolveWith(effect.with?.stacks, ctx);
+      const stackCount = typeof sv === 'number' && sv > 1 ? sv : 1;
+
+      for (let si = 0; si < stackCount; si++) {
+        this.controller.createStatus(columnId, statusOwnerId, ctx.frame, duration, source, {
+          statusId: effect.objectId,
+          ...(cfg?.stackingMode ? { stackingMode: cfg.stackingMode } : {}),
+          ...(cfg?.maxStacks != null ? { maxStacks: cfg.maxStacks } : {}),
+          ...(Object.keys(eventProps).length > 0 ? { event: eventProps } : {}),
+        });
+      }
       return true;
     }
     if (effect.object === 'REACTION') {
@@ -563,7 +576,14 @@ export class EventInterpretorController {
     if (effect.object === NounType.STATUS) {
       const skipTeam = effect.to != null && effect.to !== NounType.TEAM;
       const statusOwner = effect.to === NounType.TEAM ? COMMON_OWNER_ID : ownerId;
-      this.controller.consumeStatus(statusNameToColumnId(effect.objectId ?? '', skipTeam), statusOwner, ctx.frame, source);
+      this.controller.consumeStatus(statusIdToColumnId(effect.objectId ?? '', skipTeam), statusOwner, ctx.frame, source);
+      return true;
+    }
+    // CONSUME THIS EVENT — consume one stack of the parent status (from ENGINE_TRIGGER context)
+    if (effect.object === 'EVENT' && ctx.parentStatusId) {
+      const columnId = statusIdToColumnId(ctx.parentStatusId);
+      const statusOwnerId = ctx.parentStatusOwnerId ?? ownerId;
+      this.controller.consumeOldest(columnId, statusOwnerId, ctx.frame, count, source);
       return true;
     }
     return true;
@@ -587,7 +607,7 @@ export class EventInterpretorController {
         if (effect.objectId === 'PHYSICAL') {
           objectId = resolvePhysicalStatusColumnId(effect.objectQualifier);
         } else {
-          objectId = statusNameToColumnId(effect.objectId ?? '');
+          objectId = statusIdToColumnId(effect.objectId ?? '');
         }
         break;
       case NounType.REACTION: {
@@ -855,13 +875,14 @@ export class EventInterpretorController {
     // Status only triggers if enemy had Vulnerable OR isForced
     if (!hasVulnerable && !isForced) return true;
 
-    const statusName = columnId as PhysicalStatusType;
-    const label = STATUS_LABELS[statusName];
+    const statusId = columnId as PhysicalStatusType;
+    const label = STATUS_LABELS[statusId];
 
     this.controller.createStatus(
       columnId, ENEMY_OWNER_ID, frame, LIFT_KNOCK_DOWN_DURATION, source, {
-        statusName,
+        statusId,
         stackingMode: 'RESET',
+        maxStacks: 1,
         uid: `${columnId}-${source.ownerId}-${frame}`,
         event: {
           segments: [{
@@ -914,8 +935,9 @@ export class EventInterpretorController {
 
     this.controller.createStatus(
       PHYSICAL_STATUS_COLUMNS.CRUSH, ENEMY_OWNER_ID, frame, LIFT_KNOCK_DOWN_DURATION, source, {
-        statusName: PhysicalStatusType.CRUSH,
+        statusId: PhysicalStatusType.CRUSH,
         stackingMode: 'RESET',
+        maxStacks: 1,
         uid: `${PhysicalStatusType.CRUSH}-${source.ownerId}-${frame}`,
         event: {
           stacks: consumed,
@@ -972,8 +994,9 @@ export class EventInterpretorController {
 
     this.controller.createStatus(
       PHYSICAL_STATUS_COLUMNS.BREACH, ENEMY_OWNER_ID, frame, durationFrames, source, {
-        statusName: PhysicalStatusType.BREACH,
+        statusId: PhysicalStatusType.BREACH,
         stackingMode: 'RESET',
+        maxStacks: 1,
         uid: `${PhysicalStatusType.BREACH}-${source.ownerId}-${frame}`,
         event: {
           stacks: stackCount,
@@ -1185,7 +1208,7 @@ export class EventInterpretorController {
         frame: absFrame,
         priority: PRIORITY.ENGINE_TRIGGER,
         type: 'ENGINE_TRIGGER',
-        statusName: entry.def.properties.id,
+        statusId: entry.def.properties.id,
         columnId: '',
         ownerId: entry.operatorSlotId,
         sourceOwnerId: this.resolveOperatorId(event.ownerId),
@@ -1239,7 +1262,7 @@ export class EventInterpretorController {
 
   /** Resolve a consumeStatus target's column ID and owner from the status definition. */
   private resolveConsumeTarget(statusId: string, eventOwnerId: string): { columnId: string; ownerId: string } {
-    const columnId = statusNameToColumnId(statusId);
+    const columnId = statusIdToColumnId(statusId);
     const operatorId = this.slotOperatorMap?.[eventOwnerId];
     if (operatorId) {
       const statuses = getOperatorStatuses(operatorId);
@@ -1266,7 +1289,7 @@ export class EventInterpretorController {
       created = true;
     } else {
       created = this.controller.createStatus(ev.columnId, ev.ownerId, entry.frame, eventDuration(ev), source, {
-        statusName: ev.name, stackingMode: entry.stackingInteraction, uid: ev.uid,
+        statusId: ev.name, stackingMode: entry.stackingInteraction, uid: ev.uid,
         ...(entry.maxStacks > 0 && { maxStacks: entry.maxStacks }),
         event: {
           ...(ev.susceptibility && { susceptibility: ev.susceptibility }),
@@ -1326,7 +1349,7 @@ export class EventInterpretorController {
           frame,
           priority: PRIORITY.ENGINE_TRIGGER,
           type: 'ENGINE_TRIGGER',
-          statusName: lifecycle.def.properties.id,
+          statusId: lifecycle.def.properties.id,
           columnId: '',
           ownerId: slotId,
           sourceOwnerId: this.resolveOperatorId(slotId),
@@ -1346,7 +1369,12 @@ export class EventInterpretorController {
       const qualifier = entry.primaryCondition.objectQualifier;
       if (qualifier && qualifier !== enhancementType) continue;
 
-      const defKey = `${entry.def.properties.id}:${entry.operatorSlotId}:${frame}`;
+      // For FIRST_MATCH defs: each clause needs its own ENGINE_TRIGGER so
+      // the first matching clause fires. For others: dedup by def ID to prevent duplicates.
+      const isFirstMatch = entry.def.clauseType === ClauseEvaluationType.FIRST_MATCH;
+      const defKey = isFirstMatch
+        ? `${entry.def.properties.id}:${entry.clauseIndex}:${entry.operatorSlotId}:${frame}`
+        : `${entry.def.properties.id}:${entry.operatorSlotId}:${frame}`;
       if (this.seenTriggers.has(defKey)) continue;
       this.seenTriggers.add(defKey);
 
@@ -1364,7 +1392,7 @@ export class EventInterpretorController {
         frame,
         priority: PRIORITY.ENGINE_TRIGGER,
         type: 'ENGINE_TRIGGER',
-        statusName: entry.def.properties.id,
+        statusId: entry.def.properties.id,
         columnId: '',
         ownerId: entry.operatorSlotId,
         sourceOwnerId: this.resolveOperatorId(slotId),
@@ -1448,6 +1476,12 @@ export class EventInterpretorController {
       if (!evaluateConditions(ctx.haveConditions as unknown as import('../../dsl/semantics').Interaction[], condCtx)) return [];
     }
 
+    // Resolve parent status owner for CONSUME THIS EVENT
+    const parentTarget = ctx.def.properties.target;
+    const parentStatusOwnerId = parentTarget === 'TEAM' ? COMMON_OWNER_ID
+      : parentTarget === 'ENEMY' ? ENEMY_OWNER_ID
+      : ctx.operatorSlotId;
+
     const interpretCtx: InterpretContext = {
       frame: entry.frame,
       sourceOwnerId: ctx.operatorId,
@@ -1455,6 +1489,8 @@ export class EventInterpretorController {
       sourceSkillName: trigger.sourceSkillName,
       allEvents: () => [...this.baseEvents, ...this.controller.output],
       potential: ctx.potential,
+      parentStatusId: ctx.def.properties.id,
+      parentStatusOwnerId,
     };
 
     const cascadeFrames: QueueFrame[] = [];

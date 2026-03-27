@@ -13,6 +13,7 @@ import { USER_ID } from '../../model/channels';
 import { TOTAL_FRAMES } from '../../utils/timeline';
 import { ComboSkillEventController } from './comboSkillEventController';
 import { hasEnableClauseAtFrame } from './eventValidator';
+import { isResetStatus } from './eventPresentationController';
 import type { CombatLoadoutController } from '../combat-loadout/combatLoadoutController';
 import { allocInputEvent, allocDerivedEvent } from './objectPool';
 
@@ -113,9 +114,12 @@ export function wouldOverlapNonOverlappable(
 ): boolean {
   // Enemy inflictions are stackable — skip overlap check
   if (ev.ownerId === ENEMY_OWNER_ID && INFLICTION_COLUMN_IDS.has(ev.columnId)) return false;
+  const evIsReset = ev.id && isResetStatus(ev.id);
   const evRange = getSibRange(ev, processedEvents);
   for (const sib of allEvents) {
     if (sib.uid === ev.uid || sib.ownerId !== ev.ownerId || sib.columnId !== ev.columnId) continue;
+    // RESET statuses clamp same-id siblings — skip overlap check only for those
+    if (evIsReset && sib.id === ev.id) continue;
     const sibRange = getSibRange(sib, processedEvents);
     if (sibRange > 0 && startFrame >= sib.startFrame && startFrame < sib.startFrame + sibRange) return true;
     if (evRange > 0 && sib.startFrame >= startFrame && sib.startFrame < startFrame + evRange) return true;
@@ -136,12 +140,15 @@ export function clampNonOverlappable(
   desiredFrame: number,
   processedEvents?: readonly TimelineEvent[],
 ): number {
+  const evIsReset = ev.id && isResetStatus(ev.id);
   const evRange = getSibRange(ev, processedEvents);
   if (evRange === 0) return desiredFrame;
   const movingForward = desiredFrame >= ev.startFrame;
   let result = desiredFrame;
   for (const sib of allEvents) {
     if (sib.uid === ev.uid || sib.ownerId !== ev.ownerId || sib.columnId !== ev.columnId) continue;
+    // RESET statuses clamp same-id siblings — skip overlap check only for those
+    if (evIsReset && sib.id === ev.id) continue;
     const sibRange = getSibRange(sib, processedEvents);
     if (sibRange === 0 && evRange === 0) continue;
     const sibEnd = sib.startFrame + sibRange;
@@ -188,6 +195,7 @@ export function clampDeltaByOverlap(
   if (!ev) return clampedDelta;
   // Control events are passive state markers — no overlap constraints
   if (ev.id === CombatSkillType.CONTROL) return clampedDelta;
+  const evIsReset = ev.id && isResetStatus(ev.id);
   const evRange = getSibRange(ev, processedEvents);
   if (evRange === 0) return clampedDelta;
 
@@ -198,6 +206,8 @@ export function clampDeltaByOverlap(
   for (const sib of allEvents) {
     if (sib.uid === ev.uid || sib.ownerId !== ev.ownerId || sib.columnId !== ev.columnId) continue;
     if (draggedIds.has(sib.uid)) continue; // skip other dragged events
+    // RESET statuses clamp same-id siblings — skip overlap check only for those
+    if (evIsReset && sib.id === ev.id) continue;
     const sibRange = getSibRange(sib, processedEvents);
     if (sibRange <= 0) continue;
     siblings.push({ start: sib.startFrame, end: sib.startFrame + sibRange });
@@ -285,6 +295,7 @@ export function createEvent(
   columnId: string,
   atFrame: number,
   defaultSkill: {
+    id?: string;
     name?: string;
     segments?: EventSegmentData[];
     gaugeGain?: number;
@@ -307,10 +318,11 @@ export function createEvent(
   const span = computeSegmentsSpan(segments);
   const stackLimit = (defaultSkill?.stacks?.limit as { value?: number } | undefined)?.value ?? 1;
   const isStackable = stackLimit > 1 || (ownerId === ENEMY_OWNER_ID && INFLICTION_COLUMN_IDS.has(columnId));
+  const eventId = defaultSkill?.id ?? columnId;
   return {
     uid: genEventUid(),
-    id: defaultSkill?.name ?? columnId,
-    name: defaultSkill?.name ?? columnId,
+    id: eventId,
+    name: eventId,
     ownerId,
     columnId,
     startFrame: atFrame,
@@ -327,8 +339,8 @@ export function createEvent(
     ...(defaultSkill?.timeStop ? { timeStop: defaultSkill.timeStop } : {}),
     ...(defaultSkill?.timeDependency ? { timeDependency: defaultSkill.timeDependency } : {}),
     ...(defaultSkill?.skillPointCost != null ? { skillPointCost: defaultSkill.skillPointCost } : {}),
-    ...(defaultSkill?.sourceOwnerId ? { sourceOwnerId: defaultSkill.sourceOwnerId } : {}),
-    ...(defaultSkill?.sourceSkillName ? { sourceSkillName: defaultSkill.sourceSkillName } : {}),
+    sourceOwnerId: defaultSkill?.sourceOwnerId ?? USER_ID,
+    sourceSkillName: defaultSkill?.sourceSkillName ?? 'Freeform',
     ...(defaultSkill?.enhancementType ? { enhancementType: defaultSkill.enhancementType } : {}),
   };
 }
@@ -541,17 +553,21 @@ export function validateMove(
   if (!overlapExemptIds?.has(target.uid)) {
     clamped = clampNonOverlappable(allEvents, target, clamped, processedEvents ?? undefined);
   }
-  // Clamp non-ultimate events to the edge of ultimate animation regions
-  if (target.columnId !== SKILL_COLUMNS.ULTIMATE) {
-    clamped = clampToUltimateEdge(allEvents, target, clamped);
-  }
-  // Clamp battle/basic skills to the edge of combo animation regions
-  if (target.columnId === SKILL_COLUMNS.BATTLE || target.columnId === SKILL_COLUMNS.BASIC) {
-    clamped = clampToComboEdge(allEvents, target, clamped);
-  }
-  // Clamp enhanced events within the ENABLE clause window
-  if (target.enhancementType === EnhancementType.ENHANCED) {
-    clamped = clampToEnableWindow(allEvents, target, clamped);
+  // In strict mode (processedEvents provided), enforce animation-edge and
+  // enable-window constraints. In freeform mode these are skipped.
+  if (processedEvents != null) {
+    // Clamp non-ultimate events to the edge of ultimate animation regions
+    if (target.columnId !== SKILL_COLUMNS.ULTIMATE) {
+      clamped = clampToUltimateEdge(allEvents, target, clamped);
+    }
+    // Clamp battle/basic skills to the edge of combo animation regions
+    if (target.columnId === SKILL_COLUMNS.BATTLE || target.columnId === SKILL_COLUMNS.BASIC) {
+      clamped = clampToComboEdge(allEvents, target, clamped);
+    }
+    // Clamp enhanced events within the ENABLE clause window
+    if (target.enhancementType === EnhancementType.ENHANCED) {
+      clamped = clampToEnableWindow(allEvents, target, clamped);
+    }
   }
   return clamped;
 }

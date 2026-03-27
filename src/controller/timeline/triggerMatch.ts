@@ -103,14 +103,14 @@ interface VerbHandler {
 
 const PHYSICAL_STATUS_VALUES = new Set<string>(Object.values(PhysicalStatusType));
 
-/** Unified status name → column ID resolver. */
-export function statusNameToColumnId(name: string, skipTeamCheck?: boolean): string {
-  return (!skipTeamCheck ? getTeamStatusColumnId(name) : undefined)
-    ?? REACTION_STATUS_TO_COLUMN[name]
-    ?? (OPERATOR_COLUMNS as Record<string, string>)[name]
-    ?? (PHYSICAL_INFLICTION_COLUMNS as Record<string, string>)[name]
-    ?? (PHYSICAL_STATUS_VALUES.has(name) ? name : undefined)
-    ?? name.toLowerCase().replace(/_/g, '-');
+/** Unified status ID → column ID resolver. */
+export function statusIdToColumnId(statusId: string, skipTeamCheck?: boolean): string {
+  return (!skipTeamCheck ? getTeamStatusColumnId(statusId) : undefined)
+    ?? REACTION_STATUS_TO_COLUMN[statusId]
+    ?? (OPERATOR_COLUMNS as Record<string, string>)[statusId]
+    ?? (PHYSICAL_INFLICTION_COLUMNS as Record<string, string>)[statusId]
+    ?? (PHYSICAL_STATUS_VALUES.has(statusId) ? statusId : undefined)
+    ?? statusId.toLowerCase().replace(/_/g, '-');
 }
 
 // ── Shared helpers ────────────────────────────────────────────────────────────
@@ -201,7 +201,7 @@ function resolveColumns(cond: Predicate): Set<string> | undefined {
         if (cond.objectQualifier) return new Set([Array.isArray(cond.objectQualifier) ? cond.objectQualifier[0] : cond.objectQualifier]);
         return new Set(PHYSICAL_STATUS_COLUMN_IDS);
       }
-      if (cond.objectId) return new Set([statusNameToColumnId(cond.objectId)]);
+      if (cond.objectId) return new Set([statusIdToColumnId(cond.objectId)]);
       return undefined; // generic — needs fallback
 
     case 'STAGGER':
@@ -353,7 +353,7 @@ function handleHave(primaryCond: Predicate, ctx: VerbHandlerContext): TriggerMat
   const matches: TriggerMatch[] = [];
   if ((primaryCond.object !== 'STATUS' && primaryCond.object !== 'INFLICTION') || !primaryCond.objectId) return matches;
 
-  const colId = statusNameToColumnId(primaryCond.objectId);
+  const colId = statusIdToColumnId(primaryCond.objectId);
   const { matchesOwner } = resolveOwnerFilter(primaryCond, ctx.operatorSlotId, 'HAVE');
 
   // Extract stacks threshold from `with.stacks` if present

@@ -36,6 +36,7 @@ import GENERAL_MECHANICS from '../../model/game-data/generalMechanics.json';
 import { genEventUid } from './inputEventController';
 import { getAllOperatorStatuses } from '../gameDataStore';
 import { allocInputEvent, allocDerivedEvent } from './objectPool';
+import { getStatusStackingMode } from './eventPresentationController';
 
 /** Source metadata for event mutations. */
 interface EventSource {
@@ -47,14 +48,19 @@ interface EventSource {
 
 let _statusStackLimitCache: Map<string, number> | null = null;
 
-export function getStatusStackLimit(statusName: string): number | undefined {
+export function getStatusStackLimit(statusId: string): number | undefined {
   if (!_statusStackLimitCache) {
     _statusStackLimitCache = new Map();
     for (const s of getAllOperatorStatuses()) {
-      if (s.stacks) _statusStackLimitCache.set(s.id, s.maxStacks);
+      if (!s.stacks) continue;
+      _statusStackLimitCache.set(s.id, s.maxStacks);
+      // Also index by kebab-case column ID and display name for freeform event lookup
+      const kebab = s.id.toLowerCase().replace(/_/g, '-');
+      if (kebab !== s.id) _statusStackLimitCache.set(kebab, s.maxStacks);
+      if (s.name && s.name !== s.id) _statusStackLimitCache.set(s.name, s.maxStacks);
     }
   }
-  return _statusStackLimitCache.get(statusName);
+  return _statusStackLimitCache.get(statusId);
 }
 
 export class DerivedEventController {
@@ -195,6 +201,39 @@ export class DerivedEventController {
             ...prev,
             segments: [{ properties: { ...prev.segments[0]?.properties, duration: ev.startFrame - prev.startFrame } }],
           };
+        }
+      }
+
+      // Status events: apply stacking interaction for freeform events only.
+      // Queue-derived events (already extended) were processed by createStatus.
+      if (!this.extendedIds.has(ev.uid) && ev.id) {
+        const stackingMode = getStatusStackingMode(ev.id);
+        if (stackingMode) {
+          const maxStacks = getStatusStackLimit(ev.id);
+          const activeCount = maxStacks != null
+            ? this.activeEventsIn(ev.columnId, ev.ownerId, ev.startFrame).length
+            : 0;
+          const source = { ownerId: ev.sourceOwnerId ?? ev.ownerId, skillName: ev.sourceSkillName ?? 'Freeform' };
+
+          // MERGE: always subsume all active instances
+          if (stackingMode === StackInteractionType.MERGE) {
+            const active = this.activeEventsIn(ev.columnId, ev.ownerId, ev.startFrame);
+            for (const act of active) {
+              setEventDuration(act, ev.startFrame - act.startFrame);
+              act.eventStatus = EventStatusType.CONSUMED;
+              act.eventStatusOwnerId = source.ownerId;
+              act.eventStatusSkillName = source.skillName;
+            }
+          }
+
+          // At capacity: RESET clamps oldest, NONE skips the event
+          if (maxStacks != null && activeCount >= maxStacks) {
+            if (stackingMode === StackInteractionType.RESET) {
+              this.resetOldest(ev.columnId, ev.ownerId, ev.startFrame, source);
+            } else if (stackingMode === 'NONE') {
+              continue; // skip — at capacity with no overflow behavior
+            }
+          }
         }
       }
 
@@ -704,35 +743,12 @@ export class DerivedEventController {
   createStatus(
     columnId: string, ownerId: string, frame: number,
     durationFrames: number, source: EventSource,
-    options?: { statusName?: string; stackingMode?: string; uid?: string; maxStacks?: number; event?: Partial<TimelineEvent> },
+    options?: { statusId?: string; stackingMode?: string; uid?: string; maxStacks?: number; event?: Partial<TimelineEvent> },
   ): boolean {
-    const statusName = options?.statusName ?? columnId;
+    const statusId = options?.statusId ?? columnId;
 
-    if (options?.stackingMode === StackInteractionType.RESET) {
-      this.resetStatus(columnId, ownerId, frame, source);
-    }
-
-    // Enforce stack limit from explicit option or operator status config
-    const maxStacks = options?.maxStacks ?? getStatusStackLimit(statusName);
-    if (maxStacks != null) {
-      const active = this.activeCount(columnId, ownerId, frame);
-      if (active >= maxStacks) return false;
-    }
-
-    const ev = allocDerivedEvent();
-    ev.uid = options?.uid ?? `${statusName.toLowerCase()}-${genEventUid()}`;
-    ev.id = statusName;
-    ev.name = statusName;
-    ev.ownerId = ownerId;
-    ev.columnId = columnId;
-    ev.startFrame = frame;
-    ev.segments = [{ properties: { duration: durationFrames } }];
-    ev.sourceOwnerId = source.ownerId;
-    ev.sourceSkillName = source.skillName;
-    if (options?.event) Object.assign(ev, options.event);
-
+    // MERGE: subsume all active instances into the new one (always, not just at capacity)
     if (options?.stackingMode === StackInteractionType.MERGE) {
-      // Subsume older: clamp all active, keep the new one
       const active = this.activeEventsIn(columnId, ownerId, frame);
       for (const act of active) {
         setEventDuration(act, frame - act.startFrame);
@@ -741,6 +757,31 @@ export class DerivedEventController {
         act.eventStatusSkillName = source.skillName;
       }
     }
+
+    // Enforce stack limit — RESET clamps oldest when at capacity
+    const maxStacks = options?.maxStacks ?? getStatusStackLimit(statusId);
+    if (maxStacks != null) {
+      const active = this.activeCount(columnId, ownerId, frame);
+      if (active >= maxStacks) {
+        if (options?.stackingMode === StackInteractionType.RESET) {
+          this.resetOldest(columnId, ownerId, frame, source);
+        } else {
+          return false;
+        }
+      }
+    }
+
+    const ev = allocDerivedEvent();
+    ev.uid = options?.uid ?? `${statusId.toLowerCase()}-${genEventUid()}`;
+    ev.id = statusId;
+    ev.name = statusId;
+    ev.ownerId = ownerId;
+    ev.columnId = columnId;
+    ev.startFrame = frame;
+    ev.segments = [{ properties: { duration: durationFrames } }];
+    ev.sourceOwnerId = source.ownerId;
+    ev.sourceSkillName = source.skillName;
+    if (options?.event) Object.assign(ev, options.event);
 
     this.addEvent(ev);
     return true;
@@ -772,6 +813,25 @@ export class DerivedEventController {
   }
 
   /**
+   * Consume the N oldest active events in a column (e.g. CONSUME THIS EVENT with stacks count).
+   */
+  consumeOldest(
+    columnId: string, ownerId: string, frame: number,
+    count: number, source: EventSource,
+  ): number {
+    const allActive = this.activeEventsIn(columnId, ownerId, frame)
+      .sort((a, b) => a.startFrame - b.startFrame);
+    const toConsume = allActive.slice(0, count);
+    for (const ev of toConsume) {
+      setEventDuration(ev, frame - ev.startFrame);
+      ev.eventStatus = EventStatusType.CONSUMED;
+      ev.eventStatusOwnerId = source.ownerId;
+      ev.eventStatusSkillName = source.skillName;
+    }
+    return toConsume.length;
+  }
+
+  /**
    * Consume (clamp) all active reactions in a column.
    */
   consumeReaction(
@@ -800,10 +860,12 @@ export class DerivedEventController {
    */
   consumeLink(eventUid: string, frame: number, source: EventSource): number {
     const linkColumnId = getTeamStatusColumnId(StatusType.LINK) ?? StatusType.LINK;
-    const stacks = this.activeCount(linkColumnId, COMMON_OWNER_ID, frame);
-    if (stacks === 0) return 0;
-    this.consumeStatus(linkColumnId, COMMON_OWNER_ID, frame, source);
-    const clampedStacks = Math.min(stacks, 4);
+    const isLink = (ev: TimelineEvent) => ev.id === StatusType.LINK;
+    const linkEvents = this.activeEventsIn(linkColumnId, COMMON_OWNER_ID, frame)
+      .filter(isLink);
+    if (linkEvents.length === 0) return 0;
+    this.clampActiveFiltered(linkColumnId, COMMON_OWNER_ID, frame, source, EventStatusType.CONSUMED, isLink);
+    const clampedStacks = Math.min(linkEvents.length, 4);
     this.linkConsumptions.set(eventUid, clampedStacks);
     return clampedStacks;
   }
@@ -1084,6 +1146,19 @@ export class DerivedEventController {
     }
   }
 
+  /** Clamp the oldest active event in a column to make room for a new stack. */
+  private resetOldest(columnId: string, ownerId: string, frame: number, source: EventSource) {
+    const active = this.activeEventsIn(columnId, ownerId, frame)
+      .sort((a, b) => a.startFrame - b.startFrame);
+    if (active.length > 0) {
+      const oldest = active[0];
+      setEventDuration(oldest, frame - oldest.startFrame);
+      oldest.eventStatus = EventStatusType.REFRESHED;
+      oldest.eventStatusOwnerId = source.ownerId;
+      oldest.eventStatusSkillName = source.skillName;
+    }
+  }
+
   /** Clamp all active events in a column — set status and truncate duration. */
   resetStatus(columnId: string, ownerId: string, frame: number, source: EventSource) {
     this.clampActive(columnId, ownerId, frame, source, EventStatusType.REFRESHED);
@@ -1141,6 +1216,37 @@ export class DerivedEventController {
     }
     for (const ev of this.registeredEvents) {
       if (ev.columnId !== columnId || ev.ownerId !== ownerId) continue;
+      if (ev.eventStatus === EventStatusType.CONSUMED) continue;
+      const end = ev.startFrame + eventDuration(ev);
+      if (ev.startFrame <= frame && frame < end) {
+        setEventDuration(ev, frame - ev.startFrame);
+        ev.eventStatus = status;
+        ev.eventStatusOwnerId = source.ownerId;
+        ev.eventStatusSkillName = source.skillName;
+      }
+    }
+  }
+
+  /** Clamp only active events matching a predicate in a column. */
+  private clampActiveFiltered(
+    columnId: string, ownerId: string, frame: number,
+    source: EventSource, status: EventStatusType, predicate: (ev: TimelineEvent) => boolean,
+  ) {
+    const queueEvents = this.stacks.get(this.key(columnId, ownerId)) ?? [];
+    for (const ev of queueEvents) {
+      if (!predicate(ev)) continue;
+      if (ev.eventStatus === EventStatusType.CONSUMED) continue;
+      const end = ev.startFrame + eventDuration(ev);
+      if (ev.startFrame <= frame && frame < end) {
+        setEventDuration(ev, frame - ev.startFrame);
+        ev.eventStatus = status;
+        ev.eventStatusOwnerId = source.ownerId;
+        ev.eventStatusSkillName = source.skillName;
+      }
+    }
+    for (const ev of this.registeredEvents) {
+      if (ev.columnId !== columnId || ev.ownerId !== ownerId) continue;
+      if (!predicate(ev)) continue;
       if (ev.eventStatus === EventStatusType.CONSUMED) continue;
       const end = ev.startFrame + eventDuration(ev);
       if (ev.startFrame <= frame && frame < end) {

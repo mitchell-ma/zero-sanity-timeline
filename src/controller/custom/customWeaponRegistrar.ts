@@ -38,10 +38,10 @@ function buildDslDefsFromCustomWeapon(weapon: CustomWeapon): Record<string, unkn
     const determinerMap: Record<string, string> = { self: 'THIS', team: 'OTHER' };
     const target = targetMap[ne.target] ?? 'OPERATOR';
     const targetDeterminer = determinerMap[ne.target];
-    const statusName = `${originId}_${ne.name.toUpperCase().replace(/[^A-Z0-9]+/g, '_')}`;
+    const statusId = `${originId}_${ne.name.toUpperCase().replace(/[^A-Z0-9]+/g, '_')}`;
 
     defs.push({
-      name: statusName,
+      name: statusId,
       type: 'WEAPON_EFFECT',
       originId,
       target,

@@ -23,7 +23,7 @@ import { TimelineEvent, durationSegment, setEventDuration } from '../../consts/v
 import { FPS } from '../../utils/timeline';
 import { CritMode, EventStatusType } from '../../consts/enums';
 import { ENEMY_OWNER_ID, INFLICTION_COLUMNS, REACTION_STATUS_TO_COLUMN, SKILL_COLUMNS } from '../../model/channels/index';
-import { statusNameToColumnId } from './triggerMatch';
+import { statusIdToColumnId } from './triggerMatch';
 import { COMMON_OWNER_ID } from '../slot/commonSlotController';
 import { evaluateConditions, ConditionContext } from './conditionEvaluator';
 import { activeEventsAtFrame, activeInflictionsOfElement } from './timelineQueries';
@@ -203,7 +203,7 @@ function executeApply(effect: Effect, ctx: ExecutionContext): MutationSet {
 
   if (effect.object === 'STATUS') {
     const skipTeamCheck = effect.to != null && effect.to !== NounType.TEAM;
-    const columnId = statusNameToColumnId(effect.objectId ?? '', skipTeamCheck);
+    const columnId = statusIdToColumnId(effect.objectId ?? '', skipTeamCheck);
 
     const durationValue = resolveWith(effect.with?.duration, ctx);
     const duration = durationValue != null ? Math.round(durationValue * FPS) : 2400;
@@ -274,7 +274,7 @@ function executeConsume(effect: Effect, ctx: ExecutionContext): MutationSet {
 
   if (effect.object === 'STATUS') {
     const skipTeamCheck = (effect.fromObject ?? effect.to) != null && (effect.fromObject ?? effect.to) !== NounType.TEAM;
-    const columnId = statusNameToColumnId(effect.objectId ?? '', skipTeamCheck);
+    const columnId = statusIdToColumnId(effect.objectId ?? '', skipTeamCheck);
     const targets = activeEventsAtFrame(ctx.events, columnId, ownerId, ctx.frame)
       .filter(ev => ev.eventStatus !== EventStatusType.CONSUMED)
       .sort((a, b) => a.startFrame - b.startFrame);
@@ -325,7 +325,7 @@ function executeReset(effect: Effect, ctx: ExecutionContext): MutationSet {
   // RESET STACKS or RESET COOLDOWN — clamp all active instances
   if (effect.object === 'STACKS' && effect.objectId) {
     const skipTeamCheck = effect.to != null && effect.to !== NounType.TEAM;
-    const columnId = statusNameToColumnId(effect.objectId ?? '', skipTeamCheck);
+    const columnId = statusIdToColumnId(effect.objectId ?? '', skipTeamCheck);
     const ownerId = resolveOwnerId(effect.to as string, ctx, effect.toDeterminer);
     const targets = activeEventsAtFrame(ctx.events, columnId, ownerId, ctx.frame)
       .filter(ev => ev.eventStatus !== EventStatusType.CONSUMED);

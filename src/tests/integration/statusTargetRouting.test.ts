@@ -18,7 +18,7 @@
 import { renderHook, act } from '@testing-library/react';
 import { useApp } from '../../app/useApp';
 import { SKILL_COLUMNS, OPERATOR_COLUMNS } from '../../model/channels';
-import { InteractionModeType } from '../../consts/enums';
+import { InteractionModeType, StatusType } from '../../consts/enums';
 import { FPS } from '../../utils/timeline';
 import type { MiniTimeline } from '../../consts/viewTypes';
 import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../../controller/slot/commonSlotController';
@@ -67,9 +67,9 @@ describe('Status target routing — effect to TEAM, config default TEAM', () => 
       );
     });
 
-    // LINK should appear on the team-status column under COMMON_OWNER_ID
+    // LINK should appear under COMMON_OWNER_ID with its own column ID
     const teamLinkEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === COMMON_OWNER_ID && ev.columnId === COMMON_COLUMN_IDS.TEAM_STATUS,
+      (ev) => ev.ownerId === COMMON_OWNER_ID && ev.columnId === StatusType.LINK,
     );
     expect(teamLinkEvents.length).toBeGreaterThanOrEqual(1);
 
@@ -128,26 +128,26 @@ describe('Status target routing — no effect target, uses config default', () =
       result.current.setInteractionMode(InteractionModeType.FREEFORM);
     });
 
-    // Add a freeform LINK directly to the team-status column
+    // Add a freeform LINK directly to its column
     const teamStatusCol = findCommonColumn(result.current, COMMON_COLUMN_IDS.TEAM_STATUS);
     expect(teamStatusCol).toBeDefined();
 
     act(() => {
       result.current.handleAddEvent(
         COMMON_OWNER_ID,
-        COMMON_COLUMN_IDS.TEAM_STATUS,
+        StatusType.LINK,
         2 * FPS,
         {
-          name: 'LINK',
+          name: StatusType.LINK,
           segments: [{ properties: { duration: 5 * FPS } }],
           sourceOwnerId: SLOT_AKEKURI,
         },
       );
     });
 
-    // Should appear on team-status column
+    // Should appear under COMMON_OWNER_ID with LINK column ID
     const teamLinkEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === COMMON_OWNER_ID && ev.columnId === COMMON_COLUMN_IDS.TEAM_STATUS && ev.name === 'LINK',
+      (ev) => ev.ownerId === COMMON_OWNER_ID && ev.columnId === StatusType.LINK && ev.name === StatusType.LINK,
     );
     expect(teamLinkEvents.length).toBeGreaterThanOrEqual(1);
   });
@@ -214,9 +214,9 @@ describe('Status target routing — cross-operator consistency', () => {
       );
     });
 
-    // LINK → team column
+    // LINK → team column (distinct column ID per status)
     const teamLinkEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === COMMON_OWNER_ID && ev.columnId === COMMON_COLUMN_IDS.TEAM_STATUS,
+      (ev) => ev.ownerId === COMMON_OWNER_ID && ev.columnId === StatusType.LINK,
     );
     expect(teamLinkEvents.length).toBeGreaterThanOrEqual(1);
 

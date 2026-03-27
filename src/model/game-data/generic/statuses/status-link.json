@@ -13,9 +13,9 @@
     "stacks": {
       "limit": {
         "verb": "IS",
-        "value": 1
+        "value": 4
       },
-      "interactionType": "RESET"
+      "interactionType": "REFRESH"
     },
     "eventType": "STATUS",
     "eventCategoryType": "SKILL_STATUS",

@@ -269,7 +269,7 @@ export function buildDamageTableRows(
     const potential = (props.operator.potential ?? 5) as Potential;
 
     // Look up default segments for max frame counts (users can delete frames)
-    const defaultSegs = col.eventVariants?.find((v) => v.name === ev.id)?.segments
+    const defaultSegs = col.eventVariants?.find((v) => v.id === ev.id)?.segments
       ?? col.defaultEvent?.segments;
 
     if (ev.segments.length > 0) {

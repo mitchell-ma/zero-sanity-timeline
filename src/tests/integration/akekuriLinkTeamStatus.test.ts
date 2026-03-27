@@ -6,7 +6,7 @@
  * Akekuri Ultimate → Link Team Status — Integration Tests
  *
  * Tests the full pipeline: Akekuri's Ultimate produces LINK on its own column
- * ('team-status') under COMMON_OWNER_ID, and skills consume it.
+ * (StatusType.LINK) under COMMON_OWNER_ID, and skills consume it.
  *
  * Also tests freeform-added LINK events stacking and consumption behavior.
  */
@@ -14,7 +14,7 @@
 import { renderHook, act } from '@testing-library/react';
 import { useApp } from '../../app/useApp';
 import { SKILL_COLUMNS } from '../../model/channels';
-import { InteractionModeType } from '../../consts/enums';
+import { InteractionModeType, StatusType } from '../../consts/enums';
 import { FPS } from '../../utils/timeline';
 import type { MiniTimeline } from '../../consts/viewTypes';
 import { COMMON_OWNER_ID } from '../../controller/slot/commonSlotController';
@@ -57,7 +57,7 @@ describe('Akekuri Ultimate → Link Team Status', () => {
     });
 
     const linkEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === COMMON_OWNER_ID && ev.columnId === 'team-status',
+      (ev) => ev.ownerId === COMMON_OWNER_ID && ev.columnId === StatusType.LINK,
     );
     expect(linkEvents.length).toBeGreaterThanOrEqual(1);
   });
@@ -141,22 +141,22 @@ describe('Freeform LINK stacking', () => {
       result.current.setInteractionMode(InteractionModeType.FREEFORM);
     });
 
-    const linkEvent = { name: 'LINK', segments: [{ properties: { duration: 20 * FPS } }] };
+    const linkEvent = { id: StatusType.LINK, name: StatusType.LINK, segments: [{ properties: { duration: 20 * FPS } }] };
 
     // Add two overlapping LINK events
     act(() => {
       result.current.handleAddEvent(
-        COMMON_OWNER_ID, 'team-status', 1 * FPS, linkEvent,
+        COMMON_OWNER_ID, StatusType.LINK, 1 * FPS, linkEvent,
       );
     });
     act(() => {
       result.current.handleAddEvent(
-        COMMON_OWNER_ID, 'team-status', 2 * FPS, linkEvent,
+        COMMON_OWNER_ID, StatusType.LINK, 2 * FPS, linkEvent,
       );
     });
 
     const linkEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === COMMON_OWNER_ID && ev.columnId === 'team-status',
+      (ev) => ev.ownerId === COMMON_OWNER_ID && ev.columnId === StatusType.LINK,
     );
     expect(linkEvents).toHaveLength(2);
   });
@@ -171,17 +171,17 @@ describe('Freeform LINK stacking', () => {
     const battleCol = findColumn(result.current, SLOT_LAEVATAIN, SKILL_COLUMNS.BATTLE);
     expect(battleCol).toBeDefined();
 
-    const linkEvent = { name: 'LINK', segments: [{ properties: { duration: 20 * FPS } }] };
+    const linkEvent = { id: StatusType.LINK, name: StatusType.LINK, segments: [{ properties: { duration: 20 * FPS } }] };
 
     // Two overlapping LINK events (each 20s default duration)
     act(() => {
       result.current.handleAddEvent(
-        COMMON_OWNER_ID, 'team-status', 1 * FPS, linkEvent,
+        COMMON_OWNER_ID, StatusType.LINK, 1 * FPS, linkEvent,
       );
     });
     act(() => {
       result.current.handleAddEvent(
-        COMMON_OWNER_ID, 'team-status', 2 * FPS, linkEvent,
+        COMMON_OWNER_ID, StatusType.LINK, 2 * FPS, linkEvent,
       );
     });
 

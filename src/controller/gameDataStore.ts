@@ -293,11 +293,13 @@ function buildTeamStatusIds(): Set<string> {
 
 /**
  * If `statusId` is a team-targeting status (to === 'TEAM' in its JSON config),
- * returns the team-status column ID. Otherwise returns undefined.
+ * returns the status ID itself as its column ID. Team statuses use distinct
+ * column IDs (matched via matchColumnIds) — same architecture as operator/enemy statuses.
  */
 export function getTeamStatusColumnId(statusId: string): string | undefined {
-  return buildTeamStatusIds().has(statusId) ? 'team-status' : undefined;
+  return buildTeamStatusIds().has(statusId) ? statusId : undefined;
 }
+
 export { getSkillIds, getSkillTypeMap, getRawSkillTypeMap, resolveSkillType };
 export { getFrameSequences, getSegmentLabels };
 export { getComboTriggerClause, getComboTriggerInfo };
@@ -385,6 +387,25 @@ export function getAllStatusLabels(): Record<string, string> {
   }
   _statusLabels = labels;
   return _statusLabels;
+}
+
+// ── Status lookup by ID ───────────────────────────────────────────────────
+
+let _statusByIdCache: Map<string, OperatorStatus> | null = null;
+
+function buildStatusByIdCache() {
+  if (_statusByIdCache) return _statusByIdCache;
+  const cache = new Map<string, OperatorStatus>();
+  for (const status of getAllOperatorStatuses()) {
+    if (status.id && !cache.has(status.id)) cache.set(status.id, status);
+  }
+  _statusByIdCache = cache;
+  return cache;
+}
+
+/** Look up any operator/generic status definition by its ID. */
+export function getStatusById(statusId: string): OperatorStatus | undefined {
+  return buildStatusByIdCache().get(statusId);
 }
 
 let _statusElementMap: Record<string, string> | null = null;

@@ -83,7 +83,7 @@ function collectFrameEntries(
     start.frame = event.startFrame;
     start.priority = PRIORITY.PROCESS_FRAME;
     start.type = 'PROCESS_FRAME';
-    start.statusName = event.name;
+    start.statusId = event.name;
     start.columnId = event.columnId;
     start.ownerId = event.ownerId;
     start.sourceOwnerId = event.ownerId;
@@ -109,7 +109,7 @@ function collectFrameEntries(
           qf.frame = absFrame;
           qf.priority = PRIORITY.PROCESS_FRAME;
           qf.type = 'PROCESS_FRAME';
-          qf.statusName = event.name;
+          qf.statusId = event.name;
           qf.columnId = event.columnId;
           qf.ownerId = event.ownerId;
           qf.sourceOwnerId = event.ownerId;
@@ -133,7 +133,7 @@ function collectFrameEntries(
       combo.frame = event.startFrame;
       combo.priority = PRIORITY.COMBO_RESOLVE;
       combo.type = 'COMBO_RESOLVE';
-      combo.statusName = event.name;
+      combo.statusId = event.name;
       combo.columnId = event.columnId;
       combo.ownerId = event.ownerId;
       combo.sourceOwnerId = event.ownerId;
@@ -219,7 +219,7 @@ export function runEventQueue(
         priority: PRIORITY.INFLICTION_CREATE,
         type: 'INFLICTION_CREATE',
         uid: ev.uid,
-        statusName: ev.columnId,
+        statusId: ev.columnId,
         columnId: ev.columnId,
         ownerId: ev.ownerId,
         sourceOwnerId: ev.sourceOwnerId ?? ev.ownerId,
@@ -233,7 +233,7 @@ export function runEventQueue(
         frame: ev.startFrame,
         priority: PRIORITY.FRAME_EFFECT,
         type: 'FRAME_EFFECT',
-        statusName: ev.columnId,
+        statusId: ev.columnId,
         columnId: ev.columnId,
         ownerId: ev.ownerId,
         sourceOwnerId: ev.sourceOwnerId ?? ev.ownerId,
@@ -272,7 +272,7 @@ export function runEventQueue(
       };
       queue.insert({
         frame: ev.startFrame, priority: PRIORITY.ENGINE_TRIGGER, type: 'ENGINE_TRIGGER',
-        statusName: entry.def.properties.id, columnId: '', ownerId: entry.operatorSlotId,
+        statusId: entry.def.properties.id, columnId: '', ownerId: entry.operatorSlotId,
         sourceOwnerId: ev.ownerId, sourceSkillName: ev.name,
         maxStacks: 0, durationFrames: 0, operatorSlotId: entry.operatorSlotId,
         engineTrigger: { frame: ev.startFrame, sourceOwnerId: entry.operatorId, triggerSlotId: ev.ownerId, sourceSkillName: ev.name, ctx: triggerCtx, isEquip: entry.isEquip },

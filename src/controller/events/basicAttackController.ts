@@ -97,10 +97,8 @@ export class SkillSegmentBuilder {
             ? formatSegmentShortName(undefined, i)
             : undefined);
 
-      // Split out-of-bound frames into an implied trailing segment.
-      // Some skills (e.g. delayed explosions) have frames beyond the segment duration.
+      // Drop frames beyond the segment duration — they belong in a separate segment in the JSON.
       const inBound = frames.filter(f => f.offsetFrame <= durationFrames);
-      const outOfBound = frames.filter(f => f.offsetFrame > durationFrames);
 
       const seqRecord = seq as SkillEventSequence & { segmentTypes?: string[]; timeDependency?: string; clause?: EventSegmentData['clause'] };
       const segData: EventSegmentData = {
@@ -115,18 +113,6 @@ export class SkillSegmentBuilder {
       };
       segments.push(segData);
       totalDurationFrames += durationFrames;
-
-      if (outOfBound.length > 0) {
-        // Re-base offsets relative to the new segment's start (= end of the parent segment)
-        const rebased = outOfBound.map(f => ({ ...f, offsetFrame: f.offsetFrame - durationFrames }));
-        const impliedDuration = Math.max(...rebased.map(f => f.offsetFrame)) + 1;
-        const seqDelayLabel = 'delayedHitLabel' in seq ? (seq as SkillEventSequence & { delayedHitLabel?: string }).delayedHitLabel : undefined;
-        segments.push({
-          properties: { duration: impliedDuration, name: seqDelayLabel ?? options?.delayedHitLabel ?? 'Delay' },
-          frames: rebased,
-        });
-        totalDurationFrames += impliedDuration;
-      }
     }
 
     return { totalDurationFrames, segments };

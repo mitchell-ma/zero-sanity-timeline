@@ -291,7 +291,7 @@ export function findEventDefaults(
       (c.columnId === ev.columnId || (c.matchColumnIds?.includes(ev.columnId) ?? false)),
   );
   if (!col) return null;
-  const variant = col.eventVariants?.find((v) => v.name === ev.id);
+  const variant = col.eventVariants?.find((v) => v.id === ev.id);
   if (variant) return variant;
   return col.defaultEvent ?? null;
 }

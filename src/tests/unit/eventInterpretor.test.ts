@@ -60,11 +60,11 @@ function makeInflictionEvent(columnId: string, startFrame: number, duration = 12
 }
 
 function makeStatusEvent(columnId: string, ownerId: string, startFrame: number, duration = 2400): TimelineEvent {
-  const statusName = columnId.toUpperCase().replace(/-/g, '_');
+  const statusId = columnId.toUpperCase().replace(/-/g, '_');
   return {
     uid: `status-${columnId}-${startFrame}`,
-    id: statusName,
-    name: statusName,
+    id: statusId,
+    name: statusId,
     ownerId,
     columnId,
     startFrame,

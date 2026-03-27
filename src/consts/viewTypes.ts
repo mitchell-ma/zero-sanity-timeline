@@ -300,9 +300,11 @@ export interface MicroColumn {
   statusType?: string;
   /** Maximum concurrent events for this micro-column (from status stacks limit). */
   maxEvents?: number;
-  /** Per-micro-column default event overrides (name, duration). Used by dynamic-split context menu. */
+  /** Per-micro-column default event overrides (id, duration). Used by dynamic-split context menu. */
   defaultEvent?: {
-    name: string;
+    id: string;
+    /** Display name for translation/labels. Business logic must use `id`. */
+    name?: string;
     segments?: EventSegmentData[];
     /** Source operator ID for manually-created events (e.g. 'debugger'). */
     sourceOwnerId?: string;
@@ -333,7 +335,9 @@ export type MiniTimeline = {
 
   /** Default durations for new events created in this mini-timeline. */
   defaultEvent?: {
-    name: string;
+    id: string;
+    /** Display name for translation/labels. Business logic must use `id`. */
+    name?: string;
     triggerCondition?: string | null;
     /** Segment definitions for this event. */
     segments?: EventSegmentData[];
@@ -357,8 +361,10 @@ export type MiniTimeline = {
 
   /** Multiple event variants selectable from the context menu (e.g. Laevatain battle skill). */
   eventVariants?: {
-    name: string;
-    /** Display label in the context menu (falls back to COMBAT_SKILL_LABELS or name). */
+    id: string;
+    /** Display name for translation/labels. Business logic must use `id`. */
+    name?: string;
+    /** Display label in the context menu (falls back to COMBAT_SKILL_LABELS or id). */
     displayName?: string;
     /** Enhancement tier of this variant (NORMAL for base skills, ENHANCED/EMPOWERED for upgraded). */
     enhancementType?: import('./enums').EnhancementType;

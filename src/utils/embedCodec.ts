@@ -13,6 +13,8 @@ import { SheetData, cleanSheetData } from './sheetStorage';
 import { OperatorLoadoutState, EMPTY_LOADOUT } from '../view/OperatorLoadoutHeader';
 import { LoadoutProperties, DEFAULT_LOADOUT_PROPERTIES } from '../view/InformationPane';
 import { EnemyStats, getDefaultEnemyStats } from '../controller/appStateController';
+import { COMMON_OWNER_ID } from '../controller/slot/commonSlotController';
+import { ENEMY_OWNER_ID } from '../model/channels';
 import { ALL_OPERATORS } from '../controller/operators/operatorRegistry';
 import { ALL_ENEMIES } from '../utils/enemies';
 import type { TimelineEvent, Column, EventSegmentData } from '../consts/viewTypes';
@@ -83,6 +85,10 @@ const EQUIP_KEYS: [string, keyof OperatorLoadoutState][] = [
 ];
 
 const SLOT_IDS = ['slot-0', 'slot-1', 'slot-2', 'slot-3'];
+
+// Sentinel owner indices for non-slot owners (100+ to avoid collision with slot indices)
+const COMMON_OWNER_IDX = 100;
+const ENEMY_OWNER_IDX = 101;
 
 // ── Known ID sets for validation ────────────────────────────────────────────
 
@@ -285,12 +291,12 @@ interface EventDefaults {
 function findEventTemplate(columns: Column[], columnId: string, skillName: string): EventDefaults | null {
   for (const col of columns) {
     if (col.type !== 'mini-timeline') continue;
-    if (col.defaultEvent?.name === skillName) {
+    if (col.defaultEvent?.id === skillName) {
       return { segments: col.defaultEvent.segments };
     }
     if (col.eventVariants) {
       for (const v of col.eventVariants) {
-        if (v.name === skillName) {
+        if (v.id === skillName) {
           return { segments: v.segments };
         }
       }
@@ -366,7 +372,9 @@ export async function encodeEmbed(
   for (let ei = 0; ei < cleaned.events.length; ei++) {
     const ev = cleaned.events[ei];
     const origEv = sheetData.events[ei];
-    const slotIdx = SLOT_IDS.indexOf(ev.ownerId);
+    const slotIdx = ev.ownerId === COMMON_OWNER_ID ? COMMON_OWNER_IDX
+      : ev.ownerId === ENEMY_OWNER_ID ? ENEMY_OWNER_IDX
+      : SLOT_IDS.indexOf(ev.ownerId);
     const template = findEventTemplate(columns, ev.columnId, ev.name);
 
     const compact: EventCompact = {
@@ -679,7 +687,9 @@ export async function decodeEmbed(
   const events: TimelineEvent[] = [];
   for (let i = 0; i < embed.evs.length; i++) {
     const compact = embed.evs[i];
-    const ownerId = SLOT_IDS[compact.o] ?? SLOT_IDS[0];
+    const ownerId = compact.o === COMMON_OWNER_IDX ? COMMON_OWNER_ID
+      : compact.o === ENEMY_OWNER_IDX ? ENEMY_OWNER_ID
+      : SLOT_IDS[compact.o] ?? SLOT_IDS[0];
     const template = findEventTemplate(columns, compact.c, compact.s);
 
     const templateDuration = template?.segments ? computeSegmentsSpan(template.segments) : 0;

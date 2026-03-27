@@ -927,19 +927,15 @@ export function useApp() {
     ownerId: string,
     columnId: string,
     atFrame: number,
-    defaultSkill: { name?: string; segments?: import('../consts/viewTypes').EventSegmentData[]; gaugeGain?: number; teamGaugeGain?: number; comboTriggerColumnId?: string; operatorPotential?: number; timeInteraction?: string; isPerfectDodge?: boolean; timeDilation?: number; timeDependency?: import('../consts/enums').TimeDependency; skillPointCost?: number; sourceOwnerId?: string; sourceSkillName?: string; enhancementType?: import('../consts/enums').EnhancementType; stacks?: Record<string, unknown> } | null,
+    defaultSkill: { id?: string; name?: string; segments?: import('../consts/viewTypes').EventSegmentData[]; gaugeGain?: number; teamGaugeGain?: number; comboTriggerColumnId?: string; operatorPotential?: number; timeInteraction?: string; isPerfectDodge?: boolean; timeDilation?: number; timeDependency?: import('../consts/enums').TimeDependency; skillPointCost?: number; sourceOwnerId?: string; sourceSkillName?: string; enhancementType?: import('../consts/enums').EnhancementType; stacks?: Record<string, unknown> } | null,
   ) => {
     // Validate against controller-derived columns before adding
     if (!validColumnPairsRef.current.has(`${ownerId}:${columnId}`)) return;
     const ev = createEvent(ownerId, columnId, atFrame, defaultSkill);
     if (defaultSkill?.comboTriggerColumnId) ev.comboTriggerColumnId = defaultSkill.comboTriggerColumnId;
     setEvents((prev) => {
-      // Stack limit is always enforced (not mode-dependent)
-      const stackLimit = (defaultSkill?.stacks?.limit as { value?: number } | undefined)?.value;
-      if (stackLimit != null) {
-        const existing = prev.filter((e) => e.ownerId === ownerId && e.columnId === columnId);
-        if (existing.length >= stackLimit) return prev;
-      }
+      // No total-event limit for statuses — the engine handles concurrent stack
+      // limits and interaction behaviour (RESET, REFRESH, etc.) at processing time.
       if (interactionModeRef.current === InteractionModeType.STRICT) {
         if (wouldOverlapNonOverlappable(prev, ev, ev.startFrame, processedEventsRef.current)) return prev;
         // Check SP sufficiency for battle skills
@@ -1017,7 +1013,9 @@ export function useApp() {
       }
       const isStrict = interactionModeRef.current === InteractionModeType.STRICT;
       const processed = isStrict ? processedEventsRef.current : null;
-      const clamped = validateMove(prev, target, adjustedFrame, processed, overlapExemptIds);
+      // In freeform mode, all events are overlap-exempt (free dragging)
+      const exemptIds = isStrict ? overlapExemptIds : new Set([target.uid]);
+      const clamped = validateMove(prev, target, adjustedFrame, processed, exemptIds);
       if (clamped === target.startFrame) return prev;
       const targetId = target.uid;
       const triggerCol = ComboSkillEventController.resolveComboTriggerColumnId(target, clamped, processed);
@@ -1044,7 +1042,9 @@ export function useApp() {
       const rawIds = resolvedIds.filter((id) => prev.some((ev) => ev.uid === id));
       const idSet = new Set(rawIds);
       if (rawIds.length === 0) return prev;
-      const clampedDelta = validateBatchMoveDelta(prev, rawIds, delta, processed, overlapExemptIds);
+      // In freeform mode, all dragged events are overlap-exempt (free dragging)
+      const exemptIds = isStrict ? overlapExemptIds : idSet;
+      const clampedDelta = validateBatchMoveDelta(prev, rawIds, delta, processed, exemptIds);
       if (clampedDelta === 0) return prev;
       return prev.map((ev) => {
         if (!idSet.has(ev.uid)) return ev;

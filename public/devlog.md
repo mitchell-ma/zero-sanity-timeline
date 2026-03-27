@@ -1,5 +1,15 @@
 # Devlog
 
+## 2026-03-26
+- Team status buffs (Link, Steel Oath, Overclocked Moment) now display with proper names and stack labels (I, II, III, IV) instead of raw IDs
+- Different team statuses no longer interfere with each other when overlapping
+- Stackable statuses like Link can overlap freely; RESET statuses correctly replace the previous instance
+- Pogranichnik's Ultimate now generates 5 Steel Oath stacks, and Combo Skills consume them to summon Shieldguard Harass attacks on the enemy
+- Stack labels cap at the status limit (e.g. 5th+ Link shows IV, not V)
+- Info pane shows "REFRESHED" or "CONSUMED" instead of incorrectly labeling clamped durations as "time stop"
+- Share links now correctly preserve team status events
+- RESET statuses can be dragged past each other freely
+
 ## 2026-03-25
 - Unified how all skill effects are processed — inflictions, status applications, reactions, and physical statuses now all flow through a single pipeline instead of separate legacy paths, making behavior more consistent
 - Forced reactions (like Wulfgard's Ultimate applying Combustion or Ardelia's Combo applying Corrosion) are now expressed more cleanly in the data and process correctly through the unified pipeline

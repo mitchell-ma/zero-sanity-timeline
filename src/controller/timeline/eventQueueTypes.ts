@@ -29,7 +29,7 @@ export interface QueueFrame {
   type: 'PROCESS_FRAME' | 'FRAME_EFFECT' | 'INFLICTION_CREATE' | 'ENGINE_TRIGGER' | 'COMBO_RESOLVE';
   /** Event UID template (for infliction entries). */
   uid?: string;
-  statusName: string;
+  statusId: string;
   columnId: string;
   ownerId: string;
   sourceOwnerId: string;

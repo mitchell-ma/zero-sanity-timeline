@@ -227,4 +227,25 @@ at level 12). The function needs a fallback to return `perFrameMultipliers[segId
 
 **Affected tests (22):** Smouldering Fire ticks 0-10 (full loadout), battle skill ticks 0-10 (bare loadout).
 
+## Unimplemented mechanics — Ardelia T1
+
+Ardelia Talent 1 (Friendly Presence): battle skill creates Shadows of Mr. Dolly that heal the controlled operator on contact. Healing formula: `[63/90 + Will × 0.53/0.75]` by talent level. If controlled operator is at max HP, heals lowest-HP teammate instead. Shadows last 10s, max 10. Ultimate copies also have 10% chance to spawn shadows. Currently description-only — needs spatial/proximity mechanics to implement.
+
+## TriggerIndex keys must use enum constants, not string literals
+
+`resolveTriggerKey` in `triggerIndex.ts` builds keys like `'APPLY:physical'`, `'PERFORM:combo'` using string concatenation and raw strings. These must be composed from `VerbType`, `NounType`, `PhysicalStatusType`, `SKILL_COLUMNS`, etc. — same rule as column IDs. The `resolveCategories` function also uses raw strings (`'physical'`, `'STATUS'`, `'REACTION'`, `'INFLICTION'`). All of these need enum/constant equivalents.
+
+## Route onTriggerClause effects through the standard clause/effect pipeline
+
+Status `onTriggerClause` effects (CONSUME, APPLY, DEAL, etc.) should flow through the same interpret/effect executor pipeline as skill frame clause effects. Currently `deriveStatusEvents` in `statusTriggerCollector.ts` handles status derivation but skips non-self-producing statuses (guard at line ~492).
+
+The fix: when a trigger fires on an existing status event, evaluate its clause effects through `interpret()` / the effect executor — same as any skill frame clause. Each effect (CONSUME, APPLY, DEAL) executes independently. No special CONSUME+APPLY coupling.
+
+Key considerations:
+- `clauseType: "FIRST_MATCH"` — clauses are priority-ordered; first matching clause fires
+- `HAVE STACKS` condition — evaluates against the existing status event's active stack count
+- Effects operate on existing timeline state, not on newly created events
+
+Acceptance tests: skipped tests E, F in `pogSteelOath.test.ts`.
+
 ## Remove weaponGearEffectLoader

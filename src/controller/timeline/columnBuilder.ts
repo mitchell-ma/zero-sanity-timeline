@@ -1,4 +1,4 @@
-import { Column, MiniTimeline, Operator, Enemy, VisibleSkills } from '../../consts/viewTypes';
+import { Column, MiniTimeline, MicroColumn, Operator, Enemy, VisibleSkills } from '../../consts/viewTypes';
 import { DeterminerType, NounType, type Predicate } from '../../dsl/semantics';
 import { CombatSkillType, ELEMENT_COLORS, ElementType, EnhancementType, EventFrameType, SegmentType, StatusType, TimeDependency, TimelineSourceType } from '../../consts/enums';
 import { ENEMY_OWNER_ID, USER_ID, ENEMY_GROUP_COLUMNS, ENEMY_ACTION_COLUMN_ID, OPERATOR_COLUMNS, PHYSICAL_STATUS_COLUMNS, SKILL_COLUMN_ORDER as SKILL_ORDER, SKILL_COLUMNS, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID } from '../../model/channels';
@@ -55,16 +55,16 @@ export function buildColumns(
   const columns: Column[] = [];
 
   // Pre-scan: detect operators with team-shared status effects (e.g. Scorching Fangs)
-  type TeamStatusDef = { sourceSlot: Slot; statusName: string; label: string; duration: number };
+  type TeamStatusDef = { sourceSlot: Slot; statusId: string; label: string; duration: number };
   const teamStatusDefs: TeamStatusDef[] = [];
   // Pre-scan: collect THIS_OPERATOR status defs per operator for operator status column
-  type OperatorStatusDef = { statusName: string; label: string; columnId: string; duration: number; color: string; source: 'talent' | 'weapon' | 'gear' | 'other'; statusType?: string; stacks?: Record<string, unknown> };
+  type OperatorStatusDef = { statusId: string; label: string; columnId: string; duration: number; color: string; source: 'talent' | 'weapon' | 'gear' | 'other'; statusType?: string; stacks?: Record<string, unknown> };
   const operatorStatusMap = new Map<string, OperatorStatusDef[]>();
   // Pre-scan: collect team-targeting weapon/gear effects
-  type TeamEquipDef = { slotId: string; statusName: string; label: string; durationFrames: number; color: string };
+  type TeamEquipDef = { slotId: string; statusId: string; label: string; durationFrames: number; color: string };
   const teamWeaponGearDefs: TeamEquipDef[] = [];
   // Pre-scan: collect enemy-targeting weapon/gear effects
-  type EnemyEquipDef = { statusName: string; label: string; color: string };
+  type EnemyEquipDef = { statusId: string; label: string; color: string };
   const enemyWeaponGearDefs: EnemyEquipDef[] = [];
 
   for (const s of slots) {
@@ -85,7 +85,7 @@ export function buildColumns(
             ?? se.id.toLowerCase().replace(/_/g, '-');
           const defs = operatorStatusMap.get(s.slotId) ?? [];
           defs.push({
-            statusName: se.id,
+            statusId: se.id,
             label: STATUS_LABELS[se.id as StatusType] ?? se.id,
             columnId: colId,
             duration: durationFrames,
@@ -102,7 +102,7 @@ export function buildColumns(
     // Scan skill frames for APPLY STATUS effects targeting THIS OPERATOR (e.g. Akekuri ult → LINK)
     const skills = getOperatorSkills(s.operator.id);
     if (skills) {
-      const seen = new Set(operatorStatusMap.get(s.slotId)?.map(d => d.statusName) ?? []);
+      const seen = new Set(operatorStatusMap.get(s.slotId)?.map(d => d.statusId) ?? []);
       skills.forEach((skill) => {
         const serialized = skill.serialize() as Record<string, unknown>;
         const segments = (serialized.segments ?? []) as { frames?: { clause?: { effects?: Record<string, unknown>[] }[] }[] }[];
@@ -122,7 +122,7 @@ export function buildColumns(
                   ?? statusId.toLowerCase().replace(/_/g, '-');
                 const defs = operatorStatusMap.get(s.slotId) ?? [];
                 defs.push({
-                  statusName: statusId,
+                  statusId: statusId,
                   label: STATUS_LABELS[statusId as StatusType] ?? statusDef?.name ?? statusId,
                   columnId: colId,
                   duration: 10 * FPS,
@@ -151,7 +151,7 @@ export function buildColumns(
           // Wielder-targeted → operator status micro-column
           const defs = operatorStatusMap.get(s.slotId) ?? [];
           defs.push({
-            statusName: equipId,
+            statusId: equipId,
             label: (se.label as string) ?? equipId,
             columnId: colId,
             duration: durationFrames,
@@ -164,7 +164,7 @@ export function buildColumns(
           // Team-targeted → team weapon/gear column
           teamWeaponGearDefs.push({
             slotId: s.slotId,
-            statusName: equipId,
+            statusId: equipId,
             label: (se.label as string) ?? equipId,
             durationFrames,
             color: s.operator!.color,
@@ -172,7 +172,7 @@ export function buildColumns(
         } else if (se.target === NounType.ENEMY) {
           // Enemy-targeted → enemy status micro-column
           enemyWeaponGearDefs.push({
-            statusName: equipId,
+            statusId: equipId,
             label: (se.label as string) ?? equipId,
             color: s.operator!.color,
           });
@@ -196,6 +196,28 @@ export function buildColumns(
     headerVariant: 'skill',
     noAdd: true,
   });
+  // ── Team-targeted status columns (derived from skill configs) ─────────────
+  // Uses microColumns + matchColumnIds — same architecture as operator/enemy statuses.
+  // Each team status gets its own columnId so overlap/RESET logic works per-status.
+  const allStatuses = getAllOperatorStatuses();
+  const teamStatusMicroCols: MicroColumn[] = [];
+  const teamStatusMatchIds: string[] = [];
+  for (const statusId of Array.from(teamStatusIds ?? [])) {
+    const cfg = allStatuses.find(s => s.id === statusId);
+    const label = STATUS_LABELS[statusId as StatusType] ?? cfg?.name ?? statusId;
+    const durationFrames = cfg ? (cfg.durationSeconds > 0 ? Math.round(cfg.durationSeconds * FPS) : TOTAL_FRAMES) : TOTAL_FRAMES;
+    teamStatusMicroCols.push({
+      id: statusId,
+      label,
+      color: '#66aa88',
+      defaultEvent: {
+        id: statusId,
+        segments: [{ properties: { duration: durationFrames } }],
+        ...(cfg?.stacks ? { stacks: { limit: { value: cfg.maxStacks }, interactionType: cfg.stacks.interactionType } } : {}),
+      },
+    });
+    teamStatusMatchIds.push(statusId);
+  }
   columns.push({
     key: `${COMMON_OWNER_ID}-${COMMON_COLUMN_IDS.TEAM_STATUS}`,
     type: 'mini-timeline',
@@ -205,44 +227,22 @@ export function buildColumns(
     label: ColumnLabel.TEAM_STATUS,
     color: '#66aa88',
     headerVariant: 'skill',
-    noAdd: true,
+    ...(teamStatusMicroCols.length > 0
+      ? { microColumns: teamStatusMicroCols, microColumnAssignment: 'dynamic-split' as const, matchColumnIds: teamStatusMatchIds }
+      : { noAdd: true }),
   });
-
-  // ── Team-targeted status columns (derived from skill configs) ─────────────
-  const allStatuses = getAllOperatorStatuses();
-  for (const statusId of Array.from(teamStatusIds ?? [])) {
-    if (getTeamStatusColumnId(statusId)) continue;
-    const cfg = allStatuses.find(s => s.id === statusId);
-    const label = STATUS_LABELS[statusId as StatusType] ?? cfg?.name ?? statusId;
-    const colId = statusId.toLowerCase().replace(/_/g, '-');
-    const durationFrames = cfg ? (cfg.durationSeconds > 0 ? Math.round(cfg.durationSeconds * FPS) : TOTAL_FRAMES) : TOTAL_FRAMES;
-    columns.push({
-      key: `${COMMON_OWNER_ID}-${colId}`,
-      type: 'mini-timeline',
-      source: TimelineSourceType.COMMON,
-      ownerId: COMMON_OWNER_ID,
-      columnId: statusId,
-      label,
-      color: '#66aa88',
-      headerVariant: 'skill',
-      defaultEvent: {
-        name: statusId,
-        segments: [{ properties: { duration: durationFrames } }],
-      },
-    });
-  }
 
   // ── Shared team weapon/gear effect column ─────────────────────────────────
   const teamGearBuffs = teamWeaponGearDefs;
   if (teamGearBuffs.length > 0) {
     const microCols = teamGearBuffs.map((tgb) => {
-      const id = tgb.statusName.toLowerCase().replace(/_/g, '-');
+      const id = tgb.statusId.toLowerCase().replace(/_/g, '-');
       return {
         id,
         label: tgb.label,
         color: tgb.color,
         defaultEvent: {
-          name: tgb.label,
+          id: tgb.label,
           segments: [{ properties: { duration: tgb.durationFrames } }],
         },
       };
@@ -295,11 +295,11 @@ export function buildColumns(
         headerVariant: 'skill',
         eventVariants: [
           {
-            name: CombatSkillType.DASH,
+            id: CombatSkillType.DASH,
             segments: [{ properties: { duration: DASH_FRAMES } }],
           },
           {
-            name: CombatSkillType.DASH,
+            id: CombatSkillType.DASH,
             isPerfectDodge: true,
             timeInteraction: 'TIME_STOP',
             timeDependency: TimeDependency.REAL_TIME,
@@ -307,7 +307,7 @@ export function buildColumns(
           },
         ],
         defaultEvent: {
-          name: CombatSkillType.DASH,
+          id: CombatSkillType.DASH,
           segments: [{ properties: { duration: DASH_FRAMES } }],
         },
       });
@@ -327,6 +327,7 @@ export function buildColumns(
             headerVariant: 'skill',
             skillElement: skill.element,
             defaultEvent: {
+              id: skill.name,
               name: skill.name,
               segments: skill.defaultSegments,
               triggerCondition: skill.triggerCondition,
@@ -346,6 +347,7 @@ export function buildColumns(
           if (hasBasicVariants && skillType === SKILL_COLUMNS.BASIC && op) {
             const base = SkillSegmentBuilder.buildSegments(getFrameSequences(op.id, skill.name), { ctx: skillCtx });
             col.defaultEvent = {
+              id: skill.name,
               name: skill.name,
               segments: base.segments,
             };
@@ -360,6 +362,7 @@ export function buildColumns(
                 const variantSeg = SkillSegmentBuilder.buildSegments(variantSeqs, { ctx: skillCtx });
                 const enhancementType = suffix === '_ENHANCED' ? EnhancementType.ENHANCED : EnhancementType.EMPOWERED;
                 col.eventVariants!.push({
+                  id: varId,
                   name: varId,
                   displayName: resolveVariantDisplayName(varId, varSkill),
                   enhancementType,
@@ -387,10 +390,12 @@ export function buildColumns(
 
             col.eventVariants!.push(
               {
+                id: CombatSkillType.FINISHER,
                 name: CombatSkillType.FINISHER,
                 segments: finSeg.segments,
               },
               {
+                id: CombatSkillType.DIVE,
                 name: CombatSkillType.DIVE,
                 segments: diveSeg.segments,
               },
@@ -404,6 +409,7 @@ export function buildColumns(
             );
             col.defaultEvent = {
               ...col.defaultEvent!,
+              id: skill.name,
               name: skill.name,
               segments: baseSeg.segments,
               gaugeGain: skill.gaugeGain,
@@ -438,6 +444,7 @@ export function buildColumns(
                 : EnhancementType.ENHANCED; // ENHANCED_EMPOWERED treated as ENHANCED
               col.eventVariants!.push({
                 ...col.defaultEvent!,
+                id: varId,
                 name: varId,
                 displayName: resolveVariantDisplayName(varId, varSkill),
                 enhancementType,
@@ -454,6 +461,7 @@ export function buildColumns(
           if (basicSeqs?.length && skillType === SKILL_COLUMNS.BASIC) {
             const base = SkillSegmentBuilder.buildSegments(basicSeqs, { ctx: skillCtx });
             col.defaultEvent = {
+              id: skill.name,
               name: skill.name,
               segments: base.segments,
             };
@@ -492,10 +500,12 @@ export function buildColumns(
                 : [...empowered.segments, cdSeg];
               col.eventVariants = [
                 {
-                  name: col.defaultEvent!.name!,
+                  id: col.defaultEvent!.id,
+                  name: col.defaultEvent!.name,
                   segments: battleSegments,
                 },
                 {
+                  id: empoweredName,
                   name: empoweredName,
                   displayName: resolveVariantDisplayName(empoweredBattleId, getOperatorSkill(op!.id, empoweredBattleId)?.serialize() ?? {}),
                   segments: empVarSegs,
@@ -542,6 +552,7 @@ export function buildColumns(
                   ...(csCd > 0 ? [{ properties: { segmentTypes: [SegmentType.COOLDOWN, SegmentType.IMMEDIATE_COOLDOWN], duration: csCd, name: 'Cooldown', timeDependency: TimeDependency.REAL_TIME } }] : []),
                 ];
                 col.eventVariants.push({
+                  id: cs.id,
                   name: cs.id,
                   displayName: cs.name,
                   segments: csSegs,
@@ -579,6 +590,7 @@ export function buildColumns(
           microColumnAssignment: 'dynamic-split',
           matchColumnIds: ['tactical'],
           defaultEvent: {
+            id: tactical.name,
             name: tactical.name,
             segments: [{ properties: { duration: TACTICAL_DURATION_FRAMES } }],
           },
@@ -604,6 +616,7 @@ export function buildColumns(
           color: def.color,
           statusType: def.statusType,
           defaultEvent: {
+            id: def.label,
             name: def.label,
             segments: [{ properties: { duration: def.duration } }],
             ...(def.stacks ? { stacks: def.stacks } : {}),
@@ -611,26 +624,27 @@ export function buildColumns(
         });
         matchIds.push(def.columnId);
         // Also match StatusType enum value (e.g. 'SCORCHING_FANGS') used by processStatus.ts
-        if (def.statusName !== def.columnId) matchIds.push(def.statusName);
+        if (def.statusId !== def.columnId) matchIds.push(def.statusId);
       }
       // Team-shared statuses from other operators (e.g. Scorching Fangs shared at P3)
       for (const tsd of teamStatusDefs) {
         const isSource = slot === tsd.sourceSlot;
         if (!isSource) {
-          // Use statusName directly as ID — matches events from processStatus.ts
+          // Use statusId directly as ID — matches events from processStatus.ts
           statusMicroCols.push({
-            id: tsd.statusName,
+            id: tsd.statusId,
             label: tsd.label,
             color: op.color,
             defaultEvent: {
+              id: tsd.label,
               name: tsd.label,
               segments: [{ properties: { duration: tsd.duration } }],
             },
           });
-          matchIds.push(tsd.statusName);
+          matchIds.push(tsd.statusId);
           // Also match kebab-case form used by statusDerivationEngine
-          const kebab = tsd.statusName.toLowerCase().replace(/_/g, '-');
-          if (kebab !== tsd.statusName) matchIds.push(kebab);
+          const kebab = tsd.statusId.toLowerCase().replace(/_/g, '-');
+          if (kebab !== tsd.statusId) matchIds.push(kebab);
         }
       }
       if (statusMicroCols.length > 0) {
@@ -685,6 +699,7 @@ export function buildColumns(
     color: '#cc4444',
     headerVariant: 'skill',
     eventVariants: ENEMY_AOE_ELEMENTS.map(({ element, objectQualifier }) => ({
+      id: `AOE_${objectQualifier}`,
       name: `AOE_${objectQualifier}`,
       displayName: `Deal ${objectQualifier} damage`,
       segments: [{
@@ -721,6 +736,7 @@ export function buildColumns(
       label: 'Stagger (Partial)',
       color: '#dd8844',
       defaultEvent: {
+        id: 'Node Stagger',
         name: 'Node Stagger',
         segments: [{ properties: { duration: 600 } }],
         sourceOwnerId: USER_ID,
@@ -732,6 +748,7 @@ export function buildColumns(
       label: 'Stagger (Full)',
       color: '#ee6633',
       defaultEvent: {
+        id: 'Full Stagger',
         name: 'Full Stagger',
         segments: [{ properties: { duration: 600 } }],
         sourceOwnerId: USER_ID,
@@ -744,6 +761,7 @@ export function buildColumns(
       label: s.label,
       color: s.color,
       defaultEvent: {
+        id: s.id,
         name: s.id,
         segments: [{ properties: { duration: 120 } }],
         sourceOwnerId: USER_ID,
@@ -756,6 +774,7 @@ export function buildColumns(
       label: mc.label,
       color: mc.color,
       defaultEvent: {
+        id: mc.id,
         name: mc.id,
         segments: [{ properties: { duration: 600 } }], // 5s
         sourceOwnerId: USER_ID,
@@ -768,6 +787,7 @@ export function buildColumns(
       label: 'VULN',
       color: '#c0c8d0',
       defaultEvent: {
+        id: 'vulnerableInfliction',
         name: 'vulnerableInfliction',
         segments: [{ properties: { duration: 120 } }],
         sourceOwnerId: USER_ID,
@@ -780,6 +800,7 @@ export function buildColumns(
       label: STATUS_LABELS[StatusType.LIFT],
       color: '#c0c8d0',
       defaultEvent: {
+        id: PHYSICAL_STATUS_COLUMNS.LIFT,
         name: PHYSICAL_STATUS_COLUMNS.LIFT,
         segments: [{ properties: { duration: 120 } }],
         sourceOwnerId: USER_ID,
@@ -791,6 +812,7 @@ export function buildColumns(
       label: STATUS_LABELS[StatusType.KNOCK_DOWN],
       color: '#c0c8d0',
       defaultEvent: {
+        id: PHYSICAL_STATUS_COLUMNS.KNOCK_DOWN,
         name: PHYSICAL_STATUS_COLUMNS.KNOCK_DOWN,
         segments: [{ properties: { duration: 120 } }],
         sourceOwnerId: USER_ID,
@@ -802,6 +824,7 @@ export function buildColumns(
       label: STATUS_LABELS[StatusType.CRUSH],
       color: '#c0c8d0',
       defaultEvent: {
+        id: PHYSICAL_STATUS_COLUMNS.CRUSH,
         name: PHYSICAL_STATUS_COLUMNS.CRUSH,
         segments: [{ properties: { duration: 120 } }],
         sourceOwnerId: USER_ID,
@@ -813,6 +836,7 @@ export function buildColumns(
       label: STATUS_LABELS[StatusType.BREACH],
       color: '#c0c8d0',
       defaultEvent: {
+        id: PHYSICAL_STATUS_COLUMNS.BREACH,
         name: PHYSICAL_STATUS_COLUMNS.BREACH,
         segments: [{ properties: { duration: 1800 } }],
         sourceOwnerId: USER_ID,
@@ -825,6 +849,7 @@ export function buildColumns(
       label: STATUS_LABELS[StatusType.FOCUS],
       color: '#55aadd',
       defaultEvent: {
+        id: StatusType.FOCUS,
         name: StatusType.FOCUS,
         segments: [{ properties: { duration: 7200 } }], // 60s at 120fps (Focus duration)
         sourceOwnerId: USER_ID,
@@ -836,6 +861,7 @@ export function buildColumns(
       label: STATUS_LABELS[StatusType.SUSCEPTIBILITY],
       color: '#cc8866',
       defaultEvent: {
+        id: StatusType.SUSCEPTIBILITY,
         name: StatusType.SUSCEPTIBILITY,
         segments: [{ properties: { duration: 1800 } }], // 15s at 120fps
         sourceOwnerId: USER_ID,
@@ -847,6 +873,7 @@ export function buildColumns(
       label: STATUS_LABELS[StatusType.FRAGILITY],
       color: '#cc6644',
       defaultEvent: {
+        id: StatusType.FRAGILITY,
         name: StatusType.FRAGILITY,
         segments: [{ properties: { duration: 1800 } }], // 15s at 120fps
         sourceOwnerId: USER_ID,
@@ -880,7 +907,7 @@ export function buildColumns(
   // Enemy-targeting weapon/gear effects (deduped against existing micro-column ids)
   const existingEnemyIds = new Set(statusMicroColumns.map((mc) => mc.id));
   for (const d of enemyWeaponGearDefs) {
-    const id = d.statusName.toLowerCase().replace(/_/g, '-');
+    const id = d.statusId.toLowerCase().replace(/_/g, '-');
     if (existingEnemyIds.has(id)) continue;
     existingEnemyIds.add(id);
     statusMicroColumns.push({ id, label: d.label, color: d.color });

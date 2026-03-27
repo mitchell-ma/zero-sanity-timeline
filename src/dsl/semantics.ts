@@ -52,6 +52,16 @@ export enum DeterminerType {
   SOURCE = "SOURCE",
 }
 
+// ── Clause evaluation mode ──────────────────────────────────────────────────
+
+/** How multiple clauses in an onTriggerClause array are evaluated. */
+export enum ClauseEvaluationType {
+  /** Evaluate all clauses — execute each one whose conditions pass. */
+  ALL = "ALL",
+  /** Evaluate in order — execute only the first clause whose conditions pass. */
+  FIRST_MATCH = "FIRST_MATCH",
+}
+
 // ── Noun ────────────────────────────────────────────────────────────────────
 
 /** Nouns — entities, skills, resources, statuses, and states. */
@@ -306,7 +316,7 @@ export const ObjectType = { ...NounType, ...AdjectiveType } as typeof NounType &
  */
 export const VERB_OBJECTS: Partial<Record<VerbType, ObjectType[]>> = {
   [VerbType.APPLY]:      [ObjectType.INFLICTION, ObjectType.REACTION, ObjectType.ARTS_BURST, ObjectType.STATUS, ObjectType.STAGGER, ObjectType.TIME_STOP, ObjectType.EVENT],
-  [VerbType.CONSUME]:    [ObjectType.INFLICTION, ObjectType.REACTION, ObjectType.STATUS, ObjectType.SKILL_POINT, ObjectType.ULTIMATE_ENERGY, ObjectType.COOLDOWN, ObjectType.STAGGER, ObjectType.STACKS],
+  [VerbType.CONSUME]:    [ObjectType.INFLICTION, ObjectType.REACTION, ObjectType.STATUS, ObjectType.SKILL_POINT, ObjectType.ULTIMATE_ENERGY, ObjectType.COOLDOWN, ObjectType.STAGGER, ObjectType.STACKS, ObjectType.EVENT],
   [VerbType.RECOVER]:    [ObjectType.SKILL_POINT, ObjectType.ULTIMATE_ENERGY, ObjectType.HP],
   [VerbType.RETURN]:     [ObjectType.SKILL_POINT],
   [VerbType.DEAL]:       [ObjectType.DAMAGE, ObjectType.STAGGER],

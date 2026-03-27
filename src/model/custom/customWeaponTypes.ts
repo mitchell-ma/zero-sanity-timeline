@@ -5,6 +5,7 @@
 import { WeaponType, ElementType } from '../../consts/enums';
 import type { Interaction } from '../../dsl/semantics';
 import type { StatType } from '../enums';
+import type { CustomStatusEventDef } from './customStatusEventTypes';
 
 /** A user-created custom weapon. */
 export interface CustomWeapon {
@@ -15,6 +16,7 @@ export interface CustomWeapon {
   icon?: string;
   baseAtk: { lv1: number; lv90: number };
   skills: CustomWeaponSkillDef[];
+  statusEvents?: CustomStatusEventDef[];
 }
 
 /** A weapon skill — either a passive stat boost or a triggered named effect. */

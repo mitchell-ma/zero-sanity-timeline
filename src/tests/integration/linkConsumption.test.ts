@@ -20,7 +20,7 @@
 import { renderHook, act } from '@testing-library/react';
 import { useApp } from '../../app/useApp';
 import { SKILL_COLUMNS } from '../../model/channels';
-import { EventStatusType, InteractionModeType } from '../../consts/enums';
+import { EventStatusType, InteractionModeType, StatusType } from '../../consts/enums';
 import { FPS } from '../../utils/timeline';
 import { eventDuration } from '../../consts/viewTypes';
 import type { TimelineEvent, MiniTimeline } from '../../consts/viewTypes';
@@ -47,10 +47,10 @@ let linkIdCounter = 0;
 function linkEvent(startFrame: number, durationFrames: number): TimelineEvent {
   return {
     uid: `link-integ-${linkIdCounter++}`,
-    id: 'team-status',
-    name: 'team-status',
+    id: StatusType.LINK,
+    name: StatusType.LINK,
     ownerId: COMMON_OWNER_ID,
-    columnId: 'team-status',
+    columnId: StatusType.LINK,
     startFrame,
     segments: [{ properties: { duration: durationFrames } }],
     sourceOwnerId: SLOT_LAEVATAIN,
@@ -242,7 +242,7 @@ describe('Link Consumption — Integration', () => {
     const rawBattle = cloneEvent(battleEvents[0]);
 
     const result2 = processCombatSimulation([link, rawBattle]);
-    const linkEvents = result2.filter((ev) => ev.columnId === 'team-status');
+    const linkEvents = result2.filter((ev) => ev.columnId === StatusType.LINK);
     expect(linkEvents).toHaveLength(1);
     expect(linkEvents[0].eventStatus).toBe(EventStatusType.CONSUMED);
     // Link duration should be clamped to battle skill start (3s = 360 frames)

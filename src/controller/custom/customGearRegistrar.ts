@@ -61,10 +61,10 @@ function buildDslDefsFromCustomGearSet(gearSet: CustomGearSet, gearSetType: stri
     const determinerMap: Record<string, string> = { self: 'THIS', team: 'OTHER' };
     const target = targetMap[effect.target] ?? 'OPERATOR';
     const targetDeterminer = determinerMap[effect.target];
-    const statusName = `${originId}_${effect.label.toUpperCase().replace(/[^A-Z0-9]+/g, '_')}`;
+    const statusId = `${originId}_${effect.label.toUpperCase().replace(/[^A-Z0-9]+/g, '_')}`;
 
     defs.push({
-      name: statusName,
+      name: statusId,
       type: 'GEAR_SET_STATUS',
       originId,
       target,

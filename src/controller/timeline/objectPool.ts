@@ -99,7 +99,7 @@ export function allocQueueFrame(): QueueFrame {
   if (!_enablePooling) {
     return {
       frame: 0, priority: 0, type: 'PROCESS_FRAME',
-      statusName: '', columnId: '', ownerId: '',
+      statusId: '', columnId: '', ownerId: '',
       sourceOwnerId: '', sourceSkillName: '',
       maxStacks: 0, durationFrames: 0, operatorSlotId: '',
     };
@@ -109,7 +109,7 @@ export function allocQueueFrame(): QueueFrame {
     qf.frame = 0;
     qf.priority = 0;
     qf.type = 'PROCESS_FRAME';
-    qf.statusName = '';
+    qf.statusId = '';
     qf.columnId = '';
     qf.ownerId = '';
     qf.sourceOwnerId = '';
@@ -130,7 +130,7 @@ export function allocQueueFrame(): QueueFrame {
   }
   const qf: QueueFrame = {
     frame: 0, priority: 0, type: 'PROCESS_FRAME',
-    statusName: '', columnId: '', ownerId: '',
+    statusId: '', columnId: '', ownerId: '',
     sourceOwnerId: '', sourceSkillName: '',
     maxStacks: 0, durationFrames: 0, operatorSlotId: '',
   };

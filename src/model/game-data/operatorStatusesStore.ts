@@ -165,6 +165,7 @@ export class OperatorStatus {
   readonly originId: string;
   readonly dataSources: string[];
   readonly icon?: string;
+  readonly clauseType?: string;
 
   constructor(json: Record<string, unknown>) {
     const props = (json.properties ?? {}) as Record<string, unknown>;
@@ -172,6 +173,7 @@ export class OperatorStatus {
 
     this.clause = (json.clause ?? []) as ClausePredicate[];
     this.onTriggerClause = (json.onTriggerClause ?? []) as TriggerClause[];
+    if (json.clauseType) this.clauseType = json.clauseType as string;
     this.onEntryClause = (json.onEntryClause ?? []) as TriggerClause[];
     this.onExitClause = (json.onExitClause ?? []) as TriggerClause[];
     this.segments = (json.segments ?? []) as StatusSegment[];
@@ -213,6 +215,7 @@ export class OperatorStatus {
   serialize(): Record<string, unknown> {
     return {
       ...(this.clause.length > 0 ? { clause: this.clause } : {}),
+      ...(this.clauseType ? { clauseType: this.clauseType } : {}),
       ...(this.onTriggerClause.length > 0 ? { onTriggerClause: this.onTriggerClause } : {}),
       ...(this.onEntryClause.length > 0 ? { onEntryClause: this.onEntryClause } : {}),
       ...(this.onExitClause.length > 0 ? { onExitClause: this.onExitClause } : {}),

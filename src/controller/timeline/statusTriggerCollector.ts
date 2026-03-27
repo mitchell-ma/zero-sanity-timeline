@@ -18,12 +18,12 @@ import { LoadoutProperties } from '../../view/InformationPane';
 import { evaluateConditions, ConditionContext } from './conditionEvaluator';
 import { executeEffects, applyMutations } from './effectExecutor';
 import type { ExecutionContext } from './effectExecutor';
-import { VerbType } from '../../dsl/semantics';
+import { VerbType, ClauseEvaluationType } from '../../dsl/semantics';
 import { genEventUid } from './inputEventController';
 import type { Interaction, Effect as SemanticEffect, ValueNode } from '../../dsl/semantics';
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT, buildContextForSkillColumn } from '../calculation/valueResolver';
 import type { ValueResolutionContext } from '../calculation/valueResolver';
-import { findClauseTriggerMatches, statusNameToColumnId } from './triggerMatch';
+import { findClauseTriggerMatches, statusIdToColumnId } from './triggerMatch';
 import type { TriggerMatch, TriggerEffect, Predicate } from './triggerMatch';
 
 // ── Types from JSON ─────────────────────────────────────────────────────────
@@ -73,6 +73,8 @@ export interface StatusEventDef {
   onExitClause?: EffectClause[];
   /** Multi-phase segments (e.g. Antal Focus: 20s Focus + 40s Empowered Focus). */
   segments?: StatusSegmentDef[];
+  /** Clause evaluation mode: FIRST_MATCH evaluates clauses in order, fires first match only. */
+  clauseType?: ClauseEvaluationType;
 }
 
 interface TriggerClause {
@@ -487,6 +489,18 @@ function deriveStatusEvents(
   // events on its own — another def (e.g. a talent) handles creation via its own effects.
   const hasAnyEffects = (def.onTriggerClause ?? []).some(c => c.effects && c.effects.length > 0);
   if (!applySubEffect && !hasAnyEffects) return empty;
+  // Non-self-producing statuses (e.g. STEEL_OATH: only CONSUME + APPLY other statuses)
+  // are created by the interpretor's APPLY STATUS effect, not by this collector.
+  // TODO: implement per-clause trigger consumption (CONSUME stacks, APPLY sub-statuses)
+  // without creating parent status instances.
+  if (!applySubEffect && hasAnyEffects) {
+    const selfProducing = (def.onTriggerClause ?? []).some(c =>
+      (c.effects ?? []).some(e =>
+        e.verb === 'APPLY' && e.object === 'STATUS' && (!e.objectId || e.objectId === def.properties.id)
+      )
+    );
+    if (!selfProducing) return empty;
+  }
 
   const applyToDeterminer = directApply?.toDeterminer ?? (nestedApply as unknown as Effect | undefined)?.toDeterminer;
   let outputDef = def;
@@ -503,7 +517,7 @@ function deriveStatusEvents(
     : undefined;
   const statusId = outputDef.properties.id ?? outputDef.properties.name;
   if (!statusId) return empty;
-  const columnId = statusNameToColumnId(statusId);
+  const columnId = statusIdToColumnId(statusId);
   const limitMap = outputDef.properties.stacks?.limit;
   const maxStacks = limitMap ? getMaxStacks(limitMap, ctx.potential) : 1;
 
@@ -546,7 +560,10 @@ function deriveStatusEvents(
       ev.startFrame <= trigger.frame &&
       trigger.frame < eventEndFrame(ev)
     ).length;
-    if (activeAtFrame >= maxStacks) continue;
+    // At capacity: RESET can clamp oldest to make room, others skip
+    if (activeAtFrame >= maxStacks) {
+      if (outputDef.properties.stacks?.interactionType !== 'RESET') continue;
+    }
 
     // Determine how many events to create: 1 normally, N for ALL with CONSUME infliction
     let createCount = 1;
@@ -574,19 +591,20 @@ function deriveStatusEvents(
     for (let ci = 0; ci < createCount; ci++) {
       const evId = `${outputDef.properties.id.toLowerCase()}-${genEventUid()}`;
 
-      // For RESET stacks: clamp previous instances
-      if (outputDef.properties.stacks?.interactionType === 'RESET' && derived.length > 0) {
-        const prev = derived[derived.length - 1];
-        const prevEnd = eventEndFrame(prev);
-        if (trigger.frame < prevEnd) {
-          const clampedPrev = { ...prev, segments: [...prev.segments] };
-          setEventDuration(clampedPrev, trigger.frame - prev.startFrame);
-          derived[derived.length - 1] = {
-            ...clampedPrev,
-            eventStatus: EventStatusType.REFRESHED,
-            eventStatusOwnerId: trigger.sourceOwnerId,
-            eventStatusSkillName: trigger.sourceSkillName,
-          };
+      // RESET overflow: clamp oldest when at capacity
+      if (outputDef.properties.stacks?.interactionType === 'RESET' && activeAtFrame >= maxStacks) {
+        // Find oldest active in derived events
+        const oldestActive = derived.find(d =>
+          d.eventStatus !== EventStatusType.REFRESHED &&
+          d.eventStatus !== EventStatusType.CONSUMED &&
+          d.startFrame <= trigger.frame &&
+          trigger.frame < eventEndFrame(d)
+        );
+        if (oldestActive) {
+          setEventDuration(oldestActive, trigger.frame - oldestActive.startFrame);
+          oldestActive.eventStatus = EventStatusType.REFRESHED;
+          oldestActive.eventStatusOwnerId = trigger.sourceOwnerId;
+          oldestActive.eventStatusSkillName = trigger.sourceSkillName;
         }
       }
 
@@ -714,7 +732,7 @@ function evaluateThresholdClauses(
 
     // Find frames where the stack count crosses the threshold
     const allStatusEvents = [...ctx.events, ...derivedEvents]
-      .filter(ev => ev.columnId === statusNameToColumnId(def.properties.id) && ev.ownerId === resolveOwnerId(def.properties.target, ctx.operatorSlotId, ctx.operatorSlotMap, def.properties.targetDeterminer))
+      .filter(ev => ev.columnId === statusIdToColumnId(def.properties.id) && ev.ownerId === resolveOwnerId(def.properties.target, ctx.operatorSlotId, ctx.operatorSlotMap, def.properties.targetDeterminer))
       .sort((a, b) => a.startFrame - b.startFrame);
 
     for (const ev of allStatusEvents) {
@@ -736,11 +754,11 @@ function evaluateThresholdClauses(
       for (const effect of clause.effects) {
         if (effect.verb === 'APPLY' && effect.object === 'STATUS' && effect.objectId) {
           // Find the target status definition to get its properties
-          const targetStatusName = effect.objectId;
+          const targetStatusId = effect.objectId;
 
           // Look for the target status def in the same operator's statusEvents
           const targetDef = getEnabledDefs(ctx.operatorId)
-            .find(d => d.properties.id === targetStatusName);
+            .find(d => d.properties.id === targetStatusId);
 
           // Resolve owner from the target def's own target field (authoritative),
           // falling back to the clause's to
@@ -755,7 +773,7 @@ function evaluateThresholdClauses(
             ? getDurationFrames(targetDuration)
             : 2400; // fallback 20s
 
-          const targetColumnId = statusNameToColumnId(targetStatusName);
+          const targetColumnId = statusIdToColumnId(targetStatusId);
 
           // Refresh: clamp previous instances of the target status
           if (thresholdDerived.length > 0) {
@@ -774,9 +792,9 @@ function evaluateThresholdClauses(
           }
 
           thresholdDerived.push({
-            uid: `${targetStatusName.toLowerCase()}-${genEventUid()}`,
-            id: targetStatusName,
-            name: targetStatusName,
+            uid: `${targetStatusId.toLowerCase()}-${genEventUid()}`,
+            id: targetStatusId,
+            name: targetStatusId,
             ownerId: targetOwnerId,
             columnId: targetColumnId,
             startFrame: ev.startFrame,
@@ -894,7 +912,7 @@ function evaluateLifecycleClauses(
   if (lifecycleDefs.length === 0) return result;
 
   for (const def of lifecycleDefs) {
-    const columnId = statusNameToColumnId(def.properties.id);
+    const columnId = statusIdToColumnId(def.properties.id);
 
     // Find all status events in the timeline matching this def
     const matchingEvents = result.filter(ev => ev.columnId === columnId && ev.id === def.properties.id);
@@ -997,7 +1015,7 @@ export function deriveStatusesFromEngine(
         const talentDuration = def.properties.duration;
         const talentDurationFrames = talentDuration ? getDurationFrames(talentDuration) : TOTAL_FRAMES;
         const talentOwnerId = resolveOwnerId(def.properties.target, slotId, operatorSlotMap, def.properties.targetDeterminer);
-        const talentColumnId = statusNameToColumnId(def.properties.id);
+        const talentColumnId = statusIdToColumnId(def.properties.id);
         // Only create if not already present
         if (!result.some(ev => ev.columnId === talentColumnId && ev.ownerId === talentOwnerId)) {
           result.push({
@@ -1161,7 +1179,7 @@ export function collectEngineTriggerEntries(
         const talentDuration = def.properties.duration;
         const talentDurationFrames = talentDuration ? getDurationFrames(talentDuration) : TOTAL_FRAMES;
         const talentOwnerId = resolveOwnerId(def.properties.target, slotId, operatorSlotMap, def.properties.targetDeterminer);
-        const talentColumnId = statusNameToColumnId(def.properties.id);
+        const talentColumnId = statusIdToColumnId(def.properties.id);
         if (!events.some(ev => ev.columnId === talentColumnId && ev.ownerId === talentOwnerId)) {
           talentEvents.push({
             uid: `${def.properties.id.toLowerCase()}-talent-${slotId}`,

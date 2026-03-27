@@ -24,7 +24,7 @@ import type { NormalizedEffectDef } from '../gameDataStore';
 import { ENEMY_OWNER_ID, SKILL_COLUMNS, REACTION_COLUMNS, INFLICTION_COLUMNS, PHYSICAL_STATUS_COLUMN_IDS } from '../../model/channels';
 import { COMMON_OWNER_ID } from '../slot/commonSlotController';
 import { TOTAL_FRAMES, FPS } from '../../utils/timeline';
-import { statusNameToColumnId } from './triggerMatch';
+import { statusIdToColumnId } from './triggerMatch';
 import { TimelineEvent, durationSegment } from '../../consts/viewTypes';
 
 // ── Verb-to-column mapping (mirrors triggerMatch.ts SKILL_OBJECT_TO_COLUMN) ──
@@ -71,8 +71,10 @@ export interface TriggerDefEntry {
   secondaryConditions: Predicate[];
   /** HAVE conditions deferred to queue-time evaluation. */
   haveConditions: Predicate[];
-  /** Effects from the first onTriggerClause. */
+  /** Effects from the onTriggerClause. */
   triggerEffects?: TriggerEffect[];
+  /** Clause index within the def's onTriggerClause array (for FIRST_MATCH dedup). */
+  clauseIndex: number;
 }
 
 export interface LifecycleDefEntry {
@@ -194,7 +196,7 @@ function resolveTriggerKey(verb: string, cond: Predicate): string {
   }
   if (verb === 'APPLY' || verb === 'CONSUME' || verb === 'RECEIVE') {
     if (cond.objectId) {
-      const col = statusNameToColumnId(cond.objectId);
+      const col = statusIdToColumnId(cond.objectId);
       return `${verb}:${col}`;
     }
     // INFLICTION with element qualifier → resolve to infliction column
@@ -224,8 +226,14 @@ function resolveCategories(columnId: string): string[] {
   const inflictionColumns = new Set<string>(Object.values(INFLICTION_COLUMNS));
   if (reactionColumns.has(columnId)) categories.push('REACTION');
   if (inflictionColumns.has(columnId)) categories.push('INFLICTION');
-  if (PHYSICAL_STATUS_COLUMN_IDS.has(columnId)) categories.push('STATUS');
-  else if (!reactionColumns.has(columnId) && !inflictionColumns.has(columnId)) categories.push('STATUS');
+  if (PHYSICAL_STATUS_COLUMN_IDS.has(columnId)) {
+    categories.push('STATUS');
+    // PHYSICAL as category — matches triggers with objectId: 'PHYSICAL' (e.g. APPLY STATUS PHYSICAL)
+    // TODO: use enum constant once trigger index keys are refactored to use enums
+    categories.push(statusIdToColumnId('PHYSICAL'));
+  } else if (!reactionColumns.has(columnId) && !inflictionColumns.has(columnId)) {
+    categories.push('STATUS');
+  }
   return categories;
 }
 
@@ -370,7 +378,7 @@ export class TriggerIndex {
         const talentDuration = def.properties.duration;
         const talentDurationFrames = talentDuration ? getDurationFrames(talentDuration) : TOTAL_FRAMES;
         const talentOwnerId = resolveTargetOwnerId(def.properties.target, slotId, opSlotMap, def.properties.targetDeterminer);
-        const talentColumnId = statusNameToColumnId(def.properties.id);
+        const talentColumnId = statusIdToColumnId(def.properties.id);
         // Skip if already exists in registered events
         if (registeredEvents?.some(ev => ev.columnId === talentColumnId && ev.ownerId === talentOwnerId)) continue;
 
@@ -436,7 +444,8 @@ export class TriggerIndex {
       const hasClauseEffects = (def.clause as { effects?: unknown[] }[] | undefined)?.some(c => c.effects && c.effects.length > 0);
       if (!hasEffects && !hasClauseEffects && (def.properties.eventCategoryType ?? def.properties.type) !== 'TALENT') continue;
 
-      for (const clause of def.onTriggerClause) {
+      for (let ci = 0; ci < def.onTriggerClause.length; ci++) {
+        const clause = def.onTriggerClause[ci];
         // Find primary verb (lowest priority)
         let primaryVerb: string | undefined;
         let bestPriority = Infinity;
@@ -496,6 +505,7 @@ export class TriggerIndex {
           secondaryConditions: secondaryConds,
           haveConditions: haveConds,
           triggerEffects: clause.effects,
+          clauseIndex: ci,
         };
 
         const existing = this.index.get(key) ?? [];

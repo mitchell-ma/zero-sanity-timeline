@@ -14,11 +14,11 @@
  */
 import { TimelineEvent, Column, MiniTimeline, EventSegmentData, eventEndFrame } from '../../consts/viewTypes';
 import { TimelineSourceType, ELEMENT_COLORS, ElementType, InteractionModeType, EventStatusType } from '../../consts/enums';
-import { COMBAT_SKILL_LABELS, INFLICTION_EVENT_LABELS } from '../../consts/timelineColumnLabels';
+import { COMBAT_SKILL_LABELS, INFLICTION_EVENT_LABELS, STATUS_LABELS } from '../../consts/timelineColumnLabels';
 import { CombatSkillType } from '../../consts/enums';
 import { SKILL_COLUMNS, COMBO_WINDOW_COLUMN_ID, REACTION_COLUMNS } from '../../model/channels';
 import { formatSegmentShortName } from '../../dsl/semanticsTranslation';
-import { getAllOperatorIds, getEnabledStatusEvents } from '../gameDataStore';
+import { getAllOperatorStatuses } from '../gameDataStore';
 
 import type { Slot } from './columnBuilder';
 import type { ValidationMaps } from './eventValidationController';
@@ -44,31 +44,44 @@ interface StatusStackInfo {
 
 let statusStackCache: Map<string, StatusStackInfo> | null = null;
 
-function getStatusStackInfo(statusName: string): StatusStackInfo | undefined {
+function getStatusStackInfo(statusId: string): StatusStackInfo | undefined {
   if (!statusStackCache) {
     statusStackCache = new Map();
-    for (const opId of getAllOperatorIds()) {
-      const statusEvents = getEnabledStatusEvents(opId);
-      for (const se of statusEvents) {
-        if (!se.id || statusStackCache.has(se.id)) continue;
-        const limit = (se.stacks?.limit as { value?: number } | undefined)?.value ?? 1;
-        const verb = se.stacks?.interactionType ?? 'NONE';
-        statusStackCache.set(se.id, { instances: limit, verb });
-      }
+    for (const se of getAllOperatorStatuses()) {
+      if (!se.id || statusStackCache.has(se.id)) continue;
+      const limit = (se.stacks?.limit as { value?: number } | undefined)?.value ?? 1;
+      const verb = se.stacks?.interactionType ?? 'NONE';
+      const info = { instances: limit, verb };
+      statusStackCache.set(se.id, info);
+      // Also index by kebab-case column ID and display name for freeform event lookup
+      const kebab = se.id.toLowerCase().replace(/_/g, '-');
+      if (kebab !== se.id) statusStackCache.set(kebab, info);
+      if (se.name && se.name !== se.id) statusStackCache.set(se.name, info);
     }
   }
-  return statusStackCache.get(statusName);
+  return statusStackCache.get(statusId);
 }
 
-function isSingleInstanceStatus(statusName: string): boolean {
-  const info = getStatusStackInfo(statusName);
+function isSingleInstanceStatus(statusId: string): boolean {
+  const info = getStatusStackInfo(statusId);
   if (!info) return false;
   return info.instances <= 1 && (info.verb === 'NONE' || info.verb === 'RESET');
 }
 
-function isStackableStatus(statusName: string): boolean {
-  const info = getStatusStackInfo(statusName);
+function isStackableStatus(statusId: string): boolean {
+  const info = getStatusStackInfo(statusId);
   return !!info && info.instances > 1;
+}
+
+/** Returns true if the status has RESET interaction (new instance clamps the previous one). */
+export function isResetStatus(statusId: string): boolean {
+  const info = getStatusStackInfo(statusId);
+  return !!info && info.verb === 'RESET';
+}
+
+/** Returns the stacking mode for a known status, or undefined if not a status. */
+export function getStatusStackingMode(statusId: string): string | undefined {
+  return getStatusStackInfo(statusId)?.verb;
 }
 
 export interface StatusViewOverride {
@@ -112,10 +125,12 @@ export function computeStatusViewOverrides(
       const allSorted = [...typeEvents].sort((a, b) => a.startFrame - b.startFrame || a.uid.localeCompare(b.uid));
       const activeSorted = [...active].sort((a, b) => a.startFrame - b.startFrame || a.uid.localeCompare(b.uid));
       if (allSorted.length === 0) continue;
-      const baseName = INFLICTION_EVENT_LABELS[columnId] ?? INFLICTION_EVENT_LABELS[allSorted[0].name] ?? allSorted[0].name;
+      const baseName = INFLICTION_EVENT_LABELS[columnId] ?? INFLICTION_EVENT_LABELS[allSorted[0].name] ?? STATUS_LABELS[allSorted[0].name] ?? allSorted[0].name;
 
+      const statusInfo = getStatusStackInfo(allSorted[0].name);
       const singleInstance = isSingleInstanceStatus(allSorted[0].name);
       const stackable = isStackableStatus(allSorted[0].name);
+      const stackLimit = statusInfo?.instances;
 
       const hasRecordedStacks = allSorted.some((ev) => ev.stacks != null);
       if (allSorted.length <= 1 && !stackable && !hasRecordedStacks) continue;
@@ -133,6 +148,8 @@ export function computeStatusViewOverrides(
           }
           position = activeEarlier + 1;
         }
+        // Clamp to stack limit — events beyond the cap repeat the max label
+        if (stackLimit != null && position > stackLimit) position = stackLimit;
 
         const override: StatusViewOverride = {
           label: singleInstance ? baseName : `${baseName} ${stackLabel(position)}`,
@@ -238,6 +255,7 @@ export function resolveEventLabel(ev: TimelineEvent): string {
   if (ev.isPerfectDodge) return 'Dodge';
   return COMBAT_SKILL_LABELS[ev.name as CombatSkillType]
     ?? INFLICTION_EVENT_LABELS[ev.name]
+    ?? STATUS_LABELS[ev.name]
     ?? ev.name;
 }
 
@@ -319,7 +337,7 @@ export function computeEventPresentation(
   let allSegmentLabels: string[] | undefined;
   let allDefaultSegments: EventSegmentData[] | undefined;
   if (!isWindow && col.type === 'mini-timeline') {
-    const variantSegs = col.eventVariants?.find((v) => v.name === ev.id)?.segments
+    const variantSegs = col.eventVariants?.find((v) => v.id === ev.id)?.segments
       ?? col.defaultEvent?.segments;
     allSegmentLabels = variantSegs?.map((s) => s.properties.name!);
     allDefaultSegments = variantSegs;
