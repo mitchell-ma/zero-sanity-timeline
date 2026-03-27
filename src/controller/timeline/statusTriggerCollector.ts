@@ -7,7 +7,7 @@
  * queue entry construction.
  */
 import { TimelineEvent, EventSegmentData, eventEndFrame, durationSegment, setEventDuration } from '../../consts/viewTypes';
-import { CritMode, EventStatusType } from '../../consts/enums';
+import { CritMode, EventStatusType, StackInteractionType } from '../../consts/enums';
 import { COMMON_OWNER_ID } from '../slot/commonSlotController';
 import { ENEMY_OWNER_ID, ELEMENT_TO_INFLICTION_COLUMN, REACTION_COLUMNS, SKILL_COLUMNS } from '../../model/channels';
 import { FPS, TOTAL_FRAMES } from '../../utils/timeline';
@@ -382,7 +382,7 @@ function normalizeEquipDef(raw: NormalizedEffectDef): StatusEventDef {
   const limit = (sl?.limit ?? { verb: VerbType.IS, value: 1 }) as ValueNode;
   const stacks: StatusEventDef['properties']['stacks'] = {
     limit,
-    interactionType: (sl as Record<string, unknown>)?.interactionType as string ?? 'NONE',
+    interactionType: (sl as Record<string, unknown>)?.interactionType as string ?? StackInteractionType.NONE,
   };
 
   return {
@@ -562,7 +562,7 @@ function deriveStatusEvents(
     ).length;
     // At capacity: RESET can clamp oldest to make room, others skip
     if (activeAtFrame >= maxStacks) {
-      if (outputDef.properties.stacks?.interactionType !== 'RESET') continue;
+      if (outputDef.properties.stacks?.interactionType !== StackInteractionType.RESET) continue;
     }
 
     // Determine how many events to create: 1 normally, N for ALL with CONSUME infliction
@@ -592,7 +592,7 @@ function deriveStatusEvents(
       const evId = `${outputDef.properties.id.toLowerCase()}-${genEventUid()}`;
 
       // RESET overflow: clamp oldest when at capacity
-      if (outputDef.properties.stacks?.interactionType === 'RESET' && activeAtFrame >= maxStacks) {
+      if (outputDef.properties.stacks?.interactionType === StackInteractionType.RESET && activeAtFrame >= maxStacks) {
         // Find oldest active in derived events
         const oldestActive = derived.find(d =>
           d.eventStatus !== EventStatusType.REFRESHED &&

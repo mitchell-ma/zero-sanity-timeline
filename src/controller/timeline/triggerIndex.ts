@@ -12,6 +12,7 @@
  *
  * Replaces the pre-queue collectEngineTriggerEntries scan.
  */
+import { StackInteractionType } from '../../consts/enums';
 import type { LoadoutProperties } from '../../view/InformationPane';
 import type { StatusEventDef } from './statusTriggerCollector';
 import type { Predicate, TriggerEffect } from './triggerMatch';
@@ -133,7 +134,7 @@ function normalizeEquipDef(raw: NormalizedEffectDef): StatusEventDef {
   const limit = (sl?.limit ?? { verb: VerbType.IS, value: 1 }) as ValueNode;
   const stacks: StatusEventDef['properties']['stacks'] = {
     limit,
-    interactionType: (sl as Record<string, unknown>)?.interactionType as string ?? 'NONE',
+    interactionType: (sl as Record<string, unknown>)?.interactionType as string ?? StackInteractionType.NONE,
   };
   return {
     ...raw,

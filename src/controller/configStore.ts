@@ -10,6 +10,7 @@
 
 import type { EventSegmentData } from '../consts/viewTypes';
 import type { FrameClausePredicate } from '../model/event-frames/skillEventFrame';
+import { StackInteractionType } from '../consts/enums';
 import { VerbType } from '../dsl/semantics';
 import type { Interaction, ValueNode } from '../dsl/semantics';
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from './calculation/valueResolver';
@@ -572,7 +573,7 @@ function normalizeEffectEntry(raw: Record<string, unknown>): NormalizedEffectDef
     originId: raw.originId as string | undefined,
     stacks: {
       limit,
-      interactionType: (sl.interactionType as string) ?? 'NONE',
+      interactionType: (sl.interactionType as string) ?? StackInteractionType.NONE,
     },
     onTriggerClause: (raw.onTriggerClause ?? []) as NormalizedEffectDef['onTriggerClause'],
     ...(raw.clause ? { clause: raw.clause as NormalizedEffectDef['clause'] } : {}),
@@ -892,7 +893,7 @@ function parseStatusEvent(raw: Record<string, unknown>): StatusEventConfig {
     duration: parseDurationFrames(props),
     ...(sl ? {
       stacks: {
-        interactionType: sl.interactionType ?? 'NONE',
+        interactionType: sl.interactionType ?? StackInteractionType.NONE,
         limit: sl.limit ?? { verb: VerbType.IS, value: 1 },
       },
     } : {}),

@@ -5,7 +5,7 @@
  */
 import { registerCustomWeaponEffectDefs, deregisterCustomWeaponEffectDefs, registerCustomWeapon as registerInController, deregisterCustomWeapon as deregisterFromController } from '../gameDataStore';
 import type { CustomWeapon } from '../../model/custom/customWeaponTypes';
-import { UnitType } from '../../consts/enums';
+import { StackInteractionType, UnitType } from '../../consts/enums';
 import { VerbType } from '../../dsl/semantics';
 
 export function registerCustomWeapon(weapon: CustomWeapon): void {
@@ -50,7 +50,7 @@ function buildDslDefsFromCustomWeapon(weapon: CustomWeapon): Record<string, unkn
       stack: {
         max: { P0: ne.maxStacks },
         instances: ne.maxStacks,
-        verb: ne.maxStacks > 1 ? 'NONE' : 'RESET',
+        verb: ne.maxStacks > 1 ? StackInteractionType.NONE : StackInteractionType.RESET,
       },
       onTriggerClause: ne.triggers.map((t) => ({ conditions: [t] })),
       clause: [],

@@ -22,7 +22,7 @@ import type { ValueNode } from '../../dsl/semantics';
 import { resolveValueNode, getSimpleValue, buildContextForSkillColumn } from '../calculation/valueResolver';
 import type { ValueResolutionContext } from '../calculation/valueResolver';
 import { TimelineEvent, eventDuration } from '../../consts/viewTypes';
-import { ElementType, EventFrameType, PhysicalStatusType, UnitType } from '../../consts/enums';
+import { ElementType, EventFrameType, PhysicalStatusType, StackInteractionType, UnitType } from '../../consts/enums';
 import {
   BREACH_DURATION, ENEMY_OWNER_ID, ELEMENT_TO_INFLICTION_COLUMN,
   INFLICTION_COLUMN_IDS, INFLICTION_DURATION,
@@ -881,7 +881,7 @@ export class EventInterpretorController {
     this.controller.createStatus(
       columnId, ENEMY_OWNER_ID, frame, LIFT_KNOCK_DOWN_DURATION, source, {
         statusId,
-        stackingMode: 'RESET',
+        stackingMode: StackInteractionType.RESET,
         maxStacks: 1,
         uid: `${columnId}-${source.ownerId}-${frame}`,
         event: {
@@ -936,7 +936,7 @@ export class EventInterpretorController {
     this.controller.createStatus(
       PHYSICAL_STATUS_COLUMNS.CRUSH, ENEMY_OWNER_ID, frame, LIFT_KNOCK_DOWN_DURATION, source, {
         statusId: PhysicalStatusType.CRUSH,
-        stackingMode: 'RESET',
+        stackingMode: StackInteractionType.RESET,
         maxStacks: 1,
         uid: `${PhysicalStatusType.CRUSH}-${source.ownerId}-${frame}`,
         event: {
@@ -995,7 +995,7 @@ export class EventInterpretorController {
     this.controller.createStatus(
       PHYSICAL_STATUS_COLUMNS.BREACH, ENEMY_OWNER_ID, frame, durationFrames, source, {
         statusId: PhysicalStatusType.BREACH,
-        stackingMode: 'RESET',
+        stackingMode: StackInteractionType.RESET,
         maxStacks: 1,
         uid: `${PhysicalStatusType.BREACH}-${source.ownerId}-${frame}`,
         event: {

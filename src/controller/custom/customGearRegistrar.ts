@@ -1,7 +1,7 @@
 /**
  * Registers/deregisters custom gear sets into the runtime registries.
  */
-import { GearSetType, UnitType } from '../../consts/enums';
+import { GearSetType, StackInteractionType, UnitType } from '../../consts/enums';
 import { GEAR_SET_EFFECTS } from '../../consts/gearSetEffects';
 import type { CustomGearSet } from '../../model/custom/customGearTypes';
 import { VerbType } from '../../dsl/semantics';
@@ -73,7 +73,7 @@ function buildDslDefsFromCustomGearSet(gearSet: CustomGearSet, gearSetType: stri
       stack: {
         max: { P0: effect.maxStacks },
         instances: effect.maxStacks,
-        verb: effect.maxStacks > 1 ? 'NONE' : 'RESET',
+        verb: effect.maxStacks > 1 ? StackInteractionType.NONE : StackInteractionType.RESET,
       },
       onTriggerClause: effect.triggers.map((t) => ({ conditions: [t] })),
       clause: [],

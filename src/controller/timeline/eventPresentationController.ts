@@ -15,7 +15,7 @@
 import { TimelineEvent, Column, MiniTimeline, EventSegmentData, eventEndFrame } from '../../consts/viewTypes';
 import { TimelineSourceType, ELEMENT_COLORS, ElementType, InteractionModeType, EventStatusType } from '../../consts/enums';
 import { COMBAT_SKILL_LABELS, INFLICTION_EVENT_LABELS, STATUS_LABELS } from '../../consts/timelineColumnLabels';
-import { CombatSkillType } from '../../consts/enums';
+import { CombatSkillType, StackInteractionType } from '../../consts/enums';
 import { SKILL_COLUMNS, COMBO_WINDOW_COLUMN_ID, REACTION_COLUMNS } from '../../model/channels';
 import { formatSegmentShortName } from '../../dsl/semanticsTranslation';
 import { getAllOperatorStatuses } from '../gameDataStore';
@@ -50,7 +50,7 @@ function getStatusStackInfo(statusId: string): StatusStackInfo | undefined {
     for (const se of getAllOperatorStatuses()) {
       if (!se.id || statusStackCache.has(se.id)) continue;
       const limit = (se.stacks?.limit as { value?: number } | undefined)?.value ?? 1;
-      const verb = se.stacks?.interactionType ?? 'NONE';
+      const verb = se.stacks?.interactionType ?? StackInteractionType.NONE;
       const info = { instances: limit, verb };
       statusStackCache.set(se.id, info);
       // Also index by kebab-case column ID and display name for freeform event lookup
@@ -65,7 +65,7 @@ function getStatusStackInfo(statusId: string): StatusStackInfo | undefined {
 function isSingleInstanceStatus(statusId: string): boolean {
   const info = getStatusStackInfo(statusId);
   if (!info) return false;
-  return info.instances <= 1 && (info.verb === 'NONE' || info.verb === 'RESET');
+  return info.instances <= 1 && (info.verb === StackInteractionType.NONE || info.verb === StackInteractionType.RESET);
 }
 
 function isStackableStatus(statusId: string): boolean {
@@ -76,7 +76,7 @@ function isStackableStatus(statusId: string): boolean {
 /** Returns true if the status has RESET interaction (new instance clamps the previous one). */
 export function isResetStatus(statusId: string): boolean {
   const info = getStatusStackInfo(statusId);
-  return !!info && info.verb === 'RESET';
+  return !!info && info.verb === StackInteractionType.RESET;
 }
 
 /** Returns the stacking mode for a known status, or undefined if not a status. */

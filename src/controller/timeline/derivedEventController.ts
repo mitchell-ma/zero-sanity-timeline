@@ -230,7 +230,7 @@ export class DerivedEventController {
           if (maxStacks != null && activeCount >= maxStacks) {
             if (stackingMode === StackInteractionType.RESET) {
               this.resetOldest(ev.columnId, ev.ownerId, ev.startFrame, source);
-            } else if (stackingMode === 'NONE') {
+            } else if (stackingMode === StackInteractionType.NONE) {
               continue; // skip — at capacity with no overflow behavior
             }
           }
