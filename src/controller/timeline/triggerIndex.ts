@@ -12,12 +12,12 @@
  *
  * Replaces the pre-queue collectEngineTriggerEntries scan.
  */
-import { StackInteractionType } from '../../consts/enums';
+import { StackInteractionType, EventCategoryType, UnitType } from '../../consts/enums';
 import type { LoadoutProperties } from '../../view/InformationPane';
 import type { StatusEventDef } from './statusTriggerCollector';
 import type { Predicate, TriggerEffect } from './triggerMatch';
 import type { ValueNode } from '../../dsl/semantics';
-import { VerbType } from '../../dsl/semantics';
+import { VerbType, NounType, DeterminerType } from '../../dsl/semantics';
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from '../calculation/valueResolver';
 import { getAllOperatorIds, getSkillIds, getEnabledStatusEvents } from '../gameDataStore';
 import { getWeaponEffectDefs, getGearEffectDefs } from '../gameDataStore';
@@ -103,8 +103,8 @@ export interface TalentDefEntry {
 // ── Priority registry (mirrors triggerMatch.ts) ─────────────────────────────
 
 const VERB_PRIORITIES: Record<string, number> = {
-  PERFORM: 10, APPLY: 20, CONSUME: 25, DEAL: 30, HIT: 35,
-  DEFEAT: 40, RECEIVE: 50, BECOME: 55, RECOVER: 60, HAVE: 70, IS: 80,
+  [VerbType.PERFORM]: 10, [VerbType.APPLY]: 20, [VerbType.CONSUME]: 25, [VerbType.DEAL]: 30, [VerbType.HIT]: 35,
+  [VerbType.DEFEAT]: 40, [VerbType.RECEIVE]: 50, [VerbType.BECOME]: 55, [VerbType.RECOVER]: 60, [VerbType.HAVE]: 70, [VerbType.IS]: 80,
 };
 
 // ── Equip def normalization (mirrors statusTriggerCollector.ts) ─────────────
@@ -120,15 +120,15 @@ function normalizeEquipDef(raw: NormalizedEffectDef): StatusEventDef {
     if (clauses) {
       for (const clause of clauses) {
         for (const effect of clause.effects ?? []) {
-          if (effect.to === 'ENEMY') { target = 'ENEMY'; targetDeterminer = 'THIS'; break; }
-          if (effect.toDeterminer === 'OTHER') { target = 'OPERATOR'; targetDeterminer = 'OTHER'; break; }
-          if (effect.toDeterminer === 'ALL') { target = 'OPERATOR'; targetDeterminer = 'ALL'; break; }
-          if (effect.to === 'OPERATOR') { target = 'OPERATOR'; targetDeterminer = effect.toDeterminer ?? 'THIS'; break; }
+          if (effect.to === NounType.ENEMY) { target = NounType.ENEMY; targetDeterminer = DeterminerType.THIS; break; }
+          if (effect.toDeterminer === DeterminerType.OTHER) { target = NounType.OPERATOR; targetDeterminer = DeterminerType.OTHER; break; }
+          if (effect.toDeterminer === DeterminerType.ALL) { target = NounType.OPERATOR; targetDeterminer = DeterminerType.ALL; break; }
+          if (effect.to === NounType.OPERATOR) { target = NounType.OPERATOR; targetDeterminer = effect.toDeterminer ?? DeterminerType.THIS; break; }
         }
         if (target) break;
       }
     }
-    if (!target) { target = 'OPERATOR'; targetDeterminer = 'THIS'; }
+    if (!target) { target = NounType.OPERATOR; targetDeterminer = DeterminerType.THIS; }
   }
   const sl = raw.stacks ?? (rp?.stacks as NormalizedEffectDef['stacks']);
   const limit = (sl?.limit ?? { verb: VerbType.IS, value: 1 }) as ValueNode;
@@ -159,10 +159,10 @@ function resolveTargetOwnerId(
   operatorSlotMap: Record<string, string>,
   determiner?: string,
 ): string {
-  if (target === 'ENEMY') return ENEMY_OWNER_ID;
-  if (target === 'OPERATOR' || !target) {
-    if (determiner === 'ALL') return COMMON_OWNER_ID;
-    if (determiner === 'OTHER') return COMMON_OWNER_ID;
+  if (target === NounType.ENEMY) return ENEMY_OWNER_ID;
+  if (target === NounType.OPERATOR || !target) {
+    if (determiner === DeterminerType.ALL) return COMMON_OWNER_ID;
+    if (determiner === DeterminerType.OTHER) return COMMON_OWNER_ID;
     return slotId;
   }
   // Named operator (e.g. 'LAEVATAIN') — resolve via slot map
@@ -180,43 +180,43 @@ function getDurationFrames(duration: { value: ValueNode; unit: string }): number
     : typeof raw === 'number' ? raw
     : resolveValueNode(raw, DEFAULT_VALUE_CONTEXT);
   if (val < 0) return TOTAL_FRAMES;
-  if (duration.unit === 'SECOND') return Math.round(val * FPS);
+  if (duration.unit === UnitType.SECOND) return Math.round(val * FPS);
   return val;
 }
 
 /** Resolve primary verb key for indexing: verb + resolved column/object. */
 function resolveTriggerKey(verb: string, cond: Predicate): string {
-  if (verb === 'PERFORM') {
+  if (verb === VerbType.PERFORM) {
     // Frame-level perform actions keep their own key so they are only matched
     // by checkPerformTriggers (not by generic column-level reactive triggers).
-    if (cond.object === 'FINAL_STRIKE' || cond.object === 'FINISHER' || cond.object === 'DIVE_ATTACK') {
-      return `PERFORM:${cond.object}`;
+    if (cond.object === NounType.FINAL_STRIKE || cond.object === NounType.FINISHER || cond.object === NounType.DIVE_ATTACK) {
+      return `${VerbType.PERFORM}:${cond.object}`;
     }
     const col = SKILL_OBJECT_TO_COLUMN[cond.object ?? ''] ?? cond.object;
-    return `PERFORM:${col}`;
+    return `${VerbType.PERFORM}:${col}`;
   }
-  if (verb === 'APPLY' || verb === 'CONSUME' || verb === 'RECEIVE') {
+  if (verb === VerbType.APPLY || verb === VerbType.CONSUME || verb === VerbType.RECEIVE) {
     if (cond.objectId) {
       const col = statusIdToColumnId(cond.objectId);
       return `${verb}:${col}`;
     }
     // INFLICTION with element qualifier → resolve to infliction column
-    if (cond.object === 'INFLICTION' && cond.element) {
+    if (cond.object === NounType.INFLICTION && cond.element) {
       const inflCol = ELEMENT_TO_INFLICTION[cond.element];
       if (inflCol) return `${verb}:${inflCol}`;
     }
     return `${verb}:${cond.object ?? '*'}`;
   }
-  if (verb === 'IS' || verb === 'BECOME') {
+  if (verb === VerbType.IS || verb === VerbType.BECOME) {
     // Map state qualifiers (COMBUSTED) to column IDs (combustion) for matching
     const stateCol = STATE_TO_COLUMN[cond.object ?? ''];
     return `${verb}:${stateCol ?? cond.object ?? '*'}`;
   }
-  if (verb === 'DEAL') return 'DEAL:*';
-  if (verb === 'RECOVER') return `RECOVER:${cond.object ?? '*'}`;
+  if (verb === VerbType.DEAL) return `${VerbType.DEAL}:*`;
+  if (verb === VerbType.RECOVER) return `${VerbType.RECOVER}:${cond.object ?? '*'}`;
   // HIT/DEFEAT: index under the lowercase verb as column ID (user-placed events use 'hit'/'defeat')
-  if (verb === 'HIT') return 'HIT:hit';
-  if (verb === 'DEFEAT') return 'DEFEAT:defeat';
+  if (verb === VerbType.HIT) return `${VerbType.HIT}:hit`;
+  if (verb === VerbType.DEFEAT) return `${VerbType.DEFEAT}:defeat`;
   return `${verb}:${cond.object ?? '*'}`;
 }
 
@@ -225,15 +225,14 @@ function resolveCategories(columnId: string): string[] {
   const categories: string[] = [];
   const reactionColumns = new Set<string>(Object.values(REACTION_COLUMNS));
   const inflictionColumns = new Set<string>(Object.values(INFLICTION_COLUMNS));
-  if (reactionColumns.has(columnId)) categories.push('REACTION');
-  if (inflictionColumns.has(columnId)) categories.push('INFLICTION');
+  if (reactionColumns.has(columnId)) categories.push(NounType.REACTION);
+  if (inflictionColumns.has(columnId)) categories.push(NounType.INFLICTION);
   if (PHYSICAL_STATUS_COLUMN_IDS.has(columnId)) {
-    categories.push('STATUS');
+    categories.push(NounType.STATUS);
     // PHYSICAL as category — matches triggers with objectId: 'PHYSICAL' (e.g. APPLY STATUS PHYSICAL)
-    // TODO: use enum constant once trigger index keys are refactored to use enums
     categories.push(statusIdToColumnId('PHYSICAL'));
   } else if (!reactionColumns.has(columnId) && !inflictionColumns.has(columnId)) {
-    categories.push('STATUS');
+    categories.push(NounType.STATUS);
   }
   return categories;
 }
@@ -375,7 +374,7 @@ export class TriggerIndex {
 
     for (const def of defs) {
       // ── Talent defs ──────────────────────────────────────────────────
-      if ((def.properties.eventCategoryType ?? def.properties.type) === 'TALENT') {
+      if ((def.properties.eventCategoryType ?? def.properties.type) === EventCategoryType.TALENT) {
         const talentDuration = def.properties.duration;
         const talentDurationFrames = talentDuration ? getDurationFrames(talentDuration) : TOTAL_FRAMES;
         const talentOwnerId = resolveTargetOwnerId(def.properties.target, slotId, opSlotMap, def.properties.targetDeterminer);
@@ -407,7 +406,7 @@ export class TriggerIndex {
           const clause = c as any;
           const conditions = clause.conditions ?? [];
           const effects = clause.effects ?? [];
-          const haveConds = conditions.filter((p: { verb?: string }) => p.verb === 'HAVE');
+          const haveConds = conditions.filter((p: { verb?: string }) => p.verb === VerbType.HAVE);
           if (haveConds.length > 0 && effects.length > 0) {
             // Resolve abstract STACKS → concrete STATUS conditions
             const maxStacks = def.properties.stacks?.limit
@@ -415,12 +414,12 @@ export class TriggerIndex {
               : 1;
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const resolvedConds = haveConds.map((cond: any) => {
-              if (cond.object === 'STACKS') {
+              if (cond.object === NounType.STACKS) {
                 return {
                   ...cond,
-                  object: 'STATUS',
+                  object: NounType.STATUS,
                   objectId: def.properties.id,
-                  value: cond.value === 'MAX' ? { verb: 'IS', value: maxStacks } : cond.value,
+                  value: cond.value === 'MAX' ? { verb: VerbType.IS, value: maxStacks } : cond.value,
                 };
               }
               return cond;
@@ -443,7 +442,7 @@ export class TriggerIndex {
 
       const hasEffects = def.onTriggerClause.some(c => c.effects && c.effects.length > 0);
       const hasClauseEffects = (def.clause as { effects?: unknown[] }[] | undefined)?.some(c => c.effects && c.effects.length > 0);
-      if (!hasEffects && !hasClauseEffects && (def.properties.eventCategoryType ?? def.properties.type) !== 'TALENT') continue;
+      if (!hasEffects && !hasClauseEffects && (def.properties.eventCategoryType ?? def.properties.type) !== EventCategoryType.TALENT) continue;
 
       for (let ci = 0; ci < def.onTriggerClause.length; ci++) {
         const clause = def.onTriggerClause[ci];
@@ -461,7 +460,7 @@ export class TriggerIndex {
 
         let primaryCond = clause.conditions.find(c => c.verb === primaryVerb)!;
         const rawDeferredConds = clause.conditions.filter((c: Predicate) =>
-          c.verb === 'HAVE' || (c.verb === 'BECOME' && c.object === 'STACKS'),
+          c.verb === VerbType.HAVE || (c.verb === VerbType.BECOME && c.object === NounType.STACKS),
         );
         const secondaryConds = clause.conditions.filter(c =>
           c !== primaryCond && !rawDeferredConds.includes(c),
@@ -473,12 +472,12 @@ export class TriggerIndex {
           : 1;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const haveConds = rawDeferredConds.map((cond: any) => {
-          if (cond.object === 'STACKS') {
+          if (cond.object === NounType.STACKS) {
             return {
               ...cond,
-              object: 'STATUS',
+              object: NounType.STATUS,
               objectId: def.properties.id,
-              value: cond.value === 'MAX' ? { verb: 'IS', value: maxStacks } : cond.value,
+              value: cond.value === 'MAX' ? { verb: VerbType.IS, value: maxStacks } : cond.value,
             };
           }
           return cond;
@@ -487,9 +486,9 @@ export class TriggerIndex {
         // BECOME STACKS is self-referential: index under APPLY:{self-column} so it
         // fires when this status receives a new stack. The BECOME condition is deferred
         // to evaluation time for transition semantics (prev count ≠ current count).
-        if (primaryVerb === 'BECOME' && primaryCond.object === 'STACKS') {
-          primaryVerb = 'APPLY';
-          primaryCond = { verb: 'APPLY', object: 'STATUS', objectId: def.properties.id } as Predicate;
+        if (primaryVerb === VerbType.BECOME && primaryCond.object === NounType.STACKS) {
+          primaryVerb = VerbType.APPLY;
+          primaryCond = { verb: VerbType.APPLY, object: NounType.STATUS, objectId: def.properties.id } as Predicate;
         }
 
         const key = resolveTriggerKey(primaryVerb, primaryCond);

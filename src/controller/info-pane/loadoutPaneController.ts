@@ -1,4 +1,4 @@
-import { StatType, StatOwnerType, STAT_ATTRIBUTION } from '../../consts/enums';
+import { CombatSkillType, StatType, StatOwnerType, STAT_ATTRIBUTION } from '../../consts/enums';
 import { OperatorLoadoutState } from '../../view/OperatorLoadoutHeader';
 import { LoadoutProperties } from '../../view/InformationPane';
 import { DataDrivenOperator } from '../../model/operators/dataDrivenOperator';
@@ -17,7 +17,8 @@ import { getSkillTypeMap, getRawSkillTypeMap, getComboTriggerInfo, getOperatorSk
 import { getUltimateEnergyCost, getUltimateEnergyCostForPotential } from '../operators/operatorRegistry';
 import type { Potential } from '../../consts/types';
 import type { SkillType } from '../../consts/viewTypes';
-import { VerbType } from '../../dsl/semantics';
+import { NounType, VerbType } from '../../dsl/semantics';
+import { resolveEffectStat } from '../../model/enums/stats';
 import type { Clause } from '../../dsl/semantics';
 
 // ── Stat display helpers (shared with view) ─────────────────────────────────
@@ -152,7 +153,7 @@ export function resolveWeaponBreakdown(
             .flatMap(c => c.effects);
           for (const ef of conditionalEffects) {
             const wv = ef.with?.multiplier ?? ef.with?.value;
-            if ((wv as { value?: unknown })?.value != null && (ef.object.endsWith('_DAMAGE_BONUS') || ef.object === 'BASIC_ATTACK_DAMAGE_BONUS')) {
+            if ((wv as { value?: unknown })?.value != null && ef.object === NounType.STAT && ef.objectId === NounType.DAMAGE_BONUS) {
               // Skip — these are shown as triggered effect buffs, not secondary attr
             }
           }
@@ -161,11 +162,11 @@ export function resolveWeaponBreakdown(
 
       // Buff lines — extracted from clause effects (APPLY verb with stat object)
       const stackSuffix = maxStacks > 1 ? `/stack (max ${maxStacks})` : '';
-      interface EffectClause { verb: string; object: string; with?: { value?: { verb?: string; object?: string; value?: number; valueMin?: number; valueMax?: number } } }
+      interface EffectClause { verb: string; object: string; objectId?: string; objectQualifier?: string; with?: { value?: { verb?: string; object?: string; value?: number; valueMin?: number; valueMax?: number } } }
       const clauseEffects: EffectClause[] = (def.clause ?? []).flatMap((c) => (c.effects ?? []) as unknown as EffectClause[])
-        .filter((e) => e.verb === 'APPLY' && e.with?.value);
+        .filter((e) => e.verb === VerbType.APPLY && e.with?.value);
       const buffs: WeaponEffectBuff[] = clauseEffects.map((e) => {
-        const stat = e.object;
+        const stat = resolveEffectStat(e) ?? e.object;
         const wv = e.with!.value!;
         const isPercent = PERCENT_STATS.has(stat as StatType);
         const perStack = wv.verb === VerbType.VARY_BY && wv.object === 'STATUS_LEVEL';
@@ -448,10 +449,10 @@ export interface UltimateEnergyDisplay {
 }
 
 const SKILL_TYPE_TO_JSON_KEY: Record<SkillType, string> = {
-  basic: 'BASIC_ATTACK',
-  battle: 'BATTLE_SKILL',
-  combo: 'COMBO_SKILL',
-  ultimate: 'ULTIMATE',
+  basic: CombatSkillType.BASIC_ATTACK,
+  battle: CombatSkillType.BATTLE_SKILL,
+  combo: CombatSkillType.COMBO_SKILL,
+  ultimate: CombatSkillType.ULTIMATE,
 };
 
 /**
@@ -541,7 +542,7 @@ const BATK_VARIANT_LABELS: Record<string, string> = {
  */
 export function resolveSubSkills(operatorId: string, skillType: SkillType): SubSkillDetail[] {
   const rawMap = getRawSkillTypeMap(operatorId);
-  const jsonKey = ({ basic: 'BASIC_ATTACK', battle: 'BATTLE_SKILL', combo: 'COMBO_SKILL', ultimate: 'ULTIMATE' } as const)[skillType];
+  const jsonKey = ({ basic: CombatSkillType.BASIC_ATTACK, battle: CombatSkillType.BATTLE_SKILL, combo: CombatSkillType.COMBO_SKILL, ultimate: CombatSkillType.ULTIMATE } as const)[skillType];
   const mapping = rawMap[jsonKey];
   if (!mapping) return [];
 
@@ -605,7 +606,7 @@ function resolveSkillDetailForId(operatorId: string, skillId: string, potential:
 /** Resolve the clause data for a skill type (top-level clause, not per-segment). */
 export function resolveSkillClause(operatorId: string, skillType: SkillType): Clause {
   const typeMap = getSkillTypeMap(operatorId);
-  const jsonKey = ({ basic: 'BASIC_ATTACK', battle: 'BATTLE_SKILL', combo: 'COMBO_SKILL', ultimate: 'ULTIMATE' } as const)[skillType];
+  const jsonKey = ({ basic: CombatSkillType.BASIC_ATTACK, battle: CombatSkillType.BATTLE_SKILL, combo: CombatSkillType.COMBO_SKILL, ultimate: CombatSkillType.ULTIMATE } as const)[skillType];
   const skillId = typeMap[jsonKey];
   if (!skillId) return [];
   const skill = getOperatorSkill(operatorId, skillId);

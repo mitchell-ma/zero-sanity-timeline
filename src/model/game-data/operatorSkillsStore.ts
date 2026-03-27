@@ -7,7 +7,7 @@
  */
 import { EventType, EventCategoryType } from '../../consts/enums';
 import type { Interaction, ValueNode } from '../../dsl/semantics';
-import { checkKeys, warnMissingEffectTarget } from './validationUtils';
+import { checkKeys, validateEffect } from './validationUtils';
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -63,7 +63,7 @@ export function validateOperatorSkill(json: Record<string, unknown>, skillId: st
       const effects = clause.effects as Record<string, unknown>[] | undefined;
       if (!Array.isArray(effects)) continue;
       for (let ei = 0; ei < effects.length; ei++) {
-        errors.push(...warnMissingEffectTarget(effects[ei], `${clausePath}[${ci}].effects[${ei}]`));
+        errors.push(...validateEffect(effects[ei], `${clausePath}[${ci}].effects[${ei}]`));
       }
     }
   };

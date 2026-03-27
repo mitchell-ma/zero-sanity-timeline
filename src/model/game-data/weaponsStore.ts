@@ -5,6 +5,8 @@
  * Auto-discovers weapons/weapon-pieces/*.json via require.context.
  */
 import type { ClausePredicate } from './weaponStatusesStore';
+import { VerbType } from '../../dsl/semantics';
+import { MainStatType } from '../../consts/enums';
 import { checkKeys, VALID_VALUE_NODE_KEYS, VALID_CLAUSE_KEYS } from './validationUtils';
 
 // ── Validation ──────────────────────────────────────────────────────────────
@@ -101,7 +103,7 @@ export class Weapon {
   get baseAttackValues(): number[] {
     for (const clause of this.clause) {
       for (const ef of clause.effects) {
-        if (ef.verb === 'APPLY' && ef.object === 'BASE_ATTACK') {
+        if (ef.verb === VerbType.APPLY && ef.object === MainStatType.BASE_ATTACK) {
           const wv = (ef.with as Record<string, unknown>)?.value as { value?: number | number[] } | undefined;
           const v = wv?.value;
           return v == null ? [] : Array.isArray(v) ? v : [v];

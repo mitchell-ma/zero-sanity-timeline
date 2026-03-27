@@ -16,7 +16,7 @@ import { createCustomGearEffect, updateCustomGearEffect } from './controller/cus
 import { createCustomOperatorStatus, updateCustomOperatorStatus } from './controller/custom/customOperatorStatusController';
 import { createCustomOperatorTalent, updateCustomOperatorTalent } from './controller/custom/customOperatorTalentController';
 import { addSkillLink } from './controller/custom/customSkillLinkController';
-import { InteractionModeType, CombatSkillType, InfoLevel } from './consts/enums';
+import { InteractionModeType, CombatSkillType, InfoLevel, InfoPaneMode, SidebarMode as SidebarModeEnum } from './consts/enums';
 import { VerbType } from './dsl/semantics';
 import { getAnimationDuration, eventDuration } from './consts/viewTypes';
 import type { SkillType } from './consts/viewTypes';
@@ -60,12 +60,12 @@ function loadUiState(): UiState {
       if (parsed && typeof parsed === 'object') {
         const mode = parsed.sidebarMode;
         return {
-          sidebarMode: mode === 'workbench' ? 'workbench' : 'loadouts',
+          sidebarMode: mode === SidebarModeEnum.WORKBENCH ? SidebarModeEnum.WORKBENCH : SidebarModeEnum.LOADOUTS,
         };
       }
     }
   } catch { /* ignore */ }
-  return { sidebarMode: 'loadouts' };
+  return { sidebarMode: SidebarModeEnum.LOADOUTS };
 }
 
 function saveUiState(state: UiState): void {
@@ -78,7 +78,7 @@ export default function App() {
   const app = useApp();
   const [expandAnim, setExpandAnim] = useState(false);
   const [sidebarMode, setSidebarMode] = useState<SidebarMode>(() => loadUiState().sidebarMode);
-  const [workbenchOpen, setWorkbenchOpen] = useState(() => loadUiState().sidebarMode === 'workbench');
+  const [workbenchOpen, setWorkbenchOpen] = useState(() => loadUiState().sidebarMode === SidebarModeEnum.WORKBENCH);
   const [workbenchInitial, setWorkbenchInitial] = useState<{ entityType: ContentCategory; data: CustomContentData } | undefined>();
   const [contentRefreshKey, setContentRefreshKey] = useState(0);
   const bumpContentRefresh = useCallback(() => setContentRefreshKey((k) => k + 1), []);
@@ -195,7 +195,7 @@ export default function App() {
         onKeys={() => app.setKeysOpen((p) => !p)}
         onCustomContent={() => {
           setWorkbenchOpen(true);
-          setSidebarMode('workbench');
+          setSidebarMode(SidebarModeEnum.WORKBENCH);
         }}
         onExprEditor={() => app.setExprEditorOpen(true)}
         interactionMode={app.interactionMode}
@@ -219,23 +219,23 @@ export default function App() {
           sidebarMode={sidebarMode}
           onSidebarModeChange={(mode) => {
             setSidebarMode(mode);
-            if (mode === 'loadouts') {
+            if (mode === SidebarModeEnum.LOADOUTS) {
               setWorkbenchOpen(false);
-            } else if (mode === 'workbench') {
+            } else if (mode === SidebarModeEnum.WORKBENCH) {
               setWorkbenchOpen(true);
               if (!workbenchInitial) setWorkbenchInitial(undefined);
             }
           }}
         />
 
-        {workbenchOpen && sidebarMode === 'workbench' ? (
+        {workbenchOpen && sidebarMode === SidebarModeEnum.WORKBENCH ? (
           <Suspense fallback={<div className="tl-loading" style={{ flex: 1 }} />}>
             <UnifiedCustomizer
               initial={workbenchInitial}
               onSave={handleWorkbenchSave}
               onCancel={() => {
                 setWorkbenchOpen(false);
-                setSidebarMode('loadouts');
+                setSidebarMode(SidebarModeEnum.LOADOUTS);
               }}
               onContentChanged={bumpContentRefresh}
               contentRefreshKey={contentRefreshKey}
@@ -432,7 +432,7 @@ export default function App() {
       <Suspense fallback={null}>
         {app.editingEvent ? (
           <InformationPane
-            mode="event"
+            mode={InfoPaneMode.EVENT}
             event={app.editingEvent}
             processedEvent={app.processedEditingEvent ?? undefined}
             operators={app.allOperators}
@@ -461,7 +461,7 @@ export default function App() {
           />
         ) : app.editingSlot && app.editingSlot.operator ? (
           <InformationPane
-            mode="loadout"
+            mode={InfoPaneMode.LOADOUT}
             operatorId={app.editingSlot.operator.id}
             slotId={app.editingSlot.slotId}
             operator={app.editingSlot.operator}
@@ -481,7 +481,7 @@ export default function App() {
           />
         ) : app.editingEnemyOpen ? (
           <InformationPane
-            mode="enemy"
+            mode={InfoPaneMode.ENEMY}
             enemy={app.enemy}
             enemyStats={app.enemyStats}
             onEnemyStatsChange={app.handleEnemyStatsChange}
@@ -494,7 +494,7 @@ export default function App() {
           />
         ) : app.editingResourceCol && app.editingResourceConfig ? (
           <InformationPane
-            mode="resource"
+            mode={InfoPaneMode.RESOURCE}
             label={app.editingResourceCol.label}
             color={app.editingResourceCol.color}
             config={app.editingResourceConfig}

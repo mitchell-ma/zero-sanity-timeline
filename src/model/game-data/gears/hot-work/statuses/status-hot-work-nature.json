@@ -5,7 +5,7 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "NATURE_DAMAGE_BONUS",
+          "object": "STAT",
           "with": {
             "value": {
               "verb": "IS",
@@ -13,7 +13,9 @@
             }
           },
           "toDeterminer": "THIS",
-          "to": "OPERATOR"
+          "to": "OPERATOR",
+          "objectId": "DAMAGE_BONUS",
+          "objectQualifier": "NATURE"
         }
       ]
     }

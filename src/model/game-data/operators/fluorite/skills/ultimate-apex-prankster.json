@@ -16,18 +16,25 @@
           "object": "ULTIMATE_ENERGY",
           "with": {
             "value": {
-              "verb": "VARY_BY",
-              "object": "POTENTIAL",
-              "value": [
-                100,
-                100,
-                100,
-                100,
-                90,
-                90
-              ],
-              "ofDeterminer": "THIS",
-              "of": "OPERATOR"
+              "operation": "MULT",
+              "left": {
+                "verb": "IS",
+                "value": 100
+              },
+              "right": {
+                "verb": "VARY_BY",
+                "object": "POTENTIAL",
+                "value": [
+                  1,
+                  1,
+                  1,
+                  1,
+                  0.9,
+                  0.9
+                ],
+                "ofDeterminer": "THIS",
+                "of": "OPERATOR"
+              }
             }
           }
         }

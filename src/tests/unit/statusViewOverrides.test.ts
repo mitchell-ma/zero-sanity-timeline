@@ -54,13 +54,13 @@ function statusColumn(ownerId: string, microColumnIds: string[]): Column {
 
 describe('computeStatusViewOverrides', () => {
   describe('multi-instance statuses (Melting Flame, instances=4)', () => {
-    const col = statusColumn('slot1', ['melting-flame', 'MELTING_FLAME']);
+    const col = statusColumn('slot1', ['MELTING_FLAME']);
 
     it('adds roman numeral suffixes to overlapping events', () => {
       const events = [
-        statusEvent('mf1', 'melting-flame', 'MELTING_FLAME', 'slot1', 0, 10 * FPS),
-        statusEvent('mf2', 'melting-flame', 'MELTING_FLAME', 'slot1', 2 * FPS, 10 * FPS),
-        statusEvent('mf3', 'melting-flame', 'MELTING_FLAME', 'slot1', 4 * FPS, 10 * FPS),
+        statusEvent('mf1', 'MELTING_FLAME', 'MELTING_FLAME', 'slot1', 0, 10 * FPS),
+        statusEvent('mf2', 'MELTING_FLAME', 'MELTING_FLAME', 'slot1', 2 * FPS, 10 * FPS),
+        statusEvent('mf3', 'MELTING_FLAME', 'MELTING_FLAME', 'slot1', 4 * FPS, 10 * FPS),
       ];
       const overrides = computeStatusViewOverrides(events, [col]);
 
@@ -71,8 +71,8 @@ describe('computeStatusViewOverrides', () => {
 
     it('truncates earlier events where next starts', () => {
       const events = [
-        statusEvent('mf1', 'melting-flame', 'MELTING_FLAME', 'slot1', 0, 10 * FPS),
-        statusEvent('mf2', 'melting-flame', 'MELTING_FLAME', 'slot1', 3 * FPS, 10 * FPS),
+        statusEvent('mf1', 'MELTING_FLAME', 'MELTING_FLAME', 'slot1', 0, 10 * FPS),
+        statusEvent('mf2', 'MELTING_FLAME', 'MELTING_FLAME', 'slot1', 3 * FPS, 10 * FPS),
       ];
       const overrides = computeStatusViewOverrides(events, [col]);
 
@@ -84,12 +84,12 @@ describe('computeStatusViewOverrides', () => {
   });
 
   describe('single-instance statuses with RESET (Scorching Heart)', () => {
-    const col = statusColumn('slot1', ['scorching-heart-effect', 'SCORCHING_HEART_EFFECT']);
+    const col = statusColumn('slot1', ['SCORCHING_HEART_EFFECT']);
 
     it('omits roman numeral suffixes for overlapping events', () => {
       const events = [
-        statusEvent('sh1', 'scorching-heart-effect', 'SCORCHING_HEART_EFFECT', 'slot1', 0, 20 * FPS),
-        statusEvent('sh2', 'scorching-heart-effect', 'SCORCHING_HEART_EFFECT', 'slot1', 5 * FPS, 20 * FPS),
+        statusEvent('sh1', 'SCORCHING_HEART_EFFECT', 'SCORCHING_HEART_EFFECT', 'slot1', 0, 20 * FPS),
+        statusEvent('sh2', 'SCORCHING_HEART_EFFECT', 'SCORCHING_HEART_EFFECT', 'slot1', 5 * FPS, 20 * FPS),
       ];
       const overrides = computeStatusViewOverrides(events, [col]);
 
@@ -104,8 +104,8 @@ describe('computeStatusViewOverrides', () => {
 
     it('still truncates overlapping events visually', () => {
       const events = [
-        statusEvent('sh1', 'scorching-heart-effect', 'SCORCHING_HEART_EFFECT', 'slot1', 0, 20 * FPS),
-        statusEvent('sh2', 'scorching-heart-effect', 'SCORCHING_HEART_EFFECT', 'slot1', 5 * FPS, 20 * FPS),
+        statusEvent('sh1', 'SCORCHING_HEART_EFFECT', 'SCORCHING_HEART_EFFECT', 'slot1', 0, 20 * FPS),
+        statusEvent('sh2', 'SCORCHING_HEART_EFFECT', 'SCORCHING_HEART_EFFECT', 'slot1', 5 * FPS, 20 * FPS),
       ];
       const overrides = computeStatusViewOverrides(events, [col]);
 
@@ -132,9 +132,9 @@ describe('computeStatusViewOverrides', () => {
 
   describe('single events are not overridden', () => {
     it('single stackable status event still gets roman numeral', () => {
-      const col = statusColumn('slot1', ['melting-flame', 'MELTING_FLAME']);
+      const col = statusColumn('slot1', ['MELTING_FLAME']);
       const events = [
-        statusEvent('mf1', 'melting-flame', 'MELTING_FLAME', 'slot1', 0, 10 * FPS),
+        statusEvent('mf1', 'MELTING_FLAME', 'MELTING_FLAME', 'slot1', 0, 10 * FPS),
       ];
       const overrides = computeStatusViewOverrides(events, [col]);
 
@@ -143,9 +143,9 @@ describe('computeStatusViewOverrides', () => {
     });
 
     it('no overrides for a single RESET status event', () => {
-      const col = statusColumn('slot1', ['scorching-heart-effect', 'SCORCHING_HEART_EFFECT']);
+      const col = statusColumn('slot1', ['SCORCHING_HEART_EFFECT']);
       const events = [
-        statusEvent('sh1', 'scorching-heart-effect', 'SCORCHING_HEART_EFFECT', 'slot1', 0, 20 * FPS),
+        statusEvent('sh1', 'SCORCHING_HEART_EFFECT', 'SCORCHING_HEART_EFFECT', 'slot1', 0, 20 * FPS),
       ];
       const overrides = computeStatusViewOverrides(events, [col]);
 
@@ -154,12 +154,12 @@ describe('computeStatusViewOverrides', () => {
   });
 
   describe('non-overlapping multi-instance events still get numerals', () => {
-    const col = statusColumn('slot1', ['melting-flame', 'MELTING_FLAME']);
+    const col = statusColumn('slot1', ['MELTING_FLAME']);
 
     it('sequential non-overlapping events get position-based numerals', () => {
       const events = [
-        statusEvent('mf1', 'melting-flame', 'MELTING_FLAME', 'slot1', 0, 2 * FPS),
-        statusEvent('mf2', 'melting-flame', 'MELTING_FLAME', 'slot1', 5 * FPS, 2 * FPS),
+        statusEvent('mf1', 'MELTING_FLAME', 'MELTING_FLAME', 'slot1', 0, 2 * FPS),
+        statusEvent('mf2', 'MELTING_FLAME', 'MELTING_FLAME', 'slot1', 5 * FPS, 2 * FPS),
       ];
       const overrides = computeStatusViewOverrides(events, [col]);
 
@@ -173,11 +173,11 @@ describe('computeStatusViewOverrides', () => {
 
   describe('events from different owners are independent', () => {
     it('does not cross-contaminate between slots', () => {
-      const col1 = statusColumn('slot1', ['melting-flame', 'MELTING_FLAME']);
+      const col1 = statusColumn('slot1', ['MELTING_FLAME']);
       const col2 = statusColumn('slot2', ['focus', 'FOCUS']);
       const events = [
-        statusEvent('mf1', 'melting-flame', 'MELTING_FLAME', 'slot1', 0, 10 * FPS),
-        statusEvent('mf2', 'melting-flame', 'MELTING_FLAME', 'slot1', 2 * FPS, 10 * FPS),
+        statusEvent('mf1', 'MELTING_FLAME', 'MELTING_FLAME', 'slot1', 0, 10 * FPS),
+        statusEvent('mf2', 'MELTING_FLAME', 'MELTING_FLAME', 'slot1', 2 * FPS, 10 * FPS),
         statusEvent('f1', 'focus', 'FOCUS', 'slot2', 0, 20 * FPS),
         statusEvent('f2', 'focus', 'FOCUS', 'slot2', 10 * FPS, 20 * FPS),
       ];

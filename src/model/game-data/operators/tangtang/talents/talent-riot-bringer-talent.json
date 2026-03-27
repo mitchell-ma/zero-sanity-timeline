@@ -15,14 +15,17 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "DAMAGE_BONUS",
+          "object": "STAT",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
             "value": {
               "verb": "VARY_BY",
               "object": "TALENT_LEVEL",
-              "value": [0.4, 0.6],
+              "value": [
+                0.4,
+                0.6
+              ],
               "ofDeterminer": "THIS",
               "of": "OPERATOR"
             },
@@ -33,7 +36,8 @@
               },
               "unit": "SECOND"
             }
-          }
+          },
+          "objectId": "DAMAGE_BONUS"
         }
       ]
     }

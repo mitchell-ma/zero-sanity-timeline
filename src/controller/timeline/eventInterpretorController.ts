@@ -22,11 +22,11 @@ import type { ValueNode } from '../../dsl/semantics';
 import { resolveValueNode, getSimpleValue, buildContextForSkillColumn } from '../calculation/valueResolver';
 import type { ValueResolutionContext } from '../calculation/valueResolver';
 import { TimelineEvent, eventDuration } from '../../consts/viewTypes';
-import { ElementType, EventFrameType, PhysicalStatusType, StackInteractionType, UnitType } from '../../consts/enums';
+import { CombatSkillType, ElementType, EventFrameType, PERMANENT_DURATION, PhysicalStatusType, StackInteractionType, UnitType } from '../../consts/enums';
 import {
-  BREACH_DURATION, ENEMY_OWNER_ID, ELEMENT_TO_INFLICTION_COLUMN,
+  BREACH_DURATION, ENEMY_OWNER_ID, ELEMENT_TO_INFLICTION_COLUMN, OPERATOR_COLUMNS,
   INFLICTION_COLUMN_IDS, INFLICTION_DURATION,
-  PHYSICAL_INFLICTION_COLUMNS, PHYSICAL_INFLICTION_DURATION, PHYSICAL_STATUS_COLUMNS, PHYSICAL_STATUS_COLUMN_IDS,
+  PHYSICAL_INFLICTION_COLUMN_IDS, PHYSICAL_INFLICTION_COLUMNS, PHYSICAL_INFLICTION_DURATION, PHYSICAL_STATUS_COLUMNS, PHYSICAL_STATUS_COLUMN_IDS,
   REACTION_COLUMNS, REACTION_COLUMN_IDS, REACTION_DURATION,
   FORCED_REACTION_COLUMN, FORCED_REACTION_DURATION,
   REACTION_STATUS_TO_COLUMN, SKILL_NOUN_TO_COLUMN,
@@ -76,7 +76,7 @@ export function filterClauses(
   clauseType: string | undefined,
   evalConditions: (pred: FrameClausePredicate) => boolean,
 ): readonly FrameClausePredicate[] {
-  const isFirstMatch = clauseType === 'FIRST_MATCH';
+  const isFirstMatch = clauseType === ClauseEvaluationType.FIRST_MATCH;
   let conditionalMatched = false;
   const result: FrameClausePredicate[] = [];
   for (const pred of clauses) {
@@ -171,7 +171,7 @@ function getStatusConfig(statusId?: string): StatusConfig | undefined {
     const allStatuses = [...getAllOperatorStatuses(), ...getAllWeaponStatuses(), ...getAllGearStatuses()];
     for (const s of allStatuses) {
       const dur = s.durationSeconds;
-      const durationFrames = dur < 0 || dur === 0 ? TOTAL_FRAMES : Math.round(dur * FPS);
+      const durationFrames = dur === PERMANENT_DURATION || dur === 0 ? TOTAL_FRAMES : Math.round(dur * FPS);
       const stackLimit = s.stacks?.limit;
       const maxStacks = stackLimit
         ? (typeof stackLimit === 'number' ? stackLimit
@@ -380,24 +380,24 @@ export class EventInterpretorController {
 
     switch (effect.verb) {
       case VerbType.APPLY:
-        if (effect.object === 'INFLICTION') {
+        if (effect.object === NounType.INFLICTION) {
           const col = resolveInflictionColumnId(effect.objectQualifier);
           return col ? this.controller.canApplyInfliction(col, ownerId, ctx.frame) : false;
         }
-        if (effect.object === 'STATUS') {
+        if (effect.object === NounType.STATUS) {
           const skipTeam = effect.to != null && effect.to !== NounType.TEAM;
           const col = statusIdToColumnId(effect.objectId ?? '', skipTeam);
           const statusOwner = effect.to === NounType.TEAM ? COMMON_OWNER_ID : ownerId;
           const configLimit = effect.objectId ? getStatusStackLimit(effect.objectId) : undefined;
           return this.controller.canApplyStatus(col, statusOwner, ctx.frame, configLimit);
         }
-        if (effect.object === 'REACTION') {
+        if (effect.object === NounType.REACTION) {
           const col = resolveReactionColumnId(effect.objectQualifier);
           return col ? this.controller.canApplyReaction(col, ownerId, ctx.frame) : false;
         }
         return true;
       case VerbType.CONSUME:
-        if (effect.object === 'INFLICTION') {
+        if (effect.object === NounType.INFLICTION) {
           const col = resolveInflictionColumnId(effect.objectQualifier);
           return col ? this.controller.canConsumeInfliction(col, ownerId, ctx.frame) : false;
         }
@@ -413,7 +413,7 @@ export class EventInterpretorController {
           const col = resolveReactionColumnId(effect.objectQualifier) ?? resolveReactionColumnId(effect.objectId as AdjectiveType);
           return col ? this.controller.canConsumeReaction(col, ownerId, ctx.frame) : false;
         }
-        if (effect.object === 'STATUS') {
+        if (effect.object === NounType.STATUS) {
           const skipTeam = effect.to != null && effect.to !== NounType.TEAM;
           const col = statusIdToColumnId(effect.objectId ?? '', skipTeam);
           const statusOwner = effect.to === NounType.TEAM ? COMMON_OWNER_ID : ownerId;
@@ -429,16 +429,16 @@ export class EventInterpretorController {
     const ownerId = this.resolveOwnerId(effect.to as string, ctx, effect.toDeterminer);
     const source = { ownerId: ctx.sourceOwnerId, skillName: ctx.sourceSkillName };
 
-    if (effect.object === 'INFLICTION') {
+    if (effect.object === NounType.INFLICTION) {
       const columnId = resolveInflictionColumnId(effect.objectQualifier);
       if (!columnId) return false;
       const dv = this.resolveWith(effect.with?.duration, ctx);
       this.controller.createInfliction(columnId, ownerId, ctx.frame, typeof dv === 'number' ? Math.round(dv * FPS) : INFLICTION_DURATION, source);
       return true;
     }
-    if (effect.object === 'STATUS') {
+    if (effect.object === NounType.STATUS) {
       // Physical status (APPLY LIFT STATUS TO ENEMY) → delegate to dedicated handler
-      if (effect.objectId === 'PHYSICAL') return this.applyPhysicalStatus(effect, ctx);
+      if (effect.objectId === AdjectiveType.PHYSICAL) return this.applyPhysicalStatus(effect, ctx);
       const isTeamTarget = effect.to === NounType.TEAM;
       // When effect explicitly targets non-TEAM, skip team-status column routing even if the
       // status config defaults to TEAM — the effect's "to" is authoritative.
@@ -493,6 +493,16 @@ export class EventInterpretorController {
         }
       }
 
+      // Susceptibility status: extract inline value + qualifier into event.susceptibility
+      if (effect.objectId === NounType.SUSCEPTIBILITY && effect.with?.value) {
+        const qualifier = Array.isArray(effect.objectQualifier) ? effect.objectQualifier[0] : effect.objectQualifier;
+        const rateValue = this.resolveWith(effect.with.value, ctx);
+        if (qualifier && typeof rateValue === 'number') {
+          if (!eventProps.susceptibility) eventProps.susceptibility = {};
+          (eventProps.susceptibility as Record<string, number>)[qualifier] = rateValue;
+        }
+      }
+
       // Enforce cooldown
       if (cfg?.cooldownFrames) {
         const allEvents = ctx.allEvents();
@@ -516,7 +526,7 @@ export class EventInterpretorController {
       }
       return true;
     }
-    if (effect.object === 'REACTION') {
+    if (effect.object === NounType.REACTION) {
       const columnId = resolveReactionColumnId(effect.objectQualifier)
         ?? FORCED_REACTION_COLUMN[effect.objectId ?? ''];
       if (!columnId) return false;
@@ -530,7 +540,10 @@ export class EventInterpretorController {
       });
       return true;
     }
-    if (effect.object === 'STAGGER') {
+    // APPLY SUSCEPTIBILITY is a pure stat modifier — resolved by resolveClauseEffects
+    // during status def processing for damage calc. No timeline event created.
+    if (effect.object === NounType.SUSCEPTIBILITY) return true;
+    if (effect.object === NounType.STAGGER) {
       const v = this.resolveWith(effect.with?.staggerValue, ctx);
       this.controller.createStagger('stagger', ownerId, ctx.frame, typeof v === 'number' ? v : 0, source);
       return true;
@@ -580,7 +593,7 @@ export class EventInterpretorController {
       return true;
     }
     // CONSUME THIS EVENT — consume one stack of the parent status (from ENGINE_TRIGGER context)
-    if (effect.object === 'EVENT' && ctx.parentStatusId) {
+    if (effect.object === NounType.EVENT && ctx.parentStatusId) {
       const columnId = statusIdToColumnId(ctx.parentStatusId);
       const statusOwnerId = ctx.parentStatusOwnerId ?? ownerId;
       this.controller.consumeOldest(columnId, statusOwnerId, ctx.frame, count, source);
@@ -594,8 +607,8 @@ export class EventInterpretorController {
    * Returns the column/status ID that checkReactiveTriggers should match against.
    */
   private reactiveTriggersForEffect(effect: Effect, absFrame: number, eventOwnerId: string, eventName: string): QueueFrame[] {
-    const verb = effect.verb === VerbType.APPLY ? 'APPLY'
-      : effect.verb === VerbType.CONSUME ? 'CONSUME' : null;
+    const verb = effect.verb === VerbType.APPLY ? VerbType.APPLY
+      : effect.verb === VerbType.CONSUME ? VerbType.CONSUME : null;
     if (!verb) return [];
 
     let objectId: string | undefined;
@@ -604,7 +617,10 @@ export class EventInterpretorController {
         objectId = resolveInflictionColumnId(effect.objectQualifier);
         break;
       case NounType.STATUS:
-        if (effect.objectId === 'PHYSICAL') {
+        if (effect.objectId === AdjectiveType.PHYSICAL) {
+          // Only fire reactive triggers if a physical status was actually created
+          // (Lift/Knock Down without Vulnerable only adds Vulnerable, no physical status)
+          if (!this.lastPhysicalStatusCreated) return [];
           objectId = resolvePhysicalStatusColumnId(effect.objectQualifier);
         } else {
           objectId = statusIdToColumnId(effect.objectId ?? '');
@@ -827,12 +843,21 @@ export class EventInterpretorController {
    * - Damage: 120% ATK (physical).
    * - Stagger: 10 × (1 + ArtsIntensity / 200).
    */
+  /**
+   * APPLY PHYSICAL STATUS — always returns true (effect was handled).
+   * Sets `lastPhysicalStatusCreated` to indicate whether a physical status event
+   * was actually created, so the caller can gate reactive triggers.
+   */
+  private lastPhysicalStatusCreated = false;
   private applyPhysicalStatus(effect: Effect, ctx: InterpretContext): boolean {
     const columnId = resolvePhysicalStatusColumnId(effect.objectQualifier);
     if (!columnId) return false;
 
     const source = { ownerId: ctx.sourceOwnerId, skillName: ctx.sourceSkillName };
     const isForced = this.resolveWith(effect.with?.isForced, ctx) === 1;
+
+    // Track output count before to detect whether a physical status was actually created
+    const outputBefore = this.controller.output.length;
 
     let result = false;
     if (columnId === PHYSICAL_STATUS_COLUMNS.LIFT
@@ -843,6 +868,11 @@ export class EventInterpretorController {
     } else if (columnId === PHYSICAL_STATUS_COLUMNS.BREACH) {
       result = this.applyBreach(ctx.frame, source);
     }
+
+    // Check if a physical status event was created (not just Vulnerable)
+    this.lastPhysicalStatusCreated = this.controller.output.slice(outputBefore).some(
+      ev => ev.columnId === columnId,
+    );
 
     // Any physical status application consumes active Solidification → Shatter
     if (result) {
@@ -1092,7 +1122,7 @@ export class EventInterpretorController {
       }
 
       // Generic PERFORM trigger (PERFORM BATTLE_SKILL, etc.)
-      newEntries.push(...this.checkReactiveTriggers('PERFORM', event.columnId, absFrame, event.ownerId, event.name, event.enhancementType));
+      newEntries.push(...this.checkReactiveTriggers(VerbType.PERFORM, event.columnId, absFrame, event.ownerId, event.name, event.enhancementType));
 
       return newEntries; // event-start entry has no frame marker to process
     }
@@ -1107,17 +1137,17 @@ export class EventInterpretorController {
           triggerCol, ENEMY_OWNER_ID, absFrame, INFLICTION_DURATION,
           source, { uid: `${event.uid}-combo-inflict-${si}-${fi}` },
         );
-        newEntries.push(...this.checkReactiveTriggers('APPLY', triggerCol, absFrame, event.ownerId, event.name));
+        newEntries.push(...this.checkReactiveTriggers(VerbType.APPLY, triggerCol, absFrame, event.ownerId, event.name));
       } else if (PHYSICAL_STATUS_COLUMN_IDS.has(triggerCol)) {
         const physEffect = {
           verb: VerbType.APPLY,
           object: NounType.STATUS,
-          objectId: 'PHYSICAL',
+          objectId: AdjectiveType.PHYSICAL,
           objectQualifier: triggerCol,
           to: NounType.ENEMY,
         } as Effect;
         this.applyPhysicalStatus(physEffect, { frame: absFrame, sourceOwnerId: this.resolveOperatorId(event.ownerId), sourceSlotId: event.ownerId, sourceSkillName: event.name, allEvents: () => [...this.baseEvents, ...this.controller.output] });
-        newEntries.push(...this.checkReactiveTriggers('APPLY', triggerCol, absFrame, event.ownerId, event.name));
+        newEntries.push(...this.checkReactiveTriggers(VerbType.APPLY, triggerCol, absFrame, event.ownerId, event.name));
       }
     }
 
@@ -1165,12 +1195,40 @@ export class EventInterpretorController {
       }
     }
 
-    // ── 3. PERFORM triggers from frameTypes ─────────────────────────────
+    // ── 3b. Freeform event creation — synthetic frames on non-skill columns ──
+    // Events with no DSL clauses on infliction/reaction/status columns are freeform-placed.
+    // Route them through create* so they get the same stacking, segment building, etc.
+    if (!frame.clauses && !frame.dealDamage) {
+      const dur = eventDuration(event);
+      if (INFLICTION_COLUMN_IDS.has(event.columnId) || PHYSICAL_INFLICTION_COLUMN_IDS.has(event.columnId)) {
+        this.controller.createInfliction(event.columnId, event.ownerId, absFrame, dur, source, { uid: event.uid });
+        newEntries.push(...this.checkReactiveTriggers(VerbType.APPLY, event.columnId, absFrame, event.ownerId, event.name));
+      } else if (REACTION_COLUMN_IDS.has(event.columnId)) {
+        this.controller.createReaction(event.columnId, event.ownerId, absFrame, dur, source, {
+          stacks: event.stacks, forcedReaction: event.forcedReaction || event.isForced, uid: event.uid,
+        });
+        newEntries.push(...this.checkReactiveTriggers(VerbType.APPLY, event.columnId, absFrame, event.ownerId, event.name));
+      } else if (PHYSICAL_STATUS_COLUMN_IDS.has(event.columnId)) {
+        this.controller.createStatus(event.columnId, event.ownerId, absFrame, dur, source, {
+          statusId: event.id, stackingMode: StackInteractionType.RESET, maxStacks: 1,
+          uid: event.uid, event: { segments: event.segments },
+        });
+        newEntries.push(...this.checkReactiveTriggers(VerbType.APPLY, event.columnId, absFrame, event.ownerId, event.name));
+      } else if (event.ownerId === ENEMY_OWNER_ID || event.ownerId === COMMON_OWNER_ID) {
+        this.controller.createStatus(event.columnId, event.ownerId, absFrame, dur, source, {
+          statusId: event.id, uid: event.uid,
+          ...(event.susceptibility && { event: { susceptibility: event.susceptibility, segments: event.segments } }),
+        });
+        newEntries.push(...this.checkReactiveTriggers(VerbType.APPLY, event.id ?? event.columnId, absFrame, event.ownerId, event.name));
+      }
+    }
+
+    // ── 4. PERFORM triggers from frameTypes ─────────────────────────────
     if (frame.frameTypes) {
       for (const ft of frame.frameTypes) {
         if (ft === EventFrameType.FINAL_STRIKE || ft === EventFrameType.FINISHER || ft === EventFrameType.DIVE) {
-          const performObject = ft === EventFrameType.FINAL_STRIKE ? 'FINAL_STRIKE'
-            : ft === EventFrameType.FINISHER ? 'FINISHER' : 'DIVE_ATTACK';
+          const performObject = ft === EventFrameType.FINAL_STRIKE ? NounType.FINAL_STRIKE
+            : ft === EventFrameType.FINISHER ? NounType.FINISHER : NounType.DIVE_ATTACK;
           newEntries.push(...this.checkPerformTriggers(performObject, event, absFrame));
         }
       }
@@ -1186,9 +1244,9 @@ export class EventInterpretorController {
   private checkPerformTriggers(performObject: string, event: TimelineEvent, absFrame: number): QueueFrame[] {
     if (!this.triggerIndex) return [];
     const results: QueueFrame[] = [];
-    for (const entry of this.triggerIndex.lookup(`PERFORM:${performObject}`)) {
-      if (entry.primaryVerb !== 'PERFORM') continue;
-      const isAny = entry.primaryCondition.subjectDeterminer === 'ANY';
+    for (const entry of this.triggerIndex.lookup(`${VerbType.PERFORM}:${performObject}`)) {
+      if (entry.primaryVerb !== VerbType.PERFORM) continue;
+      const isAny = entry.primaryCondition.subjectDeterminer === DeterminerType.ANY;
       if (!isAny && event.ownerId !== entry.operatorSlotId) continue;
       const defKey = `${entry.def.properties.id}:${entry.operatorSlotId}:${absFrame}`;
       if (this.seenTriggers.has(defKey)) continue;
@@ -1268,7 +1326,7 @@ export class EventInterpretorController {
       const statuses = getOperatorStatuses(operatorId);
       const def = statuses.find(s => s.id === statusId);
       if (def) {
-        if (def.target === 'ENEMY') return { columnId, ownerId: ENEMY_OWNER_ID };
+        if (def.target === NounType.ENEMY) return { columnId, ownerId: ENEMY_OWNER_ID };
         return { columnId, ownerId: eventOwnerId };
       }
     }
@@ -1287,6 +1345,14 @@ export class EventInterpretorController {
         stacks: ev.stacks, forcedReaction: ev.forcedReaction || ev.isForced, uid: ev.uid,
       });
       created = true;
+    } else if (PHYSICAL_STATUS_COLUMN_IDS.has(ev.columnId)) {
+      created = this.controller.createStatus(ev.columnId, ev.ownerId, entry.frame, eventDuration(ev), source, {
+        statusId: ev.id,
+        stackingMode: StackInteractionType.RESET,
+        maxStacks: 1,
+        uid: ev.uid,
+        event: { segments: ev.segments },
+      });
     } else {
       created = this.controller.createStatus(ev.columnId, ev.ownerId, entry.frame, eventDuration(ev), source, {
         statusId: ev.name, stackingMode: entry.stackingInteraction, uid: ev.uid,
@@ -1301,7 +1367,7 @@ export class EventInterpretorController {
     // Post-hook: check for reactive triggers (lifecycle clauses + onTriggerClause APPLY matches)
     if (!created) return [];
     const triggerObjectId = ev.name || ev.columnId || ev.id;
-    return this.checkReactiveTriggers('APPLY', triggerObjectId, entry.frame, entry.operatorSlotId ?? ev.ownerId, ev.sourceSkillName ?? ev.name);
+    return this.checkReactiveTriggers(VerbType.APPLY, triggerObjectId, entry.frame, entry.operatorSlotId ?? ev.ownerId, ev.sourceSkillName ?? ev.name);
   }
 
   /**
@@ -1413,7 +1479,7 @@ export class EventInterpretorController {
       { ownerId: entry.sourceOwnerId, skillName: entry.sourceSkillName },
       { uid: entry.uid },
     );
-    return this.checkReactiveTriggers('APPLY', entry.columnId, entry.frame, entry.operatorSlotId, entry.sourceSkillName);
+    return this.checkReactiveTriggers(VerbType.APPLY, entry.columnId, entry.frame, entry.operatorSlotId, entry.sourceSkillName);
   }
 
 
@@ -1422,7 +1488,7 @@ export class EventInterpretorController {
 
   /** Convert a TriggerEffect to the DSL Effect type for interpret(). */
   private triggerEffectToEffect(te: import('./triggerMatch').TriggerEffect): Effect {
-    const isCompound = (te.verb === 'ALL' || te.verb === 'ANY') && te.effects && te.effects.length > 0;
+    const isCompound = (te.verb === VerbType.ALL || te.verb === VerbType.ANY) && te.effects && te.effects.length > 0;
     if (isCompound) {
       return {
         verb: te.verb as VerbType,
@@ -1478,8 +1544,8 @@ export class EventInterpretorController {
 
     // Resolve parent status owner for CONSUME THIS EVENT
     const parentTarget = ctx.def.properties.target;
-    const parentStatusOwnerId = parentTarget === 'TEAM' ? COMMON_OWNER_ID
-      : parentTarget === 'ENEMY' ? ENEMY_OWNER_ID
+    const parentStatusOwnerId = parentTarget === NounType.TEAM ? COMMON_OWNER_ID
+      : parentTarget === NounType.ENEMY ? ENEMY_OWNER_ID
       : ctx.operatorSlotId;
 
     const interpretCtx: InterpretContext = {
@@ -1497,9 +1563,9 @@ export class EventInterpretorController {
     for (const te of triggerEffects) {
       const effect = this.triggerEffectToEffect(te);
       const applied = this.interpret(effect, interpretCtx);
-      if (applied && te.verb === 'APPLY' && (te.objectId ?? te.object)) {
+      if (applied && te.verb === VerbType.APPLY && (te.objectId ?? te.object)) {
         const triggerObjectId = te.objectId ?? te.object!;
-        const newFrames = this.checkReactiveTriggers('APPLY', triggerObjectId, entry.frame, ctx.operatorSlotId, trigger.sourceSkillName);
+        const newFrames = this.checkReactiveTriggers(VerbType.APPLY, triggerObjectId, entry.frame, ctx.operatorSlotId, trigger.sourceSkillName);
         for (const f of newFrames) f.cascadeDepth = depth + 1;
         cascadeFrames.push(...newFrames);
       }

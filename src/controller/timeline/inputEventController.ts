@@ -6,9 +6,10 @@
  */
 
 import { v4 as uuidv4 } from 'uuid';
-import { CombatSkillType, EnhancementType, EventFrameType } from '../../consts/enums';
+import { CombatSkillType, ColumnType, EnhancementType, EventFrameType, InteractionModeType } from '../../consts/enums';
 import { TimelineEvent, EventSegmentData, Operator, computeSegmentsSpan, getAnimationDuration, eventEndFrame, durationSegment } from '../../consts/viewTypes';
-import { ENEMY_OWNER_ID, REACTION_COLUMN_IDS, INFLICTION_COLUMN_IDS, PHYSICAL_INFLICTION_COLUMN_IDS, SKILL_COLUMNS } from '../../model/channels';
+import { ENEMY_OWNER_ID, OPERATOR_COLUMNS, REACTION_COLUMN_IDS, INFLICTION_COLUMN_IDS, PHYSICAL_INFLICTION_COLUMN_IDS, PHYSICAL_STATUS_COLUMN_IDS, SKILL_COLUMNS } from '../../model/channels';
+import type { SkillType } from '../../consts/viewTypes';
 import { USER_ID } from '../../model/channels';
 import { TOTAL_FRAMES } from '../../utils/timeline';
 import { ComboSkillEventController } from './comboSkillEventController';
@@ -19,12 +20,14 @@ import { allocInputEvent, allocDerivedEvent } from './objectPool';
 
 // ── Event classification ─────────────────────────────────────────────────────
 
+const SKILL_COLUMN_SET: ReadonlySet<string> = new Set(Object.values(SKILL_COLUMNS) as string[]);
+
 /**
- * Classify raw events into input events (operator skills) and derived events
- * (freeform user-placed inflictions/reactions on the enemy).
+ * Classify raw events into input events (strict-mode skills) and derived events
+ * (freeform-placed inflictions, reactions, and statuses).
  *
  * Input events go into DEC.registerEvents (registeredEvents).
- * Derived events are seeded into DEC via addEvent by the interpreter.
+ * Derived events are seeded into the queue and processed via create* methods.
  */
 export function classifyEvents(rawEvents: TimelineEvent[]): { inputEvents: TimelineEvent[]; derivedEvents: TimelineEvent[] } {
   const inputEvents: TimelineEvent[] = [];
@@ -33,8 +36,9 @@ export function classifyEvents(rawEvents: TimelineEvent[]): { inputEvents: Timel
     // Clone to prevent engine mutations (eventStatus, stacks, segments
     // reassignment) from leaking back to raw state. Uses object pool when
     // pooling is enabled to avoid per-tick allocation churn.
-    const isDerived = ev.ownerId === ENEMY_OWNER_ID && ev.sourceOwnerId === USER_ID
-      && (INFLICTION_COLUMN_IDS.has(ev.columnId) || PHYSICAL_INFLICTION_COLUMN_IDS.has(ev.columnId) || REACTION_COLUMN_IDS.has(ev.columnId));
+    const isDerived = !SKILL_COLUMN_SET.has(ev.columnId)
+      && ev.columnId !== OPERATOR_COLUMNS.INPUT
+      && ev.columnId !== OPERATOR_COLUMNS.CONTROLLED;
     const copy = isDerived ? allocDerivedEvent() : allocInputEvent();
     Object.assign(copy, ev);
     // Deep-clone segment properties so pipeline mutations (time-stop duration
@@ -312,6 +316,7 @@ export function createEvent(
     enhancementType?: import('../../consts/enums').EnhancementType;
     stacks?: Record<string, unknown>;
   } | null,
+  interactionMode?: import('../../consts/enums').InteractionModeType,
 ): TimelineEvent {
   const isForced = ownerId === ENEMY_OWNER_ID && REACTION_COLUMN_IDS.has(columnId);
   const segments = defaultSkill?.segments ?? durationSegment(120);
@@ -342,6 +347,7 @@ export function createEvent(
     sourceOwnerId: defaultSkill?.sourceOwnerId ?? USER_ID,
     sourceSkillName: defaultSkill?.sourceSkillName ?? 'Freeform',
     ...(defaultSkill?.enhancementType ? { enhancementType: defaultSkill.enhancementType } : {}),
+    ...(interactionMode ? { creationInteractionMode: interactionMode } : {}),
   };
 }
 
@@ -611,7 +617,7 @@ export function buildValidColumnPairs(
 ): Set<string> {
   const pairs = new Set<string>();
   for (const col of columns) {
-    if (col.type !== 'mini-timeline' || !col.columnId) continue;
+    if (col.type !== ColumnType.MINI_TIMELINE || !col.columnId) continue;
     pairs.add(`${col.ownerId}:${col.columnId}`);
     if (col.matchColumnIds) {
       for (const id of col.matchColumnIds) {

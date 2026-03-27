@@ -57,7 +57,7 @@
         },
         {
           "verb": "APPLY",
-          "object": "SECONDARY_ATTRIBUTE_BONUS",
+          "object": "STAT",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
@@ -73,7 +73,8 @@
               "ofDeterminer": "THIS",
               "of": "OPERATOR"
             }
-          }
+          },
+          "objectId": "SECONDARY_ATTRIBUTE_BONUS"
         }
       ]
     }

@@ -61,7 +61,7 @@ Every test should use this helper to find columns and their defaultEvent templat
 function findColumn(app: ReturnType<typeof useApp>, slotId: string, columnId: string) {
   return app.columns.find(
     (c): c is MiniTimeline =>
-      c.type === 'mini-timeline' &&
+      c.type === ColumnType.MINI_TIMELINE &&
       c.ownerId === slotId &&
       c.columnId === columnId,
   );

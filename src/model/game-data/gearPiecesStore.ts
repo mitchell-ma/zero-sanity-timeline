@@ -5,13 +5,15 @@
  * Auto-discovers gears/gear-pieces/*.json via require.context.
  * Each file is an array of gear pieces belonging to a single gear set.
  */
-import type { ValueNode } from '../../dsl/semantics';
+import { VerbType, type ValueNode } from '../../dsl/semantics';
+import { MainStatType } from '../../consts/enums';
+import { resolveEffectStat } from '../enums/stats';
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from '../../controller/calculation/valueResolver';
 import { checkKeys, VALID_VALUE_NODE_KEYS, VALID_CLAUSE_KEYS } from './validationUtils';
 
 // ── Validation ──────────────────────────────────────────────────────────────
 
-const VALID_EFFECT_KEYS = new Set(['verb', 'object', 'toDeterminer', 'to', 'with']);
+const VALID_EFFECT_KEYS = new Set(['verb', 'object', 'objectId', 'objectQualifier', 'toDeterminer', 'to', 'with']);
 const VALID_EFFECT_WITH_KEYS = new Set(['value']);
 const VALID_PROPERTIES_KEYS = new Set(['id', 'name', 'type', 'gearSet']);
 const VALID_TOP_KEYS = new Set(['clause', 'properties', 'metadata']);
@@ -102,7 +104,7 @@ export class GearPiece {
   get defense(): number {
     for (const pred of this.clause) {
       for (const ef of pred.effects) {
-        if (ef.verb === 'APPLY' && ef.object === 'BASE_DEFENSE') {
+        if (ef.verb === VerbType.APPLY && ef.object === MainStatType.BASE_DEFENSE) {
           return ef.with?.value ? resolveValueNode(ef.with.value, DEFAULT_VALUE_CONTEXT) : 0;
         }
       }
@@ -144,8 +146,9 @@ export class GearPiece {
         const wvNode = ef.with?.value as { value?: number | number[] } | undefined;
         const values = wvNode?.value != null ? (Array.isArray(wvNode.value) ? wvNode.value : [wvNode.value]) : undefined;
         if (!values) continue;
-        const lineRank = ranks[ef.object] ?? defaultRank;
-        stats[ef.object] = values.length === 1 ? values[0] : (values[lineRank - 1] ?? 0);
+        const statKey = resolveEffectStat(ef) ?? ef.object;
+        const lineRank = ranks[statKey] ?? defaultRank;
+        stats[statKey] = values.length === 1 ? values[0] : (values[lineRank - 1] ?? 0);
       }
     }
     return stats;

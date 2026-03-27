@@ -46,7 +46,7 @@
  *    - Target: THIS OPERATOR (self-buff)
  *    - Max 1 stack, RESET interaction
  *    - Trigger: THIS OPERATOR APPLY COMBUSTION REACTION TO ENEMY → APPLY EVENT TO THIS OPERATOR
- *    - Effect clause: APPLY STAT_MODIFIER HEAT_DAMAGE_BONUS TO THIS OPERATOR WITH VARY_BY TALENT_LEVEL [0.2, 0.3]
+ *    - Effect clause: APPLY HEAT DAMAGE_BONUS STAT TO THIS OPERATOR WITH VARY_BY TALENT_LEVEL [0.2, 0.3]
  *    - Duration: 10s
  *
  * G. Potentials
@@ -63,8 +63,8 @@
  */
 import { TimelineEvent } from '../../consts/viewTypes';
 import { SKILL_COLUMNS } from '../../model/channels';
-import { StatusType } from '../../consts/enums';
-import { VerbType, ObjectType, NounType } from '../../dsl/semantics';
+import { StackInteractionType, StatusType } from '../../consts/enums';
+import { VerbType, ObjectType, NounType, AdjectiveType, DeterminerType } from '../../dsl/semantics';
 import { buildSequencesFromOperatorJson, DataDrivenSkillEventSequence } from '../../controller/gameDataStore';
 import { wouldOverlapSiblings } from '../../controller/timeline/eventValidator';
 
@@ -116,10 +116,10 @@ function _normalizeStatusEntry(raw: Record<string, any>): Record<string, any> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- JSON data
   const limit = sl.limit as Record<string, any> | undefined;
   if (limit) {
-    if (limit.verb === 'IS') {
+    if (limit.verb === VerbType.IS) {
       const v = limit.value;
       resolvedLimit = { P0: v, P1: v, P2: v, P3: v, P4: v, P5: v };
-    } else if (limit.verb === 'VARY_BY' && Array.isArray(limit.value)) {
+    } else if (limit.verb === VerbType.VARY_BY && Array.isArray(limit.value)) {
       const arr = limit.value;
       resolvedLimit = { P0: arr[0], P1: arr[1], P2: arr[2], P3: arr[3], P4: arr[4], P5: arr[5] };
     } else {
@@ -274,10 +274,10 @@ describe('A. Basic Attack (Rapid Fire Akimbo)', () => {
     const rawSegments = mockJson.skills[mockJson.skillTypeMap.BASIC_ATTACK.BATK].segments;
     const finalStrikeFrame = rawSegments[3].frames[0];
     const spEffect = finalStrikeFrame.clause[0].effects.find(
-      (e: Record<string, unknown>) => e.object === 'SKILL_POINT'
+      (e: Record<string, unknown>) => e.object === NounType.SKILL_POINT
     );
     const staggerEffect = finalStrikeFrame.clause[0].effects.find(
-      (e: Record<string, unknown>) => e.object === 'STAGGER'
+      (e: Record<string, unknown>) => e.object === NounType.STAGGER
     );
     expect(spEffect.with.value.value).toBe(18);
     expect(staggerEffect.with.value.value).toBe(18);
@@ -287,7 +287,7 @@ describe('A. Basic Attack (Rapid Fire Akimbo)', () => {
     const rawSegments = mockJson.skills[mockJson.skillTypeMap.BASIC_ATTACK.BATK].segments;
     for (let i = 0; i < 3; i++) {
       const frame = rawSegments[i].frames[0];
-      expect(getFrameEffectValue(frame, 'RECOVER', 'SKILL_POINT', 'value')).toBeUndefined();
+      expect(getFrameEffectValue(frame, VerbType.RECOVER, NounType.SKILL_POINT, 'value')).toBeUndefined();
     }
   });
 
@@ -295,7 +295,7 @@ describe('A. Basic Attack (Rapid Fire Akimbo)', () => {
     const sequences = getSequences('BASIC_ATTACK');
     for (const seq of sequences) {
       for (const frame of seq.getFrames()) {
-        expect(frame.getClauses().flatMap(c => c.effects).find(e => e.dslEffect?.verb === 'APPLY' && e.dslEffect?.object === 'INFLICTION')).toBeUndefined();
+        expect(frame.getClauses().flatMap(c => c.effects).find(e => e.dslEffect?.verb === VerbType.APPLY && e.dslEffect?.object === NounType.INFLICTION)).toBeUndefined();
       }
     }
   });
@@ -344,7 +344,7 @@ describe('B. Battle Skill (Thermite Tracers)', () => {
   test('B3: Battle skill costs 100 SP', () => {
     const battleSkill = mockJson.skills[mockJson.skillTypeMap.BATTLE_SKILL];
     const spCost = battleSkill.clause[0].effects.find(
-      (e: Record<string, unknown>) => e.object === 'SKILL_POINT' && e.verb === 'CONSUME'
+      (e: Record<string, unknown>) => e.object === NounType.SKILL_POINT && e.verb === VerbType.CONSUME
     );
     expect(spCost).toBeDefined();
     expect(spCost.with.value.value).toBe(100);
@@ -353,7 +353,7 @@ describe('B. Battle Skill (Thermite Tracers)', () => {
   test('B4: Battle skill has SP cost effect in clause', () => {
     const battleSkill = mockJson.skills[mockJson.skillTypeMap.BATTLE_SKILL];
     const spCost = battleSkill.clause[0].effects.find(
-      (e: Record<string, unknown>) => e.object === 'SKILL_POINT' && e.verb === 'CONSUME'
+      (e: Record<string, unknown>) => e.object === NounType.SKILL_POINT && e.verb === VerbType.CONSUME
     );
     expect(spCost).toBeDefined();
     expect(spCost.with.value.value).toBe(100);
@@ -362,23 +362,23 @@ describe('B. Battle Skill (Thermite Tracers)', () => {
   test('B5: Frame 3 recovers 5 Stagger and applies Heat infliction', () => {
     const frame2 = mockJson.skills[mockJson.skillTypeMap.BATTLE_SKILL].segments[0].frames[2];
     const stagger = frame2.clause[0].effects.find(
-      (e: Record<string, unknown>) => e.object === 'STAGGER'
+      (e: Record<string, unknown>) => e.object === NounType.STAGGER
     );
     expect(stagger.with.value.value).toBe(5);
 
     const infliction = frame2.clause[0].effects.find(
-      (e: Record<string, unknown>) => e.verb === 'APPLY' && e.object === 'INFLICTION'
+      (e: Record<string, unknown>) => e.verb === VerbType.APPLY && e.object === NounType.INFLICTION
     );
     expect(infliction).toBeDefined();
-    expect(infliction.objectQualifier).toBe('HEAT');
-    expect(infliction.to).toBe('ENEMY');
+    expect(infliction.objectQualifier).toBe(AdjectiveType.HEAT);
+    expect(infliction.to).toBe(NounType.ENEMY);
   });
 
   test('B6: Frames 1 and 2 have no stagger effects (zero-value effects removed)', () => {
     for (let i = 0; i < 2; i++) {
       const frame = mockJson.skills[mockJson.skillTypeMap.BATTLE_SKILL].segments[0].frames[i];
       const stagger = frame.clause[0].effects.find(
-        (e: Record<string, unknown>) => e.object === 'STAGGER'
+        (e: Record<string, unknown>) => e.object === NounType.STAGGER
       );
       expect(stagger).toBeUndefined();
     }
@@ -417,11 +417,11 @@ describe('C. Combo Skill (Frag Grenade Beta)', () => {
   test('C1: Combo trigger requires any operator applies arts infliction (single clause)', () => {
     const comboSkill = mockJson.skills[mockJson.skillTypeMap.COMBO_SKILL];
     expect(comboSkill.onTriggerClause.length).toBe(1);
-    expect(comboSkill.onTriggerClause[0].conditions[0].subjectDeterminer).toBe('ANY');
-    expect(comboSkill.onTriggerClause[0].conditions[0].subject).toBe('OPERATOR');
-    expect(comboSkill.onTriggerClause[0].conditions[0].verb).toBe('APPLY');
-    expect(comboSkill.onTriggerClause[0].conditions[0].object).toBe('INFLICTION');
-    expect(comboSkill.onTriggerClause[0].conditions[0].to).toBe('ENEMY');
+    expect(comboSkill.onTriggerClause[0].conditions[0].subjectDeterminer).toBe(DeterminerType.ANY);
+    expect(comboSkill.onTriggerClause[0].conditions[0].subject).toBe(NounType.OPERATOR);
+    expect(comboSkill.onTriggerClause[0].conditions[0].verb).toBe(VerbType.APPLY);
+    expect(comboSkill.onTriggerClause[0].conditions[0].object).toBe(NounType.INFLICTION);
+    expect(comboSkill.onTriggerClause[0].conditions[0].to).toBe(NounType.ENEMY);
   });
 
   test('C2: Combo activation window is 720 frames (6 seconds)', () => {
@@ -442,16 +442,16 @@ describe('C. Combo Skill (Frag Grenade Beta)', () => {
     expect(frames.length).toBe(1);
 
     const stagger = frames[0].clause[0].effects.find(
-      (e: Record<string, unknown>) => e.object === 'STAGGER'
+      (e: Record<string, unknown>) => e.object === NounType.STAGGER
     );
     expect(stagger.with.value.value).toBe(10);
 
     const infliction = frames[0].clause[0].effects.find(
-      (e: Record<string, unknown>) => e.verb === 'APPLY' && e.object === 'INFLICTION'
+      (e: Record<string, unknown>) => e.verb === VerbType.APPLY && e.object === NounType.INFLICTION
     );
     expect(infliction).toBeDefined();
-    expect(infliction.objectQualifier).toBe('HEAT');
-    expect(infliction.to).toBe('ENEMY');
+    expect(infliction.objectQualifier).toBe(AdjectiveType.HEAT);
+    expect(infliction.to).toBe(NounType.ENEMY);
   });
 
   test('C5: Combo animation is TIME_STOP (0.5s within 1s)', () => {
@@ -467,11 +467,11 @@ describe('C. Combo Skill (Frag Grenade Beta)', () => {
   test('C6: Combo recovers 10 ultimate energy to self', () => {
     const effects = mockJson.skills[mockJson.skillTypeMap.COMBO_SKILL].clause[0].effects;
     const energy = effects.find(
-      (e: Record<string, unknown>) => e.object === 'ULTIMATE_ENERGY' && e.verb === 'RECOVER'
+      (e: Record<string, unknown>) => e.object === NounType.ULTIMATE_ENERGY && e.verb === VerbType.RECOVER
     );
     expect(energy).toBeDefined();
-    expect(energy.toDeterminer).toBe('THIS');
-    expect(energy.to).toBe('OPERATOR');
+    expect(energy.toDeterminer).toBe(DeterminerType.THIS);
+    expect(energy.to).toBe(NounType.OPERATOR);
     expect(energy.with.value.value).toBe(10);
   });
 
@@ -491,17 +491,21 @@ describe('C. Combo Skill (Frag Grenade Beta)', () => {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 describe('D. Ultimate (Wolven Fury)', () => {
-  test('D1: Ultimate energy cost varies by potential', () => {
+  test('D1: Ultimate energy cost is MULT(base, VARY_BY POTENTIAL)', () => {
     const effects = mockJson.skills[mockJson.skillTypeMap.ULTIMATE].clause[0].effects;
     const energyCost = effects.find(
       (e: Record<string, unknown>) => e.object === NounType.ULTIMATE_ENERGY && e.verb === VerbType.CONSUME
     );
     expect(energyCost).toBeDefined();
-    expect(energyCost.with.value.verb).toBe(VerbType.VARY_BY);
-    expect(energyCost.with.value.object).toBe(ObjectType.POTENTIAL);
-    const values = energyCost.with.value.value as number[];
-    expect(values).toHaveLength(6);
-    expect(values[values.length - 1]).toBeLessThan(values[0]);
+    const val = energyCost.with.value;
+    expect(val.operation).toBe('MULT');
+    expect(val.left.verb).toBe(VerbType.IS);
+    expect(typeof val.left.value).toBe('number');
+    expect(val.right.verb).toBe(VerbType.VARY_BY);
+    expect(val.right.object).toBe(ObjectType.POTENTIAL);
+    const potArr = val.right.value as number[];
+    expect(potArr).toHaveLength(6);
+    expect(Math.min(...potArr)).toBeLessThan(1);
   });
 
   test('D2: Ultimate animation is TIME_STOP (1.53s within 2.5s)', () => {
@@ -609,12 +613,12 @@ describe('F. Scorching Fangs (Talent)', () => {
   });
 
   test('F2: Target is THIS OPERATOR (self-buff)', () => {
-    expect(sf.targetDeterminer).toBe('THIS');
-    expect(sf.target).toBe('OPERATOR');
+    expect(sf.targetDeterminer).toBe(DeterminerType.THIS);
+    expect(sf.target).toBe(NounType.OPERATOR);
   });
 
   test('F3: Max 1 stack with RESET interaction', () => {
-    expect(sf.stacks.interactionType).toBe('RESET');
+    expect(sf.stacks.interactionType).toBe(StackInteractionType.RESET);
     for (let p = 0; p <= 5; p++) {
       expect(sf.stacks.limit[`P${p}`]).toBe(1);
     }
@@ -624,24 +628,25 @@ describe('F. Scorching Fangs (Talent)', () => {
     expect(sf.onTriggerClause.length).toBe(1);
     const clause = sf.onTriggerClause[0];
     expect(clause.conditions.length).toBe(1);
-    expect(clause.conditions[0].subjectDeterminer).toBe('THIS');
-    expect(clause.conditions[0].subject).toBe('OPERATOR');
-    expect(clause.conditions[0].verb).toBe('APPLY');
-    expect(clause.conditions[0].object).toBe('REACTION');
-    expect(clause.conditions[0].objectQualifier).toBe('COMBUSTION');
+    expect(clause.conditions[0].subjectDeterminer).toBe(DeterminerType.THIS);
+    expect(clause.conditions[0].subject).toBe(NounType.OPERATOR);
+    expect(clause.conditions[0].verb).toBe(VerbType.APPLY);
+    expect(clause.conditions[0].object).toBe(NounType.REACTION);
+    expect(clause.conditions[0].objectQualifier).toBe(StatusType.COMBUSTION);
   });
 
-  test('F5: Effect clause applies HEAT_DAMAGE_BONUS stat modifier to self with VARY_BY TALENT_LEVEL', () => {
+  test('F5: Effect clause applies HEAT DAMAGE_BONUS stat to self with VARY_BY TALENT_LEVEL', () => {
     expect(sf.clause).toBeDefined();
     expect(sf.clause.length).toBe(1);
     const effect = sf.clause[0].effects[0];
-    expect(effect.verb).toBe('APPLY');
-    expect(effect.object).toBe('STAT_MODIFIER');
-    expect(effect.objectId).toBe('HEAT_DAMAGE_BONUS');
-    expect(effect.toDeterminer).toBe('THIS');
-    expect(effect.to).toBe('OPERATOR');
-    expect(effect.with.value.verb).toBe('VARY_BY');
-    expect(effect.with.value.object).toBe('TALENT_LEVEL');
+    expect(effect.verb).toBe(VerbType.APPLY);
+    expect(effect.object).toBe(NounType.STAT);
+    expect(effect.objectId).toBe(NounType.DAMAGE_BONUS);
+    expect(effect.objectQualifier).toBe('HEAT');
+    expect(effect.toDeterminer).toBe(DeterminerType.THIS);
+    expect(effect.to).toBe(NounType.OPERATOR);
+    expect(effect.with.value.verb).toBe(VerbType.VARY_BY);
+    expect(effect.with.value.object).toBe(NounType.TALENT_LEVEL);
     expect(effect.with.value.value).toEqual([0.2, 0.3]);
   });
 
@@ -726,14 +731,14 @@ describe('I. Cooldown Interactions', () => {
     /* eslint-disable @typescript-eslint/no-explicit-any -- JSON traversal */
     const cooldown = ba.segments?.flatMap((s: any) => s.frames ?? [])
       .flatMap((f: any) => f.clause?.[0]?.effects ?? [])
-      .find((e: any) => e.object === 'COOLDOWN');
+      .find((e: any) => e.object === NounType.COOLDOWN);
     /* eslint-enable @typescript-eslint/no-explicit-any */
     expect(cooldown).toBeUndefined();
   });
 
   test('I2: Battle skill (Thermite Tracers) has no COOLDOWN effect', () => {
     const cooldown = mockJson.skills[mockJson.skillTypeMap.BATTLE_SKILL].clause[0].effects?.find(
-      (e: Record<string, unknown>) => e.object === 'COOLDOWN'
+      (e: Record<string, unknown>) => e.object === NounType.COOLDOWN
     );
     expect(cooldown).toBeUndefined();
   });

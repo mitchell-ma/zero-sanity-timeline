@@ -890,13 +890,12 @@ export function buildColumns(
         return statusEvents
           .filter((se) => se.target === 'ENEMY')
           .filter((se) => {
-            const id = se.id.toLowerCase().replace(/_/g, '-');
-            if (seen.has(id)) return false;
-            seen.add(id);
+            if (seen.has(se.id)) return false;
+            seen.add(se.id);
             return true;
           })
           .map((se) => ({
-            id: se.id.toLowerCase().replace(/_/g, '-'),
+            id: se.id,
             label: STATUS_LABELS[se.id as StatusType] ?? se.id,
             color: s.operator!.color,
           }));

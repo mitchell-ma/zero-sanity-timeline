@@ -30,6 +30,16 @@
   },
   "segments": [
     {
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 1.57
+          },
+          "unit": "SECOND"
+        },
+        "element": "NATURE"
+      },
       "frames": [
         {
           "metadata": {
@@ -59,6 +69,7 @@
                   "verb": "CONSUME",
                   "object": "REACTION",
                   "objectId": "CORROSION",
+                  "from": "ENEMY",
                   "with": {
                     "stacks": "MAX"
                   }
@@ -66,156 +77,100 @@
                 {
                   "verb": "APPLY",
                   "object": "STATUS",
-                  "objectId": "vulnerableInfliction",
+                  "objectId": "SUSCEPTIBILITY",
+                  "objectQualifier": "PHYSICAL",
                   "to": "ENEMY",
                   "with": {
+                    "value": {
+                      "value": {
+                        "operation": "ADD",
+                        "left": {
+                          "verb": "VARY_BY",
+                          "object": "SKILL_LEVEL",
+                          "value": [
+                            0.12,
+                            0.12,
+                            0.12,
+                            0.13,
+                            0.13,
+                            0.13,
+                            0.14,
+                            0.14,
+                            0.16,
+                            0.17,
+                            0.18,
+                            0.2
+                          ],
+                          "ofDeterminer": "THIS",
+                          "of": "OPERATOR"
+                        },
+                        "right": {
+                          "verb": "VARY_BY",
+                          "object": "POTENTIAL",
+                          "value": [0, 0.08, 0.08, 0.08, 0.08, 0.08],
+                          "ofDeterminer": "THIS",
+                          "of": "OPERATOR"
+                        }
+                      },
+                      "unit": "PERCENTAGE"
+                    },
                     "duration": {
                       "verb": "IS",
                       "value": 30
-                    }
-                  },
-                  "susceptibility": {
-                    "PHYSICAL": {
-                      "operation": "ADD",
-                      "left": {
-                        "verb": "VARY_BY",
-                        "object": "SKILL_LEVEL",
-                        "value": [
-                          0.12,
-                          0.12,
-                          0.12,
-                          0.13,
-                          0.13,
-                          0.13,
-                          0.14,
-                          0.14,
-                          0.16,
-                          0.17,
-                          0.18,
-                          0.2
-                        ],
-                        "ofDeterminer": "THIS",
-                        "of": "OPERATOR"
-                      },
-                      "right": {
-                        "verb": "VARY_BY",
-                        "object": "POTENTIAL",
-                        "value": [0, 0.08, 0.08, 0.08, 0.08, 0.08],
-                        "ofDeterminer": "THIS",
-                        "of": "OPERATOR"
-                      }
                     },
-                    "ARTS": {
-                      "operation": "ADD",
-                      "left": {
-                        "verb": "VARY_BY",
-                        "object": "SKILL_LEVEL",
-                        "value": [
-                          0.12,
-                          0.12,
-                          0.12,
-                          0.13,
-                          0.13,
-                          0.13,
-                          0.14,
-                          0.14,
-                          0.16,
-                          0.17,
-                          0.18,
-                          0.2
-                        ],
-                        "ofDeterminer": "THIS",
-                        "of": "OPERATOR"
-                      },
-                      "right": {
-                        "verb": "VARY_BY",
-                        "object": "POTENTIAL",
-                        "value": [0, 0.08, 0.08, 0.08, 0.08, 0.08],
-                        "ofDeterminer": "THIS",
-                        "of": "OPERATOR"
-                      }
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
                     }
                   }
                 },
                 {
-                  "verb": "DEAL",
-                  "objectQualifier": "PHYSICAL",
-                  "object": "DAMAGE",
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "SUSCEPTIBILITY",
+                  "objectQualifier": "ARTS",
                   "to": "ENEMY",
                   "with": {
-                    "rateVulBase": {
-                      "operation": "ADD",
-                      "left": {
-                        "verb": "VARY_BY",
-                        "object": "SKILL_LEVEL",
-                        "value": [
-                          0.12,
-                          0.12,
-                          0.12,
-                          0.13,
-                          0.13,
-                          0.13,
-                          0.14,
-                          0.14,
-                          0.16,
-                          0.17,
-                          0.18,
-                          0.2
-                        ],
-                        "ofDeterminer": "THIS",
-                        "of": "OPERATOR"
+                    "value": {
+                      "value": {
+                        "operation": "ADD",
+                        "left": {
+                          "verb": "VARY_BY",
+                          "object": "SKILL_LEVEL",
+                          "value": [
+                            0.12,
+                            0.12,
+                            0.12,
+                            0.13,
+                            0.13,
+                            0.13,
+                            0.14,
+                            0.14,
+                            0.16,
+                            0.17,
+                            0.18,
+                            0.2
+                          ],
+                          "ofDeterminer": "THIS",
+                          "of": "OPERATOR"
+                        },
+                        "right": {
+                          "verb": "VARY_BY",
+                          "object": "POTENTIAL",
+                          "value": [0, 0.08, 0.08, 0.08, 0.08, 0.08],
+                          "ofDeterminer": "THIS",
+                          "of": "OPERATOR"
+                        }
                       },
-                      "right": {
-                        "verb": "VARY_BY",
-                        "object": "POTENTIAL",
-                        "value": [0, 0.08, 0.08, 0.08, 0.08, 0.08],
-                        "ofDeterminer": "THIS",
-                        "of": "OPERATOR"
-                      }
+                      "unit": "PERCENTAGE"
                     },
-                    "durationVul": {
+                    "duration": {
                       "verb": "IS",
                       "value": 30
                     },
-                    "rateVulMax": {
-                      "verb": "VARY_BY",
-                      "object": "SKILL_LEVEL",
-                      "value": [
-                        0.36,
-                        0.36,
-                        0.36,
-                        0.37,
-                        0.37,
-                        0.37,
-                        0.38,
-                        0.38,
-                        0.4,
-                        0.41,
-                        0.42,
-                        0.4
-                      ],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
-                    },
-                    "value": {
-                      "verb": "VARY_BY",
-                      "object": "SKILL_LEVEL",
-                      "value": [
-                        1.42,
-                        1.56,
-                        1.71,
-                        1.85,
-                        1.99,
-                        2.13,
-                        2.28,
-                        2.42,
-                        2.56,
-                        2.74,
-                        2.95,
-                        3.2
-                      ],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
                     }
                   }
                 }
@@ -237,11 +192,11 @@
                 },
                 {
                   "verb": "DEAL",
-                  "object": "DAMAGE",
                   "objectQualifier": "NATURE",
+                  "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
-                    "multiplier": {
+                    "value": {
                       "verb": "VARY_BY",
                       "object": "SKILL_LEVEL",
                       "value": [
@@ -257,7 +212,9 @@
                         2.74,
                         2.95,
                         3.2
-                      ]
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
                     }
                   }
                 }
@@ -266,17 +223,7 @@
           ],
           "clauseType": "ALL"
         }
-      ],
-      "properties": {
-        "duration": {
-          "value": {
-            "verb": "IS",
-            "value": 1.57
-          },
-          "unit": "SECOND"
-        },
-        "element": "NATURE"
-      }
+      ]
     }
   ],
   "clauseType": "ALL"

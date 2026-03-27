@@ -852,7 +852,7 @@ The `skillOverrides` field stores manually verified corrections that take preced
   "COMBO_SKILL": {
     "segments": [
       {
-        "metadata": { "eventComponentType": "SEGMENT", "segmentType": "ANIMATION", "dataSources": ["SELF"] },
+        "metadata": { "eventComponentType": "SEGMENT", "segmentType": "ANIMATION", "dataSources": ["ENDFIELD_SIMULATIONS"] },
         "properties": {
           "name": "Animation",
           "duration": { "value": 0.729, "unit": "SECOND" },
@@ -865,14 +865,14 @@ The `skillOverrides` field stores manually verified corrections that take preced
   },
   "ULTIMATE": {
     "frames": [...],
-    "dataSources": ["SELF"]
+    "dataSources": ["ENDFIELD_SIMULATIONS"]
   }
 }
 ```
 
 ### Rules
 
-- All override entries must include `dataSources: ["SELF"]`
+- All override entries must include `dataSources: ["ENDFIELD_SIMULATIONS"]`
 - Parsers always update `skills` (base data) but **never modify** `skillOverrides`
 - At read time, `skillOverrides` values take precedence over `skills` via deep merge
 - When new source data conflicts with an override, the parser logs a warning — the new source may be more accurate and the override should be re-verified
@@ -920,14 +920,14 @@ The `dataSources` field is an array of `DataSourceType` enum values indicating w
 ```json
 "dataSources": ["WARFARIN"]
 "dataSources": ["END_AXIS"]
-"dataSources": ["END_AXIS", "SELF"]
+"dataSources": ["END_AXIS", "ENDFIELD_SIMULATIONS"]
 ```
 
 | Value      | Description                                            |
 |------------|--------------------------------------------------------|
 | `END_AXIS` | Extracted from End-Axis community frame data (frame timing only) |
 | `WARFARIN` | Parsed from the Warfarin API (operator info, potentials, stats, skill multipliers, skill descriptions — the primary source for most data) |
-| `SELF`     | Manually measured or derived                           |
+| `ENDFIELD_SIMULATIONS` | Manually measured or derived                           |
 
 > **Note:** Most of the data in operator JSONs comes from the Warfarin API. End-Axis is used **only** for skill frame-timing data (segment durations, frame offsets, hit timing). Everything else — operator info, stats, potentials, levels, skill names/descriptions, and per-level multipliers — is sourced from Warfarin.
 
@@ -964,7 +964,7 @@ The following fields are specified above but not yet populated in the current da
 
 ### Migration Path
 
-1. Add `target` to all status interactions (defaulting to ENEMY for inflictions, SELF for buffs)
+1. Add `target` to all status interactions (defaulting to ENEMY for inflictions, OPERATOR for buffs)
 2. Build generic event builder that constructs events from the data structure (abstract CombatSkill class)
 3. Remove hardcoded combat skill classes in favor of data-driven construction
 4. Implement frame interpolation for segments where End-Axis frame count < Warfarin-derived hit count

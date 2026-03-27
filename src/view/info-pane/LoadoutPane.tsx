@@ -72,6 +72,7 @@ const STAT_LABEL_KEYS: Record<StatType, string> = {
   [StatType.FLAT_HP]: 'stat.FLAT_HP',
   // ── Damage factor stats ──────────────────────────────────────────────────────
   [StatType.DAMAGE_BONUS]: 'stat.DAMAGE_BONUS',
+  [StatType.DAMAGE_TAKEN_BONUS]: 'stat.DAMAGE_TAKEN_BONUS',
   [StatType.AMP]: 'stat.AMP',
   [StatType.SUSCEPTIBILITY]: 'stat.SUSCEPTIBILITY',
   // ── Enemy stats ──────────────────────────────────────────────────────────────

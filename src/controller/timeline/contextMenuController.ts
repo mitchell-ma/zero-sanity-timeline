@@ -6,7 +6,7 @@
  * closures, allowing the view to map actionIds to callbacks.
  */
 import { TimelineEvent, Column, MiniTimeline, ContextMenuItem, getAnimationDurationFromSegments } from '../../consts/viewTypes';
-import { CombatSkillType, InteractionModeType } from '../../consts/enums';
+import { CombatSkillType, ColumnType, MicroColumnAssignment, InteractionModeType } from '../../consts/enums';
 import { REACTION_LABELS, COMBAT_SKILL_LABELS, INFLICTION_EVENT_LABELS } from '../../consts/timelineColumnLabels';
 import { t } from '../../locales/locale';
 import { SKILL_COLUMNS, OPERATOR_COLUMNS, ENEMY_OWNER_ID } from '../../model/channels';
@@ -76,7 +76,7 @@ export function buildColumnContextMenu(
   relativeClickX: number | undefined,
   ctx: ColumnContextMenuContext,
 ): ContextMenuItem[] | null {
-  if (col.type !== 'mini-timeline') return null;
+  if (col.type !== ColumnType.MINI_TIMELINE) return null;
   if (col.derived && ctx.interactionMode === InteractionModeType.STRICT) return null;
 
   const { events, slots, resourceGraphs, alwaysAvailableComboSlots, timeStopRegions, staggerBreaks, columnPositions, interactionMode } = ctx;
@@ -102,7 +102,7 @@ export function buildColumnContextMenu(
   const inTimeStop = timeStop.blocked;
   const timeStopReason = timeStop.reason;
 
-  if (col.microColumns && col.microColumnAssignment === 'dynamic-split') {
+  if (col.microColumns && col.microColumnAssignment === MicroColumnAssignment.DYNAMIC_SPLIT) {
     return [
       headerItem,
       ...col.microColumns.map((mc) => {
@@ -124,7 +124,7 @@ export function buildColumnContextMenu(
     ];
   }
 
-  if (col.microColumns && col.microColumnAssignment === 'by-column-id') {
+  if (col.microColumns && col.microColumnAssignment === MicroColumnAssignment.BY_COLUMN_ID) {
     const colPos = columnPositions.get(col.key);
     if (!colPos || relativeClickX === undefined) return null;
     const microW = (colPos.right - colPos.left) / col.microColumns.length;
@@ -143,7 +143,7 @@ export function buildColumnContextMenu(
     ];
   }
 
-  if (col.microColumns && col.microColumnAssignment === 'by-order') {
+  if (col.microColumns && col.microColumnAssignment === MicroColumnAssignment.BY_ORDER) {
     const full = isColumnFull(col, events, atFrame);
     const beforePrev = isBeforeLastEvent(col, events, atFrame);
     const matchSet = col.matchColumnIds ? new Set(col.matchColumnIds) : null;
@@ -336,7 +336,7 @@ export function buildEventAddItems(
   interactionMode?: InteractionModeType,
 ): ContextMenuItem[] {
   const col = columns.find((c) => {
-    if (c.type !== 'mini-timeline' || !c.microColumns || c.microColumnAssignment !== 'by-order') return false;
+    if (c.type !== ColumnType.MINI_TIMELINE || !c.microColumns || c.microColumnAssignment !== MicroColumnAssignment.BY_ORDER) return false;
     if (c.matchColumnIds) return c.ownerId === ev.ownerId && c.matchColumnIds.includes(ev.columnId);
     return c.ownerId === ev.ownerId && c.columnId === ev.columnId;
   }) as MiniTimeline | undefined;
@@ -389,7 +389,7 @@ export function buildSegmentAddItems(
   const ev = events.find((e) => e.uid === eventUid);
   if (!ev) return [];
   const col = columns.find((c): c is MiniTimeline =>
-    c.type === 'mini-timeline' && c.ownerId === ev.ownerId && c.columnId === ev.columnId);
+    c.type === ColumnType.MINI_TIMELINE && c.ownerId === ev.ownerId && c.columnId === ev.columnId);
   const allSegments = col?.defaultEvent?.segments;
   if (!allSegments || allSegments.length <= 1) return [];
   const addable = allSegments.filter((s) => s.properties.name);
@@ -418,7 +418,7 @@ export function buildFrameAddItems(
   const ev = events.find((e) => e.uid === eventUid);
   if (!ev?.segments[segmentIndex]) return [];
   const col = columns.find((c): c is MiniTimeline =>
-    c.type === 'mini-timeline' && c.ownerId === ev.ownerId && c.columnId === ev.columnId);
+    c.type === ColumnType.MINI_TIMELINE && c.ownerId === ev.ownerId && c.columnId === ev.columnId);
   const seg = ev.segments[segmentIndex];
   const allDefaultSegs = col?.defaultEvent?.segments;
   const defaultSeg = allDefaultSegs?.find((s) => s.properties.name === seg.properties.name) ?? allDefaultSegs?.[segmentIndex];

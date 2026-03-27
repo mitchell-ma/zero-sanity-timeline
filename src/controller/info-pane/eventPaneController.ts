@@ -4,7 +4,7 @@ import {
   REACTION_LABELS, COMBAT_SKILL_LABELS, STATUS_LABELS,
   INFLICTION_EVENT_LABELS, PHYSICAL_INFLICTION_LABELS, PHYSICAL_STATUS_LABELS,
 } from '../../consts/timelineColumnLabels';
-import { interactionToLabel, THRESHOLD_MAX } from '../../dsl/semantics';
+import { VerbType, NounType, interactionToLabel, THRESHOLD_MAX } from '../../dsl/semantics';
 import type { Interaction, Effect, Predicate } from '../../dsl/semantics';
 import { getSimpleValue, getLeafValue } from '../../controller/calculation/valueResolver';
 import { translateEffect } from '../../dsl/semanticsTranslation';
@@ -151,7 +151,7 @@ export function resolveEventIdentity(
             for (const pred of info.onTriggerClause) {
               for (const cond of pred.conditions) {
                 if (cond.negated) continue;
-                if (cond.verb === 'HAVE' && cond.object === 'STATUS' && cond.objectId) {
+                if (cond.verb === VerbType.HAVE && cond.object === NounType.STATUS && cond.objectId) {
                   comboRequiresLabels.push(STATUS_LABELS[cond.objectId as StatusType] ?? cond.objectId);
                 } else {
                   comboTriggerLabels.push(interactionToLabel(cond as unknown as Interaction));
@@ -538,14 +538,14 @@ export interface EventDslData {
 function isRedundantEffect(e: Effect): boolean {
   const { object: obj, verb } = e;
   // SP cost / ultimate energy cost shown in dedicated SP/Skill sections
-  if (verb === 'CONSUME' && (obj === 'SKILL_POINT' || obj === 'ULTIMATE_ENERGY')) return true;
+  if (verb === VerbType.CONSUME && (obj === NounType.SKILL_POINT || obj === NounType.ULTIMATE_ENERGY)) return true;
   // Zero-value recoveries are noise
-  if (verb === 'RECOVER' && (obj === 'SKILL_POINT' || obj === 'STAGGER')) {
+  if (verb === VerbType.RECOVER && (obj === NounType.SKILL_POINT || obj === NounType.STAGGER)) {
     const val = getSimpleValue(e.with?.value);
     if (val === 0) return true;
   }
   // Zero-value stagger applications are noise
-  if (verb === 'DEAL' && obj === 'STAGGER') {
+  if (verb === VerbType.DEAL && obj === NounType.STAGGER) {
     const val = getSimpleValue(e.with?.value);
     if (val === 0) return true;
   }

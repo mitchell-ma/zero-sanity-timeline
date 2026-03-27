@@ -5,7 +5,7 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "ATTACK_BONUS",
+          "object": "STAT",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
@@ -19,7 +19,8 @@
               "ofDeterminer": "THIS",
               "of": "OPERATOR"
             }
-          }
+          },
+          "objectId": "ATTACK_BONUS"
         },
         {
           "verb": "APPLY",

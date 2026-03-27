@@ -21,7 +21,20 @@
             "value": {
               "verb": "VARY_BY",
               "object": "SKILL_LEVEL",
-              "value": [10, 10, 10, 10, 10, 12, 12, 12, 12, 13, 13, 15],
+              "value": [
+                10,
+                10,
+                10,
+                10,
+                10,
+                12,
+                12,
+                12,
+                12,
+                13,
+                13,
+                15
+              ],
               "ofDeterminer": "THIS",
               "of": "OPERATOR"
             }
@@ -175,14 +188,40 @@
                     "atbSp": {
                       "verb": "VARY_BY",
                       "object": "SKILL_LEVEL",
-                      "value": [10, 10, 10, 10, 10, 12, 12, 12, 12, 13, 13, 15],
+                      "value": [
+                        10,
+                        10,
+                        10,
+                        10,
+                        10,
+                        12,
+                        12,
+                        12,
+                        12,
+                        13,
+                        13,
+                        15
+                      ],
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
                     },
                     "uspNormal": {
                       "verb": "VARY_BY",
                       "object": "SKILL_LEVEL",
-                      "value": [10, 10, 10, 10, 10, 12, 12, 12, 12, 13, 13, 15],
+                      "value": [
+                        10,
+                        10,
+                        10,
+                        10,
+                        10,
+                        12,
+                        12,
+                        12,
+                        12,
+                        13,
+                        13,
+                        15
+                      ],
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
                     },
@@ -259,7 +298,7 @@
               "effects": [
                 {
                   "verb": "APPLY",
-                  "object": "DAMAGE_BONUS",
+                  "object": "STAT",
                   "objectQualifier": "PHYSICAL",
                   "toDeterminer": "ALL",
                   "to": "OPERATOR",
@@ -275,7 +314,8 @@
                       },
                       "unit": "SECOND"
                     }
-                  }
+                  },
+                  "objectId": "DAMAGE_BONUS"
                 }
               ]
             }

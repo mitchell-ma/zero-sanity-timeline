@@ -108,7 +108,7 @@ describe('OTHER/ANY target resolution', () => {
     test('OTHER OPERATOR condition uses targetOwnerId', () => {
       const statusEvent = makeEvent({
         uid: 'status-1',
-        columnId: 'test-buff',
+        columnId: 'TEST_BUFF',
         ownerId: 'slot2',
         name: 'TEST_BUFF',
       });
@@ -132,7 +132,7 @@ describe('OTHER/ANY target resolution', () => {
       // so it should match any operator's events
       const statusEvent = makeEvent({
         uid: 'status-1',
-        columnId: 'test-buff',
+        columnId: 'TEST_BUFF',
         ownerId: 'slot2',
         name: 'TEST_BUFF',
       });
@@ -154,7 +154,7 @@ describe('OTHER/ANY target resolution', () => {
     test('ANY OPERATOR condition uses targetOwnerId when present', () => {
       const statusEvent = makeEvent({
         uid: 'status-1',
-        columnId: 'test-buff',
+        columnId: 'TEST_BUFF',
         ownerId: 'slot3',
         name: 'TEST_BUFF',
       });

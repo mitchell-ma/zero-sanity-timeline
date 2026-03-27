@@ -94,7 +94,7 @@ describe('APPLY effects', () => {
 
     expect(result.failed).toBe(false);
     expect(result.produced).toHaveLength(1);
-    expect(result.produced[0].columnId).toBe('melting-flame');
+    expect(result.produced[0].columnId).toBe('MELTING_FLAME');
     expect(result.produced[0].ownerId).toBe('slot1');
     expect(result.produced[0].name).toBe('MELTING_FLAME');
   });
@@ -104,7 +104,7 @@ describe('APPLY effects', () => {
     const existingMf = Array.from({ length: 10 }, (_, i) => makeEvent({
       uid: `mf-${i}`,
       name: 'MELTING_FLAME',
-      columnId: 'melting-flame',
+      columnId: 'MELTING_FLAME',
       ownerId: 'slot1',
       startFrame: i * 10,
       segments: [{ properties: { duration: 108000 } }],
@@ -128,7 +128,7 @@ describe('APPLY effects', () => {
     const existing = Array.from({ length: 10 }, (_, i) => makeEvent({
       uid: `sh-${i}`,
       name: 'SCORCHING_HEART_EFFECT',
-      columnId: 'scorching-heart-effect',
+      columnId: 'SCORCHING_HEART_EFFECT',
       ownerId: 'slot1',
       startFrame: i * 10,
       segments: [{ properties: { duration: 2400 } }],
@@ -211,7 +211,7 @@ describe('CONSUME effects', () => {
   test('CONSUME STATUS clamps an active status', () => {
     const status = makeEvent({
       uid: 'mf-1',
-      columnId: 'melting-flame',
+      columnId: 'MELTING_FLAME',
       ownerId: 'slot1',
       name: 'MELTING_FLAME',
       startFrame: 0,
@@ -541,7 +541,7 @@ describe('Condition evaluation', () => {
   test('HAVE STATUS passes when status is active', () => {
     const status = makeEvent({
       uid: 'mf-1',
-      columnId: 'melting-flame',
+      columnId: 'MELTING_FLAME',
       ownerId: 'slot1',
       startFrame: 0,
       segments: [{ properties: { duration: 2400 } }],
@@ -575,7 +575,7 @@ describe('Condition evaluation', () => {
   test('HAVE STATUS with AT_LEAST cardinality', () => {
     const statuses = [0, 1, 2].map(i => makeEvent({
       uid: `mf-${i}`,
-      columnId: 'melting-flame',
+      columnId: 'MELTING_FLAME',
       ownerId: 'slot1',
       startFrame: 0,
       segments: [{ properties: { duration: 2400 } }],
@@ -642,7 +642,7 @@ describe('applyMutations', () => {
     const mutations: MutationSet = {
       produced: [makeEvent({
         uid: 'mf-new',
-        columnId: 'melting-flame',
+        columnId: 'MELTING_FLAME',
         ownerId: 'slot1',
         name: 'MELTING_FLAME',
       })],

@@ -5,7 +5,7 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "SKILL_DAMAGE_BONUS",
+          "object": "STAT",
           "toDeterminer": "OTHER",
           "to": "OPERATOR",
           "with": {
@@ -13,7 +13,9 @@
               "verb": "IS",
               "value": 0.16
             }
-          }
+          },
+          "objectId": "DAMAGE_BONUS",
+          "objectQualifier": "SKILL"
         }
       ]
     }

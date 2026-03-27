@@ -9,6 +9,15 @@
 - Info pane shows "REFRESHED" or "CONSUMED" instead of incorrectly labeling clamped durations as "time stop"
 - Share links now correctly preserve team status events
 - RESET statuses can be dragged past each other freely
+- Susceptibility status effects now display on the enemy timeline — skills that increase elemental damage taken show their element and rate
+- Ardelia's full kit is now supported: Dolly Rush consumes Corrosion stacks, Eruption Column applies Corrosion, Wooly Party has complete frame data including P3 bonus frames
+- Ardelia's empowered battle skill variant is now embedded in the base skill data, activated by Friendly Presence talent conditions
+- Freeform events (manually placed inflictions, reactions, statuses) now trigger the same reactive effects as engine-created ones
+- Physical status reactive triggers (e.g. "when Lift is applied") no longer fire incorrectly when only Vulnerable was created
+- Talent events no longer duplicate when re-processing the timeline
+- Massive game data refresh across all gear sets, weapons, and operators — hundreds of stat values, effect descriptions, and status configs updated to match latest game data
+- Damage Taken Bonus stat now supported for enemy-side damage calculations
+- Loadout sidebar, customizer, and weapon section now use consistent internal naming
 
 ## 2026-03-25
 - Unified how all skill effects are processed — inflictions, status applications, reactions, and physical statuses now all flow through a single pipeline instead of separate legacy paths, making behavior more consistent

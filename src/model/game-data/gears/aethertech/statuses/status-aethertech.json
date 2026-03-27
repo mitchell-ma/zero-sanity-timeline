@@ -5,7 +5,7 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "PHYSICAL_DAMAGE_BONUS",
+          "object": "STAT",
           "with": {
             "value": {
               "verb": "VARY_BY",
@@ -18,7 +18,9 @@
             }
           },
           "toDeterminer": "THIS",
-          "to": "OPERATOR"
+          "to": "OPERATOR",
+          "objectId": "DAMAGE_BONUS",
+          "objectQualifier": "PHYSICAL"
         }
       ]
     }

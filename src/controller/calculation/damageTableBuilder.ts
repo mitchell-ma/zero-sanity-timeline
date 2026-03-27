@@ -6,7 +6,7 @@
  */
 import { TimelineEvent, Column, MiniTimeline, Enemy as ViewEnemy } from '../../consts/viewTypes';
 import { COMBAT_SKILL_LABELS } from '../../consts/timelineColumnLabels';
-import { CombatSkillType, CritMode, DamageType, ElementType, EnemyTierType, StatType, TimelineSourceType } from '../../consts/enums';
+import { CombatSkillType, ColumnType, CritMode, DamageType, ElementType, EnemyTierType, StatType, TimelineSourceType } from '../../consts/enums';
 import { SkillLevel, Potential } from '../../consts/types';
 import { StatusDamageParams } from '../../model/calculation/damageFormulas';
 import { getModelEnemy } from './enemyRegistry';
@@ -228,7 +228,7 @@ export function buildDamageTableRows(
   // Build column lookup: ownerId-columnId → Column
   const colLookup = new Map<string, MiniTimeline>();
   for (const col of columns) {
-    if (col.type === 'mini-timeline' && col.source === TimelineSourceType.OPERATOR) {
+    if (col.type === ColumnType.MINI_TIMELINE && col.source === TimelineSourceType.OPERATOR) {
       colLookup.set(`${col.ownerId}-${col.columnId}`, col);
     }
   }
@@ -550,7 +550,7 @@ const EXCLUDED_SHEET_COLUMNS = new Set<string>([OPERATOR_COLUMNS.INPUT]);
 export function buildDamageTableColumns(columns: Column[]): DamageTableColumn[] {
   const result: DamageTableColumn[] = [];
   for (const col of columns) {
-    if (col.type !== 'mini-timeline') continue;
+    if (col.type !== ColumnType.MINI_TIMELINE) continue;
     if (col.source !== TimelineSourceType.OPERATOR) continue;
     if ((col as MiniTimeline).derived) continue;
     if (EXCLUDED_SHEET_COLUMNS.has(col.columnId)) continue;

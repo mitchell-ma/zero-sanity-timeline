@@ -1,4 +1,4 @@
-import { TimelineSourceType } from '../../consts/enums';
+import { ColumnType, HeaderVariant, TimelineSourceType } from '../../consts/enums';
 import { ColumnLabel } from '../../consts/timelineColumnLabels';
 import { MiniTimeline } from '../../consts/viewTypes';
 import { Subtimeline } from '../timeline/subtimeline';
@@ -88,23 +88,23 @@ export class CommonSlotController {
     return [
       {
         key: `${COMMON_OWNER_ID}-${COMMON_COLUMN_IDS.SKILL_POINTS}`,
-        type: 'mini-timeline',
+        type: ColumnType.MINI_TIMELINE,
         source: TimelineSourceType.COMMON,
         ownerId: COMMON_OWNER_ID,
         columnId: COMMON_COLUMN_IDS.SKILL_POINTS,
         label: ColumnLabel.SKILL_POINTS,
         color: '#ccaa33',
-        headerVariant: 'skill',
+        headerVariant: HeaderVariant.SKILL,
       },
       {
         key: `${COMMON_OWNER_ID}-${COMMON_COLUMN_IDS.TEAM_STATUS}`,
-        type: 'mini-timeline',
+        type: ColumnType.MINI_TIMELINE,
         source: TimelineSourceType.COMMON,
         ownerId: COMMON_OWNER_ID,
         columnId: COMMON_COLUMN_IDS.TEAM_STATUS,
         label: ColumnLabel.TEAM_STATUS,
         color: '#66aa88',
-        headerVariant: 'skill',
+        headerVariant: HeaderVariant.SKILL,
       },
     ];
   }

@@ -75,8 +75,8 @@ describe('buildColumns — operator status columns', () => {
     const statusCol = findStatusColumn(columns, 'slot1');
     expect(statusCol).toBeDefined();
     const microIds = statusCol!.microColumns!.map(mc => mc.id);
-    expect(microIds).toContain('melting-flame');
-    expect(microIds).toContain('scorching-heart-effect');
+    expect(microIds).toContain('MELTING_FLAME');
+    expect(microIds).toContain('SCORCHING_HEART_EFFECT');
   });
 
   it('creates status column for Laevatain with SCORCHING_HEART talent micro-column', () => {
@@ -86,7 +86,7 @@ describe('buildColumns — operator status columns', () => {
     const statusCol = findStatusColumn(columns, 'slot1');
     expect(statusCol).toBeDefined();
     const microIds = statusCol!.microColumns!.map(mc => mc.id);
-    expect(microIds).toContain('scorching-heart');
+    expect(microIds).toContain('SCORCHING_HEART');
   });
 
   it('creates status column for Wulfgard with WULFGARD_TALENT1_SCORCHING_FANGS', () => {
@@ -96,7 +96,7 @@ describe('buildColumns — operator status columns', () => {
     const statusCol = findStatusColumn(columns, 'slot1');
     expect(statusCol).toBeDefined();
     const microIds = statusCol!.microColumns!.map(mc => mc.id);
-    expect(microIds).toContain('wulfgard-talent1-scorching-fangs');
+    expect(microIds).toContain('WULFGARD_TALENT1_SCORCHING_FANGS');
   });
 
   it('creates status column for Yvonne with CRIT_STACKS', () => {
@@ -106,7 +106,7 @@ describe('buildColumns — operator status columns', () => {
     const statusCol = findStatusColumn(columns, 'slot1');
     expect(statusCol).toBeDefined();
     const microIds = statusCol!.microColumns!.map(mc => mc.id);
-    expect(microIds).toContain('crit-stacks');
+    expect(microIds).toContain('CRIT_STACKS');
   });
 });
 
@@ -117,8 +117,8 @@ describe('buildColumns — enemy-targeted statuses excluded from operator status
     const columns = buildColumns([slot], ENEMY, allSkillsVisible('slot1'));
     const statusCol = findStatusColumn(columns, 'slot1');
     const microIds = statusCol?.microColumns?.map(mc => mc.id) ?? [];
-    expect(microIds).not.toContain('focus');
-    expect(microIds).not.toContain('focus-empowered');
+    expect(microIds).not.toContain('FOCUS');
+    expect(microIds).not.toContain('FOCUS_EMPOWERED');
   });
 
   it('does not include ORIGINIUM_CRYSTAL in operator status column for Endministrator (targets ENEMY)', () => {
@@ -127,18 +127,17 @@ describe('buildColumns — enemy-targeted statuses excluded from operator status
     const columns = buildColumns([slot], ENEMY, allSkillsVisible('slot1'));
     const statusCol = findStatusColumn(columns, 'slot1');
     const microIds = statusCol?.microColumns?.map(mc => mc.id) ?? [];
-    expect(microIds).not.toContain('originium-crystal');
+    expect(microIds).not.toContain('ORIGINIUM_CRYSTAL');
   });
 });
 
-describe('buildColumns — matchColumnIds covers both kebab-case and StatusType forms', () => {
-  it('Laevatain status column matchColumnIds includes both forms for MELTING_FLAME', () => {
+describe('buildColumns — matchColumnIds includes raw status IDs', () => {
+  it('Laevatain status column matchColumnIds includes MELTING_FLAME', () => {
     const op = findOperator('LAEVATAIN');
     const slot = makeSlot('slot1', op);
     const columns = buildColumns([slot], ENEMY, allSkillsVisible('slot1'));
     const statusCol = findStatusColumn(columns, 'slot1');
     expect(statusCol).toBeDefined();
-    expect(statusCol!.matchColumnIds).toContain('melting-flame');
     expect(statusCol!.matchColumnIds).toContain('MELTING_FLAME');
   });
 });

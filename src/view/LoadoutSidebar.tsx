@@ -11,9 +11,10 @@ import {
   moveNode,
   uniqueName,
 } from '../utils/loadoutStorage';
+import { LoadoutNodeType, SidebarMode as SidebarModeEnum } from '../consts/enums';
 import { t } from '../locales/locale';
 
-export type SidebarMode = 'loadouts' | 'workbench' | null;
+export type SidebarMode = SidebarModeEnum | null;
 
 interface LoadoutSidebarProps {
   tree: LoadoutTree;
@@ -41,7 +42,7 @@ function flattenVisibleNodes(
   for (const node of children) {
     if (visibleIds && !visibleIds.has(node.id)) continue;
     result.push(node.id);
-    if (node.type === 'folder' && (!node.collapsed || filterActive)) {
+    if (node.type === LoadoutNodeType.FOLDER && (!node.collapsed || filterActive)) {
       result.push(...flattenVisibleNodes(tree, node.id, visibleIds, filterActive));
     }
   }
@@ -190,7 +191,7 @@ const LoadoutSidebar = forwardRef<HTMLDivElement, LoadoutSidebarProps>(function 
       // Normal click — select single, also trigger loadout switch / folder toggle
       setSelectedIds(new Set([node.id]));
       lastClickedRef.current = node.id;
-      if (node.type === 'loadout') onSelectLoadout(node.id);
+      if (node.type === LoadoutNodeType.LOADOUT) onSelectLoadout(node.id);
       else handleToggleFolder(node.id);
     }
   }, [flatOrder, onSelectLoadout, handleToggleFolder]);
@@ -284,7 +285,7 @@ const LoadoutSidebar = forwardRef<HTMLDivElement, LoadoutSidebarProps>(function 
 
     const targetNode = dropTarget.id ? tree.nodes.find((n) => n.id === dropTarget.id) : null;
 
-    if (dropTarget.position === 'inside' && targetNode?.type === 'folder') {
+    if (dropTarget.position === 'inside' && targetNode?.type === LoadoutNodeType.FOLDER) {
       // Drop inside a folder
       newParentId = targetNode.id;
       newOrder = getChildrenOf(tree, targetNode.id).length;
@@ -315,15 +316,15 @@ const LoadoutSidebar = forwardRef<HTMLDivElement, LoadoutSidebarProps>(function 
   const renderNode = (node: LoadoutNode, depth: number) => {
     if (visibleIds && !visibleIds.has(node.id)) return null;
 
-    const isActive = node.type === 'loadout' && node.id === activeLoadoutId;
+    const isActive = node.type === LoadoutNodeType.LOADOUT && node.id === activeLoadoutId;
     const isSelected = selectedIds.has(node.id);
     const isDragging = node.id === dragId;
     const isDropInside = dropTarget?.id === node.id && dropTarget.position === 'inside';
     const isDropBefore = dropTarget?.id === node.id && dropTarget.position === 'before';
     const isDropAfter = dropTarget?.id === node.id && dropTarget.position === 'after';
 
-    const children = node.type === 'folder' ? getChildrenOf(tree, node.id) : [];
-    const isCollapsed = node.type === 'folder' && node.collapsed && !filterLower;
+    const children = node.type === LoadoutNodeType.FOLDER ? getChildrenOf(tree, node.id) : [];
+    const isCollapsed = node.type === LoadoutNodeType.FOLDER && node.collapsed && !filterLower;
 
     return (
       <div key={node.id} style={{ opacity: isDragging ? 0.4 : 1 }}>
@@ -338,7 +339,7 @@ const LoadoutSidebar = forwardRef<HTMLDivElement, LoadoutSidebarProps>(function 
             const rect = e.currentTarget.getBoundingClientRect();
             const y = e.clientY - rect.top;
             const third = rect.height / 3;
-            if (node.type === 'folder' && y > third && y < third * 2) {
+            if (node.type === LoadoutNodeType.FOLDER && y > third && y < third * 2) {
               handleDragOver(e, node.id, 'inside');
             } else if (y < rect.height / 2) {
               handleDragOver(e, node.id, 'before');
@@ -361,12 +362,12 @@ const LoadoutSidebar = forwardRef<HTMLDivElement, LoadoutSidebarProps>(function 
             if (!selectedIds.has(node.id) || selectedIds.size <= 1) {
               setSelectedIds(new Set([node.id]));
               // Load the loadout when right-clicking it
-              if (node.type === 'loadout') onSelectLoadout(node.id);
+              if (node.type === LoadoutNodeType.LOADOUT) onSelectLoadout(node.id);
             }
-            setCtxMenu({ x: e.clientX, y: e.clientY, nodeId: node.id, parentId: node.type === 'folder' ? node.id : node.parentId });
+            setCtxMenu({ x: e.clientX, y: e.clientY, nodeId: node.id, parentId: node.type === LoadoutNodeType.FOLDER ? node.id : node.parentId });
           }}
         >
-          {node.type === 'folder' ? (
+          {node.type === LoadoutNodeType.FOLDER ? (
             <span className="loadout-node-icon loadout-node-chevron">
               {isCollapsed ? '\u25B6' : '\u25BC'}
             </span>
@@ -394,7 +395,7 @@ const LoadoutSidebar = forwardRef<HTMLDivElement, LoadoutSidebarProps>(function 
           )}
 
           <span className="loadout-node-actions" onClick={(e) => e.stopPropagation()}>
-            {node.type === 'folder' && (
+            {node.type === LoadoutNodeType.FOLDER && (
               <>
                 <button
                   className="loadout-action-btn"
@@ -425,14 +426,14 @@ const LoadoutSidebar = forwardRef<HTMLDivElement, LoadoutSidebarProps>(function 
         </div>
         {isDropAfter && <div className="loadout-drop-indicator" style={{ marginLeft: depth * 16 }} />}
 
-        {node.type === 'folder' && !isCollapsed && children.map((child) => renderNode(child, depth + 1))}
+        {node.type === LoadoutNodeType.FOLDER && !isCollapsed && children.map((child) => renderNode(child, depth + 1))}
       </div>
     );
   };
 
   const rootNodes = getChildrenOf(tree, null);
 
-  const handleIconClick = (mode: 'loadouts' | 'workbench') => {
+  const handleIconClick = (mode: SidebarModeEnum) => {
     if (sidebarMode === mode) {
       // Same icon clicked — collapse the panel
       onSidebarModeChange(null);
@@ -454,8 +455,8 @@ const LoadoutSidebar = forwardRef<HTMLDivElement, LoadoutSidebarProps>(function 
       {/* ── Icon strip (always visible) ────────────────────────── */}
       <div className="sidebar-icon-strip">
         <button
-          className={`sidebar-mode-btn${sidebarMode === 'loadouts' ? ' sidebar-mode-btn--active' : ''}`}
-          onClick={() => handleIconClick('loadouts')}
+          className={`sidebar-mode-btn${sidebarMode === SidebarModeEnum.LOADOUTS ? ' sidebar-mode-btn--active' : ''}`}
+          onClick={() => handleIconClick(SidebarModeEnum.LOADOUTS)}
           title={t('sidebar.tooltip.loadouts')}
         >
           <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
@@ -463,8 +464,8 @@ const LoadoutSidebar = forwardRef<HTMLDivElement, LoadoutSidebarProps>(function 
           </svg>
         </button>
         <button
-          className={`sidebar-mode-btn${sidebarMode === 'workbench' ? ' sidebar-mode-btn--active' : ''}`}
-          onClick={() => handleIconClick('workbench')}
+          className={`sidebar-mode-btn${sidebarMode === SidebarModeEnum.WORKBENCH ? ' sidebar-mode-btn--active' : ''}`}
+          onClick={() => handleIconClick(SidebarModeEnum.WORKBENCH)}
           title={t('sidebar.tooltip.workbench')}
         >
           <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
@@ -474,7 +475,7 @@ const LoadoutSidebar = forwardRef<HTMLDivElement, LoadoutSidebarProps>(function 
       </div>
 
       {/* ── Loadouts panel ─────────────────────────────────────── */}
-      {sidebarMode === 'loadouts' && (
+      {sidebarMode === SidebarModeEnum.LOADOUTS && (
         <div className="sidebar-panel">
           <div className="loadout-sidebar-header">
             <span className="loadout-sidebar-title">{t('sidebar.title')}</span>
@@ -645,7 +646,7 @@ function LoadoutContextMenu({
           {nodeId && node && !isBatch && (
             <>
               <div className="loadout-ctx-separator" />
-              {node.type === 'loadout' && (
+              {node.type === LoadoutNodeType.LOADOUT && (
                 <button className="loadout-ctx-item" onClick={() => onDuplicate(nodeId)}>
                   {t('sidebar.ctx.duplicate')}
                 </button>

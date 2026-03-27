@@ -5,7 +5,7 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "HEAT_DAMAGE_BONUS",
+          "object": "STAT",
           "with": {
             "value": {
               "verb": "VARY_BY",
@@ -24,11 +24,13 @@
               "ofDeterminer": "THIS",
               "of": "OPERATOR"
             }
-          }
+          },
+          "objectId": "DAMAGE_BONUS",
+          "objectQualifier": "HEAT"
         },
         {
           "verb": "APPLY",
-          "object": "NATURE_DAMAGE_BONUS",
+          "object": "STAT",
           "with": {
             "value": {
               "verb": "VARY_BY",
@@ -47,11 +49,13 @@
               "ofDeterminer": "THIS",
               "of": "OPERATOR"
             }
-          }
+          },
+          "objectId": "DAMAGE_BONUS",
+          "objectQualifier": "NATURE"
         },
         {
           "verb": "APPLY",
-          "object": "ATTACK_BONUS",
+          "object": "STAT",
           "with": {
             "value": {
               "verb": "VARY_BY",
@@ -70,7 +74,8 @@
               "ofDeterminer": "THIS",
               "of": "OPERATOR"
             }
-          }
+          },
+          "objectId": "ATTACK_BONUS"
         }
       ]
     }

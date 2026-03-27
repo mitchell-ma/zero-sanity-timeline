@@ -1,46 +1,4 @@
 {
-  "onTriggerClause": [
-    {
-      "conditions": [
-        {
-          "subjectDeterminer": "THIS",
-          "subject": "OPERATOR",
-          "verb": "HIT_WITH",
-          "object": "BATTLE_SKILL"
-        }
-      ],
-      "effects": [
-        {
-          "verb": "APPLY",
-          "object": "TREATMENT",
-          "toDeterminer": "CONTROLLED",
-          "to": "OPERATOR",
-          "with": {
-            "healBase": {
-              "verb": "VARY_BY",
-              "object": "TALENT_LEVEL",
-              "value": [
-                63,
-                90
-              ],
-              "ofDeterminer": "THIS",
-              "of": "OPERATOR"
-            },
-            "willAdditive": {
-              "verb": "VARY_BY",
-              "object": "TALENT_LEVEL",
-              "value": [
-                0.53,
-                0.75
-              ],
-              "ofDeterminer": "THIS",
-              "of": "OPERATOR"
-            }
-          }
-        }
-      ]
-    }
-  ],
   "properties": {
     "id": "FRIENDLY_PRESENCE_TALENT",
     "name": "Friendly Presence (Talent)",

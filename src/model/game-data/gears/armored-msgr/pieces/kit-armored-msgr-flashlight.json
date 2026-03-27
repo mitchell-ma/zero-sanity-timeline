@@ -37,7 +37,7 @@
         },
         {
           "verb": "APPLY",
-          "object": "HP_BONUS",
+          "object": "STAT",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
@@ -53,7 +53,8 @@
               "ofDeterminer": "THIS",
               "of": "OPERATOR"
             }
-          }
+          },
+          "objectId": "HP_BONUS"
         }
       ]
     }

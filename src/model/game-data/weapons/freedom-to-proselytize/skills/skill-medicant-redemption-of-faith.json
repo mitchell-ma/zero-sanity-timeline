@@ -5,7 +5,7 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "ALL_ATTRIBUTE_BONUS",
+          "object": "STAT",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
@@ -26,7 +26,8 @@
               "ofDeterminer": "THIS",
               "of": "OPERATOR"
             }
-          }
+          },
+          "objectId": "ALL_ATTRIBUTE_BONUS"
         }
       ]
     }

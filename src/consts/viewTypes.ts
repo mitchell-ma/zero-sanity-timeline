@@ -1,4 +1,4 @@
-import { DamageFactorType, DamageType, ElementType, EnhancementType, EventFrameType, EventStatusType, SegmentType, TimeDependency } from './enums';
+import { DamageFactorType, DamageType, ElementType, EnhancementType, EventFrameType, EventStatusType, InteractionModeType, SegmentType, TimeDependency } from './enums';
 import type { FrameClausePredicate, FrameDealDamage } from '../model/event-frames/skillEventFrame';
 
 /** String union for the four operator combat skills, matching the data keys in operators.ts. */
@@ -252,6 +252,8 @@ export interface TimelineEvent {
   statusValue?: number;
   /** Damage formula factor this status contributes to (e.g. AMP, WEAKEN, SUSCEPTIBILITY). */
   damageFactorType?: DamageFactorType;
+  /** Interaction mode at creation time — determines pipeline routing (strict = input, freeform = derived). */
+  creationInteractionMode?: InteractionModeType;
   /** Pending segment overrides from share URL decode (applied by attachDefaultSegments when columns become available). */
   _pendingSegmentOverrides?: { sg?: number[]; fo?: number[][] };
 }
@@ -318,18 +320,18 @@ export interface MicroColumn {
 /** Unified mini-timeline column — replaces SkillColumn, StatusColumn, MeltingFlameColumn. */
 export type MiniTimeline = {
   key: string;
-  type: "mini-timeline";
+  type: import("./enums").ColumnType.MINI_TIMELINE;
   source: import("./enums").TimelineSourceType;
   ownerId: string;
   columnId: string;
   label: string;
   color: string;
-  headerVariant: "skill" | "infliction";
+  headerVariant: import("./enums").HeaderVariant;
 
   /** If present, this mini-timeline has micro-columns. */
   microColumns?: MicroColumn[];
   /** How events are assigned to micro-columns. */
-  microColumnAssignment?: "by-order" | "by-column-id" | "dynamic-split";
+  microColumnAssignment?: import("./enums").MicroColumnAssignment;
   /** If set, collect events matching any of these columnIds (instead of col.columnId). */
   matchColumnIds?: string[];
 
@@ -411,7 +413,7 @@ export type MiniTimeline = {
 
 export type PlaceholderColumn = {
   key: string;
-  type: "placeholder";
+  type: import("./enums").ColumnType.PLACEHOLDER;
   ownerId: string;
   color: string;
 };

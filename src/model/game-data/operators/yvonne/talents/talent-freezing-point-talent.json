@@ -11,7 +11,8 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "CRITICAL_DAMAGE_BONUS",
+          "object": "STAT",
+          "objectId": "CRITICAL_DAMAGE_BONUS",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {

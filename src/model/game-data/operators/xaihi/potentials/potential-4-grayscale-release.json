@@ -17,7 +17,7 @@
         },
         {
           "verb": "APPLY",
-          "object": "TREATMENT_BONUS",
+          "object": "STAT",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
@@ -25,7 +25,8 @@
               "verb": "IS",
               "value": 0.1
             }
-          }
+          },
+          "objectId": "TREATMENT_BONUS"
         }
       ]
     }

@@ -16,11 +16,25 @@
           "object": "ULTIMATE_ENERGY",
           "with": {
             "value": {
-              "verb": "VARY_BY",
-              "object": "POTENTIAL",
-              "value": [100, 100, 100, 100, 85, 85],
-              "ofDeterminer": "THIS",
-              "of": "OPERATOR"
+              "operation": "MULT",
+              "left": {
+                "verb": "IS",
+                "value": 100
+              },
+              "right": {
+                "verb": "VARY_BY",
+                "object": "POTENTIAL",
+                "value": [
+                  1,
+                  1,
+                  1,
+                  1,
+                  0.85,
+                  0.85
+                ],
+                "ofDeterminer": "THIS",
+                "of": "OPERATOR"
+              }
             }
           }
         }
@@ -122,8 +136,8 @@
                 },
                 {
                   "verb": "APPLY",
-                  "object": "THE_STEEL_OATH",
-                  "objectType": "STATUS",
+                  "object": "STATUS",
+                  "objectId": "THE_STEEL_OATH",
                   "toDeterminer": "ALL",
                   "to": "OPERATOR",
                   "with": {
@@ -173,8 +187,8 @@
               "effects": [
                 {
                   "verb": "APPLY",
-                  "object": "THE_STEEL_OATH_EMPOWERED",
-                  "objectType": "STATUS",
+                  "object": "STATUS",
+                  "objectId": "THE_STEEL_OATH_EMPOWERED",
                   "toDeterminer": "THIS",
                   "to": "OPERATOR",
                   "with": {

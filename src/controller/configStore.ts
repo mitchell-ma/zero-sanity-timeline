@@ -10,8 +10,8 @@
 
 import type { EventSegmentData } from '../consts/viewTypes';
 import type { FrameClausePredicate } from '../model/event-frames/skillEventFrame';
-import { StackInteractionType } from '../consts/enums';
-import { VerbType } from '../dsl/semantics';
+import { CombatSkillType, StackInteractionType, UnitType } from '../consts/enums';
+import { VerbType, NounType, DeterminerType } from '../dsl/semantics';
 import type { Interaction, ValueNode } from '../dsl/semantics';
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from './calculation/valueResolver';
 
@@ -285,7 +285,7 @@ export function getRawSkillTypeMap(operatorId: string): Record<string, unknown> 
 }
 
 export function resolveSkillType(operatorId: string, skillId: string): string | null {
-  if (skillId === 'FINISHER' || skillId === 'DIVE') return 'BASIC_ATTACK';
+  if (skillId === CombatSkillType.FINISHER || skillId === CombatSkillType.DIVE) return CombatSkillType.BASIC_ATTACK;
   const typeMap = getSkillTypeMap(operatorId);
   for (const [type, baseId] of Object.entries(typeMap)) {
     if (baseId === skillId) return type;
@@ -464,7 +464,7 @@ export function getTeamStatusIds(operatorId: string): string[] {
       for (const frame of seg.frames ?? []) {
         for (const pred of frame.clause ?? []) {
           for (const ef of pred.effects ?? []) {
-            if (ef.to === 'TEAM' && ef.object === 'STATUS' && ef.objectId) {
+            if (ef.to === NounType.TEAM && ef.object === NounType.STATUS && ef.objectId) {
               ids.add(ef.objectId as string);
             }
           }
@@ -540,19 +540,19 @@ const customGearEffects: Record<string, NormalizedEffectDef[]> = {};
 
 function inferTarget(se: Record<string, unknown>): { target: string; targetDeterminer: string } {
   const props = (se.properties ?? {}) as Record<string, unknown>;
-  if (props.target) return { target: props.target as string, targetDeterminer: (props.targetDeterminer ?? props.toDeterminer ?? 'THIS') as string };
-  if (props.to) return { target: props.to as string, targetDeterminer: (props.toDeterminer ?? 'THIS') as string };
+  if (props.target) return { target: props.target as string, targetDeterminer: (props.targetDeterminer ?? props.toDeterminer ?? DeterminerType.THIS) as string };
+  if (props.to) return { target: props.to as string, targetDeterminer: (props.toDeterminer ?? DeterminerType.THIS) as string };
   const triggers = se.onTriggerClause as { effects?: { to?: string; toDeterminer?: string }[] }[] | undefined;
   if (triggers) {
     for (const clause of triggers) {
       for (const effect of clause.effects ?? []) {
-        if (effect.to === 'ENEMY') return { target: 'ENEMY', targetDeterminer: 'THIS' };
-        if (effect.toDeterminer === 'OTHER') return { target: 'OPERATOR', targetDeterminer: 'OTHER' };
-        if (effect.toDeterminer === 'ALL') return { target: 'OPERATOR', targetDeterminer: 'ALL' };
+        if (effect.to === NounType.ENEMY) return { target: NounType.ENEMY, targetDeterminer: DeterminerType.THIS };
+        if (effect.toDeterminer === DeterminerType.OTHER) return { target: NounType.OPERATOR, targetDeterminer: DeterminerType.OTHER };
+        if (effect.toDeterminer === DeterminerType.ALL) return { target: NounType.OPERATOR, targetDeterminer: DeterminerType.ALL };
       }
     }
   }
-  return { target: 'OPERATOR', targetDeterminer: 'THIS' };
+  return { target: NounType.OPERATOR, targetDeterminer: DeterminerType.THIS };
 }
 
 function normalizeEffectEntry(raw: Record<string, unknown>): NormalizedEffectDef {
@@ -873,7 +873,7 @@ function parseDurationFrames(props: Record<string, unknown> | undefined): number
   const dur = props.duration as { value: ValueNode; unit: string };
   const val = resolveValueNode(dur.value, DEFAULT_VALUE_CONTEXT);
   if (val < 0) return undefined;
-  return dur.unit === 'SECOND' ? Math.round(val * FPS) : val;
+  return dur.unit === UnitType.SECOND ? Math.round(val * FPS) : val;
 }
 
 function parseStatusEvent(raw: Record<string, unknown>): StatusEventConfig {
@@ -886,8 +886,8 @@ function parseStatusEvent(raw: Record<string, unknown>): StatusEventConfig {
     id,
     originId: (metadata.originId ?? raw.originId ?? '') as string,
     ...(metadata.isEnabled === false ? { isEnabled: false } : {}),
-    target: (props.target ?? raw.target ?? 'OPERATOR') as string,
-    targetDeterminer: (props.targetDeterminer ?? raw.targetDeterminer ?? 'THIS') as string,
+    target: (props.target ?? raw.target ?? NounType.OPERATOR) as string,
+    targetDeterminer: (props.targetDeterminer ?? raw.targetDeterminer ?? DeterminerType.THIS) as string,
     type: (props.eventCategoryType ?? props.type) as string | undefined,
     element: props.element as string | undefined,
     duration: parseDurationFrames(props),

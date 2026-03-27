@@ -9,7 +9,7 @@ import { LoadoutProperties, getDefaultLoadoutProperties } from '../view/Informat
 import { ALL_OPERATORS, getUltimateEnergyCost, getUltimateEnergyCostForPotential } from './operators/operatorRegistry';
 import { getModelEnemy } from './calculation/enemyRegistry';
 import { BossEnemy } from '../model/enemies/bossEnemy';
-import { StatType } from '../consts/enums';
+import { ColumnType, StatType } from '../consts/enums';
 import { DEFAULT_STATS } from '../consts/stats';
 import { getGearPiece } from './gameDataStore';
 import { filterEventsOnOperatorChange } from './timeline/inputEventController';
@@ -278,7 +278,7 @@ export function computeDefaultResourceConfig(
  */
 export function findEventDefaults(
   ev: TimelineEvent,
-  columns: (MiniTimeline | { type: 'placeholder' })[],
+  columns: (MiniTimeline | { type: ColumnType.PLACEHOLDER })[],
 ): {
   name?: string;
   segments?: import('../consts/viewTypes').EventSegmentData[];
@@ -286,7 +286,7 @@ export function findEventDefaults(
 } | null {
   const col = (columns as MiniTimeline[]).find(
     (c) =>
-      c.type === 'mini-timeline' &&
+      c.type === ColumnType.MINI_TIMELINE &&
       c.ownerId === ev.ownerId &&
       (c.columnId === ev.columnId || (c.matchColumnIds?.includes(ev.columnId) ?? false)),
   );
@@ -299,11 +299,11 @@ export function findEventDefaults(
 /** Look up stacks config from the micro-column matching an event's columnId. */
 function findMicroColumnStacks(
   ev: TimelineEvent,
-  columns: (MiniTimeline | { type: 'placeholder' })[],
+  columns: (MiniTimeline | { type: ColumnType.PLACEHOLDER })[],
 ): Record<string, unknown> | undefined {
   const col = (columns as MiniTimeline[]).find(
     (c) =>
-      c.type === 'mini-timeline' &&
+      c.type === ColumnType.MINI_TIMELINE &&
       c.ownerId === ev.ownerId &&
       (c.columnId === ev.columnId || (c.matchColumnIds?.includes(ev.columnId) ?? false)),
   );
@@ -319,7 +319,7 @@ function findMicroColumnStacks(
  */
 export function attachDefaultSegments(
   events: TimelineEvent[],
-  columns: (MiniTimeline | { type: 'placeholder' })[],
+  columns: (MiniTimeline | { type: ColumnType.PLACEHOLDER })[],
 ): TimelineEvent[] {
   return events.map((ev) => {
     // A "placeholder" segment is a single segment with only a duration property (no name, frames, metadata)

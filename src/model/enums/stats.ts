@@ -46,6 +46,8 @@ export enum StatType {
   // ── Damage factor stats ──────────────────────────────────────────────────────
   /** Elemental/skill damage bonus (percentage). Qualified by element or skill type in DSL. */
   DAMAGE_BONUS = "DAMAGE_BONUS",
+  /** Damage taken bonus (percentage increase to damage received). Qualified by element in DSL. */
+  DAMAGE_TAKEN_BONUS = "DAMAGE_TAKEN_BONUS",
   /** Elemental damage amplification (percentage). Qualified by element in DSL. */
   AMP = "AMP",
   /** Arts/elemental susceptibility (percentage increase to arts damage taken). Qualified by element in DSL. */
@@ -115,6 +117,7 @@ export const STAT_ATTRIBUTION: Record<StatType, StatOwnerType[]> = {
   [StatType.ARTS_DAMAGE_BONUS]: [StatOwnerType.OPERATOR, StatOwnerType.WEAPON, StatOwnerType.SKILL],
   // ── Damage factor stats ───────────────────────────────────────────────────
   [StatType.DAMAGE_BONUS]: [StatOwnerType.OPERATOR, StatOwnerType.WEAPON, StatOwnerType.SKILL],
+  [StatType.DAMAGE_TAKEN_BONUS]: [StatOwnerType.ENEMY],
   [StatType.AMP]: [StatOwnerType.OPERATOR],
   [StatType.SUSCEPTIBILITY]: [StatOwnerType.ENEMY],
   // ── Enemy only ────────────────────────────────────────────────────────────
@@ -131,4 +134,38 @@ export function getStatsForTarget(target: StatOwnerType): StatType[] {
   return (Object.keys(STAT_ATTRIBUTION) as StatType[]).filter(
     (stat) => STAT_ATTRIBUTION[stat].includes(target),
   );
+}
+
+// ── Qualified stat resolution ──────────────────────────────────────────────
+
+/** All valid StatType values for O(1) lookup. */
+const STAT_TYPE_SET = new Set<string>(Object.values(StatType));
+
+/** The DSL object type for stat effects. Duplicated here to avoid model→DSL dependency. */
+const STAT_OBJECT = 'STAT' as const;
+
+/**
+ * Resolve a DSL effect's object/objectId/objectQualifier into a StatType.
+ *
+ * Qualified stats: object=STAT, objectId=DAMAGE_BONUS, objectQualifier=HEAT → HEAT_DAMAGE_BONUS
+ * Unqualified stats: object=STAT, objectId=ATTACK_BONUS → ATTACK_BONUS
+ * Legacy direct stats: object=INTELLECT → INTELLECT
+ *
+ * Accepts either an effect-shaped object or individual fields.
+ * Returns undefined if the resolved key is not a valid StatType.
+ */
+export function resolveEffectStat(effect: { object: string; objectId?: string; objectQualifier?: string }): StatType | undefined;
+export function resolveEffectStat(object: string, objectId?: string, objectQualifier?: string): StatType | undefined;
+export function resolveEffectStat(
+  effectOrObject: string | { object: string; objectId?: string; objectQualifier?: string },
+  objectId?: string,
+  objectQualifier?: string,
+): StatType | undefined {
+  const obj = typeof effectOrObject === 'string' ? effectOrObject : effectOrObject.object;
+  const id = typeof effectOrObject === 'string' ? objectId : effectOrObject.objectId;
+  const qual = typeof effectOrObject === 'string' ? objectQualifier : effectOrObject.objectQualifier;
+  const key = obj === STAT_OBJECT
+    ? (qual ? `${qual}_${id}` : id ?? obj)
+    : obj;
+  return STAT_TYPE_SET.has(key) ? key as StatType : undefined;
 }

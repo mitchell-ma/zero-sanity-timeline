@@ -11,7 +11,7 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "DAMAGE_BONUS",
+          "object": "STAT",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
@@ -25,7 +25,8 @@
               "ofDeterminer": "THIS",
               "of": "OPERATOR"
             }
-          }
+          },
+          "objectId": "DAMAGE_BONUS"
         }
       ]
     }

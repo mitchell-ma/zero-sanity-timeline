@@ -11,6 +11,8 @@
  * - Custom operators with `baseStats: { lv1, lv90 }` (interpolated)
  */
 import { ElementType, StatType } from '../../consts/enums';
+import { resolveEffectStat } from '../enums/stats';
+import { VerbType, NounType } from '../../dsl/semantics';
 import { DEFAULT_STATS } from '../../consts/stats';
 import { interpolateStats, ATTRIBUTE_INCREASE_VALUES } from './operator';
 import { getOperatorPotentialRaw } from '../game-data/operatorsStore';
@@ -131,11 +133,11 @@ export class DataDrivenOperator {
       for (const clause of clauses) {
         if (clause.conditions && clause.conditions.length > 0) continue;
         for (const eff of (clause.effects ?? [])) {
-          if (eff.verb === 'APPLY' && eff.to === 'OPERATOR' && eff.object !== 'BUFF' && eff.object !== 'STATUS') {
+          if (eff.verb === VerbType.APPLY && eff.to === NounType.OPERATOR && eff.object !== NounType.STATUS) {
             const w = (eff.with ?? {}) as Record<string, { value?: unknown }>;
             const value = (w.value?.value ?? 0) as number;
-            const stat = eff.object as StatType;
-            result[stat] = (result[stat] ?? 0) + value;
+            const stat = resolveEffectStat(eff as { object: string; objectId?: string; objectQualifier?: string });
+            if (stat) result[stat] = (result[stat] ?? 0) + value;
           }
         }
       }

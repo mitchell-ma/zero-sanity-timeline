@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { LoadoutTree, flattenTreeNodes, loadLoadoutData } from '../utils/loadoutStorage';
 import { exportMultiLoadoutBundle } from '../utils/sheetStorage';
+import { LoadoutNodeType } from '../consts/enums';
 import { t } from '../locales/locale';
 
 interface ExportModalProps {
@@ -16,12 +17,12 @@ export default function ExportModal({ open, tree, activeLoadoutId, onClose }: Ex
   // Reset selection to all loadout IDs when modal opens
   useEffect(() => {
     if (open) {
-      const allLoadoutIds = new Set(tree.nodes.filter((n) => n.type === 'loadout').map((n) => n.id));
+      const allLoadoutIds = new Set(tree.nodes.filter((n) => n.type === LoadoutNodeType.LOADOUT).map((n) => n.id));
       setSelectedIds(allLoadoutIds);
     }
   }, [open, tree]);
 
-  const allLoadoutIds = tree.nodes.filter((n) => n.type === 'loadout').map((n) => n.id);
+  const allLoadoutIds = tree.nodes.filter((n) => n.type === LoadoutNodeType.LOADOUT).map((n) => n.id);
   const allSelected = allLoadoutIds.length > 0 && allLoadoutIds.every((id) => selectedIds.has(id));
 
   const handleToggleAll = useCallback(() => {
@@ -82,7 +83,7 @@ export default function ExportModal({ open, tree, activeLoadoutId, onClose }: Ex
 
         <div className="export-modal-list">
           {flattened.map(({ node, depth }) => {
-            if (node.type === 'folder') {
+            if (node.type === LoadoutNodeType.FOLDER) {
               return (
                 <div key={node.id} className="export-modal-folder" style={{ paddingLeft: 8 + depth * 20 }}>
                   <span className="export-folder-icon">{'\u25BC'}</span>

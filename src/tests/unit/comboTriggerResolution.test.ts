@@ -67,7 +67,7 @@ function makeFocusEvent(startFrame: number, durationFrames: number): TimelineEve
     uid: `focus-${startFrame}`,
     name: StatusType.FOCUS,
     ownerId: ENEMY_OWNER_ID,
-    columnId: 'focus',
+    columnId: 'FOCUS',
     startFrame,
     segments: [{ properties: { duration: durationFrames } }],
   });
@@ -361,7 +361,7 @@ describe('D. Antal battle skill → Focus, Akekuri battle skill → infliction t
       uid: 'antal-focus',
       name: 'Focus',
       ownerId: ENEMY_OWNER_ID,
-      columnId: 'focus',
+      columnId: 'FOCUS',
       startFrame: 80, // offset ~0.67s from Antal battle skill at frame 0
       segments: [{ properties: { duration: 60 * FPS } }], // 60s Focus duration
       sourceOwnerId: ANTAL_SLOT,
@@ -399,7 +399,7 @@ describe('D. Antal battle skill → Focus, Akekuri battle skill → infliction t
       uid: 'antal-focus',
       name: 'Focus',
       ownerId: ENEMY_OWNER_ID,
-      columnId: 'focus',
+      columnId: 'FOCUS',
       startFrame: 80,
       segments: [{ properties: { duration: 200 } }], // short Focus — expires at frame 280
       sourceOwnerId: ANTAL_SLOT,
@@ -457,7 +457,7 @@ describe('D. Antal battle skill → Focus, Akekuri battle skill → infliction t
       uid: 'antal-focus',
       name: 'Focus',
       ownerId: ENEMY_OWNER_ID,
-      columnId: 'focus',
+      columnId: 'FOCUS',
       startFrame: 0,
       segments: [{ properties: { duration: 60 * FPS } }],
       sourceOwnerId: ANTAL_SLOT,
@@ -493,7 +493,7 @@ describe('D. Antal battle skill → Focus, Akekuri battle skill → infliction t
       uid: 'antal-focus',
       name: 'Focus',
       ownerId: ENEMY_OWNER_ID,
-      columnId: 'focus',
+      columnId: 'FOCUS',
       startFrame: 0,
       segments: [{ properties: { duration: 60 * FPS } }],
       sourceOwnerId: ANTAL_SLOT,
@@ -543,7 +543,7 @@ describe('D. Antal battle skill → Focus, Akekuri battle skill → infliction t
       uid: 'antal-focus',
       name: 'Focus',
       ownerId: ENEMY_OWNER_ID,
-      columnId: 'focus',
+      columnId: 'FOCUS',
       startFrame: 0,
       segments: [{ properties: { duration: 60 * FPS } }],
       sourceOwnerId: ANTAL_SLOT,

@@ -57,7 +57,7 @@
         },
         {
           "verb": "APPLY",
-          "object": "CRYO_DAMAGE_BONUS",
+          "object": "STAT",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
@@ -73,11 +73,13 @@
               "ofDeterminer": "THIS",
               "of": "OPERATOR"
             }
-          }
+          },
+          "objectId": "DAMAGE_BONUS",
+          "objectQualifier": "CRYO"
         },
         {
           "verb": "APPLY",
-          "object": "ELECTRIC_DAMAGE_BONUS",
+          "object": "STAT",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
@@ -93,7 +95,9 @@
               "ofDeterminer": "THIS",
               "of": "OPERATOR"
             }
-          }
+          },
+          "objectId": "DAMAGE_BONUS",
+          "objectQualifier": "ELECTRIC"
         }
       ]
     }

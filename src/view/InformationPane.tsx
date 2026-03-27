@@ -3,7 +3,7 @@ import { TimelineEvent, Operator, Enemy, SelectedFrame, ResourceConfig, Column }
 import { OperatorLoadoutState } from './OperatorLoadoutHeader';
 import { EnemyStats } from '../controller/appStateController';
 import type { DamageTableRow } from '../controller/calculation/damageTableBuilder';
-import { InfoLevel, type InteractionModeType } from '../consts/enums';
+import { InfoLevel, InfoPaneMode, type InteractionModeType } from '../consts/enums';
 import EventPane from './info-pane/EventPane';
 import LoadoutPane from './info-pane/LoadoutPane';
 import EnemyPane from './info-pane/EnemyPane';
@@ -105,7 +105,7 @@ type InformationPaneProps = {
   interactionMode?: InteractionModeType;
 } & (
   | {
-      mode: 'event';
+      mode: InfoPaneMode.EVENT;
       event: TimelineEvent;
       processedEvent?: TimelineEvent;
       operators: Operator[];
@@ -127,7 +127,7 @@ type InformationPaneProps = {
       onSaveAsCustomSkill?: (event: TimelineEvent) => void;
     }
   | {
-      mode: 'loadout';
+      mode: InfoPaneMode.LOADOUT;
       operatorId: string;
       slotId: string;
       operator: Operator;
@@ -141,14 +141,14 @@ type InformationPaneProps = {
       onLoadoutChange?: (loadout: OperatorLoadoutState) => void;
     }
   | {
-      mode: 'enemy';
+      mode: InfoPaneMode.ENEMY;
       enemy: Enemy;
       enemyStats: EnemyStats;
       onEnemyStatsChange: (stats: EnemyStats) => void;
       onClose: () => void;
     }
   | {
-      mode: 'resource';
+      mode: InfoPaneMode.RESOURCE;
       label: string;
       color: string;
       config: ResourceConfig;
@@ -225,7 +225,7 @@ export default function InformationPane(props: InformationPaneProps) {
           </svg>
         </button>
       </div>
-      {props.mode === 'event' ? (
+      {props.mode === InfoPaneMode.EVENT ? (
         <EventPane
           event={props.event}
           processedEvent={props.processedEvent}
@@ -249,7 +249,7 @@ export default function InformationPane(props: InformationPaneProps) {
           onSaveAsCustomSkill={props.onSaveAsCustomSkill}
           verbose={verbose}
         />
-      ) : props.mode === 'loadout' ? (
+      ) : props.mode === InfoPaneMode.LOADOUT ? (
         <LoadoutPane
           operatorId={props.operatorId}
           slotId={props.slotId}
@@ -264,14 +264,14 @@ export default function InformationPane(props: InformationPaneProps) {
           onSelectOperator={props.onSelectOperator}
           onLoadoutChange={props.onLoadoutChange}
         />
-      ) : props.mode === 'enemy' ? (
+      ) : props.mode === InfoPaneMode.ENEMY ? (
         <EnemyPane
           enemy={props.enemy}
           stats={props.enemyStats}
           onStatsChange={props.onEnemyStatsChange}
           onClose={handleClose}
         />
-      ) : props.mode === 'resource' ? (
+      ) : props.mode === InfoPaneMode.RESOURCE ? (
         <ResourcePane
           label={props.label}
           color={props.color}

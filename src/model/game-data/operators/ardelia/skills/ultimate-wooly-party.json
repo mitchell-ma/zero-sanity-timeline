@@ -16,18 +16,25 @@
           "object": "ULTIMATE_ENERGY",
           "with": {
             "value": {
-              "verb": "VARY_BY",
-              "object": "POTENTIAL",
-              "value": [
-                90,
-                90,
-                90,
-                90,
-                76.5,
-                76.5
-              ],
-              "ofDeterminer": "THIS",
-              "of": "OPERATOR"
+              "operation": "MULT",
+              "left": {
+                "verb": "IS",
+                "value": 90
+              },
+              "right": {
+                "verb": "VARY_BY",
+                "object": "POTENTIAL",
+                "value": [
+                  1,
+                  1,
+                  1,
+                  1,
+                  0.85,
+                  0.85
+                ],
+                "ofDeterminer": "THIS",
+                "of": "OPERATOR"
+              }
             }
           }
         }
@@ -67,8 +74,24 @@
         "duration": {
           "value": {
             "operation": "ADD",
-            "left": { "verb": "IS", "value": 4.47 },
-            "right": { "verb": "VARY_BY", "object": "POTENTIAL", "value": [0, 0, 0, 1, 1, 1], "ofDeterminer": "THIS", "of": "OPERATOR" }
+            "left": {
+              "verb": "IS",
+              "value": 3
+            },
+            "right": {
+              "verb": "VARY_BY",
+              "object": "POTENTIAL",
+              "value": [
+                0,
+                0,
+                0,
+                1,
+                1,
+                1
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            }
           },
           "unit": "SECOND"
         },
@@ -85,173 +108,7 @@
           },
           "properties": {
             "offset": {
-              "value": 0,
-              "unit": "SECOND"
-            }
-          },
-          "clause": [
-            {
-              "conditions": [],
-              "effects": [
-                {
-                  "verb": "DEAL",
-                  "object": "STAGGER",
-                  "to": "ENEMY",
-                  "with": {
-                    "value": {
-                      "verb": "IS",
-                      "value": 2
-                    }
-                  }
-                }
-              ]
-            }
-          ],
-          "clauseType": "ALL"
-        },
-        {
-          "metadata": {
-            "eventComponentType": "FRAME",
-            "dataSources": [
-              "SELF"
-            ]
-          },
-          "properties": {
-            "offset": {
-              "value": 0,
-              "unit": "SECOND"
-            }
-          },
-          "clause": [
-            {
-              "conditions": [],
-              "effects": [
-                {
-                  "verb": "DEAL",
-                  "object": "STAGGER",
-                  "to": "ENEMY",
-                  "with": {
-                    "value": {
-                      "verb": "IS",
-                      "value": 2
-                    }
-                  }
-                }
-              ]
-            }
-          ],
-          "clauseType": "ALL"
-        },
-        {
-          "metadata": {
-            "eventComponentType": "FRAME",
-            "dataSources": [
-              "SELF"
-            ]
-          },
-          "properties": {
-            "offset": {
-              "value": 0,
-              "unit": "SECOND"
-            }
-          },
-          "clause": [
-            {
-              "conditions": [],
-              "effects": [
-                {
-                  "verb": "DEAL",
-                  "object": "STAGGER",
-                  "to": "ENEMY",
-                  "with": {
-                    "value": {
-                      "verb": "IS",
-                      "value": 2
-                    }
-                  }
-                }
-              ]
-            }
-          ],
-          "clauseType": "ALL"
-        },
-        {
-          "metadata": {
-            "eventComponentType": "FRAME",
-            "dataSources": [
-              "SELF"
-            ]
-          },
-          "properties": {
-            "offset": {
-              "value": 0,
-              "unit": "SECOND"
-            }
-          },
-          "clause": [
-            {
-              "conditions": [],
-              "effects": [
-                {
-                  "verb": "DEAL",
-                  "object": "STAGGER",
-                  "to": "ENEMY",
-                  "with": {
-                    "value": {
-                      "verb": "IS",
-                      "value": 2
-                    }
-                  }
-                }
-              ]
-            }
-          ],
-          "clauseType": "ALL"
-        },
-        {
-          "metadata": {
-            "eventComponentType": "FRAME",
-            "dataSources": [
-              "SELF"
-            ]
-          },
-          "properties": {
-            "offset": {
-              "value": 0,
-              "unit": "SECOND"
-            }
-          },
-          "clause": [
-            {
-              "conditions": [],
-              "effects": [
-                {
-                  "verb": "DEAL",
-                  "object": "STAGGER",
-                  "to": "ENEMY",
-                  "with": {
-                    "value": {
-                      "verb": "IS",
-                      "value": 2
-                    }
-                  }
-                }
-              ]
-            }
-          ],
-          "clauseType": "ALL"
-        },
-        {
-          "metadata": {
-            "eventComponentType": "FRAME",
-            "dataSources": [
-              "END_AXIS",
-              "SELF"
-            ]
-          },
-          "properties": {
-            "offset": {
-              "value": 0,
+              "value": 0.3,
               "unit": "SECOND"
             }
           },
@@ -280,18 +137,18 @@
                       "verb": "VARY_BY",
                       "object": "SKILL_LEVEL",
                       "value": [
-                        0.73,
-                        0.81,
-                        0.88,
-                        0.95,
-                        1.03,
-                        1.1,
-                        1.17,
-                        1.25,
-                        1.32,
-                        1.41,
-                        1.52,
-                        1.65
+                        0.073,
+                        0.081,
+                        0.088,
+                        0.095,
+                        0.103,
+                        0.11,
+                        0.117,
+                        0.125,
+                        0.132,
+                        0.141,
+                        0.152,
+                        0.165
                       ],
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
@@ -312,74 +169,7 @@
           },
           "properties": {
             "offset": {
-              "value": 0,
-              "unit": "SECOND"
-            }
-          },
-          "clause": [
-            {
-              "conditions": [],
-              "effects": [
-                {
-                  "verb": "DEAL",
-                  "object": "STAGGER",
-                  "to": "ENEMY",
-                  "with": {
-                    "value": {
-                      "verb": "IS",
-                      "value": 2
-                    }
-                  }
-                }
-              ]
-            }
-          ],
-          "clauseType": "ALL"
-        },
-        {
-          "metadata": {
-            "eventComponentType": "FRAME",
-            "dataSources": [
-              "SELF"
-            ]
-          },
-          "properties": {
-            "offset": {
-              "value": 0,
-              "unit": "SECOND"
-            }
-          },
-          "clause": [
-            {
-              "conditions": [],
-              "effects": [
-                {
-                  "verb": "DEAL",
-                  "object": "STAGGER",
-                  "to": "ENEMY",
-                  "with": {
-                    "value": {
-                      "verb": "IS",
-                      "value": 2
-                    }
-                  }
-                }
-              ]
-            }
-          ],
-          "clauseType": "ALL"
-        },
-        {
-          "metadata": {
-            "eventComponentType": "FRAME",
-            "dataSources": [
-              "END_AXIS",
-              "SELF"
-            ]
-          },
-          "properties": {
-            "offset": {
-              "value": 0.2,
+              "value": 0.6,
               "unit": "SECOND"
             }
           },
@@ -404,26 +194,22 @@
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
-                    "duration": {
-                      "verb": "IS",
-                      "value": 3
-                    },
                     "value": {
                       "verb": "VARY_BY",
                       "object": "SKILL_LEVEL",
                       "value": [
-                        0.73,
-                        0.81,
-                        0.88,
-                        0.95,
-                        1.03,
-                        1.1,
-                        1.17,
-                        1.25,
-                        1.32,
-                        1.41,
-                        1.52,
-                        1.65
+                        0.073,
+                        0.081,
+                        0.088,
+                        0.095,
+                        0.103,
+                        0.11,
+                        0.117,
+                        0.125,
+                        0.132,
+                        0.141,
+                        0.152,
+                        0.165
                       ],
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
@@ -444,40 +230,7 @@
           },
           "properties": {
             "offset": {
-              "value": 0.5,
-              "unit": "SECOND"
-            }
-          },
-          "clause": [
-            {
-              "conditions": [],
-              "effects": [
-                {
-                  "verb": "DEAL",
-                  "object": "STAGGER",
-                  "to": "ENEMY",
-                  "with": {
-                    "value": {
-                      "verb": "IS",
-                      "value": 2
-                    }
-                  }
-                }
-              ]
-            }
-          ],
-          "clauseType": "ALL"
-        },
-        {
-          "metadata": {
-            "eventComponentType": "FRAME",
-            "dataSources": [
-              "END_AXIS"
-            ]
-          },
-          "properties": {
-            "offset": {
-              "value": 4.2,
+              "value": 0.9,
               "unit": "SECOND"
             }
           },
@@ -506,18 +259,664 @@
                       "verb": "VARY_BY",
                       "object": "SKILL_LEVEL",
                       "value": [
-                        0.73,
-                        0.81,
-                        0.88,
-                        0.95,
-                        1.03,
-                        1.1,
-                        1.17,
-                        1.25,
-                        1.32,
-                        1.41,
-                        1.52,
-                        1.65
+                        0.073,
+                        0.081,
+                        0.088,
+                        0.095,
+                        0.103,
+                        0.11,
+                        0.117,
+                        0.125,
+                        0.132,
+                        0.141,
+                        0.152,
+                        0.165
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
+        },
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "SELF"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 1.2,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "object": "STAGGER",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 2
+                    }
+                  }
+                },
+                {
+                  "verb": "DEAL",
+                  "objectQualifier": "NATURE",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.073,
+                        0.081,
+                        0.088,
+                        0.095,
+                        0.103,
+                        0.11,
+                        0.117,
+                        0.125,
+                        0.132,
+                        0.141,
+                        0.152,
+                        0.165
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
+        },
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "SELF"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 1.5,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "object": "STAGGER",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 2
+                    }
+                  }
+                },
+                {
+                  "verb": "DEAL",
+                  "objectQualifier": "NATURE",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.073,
+                        0.081,
+                        0.088,
+                        0.095,
+                        0.103,
+                        0.11,
+                        0.117,
+                        0.125,
+                        0.132,
+                        0.141,
+                        0.152,
+                        0.165
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
+        },
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "SELF"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 1.8,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "object": "STAGGER",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 2
+                    }
+                  }
+                },
+                {
+                  "verb": "DEAL",
+                  "objectQualifier": "NATURE",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.073,
+                        0.081,
+                        0.088,
+                        0.095,
+                        0.103,
+                        0.11,
+                        0.117,
+                        0.125,
+                        0.132,
+                        0.141,
+                        0.152,
+                        0.165
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
+        },
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "SELF"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 2.1,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "object": "STAGGER",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 2
+                    }
+                  }
+                },
+                {
+                  "verb": "DEAL",
+                  "objectQualifier": "NATURE",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.073,
+                        0.081,
+                        0.088,
+                        0.095,
+                        0.103,
+                        0.11,
+                        0.117,
+                        0.125,
+                        0.132,
+                        0.141,
+                        0.152,
+                        0.165
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
+        },
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "SELF"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 2.4,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "object": "STAGGER",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 2
+                    }
+                  }
+                },
+                {
+                  "verb": "DEAL",
+                  "objectQualifier": "NATURE",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.073,
+                        0.081,
+                        0.088,
+                        0.095,
+                        0.103,
+                        0.11,
+                        0.117,
+                        0.125,
+                        0.132,
+                        0.141,
+                        0.152,
+                        0.165
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
+        },
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "SELF"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 2.7,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "object": "STAGGER",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 2
+                    }
+                  }
+                },
+                {
+                  "verb": "DEAL",
+                  "objectQualifier": "NATURE",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.073,
+                        0.081,
+                        0.088,
+                        0.095,
+                        0.103,
+                        0.11,
+                        0.117,
+                        0.125,
+                        0.132,
+                        0.141,
+                        0.152,
+                        0.165
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
+        },
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "SELF"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 3,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "object": "STAGGER",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 2
+                    }
+                  }
+                },
+                {
+                  "verb": "DEAL",
+                  "objectQualifier": "NATURE",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.073,
+                        0.081,
+                        0.088,
+                        0.095,
+                        0.103,
+                        0.11,
+                        0.117,
+                        0.125,
+                        0.132,
+                        0.141,
+                        0.152,
+                        0.165
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
+        },
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "SELF"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 3.3,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [
+                {
+                  "subjectDeterminer": "THIS",
+                  "subject": "OPERATOR",
+                  "verb": "HAVE",
+                  "object": "POTENTIAL",
+                  "cardinalityConstraint": "AT_LEAST",
+                  "value": {
+                    "verb": "IS",
+                    "value": 3
+                  }
+                }
+              ],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "object": "STAGGER",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 2
+                    }
+                  }
+                },
+                {
+                  "verb": "DEAL",
+                  "objectQualifier": "NATURE",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.073,
+                        0.081,
+                        0.088,
+                        0.095,
+                        0.103,
+                        0.11,
+                        0.117,
+                        0.125,
+                        0.132,
+                        0.141,
+                        0.152,
+                        0.165
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
+        },
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "SELF"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 3.6,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [
+                {
+                  "subjectDeterminer": "THIS",
+                  "subject": "OPERATOR",
+                  "verb": "HAVE",
+                  "object": "POTENTIAL",
+                  "cardinalityConstraint": "AT_LEAST",
+                  "value": {
+                    "verb": "IS",
+                    "value": 3
+                  }
+                }
+              ],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "object": "STAGGER",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 2
+                    }
+                  }
+                },
+                {
+                  "verb": "DEAL",
+                  "objectQualifier": "NATURE",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.073,
+                        0.081,
+                        0.088,
+                        0.095,
+                        0.103,
+                        0.11,
+                        0.117,
+                        0.125,
+                        0.132,
+                        0.141,
+                        0.152,
+                        0.165
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
+        },
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "SELF"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 3.9,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [
+                {
+                  "subjectDeterminer": "THIS",
+                  "subject": "OPERATOR",
+                  "verb": "HAVE",
+                  "object": "POTENTIAL",
+                  "cardinalityConstraint": "AT_LEAST",
+                  "value": {
+                    "verb": "IS",
+                    "value": 3
+                  }
+                }
+              ],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "object": "STAGGER",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 2
+                    }
+                  }
+                },
+                {
+                  "verb": "DEAL",
+                  "objectQualifier": "NATURE",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.073,
+                        0.081,
+                        0.088,
+                        0.095,
+                        0.103,
+                        0.11,
+                        0.117,
+                        0.125,
+                        0.132,
+                        0.141,
+                        0.152,
+                        0.165
                       ],
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"

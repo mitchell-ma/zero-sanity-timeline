@@ -8,7 +8,7 @@
  */
 
 import type { Effect, Interaction, Predicate, ValueNode, WithPreposition } from '../dsl/semantics';
-import { isValueLiteral, isValueVariable, isValueStat, isValueExpression, NounType } from '../dsl/semantics';
+import { isValueLiteral, isValueVariable, isValueStat, isValueExpression, NounType, VerbType } from '../dsl/semantics';
 import { t } from '../locales/locale';
 
 // ── Output ───────────────────────────────────────────────────────────────────
@@ -111,7 +111,6 @@ export const OBJECT_LABELS: Record<string, string> = {
   GAME_TIME: t('dsl.object.GAME_TIME'),
   REAL_TIME: t('dsl.object.REAL_TIME'),
   EVENT: t('dsl.object.EVENT'),
-  STAT_MODIFIER: t('dsl.object.STAT_MODIFIER'),
   ATTACK_BONUS: t('dsl.object.ATTACK_BONUS'),
   ARTS_REACTION: t('dsl.object.ARTS_REACTION'),
   FINAL_STRIKE: t('dsl.object.FINAL_STRIKE'),
@@ -279,7 +278,7 @@ function formatObject(e: Effect): string {
   // For STATUS/INFLICTION/REACTION with an objectId, use objectId as the name
   // e.g. APPLY STATUS (FOCUS) → "Apply Focus status"
   // e.g. APPLY STATUS (Empowered Focus) → "Apply Empowered Focus status"
-  if (e.objectId && (e.object === 'STATUS' || e.object === 'INFLICTION' || e.object === 'REACTION')) {
+  if (e.objectId && (e.object === NounType.STATUS || e.object === NounType.INFLICTION || e.object === NounType.REACTION)) {
     const name = titleCase(e.objectId);
     return `${adjStr}${name} ${objLabel}`;
   }
@@ -292,7 +291,7 @@ function formatObject(e: Effect): string {
 }
 
 function formatTarget(type: string, determiner?: string): string {
-  if (type === 'OPERATOR' && determiner) {
+  if (type === NounType.OPERATOR && determiner) {
     const det = DETERMINER_LABELS[determiner] ?? determiner.toLowerCase();
     return `${det} operator`;
   }
@@ -300,19 +299,19 @@ function formatTarget(type: string, determiner?: string): string {
 }
 
 /** Object types where a WITH `value` should be inlined into the sentence. */
-const INLINE_VALUE_OBJECTS = new Set(['STAGGER', 'SKILL_POINT', 'ULTIMATE_ENERGY', 'HP', 'COOLDOWN']);
+const INLINE_VALUE_OBJECTS = new Set([NounType.STAGGER, NounType.SKILL_POINT, NounType.ULTIMATE_ENERGY, NounType.HP, NounType.COOLDOWN]);
 
 export function translateEffect(e: Effect): TranslatedEffect {
   // Verb
   const verb = VERB_LABELS[e.verb] ?? titleCase(e.verb);
 
   // Handle PERFORM DAMAGE specially → "Deal"
-  const displayVerb = e.verb === 'PERFORM' && e.object === 'DAMAGE' ? 'Deal' : verb;
+  const displayVerb = e.verb === VerbType.PERFORM && e.object === NounType.DAMAGE ? 'Deal' : verb;
 
   // Inline simple WITH value for resource-like objects
   // e.g. APPLY STAGGER TO ENEMY WITH value IS 18 → "Apply 18 stagger to the enemy"
   let inlinedValue = '';
-  if (e.with && INLINE_VALUE_OBJECTS.has(String(e.object ?? ''))) {
+  if (e.with && INLINE_VALUE_OBJECTS.has(String(e.object ?? '') as NounType)) {
     const vw = e.with.value;
     if (vw && isValueLiteral(vw)) {
       inlinedValue = `${vw.value} `;

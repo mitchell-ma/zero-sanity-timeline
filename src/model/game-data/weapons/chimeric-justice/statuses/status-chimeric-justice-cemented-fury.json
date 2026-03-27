@@ -28,7 +28,7 @@
         },
         {
           "verb": "APPLY",
-          "object": "ATTACK_BONUS",
+          "object": "STAT",
           "with": {
             "value": {
               "verb": "VARY_BY",
@@ -47,7 +47,8 @@
               "ofDeterminer": "THIS",
               "of": "OPERATOR"
             }
-          }
+          },
+          "objectId": "ATTACK_BONUS"
         }
       ]
     }

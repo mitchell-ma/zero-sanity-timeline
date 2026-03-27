@@ -14,8 +14,8 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import { UnitType } from '../../../consts/enums';
-import { VerbType } from '../../../dsl/semantics';
+import { CombatSkillType, UnitType } from '../../../consts/enums';
+import { NounType, VerbType } from '../../../dsl/semantics';
 
 const GAMEDATA_URL = 'https://raw.githubusercontent.com/Lieyuan621/Endaxis/main/public/gamedata.json';
 
@@ -459,12 +459,12 @@ function assignMultipliersToFrames(
     const lastFrame = frames[frames.length - 1];
     if (!lastFrame.effects) lastFrame.effects = [];
     const hasUltEffect = (lastFrame.effects as { verb: string; object: string }[]).some((e) =>
-      e.verb === 'RECOVER' && e.object === 'ULTIMATE_ENERGY'
+      e.verb === VerbType.RECOVER && e.object === NounType.ULTIMATE_ENERGY
     );
     if (!hasUltEffect) {
       (lastFrame.effects as unknown[]).push({
-        verb: 'RECOVER',
-        object: 'ULTIMATE_ENERGY',
+        verb: VerbType.RECOVER,
+        object: NounType.ULTIMATE_ENERGY,
         with: { value: { verb: VerbType.IS, value: extraUsp } },
       });
     }
@@ -476,12 +476,12 @@ function assignMultipliersToFrames(
     const firstFrame = frames[0];
     if (!firstFrame.effects) firstFrame.effects = [];
     const hasUltEffect = (firstFrame.effects as { verb: string; object: string }[]).some((e) =>
-      e.verb === 'RECOVER' && e.object === 'ULTIMATE_ENERGY'
+      e.verb === VerbType.RECOVER && e.object === NounType.ULTIMATE_ENERGY
     );
     if (!hasUltEffect) {
       (firstFrame.effects as unknown[]).push({
-        verb: 'RECOVER',
-        object: 'ULTIMATE_ENERGY',
+        verb: VerbType.RECOVER,
+        object: NounType.ULTIMATE_ENERGY,
         with: { value: { verb: VerbType.IS, value: uspDisplay } },
       });
     }
@@ -593,7 +593,7 @@ async function parseOne(slug: string, roster: unknown[]) {
     if (skillMultipliers) {
       for (const [category, subIndexMap] of Object.entries(skillMultipliers)) {
         const indices = Object.keys(subIndexMap).map(Number);
-        if (category === 'BASIC_ATTACK' || category === 'ENHANCED_BASIC_ATTACK' || category === 'EMPOWERED_BASIC_ATTACK') {
+        if (category === CombatSkillType.BASIC_ATTACK || category === 'ENHANCED_BASIC_ATTACK' || category === 'EMPOWERED_BASIC_ATTACK') {
           // Segmented: create segments with frames derived from hit count
           skeleton[category] = {
             segments: indices.map(idx => {

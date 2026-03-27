@@ -7,12 +7,13 @@
  */
 
 import { SheetData, MultiLoadoutBundle, cleanSheetData } from './sheetStorage';
+import { LoadoutNodeType } from '../consts/enums';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 export interface LoadoutNode {
   id: string;
-  type: 'loadout' | 'folder';
+  type: LoadoutNodeType;
   name: string;
   parentId: string | null; // null = root level
   order: number;           // sort order within parent
@@ -117,7 +118,7 @@ export function addLoadout(tree: LoadoutTree, name: string, parentId: string | n
   const siblings = getChildrenOf(tree, parentId);
   const order = siblings.length > 0 ? Math.max(...siblings.map((s) => s.order)) + 1 : 0;
   const uniqueN = uniqueName(tree, name, parentId);
-  const node: LoadoutNode = { id: generateId(), type: 'loadout', name: uniqueN, parentId, order };
+  const node: LoadoutNode = { id: generateId(), type: LoadoutNodeType.LOADOUT, name: uniqueN, parentId, order };
   return { tree: { nodes: [...tree.nodes, node] }, node };
 }
 
@@ -131,7 +132,7 @@ export function addLoadoutAfter(tree: LoadoutTree, name: string, afterNodeId: st
     n.parentId === parentId && n.order > afterOrder ? { ...n, order: n.order + 1 } : n,
   );
   const uniqueN = uniqueName({ nodes: shifted }, name, parentId);
-  const node: LoadoutNode = { id: generateId(), type: 'loadout', name: uniqueN, parentId, order: afterOrder + 1 };
+  const node: LoadoutNode = { id: generateId(), type: LoadoutNodeType.LOADOUT, name: uniqueN, parentId, order: afterOrder + 1 };
   return { tree: { nodes: [...shifted, node] }, node };
 }
 
@@ -143,7 +144,7 @@ export function addFolder(tree: LoadoutTree, name: string, parentId: string | nu
   const siblings = getChildrenOf(tree, parentId);
   const order = siblings.length > 0 ? Math.max(...siblings.map((s) => s.order)) + 1 : 0;
   const uniqueN = uniqueName(tree, name, parentId);
-  const node: LoadoutNode = { id: generateId(), type: 'folder', name: uniqueN, parentId, order };
+  const node: LoadoutNode = { id: generateId(), type: LoadoutNodeType.FOLDER, name: uniqueN, parentId, order };
   return { tree: { nodes: [...tree.nodes, node] }, node };
 }
 
@@ -164,7 +165,7 @@ export function getNodeDepth(tree: LoadoutTree, parentId: string | null): number
 
 /** Get the max depth of descendants below a node (0 if no children). */
 function getSubtreeDepth(tree: LoadoutTree, nodeId: string): number {
-  const children = tree.nodes.filter((n) => n.parentId === nodeId && n.type === 'folder');
+  const children = tree.nodes.filter((n) => n.parentId === nodeId && n.type === LoadoutNodeType.FOLDER);
   if (children.length === 0) return 0;
   return 1 + Math.max(...children.map((c) => getSubtreeDepth(tree, c.id)));
 }
@@ -183,7 +184,7 @@ function getDescendantIds(tree: LoadoutTree, nodeId: string): string[] {
 export function removeNode(tree: LoadoutTree, nodeId: string): { tree: LoadoutTree; removedLoadoutIds: string[] } {
   const toRemove = new Set([nodeId, ...getDescendantIds(tree, nodeId)]);
   const removedLoadoutIds = tree.nodes
-    .filter((n) => toRemove.has(n.id) && n.type === 'loadout')
+    .filter((n) => toRemove.has(n.id) && n.type === LoadoutNodeType.LOADOUT)
     .map((n) => n.id);
   return {
     tree: { nodes: tree.nodes.filter((n) => !toRemove.has(n.id)) },
@@ -198,7 +199,7 @@ export function renameNode(tree: LoadoutTree, nodeId: string, name: string): Loa
 export function toggleFolder(tree: LoadoutTree, folderId: string): LoadoutTree {
   return {
     nodes: tree.nodes.map((n) =>
-      n.id === folderId && n.type === 'folder'
+      n.id === folderId && n.type === LoadoutNodeType.FOLDER
         ? { ...n, collapsed: !n.collapsed }
         : n,
     ),
@@ -215,7 +216,7 @@ export function moveNode(tree: LoadoutTree, nodeId: string, newParentId: string 
   }
   // Enforce max folder depth when moving a folder
   const node = tree.nodes.find((n) => n.id === nodeId);
-  if (node?.type === 'folder') {
+  if (node?.type === LoadoutNodeType.FOLDER) {
     const targetDepth = getNodeDepth(tree, newParentId) + 1; // depth of the moved folder
     const subtreeBelow = getSubtreeDepth(tree, nodeId);      // nested folders below it
     if (targetDepth + subtreeBelow > MAX_FOLDER_DEPTH) {
@@ -250,7 +251,7 @@ export function flattenTreeNodes(tree: LoadoutTree, parentId: string | null = nu
   const children = getChildrenOf(tree, parentId);
   for (const node of children) {
     result.push({ node, depth });
-    if (node.type === 'folder') {
+    if (node.type === LoadoutNodeType.FOLDER) {
       result.push(...flattenTreeNodes(tree, node.id, depth + 1));
     }
   }
@@ -305,7 +306,7 @@ export function mergeBundle(
     workingTree = { nodes: [...workingTree.nodes, newNode] };
 
     // Map loadout data with new ID
-    if (node.type === 'loadout' && bundle.loadouts[node.id]) {
+    if (node.type === LoadoutNodeType.LOADOUT && bundle.loadouts[node.id]) {
       loadoutData[newId] = bundle.loadouts[node.id];
     }
   }

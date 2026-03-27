@@ -48,6 +48,7 @@ export const DEFAULT_STATS: Readonly<Record<StatType, number>> = {
   [StatType.FLAT_HP]: 0,
   // ── Damage factor stats ──────────────────────────────────────────────────────
   [StatType.DAMAGE_BONUS]: 0,
+  [StatType.DAMAGE_TAKEN_BONUS]: 0,
   [StatType.AMP]: 0,
   [StatType.SUSCEPTIBILITY]: 0,
   // ── Enemy stats ──────────────────────────────────────────────────────────────

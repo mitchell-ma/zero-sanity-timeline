@@ -57,7 +57,7 @@
  */
 import { TimelineEvent } from '../../consts/viewTypes';
 import { StatusType, SegmentType, TimeDependency } from '../../consts/enums';
-import { VerbType, ObjectType, NounType } from '../../dsl/semantics';
+import { VerbType, ObjectType, NounType, AdjectiveType, DeterminerType } from '../../dsl/semantics';
 import type { Effect } from '../../dsl/semantics';
 import { SKILL_COLUMNS, ENEMY_OWNER_ID, COMBO_WINDOW_COLUMN_ID } from '../../model/channels';
 import { buildSequencesFromOperatorJson, DataDrivenSkillEventSequence } from '../../controller/gameDataStore';
@@ -184,10 +184,10 @@ describe('A. Basic Attack (Exchange Current)', () => {
     const finalStrikeFrame = rawSegments[3].frames[0];
     const effects = finalStrikeFrame.clause[0].effects;
     const spEffect = effects.find(
-      (e: Record<string, unknown>) => e.object === 'SKILL_POINT'
+      (e: Record<string, unknown>) => e.object === NounType.SKILL_POINT
     );
     const staggerEffect = effects.find(
-      (e: Record<string, unknown>) => e.object === 'STAGGER'
+      (e: Record<string, unknown>) => e.object === NounType.STAGGER
     );
     expect(spEffect.with.value.value).toBe(15);
     expect(staggerEffect.with.value.value).toBe(15);
@@ -199,10 +199,10 @@ describe('A. Basic Attack (Exchange Current)', () => {
       const frame = rawSegments[i].frames[0];
       const effects = frame.clause[0].effects;
       const spEffect = effects.find(
-        (e: Record<string, unknown>) => e.object === 'SKILL_POINT'
+        (e: Record<string, unknown>) => e.object === NounType.SKILL_POINT
       );
       const staggerEffect = effects.find(
-        (e: Record<string, unknown>) => e.object === 'STAGGER'
+        (e: Record<string, unknown>) => e.object === NounType.STAGGER
       );
       expect(spEffect).toBeUndefined();
       expect(staggerEffect).toBeUndefined();
@@ -213,7 +213,7 @@ describe('A. Basic Attack (Exchange Current)', () => {
     const sequences = getSequences('BASIC_ATTACK');
     for (const seq of sequences) {
       for (const frame of seq.getFrames()) {
-        expect(frame.getClauses().flatMap(c => c.effects).find(e => e.dslEffect?.verb === 'APPLY' && e.dslEffect?.object === 'INFLICTION')).toBeUndefined();
+        expect(frame.getClauses().flatMap(c => c.effects).find(e => e.dslEffect?.verb === VerbType.APPLY && e.dslEffect?.object === NounType.INFLICTION)).toBeUndefined();
       }
     }
   });
@@ -222,13 +222,13 @@ describe('A. Basic Attack (Exchange Current)', () => {
     const rawSegments = mockAntalJson.skills.BASIC_ATTACK.segments;
     // Segment 1: 0.23 → 0.52 — damage values are in clause[0].effects DEAL DAMAGE with.DAMAGE_MULTIPLIER.value array
     const seg1DmgEffect = rawSegments[0].frames[0].clause[0].effects.find(
-      (e: Record<string, unknown>) => e.verb === 'DEAL' && e.object === 'DAMAGE'
+      (e: Record<string, unknown>) => e.verb === VerbType.DEAL && e.object === NounType.DAMAGE
     );
     expect(seg1DmgEffect.with.value.value[0]).toBe(0.23);
     expect(seg1DmgEffect.with.value.value[11]).toBe(0.52);
     // Segment 4 (Final Strike): 0.51 → 1.15
     const seg4DmgEffect = rawSegments[3].frames[0].clause[0].effects.find(
-      (e: Record<string, unknown>) => e.verb === 'DEAL' && e.object === 'DAMAGE'
+      (e: Record<string, unknown>) => e.verb === VerbType.DEAL && e.object === NounType.DAMAGE
     );
     expect(seg4DmgEffect.with.value.value[0]).toBe(0.51);
     expect(seg4DmgEffect.with.value.value[11]).toBe(1.15);
@@ -239,10 +239,10 @@ describe('A. Basic Attack (Exchange Current)', () => {
     expect(rawSegments[2].frames.length).toBe(2);
     // Both frames have same damage multiplier at each level
     const firstDmg = rawSegments[2].frames[0].clause[0].effects.find(
-      (e: Record<string, unknown>) => e.verb === 'DEAL' && e.object === 'DAMAGE'
+      (e: Record<string, unknown>) => e.verb === VerbType.DEAL && e.object === NounType.DAMAGE
     );
     const secondDmg = rawSegments[2].frames[1].clause[0].effects.find(
-      (e: Record<string, unknown>) => e.verb === 'DEAL' && e.object === 'DAMAGE'
+      (e: Record<string, unknown>) => e.verb === VerbType.DEAL && e.object === NounType.DAMAGE
     );
     const lv12First = firstDmg.with.value.value[11];
     const lv12Second = secondDmg.with.value.value[11];
@@ -265,7 +265,7 @@ describe('B. Battle Skill (Specified Research Subject)', () => {
     const battleSkill = mockAntalJson.skills.BATTLE_SKILL;
     const effects = battleSkill.clause[0].effects;
     const spCost = effects.find(
-      (e: Record<string, unknown>) => e.object === 'SKILL_POINT' && e.verb === 'CONSUME'
+      (e: Record<string, unknown>) => e.object === NounType.SKILL_POINT && e.verb === VerbType.CONSUME
     );
     expect(spCost).toBeDefined();
     expect(spCost.with.value.value).toBe(100);
@@ -275,7 +275,7 @@ describe('B. Battle Skill (Specified Research Subject)', () => {
     const battleSkill = mockAntalJson.skills.BATTLE_SKILL;
     const effects = battleSkill.clause[0].effects;
     const spCost = effects.find(
-      (e: Record<string, unknown>) => e.object === 'SKILL_POINT' && e.verb === 'CONSUME'
+      (e: Record<string, unknown>) => e.object === NounType.SKILL_POINT && e.verb === VerbType.CONSUME
     );
     expect(spCost).toBeDefined();
     expect(spCost.with.value.value).toBe(100);
@@ -284,7 +284,7 @@ describe('B. Battle Skill (Specified Research Subject)', () => {
   test('B4: Focus duration is 60s at all skill levels', () => {
     const effects = mockAntalJson.skills.BATTLE_SKILL.segments[0].frames[0].clause.flatMap((c: { effects: unknown[] }) => c.effects);
     const focusEffect = effects.find(
-      (e: Record<string, unknown>) => e.verb === 'APPLY' && e.object === 'STATUS' && e.objectId === 'FOCUS'
+      (e: Record<string, unknown>) => e.verb === VerbType.APPLY && e.object === NounType.STATUS && e.objectId === StatusType.FOCUS
     );
     expect(focusEffect).toBeDefined();
     expect(durVal(focusEffect.with.duration.value)).toBe(60);
@@ -293,7 +293,7 @@ describe('B. Battle Skill (Specified Research Subject)', () => {
   test('B5: Susceptibility rate scales from 0.05 (lv1) to 0.10 (lv12)', () => {
     const effects = mockAntalJson.skills.BATTLE_SKILL.segments[0].frames[0].clause.flatMap((c: { effects: unknown[] }) => c.effects);
     const dmgEffect = effects.find(
-      (e: Record<string, unknown>) => e.verb === 'DEAL' && e.object === 'DAMAGE'
+      (e: Record<string, unknown>) => e.verb === VerbType.DEAL && e.object === NounType.DAMAGE
     );
     expect(dmgEffect.with.rate.value[0]).toBe(0.05);
     expect(dmgEffect.with.rate.value[11]).toBe(0.1);
@@ -302,7 +302,7 @@ describe('B. Battle Skill (Specified Research Subject)', () => {
   test('B6: Damage multiplier scales from 0.89 (lv1) to 2.0 (lv12)', () => {
     const effects = mockAntalJson.skills.BATTLE_SKILL.segments[0].frames[0].clause.flatMap((c: { effects: unknown[] }) => c.effects);
     const dmgEffect = effects.find(
-      (e: Record<string, unknown>) => e.verb === 'DEAL' && e.object === 'DAMAGE'
+      (e: Record<string, unknown>) => e.verb === VerbType.DEAL && e.object === NounType.DAMAGE
     );
     expect(dmgEffect.with.value.value[0]).toBe(0.89);
     expect(dmgEffect.with.value.value[11]).toBe(2);
@@ -334,17 +334,17 @@ describe('C. Combo Skill (EMP Test Site)', () => {
     expect(clause.conditions.length).toBe(2);
 
     // Condition 1: any operator applies physical status
-    expect(clause.conditions[0].subjectDeterminer).toBe('ANY');
-    expect(clause.conditions[0].subject).toBe('OPERATOR');
-    expect(clause.conditions[0].verb).toBe('APPLY');
-    expect(clause.conditions[0].object).toBe('STATUS');
-    expect(clause.conditions[0].objectId).toBe('PHYSICAL');
+    expect(clause.conditions[0].subjectDeterminer).toBe(DeterminerType.ANY);
+    expect(clause.conditions[0].subject).toBe(NounType.OPERATOR);
+    expect(clause.conditions[0].verb).toBe(VerbType.APPLY);
+    expect(clause.conditions[0].object).toBe(NounType.STATUS);
+    expect(clause.conditions[0].objectId).toBe(AdjectiveType.PHYSICAL);
 
     // Condition 2: enemy has Focus
-    expect(clause.conditions[1].subject).toBe('ENEMY');
-    expect(clause.conditions[1].verb).toBe('HAVE');
-    expect(clause.conditions[1].object).toBe('STATUS');
-    expect(clause.conditions[1].objectId).toBe('FOCUS');
+    expect(clause.conditions[1].subject).toBe(NounType.ENEMY);
+    expect(clause.conditions[1].verb).toBe(VerbType.HAVE);
+    expect(clause.conditions[1].object).toBe(NounType.STATUS);
+    expect(clause.conditions[1].objectId).toBe(StatusType.FOCUS);
   });
 
   test('C3: Second clause — ANY_OPERATOR APPLY Infliction + ENEMY HAVE FOCUS', () => {
@@ -352,16 +352,16 @@ describe('C. Combo Skill (EMP Test Site)', () => {
     expect(clause.conditions.length).toBe(2);
 
     // Condition 1: any operator applies arts infliction
-    expect(clause.conditions[0].subjectDeterminer).toBe('ANY');
-    expect(clause.conditions[0].subject).toBe('OPERATOR');
-    expect(clause.conditions[0].verb).toBe('APPLY');
-    expect(clause.conditions[0].object).toBe('INFLICTION');
+    expect(clause.conditions[0].subjectDeterminer).toBe(DeterminerType.ANY);
+    expect(clause.conditions[0].subject).toBe(NounType.OPERATOR);
+    expect(clause.conditions[0].verb).toBe(VerbType.APPLY);
+    expect(clause.conditions[0].object).toBe(NounType.INFLICTION);
 
     // Condition 2: enemy has Focus
-    expect(clause.conditions[1].subject).toBe('ENEMY');
-    expect(clause.conditions[1].verb).toBe('HAVE');
-    expect(clause.conditions[1].object).toBe('STATUS');
-    expect(clause.conditions[1].objectId).toBe('FOCUS');
+    expect(clause.conditions[1].subject).toBe(NounType.ENEMY);
+    expect(clause.conditions[1].verb).toBe(VerbType.HAVE);
+    expect(clause.conditions[1].object).toBe(NounType.STATUS);
+    expect(clause.conditions[1].objectId).toBe(StatusType.FOCUS);
   });
 
   test('C4: Combo activation window is 720 frames (6 seconds)', () => {
@@ -398,18 +398,18 @@ describe('C. Combo Skill (EMP Test Site)', () => {
   test('C8: Combo recovers 10 ultimate energy to self', () => {
     const effects = mockAntalJson.skills.COMBO_SKILL.clause[0].effects;
     const energy = effects.find(
-      (e: Record<string, unknown>) => e.object === 'ULTIMATE_ENERGY' && e.verb === 'RECOVER'
+      (e: Record<string, unknown>) => e.object === NounType.ULTIMATE_ENERGY && e.verb === VerbType.RECOVER
     );
     expect(energy).toBeDefined();
-    expect(energy.toDeterminer).toBe('THIS');
-    expect(energy.to).toBe('OPERATOR');
+    expect(energy.toDeterminer).toBe(DeterminerType.THIS);
+    expect(energy.to).toBe(NounType.OPERATOR);
     expect(energy.with.value.value).toBe(10);
   });
 
   test('C9: Combo damage multiplier: 1.51 (lv1) → 3.4 (lv12)', () => {
     const effects = mockAntalJson.skills.COMBO_SKILL.segments[1].frames[0].clause[0].effects;
     const dmgEffect = effects.find(
-      (e: Record<string, unknown>) => e.verb === 'DEAL' && e.object === 'DAMAGE'
+      (e: Record<string, unknown>) => e.verb === VerbType.DEAL && e.object === NounType.DAMAGE
     );
     expect(dmgEffect.with.value.value[0]).toBe(1.51);
     expect(dmgEffect.with.value.value[11]).toBe(3.4);
@@ -429,20 +429,20 @@ describe('C2. Combo Skill Source Infliction Duplication', () => {
     const comboFrame = mockAntalJson.skills.COMBO_SKILL.segments[1].frames[0];
     const effects = comboFrame.clause[0].effects;
     const sourceInfliction = effects.find(
-      (e: Record<string, unknown>) => e.verb === 'APPLY' && e.objectQualifier === 'TRIGGER' && e.object === 'INFLICTION'
+      (e: Record<string, unknown>) => e.verb === VerbType.APPLY && e.objectQualifier === DeterminerType.TRIGGER && e.object === NounType.INFLICTION
     );
     expect(sourceInfliction).toBeDefined();
-    expect(sourceInfliction.to).toBe('ENEMY');
+    expect(sourceInfliction.to).toBe(NounType.ENEMY);
   });
 
   test('C2.2: Combo frame has APPLY TRIGGER PHYSICAL STATUS DSL effect', () => {
     const comboFrame = mockAntalJson.skills.COMBO_SKILL.segments[1].frames[0];
     const effects = comboFrame.clause[0].effects;
     const sourceStatus = effects.find(
-      (e: Record<string, unknown>) => e.verb === 'APPLY' && e.objectQualifier === 'TRIGGER' && e.object === 'STATUS' && e.objectId === 'PHYSICAL'
+      (e: Record<string, unknown>) => e.verb === VerbType.APPLY && e.objectQualifier === DeterminerType.TRIGGER && e.object === NounType.STATUS && e.objectId === AdjectiveType.PHYSICAL
     );
     expect(sourceStatus).toBeDefined();
-    expect(sourceStatus.to).toBe('ENEMY');
+    expect(sourceStatus.to).toBe(NounType.ENEMY);
   });
 
   test('C2.3: Frame class reports getDuplicateTriggerSource() as true from DSL', () => {
@@ -482,17 +482,21 @@ describe('C2. Combo Skill Source Infliction Duplication', () => {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 describe('D. Ultimate (Overclocked Moment)', () => {
-  test('D1: Ultimate energy cost varies by potential', () => {
+  test('D1: Ultimate energy cost is MULT(base, VARY_BY POTENTIAL)', () => {
     const effects = mockAntalJson.skills.ULTIMATE.clause[0].effects;
     const energyCost = effects.find(
       (e: Record<string, unknown>) => e.object === NounType.ULTIMATE_ENERGY && e.verb === VerbType.CONSUME
     );
     expect(energyCost).toBeDefined();
-    expect(energyCost.with.value.verb).toBe(VerbType.VARY_BY);
-    expect(energyCost.with.value.object).toBe(ObjectType.POTENTIAL);
-    const values = energyCost.with.value.value as number[];
-    expect(values).toHaveLength(6);
-    expect(values[values.length - 1]).toBeLessThan(values[0]);
+    const val = energyCost.with.value;
+    expect(val.operation).toBe('MULT');
+    expect(val.left.verb).toBe(VerbType.IS);
+    expect(typeof val.left.value).toBe('number');
+    expect(val.right.verb).toBe(VerbType.VARY_BY);
+    expect(val.right.object).toBe(ObjectType.POTENTIAL);
+    const potArr = val.right.value as number[];
+    expect(potArr).toHaveLength(6);
+    expect(Math.min(...potArr)).toBeLessThan(1);
   });
 
   test('D2: Ultimate active duration removed from operator JSON', () => {
@@ -621,14 +625,14 @@ describe('H. Cooldown Interactions', () => {
     // Basic attacks are segment-based with no COOLDOWN effect — effects are now in clause[0].effects
     const cooldown = ba.segments?.flatMap((s: Record<string, unknown>) => (s.frames ?? []) as Record<string, unknown>[])
       .flatMap((f: Record<string, unknown>) => ((f.clause as Record<string, unknown>[])?.[0] as Record<string, unknown>)?.effects as Record<string, unknown>[] ?? [])
-      .find((e: Record<string, unknown>) => e.object === 'COOLDOWN');
+      .find((e: Record<string, unknown>) => e.object === NounType.COOLDOWN);
     expect(cooldown).toBeUndefined();
   });
 
   test('H2: Battle skill has no COOLDOWN effect in DSL', () => {
     const bs = mockAntalJson.skills.BATTLE_SKILL;
     const cooldown = (bs.clause?.[0]?.effects as Record<string, unknown>[] | undefined)?.find(
-      (e) => e.object === 'COOLDOWN'
+      (e) => e.object === NounType.COOLDOWN
     );
     expect(cooldown).toBeUndefined();
   });
@@ -709,7 +713,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
   }
 
   function makeFocus(startFrame: number, duration: number): TimelineEvent {
-    return makeEv({ uid: `focus-${startFrame}`, name: StatusType.FOCUS, ownerId: ENEMY_OWNER_ID, columnId: 'focus', startFrame, segments: [{ properties: { duration: duration } }] });
+    return makeEv({ uid: `focus-${startFrame}`, name: StatusType.FOCUS, ownerId: ENEMY_OWNER_ID, columnId: 'FOCUS', startFrame, segments: [{ properties: { duration: duration } }] });
   }
 
   function makeLaevBattle(startFrame: number): TimelineEvent {

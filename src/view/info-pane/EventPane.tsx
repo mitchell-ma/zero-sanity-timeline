@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { framesToSeconds, secondsToFrames, frameToDetailLabel, frameToTimeLabelPrecise, FPS, fmtN } from '../../utils/timeline';
 import { COMBAT_SKILL_LABELS, STATUS_LABELS } from '../../consts/timelineColumnLabels';
-import { CombatSkillType, ELEMENT_COLORS, ELEMENT_LABELS, ElementType, EventFrameType, EventStatusType, InfoLevel, InteractionModeType, SegmentType, StatusType } from '../../consts/enums';
+import { CombatSkillType, ColumnType, ELEMENT_COLORS, ELEMENT_LABELS, ElementType, EventFrameType, EventStatusType, InfoLevel, InteractionModeType, SegmentType, StatusType } from '../../consts/enums';
 import { getStatusElementMap, getStatusById } from '../../controller/gameDataStore';
 import { TimelineEvent, Operator, Enemy, SelectedFrame, Column, MiniTimeline, computeSegmentsSpan, getAnimationDuration, eventDuration } from '../../consts/viewTypes';
 import { DurationField, StatField, SegmentDurationField, FrameOffsetField } from './SharedFields';
@@ -966,8 +966,8 @@ function EventPane({
 
         {(() => {
           // Skill info: element, SP cost, multiplier
-          const col = columns.find((c) => c.type !== 'placeholder' && c.columnId === event.columnId && c.ownerId === event.ownerId);
-          const skillEl = col && col.type !== 'placeholder' ? col.skillElement : undefined;
+          const col = columns.find((c) => c.type !== ColumnType.PLACEHOLDER && c.columnId === event.columnId && c.ownerId === event.ownerId);
+          const skillEl = col && col.type !== ColumnType.PLACEHOLDER ? col.skillElement : undefined;
           const slot = slots.find((s) => s.slotId === event.ownerId);
           const operatorId = slot?.operator?.id;
           const stats = operatorId && loadoutProperties ? loadoutProperties[event.ownerId] : undefined;
@@ -988,7 +988,7 @@ function EventPane({
           // Per-tick ramping multipliers (e.g. Smouldering Fire explosion)
 
           // Look up default segments from column definition for max frame counts
-          const miniCol = col && col.type !== 'placeholder' ? col as MiniTimeline : null;
+          const miniCol = col && col.type !== ColumnType.PLACEHOLDER ? col as MiniTimeline : null;
           const defaultSegs = miniCol?.eventVariants?.find((v) => v.id === event.id)?.segments
             ?? miniCol?.defaultEvent?.segments;
 

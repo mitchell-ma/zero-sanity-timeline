@@ -8,6 +8,7 @@
  * exchange statuses, combo windows, frame positions, validation — happens here.
  */
 import { TimelineEvent, eventDuration } from '../../consts/viewTypes';
+import { VerbType, NounType } from '../../dsl/semantics';
 import { LoadoutProperties } from '../../view/InformationPane';
 import { TimeStopRegion, absoluteFrame, foreignStopsFor } from './processTimeStop';
 import { DerivedEventController } from './derivedEventController';
@@ -20,7 +21,10 @@ import { EventInterpretorController } from './eventInterpretorController';
 import { PriorityQueue } from './priorityQueue';
 import { TriggerIndex } from './triggerIndex';
 import { ENEMY_OWNER_ID, INFLICTION_COLUMN_IDS, PHYSICAL_INFLICTION_COLUMN_IDS, REACTION_COLUMN_IDS, SKILL_COLUMNS } from '../../model/channels';
+import type { SkillType } from '../../consts/viewTypes';
 import { getAllTriggerAssociations } from '../gameDataStore';
+
+const SKILL_COLUMN_SET: ReadonlySet<string> = new Set(Object.values(SKILL_COLUMNS) as string[]);
 import { classifyEvents } from './inputEventController';
 import { initHpTracker, getEnemyHpPercentage, precomputeDamageByFrame } from '../calculation/calculationController';
 import type { HPController } from '../calculation/hpController';
@@ -28,40 +32,8 @@ import type { OperatorLoadoutState } from '../../view/OperatorLoadoutHeader';
 import { resolveControlledOperator } from './controlledOperatorResolver';
 import { allocQueueFrame, resetPools, isReconcilerEnabled } from './objectPool';
 
-// ── TriggerIndex cache ──────────────────────────────────────────────────────
-// The trigger index is built from operator/weapon/gear configs + potentials.
-// It doesn't depend on event positions, so we cache it and only rebuild when
-// the loadout changes. This avoids a full config scan on every drag tick.
-
-let _cachedTriggerIndex: TriggerIndex | null = null;
-let _cachedSlotOperatorMap: Record<string, string> | undefined;
-let _cachedLoadoutProperties: Record<string, import('../../view/InformationPane').LoadoutProperties> | undefined;
-let _cachedSlotWeapons: Record<string, string | undefined> | undefined;
-let _cachedSlotGearSets: Record<string, string | undefined> | undefined;
-
-function getCachedTriggerIndex(
-  slotOperatorMap?: Record<string, string>,
-  loadoutProperties?: Record<string, import('../../view/InformationPane').LoadoutProperties>,
-  slotWeapons?: Record<string, string | undefined>,
-  slotGearSets?: Record<string, string | undefined>,
-  registeredEvents?: readonly TimelineEvent[],
-): TriggerIndex {
-  // Cache hit when all reference-identical inputs match (same objects = same loadout).
-  // During drag, these objects are stable — only event positions change.
-  if (_cachedTriggerIndex
-    && slotOperatorMap === _cachedSlotOperatorMap
-    && loadoutProperties === _cachedLoadoutProperties
-    && slotWeapons === _cachedSlotWeapons
-    && slotGearSets === _cachedSlotGearSets) {
-    return _cachedTriggerIndex;
-  }
-  _cachedTriggerIndex = TriggerIndex.build(slotOperatorMap, loadoutProperties, slotWeapons, slotGearSets, registeredEvents);
-  _cachedSlotOperatorMap = slotOperatorMap;
-  _cachedLoadoutProperties = loadoutProperties;
-  _cachedSlotWeapons = slotWeapons;
-  _cachedSlotGearSets = slotGearSets;
-  return _cachedTriggerIndex;
-}
+// TriggerIndex is now built and cached by CombatLoadoutController.syncSlots().
+// It is passed into the pipeline via the triggerIndex parameter.
 
 // ── Unified frame collection ────────────────────────────────────────────────
 
@@ -76,8 +48,6 @@ function collectFrameEntries(
   const entries: QueueFrame[] = [];
 
   for (const event of events) {
-    if (event.ownerId === ENEMY_OWNER_ID) continue;
-
     // Seed an event-start entry at the event's start frame (no frame marker)
     const start = allocQueueFrame();
     start.frame = event.startFrame;
@@ -98,9 +68,11 @@ function collectFrameEntries(
 
     const fStops = foreignStopsFor(event, stops);
     let cumulativeOffset = 0;
+    let hasFrames = false;
     for (let si = 0; si < event.segments.length; si++) {
       const seg = event.segments[si];
-      if (seg.frames) {
+      if (seg.frames && seg.frames.length > 0) {
+        hasFrames = true;
         for (let fi = 0; fi < seg.frames.length; fi++) {
           const frame = seg.frames[fi];
           const absFrame = absoluteFrame(event.startFrame, cumulativeOffset, frame.offsetFrame, fStops);
@@ -125,6 +97,29 @@ function collectFrameEntries(
         }
       }
       cumulativeOffset += seg.properties.duration;
+    }
+
+    // Synthesize a frame entry for non-skill events with no frame markers.
+    // This routes freeform inflictions, reactions, and statuses through the same
+    // PROCESS_FRAME → interpret path as engine-created events.
+    if (!hasFrames && !SKILL_COLUMN_SET.has(event.columnId as SkillType)) {
+      const synth = allocQueueFrame();
+      synth.frame = event.startFrame;
+      synth.priority = PRIORITY.PROCESS_FRAME;
+      synth.type = 'PROCESS_FRAME';
+      synth.statusId = event.name;
+      synth.columnId = event.columnId;
+      synth.ownerId = event.ownerId;
+      synth.sourceOwnerId = event.ownerId;
+      synth.sourceSkillName = event.name;
+      synth.maxStacks = 0;
+      synth.durationFrames = 0;
+      synth.operatorSlotId = event.ownerId;
+      synth.frameMarker = { offsetFrame: 0 };
+      synth.sourceEvent = event;
+      synth.segmentIndex = 0;
+      synth.frameIndex = 0;
+      entries.push(synth);
     }
 
     // Seed COMBO_RESOLVE for combo events (fires after engine triggers)
@@ -177,7 +172,7 @@ function getInterpretor(): EventInterpretorController {
  */
 export function runEventQueue(
   state: DerivedEventController,
-  derivedEvents: TimelineEvent[],
+  derivedEvents: readonly TimelineEvent[],
   loadoutProperties?: Record<string, LoadoutProperties>,
   slotWeapons?: Record<string, string | undefined>,
   slotOperatorMap?: Record<string, string>,
@@ -185,19 +180,23 @@ export function runEventQueue(
   getEnemyHpPercentage?: (frame: number) => number | null,
   getControlledSlotAtFrame?: (frame: number) => string,
   hpController?: HPController,
+  /** Pre-built TriggerIndex from CombatLoadoutController. Falls back to ad-hoc build if not provided. */
+  triggerIndex?: TriggerIndex,
 ): void {
   const slotWirings = state.getSlotWirings();
   const registeredEvents = state.getRegisteredEvents();
   const stops = state.getStops();
 
-  // Build trigger index from configs — cached when loadout hasn't changed.
-  // The index depends only on operator/weapon/gear configs + potentials,
-  // not on event positions, so it's safe to reuse during drag.
-  const triggerIdx = getCachedTriggerIndex(slotOperatorMap, loadoutProperties, slotWeapons, slotGearSets, registeredEvents);
+  // Use pre-built trigger index from CombatLoadoutController, or build ad-hoc as fallback
+  const triggerIdx = triggerIndex ?? TriggerIndex.build(slotOperatorMap, loadoutProperties, slotWeapons, slotGearSets, registeredEvents);
 
-  // Register talent events (permanent presence) before queue processing
+  // Register talent events (permanent presence) before queue processing.
+  // Dedup against already-registered events (talent events from a previous run or embed decode).
   const talentEvents = triggerIdx.getAllTalentEvents();
-  if (talentEvents.length > 0) state.registerEvents(talentEvents);
+  const newTalents = talentEvents.filter(t =>
+    !registeredEvents.some(ev => ev.columnId === t.columnId && ev.ownerId === t.ownerId)
+  );
+  if (newTalents.length > 0) state.registerEvents(newTalents);
 
   // ── Seed priority queue (reuse singleton) ──────────────────────────────
   const queue = getQueue();
@@ -210,75 +209,9 @@ export function runEventQueue(
     getControlledSlotAtFrame, triggerIndex: triggerIdx, hpController,
   });
 
-  // Seed derived events (freeform inflictions/reactions) — these go through the
-  // queue so they're processed at the correct priority (not into registeredEvents)
-  for (const ev of derivedEvents) {
-    if (INFLICTION_COLUMN_IDS.has(ev.columnId) || PHYSICAL_INFLICTION_COLUMN_IDS.has(ev.columnId)) {
-      queue.insert({
-        frame: ev.startFrame,
-        priority: PRIORITY.INFLICTION_CREATE,
-        type: 'INFLICTION_CREATE',
-        uid: ev.uid,
-        statusId: ev.columnId,
-        columnId: ev.columnId,
-        ownerId: ev.ownerId,
-        sourceOwnerId: ev.sourceOwnerId ?? ev.ownerId,
-        sourceSkillName: ev.sourceSkillName ?? ev.name,
-        maxStacks: MAX_INFLICTION_STACKS,
-        durationFrames: eventDuration(ev),
-        operatorSlotId: ev.ownerId,
-      });
-    } else if (REACTION_COLUMN_IDS.has(ev.columnId)) {
-      queue.insert({
-        frame: ev.startFrame,
-        priority: PRIORITY.FRAME_EFFECT,
-        type: 'FRAME_EFFECT',
-        statusId: ev.columnId,
-        columnId: ev.columnId,
-        ownerId: ev.ownerId,
-        sourceOwnerId: ev.sourceOwnerId ?? ev.ownerId,
-        sourceSkillName: ev.sourceSkillName ?? ev.name,
-        maxStacks: 0,
-        durationFrames: eventDuration(ev),
-        operatorSlotId: ev.ownerId,
-        derivedEvent: ev,
-      });
-    }
-  }
-
-  // Seed one PROCESS_FRAME entry per frame marker — all effects processed sequentially
-  const frameEntries = collectFrameEntries(registeredEvents, stops);
+  // Seed one PROCESS_FRAME entry per frame marker — all events (registered + derived)
+  const frameEntries = collectFrameEntries([...registeredEvents, ...derivedEvents], stops);
   for (const e of frameEntries) queue.insert(e);
-
-  // Seed reactive triggers for freeform enemy events (reactions/inflictions/statuses
-  // placed directly on the timeline — no frame markers, not handled by PROCESS_FRAME)
-  _triggerSeen.clear();
-  for (const ev of registeredEvents) {
-    if (ev.ownerId !== ENEMY_OWNER_ID) continue;
-    for (const entry of triggerIdx.matchEvent(ev.columnId)) {
-      if (entry.primaryVerb === 'PERFORM') continue; // PERFORM handled by PROCESS_FRAME
-      const dedupKey = `${entry.def.properties.id}:${entry.operatorSlotId}:${ev.startFrame}`;
-      if (_triggerSeen.has(dedupKey)) continue;
-      _triggerSeen.add(dedupKey);
-      // Target filtering for APPLY triggers
-      const toTarget = entry.primaryCondition.to as string | undefined;
-      if (toTarget === 'OPERATOR' && ev.ownerId === ENEMY_OWNER_ID) continue;
-      if (toTarget === 'ENEMY' && ev.ownerId !== ENEMY_OWNER_ID) continue;
-      const triggerCtx: import('./statusTriggerCollector').EngineTriggerContext = {
-        def: entry.def, operatorId: entry.operatorId,
-        operatorSlotId: entry.operatorSlotId, potential: entry.potential,
-        operatorSlotMap: entry.operatorSlotMap, loadoutProperties: entry.loadoutProperties,
-        haveConditions: entry.haveConditions, triggerEffects: entry.triggerEffects,
-      };
-      queue.insert({
-        frame: ev.startFrame, priority: PRIORITY.ENGINE_TRIGGER, type: 'ENGINE_TRIGGER',
-        statusId: entry.def.properties.id, columnId: '', ownerId: entry.operatorSlotId,
-        sourceOwnerId: ev.ownerId, sourceSkillName: ev.name,
-        maxStacks: 0, durationFrames: 0, operatorSlotId: entry.operatorSlotId,
-        engineTrigger: { frame: ev.startFrame, sourceOwnerId: entry.operatorId, triggerSlotId: ev.ownerId, sourceSkillName: ev.name, ctx: triggerCtx, isEquip: entry.isEquip },
-      });
-    }
-  }
 
   // ── Run the queue ─────────────────────────────────────────────────────────
   while (queue.size > 0) {
@@ -342,6 +275,8 @@ export function processCombatSimulation(
   hpController?: HPController,
   /** All slots' SP costs for insufficiency zone computation. */
   allSlotSpCosts?: ReadonlyMap<string, number>,
+  /** Pre-built TriggerIndex from CombatLoadoutController. */
+  triggerIndex?: TriggerIndex,
 ): TimelineEvent[] {
   // ── 0. Reset object pools for this pipeline run ─────────────────────────
   resetPools();
@@ -357,10 +292,12 @@ export function processCombatSimulation(
   if (spController) spController.clearPending();
   if (ueController) ueController.clear();
 
-  // ── 1. InputEventController: classify ─────────────────────────────────────
+  // ── 1. Clone and classify raw events ─────────────────────────────────────
   const { inputEvents, derivedEvents } = classifyEvents(rawEvents);
 
-  // ── 2. DerivedEventController: reset singleton and register input events ──
+  // ── 2. DerivedEventController: register skill events only ──────────────
+  // Non-skill events (inflictions, reactions, statuses) enter solely through
+  // the queue via collectFrameEntries → handleProcessFrame → create*.
   const triggerAssociations = getAllTriggerAssociations();
   if (!_decSingleton) _decSingleton = new DerivedEventController();
   _decSingleton.reset(triggerAssociations, slotWirings, spController, ueController);
@@ -393,7 +330,7 @@ export function processCombatSimulation(
     ? hpController.getEnemyHpPercentage
     : (bossMaxHp != null ? getEnemyHpPercentage : undefined);
   runEventQueue(state, derivedEvents, loadoutProperties, slotWeapons, slotOperatorMap, slotGearSets,
-    hpPercentageFn, getControlledSlotAtFrame, hpController);
+    hpPercentageFn, getControlledSlotAtFrame, hpController, triggerIndex);
 
   // ── 5. Finalize resource controllers ──────────────────────────────────────
   if (spController) {

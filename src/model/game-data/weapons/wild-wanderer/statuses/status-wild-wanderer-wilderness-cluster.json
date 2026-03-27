@@ -5,7 +5,7 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "PHYSICAL_DAMAGE_BONUS",
+          "object": "STAT",
           "toDeterminer": "OTHER",
           "to": "OPERATOR",
           "with": {
@@ -26,11 +26,13 @@
               "ofDeterminer": "THIS",
               "of": "OPERATOR"
             }
-          }
+          },
+          "objectId": "DAMAGE_BONUS",
+          "objectQualifier": "PHYSICAL"
         },
         {
           "verb": "APPLY",
-          "object": "ELECTRIC_DAMAGE_BONUS",
+          "object": "STAT",
           "toDeterminer": "OTHER",
           "to": "OPERATOR",
           "with": {
@@ -51,7 +53,9 @@
               "ofDeterminer": "THIS",
               "of": "OPERATOR"
             }
-          }
+          },
+          "objectId": "DAMAGE_BONUS",
+          "objectQualifier": "ELECTRIC"
         }
       ]
     }

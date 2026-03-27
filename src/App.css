@@ -2604,15 +2604,7 @@
   position: absolute;
   left: 0;
   right: 0;
-  background: repeating-linear-gradient(
-    135deg,
-    var(--scrim-60) 0px,
-    var(--scrim-60) 3px,
-    var(--scrim-35) 3px,
-    var(--scrim-35) 7px
-  );
-  border-top: 1px solid rgba(255, 180, 80, 0.4);
-  border-bottom: 1px solid rgba(255, 180, 80, 0.4);
+  background: var(--time-stop-bg);
   pointer-events: none;
   z-index: 2;
 }

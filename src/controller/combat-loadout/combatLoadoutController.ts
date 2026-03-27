@@ -3,6 +3,8 @@ import type { Slot } from '../timeline/columnBuilder';
 import { getWeapon } from '../gameDataStore';
 import { CommonSlotController } from '../slot/commonSlotController';
 import { getComboTriggerClause, getTeamStatusIds } from '../gameDataStore';
+import { TriggerIndex } from '../timeline/triggerIndex';
+import type { LoadoutProperties } from '../../view/InformationPane';
 
 const NUM_SLOTS = 4;
 
@@ -31,6 +33,7 @@ export class CombatLoadoutController {
   private slotIds: string[] = [];
   private cachedSlots: Slot[] = [];
   private spCosts: Map<string, number> = new Map();
+  private triggerIndex: TriggerIndex | null = null;
 
   // ── Common (global) slot ────────────────────────────────────────────────
   readonly commonSlot = new CommonSlotController();
@@ -41,11 +44,17 @@ export class CombatLoadoutController {
 
   /**
    * Sync the full slot array into the combat context.
-   * Rebuilds operator wiring and SP costs.
+   * Rebuilds operator wiring, SP costs, and trigger index.
    */
   syncSlots(slots: Slot[]): void {
     this.cachedSlots = slots;
     this.spCosts.clear();
+
+    const slotOperatorMap: Record<string, string> = {};
+    const loadoutProperties: Record<string, LoadoutProperties> = {};
+    const slotWeapons: Record<string, string | undefined> = {};
+    const slotGearSets: Record<string, string | undefined> = {};
+
     for (let i = 0; i < slots.length; i++) {
       const slot = slots[i];
       const op = slot.operator;
@@ -56,8 +65,14 @@ export class CombatLoadoutController {
           ? { operatorId: op.id }
           : null;
         this.spCosts.set(slot.slotId, op.skills.battle.skillPointCost ?? 100);
+        slotOperatorMap[slot.slotId] = op.id;
       }
+      if (slot.loadoutProperties) loadoutProperties[slot.slotId] = slot.loadoutProperties;
+      slotWeapons[slot.slotId] = slot.weaponId;
+      slotGearSets[slot.slotId] = slot.gearSetType;
     }
+
+    this.triggerIndex = TriggerIndex.build(slotOperatorMap, loadoutProperties, slotWeapons, slotGearSets);
   }
 
   // ── SP queries ─────────────────────────────────────────────────────────
@@ -79,6 +94,12 @@ export class CombatLoadoutController {
 
   getSlots(): readonly Slot[] {
     return this.cachedSlots;
+  }
+
+  // ── Trigger index ────────────────────────────────────────────────────────
+
+  getTriggerIndex(): TriggerIndex | null {
+    return this.triggerIndex;
   }
 
   // ── Team status queries ─────────────────────────────────────────────────

@@ -111,7 +111,7 @@ describe('EventInterpretorController: APPLY', () => {
     const result = interp.interpret(effect, ctx);
     expect(result).toBe(true);
     expect(interp.controller.output.length).toBe(1);
-    expect(interp.controller.output[0].columnId).toBe('focus');
+    expect(interp.controller.output[0].columnId).toBe('FOCUS');
     expect(interp.controller.output[0].ownerId).toBe('op-1');
     expect(eventDuration(interp.controller.output[0])).toBe(1200);
   });
@@ -203,7 +203,7 @@ describe('EventInterpretorController: CONSUME', () => {
 
   test('CONSUME STATUS clamps active status', () => {
     const interp = makeInterpretor();
-    const status = makeStatusEvent('melting-flame', 'op-1', 50, 2400);
+    const status = makeStatusEvent('MELTING_FLAME', 'op-1', 50, 2400);
     interp.controller.addEvent(status);
 
     const ctx = makeCtx(interp);
@@ -302,7 +302,7 @@ describe('EventInterpretorController: ALL', () => {
 
     // The 2 MF statuses created
     const mfStatuses = interp.controller.output.filter(ev =>
-      ev.columnId === 'melting-flame'
+      ev.columnId === 'MELTING_FLAME'
     );
     expect(mfStatuses.length).toBe(2);
     consoleSpy.mockRestore();
@@ -379,7 +379,7 @@ describe('EventInterpretorController: ALL', () => {
 
     interp.interpret(effect, ctx);
 
-    const mfStatuses = interp.controller.output.filter(ev => ev.columnId === 'melting-flame');
+    const mfStatuses = interp.controller.output.filter(ev => ev.columnId === 'MELTING_FLAME');
     expect(mfStatuses.length).toBe(1); // Only 1, not 4
     consoleSpy.mockRestore();
   });
@@ -433,10 +433,10 @@ describe('EventInterpretorController: ANY', () => {
 
     interp.interpret(effect, ctx);
 
-    const statuses = interp.controller.output.filter(ev => ev.columnId === 'cryo-status');
+    const statuses = interp.controller.output.filter(ev => ev.columnId === 'CRYO_STATUS');
     expect(statuses.length).toBe(1);
     // No heat status should be created
-    const heatStatuses = interp.controller.output.filter(ev => ev.columnId === 'heat-status');
+    const heatStatuses = interp.controller.output.filter(ev => ev.columnId === 'HEAT_STATUS');
     expect(heatStatuses.length).toBe(0);
     consoleSpy.mockRestore();
   });

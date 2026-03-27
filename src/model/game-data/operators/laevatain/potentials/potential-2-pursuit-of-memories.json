@@ -17,7 +17,7 @@
         },
         {
           "verb": "APPLY",
-          "object": "BASIC_ATTACK_DAMAGE_BONUS",
+          "object": "STAT",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
@@ -25,7 +25,9 @@
               "verb": "IS",
               "value": 0.15
             }
-          }
+          },
+          "objectId": "DAMAGE_BONUS",
+          "objectQualifier": "BASIC_ATTACK"
         }
       ]
     }

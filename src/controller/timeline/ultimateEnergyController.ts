@@ -9,6 +9,7 @@
  */
 
 import { SegmentType, StatType } from '../../consts/enums';
+import { VerbType, NounType } from '../../dsl/semantics';
 import { OperatorLoadoutState, EMPTY_LOADOUT } from '../../view/OperatorLoadoutHeader';
 import { LoadoutProperties, getDefaultLoadoutProperties } from '../../view/InformationPane';
 import { Operator, TimelineEvent, eventDuration } from '../../consts/viewTypes';
@@ -188,7 +189,7 @@ export function collectNoGainWindowsForEvent(
   for (const seg of ev.segments) {
     const isActive = seg.properties.segmentTypes?.includes(SegmentType.ACTIVE);
     const ignoresUlt = seg.clause?.some(c =>
-      c.effects.some(e => e.verb === 'IGNORE' && e.object === 'ULTIMATE_ENERGY')
+      c.effects.some(e => e.verb === VerbType.IGNORE && e.object === NounType.ULTIMATE_ENERGY)
     );
     if (isActive || ignoresUlt) {
       windows.push({ start: cursor, end: cursor + seg.properties.duration });

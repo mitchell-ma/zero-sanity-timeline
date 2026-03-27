@@ -31,13 +31,6 @@ export enum CombatResourceType {
   COOLDOWN = "COOLDOWN",
 }
 
-export enum VerbType {
-  APPLY = "APPLY",
-  CONSUME = "CONSUME",
-  RECOVER = "RECOVER",
-  RETURN = "RETURN",
-}
-
 export enum EventComponentType {
   EVENT = "EVENT",
   SEGMENT = "SEGMENT",
@@ -47,7 +40,7 @@ export enum EventComponentType {
 export enum DataSourceType {
   END_AXIS = "END_AXIS",
   WARFARIN = "WARFARIN",
-  SELF = "SELF",
+  ENDFIELD_SIMULATIONS = "ENDFIELD_SIMULATIONS",
 }
 
 export enum UnitType {
@@ -105,6 +98,12 @@ export enum StackInteractionType {
   MERGE = "MERGE",
   REFRESH = "REFRESH",
 }
+
+/** Sentinel: status has no stack limit. Use as stacks.limit value in JSON configs. */
+export const UNLIMITED_STACKS = -1;
+
+/** Sentinel: status has permanent duration (never expires). Use as duration value in JSON configs. */
+export const PERMANENT_DURATION = -1;
 
 export enum ElementType {
   NONE = "NONE",
@@ -696,4 +695,37 @@ export enum WeaponSkillType {
   JIMINY_12_ASSAULT_ARMAMENT_PREP = "JIMINY_12_ASSAULT_ARMAMENT_PREP",
   STANZA_OF_MEMORIALS_TWILIGHT_LUSTROUS_PYRE = "STANZA_OF_MEMORIALS_TWILIGHT_LUSTROUS_PYRE",
   DREAMS_OF_THE_STARRY_BEACH_INFLICTION_TIDAL_MURMURS = "DREAMS_OF_THE_STARRY_BEACH_INFLICTION_TIDAL_MURMURS",
+}
+
+export enum ColumnType {
+  MINI_TIMELINE = "mini-timeline",
+  PLACEHOLDER = "placeholder",
+}
+
+export enum MicroColumnAssignment {
+  BY_ORDER = "by-order",
+  BY_COLUMN_ID = "by-column-id",
+  DYNAMIC_SPLIT = "dynamic-split",
+}
+
+export enum InfoPaneMode {
+  EVENT = "event",
+  LOADOUT = "loadout",
+  ENEMY = "enemy",
+  RESOURCE = "resource",
+}
+
+export enum SidebarMode {
+  LOADOUTS = "loadouts",
+  WORKBENCH = "workbench",
+}
+
+export enum HeaderVariant {
+  INFLICTION = "infliction",
+  SKILL = "skill",
+}
+
+export enum LoadoutNodeType {
+  FOLDER = "folder",
+  LOADOUT = "loadout",
 }

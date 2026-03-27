@@ -5,7 +5,7 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "ARTS_DAMAGE_BONUS",
+          "object": "STAT",
           "to": "ENEMY",
           "with": {
             "value": {
@@ -25,7 +25,9 @@
               "ofDeterminer": "THIS",
               "of": "OPERATOR"
             }
-          }
+          },
+          "objectId": "DAMAGE_BONUS",
+          "objectQualifier": "ARTS"
         }
       ]
     }

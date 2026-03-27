@@ -1,5 +1,5 @@
-import { EventFrameType } from "../../consts/enums";
-import { NounType, VerbType, AdjectiveType } from "../../dsl/semantics";
+import { EventFrameType, SegmentType } from "../../consts/enums";
+import { NounType, VerbType, AdjectiveType, DeterminerType } from "../../dsl/semantics";
 import type { Effect, ValueNode } from "../../dsl/semantics";
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT, type ValueResolutionContext } from "../../controller/calculation/valueResolver";
 import {
@@ -130,11 +130,11 @@ interface JsonSkillCategory {
 
 /** Map DSL to + toDeterminer to target string. */
 function dslTargetToLegacy(to?: string, toDeterminer?: string): string | undefined {
-  if (to === 'TEAM') return 'TEAM';
-  if (to === 'OPERATOR') {
-    return toDeterminer === 'ALL' ? 'TEAM' : 'SELF';
+  if (to === NounType.TEAM) return 'TEAM';
+  if (to === NounType.OPERATOR) {
+    return toDeterminer === DeterminerType.ALL ? 'TEAM' : 'SELF';
   }
-  if (to === 'ENEMY') return 'ENEMY';
+  if (to === NounType.ENEMY) return 'ENEMY';
   return undefined;
 }
 
@@ -198,7 +198,7 @@ function findValue(
 function findConditionalGaugeGains(category: JsonSkillCategory | undefined, ctx?: ValueResolutionContext): Record<number, number> {
   const byEnemies: Record<number, number> = {};
   for (const ef of flattenClauseEffects(category)) {
-    if (ef.object === 'ULTIMATE_ENERGY' && ef.verb === 'RECOVER' && ef.conditions?.enemiesHitThreshold) {
+    if (ef.object === NounType.ULTIMATE_ENERGY && ef.verb === VerbType.RECOVER && ef.conditions?.enemiesHitThreshold) {
       byEnemies[ef.conditions.enemiesHitThreshold] = withValue(ef.with?.value, ctx);
     }
   }
@@ -270,7 +270,7 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
           case VerbType.APPLY:
             if (isSource && (ef.object === NounType.INFLICTION || ef.object === NounType.STATUS)) {
               duplicateSource = true;
-            } else if (ef.object === NounType.INFLICTION || ef.object === NounType.REACTION) {
+            } else if (ef.object === NounType.INFLICTION || ef.object === NounType.REACTION || ef.object === NounType.SUSCEPTIBILITY) {
               clauseEffects.push({ type: 'dsl', dslEffect: ef as unknown as Effect });
             } else if (ef.object === NounType.STATUS || ef.objectType === NounType.STATUS) {
               // Normalize: objectType=STATUS with object=<id> → object: STATUS, objectId: <id>
@@ -452,7 +452,7 @@ function catDuration(cat?: JsonSkillCategory, ctx?: ValueResolutionContext): num
 /** Get animation duration from a skill category's ANIMATION segment. */
 function catAnimationDur(cat?: JsonSkillCategory, ctx?: ValueResolutionContext): number {
   if (!cat?.segments) return 0;
-  const animSeg = cat.segments.find(s => s.properties.segmentTypes?.includes('ANIMATION'));
+  const animSeg = cat.segments.find(s => s.properties.segmentTypes?.includes(SegmentType.ANIMATION));
   return resolveDur(animSeg?.properties?.duration, ctx);
 }
 
@@ -481,11 +481,11 @@ export function getSkillTimings(operatorJson: Record<string, unknown>, ctx?: Val
   // Duration: prefer top-level property, fall back to sum of non-cooldown segments
   const comboTopDur = catDuration(comboSkill, ctx);
   const comboDur = dur(comboTopDur || ((comboSkill?.segments as JsonSegment[] | undefined)
-    ?.filter(s => !s.properties.segmentTypes?.includes('COOLDOWN'))
+    ?.filter(s => !s.properties.segmentTypes?.includes(SegmentType.COOLDOWN))
     .reduce((sum, s) => sum + resolveDur(s.properties?.duration, ctx), 0) ?? 0));
-  const comboCdFromClause = findValue(comboSkill, 'COOLDOWN', 'CONSUME', undefined, ctx);
+  const comboCdFromClause = findValue(comboSkill, NounType.COOLDOWN, VerbType.CONSUME, undefined, ctx);
   const comboCdSeg = (comboSkill?.segments as JsonSegment[] | undefined)
-    ?.find(s => s.properties.segmentTypes?.includes('COOLDOWN'));
+    ?.find(s => s.properties.segmentTypes?.includes(SegmentType.COOLDOWN));
   const comboCdFromSegment = comboCdSeg?.properties?.duration
     ? resolveDur(comboCdSeg.properties.duration, ctx)
     : undefined;
@@ -507,15 +507,15 @@ export function getSkillTimings(operatorJson: Record<string, unknown>, ctx?: Val
       const s = ultSegs.find(seg => seg.properties.segmentTypes?.includes(type));
       return s ? dur(resolveDur(s.properties?.duration, ctx)) : 0;
     };
-    ultAnimDur = segDur('ANIMATION');
-    ultTotalDur = ultAnimDur + segDur('STASIS');
-    ultCdFrames = segDur('COOLDOWN');
-    ultActiveDurFromSegs = segDur('ACTIVE');
+    ultAnimDur = segDur(SegmentType.ANIMATION);
+    ultTotalDur = ultAnimDur + segDur(SegmentType.STASIS);
+    ultCdFrames = segDur(SegmentType.COOLDOWN);
+    ultActiveDurFromSegs = segDur(SegmentType.ACTIVE);
   } else {
     ultTotalDur = dur(catDuration(ultimate, ctx));
     const ultAnimRaw = catAnimationDur(ultimate, ctx);
     ultAnimDur = ultAnimRaw > 0 ? dur(ultAnimRaw) : ultTotalDur;
-    const ultCdRaw = findValue(ultimate, 'COOLDOWN', 'CONSUME', undefined, ctx);
+    const ultCdRaw = findValue(ultimate, NounType.COOLDOWN, VerbType.CONSUME, undefined, ctx);
     ultCdFrames = ultCdRaw != null ? dur(ultCdRaw) : 0;
   }
 
@@ -535,7 +535,7 @@ export function getUltimateEnergyCost(operatorJson: Record<string, unknown>, ctx
   const skills = operatorJson.skills as Record<string, JsonSkillCategory>;
   const typeMap = operatorJson.skillTypeMap as Record<string, string> | undefined;
   const ultimate = skills?.[typeMap?.ULTIMATE ?? 'ULTIMATE'];
-  return findValue(ultimate, 'ULTIMATE_ENERGY', 'CONSUME', undefined, ctx) ?? 0;
+  return findValue(ultimate, NounType.ULTIMATE_ENERGY, VerbType.CONSUME, undefined, ctx) ?? 0;
 }
 
 export interface SkillGaugeGains {
@@ -555,8 +555,8 @@ export function getSkillGaugeGains(operatorJson: Record<string, unknown>, ctx?: 
   const battleSkillId = typeMap?.BATTLE_SKILL ?? 'BATTLE_SKILL';
   const bs = skills?.[battleSkillId];
   if (bs?.clause) {
-    result.battleGaugeGain = findValue(bs, 'ULTIMATE_ENERGY', 'RECOVER', 'SELF', ctx) ?? 0;
-    result.battleTeamGaugeGain = findValue(bs, 'ULTIMATE_ENERGY', 'RECOVER', 'TEAM', ctx) ?? 0;
+    result.battleGaugeGain = findValue(bs, NounType.ULTIMATE_ENERGY, VerbType.RECOVER, 'SELF', ctx) ?? 0;
+    result.battleTeamGaugeGain = findValue(bs, NounType.ULTIMATE_ENERGY, VerbType.RECOVER, 'TEAM', ctx) ?? 0;
   }
 
   // Combo skill gauge gains
@@ -568,9 +568,9 @@ export function getSkillGaugeGains(operatorJson: Record<string, unknown>, ctx?: 
       result.comboGaugeGainByEnemies = byEnemies;
       result.comboGaugeGain = byEnemies[1] ?? 0;
     } else {
-      result.comboGaugeGain = findValue(cs, 'ULTIMATE_ENERGY', 'RECOVER', 'SELF', ctx) ?? 0;
+      result.comboGaugeGain = findValue(cs, NounType.ULTIMATE_ENERGY, VerbType.RECOVER, 'SELF', ctx) ?? 0;
     }
-    result.comboTeamGaugeGain = findValue(cs, 'ULTIMATE_ENERGY', 'RECOVER', 'TEAM', ctx) ?? 0;
+    result.comboTeamGaugeGain = findValue(cs, NounType.ULTIMATE_ENERGY, VerbType.RECOVER, 'TEAM', ctx) ?? 0;
   }
 
   return result;
@@ -581,7 +581,7 @@ export function getBattleSkillSpCost(operatorJson: Record<string, unknown>, ctx?
   const skills = operatorJson.skills as Record<string, JsonSkillCategory> | undefined;
   const typeMap = operatorJson.skillTypeMap as Record<string, string> | undefined;
   const battleSkillId = typeMap?.BATTLE_SKILL ?? 'BATTLE_SKILL';
-  return findValue(skills?.[battleSkillId], 'SKILL_POINT', 'CONSUME', undefined, ctx) ?? 0;
+  return findValue(skills?.[battleSkillId], NounType.SKILL_POINT, VerbType.CONSUME, undefined, ctx) ?? 0;
 }
 
 // ── Per-skill-category data extraction (raw seconds, for event files) ────────
@@ -610,14 +610,14 @@ export function getSkillCategoryData(
 
   return {
     duration: catDuration(cat, ctx),
-    spCost: findValue(cat, 'SKILL_POINT', 'CONSUME', undefined, ctx)
-         ?? findValue(baseBattle, 'SKILL_POINT', 'CONSUME', undefined, ctx)
+    spCost: findValue(cat, NounType.SKILL_POINT, VerbType.CONSUME, undefined, ctx)
+         ?? findValue(baseBattle, NounType.SKILL_POINT, VerbType.CONSUME, undefined, ctx)
          ?? 0,
-    gaugeGain: findValue(cat, 'ULTIMATE_ENERGY', 'RECOVER', 'SELF', ctx)
-            ?? findValue(baseBattle, 'ULTIMATE_ENERGY', 'RECOVER', 'SELF', ctx)
+    gaugeGain: findValue(cat, NounType.ULTIMATE_ENERGY, VerbType.RECOVER, 'SELF', ctx)
+            ?? findValue(baseBattle, NounType.ULTIMATE_ENERGY, VerbType.RECOVER, 'SELF', ctx)
             ?? 0,
-    cooldown: findValue(cat, 'COOLDOWN', 'CONSUME', undefined, ctx) ?? 0,
-    energyCost: findValue(cat, 'ULTIMATE_ENERGY', 'CONSUME', undefined, ctx) ?? 0,
+    cooldown: findValue(cat, NounType.COOLDOWN, VerbType.CONSUME, undefined, ctx) ?? 0,
+    energyCost: findValue(cat, NounType.ULTIMATE_ENERGY, VerbType.CONSUME, undefined, ctx) ?? 0,
   };
 }
 

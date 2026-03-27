@@ -5,7 +5,7 @@ import {
   durationToPx,
 } from '../utils/timeline';
 import { SKILL_COLUMNS, COMBO_WINDOW_COLUMN_ID } from '../model/channels';
-import { InteractionModeType } from '../consts/enums';
+import { InteractionModeType, ColumnType, MicroColumnAssignment } from '../consts/enums';
 import {
   TimelineEvent,
   Column,
@@ -33,7 +33,7 @@ interface ResourceGraph {
 }
 
 export interface TimelineColumnProps {
-  col: Column & { type: 'mini-timeline' };
+  col: Column & { type: ColumnType.MINI_TIMELINE };
   viewModel: ColumnViewModel | undefined;
   eventPresentations: Map<string, EventPresentation>;
   /** Pre-rendered gridline elements (stable across drag — memoized by parent). */
@@ -180,7 +180,7 @@ function TimelineColumn({
       {gridlineElements}
 
       {/* Micro-column dividers (skip for dynamic-split — no fixed lanes) */}
-      {hasMicro && col.microColumnAssignment !== 'dynamic-split' && Array.from({ length: microCount - 1 }, (_, i) => (
+      {hasMicro && col.microColumnAssignment !== MicroColumnAssignment.DYNAMIC_SPLIT && Array.from({ length: microCount - 1 }, (_, i) => (
         <div
           key={`mc-div-${i}`}
           className="mf-micro-divider"

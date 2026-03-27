@@ -241,7 +241,7 @@ When `attrType` is `0`, the `compositeAttr` string determines the stat(s):
       - Build rank 1 from `attrValue`, ranks 2-4 from `enhancedAttrValues`
    f. Fetch detail endpoint for one piece per set to get set effect description
 4. Write per-set JSON to `game-data/gears/<set-slug>.json`
-5. **Before writing**, preserve any entries with `dataSources` containing `"SELF"`
+5. **Before writing**, preserve any entries with `dataSources` containing `"ENDFIELD_SIMULATIONS"`
 
 ### Set effect description
 

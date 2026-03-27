@@ -5,7 +5,7 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "DAMAGE_BONUS",
+          "object": "STAT",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
@@ -13,7 +13,8 @@
               "verb": "IS",
               "value": 0.5
             }
-          }
+          },
+          "objectId": "DAMAGE_BONUS"
         }
       ]
     }

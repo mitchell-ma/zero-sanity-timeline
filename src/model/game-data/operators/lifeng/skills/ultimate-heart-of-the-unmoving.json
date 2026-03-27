@@ -283,11 +283,25 @@
           "object": "ULTIMATE_ENERGY",
           "with": {
             "value": {
-              "verb": "VARY_BY",
-              "object": "POTENTIAL",
-              "value": [90, 90, 90, 90, 76.5, 76.5],
-              "ofDeterminer": "THIS",
-              "of": "OPERATOR"
+              "operation": "MULT",
+              "left": {
+                "verb": "IS",
+                "value": 90
+              },
+              "right": {
+                "verb": "VARY_BY",
+                "object": "POTENTIAL",
+                "value": [
+                  1,
+                  1,
+                  1,
+                  1,
+                  0.85,
+                  0.85
+                ],
+                "ofDeterminer": "THIS",
+                "of": "OPERATOR"
+              }
             }
           }
         }

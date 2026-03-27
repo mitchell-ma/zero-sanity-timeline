@@ -12,7 +12,7 @@ import {
   DamageTableRow,
 } from '../../controller/calculation/damageTableBuilder';
 import { Column, MiniTimeline } from '../../consts/viewTypes';
-import { TimelineSourceType } from '../../consts/enums';
+import { ColumnType, TimelineSourceType } from '../../consts/enums';
 import { OPERATOR_COLUMNS } from '../../model/channels';
 import { Slot } from '../../controller/timeline/columnBuilder';
 
@@ -39,7 +39,7 @@ jest.mock('../../consts/gearSetEffects', () => ({
 function miniTimeline(key: string, ownerId: string, columnId: string, label: string, opts?: { derived?: boolean }): Column {
   return {
     key,
-    type: 'mini-timeline',
+    type: ColumnType.MINI_TIMELINE,
     source: TimelineSourceType.OPERATOR,
     ownerId,
     columnId,

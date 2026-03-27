@@ -8,6 +8,7 @@
  */
 import type { Interaction } from '../../dsl/semantics';
 import type { ClauseEffect, ClausePredicate } from './weaponStatusesStore';
+import { resolveEffectStat } from '../enums/stats';
 import { checkKeys, VALID_VALUE_NODE_KEYS, VALID_CLAUSE_KEYS, VALID_METADATA_KEYS } from './validationUtils';
 
 // ── Validation ──────────────────────────────────────────────────────────────
@@ -123,7 +124,7 @@ export class WeaponSkill {
   /** Get the per-rank values for a passive stat (e.g. "HEAT_DAMAGE_BONUS"). */
   getPassiveValues(statObject: string): number[] {
     for (const effect of this.passiveEffects) {
-      if (effect.object === statObject) {
+      if (resolveEffectStat(effect) === statObject) {
         const wv = effect.with?.multiplier ?? effect.with?.value;
         const v = (wv as { value?: number | number[] })?.value;
         if (v != null) return Array.isArray(v) ? v : [v];
@@ -229,7 +230,7 @@ export function getGenericSkillStats(skillId: string, level: number): WeaponSkil
     if ((wv as { value?: unknown })?.value == null) continue;
     const vals = Array.isArray((wv as { value: unknown }).value) ? (wv as { value: number[] }).value : [(wv as { value: number }).value];
     const value = vals[level - 1] ?? 0;
-    if (value !== 0) results.push({ stat: effect.object, value });
+    if (value !== 0) results.push({ stat: resolveEffectStat(effect) ?? effect.object, value });
   }
   return results;
 }
@@ -247,7 +248,7 @@ export function getNamedSkillPassiveStats(weaponOriginId: string, level: number)
     if ((wv as { value?: unknown })?.value == null) continue;
     const vals = Array.isArray((wv as { value: unknown }).value) ? (wv as { value: number[] }).value : [(wv as { value: number }).value];
     const value = vals.length === 1 ? vals[0] : (vals[level - 1] ?? 0);
-    if (value !== 0) results.push({ stat: effect.object, value });
+    if (value !== 0) results.push({ stat: resolveEffectStat(effect) ?? effect.object, value });
   }
   return results;
 }

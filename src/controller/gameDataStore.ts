@@ -5,6 +5,7 @@
  */
 
 import { CombatSkillType, ElementType, ArtsReactionType } from '../consts/enums';
+import { NounType } from '../dsl/semantics';
 import { t } from '../locales/locale';
 
 // ── configStore (private to this module) ─────────────────────────────────────
@@ -280,19 +281,19 @@ export { buildMergedOperatorJson, getAllOperatorIds, getEnabledStatusEvents };
 
 let _teamStatusIds: Set<string> | null = null;
 
-/** Build the set of status IDs that target the team (to === 'TEAM'). */
+/** Build the set of status IDs that target the team (to === NounType.TEAM). */
 function buildTeamStatusIds(): Set<string> {
   if (_teamStatusIds) return _teamStatusIds;
   const ids = new Set<string>();
   for (const s of getAllOperatorStatuses()) {
-    if (s.to === 'TEAM' && s.id) ids.add(s.id);
+    if (s.to === NounType.TEAM && s.id) ids.add(s.id);
   }
   _teamStatusIds = ids;
   return ids;
 }
 
 /**
- * If `statusId` is a team-targeting status (to === 'TEAM' in its JSON config),
+ * If `statusId` is a team-targeting status (to === NounType.TEAM in its JSON config),
  * returns the status ID itself as its column ID. Team statuses use distinct
  * column IDs (matched via matchColumnIds) — same architecture as operator/enemy statuses.
  */

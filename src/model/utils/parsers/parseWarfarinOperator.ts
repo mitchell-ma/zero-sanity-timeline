@@ -12,6 +12,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { OperatorInformationType } from '../../enums/operators';
+import { CombatSkillType } from '../../../consts/enums';
 import { WarfarinAttributeType, warfarinToStat } from './warfarin';
 
 const API_BASE = 'https://api.warfarin.wiki/v1/en/operators';
@@ -392,10 +393,10 @@ function buildPotentials(
 
 /** Warfarin skillGroupType → CombatSkillType mapping. */
 const SKILL_GROUP_TYPE_MAP: Record<number, string> = {
-  0: 'BASIC_ATTACK',
-  1: 'BATTLE_SKILL',
-  2: 'ULTIMATE',
-  3: 'COMBO_SKILL',
+  0: CombatSkillType.BASIC_ATTACK,
+  1: CombatSkillType.BATTLE_SKILL,
+  2: CombatSkillType.ULTIMATE,
+  3: CombatSkillType.COMBO_SKILL,
 };
 
 // ── Skill multiplier extraction ────────────────────────────────────────────
@@ -433,7 +434,7 @@ function classifyWarfarinSkillId(skillId: string): SkillClassification | null {
   if (attackMatch) {
     const seqNum = parseInt(attackMatch[1], 10);
     const subIndex = attackMatch[2] ? parseInt(attackMatch[2], 10) : 0;
-    return { category: 'BASIC_ATTACK', index: (seqNum - 1) + subIndex };
+    return { category: CombatSkillType.BASIC_ATTACK, index: (seqNum - 1) + subIndex };
   }
 
   // Enhanced basic attack (during ult): ult_attack1..N
@@ -451,7 +452,7 @@ function classifyWarfarinSkillId(skillId: string): SkillClassification | null {
 
   // Battle skill
   if (suffix === 'normal_skill') {
-    return { category: 'BATTLE_SKILL', index: 0 };
+    return { category: CombatSkillType.BATTLE_SKILL, index: 0 };
   }
 
   // Enhanced battle skill (during ult)
@@ -461,12 +462,12 @@ function classifyWarfarinSkillId(skillId: string): SkillClassification | null {
 
   // Combo skill
   if (suffix === 'combo_skill') {
-    return { category: 'COMBO_SKILL', index: 0 };
+    return { category: CombatSkillType.COMBO_SKILL, index: 0 };
   }
 
   // Ultimate
   if (suffix === 'ultimate_skill') {
-    return { category: 'ULTIMATE', index: 0 };
+    return { category: CombatSkillType.ULTIMATE, index: 0 };
   }
 
   // Special attacks
@@ -477,7 +478,7 @@ function classifyWarfarinSkillId(skillId: string): SkillClassification | null {
     return { category: 'DIVE_ATTACK', index: 0 };
   }
   if (suffix === 'power_attack' || suffix === 'power_attack2') {
-    return { category: 'FINISHER', index: 0 };
+    return { category: CombatSkillType.FINISHER, index: 0 };
   }
 
   // Talent entries (no multipliers we need)
@@ -604,7 +605,7 @@ function buildSkillTimingOverrides(
     if (!bundles.length) continue;
     const first = bundles[0];
 
-    if (classification.category === 'ULTIMATE') {
+    if (classification.category === CombatSkillType.ULTIMATE) {
       const duration = first.blackboard.find(b => b.key === 'duration');
       if (duration) overrides.ultimateActiveDuration = duration.value;
     }

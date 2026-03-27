@@ -122,7 +122,7 @@ See `src/model/game-data/operatorDataSpec.md` for the full schema. Key structure
 - **Status interactions**: `{ "interactionType": "APPLY", "statusType": "HEAT", "stacks": 1, "target": "ENEMY" }`
 - **Animation**: `{ "duration": { ... }, "timeInteractionType": "TIME_STOP" }`
 - **Event component type**: `SEGMENT` or `FRAME` (`EventComponentType` enum)
-- **Data sources**: `["END_AXIS"]` or `["WARFARIN"]` or `["SELF"]` (`DataSourceType` enum)
+- **Data sources**: `["END_AXIS"]` or `["WARFARIN"]` or `["ENDFIELD_SIMULATIONS"]` (`DataSourceType` enum)
 
 ## gamedata.json Structure
 
@@ -267,7 +267,7 @@ Default for new operators:
 }
 ```
 
-With `dataSources: ["SELF"]` when measured, omitted or empty when using defaults.
+With `dataSources: ["ENDFIELD_SIMULATIONS"]` when measured, omitted or empty when using defaults.
 
 ## Data Source Rules
 
@@ -275,13 +275,13 @@ With `dataSources: ["SELF"]` when measured, omitted or empty when using defaults
 |---|---|---|
 | `END_AXIS` | Parsed from End-Axis gamedata.json | Secondary |
 | `WARFARIN` | Parsed from Warfarin API | Secondary |
-| `SELF` | Manually measured/verified | **Authoritative** — always takes precedence |
+| `ENDFIELD_SIMULATIONS` | Manually measured/verified | **Authoritative** — always takes precedence |
 
 ### Rules
 - When parsing from gamedata.json, set `dataSources: ["END_AXIS"]`
 - When parsing from Warfarin API, set `dataSources: ["WARFARIN"]`
-- `SELF` data lives in `skillOverrides` — the parser **never touches** this field
-- When manually correcting a value, add it to `skillOverrides` with `dataSources: ["SELF"]`
+- `ENDFIELD_SIMULATIONS` data lives in `skillOverrides` — the parser **never touches** this field
+- When manually correcting a value, add it to `skillOverrides` with `dataSources: ["ENDFIELD_SIMULATIONS"]`
 
 ## Skill Overrides
 
@@ -299,12 +299,12 @@ Manually verified data is stored separately from parsed data using the `skillOve
       "animation": {
         "duration": { "value": 0.729, "unit": "SECOND" },
         "timeInteractionType": "TIME_STOP",
-        "dataSources": ["SELF"]
+        "dataSources": ["ENDFIELD_SIMULATIONS"]
       }
     },
     "ULTIMATE": {
       "frames": [...],
-      "dataSources": ["SELF"]
+      "dataSources": ["ENDFIELD_SIMULATIONS"]
     }
   }
 }
@@ -312,7 +312,7 @@ Manually verified data is stored separately from parsed data using the `skillOve
 
 ### Override precedence
 - `skills` contains the base data from external sources (always overwritten by parsers)
-- `skillOverrides` contains SELF-verified corrections (never touched by parsers)
+- `skillOverrides` contains ENDFIELD_SIMULATIONS-verified corrections (never touched by parsers)
 - At read time, `skillOverrides` values take precedence over `skills` values via deep merge
 
 ### Override categories
@@ -335,7 +335,7 @@ When the parser runs:
 ### Adding a new override
 1. Identify the value to override in the `skills` structure
 2. Add the corresponding entry to `skillOverrides` with the same path
-3. Set `dataSources: ["SELF"]` on the override entry
+3. Set `dataSources: ["ENDFIELD_SIMULATIONS"]` on the override entry
 4. The base `skills` value remains unchanged (it will be updated by future parser runs)
 
 ## Finding New Operators in External Sources
@@ -770,7 +770,7 @@ Each entry in `conditionalStats[]`:
    - **Stat boosts**: Flatten blackboard values directly onto level entries, map keys to `StatType`
    - **Named skills**: Analyze description to split stats into permanent (before trigger phrase) and conditional (after trigger phrase). Detect `triggerCondition` from description text patterns. Extract `duration` and `maxStacks` from blackboard.
 7. Write to `game-data/weapons/<slug>.json` with `dataSources: ["WARFARIN"]`
-8. **Before writing**, preserve any entries with `dataSources` containing `"SELF"`
+8. **Before writing**, preserve any entries with `dataSources` containing `"ENDFIELD_SIMULATIONS"`
 
 ### Adding new weapons
 

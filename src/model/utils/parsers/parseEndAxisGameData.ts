@@ -12,8 +12,8 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import { UnitType } from '../../../consts/enums';
-import { VerbType } from '../../../dsl/semantics';
+import { CombatResourceType, UnitType } from '../../../consts/enums';
+import { DeterminerType, NounType, VerbType } from '../../../dsl/semantics';
 
 const GAMEDATA_URL = 'https://raw.githubusercontent.com/Lieyuan621/Endaxis/main/public/gamedata.json';
 const OPERATORS_DIR = path.resolve(__dirname, '../../game-data/operators');
@@ -193,18 +193,18 @@ interface AnomalyMapping {
 }
 
 const ANOMALY_TYPE_MAP: Record<string, AnomalyMapping | null> = {
-  blaze_attach:   { verb: 'APPLY', object: 'INFLICTION', objectQualifier: 'HEAT' },
-  cold_attach:    { verb: 'APPLY', object: 'INFLICTION', objectQualifier: 'CRYO' },
-  emag_attach:    { verb: 'APPLY', object: 'INFLICTION', objectQualifier: 'ELECTRIC' },
-  nature_attach:  { verb: 'APPLY', object: 'INFLICTION', objectQualifier: 'NATURE' },
-  magma_0:        { verb: 'APPLY', object: 'REACTION', objectQualifier: ['FORCED', 'COMBUSTION'], isForced: true, stacks: 1 },
-  magma_1:        { verb: 'APPLY', object: 'INFLICTION', objectQualifier: 'MELTING_FLAME' },
-  magma_2:        { verb: 'APPLY', object: 'INFLICTION', objectQualifier: 'MELTING_FLAME' },
-  magma_3:        { verb: 'APPLY', object: 'INFLICTION', objectQualifier: 'MELTING_FLAME' },
-  magma_4:        { verb: 'CONSUME', object: 'INFLICTION', objectQualifier: 'HEAT', conversion: { statusType: 'MELTING_FLAME', ratio: '1:1' } },
-  blaze_burst:    { verb: 'APPLY', object: 'REACTION', objectQualifier: 'COMBUSTION' },
-  burning:        { verb: 'APPLY', object: 'REACTION', objectQualifier: 'COMBUSTION' },
-  corrosion:      { verb: 'APPLY', object: 'REACTION', objectQualifier: 'CORROSION', isForced: true },
+  blaze_attach:   { verb: VerbType.APPLY, object: NounType.INFLICTION, objectQualifier: 'HEAT' },
+  cold_attach:    { verb: VerbType.APPLY, object: NounType.INFLICTION, objectQualifier: 'CRYO' },
+  emag_attach:    { verb: VerbType.APPLY, object: NounType.INFLICTION, objectQualifier: 'ELECTRIC' },
+  nature_attach:  { verb: VerbType.APPLY, object: NounType.INFLICTION, objectQualifier: 'NATURE' },
+  magma_0:        { verb: VerbType.APPLY, object: NounType.REACTION, objectQualifier: ['FORCED', 'COMBUSTION'], isForced: true, stacks: 1 },
+  magma_1:        { verb: VerbType.APPLY, object: NounType.INFLICTION, objectQualifier: 'MELTING_FLAME' },
+  magma_2:        { verb: VerbType.APPLY, object: NounType.INFLICTION, objectQualifier: 'MELTING_FLAME' },
+  magma_3:        { verb: VerbType.APPLY, object: NounType.INFLICTION, objectQualifier: 'MELTING_FLAME' },
+  magma_4:        { verb: VerbType.CONSUME, object: NounType.INFLICTION, objectQualifier: 'HEAT', conversion: { statusType: 'MELTING_FLAME', ratio: '1:1' } },
+  blaze_burst:    { verb: VerbType.APPLY, object: NounType.REACTION, objectQualifier: 'COMBUSTION' },
+  burning:        { verb: VerbType.APPLY, object: NounType.REACTION, objectQualifier: 'COMBUSTION' },
+  corrosion:      { verb: VerbType.APPLY, object: NounType.REACTION, objectQualifier: 'CORROSION', isForced: true },
 };
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -242,8 +242,8 @@ function convertTick(
 
   // SP recovery
   effects.push({
-    verb: 'RECOVER',
-    object: 'SKILL_POINT',
+    verb: VerbType.RECOVER,
+    object: NounType.SKILL_POINT,
     with: {
       value: { verb: VerbType.IS, value: tick.sp },
     },
@@ -251,8 +251,8 @@ function convertTick(
 
   // Stagger
   effects.push({
-    verb: 'RECOVER',
-    object: 'STAGGER',
+    verb: VerbType.RECOVER,
+    object: NounType.STAGGER,
     with: {
       value: { verb: VerbType.IS, value: tick.stagger },
     },
@@ -268,7 +268,7 @@ function convertTick(
       verb: mapping.verb,
       object: mapping.object,
       objectQualifier: mapping.objectQualifier,
-      to: 'ENEMY',
+      to: NounType.ENEMY,
     };
 
     const withPrep: Effect['with'] = {};
@@ -310,13 +310,13 @@ function buildResourceEffect(
     },
   };
 
-  if (resourceType === 'ULTIMATE_ENERGY' && interactionType === 'RECOVER') {
+  if (resourceType === CombatResourceType.ULTIMATE_ENERGY && interactionType === VerbType.RECOVER) {
     if (target === 'SELF') {
-      effect.toDeterminer = 'THIS';
-      effect.to = 'OPERATOR';
-    } else if (target === 'TEAM') {
-      effect.toDeterminer = 'ALL';
-      effect.to = 'OPERATOR';
+      effect.toDeterminer = DeterminerType.THIS;
+      effect.to = NounType.OPERATOR;
+    } else if (target === NounType.TEAM) {
+      effect.toDeterminer = DeterminerType.ALL;
+      effect.to = NounType.OPERATOR;
     }
   }
 
@@ -355,17 +355,17 @@ function parseBattleSkill(char: GameDataCharacter): SkillCategory {
 
   // SP cost
   if (char.skill_spCost) {
-    effects.push(buildResourceEffect('SKILL_POINT', 'CONSUME', char.skill_spCost));
+    effects.push(buildResourceEffect(CombatResourceType.SKILL_POINT, VerbType.CONSUME, char.skill_spCost));
   }
 
   // Gauge gain (self)
   if (char.skill_gaugeGain) {
-    effects.push(buildResourceEffect('ULTIMATE_ENERGY', 'RECOVER', char.skill_gaugeGain, 'SELF'));
+    effects.push(buildResourceEffect(CombatResourceType.ULTIMATE_ENERGY, VerbType.RECOVER, char.skill_gaugeGain, 'SELF'));
   }
 
   // Gauge gain (team)
   if (char.skill_teamGaugeGain) {
-    effects.push(buildResourceEffect('ULTIMATE_ENERGY', 'RECOVER', char.skill_teamGaugeGain, 'TEAM'));
+    effects.push(buildResourceEffect(CombatResourceType.ULTIMATE_ENERGY, VerbType.RECOVER, char.skill_teamGaugeGain, NounType.TEAM));
   }
 
   const result: SkillCategory = {
@@ -388,12 +388,12 @@ function parseComboSkill(char: GameDataCharacter): SkillCategory {
 
   // Cooldown
   if (char.link_cooldown) {
-    effects.push(buildResourceEffect('COOLDOWN', 'CONSUME', char.link_cooldown));
+    effects.push(buildResourceEffect(CombatResourceType.COOLDOWN, VerbType.CONSUME, char.link_cooldown));
   }
 
   // Gauge gain
   if (char.link_gaugeGain) {
-    effects.push(buildResourceEffect('ULTIMATE_ENERGY', 'RECOVER', char.link_gaugeGain, 'SELF'));
+    effects.push(buildResourceEffect(CombatResourceType.ULTIMATE_ENERGY, VerbType.RECOVER, char.link_gaugeGain, 'SELF'));
   }
 
   const result: SkillCategory = {
@@ -421,7 +421,7 @@ function parseUltimate(char: GameDataCharacter): SkillCategory {
 
   // Energy cost
   if (char.ultimate_gaugeMax) {
-    effects.push(buildResourceEffect('ULTIMATE_ENERGY', 'CONSUME', char.ultimate_gaugeMax));
+    effects.push(buildResourceEffect(CombatResourceType.ULTIMATE_ENERGY, VerbType.CONSUME, char.ultimate_gaugeMax));
   }
 
   const ultimateDuration = char.ultimate_duration;

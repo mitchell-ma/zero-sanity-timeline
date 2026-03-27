@@ -20,7 +20,7 @@ jest.mock('../../view/InformationPane', () => ({
 const STATUS_OWNER = 'slot-0';
 const SLOT_A = 'slot-1';
 const SLOT_B = 'slot-2';
-const STATUS_COLUMN = 'amp';
+const STATUS_COLUMN = 'AMP';
 
 function makeEvent(overrides: Partial<TimelineEvent> & { uid: string; columnId: string; startFrame: number }): TimelineEvent {
   return { id: overrides.name ?? '', name: '', ownerId: STATUS_OWNER, segments: [{ properties: { duration: 0 } }], ...overrides };

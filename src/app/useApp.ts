@@ -84,7 +84,7 @@ import {
   getDefaultEnemyStats,
 } from '../controller/appStateController';
 import { resolveGainEfficiencies } from '../controller/timeline/ultimateEnergyController';
-import { StatType, InteractionModeType, InfoLevel, CritMode, EnhancementType, ThemeType } from '../consts/enums';
+import { StatType, InteractionModeType, InfoLevel, CritMode, EnhancementType, ThemeType, ColumnType, LoadoutNodeType } from '../consts/enums';
 import { GlobalSettings, loadSettings, saveSettings, migrateLegacySettings, PERFORMANCE_THROTTLE } from '../consts/settings';
 import { configurePool } from '../controller/timeline/objectPool';
 import { SKILL_COLUMNS, COMBO_WINDOW_COLUMN_ID } from '../model/channels';
@@ -470,6 +470,7 @@ export function useApp() {
         combatLoadout.commonSlot.ultimateEnergy,
         combatLoadout.commonSlot.hp,
         combatLoadout.getAllSpCosts(),
+        combatLoadout.getTriggerIndex() ?? undefined,
       );
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -564,7 +565,7 @@ export function useApp() {
     : null;
 
   const editingResourceCol = editingResourceKey
-    ? columns.find((c): c is MiniTimeline => c.type === 'mini-timeline' && c.key === editingResourceKey) ?? null
+    ? columns.find((c): c is MiniTimeline => c.type === ColumnType.MINI_TIMELINE && c.key === editingResourceKey) ?? null
     : null;
 
   const getDefaultResourceConfig = useCallback((colKey: string): ResourceConfig => {
@@ -931,7 +932,7 @@ export function useApp() {
   ) => {
     // Validate against controller-derived columns before adding
     if (!validColumnPairsRef.current.has(`${ownerId}:${columnId}`)) return;
-    const ev = createEvent(ownerId, columnId, atFrame, defaultSkill);
+    const ev = createEvent(ownerId, columnId, atFrame, defaultSkill, interactionModeRef.current);
     if (defaultSkill?.comboTriggerColumnId) ev.comboTriggerColumnId = defaultSkill.comboTriggerColumnId;
     setEvents((prev) => {
       // No total-event limit for statuses — the engine handles concurrent stack
@@ -1210,9 +1211,9 @@ export function useApp() {
       const target = prev.find((ev) => ev.uid === eventUid);
       if (!target) return prev;
       const col = columns.find((c) =>
-        c.type === 'mini-timeline' && c.ownerId === target.ownerId && c.columnId === target.columnId,
+        c.type === ColumnType.MINI_TIMELINE && c.ownerId === target.ownerId && c.columnId === target.columnId,
       );
-      if (col?.type !== 'mini-timeline') return prev;
+      if (col?.type !== ColumnType.MINI_TIMELINE) return prev;
       const fullSeg = col.defaultEvent?.segments?.find((s) => s.properties.name === segmentLabel);
       if (!fullSeg) return prev;
       const allLabels = col.defaultEvent!.segments!.map((s) => s.properties.name);
@@ -1253,9 +1254,9 @@ export function useApp() {
       const target = prev.find((ev) => ev.uid === eventUid);
       if (!target?.segments[segmentIndex]) return prev;
       const col = columns.find((c) =>
-        c.type === 'mini-timeline' && c.ownerId === target.ownerId && c.columnId === target.columnId,
+        c.type === ColumnType.MINI_TIMELINE && c.ownerId === target.ownerId && c.columnId === target.columnId,
       );
-      if (col?.type !== 'mini-timeline') return prev;
+      if (col?.type !== ColumnType.MINI_TIMELINE) return prev;
       const seg = target.segments[segmentIndex];
       const allDefaultSegs = col.defaultEvent?.segments;
       const defaultSeg = allDefaultSegs?.find((s) => s.properties.name === seg.properties.name) ?? allDefaultSegs?.[segmentIndex];
@@ -1506,7 +1507,7 @@ export function useApp() {
       deleteLoadoutData(sid);
     }
     const remainingLoadouts = loadoutTree.nodes.filter(
-      (n) => n.type === 'loadout' && !loadoutIds.includes(n.id),
+      (n) => n.type === LoadoutNodeType.LOADOUT && !loadoutIds.includes(n.id),
     );
     if (remainingLoadouts.length === 0) {
       // Tree is now empty — reset to a fresh "Loadout 1"
@@ -1601,7 +1602,7 @@ export function useApp() {
 
   const handleClearAll = useCallback(() => {
     for (const node of loadoutTree.nodes) {
-      if (node.type === 'loadout') {
+      if (node.type === LoadoutNodeType.LOADOUT) {
         deleteLoadoutData(node.id);
       }
     }

@@ -229,7 +229,7 @@
                   "verb": "CONSUME",
                   "object": "REACTION",
                   "objectId": "COMBUSTION",
-                  "fromDeterminer": "ENEMY"
+                  "from": "ENEMY"
                 }
               ]
             },
@@ -247,7 +247,7 @@
                   "verb": "CONSUME",
                   "object": "REACTION",
                   "objectId": "COMBUSTION",
-                  "fromDeterminer": "ENEMY"
+                  "from": "ENEMY"
                 }
               ]
             },
@@ -265,7 +265,7 @@
                   "verb": "CONSUME",
                   "object": "REACTION",
                   "objectId": "ELECTRIFICATION",
-                  "fromDeterminer": "ENEMY"
+                  "from": "ENEMY"
                 }
               ]
             },

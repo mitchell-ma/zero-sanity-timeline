@@ -38,14 +38,14 @@ import { deleteCustomGearEffect } from '../../controller/custom/customGearEffect
 import { deleteCustomOperatorStatus } from '../../controller/custom/customOperatorStatusController';
 import { deleteCustomOperatorTalent } from '../../controller/custom/customOperatorTalentController';
 import { ALL_OPERATORS } from '../../controller/operators/operatorRegistry';
-import { getGearPiecesBySet, getWeapon, getWeaponIdByName, getWeaponEffectDefs, getGearEffectDefs, resolveTargetDisplay, resolveDurationSeconds, resolveTriggerInteractions, getGenericWeaponSkill, getNamedWeaponSkill } from '../../controller/gameDataStore';
+import { getGearPiecesBySet, getWeapon, getWeaponIdByName, getWeaponEffectDefs, getGearEffectDefs, resolveTargetDisplay, resolveDurationSeconds, resolveTriggerInteractions, getGenericWeaponSkill, getNamedWeaponSkill, getWeaponStatuses } from '../../controller/gameDataStore';
 import { getGearSetData, getGearSetEffect } from '../../controller/gameDataStore';
 import type { GearPieceData } from '../../controller/gameDataStore';
 import { getGearSetEffects } from '../../consts/gearSetEffects';
 import { GearSetType, GearCategory, SegmentType, ELEMENT_COLORS, ElementType } from '../../consts/enums';
 import type { SkillType, SkillDef, EventSegmentData, EventFrameMarker, TimelineEvent } from '../../consts/viewTypes';
 import { computeSegmentsSpan } from '../../consts/viewTypes';
-import { THRESHOLD_MAX } from '../../dsl/semantics';
+import { THRESHOLD_MAX, VerbType, NounType } from '../../dsl/semantics';
 import type { Interaction, Effect, Predicate } from '../../dsl/semantics';
 import { translateCondition, translateEffectParts, translateNounPhrase } from '../../dsl/semanticsTranslation';
 import { getLeafValue } from '../../controller/calculation/valueResolver';
@@ -1363,7 +1363,7 @@ function PropertiesView({ props }: { props: Record<string, unknown> }) {
         // VARY_BY tables
         if (val && typeof val === 'object' && !Array.isArray(val)) {
           const obj = val as Record<string, unknown>;
-          if (obj.verb === 'VARY_BY' && Array.isArray(obj.value)) {
+          if (obj.verb === VerbType.VARY_BY && Array.isArray(obj.value)) {
             const vals = obj.value as number[];
             const byLabel = String(obj.object ?? 'LEVEL').replace(/_/g, ' ').toLowerCase();
             return (
@@ -1376,7 +1376,7 @@ function PropertiesView({ props }: { props: Record<string, unknown> }) {
             );
           }
           // Duration with nested VARY_BY
-          if ('value' in obj && typeof obj.value === 'object' && obj.value && (obj.value as Record<string, unknown>).verb === 'VARY_BY') {
+          if ('value' in obj && typeof obj.value === 'object' && obj.value && (obj.value as Record<string, unknown>).verb === VerbType.VARY_BY) {
             const inner = obj.value as Record<string, unknown>;
             const vals = inner.value as number[];
             if (Array.isArray(vals)) {
@@ -1598,7 +1598,7 @@ function sumFrameMultipliers(frames: JsonSkillData[]): number[] | null {
         const withProps = (ef.with ?? {}) as Record<string, unknown>;
         for (const val of Object.values(withProps)) {
           const w = val && typeof val === 'object' ? val as Record<string, unknown> : null;
-          if (w && w.verb === 'VARY_BY' && Array.isArray(w.value)) {
+          if (w && w.verb === VerbType.VARY_BY && Array.isArray(w.value)) {
             const vals = w.value as number[];
             if (!totals) {
               totals = new Array(vals.length).fill(0);
@@ -1615,7 +1615,7 @@ function sumFrameMultipliers(frames: JsonSkillData[]): number[] | null {
 }
 
 function formatWithValue(w: Record<string, unknown>): string {
-  if ('verb' in w && w.verb === 'VARY_BY') {
+  if ('verb' in w && w.verb === VerbType.VARY_BY) {
     const vals = w.value as number[];
     if (Array.isArray(vals) && vals.length > 0) {
       const first = typeof vals[0] === 'number' ? vals[0] : 0;
@@ -1624,7 +1624,7 @@ function formatWithValue(w: Record<string, unknown>): string {
     }
     return String(w.value);
   }
-  if ('verb' in w && w.verb === 'IS') return String(w.value);
+  if ('verb' in w && w.verb === VerbType.IS) return String(w.value);
   if ('value' in w) {
     const inner = w.value;
     if (inner && typeof inner === 'object') return formatWithValue(inner as Record<string, unknown>);
@@ -1718,13 +1718,13 @@ function VaryByLeaf({ node, label }: { node: Record<string, unknown>; label?: st
 
 /** Render a leaf ValueNode (non-expression). */
 function ValueLeaf({ node, label }: { node: Record<string, unknown>; label?: string }) {
-  if (node.verb === 'IS' && node.object === 'STAT') {
+  if (node.verb === VerbType.IS && node.object === NounType.STAT) {
     const stat = String(node.objectId ?? node.stat ?? 'STAT').replace(/_/g, ' ');
     const of = node.ofDeterminer ? ` of ${String(node.ofDeterminer).toLowerCase()} operator` : '';
     return <span className="ops-vt-leaf">{stat}{of}</span>;
   }
-  if (node.verb === 'IS') return <span className="ops-vt-leaf">{String(node.value)}</span>;
-  if (node.verb === 'VARY_BY' && Array.isArray(node.value)) return <VaryByLeaf node={node} label={label} />;
+  if (node.verb === VerbType.IS) return <span className="ops-vt-leaf">{String(node.value)}</span>;
+  if (node.verb === VerbType.VARY_BY && Array.isArray(node.value)) return <VaryByLeaf node={node} label={label} />;
   if (node.object && node.objectId) {
     const of = node.ofDeterminer ? ` of ${String(node.ofDeterminer).toLowerCase()}` : '';
     return <span className="ops-vt-leaf">{String(node.objectId).replace(/_/g, ' ')} {String(node.object).toLowerCase()} stacks{of}</span>;
@@ -1795,8 +1795,8 @@ function ClausePredicateView({ predicate }: { predicate: Record<string, unknown>
           // Unwrap { value: ValueNode, unit } duration wrappers
           if (w && w.unit && w.value && typeof w.value === 'object') w = w.value as Record<string, unknown>;
           const label = key === 'value' ? 'Value' : key.replace(/_/g, ' ');
-          const isComplex = w && (w.operation || (w.verb === 'VARY_BY' && Array.isArray(w.value))
-            || (w.verb === 'IS' && w.object));
+          const isComplex = w && (w.operation || (w.verb === VerbType.VARY_BY && Array.isArray(w.value))
+            || (w.verb === VerbType.IS && w.object));
 
           if (isComplex) {
             withRendered.push({ key, label, node: w! });
@@ -1884,11 +1884,41 @@ function ClauseTabs({ clause, onTrigger, onEntry, onExit }: { clause: unknown[];
 }
 
 function BuiltinOperatorStatusesView({ operatorId }: { operatorId: string }) {
-  const statuses = useMemo(() =>
-    getOperatorStatuses(operatorId).map(s => s.serialize() as Record<string, unknown>)
-      .filter(s => (s.properties as Record<string, unknown> | undefined)?.eventCategoryType !== 'TALENT'),
-    [operatorId],
-  );
+  const statuses = useMemo(() => {
+    const operatorStatuses = getOperatorStatuses(operatorId).map(s => s.serialize() as Record<string, unknown>);
+    const operatorStatusIds = new Set(operatorStatuses.map(s => (s.properties as Record<string, unknown> | undefined)?.id as string).filter(Boolean));
+
+    // Scan skill effects for APPLY STATUS referencing generic statuses not already in operator statuses
+    const referencedGenericIds = new Set<string>();
+    const skills = getOperatorSkills(operatorId);
+    if (skills) {
+      skills.forEach((skill) => {
+        const serialized = skill.serialize() as Record<string, unknown>;
+        const segments = (serialized.segments ?? []) as { frames?: { clause?: { effects?: Record<string, unknown>[] }[] }[] }[];
+        for (const seg of segments) {
+          for (const frame of (seg.frames ?? [])) {
+            for (const clause of (frame.clause ?? [])) {
+              for (const eff of (clause.effects ?? [])) {
+                if (eff.verb !== 'APPLY' || eff.object !== 'STATUS') continue;
+                const statusId = eff.objectId as string;
+                if (statusId && !operatorStatusIds.has(statusId)) referencedGenericIds.add(statusId);
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // Include matching generic statuses
+    const genericStatuses = referencedGenericIds.size > 0
+      ? getOperatorStatuses('generic')
+        .filter(s => referencedGenericIds.has(s.id ?? ''))
+        .map(s => s.serialize() as Record<string, unknown>)
+      : [];
+
+    return [...operatorStatuses, ...genericStatuses]
+      .filter(s => (s.properties as Record<string, unknown> | undefined)?.eventCategoryType !== 'TALENT');
+  }, [operatorId]);
   const [openIdxSet, setOpenIdxSet] = useState<Set<number>>(new Set());
 
   if (statuses.length === 0) return <div className="ops-empty">No status data available</div>;
@@ -2152,8 +2182,11 @@ function BuiltinWeaponView({ id }: { id: string }) {
   const weaponId = getWeaponIdByName(id);
   const weapon = weaponId ? getWeapon(weaponId) : undefined;
   const dslDefs = getWeaponEffectDefs(id);
+  const weaponStatuses = useMemo(() => weaponId ? getWeaponStatuses(weaponId) : [], [weaponId]);
+  const [activeTab, setActiveTab] = useState<'skills' | 'statuses'>('skills');
   const [openSkills, setOpenSkills] = useState<Set<number>>(new Set());
   const [openEffects, setOpenEffects] = useState<Set<number>>(new Set());
+  const [openStatuses, setOpenStatuses] = useState<Set<number>>(new Set());
   const [weaponLevel, setWeaponLevel] = useState(90);
   if (!weapon) return null;
 
@@ -2192,85 +2225,145 @@ function BuiltinWeaponView({ id }: { id: string }) {
         </ReadonlySection>
       </div>
 
-      {/* ── RIGHT: Skills + Effects ── */}
+      {/* ── RIGHT: Skills | Statuses (tabbed) ── */}
       <div className="ops-split-right">
-        <ReadonlySection label="SKILLS">
-          {weapon.skills.map((skillId: string, i: number) => {
-            const genericSkill = getGenericWeaponSkill(skillId);
-            const skillData = genericSkill ?? namedSkill;
-            const skillName = skillData?.name ?? skillId.replace(/_/g, ' ');
-            const isOpen = openSkills.has(i);
-            const clause = (skillData?.clause ?? []) as unknown[];
-            const onTrigger = (skillData?.onTriggerClause ?? []) as unknown[];
-            const hasClauses = clause.length > 0 || onTrigger.length > 0;
-            return (
-              <div key={i} className={`ops-skill-card${isOpen ? ' ops-skill-card--open' : ''}`}>
-                <div className="ops-skill-card-header" onClick={() => setOpenSkills(prev => { const next = new Set(prev); if (next.has(i)) next.delete(i); else next.add(i); return next; })}>
-                  <div className="ops-skill-card-header-content">
-                    <div className="ops-skill-card-title-row">
-                      <span className="ops-skill-card-index">{i + 1}</span>
-                      <span className="ops-skill-card-name">{skillName}</span>
-                      <span className="ops-skill-card-chevron">{isOpen ? '\u25B4' : '\u25BE'}</span>
-                    </div>
-                    {skillData?.description && <span className="ops-skill-card-desc">{skillData.description}</span>}
-                  </div>
-                </div>
-                {isOpen && (
-                  <div className="ops-skill-form">
-                    <ReadonlyField label="Name" value={skillName} />
-                    {skillData?.description && <ReadonlyField label="Description" value={skillData.description} />}
-                    {hasClauses && <ClauseTabs clause={clause} onTrigger={onTrigger} onEntry={[]} onExit={[]} />}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </ReadonlySection>
+        {/* Tab bar */}
+        <div className="ops-skill-tabs">
+          {(['skills', 'statuses'] as const).map((tab) => (
+            <button
+              key={tab}
+              type="button"
+              className={`ops-skill-tab${activeTab === tab ? ' ops-skill-tab--active' : ''}`}
+              onClick={() => setActiveTab(tab)}
+            >
+              <span className="ops-skill-tab-label">{tab === 'skills' ? 'Skills' : 'Statuses'}</span>
+            </button>
+          ))}
+        </div>
 
-      {dslDefs.length > 0 && (
-        <ReadonlySection label="TRIGGERED EFFECTS">
-          {dslDefs.map((def, i: number) => {
-            const isOpen = openEffects.has(i);
-            const triggers = resolveTriggerInteractions(def);
-            return (
-              <div key={i} className={`ops-skill-card${isOpen ? ' ops-skill-card--open' : ''}`}>
-                <div className="ops-skill-card-header" onClick={() => setOpenEffects(prev => { const next = new Set(prev); if (next.has(i)) next.delete(i); else next.add(i); return next; })}>
-                  <div className="ops-skill-card-header-content">
-                    <div className="ops-skill-card-title-row">
-                      <span className="ops-skill-card-index">{i + 1}</span>
-                      <span className="ops-skill-card-name">{def.label ?? def.name}</span>
-                      <span className="ops-skill-card-chevron">{isOpen ? '\u25B4' : '\u25BE'}</span>
+        {/* ── Skills tab ── */}
+        {activeTab === 'skills' && (
+          <>
+            {weapon.skills.map((skillId: string, i: number) => {
+              const genericSkill = getGenericWeaponSkill(skillId);
+              const skillData = genericSkill ?? namedSkill;
+              const skillName = skillData?.name ?? skillId.replace(/_/g, ' ');
+              const isOpen = openSkills.has(i);
+              const clause = (skillData?.clause ?? []) as unknown[];
+              const onTrigger = (skillData?.onTriggerClause ?? []) as unknown[];
+              const hasClauses = clause.length > 0 || onTrigger.length > 0;
+              return (
+                <div key={i} className={`ops-skill-card${isOpen ? ' ops-skill-card--open' : ''}`}>
+                  <div className="ops-skill-card-header" onClick={() => setOpenSkills(prev => { const next = new Set(prev); if (next.has(i)) next.delete(i); else next.add(i); return next; })}>
+                    <div className="ops-skill-card-header-content">
+                      <div className="ops-skill-card-title-row">
+                        <span className="ops-skill-card-index">{i + 1}</span>
+                        <span className="ops-skill-card-name">{skillName}</span>
+                        <span className="ops-skill-card-chevron">{isOpen ? '\u25B4' : '\u25BE'}</span>
+                      </div>
+                      {skillData?.description && <span className="ops-skill-card-desc">{skillData.description}</span>}
                     </div>
-                    {def.note && <span className="ops-skill-card-desc">{def.note}</span>}
                   </div>
+                  {isOpen && (
+                    <div className="ops-skill-form">
+                      <ReadonlyField label="Name" value={skillName} />
+                      {skillData?.description && <ReadonlyField label="Description" value={skillData.description} />}
+                      {hasClauses && <ClauseTabs clause={clause} onTrigger={onTrigger} onEntry={[]} onExit={[]} />}
+                    </div>
+                  )}
                 </div>
-                {isOpen && (
-                  <div className="ops-skill-form">
-                    <ReadonlyField label="Target" value={resolveTargetDisplay(def)} />
-                    <ReadonlyField label="Duration" value={`${resolveDurationSeconds(def)}s`} />
-                    <ReadonlyField label="Max Stacks" value={String(def.stack?.max?.P0 ?? 1)} />
-                    {(def.cooldownSeconds ?? 0) > 0 && <ReadonlyField label="Cooldown" value={`${def.cooldownSeconds}s`} />}
-                    {triggers.length > 0 && (
-                      <>
-                        {triggers.length > 1 && <span className="ops-frame-prop-label" style={{ marginTop: '0.375rem' }}>Trigger Options</span>}
-                        {triggers.map((t, j: number) => (
-                          <ReadonlyField key={j} label={triggers.length > 1 ? `Trigger ${j + 1}` : 'Trigger'} value={interactionToText(t)} />
-                        ))}
-                      </>
-                    )}
-                    {def.buffs && def.buffs.length > 0 && def.buffs.map((b, j: number) => (
-                      <ReadonlyField key={j} label={b.stat.replace(/_/g, ' ')} value={`${b.valueMin != null ? `${b.valueMin}\u2013${b.valueMax}` : b.value}${b.perStack ? ' /stack' : ''}`} />
-                    ))}
-                    {def.clause && def.clause.length > 0 && (
-                      <ClauseTabs clause={def.clause as unknown[]} onTrigger={[]} onEntry={[]} onExit={[]} />
-                    )}
+              );
+            })}
+
+            {dslDefs.length > 0 && (
+              <>
+                <div className="ops-section-rule" style={{ marginTop: '0.75rem' }}>
+                  <span className="ops-section-label">TRIGGERED EFFECTS</span>
+                </div>
+                {dslDefs.map((def, i: number) => {
+                  const isOpen = openEffects.has(i);
+                  const triggers = resolveTriggerInteractions(def);
+                  return (
+                    <div key={i} className={`ops-skill-card${isOpen ? ' ops-skill-card--open' : ''}`}>
+                      <div className="ops-skill-card-header" onClick={() => setOpenEffects(prev => { const next = new Set(prev); if (next.has(i)) next.delete(i); else next.add(i); return next; })}>
+                        <div className="ops-skill-card-header-content">
+                          <div className="ops-skill-card-title-row">
+                            <span className="ops-skill-card-index">{i + 1}</span>
+                            <span className="ops-skill-card-name">{def.label ?? def.name}</span>
+                            <span className="ops-skill-card-chevron">{isOpen ? '\u25B4' : '\u25BE'}</span>
+                          </div>
+                          {def.note && <span className="ops-skill-card-desc">{def.note}</span>}
+                        </div>
+                      </div>
+                      {isOpen && (
+                        <div className="ops-skill-form">
+                          <ReadonlyField label="Target" value={resolveTargetDisplay(def)} />
+                          <ReadonlyField label="Duration" value={`${resolveDurationSeconds(def)}s`} />
+                          <ReadonlyField label="Max Stacks" value={String(def.stack?.max?.P0 ?? 1)} />
+                          {(def.cooldownSeconds ?? 0) > 0 && <ReadonlyField label="Cooldown" value={`${def.cooldownSeconds}s`} />}
+                          {triggers.length > 0 && (
+                            <>
+                              {triggers.length > 1 && <span className="ops-frame-prop-label" style={{ marginTop: '0.375rem' }}>Trigger Options</span>}
+                              {triggers.map((t, j: number) => (
+                                <ReadonlyField key={j} label={triggers.length > 1 ? `Trigger ${j + 1}` : 'Trigger'} value={interactionToText(t)} />
+                              ))}
+                            </>
+                          )}
+                          {def.buffs && def.buffs.length > 0 && def.buffs.map((b, j: number) => (
+                            <ReadonlyField key={j} label={b.stat.replace(/_/g, ' ')} value={`${b.valueMin != null ? `${b.valueMin}\u2013${b.valueMax}` : b.value}${b.perStack ? ' /stack' : ''}`} />
+                          ))}
+                          {def.clause && def.clause.length > 0 && (
+                            <ClauseTabs clause={def.clause as unknown[]} onTrigger={[]} onEntry={[]} onExit={[]} />
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </>
+            )}
+          </>
+        )}
+
+        {/* ── Statuses tab ── */}
+        {activeTab === 'statuses' && (
+          <>
+            {weaponStatuses.length === 0 && (
+              <div className="ops-empty" style={{ padding: '1rem 0' }}>No status definitions for this weapon.</div>
+            )}
+            {weaponStatuses.map((ws, i) => {
+              const isOpen = openStatuses.has(i);
+              return (
+                <div key={i} className={`ops-skill-card${isOpen ? ' ops-skill-card--open' : ''}`}>
+                  <div className="ops-skill-card-header" onClick={() => setOpenStatuses(prev => { const next = new Set(prev); if (next.has(i)) next.delete(i); else next.add(i); return next; })}>
+                    <div className="ops-skill-card-header-content">
+                      <div className="ops-skill-card-title-row">
+                        <span className="ops-skill-card-index">{i + 1}</span>
+                        <span className="ops-skill-card-name">{ws.name}</span>
+                        <span className="ops-skill-card-chevron">{isOpen ? '\u25B4' : '\u25BE'}</span>
+                      </div>
+                      {ws.description && <span className="ops-skill-card-desc">{ws.description}</span>}
+                    </div>
                   </div>
-                )}
-              </div>
-            );
-          })}
-        </ReadonlySection>
-      )}
+                  {isOpen && (
+                    <div className="ops-skill-form">
+                      <ReadonlyField label="Name" value={ws.name} />
+                      {ws.description && <ReadonlyField label="Description" value={ws.description} />}
+                      <ReadonlyField label="Target" value={`${ws.toDeterminer} ${ws.to}`} />
+                      <ReadonlyField label="Duration" value={`${ws.durationSeconds}${ws.duration.unit === 'SECOND' ? 's' : 'f'}`} />
+                      <ReadonlyField label="Max Stacks" value={String(ws.maxStacks)} />
+                      <ReadonlyField label="Stack Type" value={ws.stacks.interactionType} />
+                      <ReadonlyField label="Event Type" value={ws.eventType} />
+                      {ws.clause.length > 0 && (
+                        <ClauseTabs clause={ws.clause as unknown[]} onTrigger={[]} onEntry={[]} onExit={[]} />
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </>
+        )}
       </div>
     </div>
   );

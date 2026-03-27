@@ -517,9 +517,8 @@
                 {
                   "verb": "APPLY",
                   "object": "REACTION",
-                  "objectQualifier": "COMBUSTION",
-                  "to": "OPERATOR",
-                  "toDeterminer": "THIS",
+                  "objectId": "COMBUSTION",
+                  "to": "ENEMY",
                   "with": {
                     "stacks": {
                       "verb": "IS",

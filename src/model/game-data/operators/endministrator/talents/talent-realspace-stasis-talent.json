@@ -5,7 +5,9 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "PHYSICAL_DAMAGE_TAKEN_BONUS",
+          "object": "STAT",
+          "objectId": "DAMAGE_TAKEN_BONUS",
+          "objectQualifier": "PHYSICAL",
           "to": "ENEMY",
           "with": {
             "value": {

@@ -8,6 +8,7 @@ import type { EventLayout } from '../controller/timeline/timelineLayout';
 // validateSegmentContiguity removed — no longer needed in render path
 import { VERTICAL_AXIS, segmentRadius, type AxisMap } from '../utils/axisMap';
 import { formatSegmentShortName } from '../dsl/semanticsTranslation';
+import { VerbType, NounType, AdjectiveType } from '../dsl/semantics';
 
 /** Warning icon with a fixed-position tooltip that escapes scroll overflow. */
 const WarningIcon = React.memo(function WarningIcon({ messages }: { messages: string[] }) {
@@ -57,7 +58,7 @@ function hasInflictionOrStatus(f: EventFrameMarker): boolean {
     for (const ef of pred.effects) {
       if (ef.dslEffect) {
         const v = ef.dslEffect.verb;
-        if (v === 'APPLY' || v === 'CONSUME') return true;
+        if (v === VerbType.APPLY || v === VerbType.CONSUME) return true;
       }
     }
   }
@@ -113,10 +114,10 @@ function getFrameElementColor(f: EventFrameMarker, skillElement?: string): strin
       for (const ef of pred.effects) {
         if (!ef.dslEffect) continue;
         const q = Array.isArray(ef.dslEffect.objectQualifier) ? ef.dslEffect.objectQualifier[0] : ef.dslEffect.objectQualifier;
-        if (ef.dslEffect.verb === 'APPLY' || ef.dslEffect.verb === 'CONSUME') {
-          if (ef.dslEffect.object === 'INFLICTION' && q) { el = q; break; }
-          if (ef.dslEffect.object === 'REACTION' && q) { el = getStatusElementMap()[q]; break; }
-          if (ef.dslEffect.object === 'STATUS' && ef.dslEffect.objectId && ef.dslEffect.objectId !== 'PHYSICAL') {
+        if (ef.dslEffect.verb === VerbType.APPLY || ef.dslEffect.verb === VerbType.CONSUME) {
+          if (ef.dslEffect.object === NounType.INFLICTION && q) { el = q; break; }
+          if (ef.dslEffect.object === NounType.REACTION && q) { el = getStatusElementMap()[q]; break; }
+          if (ef.dslEffect.object === NounType.STATUS && ef.dslEffect.objectId && ef.dslEffect.objectId !== AdjectiveType.PHYSICAL) {
             el = getStatusElementMap()[ef.dslEffect.objectId]; break;
           }
         }

@@ -5,14 +5,36 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "ATTACK_BONUS",
+          "object": "STAT",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
             "value": {
               "operation": "ADD",
-              "left": { "verb": "VARY_BY", "object": "TALENT_LEVEL", "value": [0.001, 0.0015], "ofDeterminer": "THIS", "of": "OPERATOR" },
-              "right": { "verb": "VARY_BY", "object": "POTENTIAL", "value": [0, 0, 0, 0.0005, 0.0005, 0.0005], "ofDeterminer": "THIS", "of": "OPERATOR" }
+              "left": {
+                "verb": "VARY_BY",
+                "object": "TALENT_LEVEL",
+                "value": [
+                  0.001,
+                  0.0015
+                ],
+                "ofDeterminer": "THIS",
+                "of": "OPERATOR"
+              },
+              "right": {
+                "verb": "VARY_BY",
+                "object": "POTENTIAL",
+                "value": [
+                  0,
+                  0,
+                  0,
+                  0.0005,
+                  0.0005,
+                  0.0005
+                ],
+                "ofDeterminer": "THIS",
+                "of": "OPERATOR"
+              }
             },
             "scalingAttribute": {
               "verb": "IS",
@@ -21,7 +43,8 @@
                 "WILL"
               ]
             }
-          }
+          },
+          "objectId": "ATTACK_BONUS"
         }
       ]
     }

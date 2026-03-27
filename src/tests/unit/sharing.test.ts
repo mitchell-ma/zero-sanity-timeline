@@ -9,6 +9,7 @@
  */
 
 // @ts-nocheck
+import { ColumnType, LoadoutNodeType } from '../../consts/enums';
 // Polyfill browser APIs not available in Node test environment
 const { TextEncoder, TextDecoder } = require('util');
 global.TextEncoder = TextEncoder;
@@ -228,7 +229,7 @@ describe('embedCodec', () => {
 
     test('events with template-matching durations produce smaller output', async () => {
       const mockColumn = {
-        type: 'mini-timeline',
+        type: ColumnType.MINI_TIMELINE,
         key: 'battle',
         columnId: 'battle',
         label: 'Battle',
@@ -322,7 +323,7 @@ describe('embedCodec', () => {
 
   describe('segment and frame deltas', () => {
     const segmentColumn = {
-      type: 'mini-timeline',
+      type: ColumnType.MINI_TIMELINE,
       key: 'basic',
       columnId: 'basic',
       label: 'Basic',
@@ -639,7 +640,7 @@ describe('full state round-trip (current state → share → load → assert equ
   // Columns simulate what columnBuilder produces for the operators
   const columns = [
     {
-      type: 'mini-timeline',
+      type: ColumnType.MINI_TIMELINE,
       key: 'slot-0-basic',
       columnId: 'basic',
       ownerId: 'slot-0',
@@ -663,7 +664,7 @@ describe('full state round-trip (current state → share → load → assert equ
       },
     },
     {
-      type: 'mini-timeline',
+      type: ColumnType.MINI_TIMELINE,
       key: 'slot-0-battle',
       columnId: 'battle',
       ownerId: 'slot-0',
@@ -688,7 +689,7 @@ describe('full state round-trip (current state → share → load → assert equ
       },
     },
     {
-      type: 'mini-timeline',
+      type: ColumnType.MINI_TIMELINE,
       key: 'slot-0-combo',
       columnId: 'combo',
       ownerId: 'slot-0',
@@ -707,7 +708,7 @@ describe('full state round-trip (current state → share → load → assert equ
       },
     },
     {
-      type: 'mini-timeline',
+      type: ColumnType.MINI_TIMELINE,
       key: 'slot-0-ultimate',
       columnId: 'ultimate',
       ownerId: 'slot-0',
@@ -881,7 +882,7 @@ describe('uniqueName (loadout deduplication)', () => {
     return {
       nodes: names.map((name, i) => ({
         id: `id-${i}`,
-        type: 'loadout',
+        type: LoadoutNodeType.LOADOUT,
         name,
         parentId: null,
         order: i,

@@ -40,7 +40,7 @@
         },
         {
           "verb": "APPLY",
-          "object": "ATTACK_BONUS",
+          "object": "STAT",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
@@ -48,7 +48,8 @@
               "verb": "IS",
               "value": 0.1
             }
-          }
+          },
+          "objectId": "ATTACK_BONUS"
         }
       ]
     }

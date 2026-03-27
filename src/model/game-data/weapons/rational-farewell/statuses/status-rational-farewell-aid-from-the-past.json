@@ -5,7 +5,7 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "BATTLE_SKILL_DAMAGE_BONUS",
+          "object": "STAT",
           "with": {
             "value": {
               "verb": "VARY_BY",
@@ -24,11 +24,13 @@
               "ofDeterminer": "THIS",
               "of": "OPERATOR"
             }
-          }
+          },
+          "objectId": "DAMAGE_BONUS",
+          "objectQualifier": "BATTLE_SKILL"
         },
         {
           "verb": "APPLY",
-          "object": "ATTACK_BONUS",
+          "object": "STAT",
           "with": {
             "value": {
               "verb": "VARY_BY",
@@ -47,7 +49,8 @@
               "ofDeterminer": "THIS",
               "of": "OPERATOR"
             }
-          }
+          },
+          "objectId": "ATTACK_BONUS"
         }
       ]
     }

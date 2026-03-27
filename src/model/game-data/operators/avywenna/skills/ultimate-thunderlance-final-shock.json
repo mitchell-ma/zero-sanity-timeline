@@ -16,18 +16,25 @@
           "object": "ULTIMATE_ENERGY",
           "with": {
             "value": {
-              "verb": "VARY_BY",
-              "object": "POTENTIAL",
-              "value": [
-                100,
-                100,
-                100,
-                100,
-                85,
-                85
-              ],
-              "ofDeterminer": "THIS",
-              "of": "OPERATOR"
+              "operation": "MULT",
+              "left": {
+                "verb": "IS",
+                "value": 100
+              },
+              "right": {
+                "verb": "VARY_BY",
+                "object": "POTENTIAL",
+                "value": [
+                  1,
+                  1,
+                  1,
+                  1,
+                  0.85,
+                  0.85
+                ],
+                "ofDeterminer": "THIS",
+                "of": "OPERATOR"
+              }
             }
           }
         }
@@ -93,7 +100,26 @@
                   "object": "STAGGER",
                   "to": "ENEMY",
                   "with": {
-                    "value": { "verb": "VARY_BY", "object": "SKILL_LEVEL", "value": [15,15,15,15,15,15,15,15,15,20,20,20], "ofDeterminer": "THIS", "of": "OPERATOR" }
+                    "value": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        15,
+                        15,
+                        15,
+                        15,
+                        15,
+                        15,
+                        15,
+                        15,
+                        15,
+                        20,
+                        20,
+                        20
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
                   }
                 },
                 {

@@ -19,7 +19,7 @@ import { ALL_OPERATORS } from '../controller/operators/operatorRegistry';
 import { ALL_ENEMIES } from '../utils/enemies';
 import type { TimelineEvent, Column, EventSegmentData } from '../consts/viewTypes';
 import { eventDuration, durationSegment, computeSegmentsSpan } from '../consts/viewTypes';
-import { SegmentType } from '../consts/enums';
+import { ColumnType, SegmentType } from '../consts/enums';
 
 const EMBED_VERSION = 1;
 
@@ -290,7 +290,7 @@ interface EventDefaults {
 
 function findEventTemplate(columns: Column[], columnId: string, skillName: string): EventDefaults | null {
   for (const col of columns) {
-    if (col.type !== 'mini-timeline') continue;
+    if (col.type !== ColumnType.MINI_TIMELINE) continue;
     if (col.defaultEvent?.id === skillName) {
       return { segments: col.defaultEvent.segments };
     }

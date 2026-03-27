@@ -162,7 +162,25 @@
             }
           ],
           "clauseType": "ALL"
+        }
+      ]
+    },
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT"
+      },
+      "properties": {
+        "name": "Delayed Explosion",
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 1.63
+          },
+          "unit": "SECOND"
         },
+        "element": "NATURE"
+      },
+      "frames": [
         {
           "metadata": {
             "eventComponentType": "FRAME",
@@ -172,7 +190,7 @@
           },
           "properties": {
             "offset": {
-              "value": 1.671,
+              "value": 1.63,
               "unit": "SECOND"
             }
           },

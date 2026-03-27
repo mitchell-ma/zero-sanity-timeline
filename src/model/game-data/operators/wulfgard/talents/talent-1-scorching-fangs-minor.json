@@ -37,8 +37,8 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "STAT_MODIFIER",
-          "objectId": "HEAT_DAMAGE_BONUS",
+          "object": "STAT",
+          "objectId": "DAMAGE_BONUS",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
@@ -52,7 +52,8 @@
               "ofDeterminer": "SOURCE",
               "of": "OPERATOR"
             }
-          }
+          },
+          "objectQualifier": "HEAT"
         }
       ]
     }

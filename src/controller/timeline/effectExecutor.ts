@@ -109,7 +109,7 @@ function mergeMutations(target: MutationSet, source: MutationSet) {
 }
 
 function resolveOwnerId(target: string | undefined, ctx: ExecutionContext, determiner?: string): string {
-  if (target === NounType.OPERATOR || target === 'OPERATOR') {
+  if (target === NounType.OPERATOR) {
     switch (determiner ?? DeterminerType.THIS) {
       case DeterminerType.THIS: return ctx.sourceOwnerId;
       case DeterminerType.ALL: return COMMON_OWNER_ID;
@@ -123,8 +123,7 @@ function resolveOwnerId(target: string | undefined, ctx: ExecutionContext, deter
     }
   }
   switch (target) {
-    case NounType.ENEMY:
-    case 'ENEMY': return ENEMY_OWNER_ID;
+    case NounType.ENEMY: return ENEMY_OWNER_ID;
     default: {
       if (target && ctx.operatorSlotMap) {
         const slotId = ctx.operatorSlotMap[target.toLowerCase()];
@@ -180,7 +179,7 @@ function executeApply(effect: Effect, ctx: ExecutionContext): MutationSet {
   const result = emptyMutationSet();
   const ownerId = resolveOwnerId(effect.to as string, ctx, effect.toDeterminer);
 
-  if (effect.object === 'INFLICTION') {
+  if (effect.object === NounType.INFLICTION) {
     const columnId = resolveInflictionColumnId(effect.objectQualifier);
     if (!columnId) { result.failed = true; return result; }
 
@@ -201,7 +200,7 @@ function executeApply(effect: Effect, ctx: ExecutionContext): MutationSet {
     return result;
   }
 
-  if (effect.object === 'STATUS') {
+  if (effect.object === NounType.STATUS) {
     const skipTeamCheck = effect.to != null && effect.to !== NounType.TEAM;
     const columnId = statusIdToColumnId(effect.objectId ?? '', skipTeamCheck);
 
@@ -222,7 +221,7 @@ function executeApply(effect: Effect, ctx: ExecutionContext): MutationSet {
     return result;
   }
 
-  if (effect.object === 'REACTION') {
+  if (effect.object === NounType.REACTION) {
     const columnId = resolveReactionColumnId(effect.objectQualifier);
     if (!columnId) { result.failed = true; return result; }
 
@@ -254,7 +253,7 @@ function executeConsume(effect: Effect, ctx: ExecutionContext): MutationSet {
   const result = emptyMutationSet();
   const ownerId = resolveOwnerId(effect.fromObject as string ?? effect.to as string, ctx, effect.fromDeterminer ?? effect.toDeterminer);
 
-  if (effect.object === 'INFLICTION') {
+  if (effect.object === NounType.INFLICTION) {
     const columnId = resolveInflictionColumnId(effect.objectQualifier);
     if (!columnId) { result.failed = true; return result; }
 
@@ -272,7 +271,7 @@ function executeConsume(effect: Effect, ctx: ExecutionContext): MutationSet {
     return result;
   }
 
-  if (effect.object === 'STATUS') {
+  if (effect.object === NounType.STATUS) {
     const skipTeamCheck = (effect.fromObject ?? effect.to) != null && (effect.fromObject ?? effect.to) !== NounType.TEAM;
     const columnId = statusIdToColumnId(effect.objectId ?? '', skipTeamCheck);
     const targets = activeEventsAtFrame(ctx.events, columnId, ownerId, ctx.frame)
@@ -296,7 +295,7 @@ function executeConsume(effect: Effect, ctx: ExecutionContext): MutationSet {
     return result;
   }
 
-  if (effect.object === 'REACTION') {
+  if (effect.object === NounType.REACTION) {
     const columnId = resolveReactionColumnId(effect.objectQualifier);
     if (!columnId) { result.failed = true; return result; }
 
@@ -323,7 +322,7 @@ function executeConsume(effect: Effect, ctx: ExecutionContext): MutationSet {
 function executeReset(effect: Effect, ctx: ExecutionContext): MutationSet {
   const result = emptyMutationSet();
   // RESET STACKS or RESET COOLDOWN — clamp all active instances
-  if (effect.object === 'STACKS' && effect.objectId) {
+  if (effect.object === NounType.STACKS && effect.objectId) {
     const skipTeamCheck = effect.to != null && effect.to !== NounType.TEAM;
     const columnId = statusIdToColumnId(effect.objectId ?? '', skipTeamCheck);
     const ownerId = resolveOwnerId(effect.to as string, ctx, effect.toDeterminer);

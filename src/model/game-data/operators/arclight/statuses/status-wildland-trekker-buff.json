@@ -6,7 +6,7 @@
         {
           "verb": "APPLY",
           "objectQualifier": "ELECTRIC",
-          "object": "DAMAGE_BONUS",
+          "object": "STAT",
           "to": "TARGET",
           "with": {
             "value": {
@@ -44,7 +44,8 @@
               "ofDeterminer": "THIS",
               "of": "OPERATOR"
             }
-          }
+          },
+          "objectId": "DAMAGE_BONUS"
         }
       ]
     }

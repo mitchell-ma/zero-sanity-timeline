@@ -285,7 +285,7 @@ for (const key of gearSetEffectContext.keys()) {
   if (key.includes('/pieces/') || key.includes('/statuses/')) continue;
   const json = gearSetEffectContext(key) as Record<string, unknown>;
   const catType = ((json.properties ?? {}) as Record<string, unknown>).eventCategoryType as string;
-  if (catType === 'GEAR_SET_EFFECT') {
+  if (catType === EventCategoryType.GEAR_SET_EFFECT) {
     const effect = GearSetEffect.deserialize(json, key);
     if (effect.id) gearSetEffectCache.set(effect.id, effect);
   }

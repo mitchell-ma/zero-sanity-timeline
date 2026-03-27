@@ -1,4 +1,5 @@
 import { TimelineEvent, Column, MiniTimeline, eventEndFrame } from '../../consts/viewTypes';
+import { ColumnType } from '../../consts/enums';
 
 /**
  * Input validation functions for micro-column columns.
@@ -18,7 +19,7 @@ export function computeMonotonicBounds(
   const bounds = new Map<string, { min: number; max: number }>();
   const draggedSet = new Set(draggedIds);
   const monotonicCols = columns.filter(
-    (c): c is MiniTimeline => c.type === 'mini-timeline' && !!c.requiresMonotonicOrder,
+    (c): c is MiniTimeline => c.type === ColumnType.MINI_TIMELINE && !!c.requiresMonotonicOrder,
   );
   for (const eid of draggedIds) {
     const ev = events.find((e) => e.uid === eid);

@@ -16,6 +16,7 @@ import { checkKeys, VALID_VALUE_NODE_KEYS, VALID_CLAUSE_KEYS, VALID_METADATA_KEY
 export interface ClauseEffect {
   verb: string;
   object: string;
+  objectId?: string;
   objectQualifier?: string;
   to?: string;
   toDeterminer?: string;

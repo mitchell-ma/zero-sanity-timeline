@@ -95,6 +95,8 @@ export enum NounType {
   // Damage
   NORMAL_ATTACK = "NORMAL_ATTACK",
   DAMAGE = "DAMAGE",
+  /** Generic "all skills" qualifier (e.g. [SKILL] DAMAGE_BONUS). */
+  SKILL = "SKILL",
 
   // Statuses
   STATUS = "STATUS",
@@ -112,6 +114,8 @@ export enum NounType {
   SUSCEPTIBILITY = "SUSCEPTIBILITY",
   /** Elemental/skill damage bonus. Qualified by element or skill type. */
   DAMAGE_BONUS = "DAMAGE_BONUS",
+  /** Damage taken bonus (enemy debuff). Qualified by element. */
+  DAMAGE_TAKEN_BONUS = "DAMAGE_TAKEN_BONUS",
 
   // Time
   TIME_STOP = "TIME_STOP",
@@ -315,7 +319,7 @@ export const ObjectType = { ...NounType, ...AdjectiveType } as typeof NounType &
  * Defines which NounType/ObjectType values each verb can take as its object.
  */
 export const VERB_OBJECTS: Partial<Record<VerbType, ObjectType[]>> = {
-  [VerbType.APPLY]:      [ObjectType.INFLICTION, ObjectType.REACTION, ObjectType.ARTS_BURST, ObjectType.STATUS, ObjectType.STAGGER, ObjectType.TIME_STOP, ObjectType.EVENT],
+  [VerbType.APPLY]:      [ObjectType.INFLICTION, ObjectType.REACTION, ObjectType.ARTS_BURST, ObjectType.STATUS, ObjectType.STAT, ObjectType.STAGGER, ObjectType.SUSCEPTIBILITY, ObjectType.TIME_STOP, ObjectType.EVENT],
   [VerbType.CONSUME]:    [ObjectType.INFLICTION, ObjectType.REACTION, ObjectType.STATUS, ObjectType.SKILL_POINT, ObjectType.ULTIMATE_ENERGY, ObjectType.COOLDOWN, ObjectType.STAGGER, ObjectType.STACKS, ObjectType.EVENT],
   [VerbType.RECOVER]:    [ObjectType.SKILL_POINT, ObjectType.ULTIMATE_ENERGY, ObjectType.HP],
   [VerbType.RETURN]:     [ObjectType.SKILL_POINT],
@@ -421,7 +425,8 @@ export const NOUN_QUALIFIER_MAPPING: Partial<Record<NounType, QualifierType[]>> 
   [NounType.DAMAGE]: [AdjectiveType.HEAT, AdjectiveType.CRYO, AdjectiveType.NATURE, AdjectiveType.ELECTRIC, AdjectiveType.PHYSICAL],
   [NounType.AMP]: [AdjectiveType.HEAT, AdjectiveType.CRYO, AdjectiveType.NATURE, AdjectiveType.ELECTRIC, AdjectiveType.PHYSICAL, AdjectiveType.ARTS, DeterminerType.ANY],
   [NounType.SUSCEPTIBILITY]: [AdjectiveType.HEAT, AdjectiveType.CRYO, AdjectiveType.NATURE, AdjectiveType.ELECTRIC, AdjectiveType.ARTS],
-  [NounType.DAMAGE_BONUS]: [AdjectiveType.HEAT, AdjectiveType.CRYO, AdjectiveType.NATURE, AdjectiveType.ELECTRIC, AdjectiveType.PHYSICAL, AdjectiveType.ARTS, NounType.BASIC_ATTACK, NounType.BATTLE_SKILL, NounType.COMBO_SKILL, NounType.ULTIMATE, NounType.STAGGER],
+  [NounType.DAMAGE_BONUS]: [AdjectiveType.HEAT, AdjectiveType.CRYO, AdjectiveType.NATURE, AdjectiveType.ELECTRIC, AdjectiveType.PHYSICAL, AdjectiveType.ARTS, NounType.BASIC_ATTACK, NounType.BATTLE_SKILL, NounType.COMBO_SKILL, NounType.ULTIMATE, NounType.STAGGER, NounType.SKILL],
+  [NounType.DAMAGE_TAKEN_BONUS]: [AdjectiveType.HEAT, AdjectiveType.CRYO, AdjectiveType.NATURE, AdjectiveType.ELECTRIC, AdjectiveType.PHYSICAL, AdjectiveType.ARTS],
   [NounType.BATK]: [AdjectiveType.NORMAL, AdjectiveType.ENHANCED, AdjectiveType.EMPOWERED],
   [NounType.BATTLE_SKILL]: [AdjectiveType.NORMAL, AdjectiveType.ENHANCED, AdjectiveType.EMPOWERED],
   [NounType.COMBO_SKILL]: [AdjectiveType.NORMAL, AdjectiveType.ENHANCED, AdjectiveType.EMPOWERED],
@@ -871,7 +876,7 @@ const CARDINALITY_VERBS = new Set([VerbType.HAVE, VerbType.HIT, VerbType.PERFORM
 // Verbs that support subjectProperty
 const PROPERTY_VERBS = new Set([VerbType.IS, VerbType.OVERHEAL]);
 // Objects that need an objectId
-const NEEDS_OBJECT_ID = new Set<string>([ObjectType.STATUS, ObjectType.INFLICTION, ObjectType.REACTION, ObjectType.COOLDOWN]);
+const NEEDS_OBJECT_ID = new Set<string>([ObjectType.STATUS, ObjectType.INFLICTION, ObjectType.REACTION, ObjectType.COOLDOWN, ObjectType.STAT]);
 
 /** Which fields are visible in the interaction builder. */
 export interface InteractionFieldVisibility {
@@ -972,15 +977,28 @@ export const WITH_PROPERTY_LABELS: Record<string, string> = {
 export const WITH_BOOLEAN_PROPERTIES = new Set(['isForced']);
 
 /**
+ * Object → valid targets. Defines which entities an object can be directed at.
+ * Used by validators and the builder UI. Single-entry arrays are forced targets.
+ */
+export const OBJECT_TARGET_MAPPING: Partial<Record<ObjectType, SubjectType[]>> = {
+  [ObjectType.STAGGER]:        [SubjectType.ENEMY],
+  [ObjectType.INFLICTION]:     [SubjectType.ENEMY],
+  [ObjectType.REACTION]:       [SubjectType.ENEMY],
+  [ObjectType.ARTS_BURST]:     [SubjectType.ENEMY],
+  [ObjectType.STATUS]:         [SubjectType.OPERATOR, SubjectType.ENEMY, NounType.TEAM],
+  [ObjectType.SUSCEPTIBILITY]: [SubjectType.ENEMY],
+};
+
+/**
  * Object → forced target. Objects that can only target a specific entity.
  * If an object is in this map, the TO target is auto-set and not user-selectable.
+ * Derived from OBJECT_TARGET_MAPPING — single-entry arrays are forced.
  */
-export const OBJECT_FORCED_TARGET: Partial<Record<ObjectType, SubjectType>> = {
-  [ObjectType.STAGGER]:        SubjectType.ENEMY,
-  [ObjectType.INFLICTION]:     SubjectType.ENEMY,
-  [ObjectType.REACTION]:       SubjectType.ENEMY,
-  [ObjectType.ARTS_BURST]:     SubjectType.ENEMY,
-};
+export const OBJECT_FORCED_TARGET: Partial<Record<ObjectType, SubjectType>> = Object.fromEntries(
+  Object.entries(OBJECT_TARGET_MAPPING)
+    .filter(([, targets]) => targets.length === 1)
+    .map(([obj, targets]) => [obj, targets[0]]),
+);
 
 /**
  * Verb+Object → available WITH property keys.
@@ -988,11 +1006,12 @@ export const OBJECT_FORCED_TARGET: Partial<Record<ObjectType, SubjectType>> = {
  */
 export const VERB_OBJECT_WITH_PROPERTIES: Record<string, Record<string, string[]>> = {
   [VerbType.APPLY]: {
-    [ObjectType.STATUS]:          ['duration', 'stacks'],
+    [ObjectType.STATUS]:          ['duration', 'stacks', 'value'],
     [ObjectType.INFLICTION]:      ['stacks'],
     [ObjectType.REACTION]:        [...Reaction.EDITABLE_PROPERTIES],
     [ObjectType.TIME_STOP]:       ['duration'],
     [ObjectType.STAGGER]:         ['value'],
+    [ObjectType.SUSCEPTIBILITY]:  ['duration', 'value'],
   },
   [VerbType.DEAL]: {
     [ObjectType.DAMAGE]:     ['value'],

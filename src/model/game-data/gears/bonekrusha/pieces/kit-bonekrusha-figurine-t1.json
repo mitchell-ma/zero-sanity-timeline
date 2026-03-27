@@ -57,7 +57,7 @@
         },
         {
           "verb": "APPLY",
-          "object": "COMBO_SKILL_DAMAGE_BONUS",
+          "object": "STAT",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
@@ -73,7 +73,9 @@
               "ofDeterminer": "THIS",
               "of": "OPERATOR"
             }
-          }
+          },
+          "objectId": "DAMAGE_BONUS",
+          "objectQualifier": "COMBO_SKILL"
         }
       ]
     }

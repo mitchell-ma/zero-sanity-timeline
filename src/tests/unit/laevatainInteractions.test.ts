@@ -77,7 +77,7 @@
  */
 import { TimelineEvent } from '../../consts/viewTypes';
 import { EventFrameType, EventStatusType, StatusType } from '../../consts/enums';
-import { VerbType, ObjectType, NounType } from '../../dsl/semantics';
+import { VerbType, ObjectType, NounType, AdjectiveType, DeterminerType } from '../../dsl/semantics';
 import { ENEMY_OWNER_ID, USER_ID, OPERATOR_COLUMNS, SKILL_COLUMNS, INFLICTION_COLUMNS } from '../../model/channels';
 import { buildSequencesFromOperatorJson, DataDrivenSkillEventSequence } from '../../controller/gameDataStore';
 import { wouldOverlapSiblings } from '../../controller/timeline/eventValidator';
@@ -132,10 +132,10 @@ function _normalizeStatusEntry(raw: Record<string, any>): Record<string, any> {
   let resolvedLimit: unknown;
   const limit = sl.limit;
   if (limit) {
-    if (limit.verb === 'IS') {
+    if (limit.verb === VerbType.IS) {
       const v = limit.value;
       resolvedLimit = { P0: v, P1: v, P2: v, P3: v, P4: v, P5: v };
-    } else if (limit.verb === 'VARY_BY' && Array.isArray(limit.value)) {
+    } else if (limit.verb === VerbType.VARY_BY && Array.isArray(limit.value)) {
       const arr = limit.value;
       resolvedLimit = { P0: arr[0], P1: arr[1], P2: arr[2], P3: arr[3], P4: arr[4], P5: arr[5] };
     } else {
@@ -266,7 +266,7 @@ describe('B2. Melting Flame Consumption', () => {
     const sequences = getSequences('EMPOWERED_BATTLE_SKILL');
     const frames = sequences[0].getFrames();
     const lastFrame = frames[frames.length - 1];
-    const consumeEffect = lastFrame.getClauses().flatMap(c => c.effects).find(e => e.dslEffect?.verb === 'CONSUME' && e.dslEffect?.object === 'STATUS');
+    const consumeEffect = lastFrame.getClauses().flatMap(c => c.effects).find(e => e.dslEffect?.verb === VerbType.CONSUME && e.dslEffect?.object === NounType.STATUS);
     expect(consumeEffect?.dslEffect?.objectId).toBe('MELTING_FLAME');
   });
 
@@ -300,17 +300,17 @@ describe('C. Empowered Battle Skill & Combustion', () => {
     // Single-segment skill — get all frames
     const frames = sequences[0].getFrames();
     const lastFrame = frames[frames.length - 1];
-    const reactionEffect = lastFrame.getClauses().flatMap(c => c.effects).find(e => e.dslEffect?.verb === 'APPLY' && e.dslEffect?.object === 'REACTION');
+    const reactionEffect = lastFrame.getClauses().flatMap(c => c.effects).find(e => e.dslEffect?.verb === VerbType.APPLY && e.dslEffect?.object === NounType.REACTION);
     expect(reactionEffect).toBeDefined();
-    const q = Array.isArray(reactionEffect!.dslEffect!.objectQualifier) ? reactionEffect!.dslEffect!.objectQualifier[0] : reactionEffect!.dslEffect!.objectQualifier;
-    expect(q).toBe('COMBUSTION');
+    const q = reactionEffect!.dslEffect!.objectId ?? (Array.isArray(reactionEffect!.dslEffect!.objectQualifier) ? reactionEffect!.dslEffect!.objectQualifier[0] : reactionEffect!.dslEffect!.objectQualifier);
+    expect(q).toBe(StatusType.COMBUSTION);
   });
 
   test('C2: Normal battle skill does NOT have forced Combustion on any frame', () => {
     const sequences = getSequences('BATTLE_SKILL');
     for (const seq of sequences) {
       for (const frame of seq.getFrames()) {
-        expect(frame.getClauses().flatMap(c => c.effects).find(e => e.dslEffect?.verb === 'APPLY' && e.dslEffect?.object === 'REACTION')).toBeUndefined();
+        expect(frame.getClauses().flatMap(c => c.effects).find(e => e.dslEffect?.verb === VerbType.APPLY && e.dslEffect?.object === NounType.REACTION)).toBeUndefined();
       }
     }
   });
@@ -320,12 +320,12 @@ describe('C. Empowered Battle Skill & Combustion', () => {
     const battleFrames = rawSkills.BATTLE_SKILL.segments[0].frames;
     const firstFrameEffects = battleFrames[0].clause[0].effects;
     const mfEffect = firstFrameEffects.find(
-      (e: Record<string, unknown>) => e.verb === 'APPLY' && e.objectId === 'MELTING_FLAME'
+      (e: Record<string, unknown>) => e.verb === VerbType.APPLY && e.objectId === 'MELTING_FLAME'
     );
     expect(mfEffect).toBeDefined();
-    expect(mfEffect.object).toBe('STATUS');
-    expect(mfEffect.to).toBe('OPERATOR');
-    expect(mfEffect.toDeterminer).toBe('THIS');
+    expect(mfEffect.object).toBe(NounType.STATUS);
+    expect(mfEffect.to).toBe(NounType.OPERATOR);
+    expect(mfEffect.toDeterminer).toBe(DeterminerType.THIS);
   });
 
   test('C4: Empowered battle skill last frame applies forced Combustion reaction', () => {
@@ -335,11 +335,11 @@ describe('C. Empowered Battle Skill & Combustion', () => {
     const lastFrame = empoweredFrames[empoweredFrames.length - 1];
     const effects = lastFrame.clause[0].effects;
     const applyReaction = effects.find(
-      (e: Record<string, unknown>) => e.verb === 'APPLY' && e.object === 'REACTION'
+      (e: Record<string, unknown>) => e.verb === VerbType.APPLY && e.object === NounType.REACTION
     );
     expect(applyReaction).toBeDefined();
-    const qualifiers = Array.isArray(applyReaction.objectQualifier) ? applyReaction.objectQualifier : [applyReaction.objectQualifier];
-    expect(qualifiers).toContain('COMBUSTION');
+    const reactionId = applyReaction.objectId ?? (Array.isArray(applyReaction.objectQualifier) ? applyReaction.objectQualifier[0] : applyReaction.objectQualifier);
+    expect(reactionId).toBe(StatusType.COMBUSTION);
     expect(applyReaction.with?.isForced?.value).toBe(1);
   });
 });
@@ -356,11 +356,11 @@ describe('D. Combo Skill (Seethe) Triggers', () => {
     expect(onTriggerClause.length).toBe(2);
 
     // First clause: enemy is combusted
-    expect(onTriggerClause[0].conditions[0].subject).toBe('ENEMY');
+    expect(onTriggerClause[0].conditions[0].subject).toBe(NounType.ENEMY);
     expect(onTriggerClause[0].conditions[0].object).toBe('COMBUSTED');
 
     // Second clause: enemy is corroded
-    expect(onTriggerClause[1].conditions[0].subject).toBe('ENEMY');
+    expect(onTriggerClause[1].conditions[0].subject).toBe(NounType.ENEMY);
     expect(onTriggerClause[1].conditions[0].object).toBe('CORRODED');
   });
 
@@ -409,17 +409,17 @@ describe('E. Ultimate & Enhanced Variants', () => {
     expect(frames.length).toBeGreaterThan(0);
 
     const frame = frames[0];
-    const inflEffect = frame.getClauses().flatMap(c => c.effects).find(e => e.dslEffect?.verb === 'APPLY' && e.dslEffect?.object === 'INFLICTION');
+    const inflEffect = frame.getClauses().flatMap(c => c.effects).find(e => e.dslEffect?.verb === VerbType.APPLY && e.dslEffect?.object === NounType.INFLICTION);
     expect(inflEffect).toBeDefined();
     const qual = Array.isArray(inflEffect!.dslEffect!.objectQualifier) ? inflEffect!.dslEffect!.objectQualifier[0] : inflEffect!.dslEffect!.objectQualifier;
-    expect(qual).toBe('HEAT');
+    expect(qual).toBe(AdjectiveType.HEAT);
   });
 
   test('E5: Normal basic attack segments do NOT have Heat infliction', () => {
     const sequences = getSequences('BASIC_ATTACK');
     for (const seq of sequences) {
       for (const frame of seq.getFrames()) {
-        expect(frame.getClauses().flatMap(c => c.effects).find(e => e.dslEffect?.verb === 'APPLY' && e.dslEffect?.object === 'INFLICTION')).toBeUndefined();
+        expect(frame.getClauses().flatMap(c => c.effects).find(e => e.dslEffect?.verb === VerbType.APPLY && e.dslEffect?.object === NounType.INFLICTION)).toBeUndefined();
       }
     }
   });
@@ -432,17 +432,21 @@ describe('E. Ultimate & Enhanced Variants', () => {
     expect(typeof durVal === 'object' ? durVal.value : durVal).toBe(15);
   });
 
-  test('E7: Ultimate energy cost varies by potential', () => {
+  test('E7: Ultimate energy cost is MULT(base, VARY_BY POTENTIAL)', () => {
     const ultSkill = mockLaevatainJson.skills.ULTIMATE;
     const energyCost = ultSkill.clause[0].effects.find(
       (e: Record<string, unknown>) => e.object === NounType.ULTIMATE_ENERGY && e.verb === VerbType.CONSUME
     );
     expect(energyCost).toBeDefined();
-    expect(energyCost.with.value.verb).toBe(VerbType.VARY_BY);
-    expect(energyCost.with.value.object).toBe(ObjectType.POTENTIAL);
-    const values = energyCost.with.value.value as number[];
-    expect(values).toHaveLength(6);
-    expect(values[values.length - 1]).toBeLessThan(values[0]);
+    const val = energyCost.with.value;
+    expect(val.operation).toBe('MULT');
+    expect(val.left.verb).toBe(VerbType.IS);
+    expect(typeof val.left.value).toBe('number');
+    expect(val.right.verb).toBe(VerbType.VARY_BY);
+    expect(val.right.object).toBe(ObjectType.POTENTIAL);
+    const potArr = val.right.value as number[];
+    expect(potArr).toHaveLength(6);
+    expect(Math.min(...potArr)).toBeLessThan(1);
   });
 
   test('E8: SMOULDERING_FIRE has 11 frames and second frame has no RECOVER ULTIMATE_ENERGY', () => {
@@ -486,7 +490,7 @@ describe('H. Cooldown Interactions', () => {
     expect(cooldownSeg).toBeUndefined();
     // No COOLDOWN effect in clause
     const cooldownEffect = bs.clause?.flatMap((c: any) => /* eslint-disable-line @typescript-eslint/no-explicit-any */ c.effects ?? [])
-      .find((e: Record<string, unknown>) => e.object === 'COOLDOWN');
+      .find((e: Record<string, unknown>) => e.object === NounType.COOLDOWN);
     expect(cooldownEffect).toBeUndefined();
   });
 
@@ -582,7 +586,7 @@ describe('K. Scorching Heart absorbs Antal combo mirrored heat', () => {
     // Focus on enemy (from Antal's battle skill)
     const focus = makeEv({
       uid: 'focus-1', name: StatusType.FOCUS, ownerId: ENEMY_OWNER_ID,
-      columnId: 'focus', startFrame: 0, segments: [{ properties: { duration: 60 * FPS } }],
+      columnId: 'FOCUS', startFrame: 0, segments: [{ properties: { duration: 60 * FPS } }],
     });
     // Akekuri's heat infliction
     const akekuriHeat = makeEv({

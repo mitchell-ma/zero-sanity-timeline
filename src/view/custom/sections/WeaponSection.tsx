@@ -1,22 +1,42 @@
 /**
  * Weapon form section for the Unified Customizer.
- * Extracted from CustomWeaponWizard — same fields, collapsible layout.
+ * Identity stays collapsible; Skills and Statuses are in a tab container.
  */
-import { WeaponType } from '../../../consts/enums';
+import { useState } from 'react';
+import { WeaponType, ElementType } from '../../../consts/enums';
 import type { CustomWeapon, CustomWeaponSkillDef } from '../../../model/custom/customWeaponTypes';
 import { maxSkillsForRarity } from '../../../model/custom/customWeaponTypes';
+import type { CustomStatusEventDef } from '../../../model/custom/customStatusEventTypes';
 import CollapsibleSection from '../CollapsibleSection';
 import IdField from '../IdField';
 import type { Interaction } from '../../../dsl/semantics';
 import InteractionBuilder, { defaultInteraction } from '../InteractionBuilder';
+import StatusEventFields from './StatusEventFields';
 
 const WEAPON_TYPES = Object.values(WeaponType);
 const RARITIES = [3, 4, 5, 6] as const;
+
+type WeaponTab = 'SKILLS' | 'STATUSES';
 
 interface Props {
   data: CustomWeapon;
   onChange: (data: CustomWeapon) => void;
   originalId?: string;
+}
+
+function defaultStatusEvent(): CustomStatusEventDef {
+  return {
+    name: '',
+    target: 'wielder',
+    element: ElementType.PHYSICAL,
+    isNamedEvent: false,
+    durationValues: [10],
+    durationUnit: 'seconds',
+    stack: { interactionType: 'REPLACE', max: 1, instances: 1 },
+    clause: [],
+    onTriggerClause: [],
+    stats: [],
+  };
 }
 
 function StatBoostEditor({ skill, onChange }: { skill: CustomWeaponSkillDef; onChange: (s: CustomWeaponSkillDef) => void }) {
@@ -172,8 +192,10 @@ function SkillEditor({ skill, index, onChange, onRemove }: {
 }
 
 export default function WeaponSection({ data, onChange, originalId }: Props) {
+  const [activeTab, setActiveTab] = useState<WeaponTab>('SKILLS');
   const update = (patch: Partial<CustomWeapon>) => onChange({ ...data, ...patch });
   const maxSkills = maxSkillsForRarity(data.weaponRarity);
+  const statusEvents = data.statusEvents ?? [];
 
   return (
     <>
@@ -216,7 +238,32 @@ export default function WeaponSection({ data, onChange, originalId }: Props) {
         </div>
       </CollapsibleSection>
 
-      <CollapsibleSection title="Skills">
+      {/* ─── Tab container: Skills | Statuses ────────────────────── */}
+      <div className="ops-skill-tabs" style={{ marginTop: '0.5rem' }}>
+        <button
+          type="button"
+          className={`ops-skill-tab${activeTab === 'SKILLS' ? ' ops-skill-tab--active' : ''}`}
+          onClick={() => setActiveTab('SKILLS')}
+        >
+          <span className="ops-skill-tab-label">
+            Skills
+            {data.skills.length > 0 && <span className="ops-skill-tab-count">{data.skills.length}</span>}
+          </span>
+        </button>
+        <button
+          type="button"
+          className={`ops-skill-tab${activeTab === 'STATUSES' ? ' ops-skill-tab--active' : ''}`}
+          onClick={() => setActiveTab('STATUSES')}
+        >
+          <span className="ops-skill-tab-label">
+            Statuses
+            {statusEvents.length > 0 && <span className="ops-skill-tab-count">{statusEvents.length}</span>}
+          </span>
+        </button>
+      </div>
+
+      {/* ─── Skills tab ──────────────────────────────────────────── */}
+      {activeTab === 'SKILLS' && (
         <div className="wizard-section">
           {data.skills.map((skill, i) => (
             <SkillEditor
@@ -237,7 +284,32 @@ export default function WeaponSection({ data, onChange, originalId }: Props) {
             </button>
           )}
         </div>
-      </CollapsibleSection>
+      )}
+
+      {/* ─── Statuses tab ────────────────────────────────────────── */}
+      {activeTab === 'STATUSES' && (
+        <div className="wizard-section">
+          {statusEvents.length === 0 && (
+            <div className="ops-empty" style={{ padding: '0.75rem 0' }}>No status events. Add statuses this weapon produces.</div>
+          )}
+          {statusEvents.map((se, i) => (
+            <StatusEventFields
+              key={i}
+              event={se}
+              label={se.name || `Status ${i + 1}`}
+              onChange={(e) => {
+                const next = [...statusEvents];
+                next[i] = e;
+                update({ statusEvents: next });
+              }}
+              onRemove={() => update({ statusEvents: statusEvents.filter((_, j) => j !== i) })}
+            />
+          ))}
+          <button className="btn-add-sm" onClick={() => update({ statusEvents: [...statusEvents, defaultStatusEvent()] })} style={{ width: 'fit-content' }}>
+            + Add Status
+          </button>
+        </div>
+      )}
     </>
   );
 }

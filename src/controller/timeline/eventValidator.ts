@@ -9,7 +9,7 @@ import { CombatSkillType, EnhancementType, TimeDependency } from '../../consts/e
 import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../slot/commonSlotController';
 import type { ResourceZone } from './skillPointTimeline';
 import { getOperatorSkill, getOperatorSkills, getComboTriggerClause } from '../gameDataStore';
-import { VerbType } from '../../dsl/semantics';
+import { VerbType, NounType } from '../../dsl/semantics';
 import type { Interaction, Predicate } from '../../dsl/semantics';
 import { evaluateConditions } from './conditionEvaluator';
 import type { ConditionContext } from './conditionEvaluator';
@@ -30,10 +30,10 @@ export type TimeStopRegion = {
 
 /** Map column IDs to DSL ENABLE/DISABLE object types. */
 const COLUMN_TO_ENABLE_OBJECT: Record<string, string> = {
-  basic: 'BATK',
-  battle: 'BATTLE_SKILL',
-  combo: 'COMBO_SKILL',
-  ultimate: 'ULTIMATE',
+  [SKILL_COLUMNS.BASIC]: NounType.BATK,
+  [SKILL_COLUMNS.BATTLE]: NounType.BATTLE_SKILL,
+  [SKILL_COLUMNS.COMBO]: NounType.COMBO_SKILL,
+  [SKILL_COLUMNS.ULTIMATE]: NounType.ULTIMATE,
 };
 
 /**
@@ -52,7 +52,7 @@ export function hasEnableClauseAtFrame(
     for (const seg of ev.segments) {
       const segEnd = cursor + seg.properties.duration;
       if (atFrame >= cursor && atFrame < segEnd && seg.clause) {
-        if (seg.clause.some(c => c.effects.some(e => e.verb === 'ENABLE' && e.object === enableObject))) {
+        if (seg.clause.some(c => c.effects.some(e => e.verb === VerbType.ENABLE && e.object === enableObject))) {
           return true;
         }
       }
@@ -82,7 +82,7 @@ function hasDisableAtFrame(
       const segEnd = cursor + seg.properties.duration;
       if (atFrame >= cursor && atFrame < segEnd && seg.clause) {
         if (seg.clause.some(c => c.effects.some(e =>
-          e.verb === 'DISABLE' && e.object === disableObject
+          e.verb === VerbType.DISABLE && e.object === disableObject
           && (objectQualifier === undefined ? !e.objectQualifier : e.objectQualifier === objectQualifier),
         ))) {
           return true;
@@ -854,7 +854,7 @@ export function checkVariantAvailability(
         return { disabled: true, reason: `${CombatSkillType.FINISHER} disabled during this window` };
       }
     } else if (variantName === CombatSkillType.DIVE) {
-      if (hasDisableAtFrame(events, ownerId, 'DIVE_ATTACK', undefined, atFrame)) {
+      if (hasDisableAtFrame(events, ownerId, NounType.DIVE_ATTACK, undefined, atFrame)) {
         return { disabled: true, reason: 'DIVE_ATTACK disabled during this window' };
       }
     } else if (enableObject && hasEnhancedVariants) {
@@ -1040,7 +1040,7 @@ export function validateDisabledVariants(events: TimelineEvent[]): Map<string, s
     if (ev.id === CombatSkillType.FINISHER) {
       disableTarget = CombatSkillType.FINISHER;
     } else if (ev.id === CombatSkillType.DIVE) {
-      disableTarget = 'DIVE_ATTACK';
+      disableTarget = NounType.DIVE_ATTACK;
     } else {
       disableTarget = COLUMN_TO_ENABLE_OBJECT[ev.columnId];
       disableAdj = ev.enhancementType === EnhancementType.EMPOWERED ? EnhancementType.EMPOWERED : EnhancementType.NORMAL;
@@ -1139,10 +1139,10 @@ function evaluateActivationClause(
 
   // Build reason from first predicate's failed conditions
   const firstCond = clause[0]?.conditions?.[0] as Interaction | undefined;
-  if (firstCond?.subjectProperty === 'ULTIMATE' && firstCond?.object === 'ACTIVE' && firstCond?.negated) {
+  if (firstCond?.subjectProperty === NounType.ULTIMATE && firstCond?.object === NounType.ACTIVE && firstCond?.negated) {
     return { pass: false, reason: t('ctx.ultActiveBlocked') };
   }
-  if (firstCond?.verb === VerbType.IS && firstCond?.object === 'CONTROLLED') {
+  if (firstCond?.verb === VerbType.IS && firstCond?.object === NounType.CONTROLLED_STATE) {
     return { pass: false, reason: t('ctx.requiresControlled') };
   }
   return { pass: false, reason: t('ctx.activationNotMet') };
