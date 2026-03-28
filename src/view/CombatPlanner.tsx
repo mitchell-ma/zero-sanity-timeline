@@ -378,14 +378,12 @@ export default function CombatPlanner({
         return !hiddenStatusTypes.has(effectiveType);
       });
       if (filtered.length === col.microColumns.length) return col;
-      // Build set of hidden micro-column IDs + their uppercase variants to filter matchColumnIds
+      // Build set of hidden micro-column IDs to filter matchColumnIds
       const hiddenIds = new Set<string>();
       for (const mc of col.microColumns) {
         const effectiveType = mc.statusType ?? 'STATUS';
         if (hiddenStatusTypes.has(effectiveType)) {
           hiddenIds.add(mc.id);
-          // Also add uppercase form (e.g. 'melting-flame' → 'MELTING_FLAME')
-          hiddenIds.add(mc.id.toUpperCase().replace(/-/g, '_'));
         }
       }
       return {

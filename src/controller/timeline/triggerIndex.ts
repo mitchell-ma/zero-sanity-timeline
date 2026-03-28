@@ -17,7 +17,7 @@ import type { LoadoutProperties } from '../../view/InformationPane';
 import type { StatusEventDef } from './statusTriggerCollector';
 import type { Predicate, TriggerEffect } from './triggerMatch';
 import type { ValueNode } from '../../dsl/semantics';
-import { VerbType, NounType, DeterminerType } from '../../dsl/semantics';
+import { VerbType, NounType, ObjectType, AdjectiveType, DeterminerType } from '../../dsl/semantics';
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from '../calculation/valueResolver';
 import { getAllOperatorIds, getSkillIds, getEnabledStatusEvents } from '../gameDataStore';
 import { getWeaponEffectDefs, getGearEffectDefs } from '../gameDataStore';
@@ -31,27 +31,27 @@ import { TimelineEvent, durationSegment } from '../../consts/viewTypes';
 // ── Verb-to-column mapping (mirrors triggerMatch.ts SKILL_OBJECT_TO_COLUMN) ──
 
 const SKILL_OBJECT_TO_COLUMN: Record<string, string> = {
-  BASIC_ATTACK: SKILL_COLUMNS.BASIC,
-  BATTLE_SKILL: SKILL_COLUMNS.BATTLE,
-  COMBO_SKILL: SKILL_COLUMNS.COMBO,
-  ULTIMATE: SKILL_COLUMNS.ULTIMATE,
+  [NounType.BASIC_ATTACK]: SKILL_COLUMNS.BASIC,
+  [NounType.BATTLE_SKILL]: SKILL_COLUMNS.BATTLE,
+  [NounType.COMBO_SKILL]: SKILL_COLUMNS.COMBO,
+  [NounType.ULTIMATE]: SKILL_COLUMNS.ULTIMATE,
   ULTIMATE_SKILL: SKILL_COLUMNS.ULTIMATE,
 };
 
 /** Maps IS/BECOME state qualifiers to reaction column IDs for index keying. */
 const STATE_TO_COLUMN: Record<string, string> = {
-  COMBUSTED: REACTION_COLUMNS.COMBUSTION,
-  SOLIDIFIED: REACTION_COLUMNS.SOLIDIFICATION,
-  CORRODED: REACTION_COLUMNS.CORROSION,
-  ELECTRIFIED: REACTION_COLUMNS.ELECTRIFICATION,
+  [ObjectType.COMBUSTED]: REACTION_COLUMNS.COMBUSTION,
+  [ObjectType.SOLIDIFIED]: REACTION_COLUMNS.SOLIDIFICATION,
+  [ObjectType.CORRODED]: REACTION_COLUMNS.CORROSION,
+  [ObjectType.ELECTRIFIED]: REACTION_COLUMNS.ELECTRIFICATION,
 };
 
 /** Maps APPLY INFLICTION element qualifiers to infliction column IDs. */
 const ELEMENT_TO_INFLICTION: Record<string, string> = {
-  HEAT: INFLICTION_COLUMNS.HEAT,
-  CRYO: INFLICTION_COLUMNS.CRYO,
-  NATURE: INFLICTION_COLUMNS.NATURE,
-  ELECTRIC: INFLICTION_COLUMNS.ELECTRIC,
+  [AdjectiveType.HEAT]: INFLICTION_COLUMNS.HEAT,
+  [AdjectiveType.CRYO]: INFLICTION_COLUMNS.CRYO,
+  [AdjectiveType.NATURE]: INFLICTION_COLUMNS.NATURE,
+  [AdjectiveType.ELECTRIC]: INFLICTION_COLUMNS.ELECTRIC,
 };
 
 // ── Types ───────────────────────────────────────────────────────────────────

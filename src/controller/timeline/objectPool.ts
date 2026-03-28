@@ -122,8 +122,6 @@ export function allocQueueFrame(): QueueFrame {
     qf.sourceEvent = undefined;
     qf.segmentIndex = undefined;
     qf.frameIndex = undefined;
-    qf.derivedEvent = undefined;
-    qf.stackingInteraction = undefined;
     qf.engineTrigger = undefined;
     qf.comboResolveEvent = undefined;
     return qf;

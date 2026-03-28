@@ -1,0 +1,32 @@
+{
+  "properties": {
+    "id": "SHATTER",
+    "name": "Shatter",
+    "to": "ENEMY",
+    "element": "CRYO",
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": 2
+      },
+      "unit": "SECOND"
+    },
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 1
+      },
+      "level": {
+        "verb": "IS",
+        "value": 4
+      },
+      "interactionType": "RESET"
+    },
+    "eventType": "STATUS",
+    "eventCategoryType": "REACTION",
+    "description": "Triggered by consuming Solidification. Deals Cryo DMG based on the consumed Solidification's status level."
+  },
+  "metadata": {
+    "originId": "game"
+  }
+}

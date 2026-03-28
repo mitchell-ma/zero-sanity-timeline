@@ -16,14 +16,11 @@
  * No external bulk passes — all processing is internal to DerivedEventController methods.
  */
 import { TimelineEvent, EventSegmentData, computeSegmentsSpan, getAnimationDuration, eventDuration, setEventDuration } from '../../consts/viewTypes';
-import { CombatSkillType, EventStatusType, SegmentType, StackInteractionType, StatusType, TimeDependency } from '../../consts/enums';
+import { CombatSkillType, EventStatusType, SegmentType, StatusType, TimeDependency } from '../../consts/enums';
 import { TimeStopRegion, extendByTimeStops, isTimeStopEvent } from './processTimeStop';
 import { buildReactionSegment, buildCorrosionSegments, mergeReactions, attachReactionFrames } from './processInfliction';
-import { ENEMY_OWNER_ID, INFLICTION_COLUMN_IDS, INFLICTION_TO_REACTION, OPERATOR_COLUMNS, REACTION_COLUMNS, REACTION_COLUMN_IDS, REACTION_DURATION, SKILL_COLUMNS } from '../../model/channels';
-import { FPS, TOTAL_FRAMES } from '../../utils/timeline';
-import { StatusLevel } from '../../consts/types';
-import { getCorrosionBaseReduction, getCorrosionReductionMultiplier } from '../../model/calculation/damageFormulas';
-import { MAX_INFLICTION_STACKS } from './eventQueueTypes';
+import { OPERATOR_COLUMNS, REACTION_COLUMNS, REACTION_COLUMN_IDS, SKILL_COLUMNS } from '../../model/channels';
+import { TOTAL_FRAMES } from '../../utils/timeline';
 import type { SlotTriggerWiring } from './eventQueueTypes';
 import { findClauseTriggerMatches } from './triggerMatch';
 import { getComboTriggerClause, getComboTriggerInfo, getTeamStatusColumnId } from '../gameDataStore';
@@ -33,16 +30,11 @@ import type { UltimateEnergyController } from './ultimateEnergyController';
 import { collectNoGainWindowsForEvent } from './ultimateEnergyController';
 import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../slot/commonSlotController';
 import GENERAL_MECHANICS from '../../model/game-data/generalMechanics.json';
-import { genEventUid } from './inputEventController';
 import { getAllOperatorStatuses } from '../gameDataStore';
-import { allocInputEvent, allocDerivedEvent } from './objectPool';
-import { getStatusStackingMode } from './eventPresentationController';
-
-/** Source metadata for event mutations. */
-interface EventSource {
-  ownerId: string;
-  skillName: string;
-}
+import { allocInputEvent } from './objectPool';
+import type { ColumnHost, EventSource, AddOptions, ConsumeOptions } from './columns/eventColumn';
+import { ColumnRegistry } from './columns/columnRegistry';
+export type { EventSource } from './columns/eventColumn';
 
 // ── Status stack limit cache (from operator status configs) ──────────────────
 
@@ -54,17 +46,15 @@ export function getStatusStackLimit(statusId: string): number | undefined {
     for (const s of getAllOperatorStatuses()) {
       if (!s.stacks) continue;
       _statusStackLimitCache.set(s.id, s.maxStacks);
-      // Also index by kebab-case column ID and display name for freeform event lookup
-      const kebab = s.id.toLowerCase().replace(/_/g, '-');
-      if (kebab !== s.id) _statusStackLimitCache.set(kebab, s.maxStacks);
       if (s.name && s.name !== s.id) _statusStackLimitCache.set(s.name, s.maxStacks);
     }
   }
   return _statusStackLimitCache.get(statusId);
 }
 
-export class DerivedEventController {
+export class DerivedEventController implements ColumnHost {
   private stacks = new Map<string, TimelineEvent[]>();
+  private registry = new ColumnRegistry(this);
   private registeredEvents: TimelineEvent[] = [];
   private stops: TimeStopRegion[] = [];
   private registeredStopIds = new Set<string>();
@@ -110,6 +100,7 @@ export class DerivedEventController {
     ueController?: UltimateEnergyController,
   ) {
     this.stacks.clear();
+    this.registry.clear();
     this.registeredEvents.length = 0;
     this.stops.length = 0;
     this.registeredStopIds.clear();
@@ -201,39 +192,6 @@ export class DerivedEventController {
             ...prev,
             segments: [{ properties: { ...prev.segments[0]?.properties, duration: ev.startFrame - prev.startFrame } }],
           };
-        }
-      }
-
-      // Status events: apply stacking interaction for freeform events only.
-      // Queue-derived events (already extended) were processed by createStatus.
-      if (!this.extendedIds.has(ev.uid) && ev.id) {
-        const stackingMode = getStatusStackingMode(ev.id);
-        if (stackingMode) {
-          const maxStacks = getStatusStackLimit(ev.id);
-          const activeCount = maxStacks != null
-            ? this.activeEventsIn(ev.columnId, ev.ownerId, ev.startFrame).length
-            : 0;
-          const source = { ownerId: ev.sourceOwnerId ?? ev.ownerId, skillName: ev.sourceSkillName ?? 'Freeform' };
-
-          // MERGE: always subsume all active instances
-          if (stackingMode === StackInteractionType.MERGE) {
-            const active = this.activeEventsIn(ev.columnId, ev.ownerId, ev.startFrame);
-            for (const act of active) {
-              setEventDuration(act, ev.startFrame - act.startFrame);
-              act.eventStatus = EventStatusType.CONSUMED;
-              act.eventStatusOwnerId = source.ownerId;
-              act.eventStatusSkillName = source.skillName;
-            }
-          }
-
-          // At capacity: RESET clamps oldest, NONE skips the event
-          if (maxStacks != null && activeCount >= maxStacks) {
-            if (stackingMode === StackInteractionType.RESET) {
-              this.resetOldest(ev.columnId, ev.ownerId, ev.startFrame, source);
-            } else if (stackingMode === StackInteractionType.NONE) {
-              continue; // skip — at capacity with no overflow behavior
-            }
-          }
         }
       }
 
@@ -543,325 +501,113 @@ export class DerivedEventController {
     this.registeredEvents = events;
   }
 
+  // ── ColumnHost interface ────────────────────────────────────────────────
+
+  /** Get all active (non-consumed) events for a column+owner at a frame. */
+  activeEventsIn(columnId: string, ownerId: string, frame: number): TimelineEvent[] {
+    return this._activeEventsIn(columnId, ownerId, frame);
+  }
+
+  /** Count active events for a column+owner at a frame. */
+  activeCount(columnId: string, ownerId: string, frame: number) {
+    return this._activeEventsIn(columnId, ownerId, frame).length;
+  }
+
+  /** Extend a raw game-time duration by active time-stop regions. */
+  extendDuration(startFrame: number, rawDuration: number, eventUid?: string) {
+    return this._extendDuration(startFrame, rawDuration, eventUid);
+  }
+
+  /** Register a raw (pre-extension) duration for later re-extension. */
+  trackRawDuration(uid: string, rawDuration: number) {
+    this.rawDurations.set(uid, rawDuration);
+  }
+
+  /** Insert an event: extend duration, push to stacks + output, register stop if applicable. */
+  pushEvent(event: TimelineEvent, rawDuration: number) {
+    const extDur = this._extendDuration(event.startFrame, rawDuration, event.uid);
+    setEventDuration(event, extDur);
+    this.rawDurations.set(event.uid, rawDuration);
+    const key = this.key(event.columnId, event.ownerId);
+    const existing = this.stacks.get(key) ?? [];
+    existing.push(event);
+    this.stacks.set(key, existing);
+    this.output.push(event);
+    if (this.maybeRegisterStop(event)) {
+      this.reExtendQueueEvents();
+    }
+  }
+
+  /** Insert an already-extended event directly (no duration extension). */
+  pushEventDirect(event: TimelineEvent) {
+    const key = this.key(event.columnId, event.ownerId);
+    const existing = this.stacks.get(key) ?? [];
+    existing.push(event);
+    this.stacks.set(key, existing);
+    this.output.push(event);
+  }
+
+  /** Push an event to output only (e.g. consumed copies for freeform state tracking). */
+  pushToOutput(event: TimelineEvent) {
+    this.output.push(event);
+  }
+
+  /** Delegate creation to another column (cross-column side effects). */
+  applyToColumn(columnId: string, ownerId: string, frame: number, durationFrames: number,
+    source: EventSource, options?: AddOptions): boolean {
+    return this.registry.get(columnId).add(ownerId, frame, durationFrames, source, options);
+  }
+
+  /** Delegate consumption to another column. */
+  consumeFromColumn(columnId: string, ownerId: string, frame: number,
+    source: EventSource, options?: ConsumeOptions): number {
+    return this.registry.get(columnId).consume(ownerId, frame, source, options);
+  }
+
+  /** Get foreign time-stop regions for reaction segment building. */
+  foreignStopsFor(event: TimelineEvent): readonly TimeStopRegion[] {
+    return isTimeStopEvent(event) ? this.stops.filter(s => s.eventUid !== event.uid) : this.stops;
+  }
+
   // ── Domain Controllers ──────────────────────────────────────────────────
 
-  /**
-   * Create an infliction event. Handles deque stacking (cap 4),
-   * cross-element reaction triggers, and duration extension.
-   */
-  createInfliction(
+  /** Apply (create) an event on a column. Routes to the appropriate EventColumn. */
+  applyEvent(
     columnId: string, ownerId: string, frame: number,
     durationFrames: number, source: EventSource,
-    options?: { uid?: string },
-  ) {
-    // Cross-element reaction check: if another element's infliction is active,
-    // consume it and create a reaction instead.
-    if (INFLICTION_COLUMN_IDS.has(columnId)) {
-      const otherActive: TimelineEvent[] = [];
-      for (const otherCol of Array.from(INFLICTION_COLUMN_IDS)) {
-        if (otherCol === columnId) continue;
-        for (const ev of this.activeEventsIn(otherCol, ownerId, frame)) {
-          otherActive.push(ev);
-        }
-      }
-
-      if (otherActive.length > 0) {
-        const reactionColumnId = INFLICTION_TO_REACTION[columnId];
-        if (reactionColumnId) {
-          for (const consumed of otherActive) {
-            setEventDuration(consumed, frame - consumed.startFrame);
-            consumed.eventStatus = EventStatusType.CONSUMED;
-            consumed.eventStatusOwnerId = source.ownerId;
-            consumed.eventStatusSkillName = source.skillName;
-          }
-          this.createReaction(reactionColumnId, ENEMY_OWNER_ID, frame, REACTION_DURATION, source, {
-            uid: `${options?.uid ?? columnId}-reaction`,
-            stacks: otherActive.length,
-          });
-          // Emit a consumed copy of the incoming infliction so freeform raw
-          // events can be replaced with their reacted state.
-          const consumed = allocDerivedEvent();
-          consumed.uid = options?.uid ?? `${columnId}-${genEventUid()}`;
-          consumed.id = columnId;
-          consumed.name = columnId;
-          consumed.ownerId = ownerId;
-          consumed.columnId = columnId;
-          consumed.startFrame = frame;
-          consumed.segments = [{ properties: { duration: 0 } }];
-          consumed.sourceOwnerId = source.ownerId;
-          consumed.sourceSkillName = source.skillName;
-          consumed.eventStatus = EventStatusType.CONSUMED;
-          consumed.eventStatusOwnerId = source.ownerId;
-          consumed.eventStatusSkillName = source.skillName;
-          this.output.push(consumed);
-          return;
-        }
-      }
-    }
-
-    // Deque stacking: evict oldest if at max stacks
-    const key = this.key(columnId, ownerId);
-    const existing = this.stacks.get(key) ?? [];
-    const active = this.activeEventsIn(columnId, ownerId, frame);
-
-    // Arts Burst: same-element arts infliction stacking (not cross-element, not physical)
-    const isArtsBurst = INFLICTION_COLUMN_IDS.has(columnId) && active.length > 0;
-
-    if (active.length >= MAX_INFLICTION_STACKS) {
-      const oldest = active[0];
-      setEventDuration(oldest, frame - oldest.startFrame);
-      oldest.eventStatus = EventStatusType.CONSUMED;
-      oldest.eventStatusOwnerId = source.ownerId;
-      oldest.eventStatusSkillName = source.skillName;
-    }
-
-    const rawDur = durationFrames;
-    const extendedDuration = this.extendDuration(frame, rawDur);
-    const ev = allocDerivedEvent();
-    ev.uid = options?.uid ?? `${columnId}-${genEventUid()}`;
-    ev.id = columnId;
-    ev.name = columnId;
-    ev.ownerId = ownerId;
-    ev.columnId = columnId;
-    ev.startFrame = frame;
-    ev.segments = [{ properties: { duration: extendedDuration } }];
-    ev.sourceOwnerId = source.ownerId;
-    ev.sourceSkillName = source.skillName;
-    if (isArtsBurst) ev.isArtsBurst = true;
-    this.rawDurations.set(ev.uid, rawDur);
-    existing.push(ev);
-    this.stacks.set(key, existing);
-    this.output.push(ev);
-
-    // Record the stack position at creation time so it survives consumed-event filtering
-    const activeAfterCreation = this.activeEventsIn(columnId, ownerId, frame);
-    ev.stacks = activeAfterCreation.length;
-
-    // Extend co-active inflictions to match the new one's end
-    const newEnd = frame + extendedDuration;
-    const remainingActive = activeAfterCreation;
-    for (const act of remainingActive) {
-      if (act.uid === ev.uid) continue;
-      const actEnd = act.startFrame + eventDuration(act);
-      if (newEnd > actEnd) {
-        setEventDuration(act, newEnd - act.startFrame);
-        act.eventStatus = EventStatusType.EXTENDED;
-        act.eventStatusOwnerId = source.ownerId;
-        act.eventStatusSkillName = source.skillName;
-      }
-    }
-  }
-
-  /**
-   * Create a reaction event with inline merge/corrosion logic.
-   * Corrosion: max stats, extend duration if new is longer.
-   * Non-corrosion: refresh (clamp older) if new extends further.
-   */
-  createReaction(
-    columnId: string, ownerId: string, frame: number,
-    durationFrames: number, source: EventSource,
-    options?: { stacks?: number; forcedReaction?: boolean; uid?: string },
-  ) {
-    const ev = allocDerivedEvent();
-    ev.uid = options?.uid ?? `reaction-${columnId}-${genEventUid()}`;
-    ev.id = columnId;
-    ev.name = columnId;
-    ev.ownerId = ownerId;
-    ev.columnId = columnId;
-    ev.startFrame = frame;
-    ev.segments = [{ properties: { duration: durationFrames } }];
-    ev.sourceOwnerId = source.ownerId;
-    ev.sourceSkillName = source.skillName;
-    ev.stacks = options?.stacks;
-    ev.forcedReaction = options?.forcedReaction;
-
-    const rawDur = durationFrames;
-    setEventDuration(ev, this.extendDuration(ev.startFrame, rawDur));
-    const key = this.key(ev.columnId, ev.ownerId);
-    const existing = this.stacks.get(key) ?? [];
-    const active = existing.filter(r =>
-      r.eventStatus !== EventStatusType.CONSUMED &&
-      r.eventStatus !== EventStatusType.REFRESHED &&
-      r.startFrame <= ev.startFrame && ev.startFrame < r.startFrame + eventDuration(r)
-    );
-
-    if (active.length > 0) {
-      const prev = active[active.length - 1];
-      const prevEnd = prev.startFrame + eventDuration(prev);
-
-      if (ev.columnId === REACTION_COLUMNS.CORROSION) {
-        setEventDuration(prev, ev.startFrame - prev.startFrame);
-        prev.eventStatus = EventStatusType.REFRESHED;
-        prev.eventStatusOwnerId = source.ownerId;
-        prev.eventStatusSkillName = source.skillName;
-
-        const prevStacks = prev.stacks ?? 1;
-        const remainingOldDuration = prevEnd - ev.startFrame;
-
-        const elapsedSeconds = (ev.startFrame - prev.startFrame) / FPS;
-        const oldReductionFloor = prev.reductionFloor ?? 0;
-        const oldArtsIntensity = prev.artsIntensity ?? 0;
-        const oldBaseReduction = getCorrosionBaseReduction(
-          Math.min(prevStacks, 4) as StatusLevel,
-          elapsedSeconds,
-        ) * getCorrosionReductionMultiplier(oldArtsIntensity);
-
-        setEventDuration(ev, Math.max(remainingOldDuration, eventDuration(ev)));
-        ev.stacks = Math.max(prevStacks, ev.stacks ?? 1);
-        ev.reductionFloor = Math.max(oldReductionFloor, oldBaseReduction);
-      } else {
-        const newEnd = ev.startFrame + eventDuration(ev);
-        if (newEnd >= prevEnd) {
-          setEventDuration(prev, ev.startFrame - prev.startFrame);
-          prev.eventStatus = EventStatusType.REFRESHED;
-          prev.eventStatusOwnerId = source.ownerId;
-          prev.eventStatusSkillName = source.skillName;
-        }
-      }
-    }
-
-    // Rebuild segments for reaction events (corrosion gets per-second segments, others get a single segment)
-    if (ev.columnId === REACTION_COLUMNS.CORROSION) {
-      const segs = buildCorrosionSegments(ev);
-      if (segs) ev.segments = segs;
-    } else {
-      const fStops = this.foreignStopsFor(ev);
-      const seg = buildReactionSegment(ev, rawDur, fStops);
-      if (seg) ev.segments = [seg];
-    }
-
-    this.rawDurations.set(ev.uid, rawDur);
-    existing.push(ev);
-    this.stacks.set(key, existing);
-    this.output.push(ev);
-  }
-
-  /**
-   * Create a status event with stacking behavior.
-   * stackingMode: 'RESET' clears existing, 'MERGE' subsumes older, undefined = add alongside.
-   */
-  createStatus(
-    columnId: string, ownerId: string, frame: number,
-    durationFrames: number, source: EventSource,
-    options?: { statusId?: string; stackingMode?: string; uid?: string; maxStacks?: number; event?: Partial<TimelineEvent> },
+    options?: AddOptions,
   ): boolean {
-    const statusId = options?.statusId ?? columnId;
-
-    // MERGE: subsume all active instances into the new one (always, not just at capacity)
-    if (options?.stackingMode === StackInteractionType.MERGE) {
-      const active = this.activeEventsIn(columnId, ownerId, frame);
-      for (const act of active) {
-        setEventDuration(act, frame - act.startFrame);
-        act.eventStatus = EventStatusType.CONSUMED;
-        act.eventStatusOwnerId = source.ownerId;
-        act.eventStatusSkillName = source.skillName;
-      }
-    }
-
-    // Enforce stack limit — RESET clamps oldest when at capacity
-    const maxStacks = options?.maxStacks ?? getStatusStackLimit(statusId);
-    if (maxStacks != null) {
-      const active = this.activeCount(columnId, ownerId, frame);
-      if (active >= maxStacks) {
-        if (options?.stackingMode === StackInteractionType.RESET) {
-          this.resetOldest(columnId, ownerId, frame, source);
-        } else {
-          return false;
-        }
-      }
-    }
-
-    const ev = allocDerivedEvent();
-    ev.uid = options?.uid ?? `${statusId.toLowerCase()}-${genEventUid()}`;
-    ev.id = statusId;
-    ev.name = statusId;
-    ev.ownerId = ownerId;
-    ev.columnId = columnId;
-    ev.startFrame = frame;
-    ev.segments = [{ properties: { duration: durationFrames } }];
-    ev.sourceOwnerId = source.ownerId;
-    ev.sourceSkillName = source.skillName;
-    if (options?.event) Object.assign(ev, options.event);
-
-    this.addEvent(ev);
-    return true;
+    return this.registry.get(columnId).add(ownerId, frame, durationFrames, source, options);
   }
 
-  /** Create a stagger event (display-only / no-op for now). */
-  createStagger(_columnId: string, _ownerId: string, _frame: number, _value: number, _source: EventSource) {
-    // No-op — stagger is display-only
-  }
-
-  /**
-   * Consume (absorb) oldest N active inflictions in a column.
-   * Returns the number consumed.
-   */
-  consumeInfliction(
+  /** Consume events on a column. Routes to the appropriate EventColumn. */
+  consumeEvent(
     columnId: string, ownerId: string, frame: number,
-    count: number, source: EventSource,
-  ) {
-    const allActive = this.activeEventsIn(columnId, ownerId, frame)
-      .sort((a, b) => a.startFrame - b.startFrame);
-    const toAbsorb = allActive.slice(0, count);
-    for (const ev of toAbsorb) {
-      setEventDuration(ev, frame - ev.startFrame);
-      ev.eventStatus = EventStatusType.CONSUMED;
-      ev.eventStatusOwnerId = source.ownerId;
-      ev.eventStatusSkillName = source.skillName;
-    }
-    return toAbsorb.length;
-  }
-
-  /**
-   * Consume the N oldest active events in a column (e.g. CONSUME THIS EVENT with stacks count).
-   */
-  consumeOldest(
-    columnId: string, ownerId: string, frame: number,
-    count: number, source: EventSource,
+    source: EventSource, options?: ConsumeOptions,
   ): number {
-    const allActive = this.activeEventsIn(columnId, ownerId, frame)
-      .sort((a, b) => a.startFrame - b.startFrame);
-    const toConsume = allActive.slice(0, count);
-    for (const ev of toConsume) {
-      setEventDuration(ev, frame - ev.startFrame);
-      ev.eventStatus = EventStatusType.CONSUMED;
-      ev.eventStatusOwnerId = source.ownerId;
-      ev.eventStatusSkillName = source.skillName;
-    }
-    return toConsume.length;
+    return this.registry.get(columnId).consume(ownerId, frame, source, options);
   }
 
-  /**
-   * Consume (clamp) all active reactions in a column.
-   */
-  consumeReaction(
-    columnId: string, ownerId: string, frame: number,
-    source: EventSource,
-  ) {
-    this.clampActive(columnId, ownerId, frame, source, EventStatusType.CONSUMED);
+  /** Check if an event can be applied on a column. */
+  canApplyEvent(columnId: string, ownerId: string, frame: number): boolean {
+    return this.registry.get(columnId).canAdd(ownerId, frame);
   }
 
-  /**
-   * Consume (clamp) all active statuses in a column.
-   */
-  consumeStatus(
-    columnId: string, ownerId: string, frame: number,
-    source: EventSource,
-  ) {
-    this.clampActive(columnId, ownerId, frame, source, EventStatusType.CONSUMED);
+  /** Check if events can be consumed on a column. */
+  canConsumeEvent(columnId: string, ownerId: string, frame: number): boolean {
+    return this.registry.get(columnId).canConsume(ownerId, frame);
   }
+
+  /** No-op — stagger is display-only. */
+  createStagger(_columnId: string, _ownerId: string, _frame: number, _value: number, _source: EventSource) {}
 
   // ── Link consumption tracking ──────────────────────────────────────────
 
-  /**
-   * Try to consume Link for a battle skill or ultimate event.
-   * If Link is active, consumes it and records the stack count against the event UID.
-   * Returns the number of stacks consumed (0 if none).
-   */
+  /** Consume Link for a battle skill/ultimate. Records stack count against event UID. */
   consumeLink(eventUid: string, frame: number, source: EventSource): number {
     const linkColumnId = getTeamStatusColumnId(StatusType.LINK) ?? StatusType.LINK;
     const isLink = (ev: TimelineEvent) => ev.id === StatusType.LINK;
-    const linkEvents = this.activeEventsIn(linkColumnId, COMMON_OWNER_ID, frame)
+    const linkEvents = this._activeEventsIn(linkColumnId, COMMON_OWNER_ID, frame)
       .filter(isLink);
     if (linkEvents.length === 0) return 0;
     this.clampActiveFiltered(linkColumnId, COMMON_OWNER_ID, frame, source, EventStatusType.CONSUMED, isLink);
@@ -870,42 +616,8 @@ export class DerivedEventController {
     return clampedStacks;
   }
 
-  /** Get the Link stack count consumed by an event (0 if none). */
   getLinkStacks(eventUid: string): number {
     return this.linkConsumptions.get(eventUid) ?? 0;
-  }
-
-  // ── canDo checks for ALL loop semantics ───────────────────────────────
-
-  /** Check if an infliction can be applied (deque always accepts, evicts oldest). */
-  canApplyInfliction(_columnId: string, _ownerId: string, _frame: number) {
-    return true; // deque always accepts
-  }
-
-  /** Check if a status can be applied (respects exchange max stacks). */
-  canApplyStatus(columnId: string, ownerId: string, frame: number, maxStacks?: number) {
-    if (maxStacks == null) return true;
-    return this.activeCount(columnId, ownerId, frame) < maxStacks;
-  }
-
-  /** Check if a reaction can be applied. */
-  canApplyReaction(_columnId: string, _ownerId: string, _frame: number) {
-    return true; // reactions merge, always "applicable"
-  }
-
-  /** Check if there are active inflictions to consume. */
-  canConsumeInfliction(columnId: string, ownerId: string, frame: number) {
-    return this.activeCount(columnId, ownerId, frame) > 0;
-  }
-
-  /** Check if there are active reactions to consume. */
-  canConsumeReaction(columnId: string, ownerId: string, frame: number) {
-    return this.activeCount(columnId, ownerId, frame) > 0;
-  }
-
-  /** Check if there are active statuses to consume. */
-  canConsumeStatus(columnId: string, ownerId: string, frame: number) {
-    return this.activeCount(columnId, ownerId, frame) > 0;
   }
 
   // ── Combo chaining ────────────────────────────────────────────────────────
@@ -976,15 +688,11 @@ export class DerivedEventController {
     return true;
   }
 
-  private extendDuration(startFrame: number, rawDuration: number, eventUid?: string) {
+  private _extendDuration(startFrame: number, rawDuration: number, eventUid?: string) {
     const foreign = eventUid && this.registeredStopIds.has(eventUid)
       ? this.stops.filter(s => s.eventUid !== eventUid)
       : this.stops;
     return extendByTimeStops(startFrame, rawDuration, foreign);
-  }
-
-  private foreignStopsFor(ev: TimelineEvent): readonly TimeStopRegion[] {
-    return isTimeStopEvent(ev) ? this.stops.filter(s => s.eventUid !== ev.uid) : this.stops;
   }
 
   /**
@@ -1053,7 +761,7 @@ export class DerivedEventController {
         if (ev.eventStatus === EventStatusType.EXTENDED) continue;
         const raw = this.rawDurations.get(ev.uid);
         if (raw == null) continue;
-        setEventDuration(ev, this.extendDuration(ev.startFrame, raw, ev.uid));
+        setEventDuration(ev, this._extendDuration(ev.startFrame, raw, ev.uid));
       }
     });
   }
@@ -1098,7 +806,7 @@ export class DerivedEventController {
 
   // ── Active event queries ─────────────────────────────────────────────────
 
-  private activeEventsIn(columnId: string, ownerId: string, frame: number): TimelineEvent[] {
+  private _activeEventsIn(columnId: string, ownerId: string, frame: number): TimelineEvent[] {
     const result: TimelineEvent[] = [];
     const queueEvents = this.stacks.get(this.key(columnId, ownerId)) ?? [];
     for (const ev of queueEvents) {
@@ -1113,18 +821,14 @@ export class DerivedEventController {
     return result;
   }
 
-  activeCount(columnId: string, ownerId: string, frame: number) {
-    return this.activeEventsIn(columnId, ownerId, frame).length;
-  }
-
   /** Public query: get active events at a frame for a column+owner. */
   getActiveEvents(columnId: string, ownerId: string, frame: number): TimelineEvent[] {
-    return this.activeEventsIn(columnId, ownerId, frame);
+    return this._activeEventsIn(columnId, ownerId, frame);
   }
 
   /** Check if a given operator is the controlled operator at a given frame. */
   isControlledAt(ownerId: string, frame: number): boolean {
-    return this.activeEventsIn(OPERATOR_COLUMNS.INPUT, ownerId, frame)
+    return this._activeEventsIn(OPERATOR_COLUMNS.INPUT, ownerId, frame)
       .some((ev) => ev.id === CombatSkillType.CONTROL);
   }
 
@@ -1133,7 +837,7 @@ export class DerivedEventController {
   addEvent(ev: TimelineEvent) {
     const rawDur = eventDuration(ev);
     if (rawDur > 0) {
-      setEventDuration(ev, this.extendDuration(ev.startFrame, rawDur, ev.uid));
+      setEventDuration(ev, this._extendDuration(ev.startFrame, rawDur, ev.uid));
     }
     this.rawDurations.set(ev.uid, rawDur);
     const key = this.key(ev.columnId, ev.ownerId);
@@ -1148,7 +852,7 @@ export class DerivedEventController {
 
   /** Clamp the oldest active event in a column to make room for a new stack. */
   private resetOldest(columnId: string, ownerId: string, frame: number, source: EventSource) {
-    const active = this.activeEventsIn(columnId, ownerId, frame)
+    const active = this._activeEventsIn(columnId, ownerId, frame)
       .sort((a, b) => a.startFrame - b.startFrame);
     if (active.length > 0) {
       const oldest = active[0];

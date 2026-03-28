@@ -150,6 +150,7 @@ export enum ArtsReactionType {
   SOLIDIFICATION = "SOLIDIFICATION",
   CORROSION = "CORROSION",
   ELECTRIFICATION = "ELECTRIFICATION",
+  SHATTER = "SHATTER",
 }
 
 /** Physical statuses — triggered by physical reactions (stagger consumption). */
@@ -158,7 +159,6 @@ export enum PhysicalStatusType {
   KNOCK_DOWN = "KNOCK_DOWN",
   BREACH = "BREACH",
   CRUSH = "CRUSH",
-  SHATTER = "SHATTER",
 }
 
 /** All built-in reaction types = arts reactions + physical statuses. */
@@ -223,12 +223,13 @@ export const STATUS_DAMAGE_FACTOR: Partial<Record<string, DamageFactorType>> = {
   [StatusType.WEAKEN]: DamageFactorType.WEAKEN,
   [StatusType.DMG_REDUCTION]: DamageFactorType.DMG_REDUCTION,
   [StatusType.PROTECTION]: DamageFactorType.PROTECTION,
+  // Arts reactions
+  [ArtsReactionType.SHATTER]: DamageFactorType.NONE,
   // Physical statuses
   [PhysicalStatusType.LIFT]: DamageFactorType.STAGGER,
   [PhysicalStatusType.KNOCK_DOWN]: DamageFactorType.STAGGER,
   [PhysicalStatusType.CRUSH]: DamageFactorType.NONE,
   [PhysicalStatusType.BREACH]: DamageFactorType.FRAGILITY,
-  [PhysicalStatusType.SHATTER]: DamageFactorType.NONE,
 };
 
 /**
@@ -344,6 +345,12 @@ export enum EventCategoryType {
   BATTLE_SKILL = "BATTLE_SKILL",
   COMBO_SKILL = "COMBO_SKILL",
   ULTIMATE_SKILL = "ULTIMATE_SKILL",
+
+  // ── Built-in combat mechanics ──────────────────────────────────────────────
+  INFLICTION = "INFLICTION",
+  PHYSICAL_INFLICTION = "PHYSICAL_INFLICTION",
+  REACTION = "REACTION",
+  PHYSICAL_STATUS = "PHYSICAL_STATUS",
 
   // ── Status categories ────────────────────────────────────────────────────────
   TALENT = "TALENT",
@@ -729,3 +736,42 @@ export enum LoadoutNodeType {
   FOLDER = "folder",
   LOADOUT = "loadout",
 }
+
+// ── Column header labels ─────────────────────────────────────────────────────
+
+export const enum ColumnLabel {
+  SKILL_POINTS         = 'SKILL POINTS',
+  TEAM_STATUS          = 'TEAM STATUS',
+  LINK                 = 'LINK',
+  SHIELD               = 'SHIELD',
+  INFLICTION           = 'ARTS INFLICTION',
+  ARTS_REACTION        = 'ARTS REACTION',
+  PHYSICAL_INFLICTION  = 'PHYSICAL INFLICTION',
+  PHYSICAL_STATUS      = 'PHYSICAL STATUS',
+  SUSCEPTIBILITY       = 'SUSCEPTIBILITY',
+  FRAGILITY            = 'FRAGILITY',
+  WEAPON_BUFF          = 'WEAPON',
+  GEAR_BUFF            = 'GEAR',
+  TACTICAL             = 'TACTICAL',
+  STATUS               = 'STATUS',
+  STAGGER              = 'STAGGER',
+  STAGGER_FRAILTY      = 'STAGGER FRAILTY',
+  WULFGARD_TALENT1_SCORCHING_FANGS = 'SCORCHING FANGS',
+  SCORCHING_HEART      = 'SCORCHING HEART (TALENT)',
+  SCORCHING_HEART_EFFECT = 'SCORCHING HEART',
+  ORIGINIUM_CRYSTAL    = 'CRYSTAL',
+  WILDLAND_TREKKER     = 'WILDLAND TREKKER',
+  MESSENGERS_SONG      = "MESSENGER'S SONG",
+  ACTION               = 'ACTION',
+  CONTROLLED           = 'CONTROLLED',
+  OTHER                = 'OTHER',
+}
+
+// ── Skill column display labels ──────────────────────────────────────────────
+
+export const SKILL_LABELS: Record<string, string> = {
+  basic:    t('skill.type.basic'),
+  battle:   t('skill.type.battle'),
+  combo:    t('skill.type.combo'),
+  ultimate: t('skill.type.ultimate'),
+};

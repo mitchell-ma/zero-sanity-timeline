@@ -1,0 +1,33 @@
+{
+  "properties": {
+    "id": "ELECTRIFICATION",
+    "name": "Electrification",
+    "to": "ENEMY",
+    "element": "ELECTRIC",
+    "duration": {
+      "value": {
+        "verb": "VARY_BY",
+        "object": "STATUS_LEVEL",
+        "value": [12, 18, 24, 30]
+      },
+      "unit": "SECOND"
+    },
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 1
+      },
+      "level": {
+        "verb": "IS",
+        "value": 4
+      },
+      "interactionType": "MERGE"
+    },
+    "eventType": "STATUS",
+    "eventCategoryType": "REACTION",
+    "description": "Electric arts reaction. Deals initial Electric DMG on activation. Increases Arts DMG taken by the enemy, scaling with status level. Duration scales with level (12/18/24/30s)."
+  },
+  "metadata": {
+    "originId": "game"
+  }
+}

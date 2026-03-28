@@ -394,15 +394,16 @@ export function getAllStatusIds(): StatusIdEntry[] {
   if (_allStatusEntries) return _allStatusEntries;
   const seen = new Set<string>();
   const entries: StatusIdEntry[] = [];
-  const { STATUS_LABELS } = require('../consts/timelineColumnLabels');
   const { StatusType, ReactionType } = require('../consts/enums');
+  const { getAllStatusLabels } = require('./gameDataStore');
+  const statusLabels = getAllStatusLabels();
 
   const reactionIds = new Set(Object.values(ReactionType) as string[]);
 
   for (const id of Object.values(StatusType) as string[]) {
     if (!seen.has(id) && !reactionIds.has(id)) {
       seen.add(id);
-      entries.push({ id, label: STATUS_LABELS[id] ?? id });
+      entries.push({ id, label: statusLabels[id] ?? id });
     }
   }
 
@@ -411,7 +412,7 @@ export function getAllStatusIds(): StatusIdEntry[] {
     for (const status of statuses) {
       if (!seen.has(status.id)) {
         seen.add(status.id);
-        entries.push({ id: status.id, label: status.name || STATUS_LABELS[status.id] || status.id });
+        entries.push({ id: status.id, label: status.name || statusLabels[status.id] || status.id });
       }
     }
   }
@@ -769,18 +770,18 @@ for (const [id, setData] of Object.entries(GEAR_SET_DATA)) {
       for (const ef of (c as { effects?: { verb: string; object: string; with?: { value: { verb: string; value: number | number[]; object?: string } } }[] }).effects ?? []) {
         const w = ef.with?.value;
         if (!w) continue;
-        if (ef.object === 'BASE_DEFENSE' && w.verb === 'IS') {
+        if (ef.object === 'BASE_DEFENSE' && w.verb === VerbType.IS) {
           defense = w.value as number;
           continue;
         }
         const stat = ef.object;
-        if (w.verb === 'VARY_BY' && Array.isArray(w.value)) {
+        if (w.verb === VerbType.VARY_BY && Array.isArray(w.value)) {
           (w.value as number[]).forEach((v: number, ri: number) => {
             const rank = String(ri + 1);
             if (!allLevels[rank]) allLevels[rank] = {};
             allLevels[rank][stat] = v;
           });
-        } else if (w.verb === 'IS') {
+        } else if (w.verb === VerbType.IS) {
           if (!allLevels['1']) allLevels['1'] = {};
           allLevels['1'][stat] = w.value as number;
         }

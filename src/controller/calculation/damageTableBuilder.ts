@@ -5,7 +5,7 @@
  * and combines them into computed damage numbers for the dumb view.
  */
 import { TimelineEvent, Column, MiniTimeline, Enemy as ViewEnemy } from '../../consts/viewTypes';
-import { COMBAT_SKILL_LABELS } from '../../consts/timelineColumnLabels';
+import { getAllSkillLabels } from '../gameDataStore';
 import { CombatSkillType, ColumnType, CritMode, DamageType, ElementType, EnemyTierType, StatType, TimelineSourceType } from '../../consts/enums';
 import { SkillLevel, Potential } from '../../consts/types';
 import { StatusDamageParams } from '../../model/calculation/damageFormulas';
@@ -122,7 +122,7 @@ export interface DamageStatistics {
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 function getEventDisplayName(name: string): string {
-  return COMBAT_SKILL_LABELS[name as CombatSkillType] ?? name;
+  return getAllSkillLabels()[name as CombatSkillType] ?? name;
 }
 
 function isUltEnhanced(name: string): boolean {

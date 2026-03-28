@@ -151,10 +151,7 @@ Entries ordered by `(frame, priority)`. Lower priority fires first at the same f
 
 | Priority | Type | Handler |
 |----------|------|---------|
-| 5 | `FRAME_EFFECT` | Enemy statuses, forced reactions, team buffs, originium crystals, freeform reactions. Post-hook: reactive trigger evaluation via TriggerIndex (lifecycle clauses, APPLY/IS/BECOME triggers). |
-| 10 | `INFLICTION_CREATE` | Deque stacking (cap 4) + cross-element reaction, freeform inflictions. Post-hook: reactive APPLY INFLICTION triggers. |
-| 15 | `CONSUME` | Clamp/remove active events. Post-hook: reactive CONSUME triggers. |
-| 17 | `LINK_CONSUME` | Consume Link team status for battle skills / ultimates |
+| 5 | `PROCESS_FRAME` | Unified frame processing — DSL clause interpretation for skill events, freeform event creation (inflictions, reactions, statuses) via step 3b for non-skill events. Post-hook: reactive trigger evaluation. |
 | 22 | `ENGINE_TRIGGER` | Evaluate HAVE conditions + create derived statuses. Seeded from input events (PERFORM), from reactive post-hooks (APPLY/CONSUME/lifecycle), and from TriggerIndex. Fires before COMBO_RESOLVE so trigger effects (e.g. Scorching Heart infliction absorption) resolve first. |
 | 25 | `COMBO_RESOLVE` | Deferred combo trigger resolution. Fires after ENGINE_TRIGGER so that trigger-consumed inflictions are gone before combo HAVE conditions are checked. |
 

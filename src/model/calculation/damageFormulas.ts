@@ -260,7 +260,6 @@ export function getPhysicalStatusBaseMultiplier(
   switch (statusType) {
     case PhysicalStatusType.LIFT:
     case PhysicalStatusType.KNOCK_DOWN:
-    case PhysicalStatusType.SHATTER:
       return 1.2;
     case PhysicalStatusType.CRUSH:
       return CRUSH_MULTIPLIER[Math.min(vulnerableStacks, 4)] ?? CRUSH_MULTIPLIER[1];

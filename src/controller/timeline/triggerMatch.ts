@@ -23,6 +23,7 @@ import { getFinalStrikeTriggerFrame } from './processComboSkill';
 import { evaluateInteraction } from './conditionEvaluator';
 import type { ConditionContext } from './conditionEvaluator';
 import type { TimeStopRegion } from './processTimeStop';
+import { VerbType, NounType, ObjectType, DeterminerType } from '../../dsl/semantics';
 import type { Interaction } from '../../dsl/semantics';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -110,7 +111,7 @@ export function statusIdToColumnId(statusId: string, skipTeamCheck?: boolean): s
     ?? (OPERATOR_COLUMNS as Record<string, string>)[statusId]
     ?? (PHYSICAL_INFLICTION_COLUMNS as Record<string, string>)[statusId]
     ?? (PHYSICAL_STATUS_VALUES.has(statusId) ? statusId : undefined)
-    ?? statusId.toLowerCase().replace(/_/g, '-');
+    ?? statusId;
 }
 
 // ── Shared helpers ────────────────────────────────────────────────────────────
@@ -152,17 +153,17 @@ export function getFirstEventFrame(ev: TimelineEvent): number {
 // ── Column + owner resolution ─────────────────────────────────────────────────
 
 const SKILL_OBJECT_TO_COLUMN: Record<string, string> = {
-  BASIC_ATTACK: SKILL_COLUMNS.BASIC,
-  BATTLE_SKILL: SKILL_COLUMNS.BATTLE,
-  COMBO_SKILL:  SKILL_COLUMNS.COMBO,
-  ULTIMATE:     SKILL_COLUMNS.ULTIMATE,
+  [NounType.BASIC_ATTACK]: SKILL_COLUMNS.BASIC,
+  [NounType.BATTLE_SKILL]: SKILL_COLUMNS.BATTLE,
+  [NounType.COMBO_SKILL]:  SKILL_COLUMNS.COMBO,
+  [NounType.ULTIMATE]:     SKILL_COLUMNS.ULTIMATE,
 };
 
 const STATE_TO_REACTION_COLUMN: Record<string, string> = {
-  COMBUSTED:     REACTION_COLUMNS.COMBUSTION,
-  SOLIDIFIED:    REACTION_COLUMNS.SOLIDIFICATION,
-  CORRODED:      REACTION_COLUMNS.CORROSION,
-  ELECTRIFIED:   REACTION_COLUMNS.ELECTRIFICATION,
+  [ObjectType.COMBUSTED]:     REACTION_COLUMNS.COMBUSTION,
+  [ObjectType.SOLIDIFIED]:    REACTION_COLUMNS.SOLIDIFICATION,
+  [ObjectType.CORRODED]:      REACTION_COLUMNS.CORROSION,
+  [ObjectType.ELECTRIFIED]:   REACTION_COLUMNS.ELECTRIFICATION,
 };
 
 const SKIP_COLUMNS = new Set<string>([
@@ -222,23 +223,23 @@ function resolveColumns(cond: Predicate): Set<string> | undefined {
  */
 function resolveOwnerFilter(cond: Predicate, operatorSlotId: string, verb?: string) {
   const det = cond.subjectDeterminer;
-  const isAnyOperator = cond.subject === 'OPERATOR' && det === 'ANY';
+  const isAnyOperator = cond.subject === NounType.OPERATOR && det === DeterminerType.ANY;
   const toObj = cond.to;
   const toDet = cond.toDeterminer;
 
   // Action verbs: event ownerId = recipient (to), not subject
-  const isActionVerb = verb === 'APPLY' || verb === 'CONSUME';
+  const isActionVerb = verb === VerbType.APPLY || verb === VerbType.CONSUME;
 
   return {
     isAnyOperator,
     matchesOwner(ownerId: string) {
       if (isActionVerb && toObj) {
         // Explicit target — match event owner against target
-        if (toObj === 'ENEMY') return ownerId === ENEMY_OWNER_ID;
-        if (toObj === 'OPERATOR') {
-          if (toDet === 'ANY') return ownerId !== ENEMY_OWNER_ID && ownerId !== COMMON_OWNER_ID;
-          if (toDet === 'ALL') return true; // team-wide
-          if (toDet === 'OTHER') return ownerId !== operatorSlotId && ownerId !== ENEMY_OWNER_ID && ownerId !== COMMON_OWNER_ID;
+        if (toObj === NounType.ENEMY) return ownerId === ENEMY_OWNER_ID;
+        if (toObj === NounType.OPERATOR) {
+          if (toDet === DeterminerType.ANY) return ownerId !== ENEMY_OWNER_ID && ownerId !== COMMON_OWNER_ID;
+          if (toDet === DeterminerType.ALL) return true; // team-wide
+          if (toDet === DeterminerType.OTHER) return ownerId !== operatorSlotId && ownerId !== ENEMY_OWNER_ID && ownerId !== COMMON_OWNER_ID;
           return ownerId === operatorSlotId; // THIS or default
         }
         return true;
@@ -248,7 +249,7 @@ function resolveOwnerFilter(cond: Predicate, operatorSlotId: string, verb?: stri
         return true;
       }
       // Subject-based filtering (PERFORM, HAVE, IS, RECEIVE, DEAL, RECOVER, etc.)
-      if (cond.subject === 'ENEMY') return ownerId === ENEMY_OWNER_ID;
+      if (cond.subject === NounType.ENEMY) return ownerId === ENEMY_OWNER_ID;
       if (isAnyOperator) return ownerId !== ENEMY_OWNER_ID && ownerId !== COMMON_OWNER_ID;
       return ownerId === operatorSlotId;
     },
@@ -299,7 +300,7 @@ function scanEvents(primaryCond: Predicate, ctx: VerbHandlerContext, verb: strin
 
 function handlePerform(primaryCond: Predicate, ctx: VerbHandlerContext): TriggerMatch[] {
   const matches: TriggerMatch[] = [];
-  const { matchesOwner, isAnyOperator } = resolveOwnerFilter(primaryCond, ctx.operatorSlotId, 'PERFORM');
+  const { matchesOwner, isAnyOperator } = resolveOwnerFilter(primaryCond, ctx.operatorSlotId, VerbType.PERFORM);
 
   if (primaryCond.object === 'FINAL_STRIKE') {
     for (const ev of ctx.events) {
@@ -354,7 +355,7 @@ function handleHave(primaryCond: Predicate, ctx: VerbHandlerContext): TriggerMat
   if ((primaryCond.object !== 'STATUS' && primaryCond.object !== 'INFLICTION') || !primaryCond.objectId) return matches;
 
   const colId = statusIdToColumnId(primaryCond.objectId);
-  const { matchesOwner } = resolveOwnerFilter(primaryCond, ctx.operatorSlotId, 'HAVE');
+  const { matchesOwner } = resolveOwnerFilter(primaryCond, ctx.operatorSlotId, VerbType.HAVE);
 
   // Extract stacks threshold from `with.stacks` if present
   const stacksThreshold = extractStacksThreshold(primaryCond);
@@ -409,7 +410,7 @@ function extractStacksThreshold(cond: Predicate): number | null {
 
 function handleRecover(primaryCond: Predicate, ctx: VerbHandlerContext): TriggerMatch[] {
   const matches: TriggerMatch[] = [];
-  const { matchesOwner } = resolveOwnerFilter(primaryCond, ctx.operatorSlotId, 'RECOVER');
+  const { matchesOwner } = resolveOwnerFilter(primaryCond, ctx.operatorSlotId, VerbType.RECOVER);
 
   if (primaryCond.object === 'SKILL_POINT') {
     for (const ev of ctx.events) {
@@ -439,7 +440,7 @@ function handleIs(primaryCond: Predicate, ctx: VerbHandlerContext): TriggerMatch
   if (!colId) return [];
 
   const matches: TriggerMatch[] = [];
-  const { matchesOwner } = resolveOwnerFilter(primaryCond, ctx.operatorSlotId, 'IS');
+  const { matchesOwner } = resolveOwnerFilter(primaryCond, ctx.operatorSlotId, VerbType.IS);
 
   for (const ev of ctx.events) {
     if (ev.columnId !== colId) continue;
@@ -457,22 +458,22 @@ function handleBecome(primaryCond: Predicate, ctx: VerbHandlerContext): TriggerM
 // ── APPLY / CONSUME / RECEIVE handlers ───────────────────────────────────────
 
 function handleApply(primaryCond: Predicate, ctx: VerbHandlerContext): TriggerMatch[] {
-  return scanEvents(primaryCond, ctx, 'APPLY');
+  return scanEvents(primaryCond, ctx, VerbType.APPLY);
 }
 
 function handleConsume(primaryCond: Predicate, ctx: VerbHandlerContext): TriggerMatch[] {
-  return scanEvents(primaryCond, ctx, 'CONSUME');
+  return scanEvents(primaryCond, ctx, VerbType.CONSUME);
 }
 
 function handleReceive(primaryCond: Predicate, ctx: VerbHandlerContext): TriggerMatch[] {
-  return scanEvents(primaryCond, ctx, 'RECEIVE');
+  return scanEvents(primaryCond, ctx, VerbType.RECEIVE);
 }
 
 // ── DEAL handler ─────────────────────────────────────────────────────────────
 
 function handleDeal(primaryCond: Predicate, ctx: VerbHandlerContext): TriggerMatch[] {
   const matches: TriggerMatch[] = [];
-  const { matchesOwner } = resolveOwnerFilter(primaryCond, ctx.operatorSlotId, 'DEAL');
+  const { matchesOwner } = resolveOwnerFilter(primaryCond, ctx.operatorSlotId, VerbType.DEAL);
 
   for (const ev of ctx.events) {
     if (!matchesOwner(ev.ownerId)) continue;
@@ -527,17 +528,17 @@ function generatePeriodicTriggers(_primaryCond: Predicate, ctx: VerbHandlerConte
 // ── Registry ─────────────────────────────────────────────────────────────────
 
 const VERB_HANDLER_REGISTRY = new Map<string, VerbHandler>([
-  ['PERFORM', { priority: 10, findMatches: handlePerform }],
-  ['APPLY',   { priority: 20, findMatches: handleApply }],
-  ['CONSUME', { priority: 25, findMatches: handleConsume }],
-  ['DEAL',    { priority: 30, findMatches: handleDeal }],
-  ['HIT',     { priority: 35, findMatches: handleHit }],
-  ['DEFEAT',  { priority: 40, findMatches: handleDefeat }],
-  ['RECEIVE', { priority: 50, findMatches: handleReceive }],
-  ['BECOME',  { priority: 55, findMatches: handleBecome }],
-  ['RECOVER', { priority: 60, findMatches: handleRecover }],
-  ['HAVE',    { priority: 70, findMatches: handleHave }],
-  ['IS',      { priority: 80, findMatches: handleIs }],
+  [VerbType.PERFORM, { priority: 10, findMatches: handlePerform }],
+  [VerbType.APPLY,   { priority: 20, findMatches: handleApply }],
+  [VerbType.CONSUME, { priority: 25, findMatches: handleConsume }],
+  [VerbType.DEAL,    { priority: 30, findMatches: handleDeal }],
+  [VerbType.HIT,     { priority: 35, findMatches: handleHit }],
+  [VerbType.DEFEAT,  { priority: 40, findMatches: handleDefeat }],
+  [VerbType.RECEIVE, { priority: 50, findMatches: handleReceive }],
+  [VerbType.BECOME,  { priority: 55, findMatches: handleBecome }],
+  [VerbType.RECOVER, { priority: 60, findMatches: handleRecover }],
+  [VerbType.HAVE,    { priority: 70, findMatches: handleHave }],
+  [VerbType.IS,      { priority: 80, findMatches: handleIs }],
 ]);
 
 // ── Public API ───────────────────────────────────────────────────────────────
@@ -604,7 +605,7 @@ export function findClauseTriggerMatches(
  * HAVE with a stacks threshold (e.g. HAVE VULNERABLE WITH stacks AT_LEAST 4)
  * is NOT always available — it requires a specific stack count to be reached.
  */
-const ALWAYS_AVAILABLE_VERBS = new Set(['HIT', 'HAVE']);
+const ALWAYS_AVAILABLE_VERBS = new Set([VerbType.HIT, VerbType.HAVE]);
 export function isClauseAlwaysAvailable(
   clauses: readonly { conditions: readonly { verb: string; with?: Record<string, unknown> }[] }[],
 ): boolean {
@@ -612,9 +613,9 @@ export function isClauseAlwaysAvailable(
   return clauses.every(clause =>
     clause.conditions.length > 0 &&
     clause.conditions.every(c => {
-      if (!ALWAYS_AVAILABLE_VERBS.has(c.verb)) return false;
+      if (!ALWAYS_AVAILABLE_VERBS.has(c.verb as VerbType)) return false;
       // HAVE with a stacks threshold is event-dependent, not always available
-      if (c.verb === 'HAVE' && c.with?.stacks) return false;
+      if (c.verb === VerbType.HAVE && c.with?.stacks) return false;
       return true;
     }),
   );

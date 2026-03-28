@@ -4,7 +4,7 @@
  * All consumers import from here. configStore and sub-stores are internal.
  */
 
-import { CombatSkillType, ElementType, ArtsReactionType } from '../consts/enums';
+import { CombatSkillType, ElementType, ArtsReactionType, StatusType } from '../consts/enums';
 import { NounType } from '../dsl/semantics';
 import { t } from '../locales/locale';
 
@@ -382,7 +382,31 @@ let _statusLabels: Record<string, string> | null = null;
 
 export function getAllStatusLabels(): Record<string, string> {
   if (_statusLabels) return _statusLabels;
-  const labels: Record<string, string> = {};
+  const labels: Record<string, string> = {
+    // Game-mechanic status labels
+    [StatusType.FOCUS]:           t('status.FOCUS'),
+    [StatusType.SUSCEPTIBILITY]:  t('status.SUSCEPTIBILITY'),
+    [StatusType.FRAGILITY]:       t('status.FRAGILITY'),
+    [StatusType.ORIGINIUM_CRYSTAL]: t('status.ORIGINIUM_CRYSTAL'),
+    [StatusType.WEAKEN]:          t('status.WEAKEN'),
+    [StatusType.DMG_REDUCTION]:   t('status.DMG_REDUCTION'),
+    [StatusType.PROTECTION]:      t('status.PROTECTION'),
+    [StatusType.LINK]:            t('status.LINK'),
+    [StatusType.SHIELD]:          t('status.SHIELD'),
+    [StatusType.GEAR_BUFF]:       t('status.GEAR_BUFF'),
+    // Reactions
+    [StatusType.COMBUSTION]:      t('status.COMBUSTION'),
+    [StatusType.SOLIDIFICATION]:  t('status.SOLIDIFICATION'),
+    [StatusType.CORROSION]:       t('status.CORROSION'),
+    [StatusType.ELECTRIFICATION]: t('status.ELECTRIFICATION'),
+    // Physical statuses
+    [StatusType.LIFT]:            t('status.LIFT'),
+    [StatusType.KNOCK_DOWN]:      t('status.KNOCK_DOWN'),
+    [StatusType.CRUSH]:           t('status.CRUSH'),
+    [StatusType.BREACH]:          t('status.BREACH'),
+    [StatusType.SHATTER]:         t('status.SHATTER'),
+  };
+  // Operator statuses from JSON
   for (const status of getAllOperatorStatuses()) {
     if (status.name) labels[status.id] = status.name;
   }
@@ -390,15 +414,81 @@ export function getAllStatusLabels(): Record<string, string> {
   return _statusLabels;
 }
 
+let _inflictionLabels: Record<string, string> | null = null;
+
+/** All infliction/reaction/status event display labels. */
+export function getAllInflictionLabels(): Record<string, string> {
+  if (_inflictionLabels) return _inflictionLabels;
+  _inflictionLabels = {
+    // Arts inflictions
+    heatInfliction:       t('infliction.heatInfliction'),
+    cryoInfliction:       t('infliction.cryoInfliction'),
+    natureInfliction:     t('infliction.natureInfliction'),
+    electricInfliction:   t('infliction.electricInfliction'),
+    // Physical inflictions
+    vulnerableInfliction: t('infliction.vulnerableInfliction'),
+    // Arts reactions
+    combustion:           t('infliction.combustion'),
+    solidification:       t('infliction.solidification'),
+    corrosion:            t('infliction.corrosion'),
+    electrification:      t('infliction.electrification'),
+    // Physical statuses
+    breach:               t('infliction.breach'),
+    // Operator statuses (exchange status enum values)
+    MELTING_FLAME:        t('infliction.MELTING_FLAME'),
+    THUNDERLANCE:         t('infliction.THUNDERLANCE'),
+    // Enemy statuses
+    FOCUS:                t('infliction.FOCUS'),
+    SUSCEPTIBILITY:       t('infliction.SUSCEPTIBILITY'),
+    // Team statuses
+    SHIELD:               t('infliction.SHIELD'),
+    // Enemy debuffs
+    SCORCHING_HEART:      t('infliction.SCORCHING_HEART'),
+    SCORCHING_HEART_EFFECT: t('infliction.SCORCHING_HEART_EFFECT'),
+    FRAGILITY:            t('infliction.FRAGILITY'),
+    ORIGINIUM_CRYSTAL:    t('infliction.ORIGINIUM_CRYSTAL'),
+    WILDLAND_TREKKER:     t('infliction.WILDLAND_TREKKER'),
+    // Stagger status events
+    STAGGER_NODE:         t('infliction.STAGGER_NODE'),
+    STAGGER:              t('infliction.STAGGER'),
+    // Enemy actions
+    AOE_PHYSICAL:         t('enemyAction.AOE_PHYSICAL'),
+    AOE_HEAT:             t('enemyAction.AOE_HEAT'),
+    AOE_CRYO:             t('enemyAction.AOE_CRYO'),
+    AOE_NATURE:           t('enemyAction.AOE_NATURE'),
+    AOE_ELECTRIC:         t('enemyAction.AOE_ELECTRIC'),
+  };
+  return _inflictionLabels;
+}
+
 // ── Status lookup by ID ───────────────────────────────────────────────────
 
 let _statusByIdCache: Map<string, OperatorStatus> | null = null;
+
+/** Maps config IDs to column IDs for built-in statuses (e.g. HEAT_INFLICTION → heatInfliction). */
+const CONFIG_TO_COLUMN_ALIASES: Record<string, string> = {
+  HEAT_INFLICTION: 'heatInfliction',
+  CRYO_INFLICTION: 'cryoInfliction',
+  NATURE_INFLICTION: 'natureInfliction',
+  ELECTRIC_INFLICTION: 'electricInfliction',
+  VULNERABLE: 'vulnerableInfliction',
+  COMBUSTION: 'combustion',
+  SOLIDIFICATION: 'solidification',
+  CORROSION: 'corrosion',
+  ELECTRIFICATION: 'electrification',
+  SHATTER: 'shatter',
+};
 
 function buildStatusByIdCache() {
   if (_statusByIdCache) return _statusByIdCache;
   const cache = new Map<string, OperatorStatus>();
   for (const status of getAllOperatorStatuses()) {
-    if (status.id && !cache.has(status.id)) cache.set(status.id, status);
+    if (status.id && !cache.has(status.id)) {
+      cache.set(status.id, status);
+      // Also index by column ID alias so ColumnRegistry can look up by column ID
+      const alias = CONFIG_TO_COLUMN_ALIASES[status.id];
+      if (alias && !cache.has(alias)) cache.set(alias, status);
+    }
   }
   _statusByIdCache = cache;
   return cache;

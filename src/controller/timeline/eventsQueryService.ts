@@ -131,7 +131,7 @@ export class EventsQueryService {
     this.dmgReductionEvents = events.filter(e => e.columnId === StatusType.DMG_REDUCTION);
     this.protectionEvents = events.filter(e => e.columnId === StatusType.PROTECTION);
     this.weaponFragilityEvents = events.filter(e => e.columnId.startsWith(FRAGILITY_COLUMN_PREFIX));
-    this.scorchingHeartEvents = events.filter(e => e.columnId === 'scorching-heart-effect');
+    this.scorchingHeartEvents = events.filter(e => e.columnId === 'SCORCHING_HEART_EFFECT');
     this.wildlandTrekkerEvents = events.filter(e => e.columnId === 'WILDLAND_TREKKER');
     this.cryoInflictionEvents = events.filter(e => e.ownerId === ENEMY_OWNER_ID && e.columnId === INFLICTION_COLUMNS.CRYO);
     this.solidificationEvents = events.filter(e => e.ownerId === ENEMY_OWNER_ID && e.columnId === REACTION_COLUMNS.SOLIDIFICATION);

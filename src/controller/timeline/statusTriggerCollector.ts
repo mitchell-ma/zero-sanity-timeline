@@ -18,7 +18,7 @@ import { LoadoutProperties } from '../../view/InformationPane';
 import { evaluateConditions, ConditionContext } from './conditionEvaluator';
 import { executeEffects, applyMutations } from './effectExecutor';
 import type { ExecutionContext } from './effectExecutor';
-import { VerbType, ClauseEvaluationType } from '../../dsl/semantics';
+import { VerbType, NounType, DeterminerType, ClauseEvaluationType } from '../../dsl/semantics';
 import { genEventUid } from './inputEventController';
 import type { Interaction, Effect as SemanticEffect, ValueNode } from '../../dsl/semantics';
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT, buildContextForSkillColumn } from '../calculation/valueResolver';
@@ -195,7 +195,7 @@ function resolveClauseEffectsFromClauses(
       if (skipConditional) {
         // Check if all conditions reference EVENT — those are threshold conditions
         // handled by evaluateThresholdClauses, so skip them here.
-        const hasThisEvent = clause.conditions.some((c: Predicate) => c.subject === 'EVENT');
+        const hasThisEvent = clause.conditions.some((c: Predicate) => c.subject === NounType.EVENT);
         if (hasThisEvent) continue;
 
         // Non-EVENT conditions: evaluate them now
@@ -257,7 +257,7 @@ function resolveClauseEffectsFromClauses(
         return undefined;
       };
 
-      if (verb === 'APPLY' && object === 'SUSCEPTIBILITY' && objectQualifier) {
+      if (verb === VerbType.APPLY && object === NounType.SUSCEPTIBILITY && objectQualifier) {
         const val = resolveValue();
         if (val != null) {
           if (!ev.susceptibility) ev.susceptibility = {};
@@ -265,7 +265,7 @@ function resolveClauseEffectsFromClauses(
         }
       }
 
-      if (verb === 'APPLY' && object === 'DAMAGE_BONUS') {
+      if (verb === VerbType.APPLY && object === NounType.DAMAGE_BONUS) {
         const val = resolveValue();
         if (val != null) ev.statusValue = val;
       }
@@ -328,19 +328,19 @@ function resolveOwnerId(
   triggerOwnerId?: string,
 ): string {
   if (!target) return operatorSlotId;
-  if (target === 'OPERATOR') {
-    switch (determiner ?? 'THIS') {
-      case 'THIS': return operatorSlotId;
-      case 'ALL': return COMMON_OWNER_ID;
-      case 'OTHER': return targetOwnerId ?? operatorSlotId;
-      case 'ANY': return targetOwnerId ?? operatorSlotId;
-      case 'TRIGGER': return triggerOwnerId ?? operatorSlotId;
-      case 'SOURCE': return operatorSlotId;
+  if (target === NounType.OPERATOR) {
+    switch (determiner ?? DeterminerType.THIS) {
+      case DeterminerType.THIS: return operatorSlotId;
+      case DeterminerType.ALL: return COMMON_OWNER_ID;
+      case DeterminerType.OTHER: return targetOwnerId ?? operatorSlotId;
+      case DeterminerType.ANY: return targetOwnerId ?? operatorSlotId;
+      case DeterminerType.TRIGGER: return triggerOwnerId ?? operatorSlotId;
+      case DeterminerType.SOURCE: return operatorSlotId;
       default: return operatorSlotId;
     }
   }
   switch (target) {
-    case 'ENEMY': return ENEMY_OWNER_ID;
+    case NounType.ENEMY: return ENEMY_OWNER_ID;
     default: {
       // Try to resolve as an operator ID (e.g. 'LAEVATAIN' → 'slot1')
       if (operatorSlotMap) {
@@ -367,15 +367,15 @@ function normalizeEquipDef(raw: NormalizedEffectDef): StatusEventDef {
     if (clauses) {
       for (const clause of clauses) {
         for (const effect of clause.effects ?? []) {
-          if (effect.to === 'ENEMY') { target = 'ENEMY'; targetDeterminer = 'THIS'; break; }
-          if (effect.toDeterminer === 'OTHER') { target = 'OPERATOR'; targetDeterminer = 'OTHER'; break; }
-          if (effect.toDeterminer === 'ALL') { target = 'OPERATOR'; targetDeterminer = 'ALL'; break; }
-          if (effect.to === 'OPERATOR') { target = 'OPERATOR'; targetDeterminer = effect.toDeterminer ?? 'THIS'; break; }
+          if (effect.to === NounType.ENEMY) { target = NounType.ENEMY; targetDeterminer = DeterminerType.THIS; break; }
+          if (effect.toDeterminer === DeterminerType.OTHER) { target = NounType.OPERATOR; targetDeterminer = DeterminerType.OTHER; break; }
+          if (effect.toDeterminer === DeterminerType.ALL) { target = NounType.OPERATOR; targetDeterminer = DeterminerType.ALL; break; }
+          if (effect.to === NounType.OPERATOR) { target = NounType.OPERATOR; targetDeterminer = effect.toDeterminer ?? DeterminerType.THIS; break; }
         }
         if (target) break;
       }
     }
-    if (!target) { target = 'OPERATOR'; targetDeterminer = 'THIS'; }
+    if (!target) { target = NounType.OPERATOR; targetDeterminer = DeterminerType.THIS; }
   }
   const sl = raw.stacks ?? (rp?.stacks as NormalizedEffectDef['stacks']);
 
@@ -474,14 +474,14 @@ function deriveStatusEvents(
   // First check nested ALL sub-effects (existing pattern), then direct effects for TALENT-type defs
   const nestedApply = (def.onTriggerClause ?? [])
     .flatMap(c => c.effects ?? [])
-    .filter(e => e.verb === 'ALL')
+    .filter(e => e.verb === VerbType.ALL)
     .flatMap(e => e.effects ?? [])
-    .find(e => e.verb === 'APPLY' && e.object === 'STATUS' && e.objectId);
+    .find(e => e.verb === VerbType.APPLY && e.object === NounType.STATUS && e.objectId);
   // For TALENT-type defs, also check direct APPLY STATUS effects (e.g. IMPROVISER_TALENT → IMPROVISER)
   const directApply = !nestedApply && (def.properties.eventCategoryType ?? def.properties.type) === 'TALENT'
     ? (def.onTriggerClause ?? [])
         .flatMap(c => (c.effects ?? []) as unknown as Effect[])
-        .find(e => e.verb === 'APPLY' && e.object === 'STATUS' && e.objectId)
+        .find(e => e.verb === VerbType.APPLY && e.object === NounType.STATUS && e.objectId)
     : undefined;
   const applySubEffect = nestedApply ?? directApply;
 
@@ -496,7 +496,7 @@ function deriveStatusEvents(
   if (!applySubEffect && hasAnyEffects) {
     const selfProducing = (def.onTriggerClause ?? []).some(c =>
       (c.effects ?? []).some(e =>
-        e.verb === 'APPLY' && e.object === 'STATUS' && (!e.objectId || e.objectId === def.properties.id)
+        e.verb === VerbType.APPLY && e.object === NounType.STATUS && (!e.objectId || e.objectId === def.properties.id)
       )
     );
     if (!selfProducing) return empty;
@@ -567,8 +567,8 @@ function deriveStatusEvents(
 
     // Determine how many events to create: 1 normally, N for ALL with CONSUME infliction
     let createCount = 1;
-    const allEffect = trigger.effects?.find(e => e.verb === 'ALL');
-    const absorbSubEffect = allEffect?.effects?.find(e => e.verb === 'CONSUME' && e.object === 'INFLICTION');
+    const allEffect = trigger.effects?.find(e => e.verb === VerbType.ALL);
+    const absorbSubEffect = allEffect?.effects?.find(e => e.verb === VerbType.CONSUME && e.object === NounType.INFLICTION);
     let inflictionsToAbsorb: TimelineEvent[] = [];
 
     if (absorbSubEffect?.element) {
@@ -654,7 +654,7 @@ function deriveStatusEvents(
               if (!frame.clause) continue;
               for (const clause of frame.clause) {
                 for (const effect of (clause as unknown as { effects: Effect[] }).effects ?? []) {
-                  if (effect.verb === 'RESTORE' && effect.object === 'HP') {
+                  if (effect.verb === 'RESTORE' && effect.object === NounType.HP) {
                     const withBlock = (effect as unknown as { with?: { value?: ValueNode } }).with;
                     if (withBlock?.value) {
                       const healValue = resolveValueNode(withBlock.value, valueCtx);
@@ -724,7 +724,7 @@ function evaluateThresholdClauses(
   for (const clause of def.clause) {
     // Check for HAVE STACKS EXACTLY MAX condition
     const stackCond = clause.conditions.find(c =>
-      c.subject === 'EVENT' && c.verb === 'HAVE' && c.object === 'STACKS'
+      c.subject === NounType.EVENT && c.verb === VerbType.HAVE && c.object === NounType.STACKS
     );
     if (!stackCond) continue;
 
@@ -752,7 +752,7 @@ function evaluateThresholdClauses(
 
       // Execute clause effects
       for (const effect of clause.effects) {
-        if (effect.verb === 'APPLY' && effect.object === 'STATUS' && effect.objectId) {
+        if (effect.verb === VerbType.APPLY && effect.object === NounType.STATUS && effect.objectId) {
           // Find the target status definition to get its properties
           const targetStatusId = effect.objectId;
 
@@ -856,7 +856,7 @@ function evaluateLifecycleForEvent(
   if (def.onTriggerClause) {
     for (const clause of def.onTriggerClause) {
       const receiveConds = clause.conditions.filter(
-        (c: Predicate) => c.verb === 'RECEIVE'
+        (c: Predicate) => c.verb === VerbType.RECEIVE
       );
       if (receiveConds.length === 0) continue;
 
@@ -927,9 +927,9 @@ function evaluateLifecycleClauses(
 
 /** Resolve a RECEIVE condition's target column ID. */
 function resolveReceiveColumnId(cond: Predicate): string | undefined {
-  if (cond.object === 'STATUS' && cond.objectId) {
+  if (cond.object === NounType.STATUS && cond.objectId) {
     return REACTION_STATUS_TO_COLUMN[cond.objectId]
-      ?? cond.objectId.toLowerCase().replace(/_/g, '-');
+      ?? cond.objectId;
   }
   return undefined;
 }
@@ -1209,18 +1209,18 @@ export function collectEngineTriggerEntries(
       // be removed from the clauses before matching so they don't block trigger detection
       // (derived events like freeform inflictions aren't registered at collection time).
       const haveConds = def.onTriggerClause.flatMap(c =>
-        c.conditions.filter((p: Predicate) => p.verb === 'HAVE')
+        c.conditions.filter((p: Predicate) => p.verb === VerbType.HAVE)
       );
 
       // Check if any clause has a PERCENTAGE_HP condition — these need periodic evaluation
       // since HP changes on every damage tick, not at discrete event frames.
-      const hasHpThreshold = haveConds.some((c: Predicate) => c.object === 'PERCENTAGE_HP');
+      const hasHpThreshold = haveConds.some((c: Predicate) => c.object === NounType.PERCENTAGE_HP);
 
       // Strip HAVE conditions from clauses for matching — they'll be re-evaluated at queue time.
       const strippedClauses = haveConds.length > 0
         ? def.onTriggerClause.map(c => ({
           ...c,
-          conditions: c.conditions.filter((p: Predicate) => p.verb !== 'HAVE'),
+          conditions: c.conditions.filter((p: Predicate) => p.verb !== VerbType.HAVE),
         }))
         : def.onTriggerClause;
 

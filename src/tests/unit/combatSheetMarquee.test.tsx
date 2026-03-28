@@ -71,9 +71,21 @@ jest.mock('../../locales/locale', () => ({
   t: (key: string) => key,
 }));
 
-jest.mock('../../consts/timelineColumnLabels', () => ({
-  COMBAT_SKILL_LABELS: {},
-  SKILL_LABELS: {},
+jest.mock('../../controller/gameDataStore', () => ({
+  getAllSkillLabels: () => ({}),
+  getAllStatusLabels: () => ({}),
+  getAllInflictionLabels: () => ({}),
+  getAllOperatorIds: () => [],
+  getAllOperatorStatuses: () => [],
+  getOperatorBase: () => undefined,
+  getOperatorSkills: () => undefined,
+  getOperatorStatuses: () => [],
+  getStatusElementMap: () => new Map(),
+  getStatusById: () => undefined,
+  getWeapon: () => undefined,
+  getGearPiece: () => undefined,
+  getConsumableEntry: () => undefined,
+  getTacticalEntry: () => undefined,
 }));
 
 jest.mock('../../utils/timeline', () => ({

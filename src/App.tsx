@@ -6,7 +6,7 @@ import LoadoutSidebar from './view/LoadoutSidebar';
 import type { SidebarMode } from './view/LoadoutSidebar';
 import { ContentCategory } from './consts/contentBrowserTypes';
 import { operatorWarnings } from './controller/operators/operatorRegistry';
-import { COMBAT_SKILL_LABELS } from './consts/timelineColumnLabels';
+import { getAllSkillLabels } from './controller/gameDataStore';
 import { createCustomWeapon, updateCustomWeapon } from './controller/custom/customWeaponController';
 import { createCustomGearSet, updateCustomGearSet } from './controller/custom/customGearController';
 import { createCustomOperator, updateCustomOperator } from './controller/custom/customOperatorController';
@@ -158,7 +158,7 @@ export default function App() {
     if (!skillType) return;
 
     const id = `skill_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
-    const label = COMBAT_SKILL_LABELS[event.name as CombatSkillType] || event.name;
+    const label = getAllSkillLabels()[event.name as CombatSkillType] || event.name;
     const skill: CustomSkill = {
       id,
       name: `${label} (Custom)`,

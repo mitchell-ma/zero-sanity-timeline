@@ -29,7 +29,7 @@ const SKILL_COLUMN_SET: ReadonlySet<string> = new Set(Object.values(SKILL_COLUMN
  * Input events go into DEC.registerEvents (registeredEvents).
  * Derived events are seeded into the queue and processed via create* methods.
  */
-export function classifyEvents(rawEvents: TimelineEvent[]): { inputEvents: TimelineEvent[]; derivedEvents: TimelineEvent[] } {
+export function cloneAndSplitEvents(rawEvents: TimelineEvent[]): { inputEvents: TimelineEvent[]; derivedEvents: TimelineEvent[] } {
   const inputEvents: TimelineEvent[] = [];
   const derivedEvents: TimelineEvent[] = [];
   for (const ev of rawEvents) {

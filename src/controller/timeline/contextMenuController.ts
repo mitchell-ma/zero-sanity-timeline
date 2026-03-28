@@ -7,7 +7,8 @@
  */
 import { TimelineEvent, Column, MiniTimeline, ContextMenuItem, getAnimationDurationFromSegments } from '../../consts/viewTypes';
 import { CombatSkillType, ColumnType, MicroColumnAssignment, InteractionModeType } from '../../consts/enums';
-import { REACTION_LABELS, COMBAT_SKILL_LABELS, INFLICTION_EVENT_LABELS } from '../../consts/timelineColumnLabels';
+import { getAllSkillLabels, getAllInflictionLabels } from '../gameDataStore';
+import { REACTION_LABELS } from '../../model/channels';
 import { t } from '../../locales/locale';
 import { SKILL_COLUMNS, OPERATOR_COLUMNS, ENEMY_OWNER_ID } from '../../model/channels';
 import { COMMON_OWNER_ID } from '../slot/commonSlotController';
@@ -156,14 +157,14 @@ export function buildColumnContextMenu(
       return [
         headerItem,
         ...col.microColumns.map((mc) => ({
-          label: INFLICTION_EVENT_LABELS[mc.id] ?? mc.label,
+          label: getAllInflictionLabels()[mc.id] ?? mc.label,
           actionId: 'addEvent' as const,
           actionPayload: {
             ownerId: col.ownerId,
             columnId: mc.id,
             atFrame,
             defaultSkill: mc.defaultEvent ?? (col.defaultEvent
-              ? { ...col.defaultEvent, id: mc.id, name: INFLICTION_EVENT_LABELS[mc.id] ?? mc.id }
+              ? { ...col.defaultEvent, id: mc.id, name: getAllInflictionLabels()[mc.id] ?? mc.id }
               : null),
           },
           disabled: inTimeStop,
@@ -177,7 +178,7 @@ export function buildColumnContextMenu(
     const strict = interactionMode === InteractionModeType.STRICT;
     const disabled = full || (strict && (inTimeStop || beforePrev));
     const rawName = col.defaultEvent?.id ?? col.label;
-    const eventName = COMBAT_SKILL_LABELS[rawName as CombatSkillType] ?? INFLICTION_EVENT_LABELS[rawName] ?? col.defaultEvent?.name ?? rawName;
+    const eventName = getAllSkillLabels()[rawName as CombatSkillType] ?? getAllInflictionLabels()[rawName] ?? col.defaultEvent?.name ?? rawName;
     const disabledReason = inTimeStop
       ? t('ctx.ultimateActive')
       : full
@@ -200,7 +201,7 @@ export function buildColumnContextMenu(
 
   // Simple single-column mini-timeline (skill columns)
   const rawName = col.defaultEvent?.id ?? col.label;
-  const eventName = COMBAT_SKILL_LABELS[rawName as CombatSkillType] ?? INFLICTION_EVENT_LABELS[rawName] ?? col.defaultEvent?.name ?? rawName;
+  const eventName = getAllSkillLabels()[rawName as CombatSkillType] ?? getAllInflictionLabels()[rawName] ?? col.defaultEvent?.name ?? rawName;
 
   if (col.columnId === SKILL_COLUMNS.COMBO) {
     const comboAvail = checkComboWindowAvailability(col.ownerId, atFrame, events, alwaysAvailableComboSlots);
@@ -257,7 +258,7 @@ export function buildColumnContextMenu(
         const disabled = interactionMode === InteractionModeType.STRICT && (inTimeStop || v.disabled || availability.disabled || overlap || spInsufficient || !!finisherBlock);
         const displayName = v.isPerfectDodge ? 'Dodge'
           : col.columnId === OPERATOR_COLUMNS.INPUT ? 'Dash'
-          : v.displayName ?? COMBAT_SKILL_LABELS[v.id as CombatSkillType] ?? INFLICTION_EVENT_LABELS[v.id] ?? v.name ?? v.id;
+          : v.displayName ?? getAllSkillLabels()[v.id as CombatSkillType] ?? getAllInflictionLabels()[v.id] ?? v.name ?? v.id;
         const reason = v.disabledReason
           ?? (inTimeStop ? timeStopReason
           : spInsufficient ? spReason
@@ -362,7 +363,7 @@ export function buildEventAddItems(
   );
   const maxLabel = col.maxEvents ?? '?';
   const rawName = col.defaultEvent?.id ?? col.label;
-  const eventName = COMBAT_SKILL_LABELS[rawName as CombatSkillType] ?? INFLICTION_EVENT_LABELS[rawName] ?? col.defaultEvent?.name ?? rawName;
+  const eventName = getAllSkillLabels()[rawName as CombatSkillType] ?? getAllInflictionLabels()[rawName] ?? col.defaultEvent?.name ?? rawName;
   const disabledReason = full
     ? `${maxLabel}/${maxLabel} stacks`
     : beforePrev

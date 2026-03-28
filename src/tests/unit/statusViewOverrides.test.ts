@@ -114,12 +114,12 @@ describe('computeStatusViewOverrides', () => {
   });
 
   describe('single-instance statuses with RESET (Focus)', () => {
-    const col = statusColumn('slot2', ['focus', 'FOCUS']);
+    const col = statusColumn('slot2', ['FOCUS']);
 
     it('omits roman numeral suffixes', () => {
       const events = [
-        statusEvent('f1', 'focus', 'FOCUS', 'slot2', 0, 20 * FPS),
-        statusEvent('f2', 'focus', 'FOCUS', 'slot2', 10 * FPS, 20 * FPS),
+        statusEvent('f1', 'FOCUS', 'FOCUS', 'slot2', 0, 20 * FPS),
+        statusEvent('f2', 'FOCUS', 'FOCUS', 'slot2', 10 * FPS, 20 * FPS),
       ];
       const overrides = computeStatusViewOverrides(events, [col]);
 
@@ -174,12 +174,12 @@ describe('computeStatusViewOverrides', () => {
   describe('events from different owners are independent', () => {
     it('does not cross-contaminate between slots', () => {
       const col1 = statusColumn('slot1', ['MELTING_FLAME']);
-      const col2 = statusColumn('slot2', ['focus', 'FOCUS']);
+      const col2 = statusColumn('slot2', ['FOCUS']);
       const events = [
         statusEvent('mf1', 'MELTING_FLAME', 'MELTING_FLAME', 'slot1', 0, 10 * FPS),
         statusEvent('mf2', 'MELTING_FLAME', 'MELTING_FLAME', 'slot1', 2 * FPS, 10 * FPS),
-        statusEvent('f1', 'focus', 'FOCUS', 'slot2', 0, 20 * FPS),
-        statusEvent('f2', 'focus', 'FOCUS', 'slot2', 10 * FPS, 20 * FPS),
+        statusEvent('f1', 'FOCUS', 'FOCUS', 'slot2', 0, 20 * FPS),
+        statusEvent('f2', 'FOCUS', 'FOCUS', 'slot2', 10 * FPS, 20 * FPS),
       ];
       const overrides = computeStatusViewOverrides(events, [col1, col2]);
 

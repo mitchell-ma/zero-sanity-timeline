@@ -22,7 +22,8 @@ import {
   getConsumableEntry,
   getTacticalEntry,
 } from '../controller/gameDataStore';
-import { COMBAT_SKILL_LABELS, SKILL_LABELS } from '../consts/timelineColumnLabels';
+import { SKILL_LABELS } from '../consts/enums';
+import { getAllSkillLabels } from '../controller/gameDataStore';
 import { SkillType } from '../consts/viewTypes';
 import { t } from '../locales/locale';
 
@@ -200,7 +201,7 @@ function formatPct(n: number): string {
 }
 
 function getSkillDisplayName(skillName: string): string {
-  return COMBAT_SKILL_LABELS[skillName as CombatSkillType] ?? skillName;
+  return getAllSkillLabels()[skillName as CombatSkillType] ?? skillName;
 }
 
 function getCategoryLabel(columnId: string): string {

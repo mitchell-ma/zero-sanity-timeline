@@ -520,7 +520,7 @@ describe('D. Antal battle skill → Focus, Akekuri battle skill → infliction t
       segments: [
         { properties: { segmentTypes: [SegmentType.ANIMATION], duration: Math.round(0.5 * FPS), timeDependency: TimeDependency.REAL_TIME } },
         { properties: { duration: Math.round(0.8 * FPS) } },
-        { properties: { name: 'Cooldown', duration: 10 * FPS } },
+        { properties: { name: SegmentType.COOLDOWN, duration: 10 * FPS } },
       ],
     });
 

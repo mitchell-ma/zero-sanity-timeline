@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { framesToSeconds, secondsToFrames, frameToDetailLabel, frameToTimeLabelPrecise, FPS, fmtN } from '../../utils/timeline';
-import { COMBAT_SKILL_LABELS, STATUS_LABELS } from '../../consts/timelineColumnLabels';
+import { getAllSkillLabels, getAllStatusLabels } from '../../controller/gameDataStore';
 import { CombatSkillType, ColumnType, ELEMENT_COLORS, ELEMENT_LABELS, ElementType, EventFrameType, EventStatusType, InfoLevel, InteractionModeType, SegmentType, StatusType } from '../../consts/enums';
 import { getStatusElementMap, getStatusById } from '../../controller/gameDataStore';
 import { TimelineEvent, Operator, Enemy, SelectedFrame, Column, MiniTimeline, computeSegmentsSpan, getAnimationDuration, eventDuration } from '../../consts/viewTypes';
@@ -665,8 +665,8 @@ function EventPane({
                     const statusOpName = statusSlot?.operator?.name ?? event.eventStatusOwnerId;
                     const statusOpColor = statusSlot?.operator?.color;
                     const statusSkillLabel = event.eventStatusSkillName
-                      ? COMBAT_SKILL_LABELS[event.eventStatusSkillName as CombatSkillType]
-                        ?? STATUS_LABELS[event.eventStatusSkillName as StatusType]
+                      ? getAllSkillLabels()[event.eventStatusSkillName as CombatSkillType]
+                        ?? getAllStatusLabels()[event.eventStatusSkillName as StatusType]
                         ?? event.eventStatusSkillName
                       : null;
                     return (
@@ -1821,7 +1821,7 @@ function DebugPane({ event, processedEvent, rawEvents, allProcessedEvents }: { e
           const pipes = '│'.repeat(depth);
           const prefix = depth > 0 ? pipes + ' ' : '';
           const color = isRaw ? '#88cc44' : '#dd8844';
-          const label = COMBAT_SKILL_LABELS[ev.name as CombatSkillType] ?? STATUS_LABELS[ev.name as StatusType] ?? ev.name;
+          const label = getAllSkillLabels()[ev.name as CombatSkillType] ?? getAllStatusLabels()[ev.name as StatusType] ?? ev.name;
           const children = childrenMap.get(ev.uid) ?? [];
           return (
             <div key={ev.uid}>

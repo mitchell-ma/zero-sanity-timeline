@@ -81,10 +81,7 @@ function resolveOwnerId(subject: string, ctx: ConditionContext, determiner?: str
 function resolveColumnIds(object: string, objectId?: string, element?: string): string[] {
   if (object === 'STATUS' && objectId) {
     if (REACTION_STATUS_TO_COLUMN[objectId]) return [REACTION_STATUS_TO_COLUMN[objectId]];
-    // Status column IDs may be raw SCREAMING_CASE (e.g. "FOCUS") or kebab-case
-    // (e.g. "melting-flame"). Return both forms so lookups match either convention.
-    const kebab = objectId.toLowerCase().replace(/_/g, '-');
-    return kebab !== objectId ? [objectId, kebab] : [objectId];
+    return [objectId];
   }
   if (object === 'INFLICTION') {
     const el = objectId ?? element;

@@ -2,7 +2,7 @@
  * Column ID constants and mappings.
  *
  * A "column ID" identifies a timeline lane — the vertical column an event
- * belongs to (e.g. 'basic', 'melting-flame', 'heatInfliction', 'combustion').
+ * belongs to (e.g. 'basic', 'MELTING_FLAME', 'heatInfliction', 'combustion').
  * Not to be confused with reactive signals or pub/sub channels; these are
  * purely categorization keys that determine which timeline column renders
  * a given event.
@@ -11,6 +11,7 @@
 import { PhysicalStatusType, StatusType } from '../../consts/enums';
 import { SkillType } from '../../consts/viewTypes';
 import { FPS } from '../../utils/timeline';
+import { t } from '../../locales/locale';
 
 // ── Owner IDs ─────────────────────────────────────────────────────────────
 
@@ -92,14 +93,14 @@ export const PHYSICAL_STATUS_COLUMN_IDS = new Set<string>(Object.values(PHYSICAL
 // ── Operator effect columns ───────────────────────────────────────────────
 
 export const OPERATOR_COLUMNS = {
-  MELTING_FLAME:  'melting-flame',
-  THUNDERLANCE:   'thunderlance',
-  CRIT_STACKS:    'crit-stacks',
-  ORIGINIUM_CRYSTAL: 'originium-crystal',
-  WILDLAND_TREKKER_TRIGGER: 'wildland-trekker-trigger',
-  INPUT:          'input',
-  CONTROLLED:     'controlled',
-  OTHER:          'other',
+  MELTING_FLAME:  'MELTING_FLAME',
+  THUNDERLANCE:   'THUNDERLANCE',
+  CRIT_STACKS:    'CRIT_STACKS',
+  ORIGINIUM_CRYSTAL: 'ORIGINIUM_CRYSTAL',
+  WILDLAND_TREKKER_TRIGGER: 'WILDLAND_TREKKER_TRIGGER',
+  INPUT:          'INPUT',
+  CONTROLLED:     'CONTROLLED',
+  OTHER:          'OTHER',
 } as const;
 
 
@@ -135,6 +136,11 @@ export const ELEMENT_TO_INFLICTION_COLUMN: Record<string, string> = {
   NATURE: 'natureInfliction',
   ELECTRIC: 'electricInfliction',
 };
+
+/** Reverse: infliction column → element. */
+export const INFLICTION_COLUMN_TO_ELEMENT: Record<string, string> = Object.fromEntries(
+  Object.entries(ELEMENT_TO_INFLICTION_COLUMN).map(([el, col]) => [col, el]),
+);
 
 /** Maps forced reaction name → reaction columnId. */
 export const FORCED_REACTION_COLUMN: Record<string, string> = {
@@ -187,4 +193,47 @@ export const PHYSICAL_INFLICTION_DURATION = 2400;
 /** Shatter reaction duration (2s at 120fps). */
 export const SHATTER_DURATION = 2 * FPS;
 
+// ── Reaction micro-columns ──────────────────────────────────────────────────
 
+export const REACTION_MICRO_COLUMNS = [
+  { id: 'combustion',      label: t('reaction.micro.combustion'),  color: '#ff5522' },
+  { id: 'solidification',  label: t('reaction.micro.solidification'), color: '#88ddff' },
+  { id: 'corrosion',       label: t('reaction.micro.corrosion'),  color: '#33cc66' },
+  { id: 'electrification', label: t('reaction.micro.electrification'),  color: '#e8c840' },
+  { id: 'shatter',         label: t('reaction.micro.shatter'),    color: '#88ddff' },
+];
+
+export const REACTION_LABELS: Record<string, { label: string; color: string }> = {
+  combustion:      { label: t('reaction.combustion'),      color: '#ff5522' },
+  solidification:  { label: t('reaction.solidification'),  color: '#88ddff' },
+  corrosion:       { label: t('reaction.corrosion'),       color: '#33cc66' },
+  electrification: { label: t('reaction.electrification'), color: '#e8c840' },
+  shatter:         { label: t('reaction.shatter'),         color: '#88ddff' },
+};
+
+// ── Physical infliction / status micro-columns ──────────────────────────────
+
+export const PHYSICAL_INFLICTION_LABELS: Record<string, { label: string; color: string }> = {
+  vulnerableInfliction: { label: t('physicalInfliction.vulnerable'), color: '#c0c8d0' },
+};
+
+export const PHYSICAL_INFLICTION_MICRO_COLUMNS = [
+  { id: 'vuln-0', label: t('physicalInfliction.micro.vuln'), color: '#c0c8d0' },
+  { id: 'vuln-1', label: t('physicalInfliction.micro.vuln'), color: '#c0c8d0' },
+  { id: 'vuln-2', label: t('physicalInfliction.micro.vuln'), color: '#c0c8d0' },
+  { id: 'vuln-3', label: t('physicalInfliction.micro.vuln'), color: '#c0c8d0' },
+];
+
+export const PHYSICAL_STATUS_LABELS: Record<string, { label: string; color: string }> = {
+  [PhysicalStatusType.LIFT]: { label: t('physicalStatus.LIFT'), color: '#c0c8d0' },
+  [PhysicalStatusType.KNOCK_DOWN]: { label: t('physicalStatus.KNOCK_DOWN'), color: '#c0c8d0' },
+  [PhysicalStatusType.CRUSH]: { label: t('physicalStatus.CRUSH'), color: '#c0c8d0' },
+  [PhysicalStatusType.BREACH]: { label: t('physicalStatus.BREACH'), color: '#c0c8d0' },
+};
+
+export const PHYSICAL_STATUS_MICRO_COLUMNS = [
+  { id: PhysicalStatusType.LIFT, label: t('physicalStatus.micro.LIFT'), color: '#c0c8d0' },
+  { id: PhysicalStatusType.KNOCK_DOWN, label: t('physicalStatus.micro.KNOCK_DOWN'), color: '#c0c8d0' },
+  { id: PhysicalStatusType.CRUSH, label: t('physicalStatus.micro.CRUSH'), color: '#c0c8d0' },
+  { id: PhysicalStatusType.BREACH, label: t('physicalStatus.micro.BREACH'), color: '#c0c8d0' },
+];

@@ -1,5 +1,5 @@
 import { TimelineEvent, computeSegmentsSpan } from '../../consts/viewTypes';
-import { EventFrameType } from '../../consts/enums';
+import { EventFrameType, SegmentType } from '../../consts/enums';
 import { SKILL_COLUMNS, COMBO_WINDOW_COLUMN_ID } from '../../model/channels';
 import { TimeStopRegion, isTimeStopEvent, extendByTimeStops, foreignStopsFor } from './processTimeStop';
 import { findClauseTriggerMatches } from './triggerMatch';
@@ -64,7 +64,7 @@ export function deriveComboActivationWindows(
         let totalDur = 0;
         for (const s of ce.segments) {
           totalDur += s.properties.duration;
-          if (s.properties.name !== 'Cooldown') preCooldownDur += s.properties.duration;
+          if (!s.properties.segmentTypes?.includes(SegmentType.COOLDOWN)) preCooldownDur += s.properties.duration;
         }
         const cooldownStart = ce.startFrame + preCooldownDur;
         const cooldownEnd = ce.startFrame + totalDur;

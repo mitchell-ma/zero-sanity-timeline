@@ -1,0 +1,28 @@
+{
+  "properties": {
+    "id": "ELECTRIC_INFLICTION",
+    "name": "Electric Infliction",
+    "to": "ENEMY",
+    "element": "ELECTRIC",
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": 20
+      },
+      "unit": "SECOND"
+    },
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 4
+      },
+      "interactionType": "REFRESH"
+    },
+    "eventType": "STATUS",
+    "eventCategoryType": "INFLICTION",
+    "description": "Electric element infliction. Stacks up to 4 times. At 4 stacks, triggers Electrification arts reaction."
+  },
+  "metadata": {
+    "originId": "game"
+  }
+}

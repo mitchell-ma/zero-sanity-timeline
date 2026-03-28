@@ -1,5 +1,5 @@
 import { SkillEventSequence } from "../../model/event-frames/skillEventSequence";
-import { EventFrameType, SegmentType, TimeDependency } from "../../consts/enums";
+import { CombatSkillType, EventFrameType, SegmentType, TimeDependency } from "../../consts/enums";
 import { EventFrameMarker, EventSegmentData } from "../../consts/viewTypes";
 import { FPS } from "../../utils/timeline";
 import { formatSegmentShortName } from "../../dsl/semanticsTranslation";
@@ -76,9 +76,9 @@ export class SkillSegmentBuilder {
 
       // Mark all frames in Finisher / Dive segments with the appropriate hit type
       const segLabel = customLabels?.[i];
-      if (segLabel === 'Finisher' && frames.length > 0) {
+      if (segLabel === CombatSkillType.FINISHER && frames.length > 0) {
         for (const f of frames) f.frameTypes = [EventFrameType.FINISHER];
-      } else if (segLabel === 'Dive' && frames.length > 0) {
+      } else if (segLabel === CombatSkillType.DIVE && frames.length > 0) {
         for (const f of frames) f.frameTypes = [EventFrameType.DIVE];
       }
 

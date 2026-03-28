@@ -575,7 +575,7 @@ describe('EventInterpretorController: APPLY LIFT STATUS (PHYSICAL)', () => {
     const interp = makeInterpretor();
 
     // Pre-seed a Vulnerable infliction on the enemy
-    interp.controller.createInfliction(
+    interp.controller.applyEvent(
       PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_OWNER_ID, 50, 2400,
       { ownerId: 'op-1', skillName: 'SETUP' },
     );
@@ -602,7 +602,7 @@ describe('EventInterpretorController: APPLY LIFT STATUS (PHYSICAL)', () => {
 
   test('Lift status has 1 segment with damage frame at offset 0', () => {
     const interp = makeInterpretor();
-    interp.controller.createInfliction(
+    interp.controller.applyEvent(
       PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_OWNER_ID, 50, 2400,
       { ownerId: 'op-1', skillName: 'SETUP' },
     );
@@ -653,7 +653,7 @@ describe('EventInterpretorController: APPLY LIFT STATUS (PHYSICAL)', () => {
     const interp = makeInterpretor();
 
     // Pre-seed Vulnerable
-    interp.controller.createInfliction(
+    interp.controller.applyEvent(
       PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_OWNER_ID, 50, 2400,
       { ownerId: 'op-1', skillName: 'SETUP' },
     );
@@ -683,7 +683,7 @@ describe('EventInterpretorController: APPLY LIFT STATUS (PHYSICAL)', () => {
     const interp = makeInterpretor();
 
     // Pre-seed 1 Vulnerable
-    interp.controller.createInfliction(
+    interp.controller.applyEvent(
       PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_OWNER_ID, 50, 2400,
       { ownerId: 'op-1', skillName: 'SETUP' },
     );
@@ -727,7 +727,7 @@ describe('EventInterpretorController: APPLY KNOCK_DOWN STATUS (PHYSICAL)', () =>
 
   test('Vulnerable active → adds Vulnerable + creates Knock Down status', () => {
     const interp = makeInterpretor();
-    interp.controller.createInfliction(
+    interp.controller.applyEvent(
       PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_OWNER_ID, 50, 2400,
       { ownerId: 'op-1', skillName: 'SETUP' },
     );
@@ -764,7 +764,7 @@ describe('EventInterpretorController: APPLY KNOCK_DOWN STATUS (PHYSICAL)', () =>
 
   test('Knock Down has 1 segment with physical damage frame at offset 0', () => {
     const interp = makeInterpretor();
-    interp.controller.createInfliction(
+    interp.controller.applyEvent(
       PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_OWNER_ID, 50, 2400,
       { ownerId: 'op-1', skillName: 'SETUP' },
     );
@@ -787,7 +787,7 @@ describe('EventInterpretorController: APPLY KNOCK_DOWN STATUS (PHYSICAL)', () =>
 
   test('second Knock Down resets previous (RESET stacking)', () => {
     const interp = makeInterpretor();
-    interp.controller.createInfliction(
+    interp.controller.applyEvent(
       PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_OWNER_ID, 50, 2400,
       { ownerId: 'op-1', skillName: 'SETUP' },
     );
@@ -809,7 +809,7 @@ describe('EventInterpretorController: APPLY KNOCK_DOWN STATUS (PHYSICAL)', () =>
 
   test('always adds Vulnerable even when status triggers', () => {
     const interp = makeInterpretor();
-    interp.controller.createInfliction(
+    interp.controller.applyEvent(
       PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_OWNER_ID, 50, 2400,
       { ownerId: 'op-1', skillName: 'SETUP' },
     );
@@ -873,7 +873,7 @@ describe('EventInterpretorController: APPLY CRUSH STATUS (PHYSICAL)', () => {
 
   test('1 Vulnerable → consumes it, creates Crush with 300% multiplier', () => {
     const interp = makeInterpretor();
-    interp.controller.createInfliction(
+    interp.controller.applyEvent(
       PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_OWNER_ID, 50, 2400,
       { ownerId: 'op-1', skillName: 'SETUP' },
     );
@@ -899,7 +899,7 @@ describe('EventInterpretorController: APPLY CRUSH STATUS (PHYSICAL)', () => {
   test('2 Vulnerable → consumes all, creates Crush with 450% multiplier', () => {
     const interp = makeInterpretor();
     for (let i = 0; i < 2; i++) {
-      interp.controller.createInfliction(
+      interp.controller.applyEvent(
         PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_OWNER_ID, 50 + i, 2400,
         { ownerId: 'op-1', skillName: 'SETUP' },
       );
@@ -919,7 +919,7 @@ describe('EventInterpretorController: APPLY CRUSH STATUS (PHYSICAL)', () => {
   test('3 Vulnerable → consumes all, creates Crush with 600% multiplier', () => {
     const interp = makeInterpretor();
     for (let i = 0; i < 3; i++) {
-      interp.controller.createInfliction(
+      interp.controller.applyEvent(
         PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_OWNER_ID, 50 + i, 2400,
         { ownerId: 'op-1', skillName: 'SETUP' },
       );
@@ -939,7 +939,7 @@ describe('EventInterpretorController: APPLY CRUSH STATUS (PHYSICAL)', () => {
   test('4 Vulnerable → consumes all, creates Crush with 750% multiplier', () => {
     const interp = makeInterpretor();
     for (let i = 0; i < 4; i++) {
-      interp.controller.createInfliction(
+      interp.controller.applyEvent(
         PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_OWNER_ID, 50 + i, 2400,
         { ownerId: 'op-1', skillName: 'SETUP' },
       );
@@ -958,7 +958,7 @@ describe('EventInterpretorController: APPLY CRUSH STATUS (PHYSICAL)', () => {
 
   test('Crush does not add Vulnerable when consuming', () => {
     const interp = makeInterpretor();
-    interp.controller.createInfliction(
+    interp.controller.applyEvent(
       PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_OWNER_ID, 50, 2400,
       { ownerId: 'op-1', skillName: 'SETUP' },
     );
@@ -976,7 +976,7 @@ describe('EventInterpretorController: APPLY CRUSH STATUS (PHYSICAL)', () => {
 
   test('Crush has 1 segment with physical damage frame at offset 0', () => {
     const interp = makeInterpretor();
-    interp.controller.createInfliction(
+    interp.controller.applyEvent(
       PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_OWNER_ID, 50, 2400,
       { ownerId: 'op-1', skillName: 'SETUP' },
     );
@@ -998,7 +998,7 @@ describe('EventInterpretorController: APPLY CRUSH STATUS (PHYSICAL)', () => {
 
   test('Crush has no stagger value', () => {
     const interp = makeInterpretor();
-    interp.controller.createInfliction(
+    interp.controller.applyEvent(
       PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_OWNER_ID, 50, 2400,
       { ownerId: 'op-1', skillName: 'SETUP' },
     );
@@ -1041,7 +1041,7 @@ describe('EventInterpretorController: APPLY BREACH STATUS (PHYSICAL)', () => {
 
   test('1 Vulnerable → consumes, Breach with 100% multiplier and 12s duration', () => {
     const interp = makeInterpretor();
-    interp.controller.createInfliction(
+    interp.controller.applyEvent(
       PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_OWNER_ID, 50, 2400,
       { ownerId: 'op-1', skillName: 'SETUP' },
     );
@@ -1062,7 +1062,7 @@ describe('EventInterpretorController: APPLY BREACH STATUS (PHYSICAL)', () => {
   test('2 Vulnerable → 150% multiplier and 18s duration', () => {
     const interp = makeInterpretor();
     for (let i = 0; i < 2; i++) {
-      interp.controller.createInfliction(
+      interp.controller.applyEvent(
         PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_OWNER_ID, 50 + i, 2400,
         { ownerId: 'op-1', skillName: 'SETUP' },
       );
@@ -1082,7 +1082,7 @@ describe('EventInterpretorController: APPLY BREACH STATUS (PHYSICAL)', () => {
   test('3 Vulnerable → 200% multiplier and 24s duration', () => {
     const interp = makeInterpretor();
     for (let i = 0; i < 3; i++) {
-      interp.controller.createInfliction(
+      interp.controller.applyEvent(
         PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_OWNER_ID, 50 + i, 2400,
         { ownerId: 'op-1', skillName: 'SETUP' },
       );
@@ -1102,7 +1102,7 @@ describe('EventInterpretorController: APPLY BREACH STATUS (PHYSICAL)', () => {
   test('4 Vulnerable → 250% multiplier and 30s duration', () => {
     const interp = makeInterpretor();
     for (let i = 0; i < 4; i++) {
-      interp.controller.createInfliction(
+      interp.controller.applyEvent(
         PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_OWNER_ID, 50 + i, 2400,
         { ownerId: 'op-1', skillName: 'SETUP' },
       );
@@ -1122,7 +1122,7 @@ describe('EventInterpretorController: APPLY BREACH STATUS (PHYSICAL)', () => {
   test('consumes all Vulnerable, does not add new stacks', () => {
     const interp = makeInterpretor();
     for (let i = 0; i < 3; i++) {
-      interp.controller.createInfliction(
+      interp.controller.applyEvent(
         PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_OWNER_ID, 50 + i, 2400,
         { ownerId: 'op-1', skillName: 'SETUP' },
       );
@@ -1143,7 +1143,7 @@ describe('EventInterpretorController: APPLY BREACH STATUS (PHYSICAL)', () => {
 
   test('Breach segment has physical damage frame at offset 0', () => {
     const interp = makeInterpretor();
-    interp.controller.createInfliction(
+    interp.controller.applyEvent(
       PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_OWNER_ID, 50, 2400,
       { ownerId: 'op-1', skillName: 'SETUP' },
     );
@@ -1163,7 +1163,7 @@ describe('EventInterpretorController: APPLY BREACH STATUS (PHYSICAL)', () => {
 
   test('Breach has no stagger', () => {
     const interp = makeInterpretor();
-    interp.controller.createInfliction(
+    interp.controller.applyEvent(
       PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_OWNER_ID, 50, 2400,
       { ownerId: 'op-1', skillName: 'SETUP' },
     );

@@ -1,9 +1,7 @@
 import { CombatSkillType, DamageFactorType, ElementType, ELEMENT_COLORS, ELEMENT_LABELS, StatusType } from '../../consts/enums';
 import { TimelineEvent, Operator, Enemy, SkillType, getAnimationDuration, eventDuration, eventEndFrame } from '../../consts/viewTypes';
-import {
-  REACTION_LABELS, COMBAT_SKILL_LABELS, STATUS_LABELS,
-  INFLICTION_EVENT_LABELS, PHYSICAL_INFLICTION_LABELS, PHYSICAL_STATUS_LABELS,
-} from '../../consts/timelineColumnLabels';
+import { getAllSkillLabels, getAllStatusLabels, getAllInflictionLabels } from '../gameDataStore';
+import { REACTION_LABELS, PHYSICAL_INFLICTION_LABELS, PHYSICAL_STATUS_LABELS } from '../../model/channels';
 import { VerbType, NounType, interactionToLabel, THRESHOLD_MAX } from '../../dsl/semantics';
 import type { Interaction, Effect, Predicate } from '../../dsl/semantics';
 import { getSimpleValue, getLeafValue } from '../../controller/calculation/valueResolver';
@@ -117,7 +115,7 @@ export function resolveEventIdentity(
       ownerColor = physStatus.color;
       columnLabel = 'PHYSICAL STATUS';
     } else {
-      skillName = STATUS_LABELS[event.columnId as StatusType] ?? event.columnId;
+      skillName = getAllStatusLabels()[event.columnId as StatusType] ?? event.columnId;
       ownerColor = '#cc3333';
       columnLabel = 'STATUS';
     }
@@ -131,7 +129,7 @@ export function resolveEventIdentity(
         skillName = 'Dash';
         columnLabel = 'DASH';
       } else if (event.columnId === OPERATOR_COLUMNS.MELTING_FLAME) {
-        skillName = STATUS_LABELS['MELTING_FLAME'];
+        skillName = getAllStatusLabels()['MELTING_FLAME'];
         ownerColor = '#f07030';
         columnLabel = 'STATUS';
       } else if (event.columnId === COMBO_WINDOW_COLUMN_ID) {
@@ -152,7 +150,7 @@ export function resolveEventIdentity(
               for (const cond of pred.conditions) {
                 if (cond.negated) continue;
                 if (cond.verb === VerbType.HAVE && cond.object === NounType.STATUS && cond.objectId) {
-                  comboRequiresLabels.push(STATUS_LABELS[cond.objectId as StatusType] ?? cond.objectId);
+                  comboRequiresLabels.push(getAllStatusLabels()[cond.objectId as StatusType] ?? cond.objectId);
                 } else {
                   comboTriggerLabels.push(interactionToLabel(cond as unknown as Interaction));
                 }
@@ -175,20 +173,20 @@ export function resolveEventIdentity(
       sourceColor = sourceSlot.operator.color;
     }
     if (event.sourceSkillName) {
-      sourceSkillLabel = COMBAT_SKILL_LABELS[event.sourceSkillName as CombatSkillType]
-        ?? STATUS_LABELS[event.sourceSkillName as StatusType]
+      sourceSkillLabel = getAllSkillLabels()[event.sourceSkillName as CombatSkillType]
+        ?? getAllStatusLabels()[event.sourceSkillName as StatusType]
         ?? event.sourceSkillName;
     }
   }
 
   // Override skill name with combat label if available
-  const combatLabel = COMBAT_SKILL_LABELS[event.name as CombatSkillType];
+  const combatLabel = getAllSkillLabels()[event.name as CombatSkillType];
   if (combatLabel) {
     skillName = combatLabel;
-  } else if (INFLICTION_EVENT_LABELS[event.name]) {
-    skillName = INFLICTION_EVENT_LABELS[event.name];
-  } else if (STATUS_LABELS[event.name as StatusType]) {
-    skillName = STATUS_LABELS[event.name as StatusType];
+  } else if (getAllInflictionLabels()[event.name]) {
+    skillName = getAllInflictionLabels()[event.name];
+  } else if (getAllStatusLabels()[event.name as StatusType]) {
+    skillName = getAllStatusLabels()[event.name as StatusType];
   } else if (event.name && event.name !== event.columnId) {
     skillName = event.name;
   }
@@ -273,8 +271,8 @@ export function resolveComboChain(
     }
 
     const originalSkillLabel = bestMatch?.sourceSkillName
-      ? (COMBAT_SKILL_LABELS[bestMatch.sourceSkillName as CombatSkillType]
-        ?? STATUS_LABELS[bestMatch.sourceSkillName as StatusType]
+      ? (getAllSkillLabels()[bestMatch.sourceSkillName as CombatSkillType]
+        ?? getAllStatusLabels()[bestMatch.sourceSkillName as StatusType]
         ?? bestMatch.sourceSkillName)
       : undefined;
 
@@ -286,7 +284,7 @@ export function resolveComboChain(
     });
 
     // Link 2: Intermediary infliction/status on enemy
-    const inflLabel = INFLICTION_EVENT_LABELS[triggerCol]
+    const inflLabel = getAllInflictionLabels()[triggerCol]
       ?? PHYSICAL_INFLICTION_LABELS[triggerCol]?.label
       ?? PHYSICAL_STATUS_LABELS[triggerCol]?.label
       ?? triggerCol;
@@ -298,8 +296,8 @@ export function resolveComboChain(
   } else {
     // Direct operator trigger (e.g. FINAL_STRIKE from basic attack)
     const skillLabel = window.sourceSkillName
-      ? (COMBAT_SKILL_LABELS[window.sourceSkillName as CombatSkillType]
-        ?? STATUS_LABELS[window.sourceSkillName as StatusType]
+      ? (getAllSkillLabels()[window.sourceSkillName as CombatSkillType]
+        ?? getAllStatusLabels()[window.sourceSkillName as StatusType]
         ?? window.sourceSkillName)
       : undefined;
 
@@ -374,7 +372,7 @@ export function resolveActiveModifiers(
         const color = ELEMENT_COLORS[elType] ?? '#aaa';
         const label = ELEMENT_LABELS[elType] ?? element;
         modifiers.push({
-          label: `${STATUS_LABELS[ev.name as StatusType] ?? ev.name} (${label})`,
+          label: `${getAllStatusLabels()[ev.name as StatusType] ?? ev.name} (${label})`,
           color,
           formattedValue: `+${Math.round(value * 100)}%`,
           source: 'Susceptibility',
@@ -419,7 +417,7 @@ export function resolveActiveModifiers(
     // Weapon fragility
     if (ev.columnId.startsWith(FRAGILITY_COLUMN_PREFIX)) {
       modifiers.push({
-        label: STATUS_LABELS[ev.name as StatusType] ?? ev.name,
+        label: getAllStatusLabels()[ev.name as StatusType] ?? ev.name,
         color: '#dd8844',
         formattedValue: ev.statusValue ? `+${Math.round(ev.statusValue * 100)}%` : 'Active',
         source: 'Fragility',

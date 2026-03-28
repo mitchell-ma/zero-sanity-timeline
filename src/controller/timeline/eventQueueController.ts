@@ -23,14 +23,14 @@ import { TriggerIndex } from './triggerIndex';
 import { ENEMY_OWNER_ID, INFLICTION_COLUMN_IDS, PHYSICAL_INFLICTION_COLUMN_IDS, REACTION_COLUMN_IDS, SKILL_COLUMNS } from '../../model/channels';
 import type { SkillType } from '../../consts/viewTypes';
 import { getAllTriggerAssociations } from '../gameDataStore';
-
-const SKILL_COLUMN_SET: ReadonlySet<string> = new Set(Object.values(SKILL_COLUMNS) as string[]);
-import { classifyEvents } from './inputEventController';
+import { cloneAndSplitEvents } from './inputEventController';
 import { initHpTracker, getEnemyHpPercentage, precomputeDamageByFrame } from '../calculation/calculationController';
 import type { HPController } from '../calculation/hpController';
 import type { OperatorLoadoutState } from '../../view/OperatorLoadoutHeader';
 import { resolveControlledOperator } from './controlledOperatorResolver';
 import { allocQueueFrame, resetPools, isReconcilerEnabled } from './objectPool';
+
+const SKILL_COLUMN_SET: ReadonlySet<string> = new Set(Object.values(SKILL_COLUMNS) as string[]);
 
 // TriggerIndex is now built and cached by CombatLoadoutController.syncSlots().
 // It is passed into the pipeline via the triggerIndex parameter.
@@ -248,7 +248,7 @@ export function getLastController(): DerivedEventController {
 /**
  * Linear pipeline entry point.
  *
- * 1. InputEventController.classifyEvents → split input vs derived
+ * 1. InputEventController.cloneAndSplitEvents → split input vs derived
  * 2. DerivedEventController.registerEvents → input events only
  * 3. SkillPointController.deriveSPRecoveryEvents → SP recovery events
  * 4. EventQueueController.runEventQueue → builds trigger index, seeds derived + talents, runs interpreter
@@ -293,7 +293,7 @@ export function processCombatSimulation(
   if (ueController) ueController.clear();
 
   // ── 1. Clone and classify raw events ─────────────────────────────────────
-  const { inputEvents, derivedEvents } = classifyEvents(rawEvents);
+  const { inputEvents, derivedEvents } = cloneAndSplitEvents(rawEvents);
 
   // ── 2. DerivedEventController: register skill events only ──────────────
   // Non-skill events (inflictions, reactions, statuses) enter solely through

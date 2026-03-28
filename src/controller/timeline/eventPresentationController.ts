@@ -14,7 +14,7 @@
  */
 import { TimelineEvent, Column, MiniTimeline, EventSegmentData, eventEndFrame } from '../../consts/viewTypes';
 import { TimelineSourceType, ELEMENT_COLORS, ElementType, InteractionModeType, EventStatusType } from '../../consts/enums';
-import { COMBAT_SKILL_LABELS, INFLICTION_EVENT_LABELS, STATUS_LABELS } from '../../consts/timelineColumnLabels';
+import { getAllSkillLabels, getAllStatusLabels, getAllInflictionLabels } from '../gameDataStore';
 import { CombatSkillType, StackInteractionType } from '../../consts/enums';
 import { SKILL_COLUMNS, COMBO_WINDOW_COLUMN_ID, REACTION_COLUMNS } from '../../model/channels';
 import { formatSegmentShortName } from '../../dsl/semanticsTranslation';
@@ -53,10 +53,6 @@ function getStatusStackInfo(statusId: string): StatusStackInfo | undefined {
       const verb = se.stacks?.interactionType ?? StackInteractionType.NONE;
       const info = { instances: limit, verb };
       statusStackCache.set(se.id, info);
-      // Also index by kebab-case column ID and display name for freeform event lookup
-      const kebab = se.id.toLowerCase().replace(/_/g, '-');
-      if (kebab !== se.id) statusStackCache.set(kebab, info);
-      if (se.name && se.name !== se.id) statusStackCache.set(se.name, info);
     }
   }
   return statusStackCache.get(statusId);
@@ -125,7 +121,7 @@ export function computeStatusViewOverrides(
       const allSorted = [...typeEvents].sort((a, b) => a.startFrame - b.startFrame || a.uid.localeCompare(b.uid));
       const activeSorted = [...active].sort((a, b) => a.startFrame - b.startFrame || a.uid.localeCompare(b.uid));
       if (allSorted.length === 0) continue;
-      const baseName = INFLICTION_EVENT_LABELS[columnId] ?? INFLICTION_EVENT_LABELS[allSorted[0].name] ?? STATUS_LABELS[allSorted[0].name] ?? allSorted[0].name;
+      const baseName = getAllInflictionLabels()[columnId] ?? getAllInflictionLabels()[allSorted[0].name] ?? getAllStatusLabels()[allSorted[0].name] ?? allSorted[0].name;
 
       const statusInfo = getStatusStackInfo(allSorted[0].name);
       const singleInstance = isSingleInstanceStatus(allSorted[0].name);
@@ -253,9 +249,9 @@ export interface EventPresentation {
  */
 export function resolveEventLabel(ev: TimelineEvent): string {
   if (ev.isPerfectDodge) return 'Dodge';
-  return COMBAT_SKILL_LABELS[ev.name as CombatSkillType]
-    ?? INFLICTION_EVENT_LABELS[ev.name]
-    ?? STATUS_LABELS[ev.name]
+  return getAllSkillLabels()[ev.name as CombatSkillType]
+    ?? getAllInflictionLabels()[ev.name]
+    ?? getAllStatusLabels()[ev.name]
     ?? ev.name;
 }
 

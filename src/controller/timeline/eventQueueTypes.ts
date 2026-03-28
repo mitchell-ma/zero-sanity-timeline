@@ -13,10 +13,6 @@ export const MAX_INFLICTION_STACKS = 4;
 export const PRIORITY = {
   /** Unified frame processing — all frame marker effects in config order. */
   PROCESS_FRAME: 5,
-  /** Freeform derived events (user-placed reactions/inflictions). */
-  FRAME_EFFECT: 5,
-  /** Freeform inflictions seeded from derived events. */
-  INFLICTION_CREATE: 10,
   /** Engine triggers seeded reactively by PROCESS_FRAME or lifecycle clauses. */
   ENGINE_TRIGGER: 22,
   /** Combo trigger resolution — fires after engine triggers so absorption resolves first. */
@@ -26,7 +22,7 @@ export const PRIORITY = {
 export interface QueueFrame {
   frame: number;
   priority: number;
-  type: 'PROCESS_FRAME' | 'FRAME_EFFECT' | 'INFLICTION_CREATE' | 'ENGINE_TRIGGER' | 'COMBO_RESOLVE';
+  type: 'PROCESS_FRAME' | 'ENGINE_TRIGGER' | 'COMBO_RESOLVE';
   /** Event UID template (for infliction entries). */
   uid?: string;
   statusId: string;
@@ -47,12 +43,6 @@ export interface QueueFrame {
   segmentIndex?: number;
   /** Frame index within the segment. */
   frameIndex?: number;
-
-  // ── FRAME_EFFECT fields (freeform derived events only) ────────────────
-  /** Pre-built event for FRAME_EFFECT entries. */
-  derivedEvent?: TimelineEvent;
-  /** Stacking interaction for FRAME_EFFECT enemy statuses. */
-  stackingInteraction?: string;
 
   // ── ENGINE_TRIGGER fields ─────────────────────────────────────────────
   /** Engine trigger context for ENGINE_TRIGGER entries. */

@@ -53,41 +53,35 @@ Eliminate the parallel code path for freeform events. ALL non-skill events (infl
 
 ## Current Test State
 
-48 failures across 16 suites (out of 66 suites, 1074 total tests).
+10 failures across 5 suites (out of 66 suites, 1074 total tests). All 10 are **pre-existing** from the committed code.
 
-### Failure Categories
+### Resolved Categories
 
-#### 1. Kebab-case column ID conflicts (~15-20 failures)
-Another agent changed status IDs/column IDs from `MELTING_FLAME` to `melting-flame`. Tests expect uppercase. Affected:
-- `columnBuilder.test.ts` — micro column IDs are kebab
-- `eventInterpretor.test.ts` — `"focus"` vs `"FOCUS"`, `"melting-flame"` vs `"MELTING_FLAME"`
-- `laevatainInteractions.test.ts` — same
-- `statusColumnLayout.test.ts` — same
-- `meltingFlameStacking.test.ts` — MF events get kebab IDs from the status config
+#### 1. Kebab-case column ID conflicts — RESOLVED
+Another agent completed the kebab→SCREAMING_CASE migration in `columnBuilder.ts`, `triggerMatch.ts`, `conditionEvaluator.ts`, `statusTriggerCollector.ts`, `eventsQueryService.ts`, `eventPresentationController.ts`, `derivedEventController.ts`, and `channels/index.ts`.
 
-**Root cause:** `statusIdToColumnId()` in `triggerMatch.ts` line 113 falls through to `statusId.toLowerCase().replace(/_/g, '-')`. Other agent removed the kebab-case indexing from `getStatusStackInfo` and `getStatusStackLimit`. The status configs themselves may now use kebab IDs.
+#### 3. Operator status events not going through create* — RESOLVED
+Added `else` clause in step 3b for operator-owned status events (MF, Scorching Heart, Focus, etc.). Also filtered `collectFrameEntries` to only process skill events from `registeredEvents` (plus all derived events), preventing engine-derived statuses from being duplicated through step 3b.
 
-#### 2. Susceptibility regression (5 failures)
-All Ardelia susceptibility tests show 0 events. Both strict and freeform modes affected.
+#### 4. Combo trigger resolution — RESOLVED (was mostly kebab-case issue)
 
-**Likely cause:** The susceptibility status is created by the battle skill's DSL during queue processing. The `APPLY STATUS` effect with `objectId: SUSCEPTIBILITY` goes through `doApply` → creates status on SUSCEPTIBILITY column with `ownerId: ENEMY_OWNER_ID`. The status should go to `output` → re-registered → appear in `getProcessedEvents()`.
+#### 5. Reactive trigger seeding — RESOLVED (was mostly kebab-case issue)
 
-**Debug path:** Check if the condition `ENEMY HAVE CORROSION REACTION` evaluates to true during the battle skill frame. Check if `activeEventsIn` can find the corrosion created by the combo skill. The corrosion is in `stacks` (from `createReaction`). Verify `activeEventsIn` scans `stacks` correctly during queue processing.
+#### RESET stacking + stack labels — RESOLVED
+Added `stackingMode` passthrough in step 3b for enemy/common/operator status events. Fixed `createStatus` to only reject at capacity for NONE mode (REFRESH and other modes allow through, view layer caps labels).
 
-#### 3. Operator status events not going through create* (~5-8 failures)
-MF, Scorching Heart, and other operator-owned statuses on non-skill columns are now classified as derived. They go through `collectFrameEntries` → synthetic frame → `handleProcessFrame` step 3b. But step 3b only handles enemy/common owner or specific column sets. Operator-owned statuses (ownerId = slot-X) fall through without creating anything.
+### Remaining Pre-existing Failures (10 tests)
 
-**Fix needed:** Step 3b in `handleProcessFrame` needs an additional branch for operator-owned non-skill events that aren't in any specific column set. These should go through `createStatus` with the event's stacking config.
+#### Susceptibility regression (7 failures)
+Ardelia susceptibility tests show 0 events. Pre-existing from committed code.
+- `susceptibilityStatus.test.ts` — 4 failures
+- `fullKit.test.ts` — 3 failures (E1, E2, G2)
 
-#### 4. Combo trigger resolution (~5 failures)
-`comboTriggerResolution.test.ts` — combo triggers depend on seeing infliction events in `registeredEvents` for trigger evaluation. With inflictions now as derived events (not in `registeredEvents` during initial registration), combo trigger resolution in `registerEvents` Pass 3 can't find them.
-
-**Fix:** Combo trigger resolution runs again during re-registration of queue output (line 224 of `registerEvents`). But the timing might be wrong — combo events are placed before inflictions exist. The re-registration pass should fix this. Verify by checking if `resolveComboTriggersInline` runs after queue output is re-registered.
-
-#### 5. Reactive trigger seeding (2-3 failures)
-Weapon/gear triggers that react to enemy events (APPLY CRYO INFLICTION → trigger Bonechilling buff) relied on the removed reactive trigger seeding loop. Now handled by `checkReactiveTriggers` in step 3b. But the target filtering logic may differ.
-
-**Fix:** Verify `checkReactiveTriggers` in step 3b correctly seeds ENGINE_TRIGGER entries for weapon/gear triggers. The old loop had explicit target filtering (TO ENEMY, TO OPERATOR). `checkReactiveTriggers` may not have the same filtering.
+#### Combo mirrored infliction (3 failures)
+Pre-existing from committed code.
+- `comboTriggerResolution.test.ts` D6: Antal self-infliction triggers own combo window
+- `antalInteractions.test.ts` H7: Full combo mirror scenario
+- `laevatainInteractions.test.ts` K1: Scorching Heart absorbs mirrored heat
 
 ## Files Modified
 
@@ -119,9 +113,8 @@ Weapon/gear triggers that react to enemy events (APPLY CRYO INFLICTION → trigg
 
 ## What's Left
 
-1. Fix the 48 remaining test failures (categorized above)
-2. Resolve kebab-case vs uppercase ID conflicts with the other agent
-3. Verify the full app works end-to-end (not just tests)
-4. Remove `handleFrameEffect` and `handleInflictionCreate` legacy handlers once all events go through `handleProcessFrame` step 3b
-5. Consider removing `classifyEvents` entirely if all events can go through one path
-6. Clean up unused imports and dead code
+1. Fix the 10 remaining pre-existing test failures (susceptibility + combo mirrored infliction)
+2. Verify the full app works end-to-end (not just tests)
+3. Remove `handleFrameEffect` and `handleInflictionCreate` legacy handlers once all events go through `handleProcessFrame` step 3b
+4. Consider removing `classifyEvents` entirely if all events can go through one path
+5. Clean up unused imports and dead code

@@ -1,0 +1,32 @@
+{
+  "properties": {
+    "id": "COMBUSTION",
+    "name": "Combustion",
+    "to": "ENEMY",
+    "element": "HEAT",
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": 10
+      },
+      "unit": "SECOND"
+    },
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 1
+      },
+      "level": {
+        "verb": "IS",
+        "value": 4
+      },
+      "interactionType": "MERGE"
+    },
+    "eventType": "STATUS",
+    "eventCategoryType": "REACTION",
+    "description": "Heat arts reaction. Deals initial Heat DMG on activation, then Heat DMG over time for 10 seconds. Damage scales with status level from consumed infliction stacks."
+  },
+  "metadata": {
+    "originId": "game"
+  }
+}

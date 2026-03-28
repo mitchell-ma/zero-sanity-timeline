@@ -1,0 +1,28 @@
+{
+  "properties": {
+    "id": "KNOCK_DOWN",
+    "name": "Knock Down",
+    "to": "ENEMY",
+    "element": "PHYSICAL",
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": 1
+      },
+      "unit": "SECOND"
+    },
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 1
+      },
+      "interactionType": "RESET"
+    },
+    "eventType": "STATUS",
+    "eventCategoryType": "PHYSICAL_STATUS",
+    "description": "Physical status. Knocks the enemy down for 1 second. Deals 120% ATK Physical DMG. Requires Vulnerable on the enemy (or forced application)."
+  },
+  "metadata": {
+    "originId": "game"
+  }
+}

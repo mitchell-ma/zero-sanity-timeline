@@ -6,7 +6,7 @@ import { ALL_OPERATORS } from '../operators/operatorRegistry';
 import { getAllWeapons, getAllGearPieces, getGearSetEffect, getWeaponEffectDefs, getGearEffectDefs, getAllWeaponEffectNames, getAllGearEffectTypes, getGearEffectLabel } from '../gameDataStore';
 import { getGearSetData } from '../gameDataStore';
 import { getGearSetEffects } from '../../consts/gearSetEffects';
-import { COMBAT_SKILL_LABELS } from '../../consts/timelineColumnLabels';
+import { getAllSkillLabels } from '../gameDataStore';
 import { CombatSkillType } from '../../consts/enums';
 import { getCustomWeapons } from './customWeaponController';
 import { getCustomGearSets } from './customGearController';
@@ -60,7 +60,7 @@ export function getAllContentItems(): ContentBrowserItem[] {
     if (customOpIds.has(op.id)) continue;
     for (const [key, skill] of Object.entries(op.skills)) {
       const skillName = skill.name as CombatSkillType;
-      const label = COMBAT_SKILL_LABELS[skillName] || skill.name;
+      const label = getAllSkillLabels()[skillName] || skill.name;
       items.push({
         id: `skill:${op.id}:${key}`,
         name: label,

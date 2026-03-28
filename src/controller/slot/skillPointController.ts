@@ -22,6 +22,8 @@ import type { UltimateEnergyController } from '../timeline/ultimateEnergyControl
 
 export type { ResourceZone, SkillPointConsumptionHistory };
 
+const SP_COST_EVENT_ID = 'sp-cost';
+
 export class SkillPointController {
   private readonly subtimeline: Subtimeline;
   private readonly timeline: SkillPointTimeline;
@@ -90,8 +92,8 @@ export class SkillPointController {
   addCost(eventUid: string, frame: number, amount: number, ownerId: string, gaugeGainFrame: number) {
     this.pendingSpEvents.push({
       uid: `${eventUid}-sp`,
-      id: 'sp-cost',
-      name: 'sp-cost',
+      id: SP_COST_EVENT_ID,
+      name: SP_COST_EVENT_ID,
       ownerId: COMMON_OWNER_ID,
       columnId: COMMON_COLUMN_IDS.SKILL_POINTS,
       startFrame: frame,
@@ -164,7 +166,7 @@ export class SkillPointController {
 
     // Sort: costs before returns at same frame
     this.pendingSpEvents.sort(
-      (a, b) => a.startFrame - b.startFrame || (a.name === 'sp-cost' ? -1 : 1),
+      (a, b) => a.startFrame - b.startFrame || (a.name === SP_COST_EVENT_ID ? -1 : 1),
     );
     this.subtimeline.setEvents(this.pendingSpEvents);
 
