@@ -6,11 +6,11 @@
  */
 
 import { computeUltimateEnergyGraph, UltEnergyEvent } from '../../controller/timeline/ultimateEnergyTimeline';
+import { NounType } from '../../dsl/semantics';
 import { preConsumptionValue, validateResources, hasEnableClauseAtFrame, checkVariantAvailability, validateEnhanced, validateDisabledVariants } from '../../controller/timeline/eventValidator';
 import { applyGainEfficiency, collectNoGainWindowsForEvent, UltimateEnergyController, RawGaugeGainEvent } from '../../controller/timeline/ultimateEnergyController';
 import { SkillPointController } from '../../controller/slot/skillPointController';
 import { TimelineEvent, EventSegmentData } from '../../consts/viewTypes';
-import { SKILL_COLUMNS } from '../../model/channels';
 import { EnhancementType, SegmentType } from '../../consts/enums';
 
 jest.mock('../../model/game-data/weaponGameData', () => ({
@@ -201,7 +201,7 @@ describe('Ultimate Energy Validation', () => {
       uid: 'ult-1',
       name: 'TWILIGHT',
       ownerId: SLOT_ID,
-      columnId: SKILL_COLUMNS.ULTIMATE,
+      columnId: NounType.ULTIMATE,
       startFrame: lastHitFrame,
       segments: [{ properties: { duration: 249 } }],
     } as TimelineEvent;
@@ -311,7 +311,7 @@ describe('hasEnableClauseAtFrame', () => {
     return makeEvent({
       uid: 'ult-1',
       ownerId: SLOT,
-      columnId: SKILL_COLUMNS.ULTIMATE,
+      columnId: NounType.ULTIMATE,
       startFrame,
       segments,
     });
@@ -347,7 +347,7 @@ describe('hasEnableClauseAtFrame', () => {
   });
 
   test('returns false when event has no segments', () => {
-    const ev = makeEvent({ uid: 'ult-1', ownerId: SLOT, columnId: SKILL_COLUMNS.ULTIMATE, startFrame: 0 });
+    const ev = makeEvent({ uid: 'ult-1', ownerId: SLOT, columnId: NounType.ULTIMATE, startFrame: 0 });
     expect(hasEnableClauseAtFrame([ev], SLOT, 'BATK', 0)).toBe(false);
   });
 });
@@ -358,7 +358,7 @@ describe('collectNoGainWindowsForEvent', () => {
 
   test('collects ACTIVE segment as no-gain window', () => {
     const ev = makeEvent({
-      uid: 'ult-1', ownerId: SLOT, columnId: SKILL_COLUMNS.ULTIMATE, startFrame: 0,
+      uid: 'ult-1', ownerId: SLOT, columnId: NounType.ULTIMATE, startFrame: 0,
       segments: [
         { properties: { segmentTypes: [SegmentType.ANIMATION], duration: 249, name: 'Animation' } },
         { properties: { segmentTypes: [SegmentType.STASIS], duration: 36, name: 'Stasis' } },
@@ -374,7 +374,7 @@ describe('collectNoGainWindowsForEvent', () => {
 
   test('collects IGNORE ULTIMATE_ENERGY clause segment as no-gain window', () => {
     const ev = makeEvent({
-      uid: 'ult-1', ownerId: SLOT, columnId: SKILL_COLUMNS.ULTIMATE, startFrame: 0,
+      uid: 'ult-1', ownerId: SLOT, columnId: NounType.ULTIMATE, startFrame: 0,
       segments: [
         {
           properties: { segmentTypes: [SegmentType.ANIMATION], duration: 249, name: 'Animation' },
@@ -392,7 +392,7 @@ describe('collectNoGainWindowsForEvent', () => {
 
   test('fallback for non-segmented ultimate events', () => {
     const ev = makeEvent({
-      uid: 'ult-1', ownerId: SLOT, columnId: SKILL_COLUMNS.ULTIMATE, startFrame: 100,
+      uid: 'ult-1', ownerId: SLOT, columnId: NounType.ULTIMATE, startFrame: 100,
       segments: [{ properties: { duration: 249 } }],
     });
     const windows = collectNoGainWindowsForEvent(ev);
@@ -495,51 +495,51 @@ describe('ENABLE/DISABLE clause variant validation', () => {
 
   function ultEvent(startFrame: number): TimelineEvent {
     return makeEvent({
-      uid: 'ult-1', ownerId: SLOT, columnId: SKILL_COLUMNS.ULTIMATE, startFrame,
+      uid: 'ult-1', ownerId: SLOT, columnId: NounType.ULTIMATE, startFrame,
       segments: twilightSegments,
     });
   }
 
   test('enhanced variant is available during ENABLE window', () => {
     const events = [ultEvent(0)];
-    const result = checkVariantAvailability('FLAMING_CINDERS_ENHANCED', SLOT, events, 500, SKILL_COLUMNS.BASIC, undefined, EnhancementType.ENHANCED);
+    const result = checkVariantAvailability('FLAMING_CINDERS_ENHANCED', SLOT, events, 500, NounType.BASIC_ATTACK, undefined, EnhancementType.ENHANCED);
     expect(result.disabled).toBe(false);
   });
 
   test('enhanced variant is disabled outside ENABLE window (past ultimate)', () => {
     const events = [ultEvent(0)];
-    const result = checkVariantAvailability('FLAMING_CINDERS_ENHANCED', SLOT, events, totalDuration + 100, SKILL_COLUMNS.BASIC, undefined, EnhancementType.ENHANCED);
+    const result = checkVariantAvailability('FLAMING_CINDERS_ENHANCED', SLOT, events, totalDuration + 100, NounType.BASIC_ATTACK, undefined, EnhancementType.ENHANCED);
     expect(result.disabled).toBe(true);
     expect(result.reason).toContain('Activation condition not met');
   });
 
   test('enhanced variant is disabled when no ultimate placed', () => {
-    const result = checkVariantAvailability('FLAMING_CINDERS_ENHANCED', SLOT, [], 500, SKILL_COLUMNS.BASIC, undefined, EnhancementType.ENHANCED);
+    const result = checkVariantAvailability('FLAMING_CINDERS_ENHANCED', SLOT, [], 500, NounType.BASIC_ATTACK, undefined, EnhancementType.ENHANCED);
     expect(result.disabled).toBe(true);
   });
 
   test('regular basic is blocked during DISABLE window', () => {
     const events = [ultEvent(0)];
-    const result = checkVariantAvailability('FLAMING_CINDERS', SLOT, events, 500, SKILL_COLUMNS.BASIC, undefined, EnhancementType.NORMAL);
+    const result = checkVariantAvailability('FLAMING_CINDERS', SLOT, events, 500, NounType.BASIC_ATTACK, undefined, EnhancementType.NORMAL);
     expect(result.disabled).toBe(true);
     expect(result.reason).toContain('NORMAL');
   });
 
   test('regular basic is allowed outside DISABLE window (past ultimate)', () => {
     const events = [ultEvent(0)];
-    const result = checkVariantAvailability('FLAMING_CINDERS', SLOT, events, totalDuration + 100, SKILL_COLUMNS.BASIC, undefined, EnhancementType.NORMAL);
+    const result = checkVariantAvailability('FLAMING_CINDERS', SLOT, events, totalDuration + 100, NounType.BASIC_ATTACK, undefined, EnhancementType.NORMAL);
     expect(result.disabled).toBe(false);
   });
 
   test('finisher is disabled during ultimate (DISABLE FINISHER clause)', () => {
     const events = [ultEvent(0)];
-    const result = checkVariantAvailability('FINISHER', SLOT, events, 500, SKILL_COLUMNS.BASIC);
+    const result = checkVariantAvailability('FINISHER', SLOT, events, 500, NounType.BASIC_ATTACK);
     expect(result.disabled).toBe(true);
   });
 
   test('dive is allowed during ENABLE window', () => {
     const events = [ultEvent(0)];
-    const result = checkVariantAvailability('DIVE', SLOT, events, 500, SKILL_COLUMNS.BASIC);
+    const result = checkVariantAvailability('DIVE', SLOT, events, 500, NounType.BASIC_ATTACK);
     expect(result.disabled).toBe(false);
   });
 });
@@ -552,7 +552,7 @@ describe('validateEnhanced and validateDisabledVariants', () => {
 
   function ultEvent(startFrame: number): TimelineEvent {
     return makeEvent({
-      uid: 'ult-1', ownerId: SLOT, columnId: SKILL_COLUMNS.ULTIMATE, startFrame,
+      uid: 'ult-1', ownerId: SLOT, columnId: NounType.ULTIMATE, startFrame,
       segments: twilightSegments,
     });
   }
@@ -560,7 +560,7 @@ describe('validateEnhanced and validateDisabledVariants', () => {
   test('enhanced basic during ENABLE window: no warning', () => {
     const events = [
       ultEvent(0),
-      makeEvent({ uid: 'basic-1', ownerId: SLOT, columnId: SKILL_COLUMNS.BASIC, name: 'FLAMING_CINDERS_ENHANCED', startFrame: 500, enhancementType: EnhancementType.ENHANCED }),
+      makeEvent({ uid: 'basic-1', ownerId: SLOT, columnId: NounType.BASIC_ATTACK, name: 'FLAMING_CINDERS_ENHANCED', startFrame: 500, enhancementType: EnhancementType.ENHANCED }),
     ];
     const warnings = validateEnhanced(events);
     expect(warnings.has('basic-1')).toBe(false);
@@ -569,7 +569,7 @@ describe('validateEnhanced and validateDisabledVariants', () => {
   test('enhanced basic outside ENABLE window: warning', () => {
     const events = [
       ultEvent(0),
-      makeEvent({ uid: 'basic-1', ownerId: SLOT, columnId: SKILL_COLUMNS.BASIC, name: 'FLAMING_CINDERS_ENHANCED', startFrame: totalDuration + 100, enhancementType: EnhancementType.ENHANCED }),
+      makeEvent({ uid: 'basic-1', ownerId: SLOT, columnId: NounType.BASIC_ATTACK, name: 'FLAMING_CINDERS_ENHANCED', startFrame: totalDuration + 100, enhancementType: EnhancementType.ENHANCED }),
     ];
     const warnings = validateEnhanced(events);
     expect(warnings.has('basic-1')).toBe(true);
@@ -578,7 +578,7 @@ describe('validateEnhanced and validateDisabledVariants', () => {
   test('regular basic during DISABLE window: warning', () => {
     const events = [
       ultEvent(0),
-      makeEvent({ uid: 'basic-1', ownerId: SLOT, columnId: SKILL_COLUMNS.BASIC, name: 'FLAMING_CINDERS', startFrame: 500 }),
+      makeEvent({ uid: 'basic-1', ownerId: SLOT, columnId: NounType.BASIC_ATTACK, name: 'FLAMING_CINDERS', startFrame: 500 }),
     ];
     const warnings = validateDisabledVariants(events);
     expect(warnings.has('basic-1')).toBe(true);
@@ -587,7 +587,7 @@ describe('validateEnhanced and validateDisabledVariants', () => {
   test('regular basic outside DISABLE window (past ultimate): no warning', () => {
     const events = [
       ultEvent(0),
-      makeEvent({ uid: 'basic-1', ownerId: SLOT, columnId: SKILL_COLUMNS.BASIC, name: 'FLAMING_CINDERS', startFrame: totalDuration + 100 }),
+      makeEvent({ uid: 'basic-1', ownerId: SLOT, columnId: NounType.BASIC_ATTACK, name: 'FLAMING_CINDERS', startFrame: totalDuration + 100 }),
     ];
     const warnings = validateDisabledVariants(events);
     expect(warnings.has('basic-1')).toBe(false);
@@ -596,7 +596,7 @@ describe('validateEnhanced and validateDisabledVariants', () => {
   test('finisher during DISABLE window: warning (DISABLE FINISHER in Laevatain ultimate)', () => {
     const events = [
       ultEvent(0),
-      makeEvent({ uid: 'basic-1', ownerId: SLOT, columnId: SKILL_COLUMNS.BASIC, name: 'FINISHER', startFrame: 500 }),
+      makeEvent({ uid: 'basic-1', ownerId: SLOT, columnId: NounType.BASIC_ATTACK, name: 'FINISHER', startFrame: 500 }),
     ];
     const warnings = validateDisabledVariants(events);
     expect(warnings.has('basic-1')).toBe(true);

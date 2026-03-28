@@ -7,8 +7,9 @@
  * and generates frailty events for node crossings and full stagger breaks.
  */
 import { StatType, SegmentType } from '../../consts/enums';
+import { NounType } from '../../dsl/semantics';
 import { TimelineEvent, getAnimationDuration, durationSegment } from '../../consts/viewTypes';
-import { SKILL_COLUMNS, ENEMY_OWNER_ID, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID } from '../../model/channels';
+import { ENEMY_OWNER_ID, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID } from '../../model/channels';
 import { Subtimeline } from '../timeline/subtimeline';
 import { StaggerTimeline, StaggerBreak } from '../timeline/staggerTimeline';
 import { ResourceGraphListener, ResourcePoint } from '../timeline/resourceTimeline';
@@ -80,7 +81,7 @@ export class StaggerController {
     // Extract stagger damage events from skill segments
     const staggerEvents: TimelineEvent[] = [];
     for (const ev of processedEvents) {
-      const animOffset = (ev.columnId === SKILL_COLUMNS.COMBO || ev.columnId === SKILL_COLUMNS.ULTIMATE)
+      const animOffset = (ev.columnId === NounType.COMBO_SKILL || ev.columnId === NounType.ULTIMATE)
         ? getAnimationDuration(ev) : 0;
       let segOffset = 0;
       for (const seg of ev.segments) {

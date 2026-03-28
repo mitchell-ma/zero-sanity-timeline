@@ -5,6 +5,7 @@
  * and combines them into computed damage numbers for the dumb view.
  */
 import { TimelineEvent, Column, MiniTimeline, Enemy as ViewEnemy } from '../../consts/viewTypes';
+import { NounType } from '../../dsl/semantics';
 import { getAllSkillLabels } from '../gameDataStore';
 import { CombatSkillType, ColumnType, CritMode, DamageType, ElementType, EnemyTierType, StatType, TimelineSourceType } from '../../consts/enums';
 import { SkillLevel, Potential } from '../../consts/types';
@@ -38,7 +39,7 @@ import {
 import { EventsQueryService } from '../timeline/eventsQueryService';
 import { LoadoutProperties, DEFAULT_LOADOUT_PROPERTIES } from '../../view/InformationPane';
 import type { Slot } from '../timeline/columnBuilder';
-import { ENEMY_OWNER_ID, OPERATOR_COLUMNS, REACTION_COLUMN_IDS, SKILL_COLUMNS } from '../../model/channels';
+import { ENEMY_OWNER_ID, OPERATOR_COLUMNS, REACTION_COLUMN_IDS } from '../../model/channels';
 import { buildReactionDamageRows, ReactionOperatorContext } from './artsReactionController';
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -132,10 +133,10 @@ function isUltEnhanced(name: string): boolean {
 /** Map columnId to the CombatSkillType enum for damage bonus lookup. */
 function columnIdToSkillType(columnId: string): CombatSkillType {
   switch (columnId) {
-    case SKILL_COLUMNS.BASIC: return CombatSkillType.BASIC_ATTACK;
-    case SKILL_COLUMNS.BATTLE: return CombatSkillType.BATTLE_SKILL;
-    case SKILL_COLUMNS.COMBO: return CombatSkillType.COMBO_SKILL;
-    case SKILL_COLUMNS.ULTIMATE: return CombatSkillType.ULTIMATE;
+    case NounType.BASIC_ATTACK: return CombatSkillType.BASIC_ATTACK;
+    case NounType.BATTLE_SKILL: return CombatSkillType.BATTLE_SKILL;
+    case NounType.COMBO_SKILL: return CombatSkillType.COMBO_SKILL;
+    case NounType.ULTIMATE: return CombatSkillType.ULTIMATE;
     case OPERATOR_COLUMNS.OTHER: return CombatSkillType.BASIC_ATTACK;
     default: return CombatSkillType.BASIC_ATTACK;
   }
@@ -144,10 +145,10 @@ function columnIdToSkillType(columnId: string): CombatSkillType {
 /** Map columnId to the skill level field in LoadoutProperties. */
 function getSkillLevel(columnId: string, props: LoadoutProperties): SkillLevel {
   switch (columnId) {
-    case SKILL_COLUMNS.BASIC: return props.skills.basicAttackLevel as SkillLevel;
-    case SKILL_COLUMNS.BATTLE: return props.skills.battleSkillLevel as SkillLevel;
-    case SKILL_COLUMNS.COMBO: return props.skills.comboSkillLevel as SkillLevel;
-    case SKILL_COLUMNS.ULTIMATE: return props.skills.ultimateLevel as SkillLevel;
+    case NounType.BASIC_ATTACK: return props.skills.basicAttackLevel as SkillLevel;
+    case NounType.BATTLE_SKILL: return props.skills.battleSkillLevel as SkillLevel;
+    case NounType.COMBO_SKILL: return props.skills.comboSkillLevel as SkillLevel;
+    case NounType.ULTIMATE: return props.skills.ultimateLevel as SkillLevel;
     default: return 12 as SkillLevel;
   }
 }
@@ -256,7 +257,7 @@ export function buildDamageTableRows(
   const bossMaxHp = modelEnemy ? modelEnemy.getHp() : null;
 
   for (const ev of events) {
-    const effectiveColumnId = isUltEnhanced(ev.name) ? SKILL_COLUMNS.ULTIMATE : ev.columnId;
+    const effectiveColumnId = isUltEnhanced(ev.name) ? NounType.ULTIMATE : ev.columnId;
     const col = colLookup.get(`${ev.ownerId}-${effectiveColumnId}`)
       ?? colLookup.get(`${ev.ownerId}-${ev.columnId}`);
     if (!col) continue;
@@ -339,14 +340,14 @@ export function buildDamageTableRows(
                   [ElementType.NATURE]: opData.stats[StatType.NATURE_DAMAGE_BONUS],
                   [ElementType.ELECTRIC]: opData.stats[StatType.ELECTRIC_DAMAGE_BONUS],
                 } as Record<ElementType, number>;
-                // Wildland Trekker: adds Electric DMG% from Arclight's talent
-                const wildlandTrekkerBonus = statusQuery?.getWildlandTrekkerBonus(absFrame) ?? 0;
-                if (wildlandTrekkerBonus > 0) {
-                  allElementDmgBonuses[ElementType.ELECTRIC] = (allElementDmgBonuses[ElementType.ELECTRIC] ?? 0) + wildlandTrekkerBonus;
+                // Intellect-scaled damage bonus (e.g. Wildland Trekker talent)
+                const intellectDmgBonus = statusQuery?.getIntellectScaledDamageBonus(absFrame) ?? 0;
+                if (intellectDmgBonus > 0) {
+                  allElementDmgBonuses[ElementType.ELECTRIC] = (allElementDmgBonuses[ElementType.ELECTRIC] ?? 0) + intellectDmgBonus;
                 }
 
                 const subElementDmg = (element === ElementType.ELECTRIC)
-                  ? opData.stats[elementBonusStat] + wildlandTrekkerBonus
+                  ? opData.stats[elementBonusStat] + intellectDmgBonus
                   : opData.stats[elementBonusStat];
                 const subSkillTypeDmg = opData.stats[skillTypeBonusStat];
                 const subSkillDmg = opData.stats[StatType.SKILL_DAMAGE_BONUS];

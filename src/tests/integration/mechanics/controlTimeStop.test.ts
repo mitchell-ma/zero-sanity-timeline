@@ -13,9 +13,10 @@
  */
 
 import { renderHook, act } from '@testing-library/react';
+import { NounType } from '../../../dsl/semantics';
 import { useApp } from '../../../app/useApp';
 import { CombatSkillType, ColumnType, InteractionModeType } from '../../../consts/enums';
-import { OPERATOR_COLUMNS, SKILL_COLUMNS } from '../../../model/channels';
+import { OPERATOR_COLUMNS } from '../../../model/channels';
 import { eventDuration, getAnimationDuration } from '../../../consts/viewTypes';
 import { FPS, TOTAL_FRAMES } from '../../../utils/timeline';
 import type { MiniTimeline } from '../../../consts/viewTypes';
@@ -42,17 +43,17 @@ describe('Control status × time-stop — integration through useApp', () => {
       const { result } = renderHook(() => useApp());
       act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
-      const comboCol = findColumn(result.current, SLOT_0, SKILL_COLUMNS.COMBO);
+      const comboCol = findColumn(result.current, SLOT_0, NounType.COMBO_SKILL);
       expect(comboCol).toBeDefined();
 
       // Place combo at frame 0 (creates a time-stop during its animation)
       act(() => {
-        result.current.handleAddEvent(SLOT_0, SKILL_COLUMNS.COMBO, 0, comboCol!.defaultEvent!);
+        result.current.handleAddEvent(SLOT_0, NounType.COMBO_SKILL, 0, comboCol!.defaultEvent!);
       });
 
       // Verify combo has animation duration (i.e. creates a time-stop)
       const comboEvent = result.current.allProcessedEvents.find(
-        (ev) => ev.ownerId === SLOT_0 && ev.columnId === SKILL_COLUMNS.COMBO,
+        (ev) => ev.ownerId === SLOT_0 && ev.columnId === NounType.COMBO_SKILL,
       )!;
       const animDur = getAnimationDuration(comboEvent);
       expect(animDur).toBeGreaterThan(0);
@@ -79,17 +80,17 @@ describe('Control status × time-stop — integration through useApp', () => {
       const { result } = renderHook(() => useApp());
       act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
-      const ultCol = findColumn(result.current, SLOT_0, SKILL_COLUMNS.ULTIMATE);
+      const ultCol = findColumn(result.current, SLOT_0, NounType.ULTIMATE);
       if (!ultCol?.defaultEvent) return; // skip if no ultimate column
 
       // Place ultimate at 2s
       const ultFrame = 2 * FPS;
       act(() => {
-        result.current.handleAddEvent(SLOT_0, SKILL_COLUMNS.ULTIMATE, ultFrame, ultCol.defaultEvent!);
+        result.current.handleAddEvent(SLOT_0, NounType.ULTIMATE, ultFrame, ultCol.defaultEvent!);
       });
 
       const ultEvent = result.current.allProcessedEvents.find(
-        (ev) => ev.ownerId === SLOT_0 && ev.columnId === SKILL_COLUMNS.ULTIMATE,
+        (ev) => ev.ownerId === SLOT_0 && ev.columnId === NounType.ULTIMATE,
       )!;
       const ultAnim = getAnimationDuration(ultEvent);
       expect(ultAnim).toBeGreaterThan(0);
@@ -118,16 +119,16 @@ describe('Control status × time-stop — integration through useApp', () => {
       const { result } = renderHook(() => useApp());
       act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
-      const comboCol = findColumn(result.current, SLOT_0, SKILL_COLUMNS.COMBO);
+      const comboCol = findColumn(result.current, SLOT_0, NounType.COMBO_SKILL);
       expect(comboCol).toBeDefined();
 
       // Place combo at frame 0
       act(() => {
-        result.current.handleAddEvent(SLOT_0, SKILL_COLUMNS.COMBO, 0, comboCol!.defaultEvent!);
+        result.current.handleAddEvent(SLOT_0, NounType.COMBO_SKILL, 0, comboCol!.defaultEvent!);
       });
 
       const comboEvent = result.current.allProcessedEvents.find(
-        (ev) => ev.ownerId === SLOT_0 && ev.columnId === SKILL_COLUMNS.COMBO,
+        (ev) => ev.ownerId === SLOT_0 && ev.columnId === NounType.COMBO_SKILL,
       )!;
       const animDur = getAnimationDuration(comboEvent);
       expect(animDur).toBeGreaterThan(0);
@@ -157,17 +158,17 @@ describe('Control status × time-stop — integration through useApp', () => {
       const { result } = renderHook(() => useApp());
       act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
-      const ultCol = findColumn(result.current, SLOT_0, SKILL_COLUMNS.ULTIMATE);
+      const ultCol = findColumn(result.current, SLOT_0, NounType.ULTIMATE);
       if (!ultCol?.defaultEvent) return;
 
       // Place ultimate at 3s
       const ultFrame = 3 * FPS;
       act(() => {
-        result.current.handleAddEvent(SLOT_0, SKILL_COLUMNS.ULTIMATE, ultFrame, ultCol.defaultEvent!);
+        result.current.handleAddEvent(SLOT_0, NounType.ULTIMATE, ultFrame, ultCol.defaultEvent!);
       });
 
       const ultEvent = result.current.allProcessedEvents.find(
-        (ev) => ev.ownerId === SLOT_0 && ev.columnId === SKILL_COLUMNS.ULTIMATE,
+        (ev) => ev.ownerId === SLOT_0 && ev.columnId === NounType.ULTIMATE,
       )!;
       const ultAnim = getAnimationDuration(ultEvent);
       expect(ultAnim).toBeGreaterThan(0);

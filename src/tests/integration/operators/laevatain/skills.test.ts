@@ -13,13 +13,15 @@
  */
 
 import { renderHook, act } from '@testing-library/react';
+import { NounType } from '../../../../dsl/semantics';
 import { useApp } from '../../../../app/useApp';
-import { SKILL_COLUMNS, OPERATOR_COLUMNS, INFLICTION_COLUMNS, ENEMY_OWNER_ID, USER_ID } from '../../../../model/channels';
+import { INFLICTION_COLUMNS, ENEMY_OWNER_ID, USER_ID } from '../../../../model/channels';
 import { ColumnType, EnhancementType, EventStatusType } from '../../../../consts/enums';
 import { FPS, TOTAL_FRAMES } from '../../../../utils/timeline';
 import { eventDuration } from '../../../../consts/viewTypes';
 import type { MiniTimeline } from '../../../../consts/viewTypes';
 
+const MELTING_FLAME_ID = 'MELTING_FLAME';
 const SLOT_LAEVATAIN = 'slot-0';
 
 function findColumn(app: ReturnType<typeof useApp>, slotId: string, columnId: string) {
@@ -55,68 +57,68 @@ describe('Laevatain Skills — integration through useApp', () => {
 
   it('basic attack added without crash', () => {
     const { result } = renderHook(() => useApp());
-    const col = findColumn(result.current, SLOT_LAEVATAIN, SKILL_COLUMNS.BASIC);
+    const col = findColumn(result.current, SLOT_LAEVATAIN, NounType.BASIC_ATTACK);
     expect(col).toBeDefined();
 
     act(() => {
       result.current.handleAddEvent(
-        SLOT_LAEVATAIN, SKILL_COLUMNS.BASIC, 2 * FPS, col!.defaultEvent!,
+        SLOT_LAEVATAIN, NounType.BASIC_ATTACK, 2 * FPS, col!.defaultEvent!,
       );
     });
 
     const basics = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === SKILL_COLUMNS.BASIC,
+      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === NounType.BASIC_ATTACK,
     );
     expect(basics.length).toBeGreaterThanOrEqual(1);
   });
 
   it('battle skill added without crash', () => {
     const { result } = renderHook(() => useApp());
-    const col = findColumn(result.current, SLOT_LAEVATAIN, SKILL_COLUMNS.BATTLE);
+    const col = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE_SKILL);
     expect(col).toBeDefined();
 
     act(() => {
       result.current.handleAddEvent(
-        SLOT_LAEVATAIN, SKILL_COLUMNS.BATTLE, 5 * FPS, col!.defaultEvent!,
+        SLOT_LAEVATAIN, NounType.BATTLE_SKILL, 5 * FPS, col!.defaultEvent!,
       );
     });
 
     const battles = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === SKILL_COLUMNS.BATTLE,
+      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === NounType.BATTLE_SKILL,
     );
     expect(battles).toHaveLength(1);
   });
 
   it('combo skill added without crash', () => {
     const { result } = renderHook(() => useApp());
-    const col = findColumn(result.current, SLOT_LAEVATAIN, SKILL_COLUMNS.COMBO);
+    const col = findColumn(result.current, SLOT_LAEVATAIN, NounType.COMBO_SKILL);
     expect(col).toBeDefined();
 
     act(() => {
       result.current.handleAddEvent(
-        SLOT_LAEVATAIN, SKILL_COLUMNS.COMBO, 5 * FPS, col!.defaultEvent!,
+        SLOT_LAEVATAIN, NounType.COMBO_SKILL, 5 * FPS, col!.defaultEvent!,
       );
     });
 
     const combos = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === SKILL_COLUMNS.COMBO,
+      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === NounType.COMBO_SKILL,
     );
     expect(combos).toHaveLength(1);
   });
 
   it('ultimate added without crash', () => {
     const { result } = renderHook(() => useApp());
-    const col = findColumn(result.current, SLOT_LAEVATAIN, SKILL_COLUMNS.ULTIMATE);
+    const col = findColumn(result.current, SLOT_LAEVATAIN, NounType.ULTIMATE);
     expect(col).toBeDefined();
 
     act(() => {
       result.current.handleAddEvent(
-        SLOT_LAEVATAIN, SKILL_COLUMNS.ULTIMATE, 5 * FPS, col!.defaultEvent!,
+        SLOT_LAEVATAIN, NounType.ULTIMATE, 5 * FPS, col!.defaultEvent!,
       );
     });
 
     const ultimates = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === SKILL_COLUMNS.ULTIMATE,
+      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === NounType.ULTIMATE,
     );
     expect(ultimates).toHaveLength(1);
   });
@@ -127,17 +129,17 @@ describe('Laevatain Skills — integration through useApp', () => {
 
   it('battle skill generates 1 Melting Flame stack', () => {
     const { result } = renderHook(() => useApp());
-    const col = findColumn(result.current, SLOT_LAEVATAIN, SKILL_COLUMNS.BATTLE);
+    const col = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE_SKILL);
     expect(col).toBeDefined();
 
     act(() => {
       result.current.handleAddEvent(
-        SLOT_LAEVATAIN, SKILL_COLUMNS.BATTLE, 5 * FPS, col!.defaultEvent!,
+        SLOT_LAEVATAIN, NounType.BATTLE_SKILL, 5 * FPS, col!.defaultEvent!,
       );
     });
 
     const mfProcessed = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === OPERATOR_COLUMNS.MELTING_FLAME && ev.ownerId === SLOT_LAEVATAIN,
+      (ev) => ev.columnId === MELTING_FLAME_ID && ev.ownerId === SLOT_LAEVATAIN,
     );
     expect(mfProcessed).toHaveLength(1);
     expect(mfProcessed[0].sourceSkillName).toBe('SMOULDERING_FIRE');
@@ -155,7 +157,7 @@ describe('Laevatain Skills — integration through useApp', () => {
     'basic attack absorbs %i heat infliction(s) and generates Melting Flame at 1:1',
     (heatCount) => {
       const { result } = renderHook(() => useApp());
-      const basicCol = findColumn(result.current, SLOT_LAEVATAIN, SKILL_COLUMNS.BASIC);
+      const basicCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BASIC_ATTACK);
       expect(basicCol).toBeDefined();
 
       // Place heat inflictions on enemy via freeform add (staggered by 1 frame)
@@ -182,13 +184,13 @@ describe('Laevatain Skills — integration through useApp', () => {
       const multiSegBasic = buildMultiSegmentBasic(basicCol!.defaultEvent!);
       act(() => {
         result.current.handleAddEvent(
-          SLOT_LAEVATAIN, SKILL_COLUMNS.BASIC, 3 * FPS, multiSegBasic,
+          SLOT_LAEVATAIN, NounType.BASIC_ATTACK, 3 * FPS, multiSegBasic,
         );
       });
 
       // Melting Flames generated at 1:1 ratio with absorbed heat inflictions
       const mfEvents = result.current.allProcessedEvents.filter(
-        (ev) => ev.columnId === OPERATOR_COLUMNS.MELTING_FLAME && ev.ownerId === SLOT_LAEVATAIN,
+        (ev) => ev.columnId === MELTING_FLAME_ID && ev.ownerId === SLOT_LAEVATAIN,
       );
       expect(mfEvents).toHaveLength(heatCount);
 
@@ -208,7 +210,7 @@ describe('Laevatain Skills — integration through useApp', () => {
 
   it('MF from heat absorption has TOTAL_FRAMES duration', () => {
     const { result } = renderHook(() => useApp());
-    const basicCol = findColumn(result.current, SLOT_LAEVATAIN, SKILL_COLUMNS.BASIC);
+    const basicCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BASIC_ATTACK);
 
     // Place 1 heat infliction + multi-segment basic to trigger absorption
     act(() => {
@@ -219,11 +221,11 @@ describe('Laevatain Skills — integration through useApp', () => {
     });
     const multiSegBasic = buildMultiSegmentBasic(basicCol!.defaultEvent!);
     act(() => {
-      result.current.handleAddEvent(SLOT_LAEVATAIN, SKILL_COLUMNS.BASIC, 3 * FPS, multiSegBasic);
+      result.current.handleAddEvent(SLOT_LAEVATAIN, NounType.BASIC_ATTACK, 3 * FPS, multiSegBasic);
     });
 
     const mfEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === OPERATOR_COLUMNS.MELTING_FLAME && ev.ownerId === SLOT_LAEVATAIN,
+      (ev) => ev.columnId === MELTING_FLAME_ID && ev.ownerId === SLOT_LAEVATAIN,
     );
     expect(mfEvents.length).toBeGreaterThanOrEqual(1);
     for (const ev of mfEvents) {
@@ -237,26 +239,26 @@ describe('Laevatain Skills — integration through useApp', () => {
 
   it('empowered battle skill consumes all 4 MF stacks', () => {
     const { result } = renderHook(() => useApp());
-    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, SKILL_COLUMNS.BATTLE);
+    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE_SKILL);
 
     // Place 4 battle skills well-spaced to generate 4 MF stacks
     for (let i = 0; i < 4; i++) {
       act(() => {
         result.current.handleAddEvent(
-          SLOT_LAEVATAIN, SKILL_COLUMNS.BATTLE, (2 + i * 10) * FPS, battleCol!.defaultEvent!,
+          SLOT_LAEVATAIN, NounType.BATTLE_SKILL, (2 + i * 10) * FPS, battleCol!.defaultEvent!,
         );
       });
     }
 
     // Verify all 4 battle skills were added
     const battleEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === SKILL_COLUMNS.BATTLE,
+      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === NounType.BATTLE_SKILL,
     );
     expect(battleEvents).toHaveLength(4);
 
     // Verify 4 MF stacks exist
     const mfBefore = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === OPERATOR_COLUMNS.MELTING_FLAME && ev.ownerId === SLOT_LAEVATAIN
+      (ev) => ev.columnId === MELTING_FLAME_ID && ev.ownerId === SLOT_LAEVATAIN
         && ev.eventStatus !== EventStatusType.CONSUMED,
     );
     expect(mfBefore).toHaveLength(4);
@@ -270,13 +272,13 @@ describe('Laevatain Skills — integration through useApp', () => {
     // Add empowered BS well after all 4 battle skills have triggered MF
     act(() => {
       result.current.handleAddEvent(
-        SLOT_LAEVATAIN, SKILL_COLUMNS.BATTLE, 50 * FPS, empoweredVariant!,
+        SLOT_LAEVATAIN, NounType.BATTLE_SKILL, 50 * FPS, empoweredVariant!,
       );
     });
 
     // All 4 MF stacks should be consumed
     const mfAfter = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === OPERATOR_COLUMNS.MELTING_FLAME && ev.ownerId === SLOT_LAEVATAIN,
+      (ev) => ev.columnId === MELTING_FLAME_ID && ev.ownerId === SLOT_LAEVATAIN,
     );
     const consumed = mfAfter.filter((ev) => ev.eventStatus === EventStatusType.CONSUMED);
     expect(consumed).toHaveLength(4);
@@ -292,21 +294,21 @@ describe('Laevatain Skills — integration through useApp', () => {
 
   it('at max MF stacks, basic attack does not consume heat inflictions', () => {
     const { result } = renderHook(() => useApp());
-    const basicCol = findColumn(result.current, SLOT_LAEVATAIN, SKILL_COLUMNS.BASIC);
-    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, SKILL_COLUMNS.BATTLE);
+    const basicCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BASIC_ATTACK);
+    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE_SKILL);
 
     // 1. Generate 4 MF stacks via 4 battle skills (each produces 1 MF)
     for (let i = 0; i < 4; i++) {
       act(() => {
         result.current.handleAddEvent(
-          SLOT_LAEVATAIN, SKILL_COLUMNS.BATTLE, (2 + i * 10) * FPS, battleCol!.defaultEvent!,
+          SLOT_LAEVATAIN, NounType.BATTLE_SKILL, (2 + i * 10) * FPS, battleCol!.defaultEvent!,
         );
       });
     }
 
     // Verify 4 MF stacks (max)
     const mfStacks = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === OPERATOR_COLUMNS.MELTING_FLAME && ev.ownerId === SLOT_LAEVATAIN
+      (ev) => ev.columnId === MELTING_FLAME_ID && ev.ownerId === SLOT_LAEVATAIN
         && ev.eventStatus !== EventStatusType.CONSUMED,
     );
     expect(mfStacks).toHaveLength(4);
@@ -329,7 +331,7 @@ describe('Laevatain Skills — integration through useApp', () => {
     // 3. Add multi-segment basic attack after heat inflictions (triggers FINAL_STRIKE)
     const multiSegBasic = buildMultiSegmentBasic(basicCol!.defaultEvent!);
     act(() => {
-      result.current.handleAddEvent(SLOT_LAEVATAIN, SKILL_COLUMNS.BASIC, 65 * FPS, multiSegBasic);
+      result.current.handleAddEvent(SLOT_LAEVATAIN, NounType.BASIC_ATTACK, 65 * FPS, multiSegBasic);
     });
 
     // 4. Heat inflictions should NOT be consumed (ALL pre-validation fails: can't APPLY more MF)
@@ -342,7 +344,7 @@ describe('Laevatain Skills — integration through useApp', () => {
 
     // 5. MF stacks should still be exactly 4 (unchanged)
     const mfAfter = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === OPERATOR_COLUMNS.MELTING_FLAME && ev.ownerId === SLOT_LAEVATAIN
+      (ev) => ev.columnId === MELTING_FLAME_ID && ev.ownerId === SLOT_LAEVATAIN
         && ev.eventStatus !== EventStatusType.CONSUMED,
     );
     expect(mfAfter).toHaveLength(4);

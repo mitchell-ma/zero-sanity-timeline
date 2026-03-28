@@ -5,11 +5,46 @@
         {
           "subjectDeterminer": "THIS",
           "subject": "OPERATOR",
-          "verb": "DEAL",
-          "object": "DAMAGE",
-          "with": {
-            "source": "SKILL"
-          }
+          "verb": "PERFORM",
+          "object": "BATTLE_SKILL"
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "SLASHING_EDGE",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
+        }
+      ]
+    },
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "PERFORM",
+          "object": "COMBO_SKILL"
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "SLASHING_EDGE",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
+        }
+      ]
+    },
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "PERFORM",
+          "object": "ULTIMATE"
         }
       ],
       "effects": [
@@ -23,6 +58,7 @@
       ]
     }
   ],
+  "clauseType": "ALL",
   "properties": {
     "id": "SLASHING_EDGE_TALENT",
     "name": "Slashing Edge (Talent)",

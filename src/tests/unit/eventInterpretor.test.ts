@@ -404,8 +404,9 @@ describe('EventInterpretorController: ANY', () => {
           conditions: [{
             subject: NounType.ENEMY,
             verb: VerbType.HAVE,
-            object: ObjectType.INFLICTION,
-            element: 'HEAT',
+            object: ObjectType.STATUS,
+            objectId: NounType.INFLICTION,
+            objectQualifier: AdjectiveType.HEAT,
           }],
           effects: [{
             verb: VerbType.APPLY,
@@ -418,8 +419,9 @@ describe('EventInterpretorController: ANY', () => {
           conditions: [{
             subject: NounType.ENEMY,
             verb: VerbType.HAVE,
-            object: ObjectType.INFLICTION,
-            element: 'CRYO',
+            object: ObjectType.STATUS,
+            objectId: NounType.INFLICTION,
+            objectQualifier: AdjectiveType.CRYO,
           }],
           effects: [{
             verb: VerbType.APPLY,

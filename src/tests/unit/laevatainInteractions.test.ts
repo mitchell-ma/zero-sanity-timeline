@@ -78,11 +78,13 @@
 import { TimelineEvent } from '../../consts/viewTypes';
 import { EventFrameType, EventStatusType, StatusType } from '../../consts/enums';
 import { VerbType, ObjectType, NounType, AdjectiveType, DeterminerType } from '../../dsl/semantics';
-import { ENEMY_OWNER_ID, USER_ID, OPERATOR_COLUMNS, SKILL_COLUMNS, INFLICTION_COLUMNS } from '../../model/channels';
+import { ENEMY_OWNER_ID, USER_ID, INFLICTION_COLUMNS } from '../../model/channels';
 import { buildSequencesFromOperatorJson, DataDrivenSkillEventSequence } from '../../controller/gameDataStore';
 import { wouldOverlapSiblings } from '../../controller/timeline/eventValidator';
 import { processCombatSimulation } from '../../controller/timeline/eventQueueController';
 import { SlotTriggerWiring } from '../../controller/timeline/eventQueueTypes';
+
+const MELTING_FLAME_ID = 'MELTING_FLAME';
 
 // ── Mock require.context before importing modules that use it ────────────────
 
@@ -514,14 +516,14 @@ describe('H. Cooldown Interactions', () => {
     const comboCooldown = 10 * FPS; // 1200 frames
     const totalRange = comboDuration + comboCooldown;
     const cs1 = makeEvent({
-      uid: 'cs-1', columnId: SKILL_COLUMNS.COMBO, startFrame: 0,
+      uid: 'cs-1', columnId: NounType.COMBO_SKILL, startFrame: 0,
       segments: [{ properties: { duration: comboDuration } }],
       nonOverlappableRange: totalRange,
     });
     // During cooldown
-    expect(wouldOverlapSiblings(SLOT_ID, SKILL_COLUMNS.COMBO, comboDuration + 300, 1, [cs1])).toBe(true);
+    expect(wouldOverlapSiblings(SLOT_ID, NounType.COMBO_SKILL, comboDuration + 300, 1, [cs1])).toBe(true);
     // After cooldown
-    expect(wouldOverlapSiblings(SLOT_ID, SKILL_COLUMNS.COMBO, totalRange, 1, [cs1])).toBe(false);
+    expect(wouldOverlapSiblings(SLOT_ID, NounType.COMBO_SKILL, totalRange, 1, [cs1])).toBe(false);
   });
 
   test('H5: Ultimate placement during cooldown is blocked', () => {
@@ -530,23 +532,23 @@ describe('H. Cooldown Interactions', () => {
     const ultCooldown = 10 * FPS; // 1200 frames
     const totalRange = ultAnimation + ultActive + ultCooldown;
     const ult1 = makeEvent({
-      uid: 'ult-1', columnId: SKILL_COLUMNS.ULTIMATE, startFrame: 0,
+      uid: 'ult-1', columnId: NounType.ULTIMATE, startFrame: 0,
       segments: [{ properties: { duration: ultAnimation } }], nonOverlappableRange: totalRange,
     });
     // During cooldown phase
     const cooldownStart = ultAnimation + ultActive;
-    expect(wouldOverlapSiblings(SLOT_ID, SKILL_COLUMNS.ULTIMATE, cooldownStart + 300, 1, [ult1])).toBe(true);
+    expect(wouldOverlapSiblings(SLOT_ID, NounType.ULTIMATE, cooldownStart + 300, 1, [ult1])).toBe(true);
     // After cooldown
-    expect(wouldOverlapSiblings(SLOT_ID, SKILL_COLUMNS.ULTIMATE, totalRange, 1, [ult1])).toBe(false);
+    expect(wouldOverlapSiblings(SLOT_ID, NounType.ULTIMATE, totalRange, 1, [ult1])).toBe(false);
   });
 
   test('H6: Battle skill back-to-back is valid (no cooldown)', () => {
     const bsDuration = Math.round(2.2 * FPS); // 264 frames
     const bs1 = makeEvent({
-      uid: 'bs-1', columnId: SKILL_COLUMNS.BATTLE, startFrame: 0,
+      uid: 'bs-1', columnId: NounType.BATTLE_SKILL, startFrame: 0,
       segments: [{ properties: { duration: bsDuration } }], nonOverlappableRange: bsDuration,
     });
-    expect(wouldOverlapSiblings(SLOT_ID, SKILL_COLUMNS.BATTLE, bsDuration, bsDuration, [bs1])).toBe(false);
+    expect(wouldOverlapSiblings(SLOT_ID, NounType.BATTLE_SKILL, bsDuration, bsDuration, [bs1])).toBe(false);
   });
 });
 
@@ -590,15 +592,15 @@ describe('K. Scorching Heart absorbs Antal combo mirrored heat', () => {
     });
     // Akekuri's heat infliction
     const akekuriHeat = makeEv({
-      uid: 'akekuri-heat-1', name: 'heatInfliction', ownerId: ENEMY_OWNER_ID,
-      columnId: 'heatInfliction', startFrame: 200, segments: [{ properties: { duration: 20 * FPS } }],
+      uid: 'akekuri-heat-1', name: INFLICTION_COLUMNS.HEAT, ownerId: ENEMY_OWNER_ID,
+      columnId: INFLICTION_COLUMNS.HEAT, startFrame: 200, segments: [{ properties: { duration: 20 * FPS } }],
       sourceOwnerId: SLOT_AKEKURI, sourceSkillName: 'BURST_OF_PASSION',
     });
     // Antal combo with comboTriggerColumnId set (mirrors heat)
     const antalCombo = makeEv({
       uid: 'antal-combo-1', name: 'EMP_TEST_SITE', ownerId: SLOT_ANTAL,
-      columnId: SKILL_COLUMNS.COMBO, startFrame: 400,
-      comboTriggerColumnId: 'heatInfliction',
+      columnId: NounType.COMBO_SKILL, startFrame: 400,
+      comboTriggerColumnId: INFLICTION_COLUMNS.HEAT,
       segments: [{
         properties: { duration: Math.round(0.8 * FPS) },
         frames: [{ offsetFrame: Math.round(0.7 * FPS), duplicateTriggerSource: true }],
@@ -607,7 +609,7 @@ describe('K. Scorching Heart absorbs Antal combo mirrored heat', () => {
     // Laevatain final strike after both heat inflictions exist
     const laevBasic = makeEv({
       uid: 'laev-basic-1', name: 'FLAMING_CINDERS', ownerId: SLOT_LAEV,
-      columnId: SKILL_COLUMNS.BASIC, startFrame: 600,
+      columnId: NounType.BASIC_ATTACK, startFrame: 600,
             segments: [
         { properties: { duration: 120, name: '1' } },
         { properties: { duration: 120, name: '2' } },
@@ -622,13 +624,13 @@ describe('K. Scorching Heart absorbs Antal combo mirrored heat', () => {
 
     // Mirrored heat infliction should have been generated
     const mirroredHeat = processed.filter(
-      (e) => e.columnId === 'heatInfliction' && e.sourceOwnerId === SLOT_ANTAL,
+      (e) => e.columnId === INFLICTION_COLUMNS.HEAT && e.sourceOwnerId === SLOT_ANTAL,
     );
     expect(mirroredHeat.length).toBeGreaterThan(0);
 
     // Melting Flame events should be generated from absorption
     const mfEvents = processed.filter(
-      (e) => e.columnId === OPERATOR_COLUMNS.MELTING_FLAME,
+      (e) => e.columnId === MELTING_FLAME_ID,
     );
     // Both pre-existing and queue-created mirrored heat inflictions are
     // absorbed by the queue at the Final Strike frame → 2 MF stacks.
@@ -636,7 +638,7 @@ describe('K. Scorching Heart absorbs Antal combo mirrored heat', () => {
 
     // Pre-existing heat infliction should be clamped by absorption.
     const preExistingHeat = processed.filter((e) =>
-      e.columnId === 'heatInfliction' && e.sourceOwnerId === SLOT_AKEKURI
+      e.columnId === INFLICTION_COLUMNS.HEAT && e.sourceOwnerId === SLOT_AKEKURI
     );
     expect(preExistingHeat.length).toBe(1);
     expect(preExistingHeat[0].eventStatus).toBe(EventStatusType.CONSUMED);
@@ -674,7 +676,7 @@ describe('L. Freeform infliction + Final Strike absorption', () => {
       id: 'FLAMING_CINDERS',
       name: 'FLAMING_CINDERS',
       ownerId: LAEV_SLOT,
-      columnId: SKILL_COLUMNS.BASIC,
+      columnId: NounType.BASIC_ATTACK,
       startFrame: 100,
             segments: [
         { properties: { duration: 120, name: '1' } },
@@ -687,7 +689,7 @@ describe('L. Freeform infliction + Final Strike absorption', () => {
       [heat, basic], loadoutProps, undefined, wirings,
     );
 
-    const mfEvents = processed.filter(ev => ev.columnId === OPERATOR_COLUMNS.MELTING_FLAME);
+    const mfEvents = processed.filter(ev => ev.columnId === MELTING_FLAME_ID);
     expect(mfEvents.length).toBe(1);
   });
 });
@@ -711,7 +713,7 @@ describe('M. Normal basic attack without external infliction', () => {
       id: 'FLAMING_CINDERS',
       name: 'FLAMING_CINDERS',
       ownerId: LAEV_SLOT,
-      columnId: SKILL_COLUMNS.BASIC,
+      columnId: NounType.BASIC_ATTACK,
       startFrame: 92,
             segments: [
         { properties: { duration: 120, name: '1' } },
@@ -729,7 +731,7 @@ describe('M. Normal basic attack without external infliction', () => {
     expect(heatEvents.length).toBe(0);
 
     // No infliction → no MF absorption
-    const mfEvents = processed.filter(ev => ev.columnId === OPERATOR_COLUMNS.MELTING_FLAME);
+    const mfEvents = processed.filter(ev => ev.columnId === MELTING_FLAME_ID);
     expect(mfEvents.length).toBe(0);
   });
 });

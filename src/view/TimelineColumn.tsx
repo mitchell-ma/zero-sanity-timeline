@@ -1,10 +1,11 @@
 import React from 'react';
+import { NounType } from '../dsl/semantics';
 import EventBlock from './EventBlock';
 import {
   frameToPx,
   durationToPx,
 } from '../utils/timeline';
-import { SKILL_COLUMNS, COMBO_WINDOW_COLUMN_ID } from '../model/channels';
+import { COMBO_WINDOW_COLUMN_ID } from '../model/channels';
 import { InteractionModeType, ColumnType, MicroColumnAssignment } from '../consts/enums';
 import {
   TimelineEvent,
@@ -235,7 +236,7 @@ function TimelineColumn({
       })()}
 
       {/* Combo disabled background */}
-      {col.columnId === SKILL_COLUMNS.COMBO && !alwaysAvailableCombo && (() => {
+      {col.columnId === NounType.COMBO_SKILL && !alwaysAvailableCombo && (() => {
         const enabled: { start: number; end: number }[] = [];
         for (const w of comboWindowEvents) {
           enabled.push({ start: w.startFrame, end: eventEndFrame(w) });
@@ -258,7 +259,7 @@ function TimelineColumn({
       })()}
 
       {/* SP zones on battle columns */}
-      {col.columnId === SKILL_COLUMNS.BATTLE && (() => {
+      {col.columnId === NounType.BATTLE_SKILL && (() => {
         const insuffGaps = insufficiencyZones ?? [];
         const sufficient: { start: number; end: number }[] = [];
         let cursor = 0;

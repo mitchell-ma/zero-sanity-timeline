@@ -12,13 +12,14 @@
  */
 
 import { renderHook, act } from '@testing-library/react';
+import { NounType } from '../../../dsl/semantics';
 import { useApp } from '../../../app/useApp';
-import { SKILL_COLUMNS, OPERATOR_COLUMNS } from '../../../model/channels';
 import { ColumnType, EnhancementType, EventStatusType, InteractionModeType } from '../../../consts/enums';
 import { FPS } from '../../../utils/timeline';
 import { eventDuration } from '../../../consts/viewTypes';
 import type { MiniTimeline } from '../../../consts/viewTypes';
 
+const MELTING_FLAME_ID = 'MELTING_FLAME';
 const SLOT_LAEVATAIN = 'slot-0';
 const SLOT_AKEKURI = 'slot-1';
 const SH_COLUMN = 'SCORCHING_HEART_EFFECT';
@@ -33,11 +34,11 @@ function findColumn(app: ReturnType<typeof useApp>, slotId: string, columnId: st
 }
 
 function addBattleSkills(app: ReturnType<typeof useApp>, count: number, startAt: number, spacing: number) {
-  const col = findColumn(app, SLOT_LAEVATAIN, SKILL_COLUMNS.BATTLE);
+  const col = findColumn(app, SLOT_LAEVATAIN, NounType.BATTLE_SKILL);
   for (let i = 0; i < count; i++) {
     act(() => {
       app.handleAddEvent(
-        SLOT_LAEVATAIN, SKILL_COLUMNS.BATTLE, (startAt + i * spacing) * FPS, col!.defaultEvent!,
+        SLOT_LAEVATAIN, NounType.BATTLE_SKILL, (startAt + i * spacing) * FPS, col!.defaultEvent!,
       );
     });
   }
@@ -45,7 +46,7 @@ function addBattleSkills(app: ReturnType<typeof useApp>, count: number, startAt:
 
 function getMfEvents(app: ReturnType<typeof useApp>) {
   return app.allProcessedEvents.filter(
-    (ev) => ev.columnId === OPERATOR_COLUMNS.MELTING_FLAME && ev.ownerId === SLOT_LAEVATAIN,
+    (ev) => ev.columnId === MELTING_FLAME_ID && ev.ownerId === SLOT_LAEVATAIN,
   );
 }
 
@@ -102,7 +103,7 @@ describe('Scorching Heart — Re-activation', () => {
   it('SH3: After MF consumption and re-accumulation, SH re-activates', () => {
     const { result } = renderHook(() => useApp());
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
-    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, SKILL_COLUMNS.BATTLE);
+    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE_SKILL);
 
     // First cycle: 4 BS → 4 MF → SH
     addBattleSkills(result.current, 4, 2, 10);
@@ -115,7 +116,7 @@ describe('Scorching Heart — Re-activation', () => {
     expect(empoweredVariant).toBeDefined();
     act(() => {
       result.current.handleAddEvent(
-        SLOT_LAEVATAIN, SKILL_COLUMNS.BATTLE, 50 * FPS, empoweredVariant!,
+        SLOT_LAEVATAIN, NounType.BATTLE_SKILL, 50 * FPS, empoweredVariant!,
       );
     });
 
@@ -133,7 +134,7 @@ describe('Scorching Heart — Re-activation', () => {
   it('SH4: After MF consumption, only 2 BS do NOT re-activate SH', () => {
     const { result } = renderHook(() => useApp());
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
-    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, SKILL_COLUMNS.BATTLE);
+    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE_SKILL);
 
     // First cycle: 4 BS → SH
     addBattleSkills(result.current, 4, 2, 10);
@@ -145,7 +146,7 @@ describe('Scorching Heart — Re-activation', () => {
     );
     act(() => {
       result.current.handleAddEvent(
-        SLOT_LAEVATAIN, SKILL_COLUMNS.BATTLE, 50 * FPS, empoweredVariant!,
+        SLOT_LAEVATAIN, NounType.BATTLE_SKILL, 50 * FPS, empoweredVariant!,
       );
     });
 
@@ -209,21 +210,21 @@ describe('Scorching Heart — Under Threshold', () => {
 describe('Scorching Heart — Cross-operator Isolation', () => {
   it('SH8: Akekuri battle skills do NOT contribute to Laevatain SH', () => {
     const { result } = renderHook(() => useApp());
-    const akekuriCol = findColumn(result.current, SLOT_AKEKURI, SKILL_COLUMNS.BATTLE);
+    const akekuriCol = findColumn(result.current, SLOT_AKEKURI, NounType.BATTLE_SKILL);
     expect(akekuriCol).toBeDefined();
 
     // 4 Akekuri battle skills (don't produce MF)
     for (let i = 0; i < 4; i++) {
       act(() => {
         result.current.handleAddEvent(
-          SLOT_AKEKURI, SKILL_COLUMNS.BATTLE, (5 + i * 10) * FPS, akekuriCol!.defaultEvent!,
+          SLOT_AKEKURI, NounType.BATTLE_SKILL, (5 + i * 10) * FPS, akekuriCol!.defaultEvent!,
         );
       });
     }
 
     // No MF from Akekuri
     const mfAkekuri = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === OPERATOR_COLUMNS.MELTING_FLAME && ev.ownerId === SLOT_AKEKURI,
+      (ev) => ev.columnId === MELTING_FLAME_ID && ev.ownerId === SLOT_AKEKURI,
     );
     expect(mfAkekuri).toHaveLength(0);
 
@@ -265,7 +266,7 @@ describe('Scorching Heart — RESET Stacking', () => {
   it('SH10: Second SH resets the first — only 1 active, duration refreshed', () => {
     const { result } = renderHook(() => useApp());
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
-    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, SKILL_COLUMNS.BATTLE);
+    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE_SKILL);
 
     // First cycle: 4 BS at 2s, 4s, 6s, 8s → SH activates around ~8s+offset
     addBattleSkills(result.current, 4, 2, 2);
@@ -279,7 +280,7 @@ describe('Scorching Heart — RESET Stacking', () => {
     );
     act(() => {
       result.current.handleAddEvent(
-        SLOT_LAEVATAIN, SKILL_COLUMNS.BATTLE, 12 * FPS, empoweredVariant!,
+        SLOT_LAEVATAIN, NounType.BATTLE_SKILL, 12 * FPS, empoweredVariant!,
       );
     });
 

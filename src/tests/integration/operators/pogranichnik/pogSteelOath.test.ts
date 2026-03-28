@@ -13,8 +13,9 @@
  */
 
 import { renderHook, act } from '@testing-library/react';
+import { NounType } from '../../../../dsl/semantics';
 import { useApp } from '../../../../app/useApp';
-import { SKILL_COLUMNS, ENEMY_OWNER_ID } from '../../../../model/channels';
+import { ENEMY_OWNER_ID } from '../../../../model/channels';
 import { COMMON_OWNER_ID } from '../../../../controller/slot/commonSlotController';
 import { ColumnType, InteractionModeType } from '../../../../consts/enums';
 import { FPS } from '../../../../utils/timeline';
@@ -45,29 +46,29 @@ describe('Pogranichnik Steel Oath — integration through useApp', () => {
 
   it('A1: Ultimate places in the ULTIMATE column', () => {
     const { result } = setupWithPogranichnik();
-    const ultCol = findColumn(result.current, SLOT_1, SKILL_COLUMNS.ULTIMATE);
+    const ultCol = findColumn(result.current, SLOT_1, NounType.ULTIMATE);
     expect(ultCol).toBeDefined();
     expect(ultCol!.defaultEvent).toBeDefined();
 
     act(() => {
       result.current.handleAddEvent(
-        SLOT_1, SKILL_COLUMNS.ULTIMATE, 1 * FPS, ultCol!.defaultEvent!,
+        SLOT_1, NounType.ULTIMATE, 1 * FPS, ultCol!.defaultEvent!,
       );
     });
 
     const ultEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_1 && ev.columnId === SKILL_COLUMNS.ULTIMATE,
+      (ev) => ev.ownerId === SLOT_1 && ev.columnId === NounType.ULTIMATE,
     );
     expect(ultEvents).toHaveLength(1);
   });
 
   it('B1: Ultimate generates STEEL_OATH team status with 30s duration', () => {
     const { result } = setupWithPogranichnik();
-    const ultCol = findColumn(result.current, SLOT_1, SKILL_COLUMNS.ULTIMATE);
+    const ultCol = findColumn(result.current, SLOT_1, NounType.ULTIMATE);
 
     act(() => {
       result.current.handleAddEvent(
-        SLOT_1, SKILL_COLUMNS.ULTIMATE, 1 * FPS, ultCol!.defaultEvent!,
+        SLOT_1, NounType.ULTIMATE, 1 * FPS, ultCol!.defaultEvent!,
       );
     });
 
@@ -81,20 +82,20 @@ describe('Pogranichnik Steel Oath — integration through useApp', () => {
 
   it('C1: Laevatain ultimate does NOT consume Steel Oath', () => {
     const { result } = setupWithPogranichnik();
-    const pogUltCol = findColumn(result.current, SLOT_1, SKILL_COLUMNS.ULTIMATE);
-    const laevUltCol = findColumn(result.current, SLOT_0, SKILL_COLUMNS.ULTIMATE);
+    const pogUltCol = findColumn(result.current, SLOT_1, NounType.ULTIMATE);
+    const laevUltCol = findColumn(result.current, SLOT_0, NounType.ULTIMATE);
 
     // Pogranichnik ult at 0s → creates Steel Oath
     act(() => {
       result.current.handleAddEvent(
-        SLOT_1, SKILL_COLUMNS.ULTIMATE, 0, pogUltCol!.defaultEvent!,
+        SLOT_1, NounType.ULTIMATE, 0, pogUltCol!.defaultEvent!,
       );
     });
 
     // Laevatain ult at 5s → should NOT consume Steel Oath
     act(() => {
       result.current.handleAddEvent(
-        SLOT_0, SKILL_COLUMNS.ULTIMATE, 5 * FPS, laevUltCol!.defaultEvent!,
+        SLOT_0, NounType.ULTIMATE, 5 * FPS, laevUltCol!.defaultEvent!,
       );
     });
 
@@ -108,20 +109,20 @@ describe('Pogranichnik Steel Oath — integration through useApp', () => {
 
   it('D1: Combo skill consumes Steel Oath and generates STEEL_OATH_HARASS', () => {
     const { result } = setupWithPogranichnik();
-    const pogUltCol = findColumn(result.current, SLOT_1, SKILL_COLUMNS.ULTIMATE);
-    const pogComboCol = findColumn(result.current, SLOT_1, SKILL_COLUMNS.COMBO);
+    const pogUltCol = findColumn(result.current, SLOT_1, NounType.ULTIMATE);
+    const pogComboCol = findColumn(result.current, SLOT_1, NounType.COMBO_SKILL);
 
     // Pogranichnik ult at 0s → creates Steel Oath (5 stacks)
     act(() => {
       result.current.handleAddEvent(
-        SLOT_1, SKILL_COLUMNS.ULTIMATE, 0, pogUltCol!.defaultEvent!,
+        SLOT_1, NounType.ULTIMATE, 0, pogUltCol!.defaultEvent!,
       );
     });
 
     // Pogranichnik combo skill at 5s → should trigger PERFORM COMBO_SKILL → consume 1 Steel Oath → HARASS
     act(() => {
       result.current.handleAddEvent(
-        SLOT_1, SKILL_COLUMNS.COMBO, 5 * FPS, pogComboCol!.defaultEvent!,
+        SLOT_1, NounType.COMBO_SKILL, 5 * FPS, pogComboCol!.defaultEvent!,
       );
     });
 
@@ -134,20 +135,20 @@ describe('Pogranichnik Steel Oath — integration through useApp', () => {
 
   it('D2: Consumption clamps old events and creates continuations with fewer stacks', () => {
     const { result } = setupWithPogranichnik();
-    const pogUltCol = findColumn(result.current, SLOT_1, SKILL_COLUMNS.ULTIMATE);
-    const pogComboCol = findColumn(result.current, SLOT_1, SKILL_COLUMNS.COMBO);
+    const pogUltCol = findColumn(result.current, SLOT_1, NounType.ULTIMATE);
+    const pogComboCol = findColumn(result.current, SLOT_1, NounType.COMBO_SKILL);
 
     // Pogranichnik ult at 0s → creates Steel Oath (5 stacks)
     act(() => {
       result.current.handleAddEvent(
-        SLOT_1, SKILL_COLUMNS.ULTIMATE, 0, pogUltCol!.defaultEvent!,
+        SLOT_1, NounType.ULTIMATE, 0, pogUltCol!.defaultEvent!,
       );
     });
 
     // Combo skill at 5s → consume 1 stack
     act(() => {
       result.current.handleAddEvent(
-        SLOT_1, SKILL_COLUMNS.COMBO, 5 * FPS, pogComboCol!.defaultEvent!,
+        SLOT_1, NounType.COMBO_SKILL, 5 * FPS, pogComboCol!.defaultEvent!,
       );
     });
 
@@ -185,27 +186,27 @@ describe('Pogranichnik Steel Oath — integration through useApp', () => {
       result.current.setInteractionMode(InteractionModeType.FREEFORM);
     });
 
-    const pogUltCol = findColumn(result.current, SLOT_1, SKILL_COLUMNS.ULTIMATE);
-    const chenBattleCol = findColumn(result.current, SLOT_2, SKILL_COLUMNS.BATTLE);
+    const pogUltCol = findColumn(result.current, SLOT_1, NounType.ULTIMATE);
+    const chenBattleCol = findColumn(result.current, SLOT_2, NounType.BATTLE_SKILL);
 
     // Pogranichnik ult at 0s → creates Steel Oath (5 stacks)
     act(() => {
       result.current.handleAddEvent(
-        SLOT_1, SKILL_COLUMNS.ULTIMATE, 0, pogUltCol!.defaultEvent!,
+        SLOT_1, NounType.ULTIMATE, 0, pogUltCol!.defaultEvent!,
       );
     });
 
     // First Chen BS at 3s → APPLY LIFT adds Vulnerable I only (no physical status yet)
     act(() => {
       result.current.handleAddEvent(
-        SLOT_2, SKILL_COLUMNS.BATTLE, 3 * FPS, chenBattleCol!.defaultEvent!,
+        SLOT_2, NounType.BATTLE_SKILL, 3 * FPS, chenBattleCol!.defaultEvent!,
       );
     });
 
     // Second Chen BS at 6s → enemy has Vulnerable → APPLY LIFT creates Lift status
     act(() => {
       result.current.handleAddEvent(
-        SLOT_2, SKILL_COLUMNS.BATTLE, 6 * FPS, chenBattleCol!.defaultEvent!,
+        SLOT_2, NounType.BATTLE_SKILL, 6 * FPS, chenBattleCol!.defaultEvent!,
       );
     });
 
@@ -218,8 +219,8 @@ describe('Pogranichnik Steel Oath — integration through useApp', () => {
 
   it('F1: Two consumptions produce descending stack counts: N → N-1 → N-2', () => {
     const { result } = setupWithPogranichnik();
-    const pogUltCol = findColumn(result.current, SLOT_1, SKILL_COLUMNS.ULTIMATE);
-    const pogComboCol = findColumn(result.current, SLOT_1, SKILL_COLUMNS.COMBO);
+    const pogUltCol = findColumn(result.current, SLOT_1, NounType.ULTIMATE);
+    const pogComboCol = findColumn(result.current, SLOT_1, NounType.COMBO_SKILL);
 
     act(() => {
       result.current.setInteractionMode(InteractionModeType.FREEFORM);
@@ -228,19 +229,19 @@ describe('Pogranichnik Steel Oath — integration through useApp', () => {
     // Pogranichnik ult at 0s → creates Steel Oath (5 stacks)
     act(() => {
       result.current.handleAddEvent(
-        SLOT_1, SKILL_COLUMNS.ULTIMATE, 0, pogUltCol!.defaultEvent!,
+        SLOT_1, NounType.ULTIMATE, 0, pogUltCol!.defaultEvent!,
       );
     });
 
     // Two combo skills well after Steel Oath creation, spaced far enough for cooldown
     act(() => {
       result.current.handleAddEvent(
-        SLOT_1, SKILL_COLUMNS.COMBO, 5 * FPS, pogComboCol!.defaultEvent!,
+        SLOT_1, NounType.COMBO_SKILL, 5 * FPS, pogComboCol!.defaultEvent!,
       );
     });
     act(() => {
       result.current.handleAddEvent(
-        SLOT_1, SKILL_COLUMNS.COMBO, 20 * FPS, pogComboCol!.defaultEvent!,
+        SLOT_1, NounType.COMBO_SKILL, 20 * FPS, pogComboCol!.defaultEvent!,
       );
     });
 

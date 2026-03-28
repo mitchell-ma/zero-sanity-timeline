@@ -4,6 +4,7 @@
  */
 
 import { useState, useCallback, useRef, useMemo, useEffect } from 'react';
+import { NounType } from '../dsl/semantics';
 import { initCustomWeapons } from '../controller/custom/customWeaponController';
 import { initCustomGearSets } from '../controller/custom/customGearController';
 import { initCustomOperators } from '../controller/custom/customOperatorController';
@@ -87,7 +88,7 @@ import { resolveGainEfficiencies } from '../controller/timeline/ultimateEnergyCo
 import { StatType, InteractionModeType, InfoLevel, CritMode, EnhancementType, ThemeType, ColumnType, LoadoutNodeType } from '../consts/enums';
 import { GlobalSettings, loadSettings, saveSettings, migrateLegacySettings, PERFORMANCE_THROTTLE } from '../consts/settings';
 import { configurePool } from '../controller/timeline/objectPool';
-import { SKILL_COLUMNS, COMBO_WINDOW_COLUMN_ID } from '../model/channels';
+import { COMBO_WINDOW_COLUMN_ID } from '../model/channels';
 import type { SkillPointConsumptionHistory, ResourceZone } from '../controller/timeline/skillPointTimeline';
 
 // ── Module-scope initialization ──────────────────────────────────────────────
@@ -940,17 +941,17 @@ export function useApp() {
       if (interactionModeRef.current === InteractionModeType.STRICT) {
         if (wouldOverlapNonOverlappable(prev, ev, ev.startFrame, processedEventsRef.current)) return prev;
         // Check SP sufficiency for battle skills
-        if (columnId === SKILL_COLUMNS.BATTLE && !hasSufficientSP(ownerId, atFrame)) return prev;
+        if (columnId === NounType.BATTLE_SKILL && !hasSufficientSP(ownerId, atFrame)) return prev;
         // Enhanced skills require an active ultimate
         if (ev.enhancementType === EnhancementType.ENHANCED) {
           // Use processed events (full segments) for the ultimate check;
           // fall back to raw prev if a just-added ultimate isn't processed yet
           const eventsToCheck = processedEventsRef.current.some(
-            (e) => e.ownerId === ownerId && e.columnId === SKILL_COLUMNS.ULTIMATE,
+            (e) => e.ownerId === ownerId && e.columnId === NounType.ULTIMATE,
           ) ? processedEventsRef.current : prev;
           const ultActive = eventsToCheck.some(
             (e) => {
-              if (e.ownerId !== ownerId || e.columnId !== SKILL_COLUMNS.ULTIMATE) return false;
+              if (e.ownerId !== ownerId || e.columnId !== NounType.ULTIMATE) return false;
               // Ultimate segments: [animation, statis, active, cooldown]
               // "Active" phase starts after animation + statis
               const segs = e.segments;

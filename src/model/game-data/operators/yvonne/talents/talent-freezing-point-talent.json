@@ -5,7 +5,9 @@
         {
           "subject": "ENEMY",
           "verb": "HAVE",
-          "object": "CRYO_INFLICTION"
+          "object": "STATUS",
+          "objectId": "INFLICTION",
+          "objectQualifier": "CRYO"
         }
       ],
       "effects": [

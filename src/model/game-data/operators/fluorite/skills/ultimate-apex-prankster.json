@@ -295,7 +295,8 @@
                 {
                   "subject": "ENEMY",
                   "verb": "HAVE",
-                  "object": "INFLICTION",
+                  "object": "STATUS",
+                  "objectId": "INFLICTION",
                   "objectQualifier": "CRYO",
                   "with": {
                     "stacks": {
@@ -325,7 +326,8 @@
                 {
                   "subject": "ENEMY",
                   "verb": "HAVE",
-                  "object": "INFLICTION",
+                  "object": "STATUS",
+                  "objectId": "INFLICTION",
                   "objectQualifier": "NATURE",
                   "with": {
                     "stacks": {

@@ -249,8 +249,8 @@
           "subject": "ENEMY",
           "verb": "HAVE",
           "object": "STATUS",
-          "objectId": "PHYSICAL",
-          "objectQualifier": "SUSCEPTIBILITY"
+          "objectId": "SUSCEPTIBILITY",
+          "objectQualifier": "PHYSICAL"
         }
       ]
     },

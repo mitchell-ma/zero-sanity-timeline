@@ -9,6 +9,7 @@
  * values are validated against known enums/registries before use.
  */
 
+import { NounType } from '../dsl/semantics';
 import { SheetData, cleanSheetData } from './sheetStorage';
 import { OperatorLoadoutState, EMPTY_LOADOUT } from '../view/OperatorLoadoutHeader';
 import { LoadoutProperties, DEFAULT_LOADOUT_PROPERTIES } from '../view/InformationPane';
@@ -760,7 +761,7 @@ export async function decodeEmbed(
   // Build visible skills (all visible for shared URLs)
   const visibleSkills: Record<string, Record<string, boolean>> = {};
   for (const slotId of SLOT_IDS) {
-    visibleSkills[slotId] = { basic: true, battle: true, combo: true, ultimate: true };
+    visibleSkills[slotId] = { [NounType.BASIC_ATTACK]: true, [NounType.BATTLE_SKILL]: true, [NounType.COMBO_SKILL]: true, [NounType.ULTIMATE]: true };
   }
 
   // Reconstruct resource configs

@@ -60,7 +60,7 @@
 import { TimelineEvent } from '../../consts/viewTypes';
 import { SegmentType, StatusType, TimeDependency } from '../../consts/enums';
 import { VerbType, ObjectType, NounType, AdjectiveType, DeterminerType } from '../../dsl/semantics';
-import { SKILL_COLUMNS, ENEMY_OWNER_ID, COMBO_WINDOW_COLUMN_ID } from '../../model/channels';
+import { ENEMY_OWNER_ID, COMBO_WINDOW_COLUMN_ID, INFLICTION_COLUMNS, PHYSICAL_INFLICTION_COLUMNS } from '../../model/channels';
 import { buildSequencesFromOperatorJson, DataDrivenSkillEventSequence } from '../../controller/gameDataStore';
 import { wouldOverlapSiblings } from '../../controller/timeline/eventValidator';
 import { processCombatSimulation } from '../../controller/timeline/eventQueueController';
@@ -350,6 +350,7 @@ describe('C. Combo Skill (Eruption Column)', () => {
       expect(n.subject).toBe(NounType.ENEMY);
       expect(n.verb).toBe(VerbType.HAVE);
       expect(n.object).toBe(NounType.STATUS);
+      expect(n.objectId).toBe(NounType.INFLICTION);
     }
   });
 
@@ -623,12 +624,12 @@ describe('I. Cooldown Interactions', () => {
     const comboCooldown = 18 * FPS;
     const totalRange = comboDuration + comboCooldown;
     const cs1 = makeEvent({
-      uid: 'cs-1', columnId: SKILL_COLUMNS.COMBO, startFrame: 0,
+      uid: 'cs-1', columnId: NounType.COMBO_SKILL, startFrame: 0,
       segments: [{ properties: { duration: comboDuration } }],
       nonOverlappableRange: totalRange,
     });
-    expect(wouldOverlapSiblings(SLOT_ID, SKILL_COLUMNS.COMBO, comboDuration + 300, 1, [cs1])).toBe(true);
-    expect(wouldOverlapSiblings(SLOT_ID, SKILL_COLUMNS.COMBO, totalRange, 1, [cs1])).toBe(false);
+    expect(wouldOverlapSiblings(SLOT_ID, NounType.COMBO_SKILL, comboDuration + 300, 1, [cs1])).toBe(true);
+    expect(wouldOverlapSiblings(SLOT_ID, NounType.COMBO_SKILL, totalRange, 1, [cs1])).toBe(false);
   });
 
   test('H6: Ultimate with 0s cooldown allows immediate re-use after active phase', () => {
@@ -636,10 +637,10 @@ describe('I. Cooldown Interactions', () => {
     const ultActive = 3 * FPS;
     const totalRange = ultDuration + ultActive; // no cooldown
     const ult1 = makeEvent({
-      uid: 'ult-1', columnId: SKILL_COLUMNS.ULTIMATE, startFrame: 0,
+      uid: 'ult-1', columnId: NounType.ULTIMATE, startFrame: 0,
       segments: [{ properties: { duration: ultDuration } }], nonOverlappableRange: totalRange,
     });
-    expect(wouldOverlapSiblings(SLOT_ID, SKILL_COLUMNS.ULTIMATE, totalRange, 1, [ult1])).toBe(false);
+    expect(wouldOverlapSiblings(SLOT_ID, NounType.ULTIMATE, totalRange, 1, [ult1])).toBe(false);
   });
 });
 
@@ -669,7 +670,7 @@ describe('J. Combo Activation Window Pipeline', () => {
       uid: `ba-${slotId}-${startFrame}`,
       name: 'ROCKY_WHISPERS',
       ownerId: slotId,
-      columnId: SKILL_COLUMNS.BASIC,
+      columnId: NounType.BASIC_ATTACK,
       startFrame,
             segments: [
         { properties: { duration: Math.round(0.4 * FPS) }, frames: [{ offsetFrame: Math.round(0.2 * FPS) }] },
@@ -680,12 +681,12 @@ describe('J. Combo Activation Window Pipeline', () => {
     });
   }
 
-  function makeInflictionEvent(element: string, startFrame: number, durationFrames: number): TimelineEvent {
+  function makeInflictionEvent(columnId: string, startFrame: number, durationFrames: number): TimelineEvent {
     return makeEvent({
-      uid: `inflict-${element}-${startFrame}`,
-      name: `${element}Infliction`,
+      uid: `inflict-${columnId}-${startFrame}`,
+      name: columnId,
       ownerId: ENEMY_OWNER_ID,
-      columnId: `${element}Infliction`,
+      columnId,
       startFrame,
       segments: [{ properties: { duration: durationFrames } }],
       sourceOwnerId: SLOT_OTHER,
@@ -707,7 +708,7 @@ describe('J. Combo Activation Window Pipeline', () => {
   test('J2: Combo window blocked when enemy has active heat infliction at trigger time', () => {
     const ba = makeBasicAttack(SLOT_ARDELIA, 0);
     // Heat infliction covering the entire basic attack duration
-    const heat = makeInflictionEvent('heat', 0, 20 * FPS);
+    const heat = makeInflictionEvent(INFLICTION_COLUMNS.HEAT, 0, 20 * FPS);
     const wirings = [ardeliaWiring(), otherOperatorWiring()];
 
     const processed = processCombatSimulation([ba, heat], undefined, undefined, wirings);
@@ -719,7 +720,7 @@ describe('J. Combo Activation Window Pipeline', () => {
 
   test('J3: Combo window blocked when enemy has active nature infliction at trigger time', () => {
     const ba = makeBasicAttack(SLOT_ARDELIA, 0);
-    const nature = makeInflictionEvent('nature', 0, 20 * FPS);
+    const nature = makeInflictionEvent(INFLICTION_COLUMNS.NATURE, 0, 20 * FPS);
     const wirings = [ardeliaWiring(), otherOperatorWiring()];
 
     const processed = processCombatSimulation([ba, nature], undefined, undefined, wirings);
@@ -732,7 +733,7 @@ describe('J. Combo Activation Window Pipeline', () => {
   test('J4: Combo window opens when infliction has expired before final strike', () => {
     const ba = makeBasicAttack(SLOT_ARDELIA, 10 * FPS);
     // Heat infliction that ends well before the final strike trigger frame
-    const heat = makeInflictionEvent('heat', 0, 2 * FPS);
+    const heat = makeInflictionEvent(INFLICTION_COLUMNS.HEAT, 0, 2 * FPS);
     const wirings = [ardeliaWiring(), otherOperatorWiring()];
 
     const processed = processCombatSimulation([ba, heat], undefined, undefined, wirings);
@@ -745,7 +746,7 @@ describe('J. Combo Activation Window Pipeline', () => {
 
   test('J5: Combo window blocked when enemy has active vulnerability', () => {
     const ba = makeBasicAttack(SLOT_ARDELIA, 0);
-    const vuln = makeInflictionEvent('vulnerable', 0, 20 * FPS);
+    const vuln = makeInflictionEvent(PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, 0, 20 * FPS);
     const wirings = [ardeliaWiring(), otherOperatorWiring()];
 
     const processed = processCombatSimulation([ba, vuln], undefined, undefined, wirings);
@@ -779,7 +780,7 @@ describe('J. Combo Activation Window Pipeline', () => {
       uid: 'ba-timestop',
       name: 'ROCKY_WHISPERS',
       ownerId: SLOT_OTHER,
-      columnId: SKILL_COLUMNS.BASIC,
+      columnId: NounType.BASIC_ATTACK,
       startFrame: 0,
             segments: [
         { properties: { duration: 48 }, frames: [{ offsetFrame: 24 }] },
@@ -793,12 +794,12 @@ describe('J. Combo Activation Window Pipeline', () => {
       uid: 'combo-ts',
       name: 'SOME_COMBO',
       ownerId: SLOT_OTHER,
-      columnId: SKILL_COLUMNS.COMBO,
+      columnId: NounType.COMBO_SKILL,
       startFrame: 350,
             segments: [{ properties: { segmentTypes: [SegmentType.ANIMATION], duration: 120, timeDependency: TimeDependency.REAL_TIME } }],
     });
     // Raw 450 → extended to 570 by timestop. Active at 496, expired at 616.
-    const heat = makeInflictionEvent('heat', 0, 450);
+    const heat = makeInflictionEvent(INFLICTION_COLUMNS.HEAT, 0, 450);
     const wirings = [ardeliaWiring(), otherOperatorWiring()];
 
     const processed = processCombatSimulation([ba, combo, heat], undefined, undefined, wirings);
@@ -817,7 +818,7 @@ describe('J. Combo Activation Window Pipeline', () => {
       uid: 'ba-timestop-blocked',
       name: 'ROCKY_WHISPERS',
       ownerId: SLOT_OTHER,
-      columnId: SKILL_COLUMNS.BASIC,
+      columnId: NounType.BASIC_ATTACK,
       startFrame: 0,
             segments: [
         { properties: { duration: 48 }, frames: [{ offsetFrame: 24 }] },
@@ -830,12 +831,12 @@ describe('J. Combo Activation Window Pipeline', () => {
       uid: 'combo-ts2',
       name: 'SOME_COMBO',
       ownerId: SLOT_OTHER,
-      columnId: SKILL_COLUMNS.COMBO,
+      columnId: NounType.COMBO_SKILL,
       startFrame: 350,
             segments: [{ properties: { segmentTypes: [SegmentType.ANIMATION], duration: 120, timeDependency: TimeDependency.REAL_TIME } }],
     });
     // Raw 550 → extended 670. Active at both 496 and 616.
-    const heat = makeInflictionEvent('heat', 0, 550);
+    const heat = makeInflictionEvent(INFLICTION_COLUMNS.HEAT, 0, 550);
     const wirings = [ardeliaWiring(), otherOperatorWiring()];
 
     const processed = processCombatSimulation([ba, combo, heat], undefined, undefined, wirings);
@@ -854,7 +855,7 @@ describe('J. Combo Activation Window Pipeline', () => {
       uid: 'ba-no-timestop',
       name: 'ROCKY_WHISPERS',
       ownerId: SLOT_OTHER,
-      columnId: SKILL_COLUMNS.BASIC,
+      columnId: NounType.BASIC_ATTACK,
       startFrame: 0,
             segments: [
         { properties: { duration: 48 }, frames: [{ offsetFrame: 24 }] },
@@ -864,7 +865,7 @@ describe('J. Combo Activation Window Pipeline', () => {
       ],
     });
     // No combo timestop — infliction raw 497 covers raw trigger 496
-    const heat = makeInflictionEvent('heat', 0, 497);
+    const heat = makeInflictionEvent(INFLICTION_COLUMNS.HEAT, 0, 497);
     const wirings = [ardeliaWiring(), otherOperatorWiring()];
 
     const processed = processCombatSimulation([ba, heat], undefined, undefined, wirings);

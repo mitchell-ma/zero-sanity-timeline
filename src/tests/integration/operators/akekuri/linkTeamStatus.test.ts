@@ -12,8 +12,8 @@
  */
 
 import { renderHook, act } from '@testing-library/react';
+import { NounType } from '../../../../dsl/semantics';
 import { useApp } from '../../../../app/useApp';
-import { SKILL_COLUMNS } from '../../../../model/channels';
 import { ColumnType, InteractionModeType, StatusType } from '../../../../consts/enums';
 import { FPS } from '../../../../utils/timeline';
 import type { MiniTimeline } from '../../../../consts/viewTypes';
@@ -47,12 +47,12 @@ describe('Akekuri Ultimate → Link Team Status', () => {
       result.current.setInteractionMode(InteractionModeType.FREEFORM);
     });
 
-    const ultCol = findColumn(result.current, SLOT_AKEKURI, SKILL_COLUMNS.ULTIMATE);
+    const ultCol = findColumn(result.current, SLOT_AKEKURI, NounType.ULTIMATE);
     expect(ultCol).toBeDefined();
 
     act(() => {
       result.current.handleAddEvent(
-        SLOT_AKEKURI, SKILL_COLUMNS.ULTIMATE, 1 * FPS, ultCol!.defaultEvent!,
+        SLOT_AKEKURI, NounType.ULTIMATE, 1 * FPS, ultCol!.defaultEvent!,
       );
     });
 
@@ -69,28 +69,28 @@ describe('Akekuri Ultimate → Link Team Status', () => {
       result.current.setInteractionMode(InteractionModeType.FREEFORM);
     });
 
-    const ultCol = findColumn(result.current, SLOT_AKEKURI, SKILL_COLUMNS.ULTIMATE);
-    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, SKILL_COLUMNS.BATTLE);
+    const ultCol = findColumn(result.current, SLOT_AKEKURI, NounType.ULTIMATE);
+    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE_SKILL);
     expect(ultCol).toBeDefined();
     expect(battleCol).toBeDefined();
 
     // Akekuri Ultimate at 1s — LINK applied after ~1.68s animation
     act(() => {
       result.current.handleAddEvent(
-        SLOT_AKEKURI, SKILL_COLUMNS.ULTIMATE, 1 * FPS, ultCol!.defaultEvent!,
+        SLOT_AKEKURI, NounType.ULTIMATE, 1 * FPS, ultCol!.defaultEvent!,
       );
     });
 
     // Laevatain Battle Skill at 4s (while LINK is active)
     act(() => {
       result.current.handleAddEvent(
-        SLOT_LAEVATAIN, SKILL_COLUMNS.BATTLE, 4 * FPS, battleCol!.defaultEvent!,
+        SLOT_LAEVATAIN, NounType.BATTLE_SKILL, 4 * FPS, battleCol!.defaultEvent!,
       );
     });
 
     const controller = getLastController();
     const battleEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === SKILL_COLUMNS.BATTLE,
+      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === NounType.BATTLE_SKILL,
     );
     expect(battleEvents).toHaveLength(1);
     expect(controller.getLinkStacks(battleEvents[0].uid)).toBe(1);
@@ -103,26 +103,26 @@ describe('Akekuri Ultimate → Link Team Status', () => {
       result.current.setInteractionMode(InteractionModeType.FREEFORM);
     });
 
-    const ultCol = findColumn(result.current, SLOT_AKEKURI, SKILL_COLUMNS.ULTIMATE);
-    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, SKILL_COLUMNS.BATTLE);
+    const ultCol = findColumn(result.current, SLOT_AKEKURI, NounType.ULTIMATE);
+    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE_SKILL);
     expect(ultCol).toBeDefined();
     expect(battleCol).toBeDefined();
 
     act(() => {
       result.current.handleAddEvent(
-        SLOT_AKEKURI, SKILL_COLUMNS.ULTIMATE, 5 * FPS, ultCol!.defaultEvent!,
+        SLOT_AKEKURI, NounType.ULTIMATE, 5 * FPS, ultCol!.defaultEvent!,
       );
     });
 
     act(() => {
       result.current.handleAddEvent(
-        SLOT_LAEVATAIN, SKILL_COLUMNS.BATTLE, 1 * FPS, battleCol!.defaultEvent!,
+        SLOT_LAEVATAIN, NounType.BATTLE_SKILL, 1 * FPS, battleCol!.defaultEvent!,
       );
     });
 
     const controller = getLastController();
     const battleEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === SKILL_COLUMNS.BATTLE,
+      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === NounType.BATTLE_SKILL,
     );
     expect(battleEvents).toHaveLength(1);
     expect(controller.getLinkStacks(battleEvents[0].uid)).toBe(0);
@@ -168,7 +168,7 @@ describe('Freeform LINK stacking', () => {
       result.current.setInteractionMode(InteractionModeType.FREEFORM);
     });
 
-    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, SKILL_COLUMNS.BATTLE);
+    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE_SKILL);
     expect(battleCol).toBeDefined();
 
     const linkEvent = { id: StatusType.LINK, name: StatusType.LINK, segments: [{ properties: { duration: 20 * FPS } }] };
@@ -188,13 +188,13 @@ describe('Freeform LINK stacking', () => {
     // Laevatain Battle Skill at 5s — both LINKs active → 2 stacks consumed
     act(() => {
       result.current.handleAddEvent(
-        SLOT_LAEVATAIN, SKILL_COLUMNS.BATTLE, 5 * FPS, battleCol!.defaultEvent!,
+        SLOT_LAEVATAIN, NounType.BATTLE_SKILL, 5 * FPS, battleCol!.defaultEvent!,
       );
     });
 
     const controller = getLastController();
     const battleEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === SKILL_COLUMNS.BATTLE,
+      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === NounType.BATTLE_SKILL,
     );
     expect(battleEvents).toHaveLength(1);
     expect(controller.getLinkStacks(battleEvents[0].uid)).toBe(2);

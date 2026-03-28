@@ -374,35 +374,40 @@
           "subject": "ENEMY",
           "verb": "HAVE",
           "object": "STATUS",
-          "objectId": "vulnerableInfliction",
+          "objectId": "INFLICTION",
+          "objectQualifier": "VULNERABLE",
           "negated": true
         },
         {
           "subject": "ENEMY",
           "verb": "HAVE",
           "object": "STATUS",
-          "objectId": "heatInfliction",
+          "objectId": "INFLICTION",
+          "objectQualifier": "HEAT",
           "negated": true
         },
         {
           "subject": "ENEMY",
           "verb": "HAVE",
           "object": "STATUS",
-          "objectId": "cryoInfliction",
+          "objectId": "INFLICTION",
+          "objectQualifier": "CRYO",
           "negated": true
         },
         {
           "subject": "ENEMY",
           "verb": "HAVE",
           "object": "STATUS",
-          "objectId": "natureInfliction",
+          "objectId": "INFLICTION",
+          "objectQualifier": "NATURE",
           "negated": true
         },
         {
           "subject": "ENEMY",
           "verb": "HAVE",
           "object": "STATUS",
-          "objectId": "electricInfliction",
+          "objectId": "INFLICTION",
+          "objectQualifier": "ELECTRIC",
           "negated": true
         }
       ]

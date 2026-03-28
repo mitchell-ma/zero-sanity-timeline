@@ -1,12 +1,11 @@
-import { Column, MiniTimeline, MicroColumn, Operator, Enemy, VisibleSkills, EventFrameMarker } from '../../consts/viewTypes';
-import { AdjectiveType, DeterminerType, NounType, VerbType, type Effect, type Predicate } from '../../dsl/semantics';
+import { Column, MiniTimeline, MicroColumn, Operator, Enemy, VisibleSkills, EventFrameMarker, NOUN_TO_SKILL_TYPE } from '../../consts/viewTypes';
+import { DeterminerType, NounType, VerbType, type Effect, type Predicate } from '../../dsl/semantics';
 import type { FrameClausePredicate } from '../../model/event-frames/skillEventFrame';
-import { ColumnType, CombatSkillType, ELEMENT_COLORS, ElementType, EnhancementType, EventFrameType, HeaderVariant, MicroColumnAssignment, PhysicalStatusType, SegmentType, StatusType, TimeDependency, TimelineSourceType } from '../../consts/enums';
-import { ENEMY_OWNER_ID, ENEMY_GROUP_COLUMNS, ENEMY_ACTION_COLUMN_ID, OPERATOR_COLUMNS, PHYSICAL_STATUS_COLUMNS, SKILL_COLUMN_ORDER as SKILL_ORDER, SKILL_COLUMNS, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID, INFLICTION_COLUMN_TO_ELEMENT } from '../../model/channels';
+import { ColumnType, CombatSkillType, ELEMENT_COLORS, ElementType, EnhancementType, EventFrameType, HeaderVariant, MicroColumnAssignment, SegmentType, StatusType, TimeDependency, TimelineSourceType } from '../../consts/enums';
+import { ENEMY_OWNER_ID, ENEMY_GROUP_COLUMNS, ENEMY_ACTION_COLUMN_ID, OPERATOR_COLUMNS, PHYSICAL_INFLICTION_COLUMNS, PHYSICAL_STATUS_COLUMNS, SKILL_COLUMN_ORDER as SKILL_ORDER, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID } from '../../model/channels';
 import { getTeamStatusColumnId } from '../gameDataStore';
 import { SKILL_LABELS, ColumnLabel, STATUS_LABELS, REACTION_MICRO_COLUMNS } from '../../consts/timelineColumnLabels';
-import { getTacticalEntry, getWeapon, getAllOperatorStatuses, getWeaponEffectDefs, getGearEffectDefs } from '../gameDataStore';
-import { Tactical } from '../../model/consumables/tactical';
+import { getWeapon, getWeaponEffectDefs, getGearEffectDefs, getAllStatusLabels, getStatusById } from '../gameDataStore';
 import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../slot/commonSlotController';
 import { FPS, TOTAL_FRAMES } from '../../utils/timeline';
 import GENERAL_MECHANICS from '../../model/game-data/generalMechanics.json';
@@ -58,6 +57,63 @@ function syntheticFrame(effect: Partial<Effect>): EventFrameMarker {
 
 function syntheticSegments(duration: number, effect: Partial<Effect>) {
   return [{ properties: { duration }, frames: [syntheticFrame(effect)] }];
+}
+
+/**
+ * Build a status micro-column entry from a status config.
+ * Universal for all status types — operator, team, enemy, weapon, gear.
+ */
+function buildStatusMicroColumn(
+  statusId: string,
+  color: string,
+  overrides?: { label?: string; statusType?: string },
+): MicroColumn {
+  const cfg = getStatusById(statusId);
+  const label = overrides?.label ?? getAllStatusLabels()[statusId] ?? cfg?.name ?? statusId;
+  const durSec = cfg?.durationSeconds ?? 10;
+  const durFrames = durSec > 0 ? Math.round(durSec * FPS) : TOTAL_FRAMES;
+  const target = cfg?.to ?? NounType.OPERATOR;
+  const toDeterminer = cfg?.toDeterminer;
+  const applyEffect: Partial<Effect> = {
+    verb: VerbType.APPLY, object: NounType.STATUS, objectId: statusId,
+    to: target, ...(toDeterminer ? { toDeterminer: toDeterminer as DeterminerType } : {}),
+  };
+
+  // Use config segments when available (preserves real frame data like DEAL DAMAGE).
+  // Inject the synthetic APPLY clause into the first frame so freeform events go through interpret().
+  let segments;
+  if (cfg?.segments && cfg.segments.length > 0 && cfg.segments.some(s => s.frames?.length)) {
+    segments = cfg.segments.map((seg, si) => {
+      if (si === 0) {
+        const firstFrame = seg.frames?.[0];
+        const synClause: FrameClausePredicate = { conditions: [], effects: [{ type: 'dsl', dslEffect: applyEffect as Effect }] };
+        const existingClauses = firstFrame?.clauses ? [...firstFrame.clauses] : [];
+        return {
+          ...seg,
+          frames: [
+            { ...firstFrame, offsetFrame: firstFrame?.offsetFrame ?? 0, clauses: [synClause, ...existingClauses] },
+            ...(seg.frames?.slice(1) ?? []),
+          ],
+        };
+      }
+      return seg;
+    });
+  } else {
+    segments = syntheticSegments(durFrames, applyEffect);
+  }
+
+  return {
+    id: statusId,
+    label,
+    color,
+    ...(overrides?.statusType ? { statusType: overrides.statusType } : {}),
+    defaultEvent: {
+      id: statusId,
+      name: statusId,
+      segments,
+      ...(cfg?.stacks ? { stacks: { limit: { value: cfg.maxStacks }, interactionType: cfg.stacks.interactionType } } : {}),
+    },
+  };
 }
 
 /** Build the full ordered list of timeline columns from app state. */
@@ -214,23 +270,10 @@ export function buildColumns(
   // ── Team-targeted status columns (derived from skill configs) ─────────────
   // Uses microColumns + matchColumnIds — same architecture as operator/enemy statuses.
   // Each team status gets its own columnId so overlap/RESET logic works per-status.
-  const allStatuses = getAllOperatorStatuses();
   const teamStatusMicroCols: MicroColumn[] = [];
   const teamStatusMatchIds: string[] = [];
   for (const statusId of Array.from(teamStatusIds ?? [])) {
-    const cfg = allStatuses.find(s => s.id === statusId);
-    const label = STATUS_LABELS[statusId as StatusType] ?? cfg?.name ?? statusId;
-    const durationFrames = cfg ? (cfg.durationSeconds > 0 ? Math.round(cfg.durationSeconds * FPS) : TOTAL_FRAMES) : TOTAL_FRAMES;
-    teamStatusMicroCols.push({
-      id: statusId,
-      label,
-      color: '#66aa88',
-      defaultEvent: {
-        id: statusId,
-        segments: syntheticSegments(durationFrames, { verb: VerbType.APPLY, object: NounType.STATUS, objectId: statusId, to: NounType.TEAM }),
-        ...(cfg?.stacks ? { stacks: { limit: { value: cfg.maxStacks }, interactionType: cfg.stacks.interactionType } } : {}),
-      },
-    });
+    teamStatusMicroCols.push(buildStatusMicroColumn(statusId, '#66aa88'));
     teamStatusMatchIds.push(statusId);
   }
   columns.push({
@@ -250,18 +293,9 @@ export function buildColumns(
   // ── Shared team weapon/gear effect column ─────────────────────────────────
   const teamGearBuffs = teamWeaponGearDefs;
   if (teamGearBuffs.length > 0) {
-    const microCols = teamGearBuffs.map((tgb) => {
-      const id = tgb.statusId;
-      return {
-        id,
-        label: tgb.label,
-        color: tgb.color,
-        defaultEvent: {
-          id: tgb.statusId,
-          segments: syntheticSegments(tgb.durationFrames, { verb: VerbType.APPLY, object: NounType.STATUS, objectId: tgb.statusId, to: NounType.TEAM }),
-        },
-      };
-    });
+    const microCols = teamGearBuffs.map((tgb) =>
+      buildStatusMicroColumn(tgb.statusId, tgb.color, { label: tgb.label }),
+    );
     columns.push({
       key: `${COMMON_OWNER_ID}-team-gear-status`,
       type: ColumnType.MINI_TIMELINE,
@@ -329,15 +363,16 @@ export function buildColumns(
       slotHasCols = true;
 
       for (const skillType of SKILL_ORDER) {
-        if (visibleSkills[slot.slotId]?.[skillType]) {
-          let skill = op.skills[skillType];
+        const skillKey = NOUN_TO_SKILL_TYPE[skillType];
+        if (visibleSkills[slot.slotId]?.[skillKey]) {
+          let skill = op.skills[skillKey];
           const col: MiniTimeline = {
             key: `${slot.slotId}-${skillType}`,
             type: ColumnType.MINI_TIMELINE,
             source: TimelineSourceType.OPERATOR,
             ownerId: slot.slotId,
             columnId: skillType,
-            label: SKILL_LABELS[skillType],
+            label: SKILL_LABELS[skillKey],
             color: op.color,
             headerVariant: HeaderVariant.SKILL,
             skillElement: skill.element,
@@ -349,17 +384,17 @@ export function buildColumns(
               gaugeGain: skill.gaugeGain,
               teamGaugeGain: skill.teamGaugeGain,
               ...(skill.gaugeGainByEnemies ? { gaugeGainByEnemies: skill.gaugeGainByEnemies } : {}),
-              ...(skillType === SKILL_COLUMNS.ULTIMATE && slot.potential != null ? { operatorPotential: slot.potential } : {}),
-              ...(skillType === SKILL_COLUMNS.BATTLE && skill.skillPointCost != null ? { skillPointCost: skill.skillPointCost } : {}),
+              ...(skillType === NounType.ULTIMATE && slot.potential != null ? { operatorPotential: slot.potential } : {}),
+              ...(skillType === NounType.BATTLE_SKILL && skill.skillPointCost != null ? { skillPointCost: skill.skillPointCost } : {}),
             },
           };
           // Combo columns: use model's level-dependent cooldown + match activation windows
-          if (skillType === SKILL_COLUMNS.COMBO) {
-            col.matchColumnIds = [SKILL_COLUMNS.COMBO, 'comboActivationWindow'];
+          if (skillType === NounType.COMBO_SKILL) {
+            col.matchColumnIds = [NounType.COMBO_SKILL, 'comboActivationWindow'];
           }
           // Basic attack variants (derived from ENHANCED_*/EMPOWERED_* skill categories)
           const skillCtx = ctxFor(skillType);
-          if (hasBasicVariants && skillType === SKILL_COLUMNS.BASIC && op) {
+          if (hasBasicVariants && skillType === NounType.BASIC_ATTACK && op) {
             const base = SkillSegmentBuilder.buildSegments(getFrameSequences(op.id, skill.name), { ctx: skillCtx });
             col.defaultEvent = {
               id: skill.name,
@@ -417,7 +452,7 @@ export function buildColumns(
             );
           }
           // Battle skill variants (derived from ENHANCED_*/EMPOWERED_* skill categories)
-          if (hasBattleVariants && skillType === SKILL_COLUMNS.BATTLE && op) {
+          if (hasBattleVariants && skillType === NounType.BATTLE_SKILL && op) {
             const baseSeg = SkillSegmentBuilder.buildSegments(
               getFrameSequences(op.id, skill.name),
               { gaugeGain: skill.gaugeGain, teamGaugeGain: skill.teamGaugeGain, ctx: skillCtx },
@@ -473,7 +508,7 @@ export function buildColumns(
           }
           // Generic basic attack: data-driven frame sequences
           const basicSeqs = op && basicName ? getFrameSequences(op.id, basicName) : undefined;
-          if (basicSeqs?.length && skillType === SKILL_COLUMNS.BASIC) {
+          if (basicSeqs?.length && skillType === NounType.BASIC_ATTACK) {
             const base = SkillSegmentBuilder.buildSegments(basicSeqs, { ctx: skillCtx });
             col.defaultEvent = {
               id: skill.name,
@@ -483,7 +518,7 @@ export function buildColumns(
           }
           // Generic battle skill: data-driven frame sequences
           const battleSeqs = op && battleName ? getFrameSequences(op.id, battleName) : undefined;
-          if (battleSeqs?.length && skillType === SKILL_COLUMNS.BATTLE && !hasBattleVariants) {
+          if (battleSeqs?.length && skillType === NounType.BATTLE_SKILL && !hasBattleVariants) {
             const seg = SkillSegmentBuilder.buildSegments(battleSeqs, { gaugeGain: skill.gaugeGain, teamGaugeGain: skill.teamGaugeGain, ctx: skillCtx });
             // Only append cooldown if the data-driven segments don't already include one
             const hasBattleCdSegment = seg.segments.some(s => s.properties.segmentTypes?.includes(SegmentType.COOLDOWN));
@@ -532,13 +567,13 @@ export function buildColumns(
           // Generic combo skill: data-driven frame sequences
           const comboName = op?.skills.combo?.name;
           const comboSeqs = op && comboName ? getFrameSequences(op.id, comboName) : undefined;
-          if (comboSeqs?.length && skillType === SKILL_COLUMNS.COMBO) {
+          if (comboSeqs?.length && skillType === NounType.COMBO_SKILL) {
             const comboLabels = getSegmentLabels(op!.id, comboName!);
             const seg = SkillSegmentBuilder.buildSegments(comboSeqs, { labels: comboLabels, gaugeGain: skill.gaugeGain, teamGaugeGain: skill.teamGaugeGain, gaugeGainByEnemies: skill.gaugeGainByEnemies, ctx: skillCtx });
             col.defaultEvent = { ...col.defaultEvent!, segments: seg.segments };
           }
           // Generic ultimate: build segments from JSON data
-          if (skillType === SKILL_COLUMNS.ULTIMATE) {
+          if (skillType === NounType.ULTIMATE) {
             const ultName = op?.skills.ultimate?.name;
             const ultSeqs = op && ultName ? getFrameSequences(op!.id, ultName) : undefined;
             if (ultSeqs?.length) {
@@ -552,7 +587,7 @@ export function buildColumns(
           }
           // ── Append linked custom skills as event variants ──
           if (op) {
-            const linkedIds = getLinksForSlot(op.id, skillType);
+            const linkedIds = getLinksForSlot(op.id, skillKey);
             if (linkedIds.length > 0) {
               const allCustom = getCustomSkills();
               if (!col.eventVariants) {
@@ -584,36 +619,6 @@ export function buildColumns(
     }
     // OTHER column is sheet-only (damageTableBuilder) — not shown in the timeline.
 
-    // ── Tactical subtimeline column ───────────────────────────────────────────
-    let tacticalColCount = 0;
-    if (op && slot.tacticalId) {
-      const entry = getTacticalEntry(slot.tacticalId);
-      if (entry) {
-        const tactical = entry.create() as Tactical;
-        const TACTICAL_DURATION_FRAMES = Math.round(1 * 120); // 1 second at 120fps
-        columns.push({
-          key: `${slot.slotId}-tactical`,
-          type: ColumnType.MINI_TIMELINE,
-          source: TimelineSourceType.TACTICAL,
-          ownerId: slot.slotId,
-          columnId: 'tactical',
-          label: ColumnLabel.TACTICAL,
-          color: op.color,
-          headerVariant: HeaderVariant.SKILL,
-          derived: true,
-          microColumns: [{ id: 'tactical', label: tactical.name, color: op.color }],
-          microColumnAssignment: MicroColumnAssignment.DYNAMIC_SPLIT,
-          matchColumnIds: ['tactical'],
-          defaultEvent: {
-            id: tactical.name,
-            name: tactical.name,
-            segments: syntheticSegments(TACTICAL_DURATION_FRAMES, { verb: VerbType.APPLY, object: NounType.STATUS, objectId: tactical.name, toDeterminer: DeterminerType.THIS, to: NounType.OPERATOR }),
-          },
-        });
-        tacticalColCount++;
-      }
-    }
-
     // ── Operator status column (Melting Flame, Scorching Fangs, etc.) ────────
     let statusColCount = 0;
     if (op) {
@@ -625,18 +630,10 @@ export function buildColumns(
         .slice()
         .sort((a, b) => (STATUS_SOURCE_ORDER[a.source] ?? 3) - (STATUS_SOURCE_ORDER[b.source] ?? 3));
       for (const def of ownDefs) {
-        statusMicroCols.push({
-          id: def.columnId,
-          label: def.label,
-          color: def.color,
-          statusType: def.statusType,
-          defaultEvent: {
-            id: def.statusId,
-            name: def.statusId,
-            segments: syntheticSegments(def.duration, { verb: VerbType.APPLY, object: NounType.STATUS, objectId: def.statusId, toDeterminer: DeterminerType.THIS, to: NounType.OPERATOR }),
-            ...(def.stacks ? { stacks: def.stacks } : {}),
-          },
-        });
+        const mc = buildStatusMicroColumn(def.statusId, def.color, { label: def.label, statusType: def.statusType });
+        // Use columnId (may differ from statusId for OPERATOR_COLUMNS entries)
+        mc.id = def.columnId;
+        statusMicroCols.push(mc);
         matchIds.push(def.columnId);
         // Also match StatusType enum value (e.g. 'SCORCHING_FANGS') used by processStatus.ts
         if (def.statusId !== def.columnId) matchIds.push(def.statusId);
@@ -646,16 +643,7 @@ export function buildColumns(
         const isSource = slot === tsd.sourceSlot;
         if (!isSource) {
           // Use statusId directly as ID — matches events from processStatus.ts
-          statusMicroCols.push({
-            id: tsd.statusId,
-            label: tsd.label,
-            color: op.color,
-            defaultEvent: {
-              id: tsd.statusId,
-              name: tsd.statusId,
-              segments: syntheticSegments(tsd.duration, { verb: VerbType.APPLY, object: NounType.STATUS, objectId: tsd.statusId, toDeterminer: DeterminerType.THIS, to: NounType.OPERATOR }),
-            },
-          });
+          statusMicroCols.push(buildStatusMicroColumn(tsd.statusId, op.color, { label: tsd.label }));
           matchIds.push(tsd.statusId);
         }
       }
@@ -680,9 +668,9 @@ export function buildColumns(
 
     // Every slot gets at least MIN_SLOT_COLS columns so the loadout row stays visible
     const skillColCount = slotHasCols
-      ? SKILL_ORDER.filter((st) => visibleSkills[slot.slotId]?.[st]).length
+      ? SKILL_ORDER.filter((st) => visibleSkills[slot.slotId]?.[NOUN_TO_SKILL_TYPE[st]]).length
       : 0;
-    const needed = MIN_SLOT_COLS - (skillColCount + tacticalColCount + statusColCount);
+    const needed = MIN_SLOT_COLS - (skillColCount + statusColCount);
     for (let p = 0; p < Math.max(0, needed); p++) {
       columns.push({
         key: `${slot.slotId}-placeholder${p}`,
@@ -742,135 +730,24 @@ export function buildColumns(
   // Single column collecting all enemy statuses: inflictions, reactions, physical
   // statuses, stagger frailty, and debuffs.
   const statusMicroColumns = [
-    // Stagger frailty
-    {
-      id: NODE_STAGGER_COLUMN_ID,
-      label: 'Stagger (Partial)',
-      color: '#dd8844',
-      defaultEvent: {
-        id: NODE_STAGGER_COLUMN_ID,
-        name: NODE_STAGGER_COLUMN_ID,
-        segments: syntheticSegments(600, { verb: VerbType.APPLY, object: NounType.STATUS, objectId: NODE_STAGGER_COLUMN_ID, to: NounType.ENEMY }),
-      },
-    },
-    {
-      id: FULL_STAGGER_COLUMN_ID,
-      label: 'Stagger (Full)',
-      color: '#ee6633',
-      defaultEvent: {
-        id: FULL_STAGGER_COLUMN_ID,
-        name: FULL_STAGGER_COLUMN_ID,
-        segments: syntheticSegments(600, { verb: VerbType.APPLY, object: NounType.STATUS, objectId: FULL_STAGGER_COLUMN_ID, to: NounType.ENEMY }),
-      },
-    },
+    // Stagger
+    buildStatusMicroColumn(NODE_STAGGER_COLUMN_ID, '#dd8844'),
+    buildStatusMicroColumn(FULL_STAGGER_COLUMN_ID, '#ee6633'),
     // Arts inflictions
-    ...enemy.statuses.map((s) => ({
-      id: s.id,
-      label: s.label,
-      color: s.color,
-      defaultEvent: {
-        id: s.id,
-        name: s.id,
-        segments: syntheticSegments(120, {
-          verb: VerbType.APPLY, object: NounType.INFLICTION, to: NounType.ENEMY,
-          ...(INFLICTION_COLUMN_TO_ELEMENT[s.id] ? { objectQualifier: INFLICTION_COLUMN_TO_ELEMENT[s.id] as unknown as AdjectiveType } : {}),
-        }),
-      },
-    })),
+    ...enemy.statuses.map((s) => buildStatusMicroColumn(s.id, s.color, { label: s.label })),
     // Arts reactions
-    ...REACTION_MICRO_COLUMNS.map((mc) => ({
-      id: mc.id,
-      label: mc.label,
-      color: mc.color,
-      defaultEvent: {
-        id: mc.id,
-        name: mc.id,
-        segments: syntheticSegments(600, { verb: VerbType.APPLY, object: NounType.REACTION, objectQualifier: mc.id.toUpperCase() as unknown as AdjectiveType, to: NounType.ENEMY }),
-      },
-    })),
+    ...REACTION_MICRO_COLUMNS.map((mc) => buildStatusMicroColumn(mc.id, mc.color, { label: mc.label })),
     // Physical inflictions
-    {
-      id: 'vulnerableInfliction',
-      label: 'VULN',
-      color: '#c0c8d0',
-      defaultEvent: {
-        id: 'vulnerableInfliction',
-        name: 'vulnerableInfliction',
-        segments: syntheticSegments(120, { verb: VerbType.APPLY, object: NounType.INFLICTION, to: NounType.ENEMY }),
-      },
-    },
+    buildStatusMicroColumn(PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, '#c0c8d0', { label: 'VULN' }),
     // Physical statuses
-    {
-      id: PHYSICAL_STATUS_COLUMNS.LIFT,
-      label: STATUS_LABELS[StatusType.LIFT],
-      color: '#c0c8d0',
-      defaultEvent: {
-        id: PHYSICAL_STATUS_COLUMNS.LIFT,
-        name: PHYSICAL_STATUS_COLUMNS.LIFT,
-        segments: syntheticSegments(120, { verb: VerbType.APPLY, object: NounType.STATUS, objectQualifier: PhysicalStatusType.LIFT as unknown as AdjectiveType, to: NounType.ENEMY }),
-      },
-    },
-    {
-      id: PHYSICAL_STATUS_COLUMNS.KNOCK_DOWN,
-      label: STATUS_LABELS[StatusType.KNOCK_DOWN],
-      color: '#c0c8d0',
-      defaultEvent: {
-        id: PHYSICAL_STATUS_COLUMNS.KNOCK_DOWN,
-        name: PHYSICAL_STATUS_COLUMNS.KNOCK_DOWN,
-        segments: syntheticSegments(120, { verb: VerbType.APPLY, object: NounType.STATUS, objectQualifier: PhysicalStatusType.KNOCK_DOWN as unknown as AdjectiveType, to: NounType.ENEMY }),
-      },
-    },
-    {
-      id: PHYSICAL_STATUS_COLUMNS.CRUSH,
-      label: STATUS_LABELS[StatusType.CRUSH],
-      color: '#c0c8d0',
-      defaultEvent: {
-        id: PHYSICAL_STATUS_COLUMNS.CRUSH,
-        name: PHYSICAL_STATUS_COLUMNS.CRUSH,
-        segments: syntheticSegments(120, { verb: VerbType.APPLY, object: NounType.STATUS, objectQualifier: PhysicalStatusType.CRUSH as unknown as AdjectiveType, to: NounType.ENEMY }),
-      },
-    },
-    {
-      id: PHYSICAL_STATUS_COLUMNS.BREACH,
-      label: STATUS_LABELS[StatusType.BREACH],
-      color: '#c0c8d0',
-      defaultEvent: {
-        id: PHYSICAL_STATUS_COLUMNS.BREACH,
-        name: PHYSICAL_STATUS_COLUMNS.BREACH,
-        segments: syntheticSegments(1800, { verb: VerbType.APPLY, object: NounType.STATUS, objectQualifier: PhysicalStatusType.BREACH as unknown as AdjectiveType, to: NounType.ENEMY }),
-      },
-    },
+    buildStatusMicroColumn(PHYSICAL_STATUS_COLUMNS.LIFT, '#c0c8d0'),
+    buildStatusMicroColumn(PHYSICAL_STATUS_COLUMNS.KNOCK_DOWN, '#c0c8d0'),
+    buildStatusMicroColumn(PHYSICAL_STATUS_COLUMNS.CRUSH, '#c0c8d0'),
+    buildStatusMicroColumn(PHYSICAL_STATUS_COLUMNS.BREACH, '#c0c8d0'),
     // Debuffs
-    {
-      id: StatusType.FOCUS,
-      label: STATUS_LABELS[StatusType.FOCUS],
-      color: '#55aadd',
-      defaultEvent: {
-        id: StatusType.FOCUS,
-        name: StatusType.FOCUS,
-        segments: syntheticSegments(7200, { verb: VerbType.APPLY, object: NounType.STATUS, objectId: StatusType.FOCUS, to: NounType.ENEMY }),
-      },
-    },
-    {
-      id: StatusType.SUSCEPTIBILITY,
-      label: STATUS_LABELS[StatusType.SUSCEPTIBILITY],
-      color: '#cc8866',
-      defaultEvent: {
-        id: StatusType.SUSCEPTIBILITY,
-        name: StatusType.SUSCEPTIBILITY,
-        segments: syntheticSegments(1800, { verb: VerbType.APPLY, object: NounType.STATUS, objectId: StatusType.SUSCEPTIBILITY, to: NounType.ENEMY }),
-      },
-    },
-    {
-      id: StatusType.FRAGILITY,
-      label: STATUS_LABELS[StatusType.FRAGILITY],
-      color: '#cc6644',
-      defaultEvent: {
-        id: StatusType.FRAGILITY,
-        name: StatusType.FRAGILITY,
-        segments: syntheticSegments(1800, { verb: VerbType.APPLY, object: NounType.STATUS, objectId: StatusType.FRAGILITY, to: NounType.ENEMY }),
-      },
-    },
+    buildStatusMicroColumn(StatusType.FOCUS, '#55aadd'),
+    buildStatusMicroColumn(StatusType.SUSCEPTIBILITY, '#cc8866'),
+    buildStatusMicroColumn(StatusType.FRAGILITY, '#cc6644'),
     // Data-driven enemy status entries from operator statusEvents (deduped by id)
     ...(() => {
       const seen = new Set<string>();
@@ -885,11 +762,7 @@ export function buildColumns(
             seen.add(se.id);
             return true;
           })
-          .map((se) => ({
-            id: se.id,
-            label: STATUS_LABELS[se.id as StatusType] ?? se.id,
-            color: s.operator!.color,
-          }));
+          .map((se) => buildStatusMicroColumn(se.id, s.operator!.color));
       });
     })(),
   ];
@@ -900,7 +773,7 @@ export function buildColumns(
     const id = d.statusId;
     if (existingEnemyIds.has(id)) continue;
     existingEnemyIds.add(id);
-    statusMicroColumns.push({ id, label: d.label, color: d.color });
+    statusMicroColumns.push(buildStatusMicroColumn(id, d.color, { label: d.label }));
   }
 
   columns.push({

@@ -13,8 +13,8 @@
  */
 
 import { renderHook, act } from '@testing-library/react';
+import { NounType } from '../../../../dsl/semantics';
 import { useApp } from '../../../../app/useApp';
-import { SKILL_COLUMNS } from '../../../../model/channels';
 import { ColumnType } from '../../../../consts/enums';
 import { FPS } from '../../../../utils/timeline';
 import { eventDuration } from '../../../../consts/viewTypes';
@@ -34,7 +34,7 @@ function findColumn(app: ReturnType<typeof useApp>, slotId: string, columnId: st
 describe('Ardelia Ultimate P3 Conditional Frames', () => {
   it('A0: At P0, column defaultEvent has 10 frames (P3 frames excluded by builder)', () => {
     const { result } = renderHook(() => useApp());
-    const ultCol = findColumn(result.current, SLOT_ARDELIA, SKILL_COLUMNS.ULTIMATE);
+    const ultCol = findColumn(result.current, SLOT_ARDELIA, NounType.ULTIMATE);
     expect(ultCol).toBeDefined();
     const segs = ultCol!.defaultEvent!.segments!;
     // 2 segments: Animation + Active
@@ -56,7 +56,7 @@ describe('Ardelia Ultimate P3 Conditional Frames', () => {
       });
     });
 
-    const ultCol = findColumn(result.current, SLOT_ARDELIA, SKILL_COLUMNS.ULTIMATE);
+    const ultCol = findColumn(result.current, SLOT_ARDELIA, NounType.ULTIMATE);
     expect(ultCol).toBeDefined();
     const segs = ultCol!.defaultEvent!.segments!;
     expect(segs.length).toBe(2);
@@ -69,17 +69,17 @@ describe('Ardelia Ultimate P3 Conditional Frames', () => {
 
   it('A1: At P0, ultimate has 2 segments (no Delay)', () => {
     const { result } = renderHook(() => useApp());
-    const ultCol = findColumn(result.current, SLOT_ARDELIA, SKILL_COLUMNS.ULTIMATE);
+    const ultCol = findColumn(result.current, SLOT_ARDELIA, NounType.ULTIMATE);
     expect(ultCol).toBeDefined();
 
     act(() => {
       result.current.handleAddEvent(
-        SLOT_ARDELIA, SKILL_COLUMNS.ULTIMATE, 1 * FPS, ultCol!.defaultEvent!,
+        SLOT_ARDELIA, NounType.ULTIMATE, 1 * FPS, ultCol!.defaultEvent!,
       );
     });
 
     const ultEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_ARDELIA && ev.columnId === SKILL_COLUMNS.ULTIMATE,
+      (ev) => ev.ownerId === SLOT_ARDELIA && ev.columnId === NounType.ULTIMATE,
     );
     expect(ultEvents).toHaveLength(1);
     // 2 segments: Animation + Active (no Delay)
@@ -92,16 +92,16 @@ describe('Ardelia Ultimate P3 Conditional Frames', () => {
 
   it('A2: At P0, active segment has only base frames (out-of-bound P3 frames dropped)', () => {
     const { result } = renderHook(() => useApp());
-    const ultCol = findColumn(result.current, SLOT_ARDELIA, SKILL_COLUMNS.ULTIMATE);
+    const ultCol = findColumn(result.current, SLOT_ARDELIA, NounType.ULTIMATE);
 
     act(() => {
       result.current.handleAddEvent(
-        SLOT_ARDELIA, SKILL_COLUMNS.ULTIMATE, 1 * FPS, ultCol!.defaultEvent!,
+        SLOT_ARDELIA, NounType.ULTIMATE, 1 * FPS, ultCol!.defaultEvent!,
       );
     });
 
     const ult = result.current.allProcessedEvents.find(
-      (ev) => ev.ownerId === SLOT_ARDELIA && ev.columnId === SKILL_COLUMNS.ULTIMATE,
+      (ev) => ev.ownerId === SLOT_ARDELIA && ev.columnId === NounType.ULTIMATE,
     )!;
     const activeSeg = ult.segments.find((s) => s.properties.name === 'Wooly Party');
     expect(activeSeg).toBeDefined();
@@ -121,15 +121,15 @@ describe('Ardelia Ultimate P3 Conditional Frames', () => {
       });
     });
 
-    const ultCol = findColumn(result.current, SLOT_ARDELIA, SKILL_COLUMNS.ULTIMATE);
+    const ultCol = findColumn(result.current, SLOT_ARDELIA, NounType.ULTIMATE);
     act(() => {
       result.current.handleAddEvent(
-        SLOT_ARDELIA, SKILL_COLUMNS.ULTIMATE, 1 * FPS, ultCol!.defaultEvent!,
+        SLOT_ARDELIA, NounType.ULTIMATE, 1 * FPS, ultCol!.defaultEvent!,
       );
     });
 
     const ult = result.current.allProcessedEvents.find(
-      (ev) => ev.ownerId === SLOT_ARDELIA && ev.columnId === SKILL_COLUMNS.ULTIMATE,
+      (ev) => ev.ownerId === SLOT_ARDELIA && ev.columnId === NounType.ULTIMATE,
     )!;
     // Still 2 segments (no Delay)
     expect(ult.segments.length).toBe(2);
@@ -146,14 +146,14 @@ describe('Ardelia Ultimate P3 Conditional Frames', () => {
     const { result } = renderHook(() => useApp());
 
     // Place ult at P0
-    const ultCol0 = findColumn(result.current, SLOT_ARDELIA, SKILL_COLUMNS.ULTIMATE);
+    const ultCol0 = findColumn(result.current, SLOT_ARDELIA, NounType.ULTIMATE);
     act(() => {
       result.current.handleAddEvent(
-        SLOT_ARDELIA, SKILL_COLUMNS.ULTIMATE, 1 * FPS, ultCol0!.defaultEvent!,
+        SLOT_ARDELIA, NounType.ULTIMATE, 1 * FPS, ultCol0!.defaultEvent!,
       );
     });
     const ultP0 = result.current.allProcessedEvents.find(
-      (ev) => ev.ownerId === SLOT_ARDELIA && ev.columnId === SKILL_COLUMNS.ULTIMATE,
+      (ev) => ev.ownerId === SLOT_ARDELIA && ev.columnId === NounType.ULTIMATE,
     )!;
     const durationP0 = eventDuration(ultP0);
 
@@ -167,14 +167,14 @@ describe('Ardelia Ultimate P3 Conditional Frames', () => {
       });
     });
 
-    const ultCol3 = findColumn(result.current, SLOT_ARDELIA, SKILL_COLUMNS.ULTIMATE);
+    const ultCol3 = findColumn(result.current, SLOT_ARDELIA, NounType.ULTIMATE);
     act(() => {
       result.current.handleAddEvent(
-        SLOT_ARDELIA, SKILL_COLUMNS.ULTIMATE, 1 * FPS, ultCol3!.defaultEvent!,
+        SLOT_ARDELIA, NounType.ULTIMATE, 1 * FPS, ultCol3!.defaultEvent!,
       );
     });
     const ultP3 = result.current.allProcessedEvents.find(
-      (ev) => ev.ownerId === SLOT_ARDELIA && ev.columnId === SKILL_COLUMNS.ULTIMATE,
+      (ev) => ev.ownerId === SLOT_ARDELIA && ev.columnId === NounType.ULTIMATE,
     )!;
     const durationP3 = eventDuration(ultP3);
 
@@ -196,15 +196,15 @@ describe('Ardelia Ultimate P3 Conditional Frames', () => {
         });
       });
 
-      const ultCol = findColumn(result.current, SLOT_ARDELIA, SKILL_COLUMNS.ULTIMATE);
+      const ultCol = findColumn(result.current, SLOT_ARDELIA, NounType.ULTIMATE);
       act(() => {
         result.current.handleAddEvent(
-          SLOT_ARDELIA, SKILL_COLUMNS.ULTIMATE, 1 * FPS, ultCol!.defaultEvent!,
+          SLOT_ARDELIA, NounType.ULTIMATE, 1 * FPS, ultCol!.defaultEvent!,
         );
       });
 
       const ult = result.current.allProcessedEvents.find(
-        (ev) => ev.ownerId === SLOT_ARDELIA && ev.columnId === SKILL_COLUMNS.ULTIMATE,
+        (ev) => ev.ownerId === SLOT_ARDELIA && ev.columnId === NounType.ULTIMATE,
       );
       expect(ult).toBeDefined();
       expect(ult!.segments.length).toBe(2);

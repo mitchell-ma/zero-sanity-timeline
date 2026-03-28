@@ -9,13 +9,15 @@ import { LoadoutProperties, getDefaultLoadoutProperties } from '../view/Informat
 import { ALL_OPERATORS, getUltimateEnergyCost, getUltimateEnergyCostForPotential } from './operators/operatorRegistry';
 import { getModelEnemy } from './calculation/enemyRegistry';
 import { BossEnemy } from '../model/enemies/bossEnemy';
-import { ColumnType, StatType } from '../consts/enums';
+import { ColumnType, StatType, GearSetType } from '../consts/enums';
 import { DEFAULT_STATS } from '../consts/stats';
 import { getGearPiece } from './gameDataStore';
 import { filterEventsOnOperatorChange } from './timeline/inputEventController';
 import GENERAL_MECHANICS from '../model/game-data/generalMechanics.json';
-import { GearSetType } from '../consts/enums';
 import type { Slot } from './timeline/columnBuilder';
+import { SKILL_COLUMN_ORDER } from '../model/channels';
+
+const SKILL_COLUMN_SET: ReadonlySet<string> = new Set(SKILL_COLUMN_ORDER);
 
 // ── Shared state shape ───────────────────────────────────────────────────────
 
@@ -293,6 +295,11 @@ export function findEventDefaults(
   if (!col) return null;
   const variant = col.eventVariants?.find((v) => v.id === ev.id);
   if (variant) return variant;
+  // Check micro-column defaults (e.g. combustion within the enemy status column)
+  if (col.microColumns) {
+    const mc = col.microColumns.find((m) => m.id === ev.columnId);
+    if (mc?.defaultEvent) return mc.defaultEvent;
+  }
   return col.defaultEvent ?? null;
 }
 
@@ -343,9 +350,9 @@ export function attachDefaultSegments(
       if (ev.enhancementType === undefined && ext.enhancementType != null) props.enhancementType = ext.enhancementType as import('../consts/enums').EnhancementType;
       const stacks = findMicroColumnStacks(ev, columns);
       const stackLimit = (stacks?.limit as { value?: number } | undefined)?.value ?? 1;
-      if (defaults.segments && stackLimit <= 1 && ev.nonOverlappableRange === undefined) {
-        const span = defaults.segments.reduce((sum, s) => sum + s.properties.duration, 0);
-        props.nonOverlappableRange = span;
+      if (stackLimit <= 1 && ev.nonOverlappableRange === undefined) {
+        const span = ev.segments.reduce((sum, s) => sum + s.properties.duration, 0);
+        if (span > 0) props.nonOverlappableRange = span;
       }
       if (Object.keys(props).length > 0) patched = { ...ev, ...props };
       // Stackable events must not block sibling overlap — strip nonOverlappableRange
@@ -356,6 +363,10 @@ export function attachDefaultSegments(
     }
 
     if (!defaults?.segments) return patched;
+
+    // Non-skill events (statuses, inflictions, reactions) keep their user-set segments.
+    // Only skill events get segment rebuilding (COOLDOWN/ANIMATION refresh from config).
+    if (!SKILL_COLUMN_SET.has(ev.columnId)) return patched;
 
     // Start from column defaults, refreshing typed segment durations (COOLDOWN, ANIMATION, etc.)
     // from column definitions. Preserve user-customized durations only on untyped segments.

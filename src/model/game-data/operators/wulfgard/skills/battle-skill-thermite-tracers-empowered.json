@@ -5,8 +5,9 @@
         {
           "subject": "ENEMY",
           "verb": "HAVE",
-          "object": "REACTION",
-          "objectId": "COMBUSTION"
+          "object": "STATUS",
+          "objectId": "REACTION",
+          "objectQualifier": "COMBUSTION"
         }
       ]
     },
@@ -15,8 +16,9 @@
         {
           "subject": "ENEMY",
           "verb": "HAVE",
-          "object": "REACTION",
-          "objectId": "ELECTRIFICATION"
+          "object": "STATUS",
+          "objectId": "REACTION",
+          "objectQualifier": "ELECTRIFICATION"
         }
       ]
     }
@@ -214,21 +216,24 @@
                 {
                   "subject": "ENEMY",
                   "verb": "HAVE",
-                  "object": "REACTION",
-                  "objectId": "COMBUSTION"
+                  "object": "STATUS",
+                  "objectId": "REACTION",
+          "objectQualifier": "COMBUSTION"
                 },
                 {
                   "subject": "ENEMY",
                   "verb": "HAVE",
-                  "object": "REACTION",
-                  "objectId": "ELECTRIFICATION"
+                  "object": "STATUS",
+                  "objectId": "REACTION",
+          "objectQualifier": "ELECTRIFICATION"
                 }
               ],
               "effects": [
                 {
                   "verb": "CONSUME",
-                  "object": "REACTION",
-                  "objectId": "COMBUSTION",
+                  "object": "STATUS",
+                  "objectId": "REACTION",
+          "objectQualifier": "COMBUSTION",
                   "from": "ENEMY"
                 }
               ]
@@ -238,15 +243,17 @@
                 {
                   "subject": "ENEMY",
                   "verb": "HAVE",
-                  "object": "REACTION",
-                  "objectId": "COMBUSTION"
+                  "object": "STATUS",
+                  "objectId": "REACTION",
+          "objectQualifier": "COMBUSTION"
                 }
               ],
               "effects": [
                 {
                   "verb": "CONSUME",
-                  "object": "REACTION",
-                  "objectId": "COMBUSTION",
+                  "object": "STATUS",
+                  "objectId": "REACTION",
+          "objectQualifier": "COMBUSTION",
                   "from": "ENEMY"
                 }
               ]
@@ -256,15 +263,17 @@
                 {
                   "subject": "ENEMY",
                   "verb": "HAVE",
-                  "object": "REACTION",
-                  "objectId": "ELECTRIFICATION"
+                  "object": "STATUS",
+                  "objectId": "REACTION",
+          "objectQualifier": "ELECTRIFICATION"
                 }
               ],
               "effects": [
                 {
                   "verb": "CONSUME",
-                  "object": "REACTION",
-                  "objectId": "ELECTRIFICATION",
+                  "object": "STATUS",
+                  "objectId": "REACTION",
+          "objectQualifier": "ELECTRIFICATION",
                   "from": "ENEMY"
                 }
               ]

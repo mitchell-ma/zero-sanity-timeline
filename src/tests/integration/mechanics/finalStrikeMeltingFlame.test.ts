@@ -16,12 +16,14 @@
  */
 
 import { renderHook, act } from '@testing-library/react';
+import { NounType } from '../../../dsl/semantics';
 import { useApp } from '../../../app/useApp';
-import { SKILL_COLUMNS, INFLICTION_COLUMNS, OPERATOR_COLUMNS, ENEMY_OWNER_ID } from '../../../model/channels';
+import { INFLICTION_COLUMNS, ENEMY_OWNER_ID } from '../../../model/channels';
 import { ColumnType, InteractionModeType, EventStatusType } from '../../../consts/enums';
 import { FPS } from '../../../utils/timeline';
 import type { MiniTimeline } from '../../../consts/viewTypes';
 
+const MELTING_FLAME_ID = 'MELTING_FLAME';
 const SLOT_LAEVATAIN = 'slot-0';
 const SLOT_AKEKURI = 'slot-1';
 
@@ -42,7 +44,7 @@ function getHeatInflictions(app: ReturnType<typeof useApp>) {
 
 function getMeltingFlameEvents(app: ReturnType<typeof useApp>) {
   return app.allProcessedEvents.filter(
-    (ev) => ev.columnId === OPERATOR_COLUMNS.MELTING_FLAME && ev.ownerId === SLOT_LAEVATAIN,
+    (ev) => ev.columnId === MELTING_FLAME_ID && ev.ownerId === SLOT_LAEVATAIN,
   );
 }
 
@@ -52,12 +54,12 @@ describe('Final Strike → Melting Flame exchange timing', () => {
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
     // Place Akekuri battle skill at 2s — creates heat infliction
-    const battleCol = findColumn(result.current, SLOT_AKEKURI, SKILL_COLUMNS.BATTLE);
+    const battleCol = findColumn(result.current, SLOT_AKEKURI, NounType.BATTLE_SKILL);
     expect(battleCol).toBeDefined();
 
     act(() => {
       result.current.handleAddEvent(
-        SLOT_AKEKURI, SKILL_COLUMNS.BATTLE, 2 * FPS, battleCol!.defaultEvent!,
+        SLOT_AKEKURI, NounType.BATTLE_SKILL, 2 * FPS, battleCol!.defaultEvent!,
       );
     });
 
@@ -66,19 +68,19 @@ describe('Final Strike → Melting Flame exchange timing', () => {
     expect(heatsAfterBattle.length).toBeGreaterThanOrEqual(1);
 
     // Place Akekuri basic attack at 5s (well after heat infliction)
-    const basicCol = findColumn(result.current, SLOT_AKEKURI, SKILL_COLUMNS.BASIC);
+    const basicCol = findColumn(result.current, SLOT_AKEKURI, NounType.BASIC_ATTACK);
     expect(basicCol).toBeDefined();
 
     const basicStartFrame = 5 * FPS;
     act(() => {
       result.current.handleAddEvent(
-        SLOT_AKEKURI, SKILL_COLUMNS.BASIC, basicStartFrame, basicCol!.defaultEvent!,
+        SLOT_AKEKURI, NounType.BASIC_ATTACK, basicStartFrame, basicCol!.defaultEvent!,
       );
     });
 
     // Verify the basic attack was added
     const basicEvent = result.current.allProcessedEvents.find(
-      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === SKILL_COLUMNS.BASIC,
+      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === NounType.BASIC_ATTACK,
     );
     expect(basicEvent).toBeDefined();
 
@@ -105,12 +107,12 @@ describe('Final Strike → Melting Flame exchange timing', () => {
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
     // Place only the battle skill — heat infliction exists but no final strike
-    const battleCol = findColumn(result.current, SLOT_AKEKURI, SKILL_COLUMNS.BATTLE);
+    const battleCol = findColumn(result.current, SLOT_AKEKURI, NounType.BATTLE_SKILL);
     expect(battleCol).toBeDefined();
 
     act(() => {
       result.current.handleAddEvent(
-        SLOT_AKEKURI, SKILL_COLUMNS.BATTLE, 2 * FPS, battleCol!.defaultEvent!,
+        SLOT_AKEKURI, NounType.BATTLE_SKILL, 2 * FPS, battleCol!.defaultEvent!,
       );
     });
 

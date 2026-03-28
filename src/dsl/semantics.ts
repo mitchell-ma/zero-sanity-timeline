@@ -502,6 +502,8 @@ export interface Interaction {
   object: ObjectType;
   /** Specific identifier (StatusType, skill name, etc.). */
   objectId?: string;
+  /** Object qualifier — element or type modifier (e.g. HEAT, PHYSICAL, CRYO). */
+  objectQualifier?: AdjectiveType;
   /** Constraint type for cardinality assertions (EXACTLY, AT_LEAST, AT_MOST). */
   cardinalityConstraint?: CardinalityConstraintType;
   /** The count N in a cardinality assertion. */
@@ -691,7 +693,7 @@ export interface Effect {
   object?: ObjectType;
   /** Specific identifier (StatusType, skill name, etc.). */
   objectId?: string;
-  /** Object qualifier(s) — modifies the object. Can stack: e.g. [FORCED, COMBUSTION] REACTION, [HEAT] DAMAGE. */
+  /** Object qualifier — modifies the object (e.g. COMBUSTION REACTION, HEAT DAMAGE). */
   objectQualifier?: AdjectiveType | AdjectiveType[];
   /** Noun qualifier — modifies the object: "REDUCE ULTIMATE COOLDOWN", "ENABLE ENHANCED BATK". */
   nounQualifier?: QualifierType;

@@ -13,10 +13,11 @@
  * filtering (hidden status types) remain in the view layer.
  */
 import { TimelineEvent, Column, MiniTimeline, EventSegmentData, eventEndFrame } from '../../consts/viewTypes';
+import { NounType } from '../../dsl/semantics';
 import { TimelineSourceType, ELEMENT_COLORS, ElementType, InteractionModeType, EventStatusType } from '../../consts/enums';
 import { getAllSkillLabels, getAllStatusLabels, getAllInflictionLabels } from '../gameDataStore';
 import { CombatSkillType, StackInteractionType } from '../../consts/enums';
-import { SKILL_COLUMNS, COMBO_WINDOW_COLUMN_ID, REACTION_COLUMNS } from '../../model/channels';
+import { COMBO_WINDOW_COLUMN_ID, REACTION_COLUMNS } from '../../model/channels';
 import { formatSegmentShortName } from '../../dsl/semanticsTranslation';
 import { getAllOperatorStatuses } from '../gameDataStore';
 
@@ -222,7 +223,7 @@ function computeGreedySlotAssignments(
 function isWindowConsumed(windowEv: TimelineEvent, events: readonly TimelineEvent[]): boolean {
   const endFrame = eventEndFrame(windowEv);
   return events.some((ev) =>
-    ev.columnId === SKILL_COLUMNS.COMBO &&
+    ev.columnId === NounType.COMBO_SKILL &&
     ev.ownerId === windowEv.ownerId &&
     ev.startFrame >= windowEv.startFrame &&
     ev.startFrame < endFrame,

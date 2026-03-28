@@ -6,7 +6,7 @@
  * that matched the primary — not the status owner.
  */
 import { TimelineEvent } from '../../consts/viewTypes';
-import { SKILL_COLUMNS } from '../../model/channels';
+import { NounType } from '../../dsl/semantics';
 import { FPS } from '../../utils/timeline';
 import { findClauseTriggerMatches } from '../../controller/timeline/triggerMatch';
 
@@ -45,7 +45,7 @@ describe('TRIGGER determiner resolves to the ANY operator that matched primary',
       // SLOT_A deals damage at frame 600
       makeEvent({
         uid: 'skill-a', ownerId: SLOT_A,
-        columnId: SKILL_COLUMNS.BASIC, startFrame: 600,
+        columnId: NounType.BASIC_ATTACK, startFrame: 600,
         segments: [{ properties: { duration: 2 * FPS }, frames: [{ offsetFrame: FPS }] }],
       }),
       // SLOT_A has AMP status active at frame 600
@@ -65,7 +65,7 @@ describe('TRIGGER determiner resolves to the ANY operator that matched primary',
       // SLOT_A deals damage at frame 600
       makeEvent({
         uid: 'skill-a', ownerId: SLOT_A,
-        columnId: SKILL_COLUMNS.BASIC, startFrame: 600,
+        columnId: NounType.BASIC_ATTACK, startFrame: 600,
         segments: [{ properties: { duration: 2 * FPS }, frames: [{ offsetFrame: FPS }] }],
       }),
       // SLOT_B has AMP status (not SLOT_A)
@@ -84,13 +84,13 @@ describe('TRIGGER determiner resolves to the ANY operator that matched primary',
       // SLOT_A deals damage
       makeEvent({
         uid: 'skill-a', ownerId: SLOT_A,
-        columnId: SKILL_COLUMNS.BASIC, startFrame: 600,
+        columnId: NounType.BASIC_ATTACK, startFrame: 600,
         segments: [{ properties: { duration: 2 * FPS }, frames: [{ offsetFrame: FPS }] }],
       }),
       // SLOT_B deals damage
       makeEvent({
         uid: 'skill-b', ownerId: SLOT_B,
-        columnId: SKILL_COLUMNS.BASIC, startFrame: 900,
+        columnId: NounType.BASIC_ATTACK, startFrame: 900,
         segments: [{ properties: { duration: 2 * FPS }, frames: [{ offsetFrame: FPS }] }],
       }),
       // Only SLOT_B has AMP status
@@ -110,7 +110,7 @@ describe('TRIGGER determiner resolves to the ANY operator that matched primary',
       // SLOT_A deals damage
       makeEvent({
         uid: 'skill-a', ownerId: SLOT_A,
-        columnId: SKILL_COLUMNS.BASIC, startFrame: 600,
+        columnId: NounType.BASIC_ATTACK, startFrame: 600,
         segments: [{ properties: { duration: 2 * FPS }, frames: [{ offsetFrame: FPS }] }],
       }),
       // STATUS_OWNER (slot-0) has AMP — but slot-0 is not dealing damage

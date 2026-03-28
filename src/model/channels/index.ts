@@ -2,14 +2,14 @@
  * Column ID constants and mappings.
  *
  * A "column ID" identifies a timeline lane — the vertical column an event
- * belongs to (e.g. 'basic', 'MELTING_FLAME', 'heatInfliction', 'combustion').
+ * belongs to (e.g. 'basic', 'MELTING_FLAME', INFLICTION_COLUMNS.HEAT, REACTION_COLUMNS.COMBUSTION).
  * Not to be confused with reactive signals or pub/sub channels; these are
  * purely categorization keys that determine which timeline column renders
  * a given event.
  */
 
 import { PhysicalStatusType, StatusType } from '../../consts/enums';
-import { SkillType } from '../../consts/viewTypes';
+import { NounType } from '../../dsl/semantics';
 import { FPS } from '../../utils/timeline';
 import { t } from '../../locales/locale';
 
@@ -21,25 +21,18 @@ export const USER_ID = 'user';
 // ── Skill columns ──────────────────────────────────────────────────────────
 
 /** Skill column ID constants — use these instead of magic strings. */
-export const SKILL_COLUMNS = {
-  BASIC:    'basic' as SkillType,
-  BATTLE:   'battle' as SkillType,
-  COMBO:    'combo' as SkillType,
-  ULTIMATE: 'ultimate' as SkillType,
-} as const;
-
-export const SKILL_COLUMN_ORDER: SkillType[] = [
-  SKILL_COLUMNS.BASIC, SKILL_COLUMNS.BATTLE, SKILL_COLUMNS.COMBO, SKILL_COLUMNS.ULTIMATE,
-];
+export const SKILL_COLUMN_ORDER = [
+  NounType.BASIC_ATTACK, NounType.BATTLE_SKILL, NounType.COMBO_SKILL, NounType.ULTIMATE,
+] as const;
 
 // ── Infliction columns ─────────────────────────────────────────────────────
 
 /** Column IDs for elemental arts infliction lanes. */
 export const INFLICTION_COLUMNS = {
-  HEAT:     'heatInfliction',
-  CRYO:     'cryoInfliction',
-  NATURE:   'natureInfliction',
-  ELECTRIC: 'electricInfliction',
+  HEAT:     'HEAT_INFLICTION',
+  CRYO:     'CRYO_INFLICTION',
+  NATURE:   'NATURE_INFLICTION',
+  ELECTRIC: 'ELECTRIC_INFLICTION',
 } as const;
 
 export const INFLICTION_COLUMN_IDS: Set<string> = new Set(Object.values(INFLICTION_COLUMNS));
@@ -48,11 +41,11 @@ export const INFLICTION_COLUMN_IDS: Set<string> = new Set(Object.values(INFLICTI
 
 /** Column IDs for arts reaction lanes. */
 export const REACTION_COLUMNS = {
-  COMBUSTION:       'combustion',
-  SOLIDIFICATION:   'solidification',
-  CORROSION:        'corrosion',
-  ELECTRIFICATION:  'electrification',
-  SHATTER:          'shatter',
+  COMBUSTION:       'COMBUSTION',
+  SOLIDIFICATION:   'SOLIDIFICATION',
+  CORROSION:        'CORROSION',
+  ELECTRIFICATION:  'ELECTRIFICATION',
+  SHATTER:          'SHATTER',
 } as const;
 
 /** Maps infliction columnId → arts reaction columnId. */
@@ -69,7 +62,7 @@ export const REACTION_COLUMN_IDS = new Set([...Object.values(INFLICTION_TO_REACT
 
 /** Column IDs for physical infliction lanes. */
 export const PHYSICAL_INFLICTION_COLUMNS = {
-  VULNERABLE: 'vulnerableInfliction',
+  VULNERABLE: 'VULNERABLE',
 } as const;
 
 export const PHYSICAL_INFLICTION_COLUMN_IDS: Set<string> = new Set(Object.values(PHYSICAL_INFLICTION_COLUMNS));
@@ -93,11 +86,6 @@ export const PHYSICAL_STATUS_COLUMN_IDS = new Set<string>(Object.values(PHYSICAL
 // ── Operator effect columns ───────────────────────────────────────────────
 
 export const OPERATOR_COLUMNS = {
-  MELTING_FLAME:  'MELTING_FLAME',
-  THUNDERLANCE:   'THUNDERLANCE',
-  CRIT_STACKS:    'CRIT_STACKS',
-  ORIGINIUM_CRYSTAL: 'ORIGINIUM_CRYSTAL',
-  WILDLAND_TREKKER_TRIGGER: 'WILDLAND_TREKKER_TRIGGER',
   INPUT:          'INPUT',
   CONTROLLED:     'CONTROLLED',
   OTHER:          'OTHER',
@@ -131,16 +119,11 @@ export const COMBO_WINDOW_COLUMN_ID = 'comboActivationWindow';
 
 /** Maps element key (from frame data) → infliction columnId. */
 export const ELEMENT_TO_INFLICTION_COLUMN: Record<string, string> = {
-  HEAT: 'heatInfliction',
-  CRYO: 'cryoInfliction',
-  NATURE: 'natureInfliction',
-  ELECTRIC: 'electricInfliction',
+  HEAT: INFLICTION_COLUMNS.HEAT,
+  CRYO: INFLICTION_COLUMNS.CRYO,
+  NATURE: INFLICTION_COLUMNS.NATURE,
+  ELECTRIC: INFLICTION_COLUMNS.ELECTRIC,
 };
-
-/** Reverse: infliction column → element. */
-export const INFLICTION_COLUMN_TO_ELEMENT: Record<string, string> = Object.fromEntries(
-  Object.entries(ELEMENT_TO_INFLICTION_COLUMN).map(([el, col]) => [col, el]),
-);
 
 /** Maps forced reaction name → reaction columnId. */
 export const FORCED_REACTION_COLUMN: Record<string, string> = {
@@ -158,12 +141,6 @@ export const REACTION_STATUS_TO_COLUMN: Record<string, string> = {
   ELECTRIFICATION:  REACTION_COLUMNS.ELECTRIFICATION,
 };
 
-/** Maps skill noun type → skill column ID. */
-export const SKILL_NOUN_TO_COLUMN: Record<string, string> = {
-  COMBO_SKILL:  SKILL_COLUMNS.COMBO,
-  BATTLE_SKILL: SKILL_COLUMNS.BATTLE,
-  ULTIMATE:     SKILL_COLUMNS.ULTIMATE,
-};
 
 /** Default active duration for derived reaction events (20s at 120fps). */
 export const REACTION_DURATION = 2400;
@@ -196,25 +173,25 @@ export const SHATTER_DURATION = 2 * FPS;
 // ── Reaction micro-columns ──────────────────────────────────────────────────
 
 export const REACTION_MICRO_COLUMNS = [
-  { id: 'combustion',      label: t('reaction.micro.combustion'),  color: '#ff5522' },
-  { id: 'solidification',  label: t('reaction.micro.solidification'), color: '#88ddff' },
-  { id: 'corrosion',       label: t('reaction.micro.corrosion'),  color: '#33cc66' },
-  { id: 'electrification', label: t('reaction.micro.electrification'),  color: '#e8c840' },
-  { id: 'shatter',         label: t('reaction.micro.shatter'),    color: '#88ddff' },
+  { id: REACTION_COLUMNS.COMBUSTION,       label: t('reaction.micro.combustion'),       color: '#ff5522' },
+  { id: REACTION_COLUMNS.SOLIDIFICATION,   label: t('reaction.micro.solidification'),   color: '#88ddff' },
+  { id: REACTION_COLUMNS.CORROSION,        label: t('reaction.micro.corrosion'),        color: '#33cc66' },
+  { id: REACTION_COLUMNS.ELECTRIFICATION,  label: t('reaction.micro.electrification'),  color: '#e8c840' },
+  { id: REACTION_COLUMNS.SHATTER,          label: t('reaction.micro.shatter'),          color: '#88ddff' },
 ];
 
 export const REACTION_LABELS: Record<string, { label: string; color: string }> = {
-  combustion:      { label: t('reaction.combustion'),      color: '#ff5522' },
-  solidification:  { label: t('reaction.solidification'),  color: '#88ddff' },
-  corrosion:       { label: t('reaction.corrosion'),       color: '#33cc66' },
-  electrification: { label: t('reaction.electrification'), color: '#e8c840' },
-  shatter:         { label: t('reaction.shatter'),         color: '#88ddff' },
+  [REACTION_COLUMNS.COMBUSTION]:       { label: t('reaction.combustion'),      color: '#ff5522' },
+  [REACTION_COLUMNS.SOLIDIFICATION]:   { label: t('reaction.solidification'),  color: '#88ddff' },
+  [REACTION_COLUMNS.CORROSION]:        { label: t('reaction.corrosion'),       color: '#33cc66' },
+  [REACTION_COLUMNS.ELECTRIFICATION]:  { label: t('reaction.electrification'), color: '#e8c840' },
+  [REACTION_COLUMNS.SHATTER]:          { label: t('reaction.shatter'),         color: '#88ddff' },
 };
 
 // ── Physical infliction / status micro-columns ──────────────────────────────
 
 export const PHYSICAL_INFLICTION_LABELS: Record<string, { label: string; color: string }> = {
-  vulnerableInfliction: { label: t('physicalInfliction.vulnerable'), color: '#c0c8d0' },
+  [PHYSICAL_INFLICTION_COLUMNS.VULNERABLE]: { label: t('physicalInfliction.vulnerable'), color: '#c0c8d0' },
 };
 
 export const PHYSICAL_INFLICTION_MICRO_COLUMNS = [

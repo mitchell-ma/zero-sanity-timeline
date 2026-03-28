@@ -15,9 +15,9 @@
  */
 
 import { renderHook, act } from '@testing-library/react';
+import { NounType } from '../../../dsl/semantics';
 import { useApp } from '../../../app/useApp';
 import {
-  SKILL_COLUMNS,
   PHYSICAL_INFLICTION_COLUMNS,
   ENEMY_OWNER_ID,
   USER_ID,
@@ -55,7 +55,7 @@ describe('Vulnerable stacking — strict mode (Chen Qianyu battle skills)', () =
 
     act(() => { result.current.handleSwapOperator(SLOT_CHEN, 'CHEN_QIANYU'); });
 
-    const battleCol = findColumn(result.current, SLOT_CHEN, SKILL_COLUMNS.BATTLE);
+    const battleCol = findColumn(result.current, SLOT_CHEN, NounType.BATTLE_SKILL);
     expect(battleCol).toBeDefined();
 
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
@@ -63,7 +63,7 @@ describe('Vulnerable stacking — strict mode (Chen Qianyu battle skills)', () =
     for (let i = 0; i < 5; i++) {
       act(() => {
         result.current.handleAddEvent(
-          SLOT_CHEN, SKILL_COLUMNS.BATTLE, (2 + i * 2) * FPS, battleCol!.defaultEvent!,
+          SLOT_CHEN, NounType.BATTLE_SKILL, (2 + i * 2) * FPS, battleCol!.defaultEvent!,
         );
       });
     }
@@ -155,13 +155,13 @@ describe('Vulnerable stacking — mixed freeform + strict', () => {
     }
 
     // Then add 3 strict battle skills (still freeform mode to bypass SP)
-    const battleCol = findColumn(result.current, SLOT_CHEN, SKILL_COLUMNS.BATTLE);
+    const battleCol = findColumn(result.current, SLOT_CHEN, NounType.BATTLE_SKILL);
     expect(battleCol).toBeDefined();
 
     for (let i = 0; i < 3; i++) {
       act(() => {
         result.current.handleAddEvent(
-          SLOT_CHEN, SKILL_COLUMNS.BATTLE, (6 + i * 2) * FPS, battleCol!.defaultEvent!,
+          SLOT_CHEN, NounType.BATTLE_SKILL, (6 + i * 2) * FPS, battleCol!.defaultEvent!,
         );
       });
     }
@@ -188,12 +188,12 @@ describe('Vulnerable stacking — mixed freeform + strict', () => {
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
     // 1 strict battle skill first
-    const battleCol = findColumn(result.current, SLOT_CHEN, SKILL_COLUMNS.BATTLE);
+    const battleCol = findColumn(result.current, SLOT_CHEN, NounType.BATTLE_SKILL);
     expect(battleCol).toBeDefined();
 
     act(() => {
       result.current.handleAddEvent(
-        SLOT_CHEN, SKILL_COLUMNS.BATTLE, 2 * FPS, battleCol!.defaultEvent!,
+        SLOT_CHEN, NounType.BATTLE_SKILL, 2 * FPS, battleCol!.defaultEvent!,
       );
     });
 

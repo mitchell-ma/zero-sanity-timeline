@@ -51,7 +51,6 @@
  *    - Level table 1–99+
  */
 import { TimelineEvent } from '../../consts/viewTypes';
-import { SKILL_COLUMNS } from '../../model/channels';
 import { VerbType, ObjectType, NounType, AdjectiveType, DeterminerType } from '../../dsl/semantics';
 import { buildSequencesFromOperatorJson, DataDrivenSkillEventSequence } from '../../controller/gameDataStore';
 import { wouldOverlapSiblings } from '../../controller/timeline/eventValidator';
@@ -531,13 +530,13 @@ describe('G. Cooldown Interactions', () => {
   test('G1: Basic attack has no cooldown — sequential basic attacks can overlap freely', () => {
     const ba1 = makeEvent({
       uid: 'ba-1',
-      columnId: SKILL_COLUMNS.BASIC,
+      columnId: NounType.BASIC_ATTACK,
       startFrame: 0,
       segments: [{ properties: { duration: Math.round(0.5 * FPS) } }], // segment 1 duration
     });
     // Place second basic attack immediately after first segment
     const overlap = wouldOverlapSiblings(
-      SLOT_ID, SKILL_COLUMNS.BASIC, Math.round(0.5 * FPS), 1, [ba1],
+      SLOT_ID, NounType.BASIC_ATTACK, Math.round(0.5 * FPS), 1, [ba1],
     );
     // Basic attacks have no nonOverlappableRange, so no overlap
     expect(overlap).toBe(false);
@@ -547,14 +546,14 @@ describe('G. Cooldown Interactions', () => {
     const bsDuration = Math.round(1.33 * FPS); // 1.33s
     const bs1 = makeEvent({
       uid: 'bs-1',
-      columnId: SKILL_COLUMNS.BATTLE,
+      columnId: NounType.BATTLE_SKILL,
       startFrame: 0,
       segments: [{ properties: { duration: bsDuration } }],
       nonOverlappableRange: bsDuration,
     });
     // Place second battle skill right after the first ends
     const overlap = wouldOverlapSiblings(
-      SLOT_ID, SKILL_COLUMNS.BATTLE, bsDuration, bsDuration, [bs1],
+      SLOT_ID, NounType.BATTLE_SKILL, bsDuration, bsDuration, [bs1],
     );
     expect(overlap).toBe(false);
   });
@@ -565,7 +564,7 @@ describe('G. Cooldown Interactions', () => {
     const totalRange = comboDuration + comboCooldown;
     const cs1 = makeEvent({
       uid: 'cs-1',
-      columnId: SKILL_COLUMNS.COMBO,
+      columnId: NounType.COMBO_SKILL,
       startFrame: 0,
       segments: [{ properties: { duration: comboDuration } }],
       nonOverlappableRange: totalRange,
@@ -574,12 +573,12 @@ describe('G. Cooldown Interactions', () => {
     // During cooldown: should be blocked
     const midCooldown = comboDuration + Math.round(7.5 * FPS);
     expect(wouldOverlapSiblings(
-      SLOT_ID, SKILL_COLUMNS.COMBO, midCooldown, 1, [cs1],
+      SLOT_ID, NounType.COMBO_SKILL, midCooldown, 1, [cs1],
     )).toBe(true);
 
     // After cooldown ends: should be allowed
     expect(wouldOverlapSiblings(
-      SLOT_ID, SKILL_COLUMNS.COMBO, totalRange, 1, [cs1],
+      SLOT_ID, NounType.COMBO_SKILL, totalRange, 1, [cs1],
     )).toBe(false);
   });
 
@@ -598,14 +597,14 @@ describe('G. Cooldown Interactions', () => {
     const totalRange = comboDuration + comboCooldown;
     const cs1 = makeEvent({
       uid: 'cs-1',
-      columnId: SKILL_COLUMNS.COMBO,
+      columnId: NounType.COMBO_SKILL,
       startFrame: 0,
       segments: [{ properties: { duration: comboDuration } }],
       nonOverlappableRange: totalRange,
     });
     // 1 frame before cooldown ends
     expect(wouldOverlapSiblings(
-      SLOT_ID, SKILL_COLUMNS.COMBO, totalRange - 1, 1, [cs1],
+      SLOT_ID, NounType.COMBO_SKILL, totalRange - 1, 1, [cs1],
     )).toBe(true);
   });
 
@@ -613,14 +612,14 @@ describe('G. Cooldown Interactions', () => {
     const cs1 = makeEvent({
       uid: 'cs-1',
       ownerId: 'slot-0',
-      columnId: SKILL_COLUMNS.COMBO,
+      columnId: NounType.COMBO_SKILL,
       startFrame: 0,
       segments: [{ properties: { duration: 152 } }],
       nonOverlappableRange: 1952,
     });
     // Different owner at frame 0 — no overlap
     expect(wouldOverlapSiblings(
-      'slot-1', SKILL_COLUMNS.COMBO, 0, 1, [cs1],
+      'slot-1', NounType.COMBO_SKILL, 0, 1, [cs1],
     )).toBe(false);
   });
 });

@@ -23,9 +23,9 @@
  */
 
 import { ALL_OPERATORS } from '../../controller/operators/operatorRegistry';
+import { NounType } from '../../dsl/semantics';
 import { buildColumns, Slot } from '../../controller/timeline/columnBuilder';
 import { Enemy, MiniTimeline, Operator, VisibleSkills } from '../../consts/viewTypes';
-import { SKILL_COLUMNS } from '../../model/channels';
 
 // ── Test fixtures ───────────────────────────────────────────────────────────
 
@@ -53,10 +53,10 @@ const makeSlot = (slotId: string, operator: Operator): Slot => ({
 
 const allSkillsVisible = (slotId: string): VisibleSkills => ({
   [slotId]: {
-    [SKILL_COLUMNS.BASIC]: true,
-    [SKILL_COLUMNS.BATTLE]: true,
-    [SKILL_COLUMNS.COMBO]: true,
-    [SKILL_COLUMNS.ULTIMATE]: true,
+    [NounType.BASIC_ATTACK]: true,
+    [NounType.BATTLE_SKILL]: true,
+    [NounType.COMBO_SKILL]: true,
+    [NounType.ULTIMATE]: true,
   } as Record<string, boolean>,
 });
 

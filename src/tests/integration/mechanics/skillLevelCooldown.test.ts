@@ -13,8 +13,8 @@
  */
 
 import { renderHook, act } from '@testing-library/react';
+import { NounType } from '../../../dsl/semantics';
 import { useApp } from '../../../app/useApp';
-import { SKILL_COLUMNS } from '../../../model/channels';
 import { ColumnType, SegmentType } from '../../../consts/enums';
 import { FPS } from '../../../utils/timeline';
 import type { MiniTimeline } from '../../../consts/viewTypes';
@@ -47,7 +47,7 @@ describe('Skill Level → Cooldown Update — integration through useApp', () =>
     const { result } = renderHook(() => useApp());
 
     // Verify Ardelia is in slot-3
-    const comboCol = findColumn(result.current, SLOT_ARDELIA, SKILL_COLUMNS.COMBO);
+    const comboCol = findColumn(result.current, SLOT_ARDELIA, NounType.COMBO_SKILL);
     expect(comboCol).toBeDefined();
 
     // Default combo skill level is 12 → cooldown 17s
@@ -55,12 +55,12 @@ describe('Skill Level → Cooldown Update — integration through useApp', () =>
 
     // Add a combo skill event
     act(() => {
-      result.current.handleAddEvent(SLOT_ARDELIA, SKILL_COLUMNS.COMBO, 5 * FPS, defaultSkill);
+      result.current.handleAddEvent(SLOT_ARDELIA, NounType.COMBO_SKILL, 5 * FPS, defaultSkill);
     });
 
     // Verify cooldown segment at level 12 = 17s
     const cdAtLevel12 = getCooldownDuration(
-      result.current.allProcessedEvents, SLOT_ARDELIA, SKILL_COLUMNS.COMBO,
+      result.current.allProcessedEvents, SLOT_ARDELIA, NounType.COMBO_SKILL,
     );
     expect(cdAtLevel12).toBe(Math.round(17 * FPS));
 
@@ -75,7 +75,7 @@ describe('Skill Level → Cooldown Update — integration through useApp', () =>
 
     // Verify cooldown segment updated to level 11 = 18s
     const cdAtLevel11 = getCooldownDuration(
-      result.current.allProcessedEvents, SLOT_ARDELIA, SKILL_COLUMNS.COMBO,
+      result.current.allProcessedEvents, SLOT_ARDELIA, NounType.COMBO_SKILL,
     );
     expect(cdAtLevel11).toBe(Math.round(18 * FPS));
   });

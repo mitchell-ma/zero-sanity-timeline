@@ -15,9 +15,9 @@
  */
 
 import { renderHook, act } from '@testing-library/react';
+import { NounType } from '../../../../dsl/semantics';
 import { useApp } from '../../../../app/useApp';
 import {
-  SKILL_COLUMNS,
   PHYSICAL_INFLICTION_COLUMNS,
   PHYSICAL_STATUS_COLUMNS,
   PHYSICAL_STATUS_COLUMN_IDS,
@@ -47,13 +47,13 @@ describe('Chen Qianyu — Vulnerable → Lift physical status', () => {
       result.current.handleSwapOperator(SLOT_CHEN, 'CHEN_QIANYU');
     });
 
-    const battleCol = findColumn(result.current, SLOT_CHEN, SKILL_COLUMNS.BATTLE);
+    const battleCol = findColumn(result.current, SLOT_CHEN, NounType.BATTLE_SKILL);
     expect(battleCol).toBeDefined();
 
     // ── First battle skill at t=2s ──
     act(() => {
       result.current.handleAddEvent(
-        SLOT_CHEN, SKILL_COLUMNS.BATTLE, 2 * FPS, battleCol!.defaultEvent!,
+        SLOT_CHEN, NounType.BATTLE_SKILL, 2 * FPS, battleCol!.defaultEvent!,
       );
     });
 
@@ -72,7 +72,7 @@ describe('Chen Qianyu — Vulnerable → Lift physical status', () => {
     // ── Second battle skill while Vulnerable is still active ──
     act(() => {
       result.current.handleAddEvent(
-        SLOT_CHEN, SKILL_COLUMNS.BATTLE, 4 * FPS, battleCol!.defaultEvent!,
+        SLOT_CHEN, NounType.BATTLE_SKILL, 4 * FPS, battleCol!.defaultEvent!,
       );
     });
 

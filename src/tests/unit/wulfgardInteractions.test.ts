@@ -62,7 +62,6 @@
  *    - Talent names and levels
  */
 import { TimelineEvent } from '../../consts/viewTypes';
-import { SKILL_COLUMNS } from '../../model/channels';
 import { StackInteractionType, StatusType } from '../../consts/enums';
 import { VerbType, ObjectType, NounType, AdjectiveType, DeterminerType } from '../../dsl/semantics';
 import { buildSequencesFromOperatorJson, DataDrivenSkillEventSequence } from '../../controller/gameDataStore';
@@ -557,15 +556,18 @@ describe('E. Empowered Battle Skill', () => {
     // Predicate 1 (conditional): both reactions → consume Combustion (priority)
     expect(clauses[0].conditions).toHaveLength(2);
     expect(clauses[0].effects[0].verb).toBe(VerbType.CONSUME);
-    expect(clauses[0].effects[0].objectId).toBe(StatusType.COMBUSTION);
+    expect(clauses[0].effects[0].objectId).toBe(NounType.REACTION);
+    expect(clauses[0].effects[0].objectQualifier).toBe(StatusType.COMBUSTION);
     // Predicate 2 (conditional): combustion only → consume Combustion
     expect(clauses[1].conditions).toHaveLength(1);
     expect(clauses[1].effects[0].verb).toBe(VerbType.CONSUME);
-    expect(clauses[1].effects[0].objectId).toBe(StatusType.COMBUSTION);
+    expect(clauses[1].effects[0].objectId).toBe(NounType.REACTION);
+    expect(clauses[1].effects[0].objectQualifier).toBe(StatusType.COMBUSTION);
     // Predicate 3 (conditional): electrification only → consume Electrification
     expect(clauses[2].conditions).toHaveLength(1);
     expect(clauses[2].effects[0].verb).toBe(VerbType.CONSUME);
-    expect(clauses[2].effects[0].objectId).toBe(StatusType.ELECTRIFICATION);
+    expect(clauses[2].effects[0].objectId).toBe(NounType.REACTION);
+    expect(clauses[2].effects[0].objectQualifier).toBe(StatusType.ELECTRIFICATION);
     // Predicate 4 (unconditional): damage + stagger + SP return
     expect(clauses[3].conditions).toHaveLength(0);
     const stagger = clauses[3].effects.find(
@@ -757,23 +759,23 @@ describe('I. Cooldown Interactions', () => {
     const comboCooldown = 20 * FPS; // 2400 frames
     const totalRange = comboDuration + comboCooldown;
     const cs1 = makeEvent({
-      uid: 'cs-1', columnId: SKILL_COLUMNS.COMBO, startFrame: 0,
+      uid: 'cs-1', columnId: NounType.COMBO_SKILL, startFrame: 0,
       segments: [{ properties: { duration: comboDuration } }],
       nonOverlappableRange: totalRange,
     });
     // Mid-cooldown
-    expect(wouldOverlapSiblings(SLOT_ID, SKILL_COLUMNS.COMBO, comboDuration + 1200, 1, [cs1])).toBe(true);
+    expect(wouldOverlapSiblings(SLOT_ID, NounType.COMBO_SKILL, comboDuration + 1200, 1, [cs1])).toBe(true);
     // After cooldown
-    expect(wouldOverlapSiblings(SLOT_ID, SKILL_COLUMNS.COMBO, totalRange, 1, [cs1])).toBe(false);
+    expect(wouldOverlapSiblings(SLOT_ID, NounType.COMBO_SKILL, totalRange, 1, [cs1])).toBe(false);
   });
 
   test('I5: Battle skill back-to-back is valid (no cooldown)', () => {
     const bsDuration = Math.round(1.07 * FPS); // 128 frames
     const bs1 = makeEvent({
-      uid: 'bs-1', columnId: SKILL_COLUMNS.BATTLE, startFrame: 0,
+      uid: 'bs-1', columnId: NounType.BATTLE_SKILL, startFrame: 0,
       segments: [{ properties: { duration: bsDuration } }], nonOverlappableRange: bsDuration,
     });
-    expect(wouldOverlapSiblings(SLOT_ID, SKILL_COLUMNS.BATTLE, bsDuration, bsDuration, [bs1])).toBe(false);
+    expect(wouldOverlapSiblings(SLOT_ID, NounType.BATTLE_SKILL, bsDuration, bsDuration, [bs1])).toBe(false);
   });
 
   test('I6: P5 Wolven Fury resets combo cooldown when cast during cooldown phase', () => {

@@ -17,14 +17,16 @@
  */
 
 import { renderHook, act } from '@testing-library/react';
+import { NounType } from '../../../../dsl/semantics';
 import { useApp } from '../../../../app/useApp';
-import { SKILL_COLUMNS, OPERATOR_COLUMNS, NODE_STAGGER_COLUMN_ID, ENEMY_OWNER_ID, USER_ID } from '../../../../model/channels';
+import { NODE_STAGGER_COLUMN_ID, ENEMY_OWNER_ID, USER_ID } from '../../../../model/channels';
 import { ColumnType, InteractionModeType } from '../../../../consts/enums';
 import { EnhancementType } from '../../../../consts/enums';
 import { FPS } from '../../../../utils/timeline';
 import { checkVariantAvailability } from '../../../../controller/timeline/eventValidator';
 import type { MiniTimeline } from '../../../../consts/viewTypes';
 
+const MELTING_FLAME_ID = 'MELTING_FLAME';
 const SLOT = 'slot-0';
 
 function findColumn(app: ReturnType<typeof useApp>, slotId: string, columnId: string) {
@@ -37,8 +39,8 @@ function findColumn(app: ReturnType<typeof useApp>, slotId: string, columnId: st
 }
 
 function getMfDefault(app: ReturnType<typeof useApp>) {
-  const statusCol = findColumn(app, SLOT, OPERATOR_COLUMNS.MELTING_FLAME);
-  const mfMicro = statusCol!.microColumns?.find((mc) => mc.id === OPERATOR_COLUMNS.MELTING_FLAME);
+  const statusCol = findColumn(app, SLOT, MELTING_FLAME_ID);
+  const mfMicro = statusCol!.microColumns?.find((mc) => mc.id === MELTING_FLAME_ID);
   return mfMicro!.defaultEvent!;
 }
 
@@ -57,9 +59,9 @@ function isAvailable(
 
 /** Place the ultimate at a given frame. */
 function placeUltimate(app: ReturnType<typeof useApp>, atFrame: number) {
-  const ultCol = findColumn(app, SLOT, SKILL_COLUMNS.ULTIMATE);
+  const ultCol = findColumn(app, SLOT, NounType.ULTIMATE);
   act(() => {
-    app.handleAddEvent(SLOT, SKILL_COLUMNS.ULTIMATE, atFrame, ultCol!.defaultEvent!);
+    app.handleAddEvent(SLOT, NounType.ULTIMATE, atFrame, ultCol!.defaultEvent!);
   });
 }
 
@@ -68,7 +70,7 @@ function place4MfStacks(app: ReturnType<typeof useApp>, startFrame: number) {
   const mfDefault = getMfDefault(app);
   for (let i = 0; i < 4; i++) {
     act(() => {
-      app.handleAddEvent(SLOT, OPERATOR_COLUMNS.MELTING_FLAME, startFrame + i * FPS, mfDefault);
+      app.handleAddEvent(SLOT, MELTING_FLAME_ID, startFrame + i * FPS, mfDefault);
     });
   }
 }
@@ -81,25 +83,25 @@ describe('Laevatain variant availability — integration through useApp', () => 
   describe('No MF, No Ult → NORMAL BATK, NORMAL BS', () => {
     it('normal basic attack is available', () => {
       const { result } = renderHook(() => useApp());
-      const r = isAvailable(result.current, 'FLAMING_CINDERS', SKILL_COLUMNS.BASIC, 5 * FPS, EnhancementType.NORMAL);
+      const r = isAvailable(result.current, 'FLAMING_CINDERS', NounType.BASIC_ATTACK, 5 * FPS, EnhancementType.NORMAL);
       expect(r.disabled).toBe(false);
     });
 
     it('normal battle skill is available', () => {
       const { result } = renderHook(() => useApp());
-      const r = isAvailable(result.current, 'SMOULDERING_FIRE', SKILL_COLUMNS.BATTLE, 5 * FPS, EnhancementType.NORMAL);
+      const r = isAvailable(result.current, 'SMOULDERING_FIRE', NounType.BATTLE_SKILL, 5 * FPS, EnhancementType.NORMAL);
       expect(r.disabled).toBe(false);
     });
 
     it('enhanced basic attack is disabled (no ENABLE)', () => {
       const { result } = renderHook(() => useApp());
-      const r = isAvailable(result.current, 'FLAMING_CINDERS_ENHANCED', SKILL_COLUMNS.BASIC, 5 * FPS, EnhancementType.ENHANCED);
+      const r = isAvailable(result.current, 'FLAMING_CINDERS_ENHANCED', NounType.BASIC_ATTACK, 5 * FPS, EnhancementType.ENHANCED);
       expect(r.disabled).toBe(true);
     });
 
     it('empowered battle skill is disabled (no MF stacks)', () => {
       const { result } = renderHook(() => useApp());
-      const r = isAvailable(result.current, 'SMOULDERING_FIRE_EMPOWERED', SKILL_COLUMNS.BATTLE, 5 * FPS, EnhancementType.EMPOWERED);
+      const r = isAvailable(result.current, 'SMOULDERING_FIRE_EMPOWERED', NounType.BATTLE_SKILL, 5 * FPS, EnhancementType.EMPOWERED);
       expect(r.disabled).toBe(true);
     });
   });
@@ -108,21 +110,21 @@ describe('Laevatain variant availability — integration through useApp', () => 
     it('normal basic attack is available', () => {
       const { result } = renderHook(() => useApp());
       place4MfStacks(result.current, 2 * FPS);
-      const r = isAvailable(result.current, 'FLAMING_CINDERS', SKILL_COLUMNS.BASIC, 8 * FPS, EnhancementType.NORMAL);
+      const r = isAvailable(result.current, 'FLAMING_CINDERS', NounType.BASIC_ATTACK, 8 * FPS, EnhancementType.NORMAL);
       expect(r.disabled).toBe(false);
     });
 
     it('empowered battle skill is available (4 MF stacks)', () => {
       const { result } = renderHook(() => useApp());
       place4MfStacks(result.current, 2 * FPS);
-      const r = isAvailable(result.current, 'SMOULDERING_FIRE_EMPOWERED', SKILL_COLUMNS.BATTLE, 8 * FPS, EnhancementType.EMPOWERED);
+      const r = isAvailable(result.current, 'SMOULDERING_FIRE_EMPOWERED', NounType.BATTLE_SKILL, 8 * FPS, EnhancementType.EMPOWERED);
       expect(r.disabled).toBe(false);
     });
 
     it('enhanced basic attack is disabled (no Ult)', () => {
       const { result } = renderHook(() => useApp());
       place4MfStacks(result.current, 2 * FPS);
-      const r = isAvailable(result.current, 'FLAMING_CINDERS_ENHANCED', SKILL_COLUMNS.BASIC, 8 * FPS, EnhancementType.ENHANCED);
+      const r = isAvailable(result.current, 'FLAMING_CINDERS_ENHANCED', NounType.BASIC_ATTACK, 8 * FPS, EnhancementType.ENHANCED);
       expect(r.disabled).toBe(true);
     });
   });
@@ -131,35 +133,35 @@ describe('Laevatain variant availability — integration through useApp', () => 
     it('enhanced basic attack is available during ultimate', () => {
       const { result } = renderHook(() => useApp());
       placeUltimate(result.current, ULT_START);
-      const r = isAvailable(result.current, 'FLAMING_CINDERS_ENHANCED', SKILL_COLUMNS.BASIC, ACTIVE_FRAME, EnhancementType.ENHANCED);
+      const r = isAvailable(result.current, 'FLAMING_CINDERS_ENHANCED', NounType.BASIC_ATTACK, ACTIVE_FRAME, EnhancementType.ENHANCED);
       expect(r.disabled).toBe(false);
     });
 
     it('enhanced battle skill requires 4 MF stacks (disabled without them even during ultimate)', () => {
       const { result } = renderHook(() => useApp());
       placeUltimate(result.current, ULT_START);
-      const r = isAvailable(result.current, 'SMOULDERING_FIRE_ENHANCED', SKILL_COLUMNS.BATTLE, ACTIVE_FRAME, EnhancementType.ENHANCED);
+      const r = isAvailable(result.current, 'SMOULDERING_FIRE_ENHANCED', NounType.BATTLE_SKILL, ACTIVE_FRAME, EnhancementType.ENHANCED);
       expect(r.disabled).toBe(true);
     });
 
     it('normal basic attack is disabled during ultimate (DISABLE NORMAL)', () => {
       const { result } = renderHook(() => useApp());
       placeUltimate(result.current, ULT_START);
-      const r = isAvailable(result.current, 'FLAMING_CINDERS', SKILL_COLUMNS.BASIC, ACTIVE_FRAME, EnhancementType.NORMAL);
+      const r = isAvailable(result.current, 'FLAMING_CINDERS', NounType.BASIC_ATTACK, ACTIVE_FRAME, EnhancementType.NORMAL);
       expect(r.disabled).toBe(true);
     });
 
     it('normal battle skill is disabled during ultimate (DISABLE NORMAL)', () => {
       const { result } = renderHook(() => useApp());
       placeUltimate(result.current, ULT_START);
-      const r = isAvailable(result.current, 'SMOULDERING_FIRE', SKILL_COLUMNS.BATTLE, ACTIVE_FRAME, EnhancementType.NORMAL);
+      const r = isAvailable(result.current, 'SMOULDERING_FIRE', NounType.BATTLE_SKILL, ACTIVE_FRAME, EnhancementType.NORMAL);
       expect(r.disabled).toBe(true);
     });
 
     it('finisher is disabled during ultimate (DISABLE FINISHER)', () => {
       const { result } = renderHook(() => useApp());
       placeUltimate(result.current, ULT_START);
-      const r = isAvailable(result.current, 'FINISHER', SKILL_COLUMNS.BASIC, ACTIVE_FRAME);
+      const r = isAvailable(result.current, 'FINISHER', NounType.BASIC_ATTACK, ACTIVE_FRAME);
       expect(r.disabled).toBe(true);
     });
 
@@ -177,21 +179,21 @@ describe('Laevatain variant availability — integration through useApp', () => 
         );
       });
       // Finisher should still be disabled by the DISABLE FINISHER clause
-      const r = isAvailable(result.current, 'FINISHER', SKILL_COLUMNS.BASIC, ACTIVE_FRAME);
+      const r = isAvailable(result.current, 'FINISHER', NounType.BASIC_ATTACK, ACTIVE_FRAME);
       expect(r.disabled).toBe(true);
     });
 
     it('empowered battle skill is disabled during ultimate (DISABLE EMPOWERED)', () => {
       const { result } = renderHook(() => useApp());
       placeUltimate(result.current, ULT_START);
-      const r = isAvailable(result.current, 'SMOULDERING_FIRE_EMPOWERED', SKILL_COLUMNS.BATTLE, ACTIVE_FRAME, EnhancementType.EMPOWERED);
+      const r = isAvailable(result.current, 'SMOULDERING_FIRE_EMPOWERED', NounType.BATTLE_SKILL, ACTIVE_FRAME, EnhancementType.EMPOWERED);
       expect(r.disabled).toBe(true);
     });
 
     it('enhanced+empowered battle skill is disabled (no MF stacks)', () => {
       const { result } = renderHook(() => useApp());
       placeUltimate(result.current, ULT_START);
-      const r = isAvailable(result.current, 'SMOULDERING_FIRE_ENHANCED_EMPOWERED', SKILL_COLUMNS.BATTLE, ACTIVE_FRAME, EnhancementType.ENHANCED);
+      const r = isAvailable(result.current, 'SMOULDERING_FIRE_ENHANCED_EMPOWERED', NounType.BATTLE_SKILL, ACTIVE_FRAME, EnhancementType.ENHANCED);
       expect(r.disabled).toBe(true);
     });
 
@@ -202,12 +204,12 @@ describe('Laevatain variant availability — integration through useApp', () => 
       placeUltimate(result.current, ULT_START);
 
       // Place an enhanced battle skill during the active window (generates gauge gain normally)
-      const battleCol = findColumn(result.current, SLOT, SKILL_COLUMNS.BATTLE);
+      const battleCol = findColumn(result.current, SLOT, NounType.BATTLE_SKILL);
       const enhancedVariant = battleCol!.eventVariants?.find(
         (v) => v.enhancementType === EnhancementType.ENHANCED,
       );
       act(() => {
-        result.current.handleAddEvent(SLOT, SKILL_COLUMNS.BATTLE, ACTIVE_FRAME, enhancedVariant!);
+        result.current.handleAddEvent(SLOT, NounType.BATTLE_SKILL, ACTIVE_FRAME, enhancedVariant!);
       });
 
       // Check the resource graph — energy should not increase during the active phase
@@ -231,7 +233,7 @@ describe('Laevatain variant availability — integration through useApp', () => 
       const { result } = renderHook(() => useApp());
       place4MfStacks(result.current, 2 * FPS);
       placeUltimate(result.current, ULT_START);
-      const r = isAvailable(result.current, 'FLAMING_CINDERS_ENHANCED', SKILL_COLUMNS.BASIC, ACTIVE_FRAME, EnhancementType.ENHANCED);
+      const r = isAvailable(result.current, 'FLAMING_CINDERS_ENHANCED', NounType.BASIC_ATTACK, ACTIVE_FRAME, EnhancementType.ENHANCED);
       expect(r.disabled).toBe(false);
     });
 
@@ -239,7 +241,7 @@ describe('Laevatain variant availability — integration through useApp', () => 
       const { result } = renderHook(() => useApp());
       place4MfStacks(result.current, 2 * FPS);
       placeUltimate(result.current, ULT_START);
-      const r = isAvailable(result.current, 'SMOULDERING_FIRE_ENHANCED', SKILL_COLUMNS.BATTLE, ACTIVE_FRAME, EnhancementType.ENHANCED);
+      const r = isAvailable(result.current, 'SMOULDERING_FIRE_ENHANCED', NounType.BATTLE_SKILL, ACTIVE_FRAME, EnhancementType.ENHANCED);
       expect(r.disabled).toBe(false);
     });
 
@@ -247,7 +249,7 @@ describe('Laevatain variant availability — integration through useApp', () => 
       const { result } = renderHook(() => useApp());
       place4MfStacks(result.current, 2 * FPS);
       placeUltimate(result.current, ULT_START);
-      const r = isAvailable(result.current, 'SMOULDERING_FIRE_ENHANCED_EMPOWERED', SKILL_COLUMNS.BATTLE, ACTIVE_FRAME, EnhancementType.ENHANCED);
+      const r = isAvailable(result.current, 'SMOULDERING_FIRE_ENHANCED_EMPOWERED', NounType.BATTLE_SKILL, ACTIVE_FRAME, EnhancementType.ENHANCED);
       expect(r.disabled).toBe(false);
     });
 
@@ -255,7 +257,7 @@ describe('Laevatain variant availability — integration through useApp', () => 
       const { result } = renderHook(() => useApp());
       place4MfStacks(result.current, 2 * FPS);
       placeUltimate(result.current, ULT_START);
-      const r = isAvailable(result.current, 'FLAMING_CINDERS', SKILL_COLUMNS.BASIC, ACTIVE_FRAME, EnhancementType.NORMAL);
+      const r = isAvailable(result.current, 'FLAMING_CINDERS', NounType.BASIC_ATTACK, ACTIVE_FRAME, EnhancementType.NORMAL);
       expect(r.disabled).toBe(true);
     });
 
@@ -263,7 +265,7 @@ describe('Laevatain variant availability — integration through useApp', () => 
       const { result } = renderHook(() => useApp());
       place4MfStacks(result.current, 2 * FPS);
       placeUltimate(result.current, ULT_START);
-      const r = isAvailable(result.current, 'SMOULDERING_FIRE_EMPOWERED', SKILL_COLUMNS.BATTLE, ACTIVE_FRAME, EnhancementType.EMPOWERED);
+      const r = isAvailable(result.current, 'SMOULDERING_FIRE_EMPOWERED', NounType.BATTLE_SKILL, ACTIVE_FRAME, EnhancementType.EMPOWERED);
       expect(r.disabled).toBe(true);
     });
   });

@@ -9,7 +9,7 @@
 import { TimelineEvent, EventSegmentData, eventEndFrame, durationSegment, setEventDuration } from '../../consts/viewTypes';
 import { CritMode, EventStatusType, StackInteractionType } from '../../consts/enums';
 import { COMMON_OWNER_ID } from '../slot/commonSlotController';
-import { ENEMY_OWNER_ID, ELEMENT_TO_INFLICTION_COLUMN, REACTION_COLUMNS, SKILL_COLUMNS } from '../../model/channels';
+import { ENEMY_OWNER_ID, ELEMENT_TO_INFLICTION_COLUMN, REACTION_COLUMNS } from '../../model/channels';
 import { FPS, TOTAL_FRAMES } from '../../utils/timeline';
 import { getSkillIds, getAllOperatorIds, getEnabledStatusEvents } from '../gameDataStore';
 import { getWeaponEffectDefs, getGearEffectDefs } from '../gameDataStore';
@@ -123,7 +123,7 @@ function getEnabledDefs(operatorId: string): StatusEventDef[] {
 
 /** Build a ValueResolutionContext from DeriveContext for the talent owner. */
 function buildDeriveValueContext(ctx: DeriveContext): ValueResolutionContext {
-  const baseCtx = buildContextForSkillColumn(ctx.loadoutProperties, SKILL_COLUMNS.BATTLE);
+  const baseCtx = buildContextForSkillColumn(ctx.loadoutProperties, NounType.BATTLE_SKILL);
   baseCtx.potential = ctx.potential ?? baseCtx.potential;
   return baseCtx;
 }

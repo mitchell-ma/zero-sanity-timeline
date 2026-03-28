@@ -12,8 +12,9 @@
  */
 
 import { renderHook, act } from '@testing-library/react';
+import { NounType } from '../../../../dsl/semantics';
 import { useApp } from '../../../../app/useApp';
-import { SKILL_COLUMNS, REACTION_COLUMNS, ENEMY_OWNER_ID } from '../../../../model/channels';
+import { REACTION_COLUMNS, ENEMY_OWNER_ID } from '../../../../model/channels';
 import { ColumnType } from '../../../../consts/enums';
 import { FPS } from '../../../../utils/timeline';
 import type { MiniTimeline } from '../../../../consts/viewTypes';
@@ -34,28 +35,28 @@ describe('Ardelia combo skill — Corrosion application', () => {
     const { result } = renderHook(() => useApp());
 
     // 1. Ardelia uses basic attack (contains finisher / FINAL_STRIKE)
-    const basicCol = findColumn(result.current, SLOT_ARDELIA, SKILL_COLUMNS.BASIC);
+    const basicCol = findColumn(result.current, SLOT_ARDELIA, NounType.BASIC_ATTACK);
     expect(basicCol).toBeDefined();
 
     act(() => {
       result.current.handleAddEvent(
-        SLOT_ARDELIA, SKILL_COLUMNS.BASIC, 0, basicCol!.defaultEvent!,
+        SLOT_ARDELIA, NounType.BASIC_ATTACK, 0, basicCol!.defaultEvent!,
       );
     });
 
     // 2. Ardelia uses combo skill — triggered by her own finisher, no inflictions on enemy
-    const comboCol = findColumn(result.current, SLOT_ARDELIA, SKILL_COLUMNS.COMBO);
+    const comboCol = findColumn(result.current, SLOT_ARDELIA, NounType.COMBO_SKILL);
     expect(comboCol).toBeDefined();
 
     act(() => {
       result.current.handleAddEvent(
-        SLOT_ARDELIA, SKILL_COLUMNS.COMBO, 10 * FPS, comboCol!.defaultEvent!,
+        SLOT_ARDELIA, NounType.COMBO_SKILL, 10 * FPS, comboCol!.defaultEvent!,
       );
     });
 
     // 3. Verify: combo event exists
     const comboEvent = result.current.allProcessedEvents.find(
-      (ev) => ev.ownerId === SLOT_ARDELIA && ev.columnId === SKILL_COLUMNS.COMBO,
+      (ev) => ev.ownerId === SLOT_ARDELIA && ev.columnId === NounType.COMBO_SKILL,
     );
     expect(comboEvent).toBeDefined();
 

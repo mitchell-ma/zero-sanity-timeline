@@ -124,7 +124,8 @@
                 {
                   "subject": "ENEMY",
                   "verb": "HAVE",
-                  "object": "ORIGINIUM_CRYSTAL"
+                  "object": "STATUS",
+                  "objectId": "ORIGINIUM_CRYSTAL"
                 }
               ],
               "effects": [

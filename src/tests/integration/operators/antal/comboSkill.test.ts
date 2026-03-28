@@ -14,8 +14,9 @@
  */
 
 import { renderHook, act } from '@testing-library/react';
+import { NounType } from '../../../../dsl/semantics';
 import { useApp } from '../../../../app/useApp';
-import { SKILL_COLUMNS, INFLICTION_COLUMNS, PHYSICAL_INFLICTION_COLUMNS, PHYSICAL_STATUS_COLUMNS, ENEMY_OWNER_ID } from '../../../../model/channels';
+import { INFLICTION_COLUMNS, PHYSICAL_INFLICTION_COLUMNS, PHYSICAL_STATUS_COLUMNS, ENEMY_OWNER_ID } from '../../../../model/channels';
 import { ColumnType } from '../../../../consts/enums';
 import { FPS } from '../../../../utils/timeline';
 import type { MiniTimeline } from '../../../../consts/viewTypes';
@@ -38,32 +39,32 @@ describe('Antal combo skill — heat infliction mirroring after drag', () => {
     const { result } = renderHook(() => useApp());
 
     // 1. Antal uses battle skill (SPECIFIED_RESEARCH_SUBJECT) — applies Focus to enemy
-    const antalBattleCol = findColumn(result.current, SLOT_ANTAL, SKILL_COLUMNS.BATTLE);
+    const antalBattleCol = findColumn(result.current, SLOT_ANTAL, NounType.BATTLE_SKILL);
     expect(antalBattleCol).toBeDefined();
 
     act(() => {
       result.current.handleAddEvent(
-        SLOT_ANTAL, SKILL_COLUMNS.BATTLE, 2 * FPS, antalBattleCol!.defaultEvent!,
+        SLOT_ANTAL, NounType.BATTLE_SKILL, 2 * FPS, antalBattleCol!.defaultEvent!,
       );
     });
 
     // 2. Akekuri uses battle skill (BURST_OF_PASSION) — applies heat infliction
-    const akekuriBattleCol = findColumn(result.current, SLOT_AKEKURI, SKILL_COLUMNS.BATTLE);
+    const akekuriBattleCol = findColumn(result.current, SLOT_AKEKURI, NounType.BATTLE_SKILL);
     expect(akekuriBattleCol).toBeDefined();
 
     act(() => {
       result.current.handleAddEvent(
-        SLOT_AKEKURI, SKILL_COLUMNS.BATTLE, 5 * FPS, akekuriBattleCol!.defaultEvent!,
+        SLOT_AKEKURI, NounType.BATTLE_SKILL, 5 * FPS, akekuriBattleCol!.defaultEvent!,
       );
     });
 
     // 3. Antal uses combo skill (EMP_TEST_SITE) — triggered by Akekuri's heat infliction
-    const antalComboCol = findColumn(result.current, SLOT_ANTAL, SKILL_COLUMNS.COMBO);
+    const antalComboCol = findColumn(result.current, SLOT_ANTAL, NounType.COMBO_SKILL);
     expect(antalComboCol).toBeDefined();
 
     act(() => {
       result.current.handleAddEvent(
-        SLOT_ANTAL, SKILL_COLUMNS.COMBO, 8 * FPS, antalComboCol!.defaultEvent!,
+        SLOT_ANTAL, NounType.COMBO_SKILL, 8 * FPS, antalComboCol!.defaultEvent!,
       );
     });
 
@@ -75,7 +76,7 @@ describe('Antal combo skill — heat infliction mirroring after drag', () => {
 
     // Verify the combo event has a comboTriggerColumnId pointing to heat
     const comboEvent = result.current.allProcessedEvents.find(
-      (ev) => ev.ownerId === SLOT_ANTAL && ev.columnId === SKILL_COLUMNS.COMBO,
+      (ev) => ev.ownerId === SLOT_ANTAL && ev.columnId === NounType.COMBO_SKILL,
     );
     expect(comboEvent).toBeDefined();
     expect(comboEvent!.comboTriggerColumnId).toBe(INFLICTION_COLUMNS.HEAT);
@@ -85,23 +86,23 @@ describe('Antal combo skill — heat infliction mirroring after drag', () => {
     const { result } = renderHook(() => useApp());
 
     // Setup: Antal battle → Akekuri battle → Antal combo (same as above)
-    const antalBattleCol = findColumn(result.current, SLOT_ANTAL, SKILL_COLUMNS.BATTLE);
-    const akekuriBattleCol = findColumn(result.current, SLOT_AKEKURI, SKILL_COLUMNS.BATTLE);
-    const antalComboCol = findColumn(result.current, SLOT_ANTAL, SKILL_COLUMNS.COMBO);
+    const antalBattleCol = findColumn(result.current, SLOT_ANTAL, NounType.BATTLE_SKILL);
+    const akekuriBattleCol = findColumn(result.current, SLOT_AKEKURI, NounType.BATTLE_SKILL);
+    const antalComboCol = findColumn(result.current, SLOT_ANTAL, NounType.COMBO_SKILL);
 
     act(() => {
       result.current.handleAddEvent(
-        SLOT_ANTAL, SKILL_COLUMNS.BATTLE, 2 * FPS, antalBattleCol!.defaultEvent!,
+        SLOT_ANTAL, NounType.BATTLE_SKILL, 2 * FPS, antalBattleCol!.defaultEvent!,
       );
     });
     act(() => {
       result.current.handleAddEvent(
-        SLOT_AKEKURI, SKILL_COLUMNS.BATTLE, 5 * FPS, akekuriBattleCol!.defaultEvent!,
+        SLOT_AKEKURI, NounType.BATTLE_SKILL, 5 * FPS, akekuriBattleCol!.defaultEvent!,
       );
     });
     act(() => {
       result.current.handleAddEvent(
-        SLOT_ANTAL, SKILL_COLUMNS.COMBO, 8 * FPS, antalComboCol!.defaultEvent!,
+        SLOT_ANTAL, NounType.COMBO_SKILL, 8 * FPS, antalComboCol!.defaultEvent!,
       );
     });
 
@@ -113,7 +114,7 @@ describe('Antal combo skill — heat infliction mirroring after drag', () => {
 
     // 5. Drag Akekuri's battle skill to AFTER Antal's combo skill
     const akekuriBattle = result.current.allProcessedEvents.find(
-      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === SKILL_COLUMNS.BATTLE,
+      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === NounType.BATTLE_SKILL,
     );
     expect(akekuriBattle).toBeDefined();
 
@@ -123,7 +124,7 @@ describe('Antal combo skill — heat infliction mirroring after drag', () => {
 
     // 6. Verify: combo no longer has a trigger infliction
     const comboAfterDrag = result.current.allProcessedEvents.find(
-      (ev) => ev.ownerId === SLOT_ANTAL && ev.columnId === SKILL_COLUMNS.COMBO,
+      (ev) => ev.ownerId === SLOT_ANTAL && ev.columnId === NounType.COMBO_SKILL,
     );
     expect(comboAfterDrag).toBeDefined();
     expect(comboAfterDrag!.comboTriggerColumnId).toBeUndefined();
@@ -146,27 +147,27 @@ describe('Antal combo skill — physical status (Lift) trigger', () => {
     });
 
     // 1. Antal uses battle skill — applies Focus to enemy
-    const antalBattleCol = findColumn(result.current, SLOT_ANTAL, SKILL_COLUMNS.BATTLE);
+    const antalBattleCol = findColumn(result.current, SLOT_ANTAL, NounType.BATTLE_SKILL);
     expect(antalBattleCol).toBeDefined();
 
     act(() => {
       result.current.handleAddEvent(
-        SLOT_ANTAL, SKILL_COLUMNS.BATTLE, 0, antalBattleCol!.defaultEvent!,
+        SLOT_ANTAL, NounType.BATTLE_SKILL, 0, antalBattleCol!.defaultEvent!,
       );
     });
 
     // 2. Chen uses battle skill twice — first adds Vulnerable, second triggers Lift
-    const chenBattleCol = findColumn(result.current, SLOT_CHEN, SKILL_COLUMNS.BATTLE);
+    const chenBattleCol = findColumn(result.current, SLOT_CHEN, NounType.BATTLE_SKILL);
     expect(chenBattleCol).toBeDefined();
 
     act(() => {
       result.current.handleAddEvent(
-        SLOT_CHEN, SKILL_COLUMNS.BATTLE, 0, chenBattleCol!.defaultEvent!,
+        SLOT_CHEN, NounType.BATTLE_SKILL, 0, chenBattleCol!.defaultEvent!,
       );
     });
     act(() => {
       result.current.handleAddEvent(
-        SLOT_CHEN, SKILL_COLUMNS.BATTLE, 15 * FPS, chenBattleCol!.defaultEvent!,
+        SLOT_CHEN, NounType.BATTLE_SKILL, 15 * FPS, chenBattleCol!.defaultEvent!,
       );
     });
 
@@ -177,18 +178,18 @@ describe('Antal combo skill — physical status (Lift) trigger', () => {
     expect(liftEvents).toHaveLength(1);
 
     // 3. Antal uses combo skill — should be triggered by Lift (physical status)
-    const antalComboCol = findColumn(result.current, SLOT_ANTAL, SKILL_COLUMNS.COMBO);
+    const antalComboCol = findColumn(result.current, SLOT_ANTAL, NounType.COMBO_SKILL);
     expect(antalComboCol).toBeDefined();
 
     act(() => {
       result.current.handleAddEvent(
-        SLOT_ANTAL, SKILL_COLUMNS.COMBO, 16 * FPS, antalComboCol!.defaultEvent!,
+        SLOT_ANTAL, NounType.COMBO_SKILL, 16 * FPS, antalComboCol!.defaultEvent!,
       );
     });
 
     // Verify: combo has a trigger pointing to the Lift column
     const comboEvent = result.current.allProcessedEvents.find(
-      (ev) => ev.ownerId === SLOT_ANTAL && ev.columnId === SKILL_COLUMNS.COMBO,
+      (ev) => ev.ownerId === SLOT_ANTAL && ev.columnId === NounType.COMBO_SKILL,
     );
     expect(comboEvent).toBeDefined();
     expect(comboEvent!.comboTriggerColumnId).toBe(PHYSICAL_STATUS_COLUMNS.LIFT);
@@ -203,23 +204,23 @@ describe('Antal combo skill — physical status (Lift) trigger', () => {
     });
 
     // Antal battle skill → Focus on enemy
-    const antalBattleCol = findColumn(result.current, SLOT_ANTAL, SKILL_COLUMNS.BATTLE);
+    const antalBattleCol = findColumn(result.current, SLOT_ANTAL, NounType.BATTLE_SKILL);
     act(() => {
       result.current.handleAddEvent(
-        SLOT_ANTAL, SKILL_COLUMNS.BATTLE, 0, antalBattleCol!.defaultEvent!,
+        SLOT_ANTAL, NounType.BATTLE_SKILL, 0, antalBattleCol!.defaultEvent!,
       );
     });
 
     // Chen battle skill ×2 → Vulnerable + Lift
-    const chenBattleCol = findColumn(result.current, SLOT_CHEN, SKILL_COLUMNS.BATTLE);
+    const chenBattleCol = findColumn(result.current, SLOT_CHEN, NounType.BATTLE_SKILL);
     act(() => {
       result.current.handleAddEvent(
-        SLOT_CHEN, SKILL_COLUMNS.BATTLE, 0, chenBattleCol!.defaultEvent!,
+        SLOT_CHEN, NounType.BATTLE_SKILL, 0, chenBattleCol!.defaultEvent!,
       );
     });
     act(() => {
       result.current.handleAddEvent(
-        SLOT_CHEN, SKILL_COLUMNS.BATTLE, 15 * FPS, chenBattleCol!.defaultEvent!,
+        SLOT_CHEN, NounType.BATTLE_SKILL, 15 * FPS, chenBattleCol!.defaultEvent!,
       );
     });
 
@@ -230,10 +231,10 @@ describe('Antal combo skill — physical status (Lift) trigger', () => {
     expect(vulnBefore).toHaveLength(2);
 
     // Antal combo skill — triggered by Lift
-    const antalComboCol = findColumn(result.current, SLOT_ANTAL, SKILL_COLUMNS.COMBO);
+    const antalComboCol = findColumn(result.current, SLOT_ANTAL, NounType.COMBO_SKILL);
     act(() => {
       result.current.handleAddEvent(
-        SLOT_ANTAL, SKILL_COLUMNS.COMBO, 16 * FPS, antalComboCol!.defaultEvent!,
+        SLOT_ANTAL, NounType.COMBO_SKILL, 16 * FPS, antalComboCol!.defaultEvent!,
       );
     });
 

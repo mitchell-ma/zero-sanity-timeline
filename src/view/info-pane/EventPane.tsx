@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { NounType } from '../../dsl/semantics';
 import { framesToSeconds, secondsToFrames, frameToDetailLabel, frameToTimeLabelPrecise, FPS, fmtN } from '../../utils/timeline';
 import { getAllSkillLabels, getAllStatusLabels } from '../../controller/gameDataStore';
 import { CombatSkillType, ColumnType, ELEMENT_COLORS, ELEMENT_LABELS, ElementType, EventFrameType, EventStatusType, InfoLevel, InteractionModeType, SegmentType, StatusType } from '../../consts/enums';
@@ -11,7 +12,7 @@ import type { ResolvedPredicate, EventFullDetail } from '../../controller/info-p
 import type { Effect, Interaction, ValueNode } from '../../dsl/semantics';
 import { isValueLiteral, isValueVariable, isValueStat, isValueExpression, THRESHOLD_MAX } from '../../dsl/semantics';
 import { getLeafValue, resolveValueNode, DEFAULT_VALUE_CONTEXT } from '../../controller/calculation/valueResolver';
-import { ENEMY_OWNER_ID, OPERATOR_COLUMNS, REACTION_COLUMN_IDS, SKILL_COLUMNS, SKILL_COLUMN_ORDER } from '../../model/channels';
+import { ENEMY_OWNER_ID, OPERATOR_COLUMNS, REACTION_COLUMN_IDS, SKILL_COLUMN_ORDER } from '../../model/channels';
 import { getLastController, getReconcileStats } from '../../controller/timeline/eventQueueController';
 import { getPoolStats } from '../../controller/timeline/objectPool';
 import { getSkillMultiplier } from '../../controller/calculation/jsonMultiplierEngine';
@@ -570,7 +571,7 @@ function EventPane({
     const toFrames = (v: string) => secondsToFrames(isNaN(Number(v)) ? 0 : Number(v));
 
     // For ultimates, update the ANIMATION segment duration
-    const animSegmentUpdate = event.columnId === SKILL_COLUMNS.ULTIMATE && event.segments
+    const animSegmentUpdate = event.columnId === NounType.ULTIMATE && event.segments
       ? {
           segments: event.segments.map((seg) =>
             seg.properties.segmentTypes?.includes(SegmentType.ANIMATION)
@@ -975,10 +976,10 @@ function EventPane({
           // Resolve skill level based on column type
           let skillLevel: number | undefined;
           if (stats) {
-            if (event.columnId === SKILL_COLUMNS.BASIC) skillLevel = stats.skills.basicAttackLevel;
-            else if (event.columnId === SKILL_COLUMNS.BATTLE) skillLevel = stats.skills.battleSkillLevel;
-            else if (event.columnId === SKILL_COLUMNS.COMBO) skillLevel = stats.skills.comboSkillLevel;
-            else if (event.columnId === SKILL_COLUMNS.ULTIMATE) skillLevel = stats.skills.ultimateLevel;
+            if (event.columnId === NounType.BASIC_ATTACK) skillLevel = stats.skills.basicAttackLevel;
+            else if (event.columnId === NounType.BATTLE_SKILL) skillLevel = stats.skills.battleSkillLevel;
+            else if (event.columnId === NounType.COMBO_SKILL) skillLevel = stats.skills.comboSkillLevel;
+            else if (event.columnId === NounType.ULTIMATE) skillLevel = stats.skills.ultimateLevel;
           }
 
           // Per-segment multipliers for sequenced events (basic attacks)
@@ -1408,7 +1409,7 @@ function EventPane({
                             )}
                             {/* Properties */}
                             <div className="edit-info-text" style={TREE_LINE_2}>
-                              {event.columnId === SKILL_COLUMNS.BASIC && (
+                              {event.columnId === NounType.BASIC_ATTACK && (
                                 (readOnly || isDerived) ? (
                                   <div>Type: {(f.frameTypes ?? [EventFrameType.NORMAL]).includes(EventFrameType.FINAL_STRIKE) ? 'Final Strike' : (f.frameTypes ?? []).includes(EventFrameType.FINISHER) ? 'Finisher' : (f.frameTypes ?? []).includes(EventFrameType.DIVE) ? 'Dive' : 'Normal'}</div>
                                 ) : (
@@ -1486,7 +1487,7 @@ function EventPane({
                                 )
                               )}
                               {!(f.frameTypes ?? []).includes(EventFrameType.FINAL_STRIKE) && (f.stagger ?? 0) > 0 && (
-                                readOnly || isDerived || event.columnId === SKILL_COLUMNS.BASIC ? (
+                                readOnly || isDerived || event.columnId === NounType.BASIC_ATTACK ? (
                                   <div>Stagger: {f.stagger}</div>
                                 ) : (
                                   <>
@@ -1596,7 +1597,7 @@ function EventPane({
           </div>
         ) : (
           <>
-            {event.columnId === SKILL_COLUMNS.ULTIMATE && (
+            {event.columnId === NounType.ULTIMATE && (
               <div className="edit-panel-section">
                 <span className="edit-section-label">Animation</span>
                 <DurationField label="Duration" value={animSec} onChange={setAnimSec} onCommit={handleBlur} />
@@ -1687,7 +1688,7 @@ function DebugPane({ event, processedEvent, rawEvents, allProcessedEvents }: { e
 
       {/* Time-stop region */}
       {getAnimationDuration(event) > 0 && (
-        event.columnId === SKILL_COLUMNS.ULTIMATE || event.columnId === SKILL_COLUMNS.COMBO ||
+        event.columnId === NounType.ULTIMATE || event.columnId === NounType.COMBO_SKILL ||
         (event.columnId === OPERATOR_COLUMNS.INPUT && event.isPerfectDodge)
       ) && (() => {
         const rawStart = event.startFrame;

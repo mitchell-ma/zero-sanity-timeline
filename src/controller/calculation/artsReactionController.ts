@@ -13,6 +13,7 @@
  */
 
 import { DamageType, ElementType } from '../../consts/enums';
+import { REACTION_COLUMNS } from '../../model/channels';
 import { StatusLevel } from '../../consts/types';
 import { TimelineEvent, eventEndFrame } from '../../consts/viewTypes';
 import {
@@ -302,11 +303,11 @@ export function computeReactionDamage(
   statusQuery?: EventsQueryService,
 ): ReactionDamageTick[] {
   switch (reactionEvent.columnId) {
-    case 'combustion':      return computeCombustionDamage(reactionEvent, opCtx, modelEnemy, statusQuery);
-    case 'solidification':  return computeSolidificationDamage(reactionEvent, opCtx, modelEnemy, statusQuery);
-    case 'corrosion':       return computeCorrosionDamage(reactionEvent, opCtx, modelEnemy, statusQuery);
-    case 'electrification': return computeElectrificationDamage(reactionEvent, opCtx, modelEnemy, statusQuery);
-    case 'shatter':         return computeShatterDamage(reactionEvent, opCtx, modelEnemy, statusQuery);
+    case REACTION_COLUMNS.COMBUSTION:      return computeCombustionDamage(reactionEvent, opCtx, modelEnemy, statusQuery);
+    case REACTION_COLUMNS.SOLIDIFICATION:  return computeSolidificationDamage(reactionEvent, opCtx, modelEnemy, statusQuery);
+    case REACTION_COLUMNS.CORROSION:       return computeCorrosionDamage(reactionEvent, opCtx, modelEnemy, statusQuery);
+    case REACTION_COLUMNS.ELECTRIFICATION: return computeElectrificationDamage(reactionEvent, opCtx, modelEnemy, statusQuery);
+    case REACTION_COLUMNS.SHATTER:         return computeShatterDamage(reactionEvent, opCtx, modelEnemy, statusQuery);
     default:                return [];
   }
 }

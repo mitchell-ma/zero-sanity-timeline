@@ -17,29 +17,26 @@ import type { LoadoutProperties } from '../../view/InformationPane';
 import type { StatusEventDef } from './statusTriggerCollector';
 import type { Predicate, TriggerEffect } from './triggerMatch';
 import type { ValueNode } from '../../dsl/semantics';
-import { VerbType, NounType, ObjectType, AdjectiveType, DeterminerType } from '../../dsl/semantics';
+import { VerbType, NounType, ObjectType, AdjectiveType, DeterminerType, THRESHOLD_MAX } from '../../dsl/semantics';
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from '../calculation/valueResolver';
 import { getAllOperatorIds, getSkillIds, getEnabledStatusEvents } from '../gameDataStore';
 import { getWeaponEffectDefs, getGearEffectDefs } from '../gameDataStore';
 import type { NormalizedEffectDef } from '../gameDataStore';
-import { ENEMY_OWNER_ID, SKILL_COLUMNS, REACTION_COLUMNS, INFLICTION_COLUMNS, PHYSICAL_STATUS_COLUMN_IDS } from '../../model/channels';
+import { ENEMY_OWNER_ID, ENEMY_ACTION_COLUMN_ID, REACTION_COLUMNS, INFLICTION_COLUMNS, PHYSICAL_STATUS_COLUMN_IDS } from '../../model/channels';
 import { COMMON_OWNER_ID } from '../slot/commonSlotController';
 import { TOTAL_FRAMES, FPS } from '../../utils/timeline';
 import { statusIdToColumnId } from './triggerMatch';
 import { TimelineEvent, durationSegment } from '../../consts/viewTypes';
 
-// ── Verb-to-column mapping (mirrors triggerMatch.ts SKILL_OBJECT_TO_COLUMN) ──
+// ── Skill-alias-to-column mapping ────────────────────────────────────────────
 
-const SKILL_OBJECT_TO_COLUMN: Record<string, string> = {
-  [NounType.BASIC_ATTACK]: SKILL_COLUMNS.BASIC,
-  [NounType.BATTLE_SKILL]: SKILL_COLUMNS.BATTLE,
-  [NounType.COMBO_SKILL]: SKILL_COLUMNS.COMBO,
-  [NounType.ULTIMATE]: SKILL_COLUMNS.ULTIMATE,
-  ULTIMATE_SKILL: SKILL_COLUMNS.ULTIMATE,
+/** Maps legacy skill aliases to their NounType column ID (identity for NounType values). */
+const SKILL_ALIAS_TO_COLUMN: Record<string, string> = {
+  ULTIMATE_SKILL: NounType.ULTIMATE,
 };
 
 /** Maps IS/BECOME state qualifiers to reaction column IDs for index keying. */
-const STATE_TO_COLUMN: Record<string, string> = {
+export const STATE_TO_COLUMN: Record<string, string> = {
   [ObjectType.COMBUSTED]: REACTION_COLUMNS.COMBUSTION,
   [ObjectType.SOLIDIFIED]: REACTION_COLUMNS.SOLIDIFICATION,
   [ObjectType.CORRODED]: REACTION_COLUMNS.CORROSION,
@@ -192,7 +189,7 @@ function resolveTriggerKey(verb: string, cond: Predicate): string {
     if (cond.object === NounType.FINAL_STRIKE || cond.object === NounType.FINISHER || cond.object === NounType.DIVE_ATTACK) {
       return `${VerbType.PERFORM}:${cond.object}`;
     }
-    const col = SKILL_OBJECT_TO_COLUMN[cond.object ?? ''] ?? cond.object;
+    const col = SKILL_ALIAS_TO_COLUMN[cond.object ?? ''] ?? cond.object;
     return `${VerbType.PERFORM}:${col}`;
   }
   if (verb === VerbType.APPLY || verb === VerbType.CONSUME || verb === VerbType.RECEIVE) {
@@ -212,12 +209,15 @@ function resolveTriggerKey(verb: string, cond: Predicate): string {
     const stateCol = STATE_TO_COLUMN[cond.object ?? ''];
     return `${verb}:${stateCol ?? cond.object ?? '*'}`;
   }
-  if (verb === VerbType.DEAL) return `${VerbType.DEAL}:*`;
-  if (verb === VerbType.RECOVER) return `${VerbType.RECOVER}:${cond.object ?? '*'}`;
-  // HIT/DEFEAT: index under the lowercase verb as column ID (user-placed events use 'hit'/'defeat')
-  if (verb === VerbType.HIT) return `${VerbType.HIT}:hit`;
-  if (verb === VerbType.DEFEAT) return `${VerbType.DEFEAT}:defeat`;
-  return `${verb}:${cond.object ?? '*'}`;
+  if (verb === VerbType.DEAL) return `${VerbType.DEAL}:${NounType.DAMAGE}`;
+  if (verb === VerbType.RECOVER) {
+    if (!cond.object) return '';
+    return `${VerbType.RECOVER}:${cond.object}`;
+  }
+  if (verb === VerbType.HIT) return `${VerbType.HIT}:${ENEMY_ACTION_COLUMN_ID}`;
+  if (verb === VerbType.DEFEAT) return `${VerbType.DEFEAT}:${NounType.ENEMY}`;
+  if (!cond.object) return '';
+  return `${verb}:${cond.object}`;
 }
 
 /** Resolve generic category targets that a specific column ID belongs to. */
@@ -261,17 +261,18 @@ export class TriggerIndex {
 
   /**
    * Find all trigger defs whose indexed key matches an observable event.
-   * Searches all verb buckets for entries whose resolved target matches
-   * the event's column ID. Handles generic category targets (REACTION,
-   * INFLICTION, STATUS) matching specific column IDs.
+   * Only returns entries whose verb matches the supplied verb, and whose
+   * resolved target matches the event's column ID. Handles generic category
+   * targets (REACTION, INFLICTION, STATUS) matching specific column IDs.
    */
-  matchEvent(columnId: string): readonly TriggerDefEntry[] {
+  matchEvent(verb: string, columnId: string): readonly TriggerDefEntry[] {
     const results: TriggerDefEntry[] = [];
-    // Resolve category for the column ID (e.g. 'combustion' → REACTION)
+    // Resolve category for the column ID (e.g. REACTION_COLUMNS.COMBUSTION → REACTION)
     const categories = resolveCategories(columnId);
     this.index.forEach((entries, key) => {
-      const target = key.split(':')[1];
-      if (target === columnId || target === '*' || categories.includes(target)) {
+      const [keyVerb, target] = key.split(':');
+      if (keyVerb !== verb) return;
+      if (target === columnId || categories.includes(target)) {
         results.push(...entries);
       }
     });
@@ -419,7 +420,7 @@ export class TriggerIndex {
                   ...cond,
                   object: NounType.STATUS,
                   objectId: def.properties.id,
-                  value: cond.value === 'MAX' ? { verb: VerbType.IS, value: maxStacks } : cond.value,
+                  value: cond.value === THRESHOLD_MAX ? { verb: VerbType.IS, value: maxStacks } : cond.value,
                 };
               }
               return cond;
@@ -473,11 +474,12 @@ export class TriggerIndex {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const haveConds = rawDeferredConds.map((cond: any) => {
           if (cond.object === NounType.STACKS) {
+            const rawValue = cond.value ?? cond.with?.value;
             return {
               ...cond,
               object: NounType.STATUS,
               objectId: def.properties.id,
-              value: cond.value === 'MAX' ? { verb: VerbType.IS, value: maxStacks } : cond.value,
+              value: rawValue === THRESHOLD_MAX ? { verb: VerbType.IS, value: maxStacks } : rawValue,
             };
           }
           return cond;
@@ -492,6 +494,7 @@ export class TriggerIndex {
         }
 
         const key = resolveTriggerKey(primaryVerb, primaryCond);
+        if (!key) continue;
         const entry: TriggerDefEntry = {
           def,
           operatorId,

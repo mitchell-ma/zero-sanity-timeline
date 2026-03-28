@@ -10,8 +10,8 @@
  */
 
 import { renderHook, act } from '@testing-library/react';
+import { NounType } from '../../../dsl/semantics';
 import { useApp } from '../../../app/useApp';
-import { SKILL_COLUMNS } from '../../../model/channels';
 import { ColumnType } from '../../../consts/enums';
 import { FPS } from '../../../utils/timeline';
 import type { MiniTimeline } from '../../../consts/viewTypes';
@@ -27,7 +27,7 @@ describe('SP Consumption — integration through useApp', () => {
       (c): c is MiniTimeline =>
         c.type === ColumnType.MINI_TIMELINE &&
         c.ownerId === SLOT_AKEKURI &&
-        c.columnId === SKILL_COLUMNS.BATTLE,
+        c.columnId === NounType.BATTLE_SKILL,
     );
     expect(battleCol).toBeDefined();
     const defaultSkill = battleCol!.defaultEvent!;
@@ -40,7 +40,7 @@ describe('SP Consumption — integration through useApp', () => {
     act(() => {
       result.current.handleAddEvent(
         SLOT_AKEKURI,
-        SKILL_COLUMNS.BATTLE,
+        NounType.BATTLE_SKILL,
         atFrame,
         defaultSkill,
       );
@@ -48,7 +48,7 @@ describe('SP Consumption — integration through useApp', () => {
 
     // Verify the battle skill event exists in processed events
     const battleEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === SKILL_COLUMNS.BATTLE,
+      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === NounType.BATTLE_SKILL,
     );
     expect(battleEvents).toHaveLength(1);
     expect(battleEvents[0].skillPointCost).toBe(100);

@@ -16,10 +16,11 @@
  * No external bulk passes — all processing is internal to DerivedEventController methods.
  */
 import { TimelineEvent, EventSegmentData, computeSegmentsSpan, getAnimationDuration, eventDuration, setEventDuration } from '../../consts/viewTypes';
+import { NounType } from '../../dsl/semantics';
 import { CombatSkillType, EventStatusType, SegmentType, StatusType, TimeDependency } from '../../consts/enums';
 import { TimeStopRegion, extendByTimeStops, isTimeStopEvent } from './processTimeStop';
 import { buildReactionSegment, buildCorrosionSegments, mergeReactions, attachReactionFrames } from './processInfliction';
-import { OPERATOR_COLUMNS, REACTION_COLUMNS, REACTION_COLUMN_IDS, SKILL_COLUMNS } from '../../model/channels';
+import { OPERATOR_COLUMNS, REACTION_COLUMNS, REACTION_COLUMN_IDS } from '../../model/channels';
 import { TOTAL_FRAMES } from '../../utils/timeline';
 import type { SlotTriggerWiring } from './eventQueueTypes';
 import { findClauseTriggerMatches } from './triggerMatch';
@@ -159,7 +160,7 @@ export class DerivedEventController implements ColumnHost {
       let ev = events[i];
 
       // Combo chaining: truncate overlapping combo animations
-      if (ev.columnId === SKILL_COLUMNS.COMBO && getAnimationDuration(ev) > 0) {
+      if (ev.columnId === NounType.COMBO_SKILL && getAnimationDuration(ev) > 0) {
         ev = this.handleComboChaining(ev);
       }
 
@@ -256,7 +257,7 @@ export class DerivedEventController implements ColumnHost {
     // Update combo events that fall within trigger windows
     for (let i = 0; i < this.registeredEvents.length; i++) {
       const ev = this.registeredEvents[i];
-      if (ev.columnId !== SKILL_COLUMNS.COMBO) continue;
+      if (ev.columnId !== NounType.COMBO_SKILL) continue;
       const merged = mergedBySlot.get(ev.ownerId);
       const match = merged?.find(w => ev.startFrame >= w.startFrame && ev.startFrame < w.endFrame);
       if (match?.sourceColumnId != null && match.sourceColumnId !== ev.comboTriggerColumnId) {
@@ -275,7 +276,7 @@ export class DerivedEventController implements ColumnHost {
     // ── SP notifications ──────────────────────────────────────────────────
     if (this.spController) {
       // Battle skill with SP cost → event-level cost + frame-level returns
-      if (ev.columnId === SKILL_COLUMNS.BATTLE && ev.skillPointCost) {
+      if (ev.columnId === NounType.BATTLE_SKILL && ev.skillPointCost) {
         const firstFrame = ev.segments[0]?.frames?.[0];
         const gaugeGainFrame = firstFrame?.absoluteFrame ?? ev.startFrame;
         this.spController.addCost(ev.uid, ev.startFrame, ev.skillPointCost, ev.ownerId, gaugeGainFrame);
@@ -307,7 +308,7 @@ export class DerivedEventController implements ColumnHost {
     // ── UE notifications ──────────────────────────────────────────────────
     if (this.ueController) {
       // Combo skill → gauge gain from frames
-      if (ev.columnId === SKILL_COLUMNS.COMBO) {
+      if (ev.columnId === NounType.COMBO_SKILL) {
         for (const seg of ev.segments) {
           for (const f of seg.frames ?? []) {
             const selfGain = f.gaugeGain ?? 0;
@@ -320,7 +321,7 @@ export class DerivedEventController implements ColumnHost {
       }
 
       // Battle skill → frame-level gaugeGain markers (not SP-based)
-      if (ev.columnId === SKILL_COLUMNS.BATTLE) {
+      if (ev.columnId === NounType.BATTLE_SKILL) {
         for (const seg of ev.segments) {
           for (const f of seg.frames ?? []) {
             if (f.gaugeGain && f.gaugeGain > 0 && f.absoluteFrame != null) {
@@ -331,7 +332,7 @@ export class DerivedEventController implements ColumnHost {
       }
 
       // Ultimate event → consume + no-gain windows
-      if (ev.columnId === SKILL_COLUMNS.ULTIMATE) {
+      if (ev.columnId === NounType.ULTIMATE) {
         this.ueController.addConsume(ev.startFrame, ev.ownerId);
         const windows = collectNoGainWindowsForEvent(ev);
         for (const w of windows) {
@@ -791,11 +792,11 @@ export class DerivedEventController implements ColumnHost {
       const sourceIsDodge = source.columnId === OPERATOR_COLUMNS.INPUT && !!source.isPerfectDodge;
       if (sourceIsDodge) continue;
 
-      const sourceIsUltimate = source.columnId === SKILL_COLUMNS.ULTIMATE;
-      if (ev.columnId === SKILL_COLUMNS.COMBO && sourceIsUltimate) {
+      const sourceIsUltimate = source.columnId === NounType.ULTIMATE;
+      if (ev.columnId === NounType.COMBO_SKILL && sourceIsUltimate) {
         warnings.push('Combo skill cannot start during ultimate animation time-stop');
       }
-      if (ev.columnId === SKILL_COLUMNS.ULTIMATE && sourceIsUltimate) {
+      if (ev.columnId === NounType.ULTIMATE && sourceIsUltimate) {
         warnings.push("Ultimate cannot start during another ultimate's animation time-stop");
       }
     }

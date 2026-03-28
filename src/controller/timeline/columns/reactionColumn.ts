@@ -4,6 +4,7 @@
  */
 
 import { EventStatusType, StackInteractionType } from '../../../consts/enums';
+import { REACTION_COLUMNS } from '../../../model/channels';
 import type { StatusLevel } from '../../../consts/types';
 import { eventDuration, setEventDuration } from '../../../consts/viewTypes';
 import { FPS } from '../../../utils/timeline';
@@ -94,7 +95,7 @@ export class ReactionColumn implements EventColumn {
 
     // ── Build reaction segments ──────────────────────────────────────────
     const hasPerSecondSegments = this.interactionType === StackInteractionType.MERGE
-      && (ev.reductionFloor != null || ev.artsIntensity != null || this.columnId === 'corrosion');
+      && (ev.reductionFloor != null || ev.artsIntensity != null || this.columnId === REACTION_COLUMNS.CORROSION);
     if (hasPerSecondSegments) {
       const segs = buildCorrosionSegments(ev);
       if (segs) ev.segments = segs;

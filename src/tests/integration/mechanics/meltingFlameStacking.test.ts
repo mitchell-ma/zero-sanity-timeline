@@ -10,12 +10,13 @@
  */
 
 import { renderHook, act } from '@testing-library/react';
+import { NounType } from '../../../dsl/semantics';
 import { useApp } from '../../../app/useApp';
-import { SKILL_COLUMNS, OPERATOR_COLUMNS } from '../../../model/channels';
 import { ColumnType, EnhancementType, EventStatusType } from '../../../consts/enums';
 import { FPS } from '../../../utils/timeline';
 import type { MiniTimeline } from '../../../consts/viewTypes';
 
+const MELTING_FLAME_ID = 'MELTING_FLAME';
 const SLOT_LAEVATAIN = 'slot-0';
 
 function findColumn(app: ReturnType<typeof useApp>, slotId: string, columnId: string) {
@@ -28,9 +29,9 @@ function findColumn(app: ReturnType<typeof useApp>, slotId: string, columnId: st
 }
 
 function getMfDefault(app: ReturnType<typeof useApp>) {
-  const statusCol = findColumn(app, SLOT_LAEVATAIN, OPERATOR_COLUMNS.MELTING_FLAME);
+  const statusCol = findColumn(app, SLOT_LAEVATAIN, MELTING_FLAME_ID);
   expect(statusCol).toBeDefined();
-  const mfMicro = statusCol!.microColumns?.find((mc) => mc.id === OPERATOR_COLUMNS.MELTING_FLAME);
+  const mfMicro = statusCol!.microColumns?.find((mc) => mc.id === MELTING_FLAME_ID);
   expect(mfMicro).toBeDefined();
   return mfMicro!.defaultEvent!;
 }
@@ -43,19 +44,19 @@ describe('Melting Flame stacking — freeform add', () => {
     // Add first MF at 2s
     act(() => {
       result.current.handleAddEvent(
-        SLOT_LAEVATAIN, OPERATOR_COLUMNS.MELTING_FLAME, 2 * FPS, mfDefault,
+        SLOT_LAEVATAIN, MELTING_FLAME_ID, 2 * FPS, mfDefault,
       );
     });
 
     // Add second MF at 3s (1 second later — overlapping with first)
     act(() => {
       result.current.handleAddEvent(
-        SLOT_LAEVATAIN, OPERATOR_COLUMNS.MELTING_FLAME, 3 * FPS, mfDefault,
+        SLOT_LAEVATAIN, MELTING_FLAME_ID, 3 * FPS, mfDefault,
       );
     });
 
     const mfEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === OPERATOR_COLUMNS.MELTING_FLAME && ev.ownerId === SLOT_LAEVATAIN,
+      (ev) => ev.columnId === MELTING_FLAME_ID && ev.ownerId === SLOT_LAEVATAIN,
     );
     expect(mfEvents).toHaveLength(2);
 
@@ -75,13 +76,13 @@ describe('Melting Flame stacking — freeform add', () => {
     for (let i = 0; i < 5; i++) {
       act(() => {
         result.current.handleAddEvent(
-          SLOT_LAEVATAIN, OPERATOR_COLUMNS.MELTING_FLAME, (2 + i) * FPS, mfDefault,
+          SLOT_LAEVATAIN, MELTING_FLAME_ID, (2 + i) * FPS, mfDefault,
         );
       });
     }
 
     const mfEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === OPERATOR_COLUMNS.MELTING_FLAME && ev.ownerId === SLOT_LAEVATAIN,
+      (ev) => ev.columnId === MELTING_FLAME_ID && ev.ownerId === SLOT_LAEVATAIN,
     );
     // Only 4 should exist — the 5th is rejected by stack limit
     expect(mfEvents).toHaveLength(4);
@@ -95,20 +96,20 @@ describe('Melting Flame stacking — freeform add', () => {
     for (let i = 0; i < 4; i++) {
       act(() => {
         result.current.handleAddEvent(
-          SLOT_LAEVATAIN, OPERATOR_COLUMNS.MELTING_FLAME, (2 + i) * FPS, mfDefault,
+          SLOT_LAEVATAIN, MELTING_FLAME_ID, (2 + i) * FPS, mfDefault,
         );
       });
     }
 
     // Verify 4 MF stacks exist and are not consumed
     const mfBefore = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === OPERATOR_COLUMNS.MELTING_FLAME && ev.ownerId === SLOT_LAEVATAIN
+      (ev) => ev.columnId === MELTING_FLAME_ID && ev.ownerId === SLOT_LAEVATAIN
         && ev.eventStatus !== EventStatusType.CONSUMED,
     );
     expect(mfBefore).toHaveLength(4);
 
     // Find empowered battle skill variant
-    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, SKILL_COLUMNS.BATTLE);
+    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE_SKILL);
     expect(battleCol).toBeDefined();
     const empoweredVariant = battleCol!.eventVariants?.find(
       (v) => v.enhancementType === EnhancementType.EMPOWERED,
@@ -118,13 +119,13 @@ describe('Melting Flame stacking — freeform add', () => {
     // Add empowered BS after all 4 MF stacks
     act(() => {
       result.current.handleAddEvent(
-        SLOT_LAEVATAIN, SKILL_COLUMNS.BATTLE, 10 * FPS, empoweredVariant!,
+        SLOT_LAEVATAIN, NounType.BATTLE_SKILL, 10 * FPS, empoweredVariant!,
       );
     });
 
     // All 4 freeform MF stacks should be consumed
     const mfAfter = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === OPERATOR_COLUMNS.MELTING_FLAME && ev.ownerId === SLOT_LAEVATAIN,
+      (ev) => ev.columnId === MELTING_FLAME_ID && ev.ownerId === SLOT_LAEVATAIN,
     );
     const consumed = mfAfter.filter((ev) => ev.eventStatus === EventStatusType.CONSUMED);
     expect(consumed).toHaveLength(4);
@@ -138,25 +139,25 @@ describe('Melting Flame stacking — freeform add', () => {
     for (let i = 0; i < 4; i++) {
       act(() => {
         result.current.handleAddEvent(
-          SLOT_LAEVATAIN, OPERATOR_COLUMNS.MELTING_FLAME, (2 + i) * FPS, mfDefault,
+          SLOT_LAEVATAIN, MELTING_FLAME_ID, (2 + i) * FPS, mfDefault,
         );
       });
     }
 
     // Find and add empowered battle skill variant
-    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, SKILL_COLUMNS.BATTLE);
+    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE_SKILL);
     const empoweredVariant = battleCol!.eventVariants?.find(
       (v) => v.enhancementType === EnhancementType.EMPOWERED,
     )!;
     act(() => {
       result.current.handleAddEvent(
-        SLOT_LAEVATAIN, SKILL_COLUMNS.BATTLE, 10 * FPS, empoweredVariant,
+        SLOT_LAEVATAIN, NounType.BATTLE_SKILL, 10 * FPS, empoweredVariant,
       );
     });
 
     // Verify MF stacks are consumed
     const consumedBefore = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === OPERATOR_COLUMNS.MELTING_FLAME && ev.ownerId === SLOT_LAEVATAIN
+      (ev) => ev.columnId === MELTING_FLAME_ID && ev.ownerId === SLOT_LAEVATAIN
         && ev.eventStatus === EventStatusType.CONSUMED,
     );
     expect(consumedBefore).toHaveLength(4);
@@ -171,12 +172,12 @@ describe('Melting Flame stacking — freeform add', () => {
 
     // Verify empowered BS was undone
     const battleAfterUndo = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === SKILL_COLUMNS.BATTLE,
+      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === NounType.BATTLE_SKILL,
     );
     expect(battleAfterUndo).toHaveLength(0);
 
     const mfAfterUndo = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === OPERATOR_COLUMNS.MELTING_FLAME && ev.ownerId === SLOT_LAEVATAIN,
+      (ev) => ev.columnId === MELTING_FLAME_ID && ev.ownerId === SLOT_LAEVATAIN,
     );
     expect(mfAfterUndo).toHaveLength(4);
     const unconsumed = mfAfterUndo.filter((ev) => ev.eventStatus !== EventStatusType.CONSUMED);

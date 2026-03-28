@@ -157,7 +157,9 @@
                 {
                   "subject": "ENEMY",
                   "verb": "HAVE",
-                  "object": "PHYSICAL_SUSCEPTIBILITY"
+                  "object": "STATUS",
+                  "objectId": "SUSCEPTIBILITY",
+                  "objectQualifier": "PHYSICAL"
                 }
               ],
               "effects": [

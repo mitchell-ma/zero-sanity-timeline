@@ -22,6 +22,7 @@ import { COMMON_OWNER_ID } from '../../controller/slot/commonSlotController';
 import { eventDuration } from '../../consts/viewTypes';
 import type { TimelineEvent } from '../../consts/viewTypes';
 import { CritMode, EventStatusType } from '../../consts/enums';
+import { INFLICTION_COLUMNS, REACTION_COLUMNS } from '../../model/channels';
 
 // ── Helpers ──────────────────────────────────────────────────────────────
 
@@ -73,7 +74,7 @@ describe('APPLY effects', () => {
 
     expect(result.failed).toBe(false);
     expect(result.produced).toHaveLength(1);
-    expect(result.produced[0].columnId).toBe('heatInfliction');
+    expect(result.produced[0].columnId).toBe(INFLICTION_COLUMNS.HEAT);
     expect(result.produced[0].ownerId).toBe('enemy');
     expect(eventDuration(result.produced[0])).toBe(1200); // 10s * 120fps
   });
@@ -162,7 +163,7 @@ describe('APPLY effects', () => {
 
     expect(result.failed).toBe(false);
     expect(result.produced).toHaveLength(1);
-    expect(result.produced[0].columnId).toBe('combustion');
+    expect(result.produced[0].columnId).toBe(REACTION_COLUMNS.COMBUSTION);
     expect(result.produced[0].stacks).toBe(2);
   });
 });
@@ -173,7 +174,7 @@ describe('CONSUME effects', () => {
   test('CONSUME HEAT INFLICTION clamps the oldest active infliction', () => {
     const infliction = makeEvent({
       uid: 'inf-1',
-      columnId: 'heatInfliction',
+      columnId: INFLICTION_COLUMNS.HEAT,
       ownerId: 'enemy',
       startFrame: 0,
       segments: [{ properties: { duration: 2400 } }],
@@ -301,7 +302,7 @@ describe('ALL compound effects', () => {
   test('ALL atomicity: CONSUME + APPLY succeeds when infliction exists', () => {
     const infliction = makeEvent({
       uid: 'inf-1',
-      columnId: 'heatInfliction',
+      columnId: INFLICTION_COLUMNS.HEAT,
       ownerId: 'enemy',
       startFrame: 0,
       segments: [{ properties: { duration: 2400 } }],
@@ -343,7 +344,7 @@ describe('ALL compound effects', () => {
     // 3 inflictions exist, but AT_MOST 2
     const inflictions = [0, 1, 2].map(i => makeEvent({
       uid: `inf-${i}`,
-      columnId: 'heatInfliction',
+      columnId: INFLICTION_COLUMNS.HEAT,
       ownerId: 'enemy',
       startFrame: 0,
       segments: [{ properties: { duration: 2400 } }],
@@ -391,7 +392,7 @@ describe('ANY compound effects', () => {
   test('ANY executes only the first passing predicate', () => {
     const combustion = makeEvent({
       uid: 'comb-1',
-      columnId: 'combustion',
+      columnId: REACTION_COLUMNS.COMBUSTION,
       ownerId: 'enemy',
       startFrame: 0,
       segments: [{ properties: { duration: 2400 } }],
@@ -602,7 +603,7 @@ describe('Condition evaluation', () => {
   test('IS COMBUSTED checks for active combustion reaction', () => {
     const combustion = makeEvent({
       uid: 'comb-1',
-      columnId: 'combustion',
+      columnId: REACTION_COLUMNS.COMBUSTION,
       ownerId: 'enemy',
       startFrame: 0,
       segments: [{ properties: { duration: 2400 } }],
@@ -633,7 +634,7 @@ describe('applyMutations', () => {
   test('applies clamps and appends produced events', () => {
     const existing = makeEvent({
       uid: 'inf-1',
-      columnId: 'heatInfliction',
+      columnId: INFLICTION_COLUMNS.HEAT,
       ownerId: 'enemy',
       startFrame: 0,
       segments: [{ properties: { duration: 2400 } }],
@@ -951,7 +952,7 @@ describe('resolveOwnerId — determiner-based target resolution', () => {
   test('CONSUME FROM ENEMY resolves correctly', () => {
     const infliction = makeEvent({
       uid: 'inf-1',
-      columnId: 'heatInfliction',
+      columnId: INFLICTION_COLUMNS.HEAT,
       ownerId: 'enemy',
       startFrame: 0,
       segments: [{ properties: { duration: 2400 } }],

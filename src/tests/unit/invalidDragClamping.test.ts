@@ -8,10 +8,11 @@
  */
 
 import { TimelineEvent } from '../../consts/viewTypes';
+import { NounType } from '../../dsl/semantics';
 import { clampDeltaByResourceZones, clampDeltaByComboWindow } from '../../controller/timeline/eventValidator';
 import { clampDeltaByOverlap } from '../../controller/timeline/inputEventController';
 import type { ResourceZone } from '../../controller/timeline/skillPointTimeline';
-import { SKILL_COLUMNS, COMBO_WINDOW_COLUMN_ID } from '../../model/channels';
+import { COMBO_WINDOW_COLUMN_ID } from '../../model/channels';
 
 jest.mock('../../model/game-data/weaponGameData', () => ({
   getSkillValues: () => [], getConditionalValues: () => [],
@@ -36,13 +37,13 @@ function makeEvent(overrides: Partial<TimelineEvent> & { uid: string; columnId: 
 
 function makeZones(...ranges: [number, number][]): Map<string, ResourceZone[]> {
   const zones = ranges.map(([start, end]) => ({ start, end }));
-  return new Map([['op-1:battle', zones]]);
+  return new Map([[`op-1:${NounType.BATTLE_SKILL}`, zones]]);
 }
 
 // ── Resource zone: normal behaviour (no invalid set) ─────────────────────
 
 describe('clampDeltaByResourceZones — normal clamping', () => {
-  const events = [makeEvent({ uid: 'e1', columnId: SKILL_COLUMNS.BATTLE, startFrame: 50 })];
+  const events = [makeEvent({ uid: 'e1', columnId: NounType.BATTLE_SKILL, startFrame: 50 })];
   // Zone at [100, 200)
   const zones = makeZones([100, 200]);
 
@@ -54,7 +55,7 @@ describe('clampDeltaByResourceZones — normal clamping', () => {
 
   test('blocks dragging up into a zone', () => {
     // startFrame=250, delta=-80 → target=170 (inside zone) → clamp to 200
-    const ev = [makeEvent({ uid: 'e1', columnId: SKILL_COLUMNS.BATTLE, startFrame: 250 })];
+    const ev = [makeEvent({ uid: 'e1', columnId: NounType.BATTLE_SKILL, startFrame: 250 })];
     const result = clampDeltaByResourceZones(-80, 'e1', ev, 250, zones);
     expect(250 + result).toBe(200);
   });
@@ -71,7 +72,7 @@ describe('clampDeltaByResourceZones — normal clamping', () => {
 describe('clampDeltaByResourceZones — invalid at drag start', () => {
   // Event starts at frame 150 inside zone [100, 200)
   const startFrame = 150;
-  const events = [makeEvent({ uid: 'e1', columnId: SKILL_COLUMNS.BATTLE, startFrame })];
+  const events = [makeEvent({ uid: 'e1', columnId: NounType.BATTLE_SKILL, startFrame })];
   const zones = makeZones([100, 200]);
 
   test('allows free movement while target stays in a zone', () => {
@@ -125,7 +126,7 @@ describe('clampDeltaByResourceZones — revalidated prevents re-entry', () => {
   // Event originally at frame 150 (inside zone [100, 200)).
   // It has been dragged to a valid position and revalidated.
   const startFrame = 150;
-  const events = [makeEvent({ uid: 'e1', columnId: SKILL_COLUMNS.BATTLE, startFrame })];
+  const events = [makeEvent({ uid: 'e1', columnId: NounType.BATTLE_SKILL, startFrame })];
   const zones = makeZones([100, 200]);
 
   test('blocks re-entry from below (dragging up into zone)', () => {
@@ -174,7 +175,7 @@ describe('clampDeltaByResourceZones — revalidated prevents re-entry', () => {
 
 describe('clampDeltaByResourceZones — full drag lifecycle', () => {
   const startFrame = 150;
-  const events = [makeEvent({ uid: 'e1', columnId: SKILL_COLUMNS.BATTLE, startFrame })];
+  const events = [makeEvent({ uid: 'e1', columnId: NounType.BATTLE_SKILL, startFrame })];
   const zones = makeZones([100, 200]);
   const invalidSet = new Set(['e1']);
   const revalidated = new Set<string>();
@@ -211,7 +212,7 @@ describe('clampDeltaByComboWindow — invalid at drag start', () => {
   // Combo event at frame 50, outside all windows.
   // Window at [100, 200).
   const startFrame = 50;
-  const comboEvent = makeEvent({ uid: 'c1', columnId: SKILL_COLUMNS.COMBO, startFrame });
+  const comboEvent = makeEvent({ uid: 'c1', columnId: NounType.COMBO_SKILL, startFrame });
   const events = [comboEvent];
   const windowEvent = makeEvent({
     uid: 'w1',
@@ -261,7 +262,7 @@ describe('clampDeltaByComboWindow — invalid at drag start', () => {
 
 describe('clampDeltaByComboWindow — normal clamping', () => {
   const startFrame = 150;
-  const comboEvent = makeEvent({ uid: 'c1', columnId: SKILL_COLUMNS.COMBO, startFrame });
+  const comboEvent = makeEvent({ uid: 'c1', columnId: NounType.COMBO_SKILL, startFrame });
   const events = [comboEvent];
   const windowEvent = makeEvent({
     uid: 'w1',
@@ -290,7 +291,7 @@ describe('clampDeltaByComboWindow — normal clamping', () => {
   });
 
   test('non-combo events pass through', () => {
-    const battleEvent = makeEvent({ uid: 'b1', columnId: SKILL_COLUMNS.BATTLE, startFrame: 150 });
+    const battleEvent = makeEvent({ uid: 'b1', columnId: NounType.BATTLE_SKILL, startFrame: 150 });
     const result = clampDeltaByComboWindow(200, 'b1', [battleEvent], 150, processedEvents);
     expect(result).toBe(200);
   });
@@ -301,8 +302,8 @@ describe('clampDeltaByComboWindow — normal clamping', () => {
 describe('clampDeltaByOverlap — normal clamping', () => {
   // Event e1 at frame 50 (range 60), sibling e2 at frame 200 (range 60)
   const events = [
-    makeEvent({ uid: 'e1', columnId: SKILL_COLUMNS.BATTLE, startFrame: 50, nonOverlappableRange: 60 }),
-    makeEvent({ uid: 'e2', columnId: SKILL_COLUMNS.BATTLE, startFrame: 200, nonOverlappableRange: 60 }),
+    makeEvent({ uid: 'e1', columnId: NounType.BATTLE_SKILL, startFrame: 50, nonOverlappableRange: 60 }),
+    makeEvent({ uid: 'e2', columnId: NounType.BATTLE_SKILL, startFrame: 200, nonOverlappableRange: 60 }),
   ];
   const dragSet = new Set(['e1']);
 
@@ -327,8 +328,8 @@ describe('clampDeltaByOverlap — normal clamping', () => {
 
   test('events in different columns are not blocked', () => {
     const mixedEvents = [
-      makeEvent({ uid: 'e1', columnId: SKILL_COLUMNS.BATTLE, startFrame: 50, nonOverlappableRange: 60 }),
-      makeEvent({ uid: 'e2', columnId: SKILL_COLUMNS.ULTIMATE, startFrame: 60, nonOverlappableRange: 60 }),
+      makeEvent({ uid: 'e1', columnId: NounType.BATTLE_SKILL, startFrame: 50, nonOverlappableRange: 60 }),
+      makeEvent({ uid: 'e2', columnId: NounType.ULTIMATE, startFrame: 60, nonOverlappableRange: 60 }),
     ];
     const result = clampDeltaByOverlap(20, 'e1', mixedEvents, 50, new Set(['e1']));
     expect(result).toBe(20);
@@ -340,8 +341,8 @@ describe('clampDeltaByOverlap — normal clamping', () => {
 describe('clampDeltaByOverlap — invalid at drag start', () => {
   // e1 at frame 100 overlaps e2 at frame 120 (both range 60)
   const events = [
-    makeEvent({ uid: 'e1', columnId: SKILL_COLUMNS.BATTLE, startFrame: 100, nonOverlappableRange: 60 }),
-    makeEvent({ uid: 'e2', columnId: SKILL_COLUMNS.BATTLE, startFrame: 120, nonOverlappableRange: 60 }),
+    makeEvent({ uid: 'e1', columnId: NounType.BATTLE_SKILL, startFrame: 100, nonOverlappableRange: 60 }),
+    makeEvent({ uid: 'e2', columnId: NounType.BATTLE_SKILL, startFrame: 120, nonOverlappableRange: 60 }),
   ];
   const dragSet = new Set(['e1']);
 
@@ -379,8 +380,8 @@ describe('clampDeltaByOverlap — invalid at drag start', () => {
 describe('clampDeltaByOverlap — full lifecycle', () => {
   // e1 at frame 150 overlaps e2 at frame 140 (both range 60)
   const events = [
-    makeEvent({ uid: 'e1', columnId: SKILL_COLUMNS.BATTLE, startFrame: 150, nonOverlappableRange: 60 }),
-    makeEvent({ uid: 'e2', columnId: SKILL_COLUMNS.BATTLE, startFrame: 140, nonOverlappableRange: 60 }),
+    makeEvent({ uid: 'e1', columnId: NounType.BATTLE_SKILL, startFrame: 150, nonOverlappableRange: 60 }),
+    makeEvent({ uid: 'e2', columnId: NounType.BATTLE_SKILL, startFrame: 140, nonOverlappableRange: 60 }),
   ];
   const dragSet = new Set(['e1']);
   const overlapInvalid = new Set(['e1']);
@@ -414,8 +415,8 @@ describe('clampDeltaByOverlap — full lifecycle', () => {
 describe('clampDeltaByOverlap — edge cases', () => {
   test('zero-range events pass through', () => {
     const events = [
-      makeEvent({ uid: 'e1', columnId: SKILL_COLUMNS.BATTLE, startFrame: 50, nonOverlappableRange: 0 }),
-      makeEvent({ uid: 'e2', columnId: SKILL_COLUMNS.BATTLE, startFrame: 60, nonOverlappableRange: 60 }),
+      makeEvent({ uid: 'e1', columnId: NounType.BATTLE_SKILL, startFrame: 50, nonOverlappableRange: 0 }),
+      makeEvent({ uid: 'e2', columnId: NounType.BATTLE_SKILL, startFrame: 60, nonOverlappableRange: 60 }),
     ];
     const result = clampDeltaByOverlap(20, 'e1', events, 50, new Set(['e1']));
     expect(result).toBe(20);
@@ -423,7 +424,7 @@ describe('clampDeltaByOverlap — edge cases', () => {
 
   test('unknown event ID passes through', () => {
     const events = [
-      makeEvent({ uid: 'e1', columnId: SKILL_COLUMNS.BATTLE, startFrame: 50, nonOverlappableRange: 60 }),
+      makeEvent({ uid: 'e1', columnId: NounType.BATTLE_SKILL, startFrame: 50, nonOverlappableRange: 60 }),
     ];
     const result = clampDeltaByOverlap(100, 'e-unknown', events, 50, new Set(['e-unknown']));
     expect(result).toBe(100);
@@ -431,8 +432,8 @@ describe('clampDeltaByOverlap — edge cases', () => {
 
   test('different owners do not block each other', () => {
     const events = [
-      makeEvent({ uid: 'e1', columnId: SKILL_COLUMNS.BATTLE, startFrame: 50, ownerId: 'op-1', nonOverlappableRange: 60 }),
-      makeEvent({ uid: 'e2', columnId: SKILL_COLUMNS.BATTLE, startFrame: 80, ownerId: 'op-2', nonOverlappableRange: 60 }),
+      makeEvent({ uid: 'e1', columnId: NounType.BATTLE_SKILL, startFrame: 50, ownerId: 'op-1', nonOverlappableRange: 60 }),
+      makeEvent({ uid: 'e2', columnId: NounType.BATTLE_SKILL, startFrame: 80, ownerId: 'op-2', nonOverlappableRange: 60 }),
     ];
     // e1 moving to 80 would overlap e2 if same owner, but different owners → no block
     const result = clampDeltaByOverlap(30, 'e1', events, 50, new Set(['e1']));
@@ -441,8 +442,8 @@ describe('clampDeltaByOverlap — edge cases', () => {
 
   test('batch-dragged siblings are excluded from blocking', () => {
     const events = [
-      makeEvent({ uid: 'e1', columnId: SKILL_COLUMNS.BATTLE, startFrame: 50, nonOverlappableRange: 60 }),
-      makeEvent({ uid: 'e2', columnId: SKILL_COLUMNS.BATTLE, startFrame: 200, nonOverlappableRange: 60 }),
+      makeEvent({ uid: 'e1', columnId: NounType.BATTLE_SKILL, startFrame: 50, nonOverlappableRange: 60 }),
+      makeEvent({ uid: 'e2', columnId: NounType.BATTLE_SKILL, startFrame: 200, nonOverlappableRange: 60 }),
     ];
     // Both e1 and e2 are being dragged together — e2 should not block e1
     const dragSet = new Set(['e1', 'e2']);
@@ -453,8 +454,8 @@ describe('clampDeltaByOverlap — edge cases', () => {
   test('edge-exact placement does not overlap', () => {
     // e1 range=60 at 50, e2 starts at 200. Moving e1 to exactly 140 → end at 200, no overlap
     const events = [
-      makeEvent({ uid: 'e1', columnId: SKILL_COLUMNS.BATTLE, startFrame: 50, nonOverlappableRange: 60 }),
-      makeEvent({ uid: 'e2', columnId: SKILL_COLUMNS.BATTLE, startFrame: 200, nonOverlappableRange: 60 }),
+      makeEvent({ uid: 'e1', columnId: NounType.BATTLE_SKILL, startFrame: 50, nonOverlappableRange: 60 }),
+      makeEvent({ uid: 'e2', columnId: NounType.BATTLE_SKILL, startFrame: 200, nonOverlappableRange: 60 }),
     ];
     const result = clampDeltaByOverlap(90, 'e1', events, 50, new Set(['e1']));
     expect(result).toBe(90);
@@ -463,7 +464,7 @@ describe('clampDeltaByOverlap — edge cases', () => {
 
   test('no siblings means no clamping', () => {
     const events = [
-      makeEvent({ uid: 'e1', columnId: SKILL_COLUMNS.BATTLE, startFrame: 50, nonOverlappableRange: 60 }),
+      makeEvent({ uid: 'e1', columnId: NounType.BATTLE_SKILL, startFrame: 50, nonOverlappableRange: 60 }),
     ];
     const result = clampDeltaByOverlap(500, 'e1', events, 50, new Set(['e1']));
     expect(result).toBe(500);
@@ -475,9 +476,9 @@ describe('clampDeltaByOverlap — edge cases', () => {
 describe('clampDeltaByOverlap — multiple siblings', () => {
   // e1 at 50 (range 60), e2 at 200 (range 60), e3 at 400 (range 60)
   const events = [
-    makeEvent({ uid: 'e1', columnId: SKILL_COLUMNS.BATTLE, startFrame: 50, nonOverlappableRange: 60 }),
-    makeEvent({ uid: 'e2', columnId: SKILL_COLUMNS.BATTLE, startFrame: 200, nonOverlappableRange: 60 }),
-    makeEvent({ uid: 'e3', columnId: SKILL_COLUMNS.BATTLE, startFrame: 400, nonOverlappableRange: 60 }),
+    makeEvent({ uid: 'e1', columnId: NounType.BATTLE_SKILL, startFrame: 50, nonOverlappableRange: 60 }),
+    makeEvent({ uid: 'e2', columnId: NounType.BATTLE_SKILL, startFrame: 200, nonOverlappableRange: 60 }),
+    makeEvent({ uid: 'e3', columnId: NounType.BATTLE_SKILL, startFrame: 400, nonOverlappableRange: 60 }),
   ];
   const dragSet = new Set(['e1']);
 
@@ -496,9 +497,9 @@ describe('clampDeltaByOverlap — multiple siblings', () => {
   test('invalid at drag start: free movement through multiple overlapping siblings', () => {
     // e1 overlapping e2 at drag start, should be free to move even past e3
     const overlappingEvents = [
-      makeEvent({ uid: 'e1', columnId: SKILL_COLUMNS.BATTLE, startFrame: 210, nonOverlappableRange: 60 }),
-      makeEvent({ uid: 'e2', columnId: SKILL_COLUMNS.BATTLE, startFrame: 200, nonOverlappableRange: 60 }),
-      makeEvent({ uid: 'e3', columnId: SKILL_COLUMNS.BATTLE, startFrame: 400, nonOverlappableRange: 60 }),
+      makeEvent({ uid: 'e1', columnId: NounType.BATTLE_SKILL, startFrame: 210, nonOverlappableRange: 60 }),
+      makeEvent({ uid: 'e2', columnId: NounType.BATTLE_SKILL, startFrame: 200, nonOverlappableRange: 60 }),
+      makeEvent({ uid: 'e3', columnId: NounType.BATTLE_SKILL, startFrame: 400, nonOverlappableRange: 60 }),
     ];
     const overlapInvalid = new Set(['e1']);
     const overlapReval = new Set<string>();
@@ -515,9 +516,9 @@ describe('clampDeltaByOverlap — revalidated bidirectional clamping', () => {
   // e1 between two siblings: e2 at [100,160), e3 at [300,360)
   // e1 (range 60) at 200, revalidated — should be clamped by both sides
   const events = [
-    makeEvent({ uid: 'e1', columnId: SKILL_COLUMNS.BATTLE, startFrame: 200, nonOverlappableRange: 60 }),
-    makeEvent({ uid: 'e2', columnId: SKILL_COLUMNS.BATTLE, startFrame: 100, nonOverlappableRange: 60 }),
-    makeEvent({ uid: 'e3', columnId: SKILL_COLUMNS.BATTLE, startFrame: 300, nonOverlappableRange: 60 }),
+    makeEvent({ uid: 'e1', columnId: NounType.BATTLE_SKILL, startFrame: 200, nonOverlappableRange: 60 }),
+    makeEvent({ uid: 'e2', columnId: NounType.BATTLE_SKILL, startFrame: 100, nonOverlappableRange: 60 }),
+    makeEvent({ uid: 'e3', columnId: NounType.BATTLE_SKILL, startFrame: 300, nonOverlappableRange: 60 }),
   ];
   const dragSet = new Set(['e1']);
   const overlapInvalid = new Set<string>();

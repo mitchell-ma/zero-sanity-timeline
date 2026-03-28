@@ -14,7 +14,8 @@
           "subjectDeterminer": "THIS",
           "subject": "OPERATOR",
           "verb": "HAVE",
-          "object": "SUBDUER_OF_EVIL_P5",
+          "object": "STATUS",
+          "objectId": "SUBDUER_OF_EVIL_P5",
           "with": {
             "value": {
               "verb": "IS",

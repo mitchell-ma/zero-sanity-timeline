@@ -18,10 +18,11 @@
  */
 
 import { renderHook, act } from '@testing-library/react';
+import { NounType } from '../../../dsl/semantics';
 import { render } from '@testing-library/react';
 import React from 'react';
 import { useApp } from '../../../app/useApp';
-import { SKILL_COLUMNS, INFLICTION_COLUMNS, ENEMY_OWNER_ID } from '../../../model/channels';
+import { INFLICTION_COLUMNS, ENEMY_OWNER_ID } from '../../../model/channels';
 import { ColumnType, InteractionModeType } from '../../../consts/enums';
 import { FPS } from '../../../utils/timeline';
 import { computeTimelinePresentation } from '../../../controller/timeline/eventPresentationController';
@@ -91,12 +92,12 @@ describe('Infliction follows drag — Akekuri battle skill heat infliction', () 
     const { result } = renderHook(() => useApp());
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
-    const battleCol = findColumn(result.current, SLOT_AKEKURI, SKILL_COLUMNS.BATTLE);
+    const battleCol = findColumn(result.current, SLOT_AKEKURI, NounType.BATTLE_SKILL);
     expect(battleCol).toBeDefined();
 
     act(() => {
       result.current.handleAddEvent(
-        SLOT_AKEKURI, SKILL_COLUMNS.BATTLE, 2 * FPS, battleCol!.defaultEvent!,
+        SLOT_AKEKURI, NounType.BATTLE_SKILL, 2 * FPS, battleCol!.defaultEvent!,
       );
     });
 
@@ -104,7 +105,7 @@ describe('Infliction follows drag — Akekuri battle skill heat infliction', () 
     expect(inflictions.length).toBeGreaterThanOrEqual(1);
 
     const battleEvent = result.current.allProcessedEvents.find(
-      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === SKILL_COLUMNS.BATTLE,
+      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === NounType.BATTLE_SKILL,
     )!;
     expect(inflictions[0].startFrame).toBeGreaterThanOrEqual(battleEvent.startFrame);
   });
@@ -113,16 +114,16 @@ describe('Infliction follows drag — Akekuri battle skill heat infliction', () 
     const { result } = renderHook(() => useApp());
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
-    const battleCol = findColumn(result.current, SLOT_AKEKURI, SKILL_COLUMNS.BATTLE);
+    const battleCol = findColumn(result.current, SLOT_AKEKURI, NounType.BATTLE_SKILL);
 
     act(() => {
       result.current.handleAddEvent(
-        SLOT_AKEKURI, SKILL_COLUMNS.BATTLE, 2 * FPS, battleCol!.defaultEvent!,
+        SLOT_AKEKURI, NounType.BATTLE_SKILL, 2 * FPS, battleCol!.defaultEvent!,
       );
     });
 
     const battleUid = result.current.allProcessedEvents.find(
-      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === SKILL_COLUMNS.BATTLE,
+      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === NounType.BATTLE_SKILL,
     )!.uid;
 
     const inflictionStartBefore = getHeatInflictions(result.current)[0].startFrame;
@@ -137,16 +138,16 @@ describe('Infliction follows drag — Akekuri battle skill heat infliction', () 
     const { result } = renderHook(() => useApp());
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
-    const battleCol = findColumn(result.current, SLOT_AKEKURI, SKILL_COLUMNS.BATTLE);
+    const battleCol = findColumn(result.current, SLOT_AKEKURI, NounType.BATTLE_SKILL);
 
     act(() => {
       result.current.handleAddEvent(
-        SLOT_AKEKURI, SKILL_COLUMNS.BATTLE, 2 * FPS, battleCol!.defaultEvent!,
+        SLOT_AKEKURI, NounType.BATTLE_SKILL, 2 * FPS, battleCol!.defaultEvent!,
       );
     });
 
     const battleUid = result.current.allProcessedEvents.find(
-      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === SKILL_COLUMNS.BATTLE,
+      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === NounType.BATTLE_SKILL,
     )!.uid;
 
     // Get infliction from ColumnViewModel at battle=2s
@@ -170,16 +171,16 @@ describe('Infliction follows drag — Akekuri battle skill heat infliction', () 
     const { result } = renderHook(() => useApp());
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
-    const battleCol = findColumn(result.current, SLOT_AKEKURI, SKILL_COLUMNS.BATTLE);
+    const battleCol = findColumn(result.current, SLOT_AKEKURI, NounType.BATTLE_SKILL);
 
     act(() => {
       result.current.handleAddEvent(
-        SLOT_AKEKURI, SKILL_COLUMNS.BATTLE, 1 * FPS, battleCol!.defaultEvent!,
+        SLOT_AKEKURI, NounType.BATTLE_SKILL, 1 * FPS, battleCol!.defaultEvent!,
       );
     });
 
     const battleUid = result.current.allProcessedEvents.find(
-      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === SKILL_COLUMNS.BATTLE,
+      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === NounType.BATTLE_SKILL,
     )!.uid;
 
     // Get infliction from ColumnViewModel and render EventBlock (battle at 1s)

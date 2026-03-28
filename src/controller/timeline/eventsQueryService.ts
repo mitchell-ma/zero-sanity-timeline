@@ -7,6 +7,7 @@
  * the DerivedEventController's event data and time-stop regions.
  */
 import { TimelineEvent, eventDuration } from '../../consts/viewTypes';
+import { NounType } from '../../dsl/semantics';
 import { CombatSkillType, DamageFactorType, ElementType, StatType, StatusType } from '../../consts/enums';
 import { StaggerBreak } from './staggerTimeline';
 import {
@@ -14,16 +15,14 @@ import {
   FRAGILITY_COLUMN_PREFIX,
   INFLICTION_COLUMNS,
   NODE_STAGGER_COLUMN_ID,
-  OPERATOR_COLUMNS,
   PHYSICAL_STATUS_COLUMNS,
   REACTION_COLUMNS,
-  SKILL_COLUMNS,
 } from '../../model/channels';
-import { getCorrosionReduction, getScorchingHeartIgnoredResistance, MultiplierSource } from '../../model/calculation/damageFormulas';
+import { getCorrosionReduction, MultiplierSource } from '../../model/calculation/damageFormulas';
 import { FPS } from '../../utils/timeline';
 import type { LoadoutProperties } from '../../view/InformationPane';
 import type { DerivedEventController } from './derivedEventController';
-import { StatusLevel, TalentLevel } from '../../consts/types';
+import { StatusLevel } from '../../consts/types';
 
 // ── Exported constants ──────────────────────────────────────────────────────
 
@@ -91,11 +90,8 @@ export class EventsQueryService {
   private dmgReductionEvents: TimelineEvent[];
   private protectionEvents: TimelineEvent[];
   private weaponFragilityEvents: TimelineEvent[];
-  private scorchingHeartEvents: TimelineEvent[];
-  private wildlandTrekkerEvents: TimelineEvent[];
   private cryoInflictionEvents: TimelineEvent[];
   private solidificationEvents: TimelineEvent[];
-  private originiumCrystalEvents: TimelineEvent[];
   private nodeStaggerEvents: TimelineEvent[];
   private staggerBreaks: readonly StaggerBreak[];
   private state: DerivedEventController;
@@ -131,11 +127,8 @@ export class EventsQueryService {
     this.dmgReductionEvents = events.filter(e => e.columnId === StatusType.DMG_REDUCTION);
     this.protectionEvents = events.filter(e => e.columnId === StatusType.PROTECTION);
     this.weaponFragilityEvents = events.filter(e => e.columnId.startsWith(FRAGILITY_COLUMN_PREFIX));
-    this.scorchingHeartEvents = events.filter(e => e.columnId === 'SCORCHING_HEART_EFFECT');
-    this.wildlandTrekkerEvents = events.filter(e => e.columnId === 'WILDLAND_TREKKER');
     this.cryoInflictionEvents = events.filter(e => e.ownerId === ENEMY_OWNER_ID && e.columnId === INFLICTION_COLUMNS.CRYO);
     this.solidificationEvents = events.filter(e => e.ownerId === ENEMY_OWNER_ID && e.columnId === REACTION_COLUMNS.SOLIDIFICATION);
-    this.originiumCrystalEvents = events.filter(e => e.ownerId === ENEMY_OWNER_ID && e.columnId === OPERATOR_COLUMNS.ORIGINIUM_CRYSTAL);
     this.nodeStaggerEvents = events.filter(e => e.ownerId === ENEMY_OWNER_ID && e.columnId === NODE_STAGGER_COLUMN_ID);
   }
 
@@ -211,7 +204,7 @@ export class EventsQueryService {
     // Find the registered event that owns this frame and check if it consumed Link
     const events = this.state.getRegisteredEvents();
     for (const ev of events) {
-      if (ev.columnId !== SKILL_COLUMNS.BATTLE && ev.columnId !== SKILL_COLUMNS.ULTIMATE) continue;
+      if (ev.columnId !== NounType.BATTLE_SKILL && ev.columnId !== NounType.ULTIMATE) continue;
       if (ev.startFrame > frame || frame >= ev.startFrame + eventDuration(ev)) continue;
       const stacks = this.state.getLinkStacks(ev.uid);
       if (stacks === 0) continue;
@@ -261,15 +254,27 @@ export class EventsQueryService {
     return effects;
   }
 
-  getWildlandTrekkerBonus(frame: number): number {
-    for (const ev of this.wildlandTrekkerEvents) {
+  /** Get events for a given column ID. */
+  getColumnEvents(columnId: string): TimelineEvent[] {
+    return this.state.getRegisteredEvents().filter(e => e.columnId === columnId);
+  }
+
+  /**
+   * Compute intellect-scaled damage bonus from active status events.
+   * Scans all events with DAMAGE_BONUS factor type that carry a per-intellect
+   * statusValue and a sourceOwnerId for stat lookup.
+   */
+  getIntellectScaledDamageBonus(frame: number): number {
+    let sum = 0;
+    for (const ev of this.state.getRegisteredEvents()) {
+      if (ev.damageFactorType !== DamageFactorType.DAMAGE_BONUS) continue;
       if (!this.isActive(ev, frame)) continue;
       const perIntellect = ev.statusValue ?? 0;
       if (perIntellect === 0 || !ev.sourceOwnerId) continue;
       const intellect = this.aggregatedStats?.[ev.sourceOwnerId]?.stats[StatType.INTELLECT] ?? 0;
-      return perIntellect * intellect;
+      sum += perIntellect * intellect;
     }
-    return 0;
+    return sum;
   }
 
   getFragilityBonus(frame: number, element: ElementType): number {
@@ -299,9 +304,7 @@ export class EventsQueryService {
     }
     for (const tf of this.talentFragility) {
       if (!tf.elements.includes(element)) continue;
-      const events = tf.requiredColumnId === INFLICTION_COLUMNS.CRYO ? this.cryoInflictionEvents
-        : tf.requiredColumnId === OPERATOR_COLUMNS.ORIGINIUM_CRYSTAL ? this.originiumCrystalEvents
-        : [];
+      const events = this.getColumnEvents(tf.requiredColumnId);
       if (events.some(ev => this.isActive(ev, frame))) sum += tf.bonus;
     }
     return sum;
@@ -370,9 +373,7 @@ export class EventsQueryService {
     }
     for (const tf of this.talentFragility) {
       if (!tf.elements.includes(element)) continue;
-      const events = tf.requiredColumnId === INFLICTION_COLUMNS.CRYO ? this.cryoInflictionEvents
-        : tf.requiredColumnId === OPERATOR_COLUMNS.ORIGINIUM_CRYSTAL ? this.originiumCrystalEvents
-        : [];
+      const events = this.getColumnEvents(tf.requiredColumnId);
       if (events.some(ev => this.isActive(ev, frame))) sources.push({ label: 'Talent fragility', value: tf.bonus });
     }
     return sources;
@@ -387,14 +388,19 @@ export class EventsQueryService {
     return sources;
   }
 
-  getIgnoredResistance(frame: number, element: ElementType, attackerOwnerId: string): number {
-    if (element !== ElementType.HEAT) return 0;
-    const activeSH = this.scorchingHeartEvents.find(
-      ev => ev.ownerId === attackerOwnerId && this.isActive(ev, frame),
-    );
-    if (!activeSH) return 0;
-    const props = this.loadoutProperties[attackerOwnerId];
-    const talentLevel = Math.min(props?.operator.talentOneLevel ?? 0, 3) as TalentLevel;
-    return getScorchingHeartIgnoredResistance(talentLevel);
+  /**
+   * Sum ignored resistance from all active status events owned by the attacker
+   * whose element matches. The pipeline resolves IGNORE RESISTANCE clause effects
+   * into statusValue at event creation time.
+   */
+  getIgnoredResistance(frame: number, _element: ElementType, attackerOwnerId: string): number {
+    let sum = 0;
+    for (const ev of this.state.getRegisteredEvents()) {
+      if (ev.damageFactorType !== DamageFactorType.RESISTANCE) continue;
+      if (ev.ownerId !== attackerOwnerId) continue;
+      if (!this.isActive(ev, frame)) continue;
+      sum += ev.statusValue ?? 0;
+    }
+    return sum;
   }
 }

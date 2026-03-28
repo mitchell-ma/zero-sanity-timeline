@@ -6,13 +6,14 @@
  */
 
 import { TimelineEvent } from '../../consts/viewTypes';
+import { NounType } from '../../dsl/semantics';
 import { CombatSkillType, SegmentType } from '../../consts/enums';
 import {
   applyTimeStopExtension,
   validateTimeStopStarts,
   collectTimeStopRegions,
 } from '../../controller/timeline/processTimeStop';
-import { OPERATOR_COLUMNS, SKILL_COLUMNS } from '../../model/channels';
+import { OPERATOR_COLUMNS } from '../../model/channels';
 
 // ── Helpers ──────────────────────────────────────────────────────────────
 
@@ -45,7 +46,7 @@ function makeControlEvent(startFrame: number, duration: number, ownerId = 'op-1'
 function makeUltimateEvent(startFrame: number, animDuration: number): TimelineEvent {
   return makeEvent({
     uid: uid(),
-    columnId: SKILL_COLUMNS.ULTIMATE,
+    columnId: NounType.ULTIMATE,
     startFrame,
     segments: [
       { properties: { duration: animDuration, name: 'Animation', segmentTypes: [SegmentType.ANIMATION] } },
@@ -57,7 +58,7 @@ function makeUltimateEvent(startFrame: number, animDuration: number): TimelineEv
 function makeComboEvent(startFrame: number, animDuration: number): TimelineEvent {
   return makeEvent({
     uid: uid(),
-    columnId: SKILL_COLUMNS.COMBO,
+    columnId: NounType.COMBO_SKILL,
     startFrame,
     segments: [
       { properties: { duration: animDuration, name: 'Animation', segmentTypes: [SegmentType.ANIMATION] } },
@@ -110,7 +111,7 @@ describe('control events are NOT extended by time-stops', () => {
     const ult = makeUltimateEvent(100, 30);
     const battle = makeEvent({
       uid: uid(),
-      columnId: SKILL_COLUMNS.BATTLE,
+      columnId: NounType.BATTLE_SKILL,
       startFrame: 80,
       segments: [{ properties: { duration: 200 } }],
     });

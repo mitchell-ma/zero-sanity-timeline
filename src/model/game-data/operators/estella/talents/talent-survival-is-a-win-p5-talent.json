@@ -12,7 +12,8 @@
           "subjectDeterminer": "THIS",
           "subject": "OPERATOR",
           "verb": "HAVE",
-          "object": "SURVIVAL_IS_A_WIN_P5",
+          "object": "STATUS",
+          "objectId": "SURVIVAL_IS_A_WIN_P5",
           "with": {
             "value": {
               "verb": "IS",

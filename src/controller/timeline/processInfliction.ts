@@ -210,10 +210,10 @@ function truncateSegments(
 
 /** Maps reaction columnId → damage element. */
 const REACTION_DAMAGE_ELEMENT: Record<string, ElementType> = {
-  combustion:      ElementType.HEAT,
-  solidification:  ElementType.CRYO,
-  corrosion:       ElementType.NATURE,
-  electrification: ElementType.ELECTRIC,
+  [REACTION_COLUMNS.COMBUSTION]:      ElementType.HEAT,
+  [REACTION_COLUMNS.SOLIDIFICATION]:  ElementType.CRYO,
+  [REACTION_COLUMNS.CORROSION]:       ElementType.NATURE,
+  [REACTION_COLUMNS.ELECTRIFICATION]: ElementType.ELECTRIC,
 };
 
 /**

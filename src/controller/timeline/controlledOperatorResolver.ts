@@ -9,13 +9,13 @@
  * Only one operator can be controlled at a time. The first operator (slot-0) starts controlled.
  */
 import { TimelineEvent } from '../../consts/viewTypes';
+import { NounType } from '../../dsl/semantics';
 import { CombatSkillType } from '../../consts/enums';
-import { SKILL_COLUMNS } from '../../model/channels';
 
 /** Skill columns that imply the player is controlling the operator. */
 const CONTROL_IMPLYING_COLUMNS = new Set<string>([
-  SKILL_COLUMNS.BASIC,
-  SKILL_COLUMNS.BATTLE,
+  NounType.BASIC_ATTACK,
+  NounType.BATTLE_SKILL,
 ]);
 
 interface ControlSegment {

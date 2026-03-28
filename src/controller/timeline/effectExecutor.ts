@@ -22,7 +22,7 @@ import type { ValueResolutionContext } from '../calculation/valueResolver';
 import { TimelineEvent, durationSegment, setEventDuration } from '../../consts/viewTypes';
 import { FPS } from '../../utils/timeline';
 import { CritMode, EventStatusType } from '../../consts/enums';
-import { ENEMY_OWNER_ID, INFLICTION_COLUMNS, REACTION_STATUS_TO_COLUMN, SKILL_COLUMNS } from '../../model/channels/index';
+import { ENEMY_OWNER_ID, INFLICTION_COLUMNS, REACTION_STATUS_TO_COLUMN } from '../../model/channels/index';
 import { statusIdToColumnId } from './triggerMatch';
 import { COMMON_OWNER_ID } from '../slot/commonSlotController';
 import { evaluateConditions, ConditionContext } from './conditionEvaluator';
@@ -89,7 +89,7 @@ function emptyMutationSet(): MutationSet {
 
 function buildValueContext(ctx: ExecutionContext): ValueResolutionContext {
   const loadout = ctx.loadoutProperties?.[ctx.sourceOwnerId];
-  const baseCtx = buildContextForSkillColumn(loadout, SKILL_COLUMNS.BATTLE);
+  const baseCtx = buildContextForSkillColumn(loadout, NounType.BATTLE_SKILL);
   // Override potential from execution context if provided (e.g. cross-operator effects)
   if (ctx.potential != null) baseCtx.potential = ctx.potential;
   return baseCtx;

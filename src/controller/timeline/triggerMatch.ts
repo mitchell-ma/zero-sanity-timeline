@@ -14,7 +14,7 @@ import { PhysicalStatusType } from '../../consts/enums';
 import {
   ELEMENT_TO_INFLICTION_COLUMN,
   ENEMY_OWNER_ID, ENEMY_ACTION_COLUMN_ID, OPERATOR_COLUMNS, REACTION_COLUMNS,
-  REACTION_COLUMN_IDS, REACTION_STATUS_TO_COLUMN, INFLICTION_COLUMN_IDS, SKILL_COLUMNS,
+  REACTION_COLUMN_IDS, REACTION_STATUS_TO_COLUMN, INFLICTION_COLUMN_IDS,
   PHYSICAL_INFLICTION_COLUMNS, PHYSICAL_STATUS_COLUMN_IDS,
 } from '../../model/channels';
 import { getTeamStatusColumnId } from '../gameDataStore';
@@ -152,12 +152,6 @@ export function getFirstEventFrame(ev: TimelineEvent): number {
 
 // ── Column + owner resolution ─────────────────────────────────────────────────
 
-const SKILL_OBJECT_TO_COLUMN: Record<string, string> = {
-  [NounType.BASIC_ATTACK]: SKILL_COLUMNS.BASIC,
-  [NounType.BATTLE_SKILL]: SKILL_COLUMNS.BATTLE,
-  [NounType.COMBO_SKILL]:  SKILL_COLUMNS.COMBO,
-  [NounType.ULTIMATE]:     SKILL_COLUMNS.ULTIMATE,
-};
 
 const STATE_TO_REACTION_COLUMN: Record<string, string> = {
   [ObjectType.COMBUSTED]:     REACTION_COLUMNS.COMBUSTION,
@@ -167,7 +161,7 @@ const STATE_TO_REACTION_COLUMN: Record<string, string> = {
 };
 
 const SKIP_COLUMNS = new Set<string>([
-  SKILL_COLUMNS.BASIC, SKILL_COLUMNS.BATTLE, SKILL_COLUMNS.COMBO, SKILL_COLUMNS.ULTIMATE,
+  NounType.BASIC_ATTACK, NounType.BATTLE_SKILL, NounType.COMBO_SKILL, NounType.ULTIMATE,
 ]);
 
 /**
@@ -274,11 +268,10 @@ function scanEvents(primaryCond: Predicate, ctx: VerbHandlerContext, verb: strin
   const matches: TriggerMatch[] = [];
   const columns = resolveColumns(primaryCond);
   const { matchesOwner } = resolveOwnerFilter(primaryCond, ctx.operatorSlotId, verb);
-
   for (const ev of ctx.events) {
     if (columns) {
       if (!columns.has(ev.columnId)) continue;
-    } else if (primaryCond.object === 'STATUS') {
+    } else if (primaryCond.object === NounType.STATUS) {
       // Generic STATUS fallback: exclude skill/infliction/reaction columns
       if (REACTION_COLUMN_IDS.has(ev.columnId)) continue;
       if (INFLICTION_COLUMN_IDS.has(ev.columnId)) continue;
@@ -287,7 +280,7 @@ function scanEvents(primaryCond: Predicate, ctx: VerbHandlerContext, verb: strin
       continue;
     }
     // Arts Burst: only match infliction events flagged as same-element stacking
-    if (primaryCond.object === 'ARTS_BURST' && !ev.isArtsBurst) continue;
+    if (primaryCond.object === NounType.ARTS_BURST && !ev.isArtsBurst) continue;
     if (!matchesOwner(ev.ownerId)) continue;
     if (!checkSecondary(ctx, ev.startFrame, ev.ownerId)) continue;
 
@@ -305,7 +298,7 @@ function handlePerform(primaryCond: Predicate, ctx: VerbHandlerContext): Trigger
   if (primaryCond.object === 'FINAL_STRIKE') {
     for (const ev of ctx.events) {
       if (!matchesOwner(ev.ownerId)) continue;
-      if (ev.columnId !== SKILL_COLUMNS.BASIC) continue;
+      if (ev.columnId !== NounType.BASIC_ATTACK) continue;
       if (ev.id === CombatSkillType.FINISHER || ev.id === CombatSkillType.DIVE) continue;
 
       const triggerFrame = getFinalStrikeTriggerFrame(ev, ctx.stops);
@@ -322,7 +315,7 @@ function handlePerform(primaryCond: Predicate, ctx: VerbHandlerContext): Trigger
     const targetName = primaryCond.object === 'FINISHER' ? CombatSkillType.FINISHER : CombatSkillType.DIVE;
     for (const ev of ctx.events) {
       if (!matchesOwner(ev.ownerId)) continue;
-      if (ev.columnId !== SKILL_COLUMNS.BASIC) continue;
+      if (ev.columnId !== NounType.BASIC_ATTACK) continue;
       if (ev.id !== targetName) continue;
 
       const triggerFrame = getFirstEventFrame(ev);
@@ -333,7 +326,7 @@ function handlePerform(primaryCond: Predicate, ctx: VerbHandlerContext): Trigger
     return matches;
   }
 
-  const matchingColumn = SKILL_OBJECT_TO_COLUMN[primaryCond.object ?? ''] ?? primaryCond.object;
+  const matchingColumn = primaryCond.object;
 
   for (const ev of ctx.events) {
     if (!isAnyOperator && ev.ownerId !== ctx.operatorSlotId) continue;

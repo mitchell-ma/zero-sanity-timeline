@@ -48,7 +48,7 @@
           "clause": [
             {
               "conditions": [
-                { "subject": "ENEMY", "verb": "HAVE", "object": "INFLICTION", "objectQualifier": "CRYO" }
+                { "subject": "ENEMY", "verb": "HAVE", "object": "STATUS", "objectId": "INFLICTION", "objectQualifier": "CRYO" }
               ],
               "effects": [
                 { "verb": "CONSUME", "object": "INFLICTION", "objectQualifier": "ARTS", "from": "ENEMY" },
@@ -144,7 +144,7 @@
             },
             {
               "conditions": [
-                { "subject": "ENEMY", "verb": "HAVE", "object": "INFLICTION", "objectQualifier": "NATURE" }
+                { "subject": "ENEMY", "verb": "HAVE", "object": "STATUS", "objectId": "INFLICTION", "objectQualifier": "NATURE" }
               ],
               "effects": [
                 { "verb": "CONSUME", "object": "INFLICTION", "objectQualifier": "ARTS", "from": "ENEMY" },

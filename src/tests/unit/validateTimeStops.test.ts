@@ -8,8 +8,9 @@
  */
 
 import { TimelineEvent } from '../../consts/viewTypes';
+import { NounType } from '../../dsl/semantics';
 import { validateTimeStops, TimeStopRegion } from '../../controller/timeline/eventValidator';
-import { SKILL_COLUMNS, INFLICTION_COLUMNS, REACTION_COLUMNS, OPERATOR_COLUMNS } from '../../model/channels';
+import { INFLICTION_COLUMNS, REACTION_COLUMNS } from '../../model/channels';
 
 jest.mock('../../model/game-data/weaponGameData', () => ({
   getSkillValues: () => [], getConditionalValues: () => [],
@@ -19,6 +20,8 @@ jest.mock('../../view/InformationPane', () => ({
   DEFAULT_LOADOUT_PROPERTIES: {},
   getDefaultLoadoutProperties: () => ({}),
 }));
+
+const MELTING_FLAME_ID = 'MELTING_FLAME';
 
 // ── Helpers ──────────────────────────────────────────────────────────────
 
@@ -33,11 +36,11 @@ function makeEvent(overrides: Partial<TimelineEvent> & { uid: string; columnId: 
 }
 
 function makeUltTimeStop(startFrame: number, durationFrames: number): TimeStopRegion {
-  return { startFrame, durationFrames, ownerId: 'op-1', sourceColumnId: SKILL_COLUMNS.ULTIMATE };
+  return { startFrame, durationFrames, ownerId: 'op-1', sourceColumnId: NounType.ULTIMATE };
 }
 
 function makeComboTimeStop(startFrame: number, durationFrames: number): TimeStopRegion {
-  return { startFrame, durationFrames, ownerId: 'op-1', sourceColumnId: SKILL_COLUMNS.COMBO };
+  return { startFrame, durationFrames, ownerId: 'op-1', sourceColumnId: NounType.COMBO_SKILL };
 }
 
 // ── Tests ────────────────────────────────────────────────────────────────
@@ -47,19 +50,19 @@ describe('validateTimeStops', () => {
     const stops = [makeUltTimeStop(100, 30)];
 
     it('warns for basic attack inside ult time-stop', () => {
-      const events = [makeEvent({ uid: 'e1', columnId: SKILL_COLUMNS.BASIC, startFrame: 100 })];
+      const events = [makeEvent({ uid: 'e1', columnId: NounType.BASIC_ATTACK, startFrame: 100 })];
       const map = validateTimeStops(events, stops);
       expect(map.has('e1')).toBe(true);
     });
 
     it('warns for battle skill inside ult time-stop', () => {
-      const events = [makeEvent({ uid: 'e1', columnId: SKILL_COLUMNS.BATTLE, startFrame: 110 })];
+      const events = [makeEvent({ uid: 'e1', columnId: NounType.BATTLE_SKILL, startFrame: 110 })];
       const map = validateTimeStops(events, stops);
       expect(map.has('e1')).toBe(true);
     });
 
     it('warns for combo skill inside ult time-stop', () => {
-      const events = [makeEvent({ uid: 'e1', columnId: SKILL_COLUMNS.COMBO, startFrame: 115 })];
+      const events = [makeEvent({ uid: 'e1', columnId: NounType.COMBO_SKILL, startFrame: 115 })];
       const map = validateTimeStops(events, stops);
       expect(map.has('e1')).toBe(true);
     });
@@ -69,13 +72,13 @@ describe('validateTimeStops', () => {
     const stops = [makeComboTimeStop(200, 20)];
 
     it('warns for basic attack inside combo time-stop', () => {
-      const events = [makeEvent({ uid: 'e1', columnId: SKILL_COLUMNS.BASIC, startFrame: 200 })];
+      const events = [makeEvent({ uid: 'e1', columnId: NounType.BASIC_ATTACK, startFrame: 200 })];
       const map = validateTimeStops(events, stops);
       expect(map.has('e1')).toBe(true);
     });
 
     it('warns for battle skill inside combo time-stop', () => {
-      const events = [makeEvent({ uid: 'e1', columnId: SKILL_COLUMNS.BATTLE, startFrame: 210 })];
+      const events = [makeEvent({ uid: 'e1', columnId: NounType.BATTLE_SKILL, startFrame: 210 })];
       const map = validateTimeStops(events, stops);
       expect(map.has('e1')).toBe(true);
     });
@@ -97,7 +100,7 @@ describe('validateTimeStops', () => {
     });
 
     it('allows operator status at time-stop start', () => {
-      const events = [makeEvent({ uid: 'e1', columnId: OPERATOR_COLUMNS.MELTING_FLAME, startFrame: 100 })];
+      const events = [makeEvent({ uid: 'e1', columnId: MELTING_FLAME_ID, startFrame: 100 })];
       const map = validateTimeStops(events, stops);
       expect(map.has('e1')).toBe(false);
     });
@@ -113,13 +116,13 @@ describe('validateTimeStops', () => {
     const stops = [makeUltTimeStop(100, 30)];
 
     it('allows basic attack after time-stop ends', () => {
-      const events = [makeEvent({ uid: 'e1', columnId: SKILL_COLUMNS.BASIC, startFrame: 130 })];
+      const events = [makeEvent({ uid: 'e1', columnId: NounType.BASIC_ATTACK, startFrame: 130 })];
       const map = validateTimeStops(events, stops);
       expect(map.has('e1')).toBe(false);
     });
 
     it('allows battle skill before time-stop starts', () => {
-      const events = [makeEvent({ uid: 'e1', columnId: SKILL_COLUMNS.BATTLE, startFrame: 99 })];
+      const events = [makeEvent({ uid: 'e1', columnId: NounType.BATTLE_SKILL, startFrame: 99 })];
       const map = validateTimeStops(events, stops);
       expect(map.has('e1')).toBe(false);
     });

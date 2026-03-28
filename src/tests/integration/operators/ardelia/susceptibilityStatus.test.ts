@@ -13,7 +13,7 @@
 
 import { renderHook, act } from '@testing-library/react';
 import { useApp } from '../../../../app/useApp';
-import { SKILL_COLUMNS, REACTION_COLUMNS, ENEMY_OWNER_ID } from '../../../../model/channels';
+import { REACTION_COLUMNS, ENEMY_OWNER_ID } from '../../../../model/channels';
 import { ColumnType, InteractionModeType } from '../../../../consts/enums';
 import { NounType, AdjectiveType } from '../../../../dsl/semantics';
 import { FPS } from '../../../../utils/timeline';
@@ -37,21 +37,21 @@ describe('Ardelia Dolly Rush — Susceptibility Status', () => {
     it('applies Physical and Arts Susceptibility statuses to enemy after consuming Corrosion', () => {
       const { result } = renderHook(() => useApp());
 
-      const basicCol = findColumn(result.current, SLOT_ARDELIA, SKILL_COLUMNS.BASIC);
-      const comboCol = findColumn(result.current, SLOT_ARDELIA, SKILL_COLUMNS.COMBO);
-      const battleCol = findColumn(result.current, SLOT_ARDELIA, SKILL_COLUMNS.BATTLE);
+      const basicCol = findColumn(result.current, SLOT_ARDELIA, NounType.BASIC_ATTACK);
+      const comboCol = findColumn(result.current, SLOT_ARDELIA, NounType.COMBO_SKILL);
+      const battleCol = findColumn(result.current, SLOT_ARDELIA, NounType.BATTLE_SKILL);
       expect(basicCol).toBeDefined();
       expect(comboCol).toBeDefined();
       expect(battleCol).toBeDefined();
 
       // 1. Basic attack at frame 0 (provides FINAL_STRIKE for combo trigger)
       act(() => {
-        result.current.handleAddEvent(SLOT_ARDELIA, SKILL_COLUMNS.BASIC, 0, basicCol!.defaultEvent!);
+        result.current.handleAddEvent(SLOT_ARDELIA, NounType.BASIC_ATTACK, 0, basicCol!.defaultEvent!);
       });
 
       // 2. Combo skill at 10s (applies forced Corrosion to enemy)
       act(() => {
-        result.current.handleAddEvent(SLOT_ARDELIA, SKILL_COLUMNS.COMBO, 10 * FPS, comboCol!.defaultEvent!);
+        result.current.handleAddEvent(SLOT_ARDELIA, NounType.COMBO_SKILL, 10 * FPS, comboCol!.defaultEvent!);
       });
 
       // Verify corrosion exists on enemy before battle skill
@@ -62,7 +62,7 @@ describe('Ardelia Dolly Rush — Susceptibility Status', () => {
 
       // 3. Battle skill at 15s (should consume corrosion and apply susceptibility)
       act(() => {
-        result.current.handleAddEvent(SLOT_ARDELIA, SKILL_COLUMNS.BATTLE, 15 * FPS, battleCol!.defaultEvent!);
+        result.current.handleAddEvent(SLOT_ARDELIA, NounType.BATTLE_SKILL, 15 * FPS, battleCol!.defaultEvent!);
       });
 
       // Verify susceptibility statuses on enemy
@@ -95,12 +95,12 @@ describe('Ardelia Dolly Rush — Susceptibility Status', () => {
     it('does not apply susceptibility when enemy has no Corrosion', () => {
       const { result } = renderHook(() => useApp());
 
-      const battleCol = findColumn(result.current, SLOT_ARDELIA, SKILL_COLUMNS.BATTLE);
+      const battleCol = findColumn(result.current, SLOT_ARDELIA, NounType.BATTLE_SKILL);
       expect(battleCol).toBeDefined();
 
       // Battle skill without prior corrosion
       act(() => {
-        result.current.handleAddEvent(SLOT_ARDELIA, SKILL_COLUMNS.BATTLE, 5 * FPS, battleCol!.defaultEvent!);
+        result.current.handleAddEvent(SLOT_ARDELIA, NounType.BATTLE_SKILL, 5 * FPS, battleCol!.defaultEvent!);
       });
 
       // No susceptibility should appear
@@ -121,19 +121,19 @@ describe('Ardelia Dolly Rush — Susceptibility Status', () => {
         result.current.setInteractionMode(InteractionModeType.FREEFORM);
       });
 
-      const basicCol = findColumn(result.current, SLOT_ARDELIA, SKILL_COLUMNS.BASIC);
-      const comboCol = findColumn(result.current, SLOT_ARDELIA, SKILL_COLUMNS.COMBO);
-      const battleCol = findColumn(result.current, SLOT_ARDELIA, SKILL_COLUMNS.BATTLE);
+      const basicCol = findColumn(result.current, SLOT_ARDELIA, NounType.BASIC_ATTACK);
+      const comboCol = findColumn(result.current, SLOT_ARDELIA, NounType.COMBO_SKILL);
+      const battleCol = findColumn(result.current, SLOT_ARDELIA, NounType.BATTLE_SKILL);
 
       // Basic → Combo → Battle all in freeform
       act(() => {
-        result.current.handleAddEvent(SLOT_ARDELIA, SKILL_COLUMNS.BASIC, 0, basicCol!.defaultEvent!);
+        result.current.handleAddEvent(SLOT_ARDELIA, NounType.BASIC_ATTACK, 0, basicCol!.defaultEvent!);
       });
       act(() => {
-        result.current.handleAddEvent(SLOT_ARDELIA, SKILL_COLUMNS.COMBO, 10 * FPS, comboCol!.defaultEvent!);
+        result.current.handleAddEvent(SLOT_ARDELIA, NounType.COMBO_SKILL, 10 * FPS, comboCol!.defaultEvent!);
       });
       act(() => {
-        result.current.handleAddEvent(SLOT_ARDELIA, SKILL_COLUMNS.BATTLE, 15 * FPS, battleCol!.defaultEvent!);
+        result.current.handleAddEvent(SLOT_ARDELIA, NounType.BATTLE_SKILL, 15 * FPS, battleCol!.defaultEvent!);
       });
 
       const susceptEvents = result.current.allProcessedEvents.filter(
@@ -171,9 +171,9 @@ describe('Ardelia Dolly Rush — Susceptibility Status', () => {
         result.current.setInteractionMode(InteractionModeType.STRICT);
       });
 
-      const battleCol = findColumn(result.current, SLOT_ARDELIA, SKILL_COLUMNS.BATTLE);
+      const battleCol = findColumn(result.current, SLOT_ARDELIA, NounType.BATTLE_SKILL);
       act(() => {
-        result.current.handleAddEvent(SLOT_ARDELIA, SKILL_COLUMNS.BATTLE, 12 * FPS, battleCol!.defaultEvent!);
+        result.current.handleAddEvent(SLOT_ARDELIA, NounType.BATTLE_SKILL, 12 * FPS, battleCol!.defaultEvent!);
       });
 
       const susceptEvents = result.current.allProcessedEvents.filter(
@@ -198,18 +198,18 @@ describe('Ardelia Dolly Rush — Susceptibility Status', () => {
         });
       });
 
-      const basicCol = findColumn(result.current, SLOT_ARDELIA, SKILL_COLUMNS.BASIC);
-      const comboCol = findColumn(result.current, SLOT_ARDELIA, SKILL_COLUMNS.COMBO);
-      const battleCol = findColumn(result.current, SLOT_ARDELIA, SKILL_COLUMNS.BATTLE);
+      const basicCol = findColumn(result.current, SLOT_ARDELIA, NounType.BASIC_ATTACK);
+      const comboCol = findColumn(result.current, SLOT_ARDELIA, NounType.COMBO_SKILL);
+      const battleCol = findColumn(result.current, SLOT_ARDELIA, NounType.BATTLE_SKILL);
 
       act(() => {
-        result.current.handleAddEvent(SLOT_ARDELIA, SKILL_COLUMNS.BASIC, 0, basicCol!.defaultEvent!);
+        result.current.handleAddEvent(SLOT_ARDELIA, NounType.BASIC_ATTACK, 0, basicCol!.defaultEvent!);
       });
       act(() => {
-        result.current.handleAddEvent(SLOT_ARDELIA, SKILL_COLUMNS.COMBO, 10 * FPS, comboCol!.defaultEvent!);
+        result.current.handleAddEvent(SLOT_ARDELIA, NounType.COMBO_SKILL, 10 * FPS, comboCol!.defaultEvent!);
       });
       act(() => {
-        result.current.handleAddEvent(SLOT_ARDELIA, SKILL_COLUMNS.BATTLE, 15 * FPS, battleCol!.defaultEvent!);
+        result.current.handleAddEvent(SLOT_ARDELIA, NounType.BATTLE_SKILL, 15 * FPS, battleCol!.defaultEvent!);
       });
 
       const susceptEvents = result.current.allProcessedEvents.filter(

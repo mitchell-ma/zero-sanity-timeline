@@ -8,24 +8,25 @@
 import { Interaction, CardinalityConstraintType, NounType, DeterminerType, VerbType, AdjectiveType, type ValueNode } from '../../dsl/semantics';
 import { getSimpleValue } from '../calculation/valueResolver';
 import { TimelineEvent } from '../../consts/viewTypes';
-import { ENEMY_OWNER_ID, INFLICTION_COLUMNS, PHYSICAL_STATUS_COLUMNS, REACTION_COLUMNS, REACTION_STATUS_TO_COLUMN, SKILL_COLUMNS, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID } from '../../model/channels/index';
+import { ENEMY_OWNER_ID, INFLICTION_COLUMNS, PHYSICAL_INFLICTION_COLUMNS, PHYSICAL_STATUS_COLUMNS, PHYSICAL_STATUS_COLUMN_IDS, REACTION_COLUMNS, REACTION_STATUS_TO_COLUMN, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID, SKILL_COLUMN_ORDER } from '../../model/channels';
 import { COMMON_OWNER_ID } from '../slot/commonSlotController';
 import { activeEventsAtFrame, activeCountAtFrame } from './timelineQueries';
 
 // ── Column ID resolution ─────────────────────────────────────────────────
 
 const ELEMENT_TO_INFLICTION_COLUMN: Record<string, string> = {
-  HEAT:     INFLICTION_COLUMNS.HEAT,
-  CRYO:     INFLICTION_COLUMNS.CRYO,
-  NATURE:   INFLICTION_COLUMNS.NATURE,
-  ELECTRIC: INFLICTION_COLUMNS.ELECTRIC,
+  HEAT:       INFLICTION_COLUMNS.HEAT,
+  CRYO:       INFLICTION_COLUMNS.CRYO,
+  NATURE:     INFLICTION_COLUMNS.NATURE,
+  ELECTRIC:   INFLICTION_COLUMNS.ELECTRIC,
+  VULNERABLE: PHYSICAL_INFLICTION_COLUMNS.VULNERABLE,
 };
 
 const SKILL_TYPE_TO_COLUMN: Record<string, string> = {
-  BASIC_ATTACK:  SKILL_COLUMNS.BASIC,
-  BATTLE_SKILL:  SKILL_COLUMNS.BATTLE,
-  COMBO_SKILL:   SKILL_COLUMNS.COMBO,
-  ULTIMATE:      SKILL_COLUMNS.ULTIMATE,
+  BASIC_ATTACK:  NounType.BASIC_ATTACK,
+  BATTLE_SKILL:  NounType.BATTLE_SKILL,
+  COMBO_SKILL:   NounType.COMBO_SKILL,
+  ULTIMATE:      NounType.ULTIMATE,
 };
 
 // ── Context ──────────────────────────────────────────────────────────────
@@ -52,12 +53,14 @@ export interface ConditionContext {
   getOperatorFlatHp?: (operatorId: string, frame: number) => number;
   /** Get operator HP as percentage (0–100) at frame. */
   getOperatorPercentageHp?: (operatorId: string, frame: number) => number;
+  /** Owner ID of the parent status event (for THIS EVENT resolution in trigger contexts). */
+  parentStatusOwnerId?: string;
 }
 
 // ── Subject resolution ───────────────────────────────────────────────────
 
 function resolveOwnerId(subject: string, ctx: ConditionContext, determiner?: string): string | undefined {
-  if (subject === NounType.OPERATOR || subject === 'OPERATOR') {
+  if (subject === NounType.OPERATOR) {
     switch (determiner ?? DeterminerType.THIS) {
       case DeterminerType.THIS: return ctx.sourceOwnerId;
       case DeterminerType.ALL: return COMMON_OWNER_ID;
@@ -70,28 +73,33 @@ function resolveOwnerId(subject: string, ctx: ConditionContext, determiner?: str
     }
   }
   switch (subject) {
-    case NounType.ENEMY:
-    case 'ENEMY': return ENEMY_OWNER_ID;
+    case NounType.EVENT: return ctx.parentStatusOwnerId ?? ctx.sourceOwnerId;
+    case NounType.ENEMY: return ENEMY_OWNER_ID;
     default: return ctx.sourceOwnerId;
   }
 }
 
 // ── Column resolution for status/infliction objectId ─────────────────────
 
-function resolveColumnIds(object: string, objectId?: string, element?: string): string[] {
-  if (object === 'STATUS' && objectId) {
-    if (REACTION_STATUS_TO_COLUMN[objectId]) return [REACTION_STATUS_TO_COLUMN[objectId]];
-    return [objectId];
+function resolveColumnIds(object: string, objectId?: string, qualifier?: string): string[] {
+  if (object !== NounType.STATUS || !objectId) return [];
+
+  // Category-based: objectId is the category, qualifier narrows it
+  if (objectId === NounType.INFLICTION) {
+    if (qualifier) { const c = ELEMENT_TO_INFLICTION_COLUMN[qualifier]; return c ? [c] : []; }
+    return Object.values(INFLICTION_COLUMNS);
   }
-  if (object === 'INFLICTION') {
-    const el = objectId ?? element;
-    if (el) { const c = ELEMENT_TO_INFLICTION_COLUMN[el]; return c ? [c] : []; }
-    return [];
+  if (objectId === NounType.REACTION) {
+    if (qualifier) { const c = REACTION_STATUS_TO_COLUMN[qualifier]; return c ? [c] : []; }
+    return Object.values(REACTION_COLUMNS);
   }
-  if (object === 'REACTION' && objectId) {
-    const c = REACTION_STATUS_TO_COLUMN[objectId]; return c ? [c] : [];
+  if (objectId === AdjectiveType.PHYSICAL) {
+    if (qualifier) return [qualifier];
+    return Array.from(PHYSICAL_STATUS_COLUMN_IDS);
   }
-  return [];
+
+  // Specific status ID — qualifier doesn't affect column resolution
+  return [objectId];
 }
 
 // ── Evaluators ───────────────────────────────────────────────────────────
@@ -150,7 +158,7 @@ function evaluateHave(cond: Interaction, ctx: ConditionContext): boolean {
     return false;
   }
 
-  const columnIds = resolveColumnIds(cond.object, cond.objectId, cond.element);
+  const columnIds = resolveColumnIds(cond.object, cond.objectId, cond.objectQualifier);
   if (columnIds.length === 0) return false;
 
   const ownerId = resolveOwnerId(cond.subject, ctx, cond.subjectDeterminer);
@@ -167,6 +175,7 @@ function evaluateHave(cond: Interaction, ctx: ConditionContext): boolean {
       case CardinalityConstraintType.EXACTLY: return count === target;
       case CardinalityConstraintType.AT_LEAST: return count >= target;
       case CardinalityConstraintType.AT_MOST: return count <= target;
+      default: return count === target;
     }
   }
   return true;
@@ -188,16 +197,16 @@ function evaluateIs(cond: Interaction, ctx: ConditionContext): boolean {
     FULL_STAGGERED: FULL_STAGGER_COLUMN_ID,
   };
 
-  if (cond.object === 'ACTIVE') {
+  if (cond.object === NounType.ACTIVE) {
     // Check if the subject has any active skill events at this frame
     const ownerId = resolveOwnerId(cond.subject, ctx, cond.subjectDeterminer);
-    for (const col of Object.values(SKILL_COLUMNS)) {
+    for (const col of SKILL_COLUMN_ORDER) {
       if (activeCountAtFrame(ctx.events, col, ownerId, ctx.frame) > 0) return true;
     }
     return false;
   }
 
-  if (cond.object === 'CONTROLLED') {
+  if (cond.object === NounType.CONTROLLED_STATE) {
     // "THIS OPERATOR IS CONTROLLED" — check if this operator is the controlled operator at this frame
     const ownerId = resolveOwnerId(cond.subject, ctx, cond.subjectDeterminer);
     if (!ctx.getControlledSlotAtFrame || !ownerId) return false;
@@ -217,8 +226,8 @@ function evaluateIs(cond: Interaction, ctx: ConditionContext): boolean {
 function evaluateBecome(cond: Interaction, ctx: ConditionContext): boolean {
   // BECOME STACKS: count-based transition — current count meets cardinality AND differs from previous.
   // e.g. MF III → MF IV triggers, MF IV → MF IV does not.
-  if (cond.object === 'STATUS' || cond.object === 'STACKS') {
-    const columnIds = resolveColumnIds(cond.object === 'STACKS' ? 'STATUS' : cond.object, cond.objectId, cond.element);
+  if (cond.object === NounType.STATUS || cond.object === NounType.STACKS) {
+    const columnIds = resolveColumnIds(cond.object === NounType.STACKS ? NounType.STATUS : cond.object, cond.objectId, cond.objectQualifier);
     if (columnIds.length === 0) return false;
     const ownerId = resolveOwnerId(cond.subject, ctx, cond.subjectDeterminer);
     let countNow = 0;
@@ -253,13 +262,13 @@ function evaluateBecome(cond: Interaction, ctx: ConditionContext): boolean {
     FULL_STAGGERED: FULL_STAGGER_COLUMN_ID,
   };
 
-  if (cond.object === 'ACTIVE') {
+  if (cond.object === NounType.ACTIVE) {
     const ownerId = resolveOwnerId(cond.subject, ctx, cond.subjectDeterminer);
-    const activeNow = Object.values(SKILL_COLUMNS).some(
+    const activeNow = SKILL_COLUMN_ORDER.some(
       col => activeCountAtFrame(ctx.events, col, ownerId, ctx.frame) > 0,
     );
     if (!activeNow) return false;
-    const activeBefore = ctx.frame > 0 && Object.values(SKILL_COLUMNS).some(
+    const activeBefore = ctx.frame > 0 && SKILL_COLUMN_ORDER.some(
       col => activeCountAtFrame(ctx.events, col, ownerId, ctx.frame - 1) > 0,
     );
     return !activeBefore;
@@ -278,7 +287,7 @@ function evaluateBecome(cond: Interaction, ctx: ConditionContext): boolean {
 
 function evaluateReceive(cond: Interaction, ctx: ConditionContext): boolean {
   // RECEIVE: check if a matching status/infliction/reaction event starts at exactly this frame.
-  const columnIds = resolveColumnIds(cond.object, cond.objectId, cond.element);
+  const columnIds = resolveColumnIds(cond.object, cond.objectId, cond.objectQualifier);
   if (columnIds.length === 0) return false;
 
   const ownerId = resolveOwnerId(cond.subject, ctx, cond.subjectDeterminer);

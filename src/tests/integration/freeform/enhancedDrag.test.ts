@@ -14,8 +14,8 @@
  */
 
 import { renderHook, act } from '@testing-library/react';
+import { NounType } from '../../../dsl/semantics';
 import { useApp } from '../../../app/useApp';
-import { SKILL_COLUMNS } from '../../../model/channels';
 import { ColumnType, InteractionModeType, EnhancementType } from '../../../consts/enums';
 import { FPS } from '../../../utils/timeline';
 import type { MiniTimeline } from '../../../consts/viewTypes';
@@ -39,7 +39,7 @@ describe('Freeform enhanced/empowered drag — no ultimate required', () => {
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
     // Place empowered BS at frame 5s
-    const battleCol = findColumn(result.current, SLOT, SKILL_COLUMNS.BATTLE);
+    const battleCol = findColumn(result.current, SLOT, NounType.BATTLE_SKILL);
     const empoweredVariant = battleCol!.eventVariants?.find(
       (v) => v.enhancementType === EnhancementType.EMPOWERED,
     );
@@ -47,7 +47,7 @@ describe('Freeform enhanced/empowered drag — no ultimate required', () => {
 
     const startFrame = 5 * FPS;
     act(() => {
-      result.current.handleAddEvent(SLOT, SKILL_COLUMNS.BATTLE, startFrame, empoweredVariant!);
+      result.current.handleAddEvent(SLOT, NounType.BATTLE_SKILL, startFrame, empoweredVariant!);
     });
 
     const ev = result.current.events.find(
@@ -71,7 +71,7 @@ describe('Freeform enhanced/empowered drag — no ultimate required', () => {
 
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
-    const battleCol = findColumn(result.current, SLOT, SKILL_COLUMNS.BATTLE);
+    const battleCol = findColumn(result.current, SLOT, NounType.BATTLE_SKILL);
     const eeVariant = battleCol!.eventVariants?.find(
       (v) => v.name?.includes('ENHANCED_EMPOWERED'),
     );
@@ -79,7 +79,7 @@ describe('Freeform enhanced/empowered drag — no ultimate required', () => {
 
     const startFrame = 5 * FPS;
     act(() => {
-      result.current.handleAddEvent(SLOT, SKILL_COLUMNS.BATTLE, startFrame, eeVariant!);
+      result.current.handleAddEvent(SLOT, NounType.BATTLE_SKILL, startFrame, eeVariant!);
     });
 
     const ev = result.current.events.find(
@@ -101,7 +101,7 @@ describe('Freeform enhanced/empowered drag — no ultimate required', () => {
     const { result } = renderHook(() => useApp());
 
     // Stay in strict mode — place enhanced BS without an ultimate
-    const battleCol = findColumn(result.current, SLOT, SKILL_COLUMNS.BATTLE);
+    const battleCol = findColumn(result.current, SLOT, NounType.BATTLE_SKILL);
     const enhancedVariant = battleCol!.eventVariants?.find(
       (v) => v.enhancementType === EnhancementType.ENHANCED && !v.name?.includes('EMPOWERED'),
     );
@@ -110,14 +110,14 @@ describe('Freeform enhanced/empowered drag — no ultimate required', () => {
 
     const startFrame = 5 * FPS;
     act(() => {
-      result.current.handleAddEvent(SLOT, SKILL_COLUMNS.BATTLE, startFrame, enhancedVariant!);
+      result.current.handleAddEvent(SLOT, NounType.BATTLE_SKILL, startFrame, enhancedVariant!);
     });
 
     // Switch back to strict mode
     act(() => { result.current.setInteractionMode(InteractionModeType.STRICT); });
 
     const ev = result.current.events.find(
-      (e) => e.enhancementType === EnhancementType.ENHANCED && e.columnId === SKILL_COLUMNS.BATTLE,
+      (e) => e.enhancementType === EnhancementType.ENHANCED && e.columnId === NounType.BATTLE_SKILL,
     );
     expect(ev).toBeDefined();
 

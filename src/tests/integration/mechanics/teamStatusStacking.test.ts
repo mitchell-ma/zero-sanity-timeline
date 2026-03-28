@@ -16,8 +16,8 @@
  */
 
 import { renderHook, act } from '@testing-library/react';
+import { NounType } from '../../../dsl/semantics';
 import { useApp } from '../../../app/useApp';
-import { SKILL_COLUMNS } from '../../../model/channels';
 import { ColumnType, EventStatusType, InteractionModeType, StatusType } from '../../../consts/enums';
 import { FPS } from '../../../utils/timeline';
 import { eventDuration } from '../../../consts/viewTypes';
@@ -95,18 +95,18 @@ describe('RESET stacking interaction', () => {
   it('derived RESET status clamps earlier instance (Overclocked Moment AMP via Antal Ultimate)', () => {
     const { result } = renderHook(() => useApp());
 
-    const ultCol = findColumn(result.current, SLOT_ANTAL, SKILL_COLUMNS.ULTIMATE);
+    const ultCol = findColumn(result.current, SLOT_ANTAL, NounType.ULTIMATE);
     if (!ultCol) return; // skip if Antal doesn't have ultimate configured
 
     // Place two ultimates close together — the second's AMP (12s) should overlap the first's
     act(() => {
       result.current.handleAddEvent(
-        SLOT_ANTAL, SKILL_COLUMNS.ULTIMATE, 1 * FPS, ultCol.defaultEvent!,
+        SLOT_ANTAL, NounType.ULTIMATE, 1 * FPS, ultCol.defaultEvent!,
       );
     });
     act(() => {
       result.current.handleAddEvent(
-        SLOT_ANTAL, SKILL_COLUMNS.ULTIMATE, 5 * FPS, ultCol.defaultEvent!,
+        SLOT_ANTAL, NounType.ULTIMATE, 5 * FPS, ultCol.defaultEvent!,
       );
     });
 

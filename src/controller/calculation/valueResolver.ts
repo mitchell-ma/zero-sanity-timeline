@@ -5,12 +5,11 @@
  * All dependencies are static loadout values — no runtime state.
  */
 import {
-  ValueNode, ValueOperation, DeterminerType,
+  NounType, ValueNode, ValueOperation, DeterminerType,
   isValueLiteral, isValueVariable, isValueStat, isValueExpression,
 } from '../../dsl/semantics';
 import type { ValueVariable as ValueVariableType, ValueStat as ValueStatType } from '../../dsl/semantics';
 import type { LoadoutProperties } from '../../view/InformationPane';
-import { SKILL_COLUMNS } from '../../model/channels';
 
 // ── Resolution context ──────────────────────────────────────────────────────
 
@@ -147,10 +146,10 @@ export function getSimpleValue(node: ValueNode | undefined): number | undefined 
 
 /** Map skill column ID to the corresponding LoadoutProperties.skills field. */
 const SKILL_COLUMN_LEVEL_KEY: Record<string, keyof LoadoutProperties['skills']> = {
-  [SKILL_COLUMNS.BASIC]:    'basicAttackLevel',
-  [SKILL_COLUMNS.BATTLE]:   'battleSkillLevel',
-  [SKILL_COLUMNS.COMBO]:    'comboSkillLevel',
-  [SKILL_COLUMNS.ULTIMATE]: 'ultimateLevel',
+  [NounType.BASIC_ATTACK]:    'basicAttackLevel',
+  [NounType.BATTLE_SKILL]:   'battleSkillLevel',
+  [NounType.COMBO_SKILL]:    'comboSkillLevel',
+  [NounType.ULTIMATE]: 'ultimateLevel',
 };
 
 /** Talent slot key — corresponds to the operator JSON `talents.one` / `talents.two` key-map. */

@@ -10,8 +10,9 @@
  */
 
 import { renderHook, act } from '@testing-library/react';
+import { NounType } from '../../../../dsl/semantics';
 import { useApp } from '../../../../app/useApp';
-import { SKILL_COLUMNS, REACTION_COLUMNS, ENEMY_OWNER_ID } from '../../../../model/channels';
+import { REACTION_COLUMNS, ENEMY_OWNER_ID } from '../../../../model/channels';
 import { ColumnType } from '../../../../consts/enums';
 import { FPS } from '../../../../utils/timeline';
 import type { MiniTimeline } from '../../../../consts/viewTypes';
@@ -31,21 +32,21 @@ describe('Ardelia Dolly Rush — Corrosion consumption', () => {
   it('battle skill consumes corrosion when enemy has it', () => {
     const { result } = renderHook(() => useApp());
 
-    const basicCol = findColumn(result.current, SLOT_ARDELIA, SKILL_COLUMNS.BASIC);
-    const comboCol = findColumn(result.current, SLOT_ARDELIA, SKILL_COLUMNS.COMBO);
-    const battleCol = findColumn(result.current, SLOT_ARDELIA, SKILL_COLUMNS.BATTLE);
+    const basicCol = findColumn(result.current, SLOT_ARDELIA, NounType.BASIC_ATTACK);
+    const comboCol = findColumn(result.current, SLOT_ARDELIA, NounType.COMBO_SKILL);
+    const battleCol = findColumn(result.current, SLOT_ARDELIA, NounType.BATTLE_SKILL);
     expect(basicCol).toBeDefined();
     expect(comboCol).toBeDefined();
     expect(battleCol).toBeDefined();
 
     // 1. Basic attack at frame 0 (provides FINAL_STRIKE for combo trigger)
     act(() => {
-      result.current.handleAddEvent(SLOT_ARDELIA, SKILL_COLUMNS.BASIC, 0, basicCol!.defaultEvent!);
+      result.current.handleAddEvent(SLOT_ARDELIA, NounType.BASIC_ATTACK, 0, basicCol!.defaultEvent!);
     });
 
     // 2. Combo skill at 10s (applies forced Corrosion to enemy)
     act(() => {
-      result.current.handleAddEvent(SLOT_ARDELIA, SKILL_COLUMNS.COMBO, 10 * FPS, comboCol!.defaultEvent!);
+      result.current.handleAddEvent(SLOT_ARDELIA, NounType.COMBO_SKILL, 10 * FPS, comboCol!.defaultEvent!);
     });
 
     // Verify corrosion exists on enemy
@@ -56,7 +57,7 @@ describe('Ardelia Dolly Rush — Corrosion consumption', () => {
 
     // 3. Battle skill at 15s (should consume corrosion)
     act(() => {
-      result.current.handleAddEvent(SLOT_ARDELIA, SKILL_COLUMNS.BATTLE, 15 * FPS, battleCol!.defaultEvent!);
+      result.current.handleAddEvent(SLOT_ARDELIA, NounType.BATTLE_SKILL, 15 * FPS, battleCol!.defaultEvent!);
     });
 
     // The battle skill frame hits at offset 1.07s = frame 15*120 + 128 = 1928

@@ -1,6 +1,7 @@
 import { TimelineEvent, getAnimationDuration } from '../../consts/viewTypes';
+import { NounType } from '../../dsl/semantics';
 import { CombatSkillType, TimeDependency } from '../../consts/enums';
-import { OPERATOR_COLUMNS, SKILL_COLUMNS } from '../../model/channels';
+import { OPERATOR_COLUMNS } from '../../model/channels';
 import type { TimeStopRange } from './resourceTimeline';
 
 // ── Time-stop region types ──────────────────────────────────────────────────
@@ -14,7 +15,7 @@ export interface TimeStopRegion {
 export function isTimeStopEvent(ev: TimelineEvent): boolean {
   const anim = getAnimationDuration(ev);
   if (anim <= 0) return false;
-  return ev.columnId === SKILL_COLUMNS.ULTIMATE || ev.columnId === SKILL_COLUMNS.COMBO ||
+  return ev.columnId === NounType.ULTIMATE || ev.columnId === NounType.COMBO_SKILL ||
     (ev.columnId === OPERATOR_COLUMNS.INPUT && !!ev.isPerfectDodge);
 }
 
@@ -287,19 +288,19 @@ export function validateTimeStopStarts(
         continue;
       }
 
-      const sourceIsUltimate = source.columnId === SKILL_COLUMNS.ULTIMATE;
+      const sourceIsUltimate = source.columnId === NounType.ULTIMATE;
       const sourceIsDodge = source.columnId === OPERATOR_COLUMNS.INPUT && !!source.isPerfectDodge;
 
       // All time-stops can start within dodge's time-stop
       if (sourceIsDodge) continue;
 
       // Combo cannot start during ultimate animation time-stop
-      if (ev.columnId === SKILL_COLUMNS.COMBO && sourceIsUltimate) {
+      if (ev.columnId === NounType.COMBO_SKILL && sourceIsUltimate) {
         warnings.push(`Combo skill cannot start during ultimate animation time-stop`);
       }
 
       // Ultimate cannot start during another ultimate's animation time-stop
-      if (ev.columnId === SKILL_COLUMNS.ULTIMATE && sourceIsUltimate) {
+      if (ev.columnId === NounType.ULTIMATE && sourceIsUltimate) {
         warnings.push(`Ultimate cannot start during another ultimate's animation time-stop`);
       }
 

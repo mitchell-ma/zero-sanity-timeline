@@ -202,7 +202,8 @@
                   "subject": "ENEMY",
                   "verb": "HAVE",
                   "negated": true,
-                  "object": "VULNERABILITY"
+                  "object": "STATUS",
+                  "objectId": "VULNERABILITY"
                 }
               ],
               "effects": [

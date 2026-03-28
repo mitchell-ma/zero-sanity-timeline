@@ -2,6 +2,8 @@
  * Shared types, constants, and configuration for the event queue pipeline.
  */
 import type { TimelineEvent, EventFrameMarker } from '../../consts/viewTypes';
+import { QueueFrameType } from '../../consts/enums';
+export { QueueFrameType };
 
 // ── Constants ──────────────────────────────────────────────────────────────
 
@@ -12,17 +14,17 @@ export const MAX_INFLICTION_STACKS = 4;
 /** Priority values — lower fires first at the same frame. */
 export const PRIORITY = {
   /** Unified frame processing — all frame marker effects in config order. */
-  PROCESS_FRAME: 5,
+  [QueueFrameType.PROCESS_FRAME]: 5,
   /** Engine triggers seeded reactively by PROCESS_FRAME or lifecycle clauses. */
-  ENGINE_TRIGGER: 22,
+  [QueueFrameType.ENGINE_TRIGGER]: 22,
   /** Combo trigger resolution — fires after engine triggers so absorption resolves first. */
-  COMBO_RESOLVE: 25,
+  [QueueFrameType.COMBO_RESOLVE]: 25,
 } as const;
 
 export interface QueueFrame {
   frame: number;
   priority: number;
-  type: 'PROCESS_FRAME' | 'ENGINE_TRIGGER' | 'COMBO_RESOLVE';
+  type: QueueFrameType;
   /** Event UID template (for infliction entries). */
   uid?: string;
   statusId: string;

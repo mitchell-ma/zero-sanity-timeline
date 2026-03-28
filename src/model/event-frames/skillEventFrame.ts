@@ -80,4 +80,31 @@ export abstract class SkillEventFrame {
 
   /** Whether this frame deals stagger damage. */
   hasStagger(): boolean { return this.getStagger() > 0; }
+
+  /** Convert to a view-layer EventFrameMarker. */
+  toMarker(fps: number): import('../../consts/viewTypes').EventFrameMarker {
+    const marker: import('../../consts/viewTypes').EventFrameMarker = {
+      offsetFrame: Math.round(this.getOffsetSeconds() * fps),
+      skillPointRecovery: this.getSkillPointRecovery() || undefined,
+      stagger: this.getStagger() || undefined,
+    };
+    const dmgEl = this.getDamageElement();
+    if (dmgEl) marker.damageElement = dmgEl;
+    if (this.getDuplicateTriggerSource()) marker.duplicateTriggerSource = true;
+    const clauses = this.getClauses();
+    if (clauses.length > 0) {
+      marker.clauses = clauses as FrameClausePredicate[];
+      const ct = this.getClauseType();
+      if (ct) marker.clauseType = ct;
+    }
+    const dd = this.getDealDamage();
+    if (dd) marker.dealDamage = dd;
+    const gg = this.getGaugeGain();
+    if (gg) marker.gaugeGain = gg;
+    const deps = this.getDependencyTypes();
+    if (deps.length > 0) marker.dependencyTypes = [...deps];
+    const fts = this.getFrameTypes();
+    if (fts.length > 0) marker.frameTypes = [...fts];
+    return marker;
+  }
 }

@@ -1,5 +1,5 @@
 import { TimelineEvent } from "../../consts/viewTypes";
-import { SKILL_COLUMNS } from "../../model/channels";
+import { NounType } from '../../dsl/semantics';
 
 // ── SP Return Summary ────────────────────────────────────────────────────────
 
@@ -17,7 +17,7 @@ export function computeSpReturnSummary(
   consumptionRecord?: { naturalConsumed: number; returnedConsumed: number },
 ): SpReturnSummary {
   let totalSpReturn = 0;
-  if (event.columnId === SKILL_COLUMNS.BATTLE && event.segments) {
+  if (event.columnId === NounType.BATTLE_SKILL && event.segments) {
     for (const seg of event.segments) {
       if (!seg.frames) continue;
       for (const f of seg.frames) {

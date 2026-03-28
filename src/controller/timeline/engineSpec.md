@@ -185,7 +185,7 @@ Read-only interface backed by DerivedEventController. Pre-filters events by colu
 | `getLinkBonus(frame, skillType)` | Link damage bonus by stack count |
 | `getAmpBonus(frame)` | Sum of active arts amp effects |
 | `getCorrosionResistanceReduction(frame)` | Max active corrosion resistance reduction |
-| `getIgnoredResistance(frame, element, attacker)` | Scorching Heart ignored resistance |
+| `getIgnoredResistance(frame, element, attacker)` | Ignored resistance from active status effects |
 | `getWeakenEffects(frame)` | Active weaken fractions |
 | `getDmgReductionEffects(frame)` | Active damage reduction fractions |
 | `getProtectionEffects(frame)` | Active protection fractions |

@@ -465,29 +465,12 @@ export function getAllInflictionLabels(): Record<string, string> {
 
 let _statusByIdCache: Map<string, OperatorStatus> | null = null;
 
-/** Maps config IDs to column IDs for built-in statuses (e.g. HEAT_INFLICTION → heatInfliction). */
-const CONFIG_TO_COLUMN_ALIASES: Record<string, string> = {
-  HEAT_INFLICTION: 'heatInfliction',
-  CRYO_INFLICTION: 'cryoInfliction',
-  NATURE_INFLICTION: 'natureInfliction',
-  ELECTRIC_INFLICTION: 'electricInfliction',
-  VULNERABLE: 'vulnerableInfliction',
-  COMBUSTION: 'combustion',
-  SOLIDIFICATION: 'solidification',
-  CORROSION: 'corrosion',
-  ELECTRIFICATION: 'electrification',
-  SHATTER: 'shatter',
-};
-
 function buildStatusByIdCache() {
   if (_statusByIdCache) return _statusByIdCache;
   const cache = new Map<string, OperatorStatus>();
   for (const status of getAllOperatorStatuses()) {
     if (status.id && !cache.has(status.id)) {
       cache.set(status.id, status);
-      // Also index by column ID alias so ColumnRegistry can look up by column ID
-      const alias = CONFIG_TO_COLUMN_ALIASES[status.id];
-      if (alias && !cache.has(alias)) cache.set(alias, status);
     }
   }
   _statusByIdCache = cache;

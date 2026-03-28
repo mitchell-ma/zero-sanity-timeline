@@ -15,13 +15,16 @@
  */
 
 import { renderHook, act } from '@testing-library/react';
+import { NounType } from '../../../../dsl/semantics';
 import { useApp } from '../../../../app/useApp';
-import { SKILL_COLUMNS, OPERATOR_COLUMNS, INFLICTION_COLUMNS, ENEMY_OWNER_ID, USER_ID } from '../../../../model/channels';
+import { INFLICTION_COLUMNS, ENEMY_OWNER_ID, USER_ID } from '../../../../model/channels';
 import { ColumnType, EnhancementType, EventStatusType, InteractionModeType } from '../../../../consts/enums';
 import { FPS, TOTAL_FRAMES } from '../../../../utils/timeline';
 import { eventDuration } from '../../../../consts/viewTypes';
 import type { MiniTimeline } from '../../../../consts/viewTypes';
+import { computeTimelinePresentation } from '../../../../controller/timeline/eventPresentationController';
 
+const MELTING_FLAME_ID = 'MELTING_FLAME';
 const SLOT_LAEVATAIN = 'slot-0';
 
 beforeEach(() => {
@@ -38,8 +41,8 @@ function findColumn(app: ReturnType<typeof useApp>, slotId: string, columnId: st
 }
 
 function getMfDefault(app: ReturnType<typeof useApp>) {
-  const statusCol = findColumn(app, SLOT_LAEVATAIN, OPERATOR_COLUMNS.MELTING_FLAME);
-  const mfMicro = statusCol!.microColumns?.find((mc) => mc.id === OPERATOR_COLUMNS.MELTING_FLAME);
+  const statusCol = findColumn(app, SLOT_LAEVATAIN, MELTING_FLAME_ID);
+  const mfMicro = statusCol!.microColumns?.find((mc) => mc.id === MELTING_FLAME_ID);
   return mfMicro!.defaultEvent!;
 }
 
@@ -56,12 +59,12 @@ function buildMultiSegmentBasic(defaultEvent: NonNullable<MiniTimeline['defaultE
 }
 
 function getEmpoweredVariant(app: ReturnType<typeof useApp>) {
-  const battleCol = findColumn(app, SLOT_LAEVATAIN, SKILL_COLUMNS.BATTLE);
+  const battleCol = findColumn(app, SLOT_LAEVATAIN, NounType.BATTLE_SKILL);
   return battleCol!.eventVariants?.find((v) => v.enhancementType === EnhancementType.EMPOWERED)!;
 }
 
 function getEnhancedVariant(app: ReturnType<typeof useApp>) {
-  const battleCol = findColumn(app, SLOT_LAEVATAIN, SKILL_COLUMNS.BATTLE);
+  const battleCol = findColumn(app, SLOT_LAEVATAIN, NounType.BATTLE_SKILL);
   return battleCol!.eventVariants?.find((v) => v.enhancementType === EnhancementType.ENHANCED)!;
 }
 
@@ -86,14 +89,14 @@ function placeMfStacks(app: ReturnType<typeof useApp>, count: number, startFrame
   const mfDefault = getMfDefault(app);
   for (let i = 0; i < count; i++) {
     act(() => {
-      app.handleAddEvent(SLOT_LAEVATAIN, OPERATOR_COLUMNS.MELTING_FLAME, startFrame + i * FPS, mfDefault);
+      app.handleAddEvent(SLOT_LAEVATAIN, MELTING_FLAME_ID, startFrame + i * FPS, mfDefault);
     });
   }
 }
 
 function getMfEvents(app: ReturnType<typeof useApp>) {
   return app.allProcessedEvents.filter(
-    (ev) => ev.columnId === OPERATOR_COLUMNS.MELTING_FLAME && ev.ownerId === SLOT_LAEVATAIN,
+    (ev) => ev.columnId === MELTING_FLAME_ID && ev.ownerId === SLOT_LAEVATAIN,
   );
 }
 
@@ -119,12 +122,12 @@ describe('Freeform events — engine interactions', () => {
     expect(getUnconsumedMf(result.current)).toHaveLength(3);
 
     // Add 2 battle skills in freeform — each generates 1 MF via engine
-    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, SKILL_COLUMNS.BATTLE);
+    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE_SKILL);
     act(() => {
-      result.current.handleAddEvent(SLOT_LAEVATAIN, SKILL_COLUMNS.BATTLE, 10 * FPS, battleCol!.defaultEvent!);
+      result.current.handleAddEvent(SLOT_LAEVATAIN, NounType.BATTLE_SKILL, 10 * FPS, battleCol!.defaultEvent!);
     });
     act(() => {
-      result.current.handleAddEvent(SLOT_LAEVATAIN, SKILL_COLUMNS.BATTLE, 20 * FPS, battleCol!.defaultEvent!);
+      result.current.handleAddEvent(SLOT_LAEVATAIN, NounType.BATTLE_SKILL, 20 * FPS, battleCol!.defaultEvent!);
     });
 
     // Only 1 engine MF should be created (3 freeform + 1 engine = 4 cap)
@@ -140,10 +143,10 @@ describe('Freeform events — engine interactions', () => {
     placeHeatInflictions(result.current, 3, 1 * FPS);
 
     // Add multi-segment basic attack to trigger FINAL_STRIKE absorption
-    const basicCol = findColumn(result.current, SLOT_LAEVATAIN, SKILL_COLUMNS.BASIC);
+    const basicCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BASIC_ATTACK);
     const multiSegBasic = buildMultiSegmentBasic(basicCol!.defaultEvent!);
     act(() => {
-      result.current.handleAddEvent(SLOT_LAEVATAIN, SKILL_COLUMNS.BASIC, 3 * FPS, multiSegBasic);
+      result.current.handleAddEvent(SLOT_LAEVATAIN, NounType.BASIC_ATTACK, 3 * FPS, multiSegBasic);
     });
 
     // Freeform heat inflictions consumed by engine
@@ -164,9 +167,9 @@ describe('Freeform events — engine interactions', () => {
 
     // Place 1 freeform MF and 1 battle skill (engine-derived MF)
     placeMfStacks(result.current, 1, 2 * FPS);
-    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, SKILL_COLUMNS.BATTLE);
+    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE_SKILL);
     act(() => {
-      result.current.handleAddEvent(SLOT_LAEVATAIN, SKILL_COLUMNS.BATTLE, 10 * FPS, battleCol!.defaultEvent!);
+      result.current.handleAddEvent(SLOT_LAEVATAIN, NounType.BATTLE_SKILL, 10 * FPS, battleCol!.defaultEvent!);
     });
 
     const mfAll = getMfEvents(result.current);
@@ -188,13 +191,13 @@ describe('Strict events — engine-driven chains', () => {
     const { result } = renderHook(() => useApp());
     act(() => { result.current.setInteractionMode(InteractionModeType.STRICT); });
 
-    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, SKILL_COLUMNS.BATTLE);
+    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE_SKILL);
 
     // Build up 4 MF stacks via 4 battle skills
     for (let i = 0; i < 4; i++) {
       act(() => {
         result.current.handleAddEvent(
-          SLOT_LAEVATAIN, SKILL_COLUMNS.BATTLE, (2 + i * 10) * FPS, battleCol!.defaultEvent!,
+          SLOT_LAEVATAIN, NounType.BATTLE_SKILL, (2 + i * 10) * FPS, battleCol!.defaultEvent!,
         );
       });
     }
@@ -203,7 +206,7 @@ describe('Strict events — engine-driven chains', () => {
     // Empowered BS consumes all 4 engine-derived MF stacks
     act(() => {
       result.current.handleAddEvent(
-        SLOT_LAEVATAIN, SKILL_COLUMNS.BATTLE, 50 * FPS, getEmpoweredVariant(result.current),
+        SLOT_LAEVATAIN, NounType.BATTLE_SKILL, 50 * FPS, getEmpoweredVariant(result.current),
       );
     });
     expect(getConsumedMf(result.current)).toHaveLength(4);
@@ -214,14 +217,14 @@ describe('Strict events — engine-driven chains', () => {
     act(() => { result.current.setInteractionMode(InteractionModeType.STRICT); });
 
     // Place ultimate
-    const ultCol = findColumn(result.current, SLOT_LAEVATAIN, SKILL_COLUMNS.ULTIMATE);
+    const ultCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.ULTIMATE);
     act(() => {
-      result.current.handleAddEvent(SLOT_LAEVATAIN, SKILL_COLUMNS.ULTIMATE, 5 * FPS, ultCol!.defaultEvent!);
+      result.current.handleAddEvent(SLOT_LAEVATAIN, NounType.ULTIMATE, 5 * FPS, ultCol!.defaultEvent!);
     });
 
     // Find active phase start
     const ultEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === SKILL_COLUMNS.ULTIMATE,
+      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === NounType.ULTIMATE,
     );
     const ultSegs = ultEvents[0].segments;
     const activationEnd = ultEvents[0].startFrame + ultSegs[0].properties.duration + ultSegs[1].properties.duration;
@@ -229,13 +232,13 @@ describe('Strict events — engine-driven chains', () => {
     // Place enhanced BS during active phase
     act(() => {
       result.current.handleAddEvent(
-        SLOT_LAEVATAIN, SKILL_COLUMNS.BATTLE, activationEnd + FPS, getEnhancedVariant(result.current),
+        SLOT_LAEVATAIN, NounType.BATTLE_SKILL, activationEnd + FPS, getEnhancedVariant(result.current),
       );
     });
 
     // Enhanced BS is accepted and has damage frames (unlike normal BS, it does not generate MF)
     const battles = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === SKILL_COLUMNS.BATTLE,
+      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === NounType.BATTLE_SKILL,
     );
     expect(battles).toHaveLength(1);
     expect(battles[0].enhancementType).toBe(EnhancementType.ENHANCED);
@@ -250,34 +253,34 @@ describe('Strict events — engine-driven chains', () => {
     // Try enhanced BS without ultimate — rejected
     act(() => {
       result.current.handleAddEvent(
-        SLOT_LAEVATAIN, SKILL_COLUMNS.BATTLE, 5 * FPS, getEnhancedVariant(result.current),
+        SLOT_LAEVATAIN, NounType.BATTLE_SKILL, 5 * FPS, getEnhancedVariant(result.current),
       );
     });
     const battlesBefore = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === SKILL_COLUMNS.BATTLE,
+      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === NounType.BATTLE_SKILL,
     );
     expect(battlesBefore).toHaveLength(0);
 
     // Place ultimate, then enhanced BS during active phase — accepted
-    const ultCol = findColumn(result.current, SLOT_LAEVATAIN, SKILL_COLUMNS.ULTIMATE);
+    const ultCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.ULTIMATE);
     act(() => {
-      result.current.handleAddEvent(SLOT_LAEVATAIN, SKILL_COLUMNS.ULTIMATE, 5 * FPS, ultCol!.defaultEvent!);
+      result.current.handleAddEvent(SLOT_LAEVATAIN, NounType.ULTIMATE, 5 * FPS, ultCol!.defaultEvent!);
     });
 
     const ultEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === SKILL_COLUMNS.ULTIMATE,
+      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === NounType.ULTIMATE,
     );
     const ultSegs = ultEvents[0].segments;
     const activationEnd = ultEvents[0].startFrame + ultSegs[0].properties.duration + ultSegs[1].properties.duration;
 
     act(() => {
       result.current.handleAddEvent(
-        SLOT_LAEVATAIN, SKILL_COLUMNS.BATTLE, activationEnd + FPS, getEnhancedVariant(result.current),
+        SLOT_LAEVATAIN, NounType.BATTLE_SKILL, activationEnd + FPS, getEnhancedVariant(result.current),
       );
     });
 
     const battlesAfter = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === SKILL_COLUMNS.BATTLE,
+      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === NounType.BATTLE_SKILL,
     );
     expect(battlesAfter).toHaveLength(1);
     expect(battlesAfter[0].enhancementType).toBe(EnhancementType.ENHANCED);
@@ -287,19 +290,19 @@ describe('Strict events — engine-driven chains', () => {
     const { result } = renderHook(() => useApp());
     act(() => { result.current.setInteractionMode(InteractionModeType.STRICT); });
 
-    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, SKILL_COLUMNS.BATTLE);
+    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE_SKILL);
 
     // Add battle skill, then try to overlap — rejected
     act(() => {
-      result.current.handleAddEvent(SLOT_LAEVATAIN, SKILL_COLUMNS.BATTLE, 5 * FPS, battleCol!.defaultEvent!);
+      result.current.handleAddEvent(SLOT_LAEVATAIN, NounType.BATTLE_SKILL, 5 * FPS, battleCol!.defaultEvent!);
     });
     act(() => {
-      result.current.handleAddEvent(SLOT_LAEVATAIN, SKILL_COLUMNS.BATTLE, 5 * FPS, battleCol!.defaultEvent!);
+      result.current.handleAddEvent(SLOT_LAEVATAIN, NounType.BATTLE_SKILL, 5 * FPS, battleCol!.defaultEvent!);
     });
 
     // Only 1 battle skill → only 1 MF
     const battles = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === SKILL_COLUMNS.BATTLE,
+      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === NounType.BATTLE_SKILL,
     );
     expect(battles).toHaveLength(1);
     expect(getMfEvents(result.current)).toHaveLength(1);
@@ -323,7 +326,7 @@ describe('Mixed freeform + strict — cross-mode interactions', () => {
     act(() => { result.current.setInteractionMode(InteractionModeType.STRICT); });
     act(() => {
       result.current.handleAddEvent(
-        SLOT_LAEVATAIN, SKILL_COLUMNS.BATTLE, 10 * FPS, getEmpoweredVariant(result.current),
+        SLOT_LAEVATAIN, NounType.BATTLE_SKILL, 10 * FPS, getEmpoweredVariant(result.current),
       );
     });
 
@@ -335,11 +338,11 @@ describe('Mixed freeform + strict — cross-mode interactions', () => {
     act(() => { result.current.setInteractionMode(InteractionModeType.STRICT); });
 
     // Build 4 MF stacks via strict battle skills
-    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, SKILL_COLUMNS.BATTLE);
+    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE_SKILL);
     for (let i = 0; i < 4; i++) {
       act(() => {
         result.current.handleAddEvent(
-          SLOT_LAEVATAIN, SKILL_COLUMNS.BATTLE, (2 + i * 10) * FPS, battleCol!.defaultEvent!,
+          SLOT_LAEVATAIN, NounType.BATTLE_SKILL, (2 + i * 10) * FPS, battleCol!.defaultEvent!,
         );
       });
     }
@@ -349,7 +352,7 @@ describe('Mixed freeform + strict — cross-mode interactions', () => {
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
     act(() => {
       result.current.handleAddEvent(
-        SLOT_LAEVATAIN, SKILL_COLUMNS.BATTLE, 50 * FPS, getEmpoweredVariant(result.current),
+        SLOT_LAEVATAIN, NounType.BATTLE_SKILL, 50 * FPS, getEmpoweredVariant(result.current),
       );
     });
 
@@ -361,13 +364,13 @@ describe('Mixed freeform + strict — cross-mode interactions', () => {
 
     // Place ultimate in freeform
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
-    const ultCol = findColumn(result.current, SLOT_LAEVATAIN, SKILL_COLUMNS.ULTIMATE);
+    const ultCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.ULTIMATE);
     act(() => {
-      result.current.handleAddEvent(SLOT_LAEVATAIN, SKILL_COLUMNS.ULTIMATE, 5 * FPS, ultCol!.defaultEvent!);
+      result.current.handleAddEvent(SLOT_LAEVATAIN, NounType.ULTIMATE, 5 * FPS, ultCol!.defaultEvent!);
     });
 
     const ultEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === SKILL_COLUMNS.ULTIMATE,
+      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === NounType.ULTIMATE,
     );
     const ultSegs = ultEvents[0].segments;
     const activationEnd = ultEvents[0].startFrame + ultSegs[0].properties.duration + ultSegs[1].properties.duration;
@@ -376,12 +379,12 @@ describe('Mixed freeform + strict — cross-mode interactions', () => {
     act(() => { result.current.setInteractionMode(InteractionModeType.STRICT); });
     act(() => {
       result.current.handleAddEvent(
-        SLOT_LAEVATAIN, SKILL_COLUMNS.BATTLE, activationEnd + FPS, getEnhancedVariant(result.current),
+        SLOT_LAEVATAIN, NounType.BATTLE_SKILL, activationEnd + FPS, getEnhancedVariant(result.current),
       );
     });
 
     const battles = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === SKILL_COLUMNS.BATTLE,
+      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === NounType.BATTLE_SKILL,
     );
     expect(battles).toHaveLength(1);
     expect(battles[0].enhancementType).toBe(EnhancementType.ENHANCED);
@@ -396,10 +399,10 @@ describe('Mixed freeform + strict — cross-mode interactions', () => {
 
     // Switch to strict — multi-segment basic absorbs the freeform heat
     act(() => { result.current.setInteractionMode(InteractionModeType.STRICT); });
-    const basicCol = findColumn(result.current, SLOT_LAEVATAIN, SKILL_COLUMNS.BASIC);
+    const basicCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BASIC_ATTACK);
     const multiSegBasic = buildMultiSegmentBasic(basicCol!.defaultEvent!);
     act(() => {
-      result.current.handleAddEvent(SLOT_LAEVATAIN, SKILL_COLUMNS.BASIC, 3 * FPS, multiSegBasic);
+      result.current.handleAddEvent(SLOT_LAEVATAIN, NounType.BASIC_ATTACK, 3 * FPS, multiSegBasic);
     });
 
     // Freeform heat consumed, MF generated at 1:1
@@ -421,11 +424,11 @@ describe('Mixed freeform + strict — cross-mode interactions', () => {
 
     // Add 3 strict battle skills — only the first 2 should produce MF (cap = 4)
     act(() => { result.current.setInteractionMode(InteractionModeType.STRICT); });
-    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, SKILL_COLUMNS.BATTLE);
+    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE_SKILL);
     for (let i = 0; i < 3; i++) {
       act(() => {
         result.current.handleAddEvent(
-          SLOT_LAEVATAIN, SKILL_COLUMNS.BATTLE, (10 + i * 10) * FPS, battleCol!.defaultEvent!,
+          SLOT_LAEVATAIN, NounType.BATTLE_SKILL, (10 + i * 10) * FPS, battleCol!.defaultEvent!,
         );
       });
     }
@@ -444,10 +447,10 @@ describe('Mixed freeform + strict — cross-mode interactions', () => {
 
     // Switch to strict — basic attack absorbs heat → generates 2 more MF → cap
     act(() => { result.current.setInteractionMode(InteractionModeType.STRICT); });
-    const basicCol = findColumn(result.current, SLOT_LAEVATAIN, SKILL_COLUMNS.BASIC);
+    const basicCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BASIC_ATTACK);
     const multiSegBasic = buildMultiSegmentBasic(basicCol!.defaultEvent!);
     act(() => {
-      result.current.handleAddEvent(SLOT_LAEVATAIN, SKILL_COLUMNS.BASIC, 5 * FPS, multiSegBasic);
+      result.current.handleAddEvent(SLOT_LAEVATAIN, NounType.BASIC_ATTACK, 5 * FPS, multiSegBasic);
     });
 
     // 2 freeform MF + 2 from absorption = 4 total (cap)
@@ -460,5 +463,53 @@ describe('Mixed freeform + strict — cross-mode interactions', () => {
         && ev.eventStatus === EventStatusType.CONSUMED,
     );
     expect(heatsConsumed).toHaveLength(2);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// D. Freeform infliction default durations from config
+// ═══════════════════════════════════════════════════════════════════════════════
+
+describe('Freeform infliction default durations', () => {
+  it('freeform nature infliction has 20s duration from config — verified via view model', () => {
+    const { result } = renderHook(() => useApp());
+
+    // Find the enemy status column that contains nature infliction
+    const enemyStatusCol = result.current.columns.find(
+      (c): c is MiniTimeline =>
+        c.type === ColumnType.MINI_TIMELINE &&
+        c.ownerId === ENEMY_OWNER_ID &&
+        (c.matchColumnIds?.includes(INFLICTION_COLUMNS.NATURE) ?? false),
+    );
+    expect(enemyStatusCol).toBeDefined();
+
+    // Micro-column default should have config-driven duration
+    const natureMicro = enemyStatusCol!.microColumns?.find(
+      (mc) => mc.id === INFLICTION_COLUMNS.NATURE,
+    );
+    expect(natureMicro?.defaultEvent).toBeDefined();
+    const defaultSegDuration = natureMicro!.defaultEvent!.segments?.[0]?.properties?.duration;
+    expect(defaultSegDuration).toBe(20 * FPS); // Config: 20s
+
+    // Place freeform nature infliction at 2s
+    act(() => {
+      result.current.handleAddEvent(
+        ENEMY_OWNER_ID, INFLICTION_COLUMNS.NATURE, 2 * FPS, natureMicro!.defaultEvent!,
+      );
+    });
+
+    // Verify via view model: the event appears in the column's processed events
+    const viewModels = computeTimelinePresentation(
+      result.current.allProcessedEvents,
+      result.current.columns,
+    );
+    const vm = viewModels.get(enemyStatusCol!.key);
+    expect(vm).toBeDefined();
+    const natureInVM = vm!.events.filter(
+      (ev) => ev.columnId === INFLICTION_COLUMNS.NATURE && ev.ownerId === ENEMY_OWNER_ID,
+    );
+    expect(natureInVM).toHaveLength(1);
+    expect(eventDuration(natureInVM[0])).toBe(20 * FPS);
+    expect(natureInVM[0].startFrame).toBe(2 * FPS);
   });
 });

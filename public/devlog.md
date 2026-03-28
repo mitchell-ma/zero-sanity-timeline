@@ -9,6 +9,10 @@
 - Stack position (I, II, III, IV) is now tracked at creation time for all event types, improving label accuracy
 - Fixed an issue where manually placed events could bypass stack limits or stacking rules
 - When a skill effect doesn't specify a target, it now correctly falls back to what the status config defines (e.g. team buffs always route to the team column)
+- Chen Qianyu's Slashing Edge talent now correctly triggers on Battle Skill, Combo Skill, and Ultimate individually instead of only on generic damage
+- Stagger (full break and node break) now has proper status configs with correct durations and stacking behavior
+- Improved how talent and status triggers detect skill usage — triggers now fire more reliably when operators perform specific skill types
+- Status effects placed on the enemy timeline now correctly resolve their column and target
 
 ## 2026-03-26
 - Team status buffs (Link, Steel Oath, Overclocked Moment) now display with proper names and stack labels (I, II, III, IV) instead of raw IDs

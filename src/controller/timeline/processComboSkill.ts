@@ -1,6 +1,7 @@
 import { TimelineEvent, computeSegmentsSpan } from '../../consts/viewTypes';
+import { NounType } from '../../dsl/semantics';
 import { EventFrameType, SegmentType } from '../../consts/enums';
-import { SKILL_COLUMNS, COMBO_WINDOW_COLUMN_ID } from '../../model/channels';
+import { COMBO_WINDOW_COLUMN_ID } from '../../model/channels';
 import { TimeStopRegion, isTimeStopEvent, extendByTimeStops, foreignStopsFor } from './processTimeStop';
 import { findClauseTriggerMatches } from './triggerMatch';
 import { getComboTriggerClause, getComboTriggerInfo } from '../gameDataStore';
@@ -33,7 +34,7 @@ export function deriveComboActivationWindows(
   // time stops don't extend its combo activation window duration.
   const comboStopIdsBySlot = new Map<string, Set<string>>();
   for (const ev of events) {
-    if (ev.columnId !== SKILL_COLUMNS.COMBO || !isTimeStopEvent(ev)) continue;
+    if (ev.columnId !== NounType.COMBO_SKILL || !isTimeStopEvent(ev)) continue;
     if (!comboStopIdsBySlot.has(ev.ownerId)) comboStopIdsBySlot.set(ev.ownerId, new Set());
     comboStopIdsBySlot.get(ev.ownerId)!.add(ev.uid);
   }
@@ -41,7 +42,7 @@ export function deriveComboActivationWindows(
   // Pre-index combo events per slot for cooldown checks
   const comboEventsBySlot = new Map<string, TimelineEvent[]>();
   for (const ev of events) {
-    if (ev.columnId !== SKILL_COLUMNS.COMBO) continue;
+    if (ev.columnId !== NounType.COMBO_SKILL) continue;
     if (!comboEventsBySlot.has(ev.ownerId)) comboEventsBySlot.set(ev.ownerId, []);
     comboEventsBySlot.get(ev.ownerId)!.push(ev);
   }
@@ -263,7 +264,7 @@ export function resolveComboTriggerColumns(
   // Resolve combo events: update or clear comboTriggerColumnId
   let changed = false;
   const result = events.map((ev) => {
-    if (ev.columnId !== SKILL_COLUMNS.COMBO) return ev;
+    if (ev.columnId !== NounType.COMBO_SKILL) return ev;
 
     const merged = mergedBySlot.get(ev.ownerId);
     const match = merged?.find(

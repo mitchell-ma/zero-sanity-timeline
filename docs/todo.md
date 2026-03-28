@@ -58,33 +58,28 @@ Proposed mapping:
 - `duration` → `DURATION`
 - `atb` → `SKILL_POINT`
 
-## Remove hardcoded operator statuses from EventsQueryService
+## Wire up `damageFactorType` on TimelineEvent
 
-`eventsQueryService.ts` hardcodes two operator-specific status column IDs to filter events
-for damage calculation. These should be data-driven via `damageFactorType` tagging.
+`damageFactorType` exists on `TimelineEvent` but is never written. `getIntellectScaledDamageBonus()` and `getIgnoredResistance()` in `eventsQueryService.ts` filter by it, so they currently return 0. Need to:
 
-### Hardcoded references
-- Line 134: `this.scorchingHeartEvents = events.filter(e => e.columnId === 'scorching-heart-effect')`
-- Line 135: `this.wildlandTrekkerEvents = events.filter(e => e.columnId === 'WILDLAND_TREKKER')`
-- `getIgnoredResistance()` — hardcoded to HEAT + Scorching Heart, calls `getScorchingHeartIgnoredResistance()` from damageFormulas.ts (duplicates the config's VARY_BY TALENT_LEVEL [10, 15, 20])
-- `getWildlandTrekkerBonus()` — hardcoded to Wildland Trekker column, manually multiplies statusValue by INTELLECT stat
+1. **Set `damageFactorType` during clause resolution** — `resolveClauseEffectsFromClauses` in `statusTriggerCollector.ts` handles `APPLY DAMAGE_BONUS` and `IGNORE RESISTANCE` but doesn't set `ev.damageFactorType`
+2. **Fix TALENT_LEVEL TODO** — `statusTriggerCollector.ts` hardcodes `const talentLevel = 1 // TODO`, should use `ctx.loadoutProperties?.operator.talentOneLevel ?? 1`
+3. **Remove `getScorchingHeartIgnoredResistance`** from damageFormulas.ts — values already in the JSON config, just need `damageFactorType` wired up
 
-### What needs to happen
-1. **Tag events with `damageFactorType` during clause resolution** — `resolveClauseEffectsFromClauses` in `statusTriggerCollector.ts` already handles `APPLY DAMAGE_BONUS` and `IGNORE RESISTANCE` effects but doesn't set `ev.damageFactorType` (field exists on TimelineEvent but is never written anywhere)
-2. **Add `DAMAGE_BONUS` and `IGNORED_RESISTANCE` to `DamageFactorType` enum** — `RESISTANCE` already exists but is for corrosion
-3. **Add `effectElement` field to TimelineEvent** — persist the `adjective` (element) from clause effects so queries can filter by element generically
-4. **Add `statMultiplierKey` field to TimelineEvent** — for effects where statusValue is a per-stat coefficient (e.g. Wildland Trekker's per-intellect value), carry the stat to multiply by at query time. Config declares this via `with.statMultiplier` in the effect JSON
-5. **Fix arclight-statuses.json** — WILDLAND_TREKKER_BUFF VARY_BY has `"object": ["POTENTIAL", "INTELLECT"]` but keys "1"/"2" are talent levels, not intellect values. Rename to `["POTENTIAL", "TALENT_LEVEL"]` and add `"statMultiplier": "INTELLECT"` to the `with` block
-6. **Replace query methods** — `getIgnoredResistance` filters by `damageFactorType === IGNORED_RESISTANCE` + effectElement + ownerId. New `getElementDamageBonus(frame, element)` replaces `getWildlandTrekkerBonus` generically
-7. **Remove `getScorchingHeartIgnoredResistance`** from damageFormulas.ts and `SCORCHING_HEART_IGNORED` table — values already in the JSON config
-8. **Fix TALENT_LEVEL TODO** — two locations in statusTriggerCollector.ts hardcode `const talentLevel = 1 // TODO`, should use `ctx.loadoutProperties?.operator.talentOneLevel ?? 1`
+## Unify `Effect.objectQualifier` to single `AdjectiveType`
 
-### Related
-- Depends on fixing the talent level TODO below
-- `damageFactorType` is also dead for AMP events (never set, so `artsAmpEvents` filter on line 126 never matches)
-- `STATUS_DAMAGE_FACTOR` and `NOUN_DAMAGE_FACTOR` in enums.ts are defined but never used — intended for this purpose
+`Effect.objectQualifier` is typed `AdjectiveType | AdjectiveType[]` but the array form is never needed. The `[FORCED, COMBUSTION]` pattern it was designed for doesn't exist — `FORCED` is a property in the `with` block, not a stacked qualifier. Every consumer guards with `Array.isArray()` checks (20+ sites across controllers, views, tests, translators).
 
-Full plan: `.claude/plans/zazzy-swinging-waffle.md`
+Fix: change `Effect.objectQualifier` to `AdjectiveType` (matching `Interaction.objectQualifier`) and remove all `Array.isArray` guards. `Interaction` already has the correct single type.
+
+Example of current waste — every consumer does this:
+```typescript
+const adj = Array.isArray(effect.objectQualifier) ? effect.objectQualifier[0] : effect.objectQualifier;
+```
+This should just be:
+```typescript
+const adj = effect.objectQualifier;
+```
 
 ## Resolve talent level and p3TeamShare from DSL
 

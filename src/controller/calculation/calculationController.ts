@@ -10,8 +10,9 @@
  * damage by frame, and exposes getEnemyHpPercentage() for HP threshold predicates.
  */
 import { CritMode, CombatSkillType, PhysicalStatusType, StatType } from '../../consts/enums';
+import { NounType } from '../../dsl/semantics';
 import { TimelineEvent, Column, Enemy as ViewEnemy } from '../../consts/viewTypes';
-import { PHYSICAL_STATUS_COLUMN_IDS, SKILL_COLUMNS } from '../../model/channels';
+import { PHYSICAL_STATUS_COLUMN_IDS, SKILL_COLUMN_ORDER, ENEMY_OWNER_ID } from '../../model/channels';
 import { getPhysicalStatusStagger, getDefenseMultiplier, getTotalAttack } from '../../model/calculation/damageFormulas';
 import { LoadoutProperties, DEFAULT_LOADOUT_PROPERTIES } from '../../view/InformationPane';
 import { OperatorLoadoutState, EMPTY_LOADOUT } from '../../view/OperatorLoadoutHeader';
@@ -27,7 +28,7 @@ import {
 } from '../timeline/eventsQueryService';
 import { getLastController } from '../timeline/eventQueueController';
 import { getWeapon, getWeaponEffectDefs, resolveTargetDisplay } from '../gameDataStore';
-import { ENEMY_OWNER_ID } from '../../model/channels';
+
 import type { Slot } from '../timeline/columnBuilder';
 import type { StaggerBreak } from '../timeline/staggerTimeline';
 import type { Potential, SkillLevel } from '../../consts/types';
@@ -89,7 +90,7 @@ export function precomputeDamageByFrame(
 
   // Collect (frame, damage) pairs from all skill event frame markers
   const ticks: { frame: number; damage: number }[] = [];
-  const SKILL_COLUMN_IDS = new Set<string>(Object.values(SKILL_COLUMNS));
+  const SKILL_COLUMN_IDS = new Set<string>(SKILL_COLUMN_ORDER);
 
   for (const ev of events) {
     if (ev.ownerId === ENEMY_OWNER_ID) continue;
@@ -98,7 +99,7 @@ export function precomputeDamageByFrame(
     if (!op) continue;
 
     const props = loadoutProperties[ev.ownerId] ?? DEFAULT_LOADOUT_PROPERTIES;
-    const effectiveColumnId = ev.id.includes('_ENHANCED') ? SKILL_COLUMNS.ULTIMATE : ev.columnId;
+    const effectiveColumnId = ev.id.includes('_ENHANCED') ? NounType.ULTIMATE : ev.columnId;
     const skillLevel = getSkillLevelForColumn(effectiveColumnId, props);
     const potential = (props.operator.potential ?? 5) as Potential;
 
@@ -178,10 +179,10 @@ export function getEnemyHpPercentage(frame: number): number | null {
 /** Skill level lookup by column ID. */
 function getSkillLevelForColumn(columnId: string, props: LoadoutProperties): SkillLevel {
   switch (columnId) {
-    case SKILL_COLUMNS.BASIC: return props.skills.basicAttackLevel as SkillLevel;
-    case SKILL_COLUMNS.BATTLE: return props.skills.battleSkillLevel as SkillLevel;
-    case SKILL_COLUMNS.COMBO: return props.skills.comboSkillLevel as SkillLevel;
-    case SKILL_COLUMNS.ULTIMATE: return props.skills.ultimateLevel as SkillLevel;
+    case NounType.BASIC_ATTACK: return props.skills.basicAttackLevel as SkillLevel;
+    case NounType.BATTLE_SKILL: return props.skills.battleSkillLevel as SkillLevel;
+    case NounType.COMBO_SKILL: return props.skills.comboSkillLevel as SkillLevel;
+    case NounType.ULTIMATE: return props.skills.ultimateLevel as SkillLevel;
     default: return 12 as SkillLevel;
   }
 }

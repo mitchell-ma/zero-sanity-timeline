@@ -1,8 +1,15 @@
 {
   "properties": {
-    "id": "SUSCEPTIBILITY",
-    "name": "Susceptibility",
+    "id": "STAGGER_NODE",
+    "name": "Stagger (Partial)",
     "to": "ENEMY",
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": 5
+      },
+      "unit": "SECOND"
+    },
     "stacks": {
       "limit": {
         "verb": "IS",
@@ -12,7 +19,7 @@
     },
     "eventType": "STATUS",
     "eventCategoryType": "SKILL_STATUS",
-    "description": "Increases damage taken of the specified element."
+    "description": "Partial stagger node. Accumulates toward a full stagger break."
   },
   "metadata": {
     "originId": "game"

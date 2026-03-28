@@ -15,8 +15,9 @@
  */
 
 import { renderHook, act } from '@testing-library/react';
+import { NounType } from '../../../../dsl/semantics';
 import { useApp } from '../../../../app/useApp';
-import { SKILL_COLUMNS, ENEMY_OWNER_ID } from '../../../../model/channels';
+import { ENEMY_OWNER_ID } from '../../../../model/channels';
 import { ColumnType, EventStatusType, InteractionModeType } from '../../../../consts/enums';
 import { FPS } from '../../../../utils/timeline';
 import { eventDuration } from '../../../../consts/viewTypes';
@@ -82,13 +83,13 @@ describe('Pogranichnik Ultimate → Steel Oath', () => {
   it('ultimate produces at least one STEEL_OATH event under COMMON_OWNER_ID', () => {
     const { result } = setupPogranichnik();
 
-    const ultCol = findColumn(result.current, SLOT_POG, SKILL_COLUMNS.ULTIMATE);
+    const ultCol = findColumn(result.current, SLOT_POG, NounType.ULTIMATE);
     expect(ultCol).toBeDefined();
     expect(ultCol!.defaultEvent).toBeDefined();
 
     act(() => {
       result.current.handleAddEvent(
-        SLOT_POG, SKILL_COLUMNS.ULTIMATE, 1 * FPS, ultCol!.defaultEvent!,
+        SLOT_POG, NounType.ULTIMATE, 1 * FPS, ultCol!.defaultEvent!,
       );
     });
 
@@ -104,12 +105,12 @@ describe('Pogranichnik Ultimate → Steel Oath', () => {
   it('STEEL_OATH events have columnId matching the status ID, not generic team-status', () => {
     const { result } = setupPogranichnik();
 
-    const ultCol = findColumn(result.current, SLOT_POG, SKILL_COLUMNS.ULTIMATE);
+    const ultCol = findColumn(result.current, SLOT_POG, NounType.ULTIMATE);
     expect(ultCol).toBeDefined();
 
     act(() => {
       result.current.handleAddEvent(
-        SLOT_POG, SKILL_COLUMNS.ULTIMATE, 1 * FPS, ultCol!.defaultEvent!,
+        SLOT_POG, NounType.ULTIMATE, 1 * FPS, ultCol!.defaultEvent!,
       );
     });
 
@@ -139,12 +140,12 @@ describe('Pogranichnik STEEL_OATH → ColumnViewModel', () => {
   it('STEEL_OATH events appear in the team-status column view model', () => {
     const { result } = setupPogranichnik();
 
-    const ultCol = findColumn(result.current, SLOT_POG, SKILL_COLUMNS.ULTIMATE);
+    const ultCol = findColumn(result.current, SLOT_POG, NounType.ULTIMATE);
     expect(ultCol).toBeDefined();
 
     act(() => {
       result.current.handleAddEvent(
-        SLOT_POG, SKILL_COLUMNS.ULTIMATE, 1 * FPS, ultCol!.defaultEvent!,
+        SLOT_POG, NounType.ULTIMATE, 1 * FPS, ultCol!.defaultEvent!,
       );
     });
 
@@ -180,20 +181,20 @@ describe('Pogranichnik two Ultimates → STEEL_OATH RESET stacking', () => {
   it('second ultimate produces a new STEEL_OATH set that RESET-clamps the first', () => {
     const { result } = setupPogranichnik();
 
-    const ultCol = findColumn(result.current, SLOT_POG, SKILL_COLUMNS.ULTIMATE);
+    const ultCol = findColumn(result.current, SLOT_POG, NounType.ULTIMATE);
     expect(ultCol).toBeDefined();
 
     // First ultimate at 1s
     act(() => {
       result.current.handleAddEvent(
-        SLOT_POG, SKILL_COLUMNS.ULTIMATE, 1 * FPS, ultCol!.defaultEvent!,
+        SLOT_POG, NounType.ULTIMATE, 1 * FPS, ultCol!.defaultEvent!,
       );
     });
 
     // Second ultimate at 20s (while first STEEL_OATH 30s duration is still active)
     act(() => {
       result.current.handleAddEvent(
-        SLOT_POG, SKILL_COLUMNS.ULTIMATE, 20 * FPS, ultCol!.defaultEvent!,
+        SLOT_POG, NounType.ULTIMATE, 20 * FPS, ultCol!.defaultEvent!,
       );
     });
 
@@ -230,13 +231,13 @@ describe('Steel Oath without triggers stays active', () => {
   it('all 5 STEEL_OATH events remain unconsumed with full 30s duration when no triggers fire', () => {
     const { result } = setupPogranichnik();
 
-    const ultCol = findColumn(result.current, SLOT_POG, SKILL_COLUMNS.ULTIMATE);
+    const ultCol = findColumn(result.current, SLOT_POG, NounType.ULTIMATE);
     expect(ultCol).toBeDefined();
 
     // Place ultimate at 1s — no other events that would trigger consumption
     act(() => {
       result.current.handleAddEvent(
-        SLOT_POG, SKILL_COLUMNS.ULTIMATE, 1 * FPS, ultCol!.defaultEvent!,
+        SLOT_POG, NounType.ULTIMATE, 1 * FPS, ultCol!.defaultEvent!,
       );
     });
 
@@ -269,23 +270,23 @@ describe('Combo skill consumes Steel Oath stacks', () => {
       result.current.setInteractionMode(InteractionModeType.FREEFORM);
     });
 
-    const ultCol = findColumn(result.current, SLOT_POG, SKILL_COLUMNS.ULTIMATE);
+    const ultCol = findColumn(result.current, SLOT_POG, NounType.ULTIMATE);
     expect(ultCol).toBeDefined();
 
-    const comboCol = findColumn(result.current, SLOT_POG, SKILL_COLUMNS.COMBO);
+    const comboCol = findColumn(result.current, SLOT_POG, NounType.COMBO_SKILL);
     expect(comboCol).toBeDefined();
 
     // Place ultimate at 1s
     act(() => {
       result.current.handleAddEvent(
-        SLOT_POG, SKILL_COLUMNS.ULTIMATE, 1 * FPS, ultCol!.defaultEvent!,
+        SLOT_POG, NounType.ULTIMATE, 1 * FPS, ultCol!.defaultEvent!,
       );
     });
 
     // Place combo skill at 5s (after ultimate animation ends)
     act(() => {
       result.current.handleAddEvent(
-        SLOT_POG, SKILL_COLUMNS.COMBO, 5 * FPS, comboCol!.defaultEvent!,
+        SLOT_POG, NounType.COMBO_SKILL, 5 * FPS, comboCol!.defaultEvent!,
       );
     });
 
@@ -293,20 +294,29 @@ describe('Combo skill consumes Steel Oath stacks', () => {
       (ev) => ev.id === STEEL_OATH_ID && ev.ownerId === COMMON_OWNER_ID,
     );
 
-    // At least one STEEL_OATH event should be consumed
+    // All 5 original events consumed, 4 continuations created
     const consumedEvents = steelOathEvents.filter(
       (ev) => ev.eventStatus === EventStatusType.CONSUMED,
     );
-    expect(consumedEvents.length).toBeGreaterThanOrEqual(1);
+    expect(consumedEvents).toHaveLength(5);
 
-    // At least one Harass or Decisive Assault event should exist on the enemy
-    const enemySubStatuses = result.current.allProcessedEvents.filter(
-      (ev) =>
-        ev.ownerId === ENEMY_OWNER_ID &&
-        (ev.id === STEEL_OATH_HARASS_ID || ev.id === STEEL_OATH_DECISIVE_ASSAULT_ID),
+    // With 5 stacks remaining, HAVE STACKS=1 fails → Harass (not Decisive Assault)
+    const harassEvents = result.current.allProcessedEvents.filter(
+      (ev) => ev.ownerId === ENEMY_OWNER_ID && ev.id === STEEL_OATH_HARASS_ID,
     );
-    // The specific sub-status type depends on FIRST_MATCH + HAVE STACKS implementation
-    expect(enemySubStatuses.length).toBeGreaterThanOrEqual(1);
+    expect(harassEvents).toHaveLength(1);
+
+    // Harass event should have damage frames from the status config
+    const seg = harassEvents[0].segments[0];
+    expect(seg.frames).toBeDefined();
+    expect(seg.frames!.length).toBeGreaterThanOrEqual(1);
+    expect(seg.frames![0].dealDamage).toBeDefined();
+    expect(seg.frames![0].dealDamage!.multipliers.length).toBeGreaterThan(0);
+
+    const assaultEvents = result.current.allProcessedEvents.filter(
+      (ev) => ev.ownerId === ENEMY_OWNER_ID && ev.id === STEEL_OATH_DECISIVE_ASSAULT_ID,
+    );
+    expect(assaultEvents).toHaveLength(0);
   });
 });
 
@@ -322,16 +332,16 @@ describe('All stacks consumed → Harass and Decisive Assault mix', () => {
       result.current.setInteractionMode(InteractionModeType.FREEFORM);
     });
 
-    const ultCol = findColumn(result.current, SLOT_POG, SKILL_COLUMNS.ULTIMATE);
+    const ultCol = findColumn(result.current, SLOT_POG, NounType.ULTIMATE);
     expect(ultCol).toBeDefined();
 
-    const comboCol = findColumn(result.current, SLOT_POG, SKILL_COLUMNS.COMBO);
+    const comboCol = findColumn(result.current, SLOT_POG, NounType.COMBO_SKILL);
     expect(comboCol).toBeDefined();
 
     // Place ultimate at 1s
     act(() => {
       result.current.handleAddEvent(
-        SLOT_POG, SKILL_COLUMNS.ULTIMATE, 1 * FPS, ultCol!.defaultEvent!,
+        SLOT_POG, NounType.ULTIMATE, 1 * FPS, ultCol!.defaultEvent!,
       );
     });
 
@@ -339,7 +349,7 @@ describe('All stacks consumed → Harass and Decisive Assault mix', () => {
     for (let i = 0; i < 5; i++) {
       act(() => {
         result.current.handleAddEvent(
-          SLOT_POG, SKILL_COLUMNS.COMBO, (5 + i) * FPS, comboCol!.defaultEvent!,
+          SLOT_POG, NounType.COMBO_SKILL, (5 + i) * FPS, comboCol!.defaultEvent!,
         );
       });
     }
@@ -360,16 +370,211 @@ describe('All stacks consumed → Harass and Decisive Assault mix', () => {
     );
     expect(activeEvents).toHaveLength(0);
 
-    // Harass events should exist on the enemy (at least some stacks produce Harass)
+    // 4 Harass (stacks 5→4, 4→3, 3→2, 2→1) + 1 Decisive Assault (last stack 1→0)
+    const harassEvents = result.current.allProcessedEvents.filter(
+      (ev) => ev.ownerId === ENEMY_OWNER_ID && ev.id === STEEL_OATH_HARASS_ID,
+    );
+    expect(harassEvents).toHaveLength(4);
+
+    const assaultEvents = result.current.allProcessedEvents.filter(
+      (ev) => ev.ownerId === ENEMY_OWNER_ID && ev.id === STEEL_OATH_DECISIVE_ASSAULT_ID,
+    );
+    expect(assaultEvents).toHaveLength(1);
+
+    // All Harass and Assault events should carry damage frames from their status configs
+    for (const ev of [...harassEvents, ...assaultEvents]) {
+      const seg = ev.segments[0];
+      expect(seg.frames).toBeDefined();
+      expect(seg.frames!.length).toBeGreaterThanOrEqual(1);
+      expect(seg.frames![0].dealDamage).toBeDefined();
+    }
+    // Decisive Assault should also have stagger
+    expect(assaultEvents[0].segments[0].frames![0].stagger).toBeGreaterThan(0);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// G. Chen Qianyu BS triggers produce Harass x4 + Decisive Assault x1
+// ═══════════════════════════════════════════════════════════════════════════════
+
+describe('Chen Qianyu BS consumes Steel Oath → 4 Harass + 1 Decisive Assault', () => {
+  const SLOT_CHEN = 'slot-2';
+
+  it('6 Chen BS after Pog ult produces exactly 4 Harass and 1 Decisive Assault', () => {
+    const { result } = setupPogranichnik();
+
+    // Add Chen Qianyu to slot-2
+    act(() => { result.current.handleSwapOperator(SLOT_CHEN, 'CHEN_QIANYU'); });
+    act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
+
+    const ultCol = findColumn(result.current, SLOT_POG, NounType.ULTIMATE);
+    expect(ultCol).toBeDefined();
+
+    const chenBattleCol = findColumn(result.current, SLOT_CHEN, NounType.BATTLE_SKILL);
+    expect(chenBattleCol).toBeDefined();
+
+    // Pog ultimate at 0s → 5 Steel Oath stacks
+    act(() => {
+      result.current.handleAddEvent(
+        SLOT_POG, NounType.ULTIMATE, 0, ultCol!.defaultEvent!,
+      );
+    });
+
+    // 6 Chen BS spaced 2s apart starting at 3s
+    // First BS only adds Vulnerable (no physical status yet → no consumption)
+    // Subsequent BS apply Lift (physical status → triggers Steel Oath)
+    for (let i = 0; i < 6; i++) {
+      act(() => {
+        result.current.handleAddEvent(
+          SLOT_CHEN, NounType.BATTLE_SKILL, (3 + i * 2) * FPS, chenBattleCol!.defaultEvent!,
+        );
+      });
+    }
+
+    // Steel Oath stacks: all 5 should be consumed
+    const steelOathEvents = result.current.allProcessedEvents.filter(
+      (ev) => ev.id === STEEL_OATH_ID && ev.ownerId === COMMON_OWNER_ID,
+    );
+    const activeStacks = steelOathEvents.filter(
+      (ev) => !ev.eventStatus,
+    );
+    expect(activeStacks).toHaveLength(0);
+
+    // Enemy should have exactly 4 Harass (stacks 5→4, 4→3, 3→2, 2→1)
+    const harassEvents = result.current.allProcessedEvents.filter(
+      (ev) => ev.ownerId === ENEMY_OWNER_ID && ev.id === STEEL_OATH_HARASS_ID,
+    );
+    expect(harassEvents).toHaveLength(4);
+
+    // Enemy should have exactly 1 Decisive Assault (last stack: 1→0)
+    const assaultEvents = result.current.allProcessedEvents.filter(
+      (ev) => ev.ownerId === ENEMY_OWNER_ID && ev.id === STEEL_OATH_DECISIVE_ASSAULT_ID,
+    );
+    expect(assaultEvents).toHaveLength(1);
+
+    // Decisive Assault should be the last consumption (at or after latest Harass frame)
+    const lastHarassFrame = Math.max(...harassEvents.map(e => e.startFrame));
+    expect(assaultEvents[0].startFrame).toBeGreaterThanOrEqual(lastHarassFrame);
+
+    // No more than 5 total enemy sub-statuses (4 Harass + 1 Decisive Assault)
+    expect(harassEvents.length + assaultEvents.length).toBe(5);
+
+    // All sub-statuses should carry damage frames from their status configs
+    for (const ev of [...harassEvents, ...assaultEvents]) {
+      const seg = ev.segments[0];
+      expect(seg.frames).toBeDefined();
+      expect(seg.frames!.length).toBeGreaterThanOrEqual(1);
+      expect(seg.frames![0].dealDamage).toBeDefined();
+    }
+
+    // FIRST_MATCH: each trigger produces exactly one sub-status, never both
+    // Group all enemy Steel Oath sub-statuses by frame
+    const allSubStatuses = result.current.allProcessedEvents.filter(
+      (ev) => ev.ownerId === ENEMY_OWNER_ID &&
+        (ev.id === STEEL_OATH_HARASS_ID || ev.id === STEEL_OATH_DECISIVE_ASSAULT_ID),
+    );
+    const byFrame = new Map<number, string[]>();
+    for (const ev of allSubStatuses) {
+      const list = byFrame.get(ev.startFrame) ?? [];
+      list.push(ev.id);
+      byFrame.set(ev.startFrame, list);
+    }
+    // Each frame should have exactly one sub-status (never both Harass + Assault)
+    for (const [, ids] of Array.from(byFrame.entries())) {
+      expect(ids).toHaveLength(1);
+    }
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// H. FIRST_MATCH reactive trigger — only one clause fires per trigger frame
+// ═══════════════════════════════════════════════════════════════════════════════
+
+describe('FIRST_MATCH clause selection in reactive triggers', () => {
+  const SLOT_CHEN = 'slot-2';
+
+  it('FIRST_MATCH: conditional clause (Decisive Assault) wins over unconditional (Harass) when HAVE STACKS = 1', () => {
+    const { result } = setupPogranichnik();
+
+    act(() => { result.current.handleSwapOperator(SLOT_CHEN, 'CHEN_QIANYU'); });
+    act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
+
+    const ultCol = findColumn(result.current, SLOT_POG, NounType.ULTIMATE);
+    const chenBattleCol = findColumn(result.current, SLOT_CHEN, NounType.BATTLE_SKILL);
+    const pogComboCol = findColumn(result.current, SLOT_POG, NounType.COMBO_SKILL);
+
+    // Pog ultimate at 0s → 5 Steel Oath stacks
+    act(() => {
+      result.current.handleAddEvent(SLOT_POG, NounType.ULTIMATE, 0, ultCol!.defaultEvent!);
+    });
+
+    // Consume 4 stacks via combos (leaves exactly 1 stack)
+    for (let i = 0; i < 4; i++) {
+      act(() => {
+        result.current.handleAddEvent(SLOT_POG, NounType.COMBO_SKILL, (3 + i * 2) * FPS, pogComboCol!.defaultEvent!);
+      });
+    }
+
+    // Verify exactly 1 active stack remains
+    const steelOathBefore = result.current.allProcessedEvents.filter(
+      (ev) => ev.id === STEEL_OATH_ID && ev.ownerId === COMMON_OWNER_ID && !ev.eventStatus,
+    );
+    expect(steelOathBefore).toHaveLength(1);
+
+    // Now trigger consumption with Chen BS (APPLY PHYSICAL) — should pick Decisive Assault
+    act(() => {
+      result.current.handleAddEvent(SLOT_CHEN, NounType.BATTLE_SKILL, 15 * FPS, chenBattleCol!.defaultEvent!);
+    });
+    // Need a second BS to actually create Lift (first only adds Vulnerable)
+    act(() => {
+      result.current.handleAddEvent(SLOT_CHEN, NounType.BATTLE_SKILL, 17 * FPS, chenBattleCol!.defaultEvent!);
+    });
+
+    const allSubStatuses = result.current.allProcessedEvents.filter(
+      (ev) => ev.ownerId === ENEMY_OWNER_ID &&
+        (ev.id === STEEL_OATH_HARASS_ID || ev.id === STEEL_OATH_DECISIVE_ASSAULT_ID),
+    );
+
+    // The last consumption should produce Decisive Assault, not Harass
+    // (FIRST_MATCH: clause with HAVE STACKS=1 wins over unconditional Harass clause)
+    const assaultFromChen = allSubStatuses.filter(
+      (ev) => ev.id === STEEL_OATH_DECISIVE_ASSAULT_ID && ev.startFrame >= 15 * FPS,
+    );
+    expect(assaultFromChen).toHaveLength(1);
+
+    // Should NOT also produce Harass at the same frame
+    const harassAtSameFrame = allSubStatuses.filter(
+      (ev) => ev.id === STEEL_OATH_HARASS_ID && ev.startFrame === assaultFromChen[0].startFrame,
+    );
+    expect(harassAtSameFrame).toHaveLength(0);
+  });
+
+  it('FIRST_MATCH: unconditional clause fires when conditional clause HAVE condition fails', () => {
+    const { result } = setupPogranichnik();
+
+    act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
+
+    const ultCol = findColumn(result.current, SLOT_POG, NounType.ULTIMATE);
+    const pogComboCol = findColumn(result.current, SLOT_POG, NounType.COMBO_SKILL);
+
+    // Pog ultimate at 0s → 5 Steel Oath stacks
+    act(() => {
+      result.current.handleAddEvent(SLOT_POG, NounType.ULTIMATE, 0, ultCol!.defaultEvent!);
+    });
+
+    // Single combo at 5s — 5 stacks active, HAVE STACKS=1 fails → Harass fires (not Decisive Assault)
+    act(() => {
+      result.current.handleAddEvent(SLOT_POG, NounType.COMBO_SKILL, 5 * FPS, pogComboCol!.defaultEvent!);
+    });
+
     const harassEvents = result.current.allProcessedEvents.filter(
       (ev) => ev.ownerId === ENEMY_OWNER_ID && ev.id === STEEL_OATH_HARASS_ID,
     );
     expect(harassEvents.length).toBeGreaterThanOrEqual(1);
 
-    // TODO: Decisive Assault should exist on the enemy (last stack triggers Decisive
-    // Assault via FIRST_MATCH: clauses 1-2 match when HAVE STACKS = 1). Requires
-    // FIRST_MATCH clause ordering to be enforced in handleEngineTrigger so that
-    // clause 2 (Decisive Assault with HAVE STACKS=1) fires instead of clause 4 (Harass)
-    // when only 1 stack remains.
+    const assaultEvents = result.current.allProcessedEvents.filter(
+      (ev) => ev.ownerId === ENEMY_OWNER_ID && ev.id === STEEL_OATH_DECISIVE_ASSAULT_ID,
+    );
+    expect(assaultEvents).toHaveLength(0);
   });
 });

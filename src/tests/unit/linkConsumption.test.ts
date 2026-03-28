@@ -10,8 +10,8 @@
  * controller can apply the Link multiplier to all frames of the consuming event.
  */
 import { TimelineEvent, eventDuration } from '../../consts/viewTypes';
+import { NounType } from '../../dsl/semantics';
 import { EventStatusType, StatusType } from '../../consts/enums';
-import { SKILL_COLUMNS } from '../../model/channels';
 import { processCombatSimulation, getLastController } from '../../controller/timeline/eventQueueController';
 import { COMMON_OWNER_ID } from '../../controller/slot/commonSlotController';
 
@@ -59,7 +59,7 @@ function simpleBattleSkill(startFrame: number, duration = 2 * FPS): TimelineEven
     id: 'TEST_BATTLE_SKILL',
     name: 'TEST_BATTLE_SKILL',
     ownerId: SLOT_ID,
-    columnId: SKILL_COLUMNS.BATTLE,
+    columnId: NounType.BATTLE_SKILL,
     startFrame,
     segments: [{ properties: { duration }, frames: [{ offsetFrame: 0 }] }],
   };
@@ -72,7 +72,7 @@ function simpleUltimate(startFrame: number, activeDuration = 3 * FPS): TimelineE
     id: 'TEST_ULTIMATE',
     name: 'TEST_ULTIMATE',
     ownerId: SLOT_ID,
-    columnId: SKILL_COLUMNS.ULTIMATE,
+    columnId: NounType.ULTIMATE,
     startFrame,
     segments: [{ properties: { duration: activeDuration }, frames: [{ offsetFrame: 0 }] }],
   };
@@ -85,7 +85,7 @@ function simpleBasicAttack(startFrame: number, duration = 1 * FPS): TimelineEven
     id: 'TEST_BASIC_ATTACK',
     name: 'TEST_BASIC_ATTACK',
     ownerId: SLOT_ID,
-    columnId: SKILL_COLUMNS.BASIC,
+    columnId: NounType.BASIC_ATTACK,
     startFrame,
     segments: [{ properties: { duration }, frames: [{ offsetFrame: 0 }] }],
   };
@@ -98,7 +98,7 @@ function simpleComboSkill(startFrame: number, duration = 2 * FPS): TimelineEvent
     id: 'TEST_COMBO_SKILL',
     name: 'TEST_COMBO_SKILL',
     ownerId: SLOT_ID,
-    columnId: SKILL_COLUMNS.COMBO,
+    columnId: NounType.COMBO_SKILL,
     startFrame,
     segments: [{ properties: { duration }, frames: [{ offsetFrame: 0 }] }],
   };
@@ -218,7 +218,7 @@ describe('Link NOT consumed by non-qualifying skills', () => {
       id: 'TEST_FINISHER',
       name: 'TEST_FINISHER',
       ownerId: SLOT_ID,
-      columnId: SKILL_COLUMNS.BASIC,
+      columnId: NounType.BASIC_ATTACK,
       startFrame: 2 * FPS,
       segments: [{ properties: { duration: FPS }, frames: [{ offsetFrame: 0 }] }],
     };
@@ -237,7 +237,7 @@ describe('Link NOT consumed by non-qualifying skills', () => {
       id: 'TEST_DIVE',
       name: 'TEST_DIVE',
       ownerId: SLOT_ID,
-      columnId: SKILL_COLUMNS.BASIC,
+      columnId: NounType.BASIC_ATTACK,
       startFrame: 2 * FPS,
       segments: [{ properties: { duration: FPS }, frames: [{ offsetFrame: 0 }] }],
     };
@@ -321,7 +321,7 @@ function battleSkillFor(slotId: string, startFrame: number, duration = 2 * FPS):
     id: 'TEST_BATTLE_SKILL',
     name: 'TEST_BATTLE_SKILL',
     ownerId: slotId,
-    columnId: SKILL_COLUMNS.BATTLE,
+    columnId: NounType.BATTLE_SKILL,
     startFrame,
     segments: [{ properties: { duration }, frames: [{ offsetFrame: 0 }] }],
   };
@@ -333,7 +333,7 @@ function ultimateFor(slotId: string, startFrame: number, duration = 3 * FPS): Ti
     id: 'TEST_ULTIMATE',
     name: 'TEST_ULTIMATE',
     ownerId: slotId,
-    columnId: SKILL_COLUMNS.ULTIMATE,
+    columnId: NounType.ULTIMATE,
     startFrame,
     segments: [{ properties: { duration }, frames: [{ offsetFrame: 0 }] }],
   };
@@ -345,7 +345,7 @@ function basicAttackFor(slotId: string, startFrame: number, duration = 1 * FPS):
     id: 'TEST_BASIC',
     name: 'TEST_BASIC',
     ownerId: slotId,
-    columnId: SKILL_COLUMNS.BASIC,
+    columnId: NounType.BASIC_ATTACK,
     startFrame,
     segments: [{ properties: { duration }, frames: [{ offsetFrame: 0 }] }],
   };
@@ -357,7 +357,7 @@ function comboSkillFor(slotId: string, startFrame: number, duration = 2 * FPS): 
     id: 'TEST_COMBO',
     name: 'TEST_COMBO',
     ownerId: slotId,
-    columnId: SKILL_COLUMNS.COMBO,
+    columnId: NounType.COMBO_SKILL,
     startFrame,
     segments: [{ properties: { duration }, frames: [{ offsetFrame: 0 }] }],
   };

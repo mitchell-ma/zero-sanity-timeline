@@ -1,4 +1,5 @@
 import { useRef, useState, useCallback, useEffect, useLayoutEffect, useMemo } from 'react';
+import { NounType } from '../dsl/semantics';
 import { createPortal } from 'react-dom';
 // EventBlock rendering moved to TimelineColumn
 import { wouldOverlapNonOverlappable } from '../controller/timeline/inputEventController';
@@ -21,7 +22,7 @@ import {
   TOTAL_FRAMES,
   TIMELINE_TOP_PAD,
 } from '../utils/timeline';
-import { SKILL_COLUMNS, OPERATOR_COLUMNS, COMBO_WINDOW_COLUMN_ID, ENEMY_ACTION_COLUMN_ID } from '../model/channels';
+import { OPERATOR_COLUMNS, COMBO_WINDOW_COLUMN_ID, ENEMY_ACTION_COLUMN_ID } from '../model/channels';
 import { TimelineSourceType, InteractionModeType, CombatSkillType } from '../consts/enums';
 import {
   Operator,
@@ -164,7 +165,7 @@ const STATUS_TYPE_LABELS: Record<string, string> = {
 };
 
 // Column width weight — used for grid proportions within operator groups
-const COL_WEIGHT_SKILL_IDS = new Set<string>([SKILL_COLUMNS.BASIC, SKILL_COLUMNS.BATTLE, SKILL_COLUMNS.COMBO, SKILL_COLUMNS.ULTIMATE]);
+const COL_WEIGHT_SKILL_IDS = new Set<string>([NounType.BASIC_ATTACK, NounType.BATTLE_SKILL, NounType.COMBO_SKILL, NounType.ULTIMATE]);
 function getColWeight(col: Column) {
   if (col.type === 'placeholder') return 1;
   const cid = col.type === 'mini-timeline' ? col.columnId : undefined;
@@ -430,7 +431,7 @@ export default function CombatPlanner({
       const ultZones = computeResourceInsufficiencyZones(resourceGraphs, slots);
       // Only merge ultimate zones (SP zones already in controller output)
       ultZones.forEach((val, key) => {
-        if (!key.endsWith(`:${SKILL_COLUMNS.BATTLE}`)) zones.set(key, val);
+        if (!key.endsWith(`:${NounType.BATTLE_SKILL}`)) zones.set(key, val);
       });
     }
     return zones;
@@ -444,12 +445,12 @@ export default function CombatPlanner({
     const warnings = new Map<string, string>();
     for (const ev of events) {
       if (!draggingIds.has(ev.uid)) continue;
-      if (ev.columnId !== SKILL_COLUMNS.BATTLE && ev.columnId !== SKILL_COLUMNS.ULTIMATE) continue;
+      if (ev.columnId !== NounType.BATTLE_SKILL && ev.columnId !== NounType.ULTIMATE) continue;
       const zones = dragZonesSnapshot.get(`${ev.ownerId}:${ev.columnId}`);
       if (!zones) continue;
       for (const zone of zones) {
         if (ev.startFrame >= zone.start && ev.startFrame < zone.end) {
-          const label = ev.columnId === SKILL_COLUMNS.BATTLE ? 'SP' : 'ultimate energy';
+          const label = ev.columnId === NounType.BATTLE_SKILL ? 'SP' : 'ultimate energy';
           warnings.set(ev.uid, `Not enough ${label}`);
           break;
         }
@@ -1695,7 +1696,7 @@ export default function CombatPlanner({
       const isSeededControl = isControl && ev?.uid.startsWith('controlled-seed-');
       const hasSegments = ev && ev.segments.length > 0;
       const multiSegment = (ev?.segments.length ?? 0) > 1;
-      const isCombo = ev?.columnId === SKILL_COLUMNS.COMBO;
+      const isCombo = ev?.columnId === NounType.COMBO_SKILL;
       const segAddItems = multiSegment && !isCombo && !isControl
         ? buildSegmentAddItemsCtrl(eventUid, events, columns, interactionMode).map(resolveMenuItemAction)
         : [];
@@ -1772,7 +1773,7 @@ export default function CombatPlanner({
     const ev = events.find((ev) => ev.uid === eventUid);
     const segLabel = ev?.segments[segmentIndex]?.properties.name;
     const multiSegment = (ev?.segments.length ?? 0) > 1;
-    const isCombo = ev?.columnId === SKILL_COLUMNS.COMBO;
+    const isCombo = ev?.columnId === NounType.COMBO_SKILL;
     const addSegItems = multiSegment && !isCombo
       ? buildSegmentAddItemsCtrl(eventUid, events, columns, interactionMode).map(resolveMenuItemAction)
       : [];
@@ -1786,7 +1787,7 @@ export default function CombatPlanner({
         { separator: true },
         ...(addFrameItems.length > 0 ? [...addFrameItems, { separator: true } as const] : []),
         ...(addSegItems.length > 0 ? [...addSegItems, { separator: true } as const] : []),
-        ...(multiSegment && !isCombo && ev?.columnId === SKILL_COLUMNS.BASIC ? [{
+        ...(multiSegment && !isCombo && ev?.columnId === NounType.BASIC_ATTACK ? [{
           label: `Remove Sequence ${segLabel ?? formatSegmentShortName(undefined, segmentIndex)}`,
           action: () => { onRemoveSegment?.(eventUid, segmentIndex); onContextMenu(null); },
           danger: true,
@@ -2009,7 +2010,7 @@ export default function CombatPlanner({
               );
             }
 
-            const comboWindowEvts = col.columnId === SKILL_COLUMNS.COMBO
+            const comboWindowEvts = col.columnId === NounType.COMBO_SKILL
               ? (comboWindowEventsByOwner.get(col.ownerId) ?? EMPTY_COMBO_WINDOW_EVENTS)
               : EMPTY_COMBO_WINDOW_EVENTS;
 
@@ -2029,7 +2030,7 @@ export default function CombatPlanner({
                 totalRealFrames={totalRealFrames}
                 isGroupStart={groupStartKeys.has(col.key)}
                 resourceGraph={resourceGraphs?.get(col.key)}
-                insufficiencyZones={resourceInsufficiencyZones.get(`${col.ownerId}:${SKILL_COLUMNS.BATTLE}`)}
+                insufficiencyZones={resourceInsufficiencyZones.get(`${col.ownerId}:${NounType.BATTLE_SKILL}`)}
                 alwaysAvailableCombo={alwaysAvailableComboSlots.has(col.ownerId)}
                 comboWindowEvents={comboWindowEvts}
                 enemyStaggerNodes={enemy.staggerNodes}

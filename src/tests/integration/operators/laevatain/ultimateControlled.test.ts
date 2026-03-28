@@ -12,8 +12,9 @@
  */
 
 import { renderHook, act } from '@testing-library/react';
+import { NounType } from '../../../../dsl/semantics';
 import { useApp } from '../../../../app/useApp';
-import { SKILL_COLUMNS, OPERATOR_COLUMNS } from '../../../../model/channels';
+import { OPERATOR_COLUMNS } from '../../../../model/channels';
 import { CombatSkillType, ColumnType, InteractionModeType } from '../../../../consts/enums';
 import { FPS, TOTAL_FRAMES } from '../../../../utils/timeline';
 import { checkVariantAvailability, validateVariantClauses } from '../../../../controller/timeline/eventValidator';
@@ -46,7 +47,7 @@ describe('Laevatain ultimate controlled activation — integration through useAp
       const { result } = renderHook(() => useApp());
       const r = checkVariantAvailability(
         'TWILIGHT', SLOT_0, [...result.current.allProcessedEvents], 5 * FPS,
-        SKILL_COLUMNS.ULTIMATE, result.current.slots,
+        NounType.ULTIMATE, result.current.slots,
       );
       expect(r.disabled).toBe(false);
     });
@@ -58,7 +59,7 @@ describe('Laevatain ultimate controlled activation — integration through useAp
 
       const r = checkVariantAvailability(
         'TWILIGHT', SLOT_0, [...result.current.allProcessedEvents], 5 * FPS,
-        SKILL_COLUMNS.ULTIMATE, result.current.slots,
+        NounType.ULTIMATE, result.current.slots,
       );
       expect(r.disabled).toBe(true);
       expect(r.reason).toMatch(/controlled/i);
@@ -72,14 +73,14 @@ describe('Laevatain ultimate controlled activation — integration through useAp
       // Before swap: Laevatain is controlled
       const before = checkVariantAvailability(
         'TWILIGHT', SLOT_0, [...result.current.allProcessedEvents], 3 * FPS,
-        SKILL_COLUMNS.ULTIMATE, result.current.slots,
+        NounType.ULTIMATE, result.current.slots,
       );
       expect(before.disabled).toBe(false);
 
       // After swap: Laevatain is not controlled
       const after = checkVariantAvailability(
         'TWILIGHT', SLOT_0, [...result.current.allProcessedEvents], 7 * FPS,
-        SKILL_COLUMNS.ULTIMATE, result.current.slots,
+        NounType.ULTIMATE, result.current.slots,
       );
       expect(after.disabled).toBe(true);
     });
@@ -93,14 +94,14 @@ describe('Laevatain ultimate controlled activation — integration through useAp
       // During slot-1 control: disabled
       const during = checkVariantAvailability(
         'TWILIGHT', SLOT_0, [...result.current.allProcessedEvents], 4 * FPS,
-        SKILL_COLUMNS.ULTIMATE, result.current.slots,
+        NounType.ULTIMATE, result.current.slots,
       );
       expect(during.disabled).toBe(true);
 
       // After swap back: available
       const after = checkVariantAvailability(
         'TWILIGHT', SLOT_0, [...result.current.allProcessedEvents], 8 * FPS,
-        SKILL_COLUMNS.ULTIMATE, result.current.slots,
+        NounType.ULTIMATE, result.current.slots,
       );
       expect(after.disabled).toBe(false);
     });
@@ -109,17 +110,17 @@ describe('Laevatain ultimate controlled activation — integration through useAp
   describe('validateVariantClauses (placed event warnings)', () => {
     it('no warning when ultimate is placed while Laevatain is controlled', () => {
       const { result } = renderHook(() => useApp());
-      const ultCol = findColumn(result.current, SLOT_0, SKILL_COLUMNS.ULTIMATE);
+      const ultCol = findColumn(result.current, SLOT_0, NounType.ULTIMATE);
 
       act(() => {
-        result.current.handleAddEvent(SLOT_0, SKILL_COLUMNS.ULTIMATE, 5 * FPS, ultCol!.defaultEvent!);
+        result.current.handleAddEvent(SLOT_0, NounType.ULTIMATE, 5 * FPS, ultCol!.defaultEvent!);
       });
 
       const warnings = validateVariantClauses(
         [...result.current.allProcessedEvents], result.current.slots,
       );
       const ultEvent = result.current.allProcessedEvents.find(
-        (ev) => ev.ownerId === SLOT_0 && ev.columnId === SKILL_COLUMNS.ULTIMATE,
+        (ev) => ev.ownerId === SLOT_0 && ev.columnId === NounType.ULTIMATE,
       );
       expect(ultEvent).toBeDefined();
       expect(warnings.has(ultEvent!.uid)).toBe(false);
@@ -134,16 +135,16 @@ describe('Laevatain ultimate controlled activation — integration through useAp
       act(() => {
         result.current.setInteractionMode(InteractionModeType.FREEFORM);
       });
-      const ultCol = findColumn(result.current, SLOT_0, SKILL_COLUMNS.ULTIMATE);
+      const ultCol = findColumn(result.current, SLOT_0, NounType.ULTIMATE);
       act(() => {
-        result.current.handleAddEvent(SLOT_0, SKILL_COLUMNS.ULTIMATE, 5 * FPS, ultCol!.defaultEvent!);
+        result.current.handleAddEvent(SLOT_0, NounType.ULTIMATE, 5 * FPS, ultCol!.defaultEvent!);
       });
 
       const warnings = validateVariantClauses(
         [...result.current.allProcessedEvents], result.current.slots,
       );
       const ultEvent = result.current.allProcessedEvents.find(
-        (ev) => ev.ownerId === SLOT_0 && ev.columnId === SKILL_COLUMNS.ULTIMATE,
+        (ev) => ev.ownerId === SLOT_0 && ev.columnId === NounType.ULTIMATE,
       );
       expect(ultEvent).toBeDefined();
       expect(warnings.has(ultEvent!.uid)).toBe(true);

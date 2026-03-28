@@ -18,9 +18,10 @@
  */
 
 import { renderHook, act } from '@testing-library/react';
+import { NounType } from '../../../../dsl/semantics';
 import { useApp } from '../../../../app/useApp';
 import {
-  SKILL_COLUMNS, INFLICTION_COLUMNS, REACTION_COLUMNS, ENEMY_OWNER_ID,
+  INFLICTION_COLUMNS, REACTION_COLUMNS, ENEMY_OWNER_ID,
 } from '../../../../model/channels';
 import { ColumnType, EventStatusType } from '../../../../consts/enums';
 import { FPS } from '../../../../utils/timeline';
@@ -57,17 +58,17 @@ function setupWulfgard() {
 describe('A. Core Skill Placement', () => {
   it('A1: Battle skill appears in BATTLE column (strict)', () => {
     const { result } = setupWulfgard();
-    const col = findColumn(result.current, SLOT_WULFGARD, SKILL_COLUMNS.BATTLE);
+    const col = findColumn(result.current, SLOT_WULFGARD, NounType.BATTLE_SKILL);
     expect(col?.defaultEvent).toBeDefined();
 
     act(() => {
       result.current.handleAddEvent(
-        SLOT_WULFGARD, SKILL_COLUMNS.BATTLE, 5 * FPS, col!.defaultEvent!,
+        SLOT_WULFGARD, NounType.BATTLE_SKILL, 5 * FPS, col!.defaultEvent!,
       );
     });
 
     const events = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === SKILL_COLUMNS.BATTLE,
+      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.BATTLE_SKILL,
     );
     expect(events).toHaveLength(1);
     expect(events[0].name).toBe('THERMITE_TRACERS');
@@ -84,17 +85,17 @@ describe('A. Core Skill Placement', () => {
       );
     });
 
-    const col = findColumn(result.current, SLOT_WULFGARD, SKILL_COLUMNS.COMBO);
+    const col = findColumn(result.current, SLOT_WULFGARD, NounType.COMBO_SKILL);
     expect(col?.defaultEvent).toBeDefined();
 
     act(() => {
       result.current.handleAddEvent(
-        SLOT_WULFGARD, SKILL_COLUMNS.COMBO, 3 * FPS, col!.defaultEvent!,
+        SLOT_WULFGARD, NounType.COMBO_SKILL, 3 * FPS, col!.defaultEvent!,
       );
     });
 
     const events = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === SKILL_COLUMNS.COMBO,
+      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.COMBO_SKILL,
     );
     expect(events).toHaveLength(1);
     // Should have a cooldown segment
@@ -106,17 +107,17 @@ describe('A. Core Skill Placement', () => {
 
   it('A3: Ultimate appears in ULTIMATE column (strict)', () => {
     const { result } = setupWulfgard();
-    const col = findColumn(result.current, SLOT_WULFGARD, SKILL_COLUMNS.ULTIMATE);
+    const col = findColumn(result.current, SLOT_WULFGARD, NounType.ULTIMATE);
     expect(col?.defaultEvent).toBeDefined();
 
     act(() => {
       result.current.handleAddEvent(
-        SLOT_WULFGARD, SKILL_COLUMNS.ULTIMATE, 5 * FPS, col!.defaultEvent!,
+        SLOT_WULFGARD, NounType.ULTIMATE, 5 * FPS, col!.defaultEvent!,
       );
     });
 
     const events = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === SKILL_COLUMNS.ULTIMATE,
+      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.ULTIMATE,
     );
     expect(events).toHaveLength(1);
     expect(events[0].name).toBe('WOLVEN_FURY');
@@ -130,11 +131,11 @@ describe('A. Core Skill Placement', () => {
 describe('B. Infliction & Reaction Pipeline', () => {
   it('B1: Battle skill applies heat infliction to enemy (strict)', () => {
     const { result } = setupWulfgard();
-    const col = findColumn(result.current, SLOT_WULFGARD, SKILL_COLUMNS.BATTLE);
+    const col = findColumn(result.current, SLOT_WULFGARD, NounType.BATTLE_SKILL);
 
     act(() => {
       result.current.handleAddEvent(
-        SLOT_WULFGARD, SKILL_COLUMNS.BATTLE, 2 * FPS, col!.defaultEvent!,
+        SLOT_WULFGARD, NounType.BATTLE_SKILL, 2 * FPS, col!.defaultEvent!,
       );
     });
 
@@ -146,11 +147,11 @@ describe('B. Infliction & Reaction Pipeline', () => {
 
   it('B2: Ultimate forces Combustion on enemy (strict)', () => {
     const { result } = setupWulfgard();
-    const col = findColumn(result.current, SLOT_WULFGARD, SKILL_COLUMNS.ULTIMATE);
+    const col = findColumn(result.current, SLOT_WULFGARD, NounType.ULTIMATE);
 
     act(() => {
       result.current.handleAddEvent(
-        SLOT_WULFGARD, SKILL_COLUMNS.ULTIMATE, 2 * FPS, col!.defaultEvent!,
+        SLOT_WULFGARD, NounType.ULTIMATE, 2 * FPS, col!.defaultEvent!,
       );
     });
 
@@ -171,10 +172,10 @@ describe('B. Infliction & Reaction Pipeline', () => {
       );
     });
 
-    const col = findColumn(result.current, SLOT_WULFGARD, SKILL_COLUMNS.COMBO);
+    const col = findColumn(result.current, SLOT_WULFGARD, NounType.COMBO_SKILL);
     act(() => {
       result.current.handleAddEvent(
-        SLOT_WULFGARD, SKILL_COLUMNS.COMBO, 3 * FPS, col!.defaultEvent!,
+        SLOT_WULFGARD, NounType.COMBO_SKILL, 3 * FPS, col!.defaultEvent!,
       );
     });
 
@@ -195,23 +196,23 @@ describe('C. Combo Trigger', () => {
     const { result } = setupWulfgard();
 
     // Battle skill at 2s — applies heat infliction at frame 3 (~0.767s offset)
-    const battleCol = findColumn(result.current, SLOT_WULFGARD, SKILL_COLUMNS.BATTLE);
+    const battleCol = findColumn(result.current, SLOT_WULFGARD, NounType.BATTLE_SKILL);
     act(() => {
       result.current.handleAddEvent(
-        SLOT_WULFGARD, SKILL_COLUMNS.BATTLE, 2 * FPS, battleCol!.defaultEvent!,
+        SLOT_WULFGARD, NounType.BATTLE_SKILL, 2 * FPS, battleCol!.defaultEvent!,
       );
     });
 
     // Combo at 5s — after infliction has landed
-    const comboCol = findColumn(result.current, SLOT_WULFGARD, SKILL_COLUMNS.COMBO);
+    const comboCol = findColumn(result.current, SLOT_WULFGARD, NounType.COMBO_SKILL);
     act(() => {
       result.current.handleAddEvent(
-        SLOT_WULFGARD, SKILL_COLUMNS.COMBO, 5 * FPS, comboCol!.defaultEvent!,
+        SLOT_WULFGARD, NounType.COMBO_SKILL, 5 * FPS, comboCol!.defaultEvent!,
       );
     });
 
     const combos = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === SKILL_COLUMNS.COMBO,
+      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.COMBO_SKILL,
     );
     expect(combos).toHaveLength(1);
   });
@@ -220,25 +221,25 @@ describe('C. Combo Trigger', () => {
     const { result } = setupWulfgard();
 
     // Akekuri battle skill at 2s — applies heat infliction
-    const akekuriBattleCol = findColumn(result.current, SLOT_AKEKURI, SKILL_COLUMNS.BATTLE);
+    const akekuriBattleCol = findColumn(result.current, SLOT_AKEKURI, NounType.BATTLE_SKILL);
     expect(akekuriBattleCol).toBeDefined();
     expect(akekuriBattleCol!.defaultEvent).toBeDefined();
     act(() => {
       result.current.handleAddEvent(
-        SLOT_AKEKURI, SKILL_COLUMNS.BATTLE, 2 * FPS, akekuriBattleCol!.defaultEvent!,
+        SLOT_AKEKURI, NounType.BATTLE_SKILL, 2 * FPS, akekuriBattleCol!.defaultEvent!,
       );
     });
 
     // Wulfgard combo at 5s — should trigger from Akekuri's infliction
-    const comboCol = findColumn(result.current, SLOT_WULFGARD, SKILL_COLUMNS.COMBO);
+    const comboCol = findColumn(result.current, SLOT_WULFGARD, NounType.COMBO_SKILL);
     act(() => {
       result.current.handleAddEvent(
-        SLOT_WULFGARD, SKILL_COLUMNS.COMBO, 5 * FPS, comboCol!.defaultEvent!,
+        SLOT_WULFGARD, NounType.COMBO_SKILL, 5 * FPS, comboCol!.defaultEvent!,
       );
     });
 
     const combos = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === SKILL_COLUMNS.COMBO,
+      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.COMBO_SKILL,
     );
     expect(combos).toHaveLength(1);
   });
@@ -250,7 +251,7 @@ describe('C. Combo Trigger', () => {
 
 describe('D. Empowered Battle Skill', () => {
   function getEmpoweredVariant(app: ReturnType<typeof useApp>) {
-    const battleCol = findColumn(app, SLOT_WULFGARD, SKILL_COLUMNS.BATTLE);
+    const battleCol = findColumn(app, SLOT_WULFGARD, NounType.BATTLE_SKILL);
     const empowered = battleCol?.eventVariants?.find(
       v => v.enhancementType === 'EMPOWERED',
     );
@@ -274,12 +275,12 @@ describe('D. Empowered Battle Skill', () => {
 
     act(() => {
       result.current.handleAddEvent(
-        SLOT_WULFGARD, SKILL_COLUMNS.BATTLE, 3 * FPS, empowered!,
+        SLOT_WULFGARD, NounType.BATTLE_SKILL, 3 * FPS, empowered!,
       );
     });
 
     const battles = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === SKILL_COLUMNS.BATTLE,
+      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.BATTLE_SKILL,
     );
     expect(battles).toHaveLength(1);
     // Empowered variant has 4 frames, normal has 3
@@ -306,7 +307,7 @@ describe('D. Empowered Battle Skill', () => {
 
     act(() => {
       result.current.handleAddEvent(
-        SLOT_WULFGARD, SKILL_COLUMNS.BATTLE, 3 * FPS, empowered!,
+        SLOT_WULFGARD, NounType.BATTLE_SKILL, 3 * FPS, empowered!,
       );
     });
 
@@ -327,11 +328,11 @@ describe('D. Empowered Battle Skill', () => {
 describe('E. Scorching Fangs (Talent 1)', () => {
   it('E1: Ultimate Combustion triggers Scorching Fangs on Wulfgard (strict)', () => {
     const { result } = setupWulfgard();
-    const ultCol = findColumn(result.current, SLOT_WULFGARD, SKILL_COLUMNS.ULTIMATE);
+    const ultCol = findColumn(result.current, SLOT_WULFGARD, NounType.ULTIMATE);
 
     act(() => {
       result.current.handleAddEvent(
-        SLOT_WULFGARD, SKILL_COLUMNS.ULTIMATE, 2 * FPS, ultCol!.defaultEvent!,
+        SLOT_WULFGARD, NounType.ULTIMATE, 2 * FPS, ultCol!.defaultEvent!,
       );
     });
 
@@ -360,10 +361,10 @@ describe('F. Code of Restraint (Talent 2)', () => {
     });
 
     // Strict: empowered battle skill consumes Combustion
-    const battleCol = findColumn(result.current, SLOT_WULFGARD, SKILL_COLUMNS.BATTLE);
+    const battleCol = findColumn(result.current, SLOT_WULFGARD, NounType.BATTLE_SKILL);
     act(() => {
       result.current.handleAddEvent(
-        SLOT_WULFGARD, SKILL_COLUMNS.BATTLE, 3 * FPS, battleCol!.defaultEvent!,
+        SLOT_WULFGARD, NounType.BATTLE_SKILL, 3 * FPS, battleCol!.defaultEvent!,
       );
     });
 
@@ -399,28 +400,28 @@ describe('G. Potential Interactions', () => {
     });
 
     // Combo at 3s → goes to cooldown (20s CD, ends at ~24s)
-    const comboCol = findColumn(result.current, SLOT_WULFGARD, SKILL_COLUMNS.COMBO);
+    const comboCol = findColumn(result.current, SLOT_WULFGARD, NounType.COMBO_SKILL);
     act(() => {
       result.current.handleAddEvent(
-        SLOT_WULFGARD, SKILL_COLUMNS.COMBO, 3 * FPS, comboCol!.defaultEvent!,
+        SLOT_WULFGARD, NounType.COMBO_SKILL, 3 * FPS, comboCol!.defaultEvent!,
       );
     });
 
     const comboBefore = result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === SKILL_COLUMNS.COMBO,
+      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.COMBO_SKILL,
     );
     const durationBefore = eventDuration(comboBefore!);
 
     // Ult at 10s — should reset combo cooldown (P5 default)
-    const ultCol = findColumn(result.current, SLOT_WULFGARD, SKILL_COLUMNS.ULTIMATE);
+    const ultCol = findColumn(result.current, SLOT_WULFGARD, NounType.ULTIMATE);
     act(() => {
       result.current.handleAddEvent(
-        SLOT_WULFGARD, SKILL_COLUMNS.ULTIMATE, 10 * FPS, ultCol!.defaultEvent!,
+        SLOT_WULFGARD, NounType.ULTIMATE, 10 * FPS, ultCol!.defaultEvent!,
       );
     });
 
     const comboAfter = result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === SKILL_COLUMNS.COMBO,
+      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.COMBO_SKILL,
     );
     const durationAfter = eventDuration(comboAfter!);
 
@@ -449,28 +450,28 @@ describe('G. Potential Interactions', () => {
     });
 
     // Combo at 3s
-    const comboCol = findColumn(result.current, SLOT_WULFGARD, SKILL_COLUMNS.COMBO);
+    const comboCol = findColumn(result.current, SLOT_WULFGARD, NounType.COMBO_SKILL);
     act(() => {
       result.current.handleAddEvent(
-        SLOT_WULFGARD, SKILL_COLUMNS.COMBO, 3 * FPS, comboCol!.defaultEvent!,
+        SLOT_WULFGARD, NounType.COMBO_SKILL, 3 * FPS, comboCol!.defaultEvent!,
       );
     });
 
     const comboBefore = result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === SKILL_COLUMNS.COMBO,
+      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.COMBO_SKILL,
     );
     const durationBefore = eventDuration(comboBefore!);
 
     // Ult at 10s — should NOT reset cooldown at P4
-    const ultCol = findColumn(result.current, SLOT_WULFGARD, SKILL_COLUMNS.ULTIMATE);
+    const ultCol = findColumn(result.current, SLOT_WULFGARD, NounType.ULTIMATE);
     act(() => {
       result.current.handleAddEvent(
-        SLOT_WULFGARD, SKILL_COLUMNS.ULTIMATE, 10 * FPS, ultCol!.defaultEvent!,
+        SLOT_WULFGARD, NounType.ULTIMATE, 10 * FPS, ultCol!.defaultEvent!,
       );
     });
 
     const comboAfter = result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === SKILL_COLUMNS.COMBO,
+      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.COMBO_SKILL,
     );
     const durationAfter = eventDuration(comboAfter!);
 
@@ -496,18 +497,18 @@ describe('H. Cross-Mechanic Chains', () => {
     });
 
     // 1. Combo at 3s (triggers from infliction)
-    const comboCol = findColumn(result.current, SLOT_WULFGARD, SKILL_COLUMNS.COMBO);
+    const comboCol = findColumn(result.current, SLOT_WULFGARD, NounType.COMBO_SKILL);
     act(() => {
       result.current.handleAddEvent(
-        SLOT_WULFGARD, SKILL_COLUMNS.COMBO, 3 * FPS, comboCol!.defaultEvent!,
+        SLOT_WULFGARD, NounType.COMBO_SKILL, 3 * FPS, comboCol!.defaultEvent!,
       );
     });
 
     // 2. Ult at 10s (forces Combustion, triggers Scorching Fangs, resets combo CD)
-    const ultCol = findColumn(result.current, SLOT_WULFGARD, SKILL_COLUMNS.ULTIMATE);
+    const ultCol = findColumn(result.current, SLOT_WULFGARD, NounType.ULTIMATE);
     act(() => {
       result.current.handleAddEvent(
-        SLOT_WULFGARD, SKILL_COLUMNS.ULTIMATE, 10 * FPS, ultCol!.defaultEvent!,
+        SLOT_WULFGARD, NounType.ULTIMATE, 10 * FPS, ultCol!.defaultEvent!,
       );
     });
 
@@ -525,7 +526,7 @@ describe('H. Cross-Mechanic Chains', () => {
 
     // Verify: combo cooldown was reset (duration shortened)
     const combo = result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === SKILL_COLUMNS.COMBO,
+      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.COMBO_SKILL,
     );
     // Combo total duration should end near the ult frame (10s), not at 3s + 1s + 20s = 24s
     const comboEnd = combo!.startFrame + eventDuration(combo!);
@@ -538,26 +539,26 @@ describe('H. Cross-Mechanic Chains', () => {
     const { result } = setupWulfgard();
 
     // 1. Ult at 2s — forces Combustion
-    const ultCol = findColumn(result.current, SLOT_WULFGARD, SKILL_COLUMNS.ULTIMATE);
+    const ultCol = findColumn(result.current, SLOT_WULFGARD, NounType.ULTIMATE);
     act(() => {
       result.current.handleAddEvent(
-        SLOT_WULFGARD, SKILL_COLUMNS.ULTIMATE, 2 * FPS, ultCol!.defaultEvent!,
+        SLOT_WULFGARD, NounType.ULTIMATE, 2 * FPS, ultCol!.defaultEvent!,
       );
     });
 
     // 2. Place empowered battle skill at 4s (Combustion active from ult's forced apply at ~2.77s, 5s duration)
-    const battleCol = findColumn(result.current, SLOT_WULFGARD, SKILL_COLUMNS.BATTLE);
+    const battleCol = findColumn(result.current, SLOT_WULFGARD, NounType.BATTLE_SKILL);
     const empowered = battleCol?.eventVariants?.find(v => v.enhancementType === 'EMPOWERED');
     expect(empowered).toBeDefined();
 
     act(() => {
       result.current.handleAddEvent(
-        SLOT_WULFGARD, SKILL_COLUMNS.BATTLE, 4 * FPS, empowered!,
+        SLOT_WULFGARD, NounType.BATTLE_SKILL, 4 * FPS, empowered!,
       );
     });
 
     const battles = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === SKILL_COLUMNS.BATTLE,
+      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.BATTLE_SKILL,
     );
     expect(battles).toHaveLength(1);
 
@@ -580,10 +581,10 @@ describe('H. Cross-Mechanic Chains', () => {
     const { result } = setupWulfgard();
 
     // 1. Ult at 2s — forces Combustion + triggers Scorching Fangs
-    const ultCol = findColumn(result.current, SLOT_WULFGARD, SKILL_COLUMNS.ULTIMATE);
+    const ultCol = findColumn(result.current, SLOT_WULFGARD, NounType.ULTIMATE);
     act(() => {
       result.current.handleAddEvent(
-        SLOT_WULFGARD, SKILL_COLUMNS.ULTIMATE, 2 * FPS, ultCol!.defaultEvent!,
+        SLOT_WULFGARD, NounType.ULTIMATE, 2 * FPS, ultCol!.defaultEvent!,
       );
     });
 
@@ -595,13 +596,13 @@ describe('H. Cross-Mechanic Chains', () => {
 
     // 2. Empowered battle skill at 8s — Combustion still active, empowered variant consumes it
     //    P3 trigger: PERFORM EMPOWERED BATTLE_SKILL → apply SF to self (reset) + SF Minor to ALL_OTHER
-    const battleCol = findColumn(result.current, SLOT_WULFGARD, SKILL_COLUMNS.BATTLE);
+    const battleCol = findColumn(result.current, SLOT_WULFGARD, NounType.BATTLE_SKILL);
     const empowered = battleCol?.eventVariants?.find(v => v.enhancementType === 'EMPOWERED');
     expect(empowered).toBeDefined();
 
     act(() => {
       result.current.handleAddEvent(
-        SLOT_WULFGARD, SKILL_COLUMNS.BATTLE, 8 * FPS, empowered!,
+        SLOT_WULFGARD, NounType.BATTLE_SKILL, 8 * FPS, empowered!,
       );
     });
 
@@ -642,12 +643,12 @@ describe('I. Empowered Battle Skill — Activation & Consume Priority', () => {
     result: ReturnType<typeof setupWulfgard>['result'],
     startSec: number,
   ) {
-    const battleCol = findColumn(result.current, SLOT_WULFGARD, SKILL_COLUMNS.BATTLE);
+    const battleCol = findColumn(result.current, SLOT_WULFGARD, NounType.BATTLE_SKILL);
     const empowered = battleCol?.eventVariants?.find(v => v.enhancementType === 'EMPOWERED');
     expect(empowered).toBeDefined();
     act(() => {
       result.current.handleAddEvent(
-        SLOT_WULFGARD, SKILL_COLUMNS.BATTLE, startSec * FPS, empowered!,
+        SLOT_WULFGARD, NounType.BATTLE_SKILL, startSec * FPS, empowered!,
       );
     });
   }
@@ -670,20 +671,20 @@ describe('I. Empowered Battle Skill — Activation & Consume Priority', () => {
     placeReaction(result, REACTION_COLUMNS.SOLIDIFICATION, 1);
 
     // Empowered variant should exist in the column definition but placing it should be invalid
-    const battleCol = findColumn(result.current, SLOT_WULFGARD, SKILL_COLUMNS.BATTLE);
+    const battleCol = findColumn(result.current, SLOT_WULFGARD, NounType.BATTLE_SKILL);
     const empowered = battleCol?.eventVariants?.find(v => v.enhancementType === 'EMPOWERED');
     expect(empowered).toBeDefined();
 
     // Place it anyway — should be flagged as invalid by the validator
     act(() => {
       result.current.handleAddEvent(
-        SLOT_WULFGARD, SKILL_COLUMNS.BATTLE, 3 * FPS, empowered!,
+        SLOT_WULFGARD, NounType.BATTLE_SKILL, 3 * FPS, empowered!,
       );
     });
 
     // The placed event should have a validation warning (activation not met)
     const battles = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === SKILL_COLUMNS.BATTLE,
+      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.BATTLE_SKILL,
     );
     expect(battles).toHaveLength(1);
     // Corrosion and Solidification should NOT be consumed
@@ -757,7 +758,7 @@ describe('I. Empowered Battle Skill — Activation & Consume Priority', () => {
 
     // EBS should exist and have no activation warnings
     const battles = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === SKILL_COLUMNS.BATTLE,
+      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.BATTLE_SKILL,
     );
     expect(battles).toHaveLength(1);
     expect(battles[0].enhancementType).toBe('EMPOWERED');
@@ -771,7 +772,7 @@ describe('I. Empowered Battle Skill — Activation & Consume Priority', () => {
     placeEmpoweredBS(result, 3);
 
     const battles = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === SKILL_COLUMNS.BATTLE,
+      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.BATTLE_SKILL,
     );
     expect(battles).toHaveLength(1);
     expect(battles[0].enhancementType).toBe('EMPOWERED');
@@ -786,11 +787,11 @@ describe('I. Empowered Battle Skill — Activation & Consume Priority', () => {
 describe('J. Normal vs Empowered — Mutual Exclusivity', () => {
   it('J1: Normal BS applies heat infliction on frame 3', () => {
     const { result } = setupWulfgard();
-    const col = findColumn(result.current, SLOT_WULFGARD, SKILL_COLUMNS.BATTLE);
+    const col = findColumn(result.current, SLOT_WULFGARD, NounType.BATTLE_SKILL);
 
     act(() => {
       result.current.handleAddEvent(
-        SLOT_WULFGARD, SKILL_COLUMNS.BATTLE, 2 * FPS, col!.defaultEvent!,
+        SLOT_WULFGARD, NounType.BATTLE_SKILL, 2 * FPS, col!.defaultEvent!,
       );
     });
 
@@ -802,17 +803,17 @@ describe('J. Normal vs Empowered — Mutual Exclusivity', () => {
 
   it('J2: Normal BS has 3 frames, empowered has 4', () => {
     const { result } = setupWulfgard();
-    const col = findColumn(result.current, SLOT_WULFGARD, SKILL_COLUMNS.BATTLE);
+    const col = findColumn(result.current, SLOT_WULFGARD, NounType.BATTLE_SKILL);
 
     // Normal BS
     act(() => {
       result.current.handleAddEvent(
-        SLOT_WULFGARD, SKILL_COLUMNS.BATTLE, 2 * FPS, col!.defaultEvent!,
+        SLOT_WULFGARD, NounType.BATTLE_SKILL, 2 * FPS, col!.defaultEvent!,
       );
     });
 
     const normalBattle = result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === SKILL_COLUMNS.BATTLE,
+      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.BATTLE_SKILL,
     );
     const normalFrames = normalBattle!.segments.flatMap(
       (s: { frames?: unknown[] }) => s.frames ?? [],
@@ -832,7 +833,7 @@ describe('J. Normal vs Empowered — Mutual Exclusivity', () => {
       );
     });
 
-    const battleCol = findColumn(result.current, SLOT_WULFGARD, SKILL_COLUMNS.BATTLE);
+    const battleCol = findColumn(result.current, SLOT_WULFGARD, NounType.BATTLE_SKILL);
     const empowered = battleCol?.eventVariants?.find(v => v.enhancementType === 'EMPOWERED');
 
     // Count heat inflictions BEFORE placing empowered BS
@@ -842,7 +843,7 @@ describe('J. Normal vs Empowered — Mutual Exclusivity', () => {
 
     act(() => {
       result.current.handleAddEvent(
-        SLOT_WULFGARD, SKILL_COLUMNS.BATTLE, 3 * FPS, empowered!,
+        SLOT_WULFGARD, NounType.BATTLE_SKILL, 3 * FPS, empowered!,
       );
     });
 
@@ -861,12 +862,12 @@ describe('J. Normal vs Empowered — Mutual Exclusivity', () => {
 describe('K. Scorching Fangs — Detailed Behavior', () => {
   it('K1: Scorching Fangs has 10s duration (1200 frames)', () => {
     const { result } = setupWulfgard();
-    const col = findColumn(result.current, SLOT_WULFGARD, SKILL_COLUMNS.ULTIMATE);
+    const col = findColumn(result.current, SLOT_WULFGARD, NounType.ULTIMATE);
 
     // Ult forces Combustion → triggers Scorching Fangs
     act(() => {
       result.current.handleAddEvent(
-        SLOT_WULFGARD, SKILL_COLUMNS.ULTIMATE, 2 * FPS, col!.defaultEvent!,
+        SLOT_WULFGARD, NounType.ULTIMATE, 2 * FPS, col!.defaultEvent!,
       );
     });
 
@@ -881,17 +882,17 @@ describe('K. Scorching Fangs — Detailed Behavior', () => {
 
   it('K2: Scorching Fangs does not stack — second trigger resets duration', () => {
     const { result } = setupWulfgard();
-    const col = findColumn(result.current, SLOT_WULFGARD, SKILL_COLUMNS.ULTIMATE);
+    const col = findColumn(result.current, SLOT_WULFGARD, NounType.ULTIMATE);
 
     // Two ults spaced apart — each forces Combustion → triggers SF
     act(() => {
       result.current.handleAddEvent(
-        SLOT_WULFGARD, SKILL_COLUMNS.ULTIMATE, 2 * FPS, col!.defaultEvent!,
+        SLOT_WULFGARD, NounType.ULTIMATE, 2 * FPS, col!.defaultEvent!,
       );
     });
     act(() => {
       result.current.handleAddEvent(
-        SLOT_WULFGARD, SKILL_COLUMNS.ULTIMATE, 30 * FPS, col!.defaultEvent!,
+        SLOT_WULFGARD, NounType.ULTIMATE, 30 * FPS, col!.defaultEvent!,
       );
     });
 
@@ -908,10 +909,10 @@ describe('K. Scorching Fangs — Detailed Behavior', () => {
     const { result } = setupWulfgard();
 
     // Place ult to force Combustion → trigger SF
-    const col = findColumn(result.current, SLOT_WULFGARD, SKILL_COLUMNS.ULTIMATE);
+    const col = findColumn(result.current, SLOT_WULFGARD, NounType.ULTIMATE);
     act(() => {
       result.current.handleAddEvent(
-        SLOT_WULFGARD, SKILL_COLUMNS.ULTIMATE, 2 * FPS, col!.defaultEvent!,
+        SLOT_WULFGARD, NounType.ULTIMATE, 2 * FPS, col!.defaultEvent!,
       );
     });
 
@@ -943,30 +944,30 @@ describe('L. P5 Natural Predator — Combo Cooldown Reset', () => {
     });
 
     // Place combo at 2s
-    const comboCol = findColumn(result.current, SLOT_WULFGARD, SKILL_COLUMNS.COMBO);
+    const comboCol = findColumn(result.current, SLOT_WULFGARD, NounType.COMBO_SKILL);
     act(() => {
       result.current.handleAddEvent(
-        SLOT_WULFGARD, SKILL_COLUMNS.COMBO, 2 * FPS, comboCol!.defaultEvent!,
+        SLOT_WULFGARD, NounType.COMBO_SKILL, 2 * FPS, comboCol!.defaultEvent!,
       );
     });
 
     // Place ult at 5s — should reset combo cooldown
-    const ultCol = findColumn(result.current, SLOT_WULFGARD, SKILL_COLUMNS.ULTIMATE);
+    const ultCol = findColumn(result.current, SLOT_WULFGARD, NounType.ULTIMATE);
     act(() => {
       result.current.handleAddEvent(
-        SLOT_WULFGARD, SKILL_COLUMNS.ULTIMATE, 5 * FPS, ultCol!.defaultEvent!,
+        SLOT_WULFGARD, NounType.ULTIMATE, 5 * FPS, ultCol!.defaultEvent!,
       );
     });
 
     // Place second combo at 8s — should be placeable due to cooldown reset
     act(() => {
       result.current.handleAddEvent(
-        SLOT_WULFGARD, SKILL_COLUMNS.COMBO, 8 * FPS, comboCol!.defaultEvent!,
+        SLOT_WULFGARD, NounType.COMBO_SKILL, 8 * FPS, comboCol!.defaultEvent!,
       );
     });
 
     const combos = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === SKILL_COLUMNS.COMBO,
+      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.COMBO_SKILL,
     );
     expect(combos).toHaveLength(2);
   });
@@ -989,29 +990,29 @@ describe('L. P5 Natural Predator — Combo Cooldown Reset', () => {
       );
     });
 
-    const comboCol = findColumn(result.current, SLOT_WULFGARD, SKILL_COLUMNS.COMBO);
+    const comboCol = findColumn(result.current, SLOT_WULFGARD, NounType.COMBO_SKILL);
     act(() => {
       result.current.handleAddEvent(
-        SLOT_WULFGARD, SKILL_COLUMNS.COMBO, 2 * FPS, comboCol!.defaultEvent!,
+        SLOT_WULFGARD, NounType.COMBO_SKILL, 2 * FPS, comboCol!.defaultEvent!,
       );
     });
 
-    const ultCol = findColumn(result.current, SLOT_WULFGARD, SKILL_COLUMNS.ULTIMATE);
+    const ultCol = findColumn(result.current, SLOT_WULFGARD, NounType.ULTIMATE);
     act(() => {
       result.current.handleAddEvent(
-        SLOT_WULFGARD, SKILL_COLUMNS.ULTIMATE, 5 * FPS, ultCol!.defaultEvent!,
+        SLOT_WULFGARD, NounType.ULTIMATE, 5 * FPS, ultCol!.defaultEvent!,
       );
     });
 
     // Second combo at 8s — should NOT be placeable (still on cooldown)
     act(() => {
       result.current.handleAddEvent(
-        SLOT_WULFGARD, SKILL_COLUMNS.COMBO, 8 * FPS, comboCol!.defaultEvent!,
+        SLOT_WULFGARD, NounType.COMBO_SKILL, 8 * FPS, comboCol!.defaultEvent!,
       );
     });
 
     const combos = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === SKILL_COLUMNS.COMBO,
+      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.COMBO_SKILL,
     );
     // Only 1 combo — second was rejected or overlaps
     expect(combos).toHaveLength(1);

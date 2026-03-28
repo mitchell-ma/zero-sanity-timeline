@@ -1,8 +1,17 @@
 import { DamageFactorType, DamageType, ElementType, EnhancementType, EventFrameType, EventStatusType, InteractionModeType, SegmentType, TimeDependency } from './enums';
 import type { FrameClausePredicate, FrameDealDamage } from '../model/event-frames/skillEventFrame';
+import { NounType } from '../dsl/semantics';
 
 /** String union for the four operator combat skills, matching the data keys in operators.ts. */
 export type SkillType = "basic" | "battle" | "combo" | "ultimate";
+
+/** Maps NounType skill column IDs to SkillType data keys. */
+export const NOUN_TO_SKILL_TYPE: Record<string, SkillType> = {
+  [NounType.BASIC_ATTACK]: 'basic',
+  [NounType.BATTLE_SKILL]: 'battle',
+  [NounType.COMBO_SKILL]: 'combo',
+  [NounType.ULTIMATE]: 'ultimate',
+};
 
 export interface SkillDef {
   name: string;
@@ -208,7 +217,7 @@ export interface TimelineEvent {
   parameterValues?: Record<string, number>;
   /** Susceptibility bonuses applied by this status event (e.g. Focus), keyed by ElementType → resolved percentage. */
   susceptibility?: Partial<Record<ElementType, number>>;
-  /** For combo events: the trigger source's columnId (e.g. 'heatInfliction', 'BREACH'). */
+  /** For combo events: the trigger source's columnId (e.g. INFLICTION_COLUMNS.HEAT, PhysicalStatusType.BREACH). */
   comboTriggerColumnId?: string;
   /** How this event interacts with other timelines (TIME_STOP for ultimates and perfect dodges, NONE otherwise). */
   timeInteraction?: string;

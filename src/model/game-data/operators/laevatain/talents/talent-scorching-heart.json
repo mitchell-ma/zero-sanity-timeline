@@ -7,7 +7,7 @@
     "duration": {
       "value": {
         "verb": "IS",
-        "value": -1
+        "value": 99999
       },
       "unit": "SECOND"
     },
@@ -40,8 +40,9 @@
         {
           "subject": "ENEMY",
           "verb": "HAVE",
-          "object": "INFLICTION",
-          "objectId": "HEAT"
+          "object": "STATUS",
+          "objectId": "INFLICTION",
+          "objectQualifier": "HEAT"
         }
       ],
       "effects": [

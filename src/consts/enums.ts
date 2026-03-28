@@ -1,5 +1,11 @@
 import { t } from '../locales/locale';
 
+export enum QueueFrameType {
+  PROCESS_FRAME = 'PROCESS_FRAME',
+  ENGINE_TRIGGER = 'ENGINE_TRIGGER',
+  COMBO_RESOLVE = 'COMBO_RESOLVE',
+}
+
 export enum CombatSkillType {
   BASIC_ATTACK = "BASIC_ATTACK",
   BATK = "BATK",
@@ -99,11 +105,10 @@ export enum StackInteractionType {
   REFRESH = "REFRESH",
 }
 
-/** Sentinel: status has no stack limit. Use as stacks.limit value in JSON configs. */
-export const UNLIMITED_STACKS = -1;
-
-/** Sentinel: status has permanent duration (never expires). Use as duration value in JSON configs. */
-export const PERMANENT_DURATION = -1;
+/** Effectively infinite — used for unlimited stacks and permanent duration in JSON configs. */
+export const INFINITY = 99999;
+export const UNLIMITED_STACKS = INFINITY;
+export const PERMANENT_DURATION = INFINITY;
 
 export enum ElementType {
   NONE = "NONE",

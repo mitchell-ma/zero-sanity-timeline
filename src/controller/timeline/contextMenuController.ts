@@ -6,11 +6,12 @@
  * closures, allowing the view to map actionIds to callbacks.
  */
 import { TimelineEvent, Column, MiniTimeline, ContextMenuItem, getAnimationDurationFromSegments } from '../../consts/viewTypes';
+import { NounType } from '../../dsl/semantics';
 import { CombatSkillType, ColumnType, MicroColumnAssignment, InteractionModeType } from '../../consts/enums';
 import { getAllSkillLabels, getAllInflictionLabels } from '../gameDataStore';
 import { REACTION_LABELS } from '../../model/channels';
 import { t } from '../../locales/locale';
-import { SKILL_COLUMNS, OPERATOR_COLUMNS, ENEMY_OWNER_ID } from '../../model/channels';
+import { OPERATOR_COLUMNS, ENEMY_OWNER_ID } from '../../model/channels';
 import { COMMON_OWNER_ID } from '../slot/commonSlotController';
 import { getLastController } from './eventQueueController';
 import { isColumnFull, isBeforeLastEvent } from './microColumnController';
@@ -203,7 +204,7 @@ export function buildColumnContextMenu(
   const rawName = col.defaultEvent?.id ?? col.label;
   const eventName = getAllSkillLabels()[rawName as CombatSkillType] ?? getAllInflictionLabels()[rawName] ?? col.defaultEvent?.name ?? rawName;
 
-  if (col.columnId === SKILL_COLUMNS.COMBO) {
+  if (col.columnId === NounType.COMBO_SKILL) {
     const comboAvail = checkComboWindowAvailability(col.ownerId, atFrame, events, alwaysAvailableComboSlots);
     const overlap = checkOverlap(col.ownerId, col.columnId, computeProspectiveRange(col.defaultEvent ?? null, atFrame, timeStopRegions));
     const disabled = interactionMode === InteractionModeType.STRICT && (inTimeStop || !comboAvail.available || overlap);

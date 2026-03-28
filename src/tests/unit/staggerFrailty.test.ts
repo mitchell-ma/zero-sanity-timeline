@@ -10,11 +10,12 @@
  *    frailty events in a single call
  */
 import { Subtimeline } from '../../controller/timeline/subtimeline';
+import { NounType } from '../../dsl/semantics';
 import { StaggerTimeline } from '../../controller/timeline/staggerTimeline';
 import { DerivedEventController } from '../../controller/timeline/derivedEventController';
 import { EventsQueryService } from '../../controller/timeline/eventsQueryService';
 import { StaggerController } from '../../controller/slot/staggerController';
-import { NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID, ENEMY_OWNER_ID, SKILL_COLUMNS } from '../../model/channels';
+import { NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID, ENEMY_OWNER_ID } from '../../model/channels';
 import { StatType, SegmentType, TimeDependency } from '../../consts/enums';
 import { getStaggerMultiplier } from '../../model/calculation/damageFormulas';
 import { FPS } from '../../utils/timeline';
@@ -390,7 +391,7 @@ describe('F. StaggerController.sync', () => {
       id: 'test-skill',
       name: 'test-skill',
       ownerId,
-      columnId: SKILL_COLUMNS.BASIC,
+      columnId: NounType.BASIC_ATTACK,
       startFrame,
             segments: [{
         properties: { duration: 120 },
@@ -466,7 +467,7 @@ describe('F. StaggerController.sync', () => {
       id: 'test-combo',
       name: 'test-combo',
       ownerId: 'slot-0',
-      columnId: SKILL_COLUMNS.COMBO,
+      columnId: NounType.COMBO_SKILL,
       startFrame: 100,
             segments: [
         { properties: { segmentTypes: [SegmentType.ANIMATION], duration: 60, timeDependency: TimeDependency.REAL_TIME } },
@@ -497,7 +498,7 @@ describe('F. StaggerController.sync', () => {
       id: 'no-stagger-skill',
       name: 'no-stagger-skill',
       ownerId: 'slot-0',
-      columnId: SKILL_COLUMNS.BASIC,
+      columnId: NounType.BASIC_ATTACK,
       startFrame: 100,
             segments: [{
         properties: { duration: 120 },

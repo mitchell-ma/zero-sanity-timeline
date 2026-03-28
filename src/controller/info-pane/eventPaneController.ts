@@ -7,7 +7,7 @@ import type { Interaction, Effect, Predicate } from '../../dsl/semantics';
 import { getSimpleValue, getLeafValue } from '../../controller/calculation/valueResolver';
 import { translateEffect } from '../../dsl/semanticsTranslation';
 import type { TranslatedEffect } from '../../dsl/semanticsTranslation';
-import { ENEMY_OWNER_ID, OPERATOR_COLUMNS, REACTION_COLUMNS, PHYSICAL_STATUS_COLUMNS, PHYSICAL_STATUS_COLUMN_IDS, FRAGILITY_COLUMN_PREFIX, SKILL_COLUMNS, INFLICTION_COLUMN_IDS, PHYSICAL_INFLICTION_COLUMN_IDS, COMBO_WINDOW_COLUMN_ID } from '../../model/channels';
+import { ENEMY_OWNER_ID, OPERATOR_COLUMNS, REACTION_COLUMNS, PHYSICAL_STATUS_COLUMNS, PHYSICAL_STATUS_COLUMN_IDS, FRAGILITY_COLUMN_PREFIX, INFLICTION_COLUMN_IDS, PHYSICAL_INFLICTION_COLUMN_IDS, COMBO_WINDOW_COLUMN_ID } from '../../model/channels';
 import { computeSpReturnSummary, SpReturnSummary } from '../calculation/frameCalculator';
 import { ELECTRIFICATION_ARTS_FRAGILITY, BREACH_PHYSICAL_FRAGILITY, DEFAULT_AMP_BONUS } from '../timeline/eventsQueryService';
 import { getOperatorSkill, getSkillTypeMap, getComboTriggerInfo } from '../gameDataStore';
@@ -128,9 +128,8 @@ export function resolveEventIdentity(
       if (event.columnId === OPERATOR_COLUMNS.INPUT) {
         skillName = 'Dash';
         columnLabel = 'DASH';
-      } else if (event.columnId === OPERATOR_COLUMNS.MELTING_FLAME) {
-        skillName = getAllStatusLabels()['MELTING_FLAME'];
-        ownerColor = '#f07030';
+      } else if (getAllStatusLabels()[event.columnId]) {
+        skillName = getAllStatusLabels()[event.columnId];
         columnLabel = 'STATUS';
       } else if (event.columnId === COMBO_WINDOW_COLUMN_ID) {
         skillName = 'Combo Activation Window';
@@ -143,7 +142,7 @@ export function resolveEventIdentity(
           triggerCondition = skill.triggerCondition;
           columnLabel = event.columnId.charAt(0).toUpperCase() + event.columnId.slice(1) + ' skill';
         }
-        if (event.columnId === SKILL_COLUMNS.COMBO) {
+        if (event.columnId === NounType.COMBO_SKILL) {
           const info = getComboTriggerInfo(op.id);
           if (info) {
             for (const pred of info.onTriggerClause) {
@@ -233,7 +232,7 @@ export function resolveComboChain(
   allProcessedEvents: readonly TimelineEvent[],
   slots: { slotId: string; operator: Operator | null }[],
 ): ComboChainLink[] | null {
-  if (event.columnId !== SKILL_COLUMNS.COMBO) return null;
+  if (event.columnId !== NounType.COMBO_SKILL) return null;
 
   // Find the combo activation window that contains this combo event
   const window = allProcessedEvents.find((e) =>

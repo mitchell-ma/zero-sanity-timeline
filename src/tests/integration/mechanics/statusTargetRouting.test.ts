@@ -16,8 +16,8 @@
  */
 
 import { renderHook, act } from '@testing-library/react';
+import { NounType } from '../../../dsl/semantics';
 import { useApp } from '../../../app/useApp';
-import { SKILL_COLUMNS, OPERATOR_COLUMNS } from '../../../model/channels';
 import { ColumnType, InteractionModeType, StatusType } from '../../../consts/enums';
 import { FPS } from '../../../utils/timeline';
 import type { MiniTimeline } from '../../../consts/viewTypes';
@@ -25,6 +25,7 @@ import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../../../controller/slot/com
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
+const MELTING_FLAME_ID = 'MELTING_FLAME';
 const SLOT_LAEVATAIN = 'slot-0';
 const SLOT_AKEKURI = 'slot-1';
 
@@ -58,12 +59,12 @@ describe('Status target routing — effect to TEAM, config default TEAM', () => 
       result.current.setInteractionMode(InteractionModeType.FREEFORM);
     });
 
-    const ultCol = findColumn(result.current, SLOT_AKEKURI, SKILL_COLUMNS.ULTIMATE);
+    const ultCol = findColumn(result.current, SLOT_AKEKURI, NounType.ULTIMATE);
     expect(ultCol).toBeDefined();
 
     act(() => {
       result.current.handleAddEvent(
-        SLOT_AKEKURI, SKILL_COLUMNS.ULTIMATE, 1 * FPS, ultCol!.defaultEvent!,
+        SLOT_AKEKURI, NounType.ULTIMATE, 1 * FPS, ultCol!.defaultEvent!,
       );
     });
 
@@ -93,18 +94,18 @@ describe('Status target routing — effect to OPERATOR, config default OPERATOR'
       result.current.setInteractionMode(InteractionModeType.FREEFORM);
     });
 
-    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, SKILL_COLUMNS.BATTLE);
+    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE_SKILL);
     expect(battleCol).toBeDefined();
 
     act(() => {
       result.current.handleAddEvent(
-        SLOT_LAEVATAIN, SKILL_COLUMNS.BATTLE, 1 * FPS, battleCol!.defaultEvent!,
+        SLOT_LAEVATAIN, NounType.BATTLE_SKILL, 1 * FPS, battleCol!.defaultEvent!,
       );
     });
 
     // MELTING_FLAME should appear on Laevatain's personal MELTING_FLAME column
     const mfEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === OPERATOR_COLUMNS.MELTING_FLAME,
+      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === MELTING_FLAME_ID,
     );
     expect(mfEvents.length).toBeGreaterThanOrEqual(1);
 
@@ -160,18 +161,18 @@ describe('Status target routing — no effect target, uses config default', () =
     });
 
     // Place a BS to trigger MELTING_FLAME derivation
-    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, SKILL_COLUMNS.BATTLE);
+    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE_SKILL);
     expect(battleCol).toBeDefined();
 
     act(() => {
       result.current.handleAddEvent(
-        SLOT_LAEVATAIN, SKILL_COLUMNS.BATTLE, 2 * FPS, battleCol!.defaultEvent!,
+        SLOT_LAEVATAIN, NounType.BATTLE_SKILL, 2 * FPS, battleCol!.defaultEvent!,
       );
     });
 
     // MELTING_FLAME should appear on Laevatain's personal column
     const personalMfEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === OPERATOR_COLUMNS.MELTING_FLAME,
+      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === MELTING_FLAME_ID,
     );
     expect(personalMfEvents.length).toBeGreaterThanOrEqual(1);
 
@@ -195,22 +196,22 @@ describe('Status target routing — cross-operator consistency', () => {
       result.current.setInteractionMode(InteractionModeType.FREEFORM);
     });
 
-    const ultCol = findColumn(result.current, SLOT_AKEKURI, SKILL_COLUMNS.ULTIMATE);
-    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, SKILL_COLUMNS.BATTLE);
+    const ultCol = findColumn(result.current, SLOT_AKEKURI, NounType.ULTIMATE);
+    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE_SKILL);
     expect(ultCol).toBeDefined();
     expect(battleCol).toBeDefined();
 
     // Akekuri ult at 1s
     act(() => {
       result.current.handleAddEvent(
-        SLOT_AKEKURI, SKILL_COLUMNS.ULTIMATE, 1 * FPS, ultCol!.defaultEvent!,
+        SLOT_AKEKURI, NounType.ULTIMATE, 1 * FPS, ultCol!.defaultEvent!,
       );
     });
 
     // Laevatain BS at 1s
     act(() => {
       result.current.handleAddEvent(
-        SLOT_LAEVATAIN, SKILL_COLUMNS.BATTLE, 1 * FPS, battleCol!.defaultEvent!,
+        SLOT_LAEVATAIN, NounType.BATTLE_SKILL, 1 * FPS, battleCol!.defaultEvent!,
       );
     });
 
@@ -222,7 +223,7 @@ describe('Status target routing — cross-operator consistency', () => {
 
     // MELTING_FLAME → Laevatain personal column
     const mfEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === OPERATOR_COLUMNS.MELTING_FLAME,
+      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === MELTING_FLAME_ID,
     );
     expect(mfEvents.length).toBeGreaterThanOrEqual(1);
 

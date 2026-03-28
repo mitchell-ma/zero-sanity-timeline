@@ -50,7 +50,8 @@
                 {
                   "subject": "ENEMY",
                   "verb": "HAVE",
-                  "object": "ORIGINIUM_CRYSTAL"
+                  "object": "STATUS",
+                  "objectId": "ORIGINIUM_CRYSTAL"
                 }
               ],
               "effects": [
@@ -130,7 +131,8 @@
                   "subject": "ENEMY",
                   "verb": "HAVE",
                   "negated": true,
-                  "object": "ORIGINIUM_CRYSTAL"
+                  "object": "STATUS",
+                  "objectId": "ORIGINIUM_CRYSTAL"
                 }
               ],
               "effects": [

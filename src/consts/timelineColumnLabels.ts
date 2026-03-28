@@ -2,6 +2,7 @@ import { PhysicalStatusType, StatusType } from './enums';
 import { SkillType } from './viewTypes';
 import { getAllSkillLabels, getAllStatusLabels } from '../controller/gameDataStore';
 import { t } from '../locales/locale';
+import { REACTION_COLUMNS, PHYSICAL_INFLICTION_COLUMNS } from '../model/channels';
 
 // ── Column header labels ────────────────────────────────────────────────────
 
@@ -123,25 +124,25 @@ export const INFLICTION_EVENT_LABELS: Record<string, string> = {
 // ── Reaction labels & micro-columns ─────────────────────────────────────────
 
 export const REACTION_LABELS: Record<string, { label: string; color: string }> = {
-  combustion:      { label: t('reaction.combustion'),      color: '#ff5522' },
-  solidification:  { label: t('reaction.solidification'),  color: '#88ddff' },
-  corrosion:       { label: t('reaction.corrosion'),       color: '#33cc66' },
-  electrification: { label: t('reaction.electrification'), color: '#e8c840' },
-  shatter:         { label: t('reaction.shatter'),         color: '#88ddff' },
+  [REACTION_COLUMNS.COMBUSTION]:      { label: t('reaction.combustion'),      color: '#ff5522' },
+  [REACTION_COLUMNS.SOLIDIFICATION]:  { label: t('reaction.solidification'),  color: '#88ddff' },
+  [REACTION_COLUMNS.CORROSION]:       { label: t('reaction.corrosion'),       color: '#33cc66' },
+  [REACTION_COLUMNS.ELECTRIFICATION]: { label: t('reaction.electrification'), color: '#e8c840' },
+  [REACTION_COLUMNS.SHATTER]:         { label: t('reaction.shatter'),         color: '#88ddff' },
 };
 
 export const REACTION_MICRO_COLUMNS = [
-  { id: 'combustion',      label: t('reaction.micro.combustion'),  color: '#ff5522' },
-  { id: 'solidification',  label: t('reaction.micro.solidification'), color: '#88ddff' },
-  { id: 'corrosion',       label: t('reaction.micro.corrosion'),  color: '#33cc66' },
-  { id: 'electrification', label: t('reaction.micro.electrification'),  color: '#e8c840' },
-  { id: 'shatter',         label: t('reaction.micro.shatter'),    color: '#88ddff' },
+  { id: REACTION_COLUMNS.COMBUSTION,      label: t('reaction.micro.combustion'),  color: '#ff5522' },
+  { id: REACTION_COLUMNS.SOLIDIFICATION,  label: t('reaction.micro.solidification'), color: '#88ddff' },
+  { id: REACTION_COLUMNS.CORROSION,       label: t('reaction.micro.corrosion'),  color: '#33cc66' },
+  { id: REACTION_COLUMNS.ELECTRIFICATION, label: t('reaction.micro.electrification'),  color: '#e8c840' },
+  { id: REACTION_COLUMNS.SHATTER,         label: t('reaction.micro.shatter'),    color: '#88ddff' },
 ];
 
 // ── Physical infliction / status labels ──────────────────────────────────────
 
 export const PHYSICAL_INFLICTION_LABELS: Record<string, { label: string; color: string }> = {
-  vulnerableInfliction: { label: t('physicalInfliction.vulnerable'), color: '#c0c8d0' },
+  [PHYSICAL_INFLICTION_COLUMNS.VULNERABLE]: { label: t('physicalInfliction.vulnerable'), color: '#c0c8d0' },
 };
 
 export const PHYSICAL_INFLICTION_MICRO_COLUMNS = [

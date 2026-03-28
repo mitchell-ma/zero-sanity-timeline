@@ -18,8 +18,8 @@
  */
 
 import { renderHook, act } from '@testing-library/react';
+import { NounType } from '../../../dsl/semantics';
 import { useApp } from '../../../app/useApp';
-import { SKILL_COLUMNS } from '../../../model/channels';
 import { ColumnType, EventStatusType, InteractionModeType, StatusType } from '../../../consts/enums';
 import { FPS } from '../../../utils/timeline';
 import { eventDuration } from '../../../consts/viewTypes';
@@ -81,20 +81,20 @@ describe('Link Consumption — Integration', () => {
     const { result } = renderHook(() => useApp());
 
     // Get the real battle skill default from Akekuri
-    const battleCol = findColumn(result.current, SLOT_AKEKURI, SKILL_COLUMNS.BATTLE);
+    const battleCol = findColumn(result.current, SLOT_AKEKURI, NounType.BATTLE_SKILL);
     expect(battleCol).toBeDefined();
 
     // Add battle skill at 5s
     const battleFrame = 5 * FPS;
     act(() => {
       result.current.handleAddEvent(
-        SLOT_AKEKURI, SKILL_COLUMNS.BATTLE, battleFrame, battleCol!.defaultEvent!,
+        SLOT_AKEKURI, NounType.BATTLE_SKILL, battleFrame, battleCol!.defaultEvent!,
       );
     });
 
     // Get the battle skill event that was added
     const battleEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === SKILL_COLUMNS.BATTLE,
+      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === NounType.BATTLE_SKILL,
     );
     expect(battleEvents).toHaveLength(1);
 
@@ -111,19 +111,19 @@ describe('Link Consumption — Integration', () => {
     const { result } = renderHook(() => useApp());
 
     // Get the real ultimate default from Akekuri
-    const ultCol = findColumn(result.current, SLOT_AKEKURI, SKILL_COLUMNS.ULTIMATE);
+    const ultCol = findColumn(result.current, SLOT_AKEKURI, NounType.ULTIMATE);
     expect(ultCol).toBeDefined();
 
     // Add ultimate at 5s
     const ultFrame = 5 * FPS;
     act(() => {
       result.current.handleAddEvent(
-        SLOT_AKEKURI, SKILL_COLUMNS.ULTIMATE, ultFrame, ultCol!.defaultEvent!,
+        SLOT_AKEKURI, NounType.ULTIMATE, ultFrame, ultCol!.defaultEvent!,
       );
     });
 
     const ultEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === SKILL_COLUMNS.ULTIMATE,
+      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === NounType.ULTIMATE,
     );
     expect(ultEvents).toHaveLength(1);
 
@@ -139,18 +139,18 @@ describe('Link Consumption — Integration', () => {
   it('basic attack does NOT consume Link', () => {
     const { result } = renderHook(() => useApp());
 
-    const basicCol = findColumn(result.current, SLOT_AKEKURI, SKILL_COLUMNS.BASIC);
+    const basicCol = findColumn(result.current, SLOT_AKEKURI, NounType.BASIC_ATTACK);
     expect(basicCol).toBeDefined();
 
     const basicFrame = 5 * FPS;
     act(() => {
       result.current.handleAddEvent(
-        SLOT_AKEKURI, SKILL_COLUMNS.BASIC, basicFrame, basicCol!.defaultEvent!,
+        SLOT_AKEKURI, NounType.BASIC_ATTACK, basicFrame, basicCol!.defaultEvent!,
       );
     });
 
     const basicEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === SKILL_COLUMNS.BASIC,
+      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === NounType.BASIC_ATTACK,
     );
     expect(basicEvents).toHaveLength(1);
 
@@ -165,7 +165,7 @@ describe('Link Consumption — Integration', () => {
   it('combo skill does NOT consume Link', () => {
     const { result } = renderHook(() => useApp());
 
-    const comboCol = findColumn(result.current, SLOT_AKEKURI, SKILL_COLUMNS.COMBO);
+    const comboCol = findColumn(result.current, SLOT_AKEKURI, NounType.COMBO_SKILL);
     if (!comboCol?.defaultEvent) {
       // Some operators may not have combo skills with defaults
       return;
@@ -174,12 +174,12 @@ describe('Link Consumption — Integration', () => {
     const comboFrame = 5 * FPS;
     act(() => {
       result.current.handleAddEvent(
-        SLOT_AKEKURI, SKILL_COLUMNS.COMBO, comboFrame, comboCol.defaultEvent!,
+        SLOT_AKEKURI, NounType.COMBO_SKILL, comboFrame, comboCol.defaultEvent!,
       );
     });
 
     const comboEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === SKILL_COLUMNS.COMBO,
+      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === NounType.COMBO_SKILL,
     );
     if (comboEvents.length === 0) return; // combo may require trigger
 
@@ -194,20 +194,20 @@ describe('Link Consumption — Integration', () => {
   it('first battle skill consumes Link, subsequent one does not', () => {
     const { result } = renderHook(() => useApp());
 
-    const battleCol = findColumn(result.current, SLOT_AKEKURI, SKILL_COLUMNS.BATTLE);
+    const battleCol = findColumn(result.current, SLOT_AKEKURI, NounType.BATTLE_SKILL);
     expect(battleCol).toBeDefined();
     const defaultSkill = battleCol!.defaultEvent!;
 
     // Add two battle skills
     act(() => {
-      result.current.handleAddEvent(SLOT_AKEKURI, SKILL_COLUMNS.BATTLE, 5 * FPS, defaultSkill);
+      result.current.handleAddEvent(SLOT_AKEKURI, NounType.BATTLE_SKILL, 5 * FPS, defaultSkill);
     });
     act(() => {
-      result.current.handleAddEvent(SLOT_AKEKURI, SKILL_COLUMNS.BATTLE, 15 * FPS, defaultSkill);
+      result.current.handleAddEvent(SLOT_AKEKURI, NounType.BATTLE_SKILL, 15 * FPS, defaultSkill);
     });
 
     const battleEvents = result.current.allProcessedEvents
-      .filter((ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === SKILL_COLUMNS.BATTLE)
+      .filter((ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === NounType.BATTLE_SKILL)
       .sort((a, b) => a.startFrame - b.startFrame);
     expect(battleEvents).toHaveLength(2);
 
@@ -226,15 +226,15 @@ describe('Link Consumption — Integration', () => {
   it('Link clamped at consuming event start frame', () => {
     const { result } = renderHook(() => useApp());
 
-    const battleCol = findColumn(result.current, SLOT_AKEKURI, SKILL_COLUMNS.BATTLE);
+    const battleCol = findColumn(result.current, SLOT_AKEKURI, NounType.BATTLE_SKILL);
     expect(battleCol).toBeDefined();
 
     act(() => {
-      result.current.handleAddEvent(SLOT_AKEKURI, SKILL_COLUMNS.BATTLE, 3 * FPS, battleCol!.defaultEvent!);
+      result.current.handleAddEvent(SLOT_AKEKURI, NounType.BATTLE_SKILL, 3 * FPS, battleCol!.defaultEvent!);
     });
 
     const battleEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === SKILL_COLUMNS.BATTLE,
+      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === NounType.BATTLE_SKILL,
     );
     expect(battleEvents).toHaveLength(1);
 
@@ -263,19 +263,19 @@ describe('Link Consumption — Freeform mode events', () => {
       result.current.setInteractionMode(InteractionModeType.FREEFORM);
     });
 
-    const battleCol = findColumn(result.current, SLOT_AKEKURI, SKILL_COLUMNS.BATTLE);
+    const battleCol = findColumn(result.current, SLOT_AKEKURI, NounType.BATTLE_SKILL);
     expect(battleCol).toBeDefined();
 
     // In freeform, we can place at any frame without SP check
     const battleFrame = 1 * FPS;
     act(() => {
       result.current.handleAddEvent(
-        SLOT_AKEKURI, SKILL_COLUMNS.BATTLE, battleFrame, battleCol!.defaultEvent!,
+        SLOT_AKEKURI, NounType.BATTLE_SKILL, battleFrame, battleCol!.defaultEvent!,
       );
     });
 
     const battleEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === SKILL_COLUMNS.BATTLE,
+      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === NounType.BATTLE_SKILL,
     );
     expect(battleEvents).toHaveLength(1);
 
@@ -294,18 +294,18 @@ describe('Link Consumption — Freeform mode events', () => {
       result.current.setInteractionMode(InteractionModeType.FREEFORM);
     });
 
-    const ultCol = findColumn(result.current, SLOT_AKEKURI, SKILL_COLUMNS.ULTIMATE);
+    const ultCol = findColumn(result.current, SLOT_AKEKURI, NounType.ULTIMATE);
     expect(ultCol).toBeDefined();
 
     const ultFrame = 1 * FPS;
     act(() => {
       result.current.handleAddEvent(
-        SLOT_AKEKURI, SKILL_COLUMNS.ULTIMATE, ultFrame, ultCol!.defaultEvent!,
+        SLOT_AKEKURI, NounType.ULTIMATE, ultFrame, ultCol!.defaultEvent!,
       );
     });
 
     const ultEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === SKILL_COLUMNS.ULTIMATE,
+      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === NounType.ULTIMATE,
     );
     expect(ultEvents).toHaveLength(1);
 
@@ -324,17 +324,17 @@ describe('Link Consumption — Freeform mode events', () => {
       result.current.setInteractionMode(InteractionModeType.FREEFORM);
     });
 
-    const basicCol = findColumn(result.current, SLOT_AKEKURI, SKILL_COLUMNS.BASIC);
+    const basicCol = findColumn(result.current, SLOT_AKEKURI, NounType.BASIC_ATTACK);
     expect(basicCol).toBeDefined();
 
     act(() => {
       result.current.handleAddEvent(
-        SLOT_AKEKURI, SKILL_COLUMNS.BASIC, 1 * FPS, basicCol!.defaultEvent!,
+        SLOT_AKEKURI, NounType.BASIC_ATTACK, 1 * FPS, basicCol!.defaultEvent!,
       );
     });
 
     const basicEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === SKILL_COLUMNS.BASIC,
+      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === NounType.BASIC_ATTACK,
     );
     expect(basicEvents).toHaveLength(1);
 
@@ -353,17 +353,17 @@ describe('Link Consumption — Freeform mode events', () => {
       result.current.setInteractionMode(InteractionModeType.FREEFORM);
     });
 
-    const comboCol = findColumn(result.current, SLOT_AKEKURI, SKILL_COLUMNS.COMBO);
+    const comboCol = findColumn(result.current, SLOT_AKEKURI, NounType.COMBO_SKILL);
     if (!comboCol?.defaultEvent) return;
 
     act(() => {
       result.current.handleAddEvent(
-        SLOT_AKEKURI, SKILL_COLUMNS.COMBO, 1 * FPS, comboCol.defaultEvent!,
+        SLOT_AKEKURI, NounType.COMBO_SKILL, 1 * FPS, comboCol.defaultEvent!,
       );
     });
 
     const comboEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === SKILL_COLUMNS.COMBO,
+      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === NounType.COMBO_SKILL,
     );
     if (comboEvents.length === 0) return;
 

@@ -10,6 +10,7 @@
  */
 
 import type { TimelineEvent } from '../../consts/viewTypes';
+import { QueueFrameType } from './eventQueueTypes';
 import type { QueueFrame } from './eventQueueTypes';
 import { DEFAULT_SETTINGS } from '../../consts/settings';
 
@@ -98,7 +99,7 @@ let _qfPoolIdx = 0;
 export function allocQueueFrame(): QueueFrame {
   if (!_enablePooling) {
     return {
-      frame: 0, priority: 0, type: 'PROCESS_FRAME',
+      frame: 0, priority: 0, type: QueueFrameType.PROCESS_FRAME,
       statusId: '', columnId: '', ownerId: '',
       sourceOwnerId: '', sourceSkillName: '',
       maxStacks: 0, durationFrames: 0, operatorSlotId: '',
@@ -108,7 +109,7 @@ export function allocQueueFrame(): QueueFrame {
     const qf = _qfPool[_qfPoolIdx++];
     qf.frame = 0;
     qf.priority = 0;
-    qf.type = 'PROCESS_FRAME';
+    qf.type = QueueFrameType.PROCESS_FRAME;
     qf.statusId = '';
     qf.columnId = '';
     qf.ownerId = '';
@@ -127,7 +128,7 @@ export function allocQueueFrame(): QueueFrame {
     return qf;
   }
   const qf: QueueFrame = {
-    frame: 0, priority: 0, type: 'PROCESS_FRAME',
+    frame: 0, priority: 0, type: QueueFrameType.PROCESS_FRAME,
     statusId: '', columnId: '', ownerId: '',
     sourceOwnerId: '', sourceSkillName: '',
     maxStacks: 0, durationFrames: 0, operatorSlotId: '',

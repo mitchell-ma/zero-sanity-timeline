@@ -7,20 +7,20 @@
  * ALL game mechanics processing — time-stop resolution, infliction derivation,
  * exchange statuses, combo windows, frame positions, validation — happens here.
  */
-import { TimelineEvent, eventDuration } from '../../consts/viewTypes';
-import { VerbType, NounType } from '../../dsl/semantics';
+import { TimelineEvent } from '../../consts/viewTypes';
+import { NounType } from '../../dsl/semantics';
 import { LoadoutProperties } from '../../view/InformationPane';
 import { TimeStopRegion, absoluteFrame, foreignStopsFor } from './processTimeStop';
 import { DerivedEventController } from './derivedEventController';
 import { deriveComboActivationWindows } from './processComboSkill';
 import type { SlotTriggerWiring } from './eventQueueTypes';
 import { SkillPointController } from '../slot/skillPointController';
-import { PRIORITY, MAX_INFLICTION_STACKS } from './eventQueueTypes';
+import { PRIORITY, QueueFrameType } from './eventQueueTypes';
 import type { QueueFrame } from './eventQueueTypes';
 import { EventInterpretorController } from './eventInterpretorController';
 import { PriorityQueue } from './priorityQueue';
 import { TriggerIndex } from './triggerIndex';
-import { ENEMY_OWNER_ID, INFLICTION_COLUMN_IDS, PHYSICAL_INFLICTION_COLUMN_IDS, REACTION_COLUMN_IDS, SKILL_COLUMNS } from '../../model/channels';
+import { SKILL_COLUMN_ORDER } from '../../model/channels';
 import type { SkillType } from '../../consts/viewTypes';
 import { getAllTriggerAssociations } from '../gameDataStore';
 import { cloneAndSplitEvents } from './inputEventController';
@@ -30,7 +30,7 @@ import type { OperatorLoadoutState } from '../../view/OperatorLoadoutHeader';
 import { resolveControlledOperator } from './controlledOperatorResolver';
 import { allocQueueFrame, resetPools, isReconcilerEnabled } from './objectPool';
 
-const SKILL_COLUMN_SET: ReadonlySet<string> = new Set(Object.values(SKILL_COLUMNS) as string[]);
+const SKILL_COLUMN_SET: ReadonlySet<string> = new Set(SKILL_COLUMN_ORDER);
 
 // TriggerIndex is now built and cached by CombatLoadoutController.syncSlots().
 // It is passed into the pipeline via the triggerIndex parameter.
@@ -52,7 +52,7 @@ function collectFrameEntries(
     const start = allocQueueFrame();
     start.frame = event.startFrame;
     start.priority = PRIORITY.PROCESS_FRAME;
-    start.type = 'PROCESS_FRAME';
+    start.type = QueueFrameType.PROCESS_FRAME;
     start.statusId = event.name;
     start.columnId = event.columnId;
     start.ownerId = event.ownerId;
@@ -80,7 +80,7 @@ function collectFrameEntries(
           const qf = allocQueueFrame();
           qf.frame = absFrame;
           qf.priority = PRIORITY.PROCESS_FRAME;
-          qf.type = 'PROCESS_FRAME';
+          qf.type = QueueFrameType.PROCESS_FRAME;
           qf.statusId = event.name;
           qf.columnId = event.columnId;
           qf.ownerId = event.ownerId;
@@ -106,7 +106,7 @@ function collectFrameEntries(
       const synth = allocQueueFrame();
       synth.frame = event.startFrame;
       synth.priority = PRIORITY.PROCESS_FRAME;
-      synth.type = 'PROCESS_FRAME';
+      synth.type = QueueFrameType.PROCESS_FRAME;
       synth.statusId = event.name;
       synth.columnId = event.columnId;
       synth.ownerId = event.ownerId;
@@ -123,11 +123,11 @@ function collectFrameEntries(
     }
 
     // Seed COMBO_RESOLVE for combo events (fires after engine triggers)
-    if (event.columnId === SKILL_COLUMNS.COMBO && !event.comboTriggerColumnId) {
+    if (event.columnId === NounType.COMBO_SKILL && !event.comboTriggerColumnId) {
       const combo = allocQueueFrame();
       combo.frame = event.startFrame;
       combo.priority = PRIORITY.COMBO_RESOLVE;
-      combo.type = 'COMBO_RESOLVE';
+      combo.type = QueueFrameType.COMBO_RESOLVE;
       combo.statusId = event.name;
       combo.columnId = event.columnId;
       combo.ownerId = event.ownerId;
@@ -151,7 +151,6 @@ function collectFrameEntries(
 
 let _queue: PriorityQueue<QueueFrame> | null = null;
 let _interpretor: EventInterpretorController | null = null;
-const _triggerSeen = new Set<string>();
 
 function getQueue(): PriorityQueue<QueueFrame> {
   if (!_queue) _queue = new PriorityQueue<QueueFrame>((a, b) => a.frame !== b.frame ? a.frame - b.frame : a.priority - b.priority);

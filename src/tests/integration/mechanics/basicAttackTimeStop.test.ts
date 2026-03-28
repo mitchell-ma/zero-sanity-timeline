@@ -17,8 +17,8 @@
  */
 
 import { renderHook, act } from '@testing-library/react';
+import { NounType } from '../../../dsl/semantics';
 import { useApp } from '../../../app/useApp';
-import { SKILL_COLUMNS } from '../../../model/channels';
 import { ColumnType, InteractionModeType } from '../../../consts/enums';
 import { FPS } from '../../../utils/timeline';
 import { getAnimationDuration, computeSegmentsSpan } from '../../../consts/viewTypes';
@@ -40,13 +40,13 @@ describe('Basic attack time-stop extension — Akekuri basic + combo overlap', (
     const { result } = renderHook(() => useApp());
 
     // Add basic attack at 0s (strict mode is fine for basic attacks)
-    const basicCol = findColumn(result.current, SLOT_AKEKURI, SKILL_COLUMNS.BASIC);
+    const basicCol = findColumn(result.current, SLOT_AKEKURI, NounType.BASIC_ATTACK);
     expect(basicCol).toBeDefined();
     expect(basicCol!.defaultEvent).toBeDefined();
 
     act(() => {
       result.current.handleAddEvent(
-        SLOT_AKEKURI, SKILL_COLUMNS.BASIC, 0, basicCol!.defaultEvent!,
+        SLOT_AKEKURI, NounType.BASIC_ATTACK, 0, basicCol!.defaultEvent!,
       );
     });
 
@@ -56,22 +56,22 @@ describe('Basic attack time-stop extension — Akekuri basic + combo overlap', (
     });
 
     // Add combo at 1.3s
-    const comboCol = findColumn(result.current, SLOT_AKEKURI, SKILL_COLUMNS.COMBO);
+    const comboCol = findColumn(result.current, SLOT_AKEKURI, NounType.COMBO_SKILL);
     expect(comboCol).toBeDefined();
     expect(comboCol!.defaultEvent).toBeDefined();
 
     act(() => {
       result.current.handleAddEvent(
-        SLOT_AKEKURI, SKILL_COLUMNS.COMBO, Math.round(1.3 * FPS), comboCol!.defaultEvent!,
+        SLOT_AKEKURI, NounType.COMBO_SKILL, Math.round(1.3 * FPS), comboCol!.defaultEvent!,
       );
     });
 
     // Find processed events
     const basicEvent = result.current.allProcessedEvents.find(
-      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === SKILL_COLUMNS.BASIC,
+      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === NounType.BASIC_ATTACK,
     );
     const comboEvent = result.current.allProcessedEvents.find(
-      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === SKILL_COLUMNS.COMBO,
+      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === NounType.COMBO_SKILL,
     );
     expect(basicEvent).toBeDefined();
     expect(comboEvent).toBeDefined();
@@ -97,12 +97,12 @@ describe('Basic attack time-stop extension — Akekuri basic + combo overlap', (
   it('frames within the third segment have adjusted positions for time-stop', () => {
     const { result } = renderHook(() => useApp());
 
-    const basicCol = findColumn(result.current, SLOT_AKEKURI, SKILL_COLUMNS.BASIC);
-    const comboCol = findColumn(result.current, SLOT_AKEKURI, SKILL_COLUMNS.COMBO);
+    const basicCol = findColumn(result.current, SLOT_AKEKURI, NounType.BASIC_ATTACK);
+    const comboCol = findColumn(result.current, SLOT_AKEKURI, NounType.COMBO_SKILL);
 
     act(() => {
       result.current.handleAddEvent(
-        SLOT_AKEKURI, SKILL_COLUMNS.BASIC, 0, basicCol!.defaultEvent!,
+        SLOT_AKEKURI, NounType.BASIC_ATTACK, 0, basicCol!.defaultEvent!,
       );
     });
     act(() => {
@@ -110,17 +110,17 @@ describe('Basic attack time-stop extension — Akekuri basic + combo overlap', (
     });
     act(() => {
       result.current.handleAddEvent(
-        SLOT_AKEKURI, SKILL_COLUMNS.COMBO, Math.round(1.3 * FPS), comboCol!.defaultEvent!,
+        SLOT_AKEKURI, NounType.COMBO_SKILL, Math.round(1.3 * FPS), comboCol!.defaultEvent!,
       );
     });
 
     const basicEvent = result.current.allProcessedEvents.find(
-      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === SKILL_COLUMNS.BASIC,
+      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === NounType.BASIC_ATTACK,
     );
     expect(basicEvent).toBeDefined();
 
     const comboEvent = result.current.allProcessedEvents.find(
-      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === SKILL_COLUMNS.COMBO,
+      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === NounType.COMBO_SKILL,
     )!;
     const animDur = getAnimationDuration(comboEvent);
 
@@ -155,12 +155,12 @@ describe('Basic attack time-stop extension — Akekuri basic + combo overlap', (
   it('hover frame within extended segment resolves to correct segment index', () => {
     const { result } = renderHook(() => useApp());
 
-    const basicCol = findColumn(result.current, SLOT_AKEKURI, SKILL_COLUMNS.BASIC);
-    const comboCol = findColumn(result.current, SLOT_AKEKURI, SKILL_COLUMNS.COMBO);
+    const basicCol = findColumn(result.current, SLOT_AKEKURI, NounType.BASIC_ATTACK);
+    const comboCol = findColumn(result.current, SLOT_AKEKURI, NounType.COMBO_SKILL);
 
     act(() => {
       result.current.handleAddEvent(
-        SLOT_AKEKURI, SKILL_COLUMNS.BASIC, 0, basicCol!.defaultEvent!,
+        SLOT_AKEKURI, NounType.BASIC_ATTACK, 0, basicCol!.defaultEvent!,
       );
     });
     act(() => {
@@ -168,12 +168,12 @@ describe('Basic attack time-stop extension — Akekuri basic + combo overlap', (
     });
     act(() => {
       result.current.handleAddEvent(
-        SLOT_AKEKURI, SKILL_COLUMNS.COMBO, Math.round(1.3 * FPS), comboCol!.defaultEvent!,
+        SLOT_AKEKURI, NounType.COMBO_SKILL, Math.round(1.3 * FPS), comboCol!.defaultEvent!,
       );
     });
 
     const basicEvent = result.current.allProcessedEvents.find(
-      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === SKILL_COLUMNS.BASIC,
+      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === NounType.BASIC_ATTACK,
     )!;
 
     // Build segment boundaries from processed event (same logic as EventBlock hover)
@@ -213,12 +213,12 @@ describe('Basic attack time-stop extension — Akekuri basic + combo overlap', (
   it('segment durations do not double-extend across re-renders', () => {
     const { result } = renderHook(() => useApp());
 
-    const basicCol = findColumn(result.current, SLOT_AKEKURI, SKILL_COLUMNS.BASIC);
-    const comboCol = findColumn(result.current, SLOT_AKEKURI, SKILL_COLUMNS.COMBO);
+    const basicCol = findColumn(result.current, SLOT_AKEKURI, NounType.BASIC_ATTACK);
+    const comboCol = findColumn(result.current, SLOT_AKEKURI, NounType.COMBO_SKILL);
 
     act(() => {
       result.current.handleAddEvent(
-        SLOT_AKEKURI, SKILL_COLUMNS.BASIC, 0, basicCol!.defaultEvent!,
+        SLOT_AKEKURI, NounType.BASIC_ATTACK, 0, basicCol!.defaultEvent!,
       );
     });
     act(() => {
@@ -226,19 +226,19 @@ describe('Basic attack time-stop extension — Akekuri basic + combo overlap', (
     });
     act(() => {
       result.current.handleAddEvent(
-        SLOT_AKEKURI, SKILL_COLUMNS.COMBO, Math.round(1.3 * FPS), comboCol!.defaultEvent!,
+        SLOT_AKEKURI, NounType.COMBO_SKILL, Math.round(1.3 * FPS), comboCol!.defaultEvent!,
       );
     });
 
     const comboEvent = result.current.allProcessedEvents.find(
-      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === SKILL_COLUMNS.COMBO,
+      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === NounType.COMBO_SKILL,
     )!;
     const animDur = getAnimationDuration(comboEvent);
     const rawSeg3Duration = basicCol!.defaultEvent!.segments![2].properties.duration;
 
     // Capture seg3 duration after first pipeline run
     const seg3First = result.current.allProcessedEvents.find(
-      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === SKILL_COLUMNS.BASIC,
+      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === NounType.BASIC_ATTACK,
     )!.segments[2];
     expect(seg3First.properties.duration).toBe(rawSeg3Duration + animDur);
 
@@ -249,7 +249,7 @@ describe('Basic attack time-stop extension — Akekuri basic + combo overlap', (
 
     // Seg3 duration must still be rawDuration + animDur — NOT double-extended
     const seg3Second = result.current.allProcessedEvents.find(
-      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === SKILL_COLUMNS.BASIC,
+      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === NounType.BASIC_ATTACK,
     )!.segments[2];
     expect(seg3Second.properties.duration).toBe(rawSeg3Duration + animDur);
   });

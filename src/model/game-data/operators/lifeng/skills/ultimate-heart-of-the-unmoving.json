@@ -213,7 +213,8 @@
                   "subjectDeterminer": "THIS",
                   "subject": "OPERATOR",
                   "verb": "HAVE",
-                  "object": "LINK"
+                  "object": "STATUS",
+                  "objectId": "LINK"
                 }
               ],
               "effects": [

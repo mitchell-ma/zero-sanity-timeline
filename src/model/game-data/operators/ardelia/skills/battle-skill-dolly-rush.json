@@ -60,15 +60,17 @@
                 {
                   "subject": "ENEMY",
                   "verb": "HAVE",
-                  "object": "REACTION",
-                  "objectId": "CORROSION"
+                  "object": "STATUS",
+                  "objectId": "REACTION",
+                  "objectQualifier": "CORROSION"
                 }
               ],
               "effects": [
                 {
                   "verb": "CONSUME",
-                  "object": "REACTION",
-                  "objectId": "CORROSION",
+                  "object": "STATUS",
+                  "objectId": "REACTION",
+                  "objectQualifier": "CORROSION",
                   "from": "ENEMY",
                   "with": {
                     "stacks": "MAX"

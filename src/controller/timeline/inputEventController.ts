@@ -6,11 +6,11 @@
  */
 
 import { v4 as uuidv4 } from 'uuid';
-import { CombatSkillType, ColumnType, EnhancementType, EventFrameType, InteractionModeType } from '../../consts/enums';
+import { NounType } from '../../dsl/semantics';
+import { CombatSkillType, ColumnType, EnhancementType, EventFrameType } from '../../consts/enums';
 import { TimelineEvent, EventSegmentData, Operator, computeSegmentsSpan, getAnimationDuration, eventEndFrame, durationSegment } from '../../consts/viewTypes';
-import { ENEMY_OWNER_ID, OPERATOR_COLUMNS, REACTION_COLUMN_IDS, INFLICTION_COLUMN_IDS, PHYSICAL_INFLICTION_COLUMN_IDS, PHYSICAL_STATUS_COLUMN_IDS, SKILL_COLUMNS } from '../../model/channels';
-import type { SkillType } from '../../consts/viewTypes';
-import { USER_ID } from '../../model/channels';
+import { ENEMY_OWNER_ID, USER_ID, OPERATOR_COLUMNS, REACTION_COLUMN_IDS, INFLICTION_COLUMN_IDS, SKILL_COLUMN_ORDER } from '../../model/channels';
+
 import { TOTAL_FRAMES } from '../../utils/timeline';
 import { ComboSkillEventController } from './comboSkillEventController';
 import { hasEnableClauseAtFrame } from './eventValidator';
@@ -20,7 +20,7 @@ import { allocInputEvent, allocDerivedEvent } from './objectPool';
 
 // ── Event classification ─────────────────────────────────────────────────────
 
-const SKILL_COLUMN_SET: ReadonlySet<string> = new Set(Object.values(SKILL_COLUMNS) as string[]);
+const SKILL_COLUMN_SET: ReadonlySet<string> = new Set(SKILL_COLUMN_ORDER);
 
 /**
  * Classify raw events into input events (strict-mode skills) and derived events
@@ -364,7 +364,7 @@ export function isInUltimateAnimation(
 ): boolean {
   for (const ev of allEvents) {
     if (ev.uid === excludeEventId) continue;
-    if (ev.columnId !== SKILL_COLUMNS.ULTIMATE) continue;
+    if (ev.columnId !== NounType.ULTIMATE) continue;
     const animDur = getAnimationDuration(ev);
     if (animDur <= 0) continue;
     if (frame >= ev.startFrame && frame < ev.startFrame + animDur) return true;
@@ -385,7 +385,7 @@ function clampToUltimateEdge(
   const movingForward = desiredFrame >= target.startFrame;
   let result = desiredFrame;
   for (const ev of allEvents) {
-    if (ev.uid === target.uid || ev.columnId !== SKILL_COLUMNS.ULTIMATE) continue;
+    if (ev.uid === target.uid || ev.columnId !== NounType.ULTIMATE) continue;
     const animDur = getAnimationDuration(ev);
     if (animDur <= 0) continue;
     const animEnd = ev.startFrame + animDur;
@@ -409,7 +409,7 @@ export function isInComboAnimation(
 ): boolean {
   for (const ev of allEvents) {
     if (ev.uid === excludeEventId) continue;
-    if (ev.columnId !== SKILL_COLUMNS.COMBO) continue;
+    if (ev.columnId !== NounType.COMBO_SKILL) continue;
     const animDur = getAnimationDuration(ev);
     if (animDur <= 0) continue;
     if (frame >= ev.startFrame && frame < ev.startFrame + animDur) return true;
@@ -429,7 +429,7 @@ function clampToComboEdge(
   const movingForward = desiredFrame >= target.startFrame;
   let result = desiredFrame;
   for (const ev of allEvents) {
-    if (ev.uid === target.uid || ev.columnId !== SKILL_COLUMNS.COMBO) continue;
+    if (ev.uid === target.uid || ev.columnId !== NounType.COMBO_SKILL) continue;
     const animDur = getAnimationDuration(ev);
     if (animDur <= 0) continue;
     const animEnd = ev.startFrame + animDur;
@@ -521,13 +521,13 @@ export function validateUpdate(
   const merged = { ...target, ...validated };
   if (wouldOverlapNonOverlappable(allEvents, merged, merged.startFrame, processedEvents ?? undefined)) return null;
   // Block non-ultimate events from being placed during an ultimate animation
-  if (merged.columnId !== SKILL_COLUMNS.ULTIMATE && isInUltimateAnimation(allEvents, merged.startFrame, merged.uid)) return null;
+  if (merged.columnId !== NounType.ULTIMATE && isInUltimateAnimation(allEvents, merged.startFrame, merged.uid)) return null;
   // Block battle skills from being placed during a combo animation
-  if (merged.columnId === SKILL_COLUMNS.BATTLE && isInComboAnimation(allEvents, merged.startFrame, merged.uid)) return null;
+  if (merged.columnId === NounType.BATTLE_SKILL && isInComboAnimation(allEvents, merged.startFrame, merged.uid)) return null;
   // Enhanced skills require an active ultimate
   if (merged.enhancementType === EnhancementType.ENHANCED) {
     const ultActive = allEvents.some(
-      (e) => e.uid !== merged.uid && e.ownerId === merged.ownerId && e.columnId === SKILL_COLUMNS.ULTIMATE
+      (e) => e.uid !== merged.uid && e.ownerId === merged.ownerId && e.columnId === NounType.ULTIMATE
         && merged.startFrame >= e.startFrame + getAnimationDuration(e)
         && merged.startFrame < eventEndFrame(e),
     );
@@ -563,11 +563,11 @@ export function validateMove(
   // enable-window constraints. In freeform mode these are skipped.
   if (processedEvents != null) {
     // Clamp non-ultimate events to the edge of ultimate animation regions
-    if (target.columnId !== SKILL_COLUMNS.ULTIMATE) {
+    if (target.columnId !== NounType.ULTIMATE) {
       clamped = clampToUltimateEdge(allEvents, target, clamped);
     }
     // Clamp battle/basic skills to the edge of combo animation regions
-    if (target.columnId === SKILL_COLUMNS.BATTLE || target.columnId === SKILL_COLUMNS.BASIC) {
+    if (target.columnId === NounType.BATTLE_SKILL || target.columnId === NounType.BASIC_ATTACK) {
       clamped = clampToComboEdge(allEvents, target, clamped);
     }
     // Clamp enhanced events within the ENABLE clause window

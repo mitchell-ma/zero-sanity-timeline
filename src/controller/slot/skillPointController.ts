@@ -9,7 +9,8 @@
  * natural SP consumption per battle skill.
  */
 import { TimelineEvent, durationSegment } from '../../consts/viewTypes';
-import { SKILL_COLUMNS, OPERATOR_COLUMNS } from '../../model/channels';
+import { NounType } from '../../dsl/semantics';
+import { OPERATOR_COLUMNS } from '../../model/channels';
 import { ENEMY_OWNER_ID } from '../../model/channels';
 import { absoluteFrame, foreignStopsFor } from '../timeline/processTimeStop';
 import type { TimeStopRegion } from '../timeline/processTimeStop';
@@ -175,7 +176,7 @@ export class SkillPointController {
     this.slotSpCosts.forEach((cost, slotId) => {
       const zones = this.timeline.insufficiencyZones(cost);
       if (zones.length > 0) {
-        this.insufficiencyZones.set(`${slotId}:${SKILL_COLUMNS.BATTLE}`, zones);
+        this.insufficiencyZones.set(`${slotId}:${NounType.BATTLE_SKILL}`, zones);
       }
     });
 

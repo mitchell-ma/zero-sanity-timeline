@@ -1,5 +1,6 @@
 import { TimelineEvent, computeSegmentsSpan } from '../consts/viewTypes';
-import { SKILL_COLUMNS, COMBO_WINDOW_COLUMN_ID } from '../model/channels';
+import { NounType } from '../dsl/semantics';
+import { COMBO_WINDOW_COLUMN_ID } from '../model/channels';
 import { wouldOverlapNonOverlappable, clampDeltaByOverlap } from '../controller/timeline/inputEventController';
 import {
   clampDeltaByResourceZones,
@@ -35,14 +36,14 @@ export function computeInvalidSet(
   const invalid = new Set<string>();
   for (const de of draggedEvents) {
     // Resource zone: check live zones (includes the event's own contribution)
-    if (de.columnId === SKILL_COLUMNS.BATTLE || de.columnId === SKILL_COLUMNS.ULTIMATE) {
+    if (de.columnId === NounType.BATTLE_SKILL || de.columnId === NounType.ULTIMATE) {
       const zones = resourceZones.get(`${de.ownerId}:${de.columnId}`);
       if (zones?.some((z) => de.startFrame >= z.start && de.startFrame < z.end)) {
         invalid.add(de.uid);
       }
     }
     // Combo window: check if event is outside all combo windows
-    if (de.columnId === SKILL_COLUMNS.COMBO) {
+    if (de.columnId === NounType.COMBO_SKILL) {
       const windows = allEvents.filter(
         (w) => w.columnId === COMBO_WINDOW_COLUMN_ID && w.ownerId === de.ownerId,
       );

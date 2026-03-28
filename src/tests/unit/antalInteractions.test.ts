@@ -59,7 +59,7 @@ import { TimelineEvent } from '../../consts/viewTypes';
 import { StatusType, SegmentType, TimeDependency } from '../../consts/enums';
 import { VerbType, ObjectType, NounType, AdjectiveType, DeterminerType } from '../../dsl/semantics';
 import type { Effect } from '../../dsl/semantics';
-import { SKILL_COLUMNS, ENEMY_OWNER_ID, COMBO_WINDOW_COLUMN_ID } from '../../model/channels';
+import { INFLICTION_COLUMNS, ENEMY_OWNER_ID, COMBO_WINDOW_COLUMN_ID } from '../../model/channels';
 import { buildSequencesFromOperatorJson, DataDrivenSkillEventSequence } from '../../controller/gameDataStore';
 import { wouldOverlapSiblings } from '../../controller/timeline/eventValidator';
 import { processCombatSimulation } from '../../controller/timeline/eventQueueController';
@@ -655,14 +655,14 @@ describe('H. Cooldown Interactions', () => {
     const comboCooldown = 15 * FPS; // 1800 frames
     const totalRange = comboDuration + comboCooldown;
     const cs1 = makeEvent({
-      uid: 'cs-1', columnId: SKILL_COLUMNS.COMBO, startFrame: 0,
+      uid: 'cs-1', columnId: NounType.COMBO_SKILL, startFrame: 0,
       segments: [{ properties: { duration: comboDuration } }],
       nonOverlappableRange: totalRange,
     });
     // Mid-cooldown
-    expect(wouldOverlapSiblings(SLOT_ID, SKILL_COLUMNS.COMBO, comboDuration + 600, 1, [cs1])).toBe(true);
+    expect(wouldOverlapSiblings(SLOT_ID, NounType.COMBO_SKILL, comboDuration + 600, 1, [cs1])).toBe(true);
     // After cooldown
-    expect(wouldOverlapSiblings(SLOT_ID, SKILL_COLUMNS.COMBO, totalRange, 1, [cs1])).toBe(false);
+    expect(wouldOverlapSiblings(SLOT_ID, NounType.COMBO_SKILL, totalRange, 1, [cs1])).toBe(false);
   });
 
   test('H6: Ultimate placement during cooldown is blocked', () => {
@@ -671,23 +671,23 @@ describe('H. Cooldown Interactions', () => {
     const ultCooldown = 25 * FPS; // 3000 frames
     const totalRange = ultAnimation + ultActive + ultCooldown;
     const ult1 = makeEvent({
-      uid: 'ult-1', columnId: SKILL_COLUMNS.ULTIMATE, startFrame: 0,
+      uid: 'ult-1', columnId: NounType.ULTIMATE, startFrame: 0,
       segments: [{ properties: { duration: ultAnimation } }], nonOverlappableRange: totalRange,
     });
     // During cooldown phase
     const cooldownStart = ultAnimation + ultActive;
-    expect(wouldOverlapSiblings(SLOT_ID, SKILL_COLUMNS.ULTIMATE, cooldownStart + 600, 1, [ult1])).toBe(true);
+    expect(wouldOverlapSiblings(SLOT_ID, NounType.ULTIMATE, cooldownStart + 600, 1, [ult1])).toBe(true);
     // After cooldown ends
-    expect(wouldOverlapSiblings(SLOT_ID, SKILL_COLUMNS.ULTIMATE, totalRange, 1, [ult1])).toBe(false);
+    expect(wouldOverlapSiblings(SLOT_ID, NounType.ULTIMATE, totalRange, 1, [ult1])).toBe(false);
   });
 
   test('H7: Battle skill has no cooldown — back-to-back is valid', () => {
     const bsDuration = Math.round(1 * FPS); // 120 frames
     const bs1 = makeEvent({
-      uid: 'bs-1', columnId: SKILL_COLUMNS.BATTLE, startFrame: 0,
+      uid: 'bs-1', columnId: NounType.BATTLE_SKILL, startFrame: 0,
       segments: [{ properties: { duration: bsDuration } }], nonOverlappableRange: bsDuration,
     });
-    expect(wouldOverlapSiblings(SLOT_ID, SKILL_COLUMNS.BATTLE, bsDuration, bsDuration, [bs1])).toBe(false);
+    expect(wouldOverlapSiblings(SLOT_ID, NounType.BATTLE_SKILL, bsDuration, bsDuration, [bs1])).toBe(false);
   });
 });
 
@@ -719,7 +719,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
   function makeLaevBattle(startFrame: number): TimelineEvent {
     return makeEv({
       uid: `laev-bs-${startFrame}`, name: 'FLAMING_CINDERS', ownerId: SLOT_LAEV,
-      columnId: SKILL_COLUMNS.BATTLE, startFrame,
+      columnId: NounType.BATTLE_SKILL, startFrame,
       segments: [{
         properties: { duration: FPS },
         frames: [{
@@ -735,7 +735,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
       uid: `antal-combo-${startFrame}`,
       name: 'EMP_TEST_SITE',
       ownerId: SLOT_ANTAL,
-      columnId: SKILL_COLUMNS.COMBO,
+      columnId: NounType.COMBO_SKILL,
       startFrame,
       comboTriggerColumnId,
       segments: [
@@ -751,13 +751,13 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
   test('H1: Combo with APPLY TRIGGER INFLICTION mirrors trigger infliction', () => {
     const focus = makeFocus(0, 120 * FPS);
     const laevBattle = makeLaevBattle(100);
-    const antalCombo = makeAntalCombo(250, 'heatInfliction');
+    const antalCombo = makeAntalCombo(250, INFLICTION_COLUMNS.HEAT);
     const wirings = [laevWiring(), antalWiring()];
 
     const processed = processCombatSimulation([focus, laevBattle, antalCombo], undefined, undefined, wirings);
     const derived = processed.filter((e) => e.uid.startsWith(`${antalCombo.uid}-combo-inflict`));
     expect(derived.length).toBeGreaterThan(0);
-    expect(derived[0].columnId).toBe('heatInfliction');
+    expect(derived[0].columnId).toBe(INFLICTION_COLUMNS.HEAT);
     expect(derived[0].ownerId).toBe(ENEMY_OWNER_ID);
     expect(derived[0].sourceOwnerId).toBe(SLOT_ANTAL);
   });
@@ -772,7 +772,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
     const processed = processCombatSimulation([focus, laevBattle, antalCombo], undefined, undefined, wirings);
     const combo = processed.find((e) => e.uid === antalCombo.uid);
     expect(combo).toBeDefined();
-    expect(combo!.comboTriggerColumnId).toBe('heatInfliction');
+    expect(combo!.comboTriggerColumnId).toBe(INFLICTION_COLUMNS.HEAT);
   });
 
   test('H3: Mirrored infliction not generated when combo has no comboTriggerColumnId', () => {
@@ -792,7 +792,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
     const electricWiring: SlotTriggerWiring = { slotId: 'slot-2', operatorId: '' };
     const arcBattle = makeEv({
       uid: 'arc-bs-100', name: 'LIGHTNING_STRIKE', ownerId: 'slot-2',
-      columnId: SKILL_COLUMNS.BATTLE, startFrame: 100,
+      columnId: NounType.BATTLE_SKILL, startFrame: 100,
       segments: [{
         properties: { duration: FPS },
         frames: [{
@@ -806,10 +806,10 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
 
     const processed = processCombatSimulation([focus, arcBattle, antalCombo], undefined, undefined, wirings);
     const combo = processed.find((e) => e.uid === antalCombo.uid);
-    expect(combo!.comboTriggerColumnId).toBe('electricInfliction');
+    expect(combo!.comboTriggerColumnId).toBe(INFLICTION_COLUMNS.ELECTRIC);
     const derived = processed.filter((e) => e.uid.startsWith(`${antalCombo.uid}-combo-inflict`));
     expect(derived.length).toBeGreaterThan(0);
-    expect(derived[0].columnId).toBe('electricInfliction');
+    expect(derived[0].columnId).toBe(INFLICTION_COLUMNS.ELECTRIC);
   });
 
   test('H5: Combo window requires Focus — no window without Focus active', () => {
@@ -827,8 +827,8 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
     const focus = makeFocus(0, 120 * FPS);
     // Derived heat infliction on enemy (as if Laevatain's battle skill frame created it)
     const heatInfliction = makeEv({
-      uid: 'heat-inf-1', name: 'heatInfliction', ownerId: ENEMY_OWNER_ID,
-      columnId: 'heatInfliction', startFrame: 220, segments: [{ properties: { duration: 10 * FPS } }],
+      uid: 'heat-inf-1', name: INFLICTION_COLUMNS.HEAT, ownerId: ENEMY_OWNER_ID,
+      columnId: INFLICTION_COLUMNS.HEAT, startFrame: 220, segments: [{ properties: { duration: 10 * FPS } }],
       sourceOwnerId: SLOT_LAEV, sourceSkillName: 'FLAMING_CINDERS',
     });
     const wirings = [laevWiring(), antalWiring()];
@@ -838,7 +838,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
       (e) => e.columnId === COMBO_WINDOW_COLUMN_ID && e.ownerId === SLOT_ANTAL,
     );
     expect(windows.length).toBeGreaterThan(0);
-    expect(windows[0].comboTriggerColumnId).toBe('heatInfliction');
+    expect(windows[0].comboTriggerColumnId).toBe(INFLICTION_COLUMNS.HEAT);
   });
 
   test('H7: Full scenario — Akekuri heat infliction + Focus → Antal combo mirrors heat', () => {
@@ -846,12 +846,12 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
     const focus = makeFocus(0, 120 * FPS);
     // Akekuri's battle skill applies heat infliction to enemy
     const akekuriHeatInfliction = makeEv({
-      uid: 'akekuri-heat-1', name: 'heatInfliction', ownerId: ENEMY_OWNER_ID,
-      columnId: 'heatInfliction', startFrame: 200, segments: [{ properties: { duration: 20 * FPS } }],
+      uid: 'akekuri-heat-1', name: INFLICTION_COLUMNS.HEAT, ownerId: ENEMY_OWNER_ID,
+      columnId: INFLICTION_COLUMNS.HEAT, startFrame: 200, segments: [{ properties: { duration: 20 * FPS } }],
       sourceOwnerId: SLOT_AKEKURI, sourceSkillName: 'BURST_OF_PASSION',
     });
     // Antal places combo within the activation window, with comboTriggerColumnId resolved
-    const antalCombo = makeAntalCombo(300, 'heatInfliction');
+    const antalCombo = makeAntalCombo(300, INFLICTION_COLUMNS.HEAT);
 
     const akekuriWiring: SlotTriggerWiring = { slotId: SLOT_AKEKURI, operatorId: 'AKEKURI' };
     const wirings = [akekuriWiring, antalWiring()];
@@ -863,13 +863,13 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
 
     // Original Akekuri heat infliction still present
     const akekuriHeat = processed.filter(
-      (e) => e.columnId === 'heatInfliction' && e.sourceOwnerId === SLOT_AKEKURI,
+      (e) => e.columnId === INFLICTION_COLUMNS.HEAT && e.sourceOwnerId === SLOT_AKEKURI,
     );
     expect(akekuriHeat.length).toBeGreaterThan(0);
 
     // Antal combo mirrors heat infliction via APPLY TRIGGER INFLICTION
     const antalHeat = processed.filter(
-      (e) => e.columnId === 'heatInfliction' && e.sourceOwnerId === SLOT_ANTAL,
+      (e) => e.columnId === INFLICTION_COLUMNS.HEAT && e.sourceOwnerId === SLOT_ANTAL,
     );
     expect(antalHeat.length).toBeGreaterThan(0);
     expect(antalHeat[0].sourceSkillName).toBe('EMP_TEST_SITE');
@@ -884,8 +884,8 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
     // Focus exists (as if engine-derived) + Akekuri heat infliction on enemy
     const focus = makeFocus(0, 120 * FPS);
     const akekuriHeat = makeEv({
-      uid: 'akekuri-heat-1', name: 'heatInfliction', ownerId: ENEMY_OWNER_ID,
-      columnId: 'heatInfliction', startFrame: 200, segments: [{ properties: { duration: 20 * FPS } }],
+      uid: 'akekuri-heat-1', name: INFLICTION_COLUMNS.HEAT, ownerId: ENEMY_OWNER_ID,
+      columnId: INFLICTION_COLUMNS.HEAT, startFrame: 200, segments: [{ properties: { duration: 20 * FPS } }],
       sourceOwnerId: SLOT_AKEKURI, sourceSkillName: 'BURST_OF_PASSION',
     });
     // Antal combo placed WITHOUT comboTriggerColumnId (simulating first pass failing)
@@ -902,11 +902,11 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
     // Antal combo should have comboTriggerColumnId resolved
     const combo = processed.find((e) => e.uid === antalCombo.uid);
     expect(combo).toBeDefined();
-    expect(combo!.comboTriggerColumnId).toBe('heatInfliction');
+    expect(combo!.comboTriggerColumnId).toBe(INFLICTION_COLUMNS.HEAT);
 
     // Antal combo mirrors heat infliction via APPLY TRIGGER INFLICTION
     const antalHeat = processed.filter(
-      (e) => e.columnId === 'heatInfliction' && e.sourceOwnerId === SLOT_ANTAL,
+      (e) => e.columnId === INFLICTION_COLUMNS.HEAT && e.sourceOwnerId === SLOT_ANTAL,
     );
     expect(antalHeat.length).toBeGreaterThan(0);
     expect(antalHeat[0].sourceSkillName).toBe('EMP_TEST_SITE');
@@ -917,7 +917,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
     // Antal's own battle skill — publishes APPLY INFLICTION element:ELECTRIC
     const antalBattle = makeEv({
       uid: 'antal-bs-0', name: 'SPECIFIED_RESEARCH_SUBJECT', ownerId: SLOT_ANTAL,
-      columnId: SKILL_COLUMNS.BATTLE, startFrame: 0, segments: [{ properties: { duration: FPS } }],
+      columnId: NounType.BATTLE_SKILL, startFrame: 0, segments: [{ properties: { duration: FPS } }],
     });
     // Antal combo placed after battle skill
     const antalCombo = makeAntalCombo(250);
@@ -934,7 +934,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
 
     // No electric infliction from self-trigger
     const electricInflictions = processed.filter(
-      (e) => e.columnId === 'electricInfliction' && e.sourceOwnerId === SLOT_ANTAL,
+      (e) => e.columnId === INFLICTION_COLUMNS.ELECTRIC && e.sourceOwnerId === SLOT_ANTAL,
     );
     expect(electricInflictions.length).toBe(0);
   });
@@ -944,7 +944,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
     // Akekuri heat infliction on enemy. Combo window should appear.
     const antalBattle = makeEv({
       uid: 'antal-bs-0', name: 'SPECIFIED_RESEARCH_SUBJECT', ownerId: SLOT_ANTAL,
-      columnId: SKILL_COLUMNS.BATTLE, startFrame: 0,
+      columnId: NounType.BATTLE_SKILL, startFrame: 0,
       segments: [{
         properties: { duration: FPS },
         frames: [{
@@ -954,8 +954,8 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
       }],
     });
     const akekuriHeat = makeEv({
-      uid: 'akekuri-heat-1', name: 'heatInfliction', ownerId: ENEMY_OWNER_ID,
-      columnId: 'heatInfliction', startFrame: 200, segments: [{ properties: { duration: 20 * FPS } }],
+      uid: 'akekuri-heat-1', name: INFLICTION_COLUMNS.HEAT, ownerId: ENEMY_OWNER_ID,
+      columnId: INFLICTION_COLUMNS.HEAT, startFrame: 200, segments: [{ properties: { duration: 20 * FPS } }],
       sourceOwnerId: 'slot-0', sourceSkillName: 'BURST_OF_PASSION',
     });
     const akekuriWiring: SlotTriggerWiring = { slotId: 'slot-0', operatorId: 'AKEKURI' };
@@ -981,7 +981,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
     const focus = makeFocus(0, 120 * FPS);
     // Source (Akekuri battle) was dragged far below the combo — combo is now outside all windows.
     // Combo still has a stale comboTriggerColumnId from initial placement.
-    const antalCombo = makeAntalCombo(300, 'heatInfliction');
+    const antalCombo = makeAntalCombo(300, INFLICTION_COLUMNS.HEAT);
 
     const akekuriWiring: SlotTriggerWiring = { slotId: 'slot-0', operatorId: 'AKEKURI' };
     const wirings = [akekuriWiring, antalWiring()];
@@ -999,7 +999,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
 
     // No mirrored infliction should be generated
     const antalHeat = processed.filter(
-      (e) => e.columnId === 'heatInfliction' && e.sourceOwnerId === SLOT_ANTAL,
+      (e) => e.columnId === INFLICTION_COLUMNS.HEAT && e.sourceOwnerId === SLOT_ANTAL,
     );
     expect(antalHeat.length).toBe(0);
   });
@@ -1013,7 +1013,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
     // Antal battle skill with applyStatus Focus frame effect
     const antalBattle = makeEv({
       uid: 'antal-bs-0', name: 'SPECIFIED_RESEARCH_SUBJECT', ownerId: SLOT_ANTAL,
-      columnId: SKILL_COLUMNS.BATTLE, startFrame: 0,
+      columnId: NounType.BATTLE_SKILL, startFrame: 0,
       segments: [{
         properties: { duration: FPS },
         frames: [{
@@ -1026,7 +1026,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
     // Akekuri battle skill (source of heat infliction trigger) with infliction frame
     const akekuriBattle = makeEv({
       uid: 'akekuri-bs-0', name: 'BURST_OF_PASSION', ownerId: SLOT_AKEKURI,
-      columnId: SKILL_COLUMNS.BATTLE, startFrame: 100,
+      columnId: NounType.BATTLE_SKILL, startFrame: 100,
       segments: [{
         properties: { duration: FPS },
         frames: [{
@@ -1053,18 +1053,18 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
 
     // Heat infliction from Akekuri should exist
     const akekuriHeat = processed.filter(
-      (e) => e.columnId === 'heatInfliction' && e.sourceOwnerId === SLOT_AKEKURI,
+      (e) => e.columnId === INFLICTION_COLUMNS.HEAT && e.sourceOwnerId === SLOT_AKEKURI,
     );
     expect(akekuriHeat.length).toBeGreaterThan(0);
 
     // Antal combo should have deferred-resolved comboTriggerColumnId
     const combo = processed.find((e) => e.uid === antalCombo.uid);
     expect(combo).toBeDefined();
-    expect(combo!.comboTriggerColumnId).toBe('heatInfliction');
+    expect(combo!.comboTriggerColumnId).toBe(INFLICTION_COLUMNS.HEAT);
 
     // Antal combo mirrors heat infliction via APPLY TRIGGER INFLICTION
     const antalHeat = processed.filter(
-      (e) => e.columnId === 'heatInfliction' && e.sourceOwnerId === SLOT_ANTAL,
+      (e) => e.columnId === INFLICTION_COLUMNS.HEAT && e.sourceOwnerId === SLOT_ANTAL,
     );
     expect(antalHeat.length).toBeGreaterThan(0);
     expect(antalHeat[0].sourceSkillName).toBe('EMP_TEST_SITE');
@@ -1076,7 +1076,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
     // Antal battle skill at frame 0 — derives Focus at offset 0.67s
     const antalBattle = makeEv({
       uid: 'antal-bs-0', name: 'SPECIFIED_RESEARCH_SUBJECT', ownerId: SLOT_ANTAL,
-      columnId: SKILL_COLUMNS.BATTLE, startFrame: 0, // 1s = 120f,
+      columnId: NounType.BATTLE_SKILL, startFrame: 0, // 1s = 120f,
       segments: [{
         properties: { duration: FPS },
         frames: [{
@@ -1090,7 +1090,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
     const akekuriBattleDur = Math.round(1.33 * FPS); // 160f
     const akekuriBattle = makeEv({
       uid: 'akekuri-bs-0', name: 'BURST_OF_PASSION', ownerId: SLOT_AKEKURI,
-      columnId: SKILL_COLUMNS.BATTLE, startFrame: FPS,
+      columnId: NounType.BATTLE_SKILL, startFrame: FPS,
       segments: [{
         properties: { duration: akekuriBattleDur },
         frames: [{
@@ -1118,7 +1118,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
     expect(focusEvents[0].sourceOwnerId).toBe(SLOT_ANTAL);
 
     // 2. Two heat inflictions: one from Akekuri BS, one mirrored by Antal combo (APPLY TRIGGER INFLICTION)
-    const heatInflictions = processed.filter((e) => e.columnId === 'heatInfliction');
+    const heatInflictions = processed.filter((e) => e.columnId === INFLICTION_COLUMNS.HEAT);
     expect(heatInflictions.length).toBe(2);
     expect(heatInflictions.filter((e) => e.sourceOwnerId === SLOT_AKEKURI).length).toBe(1);
     expect(heatInflictions.filter((e) => e.sourceOwnerId === SLOT_ANTAL).length).toBe(1);
@@ -1135,7 +1135,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
     // Both battle skills at frame 0
     const antalBattle = makeEv({
       uid: 'antal-bs-0', name: 'SPECIFIED_RESEARCH_SUBJECT', ownerId: SLOT_ANTAL,
-      columnId: SKILL_COLUMNS.BATTLE, startFrame: 0,
+      columnId: NounType.BATTLE_SKILL, startFrame: 0,
       segments: [{
         properties: { duration: FPS },
         frames: [{
@@ -1147,7 +1147,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
 
     const akekuriBattle = makeEv({
       uid: 'akekuri-bs-0', name: 'BURST_OF_PASSION', ownerId: SLOT_AKEKURI,
-      columnId: SKILL_COLUMNS.BATTLE, startFrame: 0,
+      columnId: NounType.BATTLE_SKILL, startFrame: 0,
       segments: [{
         properties: { duration: Math.round(1.33 * FPS) },
         frames: [{
@@ -1170,7 +1170,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
     );
 
     // Two heat inflictions: Akekuri original + Antal combo mirror (APPLY TRIGGER INFLICTION)
-    const heatInflictions = processed.filter((e) => e.columnId === 'heatInfliction');
+    const heatInflictions = processed.filter((e) => e.columnId === INFLICTION_COLUMNS.HEAT);
     expect(heatInflictions.length).toBe(2);
     expect(heatInflictions.filter((e) => e.sourceOwnerId === SLOT_AKEKURI).length).toBe(1);
     expect(heatInflictions.filter((e) => e.sourceOwnerId === SLOT_ANTAL).length).toBe(1);

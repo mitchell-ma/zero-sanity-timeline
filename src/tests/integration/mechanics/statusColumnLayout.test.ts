@@ -15,12 +15,12 @@
 
 import { renderHook, act } from '@testing-library/react';
 import { useApp } from '../../../app/useApp';
-import { OPERATOR_COLUMNS } from '../../../model/channels';
 import { ColumnType, InteractionModeType } from '../../../consts/enums';
 import { FPS } from '../../../utils/timeline';
 import { computeTimelinePresentation } from '../../../controller/timeline/eventPresentationController';
 import type { MiniTimeline } from '../../../consts/viewTypes';
 
+const MELTING_FLAME_ID = 'MELTING_FLAME';
 const SLOT_LAEVATAIN = 'slot-0';
 const SH_EFFECT_COLUMN = 'SCORCHING_HEART_EFFECT';
 const SH_TALENT_COLUMN = 'SCORCHING_HEART';
@@ -59,10 +59,10 @@ describe('Status column layout — micro-column positioning', () => {
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
     // Add Melting Flame at 2s
-    const mfDefault = getDefaultEvent(result.current, OPERATOR_COLUMNS.MELTING_FLAME);
+    const mfDefault = getDefaultEvent(result.current, MELTING_FLAME_ID);
     act(() => {
       result.current.handleAddEvent(
-        SLOT_LAEVATAIN, OPERATOR_COLUMNS.MELTING_FLAME, 2 * FPS, mfDefault,
+        SLOT_LAEVATAIN, MELTING_FLAME_ID, 2 * FPS, mfDefault,
       );
     });
 

@@ -5,7 +5,8 @@
         {
           "subject": "ENEMY",
           "verb": "HAVE",
-          "object": "SLOW"
+          "object": "STATUS",
+          "objectId": "SLOW"
         }
       ],
       "effects": [

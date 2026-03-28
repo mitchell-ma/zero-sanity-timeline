@@ -6,11 +6,12 @@
  * where game-time-dependent processes pause (durations stretch).
  */
 import { TimelineEvent, getAnimationDuration, eventDuration } from '../../consts/viewTypes';
+import { NounType } from '../../dsl/semantics';
 import { SegmentType, TimeDependency } from '../../consts/enums';
 import {
   TOTAL_FRAMES,
 } from '../../utils/timeline';
-import { OPERATOR_COLUMNS, SKILL_COLUMNS } from '../../model/channels';
+import { OPERATOR_COLUMNS } from '../../model/channels';
 
 // ── Layout types ──────────────────────────────────────────────────────────────
 
@@ -95,8 +96,8 @@ function collectRawStops(events: TimelineEvent[]): RawTimeStop[] {
     const anim = getAnimationDuration(ev);
     if (anim <= 0) continue;
     const isTimeStop =
-      ev.columnId === SKILL_COLUMNS.ULTIMATE ||
-      ev.columnId === SKILL_COLUMNS.COMBO ||
+      ev.columnId === NounType.ULTIMATE ||
+      ev.columnId === NounType.COMBO_SKILL ||
       (ev.columnId === OPERATOR_COLUMNS.INPUT && ev.isPerfectDodge);
     if (!isTimeStop) continue;
     stops.push({
@@ -149,7 +150,7 @@ function realDurationForGameTime(realStart: number, gameDur: number, stops: read
 function isTimeStopEvent(ev: TimelineEvent): boolean {
   const anim = getAnimationDuration(ev);
   if (anim <= 0) return false;
-  return ev.columnId === SKILL_COLUMNS.ULTIMATE || ev.columnId === SKILL_COLUMNS.COMBO ||
+  return ev.columnId === NounType.ULTIMATE || ev.columnId === NounType.COMBO_SKILL ||
     (ev.columnId === OPERATOR_COLUMNS.INPUT && !!ev.isPerfectDodge);
 }
 

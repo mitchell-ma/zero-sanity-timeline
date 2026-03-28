@@ -6,8 +6,11 @@
  * Each file contains an array of operator status entries sharing an originId.
  */
 import { EventType, EventCategoryType } from '../../consts/enums';
+import type { EventSegmentData, EventFrameMarker } from '../../consts/viewTypes';
 import type { ClauseEffect, ClausePredicate, StacksConfig, DurationConfig } from './weaponStatusesStore';
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from '../../controller/calculation/valueResolver';
+import { DataDrivenSkillEventFrame } from '../event-frames/dataDrivenEventFrames';
+import { FPS } from '../../utils/timeline';
 import { checkKeys, VALID_VALUE_NODE_KEYS, VALID_CLAUSE_KEYS, VALID_METADATA_KEYS, validateEffect } from './validationUtils';
 
 // ── Trigger clause type ─────────────────────────────────────────────────────
@@ -146,7 +149,8 @@ export class OperatorStatus {
   readonly onTriggerClause: TriggerClause[];
   readonly onEntryClause: TriggerClause[];
   readonly onExitClause: TriggerClause[];
-  readonly segments: StatusSegment[];
+  readonly segments: EventSegmentData[];
+  private readonly _rawSegments: StatusSegment[];
   readonly id: string;
   readonly name: string;
   readonly description?: string;
@@ -176,7 +180,27 @@ export class OperatorStatus {
     if (json.clauseType) this.clauseType = json.clauseType as string;
     this.onEntryClause = (json.onEntryClause ?? []) as TriggerClause[];
     this.onExitClause = (json.onExitClause ?? []) as TriggerClause[];
-    this.segments = (json.segments ?? []) as StatusSegment[];
+    const rawSegments = (json.segments ?? []) as StatusSegment[];
+    this._rawSegments = rawSegments;
+    this.segments = rawSegments.map(seg => {
+      const segProps = seg.properties as Record<string, unknown> | undefined;
+      const durConfig = segProps?.duration as { value: unknown; unit: string } | undefined;
+      const durationFrames = durConfig
+        ? Math.round(resolveValueNode(durConfig.value as import('../../dsl/semantics').ValueNode, DEFAULT_VALUE_CONTEXT) * FPS)
+        : 0;
+      const segData: EventSegmentData = {
+        properties: {
+          duration: durationFrames,
+          name: segProps?.name as string | undefined,
+        },
+      };
+      if (seg.frames && seg.frames.length > 0) {
+        segData.frames = seg.frames.map(
+          f => new DataDrivenSkillEventFrame(f as Record<string, unknown>).toMarker(FPS) as EventFrameMarker,
+        );
+      }
+      return segData;
+    });
     this.id = (props.id ?? '') as string;
     this.name = (props.name ?? '') as string;
     if (props.description) this.description = props.description as string;
@@ -219,7 +243,7 @@ export class OperatorStatus {
       ...(this.onTriggerClause.length > 0 ? { onTriggerClause: this.onTriggerClause } : {}),
       ...(this.onEntryClause.length > 0 ? { onEntryClause: this.onEntryClause } : {}),
       ...(this.onExitClause.length > 0 ? { onExitClause: this.onExitClause } : {}),
-      ...(this.segments.length > 0 ? { segments: this.segments } : {}),
+      ...(this._rawSegments.length > 0 ? { segments: this._rawSegments } : {}),
       properties: {
         id: this.id,
         name: this.name,

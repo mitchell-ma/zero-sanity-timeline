@@ -10,6 +10,7 @@
 
 // @ts-nocheck
 import { ColumnType, LoadoutNodeType } from '../../consts/enums';
+import { NounType } from '../../dsl/semantics';
 // Polyfill browser APIs not available in Node test environment
 const { TextEncoder, TextDecoder } = require('util');
 global.TextEncoder = TextEncoder;
@@ -149,7 +150,7 @@ describe('embedCodec', () => {
             id: 'ev-1',
             name: 'FLAMING_CINDERS',
             ownerId: 'slot-0',
-            columnId: 'battle',
+            columnId: NounType.BATTLE_SKILL,
             startFrame: 360,
             segments: [{ properties: { duration: 188 } }],
           },
@@ -157,7 +158,7 @@ describe('embedCodec', () => {
             id: 'ev-2',
             name: 'ERUPTION_COLUMN',
             ownerId: 'slot-3',
-            columnId: 'combo',
+            columnId: NounType.COMBO_SKILL,
             startFrame: 720,
                         segments: [{ properties: { segmentTypes: ['ANIMATION'], duration: 60, timeDependency: 'REAL_TIME' } }],
           },
@@ -230,8 +231,8 @@ describe('embedCodec', () => {
     test('events with template-matching durations produce smaller output', async () => {
       const mockColumn = {
         type: ColumnType.MINI_TIMELINE,
-        key: 'battle',
-        columnId: 'battle',
+        key: NounType.BATTLE_SKILL,
+        columnId: NounType.BATTLE_SKILL,
         label: 'Battle',
         color: '#fff',
         ownerId: 'slot-0',
@@ -248,7 +249,7 @@ describe('embedCodec', () => {
           id: 'ev-1',
           name: 'FLAMING_CINDERS',
           ownerId: 'slot-0',
-          columnId: 'battle',
+          columnId: NounType.BATTLE_SKILL,
           startFrame: 360,
           segments: [{ properties: { duration: 188 } }],
         }],
@@ -287,7 +288,7 @@ describe('embedCodec', () => {
           id: 'ev-1',
           name: 'FLAMING_CINDERS',
           ownerId: 'slot-0',
-          columnId: 'battle',
+          columnId: NounType.BATTLE_SKILL,
           startFrame: 99999,
           segments: [{ properties: { duration: -50 } }],
         }],
@@ -324,8 +325,8 @@ describe('embedCodec', () => {
   describe('segment and frame deltas', () => {
     const segmentColumn = {
       type: ColumnType.MINI_TIMELINE,
-      key: 'basic',
-      columnId: 'basic',
+      key: NounType.BASIC_ATTACK,
+      columnId: NounType.BASIC_ATTACK,
       label: 'Basic',
       color: '#fff',
       ownerId: 'slot-0',
@@ -349,7 +350,7 @@ describe('embedCodec', () => {
           id: 'ev-1',
           name: 'BASIC_N1',
           ownerId: 'slot-0',
-          columnId: 'basic',
+          columnId: NounType.BASIC_ATTACK,
           startFrame: 120,
           segments: [{ properties: { duration: 300 } }],
           // No segments on the raw event — unedited
@@ -371,7 +372,7 @@ describe('embedCodec', () => {
           id: 'ev-1',
           name: 'BASIC_N1',
           ownerId: 'slot-0',
-          columnId: 'basic',
+          columnId: NounType.BASIC_ATTACK,
           startFrame: 120,
                     segments: [
             { properties: { duration: 80, name: '1' }, frames: [{ offsetFrame: 20 }, { offsetFrame: 45 }] },
@@ -397,7 +398,7 @@ describe('embedCodec', () => {
           id: 'ev-1',
           name: 'BASIC_N1',
           ownerId: 'slot-0',
-          columnId: 'basic',
+          columnId: NounType.BASIC_ATTACK,
           startFrame: 120,
                     segments: [
             { properties: { duration: 60, name: '1' }, frames: [{ offsetFrame: 25 }, { offsetFrame: 45 }] },
@@ -426,7 +427,7 @@ describe('embedCodec', () => {
           id: 'ev-1',
           name: 'BASIC_N1',
           ownerId: 'slot-0',
-          columnId: 'basic',
+          columnId: NounType.BASIC_ATTACK,
           startFrame: 0,
                     segments: [
             { properties: { duration: 60, name: '1' }, frames: [{ offsetFrame: 20 }, { offsetFrame: 45 }] },
@@ -462,7 +463,7 @@ describe('embedCodec', () => {
         id: 'ev-1',
         name: 'BASIC_N1',
         ownerId: 'slot-0',
-        columnId: 'basic',
+        columnId: NounType.BASIC_ATTACK,
         startFrame: 0,
                 segments: [
           { properties: { duration: 60, name: '1' }, frames: [{ offsetFrame: 20 }, { offsetFrame: 45 }] },
@@ -498,7 +499,7 @@ describe('embedCodec', () => {
         id: 'ev-1',
         name: 'BASIC_N1',
         ownerId: 'slot-0',
-        columnId: 'basic',
+        columnId: NounType.BASIC_ATTACK,
         startFrame: 0,
         segments: [{ properties: { duration: 300 } }],
         // NO segments — this is how raw events look before any edit
@@ -536,7 +537,7 @@ describe('embedCodec', () => {
           id: 'ev-1',
           name: 'BASIC_N1',
           ownerId: 'slot-0',
-          columnId: 'basic',
+          columnId: NounType.BASIC_ATTACK,
           startFrame: 0,
                     segments: [
             { properties: { duration: 90, name: '1' }, frames: [{ offsetFrame: 25 }, { offsetFrame: 55 }] },
@@ -566,10 +567,10 @@ describe('embedCodec', () => {
       const decoded = await decodeEmbed(encoded, []);
 
       for (const slotId of ['slot-0', 'slot-1', 'slot-2', 'slot-3']) {
-        expect(decoded.visibleSkills[slotId].basic).toBe(true);
-        expect(decoded.visibleSkills[slotId].battle).toBe(true);
-        expect(decoded.visibleSkills[slotId].combo).toBe(true);
-        expect(decoded.visibleSkills[slotId].ultimate).toBe(true);
+        expect(decoded.visibleSkills[slotId][NounType.BASIC_ATTACK]).toBe(true);
+        expect(decoded.visibleSkills[slotId][NounType.BATTLE_SKILL]).toBe(true);
+        expect(decoded.visibleSkills[slotId][NounType.COMBO_SKILL]).toBe(true);
+        expect(decoded.visibleSkills[slotId][NounType.ULTIMATE]).toBe(true);
       }
     });
   });
@@ -642,7 +643,7 @@ describe('full state round-trip (current state → share → load → assert equ
     {
       type: ColumnType.MINI_TIMELINE,
       key: 'slot-0-basic',
-      columnId: 'basic',
+      columnId: NounType.BASIC_ATTACK,
       ownerId: 'slot-0',
       label: 'Basic',
       color: '#f0a040',
@@ -666,7 +667,7 @@ describe('full state round-trip (current state → share → load → assert equ
     {
       type: ColumnType.MINI_TIMELINE,
       key: 'slot-0-battle',
-      columnId: 'battle',
+      columnId: NounType.BATTLE_SKILL,
       ownerId: 'slot-0',
       label: 'Battle',
       color: '#f0a040',
@@ -691,7 +692,7 @@ describe('full state round-trip (current state → share → load → assert equ
     {
       type: ColumnType.MINI_TIMELINE,
       key: 'slot-0-combo',
-      columnId: 'combo',
+      columnId: NounType.COMBO_SKILL,
       ownerId: 'slot-0',
       label: 'Combo',
       color: '#f0a040',
@@ -710,7 +711,7 @@ describe('full state round-trip (current state → share → load → assert equ
     {
       type: ColumnType.MINI_TIMELINE,
       key: 'slot-0-ultimate',
-      columnId: 'ultimate',
+      columnId: NounType.ULTIMATE,
       ownerId: 'slot-0',
       label: 'Ultimate',
       color: '#f0a040',
@@ -737,7 +738,7 @@ describe('full state round-trip (current state → share → load → assert equ
           id: 'ev-1',
           name: 'SWORD_OF_ASPIRATION',
           ownerId: 'slot-0',
-          columnId: 'basic',
+          columnId: NounType.BASIC_ATTACK,
           startFrame: 0,
                     segments: [
             { properties: { duration: 48, name: '1' }, frames: [{ offsetFrame: 18 }, { offsetFrame: 35 }] },
@@ -750,7 +751,7 @@ describe('full state round-trip (current state → share → load → assert equ
           id: 'ev-2',
           name: 'SMOULDERING_FIRE',
           ownerId: 'slot-0',
-          columnId: 'battle',
+          columnId: NounType.BATTLE_SKILL,
           startFrame: 240,
           skillPointCost: 100,
           segments: [
@@ -767,7 +768,7 @@ describe('full state round-trip (current state → share → load → assert equ
           id: 'ev-3',
           name: 'ERUPTION_COLUMN',
           ownerId: 'slot-0',
-          columnId: 'combo',
+          columnId: NounType.COMBO_SKILL,
           startFrame: 600,
                     segments: [{ properties: { segmentTypes: ['ANIMATION'], duration: 60, timeDependency: 'REAL_TIME' } }],
           timeInteraction: 'TIME_STOP',
@@ -777,7 +778,7 @@ describe('full state round-trip (current state → share → load → assert equ
           id: 'ev-4',
           name: 'SWORD_OF_ASPIRATION',
           ownerId: 'slot-0',
-          columnId: 'basic',
+          columnId: NounType.BASIC_ATTACK,
           startFrame: 720,
           segments: [{ properties: { duration: 240 } }],
         },
