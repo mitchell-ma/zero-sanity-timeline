@@ -422,7 +422,6 @@ export class EventInterpretorController {
         const consumeOwner = effect.to === NounType.TEAM ? COMMON_OWNER_ID : ownerId;
         return this.controller.canConsumeEvent(col, consumeOwner, ctx.frame);
       }
-        return true;
       default:
         return true;
     }
