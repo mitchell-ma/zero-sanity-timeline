@@ -126,7 +126,7 @@
           "objectId": "PHYSICAL",
           "object": "STATUS",
           "of": "ENEMY",
-          "until": "END"
+          "until": { "object": "END", "of": "SEGMENT", "ofDeterminer": "THIS" }
         }
       ]
     }
@@ -149,7 +149,7 @@
           "objectId": "PHYSICAL",
           "object": "STATUS",
           "of": "ENEMY",
-          "until": "END"
+          "until": { "object": "END", "of": "SEGMENT", "ofDeterminer": "THIS" }
         }
       ]
     }

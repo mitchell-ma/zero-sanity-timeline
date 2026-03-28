@@ -3,15 +3,8 @@ import type { FrameClausePredicate, FrameDealDamage } from '../model/event-frame
 import { NounType } from '../dsl/semantics';
 
 /** String union for the four operator combat skills, matching the data keys in operators.ts. */
-export type SkillType = "basic" | "battle" | "combo" | "ultimate";
-
-/** Maps NounType skill column IDs to SkillType data keys. */
-export const NOUN_TO_SKILL_TYPE: Record<string, SkillType> = {
-  [NounType.BASIC_ATTACK]: 'basic',
-  [NounType.BATTLE_SKILL]: 'battle',
-  [NounType.COMBO_SKILL]: 'combo',
-  [NounType.ULTIMATE]: 'ultimate',
-};
+/** @deprecated Use NounType skill values directly. */
+export type SkillType = string;
 
 export interface SkillDef {
   name: string;
@@ -52,7 +45,7 @@ export interface Operator {
   kit2: string;
   food: string;
   tactical: string;
-  skills: Record<SkillType, SkillDef>;
+  skills: Record<string, SkillDef>;
   maxTalentOneLevel: number;
   maxTalentTwoLevel: number;
   talentOneName: string;
@@ -293,7 +286,7 @@ export interface ContextMenuState {
   items: ContextMenuItem[];
 }
 
-export type VisibleSkills = Record<string, Record<SkillType, boolean>>;
+export type VisibleSkills = Record<string, Record<string, boolean>>;
 
 /** Editable resource parameters for a resource subtimeline. */
 export interface ResourceConfig {

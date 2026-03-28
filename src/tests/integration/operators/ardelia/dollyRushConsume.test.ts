@@ -7,26 +7,22 @@
  *
  * Tests that when enemy has Corrosion, Ardelia's battle skill (Dolly Rush)
  * consumes the corrosion and applies susceptibility.
+ *
+ * Verification layers:
+ *   Context menu: getMenuPayload succeeds (skill is available and enabled)
+ *   Controller: allProcessedEvents corrosion clamped at battle hit frame
+ *   View: computeTimelinePresentation ColumnViewModel for enemy CORROSION column
  */
 
 import { renderHook, act } from '@testing-library/react';
 import { NounType } from '../../../../dsl/semantics';
 import { useApp } from '../../../../app/useApp';
-import { REACTION_COLUMNS, ENEMY_OWNER_ID } from '../../../../model/channels';
-import { ColumnType } from '../../../../consts/enums';
+import { REACTION_COLUMNS, ENEMY_OWNER_ID, ENEMY_GROUP_COLUMNS } from '../../../../model/channels';
 import { FPS } from '../../../../utils/timeline';
-import type { MiniTimeline } from '../../../../consts/viewTypes';
+import { computeTimelinePresentation } from '../../../../controller/timeline/eventPresentationController';
+import { findColumn, getMenuPayload } from '../../helpers';
 
 const SLOT_ARDELIA = 'slot-3';
-
-function findColumn(app: ReturnType<typeof useApp>, slotId: string, columnId: string) {
-  return app.columns.find(
-    (c): c is MiniTimeline =>
-      c.type === ColumnType.MINI_TIMELINE &&
-      c.ownerId === slotId &&
-      c.columnId === columnId,
-  );
-}
 
 describe('Ardelia Dolly Rush — Corrosion consumption', () => {
   it('battle skill consumes corrosion when enemy has it', () => {
@@ -39,25 +35,30 @@ describe('Ardelia Dolly Rush — Corrosion consumption', () => {
     expect(comboCol).toBeDefined();
     expect(battleCol).toBeDefined();
 
+    // ── Context menu: verify each skill is available and enabled ─────────
+
     // 1. Basic attack at frame 0 (provides FINAL_STRIKE for combo trigger)
+    const basicPayload = getMenuPayload(result.current, basicCol!, 0);
     act(() => {
-      result.current.handleAddEvent(SLOT_ARDELIA, NounType.BASIC_ATTACK, 0, basicCol!.defaultEvent!);
+      result.current.handleAddEvent(basicPayload.ownerId, basicPayload.columnId, basicPayload.atFrame, basicPayload.defaultSkill);
     });
 
     // 2. Combo skill at 10s (applies forced Corrosion to enemy)
+    const comboPayload = getMenuPayload(result.current, comboCol!, 10 * FPS);
     act(() => {
-      result.current.handleAddEvent(SLOT_ARDELIA, NounType.COMBO_SKILL, 10 * FPS, comboCol!.defaultEvent!);
+      result.current.handleAddEvent(comboPayload.ownerId, comboPayload.columnId, comboPayload.atFrame, comboPayload.defaultSkill);
     });
 
-    // Verify corrosion exists on enemy
+    // ── Controller: verify corrosion exists on enemy ────────────────────
     const corrosionBefore = result.current.allProcessedEvents.filter(
       ev => ev.columnId === REACTION_COLUMNS.CORROSION && ev.ownerId === ENEMY_OWNER_ID,
     );
     expect(corrosionBefore).toHaveLength(1);
 
     // 3. Battle skill at 15s (should consume corrosion)
+    const battlePayload = getMenuPayload(result.current, battleCol!, 15 * FPS);
     act(() => {
-      result.current.handleAddEvent(SLOT_ARDELIA, NounType.BATTLE_SKILL, 15 * FPS, battleCol!.defaultEvent!);
+      result.current.handleAddEvent(battlePayload.ownerId, battlePayload.columnId, battlePayload.atFrame, battlePayload.defaultSkill);
     });
 
     // The battle skill frame hits at offset 1.07s = frame 15*120 + 128 = 1928
@@ -77,5 +78,25 @@ describe('Ardelia Dolly Rush — Corrosion consumption', () => {
 
     // Corrosion should end at or before the battle skill hit frame (consumed)
     expect(corrosionEnd).toBeLessThanOrEqual(battleFrameHit);
+
+    // ── View: computeTimelinePresentation ColumnViewModel ───────────────
+    // Verify corrosion appears in the enemy's unified status column VM
+    const vms = computeTimelinePresentation(allEvents, result.current.columns);
+    const enemyStatusVM = vms.get(ENEMY_GROUP_COLUMNS.ENEMY_STATUS);
+    expect(enemyStatusVM).toBeDefined();
+
+    // Filter the VM's events for corrosion
+    const vmCorrosionEvents = enemyStatusVM!.events.filter(
+      ev => ev.columnId === REACTION_COLUMNS.CORROSION,
+    );
+    expect(vmCorrosionEvents).toHaveLength(1);
+
+    // The view-layer corrosion event should also be clamped
+    const vmCorrosion = vmCorrosionEvents[0];
+    const vmTotalDur = vmCorrosion.segments.reduce(
+      (sum: number, s: { properties: { duration: number } }) => sum + s.properties.duration, 0,
+    );
+    const vmCorrosionEnd = vmCorrosion.startFrame + vmTotalDur;
+    expect(vmCorrosionEnd).toBeLessThanOrEqual(battleFrameHit);
   });
 });

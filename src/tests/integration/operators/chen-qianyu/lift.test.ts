@@ -10,6 +10,11 @@
  *   1. Always adds 1 Vulnerable infliction stack.
  *   2. Only creates the Lift status if enemy already had Vulnerable OR isForced.
  *
+ * Three-layer verification:
+ *   1. Context menu: column exists and add-event menu item is available
+ *   2. Controller: allProcessedEvents contain expected infliction/status events
+ *   3. View: computeTimelinePresentation produces ColumnViewModels with correct Lift events
+ *
  * Default slot order: slot-0=Laevatain, slot-1=Akekuri, slot-2=Antal, slot-3=Ardelia
  * Chen Qianyu must be swapped in via handleSwapOperator.
  */
@@ -22,70 +27,105 @@ import {
   PHYSICAL_STATUS_COLUMNS,
   PHYSICAL_STATUS_COLUMN_IDS,
   ENEMY_OWNER_ID,
+  ENEMY_GROUP_COLUMNS,
 } from '../../../../model/channels';
-import { ColumnType } from '../../../../consts/enums';
 import { FPS } from '../../../../utils/timeline';
-import type { MiniTimeline } from '../../../../consts/viewTypes';
+import { computeTimelinePresentation } from '../../../../controller/timeline/eventPresentationController';
+import { findColumn, getMenuPayload, buildContextMenu } from '../../helpers';
+import type { AppResult } from '../../helpers';
+
+/* eslint-disable @typescript-eslint/no-require-imports */
+const CHEN_QIANYU_ID: string = require('../../../../model/game-data/operators/chen-qianyu/chen-qianyu.json').id;
+/* eslint-enable @typescript-eslint/no-require-imports */
 
 const SLOT_CHEN = 'slot-0';
 
-function findColumn(app: ReturnType<typeof useApp>, slotId: string, columnId: string) {
-  return app.columns.find(
-    (c): c is MiniTimeline =>
-      c.type === ColumnType.MINI_TIMELINE &&
-      c.ownerId === slotId &&
-      c.columnId === columnId,
-  );
+beforeEach(() => {
+  localStorage.clear();
+});
+
+function setupChen() {
+  const view = renderHook(() => useApp());
+  act(() => { view.result.current.handleSwapOperator(SLOT_CHEN, CHEN_QIANYU_ID); });
+  return view;
+}
+
+function addViaContextMenu(app: AppResult, slotId: string, columnId: string, atFrame: number, variantLabel?: string) {
+  const col = findColumn(app, slotId, columnId);
+  expect(col).toBeDefined();
+  const payload = getMenuPayload(app, col!, atFrame, variantLabel);
+  app.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
 }
 
 describe('Chen Qianyu — Vulnerable → Lift physical status', () => {
   it('first battle skill applies Vulnerable only; second adds 2nd stack and triggers Lift', () => {
-    const { result } = renderHook(() => useApp());
+    const { result } = setupChen();
 
-    // Swap Chen Qianyu into slot-0
-    act(() => {
-      result.current.handleSwapOperator(SLOT_CHEN, 'CHEN_QIANYU');
-    });
-
+    // ── Context menu: verify battle skill column exists and menu is available ──
     const battleCol = findColumn(result.current, SLOT_CHEN, NounType.BATTLE_SKILL);
     expect(battleCol).toBeDefined();
+    expect(battleCol!.defaultEvent).toBeDefined();
 
-    // ── First battle skill at t=2s ──
+    const menuItems = buildContextMenu(result.current, battleCol!, 2 * FPS);
+    expect(menuItems).not.toBeNull();
+    expect(menuItems!.some(i => i.actionId === 'addEvent' && !i.disabled)).toBe(true);
+
+    // ── First battle skill at t=2s via context menu ──
     act(() => {
-      result.current.handleAddEvent(
-        SLOT_CHEN, NounType.BATTLE_SKILL, 2 * FPS, battleCol!.defaultEvent!,
-      );
+      addViaContextMenu(result.current, SLOT_CHEN, NounType.BATTLE_SKILL, 2 * FPS);
     });
 
-    // Enemy should have exactly 1 Vulnerable infliction
+    // Controller layer: Enemy should have exactly 1 Vulnerable infliction
     const vulnAfterFirst = result.current.allProcessedEvents.filter(
       (ev) => ev.columnId === PHYSICAL_INFLICTION_COLUMNS.VULNERABLE && ev.ownerId === ENEMY_OWNER_ID,
     );
     expect(vulnAfterFirst).toHaveLength(1);
 
-    // Enemy should have NO physical statuses (Lift, Knock Down, Crush, Breach)
+    // Controller layer: Enemy should have NO physical statuses (Lift, Knock Down, Crush, Breach)
     const physStatusAfterFirst = result.current.allProcessedEvents.filter(
       (ev) => PHYSICAL_STATUS_COLUMN_IDS.has(ev.columnId) && ev.ownerId === ENEMY_OWNER_ID,
     );
     expect(physStatusAfterFirst).toHaveLength(0);
 
-    // ── Second battle skill while Vulnerable is still active ──
+    // ── Second battle skill while Vulnerable is still active via context menu ──
     act(() => {
-      result.current.handleAddEvent(
-        SLOT_CHEN, NounType.BATTLE_SKILL, 4 * FPS, battleCol!.defaultEvent!,
-      );
+      addViaContextMenu(result.current, SLOT_CHEN, NounType.BATTLE_SKILL, 4 * FPS);
     });
 
-    // Enemy should now have 2 Vulnerable infliction stacks
+    // Controller layer: Enemy should now have 2 Vulnerable infliction stacks
     const vulnAfterSecond = result.current.allProcessedEvents.filter(
       (ev) => ev.columnId === PHYSICAL_INFLICTION_COLUMNS.VULNERABLE && ev.ownerId === ENEMY_OWNER_ID,
     );
     expect(vulnAfterSecond).toHaveLength(2);
 
-    // Enemy should now have Lift status
+    // Controller layer: Enemy should now have Lift status
     const liftEvents = result.current.allProcessedEvents.filter(
       (ev) => ev.columnId === PHYSICAL_STATUS_COLUMNS.LIFT && ev.ownerId === ENEMY_OWNER_ID,
     );
     expect(liftEvents).toHaveLength(1);
+
+    // ── View layer: computeTimelinePresentation shows Lift in enemy status column ──
+    const enemyStatusCol = findColumn(result.current, ENEMY_OWNER_ID, ENEMY_GROUP_COLUMNS.ENEMY_STATUS);
+    expect(enemyStatusCol).toBeDefined();
+
+    const viewModels = computeTimelinePresentation(
+      result.current.allProcessedEvents,
+      result.current.columns,
+    );
+
+    const enemyStatusVM = viewModels.get(enemyStatusCol!.key);
+    expect(enemyStatusVM).toBeDefined();
+
+    // Vulnerable infliction events in the view model
+    const vulnVMEvents = enemyStatusVM!.events.filter(
+      (ev) => ev.columnId === PHYSICAL_INFLICTION_COLUMNS.VULNERABLE,
+    );
+    expect(vulnVMEvents).toHaveLength(2);
+
+    // Lift status event in the view model
+    const liftVMEvents = enemyStatusVM!.events.filter(
+      (ev) => ev.columnId === PHYSICAL_STATUS_COLUMNS.LIFT,
+    );
+    expect(liftVMEvents).toHaveLength(1);
   });
 });

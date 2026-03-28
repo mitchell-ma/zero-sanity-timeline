@@ -22,7 +22,7 @@ import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from '../calculation/valueRes
 import { getAllOperatorIds, getSkillIds, getEnabledStatusEvents } from '../gameDataStore';
 import { getWeaponEffectDefs, getGearEffectDefs } from '../gameDataStore';
 import type { NormalizedEffectDef } from '../gameDataStore';
-import { ENEMY_OWNER_ID, ENEMY_ACTION_COLUMN_ID, REACTION_COLUMNS, INFLICTION_COLUMNS, PHYSICAL_STATUS_COLUMN_IDS } from '../../model/channels';
+import { ENEMY_OWNER_ID, ENEMY_ACTION_COLUMN_ID, REACTION_COLUMNS, INFLICTION_COLUMNS, PHYSICAL_STATUS_COLUMNS, PHYSICAL_STATUS_COLUMN_IDS } from '../../model/channels';
 import { COMMON_OWNER_ID } from '../slot/commonSlotController';
 import { TOTAL_FRAMES, FPS } from '../../utils/timeline';
 import { statusIdToColumnId } from './triggerMatch';
@@ -35,12 +35,18 @@ const SKILL_ALIAS_TO_COLUMN: Record<string, string> = {
   ULTIMATE_SKILL: NounType.ULTIMATE,
 };
 
-/** Maps IS/BECOME state qualifiers to reaction column IDs for index keying. */
+/** Maps IS/BECOME state qualifiers to column IDs for index keying. */
 export const STATE_TO_COLUMN: Record<string, string> = {
+  // Arts reactions
   [ObjectType.COMBUSTED]: REACTION_COLUMNS.COMBUSTION,
   [ObjectType.SOLIDIFIED]: REACTION_COLUMNS.SOLIDIFICATION,
   [ObjectType.CORRODED]: REACTION_COLUMNS.CORROSION,
   [ObjectType.ELECTRIFIED]: REACTION_COLUMNS.ELECTRIFICATION,
+  // Physical statuses
+  [ObjectType.LIFTED]: PHYSICAL_STATUS_COLUMNS.LIFT,
+  [ObjectType.KNOCKED_DOWN]: PHYSICAL_STATUS_COLUMNS.KNOCK_DOWN,
+  [ObjectType.CRUSHED]: PHYSICAL_STATUS_COLUMNS.CRUSH,
+  [ObjectType.BREACHED]: PHYSICAL_STATUS_COLUMNS.BREACH,
 };
 
 /** Maps APPLY INFLICTION element qualifiers to infliction column IDs. */
@@ -80,7 +86,7 @@ export interface LifecycleDefEntry {
   operatorId: string;
   /** HAVE conditions resolved to concrete form (STACKS → STATUS with max value). */
   haveConditions: Predicate[];
-  /** Effects from the clause (e.g. APPLY STATUS SCORCHING_HEART_EFFECT). */
+  /** Effects from the clause (e.g. APPLY STATUS SCORCHING_HEART). */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   effects: any[];
   /** Full serialized def for ENGINE_TRIGGER context. */
@@ -461,7 +467,7 @@ export class TriggerIndex {
 
         let primaryCond = clause.conditions.find(c => c.verb === primaryVerb)!;
         const rawDeferredConds = clause.conditions.filter((c: Predicate) =>
-          c.verb === VerbType.HAVE || (c.verb === VerbType.BECOME && c.object === NounType.STACKS),
+          c.verb === VerbType.HAVE || c.verb === VerbType.BECOME,
         );
         const secondaryConds = clause.conditions.filter(c =>
           c !== primaryCond && !rawDeferredConds.includes(c),
@@ -491,6 +497,16 @@ export class TriggerIndex {
         if (primaryVerb === VerbType.BECOME && primaryCond.object === NounType.STACKS) {
           primaryVerb = VerbType.APPLY;
           primaryCond = { verb: VerbType.APPLY, object: NounType.STATUS, objectId: def.properties.id } as Predicate;
+        }
+
+        // BECOME <state> (LIFTED, COMBUSTED, etc.) fires when the corresponding
+        // status is applied. Remap to APPLY:<column> so reactive triggers match.
+        if (primaryVerb === VerbType.BECOME && primaryCond.object !== NounType.STACKS) {
+          const stateCol = STATE_TO_COLUMN[primaryCond.object as string];
+          if (stateCol) {
+            primaryVerb = VerbType.APPLY;
+            primaryCond = { verb: VerbType.APPLY, object: NounType.STATUS, objectId: stateCol } as Predicate;
+          }
         }
 
         const key = resolveTriggerKey(primaryVerb, primaryCond);

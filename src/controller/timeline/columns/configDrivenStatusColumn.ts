@@ -70,6 +70,7 @@ export class ConfigDrivenStatusColumn implements EventColumn {
     ev.sourceSkillName = source.skillName;
     if (options?.event) Object.assign(ev, options.event);
 
+
     this.host.pushEvent(ev, durationFrames);
 
     // Record stack position at creation time (don't overwrite if caller set it explicitly)

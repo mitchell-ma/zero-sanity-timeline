@@ -1,0 +1,24 @@
+{
+  "id": "ROSSI",
+  "name": "Rossi",
+  "operatorRarity": 6,
+  "operatorClassType": "GUARD",
+  "elementType": "PHYSICAL",
+  "weaponTypes": [
+    "SWORD"
+  ],
+  "mainAttributeType": "AGILITY",
+  "secondaryAttributeType": "STRENGTH",
+  "talents": {
+    "one": "NICKS_AND_SCRATCHES_TALENT",
+    "two": "SEETHING_BLOOD_TALENT",
+    "attributeIncrease": {
+      "id": "SKIRMISHER"
+    }
+  },
+  "statsByLevel": [],
+  "potentials": [],
+  "dataSources": [
+    "END_AXIS"
+  ]
+}

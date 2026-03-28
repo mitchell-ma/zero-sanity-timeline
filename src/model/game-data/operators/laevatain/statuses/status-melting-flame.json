@@ -15,7 +15,7 @@
         {
           "verb": "APPLY",
           "object": "STATUS",
-          "objectId": "SCORCHING_HEART_EFFECT",
+          "objectId": "SCORCHING_HEART",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {

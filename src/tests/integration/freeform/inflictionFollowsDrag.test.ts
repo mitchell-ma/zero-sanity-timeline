@@ -23,35 +23,26 @@ import { render } from '@testing-library/react';
 import React from 'react';
 import { useApp } from '../../../app/useApp';
 import { INFLICTION_COLUMNS, ENEMY_OWNER_ID } from '../../../model/channels';
-import { ColumnType, InteractionModeType } from '../../../consts/enums';
-import { FPS } from '../../../utils/timeline';
+import { InteractionModeType } from '../../../consts/enums';
+import { FPS, durationToPx } from '../../../utils/timeline';
 import { computeTimelinePresentation } from '../../../controller/timeline/eventPresentationController';
-import { durationToPx } from '../../../utils/timeline';
-import type { MiniTimeline, TimelineEvent } from '../../../consts/viewTypes';
+import type { TimelineEvent } from '../../../consts/viewTypes';
 import EventBlock from '../../../view/EventBlock';
+import { findColumn, getMenuPayload, buildContextMenu, type AppResult } from '../helpers';
 
 const SLOT_AKEKURI = 'slot-1';
 const ZOOM = 1;
 const noop2 = (_a: unknown, _b: unknown) => {};
 const noop3 = (_a: unknown, _b: unknown, _c: unknown) => {};
 
-function findColumn(app: ReturnType<typeof useApp>, slotId: string, columnId: string) {
-  return app.columns.find(
-    (c): c is MiniTimeline =>
-      c.type === ColumnType.MINI_TIMELINE &&
-      c.ownerId === slotId &&
-      c.columnId === columnId,
-  );
-}
-
-function getHeatInflictions(app: ReturnType<typeof useApp>) {
+function getHeatInflictions(app: AppResult) {
   return app.allProcessedEvents.filter(
     (ev) => ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerId === ENEMY_OWNER_ID,
   );
 }
 
 /** Get the heat infliction event from the ColumnViewModel (same path as real rendering). */
-function getInflictionFromVM(app: ReturnType<typeof useApp>) {
+function getInflictionFromVM(app: AppResult) {
   const vms = computeTimelinePresentation(app.allProcessedEvents, app.columns);
   // Find the enemy column that contains heat inflictions
   for (const [, vm] of Array.from(vms.entries())) {
@@ -95,9 +86,15 @@ describe('Infliction follows drag — Akekuri battle skill heat infliction', () 
     const battleCol = findColumn(result.current, SLOT_AKEKURI, NounType.BATTLE_SKILL);
     expect(battleCol).toBeDefined();
 
+    // Context menu flow: right-click column → get addEvent payload → add event
+    const menuItems = buildContextMenu(result.current, battleCol!, 2 * FPS);
+    expect(menuItems).not.toBeNull();
+    expect(menuItems!.some(i => i.actionId === 'addEvent')).toBe(true);
+
+    const payload = getMenuPayload(result.current, battleCol!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        SLOT_AKEKURI, NounType.BATTLE_SKILL, 2 * FPS, battleCol!.defaultEvent!,
+        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
@@ -116,9 +113,10 @@ describe('Infliction follows drag — Akekuri battle skill heat infliction', () 
 
     const battleCol = findColumn(result.current, SLOT_AKEKURI, NounType.BATTLE_SKILL);
 
+    const payload = getMenuPayload(result.current, battleCol!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        SLOT_AKEKURI, NounType.BATTLE_SKILL, 2 * FPS, battleCol!.defaultEvent!,
+        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
@@ -140,9 +138,10 @@ describe('Infliction follows drag — Akekuri battle skill heat infliction', () 
 
     const battleCol = findColumn(result.current, SLOT_AKEKURI, NounType.BATTLE_SKILL);
 
+    const payload = getMenuPayload(result.current, battleCol!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        SLOT_AKEKURI, NounType.BATTLE_SKILL, 2 * FPS, battleCol!.defaultEvent!,
+        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
@@ -173,9 +172,10 @@ describe('Infliction follows drag — Akekuri battle skill heat infliction', () 
 
     const battleCol = findColumn(result.current, SLOT_AKEKURI, NounType.BATTLE_SKILL);
 
+    const payload = getMenuPayload(result.current, battleCol!, 1 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        SLOT_AKEKURI, NounType.BATTLE_SKILL, 1 * FPS, battleCol!.defaultEvent!,
+        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 

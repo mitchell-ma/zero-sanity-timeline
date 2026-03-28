@@ -166,8 +166,7 @@ export function translateCondition(c: Record<string, unknown>): string {
   if (c.subject) parts.push(translateDslToken(String(c.subject)));
   if (c.verb) parts.push(translateDslToken(String(c.verb)));
   if (c.objectQualifier) {
-    const adj = Array.isArray(c.objectQualifier) ? c.objectQualifier : [c.objectQualifier];
-    parts.push(...adj.map(a => translateDslToken(String(a))));
+    parts.push(translateDslToken(String(c.objectQualifier)));
   }
   if (c.objectId) {
     parts.push(titleCase(String(c.objectId)));
@@ -202,8 +201,7 @@ export function translateEffectParts(ef: Record<string, unknown>): {
   // Object with objectQualifier and objectId
   const adjParts: string[] = [];
   if (ef.objectQualifier) {
-    const adj = Array.isArray(ef.objectQualifier) ? ef.objectQualifier : [ef.objectQualifier];
-    adjParts.push(...adj.map(a => translateDslToken(String(a))));
+    adjParts.push(translateDslToken(String(ef.objectQualifier)));
   }
 
   let objectStr = '';
@@ -263,12 +261,8 @@ function formatWithValue(key: string, node: ValueNode): string {
 }
 
 function formatObject(e: Effect): string {
-  const adjs = e.objectQualifier
-    ? (Array.isArray(e.objectQualifier) ? e.objectQualifier : [e.objectQualifier])
-    : [];
-
-  const adjStr = adjs.length > 0
-    ? adjs.map((a) => titleCase(a)).join(' ') + ' '
+  const adjStr = e.objectQualifier
+    ? titleCase(e.objectQualifier) + ' '
     : '';
 
   const objLabel = e.object
@@ -336,7 +330,11 @@ export function translateEffect(e: Effect): TranslatedEffect {
   // ON
   if (e.onObject) parts.push(`on ${formatTarget(String(e.onObject), e.onDeterminer)}`);
   // UNTIL
-  if (e.until) parts.push(`until ${e.until.toLowerCase()}`);
+  if (e.until) {
+    const scope = e.until.of?.toLowerCase() ?? 'event';
+    const det = e.until.ofDeterminer?.toLowerCase() ?? 'this';
+    parts.push(`until ${e.until.object.toLowerCase()} of ${det} ${scope}`);
+  }
   // FOR
   if (e.for) {
     const fc = e.for.cardinalityConstraint.replace(/_/g, ' ').toLowerCase();

@@ -1,0 +1,108 @@
+{
+  "properties": {
+    "name": "Razorclaw Ambuscade",
+    "description": "Flurry of stabs dealing Heat DMG, dashes with dagger for massive Heat DMG, applies Heat Infliction. Enhanced Critical Damage on crits.",
+    "eventType": "COMBAT_SKILL",
+    "eventCategoryType": "ULTIMATE_SKILL",
+    "element": "HEAT",
+    "id": "RAZORCLAW_AMBUSCADE"
+  },
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "CONSUME",
+          "object": "ULTIMATE_ENERGY",
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": 100
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT"
+      },
+      "properties": {
+        "segmentTypes": [
+          "ANIMATION"
+        ],
+        "name": "Animation",
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 2.05
+          },
+          "unit": "SECOND"
+        },
+        "timeDependency": "REAL_TIME",
+        "timeInteractionType": "TIME_STOP"
+      },
+      "frames": []
+    },
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT",
+        "dataSources": [
+          "END_AXIS"
+        ]
+      },
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 5
+          },
+          "unit": "SECOND"
+        },
+        "element": "HEAT"
+      },
+      "frames": [
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "END_AXIS"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 5,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "APPLY",
+                  "object": "REACTION",
+                  "objectQualifier": "COMBUSTION",
+                  "to": "ENEMY",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "originId": "ROSSI"
+  },
+  "clauseType": "ALL"
+}

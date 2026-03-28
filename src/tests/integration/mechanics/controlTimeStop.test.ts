@@ -10,6 +10,11 @@
  * 2. Control swap placed during time-stop gets a validation warning
  * 3. Control events can be dragged freely through ultimate animation zones
  * 4. Control events can be dragged past dodge events (no overlap clamping)
+ *
+ * Verification layers:
+ *   Context menu: "Set as Controlled Operator" flow, skill variant availability
+ *   Controller: allProcessedEvents clamping, time-stop extension immunity
+ *   View: computeTimelinePresentation ColumnViewModel for INPUT column
  */
 
 import { renderHook, act } from '@testing-library/react';
@@ -18,24 +23,67 @@ import { useApp } from '../../../app/useApp';
 import { CombatSkillType, ColumnType, InteractionModeType } from '../../../consts/enums';
 import { OPERATOR_COLUMNS } from '../../../model/channels';
 import { eventDuration, getAnimationDuration } from '../../../consts/viewTypes';
+import type { MiniTimeline, ContextMenuItem } from '../../../consts/viewTypes';
 import { FPS, TOTAL_FRAMES } from '../../../utils/timeline';
-import type { MiniTimeline } from '../../../consts/viewTypes';
+import { computeTimelinePresentation } from '../../../controller/timeline/eventPresentationController';
+import { findColumn, buildContextMenu, getMenuPayload } from '../helpers';
+import type { AppResult, AddEventPayload } from '../helpers';
 
 const SLOT_0 = 'slot-0';
 const SLOT_1 = 'slot-1';
 
-function getControlEvents(app: ReturnType<typeof useApp>) {
+const CONTROL_LABEL = 'Set as Controlled Operator';
+
+function getControlEvents(app: AppResult) {
   return app.allProcessedEvents.filter(
     (ev) => ev.id === CombatSkillType.CONTROL && ev.columnId === OPERATOR_COLUMNS.INPUT,
   );
 }
 
-function findColumn(app: ReturnType<typeof useApp>, slotId: string, columnId: string) {
+/** Find any operator-owned column for a slot to use as a context menu target. */
+function findAnyOperatorColumn(app: AppResult, slotId: string) {
   return app.columns.find(
     (c): c is MiniTimeline =>
-      c.type === ColumnType.MINI_TIMELINE && c.ownerId === slotId && c.columnId === columnId,
+      c.type === ColumnType.MINI_TIMELINE &&
+      c.ownerId === slotId &&
+      c.columnId === NounType.BASIC_ATTACK,
   );
 }
+
+/** Build context menu for a slot's column and find the "Set as Controlled Operator" item. */
+function findControlMenuItem(app: AppResult, slotId: string, atFrame: number): ContextMenuItem | undefined {
+  const col = findAnyOperatorColumn(app, slotId);
+  if (!col) throw new Error(`No column found for ${slotId}`);
+  const items = buildContextMenu(app, col, atFrame);
+  if (!items) throw new Error(`Context menu returned null for ${slotId} at frame ${atFrame}`);
+  return items.find(i => i.label === CONTROL_LABEL);
+}
+
+/** Extract the addEvent payload from the control menu item, asserting it exists and is enabled. */
+function getControlPayload(app: AppResult, slotId: string, atFrame: number): AddEventPayload {
+  const item = findControlMenuItem(app, slotId, atFrame);
+  if (!item) throw new Error(`"${CONTROL_LABEL}" item not found for ${slotId} at frame ${atFrame}`);
+  if (item.disabled) throw new Error(`"${CONTROL_LABEL}" item is disabled for ${slotId}: ${item.disabledReason}`);
+  return item.actionPayload as AddEventPayload;
+}
+
+/** Get control events from the INPUT column's ColumnViewModel (view layer). */
+function getControlEventsFromVM(app: AppResult) {
+  const vms = computeTimelinePresentation(app.allProcessedEvents, app.columns);
+  const controlEvents = [];
+  for (const [, vm] of Array.from(vms.entries())) {
+    for (const ev of vm.events) {
+      if (ev.id === CombatSkillType.CONTROL && ev.columnId === OPERATOR_COLUMNS.INPUT) {
+        controlEvents.push(ev);
+      }
+    }
+  }
+  return controlEvents;
+}
+
+beforeEach(() => {
+  localStorage.clear();
+});
 
 describe('Control status × time-stop — integration through useApp', () => {
   describe('control events are NOT extended by time-stops', () => {
@@ -43,12 +91,13 @@ describe('Control status × time-stop — integration through useApp', () => {
       const { result } = renderHook(() => useApp());
       act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
+      // Context menu layer: place combo via context menu flow
       const comboCol = findColumn(result.current, SLOT_0, NounType.COMBO_SKILL);
       expect(comboCol).toBeDefined();
 
-      // Place combo at frame 0 (creates a time-stop during its animation)
+      const comboPayload = getMenuPayload(result.current, comboCol!, 0);
       act(() => {
-        result.current.handleAddEvent(SLOT_0, NounType.COMBO_SKILL, 0, comboCol!.defaultEvent!);
+        result.current.handleAddEvent(comboPayload.ownerId, comboPayload.columnId, comboPayload.atFrame, comboPayload.defaultSkill);
       });
 
       // Verify combo has animation duration (i.e. creates a time-stop)
@@ -58,22 +107,26 @@ describe('Control status × time-stop — integration through useApp', () => {
       const animDur = getAnimationDuration(comboEvent);
       expect(animDur).toBeGreaterThan(0);
 
-      // Place control swap on slot-1 at frame 0 (overlaps combo time-stop)
-      const swapDuration = TOTAL_FRAMES;
+      // Context menu layer: set slot-1 as controlled operator at frame 0
+      const controlPayload = getControlPayload(result.current, SLOT_1, 0);
       act(() => {
         result.current.handleAddEvent(
-          SLOT_1, OPERATOR_COLUMNS.INPUT, 0,
-          { id: CombatSkillType.CONTROL, name: CombatSkillType.CONTROL, segments: [{ properties: { duration: swapDuration, name: 'Control' } }] },
+          controlPayload.ownerId, controlPayload.columnId, controlPayload.atFrame, controlPayload.defaultSkill,
         );
       });
 
-      // The slot-1 control event should NOT be extended by the combo time-stop
+      // Controller layer: slot-1 control event should NOT be extended by the combo time-stop
       const slot1Control = getControlEvents(result.current).find(
         (ev) => ev.ownerId === SLOT_1,
       )!;
       expect(slot1Control).toBeDefined();
-      // Seed was clamped to 0 duration, so slot-1 control starts at 0 with raw duration
-      expect(eventDuration(slot1Control)).toBe(swapDuration);
+      expect(eventDuration(slot1Control)).toBe(TOTAL_FRAMES);
+
+      // View layer: verify control events in ColumnViewModel
+      const vmControls = getControlEventsFromVM(result.current);
+      const vmSlot1 = vmControls.find(ev => ev.ownerId === SLOT_1);
+      expect(vmSlot1).toBeDefined();
+      expect(eventDuration(vmSlot1!)).toBe(TOTAL_FRAMES);
     });
 
     it('control event duration unchanged when ultimate time-stop overlaps', () => {
@@ -83,10 +136,11 @@ describe('Control status × time-stop — integration through useApp', () => {
       const ultCol = findColumn(result.current, SLOT_0, NounType.ULTIMATE);
       if (!ultCol?.defaultEvent) return; // skip if no ultimate column
 
-      // Place ultimate at 2s
+      // Context menu layer: place ultimate via context menu flow at 2s
       const ultFrame = 2 * FPS;
+      const ultPayload = getMenuPayload(result.current, ultCol, ultFrame);
       act(() => {
-        result.current.handleAddEvent(SLOT_0, NounType.ULTIMATE, ultFrame, ultCol.defaultEvent!);
+        result.current.handleAddEvent(ultPayload.ownerId, ultPayload.columnId, ultPayload.atFrame, ultPayload.defaultSkill);
       });
 
       const ultEvent = result.current.allProcessedEvents.find(
@@ -95,17 +149,17 @@ describe('Control status × time-stop — integration through useApp', () => {
       const ultAnim = getAnimationDuration(ultEvent);
       expect(ultAnim).toBeGreaterThan(0);
 
-      // Place control swap on slot-1 at 1s (before ult, but overlaps ult time-stop)
+      // Context menu layer: set slot-1 as controlled operator at 1s (before ult, but overlaps ult time-stop)
       const swapFrame = 1 * FPS;
-      const rawDuration = TOTAL_FRAMES - swapFrame;
+      const controlPayload = getControlPayload(result.current, SLOT_1, swapFrame);
       act(() => {
         result.current.handleAddEvent(
-          SLOT_1, OPERATOR_COLUMNS.INPUT, swapFrame,
-          { id: CombatSkillType.CONTROL, name: CombatSkillType.CONTROL, segments: [{ properties: { duration: rawDuration, name: 'Control' } }] },
+          controlPayload.ownerId, controlPayload.columnId, controlPayload.atFrame, controlPayload.defaultSkill,
         );
       });
 
-      // Control event should NOT be extended
+      // Controller layer: control event should NOT be extended
+      const rawDuration = TOTAL_FRAMES - swapFrame;
       const slot1Control = getControlEvents(result.current).find(
         (ev) => ev.ownerId === SLOT_1,
       )!;
@@ -119,12 +173,13 @@ describe('Control status × time-stop — integration through useApp', () => {
       const { result } = renderHook(() => useApp());
       act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
+      // Context menu layer: place combo via context menu flow
       const comboCol = findColumn(result.current, SLOT_0, NounType.COMBO_SKILL);
       expect(comboCol).toBeDefined();
 
-      // Place combo at frame 0
+      const comboPayload = getMenuPayload(result.current, comboCol!, 0);
       act(() => {
-        result.current.handleAddEvent(SLOT_0, NounType.COMBO_SKILL, 0, comboCol!.defaultEvent!);
+        result.current.handleAddEvent(comboPayload.ownerId, comboPayload.columnId, comboPayload.atFrame, comboPayload.defaultSkill);
       });
 
       const comboEvent = result.current.allProcessedEvents.find(
@@ -133,17 +188,24 @@ describe('Control status × time-stop — integration through useApp', () => {
       const animDur = getAnimationDuration(comboEvent);
       expect(animDur).toBeGreaterThan(0);
 
-      // Place control swap INSIDE the combo time-stop
+      // Context menu layer: verify the control item is disabled during time-stop
       const swapFrame = Math.floor(animDur / 2);
       expect(swapFrame).toBeGreaterThan(0);
+
+      const controlItem = findControlMenuItem(result.current, SLOT_1, swapFrame);
+      expect(controlItem).toBeDefined();
+      expect(controlItem!.disabled).toBe(true);
+      expect(controlItem!.disabledReason).toMatch(/time-stop/i);
+
+      // In freeform mode, the user can still place the event using the disabled item's payload
+      const controlPayload = controlItem!.actionPayload as AddEventPayload;
       act(() => {
         result.current.handleAddEvent(
-          SLOT_1, OPERATOR_COLUMNS.INPUT, swapFrame,
-          { id: CombatSkillType.CONTROL, name: CombatSkillType.CONTROL, segments: [{ properties: { duration: TOTAL_FRAMES - swapFrame, name: 'Control' } }] },
+          controlPayload.ownerId, controlPayload.columnId, swapFrame, controlPayload.defaultSkill,
         );
       });
 
-      // The control event should have a time-stop warning
+      // Controller layer: the control event should have a time-stop warning
       const slot1Control = result.current.allProcessedEvents.find(
         (ev) => ev.id === CombatSkillType.CONTROL && ev.ownerId === SLOT_1,
       )!;
@@ -161,10 +223,11 @@ describe('Control status × time-stop — integration through useApp', () => {
       const ultCol = findColumn(result.current, SLOT_0, NounType.ULTIMATE);
       if (!ultCol?.defaultEvent) return;
 
-      // Place ultimate at 3s
+      // Context menu layer: place ultimate via context menu flow at 3s
       const ultFrame = 3 * FPS;
+      const ultPayload = getMenuPayload(result.current, ultCol, ultFrame);
       act(() => {
-        result.current.handleAddEvent(SLOT_0, NounType.ULTIMATE, ultFrame, ultCol.defaultEvent!);
+        result.current.handleAddEvent(ultPayload.ownerId, ultPayload.columnId, ultPayload.atFrame, ultPayload.defaultSkill);
       });
 
       const ultEvent = result.current.allProcessedEvents.find(
@@ -173,12 +236,12 @@ describe('Control status × time-stop — integration through useApp', () => {
       const ultAnim = getAnimationDuration(ultEvent);
       expect(ultAnim).toBeGreaterThan(0);
 
-      // Place control swap on slot-1 at 1s (before the ult)
+      // Context menu layer: set slot-1 as controlled operator at 1s (before the ult)
       const initialFrame = 1 * FPS;
+      const controlPayload = getControlPayload(result.current, SLOT_1, initialFrame);
       act(() => {
         result.current.handleAddEvent(
-          SLOT_1, OPERATOR_COLUMNS.INPUT, initialFrame,
-          { id: CombatSkillType.CONTROL, name: CombatSkillType.CONTROL, segments: [{ properties: { duration: TOTAL_FRAMES - initialFrame, name: 'Control' } }] },
+          controlPayload.ownerId, controlPayload.columnId, controlPayload.atFrame, controlPayload.defaultSkill,
         );
       });
 
@@ -197,7 +260,7 @@ describe('Control status × time-stop — integration through useApp', () => {
         result.current.handleMoveEvents([slot1Control.uid], delta);
       });
 
-      // Control event should be at the target frame (not clamped away)
+      // Controller layer: control event should be at the target frame (not clamped away)
       const movedControl = result.current.allProcessedEvents.find(
         (ev) => ev.uid === slot1Control.uid,
       )!;
@@ -212,20 +275,19 @@ describe('Control status × time-stop — integration through useApp', () => {
       const inputCol = findColumn(result.current, SLOT_1, OPERATOR_COLUMNS.INPUT);
       expect(inputCol).toBeDefined();
 
-      // Place a dodge on slot-1's input column at 3s
+      // Context menu layer: place a dodge on slot-1's input column at 3s via context menu
       const dodgeFrame = 3 * FPS;
-      const dodgeVariant = inputCol!.eventVariants?.find((v) => v.isPerfectDodge);
-      const dodgeDefault = dodgeVariant ?? inputCol!.defaultEvent!;
+      const dodgePayload = getMenuPayload(result.current, inputCol!, dodgeFrame, 'Dodge');
       act(() => {
-        result.current.handleAddEvent(SLOT_1, OPERATOR_COLUMNS.INPUT, dodgeFrame, dodgeDefault);
+        result.current.handleAddEvent(dodgePayload.ownerId, dodgePayload.columnId, dodgePayload.atFrame, dodgePayload.defaultSkill);
       });
 
-      // Place control swap on slot-1 at 1s (before the dodge)
+      // Context menu layer: set slot-1 as controlled operator at 1s (before the dodge)
       const initialFrame = 1 * FPS;
+      const controlPayload = getControlPayload(result.current, SLOT_1, initialFrame);
       act(() => {
         result.current.handleAddEvent(
-          SLOT_1, OPERATOR_COLUMNS.INPUT, initialFrame,
-          { id: CombatSkillType.CONTROL, name: CombatSkillType.CONTROL, segments: [{ properties: { duration: TOTAL_FRAMES - initialFrame, name: 'Control' } }] },
+          controlPayload.ownerId, controlPayload.columnId, controlPayload.atFrame, controlPayload.defaultSkill,
         );
       });
 
@@ -242,7 +304,7 @@ describe('Control status × time-stop — integration through useApp', () => {
         result.current.handleMoveEvents([slot1Control.uid], delta);
       });
 
-      // Control event should be at 5s (not blocked by the dodge)
+      // Controller layer: control event should be at 5s (not blocked by the dodge)
       const movedControl = result.current.allProcessedEvents.find(
         (ev) => ev.uid === slot1Control.uid,
       )!;

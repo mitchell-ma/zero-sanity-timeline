@@ -5,7 +5,8 @@
  * and the logic for loading and applying saved sheet data.
  */
 
-import { Operator, TimelineEvent, VisibleSkills, SkillType } from '../consts/viewTypes';
+import { Operator, TimelineEvent, VisibleSkills } from '../consts/viewTypes';
+import { NounType } from '../dsl/semantics';
 import { OperatorLoadoutState, EMPTY_LOADOUT } from '../view/OperatorLoadoutHeader';
 import { LoadoutProperties, DEFAULT_LOADOUT_PROPERTIES, getDefaultLoadoutProperties } from '../view/InformationPane';
 import { ALL_OPERATORS } from '../controller/operators/operatorRegistry';
@@ -26,11 +27,11 @@ export const INITIAL_VISIBLE: VisibleSkills = Object.fromEntries(
   SLOT_IDS.map((slotId) => [
     slotId,
     {
-      basic: true,
-      battle: true,
-      combo: true,
-      ultimate: true,
-    } satisfies Record<SkillType, boolean>,
+      [NounType.BASIC_ATTACK]: true,
+      [NounType.BATTLE_SKILL]: true,
+      [NounType.COMBO_SKILL]: true,
+      [NounType.ULTIMATE]: true,
+    },
   ]),
 );
 

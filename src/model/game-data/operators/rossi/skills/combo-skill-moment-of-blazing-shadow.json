@@ -1,0 +1,93 @@
+{
+  "properties": {
+    "name": "Moment of Blazing Shadow",
+    "description": "When an enemy has both Vulnerability and Arts Infliction stacks. Consumes Arts Infliction stacks, deals Physical DMG scaled by stacks, applies Lift, increases Crit Rate and Crit DMG.",
+    "eventType": "COMBAT_SKILL",
+    "eventCategoryType": "COMBO_SKILL",
+    "element": "PHYSICAL",
+    "id": "MOMENT_OF_BLAZING_SHADOW"
+  },
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "RECOVER",
+          "object": "ULTIMATE_ENERGY",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": 10
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT"
+      },
+      "properties": {
+        "segmentTypes": [
+          "ANIMATION"
+        ],
+        "name": "Animation",
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 0.5
+          },
+          "unit": "SECOND"
+        },
+        "timeDependency": "REAL_TIME",
+        "timeInteractionType": "TIME_STOP"
+      },
+      "frames": []
+    },
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT",
+        "dataSources": [
+          "END_AXIS"
+        ]
+      },
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 0.8
+          },
+          "unit": "SECOND"
+        },
+        "element": "PHYSICAL",
+        "name": "Moment of Blazing Shadow"
+      },
+      "frames": []
+    }
+  ],
+  "metadata": {
+    "originId": "ROSSI"
+  },
+  "onTriggerClause": [
+    {
+      "conditions": [
+        {
+          "subject": "ENEMY",
+          "verb": "HAVE",
+          "object": "STATUS",
+          "objectId": "VULNERABILITY"
+        },
+        {
+          "subject": "ENEMY",
+          "verb": "HAVE",
+          "object": "ARTS_INFLICTION"
+        }
+      ]
+    }
+  ],
+  "clauseType": "ALL"
+}

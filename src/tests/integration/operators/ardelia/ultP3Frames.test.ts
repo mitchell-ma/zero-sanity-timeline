@@ -15,35 +15,61 @@
 import { renderHook, act } from '@testing-library/react';
 import { NounType } from '../../../../dsl/semantics';
 import { useApp } from '../../../../app/useApp';
-import { ColumnType } from '../../../../consts/enums';
+import { InteractionModeType } from '../../../../consts/enums';
 import { FPS } from '../../../../utils/timeline';
 import { eventDuration } from '../../../../consts/viewTypes';
-import type { MiniTimeline } from '../../../../consts/viewTypes';
+import { computeTimelinePresentation } from '../../../../controller/timeline/eventPresentationController';
+import { findColumn, buildContextMenu, getMenuPayload } from '../../helpers';
+import type { AppResult } from '../../helpers';
 
 const SLOT_ARDELIA = 'slot-3'; // Ardelia is default slot-3
 
-function findColumn(app: ReturnType<typeof useApp>, slotId: string, columnId: string) {
-  return app.columns.find(
-    (c): c is MiniTimeline =>
-      c.type === ColumnType.MINI_TIMELINE &&
-      c.ownerId === slotId &&
-      c.columnId === columnId,
-  );
+// Game-data verified segment names (from segment.properties.name in ardelia skills JSON)
+const ACTIVE_SEGMENT_NAME = 'Wooly Party';
+const DELAY_SEGMENT_NAME = 'Delay';
+
+// Game-data verified frame counts and durations
+const P0_FRAME_COUNT = 10;
+const P3_FRAME_COUNT = 13;
+const P0_ACTIVE_DURATION_S = 3;
+const P3_ACTIVE_DURATION_S = 4;
+
+/** Add an ultimate via context menu flow. */
+function addUltViaMenu(app: AppResult, atFrame: number) {
+  const col = findColumn(app, SLOT_ARDELIA, NounType.ULTIMATE);
+  expect(col).toBeDefined();
+  const payload = getMenuPayload(app, col!, atFrame);
+  app.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
 }
 
 describe('Ardelia Ultimate P3 Conditional Frames', () => {
   it('A0: At P0, column defaultEvent has 10 frames (P3 frames excluded by builder)', () => {
     const { result } = renderHook(() => useApp());
+
+    // Context menu verification: ult column is available
     const ultCol = findColumn(result.current, SLOT_ARDELIA, NounType.ULTIMATE);
     expect(ultCol).toBeDefined();
+    const menuItems = buildContextMenu(result.current, ultCol!, 1 * FPS);
+    expect(menuItems).not.toBeNull();
+    expect(menuItems!.some(i => i.actionId === 'addEvent')).toBe(true);
+
     const segs = ultCol!.defaultEvent!.segments!;
     // 2 segments: Animation + Active
     expect(segs.length).toBe(2);
-    const activeSeg = segs.find((s) => s.properties.name === 'Wooly Party');
+    const activeSeg = segs.find((s) => s.properties.name === ACTIVE_SEGMENT_NAME);
     expect(activeSeg).toBeDefined();
-    expect(activeSeg!.frames!.length).toBe(10);
+    expect(activeSeg!.frames!.length).toBe(P0_FRAME_COUNT);
     // Active segment duration = 3s at P0
-    expect(activeSeg!.properties.duration).toBe(3 * FPS);
+    expect(activeSeg!.properties.duration).toBe(P0_ACTIVE_DURATION_S * FPS);
+
+    // View-layer verification: computeTimelinePresentation includes the ult column
+    const viewModels = computeTimelinePresentation(
+      result.current.allProcessedEvents,
+      result.current.columns,
+    );
+    const vm = viewModels.get(ultCol!.key);
+    expect(vm).toBeDefined();
+    expect(vm!.column).toBe(ultCol);
   });
 
   it('A0b: At P3, column defaultEvent has 13 frames (P3 frames included)', () => {
@@ -60,23 +86,17 @@ describe('Ardelia Ultimate P3 Conditional Frames', () => {
     expect(ultCol).toBeDefined();
     const segs = ultCol!.defaultEvent!.segments!;
     expect(segs.length).toBe(2);
-    const activeSeg = segs.find((s) => s.properties.name === 'Wooly Party');
+    const activeSeg = segs.find((s) => s.properties.name === ACTIVE_SEGMENT_NAME);
     expect(activeSeg).toBeDefined();
-    expect(activeSeg!.frames!.length).toBe(13);
+    expect(activeSeg!.frames!.length).toBe(P3_FRAME_COUNT);
     // Active segment duration = 4s at P3
-    expect(activeSeg!.properties.duration).toBe(4 * FPS);
+    expect(activeSeg!.properties.duration).toBe(P3_ACTIVE_DURATION_S * FPS);
   });
 
   it('A1: At P0, ultimate has 2 segments (no Delay)', () => {
     const { result } = renderHook(() => useApp());
-    const ultCol = findColumn(result.current, SLOT_ARDELIA, NounType.ULTIMATE);
-    expect(ultCol).toBeDefined();
 
-    act(() => {
-      result.current.handleAddEvent(
-        SLOT_ARDELIA, NounType.ULTIMATE, 1 * FPS, ultCol!.defaultEvent!,
-      );
-    });
+    act(() => { addUltViaMenu(result.current, 1 * FPS); });
 
     const ultEvents = result.current.allProcessedEvents.filter(
       (ev) => ev.ownerId === SLOT_ARDELIA && ev.columnId === NounType.ULTIMATE,
@@ -86,27 +106,22 @@ describe('Ardelia Ultimate P3 Conditional Frames', () => {
     expect(ultEvents[0].segments.length).toBe(2);
     // No segment named "Delay"
     expect(ultEvents[0].segments.every(
-      (s) => s.properties.name !== 'Delay',
+      (s) => s.properties.name !== DELAY_SEGMENT_NAME,
     )).toBe(true);
   });
 
   it('A2: At P0, active segment has only base frames (out-of-bound P3 frames dropped)', () => {
     const { result } = renderHook(() => useApp());
-    const ultCol = findColumn(result.current, SLOT_ARDELIA, NounType.ULTIMATE);
 
-    act(() => {
-      result.current.handleAddEvent(
-        SLOT_ARDELIA, NounType.ULTIMATE, 1 * FPS, ultCol!.defaultEvent!,
-      );
-    });
+    act(() => { addUltViaMenu(result.current, 1 * FPS); });
 
     const ult = result.current.allProcessedEvents.find(
       (ev) => ev.ownerId === SLOT_ARDELIA && ev.columnId === NounType.ULTIMATE,
     )!;
-    const activeSeg = ult.segments.find((s) => s.properties.name === 'Wooly Party');
+    const activeSeg = ult.segments.find((s) => s.properties.name === ACTIVE_SEGMENT_NAME);
     expect(activeSeg).toBeDefined();
     // At P0, duration is 3s = 360 frames. Only 10 base frames (0.3s–3.0s) fit.
-    expect(activeSeg!.frames!.length).toBe(10);
+    expect(activeSeg!.frames!.length).toBe(P0_FRAME_COUNT);
   });
 
   it('B1: At P3, active segment extends and includes P3-gated frames', () => {
@@ -121,12 +136,7 @@ describe('Ardelia Ultimate P3 Conditional Frames', () => {
       });
     });
 
-    const ultCol = findColumn(result.current, SLOT_ARDELIA, NounType.ULTIMATE);
-    act(() => {
-      result.current.handleAddEvent(
-        SLOT_ARDELIA, NounType.ULTIMATE, 1 * FPS, ultCol!.defaultEvent!,
-      );
-    });
+    act(() => { addUltViaMenu(result.current, 1 * FPS); });
 
     const ult = result.current.allProcessedEvents.find(
       (ev) => ev.ownerId === SLOT_ARDELIA && ev.columnId === NounType.ULTIMATE,
@@ -134,24 +144,20 @@ describe('Ardelia Ultimate P3 Conditional Frames', () => {
     // Still 2 segments (no Delay)
     expect(ult.segments.length).toBe(2);
 
-    const activeSeg = ult.segments.find((s) => s.properties.name === 'Wooly Party');
+    const activeSeg = ult.segments.find((s) => s.properties.name === ACTIVE_SEGMENT_NAME);
     expect(activeSeg).toBeDefined();
     // At P3, duration is 4s = 480 frames. All 13 frames (0.3s–3.9s) fit.
-    expect(activeSeg!.frames!.length).toBe(13);
+    expect(activeSeg!.frames!.length).toBe(P3_FRAME_COUNT);
     // Active segment duration should be longer than P0
-    expect(activeSeg!.properties.duration).toBe(4 * FPS);
+    expect(activeSeg!.properties.duration).toBe(P3_ACTIVE_DURATION_S * FPS);
   });
 
   it('B2: At P3, ult total duration is longer than at P0', () => {
     const { result } = renderHook(() => useApp());
+    act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
     // Place ult at P0
-    const ultCol0 = findColumn(result.current, SLOT_ARDELIA, NounType.ULTIMATE);
-    act(() => {
-      result.current.handleAddEvent(
-        SLOT_ARDELIA, NounType.ULTIMATE, 1 * FPS, ultCol0!.defaultEvent!,
-      );
-    });
+    act(() => { addUltViaMenu(result.current, 1 * FPS); });
     const ultP0 = result.current.allProcessedEvents.find(
       (ev) => ev.ownerId === SLOT_ARDELIA && ev.columnId === NounType.ULTIMATE,
     )!;
@@ -167,12 +173,7 @@ describe('Ardelia Ultimate P3 Conditional Frames', () => {
       });
     });
 
-    const ultCol3 = findColumn(result.current, SLOT_ARDELIA, NounType.ULTIMATE);
-    act(() => {
-      result.current.handleAddEvent(
-        SLOT_ARDELIA, NounType.ULTIMATE, 1 * FPS, ultCol3!.defaultEvent!,
-      );
-    });
+    act(() => { addUltViaMenu(result.current, 1 * FPS); });
     const ultP3 = result.current.allProcessedEvents.find(
       (ev) => ev.ownerId === SLOT_ARDELIA && ev.columnId === NounType.ULTIMATE,
     )!;
@@ -185,6 +186,7 @@ describe('Ardelia Ultimate P3 Conditional Frames', () => {
 
   it('C1: No Delay segment at any potential level', () => {
     const { result } = renderHook(() => useApp());
+    act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
     for (const pot of [0, 1, 2, 3, 4, 5]) {
       act(() => { result.current.handleClearLoadout(); });
@@ -196,19 +198,14 @@ describe('Ardelia Ultimate P3 Conditional Frames', () => {
         });
       });
 
-      const ultCol = findColumn(result.current, SLOT_ARDELIA, NounType.ULTIMATE);
-      act(() => {
-        result.current.handleAddEvent(
-          SLOT_ARDELIA, NounType.ULTIMATE, 1 * FPS, ultCol!.defaultEvent!,
-        );
-      });
+      act(() => { addUltViaMenu(result.current, 1 * FPS); });
 
       const ult = result.current.allProcessedEvents.find(
         (ev) => ev.ownerId === SLOT_ARDELIA && ev.columnId === NounType.ULTIMATE,
       );
       expect(ult).toBeDefined();
       expect(ult!.segments.length).toBe(2);
-      expect(ult!.segments.every((s) => s.properties.name !== 'Delay')).toBe(true);
+      expect(ult!.segments.every((s) => s.properties.name !== DELAY_SEGMENT_NAME)).toBe(true);
     }
   });
 });

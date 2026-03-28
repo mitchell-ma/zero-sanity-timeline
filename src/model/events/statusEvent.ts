@@ -3,7 +3,6 @@ import {
   ElementType,
   EventOriginType,
   EventType,
-  OperatorType,
   StackInteractionType,
   StatusType,
 } from "../../consts/enums";
@@ -99,7 +98,7 @@ export abstract class StatusEvent extends Event implements Stacks {
     eventOrigin: EventOriginType;
     name: string;
     target: DslTarget;
-    sourceOperator: OperatorType;
+    sourceOperator: string;
     element: ElementType;
     duration: Duration;
     isForced?: boolean;

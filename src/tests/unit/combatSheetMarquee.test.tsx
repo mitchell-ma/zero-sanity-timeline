@@ -84,8 +84,8 @@ jest.mock('../../controller/gameDataStore', () => ({
   getStatusById: () => undefined,
   getWeapon: () => undefined,
   getGearPiece: () => undefined,
-  getConsumableEntry: () => undefined,
-  getTacticalEntry: () => undefined,
+  getConsumable: () => undefined,
+  getTactical: () => undefined,
 }));
 
 jest.mock('../../utils/timeline', () => ({

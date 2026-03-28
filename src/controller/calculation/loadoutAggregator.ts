@@ -24,8 +24,7 @@ import {
   getGearPiece,
   getGenericSkillStats,
   getNamedSkillPassiveStats,
-  getConsumableEntry,
-  getTacticalEntry,
+  getConsumable,
 } from '../gameDataStore';
 
 // ── Result type ─────────────────────────────────────────────────────────
@@ -306,25 +305,15 @@ export function aggregateLoadoutStats(
 
   // 5. Consumable (food buff)
   if (loadout.consumableId) {
-    const entry = getConsumableEntry(loadout.consumableId);
-    if (entry) {
-      const consumable = entry.create();
+    const consumable = getConsumable(loadout.consumableId);
+    if (consumable) {
       for (const [key, value] of Object.entries(consumable.stats)) {
         addStat(key as StatType, value as number, 'Food');
       }
     }
   }
 
-  // 6. Tactical
-  if (loadout.tacticalId) {
-    const entry = getTacticalEntry(loadout.tacticalId);
-    if (entry) {
-      const tactical = entry.create();
-      for (const [key, value] of Object.entries(tactical.stats)) {
-        addStat(key as StatType, value as number, 'Tactical');
-      }
-    }
-  }
+  // 6. Tactical — tacticals contribute effects via onTriggerClause, not passive stats
 
   const baseAttack = operatorBaseAttack + weaponBaseAttack;
   const atkBonus = stats[StatType.ATTACK_BONUS];

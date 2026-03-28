@@ -1,6 +1,6 @@
 {
   "properties": {
-    "id": "SCORCHING_HEART",
+    "id": "SCORCHING_HEART_TALENT",
     "target": "OPERATOR",
     "targetDeterminer": "THIS",
     "name": "Scorching Heart (Talent)",

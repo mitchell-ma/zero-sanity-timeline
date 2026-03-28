@@ -334,7 +334,7 @@ export function computeResourceInsufficiencyZones(
   if (spGraph && spGraph.points.length >= 2) {
     for (const slot of slots) {
       if (!slot.operator) continue;
-      const cost = slot.operator.skills.battle.skillPointCost ?? 100;
+      const cost = slot.operator.skills[NounType.BATTLE_SKILL]?.skillPointCost ?? 100;
       const gaps = findInsufficientZones(spGraph.points, cost);
       if (gaps.length > 0) zones.set(`${slot.slotId}:${NounType.BATTLE_SKILL}`, gaps);
     }
@@ -465,7 +465,7 @@ export function checkResourceAvailability(
     }
   } else if (columnId === NounType.BATTLE_SKILL) {
     const slot = slots.find((s) => s.slotId === ownerId);
-    const spCost = slot?.operator?.skills.battle.skillPointCost ?? 100;
+    const spCost = slot?.operator?.skills[NounType.BATTLE_SKILL]?.skillPointCost ?? 100;
     const spKey = `${COMMON_OWNER_ID}-${COMMON_COLUMN_IDS.SKILL_POINTS}`;
     const spGraph = resourceGraphs.get(spKey);
     if (spGraph) {

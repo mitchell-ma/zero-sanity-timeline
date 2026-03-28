@@ -756,7 +756,9 @@ describe('N. Scorching Heart talent presence', () => {
       [], loadoutProps, undefined, wirings, slotOpMap,
     );
 
-    const shEvents = processed.filter(ev => ev.id === 'SCORCHING_HEART');
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const SH_TALENT_ID: string = require('../../model/game-data/operators/laevatain/talents/talent-scorching-heart.json').properties.id;
+    const shEvents = processed.filter(ev => ev.id === SH_TALENT_ID);
     expect(shEvents.length).toBe(1);
     expect(shEvents[0].startFrame).toBe(0);
     expect(shEvents[0].ownerId).toBe(LAEV_SLOT);

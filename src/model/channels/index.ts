@@ -91,6 +91,9 @@ export const OPERATOR_COLUMNS = {
   OTHER:          'OTHER',
 } as const;
 
+/** Column ID for the per-operator status column (talents + operator-specific statuses). */
+export const OPERATOR_STATUS_COLUMN_ID = 'operator-status';
+
 
 // ── Weapon fragility columns ──────────────────────────────────────────────
 

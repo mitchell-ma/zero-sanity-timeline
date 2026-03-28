@@ -1,4 +1,4 @@
-import { CombatSkillType, OperatorType } from "../../consts/enums";
+import { CombatSkillType } from "../../consts/enums";
 import type { DslTarget } from "../../dsl/semantics";
 import { CombatSkillEvent } from "./combatSkillEvent";
 
@@ -8,7 +8,7 @@ export class BasicSkillEvent extends CombatSkillEvent {
   constructor(params: {
     name: string;
     target: DslTarget;
-    sourceOperator: OperatorType;
+    sourceOperator: string;
     duration: number;
     cooldownSeconds: number;
     skillPointCost?: number;

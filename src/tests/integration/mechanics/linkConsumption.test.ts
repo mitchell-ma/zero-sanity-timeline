@@ -6,7 +6,7 @@
  * Link Consumption — Integration Tests
  *
  * Tests the Link team status consumption through the full pipeline:
- * useApp → handleAddEvent → processCombatSimulation → DEC link tracking.
+ * useApp → context menu → handleAddEvent → processCombatSimulation → DEC link tracking.
  *
  * Link is consumed when a battle skill or ultimate starts. The consumption
  * applies to the entire event (all frames). Basic attacks, finishers,
@@ -15,31 +15,31 @@
  * Since no operator currently produces Link through skills in the default lineup,
  * these tests inject Link events directly as raw events alongside skill events
  * and verify consumption through the DerivedEventController.
+ *
+ * Three-layer verification:
+ * 1. Context menu: skill menu item is available and enabled at the target frame
+ * 2. Controller: processCombatSimulation + DEC getLinkStacks records correct consumption
+ * 3. View: processed events reflect consumed Link with correct clamped duration
  */
 
 import { renderHook, act } from '@testing-library/react';
 import { NounType } from '../../../dsl/semantics';
 import { useApp } from '../../../app/useApp';
-import { ColumnType, EventStatusType, InteractionModeType, StatusType } from '../../../consts/enums';
+import { EventStatusType, InteractionModeType, StatusType } from '../../../consts/enums';
 import { FPS } from '../../../utils/timeline';
 import { eventDuration } from '../../../consts/viewTypes';
-import type { TimelineEvent, MiniTimeline } from '../../../consts/viewTypes';
+import type { TimelineEvent } from '../../../consts/viewTypes';
 import { COMMON_OWNER_ID } from '../../../controller/slot/commonSlotController';
 import { processCombatSimulation, getLastController } from '../../../controller/timeline/eventQueueController';
+import { findColumn, buildContextMenu, getMenuPayload, type AppResult } from '../helpers';
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
+// ── Constants ──────────────────────────────────────────────────────────────
 
-const SLOT_LAEVATAIN = 'slot-0';
 const SLOT_AKEKURI = 'slot-1';
+const SLOT_LAEVATAIN = 'slot-0';
+const TEST_LINK_SOURCE = 'Test Link';
 
-function findColumn(app: ReturnType<typeof useApp>, slotId: string, columnId: string) {
-  return app.columns.find(
-    (c): c is MiniTimeline =>
-      c.type === ColumnType.MINI_TIMELINE &&
-      c.ownerId === slotId &&
-      c.columnId === columnId,
-  );
-}
+// ── Helpers ────────────────────────────────────────────────────────────────
 
 let linkIdCounter = 0;
 
@@ -54,7 +54,7 @@ function linkEvent(startFrame: number, durationFrames: number): TimelineEvent {
     startFrame,
     segments: [{ properties: { duration: durationFrames } }],
     sourceOwnerId: SLOT_LAEVATAIN,
-    sourceSkillName: 'Test Link',
+    sourceSkillName: TEST_LINK_SOURCE,
   };
 }
 
@@ -70,6 +70,31 @@ function cloneEvent(ev: TimelineEvent): TimelineEvent {
   };
 }
 
+/**
+ * Add a skill event via context menu flow. Returns the payload used.
+ * Verifies context menu availability (layer 1) before adding.
+ */
+function addSkillViaContextMenu(
+  app: AppResult,
+  slotId: string,
+  columnId: string,
+  atFrame: number,
+  variantLabel?: string,
+) {
+  const col = findColumn(app, slotId, columnId);
+  expect(col).toBeDefined();
+
+  // Layer 1: Context menu — verify menu item is available and enabled
+  const menuItems = buildContextMenu(app, col!, atFrame);
+  expect(menuItems).not.toBeNull();
+  expect(menuItems!.length).toBeGreaterThan(0);
+
+  const payload = getMenuPayload(app, col!, atFrame, variantLabel);
+  expect(payload.defaultSkill).toBeDefined();
+
+  return payload;
+}
+
 beforeEach(() => { linkIdCounter = 0; });
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -80,25 +105,26 @@ describe('Link Consumption — Integration', () => {
   it('battle skill consumes Link and records stacks on DEC', () => {
     const { result } = renderHook(() => useApp());
 
-    // Get the real battle skill default from Akekuri
-    const battleCol = findColumn(result.current, SLOT_AKEKURI, NounType.BATTLE_SKILL);
-    expect(battleCol).toBeDefined();
-
-    // Add battle skill at 5s
+    // Layer 1: Context menu — battle skill available at 5s
     const battleFrame = 5 * FPS;
+    const payload = addSkillViaContextMenu(
+      result.current, SLOT_AKEKURI, NounType.BATTLE_SKILL, battleFrame,
+    );
+
+    // Add battle skill via context menu payload
     act(() => {
       result.current.handleAddEvent(
-        SLOT_AKEKURI, NounType.BATTLE_SKILL, battleFrame, battleCol!.defaultEvent!,
+        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
-    // Get the battle skill event that was added
+    // Layer 2: Controller — verify event placed
     const battleEvents = result.current.allProcessedEvents.filter(
       (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === NounType.BATTLE_SKILL,
     );
     expect(battleEvents).toHaveLength(1);
 
-    // Now run processCombatSimulation directly with Link + the same battle skill
+    // Layer 2: Controller — processCombatSimulation with Link + battle skill
     const link = linkEvent(0, 10 * FPS);
     const rawBattle = cloneEvent(battleEvents[0]);
 
@@ -110,15 +136,15 @@ describe('Link Consumption — Integration', () => {
   it('ultimate consumes Link and records stacks on DEC', () => {
     const { result } = renderHook(() => useApp());
 
-    // Get the real ultimate default from Akekuri
-    const ultCol = findColumn(result.current, SLOT_AKEKURI, NounType.ULTIMATE);
-    expect(ultCol).toBeDefined();
-
-    // Add ultimate at 5s
+    // Layer 1: Context menu — ultimate available at 5s
     const ultFrame = 5 * FPS;
+    const payload = addSkillViaContextMenu(
+      result.current, SLOT_AKEKURI, NounType.ULTIMATE, ultFrame,
+    );
+
     act(() => {
       result.current.handleAddEvent(
-        SLOT_AKEKURI, NounType.ULTIMATE, ultFrame, ultCol!.defaultEvent!,
+        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
@@ -127,7 +153,7 @@ describe('Link Consumption — Integration', () => {
     );
     expect(ultEvents).toHaveLength(1);
 
-    // Run with Link active before the ultimate
+    // Layer 2: Controller — Link consumed by ultimate
     const link = linkEvent(0, 10 * FPS);
     const rawUlt = cloneEvent(ultEvents[0]);
 
@@ -139,13 +165,15 @@ describe('Link Consumption — Integration', () => {
   it('basic attack does NOT consume Link', () => {
     const { result } = renderHook(() => useApp());
 
-    const basicCol = findColumn(result.current, SLOT_AKEKURI, NounType.BASIC_ATTACK);
-    expect(basicCol).toBeDefined();
-
+    // Layer 1: Context menu — basic attack available at 5s
     const basicFrame = 5 * FPS;
+    const payload = addSkillViaContextMenu(
+      result.current, SLOT_AKEKURI, NounType.BASIC_ATTACK, basicFrame,
+    );
+
     act(() => {
       result.current.handleAddEvent(
-        SLOT_AKEKURI, NounType.BASIC_ATTACK, basicFrame, basicCol!.defaultEvent!,
+        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
@@ -171,17 +199,25 @@ describe('Link Consumption — Integration', () => {
       return;
     }
 
+    // Layer 1: Context menu — combo skill may be disabled (requires trigger)
     const comboFrame = 5 * FPS;
+    const menuItems = buildContextMenu(result.current, comboCol!, comboFrame);
+    if (!menuItems) return;
+    const addItem = menuItems.find(i => i.actionId === 'addEvent');
+    if (!addItem || addItem.disabled) return; // combo requires trigger — skip
+
+    const payload = getMenuPayload(result.current, comboCol!, comboFrame);
+
     act(() => {
       result.current.handleAddEvent(
-        SLOT_AKEKURI, NounType.COMBO_SKILL, comboFrame, comboCol.defaultEvent!,
+        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const comboEvents = result.current.allProcessedEvents.filter(
       (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === NounType.COMBO_SKILL,
     );
-    if (comboEvents.length === 0) return; // combo may require trigger
+    if (comboEvents.length === 0) return;
 
     const link = linkEvent(0, 10 * FPS);
     const rawCombo = cloneEvent(comboEvents[0]);
@@ -194,16 +230,26 @@ describe('Link Consumption — Integration', () => {
   it('first battle skill consumes Link, subsequent one does not', () => {
     const { result } = renderHook(() => useApp());
 
-    const battleCol = findColumn(result.current, SLOT_AKEKURI, NounType.BATTLE_SKILL);
-    expect(battleCol).toBeDefined();
-    const defaultSkill = battleCol!.defaultEvent!;
+    // Layer 1: Context menu — first battle skill at 5s
+    const payload1 = addSkillViaContextMenu(
+      result.current, SLOT_AKEKURI, NounType.BATTLE_SKILL, 5 * FPS,
+    );
 
-    // Add two battle skills
     act(() => {
-      result.current.handleAddEvent(SLOT_AKEKURI, NounType.BATTLE_SKILL, 5 * FPS, defaultSkill);
+      result.current.handleAddEvent(
+        payload1.ownerId, payload1.columnId, payload1.atFrame, payload1.defaultSkill,
+      );
     });
+
+    // Layer 1: Context menu — second battle skill at 15s
+    const payload2 = addSkillViaContextMenu(
+      result.current, SLOT_AKEKURI, NounType.BATTLE_SKILL, 15 * FPS,
+    );
+
     act(() => {
-      result.current.handleAddEvent(SLOT_AKEKURI, NounType.BATTLE_SKILL, 15 * FPS, defaultSkill);
+      result.current.handleAddEvent(
+        payload2.ownerId, payload2.columnId, payload2.atFrame, payload2.defaultSkill,
+      );
     });
 
     const battleEvents = result.current.allProcessedEvents
@@ -226,11 +272,15 @@ describe('Link Consumption — Integration', () => {
   it('Link clamped at consuming event start frame', () => {
     const { result } = renderHook(() => useApp());
 
-    const battleCol = findColumn(result.current, SLOT_AKEKURI, NounType.BATTLE_SKILL);
-    expect(battleCol).toBeDefined();
+    // Layer 1: Context menu — battle skill at 3s
+    const payload = addSkillViaContextMenu(
+      result.current, SLOT_AKEKURI, NounType.BATTLE_SKILL, 3 * FPS,
+    );
 
     act(() => {
-      result.current.handleAddEvent(SLOT_AKEKURI, NounType.BATTLE_SKILL, 3 * FPS, battleCol!.defaultEvent!);
+      result.current.handleAddEvent(
+        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+      );
     });
 
     const battleEvents = result.current.allProcessedEvents.filter(
@@ -241,8 +291,9 @@ describe('Link Consumption — Integration', () => {
     const link = linkEvent(0, 10 * FPS);
     const rawBattle = cloneEvent(battleEvents[0]);
 
-    const result2 = processCombatSimulation([link, rawBattle]);
-    const linkEvents = result2.filter((ev) => ev.columnId === StatusType.LINK);
+    // Layer 3: View — verify consumed Link event has clamped duration
+    const simResult = processCombatSimulation([link, rawBattle]);
+    const linkEvents = simResult.filter((ev) => ev.columnId === StatusType.LINK);
     expect(linkEvents).toHaveLength(1);
     expect(linkEvents[0].eventStatus).toBe(EventStatusType.CONSUMED);
     // Link duration should be clamped to battle skill start (3s = 360 frames)
@@ -263,14 +314,15 @@ describe('Link Consumption — Freeform mode events', () => {
       result.current.setInteractionMode(InteractionModeType.FREEFORM);
     });
 
-    const battleCol = findColumn(result.current, SLOT_AKEKURI, NounType.BATTLE_SKILL);
-    expect(battleCol).toBeDefined();
-
-    // In freeform, we can place at any frame without SP check
+    // Layer 1: Context menu — battle skill available in freeform at 1s
     const battleFrame = 1 * FPS;
+    const payload = addSkillViaContextMenu(
+      result.current, SLOT_AKEKURI, NounType.BATTLE_SKILL, battleFrame,
+    );
+
     act(() => {
       result.current.handleAddEvent(
-        SLOT_AKEKURI, NounType.BATTLE_SKILL, battleFrame, battleCol!.defaultEvent!,
+        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
@@ -294,13 +346,15 @@ describe('Link Consumption — Freeform mode events', () => {
       result.current.setInteractionMode(InteractionModeType.FREEFORM);
     });
 
-    const ultCol = findColumn(result.current, SLOT_AKEKURI, NounType.ULTIMATE);
-    expect(ultCol).toBeDefined();
-
+    // Layer 1: Context menu — ultimate available in freeform at 1s
     const ultFrame = 1 * FPS;
+    const payload = addSkillViaContextMenu(
+      result.current, SLOT_AKEKURI, NounType.ULTIMATE, ultFrame,
+    );
+
     act(() => {
       result.current.handleAddEvent(
-        SLOT_AKEKURI, NounType.ULTIMATE, ultFrame, ultCol!.defaultEvent!,
+        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
@@ -324,12 +378,14 @@ describe('Link Consumption — Freeform mode events', () => {
       result.current.setInteractionMode(InteractionModeType.FREEFORM);
     });
 
-    const basicCol = findColumn(result.current, SLOT_AKEKURI, NounType.BASIC_ATTACK);
-    expect(basicCol).toBeDefined();
+    // Layer 1: Context menu — basic attack in freeform
+    const payload = addSkillViaContextMenu(
+      result.current, SLOT_AKEKURI, NounType.BASIC_ATTACK, 1 * FPS,
+    );
 
     act(() => {
       result.current.handleAddEvent(
-        SLOT_AKEKURI, NounType.BASIC_ATTACK, 1 * FPS, basicCol!.defaultEvent!,
+        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
@@ -356,9 +412,18 @@ describe('Link Consumption — Freeform mode events', () => {
     const comboCol = findColumn(result.current, SLOT_AKEKURI, NounType.COMBO_SKILL);
     if (!comboCol?.defaultEvent) return;
 
+    // Layer 1: Context menu — combo may be disabled even in freeform (requires trigger)
+    const comboFrame = 1 * FPS;
+    const menuItems = buildContextMenu(result.current, comboCol!, comboFrame);
+    if (!menuItems) return;
+    const addItem = menuItems.find(i => i.actionId === 'addEvent');
+    if (!addItem || addItem.disabled) return;
+
+    const payload = getMenuPayload(result.current, comboCol!, comboFrame);
+
     act(() => {
       result.current.handleAddEvent(
-        SLOT_AKEKURI, NounType.COMBO_SKILL, 1 * FPS, comboCol.defaultEvent!,
+        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 

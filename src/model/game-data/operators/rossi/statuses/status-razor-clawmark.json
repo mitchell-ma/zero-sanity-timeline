@@ -1,0 +1,102 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "DEAL",
+          "objectQualifier": "PHYSICAL",
+          "object": "DAMAGE",
+          "to": "ENEMY",
+          "with": {
+            "value": {
+              "verb": "VARY_BY",
+              "object": "TALENT_LEVEL",
+              "value": [
+                0,
+                0
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            }
+          },
+          "_note": "DoT — Physical DMG per second as % of ATK. Multiplier values unknown, placeholders."
+        },
+        {
+          "verb": "AMP",
+          "object": "DAMAGE",
+          "objectQualifier": "PHYSICAL",
+          "to": "ENEMY",
+          "with": {
+            "value": {
+              "verb": "VARY_BY",
+              "object": "TALENT_LEVEL",
+              "value": [
+                0,
+                0
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            }
+          },
+          "_note": "Increased Physical DMG taken. Multiplier values unknown, placeholders."
+        },
+        {
+          "verb": "AMP",
+          "object": "DAMAGE",
+          "objectQualifier": "HEAT",
+          "to": "ENEMY",
+          "with": {
+            "value": {
+              "verb": "VARY_BY",
+              "object": "TALENT_LEVEL",
+              "value": [
+                0,
+                0
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            }
+          },
+          "_note": "Increased Heat DMG taken. Multiplier values unknown, placeholders."
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "RAZOR_CLAWMARK",
+    "name": "Razor Clawmark",
+    "to": "ENEMY",
+    "duration": {
+      "value": {
+        "verb": "VARY_BY",
+        "object": "TALENT_LEVEL",
+        "value": [
+          0,
+          0
+        ],
+        "ofDeterminer": "THIS",
+        "of": "OPERATOR"
+      },
+      "unit": "SECOND",
+      "_note": "Duration unknown, placeholder values."
+    },
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 1
+      },
+      "interactionType": "RESET"
+    },
+    "eventType": "STATUS",
+    "eventCategoryType": "STATUS",
+    "description": "Target takes Physical DMG per second and increased Physical + Heat DMG. Applied by Wolven Ambrage (Nicks and Scratches talent). Non-stacking."
+  },
+  "metadata": {
+    "originId": "NICKS_AND_SCRATCHES_TALENT",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ]
+  },
+  "clauseType": "ALL"
+}

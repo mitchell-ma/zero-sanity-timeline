@@ -28,7 +28,7 @@ interface Duration {
 interface Effect {
   verb: string;
   object: string;
-  objectQualifier?: string | string[];
+  objectQualifier?: string;
   toDeterminer?: string;
   to?: string;
   with?: {
@@ -153,7 +153,7 @@ interface GameDataCharacter {
 
 // ── ID mapping ───────────────────────────────────────────────────────────────
 
-/** Maps gamedata.json operator IDs to our OperatorType enum values. */
+/** Maps gamedata.json operator IDs to our operator ID strings. */
 const GAMEDATA_ID_TO_OPERATOR: Record<string, string> = {
   LAEVATAIN: 'LAEVATAIN',
   AKEKURI: 'AKEKURI',
@@ -179,6 +179,7 @@ const GAMEDATA_ID_TO_OPERATOR: Record<string, string> = {
   ALESH: 'ALESH',
   ARCLIGHT: 'ARCLIGHT',
   TANGTANG: 'TANGTANG',
+  ROSSI: 'ROSSI',
 };
 
 // ── Anomaly type mapping ─────────────────────────────────────────────────────
@@ -186,7 +187,7 @@ const GAMEDATA_ID_TO_OPERATOR: Record<string, string> = {
 interface AnomalyMapping {
   verb: string;
   object: string;
-  objectQualifier?: string | string[];
+  objectQualifier?: string;
   isForced?: boolean;
   stacks?: number;
   conversion?: { statusType: string; ratio: string };
@@ -197,7 +198,7 @@ const ANOMALY_TYPE_MAP: Record<string, AnomalyMapping | null> = {
   cold_attach:    { verb: VerbType.APPLY, object: NounType.INFLICTION, objectQualifier: 'CRYO' },
   emag_attach:    { verb: VerbType.APPLY, object: NounType.INFLICTION, objectQualifier: 'ELECTRIC' },
   nature_attach:  { verb: VerbType.APPLY, object: NounType.INFLICTION, objectQualifier: 'NATURE' },
-  magma_0:        { verb: VerbType.APPLY, object: NounType.REACTION, objectQualifier: ['FORCED', 'COMBUSTION'], isForced: true, stacks: 1 },
+  magma_0:        { verb: VerbType.APPLY, object: NounType.REACTION, objectQualifier: 'COMBUSTION', isForced: true, stacks: 1 },
   magma_1:        { verb: VerbType.APPLY, object: NounType.INFLICTION, objectQualifier: 'MELTING_FLAME' },
   magma_2:        { verb: VerbType.APPLY, object: NounType.INFLICTION, objectQualifier: 'MELTING_FLAME' },
   magma_3:        { verb: VerbType.APPLY, object: NounType.INFLICTION, objectQualifier: 'MELTING_FLAME' },

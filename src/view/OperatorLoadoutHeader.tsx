@@ -2,8 +2,8 @@ import React, { useEffect, useRef } from 'react';
 import {
   getWeapon,
   getGearPiece,
-  getConsumableEntry,
-  getTacticalEntry,
+  getConsumable,
+  getTactical,
 } from '../controller/gameDataStore';
 
 export interface OperatorLoadoutState {
@@ -156,8 +156,8 @@ interface EquipmentSlotsProps {
 
 export function EquipmentSlots({ operatorWeaponTypes, state }: EquipmentSlotsProps) {
   const wpn = state.weaponId ? getWeapon(state.weaponId) : undefined;
-  const csm = state.consumableId ? getConsumableEntry(state.consumableId) : undefined;
-  const tac = state.tacticalId ? getTacticalEntry(state.tacticalId) : undefined;
+  const csm = state.consumableId ? getConsumable(state.consumableId) : undefined;
+  const tac = state.tacticalId ? getTactical(state.tacticalId) : undefined;
   const arm = state.armorId ? getGearPiece(state.armorId) : undefined;
   const glv = state.glovesId ? getGearPiece(state.glovesId) : undefined;
   const k1 = state.kit1Id ? getGearPiece(state.kit1Id) : undefined;

@@ -1,0 +1,50 @@
+{
+  "properties": {
+    "id": "GINSENG_MEAT_STEW",
+    "name": "Ginseng Meat Stew",
+    "rarity": 5,
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": 300
+      },
+      "unit": "SECOND"
+    }
+  },
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STAT",
+          "objectId": "BASE_ATTACK",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": 180
+            }
+          }
+        },
+        {
+          "verb": "APPLY",
+          "object": "STAT",
+          "objectId": "CRITICAL_RATE",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": 0.1144
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "originId": "game"
+  }
+}

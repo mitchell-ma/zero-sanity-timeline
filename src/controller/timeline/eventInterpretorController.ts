@@ -21,7 +21,7 @@ import {
 import type { ValueNode } from '../../dsl/semantics';
 import { resolveValueNode, getSimpleValue, buildContextForSkillColumn } from '../calculation/valueResolver';
 import type { ValueResolutionContext } from '../calculation/valueResolver';
-import { TimelineEvent, eventDuration } from '../../consts/viewTypes';
+import { TimelineEvent, eventDuration, setEventDuration } from '../../consts/viewTypes';
 import { ElementType, EventFrameType, PERMANENT_DURATION, PhysicalStatusType, StackInteractionType, UnitType } from '../../consts/enums';
 import {
   BREACH_DURATION, ENEMY_OWNER_ID, ENEMY_ACTION_COLUMN_ID, ELEMENT_TO_INFLICTION_COLUMN,
@@ -46,6 +46,7 @@ import { getPhysicalStatusBaseMultiplier, getShatterBaseMultiplier } from '../..
 import type { StatusLevel } from '../../consts/types';
 import type { SlotTriggerWiring } from './eventQueueTypes';
 import { findClauseTriggerMatches, statusIdToColumnId } from './triggerMatch';
+import { activeEventsAtFrame } from './timelineQueries';
 import { getComboTriggerClause, getComboTriggerInfo } from '../gameDataStore';
 import { PRIORITY, QueueFrameType } from './eventQueueTypes';
 import { resolveClauseEffects } from './statusTriggerCollector';
@@ -98,15 +99,15 @@ export function filterClauses(
 
 const PHYSICAL_STATUS_VALUES = new Set<string>(Object.values(PhysicalStatusType));
 
-function resolveQualifier(objectQualifier?: AdjectiveType | AdjectiveType[]) {
-  return Array.isArray(objectQualifier) ? objectQualifier[0] : objectQualifier;
+function resolveQualifier(objectQualifier?: AdjectiveType) {
+  return objectQualifier;
 }
 
 /**
  * Resolve column ID from effect fields: object + objectId + objectQualifier.
  * Handles both legacy format (object=INFLICTION) and correct grammar (object=STATUS, objectId=INFLICTION).
  */
-function resolveEffectColumnId(object?: string, objectId?: string, objectQualifier?: AdjectiveType | AdjectiveType[]): string | undefined {
+function resolveEffectColumnId(object?: string, objectId?: string, objectQualifier?: AdjectiveType): string | undefined {
   const qualifier = resolveQualifier(objectQualifier);
 
   // Correct grammar: object=STATUS, objectId is the category
@@ -243,6 +244,7 @@ export interface InterpretContext {
   allEvents: () => readonly TimelineEvent[];
   potential?: number;
   parentEventEndFrame?: number;
+  parentSegmentEndFrame?: number;
   targetOwnerId?: string;
   /** Status ID of the parent status def when processing ENGINE_TRIGGER effects.
    *  Used by CONSUME THIS EVENT to identify which status to consume. */
@@ -344,7 +346,9 @@ export class EventInterpretorController {
 
       case VerbType.RECOVER: return this.doRecover(effect, ctx);
 
-      case VerbType.REFRESH: case VerbType.EXTEND:
+      case VerbType.EXTEND:  return this.doExtend(effect, ctx);
+
+      case VerbType.REFRESH:
       case VerbType.RETURN: case VerbType.DEAL:
       case VerbType.HIT: case VerbType.DEFEAT: case VerbType.PERFORM:
       case VerbType.IGNORE: case VerbType.OVERHEAL: case VerbType.EXPERIENCE:
@@ -527,7 +531,7 @@ export class EventInterpretorController {
 
       // Susceptibility status: extract inline value + qualifier into event.susceptibility
       if (effect.objectId === NounType.SUSCEPTIBILITY && effect.with?.value) {
-        const qualifier = Array.isArray(effect.objectQualifier) ? effect.objectQualifier[0] : effect.objectQualifier;
+        const qualifier = effect.objectQualifier;
         const rateValue = this.resolveWith(effect.with.value, ctx);
         if (qualifier && typeof rateValue === 'number') {
           if (!eventProps.susceptibility) eventProps.susceptibility = {};
@@ -557,6 +561,10 @@ export class EventInterpretorController {
           ...(freeformUid && si === 0 ? { uid: freeformUid } : {}),
         });
       }
+
+      // Synchronously process the new status event's lifecycle clauses and frame markers
+      this.processNewStatusEvent(effect.objectId, statusOwnerId, ctx);
+
       return true;
     }
     // APPLY SUSCEPTIBILITY is a pure stat modifier — resolved by resolveClauseEffects
@@ -696,6 +704,36 @@ export class EventInterpretorController {
       return resolveValueNode(inner.value as ValueNode, this.buildValueContext(ctx));
     }
     return resolveValueNode(node, this.buildValueContext(ctx));
+  }
+
+  private doExtend(effect: Effect, ctx: InterpretContext) {
+    if (!effect.until || effect.until.object !== NounType.END) return true;
+
+    // Resolve which end frame to extend to based on until.of scope
+    const endFrame = effect.until.of === NounType.SEGMENT
+      ? ctx.parentSegmentEndFrame
+      : ctx.parentEventEndFrame;
+    if (endFrame == null) return true;
+
+    // Resolve target column and owner
+    const columnId = resolveEffectColumnId(effect.object, effect.objectId, effect.objectQualifier);
+    if (!columnId) return true;
+    const ownerId = this.resolveOwnerId(effect.ofObject ?? effect.to, ctx, effect.ofDeterminer ?? effect.toDeterminer);
+
+    // Extend active target events to persist until the resolved end frame
+    for (const ev of this.controller.output) {
+      if (ev.columnId !== columnId) continue;
+      if (ownerId != null && ev.ownerId !== ownerId) continue;
+      if (ev.startFrame > ctx.frame) continue;
+      const currentEnd = ev.startFrame + eventDuration(ev);
+      if (currentEnd > ctx.frame) {
+        const newDuration = endFrame - ev.startFrame;
+        if (newDuration > eventDuration(ev)) {
+          setEventDuration(ev, newDuration);
+        }
+      }
+    }
+    return true;
   }
 
   private doReduce(effect: Effect, ctx: InterpretContext) {
@@ -1166,6 +1204,16 @@ export class EventInterpretorController {
 
     // ── 3. Clause loop — all effects through interpret() ─────────────
     if (frame.clauses) {
+      // Compute segment end frame for EXTEND UNTIL END OF SEGMENT
+      const parentEventEnd = event.startFrame + eventDuration(event);
+      let parentSegEnd = parentEventEnd;
+      let segStart = event.startFrame;
+      for (const seg of event.segments) {
+        const segEnd = segStart + (seg.properties.duration ?? 0);
+        if (absFrame >= segStart && absFrame < segEnd) { parentSegEnd = segEnd; break; }
+        segStart = segEnd;
+      }
+
       const interpretCtx: InterpretContext = {
         frame: absFrame,
         sourceOwnerId: this.resolveOperatorId(event.ownerId),
@@ -1176,7 +1224,8 @@ export class EventInterpretorController {
         sourceEventUid: !SKILL_COLUMN_SET.has(event.columnId) ? event.uid : undefined,
         allEvents: () => [...this.baseEvents, ...this.controller.output],
         potential: pot,
-        parentEventEndFrame: event.startFrame + eventDuration(event),
+        parentEventEndFrame: parentEventEnd,
+        parentSegmentEndFrame: parentSegEnd,
       };
       // Resolve supplied parameters: user-set values on event, or defaults from frame/event definitions
       const resolvedParams: Record<string, number> = {};
@@ -1257,6 +1306,98 @@ export class EventInterpretorController {
    * Fire PERFORM triggers for a specific PERFORM object (FINAL_STRIKE, FINISHER, DIVE_ATTACK).
    * Looks up the trigger index for matching defs.
    */
+  /**
+   * Synchronously process a newly created status event's lifecycle clauses
+   * and segment frame markers. Called inline from doApply — no queueing.
+   */
+  private processNewStatusEvent(statusId: string | undefined, statusOwnerId: string, ctx: InterpretContext) {
+    if (!statusId) return;
+
+    // Find the newly created status event
+    const statusEvents = this.controller.output.filter(
+      ev => ev.id === statusId && ev.ownerId === statusOwnerId && ev.startFrame === ctx.frame,
+    );
+    const statusEv = statusEvents[statusEvents.length - 1];
+    if (!statusEv) return;
+
+    const parentEventEnd = statusEv.startFrame + eventDuration(statusEv);
+    const source = {
+      ownerId: statusEv.sourceOwnerId ?? this.resolveOperatorId(statusEv.ownerId),
+      skillName: statusEv.sourceSkillName ?? statusEv.name,
+    };
+    const pot = this.loadoutProperties?.[statusEv.ownerId]?.operator.potential ?? 0;
+
+    // ── onEntryClause: evaluate conditions and execute effects inline ────
+    const statusDef = getStatusDef(statusId);
+    if (statusDef?.onEntryClause?.length) {
+      const parentSegEnd = statusEv.startFrame + (statusEv.segments[0]?.properties.duration ?? 0);
+      const entryCtx: InterpretContext = {
+        ...ctx,
+        parentEventEndFrame: parentEventEnd,
+        parentSegmentEndFrame: parentSegEnd,
+        parentStatusId: statusId,
+        parentStatusOwnerId: statusOwnerId,
+      };
+      for (const clause of statusDef.onEntryClause as { conditions: unknown[]; effects?: unknown[] }[]) {
+        if (!clause.effects?.length) continue;
+        const condCtx: ConditionContext = {
+          events: [...this.baseEvents, ...this.controller.output],
+          frame: ctx.frame,
+          sourceOwnerId: statusOwnerId,
+        };
+        if (clause.conditions.length > 0 &&
+            !evaluateConditions(clause.conditions as unknown as import('../../dsl/semantics').Interaction[], condCtx)) continue;
+        for (const rawEffect of clause.effects) {
+          // Normalize JSON "of" → Effect.ofObject (same as triggerEffectToEffect)
+          const raw = rawEffect as Record<string, unknown>;
+          const effect = { ...raw, ofObject: raw.of ?? raw.ofObject, ofDeterminer: raw.ofDeterminer } as unknown as Effect;
+          this.interpret(effect, entryCtx);
+        }
+      }
+    }
+
+    // ── Segment frame markers: process inline (same as handleProcessFrame) ──
+    let cumOffset = 0;
+    for (let si = 0; si < statusEv.segments.length; si++) {
+      const seg = statusEv.segments[si];
+      if (seg.frames) {
+        for (let fi = 0; fi < seg.frames.length; fi++) {
+          const fm = seg.frames[fi];
+          const absFrame = statusEv.startFrame + cumOffset + fm.offsetFrame;
+          // Compute segment end for EXTEND UNTIL END OF SEGMENT
+          const segEnd = statusEv.startFrame + cumOffset + (seg.properties.duration ?? 0);
+          const frameCtx: InterpretContext = {
+            frame: absFrame,
+            sourceOwnerId: source.ownerId,
+            sourceSlotId: statusEv.ownerId,
+            sourceSkillName: statusEv.name,
+            sourceEventUid: statusEv.uid,
+            allEvents: () => [...this.baseEvents, ...this.controller.output],
+            potential: pot,
+            parentEventEndFrame: parentEventEnd,
+            parentSegmentEndFrame: segEnd,
+          };
+          if (fm.clauses) {
+            const condCtx: ConditionContext = {
+              events: [...this.baseEvents, ...this.controller.output],
+              frame: absFrame,
+              sourceOwnerId: statusEv.ownerId,
+              potential: pot,
+            };
+            for (const clause of fm.clauses) {
+              if (clause.conditions.length > 0 &&
+                  !evaluateConditions(clause.conditions as unknown as import('../../dsl/semantics').Interaction[], condCtx)) continue;
+              for (const ef of clause.effects) {
+                if (ef.dslEffect) this.interpret(ef.dslEffect, frameCtx);
+              }
+            }
+          }
+        }
+      }
+      cumOffset += seg.properties.duration;
+    }
+  }
+
   private checkPerformTriggers(performObject: string, event: TimelineEvent, absFrame: number): QueueFrame[] {
     if (!this.triggerIndex) return [];
     const results: QueueFrame[] = [];
@@ -1544,6 +1685,9 @@ export class EventInterpretorController {
           to: se.to as Effect['to'],
           toDeterminer: se.toDeterminer as Effect['toDeterminer'],
           with: se.with as Effect['with'],
+          until: se.until as Effect['until'],
+          ofObject: se.of as Effect['ofObject'],
+          ofDeterminer: se.ofDeterminer as Effect['ofDeterminer'],
         })),
       };
     }
@@ -1556,6 +1700,9 @@ export class EventInterpretorController {
       to: te.to as Effect['to'],
       toDeterminer: te.toDeterminer as Effect['toDeterminer'],
       with: te.with as Effect['with'],
+      until: te.until as Effect['until'],
+      ofObject: te.of as Effect['ofObject'],
+      ofDeterminer: te.ofDeterminer as Effect['ofDeterminer'],
       cardinalityConstraint: te.cardinalityConstraint as Effect['cardinalityConstraint'],
       value: te.value === 'MAX' ? THRESHOLD_MAX : te.value as Effect['value'],
     };
@@ -1590,6 +1737,29 @@ export class EventInterpretorController {
       if (!evaluateConditions(ctx.haveConditions as unknown as import('../../dsl/semantics').Interaction[], condCtx)) return [];
     }
 
+    // Compute parent status event end frames (for EXTEND UNTIL END OF SEGMENT/EVENT)
+    const parentColumnId = statusIdToColumnId(ctx.def.properties.id);
+    const allEvents = [...this.baseEvents, ...this.controller.output];
+    const parentEvents = activeEventsAtFrame(allEvents, parentColumnId, parentStatusOwnerId, entry.frame);
+    const parentEv = parentEvents.length > 0 ? parentEvents[parentEvents.length - 1] : undefined;
+    let parentEventEndFrame: number | undefined;
+    let parentSegmentEndFrame: number | undefined;
+    if (parentEv) {
+      parentEventEndFrame = parentEv.startFrame + eventDuration(parentEv);
+      // Find the segment active at the trigger frame
+      let segStart = parentEv.startFrame;
+      for (const seg of parentEv.segments) {
+        const segEnd = segStart + (seg.properties.duration ?? 0);
+        if (entry.frame >= segStart && entry.frame < segEnd) {
+          parentSegmentEndFrame = segEnd;
+          break;
+        }
+        segStart = segEnd;
+      }
+      // Fallback: if frame is at or past last segment, use event end
+      if (parentSegmentEndFrame == null) parentSegmentEndFrame = parentEventEndFrame;
+    }
+
     const interpretCtx: InterpretContext = {
       frame: entry.frame,
       sourceOwnerId: ctx.operatorId,
@@ -1599,6 +1769,8 @@ export class EventInterpretorController {
       potential: ctx.potential,
       parentStatusId: ctx.def.properties.id,
       parentStatusOwnerId,
+      parentEventEndFrame,
+      parentSegmentEndFrame,
     };
 
     const cascadeFrames: QueueFrame[] = [];
@@ -1616,36 +1788,15 @@ export class EventInterpretorController {
       }
     }
 
-    // Enqueue PROCESS_FRAME entries for any newly created events with frame markers
+    // Fire reactive triggers for events produced by compound effects (ALL/ANY).
+    // The top-level reactive trigger fires on the ALL wrapper which has no objectId,
+    // so individual status events created inside the compound are missed. Scan newly
+    // created events and fire reactive triggers for each APPLY STATUS.
     for (let i = outputBefore; i < this.controller.output.length; i++) {
       const ev = this.controller.output[i];
-      let cumulativeOffset = 0;
-      for (let si = 0; si < ev.segments.length; si++) {
-        const seg = ev.segments[si];
-        if (seg.frames) {
-          for (let fi = 0; fi < seg.frames.length; fi++) {
-            const frame = seg.frames[fi];
-            cascadeFrames.push({
-              frame: ev.startFrame + cumulativeOffset + frame.offsetFrame,
-              priority: PRIORITY.PROCESS_FRAME,
-              type: QueueFrameType.PROCESS_FRAME,
-              statusId: ev.name,
-              columnId: ev.columnId,
-              ownerId: ev.ownerId,
-              sourceOwnerId: ev.ownerId,
-              sourceSkillName: ev.name,
-              maxStacks: 0,
-              durationFrames: 0,
-              operatorSlotId: ev.ownerId,
-              frameMarker: frame,
-              sourceEvent: ev,
-              segmentIndex: si,
-              frameIndex: fi,
-            });
-          }
-        }
-        cumulativeOffset += seg.properties.duration;
-      }
+      const newFrames = this.checkReactiveTriggers(VerbType.APPLY, ev.columnId, entry.frame, ev.ownerId, trigger.sourceSkillName);
+      for (const f of newFrames) f.cascadeDepth = depth + 1;
+      cascadeFrames.push(...newFrames);
     }
 
     return cascadeFrames;

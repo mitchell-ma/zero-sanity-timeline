@@ -26,7 +26,7 @@
     }
   ],
   "properties": {
-    "id": "SCORCHING_HEART_EFFECT",
+    "id": "SCORCHING_HEART",
     "name": "Scorching Heart",
     "target": "OPERATOR",
     "targetDeterminer": "THIS",

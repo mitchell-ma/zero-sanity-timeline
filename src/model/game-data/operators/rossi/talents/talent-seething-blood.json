@@ -1,0 +1,72 @@
+{
+  "onTriggerClause": [
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "DEAL",
+          "objectQualifier": "CRITICAL",
+          "object": "DAMAGE",
+          "_note": "Triggers on crit against Razor Clawmark target. The Razor Clawmark condition is implicit."
+        }
+      ],
+      "effects": [
+        {
+          "verb": "DEAL",
+          "object": "DAMAGE",
+          "to": "ENEMY",
+          "with": {
+            "value": {
+              "verb": "VARY_BY",
+              "object": "TALENT_LEVEL",
+              "value": [
+                0,
+                0
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            }
+          },
+          "_note": "Extra damage on crit against Razor Clawmark target. Multiplier values unknown, placeholders."
+        },
+        {
+          "verb": "RECOVER",
+          "object": "HP",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "VARY_BY",
+              "object": "TALENT_LEVEL",
+              "value": [
+                0,
+                0
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            }
+          },
+          "_note": "HP recovery on crit against Razor Clawmark target. Value unknown, placeholder. Amplified vs Combusted targets."
+        }
+      ]
+    }
+  ],
+  "clauseType": "ALL",
+  "properties": {
+    "id": "SEETHING_BLOOD_TALENT",
+    "name": "Seething Blood (Talent)",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
+    "eventType": "STATUS",
+    "eventCategoryType": "TALENT",
+    "description": "Crits on Razor Clawmark targets deal extra damage and recover HP. Amplified vs Combusted targets.",
+    "maxLevel": 2
+  },
+  "metadata": {
+    "originId": "ROSSI",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ]
+  }
+}

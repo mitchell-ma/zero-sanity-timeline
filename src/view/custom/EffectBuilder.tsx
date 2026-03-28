@@ -4,7 +4,7 @@
  * Uses SentenceSlot for progressive disclosure with spring-momentum animations.
  */
 import { useState } from 'react';
-import { VerbType, ObjectType, SubjectType, DeterminerType, THRESHOLD_MAX, DURATION_END,
+import { VerbType, ObjectType, SubjectType, DeterminerType, NounType, THRESHOLD_MAX,
   VERB_LABELS, OBJECT_QUALIFIER_LABELS, OBJECT_LABELS, TARGET_LABELS, DETERMINER_LABELS, OBJECT_QUALIFIERS,
   EFFECT_VERBS, getObjectsForEffectVerb, getEffectFieldVisibility, WITH_PROPERTY_LABELS,
   OBJECT_REQUIRED_QUALIFIER, OBJECT_DEFAULT_QUALIFIER,
@@ -70,7 +70,7 @@ export default function EffectBuilder({ value, onChange, onRemove, compact }: Ef
         {/* Adjective — slides in when object type has adjectives (hidden for STATUS) */}
         <SentenceSlot active={vis.showObjectQualifier}>
           <CustomSelect
-            value={Array.isArray(value.objectQualifier) ? value.objectQualifier[0] ?? '' : value.objectQualifier ?? ''}
+            value={value.objectQualifier ?? ''}
             options={[
               ...(OBJECT_REQUIRED_QUALIFIER.has(value.object ?? '') ? [] : [{ value: '', label: '—' }]),
               ...adjectives.map((a) => ({ value: a, label: OBJECT_QUALIFIER_LABELS[a] })),
@@ -178,8 +178,8 @@ export default function EffectBuilder({ value, onChange, onRemove, compact }: Ef
             <label className="ib-checkbox">
               <input
                 type="checkbox"
-                checked={value.until === DURATION_END}
-                onChange={(e) => update({ until: e.target.checked ? DURATION_END : undefined })}
+                checked={value.until?.object === NounType.END}
+                onChange={(e) => update({ until: e.target.checked ? { object: NounType.END, of: NounType.EVENT } : undefined })}
               />
               UNTIL END
             </label>

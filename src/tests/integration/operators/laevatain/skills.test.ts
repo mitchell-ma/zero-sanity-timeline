@@ -6,40 +6,43 @@
  * Laevatain — Integration Tests
  *
  * Tests the full user flow through useApp:
- * 1. User adds Laevatain's skills via handleAddEvent (same path as right-click → context menu)
+ * 1. User adds Laevatain's skills via context menu → handleAddEvent
  * 2. Verify skills don't crash the pipeline
  * 3. Verify battle skill generates 1 Melting Flame stack
  * 4. Verify basic attack absorbs enemy heat inflictions and generates Melting Flames at 1:1 ratio
+ *
+ * Verifies all three layers:
+ * - Context menu: menu items are available and enabled
+ * - Controller: event counts, event status, timing, duration
+ * - View: computeTimelinePresentation includes events in their columns
  */
 
 import { renderHook, act } from '@testing-library/react';
 import { NounType } from '../../../../dsl/semantics';
 import { useApp } from '../../../../app/useApp';
-import { INFLICTION_COLUMNS, ENEMY_OWNER_ID, USER_ID } from '../../../../model/channels';
-import { ColumnType, EnhancementType, EventStatusType } from '../../../../consts/enums';
+import { INFLICTION_COLUMNS, ENEMY_OWNER_ID, OPERATOR_STATUS_COLUMN_ID, ENEMY_GROUP_COLUMNS } from '../../../../model/channels';
+import { EnhancementType, EventStatusType, InteractionModeType } from '../../../../consts/enums';
 import { FPS, TOTAL_FRAMES } from '../../../../utils/timeline';
 import { eventDuration } from '../../../../consts/viewTypes';
-import type { MiniTimeline } from '../../../../consts/viewTypes';
+import { computeTimelinePresentation } from '../../../../controller/timeline/eventPresentationController';
+import { findColumn, buildContextMenu, getMenuPayload, getAddEventPayload } from '../../helpers';
+import type { AppResult, AddEventPayload } from '../../helpers';
 
-const MELTING_FLAME_ID = 'MELTING_FLAME';
+/* eslint-disable @typescript-eslint/no-require-imports */
+const MELTING_FLAME_ID: string = require('../../../../model/game-data/operators/laevatain/statuses/status-melting-flame.json').properties.id;
+const SMOULDERING_FIRE_ID: string = require('../../../../model/game-data/operators/laevatain/skills/battle-skill-smouldering-fire.json').properties.id;
+/* eslint-enable @typescript-eslint/no-require-imports */
+
 const SLOT_LAEVATAIN = 'slot-0';
-
-function findColumn(app: ReturnType<typeof useApp>, slotId: string, columnId: string) {
-  return app.columns.find(
-    (c): c is MiniTimeline =>
-      c.type === ColumnType.MINI_TIMELINE &&
-      c.ownerId === slotId &&
-      c.columnId === columnId,
-  );
-}
 
 /**
  * Build a multi-segment basic attack event payload that triggers Final Strike
  * absorption. The context menu default is a single-sequence BATK; the engine
- * needs ≥ 2 segments to resolve FINAL_STRIKE.
+ * needs >= 2 segments to resolve FINAL_STRIKE.
  */
-function buildMultiSegmentBasic(defaultEvent: NonNullable<MiniTimeline['defaultEvent']>) {
-  const seg = defaultEvent.segments![0];
+function buildMultiSegmentBasic(defaultEvent: AddEventPayload['defaultSkill']) {
+  const segments = defaultEvent.segments as { properties: Record<string, unknown>; frames?: unknown }[];
+  const seg = segments[0];
   return {
     ...defaultEvent,
     segments: [
@@ -47,7 +50,26 @@ function buildMultiSegmentBasic(defaultEvent: NonNullable<MiniTimeline['defaultE
       { properties: { duration: seg.properties.duration, name: 'II' } },
       { properties: { duration: seg.properties.duration, name: 'III' }, frames: seg.frames },
     ],
-  };
+  } as AddEventPayload['defaultSkill'];
+}
+
+/** Add a heat infliction on enemy in freeform mode via context menu flow. */
+function addHeatInfliction(app: AppResult, atFrame: number) {
+  const enemyStatusCol = findColumn(app, ENEMY_OWNER_ID, ENEMY_GROUP_COLUMNS.ENEMY_STATUS);
+  expect(enemyStatusCol).toBeDefined();
+  const menuItems = buildContextMenu(app, enemyStatusCol!, atFrame);
+  expect(menuItems).not.toBeNull();
+  // Find the heat infliction menu item by its action payload columnId
+  const heatItem = menuItems!.find(
+    (i) => i.actionId === 'addEvent'
+      && (i.actionPayload as AddEventPayload)?.columnId === INFLICTION_COLUMNS.HEAT,
+  );
+  expect(heatItem).toBeDefined();
+  expect(heatItem!.disabled).toBeFalsy();
+  const payload = heatItem!.actionPayload as AddEventPayload;
+  act(() => {
+    app.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+  });
 }
 
 describe('Laevatain Skills — integration through useApp', () => {
@@ -60,9 +82,15 @@ describe('Laevatain Skills — integration through useApp', () => {
     const col = findColumn(result.current, SLOT_LAEVATAIN, NounType.BASIC_ATTACK);
     expect(col).toBeDefined();
 
+    // Context menu layer: verify menu item is available and enabled
+    const menuItems = buildContextMenu(result.current, col!, 2 * FPS);
+    expect(menuItems).not.toBeNull();
+    expect(menuItems!.some((i) => i.actionId === 'addEvent' && !i.disabled)).toBe(true);
+
+    const payload = getAddEventPayload(menuItems!);
     act(() => {
       result.current.handleAddEvent(
-        SLOT_LAEVATAIN, NounType.BASIC_ATTACK, 2 * FPS, col!.defaultEvent!,
+        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
@@ -77,9 +105,15 @@ describe('Laevatain Skills — integration through useApp', () => {
     const col = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE_SKILL);
     expect(col).toBeDefined();
 
+    // Context menu layer: verify menu item is available and enabled
+    const menuItems = buildContextMenu(result.current, col!, 5 * FPS);
+    expect(menuItems).not.toBeNull();
+    expect(menuItems!.some((i) => i.actionId === 'addEvent' && !i.disabled)).toBe(true);
+
+    const payload = getAddEventPayload(menuItems!);
     act(() => {
       result.current.handleAddEvent(
-        SLOT_LAEVATAIN, NounType.BATTLE_SKILL, 5 * FPS, col!.defaultEvent!,
+        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
@@ -91,12 +125,22 @@ describe('Laevatain Skills — integration through useApp', () => {
 
   it('combo skill added without crash', () => {
     const { result } = renderHook(() => useApp());
+
+    // Combo skill requires activation conditions — switch to freeform to bypass
+    act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
+
     const col = findColumn(result.current, SLOT_LAEVATAIN, NounType.COMBO_SKILL);
     expect(col).toBeDefined();
 
+    // Context menu layer: verify menu item is available in freeform
+    const menuItems = buildContextMenu(result.current, col!, 5 * FPS);
+    expect(menuItems).not.toBeNull();
+    expect(menuItems!.some((i) => i.actionId === 'addEvent' && !i.disabled)).toBe(true);
+
+    const payload = getAddEventPayload(menuItems!);
     act(() => {
       result.current.handleAddEvent(
-        SLOT_LAEVATAIN, NounType.COMBO_SKILL, 5 * FPS, col!.defaultEvent!,
+        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
@@ -111,9 +155,15 @@ describe('Laevatain Skills — integration through useApp', () => {
     const col = findColumn(result.current, SLOT_LAEVATAIN, NounType.ULTIMATE);
     expect(col).toBeDefined();
 
+    // Context menu layer: verify menu item is available and enabled
+    const menuItems = buildContextMenu(result.current, col!, 5 * FPS);
+    expect(menuItems).not.toBeNull();
+    expect(menuItems!.some((i) => i.actionId === 'addEvent' && !i.disabled)).toBe(true);
+
+    const payload = getAddEventPayload(menuItems!);
     act(() => {
       result.current.handleAddEvent(
-        SLOT_LAEVATAIN, NounType.ULTIMATE, 5 * FPS, col!.defaultEvent!,
+        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
@@ -132,24 +182,40 @@ describe('Laevatain Skills — integration through useApp', () => {
     const col = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE_SKILL);
     expect(col).toBeDefined();
 
+    const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        SLOT_LAEVATAIN, NounType.BATTLE_SKILL, 5 * FPS, col!.defaultEvent!,
+        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
+    // Controller layer: MF event generated
     const mfProcessed = result.current.allProcessedEvents.filter(
       (ev) => ev.columnId === MELTING_FLAME_ID && ev.ownerId === SLOT_LAEVATAIN,
     );
     expect(mfProcessed).toHaveLength(1);
-    expect(mfProcessed[0].sourceSkillName).toBe('SMOULDERING_FIRE');
+    expect(mfProcessed[0].sourceSkillName).toBe(SMOULDERING_FIRE_ID);
+
+    // View layer: MF appears in operator status column
+    const viewModels = computeTimelinePresentation(
+      result.current.allProcessedEvents,
+      result.current.columns,
+    );
+    const statusCol = findColumn(result.current, SLOT_LAEVATAIN, OPERATOR_STATUS_COLUMN_ID);
+    expect(statusCol).toBeDefined();
+    const statusVm = viewModels.get(statusCol!.key);
+    expect(statusVm).toBeDefined();
+    const mfVmEvents = statusVm!.events.filter(
+      (ev) => ev.columnId === MELTING_FLAME_ID && ev.ownerId === SLOT_LAEVATAIN,
+    );
+    expect(mfVmEvents).toHaveLength(1);
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
   // C. Heat infliction absorption via basic attack → Melting Flame at 1:1
   //
   // Absorption triggers on FINAL_STRIKE which requires a multi-segment basic
-  // attack (≥ 2 segments). The context menu default is a single sequence, so
+  // attack (>= 2 segments). The context menu default is a single sequence, so
   // we construct the multi-segment payload to simulate a full basic chain.
   // ═══════════════════════════════════════════════════════════════════════════
 
@@ -157,21 +223,13 @@ describe('Laevatain Skills — integration through useApp', () => {
     'basic attack absorbs %i heat infliction(s) and generates Melting Flame at 1:1',
     (heatCount) => {
       const { result } = renderHook(() => useApp());
-      const basicCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BASIC_ATTACK);
-      expect(basicCol).toBeDefined();
 
-      // Place heat inflictions on enemy via freeform add (staggered by 1 frame)
+      // Switch to freeform for manual heat infliction placement
+      act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
+
+      // Place heat inflictions on enemy via freeform context menu (staggered by 1 frame)
       for (let i = 0; i < heatCount; i++) {
-        act(() => {
-          result.current.handleAddEvent(
-            ENEMY_OWNER_ID, INFLICTION_COLUMNS.HEAT, 1 * FPS + i,
-            {
-              name: INFLICTION_COLUMNS.HEAT,
-              segments: [{ properties: { duration: 20 * FPS } }],
-              sourceOwnerId: USER_ID,
-            },
-          );
-        });
+        addHeatInfliction(result.current, 1 * FPS + i);
       }
 
       // Verify heat inflictions exist before basic attack
@@ -181,14 +239,17 @@ describe('Laevatain Skills — integration through useApp', () => {
       expect(heatsBefore).toHaveLength(heatCount);
 
       // Add multi-segment basic attack (triggers FINAL_STRIKE absorption)
-      const multiSegBasic = buildMultiSegmentBasic(basicCol!.defaultEvent!);
+      const basicCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BASIC_ATTACK);
+      expect(basicCol).toBeDefined();
+      const basicPayload = getMenuPayload(result.current, basicCol!, 3 * FPS);
+      const multiSegBasic = buildMultiSegmentBasic(basicPayload.defaultSkill);
       act(() => {
         result.current.handleAddEvent(
-          SLOT_LAEVATAIN, NounType.BASIC_ATTACK, 3 * FPS, multiSegBasic,
+          basicPayload.ownerId, basicPayload.columnId, basicPayload.atFrame, multiSegBasic,
         );
       });
 
-      // Melting Flames generated at 1:1 ratio with absorbed heat inflictions
+      // Controller layer: Melting Flames generated at 1:1 ratio with absorbed heat inflictions
       const mfEvents = result.current.allProcessedEvents.filter(
         (ev) => ev.columnId === MELTING_FLAME_ID && ev.ownerId === SLOT_LAEVATAIN,
       );
@@ -201,6 +262,22 @@ describe('Laevatain Skills — integration through useApp', () => {
           && ev.eventStatus === EventStatusType.CONSUMED,
       );
       expect(heatsAfter).toHaveLength(heatCount);
+
+      // View layer: consumed heats and generated MF appear in presentation
+      const viewModels = computeTimelinePresentation(
+        result.current.allProcessedEvents,
+        result.current.columns,
+      );
+
+      // MF events in status column
+      const statusCol = findColumn(result.current, SLOT_LAEVATAIN, OPERATOR_STATUS_COLUMN_ID);
+      expect(statusCol).toBeDefined();
+      const statusVm = viewModels.get(statusCol!.key);
+      expect(statusVm).toBeDefined();
+      const mfVmEvents = statusVm!.events.filter(
+        (ev) => ev.columnId === MELTING_FLAME_ID && ev.ownerId === SLOT_LAEVATAIN,
+      );
+      expect(mfVmEvents).toHaveLength(heatCount);
     },
   );
 
@@ -210,18 +287,22 @@ describe('Laevatain Skills — integration through useApp', () => {
 
   it('MF from heat absorption has TOTAL_FRAMES duration', () => {
     const { result } = renderHook(() => useApp());
-    const basicCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BASIC_ATTACK);
 
-    // Place 1 heat infliction + multi-segment basic to trigger absorption
+    // Switch to freeform for manual heat infliction placement
+    act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
+
+    // Place 1 heat infliction via freeform context menu
+    addHeatInfliction(result.current, 1 * FPS);
+
+    // Add multi-segment basic to trigger absorption
+    const basicCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BASIC_ATTACK);
+    expect(basicCol).toBeDefined();
+    const basicPayload = getMenuPayload(result.current, basicCol!, 3 * FPS);
+    const multiSegBasic = buildMultiSegmentBasic(basicPayload.defaultSkill);
     act(() => {
       result.current.handleAddEvent(
-        ENEMY_OWNER_ID, INFLICTION_COLUMNS.HEAT, 1 * FPS,
-        { name: INFLICTION_COLUMNS.HEAT, segments: [{ properties: { duration: 20 * FPS } }], sourceOwnerId: USER_ID },
+        basicPayload.ownerId, basicPayload.columnId, basicPayload.atFrame, multiSegBasic,
       );
-    });
-    const multiSegBasic = buildMultiSegmentBasic(basicCol!.defaultEvent!);
-    act(() => {
-      result.current.handleAddEvent(SLOT_LAEVATAIN, NounType.BASIC_ATTACK, 3 * FPS, multiSegBasic);
     });
 
     const mfEvents = result.current.allProcessedEvents.filter(
@@ -240,12 +321,15 @@ describe('Laevatain Skills — integration through useApp', () => {
   it('empowered battle skill consumes all 4 MF stacks', () => {
     const { result } = renderHook(() => useApp());
     const battleCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE_SKILL);
+    expect(battleCol).toBeDefined();
 
-    // Place 4 battle skills well-spaced to generate 4 MF stacks
+    // Place 4 battle skills well-spaced to generate 4 MF stacks via context menu
     for (let i = 0; i < 4; i++) {
+      const atFrame = (2 + i * 10) * FPS;
+      const payload = getMenuPayload(result.current, battleCol!, atFrame);
       act(() => {
         result.current.handleAddEvent(
-          SLOT_LAEVATAIN, NounType.BATTLE_SKILL, (2 + i * 10) * FPS, battleCol!.defaultEvent!,
+          payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
         );
       });
     }
@@ -263,16 +347,19 @@ describe('Laevatain Skills — integration through useApp', () => {
     );
     expect(mfBefore).toHaveLength(4);
 
-    // Find empowered variant from battle column
+    // Find empowered variant label from battle column
     const empoweredVariant = battleCol!.eventVariants?.find(
       (v) => v.enhancementType === EnhancementType.EMPOWERED,
     );
     expect(empoweredVariant).toBeDefined();
 
-    // Add empowered BS well after all 4 battle skills have triggered MF
+    // Add empowered BS via context menu with variant label, well after all 4 battle skills
+    const empPayload = getMenuPayload(
+      result.current, battleCol!, 50 * FPS, empoweredVariant!.displayName,
+    );
     act(() => {
       result.current.handleAddEvent(
-        SLOT_LAEVATAIN, NounType.BATTLE_SKILL, 50 * FPS, empoweredVariant!,
+        empPayload.ownerId, empPayload.columnId, empPayload.atFrame, empPayload.defaultSkill,
       );
     });
 
@@ -299,9 +386,11 @@ describe('Laevatain Skills — integration through useApp', () => {
 
     // 1. Generate 4 MF stacks via 4 battle skills (each produces 1 MF)
     for (let i = 0; i < 4; i++) {
+      const atFrame = (2 + i * 10) * FPS;
+      const payload = getMenuPayload(result.current, battleCol!, atFrame);
       act(() => {
         result.current.handleAddEvent(
-          SLOT_LAEVATAIN, NounType.BATTLE_SKILL, (2 + i * 10) * FPS, battleCol!.defaultEvent!,
+          payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
         );
       });
     }
@@ -313,25 +402,20 @@ describe('Laevatain Skills — integration through useApp', () => {
     );
     expect(mfStacks).toHaveLength(4);
 
-    // 2. Add heat inflictions on enemy AFTER all battle skills
+    // 2. Switch to freeform and add heat inflictions on enemy AFTER all battle skills
+    act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
     const inflictionFrame = 60 * FPS;
     for (let i = 0; i < 2; i++) {
-      act(() => {
-        result.current.handleAddEvent(
-          ENEMY_OWNER_ID, INFLICTION_COLUMNS.HEAT, inflictionFrame + i,
-          {
-            name: INFLICTION_COLUMNS.HEAT,
-            segments: [{ properties: { duration: 20 * FPS } }],
-            sourceOwnerId: USER_ID,
-          },
-        );
-      });
+      addHeatInfliction(result.current, inflictionFrame + i);
     }
 
     // 3. Add multi-segment basic attack after heat inflictions (triggers FINAL_STRIKE)
-    const multiSegBasic = buildMultiSegmentBasic(basicCol!.defaultEvent!);
+    const basicPayload = getMenuPayload(result.current, basicCol!, 65 * FPS);
+    const multiSegBasic = buildMultiSegmentBasic(basicPayload.defaultSkill);
     act(() => {
-      result.current.handleAddEvent(SLOT_LAEVATAIN, NounType.BASIC_ATTACK, 65 * FPS, multiSegBasic);
+      result.current.handleAddEvent(
+        basicPayload.ownerId, basicPayload.columnId, basicPayload.atFrame, multiSegBasic,
+      );
     });
 
     // 4. Heat inflictions should NOT be consumed (ALL pre-validation fails: can't APPLY more MF)

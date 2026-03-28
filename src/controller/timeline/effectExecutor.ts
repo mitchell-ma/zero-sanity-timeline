@@ -19,14 +19,14 @@ import {
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT, buildContextForSkillColumn } from '../calculation/valueResolver';
 import type { ValueNode } from '../../dsl/semantics';
 import type { ValueResolutionContext } from '../calculation/valueResolver';
-import { TimelineEvent, durationSegment, setEventDuration } from '../../consts/viewTypes';
+import { TimelineEvent, durationSegment, eventDuration, setEventDuration } from '../../consts/viewTypes';
 import { FPS } from '../../utils/timeline';
 import { CritMode, EventStatusType } from '../../consts/enums';
 import { ENEMY_OWNER_ID, INFLICTION_COLUMNS, REACTION_STATUS_TO_COLUMN } from '../../model/channels/index';
 import { statusIdToColumnId } from './triggerMatch';
 import { COMMON_OWNER_ID } from '../slot/commonSlotController';
 import { evaluateConditions, ConditionContext } from './conditionEvaluator';
-import { activeEventsAtFrame, activeInflictionsOfElement } from './timelineQueries';
+import { activeEventsAtFrame, activeInflictionsOfElement, isActiveAtFrame } from './timelineQueries';
 import { LoadoutProperties } from '../../view/InformationPane';
 import { genEventUid } from './inputEventController';
 import { allocDerivedEvent } from './objectPool';
@@ -66,8 +66,10 @@ export interface ExecutionContext {
   potential?: number;
   /** Counter for generating unique event UIDs within a single execution. */
   idCounter: number;
-  /** End frame of the parent status event (for EXTEND UNTIL END). */
+  /** End frame of the parent status event (for EXTEND UNTIL END OF EVENT). */
   parentEventEndFrame?: number;
+  /** End frame of the current segment of the parent status (for EXTEND UNTIL END OF SEGMENT). */
+  parentSegmentEndFrame?: number;
   /** Target operator ID for OTHER/ANY determiner resolution. */
   targetOwnerId?: string;
   /** Operator who triggered the effect (for TRIGGER determiner). */
@@ -161,16 +163,14 @@ const ELEMENT_TO_INFLICTION_COLUMN: Record<string, string> = {
 };
 
 
-function resolveInflictionColumnId(objectQualifier?: AdjectiveType | AdjectiveType[]): string | undefined {
-  const adj = Array.isArray(objectQualifier) ? objectQualifier[0] : objectQualifier;
-  if (!adj) return undefined;
-  return ELEMENT_TO_INFLICTION_COLUMN[adj];
+function resolveInflictionColumnId(objectQualifier?: AdjectiveType): string | undefined {
+  if (!objectQualifier) return undefined;
+  return ELEMENT_TO_INFLICTION_COLUMN[objectQualifier];
 }
 
-function resolveReactionColumnId(objectQualifier?: AdjectiveType | AdjectiveType[]): string | undefined {
-  const adj = Array.isArray(objectQualifier) ? objectQualifier[0] : objectQualifier;
-  if (!adj) return undefined;
-  return REACTION_STATUS_TO_COLUMN[adj];
+function resolveReactionColumnId(objectQualifier?: AdjectiveType): string | undefined {
+  if (!objectQualifier) return undefined;
+  return REACTION_STATUS_TO_COLUMN[objectQualifier];
 }
 
 // ── Verb Handlers ────────────────────────────────────────────────────────
@@ -341,6 +341,49 @@ function executeReset(effect: Effect, ctx: ExecutionContext): MutationSet {
   return result;
 }
 
+// ── Extend ──────────────────────────────────────────────────────────────
+
+function resolveExtendColumnId(effect: Effect): string | undefined {
+  if (effect.object === NounType.STATUS && effect.objectId === AdjectiveType.PHYSICAL) {
+    const qualifier = effect.objectQualifier;
+    return qualifier ?? undefined;
+  }
+  if (effect.object === NounType.STATUS && effect.objectId) {
+    return statusIdToColumnId(effect.objectId);
+  }
+  return undefined;
+}
+
+function executeExtend(effect: Effect, ctx: ExecutionContext): MutationSet {
+  if (!effect.until || effect.until.object !== NounType.END) return emptyMutationSet();
+
+  const endFrame = effect.until.of === NounType.SEGMENT
+    ? ctx.parentSegmentEndFrame
+    : ctx.parentEventEndFrame;
+  if (endFrame == null) return emptyMutationSet();
+
+  const columnId = resolveExtendColumnId(effect);
+  if (!columnId) return emptyMutationSet();
+
+  const ownerId = resolveOwnerId(
+    (effect.ofObject ?? effect.to) as string,
+    ctx,
+    effect.ofDeterminer ?? effect.toDeterminer,
+  );
+
+  // Mutate matching active events in-place (same pattern as statusTriggerCollector)
+  for (const ev of ctx.events as TimelineEvent[]) {
+    if (ev.columnId !== columnId) continue;
+    if (ownerId != null && ev.ownerId !== ownerId) continue;
+    if (!isActiveAtFrame(ev, ctx.frame)) continue;
+    const newDuration = endFrame - ev.startFrame;
+    if (newDuration > eventDuration(ev)) {
+      setEventDuration(ev, newDuration);
+    }
+  }
+  return emptyMutationSet();
+}
+
 // ── Compound: ALL / ANY ──────────────────────────────────────────────────
 
 function executeAll(effect: Effect, ctx: ExecutionContext): MutationSet {
@@ -494,9 +537,10 @@ export function executeEffect(effect: Effect, ctx: ExecutionContext): MutationSe
     case VerbType.CONSUME: return executeConsume(effect, ctx);
     case VerbType.RESET:   return executeReset(effect, ctx);
 
+    case VerbType.EXTEND: return executeExtend(effect, ctx);
+
     // Resource verbs and verbs handled by the interpretor — no timeline mutations here
     case VerbType.REFRESH:
-    case VerbType.EXTEND:
     case VerbType.MERGE:
     case VerbType.RECOVER:
     case VerbType.RETURN:

@@ -8,8 +8,8 @@ import {
   getWeaponsByType,
   getGearPiecesByType,
   getGearSetEffect,
-  getAllConsumableEntries,
-  getAllTacticalEntries,
+  getAllConsumables,
+  getAllTacticals,
 } from '../../controller/gameDataStore';
 import { GearCategory } from '../../consts/enums';
 import { LoadoutProperties } from '../InformationPane';
@@ -701,7 +701,7 @@ function LoadoutPane({ operatorId, slotId, operator, loadout, stats, onStatsChan
           <span className="edit-section-label">Consumable</span>
           {onLoadoutChange && (
             <ItemSelector
-              entries={getAllConsumableEntries()}
+              entries={getAllConsumables()}
               selectedId={loadout.consumableId}
               onSelect={(id) => setLoadoutField('consumableId', id)}
               placeholder="Consumable"
@@ -714,7 +714,7 @@ function LoadoutPane({ operatorId, slotId, operator, loadout, stats, onStatsChan
           <span className="edit-section-label">Tactical</span>
           {onLoadoutChange && (
             <ItemSelector
-              entries={getAllTacticalEntries()}
+              entries={getAllTacticals()}
               selectedId={loadout.tacticalId}
               onSelect={(id) => setLoadoutField('tacticalId', id)}
               placeholder="Tactical"

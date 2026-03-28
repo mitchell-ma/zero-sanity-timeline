@@ -1,0 +1,150 @@
+{
+  "segments": [
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT",
+        "dataSources": [
+          "END_AXIS"
+        ]
+      },
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 2.83
+          },
+          "unit": "SECOND"
+        },
+        "element": "PHYSICAL"
+      },
+      "frames": []
+    },
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT",
+        "dataSources": [
+          "END_AXIS"
+        ]
+      },
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 0.75
+          },
+          "unit": "SECOND"
+        },
+        "element": "PHYSICAL"
+      },
+      "frames": [
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "END_AXIS"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 0.75,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "RECOVER",
+                  "object": "SKILL_POINT",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 18
+                    }
+                  }
+                },
+                {
+                  "verb": "PERFORM",
+                  "object": "FINAL_STRIKE",
+                  "to": "ENEMY"
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
+        }
+      ]
+    },
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT",
+        "dataSources": [
+          "END_AXIS"
+        ],
+        "_note": "Segments 3-5 have 0s duration in End-Axis data — incomplete frame data"
+      },
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 0
+          },
+          "unit": "SECOND"
+        },
+        "element": "PHYSICAL"
+      },
+      "frames": []
+    },
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT",
+        "dataSources": [
+          "END_AXIS"
+        ]
+      },
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 0
+          },
+          "unit": "SECOND"
+        },
+        "element": "PHYSICAL"
+      },
+      "frames": []
+    },
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT",
+        "dataSources": [
+          "END_AXIS"
+        ]
+      },
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 0
+          },
+          "unit": "SECOND"
+        },
+        "element": "PHYSICAL"
+      },
+      "frames": []
+    }
+  ],
+  "properties": {
+    "name": "Seething Wolfblood",
+    "description": "An attack with up to 5 sequences that deals Physical DMG.",
+    "eventType": "COMBAT_SKILL",
+    "eventCategoryType": "BASIC_ATTACK",
+    "element": "PHYSICAL",
+    "id": "SEETHING_WOLFBLOOD"
+  },
+  "metadata": {
+    "originId": "ROSSI",
+    "icon": "skills/attack_sword.png"
+  }
+}

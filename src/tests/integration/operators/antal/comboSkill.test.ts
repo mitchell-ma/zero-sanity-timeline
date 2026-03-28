@@ -10,6 +10,11 @@
  * pipeline. Verifies that dragging Akekuri's battle skill after Antal's combo invalidates
  * the combo's trigger infliction.
  *
+ * Three-layer verification:
+ * 1. Context menu: add-event items are available and enabled for each column
+ * 2. Controller: processed events contain expected infliction/status data
+ * 3. View: computeTimelinePresentation includes combo and infliction events in their columns
+ *
  * Default slot order: slot-0=Laevatain, slot-1=Akekuri, slot-2=Antal, slot-3=Ardelia
  */
 
@@ -20,54 +25,70 @@ import { INFLICTION_COLUMNS, PHYSICAL_INFLICTION_COLUMNS, PHYSICAL_STATUS_COLUMN
 import { ColumnType } from '../../../../consts/enums';
 import { FPS } from '../../../../utils/timeline';
 import type { MiniTimeline } from '../../../../consts/viewTypes';
+import { computeTimelinePresentation } from '../../../../controller/timeline/eventPresentationController';
+import { findColumn, buildContextMenu, getMenuPayload, type AppResult } from '../../helpers';
+
+/* eslint-disable @typescript-eslint/no-require-imports */
+const CHEN_QIANYU_ID: string = require('../../../../model/game-data/operators/chen-qianyu/chen-qianyu.json').id;
+/* eslint-enable @typescript-eslint/no-require-imports */
 
 const SLOT_CHEN = 'slot-1';
 const SLOT_AKEKURI = 'slot-1';
 const SLOT_ANTAL = 'slot-2';
 
-function findColumn(app: ReturnType<typeof useApp>, slotId: string, columnId: string) {
-  return app.columns.find(
-    (c): c is MiniTimeline =>
-      c.type === ColumnType.MINI_TIMELINE &&
-      c.ownerId === slotId &&
-      c.columnId === columnId,
-  );
+/** Helper: add Antal battle skill, Akekuri battle skill, then Antal combo skill. */
+function setupAntalComboWithHeat(result: { current: AppResult }) {
+  // 1. Antal uses battle skill (SPECIFIED_RESEARCH_SUBJECT) — applies Focus to enemy
+  const antalBattleCol = findColumn(result.current, SLOT_ANTAL, NounType.BATTLE_SKILL);
+  expect(antalBattleCol).toBeDefined();
+
+  const antalBattlePayload = getMenuPayload(result.current, antalBattleCol!, 2 * FPS);
+
+  act(() => {
+    result.current.handleAddEvent(
+      antalBattlePayload.ownerId, antalBattlePayload.columnId,
+      antalBattlePayload.atFrame, antalBattlePayload.defaultSkill,
+    );
+  });
+
+  // 2. Akekuri uses battle skill (BURST_OF_PASSION) — applies heat infliction
+  const akekuriBattleCol = findColumn(result.current, SLOT_AKEKURI, NounType.BATTLE_SKILL);
+  expect(akekuriBattleCol).toBeDefined();
+
+  const akekuriBattlePayload = getMenuPayload(result.current, akekuriBattleCol!, 5 * FPS);
+
+  act(() => {
+    result.current.handleAddEvent(
+      akekuriBattlePayload.ownerId, akekuriBattlePayload.columnId,
+      akekuriBattlePayload.atFrame, akekuriBattlePayload.defaultSkill,
+    );
+  });
+
+  // 3. Antal uses combo skill (EMP_TEST_SITE) — triggered by Akekuri's heat infliction
+  const antalComboCol = findColumn(result.current, SLOT_ANTAL, NounType.COMBO_SKILL);
+  expect(antalComboCol).toBeDefined();
+
+  const antalComboMenu = buildContextMenu(result.current, antalComboCol!, 8 * FPS);
+  expect(antalComboMenu).not.toBeNull();
+  expect(antalComboMenu!.length).toBeGreaterThan(0);
+
+  const antalComboPayload = getMenuPayload(result.current, antalComboCol!, 8 * FPS);
+
+  act(() => {
+    result.current.handleAddEvent(
+      antalComboPayload.ownerId, antalComboPayload.columnId,
+      antalComboPayload.atFrame, antalComboPayload.defaultSkill,
+    );
+  });
 }
 
 describe('Antal combo skill — heat infliction mirroring after drag', () => {
   it('combo mirrors heat infliction when Akekuri battle skill precedes it', () => {
     const { result } = renderHook(() => useApp());
 
-    // 1. Antal uses battle skill (SPECIFIED_RESEARCH_SUBJECT) — applies Focus to enemy
-    const antalBattleCol = findColumn(result.current, SLOT_ANTAL, NounType.BATTLE_SKILL);
-    expect(antalBattleCol).toBeDefined();
+    setupAntalComboWithHeat(result);
 
-    act(() => {
-      result.current.handleAddEvent(
-        SLOT_ANTAL, NounType.BATTLE_SKILL, 2 * FPS, antalBattleCol!.defaultEvent!,
-      );
-    });
-
-    // 2. Akekuri uses battle skill (BURST_OF_PASSION) — applies heat infliction
-    const akekuriBattleCol = findColumn(result.current, SLOT_AKEKURI, NounType.BATTLE_SKILL);
-    expect(akekuriBattleCol).toBeDefined();
-
-    act(() => {
-      result.current.handleAddEvent(
-        SLOT_AKEKURI, NounType.BATTLE_SKILL, 5 * FPS, akekuriBattleCol!.defaultEvent!,
-      );
-    });
-
-    // 3. Antal uses combo skill (EMP_TEST_SITE) — triggered by Akekuri's heat infliction
-    const antalComboCol = findColumn(result.current, SLOT_ANTAL, NounType.COMBO_SKILL);
-    expect(antalComboCol).toBeDefined();
-
-    act(() => {
-      result.current.handleAddEvent(
-        SLOT_ANTAL, NounType.COMBO_SKILL, 8 * FPS, antalComboCol!.defaultEvent!,
-      );
-    });
-
+    // ── Controller layer ────────────────────────────────────────────────
     // 4. Verify: enemy has 2 heat inflictions (one from Akekuri, one mirrored from Antal combo)
     const heatsWithCombo = result.current.allProcessedEvents.filter(
       (ev) => ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerId === ENEMY_OWNER_ID,
@@ -80,31 +101,40 @@ describe('Antal combo skill — heat infliction mirroring after drag', () => {
     );
     expect(comboEvent).toBeDefined();
     expect(comboEvent!.comboTriggerColumnId).toBe(INFLICTION_COLUMNS.HEAT);
+
+    // ── View layer ──────────────────────────────────────────────────────
+    // Verify: heat infliction events appear in the enemy's infliction column view model
+    const enemyHeatCol = result.current.columns.find(
+      (c): c is MiniTimeline =>
+        c.type === ColumnType.MINI_TIMELINE &&
+        c.ownerId === ENEMY_OWNER_ID &&
+        (c.matchColumnIds?.includes(INFLICTION_COLUMNS.HEAT) ?? false),
+    );
+    expect(enemyHeatCol).toBeDefined();
+
+    const viewModels = computeTimelinePresentation(
+      result.current.allProcessedEvents,
+      result.current.columns,
+    );
+    const vm = viewModels.get(enemyHeatCol!.key);
+    expect(vm).toBeDefined();
+
+    const heatInVM = vm!.events.filter(
+      (ev) => ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerId === ENEMY_OWNER_ID,
+    );
+    expect(heatInVM).toHaveLength(2);
+
+    // Verify: combo event appears in Antal's combo column view model
+    const antalComboCol = findColumn(result.current, SLOT_ANTAL, NounType.COMBO_SKILL);
+    const comboVM = viewModels.get(antalComboCol!.key);
+    expect(comboVM).toBeDefined();
+    expect(comboVM!.events.length).toBeGreaterThan(0);
   });
 
   it('combo loses heat infliction when Akekuri battle skill is dragged after it', () => {
     const { result } = renderHook(() => useApp());
 
-    // Setup: Antal battle → Akekuri battle → Antal combo (same as above)
-    const antalBattleCol = findColumn(result.current, SLOT_ANTAL, NounType.BATTLE_SKILL);
-    const akekuriBattleCol = findColumn(result.current, SLOT_AKEKURI, NounType.BATTLE_SKILL);
-    const antalComboCol = findColumn(result.current, SLOT_ANTAL, NounType.COMBO_SKILL);
-
-    act(() => {
-      result.current.handleAddEvent(
-        SLOT_ANTAL, NounType.BATTLE_SKILL, 2 * FPS, antalBattleCol!.defaultEvent!,
-      );
-    });
-    act(() => {
-      result.current.handleAddEvent(
-        SLOT_AKEKURI, NounType.BATTLE_SKILL, 5 * FPS, akekuriBattleCol!.defaultEvent!,
-      );
-    });
-    act(() => {
-      result.current.handleAddEvent(
-        SLOT_ANTAL, NounType.COMBO_SKILL, 8 * FPS, antalComboCol!.defaultEvent!,
-      );
-    });
+    setupAntalComboWithHeat(result);
 
     // Sanity check: 2 heat inflictions before drag
     const heatsBefore = result.current.allProcessedEvents.filter(
@@ -143,50 +173,75 @@ describe('Antal combo skill — physical status (Lift) trigger', () => {
 
     // Swap Chen Qianyu into slot-1 (replaces Akekuri)
     act(() => {
-      result.current.handleSwapOperator(SLOT_CHEN, 'CHEN_QIANYU');
+      result.current.handleSwapOperator(SLOT_CHEN, CHEN_QIANYU_ID);
     });
 
+    // ── Context menu layer: Antal battle skill ─────────────────────────
     // 1. Antal uses battle skill — applies Focus to enemy
     const antalBattleCol = findColumn(result.current, SLOT_ANTAL, NounType.BATTLE_SKILL);
     expect(antalBattleCol).toBeDefined();
 
+    const antalBattleMenu = buildContextMenu(result.current, antalBattleCol!, 0);
+    expect(antalBattleMenu).not.toBeNull();
+
+    const antalBattlePayload = getMenuPayload(result.current, antalBattleCol!, 0);
+
     act(() => {
       result.current.handleAddEvent(
-        SLOT_ANTAL, NounType.BATTLE_SKILL, 0, antalBattleCol!.defaultEvent!,
+        antalBattlePayload.ownerId, antalBattlePayload.columnId,
+        antalBattlePayload.atFrame, antalBattlePayload.defaultSkill,
       );
     });
 
+    // ── Context menu layer: Chen battle skill x2 ───────────────────────
     // 2. Chen uses battle skill twice — first adds Vulnerable, second triggers Lift
     const chenBattleCol = findColumn(result.current, SLOT_CHEN, NounType.BATTLE_SKILL);
     expect(chenBattleCol).toBeDefined();
 
+    const chenPayload1 = getMenuPayload(result.current, chenBattleCol!, 0);
+
     act(() => {
       result.current.handleAddEvent(
-        SLOT_CHEN, NounType.BATTLE_SKILL, 0, chenBattleCol!.defaultEvent!,
-      );
-    });
-    act(() => {
-      result.current.handleAddEvent(
-        SLOT_CHEN, NounType.BATTLE_SKILL, 15 * FPS, chenBattleCol!.defaultEvent!,
+        chenPayload1.ownerId, chenPayload1.columnId,
+        chenPayload1.atFrame, chenPayload1.defaultSkill,
       );
     });
 
+    const chenPayload2 = getMenuPayload(result.current, chenBattleCol!, 15 * FPS);
+
+    act(() => {
+      result.current.handleAddEvent(
+        chenPayload2.ownerId, chenPayload2.columnId,
+        chenPayload2.atFrame, chenPayload2.defaultSkill,
+      );
+    });
+
+    // ── Controller layer ────────────────────────────────────────────────
     // Verify: enemy has Lift status
     const liftEvents = result.current.allProcessedEvents.filter(
       (ev) => ev.columnId === PHYSICAL_STATUS_COLUMNS.LIFT && ev.ownerId === ENEMY_OWNER_ID,
     );
     expect(liftEvents).toHaveLength(1);
 
+    // ── Context menu layer: Antal combo skill ──────────────────────────
     // 3. Antal uses combo skill — should be triggered by Lift (physical status)
     const antalComboCol = findColumn(result.current, SLOT_ANTAL, NounType.COMBO_SKILL);
     expect(antalComboCol).toBeDefined();
 
+    const comboMenu = buildContextMenu(result.current, antalComboCol!, 16 * FPS);
+    expect(comboMenu).not.toBeNull();
+    expect(comboMenu!.length).toBeGreaterThan(0);
+
+    const comboPayload = getMenuPayload(result.current, antalComboCol!, 16 * FPS);
+
     act(() => {
       result.current.handleAddEvent(
-        SLOT_ANTAL, NounType.COMBO_SKILL, 16 * FPS, antalComboCol!.defaultEvent!,
+        comboPayload.ownerId, comboPayload.columnId,
+        comboPayload.atFrame, comboPayload.defaultSkill,
       );
     });
 
+    // ── Controller layer ────────────────────────────────────────────────
     // Verify: combo has a trigger pointing to the Lift column
     const comboEvent = result.current.allProcessedEvents.find(
       (ev) => ev.ownerId === SLOT_ANTAL && ev.columnId === NounType.COMBO_SKILL,
@@ -200,27 +255,36 @@ describe('Antal combo skill — physical status (Lift) trigger', () => {
 
     // Swap Chen Qianyu into slot-1
     act(() => {
-      result.current.handleSwapOperator(SLOT_CHEN, 'CHEN_QIANYU');
+      result.current.handleSwapOperator(SLOT_CHEN, CHEN_QIANYU_ID);
     });
 
-    // Antal battle skill → Focus on enemy
+    // Antal battle skill — Focus on enemy
     const antalBattleCol = findColumn(result.current, SLOT_ANTAL, NounType.BATTLE_SKILL);
+    const antalBattlePayload = getMenuPayload(result.current, antalBattleCol!, 0);
+
     act(() => {
       result.current.handleAddEvent(
-        SLOT_ANTAL, NounType.BATTLE_SKILL, 0, antalBattleCol!.defaultEvent!,
+        antalBattlePayload.ownerId, antalBattlePayload.columnId,
+        antalBattlePayload.atFrame, antalBattlePayload.defaultSkill,
       );
     });
 
-    // Chen battle skill ×2 → Vulnerable + Lift
+    // Chen battle skill x2 — Vulnerable + Lift
     const chenBattleCol = findColumn(result.current, SLOT_CHEN, NounType.BATTLE_SKILL);
+
+    const chenPayload1 = getMenuPayload(result.current, chenBattleCol!, 0);
     act(() => {
       result.current.handleAddEvent(
-        SLOT_CHEN, NounType.BATTLE_SKILL, 0, chenBattleCol!.defaultEvent!,
+        chenPayload1.ownerId, chenPayload1.columnId,
+        chenPayload1.atFrame, chenPayload1.defaultSkill,
       );
     });
+
+    const chenPayload2 = getMenuPayload(result.current, chenBattleCol!, 15 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        SLOT_CHEN, NounType.BATTLE_SKILL, 15 * FPS, chenBattleCol!.defaultEvent!,
+        chenPayload2.ownerId, chenPayload2.columnId,
+        chenPayload2.atFrame, chenPayload2.defaultSkill,
       );
     });
 
@@ -232,13 +296,17 @@ describe('Antal combo skill — physical status (Lift) trigger', () => {
 
     // Antal combo skill — triggered by Lift
     const antalComboCol = findColumn(result.current, SLOT_ANTAL, NounType.COMBO_SKILL);
+    const comboPayload = getMenuPayload(result.current, antalComboCol!, 16 * FPS);
+
     act(() => {
       result.current.handleAddEvent(
-        SLOT_ANTAL, NounType.COMBO_SKILL, 16 * FPS, antalComboCol!.defaultEvent!,
+        comboPayload.ownerId, comboPayload.columnId,
+        comboPayload.atFrame, comboPayload.defaultSkill,
       );
     });
 
-    // Combo should duplicate the trigger source (Lift → adds another Vulnerable stack)
+    // ── Controller layer ────────────────────────────────────────────────
+    // Combo should duplicate the trigger source (Lift -> adds another Vulnerable stack)
     const vulnAfter = result.current.allProcessedEvents.filter(
       (ev) => ev.columnId === PHYSICAL_INFLICTION_COLUMNS.VULNERABLE && ev.ownerId === ENEMY_OWNER_ID,
     );

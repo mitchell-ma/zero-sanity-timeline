@@ -1,7 +1,5 @@
 import { TimelineEvent, EventSegmentData } from '../../consts/viewTypes';
-import { getTacticalEntry } from '../gameDataStore';
-import { Tactical } from '../../model/consumables/tactical';
-import { StewMeeting } from '../../model/consumables/stewMeeting';
+import { getTactical } from '../gameDataStore';
 import type { Interaction } from '../../dsl/semantics';
 import { FPS } from '../../utils/timeline';
 
@@ -24,22 +22,17 @@ interface TacticalEventConfig {
 
 /** Resolve tactical config from a tactical ID. */
 function getTacticalConfig(tacticalId: string): TacticalEventConfig | null {
-  const entry = getTacticalEntry(tacticalId);
-  if (!entry) return null;
-  const tactical = entry.create() as Tactical;
+  const tactical = getTactical(tacticalId);
+  if (!tactical) return null;
 
-  if (tactical instanceof StewMeeting) {
-    return {
-      name: tactical.name,
-      durationFrames: Math.round(1 * FPS), // 1 second
-      maxUses: tactical.maxUses,
-      trigger: tactical.triggerCondition,
-      ultEnergyRestore: StewMeeting.ULTIMATE_ENERGY_RESTORE,
-      ultThreshold: StewMeeting.TRIGGER_THRESHOLD,
-    };
-  }
-
-  return null;
+  return {
+    name: tactical.name,
+    durationFrames: Math.round(tactical.durationSeconds * FPS),
+    maxUses: tactical.maxUses,
+    trigger: tactical.triggerCondition,
+    ultEnergyRestore: tactical.ultEnergyRestore,
+    ultThreshold: tactical.triggerThreshold,
+  };
 }
 
 /**

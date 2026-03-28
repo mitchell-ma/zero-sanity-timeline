@@ -326,7 +326,7 @@ export function resolveSpReturn(
 
   const summary = computeSpReturnSummary(event, consumptionRecord);
   const slot = slots.find((s) => s.slotId === event.ownerId);
-  const spNotes = slot?.operator?.skills.battle.spReturnNotes ?? [];
+  const spNotes = slot?.operator?.skills[NounType.BATTLE_SKILL]?.spReturnNotes ?? [];
 
   return { summary, spNotes };
 }
@@ -480,8 +480,7 @@ export function effectToText(e: Effect): string {
     parts.push(String(resolved ?? '?'));
   }
   if (e.objectQualifier) {
-    const adjs = Array.isArray(e.objectQualifier) ? e.objectQualifier : [e.objectQualifier];
-    parts.push(adjs.map((a) => a.replace(/_/g, ' ')).join(' '));
+    parts.push(e.objectQualifier.replace(/_/g, ' '));
   }
   if (e.object) parts.push(String(e.object).replace(/_/g, ' '));
   if (e.objectId) parts.push(`(${e.objectId})`);

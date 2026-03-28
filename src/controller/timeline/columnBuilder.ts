@@ -1,8 +1,8 @@
-import { Column, MiniTimeline, MicroColumn, Operator, Enemy, VisibleSkills, EventFrameMarker, NOUN_TO_SKILL_TYPE } from '../../consts/viewTypes';
+import { Column, MiniTimeline, MicroColumn, Operator, Enemy, VisibleSkills, EventFrameMarker } from '../../consts/viewTypes';
 import { DeterminerType, NounType, VerbType, type Effect, type Predicate } from '../../dsl/semantics';
 import type { FrameClausePredicate } from '../../model/event-frames/skillEventFrame';
 import { ColumnType, CombatSkillType, ELEMENT_COLORS, ElementType, EnhancementType, EventFrameType, HeaderVariant, MicroColumnAssignment, SegmentType, StatusType, TimeDependency, TimelineSourceType } from '../../consts/enums';
-import { ENEMY_OWNER_ID, ENEMY_GROUP_COLUMNS, ENEMY_ACTION_COLUMN_ID, OPERATOR_COLUMNS, PHYSICAL_INFLICTION_COLUMNS, PHYSICAL_STATUS_COLUMNS, SKILL_COLUMN_ORDER as SKILL_ORDER, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID } from '../../model/channels';
+import { ENEMY_OWNER_ID, ENEMY_GROUP_COLUMNS, ENEMY_ACTION_COLUMN_ID, OPERATOR_COLUMNS, OPERATOR_STATUS_COLUMN_ID, PHYSICAL_INFLICTION_COLUMNS, PHYSICAL_STATUS_COLUMNS, SKILL_COLUMN_ORDER as SKILL_ORDER, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID } from '../../model/channels';
 import { getTeamStatusColumnId } from '../gameDataStore';
 import { SKILL_LABELS, ColumnLabel, STATUS_LABELS, REACTION_MICRO_COLUMNS } from '../../consts/timelineColumnLabels';
 import { getWeapon, getWeaponEffectDefs, getGearEffectDefs, getAllStatusLabels, getStatusById } from '../gameDataStore';
@@ -315,9 +315,9 @@ export function buildColumns(
   for (const slot of slots) {
     const op = slot.operator;
     // Detect variants by presence of _ENHANCED/_EMPOWERED skill ID suffixes
-    const basicName = op?.skills.basic?.name;
-    const battleName = op?.skills.battle?.name;
-    const hasBasicVariants = op && basicName && (!!getOperatorSkill(op.id, basicName + '_ENHANCED') || !!getOperatorSkill(op.id, basicName + '_EMPOWERED'));
+    const basicName = op?.skills[NounType.BASIC_ATTACK]?.name;
+    const battleName = op?.skills[NounType.BATTLE_SKILL]?.name;
+    // hasBasicVariants removed — BA categories (BATK/DIVE/FINISHER) are now always discovered
     const hasBattleVariants = op && battleName && (!!getOperatorSkill(op.id, battleName + '_ENHANCED') || !!getOperatorSkill(op.id, battleName + '_EMPOWERED'));
     let slotHasCols = false;
     // ── Aggregated stats for value resolution context ──
@@ -363,16 +363,16 @@ export function buildColumns(
       slotHasCols = true;
 
       for (const skillType of SKILL_ORDER) {
-        const skillKey = NOUN_TO_SKILL_TYPE[skillType];
-        if (visibleSkills[slot.slotId]?.[skillKey]) {
-          let skill = op.skills[skillKey];
+        // skillType is already the NounType key for skills/visibleSkills
+        if (visibleSkills[slot.slotId]?.[skillType]) {
+          let skill = op.skills[skillType];
           const col: MiniTimeline = {
             key: `${slot.slotId}-${skillType}`,
             type: ColumnType.MINI_TIMELINE,
             source: TimelineSourceType.OPERATOR,
             ownerId: slot.slotId,
             columnId: skillType,
-            label: SKILL_LABELS[skillKey],
+            label: SKILL_LABELS[skillType],
             color: op.color,
             headerVariant: HeaderVariant.SKILL,
             skillElement: skill.element,
@@ -392,64 +392,91 @@ export function buildColumns(
           if (skillType === NounType.COMBO_SKILL) {
             col.matchColumnIds = [NounType.COMBO_SKILL, 'comboActivationWindow'];
           }
-          // Basic attack variants (derived from ENHANCED_*/EMPOWERED_* skill categories)
+          // Basic attack categories: BATK, FINISHER, DIVE are independent categories.
+          // Each category can have its own _ENHANCED/_EMPOWERED variants.
           const skillCtx = ctxFor(skillType);
-          if (hasBasicVariants && skillType === NounType.BASIC_ATTACK && op) {
-            const base = SkillSegmentBuilder.buildSegments(getFrameSequences(op.id, skill.name), { ctx: skillCtx });
-            col.defaultEvent = {
-              id: skill.name,
-              name: skill.name,
-              segments: base.segments,
-            };
-            col.eventVariants = [{ ...col.defaultEvent, enhancementType: EnhancementType.NORMAL }];
-            // Auto-discover variant skill IDs
-            for (const suffix of ['_ENHANCED', '_EMPOWERED']) {
-              const varId = skill.name + suffix;
-              const varSkill = op ? (getOperatorSkill(op.id, varId)?.serialize() ?? null) as Record<string, unknown> | null : null;
-              if (!varSkill) continue;
-              const variantSeqs = getFrameSequences(op.id, varId);
-              if (variantSeqs?.length) {
-                const variantSeg = SkillSegmentBuilder.buildSegments(variantSeqs, { ctx: skillCtx });
-                const enhancementType = suffix === '_ENHANCED' ? EnhancementType.ENHANCED : EnhancementType.EMPOWERED;
-                col.eventVariants!.push({
-                  id: varId,
-                  name: varId,
-                  displayName: resolveVariantDisplayName(varId, varSkill),
-                  enhancementType,
-                  segments: variantSeg.segments,
-                  ...(varSkill.triggerCondition ? { triggerCondition: varSkill.triggerCondition as string } : {}),
-                  ...(varSkill.activationClause ? { activationClause: varSkill.activationClause as Predicate[] } : {}),
-                });
-              }
-            }
-            // Finisher + Dive — built from per-operator skills JSON when available
-            const rawTypeMap = op ? getRawSkillTypeMap(op.id) as Record<string, unknown> : undefined;
+          if (skillType === NounType.BASIC_ATTACK && op) {
+            const rawTypeMap = getRawSkillTypeMap(op.id) as Record<string, unknown> | undefined;
             const basicEntry = rawTypeMap?.BASIC_ATTACK as Record<string, string> | undefined;
+            const batkId = basicEntry?.BATK ?? skill.name;
             const finisherId = basicEntry?.FINISHER;
             const diveId = basicEntry?.DIVE;
 
-            const finSeqs = finisherId ? getFrameSequences(op.id, finisherId) : [];
-            const diveSeqs = diveId ? getFrameSequences(op.id, diveId) : [];
+            // Only build from frame sequences if BATK has frame data
+            const batkSeqs = getFrameSequences(op.id, batkId);
+            if (batkSeqs.length) {
+              const base = SkillSegmentBuilder.buildSegments(batkSeqs, { ctx: skillCtx });
+              col.defaultEvent = {
+                id: batkId,
+                name: batkId,
+                segments: base.segments,
+              };
+            }
 
-            const finSeg = finSeqs.length
-              ? SkillSegmentBuilder.buildSegments(finSeqs, { labels: ['Finisher'], ctx: skillCtx })
-              : { totalDurationFrames: FINISHER_FRAMES, segments: [{ properties: { duration: FINISHER_FRAMES, name: 'Finisher' }, frames: [{ offsetFrame: FINISHER_FRAMES, skillPointRecovery: 0, stagger: 0, frameTypes: [EventFrameType.FINISHER] }] }] };
-            const diveSeg = diveSeqs.length
-              ? SkillSegmentBuilder.buildSegments(diveSeqs, { labels: ['Dive'], ctx: skillCtx })
-              : { totalDurationFrames: DIVE_FRAMES, segments: [{ properties: { duration: DIVE_FRAMES, name: 'Dive' }, frames: [{ offsetFrame: DIVE_FRAMES, skillPointRecovery: 0, stagger: 0, frameTypes: [EventFrameType.DIVE] }] }] };
+            // Collect all BA categories + their variants
+            const categories: { baseId: string; categoryId: string; label?: string }[] = [
+              { baseId: batkId, categoryId: batkId },
+            ];
+            if (finisherId) categories.push({ baseId: finisherId, categoryId: CombatSkillType.FINISHER, label: 'Finisher' });
+            if (diveId) categories.push({ baseId: diveId, categoryId: CombatSkillType.DIVE, label: 'Dive' });
 
-            col.eventVariants!.push(
-              {
-                id: CombatSkillType.FINISHER,
-                name: CombatSkillType.FINISHER,
-                segments: finSeg.segments,
-              },
-              {
-                id: CombatSkillType.DIVE,
-                name: CombatSkillType.DIVE,
-                segments: diveSeg.segments,
-              },
+            // Only populate eventVariants if there are multiple categories or any category has variants
+            const hasMultipleCategories = categories.length > 1;
+            const hasAnyVariant = categories.some(({ baseId }) =>
+              !!getOperatorSkill(op!.id, baseId + '_ENHANCED') || !!getOperatorSkill(op!.id, baseId + '_EMPOWERED'),
             );
+
+            if (hasMultipleCategories || hasAnyVariant) {
+              col.eventVariants = [];
+
+              for (const { baseId, categoryId, label } of categories) {
+                const seqs = getFrameSequences(op.id, baseId);
+                const seg = seqs.length
+                  ? SkillSegmentBuilder.buildSegments(seqs, { labels: label ? [label] : undefined, ctx: skillCtx })
+                  : null;
+
+                if (!seg) {
+                  // Fallback for missing frame data
+                  const fallbackFrames = categoryId === CombatSkillType.FINISHER ? FINISHER_FRAMES : DIVE_FRAMES;
+                  const fallbackType = categoryId === CombatSkillType.FINISHER ? EventFrameType.FINISHER : EventFrameType.DIVE;
+                  col.eventVariants.push({
+                    id: categoryId,
+                    name: categoryId,
+                    segments: [{ properties: { duration: fallbackFrames, name: label ?? categoryId }, frames: [{ offsetFrame: fallbackFrames, skillPointRecovery: 0, stagger: 0, frameTypes: [fallbackType] }] }],
+                  });
+                  continue;
+                }
+
+                // Base category entry
+                col.eventVariants.push({
+                  id: categoryId,
+                  name: categoryId,
+                  ...(baseId === batkId ? { enhancementType: EnhancementType.NORMAL } : {}),
+                  segments: seg.segments,
+                });
+
+                // Auto-discover _ENHANCED/_EMPOWERED variants for this category
+                for (const suffix of ['_ENHANCED', '_EMPOWERED']) {
+                  const varId = baseId + suffix;
+                  const varSkill = (getOperatorSkill(op.id, varId)?.serialize() ?? null) as Record<string, unknown> | null;
+                  if (!varSkill) continue;
+                  const variantSeqs = getFrameSequences(op.id, varId);
+                  if (variantSeqs?.length) {
+                    const variantSeg = SkillSegmentBuilder.buildSegments(variantSeqs, { ctx: skillCtx });
+                    const enhancementType = suffix === '_ENHANCED' ? EnhancementType.ENHANCED : EnhancementType.EMPOWERED;
+                    col.eventVariants.push({
+                      id: varId,
+                      name: varId,
+                      displayName: resolveVariantDisplayName(varId, varSkill),
+                      enhancementType,
+                      segments: variantSeg.segments,
+                      ...(varSkill.triggerCondition ? { triggerCondition: varSkill.triggerCondition as string } : {}),
+                      ...(varSkill.activationClause ? { activationClause: varSkill.activationClause as Predicate[] } : {}),
+                    });
+                  }
+                }
+              }
+            }
           }
           // Battle skill variants (derived from ENHANCED_*/EMPOWERED_* skill categories)
           if (hasBattleVariants && skillType === NounType.BATTLE_SKILL && op) {
@@ -565,7 +592,7 @@ export function buildColumns(
             }
           }
           // Generic combo skill: data-driven frame sequences
-          const comboName = op?.skills.combo?.name;
+          const comboName = op?.skills[NounType.COMBO_SKILL]?.name;
           const comboSeqs = op && comboName ? getFrameSequences(op.id, comboName) : undefined;
           if (comboSeqs?.length && skillType === NounType.COMBO_SKILL) {
             const comboLabels = getSegmentLabels(op!.id, comboName!);
@@ -574,7 +601,7 @@ export function buildColumns(
           }
           // Generic ultimate: build segments from JSON data
           if (skillType === NounType.ULTIMATE) {
-            const ultName = op?.skills.ultimate?.name;
+            const ultName = op?.skills[NounType.ULTIMATE]?.name;
             const ultSeqs = op && ultName ? getFrameSequences(op!.id, ultName) : undefined;
             if (ultSeqs?.length) {
               const ultLabels = getSegmentLabels(op!.id, ultName!);
@@ -587,7 +614,7 @@ export function buildColumns(
           }
           // ── Append linked custom skills as event variants ──
           if (op) {
-            const linkedIds = getLinksForSlot(op.id, skillKey);
+            const linkedIds = getLinksForSlot(op.id, skillType);
             if (linkedIds.length > 0) {
               const allCustom = getCustomSkills();
               if (!col.eventVariants) {
@@ -649,11 +676,11 @@ export function buildColumns(
       }
       if (statusMicroCols.length > 0) {
         columns.push({
-          key: `${slot.slotId}-operator-status`,
+          key: `${slot.slotId}-${OPERATOR_STATUS_COLUMN_ID}`,
           type: ColumnType.MINI_TIMELINE,
           source: TimelineSourceType.OPERATOR,
           ownerId: slot.slotId,
-          columnId: 'operator-status',
+          columnId: OPERATOR_STATUS_COLUMN_ID,
           label: ColumnLabel.STATUS,
           color: op.color,
           headerVariant: HeaderVariant.SKILL,
@@ -668,7 +695,7 @@ export function buildColumns(
 
     // Every slot gets at least MIN_SLOT_COLS columns so the loadout row stays visible
     const skillColCount = slotHasCols
-      ? SKILL_ORDER.filter((st) => visibleSkills[slot.slotId]?.[NOUN_TO_SKILL_TYPE[st]]).length
+      ? SKILL_ORDER.filter((st) => visibleSkills[slot.slotId]?.[st]).length
       : 0;
     const needed = MIN_SLOT_COLS - (skillColCount + statusColCount);
     for (let p = 0; p < Math.max(0, needed); p++) {

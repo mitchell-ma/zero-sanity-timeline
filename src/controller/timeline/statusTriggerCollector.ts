@@ -824,16 +824,30 @@ function evaluateLifecycleForEvent(
   const parentEndFrame = eventEndFrame(statusEv);
   const sourceOwnerId = statusEv.sourceOwnerId ?? statusEv.ownerId;
 
-  const makeExecCtx = (frame: number): ExecutionContext => ({
-    events: result,
-    frame,
-    sourceOwnerId,
-    sourceSkillName: statusEv.name,
-    operatorSlotMap,
-    idCounter: 0,
-    parentEventEndFrame: parentEndFrame,
-    critMode,
-  });
+  const makeExecCtx = (frame: number): ExecutionContext => {
+    // Compute the segment end frame for the given frame within the parent event
+    let segmentEndFrame = parentEndFrame;
+    let segStart = statusEv.startFrame;
+    for (const seg of statusEv.segments) {
+      const segEnd = segStart + (seg.properties.duration ?? 0);
+      if (frame >= segStart && frame < segEnd) {
+        segmentEndFrame = segEnd;
+        break;
+      }
+      segStart = segEnd;
+    }
+    return {
+      events: result,
+      frame,
+      sourceOwnerId,
+      sourceSkillName: statusEv.name,
+      operatorSlotMap,
+      idCounter: 0,
+      parentEventEndFrame: parentEndFrame,
+      parentSegmentEndFrame: segmentEndFrame,
+      critMode,
+    };
+  };
 
   // onEntryClause: evaluate once at startFrame
   if (def.onEntryClause) {

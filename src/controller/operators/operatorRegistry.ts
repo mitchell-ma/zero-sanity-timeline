@@ -8,6 +8,7 @@
  */
 import { Operator as ViewOperator, SkillDef, EventSegmentData } from '../../consts/viewTypes';
 import { CombatSkillType, ElementType, OperatorClassType, ELEMENT_COLORS, SegmentType, TimeDependency } from '../../consts/enums';
+import { NounType } from '../../dsl/semantics';
 import { Potential } from '../../consts/types';
 import {
   buildMergedOperatorJson,
@@ -92,12 +93,9 @@ function buildViewOperatorFromJson(operatorId: string, opJson: Record<string, un
 
   // Build skill type → base skill ID map from skillTypeMap
   const typeMap = getSkillTypeMap(operatorId);
-  const categoryToName: Record<string, string> = {};
-  for (const [type, baseId] of Object.entries(typeMap)) {
-    const viewKey = type === CombatSkillType.BASIC_ATTACK ? 'basic' : type === CombatSkillType.BATTLE_SKILL ? 'battle'
-      : type === CombatSkillType.COMBO_SKILL ? 'combo' : type === CombatSkillType.ULTIMATE ? 'ultimate' : null;
-    if (viewKey) categoryToName[viewKey] = baseId;
-  }
+  // typeMap keys are already NounType values (BASIC_ATTACK, BATTLE_SKILL, etc.)
+  // so categoryToName is just typeMap itself
+  const categoryToName = typeMap;
 
   // Compute skill timing from End-Axis data
   const basicActivation = 24;
@@ -115,18 +113,18 @@ function buildViewOperatorFromJson(operatorId: string, opJson: Record<string, un
     defaultSegments?: EventSegmentData[];
     triggerCondition: string | null;
   }> = {
-    basic: {
+    [NounType.BASIC_ATTACK]: {
       defaultSegments: buildSegments(basicActivation, 0),
       triggerCondition: null,
     },
-    battle: {
+    [NounType.BATTLE_SKILL]: {
       defaultSegments: buildSegments(battleActivation, battleCooldown),
       triggerCondition: null,
     },
-    combo: {
+    [NounType.COMBO_SKILL]: {
       triggerCondition: null,
     },
-    ultimate: {
+    [NounType.ULTIMATE]: {
       triggerCondition: null,
     },
   };
@@ -134,25 +132,23 @@ function buildViewOperatorFromJson(operatorId: string, opJson: Record<string, un
   const skills: Record<string, SkillDef> = {};
   for (const [key, timing] of Object.entries(skillSegmentConfigs)) {
     const skillName = categoryToName[key] ?? key;
-    const categoryKey = key === 'basic' ? CombatSkillType.BASIC_ATTACK : key === 'battle' ? CombatSkillType.BATTLE_SKILL
-      : key === 'combo' ? CombatSkillType.COMBO_SKILL : CombatSkillType.ULTIMATE;
-    const rawEntry: string | undefined = typeMap[categoryKey];
-    const resolvedSkillId = rawEntry ?? categoryKey;
+    const rawEntry: string | undefined = typeMap[key];
+    const resolvedSkillId = rawEntry ?? key;
     const catData = opSkills?.[resolvedSkillId];
     const desc = (catData?.properties as Record<string, unknown> | undefined)?.description as string | undefined;
     skills[key] = { name: skillName, element: elementType, ...timing, ...(desc ? { description: desc } : {}) };
   }
 
   // SP cost from JSON
-  if (skills.battle) {
+  if (skills[NounType.BATTLE_SKILL]) {
     const spCost = loadBattleSkillSpCost(opJson);
-    if (spCost > 0) skills.battle = { ...skills.battle, skillPointCost: spCost };
+    if (spCost > 0) skills[NounType.BATTLE_SKILL] = { ...skills[NounType.BATTLE_SKILL], skillPointCost: spCost };
   }
 
   // Gauge gains
-  if (skills.combo) {
-    skills.combo = {
-      ...skills.combo,
+  if (skills[NounType.COMBO_SKILL]) {
+    skills[NounType.COMBO_SKILL] = {
+      ...skills[NounType.COMBO_SKILL],
       gaugeGain: gg.comboGaugeGain,
       teamGaugeGain: gg.comboTeamGaugeGain,
       ...(gg.comboGaugeGainByEnemies ? { gaugeGainByEnemies: gg.comboGaugeGainByEnemies } : {}),
@@ -160,10 +156,10 @@ function buildViewOperatorFromJson(operatorId: string, opJson: Record<string, un
   }
 
   // SP return notes from JSON (resolve via skillTypeMap)
-  const battleSkillId = typeMap.BATTLE_SKILL;
+  const battleSkillId = typeMap[NounType.BATTLE_SKILL];
   const spReturnNotes = (battleSkillId ? opSkills?.[battleSkillId]?.spReturnNotes : undefined) as string[] | undefined;
-  if (skills.battle && spReturnNotes?.length) {
-    skills.battle = { ...skills.battle, spReturnNotes };
+  if (skills[NounType.BATTLE_SKILL] && spReturnNotes?.length) {
+    skills[NounType.BATTLE_SKILL] = { ...skills[NounType.BATTLE_SKILL], spReturnNotes };
   }
 
   return {

@@ -157,43 +157,36 @@
         "name": "Cooldown",
         "duration": {
           "value": {
-            "verb": "VARY_BY",
-            "object": "SKILL_LEVEL",
-            "value": [
-              16,
-              16,
-              16,
-              16,
-              16,
-              16,
-              16,
-              16,
-              16,
-              16,
-              16,
-              15
-            ],
-            "ofDeterminer": "THIS",
-            "of": "OPERATOR"
-          },
-          "unit": "SECOND",
-          "modifier": {
-            "value": 3,
-            "verb": "SUBTRACT",
-            "unit": "SECOND",
-            "condition": {
-              "subjectDeterminer": "THIS",
-              "subject": "OPERATOR",
-              "verb": "HAVE",
+            "operation": "ADD",
+            "left": {
+              "verb": "VARY_BY",
+              "object": "SKILL_LEVEL",
+              "value": [
+                16,
+                16,
+                16,
+                16,
+                16,
+                16,
+                16,
+                16,
+                16,
+                16,
+                16,
+                15
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            },
+            "right": {
+              "verb": "VARY_BY",
               "object": "POTENTIAL",
-              "with": {
-                "value": {
-                  "verb": "AT_LEAST",
-                  "value": 5
-                }
-              }
+              "value": [0, 0, 0, 0, 0, -3],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
             }
-          }
+          },
+          "unit": "SECOND"
         },
         "timeDependency": "REAL_TIME"
       },

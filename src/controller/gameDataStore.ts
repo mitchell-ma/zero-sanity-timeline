@@ -4,9 +4,15 @@
  * All consumers import from here. configStore and sub-stores are internal.
  */
 
-import { CombatSkillType, ElementType, ArtsReactionType, StatusType } from '../consts/enums';
+import { CombatSkillType, ElementType, ArtsReactionType, PhysicalStatusType, StatusType } from '../consts/enums';
 import { NounType } from '../dsl/semantics';
 import { t } from '../locales/locale';
+import {
+  INFLICTION_COLUMNS, REACTION_COLUMNS,
+  PHYSICAL_INFLICTION_COLUMNS,
+  NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID,
+  ENEMY_ACTION_COLUMN_ID,
+} from '../model/channels';
 
 // ── configStore (private to this module) ─────────────────────────────────────
 
@@ -145,39 +151,11 @@ import {
 
 // ── Consumables & Tacticals ─────────────────────────────────────────────────
 
-import { Consumable } from '../model/consumables/consumable';
-import { GinsengMeatStew } from '../model/consumables/ginsengMeatStew';
-import { PerplexingMedication } from '../model/consumables/perplexingMedication';
-import { Tactical } from '../model/consumables/tactical';
-import { StewMeeting } from '../model/consumables/stewMeeting';
-import ginsengMeatStewIcon from '../assets/consumables/ginseng_meat_stew.webp';
-import perplexingMedicationIcon from '../assets/consumables/perplexing_medication.webp';
-import stewMeetingIcon from '../assets/consumables/stew_meeting.webp';
-
-export interface ConsumableEntry {
-  id: string;
-  name: string;
-  icon?: string;
-  rarity: number;
-  create: () => Consumable;
-}
-
-export interface TacticalEntry {
-  id: string;
-  name: string;
-  icon?: string;
-  rarity: number;
-  create: () => Tactical;
-}
-
-const CONSUMABLE_ENTRIES: ConsumableEntry[] = [
-  { id: 'GINSENG_MEAT_STEW', name: t('consumable.GINSENG_MEAT_STEW'), icon: ginsengMeatStewIcon, rarity: 3, create: () => new GinsengMeatStew() },
-  { id: 'PERPLEXING_MEDICATION', name: t('consumable.PERPLEXING_MEDICATION'), icon: perplexingMedicationIcon, rarity: 4, create: () => new PerplexingMedication() },
-];
-
-const TACTICAL_ENTRIES: TacticalEntry[] = [
-  { id: 'STEW_MEETING', name: t('tactical.STEW_MEETING'), icon: stewMeetingIcon, rarity: 3, create: () => new StewMeeting() },
-];
+import {
+  getConsumable, getAllConsumables, getConsumableIdByName,
+  getTactical, getAllTacticals, getTacticalIdByName,
+  type ConsumableData, type TacticalData,
+} from '../model/game-data/consumablesStore';
 
 // ── Re-export types ─────────────────────────────────────────────────────────
 
@@ -324,29 +302,8 @@ export { getTriggerAssociations, getAllTriggerAssociations };
 
 // ── Consumables & Tacticals ─────────────────────────────────────────────────
 
-export function getAllConsumableEntries(): readonly ConsumableEntry[] {
-  return CONSUMABLE_ENTRIES;
-}
-
-export function getConsumableEntry(consumableId: string): ConsumableEntry | undefined {
-  return CONSUMABLE_ENTRIES.find(c => c.id === consumableId);
-}
-
-export function getConsumableIdByName(name: string): string | undefined {
-  return CONSUMABLE_ENTRIES.find(c => c.name === name)?.id;
-}
-
-export function getAllTacticalEntries(): readonly TacticalEntry[] {
-  return TACTICAL_ENTRIES;
-}
-
-export function getTacticalEntry(tacticalId: string): TacticalEntry | undefined {
-  return TACTICAL_ENTRIES.find(t => t.id === tacticalId);
-}
-
-export function getTacticalIdByName(name: string): string | undefined {
-  return TACTICAL_ENTRIES.find(t => t.name === name)?.id;
-}
+export { getConsumable, getAllConsumables, getConsumableIdByName };
+export { getTactical, getAllTacticals, getTacticalIdByName };
 
 // ── Legacy name→ID resolution (for sheet migration) ─────────────────────────
 
@@ -354,6 +311,7 @@ export { getWeaponIdByName as resolveWeaponId };
 export { getGearPieceIdByName as resolveGearPieceId };
 export { getConsumableIdByName as resolveConsumableId };
 export { getTacticalIdByName as resolveTacticalId };
+export type { ConsumableData, TacticalData };
 
 // ── Derived label / metadata maps ────────────────────────────────────────────
 
@@ -387,7 +345,6 @@ export function getAllStatusLabels(): Record<string, string> {
     [StatusType.FOCUS]:           t('status.FOCUS'),
     [StatusType.SUSCEPTIBILITY]:  t('status.SUSCEPTIBILITY'),
     [StatusType.FRAGILITY]:       t('status.FRAGILITY'),
-    [StatusType.ORIGINIUM_CRYSTAL]: t('status.ORIGINIUM_CRYSTAL'),
     [StatusType.WEAKEN]:          t('status.WEAKEN'),
     [StatusType.DMG_REDUCTION]:   t('status.DMG_REDUCTION'),
     [StatusType.PROTECTION]:      t('status.PROTECTION'),
@@ -421,42 +378,31 @@ export function getAllInflictionLabels(): Record<string, string> {
   if (_inflictionLabels) return _inflictionLabels;
   _inflictionLabels = {
     // Arts inflictions
-    heatInfliction:       t('infliction.heatInfliction'),
-    cryoInfliction:       t('infliction.cryoInfliction'),
-    natureInfliction:     t('infliction.natureInfliction'),
-    electricInfliction:   t('infliction.electricInfliction'),
+    [INFLICTION_COLUMNS.HEAT]:     t('infliction.heatInfliction'),
+    [INFLICTION_COLUMNS.CRYO]:     t('infliction.cryoInfliction'),
+    [INFLICTION_COLUMNS.NATURE]:   t('infliction.natureInfliction'),
+    [INFLICTION_COLUMNS.ELECTRIC]: t('infliction.electricInfliction'),
     // Physical inflictions
-    vulnerableInfliction: t('infliction.vulnerableInfliction'),
+    [PHYSICAL_INFLICTION_COLUMNS.VULNERABLE]: t('infliction.vulnerableInfliction'),
     // Arts reactions
-    combustion:           t('infliction.combustion'),
-    solidification:       t('infliction.solidification'),
-    corrosion:            t('infliction.corrosion'),
-    electrification:      t('infliction.electrification'),
+    [REACTION_COLUMNS.COMBUSTION]:       t('infliction.combustion'),
+    [REACTION_COLUMNS.SOLIDIFICATION]:   t('infliction.solidification'),
+    [REACTION_COLUMNS.CORROSION]:        t('infliction.corrosion'),
+    [REACTION_COLUMNS.ELECTRIFICATION]:  t('infliction.electrification'),
     // Physical statuses
-    breach:               t('infliction.breach'),
-    // Operator statuses (exchange status enum values)
-    MELTING_FLAME:        t('infliction.MELTING_FLAME'),
-    THUNDERLANCE:         t('infliction.THUNDERLANCE'),
+    [PhysicalStatusType.BREACH]:  t('infliction.breach'),
     // Enemy statuses
-    FOCUS:                t('infliction.FOCUS'),
-    SUSCEPTIBILITY:       t('infliction.SUSCEPTIBILITY'),
+    [StatusType.FOCUS]:           t('infliction.FOCUS'),
+    [StatusType.SUSCEPTIBILITY]:  t('infliction.SUSCEPTIBILITY'),
     // Team statuses
-    SHIELD:               t('infliction.SHIELD'),
+    [StatusType.SHIELD]:          t('infliction.SHIELD'),
     // Enemy debuffs
-    SCORCHING_HEART:      t('infliction.SCORCHING_HEART'),
-    SCORCHING_HEART_EFFECT: t('infliction.SCORCHING_HEART_EFFECT'),
-    FRAGILITY:            t('infliction.FRAGILITY'),
-    ORIGINIUM_CRYSTAL:    t('infliction.ORIGINIUM_CRYSTAL'),
-    WILDLAND_TREKKER:     t('infliction.WILDLAND_TREKKER'),
+    [StatusType.FRAGILITY]:       t('infliction.FRAGILITY'),
     // Stagger status events
-    STAGGER_NODE:         t('infliction.STAGGER_NODE'),
-    STAGGER:              t('infliction.STAGGER'),
+    [NODE_STAGGER_COLUMN_ID]:     t('infliction.STAGGER_NODE'),
+    [FULL_STAGGER_COLUMN_ID]:     t('infliction.STAGGER'),
     // Enemy actions
-    AOE_PHYSICAL:         t('enemyAction.AOE_PHYSICAL'),
-    AOE_HEAT:             t('enemyAction.AOE_HEAT'),
-    AOE_CRYO:             t('enemyAction.AOE_CRYO'),
-    AOE_NATURE:           t('enemyAction.AOE_NATURE'),
-    AOE_ELECTRIC:         t('enemyAction.AOE_ELECTRIC'),
+    [ENEMY_ACTION_COLUMN_ID]:     t('enemyAction.AOE_PHYSICAL'),
   };
   return _inflictionLabels;
 }

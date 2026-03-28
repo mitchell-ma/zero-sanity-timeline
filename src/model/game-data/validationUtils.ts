@@ -48,11 +48,8 @@ function warnInvalidQualifier(ef: Record<string, unknown>, path: string): string
 
   const validQualifiers = OBJECT_QUALIFIERS[obj as ObjectType];
   if (validQualifiers && ef.objectQualifier) {
-    const quals = Array.isArray(ef.objectQualifier) ? ef.objectQualifier : [ef.objectQualifier];
-    for (const q of quals) {
-      if (!(validQualifiers as string[]).includes(q as string)) {
-        errors.push(`${path}: ${ef.verb} ${obj} has invalid qualifier "${q}"`);
-      }
+    if (!(validQualifiers as string[]).includes(ef.objectQualifier as string)) {
+      errors.push(`${path}: ${ef.verb} ${obj} has invalid qualifier "${ef.objectQualifier}"`);
     }
   }
 

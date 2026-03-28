@@ -8,6 +8,11 @@
  * Tests the full pipeline: Pogranichnik's Ultimate (SHIELDGUARD_BANNER) produces
  * STEEL_OATH team status events under COMMON_OWNER_ID.
  *
+ * Three-layer verification:
+ * 1. Context menu: add-event items are available and enabled for each column
+ * 2. Controller: events appear in allProcessedEvents with correct properties
+ * 3. View: computeTimelinePresentation includes events in the correct column view model
+ *
  * Default slot order: slot-0=Laevatain, slot-1=Akekuri, slot-2=Antal, slot-3=Ardelia
  * Pogranichnik is swapped into slot-3 via handleSwapOperator.
  *
@@ -18,37 +23,60 @@ import { renderHook, act } from '@testing-library/react';
 import { NounType } from '../../../../dsl/semantics';
 import { useApp } from '../../../../app/useApp';
 import { ENEMY_OWNER_ID } from '../../../../model/channels';
-import { ColumnType, EventStatusType, InteractionModeType } from '../../../../consts/enums';
+import { EventStatusType, InteractionModeType } from '../../../../consts/enums';
 import { FPS } from '../../../../utils/timeline';
 import { eventDuration } from '../../../../consts/viewTypes';
-import type { MiniTimeline } from '../../../../consts/viewTypes';
 import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../../../../controller/slot/commonSlotController';
 import { computeTimelinePresentation } from '../../../../controller/timeline/eventPresentationController';
 import { getTeamStatusIds } from '../../../../controller/gameDataStore';
+import { findColumn, buildContextMenu, getMenuPayload } from '../../helpers';
+import type { AppResult } from '../../helpers';
 
-// ── Constants ────────────────────────────────────────────────────────────────
+// ── Constants (loaded from game data JSON) ──────────────────────────────────
+
+/* eslint-disable @typescript-eslint/no-require-imports */
+const POGRANICHNIK_ID: string = require('../../../../model/game-data/operators/pogranichnik/pogranichnik.json').id;
+const CHEN_QIANYU_ID: string = require('../../../../model/game-data/operators/chen-qianyu/chen-qianyu.json').id;
+const STEEL_OATH_ID: string = require('../../../../model/game-data/operators/pogranichnik/statuses/status-steel-oath.json').properties.id;
+const STEEL_OATH_HARASS_ID: string = require('../../../../model/game-data/operators/pogranichnik/statuses/status-steel-oath-harass.json').properties.id;
+const STEEL_OATH_DECISIVE_ASSAULT_ID: string = require('../../../../model/game-data/operators/pogranichnik/statuses/status-steel-oath-decisive-assault.json').properties.id;
+/* eslint-enable @typescript-eslint/no-require-imports */
 
 const SLOT_POG = 'slot-3';
-const STEEL_OATH_ID = 'STEEL_OATH';
-const STEEL_OATH_HARASS_ID = 'STEEL_OATH_HARASS';
-const STEEL_OATH_DECISIVE_ASSAULT_ID = 'STEEL_OATH_DECISIVE_ASSAULT';
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
-
-function findColumn(app: ReturnType<typeof useApp>, slotId: string, columnId: string) {
-  return app.columns.find(
-    (c): c is MiniTimeline =>
-      c.type === ColumnType.MINI_TIMELINE &&
-      c.ownerId === slotId &&
-      c.columnId === columnId,
-  );
-}
+// ── Helpers ─────────────────────────────────────────────────────────────────
 
 /** Set up a fresh hook with Pogranichnik in slot-3. */
 function setupPogranichnik() {
   const view = renderHook(() => useApp());
-  act(() => { view.result.current.handleSwapOperator(SLOT_POG, 'POGRANICHNIK'); });
+  act(() => { view.result.current.handleSwapOperator(SLOT_POG, POGRANICHNIK_ID); });
   return view;
+}
+
+/** Add an ultimate via context menu flow: find column → get menu payload → handleAddEvent. */
+function addUltimate(app: AppResult, atFrame: number) {
+  const ultCol = findColumn(app, SLOT_POG, NounType.ULTIMATE);
+  expect(ultCol).toBeDefined();
+
+  const menu = buildContextMenu(app, ultCol!, atFrame);
+  expect(menu).not.toBeNull();
+  expect(menu!.length).toBeGreaterThan(0);
+
+  const payload = getMenuPayload(app, ultCol!, atFrame);
+  act(() => {
+    app.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+  });
+}
+
+/** Add a combo skill via context menu flow. */
+function addComboSkill(app: AppResult, atFrame: number) {
+  const comboCol = findColumn(app, SLOT_POG, NounType.COMBO_SKILL);
+  expect(comboCol).toBeDefined();
+
+  const payload = getMenuPayload(app, comboCol!, atFrame);
+  act(() => {
+    app.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+  });
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -57,18 +85,13 @@ function setupPogranichnik() {
 
 describe('Data pipeline prerequisites', () => {
   it('getTeamStatusIds for POGRANICHNIK includes STEEL_OATH', () => {
-    const ids = getTeamStatusIds('POGRANICHNIK');
+    const ids = getTeamStatusIds(POGRANICHNIK_ID);
     expect(ids).toContain(STEEL_OATH_ID);
   });
 
   it('team-status column matchColumnIds includes STEEL_OATH when Pog is slotted', () => {
     const { result } = setupPogranichnik();
-    const teamCol = result.current.columns.find(
-      (c): c is MiniTimeline =>
-        c.type === ColumnType.MINI_TIMELINE &&
-        c.ownerId === COMMON_OWNER_ID &&
-        c.columnId === COMMON_COLUMN_IDS.TEAM_STATUS,
-    );
+    const teamCol = findColumn(result.current, COMMON_OWNER_ID, COMMON_COLUMN_IDS.TEAM_STATUS);
     expect(teamCol).toBeDefined();
     expect(teamCol!.matchColumnIds).toBeDefined();
     expect(teamCol!.matchColumnIds).toContain(STEEL_OATH_ID);
@@ -83,16 +106,10 @@ describe('Pogranichnik Ultimate → Steel Oath', () => {
   it('ultimate produces at least one STEEL_OATH event under COMMON_OWNER_ID', () => {
     const { result } = setupPogranichnik();
 
-    const ultCol = findColumn(result.current, SLOT_POG, NounType.ULTIMATE);
-    expect(ultCol).toBeDefined();
-    expect(ultCol!.defaultEvent).toBeDefined();
+    // ── Context menu layer ──────────────────────────────────────────────
+    addUltimate(result.current, 1 * FPS);
 
-    act(() => {
-      result.current.handleAddEvent(
-        SLOT_POG, NounType.ULTIMATE, 1 * FPS, ultCol!.defaultEvent!,
-      );
-    });
-
+    // ── Controller layer ────────────────────────────────────────────────
     const steelOathEvents = result.current.allProcessedEvents.filter(
       (ev) => ev.id === STEEL_OATH_ID && ev.ownerId === COMMON_OWNER_ID,
     );
@@ -105,14 +122,7 @@ describe('Pogranichnik Ultimate → Steel Oath', () => {
   it('STEEL_OATH events have columnId matching the status ID, not generic team-status', () => {
     const { result } = setupPogranichnik();
 
-    const ultCol = findColumn(result.current, SLOT_POG, NounType.ULTIMATE);
-    expect(ultCol).toBeDefined();
-
-    act(() => {
-      result.current.handleAddEvent(
-        SLOT_POG, NounType.ULTIMATE, 1 * FPS, ultCol!.defaultEvent!,
-      );
-    });
+    addUltimate(result.current, 1 * FPS);
 
     const steelOathEvents = result.current.allProcessedEvents.filter(
       (ev) => ev.id === STEEL_OATH_ID && ev.ownerId === COMMON_OWNER_ID,
@@ -124,9 +134,9 @@ describe('Pogranichnik Ultimate → Steel Oath', () => {
       expect(ev.columnId).toBe(STEEL_OATH_ID);
     }
 
-    // No STEEL_OATH events should be under the generic 'team-status' columnId
+    // No STEEL_OATH events should be under the generic team-status columnId
     const genericSteelOath = result.current.allProcessedEvents.filter(
-      (ev) => ev.id === STEEL_OATH_ID && ev.columnId === 'team-status',
+      (ev) => ev.id === STEEL_OATH_ID && ev.columnId === COMMON_COLUMN_IDS.TEAM_STATUS,
     );
     expect(genericSteelOath).toHaveLength(0);
   });
@@ -140,15 +150,9 @@ describe('Pogranichnik STEEL_OATH → ColumnViewModel', () => {
   it('STEEL_OATH events appear in the team-status column view model', () => {
     const { result } = setupPogranichnik();
 
-    const ultCol = findColumn(result.current, SLOT_POG, NounType.ULTIMATE);
-    expect(ultCol).toBeDefined();
+    addUltimate(result.current, 1 * FPS);
 
-    act(() => {
-      result.current.handleAddEvent(
-        SLOT_POG, NounType.ULTIMATE, 1 * FPS, ultCol!.defaultEvent!,
-      );
-    });
-
+    // ── View layer ──────────────────────────────────────────────────────
     // Compute the view models that the view layer uses
     const viewModels = computeTimelinePresentation(
       result.current.allProcessedEvents,
@@ -181,22 +185,11 @@ describe('Pogranichnik two Ultimates → STEEL_OATH RESET stacking', () => {
   it('second ultimate produces a new STEEL_OATH set that RESET-clamps the first', () => {
     const { result } = setupPogranichnik();
 
-    const ultCol = findColumn(result.current, SLOT_POG, NounType.ULTIMATE);
-    expect(ultCol).toBeDefined();
-
     // First ultimate at 1s
-    act(() => {
-      result.current.handleAddEvent(
-        SLOT_POG, NounType.ULTIMATE, 1 * FPS, ultCol!.defaultEvent!,
-      );
-    });
+    addUltimate(result.current, 1 * FPS);
 
     // Second ultimate at 20s (while first STEEL_OATH 30s duration is still active)
-    act(() => {
-      result.current.handleAddEvent(
-        SLOT_POG, NounType.ULTIMATE, 20 * FPS, ultCol!.defaultEvent!,
-      );
-    });
+    addUltimate(result.current, 20 * FPS);
 
     const steelOathEvents = result.current.allProcessedEvents.filter(
       (ev) => ev.id === STEEL_OATH_ID && ev.ownerId === COMMON_OWNER_ID,
@@ -231,15 +224,8 @@ describe('Steel Oath without triggers stays active', () => {
   it('all 5 STEEL_OATH events remain unconsumed with full 30s duration when no triggers fire', () => {
     const { result } = setupPogranichnik();
 
-    const ultCol = findColumn(result.current, SLOT_POG, NounType.ULTIMATE);
-    expect(ultCol).toBeDefined();
-
     // Place ultimate at 1s — no other events that would trigger consumption
-    act(() => {
-      result.current.handleAddEvent(
-        SLOT_POG, NounType.ULTIMATE, 1 * FPS, ultCol!.defaultEvent!,
-      );
-    });
+    addUltimate(result.current, 1 * FPS);
 
     const steelOathEvents = result.current.allProcessedEvents.filter(
       (ev) => ev.id === STEEL_OATH_ID && ev.ownerId === COMMON_OWNER_ID,
@@ -270,25 +256,11 @@ describe('Combo skill consumes Steel Oath stacks', () => {
       result.current.setInteractionMode(InteractionModeType.FREEFORM);
     });
 
-    const ultCol = findColumn(result.current, SLOT_POG, NounType.ULTIMATE);
-    expect(ultCol).toBeDefined();
-
-    const comboCol = findColumn(result.current, SLOT_POG, NounType.COMBO_SKILL);
-    expect(comboCol).toBeDefined();
-
     // Place ultimate at 1s
-    act(() => {
-      result.current.handleAddEvent(
-        SLOT_POG, NounType.ULTIMATE, 1 * FPS, ultCol!.defaultEvent!,
-      );
-    });
+    addUltimate(result.current, 1 * FPS);
 
     // Place combo skill at 5s (after ultimate animation ends)
-    act(() => {
-      result.current.handleAddEvent(
-        SLOT_POG, NounType.COMBO_SKILL, 5 * FPS, comboCol!.defaultEvent!,
-      );
-    });
+    addComboSkill(result.current, 5 * FPS);
 
     const steelOathEvents = result.current.allProcessedEvents.filter(
       (ev) => ev.id === STEEL_OATH_ID && ev.ownerId === COMMON_OWNER_ID,
@@ -332,26 +304,12 @@ describe('All stacks consumed → Harass and Decisive Assault mix', () => {
       result.current.setInteractionMode(InteractionModeType.FREEFORM);
     });
 
-    const ultCol = findColumn(result.current, SLOT_POG, NounType.ULTIMATE);
-    expect(ultCol).toBeDefined();
-
-    const comboCol = findColumn(result.current, SLOT_POG, NounType.COMBO_SKILL);
-    expect(comboCol).toBeDefined();
-
     // Place ultimate at 1s
-    act(() => {
-      result.current.handleAddEvent(
-        SLOT_POG, NounType.ULTIMATE, 1 * FPS, ultCol!.defaultEvent!,
-      );
-    });
+    addUltimate(result.current, 1 * FPS);
 
     // Place 5 combo skills spaced 1s apart starting at 5s (5s, 6s, 7s, 8s, 9s)
     for (let i = 0; i < 5; i++) {
-      act(() => {
-        result.current.handleAddEvent(
-          SLOT_POG, NounType.COMBO_SKILL, (5 + i) * FPS, comboCol!.defaultEvent!,
-        );
-      });
+      addComboSkill(result.current, (5 + i) * FPS);
     }
 
     const steelOathEvents = result.current.allProcessedEvents.filter(
@@ -404,33 +362,33 @@ describe('Chen Qianyu BS consumes Steel Oath → 4 Harass + 1 Decisive Assault',
     const { result } = setupPogranichnik();
 
     // Add Chen Qianyu to slot-2
-    act(() => { result.current.handleSwapOperator(SLOT_CHEN, 'CHEN_QIANYU'); });
+    act(() => { result.current.handleSwapOperator(SLOT_CHEN, CHEN_QIANYU_ID); });
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
-    const ultCol = findColumn(result.current, SLOT_POG, NounType.ULTIMATE);
-    expect(ultCol).toBeDefined();
+    // ── Context menu layer: ultimate ────────────────────────────────────
+    addUltimate(result.current, 0);
 
+    // ── Context menu layer: Chen BS ─────────────────────────────────────
     const chenBattleCol = findColumn(result.current, SLOT_CHEN, NounType.BATTLE_SKILL);
     expect(chenBattleCol).toBeDefined();
 
-    // Pog ultimate at 0s → 5 Steel Oath stacks
-    act(() => {
-      result.current.handleAddEvent(
-        SLOT_POG, NounType.ULTIMATE, 0, ultCol!.defaultEvent!,
-      );
-    });
+    const chenMenu = buildContextMenu(result.current, chenBattleCol!, 3 * FPS);
+    expect(chenMenu).not.toBeNull();
+    expect(chenMenu!.length).toBeGreaterThan(0);
 
     // 6 Chen BS spaced 2s apart starting at 3s
     // First BS only adds Vulnerable (no physical status yet → no consumption)
     // Subsequent BS apply Lift (physical status → triggers Steel Oath)
     for (let i = 0; i < 6; i++) {
+      const payload = getMenuPayload(result.current, chenBattleCol!, (3 + i * 2) * FPS);
       act(() => {
         result.current.handleAddEvent(
-          SLOT_CHEN, NounType.BATTLE_SKILL, (3 + i * 2) * FPS, chenBattleCol!.defaultEvent!,
+          payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
         );
       });
     }
 
+    // ── Controller layer ────────────────────────────────────────────────
     // Steel Oath stacks: all 5 should be consumed
     const steelOathEvents = result.current.allProcessedEvents.filter(
       (ev) => ev.id === STEEL_OATH_ID && ev.ownerId === COMMON_OWNER_ID,
@@ -496,22 +454,20 @@ describe('FIRST_MATCH clause selection in reactive triggers', () => {
   it('FIRST_MATCH: conditional clause (Decisive Assault) wins over unconditional (Harass) when HAVE STACKS = 1', () => {
     const { result } = setupPogranichnik();
 
-    act(() => { result.current.handleSwapOperator(SLOT_CHEN, 'CHEN_QIANYU'); });
+    act(() => { result.current.handleSwapOperator(SLOT_CHEN, CHEN_QIANYU_ID); });
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
-    const ultCol = findColumn(result.current, SLOT_POG, NounType.ULTIMATE);
     const chenBattleCol = findColumn(result.current, SLOT_CHEN, NounType.BATTLE_SKILL);
     const pogComboCol = findColumn(result.current, SLOT_POG, NounType.COMBO_SKILL);
 
     // Pog ultimate at 0s → 5 Steel Oath stacks
-    act(() => {
-      result.current.handleAddEvent(SLOT_POG, NounType.ULTIMATE, 0, ultCol!.defaultEvent!);
-    });
+    addUltimate(result.current, 0);
 
     // Consume 4 stacks via combos (leaves exactly 1 stack)
     for (let i = 0; i < 4; i++) {
+      const payload = getMenuPayload(result.current, pogComboCol!, (3 + i * 2) * FPS);
       act(() => {
-        result.current.handleAddEvent(SLOT_POG, NounType.COMBO_SKILL, (3 + i * 2) * FPS, pogComboCol!.defaultEvent!);
+        result.current.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
       });
     }
 
@@ -522,12 +478,14 @@ describe('FIRST_MATCH clause selection in reactive triggers', () => {
     expect(steelOathBefore).toHaveLength(1);
 
     // Now trigger consumption with Chen BS (APPLY PHYSICAL) — should pick Decisive Assault
+    const chenPayload1 = getMenuPayload(result.current, chenBattleCol!, 15 * FPS);
     act(() => {
-      result.current.handleAddEvent(SLOT_CHEN, NounType.BATTLE_SKILL, 15 * FPS, chenBattleCol!.defaultEvent!);
+      result.current.handleAddEvent(chenPayload1.ownerId, chenPayload1.columnId, chenPayload1.atFrame, chenPayload1.defaultSkill);
     });
     // Need a second BS to actually create Lift (first only adds Vulnerable)
+    const chenPayload2 = getMenuPayload(result.current, chenBattleCol!, 17 * FPS);
     act(() => {
-      result.current.handleAddEvent(SLOT_CHEN, NounType.BATTLE_SKILL, 17 * FPS, chenBattleCol!.defaultEvent!);
+      result.current.handleAddEvent(chenPayload2.ownerId, chenPayload2.columnId, chenPayload2.atFrame, chenPayload2.defaultSkill);
     });
 
     const allSubStatuses = result.current.allProcessedEvents.filter(
@@ -554,18 +512,11 @@ describe('FIRST_MATCH clause selection in reactive triggers', () => {
 
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
-    const ultCol = findColumn(result.current, SLOT_POG, NounType.ULTIMATE);
-    const pogComboCol = findColumn(result.current, SLOT_POG, NounType.COMBO_SKILL);
-
     // Pog ultimate at 0s → 5 Steel Oath stacks
-    act(() => {
-      result.current.handleAddEvent(SLOT_POG, NounType.ULTIMATE, 0, ultCol!.defaultEvent!);
-    });
+    addUltimate(result.current, 0);
 
     // Single combo at 5s — 5 stacks active, HAVE STACKS=1 fails → Harass fires (not Decisive Assault)
-    act(() => {
-      result.current.handleAddEvent(SLOT_POG, NounType.COMBO_SKILL, 5 * FPS, pogComboCol!.defaultEvent!);
-    });
+    addComboSkill(result.current, 5 * FPS);
 
     const harassEvents = result.current.allProcessedEvents.filter(
       (ev) => ev.ownerId === ENEMY_OWNER_ID && ev.id === STEEL_OATH_HARASS_ID,

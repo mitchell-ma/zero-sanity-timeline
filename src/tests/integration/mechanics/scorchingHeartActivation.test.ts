@@ -9,58 +9,78 @@
  * stacks, Scorching Heart Effect automatically activates. Verifies activation
  * threshold, re-activation after consumption, timing, RESET stacking, and
  * isolation from other operators.
+ *
+ * Verifies all three layers:
+ * 1. Context menu: battle skill menu items are available and enabled
+ * 2. Controller: MF/SH event counts, event status, timing, duration
+ * 3. View: computeTimelinePresentation includes MF/SH events in their columns
  */
 
 import { renderHook, act } from '@testing-library/react';
 import { NounType } from '../../../dsl/semantics';
 import { useApp } from '../../../app/useApp';
-import { ColumnType, EnhancementType, EventStatusType, InteractionModeType } from '../../../consts/enums';
+import { EnhancementType, EventStatusType, InteractionModeType } from '../../../consts/enums';
 import { FPS } from '../../../utils/timeline';
 import { eventDuration } from '../../../consts/viewTypes';
-import type { MiniTimeline } from '../../../consts/viewTypes';
+import { computeTimelinePresentation } from '../../../controller/timeline/eventPresentationController';
+import { findColumn, buildContextMenu, getMenuPayload } from '../helpers';
+import type { AppResult } from '../helpers';
+import { OPERATOR_STATUS_COLUMN_ID } from '../../../model/channels';
 
-const MELTING_FLAME_ID = 'MELTING_FLAME';
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const MELTING_FLAME_ID: string = require('../../../model/game-data/operators/laevatain/statuses/status-melting-flame.json').properties.id;
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const SH_COLUMN: string = require('../../../model/game-data/operators/laevatain/statuses/status-scorching-heart.json').properties.id;
 const SLOT_LAEVATAIN = 'slot-0';
 const SLOT_AKEKURI = 'slot-1';
-const SH_COLUMN = 'SCORCHING_HEART_EFFECT';
 
-function findColumn(app: ReturnType<typeof useApp>, slotId: string, columnId: string) {
-  return app.columns.find(
-    (c): c is MiniTimeline =>
-      c.type === ColumnType.MINI_TIMELINE &&
-      c.ownerId === slotId &&
-      c.columnId === columnId,
-  );
-}
-
-function addBattleSkills(app: ReturnType<typeof useApp>, count: number, startAt: number, spacing: number) {
+/** Add battle skills for Laevatain via context menu flow. */
+function addBattleSkills(app: AppResult, count: number, startAt: number, spacing: number) {
   const col = findColumn(app, SLOT_LAEVATAIN, NounType.BATTLE_SKILL);
   for (let i = 0; i < count; i++) {
+    const atFrame = (startAt + i * spacing) * FPS;
+    const payload = getMenuPayload(app, col!, atFrame);
     act(() => {
       app.handleAddEvent(
-        SLOT_LAEVATAIN, NounType.BATTLE_SKILL, (startAt + i * spacing) * FPS, col!.defaultEvent!,
+        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
   }
 }
 
-function getMfEvents(app: ReturnType<typeof useApp>) {
+/** Add an empowered battle skill for Laevatain via context menu flow. */
+function addEmpoweredBattleSkill(app: AppResult, atSecond: number) {
+  const col = findColumn(app, SLOT_LAEVATAIN, NounType.BATTLE_SKILL);
+  const empoweredVariant = col!.eventVariants?.find(
+    (v) => v.enhancementType === EnhancementType.EMPOWERED,
+  );
+  expect(empoweredVariant).toBeDefined();
+  const atFrame = atSecond * FPS;
+  const payload = getMenuPayload(app, col!, atFrame, empoweredVariant!.displayName);
+  act(() => {
+    app.handleAddEvent(
+      payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+    );
+  });
+}
+
+function getMfEvents(app: AppResult) {
   return app.allProcessedEvents.filter(
     (ev) => ev.columnId === MELTING_FLAME_ID && ev.ownerId === SLOT_LAEVATAIN,
   );
 }
 
-function getActiveMfEvents(app: ReturnType<typeof useApp>) {
+function getActiveMfEvents(app: AppResult) {
   return getMfEvents(app).filter((ev) => ev.eventStatus !== EventStatusType.CONSUMED);
 }
 
-function getShEvents(app: ReturnType<typeof useApp>) {
+function getShEvents(app: AppResult) {
   return app.allProcessedEvents.filter(
     (ev) => ev.columnId === SH_COLUMN && ev.ownerId === SLOT_LAEVATAIN,
   );
 }
 
-function getActiveShEvents(app: ReturnType<typeof useApp>) {
+function getActiveShEvents(app: AppResult) {
   return getShEvents(app).filter((ev) =>
     ev.eventStatus !== EventStatusType.CONSUMED && ev.eventStatus !== EventStatusType.REFRESHED,
   );
@@ -73,6 +93,16 @@ function getActiveShEvents(app: ReturnType<typeof useApp>) {
 describe('Scorching Heart — Basic Activation', () => {
   it('SH1: 4 battle skills produce Scorching Heart', () => {
     const { result } = renderHook(() => useApp());
+
+    // ── Context menu layer ──────────────────────────────────────────────
+    // Verify battle skill menu item is enabled before adding
+    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE_SKILL);
+    expect(battleCol).toBeDefined();
+    const menuItems = buildContextMenu(result.current, battleCol!, 2 * FPS);
+    expect(menuItems).not.toBeNull();
+    expect(menuItems!.some((i) => i.actionId === 'addEvent' && !i.disabled)).toBe(true);
+
+    // ── Controller layer ────────────────────────────────────────────────
     addBattleSkills(result.current, 4, 2, 10);
 
     const mf = getActiveMfEvents(result.current);
@@ -81,6 +111,31 @@ describe('Scorching Heart — Basic Activation', () => {
     const sh = getShEvents(result.current);
     expect(sh).toHaveLength(1);
     expect(sh[0].ownerId).toBe(SLOT_LAEVATAIN);
+
+    // ── View layer ──────────────────────────────────────────────────────
+    const viewModels = computeTimelinePresentation(
+      result.current.allProcessedEvents,
+      result.current.columns,
+    );
+
+    // MF and SH events live in the unified operator status column
+    const statusCol = findColumn(result.current, SLOT_LAEVATAIN, OPERATOR_STATUS_COLUMN_ID);
+    expect(statusCol).toBeDefined();
+    const statusVm = viewModels.get(statusCol!.key);
+    expect(statusVm).toBeDefined();
+
+    // MF events appear in the status column view model
+    const mfVmEvents = statusVm!.events.filter(
+      (ev) => ev.columnId === MELTING_FLAME_ID && ev.ownerId === SLOT_LAEVATAIN,
+    );
+    expect(mfVmEvents.length).toBeGreaterThanOrEqual(4);
+
+    // SH event appears in the status column view model
+    const shVmEvents = statusVm!.events.filter(
+      (ev) => ev.columnId === SH_COLUMN && ev.ownerId === SLOT_LAEVATAIN,
+    );
+    expect(shVmEvents).toHaveLength(1);
+    expect(shVmEvents[0].uid).toBe(sh[0].uid);
   });
 
   it('SH2: 3 battle skills do NOT produce Scorching Heart', () => {
@@ -103,22 +158,13 @@ describe('Scorching Heart — Re-activation', () => {
   it('SH3: After MF consumption and re-accumulation, SH re-activates', () => {
     const { result } = renderHook(() => useApp());
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
-    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE_SKILL);
 
     // First cycle: 4 BS → 4 MF → SH
     addBattleSkills(result.current, 4, 2, 10);
     expect(getShEvents(result.current)).toHaveLength(1);
 
     // Empowered BS consumes all 4 MF
-    const empoweredVariant = battleCol!.eventVariants?.find(
-      (v) => v.enhancementType === EnhancementType.EMPOWERED,
-    );
-    expect(empoweredVariant).toBeDefined();
-    act(() => {
-      result.current.handleAddEvent(
-        SLOT_LAEVATAIN, NounType.BATTLE_SKILL, 50 * FPS, empoweredVariant!,
-      );
-    });
+    addEmpoweredBattleSkill(result.current, 50);
 
     // Second cycle: 4 more BS → 4 new MF → second SH
     addBattleSkills(result.current, 4, 60, 10);
@@ -134,21 +180,13 @@ describe('Scorching Heart — Re-activation', () => {
   it('SH4: After MF consumption, only 2 BS do NOT re-activate SH', () => {
     const { result } = renderHook(() => useApp());
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
-    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE_SKILL);
 
     // First cycle: 4 BS → SH
     addBattleSkills(result.current, 4, 2, 10);
     expect(getShEvents(result.current)).toHaveLength(1);
 
     // Empowered BS consumes MF
-    const empoweredVariant = battleCol!.eventVariants?.find(
-      (v) => v.enhancementType === EnhancementType.EMPOWERED,
-    );
-    act(() => {
-      result.current.handleAddEvent(
-        SLOT_LAEVATAIN, NounType.BATTLE_SKILL, 50 * FPS, empoweredVariant!,
-      );
-    });
+    addEmpoweredBattleSkill(result.current, 50);
 
     // Only 2 BS → 2 MF (below threshold)
     addBattleSkills(result.current, 2, 60, 10);
@@ -213,11 +251,13 @@ describe('Scorching Heart — Cross-operator Isolation', () => {
     const akekuriCol = findColumn(result.current, SLOT_AKEKURI, NounType.BATTLE_SKILL);
     expect(akekuriCol).toBeDefined();
 
-    // 4 Akekuri battle skills (don't produce MF)
+    // 4 Akekuri battle skills via context menu
     for (let i = 0; i < 4; i++) {
+      const atFrame = (5 + i * 10) * FPS;
+      const payload = getMenuPayload(result.current, akekuriCol!, atFrame);
       act(() => {
         result.current.handleAddEvent(
-          SLOT_AKEKURI, NounType.BATTLE_SKILL, (5 + i * 10) * FPS, akekuriCol!.defaultEvent!,
+          payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
         );
       });
     }
@@ -266,7 +306,6 @@ describe('Scorching Heart — RESET Stacking', () => {
   it('SH10: Second SH resets the first — only 1 active, duration refreshed', () => {
     const { result } = renderHook(() => useApp());
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
-    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE_SKILL);
 
     // First cycle: 4 BS at 2s, 4s, 6s, 8s → SH activates around ~8s+offset
     addBattleSkills(result.current, 4, 2, 2);
@@ -275,14 +314,7 @@ describe('Scorching Heart — RESET Stacking', () => {
     const firstShFrame = firstSh[0].startFrame;
 
     // Empowered BS at 12s consumes all MF
-    const empoweredVariant = battleCol!.eventVariants?.find(
-      (v) => v.enhancementType === EnhancementType.EMPOWERED,
-    );
-    act(() => {
-      result.current.handleAddEvent(
-        SLOT_LAEVATAIN, NounType.BATTLE_SKILL, 12 * FPS, empoweredVariant!,
-      );
-    });
+    addEmpoweredBattleSkill(result.current, 12);
 
     // Second cycle: 4 BS at 14s, 16s, 18s, 20s — 4th MF at ~20s+offset
     // First SH expires at ~8s+offset+20s = ~28s+offset, so SH is still active at ~20s
@@ -305,5 +337,27 @@ describe('Scorching Heart — RESET Stacking', () => {
     const resetSh = allSh.filter((ev) => ev.eventStatus === EventStatusType.REFRESHED);
     expect(resetSh).toHaveLength(1);
     expect(resetSh[0].startFrame).toBe(firstShFrame);
+
+    // ── View layer ──────────────────────────────────────────────────────
+    // Verify only the active SH appears as non-refreshed in the view model
+    const viewModels = computeTimelinePresentation(
+      result.current.allProcessedEvents,
+      result.current.columns,
+    );
+    const statusCol = findColumn(result.current, SLOT_LAEVATAIN, OPERATOR_STATUS_COLUMN_ID);
+    expect(statusCol).toBeDefined();
+    const statusVm = viewModels.get(statusCol!.key);
+    expect(statusVm).toBeDefined();
+    const shVmEvents = statusVm!.events.filter(
+      (ev) => ev.columnId === SH_COLUMN && ev.ownerId === SLOT_LAEVATAIN,
+    );
+    // Both SH events exist in the view model (refreshed one is rendered dimmed)
+    expect(shVmEvents).toHaveLength(2);
+    // The active one matches
+    const activeInVm = shVmEvents.filter(
+      (ev) => ev.eventStatus !== EventStatusType.REFRESHED,
+    );
+    expect(activeInVm).toHaveLength(1);
+    expect(activeInVm[0].uid).toBe(activeSh[0].uid);
   });
 });

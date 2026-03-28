@@ -19,54 +19,59 @@
 import { renderHook, act } from '@testing-library/react';
 import { NounType } from '../../../dsl/semantics';
 import { useApp } from '../../../app/useApp';
-import { ColumnType, InteractionModeType } from '../../../consts/enums';
+import { InteractionModeType } from '../../../consts/enums';
 import { FPS } from '../../../utils/timeline';
 import { getAnimationDuration, computeSegmentsSpan } from '../../../consts/viewTypes';
-import type { MiniTimeline } from '../../../consts/viewTypes';
+import { findColumn, getMenuPayload, buildContextMenu, type AppResult } from '../helpers';
 
 const SLOT_AKEKURI = 'slot-1';
 
-function findColumn(app: ReturnType<typeof useApp>, slotId: string, columnId: string) {
-  return app.columns.find(
-    (c): c is MiniTimeline =>
-      c.type === ColumnType.MINI_TIMELINE &&
-      c.ownerId === slotId &&
-      c.columnId === columnId,
-  );
+/**
+ * Add a basic attack at frame 0 and a combo skill at 1.3s via context menu flow.
+ * Takes a result ref so we always read the latest app state after each act().
+ */
+function setupBasicAndCombo(result: { current: AppResult }) {
+  const basicCol = findColumn(result.current, SLOT_AKEKURI, NounType.BASIC_ATTACK);
+  expect(basicCol).toBeDefined();
+
+  const basicPayload = getMenuPayload(result.current, basicCol!, 0);
+  act(() => {
+    result.current.handleAddEvent(
+      basicPayload.ownerId, basicPayload.columnId, basicPayload.atFrame, basicPayload.defaultSkill,
+    );
+  });
+
+  // Switch to freeform so combo placement is valid without an active trigger
+  act(() => {
+    result.current.setInteractionMode(InteractionModeType.FREEFORM);
+  });
+
+  const comboCol = findColumn(result.current, SLOT_AKEKURI, NounType.COMBO_SKILL);
+  expect(comboCol).toBeDefined();
+
+  const comboPayload = getMenuPayload(result.current, comboCol!, Math.round(1.3 * FPS));
+  act(() => {
+    result.current.handleAddEvent(
+      comboPayload.ownerId, comboPayload.columnId, comboPayload.atFrame, comboPayload.defaultSkill,
+    );
+  });
 }
 
 describe('Basic attack time-stop extension — Akekuri basic + combo overlap', () => {
   it('third segment of basic attack is extended by combo time-stop', () => {
     const { result } = renderHook(() => useApp());
 
-    // Add basic attack at 0s (strict mode is fine for basic attacks)
+    // --- Context menu layer: verify menu items are available ---
     const basicCol = findColumn(result.current, SLOT_AKEKURI, NounType.BASIC_ATTACK);
     expect(basicCol).toBeDefined();
-    expect(basicCol!.defaultEvent).toBeDefined();
+    const basicMenu = buildContextMenu(result.current, basicCol!, 0);
+    expect(basicMenu).not.toBeNull();
+    expect(basicMenu!.some(i => i.actionId === 'addEvent')).toBe(true);
 
-    act(() => {
-      result.current.handleAddEvent(
-        SLOT_AKEKURI, NounType.BASIC_ATTACK, 0, basicCol!.defaultEvent!,
-      );
-    });
+    // --- Add events via context menu flow ---
+    setupBasicAndCombo(result);
 
-    // Switch to freeform for combo placement
-    act(() => {
-      result.current.setInteractionMode(InteractionModeType.FREEFORM);
-    });
-
-    // Add combo at 1.3s
-    const comboCol = findColumn(result.current, SLOT_AKEKURI, NounType.COMBO_SKILL);
-    expect(comboCol).toBeDefined();
-    expect(comboCol!.defaultEvent).toBeDefined();
-
-    act(() => {
-      result.current.handleAddEvent(
-        SLOT_AKEKURI, NounType.COMBO_SKILL, Math.round(1.3 * FPS), comboCol!.defaultEvent!,
-      );
-    });
-
-    // Find processed events
+    // --- Controller layer: verify processed events ---
     const basicEvent = result.current.allProcessedEvents.find(
       (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === NounType.BASIC_ATTACK,
     );
@@ -98,21 +103,8 @@ describe('Basic attack time-stop extension — Akekuri basic + combo overlap', (
     const { result } = renderHook(() => useApp());
 
     const basicCol = findColumn(result.current, SLOT_AKEKURI, NounType.BASIC_ATTACK);
-    const comboCol = findColumn(result.current, SLOT_AKEKURI, NounType.COMBO_SKILL);
 
-    act(() => {
-      result.current.handleAddEvent(
-        SLOT_AKEKURI, NounType.BASIC_ATTACK, 0, basicCol!.defaultEvent!,
-      );
-    });
-    act(() => {
-      result.current.setInteractionMode(InteractionModeType.FREEFORM);
-    });
-    act(() => {
-      result.current.handleAddEvent(
-        SLOT_AKEKURI, NounType.COMBO_SKILL, Math.round(1.3 * FPS), comboCol!.defaultEvent!,
-      );
-    });
+    setupBasicAndCombo(result);
 
     const basicEvent = result.current.allProcessedEvents.find(
       (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === NounType.BASIC_ATTACK,
@@ -156,21 +148,8 @@ describe('Basic attack time-stop extension — Akekuri basic + combo overlap', (
     const { result } = renderHook(() => useApp());
 
     const basicCol = findColumn(result.current, SLOT_AKEKURI, NounType.BASIC_ATTACK);
-    const comboCol = findColumn(result.current, SLOT_AKEKURI, NounType.COMBO_SKILL);
 
-    act(() => {
-      result.current.handleAddEvent(
-        SLOT_AKEKURI, NounType.BASIC_ATTACK, 0, basicCol!.defaultEvent!,
-      );
-    });
-    act(() => {
-      result.current.setInteractionMode(InteractionModeType.FREEFORM);
-    });
-    act(() => {
-      result.current.handleAddEvent(
-        SLOT_AKEKURI, NounType.COMBO_SKILL, Math.round(1.3 * FPS), comboCol!.defaultEvent!,
-      );
-    });
+    setupBasicAndCombo(result);
 
     const basicEvent = result.current.allProcessedEvents.find(
       (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === NounType.BASIC_ATTACK,
@@ -214,21 +193,8 @@ describe('Basic attack time-stop extension — Akekuri basic + combo overlap', (
     const { result } = renderHook(() => useApp());
 
     const basicCol = findColumn(result.current, SLOT_AKEKURI, NounType.BASIC_ATTACK);
-    const comboCol = findColumn(result.current, SLOT_AKEKURI, NounType.COMBO_SKILL);
 
-    act(() => {
-      result.current.handleAddEvent(
-        SLOT_AKEKURI, NounType.BASIC_ATTACK, 0, basicCol!.defaultEvent!,
-      );
-    });
-    act(() => {
-      result.current.setInteractionMode(InteractionModeType.FREEFORM);
-    });
-    act(() => {
-      result.current.handleAddEvent(
-        SLOT_AKEKURI, NounType.COMBO_SKILL, Math.round(1.3 * FPS), comboCol!.defaultEvent!,
-      );
-    });
+    setupBasicAndCombo(result);
 
     const comboEvent = result.current.allProcessedEvents.find(
       (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === NounType.COMBO_SKILL,

@@ -19,8 +19,8 @@ import { OPERATORS } from '../utils/loadoutRegistry';
 import {
   getWeapon,
   getGearPiece,
-  getConsumableEntry,
-  getTacticalEntry,
+  getConsumable,
+  getTactical,
 } from '../controller/gameDataStore';
 import { SKILL_LABELS } from '../consts/enums';
 import { getAllSkillLabels } from '../controller/gameDataStore';
@@ -796,8 +796,8 @@ export default React.memo(function CombatSheet({
               const glovesEntry = loadout?.glovesId ? getGearPiece(loadout.glovesId) : null;
               const kit1Entry = loadout?.kit1Id ? getGearPiece(loadout.kit1Id) : null;
               const kit2Entry = loadout?.kit2Id ? getGearPiece(loadout.kit2Id) : null;
-              const consumableEntry = loadout?.consumableId ? getConsumableEntry(loadout.consumableId) : null;
-              const tacticalEntry = loadout?.tacticalId ? getTacticalEntry(loadout.tacticalId) : null;
+              const consumableEntry = loadout?.consumableId ? getConsumable(loadout.consumableId) : null;
+              const tacticalEntry = loadout?.tacticalId ? getTactical(loadout.tacticalId) : null;
               const coreItems = [weaponEntry, armorEntry, glovesEntry, kit1Entry, kit2Entry];
               const items = [
                 ...coreItems,

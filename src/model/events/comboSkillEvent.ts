@@ -1,6 +1,5 @@
 import {
   CombatSkillType,
-  OperatorType,
 } from "../../consts/enums";
 import type { DslTarget } from "../../dsl/semantics";
 import type { Interaction } from "../../dsl/semantics";
@@ -12,7 +11,7 @@ export class ComboSkillEvent extends CombatSkillEvent {
   constructor(params: {
     name: string;
     target: DslTarget;
-    sourceOperator: OperatorType;
+    sourceOperator: string;
     duration: number;
     cooldownSeconds: number;
     triggerConditions: Set<Interaction>;

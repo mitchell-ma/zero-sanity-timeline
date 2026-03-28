@@ -5,38 +5,12 @@
 The weapon status timeline columns have been removed from the column builder and view.
 The following files/code still reference `weaponSkillEffects.ts` and can be cleaned up:
 
-- `src/consts/weaponSkillEffects.ts` — the data registry itself
 - `src/controller/custom/customWeaponRegistrar.ts`
 - `src/controller/custom/builtinToCustomConverter.ts`
-- `src/controller/info-pane/loadoutPaneController.ts`
-- `src/model/events/weaponSkillStatusEvent.ts`
 - `src/model/weapon-skills/weaponSkill.ts`
-- `src/view/CombatSheet.tsx`
-- `src/view/custom/ContentViewer.tsx`
-- `src/controller/custom/contentCatalogController.ts`
 - `TimelineSourceType.WEAPON` enum value in `src/consts/enums.ts`
 - `ColumnLabel.WEAPON_BUFF` in `src/consts/timelineColumnLabels.ts`
 - `StatusType.UNBRIDLED_EDGE` and related entries in enums/labels
-
-## Migrate remaining hardcoded status functions to the effect executor
-
-The DSL effect executor (`effectExecutor.ts`) and shared condition evaluator
-(`conditionEvaluator.ts`) are in place. The following functions in `processStatus.ts`
-need executor extensions before they can be migrated:
-
-- **`deriveUnbridledEdge`** — weapon-triggered (SP recovery hits → stacking team buff).
-  Needs: weapon-based trigger support, SP recovery frame scanning.
-- **`consumeVulnerabilityForSusceptibility`** (Gilberta) — consume vulnerability stacks
-  at ultimate cast → arts susceptibility with stack-count × per-level value computation.
-  Needs: stack-count-based value derivation in executor.
-- **`consumeCryoForSusceptibility`** (Last Rite) — consume cryo stacks at combo cast →
-  cryo susceptibility with talent-gated per-stack value.
-  Needs: same stack-count-based value derivation.
-- **`applyXaihiP5AmpBoost`** (Xaihi P5) — mutate existing ARTS_AMP statusValue × 1.1.
-  Needs: event mutation support (not derivation).
-
-Once the executor supports these patterns, migrate one at a time into operator JSON
-`statusEvents` and remove the hardcoded functions.
 
 ## Share link could be Huffman encoded
 
@@ -66,21 +40,6 @@ Proposed mapping:
 2. **Fix TALENT_LEVEL TODO** — `statusTriggerCollector.ts` hardcodes `const talentLevel = 1 // TODO`, should use `ctx.loadoutProperties?.operator.talentOneLevel ?? 1`
 3. **Remove `getScorchingHeartIgnoredResistance`** from damageFormulas.ts — values already in the JSON config, just need `damageFactorType` wired up
 
-## Unify `Effect.objectQualifier` to single `AdjectiveType`
-
-`Effect.objectQualifier` is typed `AdjectiveType | AdjectiveType[]` but the array form is never needed. The `[FORCED, COMBUSTION]` pattern it was designed for doesn't exist — `FORCED` is a property in the `with` block, not a stacked qualifier. Every consumer guards with `Array.isArray()` checks (20+ sites across controllers, views, tests, translators).
-
-Fix: change `Effect.objectQualifier` to `AdjectiveType` (matching `Interaction.objectQualifier`) and remove all `Array.isArray` guards. `Interaction` already has the correct single type.
-
-Example of current waste — every consumer does this:
-```typescript
-const adj = Array.isArray(effect.objectQualifier) ? effect.objectQualifier[0] : effect.objectQualifier;
-```
-This should just be:
-```typescript
-const adj = effect.objectQualifier;
-```
-
 ## Resolve talent level and p3TeamShare from DSL
 
 `minTalentLevel` and `p3TeamShare` were removed from status JSON configs during the DSL refactor.
@@ -93,11 +52,6 @@ The engine currently uses dummy talent level values (`1`) where it previously re
   shared copies with reduced duration, replacing the old `p3TeamShare.durationMultiplier` field.
 
 Search for `TODO: resolve talent level from DSL` in `statusDerivationEngine.ts` for all affected sites.
-
-## Segment name should go in properties
-
-Status segment `name` field should be moved into `segments[].properties.name` to be consistent
-with the Event/Segment/Frame DSL structure where all descriptive fields live in `properties`.
 
 ## Sheet statistics
 
@@ -155,45 +109,37 @@ These sets have HP-threshold conditions but are metadata-only with zero clauses:
 
 ### Previously tracked (from earlier review)
 
-1. **Akekuri "Staying in the Zone"** — talent two is `name`-only but wiki says "when ultimate is active, gains Link." The ultimate already has `APPLY LINK` on its first frame, so the Link application exists. The talent file itself just needs a clause or the TODO can be closed if the ult frame covers it. Also: the ult uses `objectType: "STATUS"` instead of `object: "STATUS", objectId: "LINK"` — same pattern fixed in Lifeng's combo.
+1. **Last Rite "Cryogenic Embrittlement"** — talent two is `name`-only. Wiki says "ultimate hits enemies with Cryo Susceptibility: multiply Cryo Susceptibility effectiveness ×1.2/×1.5." This modifier needs to live somewhere — either as a SKILL_PARAMETER in the operator JSON or baked into the ult DSL as a conditional clause (IF ENEMY HAVE CRYO_SUSCEPTIBILITY → APPLY CRYO_SUSCEPTIBILITY_MODIFIER [1.2, 1.5]).
 
-2. **Last Rite "Cryogenic Embrittlement"** — talent two is `name`-only. Wiki says "ultimate hits enemies with Cryo Susceptibility: multiply Cryo Susceptibility effectiveness ×1.2/×1.5." This modifier needs to live somewhere — either as a SKILL_PARAMETER in the operator JSON or baked into the ult DSL as a conditional clause (IF ENEMY HAVE CRYO_SUSCEPTIBILITY → APPLY CRYO_SUSCEPTIBILITY_MODIFIER [1.2, 1.5]).
-
-3. **Pogranichnik "Tactical Instruction"** — talent two is `name`-only. Wiki says "operators triggering ultimate's subsequent effects gain Fervent Morale for 5s/10s." Fervent Morale status already exists (from talent one The Living Banner). This should be baked into the ult DSL — when other operators benefit from the ult, they receive FERVENT_MORALE with duration VARY_BY TALENT_LEVEL [5, 10].
+2. **Pogranichnik "Tactical Instruction"** — talent two is `name`-only. Wiki says "operators triggering ultimate's subsequent effects gain Fervent Morale for 5s/10s." Fervent Morale status already exists (from talent one The Living Banner). This should be baked into the ult DSL — when other operators benefit from the ult, they receive FERVENT_MORALE with duration VARY_BY TALENT_LEVEL [5, 10].
 
 ### From 2026-03-26 batch reconciliation (18 operators)
 
 #### Missing VARY_BY POTENTIAL (needs engine support for HP conditions)
 
-4. **Alesh P5** — "Hitting a target below 50% HP increases the DMG Multiplier to 1.5 times the original." Needs enemy HP<50% condition on ultimate damage. Engine does not support HP threshold conditions yet.
+3. **Alesh P5** — "Hitting a target below 50% HP increases the DMG Multiplier to 1.5 times the original." Needs enemy HP<50% condition on ultimate damage. Engine does not support HP threshold conditions yet.
 
-5. **Chen Qianyu P1** — Status `status-chen-qianyu-potential1-shadowless.json` applies +20% DAMAGE_BONUS unconditionally but wiki says "to enemies below 50% HP." Same HP condition gap as Alesh P5.
+4. **Chen Qianyu P1** — Status `status-chen-qianyu-potential1-shadowless.json` applies +20% DAMAGE_BONUS unconditionally but wiki says "to enemies below 50% HP." Same HP condition gap as Alesh P5.
 
-6. **Ardelia P1** — Susceptibility +8% was baked in, but verify the `rateVulBase` ADD wrapper in the conditional DEAL DAMAGE clause is also applied (currently only the susceptibility arrays were wrapped).
+5. **Ardelia P1** — Susceptibility +8% was baked in, but verify the `rateVulBase` ADD wrapper in the conditional DEAL DAMAGE clause is also applied (currently only the susceptibility arrays were wrapped).
 
 #### Missing Talent/Status Effects
 
-7. **Da Pan "Salty or Mild"** — Talent not implemented. Wiki: "Prep Ingredients stacks from ultimate final hit, combo cooldown reduction." Needs full talent clause modeling.
-
-8. **Snowshine RETALIATE** — `RETALIATE` verb used in SAR Professional talent is not defined in DSL `VerbType` enum. RETALIATE means "when the BS is active and the enemy deals damage to the operator." Needs a new VerbType or composite condition to implement.
-
-9. **Ember PROTECTION** — `PROTECTION` is used as a noun in APPLY effects (laevatain, ember, catcher, snowshine) but is not in `NounType` in `semantics.ts`. Needs to be added as a recognized NounType for DSL validation.
+6. **Da Pan "Salty or Mild"** — Talent not implemented. Wiki: "Prep Ingredients stacks from ultimate final hit, combo cooldown reduction." Needs full talent clause modeling.
 
 #### Structural / Data Issues
 
-10. **Ardelia battle-skill-dolly-rush.json** — Unconditional DEAL NATURE DAMAGE clause uses `"multiplier"` key instead of `"value"` in the `with` block. Non-standard; verify engine handles it or change to `"value"`.
+7. **Arclight empowered battle skill** — Damage multiplier values [0.45...1.01] for the two Physical slashes were taken from the normal variant. Verify these are correct for the empowered version (wiki doesn't distinguish normal vs empowered BS multipliers for Arclight).
 
-11. **Arclight empowered battle skill** — Damage multiplier values [0.45...1.01] for the two Physical slashes were taken from the normal variant. Verify these are correct for the empowered version (wiki doesn't distinguish normal vs empowered BS multipliers for Arclight).
+8. **Endministrator basic attack SEQ 3/4** — Rounding discrepancies (1-2%) vs wiki at several skill levels due to per-hit division.
 
-12. **Endministrator basic attack SEQ 3/4** — Rounding discrepancies (1-2%) vs wiki at several skill levels due to per-hit division.
+9. **Arclight combo** — Total multiplier 1% over across all levels (156% vs wiki 155%). Per-hit values may need slight adjustment.
 
-13. **Arclight combo** — Total multiplier 1% over across all levels (156% vs wiki 155%). Per-hit values may need slight adjustment.
+10. **Yvonne empowered basic attack** — Segment 0 has 3 frames with empty `effects: []`. These serve no purpose and should be removed or populated.
 
-14. **Yvonne empowered basic attack** — Segment 0 has 3 frames with empty `effects: []`. These serve no purpose and should be removed or populated.
+11. **Multiple operators** — Description template placeholders unresolved ({trigger_hp_ratio:0%}, {extra_scaling}, {duration-1:0%}, etc.). Cosmetic only but should be filled in.
 
-15. **Multiple operators** — Description template placeholders unresolved ({trigger_hp_ratio:0%}, {extra_scaling}, {duration-1:0%}, etc.). Cosmetic only but should be filled in.
-
-16. **Multiple operators** — Status descriptions copied from skill descriptions instead of describing the status itself (Arclight Wildland Trekker trigger/buff, Endministrator Originium Crystal, Avywenna Thunderlance).
+12. **Multiple operators** — Status descriptions copied from skill descriptions instead of describing the status itself (Arclight Wildland Trekker trigger/buff, Endministrator Originium Crystal, Avywenna Thunderlance).
 
 ## Fix laevatainDamageCalc.test.ts — broken after gameDataController mock removal
 
@@ -226,21 +172,3 @@ at level 12). The function needs a fallback to return `perFrameMultipliers[segId
 
 Ardelia Talent 1 (Friendly Presence): battle skill creates Shadows of Mr. Dolly that heal the controlled operator on contact. Healing formula: `[63/90 + Will × 0.53/0.75]` by talent level. If controlled operator is at max HP, heals lowest-HP teammate instead. Shadows last 10s, max 10. Ultimate copies also have 10% chance to spawn shadows. Currently description-only — needs spatial/proximity mechanics to implement.
 
-## TriggerIndex keys must use enum constants, not string literals
-
-`resolveTriggerKey` in `triggerIndex.ts` builds keys like `'APPLY:physical'`, `'PERFORM:combo'` using string concatenation and raw strings. These must be composed from `VerbType`, `NounType`, `PhysicalStatusType`, `SKILL_COLUMNS`, etc. — same rule as column IDs. The `resolveCategories` function also uses raw strings (`'physical'`, `'STATUS'`, `'REACTION'`, `'INFLICTION'`). All of these need enum/constant equivalents.
-
-## Route onTriggerClause effects through the standard clause/effect pipeline
-
-Status `onTriggerClause` effects (CONSUME, APPLY, DEAL, etc.) should flow through the same interpret/effect executor pipeline as skill frame clause effects. Currently `deriveStatusEvents` in `statusTriggerCollector.ts` handles status derivation but skips non-self-producing statuses (guard at line ~492).
-
-The fix: when a trigger fires on an existing status event, evaluate its clause effects through `interpret()` / the effect executor — same as any skill frame clause. Each effect (CONSUME, APPLY, DEAL) executes independently. No special CONSUME+APPLY coupling.
-
-Key considerations:
-- `clauseType: "FIRST_MATCH"` — clauses are priority-ordered; first matching clause fires
-- `HAVE STACKS` condition — evaluates against the existing status event's active stack count
-- Effects operate on existing timeline state, not on newly created events
-
-Acceptance tests: skipped tests E, F in `pogSteelOath.test.ts`.
-
-## Remove weaponGearEffectLoader

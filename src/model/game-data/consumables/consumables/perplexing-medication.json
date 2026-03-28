@@ -1,0 +1,37 @@
+{
+  "properties": {
+    "id": "PERPLEXING_MEDICATION",
+    "name": "Perplexing Medication",
+    "rarity": 4,
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": 300
+      },
+      "unit": "SECOND"
+    }
+  },
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STAT",
+          "objectId": "ULTIMATE_GAIN_EFFICIENCY",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": 0.2376
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "originId": "game"
+  }
+}

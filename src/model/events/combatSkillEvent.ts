@@ -1,4 +1,4 @@
-import { CombatSkillType, UnitType, EventOriginType, EventType, OperatorType } from "../../consts/enums";
+import { CombatSkillType, UnitType, EventOriginType, EventType } from "../../consts/enums";
 import type { Clause, DslTarget } from "../../dsl/semantics";
 import { Event } from "./event";
 
@@ -13,7 +13,7 @@ export abstract class CombatSkillEvent extends Event {
     eventOrigin?: EventOriginType;
     name?: string;
     target: DslTarget;
-    sourceOperator: OperatorType;
+    sourceOperator: string;
     duration: number;
     cooldownSeconds: number;
     clause?: Clause;

@@ -58,6 +58,9 @@ export interface TriggerEffect {
   to?: string;
   toDeterminer?: string;
   with?: Record<string, unknown>;
+  until?: Record<string, unknown>;
+  of?: string;
+  ofDeterminer?: string;
 }
 
 export interface TriggerSubEffect {
@@ -71,6 +74,9 @@ export interface TriggerSubEffect {
   to?: string;
   toDeterminer?: string;
   with?: Record<string, unknown>;
+  until?: Record<string, unknown>;
+  of?: string;
+  ofDeterminer?: string;
 }
 
 export interface TriggerMatch {
@@ -104,6 +110,11 @@ interface VerbHandler {
 
 const PHYSICAL_STATUS_VALUES = new Set<string>(Object.values(PhysicalStatusType));
 
+/** Maps game-data status noun forms to their column ID equivalents. */
+const STATUS_ALIAS_TO_COLUMN: Record<string, string> = {
+  VULNERABILITY: PHYSICAL_INFLICTION_COLUMNS.VULNERABLE,
+};
+
 /** Unified status ID → column ID resolver. */
 export function statusIdToColumnId(statusId: string, skipTeamCheck?: boolean): string {
   return (!skipTeamCheck ? getTeamStatusColumnId(statusId) : undefined)
@@ -111,6 +122,7 @@ export function statusIdToColumnId(statusId: string, skipTeamCheck?: boolean): s
     ?? (OPERATOR_COLUMNS as Record<string, string>)[statusId]
     ?? (PHYSICAL_INFLICTION_COLUMNS as Record<string, string>)[statusId]
     ?? (PHYSICAL_STATUS_VALUES.has(statusId) ? statusId : undefined)
+    ?? STATUS_ALIAS_TO_COLUMN[statusId]
     ?? statusId;
 }
 
@@ -193,7 +205,7 @@ function resolveColumns(cond: Predicate): Set<string> | undefined {
     case 'STATUS':
       if (cond.objectId === 'PHYSICAL') {
         // APPLY PHYSICAL STATUS — resolve qualifier to specific column, or all physical columns
-        if (cond.objectQualifier) return new Set([Array.isArray(cond.objectQualifier) ? cond.objectQualifier[0] : cond.objectQualifier]);
+        if (cond.objectQualifier) return new Set([cond.objectQualifier]);
         return new Set(PHYSICAL_STATUS_COLUMN_IDS);
       }
       if (cond.objectId) return new Set([statusIdToColumnId(cond.objectId)]);

@@ -181,7 +181,6 @@ enum _StatusType {
   FOCUS = "FOCUS",
   SUSCEPTIBILITY = "SUSCEPTIBILITY",
   FRAGILITY = "FRAGILITY",
-  ORIGINIUM_CRYSTAL = "ORIGINIUM_CRYSTAL",
   WEAKEN = "WEAKEN",
   DMG_REDUCTION = "DMG_REDUCTION",
   PROTECTION = "PROTECTION",
@@ -224,7 +223,6 @@ export const STATUS_DAMAGE_FACTOR: Partial<Record<string, DamageFactorType>> = {
   [StatusType.FOCUS]: DamageFactorType.SUSCEPTIBILITY,
   [StatusType.SUSCEPTIBILITY]: DamageFactorType.SUSCEPTIBILITY,
   [StatusType.FRAGILITY]: DamageFactorType.FRAGILITY,
-  [StatusType.ORIGINIUM_CRYSTAL]: DamageFactorType.FRAGILITY,
   [StatusType.WEAKEN]: DamageFactorType.WEAKEN,
   [StatusType.DMG_REDUCTION]: DamageFactorType.DMG_REDUCTION,
   [StatusType.PROTECTION]: DamageFactorType.PROTECTION,
@@ -441,7 +439,7 @@ export { GearType } from '../model/enums/gears';
 
 
 
-export { OperatorInformationType, OperatorType } from '../model/enums/operators';
+export { OperatorInformationType } from '../model/enums/operators';
 
 export enum EnemyType {
   // ── Aggeloi ─────────────────────────────────────────────────────────────────
@@ -761,12 +759,6 @@ export const enum ColumnLabel {
   STATUS               = 'STATUS',
   STAGGER              = 'STAGGER',
   STAGGER_FRAILTY      = 'STAGGER FRAILTY',
-  WULFGARD_TALENT1_SCORCHING_FANGS = 'SCORCHING FANGS',
-  SCORCHING_HEART      = 'SCORCHING HEART (TALENT)',
-  SCORCHING_HEART_EFFECT = 'SCORCHING HEART',
-  ORIGINIUM_CRYSTAL    = 'CRYSTAL',
-  WILDLAND_TREKKER     = 'WILDLAND TREKKER',
-  MESSENGERS_SONG      = "MESSENGER'S SONG",
   ACTION               = 'ACTION',
   CONTROLLED           = 'CONTROLLED',
   OTHER                = 'OTHER',

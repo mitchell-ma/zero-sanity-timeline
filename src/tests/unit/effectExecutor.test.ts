@@ -24,6 +24,9 @@ import type { TimelineEvent } from '../../consts/viewTypes';
 import { CritMode, EventStatusType } from '../../consts/enums';
 import { INFLICTION_COLUMNS, REACTION_COLUMNS } from '../../model/channels';
 
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const SH_ID: string = require('../../model/game-data/operators/laevatain/statuses/status-scorching-heart.json').properties.id;
+
 // ── Helpers ──────────────────────────────────────────────────────────────
 
 function makeEvent(overrides: Partial<TimelineEvent> & { uid: string; columnId: string; ownerId: string }): TimelineEvent {
@@ -128,8 +131,8 @@ describe('APPLY effects', () => {
     // No cap on any status type
     const existing = Array.from({ length: 10 }, (_, i) => makeEvent({
       uid: `sh-${i}`,
-      name: 'SCORCHING_HEART_EFFECT',
-      columnId: 'SCORCHING_HEART_EFFECT',
+      name: SH_ID,
+      columnId: SH_ID,
       ownerId: 'slot1',
       startFrame: i * 10,
       segments: [{ properties: { duration: 2400 } }],
@@ -137,7 +140,7 @@ describe('APPLY effects', () => {
     const effect: Effect = {
       verb: VerbType.APPLY,
       object: NounType.STATUS,
-      objectId: 'SCORCHING_HEART_EFFECT',
+      objectId: SH_ID,
       toDeterminer: DeterminerType.THIS,
       to: NounType.OPERATOR,
     };

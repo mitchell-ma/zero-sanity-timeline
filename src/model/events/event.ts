@@ -1,4 +1,4 @@
-import { UnitType, EventOriginType, EventType, OperatorType } from "../../consts/enums";
+import { UnitType, EventOriginType, EventType } from "../../consts/enums";
 import type { Clause, DslTarget } from "../../dsl/semantics";
 
 /** Duration with explicit unit. */
@@ -12,7 +12,7 @@ export abstract class Event {
   readonly eventOrigin: EventOriginType;
   readonly name: string;
   readonly target: DslTarget;
-  readonly sourceOperator: OperatorType;
+  readonly sourceOperator: string;
   duration: Duration;
   /** Maximum number of times this event can occur. Undefined means unlimited. */
   readonly maxOccurrences?: number;
@@ -28,7 +28,7 @@ export abstract class Event {
     eventOrigin: EventOriginType;
     name?: string;
     target: DslTarget;
-    sourceOperator: OperatorType;
+    sourceOperator: string;
     duration: Duration;
     maxOccurrences?: number;
     clause?: Clause;

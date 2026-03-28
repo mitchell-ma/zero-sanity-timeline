@@ -15,8 +15,6 @@ import { Reaction } from '../model/combat-statuses/reaction';
 /** Sentinel value meaning "the potential-resolved maximum" for stack counts and cardinality. */
 export const THRESHOLD_MAX = 'MAX' as const;
 
-/** Sentinel for UNTIL preposition — extend to the end of the parent event. */
-export const DURATION_END = 'END' as const;
 
 // ── Potential ───────────────────────────────────────────────────────────────
 
@@ -116,6 +114,12 @@ export enum NounType {
   DAMAGE_BONUS = "DAMAGE_BONUS",
   /** Damage taken bonus (enemy debuff). Qualified by element. */
   DAMAGE_TAKEN_BONUS = "DAMAGE_TAKEN_BONUS",
+
+  // Structural
+  /** Generic endpoint — meaning depends on context (UNTIL END = end of segment/event). */
+  END = "END",
+  /** A segment within an event (for UNTIL END OF THIS SEGMENT). */
+  SEGMENT = "SEGMENT",
 
   // Time
   TIME_STOP = "TIME_STOP",
@@ -664,6 +668,16 @@ export type WithValue = ValueLiteral | ValueVariable | ValueStat;
  */
 export type WithPreposition = Record<string, ValueNode>;
 
+/** UNTIL preposition — "UNTIL END OF THIS SEGMENT". */
+export interface UntilPreposition {
+  /** The object of the UNTIL clause — NounType.END. */
+  object: NounType.END;
+  /** What "END" refers to — SEGMENT or EVENT. */
+  of: NounType.SEGMENT | NounType.EVENT;
+  /** Determiner for the scope — typically THIS. */
+  ofDeterminer?: DeterminerType;
+}
+
 // ── Effect ──────────────────────────────────────────────────────────────────
 
 /**
@@ -694,7 +708,7 @@ export interface Effect {
   /** Specific identifier (StatusType, skill name, etc.). */
   objectId?: string;
   /** Object qualifier — modifies the object (e.g. COMBUSTION REACTION, HEAT DAMAGE). */
-  objectQualifier?: AdjectiveType | AdjectiveType[];
+  objectQualifier?: AdjectiveType;
   /** Noun qualifier — modifies the object: "REDUCE ULTIMATE COOLDOWN", "ENABLE ENHANCED BATK". */
   nounQualifier?: QualifierType;
   /** Constraint on cardinality (AT_MOST, AT_LEAST, EXACTLY) — for compound ALL/ANY grouping. */
@@ -719,8 +733,8 @@ export interface Effect {
   with?: WithPreposition;
   /** FOR — cardinality limit on compound actions: "ALL FOR AT_MOST 4". */
   for?: { cardinalityConstraint: CardinalityConstraintType; value: ValueNode | typeof THRESHOLD_MAX };
-  /** UNTIL — duration cap: "EXTEND STATUS UNTIL END". */
-  until?: typeof DURATION_END;
+  /** UNTIL — duration cap: "EXTEND STATUS UNTIL END OF THIS SEGMENT". */
+  until?: UntilPreposition;
   /** OF — ownership/possession: "REDUCE COOLDOWN OF THIS OPERATOR". */
   ofObject?: SubjectType | string;
   /** Determiner for OF target (THIS, OTHER, ALL, ANY). */

@@ -4,7 +4,7 @@ import { LoadoutProperties } from '../../view/InformationPane';
 import { DataDrivenOperator } from '../../model/operators/dataDrivenOperator';
 import { getOperatorConfig } from '../operators/operatorRegistry';
 import {
-  getWeapon, getGearPiece, getConsumableEntry, getTacticalEntry,
+  getWeapon, getGearPiece, getConsumable, getTactical,
   getGenericSkillStats, getNamedSkillPassiveStats,
   getGenericWeaponSkill, getNamedWeaponSkill,
   getWeaponEffectDefs, resolveDurationSeconds,
@@ -291,7 +291,7 @@ export function resolveGearBonusSummary(
 
 // ── Tactical Breakdown ──────────────────────────────────────────────────────
 
-export interface TacticalData {
+export interface TacticalDisplayData {
   name: string;
   modelMaxUses: number;
   currentMaxUses: number;
@@ -300,18 +300,16 @@ export interface TacticalData {
 export function resolveTactical(
   loadout: OperatorLoadoutState,
   stats: LoadoutProperties,
-): { foodName: string | null; tactical: TacticalData | null } {
-  const food = loadout.consumableId ? getConsumableEntry(loadout.consumableId) : undefined;
-  const tac = loadout.tacticalId ? getTacticalEntry(loadout.tacticalId) : undefined;
+): { foodName: string | null; tactical: TacticalDisplayData | null } {
+  const food = loadout.consumableId ? getConsumable(loadout.consumableId) : undefined;
+  const tac = loadout.tacticalId ? getTactical(loadout.tacticalId) : undefined;
 
-  let tactical: TacticalData | null = null;
+  let tactical: TacticalDisplayData | null = null;
   if (tac) {
-    const tacInstance = tac.create();
-    const modelMax = tacInstance.maxUses;
     tactical = {
       name: tac.name,
-      modelMaxUses: modelMax,
-      currentMaxUses: stats.tacticalMaxUses ?? modelMax,
+      modelMaxUses: tac.maxUses,
+      currentMaxUses: stats.tacticalMaxUses ?? tac.maxUses,
     };
   }
 
@@ -542,8 +540,7 @@ const BATK_VARIANT_LABELS: Record<string, string> = {
  */
 export function resolveSubSkills(operatorId: string, skillType: SkillType): SubSkillDetail[] {
   const rawMap = getRawSkillTypeMap(operatorId);
-  const jsonKey = ({ basic: CombatSkillType.BASIC_ATTACK, battle: CombatSkillType.BATTLE_SKILL, combo: CombatSkillType.COMBO_SKILL, ultimate: CombatSkillType.ULTIMATE } as const)[skillType];
-  const mapping = rawMap[jsonKey];
+  const mapping = rawMap[skillType];
   if (!mapping) return [];
 
   if (typeof mapping === 'string') {
@@ -606,8 +603,7 @@ function resolveSkillDetailForId(operatorId: string, skillId: string, potential:
 /** Resolve the clause data for a skill type (top-level clause, not per-segment). */
 export function resolveSkillClause(operatorId: string, skillType: SkillType): Clause {
   const typeMap = getSkillTypeMap(operatorId);
-  const jsonKey = ({ basic: CombatSkillType.BASIC_ATTACK, battle: CombatSkillType.BATTLE_SKILL, combo: CombatSkillType.COMBO_SKILL, ultimate: CombatSkillType.ULTIMATE } as const)[skillType];
-  const skillId = typeMap[jsonKey];
+  const skillId = typeMap[skillType];
   if (!skillId) return [];
   const skill = getOperatorSkill(operatorId, skillId);
   return (skill?.clause ?? []) as Clause;

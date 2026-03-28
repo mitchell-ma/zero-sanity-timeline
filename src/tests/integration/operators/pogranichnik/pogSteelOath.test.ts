@@ -10,6 +10,11 @@
  * B. Steel Oath has correct duration (30s from with.duration on APPLY effect)
  * C. Steel Oath is NOT consumed by other operators' ultimates (Link-only consumption)
  * D. Steel Oath consumption via physical status triggers (BREACH from battle skill)
+ *
+ * Three-layer verification:
+ * 1. Context menu: add-event items are available and enabled for each column
+ * 2. Controller: events appear in allProcessedEvents with correct properties
+ * 3. View: computeTimelinePresentation includes events in the correct column view models
  */
 
 import { renderHook, act } from '@testing-library/react';
@@ -17,29 +22,32 @@ import { NounType } from '../../../../dsl/semantics';
 import { useApp } from '../../../../app/useApp';
 import { ENEMY_OWNER_ID } from '../../../../model/channels';
 import { COMMON_OWNER_ID } from '../../../../controller/slot/commonSlotController';
-import { ColumnType, InteractionModeType } from '../../../../consts/enums';
+import { EventStatusType, InteractionModeType } from '../../../../consts/enums';
 import { FPS } from '../../../../utils/timeline';
 import { eventDuration } from '../../../../consts/viewTypes';
-import type { MiniTimeline } from '../../../../consts/viewTypes';
+import { computeTimelinePresentation } from '../../../../controller/timeline/eventPresentationController';
+import { findColumn, buildContextMenu, getMenuPayload } from '../../helpers';
+
+// ── Status IDs from JSON (single source of truth) ──────────────────────────
+
+/* eslint-disable @typescript-eslint/no-require-imports */
+const POGRANICHNIK_ID: string = require('../../../../model/game-data/operators/pogranichnik/pogranichnik.json').id;
+const CHEN_QIANYU_ID: string = require('../../../../model/game-data/operators/chen-qianyu/chen-qianyu.json').id;
+const STEEL_OATH_ID: string = require('../../../../model/game-data/operators/pogranichnik/statuses/status-steel-oath.json').properties.id;
+const STEEL_OATH_HARASS_ID: string = require('../../../../model/game-data/operators/pogranichnik/statuses/status-steel-oath-harass.json').properties.id;
+/* eslint-enable @typescript-eslint/no-require-imports */
+
+// ── Slot constants ──────────────────────────────────────────────────────────
 
 const SLOT_0 = 'slot-0'; // Laevatain by default
 const SLOT_1 = 'slot-1'; // Swap to Pogranichnik
 const SLOT_2 = 'slot-2'; // Swap to Chen Qianyu
 
-function findColumn(app: ReturnType<typeof useApp>, slotId: string, columnId: string) {
-  return app.columns.find(
-    (c): c is MiniTimeline =>
-      c.type === ColumnType.MINI_TIMELINE &&
-      c.ownerId === slotId &&
-      c.columnId === columnId,
-  );
-}
-
 describe('Pogranichnik Steel Oath — integration through useApp', () => {
   function setupWithPogranichnik() {
     const { result, ...utils } = renderHook(() => useApp());
     act(() => {
-      result.current.handleSwapOperator(SLOT_1, 'POGRANICHNIK');
+      result.current.handleSwapOperator(SLOT_1, POGRANICHNIK_ID);
     });
     return { result, ...utils };
   }
@@ -48,11 +56,19 @@ describe('Pogranichnik Steel Oath — integration through useApp', () => {
     const { result } = setupWithPogranichnik();
     const ultCol = findColumn(result.current, SLOT_1, NounType.ULTIMATE);
     expect(ultCol).toBeDefined();
-    expect(ultCol!.defaultEvent).toBeDefined();
 
+    // ── Context menu layer ──────────────────────────────────────────────
+    const ultMenu = buildContextMenu(result.current, ultCol!, 1 * FPS);
+    expect(ultMenu).not.toBeNull();
+    expect(ultMenu!.length).toBeGreaterThan(0);
+
+    const payload = getMenuPayload(result.current, ultCol!, 1 * FPS);
+    expect(payload.columnId).toBe(NounType.ULTIMATE);
+
+    // ── Controller layer ────────────────────────────────────────────────
     act(() => {
       result.current.handleAddEvent(
-        SLOT_1, NounType.ULTIMATE, 1 * FPS, ultCol!.defaultEvent!,
+        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
@@ -66,18 +82,32 @@ describe('Pogranichnik Steel Oath — integration through useApp', () => {
     const { result } = setupWithPogranichnik();
     const ultCol = findColumn(result.current, SLOT_1, NounType.ULTIMATE);
 
+    const payload = getMenuPayload(result.current, ultCol!, 1 * FPS);
+
     act(() => {
       result.current.handleAddEvent(
-        SLOT_1, NounType.ULTIMATE, 1 * FPS, ultCol!.defaultEvent!,
+        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
+    // ── Controller layer ────────────────────────────────────────────────
     const steelOathEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === COMMON_OWNER_ID && ev.id === 'STEEL_OATH',
+      (ev) => ev.ownerId === COMMON_OWNER_ID && ev.id === STEEL_OATH_ID,
     );
     expect(steelOathEvents.length).toBeGreaterThanOrEqual(1);
     // Steel Oath should have a positive duration (30s = 3600 frames from the APPLY with.duration)
     expect(eventDuration(steelOathEvents[0])).toBeGreaterThan(0);
+
+    // ── View layer ──────────────────────────────────────────────────────
+    const viewModels = computeTimelinePresentation(
+      result.current.allProcessedEvents,
+      result.current.columns,
+    );
+    // Find any view model that contains a STEEL_OATH event
+    const steelOathInView = Array.from(viewModels.values()).some(
+      (vm) => vm.events.some((ev) => ev.id === STEEL_OATH_ID),
+    );
+    expect(steelOathInView).toBe(true);
   });
 
   it('C1: Laevatain ultimate does NOT consume Steel Oath', () => {
@@ -86,21 +116,23 @@ describe('Pogranichnik Steel Oath — integration through useApp', () => {
     const laevUltCol = findColumn(result.current, SLOT_0, NounType.ULTIMATE);
 
     // Pogranichnik ult at 0s → creates Steel Oath
+    const pogPayload = getMenuPayload(result.current, pogUltCol!, 0);
     act(() => {
       result.current.handleAddEvent(
-        SLOT_1, NounType.ULTIMATE, 0, pogUltCol!.defaultEvent!,
+        pogPayload.ownerId, pogPayload.columnId, pogPayload.atFrame, pogPayload.defaultSkill,
       );
     });
 
     // Laevatain ult at 5s → should NOT consume Steel Oath
+    const laevPayload = getMenuPayload(result.current, laevUltCol!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        SLOT_0, NounType.ULTIMATE, 5 * FPS, laevUltCol!.defaultEvent!,
+        laevPayload.ownerId, laevPayload.columnId, laevPayload.atFrame, laevPayload.defaultSkill,
       );
     });
 
     const steelOathEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === COMMON_OWNER_ID && ev.id === 'STEEL_OATH',
+      (ev) => ev.ownerId === COMMON_OWNER_ID && ev.id === STEEL_OATH_ID,
     );
     expect(steelOathEvents.length).toBeGreaterThanOrEqual(1);
     // Steel Oath should still have a positive duration, not clamped to 0 by Laevatain ult
@@ -109,25 +141,32 @@ describe('Pogranichnik Steel Oath — integration through useApp', () => {
 
   it('D1: Combo skill consumes Steel Oath and generates STEEL_OATH_HARASS', () => {
     const { result } = setupWithPogranichnik();
+
+    act(() => {
+      result.current.setInteractionMode(InteractionModeType.FREEFORM);
+    });
+
     const pogUltCol = findColumn(result.current, SLOT_1, NounType.ULTIMATE);
     const pogComboCol = findColumn(result.current, SLOT_1, NounType.COMBO_SKILL);
 
     // Pogranichnik ult at 0s → creates Steel Oath (5 stacks)
+    const ultPayload = getMenuPayload(result.current, pogUltCol!, 0);
     act(() => {
       result.current.handleAddEvent(
-        SLOT_1, NounType.ULTIMATE, 0, pogUltCol!.defaultEvent!,
+        ultPayload.ownerId, ultPayload.columnId, ultPayload.atFrame, ultPayload.defaultSkill,
       );
     });
 
     // Pogranichnik combo skill at 5s → should trigger PERFORM COMBO_SKILL → consume 1 Steel Oath → HARASS
+    const comboPayload = getMenuPayload(result.current, pogComboCol!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        SLOT_1, NounType.COMBO_SKILL, 5 * FPS, pogComboCol!.defaultEvent!,
+        comboPayload.ownerId, comboPayload.columnId, comboPayload.atFrame, comboPayload.defaultSkill,
       );
     });
 
     const harassEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === ENEMY_OWNER_ID && ev.id === 'STEEL_OATH_HARASS',
+      (ev) => ev.ownerId === ENEMY_OWNER_ID && ev.id === STEEL_OATH_HARASS_ID,
     );
     expect(harassEvents.length).toBeGreaterThanOrEqual(1);
     expect(harassEvents[0].startFrame).toBeGreaterThanOrEqual(5 * FPS);
@@ -135,29 +174,36 @@ describe('Pogranichnik Steel Oath — integration through useApp', () => {
 
   it('D2: Consumption clamps old events and creates continuations with fewer stacks', () => {
     const { result } = setupWithPogranichnik();
+
+    act(() => {
+      result.current.setInteractionMode(InteractionModeType.FREEFORM);
+    });
+
     const pogUltCol = findColumn(result.current, SLOT_1, NounType.ULTIMATE);
     const pogComboCol = findColumn(result.current, SLOT_1, NounType.COMBO_SKILL);
 
     // Pogranichnik ult at 0s → creates Steel Oath (5 stacks)
+    const ultPayload = getMenuPayload(result.current, pogUltCol!, 0);
     act(() => {
       result.current.handleAddEvent(
-        SLOT_1, NounType.ULTIMATE, 0, pogUltCol!.defaultEvent!,
+        ultPayload.ownerId, ultPayload.columnId, ultPayload.atFrame, ultPayload.defaultSkill,
       );
     });
 
     // Combo skill at 5s → consume 1 stack
+    const comboPayload = getMenuPayload(result.current, pogComboCol!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        SLOT_1, NounType.COMBO_SKILL, 5 * FPS, pogComboCol!.defaultEvent!,
+        comboPayload.ownerId, comboPayload.columnId, comboPayload.atFrame, comboPayload.defaultSkill,
       );
     });
 
     const steelOathEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === COMMON_OWNER_ID && ev.id === 'STEEL_OATH',
+      (ev) => ev.ownerId === COMMON_OWNER_ID && ev.id === STEEL_OATH_ID,
     );
 
     // All 5 original events should be consumed (clamped at combo frame)
-    const consumed = steelOathEvents.filter(ev => ev.eventStatus === 'CONSUMED');
+    const consumed = steelOathEvents.filter(ev => ev.eventStatus === EventStatusType.CONSUMED);
     expect(consumed).toHaveLength(5);
     for (const ev of consumed) {
       expect(eventDuration(ev)).toBeLessThanOrEqual(5 * FPS + 1);
@@ -165,7 +211,7 @@ describe('Pogranichnik Steel Oath — integration through useApp', () => {
 
     // 4 continuation events should be created starting at the combo frame
     const continuations = steelOathEvents.filter(
-      ev => ev.eventStatus !== 'CONSUMED' && ev.startFrame >= 5 * FPS,
+      ev => ev.eventStatus !== EventStatusType.CONSUMED && ev.startFrame >= 5 * FPS,
     );
     expect(continuations).toHaveLength(4);
     for (const ev of continuations) {
@@ -179,7 +225,7 @@ describe('Pogranichnik Steel Oath — integration through useApp', () => {
 
     // Also add Chen Qianyu to slot 2
     act(() => {
-      result.current.handleSwapOperator(SLOT_2, 'CHEN_QIANYU');
+      result.current.handleSwapOperator(SLOT_2, CHEN_QIANYU_ID);
     });
 
     act(() => {
@@ -189,30 +235,37 @@ describe('Pogranichnik Steel Oath — integration through useApp', () => {
     const pogUltCol = findColumn(result.current, SLOT_1, NounType.ULTIMATE);
     const chenBattleCol = findColumn(result.current, SLOT_2, NounType.BATTLE_SKILL);
 
+    // ── Context menu layer ──────────────────────────────────────────────
+    const chenMenu = buildContextMenu(result.current, chenBattleCol!, 3 * FPS);
+    expect(chenMenu).not.toBeNull();
+
     // Pogranichnik ult at 0s → creates Steel Oath (5 stacks)
+    const ultPayload = getMenuPayload(result.current, pogUltCol!, 0);
     act(() => {
       result.current.handleAddEvent(
-        SLOT_1, NounType.ULTIMATE, 0, pogUltCol!.defaultEvent!,
+        ultPayload.ownerId, ultPayload.columnId, ultPayload.atFrame, ultPayload.defaultSkill,
       );
     });
 
     // First Chen BS at 3s → APPLY LIFT adds Vulnerable I only (no physical status yet)
+    const chenPayload1 = getMenuPayload(result.current, chenBattleCol!, 3 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        SLOT_2, NounType.BATTLE_SKILL, 3 * FPS, chenBattleCol!.defaultEvent!,
+        chenPayload1.ownerId, chenPayload1.columnId, chenPayload1.atFrame, chenPayload1.defaultSkill,
       );
     });
 
     // Second Chen BS at 6s → enemy has Vulnerable → APPLY LIFT creates Lift status
+    const chenPayload2 = getMenuPayload(result.current, chenBattleCol!, 6 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        SLOT_2, NounType.BATTLE_SKILL, 6 * FPS, chenBattleCol!.defaultEvent!,
+        chenPayload2.ownerId, chenPayload2.columnId, chenPayload2.atFrame, chenPayload2.defaultSkill,
       );
     });
 
     // Steel Oath should be triggered by the second BS's physical status (LIFT)
     const harassEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === ENEMY_OWNER_ID && ev.id === 'STEEL_OATH_HARASS',
+      (ev) => ev.ownerId === ENEMY_OWNER_ID && ev.id === STEEL_OATH_HARASS_ID,
     );
     expect(harassEvents.length).toBeGreaterThanOrEqual(1);
   });
@@ -227,26 +280,29 @@ describe('Pogranichnik Steel Oath — integration through useApp', () => {
     });
 
     // Pogranichnik ult at 0s → creates Steel Oath (5 stacks)
+    const ultPayload = getMenuPayload(result.current, pogUltCol!, 0);
     act(() => {
       result.current.handleAddEvent(
-        SLOT_1, NounType.ULTIMATE, 0, pogUltCol!.defaultEvent!,
+        ultPayload.ownerId, ultPayload.columnId, ultPayload.atFrame, ultPayload.defaultSkill,
       );
     });
 
     // Two combo skills well after Steel Oath creation, spaced far enough for cooldown
+    const comboPayload1 = getMenuPayload(result.current, pogComboCol!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        SLOT_1, NounType.COMBO_SKILL, 5 * FPS, pogComboCol!.defaultEvent!,
+        comboPayload1.ownerId, comboPayload1.columnId, comboPayload1.atFrame, comboPayload1.defaultSkill,
       );
     });
+    const comboPayload2 = getMenuPayload(result.current, pogComboCol!, 20 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        SLOT_1, NounType.COMBO_SKILL, 20 * FPS, pogComboCol!.defaultEvent!,
+        comboPayload2.ownerId, comboPayload2.columnId, comboPayload2.atFrame, comboPayload2.defaultSkill,
       );
     });
 
     const steelOathEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === COMMON_OWNER_ID && ev.id === 'STEEL_OATH',
+      (ev) => ev.ownerId === COMMON_OWNER_ID && ev.id === STEEL_OATH_ID,
     );
 
     // Collect distinct stack counts in chronological order
@@ -263,7 +319,7 @@ describe('Pogranichnik Steel Oath — integration through useApp', () => {
     expect(distinctCounts[2]).toBe(distinctCounts[1]! - 1);
 
     // Active (non-consumed) events should all have the lowest stack count
-    const active = steelOathEvents.filter(ev => ev.eventStatus !== 'CONSUMED');
+    const active = steelOathEvents.filter(ev => ev.eventStatus !== EventStatusType.CONSUMED);
     expect(active.length).toBeGreaterThan(0);
     for (const ev of active) {
       expect(ev.stacks).toBe(distinctCounts[2]);

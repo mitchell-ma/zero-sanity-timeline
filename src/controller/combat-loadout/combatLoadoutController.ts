@@ -1,4 +1,5 @@
 import { Operator } from '../../consts/viewTypes';
+import { NounType } from '../../dsl/semantics';
 import type { Slot } from '../timeline/columnBuilder';
 import { getWeapon } from '../gameDataStore';
 import { CommonSlotController } from '../slot/commonSlotController';
@@ -64,7 +65,7 @@ export class CombatLoadoutController {
         this.slots[i] = getComboTriggerClause(op.id)
           ? { operatorId: op.id }
           : null;
-        this.spCosts.set(slot.slotId, op.skills.battle.skillPointCost ?? 100);
+        this.spCosts.set(slot.slotId, op.skills[NounType.BATTLE_SKILL]?.skillPointCost ?? 100);
         slotOperatorMap[slot.slotId] = op.id;
       }
       if (slot.loadoutProperties) loadoutProperties[slot.slotId] = slot.loadoutProperties;

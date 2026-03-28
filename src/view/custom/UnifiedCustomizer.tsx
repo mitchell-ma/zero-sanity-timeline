@@ -600,8 +600,7 @@ function effectToText(e: Effect): string {
   parts.push(e.verb.replace(/_/g, ' '));
   if (e.value != null) parts.push(e.value === THRESHOLD_MAX ? 'MAX' : (typeof e.value === 'object' && 'value' in e.value ? String(e.value.value) : String(e.value)));
   if (e.objectQualifier) {
-    const adjs = Array.isArray(e.objectQualifier) ? e.objectQualifier : [e.objectQualifier];
-    parts.push(adjs.map((a) => a.replace(/_/g, ' ')).join(' '));
+    parts.push(e.objectQualifier.replace(/_/g, ' '));
   }
   if (e.object) parts.push(e.object.replace(/_/g, ' '));
   if (e.objectId) parts.push(`(${e.objectId})`);

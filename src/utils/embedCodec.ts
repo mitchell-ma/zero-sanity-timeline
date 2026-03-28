@@ -761,7 +761,12 @@ export async function decodeEmbed(
   // Build visible skills (all visible for shared URLs)
   const visibleSkills: Record<string, Record<string, boolean>> = {};
   for (const slotId of SLOT_IDS) {
-    visibleSkills[slotId] = { [NounType.BASIC_ATTACK]: true, [NounType.BATTLE_SKILL]: true, [NounType.COMBO_SKILL]: true, [NounType.ULTIMATE]: true };
+    visibleSkills[slotId] = {
+      [NounType.BASIC_ATTACK]: true,
+      [NounType.BATTLE_SKILL]: true,
+      [NounType.COMBO_SKILL]: true,
+      [NounType.ULTIMATE]: true,
+    };
   }
 
   // Reconstruct resource configs

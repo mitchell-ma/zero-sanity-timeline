@@ -1,16 +1,20 @@
 import { PhysicalStatusType, StatusType } from './enums';
-import { SkillType } from './viewTypes';
+import { NounType } from '../dsl/semantics';
 import { getAllSkillLabels, getAllStatusLabels } from '../controller/gameDataStore';
 import { t } from '../locales/locale';
-import { REACTION_COLUMNS, PHYSICAL_INFLICTION_COLUMNS } from '../model/channels';
+import {
+  INFLICTION_COLUMNS, REACTION_COLUMNS,
+  PHYSICAL_INFLICTION_COLUMNS,
+  NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID,
+} from '../model/channels';
 
 // ── Column header labels ────────────────────────────────────────────────────
 
-export const SKILL_LABELS: Record<SkillType, string> = {
-  basic:    t('skill.type.basic'),
-  battle:   t('skill.type.battle'),
-  combo:    t('skill.type.combo'),
-  ultimate: t('skill.type.ultimate'),
+export const SKILL_LABELS: Record<string, string> = {
+  [NounType.BASIC_ATTACK]: t('skill.type.basic'),
+  [NounType.BATTLE_SKILL]: t('skill.type.battle'),
+  [NounType.COMBO_SKILL]:  t('skill.type.combo'),
+  [NounType.ULTIMATE]:     t('skill.type.ultimate'),
 };
 
 export const enum ColumnLabel {
@@ -30,12 +34,6 @@ export const enum ColumnLabel {
   STATUS               = 'STATUS',
   STAGGER              = 'STAGGER',
   STAGGER_FRAILTY      = 'STAGGER FRAILTY',
-  WULFGARD_TALENT1_SCORCHING_FANGS = 'SCORCHING FANGS',
-  SCORCHING_HEART      = 'SCORCHING HEART (TALENT)',
-  SCORCHING_HEART_EFFECT = 'SCORCHING HEART',
-  ORIGINIUM_CRYSTAL    = 'CRYSTAL',
-  WILDLAND_TREKKER     = 'WILDLAND TREKKER',
-  MESSENGERS_SONG      = "MESSENGER'S SONG",
   ACTION               = 'ACTION',
   CONTROLLED           = 'CONTROLLED',
   OTHER                = 'OTHER',
@@ -46,7 +44,6 @@ const GAME_MECHANIC_STATUS_LABELS: Record<string, string> = {
   [StatusType.FOCUS]:           t('status.FOCUS'),
   [StatusType.SUSCEPTIBILITY]:  t('status.SUSCEPTIBILITY'),
   [StatusType.FRAGILITY]:       t('status.FRAGILITY'),
-  [StatusType.ORIGINIUM_CRYSTAL]: t('status.ORIGINIUM_CRYSTAL'),
   [StatusType.WEAKEN]:          t('status.WEAKEN'),
   [StatusType.DMG_REDUCTION]:   t('status.DMG_REDUCTION'),
   [StatusType.PROTECTION]:      t('status.PROTECTION'),
@@ -81,38 +78,29 @@ export const COMBAT_SKILL_LABELS: Record<string, string> = getAllSkillLabels();
 
 export const INFLICTION_EVENT_LABELS: Record<string, string> = {
   // Arts inflictions
-  heatInfliction:       t('infliction.heatInfliction'),
-  cryoInfliction:       t('infliction.cryoInfliction'),
-  natureInfliction:     t('infliction.natureInfliction'),
-  electricInfliction:   t('infliction.electricInfliction'),
+  [INFLICTION_COLUMNS.HEAT]:     t('infliction.heatInfliction'),
+  [INFLICTION_COLUMNS.CRYO]:     t('infliction.cryoInfliction'),
+  [INFLICTION_COLUMNS.NATURE]:   t('infliction.natureInfliction'),
+  [INFLICTION_COLUMNS.ELECTRIC]: t('infliction.electricInfliction'),
   // Physical inflictions
-  vulnerableInfliction: t('infliction.vulnerableInfliction'),
-  // Arts reactions (derived event names use lowercase columnId)
-  combustion:           t('infliction.combustion'),
-  solidification:       t('infliction.solidification'),
-  corrosion:            t('infliction.corrosion'),
-  electrification:      t('infliction.electrification'),
+  [PHYSICAL_INFLICTION_COLUMNS.VULNERABLE]: t('infliction.vulnerableInfliction'),
+  // Arts reactions
+  [REACTION_COLUMNS.COMBUSTION]:       t('infliction.combustion'),
+  [REACTION_COLUMNS.SOLIDIFICATION]:   t('infliction.solidification'),
+  [REACTION_COLUMNS.CORROSION]:        t('infliction.corrosion'),
+  [REACTION_COLUMNS.ELECTRIFICATION]:  t('infliction.electrification'),
   // Physical statuses
-  breach:               t('infliction.breach'),
-  // Operator statuses (exchange status enum values)
-  MELTING_FLAME:        t('infliction.MELTING_FLAME'),
-  THUNDERLANCE:         t('infliction.THUNDERLANCE'),
-  // Enemy statuses (applied via applyStatus frames)
-  focus:                t('infliction.focus'),
-  FOCUS:                t('infliction.FOCUS'),
-  SUSCEPTIBILITY:       t('infliction.SUSCEPTIBILITY'),
+  [PhysicalStatusType.BREACH]:  t('infliction.breach'),
+  // Enemy statuses
+  [StatusType.FOCUS]:           t('infliction.FOCUS'),
+  [StatusType.SUSCEPTIBILITY]:  t('infliction.SUSCEPTIBILITY'),
   // Team statuses
-  SHIELD:               t('infliction.SHIELD'),
+  [StatusType.SHIELD]:          t('infliction.SHIELD'),
   // Enemy debuffs
-  SCORCHING_HEART:      t('infliction.SCORCHING_HEART'),
-  SCORCHING_HEART_EFFECT: t('infliction.SCORCHING_HEART_EFFECT'),
-  FRAGILITY:            t('infliction.FRAGILITY'),
-  ORIGINIUM_CRYSTAL:    t('infliction.ORIGINIUM_CRYSTAL'),
-  'originium-crystal':  t('infliction.originium-crystal'),
-  WILDLAND_TREKKER:     t('infliction.WILDLAND_TREKKER'),
+  [StatusType.FRAGILITY]:       t('infliction.FRAGILITY'),
   // Stagger status events
-  STAGGER_NODE:         t('infliction.STAGGER_NODE'),
-  STAGGER:              t('infliction.STAGGER'),
+  [NODE_STAGGER_COLUMN_ID]:     t('infliction.STAGGER_NODE'),
+  [FULL_STAGGER_COLUMN_ID]:     t('infliction.STAGGER'),
   // Enemy actions
   AOE_PHYSICAL:         t('enemyAction.AOE_PHYSICAL'),
   AOE_HEAT:             t('enemyAction.AOE_HEAT'),

@@ -113,7 +113,7 @@ function getFrameElementColor(f: EventFrameMarker, skillElement?: string): strin
       if (el) break;
       for (const ef of pred.effects) {
         if (!ef.dslEffect) continue;
-        const q = Array.isArray(ef.dslEffect.objectQualifier) ? ef.dslEffect.objectQualifier[0] : ef.dslEffect.objectQualifier;
+        const q = ef.dslEffect.objectQualifier;
         if (ef.dslEffect.verb === VerbType.APPLY || ef.dslEffect.verb === VerbType.CONSUME) {
           if (ef.dslEffect.object === NounType.INFLICTION && q) { el = q; break; }
           if (ef.dslEffect.object === NounType.REACTION && q) { el = getStatusElementMap()[q]; break; }

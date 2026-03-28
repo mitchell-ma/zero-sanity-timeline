@@ -37,7 +37,7 @@ interface JsonEffect {
   object?: string;
   objectId?: string;
   objectType?: string;
-  objectQualifier?: string | string[];
+  objectQualifier?: string;
   toDeterminer?: string;
   to?: string;
   fromDeterminer?: string;
@@ -256,9 +256,9 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
       const clauseEffects: FrameClauseEffect[] = [];
       for (const ef of pred.effects) {
         const wp = ef.with;
-        const qualifiers = Array.isArray(ef.objectQualifier) ? ef.objectQualifier : ef.objectQualifier ? [ef.objectQualifier] : [];
-        const elementQualifier = qualifiers.find(a => [AdjectiveType.HEAT, AdjectiveType.CRYO, AdjectiveType.NATURE, AdjectiveType.ELECTRIC, AdjectiveType.PHYSICAL].includes(a as AdjectiveType));
-        const isSource = qualifiers.includes('TRIGGER');
+        const elementQualifier = ef.objectQualifier && [AdjectiveType.HEAT, AdjectiveType.CRYO, AdjectiveType.NATURE, AdjectiveType.ELECTRIC, AdjectiveType.PHYSICAL].includes(ef.objectQualifier as AdjectiveType)
+          ? ef.objectQualifier : undefined;
+        const isSource = ef.objectQualifier === 'TRIGGER';
 
         switch (ef.verb) {
           case VerbType.RECOVER:

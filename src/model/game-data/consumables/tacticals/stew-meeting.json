@@ -1,0 +1,84 @@
+{
+  "properties": {
+    "id": "STEW_MEETING",
+    "name": "Stew Meeting",
+    "rarity": 2,
+    "usageLimit": {
+      "verb": "IS",
+      "value": 3
+    }
+  },
+  "onTriggerClause": [
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "HAVE",
+          "object": "ULTIMATE_ENERGY",
+          "cardinalityConstraint": "AT_MOST",
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": 0.5,
+              "unit": "PERCENTAGE"
+            }
+          }
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "objectDeterminer": "THIS",
+          "object": "EVENT"
+        }
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 2
+          },
+          "unit": "SECOND"
+        }
+      },
+      "frames": [
+        {
+          "properties": {
+            "offset": {
+              "value": 0,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "RECOVER",
+                  "object": "ULTIMATE_ENERGY",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 0.2,
+                      "unit": "PERCENTAGE"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "originId": "game"
+  }
+}

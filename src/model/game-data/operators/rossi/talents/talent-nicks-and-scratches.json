@@ -1,0 +1,39 @@
+{
+  "onTriggerClause": [
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "PERFORM",
+          "object": "BATTLE_SKILL",
+          "_note": "Triggers on Wolven Ambrage activation — battle skill hitting a Vulnerable target. Modeled as battle skill trigger; the Vulnerable condition is implicit in the Wolven Ambrage mechanic."
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "RAZOR_CLAWMARK",
+          "to": "ENEMY"
+        }
+      ]
+    }
+  ],
+  "clauseType": "ALL",
+  "properties": {
+    "id": "NICKS_AND_SCRATCHES_TALENT",
+    "name": "Nicks and Scratches (Talent)",
+    "to": "ENEMY",
+    "eventType": "STATUS",
+    "eventCategoryType": "TALENT",
+    "description": "After Wolven Ambrage activates, applies Razor Clawmark to target. While active: target takes Physical DMG per second and increased Physical + Heat DMG taken.",
+    "maxLevel": 2
+  },
+  "metadata": {
+    "originId": "ROSSI",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ]
+  }
+}
