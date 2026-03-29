@@ -80,6 +80,8 @@ export interface ExecutionContext {
   critMode?: CritMode;
   /** Cumulative chance multiplier for EXPECTED mode (default 1.0). */
   chanceMultiplier?: number;
+  /** The slot where the parent status event lives (for self-consumption). */
+  currentOwnerId?: string;
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────
@@ -314,7 +316,31 @@ function executeConsume(effect: Effect, ctx: ExecutionContext): MutationSet {
     return result;
   }
 
-  // CONSUME SKILL_POINT, ULTIMATE_ENERGY, COOLDOWN, STACKS — resource verbs.
+  // CONSUME STACKS — self-consumption: consume stacks of the parent status.
+  // Used by statuses with onTriggerClause that deplete their own stacks (e.g. Auxiliary Crystal).
+  if (effect.object === NounType.STACKS) {
+    const statusId = effect.objectId ?? ctx.sourceSkillName;
+    const columnId = statusIdToColumnId(statusId);
+    // Use currentOwnerId (the slot where the status lives) for self-consumption
+    const statusOwnerId = ctx.currentOwnerId
+      ?? resolveOwnerId(effect.fromObject as string ?? effect.to as string ?? NounType.OPERATOR, ctx, effect.fromDeterminer ?? effect.toDeterminer);
+    const targets = activeEventsAtFrame(ctx.events, columnId, statusOwnerId, ctx.frame)
+      .filter(ev => ev.eventStatus !== EventStatusType.CONSUMED)
+      .sort((a, b) => a.startFrame - b.startFrame);
+    const consumeCount = resolveWith(effect.with?.stacks, ctx) ?? 1;
+    const toConsume = targets.slice(0, consumeCount);
+    for (const target of toConsume) {
+      result.clamped.set(target.uid, {
+        newDuration: Math.max(0, ctx.frame - target.startFrame),
+        eventStatus: EventStatusType.CONSUMED,
+        sourceOwnerId: ctx.sourceOwnerId,
+        sourceSkillName: ctx.sourceSkillName,
+      });
+    }
+    return result;
+  }
+
+  // CONSUME SKILL_POINT, ULTIMATE_ENERGY, COOLDOWN — resource verbs.
   // These don't produce timeline mutations (resources tracked separately).
   return result;
 }

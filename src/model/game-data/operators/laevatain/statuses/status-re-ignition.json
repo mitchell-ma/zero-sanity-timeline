@@ -5,7 +5,8 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "PROTECTION",
+          "object": "STATUS",
+          "objectId": "PROTECTION",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
@@ -17,7 +18,7 @@
         },
         {
           "verb": "APPLY",
-          "object": "HP_REGEN",
+          "object": "STAT", "objectId": "HP_REGEN",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {

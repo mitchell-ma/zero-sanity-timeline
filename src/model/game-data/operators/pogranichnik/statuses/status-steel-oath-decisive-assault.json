@@ -69,12 +69,12 @@
                       "verb": "VARY_BY",
                       "object": "SKILL_LEVEL",
                       "value": [
-                        2.0,
+                        2,
                         2.2,
                         2.4,
                         2.6,
                         2.8,
-                        3.0,
+                        3,
                         3.2,
                         3.4,
                         3.6,
@@ -83,6 +83,13 @@
                         4.5
                       ],
                       "ofDeterminer": "SOURCE",
+                      "of": "OPERATOR"
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "ofDeterminer": "THIS",
                       "of": "OPERATOR"
                     }
                   }

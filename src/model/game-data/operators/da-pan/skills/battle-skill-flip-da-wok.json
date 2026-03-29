@@ -73,6 +73,13 @@
                       ],
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
                     }
                   }
                 }
@@ -145,6 +152,13 @@
                         2.39,
                         2.59
                       ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
                     }

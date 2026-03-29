@@ -20,7 +20,7 @@
             {
               "verb": "APPLY",
               "objectQualifier": "ELECTRIC",
-              "object": "AMP",
+              "object": "STATUS", "objectId": "AMP",
               "to": "TEAM",
               "with": {
                 "value": {
@@ -48,7 +48,7 @@
             {
               "verb": "APPLY",
               "objectQualifier": "HEAT",
-              "object": "AMP",
+              "object": "STATUS", "objectId": "AMP",
               "to": "TEAM",
               "with": {
                 "value": {

@@ -1,65 +1,13 @@
 {
-  "onTriggerClause": [
-    {
-      "conditions": [
-        {
-          "subjectDeterminer": "THIS",
-          "subject": "OPERATOR",
-          "verb": "HIT",
-          "object": "ENEMY"
-        },
-        {
-          "subject": "ENEMY",
-          "verb": "HAVE",
-          "object": "STATUS",
-          "objectId": "INFLICTION",
-          "objectQualifier": "CRYO"
-        }
-      ],
-      "effects": [
-        {
-          "verb": "APPLY",
-          "object": "STATUS",
-          "objectId": "EXECUTE_PROCESS",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR"
-        }
-      ]
-    },
-    {
-      "conditions": [
-        {
-          "subjectDeterminer": "THIS",
-          "subject": "OPERATOR",
-          "verb": "HIT",
-          "object": "ENEMY"
-        },
-        {
-          "subject": "ENEMY",
-          "verb": "IS",
-          "object": "SOLIDIFIED"
-        }
-      ],
-      "effects": [
-        {
-          "verb": "APPLY",
-          "object": "STATUS",
-          "objectId": "EXECUTE_PROCESS",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR"
-        }
-      ]
-    }
-  ],
   "properties": {
     "id": "EXECUTE_PROCESS_TALENT",
+    "maxLevel": { "verb": "IS", "value": 2 },
     "name": "Execute Process (Talent)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
     "eventCategoryType": "TALENT",
-    "description": "Combo skill Stress Testing improved: Hitting an enemy with Cryo Infliction or Solidification also causes the enemy to suffer Cryo DMG Taken +10% for 5s. This effect cannot stack.",
-    "maxLevel": 2
+    "description": "Combo skill Stress Testing improved: Hitting an enemy with Cryo Infliction or Solidification also causes the enemy to suffer Cryo DMG Taken +10% for 5s. This effect cannot stack."
   },
   "metadata": {
     "originId": "XAIHI",

@@ -9,6 +9,7 @@
 import { TimelineEvent, eventDuration } from '../../consts/viewTypes';
 import { NounType } from '../../dsl/semantics';
 import { CombatSkillType, DamageFactorType, ElementType, StatType, StatusType } from '../../consts/enums';
+import { isQualifiedId } from '../../dsl/semantics';
 import { StaggerBreak } from './staggerTimeline';
 import {
   ENEMY_OWNER_ID,
@@ -117,7 +118,7 @@ export class EventsQueryService {
 
     // Pre-filter from DerivedEventController for O(n) per-column queries
     const events = state.getRegisteredEvents();
-    this.susceptibilityEvents = events.filter(e => (e.columnId === StatusType.SUSCEPTIBILITY || e.columnId === StatusType.FOCUS) && e.ownerId === ENEMY_OWNER_ID);
+    this.susceptibilityEvents = events.filter(e => (e.columnId === StatusType.SUSCEPTIBILITY || e.columnId === StatusType.FOCUS || isQualifiedId(e.columnId, StatusType.SUSCEPTIBILITY)) && e.ownerId === ENEMY_OWNER_ID);
     this.linkEvents = events.filter(e => e.columnId === StatusType.LINK);
     this.artsAmpEvents = events.filter(e => e.damageFactorType === DamageFactorType.AMP);
     this.electrificationEvents = events.filter(e => e.columnId === REACTION_COLUMNS.ELECTRIFICATION);

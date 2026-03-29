@@ -11,7 +11,7 @@
 import type { EventSegmentData } from '../consts/viewTypes';
 import type { FrameClausePredicate } from '../model/event-frames/skillEventFrame';
 import { CombatSkillType, StackInteractionType, UnitType } from '../consts/enums';
-import { VerbType, NounType, DeterminerType } from '../dsl/semantics';
+import { VerbType, NounType, DeterminerType, flattenQualifiedId } from '../dsl/semantics';
 import type { Interaction, ValueNode } from '../dsl/semantics';
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from './calculation/valueResolver';
 
@@ -89,6 +89,11 @@ import {
   getWeaponStatuses,
   getAllWeaponStatusOriginIds,
 } from '../model/game-data/weaponStatusesStore';
+
+import {
+  getConsumable as getConsumableData,
+  getTactical as getTacticalData,
+} from '../model/game-data/consumablesStore';
 
 // ── Frame pipeline ──────────────────────────────────────────────────────────
 
@@ -466,7 +471,12 @@ export function getTeamStatusIds(operatorId: string): string[] {
         for (const pred of frame.clause ?? []) {
           for (const ef of pred.effects ?? []) {
             if (ef.to === NounType.TEAM && ef.object === NounType.STATUS && ef.objectId) {
-              ids.add(ef.objectId as string);
+              // Qualified status → element-specific ID (e.g. CRYO + AMP → CRYO_AMP)
+              if (ef.objectQualifier) {
+                ids.add(flattenQualifiedId(ef.objectQualifier as string, ef.objectId as string));
+              } else {
+                ids.add(ef.objectId as string);
+              }
             }
           }
         }
@@ -495,7 +505,7 @@ export interface NormalizedEffectDef {
     limit: ValueNode;
     interactionType: string;
   };
-  onTriggerClause: { conditions: Interaction[] }[];
+  onTriggerClause: { conditions: Interaction[]; effects?: Record<string, unknown>[] }[];
   clause?: { conditions: Interaction[]; effects: Record<string, unknown>[] }[];
   note?: string;
   cooldownSeconds?: number;
@@ -505,17 +515,19 @@ export interface NormalizedEffectDef {
   isForced?: boolean;
   enhancementTypes?: string[];
   susceptibility?: Record<string, number[]>;
+  eventCategoryType?: string;
+  usageLimit?: number;
   segments?: unknown[];
   stats?: unknown[];
   statusValue?: number;
 }
 
-// ── Weapon name → originId mapping ────────────────────────────────────────────
+// ── Weapon ID → originId mapping ─────────────────────────────────────────────
 
-const WEAPON_NAME_TO_ORIGIN: Record<string, string> = {};
+const WEAPON_ID_TO_ORIGIN: Record<string, string> = {};
 for (const weapon of getAllWeapons()) {
-  if (weapon.name && weapon.id) {
-    WEAPON_NAME_TO_ORIGIN[weapon.name] = weapon.id;
+  if (weapon.id) {
+    WEAPON_ID_TO_ORIGIN[weapon.id] = weapon.id;
   }
 }
 
@@ -571,7 +583,7 @@ function normalizeEffectEntry(raw: Record<string, unknown>): NormalizedEffectDef
     ...(raw.element ? { element: raw.element as string } : {}),
     target,
     targetDeterminer,
-    originId: raw.originId as string | undefined,
+    originId: (raw.originId ?? (raw.metadata as Record<string, unknown> | undefined)?.originId) as string | undefined,
     stacks: {
       limit,
       interactionType: (sl.interactionType as string) ?? StackInteractionType.NONE,
@@ -580,6 +592,11 @@ function normalizeEffectEntry(raw: Record<string, unknown>): NormalizedEffectDef
     ...(raw.clause ? { clause: raw.clause as NormalizedEffectDef['clause'] } : {}),
     ...(raw.note ? { note: raw.note as string } : {}),
     ...(raw.cooldownSeconds ?? (props.cooldownSeconds as number | undefined) ? { cooldownSeconds: (raw.cooldownSeconds ?? props.cooldownSeconds) as number } : {}),
+    ...(props.eventCategoryType ? { eventCategoryType: props.eventCategoryType as string } : {}),
+    ...(raw.usageLimit != null ? { usageLimit: raw.usageLimit as number }
+      : (props.usageLimit as Record<string, unknown> | undefined)?.value != null
+        ? { usageLimit: (props.usageLimit as { value?: number }).value! }
+        : {}),
   };
 
   if (props.duration) {
@@ -589,9 +606,9 @@ function normalizeEffectEntry(raw: Record<string, unknown>): NormalizedEffectDef
   return out;
 }
 
-export function getWeaponEffectDefs(weaponName: string): NormalizedEffectDef[] {
-  if (customWeaponEffects[weaponName]) return customWeaponEffects[weaponName];
-  const originId = WEAPON_NAME_TO_ORIGIN[weaponName];
+export function getWeaponEffectDefs(weaponId: string): NormalizedEffectDef[] {
+  if (customWeaponEffects[weaponId]) return customWeaponEffects[weaponId];
+  const originId = WEAPON_ID_TO_ORIGIN[weaponId];
   if (!originId) return [];
   const statuses = getWeaponStatuses(originId);
   if (statuses.length === 0) return [];
@@ -629,13 +646,13 @@ export function getGearEffectDefs(gearSetType: string): NormalizedEffectDef[] {
   return defs;
 }
 
-export function getAllWeaponEffectNames(): string[] {
-  const names: string[] = [];
+export function getAllWeaponEffectIds(): string[] {
+  const ids: string[] = [];
   for (const weapon of getAllWeapons()) {
     const statuses = getWeaponStatuses(weapon.id);
-    if (statuses.length > 0) names.push(weapon.name);
+    if (statuses.length > 0) ids.push(weapon.id);
   }
-  return [...names, ...Object.keys(customWeaponEffects)];
+  return [...ids, ...Object.keys(customWeaponEffects)];
 }
 
 export function getAllGearEffectTypes(): string[] {
@@ -645,12 +662,12 @@ export function getAllGearEffectTypes(): string[] {
   ];
 }
 
-export function registerCustomWeaponEffectDefs(weaponName: string, defs: NormalizedEffectDef[] | Record<string, unknown>[]): void {
-  customWeaponEffects[weaponName] = defs as NormalizedEffectDef[];
+export function registerCustomWeaponEffectDefs(weaponId: string, defs: NormalizedEffectDef[] | Record<string, unknown>[]): void {
+  customWeaponEffects[weaponId] = defs as NormalizedEffectDef[];
 }
 
-export function deregisterCustomWeaponEffectDefs(weaponName: string): void {
-  delete customWeaponEffects[weaponName];
+export function deregisterCustomWeaponEffectDefs(weaponId: string): void {
+  delete customWeaponEffects[weaponId];
 }
 
 export function registerCustomGearEffectDefs(gearSetType: string, defs: NormalizedEffectDef[] | Record<string, unknown>[]): void {
@@ -685,6 +702,50 @@ export function registerCustomGearEffectDefs(gearSetType: string, defs: Normaliz
 
 export function deregisterCustomGearEffectDefs(gearSetType: string): void {
   delete customGearEffects[gearSetType];
+}
+
+/**
+ * Get weapon skill as a talent-shaped trigger source def.
+ * Returns one def per weapon skill with the skill's real ID and all onTriggerClause entries.
+ * Passive clause effects (if any) are included as the def's clause.
+ */
+export function getWeaponTriggerDefs(weaponId: string): NormalizedEffectDef[] {
+  const originId = WEAPON_ID_TO_ORIGIN[weaponId];
+  if (!originId) return [];
+  const namedSkill = getNamedWeaponSkill(originId);
+  if (!namedSkill) return [];
+  if (!namedSkill.onTriggerClause.length && !namedSkill.clause.length) return [];
+  return [normalizeEffectEntry(namedSkill.serializeAsTriggerDef())];
+}
+
+/**
+ * Get gear set effect as a talent-shaped trigger source def.
+ * Returns one def per gear set with the effect's real ID and all onTriggerClause entries.
+ */
+export function getGearTriggerDefs(gearSetType: string): NormalizedEffectDef[] {
+  const effect = getGearSetEffect(gearSetType);
+  if (!effect) return [];
+  if (!effect.onTriggerClause.length) return [];
+  return [normalizeEffectEntry(effect.serializeAsTriggerDef())];
+}
+
+/**
+ * Get consumable as a passive talent-shaped def (stat buffs with duration).
+ */
+export function getConsumablePassiveDef(consumableId: string): NormalizedEffectDef | undefined {
+  const consumable = getConsumableData(consumableId);
+  if (!consumable) return undefined;
+  return normalizeEffectEntry(consumable.serializeAsTriggerDef());
+}
+
+/**
+ * Get tactical as a trigger source def (talent-shaped with onTriggerClause).
+ */
+export function getTacticalTriggerDef(tacticalId: string): NormalizedEffectDef | undefined {
+  const tactical = getTacticalData(tacticalId);
+  if (!tactical) return undefined;
+  if (!tactical.onTriggerClause.length) return undefined;
+  return normalizeEffectEntry(tactical.serializeAsTriggerDef());
 }
 
 export function getGearEffectLabel(gearSetType: string): string | undefined {
@@ -790,7 +851,7 @@ for (const [id, setData] of Object.entries(GEAR_SET_DATA)) {
     setData.pieces.push({
       gearType: gp.id,
       name: gp.name,
-      gearCategory: gp.type,
+      gearCategory: gp.gearType,
       defense,
       allLevels,
     });
@@ -982,14 +1043,14 @@ function buildTriggerAssociations(): TriggerAssociation[] {
     }
   }
 
-  for (const weaponName of getAllWeaponEffectNames()) {
-    const defs = getWeaponEffectDefs(weaponName);
+  for (const weaponId of getAllWeaponEffectIds()) {
+    const defs = getWeaponEffectDefs(weaponId);
     for (const def of defs) {
       if (def.onTriggerClause?.length) {
         associations.push({
-          operatorId: def.originId ?? weaponName,
+          operatorId: def.originId ?? weaponId,
           statusId: def.id,
-          originId: def.originId ?? weaponName,
+          originId: def.originId ?? weaponId,
           triggerClause: def.onTriggerClause,
           source: 'weapon',
         });

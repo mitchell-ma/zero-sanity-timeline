@@ -1,4 +1,4 @@
-import { EventFrameType, SegmentType } from "../../consts/enums";
+import { EventFrameType, SegmentType, DamageScalingStatType } from "../../consts/enums";
 import { NounType, VerbType, AdjectiveType, DeterminerType } from "../../dsl/semantics";
 import type { Effect, ValueNode } from "../../dsl/semantics";
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT, type ValueResolutionContext } from "../../controller/calculation/valueResolver";
@@ -38,6 +38,7 @@ interface JsonEffect {
   objectId?: string;
   objectType?: string;
   objectQualifier?: string;
+  objectDeterminer?: string;
   toDeterminer?: string;
   to?: string;
   fromDeterminer?: string;
@@ -258,7 +259,7 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
         const wp = ef.with;
         const elementQualifier = ef.objectQualifier && [AdjectiveType.HEAT, AdjectiveType.CRYO, AdjectiveType.NATURE, AdjectiveType.ELECTRIC, AdjectiveType.PHYSICAL].includes(ef.objectQualifier as AdjectiveType)
           ? ef.objectQualifier : undefined;
-        const isSource = ef.objectQualifier === 'TRIGGER';
+        const isSource = ef.objectDeterminer === DeterminerType.TRIGGER;
 
         switch (ef.verb) {
           case VerbType.RECOVER:
@@ -298,9 +299,12 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
             if (ef.object === NounType.DAMAGE) {
               const multipliers = wp?.value;
               const mulArr = multipliers && Array.isArray(multipliers.value) ? multipliers.value : [];
+              const mainStatNode = wp?.mainStat as Record<string, unknown> | undefined;
+              const mainStat = mainStatNode?.objectId as DamageScalingStatType | undefined;
               const dd: FrameDealDamage = {
-                ...(elementQualifier && { element: elementQualifier }),
+                ...(elementQualifier ? { element: elementQualifier } : {}),
                 multipliers: mulArr,
+                ...(mainStat ? { mainStat } : {}),
               };
               dealDamage = dd;
               clauseEffects.push({ type: 'dealDamage', dealDamage: dd });

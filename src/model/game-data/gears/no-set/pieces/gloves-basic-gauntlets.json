@@ -5,7 +5,7 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "BASE_DEFENSE",
+          "object": "STAT", "objectId": "BASE_DEFENSE",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
@@ -17,7 +17,7 @@
         },
         {
           "verb": "APPLY",
-          "object": "STRENGTH",
+          "object": "STAT", "objectId": "STRENGTH",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
@@ -37,7 +37,7 @@
         },
         {
           "verb": "APPLY",
-          "object": "AGILITY",
+          "object": "STAT", "objectId": "AGILITY",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
@@ -57,7 +57,7 @@
         },
         {
           "verb": "APPLY",
-          "object": "FLAT_HP",
+          "object": "STAT", "objectId": "FLAT_HP",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
@@ -81,7 +81,7 @@
   "properties": {
     "id": "BASIC_GAUNTLETS",
     "name": "Basic Gauntlets",
-    "type": "GLOVES",
+    "gearType": "GLOVES",
     "gearSet": "NONE"
   },
   "metadata": {

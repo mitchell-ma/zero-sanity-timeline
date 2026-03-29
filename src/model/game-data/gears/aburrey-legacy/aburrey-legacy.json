@@ -7,13 +7,39 @@
           "subject": "OPERATOR",
           "verb": "PERFORM",
           "object": "BATTLE_SKILL"
-        },
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "ABURREY_LEGACY_BATTLE_SKILL",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
+        }
+      ]
+    },
+    {
+      "conditions": [
         {
           "subjectDeterminer": "THIS",
           "subject": "OPERATOR",
           "verb": "PERFORM",
           "object": "COMBO_SKILL"
-        },
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "ABURREY_LEGACY_COMBO_SKILL",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
+        }
+      ]
+    },
+    {
+      "conditions": [
         {
           "subjectDeterminer": "THIS",
           "subject": "OPERATOR",
@@ -25,7 +51,9 @@
         {
           "verb": "APPLY",
           "object": "STATUS",
-          "objectId": "ABURREY_LEGACY"
+          "objectId": "ABURREY_LEGACY_ULTIMATE",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
         }
       ]
     }

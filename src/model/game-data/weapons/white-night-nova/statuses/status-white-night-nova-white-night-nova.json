@@ -30,7 +30,7 @@
         },
         {
           "verb": "APPLY",
-          "object": "ARTS_INTENSITY",
+          "object": "STAT", "objectId": "ARTS_INTENSITY",
           "with": {
             "value": {
               "verb": "VARY_BY",

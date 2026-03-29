@@ -1,13 +1,13 @@
 {
   "properties": {
     "id": "WILDLAND_TREKKER_TALENT",
+    "maxLevel": { "verb": "IS", "value": 2 },
     "name": "Wildland Trekker (Talent)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
     "eventCategoryType": "TALENT",
-    "description": "Battle skill Tempestuous Arc improved: Triggering the additional effect 3 time(s) grants the team Electric DMG Dealt +0.05% for every point of Arclight's Intellect. This effect has a 15s duration and cannot stack.",
-    "maxLevel": 2
+    "description": "Battle skill Tempestuous Arc improved: Triggering the additional effect 3 time(s) grants the team Electric DMG Dealt +0.05% for every point of Arclight's Intellect. This effect has a 15s duration and cannot stack."
   },
   "metadata": {
     "originId": "ARCLIGHT",

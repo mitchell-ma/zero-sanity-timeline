@@ -5,13 +5,14 @@
  * Auto-discovers operator-statuses/*.json via require.context.
  * Each file contains an array of operator status entries sharing an originId.
  */
-import { EventType, EventCategoryType } from '../../consts/enums';
+import { EventType, EventCategoryType, UNLIMITED_STACKS } from '../../consts/enums';
 import type { EventSegmentData, EventFrameMarker } from '../../consts/viewTypes';
 import type { ClauseEffect, ClausePredicate, StacksConfig, DurationConfig } from './weaponStatusesStore';
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from '../../controller/calculation/valueResolver';
 import { DataDrivenSkillEventFrame } from '../event-frames/dataDrivenEventFrames';
+
 import { FPS } from '../../utils/timeline';
-import { checkKeys, VALID_VALUE_NODE_KEYS, VALID_CLAUSE_KEYS, VALID_METADATA_KEYS, validateEffect } from './validationUtils';
+import { checkKeys, VALID_VALUE_NODE_KEYS, VALID_CLAUSE_KEYS, VALID_METADATA_KEYS, VALID_EFFECT_KEYS, VALID_EFFECT_WITH_KEYS, VALID_TRIGGER_CONDITION_KEYS, validateEffect } from './validationUtils';
 
 // ── Trigger clause type ─────────────────────────────────────────────────────
 
@@ -44,26 +45,24 @@ interface StatusSegment {
 
 // ── Validation ──────────────────────────────────────────────────────────────
 
-const VALID_EFFECT_KEYS = new Set(['verb', 'object', 'objectId', 'objectType', 'objectQualifier', 'to', 'toDeterminer', 'with', 'value', 'cardinalityConstraint', 'effects']);
-const VALID_EFFECT_WITH_KEYS = new Set(['value', 'duration']);
-const VALID_TRIGGER_CONDITION_KEYS = new Set(['subjectDeterminer', 'subject', 'verb', 'object', 'objectId', 'value', 'cardinalityConstraint', 'to', 'toDeterminer', 'with']);
 const VALID_DURATION_KEYS = new Set(['value', 'unit', 'modifier']);
-const VALID_STATUS_LEVEL_KEYS = new Set(['limit', 'interactionType']);
-const VALID_SEGMENT_KEYS = new Set(['metadata', 'properties', 'clause', 'frames']);
-const VALID_PROPERTIES_KEYS = new Set(['id', 'name', 'description', 'type', 'element', 'target', 'targetDeterminer', 'to', 'toDeterminer', 'duration', 'stacks', 'enhancementTypes', 'eventType', 'eventCategoryType']);
+const VALID_STATUS_LEVEL_KEYS = new Set(['limit', 'interactionType', 'level']);
+const VALID_SEGMENT_KEYS = new Set(['metadata', 'properties', 'clause', 'clauseType', 'frames']);
+const VALID_PROPERTIES_KEYS = new Set(['id', 'name', 'description', 'type', 'element', 'target', 'targetDeterminer', 'to', 'toDeterminer', 'duration', 'stacks', 'enhancementType', 'enhancementTypes', 'eventType', 'eventCategoryType']);
 const VALID_TOP_KEYS = new Set(['clause', 'clauseType', 'onTriggerClause', 'onEntryClause', 'onExitClause', 'segments', 'properties', 'metadata']);
 
 function validateValueNode(wv: Record<string, unknown>, path: string): string[] {
   const errors = checkKeys(wv, VALID_VALUE_NODE_KEYS, path);
   if ('verb' in wv && typeof wv.verb !== 'string') errors.push(`${path}.verb: must be a string`);
-  if ('operator' in wv && typeof wv.operator !== 'string') errors.push(`${path}.operator: must be a string`);
+  if ('operation' in wv && typeof wv.operation !== 'string') errors.push(`${path}.operation: must be a string`);
   return errors;
 }
 
 function validateStatusEffect(ef: Record<string, unknown>, path: string): string[] {
   const errors = checkKeys(ef, VALID_EFFECT_KEYS, path);
   if (typeof ef.verb !== 'string') errors.push(`${path}.verb: must be a string`);
-  if (typeof ef.object !== 'string') errors.push(`${path}.object: must be a string`);
+  // Compound effects (ALL/ANY) have nested effects instead of an object
+  if (!ef.effects && typeof ef.object !== 'string') errors.push(`${path}.object: must be a string`);
   errors.push(...validateEffect(ef, path));
   if (ef.with) {
     const w = ef.with as Record<string, unknown>;
@@ -269,10 +268,13 @@ export class OperatorStatus {
 
   /** Deserialize from JSON with validation. */
   static deserialize(json: Record<string, unknown>, source?: string): OperatorStatus {
-    const errors = validateOperatorStatus(json);
-    if (errors.length > 0) {
-      const id = (json.properties as Record<string, unknown>)?.id ?? 'unknown';
-      console.warn(`[OperatorStatus] Validation errors in ${source ?? id}:\n  ${errors.join('\n  ')}`);
+    const meta = json.metadata as Record<string, unknown> | undefined;
+    if (meta?.isEnabled !== false) {
+      const errors = validateOperatorStatus(json);
+      if (errors.length > 0) {
+        const id = (json.properties as Record<string, unknown>)?.id ?? 'unknown';
+        console.warn(`[OperatorStatus] Validation errors in ${source ?? id}:\n  ${errors.join('\n  ')}`);
+      }
     }
     return new OperatorStatus(json);
   }
@@ -326,6 +328,11 @@ for (const key of genericStatusContext.keys()) {
 const genericStatusDirContext = require.context('./generic/statuses', false, /\.json$/);
 for (const key of genericStatusDirContext.keys()) {
   const json = genericStatusDirContext(key) as Record<string, unknown>;
+  // Generic statuses without stacks config get unlimited stacks
+  const props = json.properties as Record<string, unknown> | undefined;
+  if (props && !props.stacks) {
+    props.stacks = { limit: { verb: 'IS', value: UNLIMITED_STACKS }, interactionType: 'NONE' };
+  }
   const status = OperatorStatus.deserialize(json, key);
 
   if (!operatorStatusCache.has('generic')) {

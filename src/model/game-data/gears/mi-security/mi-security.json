@@ -13,24 +13,9 @@
         {
           "verb": "APPLY",
           "object": "STATUS",
-          "objectId": "MI_SECURITY"
-        }
-      ]
-    },
-    {
-      "conditions": [
-        {
-          "subjectDeterminer": "THIS",
-          "subject": "OPERATOR",
-          "verb": "PERFORM",
-          "object": "CRITICAL_HIT"
-        }
-      ],
-      "effects": [
-        {
-          "verb": "APPLY",
-          "object": "STATUS",
-          "objectId": "MI_SECURITY_MAX"
+          "objectId": "MI_SECURITY",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
         }
       ]
     }

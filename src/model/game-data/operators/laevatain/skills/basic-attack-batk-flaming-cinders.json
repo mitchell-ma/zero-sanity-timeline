@@ -60,6 +60,13 @@
                       ],
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
                     }
                   }
                 }
@@ -130,6 +137,13 @@
                       ],
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
                     }
                   }
                 }
@@ -178,6 +192,13 @@
                         0.25,
                         0.27
                       ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
                     }
@@ -250,6 +271,13 @@
                       ],
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
                     }
                   }
                 }
@@ -320,6 +348,13 @@
                       ],
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
                     }
                   }
                 }
@@ -370,6 +405,13 @@
                       ],
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
                     }
                   }
                 }
@@ -418,6 +460,13 @@
                         0.27,
                         0.29
                       ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
                     }
@@ -490,6 +539,13 @@
                       ],
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
                     }
                   }
                 }
@@ -559,6 +615,13 @@
                         0.55,
                         0.6
                       ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
                     }

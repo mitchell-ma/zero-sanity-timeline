@@ -13,7 +13,9 @@
         {
           "verb": "APPLY",
           "object": "STATUS",
-          "objectId": "FRONTIERS"
+          "objectId": "FRONTIERS",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
         }
       ]
     }

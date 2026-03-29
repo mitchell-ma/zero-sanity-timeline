@@ -9,7 +9,7 @@
  * estimated damage per frame from registered skill events, stores cumulative
  * damage by frame, and exposes getEnemyHpPercentage() for HP threshold predicates.
  */
-import { CritMode, CombatSkillType, PhysicalStatusType, StatType } from '../../consts/enums';
+import { CritMode, CombatSkillType, DamageScalingStatType, PhysicalStatusType, StatType } from '../../consts/enums';
 import { NounType } from '../../dsl/semantics';
 import { TimelineEvent, Column, Enemy as ViewEnemy } from '../../consts/viewTypes';
 import { PHYSICAL_STATUS_COLUMN_IDS, SKILL_COLUMN_ORDER, ENEMY_OWNER_ID } from '../../model/channels';
@@ -73,8 +73,8 @@ export function precomputeDamageByFrame(
   const enemyDef = modelEnemy ? modelEnemy.getDef() : 100;
   const defMult = getDefenseMultiplier(enemyDef);
 
-  // Build operator data cache: slotId → { totalAttack, attributeBonus, operatorId }
-  const opData = new Map<string, { totalAttack: number; attributeBonus: number; operatorId: string }>();
+  // Build operator data cache: slotId → { totalAttack, totalDefense, effectiveHp, attributeBonus, operatorId }
+  const opData = new Map<string, { totalAttack: number; totalDefense: number; effectiveHp: number; attributeBonus: number; operatorId: string }>();
   for (const slot of slots) {
     if (!slot.operatorId) continue;
     const props = loadoutProperties[slot.slotId] ?? DEFAULT_LOADOUT_PROPERTIES;
@@ -85,7 +85,7 @@ export function precomputeDamageByFrame(
       agg.operatorBaseAttack, agg.weaponBaseAttack,
       agg.stats[StatType.ATTACK_BONUS], agg.flatAttackBonuses,
     );
-    opData.set(slot.slotId, { totalAttack, attributeBonus: agg.attributeBonus, operatorId: slot.operatorId });
+    opData.set(slot.slotId, { totalAttack, totalDefense: agg.totalDefense, effectiveHp: agg.effectiveHp, attributeBonus: agg.attributeBonus, operatorId: slot.operatorId });
   }
 
   // Collect (frame, damage) pairs from all skill event frame markers
@@ -127,7 +127,10 @@ export function precomputeDamageByFrame(
           }
 
           if (multiplier != null && multiplier > 0) {
-            const damage = op.totalAttack * multiplier * op.attributeBonus * defMult;
+            const mainStatValue = f.dealDamage?.mainStat === DamageScalingStatType.DEFENSE ? op.totalDefense
+              : f.dealDamage?.mainStat === DamageScalingStatType.HP ? op.effectiveHp
+              : op.totalAttack;
+            const damage = mainStatValue * multiplier * op.attributeBonus * defMult;
             ticks.push({ frame: absFrame, damage });
           }
         }

@@ -1,13 +1,13 @@
 {
   "properties": {
     "id": "SUBCONSCIOUS_ACT_TALENT",
+    "maxLevel": { "verb": "IS", "value": 2 },
     "name": "Subconscious Act (Talent)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
     "eventCategoryType": "TALENT",
-    "description": "Gains 30% chance of Physical DMG immunity and restores HP of self by [45 + Strength×0.38].",
-    "maxLevel": 2
+    "description": "Gains 30% chance of Physical DMG immunity and restores HP of self by [45 + Strength×0.38]."
   },
   "metadata": {
     "originId": "ANTAL",

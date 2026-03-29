@@ -5,7 +5,7 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "dmg_up",
+          "object": "STAT", "objectId": "DAMAGE_BONUS",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
@@ -38,7 +38,7 @@
           "subjectDeterminer": "THIS",
           "subject": "OPERATOR",
           "verb": "APPLY",
-          "object": "ARTS_REACTION"
+          "object": "STATUS", "objectId": "ARTS_REACTION"
         }
       ],
       "effects": [

@@ -40,7 +40,8 @@
           "subject": "OPERATOR",
           "verb": "CONSUME",
           "object": "STATUS",
-          "objectId": "VULNERABILITY",
+          "objectId": "INFLICTION",
+          "objectQualifier": "VULNERABLE",
           "with": {
             "stacks": "MAX"
           }

@@ -1,0 +1,20 @@
+{
+  "properties": {
+    "id": "ELECTRIC_AMP",
+    "name": "Electric Amp",
+    "to": "TEAM",
+    "eventType": "STATUS",
+    "eventCategoryType": "STATUS",
+    "description": "Electric Amp applied to the team.",
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": 5
+      },
+      "unit": "SECOND"
+    }
+  },
+  "metadata": {
+    "originId": "generic"
+  }
+}

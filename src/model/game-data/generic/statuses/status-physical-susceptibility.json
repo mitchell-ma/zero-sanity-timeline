@@ -1,0 +1,20 @@
+{
+  "properties": {
+    "id": "PHYSICAL_SUSCEPTIBILITY",
+    "name": "Physical Susceptibility",
+    "to": "ENEMY",
+    "eventType": "STATUS",
+    "eventCategoryType": "STATUS",
+    "description": "Physical Susceptibility applied to enemy.",
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": 5
+      },
+      "unit": "SECOND"
+    }
+  },
+  "metadata": {
+    "originId": "generic"
+  }
+}

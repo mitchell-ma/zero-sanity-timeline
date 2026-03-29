@@ -5,7 +5,7 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "CRITICAL_DAMAGE",
+          "object": "STAT", "objectId": "CRITICAL_DAMAGE",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
@@ -39,7 +39,8 @@
           "subject": "OPERATOR",
           "verb": "APPLY",
           "object": "STATUS",
-          "objectId": "VULNERABILITY"
+          "objectId": "INFLICTION",
+          "objectQualifier": "VULNERABLE"
         }
       ],
       "effects": [

@@ -5,7 +5,7 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "HASTE",
+          "object": "STAT", "objectId": "HASTE",
           "toDeterminer": "ALL",
           "to": "OPERATOR",
           "with": {
@@ -23,7 +23,7 @@
         },
         {
           "verb": "APPLY",
-          "object": "SLOW",
+          "object": "STATUS", "objectId": "SLOW",
           "to": "ENEMY",
           "with": {
             "value": {
@@ -43,13 +43,13 @@
   ],
   "properties": {
     "id": "FAM_OF_HONOR_TALENT",
+    "maxLevel": { "verb": "IS", "value": 2 },
     "name": "Fam of Honor (Talent)",
     "to": "OPERATOR",
     "toDeterminer": "ALL",
     "eventType": "STATUS",
     "eventCategoryType": "TALENT",
-    "description": "When within a 5-meter radius of a Whirlpool, allied operators gain 10% Haste while enemies suffer 20% Slow. These effects persist for 3s after leaving the area of effect.",
-    "maxLevel": 2
+    "description": "When within a 5-meter radius of a Whirlpool, allied operators gain 10% Haste while enemies suffer 20% Slow. These effects persist for 3s after leaving the area of effect."
   },
   "metadata": {
     "originId": "TANGTANG",

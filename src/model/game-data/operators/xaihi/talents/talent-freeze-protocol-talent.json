@@ -1,13 +1,13 @@
 {
   "properties": {
     "id": "FREEZE_PROTOCOL_TALENT",
+    "maxLevel": { "verb": "IS", "value": 1 },
     "name": "Freeze Protocol (Talent)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
     "eventCategoryType": "TALENT",
-    "description": "Ultimate Stack Overflow improved: The ultimate also dispels Cryo Infliction and Solidification from the entire team.",
-    "maxLevel": 1
+    "description": "Ultimate Stack Overflow improved: The ultimate also dispels Cryo Infliction and Solidification from the entire team."
   },
   "metadata": {
     "originId": "XAIHI",

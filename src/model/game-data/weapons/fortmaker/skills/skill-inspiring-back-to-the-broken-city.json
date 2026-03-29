@@ -31,7 +31,7 @@
         },
         {
           "verb": "APPLY",
-          "object": "ARTS_INTENSITY",
+          "object": "STAT", "objectId": "ARTS_INTENSITY",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {

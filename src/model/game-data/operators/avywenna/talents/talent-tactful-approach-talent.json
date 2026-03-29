@@ -14,7 +14,7 @@
               "object": "TALENT_LEVEL",
               "value": [
                 0.06,
-                0.10
+                0.1
               ],
               "ofDeterminer": "THIS",
               "of": "OPERATOR"
@@ -34,13 +34,13 @@
   "clauseType": "ALL",
   "properties": {
     "id": "TACTFUL_APPROACH_TALENT",
+    "maxLevel": { "verb": "IS", "value": 2 },
     "name": "Tactful Approach (Talent)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
     "eventCategoryType": "TALENT",
-    "description": "Ultimate Thunderlance: Final Shock improved: Also applies 10% Electric Susceptibility for 10s to enemies it hits.",
-    "maxLevel": 2
+    "description": "Ultimate Thunderlance: Final Shock improved: Also applies 10% Electric Susceptibility for 10s to enemies it hits."
   },
   "metadata": {
     "originId": "AVYWENNA",

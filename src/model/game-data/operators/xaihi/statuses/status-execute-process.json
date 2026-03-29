@@ -1,29 +1,4 @@
 {
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "APPLY",
-          "object": "SUSCEPTIBILITY",
-          "objectQualifier": "CRYO",
-          "to": "ENEMY",
-          "with": {
-            "value": {
-              "verb": "VARY_BY",
-              "object": "TALENT_LEVEL",
-              "value": [
-                0.07,
-                0.1
-              ],
-              "ofDeterminer": "THIS",
-              "of": "OPERATOR"
-            }
-          }
-        }
-      ]
-    }
-  ],
   "properties": {
     "id": "EXECUTE_PROCESS",
     "name": "Execute Process",
@@ -44,13 +19,12 @@
     },
     "eventType": "STATUS",
     "eventCategoryType": "STATUS",
-    "description": "Combo skill Stress Testing improved: Hitting an enemy with Cryo Infliction or Solidification also causes the enemy to suffer Cryo DMG Taken +10% for 5s. This effect cannot stack."
+    "description": "Cryo DMG Taken debuff (Cryo Fragility) applied by Stress Testing."
   },
   "metadata": {
     "originId": "EXECUTE_PROCESS_TALENT",
     "dataSources": [
       "ENDFIELD_WIKI"
     ]
-  },
-  "clauseType": "ALL"
+  }
 }

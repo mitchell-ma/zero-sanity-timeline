@@ -315,6 +315,7 @@ export function createEvent(
     sourceSkillName?: string;
     enhancementType?: import('../../consts/enums').EnhancementType;
     stacks?: Record<string, unknown>;
+    segmentOrigin?: number[];
   } | null,
   interactionMode?: import('../../consts/enums').InteractionModeType,
 ): TimelineEvent {
@@ -348,6 +349,7 @@ export function createEvent(
     sourceSkillName: defaultSkill?.sourceSkillName ?? 'Freeform',
     ...(defaultSkill?.enhancementType ? { enhancementType: defaultSkill.enhancementType } : {}),
     ...(interactionMode ? { creationInteractionMode: interactionMode } : {}),
+    ...(defaultSkill?.segmentOrigin ? { segmentOrigin: defaultSkill.segmentOrigin } : {}),
   };
 }
 

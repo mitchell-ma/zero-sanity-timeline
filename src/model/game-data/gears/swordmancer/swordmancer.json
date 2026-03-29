@@ -6,14 +6,18 @@
           "subjectDeterminer": "THIS",
           "subject": "OPERATOR",
           "verb": "APPLY",
-          "object": "STATUS"
+          "object": "STATUS",
+          "objectId": "PHYSICAL",
+          "to": "ENEMY"
         }
       ],
       "effects": [
         {
           "verb": "APPLY",
           "object": "STATUS",
-          "objectId": "SWORDMANCER"
+          "objectId": "SWORDMANCER",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
         }
       ]
     }

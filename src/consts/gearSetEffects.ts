@@ -67,7 +67,6 @@ export const GEAR_SET_EFFECTS: GearSetEffectsEntry[] = [
     gearSetType: GearSetType.AIC_HEAVY,
     label: 'AIC Heavy',
     passiveStats: { [StatType.FLAT_HP]: 500 },
-    // TODO: Implement instant HP restore on kill (100 HP, 5s CD)
     effects: [],
   },
 
@@ -210,7 +209,6 @@ export const GEAR_SET_EFFECTS: GearSetEffectsEntry[] = [
     gearSetType: GearSetType.ARMORED_MSGR,
     label: 'Armored MSGR',
     passiveStats: { [StatType.STRENGTH]: 50 },
-    // TODO: Implement conditional DMG Reduction +30% when HP below 50%
     effects: [],
   },
 
@@ -220,7 +218,6 @@ export const GEAR_SET_EFFECTS: GearSetEffectsEntry[] = [
     gearSetType: GearSetType.ROVING_MSGR,
     label: 'Roving MSGR',
     passiveStats: { [StatType.AGILITY]: 50 },
-    // TODO: Implement conditional Physical DMG +20% when HP above 80%
     effects: [],
   },
 
@@ -230,7 +227,6 @@ export const GEAR_SET_EFFECTS: GearSetEffectsEntry[] = [
     gearSetType: GearSetType.MORDVOLT_INSULATION,
     label: 'Mordvolt Insulation',
     passiveStats: { [StatType.INTELLECT]: 50 },
-    // TODO: Implement conditional Arts DMG +20% when HP above 80%
     effects: [],
   },
 
@@ -240,7 +236,6 @@ export const GEAR_SET_EFFECTS: GearSetEffectsEntry[] = [
     gearSetType: GearSetType.MORDVOLT_RESISTANT,
     label: 'Mordvolt Resistant',
     passiveStats: { [StatType.WILL]: 50 },
-    // TODO: Implement conditional Treatment Effect +30% when HP below 50%
     effects: [],
   },
 ];

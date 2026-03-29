@@ -3,14 +3,32 @@
     {
       "conditions": [
         {
-          "subjectDeterminer": "THIS",
-          "subject": "OPERATOR",
-          "verb": "IS_HIT",
+          "subject": "ENEMY",
+          "verb": "DEAL",
+          "object": "DAMAGE",
+          "to": "OPERATOR",
+          "toDeterminer": "ALL",
           "with": {
             "chance": {
               "operation": "ADD",
-              "left": { "verb": "IS", "value": 0.2 },
-              "right": { "verb": "VARY_BY", "object": "POTENTIAL", "value": [0, 0, 0.1, 0.1, 0.1, 0.1], "ofDeterminer": "THIS", "of": "OPERATOR" }
+              "left": {
+                "verb": "IS",
+                "value": 0.2
+              },
+              "right": {
+                "verb": "VARY_BY",
+                "object": "POTENTIAL",
+                "value": [
+                  0,
+                  0,
+                  0.1,
+                  0.1,
+                  0.1,
+                  0.1
+                ],
+                "ofDeterminer": "THIS",
+                "of": "OPERATOR"
+              }
             }
           }
         }
@@ -28,13 +46,13 @@
   ],
   "properties": {
     "id": "UNPREDICTABLE_TALENT",
+    "maxLevel": { "verb": "IS", "value": 2 },
     "name": "Unpredictable (Talent)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
     "eventCategoryType": "TALENT",
-    "description": "Grants {probability:0%} chance of Arts DMG immunity and grants Fluorite ATK +{atk_up:0%} for {duration:0}s. This effect cannot stack.",
-    "maxLevel": 2
+    "description": "Grants {probability:0%} chance of Arts DMG immunity and grants Fluorite ATK +{atk_up:0%} for {duration:0}s. This effect cannot stack."
   },
   "metadata": {
     "originId": "FLUORITE",

@@ -5,7 +5,7 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "BUFF",
+          "object": "STATUS",
           "objectId": "AKEKURI_POTENTIAL5_TEMPO_OF_AWARENESS",
           "toDeterminer": "THIS",
           "to": "OPERATOR"

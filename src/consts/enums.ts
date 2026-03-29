@@ -29,6 +29,13 @@ export enum MainStatType {
   BASE_DEFENSE = "BASE_DEFENSE",
 }
 
+/** The main stat that a DEAL DAMAGE effect scales from. */
+export enum DamageScalingStatType {
+  ATTACK = "ATTACK",
+  DEFENSE = "DEFENSE",
+  HP = "HP",
+}
+
 export enum CombatResourceType {
   HP = "HP",
   SKILL_POINT = "SKILL_POINT",
@@ -397,6 +404,7 @@ export enum EnhancementType {
   ENHANCED = "ENHANCED",
   EMPOWERED = "EMPOWERED",
   MINOR = "MINOR",
+  MAJOR = "MAJOR",
 }
 
 /** The phase type of an event segment. */
@@ -435,11 +443,14 @@ export enum InfoLevel {
 
 
 export { StatType, StatOwnerType, STAT_ATTRIBUTION, getStatsForTarget } from '../model/enums/stats';
-export { GearType } from '../model/enums/gears';
-
-
 
 export { OperatorInformationType } from '../model/enums/operators';
+
+export enum GearType {
+  ARMOR = "ARMOR",
+  GLOVES = "GLOVES",
+  KIT = "KIT",
+}
 
 export enum EnemyType {
   // ── Aggeloi ─────────────────────────────────────────────────────────────────

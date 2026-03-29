@@ -59,7 +59,7 @@
                   "verb": "CONSUME",
                   "object": "STATUS",
                   "objectId": "ORIGINIUM_CRYSTAL",
-                  "to": "ENEMY",
+                  "from": "ENEMY",
                   "with": {
                     "stacks": "MAX"
                   }
@@ -71,7 +71,14 @@
                     "value": {
                       "verb": "VARY_BY",
                       "object": "POTENTIAL",
-                      "value": [0, 50, 50, 50, 50, 50],
+                      "value": [
+                        0,
+                        50,
+                        50,
+                        50,
+                        50,
+                        50
+                      ],
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
                     }
@@ -111,6 +118,13 @@
                         3.23,
                         3.5
                       ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
                     }
@@ -170,6 +184,13 @@
                         3.23,
                         3.5
                       ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
                     }

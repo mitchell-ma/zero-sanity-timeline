@@ -1,62 +1,13 @@
 {
-  "onTriggerClause": [
-    {
-      "conditions": [
-        {
-          "subjectDeterminer": "THIS",
-          "subject": "OPERATOR",
-          "verb": "HIT_WITH",
-          "object": "THUNDERLANCE"
-        }
-      ],
-      "effects": [
-        {
-          "verb": "RECOVER",
-          "object": "ULTIMATE_ENERGY",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR",
-          "with": {
-            "value": {
-              "operation": "ADD",
-              "left": {
-                "verb": "VARY_BY",
-                "object": "TALENT_LEVEL",
-                "value": [
-                  3,
-                  4
-                ],
-                "ofDeterminer": "THIS",
-                "of": "OPERATOR"
-              },
-              "right": {
-                "verb": "VARY_BY",
-                "object": "POTENTIAL",
-                "value": [
-                  0,
-                  2,
-                  2,
-                  2,
-                  2,
-                  2
-                ],
-                "ofDeterminer": "THIS",
-                "of": "OPERATOR"
-              }
-            }
-          }
-        }
-      ]
-    }
-  ],
   "properties": {
     "id": "EXPEDITED_DELIVERY_TALENT",
+    "maxLevel": { "verb": "IS", "value": 2 },
     "name": "EXPEDITED DELIVERY (Talent)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
     "eventCategoryType": "TALENT",
-    "description": "After a thrown or returning Thunderlance or Thunderlance EX hits the enemy, Avywenna gains 3 Ultimate Energy.",
-    "maxLevel": 2
+    "description": "After a thrown or returning Thunderlance or Thunderlance EX hits the enemy, Avywenna gains 3 Ultimate Energy."
   },
   "metadata": {
     "originId": "AVYWENNA",

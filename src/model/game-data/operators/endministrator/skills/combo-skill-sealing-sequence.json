@@ -118,13 +118,20 @@
                       ],
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
                     }
                   }
                 },
                 {
                   "verb": "APPLY",
-                  "object": "ORIGINIUM_CRYSTAL",
-                  "objectType": "STATUS",
+                  "object": "STATUS",
+                  "objectId": "ORIGINIUM_CRYSTAL",
                   "to": "ENEMY",
                   "with": {
                     "duration": {
@@ -149,26 +156,6 @@
                         "of": "OPERATOR"
                       },
                       "unit": "SECOND"
-                    },
-                    "SHATTER_DAMAGE_MULTIPLIER": {
-                      "verb": "VARY_BY",
-                      "object": "SKILL_LEVEL",
-                      "value": [
-                        1.78,
-                        1.96,
-                        2.13,
-                        2.31,
-                        2.49,
-                        2.67,
-                        2.84,
-                        3.02,
-                        3.2,
-                        3.42,
-                        3.69,
-                        4
-                      ],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
                     }
                   }
                 }

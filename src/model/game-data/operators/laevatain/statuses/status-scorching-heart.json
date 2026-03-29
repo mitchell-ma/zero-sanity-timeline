@@ -6,8 +6,9 @@
         {
           "verb": "IGNORE",
           "objectQualifier": "HEAT",
-          "object": "RESISTANCE",
-          "to": "TARGET",
+          "object": "STAT",
+          "objectId": "RESISTANCE",
+          "from": "ENEMY",
           "with": {
             "value": {
               "verb": "VARY_BY",

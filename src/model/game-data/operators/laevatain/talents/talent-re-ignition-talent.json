@@ -5,8 +5,9 @@
         {
           "subjectDeterminer": "THIS",
           "subject": "OPERATOR",
-          "verb": "HP_BELOW",
-          "object": "PERCENTAGE",
+          "verb": "HAVE",
+          "object": "HP",
+          "cardinalityConstraint": "AT_MOST",
           "with": {
             "value": {
               "verb": "IS",
@@ -28,13 +29,13 @@
   ],
   "properties": {
     "id": "RE_IGNITION_TALENT",
+    "maxLevel": { "verb": "IS", "value": 2 },
     "name": "Re-Ignition (Talent)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
     "eventCategoryType": "TALENT",
-    "description": "When HP drops below 40%, gain 90% Protection and restore 5% Max HP per second for 4s. This effect triggers once every 120s.",
-    "maxLevel": 2
+    "description": "When HP drops below 40%, gain 90% Protection and restore 5% Max HP per second for 4s. This effect triggers once every 120s."
   },
   "metadata": {
     "originId": "LAEVATAIN",

@@ -79,7 +79,8 @@
           "subject": "ENEMY",
           "verb": "HAVE",
           "object": "STATUS",
-          "objectId": "VULNERABILITY"
+          "objectId": "INFLICTION",
+          "objectQualifier": "VULNERABLE"
         },
         {
           "subject": "ENEMY",

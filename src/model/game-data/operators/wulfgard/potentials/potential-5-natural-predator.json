@@ -11,9 +11,16 @@
       ],
       "effects": [
         {
-          "verb": "RESET",
+          "verb": "REDUCE",
           "object": "COOLDOWN",
-          "objectId": "COMBO_SKILL"
+          "objectId": "COMBO_SKILL",
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": 1
+            },
+            "unit": "PERCENTAGE"
+          }
         }
       ]
     }

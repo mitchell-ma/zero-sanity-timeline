@@ -5,20 +5,10 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "BUFF",
+          "object": "STATUS",
           "objectId": "LAEVATAIN_POTENTIAL5_PROOF_OF_EXISTENCE",
           "toDeterminer": "THIS",
-          "to": "OPERATOR",
-          "with": {
-            "extend_duration": {
-              "verb": "IS",
-              "value": 1
-            },
-            "max_duration": {
-              "verb": "IS",
-              "value": 7
-            }
-          }
+          "to": "OPERATOR"
         }
       ]
     }

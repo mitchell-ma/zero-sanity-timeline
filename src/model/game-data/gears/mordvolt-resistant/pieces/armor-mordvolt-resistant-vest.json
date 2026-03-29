@@ -5,7 +5,7 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "BASE_DEFENSE",
+          "object": "STAT", "objectId": "BASE_DEFENSE",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
@@ -17,7 +17,7 @@
         },
         {
           "verb": "APPLY",
-          "object": "WILL",
+          "object": "STAT", "objectId": "WILL",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
@@ -37,7 +37,7 @@
         },
         {
           "verb": "APPLY",
-          "object": "AGILITY",
+          "object": "STAT", "objectId": "AGILITY",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
@@ -82,7 +82,7 @@
   "properties": {
     "id": "MORDVOLT_RESISTANT_VEST",
     "name": "Mordvolt Resistant Vest",
-    "type": "ARMOR",
+    "gearType": "ARMOR",
     "gearSet": "MORDVOLT_RESISTANT"
   },
   "metadata": {

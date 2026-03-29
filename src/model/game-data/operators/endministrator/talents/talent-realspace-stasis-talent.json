@@ -27,6 +27,7 @@
   ],
   "properties": {
     "id": "REALSPACE_STASIS_TALENT",
+    "maxLevel": { "verb": "IS", "value": 2 },
     "name": "Realspace Stasis (Talent)",
     "to": "ENEMY",
     "toDeterminer": "THIS",
@@ -46,8 +47,7 @@
     },
     "eventType": "STATUS",
     "eventCategoryType": "TALENT",
-    "description": "Enemies with attached Originium Crystals suffer Physical DMG Taken +{dmg:0%}.",
-    "maxLevel": 2
+    "description": "Enemies with attached Originium Crystals suffer Physical DMG Taken +{dmg:0%}."
   },
   "metadata": {
     "originId": "ENDMINISTRATOR",

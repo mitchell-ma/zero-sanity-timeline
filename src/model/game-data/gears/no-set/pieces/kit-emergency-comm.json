@@ -5,7 +5,7 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "BASE_DEFENSE",
+          "object": "STAT", "objectId": "BASE_DEFENSE",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
@@ -17,7 +17,7 @@
         },
         {
           "verb": "APPLY",
-          "object": "CRITICAL_RATE",
+          "object": "STAT", "objectId": "CRITICAL_RATE",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
@@ -41,7 +41,7 @@
   "properties": {
     "id": "EMERGENCY_COMM",
     "name": "Emergency Comm",
-    "type": "KIT",
+    "gearType": "KIT",
     "gearSet": "NONE"
   },
   "metadata": {

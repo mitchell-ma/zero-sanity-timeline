@@ -150,30 +150,6 @@
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
-                    "atbUp": {
-                      "verb": "VARY_BY",
-                      "object": "SKILL_LEVEL",
-                      "value": [
-                        12,
-                        12,
-                        12,
-                        12,
-                        12,
-                        12,
-                        12,
-                        12,
-                        12,
-                        15,
-                        15,
-                        15
-                      ],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
-                    },
-                    "atbMax": {
-                      "verb": "IS",
-                      "value": 100
-                    },
                     "value": {
                       "verb": "VARY_BY",
                       "object": "SKILL_LEVEL",
@@ -191,6 +167,13 @@
                         9.04,
                         9.8
                       ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
                     }

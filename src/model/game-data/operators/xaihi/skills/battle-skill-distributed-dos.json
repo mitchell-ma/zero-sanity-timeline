@@ -33,7 +33,7 @@
         "duration": {
           "value": {
             "verb": "IS",
-            "value": 20
+            "value": 2
           },
           "unit": "SECOND"
         }
@@ -45,7 +45,7 @@
           },
           "properties": {
             "offset": {
-              "value": 0,
+              "value": 0.5,
               "unit": "SECOND"
             }
           },
@@ -54,83 +54,22 @@
               "conditions": [],
               "effects": [
                 {
-                  "verb": "RECOVER",
-                  "object": "HP",
-                  "toDeterminer": "CONTROLLED",
-                  "to": "OPERATOR",
-                  "with": {
-                    "value": {
-                      "operation": "ADD",
-                      "left": {
-                        "verb": "VARY_BY",
-                        "object": "SKILL_LEVEL",
-                        "value": [144, 173, 202, 230, 245, 259, 274, 288, 302, 310, 317, 324],
-                        "ofDeterminer": "THIS",
-                        "of": "OPERATOR"
-                      },
-                      "right": {
-                        "operation": "MULT",
-                        "left": {
-                          "verb": "VARY_BY",
-                          "object": "SKILL_LEVEL",
-                          "value": [0.34, 0.40, 0.47, 0.54, 0.57, 0.60, 0.64, 0.67, 0.71, 0.72, 0.74, 0.76],
-                          "ofDeterminer": "THIS",
-                          "of": "OPERATOR"
-                        },
-                        "right": {
-                          "verb": "IS",
-                          "object": "STAT",
-                          "objectId": "WILL",
-                          "ofDeterminer": "THIS"
-                        }
-                      }
-                    },
-                    "cardinality": { "value": { "verb": "IS", "value": 2 } }
-                  }
-                }
-              ]
-            },
-            {
-              "conditions": [
-                {
-                  "subjectDeterminer": "CONTROLLED",
-                  "subject": "OPERATOR",
-                  "verb": "HAVE",
-                  "objectQualifier": "FULL",
-                  "object": "HP"
-                }
-              ],
-              "effects": [
-                {
                   "verb": "APPLY",
-                  "objectQualifier": "ARTS",
-                  "object": "AMP",
+                  "object": "STATUS",
+                  "objectId": "AUXILIARY_CRYSTAL",
                   "toDeterminer": "CONTROLLED",
                   "to": "OPERATOR",
                   "with": {
-                    "value": {
-                      "operation": "ADD",
-                      "left": {
-                        "verb": "VARY_BY",
-                        "object": "SKILL_LEVEL",
-                        "value": [0.09, 0.09, 0.09, 0.09, 0.09, 0.11, 0.11, 0.11, 0.13, 0.13, 0.13, 0.15],
-                        "ofDeterminer": "THIS",
-                        "of": "OPERATOR"
-                      },
-                      "right": {
-                        "verb": "VARY_BY",
-                        "object": "POTENTIAL",
-                        "value": [0, 0.05, 0.05, 0.05, 0.05, 0.05],
-                        "ofDeterminer": "THIS",
-                        "of": "OPERATOR"
-                      }
-                    },
-                    "duration": { "value": { "verb": "IS", "value": 25 }, "unit": "SECOND" }
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 2
+                    }
                   }
                 }
               ]
             }
-          ]
+          ],
+          "clauseType": "ALL"
         }
       ]
     }

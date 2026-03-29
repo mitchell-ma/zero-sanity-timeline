@@ -27,16 +27,6 @@
               ],
               "ofDeterminer": "THIS",
               "of": "OPERATOR"
-            },
-            "vsSolidified": {
-              "verb": "VARY_BY",
-              "object": "TALENT_LEVEL",
-              "value": [
-                0.2,
-                0.4
-              ],
-              "ofDeterminer": "THIS",
-              "of": "OPERATOR"
             }
           }
         }
@@ -45,13 +35,13 @@
   ],
   "properties": {
     "id": "FREEZING_POINT_TALENT",
+    "maxLevel": { "verb": "IS", "value": 2 },
     "name": "Freezing Point (Talent)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
     "eventCategoryType": "TALENT",
-    "description": "Against enemies with active Cryo Infliction, gains Critical DMG Dealt +{inflict_up:0%}. Effect is doubled against enemies with Solidification.",
-    "maxLevel": 2
+    "description": "Against enemies with active Cryo Infliction, gains Critical DMG Dealt +{inflict_up:0%}. Effect is doubled against enemies with Solidification."
   },
   "metadata": {
     "originId": "YVONNE",

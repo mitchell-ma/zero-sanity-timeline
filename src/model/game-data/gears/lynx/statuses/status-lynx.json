@@ -5,7 +5,7 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "FINAL_DAMAGE_REDUCTION",
+          "object": "STAT", "objectId": "FINAL_DAMAGE_REDUCTION",
           "toDeterminer": "OTHER",
           "to": "OPERATOR",
           "with": {
@@ -19,7 +19,6 @@
     }
   ],
   "properties": {
-    "type": "GEAR_SET_STATUS",
     "id": "LYNX",
     "name": "LYNX",
     "duration": {

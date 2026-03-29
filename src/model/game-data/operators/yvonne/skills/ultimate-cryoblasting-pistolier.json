@@ -87,9 +87,26 @@
                       "verb": "VARY_BY",
                       "object": "SKILL_LEVEL",
                       "value": [
-                        1.33, 1.47, 1.60, 1.73, 1.86, 2.00,
-                        2.13, 2.26, 2.40, 2.56, 2.76, 3.00
+                        1.33,
+                        1.47,
+                        1.6,
+                        1.73,
+                        1.86,
+                        2,
+                        2.13,
+                        2.26,
+                        2.4,
+                        2.56,
+                        2.76,
+                        3
                       ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
                     }
@@ -117,7 +134,7 @@
           },
           "properties": {
             "offset": {
-              "value": 7.0,
+              "value": 7,
               "unit": "SECOND"
             }
           },
@@ -141,9 +158,26 @@
                       "verb": "VARY_BY",
                       "object": "SKILL_LEVEL",
                       "value": [
-                        2.67, 2.94, 3.20, 3.47, 3.74, 4.00,
-                        4.27, 4.54, 4.80, 5.14, 5.54, 6.00
+                        2.67,
+                        2.94,
+                        3.2,
+                        3.47,
+                        3.74,
+                        4,
+                        4.27,
+                        4.54,
+                        4.8,
+                        5.14,
+                        5.54,
+                        6
                       ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
                     }

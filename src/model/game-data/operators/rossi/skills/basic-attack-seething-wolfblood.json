@@ -81,8 +81,7 @@
         "eventComponentType": "SEGMENT",
         "dataSources": [
           "END_AXIS"
-        ],
-        "_note": "Segments 3-5 have 0s duration in End-Axis data — incomplete frame data"
+        ]
       },
       "properties": {
         "duration": {

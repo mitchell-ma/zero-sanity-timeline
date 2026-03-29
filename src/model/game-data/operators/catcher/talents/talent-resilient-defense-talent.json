@@ -5,7 +5,7 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "DEFENSE",
+          "object": "STAT", "objectId": "DEFENSE",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
@@ -18,14 +18,6 @@
               ],
               "ofDeterminer": "THIS",
               "of": "OPERATOR"
-            },
-            "scalingAttribute": {
-              "verb": "IS",
-              "value": "WILL"
-            },
-            "scalingRate": {
-              "verb": "IS",
-              "value": 10
             }
           }
         }
@@ -34,13 +26,13 @@
   ],
   "properties": {
     "id": "RESILIENT_DEFENSE_TALENT",
+    "maxLevel": { "verb": "IS", "value": 2 },
     "name": "Resilient Defense (Talent)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
     "eventCategoryType": "TALENT",
-    "description": "For every 10 Will, DEF +1.2.",
-    "maxLevel": 2
+    "description": "For every 10 Will, DEF +1.2."
   },
   "metadata": {
     "originId": "CATCHER",

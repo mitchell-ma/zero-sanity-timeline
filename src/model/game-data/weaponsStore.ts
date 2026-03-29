@@ -6,13 +6,11 @@
  */
 import type { ClausePredicate } from './weaponStatusesStore';
 import { VerbType } from '../../dsl/semantics';
-import { MainStatType } from '../../consts/enums';
-import { checkKeys, VALID_VALUE_NODE_KEYS, VALID_CLAUSE_KEYS } from './validationUtils';
+import { StatType } from '../enums/stats';
+import { resolveEffectStat } from '../enums/stats';
+import { checkKeys, VALID_VALUE_NODE_KEYS, VALID_CLAUSE_KEYS, VALID_EFFECT_KEYS, VALID_EFFECT_WITH_KEYS, validateEffect as validateEffectSemantics } from './validationUtils';
 
 // ── Validation ──────────────────────────────────────────────────────────────
-
-const VALID_EFFECT_KEYS = new Set(['verb', 'object', 'toDeterminer', 'to', 'with']);
-const VALID_EFFECT_WITH_KEYS = new Set(['value']);
 const VALID_PROPERTIES_KEYS = new Set(['id', 'name', 'type', 'rarity']);
 const VALID_METADATA_KEYS = new Set(['originId', 'dataSources', 'icon', 'nameId']);
 const VALID_TOP_KEYS = new Set(['skills', 'properties', 'metadata', 'clause']);
@@ -20,14 +18,15 @@ const VALID_TOP_KEYS = new Set(['skills', 'properties', 'metadata', 'clause']);
 function validateValueNode(wv: Record<string, unknown>, path: string): string[] {
   const errors = checkKeys(wv, VALID_VALUE_NODE_KEYS, path);
   if ('verb' in wv && typeof wv.verb !== 'string') errors.push(`${path}.verb: must be a string`);
-  if ('operator' in wv && typeof wv.operator !== 'string') errors.push(`${path}.operator: must be a string`);
+  if ('operation' in wv && typeof wv.operation !== 'string') errors.push(`${path}.operation: must be a string`);
   return errors;
 }
 
-function validateEffect(ef: Record<string, unknown>, path: string): string[] {
+function validateLocalEffect(ef: Record<string, unknown>, path: string): string[] {
   const errors = checkKeys(ef, VALID_EFFECT_KEYS, path);
   if (typeof ef.verb !== 'string') errors.push(`${path}.verb: must be a string`);
   if (typeof ef.object !== 'string') errors.push(`${path}.object: must be a string`);
+  errors.push(...validateEffectSemantics(ef, path));
   if (ef.with) {
     const w = ef.with as Record<string, unknown>;
     errors.push(...checkKeys(w, VALID_EFFECT_WITH_KEYS, `${path}.with`));
@@ -49,7 +48,7 @@ export function validateWeapon(json: Record<string, unknown>): string[] {
       const clauseErrors = checkKeys(c, VALID_CLAUSE_KEYS, `clause[${i}]`);
       errors.push(...clauseErrors);
       if (Array.isArray(c.effects)) {
-        (c.effects as Record<string, unknown>[]).forEach((ef, j) => errors.push(...validateEffect(ef, `clause[${i}].effects[${j}]`)));
+        (c.effects as Record<string, unknown>[]).forEach((ef, j) => errors.push(...validateLocalEffect(ef, `clause[${i}].effects[${j}]`)));
       }
     });
   }
@@ -99,11 +98,11 @@ export class Weapon {
     this.originId = (meta.originId ?? '') as string;
   }
 
-  /** Get base attack values (from clause APPLY BASE_ATTACK). */
+  /** Get base attack values (from clause APPLY STAT objectId=BASE_ATTACK). */
   get baseAttackValues(): number[] {
     for (const clause of this.clause) {
       for (const ef of clause.effects) {
-        if (ef.verb === VerbType.APPLY && ef.object === MainStatType.BASE_ATTACK) {
+        if (ef.verb === VerbType.APPLY && resolveEffectStat(ef) === StatType.BASE_ATTACK) {
           const wv = (ef.with as Record<string, unknown>)?.value as { value?: number | number[] } | undefined;
           const v = wv?.value;
           return v == null ? [] : Array.isArray(v) ? v : [v];

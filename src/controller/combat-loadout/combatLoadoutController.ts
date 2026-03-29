@@ -55,6 +55,8 @@ export class CombatLoadoutController {
     const loadoutProperties: Record<string, LoadoutProperties> = {};
     const slotWeapons: Record<string, string | undefined> = {};
     const slotGearSets: Record<string, string | undefined> = {};
+    const slotConsumables: Record<string, string | undefined> = {};
+    const slotTacticals: Record<string, string | undefined> = {};
 
     for (let i = 0; i < slots.length; i++) {
       const slot = slots[i];
@@ -71,9 +73,11 @@ export class CombatLoadoutController {
       if (slot.loadoutProperties) loadoutProperties[slot.slotId] = slot.loadoutProperties;
       slotWeapons[slot.slotId] = slot.weaponId;
       slotGearSets[slot.slotId] = slot.gearSetType;
+      slotConsumables[slot.slotId] = slot.consumableId;
+      slotTacticals[slot.slotId] = slot.tacticalId;
     }
 
-    this.triggerIndex = TriggerIndex.build(slotOperatorMap, loadoutProperties, slotWeapons, slotGearSets);
+    this.triggerIndex = TriggerIndex.build(slotOperatorMap, loadoutProperties, slotWeapons, slotGearSets, undefined, slotConsumables, slotTacticals);
   }
 
   // ── SP queries ─────────────────────────────────────────────────────────

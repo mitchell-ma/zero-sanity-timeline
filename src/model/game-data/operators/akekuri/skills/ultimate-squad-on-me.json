@@ -102,8 +102,18 @@
                   "with": {
                     "duration": {
                       "value": {
-                        "verb": "IS",
-                        "value": 3.425
+                        "operation": "ADD",
+                        "left": {
+                          "verb": "IS",
+                          "value": 3.425
+                        },
+                        "right": {
+                          "verb": "VARY_BY",
+                          "object": "POTENTIAL",
+                          "value": [0, 0, 0, 0, 0, 5],
+                          "ofDeterminer": "THIS",
+                          "of": "OPERATOR"
+                        }
                       },
                       "unit": "SECOND"
                     }

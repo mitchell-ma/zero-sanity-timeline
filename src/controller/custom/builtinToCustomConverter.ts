@@ -29,7 +29,7 @@ export function weaponToCustomWeapon(weaponName: string): CustomWeapon | null {
   if (config.skills[2]) skillTypes.push(config.skills[2]);
 
   // Check for triggered effects from DSL JSON
-  const dslDefs = getWeaponEffectDefs(weaponName);
+  const dslDefs = getWeaponEffectDefs(weaponId!);
   // Index DSL defs by label for matching to skill slots
   let dslDefIdx = 0;
 
@@ -97,7 +97,7 @@ export function gearSetToCustomGearSet(gearSetType: GearSetType): CustomGearSet 
 
   const pieces: CustomGearPiece[] = gearPieces.slice(0, 3).map((g) => ({
     name: g.name,
-    gearCategory: g.type as GearCategory,
+    gearCategory: g.gearType as GearCategory,
     defense: 0,
     statsByRank: { 1: {}, 2: {}, 3: {}, 4: {} },
   }));

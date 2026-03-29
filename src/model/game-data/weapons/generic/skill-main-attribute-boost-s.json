@@ -5,7 +5,7 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "MAIN_ATTRIBUTE",
+          "object": "STAT", "objectId": "MAIN_ATTRIBUTE",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {

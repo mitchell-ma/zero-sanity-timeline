@@ -1,13 +1,13 @@
 {
   "properties": {
     "id": "STAYING_IN_THE_ZONE_TALENT",
+    "maxLevel": { "verb": "IS", "value": 1 },
     "name": "Staying in the Zone (Talent)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
     "eventCategoryType": "TALENT",
-    "description": "Ultimate SQUAD! ON ME! improved: When ultimate is active, gains Link.",
-    "maxLevel": 1
+    "description": "Ultimate SQUAD! ON ME! improved: When ultimate is active, gains Link."
   },
   "metadata": {
     "originId": "AKEKURI",

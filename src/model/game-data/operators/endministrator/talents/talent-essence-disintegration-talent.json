@@ -6,7 +6,7 @@
           "subjectDeterminer": "THIS",
           "subject": "OPERATOR",
           "verb": "CONSUME",
-          "object": "ORIGINIUM_CRYSTAL",
+          "object": "STATUS", "objectId": "ORIGINIUM_CRYSTAL",
           "with": {
             "stacks": "MAX"
           }
@@ -41,7 +41,7 @@
           "subjectDeterminer": "THIS",
           "subject": "OPERATOR",
           "verb": "CONSUME",
-          "object": "ORIGINIUM_CRYSTAL",
+          "object": "STATUS", "objectId": "ORIGINIUM_CRYSTAL",
           "with": {
             "stacks": "MAX"
           }
@@ -51,9 +51,10 @@
           "subject": "OPERATOR",
           "verb": "HAVE",
           "object": "POTENTIAL",
+          "cardinalityConstraint": "AT_LEAST",
           "with": {
             "value": {
-              "verb": "AT_LEAST",
+              "verb": "IS",
               "value": 2
             }
           }
@@ -79,13 +80,13 @@
   ],
   "properties": {
     "id": "ESSENCE_DISINTEGRATION_TALENT",
+    "maxLevel": { "verb": "IS", "value": 2 },
     "name": "Essence Disintegration (Talent)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
     "eventCategoryType": "TALENT",
-    "description": "When the Originium Crystals attached to the enemy are consumed, the Endministrator gains ATK +30% for 15s. This effect cannot stack.",
-    "maxLevel": 2
+    "description": "When the Originium Crystals attached to the enemy are consumed, the Endministrator gains ATK +30% for 15s. This effect cannot stack."
   },
   "metadata": {
     "originId": "ENDMINISTRATOR",

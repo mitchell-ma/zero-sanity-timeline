@@ -18,9 +18,15 @@
               ],
               "ofDeterminer": "THIS",
               "of": "OPERATOR"
+            },
+            "mainStat": {
+              "verb": "IS",
+              "object": "STAT",
+              "objectId": "ATTACK",
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
             }
-          },
-          "_note": "DoT — Physical DMG per second as % of ATK. Multiplier values unknown, placeholders."
+          }
         },
         {
           "verb": "AMP",
@@ -38,8 +44,7 @@
               "ofDeterminer": "THIS",
               "of": "OPERATOR"
             }
-          },
-          "_note": "Increased Physical DMG taken. Multiplier values unknown, placeholders."
+          }
         },
         {
           "verb": "AMP",
@@ -57,8 +62,7 @@
               "ofDeterminer": "THIS",
               "of": "OPERATOR"
             }
-          },
-          "_note": "Increased Heat DMG taken. Multiplier values unknown, placeholders."
+          }
         }
       ]
     }
@@ -78,8 +82,7 @@
         "ofDeterminer": "THIS",
         "of": "OPERATOR"
       },
-      "unit": "SECOND",
-      "_note": "Duration unknown, placeholder values."
+      "unit": "SECOND"
     },
     "stacks": {
       "limit": {
@@ -96,7 +99,8 @@
     "originId": "NICKS_AND_SCRATCHES_TALENT",
     "dataSources": [
       "ENDFIELD_WIKI"
-    ]
+    ],
+    "isEnabled": false
   },
   "clauseType": "ALL"
 }

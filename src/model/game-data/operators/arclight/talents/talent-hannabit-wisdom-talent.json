@@ -1,13 +1,13 @@
 {
   "properties": {
     "id": "HANNABIT_WISDOM_TALENT",
+    "maxLevel": { "verb": "IS", "value": 2 },
     "name": "Hannabit Wisdom (Talent)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
     "eventCategoryType": "TALENT",
-    "description": "50% chance to ignore an Arts Infliction applied on her.",
-    "maxLevel": 2
+    "description": "50% chance to ignore an Arts Infliction applied on her."
   },
   "metadata": {
     "originId": "ARCLIGHT",

@@ -4,25 +4,24 @@
       "conditions": [],
       "effects": [
         {
-          "verb": "RECOVER",
+          "verb": "RETURN",
           "object": "SKILL_POINT",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
           "with": {
             "value": {
               "verb": "IS",
               "value": 50
             }
-          },
-          "toDeterminer": "THIS",
-          "to": "OPERATOR"
+          }
         }
       ]
     }
   ],
   "properties": {
-    "type": "GEAR_SET_STATUS",
     "id": "CATASTROPHE",
     "name": "Catastrophe",
-    "description": "Returns +50 SP on battle skill cast. Triggers once per battle.",
+    "description": "Returns +50 SP on battle skill cast. Once per battle.",
     "duration": {
       "value": {
         "verb": "IS",
@@ -36,6 +35,10 @@
         "value": 1
       },
       "interactionType": "RESET"
+    },
+    "usageLimit": {
+      "verb": "IS",
+      "value": 1
     },
     "eventType": "STATUS",
     "eventCategoryType": "GEAR_SET_STATUS"

@@ -11,7 +11,7 @@ interface TacticalEventConfig {
   /** Duration in frames. */
   durationFrames: number;
   /** Max uses per battle. */
-  maxUses: number;
+  usageLimit: number;
   /** Trigger condition type. */
   trigger: Interaction;
   /** Ultimate energy restore as a fraction of max (e.g. 0.2 = 20%). */
@@ -28,7 +28,7 @@ function getTacticalConfig(tacticalId: string): TacticalEventConfig | null {
   return {
     name: tactical.name,
     durationFrames: Math.round(tactical.durationSeconds * FPS),
-    maxUses: tactical.maxUses,
+    usageLimit: tactical.resolvedUsageLimit,
     trigger: tactical.triggerCondition,
     ultEnergyRestore: tactical.ultEnergyRestore,
     ultThreshold: tactical.triggerThreshold,
@@ -50,7 +50,7 @@ export interface TacticalEventResult {
  *
  * Iteratively scans the ultimate energy graph (including previously generated
  * tactical gains) to find frames where energy drops below the trigger threshold,
- * up to `maxUses`.
+ * up to `usageLimit`.
  *
  * @param slotId       Operator slot ID
  * @param tacticalId   Equipped tactical item ID
@@ -66,11 +66,11 @@ export function generateTacticalEvents(
   ultTimeline: { frame: number; type: 'consume' | 'gain'; amount: number }[],
   chargePerFrame: number,
   startValue: number,
-  maxUsesOverride?: number,
+  usageLimitOverride?: number,
 ): TacticalEventResult | null {
   const config = getTacticalConfig(tacticalId);
   if (!config) return null;
-  if (maxUsesOverride !== undefined) config.maxUses = maxUsesOverride;
+  if (usageLimitOverride !== undefined) config.usageLimit = usageLimitOverride;
 
   const threshold = config.ultThreshold * ultMax;
   const restoreAmount = config.ultEnergyRestore * ultMax;
@@ -80,7 +80,7 @@ export function generateTacticalEvents(
   // Build a mutable working timeline that we'll augment with tactical gains
   const workingTimeline = ultTimeline.map((t) => ({ ...t }));
 
-  for (let use = 0; use < config.maxUses; use++) {
+  for (let use = 0; use < config.usageLimit; use++) {
     // Simulate the ult energy graph to find the first frame below threshold
     const triggerFrame = findFirstBelowThreshold(
       workingTimeline, ultMax, chargePerFrame, startValue, threshold,

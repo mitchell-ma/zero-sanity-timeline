@@ -13,7 +13,9 @@
         {
           "verb": "APPLY",
           "object": "STATUS",
-          "objectId": "TYPE_50_YINGLUNG"
+          "objectId": "TYPE_50_YINGLUNG",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
         }
       ]
     }

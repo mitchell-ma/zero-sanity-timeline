@@ -21,7 +21,6 @@
     }
   ],
   "properties": {
-    "type": "GEAR_SET_STATUS",
     "id": "TIDE_SURGE",
     "name": "Tide Surge",
     "duration": {

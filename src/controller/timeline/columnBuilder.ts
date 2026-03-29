@@ -18,12 +18,23 @@ import { getBaseSkillId, formatSkillDisplayName } from '../../dsl/semanticsTrans
 import { buildContextForSkillColumn } from '../calculation/valueResolver';
 import { aggregateLoadoutStats } from '../calculation/loadoutAggregator';
 
+/** Column IDs that are NOT status columns — excluded from the operator status catch-all. */
+const OPERATOR_NON_STATUS_COLUMNS: ReadonlySet<string> = new Set([
+  ...SKILL_ORDER,
+  OPERATOR_COLUMNS.INPUT,
+  OPERATOR_COLUMNS.CONTROLLED,
+  OPERATOR_COLUMNS.OTHER,
+  OPERATOR_STATUS_COLUMN_ID,
+]);
+
 export interface Slot {
   slotId: string;
   operator: Operator | null;
   potential?: number;
   /** Equipped weapon ID (for weapon skill subtimeline columns). */
   weaponId?: string;
+  /** Equipped consumable ID (for consumable passive effects). */
+  consumableId?: string;
   /** Equipped tactical ID (for tactical subtimeline column). */
   tacticalId?: string;
   /** Active gear set effect type (3+ matching pieces). */
@@ -170,7 +181,7 @@ export function buildColumns(
       }
     }
 
-    // Scan skill frames for APPLY STATUS effects targeting THIS OPERATOR (e.g. Akekuri ult → LINK)
+    // Scan skill frames for APPLY STATUS effects targeting OPERATOR (e.g. Akekuri ult → LINK)
     const skills = getOperatorSkills(s.operator.id);
     if (skills) {
       const seen = new Set(operatorStatusMap.get(s.slotId)?.map(d => d.statusId) ?? []);
@@ -184,7 +195,34 @@ export function buildColumns(
                 if (eff.verb !== 'APPLY' || eff.object !== 'STATUS') continue;
                 if (eff.to !== NounType.OPERATOR) continue;
                 const statusId = eff.objectId as string;
-                if (!statusId || seen.has(statusId)) continue;
+                if (!statusId) continue;
+                // CONTROLLED target: status could land on any operator's column,
+                // so add the micro-column to ALL operator slots (even if already
+                // added to the source slot by the prescan).
+                if (eff.toDeterminer === DeterminerType.CONTROLLED) {
+                  const allStatuses = [...getEnabledStatusEvents(s.operator!.id), ...getEnabledStatusEvents('generic')];
+                  const statusDef = allStatuses.find(st => st.id === statusId);
+                  const colId = (OPERATOR_COLUMNS as Record<string, string>)[statusId] ?? statusId;
+                  for (const targetSlot of slots) {
+                    if (!targetSlot.operator) continue;
+                    const targetDefs = operatorStatusMap.get(targetSlot.slotId) ?? [];
+                    if (!targetDefs.some(d => d.statusId === statusId)) {
+                      targetDefs.push({
+                        statusId,
+                        label: STATUS_LABELS[statusId as StatusType] ?? statusDef?.name ?? statusId,
+                        columnId: colId,
+                        duration: 10 * FPS,
+                        color: targetSlot.operator.color,
+                        source: 'other',
+                        statusType: statusDef?.type ?? 'STATUS',
+                        ...(statusDef?.stacks ? { stacks: statusDef.stacks as unknown as Record<string, unknown> } : {}),
+                      });
+                      operatorStatusMap.set(targetSlot.slotId, targetDefs);
+                    }
+                  }
+                  continue;
+                }
+                if (seen.has(statusId)) continue;
                 seen.add(statusId);
                 // Look up status config for duration/stacks
                 const allStatuses = [...getEnabledStatusEvents(s.operator!.id), ...getEnabledStatusEvents('generic')];
@@ -688,6 +726,7 @@ export function buildColumns(
           microColumns: statusMicroCols,
           microColumnAssignment: MicroColumnAssignment.DYNAMIC_SPLIT,
           matchColumnIds: matchIds,
+          matchAllExcept: OPERATOR_NON_STATUS_COLUMNS,
         });
       statusColCount++;
       }
@@ -771,26 +810,39 @@ export function buildColumns(
     buildStatusMicroColumn(PHYSICAL_STATUS_COLUMNS.KNOCK_DOWN, '#c0c8d0'),
     buildStatusMicroColumn(PHYSICAL_STATUS_COLUMNS.CRUSH, '#c0c8d0'),
     buildStatusMicroColumn(PHYSICAL_STATUS_COLUMNS.BREACH, '#c0c8d0'),
-    // Debuffs
+    // Debuff base types (catch-all for operator-specific susceptibility/fragility effects)
     buildStatusMicroColumn(StatusType.FOCUS, '#55aadd'),
     buildStatusMicroColumn(StatusType.SUSCEPTIBILITY, '#cc8866'),
     buildStatusMicroColumn(StatusType.FRAGILITY, '#cc6644'),
-    // Data-driven enemy status entries from operator statusEvents (deduped by id)
+    // Data-driven enemy status entries: all statuses targeting ENEMY
+    // from operator defs and generic defs (deduped by id)
     ...(() => {
-      const seen = new Set<string>();
-      return slots.flatMap(s => {
-        if (!s.operator) return [];
-        const statusEvents = getEnabledStatusEvents(s.operator.id);
-        if (!statusEvents.length) return [];
-        return statusEvents
-          .filter((se) => se.target === 'ENEMY')
-          .filter((se) => {
-            if (seen.has(se.id)) return false;
-            seen.add(se.id);
-            return true;
-          })
-          .map((se) => buildStatusMicroColumn(se.id, s.operator!.color));
-      });
+      const seen = new Set<string>([
+        NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID,
+        ...enemy.statuses.map(s => s.id),
+        ...REACTION_MICRO_COLUMNS.map(mc => mc.id),
+        PHYSICAL_INFLICTION_COLUMNS.VULNERABLE,
+        PHYSICAL_STATUS_COLUMNS.LIFT, PHYSICAL_STATUS_COLUMNS.KNOCK_DOWN,
+        PHYSICAL_STATUS_COLUMNS.CRUSH, PHYSICAL_STATUS_COLUMNS.BREACH,
+        StatusType.FOCUS, StatusType.SUSCEPTIBILITY, StatusType.FRAGILITY,
+      ]);
+      const cols: MicroColumn[] = [];
+      // Operator-specific statuses targeting ENEMY
+      for (const s of slots) {
+        if (!s.operator) continue;
+        for (const se of getEnabledStatusEvents(s.operator.id)) {
+          if (se.target !== NounType.ENEMY || seen.has(se.id)) continue;
+          seen.add(se.id);
+          cols.push(buildStatusMicroColumn(se.id, s.operator.color));
+        }
+      }
+      // Generic statuses targeting ENEMY
+      for (const se of getEnabledStatusEvents('generic')) {
+        if (se.target !== NounType.ENEMY || seen.has(se.id)) continue;
+        seen.add(se.id);
+        cols.push(buildStatusMicroColumn(se.id, '#cc8866'));
+      }
+      return cols;
     })(),
   ];
 

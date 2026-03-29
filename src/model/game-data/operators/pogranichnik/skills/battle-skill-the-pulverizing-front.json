@@ -65,70 +65,6 @@
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
-                    "atb1": {
-                      "verb": "IS",
-                      "value": 5
-                    },
-                    "atb2": {
-                      "verb": "VARY_BY",
-                      "object": "SKILL_LEVEL",
-                      "value": [
-                        10,
-                        10,
-                        10,
-                        10,
-                        10,
-                        10,
-                        10,
-                        10,
-                        10,
-                        15,
-                        15,
-                        15
-                      ],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
-                    },
-                    "atb3": {
-                      "verb": "VARY_BY",
-                      "object": "SKILL_LEVEL",
-                      "value": [
-                        20,
-                        20,
-                        20,
-                        20,
-                        20,
-                        20,
-                        20,
-                        20,
-                        20,
-                        25,
-                        25,
-                        25
-                      ],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
-                    },
-                    "atb4": {
-                      "verb": "VARY_BY",
-                      "object": "SKILL_LEVEL",
-                      "value": [
-                        30,
-                        30,
-                        30,
-                        30,
-                        30,
-                        30,
-                        30,
-                        30,
-                        30,
-                        35,
-                        35,
-                        35
-                      ],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
-                    },
                     "value": {
                       "verb": "VARY_BY",
                       "object": "SKILL_LEVEL",
@@ -146,6 +82,13 @@
                         1.77,
                         1.92
                       ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
                     }
@@ -207,6 +150,13 @@
                         2.19,
                         2.38
                       ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
                     }

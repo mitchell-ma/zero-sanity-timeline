@@ -21,7 +21,6 @@
     }
   ],
   "properties": {
-    "type": "GEAR_SET_STATUS",
     "id": "HOT_WORK_HEAT",
     "name": "Hot Work (Heat)",
     "duration": {

@@ -6,19 +6,13 @@
  * Each file is an array: first entry is the set-level effect (GEAR_SET_EFFECT),
  * followed by individual status entries (GEAR_SET_STATUS).
  */
-import { UnitType, EventType, EventCategoryType } from '../../consts/enums';
-import { VerbType } from '../../dsl/semantics';
+import { UnitType, EventType, EventCategoryType, StackInteractionType } from '../../consts/enums';
+import { VerbType, NounType, DeterminerType } from '../../dsl/semantics';
 import type { Interaction } from '../../dsl/semantics';
 import type { ClausePredicate, StacksConfig, DurationConfig } from './weaponStatusesStore';
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from '../../controller/calculation/valueResolver';
 
-import { checkKeys, VALID_VALUE_NODE_KEYS, VALID_CLAUSE_KEYS, VALID_METADATA_KEYS } from './validationUtils';
-
-// ── Shared validation helpers ───────────────────────────────────────────────
-
-const VALID_EFFECT_KEYS = new Set(['verb', 'object', 'objectQualifier', 'objectId', 'to', 'toDeterminer', 'with']);
-const VALID_EFFECT_WITH_KEYS = new Set(['value', 'multiplier', 'staggerValue']);
-const VALID_TRIGGER_CLAUSE_KEYS = new Set(['conditions', 'effects']);
+import { checkKeys, VALID_VALUE_NODE_KEYS, VALID_CLAUSE_KEYS, VALID_METADATA_KEYS, VALID_EFFECT_KEYS, VALID_EFFECT_WITH_KEYS, validateEffect as validateEffectSemantics } from './validationUtils';
 
 function validateValueNode(wv: Record<string, unknown>, path: string): string[] {
   const errors = checkKeys(wv, VALID_VALUE_NODE_KEYS, path);
@@ -27,10 +21,11 @@ function validateValueNode(wv: Record<string, unknown>, path: string): string[] 
   return errors;
 }
 
-function validateEffect(ef: Record<string, unknown>, path: string): string[] {
+function validateLocalEffect(ef: Record<string, unknown>, path: string): string[] {
   const errors = checkKeys(ef, VALID_EFFECT_KEYS, path);
   if (typeof ef.verb !== 'string') errors.push(`${path}.verb: must be a string`);
   if (typeof ef.object !== 'string') errors.push(`${path}.object: must be a string`);
+  errors.push(...validateEffectSemantics(ef, path));
   if (ef.with) {
     const w = ef.with as Record<string, unknown>;
     errors.push(...checkKeys(w, VALID_EFFECT_WITH_KEYS, `${path}.with`));
@@ -45,7 +40,7 @@ function validateClause(clause: Record<string, unknown>, path: string): string[]
   const errors = checkKeys(clause, VALID_CLAUSE_KEYS, path);
   if (!Array.isArray(clause.conditions)) errors.push(`${path}.conditions: must be an array`);
   if (!Array.isArray(clause.effects)) errors.push(`${path}.effects: must be an array`);
-  else (clause.effects as Record<string, unknown>[]).forEach((ef, i) => errors.push(...validateEffect(ef, `${path}.effects[${i}]`)));
+  else (clause.effects as Record<string, unknown>[]).forEach((ef, i) => errors.push(...validateLocalEffect(ef, `${path}.effects[${i}]`)));
   return errors;
 }
 
@@ -61,10 +56,10 @@ export function validateGearSetEffect(json: Record<string, unknown>): string[] {
   if (json.onTriggerClause) {
     if (!Array.isArray(json.onTriggerClause)) errors.push('root.onTriggerClause: must be an array');
     else (json.onTriggerClause as Record<string, unknown>[]).forEach((t, i) => {
-      errors.push(...checkKeys(t, VALID_TRIGGER_CLAUSE_KEYS, `onTriggerClause[${i}]`));
+      errors.push(...checkKeys(t, VALID_CLAUSE_KEYS, `onTriggerClause[${i}]`));
       if (!Array.isArray(t.conditions)) errors.push(`onTriggerClause[${i}].conditions: must be an array`);
       if (!Array.isArray(t.effects)) errors.push(`onTriggerClause[${i}].effects: must be an array`);
-      else (t.effects as Record<string, unknown>[]).forEach((ef, j) => errors.push(...validateEffect(ef, `onTriggerClause[${i}].effects[${j}]`)));
+      else (t.effects as Record<string, unknown>[]).forEach((ef, j) => errors.push(...validateLocalEffect(ef, `onTriggerClause[${i}].effects[${j}]`)));
     });
   }
 
@@ -73,7 +68,6 @@ export function validateGearSetEffect(json: Record<string, unknown>): string[] {
   errors.push(...checkKeys(props, VALID_SET_EFFECT_PROPS_KEYS, 'properties'));
   if (typeof props.id !== 'string') errors.push('properties.id: must be a string');
   if (typeof props.name !== 'string') errors.push('properties.name: must be a string');
-  if (typeof props.type !== 'string') errors.push('properties.type: must be a string');
 
   const meta = json.metadata as Record<string, unknown> | undefined;
   if (meta) errors.push(...checkKeys(meta, VALID_METADATA_KEYS, 'metadata'));
@@ -84,7 +78,7 @@ export function validateGearSetEffect(json: Record<string, unknown>): string[] {
 // ── GearStatus validation ───────────────────────────────────────────────────
 
 const VALID_STATUS_TOP_KEYS = new Set(['clause', 'properties', 'metadata']);
-const VALID_STATUS_PROPS_KEYS = new Set(['type', 'id', 'name', 'description', 'duration', 'stacks', 'cooldownSeconds', 'eventType', 'eventCategoryType']);
+const VALID_STATUS_PROPS_KEYS = new Set(['id', 'name', 'description', 'duration', 'stacks', 'cooldownSeconds', 'usageLimit', 'enhancementType', 'eventType', 'eventCategoryType']);
 const VALID_DURATION_KEYS = new Set(['value', 'unit']);
 const VALID_STATUS_LEVEL_KEYS = new Set(['limit', 'interactionType']);
 
@@ -100,7 +94,6 @@ export function validateGearStatus(json: Record<string, unknown>): string[] {
   errors.push(...checkKeys(props, VALID_STATUS_PROPS_KEYS, 'properties'));
   if (typeof props.id !== 'string') errors.push('properties.id: must be a string');
   if (typeof props.name !== 'string') errors.push('properties.name: must be a string');
-  if (typeof props.type !== 'string') errors.push('properties.type: must be a string');
 
   if (props.duration) {
     const dur = props.duration as Record<string, unknown>;
@@ -188,6 +181,25 @@ export class GearSetEffect {
     };
   }
 
+  /** Serialize as a talent-shaped trigger source def for the event pipeline. */
+  serializeAsTriggerDef(): Record<string, unknown> {
+    return {
+      ...(this.onTriggerClause.length > 0 ? { onTriggerClause: this.onTriggerClause } : {}),
+      properties: {
+        id: this.id,
+        name: this.name,
+        target: NounType.OPERATOR,
+        targetDeterminer: DeterminerType.THIS,
+        stacks: { limit: { verb: VerbType.IS, value: 1 }, interactionType: StackInteractionType.NONE },
+        eventType: EventType.STATUS,
+        eventCategoryType: EventCategoryType.TALENT,
+      },
+      metadata: {
+        originId: this.originId,
+      },
+    };
+  }
+
   static deserialize(json: Record<string, unknown>, source?: string): GearSetEffect {
     const errors = validateGearSetEffect(json);
     if (errors.length > 0) {
@@ -200,16 +212,16 @@ export class GearSetEffect {
 
 // ── GearStatus class ────────────────────────────────────────────────────────
 
-/** A single gear status definition (type=GEAR_SET_STATUS). */
+/** A single gear status definition (eventCategoryType=GEAR_SET_STATUS). */
 export class GearStatus {
   readonly clause: ClausePredicate[];
-  readonly type: string;
   readonly id: string;
   readonly name: string;
   readonly description?: string;
   readonly duration: DurationConfig;
   readonly stacks: StacksConfig;
   readonly cooldownSeconds?: number;
+  readonly usageLimit?: { verb: string; value: number };
   readonly eventType: EventType;
   readonly eventCategoryType: EventCategoryType;
   readonly originId: string;
@@ -219,7 +231,6 @@ export class GearStatus {
     const meta = (json.metadata ?? {}) as Record<string, unknown>;
 
     this.clause = (json.clause ?? []) as ClausePredicate[];
-    this.type = (props.type ?? 'GEAR_SET_STATUS') as string;
     this.id = (props.id ?? '') as string;
     this.name = (props.name ?? '') as string;
     if (props.description) this.description = props.description as string;
@@ -229,6 +240,7 @@ export class GearStatus {
       interactionType: 'NONE',
     }) as StacksConfig;
     if (props.cooldownSeconds) this.cooldownSeconds = props.cooldownSeconds as number;
+    if (props.usageLimit) this.usageLimit = props.usageLimit as { verb: string; value: number };
     this.eventType = (props.eventType as EventType) ?? EventType.STATUS;
     this.eventCategoryType = (props.eventCategoryType as EventCategoryType) ?? EventCategoryType.GEAR_SET_STATUS;
     this.originId = (meta.originId ?? '') as string;
@@ -255,6 +267,7 @@ export class GearStatus {
         eventType: this.eventType,
         eventCategoryType: this.eventCategoryType,
       },
+      ...(this.usageLimit ? { usageLimit: this.usageLimit.value } : {}),
       metadata: {
         originId: this.originId,
       },

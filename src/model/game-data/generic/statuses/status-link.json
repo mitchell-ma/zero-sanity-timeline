@@ -19,7 +19,7 @@
     },
     "eventType": "STATUS",
     "eventCategoryType": "SKILL_STATUS",
-    "description": "When consumed by Heart of the Unmoving, deals an additional hit of massive Physical DMG."
+    "description": "Next battle skill or ultimate cast by the team consumes the Link buff and deals more DMG, with battle skills getting a higher increase. Effects of the same type can stack, but with diminishing returns."
   },
   "metadata": {
     "originId": "game",

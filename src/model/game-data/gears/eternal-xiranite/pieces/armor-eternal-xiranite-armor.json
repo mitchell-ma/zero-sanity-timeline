@@ -5,7 +5,7 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "BASE_DEFENSE",
+          "object": "STAT", "objectId": "BASE_DEFENSE",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
@@ -17,7 +17,7 @@
         },
         {
           "verb": "APPLY",
-          "object": "WILL",
+          "object": "STAT", "objectId": "WILL",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
@@ -37,7 +37,7 @@
         },
         {
           "verb": "APPLY",
-          "object": "INTELLECT",
+          "object": "STAT", "objectId": "INTELLECT",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
@@ -57,7 +57,7 @@
         },
         {
           "verb": "APPLY",
-          "object": "ARTS_INTENSITY",
+          "object": "STAT", "objectId": "ARTS_INTENSITY",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
@@ -81,7 +81,7 @@
   "properties": {
     "id": "ETERNAL_XIRANITE_ARMOR",
     "name": "Eternal Xiranite Armor",
-    "type": "ARMOR",
+    "gearType": "ARMOR",
     "gearSet": "ETERNAL_XIRANITE"
   },
   "metadata": {

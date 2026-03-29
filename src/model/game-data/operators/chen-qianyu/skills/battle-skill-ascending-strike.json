@@ -122,10 +122,24 @@
                       "right": {
                         "verb": "VARY_BY",
                         "object": "POTENTIAL",
-                        "value": [1, 1, 1, 1.1, 1.1, 1.1],
+                        "value": [
+                          1,
+                          1,
+                          1,
+                          1.1,
+                          1.1,
+                          1.1
+                        ],
                         "ofDeterminer": "THIS",
                         "of": "OPERATOR"
                       }
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
                     }
                   }
                 }

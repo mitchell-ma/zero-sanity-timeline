@@ -5,7 +5,7 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "ULTIMATE_GAIN_EFFICIENCY",
+          "object": "STAT", "objectId": "ULTIMATE_GAIN_EFFICIENCY",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {

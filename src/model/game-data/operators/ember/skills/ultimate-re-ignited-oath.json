@@ -120,6 +120,13 @@
                       ],
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
                     }
                   }
                 },
@@ -144,26 +151,6 @@
                     "duration": {
                       "verb": "IS",
                       "value": 10
-                    },
-                    "HP_MULTIPLIER": {
-                      "verb": "VARY_BY",
-                      "object": "SKILL_LEVEL",
-                      "value": [
-                        0.18,
-                        0.18,
-                        0.18,
-                        0.2,
-                        0.2,
-                        0.2,
-                        0.22,
-                        0.22,
-                        0.22,
-                        0.25,
-                        0.25,
-                        0.25
-                      ],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
                     }
                   }
                 }
@@ -190,33 +177,7 @@
                   "object": "STATUS",
                   "objectId": "THE_STEEL_OATH_EMPOWERED",
                   "toDeterminer": "THIS",
-                  "to": "OPERATOR",
-                  "with": {
-                    "HP_MULTIPLIER": {
-                      "verb": "VARY_BY",
-                      "object": "SKILL_LEVEL",
-                      "value": [
-                        0.18,
-                        0.18,
-                        0.18,
-                        0.2,
-                        0.2,
-                        0.2,
-                        0.22,
-                        0.22,
-                        0.22,
-                        0.25,
-                        0.25,
-                        0.25
-                      ],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
-                    },
-                    "HP_MULTIPLIER_MODIFIER": {
-                      "verb": "IS",
-                      "value": 1.2
-                    }
-                  }
+                  "to": "OPERATOR"
                 }
               ]
             }

@@ -29,7 +29,8 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "CRITICAL_RATE",
+          "object": "STAT",
+          "objectId": "CRITICAL_RATE",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
@@ -50,13 +51,15 @@
           "verb": "HAVE",
           "object": "STATUS",
           "objectId": "CRIT_STACKS",
-          "with": { "stacks": { "verb": "AT_LEAST", "value": 10 } }
+          "cardinalityConstraint": "AT_LEAST",
+          "with": { "stacks": { "verb": "IS", "value": 10 } }
         }
       ],
       "effects": [
         {
           "verb": "APPLY",
-          "object": "CRITICAL_DAMAGE",
+          "object": "STAT",
+          "objectId": "CRITICAL_DAMAGE",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {

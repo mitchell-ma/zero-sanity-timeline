@@ -6,6 +6,7 @@
         {
           "verb": "APPLY",
           "object": "STAT",
+          "objectId": "DAMAGE_BONUS",
           "toDeterminer": "OTHER",
           "to": "OPERATOR",
           "with": {
@@ -13,15 +14,12 @@
               "verb": "IS",
               "value": 0.16
             }
-          },
-          "objectId": "DAMAGE_BONUS",
-          "objectQualifier": "SKILL"
+          }
         }
       ]
     }
   ],
   "properties": {
-    "type": "GEAR_SET_STATUS",
     "id": "ETERNAL_XIRANITE",
     "name": "Eternal Xiranite",
     "duration": {
@@ -38,7 +36,7 @@
       },
       "interactionType": "RESET"
     },
-    "description": "On applying Amp/Protected/Susceptibility/Weakened",
+    "description": "DMG Dealt +16% for 15s to other teammates.",
     "eventType": "STATUS",
     "eventCategoryType": "GEAR_SET_STATUS"
   },

@@ -47,8 +47,8 @@
               "effects": [
                 {
                   "verb": "APPLY",
-                  "object": "PROTECTION",
-                  "objectType": "STATUS",
+                  "object": "STATUS",
+                  "objectId": "PROTECTION",
                   "toDeterminer": "ALL",
                   "to": "OPERATOR",
                   "with": {
@@ -103,8 +103,9 @@
                 },
                 {
                   "verb": "APPLY",
-                  "object": "VULNERABILITY",
-                  "objectType": "STATUS",
+                  "object": "STATUS",
+                  "objectId": "INFLICTION",
+                  "objectQualifier": "VULNERABLE",
                   "to": "ENEMY",
                   "with": {
                     "stacks": {
@@ -138,6 +139,13 @@
                       ],
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
                     }
                   }
                 }
@@ -150,9 +158,10 @@
                   "subject": "OPERATOR",
                   "verb": "HAVE",
                   "object": "POTENTIAL",
+                  "cardinalityConstraint": "AT_LEAST",
                   "with": {
                     "value": {
-                      "verb": "AT_LEAST",
+                      "verb": "IS",
                       "value": 1
                     }
                   }
@@ -175,7 +184,7 @@
                         "operation": "MULT",
                         "left": {
                           "verb": "IS",
-                          "value": 5.0
+                          "value": 5
                         },
                         "right": {
                           "verb": "IS",
@@ -185,6 +194,13 @@
                           "of": "OPERATOR"
                         }
                       }
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "DEFENSE",
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
                     }
                   }
                 }
@@ -197,9 +213,10 @@
                   "subject": "OPERATOR",
                   "verb": "HAVE",
                   "object": "POTENTIAL",
+                  "cardinalityConstraint": "AT_LEAST",
                   "with": {
                     "value": {
-                      "verb": "AT_LEAST",
+                      "verb": "IS",
                       "value": 5
                     }
                   }

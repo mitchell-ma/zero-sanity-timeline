@@ -3,32 +3,42 @@
     {
       "conditions": [
         {
-          "subject": "ENEMY",
-          "verb": "IS",
-          "object": "COMBUSTED"
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "APPLY",
+          "object": "REACTION",
+          "objectId": "COMBUSTION",
+          "to": "ENEMY"
         }
       ],
       "effects": [
         {
           "verb": "APPLY",
           "object": "STATUS",
-          "objectId": "HOT_WORK_HEAT"
+          "objectId": "HOT_WORK_HEAT",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
         }
       ]
     },
     {
       "conditions": [
         {
-          "subject": "ENEMY",
-          "verb": "IS",
-          "object": "CORRODED"
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "APPLY",
+          "object": "REACTION",
+          "objectId": "CORROSION",
+          "to": "ENEMY"
         }
       ],
       "effects": [
         {
           "verb": "APPLY",
           "object": "STATUS",
-          "objectId": "HOT_WORK_NATURE"
+          "objectId": "HOT_WORK_NATURE",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
         }
       ]
     }

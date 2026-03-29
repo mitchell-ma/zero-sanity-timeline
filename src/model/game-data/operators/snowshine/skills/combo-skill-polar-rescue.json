@@ -79,8 +79,8 @@
               "effects": [
                 {
                   "verb": "APPLY",
-                  "object": "TREATMENT",
-                  "objectType": "STATUS",
+                  "object": "STAT",
+                  "objectId": "TREATMENT",
                   "toDeterminer": "ALL",
                   "to": "OPERATOR",
                   "with": {
@@ -128,8 +128,8 @@
                 },
                 {
                   "verb": "APPLY",
-                  "object": "CONTINUOUS_TREATMENT",
-                  "objectType": "STATUS",
+                  "object": "STATUS",
+                  "objectId": "CONTINUOUS_TREATMENT",
                   "toDeterminer": "ALL",
                   "to": "OPERATOR",
                   "with": {
@@ -138,11 +138,6 @@
                         "verb": "IS",
                         "value": 3
                       },
-                      "unit": "SECOND"
-                    },
-                    "interval": {
-                      "verb": "IS",
-                      "value": 0.5,
                       "unit": "SECOND"
                     },
                     "healBase": {
@@ -245,9 +240,11 @@
           "verb": "HAVE",
           "object": "HP",
           "cardinalityConstraint": "AT_MOST",
-          "value": {
-            "verb": "IS",
-            "value": 60
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": 60
+            }
           }
         }
       ]

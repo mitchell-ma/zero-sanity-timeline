@@ -125,18 +125,6 @@
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
-                    "usp_1Display": {
-                      "verb": "IS",
-                      "value": 25
-                    },
-                    "usp_2Display": {
-                      "verb": "IS",
-                      "value": 30
-                    },
-                    "usp_3Display": {
-                      "verb": "IS",
-                      "value": 35
-                    },
                     "value": {
                       "verb": "VARY_BY",
                       "object": "SKILL_LEVEL",
@@ -154,6 +142,13 @@
                         4.98,
                         5.4
                       ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
                     }

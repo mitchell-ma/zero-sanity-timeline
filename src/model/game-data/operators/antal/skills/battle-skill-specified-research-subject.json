@@ -44,11 +44,17 @@
               "unit": "SECOND"
             }
           },
-          "clauseType": "FIRST_MATCH",
+          "clauseType": "ALL",
           "clause": [
             {
               "conditions": [
-                { "subject": "OPERATOR", "verb": "HAVE", "object": "POTENTIAL", "cardinalityConstraint": "AT_LEAST", "value": 5 }
+                {
+                  "subject": "OPERATOR",
+                  "verb": "HAVE",
+                  "object": "POTENTIAL",
+                  "cardinalityConstraint": "AT_LEAST",
+                  "value": 5
+                }
               ],
               "effects": [
                 {
@@ -139,7 +145,13 @@
             },
             {
               "conditions": [
-                { "subject": "OPERATOR", "verb": "HAVE", "object": "POTENTIAL", "cardinalityConstraint": "AT_MOST", "value": 4 }
+                {
+                  "subject": "OPERATOR",
+                  "verb": "HAVE",
+                  "object": "POTENTIAL",
+                  "cardinalityConstraint": "AT_MOST",
+                  "value": 4
+                }
               ],
               "effects": [
                 {
@@ -240,13 +252,19 @@
                       ],
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
                     }
                   }
                 }
               ]
             }
-          ],
-          "clauseType": "ALL"
+          ]
         }
       ],
       "properties": {

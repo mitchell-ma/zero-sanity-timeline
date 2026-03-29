@@ -22,7 +22,7 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "BASE_ATTACK",
+          "object": "STAT", "objectId": "BASE_ATTACK",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {

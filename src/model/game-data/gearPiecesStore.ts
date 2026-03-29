@@ -6,16 +6,13 @@
  * Each file is an array of gear pieces belonging to a single gear set.
  */
 import { VerbType, type ValueNode } from '../../dsl/semantics';
-import { MainStatType } from '../../consts/enums';
+import { StatType } from '../enums/stats';
 import { resolveEffectStat } from '../enums/stats';
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from '../../controller/calculation/valueResolver';
-import { checkKeys, VALID_VALUE_NODE_KEYS, VALID_CLAUSE_KEYS } from './validationUtils';
+import { checkKeys, VALID_VALUE_NODE_KEYS, VALID_CLAUSE_KEYS, VALID_EFFECT_KEYS, VALID_EFFECT_WITH_KEYS, validateEffect as validateEffectSemantics } from './validationUtils';
 
 // ── Validation ──────────────────────────────────────────────────────────────
-
-const VALID_EFFECT_KEYS = new Set(['verb', 'object', 'objectId', 'objectQualifier', 'toDeterminer', 'to', 'with']);
-const VALID_EFFECT_WITH_KEYS = new Set(['value']);
-const VALID_PROPERTIES_KEYS = new Set(['id', 'name', 'type', 'gearSet']);
+const VALID_PROPERTIES_KEYS = new Set(['id', 'name', 'gearType', 'gearSet']);
 const VALID_TOP_KEYS = new Set(['clause', 'properties', 'metadata']);
 
 function validateValueNode(wv: Record<string, unknown>, path: string): string[] {
@@ -25,10 +22,11 @@ function validateValueNode(wv: Record<string, unknown>, path: string): string[] 
   return errors;
 }
 
-function validateEffect(ef: Record<string, unknown>, path: string): string[] {
+function validateLocalEffect(ef: Record<string, unknown>, path: string): string[] {
   const errors = checkKeys(ef, VALID_EFFECT_KEYS, path);
   if (typeof ef.verb !== 'string') errors.push(`${path}.verb: must be a string`);
   if (typeof ef.object !== 'string') errors.push(`${path}.object: must be a string`);
+  errors.push(...validateEffectSemantics(ef, path));
   if (ef.with) {
     const w = ef.with as Record<string, unknown>;
     errors.push(...checkKeys(w, VALID_EFFECT_WITH_KEYS, `${path}.with`));
@@ -47,7 +45,7 @@ export function validateGearPiece(json: Record<string, unknown>): string[] {
       const clauseErrors = checkKeys(c, VALID_CLAUSE_KEYS, `clause[${i}]`);
       errors.push(...clauseErrors);
       if (Array.isArray(c.effects)) {
-        (c.effects as Record<string, unknown>[]).forEach((ef, j) => errors.push(...validateEffect(ef, `clause[${i}].effects[${j}]`)));
+        (c.effects as Record<string, unknown>[]).forEach((ef, j) => errors.push(...validateLocalEffect(ef, `clause[${i}].effects[${j}]`)));
       }
     });
   }
@@ -57,7 +55,7 @@ export function validateGearPiece(json: Record<string, unknown>): string[] {
   errors.push(...checkKeys(props, VALID_PROPERTIES_KEYS, 'properties'));
   if (typeof props.id !== 'string') errors.push('properties.id: must be a string');
   if (typeof props.name !== 'string') errors.push('properties.name: must be a string');
-  if (typeof props.type !== 'string') errors.push('properties.type: must be a string');
+  if (typeof props.gearType !== 'string') errors.push('properties.gearType: must be a string');
   if (typeof props.gearSet !== 'string') errors.push('properties.gearSet: must be a string');
 
   return errors;
@@ -85,7 +83,7 @@ export class GearPiece {
   readonly clause: ClausePredicate[];
   readonly id: string;
   readonly name: string;
-  readonly type: string;
+  readonly gearType: string;
   readonly gearSet: string;
   /** Resolved icon URL (set by loader after construction). */
   icon?: string;
@@ -96,15 +94,16 @@ export class GearPiece {
     this.clause = (json.clause ?? []) as ClausePredicate[];
     this.id = (props.id ?? '') as string;
     this.name = (props.name ?? '') as string;
-    this.type = (props.type ?? '') as string;
+    this.gearType = (props.gearType ?? '') as string;
     this.gearSet = (props.gearSet ?? '') as string;
   }
 
-  /** Get defense value (from clause APPLY BASE_DEFENSE with IS verb). */
+  /** Get defense value (from clause APPLY STAT objectId=BASE_DEFENSE with IS verb). */
   get defense(): number {
     for (const pred of this.clause) {
       for (const ef of pred.effects) {
-        if (ef.verb === VerbType.APPLY && ef.object === MainStatType.BASE_DEFENSE) {
+        const statKey = resolveEffectStat(ef);
+        if (ef.verb === VerbType.APPLY && statKey === StatType.BASE_DEFENSE) {
           return ef.with?.value ? resolveValueNode(ef.with.value, DEFAULT_VALUE_CONTEXT) : 0;
         }
       }
@@ -120,8 +119,8 @@ export class GearPiece {
         const wvNode = ef.with?.value as { value?: number | number[] } | undefined;
         const values = wvNode?.value != null ? (Array.isArray(wvNode.value) ? wvNode.value : [wvNode.value]) : undefined;
         if (!values) continue;
-        // IS verb → single value for all ranks; VARY_BY → indexed by rank
-        stats[ef.object] = values.length === 1 ? values[0] : (values[rank - 1] ?? 0);
+        const statKey = resolveEffectStat(ef) ?? ef.object;
+        stats[statKey] = values.length === 1 ? values[0] : (values[rank - 1] ?? 0);
       }
     }
     return stats;
@@ -132,7 +131,7 @@ export class GearPiece {
     const keys: string[] = [];
     for (const pred of this.clause) {
       for (const ef of pred.effects) {
-        keys.push(ef.object);
+        keys.push(resolveEffectStat(ef) ?? ef.object);
       }
     }
     return keys;
@@ -161,7 +160,7 @@ export class GearPiece {
       properties: {
         id: this.id,
         name: this.name,
-        type: this.type,
+        gearType: this.gearType,
         gearSet: this.gearSet,
       },
     };
@@ -268,7 +267,7 @@ export function getGearPiecesBySet(gearSet: string): readonly GearPiece[] {
 
 /** Get all gear pieces filtered by type (ARMOR, GLOVES, KIT). */
 export function getGearPiecesByType(pieceType: string): readonly GearPiece[] {
-  return getAllGearPieces().filter(p => p.type === pieceType);
+  return getAllGearPieces().filter(p => p.gearType === pieceType);
 }
 
 // ── Custom registration ─────────────────────────────────────────────────────

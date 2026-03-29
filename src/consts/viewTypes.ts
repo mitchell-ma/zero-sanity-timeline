@@ -258,6 +258,8 @@ export interface TimelineEvent {
   creationInteractionMode?: InteractionModeType;
   /** Pending segment overrides from share URL decode (applied by attachDefaultSegments when columns become available). */
   _pendingSegmentOverrides?: { sg?: number[]; fo?: number[][] };
+  /** Indices of segments from the full variant chain placed at creation. Undefined = full chain. */
+  segmentOrigin?: number[];
 }
 
 export interface ContextMenuItem {
@@ -278,6 +280,15 @@ export interface ContextMenuItem {
   checked?: boolean;
   /** If true, clicking this item does NOT close the menu. */
   keepOpen?: boolean;
+  /** Inline sub-buttons rendered as a horizontal row (e.g. individual BATK segments). */
+  inlineButtons?: {
+    label: string;
+    action?: () => void;
+    actionId?: string;
+    actionPayload?: unknown;
+    disabled?: boolean;
+    disabledReason?: string;
+  }[];
 }
 
 export interface ContextMenuState {
@@ -336,6 +347,8 @@ export type MiniTimeline = {
   microColumnAssignment?: import("./enums").MicroColumnAssignment;
   /** If set, collect events matching any of these columnIds (instead of col.columnId). */
   matchColumnIds?: string[];
+  /** If set, match all events on this ownerId EXCEPT those with columnIds in this set. */
+  matchAllExcept?: ReadonlySet<string>;
 
   /** Default durations for new events created in this mini-timeline. */
   defaultEvent?: {

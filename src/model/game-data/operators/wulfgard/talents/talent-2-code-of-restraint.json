@@ -1,13 +1,13 @@
 {
   "properties": {
     "id": "WULFGARD_TALENT2_CODE_OF_RESTRAINT",
+    "maxLevel": { "verb": "IS", "value": 2 },
     "name": "Code of Restraint (Talent)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
     "eventCategoryType": "TALENT",
-    "description": "Whenever the battle skill Thermite Tracers successfully consumes an Arts Reaction, return 5/10 SP.",
-    "maxLevel": 2
+    "description": "Whenever the battle skill Thermite Tracers successfully consumes an Arts Reaction, return 5/10 SP."
   },
   "metadata": {
     "originId": "WULFGARD",

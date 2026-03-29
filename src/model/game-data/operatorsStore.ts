@@ -42,7 +42,6 @@ const VALID_TOP_KEYS = new Set([
 ]);
 
 const VALID_TALENT_KEYS = new Set(['one', 'two', 'attributeIncrease']);
-const VALID_TALENT_ENTRY_KEYS = new Set(['id', 'name', 'description', 'maxLevel']);
 const VALID_ATTR_INCREASE_KEYS = new Set(['id', 'name', 'attribute']);
 
 
@@ -72,9 +71,8 @@ export function validateOperator(json: Record<string, unknown>): string[] {
   if (json.talents) {
     const talents = json.talents as Record<string, unknown>;
     errors.push(...checkKeys(talents, VALID_TALENT_KEYS, 'talents'));
-    // talents.one and talents.two can be string IDs (resolved from talent files) or inline objects
-    if (talents.one && typeof talents.one === 'object') errors.push(...checkKeys(talents.one as Record<string, unknown>, VALID_TALENT_ENTRY_KEYS, 'talents.one'));
-    if (talents.two && typeof talents.two === 'object') errors.push(...checkKeys(talents.two as Record<string, unknown>, VALID_TALENT_ENTRY_KEYS, 'talents.two'));
+    if (talents.one && typeof talents.one !== 'string') errors.push('talents.one: must be a talent ID string');
+    if (talents.two && typeof talents.two !== 'string') errors.push('talents.two: must be a talent ID string');
     if (talents.attributeIncrease) errors.push(...checkKeys(talents.attributeIncrease as Record<string, unknown>, VALID_ATTR_INCREASE_KEYS, 'talents.attributeIncrease'));
   }
 
@@ -239,6 +237,27 @@ function loadPotentialsFromFiles(context: any, operatorDir: string): { resolved:
 
 // ── Talent file → TalentEntry resolution ────────────────────────────────────
 
+/** Resolve a ValueNode-style maxLevel property: { verb: "IS", value: N }. */
+function resolveMaxLevel(node: unknown): number | null {
+  if (!node || typeof node !== 'object') return null;
+  const rec = node as Record<string, unknown>;
+  if (rec.verb === 'IS' && typeof rec.value === 'number') return rec.value;
+  return null;
+}
+
+/** Derive maxLevel from the longest VARY_BY TALENT_LEVEL array in a JSON tree. */
+function deriveTalentMaxLevel(obj: unknown): number {
+  if (Array.isArray(obj)) return Math.max(0, ...obj.map(deriveTalentMaxLevel));
+  if (obj && typeof obj === 'object') {
+    const rec = obj as Record<string, unknown>;
+    if (rec.object === 'TALENT_LEVEL' && rec.verb === 'VARY_BY' && Array.isArray(rec.value)) {
+      return rec.value.length;
+    }
+    return Math.max(0, ...Object.values(rec).map(deriveTalentMaxLevel));
+  }
+  return 0;
+}
+
 /** Build a map of talent ID → TalentEntry from talent JSON files for a given operator directory. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function loadTalentsFromFiles(context: any, operatorDir: string): Map<string, TalentEntry> {
@@ -249,14 +268,15 @@ function loadTalentsFromFiles(context: any, operatorDir: string): Map<string, Ta
     const json = context(key) as Record<string, unknown>;
     const props = (json.properties ?? {}) as Record<string, unknown>;
     const id = props.id as string | undefined;
-    if (!id || props.maxLevel == null) continue;
+    if (!id) continue;
     const rawName = (props.name ?? '') as string;
-    entries.set(id, {
+    const entry: TalentEntry = {
       id,
       name: rawName.replace(/ \(Talent\)$/, ''),
-      description: (props.description ?? undefined) as string | undefined,
-      maxLevel: props.maxLevel as number,
-    });
+      maxLevel: resolveMaxLevel(props.maxLevel) ?? (deriveTalentMaxLevel(json) || 1),
+    };
+    if (typeof props.description === 'string') entry.description = props.description;
+    entries.set(id, entry);
   }
   return entries;
 }
@@ -274,7 +294,7 @@ function resolveTalentRefs(
         talents[slot] = entry;
       } else {
         console.warn(`[OperatorsStore] Talent ID "${val}" not found in talent files`);
-        talents[slot] = { id: val, maxLevel: 0 };
+        talents[slot] = { id: val, maxLevel: 1 };
       }
     }
   }
@@ -305,6 +325,13 @@ for (const key of operatorContext.keys()) {
   const dirName = match[1];
   const json = operatorContext(key) as Record<string, unknown>;
 
+  // Validate raw JSON before any resolution
+  const errors = validateOperator(json);
+  if (errors.length > 0) {
+    const id = json.id ?? json.name ?? 'unknown';
+    console.warn(`[OperatorBase] Validation errors in ${key ?? id}:\n  ${errors.join('\n  ')}`);
+  }
+
   // Load potentials from separate files instead of inline data
   const { resolved: potentials, raw: rawPotentials } = loadPotentialsFromFiles(operatorContext, dirName);
   if (potentials.length > 0) {
@@ -321,7 +348,7 @@ for (const key of operatorContext.keys()) {
     resolvedJson = { ...json, talents: resolvedTalents };
   }
 
-  const operator = OperatorBase.deserialize(resolvedJson, key);
+  const operator = new OperatorBase(resolvedJson);
   if (operator.id) {
     const operatorId = operator.id;
     operator.icon = resolveOperatorIcon(operator.name);

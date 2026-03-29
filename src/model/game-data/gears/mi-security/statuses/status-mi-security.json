@@ -6,26 +6,49 @@
         {
           "verb": "APPLY",
           "object": "STAT",
+          "objectId": "ATTACK_BONUS",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
           "with": {
             "value": {
               "verb": "VARY_BY",
               "object": "STATUS_LEVEL",
               "value": [
                 0.05
-              ],
-              "ofDeterminer": "THIS",
-              "of": "OPERATOR"
+              ]
             }
-          },
+          }
+        }
+      ]
+    },
+    {
+      "conditions": [
+        {
+          "subject": "EVENT",
+          "verb": "HAVE",
+          "object": "STACKS",
+          "cardinalityConstraint": "EXACTLY",
+          "value": 5
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STAT",
+          "objectId": "CRITICAL_RATE",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
-          "objectId": "ATTACK_BONUS"
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": 0.05
+            }
+          }
         }
       ]
     }
   ],
   "properties": {
-    "type": "GEAR_SET_STATUS",
     "id": "MI_SECURITY",
     "name": "MI Security",
     "duration": {
@@ -42,7 +65,7 @@
       },
       "interactionType": "NONE"
     },
-    "description": "ATK +5% for 5s after scoring a critical hit. Max 5 stacks.",
+    "description": "ATK +5% per stack for 5s after crit. At 5 stacks, also Critical Rate +5%.",
     "eventType": "STATUS",
     "eventCategoryType": "GEAR_SET_STATUS"
   },

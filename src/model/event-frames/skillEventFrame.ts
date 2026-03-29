@@ -1,4 +1,4 @@
-import { EventFrameType } from "../../consts/enums";
+import { EventFrameType, DamageScalingStatType } from "../../consts/enums";
 
 // ── Clause/predicate types (DSL v2) ──────────────────────────────────────────
 
@@ -20,6 +20,7 @@ export interface FrameCondition {
 export interface FrameDealDamage {
   element?: string;          // "NATURE", "HEAT", etc.
   multipliers: number[];     // per skill level (12 entries)
+  mainStat?: DamageScalingStatType;
 }
 
 /** A single effect within a clause predicate. */

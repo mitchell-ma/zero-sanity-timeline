@@ -1,0 +1,46 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STAT",
+          "objectId": "FINAL_DAMAGE_REDUCTION",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": 0.30
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "ARMORED_MSGR",
+    "name": "Armored MSGR",
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": 1
+      },
+      "unit": "SECOND"
+    },
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 1
+      },
+      "interactionType": "RESET"
+    },
+    "description": "30% DMG Reduction when HP below 50%.",
+    "eventType": "STATUS",
+    "eventCategoryType": "GEAR_SET_STATUS"
+  },
+  "metadata": {
+    "originId": "ARMORED_MSGR"
+  }
+}

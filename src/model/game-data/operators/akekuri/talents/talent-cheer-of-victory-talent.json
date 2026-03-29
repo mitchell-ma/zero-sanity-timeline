@@ -1,13 +1,36 @@
 {
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STAT",
+          "objectId": "SP_RECOVERY_BONUS",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "VARY_BY",
+              "object": "TALENT_LEVEL",
+              "value": [0.015, 0.015],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            }
+          }
+        }
+      ]
+    }
+  ],
   "properties": {
     "id": "CHEER_OF_VICTORY_TALENT",
+    "maxLevel": { "verb": "IS", "value": 2 },
     "name": "Cheer of Victory (Talent)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
     "eventCategoryType": "TALENT",
-    "description": "Combo skill Flash and Dash improved: For every 10 points of Intellect, SP Recovery +1.5% (max: 75%).",
-    "maxLevel": 2
+    "description": "Combo skill Flash and Dash improved: For every 10 points of Intellect, SP Recovery +1.5% (max: 75%)."
   },
   "metadata": {
     "originId": "AKEKURI",
@@ -15,5 +38,6 @@
       "WARFARIN"
     ],
     "icon": "skills/akekuri_talent_1_icon.png"
-  }
+  },
+  "clauseType": "ALL"
 }

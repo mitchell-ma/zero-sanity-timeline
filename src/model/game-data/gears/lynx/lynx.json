@@ -13,7 +13,9 @@
         {
           "verb": "APPLY",
           "object": "STATUS",
-          "objectId": "LYNX"
+          "objectId": "LYNX",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
         }
       ]
     }

@@ -118,6 +118,13 @@
                       ],
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
                     }
                   }
                 },
@@ -126,29 +133,7 @@
                   "object": "STATUS",
                   "objectId": "PHYSICAL",
                   "objectQualifier": "CRUSH",
-                  "to": "ENEMY",
-                  "with": {
-                    "ADDITIONAL_DAMAGE_MULTIPLIER": {
-                      "verb": "VARY_BY",
-                      "object": "SKILL_LEVEL",
-                      "value": [
-                        1.1,
-                        1.1,
-                        1.1,
-                        1.1,
-                        1.1,
-                        1.1,
-                        1.1,
-                        1.1,
-                        1.15,
-                        1.15,
-                        1.15,
-                        1.2
-                      ],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
-                    }
-                  }
+                  "to": "ENEMY"
                 }
               ]
             }
@@ -207,7 +192,8 @@
           "subject": "OPERATOR",
           "verb": "APPLY",
           "object": "STATUS",
-          "objectId": "VULNERABILITY"
+          "objectId": "INFLICTION",
+          "objectQualifier": "VULNERABLE"
         }
       ]
     }

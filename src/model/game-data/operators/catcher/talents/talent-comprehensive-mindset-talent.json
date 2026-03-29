@@ -8,7 +8,14 @@
           "verb": "DEAL",
           "object": "DAMAGE",
           "with": {
-            "source": "FINAL_HIT"
+            "source": "FINAL_HIT",
+            "mainStat": {
+              "verb": "IS",
+              "object": "STAT",
+              "objectId": "ATTACK",
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            }
           }
         }
       ],
@@ -29,13 +36,10 @@
               "ofDeterminer": "THIS",
               "of": "OPERATOR"
             },
-            "hitCount": {
-              "verb": "VARY_BY",
-              "object": "TALENT_LEVEL",
-              "value": [
-                2,
-                3
-              ],
+            "mainStat": {
+              "verb": "IS",
+              "object": "STAT",
+              "objectId": "ATTACK",
               "ofDeterminer": "THIS",
               "of": "OPERATOR"
             }
@@ -46,13 +50,13 @@
   ],
   "properties": {
     "id": "COMPREHENSIVE_MINDSET_TALENT",
+    "maxLevel": { "verb": "IS", "value": 2 },
     "name": "Comprehensive Mindset (Talent)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
     "eventCategoryType": "TALENT",
-    "description": "Ultimate Textbook Assault improved: Final hit creates {talent_1+1:0} shockwave(s), each dealing 30% ATK of Physical DMG.",
-    "maxLevel": 2
+    "description": "Ultimate Textbook Assault improved: Final hit creates {talent_1+1:0} shockwave(s), each dealing 30% ATK of Physical DMG."
   },
   "metadata": {
     "originId": "CATCHER",

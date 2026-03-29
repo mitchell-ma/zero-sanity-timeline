@@ -7,7 +7,8 @@
           "verb": "APPLY",
           "objectQualifier": "ELECTRIC",
           "object": "STAT",
-          "to": "TARGET",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
           "with": {
             "value": {
               "verb": "VARY_BY",

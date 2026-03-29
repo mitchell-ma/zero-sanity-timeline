@@ -25,8 +25,7 @@
     }
   ],
   "metadata": {
-    "originId": "ROSSI",
-    "_note": "Wolven Ambrage conditional (Heat DMG when enemy has Vulnerable) is not modeled — no multiplier data available from End-Axis"
+    "originId": "ROSSI"
   },
   "segments": [
     {

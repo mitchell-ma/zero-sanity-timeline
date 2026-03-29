@@ -32,6 +32,18 @@ import { allocQueueFrame, resetPools, isReconcilerEnabled } from './objectPool';
 
 const SKILL_COLUMN_SET: ReadonlySet<string> = new Set(SKILL_COLUMN_ORDER);
 
+/** Resource columns that should not generate synthetic PROCESS_FRAME entries. */
+let _resourceColumnSet: ReadonlySet<string> | null = null;
+function getResourceColumnSet(): ReadonlySet<string> {
+  if (!_resourceColumnSet) {
+    // Lazy init to avoid circular dependency with commonSlotController
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { COMMON_COLUMN_IDS } = require('../slot/commonSlotController');
+    _resourceColumnSet = new Set(Object.values(COMMON_COLUMN_IDS) as string[]);
+  }
+  return _resourceColumnSet;
+}
+
 // TriggerIndex is now built and cached by CombatLoadoutController.syncSlots().
 // It is passed into the pipeline via the triggerIndex parameter.
 
@@ -102,7 +114,7 @@ function collectFrameEntries(
     // Synthesize a frame entry for non-skill events with no frame markers.
     // This routes freeform inflictions, reactions, and statuses through the same
     // PROCESS_FRAME → interpret path as engine-created events.
-    if (!hasFrames && !SKILL_COLUMN_SET.has(event.columnId as SkillType)) {
+    if (!hasFrames && !SKILL_COLUMN_SET.has(event.columnId as SkillType) && !getResourceColumnSet().has(event.columnId)) {
       const synth = allocQueueFrame();
       synth.frame = event.startFrame;
       synth.priority = PRIORITY.PROCESS_FRAME;

@@ -2,21 +2,14 @@
  * Controlled Operator Resolver — determines which operator the player controls
  * at each point in the timeline.
  *
- * Control is determined by:
- * 1. Explicit user-placed "take control" events on the controlled column
- * 2. Skill events that imply a swap (basic attacks, battle skills on a different operator)
+ * Control is determined solely by explicit user-placed CONTROL events.
+ * No skill columns imply control transfer — operators can use any skill when not controlled.
  *
  * Only one operator can be controlled at a time. The first operator (slot-0) starts controlled.
  */
 import { TimelineEvent } from '../../consts/viewTypes';
-import { NounType } from '../../dsl/semantics';
 import { CombatSkillType } from '../../consts/enums';
 
-/** Skill columns that imply the player is controlling the operator. */
-const CONTROL_IMPLYING_COLUMNS = new Set<string>([
-  NounType.BASIC_ATTACK,
-  NounType.BATTLE_SKILL,
-]);
 
 interface ControlSegment {
   slotId: string;
@@ -39,8 +32,6 @@ export function resolveControlledOperator(
 
   for (const ev of events) {
     if (ev.id === CombatSkillType.CONTROL) {
-      transferPoints.push({ frame: ev.startFrame, slotId: ev.ownerId });
-    } else if (CONTROL_IMPLYING_COLUMNS.has(ev.columnId)) {
       transferPoints.push({ frame: ev.startFrame, slotId: ev.ownerId });
     }
   }

@@ -17,6 +17,8 @@ import {
   VERB_OBJECTS,
   THRESHOLD_MAX,
   ClauseEvaluationType,
+  flattenQualifiedId,
+  isQualifiedId,
 } from '../../dsl/semantics';
 import type { ValueNode } from '../../dsl/semantics';
 import { resolveValueNode, getSimpleValue, buildContextForSkillColumn } from '../calculation/valueResolver';
@@ -98,6 +100,7 @@ export function filterClauses(
 
 
 const PHYSICAL_STATUS_VALUES = new Set<string>(Object.values(PhysicalStatusType));
+
 
 function resolveQualifier(objectQualifier?: AdjectiveType) {
   return objectQualifier;
@@ -269,6 +272,8 @@ export class EventInterpretorController {
   private hpController?: HPController;
   /** Dedup set for reactive triggers: prevents double-firing at the same frame. */
   private seenTriggers = new Set<string>();
+  /** Usage counter for triggers with usageLimit (e.g. tacticals, gear sets). Key: "defId:slotId". */
+  private triggerUsageCount = new Map<string, number>();
 
   /** Resolve slot ID → operator ID. Returns the operator ID if mapped, or the input unchanged. */
   private resolveOperatorId(slotId: string): string {
@@ -320,6 +325,7 @@ export class EventInterpretorController {
     this.controller = controller;
     this.baseEvents = baseEvents;
     this.seenTriggers.clear();
+    this.triggerUsageCount.clear();
     this.loadoutProperties = options?.loadoutProperties;
     this.slotOperatorMap = options?.slotOperatorMap;
     this.slotWirings = options?.slotWirings;
@@ -385,7 +391,7 @@ export class EventInterpretorController {
     if (target === NounType.OPERATOR) {
       switch (determiner ?? DeterminerType.THIS) {
         case DeterminerType.THIS: return slotId;
-        case DeterminerType.ALL: return COMMON_OWNER_ID;
+        case DeterminerType.ALL: return slotId; // ALL is handled by doApply loop, not here
         case DeterminerType.ALL_OTHER: return COMMON_OWNER_ID;
         case DeterminerType.OTHER: return ctx.targetOwnerId ?? slotId;
         case DeterminerType.ANY: return ctx.targetOwnerId ?? slotId;
@@ -442,6 +448,14 @@ export class EventInterpretorController {
         effectToDeterminer = effectToDeterminer ?? statusDef.toDeterminer as typeof effectToDeterminer;
       }
     }
+    // ALL OPERATOR: apply to each operator slot individually, not COMMON_OWNER_ID
+    if (effectTo === NounType.OPERATOR && effectToDeterminer === DeterminerType.ALL && this.slotOperatorMap) {
+      for (const slotId of Object.keys(this.slotOperatorMap)) {
+        this.doApply({ ...effect, to: NounType.OPERATOR, toDeterminer: DeterminerType.THIS } as Effect,
+          { ...ctx, sourceSlotId: slotId });
+      }
+      return true;
+    }
     const ownerId = this.resolveOwnerId(effectTo, ctx, effectToDeterminer);
     const source = { ownerId: ctx.sourceOwnerId, skillName: ctx.sourceSkillName };
 
@@ -481,6 +495,18 @@ export class EventInterpretorController {
       }
       // Physical status (APPLY PHYSICAL STATUS LIFT TO ENEMY) → delegate to dedicated handler
       if (effect.objectId === AdjectiveType.PHYSICAL) return this.applyPhysicalStatus(effect, ctx);
+      // Qualified status: resolve objectId + objectQualifier → element-specific ID
+      // (e.g. CRYO + AMP → CRYO_AMP, CRYO + FRAGILITY → CRYO_FRAGILITY)
+      // Skip nouns with dedicated handling (SUSCEPTIBILITY, INFLICTION, REACTION, PHYSICAL).
+      if (effect.objectId && effect.objectQualifier
+          && effect.objectId !== NounType.INFLICTION
+          && effect.objectId !== NounType.REACTION
+          && effect.objectId !== AdjectiveType.PHYSICAL) {
+        const qualifiedId = flattenQualifiedId(effect.objectQualifier as string, effect.objectId);
+        if (getStatusById(qualifiedId)) {
+          return this.doApply({ ...effect, objectId: qualifiedId }, ctx);
+        }
+      }
       const isTeamTarget = effect.to === NounType.TEAM;
       // When effect explicitly targets non-TEAM, skip team-status column routing even if the
       // status config defaults to TEAM — the effect's "to" is authoritative.
@@ -530,12 +556,25 @@ export class EventInterpretorController {
       }
 
       // Susceptibility status: extract inline value + qualifier into event.susceptibility
-      if (effect.objectId === NounType.SUSCEPTIBILITY && effect.with?.value) {
-        const qualifier = effect.objectQualifier;
+      // Matches both base (SUSCEPTIBILITY + qualifier) and qualified (PHYSICAL_SUSCEPTIBILITY) objectIds
+      const isSusceptibility = effect.objectId === NounType.SUSCEPTIBILITY
+        || (effect.objectId && isQualifiedId(effect.objectId, NounType.SUSCEPTIBILITY));
+      if (isSusceptibility && effect.with?.value) {
+        const qualifier = effect.objectQualifier
+          ?? effect.objectId?.replace(`_${NounType.SUSCEPTIBILITY}`, '');
         const rateValue = this.resolveWith(effect.with.value, ctx);
         if (qualifier && typeof rateValue === 'number') {
           if (!eventProps.susceptibility) eventProps.susceptibility = {};
           (eventProps.susceptibility as Record<string, number>)[qualifier] = rateValue;
+        }
+      }
+
+      // Inline status value: resolve with.value into statusValue for any status
+      // (e.g. AMP percentage, FRAGILITY percentage)
+      if (effect.with?.value && eventProps.statusValue == null) {
+        const inlineValue = this.resolveWith(effect.with.value, ctx);
+        if (typeof inlineValue === 'number') {
+          eventProps.statusValue = inlineValue;
         }
       }
 
@@ -619,6 +658,13 @@ export class EventInterpretorController {
       const consumed = this.controller.consumeEvent(columnId, statusOwnerId, ctx.frame, source, { count, restack: true });
       return consumed > 0;
     }
+    // CONSUME STACKS — self-consumption of the parent status stacks (e.g. Auxiliary Crystal)
+    if (effect.object === NounType.STACKS && ctx.parentStatusId) {
+      const columnId = statusIdToColumnId(ctx.parentStatusId);
+      const statusOwnerId = ctx.parentStatusOwnerId ?? ownerId;
+      const consumed = this.controller.consumeEvent(columnId, statusOwnerId, ctx.frame, source, { count, restack: true });
+      return consumed > 0;
+    }
     return true;
   }
 
@@ -688,7 +734,7 @@ export class EventInterpretorController {
   }
 
   private buildValueContext(ctx: InterpretContext): ValueResolutionContext {
-    const loadout = this.loadoutProperties?.[ctx.sourceOwnerId];
+    const loadout = this.loadoutProperties?.[ctx.sourceSlotId ?? ctx.sourceOwnerId];
     const baseCtx = buildContextForSkillColumn(loadout, NounType.BATTLE_SKILL);
     if (ctx.potential != null) baseCtx.potential = ctx.potential;
     return baseCtx;
@@ -738,17 +784,28 @@ export class EventInterpretorController {
 
   private doReduce(effect: Effect, ctx: InterpretContext) {
     if (effect.object !== ObjectType.COOLDOWN) return true;
-    if (!effect.by) return true;
 
-    // Resolve which skill column's cooldown to reduce
-    const targetColumnId = effect.nounQualifier;
+    // Resolve which skill column's cooldown to reduce — from objectId or nounQualifier
+    const targetColumnId = effect.objectId ?? effect.nounQualifier;
     if (!targetColumnId || !SKILL_COLUMN_SET.has(targetColumnId)) return true;
 
-    const byValue = resolveValueNode(effect.by.value, this.buildValueContext(ctx));
+    // Resolve reduction amount from `by` (preposition) or `with` (properties)
+    let byValue: number;
+    let unit: string | undefined;
+    if (effect.by) {
+      byValue = resolveValueNode(effect.by.value, this.buildValueContext(ctx));
+      unit = effect.by.unit;
+    } else if (effect.with?.value) {
+      byValue = resolveValueNode(effect.with.value, this.buildValueContext(ctx));
+      unit = (effect.with as Record<string, unknown>).unit as string | undefined;
+    } else {
+      return true;
+    }
 
     // Find same-owner events in the target column that are in cooldown phase at ctx.frame
+    const slotId = ctx.sourceSlotId ?? ctx.sourceOwnerId;
     for (const ev of this.baseEvents) {
-      if (ev.ownerId !== ctx.sourceOwnerId) continue;
+      if (ev.ownerId !== slotId) continue;
       if (ev.columnId !== targetColumnId) continue;
 
       let preCooldownDur = 0;
@@ -766,12 +823,12 @@ export class EventInterpretorController {
 
       // Convert by value to frames based on unit
       let reductionFrames: number;
-      switch (effect.by.unit) {
+      switch (unit) {
         case UnitType.SECOND:
           reductionFrames = byValue * FPS;
           break;
         case UnitType.PERCENTAGE:
-          reductionFrames = cooldownDur * (byValue / 100);
+          reductionFrames = cooldownDur * byValue;
           break;
         default:
           reductionFrames = byValue;
@@ -1405,7 +1462,7 @@ export class EventInterpretorController {
       if (entry.primaryVerb !== VerbType.PERFORM) continue;
       const isAny = entry.primaryCondition.subjectDeterminer === DeterminerType.ANY;
       if (!isAny && event.ownerId !== entry.operatorSlotId) continue;
-      const defKey = `${entry.def.properties.id}:${entry.operatorSlotId}:${absFrame}`;
+      const defKey = `${entry.def.properties.id}:${entry.operatorSlotId}:${absFrame}:${entry.clauseIndex}`;
       if (this.seenTriggers.has(defKey)) continue;
       this.seenTriggers.add(defKey);
 
@@ -1554,9 +1611,21 @@ export class EventInterpretorController {
     const firstMatchGroups = new Map<string, TriggerDefEntry[]>();
 
     for (const entry of this.triggerIndex.matchEvent(verb, objectId)) {
-      // Filter by nounQualifier (e.g. EMPOWERED) — only match if the event's enhancement type matches
-      const qualifier = entry.primaryCondition.objectQualifier;
-      if (qualifier && qualifier !== enhancementType) continue;
+      // Enhancement type filter: entries for enhanced/empowered variants only match
+      // events with the corresponding enhancement type.
+      // Owner filter: THIS OPERATOR triggers only match events from the same slot
+      const det = entry.primaryCondition.subjectDeterminer ?? DeterminerType.THIS;
+      const subj = entry.primaryCondition.subject;
+      if (det === DeterminerType.THIS && subj === NounType.OPERATOR && slotId !== entry.operatorSlotId) continue;
+
+      const entryEnhancement = entry.def.properties.enhancementTypes?.[0];
+      if (entryEnhancement && entryEnhancement !== enhancementType) continue;
+
+      // Check usage limit (e.g. tacticals, gear sets)
+      if (entry.usageLimit != null) {
+        const usageKey = `${entry.def.properties.id}:${entry.operatorSlotId}`;
+        if ((this.triggerUsageCount.get(usageKey) ?? 0) >= entry.usageLimit) continue;
+      }
 
       const isFirstMatch = entry.def.clauseType === ClauseEvaluationType.FIRST_MATCH;
       if (isFirstMatch) {
@@ -1786,6 +1855,12 @@ export class EventInterpretorController {
         for (const f of newFrames) f.cascadeDepth = depth + 1;
         cascadeFrames.push(...newFrames);
       }
+    }
+
+    // Increment usage counter for triggers with usageLimit (e.g. tacticals, gear sets)
+    if (this.controller.output.length > outputBefore) {
+      const usageKey = `${ctx.def.properties.id}:${ctx.operatorSlotId}`;
+      this.triggerUsageCount.set(usageKey, (this.triggerUsageCount.get(usageKey) ?? 0) + 1);
     }
 
     // Fire reactive triggers for events produced by compound effects (ALL/ANY).

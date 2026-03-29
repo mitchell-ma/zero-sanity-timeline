@@ -5,7 +5,7 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "INTELLECT",
+          "object": "STAT", "objectId": "INTELLECT",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
@@ -17,7 +17,7 @@
         },
         {
           "verb": "APPLY",
-          "object": "BASE_HP",
+          "object": "STAT", "objectId": "BASE_HP",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {

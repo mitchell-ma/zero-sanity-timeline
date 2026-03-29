@@ -17,6 +17,13 @@
             "staggerValue": {
               "verb": "IS",
               "value": 10
+            },
+            "mainStat": {
+              "verb": "IS",
+              "object": "STAT",
+              "objectId": "ATTACK",
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
             }
           }
         }
@@ -24,7 +31,6 @@
     }
   ],
   "properties": {
-    "type": "GEAR_SET_STATUS",
     "id": "SWORDMANCER",
     "name": "Swordmancer",
     "description": "Deals 250% ATK Physical DMG + 10 Stagger. 15s cooldown.",

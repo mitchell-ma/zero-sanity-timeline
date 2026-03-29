@@ -12,9 +12,7 @@
               "object": "STATUS_LEVEL",
               "value": [
                 0.2
-              ],
-              "ofDeterminer": "THIS",
-              "of": "OPERATOR"
+              ]
             }
           },
           "toDeterminer": "THIS",
@@ -26,7 +24,6 @@
     }
   ],
   "properties": {
-    "type": "GEAR_SET_STATUS",
     "id": "TYPE_50_YINGLUNG",
     "name": "Type 50 Yinglung",
     "duration": {

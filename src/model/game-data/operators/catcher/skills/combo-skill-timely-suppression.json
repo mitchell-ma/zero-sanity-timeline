@@ -94,7 +94,7 @@
                       "value": [
                         0.25,
                         0.27,
-                        0.30,
+                        0.3,
                         0.32,
                         0.34,
                         0.37,
@@ -105,6 +105,13 @@
                         0.51,
                         0.55
                       ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
                     }
@@ -168,13 +175,20 @@
                       ],
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
                     }
                   }
                 },
                 {
                   "verb": "APPLY",
-                  "object": "SHIELD",
-                  "objectType": "STATUS",
+                  "object": "STATUS",
+                  "objectId": "SHIELD",
                   "toDeterminer": "THIS",
                   "to": "OPERATOR",
                   "with": {
@@ -221,8 +235,24 @@
                     "duration": {
                       "value": {
                         "operation": "ADD",
-                        "left": { "verb": "IS", "value": 10 },
-                        "right": { "verb": "VARY_BY", "object": "POTENTIAL", "value": [0, 0, 0, 5, 5, 5], "ofDeterminer": "THIS", "of": "OPERATOR" }
+                        "left": {
+                          "verb": "IS",
+                          "value": 10
+                        },
+                        "right": {
+                          "verb": "VARY_BY",
+                          "object": "POTENTIAL",
+                          "value": [
+                            0,
+                            0,
+                            0,
+                            5,
+                            5,
+                            5
+                          ],
+                          "ofDeterminer": "THIS",
+                          "of": "OPERATOR"
+                        }
                       },
                       "unit": "SECOND"
                     }
@@ -230,8 +260,8 @@
                 },
                 {
                   "verb": "APPLY",
-                  "object": "SHIELD",
-                  "objectType": "STATUS",
+                  "object": "STATUS",
+                  "objectId": "SHIELD",
                   "toDeterminer": "CONTROLLED",
                   "to": "OPERATOR",
                   "with": {
@@ -278,8 +308,24 @@
                     "duration": {
                       "value": {
                         "operation": "ADD",
-                        "left": { "verb": "IS", "value": 10 },
-                        "right": { "verb": "VARY_BY", "object": "POTENTIAL", "value": [0, 0, 0, 5, 5, 5], "ofDeterminer": "THIS", "of": "OPERATOR" }
+                        "left": {
+                          "verb": "IS",
+                          "value": 10
+                        },
+                        "right": {
+                          "verb": "VARY_BY",
+                          "object": "POTENTIAL",
+                          "value": [
+                            0,
+                            0,
+                            0,
+                            5,
+                            5,
+                            5
+                          ],
+                          "ofDeterminer": "THIS",
+                          "of": "OPERATOR"
+                        }
                       },
                       "unit": "SECOND"
                     }
@@ -340,7 +386,8 @@
         {
           "subject": "ENEMY",
           "verb": "PERFORM",
-          "object": "CHARGE"
+          "object": "STATUS",
+          "objectId": "CHARGE"
         }
       ]
     },
@@ -358,9 +405,10 @@
           "subject": "OPERATOR",
           "verb": "HAVE",
           "object": "HP",
+          "cardinalityConstraint": "AT_MOST",
           "with": {
             "value": {
-              "verb": "AT_MOST",
+              "verb": "IS",
               "value": 0.4
             }
           }

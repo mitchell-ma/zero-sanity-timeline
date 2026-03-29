@@ -78,7 +78,6 @@
               "unit": "SECOND"
             }
           },
-          "_note": "Mutually exclusive paths — each is a single hit instance for crit calculation purposes. Do not split a single path into multiple DEAL DAMAGE effects.",
           "clause": [
             {
               "conditions": [
@@ -133,6 +132,13 @@
                         3.32,
                         3.6
                       ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
                     }
@@ -194,6 +200,13 @@
                       ],
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
                     }
                   }
                 },
@@ -226,8 +239,24 @@
                     "duration": {
                       "value": {
                         "operation": "ADD",
-                        "left": { "verb": "IS", "value": 6 },
-                        "right": { "verb": "VARY_BY", "object": "POTENTIAL", "value": [0, 3, 3, 3, 3, 3], "ofDeterminer": "THIS", "of": "OPERATOR" }
+                        "left": {
+                          "verb": "IS",
+                          "value": 6
+                        },
+                        "right": {
+                          "verb": "VARY_BY",
+                          "object": "POTENTIAL",
+                          "value": [
+                            0,
+                            3,
+                            3,
+                            3,
+                            3,
+                            3
+                          ],
+                          "ofDeterminer": "THIS",
+                          "of": "OPERATOR"
+                        }
                       },
                       "unit": "SECOND"
                     }

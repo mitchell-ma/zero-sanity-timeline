@@ -5,7 +5,7 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "BASE_DEFENSE",
+          "object": "STAT", "objectId": "BASE_DEFENSE",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
@@ -17,7 +17,7 @@
         },
         {
           "verb": "APPLY",
-          "object": "STRENGTH",
+          "object": "STAT", "objectId": "STRENGTH",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
@@ -37,7 +37,7 @@
         },
         {
           "verb": "APPLY",
-          "object": "WILL",
+          "object": "STAT", "objectId": "WILL",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
@@ -57,7 +57,7 @@
         },
         {
           "verb": "APPLY",
-          "object": "FINAL_DAMAGE_REDUCTION",
+          "object": "STAT", "objectId": "FINAL_DAMAGE_REDUCTION",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
@@ -81,7 +81,7 @@
   "properties": {
     "id": "AIC_GAUNTLETS",
     "name": "Aic Gauntlets",
-    "type": "GLOVES",
+    "gearType": "GLOVES",
     "gearSet": "AIC_HEAVY"
   },
   "metadata": {

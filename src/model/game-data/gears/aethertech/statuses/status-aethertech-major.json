@@ -5,27 +5,29 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "CRITICAL_RATE",
+          "object": "STAT",
+          "objectId": "DAMAGE_BONUS",
+          "objectQualifier": "PHYSICAL",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
           "with": {
             "value": {
               "verb": "IS",
-              "value": 0.05
+              "value": 0.16
             }
-          },
-          "toDeterminer": "THIS",
-          "to": "OPERATOR"
+          }
         }
       ]
     }
   ],
   "properties": {
-    "type": "GEAR_SET_STATUS",
-    "id": "MI_SECURITY_MAX",
-    "name": "MI Security (Max)",
+    "id": "AETHERTECH_MAJOR",
+    "name": "Æthertech (Major)",
+    "enhancementType": "MAJOR",
     "duration": {
       "value": {
         "verb": "IS",
-        "value": 5
+        "value": 10
       },
       "unit": "SECOND"
     },
@@ -36,11 +38,11 @@
       },
       "interactionType": "RESET"
     },
-    "description": "Activates at 5 stacks",
+    "description": "Physical DMG +16% for 10s. Activates at 4 stacks of Vulnerability.",
     "eventType": "STATUS",
     "eventCategoryType": "GEAR_SET_STATUS"
   },
   "metadata": {
-    "originId": "MI_SECURITY"
+    "originId": "AETHERTECH"
   }
 }

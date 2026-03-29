@@ -9,7 +9,7 @@ import { UnitType, EventType, EventCategoryType } from '../../consts/enums';
 import { VerbType } from '../../dsl/semantics';
 import type { Interaction, ValueNode } from '../../dsl/semantics';
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from '../../controller/calculation/valueResolver';
-import { checkKeys, VALID_VALUE_NODE_KEYS, VALID_CLAUSE_KEYS, VALID_METADATA_KEYS } from './validationUtils';
+import { checkKeys, VALID_VALUE_NODE_KEYS, VALID_CLAUSE_KEYS, VALID_METADATA_KEYS, VALID_EFFECT_KEYS, VALID_EFFECT_WITH_KEYS, validateEffect as validateEffectSemantics } from './validationUtils';
 
 // ── DSL value types ─────────────────────────────────────────────────────────
 
@@ -40,8 +40,6 @@ export interface DurationConfig {
 
 // ── Validation ──────────────────────────────────────────────────────────────
 
-const VALID_EFFECT_KEYS = new Set(['verb', 'object', 'objectQualifier', 'to', 'toDeterminer', 'with', 'objectId']);
-const VALID_EFFECT_WITH_KEYS = new Set(['value']);
 const VALID_DURATION_KEYS = new Set(['value', 'unit']);
 const VALID_STATUS_LEVEL_KEYS = new Set(['limit', 'interactionType']);
 const VALID_PROPERTIES_KEYS = new Set(['id', 'name', 'description', 'to', 'toDeterminer', 'duration', 'stacks', 'eventType', 'eventCategoryType']);
@@ -54,10 +52,11 @@ function validateValueNode(wv: Record<string, unknown>, path: string): string[] 
   return errors;
 }
 
-function validateEffect(ef: Record<string, unknown>, path: string): string[] {
+function validateLocalEffect(ef: Record<string, unknown>, path: string): string[] {
   const errors = checkKeys(ef, VALID_EFFECT_KEYS, path);
   if (typeof ef.verb !== 'string') errors.push(`${path}.verb: must be a string`);
   if (typeof ef.object !== 'string') errors.push(`${path}.object: must be a string`);
+  errors.push(...validateEffectSemantics(ef, path));
   if (ef.with) {
     const w = ef.with as Record<string, unknown>;
     errors.push(...checkKeys(w, VALID_EFFECT_WITH_KEYS, `${path}.with`));
@@ -70,7 +69,7 @@ function validateClause(clause: Record<string, unknown>, path: string): string[]
   const errors = checkKeys(clause, VALID_CLAUSE_KEYS, path);
   if (!Array.isArray(clause.conditions)) errors.push(`${path}.conditions: must be an array`);
   if (!Array.isArray(clause.effects)) errors.push(`${path}.effects: must be an array`);
-  else (clause.effects as Record<string, unknown>[]).forEach((ef, i) => errors.push(...validateEffect(ef, `${path}.effects[${i}]`)));
+  else (clause.effects as Record<string, unknown>[]).forEach((ef, i) => errors.push(...validateLocalEffect(ef, `${path}.effects[${i}]`)));
   return errors;
 }
 
@@ -78,8 +77,10 @@ function validateClause(clause: Record<string, unknown>, path: string): string[]
 export function validateWeaponStatus(json: Record<string, unknown>): string[] {
   const errors = checkKeys(json, VALID_TOP_KEYS, 'root');
 
-  if (!Array.isArray(json.clause)) errors.push('root.clause: must be an array');
-  else (json.clause as Record<string, unknown>[]).forEach((c, i) => errors.push(...validateClause(c, `clause[${i}]`)));
+  if (json.clause) {
+    if (!Array.isArray(json.clause)) errors.push('root.clause: must be an array');
+    else (json.clause as Record<string, unknown>[]).forEach((c, i) => errors.push(...validateClause(c, `clause[${i}]`)));
+  }
 
   const props = json.properties as Record<string, unknown> | undefined;
   if (!props) { errors.push('root.properties: required'); return errors; }

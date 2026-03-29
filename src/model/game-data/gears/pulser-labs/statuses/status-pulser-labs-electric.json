@@ -21,7 +21,6 @@
     }
   ],
   "properties": {
-    "type": "GEAR_SET_STATUS",
     "id": "PULSER_LABS_ELECTRIC",
     "name": "Pulser Labs (Electric)",
     "duration": {

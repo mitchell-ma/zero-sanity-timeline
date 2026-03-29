@@ -118,6 +118,13 @@
                       ],
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
                     }
                   }
                 }
@@ -131,9 +138,10 @@
                   "object": "STATUS",
                   "objectId": "INFLICTION",
                   "objectQualifier": "CRYO",
+                  "cardinalityConstraint": "AT_LEAST",
                   "with": {
                     "stacks": {
-                      "verb": "AT_LEAST",
+                      "verb": "IS",
                       "value": 2
                     }
                   }
@@ -162,9 +170,10 @@
                   "object": "STATUS",
                   "objectId": "INFLICTION",
                   "objectQualifier": "NATURE",
+                  "cardinalityConstraint": "AT_LEAST",
                   "with": {
                     "stacks": {
-                      "verb": "AT_LEAST",
+                      "verb": "IS",
                       "value": 2
                     }
                   }
@@ -204,7 +213,20 @@
           "value": {
             "verb": "VARY_BY",
             "object": "SKILL_LEVEL",
-            "value": [40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 38],
+            "value": [
+              40,
+              40,
+              40,
+              40,
+              40,
+              40,
+              40,
+              40,
+              40,
+              40,
+              40,
+              38
+            ],
             "ofDeterminer": "THIS",
             "of": "OPERATOR"
           },
@@ -227,9 +249,10 @@
           "verb": "HAVE",
           "object": "INFLICTION",
           "objectQualifier": "CRYO",
+          "cardinalityConstraint": "AT_LEAST",
           "with": {
             "stacks": {
-              "verb": "AT_LEAST",
+              "verb": "IS",
               "value": 2
             }
           }
@@ -243,9 +266,10 @@
           "verb": "HAVE",
           "object": "INFLICTION",
           "objectQualifier": "NATURE",
+          "cardinalityConstraint": "AT_LEAST",
           "with": {
             "stacks": {
-              "verb": "AT_LEAST",
+              "verb": "IS",
               "value": 2
             }
           }

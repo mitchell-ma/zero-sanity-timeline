@@ -13,7 +13,9 @@
         {
           "verb": "APPLY",
           "object": "STATUS",
-          "objectId": "AIC_LIGHT"
+          "objectId": "AIC_LIGHT",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
         }
       ]
     }

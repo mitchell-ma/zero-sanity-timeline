@@ -69,9 +69,16 @@
                         0.8,
                         0.86,
                         0.92,
-                        1.0
+                        1
                       ],
                       "ofDeterminer": "SOURCE",
+                      "of": "OPERATOR"
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "ofDeterminer": "THIS",
                       "of": "OPERATOR"
                     }
                   }

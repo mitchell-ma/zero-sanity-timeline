@@ -11,6 +11,7 @@ import { CombatSkillType, ColumnType, MicroColumnAssignment, InteractionModeType
 import { getAllSkillLabels, getAllInflictionLabels } from '../gameDataStore';
 import { REACTION_LABELS } from '../../model/channels';
 import { t } from '../../locales/locale';
+import { formatSegmentShortName } from '../../dsl/semanticsTranslation';
 import { OPERATOR_COLUMNS, ENEMY_OWNER_ID } from '../../model/channels';
 import { COMMON_OWNER_ID } from '../slot/commonSlotController';
 import { getLastController } from './eventQueueController';
@@ -105,23 +106,24 @@ export function buildColumnContextMenu(
   const timeStopReason = timeStop.reason;
 
   if (col.microColumns && col.microColumnAssignment === MicroColumnAssignment.DYNAMIC_SPLIT) {
+    const mcItems = col.microColumns.map((mc) => {
+      // Check stack limit per micro-column
+      const matchSet = col.matchColumnIds ? new Set(col.matchColumnIds) : null;
+      const mcEvents = events.filter(
+        (ev) => ev.ownerId === col.ownerId && (matchSet ? ev.columnId === mc.id : ev.columnId === col.columnId),
+      );
+      const mcFull = col.maxEvents != null && mcEvents.length >= col.maxEvents;
+      return {
+        label: REACTION_LABELS[mc.id]?.label ?? mc.label,
+        actionId: 'addEvent' as const,
+        actionPayload: { ownerId: col.ownerId, columnId: mc.id, atFrame, defaultSkill: mc.defaultEvent ?? col.defaultEvent ?? null },
+        disabled: mcFull || inTimeStop,
+        disabledReason: mcFull ? t('ctx.stacksFull', { current: String(mcEvents.length), max: String(col.maxEvents ?? '?') }) : inTimeStop ? timeStopReason : undefined,
+      };
+    }).sort((a, b) => (a.label ?? '').localeCompare(b.label ?? ''));
     return [
       headerItem,
-      ...col.microColumns.map((mc) => {
-        // Check stack limit per micro-column
-        const matchSet = col.matchColumnIds ? new Set(col.matchColumnIds) : null;
-        const mcEvents = events.filter(
-          (ev) => ev.ownerId === col.ownerId && (matchSet ? ev.columnId === mc.id : ev.columnId === col.columnId),
-        );
-        const mcFull = col.maxEvents != null && mcEvents.length >= col.maxEvents;
-        return {
-          label: REACTION_LABELS[mc.id]?.label ?? mc.label,
-          actionId: 'addEvent' as const,
-          actionPayload: { ownerId: col.ownerId, columnId: mc.id, atFrame, defaultSkill: mc.defaultEvent ?? col.defaultEvent ?? null },
-          disabled: mcFull || inTimeStop,
-          disabledReason: mcFull ? t('ctx.stacksFull', { current: String(mcEvents.length), max: String(col.maxEvents ?? '?') }) : inTimeStop ? timeStopReason : undefined,
-        };
-      }),
+      ...mcItems,
       ...(ctrlItem ? [{ separator: true } as ContextMenuItem, ctrlItem] : []),
     ];
   }
@@ -155,22 +157,23 @@ export function buildColumnContextMenu(
     );
 
     if (col.matchColumnIds && col.microColumns) {
+      const mcItems = col.microColumns.map((mc) => ({
+        label: getAllInflictionLabels()[mc.id] ?? mc.label,
+        actionId: 'addEvent' as const,
+        actionPayload: {
+          ownerId: col.ownerId,
+          columnId: mc.id,
+          atFrame,
+          defaultSkill: mc.defaultEvent ?? (col.defaultEvent
+            ? { ...col.defaultEvent, id: mc.id, name: getAllInflictionLabels()[mc.id] ?? mc.id }
+            : null),
+        },
+        disabled: inTimeStop,
+        disabledReason: inTimeStop ? timeStopReason : undefined,
+      })).sort((a, b) => (a.label ?? '').localeCompare(b.label ?? ''));
       return [
         headerItem,
-        ...col.microColumns.map((mc) => ({
-          label: getAllInflictionLabels()[mc.id] ?? mc.label,
-          actionId: 'addEvent' as const,
-          actionPayload: {
-            ownerId: col.ownerId,
-            columnId: mc.id,
-            atFrame,
-            defaultSkill: mc.defaultEvent ?? (col.defaultEvent
-              ? { ...col.defaultEvent, id: mc.id, name: getAllInflictionLabels()[mc.id] ?? mc.id }
-              : null),
-          },
-          disabled: inTimeStop,
-          disabledReason: inTimeStop ? timeStopReason : undefined,
-        })),
+        ...mcItems,
         ...(ctrlItem ? [{ separator: true } as ContextMenuItem, ctrlItem] : []),
       ];
     }
@@ -267,6 +270,41 @@ export function buildColumnContextMenu(
           : finisherBlock ? finisherBlock
           : overlap ? t('ctx.overlap')
           : undefined);
+        // Build inline segment buttons for BATK variants with multiple segments
+        const isBatkChain = col.columnId === NounType.BASIC_ATTACK
+          && v.segments && v.segments.length > 1
+          && v.id !== CombatSkillType.FINISHER && v.id !== CombatSkillType.DIVE;
+        const inlineButtons = isBatkChain
+          ? v.segments!.map((seg, segIdx) => {
+            const segOverlap = checkOverlap(col.ownerId, col.columnId, computeProspectiveRange({ segments: [seg] }, atFrame, timeStopRegions));
+            const segDisabled = interactionMode === InteractionModeType.STRICT && (inTimeStop || v.disabled || availability.disabled || segOverlap || spInsufficient);
+            const segReason = v.disabledReason
+              ?? (inTimeStop ? timeStopReason
+              : spInsufficient ? spReason
+              : availability.disabled ? availability.reason
+              : segOverlap ? t('ctx.overlap')
+              : undefined);
+            return {
+              label: formatSegmentShortName(seg.properties.name, segIdx),
+              actionId: 'addEvent' as const,
+              actionPayload: {
+                ownerId: col.ownerId,
+                columnId: col.columnId,
+                atFrame,
+                defaultSkill: {
+                  id: v.id,
+                  name: v.name,
+                  segments: [seg],
+                  segmentOrigin: [segIdx],
+                  ...(v.enhancementType ? { enhancementType: v.enhancementType } : {}),
+                },
+              },
+              disabled: segDisabled,
+              disabledReason: segReason,
+            };
+          })
+          : undefined;
+
         return {
           label: displayName,
           disabledReason: reason,
@@ -291,6 +329,7 @@ export function buildColumnContextMenu(
             },
           },
           disabled,
+          inlineButtons,
         };
       }),
       ...(ctrlItem ? [{ separator: true } as ContextMenuItem, ctrlItem] : []),

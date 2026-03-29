@@ -95,13 +95,13 @@
                 },
                 {
                   "verb": "APPLY",
-                  "objectQualifier": "TRIGGER",
+                  "objectDeterminer": "TRIGGER",
                   "object": "INFLICTION",
                   "to": "ENEMY"
                 },
                 {
                   "verb": "APPLY",
-                  "objectQualifier": "TRIGGER",
+                  "objectDeterminer": "TRIGGER",
                   "object": "STATUS",
                   "objectId": "PHYSICAL",
                   "to": "ENEMY"
@@ -129,6 +129,13 @@
                         3.13,
                         3.4
                       ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
                     }

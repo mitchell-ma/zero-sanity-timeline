@@ -68,6 +68,13 @@
                       ],
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
                     }
                   }
                 }
@@ -129,6 +136,13 @@
                       ],
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
                     }
                   }
                 }
@@ -158,7 +172,7 @@
                   "verb": "CONSUME",
                   "object": "STATUS",
                   "objectId": "ELECTRIFICATION",
-                  "to": "ENEMY"
+                  "from": "ENEMY"
                 },
                 {
                   "verb": "DEAL",
@@ -185,6 +199,13 @@
                       ],
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
                     }
                   }
                 },
@@ -195,7 +216,20 @@
                     "value": {
                       "verb": "VARY_BY",
                       "object": "SKILL_LEVEL",
-                      "value": [30, 30, 30, 30, 30, 35, 35, 35, 35, 35, 40, 40],
+                      "value": [
+                        30,
+                        30,
+                        30,
+                        30,
+                        30,
+                        35,
+                        35,
+                        35,
+                        35,
+                        35,
+                        40,
+                        40
+                      ],
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
                     }

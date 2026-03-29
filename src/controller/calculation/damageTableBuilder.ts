@@ -7,7 +7,7 @@
 import { TimelineEvent, Column, MiniTimeline, Enemy as ViewEnemy } from '../../consts/viewTypes';
 import { NounType } from '../../dsl/semantics';
 import { getAllSkillLabels } from '../gameDataStore';
-import { CombatSkillType, ColumnType, CritMode, DamageType, ElementType, EnemyTierType, StatType, TimelineSourceType } from '../../consts/enums';
+import { CombatSkillType, ColumnType, CritMode, DamageScalingStatType, DamageType, ElementType, EnemyTierType, StatType, TimelineSourceType } from '../../consts/enums';
 import { SkillLevel, Potential } from '../../consts/types';
 import { StatusDamageParams } from '../../model/calculation/damageFormulas';
 import { getModelEnemy } from './enemyRegistry';
@@ -157,6 +157,8 @@ function getSkillLevel(columnId: string, props: LoadoutProperties): SkillLevel {
 
 interface OperatorCalcData {
   totalAttack: number;
+  totalDefense: number;
+  effectiveHp: number;
   attributeBonus: number;
   critRate: number;
   critDamage: number;
@@ -192,6 +194,8 @@ function buildOperatorCalcData(
 
   return {
     totalAttack,
+    totalDefense: agg.totalDefense,
+    effectiveHp: agg.effectiveHp,
     attributeBonus,
     critRate: Math.min(Math.max(agg.stats[StatType.CRITICAL_RATE], 0), 1),
     critDamage: agg.stats[StatType.CRITICAL_DAMAGE],
@@ -445,8 +449,12 @@ export function buildDamageTableRows(
                   isPerTickMultiplier: isPerTick,
                 };
 
+                const mainStatValue = frame.dealDamage?.mainStat === DamageScalingStatType.DEFENSE ? opData.totalDefense
+                  : frame.dealDamage?.mainStat === DamageScalingStatType.HP ? opData.effectiveHp
+                  : opData.totalAttack;
+
                 params = {
-                  attack: opData.totalAttack,
+                  attack: mainStatValue,
                   baseMultiplier: multiplier,
                   attributeBonus: opData.attributeBonus,
                   multiplierGroup,

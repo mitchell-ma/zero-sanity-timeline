@@ -5,7 +5,7 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "BASE_ATTACK",
+          "object": "STAT", "objectId": "BASE_ATTACK",
           "with": {
             "value": {
               "verb": "IS",
@@ -19,7 +19,6 @@
     }
   ],
   "properties": {
-    "type": "GEAR_SET_STATUS",
     "id": "AIC_LIGHT",
     "name": "AIC Light",
     "duration": {

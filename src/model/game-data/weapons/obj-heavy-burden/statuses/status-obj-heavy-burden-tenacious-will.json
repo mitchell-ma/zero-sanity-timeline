@@ -5,7 +5,7 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "DEF",
+          "object": "STAT", "objectId": "DEF",
           "with": {
             "value": {
               "verb": "VARY_BY",

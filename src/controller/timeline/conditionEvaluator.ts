@@ -7,6 +7,7 @@
  */
 import { Interaction, CardinalityConstraintType, NounType, DeterminerType, VerbType, AdjectiveType, type ValueNode } from '../../dsl/semantics';
 import { getSimpleValue } from '../calculation/valueResolver';
+import { UnitType } from '../../consts/enums';
 import { TimelineEvent } from '../../consts/viewTypes';
 import { ENEMY_OWNER_ID, INFLICTION_COLUMNS, PHYSICAL_INFLICTION_COLUMNS, PHYSICAL_STATUS_COLUMNS, PHYSICAL_STATUS_COLUMN_IDS, REACTION_COLUMNS, REACTION_STATUS_TO_COLUMN, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID, SKILL_COLUMN_ORDER } from '../../model/channels';
 import { COMMON_OWNER_ID } from '../slot/commonSlotController';
@@ -102,10 +103,21 @@ function resolveColumnIds(object: string, objectId?: string, qualifier?: string)
   return [objectId];
 }
 
+// ── Threshold resolution ─────────────────────────────────────────────────
+
+/** Extract target value and constraint from a condition, supporting both direct (value/cardinalityConstraint) and with-based (with.value ValueNode) formats. */
+function resolveConditionThreshold(cond: Interaction): { target: number; constraint?: string } {
+  const withBlock = (cond as unknown as Record<string, unknown>).with as Record<string, unknown> | undefined;
+  const rawValue = cond.value ?? withBlock?.value;
+  const target = (rawValue ? getSimpleValue(rawValue as ValueNode) : undefined) ?? 0;
+  return { target, constraint: cond.cardinalityConstraint };
+}
+
 // ── Evaluators ───────────────────────────────────────────────────────────
 
 function evaluateParameter(cond: Interaction, ctx: ConditionContext): boolean {
-  const paramValue = ctx.suppliedParameters?.[cond.object as string] ?? 0;
+  const paramName = (cond as unknown as Record<string, unknown>).subjectId as string ?? cond.object as string;
+  const paramValue = ctx.suppliedParameters?.[paramName] ?? 0;
   // Target comes from cond.value (standard) or cond.with.value (extended form)
   const withBlock = (cond as unknown as Record<string, unknown>).with as Record<string, unknown> | undefined;
   const targetNode = cond.value ?? withBlock?.value;
@@ -124,8 +136,8 @@ function evaluateHave(cond: Interaction, ctx: ConditionContext): boolean {
   // POTENTIAL: check operator potential level
   if (cond.object === NounType.POTENTIAL) {
     const pot = ctx.potential ?? 0;
-    const target = (cond.value ? getSimpleValue(cond.value) : undefined) ?? 0;
-    switch (cond.cardinalityConstraint) {
+    const { target, constraint } = resolveConditionThreshold(cond);
+    switch (constraint) {
       case CardinalityConstraintType.AT_LEAST: return pot >= target;
       case CardinalityConstraintType.AT_MOST: return pot <= target;
       case CardinalityConstraintType.EXACTLY: return pot === target;
@@ -134,12 +146,29 @@ function evaluateHave(cond: Interaction, ctx: ConditionContext): boolean {
   }
 
   // HP with FULL qualifier: check if operator is at max HP
+  // HP with value+unit PERCENTAGE: check operator HP% threshold
   if (cond.object === NounType.HP) {
     const qualifier = (cond as unknown as Record<string, unknown>).objectQualifier as string | undefined;
     if (qualifier === AdjectiveType.FULL) {
       const ownerId = resolveOwnerId(cond.subject, ctx, cond.subjectDeterminer);
       if (!ownerId || !ctx.getOperatorPercentageHp) return true; // default to full if no tracker
       return ctx.getOperatorPercentageHp(ownerId, ctx.frame) >= 100;
+    }
+    // Value+unit PERCENTAGE pattern: HAVE HP AT_MOST/AT_LEAST N (UNIT PERCENTAGE)
+    const withBlock = (cond as unknown as Record<string, unknown>).with as Record<string, unknown> | undefined;
+    const valueWrapper = withBlock?.value as Record<string, unknown> | undefined;
+    if (valueWrapper?.unit === UnitType.PERCENTAGE) {
+      const ownerId = resolveOwnerId(cond.subject, ctx, cond.subjectDeterminer);
+      if (!ownerId || !ctx.getOperatorPercentageHp) return true;
+      const hpPct = ctx.getOperatorPercentageHp(ownerId, ctx.frame);
+      const innerValue = valueWrapper.value as Record<string, unknown> | undefined;
+      const target = innerValue ? getSimpleValue(innerValue as unknown as ValueNode) ?? 100 : 100;
+      switch (cond.cardinalityConstraint) {
+        case CardinalityConstraintType.AT_MOST: return hpPct <= target;
+        case CardinalityConstraintType.AT_LEAST: return hpPct >= target;
+        case CardinalityConstraintType.EXACTLY: return Math.round(hpPct) === target;
+      }
+      return false;
     }
     return false;
   }
@@ -226,10 +255,16 @@ function evaluateIs(cond: Interaction, ctx: ConditionContext): boolean {
 function evaluateBecome(cond: Interaction, ctx: ConditionContext): boolean {
   // BECOME STACKS: count-based transition — current count meets cardinality AND differs from previous.
   // e.g. MF III → MF IV triggers, MF IV → MF IV does not.
+  // For external monitoring (e.g. combo watches AUXILIARY_CRYSTAL), use ofSubject/ofDeterminer
+  // to resolve the possessor (whose status to check).
   if (cond.object === NounType.STATUS || cond.object === NounType.STACKS) {
-    const columnIds = resolveColumnIds(cond.object === NounType.STACKS ? NounType.STATUS : cond.object, cond.objectId, cond.objectQualifier);
+    const statusId = cond.subjectId ?? cond.objectId;
+    const columnIds = resolveColumnIds(cond.object === NounType.STACKS ? NounType.STATUS : cond.object, statusId, cond.objectQualifier);
     if (columnIds.length === 0) return false;
-    const ownerId = resolveOwnerId(cond.subject, ctx, cond.subjectDeterminer);
+    // Use ofSubject/ofDeterminer for possessor resolution if available, otherwise fall back to subject
+    const ownerSubject = cond.ofSubject ?? cond.subject;
+    const ownerDeterminer = cond.ofDeterminer ?? cond.subjectDeterminer;
+    const ownerId = resolveOwnerId(ownerSubject, ctx, ownerDeterminer);
     let countNow = 0;
     let countBefore = 0;
     for (const colId of columnIds) {
@@ -300,9 +335,13 @@ function evaluateReceive(cond: Interaction, ctx: ConditionContext): boolean {
 
 function evaluatePerform(cond: Interaction, ctx: ConditionContext): boolean {
   // PERFORM conditions check if a skill event exists at/before this frame.
-  // This is primarily used for trigger matching, not condition evaluation.
   const columnId = SKILL_TYPE_TO_COLUMN[cond.object];
-  if (!columnId) return false;
+  if (!columnId) {
+    // Frame-type PERFORM targets (FINAL_STRIKE, FINISHER, DIVE) don't map to
+    // columns — they're validated by the trigger frame finder. If we reached
+    // condition evaluation at this frame, the PERFORM is inherently satisfied.
+    return true;
+  }
 
   const ownerId = resolveOwnerId(cond.subject, ctx, cond.subjectDeterminer);
   return ctx.events.some(ev =>

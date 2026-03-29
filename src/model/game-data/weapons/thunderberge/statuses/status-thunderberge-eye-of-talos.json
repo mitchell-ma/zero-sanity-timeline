@@ -5,7 +5,9 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "SHIELD",
+          "object": "STATUS", "objectId": "SHIELD",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
           "with": {
             "value": {
               "verb": "VARY_BY",

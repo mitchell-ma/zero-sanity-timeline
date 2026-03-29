@@ -5,7 +5,7 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "STRENGTH",
+          "object": "STAT", "objectId": "STRENGTH",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {

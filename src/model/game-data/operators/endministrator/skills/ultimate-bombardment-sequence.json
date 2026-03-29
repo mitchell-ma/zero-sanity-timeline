@@ -114,6 +114,13 @@
                       ],
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
                     }
                   }
                 }
@@ -133,7 +140,7 @@
                   "verb": "CONSUME",
                   "object": "STATUS",
                   "objectId": "ORIGINIUM_CRYSTAL",
-                  "to": "ENEMY",
+                  "from": "ENEMY",
                   "with": {
                     "stacks": "MAX"
                   }
@@ -161,6 +168,13 @@
                         5.54,
                         6
                       ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
                     }

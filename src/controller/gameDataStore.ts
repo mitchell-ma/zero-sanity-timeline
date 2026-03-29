@@ -85,7 +85,11 @@ import {
   // Weapon & gear effects
   getWeaponEffectDefs,
   getGearEffectDefs,
-  getAllWeaponEffectNames,
+  getWeaponTriggerDefs,
+  getGearTriggerDefs,
+  getConsumablePassiveDef,
+  getTacticalTriggerDef,
+  getAllWeaponEffectIds,
   getAllGearEffectTypes,
   registerCustomWeaponEffectDefs,
   deregisterCustomWeaponEffectDefs,
@@ -210,7 +214,8 @@ export { getWeaponStatuses, getAllWeaponStatusOriginIds };
 
 // ── Weapon & gear effects ──────────────────────────────────────────────────
 
-export { getWeaponEffectDefs, getGearEffectDefs, getAllWeaponEffectNames, getAllGearEffectTypes };
+export { getWeaponEffectDefs, getGearEffectDefs, getAllWeaponEffectIds, getAllGearEffectTypes };
+export { getWeaponTriggerDefs, getGearTriggerDefs, getConsumablePassiveDef, getTacticalTriggerDef };
 export { registerCustomWeaponEffectDefs, deregisterCustomWeaponEffectDefs };
 export { registerCustomGearEffectDefs, deregisterCustomGearEffectDefs };
 export { getGearEffectLabel, resolveTargetDisplay, resolveDurationSeconds, resolveTriggerInteractions };

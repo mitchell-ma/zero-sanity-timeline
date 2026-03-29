@@ -19,8 +19,8 @@ import type { Predicate, TriggerEffect } from './triggerMatch';
 import type { ValueNode } from '../../dsl/semantics';
 import { VerbType, NounType, ObjectType, AdjectiveType, DeterminerType, THRESHOLD_MAX } from '../../dsl/semantics';
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from '../calculation/valueResolver';
-import { getAllOperatorIds, getSkillIds, getEnabledStatusEvents } from '../gameDataStore';
-import { getWeaponEffectDefs, getGearEffectDefs } from '../gameDataStore';
+import { getAllOperatorIds, getSkillIds, getEnabledStatusEvents, getOperatorSkills } from '../gameDataStore';
+import { getWeaponTriggerDefs, getGearTriggerDefs, getConsumablePassiveDef, getTacticalTriggerDef } from '../gameDataStore';
 import type { NormalizedEffectDef } from '../gameDataStore';
 import { ENEMY_OWNER_ID, ENEMY_ACTION_COLUMN_ID, REACTION_COLUMNS, INFLICTION_COLUMNS, PHYSICAL_STATUS_COLUMNS, PHYSICAL_STATUS_COLUMN_IDS } from '../../model/channels';
 import { COMMON_OWNER_ID } from '../slot/commonSlotController';
@@ -79,6 +79,8 @@ export interface TriggerDefEntry {
   triggerEffects?: TriggerEffect[];
   /** Clause index within the def's onTriggerClause array (for FIRST_MATCH dedup). */
   clauseIndex: number;
+  /** Maximum number of times this trigger can fire (e.g. tactical/gear usage limits). */
+  usageLimit?: number;
 }
 
 export interface LifecycleDefEntry {
@@ -149,6 +151,7 @@ function normalizeEquipDef(raw: NormalizedEffectDef): StatusEventDef {
       duration: rp?.duration as StatusEventDef['properties']['duration'],
       susceptibility: raw.susceptibility ?? (rp?.susceptibility as string),
       cooldownSeconds: raw.cooldownSeconds ?? (rp?.cooldownSeconds as number),
+      ...(raw.eventCategoryType ? { eventCategoryType: raw.eventCategoryType } : {}),
     },
     onTriggerClause: raw.onTriggerClause as StatusEventDef['onTriggerClause'] ?? [],
   } as StatusEventDef;
@@ -204,8 +207,9 @@ function resolveTriggerKey(verb: string, cond: Predicate): string {
       return `${verb}:${col}`;
     }
     // INFLICTION with element qualifier → resolve to infliction column
-    if (cond.object === NounType.INFLICTION && cond.element) {
-      const inflCol = ELEMENT_TO_INFLICTION[cond.element];
+    const inflElement = cond.element ?? cond.objectQualifier;
+    if (cond.object === NounType.INFLICTION && inflElement) {
+      const inflCol = ELEMENT_TO_INFLICTION[inflElement];
       if (inflCol) return `${verb}:${inflCol}`;
     }
     return `${verb}:${cond.object ?? '*'}`;
@@ -312,6 +316,8 @@ export class TriggerIndex {
     slotWeapons?: Record<string, string | undefined>,
     slotGearSets?: Record<string, string | undefined>,
     registeredEvents?: readonly TimelineEvent[],
+    slotConsumables?: Record<string, string | undefined>,
+    slotTacticals?: Record<string, string | undefined>,
   ): TriggerIndex {
     const idx = new TriggerIndex();
 
@@ -343,12 +349,12 @@ export class TriggerIndex {
       idx.processDefsForSlot(slotId, opId, defs, false, loadoutProperties, operatorSlotMap, registeredEvents);
     }
 
-    // Process weapon defs
+    // Process weapon trigger defs (trigger sources with full conditions + effects)
     if (slotWeapons) {
-      for (const [slotId, weaponName] of Object.entries(slotWeapons)) {
-        if (!weaponName) continue;
+      for (const [slotId, weaponId] of Object.entries(slotWeapons)) {
+        if (!weaponId) continue;
         const opId = slotOperatorMap?.[slotId] ?? '';
-        idx.processDefsForSlot(slotId, opId, getWeaponEffectDefs(weaponName).map(normalizeEquipDef), true, loadoutProperties, operatorSlotMap, registeredEvents);
+        idx.processDefsForSlot(slotId, opId, getWeaponTriggerDefs(weaponId).map(normalizeEquipDef), true, loadoutProperties, operatorSlotMap, registeredEvents);
       }
     }
 
@@ -357,7 +363,27 @@ export class TriggerIndex {
       for (const [slotId, gearSetType] of Object.entries(slotGearSets)) {
         if (!gearSetType) continue;
         const opId = slotOperatorMap?.[slotId] ?? '';
-        idx.processDefsForSlot(slotId, opId, getGearEffectDefs(gearSetType).map(normalizeEquipDef), true, loadoutProperties, operatorSlotMap, registeredEvents);
+        idx.processDefsForSlot(slotId, opId, getGearTriggerDefs(gearSetType).map(normalizeEquipDef), true, loadoutProperties, operatorSlotMap, registeredEvents);
+      }
+    }
+
+    // Process consumable defs
+    if (slotConsumables) {
+      for (const [slotId, consumableId] of Object.entries(slotConsumables)) {
+        if (!consumableId) continue;
+        const opId = slotOperatorMap?.[slotId] ?? '';
+        const def = getConsumablePassiveDef(consumableId);
+        if (def) idx.processDefsForSlot(slotId, opId, [normalizeEquipDef(def)], true, loadoutProperties, operatorSlotMap, registeredEvents);
+      }
+    }
+
+    // Process tactical defs
+    if (slotTacticals) {
+      for (const [slotId, tacticalId] of Object.entries(slotTacticals)) {
+        if (!tacticalId) continue;
+        const opId = slotOperatorMap?.[slotId] ?? '';
+        const def = getTacticalTriggerDef(tacticalId);
+        if (def) idx.processDefsForSlot(slotId, opId, [normalizeEquipDef(def)], true, loadoutProperties, operatorSlotMap, registeredEvents);
       }
     }
 
@@ -491,12 +517,14 @@ export class TriggerIndex {
           return cond;
         });
 
-        // BECOME STACKS is self-referential: index under APPLY:{self-column} so it
-        // fires when this status receives a new stack. The BECOME condition is deferred
-        // to evaluation time for transition semantics (prev count ≠ current count).
+        // BECOME STACKS: index under APPLY:{status-column} so it fires when the
+        // status receives a new stack. For self-referential (MF watching own stacks),
+        // use def.properties.id. For external (combo watching another status), use
+        // the condition's subjectId.
         if (primaryVerb === VerbType.BECOME && primaryCond.object === NounType.STACKS) {
+          const targetStatusId = primaryCond.subjectId ?? def.properties.id;
           primaryVerb = VerbType.APPLY;
-          primaryCond = { verb: VerbType.APPLY, object: NounType.STATUS, objectId: def.properties.id } as Predicate;
+          primaryCond = { verb: VerbType.APPLY, object: NounType.STATUS, objectId: targetStatusId } as Predicate;
         }
 
         // BECOME <state> (LIFTED, COMBUSTED, etc.) fires when the corresponding
@@ -525,12 +553,52 @@ export class TriggerIndex {
           haveConditions: haveConds,
           triggerEffects: clause.effects,
           clauseIndex: ci,
+          ...((def as unknown as { usageLimit?: number }).usageLimit != null
+            ? { usageLimit: (def as unknown as { usageLimit?: number }).usageLimit }
+            : {}),
         };
+
+        // If this status is applied via CONTROLLED (e.g. Auxiliary Crystal),
+        // create trigger entries for ALL operator slots since the status can
+        // live on any slot. Each entry gets its own operatorSlotId so THIS
+        // resolves to the correct status owner.
+        const targetSlots = isControlledAppliedStatus(operatorId, def.properties.id)
+          ? Object.values(opSlotMap).filter(s => s !== slotId)
+          : [];
 
         const existing = this.index.get(key) ?? [];
         existing.push(entry);
+        for (const targetSlot of targetSlots) {
+          existing.push({ ...entry, operatorSlotId: targetSlot });
+        }
         this.index.set(key, existing);
       }
     }
   }
+}
+
+/** Check if a status is applied to CONTROLLED OPERATOR by scanning skill frame effects. */
+function isControlledAppliedStatus(operatorId: string, statusId: string): boolean {
+  const skills = getOperatorSkills(operatorId);
+  if (!skills) return false;
+  let found = false;
+  skills.forEach((skill) => {
+    if (found) return;
+    const serialized = skill.serialize() as Record<string, unknown>;
+    const segments = (serialized.segments ?? []) as { frames?: { clause?: { effects?: Record<string, unknown>[] }[] }[] }[];
+    for (const seg of segments) {
+      for (const frame of (seg.frames ?? [])) {
+        for (const clause of (frame.clause ?? [])) {
+          for (const eff of (clause.effects ?? [])) {
+            if (eff.verb === VerbType.APPLY && eff.object === NounType.STATUS &&
+                eff.objectId === statusId && eff.toDeterminer === DeterminerType.CONTROLLED) {
+              found = true;
+              return;
+            }
+          }
+        }
+      }
+    }
+  });
+  return found;
 }

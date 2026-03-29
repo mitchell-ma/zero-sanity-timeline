@@ -50,7 +50,7 @@ const EVENT_OPTIONAL_KEYS: (keyof TimelineEvent)[] = [
   'forcedReaction', 'isArtsBurst', 'reductionFloor', 'artsIntensity',
   'operatorPotential', 'skillPointCost', 'enhancementType',
   'activationClause', 'comboChainFreezeEnd', 'warnings',
-  'statusValue', 'damageFactorType', '_pendingSegmentOverrides',
+  'statusValue', 'damageFactorType', '_pendingSegmentOverrides', 'segmentOrigin',
 ];
 
 function pooledEvent(): TimelineEvent {

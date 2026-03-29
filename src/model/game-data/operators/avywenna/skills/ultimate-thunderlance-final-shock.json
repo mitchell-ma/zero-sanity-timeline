@@ -128,50 +128,6 @@
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
-                    "pulseResistDownRate": {
-                      "verb": "VARY_BY",
-                      "object": "SKILL_LEVEL",
-                      "value": [
-                        0.3,
-                        0.32,
-                        0.32,
-                        0.32,
-                        0.32,
-                        0.34,
-                        0.34,
-                        0.34,
-                        0.34,
-                        0.36,
-                        0.38,
-                        0.4
-                      ],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
-                    },
-                    "pulseResistDownDuration": {
-                      "verb": "VARY_BY",
-                      "object": "SKILL_LEVEL",
-                      "value": [
-                        5,
-                        5,
-                        5,
-                        5,
-                        5,
-                        5,
-                        5,
-                        5,
-                        5,
-                        6,
-                        7,
-                        8
-                      ],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
-                    },
-                    "lanceDurationUlt": {
-                      "verb": "IS",
-                      "value": 30
-                    },
                     "value": {
                       "verb": "VARY_BY",
                       "object": "SKILL_LEVEL",
@@ -189,6 +145,13 @@
                         8.76,
                         9.5
                       ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
                     }

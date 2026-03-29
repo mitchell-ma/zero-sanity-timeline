@@ -5,8 +5,8 @@
  *   consumables/consumables/*.json  → ConsumableData
  *   consumables/tacticals/*.json    → TacticalData
  */
-import { StatType, UnitType } from '../../consts/enums';
-import { VerbType, NounType } from '../../dsl/semantics';
+import { StatType, UnitType, EventType, EventCategoryType, StackInteractionType } from '../../consts/enums';
+import { VerbType, NounType, DeterminerType } from '../../dsl/semantics';
 import type { Interaction, ValueNode } from '../../dsl/semantics';
 import { checkKeys, VALID_CLAUSE_KEYS } from './validationUtils';
 
@@ -163,6 +163,24 @@ export class ConsumableData {
     return resolveDurationSeconds(this.duration);
   }
 
+  /** Serialize as a talent-shaped passive def for the event pipeline. */
+  serializeAsTriggerDef(): Record<string, unknown> {
+    return {
+      clause: this.clause,
+      properties: {
+        id: this.id,
+        name: this.name,
+        target: NounType.OPERATOR,
+        targetDeterminer: DeterminerType.THIS,
+        stacks: { limit: { verb: VerbType.IS, value: 1 }, interactionType: StackInteractionType.NONE },
+        duration: this.duration,
+        eventType: EventType.STATUS,
+        eventCategoryType: EventCategoryType.TALENT,
+      },
+      metadata: {},
+    };
+  }
+
   static deserialize(json: Record<string, unknown>, source?: string) {
     const errors = validateConsumable(json);
     if (errors.length > 0) {
@@ -204,12 +222,31 @@ export class TacticalData {
     this.duration = extractSegmentDuration(this.segments)!;
   }
 
-  get maxUses(): number {
+  get resolvedUsageLimit(): number {
     return (this.usageLimit as { value?: number }).value ?? 1;
   }
 
   get durationSeconds(): number {
     return resolveDurationSeconds(this.duration);
+  }
+
+  /** Serialize as a talent-shaped trigger source def for the event pipeline. */
+  serializeAsTriggerDef(): Record<string, unknown> {
+    return {
+      ...(this.onTriggerClause.length > 0 ? { onTriggerClause: this.onTriggerClause } : {}),
+      ...(this.segments.length > 0 ? { segments: this.segments } : {}),
+      properties: {
+        id: this.id,
+        name: this.name,
+        target: NounType.OPERATOR,
+        targetDeterminer: DeterminerType.THIS,
+        stacks: { limit: { verb: VerbType.IS, value: 1 }, interactionType: StackInteractionType.NONE },
+        eventType: EventType.STATUS,
+        eventCategoryType: EventCategoryType.TALENT,
+      },
+      metadata: {},
+      usageLimit: this.resolvedUsageLimit,
+    };
   }
 
   static deserialize(json: Record<string, unknown>, source?: string) {

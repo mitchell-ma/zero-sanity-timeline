@@ -126,30 +126,6 @@
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
                     },
-                    "atkScale3": {
-                      "verb": "VARY_BY",
-                      "object": "SKILL_LEVEL",
-                      "value": [
-                        1.07,
-                        1.17,
-                        1.28,
-                        1.39,
-                        1.49,
-                        1.6,
-                        1.71,
-                        1.81,
-                        1.92,
-                        2.05,
-                        2.21,
-                        2.4
-                      ],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
-                    },
-                    "uspBase": {
-                      "verb": "IS",
-                      "value": 40
-                    },
                     "count": {
                       "verb": "IS",
                       "value": 3
@@ -179,10 +155,24 @@
                       "right": {
                         "verb": "VARY_BY",
                         "object": "POTENTIAL",
-                        "value": [1, 1, 1, 1.15, 1.15, 1.15],
+                        "value": [
+                          1,
+                          1,
+                          1,
+                          1.15,
+                          1.15,
+                          1.15
+                        ],
                         "ofDeterminer": "THIS",
                         "of": "OPERATOR"
                       }
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
                     }
                   }
                 }
@@ -245,26 +235,6 @@
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
                     },
-                    "atkScale3": {
-                      "verb": "VARY_BY",
-                      "object": "SKILL_LEVEL",
-                      "value": [
-                        1.07,
-                        1.17,
-                        1.28,
-                        1.39,
-                        1.49,
-                        1.6,
-                        1.71,
-                        1.81,
-                        1.92,
-                        2.05,
-                        2.21,
-                        2.4
-                      ],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
-                    },
                     "value": {
                       "operation": "MULT",
                       "left": {
@@ -290,10 +260,24 @@
                       "right": {
                         "verb": "VARY_BY",
                         "object": "POTENTIAL",
-                        "value": [1, 1, 1, 1.15, 1.15, 1.15],
+                        "value": [
+                          1,
+                          1,
+                          1,
+                          1.15,
+                          1.15,
+                          1.15
+                        ],
                         "ofDeterminer": "THIS",
                         "of": "OPERATOR"
                       }
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
                     }
                   }
                 }

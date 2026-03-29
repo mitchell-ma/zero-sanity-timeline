@@ -3158,6 +3158,8 @@
   border: 1px solid var(--border-bright);
   border-radius: 0;
   min-width: 11.25rem;
+  max-height: min(24rem, calc(100vh - 1rem));
+  overflow-y: auto;
   padding: 0.25rem 0;
   box-shadow: 0 8px 32px var(--scrim-60);
   animation: ctx-appear 0.08s ease;
@@ -3190,6 +3192,35 @@
 
 .context-menu-item.disabled,
 .context-menu-item:disabled {
+  color: var(--text-muted);
+  cursor: default;
+}
+
+.context-menu-inline-row {
+  display: flex;
+  gap: 2px;
+  padding: 0 0.875rem 0.375rem;
+}
+.context-menu-inline-btn {
+  flex: 1;
+  padding: 0.1875rem 0;
+  font-family: var(--font-display);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  background: var(--overlay-04);
+  border: 1px solid var(--border-dim);
+  color: var(--text-secondary);
+  cursor: pointer;
+  text-align: center;
+  transition: background 0.08s;
+}
+.context-menu-inline-btn:not(:disabled):hover {
+  background: var(--overlay-08);
+  color: var(--text-bright);
+}
+.context-menu-inline-btn.disabled,
+.context-menu-inline-btn:disabled {
   color: var(--text-muted);
   cursor: default;
 }
@@ -9537,7 +9568,7 @@
   position: absolute;
   left: 0;
   top: 0;
-  bottom: 50%;
+  height: 0.625em;
   width: 0.625rem;
   border-left: 1px solid var(--border-dim);
   border-bottom: 1px solid var(--border-dim);
@@ -9546,7 +9577,7 @@
   content: '';
   position: absolute;
   left: 0;
-  top: 50%;
+  top: 0.625em;
   bottom: 0;
   border-left: 1px solid var(--border-dim);
 }
@@ -9566,6 +9597,55 @@
   color: var(--text-secondary);
   font-family: var(--font-display);
   font-size: 0.75rem;
+}
+
+/* ── Property tree (nested struct fields) ────────── */
+.ops-prop-tree {
+  padding: 0.25rem 0;
+}
+.ops-prop-tree-label {
+  font-family: var(--font-display);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+.ops-prop-tree-children {
+  padding-left: 0.25rem;
+  padding-top: 0.25rem;
+  overflow: hidden;
+}
+.ops-prop-tree-leaf {
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+.ops-prop-tree-leaf-label {
+  color: var(--text-muted);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-right: 0.25rem;
+}
+
+/* Light-mode contrast boost for tree lines and labels */
+[data-theme="light"] .ops-vt-branch::before,
+[data-theme="light"] .ops-vt-branch--mid::after {
+  border-color: rgba(0, 0, 0, 0.25);
+}
+[data-theme="light"] .ops-prop-tree-label,
+[data-theme="light"] .ops-prop-tree-leaf-label {
+  color: #555;
+}
+[data-theme="light"] .ops-prop-tree-leaf,
+[data-theme="light"] .ops-vt-leaf {
+  color: #444;
+}
+[data-theme="light"] .ops-clause-condition-text {
+  color: #444;
 }
 
 .ops-frame-effect-with {
@@ -9700,6 +9780,13 @@
 }
 .ops-clause-predicate {
   margin-bottom: 0.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-dim);
+}
+.ops-clause-predicate:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
 }
 .ops-clause-conditions {
   margin-bottom: 0.375rem;

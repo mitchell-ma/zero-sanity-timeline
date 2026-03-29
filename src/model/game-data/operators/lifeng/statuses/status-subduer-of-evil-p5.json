@@ -12,6 +12,13 @@
             "value": {
               "verb": "IS",
               "value": 2.5
+            },
+            "mainStat": {
+              "verb": "IS",
+              "object": "STAT",
+              "objectId": "ATTACK",
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
             }
           }
         },

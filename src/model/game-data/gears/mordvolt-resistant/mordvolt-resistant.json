@@ -1,8 +1,38 @@
 {
+  "onTriggerClause": [
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "HAVE",
+          "object": "HP",
+          "cardinalityConstraint": "AT_MOST",
+          "with": {
+            "value": {
+              "value": { "verb": "IS", "value": 50 },
+              "unit": "PERCENTAGE"
+            }
+          }
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "MORDVOLT_RESISTANT",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
+        }
+      ]
+    }
+  ],
   "properties": {
     "id": "MORDVOLT_RESISTANT",
     "name": "Mordvolt Resistant",
     "rarity": 4,
+    "piecesRequired": 3,
+    "description": "3-piece set effect: Wearer's Will +50. When the wearer's HP drops below 50%, the wearer's Treatment Effect increases by 30%.",
     "eventType": "STATUS",
     "eventCategoryType": "GEAR_SET_EFFECT"
   },

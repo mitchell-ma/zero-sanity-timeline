@@ -61,13 +61,13 @@
   "clauseType": "ALL",
   "properties": {
     "id": "SLASHING_EDGE_TALENT",
+    "maxLevel": { "verb": "IS", "value": 2 },
     "name": "Slashing Edge (Talent)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
     "eventCategoryType": "TALENT",
-    "description": "After hitting an enemy with skills, Chen gains ATK +4% for 10s. This effect can reach 5 stacks.",
-    "maxLevel": 2
+    "description": "After hitting an enemy with skills, Chen gains ATK +4% for 10s. This effect can reach 5 stacks."
   },
   "metadata": {
     "originId": "CHEN_QIANYU",

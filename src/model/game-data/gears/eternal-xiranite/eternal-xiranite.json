@@ -6,15 +6,81 @@
           "subjectDeterminer": "THIS",
           "subject": "OPERATOR",
           "verb": "APPLY",
-          "object": "STATUS",
-          "objectId": "BUFF"
+          "objectDeterminer": "ANY",
+          "object": "AMP",
+          "to": "OPERATOR",
+          "toDeterminer": "ANY"
         }
       ],
       "effects": [
         {
           "verb": "APPLY",
           "object": "STATUS",
-          "objectId": "ETERNAL_XIRANITE"
+          "objectId": "ETERNAL_XIRANITE",
+          "toDeterminer": "ALL_OTHER",
+          "to": "OPERATOR"
+        }
+      ]
+    },
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "APPLY",
+          "object": "PROTECTED",
+          "to": "OPERATOR",
+          "toDeterminer": "ANY"
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "ETERNAL_XIRANITE",
+          "toDeterminer": "ALL_OTHER",
+          "to": "OPERATOR"
+        }
+      ]
+    },
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "APPLY",
+          "objectDeterminer": "ANY",
+          "object": "SUSCEPTIBILITY",
+          "to": "ENEMY"
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "ETERNAL_XIRANITE",
+          "toDeterminer": "ALL_OTHER",
+          "to": "OPERATOR"
+        }
+      ]
+    },
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "APPLY",
+          "object": "WEAKENED",
+          "to": "ENEMY"
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "ETERNAL_XIRANITE",
+          "toDeterminer": "ALL_OTHER",
+          "to": "OPERATOR"
         }
       ]
     }

@@ -29,7 +29,7 @@
               "conditions": [],
               "effects": [
                 {
-                  "verb": "RESTORE",
+                  "verb": "RECOVER",
                   "object": "HP",
                   "toDeterminer": "THIS",
                   "to": "OPERATOR",

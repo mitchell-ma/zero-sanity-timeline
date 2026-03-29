@@ -5,7 +5,7 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "BUFF",
+          "object": "STATUS", "objectId": "BUFF",
           "objectId": "POGRANICHNIK_POTENTIAL5_NEWLY_FORGED_BLADE",
           "toDeterminer": "THIS",
           "to": "OPERATOR"

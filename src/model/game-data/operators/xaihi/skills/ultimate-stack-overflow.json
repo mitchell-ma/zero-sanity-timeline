@@ -23,14 +23,7 @@
               "right": {
                 "verb": "VARY_BY",
                 "object": "POTENTIAL",
-                "value": [
-                  1,
-                  1,
-                  0.9,
-                  0.9,
-                  0.9,
-                  0.9
-                ],
+                "value": [1, 1, 0.9, 0.9, 0.9, 0.9],
                 "ofDeterminer": "THIS",
                 "of": "OPERATOR"
               }
@@ -46,9 +39,7 @@
         "eventComponentType": "SEGMENT"
       },
       "properties": {
-        "segmentTypes": [
-          "ANIMATION"
-        ],
+        "segmentTypes": ["ANIMATION"],
         "name": "Animation",
         "duration": {
           "value": {
@@ -93,45 +84,55 @@
                 {
                   "verb": "APPLY",
                   "objectQualifier": "CRYO",
-                  "object": "AMP",
-                  "toDeterminer": "ALL",
-                  "to": "OPERATOR",
+                  "object": "STATUS",
+                  "objectId": "AMP",
+                  "to": "TEAM",
                   "with": {
                     "value": {
-                      "operation": "MULT",
+                      "operation": "MIN",
                       "left": {
                         "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
-                        "value": [
-                          0.11,
-                          0.12,
-                          0.13,
-                          0.14,
-                          0.15,
-                          0.16,
-                          0.17,
-                          0.18,
-                          0.19,
-                          0.21,
-                          0.22,
-                          0.24
-                        ],
+                        "value": [0.30, 0.30, 0.30, 0.30, 0.30, 0.30, 0.30, 0.30, 0.30, 0.30, 0.30, 0.36],
                         "ofDeterminer": "THIS",
                         "of": "OPERATOR"
                       },
                       "right": {
-                        "verb": "VARY_BY",
-                        "object": "POTENTIAL",
-                        "value": [
-                          1,
-                          1,
-                          1,
-                          1,
-                          1,
-                          1.1
-                        ],
-                        "ofDeterminer": "THIS",
-                        "of": "OPERATOR"
+                        "operation": "ADD",
+                        "left": {
+                          "operation": "MULT",
+                          "left": {
+                            "verb": "VARY_BY",
+                            "object": "SKILL_LEVEL",
+                            "value": [0.11, 0.12, 0.13, 0.14, 0.15, 0.16, 0.17, 0.18, 0.19, 0.21, 0.22, 0.24],
+                            "ofDeterminer": "THIS",
+                            "of": "OPERATOR"
+                          },
+                          "right": {
+                            "verb": "VARY_BY",
+                            "object": "POTENTIAL",
+                            "value": [1, 1, 1, 1, 1, 1.1],
+                            "ofDeterminer": "THIS",
+                            "of": "OPERATOR"
+                          }
+                        },
+                        "right": {
+                          "operation": "MULT",
+                          "left": {
+                            "verb": "VARY_BY",
+                            "object": "SKILL_LEVEL",
+                            "value": [0.00014, 0.00015, 0.00016, 0.00018, 0.00019, 0.0002, 0.00022, 0.00023, 0.00024, 0.00026, 0.00028, 0.0003],
+                            "ofDeterminer": "THIS",
+                            "of": "OPERATOR"
+                          },
+                          "right": {
+                            "verb": "IS",
+                            "object": "STAT",
+                            "objectId": "INTELLECT",
+                            "ofDeterminer": "THIS",
+                            "of": "OPERATOR"
+                          }
+                        }
                       }
                     },
                     "duration": {
@@ -146,45 +147,55 @@
                 {
                   "verb": "APPLY",
                   "objectQualifier": "NATURE",
-                  "object": "AMP",
-                  "toDeterminer": "ALL",
-                  "to": "OPERATOR",
+                  "object": "STATUS",
+                  "objectId": "AMP",
+                  "to": "TEAM",
                   "with": {
                     "value": {
-                      "operation": "MULT",
+                      "operation": "MIN",
                       "left": {
                         "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
-                        "value": [
-                          0.11,
-                          0.12,
-                          0.13,
-                          0.14,
-                          0.15,
-                          0.16,
-                          0.17,
-                          0.18,
-                          0.19,
-                          0.21,
-                          0.22,
-                          0.24
-                        ],
+                        "value": [0.30, 0.30, 0.30, 0.30, 0.30, 0.30, 0.30, 0.30, 0.30, 0.30, 0.30, 0.36],
                         "ofDeterminer": "THIS",
                         "of": "OPERATOR"
                       },
                       "right": {
-                        "verb": "VARY_BY",
-                        "object": "POTENTIAL",
-                        "value": [
-                          1,
-                          1,
-                          1,
-                          1,
-                          1,
-                          1.1
-                        ],
-                        "ofDeterminer": "THIS",
-                        "of": "OPERATOR"
+                        "operation": "ADD",
+                        "left": {
+                          "operation": "MULT",
+                          "left": {
+                            "verb": "VARY_BY",
+                            "object": "SKILL_LEVEL",
+                            "value": [0.11, 0.12, 0.13, 0.14, 0.15, 0.16, 0.17, 0.18, 0.19, 0.21, 0.22, 0.24],
+                            "ofDeterminer": "THIS",
+                            "of": "OPERATOR"
+                          },
+                          "right": {
+                            "verb": "VARY_BY",
+                            "object": "POTENTIAL",
+                            "value": [1, 1, 1, 1, 1, 1.1],
+                            "ofDeterminer": "THIS",
+                            "of": "OPERATOR"
+                          }
+                        },
+                        "right": {
+                          "operation": "MULT",
+                          "left": {
+                            "verb": "VARY_BY",
+                            "object": "SKILL_LEVEL",
+                            "value": [0.00014, 0.00015, 0.00016, 0.00018, 0.00019, 0.0002, 0.00022, 0.00023, 0.00024, 0.00026, 0.00028, 0.0003],
+                            "ofDeterminer": "THIS",
+                            "of": "OPERATOR"
+                          },
+                          "right": {
+                            "verb": "IS",
+                            "object": "STAT",
+                            "objectId": "INTELLECT",
+                            "ofDeterminer": "THIS",
+                            "of": "OPERATOR"
+                          }
+                        }
                       }
                     },
                     "duration": {
@@ -195,6 +206,34 @@
                       "unit": "SECOND"
                     }
                   }
+                }
+              ]
+            },
+            {
+              "conditions": [
+                {
+                  "subjectDeterminer": "THIS",
+                  "subject": "OPERATOR",
+                  "verb": "HAVE",
+                  "object": "TALENT_LEVEL",
+                  "cardinalityConstraint": "AT_LEAST",
+                  "value": 2
+                }
+              ],
+              "effects": [
+                {
+                  "verb": "CONSUME",
+                  "object": "INFLICTION",
+                  "objectQualifier": "CRYO",
+                  "fromDeterminer": "ALL",
+                  "from": "OPERATOR"
+                },
+                {
+                  "verb": "CONSUME",
+                  "object": "REACTION",
+                  "objectQualifier": "SOLIDIFICATION",
+                  "fromDeterminer": "ALL",
+                  "from": "OPERATOR"
                 }
               ]
             }

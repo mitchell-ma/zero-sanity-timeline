@@ -87,6 +87,13 @@
                       ],
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
                     }
                   }
                 },
@@ -152,82 +159,6 @@
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
-                    "atbReturn": {
-                      "verb": "IS",
-                      "value": 20
-                    },
-                    "atbReturn_02": {
-                      "verb": "IS",
-                      "value": 40
-                    },
-                    "rateSpellvulnerable": {
-                      "operation": "ADD",
-                      "left": {
-                        "verb": "VARY_BY",
-                        "object": "SKILL_LEVEL",
-                        "value": [
-                          0.03,
-                          0.03,
-                          0.03,
-                          0.035,
-                          0.035,
-                          0.035,
-                          0.04,
-                          0.04,
-                          0.04,
-                          0.045,
-                          0.045,
-                          0.05
-                        ],
-                        "ofDeterminer": "THIS",
-                        "of": "OPERATOR"
-                      },
-                      "right": {
-                        "verb": "VARY_BY",
-                        "object": "POTENTIAL",
-                        "value": [0, 0, 0, 0.05, 0.05, 0.05],
-                        "ofDeterminer": "THIS",
-                        "of": "OPERATOR"
-                      }
-                    },
-                    "rateSpellvulnerable_02": {
-                      "operation": "ADD",
-                      "left": {
-                        "verb": "VARY_BY",
-                        "object": "SKILL_LEVEL",
-                        "value": [
-                          0.06,
-                          0.06,
-                          0.06,
-                          0.07,
-                          0.07,
-                          0.07,
-                          0.08,
-                          0.08,
-                          0.08,
-                          0.09,
-                          0.09,
-                          0.1
-                        ],
-                        "ofDeterminer": "THIS",
-                        "of": "OPERATOR"
-                      },
-                      "right": {
-                        "verb": "VARY_BY",
-                        "object": "POTENTIAL",
-                        "value": [0, 0, 0, 0.05, 0.05, 0.05],
-                        "ofDeterminer": "THIS",
-                        "of": "OPERATOR"
-                      }
-                    },
-                    "durationSpellvulnerable": {
-                      "verb": "IS",
-                      "value": 15
-                    },
-                    "durationTornado": {
-                      "verb": "IS",
-                      "value": 3
-                    },
                     "value": {
                       "operation": "MULT",
                       "left": {
@@ -253,10 +184,24 @@
                       "right": {
                         "verb": "VARY_BY",
                         "object": "POTENTIAL",
-                        "value": [1, 1, 1, 1.1, 1.1, 1.1],
+                        "value": [
+                          1,
+                          1,
+                          1,
+                          1.1,
+                          1.1,
+                          1.1
+                        ],
                         "ofDeterminer": "THIS",
                         "of": "OPERATOR"
                       }
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
                     }
                   }
                 }

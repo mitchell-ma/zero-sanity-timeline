@@ -62,16 +62,15 @@ export class SkillSegmentBuilder {
         return marker;
       });
 
-      // Mark the last frame of the final sequence as a final strike (basic attacks only)
-      // SP recovery is granted only on the final strike
+      // Populate SP recovery and stagger templates on the final strike frame.
+      // FINAL_STRIKE frameType is derived from PERFORM FINAL_STRIKE in the JSON config.
       if (isMulti && !customLabels && i === sequences.length - 1 && frames.length > 0) {
         const finalFrame = frames[frames.length - 1];
-        if (!finalFrame.frameTypes?.includes(EventFrameType.FINAL_STRIKE)) {
-          finalFrame.frameTypes = [EventFrameType.FINAL_STRIKE];
+        if (finalFrame.frameTypes?.includes(EventFrameType.FINAL_STRIKE)) {
+          finalFrame.skillPointRecovery = allSequenceTotalSP;
+          finalFrame.templateFinalStrikeSP = allSequenceTotalSP;
+          finalFrame.templateFinalStrikeStagger = finalFrame.stagger ?? 0;
         }
-        finalFrame.skillPointRecovery = allSequenceTotalSP;
-        finalFrame.templateFinalStrikeSP = allSequenceTotalSP;
-        finalFrame.templateFinalStrikeStagger = finalFrame.stagger ?? 0;
       }
 
       // Mark all frames in Finisher / Dive segments with the appropriate hit type

@@ -3,13 +3,17 @@
     {
       "conditions": [
         {
-          "subjectDeterminer": "THIS",
-          "subject": "OPERATOR",
-          "verb": "INTERRUPT",
-          "object": "ENEMY_CHARGE"
+          "subject": "ENEMY",
+          "verb": "HAVE",
+          "object": "CHARGE"
         }
       ],
       "effects": [
+        {
+          "verb": "CONSUME",
+          "object": "CHARGE",
+          "from": "ENEMY"
+        },
         {
           "verb": "DEAL",
           "object": "STAGGER",
@@ -32,13 +36,13 @@
   ],
   "properties": {
     "id": "MOMENTUM_BREAKER_TALENT",
+    "maxLevel": { "verb": "IS", "value": 2 },
     "name": "Momentum Breaker (Talent)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
     "eventCategoryType": "TALENT",
-    "description": "Interrupting the enemy's charge up deals another 10 Stagger.",
-    "maxLevel": 2
+    "description": "Interrupting the enemy's charge up deals another 10 Stagger."
   },
   "metadata": {
     "originId": "CHEN_QIANYU",

@@ -131,13 +131,20 @@
                       ],
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
                     }
                   }
                 },
                 {
                   "verb": "APPLY",
-                  "object": "WEAKEN",
-                  "objectType": "STATUS",
+                  "object": "STATUS",
+                  "objectId": "WEAKEN",
                   "to": "ENEMY",
                   "with": {
                     "value": {
@@ -178,9 +185,10 @@
                   "subject": "OPERATOR",
                   "verb": "HAVE",
                   "object": "POTENTIAL",
+                  "cardinalityConstraint": "AT_LEAST",
                   "with": {
                     "value": {
-                      "verb": "AT_LEAST",
+                      "verb": "IS",
                       "value": 1
                     }
                   }
@@ -213,6 +221,13 @@
                           "of": "OPERATOR"
                         }
                       }
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "DEFENSE",
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
                     }
                   }
                 }
@@ -274,6 +289,13 @@
                       ],
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
                     }
                   }
                 }
@@ -286,9 +308,10 @@
                   "subject": "OPERATOR",
                   "verb": "HAVE",
                   "object": "POTENTIAL",
+                  "cardinalityConstraint": "AT_LEAST",
                   "with": {
                     "value": {
-                      "verb": "AT_LEAST",
+                      "verb": "IS",
                       "value": 1
                     }
                   }
@@ -321,6 +344,13 @@
                           "of": "OPERATOR"
                         }
                       }
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "DEFENSE",
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
                     }
                   }
                 }
@@ -389,6 +419,13 @@
                       ],
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
                     }
                   }
                 }
@@ -401,9 +438,10 @@
                   "subject": "OPERATOR",
                   "verb": "HAVE",
                   "object": "POTENTIAL",
+                  "cardinalityConstraint": "AT_LEAST",
                   "with": {
                     "value": {
-                      "verb": "AT_LEAST",
+                      "verb": "IS",
                       "value": 1
                     }
                   }
@@ -436,6 +474,13 @@
                           "of": "OPERATOR"
                         }
                       }
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "DEFENSE",
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
                     }
                   }
                 }

@@ -5,8 +5,8 @@
         {
           "subjectDeterminer": "THIS",
           "subject": "OPERATOR",
-          "verb": "CAST",
-          "object": "FORWARD_MARCH"
+          "verb": "PERFORM",
+          "object": "STATUS", "objectId": "FORWARD_MARCH"
         }
       ],
       "effects": [
@@ -24,8 +24,8 @@
         {
           "subjectDeterminer": "THIS",
           "subject": "OPERATOR",
-          "verb": "CAST",
-          "object": "FRONTLINE_SUPPORT"
+          "verb": "PERFORM",
+          "object": "STATUS", "objectId": "FRONTLINE_SUPPORT"
         }
       ],
       "effects": [
@@ -41,13 +41,13 @@
   ],
   "properties": {
     "id": "INFLAMED_FOR_THE_ASSAULT_TALENT",
+    "maxLevel": { "verb": "IS", "value": 2 },
     "name": "Inflamed for the Assault (Talent)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
     "eventCategoryType": "TALENT",
-    "description": "When casting the battle skill Forward March and the combo skill Frontline Support, Ember gains 50% Protection and is less likely to be interrupted.",
-    "maxLevel": 2
+    "description": "When casting the battle skill Forward March and the combo skill Frontline Support, Ember gains 50% Protection and is less likely to be interrupted."
   },
   "metadata": {
     "originId": "EMBER",

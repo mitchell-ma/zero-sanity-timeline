@@ -73,6 +73,13 @@
                       ],
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
                     }
                   }
                 }
@@ -121,6 +128,13 @@
                         0.79,
                         0.86
                       ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
                     }
@@ -191,6 +205,13 @@
                       ],
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
                     }
                   }
                 }
@@ -203,14 +224,16 @@
                   "verb": "HAVE",
                   "negated": true,
                   "object": "STATUS",
-                  "objectId": "VULNERABILITY"
+                  "objectId": "INFLICTION",
+                  "objectQualifier": "VULNERABLE"
                 }
               ],
               "effects": [
                 {
                   "verb": "APPLY",
-                  "object": "PHYSICAL_SUSCEPTIBILITY",
-                  "objectType": "STATUS",
+                  "object": "STATUS",
+                  "objectId": "SUSCEPTIBILITY",
+                  "objectQualifier": "PHYSICAL",
                   "to": "ENEMY",
                   "with": {
                     "value": {

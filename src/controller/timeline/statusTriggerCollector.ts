@@ -7,11 +7,11 @@
  * queue entry construction.
  */
 import { TimelineEvent, EventSegmentData, eventEndFrame, durationSegment, setEventDuration } from '../../consts/viewTypes';
-import { CritMode, EventStatusType, StackInteractionType } from '../../consts/enums';
+import { CritMode, EventCategoryType, EventFrameType, EventStatusType, StackInteractionType, UnitType } from '../../consts/enums';
 import { COMMON_OWNER_ID } from '../slot/commonSlotController';
 import { ENEMY_OWNER_ID, ELEMENT_TO_INFLICTION_COLUMN, REACTION_COLUMNS } from '../../model/channels';
 import { FPS, TOTAL_FRAMES } from '../../utils/timeline';
-import { getSkillIds, getAllOperatorIds, getEnabledStatusEvents } from '../gameDataStore';
+import { getSkillIds, getAllOperatorIds, getEnabledStatusEvents, getOperatorBase } from '../gameDataStore';
 import { getWeaponEffectDefs, getGearEffectDefs } from '../gameDataStore';
 import type { NormalizedEffectDef } from '../gameDataStore';
 import { LoadoutProperties } from '../../view/InformationPane';
@@ -25,6 +25,27 @@ import { resolveValueNode, DEFAULT_VALUE_CONTEXT, buildContextForSkillColumn } f
 import type { ValueResolutionContext } from '../calculation/valueResolver';
 import { findClauseTriggerMatches, statusIdToColumnId } from './triggerMatch';
 import type { TriggerMatch, TriggerEffect, Predicate } from './triggerMatch';
+
+// ── Talent level resolution ─────────────────────────────────────────────────
+
+/**
+ * Resolve the talent level for a status def, based on which talent slot it belongs to.
+ * Checks if the def's ID or originId matches the operator's talent one or two.
+ */
+function resolveTalentLevel(def: StatusEventDef, ctx: DeriveContext): number {
+  const props = ctx.loadoutProperties?.operator;
+  if (!props) return 0;
+  const op = getOperatorBase(ctx.operatorId);
+  if (!op) return props.talentOneLevel;
+  const talentOneId = op.talents.one?.id;
+  const talentTwoId = op.talents.two?.id;
+  const defId = def.properties.id;
+  const originId = def.metadata?.originId;
+  if (defId === talentTwoId || originId === talentTwoId) return props.talentTwoLevel;
+  if (defId === talentOneId || originId === talentOneId) return props.talentOneLevel;
+  // Default to talent one
+  return props.talentOneLevel;
+}
 
 // ── Types from JSON ─────────────────────────────────────────────────────────
 
@@ -152,7 +173,7 @@ function resolveClauseDimensionKey(
     return best;
   }
   if (dim === 'TALENT_LEVEL' || dim === 'INTELLECT') {
-    const talentLevel = 1 // TODO: resolve talent level from DSL;
+    const talentLevel = resolveTalentLevel(def, ctx);
     let best: string | undefined;
     let bestN = 0;
     for (const k of keys) {
@@ -234,7 +255,7 @@ function resolveClauseEffectsFromClauses(
             return arr[Math.min(skillLevel, arr.length) - 1] ?? arr[0];
           }
           if (dims === 'TALENT_LEVEL' || dims === 'INTELLECT') {
-            const talentLevel = 1 // TODO: resolve talent level from DSL;
+            const talentLevel = resolveTalentLevel(def, ctx);
             return arr[Math.min(talentLevel, arr.length) - 1] ?? arr[0];
           }
           return undefined;
@@ -331,7 +352,7 @@ function resolveOwnerId(
   if (target === NounType.OPERATOR) {
     switch (determiner ?? DeterminerType.THIS) {
       case DeterminerType.THIS: return operatorSlotId;
-      case DeterminerType.ALL: return COMMON_OWNER_ID;
+      case DeterminerType.ALL: return operatorSlotId; // ALL handled by caller loop, not here
       case DeterminerType.OTHER: return targetOwnerId ?? operatorSlotId;
       case DeterminerType.ANY: return targetOwnerId ?? operatorSlotId;
       case DeterminerType.TRIGGER: return triggerOwnerId ?? operatorSlotId;
@@ -478,7 +499,7 @@ function deriveStatusEvents(
     .flatMap(e => e.effects ?? [])
     .find(e => e.verb === VerbType.APPLY && e.object === NounType.STATUS && e.objectId);
   // For TALENT-type defs, also check direct APPLY STATUS effects (e.g. IMPROVISER_TALENT → IMPROVISER)
-  const directApply = !nestedApply && (def.properties.eventCategoryType ?? def.properties.type) === 'TALENT'
+  const directApply = !nestedApply && (def.properties.eventCategoryType ?? def.properties.type) === EventCategoryType.TALENT
     ? (def.onTriggerClause ?? [])
         .flatMap(c => (c.effects ?? []) as unknown as Effect[])
         .find(e => e.verb === VerbType.APPLY && e.object === NounType.STATUS && e.objectId)
@@ -683,7 +704,7 @@ function deriveStatusEvents(
         const resolved: Record<string, number> = {};
         for (const [element, values] of Object.entries(outputDef.properties.susceptibility)) {
           const arr = values as number[];
-          const talentLevel = 1; // TODO: resolve talent level from DSL
+          const talentLevel = resolveTalentLevel(outputDef, ctx);
           resolved[element] = arr[Math.min(talentLevel, arr.length) - 1] ?? arr[0];
         }
         ev.susceptibility = resolved;
@@ -846,6 +867,8 @@ function evaluateLifecycleForEvent(
       parentEventEndFrame: parentEndFrame,
       parentSegmentEndFrame: segmentEndFrame,
       critMode,
+      // The slot where the status event currently lives (for self-consumption)
+      currentOwnerId: statusEv.ownerId,
     };
   };
 
@@ -869,29 +892,49 @@ function evaluateLifecycleForEvent(
   // onTriggerClause: for each clause, find matching events during the status's active window
   if (def.onTriggerClause) {
     for (const clause of def.onTriggerClause) {
+      // RECEIVE conditions: find events in a matching column
       const receiveConds = clause.conditions.filter(
         (c: Predicate) => c.verb === VerbType.RECEIVE
       );
-      if (receiveConds.length === 0) continue;
-
-      const receiveCond = receiveConds[0];
-      const targetColumnId = resolveReceiveColumnId(receiveCond);
-      if (!targetColumnId) continue;
-
-      const triggerEvents = result.filter(ev =>
-        ev.columnId === targetColumnId &&
-        ev.startFrame >= statusEv.startFrame &&
-        ev.startFrame < parentEndFrame
+      // PERFORM conditions: find skill events with matching frame effects
+      const performConds = clause.conditions.filter(
+        (c: Predicate) => c.verb === VerbType.PERFORM
       );
+      if (receiveConds.length === 0 && performConds.length === 0) continue;
 
-      for (const triggerEv of triggerEvents) {
+      let triggerFrames: number[] = [];
+
+      if (receiveConds.length > 0) {
+        const receiveCond = receiveConds[0];
+        const targetColumnId = resolveReceiveColumnId(receiveCond);
+        if (!targetColumnId) continue;
+
+        triggerFrames = result
+          .filter(ev =>
+            ev.columnId === targetColumnId &&
+            ev.startFrame >= statusEv.startFrame &&
+            ev.startFrame < parentEndFrame
+          )
+          .map(ev => ev.startFrame);
+      } else if (performConds.length > 0) {
+        // Find frames where PERFORM FINAL_STRIKE (or other skill types) occur
+        triggerFrames = collectPerformTriggerFrames(
+          performConds[0] as unknown as Interaction,
+          result,
+          statusEv.startFrame,
+          parentEndFrame,
+          sourceOwnerId,
+        );
+      }
+
+      for (const triggerFrame of triggerFrames) {
         const condCtx: ConditionContext = {
           events: result,
-          frame: triggerEv.startFrame,
+          frame: triggerFrame,
           sourceOwnerId,
         };
         if (!evaluateConditions(clause.conditions as unknown as Interaction[], condCtx)) continue;
-        const execCtx = makeExecCtx(triggerEv.startFrame);
+        const execCtx = makeExecCtx(triggerFrame);
         const mutations = executeEffects(clause.effects as unknown as SemanticEffect[], execCtx);
         if (!mutations.failed) {
           result = applyMutations(result, mutations);
@@ -946,6 +989,50 @@ function resolveReceiveColumnId(cond: Predicate): string | undefined {
       ?? cond.objectId;
   }
   return undefined;
+}
+
+/**
+ * Collect frames where a PERFORM condition is satisfied within a time window.
+ *
+ * Scans frame clauses for PERFORM effects matching the condition's object
+ * (e.g. FINAL_STRIKE, FINISHER). This is DSL-driven — frameTypes are derived
+ * from PERFORM effects, so we scan the source effects directly.
+ */
+function collectPerformTriggerFrames(
+  cond: Interaction,
+  events: TimelineEvent[],
+  windowStart: number,
+  windowEnd: number,
+  operatorSlotId: string,
+): number[] {
+  const frames: number[] = [];
+  const targetObject = cond.object;
+  const det = cond.subjectDeterminer ?? DeterminerType.THIS;
+
+  for (const ev of events) {
+    // THIS: only check the defining operator's own events
+    // CONTROLLED: accept from any operator (controlled can be any slot)
+    if (det === DeterminerType.THIS && ev.ownerId !== operatorSlotId) continue;
+    if (!ev.segments) continue;
+
+    let cumulativeOffset = 0;
+    for (const seg of ev.segments) {
+      if (seg.frames) {
+        for (const frame of seg.frames) {
+          const hasPerform = frame.frameTypes?.includes(targetObject as unknown as EventFrameType);
+          if (!hasPerform) continue;
+
+          const absFrame = frame.absoluteFrame ?? (ev.startFrame + cumulativeOffset + frame.offsetFrame);
+          if (absFrame >= windowStart && absFrame < windowEnd) {
+            frames.push(absFrame);
+          }
+        }
+      }
+      cumulativeOffset += seg.properties.duration;
+    }
+  }
+
+  return frames.sort((a, b) => a - b);
 }
 
 // ── Public API ──────────────────────────────────────────────────────────────
@@ -1025,7 +1112,7 @@ export function deriveStatusesFromEngine(
 
       // TALENT type: create a permanent presence event on the operator's timeline.
       // The talent event is separate from the trigger effects (e.g. absorption → MF).
-      if ((def.properties.eventCategoryType ?? def.properties.type) === 'TALENT') {
+      if ((def.properties.eventCategoryType ?? def.properties.type) === EventCategoryType.TALENT) {
         const talentDuration = def.properties.duration;
         const talentDurationFrames = talentDuration ? getDurationFrames(talentDuration) : TOTAL_FRAMES;
         const talentOwnerId = resolveOwnerId(def.properties.target, slotId, operatorSlotMap, def.properties.targetDeterminer);
@@ -1073,9 +1160,9 @@ export function deriveStatusesFromEngine(
 
   const equipDefs: { slotId: string; def: StatusEventDef }[] = [];
   if (slotWeapons) {
-    for (const [slotId, weaponName] of Object.entries(slotWeapons)) {
-      if (!weaponName) continue;
-      for (const raw of getWeaponEffectDefs(weaponName)) {
+    for (const [slotId, weaponId] of Object.entries(slotWeapons)) {
+      if (!weaponId) continue;
+      for (const raw of getWeaponEffectDefs(weaponId)) {
         equipDefs.push({ slotId, def: normalizeEquipDef(raw) });
       }
     }
@@ -1189,7 +1276,7 @@ export function collectEngineTriggerEntries(
       if (skipDefNames?.has(def.properties.id)) continue;
 
       // TALENT type: permanent presence event (check BEFORE final-strike skip)
-      if ((def.properties.eventCategoryType ?? def.properties.type) === 'TALENT') {
+      if ((def.properties.eventCategoryType ?? def.properties.type) === EventCategoryType.TALENT) {
         const talentDuration = def.properties.duration;
         const talentDurationFrames = talentDuration ? getDurationFrames(talentDuration) : TOTAL_FRAMES;
         const talentOwnerId = resolveOwnerId(def.properties.target, slotId, operatorSlotMap, def.properties.targetDeterminer);
@@ -1216,7 +1303,7 @@ export function collectEngineTriggerEntries(
       // Weapon/gear defs often have output effects in `clause` rather than `onTriggerClause[].effects`.
       const hasEffects = def.onTriggerClause.some(c => c.effects && c.effects.length > 0);
       const hasClauseEffects = (def.clause as { effects?: unknown[] }[] | undefined)?.some(c => c.effects && c.effects.length > 0);
-      if (!hasEffects && !hasClauseEffects && (def.properties.eventCategoryType ?? def.properties.type) !== 'TALENT') continue;
+      if (!hasEffects && !hasClauseEffects && (def.properties.eventCategoryType ?? def.properties.type) !== EventCategoryType.TALENT) continue;
 
       // Use the unified verb-handler registry to find trigger matches for ALL verb types.
       // HAVE conditions are extracted and deferred to queue-time evaluation — they must
@@ -1226,9 +1313,18 @@ export function collectEngineTriggerEntries(
         c.conditions.filter((p: Predicate) => p.verb === VerbType.HAVE)
       );
 
-      // Check if any clause has a PERCENTAGE_HP condition — these need periodic evaluation
+      // Check if any clause has an HP% condition — these need periodic evaluation
       // since HP changes on every damage tick, not at discrete event frames.
-      const hasHpThreshold = haveConds.some((c: Predicate) => c.object === NounType.PERCENTAGE_HP);
+      // Supports both PERCENTAGE_HP (legacy) and HP with unit PERCENTAGE (value+unit wrapper).
+      const hasHpThreshold = haveConds.some((c: Predicate) => {
+        if (c.object === NounType.PERCENTAGE_HP) return true;
+        if (c.object === NounType.HP) {
+          const w = (c as unknown as Record<string, unknown>).with as Record<string, unknown> | undefined;
+          const v = w?.value as Record<string, unknown> | undefined;
+          return v?.unit === UnitType.PERCENTAGE;
+        }
+        return false;
+      });
 
       // Strip HAVE conditions from clauses for matching — they'll be re-evaluated at queue time.
       const strippedClauses = haveConds.length > 0
@@ -1287,10 +1383,10 @@ export function collectEngineTriggerEntries(
   }
 
   if (slotWeapons) {
-    for (const [slotId, weaponName] of Object.entries(slotWeapons)) {
-      if (!weaponName) continue;
+    for (const [slotId, weaponId] of Object.entries(slotWeapons)) {
+      if (!weaponId) continue;
       const opId = slotOperatorMap ? Object.entries(slotOperatorMap).find(([s]) => s === slotId)?.[1] : undefined;
-      processDefsForSlot(slotId, opId ?? '', getWeaponEffectDefs(weaponName).map(normalizeEquipDef), true);
+      processDefsForSlot(slotId, opId ?? '', getWeaponEffectDefs(weaponId).map(normalizeEquipDef), true);
     }
   }
   if (slotGearSets) {

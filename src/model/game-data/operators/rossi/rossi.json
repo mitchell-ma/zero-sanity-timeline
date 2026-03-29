@@ -18,7 +18,10 @@
   },
   "statsByLevel": [],
   "potentials": [],
-  "dataSources": [
-    "END_AXIS"
-  ]
+  "metadata": {
+    "originId": "ROSSI",
+    "dataSources": [
+      "END_AXIS"
+    ]
+  }
 }

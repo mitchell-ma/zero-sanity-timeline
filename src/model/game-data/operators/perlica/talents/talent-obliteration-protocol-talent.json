@@ -33,13 +33,13 @@
   ],
   "properties": {
     "id": "OBLITERATION_PROTOCOL_TALENT",
+    "maxLevel": { "verb": "IS", "value": 2 },
     "name": "Obliteration Protocol (Talent)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
     "eventCategoryType": "TALENT",
-    "description": "DMG Dealt +30% to Staggered enemies.",
-    "maxLevel": 2
+    "description": "DMG Dealt +30% to Staggered enemies."
   },
   "metadata": {
     "originId": "PERLICA",

@@ -1,0 +1,17 @@
+{
+  "properties": {
+    "id": "WEAKNESS",
+    "name": "Weakness",
+    "to": "ENEMY",
+    "stacks": {
+      "limit": { "verb": "IS", "value": 1 },
+      "interactionType": "RESET"
+    },
+    "eventType": "STATUS",
+    "eventCategoryType": "STATUS",
+    "description": "Reduces damage dealt by enemy."
+  },
+  "metadata": {
+    "originId": "generic"
+  }
+}

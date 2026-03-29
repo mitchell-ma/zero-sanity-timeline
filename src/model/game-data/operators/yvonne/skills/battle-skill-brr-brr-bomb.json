@@ -48,11 +48,28 @@
           "clause": [
             {
               "conditions": [
-                { "subject": "ENEMY", "verb": "HAVE", "object": "STATUS", "objectId": "INFLICTION", "objectQualifier": "CRYO" }
+                {
+                  "subject": "ENEMY",
+                  "verb": "HAVE",
+                  "object": "STATUS",
+                  "objectId": "INFLICTION",
+                  "objectQualifier": "CRYO"
+                }
               ],
               "effects": [
-                { "verb": "CONSUME", "object": "INFLICTION", "objectQualifier": "ARTS", "from": "ENEMY" },
-                { "verb": "APPLY", "object": "STATUS", "objectId": "PHYSICAL", "objectQualifier": "SOLIDIFICATION", "to": "ENEMY" },
+                {
+                  "verb": "CONSUME",
+                  "object": "INFLICTION",
+                  "objectQualifier": "ARTS",
+                  "from": "ENEMY"
+                },
+                {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "PHYSICAL",
+                  "objectQualifier": "SOLIDIFICATION",
+                  "to": "ENEMY"
+                },
                 {
                   "verb": "DEAL",
                   "object": "STAGGER",
@@ -90,34 +107,6 @@
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
                     },
-                    "atkScaleLayer": {
-                      "verb": "VARY_BY",
-                      "object": "SKILL_LEVEL",
-                      "value": [
-                        0.89,
-                        0.98,
-                        1.07,
-                        1.16,
-                        1.24,
-                        1.33,
-                        1.42,
-                        1.51,
-                        1.6,
-                        1.71,
-                        1.85,
-                        2
-                      ],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
-                    },
-                    "uspBase": {
-                      "verb": "IS",
-                      "value": 10
-                    },
-                    "uspLayer": {
-                      "verb": "IS",
-                      "value": 30
-                    },
                     "value": {
                       "verb": "VARY_BY",
                       "object": "SKILL_LEVEL",
@@ -135,6 +124,13 @@
                         2.3,
                         2.5
                       ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
                     }
@@ -144,11 +140,28 @@
             },
             {
               "conditions": [
-                { "subject": "ENEMY", "verb": "HAVE", "object": "STATUS", "objectId": "INFLICTION", "objectQualifier": "NATURE" }
+                {
+                  "subject": "ENEMY",
+                  "verb": "HAVE",
+                  "object": "STATUS",
+                  "objectId": "INFLICTION",
+                  "objectQualifier": "NATURE"
+                }
               ],
               "effects": [
-                { "verb": "CONSUME", "object": "INFLICTION", "objectQualifier": "ARTS", "from": "ENEMY" },
-                { "verb": "APPLY", "object": "STATUS", "objectId": "PHYSICAL", "objectQualifier": "SOLIDIFICATION", "to": "ENEMY" },
+                {
+                  "verb": "CONSUME",
+                  "object": "INFLICTION",
+                  "objectQualifier": "ARTS",
+                  "from": "ENEMY"
+                },
+                {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "PHYSICAL",
+                  "objectQualifier": "SOLIDIFICATION",
+                  "to": "ENEMY"
+                },
                 {
                   "verb": "DEAL",
                   "object": "STAGGER",
@@ -186,34 +199,6 @@
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
                     },
-                    "atkScaleLayer": {
-                      "verb": "VARY_BY",
-                      "object": "SKILL_LEVEL",
-                      "value": [
-                        0.89,
-                        0.98,
-                        1.07,
-                        1.16,
-                        1.24,
-                        1.33,
-                        1.42,
-                        1.51,
-                        1.6,
-                        1.71,
-                        1.85,
-                        2
-                      ],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
-                    },
-                    "uspBase": {
-                      "verb": "IS",
-                      "value": 10
-                    },
-                    "uspLayer": {
-                      "verb": "IS",
-                      "value": 30
-                    },
                     "value": {
                       "verb": "VARY_BY",
                       "object": "SKILL_LEVEL",
@@ -231,6 +216,13 @@
                         2.3,
                         2.5
                       ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
                     }
@@ -278,34 +270,6 @@
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
                     },
-                    "atkScaleLayer": {
-                      "verb": "VARY_BY",
-                      "object": "SKILL_LEVEL",
-                      "value": [
-                        0.89,
-                        0.98,
-                        1.07,
-                        1.16,
-                        1.24,
-                        1.33,
-                        1.42,
-                        1.51,
-                        1.6,
-                        1.71,
-                        1.85,
-                        2
-                      ],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
-                    },
-                    "uspBase": {
-                      "verb": "IS",
-                      "value": 10
-                    },
-                    "uspLayer": {
-                      "verb": "IS",
-                      "value": 30
-                    },
                     "value": {
                       "verb": "VARY_BY",
                       "object": "SKILL_LEVEL",
@@ -323,6 +287,13 @@
                         2.3,
                         2.5
                       ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
                     }

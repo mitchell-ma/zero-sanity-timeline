@@ -39,7 +39,7 @@
           "subjectDeterminer": "THIS",
           "subject": "OPERATOR",
           "verb": "APPLY",
-          "object": "ARTS_REACTION"
+          "object": "STATUS", "objectId": "ARTS_REACTION"
         }
       ],
       "effects": [

@@ -5,7 +5,7 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "BUFF",
+          "object": "STATUS", "objectId": "BUFF",
           "objectId": "GILBERTA_POTENTIAL5_SPECIAL_MAIL",
           "toDeterminer": "THIS",
           "to": "OPERATOR"

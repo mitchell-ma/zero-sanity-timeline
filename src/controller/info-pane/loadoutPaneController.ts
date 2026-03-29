@@ -308,8 +308,8 @@ export function resolveTactical(
   if (tac) {
     tactical = {
       name: tac.name,
-      modelMaxUses: tac.maxUses,
-      currentMaxUses: stats.tacticalMaxUses ?? tac.maxUses,
+      modelMaxUses: tac.resolvedUsageLimit,
+      currentMaxUses: stats.tacticalMaxUses ?? tac.resolvedUsageLimit,
     };
   }
 

@@ -100,11 +100,13 @@ export function computeStatusViewOverrides(
   for (const col of columns) {
     if (col.type !== 'mini-timeline' || !col.microColumns) continue;
 
-    const matchSet = col.matchColumnIds ? new Set(col.matchColumnIds) : null;
-    const colEvents = events.filter(
-      (ev) => ev.ownerId === col.ownerId &&
-        (matchSet ? matchSet.has(ev.columnId) : ev.columnId === col.columnId),
-    );
+    const colEvents = col.matchAllExcept
+      ? events.filter(ev => ev.ownerId === col.ownerId && !col.matchAllExcept!.has(ev.columnId))
+      : (() => {
+        const matchSet = col.matchColumnIds ? new Set(col.matchColumnIds) : null;
+        return events.filter(ev => ev.ownerId === col.ownerId &&
+          (matchSet ? matchSet.has(ev.columnId) : ev.columnId === col.columnId));
+      })();
 
     const byType = new Map<string, TimelineEvent[]>();
     for (const ev of colEvents) {
@@ -194,12 +196,14 @@ function computeGreedySlotAssignments(
     if (col.type !== 'mini-timeline' || !col.reuseExpiredSlots || !col.microColumns) continue;
     const microCount = col.microColumns.length;
 
-    const matchSet = col.matchColumnIds ? new Set(col.matchColumnIds) : null;
-    const colEvents = events.filter(
-      (ev) => ev.ownerId === col.ownerId &&
-        (matchSet ? matchSet.has(ev.columnId) : ev.columnId === col.columnId),
-    );
-    const sorted = [...colEvents].sort((a, b) => a.startFrame - b.startFrame);
+    const colEvents2 = col.matchAllExcept
+      ? events.filter(ev => ev.ownerId === col.ownerId && !col.matchAllExcept!.has(ev.columnId))
+      : (() => {
+        const ms = col.matchColumnIds ? new Set(col.matchColumnIds) : null;
+        return events.filter(ev => ev.ownerId === col.ownerId &&
+          (ms ? ms.has(ev.columnId) : ev.columnId === col.columnId));
+      })();
+    const sorted = [...colEvents2].sort((a, b) => a.startFrame - b.startFrame);
     for (const ev of sorted) {
       let activeCount = 0;
       for (const other of sorted) {
@@ -393,6 +397,7 @@ export interface ColumnViewModel {
 // Used by external callers (e.g. tests, future incremental updates)
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function getEventsForColumn(col: MiniTimeline, events: TimelineEvent[]): TimelineEvent[] {
+  if (col.matchAllExcept) return events.filter(ev => ev.ownerId === col.ownerId && !col.matchAllExcept!.has(ev.columnId));
   if (col.matchColumnIds) {
     const matchSet = new Set(col.matchColumnIds);
     return events.filter(
@@ -415,6 +420,15 @@ function getEventsForColumnGrouped(
   col: MiniTimeline,
   grouped: Map<string, TimelineEvent[]>,
 ): TimelineEvent[] {
+  if (col.matchAllExcept) {
+    const result: TimelineEvent[] = [];
+    grouped.forEach((arr, key) => {
+      if (!key.startsWith(`${col.ownerId}\0`)) return;
+      const colId = key.slice(col.ownerId.length + 1);
+      if (!col.matchAllExcept!.has(colId)) result.push(...arr);
+    });
+    return result;
+  }
   if (col.matchColumnIds) {
     const result: TimelineEvent[] = [];
     for (const cid of col.matchColumnIds) {

@@ -5,7 +5,7 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "BUFF",
+          "object": "STATUS", "objectId": "BUFF",
           "objectId": "buff_chr_0027_tangtang_potential_5_effect",
           "toDeterminer": "THIS",
           "to": "OPERATOR"

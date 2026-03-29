@@ -27,6 +27,13 @@
               ],
               "ofDeterminer": "THIS",
               "of": "OPERATOR"
+            },
+            "mainStat": {
+              "verb": "IS",
+              "object": "STAT",
+              "objectId": "ATTACK",
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
             }
           }
         }
@@ -35,13 +42,13 @@
   ],
   "properties": {
     "id": "SUBDUER_OF_EVIL_TALENT",
+    "maxLevel": { "verb": "IS", "value": 2 },
     "name": "Subduer of Evil (Talent)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
     "eventCategoryType": "TALENT",
-    "description": "Applying Knock Down also deals 100% ATK of Physical DMG.",
-    "maxLevel": 2
+    "description": "Applying Knock Down also deals 100% ATK of Physical DMG."
   },
   "metadata": {
     "originId": "LIFENG",

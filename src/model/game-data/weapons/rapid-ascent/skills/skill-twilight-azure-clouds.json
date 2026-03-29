@@ -32,7 +32,7 @@
         },
         {
           "verb": "APPLY",
-          "object": "dmg_up",
+          "object": "STAT", "objectId": "DAMAGE_BONUS",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {

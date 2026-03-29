@@ -3,32 +3,42 @@
     {
       "conditions": [
         {
-          "subject": "ENEMY",
-          "verb": "IS",
-          "object": "ELECTRIFIED"
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "APPLY",
+          "object": "REACTION",
+          "objectId": "ELECTRIFICATION",
+          "to": "ENEMY"
         }
       ],
       "effects": [
         {
           "verb": "APPLY",
           "object": "STATUS",
-          "objectId": "PULSER_LABS_ELECTRIC"
+          "objectId": "PULSER_LABS_ELECTRIC",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
         }
       ]
     },
     {
       "conditions": [
         {
-          "subject": "ENEMY",
-          "verb": "IS",
-          "object": "SOLIDIFIED"
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "APPLY",
+          "object": "REACTION",
+          "objectId": "SOLIDIFICATION",
+          "to": "ENEMY"
         }
       ],
       "effects": [
         {
           "verb": "APPLY",
           "object": "STATUS",
-          "objectId": "PULSER_LABS_CRYO"
+          "objectId": "PULSER_LABS_CRYO",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
         }
       ]
     }

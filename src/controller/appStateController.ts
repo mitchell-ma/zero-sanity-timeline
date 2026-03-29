@@ -294,7 +294,15 @@ export function findEventDefaults(
   );
   if (!col) return null;
   const variant = col.eventVariants?.find((v) => v.id === ev.id);
-  if (variant) return variant;
+  if (variant) {
+    if (ev.segmentOrigin && variant.segments) {
+      return {
+        ...variant,
+        segments: ev.segmentOrigin.map((i) => variant.segments![i]).filter(Boolean),
+      };
+    }
+    return variant;
+  }
   // Check micro-column defaults (e.g. combustion within the enemy status column)
   if (col.microColumns) {
     const mc = col.microColumns.find((m) => m.id === ev.columnId);

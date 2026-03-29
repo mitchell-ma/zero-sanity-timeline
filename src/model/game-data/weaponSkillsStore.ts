@@ -7,15 +7,13 @@
  * Named skills (per-weapon) are in <weapon>-skills.json with metadata.originId.
  */
 import type { Interaction } from '../../dsl/semantics';
+import { NounType, DeterminerType, VerbType } from '../../dsl/semantics';
+import { EventType, EventCategoryType, StackInteractionType } from '../../consts/enums';
 import type { ClauseEffect, ClausePredicate } from './weaponStatusesStore';
 import { resolveEffectStat } from '../enums/stats';
-import { checkKeys, VALID_VALUE_NODE_KEYS, VALID_CLAUSE_KEYS, VALID_METADATA_KEYS } from './validationUtils';
+import { checkKeys, VALID_VALUE_NODE_KEYS, VALID_CLAUSE_KEYS, VALID_METADATA_KEYS, VALID_EFFECT_KEYS, VALID_EFFECT_WITH_KEYS, VALID_TRIGGER_CONDITION_KEYS, validateEffect as validateEffectSemantics } from './validationUtils';
 
 // ── Validation ──────────────────────────────────────────────────────────────
-
-const VALID_EFFECT_KEYS = new Set(['verb', 'object', 'objectQualifier', 'objectId', 'to', 'toDeterminer', 'with']);
-const VALID_EFFECT_WITH_KEYS = new Set(['multiplier', 'value']);
-const VALID_TRIGGER_CONDITION_KEYS = new Set(['subjectDeterminer', 'subject', 'verb', 'object', 'objectId', 'element']);
 const VALID_PROPERTIES_KEYS = new Set(['id', 'name', 'description']);
 const VALID_TOP_KEYS = new Set(['clause', 'onTriggerClause', 'properties', 'metadata']);
 
@@ -26,10 +24,11 @@ function validateValueNode(wv: Record<string, unknown>, path: string): string[] 
   return errors;
 }
 
-function validateEffect(ef: Record<string, unknown>, path: string): string[] {
+function validateLocalEffect(ef: Record<string, unknown>, path: string): string[] {
   const errors = checkKeys(ef, VALID_EFFECT_KEYS, path);
   if (typeof ef.verb !== 'string') errors.push(`${path}.verb: must be a string`);
   if (typeof ef.object !== 'string') errors.push(`${path}.object: must be a string`);
+  errors.push(...validateEffectSemantics(ef, path));
   if (ef.with) {
     const w = ef.with as Record<string, unknown>;
     errors.push(...checkKeys(w, VALID_EFFECT_WITH_KEYS, `${path}.with`));
@@ -43,7 +42,7 @@ function validateClause(clause: Record<string, unknown>, path: string): string[]
   const errors = checkKeys(clause, VALID_CLAUSE_KEYS, path);
   if (!Array.isArray(clause.conditions)) errors.push(`${path}.conditions: must be an array`);
   if (!Array.isArray(clause.effects)) errors.push(`${path}.effects: must be an array`);
-  else (clause.effects as Record<string, unknown>[]).forEach((ef, i) => errors.push(...validateEffect(ef, `${path}.effects[${i}]`)));
+  else (clause.effects as Record<string, unknown>[]).forEach((ef, i) => errors.push(...validateLocalEffect(ef, `${path}.effects[${i}]`)));
   return errors;
 }
 
@@ -53,7 +52,7 @@ function validateTriggerClause(clause: Record<string, unknown>, path: string): s
   else (clause.conditions as Record<string, unknown>[]).forEach((c, i) => errors.push(...checkKeys(c, VALID_TRIGGER_CONDITION_KEYS, `${path}.conditions[${i}]`)));
   if (clause.effects) {
     if (!Array.isArray(clause.effects)) errors.push(`${path}.effects: must be an array`);
-    else (clause.effects as Record<string, unknown>[]).forEach((ef, i) => errors.push(...validateEffect(ef, `${path}.effects[${i}]`)));
+    else (clause.effects as Record<string, unknown>[]).forEach((ef, i) => errors.push(...validateLocalEffect(ef, `${path}.effects[${i}]`)));
   }
   return errors;
 }
@@ -97,6 +96,7 @@ export interface TriggerClause {
 
 /** A weapon skill definition. Maps 1:1 to the JSON shape. */
 export class WeaponSkill {
+  readonly id: string;
   readonly clause: ClausePredicate[];
   readonly onTriggerClause: TriggerClause[];
   readonly name: string;
@@ -107,6 +107,7 @@ export class WeaponSkill {
     const props = (json.properties ?? {}) as Record<string, unknown>;
     const meta = (json.metadata ?? {}) as Record<string, unknown>;
 
+    this.id = (props.id ?? '') as string;
     this.clause = (json.clause ?? []) as ClausePredicate[];
     this.onTriggerClause = (json.onTriggerClause ?? []) as TriggerClause[];
     this.name = (props.name ?? '') as string;
@@ -143,6 +144,26 @@ export class WeaponSkill {
         ...(this.description ? { description: this.description } : {}),
       },
       ...(this.originId ? { metadata: { originId: this.originId } } : {}),
+    };
+  }
+
+  /** Serialize as a talent-shaped trigger source def for the event pipeline. */
+  serializeAsTriggerDef(): Record<string, unknown> {
+    return {
+      ...(this.clause.length > 0 ? { clause: this.clause } : {}),
+      ...(this.onTriggerClause.length > 0 ? { onTriggerClause: this.onTriggerClause } : {}),
+      properties: {
+        id: this.id,
+        name: this.name,
+        target: NounType.OPERATOR,
+        targetDeterminer: DeterminerType.THIS,
+        stacks: { limit: { verb: VerbType.IS, value: 1 }, interactionType: StackInteractionType.NONE },
+        eventType: EventType.STATUS,
+        eventCategoryType: EventCategoryType.TALENT,
+      },
+      metadata: {
+        ...(this.originId ? { originId: this.originId } : {}),
+      },
     };
   }
 

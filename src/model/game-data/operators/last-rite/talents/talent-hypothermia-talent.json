@@ -15,8 +15,9 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "CRYO_SUSCEPTIBILITY",
-          "objectType": "STATUS",
+          "object": "STATUS",
+          "objectId": "SUSCEPTIBILITY",
+          "objectQualifier": "CRYO",
           "to": "ENEMY",
           "with": {
             "value": {
@@ -43,13 +44,13 @@
   ],
   "properties": {
     "id": "HYPOTHERMIA_TALENT",
+    "maxLevel": { "verb": "IS", "value": 2 },
     "name": "Hypothermia (Talent)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
     "eventCategoryType": "TALENT",
-    "description": "After Last Rite consumes any Arts Infliction, she applies Cryo Susceptibility to the target with the effect of [Number of Arts Infliction stacks consumed × 4%] for 15s. This effect cannot stack.",
-    "maxLevel": 2
+    "description": "After Last Rite consumes any Arts Infliction, she applies Cryo Susceptibility to the target with the effect of [Number of Arts Infliction stacks consumed × 4%] for 15s. This effect cannot stack."
   },
   "metadata": {
     "originId": "LAST_RITE",

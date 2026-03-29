@@ -19,7 +19,7 @@
           "effects": [
             {
               "verb": "APPLY",
-              "object": "SLOW",
+              "object": "STATUS", "objectId": "SLOW",
               "to": "ENEMY",
               "with": {
                 "value": {

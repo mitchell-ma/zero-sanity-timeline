@@ -85,26 +85,6 @@
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
                     },
-                    "atkScale_3": {
-                      "verb": "VARY_BY",
-                      "object": "SKILL_LEVEL",
-                      "value": [
-                        4,
-                        4.4,
-                        4.8,
-                        5.2,
-                        5.6,
-                        6,
-                        6.4,
-                        6.8,
-                        7.2,
-                        7.7,
-                        8.3,
-                        9
-                      ],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
-                    },
                     "poiseExtra": {
                       "verb": "IS",
                       "value": 10
@@ -133,6 +113,13 @@
                         3.04,
                         3.3
                       ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
                     }
@@ -197,26 +184,6 @@
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
                     },
-                    "atkScale_3": {
-                      "verb": "VARY_BY",
-                      "object": "SKILL_LEVEL",
-                      "value": [
-                        4,
-                        4.4,
-                        4.8,
-                        5.2,
-                        5.6,
-                        6,
-                        6.4,
-                        6.8,
-                        7.2,
-                        7.7,
-                        8.3,
-                        9
-                      ],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
-                    },
                     "value": {
                       "verb": "VARY_BY",
                       "object": "SKILL_LEVEL",
@@ -234,6 +201,13 @@
                         3.04,
                         3.3
                       ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
                     }
@@ -265,8 +239,8 @@
                   "verb": "CONSUME",
                   "object": "STATUS",
                   "objectId": "MELTING_FLAME",
-                  "to": "OPERATOR",
-                  "toDeterminer": "THIS",
+                  "fromDeterminer": "THIS",
+                  "from": "OPERATOR",
                   "with": {
                     "stacks": 1
                   }

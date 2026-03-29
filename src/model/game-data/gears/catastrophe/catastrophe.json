@@ -13,7 +13,9 @@
         {
           "verb": "APPLY",
           "object": "STATUS",
-          "objectId": "CATASTROPHE"
+          "objectId": "CATASTROPHE",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
         }
       ]
     }

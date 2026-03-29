@@ -70,13 +70,40 @@
                   "with": {
                     "damageMultiplierIncrement": {
                       "operation": "MULT",
-                      "left": { "verb": "VARY_BY", "object": "SKILL_LEVEL", "value": [1.64, 1.81, 1.97, 2.14, 2.3, 2.47, 2.63, 2.79, 2.96, 3.16, 3.41, 3.7], "ofDeterminer": "THIS", "of": "OPERATOR" },
-                      "right": { "verb": "VARY_BY", "object": "POTENTIAL", "value": [1, 1, 1, 1, 1, 1.2], "ofDeterminer": "THIS", "of": "OPERATOR" }
-                    },
-                    "atkScale_3": {
-                      "operation": "MULT",
-                      "left": { "verb": "VARY_BY", "object": "SKILL_LEVEL", "value": [4, 4.4, 4.8, 5.2, 5.6, 6, 6.4, 6.8, 7.2, 7.7, 8.3, 9], "ofDeterminer": "THIS", "of": "OPERATOR" },
-                      "right": { "verb": "VARY_BY", "object": "POTENTIAL", "value": [1, 1, 1, 1, 1, 1.2], "ofDeterminer": "THIS", "of": "OPERATOR" }
+                      "left": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          1.64,
+                          1.81,
+                          1.97,
+                          2.14,
+                          2.3,
+                          2.47,
+                          2.63,
+                          2.79,
+                          2.96,
+                          3.16,
+                          3.41,
+                          3.7
+                        ],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
+                      },
+                      "right": {
+                        "verb": "VARY_BY",
+                        "object": "POTENTIAL",
+                        "value": [
+                          1,
+                          1,
+                          1,
+                          1,
+                          1,
+                          1.2
+                        ],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
+                      }
                     },
                     "poiseExtra": {
                       "verb": "IS",
@@ -91,8 +118,47 @@
                     },
                     "value": {
                       "operation": "MULT",
-                      "left": { "verb": "VARY_BY", "object": "SKILL_LEVEL", "value": [1.47, 1.61, 1.76, 1.91, 2.05, 2.2, 2.35, 2.49, 2.64, 2.82, 3.04, 3.3], "ofDeterminer": "THIS", "of": "OPERATOR" },
-                      "right": { "verb": "VARY_BY", "object": "POTENTIAL", "value": [1, 1, 1, 1, 1, 1.2], "ofDeterminer": "THIS", "of": "OPERATOR" }
+                      "left": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          1.47,
+                          1.61,
+                          1.76,
+                          1.91,
+                          2.05,
+                          2.2,
+                          2.35,
+                          2.49,
+                          2.64,
+                          2.82,
+                          3.04,
+                          3.3
+                        ],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
+                      },
+                      "right": {
+                        "verb": "VARY_BY",
+                        "object": "POTENTIAL",
+                        "value": [
+                          1,
+                          1,
+                          1,
+                          1,
+                          1,
+                          1.2
+                        ],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
+                      }
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
                     }
                   }
                 }
@@ -137,18 +203,84 @@
                   "with": {
                     "damageMultiplierIncrement": {
                       "operation": "MULT",
-                      "left": { "verb": "VARY_BY", "object": "SKILL_LEVEL", "value": [1.64, 1.81, 1.97, 2.14, 2.3, 2.47, 2.63, 2.79, 2.96, 3.16, 3.41, 3.7], "ofDeterminer": "THIS", "of": "OPERATOR" },
-                      "right": { "verb": "VARY_BY", "object": "POTENTIAL", "value": [1, 1, 1, 1, 1, 1.2], "ofDeterminer": "THIS", "of": "OPERATOR" }
-                    },
-                    "atkScale_3": {
-                      "operation": "MULT",
-                      "left": { "verb": "VARY_BY", "object": "SKILL_LEVEL", "value": [4, 4.4, 4.8, 5.2, 5.6, 6, 6.4, 6.8, 7.2, 7.7, 8.3, 9], "ofDeterminer": "THIS", "of": "OPERATOR" },
-                      "right": { "verb": "VARY_BY", "object": "POTENTIAL", "value": [1, 1, 1, 1, 1, 1.2], "ofDeterminer": "THIS", "of": "OPERATOR" }
+                      "left": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          1.64,
+                          1.81,
+                          1.97,
+                          2.14,
+                          2.3,
+                          2.47,
+                          2.63,
+                          2.79,
+                          2.96,
+                          3.16,
+                          3.41,
+                          3.7
+                        ],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
+                      },
+                      "right": {
+                        "verb": "VARY_BY",
+                        "object": "POTENTIAL",
+                        "value": [
+                          1,
+                          1,
+                          1,
+                          1,
+                          1,
+                          1.2
+                        ],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
+                      }
                     },
                     "value": {
                       "operation": "MULT",
-                      "left": { "verb": "VARY_BY", "object": "SKILL_LEVEL", "value": [1.47, 1.61, 1.76, 1.91, 2.05, 2.2, 2.35, 2.49, 2.64, 2.82, 3.04, 3.3], "ofDeterminer": "THIS", "of": "OPERATOR" },
-                      "right": { "verb": "VARY_BY", "object": "POTENTIAL", "value": [1, 1, 1, 1, 1, 1.2], "ofDeterminer": "THIS", "of": "OPERATOR" }
+                      "left": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          1.47,
+                          1.61,
+                          1.76,
+                          1.91,
+                          2.05,
+                          2.2,
+                          2.35,
+                          2.49,
+                          2.64,
+                          2.82,
+                          3.04,
+                          3.3
+                        ],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
+                      },
+                      "right": {
+                        "verb": "VARY_BY",
+                        "object": "POTENTIAL",
+                        "value": [
+                          1,
+                          1,
+                          1,
+                          1,
+                          1,
+                          1.2
+                        ],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
+                      }
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
                     }
                   }
                 }

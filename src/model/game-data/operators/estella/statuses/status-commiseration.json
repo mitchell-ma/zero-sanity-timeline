@@ -1,12 +1,12 @@
 {
-  "clause": [
+  "onTriggerClause": [
     {
       "conditions": [
         {
           "subjectDeterminer": "THIS",
           "subject": "OPERATOR",
           "verb": "PERFORM",
-          "object": "ONOMATOPOEIA"
+          "object": "COMBO_SKILL"
         }
       ],
       "effects": [
@@ -25,6 +25,11 @@
               "of": "OPERATOR"
             }
           }
+        },
+        {
+          "verb": "CONSUME",
+          "object": "EVENT",
+          "objectDeterminer": "THIS"
         }
       ]
     }

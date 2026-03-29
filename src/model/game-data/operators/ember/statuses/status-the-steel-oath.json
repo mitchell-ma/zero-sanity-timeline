@@ -28,7 +28,7 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "SHIELD",
+          "object": "STATUS", "objectId": "SHIELD",
           "toDeterminer": "ALL",
           "to": "OPERATOR",
           "with": {

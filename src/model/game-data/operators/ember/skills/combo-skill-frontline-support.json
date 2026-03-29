@@ -125,6 +125,13 @@
                       ],
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
                     }
                   }
                 },
@@ -198,9 +205,10 @@
                   "subject": "OPERATOR",
                   "verb": "HAVE",
                   "object": "POTENTIAL",
+                  "cardinalityConstraint": "AT_LEAST",
                   "with": {
                     "value": {
-                      "verb": "AT_LEAST",
+                      "verb": "IS",
                       "value": 3
                     }
                   }

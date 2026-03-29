@@ -19,7 +19,7 @@
               "verb": "APPLY",
               "objectQualifier": "ELECTRIC",
               "object": "SUSCEPTIBILITY",
-              "to": "TARGET",
+              "to": "ENEMY",
               "with": {
                 "value": {
                   "verb": "VARY_BY",
@@ -47,7 +47,7 @@
               "verb": "APPLY",
               "objectQualifier": "HEAT",
               "object": "SUSCEPTIBILITY",
-              "to": "TARGET",
+              "to": "ENEMY",
               "with": {
                 "value": {
                   "verb": "VARY_BY",
@@ -95,7 +95,7 @@
               "verb": "APPLY",
               "objectQualifier": "ELECTRIC",
               "object": "SUSCEPTIBILITY",
-              "to": "TARGET",
+              "to": "ENEMY",
               "with": {
                 "value": {
                   "verb": "VARY_BY",
@@ -123,7 +123,7 @@
               "verb": "APPLY",
               "objectQualifier": "HEAT",
               "object": "SUSCEPTIBILITY",
-              "to": "TARGET",
+              "to": "ENEMY",
               "with": {
                 "value": {
                   "verb": "VARY_BY",

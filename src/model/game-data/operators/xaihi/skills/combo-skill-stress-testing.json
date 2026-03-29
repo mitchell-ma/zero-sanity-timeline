@@ -130,6 +130,36 @@
                       ],
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                },
+                {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "FRAGILITY",
+                  "objectQualifier": "CRYO",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "VARY_BY",
+                      "object": "TALENT_LEVEL",
+                      "value": [0, 0.07, 0.1],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    },
+                    "duration": {
+                      "value": {
+                        "verb": "IS",
+                        "value": 5
+                      },
+                      "unit": "SECOND"
                     }
                   }
                 }
@@ -186,10 +216,14 @@
     {
       "conditions": [
         {
-          "subjectDeterminer": "THIS",
-          "subject": "OPERATOR",
-          "verb": "RECOVER",
-          "object": "HP"
+          "subject": "STATUS",
+          "subjectId": "AUXILIARY_CRYSTAL",
+          "ofSubject": "OPERATOR",
+          "ofDeterminer": "CONTROLLED",
+          "verb": "BECOME",
+          "object": "STACKS",
+          "cardinalityConstraint": "EXACTLY",
+          "value": { "verb": "IS", "value": 0 }
         }
       ]
     }

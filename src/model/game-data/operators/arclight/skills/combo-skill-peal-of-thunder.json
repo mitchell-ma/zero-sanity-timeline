@@ -107,6 +107,13 @@
                       ],
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
                     }
                   }
                 }
@@ -157,6 +164,13 @@
                       ],
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
                     }
                   }
                 }
@@ -189,7 +203,20 @@
                     "value": {
                       "verb": "VARY_BY",
                       "object": "SKILL_LEVEL",
-                      "value": [8, 8, 8, 8, 8, 9, 9, 9, 9, 10, 10, 10],
+                      "value": [
+                        8,
+                        8,
+                        8,
+                        8,
+                        8,
+                        9,
+                        9,
+                        9,
+                        9,
+                        10,
+                        10,
+                        10
+                      ],
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
                     }
@@ -229,6 +256,13 @@
                         1.07,
                         1.17
                       ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
                     }

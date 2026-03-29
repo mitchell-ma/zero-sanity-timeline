@@ -109,9 +109,9 @@ These sets have HP-threshold conditions but are metadata-only with zero clauses:
 
 ### Previously tracked (from earlier review)
 
-1. **Last Rite "Cryogenic Embrittlement"** — talent two is `name`-only. Wiki says "ultimate hits enemies with Cryo Susceptibility: multiply Cryo Susceptibility effectiveness ×1.2/×1.5." This modifier needs to live somewhere — either as a SKILL_PARAMETER in the operator JSON or baked into the ult DSL as a conditional clause (IF ENEMY HAVE CRYO_SUSCEPTIBILITY → APPLY CRYO_SUSCEPTIBILITY_MODIFIER [1.2, 1.5]).
+1. ~~**Last Rite "Cryogenic Embrittlement"**~~ — DONE (2026-03-29): Added onTriggerClause with AMP SUSCEPTIBILITY CRYO x1.2 on PERFORM ULTIMATE.
 
-2. **Pogranichnik "Tactical Instruction"** — talent two is `name`-only. Wiki says "operators triggering ultimate's subsequent effects gain Fervent Morale for 5s/10s." Fervent Morale status already exists (from talent one The Living Banner). This should be baked into the ult DSL — when other operators benefit from the ult, they receive FERVENT_MORALE with duration VARY_BY TALENT_LEVEL [5, 10].
+2. ~~**Pogranichnik "Tactical Instruction"**~~ — DONE (2026-03-29): Added onTriggerClause: ANY OPERATOR CONSUME STEEL_OATH → APPLY FERVENT_MORALE.
 
 ### From 2026-03-26 batch reconciliation (18 operators)
 
@@ -125,7 +125,7 @@ These sets have HP-threshold conditions but are metadata-only with zero clauses:
 
 #### Missing Talent/Status Effects
 
-6. **Da Pan "Salty or Mild"** — Talent not implemented. Wiki: "Prep Ingredients stacks from ultimate final hit, combo cooldown reduction." Needs full talent clause modeling.
+6. ~~**Da Pan "Salty or Mild"**~~ — DONE (2026-03-29): Added simplified onTriggerClause: PERFORM ULTIMATE → APPLY PREP_INGREDIENTS. Full stack-per-enemy-hit and cooldown reduction left as description-only.
 
 #### Structural / Data Issues
 
@@ -140,6 +140,58 @@ These sets have HP-threshold conditions but are metadata-only with zero clauses:
 11. **Multiple operators** — Description template placeholders unresolved ({trigger_hp_ratio:0%}, {extra_scaling}, {duration-1:0%}, etc.). Cosmetic only but should be filled in.
 
 12. **Multiple operators** — Status descriptions copied from skill descriptions instead of describing the status itself (Arclight Wildland Trekker trigger/buff, Endministrator Originium Crystal, Avywenna Thunderlance).
+
+## DSL migrations completed (2026-03-29)
+
+- Non-standard verbs migrated: CAST→PERFORM, INTERRUPT→HAVE CHARGE, RECOVER_SP→RECOVER+SKILL_POINT, RESTORE→RECOVER, HP_BELOW→HAVE HP+AT_MOST, IS_HIT→ENEMY DEAL DAMAGE, TRIGGER→APPLY SHATTER, LESS_THAN→HAVE+AT_MOST, HIT_WITH→description-only
+- AT_LEAST/AT_MOST formalized: moved from ValueNode verbs to cardinalityConstraint on Interaction (~25 occurrences across 13 files)
+- Non-standard `with` keys removed (~40 keys across 27 files)
+- Gilberta PARAMETER conditions normalized: subjectId for param name, verb IS, cardinalityConstraint AT_LEAST
+
+### Disabled configs still needing real data
+- **Rossi**: Both talents (Nicks and Scratches, Seething Blood) + Razor Clawmark status — all `isEnabled: false` with `[0, 0]` placeholder values
+- **Antal**: Improviser talent + Improviser status — `isEnabled: false`
+
+### Talents implemented (2026-03-29)
+- Akekuri Cheer of Victory (SP Recovery scaling)
+- Da Pan Salty or Mild (simplified Prep Ingredients from ult)
+- Last Rite Cryogenic Embrittlement (1.2x Cryo Susceptibility AMP)
+- Perlica Cycle Protocol (extra combo chain on Vulnerable)
+- Pogranichnik Tactical Instruction (Fervent Morale from Steel Oath)
+- Ardelia Friendly Presence (simplified HP recovery on hit)
+- Estella Laziness Pays Off Now (Cryo Infliction ignore + DMG reduction)
+- Estella Commiseration (APPLY SHATTER → COMMISERATION, consumed on combo for SP return)
+- Akekuri LINK duration now scales with P5 (+5s via VARY_BY POTENTIAL)
+
+### Talents left as description-only (passive/probabilistic/spatial)
+- Antal Subconscious Act (30% DMG immunity)
+- Arclight Hannabit Wisdom (50% Arts Infliction ignore)
+- Ardelia Mountainpeak Surfer (spatial recast)
+- Snowshine SAR Professional (RETALIATE verb — no DSL equivalent)
+
+## Integration test plan (423 tests across 19 operators)
+
+Full test plans generated for all untested operators. Plans cover context menu, controller, and view layer assertions.
+
+| Operator | Tests | Key Mechanics |
+|----------|-------|---------------|
+| Ember | 57 | Team shields, Protection, Steel Oath Empowered (P5) |
+| Catcher | 37 | RETURN vs RECOVER SP, dual shield, DEF-scaling P1 |
+| Da Pan | 40 | Lift/Knock Down, Vulnerability trigger, R&T stacking |
+| Lifeng | 30 | LINK consume/bonus-hit, Subduer of Evil chain |
+| Endministrator | 34 | Originium Crystal cycle, teammate combo trigger |
+| Estella | 20 | Solidification trigger, Commiseration from Shatter |
+| Fluorite | 20 | 2+ stack threshold combo, Slow, Unpredictable |
+| Gilberta | 21 | Arts Reaction combo, Gravity Field Lift extension |
+| Alesh | 16 | Cryo→Solidification, Flash-frozen talent |
+| Arclight | 22 | Wildland Trekker counter, empowered activation |
+| Avywenna | 21 | Thunderlance deploy/retrieve exchange |
+| Snowshine | 13 | Protection to all, P5 conditional SP return |
+| Perlica | 16 | Electric infliction, forced Electrification |
+| Last Rite | 22 | 240 energy ult, Cryo Susceptibility |
+| Tangtang | 18 | Waterspout/Whirlpool, Fam of Honor team Haste |
+| Yvonne | 19 | FIRST_MATCH BS, Crit Stacks, empowered BATK |
+| Rossi | 17 | Dual-element, Combustion from ult, disabled talents |
 
 ## Fix laevatainDamageCalc.test.ts — broken after gameDataController mock removal
 

@@ -118,6 +118,13 @@
                       ],
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
                     }
                   }
                 },
@@ -127,12 +134,31 @@
                   "objectQualifier": "ELECTRIC",
                   "to": "ENEMY",
                   "with": {
-                    "stacks": { "verb": "IS", "value": 1 },
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    },
                     "duration": {
                       "value": {
                         "operation": "MULT",
-                        "left": { "verb": "IS", "value": 5 },
-                        "right": { "verb": "VARY_BY", "object": "POTENTIAL", "value": [1, 1.75, 1.75, 1.75, 1.75, 1.75], "ofDeterminer": "THIS", "of": "OPERATOR" }
+                        "left": {
+                          "verb": "IS",
+                          "value": 5
+                        },
+                        "right": {
+                          "verb": "VARY_BY",
+                          "object": "POTENTIAL",
+                          "value": [
+                            1,
+                            1.75,
+                            1.75,
+                            1.75,
+                            1.75,
+                            1.75
+                          ],
+                          "ofDeterminer": "THIS",
+                          "of": "OPERATOR"
+                        }
                       },
                       "unit": "SECOND"
                     }

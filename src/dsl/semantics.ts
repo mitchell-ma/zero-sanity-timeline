@@ -99,6 +99,12 @@ export enum NounType {
   // Statuses
   STATUS = "STATUS",
   AMP = "AMP",
+  HEAT_AMP = "HEAT_AMP",
+  CRYO_AMP = "CRYO_AMP",
+  NATURE_AMP = "NATURE_AMP",
+  ELECTRIC_AMP = "ELECTRIC_AMP",
+  PHYSICAL_AMP = "PHYSICAL_AMP",
+  ARTS_AMP = "ARTS_AMP",
   INFLICTION = "INFLICTION",
   REACTION = "REACTION",
   ARTS_REACTION = "ARTS_REACTION",
@@ -114,6 +120,16 @@ export enum NounType {
   DAMAGE_BONUS = "DAMAGE_BONUS",
   /** Damage taken bonus (enemy debuff). Qualified by element. */
   DAMAGE_TAKEN_BONUS = "DAMAGE_TAKEN_BONUS",
+  /** Damage reduction buff on operator. */
+  PROTECTED = "PROTECTED",
+  /** Damage dealt reduction debuff on enemy. */
+  WEAKENED = "WEAKENED",
+  /** Damage reduction debuff on enemy. Qualified by element. Separate damage factor from SUSCEPTIBILITY. */
+  FRAGILITY = "FRAGILITY",
+  /** Damage reduction buff on operator (in-game: Sanctuary). */
+  SANCTUARY = "SANCTUARY",
+  /** Damage dealt reduction debuff on enemy (in-game: Weakness). */
+  WEAKNESS = "WEAKNESS",
 
   // Structural
   /** Generic endpoint — meaning depends on context (UNTIL END = end of segment/event). */
@@ -335,7 +351,7 @@ export const VERB_OBJECTS: Partial<Record<VerbType, ObjectType[]>> = {
   [VerbType.EXTEND]:     [ObjectType.STATUS, ObjectType.INFLICTION, ObjectType.REACTION],
   [VerbType.MERGE]:      [ObjectType.STATUS, ObjectType.INFLICTION],
   [VerbType.RESET]:      [ObjectType.STACKS],
-  [VerbType.IGNORE]:     [ObjectType.STATUS, ObjectType.ULTIMATE_ENERGY],
+  [VerbType.IGNORE]:     [ObjectType.STATUS, ObjectType.STAT, ObjectType.ULTIMATE_ENERGY],
   [VerbType.ENABLE]:     [ObjectType.BATK, ObjectType.BATTLE_SKILL, ObjectType.COMBO_SKILL, ObjectType.ULTIMATE, ObjectType.FINISHER, ObjectType.DIVE_ATTACK],
   [VerbType.DISABLE]:    [ObjectType.BATK, ObjectType.BATTLE_SKILL, ObjectType.COMBO_SKILL, ObjectType.ULTIMATE, ObjectType.FINISHER, ObjectType.DIVE_ATTACK],
   [VerbType.EXPERIENCE]: [ObjectType.GAME_TIME, ObjectType.REAL_TIME],
@@ -360,7 +376,7 @@ export const OBJECT_QUALIFIERS: Partial<Record<ObjectType, AdjectiveType[]>> = {
     AdjectiveType.HEAT, AdjectiveType.CRYO, AdjectiveType.NATURE, AdjectiveType.ELECTRIC, AdjectiveType.PHYSICAL,
   ],
   [ObjectType.INFLICTION]: [
-    AdjectiveType.HEAT, AdjectiveType.CRYO, AdjectiveType.NATURE, AdjectiveType.ELECTRIC, AdjectiveType.PHYSICAL,
+    AdjectiveType.HEAT, AdjectiveType.CRYO, AdjectiveType.NATURE, AdjectiveType.ELECTRIC, AdjectiveType.PHYSICAL, AdjectiveType.ARTS,
   ],
   [ObjectType.REACTION]: [
     // Arts reactions
@@ -414,6 +430,7 @@ export const NOUN_UNITS: Partial<Record<NounType, UnitType[]>> = {
   [NounType.DAMAGE]: [UnitType.FLAT, UnitType.PERCENTAGE, UnitType.MULTIPLIER],
   [NounType.SLOW]: [UnitType.PERCENTAGE],
   [NounType.SUSCEPTIBILITY]: [UnitType.PERCENTAGE],
+  [NounType.FRAGILITY]: [UnitType.PERCENTAGE],
   [NounType.DAMAGE_BONUS]: [UnitType.PERCENTAGE],
 };
 
@@ -428,7 +445,8 @@ export const NOUN_QUALIFIER_MAPPING: Partial<Record<NounType, QualifierType[]>> 
   [NounType.COOLDOWN]: [NounType.ULTIMATE, NounType.COMBO_SKILL],
   [NounType.DAMAGE]: [AdjectiveType.HEAT, AdjectiveType.CRYO, AdjectiveType.NATURE, AdjectiveType.ELECTRIC, AdjectiveType.PHYSICAL],
   [NounType.AMP]: [AdjectiveType.HEAT, AdjectiveType.CRYO, AdjectiveType.NATURE, AdjectiveType.ELECTRIC, AdjectiveType.PHYSICAL, AdjectiveType.ARTS, DeterminerType.ANY],
-  [NounType.SUSCEPTIBILITY]: [AdjectiveType.HEAT, AdjectiveType.CRYO, AdjectiveType.NATURE, AdjectiveType.ELECTRIC, AdjectiveType.ARTS],
+  [NounType.SUSCEPTIBILITY]: [AdjectiveType.HEAT, AdjectiveType.CRYO, AdjectiveType.NATURE, AdjectiveType.ELECTRIC, AdjectiveType.PHYSICAL, AdjectiveType.ARTS],
+  [NounType.FRAGILITY]: [AdjectiveType.HEAT, AdjectiveType.CRYO, AdjectiveType.NATURE, AdjectiveType.ELECTRIC, AdjectiveType.PHYSICAL, AdjectiveType.ARTS],
   [NounType.DAMAGE_BONUS]: [AdjectiveType.HEAT, AdjectiveType.CRYO, AdjectiveType.NATURE, AdjectiveType.ELECTRIC, AdjectiveType.PHYSICAL, AdjectiveType.ARTS, NounType.BASIC_ATTACK, NounType.BATTLE_SKILL, NounType.COMBO_SKILL, NounType.ULTIMATE, NounType.STAGGER, NounType.SKILL],
   [NounType.DAMAGE_TAKEN_BONUS]: [AdjectiveType.HEAT, AdjectiveType.CRYO, AdjectiveType.NATURE, AdjectiveType.ELECTRIC, AdjectiveType.PHYSICAL, AdjectiveType.ARTS],
   [NounType.BATK]: [AdjectiveType.NORMAL, AdjectiveType.ENHANCED, AdjectiveType.EMPOWERED],
@@ -498,8 +516,14 @@ export interface Interaction {
   /** Determiner for OPERATOR subjects (THIS, OTHER, ALL, ANY). Defaults to THIS. */
   subjectDeterminer?: DeterminerType;
   subject: SubjectType;
+  /** Specific identifier for the subject (e.g. status ID: "AUXILIARY_CRYSTAL"). */
+  subjectId?: string;
   /** Possessive — "This Operator's ULTIMATE". Used with IS and OVERHEAL. */
   subjectProperty?: ObjectType;
+  /** OF — possessor entity type: "[STATUS] OF [OPERATOR]". */
+  ofSubject?: SubjectType;
+  /** Determiner for the OF possessor: "STATUS OF [CONTROLLED] OPERATOR". */
+  ofDeterminer?: DeterminerType;
   verb: VerbType;
   /** NOT — "IS NOT ACTIVE". */
   negated?: boolean;
@@ -855,6 +879,24 @@ export const OPERATOR_VERBS = [
   VerbType.RECOVER,
 ];
 
+// ── Qualified ID utilities ──────────────────────────────────────────────────
+
+/**
+ * Flatten a qualifier + base noun into a qualified ID.
+ * e.g. flattenQualifiedId("CRYO", "AMP") → "CRYO_AMP"
+ */
+export function flattenQualifiedId(qualifier: string, baseId: string): string {
+  return `${qualifier}_${baseId}`;
+}
+
+/**
+ * Check if an ID is a qualified variant of a base noun.
+ * e.g. isQualifiedId("CRYO_AMP", "AMP") → true
+ */
+export function isQualifiedId(id: string, baseId: string): boolean {
+  return id.endsWith(`_${baseId}`) && id.length > baseId.length + 1;
+}
+
 /** Verbs available for effects (alphabetical, ANY disabled). */
 export const EFFECT_VERBS = [
   VerbType.ALL, // VerbType.ANY,
@@ -1003,6 +1045,11 @@ export const OBJECT_TARGET_MAPPING: Partial<Record<ObjectType, SubjectType[]>> =
   [ObjectType.ARTS_BURST]:     [SubjectType.ENEMY],
   [ObjectType.STATUS]:         [SubjectType.OPERATOR, SubjectType.ENEMY, NounType.TEAM],
   [ObjectType.SUSCEPTIBILITY]: [SubjectType.ENEMY],
+  [ObjectType.FRAGILITY]:      [SubjectType.ENEMY],
+  [ObjectType.PROTECTED]:      [SubjectType.OPERATOR, NounType.TEAM],
+  [ObjectType.WEAKENED]:       [SubjectType.ENEMY],
+  [ObjectType.SANCTUARY]:      [SubjectType.OPERATOR],
+  [ObjectType.WEAKNESS]:       [SubjectType.ENEMY],
 };
 
 /**

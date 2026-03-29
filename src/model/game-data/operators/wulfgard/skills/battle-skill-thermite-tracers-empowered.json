@@ -78,6 +78,13 @@
                       ],
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
                     }
                   }
                 }
@@ -126,6 +133,13 @@
                         0.71,
                         0.77
                       ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
                     }
@@ -189,6 +203,13 @@
                       ],
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
                     }
                   }
                 }
@@ -218,14 +239,14 @@
                   "verb": "HAVE",
                   "object": "STATUS",
                   "objectId": "REACTION",
-          "objectQualifier": "COMBUSTION"
+                  "objectQualifier": "COMBUSTION"
                 },
                 {
                   "subject": "ENEMY",
                   "verb": "HAVE",
                   "object": "STATUS",
                   "objectId": "REACTION",
-          "objectQualifier": "ELECTRIFICATION"
+                  "objectQualifier": "ELECTRIFICATION"
                 }
               ],
               "effects": [
@@ -233,7 +254,7 @@
                   "verb": "CONSUME",
                   "object": "STATUS",
                   "objectId": "REACTION",
-          "objectQualifier": "COMBUSTION",
+                  "objectQualifier": "COMBUSTION",
                   "from": "ENEMY"
                 }
               ]
@@ -245,7 +266,7 @@
                   "verb": "HAVE",
                   "object": "STATUS",
                   "objectId": "REACTION",
-          "objectQualifier": "COMBUSTION"
+                  "objectQualifier": "COMBUSTION"
                 }
               ],
               "effects": [
@@ -253,7 +274,7 @@
                   "verb": "CONSUME",
                   "object": "STATUS",
                   "objectId": "REACTION",
-          "objectQualifier": "COMBUSTION",
+                  "objectQualifier": "COMBUSTION",
                   "from": "ENEMY"
                 }
               ]
@@ -265,7 +286,7 @@
                   "verb": "HAVE",
                   "object": "STATUS",
                   "objectId": "REACTION",
-          "objectQualifier": "ELECTRIFICATION"
+                  "objectQualifier": "ELECTRIFICATION"
                 }
               ],
               "effects": [
@@ -273,7 +294,7 @@
                   "verb": "CONSUME",
                   "object": "STATUS",
                   "objectId": "REACTION",
-          "objectQualifier": "ELECTRIFICATION",
+                  "objectQualifier": "ELECTRIFICATION",
                   "from": "ENEMY"
                 }
               ]
@@ -315,6 +336,13 @@
                         7.84,
                         8.5
                       ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
                     }

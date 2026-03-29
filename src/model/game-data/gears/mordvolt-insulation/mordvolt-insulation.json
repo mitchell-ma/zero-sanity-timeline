@@ -1,8 +1,38 @@
 {
+  "onTriggerClause": [
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "HAVE",
+          "object": "HP",
+          "cardinalityConstraint": "AT_LEAST",
+          "with": {
+            "value": {
+              "value": { "verb": "IS", "value": 80 },
+              "unit": "PERCENTAGE"
+            }
+          }
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "MORDVOLT_INSULATION",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
+        }
+      ]
+    }
+  ],
   "properties": {
     "id": "MORDVOLT_INSULATION",
     "name": "Mordvolt Insulation",
     "rarity": 4,
+    "piecesRequired": 3,
+    "description": "3-piece set effect: Wearer's Intellect +50. When the wearer's HP exceeds 80%, the wearer's Arts DMG increases by 20%.",
     "eventType": "STATUS",
     "eventCategoryType": "GEAR_SET_EFFECT"
   },

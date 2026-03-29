@@ -3,7 +3,8 @@
  */
 import { ContentCategory, ContentBrowserItem } from '../../consts/contentBrowserTypes';
 import { ALL_OPERATORS } from '../operators/operatorRegistry';
-import { getAllWeapons, getAllGearPieces, getGearSetEffect, getWeaponEffectDefs, getGearEffectDefs, getAllWeaponEffectNames, getAllGearEffectTypes, getGearEffectLabel } from '../gameDataStore';
+import { getAllWeapons, getAllGearPieces, getGearSetEffect, getWeapon, getWeaponEffectDefs, getGearEffectDefs, getAllWeaponEffectIds, getAllGearEffectTypes, getGearEffectLabel } from '../gameDataStore';
+import { getAllConsumables, getAllTacticals } from '../../model/game-data/consumablesStore';
 import { getGearSetData } from '../gameDataStore';
 import { getGearSetEffects } from '../../consts/gearSetEffects';
 import { getAllSkillLabels } from '../gameDataStore';
@@ -156,12 +157,13 @@ export function getAllContentItems(): ContentBrowserItem[] {
   }
 
   // ── Weapon Skill Effects ────────────────────────────────────────────────
-  for (const weaponName of getAllWeaponEffectNames()) {
-    const defs = getWeaponEffectDefs(weaponName);
+  for (const weaponId of getAllWeaponEffectIds()) {
+    const defs = getWeaponEffectDefs(weaponId);
     const firstDef = defs[0];
+    const weaponDisplayName = getWeapon(weaponId)?.name ?? weaponId;
     items.push({
-      id: `wse:${weaponName}`,
-      name: weaponName,
+      id: `wse:${weaponId}`,
+      name: weaponDisplayName,
       category: ContentCategory.WEAPON_EFFECTS,
       source: 'builtin',
       meta: firstDef ? (firstDef.label ?? firstDef.name ?? '') : 'No effects',
@@ -223,6 +225,28 @@ export function getAllContentItems(): ContentBrowserItem[] {
       category: ContentCategory.OPERATOR_TALENTS,
       source: 'custom',
       meta: `Slot ${ot.slot} \u00B7 Lv${ot.maxLevel}`,
+    });
+  }
+
+  // ── Consumables ──────────────────────────────────────────────────────
+  for (const c of getAllConsumables()) {
+    items.push({
+      id: c.id,
+      name: c.name,
+      category: ContentCategory.CONSUMABLES,
+      source: 'builtin',
+      meta: `${starStr(c.rarity)} Consumable`,
+    });
+  }
+
+  // ── Tacticals ────────────────────────────────────────────────────────
+  for (const tc of getAllTacticals()) {
+    items.push({
+      id: tc.id,
+      name: tc.name,
+      category: ContentCategory.TACTICALS,
+      source: 'builtin',
+      meta: `${starStr(tc.rarity)} Tactical`,
     });
   }
 

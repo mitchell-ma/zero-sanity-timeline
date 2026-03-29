@@ -7,14 +7,17 @@
           "subject": "OPERATOR",
           "verb": "APPLY",
           "object": "INFLICTION",
-          "stacks": 2
+          "stacks": 2,
+          "to": "ENEMY"
         }
       ],
       "effects": [
         {
           "verb": "APPLY",
           "object": "STATUS",
-          "objectId": "TIDE_SURGE"
+          "objectId": "TIDE_SURGE",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
         }
       ]
     }

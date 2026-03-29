@@ -1,13 +1,35 @@
 {
+  "onTriggerClause": [
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "ANY",
+          "subject": "OPERATOR",
+          "verb": "CONSUME",
+          "object": "STATUS",
+          "objectId": "STEEL_OATH"
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "FERVENT_MORALE",
+          "toDeterminer": "TRIGGER",
+          "to": "OPERATOR"
+        }
+      ]
+    }
+  ],
   "properties": {
     "id": "TACTICAL_INSTRUCTION_TALENT",
+    "maxLevel": { "verb": "IS", "value": 2 },
     "name": "Tactical Instruction (Talent)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
     "eventCategoryType": "TALENT",
-    "description": "Ultimate Shieldguard Banner, Forward improved: Any operator triggering the ultimate's subsequent effects also gains Fervent Morale for 10s. Requires activation of talent: The Living Banner.",
-    "maxLevel": 2
+    "description": "Ultimate Shieldguard Banner, Forward improved: Any operator triggering the ultimate's subsequent effects also gains Fervent Morale for 10s. Requires activation of talent: The Living Banner."
   },
   "metadata": {
     "originId": "POGRANICHNIK",

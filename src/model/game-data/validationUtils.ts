@@ -1,8 +1,14 @@
 import {
-  VerbType,
+  VerbType, DeterminerType,
   VERB_OBJECTS, OBJECT_QUALIFIERS, OBJECT_REQUIRED_QUALIFIER, OBJECT_TARGET_MAPPING,
+  NOUN_QUALIFIER_MAPPING,
 } from '../../dsl/semantics';
-import type { ObjectType } from '../../dsl/semantics';
+import type { ObjectType, NounType } from '../../dsl/semantics';
+import { OperatorClassType } from '../../consts/enums';
+
+// ── Enum value sets for validation ──────────────────────────────────────────
+const VALID_DETERMINERS = new Set<string>(Object.values(DeterminerType));
+const VALID_OPERATOR_CLASSES = new Set<string>(Object.values(OperatorClassType));
 
 // ── Shared validation utilities for game-data config loaders ────────────────
 
@@ -15,15 +21,32 @@ export function checkKeys(obj: Record<string, unknown>, valid: Set<string>, path
   return errors;
 }
 
-// ── Shared valid-key sets (value nodes are reused across all config types) ───
+// ── Shared valid-key sets ───────────────────────────────────────────────────
 
 export const VALID_VALUE_NODE_KEYS = new Set([
-  'verb', 'value', 'object', 'objectId', 'operator', 'left', 'right', 'ofDeterminer', 'of',
+  'verb', 'value', 'object', 'objectId', 'operation', 'left', 'right', 'ofDeterminer', 'of',
 ]);
 
 export const VALID_CLAUSE_KEYS = new Set(['conditions', 'effects']);
 
-export const VALID_METADATA_KEYS = new Set(['originId', 'dataSources', 'icon']);
+export const VALID_METADATA_KEYS = new Set(['originId', 'dataSources', 'icon', 'isEnabled']);
+
+export const VALID_EFFECT_KEYS = new Set([
+  'verb', 'object', 'objectId', 'objectType', 'objectQualifier', 'objectDeterminer',
+  'to', 'toDeterminer', 'toQualifier', 'from', 'fromDeterminer',
+  'of', 'until',
+  'with', 'value', 'cardinalityConstraint', 'effects', 'negated',
+]);
+
+export const VALID_EFFECT_WITH_KEYS = new Set([
+  'value', 'duration', 'unit', 'stacks', 'multiplier', 'staggerValue', 'mainStat', 'cardinality',
+]);
+
+export const VALID_TRIGGER_CONDITION_KEYS = new Set([
+  'subjectDeterminer', 'subject', 'subjectId', 'verb', 'object', 'objectId', 'objectQualifier', 'objectDeterminer',
+  'element', 'negated', 'cardinalityConstraint', 'value', 'to', 'toDeterminer', 'from', 'fromDeterminer', 'with',
+  'ofSubject', 'ofDeterminer',
+]);
 
 // ── Effect validation (all checks driven by semantics.ts mappings) ──────────
 
@@ -46,7 +69,11 @@ function warnInvalidQualifier(ef: Record<string, unknown>, path: string): string
     errors.push(`${path}: ${ef.verb} ${obj} requires a qualifier (objectQualifier or objectId)`);
   }
 
-  const validQualifiers = OBJECT_QUALIFIERS[obj as ObjectType];
+  // When objectId is present (e.g. object=STATUS, objectId=REACTION), validate qualifier
+  // against the objectId's noun qualifier set; otherwise use the object's own qualifiers
+  const validQualifiers = ef.objectId
+    ? NOUN_QUALIFIER_MAPPING[ef.objectId as NounType]
+    : OBJECT_QUALIFIERS[obj as ObjectType];
   if (validQualifiers && ef.objectQualifier) {
     if (!(validQualifiers as string[]).includes(ef.objectQualifier as string)) {
       errors.push(`${path}: ${ef.verb} ${obj} has invalid qualifier "${ef.objectQualifier}"`);
@@ -54,6 +81,25 @@ function warnInvalidQualifier(ef: Record<string, unknown>, path: string): string
   }
 
   return errors;
+}
+
+/** Validate determiner fields against DeterminerType enum. */
+function warnInvalidDeterminers(ef: Record<string, unknown>, path: string): string[] {
+  const errors: string[] = [];
+  for (const key of ['toDeterminer', 'fromDeterminer', 'objectDeterminer'] as const) {
+    if (ef[key] && !VALID_DETERMINERS.has(ef[key] as string)) {
+      errors.push(`${path}.${key}: "${ef[key]}" is not a valid DeterminerType`);
+    }
+  }
+  return errors;
+}
+
+/** Validate toQualifier against OperatorClassType. */
+function warnInvalidToQualifier(ef: Record<string, unknown>, path: string): string[] {
+  if (ef.toQualifier && !VALID_OPERATOR_CLASSES.has(ef.toQualifier as string)) {
+    return [`${path}.toQualifier: "${ef.toQualifier}" is not a valid OperatorClassType`];
+  }
+  return [];
 }
 
 /** Validate APPLY target against OBJECT_TARGET_MAPPING. */
@@ -91,6 +137,8 @@ export function validateEffect(ef: Record<string, unknown>, path: string): strin
   return [
     ...warnInvalidVerbObject(ef, path),
     ...warnInvalidQualifier(ef, path),
+    ...warnInvalidDeterminers(ef, path),
+    ...warnInvalidToQualifier(ef, path),
     ...warnInvalidApplyTarget(ef, path),
     ...warnInvalidConsumeTarget(ef, path),
   ];

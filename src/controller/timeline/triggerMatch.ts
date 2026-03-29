@@ -8,7 +8,7 @@
  * predicates at each candidate frame.
  */
 import { TimelineEvent, computeSegmentsSpan } from '../../consts/viewTypes';
-import { CombatSkillType } from '../../consts/enums';
+import { CombatSkillType, EventStatusType } from '../../consts/enums';
 import { COMMON_OWNER_ID } from '../slot/commonSlotController';
 import { PhysicalStatusType } from '../../consts/enums';
 import {
@@ -23,13 +23,14 @@ import { getFinalStrikeTriggerFrame } from './processComboSkill';
 import { evaluateInteraction } from './conditionEvaluator';
 import type { ConditionContext } from './conditionEvaluator';
 import type { TimeStopRegion } from './processTimeStop';
-import { VerbType, NounType, ObjectType, DeterminerType } from '../../dsl/semantics';
+import { VerbType, NounType, ObjectType, DeterminerType, CardinalityConstraintType } from '../../dsl/semantics';
 import type { Interaction } from '../../dsl/semantics';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 export interface Predicate {
   subject: string;
+  subjectId?: string;
   verb: string;
   object?: string;
   objectId?: string;
@@ -38,6 +39,10 @@ export interface Predicate {
   element?: string;
   objectQualifier?: string;
   subjectDeterminer?: string;
+  /** OF — possessor entity type for the subject. */
+  ofSubject?: string;
+  /** Determiner for the OF possessor. */
+  ofDeterminer?: string;
   to?: string;
   toDeterminer?: string;
   with?: Record<string, unknown>;
@@ -112,7 +117,6 @@ const PHYSICAL_STATUS_VALUES = new Set<string>(Object.values(PhysicalStatusType)
 
 /** Maps game-data status noun forms to their column ID equivalents. */
 const STATUS_ALIAS_TO_COLUMN: Record<string, string> = {
-  VULNERABILITY: PHYSICAL_INFLICTION_COLUMNS.VULNERABLE,
 };
 
 /** Unified status ID → column ID resolver. */
@@ -229,7 +233,7 @@ function resolveColumns(cond: Predicate): Set<string> | undefined {
  */
 function resolveOwnerFilter(cond: Predicate, operatorSlotId: string, verb?: string) {
   const det = cond.subjectDeterminer;
-  const isAnyOperator = cond.subject === NounType.OPERATOR && det === DeterminerType.ANY;
+  const isAnyOperator = cond.subject === NounType.OPERATOR && (det === DeterminerType.ANY || det === DeterminerType.CONTROLLED);
   const toObj = cond.to;
   const toDet = cond.toDeterminer;
 
@@ -283,13 +287,11 @@ function scanEvents(primaryCond: Predicate, ctx: VerbHandlerContext, verb: strin
   for (const ev of ctx.events) {
     if (columns) {
       if (!columns.has(ev.columnId)) continue;
-    } else if (primaryCond.object === NounType.STATUS) {
-      // Generic STATUS fallback: exclude skill/infliction/reaction columns
+    } else {
+      // Generic fallback: scan all status columns (exclude skill/infliction/reaction)
       if (REACTION_COLUMN_IDS.has(ev.columnId)) continue;
       if (INFLICTION_COLUMN_IDS.has(ev.columnId)) continue;
       if (SKIP_COLUMNS.has(ev.columnId)) continue;
-    } else {
-      continue;
     }
     // Arts Burst: only match infliction events flagged as same-element stacking
     if (primaryCond.object === NounType.ARTS_BURST && !ev.isArtsBurst) continue;
@@ -457,6 +459,74 @@ function handleIs(primaryCond: Predicate, ctx: VerbHandlerContext): TriggerMatch
 }
 
 function handleBecome(primaryCond: Predicate, ctx: VerbHandlerContext): TriggerMatch[] {
+  // BECOME STACKS: check transition points where a status's stack count changes.
+  // Only scan frames where matching events start or end (not every frame).
+  if (primaryCond.object === NounType.STACKS) {
+    const statusId = primaryCond.subjectId ?? primaryCond.objectId;
+    if (!statusId) return [];
+    const colId = statusIdToColumnId(statusId);
+    const possessorSubject = primaryCond.ofSubject ?? primaryCond.subject;
+    const possessorDeterminer = primaryCond.ofDeterminer ?? primaryCond.subjectDeterminer;
+    const { matchesOwner } = resolveOwnerFilter(
+      { ...primaryCond, subject: possessorSubject, subjectDeterminer: possessorDeterminer } as Predicate,
+      ctx.operatorSlotId, VerbType.BECOME,
+    );
+    const targetValue = primaryCond.value != null
+      ? (typeof primaryCond.value === 'object' && 'value' in primaryCond.value
+          ? (primaryCond.value as { value: number }).value
+          : Number(primaryCond.value))
+      : undefined;
+    const constraint = primaryCond.cardinalityConstraint;
+
+    // Collect ALL relevant status events (including consumed — their clamped
+    // duration is needed to detect consumption-based transitions).
+    const statusEvents = ctx.events.filter(ev =>
+      ev.columnId === colId && matchesOwner(ev.ownerId),
+    );
+    if (statusEvents.length === 0) return [];
+
+    // Transition points: frames where events start or end (stack count changes)
+    const transitionFrames = new Set<number>();
+    for (const ev of statusEvents) {
+      transitionFrames.add(ev.startFrame);
+      const endFrame = ev.startFrame + computeSegmentsSpan(ev.segments);
+      transitionFrames.add(endFrame);
+    }
+
+    const countAt = (frame: number) => statusEvents.filter(ev =>
+      ev.startFrame <= frame && frame < ev.startFrame + computeSegmentsSpan(ev.segments),
+    ).length;
+
+    const matches: TriggerMatch[] = [];
+    for (const frame of Array.from(transitionFrames)) {
+      if (frame < 1) continue;
+      const countNow = countAt(frame);
+      const countBefore = countAt(frame - 1);
+      if (countNow === countBefore) continue;
+      if (targetValue != null) {
+        const passes = constraint === CardinalityConstraintType.EXACTLY ? countNow === targetValue
+          : constraint === CardinalityConstraintType.AT_LEAST ? countNow >= targetValue
+          : constraint === CardinalityConstraintType.AT_MOST ? countNow <= targetValue
+          : countNow === targetValue;
+        if (!passes) continue;
+      }
+      // Exclude natural expiry: only trigger when a stack was actively consumed
+      // at this frame (event clamped to end here with CONSUMED status), not when
+      // it simply reached its natural duration end.
+      if (targetValue === 0) {
+        const wasConsumed = statusEvents.some(ev =>
+          ev.eventStatus === EventStatusType.CONSUMED &&
+          ev.startFrame + computeSegmentsSpan(ev.segments) === frame,
+        );
+        if (!wasConsumed) continue;
+      }
+      if (!checkSecondary(ctx, frame, ctx.operatorSlotId)) continue;
+      const synthetic = { ownerId: ctx.operatorSlotId, name: '' } as TimelineEvent;
+      matches.push(makeMatch(frame, synthetic, ctx.clauseEffects));
+    }
+    return matches;
+  }
+
   return handleIs(primaryCond, ctx);
 }
 

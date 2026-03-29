@@ -6,28 +6,22 @@
         {
           "verb": "APPLY",
           "object": "STAT",
-          "with": {
-            "value": {
-              "verb": "VARY_BY",
-              "object": "STATUS_LEVEL",
-              "value": [
-                0.05
-              ],
-              "ofDeterminer": "THIS",
-              "of": "OPERATOR"
-            }
-          },
+          "objectId": "ATTACK_BONUS",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
-          "objectId": "ATTACK_BONUS"
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": 0.05
+            }
+          }
         }
       ]
     }
   ],
   "properties": {
-    "type": "GEAR_SET_STATUS",
-    "id": "ABURREY_LEGACY",
-    "name": "Aburrey's Legacy",
+    "id": "ABURREY_LEGACY_ULTIMATE",
+    "name": "Aburrey's Legacy (Ultimate)",
     "duration": {
       "value": {
         "verb": "IS",
@@ -38,11 +32,11 @@
     "stacks": {
       "limit": {
         "verb": "IS",
-        "value": 3
+        "value": 1
       },
-      "interactionType": "NONE"
+      "interactionType": "RESET"
     },
-    "description": "Each skill type gives a unique non-self-stacking buff",
+    "description": "ATK +5% for 15s. Refreshes on ultimate cast.",
     "eventType": "STATUS",
     "eventCategoryType": "GEAR_SET_STATUS"
   },
