@@ -27,12 +27,9 @@
               "verb": "IS",
               "object": "STAT",
               "objectId": "WILL",
+              "value": 0.53,
               "ofDeterminer": "THIS",
               "of": "OPERATOR"
-            },
-            "mainStatScaling": {
-              "verb": "IS",
-              "value": 0.53
             }
           }
         }

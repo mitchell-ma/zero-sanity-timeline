@@ -223,6 +223,7 @@ export default function App() {
           onDuplicateLoadout={app.handleDuplicateLoadout}
           onDeleteLoadout={app.handleDeleteLoadout}
           onWarning={app.setWarningMessage}
+          onLoadCommunityLoadout={app.handleLoadCommunityLoadout}
           sidebarMode={sidebarMode}
           onSidebarModeChange={(mode) => {
             setSidebarMode(mode);
@@ -313,6 +314,7 @@ export default function App() {
                     contentFrames={app.contentFrames}
                     spInsufficiencyZones={app.spInsufficiencyZones}
                     dragThrottle={app.dragThrottle}
+                    readOnly={app.readOnly}
                   />
                   {(app.hidePreview === 'left' || app.showPreview === 'left') && (
                     <div className="pane-hide-overlay">

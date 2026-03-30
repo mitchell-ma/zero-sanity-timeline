@@ -1,6 +1,5 @@
 import { DamageFactorType, DamageType, ElementType, EnhancementType, EventFrameType, EventStatusType, InteractionModeType, SegmentType, TimeDependency } from './enums';
 import type { FrameClausePredicate, FrameDealDamage } from '../model/event-frames/skillEventFrame';
-import { NounType } from '../dsl/semantics';
 
 /** String union for the four operator combat skills, matching the data keys in operators.ts. */
 /** @deprecated Use NounType skill values directly. */
@@ -102,8 +101,6 @@ export interface EventFrameMarker {
   damageElement?: string;
   /** ATK multiplier for damage dealt by this frame (e.g. 1.2 = 120%). */
   damageMultiplier?: number;
-  /** Stagger value dealt by this frame (pre-computed, ready for stagger gauge). */
-  staggerValue?: number;
   /** Label for status-effect frames (e.g. "-12.0 Res"). Non-null marks this as a status frame rather than a damage frame. */
   statusLabel?: string;
   /** Whether this frame re-applies the trigger source (infliction or physical status) that caused the combo. */
@@ -276,8 +273,8 @@ export interface ContextMenuItem {
   actionId?: string;
   /** Payload for the action (e.g. event creation params). */
   actionPayload?: unknown;
-  /** Show a check indicator — for toggle items. */
-  checked?: boolean;
+  /** Show a check indicator — for toggle items. Static boolean or getter function. */
+  checked?: boolean | (() => boolean);
   /** If true, clicking this item does NOT close the menu. */
   keepOpen?: boolean;
   /** Inline sub-buttons rendered as a horizontal row (e.g. individual BATK segments). */

@@ -246,7 +246,7 @@ A Verb-Object sentence with optional adjective and prepositional phrases.
 | `cardinality` | Generic count | Resources (SP, energy, cooldown) |
 | `duration` | Seconds | TIME_STOP, REACTION, STATUS |
 | `multiplier` | Damage multiplier | DAMAGE |
-| `staggerValue` | Stagger amount | STAGGER |
+| `stagger` | Stagger amount | STAGGER |
 | `skillPoint` | SP value | SKILL_POINT |
 | `stacks` | Stack count (reactions, operator statuses, inflictions) | STATUS, INFLICTION, ARTS_REACTION, PHYSICAL_STATUS |
 

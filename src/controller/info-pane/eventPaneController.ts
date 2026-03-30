@@ -3,8 +3,8 @@ import { TimelineEvent, Operator, Enemy, SkillType, getAnimationDuration, eventD
 import { getAllSkillLabels, getAllStatusLabels, getAllInflictionLabels } from '../gameDataStore';
 import { REACTION_LABELS, PHYSICAL_INFLICTION_LABELS, PHYSICAL_STATUS_LABELS } from '../../model/channels';
 import { VerbType, NounType, interactionToLabel, THRESHOLD_MAX } from '../../dsl/semantics';
-import type { Interaction, Effect, Predicate } from '../../dsl/semantics';
-import { getSimpleValue, getLeafValue } from '../../controller/calculation/valueResolver';
+import type { Interaction, Effect, Predicate, ValueNode } from '../../dsl/semantics';
+import { resolveValueNode, DEFAULT_VALUE_CONTEXT, getLeafValue } from '../../controller/calculation/valueResolver';
 import { translateEffect } from '../../dsl/semanticsTranslation';
 import type { TranslatedEffect } from '../../dsl/semanticsTranslation';
 import { ENEMY_OWNER_ID, OPERATOR_COLUMNS, REACTION_COLUMNS, PHYSICAL_STATUS_COLUMNS, PHYSICAL_STATUS_COLUMN_IDS, FRAGILITY_COLUMN_PREFIX, INFLICTION_COLUMN_IDS, PHYSICAL_INFLICTION_COLUMN_IDS, COMBO_WINDOW_COLUMN_ID } from '../../model/channels';
@@ -12,6 +12,12 @@ import { computeSpReturnSummary, SpReturnSummary } from '../calculation/frameCal
 import { ELECTRIFICATION_ARTS_FRAGILITY, BREACH_PHYSICAL_FRAGILITY, DEFAULT_AMP_BONUS } from '../timeline/eventsQueryService';
 import { getOperatorSkill, getSkillTypeMap, getComboTriggerInfo } from '../gameDataStore';
 import { getLastController } from '../timeline/eventQueueController';
+
+/** Resolve a ValueNode to a number using default context. Returns undefined if node is falsy. */
+function resolveValue(node: ValueNode | typeof THRESHOLD_MAX | undefined): number | undefined {
+  if (!node || node === THRESHOLD_MAX) return undefined;
+  return resolveValueNode(node as ValueNode, DEFAULT_VALUE_CONTEXT);
+}
 
 // ── JSON Skill Data Shapes ──────────────────────────────────────────────────
 
@@ -464,7 +470,7 @@ export function interactionToText(i: Interaction): string {
   parts.push(i.object.replace(/_/g, ' '));
   if (i.objectId) parts.push(`(${i.objectId})`);
   if (i.cardinalityConstraint && i.value != null) {
-    const resolved = getSimpleValue(i.value);
+    const resolved = resolveValue(i.value);
     parts.push(`${i.cardinalityConstraint.replace(/_/g, ' ')} ${resolved ?? '?'}`);
   }
   if (i.element) parts.push(`[${i.element}]`);
@@ -476,7 +482,7 @@ export function effectToText(e: Effect): string {
   const parts: string[] = [];
   parts.push(e.verb.replace(/_/g, ' '));
   if (e.value != null) {
-    const resolved = e.value === THRESHOLD_MAX ? 'MAX' : getSimpleValue(e.value);
+    const resolved = e.value === THRESHOLD_MAX ? THRESHOLD_MAX : resolveValue(e.value);
     parts.push(String(resolved ?? '?'));
   }
   if (e.objectQualifier) {
@@ -488,7 +494,7 @@ export function effectToText(e: Effect): string {
   if (e.fromObject) parts.push(`FROM ${String(e.fromObject).replace(/_/g, ' ')}`);
   if (e.onObject) parts.push(`ON ${String(e.onObject).replace(/_/g, ' ')}`);
   if (e.for) {
-    const forResolved = e.for.value === THRESHOLD_MAX ? 'MAX' : getSimpleValue(e.for.value);
+    const forResolved = e.for.value === THRESHOLD_MAX ? THRESHOLD_MAX : resolveValue(e.for.value);
     parts.push(`FOR ${e.for.cardinalityConstraint.replace(/_/g, ' ')} ${forResolved ?? '?'}`);
   } else if (e.cardinalityConstraint) {
     parts.push(e.cardinalityConstraint.replace(/_/g, ' '));
@@ -537,13 +543,11 @@ function isRedundantEffect(e: Effect): boolean {
   if (verb === VerbType.CONSUME && (obj === NounType.SKILL_POINT || obj === NounType.ULTIMATE_ENERGY)) return true;
   // Zero-value recoveries are noise
   if (verb === VerbType.RECOVER && (obj === NounType.SKILL_POINT || obj === NounType.STAGGER)) {
-    const val = getSimpleValue(e.with?.value);
-    if (val === 0) return true;
+    if (resolveValue(e.with?.value as ValueNode) === 0) return true;
   }
   // Zero-value stagger applications are noise
   if (verb === VerbType.DEAL && obj === NounType.STAGGER) {
-    const val = getSimpleValue(e.with?.value);
-    if (val === 0) return true;
+    if (resolveValue(e.with?.value as ValueNode) === 0) return true;
   }
   return false;
 }

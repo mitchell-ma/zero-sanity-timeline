@@ -6,7 +6,7 @@
  * they don't mutate it.
  */
 import { Interaction, CardinalityConstraintType, NounType, DeterminerType, VerbType, AdjectiveType, type ValueNode } from '../../dsl/semantics';
-import { getSimpleValue } from '../calculation/valueResolver';
+import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from '../calculation/valueResolver';
 import { UnitType } from '../../consts/enums';
 import { TimelineEvent } from '../../consts/viewTypes';
 import { ENEMY_OWNER_ID, INFLICTION_COLUMNS, PHYSICAL_INFLICTION_COLUMNS, PHYSICAL_STATUS_COLUMNS, PHYSICAL_STATUS_COLUMN_IDS, REACTION_COLUMNS, REACTION_STATUS_TO_COLUMN, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID, SKILL_COLUMN_ORDER } from '../../model/channels';
@@ -116,7 +116,7 @@ export function resolveColumnIds(object: string, objectId?: string, qualifier?: 
 function resolveConditionThreshold(cond: Interaction): { target: number; constraint?: string } {
   const withBlock = (cond as unknown as Record<string, unknown>).with as Record<string, unknown> | undefined;
   const rawValue = cond.value ?? withBlock?.value;
-  const target = (rawValue ? getSimpleValue(rawValue as ValueNode) : undefined) ?? 0;
+  const target = (rawValue ? resolveValueNode(rawValue as ValueNode, DEFAULT_VALUE_CONTEXT) : undefined) ?? 0;
   return { target, constraint: cond.cardinalityConstraint };
 }
 
@@ -128,7 +128,7 @@ function evaluateParameter(cond: Interaction, ctx: ConditionContext): boolean {
   // Target comes from cond.value (standard) or cond.with.value (extended form)
   const withBlock = (cond as unknown as Record<string, unknown>).with as Record<string, unknown> | undefined;
   const targetNode = cond.value ?? withBlock?.value;
-  const target = targetNode ? getSimpleValue(targetNode as unknown as ValueNode) : undefined;
+  const target = targetNode ? resolveValueNode(targetNode as unknown as ValueNode, DEFAULT_VALUE_CONTEXT) : undefined;
   if (target == null) return false;
   const constraint = cond.cardinalityConstraint ?? cond.verb;
   switch (constraint) {
@@ -169,7 +169,7 @@ function evaluateHave(cond: Interaction, ctx: ConditionContext): boolean {
       if (!ownerId || !ctx.getOperatorPercentageHp) return true;
       const hpPct = ctx.getOperatorPercentageHp(ownerId, ctx.frame);
       const innerValue = valueWrapper.value as Record<string, unknown> | undefined;
-      const target = innerValue ? getSimpleValue(innerValue as unknown as ValueNode) ?? 100 : 100;
+      const target = innerValue ? resolveValueNode(innerValue as unknown as ValueNode, DEFAULT_VALUE_CONTEXT) ?? 100 : 100;
       switch (cond.cardinalityConstraint) {
         case CardinalityConstraintType.AT_MOST: return hpPct <= target;
         case CardinalityConstraintType.AT_LEAST: return hpPct >= target;
@@ -185,7 +185,7 @@ function evaluateHave(cond: Interaction, ctx: ConditionContext): boolean {
     if (!ctx.getEnemyHpPercentage) return false;
     const hpPct = ctx.getEnemyHpPercentage(ctx.frame);
     if (hpPct == null) return false;
-    const target = (cond.value ? getSimpleValue(cond.value) : undefined) ?? 100;
+    const target = (cond.value ? resolveValueNode(cond.value!, DEFAULT_VALUE_CONTEXT) : undefined) ?? 100;
     switch (cond.cardinalityConstraint) {
       case CardinalityConstraintType.AT_MOST: return hpPct <= target;
       case CardinalityConstraintType.AT_LEAST: return hpPct >= target;
@@ -206,7 +206,7 @@ function evaluateHave(cond: Interaction, ctx: ConditionContext): boolean {
   if (count === 0) return false;
 
   if (cond.value != null) {
-    const target = getSimpleValue(cond.value) ?? 0;
+    const target = resolveValueNode(cond.value!, DEFAULT_VALUE_CONTEXT) ?? 0;
     switch (cond.cardinalityConstraint) {
       case CardinalityConstraintType.EXACTLY: return count === target;
       case CardinalityConstraintType.AT_LEAST: return count >= target;
@@ -280,7 +280,7 @@ function evaluateBecome(cond: Interaction, ctx: ConditionContext): boolean {
     }
     if (countNow === countBefore) return false;
     if (cond.value != null) {
-      const target = getSimpleValue(cond.value) ?? 0;
+      const target = resolveValueNode(cond.value!, DEFAULT_VALUE_CONTEXT) ?? 0;
       switch (cond.cardinalityConstraint) {
         case CardinalityConstraintType.EXACTLY: return countNow === target;
         case CardinalityConstraintType.AT_LEAST: return countNow >= target;

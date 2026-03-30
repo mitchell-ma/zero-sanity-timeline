@@ -234,208 +234,84 @@
           "clause": [
             {
               "conditions": [
-                {
-                  "subject": "ENEMY",
-                  "verb": "HAVE",
-                  "object": "STATUS",
-                  "objectId": "REACTION",
-                  "objectQualifier": "COMBUSTION"
-                },
-                {
-                  "subject": "ENEMY",
-                  "verb": "HAVE",
-                  "object": "STATUS",
-                  "objectId": "REACTION",
-                  "objectQualifier": "ELECTRIFICATION"
-                }
+                { "subjectDeterminer": "THIS", "subject": "OPERATOR", "verb": "HAVE", "object": "STATUS", "objectId": "WULFGARD_TALENT1_SCORCHING_FANGS" },
+                { "subjectDeterminer": "THIS", "subject": "OPERATOR", "verb": "HAVE", "object": "POTENTIAL", "value": { "verb": "IS", "value": 3 } },
+                { "subject": "ENEMY", "verb": "HAVE", "object": "STATUS", "objectId": "REACTION", "objectQualifier": "COMBUSTION" },
+                { "subject": "ENEMY", "verb": "HAVE", "object": "STATUS", "objectId": "REACTION", "objectQualifier": "ELECTRIFICATION" }
               ],
               "effects": [
-                {
-                  "verb": "CONSUME",
-                  "object": "STATUS",
-                  "objectId": "REACTION",
-                  "objectQualifier": "COMBUSTION",
-                  "from": "ENEMY"
-                }
+                { "verb": "CONSUME", "object": "STATUS", "objectId": "REACTION", "objectQualifier": "COMBUSTION", "from": "ENEMY" },
+                { "verb": "APPLY", "object": "STATUS", "objectId": "WULFGARD_TALENT1_SCORCHING_FANGS", "toDeterminer": "THIS", "to": "OPERATOR", "with": { "stacks": { "verb": "IS", "value": 1 }, "duration": { "verb": "IS", "value": 10 } } },
+                { "verb": "APPLY", "object": "STATUS", "objectId": "WULFGARD_TALENT1_SCORCHING_FANGS_MINOR", "toDeterminer": "ALL_OTHER", "to": "OPERATOR", "with": { "stacks": { "verb": "IS", "value": 1 }, "duration": { "verb": "IS", "value": 10 } } },
+                { "verb": "DEAL", "object": "STAGGER", "to": "ENEMY", "with": { "value": { "verb": "IS", "value": 5 } } },
+                { "verb": "DEAL", "objectQualifier": "HEAT", "object": "DAMAGE", "to": "ENEMY", "with": { "value": { "verb": "VARY_BY", "object": "SKILL_LEVEL", "value": [3.78, 4.15, 4.53, 4.91, 5.29, 5.66, 6.04, 6.42, 6.8, 7.27, 7.84, 8.5], "ofDeterminer": "THIS", "of": "OPERATOR" }, "mainStat": { "verb": "IS", "object": "STAT", "objectId": "ATTACK", "ofDeterminer": "THIS", "of": "OPERATOR" } } },
+                { "verb": "RETURN", "object": "SKILL_POINT", "with": { "value": { "operation": "ADD", "left": { "verb": "VARY_BY", "object": "TALENT_LEVEL", "value": [0, 5, 10], "ofDeterminer": "THIS", "of": "OPERATOR" }, "right": { "verb": "VARY_BY", "object": "POTENTIAL", "value": [0, 0, 10, 10, 10, 10], "ofDeterminer": "THIS", "of": "OPERATOR" } } } }
               ]
             },
             {
               "conditions": [
-                {
-                  "subject": "ENEMY",
-                  "verb": "HAVE",
-                  "object": "STATUS",
-                  "objectId": "REACTION",
-                  "objectQualifier": "COMBUSTION"
-                }
+                { "subjectDeterminer": "THIS", "subject": "OPERATOR", "verb": "HAVE", "object": "STATUS", "objectId": "WULFGARD_TALENT1_SCORCHING_FANGS" },
+                { "subjectDeterminer": "THIS", "subject": "OPERATOR", "verb": "HAVE", "object": "POTENTIAL", "value": { "verb": "IS", "value": 3 } },
+                { "subject": "ENEMY", "verb": "HAVE", "object": "STATUS", "objectId": "REACTION", "objectQualifier": "COMBUSTION" },
+                { "subject": "ENEMY", "verb": "HAVE", "negated": true, "object": "STATUS", "objectId": "REACTION", "objectQualifier": "ELECTRIFICATION" }
               ],
               "effects": [
-                {
-                  "verb": "CONSUME",
-                  "object": "STATUS",
-                  "objectId": "REACTION",
-                  "objectQualifier": "COMBUSTION",
-                  "from": "ENEMY"
-                }
+                { "verb": "CONSUME", "object": "STATUS", "objectId": "REACTION", "objectQualifier": "COMBUSTION", "from": "ENEMY" },
+                { "verb": "APPLY", "object": "STATUS", "objectId": "WULFGARD_TALENT1_SCORCHING_FANGS", "toDeterminer": "THIS", "to": "OPERATOR", "with": { "stacks": { "verb": "IS", "value": 1 }, "duration": { "verb": "IS", "value": 10 } } },
+                { "verb": "APPLY", "object": "STATUS", "objectId": "WULFGARD_TALENT1_SCORCHING_FANGS_MINOR", "toDeterminer": "ALL_OTHER", "to": "OPERATOR", "with": { "stacks": { "verb": "IS", "value": 1 }, "duration": { "verb": "IS", "value": 10 } } },
+                { "verb": "DEAL", "object": "STAGGER", "to": "ENEMY", "with": { "value": { "verb": "IS", "value": 5 } } },
+                { "verb": "DEAL", "objectQualifier": "HEAT", "object": "DAMAGE", "to": "ENEMY", "with": { "value": { "verb": "VARY_BY", "object": "SKILL_LEVEL", "value": [3.78, 4.15, 4.53, 4.91, 5.29, 5.66, 6.04, 6.42, 6.8, 7.27, 7.84, 8.5], "ofDeterminer": "THIS", "of": "OPERATOR" }, "mainStat": { "verb": "IS", "object": "STAT", "objectId": "ATTACK", "ofDeterminer": "THIS", "of": "OPERATOR" } } },
+                { "verb": "RETURN", "object": "SKILL_POINT", "with": { "value": { "operation": "ADD", "left": { "verb": "VARY_BY", "object": "TALENT_LEVEL", "value": [0, 5, 10], "ofDeterminer": "THIS", "of": "OPERATOR" }, "right": { "verb": "VARY_BY", "object": "POTENTIAL", "value": [0, 0, 10, 10, 10, 10], "ofDeterminer": "THIS", "of": "OPERATOR" } } } }
               ]
             },
             {
               "conditions": [
-                {
-                  "subject": "ENEMY",
-                  "verb": "HAVE",
-                  "object": "STATUS",
-                  "objectId": "REACTION",
-                  "objectQualifier": "ELECTRIFICATION"
-                }
+                { "subjectDeterminer": "THIS", "subject": "OPERATOR", "verb": "HAVE", "object": "STATUS", "objectId": "WULFGARD_TALENT1_SCORCHING_FANGS" },
+                { "subjectDeterminer": "THIS", "subject": "OPERATOR", "verb": "HAVE", "object": "POTENTIAL", "value": { "verb": "IS", "value": 3 } },
+                { "subject": "ENEMY", "verb": "HAVE", "object": "STATUS", "objectId": "REACTION", "objectQualifier": "ELECTRIFICATION" },
+                { "subject": "ENEMY", "verb": "HAVE", "negated": true, "object": "STATUS", "objectId": "REACTION", "objectQualifier": "COMBUSTION" }
               ],
               "effects": [
-                {
-                  "verb": "CONSUME",
-                  "object": "STATUS",
-                  "objectId": "REACTION",
-                  "objectQualifier": "ELECTRIFICATION",
-                  "from": "ENEMY"
-                }
-              ]
-            },
-            {
-              "conditions": [],
-              "effects": [
-                {
-                  "verb": "DEAL",
-                  "object": "STAGGER",
-                  "to": "ENEMY",
-                  "with": {
-                    "value": {
-                      "verb": "IS",
-                      "value": 5
-                    }
-                  }
-                },
-                {
-                  "verb": "DEAL",
-                  "objectQualifier": "HEAT",
-                  "object": "DAMAGE",
-                  "to": "ENEMY",
-                  "with": {
-                    "value": {
-                      "verb": "VARY_BY",
-                      "object": "SKILL_LEVEL",
-                      "value": [
-                        3.78,
-                        4.15,
-                        4.53,
-                        4.91,
-                        5.29,
-                        5.66,
-                        6.04,
-                        6.42,
-                        6.8,
-                        7.27,
-                        7.84,
-                        8.5
-                      ],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
-                    },
-                    "mainStat": {
-                      "verb": "IS",
-                      "object": "STAT",
-                      "objectId": "ATTACK",
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
-                    }
-                  }
-                },
-                {
-                  "verb": "RETURN",
-                  "object": "SKILL_POINT",
-                  "with": {
-                    "value": {
-                      "operation": "ADD",
-                      "left": {
-                        "verb": "VARY_BY",
-                        "object": "TALENT_LEVEL",
-                        "value": [
-                          0,
-                          5,
-                          10
-                        ],
-                        "ofDeterminer": "THIS",
-                        "of": "OPERATOR"
-                      },
-                      "right": {
-                        "verb": "VARY_BY",
-                        "object": "POTENTIAL",
-                        "value": [
-                          0,
-                          0,
-                          10,
-                          10,
-                          10,
-                          10
-                        ],
-                        "ofDeterminer": "THIS",
-                        "of": "OPERATOR"
-                      }
-                    }
-                  }
-                }
+                { "verb": "CONSUME", "object": "STATUS", "objectId": "REACTION", "objectQualifier": "ELECTRIFICATION", "from": "ENEMY" },
+                { "verb": "APPLY", "object": "STATUS", "objectId": "WULFGARD_TALENT1_SCORCHING_FANGS", "toDeterminer": "THIS", "to": "OPERATOR", "with": { "stacks": { "verb": "IS", "value": 1 }, "duration": { "verb": "IS", "value": 10 } } },
+                { "verb": "APPLY", "object": "STATUS", "objectId": "WULFGARD_TALENT1_SCORCHING_FANGS_MINOR", "toDeterminer": "ALL_OTHER", "to": "OPERATOR", "with": { "stacks": { "verb": "IS", "value": 1 }, "duration": { "verb": "IS", "value": 10 } } },
+                { "verb": "DEAL", "object": "STAGGER", "to": "ENEMY", "with": { "value": { "verb": "IS", "value": 5 } } },
+                { "verb": "DEAL", "objectQualifier": "HEAT", "object": "DAMAGE", "to": "ENEMY", "with": { "value": { "verb": "VARY_BY", "object": "SKILL_LEVEL", "value": [3.78, 4.15, 4.53, 4.91, 5.29, 5.66, 6.04, 6.42, 6.8, 7.27, 7.84, 8.5], "ofDeterminer": "THIS", "of": "OPERATOR" }, "mainStat": { "verb": "IS", "object": "STAT", "objectId": "ATTACK", "ofDeterminer": "THIS", "of": "OPERATOR" } } },
+                { "verb": "RETURN", "object": "SKILL_POINT", "with": { "value": { "operation": "ADD", "left": { "verb": "VARY_BY", "object": "TALENT_LEVEL", "value": [0, 5, 10], "ofDeterminer": "THIS", "of": "OPERATOR" }, "right": { "verb": "VARY_BY", "object": "POTENTIAL", "value": [0, 0, 10, 10, 10, 10], "ofDeterminer": "THIS", "of": "OPERATOR" } } } }
               ]
             },
             {
               "conditions": [
-                {
-                  "subjectDeterminer": "THIS",
-                  "subject": "OPERATOR",
-                  "verb": "HAVE",
-                  "object": "STATUS",
-                  "objectId": "WULFGARD_TALENT1_SCORCHING_FANGS"
-                },
-                {
-                  "subjectDeterminer": "THIS",
-                  "subject": "OPERATOR",
-                  "verb": "HAVE",
-                  "object": "POTENTIAL",
-                  "value": 3
-                }
+                { "subject": "ENEMY", "verb": "HAVE", "object": "STATUS", "objectId": "REACTION", "objectQualifier": "COMBUSTION" },
+                { "subject": "ENEMY", "verb": "HAVE", "object": "STATUS", "objectId": "REACTION", "objectQualifier": "ELECTRIFICATION" }
               ],
               "effects": [
-                {
-                  "verb": "APPLY",
-                  "object": "STATUS",
-                  "objectId": "WULFGARD_TALENT1_SCORCHING_FANGS",
-                  "toDeterminer": "THIS",
-                  "to": "OPERATOR",
-                  "with": {
-                    "stacks": {
-                      "verb": "IS",
-                      "value": 1
-                    },
-                    "duration": {
-                      "verb": "IS",
-                      "value": 10
-                    }
-                  }
-                },
-                {
-                  "verb": "APPLY",
-                  "object": "STATUS",
-                  "objectId": "WULFGARD_TALENT1_SCORCHING_FANGS_MINOR",
-                  "toDeterminer": "ALL_OTHER",
-                  "to": "OPERATOR",
-                  "with": {
-                    "stacks": {
-                      "verb": "IS",
-                      "value": 1
-                    },
-                    "duration": {
-                      "verb": "IS",
-                      "value": 10
-                    }
-                  }
-                }
+                { "verb": "CONSUME", "object": "STATUS", "objectId": "REACTION", "objectQualifier": "COMBUSTION", "from": "ENEMY" },
+                { "verb": "DEAL", "object": "STAGGER", "to": "ENEMY", "with": { "value": { "verb": "IS", "value": 5 } } },
+                { "verb": "DEAL", "objectQualifier": "HEAT", "object": "DAMAGE", "to": "ENEMY", "with": { "value": { "verb": "VARY_BY", "object": "SKILL_LEVEL", "value": [3.78, 4.15, 4.53, 4.91, 5.29, 5.66, 6.04, 6.42, 6.8, 7.27, 7.84, 8.5], "ofDeterminer": "THIS", "of": "OPERATOR" }, "mainStat": { "verb": "IS", "object": "STAT", "objectId": "ATTACK", "ofDeterminer": "THIS", "of": "OPERATOR" } } },
+                { "verb": "RETURN", "object": "SKILL_POINT", "with": { "value": { "operation": "ADD", "left": { "verb": "VARY_BY", "object": "TALENT_LEVEL", "value": [0, 5, 10], "ofDeterminer": "THIS", "of": "OPERATOR" }, "right": { "verb": "VARY_BY", "object": "POTENTIAL", "value": [0, 0, 10, 10, 10, 10], "ofDeterminer": "THIS", "of": "OPERATOR" } } } }
+              ]
+            },
+            {
+              "conditions": [
+                { "subject": "ENEMY", "verb": "HAVE", "object": "STATUS", "objectId": "REACTION", "objectQualifier": "COMBUSTION" }
+              ],
+              "effects": [
+                { "verb": "CONSUME", "object": "STATUS", "objectId": "REACTION", "objectQualifier": "COMBUSTION", "from": "ENEMY" },
+                { "verb": "DEAL", "object": "STAGGER", "to": "ENEMY", "with": { "value": { "verb": "IS", "value": 5 } } },
+                { "verb": "DEAL", "objectQualifier": "HEAT", "object": "DAMAGE", "to": "ENEMY", "with": { "value": { "verb": "VARY_BY", "object": "SKILL_LEVEL", "value": [3.78, 4.15, 4.53, 4.91, 5.29, 5.66, 6.04, 6.42, 6.8, 7.27, 7.84, 8.5], "ofDeterminer": "THIS", "of": "OPERATOR" }, "mainStat": { "verb": "IS", "object": "STAT", "objectId": "ATTACK", "ofDeterminer": "THIS", "of": "OPERATOR" } } },
+                { "verb": "RETURN", "object": "SKILL_POINT", "with": { "value": { "operation": "ADD", "left": { "verb": "VARY_BY", "object": "TALENT_LEVEL", "value": [0, 5, 10], "ofDeterminer": "THIS", "of": "OPERATOR" }, "right": { "verb": "VARY_BY", "object": "POTENTIAL", "value": [0, 0, 10, 10, 10, 10], "ofDeterminer": "THIS", "of": "OPERATOR" } } } }
+              ]
+            },
+            {
+              "conditions": [
+                { "subject": "ENEMY", "verb": "HAVE", "object": "STATUS", "objectId": "REACTION", "objectQualifier": "ELECTRIFICATION" }
+              ],
+              "effects": [
+                { "verb": "CONSUME", "object": "STATUS", "objectId": "REACTION", "objectQualifier": "ELECTRIFICATION", "from": "ENEMY" },
+                { "verb": "DEAL", "object": "STAGGER", "to": "ENEMY", "with": { "value": { "verb": "IS", "value": 5 } } },
+                { "verb": "DEAL", "objectQualifier": "HEAT", "object": "DAMAGE", "to": "ENEMY", "with": { "value": { "verb": "VARY_BY", "object": "SKILL_LEVEL", "value": [3.78, 4.15, 4.53, 4.91, 5.29, 5.66, 6.04, 6.42, 6.8, 7.27, 7.84, 8.5], "ofDeterminer": "THIS", "of": "OPERATOR" }, "mainStat": { "verb": "IS", "object": "STAT", "objectId": "ATTACK", "ofDeterminer": "THIS", "of": "OPERATOR" } } },
+                { "verb": "RETURN", "object": "SKILL_POINT", "with": { "value": { "operation": "ADD", "left": { "verb": "VARY_BY", "object": "TALENT_LEVEL", "value": [0, 5, 10], "ofDeterminer": "THIS", "of": "OPERATOR" }, "right": { "verb": "VARY_BY", "object": "POTENTIAL", "value": [0, 0, 10, 10, 10, 10], "ofDeterminer": "THIS", "of": "OPERATOR" } } } }
               ]
             }
           ],

@@ -349,8 +349,6 @@ function handleHave(primaryCond: Predicate, ctx: VerbHandlerContext): TriggerMat
 
   // Collect ALL conditions (primary + secondary) that use HAVE — each contributes candidate frames
   const allHaveConds = [primaryCond, ...ctx.secondaryConditions.filter(sc => sc.verb === VerbType.HAVE)];
-  const nonHaveSecondary = ctx.secondaryConditions.filter(sc => sc.verb !== VerbType.HAVE);
-
   // Gather candidate frames from ALL HAVE conditions' matching events
   const candidateFrames = new Set<number>();
   for (const cond of allHaveConds) {
@@ -388,15 +386,6 @@ function handleHave(primaryCond: Predicate, ctx: VerbHandlerContext): TriggerMat
 }
 
 /** Extract a stacks threshold from a predicate's `with.stacks` block. */
-function extractStacksThreshold(cond: Predicate): number | null {
-  const w = cond.with;
-  if (!w) return null;
-  const sl = w.stacks as { verb?: string; cardinalityConstraint?: string; values?: number[] } | undefined;
-  if (!sl?.values?.length) return null;
-  if (sl.cardinalityConstraint === 'AT_LEAST') return sl.values[0];
-  return null;
-}
-
 // ── RECOVER handler ──────────────────────────────────────────────────────────
 
 function handleRecover(primaryCond: Predicate, ctx: VerbHandlerContext): TriggerMatch[] {

@@ -39,7 +39,7 @@
           "object": "INFLICTION",
           "objectId": "VULNERABLE",
           "cardinalityConstraint": "EXACTLY",
-          "value": 4
+          "value": { "verb": "IS", "value": 4 }
         }
       ],
       "effects": [

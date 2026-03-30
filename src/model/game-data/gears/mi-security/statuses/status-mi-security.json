@@ -28,7 +28,7 @@
           "verb": "HAVE",
           "object": "STACKS",
           "cardinalityConstraint": "EXACTLY",
-          "value": 5
+          "value": { "verb": "IS", "value": 5 }
         }
       ],
       "effects": [

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ContextMenuItem } from "../consts/viewTypes";
 
 interface ContextMenuProps {
@@ -10,6 +10,7 @@ interface ContextMenuProps {
 
 export default function ContextMenu({ x, y, items, onClose }: ContextMenuProps) {
   const menuRef = useRef<HTMLDivElement>(null);
+  const [, forceRender] = useState(0);
 
   const menuW = 220;
   const menuH = items.reduce((h, item) =>
@@ -53,6 +54,7 @@ export default function ContextMenu({ x, y, items, onClose }: ContextMenuProps) 
         if (item.header) {
           return <div key={i} className="context-menu-header">{item.label}</div>;
         }
+        const checked = typeof item.checked === 'function' ? item.checked() : item.checked;
         return (
           <div key={i}>
             <button
@@ -61,11 +63,12 @@ export default function ContextMenu({ x, y, items, onClose }: ContextMenuProps) 
               onClick={() => {
                 if (item.disabled) return;
                 item.action?.();
-                if (!item.keepOpen) onClose();
+                if (item.keepOpen) forceRender((n) => n + 1);
+                else onClose();
               }}
             >
               {item.checked != null && (
-                <span className="context-menu-check">{item.checked ? '\u2713' : ''}</span>
+                <span className="context-menu-check">{checked ? '\u2713' : ''}</span>
               )}
               {item.label}
               {item.disabledReason && (

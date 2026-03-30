@@ -21,7 +21,7 @@ import {
   isQualifiedId,
 } from '../../dsl/semantics';
 import type { ValueNode } from '../../dsl/semantics';
-import { resolveValueNode, getSimpleValue, buildContextForSkillColumn } from '../calculation/valueResolver';
+import { resolveValueNode, DEFAULT_VALUE_CONTEXT, buildContextForSkillColumn } from '../calculation/valueResolver';
 import type { ValueResolutionContext } from '../calculation/valueResolver';
 import { TimelineEvent, eventDuration, setEventDuration } from '../../consts/viewTypes';
 import { CritMode, DamageType, ElementType, EventFrameType, PERMANENT_DURATION, PhysicalStatusType, StackInteractionType, UnitType } from '../../consts/enums';
@@ -175,7 +175,7 @@ function validateVerbObject(verb: VerbType, object?: string) {
 function resolveCardinality(cardinality: ValueNode | typeof THRESHOLD_MAX | undefined, _potential: number, defaultMax = 999) {
   if (cardinality === THRESHOLD_MAX) return defaultMax;
   if (cardinality != null && typeof cardinality === 'object') {
-    return getSimpleValue(cardinality) ?? defaultMax;
+    return resolveValueNode(cardinality, DEFAULT_VALUE_CONTEXT) ?? defaultMax;
   }
   return defaultMax;
 }
@@ -205,7 +205,7 @@ function getStatusConfig(statusId?: string): StatusConfig | undefined {
       const maxStacks = stackLimit
         ? (typeof stackLimit === 'number' ? stackLimit
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          : getSimpleValue(stackLimit as any) ?? undefined)
+          : resolveValueNode(stackLimit as any, DEFAULT_VALUE_CONTEXT) ?? undefined)
         : undefined;
       const cdSecs = (s as unknown as { cooldownSeconds?: number }).cooldownSeconds;
       const cfg: StatusConfig = {
@@ -614,6 +614,11 @@ export class EventInterpretorController {
       const v = this.resolveWith(effect.with?.staggerValue, ctx);
       this.controller.createStagger('stagger', ownerId, ctx.frame, typeof v === 'number' ? v : 0, source);
       return true;
+    }
+    // APPLY EVENT — create a new instance of the parent status definition on the target.
+    // Equivalent to APPLY STATUS <parentStatusId> with the parent's duration and stacking.
+    if (effect.object === NounType.EVENT && ctx.parentStatusId) {
+      return this.doApply({ ...effect, object: NounType.STATUS, objectId: ctx.parentStatusId }, ctx);
     }
     console.warn(`[EventInterpretor] APPLY: unsupported object ${effect.object}`);
     return false;

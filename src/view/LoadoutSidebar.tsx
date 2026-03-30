@@ -13,6 +13,7 @@ import {
 } from '../utils/loadoutStorage';
 import { LoadoutNodeType, SidebarMode as SidebarModeEnum } from '../consts/enums';
 import { t } from '../locales/locale';
+import { COMMUNITY_FOLDERS, CommunityFolder } from '../app/communityLoadouts';
 
 export type SidebarMode = SidebarModeEnum | null;
 
@@ -25,6 +26,7 @@ interface LoadoutSidebarProps {
   onDuplicateLoadout: (sourceId: string) => void;
   onDeleteLoadout: (loadoutIds: string[], nodeId: string) => void;
   onWarning?: (message: string) => void;
+  onLoadCommunityLoadout: (loadoutId: string) => void;
   sidebarMode: SidebarMode;
   onSidebarModeChange: (mode: SidebarMode) => void;
 }
@@ -58,6 +60,7 @@ const LoadoutSidebar = forwardRef<HTMLDivElement, LoadoutSidebarProps>(function 
   onDuplicateLoadout,
   onDeleteLoadout,
   onWarning,
+  onLoadCommunityLoadout,
   sidebarMode,
   onSidebarModeChange,
 }, ref) {
@@ -531,6 +534,7 @@ const LoadoutSidebar = forwardRef<HTMLDivElement, LoadoutSidebarProps>(function 
               if (!isOverNode) setSelectedIds(new Set());
             }}
           >
+            <CommunitySection folders={COMMUNITY_FOLDERS} activeId={activeLoadoutId} onLoad={onLoadCommunityLoadout} onDuplicate={onDuplicateLoadout} />
             {rootNodes.length === 0 && !filter && (
               <div className="loadout-empty">{t('sidebar.empty')}</div>
             )}
@@ -583,6 +587,89 @@ const LoadoutSidebar = forwardRef<HTMLDivElement, LoadoutSidebarProps>(function 
 });
 
 export default LoadoutSidebar;
+
+// ─── Community section sub-component ─────────────────────────────────────────
+
+function CommunitySection({ folders, activeId, onLoad, onDuplicate }: { folders: CommunityFolder[]; activeId: string | null; onLoad: (id: string) => void; onDuplicate: (id: string) => void }) {
+  const [collapsed, setCollapsed] = useState(false);
+  const [collapsedFolders, setCollapsedFolders] = useState<Set<string>>(new Set());
+  const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number; loadoutId: string } | null>(null);
+  const ctxRef = useRef<HTMLDivElement>(null);
+
+  const toggleFolder = useCallback((folderId: string) => {
+    setCollapsedFolders((prev) => {
+      const next = new Set(prev);
+      if (next.has(folderId)) next.delete(folderId);
+      else next.add(folderId);
+      return next;
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!ctxMenu) return;
+    const dismiss = (e: MouseEvent) => {
+      if (ctxRef.current && !ctxRef.current.contains(e.target as Node)) setCtxMenu(null);
+    };
+    const dismissKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setCtxMenu(null); };
+    window.addEventListener('mousedown', dismiss);
+    window.addEventListener('keydown', dismissKey);
+    return () => { window.removeEventListener('mousedown', dismiss); window.removeEventListener('keydown', dismissKey); };
+  }, [ctxMenu]);
+
+  return (
+    <div className="community-section">
+      <div className="community-section-header" onClick={() => setCollapsed((p) => !p)}>
+        <span className="loadout-node-icon loadout-node-chevron">
+          {collapsed ? '\u25B6' : '\u25BC'}
+        </span>
+        <span className="community-section-title">{t('sidebar.community.title')}</span>
+      </div>
+      {!collapsed && folders.map((folder) => (
+        <div key={folder.id}>
+          <div
+            className="community-node community-node--folder"
+            style={{ paddingLeft: 16 }}
+            onClick={() => toggleFolder(folder.id)}
+          >
+            <span className="loadout-node-icon loadout-node-chevron">
+              {collapsedFolders.has(folder.id) ? '\u25B6' : '\u25BC'}
+            </span>
+            <span className="loadout-node-name">{folder.name}</span>
+          </div>
+          {!collapsedFolders.has(folder.id) && folder.loadouts.map((loadout) => {
+            const isActive = loadout.id === activeId;
+            return (
+              <div
+                key={loadout.id}
+                className={`community-node${isActive ? ' community-node--active' : ''}`}
+                style={{ paddingLeft: 32 }}
+                title={t('sidebar.community.tooltip')}
+                onClick={() => onLoad(loadout.id)}
+                onContextMenu={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onLoad(loadout.id);
+                  setCtxMenu({ x: e.clientX, y: e.clientY, loadoutId: loadout.id });
+                }}
+              >
+                <span className="loadout-node-icon loadout-node-dot">{isActive ? '\u25CF' : '\u25CB'}</span>
+                <span className="loadout-node-name">{loadout.name}</span>
+              </div>
+            );
+          })}
+        </div>
+      ))}
+      {ctxMenu && createPortal(
+        <div ref={ctxRef} className="loadout-ctx-menu" style={{ position: 'fixed', left: ctxMenu.x, top: ctxMenu.y, zIndex: 9999 }}>
+          <button className="loadout-ctx-item" onClick={() => { onDuplicate(ctxMenu.loadoutId); setCtxMenu(null); }}>
+            {t('sidebar.ctx.duplicate')}
+          </button>
+        </div>,
+        document.body,
+      )}
+    </div>
+  );
+}
 
 // ─── Context menu sub-component ──────────────────────────────────────────────
 

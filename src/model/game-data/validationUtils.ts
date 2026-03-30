@@ -1,7 +1,7 @@
 import {
   VerbType, DeterminerType,
   VERB_OBJECTS, OBJECT_QUALIFIERS, OBJECT_REQUIRED_QUALIFIER, OBJECT_TARGET_MAPPING,
-  NOUN_QUALIFIER_MAPPING,
+  CONSUME_TARGET_MAPPING, NOUN_QUALIFIER_MAPPING,
 } from '../../dsl/semantics';
 import type { ObjectType, NounType } from '../../dsl/semantics';
 import { OperatorClassType } from '../../consts/enums';
@@ -39,7 +39,7 @@ export const VALID_EFFECT_KEYS = new Set([
 ]);
 
 export const VALID_EFFECT_WITH_KEYS = new Set([
-  'value', 'duration', 'unit', 'stacks', 'multiplier', 'staggerValue', 'mainStat', 'cardinality',
+  'value', 'duration', 'unit', 'stacks', 'multiplier', 'stagger', 'mainStat', 'cardinality',
 ]);
 
 export const VALID_TRIGGER_CONDITION_KEYS = new Set([
@@ -114,10 +114,10 @@ function warnInvalidApplyTarget(ef: Record<string, unknown>, path: string): stri
   return [];
 }
 
-/** Validate CONSUME target against OBJECT_TARGET_MAPPING. */
+/** Validate CONSUME target against CONSUME_TARGET_MAPPING (broader than APPLY). */
 function warnInvalidConsumeTarget(ef: Record<string, unknown>, path: string): string[] {
   if (ef.verb !== VerbType.CONSUME) return [];
-  const validTargets = OBJECT_TARGET_MAPPING[ef.object as ObjectType];
+  const validTargets = CONSUME_TARGET_MAPPING[ef.object as ObjectType];
   if (!validTargets) return [];
   const from = (ef as { from?: string }).from;
   if (!from) {

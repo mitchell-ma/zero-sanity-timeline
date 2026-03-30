@@ -101,7 +101,7 @@ export interface TalentDefEntry {
   def: StatusEventDef;
   operatorId: string;
   operatorSlotId: string;
-  talentEvent: TimelineEvent;
+  talentEvent: TimelineEvent | null;
 }
 
 // ── Priority registry (mirrors triggerMatch.ts) ─────────────────────────────
@@ -302,7 +302,9 @@ export class TriggerIndex {
   getAllTalentEvents(): TimelineEvent[] {
     const events: TimelineEvent[] = [];
     this.talentsBySlot.forEach(defs => {
-      for (const d of defs) events.push(d.talentEvent);
+      for (const d of defs) {
+        if (d.talentEvent) events.push(d.talentEvent);
+      }
     });
     return events;
   }
@@ -411,24 +413,37 @@ export class TriggerIndex {
         const talentDurationFrames = talentDuration ? getDurationFrames(talentDuration) : TOTAL_FRAMES;
         const talentOwnerId = resolveTargetOwnerId(def.properties.target, slotId, opSlotMap, def.properties.targetDeterminer);
         const talentColumnId = def.properties.id;
-        // Skip if already exists in registered events
-        if (registeredEvents?.some(ev => ev.columnId === talentColumnId && ev.ownerId === talentOwnerId)) continue;
 
-        const talentEvent: TimelineEvent = {
-          uid: `${def.properties.id.toLowerCase()}-talent-${slotId}`,
-          id: def.properties.id,
-          name: def.properties.id,
-          ownerId: talentOwnerId,
-          columnId: talentColumnId,
-          startFrame: 0,
-          segments: durationSegment(talentDurationFrames),
-          sourceOwnerId: operatorId,
-          sourceSkillName: def.properties.id,
-        };
+        // Trigger-only talents (have onTriggerClause + finite duration) create instances
+        // via APPLY EVENT during queue processing — no template event. Template events
+        // for these falsely satisfy HAVE STATUS conditions.
+        const hasTrigger = def.onTriggerClause && def.onTriggerClause.length > 0;
+        const isPassive = talentDurationFrames >= TOTAL_FRAMES;
+        if (hasTrigger && !isPassive) {
+          const existing = this.talentsBySlot.get(slotId) ?? [];
+          existing.push({ def, operatorId, operatorSlotId: slotId, talentEvent: null });
+          this.talentsBySlot.set(slotId, existing);
+          // Fall through to onTriggerClause indexing below (don't continue)
+        } else {
+          // Skip if already exists in registered events
+          if (registeredEvents?.some(ev => ev.columnId === talentColumnId && ev.ownerId === talentOwnerId)) continue;
 
-        const existing = this.talentsBySlot.get(slotId) ?? [];
-        existing.push({ def, operatorId, operatorSlotId: slotId, talentEvent });
-        this.talentsBySlot.set(slotId, existing);
+          const talentEvent: TimelineEvent = {
+            uid: `${def.properties.id.toLowerCase()}-talent-${slotId}`,
+            id: def.properties.id,
+            name: def.properties.id,
+            ownerId: talentOwnerId,
+            columnId: talentColumnId,
+            startFrame: 0,
+            segments: durationSegment(talentDurationFrames),
+            sourceOwnerId: operatorId,
+            sourceSkillName: def.properties.id,
+          };
+
+          const existing = this.talentsBySlot.get(slotId) ?? [];
+          existing.push({ def, operatorId, operatorSlotId: slotId, talentEvent });
+          this.talentsBySlot.set(slotId, existing);
+        }
       }
 
       // ── Lifecycle clauses (clause with HAVE conditions) ──────────────

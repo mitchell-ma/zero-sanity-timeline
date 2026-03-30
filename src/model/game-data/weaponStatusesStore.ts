@@ -28,6 +28,11 @@ export interface ClausePredicate {
   effects: ClauseEffect[];
 }
 
+interface TriggerClause {
+  conditions: Interaction[];
+  effects?: ClauseEffect[];
+}
+
 export interface StacksConfig {
   limit: ValueNode;
   interactionType: string;
@@ -122,6 +127,8 @@ export function validateWeaponStatus(json: Record<string, unknown>): string[] {
 /** A single weapon status effect definition. Maps 1:1 to the JSON shape. */
 export class WeaponStatus {
   readonly clause: ClausePredicate[];
+  readonly onTriggerClause: TriggerClause[];
+  readonly onExitClause: ClausePredicate[];
   readonly id: string;
   readonly name: string;
   readonly description?: string;
@@ -138,6 +145,8 @@ export class WeaponStatus {
     const meta = (json.metadata ?? {}) as Record<string, unknown>;
 
     this.clause = (json.clause ?? []) as ClausePredicate[];
+    this.onTriggerClause = (json.onTriggerClause ?? []) as TriggerClause[];
+    this.onExitClause = (json.onExitClause ?? []) as ClausePredicate[];
     this.id = (props.id ?? '') as string;
     this.name = (props.name ?? '') as string;
     if (props.description) this.description = props.description as string;
@@ -165,6 +174,8 @@ export class WeaponStatus {
   serialize(): Record<string, unknown> {
     return {
       clause: this.clause,
+      ...(this.onTriggerClause.length > 0 ? { onTriggerClause: this.onTriggerClause } : {}),
+      ...(this.onExitClause.length > 0 ? { onExitClause: this.onExitClause } : {}),
       properties: {
         id: this.id,
         name: this.name,

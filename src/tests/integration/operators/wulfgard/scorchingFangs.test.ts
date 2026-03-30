@@ -25,7 +25,7 @@ import {
   REACTION_COLUMNS, ENEMY_OWNER_ID,
   OPERATOR_STATUS_COLUMN_ID,
 } from '../../../../model/channels';
-import { findColumn, getMenuPayload, setUltimateEnergyToMax } from '../../helpers';
+import { findColumn } from '../../helpers';
 import type { AppResult } from '../../helpers';
 
 /* eslint-disable @typescript-eslint/no-require-imports */
@@ -64,7 +64,6 @@ function setPotential(result: { current: AppResult }, potential: number) {
 }
 
 function placeUlt(result: { current: AppResult }, startSec: number) {
-  act(() => { setUltimateEnergyToMax(result.current, SLOT_WULFGARD, 0); });
   const ultCol = findColumn(result.current, SLOT_WULFGARD, NounType.ULTIMATE);
   act(() => {
     result.current.handleAddEvent(

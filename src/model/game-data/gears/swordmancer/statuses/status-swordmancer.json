@@ -14,7 +14,7 @@
               "verb": "IS",
               "value": 2.5
             },
-            "staggerValue": {
+            "stagger": {
               "verb": "IS",
               "value": 10
             },

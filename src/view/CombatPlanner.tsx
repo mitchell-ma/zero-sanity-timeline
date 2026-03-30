@@ -146,8 +146,12 @@ interface CombatPlannerProps {
   spInsufficiencyZones?: Map<string, import('../controller/timeline/skillPointTimeline').ResourceZone[]>;
   /** Drag throttle cadence (1=every frame ~60fps, 2=every other ~30fps, 3=~20fps). */
   dragThrottle?: number;
+  /** When true, all mutations are disabled (community/sample loadouts). */
+  readOnly?: boolean;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const noop1 = (_a: unknown) => {};
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const noop2 = (_a: unknown, _b: unknown) => {};
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -245,6 +249,7 @@ export default function CombatPlanner({
   orientation = 'vertical',
   onToggleOrientation,
   dragThrottle = 2,
+  readOnly,
 }: CombatPlannerProps) {
   const axis = getAxisMap(orientation);
   const isHorizontal = orientation === 'horizontal';
@@ -398,7 +403,6 @@ export default function CombatPlanner({
     if (hiddenStatusTypes.size === 0) return columnsProp;
     return columnsProp.map((col) => {
       if (col.type !== 'mini-timeline' || !col.microColumns || col.microColumnAssignment !== 'dynamic-split') return col;
-      // Check if any micro-column in this column has a statusType that could be filtered
       const hasFilterable = col.microColumns.some((mc) => mc.statusType);
       if (!hasFilterable) return col;
       const filtered = col.microColumns.filter((mc) => {
@@ -406,7 +410,7 @@ export default function CombatPlanner({
         return !hiddenStatusTypes.has(effectiveType);
       });
       if (filtered.length === col.microColumns.length) return col;
-      // Build set of hidden micro-column IDs to filter matchColumnIds
+      // Collect hidden micro-column IDs to exclude from event matching
       const hiddenIds = new Set<string>();
       for (const mc of col.microColumns) {
         const effectiveType = mc.statusType ?? EventCategoryType.SKILL_STATUS;
@@ -414,10 +418,15 @@ export default function CombatPlanner({
           hiddenIds.add(mc.id);
         }
       }
+      // Extend matchAllExcept to also exclude hidden status column IDs
+      const extendedExcept = new Set<string>();
+      if (col.matchAllExcept) col.matchAllExcept.forEach((id) => extendedExcept.add(id));
+      hiddenIds.forEach((id) => extendedExcept.add(id));
       return {
         ...col,
         microColumns: filtered,
         matchColumnIds: col.matchColumnIds?.filter((id) => !hiddenIds.has(id)),
+        matchAllExcept: extendedExcept,
       };
     });
   }, [columnsProp, hiddenStatusTypes]);
@@ -577,7 +586,7 @@ export default function CombatPlanner({
   }, [enemyMenuOpen]);
 
   const handleEnemyClick = useCallback(() => {
-    if (!allEnemies || !onSwapEnemy) return;
+    if (readOnly || !allEnemies || !onSwapEnemy) return;
     if (enemyMenuOpen) { setEnemyMenuOpen(false); return; }
     if (enemyNameRef.current) {
       const rect = enemyNameRef.current.getBoundingClientRect();
@@ -589,7 +598,7 @@ export default function CombatPlanner({
     setEnemySearch('');
     setEnemyActiveTiers(new Set(ENEMY_TIERS));
     setEnemyMenuOpen(true);
-  }, [enemyMenuOpen, allEnemies, onSwapEnemy, isHorizontal]);
+  }, [readOnly, enemyMenuOpen, allEnemies, onSwapEnemy, isHorizontal]);
 
   const pickEnemy = useCallback((id: string) => {
     onSwapEnemy?.(id);
@@ -888,6 +897,7 @@ export default function CombatPlanner({
     const handler = (e: KeyboardEvent) => {
       const tag = (e.target as HTMLElement).tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+      if (readOnly) return;
       if (e.key === 'Delete' && selectedIds.size > 0) {
         e.preventDefault();
         const ids = Array.from(selectedIds);
@@ -1117,7 +1127,8 @@ export default function CombatPlanner({
         return new Set([eventUid]);
       });
     }
-  }, [onContextMenu, onSelectedFramesChange]);
+    onEditEvent(eventUid);
+  }, [onContextMenu, onSelectedFramesChange, onEditEvent]);
 
   // ─── Event double-click (open info pane) ──────────────────────────────────────
   const handleEventDoubleClick = useCallback((_e: React.MouseEvent, eventUid: string) => {
@@ -1449,7 +1460,7 @@ export default function CombatPlanner({
     eventUid: string,
     startFrame: number,
   ) => {
-    if (e.button !== 0) return; // only left-click drag
+    if (readOnly || e.button !== 0) return;
     // Block drag for derived columns (e.g. melting flame) unless freeform mode
     const ev = events.find((ev) => ev.uid === eventUid);
     if (ev && interactionMode === InteractionModeType.STRICT) {
@@ -1504,7 +1515,7 @@ export default function CombatPlanner({
 
   // ─── Frame diamond drag start ────────────────────────────────────────────────
   const handleFrameDragStart = useCallback((e: React.MouseEvent, eventUid: string, segmentIndex: number, frameIndex: number) => {
-    if (e.button !== 0) return;
+    if (readOnly || e.button !== 0) return;
     const ev = events.find((ev) => ev.uid === eventUid);
     if (!ev?.segments) return;
     const seg = ev.segments[segmentIndex];
@@ -1527,14 +1538,14 @@ export default function CombatPlanner({
       maxOffset: nextOffset,
     };
     dragMovedRef.current = false;
-  }, [events, onBatchStart, axis]);
+  }, [readOnly, events, onBatchStart, axis]);
 
   const handleFrameClickGuarded = useCallback((e: React.MouseEvent, eid: string, si: number, fi: number) => {
     if (!dragMovedRef.current) onFrameClick?.(e, eid, si, fi);
   }, [onFrameClick]);
 
   const handleSegmentResizeDragStart = useCallback((e: React.MouseEvent, eventUid: string, segmentIndex: number, edge: 'start' | 'end') => {
-    if (e.button !== 0) return;
+    if (readOnly || e.button !== 0) return;
     const ev = events.find((ev) => ev.uid === eventUid);
     if (!ev) return;
     const seg = ev.segments[segmentIndex];
@@ -1683,6 +1694,7 @@ export default function CombatPlanner({
     col: Column,
   ) => {
     e.preventDefault();
+    if (readOnly) return;
     e.stopPropagation();
     if (dupMode) { setDupMode(false); dupSourceRef.current = []; return; }
     if (rmbDraggedRef.current) return;
@@ -1740,12 +1752,24 @@ export default function CombatPlanner({
     return types;
   }, [columnsProp]);
 
+  // Ref for checked getters to read current hidden state without stale closures
+  const hiddenStatusTypesRef = useRef(hiddenStatusTypes);
+  hiddenStatusTypesRef.current = hiddenStatusTypes;
+
+  /** Update hidden status types and eagerly sync the ref for immediate getter reads. */
+  const toggleHiddenStatusTypes = useCallback((updater: (prev: Set<string>) => Set<string>) => {
+    setHiddenStatusTypes((prev) => {
+      const next = updater(prev);
+      hiddenStatusTypesRef.current = next;
+      return next;
+    });
+  }, []);
+
   const handleHeaderContextMenu = useCallback((e: React.MouseEvent, col: Column) => {
     e.preventDefault();
     e.stopPropagation();
     if (col.type !== 'mini-timeline' || col.microColumnAssignment !== 'dynamic-split') return;
     if (allStatusTypes.size === 0) return;
-    // Only show on columns that have filterable micro-columns (with statusType)
     const unfilteredCol = columnsProp.find((c) => c.key === col.key);
     if (!unfilteredCol || unfilteredCol.type !== 'mini-timeline' || !unfilteredCol.microColumns?.some((mc) => mc.statusType)) return;
     const items: import('../consts/viewTypes').ContextMenuItem[] = [
@@ -1755,34 +1779,29 @@ export default function CombatPlanner({
       const groupTypes = group.types.filter((t) => allStatusTypes.has(t));
       if (groupTypes.length === 0) continue;
       const groupTotal = groupTypes.reduce((sum, t) => sum + (allStatusTypes.get(t) ?? 0), 0);
-      const allVisible = groupTypes.every((t) => !hiddenStatusTypes.has(t));
-      // Group header toggle — toggles all types in the group
       items.push({
         label: `${group.label} (${groupTotal})`,
-        checked: allVisible,
+        checked: () => groupTypes.every((t) => !hiddenStatusTypesRef.current.has(t)),
         keepOpen: true,
         action: () => {
-          setHiddenStatusTypes((prev) => {
+          toggleHiddenStatusTypes((prev) => {
             const next = new Set(prev);
-            if (allVisible) {
-              for (const t of groupTypes) next.add(t);
-            } else {
-              for (const t of groupTypes) next.delete(t);
-            }
+            const allVisible = groupTypes.every((t) => !prev.has(t));
+            if (allVisible) { for (const t of groupTypes) next.add(t); }
+            else { for (const t of groupTypes) next.delete(t); }
             return next;
           });
         },
       });
-      // Individual sub-items only when the group has multiple active types
       if (groupTypes.length > 1) {
         for (const type of groupTypes) {
           const count = allStatusTypes.get(type) ?? 0;
           items.push({
             label: `  ${STATUS_TYPE_LABELS[type] ?? type} (${count})`,
-            checked: !hiddenStatusTypes.has(type),
+            checked: () => !hiddenStatusTypesRef.current.has(type),
             keepOpen: true,
             action: () => {
-              setHiddenStatusTypes((prev) => {
+              toggleHiddenStatusTypes((prev) => {
                 const next = new Set(prev);
                 if (next.has(type)) next.delete(type); else next.add(type);
                 return next;
@@ -1792,15 +1811,14 @@ export default function CombatPlanner({
         }
       }
     }
-    // Any ungrouped types (future-proofing)
     for (const [type, count] of Array.from(allStatusTypes.entries())) {
       if (STATUS_FILTER_GROUPS.some((g) => g.types.includes(type as EventCategoryType))) continue;
       items.push({
         label: `${STATUS_TYPE_LABELS[type] ?? type} (${count})`,
-        checked: !hiddenStatusTypes.has(type),
+        checked: () => !hiddenStatusTypesRef.current.has(type),
         keepOpen: true,
         action: () => {
-          setHiddenStatusTypes((prev) => {
+          toggleHiddenStatusTypes((prev) => {
             const next = new Set(prev);
             if (next.has(type)) next.delete(type); else next.add(type);
             return next;
@@ -1809,7 +1827,7 @@ export default function CombatPlanner({
       });
     }
     onContextMenu({ x: e.clientX, y: e.clientY, items });
-  }, [allStatusTypes, hiddenStatusTypes, onContextMenu, columnsProp]);
+  }, [allStatusTypes, onContextMenu, columnsProp, toggleHiddenStatusTypes]);
 
   // ─── Right-click on event ────────────────────────────────────────────────────
   const handleEventContextMenu = useCallback((
@@ -1818,6 +1836,7 @@ export default function CombatPlanner({
   ) => {
     e.preventDefault();
     e.stopPropagation();
+    if (readOnly) return;
     if (rmbDraggedRef.current) return;
     onSelectedFramesChange?.([]);
 
@@ -1882,6 +1901,7 @@ export default function CombatPlanner({
   ) => {
     e.preventDefault();
     e.stopPropagation();
+    if (readOnly) return;
     if (rmbDraggedRef.current) return;
     const isInSelection = selectedFrames?.some(
       (sf) => sf.eventUid === eventUid && sf.segmentIndex === segmentIndex && sf.frameIndex === frameIndex,
@@ -1914,7 +1934,7 @@ export default function CombatPlanner({
         ],
       });
     }
-  }, [onContextMenu, onRemoveFrame, onRemoveFrames, selectedFrames, onSelectedFramesChange]);
+  }, [readOnly, onContextMenu, onRemoveFrame, onRemoveFrames, selectedFrames, onSelectedFramesChange]);
 
   // ─── Right-click on segment (multi-segment events only) ────────────────────
   const handleSegmentContextMenu = useCallback((
@@ -1924,6 +1944,7 @@ export default function CombatPlanner({
   ) => {
     e.preventDefault();
     e.stopPropagation();
+    if (readOnly) return;
     if (rmbDraggedRef.current) return;
     onSelectedFramesChange?.([]);
     const ev = events.find((ev) => ev.uid === eventUid);
@@ -1938,7 +1959,7 @@ export default function CombatPlanner({
     }
     items.push({ label: 'Remove Event', action: () => onRemoveEvent(eventUid), danger: true });
     onContextMenu({ x: e.clientX, y: e.clientY, items });
-  }, [onContextMenu, onRemoveEvent, onResetEvent, onResetSegments, onSelectedFramesChange, events]);
+  }, [readOnly, onContextMenu, onRemoveEvent, onResetEvent, onResetSegments, onSelectedFramesChange, events]);
 
   return (
     <div
@@ -2010,7 +2031,7 @@ export default function CombatPlanner({
                   splash={op?.splash}
                   state={loadouts[slot.slotId]}
                   slotId={slot.slotId}
-                  onEdit={onEditLoadout}
+                  onEdit={readOnly ? noop1 : onEditLoadout}
                 />
               </div>
             );
@@ -2184,7 +2205,7 @@ export default function CombatPlanner({
                 allEvents={events}
                 selectedIds={selectedIds}
                 hoveredId={hoveredId}
-                hoverFrame={draggingIds ? null : hoverFrame}
+                hoverFrame={hoverFrame}
                 draggingIds={draggingIds}
                 selectedFramesByEvent={selectedFramesByEvent}
                 interactionMode={interactionMode}

@@ -4,7 +4,7 @@ import { framesToSeconds, secondsToFrames, frameToDetailLabel, frameToTimeLabelP
 import { parseMathInput } from '../../utils/mathExpr';
 import { getAllSkillLabels, getAllStatusLabels } from '../../controller/gameDataStore';
 import { CombatSkillType, ELEMENT_COLORS, ELEMENT_LABELS, ElementType, EventStatusType, InfoLevel, InteractionModeType, SegmentType, StatusType } from '../../consts/enums';
-import { getStatusElementMap, getStatusById } from '../../controller/gameDataStore';
+import { getStatusElementMap, getStatusById, getAnyStatusSerialized } from '../../controller/gameDataStore';
 import { TimelineEvent, Operator, Enemy, SelectedFrame, Column, computeSegmentsSpan, getAnimationDuration, eventDuration } from '../../consts/viewTypes';
 import { StatField } from './SharedFields';
 import type { LoadoutProperties } from '../InformationPane';
@@ -93,6 +93,13 @@ function EventPane({
     const skillObj = getOperatorSkill(slot.operator.id, event.name);
     return skillObj ? skillObj.serialize() as Record<string, unknown> : null;
   }, [event.ownerId, event.name, slots, verbose]);
+
+  // Raw serialized status data for verbose DataCardBody rendering
+  const statusCardData = useMemo(() => {
+    if (verbose < InfoLevel.DETAILED) return null;
+    if (skillCardData) return null; // skill card takes precedence
+    return getAnyStatusSerialized(event.name);
+  }, [event.name, verbose, skillCardData]);
 
   const selectedFrameElRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
@@ -239,6 +246,13 @@ function EventPane({
           <div className="edit-panel-section">
             <span className="edit-section-label">Skill Definition</span>
             <DataCardBody data={skillCardData} />
+          </div>
+        )}
+
+        {statusCardData && (
+          <div className="edit-panel-section">
+            <span className="edit-section-label">Status Definition</span>
+            <DataCardBody data={statusCardData} />
           </div>
         )}
 

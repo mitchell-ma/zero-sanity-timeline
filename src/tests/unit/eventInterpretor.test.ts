@@ -1011,7 +1011,7 @@ describe('EventInterpretorController: APPLY CRUSH STATUS (PHYSICAL)', () => {
     const crushEvents = interp.controller.output.filter(
       ev => ev.columnId === PHYSICAL_STATUS_COLUMNS.CRUSH,
     );
-    expect(crushEvents[0].segments![0].frames![0].staggerValue).toBeUndefined();
+    expect(crushEvents[0].segments![0].frames![0].stagger).toBeUndefined();
   });
 });
 
@@ -1176,6 +1176,6 @@ describe('EventInterpretorController: APPLY BREACH STATUS (PHYSICAL)', () => {
     const breachEvents = interp.controller.output.filter(
       ev => ev.columnId === PHYSICAL_STATUS_COLUMNS.BREACH,
     );
-    expect(breachEvents[0].segments![0].frames![0].staggerValue).toBeUndefined();
+    expect(breachEvents[0].segments![0].frames![0].stagger).toBeUndefined();
   });
 });

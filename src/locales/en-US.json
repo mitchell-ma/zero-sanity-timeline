@@ -80,6 +80,8 @@
   "sidebar.confirm.batchDelete": "Delete {count} items?",
   "sidebar.confirm.confirmDelete": "Confirm Delete",
   "sidebar.confirm.cancel": "Cancel",
+  "sidebar.community.title": "COMMUNITY",
+  "sidebar.community.tooltip": "Load this sample loadout",
 
   "confirm.cancel": "Cancel",
   "confirm.confirm": "Confirm",
@@ -375,7 +377,7 @@
   "dsl.property.duration": "Duration",
   "dsl.property.stacks": "Stacks",
   "dsl.property.multiplier": "Multiplier",
-  "dsl.property.staggerValue": "Stagger",
+  "dsl.property.stagger": "Stagger",
   "dsl.property.skillPoint": "SP",
   "dsl.property.stacks": "Stacks",
 
@@ -392,7 +394,7 @@
   "dsl.with.threshold": "Threshold",
   "dsl.with.rate": "Rate",
   "dsl.with.source": "Source",
-  "dsl.with.staggerValue": "Stagger",
+  "dsl.with.stagger": "Stagger",
   "dsl.with.healBase": "Heal Base",
   "dsl.with.shieldBase": "Shield Base",
   "dsl.with.defAdditive": "DEF Additive",
@@ -641,6 +643,6 @@
   "dsl.property.duration": "Duration",
   "dsl.property.stacks": "Stacks",
   "dsl.property.multiplier": "Multiplier",
-  "dsl.property.staggerValue": "Stagger",
+  "dsl.property.stagger": "Stagger",
   "dsl.property.skillPoint": "SP"
 }

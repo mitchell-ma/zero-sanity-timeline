@@ -135,12 +135,6 @@ export function getLeafValue(node: ValueNode): number | number[] | undefined {
  * For VARY_BY nodes with an array: returns undefined (needs index).
  * For expression nodes: returns undefined (needs full resolution).
  */
-export function getSimpleValue(node: ValueNode | undefined): number | undefined {
-  if (!node) return undefined;
-  if (isValueLiteral(node)) return node.value;
-  if (isValueVariable(node) && typeof node.value === 'number') return node.value;
-  return undefined;
-}
 
 // ── Skill column → skill level mapping ──────────────────────────────────────
 

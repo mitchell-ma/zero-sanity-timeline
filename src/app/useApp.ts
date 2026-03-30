@@ -47,6 +47,7 @@ import {
   applySheetData,
   loadInitialState,
 } from './sheetDefaults';
+import { generateCommunityLoadout, isCommunityLoadoutId, getCommunityLoadoutName } from './communityLoadouts';
 import {
   LoadoutTree,
   loadLoadoutTree,
@@ -352,7 +353,7 @@ export function useApp() {
       const resolved = applySheetData(sheetData);
 
       // Save current loadout before creating the imported one
-      if (activeLoadoutId) {
+      if (activeLoadoutId && !isCommunityLoadoutId(activeLoadoutId)) {
         saveLoadoutData(activeLoadoutId, buildSheetData());
       }
 
@@ -638,7 +639,7 @@ export function useApp() {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
         e.preventDefault();
         saveLoadoutTree(loadoutTree);
-        if (activeLoadoutId) {
+        if (activeLoadoutId && !isCommunityLoadoutId(activeLoadoutId)) {
           saveLoadoutData(activeLoadoutId, buildSheetData());
           saveActiveLoadoutId(activeLoadoutId);
         }
@@ -704,7 +705,7 @@ export function useApp() {
   useAutoSave(buildSheetData);
 
   useEffect(() => {
-    if (!activeLoadoutId) return;
+    if (!activeLoadoutId || isCommunityLoadoutId(activeLoadoutId)) return;
     const timer = setTimeout(() => {
       saveLoadoutData(activeLoadoutId, buildSheetData());
     }, 600);
@@ -1174,7 +1175,7 @@ export function useApp() {
   }, []);
 
   const handleNewLoadout = useCallback((parentId: string | null) => {
-    if (activeLoadoutId) {
+    if (activeLoadoutId && !isCommunityLoadoutId(activeLoadoutId)) {
       saveLoadoutData(activeLoadoutId, buildSheetData());
     }
     const existingNames = new Set(loadoutTree.nodes.map((n) => n.name));
@@ -1221,21 +1222,31 @@ export function useApp() {
 
   const handleDuplicateLoadout = useCallback((sourceId: string) => {
     // Save current loadout before switching
-    if (activeLoadoutId) {
+    if (activeLoadoutId && !isCommunityLoadoutId(activeLoadoutId)) {
       saveLoadoutData(activeLoadoutId, buildSheetData());
     }
-    const sourceNode = loadoutTree.nodes.find((n) => n.id === sourceId);
-    const baseName = sourceNode ? sourceNode.name : 'Loadout';
+
+    // Resolve source name and data — community loadouts are generated, not stored
+    const isCommunity = isCommunityLoadoutId(sourceId);
+    const baseName = isCommunity
+      ? (getCommunityLoadoutName(sourceId) ?? 'Community')
+      : (loadoutTree.nodes.find((n) => n.id === sourceId)?.name ?? 'Loadout');
     const existingNames = new Set(loadoutTree.nodes.map((n) => n.name));
     let copyNum = 1;
     while (existingNames.has(`${baseName} - Copy ${copyNum}`)) copyNum++;
     const newName = `${baseName} - Copy ${copyNum}`;
-    const { tree: newTree, node } = addLoadoutAfter(loadoutTree, newName, sourceId);
+
+    // Community loadouts add to root; user loadouts insert after source
+    const { tree: newTree, node } = isCommunity
+      ? addLoadoutNode(loadoutTree, newName, null)
+      : addLoadoutAfter(loadoutTree, newName, sourceId);
     setLoadoutTree(newTree);
     saveLoadoutTree(newTree);
 
     // Copy source data (or current state if source is active)
-    const sourceData = sourceId === activeLoadoutId ? buildSheetData() : loadLoadoutData(sourceId);
+    const sourceData = isCommunity
+      ? generateCommunityLoadout(sourceId)
+      : (sourceId === activeLoadoutId ? buildSheetData() : loadLoadoutData(sourceId));
     if (sourceData) {
       saveLoadoutData(node.id, sourceData);
       const resolved = applySheetData(sourceData);
@@ -1270,7 +1281,7 @@ export function useApp() {
 
   const handleSelectLoadout = useCallback((id: string) => {
     if (id === activeLoadoutId) return;
-    if (activeLoadoutId) {
+    if (activeLoadoutId && !isCommunityLoadoutId(activeLoadoutId)) {
       saveLoadoutData(activeLoadoutId, buildSheetData());
     }
     const data = loadLoadoutData(id);
@@ -1360,8 +1371,36 @@ export function useApp() {
     }
   }, [activeLoadoutId, loadoutTree, handleSelectLoadout, resetLoadoutTree, resetCombatState]);
 
+  const handleLoadCommunityLoadout = useCallback((communityId: string) => {
+    if (communityId === activeLoadoutId) return;
+    const sheetData = generateCommunityLoadout(communityId);
+    if (!sheetData) return;
+    // Save current user loadout before switching (skip if already viewing a community loadout)
+    if (activeLoadoutId && !isCommunityLoadoutId(activeLoadoutId)) {
+      saveLoadoutData(activeLoadoutId, buildSheetData());
+    }
+    const resolved = applySheetData(sheetData);
+    resetCombatState({
+      events: resolved.events,
+      operators: resolved.operators,
+      enemy: resolved.enemy,
+      enemyStats: resolved.enemyStats ?? getDefaultEnemyStats(resolved.enemy.id),
+      loadouts: resolved.loadouts,
+      loadoutProperties: resolved.loadoutProperties,
+      resourceConfigs: resolved.resourceConfigs,
+      overrides: resolved.overrides,
+    });
+    setVisibleSkills(resolved.visibleSkills);
+    setEditingEventId(null);
+    setEditingSlotId(null);
+    setEditingResourceKey(null);
+    setContextMenu(null);
+    setActiveLoadoutId(communityId);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeLoadoutId, buildSheetData, resetCombatState]);
+
   const handleExport = useCallback(() => {
-    if (activeLoadoutId) {
+    if (activeLoadoutId && !isCommunityLoadoutId(activeLoadoutId)) {
       saveLoadoutData(activeLoadoutId, buildSheetData());
     }
     setExportModalOpen(true);
@@ -1579,6 +1618,7 @@ export function useApp() {
 
     // Loadout tree
     loadoutTree, activeLoadoutId, sidebarCollapsed,
+    readOnly: isCommunityLoadoutId(activeLoadoutId),
 
     // Refs
     appBodyRef, sidebarRef,
@@ -1596,6 +1636,7 @@ export function useApp() {
 
     // Loadout tree handlers
     handleLoadoutTreeChange, handleNewLoadout, handleDuplicateLoadout, handleSelectLoadout, handleDeleteLoadout,
+    handleLoadCommunityLoadout,
     handleExport, handleImport, handleClearLoadout, handleClearAll, handleRenameActiveLoadout,
     handleToggleSidebar,
 

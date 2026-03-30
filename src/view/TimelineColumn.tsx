@@ -172,7 +172,7 @@ function TimelineColumn({
     onSegmentContextMenu: pres.passive ? undefined : onSegmentContextMenu,
     onSegmentResizeDragStart: pres.passive ? undefined : onSegmentResizeDragStart,
     selectedFrames: pres.passive ? undefined : selectedFramesByEvent?.get(ev.uid),
-    hoverFrame: draggingIds ? null : hoverFrame,
+    hoverFrame: draggingIds?.has(ev.uid) ? null : hoverFrame,
   });
 
   return (
@@ -337,7 +337,7 @@ function TimelineColumn({
               {...buildEventBlockProps(ev, pres)}
               selected={isWindow ? false : selectedIds.has(ev.uid)}
               hovered={isWindow ? false : hoveredId === ev.uid}
-              hoverFrame={isWindow ? undefined : draggingIds ? null : hoverFrame}
+              hoverFrame={isWindow ? undefined : draggingIds?.has(ev.uid) ? null : hoverFrame}
               wrapStyle={laneStyle}
             />
           );

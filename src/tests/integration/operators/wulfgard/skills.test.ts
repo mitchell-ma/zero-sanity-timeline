@@ -35,7 +35,7 @@ import { FPS } from '../../../../utils/timeline';
 import { eventDuration } from '../../../../consts/viewTypes';
 import { computeTimelinePresentation } from '../../../../controller/timeline/eventPresentationController';
 import { getUltimateEnergyCostForPotential } from '../../../../controller/operators/operatorRegistry';
-import { findColumn, buildContextMenu, getMenuPayload, type AppResult } from '../../helpers';
+import { findColumn, buildContextMenu, getMenuPayload, setUltimateEnergyToMax, type AppResult } from '../../helpers';
 
 // ── Game-data verified constants ────────────────────────────────────────────
 
@@ -73,6 +73,15 @@ function setupWulfgard() {
   const view = renderHook(() => useApp());
   act(() => { view.result.current.handleSwapOperator(SLOT_WULFGARD, WULFGARD_ID); });
   return view;
+}
+
+function placeUlt(result: { current: AppResult }, startSec: number) {
+  const ultCol = findColumn(result.current, SLOT_WULFGARD, NounType.ULTIMATE);
+  act(() => {
+    result.current.handleAddEvent(
+      SLOT_WULFGARD, NounType.ULTIMATE, startSec * FPS, ultCol!.defaultEvent!,
+    );
+  });
 }
 
 function setPotential(result: { current: AppResult }, potential: number) {
@@ -165,16 +174,7 @@ describe('A. Core Skill Placement', () => {
 
   it('A3: Ultimate appears in ULTIMATE column (strict)', () => {
     const { result } = setupWulfgard();
-    const col = findColumn(result.current, SLOT_WULFGARD, NounType.ULTIMATE);
-    expect(col?.defaultEvent).toBeDefined();
-
-    const payload = getMenuPayload(result.current, col!, 5 * FPS);
-    act(() => {
-      result.current.handleAddEvent(
-        payload.ownerId, payload.columnId,
-        payload.atFrame, payload.defaultSkill,
-      );
-    });
+    placeUlt(result, 5);
 
     const events = result.current.allProcessedEvents.filter(
       ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.ULTIMATE,
@@ -697,12 +697,11 @@ describe('H. Cross-Mechanic Chains', () => {
     const { result } = setupWulfgard();
 
     // 1. Ult at 2s — forces Combustion + triggers Scorching Fangs
+    act(() => { setUltimateEnergyToMax(result.current, SLOT_WULFGARD, 0); });
     const ultCol = findColumn(result.current, SLOT_WULFGARD, NounType.ULTIMATE);
-    const ultPayload = getMenuPayload(result.current, ultCol!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        ultPayload.ownerId, ultPayload.columnId,
-        ultPayload.atFrame, ultPayload.defaultSkill,
+        SLOT_WULFGARD, NounType.ULTIMATE, 2 * FPS, ultCol!.defaultEvent!,
       );
     });
 
@@ -1074,24 +1073,10 @@ describe('K. Scorching Fangs — Detailed Behavior', () => {
 
   it('K2: Scorching Fangs does not stack — second trigger resets duration', () => {
     const { result } = setupWulfgard();
-    const col = findColumn(result.current, SLOT_WULFGARD, NounType.ULTIMATE);
 
     // Two ults spaced apart — each forces Combustion -> triggers SF
-    const payload1 = getMenuPayload(result.current, col!, 2 * FPS);
-    act(() => {
-      result.current.handleAddEvent(
-        payload1.ownerId, payload1.columnId,
-        payload1.atFrame, payload1.defaultSkill,
-      );
-    });
-
-    const payload2 = getMenuPayload(result.current, col!, 30 * FPS);
-    act(() => {
-      result.current.handleAddEvent(
-        payload2.ownerId, payload2.columnId,
-        payload2.atFrame, payload2.defaultSkill,
-      );
-    });
+    placeUlt(result, 2);
+    placeUlt(result, 30);
 
     const sf = result.current.allProcessedEvents.filter(
       ev => ev.ownerId === SLOT_WULFGARD &&

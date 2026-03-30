@@ -86,6 +86,7 @@ import {
   getWeaponEffectDefs,
   getGearEffectDefs,
   getWeaponTriggerDefs,
+  getWeaponStatusTriggerDefs,
   getGearTriggerDefs,
   getConsumablePassiveDef,
   getTacticalTriggerDef,
@@ -216,7 +217,7 @@ export { getWeaponStatuses, getAllWeaponStatusOriginIds };
 // ── Weapon & gear effects ──────────────────────────────────────────────────
 
 export { getWeaponEffectDefs, getGearEffectDefs, getAllWeaponEffectIds, getAllGearEffectTypes };
-export { getWeaponTriggerDefs, getGearTriggerDefs, getConsumablePassiveDef, getTacticalTriggerDef };
+export { getWeaponTriggerDefs, getWeaponStatusTriggerDefs, getGearTriggerDefs, getConsumablePassiveDef, getTacticalTriggerDef };
 export { registerCustomWeaponEffectDefs, deregisterCustomWeaponEffectDefs };
 export { registerCustomGearEffectDefs, deregisterCustomGearEffectDefs };
 export { getGearEffectLabel, resolveTargetDisplay, resolveDurationSeconds, resolveTriggerInteractions };
@@ -428,6 +429,26 @@ function buildStatusByIdCache() {
 /** Look up any operator/generic status definition by its ID. */
 export function getStatusById(statusId: string): OperatorStatus | undefined {
   return buildStatusByIdCache().get(statusId);
+}
+
+/** Look up any status definition (operator, weapon, or gear) and return serialized JSON. */
+export function getAnyStatusSerialized(statusId: string): Record<string, unknown> | null {
+  const opStatus = buildStatusByIdCache().get(statusId);
+  if (opStatus) return opStatus.serialize() as Record<string, unknown>;
+  for (const originId of getAllWeaponStatusOriginIds()) {
+    for (const ws of getWeaponStatuses(originId)) {
+      if (ws.id === statusId) return ws.serialize() as Record<string, unknown>;
+    }
+  }
+  for (const originId of getAllGearStatusOriginIds()) {
+    for (const gs of getGearStatuses(originId)) {
+      if (gs.id === statusId) return gs.serialize() as Record<string, unknown>;
+    }
+  }
+  for (const gse of getAllGearSetEffects()) {
+    if (gse.id === statusId) return gse.serialize() as Record<string, unknown>;
+  }
+  return null;
 }
 
 let _statusElementMap: Record<string, string> | null = null;

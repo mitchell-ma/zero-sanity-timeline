@@ -284,7 +284,7 @@ function resolvePhysicalStatusStagger(
       if (!seg.frames) continue;
       for (const frame of seg.frames) {
         if (frame.damageMultiplier != null) {
-          frame.staggerValue = stagger;
+          frame.stagger = stagger;
         }
       }
     }

@@ -7,7 +7,7 @@
  * No hardcoded DISPLAY_CONFIGS — all display/timing data comes from JSON fields.
  */
 import { Operator as ViewOperator, SkillDef, EventSegmentData } from '../../consts/viewTypes';
-import { CombatSkillType, ElementType, OperatorClassType, ELEMENT_COLORS, SegmentType, TimeDependency } from '../../consts/enums';
+import { ElementType, OperatorClassType, ELEMENT_COLORS, SegmentType, TimeDependency } from '../../consts/enums';
 import { NounType } from '../../dsl/semantics';
 import { Potential } from '../../consts/types';
 import {

@@ -217,7 +217,7 @@
                   "verb": "HAVE",
                   "object": "TALENT_LEVEL",
                   "cardinalityConstraint": "AT_LEAST",
-                  "value": 2
+                  "value": { "verb": "IS", "value": 2 }
                 }
               ],
               "effects": [

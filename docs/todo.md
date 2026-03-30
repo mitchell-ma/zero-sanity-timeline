@@ -169,29 +169,33 @@ These sets have HP-threshold conditions but are metadata-only with zero clauses:
 - Ardelia Mountainpeak Surfer (spatial recast)
 - Snowshine SAR Professional (RETALIATE verb — no DSL equivalent)
 
-## Integration test plan (423 tests across 19 operators)
+## Integration tests — deeper mechanics (remaining)
 
-Full test plans generated for all untested operators. Plans cover context menu, controller, and view layer assertions.
+Core integration tests (skill placement, infliction pipelines, combo triggers, ultimate energy,
+talent statuses, view layer) are implemented for all 25 operators (177 new tests added 2026-03-29).
+The following deeper mechanic-specific tests remain:
 
-| Operator | Tests | Key Mechanics |
-|----------|-------|---------------|
-| Ember | 57 | Team shields, Protection, Steel Oath Empowered (P5) |
-| Catcher | 37 | RETURN vs RECOVER SP, dual shield, DEF-scaling P1 |
-| Da Pan | 40 | Lift/Knock Down, Vulnerability trigger, R&T stacking |
-| Lifeng | 30 | LINK consume/bonus-hit, Subduer of Evil chain |
-| Endministrator | 34 | Originium Crystal cycle, teammate combo trigger |
-| Estella | 20 | Solidification trigger, Commiseration from Shatter |
-| Fluorite | 20 | 2+ stack threshold combo, Slow, Unpredictable |
-| Gilberta | 21 | Arts Reaction combo, Gravity Field Lift extension |
-| Alesh | 16 | Cryo→Solidification, Flash-frozen talent |
-| Arclight | 22 | Wildland Trekker counter, empowered activation |
-| Avywenna | 21 | Thunderlance deploy/retrieve exchange |
-| Snowshine | 13 | Protection to all, P5 conditional SP return |
-| Perlica | 16 | Electric infliction, forced Electrification |
-| Last Rite | 22 | 240 energy ult, Cryo Susceptibility |
-| Tangtang | 18 | Waterspout/Whirlpool, Fam of Honor team Haste |
-| Yvonne | 19 | FIRST_MATCH BS, Crit Stacks, empowered BATK |
-| Rossi | 17 | Dual-element, Combustion from ult, disabled talents |
+| Operator | Missing Tests |
+|----------|--------------|
+| Ember | P5 Steel Oath Empowered (shield ×1.2 + ATK +10%), Pay the Ferric Price 3-stack accumulation, Protection duration extension on hit |
+| Catcher | RETURN vs RECOVER SP distinction, P1 DEF-scaling bonus damage on BS/ult hit, Weaken status from ult |
+| Da Pan | Reduce & Thicken multi-stack accumulation (4 stacks), Vulnerability 4-stack combo trigger in strict mode, P5 extra Vulnerability stack |
+| Lifeng | LINK consume bonus hit on ult (Vajra Impact conditional), Subduer of Evil talent chain (Knock Down → Physical DMG), Illumination ATK scaling from INT+WILL |
+| Endministrator | Teammate combo trigger in strict mode (another op's combo fires Endministrator's), Realspace Stasis passive debuff, P1 SP return on crystal consume |
+| Arclight | Wildland Trekker counter accumulation + buff activation, empowered battle skill variant, Tactful Approach status |
+| Fluorite | 2+ infliction stack threshold combo trigger in strict mode, Slow status application, Unpredictable talent stacking |
+| Gilberta | Arts Reaction combo trigger in strict mode, Gravity Field Lift extension, Messenger's Song UE gain buff |
+| Alesh | Flash-frozen talent (Cryo→Solidification chain), arts reaction consume combo trigger in strict mode |
+| Avywenna | Thunderlance deploy/retrieve exchange mechanic (basic attack interaction) |
+| Tangtang | Waterspout/Whirlpool status application, Fam of Honor team Haste |
+| Yvonne | Empowered basic attack variant, Crit Stacks accumulation (10 max), Barrage of Technology consume interaction |
+| Last Rite | Cryogenic Embrittlement (1.2× Cryo Susceptibility AMP on ult), Hypothermia talent |
+| Snowshine | P1 Protection blocks Arts Inflictions, P5 retaliation SP return |
+
+### Engine blockers for some deeper tests
+- `isForced: true` as raw boolean in JSON doesn't resolve through `resolveWith()` (affects forced Lift/Knock Down for Da Pan, Gilberta, Estella, Lifeng)
+- Strict-mode combo triggering requires the engine to evaluate `onTriggerClause` conditions against pipeline state
+- HP threshold conditions not supported (affects Alesh P5, Chen Qianyu P1, Catcher combo trigger)
 
 ## Fix laevatainDamageCalc.test.ts — broken after gameDataController mock removal
 

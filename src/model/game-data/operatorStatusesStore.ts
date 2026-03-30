@@ -48,7 +48,7 @@ interface StatusSegment {
 const VALID_DURATION_KEYS = new Set(['value', 'unit', 'modifier']);
 const VALID_STATUS_LEVEL_KEYS = new Set(['limit', 'interactionType', 'level']);
 const VALID_SEGMENT_KEYS = new Set(['metadata', 'properties', 'clause', 'clauseType', 'frames']);
-const VALID_PROPERTIES_KEYS = new Set(['id', 'name', 'description', 'type', 'element', 'target', 'targetDeterminer', 'to', 'toDeterminer', 'duration', 'stacks', 'enhancementType', 'enhancementTypes', 'eventType', 'eventCategoryType']);
+const VALID_PROPERTIES_KEYS = new Set(['id', 'name', 'description', 'type', 'element', 'target', 'targetDeterminer', 'to', 'toDeterminer', 'duration', 'stacks', 'enhancementType', 'enhancementTypes', 'eventType', 'eventCategoryType', 'maxLevel']);
 const VALID_TOP_KEYS = new Set(['clause', 'clauseType', 'onTriggerClause', 'onEntryClause', 'onExitClause', 'segments', 'properties', 'metadata']);
 
 function validateValueNode(wv: Record<string, unknown>, path: string): string[] {

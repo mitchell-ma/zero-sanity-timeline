@@ -123,7 +123,7 @@ const PROPERTY_LABELS: Record<string, string> = {
   duration: t('dsl.property.duration'),
   stacks: t('dsl.property.stacks'),
   multiplier: t('dsl.property.multiplier'),
-  staggerValue: t('dsl.property.staggerValue'),
+  stagger: t('dsl.property.stagger'),
   skillPoint: t('dsl.property.skillPoint'),
 };
 

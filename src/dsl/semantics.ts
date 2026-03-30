@@ -686,7 +686,7 @@ export type WithValue = ValueLiteral | ValueVariable | ValueStat;
  *   value            — generic count (e.g. RECOVER 100 SKILL_POINT, CONSUME 300 ULTIMATE_ENERGY)
  *   duration         — seconds (e.g. TIME_STOP, REACTION, STATUS duration)
  *   multiplier       — damage multiplier (VARY_BY SKILL_LEVEL → per-level array)
- *   staggerValue     — stagger amount
+ *   stagger          — stagger amount
  *   skillPoint       — SP value
  *   stacks           — stack count (STATUS, INFLICTION, ARTS_REACTION)
  */
@@ -1050,6 +1050,16 @@ export const OBJECT_TARGET_MAPPING: Partial<Record<ObjectType, SubjectType[]>> =
   [ObjectType.WEAKENED]:       [SubjectType.ENEMY],
   [ObjectType.SANCTUARY]:      [SubjectType.OPERATOR],
   [ObjectType.WEAKNESS]:       [SubjectType.ENEMY],
+};
+
+/**
+ * Object → valid CONSUME sources. CONSUME has broader valid targets than APPLY —
+ * e.g. operators can consume inflictions/reactions from themselves (Xaihi ult).
+ */
+export const CONSUME_TARGET_MAPPING: Partial<Record<ObjectType, SubjectType[]>> = {
+  ...OBJECT_TARGET_MAPPING,
+  [ObjectType.INFLICTION]:     [SubjectType.ENEMY, SubjectType.OPERATOR],
+  [ObjectType.REACTION]:       [SubjectType.ENEMY, SubjectType.OPERATOR],
 };
 
 /**

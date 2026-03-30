@@ -340,6 +340,10 @@
                   "objectQualifier": "COMBUSTION",
                   "to": "ENEMY",
                   "with": {
+                    "duration": {
+                      "verb": "IS",
+                      "value": 10
+                    },
                     "stacks": {
                       "verb": "IS",
                       "value": 1

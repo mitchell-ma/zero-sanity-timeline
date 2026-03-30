@@ -13,6 +13,13 @@
 - Gear effect data expanded across many sets with improved metadata and status configs
 - Rossi banner image optimized (83% smaller file size)
 - New gear piece icons for Aethertech light gloves and stabilizer
+- Added a Community section in the sidebar with pre-built sample loadouts — browse them read-only, or right-click to duplicate into your own collection
+- Talents that only activate on specific triggers no longer appear as permanent bars on the timeline — they now correctly spawn as individual instances when their conditions are met
+- Wulfgard's Scorching Fangs talent now properly gates behind potential level and active Scorching Fangs status, with correct SP return and damage on reaction consumption
+- Status filter checkboxes in column headers now update instantly when toggled instead of requiring a menu re-open
+- Weapon status effects with trigger conditions (like Lupine Scarlet's Wolven Blood) now properly contribute to the trigger pipeline
+- New MI Security gear piece icons added
+- Single-clicking an event now opens the detail panel immediately for faster inspection
 
 ## 2026-03-28
 - Status effects can now trigger actions when they appear or expire, enabling mechanics like Gilberta's Gravity Field extending Lift duration while the field is active

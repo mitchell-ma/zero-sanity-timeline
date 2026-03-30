@@ -793,6 +793,20 @@ export function getWeaponTriggerDefs(weaponId: string): NormalizedEffectDef[] {
   return [normalizeEffectEntry(namedSkill.serializeAsTriggerDef())];
 }
 
+/** Get weapon STATUS defs that have onTriggerClause (e.g. BECOME STACKS triggers). */
+export function getWeaponStatusTriggerDefs(weaponId: string): NormalizedEffectDef[] {
+  const originId = WEAPON_ID_TO_ORIGIN[weaponId];
+  if (!originId) return [];
+  const statuses = getWeaponStatuses(originId);
+  const defs: NormalizedEffectDef[] = [];
+  for (const s of statuses) {
+    const raw = s.serialize();
+    if (!(raw.onTriggerClause as unknown[])?.length) continue;
+    defs.push(normalizeEffectEntry(raw as NormalizedEffectDef));
+  }
+  return defs;
+}
+
 /**
  * Get gear set effect as a talent-shaped trigger source def.
  * Returns one def per gear set with the effect's real ID and all onTriggerClause entries.

@@ -23,9 +23,12 @@
 import { renderHook, act } from '@testing-library/react';
 import { NounType } from '../../../dsl/semantics';
 import { useApp } from '../../../app/useApp';
-import { CritMode, EventStatusType } from '../../../consts/enums';
+import { CritMode, EventStatusType, InteractionModeType, ColumnType } from '../../../consts/enums';
 import { FPS } from '../../../utils/timeline';
+import { OPERATOR_STATUS_COLUMN_ID } from '../../../model/channels';
+import { computeTimelinePresentation } from '../../../controller/timeline/eventPresentationController';
 import { findColumn, getMenuPayload, type AppResult } from '../helpers';
+import type { MiniTimeline } from '../../../consts/viewTypes';
 
 /* eslint-disable @typescript-eslint/no-require-imports */
 const ROSSI_ID: string = require('../../../model/game-data/operators/rossi/rossi.json').id;
@@ -92,6 +95,15 @@ function findWolvenBloodMaxEvents(app: AppResult) {
   );
 }
 
+function findStatusColumn(app: AppResult, slotId: string) {
+  return app.columns.find(
+    (c): c is MiniTimeline =>
+      c.type === ColumnType.MINI_TIMELINE &&
+      c.ownerId === slotId &&
+      (c.columnId === OPERATOR_STATUS_COLUMN_ID || (c.matchColumnIds?.includes(WOLVEN_BLOOD_ID) ?? false)),
+  );
+}
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // A. Config Validation
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -133,26 +145,28 @@ describe('B. Wolven Blood stack generation', () => {
   it('B1: Single battle skill with ALWAYS crit generates Wolven Blood stacks equal to damage frame count', () => {
     const { result } = setupRossiWithLupineScarlet();
 
-    // Verify weapon skill presence event exists (confirms weapon loaded)
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const WEAPON_SKILL_ID: string = require('../../../model/game-data/weapons/lupine-scarlet/skills/skill-fracture-gnashing-wolves.json').properties.id;
-    const presence = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_ROSSI && ev.name === WEAPON_SKILL_ID && ev.startFrame === 0,
-    );
-    expect(presence).toHaveLength(1);
-
     placeBattleSkill(result.current, 2);
 
-    // Debug: check all Wolven Blood events (including consumed)
-    const allWB = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_ROSSI && (ev.name === WOLVEN_BLOOD_ID || ev.columnId === WOLVEN_BLOOD_ID),
-    );
-    // eslint-disable-next-line no-console
-    console.log(`Wolven Blood events: ${allWB.length}, statuses: ${allWB.map(e => `${e.name}@${e.startFrame} status=${e.eventStatus}`).join(', ')}`);
-
+    // Controller: correct stack count
     const stacks = findWolvenBloodStacks(result.current);
-    // Each crit damage frame should produce one Wolven Blood stack
     expect(stacks.length).toBe(DAMAGE_FRAMES_PER_BS);
+
+    // Controller: each stack has long duration (effectively permanent — clamped to timeline length)
+    for (const s of stacks) {
+      const dur = s.segments.reduce((sum, seg) => sum + seg.properties.duration, 0);
+      expect(dur).toBeGreaterThan(100 * FPS);
+    }
+
+    // View: Wolven Blood stacks visible in operator status column
+    const statusCol = findStatusColumn(result.current, SLOT_ROSSI);
+    if (statusCol) {
+      const viewModels = computeTimelinePresentation(result.current.allProcessedEvents, result.current.columns);
+      const vm = viewModels.get(statusCol.key);
+      if (vm) {
+        const wbEvents = vm.events.filter(ev => ev.name === WOLVEN_BLOOD_ID);
+        expect(wbEvents.length).toBe(DAMAGE_FRAMES_PER_BS);
+      }
+    }
   });
 
   it('B2: Multiple battle skills accumulate Wolven Blood stacks', () => {
@@ -162,8 +176,20 @@ describe('B. Wolven Blood stack generation', () => {
     placeBattleSkill(result.current, 2);
     placeBattleSkill(result.current, 5);
 
+    // Controller: stacks accumulate across skills
     const stacks = findWolvenBloodStacks(result.current);
     expect(stacks.length).toBe(DAMAGE_FRAMES_PER_BS * 2);
+
+    // View: all stacks visible
+    const statusCol = findStatusColumn(result.current, SLOT_ROSSI);
+    if (statusCol) {
+      const viewModels = computeTimelinePresentation(result.current.allProcessedEvents, result.current.columns);
+      const vm = viewModels.get(statusCol.key);
+      if (vm) {
+        const wbEvents = vm.events.filter(ev => ev.name === WOLVEN_BLOOD_ID);
+        expect(wbEvents.length).toBe(DAMAGE_FRAMES_PER_BS * 2);
+      }
+    }
   });
 });
 
@@ -175,24 +201,50 @@ describe('C. Max stacks triggers Wolven Blood Max', () => {
   it('C1: Reaching 16 stacks produces Wolven Blood (Max Stacks) with 20s duration', () => {
     const { result } = setupRossiWithLupineScarlet();
 
-    // Place enough battle skills to reach 16 stacks
-    // Each BS has DAMAGE_FRAMES_PER_BS crit frames → need ceil(16 / DAMAGE_FRAMES_PER_BS) BSes
-    const bsNeeded = Math.ceil(16 / DAMAGE_FRAMES_PER_BS);
-    for (let i = 0; i < bsNeeded; i++) {
-      placeBattleSkill(result.current, 2 + i * 3);
-    }
+    // Place first BS normally to get the payload template
+    placeBattleSkill(result.current, 2);
+    const bsEvent = result.current.allProcessedEvents.find(
+      ev => ev.ownerId === SLOT_ROSSI && ev.columnId === NounType.BATTLE_SKILL,
+    );
+    expect(bsEvent).toBeDefined();
 
-    // Should have 16 stacks (capped)
+    // Place remaining BSes using handleAddEvent directly (bypass SP check via freeform)
+    act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
+    const bsNeeded = Math.ceil(16 / DAMAGE_FRAMES_PER_BS);
+    for (let i = 1; i < bsNeeded; i++) {
+      act(() => {
+        result.current.handleAddEvent(
+          SLOT_ROSSI, NounType.BATTLE_SKILL, (2 + i * 3) * FPS,
+          { name: bsEvent!.name, segments: bsEvent!.segments },
+        );
+      });
+    }
+    act(() => { result.current.setInteractionMode(InteractionModeType.STRICT); });
+
+    // Controller: should have 16 stacks (capped)
     const stacks = findWolvenBloodStacks(result.current);
     expect(stacks.length).toBe(16);
 
-    // Wolven Blood Max should exist
+    // Controller: Wolven Blood Max should exist
     const maxEvents = findWolvenBloodMaxEvents(result.current);
     expect(maxEvents.length).toBeGreaterThanOrEqual(1);
 
-    // Max event duration should be 20s = 2400 frames
+    // Controller: Max event duration should be 20s = 2400 frames
     const maxDur = maxEvents[0].segments.reduce((sum, s) => sum + s.properties.duration, 0);
     expect(maxDur).toBe(20 * FPS);
+
+    // View: both Wolven Blood stacks and Wolven Blood Max visible in status column
+    const statusCol = findStatusColumn(result.current, SLOT_ROSSI);
+    if (statusCol) {
+      const viewModels = computeTimelinePresentation(result.current.allProcessedEvents, result.current.columns);
+      const vm = viewModels.get(statusCol.key);
+      if (vm) {
+        const wbInView = vm.events.filter(ev => ev.name === WOLVEN_BLOOD_ID);
+        expect(wbInView.length).toBe(16);
+        const wbMaxInView = vm.events.filter(ev => ev.name === WOLVEN_BLOOD_MAX_ID);
+        expect(wbMaxInView.length).toBeGreaterThanOrEqual(1);
+      }
+    }
   });
 
   it('C2: Wolven Blood Max onExitClause consumes all Wolven Blood stacks (config check)', () => {

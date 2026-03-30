@@ -1696,6 +1696,65 @@
   color: var(--text-muted);
 }
 
+/* ── Community section ───────────────────────────────── */
+.community-section {
+  padding-bottom: 0.25rem;
+  margin-bottom: 0.25rem;
+  border-bottom: 1px solid var(--border-dim);
+}
+.community-section-header {
+  display: flex;
+  align-items: center;
+  padding: 0.25rem 0.5rem;
+  cursor: pointer;
+  user-select: none;
+}
+.community-section-header:hover {
+  background: var(--bg-elevated);
+}
+.community-section-title {
+  font-family: var(--font-display);
+  font-size: 0.5625rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  color: var(--text-muted);
+  margin-left: 0.375rem;
+}
+.community-node {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.5rem;
+  cursor: pointer;
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  border-radius: 3px;
+  margin: 1px 4px;
+  user-select: none;
+}
+.community-node:hover {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+}
+.community-node--active {
+  background: var(--overlay-10);
+  color: var(--text-bright, #e0e0e0);
+}
+.community-node--active:hover {
+  background: var(--overlay-14);
+}
+.community-node--active .loadout-node-icon {
+  color: var(--text-bright, #e0e0e0);
+}
+.community-node--folder {
+  cursor: default;
+}
+.community-node--folder:hover {
+  background: none;
+  color: var(--text-muted);
+}
+
 /* ── Loadout context menu ────────────────────────────── */
 .loadout-ctx-menu {
   background: var(--bg-panel);
