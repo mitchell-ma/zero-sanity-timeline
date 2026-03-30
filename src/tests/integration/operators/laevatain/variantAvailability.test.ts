@@ -24,7 +24,8 @@
 import { renderHook, act } from '@testing-library/react';
 import { NounType } from '../../../../dsl/semantics';
 import { useApp } from '../../../../app/useApp';
-import { NODE_STAGGER_COLUMN_ID, ENEMY_OWNER_ID, USER_ID } from '../../../../model/channels';
+import { NODE_STAGGER_COLUMN_ID, ENEMY_OWNER_ID, USER_ID, ultimateGraphKey } from '../../../../model/channels';
+import { getUltimateEnergyCost } from '../../../../controller/operators/operatorRegistry';
 import { ColumnType, InteractionModeType, CombatSkillType } from '../../../../consts/enums';
 import { EnhancementType } from '../../../../consts/enums';
 import { FPS } from '../../../../utils/timeline';
@@ -82,8 +83,19 @@ function isAvailable(
   );
 }
 
+/** Ensure ultimate energy starts at max so the ultimate can be placed. */
+function ensureUltimateEnergyMax(ref: HookRef) {
+  const op = ref.current.operators[0];
+  if (!op) return;
+  const cost = getUltimateEnergyCost(op.id);
+  act(() => {
+    ref.current.handleResourceConfigChange(ultimateGraphKey(SLOT), { startValue: cost, max: cost, regenPerSecond: 0 });
+  });
+}
+
 /** Place the ultimate at a given frame via context menu flow. */
 function placeUltimate(ref: HookRef, atFrame: number) {
+  ensureUltimateEnergyMax(ref);
   const ultCol = findMatchingColumn(ref.current, SLOT, NounType.ULTIMATE);
   const payload = getMenuPayload(ref.current, ultCol!, atFrame);
   act(() => {
@@ -232,7 +244,7 @@ describe('Laevatain variant availability — integration through useApp', () => 
       expect(r.disabled).toBe(true);
     });
 
-    it('normal basic attack is disabled during ultimate (DISABLE NORMAL)', () => {
+    it('normal basic attack is disabled during ultimate (DISABLE FLAMING_CINDERS)', () => {
       const { result } = renderHook(() => useApp());
       placeUltimate(result, ULT_START);
       const r = isAvailable(result.current, FLAMING_CINDERS_ID, NounType.BASIC_ATTACK, ACTIVE_FRAME, EnhancementType.NORMAL);
@@ -247,7 +259,7 @@ describe('Laevatain variant availability — integration through useApp', () => 
       expect(item!.disabled).toBe(true);
     });
 
-    it('normal battle skill is disabled during ultimate (DISABLE NORMAL)', () => {
+    it('normal battle skill is disabled during ultimate (DISABLE SMOULDERING_FIRE)', () => {
       const { result } = renderHook(() => useApp());
       placeUltimate(result, ULT_START);
       const r = isAvailable(result.current, SMOULDERING_FIRE_ID, NounType.BATTLE_SKILL, ACTIVE_FRAME, EnhancementType.NORMAL);
@@ -298,12 +310,12 @@ describe('Laevatain variant availability — integration through useApp', () => 
       act(() => {
         result.current.setInteractionMode(InteractionModeType.STRICT);
       });
-      // Finisher should still be disabled by the DISABLE FINISHER clause
+      // Finisher should still be disabled by the DISABLE clause targeting its ID
       const r = isAvailable(result.current, CombatSkillType.FINISHER, NounType.BASIC_ATTACK, ACTIVE_FRAME);
       expect(r.disabled).toBe(true);
     });
 
-    it('empowered battle skill is disabled during ultimate (DISABLE EMPOWERED)', () => {
+    it('empowered battle skill is disabled during ultimate (DISABLE SMOULDERING_FIRE_EMPOWERED)', () => {
       const { result } = renderHook(() => useApp());
       placeUltimate(result, ULT_START);
       const r = isAvailable(result.current, SMOULDERING_FIRE_EMPOWERED_ID, NounType.BATTLE_SKILL, ACTIVE_FRAME, EnhancementType.EMPOWERED);
@@ -333,7 +345,7 @@ describe('Laevatain variant availability — integration through useApp', () => 
       });
 
       // Check the resource graph — energy should not increase during the active phase
-      const ueGraph = result.current.resourceGraphs.get(`${SLOT}-ultimate`);
+      const ueGraph = result.current.resourceGraphs.get(ultimateGraphKey(SLOT));
       expect(ueGraph).toBeDefined();
 
       // Find the point right after the battle skill — energy should not have gained
@@ -403,7 +415,7 @@ describe('Laevatain variant availability — integration through useApp', () => 
       expect(r.disabled).toBe(true);
     });
 
-    it('empowered-only battle skill is still disabled (DISABLE EMPOWERED)', () => {
+    it('empowered-only battle skill is still disabled (DISABLE SMOULDERING_FIRE_EMPOWERED)', () => {
       const { result } = renderHook(() => useApp());
       place4MfStacks(result, 2 * FPS);
       placeUltimate(result, ULT_START);

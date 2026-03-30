@@ -31,7 +31,7 @@ import { eventDuration } from '../../../consts/viewTypes';
 import type { TimelineEvent } from '../../../consts/viewTypes';
 import { COMMON_OWNER_ID } from '../../../controller/slot/commonSlotController';
 import { processCombatSimulation, getLastController } from '../../../controller/timeline/eventQueueController';
-import { findColumn, buildContextMenu, getMenuPayload, type AppResult } from '../helpers';
+import { findColumn, buildContextMenu, getMenuPayload, setUltimateEnergyToMax, type AppResult } from '../helpers';
 
 // ── Constants ──────────────────────────────────────────────────────────────
 
@@ -135,6 +135,7 @@ describe('Link Consumption — Integration', () => {
 
   it('ultimate consumes Link and records stacks on DEC', () => {
     const { result } = renderHook(() => useApp());
+    act(() => { setUltimateEnergyToMax(result.current, SLOT_AKEKURI, 1); });
 
     // Layer 1: Context menu — ultimate available at 5s
     const ultFrame = 5 * FPS;
@@ -341,6 +342,7 @@ describe('Link Consumption — Freeform mode events', () => {
 
   it('freeform ultimate consumes Link', () => {
     const { result } = renderHook(() => useApp());
+    act(() => { setUltimateEnergyToMax(result.current, SLOT_AKEKURI, 1); });
 
     act(() => {
       result.current.setInteractionMode(InteractionModeType.FREEFORM);

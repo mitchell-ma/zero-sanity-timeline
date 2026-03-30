@@ -2,7 +2,6 @@
   "properties": {
     "name": "Flash and Dash",
     "description": "When an enemy becomes Staggered or hits a Stagger Node. Performs a returning dash with 2 thrust sequences, with each sequence dealing Physical DMG and recovering some SP.",
-    "windowFrames": 720,
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "COMBO_SKILL",
     "element": "PHYSICAL",
@@ -268,25 +267,40 @@
     "originId": "AKEKURI",
     "icon": "skills/combo_akekuri.png"
   },
-  "onTriggerClause": [
-    {
-      "conditions": [
-        {
-          "subject": "ENEMY",
-          "verb": "IS",
-          "object": "NODE_STAGGERED"
-        }
-      ]
+  "clauseType": "ALL",
+  "activationWindow": {
+    "properties": {
+      "maxSkills": 1
     },
-    {
-      "conditions": [
-        {
-          "subject": "ENEMY",
-          "verb": "IS",
-          "object": "FULL_STAGGERED"
+    "onTriggerClause": [
+      {
+        "conditions": [
+          {
+            "subject": "ENEMY",
+            "verb": "IS",
+            "object": "NODE_STAGGERED"
+          }
+        ]
+      },
+      {
+        "conditions": [
+          {
+            "subject": "ENEMY",
+            "verb": "IS",
+            "object": "FULL_STAGGERED"
+          }
+        ]
+      }
+    ],
+    "segments": [
+      {
+        "properties": {
+          "duration": {
+            "value": 6,
+            "unit": "SECOND"
+          }
         }
-      ]
-    }
-  ],
-  "clauseType": "ALL"
+      }
+    ]
+  }
 }

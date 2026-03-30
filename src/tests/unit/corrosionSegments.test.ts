@@ -86,8 +86,8 @@ describe('corrosion segments', () => {
 
     expect(reaction).toBeDefined();
     expect(reaction!.columnId).toBe(REACTION_COLUMNS.CORROSION);
-    // Default reaction duration is 20s (2400 frames)
-    expect(reaction!.segments[0].properties.duration).toBe(2400);
+    // Corrosion duration from JSON config: 15s (1800 frames)
+    expect(reaction!.segments[0].properties.duration).toBe(1800);
   });
 
   // ── Segment structure ──────────────────────────────────────────────────

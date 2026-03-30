@@ -2,7 +2,6 @@
   "properties": {
     "name": "Sealing Sequence",
     "description": "When another operator in the team deals DMG with combo skills. Rushes to the enemy's side to deal Physical DMG and attach Originium Crystals that temporarily seal them. Applying Physical Status or Vulnerability to the sealed enemy consumes the Originium Crystals and deals additional Physical DMG.",
-    "windowFrames": 720,
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "COMBO_SKILL",
     "element": "PHYSICAL",
@@ -208,17 +207,32 @@
     "originId": "ENDMINISTRATOR",
     "icon": "skills/combo_endministrator.png"
   },
-  "onTriggerClause": [
-    {
-      "conditions": [
-        {
-          "subjectDeterminer": "THIS",
-          "subject": "OPERATOR",
-          "verb": "PERFORM",
-          "object": "COMBO_SKILL"
+  "clauseType": "ALL",
+  "activationWindow": {
+    "properties": {
+      "maxSkills": 1
+    },
+    "onTriggerClause": [
+      {
+        "conditions": [
+          {
+            "subjectDeterminer": "THIS",
+            "subject": "OPERATOR",
+            "verb": "PERFORM",
+            "object": "COMBO_SKILL"
+          }
+        ]
+      }
+    ],
+    "segments": [
+      {
+        "properties": {
+          "duration": {
+            "value": 6,
+            "unit": "SECOND"
+          }
         }
-      ]
-    }
-  ],
-  "clauseType": "ALL"
+      }
+    ]
+  }
 }

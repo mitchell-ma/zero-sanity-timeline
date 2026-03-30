@@ -1,0 +1,13 @@
+{
+  "properties": {
+    "id": "ROSSI_P2_GAP_TO_PERFECTION",
+    "name": "Gap to Perfection",
+    "level": 2,
+    "eventType": "POTENTIAL_EVENT",
+    "eventCategoryType": "POTENTIAL",
+    "description": "Agility +20, Critical Rate +7%."
+  },
+  "metadata": {
+    "originId": "ROSSI"
+  }
+}

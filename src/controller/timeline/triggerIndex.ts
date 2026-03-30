@@ -25,7 +25,6 @@ import type { NormalizedEffectDef } from '../gameDataStore';
 import { ENEMY_OWNER_ID, ENEMY_ACTION_COLUMN_ID, REACTION_COLUMNS, INFLICTION_COLUMNS, PHYSICAL_STATUS_COLUMNS, PHYSICAL_STATUS_COLUMN_IDS } from '../../model/channels';
 import { COMMON_OWNER_ID } from '../slot/commonSlotController';
 import { TOTAL_FRAMES, FPS } from '../../utils/timeline';
-import { statusIdToColumnId } from './triggerMatch';
 import { TimelineEvent, durationSegment } from '../../consts/viewTypes';
 
 // ── Skill-alias-to-column mapping ────────────────────────────────────────────
@@ -203,7 +202,7 @@ function resolveTriggerKey(verb: string, cond: Predicate): string {
   }
   if (verb === VerbType.APPLY || verb === VerbType.CONSUME || verb === VerbType.RECEIVE) {
     if (cond.objectId) {
-      const col = statusIdToColumnId(cond.objectId);
+      const col = cond.objectId;
       return `${verb}:${col}`;
     }
     // INFLICTION with element qualifier → resolve to infliction column
@@ -240,7 +239,7 @@ function resolveCategories(columnId: string): string[] {
   if (PHYSICAL_STATUS_COLUMN_IDS.has(columnId)) {
     categories.push(NounType.STATUS);
     // PHYSICAL as category — matches triggers with objectId: 'PHYSICAL' (e.g. APPLY STATUS PHYSICAL)
-    categories.push(statusIdToColumnId('PHYSICAL'));
+    categories.push('PHYSICAL');
   } else if (!reactionColumns.has(columnId) && !inflictionColumns.has(columnId)) {
     categories.push(NounType.STATUS);
   }
@@ -411,7 +410,7 @@ export class TriggerIndex {
         const talentDuration = def.properties.duration;
         const talentDurationFrames = talentDuration ? getDurationFrames(talentDuration) : TOTAL_FRAMES;
         const talentOwnerId = resolveTargetOwnerId(def.properties.target, slotId, opSlotMap, def.properties.targetDeterminer);
-        const talentColumnId = statusIdToColumnId(def.properties.id);
+        const talentColumnId = def.properties.id;
         // Skip if already exists in registered events
         if (registeredEvents?.some(ev => ev.columnId === talentColumnId && ev.ownerId === talentOwnerId)) continue;
 

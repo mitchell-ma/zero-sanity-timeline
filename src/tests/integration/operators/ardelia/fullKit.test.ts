@@ -17,7 +17,7 @@
  */
 
 import { renderHook, act } from '@testing-library/react';
-import { NounType } from '../../../../dsl/semantics';
+import { NounType, isQualifiedId } from '../../../../dsl/semantics';
 import { useApp } from '../../../../app/useApp';
 import { REACTION_COLUMNS, ENEMY_OWNER_ID } from '../../../../model/channels';
 import { ColumnType, InteractionModeType } from '../../../../consts/enums';
@@ -26,7 +26,7 @@ import { eventDuration } from '../../../../consts/viewTypes';
 import type { MiniTimeline, TimelineEvent } from '../../../../consts/viewTypes';
 import { computeTimelinePresentation } from '../../../../controller/timeline/eventPresentationController';
 import { buildMergedOperatorJson, getBattleSkillSpCost } from '../../../../controller/gameDataStore';
-import { findColumn, buildContextMenu, getMenuPayload, type AppResult } from '../../helpers';
+import { findColumn, buildContextMenu, getMenuPayload, setUltimateEnergyToMax, type AppResult } from '../../helpers';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const ARDELIA_ID: string = require('../../../../model/game-data/operators/ardelia/ardelia.json').id;
@@ -188,7 +188,7 @@ describe('Ardelia Full Kit — Battle Skill', () => {
 
     // No susceptibility events on enemy
     const susceptEvents = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === NounType.SUSCEPTIBILITY && ev.ownerId === ENEMY_OWNER_ID,
+      ev => isQualifiedId(ev.columnId, NounType.SUSCEPTIBILITY) && ev.ownerId === ENEMY_OWNER_ID,
     );
     expect(susceptEvents).toHaveLength(0);
   });
@@ -379,6 +379,7 @@ describe('Ardelia Full Kit — Combo Skill', () => {
 describe('Ardelia Full Kit — Ultimate', () => {
   it('D1: ultimate does not crash the pipeline', () => {
     const { result } = renderHook(() => useApp());
+    act(() => { setUltimateEnergyToMax(result.current, SLOT_ARDELIA, 3); });
     const ultCol = findColumn(result.current, SLOT_ARDELIA, NounType.ULTIMATE);
     expect(ultCol).toBeDefined();
 
@@ -405,6 +406,7 @@ describe('Ardelia Full Kit — Ultimate', () => {
 
   it('D2: P0 ultimate has 2 segments (Animation + Active, no Delay)', () => {
     const { result } = renderHook(() => useApp());
+    act(() => { setUltimateEnergyToMax(result.current, SLOT_ARDELIA, 3); });
     const ultCol = findColumn(result.current, SLOT_ARDELIA, NounType.ULTIMATE);
 
     const payload = getMenuPayload(result.current, ultCol!, 5 * FPS);
@@ -424,6 +426,7 @@ describe('Ardelia Full Kit — Ultimate', () => {
 
   it('D3: P0 active segment has 10 frames in 3s', () => {
     const { result } = renderHook(() => useApp());
+    act(() => { setUltimateEnergyToMax(result.current, SLOT_ARDELIA, 3); });
     const ultCol = findColumn(result.current, SLOT_ARDELIA, NounType.ULTIMATE);
 
     const payload = getMenuPayload(result.current, ultCol!, 5 * FPS);
@@ -446,6 +449,7 @@ describe('Ardelia Full Kit — Ultimate', () => {
   it('D4: P3 active segment has 13 frames in 4s', () => {
     const { result } = renderHook(() => useApp());
     setPotential(result, 3);
+    act(() => { setUltimateEnergyToMax(result.current, SLOT_ARDELIA, 3); });
 
     const ultCol = findColumn(result.current, SLOT_ARDELIA, NounType.ULTIMATE);
     const payload = getMenuPayload(result.current, ultCol!, 5 * FPS);
@@ -467,6 +471,7 @@ describe('Ardelia Full Kit — Ultimate', () => {
 
   it('D5: P3 ultimate is 1s longer than P0', () => {
     const { result } = renderHook(() => useApp());
+    act(() => { setUltimateEnergyToMax(result.current, SLOT_ARDELIA, 3); });
 
     // P0 ultimate
     const ultCol0 = findColumn(result.current, SLOT_ARDELIA, NounType.ULTIMATE);
@@ -485,6 +490,7 @@ describe('Ardelia Full Kit — Ultimate', () => {
     // Clear and set P3
     act(() => { result.current.handleClearLoadout(); });
     setPotential(result, 3);
+    act(() => { setUltimateEnergyToMax(result.current, SLOT_ARDELIA, 3); });
 
     const ultCol3 = findColumn(result.current, SLOT_ARDELIA, NounType.ULTIMATE);
     const payload3 = getMenuPayload(result.current, ultCol3!, 5 * FPS);
@@ -554,7 +560,7 @@ describe('Ardelia Full Kit — Corrosion → Susceptibility Pipeline', () => {
 
     // Susceptibility should be applied
     const susceptEvents = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === NounType.SUSCEPTIBILITY && ev.ownerId === ENEMY_OWNER_ID,
+      ev => isQualifiedId(ev.columnId, NounType.SUSCEPTIBILITY) && ev.ownerId === ENEMY_OWNER_ID,
     );
     expect(susceptEvents).toHaveLength(2);
 
@@ -583,7 +589,7 @@ describe('Ardelia Full Kit — Corrosion → Susceptibility Pipeline', () => {
     // Susceptibility events are present in the view model (may be grouped in a shared column)
     const allVMEvents = Array.from(viewModels.values()).flatMap(vm => vm.events);
     const susceptInVM = allVMEvents.filter(
-      ev => ev.columnId === NounType.SUSCEPTIBILITY && ev.ownerId === ENEMY_OWNER_ID,
+      ev => isQualifiedId(ev.columnId, NounType.SUSCEPTIBILITY) && ev.ownerId === ENEMY_OWNER_ID,
     );
     expect(susceptInVM.length).toBeGreaterThan(0);
   });
@@ -631,7 +637,7 @@ describe('Ardelia Full Kit — Corrosion → Susceptibility Pipeline', () => {
 
     // Still only 2 susceptibility events (from first battle skill)
     const susceptEvents = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === NounType.SUSCEPTIBILITY && ev.ownerId === ENEMY_OWNER_ID,
+      ev => isQualifiedId(ev.columnId, NounType.SUSCEPTIBILITY) && ev.ownerId === ENEMY_OWNER_ID,
     );
     expect(susceptEvents).toHaveLength(2);
   });
@@ -677,6 +683,7 @@ describe('Ardelia Full Kit — Potential Progression', () => {
     for (const pot of [0, 1, 2, 3, 4, 5]) {
       act(() => { result.current.handleClearLoadout(); });
       setPotential(result, pot);
+      act(() => { setUltimateEnergyToMax(result.current, SLOT_ARDELIA, 3); });
 
       const ultCol = findColumn(result.current, SLOT_ARDELIA, NounType.ULTIMATE);
       const payload = getMenuPayload(result.current, ultCol!, 5 * FPS);
@@ -793,7 +800,7 @@ describe('Ardelia Full Kit — Freeform Edge Cases', () => {
     });
 
     const susceptEvents = result.current.allProcessedEvents.filter(
-      (ev: TimelineEvent) => ev.columnId === NounType.SUSCEPTIBILITY && ev.ownerId === ENEMY_OWNER_ID,
+      (ev: TimelineEvent) => isQualifiedId(ev.columnId, NounType.SUSCEPTIBILITY) && ev.ownerId === ENEMY_OWNER_ID,
     );
     expect(susceptEvents).toHaveLength(2);
   });

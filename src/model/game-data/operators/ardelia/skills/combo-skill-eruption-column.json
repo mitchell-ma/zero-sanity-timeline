@@ -2,7 +2,6 @@
   "properties": {
     "name": "Eruption Column",
     "description": "When the controlled operator performs a Final Strike on an enemy with no stacks of Vulnerability or Arts Infliction. Launches a homing Volcanic Cloud at a target enemy that deals Nature DMG when close enough to the target. The Volcanic Cloud explodes after a short delay, dealing half of the Nature DMG and forcibly applying temporary Corrosion to nearby enemies.",
-    "windowFrames": 720,
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "COMBO_SKILL",
     "element": "NATURE",
@@ -347,57 +346,72 @@
     "originId": "ARDELIA",
     "icon": "skills/combo_ardelia.png"
   },
-  "onTriggerClause": [
-    {
-      "conditions": [
-        {
-          "subjectDeterminer": "ANY",
-          "subject": "OPERATOR",
-          "verb": "PERFORM",
-          "object": "FINAL_STRIKE"
-        },
-        {
-          "subject": "ENEMY",
-          "verb": "HAVE",
-          "object": "STATUS",
-          "objectId": "INFLICTION",
-          "objectQualifier": "VULNERABLE",
-          "negated": true
-        },
-        {
-          "subject": "ENEMY",
-          "verb": "HAVE",
-          "object": "STATUS",
-          "objectId": "INFLICTION",
-          "objectQualifier": "HEAT",
-          "negated": true
-        },
-        {
-          "subject": "ENEMY",
-          "verb": "HAVE",
-          "object": "STATUS",
-          "objectId": "INFLICTION",
-          "objectQualifier": "CRYO",
-          "negated": true
-        },
-        {
-          "subject": "ENEMY",
-          "verb": "HAVE",
-          "object": "STATUS",
-          "objectId": "INFLICTION",
-          "objectQualifier": "NATURE",
-          "negated": true
-        },
-        {
-          "subject": "ENEMY",
-          "verb": "HAVE",
-          "object": "STATUS",
-          "objectId": "INFLICTION",
-          "objectQualifier": "ELECTRIC",
-          "negated": true
+  "clauseType": "ALL",
+  "activationWindow": {
+    "properties": {
+      "maxSkills": 1
+    },
+    "onTriggerClause": [
+      {
+        "conditions": [
+          {
+            "subjectDeterminer": "ANY",
+            "subject": "OPERATOR",
+            "verb": "PERFORM",
+            "object": "FINAL_STRIKE"
+          },
+          {
+            "subject": "ENEMY",
+            "verb": "HAVE",
+            "object": "STATUS",
+            "objectId": "INFLICTION",
+            "objectQualifier": "VULNERABLE",
+            "negated": true
+          },
+          {
+            "subject": "ENEMY",
+            "verb": "HAVE",
+            "object": "STATUS",
+            "objectId": "INFLICTION",
+            "objectQualifier": "HEAT",
+            "negated": true
+          },
+          {
+            "subject": "ENEMY",
+            "verb": "HAVE",
+            "object": "STATUS",
+            "objectId": "INFLICTION",
+            "objectQualifier": "CRYO",
+            "negated": true
+          },
+          {
+            "subject": "ENEMY",
+            "verb": "HAVE",
+            "object": "STATUS",
+            "objectId": "INFLICTION",
+            "objectQualifier": "NATURE",
+            "negated": true
+          },
+          {
+            "subject": "ENEMY",
+            "verb": "HAVE",
+            "object": "STATUS",
+            "objectId": "INFLICTION",
+            "objectQualifier": "ELECTRIC",
+            "negated": true
+          }
+        ]
+      }
+    ],
+    "segments": [
+      {
+        "properties": {
+          "duration": {
+            "value": 6,
+            "unit": "SECOND"
+          }
         }
-      ]
-    }
-  ],
-  "clauseType": "ALL"
+      }
+    ]
+  }
 }

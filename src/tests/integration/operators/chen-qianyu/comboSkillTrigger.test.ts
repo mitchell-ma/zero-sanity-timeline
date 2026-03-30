@@ -8,7 +8,7 @@
  * Tests Chen Qianyu's combo skill (Soar to the Stars) placement, effects, and cooldown
  * through the full useApp pipeline.
  *
- * Combo trigger: onTriggerClause: THIS OPERATOR APPLY STATUS VULNERABILITY
+ * Combo trigger: onTriggerClause: THIS OPERATOR APPLY VULNERABLE INFLICTION STATUS
  * In freeform mode, combo is always placeable (no window gating).
  *
  * Also tests:

@@ -2,31 +2,22 @@
   "properties": {
     "name": "Seethe",
     "description": "When an enemy suffers Combustion or Corrosion. Fire erupts beneath the feet of any enemy with Combustion or Corrosion, dealing Heat DMG to them. If the skill hits the enemy, Laevatain gains 1 stack of Melting Flame and further gains Ultimate Energy per enemy hit.",
-    "windowFrames": 720,
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "COMBO_SKILL",
     "element": "HEAT",
-    "id": "SEETHE"
-  },
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
+    "id": "SEETHE",
+    "suppliedParameters": {
+      "VARY_BY": [
         {
-          "verb": "RECOVER",
-          "object": "ULTIMATE_ENERGY",
-          "to": "OPERATOR",
-          "toDeterminer": "THIS",
-          "with": {
-            "value": {
-              "verb": "IS",
-              "value": 30
-            }
-          }
+          "id": "ENEMY_HIT",
+          "name": "Enemies Hit",
+          "lowerRange": 1,
+          "upperRange": 3,
+          "default": 1
         }
       ]
     }
-  ],
+  },
   "segments": [
     {
       "metadata": {
@@ -60,7 +51,7 @@
         "duration": {
           "value": {
             "verb": "IS",
-            "value": 0.804
+            "value": 1.8
           },
           "unit": "SECOND"
         },
@@ -112,10 +103,17 @@
                 {
                   "verb": "RECOVER",
                   "object": "ULTIMATE_ENERGY",
+                  "to": "OPERATOR",
+                  "toDeterminer": "THIS",
                   "with": {
                     "value": {
-                      "verb": "IS",
-                      "value": 25
+                      "verb": "VARY_BY",
+                      "object": "ENEMY_HIT",
+                      "value": [
+                        25,
+                        30,
+                        35
+                      ]
                     }
                   }
                 },
@@ -187,25 +185,40 @@
     "originId": "LAEVATAIN",
     "icon": "skills/combo_laevatain.png"
   },
-  "onTriggerClause": [
-    {
-      "conditions": [
-        {
-          "subject": "ENEMY",
-          "verb": "IS",
-          "object": "COMBUSTED"
-        }
-      ]
+  "clauseType": "ALL",
+  "activationWindow": {
+    "properties": {
+      "maxSkills": 1
     },
-    {
-      "conditions": [
-        {
-          "subject": "ENEMY",
-          "verb": "IS",
-          "object": "CORRODED"
+    "onTriggerClause": [
+      {
+        "conditions": [
+          {
+            "subject": "ENEMY",
+            "verb": "IS",
+            "object": "COMBUSTED"
+          }
+        ]
+      },
+      {
+        "conditions": [
+          {
+            "subject": "ENEMY",
+            "verb": "IS",
+            "object": "CORRODED"
+          }
+        ]
+      }
+    ],
+    "segments": [
+      {
+        "properties": {
+          "duration": {
+            "value": 6,
+            "unit": "SECOND"
+          }
         }
-      ]
-    }
-  ],
-  "clauseType": "ALL"
+      }
+    ]
+  }
 }

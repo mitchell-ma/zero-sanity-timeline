@@ -294,6 +294,22 @@ Non-Controlled Reduction = Coeff,  for specific powerful enemy attacks
 
 These have their own base damage formulas separate from skill damage.
 
+### Physical Status Activation
+
+Physical statuses require **Vulnerable** (a physical infliction) as a prerequisite:
+
+| Status      | Prerequisite | Effect |
+|-------------|-------------|--------|
+| **Lift**       | Enemy must already have Vulnerable | Consumes Vulnerable, applies Lift (1s RESET), deals 120% ATK Physical DMG |
+| **Knock Down** | Enemy must already have Vulnerable | Consumes Vulnerable, applies Knock Down (1s RESET), deals 120% ATK Physical DMG |
+| **Breach**     | None (always applies) | Applies Breach, deals 50% ATK + 50% ATK per Vulnerable stack |
+| **Crush**      | None (always applies) | Applies Crush, deals 150% ATK + 150% ATK per Vulnerable stack |
+
+**APPLY LIFT / KNOCK_DOWN always adds 1 Vulnerable stack**, regardless of whether Lift/Knock Down triggers. The status itself only triggers if Vulnerable **already existed** before the current hit (or `isForced` is set). This means:
+- First APPLY LIFT on a clean enemy → only adds Vulnerable, no Lift
+- Second APPLY LIFT → finds existing Vulnerable → creates Lift + adds another Vulnerable
+- Rotation implication: the first skill applies Vulnerable, the second skill gets the Lift
+
 ### Physical Status Base Multipliers
 
 | Status      | Multiplier                         |

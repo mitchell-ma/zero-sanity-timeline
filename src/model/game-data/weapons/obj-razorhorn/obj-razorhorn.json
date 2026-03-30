@@ -5,7 +5,7 @@
     "INFLICTION_CONQUEST_OF_ICY_PEAKS"
   ],
   "properties": {
-    "name": "Obj Razorhorn",
+    "name": "OBJ Razorhorn",
     "id": "OBJ_RAZORHORN",
     "type": "POLEARM",
     "rarity": 5
@@ -23,7 +23,8 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "STAT", "objectId": "BASE_ATTACK",
+          "object": "STAT",
+          "objectId": "BASE_ATTACK",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {

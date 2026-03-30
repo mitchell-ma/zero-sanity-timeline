@@ -19,7 +19,7 @@ import { InteractionModeType } from '../../../../consts/enums';
 import { FPS } from '../../../../utils/timeline';
 import { eventDuration } from '../../../../consts/viewTypes';
 import { computeTimelinePresentation } from '../../../../controller/timeline/eventPresentationController';
-import { findColumn, buildContextMenu, getMenuPayload } from '../../helpers';
+import { findColumn, buildContextMenu, getMenuPayload, setUltimateEnergyToMax } from '../../helpers';
 import type { AppResult } from '../../helpers';
 
 const SLOT_ARDELIA = 'slot-3'; // Ardelia is default slot-3
@@ -35,11 +35,12 @@ const P0_ACTIVE_DURATION_S = 3;
 const P3_ACTIVE_DURATION_S = 4;
 
 /** Add an ultimate via context menu flow. */
-function addUltViaMenu(app: AppResult, atFrame: number) {
-  const col = findColumn(app, SLOT_ARDELIA, NounType.ULTIMATE);
+function addUltViaMenu(ref: { current: AppResult }, atFrame: number) {
+  act(() => { setUltimateEnergyToMax(ref.current, SLOT_ARDELIA, 3); });
+  const col = findColumn(ref.current, SLOT_ARDELIA, NounType.ULTIMATE);
   expect(col).toBeDefined();
-  const payload = getMenuPayload(app, col!, atFrame);
-  app.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+  const payload = getMenuPayload(ref.current, col!, atFrame);
+  act(() => { ref.current.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill); });
 }
 
 describe('Ardelia Ultimate P3 Conditional Frames', () => {
@@ -96,7 +97,7 @@ describe('Ardelia Ultimate P3 Conditional Frames', () => {
   it('A1: At P0, ultimate has 2 segments (no Delay)', () => {
     const { result } = renderHook(() => useApp());
 
-    act(() => { addUltViaMenu(result.current, 1 * FPS); });
+    addUltViaMenu(result, 1 * FPS);
 
     const ultEvents = result.current.allProcessedEvents.filter(
       (ev) => ev.ownerId === SLOT_ARDELIA && ev.columnId === NounType.ULTIMATE,
@@ -113,7 +114,7 @@ describe('Ardelia Ultimate P3 Conditional Frames', () => {
   it('A2: At P0, active segment has only base frames (out-of-bound P3 frames dropped)', () => {
     const { result } = renderHook(() => useApp());
 
-    act(() => { addUltViaMenu(result.current, 1 * FPS); });
+    addUltViaMenu(result, 1 * FPS);
 
     const ult = result.current.allProcessedEvents.find(
       (ev) => ev.ownerId === SLOT_ARDELIA && ev.columnId === NounType.ULTIMATE,
@@ -136,7 +137,7 @@ describe('Ardelia Ultimate P3 Conditional Frames', () => {
       });
     });
 
-    act(() => { addUltViaMenu(result.current, 1 * FPS); });
+    addUltViaMenu(result, 1 * FPS);
 
     const ult = result.current.allProcessedEvents.find(
       (ev) => ev.ownerId === SLOT_ARDELIA && ev.columnId === NounType.ULTIMATE,
@@ -157,7 +158,7 @@ describe('Ardelia Ultimate P3 Conditional Frames', () => {
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
     // Place ult at P0
-    act(() => { addUltViaMenu(result.current, 1 * FPS); });
+    addUltViaMenu(result, 1 * FPS);
     const ultP0 = result.current.allProcessedEvents.find(
       (ev) => ev.ownerId === SLOT_ARDELIA && ev.columnId === NounType.ULTIMATE,
     )!;
@@ -173,7 +174,7 @@ describe('Ardelia Ultimate P3 Conditional Frames', () => {
       });
     });
 
-    act(() => { addUltViaMenu(result.current, 1 * FPS); });
+    addUltViaMenu(result, 1 * FPS);
     const ultP3 = result.current.allProcessedEvents.find(
       (ev) => ev.ownerId === SLOT_ARDELIA && ev.columnId === NounType.ULTIMATE,
     )!;
@@ -198,7 +199,7 @@ describe('Ardelia Ultimate P3 Conditional Frames', () => {
         });
       });
 
-      act(() => { addUltViaMenu(result.current, 1 * FPS); });
+      addUltViaMenu(result, 1 * FPS);
 
       const ult = result.current.allProcessedEvents.find(
         (ev) => ev.ownerId === SLOT_ARDELIA && ev.columnId === NounType.ULTIMATE,

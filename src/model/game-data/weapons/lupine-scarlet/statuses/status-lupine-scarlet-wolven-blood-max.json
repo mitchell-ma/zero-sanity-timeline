@@ -1,0 +1,109 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STAT",
+          "objectId": "DAMAGE_BONUS",
+          "objectQualifier": "PHYSICAL",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "VARY_BY",
+              "object": "SKILL_LEVEL",
+              "value": [
+                0.24,
+                0.288,
+                0.336,
+                0.384,
+                0.432,
+                0.48,
+                0.528,
+                0.576,
+                0.672
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            }
+          }
+        },
+        {
+          "verb": "APPLY",
+          "object": "STAT",
+          "objectId": "DAMAGE_BONUS",
+          "objectQualifier": "HEAT",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "VARY_BY",
+              "object": "SKILL_LEVEL",
+              "value": [
+                0.24,
+                0.288,
+                0.336,
+                0.384,
+                0.432,
+                0.48,
+                0.528,
+                0.576,
+                0.672
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "onExitClause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "CONSUME",
+          "object": "STATUS",
+          "objectId": "LUPINE_SCARLET_WOLVEN_BLOOD",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "stacks": "MAX"
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "LUPINE_SCARLET_WOLVEN_BLOOD_MAX",
+    "name": "Wolven Blood (Max Stacks)",
+    "description": "Additional Physical and Heat DMG Dealt at max stacks. On expiry, removes all Wolven Blood stacks.",
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": 20
+      },
+      "unit": "SECOND"
+    },
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 1
+      },
+      "interactionType": "RESET"
+    },
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
+    "eventType": "STATUS",
+    "eventCategoryType": "WEAPON_STATUS"
+  },
+  "metadata": {
+    "originId": "LUPINE_SCARLET",
+    "dataSources": [
+      "WARFARIN"
+    ]
+  }
+}

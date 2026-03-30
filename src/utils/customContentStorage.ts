@@ -12,6 +12,7 @@ import type { CustomOperatorStatus } from '../model/custom/customOperatorStatusT
 import type { CustomOperatorTalent } from '../model/custom/customOperatorTalentTypes';
 import { getWeaponIdByName } from '../controller/gameDataStore';
 import { GearCategory } from '../consts/enums';
+import { needsMigration, migrateV1ToV2 } from './customContentMigration';
 
 const CUSTOM_WEAPONS_KEY = 'zst-custom-weapons';
 const CUSTOM_GEARS_KEY = 'zst-custom-gear-sets';
@@ -21,6 +22,57 @@ const CUSTOM_WEAPON_EFFECTS_KEY = 'zst-custom-weapon-effects';
 const CUSTOM_GEAR_EFFECTS_KEY = 'zst-custom-gear-effects';
 const CUSTOM_OPERATOR_STATUSES_KEY = 'zst-custom-operator-statuses';
 const CUSTOM_OPERATOR_TALENTS_KEY = 'zst-custom-operator-talents';
+
+// ── V2 Game Data JSON Storage ─────────────────────────────────────────────
+// These functions store raw game data JSON (same format as built-in entities).
+// They are the primary interface for v2 storage.
+
+let migrationRan = false;
+
+/** Ensure v1→v2 migration has run. Call once at app startup. */
+export function ensureMigrated(): void {
+  if (migrationRan) return;
+  migrationRan = true;
+  if (needsMigration()) {
+    const result = migrateV1ToV2();
+    if (result.errors.length > 0) {
+      console.warn('[CustomContent] Migration errors:', result.errors);
+    }
+    if (result.migrated > 0) {
+      console.log(`[CustomContent] Migrated ${result.migrated} items to v2 format`);
+    }
+  }
+}
+
+/** Load an array of game data JSON objects from a storage key. */
+export function loadGameDataArray(key: string): Record<string, unknown>[] {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed;
+  } catch {
+    return [];
+  }
+}
+
+/** Save an array of game data JSON objects to a storage key. */
+export function saveGameDataArray(key: string, data: Record<string, unknown>[]): void {
+  localStorage.setItem(key, JSON.stringify(data));
+}
+
+/** Storage keys exported for use by controllers and exporters. */
+export const STORAGE_KEYS = {
+  operators: CUSTOM_OPERATORS_KEY,
+  skills: CUSTOM_SKILLS_KEY,
+  operatorStatuses: CUSTOM_OPERATOR_STATUSES_KEY,
+  operatorTalents: CUSTOM_OPERATOR_TALENTS_KEY,
+  weapons: CUSTOM_WEAPONS_KEY,
+  weaponEffects: CUSTOM_WEAPON_EFFECTS_KEY,
+  gearSets: CUSTOM_GEARS_KEY,
+  gearEffects: CUSTOM_GEAR_EFFECTS_KEY,
+} as const;
 
 /** Remove all custom content from localStorage. */
 export function clearAllCustomContent(): void {
@@ -58,14 +110,26 @@ export function getAllCustomIds(): Map<string, string> {
     } catch { /* ignore */ }
   };
 
-  addItems(CUSTOM_WEAPONS_KEY, 'weapon', (w) => w.id as string);
-  addItems(CUSTOM_GEARS_KEY, 'gear set', (g) => g.id as string);
-  addItems(CUSTOM_OPERATORS_KEY, 'operator', (o) => o.id as string);
-  addItems(CUSTOM_SKILLS_KEY, 'skill', (s) => s.id as string);
-  addItems(CUSTOM_WEAPON_EFFECTS_KEY, 'weapon effect', (e) => e.id as string);
-  addItems(CUSTOM_GEAR_EFFECTS_KEY, 'gear effect', (e) => e.id as string);
-  addItems(CUSTOM_OPERATOR_STATUSES_KEY, 'operator status', (s) => s.id as string);
-  addItems(CUSTOM_OPERATOR_TALENTS_KEY, 'operator talent', (t) => t.id as string);
+  // v2 bundle formats: weapons use { weapon: { properties: { id } } }, gears use { setEffect: { properties: { id } } }
+  // Leaf entities use { _wrapId } wrappers. Operators store game data JSON with top-level id.
+  addItems(CUSTOM_OPERATORS_KEY, 'operator', (o) => (o.id ?? '') as string);
+  addItems(CUSTOM_WEAPONS_KEY, 'weapon', (w) => {
+    if (w._wrapId) return w._wrapId as string;
+    const weapon = (w.weapon ?? w) as Record<string, unknown>;
+    const props = (weapon.properties ?? {}) as Record<string, unknown>;
+    return (props.id ?? w.id ?? '') as string;
+  });
+  addItems(CUSTOM_GEARS_KEY, 'gear set', (g) => {
+    if (g._wrapId) return g._wrapId as string;
+    const se = g.setEffect as Record<string, unknown> | undefined;
+    const props = (se?.properties ?? {}) as Record<string, unknown>;
+    return (props.id ?? g.id ?? '') as string;
+  });
+  addItems(CUSTOM_SKILLS_KEY, 'skill', (s) => (s._wrapId ?? s.id ?? '') as string);
+  addItems(CUSTOM_WEAPON_EFFECTS_KEY, 'weapon effect', (e) => (e._wrapId ?? e.id ?? '') as string);
+  addItems(CUSTOM_GEAR_EFFECTS_KEY, 'gear effect', (e) => (e._wrapId ?? e.id ?? '') as string);
+  addItems(CUSTOM_OPERATOR_STATUSES_KEY, 'operator status', (s) => (s._wrapId ?? s.id ?? '') as string);
+  addItems(CUSTOM_OPERATOR_TALENTS_KEY, 'operator talent', (t) => (t._wrapId ?? t.id ?? '') as string);
 
   return ids;
 }

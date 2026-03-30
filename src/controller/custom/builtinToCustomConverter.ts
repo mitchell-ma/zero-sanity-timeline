@@ -1,20 +1,21 @@
 /**
- * Converts built-in game data to CustomWeapon / CustomGearSet format
+ * Converts built-in game data to CustomWeapon / CustomGearSet / CustomOperator
  * for the "Clone as Custom" feature.
+ *
+ * Uses serialize() on the built-in entities + the gameDataAdapters toFriendly()
+ * functions to produce editor-compatible types.
  */
-import { WeaponType, GearSetType, GearCategory, ElementType } from '../../consts/enums';
-import { getWeapon, resolveWeaponId, getAllGearPieces, getGearSetEffect, getWeaponEffectDefs, getGearEffectDefs, resolveTargetDisplay, resolveDurationSeconds, resolveTriggerInteractions } from '../gameDataStore';
-import { getGearSetEffects } from '../../consts/gearSetEffects';
+import { GearSetType, ElementType, WeaponType } from '../../consts/enums';
+import { getWeapon, resolveWeaponId, getGearSetEffect, getWeaponStatuses, getGearStatuses, getGearPiecesBySet } from '../gameDataStore';
 import { ALL_OPERATORS } from '../operators/operatorRegistry';
-import { legacyTargetToObjectType, encodeLegacyTarget } from './bridgeUtils';
+import { getOperatorBase, getComboTriggerInfo } from '../gameDataStore';
 import { SubjectType, VerbType, ObjectType, DeterminerType } from '../../dsl/semantics';
 import type { Predicate } from '../../dsl/semantics';
-import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from '../calculation/valueResolver';
 import { OperatorClassType } from '../../model/enums/operators';
-import type { CustomWeapon, CustomWeaponSkillDef } from '../../model/custom/customWeaponTypes';
-import type { CustomGearSet, CustomGearPiece, CustomGearSetEffect } from '../../model/custom/customGearTypes';
+import type { CustomWeapon } from '../../model/custom/customWeaponTypes';
+import type { CustomGearSet } from '../../model/custom/customGearTypes';
 import type { CustomOperator } from '../../model/custom/customOperatorTypes';
-import { getComboTriggerInfo } from '../gameDataStore';
+import { weaponToFriendly, gearSetToFriendly, operatorToFriendly } from './gameDataAdapters';
 
 /** Convert a built-in weapon to CustomWeapon format. */
 export function weaponToCustomWeapon(weaponName: string): CustomWeapon | null {
@@ -22,122 +23,31 @@ export function weaponToCustomWeapon(weaponName: string): CustomWeapon | null {
   const config = weaponId ? getWeapon(weaponId) : undefined;
   if (!config) return null;
 
-  const skills: CustomWeaponSkillDef[] = [];
+  const weaponJson = config.serialize();
+  const statusObjs = getWeaponStatuses(weaponId!) ?? [];
+  const statusJsons = statusObjs.map(s => s.serialize());
 
-  // Skill 1 & 2 are stat boosts; skill 3 is the named effect
-  const skillTypes = [config.skills[0], config.skills[1]].filter(Boolean);
-  if (config.skills[2]) skillTypes.push(config.skills[2]);
-
-  // Check for triggered effects from DSL JSON
-  const dslDefs = getWeaponEffectDefs(weaponId!);
-  // Index DSL defs by label for matching to skill slots
-  let dslDefIdx = 0;
-
-  for (const skillType of skillTypes) {
-    // Named skill (skill 3) — match to DSL defs
-    if (dslDefIdx < dslDefs.length && skillType === config.skills[2]) {
-      // All remaining DSL defs belong to the named skill slot
-      while (dslDefIdx < dslDefs.length) {
-        const def = dslDefs[dslDefIdx];
-        const target = resolveTargetDisplay(def);
-        const clauseEffects = (def.clause ?? []).flatMap((c) => (c.effects ?? []) as Record<string, unknown>[])
-          .filter((e) => e.verb === 'APPLY' && (e.with as Record<string, unknown>)?.value);
-        skills.push({
-          type: 'NAMED',
-          label: def.name ?? def.description ?? '',
-          namedEffect: {
-            name: def.name ?? def.description ?? '',
-            triggers: resolveTriggerInteractions(def),
-            target: encodeLegacyTarget(legacyTargetToObjectType(target as 'wielder' | 'team' | 'enemy')),
-            durationSeconds: resolveDurationSeconds(def),
-            maxStacks: def.stacks?.limit ? resolveValueNode(def.stacks.limit, DEFAULT_VALUE_CONTEXT) : 1,
-            cooldownSeconds: def.cooldownSeconds ?? 0,
-            buffs: clauseEffects.map((e) => {
-              const wv = (e.with as Record<string, unknown>).value as Record<string, unknown>;
-              const perStack = wv.verb === VerbType.VARY_BY && wv.object === 'STATUS_LEVEL';
-              return {
-                stat: e.object as string,
-                valueMin: (wv.valueMin as number) ?? (wv.value as number) ?? 0,
-                valueMax: (wv.valueMax as number) ?? (wv.value as number) ?? 0,
-                perStack,
-              };
-            }),
-            note: def.note,
-          },
-        });
-        dslDefIdx++;
-      }
-    } else {
-      // Treat as stat boost with placeholder label
-      skills.push({
-        type: 'STAT_BOOST',
-        label: skillType.replace(/_/g, ' '),
-        statBoost: { stat: skillType, values: [] },
-      });
-    }
-  }
-
-  return {
-    id: `clone_${weaponName.toLowerCase().replace(/\s+/g, '_')}_${Date.now()}`,
-    name: `${weaponName} (Clone)`,
-    weaponType: config.type as WeaponType,
-    weaponRarity: config.rarity as 3 | 4 | 5 | 6,
-    baseAtk: { lv1: config.getBaseAttack(1), lv90: config.getBaseAttack(90) },
-    skills,
-  };
+  const friendly = weaponToFriendly(weaponJson, [], statusJsons);
+  friendly.id = `clone_${weaponName.toLowerCase().replace(/\s+/g, '_')}_${Date.now()}`;
+  friendly.name = `${weaponName} (Clone)`;
+  return friendly;
 }
 
 /** Convert a built-in gear set to CustomGearSet format. */
 export function gearSetToCustomGearSet(gearSetType: GearSetType): CustomGearSet | null {
-  const gearPieces = getAllGearPieces().filter((g) => g.gearSet === gearSetType);
+  const gearPieces = getGearPiecesBySet(gearSetType as string);
   if (gearPieces.length === 0) return null;
 
-  const passiveEntry = getGearSetEffects(gearSetType);
-  const dslDefs = getGearEffectDefs(gearSetType);
+  const setEffect = getGearSetEffect(gearSetType);
+  const setEffectJson = setEffect?.serialize() ?? undefined;
+  const pieceJsons = gearPieces.map(p => p.serialize());
+  const gearStatuses = getGearStatuses(gearSetType as string) ?? [];
+  const statusJsons = gearStatuses.map(s => s.serialize());
 
-  const pieces: CustomGearPiece[] = gearPieces.slice(0, 3).map((g) => ({
-    name: g.name,
-    gearCategory: g.gearType as GearCategory,
-    defense: 0,
-    statsByRank: { 1: {}, 2: {}, 3: {}, 4: {} },
-  }));
-
-  let setEffect: CustomGearSetEffect | undefined;
-  if (passiveEntry || dslDefs.length > 0) {
-    setEffect = {
-      passiveStats: (passiveEntry?.passiveStats ?? {}) as Record<string, number>,
-      effects: dslDefs.map((def) => {
-        const clauseEffects = (def.clause ?? []).flatMap((c) => (c.effects ?? []) as Record<string, unknown>[])
-          .filter((e) => e.verb === 'APPLY' && (e.with as Record<string, unknown>)?.value);
-        return {
-          label: def.name ?? def.description ?? '',
-          triggers: resolveTriggerInteractions(def),
-          target: encodeLegacyTarget(legacyTargetToObjectType(resolveTargetDisplay(def) as 'wielder' | 'team' | 'enemy')),
-          durationSeconds: resolveDurationSeconds(def),
-          maxStacks: def.stacks?.limit ? resolveValueNode(def.stacks.limit, DEFAULT_VALUE_CONTEXT) : 1,
-          cooldownSeconds: def.cooldownSeconds ?? 0,
-          buffs: clauseEffects.map((e) => {
-            const wv = (e.with as Record<string, unknown>).value as Record<string, unknown>;
-            const perStack = wv.verb === VerbType.VARY_BY && wv.object === 'STATUS_LEVEL';
-            return {
-              stat: e.object as string,
-              value: (wv.value as number) ?? (wv.valueMin as number) ?? 0,
-              perStack,
-            };
-          }),
-          note: def.note,
-        };
-      }),
-    };
-  }
-
-  return {
-    id: `clone_${gearSetType.toLowerCase()}_${Date.now()}`,
-    setName: `${passiveEntry?.label ?? gearSetType} (Clone)`,
-    rarity: ((getGearSetEffect(gearSetType)?.rarity ?? 5) as 4 | 5 | 6) || 5,
-    pieces,
-    setEffect,
-  };
+  const friendly = gearSetToFriendly(setEffectJson, pieceJsons, statusJsons, gearSetType as string);
+  friendly.id = `clone_${gearSetType.toLowerCase()}_${Date.now()}`;
+  friendly.setName = `${friendly.setName} (Clone)`;
+  return friendly;
 }
 
 /** Convert a built-in operator to CustomOperator format. */
@@ -145,12 +55,29 @@ export function operatorToCustomOperator(operatorId: string): CustomOperator | n
   const op = ALL_OPERATORS.find((o) => o.id === operatorId);
   if (!op) return null;
 
+  // Try to use serialize() + adapter if we have the base data
+  const base = getOperatorBase(operatorId);
+  if (base) {
+    const friendly = operatorToFriendly(base.serialize());
+    friendly.id = `clone_${operatorId}_${Date.now()}`;
+    friendly.name = `${op.name} (Clone)`;
+    friendly.baseOperatorId = operatorId;
+
+    // Populate combo trigger from game data
+    const info = getComboTriggerInfo(operatorId);
+    if (info) {
+      friendly.combo = {
+        onTriggerClause: info.onTriggerClause as Predicate[],
+        description: info.description ?? '',
+        windowFrames: info.windowFrames ?? 720,
+      };
+    }
+    return friendly;
+  }
+
+  // Fallback for operators without base data
   const info = getComboTriggerInfo(operatorId);
-
-  // Provide placeholder BASE_ATTACK so validation passes
-  const placeholderStats: Partial<Record<string, number>> = { BASE_ATTACK: 100 };
-
-  // Copy onTriggerClause directly from JSON (already in the right shape)
+  const placeholderStats: Partial<Record<string, number>> = { BASE_HP: 800, BASE_ATTACK: 100, BASE_DEFENSE: 0 };
   const onTriggerClause: Predicate[] = info
     ? (info.onTriggerClause as Predicate[])
     : [{ conditions: [{ subjectDeterminer: DeterminerType.THIS, subject: SubjectType.OPERATOR, verb: VerbType.PERFORM, object: ObjectType.BATTLE_SKILL }], effects: [] }];
@@ -162,10 +89,10 @@ export function operatorToCustomOperator(operatorId: string): CustomOperator | n
     elementType: op.element as ElementType,
     weaponTypes: op.weaponTypes as WeaponType[],
     operatorRarity: (op.rarity as 4 | 5 | 6) || 6,
+    baseOperatorId: operatorId,
     mainAttributeType: '',
     baseStats: { lv1: { ...placeholderStats }, lv90: { ...placeholderStats } },
     potentials: [],
-    skills: [],
     combo: {
       onTriggerClause,
       description: info?.description ?? '',

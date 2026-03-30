@@ -15,7 +15,6 @@ import {
   getTickMarks,
   getVisibleFrameRange,
   frameToTimeLabel,
-  frameToDetailLabel,
   FPS,
   TIME_AXIS_WIDTH,
   HEADER_HEIGHT,
@@ -23,7 +22,7 @@ import {
   TIMELINE_TOP_PAD,
 } from '../utils/timeline';
 import { OPERATOR_COLUMNS, COMBO_WINDOW_COLUMN_ID, ENEMY_ACTION_COLUMN_ID } from '../model/channels';
-import { TimelineSourceType, InteractionModeType, CombatSkillType } from '../consts/enums';
+import { TimelineSourceType, InteractionModeType, CombatSkillType, EventCategoryType, ColumnType } from '../consts/enums';
 import {
   Operator,
   Enemy,
@@ -49,10 +48,6 @@ import { computeAllValidations } from '../controller/timeline/eventValidationCon
 import { computeSlotElementColors, computeEventPresentation, computeTimelinePresentation } from '../controller/timeline/eventPresentationController';
 import {
   buildColumnContextMenu,
-  buildEventAddItems,
-  buildSegmentAddItems as buildSegmentAddItemsCtrl,
-  buildFrameAddItems as buildFrameAddItemsCtrl,
-  controlledItem,
 } from '../controller/timeline/contextMenuController';
 import { useTouchHandlers } from '../utils/useTouchHandlers';
 import TimelineColumn from './TimelineColumn';
@@ -92,8 +87,8 @@ interface CombatPlannerProps {
   onToggleOrientation?: () => void;
   onToggleSkill: (slotId: string, skillType: string) => void;
   onAddEvent: (ownerId: string, columnId: string, atFrame: number, defaultSkill: object | null) => void;
-  onMoveEvent: (id: string, newStartFrame: number, overlapExemptIds?: Set<string>) => void;
-  onMoveEvents?: (ids: string[], delta: number, overlapExemptIds?: Set<string>) => void;
+  onMoveEvent: (id: string, newStartFrame: number, overlapExemptIds?: Set<string>, strictOverride?: boolean) => void;
+  onMoveEvents?: (ids: string[], delta: number, overlapExemptIds?: Set<string>, strictOverride?: boolean) => void;
   onContextMenu: (state: ContextMenuState | null) => void;
   onEditEvent: (id: string | null, context?: string) => void;
   onRemoveEvent: (id: string) => void;
@@ -121,6 +116,7 @@ interface CombatPlannerProps {
   onAddSegment?: (eventUid: string, segmentLabel: string) => void;
   onAddFrame?: (eventUid: string, segmentIndex: number, frameOffsetFrame: number) => void;
   onMoveFrame?: (eventUid: string, segmentIndex: number, frameIndex: number, newOffsetFrame: number) => void;
+  onResizeSegment?: (eventUid: string, updates: { segmentIndex: number; newDuration: number }[]) => void;
   selectedFrames?: import('../consts/viewTypes').SelectedFrame[];
   onSelectedFramesChange?: (frames: import('../consts/viewTypes').SelectedFrame[]) => void;
   /** Callback to expose the scroll container ref for external scroll sync. */
@@ -158,11 +154,25 @@ const noop2 = (_a: unknown, _b: unknown) => {};
 const noop3 = (_a: unknown, _b: unknown, _c: unknown) => {};
 
 const STATUS_TYPE_LABELS: Record<string, string> = {
-  STATUS: 'Status',
-  TALENT: 'Talent', TALENT_STATUS: 'Talent Status', SKILL_STATUS: 'Skill Status',
-  GEAR_STATUS: 'Gear Status', WEAPON_STATUS: 'Weapon Status',
-  POTENTIAL: 'Potential', POTENTIAL_STATUS: 'Potential Status',
+  [EventCategoryType.SKILL_STATUS]: 'Skill Status',
+  [EventCategoryType.TALENT]: 'Talent',
+  [EventCategoryType.TALENT_STATUS]: 'Talent Status',
+  [EventCategoryType.WEAPON_STATUS]: 'Weapon Status',
+  [EventCategoryType.GEAR_STATUS]: 'Gear Status',
+  [EventCategoryType.GEAR_SET_EFFECT]: 'Gear Set Effect',
+  [EventCategoryType.GEAR_SET_STATUS]: 'Gear Set Status',
+  [EventCategoryType.POTENTIAL]: 'Potential',
+  [EventCategoryType.POTENTIAL_STATUS]: 'Potential Status',
 };
+
+/** Groups of status types for the filter menu, with display order. */
+const STATUS_FILTER_GROUPS: { label: string; types: EventCategoryType[] }[] = [
+  { label: 'Talents', types: [EventCategoryType.TALENT, EventCategoryType.TALENT_STATUS] },
+  { label: 'Skills', types: [EventCategoryType.SKILL_STATUS] },
+  { label: 'Weapons', types: [EventCategoryType.WEAPON_STATUS] },
+  { label: 'Gears', types: [EventCategoryType.GEAR_STATUS, EventCategoryType.GEAR_SET_EFFECT, EventCategoryType.GEAR_SET_STATUS] },
+  { label: 'Potentials', types: [EventCategoryType.POTENTIAL, EventCategoryType.POTENTIAL_STATUS] },
+];
 
 // Column width weight — used for grid proportions within operator groups
 const COL_WEIGHT_SKILL_IDS = new Set<string>([NounType.BASIC_ATTACK, NounType.BATTLE_SKILL, NounType.COMBO_SKILL, NounType.ULTIMATE]);
@@ -214,6 +224,7 @@ export default function CombatPlanner({
   onAddSegment,
   onAddFrame,
   onMoveFrame,
+  onResizeSegment,
   selectedFrames,
   onSelectedFramesChange,
   onScrollRef,
@@ -247,6 +258,11 @@ export default function CombatPlanner({
   const rmbMarqueeRef = useRef<{ startX: number; startY: number; moved: boolean; ctrlKey: boolean; priorFrames: SelectedFrame[] } | null>(null);
   const rmbDraggedRef = useRef(false);
   const dragMovedRef = useRef(false);
+  // Stable refs for callbacks used inside throttled drag actions — avoids stale closures
+  const onMoveFrameRef = useRef(onMoveFrame);
+  onMoveFrameRef.current = onMoveFrame;
+  const onResizeSegmentRef = useRef(onResizeSegment);
+  onResizeSegmentRef.current = onResizeSegment;
   const frameDragRef = useRef<{
     eventUid: string;
     segmentIndex: number;
@@ -257,6 +273,17 @@ export default function CombatPlanner({
     minOffset: number;
     /** Maximum allowed offsetFrame (segDuration - 1 or next frame's offset - 1). */
     maxOffset: number;
+  } | null>(null);
+  const segResizeDragRef = useRef<{
+    eventUid: string;
+    segmentIndex: number;
+    edge: 'start' | 'end';
+    startMouseFrame: number;
+    startDuration: number;
+    minDuration: number;
+    siblingIndex: number;
+    siblingStartDuration: number;
+    siblingMinDuration: number;
   } | null>(null);
   const zoomRef     = useRef(zoom);
   const bodyTopRef  = useRef<number | null>(null);
@@ -375,14 +402,14 @@ export default function CombatPlanner({
       const hasFilterable = col.microColumns.some((mc) => mc.statusType);
       if (!hasFilterable) return col;
       const filtered = col.microColumns.filter((mc) => {
-        const effectiveType = mc.statusType ?? 'STATUS';
+        const effectiveType = mc.statusType ?? EventCategoryType.SKILL_STATUS;
         return !hiddenStatusTypes.has(effectiveType);
       });
       if (filtered.length === col.microColumns.length) return col;
       // Build set of hidden micro-column IDs to filter matchColumnIds
       const hiddenIds = new Set<string>();
       for (const mc of col.microColumns) {
-        const effectiveType = mc.statusType ?? 'STATUS';
+        const effectiveType = mc.statusType ?? EventCategoryType.SKILL_STATUS;
         if (hiddenStatusTypes.has(effectiveType)) {
           hiddenIds.add(mc.id);
         }
@@ -480,6 +507,27 @@ export default function CombatPlanner({
   }, []);
 
   useEffect(() => { zoomRef.current = zoom; }, [zoom]);
+
+  // Track ctrl key held state via CSS class on outer container (avoids re-renders)
+  useEffect(() => {
+    const el = outerRef.current;
+    if (!el) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.ctrlKey || e.metaKey) el.classList.add('ctrl-held');
+      else el.classList.remove('ctrl-held');
+    };
+    window.addEventListener('keydown', onKey);
+    window.addEventListener('keyup', onKey);
+    // Also clear on blur (ctrl released while window unfocused)
+    const onBlur = () => el.classList.remove('ctrl-held');
+    window.addEventListener('blur', onBlur);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      window.removeEventListener('keyup', onKey);
+      window.removeEventListener('blur', onBlur);
+    };
+  }, []);
+
   const outerRectRef = useRef(outerRect);
   outerRectRef.current = outerRect;
   const columnsRef = useRef(columns);
@@ -1062,30 +1110,20 @@ export default function CombatPlanner({
     onContextMenu(null); // dismiss any open context menu
     onSelectedFramesChange?.([]); // deselect frames when selecting events
     if (e.ctrlKey || e.metaKey) {
-      setSelectedIds((prev) => {
-        const next = new Set(prev);
-        if (next.has(eventUid)) next.delete(eventUid);
-        else next.add(eventUid);
-        if (next.size === 1) {
-          let singleId = '';
-          next.forEach((id) => { singleId = id; });
-          onEditEvent(singleId);
-        } else {
-          onEditEvent(null);
-        }
-        return next;
-      });
+      setSelectedIds(new Set([eventUid]));
     } else {
       setSelectedIds((prev) => {
-        if (prev.has(eventUid) && prev.size === 1) {
-          onEditEvent(null);
-          return new Set();
-        }
-        onEditEvent(eventUid);
+        if (prev.has(eventUid) && prev.size === 1) return new Set();
         return new Set([eventUid]);
       });
     }
-  }, [onContextMenu, onEditEvent, onSelectedFramesChange]);
+  }, [onContextMenu, onSelectedFramesChange]);
+
+  // ─── Event double-click (open info pane) ──────────────────────────────────────
+  const handleEventDoubleClick = useCallback((_e: React.MouseEvent, eventUid: string) => {
+    onEditEvent(eventUid);
+    setSelectedIds(new Set([eventUid]));
+  }, [onEditEvent]);
 
   // ─── Mouse move ─────────────────────────────────────────────────────────────
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
@@ -1094,7 +1132,7 @@ export default function CombatPlanner({
       updateHoverLineDOM(null);
       setHoverFrame(null);
 
-    } else if (dragRef.current || frameDragRef.current) {
+    } else if (dragRef.current || frameDragRef.current || segResizeDragRef.current) {
       // During drag, hover line is updated inside the throttled drag action — skip here.
       // Still track mouse position for scroll-based recomputation.
       hoverClientFrameRef.current = e[axis.clientFrame];
@@ -1192,7 +1230,8 @@ export default function CombatPlanner({
         (e[axis.clientFrame] - startMouseF) / getPxPerFrame(zoomRef.current)
       );
 
-      const strict = interactionModeRef.current === InteractionModeType.STRICT;
+      const baseStrict = interactionModeRef.current === InteractionModeType.STRICT;
+      const strict = (e.ctrlKey || e.metaKey) ? !baseStrict : baseStrict;
       const { clampedDelta, overlapExempt } = clampDragDelta(deltaFrames, dragRef.current, eventsRef.current, strict);
 
       // Hover line updates immediately (no throttle) for visual responsiveness.
@@ -1209,15 +1248,16 @@ export default function CombatPlanner({
 
       // Throttled state update — triggers React re-render + pipeline
       const dragState = dragRef.current;
+      const strictForMove = strict;
       throttledDragAction.current(() => {
         if (eventUids.length > 1 && onMoveEvents) {
           const incrementalDelta = clampedDelta - dragState.lastAppliedDelta;
-          onMoveEvents(eventUids, incrementalDelta, overlapExempt);
+          onMoveEvents(eventUids, incrementalDelta, overlapExempt, strictForMove);
           dragState.lastAppliedDelta = clampedDelta;
         } else {
           for (const eid of eventUids) {
             const orig = startFrames.get(eid) ?? 0;
-            onMoveEvent(eid, orig + clampedDelta, overlapExempt);
+            onMoveEvent(eid, orig + clampedDelta, overlapExempt, strictForMove);
           }
         }
         setHoverFrame(pnf);
@@ -1231,7 +1271,29 @@ export default function CombatPlanner({
       const { eventUid, segmentIndex, frameIndex, startMouseFrame: startMouseF, startOffsetFrame, minOffset, maxOffset } = frameDragRef.current;
       const deltaFrames = Math.round((e[axis.clientFrame] - startMouseF) / getPxPerFrame(zoomRef.current));
       const newOffset = Math.max(minOffset, Math.min(maxOffset, startOffsetFrame + deltaFrames));
-      throttledDragAction.current(() => onMoveFrame?.(eventUid, segmentIndex, frameIndex, newOffset));
+      throttledDragAction.current(() => onMoveFrameRef.current?.(eventUid, segmentIndex, frameIndex, newOffset));
+      return;
+    }
+
+    // Segment edge resize drag — adjusts both the target segment and its sibling
+    if (segResizeDragRef.current) {
+      dragMovedRef.current = true;
+      const { eventUid, segmentIndex, edge, startMouseFrame: startMouseF, startDuration, minDuration, siblingIndex, siblingStartDuration, siblingMinDuration } = segResizeDragRef.current;
+      const rawDelta = Math.round((e[axis.clientFrame] - startMouseF) / getPxPerFrame(zoomRef.current));
+      // For 'start' edge: shrinking this segment grows the sibling (and vice versa)
+      // For 'end' edge: growing this segment shrinks the sibling
+      const thisDelta = edge === 'end' ? rawDelta : -rawDelta;
+      const hasSibling = siblingStartDuration > 0;
+      // Clamp so neither segment goes below its minimum
+      const maxGrow = hasSibling ? siblingStartDuration - siblingMinDuration : Infinity;
+      const maxShrink = startDuration - minDuration;
+      const clampedDelta = Math.max(-maxShrink, Math.min(maxGrow, thisDelta));
+      const newDuration = startDuration + clampedDelta;
+      const updates: { segmentIndex: number; newDuration: number }[] = [{ segmentIndex, newDuration }];
+      if (hasSibling) {
+        updates.push({ segmentIndex: siblingIndex, newDuration: siblingStartDuration - clampedDelta });
+      }
+      throttledDragAction.current(() => onResizeSegmentRef.current?.(eventUid, updates));
       return;
     }
 
@@ -1261,13 +1323,6 @@ export default function CombatPlanner({
         finalIds = marqueeIds;
       }
       setSelectedIds(finalIds);
-      if (finalIds.size === 1) {
-        let singleId = '';
-        finalIds.forEach((id) => { singleId = id; });
-        onEditEvent(singleId);
-      } else {
-        onEditEvent(null);
-      }
     }
 
     // Right-click marquee drag (frame selection)
@@ -1327,6 +1382,14 @@ export default function CombatPlanner({
       onBatchEnd?.();
       requestAnimationFrame(() => { dragMovedRef.current = false; });
     }
+    if (segResizeDragRef.current) {
+      throttledDragAction.current.flush();
+      segResizeDragRef.current = null;
+      outerRef.current?.classList.remove('segment-resizing');
+      outerRef.current?.querySelectorAll('.resize-active').forEach((el) => el.classList.remove('resize-active'));
+      onBatchEnd?.();
+      requestAnimationFrame(() => { dragMovedRef.current = false; });
+    }
     if (dragRef.current) {
       throttledDragAction.current.flush();
       dragRef.current = null;
@@ -1351,14 +1414,19 @@ export default function CombatPlanner({
       frameDragRef.current = null;
       onBatchEnd?.();
     }
+    if (segResizeDragRef.current) {
+      segResizeDragRef.current = null;
+      outerRef.current?.classList.remove('segment-resizing');
+      outerRef.current?.querySelectorAll('.resize-active').forEach((el) => el.classList.remove('resize-active'));
+      onBatchEnd?.();
+    }
     if (marqueeRef.current) {
-      // Click without drag — dismiss selection and info pane
+      // Click without drag — dismiss selection
       if (!dragMovedRef.current) {
         if (!marqueeRef.current.ctrlKey) {
           setSelectedIds(new Set());
           onSelectedFramesChange?.([]);
         }
-        onEditEvent(null);
       }
       marqueeRef.current = null;
       setMarqueeRect(null);
@@ -1368,7 +1436,7 @@ export default function CombatPlanner({
       setMarqueeRect(null);
     }
     requestAnimationFrame(() => { dragMovedRef.current = false; rmbDraggedRef.current = false; });
-  }, [onBatchEnd, onEditEvent, onSelectedFramesChange]);
+  }, [onBatchEnd, onSelectedFramesChange]);
 
   // ─── Drag start (event move) ──────────────────────────────────────────────────
   const getMonotonicBounds = useCallback(
@@ -1465,6 +1533,44 @@ export default function CombatPlanner({
     if (!dragMovedRef.current) onFrameClick?.(e, eid, si, fi);
   }, [onFrameClick]);
 
+  const handleSegmentResizeDragStart = useCallback((e: React.MouseEvent, eventUid: string, segmentIndex: number, edge: 'start' | 'end') => {
+    if (e.button !== 0) return;
+    const ev = events.find((ev) => ev.uid === eventUid);
+    if (!ev) return;
+    const seg = ev.segments[segmentIndex];
+    if (!seg) return;
+    // Minimum duration: max frame offset + 1 (so frames don't exceed segment bounds), or 1
+    const maxFrameOffset = seg.frames?.reduce((mx, f) => Math.max(mx, f.offsetFrame), -1) ?? -1;
+    const minDuration = maxFrameOffset + 1 || 1;
+    // Sibling: the adjacent segment that shares the edge being dragged
+    const siblingIndex = edge === 'start' ? segmentIndex - 1 : segmentIndex + 1;
+    const sibling = ev.segments[siblingIndex] ?? null;
+    const sibMaxFrame = sibling?.frames?.reduce((mx, f) => Math.max(mx, f.offsetFrame), -1) ?? -1;
+    const siblingMinDuration = sibling ? (sibMaxFrame + 1 || 1) : 0;
+    onBatchStart?.();
+    segResizeDragRef.current = {
+      eventUid,
+      segmentIndex,
+      edge,
+      startMouseFrame: e[axis.clientFrame],
+      startDuration: seg.properties.duration,
+      minDuration,
+      siblingIndex,
+      siblingStartDuration: sibling?.properties.duration ?? 0,
+      siblingMinDuration,
+    };
+    dragMovedRef.current = false;
+    setHoverFrame(null);
+    updateHoverLineDOM(null);
+    e.stopPropagation();
+    e.preventDefault();
+    // Mark outer as resizing and highlight the active handle
+    outerRef.current?.classList.add('segment-resizing');
+    const handle = e.currentTarget as HTMLElement;
+    handle.classList.add('resize-active');
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [events, onBatchStart, axis]);
+
   // ─── Marquee start (mousedown on empty timeline area) ─────────────────────────
   const handleTimelineMouseDown = useCallback((e: React.MouseEvent) => {
     // Dup mode: right-click cancels, left-click confirms
@@ -1541,23 +1647,33 @@ export default function CombatPlanner({
   const resolveMenuItemAction = useCallback((item: import('../consts/viewTypes').ContextMenuItem): import('../consts/viewTypes').ContextMenuItem => {
     if (item.separator || item.header || item.action) return item;
     const { actionId, actionPayload, ...rest } = item;
+    // Resolve inline buttons recursively
+    const resolvedInline = rest.inlineButtons?.map((btn) => {
+      if (btn.action || !btn.actionId) return btn;
+      if (btn.actionId === 'addEvent') {
+        const p = btn.actionPayload as { ownerId: string; columnId: string; atFrame: number; defaultSkill: object | null };
+        return { ...btn, action: () => onAddEvent(p.ownerId, p.columnId, p.atFrame, p.defaultSkill) };
+      }
+      return btn;
+    });
+    const resolved = resolvedInline ? { ...rest, inlineButtons: resolvedInline } : rest;
     switch (actionId) {
       case 'addEvent': {
         const p = actionPayload as { ownerId: string; columnId: string; atFrame: number; defaultSkill: object | null };
-        return { ...rest, action: () => onAddEvent(p.ownerId, p.columnId, p.atFrame, p.defaultSkill) };
+        return { ...resolved, action: () => onAddEvent(p.ownerId, p.columnId, p.atFrame, p.defaultSkill) };
       }
       case 'editResource':
-        return { ...rest, action: () => { onEditResource?.(actionPayload as string); onContextMenu(null); } };
+        return { ...resolved, action: () => { onEditResource?.(actionPayload as string); onContextMenu(null); } };
       case 'addSegment': {
         const p = actionPayload as { eventId: string; segmentLabel: string };
-        return { ...rest, action: () => { onAddSegment?.(p.eventId, p.segmentLabel); onContextMenu(null); } };
+        return { ...resolved, action: () => { onAddSegment?.(p.eventId, p.segmentLabel); onContextMenu(null); } };
       }
       case 'addFrame': {
         const p = actionPayload as { eventId: string; segmentIndex: number; frameOffsetFrame: number };
-        return { ...rest, action: () => { onAddFrame?.(p.eventId, p.segmentIndex, p.frameOffsetFrame); onContextMenu(null); } };
+        return { ...resolved, action: () => { onAddFrame?.(p.eventId, p.segmentIndex, p.frameOffsetFrame); onContextMenu(null); } };
       }
       default:
-        return item;
+        return { ...item, ...(resolvedInline ? { inlineButtons: resolvedInline } : {}) };
     }
   }, [onAddEvent, onEditResource, onContextMenu, onAddSegment, onAddFrame]);
 
@@ -1583,18 +1699,29 @@ export default function CombatPlanner({
     const colPos = columnPositions.get(col.key);
     const relClickX = colPos ? e[axis.clientLane] - (rect[axis.rectLaneStart] - (scrollRef.current?.[axis.scrollLane] ?? 0)) - colPos.left : undefined;
 
+    const effectiveMode = (e.ctrlKey || e.metaKey)
+      ? (interactionMode === InteractionModeType.STRICT ? InteractionModeType.FREEFORM : InteractionModeType.STRICT)
+      : interactionMode;
     const items = buildColumnContextMenu(col, atFrame, relClickX, {
       events, slots, resourceGraphs, alwaysAvailableComboSlots,
-      timeStopRegions, staggerBreaks, columnPositions, interactionMode,
+      timeStopRegions, staggerBreaks, columnPositions, interactionMode: effectiveMode,
     });
     if (!items) return;
 
+    // Check if click landed on an event — add Remove Event option
+    const eventEl = (e.target as HTMLElement).closest('[data-event-uid]');
+    const clickedEventUid = eventEl?.getAttribute('data-event-uid') ?? null;
+    const removeItems: import('../consts/viewTypes').ContextMenuItem[] = [];
+    if (clickedEventUid) {
+      removeItems.push({ separator: true }, { label: 'Remove Event', action: () => onRemoveEvent(clickedEventUid), danger: true });
+    }
+
     onContextMenu({
       x: e.clientX, y: e.clientY,
-      items: items.map(resolveMenuItemAction),
+      items: [...items.map(resolveMenuItemAction), ...removeItems],
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [onContextMenu, events, columnPositions, resourceGraphs, onSelectedFramesChange, dupMode, slots, interactionMode, timeStopRegions, staggerBreaks, alwaysAvailableComboSlots, resolveMenuItemAction, axis, isHorizontal]);
+  }, [onContextMenu, events, columnPositions, resourceGraphs, onSelectedFramesChange, dupMode, slots, interactionMode, timeStopRegions, staggerBreaks, alwaysAvailableComboSlots, resolveMenuItemAction, axis, isHorizontal, onRemoveEvent]);
 
   // ─── Right-click on status column header ───────────────────────────────────
   // Collect all status types across all status columns (global setting)
@@ -1606,7 +1733,7 @@ export default function CombatPlanner({
       const hasTyped = col.microColumns.some((mc) => mc.statusType);
       if (!hasTyped) continue;
       for (const mc of col.microColumns) {
-        const effectiveType = mc.statusType ?? 'STATUS';
+        const effectiveType = mc.statusType ?? EventCategoryType.SKILL_STATUS;
         types.set(effectiveType, (types.get(effectiveType) ?? 0) + 1);
       }
     }
@@ -1623,7 +1750,52 @@ export default function CombatPlanner({
     if (!unfilteredCol || unfilteredCol.type !== 'mini-timeline' || !unfilteredCol.microColumns?.some((mc) => mc.statusType)) return;
     const items: import('../consts/viewTypes').ContextMenuItem[] = [
       { label: 'Status Filters', header: true },
-      ...Array.from(allStatusTypes.entries()).map(([type, count]) => ({
+    ];
+    for (const group of STATUS_FILTER_GROUPS) {
+      const groupTypes = group.types.filter((t) => allStatusTypes.has(t));
+      if (groupTypes.length === 0) continue;
+      const groupTotal = groupTypes.reduce((sum, t) => sum + (allStatusTypes.get(t) ?? 0), 0);
+      const allVisible = groupTypes.every((t) => !hiddenStatusTypes.has(t));
+      // Group header toggle — toggles all types in the group
+      items.push({
+        label: `${group.label} (${groupTotal})`,
+        checked: allVisible,
+        keepOpen: true,
+        action: () => {
+          setHiddenStatusTypes((prev) => {
+            const next = new Set(prev);
+            if (allVisible) {
+              for (const t of groupTypes) next.add(t);
+            } else {
+              for (const t of groupTypes) next.delete(t);
+            }
+            return next;
+          });
+        },
+      });
+      // Individual sub-items only when the group has multiple active types
+      if (groupTypes.length > 1) {
+        for (const type of groupTypes) {
+          const count = allStatusTypes.get(type) ?? 0;
+          items.push({
+            label: `  ${STATUS_TYPE_LABELS[type] ?? type} (${count})`,
+            checked: !hiddenStatusTypes.has(type),
+            keepOpen: true,
+            action: () => {
+              setHiddenStatusTypes((prev) => {
+                const next = new Set(prev);
+                if (next.has(type)) next.delete(type); else next.add(type);
+                return next;
+              });
+            },
+          });
+        }
+      }
+    }
+    // Any ungrouped types (future-proofing)
+    for (const [type, count] of Array.from(allStatusTypes.entries())) {
+      if (STATUS_FILTER_GROUPS.some((g) => g.types.includes(type as EventCategoryType))) continue;
+      items.push({
         label: `${STATUS_TYPE_LABELS[type] ?? type} (${count})`,
         checked: !hiddenStatusTypes.has(type),
         keepOpen: true,
@@ -1634,8 +1806,8 @@ export default function CombatPlanner({
             return next;
           });
         },
-      })),
-    ];
+      });
+    }
     onContextMenu({ x: e.clientX, y: e.clientY, items });
   }, [allStatusTypes, hiddenStatusTypes, onContextMenu, columnsProp]);
 
@@ -1648,74 +1820,58 @@ export default function CombatPlanner({
     e.stopPropagation();
     if (rmbDraggedRef.current) return;
     onSelectedFramesChange?.([]);
-    const target = events.find((ev) => ev.uid === eventUid);
-    if (target && interactionMode === InteractionModeType.STRICT) {
-      const col = columns.find((c): c is MiniTimeline => c.type === 'mini-timeline' && c.ownerId === target.ownerId && c.columnId === target.columnId);
+
+    // ── Batch: right-clicked event is part of a multi-selection ─────────
+    if (selectedIds.has(eventUid) && selectedIds.size > 1) {
+      const ids = Array.from(selectedIds);
+      const items: import('../consts/viewTypes').ContextMenuItem[] = [];
+      if (onResetEvents) {
+        items.push({ label: `Reset ${ids.length} Events`, action: () => { onResetEvents(ids); onContextMenu(null); } });
+      }
+      if (onRemoveEvents) {
+        items.push({ label: `Remove ${ids.length} Events`, action: () => { onRemoveEvents(ids); setSelectedIds(new Set()); onContextMenu(null); }, danger: true });
+      }
+      onContextMenu({ x: e.clientX, y: e.clientY, items });
+      return;
+    }
+
+    // ── Single event ───────────────────────────────────────────────────
+    const ev = events.find((ev) => ev.uid === eventUid);
+    if (!ev) return;
+    if (ev.name === CombatSkillType.CONTROL) return;
+    if (interactionMode === InteractionModeType.STRICT) {
+      const col = columns.find((c): c is MiniTimeline => c.type === ColumnType.MINI_TIMELINE && c.ownerId === ev.ownerId && c.columnId === ev.columnId);
       if (col?.derived) return;
     }
 
-    const scrollFrame = scrollRef.current?.[axis.scrollPos] ?? 0;
-    const rect = scrollRef.current?.getBoundingClientRect();
-    let atFrame = 0;
-    let label = '';
-    if (rect && bodyTopRef.current !== null) {
-      const relFrame = e[axis.clientFrame] - rect[axis.rectFrameStart] + scrollFrame - bodyTopRef.current;
-      atFrame = pxToFrame(Math.max(0, relFrame), zoomRef.current);
-      label = frameToDetailLabel(atFrame);
+    const multiSegment = ev.segments.length > 1;
+    const isCombo = ev.columnId === NounType.COMBO_SKILL;
+
+    // Determine which segment the click landed on
+    const evEl = scrollRef.current?.querySelector(`[data-event-uid="${eventUid}"]`) as HTMLElement | null;
+    let hoveredSegIndex = 0;
+    if (evEl) {
+      const evRect = evEl.getBoundingClientRect();
+      const clickRel = e[axis.clientFrame] - evRect[axis.rectFrameStart];
+      let running = 0;
+      for (let si = 0; si < ev.segments.length; si++) {
+        const segPx = durationToPx(ev.segments[si].properties.duration, zoomRef.current);
+        if (clickRel < running + segPx) { hoveredSegIndex = si; break; }
+        running += segPx;
+        hoveredSegIndex = si;
+      }
     }
+    const segLabel = ev.segments[hoveredSegIndex]?.properties.name ?? formatSegmentShortName(undefined, hoveredSegIndex);
 
-    const ev = events.find((ev) => ev.uid === eventUid);
-    const addItems = ev
-      ? buildEventAddItems(ev, columns, events, atFrame, label, 'addEvent', interactionMode).map(resolveMenuItemAction)
-      : [];
-
-    const ctrlItem = ev ? controlledItem(ev.ownerId, atFrame, timeStopRegions) : null;
-    const ctrlItems = ctrlItem ? [{ separator: true } as const, resolveMenuItemAction(ctrlItem)] : [];
-
-    if (selectedIds.has(eventUid) && selectedIds.size > 1) {
-      const count = selectedIds.size;
-      const ids = Array.from(selectedIds);
-      onContextMenu({
-        x: e.clientX, y: e.clientY,
-        items: [
-          ...(onResetEvents ? [{
-            label: `Reset ${count} Events to Default`,
-            action: () => { onResetEvents(ids); },
-          }] : []),
-          {
-            label: `Remove ${count} Events`,
-            action: () => { onRemoveEvents?.(ids); setSelectedIds(new Set()); onContextMenu(null); },
-            danger: true,
-          },
-          ...(addItems.length > 0 ? [{ separator: true } as const, ...addItems] : []),
-          ...ctrlItems,
-        ],
-      });
-    } else {
-      const isControl = ev?.name === CombatSkillType.CONTROL;
-      const isSeededControl = isControl && ev?.uid.startsWith('controlled-seed-');
-      const hasSegments = ev && ev.segments.length > 0;
-      const multiSegment = (ev?.segments.length ?? 0) > 1;
-      const isCombo = ev?.columnId === NounType.COMBO_SKILL;
-      const segAddItems = multiSegment && !isCombo && !isControl
-        ? buildSegmentAddItemsCtrl(eventUid, events, columns, interactionMode).map(resolveMenuItemAction)
-        : [];
-      onContextMenu({
-        x: e.clientX, y: e.clientY,
-        items: [
-          ...(!isControl && onResetEvent ? [{ label: 'Reset Event to Default', action: () => { onResetEvent(eventUid); } }] : []),
-          ...(!isControl && multiSegment && !isCombo && onResetSegments ? [{ label: 'Reset Segments to Default', action: () => { onResetSegments(eventUid); } }] : []),
-          ...(!isControl && hasSegments && onResetFrames ? [{ label: 'Reset Frames to Default', action: () => { onResetFrames(eventUid); } }] : []),
-          ...(!isControl ? [{ separator: true }] : []),
-          ...(segAddItems.length > 0 ? [...segAddItems, { separator: true } as const] : []),
-          ...(!isSeededControl ? [{ label: 'Remove Event', action: () => onRemoveEvent(eventUid), danger: true }] : []),
-          ...(addItems.length > 0 ? [{ separator: true } as const, ...addItems] : []),
-          ...ctrlItems,
-        ],
-      });
+    const items: import('../consts/viewTypes').ContextMenuItem[] = [];
+    if (onResetEvent) items.push({ label: 'Reset Event to Default', action: () => { onResetEvent(eventUid); onContextMenu(null); } });
+    if (multiSegment && !isCombo && onResetSegments) {
+      items.push({ label: `Reset Segment ${segLabel}`, action: () => { onResetSegments(eventUid); onContextMenu(null); } });
     }
+    items.push({ label: 'Remove Event', action: () => { onRemoveEvent(eventUid); onContextMenu(null); }, danger: true });
+    onContextMenu({ x: e.clientX, y: e.clientY, items });
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [onRemoveEvent, onRemoveEvents, onResetEvent, onResetEvents, onResetSegments, onResetFrames, onContextMenu, selectedIds, events, columns, onSelectedFramesChange, interactionMode, resolveMenuItemAction]);
+  }, [onRemoveEvent, onRemoveEvents, onResetEvent, onResetEvents, onResetSegments, onContextMenu, events, selectedIds, onSelectedFramesChange, interactionMode, axis]);
 
   // ─── Right-click on frame diamond ──────────────────────────────────────────
   const handleFrameContextMenu = useCallback((
@@ -1771,31 +1927,18 @@ export default function CombatPlanner({
     if (rmbDraggedRef.current) return;
     onSelectedFramesChange?.([]);
     const ev = events.find((ev) => ev.uid === eventUid);
-    const segLabel = ev?.segments[segmentIndex]?.properties.name;
-    const multiSegment = (ev?.segments.length ?? 0) > 1;
-    const isCombo = ev?.columnId === NounType.COMBO_SKILL;
-    const addSegItems = multiSegment && !isCombo
-      ? buildSegmentAddItemsCtrl(eventUid, events, columns, interactionMode).map(resolveMenuItemAction)
-      : [];
-    const addFrameItems = buildFrameAddItemsCtrl(eventUid, segmentIndex, events, columns).map(resolveMenuItemAction);
-    onContextMenu({
-      x: e.clientX, y: e.clientY,
-      items: [
-        ...(onResetEvent ? [{ label: 'Reset Event to Default', action: () => { onResetEvent(eventUid); } }] : []),
-        ...(multiSegment && !isCombo && onResetSegments ? [{ label: 'Reset Segments to Default', action: () => { onResetSegments(eventUid); } }] : []),
-        ...(onResetFrames ? [{ label: 'Reset Frames to Default', action: () => { onResetFrames(eventUid); } }] : []),
-        { separator: true },
-        ...(addFrameItems.length > 0 ? [...addFrameItems, { separator: true } as const] : []),
-        ...(addSegItems.length > 0 ? [...addSegItems, { separator: true } as const] : []),
-        ...(multiSegment && !isCombo && ev?.columnId === NounType.BASIC_ATTACK ? [{
-          label: `Remove Sequence ${segLabel ?? formatSegmentShortName(undefined, segmentIndex)}`,
-          action: () => { onRemoveSegment?.(eventUid, segmentIndex); onContextMenu(null); },
-          danger: true,
-        }] : []),
-        { label: 'Remove Event', action: () => onRemoveEvent(eventUid), danger: true },
-      ],
-    });
-  }, [onContextMenu, onRemoveEvent, onRemoveSegment, onResetEvent, onResetSegments, onResetFrames, onSelectedFramesChange, events, columns, interactionMode, resolveMenuItemAction]);
+    if (!ev) return;
+    const segLabel = ev.segments[segmentIndex]?.properties.name ?? formatSegmentShortName(undefined, segmentIndex);
+    const multiSegment = ev.segments.length > 1;
+    const isCombo = ev.columnId === NounType.COMBO_SKILL;
+    const items: import('../consts/viewTypes').ContextMenuItem[] = [];
+    if (onResetEvent) items.push({ label: 'Reset Event to Default', action: () => { onResetEvent(eventUid); } });
+    if (multiSegment && !isCombo && onResetSegments) {
+      items.push({ label: `Reset Segment ${segLabel}`, action: () => { onResetSegments(eventUid); } });
+    }
+    items.push({ label: 'Remove Event', action: () => onRemoveEvent(eventUid), danger: true });
+    onContextMenu({ x: e.clientX, y: e.clientY, items });
+  }, [onContextMenu, onRemoveEvent, onResetEvent, onResetSegments, onSelectedFramesChange, events]);
 
   return (
     <div
@@ -2050,12 +2193,14 @@ export default function CombatPlanner({
                 onDragStart={handleEventDragStart}
                 onContextMenu={handleEventContextMenu}
                 onSelect={handleEventSelect}
+                onDoubleClick={handleEventDoubleClick}
                 onHover={handleEventHover}
                 onTouchStart={handleEventTouchStart}
                 onFrameClick={handleFrameClickGuarded}
                 onFrameContextMenu={handleFrameContextMenu}
                 onFrameDragStart={handleFrameDragStart}
                 onSegmentContextMenu={handleSegmentContextMenu}
+                onSegmentResizeDragStart={handleSegmentResizeDragStart}
               />
             );
           })}

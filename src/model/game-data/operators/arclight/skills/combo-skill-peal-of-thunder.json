@@ -2,7 +2,6 @@
   "properties": {
     "name": "Peal of Thunder",
     "description": "When an enemy suffers Electrification or after an enemy's Electrification is consumed. Blinks to the enemy's side to unleash a flurry of slashes that deals Physical DMG and recovers some SP.",
-    "windowFrames": 720,
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "COMBO_SKILL",
     "element": "PHYSICAL",
@@ -301,16 +300,31 @@
     "originId": "ARCLIGHT",
     "icon": "skills/combo_arclight.png"
   },
-  "onTriggerClause": [
-    {
-      "conditions": [
-        {
-          "subject": "ENEMY",
-          "verb": "IS",
-          "object": "ELECTRIFIED"
+  "clauseType": "ALL",
+  "activationWindow": {
+    "properties": {
+      "maxSkills": 1
+    },
+    "onTriggerClause": [
+      {
+        "conditions": [
+          {
+            "subject": "ENEMY",
+            "verb": "IS",
+            "object": "ELECTRIFIED"
+          }
+        ]
+      }
+    ],
+    "segments": [
+      {
+        "properties": {
+          "duration": {
+            "value": 6,
+            "unit": "SECOND"
+          }
         }
-      ]
-    }
-  ],
-  "clauseType": "ALL"
+      }
+    ]
+  }
 }

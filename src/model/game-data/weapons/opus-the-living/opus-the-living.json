@@ -5,7 +5,7 @@
     "INFLICTION_ROAD_HOME_FOR_ALL_LIFE"
   ],
   "properties": {
-    "name": "Opus The Living",
+    "name": "Opus: The Living",
     "id": "OPUS_THE_LIVING",
     "type": "HANDCANNON",
     "rarity": 5
@@ -23,7 +23,8 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "STAT", "objectId": "BASE_ATTACK",
+          "object": "STAT",
+          "objectId": "BASE_ATTACK",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {

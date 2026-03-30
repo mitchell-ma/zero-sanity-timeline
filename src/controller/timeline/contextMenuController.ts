@@ -209,6 +209,39 @@ export function buildColumnContextMenu(
 
   if (col.columnId === NounType.COMBO_SKILL) {
     const comboAvail = checkComboWindowAvailability(col.ownerId, atFrame, events, alwaysAvailableComboSlots);
+    const variants = col.eventVariants && col.eventVariants.length > 1 ? col.eventVariants : null;
+
+    if (variants) {
+      // Multiple combo variants (e.g. normal + empowered) — show each with individual availability
+      return [
+        headerItem,
+        ...variants.map((v) => {
+          const availability = checkVariantAvailability(v.id, col.ownerId, events, atFrame, col.columnId, slots, v.enhancementType);
+          const overlap = checkOverlap(col.ownerId, col.columnId, computeProspectiveRange(v, atFrame, timeStopRegions));
+          const disabled = interactionMode === InteractionModeType.STRICT && (inTimeStop || !comboAvail.available || availability.disabled || overlap);
+          const displayName = v.displayName ?? getAllSkillLabels()[v.id as CombatSkillType] ?? v.name ?? v.id;
+          const reason = inTimeStop ? timeStopReason
+            : !comboAvail.available ? comboAvail.reason
+            : availability.disabled ? availability.reason
+            : overlap ? t('ctx.overlap') : undefined;
+          return {
+            label: displayName,
+            actionId: 'addEvent' as const,
+            actionPayload: {
+              ownerId: col.ownerId,
+              columnId: col.columnId,
+              atFrame,
+              defaultSkill: { ...v, comboTriggerColumnId: comboAvail.comboTriggerColumnId },
+            },
+            disabled,
+            disabledReason: reason,
+          };
+        }),
+        ...(ctrlItem ? [{ separator: true } as ContextMenuItem, ctrlItem] : []),
+      ];
+    }
+
+    // Single combo variant — show as one item
     const overlap = checkOverlap(col.ownerId, col.columnId, computeProspectiveRange(col.defaultEvent ?? null, atFrame, timeStopRegions));
     const disabled = interactionMode === InteractionModeType.STRICT && (inTimeStop || !comboAvail.available || overlap);
     const reason = inTimeStop ? timeStopReason

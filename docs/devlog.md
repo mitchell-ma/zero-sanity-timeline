@@ -1,5 +1,19 @@
 # Devlog
 
+## 2026-03-29
+- Introduced an override system for event segments — you can now resize, pin, or remove individual segments and frames without losing the original skill data, so your edits survive round-trips through shared URLs
+- Combo skill activation windows now support multiple skills per window — operators with multi-combo windows can queue several skills in the same activation period
+- Rossi is now fully data-complete with all stat progressions, skill variants (empowered battle skill, dive/finisher attacks), crit and timing statuses, and potentials
+- Five new weapons added: Brigand's Calling, Glorious Memory, Home Longing, Lupine Scarlet, and Prominent Edge
+- Event detail panel redesigned with tabbed segment views and cleaner data cards for easier reading of complex skill breakdowns
+- Event categories (talent, weapon status, gear status, gear set effect, potential, etc.) are now tracked and labeled — status effects display more descriptive type tags
+- Custom operator and weapon data can now be exported and imported as ZIP files for sharing custom content between browsers
+- Trigger condition matching improved — conditions with multiple requirements now correctly aggregate candidates across all clauses
+- Enable/disable variant resolution now matches by variant ID instead of object type, fixing cases where the wrong variant was toggled
+- Gear effect data expanded across many sets with improved metadata and status configs
+- Rossi banner image optimized (83% smaller file size)
+- New gear piece icons for Aethertech light gloves and stabilizer
+
 ## 2026-03-28
 - Status effects can now trigger actions when they appear or expire, enabling mechanics like Gilberta's Gravity Field extending Lift duration while the field is active
 - Scorching Heart now correctly activates when Laevatain absorbs 4 Heat Inflictions via Final Strike — previously the absorption path didn't trigger the activation

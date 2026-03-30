@@ -5,7 +5,8 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "STAT", "objectId": "BASE_DEFENSE",
+          "object": "STAT",
+          "objectId": "BASE_DEFENSE",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
@@ -17,7 +18,8 @@
         },
         {
           "verb": "APPLY",
-          "object": "STAT", "objectId": "STRENGTH",
+          "object": "STAT",
+          "objectId": "STRENGTH",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
@@ -37,7 +39,8 @@
         },
         {
           "verb": "APPLY",
-          "object": "STAT", "objectId": "WILL",
+          "object": "STAT",
+          "objectId": "WILL",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
@@ -57,7 +60,8 @@
         },
         {
           "verb": "APPLY",
-          "object": "STAT", "objectId": "FINAL_DAMAGE_REDUCTION",
+          "object": "STAT",
+          "objectId": "FINAL_DAMAGE_REDUCTION",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
@@ -80,7 +84,7 @@
   ],
   "properties": {
     "id": "ARMORED_MSGR_GLOVES",
-    "name": "Armored Msgr Gloves",
+    "name": "Armored MSGR Gloves",
     "gearType": "GLOVES",
     "gearSet": "ARMORED_MSGR"
   },

@@ -13,6 +13,7 @@ import type { Slot } from '../controller/timeline/columnBuilder';
 import type { StaggerBreak } from '../controller/timeline/staggerTimeline';
 import { ResourcePoint } from '../controller/timeline/resourceTimeline';
 import { CritMode, CombatSkillType, FoldMode } from '../consts/enums';
+import type { OverrideStore } from '../consts/overrideTypes';
 import { LoadoutProperties } from './InformationPane';
 import { OperatorLoadoutState } from './OperatorLoadoutHeader';
 import { OPERATORS } from '../utils/loadoutRegistry';
@@ -26,6 +27,7 @@ import { SKILL_LABELS } from '../consts/enums';
 import { getAllSkillLabels } from '../controller/gameDataStore';
 import { SkillType } from '../consts/viewTypes';
 import { t } from '../locales/locale';
+import { ultimateGraphKey } from '../model/channels';
 
 const ROW_HEIGHT = 22;
 const MARQUEE_THRESHOLD = 4;
@@ -260,6 +262,7 @@ interface CombatSheetProps {
   onDamageRows?: (rows: DamageTableRow[]) => void;
   critMode?: CritMode;
   onCritModeChange?: (mode: CritMode) => void;
+  overrides?: OverrideStore;
   plannerHidden?: boolean;
   resourceGraphs?: Map<string, { points: ReadonlyArray<ResourcePoint>; min: number; max: number }>;
 }
@@ -268,7 +271,7 @@ export default React.memo(function CombatSheet({
   slots, events, columns, enemy, loadoutProperties, loadouts, zoom, loadoutRowHeight, headerRowHeight,
   selectedFrames, hoverFrameRef, onScrollRef, onScroll: onScrollProp, onZoom,
   staggerBreaks, compact, showRealTime = true, contentFrames: contentFramesProp, onDamageClick, onDamageRows,
-  critMode = CritMode.NEVER, onCritModeChange, plannerHidden, resourceGraphs,
+  critMode = CritMode.NEVER, onCritModeChange, overrides, plannerHidden, resourceGraphs,
 }: CombatSheetProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const formatTime = useCallback(
@@ -424,9 +427,9 @@ export default React.memo(function CombatSheet({
   }, [slots]);
 
   const { rows: rawRows } = useMemo(
-    () => runCalculation(events, columns, slots, enemy, loadoutProperties, loadouts, staggerBreaks, critMode),
+    () => runCalculation(events, columns, slots, enemy, loadoutProperties, loadouts, staggerBreaks, critMode, overrides),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [events, columns, slots, enemy, loadoutProperties, loadouts, staggerBreaks, critMode],
+    [events, columns, slots, enemy, loadoutProperties, loadouts, staggerBreaks, critMode, overrides],
   );
   const bossMaxHp = useMemo(() => {
     const model = getModelEnemy(enemy.id);
@@ -1059,7 +1062,7 @@ function SheetCell({ def, row, opInfo, opColor, bossMaxHp, formatTime, onDamageC
       );
     }
     case SheetCol.ULT_CHARGE: {
-      const ultGraph = resourceGraphs?.get(`${row.ownerId}-ultimate`);
+      const ultGraph = resourceGraphs?.get(ultimateGraphKey(row.ownerId));
       const ultVal = ultGraph ? getResourceValueAfter(ultGraph.points, row.absoluteFrame) : null;
       return (
         <div className={`dmg-cell ${def.cellClass}`} style={style}

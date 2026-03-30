@@ -224,3 +224,36 @@ at level 12). The function needs a fallback to return `perFrameMultipliers[segId
 
 Ardelia Talent 1 (Friendly Presence): battle skill creates Shadows of Mr. Dolly that heal the controlled operator on contact. Healing formula: `[63/90 + Will × 0.53/0.75]` by talent level. If controlled operator is at max HP, heals lowest-HP teammate instead. Shadows last 10s, max 10. Ultimate copies also have 10% chance to spawn shadows. Currently description-only — needs spatial/proximity mechanics to implement.
 
+
+## Rossi full reconciliation (from Warfarin + SkillData audit)
+
+### Battle Skill — Crimson Shadow
+- [ ] Duration 1.75s → 1.3s (SkillData AllowNext f38)
+- [ ] Frame 1 offset 0.5→0.533s, Frame 2 offset 0.8→0.733s, Frame 3 offset 1.2→1.167s
+- [ ] Frame 3 has DEAL DAMAGE but SkillData f35 ChannelingAction has hasDmg=False — should be stagger+UE only, not damage
+- [ ] Frame 1+2 mults (0.255 each) are derived splits of atk_scale_1=0.85. Verify per-hit breakdown
+- [ ] Frame 3 stagger=5 matches poise_1=5 ✅
+- [ ] Missing: RECOVER UE (usp_1=15 on SEQ 1 complete, usp_2=10 on SEQ 2)
+- [ ] Missing: SEQ 2 entirely (atk_scale_3=1.28, poise_2=10, fires at ~7.2s via projectiles)
+- [ ] Missing: Bleed status (atk_scale_bleed=0.36, duration_bleed=15s)
+- [ ] Empowered variant: verify diff from base (WOLVEN_AMBRAGE status)
+- [ ] Dual element: SEQ 1 = Physical (no SpellInfliction), SEQ 2 = Heat (check projhit for infliction)
+
+### Combo Skill — Moment of Blazing Shadow
+- [ ] Rossi has 3 combo variants (combo_1, combo_2, combo_3) — we only model combo_1
+- [ ] Seg 2 dur 0.8s vs SkillData 0.733s
+- [ ] Missing DEAL DAMAGE frame (atk_scale=0.4, poise=10) — current frame only has status effects
+- [ ] Missing RECOVER UE (usp=10)
+- [ ] Combo 2: atk_scale=0.67, display variants for SEQ 2 (1.33/0.67), crit buff (25%, 15s)
+- [ ] Combo 3: atk_scale_s/f=1.33, crit rate+dmg buff (15%/30%, 15s), per-infliction-stack bonus (80%)
+
+### Ultimate — Razorclaw Ambuscade
+- [ ] Seg 1 (Animation) dur 2.592s vs SkillData exclusive=5.167s — very different
+- [ ] SkillData shows damage at 1.9s, 2.133s, 4.067s — ult has damage frames we don't model
+- [ ] Warfarin: atk_scale_1=0.11 (stab per hit), atk_scale_2=1.11 (SEQ 1 slash), atk_scale_3=3.33 (SEQ 2 slash)
+- [ ] display_atk_scale_1_min=1.28, display_atk_scale_1_max=2.75 — variable stab count
+- [ ] Missing: DEAL STAGGER 25, crit_damage_up_to_bleed=0.6
+- [ ] Seg 2 has APPLY INFLICTION at offset 5s — verify timing
+
+### General
+- [ ] Yvonne empowered BA: non-standard Warfarin IDs (ult_attack1_1 etc.), stagger 20 vs 17

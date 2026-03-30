@@ -25,7 +25,7 @@ import { EnhancementType, EventStatusType, InteractionModeType } from '../../../
 import { FPS, TOTAL_FRAMES } from '../../../../utils/timeline';
 import { eventDuration } from '../../../../consts/viewTypes';
 import { computeTimelinePresentation } from '../../../../controller/timeline/eventPresentationController';
-import { findColumn, buildContextMenu, getMenuPayload, getAddEventPayload } from '../../helpers';
+import { findColumn, buildContextMenu, getMenuPayload, getAddEventPayload, setUltimateEnergyToMax } from '../../helpers';
 import type { AppResult, AddEventPayload } from '../../helpers';
 
 /* eslint-disable @typescript-eslint/no-require-imports */
@@ -152,6 +152,7 @@ describe('Laevatain Skills — integration through useApp', () => {
 
   it('ultimate added without crash', () => {
     const { result } = renderHook(() => useApp());
+    act(() => { setUltimateEnergyToMax(result.current, SLOT_LAEVATAIN, 0); });
     const col = findColumn(result.current, SLOT_LAEVATAIN, NounType.ULTIMATE);
     expect(col).toBeDefined();
 

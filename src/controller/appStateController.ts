@@ -4,6 +4,7 @@
  */
 
 import { Operator, TimelineEvent, ResourceConfig, Enemy, MiniTimeline } from '../consts/viewTypes';
+import type { OverrideStore } from '../consts/overrideTypes';
 import { OperatorLoadoutState, EMPTY_LOADOUT } from '../view/OperatorLoadoutHeader';
 import { LoadoutProperties, getDefaultLoadoutProperties } from '../view/InformationPane';
 import { ALL_OPERATORS, getUltimateEnergyCost, getUltimateEnergyCostForPotential } from './operators/operatorRegistry';
@@ -15,7 +16,8 @@ import { getGearPiece } from './gameDataStore';
 import { filterEventsOnOperatorChange } from './timeline/inputEventController';
 import GENERAL_MECHANICS from '../model/game-data/generalMechanics.json';
 import type { Slot } from './timeline/columnBuilder';
-import { SKILL_COLUMN_ORDER } from '../model/channels';
+import { NounType } from '../dsl/semantics';
+import { SKILL_COLUMN_ORDER, ultimateGraphKey } from '../model/channels';
 
 const SKILL_COLUMN_SET: ReadonlySet<string> = new Set(SKILL_COLUMN_ORDER);
 
@@ -59,7 +61,7 @@ export function getDefaultEnemyStats(enemyId: string, level: number = DEFAULT_EN
   };
 }
 
-export interface UndoableState {
+export interface CombatState {
   events: TimelineEvent[];
   operators: (Operator | null)[];
   enemy: Enemy;
@@ -67,20 +69,21 @@ export interface UndoableState {
   loadouts: Record<string, OperatorLoadoutState>;
   loadoutProperties: Record<string, LoadoutProperties>;
   resourceConfigs: Record<string, ResourceConfig>;
+  overrides: OverrideStore;
 }
 
 // ── Operator swap ────────────────────────────────────────────────────────────
 
 /**
- * Compute the next UndoableState when an operator is swapped into a slot.
+ * Compute the next CombatState when an operator is swapped into a slot.
  * Handles: operator array update, event pruning, weapon compatibility, stats reset.
  */
 export function swapOperator(
-  prev: UndoableState,
+  prev: CombatState,
   slotId: string,
   newOperatorId: string | null,
   slotIds: string[],
-): UndoableState {
+): CombatState {
   const slotIndex = slotIds.indexOf(slotId);
   if (slotIndex < 0) return prev;
 
@@ -151,15 +154,15 @@ export function swapOperator(
 // ── Stats change with potential ──────────────────────────────────────────────
 
 /**
- * Compute the next UndoableState when loadout stats change.
+ * Compute the next CombatState when loadout stats change.
  * Handles: potential-dependent ultimate energy cost update.
  */
 export function updatePropertiesWithPotential(
-  prev: UndoableState,
+  prev: CombatState,
   slotId: string,
   properties: LoadoutProperties,
   slotIds: string[],
-): UndoableState {
+): CombatState {
   const prevProperties = prev.loadoutProperties[slotId];
   let nextResourceConfigs = prev.resourceConfigs;
 
@@ -171,7 +174,7 @@ export function updatePropertiesWithPotential(
         op.id, properties.operator.potential as 0 | 1 | 2 | 3 | 4 | 5,
       );
       if (newCost != null) {
-        const ultKey = `${slotId}-ultimate`;
+        const ultKey = ultimateGraphKey(slotId);
         const existing = prev.resourceConfigs[ultKey];
         if (existing && existing.max !== newCost) {
           nextResourceConfigs = { ...prev.resourceConfigs, [ultKey]: { ...existing, max: newCost } };
@@ -260,8 +263,8 @@ export function computeDefaultResourceConfig(
   if (staggerKey && colKey === staggerKey) {
     return { startValue: 0, max: staggerMax ?? 60, regenPerSecond: 0 };
   }
-  // Ultimate columns: slot-X-ultimate
-  const slotId = colKey.replace(/-ultimate$/, '');
+  // Ultimate columns: slot-X-ULTIMATE
+  const slotId = colKey.replace(`-${NounType.ULTIMATE}`, '');
   const slotIdx = slotIds.indexOf(slotId);
   const op = slotIdx >= 0 ? operators[slotIdx] : null;
   if (!op) return { startValue: 0, max: GENERAL_MECHANICS.skillPoints.max, regenPerSecond: 0 };
@@ -378,9 +381,7 @@ export function attachDefaultSegments(
 
     // Start from column defaults, refreshing typed segment durations (COOLDOWN, ANIMATION, etc.)
     // from column definitions. Preserve user-customized durations only on untyped segments.
-    const overrides = ev._pendingSegmentOverrides;
-    const segCount = overrides?.sg ? overrides.sg.length : defaults.segments.length;
-    let segments = defaults.segments.slice(0, segCount).map((defSeg, i) => {
+    const segments = defaults.segments.slice().map((defSeg, i) => {
       const copy = { ...defSeg, frames: defSeg.frames?.map((f) => ({ ...f })) };
       // Preserve user-modified duration only for untyped segments (no segmentTypes)
       const isTyped = defSeg.properties.segmentTypes && defSeg.properties.segmentTypes.length > 0;
@@ -396,24 +397,6 @@ export function attachDefaultSegments(
       }
       return copy;
     });
-
-    // Apply pending overrides from share URL decode
-    if (overrides) {
-      if (overrides.sg) {
-        for (let si = 0; si < overrides.sg.length && si < segments.length; si++) {
-          segments[si] = { ...segments[si], properties: { ...segments[si].properties, duration: overrides.sg[si] } };
-        }
-      }
-      if (overrides.fo) {
-        for (const [si, fi, offset] of overrides.fo) {
-          if (si < segments.length && segments[si].frames && fi < segments[si].frames!.length) {
-            segments[si].frames![fi] = { ...segments[si].frames![fi], offsetFrame: offset };
-          }
-        }
-      }
-      const { _pendingSegmentOverrides, ...rest } = patched;
-      return { ...rest, segments };
-    }
 
     return { ...patched, segments };
   });

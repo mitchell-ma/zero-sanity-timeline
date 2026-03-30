@@ -29,7 +29,7 @@ import { eventDuration } from '../../../../consts/viewTypes';
 import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../../../../controller/slot/commonSlotController';
 import { computeTimelinePresentation } from '../../../../controller/timeline/eventPresentationController';
 import { getTeamStatusIds } from '../../../../controller/gameDataStore';
-import { findColumn, buildContextMenu, getMenuPayload } from '../../helpers';
+import { findColumn, buildContextMenu, getMenuPayload, setUltimateEnergyToMax } from '../../helpers';
 import type { AppResult } from '../../helpers';
 
 // ── Constants (loaded from game data JSON) ──────────────────────────────────
@@ -107,6 +107,7 @@ describe('Pogranichnik Ultimate → Steel Oath', () => {
     const { result } = setupPogranichnik();
 
     // ── Context menu layer ──────────────────────────────────────────────
+    act(() => { setUltimateEnergyToMax(result.current, SLOT_POG, 3); });
     addUltimate(result.current, 1 * FPS);
 
     // ── Controller layer ────────────────────────────────────────────────
@@ -122,6 +123,7 @@ describe('Pogranichnik Ultimate → Steel Oath', () => {
   it('STEEL_OATH events have columnId matching the status ID, not generic team-status', () => {
     const { result } = setupPogranichnik();
 
+    act(() => { setUltimateEnergyToMax(result.current, SLOT_POG, 3); });
     addUltimate(result.current, 1 * FPS);
 
     const steelOathEvents = result.current.allProcessedEvents.filter(
@@ -150,6 +152,7 @@ describe('Pogranichnik STEEL_OATH → ColumnViewModel', () => {
   it('STEEL_OATH events appear in the team-status column view model', () => {
     const { result } = setupPogranichnik();
 
+    act(() => { setUltimateEnergyToMax(result.current, SLOT_POG, 3); });
     addUltimate(result.current, 1 * FPS);
 
     // ── View layer ──────────────────────────────────────────────────────
@@ -186,10 +189,14 @@ describe('Pogranichnik two Ultimates → STEEL_OATH RESET stacking', () => {
     const { result } = setupPogranichnik();
 
     // First ultimate at 1s
+    act(() => { setUltimateEnergyToMax(result.current, SLOT_POG, 3); });
     addUltimate(result.current, 1 * FPS);
 
-    // Second ultimate at 20s (while first STEEL_OATH 30s duration is still active)
-    addUltimate(result.current, 20 * FPS);
+    // Second ultimate at 20s — place directly via handleAddEvent (energy consumed by first)
+    const ultCol = findColumn(result.current, SLOT_POG, NounType.ULTIMATE);
+    act(() => {
+      result.current.handleAddEvent(SLOT_POG, NounType.ULTIMATE, 20 * FPS, ultCol!.defaultEvent!);
+    });
 
     const steelOathEvents = result.current.allProcessedEvents.filter(
       (ev) => ev.id === STEEL_OATH_ID && ev.ownerId === COMMON_OWNER_ID,
@@ -225,6 +232,7 @@ describe('Steel Oath without triggers stays active', () => {
     const { result } = setupPogranichnik();
 
     // Place ultimate at 1s — no other events that would trigger consumption
+    act(() => { setUltimateEnergyToMax(result.current, SLOT_POG, 3); });
     addUltimate(result.current, 1 * FPS);
 
     const steelOathEvents = result.current.allProcessedEvents.filter(
@@ -257,6 +265,7 @@ describe('Combo skill consumes Steel Oath stacks', () => {
     });
 
     // Place ultimate at 1s
+    act(() => { setUltimateEnergyToMax(result.current, SLOT_POG, 3); });
     addUltimate(result.current, 1 * FPS);
 
     // Place combo skill at 5s (after ultimate animation ends)
@@ -305,6 +314,7 @@ describe('All stacks consumed → Harass and Decisive Assault mix', () => {
     });
 
     // Place ultimate at 1s
+    act(() => { setUltimateEnergyToMax(result.current, SLOT_POG, 3); });
     addUltimate(result.current, 1 * FPS);
 
     // Place 5 combo skills spaced 1s apart starting at 5s (5s, 6s, 7s, 8s, 9s)
@@ -366,6 +376,7 @@ describe('Chen Qianyu BS consumes Steel Oath → 4 Harass + 1 Decisive Assault',
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
     // ── Context menu layer: ultimate ────────────────────────────────────
+    act(() => { setUltimateEnergyToMax(result.current, SLOT_POG, 3); });
     addUltimate(result.current, 0);
 
     // ── Context menu layer: Chen BS ─────────────────────────────────────
@@ -461,6 +472,7 @@ describe('FIRST_MATCH clause selection in reactive triggers', () => {
     const pogComboCol = findColumn(result.current, SLOT_POG, NounType.COMBO_SKILL);
 
     // Pog ultimate at 0s → 5 Steel Oath stacks
+    act(() => { setUltimateEnergyToMax(result.current, SLOT_POG, 3); });
     addUltimate(result.current, 0);
 
     // Consume 4 stacks via combos (leaves exactly 1 stack)
@@ -513,6 +525,7 @@ describe('FIRST_MATCH clause selection in reactive triggers', () => {
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
     // Pog ultimate at 0s → 5 Steel Oath stacks
+    act(() => { setUltimateEnergyToMax(result.current, SLOT_POG, 3); });
     addUltimate(result.current, 0);
 
     // Single combo at 5s — 5 stacks active, HAVE STACKS=1 fails → Harass fires (not Decisive Assault)

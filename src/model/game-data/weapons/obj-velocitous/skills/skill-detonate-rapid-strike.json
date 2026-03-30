@@ -42,5 +42,27 @@
     "dataSources": [
       "ENDFIELD_WIKI"
     ]
-  }
+  },
+  "onTriggerClause": [
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "CONSUME",
+          "object": "INFLICTION",
+          "objectQualifier": "ARTS"
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "OBJ_VELOCITOUS_RAPID_STRIKE",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
+        }
+      ]
+    }
+  ]
 }

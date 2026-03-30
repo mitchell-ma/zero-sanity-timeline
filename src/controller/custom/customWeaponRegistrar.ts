@@ -2,63 +2,57 @@
  * Registers/deregisters custom weapons into the runtime registries
  * so they appear alongside built-in weapons in loadout dropdowns
  * and the timeline pipeline.
+ *
+ * V2: Custom weapons are stored as game data JSON (same format as built-in weapons).
+ * V1 legacy: Also supports CustomWeapon format via adapter conversion.
  */
 import { registerCustomWeaponEffectDefs, deregisterCustomWeaponEffectDefs, registerCustomWeapon as registerInController, deregisterCustomWeapon as deregisterFromController } from '../gameDataStore';
 import type { CustomWeapon } from '../../model/custom/customWeaponTypes';
-import { StackInteractionType, UnitType } from '../../consts/enums';
-import { VerbType } from '../../dsl/semantics';
+import { weaponFromFriendly, weaponNamedEffectsToStatuses } from './gameDataAdapters';
 
+type GameDataJson = Record<string, unknown>;
+
+/**
+ * Register a custom weapon from game data JSON.
+ * Handles both the weapon itself and any associated status defs.
+ */
+export function registerCustomWeaponJson(weaponJson: GameDataJson, statusJsons?: GameDataJson[]): void {
+  const props = (weaponJson.properties ?? {}) as GameDataJson;
+  const meta = (weaponJson.metadata ?? {}) as GameDataJson;
+  const icon = (meta.icon ?? '') as string | undefined;
+
+  // Register the weapon in the weapons store
+  registerInController(weaponJson, icon);
+
+  // Register status defs for the derivation engine
+  if (statusJsons && statusJsons.length > 0) {
+    const name = (props.name ?? props.id ?? '') as string;
+    registerCustomWeaponEffectDefs(name, statusJsons);
+  }
+}
+
+/**
+ * Deregister a custom weapon by game data JSON.
+ */
+export function deregisterCustomWeaponJson(weaponJson: GameDataJson): void {
+  const props = (weaponJson.properties ?? {}) as GameDataJson;
+  const id = (props.id ?? '') as string;
+  const name = (props.name ?? '') as string;
+
+  deregisterCustomWeaponEffectDefs(name);
+  deregisterFromController(id);
+}
+
+// ── Legacy v1 support ──────────────────────────────────────────────────────
+
+/** Register from legacy CustomWeapon format. */
 export function registerCustomWeapon(weapon: CustomWeapon): void {
-  // Register in weaponsController
-  registerInController({ skills: [], properties: { id: weapon.id, name: weapon.name, type: weapon.weaponType as string, rarity: weapon.weaponRarity }, metadata: { originId: weapon.id } }, weapon.icon);
-
-  // Register DSL status event defs for the derivation engine
-  const dslDefs = buildDslDefsFromCustomWeapon(weapon);
-  if (dslDefs.length > 0) {
-    registerCustomWeaponEffectDefs(weapon.name, dslDefs);
-  }
+  const weaponJson = weaponFromFriendly(weapon);
+  const statusJsons = weaponNamedEffectsToStatuses(weapon);
+  registerCustomWeaponJson(weaponJson, statusJsons);
 }
 
+/** Deregister from legacy CustomWeapon format. */
 export function deregisterCustomWeapon(weapon: CustomWeapon): void {
-  deregisterCustomWeaponEffectDefs(weapon.name);
-  deregisterFromController(weapon.id);
-}
-
-/** Convert a custom weapon's named effects to DSL StatusEventDef format. */
-function buildDslDefsFromCustomWeapon(weapon: CustomWeapon): Record<string, unknown>[] {
-  const defs: Record<string, unknown>[] = [];
-  const originId = weapon.id.toUpperCase().replace(/[^A-Z0-9]+/g, '_');
-
-  for (const skill of weapon.skills) {
-    if (skill.type !== 'NAMED' || !skill.namedEffect) continue;
-    const ne = skill.namedEffect;
-    if (ne.triggers.length === 0) continue;
-
-    const targetMap: Record<string, string> = { self: 'OPERATOR', team: 'OPERATOR', enemy: 'ENEMY' };
-    const determinerMap: Record<string, string> = { self: 'THIS', team: 'OTHER' };
-    const target = targetMap[ne.target] ?? 'OPERATOR';
-    const targetDeterminer = determinerMap[ne.target];
-    const statusId = `${originId}_${ne.name.toUpperCase().replace(/[^A-Z0-9]+/g, '_')}`;
-
-    defs.push({
-      name: statusId,
-      type: 'WEAPON_EFFECT',
-      originId,
-      target,
-      ...(targetDeterminer ? { targetDeterminer } : {}),
-      label: ne.name,
-      stack: {
-        max: { P0: ne.maxStacks },
-        instances: ne.maxStacks,
-        verb: ne.maxStacks > 1 ? StackInteractionType.NONE : StackInteractionType.RESET,
-      },
-      onTriggerClause: ne.triggers.map((t) => ({ conditions: [t] })),
-      clause: [],
-      buffs: ne.buffs,
-      properties: { duration: { value: { verb: VerbType.IS, value: ne.durationSeconds }, unit: UnitType.SECOND } },
-      ...(ne.cooldownSeconds ? { cooldownSeconds: ne.cooldownSeconds } : {}),
-    });
-  }
-
-  return defs;
+  deregisterCustomWeaponJson(weaponFromFriendly(weapon));
 }

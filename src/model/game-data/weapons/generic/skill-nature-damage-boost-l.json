@@ -36,7 +36,7 @@
   "properties": {
     "name": "Nature DMG Boost [L]",
     "description": "Nature DMG Dealt +",
-    "id": "NATURE_DMG_BOOST_L"
+    "id": "NATURE_DAMAGE_BOOST_L"
   },
   "metadata": {
     "originId": "game",

@@ -106,7 +106,7 @@ export function applySheetData(data: SheetData) {
     ),
     visibleSkills: { ...INITIAL_VISIBLE, ...data.visibleSkills },
     resourceConfigs: data.resourceConfigs ?? {},
-    derivedEventOverrides: data.derivedEventOverrides ?? {},
+    overrides: data.overrides ?? {},
   };
 }
 

@@ -1,4 +1,5 @@
-import React, { useRef, useEffect, useCallback } from 'react';
+import React, { useRef, useEffect, useCallback, useState } from 'react';
+import { parseMathInput } from '../../../utils/mathExpr';
 
 /** Initial delay before repeating (ms). */
 const REPEAT_DELAY = 200;
@@ -21,6 +22,8 @@ export default function NumberInputWithFastForwardButtons({ label, value, min, m
   showMinMax?: boolean;
   onChange: (v: number) => void;
 }) {
+  const [editing, setEditing] = useState(false);
+  const [editText, setEditText] = useState('');
   const valueRef = useRef(value);
   valueRef.current = value;
 
@@ -77,19 +80,17 @@ export default function NumberInputWithFastForwardButtons({ label, value, min, m
         >-</button>
         <input
           className="edit-input stat-field-input"
-          type="number"
-          step={step}
-          value={value}
-          min={min}
-          max={max}
-          onChange={(e) => {
-            const v = Math.max(min, Math.min(max, Number(e.target.value) || min));
-            onChange(v);
-          }}
-          onBlur={(e) => {
-            const v = Math.max(min, Math.min(max, Number(e.target.value) || min));
+          type="text"
+          inputMode="decimal"
+          value={editing ? editText : value}
+          onFocus={(e) => { setEditing(true); setEditText(String(value)); e.target.select(); }}
+          onChange={(e) => setEditText(e.target.value)}
+          onBlur={() => {
+            const v = Math.max(min, Math.min(max, parseMathInput(editText, value)));
+            setEditing(false);
             if (v !== value) onChange(v);
           }}
+          onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
         />
         <button
           tabIndex={-1}

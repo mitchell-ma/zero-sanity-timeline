@@ -20,11 +20,11 @@ import { NounType } from '../../dsl/semantics';
 import { CombatSkillType, EventStatusType, SegmentType, StatusType, TimeDependency } from '../../consts/enums';
 import { TimeStopRegion, extendByTimeStops, isTimeStopEvent } from './processTimeStop';
 import { buildReactionSegment, buildCorrosionSegments, mergeReactions, attachReactionFrames } from './processInfliction';
-import { OPERATOR_COLUMNS, REACTION_COLUMNS, REACTION_COLUMN_IDS } from '../../model/channels';
+import { OPERATOR_COLUMNS, REACTION_COLUMNS, REACTION_COLUMN_IDS, COMBO_WINDOW_COLUMN_ID } from '../../model/channels';
 import { TOTAL_FRAMES } from '../../utils/timeline';
 import type { SlotTriggerWiring } from './eventQueueTypes';
 import { findClauseTriggerMatches } from './triggerMatch';
-import { getComboTriggerClause, getComboTriggerInfo, getTeamStatusColumnId } from '../gameDataStore';
+import { getComboTriggerClause, getComboTriggerInfo } from '../gameDataStore';
 import type { TriggerAssociation } from '../gameDataStore';
 import type { SkillPointController } from '../slot/skillPointController';
 import type { UltimateEnergyController } from './ultimateEnergyController';
@@ -163,6 +163,7 @@ export class DerivedEventController implements ColumnHost {
       if (ev.columnId === NounType.COMBO_SKILL && getAnimationDuration(ev) > 0) {
         ev = this.handleComboChaining(ev);
       }
+
 
       // Auto-build reaction segments for freeform reaction events
       if (REACTION_COLUMN_IDS.has(ev.columnId)) {
@@ -606,7 +607,7 @@ export class DerivedEventController implements ColumnHost {
 
   /** Consume Link for a battle skill/ultimate. Records stack count against event UID. */
   consumeLink(eventUid: string, frame: number, source: EventSource): number {
-    const linkColumnId = getTeamStatusColumnId(StatusType.LINK) ?? StatusType.LINK;
+    const linkColumnId = StatusType.LINK;
     const isLink = (ev: TimelineEvent) => ev.id === StatusType.LINK;
     const linkEvents = this._activeEventsIn(linkColumnId, COMMON_OWNER_ID, frame)
       .filter(isLink);
@@ -873,6 +874,36 @@ export class DerivedEventController implements ColumnHost {
    * Reset a skill event's cooldown segment at a given frame.
    * Truncates the Cooldown segment so the event ends at resetFrame.
    */
+  /**
+   * For each multi-skill activation window, clamp earlier combo cooldowns
+   * so they end where the next combo starts. Called after windows are registered.
+   */
+  clampMultiSkillComboCooldowns() {
+    // Find all multi-skill windows
+    const windows = this.registeredEvents.filter(
+      (ev) => ev.columnId === COMBO_WINDOW_COLUMN_ID && (ev.maxSkills ?? 1) > 1,
+    );
+    if (windows.length === 0) return;
+
+    for (const win of windows) {
+      const winEnd = win.startFrame + computeSegmentsSpan(win.segments);
+      // Find all combo events in this window, sorted by startFrame
+      const combos = this.registeredEvents
+        .filter((ev) =>
+          ev.columnId === NounType.COMBO_SKILL &&
+          ev.ownerId === win.ownerId &&
+          ev.startFrame >= win.startFrame &&
+          ev.startFrame < winEnd,
+        )
+        .sort((a, b) => a.startFrame - b.startFrame);
+
+      // Clamp each combo's cooldown to end at the next combo's start
+      for (let i = 0; i < combos.length - 1; i++) {
+        this.resetCooldown(combos[i].uid, combos[i + 1].startFrame);
+      }
+    }
+  }
+
   resetCooldown(eventUid: string, resetFrame: number) {
     for (let i = 0; i < this.registeredEvents.length; i++) {
       if (this.registeredEvents[i].uid !== eventUid) continue;

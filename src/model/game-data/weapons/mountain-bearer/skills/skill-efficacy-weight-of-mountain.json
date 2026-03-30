@@ -5,7 +5,8 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "STAT", "objectId": "DAMAGE_BONUS",
+          "object": "STAT",
+          "objectId": "DAMAGE_BONUS",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
@@ -41,5 +42,49 @@
     "dataSources": [
       "ENDFIELD_WIKI"
     ]
-  }
+  },
+  "onTriggerClause": [
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "INFLICTION",
+          "objectQualifier": "VULNERABLE"
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "MOUNTAIN_BEARER_WEIGHT_VULN",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
+        }
+      ]
+    },
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "APPLY",
+          "objectQualifier": "PHYSICAL",
+          "object": "SUSCEPTIBILITY",
+          "to": "ENEMY"
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "MOUNTAIN_BEARER_WEIGHT_SUSC",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
+        }
+      ]
+    }
+  ]
 }

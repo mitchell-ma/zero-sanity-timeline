@@ -2,7 +2,6 @@
   "properties": {
     "name": "Stress Testing",
     "description": "When the Auxiliary Crystal uses up its HP treatments. Quickly charges up the Auxiliary Crystal and launches it at the enemy to deal Cryo DMG and Cryo Infliction.",
-    "windowFrames": 720,
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "COMBO_SKILL",
     "element": "CRYO",
@@ -150,7 +149,11 @@
                     "value": {
                       "verb": "VARY_BY",
                       "object": "TALENT_LEVEL",
-                      "value": [0, 0.07, 0.1],
+                      "value": [
+                        0,
+                        0.07,
+                        0.1
+                      ],
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
                     },
@@ -212,21 +215,39 @@
     "originId": "XAIHI",
     "icon": "skills/combo_xaihi.png"
   },
-  "onTriggerClause": [
-    {
-      "conditions": [
-        {
-          "subject": "STATUS",
-          "subjectId": "AUXILIARY_CRYSTAL",
-          "ofSubject": "OPERATOR",
-          "ofDeterminer": "CONTROLLED",
-          "verb": "BECOME",
-          "object": "STACKS",
-          "cardinalityConstraint": "EXACTLY",
-          "value": { "verb": "IS", "value": 0 }
+  "clauseType": "ALL",
+  "activationWindow": {
+    "properties": {
+      "maxSkills": 1
+    },
+    "onTriggerClause": [
+      {
+        "conditions": [
+          {
+            "subject": "STATUS",
+            "subjectId": "AUXILIARY_CRYSTAL",
+            "ofSubject": "OPERATOR",
+            "ofDeterminer": "CONTROLLED",
+            "verb": "BECOME",
+            "object": "STACKS",
+            "cardinalityConstraint": "EXACTLY",
+            "value": {
+              "verb": "IS",
+              "value": 0
+            }
+          }
+        ]
+      }
+    ],
+    "segments": [
+      {
+        "properties": {
+          "duration": {
+            "value": 6,
+            "unit": "SECOND"
+          }
         }
-      ]
-    }
-  ],
-  "clauseType": "ALL"
+      }
+    ]
+  }
 }

@@ -114,7 +114,7 @@ function inferSkillTypeMap(skills: Record<string, Record<string, unknown>>): Rec
   const baseSkills = ids.filter(id => id !== batkId && !variantSuffixes.some(s => id.endsWith(s)));
   for (const id of baseSkills) {
     const s = skills[id];
-    if ((s.onTriggerClause as unknown[])?.length) { typeMap.COMBO_SKILL = id; break; }
+    if ((s.activationWindow as Record<string, unknown>)?.onTriggerClause || (s.onTriggerClause as unknown[])?.length) { typeMap.COMBO_SKILL = id; break; }
   }
   const remaining = baseSkills.filter(id => id !== typeMap.COMBO_SKILL);
   for (const id of remaining) {
@@ -336,8 +336,8 @@ describe('B. Battle Skill (Dolly Rush)', () => {
 describe('C. Combo Skill (Eruption Column)', () => {
   test('C1: Combo trigger requires Final Strike with no Vulnerability or Arts Infliction', () => {
     const comboSkill = mockJson.skills.COMBO_SKILL;
-    expect(comboSkill.onTriggerClause.length).toBe(1);
-    const conditions = comboSkill.onTriggerClause[0].conditions;
+    expect(comboSkill.activationWindow.onTriggerClause.length).toBe(1);
+    const conditions = comboSkill.activationWindow.onTriggerClause[0].conditions;
     // 1 trigger condition + 5 negated forbid conditions
     expect(conditions.length).toBe(6);
     expect(conditions[0].subjectDeterminer).toBe(DeterminerType.ANY);
@@ -355,7 +355,7 @@ describe('C. Combo Skill (Eruption Column)', () => {
   });
 
   test('C2: Combo activation window is 720 frames (6 seconds)', () => {
-    expect(mockJson.skills.COMBO_SKILL.properties.windowFrames).toBe(720);
+    expect(mockJson.skills.COMBO_SKILL.activationWindow.segments[0].properties.duration.value).toBe(6);
   });
 
   test('C3: Combo cooldown is 18 seconds', () => {

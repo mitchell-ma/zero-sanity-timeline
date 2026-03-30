@@ -1,31 +1,20 @@
 {
   "properties": {
     "name": "Moment of Blazing Shadow",
-    "description": "When an enemy has both Vulnerability and Arts Infliction stacks. Consumes Arts Infliction stacks, deals Physical DMG scaled by stacks, applies Lift, increases Crit Rate and Crit DMG.",
+    "description": "When an enemy has both Vulnerability and Arts Infliction stacks. Fire erupts beneath the enemy's feet, dealing Physical DMG.",
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "COMBO_SKILL",
     "element": "PHYSICAL",
     "id": "MOMENT_OF_BLAZING_SHADOW"
   },
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "RECOVER",
-          "object": "ULTIMATE_ENERGY",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR",
-          "with": {
-            "value": {
-              "verb": "IS",
-              "value": 10
-            }
-          }
-        }
-      ]
-    }
-  ],
+  "metadata": {
+    "originId": "ROSSI",
+    "dataSources": [
+      "WARFARIN",
+      "SKILL_DATA",
+      "ENDFIELD_WIKI"
+    ]
+  },
   "segments": [
     {
       "metadata": {
@@ -52,43 +41,330 @@
       "metadata": {
         "eventComponentType": "SEGMENT",
         "dataSources": [
-          "END_AXIS"
+          "SKILL_DATA",
+          "WARFARIN"
         ]
       },
       "properties": {
         "duration": {
           "value": {
             "verb": "IS",
-            "value": 0.8
+            "value": 0.733
           },
           "unit": "SECOND"
         },
         "element": "PHYSICAL",
         "name": "Moment of Blazing Shadow"
       },
+      "frames": [
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "SKILL_DATA",
+              "WARFARIN"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 0.4,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "objectQualifier": "PHYSICAL",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "operation": "MULT",
+                      "left": {
+                        "operation": "MULT",
+                        "left": {
+                          "verb": "VARY_BY",
+                          "object": "SKILL_LEVEL",
+                          "value": [
+                            0.4,
+                            0.44,
+                            0.48,
+                            0.52,
+                            0.56,
+                            0.6,
+                            0.64,
+                            0.68,
+                            0.72,
+                            0.77,
+                            0.83,
+                            0.9
+                          ],
+                          "ofDeterminer": "THIS",
+                          "of": "OPERATOR"
+                        },
+                        "right": {
+                          "verb": "IS",
+                          "value": 0.5
+                        }
+                      },
+                      "right": {
+                        "verb": "VARY_BY",
+                        "object": "POTENTIAL",
+                        "value": [
+                          1,
+                          1.15,
+                          1.15,
+                          1.15,
+                          1.15,
+                          1.15
+                        ],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
+                      }
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
+        },
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "SKILL_DATA",
+              "WARFARIN"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 0.633,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "RECOVER",
+                  "object": "ULTIMATE_ENERGY",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 10
+                    }
+                  }
+                },
+                {
+                  "verb": "DEAL",
+                  "object": "STAGGER",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 10
+                    }
+                  }
+                },
+                {
+                  "verb": "DEAL",
+                  "objectQualifier": "PHYSICAL",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "operation": "MULT",
+                      "left": {
+                        "operation": "MULT",
+                        "left": {
+                          "verb": "VARY_BY",
+                          "object": "SKILL_LEVEL",
+                          "value": [
+                            0.4,
+                            0.44,
+                            0.48,
+                            0.52,
+                            0.56,
+                            0.6,
+                            0.64,
+                            0.68,
+                            0.72,
+                            0.77,
+                            0.83,
+                            0.9
+                          ],
+                          "ofDeterminer": "THIS",
+                          "of": "OPERATOR"
+                        },
+                        "right": {
+                          "verb": "IS",
+                          "value": 0.5
+                        }
+                      },
+                      "right": {
+                        "verb": "VARY_BY",
+                        "object": "POTENTIAL",
+                        "value": [
+                          1,
+                          1.15,
+                          1.15,
+                          1.15,
+                          1.15,
+                          1.15
+                        ],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
+                      }
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "conditions": [
+                {
+                  "subjectDeterminer": "THIS",
+                  "subject": "OPERATOR",
+                  "verb": "HAVE",
+                  "object": "STATUS",
+                  "objectId": "PERFECT_TIMING"
+                }
+              ],
+              "effects": [
+                {
+                  "verb": "CONSUME",
+                  "object": "STATUS",
+                  "objectId": "PERFECT_TIMING",
+                  "fromDeterminer": "THIS",
+                  "from": "OPERATOR"
+                }
+              ]
+            },
+            {
+              "conditions": [
+                {
+                  "subjectDeterminer": "THIS",
+                  "subject": "OPERATOR",
+                  "verb": "NOT_HAVE",
+                  "object": "STATUS",
+                  "objectId": "PERFECT_TIMING"
+                }
+              ],
+              "effects": [
+                {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "PERFECT_TIMING",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "duration": {
+                      "value": {
+                        "verb": "IS",
+                        "value": 6
+                      },
+                      "unit": "SECOND",
+                      "clause": "EXTEND_UNTIL_END",
+                      "clauseTarget": "ACTIVATION_WINDOW"
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "clauseType": "FIRST_MATCH"
+        }
+      ]
+    },
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT"
+      },
+      "properties": {
+        "segmentTypes": [
+          "COOLDOWN",
+          "IMMEDIATE_COOLDOWN"
+        ],
+        "name": "Cooldown",
+        "duration": {
+          "value": {
+            "verb": "VARY_BY",
+            "object": "SKILL_LEVEL",
+            "value": [
+              15,
+              15,
+              15,
+              15,
+              15,
+              15,
+              15,
+              15,
+              15,
+              15,
+              14,
+              14
+            ],
+            "ofDeterminer": "THIS",
+            "of": "OPERATOR"
+          },
+          "unit": "SECOND"
+        },
+        "timeDependency": "REAL_TIME"
+      },
       "frames": []
     }
   ],
-  "metadata": {
-    "originId": "ROSSI"
-  },
-  "onTriggerClause": [
-    {
-      "conditions": [
-        {
-          "subject": "ENEMY",
-          "verb": "HAVE",
-          "object": "STATUS",
-          "objectId": "INFLICTION",
-          "objectQualifier": "VULNERABLE"
-        },
-        {
-          "subject": "ENEMY",
-          "verb": "HAVE",
-          "object": "ARTS_INFLICTION"
+  "clauseType": "ALL",
+  "activationWindow": {
+    "properties": {
+      "maxSkills": 2
+    },
+    "onTriggerClause": [
+      {
+        "conditions": [
+          {
+            "subject": "ENEMY",
+            "verb": "HAVE",
+            "object": "STATUS",
+            "objectId": "VULNERABLE"
+          },
+          {
+            "subject": "ENEMY",
+            "verb": "HAVE",
+            "object": "INFLICTION",
+            "objectQualifier": "ARTS"
+          }
+        ]
+      }
+    ],
+    "segments": [
+      {
+        "properties": {
+          "duration": {
+            "value": 6,
+            "unit": "SECOND"
+          }
         }
-      ]
-    }
-  ],
-  "clauseType": "ALL"
+      }
+    ]
+  }
 }

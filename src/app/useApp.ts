@@ -8,7 +8,7 @@ import { NounType } from '../dsl/semantics';
 import { initCustomWeapons } from '../controller/custom/customWeaponController';
 import { initCustomGearSets } from '../controller/custom/customGearController';
 import { initCustomOperators } from '../controller/custom/customOperatorController';
-import { useHistory } from '../utils/useHistory';
+import { useCombatState } from './useCombatState';
 import type { Orientation } from '../utils/axisMap';
 import { LoadoutProperties } from '../view/InformationPane';
 import { OperatorLoadoutState } from '../view/OperatorLoadoutHeader';
@@ -17,16 +17,13 @@ import { ALL_ENEMIES, DEFAULT_ENEMY } from '../utils/enemies';
 import { TimelineEvent, VisibleSkills, ContextMenuState, SkillType, SelectedFrame, ResourceConfig, MiniTimeline, computeSegmentsSpan, eventEndFrame } from '../consts/viewTypes';
 import type { DamageTableRow } from '../controller/calculation/damageTableBuilder';
 import { getModelEnemy } from '../controller/calculation/enemyRegistry';
-import { processCombatSimulation } from '../controller/timeline/eventQueueController';
+import { processCombatSimulation, getLastCritResults } from '../controller/timeline/eventQueueController';
 import { SlotTriggerWiring } from '../controller/timeline/eventQueueTypes';
 import { getComboTriggerClause } from '../controller/gameDataStore';
 import { buildColumns } from '../controller/timeline/columnBuilder';
 import {
   createEvent,
   genEventUid,
-  validateUpdate,
-  validateMove,
-  validateBatchMoveDelta,
   wouldOverlapNonOverlappable,
   setNextEventUid,
   getNextEventUid,
@@ -35,7 +32,6 @@ import {
   setCombatLoadout,
   hasSufficientSP,
 } from '../controller/timeline/inputEventController';
-import { ComboSkillEventController } from '../controller/timeline/comboSkillEventController';
 import {
   serializeSheet,
   clearLocalStorage,
@@ -74,24 +70,28 @@ import { useAutoSave } from './useAutoSave';
 import { LOADOUT_ROW_HEIGHT, FPS, TOTAL_FRAMES, frameToPx } from '../utils/timeline';
 import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../controller/slot/commonSlotController';
 import {
-  UndoableState,
+  CombatState,
   EnemyStats,
-  swapOperator,
-  updatePropertiesWithPotential,
   computeSlots,
   computeDefaultResourceConfig,
-  findEventDefaults,
   attachDefaultSegments,
   getDefaultEnemyStats,
 } from '../controller/appStateController';
 import { resolveGainEfficiencies } from '../controller/timeline/ultimateEnergyController';
 import { StatType, InteractionModeType, InfoLevel, CritMode, EnhancementType, ThemeType, ColumnType, LoadoutNodeType } from '../consts/enums';
+import { buildOverrideKey } from '../controller/overrideController';
+import type { MoveContext } from '../controller/combatStateController';
+import { applyEventOverrides } from '../controller/timeline/overrideApplicator';
 import { GlobalSettings, loadSettings, saveSettings, migrateLegacySettings, PERFORMANCE_THROTTLE } from '../consts/settings';
 import { configurePool } from '../controller/timeline/objectPool';
-import { COMBO_WINDOW_COLUMN_ID } from '../model/channels';
+import { COMBO_WINDOW_COLUMN_ID, ultimateGraphKey } from '../model/channels';
 import type { SkillPointConsumptionHistory, ResourceZone } from '../controller/timeline/skillPointTimeline';
 
 // ── Module-scope initialization ──────────────────────────────────────────────
+
+// Run v1→v2 migration before loading custom content (idempotent)
+import { ensureMigrated } from '../utils/customContentStorage';
+ensureMigrated();
 
 // Register custom content before loading sheet data (sheets may reference custom items)
 initCustomWeapons();
@@ -136,14 +136,15 @@ const initialLoadouts = initLoadouts();
 export function useApp() {
   // ─── Core state ──────────────────────────────────────────────────────────
   const {
-    state: undoable,
-    setState: setUndoable,
-    resetState: resetUndoable,
+    state: combatState,
+    setState: setCombatState,
+    resetState: resetCombatState,
     beginBatch,
     endBatch,
     undo,
     redo,
-  } = useHistory<UndoableState>({
+    controller: ctrl,
+  } = useCombatState({
     events: initialLoad.loaded?.events ?? [],
     operators: initialLoad.loaded?.operators ?? [...INITIAL_OPERATORS],
     enemy: initialLoad.loaded?.enemy ?? DEFAULT_ENEMY,
@@ -151,16 +152,17 @@ export function useApp() {
     loadouts: initialLoad.loaded?.loadouts ?? INITIAL_LOADOUTS,
     loadoutProperties: initialLoad.loaded?.loadoutProperties ?? INITIAL_LOADOUT_PROPERTIES,
     resourceConfigs: initialLoad.loaded?.resourceConfigs ?? {},
+    overrides: initialLoad.loaded?.overrides ?? {},
   });
 
-  const { events, operators, enemy, enemyStats, loadouts, loadoutProperties, resourceConfigs } = undoable;
+  const { events, operators, enemy, enemyStats, loadouts, loadoutProperties, resourceConfigs, overrides } = combatState;
 
   const setEvents = useCallback((action: TimelineEvent[] | ((prev: TimelineEvent[]) => TimelineEvent[])) => {
-    setUndoable((prev) => {
+    setCombatState((prev) => {
       const next = typeof action === 'function' ? action(prev.events) : action;
       return next === prev.events ? prev : { ...prev, events: next };
     });
-  }, [setUndoable]);
+  }, [setCombatState]);
 
 
   // ─── UI state ────────────────────────────────────────────────────────────
@@ -188,9 +190,6 @@ export function useApp() {
   const [damageRows, setDamageRows] = useState<DamageTableRow[]>([]);
   const [spConsumptionHistory, setSpConsumptionHistory] = useState<SkillPointConsumptionHistory[]>([]);
   const [spInsufficiencyZones, setSpInsufficiencyZones] = useState<Map<string, ResourceZone[]>>(new Map());
-  const [derivedEventOverrides, setDerivedEventOverrides] = useState<Record<string, Partial<TimelineEvent>>>(
-    initialLoad.loaded?.derivedEventOverrides ?? {},
-  );
   const [infoPaneClosing,  setInfoPaneClosing]  = useState(false);
   const [infoPanePinned,   setInfoPanePinned]   = useState(false);
   const [infoPaneVerbose,  setInfoPaneVerbose]  = useState(InfoLevel.DETAILED);
@@ -334,30 +333,11 @@ export function useApp() {
   const validColumnPairsRef = useRef<Set<string>>(new Set());
   validColumnPairsRef.current = useMemo(() => buildValidColumnPairs(columns), [columns]);
 
-  // Filter events to valid columns and attach default segments (segments are not persisted)
+  // Filter events to valid columns, attach default segments, then apply overrides
   const validEvents = useMemo(
-    () => attachDefaultSegments(filterEventsToColumns(events, columns), columns),
-    [events, columns],
+    () => applyEventOverrides(attachDefaultSegments(filterEventsToColumns(events, columns), columns), overrides),
+    [events, columns, overrides],
   );
-
-  // Write resolved segment overrides back to raw events (one-time after embed decode)
-  useEffect(() => {
-    const pending = events.filter((ev) => ev._pendingSegmentOverrides);
-    if (pending.length === 0) return;
-    const resolved = new Map<string, TimelineEvent['segments']>();
-    for (const ev of pending) {
-      const valid = validEvents.find((v) => v.uid === ev.uid);
-      if (valid?.segments) resolved.set(ev.uid, valid.segments);
-    }
-    if (resolved.size === 0) return;
-    setEvents((prev) => prev.map((ev) => {
-      const segs = resolved.get(ev.uid);
-      if (!segs) return ev;
-      const { _pendingSegmentOverrides, ...rest } = ev;
-      return { ...rest, segments: segs };
-    }));
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [validEvents]);
 
   // ─── Embed URL loading (one-time on mount) ─────────────────────────────
   const embedLoadedRef = useRef(false);
@@ -383,7 +363,7 @@ export function useApp() {
       saveLoadoutTree(newTree);
 
       setNextEventUid(sheetData.nextEventId);
-      resetUndoable({
+      resetCombatState({
         events: resolved.events,
         operators: resolved.operators,
         enemy: resolved.enemy,
@@ -391,9 +371,9 @@ export function useApp() {
         loadouts: resolved.loadouts,
         loadoutProperties: resolved.loadoutProperties,
         resourceConfigs: resolved.resourceConfigs,
+        overrides: resolved.overrides,
       });
       setVisibleSkills(resolved.visibleSkills);
-      setDerivedEventOverrides(resolved.derivedEventOverrides);
 
       // Persist imported data under the new loadout
       saveLoadoutData(node.id, sheetData);
@@ -455,7 +435,7 @@ export function useApp() {
         const op = operators[i];
         if (!op) continue;
         const slotId = SLOT_IDS[i];
-        const cfg = resourceConfigs?.[`${slotId}-ultimate`];
+        const cfg = resourceConfigs?.[ultimateGraphKey(slotId)];
         ue.configureSlot(slotId, {
           max: cfg?.max ?? getUltimateEnergyCost(op.id),
           startValue: cfg?.startValue ?? 0,
@@ -472,11 +452,21 @@ export function useApp() {
         combatLoadout.commonSlot.hp,
         combatLoadout.getAllSpCosts(),
         combatLoadout.getTriggerIndex() ?? undefined,
+        critMode, overrides, enemyStats,
       );
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [validEvents, loadoutProperties, slotWeapons, slotWirings, slotOperatorMap, slotGearSets, bossMaxHp, enemy.id, loadouts, combatLoadout, operators, resourceConfigs],
+    [validEvents, loadoutProperties, slotWeapons, slotWirings, slotOperatorMap, slotGearSets, bossMaxHp, enemy.id, loadouts, combatLoadout, operators, resourceConfigs, critMode, overrides, enemyStats],
   );
+
+  // Write back crit results from SIMULATION mode (one-time per new event)
+  useEffect(() => {
+    if (critMode !== CritMode.SIMULATION) return;
+    const crits = getLastCritResults();
+    if (!crits || crits.size === 0) return;
+    setCombatState((prev) => ctrl.persistCritResults(prev, crits));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [processedEvents]);
 
   const { resourceGraphs } = useResourceGraphs(
     operators, SLOT_IDS, processedEvents, combatLoadout, resourceConfigs,
@@ -500,33 +490,17 @@ export function useApp() {
 
   // Apply user overrides to derived events
   const allProcessedEvents = useMemo(() => {
-    const keys = Object.keys(derivedEventOverrides);
+    const keys = Object.keys(overrides);
     if (keys.length === 0) return allProcessedEventsRaw;
     return allProcessedEventsRaw.map((ev) => {
-      const override = derivedEventOverrides[ev.uid];
-      return override ? { ...ev, ...override } : ev;
+      const key = buildOverrideKey(ev);
+      const override = overrides[key];
+      return override?.propertyOverrides ? { ...ev, ...override.propertyOverrides } : ev;
     });
-  }, [allProcessedEventsRaw, derivedEventOverrides]);
+  }, [allProcessedEventsRaw, overrides]);
 
   const processedEventsRef = useRef(allProcessedEvents);
   processedEventsRef.current = allProcessedEvents;
-
-  // Prune stale overrides when derived events change
-  useEffect(() => {
-    const keys = Object.keys(derivedEventOverrides);
-    if (keys.length === 0) return;
-    const processedIds = new Set(allProcessedEventsRaw.map((ev) => ev.uid));
-    const hasStale = keys.some((id) => !processedIds.has(id));
-    if (hasStale) {
-      setDerivedEventOverrides((prev) => {
-        const next: Record<string, Partial<TimelineEvent>> = {};
-        for (const [id, override] of Object.entries(prev)) {
-          if (processedIds.has(id)) next[id] = override;
-        }
-        return next;
-      });
-    }
-  }, [allProcessedEventsRaw, derivedEventOverrides]);
 
   // Dynamic timeline length: grow to furthest event + buffer, minimum 2 minutes
   const contentFrames = useMemo(() => {
@@ -688,6 +662,19 @@ export function useApp() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editingEventId, editingSlotId, editingEnemyOpen, editingResourceKey, editingDamageRow, activeLoadoutId, loadoutTree]);
 
+  // ─── Click-outside to close unpinned info pane ──────────────────────────
+  useEffect(() => {
+    if (infoPanePinned) return;
+    const hasPaneOpen = editingEventId || editingSlotId || editingEnemyOpen || editingResourceKey || editingDamageRow;
+    if (!hasPaneOpen) return;
+    const handler = (e: MouseEvent) => {
+      const panel = (e.target as Element).closest('.event-edit-panel');
+      if (!panel) setInfoPaneClosing(true);
+    };
+    window.addEventListener('mousedown', handler);
+    return () => window.removeEventListener('mousedown', handler);
+  }, [infoPanePinned, editingEventId, editingSlotId, editingEnemyOpen, editingResourceKey, editingDamageRow]);
+
   // ─── Persistence ─────────────────────────────────────────────────────────
   const buildSheetData = useCallback(() => {
     // Dev assertion: detect duplicate event IDs before saving
@@ -710,9 +697,9 @@ export function useApp() {
       visibleSkills,
       getNextEventUid(),
       resourceConfigs,
-      derivedEventOverrides,
+      overrides,
     );
-  }, [operators, enemy, enemyStats, events, loadouts, loadoutProperties, visibleSkills, resourceConfigs, derivedEventOverrides]);
+  }, [operators, enemy, enemyStats, events, loadouts, loadoutProperties, visibleSkills, resourceConfigs, overrides]);
 
   useAutoSave(buildSheetData);
 
@@ -974,104 +961,42 @@ export function useApp() {
   }, []);
 
   const handleUpdateEvent = useCallback((id: string, updates: Partial<TimelineEvent>) => {
-    // Try raw events first; if not found, store as derived event override
-    setEvents((prev) => {
-      const target = prev.find((ev) => ev.uid === id);
-      if (!target) {
-        // Derived event — store override outside setEvents to avoid side effects
-        queueMicrotask(() => {
-          setDerivedEventOverrides((overrides) => ({
-            ...overrides,
-            [id]: { ...overrides[id], ...updates },
-          }));
-        });
-        return prev;
-      }
-      const isStrict = interactionModeRef.current === InteractionModeType.STRICT;
-      const processed = isStrict ? processedEventsRef.current : null;
-      const merged = validateUpdate(prev, target, updates, processed);
-      if (!merged) return prev;
-      return prev.map((ev) => (ev.uid === id ? merged : ev));
-    });
+    const isStrict = interactionModeRef.current === InteractionModeType.STRICT;
+    const processed = isStrict ? processedEventsRef.current : null;
+    setCombatState((prev) => ctrl.updateEvent(prev, id, updates, { isStrict, processed }));
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [ctrl, setCombatState]);
 
 
-  const handleMoveEvent = useCallback((id: string, newStartFrame: number, overlapExemptIds?: Set<string>) => {
-    setEvents((prev) => {
-      let target = prev.find((ev) => ev.uid === id);
-      if (!target && interactionModeRef.current !== InteractionModeType.STRICT) {
-        // Derived event drag — redirect to source infliction if this is a freeform reaction
-        const sourceId = id.endsWith('-reaction') ? id.slice(0, -'-reaction'.length) : undefined;
-        if (sourceId) target = prev.find((ev) => ev.uid === sourceId);
-      }
-      if (!target) return prev;
-      // When redirected from a reaction, compute delta from the reaction's position
-      const isRedirected = target.uid !== id;
-      let adjustedFrame = newStartFrame;
-      if (isRedirected) {
-        const reaction = processedEventsRef.current?.find((ev) => ev.uid === id);
-        if (reaction) adjustedFrame = target.startFrame + (newStartFrame - reaction.startFrame);
-      }
-      const isStrict = interactionModeRef.current === InteractionModeType.STRICT;
-      const processed = isStrict ? processedEventsRef.current : null;
-      // In freeform mode, all events are overlap-exempt (free dragging)
-      const exemptIds = isStrict ? overlapExemptIds : new Set([target.uid]);
-      const clamped = validateMove(prev, target, adjustedFrame, processed, exemptIds);
-      if (clamped === target.startFrame) return prev;
-      const targetId = target.uid;
-      const triggerCol = ComboSkillEventController.resolveComboTriggerColumnId(target, clamped, processed);
-      return prev.map((ev) => (ev.uid === targetId ? { ...ev, startFrame: clamped, ...(triggerCol !== undefined ? { comboTriggerColumnId: triggerCol } : {}) } : ev));
-    });
+  const handleMoveEvent = useCallback((id: string, newStartFrame: number, overlapExemptIds?: Set<string>, strictOverride?: boolean) => {
+    const isStrict = strictOverride ?? interactionModeRef.current === InteractionModeType.STRICT;
+    const processed = isStrict ? processedEventsRef.current : null;
+    const moveCtx: MoveContext = { isStrict, processed, overlapExemptIds };
+    setCombatState((prev) => ctrl.moveEvent(prev, id, newStartFrame, moveCtx, validEvents));
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [validEvents, ctrl, setCombatState]);
 
-  const handleMoveEvents = useCallback((ids: string[], delta: number, overlapExemptIds?: Set<string>) => {
+  const handleMoveEvents = useCallback((ids: string[], delta: number, overlapExemptIds?: Set<string>, strictOverride?: boolean) => {
     if (delta === 0) return;
-    setEvents((prev) => {
-      const isStrict = interactionModeRef.current === InteractionModeType.STRICT;
-      const processed = isStrict ? processedEventsRef.current : null;
-      // Resolve derived reaction IDs to their source infliction IDs
-      let resolvedIds = ids;
-      if (!isStrict) {
-        resolvedIds = ids.map((id) => {
-          if (prev.some((ev) => ev.uid === id)) return id;
-          const sourceId = id.endsWith('-reaction') ? id.slice(0, -'-reaction'.length) : undefined;
-          if (sourceId && prev.some((ev) => ev.uid === sourceId)) return sourceId;
-          return id;
-        });
-      }
-      const rawIds = resolvedIds.filter((id) => prev.some((ev) => ev.uid === id));
-      const idSet = new Set(rawIds);
-      if (rawIds.length === 0) return prev;
-      // In freeform mode, all dragged events are overlap-exempt (free dragging)
-      const exemptIds = isStrict ? overlapExemptIds : idSet;
-      const clampedDelta = validateBatchMoveDelta(prev, rawIds, delta, processed, exemptIds);
-      if (clampedDelta === 0) return prev;
-      return prev.map((ev) => {
-        if (!idSet.has(ev.uid)) return ev;
-        const newFrame = ev.startFrame + clampedDelta;
-        const triggerCol = ComboSkillEventController.resolveComboTriggerColumnId(ev, newFrame, processed);
-        return { ...ev, startFrame: newFrame, ...(triggerCol !== undefined ? { comboTriggerColumnId: triggerCol } : {}) };
-      });
-    });
+    const isStrict = strictOverride ?? interactionModeRef.current === InteractionModeType.STRICT;
+    const processed = isStrict ? processedEventsRef.current : null;
+    const moveCtx: MoveContext = { isStrict, processed, overlapExemptIds };
+    setCombatState((prev) => ctrl.moveEvents(prev, ids, delta, moveCtx, validEvents));
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [validEvents, ctrl, setCombatState]);
 
   const handleRemoveEvent = useCallback((id: string) => {
-    setEvents((prev) => prev.filter((ev) => ev.uid !== id));
+    setCombatState((prev) => ctrl.removeEvent(prev, id, validEvents));
     setEditingEventId((cur) => (cur === id ? null : cur));
     setContextMenu(null);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [validEvents, ctrl, setCombatState]);
 
   const handleRemoveEvents = useCallback((ids: string[]) => {
     const idSet = new Set(ids);
-    setEvents((prev) => prev.filter((ev) => !idSet.has(ev.uid)));
+    setCombatState((prev) => ctrl.removeEvents(prev, ids, validEvents));
     setEditingEventId((cur) => (cur && idSet.has(cur) ? null : cur));
     setContextMenu(null);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [validEvents, ctrl, setCombatState]);
 
   const handleDuplicateEvents = useCallback((sourceEvents: TimelineEvent[], frameOffset: number): string[] => {
     const newUids: string[] = [];
@@ -1092,187 +1017,82 @@ export function useApp() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const findDefaults = useCallback((ev: TimelineEvent) => {
-    return findEventDefaults(ev, columns);
-  }, [columns]);
 
   const handleResetEvent = useCallback((id: string) => {
-    setEvents((prev) => {
-      const target = prev.find((ev) => ev.uid === id);
-      if (!target) return prev;
-      const defaults = findDefaults(target);
-      if (!defaults) return prev;
-      return prev.map((ev) => (ev.uid === id ? {
-        ...ev,
-        ...(defaults.segments ? { segments: defaults.segments } : {}),
-        ...(defaults.skillPointCost !== undefined ? { skillPointCost: defaults.skillPointCost } : {}),
-      } : ev));
-    });
+    const target = validEvents.find((ev) => ev.uid === id);
+    if (target) setCombatState((prev) => ctrl.resetEvent(prev, target, columns));
     setContextMenu(null);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [findDefaults]);
+  }, [validEvents, columns, ctrl, setCombatState]);
 
   const handleResetSegments = useCallback((id: string) => {
-    setEvents((prev) => {
-      const target = prev.find((ev) => ev.uid === id);
-      if (!target) return prev;
-      const defaults = findDefaults(target);
-      if (!defaults?.segments) return prev;
-      return prev.map((ev) => (ev.uid === id ? {
-        ...ev,
-        segments: defaults.segments!.map((defSeg, i) => ({
-          ...defSeg,
-          properties: { ...defSeg.properties, duration: ev.segments[i]?.properties.duration ?? defSeg.properties.duration },
-        })),
-      } : ev));
-    });
+    const target = validEvents.find((ev) => ev.uid === id);
+    if (target) setCombatState((prev) => ctrl.resetSegmentOverrides(prev, target));
     setContextMenu(null);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [findDefaults]);
+  }, [validEvents, ctrl, setCombatState]);
 
   const handleResetFrames = useCallback((id: string) => {
-    setEvents((prev) => {
-      const target = prev.find((ev) => ev.uid === id);
-      if (!target) return prev;
-      const defaults = findDefaults(target);
-      if (!defaults?.segments) return prev;
-      return prev.map((ev) => (ev.uid === id ? {
-        ...ev,
-        segments: ev.segments.map((seg, i) => ({
-          ...seg,
-          frames: defaults.segments![i]?.frames ?? seg.frames,
-        })),
-      } : ev));
-    });
+    const target = validEvents.find((ev) => ev.uid === id);
+    if (target) setCombatState((prev) => ctrl.resetFrameOverrides(prev, target));
     setContextMenu(null);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [findDefaults]);
+  }, [validEvents, ctrl, setCombatState]);
 
   const handleResetEvents = useCallback((ids: string[]) => {
-    setEvents((prev) => {
-      let changed = false;
-      const result = prev.map((ev) => {
-        if (!ids.includes(ev.uid)) return ev;
-        const defaults = findDefaults(ev);
-        if (!defaults) return ev;
-        changed = true;
-        return {
-          ...ev,
-          ...(defaults.segments ? { segments: defaults.segments } : {}),
-          ...(defaults.skillPointCost !== undefined ? { skillPointCost: defaults.skillPointCost } : {}),
-        };
-      });
-      return changed ? result : prev;
-    });
+    const targets = ids.map((id) => validEvents.find((ev) => ev.uid === id)).filter(Boolean) as TimelineEvent[];
+    setCombatState((prev) => ctrl.resetEvents(prev, targets, columns));
     setContextMenu(null);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [findDefaults]);
+  }, [validEvents, columns, ctrl, setCombatState]);
 
   const handleRemoveFrame = useCallback((eventUid: string, segmentIndex: number, frameIndex: number) => {
-    setEvents((prev) => {
-      const target = prev.find((ev) => ev.uid === eventUid);
-      if (!target) return prev;
-      const segments = target.segments;
-      if (!segments[segmentIndex]?.frames) return prev;
-      const newSegments = segments.map((seg, si) => {
-        if (si !== segmentIndex) return seg;
-        return { ...seg, frames: seg.frames?.filter((_, fi) => fi !== frameIndex) };
-      });
-      return prev.map((ev) => (ev.uid === eventUid ? { ...ev, segments: newSegments } : ev));
-    });
+    const target = validEvents.find((ev) => ev.uid === eventUid);
+    if (!target) return;
+    setCombatState((prev) => ctrl.removeFrame(prev, target, segmentIndex, frameIndex));
     setSelectedFrames((prev) => prev.filter((f) => !(f.eventUid === eventUid && f.segmentIndex === segmentIndex && f.frameIndex === frameIndex)));
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [columns]);
+  }, [validEvents, ctrl, setCombatState]);
 
   const handleRemoveFrames = useCallback((frames: SelectedFrame[]) => {
-    const byEvent = new Map<string, { segmentIndex: number; frameIndex: number }[]>();
-    for (const f of frames) {
-      const arr = byEvent.get(f.eventUid) ?? [];
-      arr.push({ segmentIndex: f.segmentIndex, frameIndex: f.frameIndex });
-      byEvent.set(f.eventUid, arr);
-    }
-    setEvents((prev) => prev.map((ev) => {
-      const toRemove = byEvent.get(ev.uid);
-      if (!toRemove) return ev;
-      const segments = ev.segments;
-      const removeSet = new Set(toRemove.map((r) => `${r.segmentIndex}-${r.frameIndex}`));
-      const newSegments = segments.map((seg, si) => {
-        if (!seg.frames) return seg;
-        const filtered = seg.frames.filter((_, fi) => !removeSet.has(`${si}-${fi}`));
-        return { ...seg, frames: filtered };
-      });
-      return { ...ev, segments: newSegments };
-    }));
+    const targets = frames.map((f) => {
+      const target = validEvents.find((ev) => ev.uid === f.eventUid);
+      return target ? { target, segmentIndex: f.segmentIndex, frameIndex: f.frameIndex } : null;
+    }).filter(Boolean) as { target: TimelineEvent; segmentIndex: number; frameIndex: number }[];
+    setCombatState((prev) => ctrl.removeFrames(prev, targets));
     setSelectedFrames([]);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [columns]);
+  }, [validEvents, ctrl, setCombatState]);
 
   const handleAddSegment = useCallback((eventUid: string, segmentLabel: string) => {
-    setEvents((prev) => {
-      const target = prev.find((ev) => ev.uid === eventUid);
-      if (!target) return prev;
-      const col = columns.find((c) =>
-        c.type === ColumnType.MINI_TIMELINE && c.ownerId === target.ownerId && c.columnId === target.columnId,
-      );
-      if (col?.type !== ColumnType.MINI_TIMELINE) return prev;
-      const fullSeg = col.defaultEvent?.segments?.find((s) => s.properties.name === segmentLabel);
-      if (!fullSeg) return prev;
-      const allLabels = col.defaultEvent!.segments!.map((s) => s.properties.name);
-      const newSegments = [...target.segments, fullSeg];
-      newSegments.sort((a, b) => {
-        const ai = allLabels.indexOf(a.properties.name);
-        const bi = allLabels.indexOf(b.properties.name);
-        return ai - bi;
-      });
-      const totalDuration = computeSegmentsSpan(newSegments);
-      return prev.map((ev) => (ev.uid === eventUid ? {
-        ...ev,
-        segments: newSegments,
-        nonOverlappableRange: totalDuration,
-      } : ev));
-    });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [columns]);
+    const target = validEvents.find((ev) => ev.uid === eventUid);
+    if (!target) return;
+    const col = columns.find((c) =>
+      c.type === ColumnType.MINI_TIMELINE && c.ownerId === target.ownerId && c.columnId === target.columnId,
+    );
+    if (col?.type !== ColumnType.MINI_TIMELINE) return;
+    const templateSegs = col.defaultEvent?.segments;
+    if (!templateSegs) return;
+    const templateIdx = templateSegs.findIndex((s) => s.properties.name === segmentLabel);
+    if (templateIdx < 0) return;
+    setCombatState((prev) => ctrl.addSegmentBack(prev, target, templateIdx));
+  }, [validEvents, columns, ctrl, setCombatState]);
 
   const handleRemoveSegment = useCallback((eventUid: string, segmentIndex: number) => {
-    setEvents((prev) => {
-      const target = prev.find((ev) => ev.uid === eventUid);
-      if (!target || target.segments.length <= 1) return prev;
-      const newSegments = target.segments.filter((_, si) => si !== segmentIndex);
-      const totalDuration = computeSegmentsSpan(newSegments);
-      return prev.map((ev) => (ev.uid === eventUid ? {
-        ...ev,
-        segments: newSegments,
-        nonOverlappableRange: totalDuration,
-      } : ev));
-    });
+    const target = validEvents.find((ev) => ev.uid === eventUid);
+    if (!target || target.segments.length <= 1) return;
+    setCombatState((prev) => ctrl.removeSegment(prev, target, segmentIndex));
     setSelectedFrames((prev) => prev.filter((f) => !(f.eventUid === eventUid && f.segmentIndex === segmentIndex)));
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [validEvents, ctrl, setCombatState]);
 
   const handleAddFrame = useCallback((eventUid: string, segmentIndex: number, frameOffsetFrame: number) => {
-    setEvents((prev) => {
-      const target = prev.find((ev) => ev.uid === eventUid);
-      if (!target?.segments[segmentIndex]) return prev;
-      const col = columns.find((c) =>
-        c.type === ColumnType.MINI_TIMELINE && c.ownerId === target.ownerId && c.columnId === target.columnId,
-      );
-      if (col?.type !== ColumnType.MINI_TIMELINE) return prev;
-      const seg = target.segments[segmentIndex];
-      const allDefaultSegs = col.defaultEvent?.segments;
-      const defaultSeg = allDefaultSegs?.find((s) => s.properties.name === seg.properties.name) ?? allDefaultSegs?.[segmentIndex];
-      const fullFrame = defaultSeg?.frames?.find((f) => f.offsetFrame === frameOffsetFrame);
-      if (!fullFrame) return prev;
-      if (seg.frames?.some((f) => f.offsetFrame === frameOffsetFrame)) return prev;
-      const newFrames = [...(seg.frames ?? []), fullFrame];
-      newFrames.sort((a, b) => a.offsetFrame - b.offsetFrame);
-      const newSegments = target.segments.map((s, si) =>
-        si === segmentIndex ? { ...s, frames: newFrames } : s,
-      );
-      return prev.map((ev) => (ev.uid === eventUid ? { ...ev, segments: newSegments } : ev));
-    });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [columns]);
+    const target = validEvents.find((ev) => ev.uid === eventUid);
+    if (!target) return;
+    const col = columns.find((c) =>
+      c.type === ColumnType.MINI_TIMELINE && c.ownerId === target.ownerId && c.columnId === target.columnId,
+    );
+    if (col?.type !== ColumnType.MINI_TIMELINE) return;
+    const allDefaultSegs = col.defaultEvent?.segments;
+    const seg = target.segments[segmentIndex];
+    const defaultSeg = allDefaultSegs?.find((s) => s.properties.name === seg?.properties.name) ?? allDefaultSegs?.[segmentIndex];
+    const frameIndex = defaultSeg?.frames?.findIndex((f) => f.offsetFrame === frameOffsetFrame);
+    if (frameIndex == null || frameIndex < 0) return;
+    setCombatState((prev) => ctrl.addFrameBack(prev, target, segmentIndex, frameIndex));
+  }, [validEvents, columns, ctrl, setCombatState]);
 
   const handleFrameClick = useCallback((e: React.MouseEvent, eventUid: string, segmentIndex: number, frameIndex: number) => {
     const ctrlKey = e.ctrlKey || e.metaKey;
@@ -1291,66 +1111,52 @@ export function useApp() {
   }, []);
 
   const handleMoveFrame = useCallback((eventUid: string, segmentIndex: number, frameIndex: number, newOffsetFrame: number) => {
-    setEvents((prev) => prev.map((ev) => {
-      if (ev.uid !== eventUid) return ev;
-      const segments = ev.segments;
-      const newSegments = segments.map((seg, si) => {
-        if (si !== segmentIndex || !seg.frames) return seg;
-        const newFrames = seg.frames.map((f, fi) =>
-          fi === frameIndex ? { ...f, offsetFrame: newOffsetFrame } : f,
-        );
-        return { ...seg, frames: newFrames };
-      });
-      return { ...ev, segments: newSegments };
-    }));
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [columns]);
+    const target = validEvents.find((ev) => ev.uid === eventUid);
+    if (!target) return;
+    setCombatState((prev) => ctrl.moveFrame(prev, target, segmentIndex, frameIndex, newOffsetFrame));
+  }, [validEvents, ctrl, setCombatState]);
+
+  const handleResizeSegment = useCallback((eventUid: string, updates: { segmentIndex: number; newDuration: number }[]) => {
+    const target = validEvents.find((ev) => ev.uid === eventUid);
+    if (!target) return;
+    setCombatState((prev) => ctrl.resizeSegment(prev, target, updates));
+  }, [validEvents, ctrl, setCombatState]);
 
   // ─── Loadout & operator handlers ─────────────────────────────────────────
-  const handleLoadoutChange = useCallback((slotId: string, state: OperatorLoadoutState) => {
-    setUndoable((prev) => ({
-      ...prev,
-      loadouts: { ...prev.loadouts, [slotId]: state },
-    }));
-  }, [setUndoable]);
+  const handleLoadoutChange = useCallback((slotId: string, loadout: OperatorLoadoutState) => {
+    setCombatState((prev) => ctrl.setLoadout(prev, slotId, loadout));
+  }, [ctrl, setCombatState]);
 
   const handleStatsChange = useCallback((slotId: string, stats: LoadoutProperties) => {
-    setUndoable((prev) => updatePropertiesWithPotential(prev, slotId, stats, SLOT_IDS));
-  }, [setUndoable]);
+    setCombatState((prev) => ctrl.updateLoadoutProperties(prev, slotId, stats, SLOT_IDS));
+  }, [ctrl, setCombatState]);
 
   const handleSwapOperator = useCallback((slotId: string, newOperatorId: string | null) => {
-    setUndoable((prev) => swapOperator(prev, slotId, newOperatorId, SLOT_IDS));
-  }, [setUndoable]);
+    setCombatState((prev) => ctrl.swapOperator(prev, slotId, newOperatorId, SLOT_IDS));
+  }, [ctrl, setCombatState]);
 
   const handleSwapEnemy = useCallback((enemyId: string) => {
     const found = ALL_ENEMIES.find((e) => e.id === enemyId);
     if (found) {
-      setUndoable((prev) => ({ ...prev, enemy: found, enemyStats: getDefaultEnemyStats(found.id) }));
+      setCombatState((prev) => ctrl.setEnemy(prev, found, getDefaultEnemyStats(found.id)));
     }
-  }, [setUndoable]);
+  }, [ctrl, setCombatState]);
 
   const handleEnemyStatsChange = useCallback((stats: EnemyStats) => {
-    setUndoable((prev) => ({ ...prev, enemyStats: stats }));
-  }, [setUndoable]);
+    setCombatState((prev) => ctrl.setEnemyStats(prev, stats));
+  }, [ctrl, setCombatState]);
 
   const handleResourceConfigChange = useCallback((colKey: string, config: ResourceConfig) => {
     if (colKey === staggerKey) {
-      // Stagger resource config is sourced from enemyStats
-      setUndoable((prev) => ({
-        ...prev,
-        enemyStats: {
-          ...prev.enemyStats,
-          [StatType.STAGGER_HP]: config.max,
-          staggerStartValue: config.startValue,
-        },
+      setCombatState((prev) => ctrl.setEnemyStats(prev, {
+        ...prev.enemyStats,
+        [StatType.STAGGER_HP]: config.max,
+        staggerStartValue: config.startValue,
       }));
       return;
     }
-    setUndoable((prev) => ({
-      ...prev,
-      resourceConfigs: { ...prev.resourceConfigs, [colKey]: config },
-    }));
-  }, [setUndoable, staggerKey]);
+    setCombatState((prev) => ctrl.setResourceConfig(prev, colKey, config));
+  }, [ctrl, setCombatState, staggerKey]);
 
   // ─── Loadout tree handlers ───────────────────────────────────────────────
   const handleLoadoutTreeChange = useCallback((tree: LoadoutTree) => {
@@ -1379,7 +1185,7 @@ export function useApp() {
     saveLoadoutTree(newTree);
 
     setNextEventUid(1);
-    const emptyState: UndoableState = {
+    const emptyState: CombatState = {
       events: [],
       operators: [...INITIAL_OPERATORS],
       enemy: DEFAULT_ENEMY,
@@ -1387,10 +1193,10 @@ export function useApp() {
       loadouts: INITIAL_LOADOUTS,
       loadoutProperties: INITIAL_LOADOUT_PROPERTIES,
       resourceConfigs: {},
+      overrides: {},
     };
-    resetUndoable(emptyState);
+    resetCombatState(emptyState);
     setVisibleSkills(INITIAL_VISIBLE);
-    setDerivedEventOverrides({});
     setEditingEventId(null);
     setEditingSlotId(null);
     setEditingResourceKey(null);
@@ -1411,7 +1217,7 @@ export function useApp() {
     setActiveLoadoutId(node.id);
     saveActiveLoadoutId(node.id);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loadoutTree, activeLoadoutId, buildSheetData, resetUndoable]);
+  }, [loadoutTree, activeLoadoutId, buildSheetData, resetCombatState]);
 
   const handleDuplicateLoadout = useCallback((sourceId: string) => {
     // Save current loadout before switching
@@ -1433,7 +1239,7 @@ export function useApp() {
     if (sourceData) {
       saveLoadoutData(node.id, sourceData);
       const resolved = applySheetData(sourceData);
-      resetUndoable({
+      resetCombatState({
         events: resolved.events,
         operators: resolved.operators,
         enemy: resolved.enemy,
@@ -1441,9 +1247,9 @@ export function useApp() {
         loadouts: resolved.loadouts,
         loadoutProperties: resolved.loadoutProperties,
         resourceConfigs: resolved.resourceConfigs,
+        overrides: resolved.overrides,
       });
       setVisibleSkills(resolved.visibleSkills);
-      setDerivedEventOverrides(resolved.derivedEventOverrides);
     } else {
       saveLoadoutData(node.id, serializeSheet(
         INITIAL_OPERATORS.map((op) => op?.id ?? null),
@@ -1451,7 +1257,7 @@ export function useApp() {
         getDefaultEnemyStats(DEFAULT_ENEMY.id),
         [], INITIAL_LOADOUTS, INITIAL_LOADOUT_PROPERTIES, INITIAL_VISIBLE, 1, {},
       ));
-      setDerivedEventOverrides({});
+      setCombatState((prev) => Object.keys(prev.overrides).length === 0 ? prev : { ...prev, overrides: {} });
     }
     setEditingEventId(null);
     setEditingSlotId(null);
@@ -1460,7 +1266,7 @@ export function useApp() {
     setActiveLoadoutId(node.id);
     saveActiveLoadoutId(node.id);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loadoutTree, activeLoadoutId, buildSheetData, resetUndoable]);
+  }, [loadoutTree, activeLoadoutId, buildSheetData, resetCombatState]);
 
   const handleSelectLoadout = useCallback((id: string) => {
     if (id === activeLoadoutId) return;
@@ -1470,7 +1276,7 @@ export function useApp() {
     const data = loadLoadoutData(id);
     if (data) {
       const resolved = applySheetData(data);
-      resetUndoable({
+      resetCombatState({
         events: resolved.events,
         operators: resolved.operators,
         enemy: resolved.enemy,
@@ -1478,12 +1284,12 @@ export function useApp() {
         loadouts: resolved.loadouts,
         loadoutProperties: resolved.loadoutProperties,
         resourceConfigs: resolved.resourceConfigs,
+        overrides: resolved.overrides,
       });
       setVisibleSkills(resolved.visibleSkills);
-      setDerivedEventOverrides(resolved.derivedEventOverrides);
     } else {
       setNextEventUid(1);
-      resetUndoable({
+      resetCombatState({
         events: [],
         operators: [...INITIAL_OPERATORS],
         enemy: DEFAULT_ENEMY,
@@ -1491,9 +1297,9 @@ export function useApp() {
         loadouts: INITIAL_LOADOUTS,
         loadoutProperties: INITIAL_LOADOUT_PROPERTIES,
         resourceConfigs: {},
+        overrides: {},
       });
       setVisibleSkills(INITIAL_VISIBLE);
-      setDerivedEventOverrides({});
     }
     setEditingEventId(null);
     setEditingSlotId(null);
@@ -1501,7 +1307,7 @@ export function useApp() {
     setContextMenu(null);
     setActiveLoadoutId(id);
     saveActiveLoadoutId(id);
-  }, [activeLoadoutId, buildSheetData, resetUndoable]);
+  }, [activeLoadoutId, buildSheetData, resetCombatState]);
 
   const handleDeleteLoadout = useCallback((loadoutIds: string[], _nodeId: string) => {
     for (const sid of loadoutIds) {
@@ -1517,7 +1323,7 @@ export function useApp() {
       resetLoadoutTree(newTree);
 
       setNextEventUid(1);
-      const emptyState: UndoableState = {
+      const emptyState: CombatState = {
         events: [],
         operators: [...INITIAL_OPERATORS],
         enemy: DEFAULT_ENEMY,
@@ -1525,8 +1331,9 @@ export function useApp() {
         loadouts: INITIAL_LOADOUTS,
         loadoutProperties: INITIAL_LOADOUT_PROPERTIES,
         resourceConfigs: {},
+        overrides: {},
       };
-      resetUndoable(emptyState);
+      resetCombatState(emptyState);
       setVisibleSkills(INITIAL_VISIBLE);
       setEditingEventId(null);
       setEditingSlotId(null);
@@ -1551,7 +1358,7 @@ export function useApp() {
     } else if (activeLoadoutId && loadoutIds.includes(activeLoadoutId)) {
       handleSelectLoadout(remainingLoadouts[0].id);
     }
-  }, [activeLoadoutId, loadoutTree, handleSelectLoadout, resetLoadoutTree, resetUndoable]);
+  }, [activeLoadoutId, loadoutTree, handleSelectLoadout, resetLoadoutTree, resetCombatState]);
 
   const handleExport = useCallback(() => {
     if (activeLoadoutId) {
@@ -1575,7 +1382,7 @@ export function useApp() {
 
   const handleClearLoadout = useCallback(() => {
     setNextEventUid(1);
-    resetUndoable({
+    resetCombatState({
       events: [],
       operators: [...INITIAL_OPERATORS],
       enemy: DEFAULT_ENEMY,
@@ -1583,9 +1390,9 @@ export function useApp() {
       loadouts: INITIAL_LOADOUTS,
       loadoutProperties: INITIAL_LOADOUT_PROPERTIES,
       resourceConfigs: {},
+      overrides: {},
     });
     setVisibleSkills(INITIAL_VISIBLE);
-    setDerivedEventOverrides({});
     setEditingEventId(null);
     setEditingSlotId(null);
     setEditingResourceKey(null);
@@ -1599,7 +1406,7 @@ export function useApp() {
       ));
     }
     setConfirmClearLoadout(false);
-  }, [resetUndoable, activeLoadoutId]);
+  }, [resetCombatState, activeLoadoutId]);
 
   const handleClearAll = useCallback(() => {
     for (const node of loadoutTree.nodes) {
@@ -1612,7 +1419,7 @@ export function useApp() {
     resetLoadoutTree(newTree);
 
     setNextEventUid(1);
-    const emptyState: UndoableState = {
+    const emptyState: CombatState = {
       events: [],
       operators: [...INITIAL_OPERATORS],
       enemy: DEFAULT_ENEMY,
@@ -1620,10 +1427,10 @@ export function useApp() {
       loadouts: INITIAL_LOADOUTS,
       loadoutProperties: INITIAL_LOADOUT_PROPERTIES,
       resourceConfigs: {},
+      overrides: {},
     };
-    resetUndoable(emptyState);
+    resetCombatState(emptyState);
     setVisibleSkills(INITIAL_VISIBLE);
-    setDerivedEventOverrides({});
     setEditingEventId(null);
     setEditingSlotId(null);
     setEditingResourceKey(null);
@@ -1645,7 +1452,7 @@ export function useApp() {
     setActiveLoadoutId(node.id);
     saveActiveLoadoutId(node.id);
     setConfirmClearAll(false);
-  }, [loadoutTree, resetLoadoutTree, resetUndoable]);
+  }, [loadoutTree, resetLoadoutTree, resetCombatState]);
 
   const handleRenameActiveLoadout = useCallback((name: string) => {
     if (!activeLoadoutId) return;
@@ -1757,7 +1564,7 @@ export function useApp() {
   // ─── Return ──────────────────────────────────────────────────────────────
   return {
     // Core state
-    operators, enemy, enemyStats, events, loadouts, loadoutProperties, visibleSkills, resourceConfigs, buildSheetData,
+    operators, enemy, enemyStats, events, loadouts, loadoutProperties, visibleSkills, resourceConfigs, overrides, buildSheetData,
     columns, slots, allProcessedEvents, contentFrames, resourceGraphs, staggerBreaks, spConsumptionHistory, spInsufficiencyZones,
 
     // UI state
@@ -1781,7 +1588,7 @@ export function useApp() {
     handleRemoveEvent, handleRemoveEvents, handleDuplicateEvents,
     handleResetEvent, handleResetEvents, handleResetSegments, handleResetFrames,
     handleRemoveFrame, handleRemoveFrames, handleAddFrame, handleAddSegment,
-    handleRemoveSegment, handleMoveFrame, handleFrameClick,
+    handleRemoveSegment, handleMoveFrame, handleResizeSegment, handleFrameClick,
 
     // Loadout/operator handlers
     handleLoadoutChange, handleStatsChange, handleSwapOperator, handleSwapEnemy, handleEnemyStatsChange,

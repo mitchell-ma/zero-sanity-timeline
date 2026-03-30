@@ -184,7 +184,7 @@ const GEAR_ICONS: Record<string, string> = {};
 for (const key of gearIconContext.keys()) {
   const match = key.match(/\.\/(.+)\.(png|webp)$/);
   if (match) {
-    GEAR_ICONS[match[1]] = gearIconContext(key);
+    GEAR_ICONS[match[1].toLowerCase()] = gearIconContext(key);
   }
 }
 

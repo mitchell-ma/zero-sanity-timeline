@@ -27,7 +27,7 @@ import { FPS } from '../../../../utils/timeline';
 import { checkVariantAvailability, validateVariantClauses } from '../../../../controller/timeline/eventValidator';
 import { computeTimelinePresentation } from '../../../../controller/timeline/eventPresentationController';
 import type { MiniTimeline, ContextMenuItem } from '../../../../consts/viewTypes';
-import { findColumn, buildContextMenu, getMenuPayload } from '../../helpers';
+import { findColumn, buildContextMenu, getMenuPayload, setUltimateEnergyToMax } from '../../helpers';
 import type { AppResult, AddEventPayload } from '../../helpers';
 
 /* eslint-disable @typescript-eslint/no-require-imports */
@@ -106,6 +106,7 @@ describe('Laevatain ultimate controlled activation — integration through useAp
   describe('checkVariantAvailability (context menu)', () => {
     it('ultimate is available when Laevatain is the controlled operator (initial state)', () => {
       const { result } = renderHook(() => useApp());
+      act(() => { setUltimateEnergyToMax(result.current, SLOT_0, 0); });
       const r = checkVariantAvailability(
         TWILIGHT_ID, SLOT_0, [...result.current.allProcessedEvents], 5 * FPS,
         NounType.ULTIMATE, result.current.slots,
@@ -138,6 +139,7 @@ describe('Laevatain ultimate controlled activation — integration through useAp
 
     it('ultimate is available before control swap but disabled after', () => {
       const { result } = renderHook(() => useApp());
+      act(() => { setUltimateEnergyToMax(result.current, SLOT_0, 0); });
       const swapFrame = 5 * FPS;
       swapControlTo(result.current, SLOT_1, swapFrame);
 
@@ -167,6 +169,7 @@ describe('Laevatain ultimate controlled activation — integration through useAp
 
     it('ultimate is available again after control swaps back', () => {
       const { result } = renderHook(() => useApp());
+      act(() => { setUltimateEnergyToMax(result.current, SLOT_0, 0); });
       // Swap to slot-1 at 3s, then back to slot-0 at 6s
       swapControlTo(result.current, SLOT_1, 3 * FPS);
       swapControlTo(result.current, SLOT_0, 6 * FPS);
@@ -199,6 +202,7 @@ describe('Laevatain ultimate controlled activation — integration through useAp
   describe('validateVariantClauses (placed event warnings)', () => {
     it('no warning when ultimate is placed while Laevatain is controlled', () => {
       const { result } = renderHook(() => useApp());
+      act(() => { setUltimateEnergyToMax(result.current, SLOT_0, 0); });
 
       // Place ultimate via context menu
       const ultCol = findColumn(result.current, SLOT_0, NounType.ULTIMATE);
@@ -226,6 +230,7 @@ describe('Laevatain ultimate controlled activation — integration through useAp
 
     it('warning when ultimate is placed at a frame where Laevatain is not controlled', () => {
       const { result } = renderHook(() => useApp());
+      act(() => { setUltimateEnergyToMax(result.current, SLOT_0, 0); });
       // Swap control to slot-1 at 3s via context menu
       swapControlTo(result.current, SLOT_1, 3 * FPS);
 

@@ -22,8 +22,8 @@ import type { ValueResolutionContext } from '../calculation/valueResolver';
 import { TimelineEvent, durationSegment, eventDuration, setEventDuration } from '../../consts/viewTypes';
 import { FPS } from '../../utils/timeline';
 import { CritMode, EventStatusType } from '../../consts/enums';
+import type { OverrideStore } from '../../consts/overrideTypes';
 import { ENEMY_OWNER_ID, INFLICTION_COLUMNS, REACTION_STATUS_TO_COLUMN } from '../../model/channels/index';
-import { statusIdToColumnId } from './triggerMatch';
 import { COMMON_OWNER_ID } from '../slot/commonSlotController';
 import { evaluateConditions, ConditionContext } from './conditionEvaluator';
 import { activeEventsAtFrame, activeInflictionsOfElement, isActiveAtFrame } from './timelineQueries';
@@ -82,6 +82,12 @@ export interface ExecutionContext {
   chanceMultiplier?: number;
   /** The slot where the parent status event lives (for self-consumption). */
   currentOwnerId?: string;
+  /** Override store for pinned chance outcomes. */
+  overrides?: OverrideStore;
+  /** Override key for the current event (composite key for override lookup). */
+  overrideKey?: string;
+  /** Current clause path for chance override matching. */
+  clausePath?: string;
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────
@@ -203,8 +209,7 @@ function executeApply(effect: Effect, ctx: ExecutionContext): MutationSet {
   }
 
   if (effect.object === NounType.STATUS) {
-    const skipTeamCheck = effect.to != null && effect.to !== NounType.TEAM;
-    const columnId = statusIdToColumnId(effect.objectId ?? '', skipTeamCheck);
+    const columnId = effect.objectId ?? '';
 
     const durationValue = resolveWith(effect.with?.duration, ctx);
     const duration = durationValue != null ? Math.round(durationValue * FPS) : 2400;
@@ -274,8 +279,7 @@ function executeConsume(effect: Effect, ctx: ExecutionContext): MutationSet {
   }
 
   if (effect.object === NounType.STATUS) {
-    const skipTeamCheck = (effect.fromObject ?? effect.to) != null && (effect.fromObject ?? effect.to) !== NounType.TEAM;
-    const columnId = statusIdToColumnId(effect.objectId ?? '', skipTeamCheck);
+    const columnId = effect.objectId ?? '';
     const targets = activeEventsAtFrame(ctx.events, columnId, ownerId, ctx.frame)
       .filter(ev => ev.eventStatus !== EventStatusType.CONSUMED)
       .sort((a, b) => a.startFrame - b.startFrame);
@@ -320,7 +324,7 @@ function executeConsume(effect: Effect, ctx: ExecutionContext): MutationSet {
   // Used by statuses with onTriggerClause that deplete their own stacks (e.g. Auxiliary Crystal).
   if (effect.object === NounType.STACKS) {
     const statusId = effect.objectId ?? ctx.sourceSkillName;
-    const columnId = statusIdToColumnId(statusId);
+    const columnId = statusId;
     // Use currentOwnerId (the slot where the status lives) for self-consumption
     const statusOwnerId = ctx.currentOwnerId
       ?? resolveOwnerId(effect.fromObject as string ?? effect.to as string ?? NounType.OPERATOR, ctx, effect.fromDeterminer ?? effect.toDeterminer);
@@ -349,8 +353,7 @@ function executeReset(effect: Effect, ctx: ExecutionContext): MutationSet {
   const result = emptyMutationSet();
   // RESET STACKS or RESET COOLDOWN — clamp all active instances
   if (effect.object === NounType.STACKS && effect.objectId) {
-    const skipTeamCheck = effect.to != null && effect.to !== NounType.TEAM;
-    const columnId = statusIdToColumnId(effect.objectId ?? '', skipTeamCheck);
+    const columnId = effect.objectId ?? '';
     const ownerId = resolveOwnerId(effect.to as string, ctx, effect.toDeterminer);
     const targets = activeEventsAtFrame(ctx.events, columnId, ownerId, ctx.frame)
       .filter(ev => ev.eventStatus !== EventStatusType.CONSUMED);
@@ -375,7 +378,7 @@ function resolveExtendColumnId(effect: Effect): string | undefined {
     return qualifier ?? undefined;
   }
   if (effect.object === NounType.STATUS && effect.objectId) {
-    return statusIdToColumnId(effect.objectId);
+    return effect.objectId;
   }
   return undefined;
 }
@@ -526,14 +529,20 @@ function executeChance(effect: Effect, ctx: ExecutionContext): MutationSet {
   let shouldExecute: boolean;
   let childChanceMultiplier = ctx.chanceMultiplier ?? 1;
 
-  switch (critMode) {
-    case CritMode.ALWAYS:     shouldExecute = true; break;
-    case CritMode.NEVER:      shouldExecute = false; break;
-    case CritMode.SIMULATION: shouldExecute = Math.random() < chance; break;
-    case CritMode.EXPECTED:
-      shouldExecute = true;
-      childChanceMultiplier *= chance;
-      break;
+  // Check for pinned chance override
+  const chancePin = findChancePin(ctx);
+  if (chancePin !== undefined) {
+    shouldExecute = chancePin;
+  } else {
+    switch (critMode) {
+      case CritMode.ALWAYS:     shouldExecute = true; break;
+      case CritMode.NEVER:      shouldExecute = false; break;
+      case CritMode.SIMULATION: shouldExecute = Math.random() < chance; break;
+      case CritMode.EXPECTED:
+        shouldExecute = true;
+        childChanceMultiplier *= chance;
+        break;
+    }
   }
 
   if (!shouldExecute) return emptyMutationSet();
@@ -546,6 +555,14 @@ function executeChance(effect: Effect, ctx: ExecutionContext): MutationSet {
     mergeMutations(result, childResult);
   }
   return result;
+}
+
+/** Look up a pinned chance outcome from the override store. */
+function findChancePin(ctx: ExecutionContext): boolean | undefined {
+  if (!ctx.overrides || !ctx.overrideKey || !ctx.clausePath) return undefined;
+  const entry = ctx.overrides[ctx.overrideKey];
+  if (!entry?.chanceOverrides) return undefined;
+  return entry.chanceOverrides.find((c) => c.clausePath === ctx.clausePath)?.outcome;
 }
 
 // ── Main dispatcher ──────────────────────────────────────────────────────

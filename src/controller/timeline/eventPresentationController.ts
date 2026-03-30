@@ -14,9 +14,9 @@
  */
 import { TimelineEvent, Column, MiniTimeline, EventSegmentData, eventEndFrame } from '../../consts/viewTypes';
 import { NounType } from '../../dsl/semantics';
-import { TimelineSourceType, ELEMENT_COLORS, ElementType, InteractionModeType, EventStatusType } from '../../consts/enums';
+import { TimelineSourceType, ELEMENT_COLORS, ElementType, InteractionModeType, EventStatusType, DEFAULT_EVENT_COLOR } from '../../consts/enums';
 import { getAllSkillLabels, getAllStatusLabels, getAllInflictionLabels } from '../gameDataStore';
-import { CombatSkillType, StackInteractionType } from '../../consts/enums';
+import { CombatSkillType, StackInteractionType, UNLIMITED_STACKS } from '../../consts/enums';
 import { COMBO_WINDOW_COLUMN_ID, REACTION_COLUMNS } from '../../model/channels';
 import { formatSegmentShortName } from '../../dsl/semanticsTranslation';
 import { getAllOperatorStatuses } from '../gameDataStore';
@@ -62,6 +62,8 @@ function getStatusStackInfo(statusId: string): StatusStackInfo | undefined {
 function isSingleInstanceStatus(statusId: string): boolean {
   const info = getStatusStackInfo(statusId);
   if (!info) return false;
+  // Unlimited stacks with NONE interaction = independent instances (no stack labels)
+  if (info.instances >= UNLIMITED_STACKS && info.verb === StackInteractionType.NONE) return true;
   return info.instances <= 1 && (info.verb === StackInteractionType.NONE || info.verb === StackInteractionType.RESET);
 }
 
@@ -158,8 +160,9 @@ export function computeStatusViewOverrides(
         // stacking events tile without overlapping wrappers.  Applies to all
         // events (including consumed) because consumed inflictions can be
         // extended before eviction and their tall wrappers overlap later events.
+        // Skip for single-instance statuses (independent, no tiling needed).
         const allIdx = allSorted.indexOf(ev);
-        if (allIdx >= 0 && allIdx < allSorted.length - 1) {
+        if (!singleInstance && allIdx >= 0 && allIdx < allSorted.length - 1) {
           const nextStart = allSorted[allIdx + 1].startFrame;
           const evEnd = eventEndFrame(ev);
           if (nextStart < evEnd) {
@@ -226,12 +229,18 @@ function computeGreedySlotAssignments(
 
 function isWindowConsumed(windowEv: TimelineEvent, events: readonly TimelineEvent[]): boolean {
   const endFrame = eventEndFrame(windowEv);
-  return events.some((ev) =>
-    ev.columnId === NounType.COMBO_SKILL &&
-    ev.ownerId === windowEv.ownerId &&
-    ev.startFrame >= windowEv.startFrame &&
-    ev.startFrame < endFrame,
-  );
+  const max = windowEv.maxSkills ?? 1;
+  let count = 0;
+  for (const ev of events) {
+    if (ev.columnId === NounType.COMBO_SKILL &&
+        ev.ownerId === windowEv.ownerId &&
+        ev.startFrame >= windowEv.startFrame &&
+        ev.startFrame < endFrame) {
+      count++;
+      if (count >= max) return true;
+    }
+  }
+  return false;
 }
 
 export interface EventPresentation {
@@ -269,12 +278,10 @@ export function resolveEventColor(
   slotElementColors: Record<string, string>,
 ): string {
   if (col.type !== 'mini-timeline') return col.color;
-  const isSequenced = ev.segments.length > 0;
-  if (!isSequenced) return col.color;
   const skillElColor = col.skillElement
     ? ELEMENT_COLORS[col.skillElement as ElementType]
     : undefined;
-  return skillElColor ?? slotElementColors[col.ownerId] ?? col.color;
+  return skillElColor ?? slotElementColors[col.ownerId] ?? DEFAULT_EVENT_COLOR;
 }
 
 /**
@@ -284,7 +291,7 @@ export function computeSlotElementColors(slots: Slot[]): Record<string, string> 
   const map: Record<string, string> = {};
   for (const s of slots) {
     if (s.operator) {
-      map[s.slotId] = ELEMENT_COLORS[s.operator.element as ElementType] ?? s.operator.color;
+      map[s.slotId] = ELEMENT_COLORS[s.operator.element as ElementType] ?? DEFAULT_EVENT_COLOR;
     }
   }
   return map;
@@ -533,19 +540,23 @@ function computeMicroPositions(
       const evStart = ev.startFrame;
       const evEnd = eventEndFrame(ev);
 
+      // Independent instances (unlimited stacks, NONE interaction) use unique
+      // type keys so overlapping events get separate slots instead of sharing.
+      const typeKey = isSingleInstanceStatus(ev.columnId) ? ev.uid : ev.columnId;
+
       // If this type already has a slot assigned, reuse it — unless a
       // different-type event now overlaps in that slot.
-      const existingSlot = typeSlots.get(ev.columnId);
+      const existingSlot = typeSlots.get(typeKey);
       if (existingSlot != null) {
         let conflict = false;
         for (const r of slots[existingSlot]) {
-          if (r.type !== ev.columnId && r.start < evEnd && r.end > evStart) {
+          if (r.type !== typeKey && r.start < evEnd && r.end > evStart) {
             conflict = true;
             break;
           }
         }
         if (!conflict) {
-          slots[existingSlot].push({ type: ev.columnId, start: evStart, end: evEnd });
+          slots[existingSlot].push({ type: typeKey, start: evStart, end: evEnd });
           eventSlots.set(ev.uid, existingSlot);
           continue;
         }
@@ -557,7 +568,7 @@ function computeMicroPositions(
         const ranges = slots[s];
         let conflict = false;
         for (const r of ranges) {
-          if (r.type === ev.columnId) continue;
+          if (r.type === typeKey) continue;
           if (r.start < evEnd && r.end > evStart) { conflict = true; break; }
         }
         if (!conflict) { assignedSlot = s; break; }
@@ -567,8 +578,8 @@ function computeMicroPositions(
         slots.push([]);
       }
 
-      slots[assignedSlot].push({ type: ev.columnId, start: evStart, end: evEnd });
-      typeSlots.set(ev.columnId, assignedSlot);
+      slots[assignedSlot].push({ type: typeKey, start: evStart, end: evEnd });
+      typeSlots.set(typeKey, assignedSlot);
       eventSlots.set(ev.uid, assignedSlot);
     }
 
@@ -581,7 +592,7 @@ function computeMicroPositions(
       positions.set(ev.uid, {
         leftFrac: slot * slotFrac,
         widthFrac: slotFrac,
-        color: mcById.get(ev.columnId)?.color ?? col.color,
+        color: mcById.get(ev.columnId)?.color ?? DEFAULT_EVENT_COLOR,
       });
     }
   } else if (col.microColumnAssignment === 'by-order') {

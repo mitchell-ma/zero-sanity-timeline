@@ -5,7 +5,7 @@
     "INSPIRING_START_OF_A_SAGA"
   ],
   "properties": {
-    "name": "Pathfinders Beacon",
+    "name": "Pathfinder's Beacon",
     "id": "PATHFINDERS_BEACON",
     "type": "POLEARM",
     "rarity": 4
@@ -23,7 +23,8 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "STAT", "objectId": "BASE_ATTACK",
+          "object": "STAT",
+          "objectId": "BASE_ATTACK",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {

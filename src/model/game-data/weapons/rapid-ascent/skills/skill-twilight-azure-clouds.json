@@ -29,10 +29,22 @@
           },
           "objectId": "DAMAGE_BONUS",
           "objectQualifier": "PHYSICAL"
-        },
+        }
+      ]
+    },
+    {
+      "conditions": [
+        {
+          "subject": "ENEMY",
+          "verb": "IS",
+          "object": "STAGGERED"
+        }
+      ],
+      "effects": [
         {
           "verb": "APPLY",
-          "object": "STAT", "objectId": "DAMAGE_BONUS",
+          "object": "STAT",
+          "objectId": "DAMAGE_BONUS",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {

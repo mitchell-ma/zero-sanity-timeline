@@ -5,7 +5,7 @@
     "DETONATE_RAPID_STRIKE"
   ],
   "properties": {
-    "name": "Obj Velocitous",
+    "name": "OBJ Velocitous",
     "id": "OBJ_VELOCITOUS",
     "type": "HANDCANNON",
     "rarity": 5
@@ -23,7 +23,8 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "STAT", "objectId": "BASE_ATTACK",
+          "object": "STAT",
+          "objectId": "BASE_ATTACK",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {

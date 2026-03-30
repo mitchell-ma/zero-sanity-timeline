@@ -39,7 +39,7 @@
           "subject": "OPERATOR",
           "verb": "APPLY",
           "object": "INFLICTION",
-          "element": "CRYO"
+          "objectQualifier": "CRYO"
         }
       ],
       "effects": [
@@ -47,6 +47,32 @@
           "verb": "APPLY",
           "object": "STATUS",
           "objectId": "KHRAVENGGER_BONECHILLING",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
+        }
+      ]
+    },
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "DEAL",
+          "object": "DAMAGE",
+          "objectQualifier": "COMBO_SKILL"
+        },
+        {
+          "subject": "ENEMY",
+          "verb": "HAVE",
+          "object": "INFLICTION",
+          "objectQualifier": "CRYO"
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "KHRAVENGGER_BONECHILLING_COMBO",
           "toDeterminer": "THIS",
           "to": "OPERATOR"
         }

@@ -13,6 +13,8 @@ import {
 } from '../../controller/timeline/contextMenuController';
 import { getAlwaysAvailableComboSlots } from '../../controller/timeline/eventValidator';
 import { computeAllValidations } from '../../controller/timeline/eventValidationController';
+import { ultimateGraphKey } from '../../model/channels';
+import { getUltimateEnergyCost } from '../../controller/operators/operatorRegistry';
 import type { useApp } from '../../app/useApp';
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -110,6 +112,17 @@ export function getAddEventPayload(
   }
 
   return item.actionPayload as AddEventPayload;
+}
+
+/**
+ * Set ultimate energy to max for a slot so ultimates can be placed.
+ * Must be called inside act().
+ */
+export function setUltimateEnergyToMax(app: AppResult, slotId: string, slotIndex: number) {
+  const op = app.operators[slotIndex];
+  if (!op) return;
+  const cost = getUltimateEnergyCost(op.id);
+  app.handleResourceConfigChange(ultimateGraphKey(slotId), { startValue: cost, max: cost, regenPerSecond: 0 });
 }
 
 /**

@@ -45,10 +45,10 @@ Subjects use DeterminerType + NounType. e.g. `THIS OPERATOR`, `ANY OPERATOR`, `E
 | | `RECOVER` | Gain a resource |
 | | `OVERHEAL` | Recovery exceeds maximum |
 | | `RETURN` | Return resource to source |
-| **Physical** | `LIFT` | Lift an enemy |
-| | `KNOCK_DOWN` | Knock down an enemy |
-| | `BREACH` | Breach an enemy |
-| | `CRUSH` | Crush an enemy |
+| **Physical** | `LIFT` | Lift an enemy (requires pre-existing Vulnerable) |
+| | `KNOCK_DOWN` | Knock down an enemy (requires pre-existing Vulnerable) |
+| | `BREACH` | Breach an enemy (always applies) |
+| | `CRUSH` | Crush an enemy (always applies) |
 | **Stack/Duration** | `REFRESH` | Reset duration to full |
 | | `EXTEND` | Extend duration |
 | | `MERGE` | Newer subsumes older |
@@ -281,6 +281,25 @@ Antal's combo triggers when an enemy with Focus suffers a Physical Status or Art
 Two effects are needed because the combo has two trigger clauses (one for arts infliction, one for physical status). At runtime, only the effect matching the actual trigger fires.
 
 See `NOUN_ADJUNCTS` in `src/consts/semantics.ts` for the valid noun adjunct map.
+
+### Physical Status Mechanics — Vulnerable Prerequisite
+
+Physical statuses (Lift, Knock Down, Breach, Crush) interact with **Vulnerable**, a physical infliction that stacks on the enemy.
+
+**APPLY LIFT / KNOCK_DOWN** always adds 1 Vulnerable stack. The Lift/Knock Down status itself only triggers if the enemy **already had Vulnerable before this hit** (or `isForced` is set):
+
+1. Engine checks `activeCount(VULNERABLE, ENEMY, frame) > 0`
+2. Engine always applies 1 Vulnerable stack (regardless of check result)
+3. If check was true → create Lift/Knock Down event (120% ATK Physical DMG, 1s RESET)
+4. If check was false → only Vulnerable was added, no Lift/Knock Down
+
+**Implication:** The first APPLY LIFT on a clean enemy only adds Vulnerable. A second APPLY LIFT (when Vulnerable exists) triggers the actual Lift. Rotation order matters.
+
+**APPLY BREACH / CRUSH** do not require pre-existing Vulnerable — they always activate. Their damage scales with existing Vulnerable stacks (Breach: 50% + 50% per stack, Crush: 150% + 150% per stack).
+
+All physical status applications also consume active **Solidification** (arts reaction) → triggering **Shatter** if present.
+
+DSL pattern: `{ "verb": "APPLY", "objectQualifier": "LIFT", "objectId": "PHYSICAL", "object": "STATUS", "to": "ENEMY" }`
 
 ### Composition
 

@@ -2,7 +2,6 @@
   "properties": {
     "name": "Arcane Staff: Matrix Displacement",
     "description": "When an Arts Reaction is applied to an enemy. A quick casting of the Arts that generates a gravity pull, which then deals Nature DMG and forcibly Lifts the target and nearby enemies.",
-    "windowFrames": 720,
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "COMBO_SKILL",
     "element": "NATURE",
@@ -372,19 +371,34 @@
     "originId": "GILBERTA",
     "icon": "skills/combo_gilberta.png"
   },
-  "onTriggerClause": [
-    {
-      "conditions": [
-        {
-          "subjectDeterminer": "ANY",
-          "subject": "OPERATOR",
-          "verb": "APPLY",
-          "objectQualifier": "ARTS",
-          "object": "REACTION",
-          "to": "ENEMY"
+  "clauseType": "ALL",
+  "activationWindow": {
+    "properties": {
+      "maxSkills": 1
+    },
+    "onTriggerClause": [
+      {
+        "conditions": [
+          {
+            "subjectDeterminer": "ANY",
+            "subject": "OPERATOR",
+            "verb": "APPLY",
+            "objectQualifier": "ARTS",
+            "object": "REACTION",
+            "to": "ENEMY"
+          }
+        ]
+      }
+    ],
+    "segments": [
+      {
+        "properties": {
+          "duration": {
+            "value": 6,
+            "unit": "SECOND"
+          }
         }
-      ]
-    }
-  ],
-  "clauseType": "ALL"
+      }
+    ]
+  }
 }

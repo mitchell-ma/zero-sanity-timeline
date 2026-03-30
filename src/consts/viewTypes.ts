@@ -169,7 +169,7 @@ export interface EventSegmentData {
   /** Damage frame markers within this segment. */
   frames?: EventFrameMarker[];
   /** Clause effects active during this segment (from JSON clause data). */
-  clause?: { conditions: Record<string, unknown>[]; effects: { verb: string; objectQualifier?: string; object: string; nounQualifier?: string; toDeterminer?: string; to?: string; ofDeterminer?: string; ofObject?: string }[] }[];
+  clause?: { conditions: Record<string, unknown>[]; effects: { verb: string; objectId?: string; objectQualifier?: string; object: string; nounQualifier?: string; toDeterminer?: string; to?: string; ofDeterminer?: string; ofObject?: string }[] }[];
   /** Catch-all for domain-specific fields not part of the core segment model. */
   unknown?: Record<string, unknown>;
 }
@@ -246,6 +246,8 @@ export interface TimelineEvent {
   enhancementType?: EnhancementType;
   /** Preconditions for placing this event (OR of predicates). Evaluated by context menu and validation. */
   activationClause?: import('../dsl/semantics').Predicate[];
+  /** Maximum number of combo skills allowed within this activation window (default 1). */
+  maxSkills?: number;
   /** For chained combo time-stops: game frames [startFrame, comboChainFreezeEnd) are frozen in real-time layout. */
   comboChainFreezeEnd?: number;
   /** Validation warnings (e.g. event starts inside an invalid time-stop period). */
@@ -256,8 +258,6 @@ export interface TimelineEvent {
   damageFactorType?: DamageFactorType;
   /** Interaction mode at creation time — determines pipeline routing (strict = input, freeform = derived). */
   creationInteractionMode?: InteractionModeType;
-  /** Pending segment overrides from share URL decode (applied by attachDefaultSegments when columns become available). */
-  _pendingSegmentOverrides?: { sg?: number[]; fo?: number[][] };
   /** Indices of segments from the full variant chain placed at creation. Undefined = full chain. */
   segmentOrigin?: number[];
 }
@@ -470,6 +470,23 @@ export function getAnimationDurationFromSegments(segments: readonly EventSegment
 /** Get the total duration of an event from its segments. */
 export function eventDuration(ev: Pick<TimelineEvent, 'segments'>): number {
   return computeSegmentsSpan(ev.segments);
+}
+
+/** Get the absolute frame where the event's active portion ends (before cooldown segments). */
+export function activeEndFrame(ev: Pick<TimelineEvent, 'startFrame' | 'segments'>): number {
+  let running = 0;
+  let activeEnd = 0;
+  for (const seg of ev.segments) {
+    const isCooldown = seg.properties.segmentTypes?.some(
+      t => t === SegmentType.COOLDOWN || t === SegmentType.IMMEDIATE_COOLDOWN,
+    );
+    const off = seg.properties.segmentTypes?.includes(SegmentType.IMMEDIATE_COOLDOWN)
+      ? 0 : seg.properties.offset ?? running;
+    const end = off + seg.properties.duration;
+    if (!isCooldown && end > activeEnd) activeEnd = end;
+    running = seg.properties.offset == null ? running + seg.properties.duration : end;
+  }
+  return ev.startFrame + activeEnd;
 }
 
 /** Get the end frame (startFrame + total segment duration) of an event. */

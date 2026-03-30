@@ -5,7 +5,8 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "STAT", "objectId": "BASE_DEFENSE",
+          "object": "STAT",
+          "objectId": "BASE_DEFENSE",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
@@ -17,7 +18,8 @@
         },
         {
           "verb": "APPLY",
-          "object": "STAT", "objectId": "INTELLECT",
+          "object": "STAT",
+          "objectId": "INTELLECT",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
@@ -37,7 +39,8 @@
         },
         {
           "verb": "APPLY",
-          "object": "STAT", "objectId": "WILL",
+          "object": "STAT",
+          "objectId": "WILL",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
@@ -57,7 +60,8 @@
         },
         {
           "verb": "APPLY",
-          "object": "STAT", "objectId": "CRITICAL_RATE",
+          "object": "STAT",
+          "objectId": "CRITICAL_RATE",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
@@ -80,7 +84,7 @@
   ],
   "properties": {
     "id": "MI_SECURITY_OVERALLS_T1",
-    "name": "Mi Security Overalls T1",
+    "name": "MI Security Overalls T1",
     "gearType": "ARMOR",
     "gearSet": "MI_SECURITY"
   },

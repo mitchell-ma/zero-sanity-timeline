@@ -118,9 +118,10 @@ When invoked with an operator name, perform a full audit of the operator's JSON 
 
 | DSL Pattern | Reference File | What to learn |
 |---|---|---|
-| Combo onTriggerClause (arts infliction) | `wulfgard/skills/combo-skill-frag-grenade-beta.json` | ANY OPERATOR APPLY INFLICTION ARTS TO ENEMY |
-| Combo onTriggerClause (multi-condition OR) | `antal/skills/combo-skill-emp-test-site.json` | Multiple clause entries = OR; conditions within one entry = AND |
-| Combo onTriggerClause (stagger state) | `akekuri/skills/combo-skill-flash-and-dash.json` | IS NODE_STAGGERED / IS FULL_STAGGERED |
+| Combo activationWindow (arts infliction trigger) | `wulfgard/skills/combo-skill-frag-grenade-beta.json` | `activationWindow.onTriggerClause`: ANY OPERATOR APPLY INFLICTION ARTS TO ENEMY |
+| Combo activationWindow (multi-condition OR) | `antal/skills/combo-skill-emp-test-site.json` | Multiple clause entries = OR; conditions within one entry = AND |
+| Combo activationWindow (stagger state trigger) | `akekuri/skills/combo-skill-flash-and-dash.json` | IS NODE_STAGGERED / IS FULL_STAGGERED |
+| Combo activationWindow (maxSkills chaining) | `rossi/skills/combo-skill-moment-of-blazing-shadow.json` | `activationWindow.properties.maxSkills: 2` — allows two combo skills per window |
 | SP RETURN (conditional refund) | `wulfgard/skills/battle-skill-thermite-tracers-empowered.json` | verb: "RETURN" + VARY_BY POTENTIAL ADD |
 | VARY_BY POTENTIAL (ult energy cost) | `laevatain/skills/ultimate-twilight.json` | CONSUME ULTIMATE_ENERGY with 6-entry POTENTIAL array |
 | VARY_BY POTENTIAL (damage MULT) | `wulfgard/skills/combo-skill-frag-grenade-beta.json` | operation: "MULT", left: VARY_BY SKILL_LEVEL, right: VARY_BY POTENTIAL |
@@ -678,6 +679,114 @@ expect(eventDuration(sf[0])).toBeGreaterThanOrEqual(10 * FPS);
 - **String literals** — use enum constants (`VerbType.CONSUME`, `NounType.REACTION`, `StatusType.COMBUSTION`, `SKILL_COLUMNS.BATTLE`, etc.) for all comparisons.
 - **Engine internals** — test through the public `useApp` API, not internal controller methods.
 
+## Operator skill skeleton generation (new operators)
+
+When adding a new operator, use the skeleton parser to generate initial skill configs from game data dumps before manually authoring the DSL layer.
+
+### Data sources
+
+| Source | Location | What it provides |
+|--------|----------|-----------------|
+| **Warfarin API** | `https://api.warfarin.wiki/v1/en/operators/<slug>` | Per-level multiplier tables (`atk_scale` × 12 levels), hit counts (`display_atk_scale / atk_scale`), stagger (`poise`, `poise_extra`), SP recovery (`atb`), UE gain (`extra_usp`, `usp_N_display`), skill costs (`costType`/`costValue`), effect durations, MF/stack thresholds (`count`), skill labels, and descriptions |
+| **SkillData dump** | `.claude-adhoc/SkillData/` | Per-frame timing: segment durations (`AllowNextSkillAction` start), damage frame offsets (`DamageAction`/`ChannelingAction`/`LaunchProjectile` trigger frames), entity spawn timing (`SpawnAbilityEntity`), infliction types (`SpellInfliction.inflictionType`), and flow control (`JumpToAction`, `FinishOwnerAction`, `CheckBuffStackNum`) |
+| **endfield.wiki.gg** | `https://endfield.wiki.gg/wiki/<Operator_Name>` | Human-readable skill descriptions for DSL authoring, sanity check on values |
+
+### Skeleton parser
+
+**Script:** `src/model/utils/parsers/parseSkillData.py`
+
+**Usage:**
+```bash
+# Fetch Warfarin data
+curl -s 'https://api.warfarin.wiki/v1/en/operators/<slug>' -H 'User-Agent: Mozilla/5.0' -o /tmp/<slug>_warfarin.json
+
+# Run parser
+python3 src/model/utils/parsers/parseSkillData.py \
+  --warfarin /tmp/<slug>_warfarin.json \
+  --skilldata .claude-secrets/SkillData \
+  --prefix <char_prefix> \
+  --operator <OPERATOR_ID> \
+  --element <ELEMENT> \
+  [--compare src/model/game-data/operators/<slug>/skills] \
+  [--output /tmp/<slug>_skeleton]
+```
+
+### What the skeleton auto-generates
+
+| Field | Source | Accuracy |
+|-------|--------|----------|
+| Segment count | SkillData (1 file per BA segment) | Exact |
+| Segment duration | SkillData `AllowNextSkillAction` start / 30 + 1 frame | Within 1 frame of End-Axis |
+| Hit count per segment | Warfarin `display_atk_scale / atk_scale` | Exact |
+| Frame offsets | SkillData `DamageAction`/`ChannelingAction`/`LaunchProjectile` trigger frames | Exact for direct hits; entity hits need spawn offset math |
+| Per-level multipliers | Warfarin `atk_scale` × 12 levels | Exact |
+| Segment total × ratio (MULT) | Warfarin `display_atk_scale` + computed ratio | Exact for uniform multi-hit |
+| Named multiplier tiers | Warfarin `atk_scale`, `atk_scale_2`, `atk_scale_3` | Exact (each tier gets own VARY_BY) |
+| DEAL STAGGER | Warfarin `poise` (base), `poise_extra` (additional attack) | Exact |
+| RECOVER SKILL_POINT | Warfarin `atb` | Exact |
+| CONSUME SKILL_POINT / ULTIMATE_ENERGY | Warfarin `costType` (0=UE, 1=SP) + `costValue` | Exact |
+| RECOVER ULTIMATE_ENERGY | Warfarin `extra_usp` (empowered BS) | Exact |
+| APPLY REACTION (type from label) | Warfarin label text detection ("Combustion", "Corrosion") + `duration` | Exact |
+| CONSUME STATUS (MF threshold) | Warfarin `count` | Exact |
+| UE gain per enemy count | Warfarin `usp_N_display` keys | Exact |
+| Ultimate active duration | Warfarin `duration` on ultimate_skill | Exact |
+| Ultimate animation duration | SkillData `exclusiveFrame` / 30 | Exact |
+| Cooldown | SkillData blackboard `duration` or Warfarin `coolDown` | Exact |
+| Infliction element | SkillData `SpellInfliction.inflictionType` ("Fire", "Ice", etc.) | Exact |
+| Damage delivery type | SkillData action `$type` (DIRECT/CHANNELING/PROJECTILE/ENTITY) | Exact |
+| Empowered additional attack clause | Warfarin `atk_scale_3` + `poise_extra` + `extra_usp` + `duration` + `count` | Full clause |
+
+### What the skeleton surfaces as advisories
+
+The parser logs warnings for notable actions that may affect frame counts or require manual DSL authoring:
+
+| Advisory | Source | What it means |
+|----------|--------|--------------|
+| `JumpToAction → fN (skips M frames)` | SkillData | Conditional branch — may shorten entity lifetime (empowered path cuts DoT ticks) |
+| `FinishOwnerAction context='ball'` | SkillData | Kills spawned entity — truncation point for empowered variant |
+| `CheckBuffStackNumAdvanced (buff=X, GE N)` | SkillData | Conditional branch gating empowered activation |
+| `FinishBuffAction` | SkillData | Consumes buff stacks (MF consumption) |
+| `ModifyDynamicBlackboard (key=X, op=Multiply)` | SkillData | Runtime multiplier adjustment (empowered additional attack scaling) |
+| `CreateBuffAction` | SkillData | Applies buff/status (MF stacks, combo buffs) |
+| `Multiple multiplier tiers` | Warfarin | Frames within segment have different weights — not uniform hits |
+| `atk_scale_3 present` | Warfarin | EMPOWERED variant exists with separate additional attack multiplier |
+| `atk_scale ≠ atk_scale_2` | Warfarin | ENHANCED variant or multi-sequence skill with different per-hit damage |
+| `Uniform N-hit segment` | Warfarin | `display_atk_scale / atk_scale` = N, all frames use same multiplier |
+| `UE gain per enemy count` | Warfarin | Combo UE scaling: `usp_N_display` keys |
+
+### What requires manual DSL authoring
+
+After generating the skeleton, these items must be authored by hand using wiki descriptions and reference operator patterns (section 7b):
+
+| Item | Why it's manual | Where to look |
+|------|----------------|---------------|
+| `APPLY STATUS` (operator statuses like MF) | SkillData `CreateBuffAction` has buff IDs but not human-readable status names | Wiki skill description |
+| `PERFORM FINAL_STRIKE` | Not in any data source | Wiki BA description ("Final Strike also deals...") |
+| `APPLY INFLICTION` (non-channeling) | Only channeling-embedded inflictions are auto-detected | Wiki skill description + SkillData `SpellInfliction` |
+| `frameTypes` (GUARANTEED_HIT, PASSIVE, DIVE, FINISHER) | Not in either data source | Skill category + wiki description |
+| `dependencyTypes` (PREVIOUS_FRAME) | Not in either data source | Entity-based skills where ticks depend on first hit |
+| `segmentTypes` (ANIMATION, COOLDOWN, ACTIVE, STASIS) | Only partially derivable | Skill structure analysis |
+| `activationClause` | Domain logic (e.g. "must be controlled operator") | Wiki skill description |
+| `onTriggerClause` | Domain logic (e.g. "when enemy suffers Combustion") | Wiki combo/talent description |
+| Mode changes (ENABLE/DISABLE BATK) | Domain logic for ultimate | Wiki ultimate description |
+| `timeDependency`, `timeInteractionType` | Partially derivable (TIME_STOP for combo/ult anims) | Skill behavior |
+| `windowFrames` | Not in either data source | Combo activation window |
+| Empowered frame count (truncated entity) | SkillData has JumpTo + FinishOwner but requires manual flow tracing | Advisories + wiki |
+| Enhancement relationships | Inferable from naming but not explicit | Wiki + SkillData file naming |
+| Potential effects (VARY_BY POTENTIAL) | Warfarin has potential data but skeleton doesn't bake it | Wiki potentials + section 12 procedure |
+
+### Workflow for new operators
+
+1. **Obtain data dumps** — download SkillData files to `.claude-adhoc/SkillData/`, fetch Warfarin JSON
+2. **Run skeleton parser** — generates initial skill JSONs with segments, frames, offsets, multipliers, stagger, SP, UE, costs, delivery metadata, and advisories
+3. **Review advisories** — identify empowered variants (atk_scale_3), conditional branches (JumpToAction), entity truncation, multi-tier multipliers
+4. **Fetch wiki** — read skill/talent/potential descriptions from endfield.wiki.gg
+5. **Author DSL layer** — add status effects, triggers, activation clauses, mode changes, frame/segment types using wiki descriptions and reference operator patterns (section 7b)
+6. **Cross-reference** — verify all multipliers, durations, costs against wiki as sanity check
+7. **Bake potentials** — apply VARY_BY POTENTIAL arrays per section 12 procedure
+8. **Write integration tests** — cover skill placement, trigger chains, empowered activation per the test strategy above
+9. **Run reconciliation** — full audit against wiki (section 14 checklist)
+
 ## File locations
 
 | Config | Path | Format |
@@ -692,3 +801,7 @@ expect(eventDuration(sf[0])).toBeGreaterThanOrEqual(10 * FPS);
 | Operator potentials | `src/model/game-data/operators/<op>/potentials/*.json` | `{ properties, metadata }` (description-only) |
 | Operator statuses | `src/model/game-data/operators/<op>/statuses/*.json` | `{ onTriggerClause?, clause?, properties, metadata }` |
 | Status store | `src/model/game-data/operatorStatusesStore.ts` | Scans `statuses/` and `talents/` only (NOT `potentials/`) |
+| **Skeleton parser** | `src/model/utils/parsers/parseSkillData.py` | Combines Warfarin + SkillData into skill JSON skeletons |
+| **SkillData dumps** | `.claude-secrets/SkillData/` | Game client data dump — frame timing, action types, entity timelines |
+| **Warfarin API** | `https://api.warfarin.wiki/v1/en/operators/<slug>` | Per-level multipliers, costs, labels, blackboard values |
+| **Wiki** | `https://endfield.wiki.gg/wiki/<Operator_Name>` | Human-readable descriptions — sanity check + DSL authoring reference |

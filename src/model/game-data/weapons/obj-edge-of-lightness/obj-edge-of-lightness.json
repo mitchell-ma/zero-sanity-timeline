@@ -5,7 +5,7 @@
     "FLOW_UNBRIDLED_EDGE"
   ],
   "properties": {
-    "name": "Obj Edge Of Lightness",
+    "name": "OBJ Edge of Lightness",
     "id": "OBJ_EDGE_OF_LIGHTNESS",
     "type": "SWORD",
     "rarity": 5
@@ -23,7 +23,8 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "STAT", "objectId": "BASE_ATTACK",
+          "object": "STAT",
+          "objectId": "BASE_ATTACK",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {

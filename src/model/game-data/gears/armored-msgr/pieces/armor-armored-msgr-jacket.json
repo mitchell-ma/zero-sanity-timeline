@@ -5,7 +5,8 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "STAT", "objectId": "BASE_DEFENSE",
+          "object": "STAT",
+          "objectId": "BASE_DEFENSE",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
@@ -17,7 +18,8 @@
         },
         {
           "verb": "APPLY",
-          "object": "STAT", "objectId": "STRENGTH",
+          "object": "STAT",
+          "objectId": "STRENGTH",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
@@ -37,7 +39,8 @@
         },
         {
           "verb": "APPLY",
-          "object": "STAT", "objectId": "AGILITY",
+          "object": "STAT",
+          "objectId": "AGILITY",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
@@ -81,7 +84,7 @@
   ],
   "properties": {
     "id": "ARMORED_MSGR_JACKET",
-    "name": "Armored Msgr Jacket",
+    "name": "Armored MSGR Jacket",
     "gearType": "ARMOR",
     "gearSet": "ARMORED_MSGR"
   },

@@ -118,6 +118,8 @@ export function deriveComboActivationWindows(
     for (let i = 0; i < merged.length; i++) {
       const w = merged[i];
       const duration = w.endFrame - w.startFrame;
+      const wiring = slotWirings.find(sw => sw.slotId === slotId)!;
+      const triggerInfo = getComboTriggerInfo(wiring.operatorId);
       derived.push({
         uid: `combo-window-${slotId}-${i}`,
         id: COMBO_WINDOW_COLUMN_ID,
@@ -128,6 +130,7 @@ export function deriveComboActivationWindows(
         sourceOwnerId: w.sourceOwnerId,
         sourceSkillName: w.sourceSkillName,
         comboTriggerColumnId: w.sourceColumnId,
+        maxSkills: triggerInfo?.maxSkills ?? 1,
         segments: [{ properties: { duration } }],
       });
     }

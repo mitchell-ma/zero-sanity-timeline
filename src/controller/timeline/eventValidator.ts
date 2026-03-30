@@ -28,22 +28,14 @@ export type TimeStopRegion = {
   sourceColumnId: string;
 };
 
-/** Map column IDs to DSL ENABLE/DISABLE object types. */
-const COLUMN_TO_ENABLE_OBJECT: Record<string, string> = {
-  [NounType.BASIC_ATTACK]: NounType.BATK,
-  [NounType.BATTLE_SKILL]: NounType.BATTLE_SKILL,
-  [NounType.COMBO_SKILL]: NounType.COMBO_SKILL,
-  [NounType.ULTIMATE]: NounType.ULTIMATE,
-};
-
 /**
  * Check if any overlapping segment across all events for a given owner
- * has an ENABLE clause for the specified skill object type at the given frame.
+ * has an ENABLE clause targeting the specified variant ID at the given frame.
  */
 export function hasEnableClauseAtFrame(
   events: readonly TimelineEvent[],
   ownerId: string,
-  enableObject: string,
+  variantId: string,
   atFrame: number,
 ): boolean {
   for (const ev of events) {
@@ -52,7 +44,7 @@ export function hasEnableClauseAtFrame(
     for (const seg of ev.segments) {
       const segEnd = cursor + seg.properties.duration;
       if (atFrame >= cursor && atFrame < segEnd && seg.clause) {
-        if (seg.clause.some(c => c.effects.some(e => e.verb === VerbType.ENABLE && e.object === enableObject))) {
+        if (seg.clause.some(c => c.effects.some(e => e.verb === VerbType.ENABLE && e.objectId === variantId))) {
           return true;
         }
       }
@@ -63,16 +55,13 @@ export function hasEnableClauseAtFrame(
 }
 
 /**
- * Check if any overlapping segment has a DISABLE clause matching the specified
- * object and objectQualifier at the given frame.
- * When objectQualifier is undefined, matches DISABLE effects with no objectQualifier (e.g. DISABLE FINISHER).
- * When objectQualifier is provided, matches DISABLE effects with that exact objectQualifier (e.g. DISABLE NORMAL BATK).
+ * Check if any overlapping segment has a DISABLE clause targeting the specified
+ * variant ID at the given frame.
  */
 function hasDisableAtFrame(
   events: readonly TimelineEvent[],
   ownerId: string,
-  disableObject: string,
-  objectQualifier: string | undefined,
+  variantId: string,
   atFrame: number,
 ): boolean {
   for (const ev of events) {
@@ -82,8 +71,7 @@ function hasDisableAtFrame(
       const segEnd = cursor + seg.properties.duration;
       if (atFrame >= cursor && atFrame < segEnd && seg.clause) {
         if (seg.clause.some(c => c.effects.some(e =>
-          e.verb === VerbType.DISABLE && e.object === disableObject
-          && (objectQualifier === undefined ? !e.objectQualifier : e.objectQualifier === objectQualifier),
+          e.verb === VerbType.DISABLE && e.objectId === variantId,
         ))) {
           return true;
         }
@@ -608,8 +596,25 @@ export function wouldOverlapSiblings(
   events: TimelineEvent[],
 ): boolean {
   if (range <= 0) return false;
+  // Combo skills in multi-skill activation windows bypass overlap against siblings in the same window
+  let windowStart = -1;
+  let windowEnd = -1;
+  if (columnId === NounType.COMBO_SKILL) {
+    for (const w of events) {
+      if (w.columnId !== COMBO_WINDOW_COLUMN_ID || w.ownerId !== ownerId) continue;
+      if ((w.maxSkills ?? 1) <= 1) continue;
+      const wEnd = eventEndFrame(w);
+      if (atFrame >= w.startFrame && atFrame < wEnd) {
+        windowStart = w.startFrame;
+        windowEnd = wEnd;
+        break;
+      }
+    }
+  }
   return events.some((sib) => {
     if (sib.ownerId !== ownerId || sib.columnId !== columnId) return false;
+    if (windowEnd > 0 && sib.columnId === NounType.COMBO_SKILL &&
+        sib.startFrame >= windowStart && sib.startFrame < windowEnd) return false;
     const sibRange = sib.nonOverlappableRange ?? computeSegmentsSpan(sib.segments);
     if (sibRange > 0 && atFrame >= sib.startFrame && atFrame < sib.startFrame + sibRange) return true;
     if (sib.startFrame >= atFrame && sib.startFrame < atFrame + range) return true;
@@ -717,14 +722,17 @@ export function checkComboWindowAvailability(
     return { available: false, reason: 'No trigger active' };
   }
 
-  const windowConsumed = events.some((ev) =>
-    ev.columnId === NounType.COMBO_SKILL && ev.ownerId === ownerId &&
-    ev.startFrame >= matchingWindow.startFrame &&
-    ev.startFrame < eventEndFrame(matchingWindow),
-  );
-
-  if (windowConsumed) {
-    return { available: false, reason: 'Combo skill already activated' };
+  const windowEnd = eventEndFrame(matchingWindow);
+  let usedCount = 0;
+  for (const ev of events) {
+    if (ev.columnId === NounType.COMBO_SKILL && ev.ownerId === ownerId &&
+        ev.startFrame >= matchingWindow.startFrame && ev.startFrame < windowEnd) {
+      usedCount++;
+    }
+  }
+  const max = matchingWindow.maxSkills ?? 1;
+  if (usedCount >= max) {
+    return { available: false, reason: 'Combo skill limit reached' };
   }
 
   return { available: true, comboTriggerColumnId: matchingWindow.comboTriggerColumnId };
@@ -821,11 +829,9 @@ export function checkVariantAvailability(
   const opId = slot?.operator?.id;
   const variantTypes = opId ? getVariantEnhancementTypes(opId, variantName) : null;
   const isEnhanced = variantTypes ? variantTypes.includes(EnhancementType.ENHANCED) : enhancementType === EnhancementType.ENHANCED;
-  const isEmpowered = variantTypes ? variantTypes.includes(EnhancementType.EMPOWERED) : enhancementType === EnhancementType.EMPOWERED;
 
   // Enhanced/non-enhanced checks only apply to basic, battle, and combo skills
   const hasEnhancedVariants = columnId ? ENHANCED_VARIANT_COLUMNS.has(columnId as NounType) : true;
-  const enableObject = columnId ? COLUMN_TO_ENABLE_OBJECT[columnId] : undefined;
 
   // Evaluate segment clause conditions (e.g. variant-specific activation rules)
   if (opId) {
@@ -840,29 +846,16 @@ export function checkVariantAvailability(
     }
   }
 
-  // Enhanced variant: requires an active ENABLE clause for this skill type
-  if (isEnhanced && enableObject && hasEnhancedVariants) {
-    if (!hasEnableClauseAtFrame(events, ownerId, enableObject, atFrame)) {
+  // Enhanced variant: requires an active ENABLE clause targeting this variant ID
+  if (isEnhanced && hasEnhancedVariants) {
+    if (!hasEnableClauseAtFrame(events, ownerId, variantName, atFrame)) {
       return { disabled: true, reason: t('ctx.activationNotMet') };
     }
   }
 
-  // Non-enhanced variant blocked by DISABLE clause (enhanced variants bypass DISABLE)
-  if (!isEnhanced) {
-    if (variantName === CombatSkillType.FINISHER) {
-      if (hasDisableAtFrame(events, ownerId, CombatSkillType.FINISHER, undefined, atFrame)) {
-        return { disabled: true, reason: `${CombatSkillType.FINISHER} disabled during this window` };
-      }
-    } else if (variantName === CombatSkillType.DIVE) {
-      if (hasDisableAtFrame(events, ownerId, NounType.DIVE_ATTACK, undefined, atFrame)) {
-        return { disabled: true, reason: 'DIVE_ATTACK disabled during this window' };
-      }
-    } else if (enableObject && hasEnhancedVariants) {
-      const tier = isEmpowered ? EnhancementType.EMPOWERED : EnhancementType.NORMAL;
-      if (hasDisableAtFrame(events, ownerId, enableObject, tier, atFrame)) {
-        return { disabled: true, reason: `${tier} variant disabled during this window` };
-      }
-    }
+  // Any variant blocked by a DISABLE clause targeting this variant ID
+  if (hasDisableAtFrame(events, ownerId, variantName, atFrame)) {
+    return { disabled: true, reason: `${variantName} disabled during this window` };
   }
 
   return { disabled: false };
@@ -880,9 +873,10 @@ export function validateComboWindows(
   const alwaysAvailable = getAlwaysAvailableComboSlots(slots);
 
   const windowEvents = events.filter((ev) => ev.columnId === COMBO_WINDOW_COLUMN_ID);
-  const consumedWindows = new Map<string, string>();
+  // Track how many skills have been placed in each window
+  const windowUsage = new Map<string, number>();
 
-  // First pass: non-dragged events consume windows
+  // First pass: non-dragged events consume window slots
   for (const ev of events) {
     if (draggingIds?.has(ev.uid)) continue;
     if (ev.columnId !== NounType.COMBO_SKILL) continue;
@@ -900,11 +894,12 @@ export function validateComboWindows(
       map.set(ev.uid, 'Outside combo trigger window');
       continue;
     }
-    const existing = consumedWindows.get(matchingWindow.uid);
-    if (existing) {
-      map.set(ev.uid, 'Combo skill already activated by another combo');
+    const used = windowUsage.get(matchingWindow.uid) ?? 0;
+    const max = matchingWindow.maxSkills ?? 1;
+    if (used >= max) {
+      map.set(ev.uid, 'Combo skill limit reached for this window');
     } else {
-      consumedWindows.set(matchingWindow.uid, ev.uid);
+      windowUsage.set(matchingWindow.uid, used + 1);
     }
   }
 
@@ -927,9 +922,10 @@ export function validateComboWindows(
         map.set(ev.uid, 'Outside combo trigger window');
         continue;
       }
-      const existing = consumedWindows.get(matchingWindow.uid);
-      if (existing) {
-        map.set(ev.uid, 'Combo skill already activated by another combo');
+      const used = windowUsage.get(matchingWindow.uid) ?? 0;
+      const max = matchingWindow.maxSkills ?? 1;
+      if (used >= max) {
+        map.set(ev.uid, 'Combo skill limit reached for this window');
       }
     }
   }
@@ -998,9 +994,6 @@ export function validateEnhanced(events: TimelineEvent[]): Map<string, string> {
     if (ev.enhancementType !== EnhancementType.ENHANCED) continue;
     if (ev.columnId === NounType.ULTIMATE) continue;
 
-    const enableObject = COLUMN_TO_ENABLE_OBJECT[ev.columnId];
-    if (!enableObject) continue;
-
     // Collect all segment start frames; fall back to event start if no segments
     const segStarts: number[] = [];
     if (ev.segments.length > 0) {
@@ -1013,9 +1006,9 @@ export function validateEnhanced(events: TimelineEvent[]): Map<string, string> {
       segStarts.push(ev.startFrame);
     }
 
-    // Every segment start must fall within an active ENABLE clause
+    // Every segment start must fall within an active ENABLE clause targeting this variant
     for (const frame of segStarts) {
-      if (!hasEnableClauseAtFrame(events, ev.ownerId, enableObject, frame)) {
+      if (!hasEnableClauseAtFrame(events, ev.ownerId, ev.name, frame)) {
         map.set(ev.uid, 'Enhanced skill must be within an active ENABLE effect');
         break;
       }
@@ -1025,27 +1018,13 @@ export function validateEnhanced(events: TimelineEvent[]): Map<string, string> {
 }
 
 /**
- * Validates that variants with an active DISABLE clause do NOT start
- * inside the disabled window. Checks regular basic attacks, battle skills, finishers, and dives.
+ * Validates that variants with an active DISABLE clause targeting their ID
+ * do NOT start inside the disabled window.
  */
 export function validateDisabledVariants(events: TimelineEvent[]): Map<string, string> {
   const map = new Map<string, string>();
   for (const ev of events) {
     if (ev.columnId !== NounType.BASIC_ATTACK && ev.columnId !== NounType.BATTLE_SKILL) continue;
-    // Skip enhanced — enhanced variants bypass DISABLE
-    if (ev.enhancementType === EnhancementType.ENHANCED) continue;
-
-    let disableTarget: string | undefined;
-    let disableAdj: string | undefined;
-    if (ev.id === CombatSkillType.FINISHER) {
-      disableTarget = CombatSkillType.FINISHER;
-    } else if (ev.id === CombatSkillType.DIVE) {
-      disableTarget = NounType.DIVE_ATTACK;
-    } else {
-      disableTarget = COLUMN_TO_ENABLE_OBJECT[ev.columnId];
-      disableAdj = ev.enhancementType === EnhancementType.EMPOWERED ? EnhancementType.EMPOWERED : EnhancementType.NORMAL;
-    }
-    if (!disableTarget) continue;
 
     // Collect all segment start frames
     const segStarts: number[] = [];
@@ -1060,7 +1039,7 @@ export function validateDisabledVariants(events: TimelineEvent[]): Map<string, s
     }
 
     for (const frame of segStarts) {
-      if (hasDisableAtFrame(events, ev.ownerId, disableTarget, disableAdj, frame)) {
+      if (hasDisableAtFrame(events, ev.ownerId, ev.name, frame)) {
         map.set(ev.uid, 'Variant cannot be used during DISABLE window');
         break;
       }

@@ -7,7 +7,7 @@
  * ALL game mechanics processing — time-stop resolution, infliction derivation,
  * exchange statuses, combo windows, frame positions, validation — happens here.
  */
-import { TimelineEvent } from '../../consts/viewTypes';
+import { TimelineEvent, activeEndFrame } from '../../consts/viewTypes';
 import { NounType } from '../../dsl/semantics';
 import { LoadoutProperties } from '../../view/InformationPane';
 import { TimeStopRegion, absoluteFrame, foreignStopsFor } from './processTimeStop';
@@ -15,7 +15,7 @@ import { DerivedEventController } from './derivedEventController';
 import { deriveComboActivationWindows } from './processComboSkill';
 import type { SlotTriggerWiring } from './eventQueueTypes';
 import { SkillPointController } from '../slot/skillPointController';
-import { PRIORITY, QueueFrameType } from './eventQueueTypes';
+import { PRIORITY, QueueFrameType, FrameHookType } from './eventQueueTypes';
 import type { QueueFrame } from './eventQueueTypes';
 import { EventInterpretorController } from './eventInterpretorController';
 import { PriorityQueue } from './priorityQueue';
@@ -26,7 +26,11 @@ import { getAllTriggerAssociations } from '../gameDataStore';
 import { cloneAndSplitEvents } from './inputEventController';
 import { initHpTracker, getEnemyHpPercentage, precomputeDamageByFrame } from '../calculation/calculationController';
 import type { HPController } from '../calculation/hpController';
+import { StatAccumulator } from '../calculation/statAccumulator';
+import type { OverrideStore } from '../../consts/overrideTypes';
+import { CritMode } from '../../consts/enums';
 import type { OperatorLoadoutState } from '../../view/OperatorLoadoutHeader';
+import type { EnemyStats } from '../appStateController';
 import { resolveControlledOperator } from './controlledOperatorResolver';
 import { allocQueueFrame, resetPools, isReconcilerEnabled } from './objectPool';
 
@@ -60,11 +64,12 @@ function collectFrameEntries(
   const entries: QueueFrame[] = [];
 
   for (const event of events) {
-    // Seed an event-start entry at the event's start frame (no frame marker)
+    // Seed an event-start entry at the event's start frame
     const start = allocQueueFrame();
     start.frame = event.startFrame;
     start.priority = PRIORITY.PROCESS_FRAME;
     start.type = QueueFrameType.PROCESS_FRAME;
+    start.hookType = FrameHookType.EVENT_START;
     start.statusId = event.name;
     start.columnId = event.columnId;
     start.ownerId = event.ownerId;
@@ -134,6 +139,28 @@ function collectFrameEntries(
       entries.push(synth);
     }
 
+    // Seed an event-end entry at the active end frame (before cooldown segments)
+    const endFrame = activeEndFrame(event);
+    if (endFrame > event.startFrame) {
+      const end = allocQueueFrame();
+      end.frame = endFrame;
+      end.priority = PRIORITY.PROCESS_FRAME;
+      end.type = QueueFrameType.PROCESS_FRAME;
+      end.hookType = FrameHookType.EVENT_END;
+      end.statusId = event.name;
+      end.columnId = event.columnId;
+      end.ownerId = event.ownerId;
+      end.sourceOwnerId = event.ownerId;
+      end.sourceSkillName = event.name;
+      end.maxStacks = 0;
+      end.durationFrames = 0;
+      end.operatorSlotId = event.ownerId;
+      end.sourceEvent = event;
+      end.segmentIndex = -1;
+      end.frameIndex = -1;
+      entries.push(end);
+    }
+
     // Seed COMBO_RESOLVE for combo events (fires after engine triggers)
     if (event.columnId === NounType.COMBO_SKILL && !event.comboTriggerColumnId) {
       const combo = allocQueueFrame();
@@ -193,6 +220,9 @@ export function runEventQueue(
   hpController?: HPController,
   /** Pre-built TriggerIndex from CombatLoadoutController. Falls back to ad-hoc build if not provided. */
   triggerIndex?: TriggerIndex,
+  statAccumulator?: StatAccumulator,
+  critMode?: CritMode,
+  overrides?: OverrideStore,
 ): void {
   const slotWirings = state.getSlotWirings();
   const registeredEvents = state.getRegisteredEvents();
@@ -218,6 +248,7 @@ export function runEventQueue(
   interpretor.resetWith(state, registeredEvents, {
     loadoutProperties, slotOperatorMap, slotWirings, getEnemyHpPercentage,
     getControlledSlotAtFrame, triggerIndex: triggerIdx, hpController,
+    statAccumulator, critMode, overrides,
   });
 
   // Seed one PROCESS_FRAME entry per frame marker — all events (registered + derived)
@@ -242,6 +273,9 @@ export function runEventQueue(
   state.markExtended(comboWindows.map(ev => ev.uid));
   state.registerEvents([...queueEvents, ...comboWindows]);
 
+  // Clamp combo cooldowns in multi-skill windows (after windows are registered)
+  state.clampMultiSkillComboCooldowns();
+
   state.validateAll();
 }
 
@@ -250,10 +284,21 @@ export function runEventQueue(
 // Lazily created DerivedEventController singleton — reset() clears all state.
 let _decSingleton: DerivedEventController | null = null;
 let _lastController: DerivedEventController | null = null;
+let _statAccumulator: StatAccumulator | null = null;
 
 /** Get the DerivedEventController from the most recent processCombatSimulation run. */
 export function getLastController(): DerivedEventController {
   return _lastController!;
+}
+
+/** Get the StatAccumulator from the most recent processCombatSimulation run. */
+export function getLastStatAccumulator(): StatAccumulator | null {
+  return _statAccumulator;
+}
+
+/** Get crit results resolved during the most recent SIMULATION pipeline run. */
+export function getLastCritResults(): Map<string, Map<number, Map<number, boolean>>> | undefined {
+  return _statAccumulator?.getResolvedCrits();
 }
 
 /**
@@ -288,6 +333,12 @@ export function processCombatSimulation(
   allSlotSpCosts?: ReadonlyMap<string, number>,
   /** Pre-built TriggerIndex from CombatLoadoutController. */
   triggerIndex?: TriggerIndex,
+  /** CritMode for SIMULATION/EXPECTED crit resolution during pipeline. */
+  critMode?: CritMode,
+  /** Override store for reading existing crit pins. */
+  overrides?: OverrideStore,
+  /** Enemy stats for stat accumulator initialization. */
+  enemyStats?: EnemyStats,
 ): TimelineEvent[] {
   // ── 0. Reset object pools for this pipeline run ─────────────────────────
   resetPools();
@@ -302,6 +353,11 @@ export function processCombatSimulation(
   // ── 0b. Clear resource controllers for this pipeline run ──────────────────
   if (spController) spController.clearPending();
   if (ueController) ueController.clear();
+
+  // ── 0c. Initialize stat accumulator for real-time stat tracking ──────────
+  if (!_statAccumulator) _statAccumulator = new StatAccumulator();
+  const accumSlotIds = slotOperatorMap ? Object.keys(slotOperatorMap) : [];
+  _statAccumulator.init(accumSlotIds, loadoutProperties ?? {}, loadouts, slotOperatorMap, enemyStats);
 
   // ── 1. Clone and classify raw events ─────────────────────────────────────
   const { inputEvents, derivedEvents } = cloneAndSplitEvents(rawEvents);
@@ -341,7 +397,8 @@ export function processCombatSimulation(
     ? hpController.getEnemyHpPercentage
     : (bossMaxHp != null ? getEnemyHpPercentage : undefined);
   runEventQueue(state, derivedEvents, loadoutProperties, slotWeapons, slotOperatorMap, slotGearSets,
-    hpPercentageFn, getControlledSlotAtFrame, hpController, triggerIndex);
+    hpPercentageFn, getControlledSlotAtFrame, hpController, triggerIndex,
+    _statAccumulator, critMode, overrides);
 
   // ── 5. Finalize resource controllers ──────────────────────────────────────
   if (spController) {

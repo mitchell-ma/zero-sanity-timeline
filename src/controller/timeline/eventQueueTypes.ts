@@ -2,8 +2,8 @@
  * Shared types, constants, and configuration for the event queue pipeline.
  */
 import type { TimelineEvent, EventFrameMarker } from '../../consts/viewTypes';
-import { QueueFrameType } from '../../consts/enums';
-export { QueueFrameType };
+import { QueueFrameType, FrameHookType } from '../../consts/enums';
+export { QueueFrameType, FrameHookType };
 
 // ── Constants ──────────────────────────────────────────────────────────────
 
@@ -25,6 +25,8 @@ export interface QueueFrame {
   frame: number;
   priority: number;
   type: QueueFrameType;
+  /** Lifecycle hook type for synthetic start/end entries. Undefined = normal frame marker. */
+  hookType?: FrameHookType;
   /** Event UID template (for infliction entries). */
   uid?: string;
   statusId: string;

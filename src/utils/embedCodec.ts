@@ -21,6 +21,8 @@ import { ALL_ENEMIES } from '../utils/enemies';
 import type { TimelineEvent, Column, EventSegmentData } from '../consts/viewTypes';
 import { eventDuration, durationSegment, computeSegmentsSpan } from '../consts/viewTypes';
 import { ColumnType, SegmentType } from '../consts/enums';
+import type { OverrideStore, EventOverride } from '../consts/overrideTypes';
+import { buildOverrideKey } from '../controller/overrideController';
 
 const EMBED_VERSION = 1;
 
@@ -46,6 +48,31 @@ interface EmbedData {
   evs: EventCompact[];
   /** Resource config overrides (SP start, ult gauge start, etc.). */
   rc?: Record<string, { s: number; m: number; r: number }>;
+  /** Event overrides keyed by composite key. */
+  ov?: OverrideCompact[];
+}
+
+interface OverrideCompact {
+  /** Index into the evs array identifying which event this override applies to. */
+  i: number;
+  /** Segment duration overrides: [segIdx, duration] pairs. */
+  sd?: number[][];
+  /** Frame offset overrides: [segIdx, frameIdx, offsetFrame] triples. */
+  fo?: number[][];
+  /** Crit pins: [segIdx, frameIdx, 0|1] triples. */
+  cr?: number[][];
+  /** Chance pins: [clausePathHash, 0|1] pairs. */
+  ch?: number[][];
+  /** Deleted segment indices. */
+  ds?: number[];
+  /** Deleted frames: [segIdx, frameIdx] pairs. */
+  df?: number[][];
+  /** Additional segments: [insertAfter, duration] pairs. */
+  as?: number[][];
+  /** Additional frames: [segIdx, offsetFrame] pairs. */
+  af?: number[][];
+  /** Property overrides (sparse). */
+  po?: Record<string, unknown>;
 }
 
 interface SlotDelta {
@@ -67,10 +94,20 @@ interface EventCompact {
   pd?: boolean;
   fc?: boolean;
   ti?: string;
-  /** Per-segment durationFrames (only present when any segment differs from template). */
-  sg?: number[];
-  /** Frame offset overrides: [segIdx, frameIdx, offsetFrame] triples. */
-  fo?: number[][];
+  /** Segment origin indices from the full variant chain. Absent = full chain. */
+  so?: number[];
+}
+
+// ── Hash helpers ────────────────────────────────────────────────────────────
+
+/** FNV-1a hash for compact clause path encoding. */
+function fnv1aHash(str: string): number {
+  let hash = 0x811c9dc5;
+  for (let i = 0; i < str.length; i++) {
+    hash ^= str.charCodeAt(i);
+    hash = Math.imul(hash, 0x01000193);
+  }
+  return hash >>> 0; // unsigned 32-bit
 }
 
 // ── Equipment key mapping ───────────────────────────────────────────────────
@@ -403,43 +440,68 @@ export async function encodeEmbed(
     const animSeg = origEv?.segments.find(s => s.properties.segmentTypes?.includes(SegmentType.ANIMATION));
     if (animSeg?.properties.duration) compact.an = animSeg.properties.duration;
 
-    // Segment and frame deltas — compare original event's segments against template.
-    // Only edited events have meaningful segments; unedited events have a single
-    // placeholder segment (no name, frames, or metadata) that should be ignored.
-    const origSegments = origEv?.segments;
-    const isPlaceholder = origSegments?.length === 1
-      && !origSegments[0].properties.name && !origSegments[0].frames && !origSegments[0].metadata;
-    const templateSegments = template?.segments;
-    if (origSegments && templateSegments && !isPlaceholder) {
-      const minLen = Math.min(origSegments.length, templateSegments.length);
-
-      // Check for segment duration differences
-      let hasSegDiff = origSegments.length !== templateSegments.length;
-      const segDurations: number[] = [];
-      for (let si = 0; si < origSegments.length; si++) {
-        segDurations.push(origSegments[si].properties.duration);
-        if (si < templateSegments.length && origSegments[si].properties.duration !== templateSegments[si].properties.duration) {
-          hasSegDiff = true;
-        }
-      }
-      if (hasSegDiff) compact.sg = segDurations;
-
-      // Check for frame offset differences
-      const frameOverrides: number[][] = [];
-      for (let si = 0; si < minLen; si++) {
-        const origFrames = origSegments[si].frames;
-        const tmplFrames = templateSegments[si].frames;
-        if (!origFrames || !tmplFrames) continue;
-        for (let fi = 0; fi < origFrames.length && fi < tmplFrames.length; fi++) {
-          if (origFrames[fi].offsetFrame !== tmplFrames[fi].offsetFrame) {
-            frameOverrides.push([si, fi, origFrames[fi].offsetFrame]);
-          }
-        }
-      }
-      if (frameOverrides.length > 0) compact.fo = frameOverrides;
-    }
+    if (origEv?.segmentOrigin) compact.so = origEv.segmentOrigin;
 
     embed.evs.push(compact);
+  }
+
+  // Encode override store — map composite keys to event indices
+  if (cleaned.overrides && Object.keys(cleaned.overrides).length > 0) {
+    // Build key → event index lookup from the encoded events
+    const keyToIdx = new Map<string, number>();
+    for (let ei = 0; ei < cleaned.events.length; ei++) {
+      const ev = cleaned.events[ei];
+      keyToIdx.set(buildOverrideKey(ev), ei);
+    }
+    const ov: OverrideCompact[] = [];
+    for (const [key, entry] of Object.entries(cleaned.overrides)) {
+      const evIdx = keyToIdx.get(key);
+      if (evIdx === undefined) continue; // override for a non-existent event — skip
+      const oc: OverrideCompact = { i: evIdx };
+
+      if (entry.segments) {
+        const sd: number[][] = [];
+        const fo: number[][] = [];
+        const cr: number[][] = [];
+        for (const [segIdxStr, seg] of Object.entries(entry.segments)) {
+          const segIdx = Number(segIdxStr);
+          if (seg.deleted) {
+            if (!oc.ds) oc.ds = [];
+            oc.ds.push(segIdx);
+          }
+          if (seg.duration !== undefined) sd.push([segIdx, seg.duration]);
+          if (seg.frames) {
+            for (const [frameIdxStr, frame] of Object.entries(seg.frames)) {
+              const frameIdx = Number(frameIdxStr);
+              if (frame.offsetFrame !== undefined) fo.push([segIdx, frameIdx, frame.offsetFrame]);
+              if (frame.isCritical !== undefined) cr.push([segIdx, frameIdx, frame.isCritical ? 1 : 0]);
+            }
+          }
+        }
+        if (sd.length > 0) oc.sd = sd;
+        if (fo.length > 0) oc.fo = fo;
+        if (cr.length > 0) oc.cr = cr;
+      }
+
+      if (entry.deletedFrames && entry.deletedFrames.length > 0) oc.df = entry.deletedFrames;
+      if (entry.additionalSegments && entry.additionalSegments.length > 0) {
+        oc.as = entry.additionalSegments.map((s) => [s.insertAfter, s.duration]);
+      }
+      if (entry.additionalFrames && entry.additionalFrames.length > 0) {
+        oc.af = entry.additionalFrames.map((f) => [f.segmentIndex, f.offsetFrame]);
+      }
+      if (entry.chanceOverrides && entry.chanceOverrides.length > 0) {
+        oc.ch = entry.chanceOverrides.map((c) => [fnv1aHash(c.clausePath), c.outcome ? 1 : 0]);
+      }
+      if (entry.propertyOverrides && Object.keys(entry.propertyOverrides).length > 0) {
+        oc.po = entry.propertyOverrides;
+      }
+
+      // Only emit if there's actual override data
+      const hasData = oc.sd || oc.fo || oc.cr || oc.ds || oc.df || oc.as || oc.af || oc.ch || oc.po;
+      if (hasData) ov.push(oc);
+    }
+    if (ov.length > 0) embed.ov = ov;
   }
 
   const json = JSON.stringify(embed);
@@ -583,35 +645,75 @@ function parseAndValidate(json: string): EmbedData {
     if (evRaw.fc === true) compact.fc = true;
     if (typeof evRaw.ti === 'string') compact.ti = sanitizeStr(evRaw.ti, 50) ?? undefined;
 
-    // Segment duration overrides
-    if (Array.isArray(evRaw.sg)) {
-      const sg: number[] = [];
-      for (const v of evRaw.sg.slice(0, 20)) {
-        sg.push(typeof v === 'number' && Number.isFinite(v) ? sanitizeNum(v, 0, MAX_FRAME, 0) : 0);
+    // Segment origin indices
+    if (Array.isArray(evRaw.so)) {
+      const so: number[] = [];
+      for (const v of evRaw.so.slice(0, 20)) {
+        if (typeof v === 'number' && Number.isFinite(v)) so.push(sanitizeNum(v, 0, 19, 0));
       }
-      if (sg.length > 0) compact.sg = sg;
-    }
-
-    // Frame offset overrides: [[segIdx, frameIdx, offsetFrame], ...]
-    if (Array.isArray(evRaw.fo)) {
-      const fo: number[][] = [];
-      for (const triple of evRaw.fo.slice(0, 100)) {
-        if (Array.isArray(triple) && triple.length === 3 &&
-            triple.every((v: unknown) => typeof v === 'number' && Number.isFinite(v as number))) {
-          fo.push([
-            sanitizeNum(triple[0], 0, 19, 0),
-            sanitizeNum(triple[1], 0, 99, 0),
-            sanitizeNum(triple[2], 0, MAX_FRAME, 0),
-          ]);
-        }
-      }
-      if (fo.length > 0) compact.fo = fo;
+      if (so.length > 0) compact.so = so;
     }
 
     evs.push(compact);
   }
 
-  return { v, ops, en, enD, slots, evs, rc };
+  // Override store entries
+  let ov: OverrideCompact[] | undefined;
+  if (Array.isArray(raw.ov)) {
+    ov = [];
+    for (const ovRaw of raw.ov.slice(0, MAX_EVENTS)) {
+      if (ovRaw == null || typeof ovRaw !== 'object') continue;
+      if (typeof ovRaw.i !== 'number' || !Number.isFinite(ovRaw.i)) continue;
+      const i = sanitizeNum(ovRaw.i, 0, MAX_EVENTS - 1, 0);
+      const oc: OverrideCompact = { i };
+      if (Array.isArray(ovRaw.sd)) {
+        oc.sd = ovRaw.sd.slice(0, 20).filter((p: unknown) =>
+          Array.isArray(p) && p.length === 2 && p.every((v: unknown) => typeof v === 'number' && Number.isFinite(v)),
+        ).map((p: number[]) => [sanitizeNum(p[0], 0, 19, 0), sanitizeNum(p[1], 0, MAX_FRAME, 0)]);
+      }
+      if (Array.isArray(ovRaw.fo)) {
+        oc.fo = ovRaw.fo.slice(0, 100).filter((t: unknown) =>
+          Array.isArray(t) && t.length === 3 && t.every((v: unknown) => typeof v === 'number' && Number.isFinite(v)),
+        ).map((t: number[]) => [sanitizeNum(t[0], 0, 19, 0), sanitizeNum(t[1], 0, 99, 0), sanitizeNum(t[2], 0, MAX_FRAME, 0)]);
+      }
+      if (Array.isArray(ovRaw.cr)) {
+        oc.cr = ovRaw.cr.slice(0, 500).filter((t: unknown) =>
+          Array.isArray(t) && t.length === 3 && t.every((v: unknown) => typeof v === 'number' && Number.isFinite(v)),
+        ).map((t: number[]) => [sanitizeNum(t[0], 0, 19, 0), sanitizeNum(t[1], 0, 99, 0), t[2] ? 1 : 0]);
+      }
+      if (Array.isArray(ovRaw.ch)) {
+        oc.ch = ovRaw.ch.slice(0, 50).filter((p: unknown) =>
+          Array.isArray(p) && p.length === 2 && typeof p[0] === 'number' && typeof p[1] === 'number',
+        );
+      }
+      if (Array.isArray(ovRaw.ds)) {
+        oc.ds = ovRaw.ds.slice(0, 20).filter((v: unknown) => typeof v === 'number' && Number.isFinite(v))
+          .map((v: number) => sanitizeNum(v, 0, 19, 0));
+      }
+      if (Array.isArray(ovRaw.df)) {
+        oc.df = ovRaw.df.slice(0, 100).filter((p: unknown) =>
+          Array.isArray(p) && p.length === 2 && p.every((v: unknown) => typeof v === 'number' && Number.isFinite(v)),
+        ).map((p: number[]) => [sanitizeNum(p[0], 0, 19, 0), sanitizeNum(p[1], 0, 99, 0)]);
+      }
+      if (Array.isArray(ovRaw.as)) {
+        oc.as = ovRaw.as.slice(0, 20).filter((p: unknown) =>
+          Array.isArray(p) && p.length === 2 && p.every((v: unknown) => typeof v === 'number' && Number.isFinite(v)),
+        ).map((p: number[]) => [sanitizeNum(p[0], -1, 19, -1), sanitizeNum(p[1], 0, MAX_FRAME, 0)]);
+      }
+      if (Array.isArray(ovRaw.af)) {
+        oc.af = ovRaw.af.slice(0, 100).filter((p: unknown) =>
+          Array.isArray(p) && p.length === 2 && p.every((v: unknown) => typeof v === 'number' && Number.isFinite(v)),
+        ).map((p: number[]) => [sanitizeNum(p[0], 0, 19, 0), sanitizeNum(p[1], 0, MAX_FRAME, 0)]);
+      }
+      if (ovRaw.po != null && typeof ovRaw.po === 'object' && !Array.isArray(ovRaw.po)) {
+        oc.po = ovRaw.po as Record<string, unknown>;
+      }
+      ov.push(oc);
+    }
+    if (ov.length === 0) ov = undefined;
+  }
+
+  return { v, ops, en, enD, slots, evs, rc, ov };
 }
 
 /**
@@ -720,40 +822,7 @@ export async function decodeEmbed(
     if (compact.fc) ev.isForced = true;
     if (compact.ti) ev.timeInteraction = compact.ti;
 
-    // Apply segment/frame overrides on top of template segments
-    if (compact.sg || compact.fo) {
-      if (template?.segments) {
-        // Columns available — apply overrides immediately
-        // Truncate to sg length if segment count differs (user removed segments)
-        const segCount = compact.sg ? compact.sg.length : template.segments.length;
-        const segments: EventSegmentData[] = template.segments
-          .slice(0, segCount)
-          .map((s) => ({ ...s, frames: s.frames?.map((f) => ({ ...f })) }));
-
-        if (compact.sg) {
-          for (let si = 0; si < compact.sg.length && si < segments.length; si++) {
-            segments[si] = { ...segments[si], properties: { ...segments[si].properties, duration: compact.sg[si] } };
-          }
-        }
-
-        if (compact.fo) {
-          for (const [si, fi, offset] of compact.fo) {
-            if (si < segments.length && segments[si].frames && fi < segments[si].frames!.length) {
-              segments[si].frames![fi] = { ...segments[si].frames![fi], offsetFrame: offset };
-            }
-          }
-        }
-
-        ev.segments = segments;
-      } else {
-        // Columns not available yet (embed loaded at mount time) — stash overrides
-        // for attachDefaultSegments to apply once columns are computed.
-        ev._pendingSegmentOverrides = {
-          ...(compact.sg ? { sg: compact.sg } : {}),
-          ...(compact.fo ? { fo: compact.fo } : {}),
-        };
-      }
-    }
+    if (compact.so) ev.segmentOrigin = compact.so;
 
     events.push(ev);
   }
@@ -769,11 +838,67 @@ export async function decodeEmbed(
     };
   }
 
-  // Reconstruct resource configs
+  // Reconstruct resource configs (migrate legacy lowercase '-ultimate' keys)
   const resourceConfigs: Record<string, import('../consts/viewTypes').ResourceConfig> = {};
   if (embed.rc) {
     for (const [key, val] of Object.entries(embed.rc)) {
-      resourceConfigs[key] = { startValue: val.s, max: val.m, regenPerSecond: val.r };
+      const migratedKey = key.replace(/-ultimate$/, `-${NounType.ULTIMATE}`);
+      resourceConfigs[migratedKey] = { startValue: val.s, max: val.m, regenPerSecond: val.r };
+    }
+  }
+
+  // Reconstruct override store from compact entries
+  const overrides: OverrideStore = {};
+  if (embed.ov) {
+    for (const oc of embed.ov) {
+      const entry: EventOverride = {};
+
+      // Segment duration and frame overrides
+      if (oc.sd || oc.fo || oc.cr || oc.ds) {
+        const segments: Record<number, import('../consts/overrideTypes').SegmentOverride> = {};
+        if (oc.sd) {
+          for (const [segIdx, duration] of oc.sd) {
+            segments[segIdx] = { ...segments[segIdx], duration };
+          }
+        }
+        if (oc.fo) {
+          for (const [segIdx, frameIdx, offsetFrame] of oc.fo) {
+            const seg = segments[segIdx] ?? {};
+            const frames = { ...seg.frames, [frameIdx]: { ...seg.frames?.[frameIdx], offsetFrame } };
+            segments[segIdx] = { ...seg, frames };
+          }
+        }
+        if (oc.cr) {
+          for (const [segIdx, frameIdx, crit] of oc.cr) {
+            const seg = segments[segIdx] ?? {};
+            const frames = { ...seg.frames, [frameIdx]: { ...seg.frames?.[frameIdx], isCritical: crit === 1 } };
+            segments[segIdx] = { ...seg, frames };
+          }
+        }
+        if (oc.ds) {
+          for (const segIdx of oc.ds) {
+            segments[segIdx] = { ...segments[segIdx], deleted: true };
+          }
+        }
+        if (Object.keys(segments).length > 0) entry.segments = segments;
+      }
+
+      if (oc.df && oc.df.length > 0) entry.deletedFrames = oc.df as [number, number][];
+      if (oc.as && oc.as.length > 0) {
+        entry.additionalSegments = oc.as.map(([insertAfter, duration]) => ({ insertAfter, duration }));
+      }
+      if (oc.af && oc.af.length > 0) {
+        entry.additionalFrames = oc.af.map(([segmentIndex, offsetFrame]) => ({ segmentIndex, offsetFrame }));
+      }
+      // Note: chance overrides use hashed clause paths — stored as-is for round-trip
+      if (oc.ch && oc.ch.length > 0) {
+        entry.chanceOverrides = oc.ch.map(([hash, outcome]) => ({ clausePath: String(hash), outcome: outcome === 1 }));
+      }
+      if (oc.po) entry.propertyOverrides = oc.po;
+
+      // Resolve event index to composite key
+      const ev = events[oc.i];
+      if (ev) overrides[buildOverrideKey(ev)] = entry;
     }
   }
 
@@ -788,6 +913,7 @@ export async function decodeEmbed(
     visibleSkills,
     nextEventId: events.length + 1,
     ...(Object.keys(resourceConfigs).length > 0 ? { resourceConfigs } : {}),
+    ...(Object.keys(overrides).length > 0 ? { overrides } : {}),
   };
 }
 

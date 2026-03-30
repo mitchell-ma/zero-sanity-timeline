@@ -2,7 +2,6 @@
   "properties": {
     "name": "Thunderlance: Strike",
     "description": "When controlled operator performs a Final Strike on a target with active Electric Infliction or Electrification. Leaps into mid-air and throws 3 Thunderlances at the target, then deals 1 hit of Electric DMG to enemies in the area of effect.",
-    "windowFrames": 720,
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "COMBO_SKILL",
     "element": "ELECTRIC",
@@ -177,39 +176,54 @@
     "originId": "AVYWENNA",
     "icon": "skills/combo_avywenna.png"
   },
-  "onTriggerClause": [
-    {
-      "conditions": [
-        {
-          "subjectDeterminer": "CONTROLLED",
-          "subject": "OPERATOR",
-          "verb": "PERFORM",
-          "object": "FINAL_STRIKE"
-        },
-        {
-          "subject": "ENEMY",
-          "verb": "HAVE",
-          "object": "STATUS",
-          "objectId": "INFLICTION",
-          "objectQualifier": "ELECTRIC"
-        }
-      ]
+  "clauseType": "ALL",
+  "activationWindow": {
+    "properties": {
+      "maxSkills": 1
     },
-    {
-      "conditions": [
-        {
-          "subjectDeterminer": "CONTROLLED",
-          "subject": "OPERATOR",
-          "verb": "PERFORM",
-          "object": "FINAL_STRIKE"
-        },
-        {
-          "subject": "ENEMY",
-          "verb": "IS",
-          "object": "ELECTRIFIED"
+    "onTriggerClause": [
+      {
+        "conditions": [
+          {
+            "subjectDeterminer": "CONTROLLED",
+            "subject": "OPERATOR",
+            "verb": "PERFORM",
+            "object": "FINAL_STRIKE"
+          },
+          {
+            "subject": "ENEMY",
+            "verb": "HAVE",
+            "object": "STATUS",
+            "objectId": "INFLICTION",
+            "objectQualifier": "ELECTRIC"
+          }
+        ]
+      },
+      {
+        "conditions": [
+          {
+            "subjectDeterminer": "CONTROLLED",
+            "subject": "OPERATOR",
+            "verb": "PERFORM",
+            "object": "FINAL_STRIKE"
+          },
+          {
+            "subject": "ENEMY",
+            "verb": "IS",
+            "object": "ELECTRIFIED"
+          }
+        ]
+      }
+    ],
+    "segments": [
+      {
+        "properties": {
+          "duration": {
+            "value": 6,
+            "unit": "SECOND"
+          }
         }
-      ]
-    }
-  ],
-  "clauseType": "ALL"
+      }
+    ]
+  }
 }

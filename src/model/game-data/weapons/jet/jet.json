@@ -5,7 +5,7 @@
     "SUPPRESSION_ASTROPHYSICS"
   ],
   "properties": {
-    "name": "Jet",
+    "name": "JET",
     "id": "JET",
     "type": "POLEARM",
     "rarity": 6
@@ -23,7 +23,8 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "STAT", "objectId": "BASE_ATTACK",
+          "object": "STAT",
+          "objectId": "BASE_ATTACK",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {

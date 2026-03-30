@@ -36,7 +36,7 @@
   "properties": {
     "name": "Heat DMG Boost [M]",
     "description": "Heat DMG Dealt +",
-    "id": "HEAT_DMG_BOOST_M"
+    "id": "HEAT_DAMAGE_BOOST_M"
   },
   "metadata": {
     "originId": "game",

@@ -82,11 +82,18 @@ function resolveOwnerId(subject: string, ctx: ConditionContext, determiner?: str
 
 // ── Column resolution for status/infliction objectId ─────────────────────
 
-function resolveColumnIds(object: string, objectId?: string, qualifier?: string): string[] {
+export function resolveColumnIds(object: string, objectId?: string, qualifier?: string): string[] {
+  // Direct object form: object=INFLICTION qualifier=ARTS → all arts infliction columns
+  if (object === NounType.INFLICTION) {
+    if (qualifier === AdjectiveType.ARTS) return Object.values(INFLICTION_COLUMNS);
+    if (qualifier) { const c = ELEMENT_TO_INFLICTION_COLUMN[qualifier]; return c ? [c] : []; }
+    return Object.values(INFLICTION_COLUMNS);
+  }
   if (object !== NounType.STATUS || !objectId) return [];
 
   // Category-based: objectId is the category, qualifier narrows it
   if (objectId === NounType.INFLICTION) {
+    if (qualifier === AdjectiveType.ARTS) return Object.values(INFLICTION_COLUMNS);
     if (qualifier) { const c = ELEMENT_TO_INFLICTION_COLUMN[qualifier]; return c ? [c] : []; }
     return Object.values(INFLICTION_COLUMNS);
   }

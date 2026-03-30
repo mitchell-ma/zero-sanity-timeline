@@ -1,0 +1,67 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STAT",
+          "objectId": "ATTACK_BONUS",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "multiplier": {
+              "verb": "VARY_BY",
+              "object": "SKILL_LEVEL",
+              "value": [
+                0.16,
+                0.192,
+                0.224,
+                0.256,
+                0.288,
+                0.32,
+                0.352,
+                0.384,
+                0.448
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "onTriggerClause": [
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "PERFORM",
+          "object": "CRITICAL_HIT"
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "LUPINE_SCARLET_WOLVEN_BLOOD",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "name": "Fracture: Gnashing Wolves",
+    "description": "ATK +{atk_up:0.0%}. After the wielder's skill deals Critical DMG, the wielder gains 1 stack of Wolven Blood that grants Physical and Heat DMG Dealt +{dmg_up:0.0%}. Wolven Blood can reach {max_stack:0} stacks. After reaching {max_stack:0} stacks, the wielder gains another Physical and Heat DMG Dealt +{dmg_up2:0.0%} for {duration:0}s. After the duration ends, all Wolven Blood stacks are removed.",
+    "id": "FRACTURE_GNASHING_WOLVES"
+  },
+  "metadata": {
+    "originId": "LUPINE_SCARLET",
+    "dataSources": [
+      "WARFARIN"
+    ]
+  }
+}

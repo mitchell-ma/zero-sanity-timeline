@@ -9,6 +9,7 @@ import { computeUltimateEnergyGraph, UltEnergyEvent } from '../../controller/tim
 import { NounType } from '../../dsl/semantics';
 import { preConsumptionValue, validateResources, hasEnableClauseAtFrame, checkVariantAvailability, validateEnhanced, validateDisabledVariants } from '../../controller/timeline/eventValidator';
 import { applyGainEfficiency, collectNoGainWindowsForEvent, UltimateEnergyController, RawGaugeGainEvent } from '../../controller/timeline/ultimateEnergyController';
+import { ultimateGraphKey } from '../../model/channels';
 import { SkillPointController } from '../../controller/slot/skillPointController';
 import { TimelineEvent, EventSegmentData } from '../../consts/viewTypes';
 import { EnhancementType, SegmentType } from '../../consts/enums';
@@ -195,7 +196,7 @@ describe('Ultimate Energy Validation', () => {
 
     const graph = ueController.getGraph(SLOT_ID)!;
     const resourceGraphs = new Map();
-    resourceGraphs.set(`${SLOT_ID}-ultimate`, { points: graph.points, min: 0, max: MAX_ENERGY });
+    resourceGraphs.set(ultimateGraphKey(SLOT_ID), { points: graph.points, min: 0, max: MAX_ENERGY });
 
     const ultEvent = {
       uid: 'ult-1',
@@ -319,36 +320,36 @@ describe('hasEnableClauseAtFrame', () => {
 
   test('returns true when frame falls within a segment with ENABLE clause', () => {
     const ev = ultWithSegments(0, twilightSegments);
-    // All three pre-cooldown segments (Animation, Stasis, Active) have ENABLE ENHANCED BATK
-    expect(hasEnableClauseAtFrame([ev], SLOT, 'BATK', 100)).toBe(true);
-    expect(hasEnableClauseAtFrame([ev], SLOT, 'BATK', 500)).toBe(true);
+    // All three pre-cooldown segments (Animation, Stasis, Active) have ENABLE for FLAMING_CINDERS_ENHANCED
+    expect(hasEnableClauseAtFrame([ev], SLOT, 'FLAMING_CINDERS_ENHANCED', 100)).toBe(true);
+    expect(hasEnableClauseAtFrame([ev], SLOT, 'FLAMING_CINDERS_ENHANCED', 500)).toBe(true);
   });
 
   test('returns false after ultimate ends (past all segments)', () => {
     const ev = ultWithSegments(0, twilightSegments);
     const totalDuration = twilightSegments.reduce((s, seg) => s + seg.properties.duration, 0);
-    expect(hasEnableClauseAtFrame([ev], SLOT, 'BATK', totalDuration + 100)).toBe(false);
+    expect(hasEnableClauseAtFrame([ev], SLOT, 'FLAMING_CINDERS_ENHANCED', totalDuration + 100)).toBe(false);
   });
 
   test('returns false before ultimate starts', () => {
     const ev = ultWithSegments(1000, twilightSegments);
-    expect(hasEnableClauseAtFrame([ev], SLOT, 'BATK', 500)).toBe(false);
+    expect(hasEnableClauseAtFrame([ev], SLOT, 'FLAMING_CINDERS_ENHANCED', 500)).toBe(false);
   });
 
-  test('returns false for wrong skill object type', () => {
+  test('returns false for non-enabled variant ID', () => {
     const ev = ultWithSegments(0, twilightSegments);
-    // ENABLE ENHANCED BATK/BATTLE_SKILL doesn't match COMBO_SKILL
-    expect(hasEnableClauseAtFrame([ev], SLOT, 'COMBO_SKILL', 500)).toBe(false);
+    // ENABLE targets specific IDs — a non-existent variant should not match
+    expect(hasEnableClauseAtFrame([ev], SLOT, 'NONEXISTENT_SKILL', 500)).toBe(false);
   });
 
   test('returns false for different owner', () => {
     const ev = ultWithSegments(0, twilightSegments);
-    expect(hasEnableClauseAtFrame([ev], 'slot-1', 'BATK', 500)).toBe(false);
+    expect(hasEnableClauseAtFrame([ev], 'slot-1', 'FLAMING_CINDERS_ENHANCED', 500)).toBe(false);
   });
 
   test('returns false when event has no segments', () => {
     const ev = makeEvent({ uid: 'ult-1', ownerId: SLOT, columnId: NounType.ULTIMATE, startFrame: 0 });
-    expect(hasEnableClauseAtFrame([ev], SLOT, 'BATK', 0)).toBe(false);
+    expect(hasEnableClauseAtFrame([ev], SLOT, 'FLAMING_CINDERS_ENHANCED', 0)).toBe(false);
   });
 });
 
@@ -522,7 +523,7 @@ describe('ENABLE/DISABLE clause variant validation', () => {
     const events = [ultEvent(0)];
     const result = checkVariantAvailability('FLAMING_CINDERS', SLOT, events, 500, NounType.BASIC_ATTACK, undefined, EnhancementType.NORMAL);
     expect(result.disabled).toBe(true);
-    expect(result.reason).toContain('NORMAL');
+    expect(result.reason).toContain('FLAMING_CINDERS disabled');
   });
 
   test('regular basic is allowed outside DISABLE window (past ultimate)', () => {

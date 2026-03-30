@@ -202,7 +202,7 @@ function _inferSkillTypeMap(skills: Record<string, any>): Record<string, any> {
   });
   for (const id of baseSkills) {
     const skill = skills[id] as Record<string, unknown>;
-    if (skill?.onTriggerClause && (skill.onTriggerClause as unknown[]).length > 0) {
+    if ((skill?.activationWindow as Record<string, unknown>)?.onTriggerClause || (skill?.onTriggerClause && (skill.onTriggerClause as unknown[]).length > 0)) {
       map.COMBO_SKILL = id;
       break;
     }
@@ -353,7 +353,7 @@ describe('C. Empowered Battle Skill & Combustion', () => {
 describe('D. Combo Skill (Seethe) Triggers', () => {
   test('D1: Combo trigger clause requires Combustion or Corrosion', () => {
     const comboSkill = mockLaevatainJson.skills.COMBO_SKILL;
-    const onTriggerClause = comboSkill.onTriggerClause;
+    const onTriggerClause = comboSkill.activationWindow.onTriggerClause;
     expect(onTriggerClause).toBeDefined();
     expect(onTriggerClause.length).toBe(2);
 
@@ -368,7 +368,7 @@ describe('D. Combo Skill (Seethe) Triggers', () => {
 
   test('D2: Combo activation window is 720 frames (6 seconds)', () => {
     const comboSkill = mockLaevatainJson.skills.COMBO_SKILL;
-    expect(comboSkill.properties.windowFrames).toBe(720);
+    expect(comboSkill.activationWindow.segments[0].properties.duration.value).toBe(6);
   });
 
   test('D5: Combo skill frame data includes stagger recovery', () => {

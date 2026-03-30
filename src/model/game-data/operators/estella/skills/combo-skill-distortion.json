@@ -2,7 +2,6 @@
   "properties": {
     "name": "Distortion",
     "description": "When an enemy suffers Solidification. Quickly moves to the enemy's side to deal Physical DMG and forcibly Lift enemies in a small area. If the skill hits a target with Solidification, the skill deals additional DMG and applies Physical Susceptibility.",
-    "windowFrames": 720,
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "COMBO_SKILL",
     "element": "PHYSICAL",
@@ -311,16 +310,31 @@
     "originId": "ESTELLA",
     "icon": "skills/combo_estella.png"
   },
-  "onTriggerClause": [
-    {
-      "conditions": [
-        {
-          "subject": "ENEMY",
-          "verb": "IS",
-          "object": "SOLIDIFIED"
+  "clauseType": "ALL",
+  "activationWindow": {
+    "properties": {
+      "maxSkills": 1
+    },
+    "onTriggerClause": [
+      {
+        "conditions": [
+          {
+            "subject": "ENEMY",
+            "verb": "IS",
+            "object": "SOLIDIFIED"
+          }
+        ]
+      }
+    ],
+    "segments": [
+      {
+        "properties": {
+          "duration": {
+            "value": 6,
+            "unit": "SECOND"
+          }
         }
-      ]
-    }
-  ],
-  "clauseType": "ALL"
+      }
+    ]
+  }
 }

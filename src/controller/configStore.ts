@@ -10,7 +10,7 @@
 
 import type { EventSegmentData } from '../consts/viewTypes';
 import type { FrameClausePredicate } from '../model/event-frames/skillEventFrame';
-import { CombatSkillType, StackInteractionType, UnitType } from '../consts/enums';
+import { CombatSkillType, EventCategoryType, StackInteractionType, UnitType } from '../consts/enums';
 import { VerbType, NounType, DeterminerType, flattenQualifiedId } from '../dsl/semantics';
 import type { Interaction, ValueNode } from '../dsl/semantics';
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from './calculation/valueResolver';
@@ -171,7 +171,7 @@ export type { SkillTimings, SkillGaugeGains, SkillCategoryData };
 
 // ── SkillTypeMap inference ──────────────────────────────────────────────────
 
-function inferSkillTypeMap(skills: ReadonlyMap<string, { onTriggerClause: unknown[]; segments: unknown[] }>): Record<string, unknown> {
+function inferSkillTypeMap(skills: ReadonlyMap<string, { onTriggerClause: unknown[]; segments: unknown[]; eventCategoryType?: string; activationWindow?: { onTriggerClause?: unknown[] } }>): Record<string, unknown> {
   const typeMap: Record<string, unknown> = {};
   const skillIds: string[] = [];
   skills.forEach((_, id) => skillIds.push(id));
@@ -179,17 +179,36 @@ function inferSkillTypeMap(skills: ReadonlyMap<string, { onTriggerClause: unknow
   const finisherIds = skillIds.filter(id => id.endsWith('_FINISHER'));
   const diveIds = skillIds.filter(id => id.endsWith('_DIVE'));
 
+  // Primary: use eventCategoryType from JSON if available
   let batkId: string | undefined;
-  for (const fId of finisherIds) {
-    const base = fId.replace(/_FINISHER$/, '');
-    if (skills.has(base)) {
-      batkId = base;
-      const batk: Record<string, string> = { BATK: base };
-      batk.FINISHER = fId;
-      const diveId = diveIds.find(d => d.replace(/_DIVE$/, '') === base);
+  for (const id of skillIds) {
+    const skill = skills.get(id);
+    const cat = skill?.eventCategoryType;
+    if (cat === EventCategoryType.BASIC_ATTACK && !id.endsWith('_FINISHER') && !id.endsWith('_DIVE') && !id.endsWith('_ENHANCED') && !id.endsWith('_EMPOWERED')) {
+      batkId = id;
+      const batk: Record<string, string> = { BATK: id };
+      const finisherId = finisherIds.find(f => f.replace(/_FINISHER$/, '') === id);
+      if (finisherId) batk.FINISHER = finisherId;
+      const diveId = diveIds.find(d => d.replace(/_DIVE$/, '') === id);
       if (diveId) batk.DIVE = diveId;
       typeMap.BASIC_ATTACK = batk;
       break;
+    }
+  }
+
+  // Fallback: detect BATK from finisher suffix
+  if (!batkId) {
+    for (const fId of finisherIds) {
+      const base = fId.replace(/_FINISHER$/, '');
+      if (skills.has(base)) {
+        batkId = base;
+        const batk: Record<string, string> = { BATK: base };
+        batk.FINISHER = fId;
+        const diveId = diveIds.find(d => d.replace(/_DIVE$/, '') === base);
+        if (diveId) batk.DIVE = diveId;
+        typeMap.BASIC_ATTACK = batk;
+        break;
+      }
     }
   }
 
@@ -199,28 +218,44 @@ function inferSkillTypeMap(skills: ReadonlyMap<string, { onTriggerClause: unknow
     return !variantSuffixes.some(s => id.endsWith(s));
   });
 
+  // Primary: use eventCategoryType for combo/battle/ult
   for (const id of baseSkills) {
     const skill = skills.get(id);
-    if (skill?.onTriggerClause?.length) {
-      typeMap.COMBO_SKILL = id;
-      break;
+    const cat = skill?.eventCategoryType;
+    if (cat === EventCategoryType.COMBO_SKILL && !typeMap.COMBO_SKILL) typeMap.COMBO_SKILL = id;
+    else if (cat === EventCategoryType.BATTLE_SKILL && !typeMap.BATTLE_SKILL) typeMap.BATTLE_SKILL = id;
+    else if (cat === EventCategoryType.ULTIMATE_SKILL && !typeMap.ULTIMATE) typeMap.ULTIMATE = id;
+  }
+
+  // Fallback: heuristic detection for anything not yet resolved
+  if (!typeMap.COMBO_SKILL) {
+    for (const id of baseSkills) {
+      const skill = skills.get(id);
+      if (skill?.activationWindow?.onTriggerClause?.length || skill?.onTriggerClause?.length) {
+        typeMap.COMBO_SKILL = id;
+        break;
+      }
     }
   }
 
-  const remaining = baseSkills.filter(id => id !== typeMap.COMBO_SKILL);
+  const remaining = baseSkills.filter(id => id !== typeMap.COMBO_SKILL && id !== typeMap.BATTLE_SKILL);
 
-  for (const id of remaining) {
-    const skill = skills.get(id);
-    const segs = skill?.segments as { properties: { segmentTypes?: string[] } }[] | undefined;
-    if (segs?.some(s => s.properties.segmentTypes?.includes('ANIMATION'))) {
-      typeMap.ULTIMATE = id;
-      break;
+  if (!typeMap.ULTIMATE) {
+    for (const id of remaining) {
+      const skill = skills.get(id);
+      const segs = skill?.segments as { properties: { segmentTypes?: string[] } }[] | undefined;
+      if (segs?.some(s => s.properties.segmentTypes?.includes('ANIMATION'))) {
+        typeMap.ULTIMATE = id;
+        break;
+      }
     }
   }
 
-  const battleCandidates = remaining.filter(id => id !== typeMap.ULTIMATE);
-  if (battleCandidates.length === 1) {
-    typeMap.BATTLE_SKILL = battleCandidates[0];
+  if (!typeMap.BATTLE_SKILL) {
+    const battleCandidates = remaining.filter(id => id !== typeMap.ULTIMATE);
+    if (battleCandidates.length === 1) {
+      typeMap.BATTLE_SKILL = battleCandidates[0];
+    }
   }
 
   return typeMap;
@@ -360,6 +395,8 @@ export interface ComboTriggerInfo {
   onTriggerClause: readonly { conditions: TriggerCondition[] }[];
   description: string;
   windowFrames: number;
+  maxSkills: number;
+  skillId: string;
 }
 
 export function getComboTriggerClause(operatorId: string): readonly { conditions: TriggerCondition[] }[] | undefined {
@@ -367,7 +404,12 @@ export function getComboTriggerClause(operatorId: string): readonly { conditions
   if (!skills) return undefined;
   let result: readonly { conditions: TriggerCondition[] }[] | undefined;
   skills.forEach(skill => {
-    if (!result && skill.onTriggerClause.length > 0) {
+    if (result) return;
+    const aw = skill.activationWindow;
+    if (aw?.onTriggerClause?.length) {
+      result = aw.onTriggerClause as readonly { conditions: TriggerCondition[] }[];
+    } else if (skill.onTriggerClause.length > 0) {
+      // Legacy fallback: top-level onTriggerClause
       result = skill.onTriggerClause as readonly { conditions: TriggerCondition[] }[];
     }
   });
@@ -379,15 +421,48 @@ export function getComboTriggerInfo(operatorId: string): ComboTriggerInfo | unde
   if (!skills) return undefined;
   let result: ComboTriggerInfo | undefined;
   skills.forEach(skill => {
-    if (!result && skill.onTriggerClause.length > 0) {
+    if (result) return;
+    const aw = skill.activationWindow;
+    if (aw?.onTriggerClause?.length) {
+      const durSeg = aw.segments?.[0]?.properties?.duration;
+      const rawVal = durSeg?.value;
+      const durSeconds = rawVal == null ? 6
+        : typeof rawVal === 'number' ? rawVal
+        : resolveValueNode(rawVal, DEFAULT_VALUE_CONTEXT);
+      const unit = durSeg?.unit ?? UnitType.SECOND;
+      const windowFrames = unit === UnitType.SECOND ? durSeconds * 120 : durSeconds;
+      result = {
+        onTriggerClause: aw.onTriggerClause as readonly { conditions: TriggerCondition[] }[],
+        description: skill.description ?? '',
+        windowFrames,
+        maxSkills: aw.properties?.maxSkills ?? 1,
+        skillId: skill.id,
+      };
+    } else if (skill.onTriggerClause.length > 0) {
+      // Legacy fallback: top-level onTriggerClause + windowFrames
       result = {
         onTriggerClause: skill.onTriggerClause as readonly { conditions: TriggerCondition[] }[],
         description: skill.description ?? '',
         windowFrames: skill.windowFrames ?? 720,
+        maxSkills: 1,
+        skillId: skill.id,
       };
     }
   });
   return result;
+}
+
+/** Get all combo skill IDs for an operator (for cooldown-based window suppression). */
+export function getComboSkillIds(operatorId: string): string[] {
+  const skills = getOperatorSkills(operatorId);
+  if (!skills) return [];
+  const ids: string[] = [];
+  skills.forEach(skill => {
+    if (skill.eventCategoryType === EventCategoryType.COMBO_SKILL) {
+      ids.push(skill.id);
+    }
+  });
+  return ids;
 }
 
 // ── ID collection helpers ───────────────────────────────────────────────────

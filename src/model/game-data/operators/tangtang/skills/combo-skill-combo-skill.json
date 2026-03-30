@@ -206,35 +206,50 @@
       "frames": []
     }
   ],
-  "onTriggerClause": [
-    {
-      "conditions": [
-        {
-          "subjectDeterminer": "ANY",
-          "subject": "OPERATOR",
-          "verb": "APPLY",
-          "object": "INFLICTION",
-          "objectQualifier": "CRYO",
-          "to": "ENEMY"
-        }
-      ]
-    },
-    {
-      "conditions": [
-        {
-          "subjectDeterminer": "ANY",
-          "subject": "OPERATOR",
-          "verb": "DEAL",
-          "objectQualifier": "ARTS_BURST",
-          "object": "DAMAGE",
-          "to": "ENEMY"
-        }
-      ]
-    }
-  ],
   "metadata": {
     "originId": "TANGTANG",
     "icon": "skills/combo_tangtang.png"
   },
-  "clauseType": "ALL"
+  "clauseType": "ALL",
+  "activationWindow": {
+    "properties": {
+      "maxSkills": 1
+    },
+    "onTriggerClause": [
+      {
+        "conditions": [
+          {
+            "subjectDeterminer": "ANY",
+            "subject": "OPERATOR",
+            "verb": "APPLY",
+            "object": "INFLICTION",
+            "objectQualifier": "CRYO",
+            "to": "ENEMY"
+          }
+        ]
+      },
+      {
+        "conditions": [
+          {
+            "subjectDeterminer": "ANY",
+            "subject": "OPERATOR",
+            "verb": "DEAL",
+            "objectQualifier": "ARTS_BURST",
+            "object": "DAMAGE",
+            "to": "ENEMY"
+          }
+        ]
+      }
+    ],
+    "segments": [
+      {
+        "properties": {
+          "duration": {
+            "value": 6,
+            "unit": "SECOND"
+          }
+        }
+      }
+    ]
+  }
 }

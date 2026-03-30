@@ -9,7 +9,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { NounType } from '../../dsl/semantics';
 import { CombatSkillType, ColumnType, EnhancementType, EventFrameType } from '../../consts/enums';
 import { TimelineEvent, EventSegmentData, Operator, computeSegmentsSpan, getAnimationDuration, eventEndFrame, durationSegment } from '../../consts/viewTypes';
-import { ENEMY_OWNER_ID, USER_ID, OPERATOR_COLUMNS, REACTION_COLUMN_IDS, INFLICTION_COLUMN_IDS, SKILL_COLUMN_ORDER } from '../../model/channels';
+import { ENEMY_OWNER_ID, USER_ID, OPERATOR_COLUMNS, REACTION_COLUMN_IDS, INFLICTION_COLUMN_IDS, SKILL_COLUMN_ORDER, COMBO_WINDOW_COLUMN_ID } from '../../model/channels';
 
 import { TOTAL_FRAMES } from '../../utils/timeline';
 import { ComboSkillEventController } from './comboSkillEventController';
@@ -119,16 +119,34 @@ export function wouldOverlapNonOverlappable(
   // Enemy inflictions are stackable — skip overlap check
   if (ev.ownerId === ENEMY_OWNER_ID && INFLICTION_COLUMN_IDS.has(ev.columnId)) return false;
   const evIsReset = ev.id && isResetStatus(ev.id);
+  // Combo skills in multi-skill activation windows bypass overlap against siblings in the same window
+  const comboWindowBypass = ev.columnId === NounType.COMBO_SKILL && processedEvents
+    ? findMultiSkillWindow(ev.ownerId, startFrame, processedEvents)
+    : undefined;
   const evRange = getSibRange(ev, processedEvents);
   for (const sib of allEvents) {
     if (sib.uid === ev.uid || sib.ownerId !== ev.ownerId || sib.columnId !== ev.columnId) continue;
     // RESET statuses clamp same-id siblings — skip overlap check only for those
     if (evIsReset && sib.id === ev.id) continue;
+    // Combo skills in the same multi-skill activation window bypass overlap
+    if (comboWindowBypass && sib.columnId === NounType.COMBO_SKILL &&
+        sib.startFrame >= comboWindowBypass.startFrame &&
+        sib.startFrame < eventEndFrame(comboWindowBypass)) continue;
     const sibRange = getSibRange(sib, processedEvents);
     if (sibRange > 0 && startFrame >= sib.startFrame && startFrame < sib.startFrame + sibRange) return true;
     if (evRange > 0 && sib.startFrame >= startFrame && sib.startFrame < startFrame + evRange) return true;
   }
   return false;
+}
+
+/** Find an activation window with maxSkills > 1 containing the given frame for this owner. */
+function findMultiSkillWindow(ownerId: string, frame: number, processedEvents: readonly TimelineEvent[]): TimelineEvent | undefined {
+  for (const ev of processedEvents) {
+    if (ev.columnId !== COMBO_WINDOW_COLUMN_ID || ev.ownerId !== ownerId) continue;
+    if ((ev.maxSkills ?? 1) <= 1) continue;
+    if (frame >= ev.startFrame && frame < eventEndFrame(ev)) return ev;
+  }
+  return undefined;
 }
 
 /**
@@ -145,6 +163,9 @@ export function clampNonOverlappable(
   processedEvents?: readonly TimelineEvent[],
 ): number {
   const evIsReset = ev.id && isResetStatus(ev.id);
+  const comboWindowBypass = ev.columnId === NounType.COMBO_SKILL && processedEvents
+    ? findMultiSkillWindow(ev.ownerId, desiredFrame, processedEvents)
+    : undefined;
   const evRange = getSibRange(ev, processedEvents);
   if (evRange === 0) return desiredFrame;
   const movingForward = desiredFrame >= ev.startFrame;
@@ -153,6 +174,9 @@ export function clampNonOverlappable(
     if (sib.uid === ev.uid || sib.ownerId !== ev.ownerId || sib.columnId !== ev.columnId) continue;
     // RESET statuses clamp same-id siblings — skip overlap check only for those
     if (evIsReset && sib.id === ev.id) continue;
+    if (comboWindowBypass && sib.columnId === NounType.COMBO_SKILL &&
+        sib.startFrame >= comboWindowBypass.startFrame &&
+        sib.startFrame < eventEndFrame(comboWindowBypass)) continue;
     const sibRange = getSibRange(sib, processedEvents);
     if (sibRange === 0 && evRange === 0) continue;
     const sibEnd = sib.startFrame + sibRange;
@@ -444,28 +468,17 @@ function clampToComboEdge(
 
 // ── Enhanced → ENABLE clause constraint ──────────────────────────────────
 
-/** Map column IDs to DSL ENABLE object types. */
-const COLUMN_TO_ENABLE_OBJECT: Record<string, string> = {
-  basic: 'BATK',
-  battle: 'BATTLE_SKILL',
-  combo: 'COMBO_SKILL',
-  ultimate: 'ULTIMATE',
-};
-
 /**
  * Clamp enhanced events so that all segment start frames remain within
- * an active ENABLE clause window.
+ * an active ENABLE clause window targeting this variant's ID.
  */
 function clampToEnableWindow(
   allEvents: TimelineEvent[],
   target: TimelineEvent,
   desiredFrame: number,
 ): number {
-  const enableObject = COLUMN_TO_ENABLE_OBJECT[target.columnId];
-  if (!enableObject) return target.startFrame;
-
   // Find the ENABLE window by scanning for a frame that has the clause
-  if (!hasEnableClauseAtFrame(allEvents, target.ownerId, enableObject, desiredFrame)) {
+  if (!hasEnableClauseAtFrame(allEvents, target.ownerId, target.name, desiredFrame)) {
     return target.startFrame; // desired frame outside ENABLE window
   }
   return desiredFrame;

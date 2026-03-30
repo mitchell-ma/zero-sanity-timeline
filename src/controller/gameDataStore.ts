@@ -113,6 +113,7 @@ import {
   getSegmentLabels,
   getComboTriggerClause,
   getComboTriggerInfo,
+  getComboSkillIds,
   getAllStatusIds,
   getAllReactionIds,
   getAllInflictionIds,
@@ -275,18 +276,14 @@ function buildTeamStatusIds(): Set<string> {
   return ids;
 }
 
-/**
- * If `statusId` is a team-targeting status (to === NounType.TEAM in its JSON config),
- * returns the status ID itself as its column ID. Team statuses use distinct
- * column IDs (matched via matchColumnIds) — same architecture as operator/enemy statuses.
- */
-export function getTeamStatusColumnId(statusId: string): string | undefined {
-  return buildTeamStatusIds().has(statusId) ? statusId : undefined;
+/** Check if a status ID targets the team (to === NounType.TEAM in its JSON config). */
+export function isTeamStatus(statusId: string): boolean {
+  return buildTeamStatusIds().has(statusId);
 }
 
 export { getSkillIds, getSkillTypeMap, getRawSkillTypeMap, resolveSkillType };
 export { getFrameSequences, getSegmentLabels };
-export { getComboTriggerClause, getComboTriggerInfo };
+export { getComboTriggerClause, getComboTriggerInfo, getComboSkillIds };
 export { getAllStatusIds, getAllReactionIds, getAllInflictionIds };
 export { getTeamStatusIds };
 

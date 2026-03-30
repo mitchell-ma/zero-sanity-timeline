@@ -97,6 +97,13 @@ export default function App() {
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Suppress browser context menu globally
+  useEffect(() => {
+    const suppress = (e: MouseEvent) => e.preventDefault();
+    document.addEventListener('contextmenu', suppress, { capture: true });
+    return () => document.removeEventListener('contextmenu', suppress, { capture: true });
+  }, []);
+
   // Persist UI selection state on change
   useEffect(() => {
     saveUiState({ sidebarMode });
@@ -177,7 +184,7 @@ export default function App() {
   }, [bumpContentRefresh, app.bumpCustomSkillVersion]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <div className="app" onContextMenu={(e) => e.preventDefault()}>
+    <div className="app">
       <AppBar
         activeLoadoutName={app.loadoutTree.nodes.find((n) => n.id === app.activeLoadoutId)?.name ?? ''}
         onRenameLoadout={app.handleRenameActiveLoadout}
@@ -287,6 +294,7 @@ export default function App() {
                     onAddSegment={app.handleAddSegment}
                     onAddFrame={app.handleAddFrame}
                     onMoveFrame={app.handleMoveFrame}
+                    onResizeSegment={app.handleResizeSegment}
                     selectedFrames={app.selectedFrames}
                     onSelectedFramesChange={app.setSelectedFrames}
                     onLoadoutRowHeight={app.setLoadoutRowHeight}
@@ -399,6 +407,7 @@ export default function App() {
                     onDamageRows={app.setDamageRows}
                     critMode={app.critMode}
                     onCritModeChange={app.setCritMode}
+                    overrides={app.overrides}
                     plannerHidden={app.hiddenPane === 'left'}
                     resourceGraphs={app.resourceGraphs}
                   />

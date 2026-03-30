@@ -39,7 +39,7 @@ const COMBO_JSON = require(
   '../../../../model/game-data/operators/wulfgard/skills/combo-skill-frag-grenade-beta.json',
 );
 const COMBO_ID: string = COMBO_JSON.properties.id;
-const COMBO_WINDOW_FRAMES: number = COMBO_JSON.properties.windowFrames;
+const COMBO_WINDOW_FRAMES: number = COMBO_JSON.activationWindow.segments[0].properties.duration.value * 120;
 /* eslint-enable @typescript-eslint/no-require-imports */
 
 const SLOT_WULFGARD = 'slot-0';

@@ -36,7 +36,7 @@
   "properties": {
     "name": "Cryo DMG Boost [M]",
     "description": "Cryo DMG Dealt +",
-    "id": "CRYO_DMG_BOOST_M"
+    "id": "CRYO_DAMAGE_BOOST_M"
   },
   "metadata": {
     "originId": "game",

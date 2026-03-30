@@ -234,9 +234,9 @@ export enum VerbType {
   // ── Stat ────────────────────────────────────────────────────────────────
   /** Ignore a resistance/stat (e.g. IGNORE HEAT_RESISTANCE ON ENEMY). */
   IGNORE = "IGNORE",
-  /** Enable a skill variant tier (e.g. ENABLE ENHANCED BATK OF THIS OPERATOR). */
+  /** Enable a specific skill variant by ID (e.g. ENABLE FLAMING_CINDERS_ENHANCED BATK OF THIS OPERATOR). */
   ENABLE = "ENABLE",
-  /** Disable a skill variant tier (e.g. DISABLE NORMAL BATK OF THIS OPERATOR). */
+  /** Disable a specific skill variant by ID (e.g. DISABLE FLAMING_CINDERS BATK OF THIS OPERATOR). */
   DISABLE = "DISABLE",
 
   // ── Time ────────────────────────────────────────────────────────────────
@@ -314,7 +314,7 @@ export enum AdjectiveType {
   DODGE = "DODGE",
   ANIMATION = "ANIMATION",
 
-  // Enhancement qualifiers (ENABLE ENHANCED BATK, PERFORM EMPOWERED BATTLE_SKILL)
+  // Enhancement qualifiers (PERFORM EMPOWERED BATTLE_SKILL)
   NORMAL = "NORMAL",
   ENHANCED = "ENHANCED",
   EMPOWERED = "EMPOWERED",
@@ -344,7 +344,7 @@ export const VERB_OBJECTS: Partial<Record<VerbType, ObjectType[]>> = {
   [VerbType.RECOVER]:    [ObjectType.SKILL_POINT, ObjectType.ULTIMATE_ENERGY, ObjectType.HP],
   [VerbType.RETURN]:     [ObjectType.SKILL_POINT],
   [VerbType.DEAL]:       [ObjectType.DAMAGE, ObjectType.STAGGER],
-  [VerbType.PERFORM]:    [ObjectType.BASIC_ATTACK, ObjectType.BATTLE_SKILL, ObjectType.COMBO_SKILL, ObjectType.ULTIMATE, ObjectType.FINAL_STRIKE, ObjectType.FINISHER, ObjectType.DIVE_ATTACK, ObjectType.NORMAL_ATTACK, ObjectType.CHARGE],
+  [VerbType.PERFORM]:    [ObjectType.BASIC_ATTACK, ObjectType.BATTLE_SKILL, ObjectType.COMBO_SKILL, ObjectType.ULTIMATE, ObjectType.FINAL_STRIKE, ObjectType.FINISHER, ObjectType.DIVE_ATTACK, ObjectType.NORMAL_ATTACK, ObjectType.CHARGE, ObjectType.CRITICAL_HIT],
   [VerbType.HIT]:        [ObjectType.ENEMY],
   [VerbType.DEFEAT]:     [ObjectType.ENEMY],
   [VerbType.REFRESH]:    [ObjectType.STATUS, ObjectType.INFLICTION, ObjectType.REACTION],
@@ -733,7 +733,7 @@ export interface Effect {
   objectId?: string;
   /** Object qualifier — modifies the object (e.g. COMBUSTION REACTION, HEAT DAMAGE). */
   objectQualifier?: AdjectiveType;
-  /** Noun qualifier — modifies the object: "REDUCE ULTIMATE COOLDOWN", "ENABLE ENHANCED BATK". */
+  /** Noun qualifier — modifies the object: "REDUCE ULTIMATE COOLDOWN". */
   nounQualifier?: QualifierType;
   /** Constraint on cardinality (AT_MOST, AT_LEAST, EXACTLY) — for compound ALL/ANY grouping. */
   cardinalityConstraint?: CardinalityConstraintType;

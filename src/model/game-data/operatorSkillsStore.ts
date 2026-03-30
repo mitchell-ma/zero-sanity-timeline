@@ -20,10 +20,17 @@ interface TriggerClause {
   conditions: Interaction[];
 }
 
+/** Activation window embedded Event structure within a combo skill. */
+export interface ActivationWindowDef {
+  properties: { maxSkills?: number };
+  onTriggerClause: TriggerClause[];
+  segments: { properties: { duration: { value: number | ValueNode; unit: string } } }[];
+}
+
 // ── Validation ──────────────────────────────────────────────────────────────
 
 const VALID_SKILL_ENTRY_KEYS = new Set([
-  'segments', 'clause', 'clauseType', 'onTriggerClause', 'activationClause', 'properties', 'metadata',
+  'segments', 'clause', 'clauseType', 'onTriggerClause', 'activationClause', 'activationWindow', 'properties', 'metadata',
 ]);
 
 const VALID_SKILL_PROPERTIES_KEYS = new Set([
@@ -111,6 +118,7 @@ export class OperatorSkill {
   readonly element?: string;
   readonly eventType: EventType;
   readonly eventCategoryType?: EventCategoryType;
+  readonly activationWindow?: ActivationWindowDef;
   readonly originId?: string;
   readonly icon?: string;
 
@@ -132,6 +140,7 @@ export class OperatorSkill {
     if (props.element) this.element = props.element as string;
     this.eventType = (props.eventType as EventType) ?? EventType.COMBAT_SKILL;
     if (props.eventCategoryType) this.eventCategoryType = props.eventCategoryType as EventCategoryType;
+    if (json.activationWindow) this.activationWindow = json.activationWindow as ActivationWindowDef;
     if (meta.originId) this.originId = meta.originId as string;
     if (meta.icon) this.icon = meta.icon as string;
   }
@@ -143,6 +152,7 @@ export class OperatorSkill {
       ...(this.clause.length > 0 ? { clause: this.clause } : {}),
       ...(this.activationClause.length > 0 ? { activationClause: this.activationClause } : {}),
       ...(this.onTriggerClause.length > 0 ? { onTriggerClause: this.onTriggerClause } : {}),
+      ...(this.activationWindow ? { activationWindow: this.activationWindow } : {}),
       properties: {
         id: this.id,
         name: this.name,

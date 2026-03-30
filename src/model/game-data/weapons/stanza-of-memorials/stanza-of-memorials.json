@@ -5,7 +5,7 @@
     "TWILIGHT_LUSTROUS_PYRE"
   ],
   "properties": {
-    "name": "Stanza Of Memorials",
+    "name": "Stanza of Memorials",
     "id": "STANZA_OF_MEMORIALS",
     "type": "ARTS_UNIT",
     "rarity": 5
@@ -23,7 +23,8 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "STAT", "objectId": "BASE_ATTACK",
+          "object": "STAT",
+          "objectId": "BASE_ATTACK",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {

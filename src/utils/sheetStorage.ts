@@ -1,8 +1,10 @@
 import { TimelineEvent, VisibleSkills, ResourceConfig } from '../consts/viewTypes';
+import { OverrideStore } from '../consts/overrideTypes';
 import { OperatorLoadoutState } from '../view/OperatorLoadoutHeader';
 import { LoadoutProperties } from '../view/InformationPane';
 import { EnemyStats } from '../controller/appStateController';
 import { LoadoutTree } from './loadoutStorage';
+import { NounType } from '../dsl/semantics';
 
 import {
   resolveWeaponId,
@@ -25,7 +27,7 @@ export interface SheetData {
   visibleSkills: VisibleSkills;
   nextEventId: number;
   resourceConfigs?: Record<string, ResourceConfig>;
-  derivedEventOverrides?: Record<string, Partial<TimelineEvent>>;
+  overrides?: OverrideStore;
 }
 
 export function serializeSheet(
@@ -38,7 +40,7 @@ export function serializeSheet(
   visibleSkills: VisibleSkills,
   nextEventId: number,
   resourceConfigs?: Record<string, ResourceConfig>,
-  derivedEventOverrides?: Record<string, Partial<TimelineEvent>>,
+  overrides?: OverrideStore,
 ): SheetData {
   return {
     version: CURRENT_VERSION,
@@ -51,7 +53,7 @@ export function serializeSheet(
     visibleSkills,
     nextEventId,
     ...(resourceConfigs && Object.keys(resourceConfigs).length > 0 ? { resourceConfigs } : {}),
-    ...(derivedEventOverrides && Object.keys(derivedEventOverrides).length > 0 ? { derivedEventOverrides } : {}),
+    ...(overrides && Object.keys(overrides).length > 0 ? { overrides } : {}),
   };
 }
 
@@ -83,6 +85,16 @@ function migrateSheetData(data: Record<string, unknown>): SheetData {
     }
     data.loadouts = newLoadouts;
     data.version = CURRENT_VERSION;
+  }
+  // Migrate legacy lowercase '-ultimate' resource config keys to NounType.ULTIMATE
+  if (data.resourceConfigs) {
+    const rc = data.resourceConfigs as Record<string, ResourceConfig>;
+    const migrated: Record<string, ResourceConfig> = {};
+    for (const [key, val] of Object.entries(rc)) {
+      const migratedKey = key.replace(/-ultimate$/, `-${NounType.ULTIMATE}`);
+      migrated[migratedKey] = val;
+    }
+    data.resourceConfigs = migrated;
   }
   return data as unknown as SheetData;
 }

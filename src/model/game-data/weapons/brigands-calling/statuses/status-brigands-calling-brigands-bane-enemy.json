@@ -1,0 +1,63 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STAT",
+          "objectId": "ARTS_DAMAGE_TAKEN",
+          "toDeterminer": "THIS",
+          "to": "ENEMY",
+          "with": {
+            "value": {
+              "verb": "VARY_BY",
+              "object": "SKILL_LEVEL",
+              "value": [
+                0.06,
+                0.072,
+                0.084,
+                0.096,
+                0.108,
+                0.12,
+                0.132,
+                0.144,
+                0.168
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "BRIGANDS_CALLING_BRIGANDS_BANE_ENEMY",
+    "name": "Brigand's Bane (Enemy)",
+    "description": "Arts DMG Taken increase on enemy from Arts Susceptibility application",
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": 20
+      },
+      "unit": "SECOND"
+    },
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 1
+      },
+      "interactionType": "RESET"
+    },
+    "to": "ENEMY",
+    "eventType": "STATUS",
+    "eventCategoryType": "WEAPON_STATUS"
+  },
+  "metadata": {
+    "originId": "BRIGANDS_CALLING",
+    "dataSources": [
+      "WARFARIN"
+    ]
+  }
+}

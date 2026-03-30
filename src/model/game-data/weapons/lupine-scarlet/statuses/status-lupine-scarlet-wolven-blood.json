@@ -1,0 +1,119 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STAT",
+          "objectId": "DAMAGE_BONUS",
+          "objectQualifier": "PHYSICAL",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "VARY_BY",
+              "object": "SKILL_LEVEL",
+              "value": [
+                0.01,
+                0.012,
+                0.014,
+                0.016,
+                0.018,
+                0.02,
+                0.022,
+                0.024,
+                0.028
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            }
+          }
+        },
+        {
+          "verb": "APPLY",
+          "object": "STAT",
+          "objectId": "DAMAGE_BONUS",
+          "objectQualifier": "HEAT",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "VARY_BY",
+              "object": "SKILL_LEVEL",
+              "value": [
+                0.01,
+                0.012,
+                0.014,
+                0.016,
+                0.018,
+                0.02,
+                0.022,
+                0.024,
+                0.028
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "onTriggerClause": [
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "BECOME",
+          "object": "STACKS",
+          "objectId": "LUPINE_SCARLET_WOLVEN_BLOOD",
+          "cardinalityConstraint": "EXACTLY",
+          "value": {
+            "verb": "IS",
+            "value": 16
+          }
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "LUPINE_SCARLET_WOLVEN_BLOOD_MAX",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "LUPINE_SCARLET_WOLVEN_BLOOD",
+    "name": "Wolven Blood",
+    "description": "Physical and Heat DMG Dealt per stack. At 16 stacks, grants Wolven Blood (Max Stacks) bonus.",
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": 99999
+      },
+      "unit": "SECOND"
+    },
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 16
+      },
+      "interactionType": "NONE"
+    },
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
+    "eventType": "STATUS",
+    "eventCategoryType": "WEAPON_STATUS"
+  },
+  "metadata": {
+    "originId": "LUPINE_SCARLET",
+    "dataSources": [
+      "WARFARIN"
+    ]
+  }
+}

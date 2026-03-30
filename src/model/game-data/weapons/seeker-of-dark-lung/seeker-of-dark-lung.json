@@ -5,7 +5,7 @@
     "DETONATE_SEEKER_OF_THE_ESOTERIC"
   ],
   "properties": {
-    "name": "Seeker Of Dark Lung",
+    "name": "Seeker of Dark Lung",
     "id": "SEEKER_OF_DARK_LUNG",
     "type": "GREAT_SWORD",
     "rarity": 5
@@ -23,7 +23,8 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "STAT", "objectId": "BASE_ATTACK",
+          "object": "STAT",
+          "objectId": "BASE_ATTACK",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {

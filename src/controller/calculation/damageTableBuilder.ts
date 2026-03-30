@@ -5,6 +5,8 @@
  * and combines them into computed damage numbers for the dumb view.
  */
 import { TimelineEvent, Column, MiniTimeline, Enemy as ViewEnemy } from '../../consts/viewTypes';
+import type { OverrideStore } from '../../consts/overrideTypes';
+import { buildOverrideKey } from '../overrideController';
 import { NounType } from '../../dsl/semantics';
 import { getAllSkillLabels } from '../gameDataStore';
 import { CombatSkillType, ColumnType, CritMode, DamageScalingStatType, DamageType, ElementType, EnemyTierType, StatType, TimelineSourceType } from '../../consts/enums';
@@ -227,6 +229,7 @@ export function buildDamageTableRows(
   loadouts?: Record<string, OperatorLoadoutState>,
   statusQuery?: EventsQueryService,
   critMode?: CritMode,
+  overrides?: OverrideStore,
 ): DamageTableRow[] {
   const rows: DamageTableRow[] = [];
 
@@ -382,25 +385,27 @@ export function buildDamageTableRows(
                   }
                 }
 
-                // Crit multiplier based on crit mode (DOT frames cannot crit)
+                // Crit multiplier — reads resolved crit state from overrides (set by CombatStateController)
                 const isDot = frame.damageType === DamageType.DAMAGE_OVER_TIME;
                 const canCrit = !isDot;
                 let frameCrit: boolean | undefined;
                 let expectedCrit: number;
                 if (!canCrit) {
                   expectedCrit = 1;
-                } else if (critMode === CritMode.ALWAYS) {
-                  expectedCrit = getCritMultiplier(true, opData.critDamage);
-                } else if (critMode === CritMode.NEVER) {
-                  expectedCrit = 1;
-                } else if (critMode === CritMode.SIMULATION) {
-                  frameCrit = Math.random() < opData.critRate;
-                  frame.isCrit = frameCrit;
-                  expectedCrit = frameCrit
-                    ? getCritMultiplier(true, opData.critDamage)
-                    : 1;
                 } else {
-                  expectedCrit = getExpectedCritMultiplier(opData.critRate, opData.critDamage);
+                  const critPin = overrides?.[buildOverrideKey(ev)]?.segments?.[si]?.frames?.[fi]?.isCritical;
+                  if (critPin !== undefined) {
+                    frameCrit = critPin;
+                    frame.isCrit = frameCrit;
+                    expectedCrit = getCritMultiplier(frameCrit, opData.critDamage);
+                  } else if (critMode === CritMode.ALWAYS) {
+                    expectedCrit = getCritMultiplier(true, opData.critDamage);
+                  } else if (critMode === CritMode.NEVER) {
+                    expectedCrit = 1;
+                  } else {
+                    // EXPECTED or SIMULATION without a pin — use expected value
+                    expectedCrit = getExpectedCritMultiplier(opData.critRate, opData.critDamage);
+                  }
                 }
 
                 // Finisher: applies when the event is a finisher attack during stagger break

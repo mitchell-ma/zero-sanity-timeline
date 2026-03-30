@@ -5,7 +5,7 @@
     "MEDICANT_REDEMPTION_OF_FAITH"
   ],
   "properties": {
-    "name": "Freedom To Proselytize",
+    "name": "Freedom to Proselytize",
     "id": "FREEDOM_TO_PROSELYTIZE",
     "type": "ARTS_UNIT",
     "rarity": 5
@@ -23,7 +23,8 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "STAT", "objectId": "BASE_ATTACK",
+          "object": "STAT",
+          "objectId": "BASE_ATTACK",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {

@@ -5,7 +5,8 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "STAT", "objectId": "BASE_DEFENSE",
+          "object": "STAT",
+          "objectId": "BASE_DEFENSE",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
@@ -17,7 +18,8 @@
         },
         {
           "verb": "APPLY",
-          "object": "STAT", "objectId": "AGILITY",
+          "object": "STAT",
+          "objectId": "AGILITY",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
@@ -37,7 +39,8 @@
         },
         {
           "verb": "APPLY",
-          "object": "STAT", "objectId": "STRENGTH",
+          "object": "STAT",
+          "objectId": "STRENGTH",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
@@ -82,7 +85,7 @@
   ],
   "properties": {
     "id": "ROVING_MSGR_FLASHLIGHT_T2",
-    "name": "Roving Msgr Flashlight T2",
+    "name": "Roving MSGR Flashlight T2",
     "gearType": "KIT",
     "gearSet": "ROVING_MSGR"
   },

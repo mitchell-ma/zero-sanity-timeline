@@ -24,6 +24,13 @@ import {
 } from '../../controller/info-pane/loadoutPaneController';
 import type { StatSourceEntry } from '../../controller/calculation/loadoutAggregator';
 import { t } from '../../locales/locale';
+import {
+  getNamedWeaponSkill,
+  getWeaponStatuses, getWeaponIdByName,
+  getWeaponEffectDefs,
+  getGearPiece, getGearPieceIdByName,
+} from '../../controller/gameDataStore';
+import { DataCardBody, normalizedDefToData, EffectDefExtraFields } from '../custom/DataCardComponents';
 
 // ── Stat display labels ─────────────────────────────────────────────────────
 
@@ -530,7 +537,7 @@ function LoadoutPane({ operatorId, slotId, operator, loadout, stats, onStatsChan
                   showMinMax
                   onChange={setSkill(levelKey)}
                 />
-                {verbose >= InfoLevel.DETAILED &&skill.description && (
+                {verbose >= InfoLevel.DETAILED && skill?.description && (
                   <div style={{ fontSize: DESC_FONT_SIZE, color: 'var(--text-secondary)', lineHeight: 1.4, padding: '2px 6px 4px' }}>
                     <div style={{ fontWeight: 600, color: 'var(--text-primary)', marginBottom: 2 }}>{skill.name.split('_').map(w => w.charAt(0) + w.slice(1).toLowerCase()).join(' ')}</div>
                     {skill.description}
@@ -612,6 +619,9 @@ function LoadoutPane({ operatorId, slotId, operator, loadout, stats, onStatsChan
             ))}
           </>
           )}
+          {verbose >= InfoLevel.DETAILED && loadout.weaponId && (
+            <WeaponDetailCards weaponName={loadout.weaponId} />
+          )}
         </div>
 
         <div className="edit-panel-section">
@@ -672,6 +682,9 @@ function LoadoutPane({ operatorId, slotId, operator, loadout, stats, onStatsChan
                         <span style={statValueStyle}>{formatStatValue(statType, piece.resolvedStats[statType] ?? 0)}</span>
                       </div>
                     ))}
+                    {verbose >= InfoLevel.DETAILED && (
+                      <GearPieceDetailCard pieceId={loadout[loadoutKey]} />
+                    )}
                   </>
                 )}
               </React.Fragment>
@@ -906,6 +919,80 @@ function StatWithSources({ stat, value, displayValue, sources }: {
         </div>
       )}
     </>
+  );
+}
+
+// ── Detail card sub-components ──────────────────────────────────────────────
+
+function WeaponDetailCards({ weaponName }: { weaponName: string }) {
+  const weaponId = getWeaponIdByName(weaponName);
+  const [openCards, setOpenCards] = useState<Set<number>>(new Set());
+  const toggle = (i: number) => setOpenCards(prev => { const next = new Set(prev); if (next.has(i)) next.delete(i); else next.add(i); return next; });
+
+  const cards: { key: string; label: string; data: Record<string, unknown>; extra?: React.ReactNode }[] = [];
+
+  // Weapon skills
+  if (weaponId) {
+    const namedSkill = getNamedWeaponSkill(weaponId);
+    if (namedSkill) {
+      cards.push({ key: `named-${weaponId}`, label: namedSkill.name, data: namedSkill.serialize() as Record<string, unknown> });
+    }
+  }
+
+  // Weapon effect defs
+  const dslDefs = getWeaponEffectDefs(weaponName);
+  for (const def of dslDefs) {
+    cards.push({ key: `eff-${def.id}`, label: def.label ?? def.name ?? def.id, data: normalizedDefToData(def), extra: <EffectDefExtraFields def={def} /> });
+  }
+
+  // Weapon statuses
+  if (weaponId) {
+    for (const ws of getWeaponStatuses(weaponId)) {
+      cards.push({ key: `ws-${ws.id}`, label: ws.name, data: ws.serialize() as Record<string, unknown> });
+    }
+  }
+
+  if (cards.length === 0) return null;
+
+  return (
+    <div style={{ marginTop: 8 }}>
+      {cards.map((card, i) => {
+        const isOpen = openCards.has(i);
+        return (
+          <div key={card.key} className={`ops-skill-card${isOpen ? ' ops-skill-card--open' : ''}`}>
+            <div className="ops-skill-card-header" onClick={() => toggle(i)}>
+              <div className="ops-skill-card-header-content">
+                <div className="ops-skill-card-title-row">
+                  <span className="ops-skill-card-name">{card.label}</span>
+                  <span className="ops-skill-card-chevron">{isOpen ? '\u25B4' : '\u25BE'}</span>
+                </div>
+              </div>
+            </div>
+            {isOpen && <DataCardBody data={card.data} extraFields={card.extra} />}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function GearPieceDetailCard({ pieceId }: { pieceId: string | null }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const piece = pieceId ? getGearPiece(pieceId) ?? getGearPiece(getGearPieceIdByName(pieceId) ?? '') : undefined;
+  if (!piece) return null;
+
+  return (
+    <div className={`ops-skill-card${isOpen ? ' ops-skill-card--open' : ''}`} style={{ marginTop: 4 }}>
+      <div className="ops-skill-card-header" onClick={() => setIsOpen(prev => !prev)}>
+        <div className="ops-skill-card-header-content">
+          <div className="ops-skill-card-title-row">
+            <span className="ops-skill-card-name">Details</span>
+            <span className="ops-skill-card-chevron">{isOpen ? '\u25B4' : '\u25BE'}</span>
+          </div>
+        </div>
+      </div>
+      {isOpen && <DataCardBody data={piece.serialize() as Record<string, unknown>} />}
+    </div>
   );
 }
 

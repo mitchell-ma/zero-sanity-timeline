@@ -2,7 +2,6 @@
   "properties": {
     "name": "Frag Grenade·β",
     "description": "When an Arts Infliction is applied to an enemy. Throws a frag grenade at the target's location that explodes upon hitting the ground, dealing Heat DMG and Heat Infliction to nearby enemies.",
-    "windowFrames": 720,
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "COMBO_SKILL",
     "element": "HEAT",
@@ -189,19 +188,34 @@
     "originId": "WULFGARD",
     "icon": "skills/combo_wulfgard.png"
   },
-  "onTriggerClause": [
-    {
-      "conditions": [
-        {
-          "subjectDeterminer": "ANY",
-          "subject": "OPERATOR",
-          "verb": "APPLY",
-          "object": "INFLICTION",
-          "objectId": "ARTS",
-          "to": "ENEMY"
+  "clauseType": "ALL",
+  "activationWindow": {
+    "properties": {
+      "maxSkills": 1
+    },
+    "onTriggerClause": [
+      {
+        "conditions": [
+          {
+            "subjectDeterminer": "ANY",
+            "subject": "OPERATOR",
+            "verb": "APPLY",
+            "object": "INFLICTION",
+            "objectId": "ARTS",
+            "to": "ENEMY"
+          }
+        ]
+      }
+    ],
+    "segments": [
+      {
+        "properties": {
+          "duration": {
+            "value": 6,
+            "unit": "SECOND"
+          }
         }
-      ]
-    }
-  ],
-  "clauseType": "ALL"
+      }
+    ]
+  }
 }

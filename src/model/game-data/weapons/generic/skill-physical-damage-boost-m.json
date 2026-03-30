@@ -36,7 +36,7 @@
   "properties": {
     "name": "Physical DMG Boost [M]",
     "description": "Physical DMG Dealt +",
-    "id": "PHYSICAL_DMG_BOOST_M"
+    "id": "PHYSICAL_DAMAGE_BOOST_M"
   },
   "metadata": {
     "originId": "game",

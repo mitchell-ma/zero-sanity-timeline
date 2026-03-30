@@ -1,0 +1,392 @@
+{
+  "activationClause": [
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "HAVE",
+          "object": "STATUS",
+          "objectId": "PERFECT_TIMING"
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "enhancementTypes": [
+      "EMPOWERED"
+    ],
+    "name": "Moment of Blazing Shadow (Empowered)",
+    "description": "Consumes all Arts Infliction stacks on the target, dealing Physical DMG scaled by the number of stacks consumed. Applies Lift and grants increased Critical Rate and Critical DMG Dealt.",
+    "eventType": "COMBAT_SKILL",
+    "eventCategoryType": "COMBO_SKILL",
+    "element": "PHYSICAL",
+    "id": "MOMENT_OF_BLAZING_SHADOW_EMPOWERED"
+  },
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "CONSUME",
+          "object": "STATUS",
+          "objectId": "PERFECT_TIMING",
+          "fromDeterminer": "THIS",
+          "from": "OPERATOR"
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "originId": "ROSSI",
+    "dataSources": [
+      "WARFARIN",
+      "SKILL_DATA",
+      "ENDFIELD_WIKI"
+    ]
+  },
+  "segments": [
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT"
+      },
+      "properties": {
+        "segmentTypes": [
+          "ANIMATION"
+        ],
+        "name": "Animation",
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 0.5
+          },
+          "unit": "SECOND"
+        },
+        "timeDependency": "REAL_TIME",
+        "timeInteractionType": "TIME_STOP"
+      },
+      "frames": []
+    },
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT",
+        "dataSources": [
+          "SKILL_DATA",
+          "WARFARIN"
+        ]
+      },
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 1.767
+          },
+          "unit": "SECOND"
+        },
+        "element": "PHYSICAL",
+        "name": "Moment of Blazing Shadow (Empowered)"
+      },
+      "frames": [
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "SKILL_DATA",
+              "WARFARIN"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 0.9,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "objectQualifier": "PHYSICAL",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "operation": "MULT",
+                      "left": {
+                        "operation": "MULT",
+                        "left": {
+                          "verb": "VARY_BY",
+                          "object": "SKILL_LEVEL",
+                          "value": [
+                            1.33,
+                            1.47,
+                            1.6,
+                            1.73,
+                            1.87,
+                            2,
+                            2.13,
+                            2.27,
+                            2.4,
+                            2.57,
+                            2.77,
+                            3
+                          ],
+                          "ofDeterminer": "THIS",
+                          "of": "OPERATOR"
+                        },
+                        "right": {
+                          "verb": "IS",
+                          "value": 0.5
+                        }
+                      },
+                      "right": {
+                        "verb": "VARY_BY",
+                        "object": "POTENTIAL",
+                        "value": [
+                          1,
+                          1.15,
+                          1.15,
+                          1.15,
+                          1.15,
+                          1.15
+                        ],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
+                      }
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
+        },
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "SKILL_DATA",
+              "WARFARIN"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 1.767,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "RECOVER",
+                  "object": "ULTIMATE_ENERGY",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 10
+                    }
+                  }
+                },
+                {
+                  "verb": "DEAL",
+                  "object": "STAGGER",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 5
+                    }
+                  }
+                },
+                {
+                  "verb": "DEAL",
+                  "objectQualifier": "PHYSICAL",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "operation": "MULT",
+                      "left": {
+                        "operation": "ADD",
+                        "left": {
+                          "operation": "MULT",
+                          "left": {
+                            "verb": "VARY_BY",
+                            "object": "SKILL_LEVEL",
+                            "value": [
+                              1.33,
+                              1.47,
+                              1.6,
+                              1.73,
+                              1.87,
+                              2,
+                              2.13,
+                              2.27,
+                              2.4,
+                              2.57,
+                              2.77,
+                              3
+                            ],
+                            "ofDeterminer": "THIS",
+                            "of": "OPERATOR"
+                          },
+                          "right": {
+                            "verb": "IS",
+                            "value": 0.5
+                          }
+                        },
+                        "right": {
+                          "operation": "MULT",
+                          "left": {
+                            "verb": "VARY_BY",
+                            "object": "SKILL_LEVEL",
+                            "value": [
+                              0.8,
+                              0.88,
+                              0.96,
+                              1.04,
+                              1.12,
+                              1.2,
+                              1.28,
+                              1.36,
+                              1.44,
+                              1.54,
+                              1.66,
+                              1.8
+                            ],
+                            "ofDeterminer": "THIS",
+                            "of": "OPERATOR"
+                          },
+                          "right": {
+                            "verb": "IS",
+                            "objectQualifier": "ARTS",
+                            "objectId": "INFLICTION",
+                            "object": "STACKS",
+                            "ofDeterminer": "THIS",
+                            "of": "ENEMY"
+                          }
+                        }
+                      },
+                      "right": {
+                        "verb": "VARY_BY",
+                        "object": "POTENTIAL",
+                        "value": [
+                          1,
+                          1.15,
+                          1.15,
+                          1.15,
+                          1.15,
+                          1.15
+                        ],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
+                      }
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                },
+                {
+                  "verb": "CONSUME",
+                  "object": "STATUS",
+                  "objectId": "INFLICTION",
+                  "objectQualifier": "ARTS",
+                  "from": "ENEMY"
+                },
+                {
+                  "verb": "APPLY",
+                  "objectQualifier": "LIFT",
+                  "object": "STATUS",
+                  "objectId": "PHYSICAL",
+                  "to": "ENEMY"
+                },
+                {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "VULNERABLE",
+                  "to": "ENEMY",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  }
+                },
+                {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "BLAZING_SHADOW_CRIT",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "duration": {
+                      "value": {
+                        "verb": "IS",
+                        "value": 15
+                      },
+                      "unit": "SECOND"
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
+        }
+      ]
+    },
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT"
+      },
+      "properties": {
+        "segmentTypes": [
+          "COOLDOWN",
+          "IMMEDIATE_COOLDOWN"
+        ],
+        "name": "Cooldown",
+        "duration": {
+          "value": {
+            "verb": "VARY_BY",
+            "object": "SKILL_LEVEL",
+            "value": [
+              15,
+              15,
+              15,
+              15,
+              15,
+              15,
+              15,
+              15,
+              15,
+              15,
+              14,
+              14
+            ],
+            "ofDeterminer": "THIS",
+            "of": "OPERATOR"
+          },
+          "unit": "SECOND"
+        },
+        "timeDependency": "REAL_TIME"
+      },
+      "frames": []
+    }
+  ],
+  "clauseType": "ALL"
+}

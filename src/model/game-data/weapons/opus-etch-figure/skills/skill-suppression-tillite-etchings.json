@@ -42,5 +42,27 @@
     "dataSources": [
       "ENDFIELD_WIKI"
     ]
-  }
+  },
+  "onTriggerClause": [
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "APPLY",
+          "object": "INFLICTION",
+          "objectQualifier": "NATURE"
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "OPUS_ETCH_FIGURE_TILLITE_ETCHINGS",
+          "toDeterminer": "ALL_OTHER",
+          "to": "OPERATOR"
+        }
+      ]
+    }
+  ]
 }

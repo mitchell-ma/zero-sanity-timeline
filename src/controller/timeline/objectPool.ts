@@ -49,8 +49,8 @@ const EVENT_OPTIONAL_KEYS: (keyof TimelineEvent)[] = [
   'eventStatus', 'eventStatusOwnerId', 'eventStatusSkillName',
   'forcedReaction', 'isArtsBurst', 'reductionFloor', 'artsIntensity',
   'operatorPotential', 'skillPointCost', 'enhancementType',
-  'activationClause', 'comboChainFreezeEnd', 'warnings',
-  'statusValue', 'damageFactorType', '_pendingSegmentOverrides', 'segmentOrigin',
+  'activationClause', 'comboChainFreezeEnd', 'maxSkills', 'warnings',
+  'statusValue', 'damageFactorType', 'segmentOrigin',
 ];
 
 function pooledEvent(): TimelineEvent {
@@ -118,6 +118,7 @@ export function allocQueueFrame(): QueueFrame {
     qf.maxStacks = 0;
     qf.durationFrames = 0;
     qf.operatorSlotId = '';
+    qf.hookType = undefined;
     qf.uid = undefined;
     qf.frameMarker = undefined;
     qf.sourceEvent = undefined;

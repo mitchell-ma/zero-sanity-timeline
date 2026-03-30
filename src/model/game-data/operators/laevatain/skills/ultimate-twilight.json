@@ -43,20 +43,21 @@
             },
             {
               "verb": "ENABLE",
-              "objectQualifier": "ENHANCED",
+              "objectId": "FLAMING_CINDERS_ENHANCED",
               "object": "BATK",
               "toDeterminer": "THIS",
               "to": "OPERATOR"
             },
             {
               "verb": "DISABLE",
-              "objectQualifier": "NORMAL",
+              "objectId": "FLAMING_CINDERS",
               "object": "BATK",
               "toDeterminer": "THIS",
               "to": "OPERATOR"
             },
             {
               "verb": "DISABLE",
+              "objectId": "FINISHER",
               "object": "FINISHER",
               "toDeterminer": "THIS",
               "to": "OPERATOR"
@@ -90,41 +91,49 @@
           "effects": [
             {
               "verb": "ENABLE",
-              "objectQualifier": "ENHANCED",
+              "objectId": "FLAMING_CINDERS_ENHANCED",
               "object": "BATK",
               "toDeterminer": "THIS",
               "to": "OPERATOR"
             },
             {
               "verb": "DISABLE",
-              "objectQualifier": "NORMAL",
+              "objectId": "FLAMING_CINDERS",
               "object": "BATK",
               "toDeterminer": "THIS",
               "to": "OPERATOR"
             },
             {
               "verb": "ENABLE",
-              "objectQualifier": "ENHANCED",
+              "objectId": "SMOULDERING_FIRE_ENHANCED",
+              "object": "BATTLE_SKILL",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR"
+            },
+            {
+              "verb": "ENABLE",
+              "objectId": "SMOULDERING_FIRE_ENHANCED_EMPOWERED",
               "object": "BATTLE_SKILL",
               "toDeterminer": "THIS",
               "to": "OPERATOR"
             },
             {
               "verb": "DISABLE",
-              "objectQualifier": "NORMAL",
+              "objectId": "SMOULDERING_FIRE",
               "object": "BATTLE_SKILL",
               "toDeterminer": "THIS",
               "to": "OPERATOR"
             },
             {
               "verb": "DISABLE",
-              "objectQualifier": "EMPOWERED",
+              "objectId": "SMOULDERING_FIRE_EMPOWERED",
               "object": "BATTLE_SKILL",
               "toDeterminer": "THIS",
               "to": "OPERATOR"
             },
             {
               "verb": "DISABLE",
+              "objectId": "FINISHER",
               "object": "FINISHER",
               "toDeterminer": "THIS",
               "to": "OPERATOR"
@@ -158,41 +167,49 @@
           "effects": [
             {
               "verb": "ENABLE",
-              "objectQualifier": "ENHANCED",
+              "objectId": "FLAMING_CINDERS_ENHANCED",
               "object": "BATK",
               "toDeterminer": "THIS",
               "to": "OPERATOR"
             },
             {
               "verb": "DISABLE",
-              "objectQualifier": "NORMAL",
+              "objectId": "FLAMING_CINDERS",
               "object": "BATK",
               "toDeterminer": "THIS",
               "to": "OPERATOR"
             },
             {
               "verb": "ENABLE",
-              "objectQualifier": "ENHANCED",
+              "objectId": "SMOULDERING_FIRE_ENHANCED",
+              "object": "BATTLE_SKILL",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR"
+            },
+            {
+              "verb": "ENABLE",
+              "objectId": "SMOULDERING_FIRE_ENHANCED_EMPOWERED",
               "object": "BATTLE_SKILL",
               "toDeterminer": "THIS",
               "to": "OPERATOR"
             },
             {
               "verb": "DISABLE",
-              "objectQualifier": "NORMAL",
+              "objectId": "SMOULDERING_FIRE",
               "object": "BATTLE_SKILL",
               "toDeterminer": "THIS",
               "to": "OPERATOR"
             },
             {
               "verb": "DISABLE",
-              "objectQualifier": "EMPOWERED",
+              "objectId": "SMOULDERING_FIRE_EMPOWERED",
               "object": "BATTLE_SKILL",
               "toDeterminer": "THIS",
               "to": "OPERATOR"
             },
             {
               "verb": "DISABLE",
+              "objectId": "FINISHER",
               "object": "FINISHER",
               "toDeterminer": "THIS",
               "to": "OPERATOR"

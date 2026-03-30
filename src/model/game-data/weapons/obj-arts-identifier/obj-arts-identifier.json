@@ -5,7 +5,7 @@
     "PURSUIT_TRANSCENDENT_ARTS"
   ],
   "properties": {
-    "name": "Obj Arts Identifier",
+    "name": "OBJ Arts Identifier",
     "id": "OBJ_ARTS_IDENTIFIER",
     "type": "ARTS_UNIT",
     "rarity": 5
@@ -23,7 +23,8 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "STAT", "objectId": "BASE_ATTACK",
+          "object": "STAT",
+          "objectId": "BASE_ATTACK",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {

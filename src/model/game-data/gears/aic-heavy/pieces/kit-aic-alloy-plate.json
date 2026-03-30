@@ -5,7 +5,8 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "STAT", "objectId": "BASE_DEFENSE",
+          "object": "STAT",
+          "objectId": "BASE_DEFENSE",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
@@ -17,7 +18,8 @@
         },
         {
           "verb": "APPLY",
-          "object": "STAT", "objectId": "AGILITY",
+          "object": "STAT",
+          "objectId": "AGILITY",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
@@ -37,7 +39,8 @@
         },
         {
           "verb": "APPLY",
-          "object": "STAT", "objectId": "FINAL_DAMAGE_REDUCTION",
+          "object": "STAT",
+          "objectId": "FINAL_DAMAGE_REDUCTION",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
@@ -60,7 +63,7 @@
   ],
   "properties": {
     "id": "AIC_ALLOY_PLATE",
-    "name": "Aic Alloy Plate",
+    "name": "AIC Alloy Plate",
     "gearType": "KIT",
     "gearSet": "AIC_HEAVY"
   },

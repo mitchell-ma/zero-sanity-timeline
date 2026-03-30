@@ -5,7 +5,7 @@
     "SUPPRESSION_TILLITE_ETCHINGS"
   ],
   "properties": {
-    "name": "Opus Etch Figure",
+    "name": "Opus: Etch Figure",
     "id": "OPUS_ETCH_FIGURE",
     "type": "ARTS_UNIT",
     "rarity": 6
@@ -23,7 +23,8 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "STAT", "objectId": "BASE_ATTACK",
+          "object": "STAT",
+          "objectId": "BASE_ATTACK",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {

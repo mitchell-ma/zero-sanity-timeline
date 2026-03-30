@@ -2,7 +2,6 @@
   "properties": {
     "name": "Free Giveaway",
     "description": "When an enemy has 2 or more stacks of Cryo Infliction or Nature Infliction. Shoots the target enemy to trigger a special explosion that deals Nature DMG and applies another Arts Infliction of the element already on the enemy.",
-    "windowFrames": 720,
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "COMBO_SKILL",
     "element": "NATURE",
@@ -241,41 +240,56 @@
     "originId": "FLUORITE",
     "icon": "skills/combo_fluorite.png"
   },
-  "onTriggerClause": [
-    {
-      "conditions": [
-        {
-          "subject": "ENEMY",
-          "verb": "HAVE",
-          "object": "INFLICTION",
-          "objectQualifier": "CRYO",
-          "cardinalityConstraint": "AT_LEAST",
-          "with": {
-            "stacks": {
-              "verb": "IS",
-              "value": 2
-            }
-          }
-        }
-      ]
+  "clauseType": "ALL",
+  "activationWindow": {
+    "properties": {
+      "maxSkills": 1
     },
-    {
-      "conditions": [
-        {
-          "subject": "ENEMY",
-          "verb": "HAVE",
-          "object": "INFLICTION",
-          "objectQualifier": "NATURE",
-          "cardinalityConstraint": "AT_LEAST",
-          "with": {
-            "stacks": {
-              "verb": "IS",
-              "value": 2
+    "onTriggerClause": [
+      {
+        "conditions": [
+          {
+            "subject": "ENEMY",
+            "verb": "HAVE",
+            "object": "INFLICTION",
+            "objectQualifier": "CRYO",
+            "cardinalityConstraint": "AT_LEAST",
+            "with": {
+              "stacks": {
+                "verb": "IS",
+                "value": 2
+              }
             }
           }
+        ]
+      },
+      {
+        "conditions": [
+          {
+            "subject": "ENEMY",
+            "verb": "HAVE",
+            "object": "INFLICTION",
+            "objectQualifier": "NATURE",
+            "cardinalityConstraint": "AT_LEAST",
+            "with": {
+              "stacks": {
+                "verb": "IS",
+                "value": 2
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "segments": [
+      {
+        "properties": {
+          "duration": {
+            "value": 6,
+            "unit": "SECOND"
+          }
         }
-      ]
-    }
-  ],
-  "clauseType": "ALL"
+      }
+    ]
+  }
 }

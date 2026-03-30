@@ -29,6 +29,7 @@ yarn-error.log*
 # Claude
 .claude-adhoc
 .claude-temp
+.claude-secrets
 .playwright-mcp
 
 # wrangler files

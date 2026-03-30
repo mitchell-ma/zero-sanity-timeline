@@ -106,7 +106,7 @@ function inferSkillTypeMap(skills: Record<string, Record<string, unknown>>): Rec
   // COMBO_SKILL: has onTriggerClause
   for (const id of baseSkills) {
     const s = skills[id];
-    if ((s.onTriggerClause as unknown[])?.length) { typeMap.COMBO_SKILL = id; break; }
+    if ((s.activationWindow as Record<string, unknown>)?.onTriggerClause || (s.onTriggerClause as unknown[])?.length) { typeMap.COMBO_SKILL = id; break; }
   }
   const remaining = baseSkills.filter(id => id !== typeMap.COMBO_SKILL);
   // ULTIMATE: has ANIMATION segment
@@ -326,11 +326,11 @@ describe('B. Battle Skill (Specified Research Subject)', () => {
 describe('C. Combo Skill (EMP Test Site)', () => {
   test('C1: Combo trigger has two clauses (Physical Status OR Arts Infliction while Focus)', () => {
     const comboSkill = mockAntalJson.skills.COMBO_SKILL;
-    expect(comboSkill.onTriggerClause.length).toBe(2);
+    expect(comboSkill.activationWindow.onTriggerClause.length).toBe(2);
   });
 
   test('C2: First clause — ANY_OPERATOR APPLY Physical Status + ENEMY HAVE FOCUS', () => {
-    const clause = mockAntalJson.skills.COMBO_SKILL.onTriggerClause[0];
+    const clause = mockAntalJson.skills.COMBO_SKILL.activationWindow.onTriggerClause[0];
     expect(clause.conditions.length).toBe(2);
 
     // Condition 1: any operator applies physical status
@@ -348,7 +348,7 @@ describe('C. Combo Skill (EMP Test Site)', () => {
   });
 
   test('C3: Second clause — ANY_OPERATOR APPLY Infliction + ENEMY HAVE FOCUS', () => {
-    const clause = mockAntalJson.skills.COMBO_SKILL.onTriggerClause[1];
+    const clause = mockAntalJson.skills.COMBO_SKILL.activationWindow.onTriggerClause[1];
     expect(clause.conditions.length).toBe(2);
 
     // Condition 1: any operator applies arts infliction
@@ -365,7 +365,7 @@ describe('C. Combo Skill (EMP Test Site)', () => {
   });
 
   test('C4: Combo activation window is 720 frames (6 seconds)', () => {
-    expect(mockAntalJson.skills.COMBO_SKILL.properties.windowFrames).toBe(720);
+    expect(mockAntalJson.skills.COMBO_SKILL.activationWindow.segments[0].properties.duration.value).toBe(6);
   });
 
   test('C5: Combo cooldown is 24 seconds', () => {
@@ -429,7 +429,7 @@ describe('C2. Combo Skill Source Infliction Duplication', () => {
     const comboFrame = mockAntalJson.skills.COMBO_SKILL.segments[1].frames[0];
     const effects = comboFrame.clause[0].effects;
     const sourceInfliction = effects.find(
-      (e: Record<string, unknown>) => e.verb === VerbType.APPLY && e.objectQualifier === DeterminerType.TRIGGER && e.object === NounType.INFLICTION
+      (e: Record<string, unknown>) => e.verb === VerbType.APPLY && e.objectDeterminer === DeterminerType.TRIGGER && e.object === NounType.INFLICTION
     );
     expect(sourceInfliction).toBeDefined();
     expect(sourceInfliction.to).toBe(NounType.ENEMY);
@@ -439,7 +439,7 @@ describe('C2. Combo Skill Source Infliction Duplication', () => {
     const comboFrame = mockAntalJson.skills.COMBO_SKILL.segments[1].frames[0];
     const effects = comboFrame.clause[0].effects;
     const sourceStatus = effects.find(
-      (e: Record<string, unknown>) => e.verb === VerbType.APPLY && e.objectQualifier === DeterminerType.TRIGGER && e.object === NounType.STATUS && e.objectId === AdjectiveType.PHYSICAL
+      (e: Record<string, unknown>) => e.verb === VerbType.APPLY && e.objectDeterminer === DeterminerType.TRIGGER && e.object === NounType.STATUS && e.objectId === AdjectiveType.PHYSICAL
     );
     expect(sourceStatus).toBeDefined();
     expect(sourceStatus.to).toBe(NounType.ENEMY);

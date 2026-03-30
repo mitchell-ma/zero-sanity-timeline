@@ -11,6 +11,7 @@
 // @ts-nocheck
 import { ColumnType, LoadoutNodeType } from '../../consts/enums';
 import { NounType } from '../../dsl/semantics';
+import { ultimateGraphKey } from '../../model/channels';
 // Polyfill browser APIs not available in Node test environment
 const { TextEncoder, TextDecoder } = require('util');
 global.TextEncoder = TextEncoder;
@@ -92,7 +93,8 @@ jest.mock('../../utils/enemies', () => ({
 
 const { encodeEmbed, decodeEmbed, buildShareUrl, getEmbedParams } = require('../../utils/embedCodec');
 const { cleanSheetData } = require('../../utils/sheetStorage');
-const { attachDefaultSegments } = require('../../controller/appStateController');
+// Override applicator used when materializing overrides onto events
+// const { applyEventOverrides } = require('../../controller/timeline/overrideApplicator');
 const { EMPTY_LOADOUT } = require('../../view/OperatorLoadoutHeader');
 const { DEFAULT_LOADOUT_PROPERTIES } = require('../../view/InformationPane');
 const { uniqueName } = require('../../utils/loadoutStorage');
@@ -366,197 +368,140 @@ describe('embedCodec', () => {
       expect(decoded.events[0].segments).toHaveLength(1);
     });
 
-    test('edited segment durations round-trip', async () => {
+    test('edited segment durations round-trip via overrides', async () => {
+      const key = 'BASIC_N1:slot-0:BASIC_ATTACK:120';
       const original = makeSheetData({
         events: [{
-          id: 'ev-1',
-          name: 'BASIC_N1',
-          ownerId: 'slot-0',
-          columnId: NounType.BASIC_ATTACK,
-          startFrame: 120,
-                    segments: [
-            { properties: { duration: 80, name: '1' }, frames: [{ offsetFrame: 20 }, { offsetFrame: 45 }] },
-            { properties: { duration: 80, name: '2' }, frames: [{ offsetFrame: 30 }] },
-            { properties: { duration: 100, name: '3' }, frames: [{ offsetFrame: 50 }, { offsetFrame: 75 }] },
-          ],
+          id: 'BASIC_N1', uid: 'ev-1', name: 'BASIC_N1', ownerId: 'slot-0',
+          columnId: NounType.BASIC_ATTACK, startFrame: 120,
+          segments: [{ properties: { duration: 300 } }],
         }],
+        overrides: {
+          [key]: { segments: { 0: { duration: 80 } } },
+        },
       });
 
       const encoded = await encodeEmbed(original, [segmentColumn]);
       const decoded = await decodeEmbed(encoded, [segmentColumn]);
 
-      expect(decoded.events[0].segments).toBeDefined();
-      expect(decoded.events[0].segments).toHaveLength(3);
-      expect(decoded.events[0].segments[0].properties.duration).toBe(80); // edited
-      expect(decoded.events[0].segments[1].properties.duration).toBe(80); // unchanged
-      expect(decoded.events[0].segments[2].properties.duration).toBe(100); // unchanged
+      expect(decoded.overrides).toBeDefined();
+      expect(decoded.overrides[key]?.segments?.[0]?.duration).toBe(80);
     });
 
-    test('edited frame offsets round-trip', async () => {
+    test('edited frame offsets round-trip via overrides', async () => {
+      const key = 'BASIC_N1:slot-0:BASIC_ATTACK:120';
       const original = makeSheetData({
         events: [{
-          id: 'ev-1',
-          name: 'BASIC_N1',
-          ownerId: 'slot-0',
-          columnId: NounType.BASIC_ATTACK,
-          startFrame: 120,
-                    segments: [
-            { properties: { duration: 60, name: '1' }, frames: [{ offsetFrame: 25 }, { offsetFrame: 45 }] },
-            { properties: { duration: 80, name: '2' }, frames: [{ offsetFrame: 30 }] },
-            { properties: { duration: 100, name: '3' }, frames: [{ offsetFrame: 50 }, { offsetFrame: 80 }] },
-          ],
+          id: 'BASIC_N1', uid: 'ev-1', name: 'BASIC_N1', ownerId: 'slot-0',
+          columnId: NounType.BASIC_ATTACK, startFrame: 120,
+          segments: [{ properties: { duration: 300 } }],
         }],
+        overrides: {
+          [key]: {
+            segments: {
+              0: { frames: { 0: { offsetFrame: 25 }, 1: { offsetFrame: 45 } } },
+              2: { frames: { 1: { offsetFrame: 80 } } },
+            },
+          },
+        },
       });
 
       const encoded = await encodeEmbed(original, [segmentColumn]);
       const decoded = await decodeEmbed(encoded, [segmentColumn]);
 
-      expect(decoded.events[0].segments).toBeDefined();
-      // N1 frame 0: 20 → 25
-      expect(decoded.events[0].segments[0].frames[0].offsetFrame).toBe(25);
-      // N1 frame 1: unchanged
-      expect(decoded.events[0].segments[0].frames[1].offsetFrame).toBe(45);
-      // N3 frame 1: 75 → 80
-      expect(decoded.events[0].segments[2].frames[1].offsetFrame).toBe(80);
+      expect(decoded.overrides).toBeDefined();
+      expect(decoded.overrides[key]?.segments?.[0]?.frames?.[0]?.offsetFrame).toBe(25);
+      expect(decoded.overrides[key]?.segments?.[0]?.frames?.[1]?.offsetFrame).toBe(45);
+      expect(decoded.overrides[key]?.segments?.[2]?.frames?.[1]?.offsetFrame).toBe(80);
     });
 
-    test('frame offset only edit round-trips (no segment duration change)', async () => {
-      // Simulate: user only changed frame offset on N2 (30 → 40), nothing else
+    test('frame offset only edit round-trips via overrides', async () => {
+      const key = 'BASIC_N1:slot-0:BASIC_ATTACK:0';
       const original = makeSheetData({
         events: [{
-          id: 'ev-1',
-          name: 'BASIC_N1',
-          ownerId: 'slot-0',
-          columnId: NounType.BASIC_ATTACK,
-          startFrame: 0,
-                    segments: [
-            { properties: { duration: 60, name: '1' }, frames: [{ offsetFrame: 20 }, { offsetFrame: 45 }] },
-            { properties: { duration: 80, name: '2' }, frames: [{ offsetFrame: 40 }] },
-            { properties: { duration: 100, name: '3' }, frames: [{ offsetFrame: 50 }, { offsetFrame: 75 }] },
-          ],
+          id: 'BASIC_N1', uid: 'ev-1', name: 'BASIC_N1', ownerId: 'slot-0',
+          columnId: NounType.BASIC_ATTACK, startFrame: 0,
+          segments: [{ properties: { duration: 300 } }],
         }],
+        overrides: {
+          [key]: { segments: { 1: { frames: { 0: { offsetFrame: 40 } } } } },
+        },
       });
 
       const encoded = await encodeEmbed(original, [segmentColumn]);
       const decoded = await decodeEmbed(encoded, [segmentColumn]);
 
-      expect(decoded.events[0].segments).toBeDefined();
-      expect(decoded.events[0].segments[1].frames[0].offsetFrame).toBe(40);
-      // Everything else unchanged
-      expect(decoded.events[0].segments[0].frames[0].offsetFrame).toBe(20);
-      expect(decoded.events[0].segments[0].frames[1].offsetFrame).toBe(45);
-      expect(decoded.events[0].segments[2].frames[0].offsetFrame).toBe(50);
-      expect(decoded.events[0].segments[2].frames[1].offsetFrame).toBe(75);
-      // Segment durations unchanged
-      expect(decoded.events[0].segments[0].properties.duration).toBe(60);
-      expect(decoded.events[0].segments[1].properties.duration).toBe(80);
-      expect(decoded.events[0].segments[2].properties.duration).toBe(100);
+      expect(decoded.overrides).toBeDefined();
+      expect(decoded.overrides[key]?.segments?.[1]?.frames?.[0]?.offsetFrame).toBe(40);
     });
 
-    test('edited frame offsets survive cleanSheetData + encode/decode', async () => {
-      // Simulate the full production flow:
-      // 1. Raw event with user-edited segments (frame offset 30→40 on N2)
-      // 2. cleanSheetData (called by encodeEmbed internally)
-      // 3. encode → decode
-      // 4. Verify frame offset is preserved
-      const rawEvent = {
-        id: 'ev-1',
-        name: 'BASIC_N1',
-        ownerId: 'slot-0',
-        columnId: NounType.BASIC_ATTACK,
-        startFrame: 0,
-                segments: [
-          { properties: { duration: 60, name: '1' }, frames: [{ offsetFrame: 20 }, { offsetFrame: 45 }] },
-          { properties: { duration: 80, name: '2' }, frames: [{ offsetFrame: 40 }] },
-          { properties: { duration: 100, name: '3' }, frames: [{ offsetFrame: 50 }, { offsetFrame: 75 }] },
-        ],
-      };
+    test('overrides survive cleanSheetData + encode/decode', async () => {
+      const key = 'BASIC_N1:slot-0:BASIC_ATTACK:0';
+      const sheet = makeSheetData({
+        events: [{
+          id: 'BASIC_N1', uid: 'ev-1', name: 'BASIC_N1', ownerId: 'slot-0',
+          columnId: NounType.BASIC_ATTACK, startFrame: 0,
+          segments: [{ properties: { duration: 300 } }],
+        }],
+        overrides: {
+          [key]: { segments: { 1: { frames: { 0: { offsetFrame: 40 } } } } },
+        },
+      });
 
-      // Verify cleanSheetData preserves segments
-      const sheet = makeSheetData({ events: [rawEvent] });
       const cleaned = cleanSheetData(sheet);
-      expect(cleaned.events[0].segments).toBeDefined();
-      expect(cleaned.events[0].segments[1].frames[0].offsetFrame).toBe(40);
+      expect(cleaned.overrides).toBeDefined();
 
-      // Full encode/decode round-trip
       const encoded = await encodeEmbed(sheet, [segmentColumn]);
       const decoded = await decodeEmbed(encoded, [segmentColumn]);
 
-      expect(decoded.events[0].segments).toBeDefined();
-      expect(decoded.events[0].segments[1].frames[0].offsetFrame).toBe(40);
+      expect(decoded.overrides).toBeDefined();
+      expect(decoded.overrides[key]?.segments?.[1]?.frames?.[0]?.offsetFrame).toBe(40);
     });
 
-    test('raw event without segments: edit via FrameOffsetField pattern then share', async () => {
-      // Simulate the full production lifecycle:
-      // 1. Event is added (no segments on raw event)
-      // 2. User edits frame offset via FrameOffsetField (writes segments to raw event via handleUpdateEvent)
-      // 3. Save to localStorage (cleanSheetData preserves segments)
-      // 4. Encode for sharing
-      // 5. Decode on recipient side
-
-      // Step 1: Raw event with no segments (as created by handleAddEvent)
-      const rawEvent = {
-        id: 'ev-1',
-        name: 'BASIC_N1',
-        ownerId: 'slot-0',
-        columnId: NounType.BASIC_ATTACK,
-        startFrame: 0,
-        segments: [{ properties: { duration: 300 } }],
-        // NO segments — this is how raw events look before any edit
-      };
-
-      // Step 2: Simulate FrameOffsetField.commit() — it reads segments from the *processed* event
-      // (which got them from attachDefaultSegments), modifies one frame offset, and calls
-      // onUpdate(eventId, { segments: newSegments })
-      const processedSegments = segmentColumn.defaultEvent.segments; // from attachDefaultSegments
-      const editedSegments = processedSegments.map((s, si) => {
-        if (si !== 1) return s;
-        return { ...s, frames: s.frames.map((f, fi) => fi === 0 ? { ...f, offsetFrame: 45 } : f) };
-      });
-      // After handleUpdateEvent: merged = { ...rawEvent, segments: editedSegments }
-      const afterEdit = { ...rawEvent, segments: editedSegments };
-
-      // Step 3: cleanSheetData preserves segments
-      const sheet = makeSheetData({ events: [afterEdit] });
-      const cleaned = cleanSheetData(sheet);
-      expect(cleaned.events[0].segments).toBeDefined();
-      expect(cleaned.events[0].segments[1].frames[0].offsetFrame).toBe(45);
-
-      // Step 4+5: Encode and decode
-      const encoded = await encodeEmbed(sheet, [segmentColumn]);
-      const decoded = await decodeEmbed(encoded, [segmentColumn]);
-
-      expect(decoded.events[0].segments).toBeDefined();
-      expect(decoded.events[0].segments[1].frames[0].offsetFrame).toBe(45); // edited value
-      expect(decoded.events[0].segments[0].frames[0].offsetFrame).toBe(20); // default value
-    });
-
-    test('combined segment duration and frame offset edits round-trip', async () => {
+    test('override store round-trips frame edits via OverrideStore pattern', async () => {
+      const key = 'BASIC_N1:slot-0:BASIC_ATTACK:0';
       const original = makeSheetData({
         events: [{
-          id: 'ev-1',
-          name: 'BASIC_N1',
-          ownerId: 'slot-0',
-          columnId: NounType.BASIC_ATTACK,
-          startFrame: 0,
-                    segments: [
-            { properties: { duration: 90, name: '1' }, frames: [{ offsetFrame: 25 }, { offsetFrame: 55 }] },
-            { properties: { duration: 80, name: '2' }, frames: [{ offsetFrame: 30 }] },
-            { properties: { duration: 100, name: '3' }, frames: [{ offsetFrame: 50 }, { offsetFrame: 75 }] },
-          ],
+          id: 'BASIC_N1', uid: 'ev-1', name: 'BASIC_N1', ownerId: 'slot-0',
+          columnId: NounType.BASIC_ATTACK, startFrame: 0,
+          segments: [{ properties: { duration: 300 } }],
         }],
+        overrides: {
+          [key]: { segments: { 1: { frames: { 0: { offsetFrame: 45 } } } } },
+        },
       });
 
       const encoded = await encodeEmbed(original, [segmentColumn]);
       const decoded = await decodeEmbed(encoded, [segmentColumn]);
 
-      expect(decoded.events[0].segments).toBeDefined();
-      // N1 duration: 60 → 90
-      expect(decoded.events[0].segments[0].properties.duration).toBe(90);
-      // N1 frame 0: 20 → 25
-      expect(decoded.events[0].segments[0].frames[0].offsetFrame).toBe(25);
-      // N1 frame 1: 45 → 55
-      expect(decoded.events[0].segments[0].frames[1].offsetFrame).toBe(55);
+      expect(decoded.overrides).toBeDefined();
+      expect(decoded.overrides[key]?.segments?.[1]?.frames?.[0]?.offsetFrame).toBe(45);
+    });
+
+    test('combined segment duration and frame offset overrides round-trip', async () => {
+      const key = 'BASIC_N1:slot-0:BASIC_ATTACK:0';
+      const original = makeSheetData({
+        events: [{
+          id: 'BASIC_N1', uid: 'ev-1', name: 'BASIC_N1', ownerId: 'slot-0',
+          columnId: NounType.BASIC_ATTACK, startFrame: 0,
+          segments: [{ properties: { duration: 300 } }],
+        }],
+        overrides: {
+          [key]: {
+            segments: {
+              0: { duration: 90, frames: { 0: { offsetFrame: 25 }, 1: { offsetFrame: 55 } } },
+            },
+          },
+        },
+      });
+
+      const encoded = await encodeEmbed(original, [segmentColumn]);
+      const decoded = await decodeEmbed(encoded, [segmentColumn]);
+
+      expect(decoded.overrides).toBeDefined();
+      expect(decoded.overrides[key]?.segments?.[0]?.duration).toBe(90);
+      expect(decoded.overrides[key]?.segments?.[0]?.frames?.[0]?.offsetFrame).toBe(25);
+      expect(decoded.overrides[key]?.segments?.[0]?.frames?.[1]?.offsetFrame).toBe(55);
     });
   });
 
@@ -710,7 +655,7 @@ describe('full state round-trip (current state → share → load → assert equ
     },
     {
       type: ColumnType.MINI_TIMELINE,
-      key: 'slot-0-ultimate',
+      key: ultimateGraphKey('slot-0'),
       columnId: NounType.ULTIMATE,
       ownerId: 'slot-0',
       label: 'Ultimate',
@@ -727,62 +672,51 @@ describe('full state round-trip (current state → share → load → assert equ
     },
   ];
 
-  test('full app state survives encode → decode → attachDefaultSegments', async () => {
+  test('full app state survives encode → decode with overrides', async () => {
     // ── Build "current app state" ───────────────────────────────────────
-    // This represents what buildSheetData() returns: raw events with
-    // user-edited segments, resource config overrides, loadout properties, etc.
+    const baKey = 'SWORD_OF_ASPIRATION:slot-0:BASIC_ATTACK:0';
+    const bsKey = 'SMOULDERING_FIRE:slot-0:BATTLE_SKILL:240';
     const currentState = makeSheetData({
       events: [
-        // Basic attack with truncated segments (N1–N3 only) and edited frame offset
+        // Basic attack (raw, unedited segments — overrides stored separately)
         {
-          id: 'ev-1',
-          name: 'SWORD_OF_ASPIRATION',
-          ownerId: 'slot-0',
-          columnId: NounType.BASIC_ATTACK,
-          startFrame: 0,
-                    segments: [
-            { properties: { duration: 48, name: '1' }, frames: [{ offsetFrame: 18 }, { offsetFrame: 35 }] },
-            { properties: { duration: 52, name: '2' }, frames: [{ offsetFrame: 20 }] },
-            { properties: { duration: 60, name: '3' }, frames: [{ offsetFrame: 25 }, { offsetFrame: 45 }] },
-          ],
+          id: 'SWORD_OF_ASPIRATION', uid: 'ev-1', name: 'SWORD_OF_ASPIRATION', ownerId: 'slot-0',
+          columnId: NounType.BASIC_ATTACK, startFrame: 0,
+          segments: [{ properties: { duration: 300 } }],
         },
-        // Battle skill with edited frame offset and SP cost
+        // Battle skill with SP cost
         {
-          id: 'ev-2',
-          name: 'SMOULDERING_FIRE',
-          ownerId: 'slot-0',
-          columnId: NounType.BATTLE_SKILL,
-          startFrame: 240,
+          id: 'SMOULDERING_FIRE', uid: 'ev-2', name: 'SMOULDERING_FIRE', ownerId: 'slot-0',
+          columnId: NounType.BATTLE_SKILL, startFrame: 240,
           skillPointCost: 100,
-          segments: [
-            { properties: { duration: 264 }, frames: [
-              { offsetFrame: 33 }, { offsetFrame: 45 }, { offsetFrame: 60 },
-              { offsetFrame: 75 }, { offsetFrame: 90 }, { offsetFrame: 105 },
-              { offsetFrame: 120 }, { offsetFrame: 135 }, { offsetFrame: 155 },
-              { offsetFrame: 170 }, { offsetFrame: 185 },
-            ]},
-          ],
+          segments: [{ properties: { duration: 264 } }],
         },
-        // Combo skill (no segments, has animation + time interaction)
+        // Combo skill (has animation + time interaction)
         {
-          id: 'ev-3',
-          name: 'ERUPTION_COLUMN',
-          ownerId: 'slot-0',
-          columnId: NounType.COMBO_SKILL,
-          startFrame: 600,
-                    segments: [{ properties: { segmentTypes: ['ANIMATION'], duration: 60, timeDependency: 'REAL_TIME' } }],
+          id: 'ERUPTION_COLUMN', uid: 'ev-3', name: 'ERUPTION_COLUMN', ownerId: 'slot-0',
+          columnId: NounType.COMBO_SKILL, startFrame: 600,
+          segments: [{ properties: { segmentTypes: ['ANIMATION'], duration: 60, timeDependency: 'REAL_TIME' } }],
           timeInteraction: 'TIME_STOP',
         },
-        // Unedited basic attack (no segments on raw event)
+        // Unedited basic attack
         {
-          id: 'ev-4',
-          name: 'SWORD_OF_ASPIRATION',
-          ownerId: 'slot-0',
-          columnId: NounType.BASIC_ATTACK,
-          startFrame: 720,
+          id: 'SWORD_OF_ASPIRATION', uid: 'ev-4', name: 'SWORD_OF_ASPIRATION', ownerId: 'slot-0',
+          columnId: NounType.BASIC_ATTACK, startFrame: 720,
           segments: [{ properties: { duration: 240 } }],
         },
       ],
+      overrides: {
+        [baKey]: {
+          segments: {
+            0: { duration: 48, frames: { 0: { offsetFrame: 18 } } },
+            1: { duration: 52 },
+            2: { duration: 60 },
+          },
+        },
+        [bsKey]: {
+          segments: { 0: { frames: { 0: { offsetFrame: 33 } } } },
+        },
+      },
       loadouts: {
         'slot-0': { ...EMPTY_LOADOUT, weaponId: 'FORGEBORN_SCATHE', armorId: 'TIDE_FALL' },
         'slot-1': { ...EMPTY_LOADOUT },
@@ -801,80 +735,60 @@ describe('full state round-trip (current state → share → load → assert equ
       },
       resourceConfigs: {
         'common-skillPoints': { startValue: 500, max: 1000, regenPerSecond: 10 },
-        'slot-0-ultimate': { startValue: 200, max: 6000, regenPerSecond: 0 },
+        [ultimateGraphKey('slot-0')]: { startValue: 200, max: 6000, regenPerSecond: 0 },
       },
     });
 
     // ── Step 1: Encode (simulates SHARE button click) ───────────────────
     const encoded = await encodeEmbed(currentState, columns);
 
-    // ── Step 2: Decode with empty columns (simulates mount-time decode) ─
-    const decodedRaw = await decodeEmbed(encoded, []);
-
-    // ── Step 3: attachDefaultSegments with real columns ─────────────────
-    // (simulates what validEvents memo does after columns recompute)
-    const resolved = attachDefaultSegments(decodedRaw.events, columns);
+    // ── Step 2: Decode (simulates mount-time decode) ────────────────────
+    const decoded = await decodeEmbed(encoded, []);
 
     // ── Assertions: event positions and names ───────────────────────────
-    expect(resolved).toHaveLength(4);
-    expect(resolved[0].name).toBe('SWORD_OF_ASPIRATION');
-    expect(resolved[0].startFrame).toBe(0);
-    expect(resolved[1].name).toBe('SMOULDERING_FIRE');
-    expect(resolved[1].startFrame).toBe(240);
-    expect(resolved[2].name).toBe('ERUPTION_COLUMN');
-    expect(resolved[2].startFrame).toBe(600);
-    expect(resolved[3].name).toBe('SWORD_OF_ASPIRATION');
-    expect(resolved[3].startFrame).toBe(720);
+    expect(decoded.events).toHaveLength(4);
+    expect(decoded.events[0].name).toBe('SWORD_OF_ASPIRATION');
+    expect(decoded.events[0].startFrame).toBe(0);
+    expect(decoded.events[1].name).toBe('SMOULDERING_FIRE');
+    expect(decoded.events[1].startFrame).toBe(240);
+    expect(decoded.events[2].name).toBe('ERUPTION_COLUMN');
+    expect(decoded.events[2].startFrame).toBe(600);
+    expect(decoded.events[3].name).toBe('SWORD_OF_ASPIRATION');
+    expect(decoded.events[3].startFrame).toBe(720);
 
-    // ── Assertions: edited basic attack segments (truncated N1–N3) ──────
-    expect(resolved[0].segments).toHaveLength(3);
-    expect(resolved[0].segments[0].properties.duration).toBe(48);
-    expect(resolved[0].segments[0].frames[0].offsetFrame).toBe(18); // edited from 15
-    expect(resolved[0].segments[0].frames[1].offsetFrame).toBe(35); // unchanged
-    expect(resolved[0].segments[1].frames[0].offsetFrame).toBe(20); // unchanged
-    expect(resolved[0].segments[2].frames[0].offsetFrame).toBe(25); // unchanged
-    expect(resolved[0].segments[2].frames[1].offsetFrame).toBe(45); // unchanged
-
-    // ── Assertions: edited battle skill frame offset ────────────────────
-    expect(resolved[1].segments).toHaveLength(1);
-    expect(resolved[1].segments[0].frames[0].offsetFrame).toBe(33); // edited from 30
-    expect(resolved[1].segments[0].frames[1].offsetFrame).toBe(45); // unchanged
-    // skillPointCost reattached from column definition
-    expect(resolved[1].skillPointCost).toBe(100);
+    // ── Assertions: overrides round-tripped ─────────────────────────────
+    expect(decoded.overrides).toBeDefined();
+    expect(decoded.overrides[baKey]?.segments?.[0]?.duration).toBe(48);
+    expect(decoded.overrides[baKey]?.segments?.[0]?.frames?.[0]?.offsetFrame).toBe(18);
+    expect(decoded.overrides[baKey]?.segments?.[1]?.duration).toBe(52);
+    expect(decoded.overrides[baKey]?.segments?.[2]?.duration).toBe(60);
+    expect(decoded.overrides[bsKey]?.segments?.[0]?.frames?.[0]?.offsetFrame).toBe(33);
 
     // ── Assertions: combo skill properties ──────────────────────────────
-    const comboAnimSeg = resolved[2].segments?.find(s => s.properties.segmentTypes?.includes('ANIMATION'));
+    const comboAnimSeg = decoded.events[2].segments?.find(s => s.properties.segmentTypes?.includes('ANIMATION'));
     expect(comboAnimSeg?.properties.duration).toBe(60);
-    expect(resolved[2].timeInteraction).toBe('TIME_STOP');
-    // gaugeGain/teamGaugeGain reattached from column definition
-    expect(resolved[2].gaugeGain).toBe(15);
-    expect(resolved[2].teamGaugeGain).toBe(5);
-
-    // ── Assertions: unedited basic attack gets full default segments ────
-    expect(resolved[3].segments).toHaveLength(5);
-    expect(resolved[3].segments[0].frames[0].offsetFrame).toBe(15); // default
-    expect(resolved[3].gaugeGain).toBe(5); // reattached
+    expect(decoded.events[2].timeInteraction).toBe('TIME_STOP');
 
     // ── Assertions: resource configs ────────────────────────────────────
-    expect(decodedRaw.resourceConfigs).toBeDefined();
-    expect(decodedRaw.resourceConfigs['common-skillPoints']).toEqual({
+    expect(decoded.resourceConfigs).toBeDefined();
+    expect(decoded.resourceConfigs['common-skillPoints']).toEqual({
       startValue: 500, max: 1000, regenPerSecond: 10,
     });
-    expect(decodedRaw.resourceConfigs['slot-0-ultimate']).toEqual({
+    expect(decoded.resourceConfigs[ultimateGraphKey('slot-0')]).toEqual({
       startValue: 200, max: 6000, regenPerSecond: 0,
     });
 
     // ── Assertions: loadout properties ──────────────────────────────────
-    expect(decodedRaw.loadoutProperties['slot-0'].operator.potential).toBe(3);
-    expect(decodedRaw.loadoutProperties['slot-0'].skills.battleSkillLevel).toBe(10);
+    expect(decoded.loadoutProperties['slot-0'].operator.potential).toBe(3);
+    expect(decoded.loadoutProperties['slot-0'].skills.battleSkillLevel).toBe(10);
 
     // ── Assertions: equipment ───────────────────────────────────────────
-    expect(decodedRaw.loadouts['slot-0'].weaponId).toBe('FORGEBORN_SCATHE');
-    expect(decodedRaw.loadouts['slot-0'].armorId).toBe('TIDE_FALL');
+    expect(decoded.loadouts['slot-0'].weaponId).toBe('FORGEBORN_SCATHE');
+    expect(decoded.loadouts['slot-0'].armorId).toBe('TIDE_FALL');
 
     // ── Assertions: operator and enemy IDs ──────────────────────────────
-    expect(decodedRaw.operatorIds).toEqual(['LAEVATAIN', 'AKEKURI', 'ANTAL', 'ARDELIA']);
-    expect(decodedRaw.enemyId).toBe('training_dummy');
+    expect(decoded.operatorIds).toEqual(['LAEVATAIN', 'AKEKURI', 'ANTAL', 'ARDELIA']);
+    expect(decoded.enemyId).toBe('training_dummy');
   });
 });
 

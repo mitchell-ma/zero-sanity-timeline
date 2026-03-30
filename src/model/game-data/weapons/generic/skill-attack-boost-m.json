@@ -35,7 +35,7 @@
   "properties": {
     "name": "ATK Boost [M]",
     "description": "Attack +",
-    "id": "ATK_BOOST_M"
+    "id": "ATTACK_BOOST_M"
   },
   "metadata": {
     "originId": "game",

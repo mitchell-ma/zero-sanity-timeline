@@ -72,12 +72,14 @@ export interface TimelineColumnProps {
   onDragStart: (e: React.MouseEvent, eventUid: string, startFrame: number) => void;
   onContextMenu: (e: React.MouseEvent, eventUid: string) => void;
   onSelect: (e: React.MouseEvent, eventUid: string) => void;
+  onDoubleClick?: (e: React.MouseEvent, eventUid: string) => void;
   onHover: (eventUid: string | null) => void;
   onTouchStart?: (e: React.TouchEvent, eventUid: string, startFrame: number) => void;
   onFrameClick?: (e: React.MouseEvent, eventUid: string, segmentIndex: number, frameIndex: number) => void;
   onFrameContextMenu?: (e: React.MouseEvent, eventUid: string, segmentIndex: number, frameIndex: number) => void;
   onFrameDragStart?: (e: React.MouseEvent, eventUid: string, segmentIndex: number, frameIndex: number) => void;
   onSegmentContextMenu?: (e: React.MouseEvent, eventUid: string, segmentIndex: number) => void;
+  onSegmentResizeDragStart?: (e: React.MouseEvent, eventUid: string, segmentIndex: number, edge: 'start' | 'end') => void;
 }
 
 function TimelineColumn({
@@ -114,12 +116,14 @@ function TimelineColumn({
   onDragStart,
   onContextMenu,
   onSelect,
+  onDoubleClick,
   onHover,
   onTouchStart,
   onFrameClick,
   onFrameContextMenu,
   onFrameDragStart,
   onSegmentContextMenu,
+  onSegmentResizeDragStart,
 }: TimelineColumnProps) {
   const hasMicro = !!col.microColumns;
   const microCount = col.microColumns?.length ?? 0;
@@ -159,12 +163,14 @@ function TimelineColumn({
     onDragStart: isDerivedCol || pres.passive ? noop3 : onDragStart,
     onContextMenu: isDerivedCol || pres.passive ? noop2 : onContextMenu,
     onSelect,
+    onDoubleClick: pres.passive ? undefined : onDoubleClick,
     onHover: pres.passive ? undefined : onHover,
     onTouchStart: isDerivedCol || pres.passive ? undefined : onTouchStart,
     onFrameClick: pres.passive ? undefined : onFrameClick,
     onFrameContextMenu: pres.passive ? undefined : onFrameContextMenu,
     onFrameDragStart: pres.passive ? undefined : onFrameDragStart,
     onSegmentContextMenu: pres.passive ? undefined : onSegmentContextMenu,
+    onSegmentResizeDragStart: pres.passive ? undefined : onSegmentResizeDragStart,
     selectedFrames: pres.passive ? undefined : selectedFramesByEvent?.get(ev.uid),
     hoverFrame: draggingIds ? null : hoverFrame,
   });

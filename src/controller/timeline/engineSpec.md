@@ -53,7 +53,7 @@ processCombatSimulation(rawEvents, loadoutContext...)
 | `processTimeStop` | `processTimeStop.ts` | Pure functions for time-stop math. |
 | `triggerMatch` | `triggerMatch.ts` | Trigger clause matching: verb handler registry. |
 | `statusTriggerCollector` | `statusTriggerCollector.ts` | Queue-seeding: collects trigger contexts from operator/weapon/gear configs. |
-| `processComboSkill` | `processComboSkill.ts` | Combo domain: activation window derivation, final strike frame computation. |
+| `processComboSkill` | `processComboSkill.ts` | Combo domain: activation window derivation (from `activationWindow` embedded Event in combo skill JSON), final strike frame computation. Windows carry `maxSkills` for chaining. |
 | `processInfliction` | `processInfliction.ts` | Infliction/reaction domain: reaction merging, segment builders. |
 | `ConfigController` | `configController.ts` | Config deserialization and caching. |
 

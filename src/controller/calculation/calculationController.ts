@@ -10,6 +10,7 @@
  * damage by frame, and exposes getEnemyHpPercentage() for HP threshold predicates.
  */
 import { CritMode, CombatSkillType, DamageScalingStatType, PhysicalStatusType, StatType } from '../../consts/enums';
+import type { OverrideStore } from '../../consts/overrideTypes';
 import { NounType } from '../../dsl/semantics';
 import { TimelineEvent, Column, Enemy as ViewEnemy } from '../../consts/viewTypes';
 import { PHYSICAL_STATUS_COLUMN_IDS, SKILL_COLUMN_ORDER, ENEMY_OWNER_ID } from '../../model/channels';
@@ -309,6 +310,7 @@ export function runCalculation(
   loadouts?: Record<string, OperatorLoadoutState>,
   staggerBreaks?: readonly StaggerBreak[],
   critMode?: CritMode,
+  overrides?: OverrideStore,
 ): CalculationResult {
   const aggregatedStats = buildAggregatedStats(slots, loadoutProperties, loadouts);
   const weaponFragility = buildWeaponFragility(slots);
@@ -328,7 +330,7 @@ export function runCalculation(
 
   const rows = buildDamageTableRows(
     events, columns, slots, enemy,
-    loadoutProperties, loadouts, statusQuery, critMode,
+    loadoutProperties, loadouts, statusQuery, critMode, overrides,
   );
 
   return { aggregatedStats, statusQuery, rows };

@@ -1,0 +1,13 @@
+{
+  "properties": {
+    "id": "ROSSI_P3_TANGIBLE_DUTIES",
+    "name": "Tangible Duties",
+    "level": 3,
+    "eventType": "POTENTIAL_EVENT",
+    "eventCategoryType": "POTENTIAL",
+    "description": "Talent Seething Blood improved: When triggered, it grants Base DMG Multiplier +8% and restores HP +[Intellect x 04]."
+  },
+  "metadata": {
+    "originId": "ROSSI"
+  }
+}

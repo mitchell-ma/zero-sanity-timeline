@@ -10,14 +10,13 @@
 import { TimelineEvent, computeSegmentsSpan } from '../../consts/viewTypes';
 import { CombatSkillType, EventStatusType } from '../../consts/enums';
 import { COMMON_OWNER_ID } from '../slot/commonSlotController';
-import { PhysicalStatusType } from '../../consts/enums';
 import {
   ELEMENT_TO_INFLICTION_COLUMN,
-  ENEMY_OWNER_ID, ENEMY_ACTION_COLUMN_ID, OPERATOR_COLUMNS, REACTION_COLUMNS,
-  REACTION_COLUMN_IDS, REACTION_STATUS_TO_COLUMN, INFLICTION_COLUMN_IDS,
-  PHYSICAL_INFLICTION_COLUMNS, PHYSICAL_STATUS_COLUMN_IDS,
+  ENEMY_OWNER_ID, ENEMY_ACTION_COLUMN_ID, REACTION_COLUMNS,
+  REACTION_COLUMN_IDS, INFLICTION_COLUMN_IDS,
+  PHYSICAL_STATUS_COLUMN_IDS,
 } from '../../model/channels';
-import { getTeamStatusColumnId } from '../gameDataStore';
+import { resolveColumnIds } from './conditionEvaluator';
 import { FPS, TOTAL_FRAMES } from '../../utils/timeline';
 import { getFinalStrikeTriggerFrame } from './processComboSkill';
 import { evaluateInteraction } from './conditionEvaluator';
@@ -111,25 +110,6 @@ interface VerbHandler {
   findMatches: VerbHandlerFn;
 }
 
-// ── Column ID mapping ─────────────────────────────────────────────────────────
-
-const PHYSICAL_STATUS_VALUES = new Set<string>(Object.values(PhysicalStatusType));
-
-/** Maps game-data status noun forms to their column ID equivalents. */
-const STATUS_ALIAS_TO_COLUMN: Record<string, string> = {
-};
-
-/** Unified status ID → column ID resolver. */
-export function statusIdToColumnId(statusId: string, skipTeamCheck?: boolean): string {
-  return (!skipTeamCheck ? getTeamStatusColumnId(statusId) : undefined)
-    ?? REACTION_STATUS_TO_COLUMN[statusId]
-    ?? (OPERATOR_COLUMNS as Record<string, string>)[statusId]
-    ?? (PHYSICAL_INFLICTION_COLUMNS as Record<string, string>)[statusId]
-    ?? (PHYSICAL_STATUS_VALUES.has(statusId) ? statusId : undefined)
-    ?? STATUS_ALIAS_TO_COLUMN[statusId]
-    ?? statusId;
-}
-
 // ── Shared helpers ────────────────────────────────────────────────────────────
 
 /**
@@ -195,12 +175,15 @@ function resolveColumns(cond: Predicate): Set<string> | undefined {
       }
       return new Set(REACTION_COLUMN_IDS);
 
-    case 'INFLICTION':
+    case 'INFLICTION': {
+      const ids = resolveColumnIds(cond.object, cond.objectId, cond.objectQualifier);
+      if (ids.length > 0) return new Set(ids);
       if (el) {
         const colId = ELEMENT_TO_INFLICTION_COLUMN[el];
         return colId ? new Set([colId]) : new Set();
       }
       return new Set(INFLICTION_COLUMN_IDS);
+    }
 
     case 'ARTS_BURST':
       // Arts Burst events live in infliction columns, filtered by isArtsBurst flag in scanEvents
@@ -212,7 +195,10 @@ function resolveColumns(cond: Predicate): Set<string> | undefined {
         if (cond.objectQualifier) return new Set([cond.objectQualifier]);
         return new Set(PHYSICAL_STATUS_COLUMN_IDS);
       }
-      if (cond.objectId) return new Set([statusIdToColumnId(cond.objectId)]);
+      if (cond.objectId) {
+        const ids = resolveColumnIds(cond.object, cond.objectId, cond.objectQualifier);
+        return ids.length > 0 ? new Set(ids) : new Set([cond.objectId]);
+      }
       return undefined; // generic — needs fallback
 
     case 'STAGGER':
@@ -361,45 +347,43 @@ function handleHave(primaryCond: Predicate, ctx: VerbHandlerContext): TriggerMat
   const matches: TriggerMatch[] = [];
   if ((primaryCond.object !== 'STATUS' && primaryCond.object !== 'INFLICTION') || !primaryCond.objectId) return matches;
 
-  const colId = statusIdToColumnId(primaryCond.objectId);
-  const { matchesOwner } = resolveOwnerFilter(primaryCond, ctx.operatorSlotId, VerbType.HAVE);
+  // Collect ALL conditions (primary + secondary) that use HAVE — each contributes candidate frames
+  const allHaveConds = [primaryCond, ...ctx.secondaryConditions.filter(sc => sc.verb === VerbType.HAVE)];
+  const nonHaveSecondary = ctx.secondaryConditions.filter(sc => sc.verb !== VerbType.HAVE);
 
-  // Extract stacks threshold from `with.stacks` if present
-  const stacksThreshold = extractStacksThreshold(primaryCond);
-
-  if (stacksThreshold != null) {
-    // Count concurrent events on the column to find when the threshold is reached.
-    const colEvents = ctx.events
-      .filter(ev => ev.columnId === colId && matchesOwner(ev.ownerId))
-      .sort((a, b) => a.startFrame - b.startFrame);
-
-    for (let i = 0; i < colEvents.length; i++) {
-      const candidateFrame = colEvents[i].startFrame;
-      let activeCount = 0;
-      for (const ev of colEvents) {
-        const evEnd = ev.startFrame + computeSegmentsSpan(ev.segments);
-        if (ev.startFrame <= candidateFrame && candidateFrame < evEnd) {
-          activeCount++;
-        }
-      }
-      if (activeCount >= stacksThreshold) {
-        if (!checkSecondary(ctx, candidateFrame, colEvents[i].ownerId)) continue;
-        matches.push(makeMatch(candidateFrame, colEvents[i], ctx.clauseEffects));
-      }
-    }
-  } else {
+  // Gather candidate frames from ALL HAVE conditions' matching events
+  const candidateFrames = new Set<number>();
+  for (const cond of allHaveConds) {
+    const colIds = resolveColumns(cond);
+    if (!colIds) continue;
+    const { matchesOwner } = resolveOwnerFilter(cond, ctx.operatorSlotId, VerbType.HAVE);
     for (const ev of ctx.events) {
-      if (ev.columnId !== colId) continue;
+      if (!colIds.has(ev.columnId)) continue;
       if (!matchesOwner(ev.ownerId)) continue;
-
-      if (primaryCond.value != null) {
-        if (!checkPredicate(primaryCond, ctx.events, ctx.operatorSlotId, ev.startFrame, ev.ownerId)) continue;
-      }
-      if (!checkSecondary(ctx, ev.startFrame, ev.ownerId)) continue;
-
-      matches.push(makeMatch(ev.startFrame, ev, ctx.clauseEffects));
+      candidateFrames.add(ev.startFrame);
     }
   }
+
+  // At each candidate frame, check ALL conditions (primary + all secondary)
+  const allConditions = [primaryCond, ...ctx.secondaryConditions];
+  for (const frame of Array.from(candidateFrames)) {
+    const allPass = allConditions.every(cond =>
+      checkPredicate(cond, ctx.events, ctx.operatorSlotId, frame),
+    );
+    if (!allPass) continue;
+
+    // Find the event at this frame to use as source — prefer primary condition's matching event
+    const primaryColIds = resolveColumns(primaryCond);
+    const { matchesOwner: primaryMatchesOwner } = resolveOwnerFilter(primaryCond, ctx.operatorSlotId, VerbType.HAVE);
+    const sourceEv = ctx.events.find(ev =>
+      ev.startFrame <= frame && frame < ev.startFrame + computeSegmentsSpan(ev.segments) &&
+      primaryColIds?.has(ev.columnId) && primaryMatchesOwner(ev.ownerId),
+    ) ?? ctx.events.find(ev => ev.startFrame === frame);
+    if (sourceEv) {
+      matches.push(makeMatch(frame, sourceEv, ctx.clauseEffects));
+    }
+  }
+
   return matches;
 }
 
@@ -464,7 +448,7 @@ function handleBecome(primaryCond: Predicate, ctx: VerbHandlerContext): TriggerM
   if (primaryCond.object === NounType.STACKS) {
     const statusId = primaryCond.subjectId ?? primaryCond.objectId;
     if (!statusId) return [];
-    const colId = statusIdToColumnId(statusId);
+    const colId = statusId;
     const possessorSubject = primaryCond.ofSubject ?? primaryCond.subject;
     const possessorDeterminer = primaryCond.ofDeterminer ?? primaryCond.subjectDeterminer;
     const { matchesOwner } = resolveOwnerFilter(
@@ -680,7 +664,7 @@ export function findClauseTriggerMatches(
  * HAVE with a stacks threshold (e.g. HAVE VULNERABLE WITH stacks AT_LEAST 4)
  * is NOT always available — it requires a specific stack count to be reached.
  */
-const ALWAYS_AVAILABLE_VERBS = new Set([VerbType.HIT, VerbType.HAVE]);
+const ALWAYS_AVAILABLE_VERBS = new Set([VerbType.HIT]);
 export function isClauseAlwaysAvailable(
   clauses: readonly { conditions: readonly { verb: string; with?: Record<string, unknown> }[] }[],
 ): boolean {

@@ -28,7 +28,7 @@ import { getUltimateEnergyCostForPotential } from '../../../../controller/operat
 import {
   INFLICTION_COLUMNS, ENEMY_OWNER_ID,
 } from '../../../../model/channels';
-import { findColumn, getMenuPayload } from '../../helpers';
+import { findColumn, getMenuPayload, setUltimateEnergyToMax } from '../../helpers';
 import type { AppResult } from '../../helpers';
 
 /* eslint-disable @typescript-eslint/no-require-imports */
@@ -121,6 +121,7 @@ describe('B. P5 — Natural Predator', () => {
     const durationBefore = eventDuration(comboBefore!);
 
     // Ult at 5s — P5 Natural Predator should reset combo cooldown
+    act(() => { setUltimateEnergyToMax(result.current, SLOT_WULFGARD, 0); });
     const ultCol = findColumn(result.current, SLOT_WULFGARD, NounType.ULTIMATE);
     const ultPayload = getMenuPayload(result.current, ultCol!, 5 * FPS);
     act(() => {
@@ -157,6 +158,7 @@ describe('B. P5 — Natural Predator', () => {
     const durationBefore = eventDuration(comboBefore!);
 
     // Ult at 5s — should reset combo cooldown
+    act(() => { setUltimateEnergyToMax(result.current, SLOT_WULFGARD, 0); });
     const ultCol = findColumn(result.current, SLOT_WULFGARD, NounType.ULTIMATE);
     const ultPayload = getMenuPayload(result.current, ultCol!, 5 * FPS);
     act(() => {
@@ -220,6 +222,7 @@ describe('C. P0 — No Potential Effects', () => {
     const durationBefore = eventDuration(comboBefore!);
 
     // Ult at 5s — should NOT reset combo cooldown at P0
+    act(() => { setUltimateEnergyToMax(result.current, SLOT_WULFGARD, 0); });
     const ultCol = findColumn(result.current, SLOT_WULFGARD, NounType.ULTIMATE);
     const ultPayload = getMenuPayload(result.current, ultCol!, 5 * FPS);
     act(() => {

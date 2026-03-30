@@ -510,12 +510,14 @@ expect(statusEvent).toBeDefined();
 
 ### Verifying Combo Triggers
 
-Use `getComboTriggerInfo` to verify combo windows use the correct trigger conditions:
+Use `getComboTriggerInfo` to verify combo activation windows. Trigger conditions and window duration are read from the `activationWindow` embedded Event structure in the combo skill JSON. `maxSkills` controls how many combo skills can be placed within one window (default 1, e.g. Rossi = 2 for chaining):
 
 ```typescript
-const comboInfo = getComboTriggerInfo('ANTAL');
+const comboInfo = getComboTriggerInfo('ROSSI');
 expect(comboInfo).toBeDefined();
-// Use comboInfo to verify what infliction/status types should trigger the combo
+expect(comboInfo!.maxSkills).toBe(2);        // chaining: 2 combos per window
+expect(comboInfo!.windowFrames).toBe(720);   // 6s window
+expect(comboInfo!.skillId).toBe('MOMENT_OF_BLAZING_SHADOW');
 ```
 
 ### Verifying Frame Sequences
@@ -578,6 +580,30 @@ Talent and potential statuses (e.g. Scorching Fangs, Code of Restraint) appear a
 - **Triggered only:** `ev.startFrame > 0`
 - **All including template:** no startFrame filter
 - Template `ownerId` is always the defining operator's slot. Triggered instances on teammates have `ownerId` = the teammate's slot.
+
+### Physical status (Lift, Knock Down) requires pre-existing Vulnerable
+Lift and Knock Down check for **existing** Vulnerable stacks *before* applying a new one. The first APPLY LIFT on a clean enemy only adds Vulnerable — the Lift event is NOT created. A second APPLY LIFT (when Vulnerable already exists) creates the actual Lift status. This is correct game behavior.
+
+**When testing Lift/Knock Down**, always place Vulnerable on the enemy first:
+```typescript
+// WRONG — Lift won't fire, only Vulnerable is added
+const payload = getMenuPayload(result.current, bsCol!, 2 * FPS);
+act(() => { result.current.handleAddEvent(...); });
+// liftEvents.length === 0  ❌
+
+// RIGHT — place Vulnerable first, then BS triggers Lift
+placeVulnerableOnEnemy(result, 0);  // freeform Vulnerable on enemy
+const payload = getMenuPayload(result.current, bsCol!, 2 * FPS);
+act(() => { result.current.handleAddEvent(...); });
+// liftEvents.length >= 1  ✅
+```
+
+The engine logic (`applyLiftOrKnockDown` in `eventInterpretorController.ts`):
+1. Check `activeCount(VULNERABLE) > 0` at frame
+2. Always apply 1 Vulnerable stack
+3. Only create Lift/Knock Down if step 1 was true (or `isForced`)
+
+This means rotation order matters: first skill applies Vulnerable, second skill gets the Lift.
 
 ### Basic attack categories (BATK, DIVE, FINISHER)
 These are three **independent** BA categories, not variants of each other. Each has its own skill JSON and can independently have `_ENHANCED`/`_EMPOWERED` variants. All three appear in `eventVariants` on the `BASIC_ATTACK` column when skill data exists. BATK is the `defaultEvent`; DIVE and FINISHER are additional entries:

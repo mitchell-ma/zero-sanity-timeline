@@ -23,7 +23,7 @@ import { genEventUid } from './inputEventController';
 import type { Interaction, Effect as SemanticEffect, ValueNode } from '../../dsl/semantics';
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT, buildContextForSkillColumn } from '../calculation/valueResolver';
 import type { ValueResolutionContext } from '../calculation/valueResolver';
-import { findClauseTriggerMatches, statusIdToColumnId } from './triggerMatch';
+import { findClauseTriggerMatches } from './triggerMatch';
 import type { TriggerMatch, TriggerEffect, Predicate } from './triggerMatch';
 
 // ── Talent level resolution ─────────────────────────────────────────────────
@@ -538,7 +538,7 @@ function deriveStatusEvents(
     : undefined;
   const statusId = outputDef.properties.id ?? outputDef.properties.name;
   if (!statusId) return empty;
-  const columnId = statusIdToColumnId(statusId);
+  const columnId = statusId;
   const limitMap = outputDef.properties.stacks?.limit;
   const maxStacks = limitMap ? getMaxStacks(limitMap, ctx.potential) : 1;
 
@@ -753,7 +753,7 @@ function evaluateThresholdClauses(
 
     // Find frames where the stack count crosses the threshold
     const allStatusEvents = [...ctx.events, ...derivedEvents]
-      .filter(ev => ev.columnId === statusIdToColumnId(def.properties.id) && ev.ownerId === resolveOwnerId(def.properties.target, ctx.operatorSlotId, ctx.operatorSlotMap, def.properties.targetDeterminer))
+      .filter(ev => ev.columnId === def.properties.id && ev.ownerId === resolveOwnerId(def.properties.target, ctx.operatorSlotId, ctx.operatorSlotMap, def.properties.targetDeterminer))
       .sort((a, b) => a.startFrame - b.startFrame);
 
     for (const ev of allStatusEvents) {
@@ -794,7 +794,7 @@ function evaluateThresholdClauses(
             ? getDurationFrames(targetDuration)
             : 2400; // fallback 20s
 
-          const targetColumnId = statusIdToColumnId(targetStatusId);
+          const targetColumnId = targetStatusId;
 
           // Refresh: clamp previous instances of the target status
           if (thresholdDerived.length > 0) {
@@ -969,7 +969,7 @@ function evaluateLifecycleClauses(
   if (lifecycleDefs.length === 0) return result;
 
   for (const def of lifecycleDefs) {
-    const columnId = statusIdToColumnId(def.properties.id);
+    const columnId = def.properties.id;
 
     // Find all status events in the timeline matching this def
     const matchingEvents = result.filter(ev => ev.columnId === columnId && ev.id === def.properties.id);
@@ -1116,7 +1116,7 @@ export function deriveStatusesFromEngine(
         const talentDuration = def.properties.duration;
         const talentDurationFrames = talentDuration ? getDurationFrames(talentDuration) : TOTAL_FRAMES;
         const talentOwnerId = resolveOwnerId(def.properties.target, slotId, operatorSlotMap, def.properties.targetDeterminer);
-        const talentColumnId = statusIdToColumnId(def.properties.id);
+        const talentColumnId = def.properties.id;
         // Only create if not already present
         if (!result.some(ev => ev.columnId === talentColumnId && ev.ownerId === talentOwnerId)) {
           result.push({
@@ -1280,7 +1280,7 @@ export function collectEngineTriggerEntries(
         const talentDuration = def.properties.duration;
         const talentDurationFrames = talentDuration ? getDurationFrames(talentDuration) : TOTAL_FRAMES;
         const talentOwnerId = resolveOwnerId(def.properties.target, slotId, operatorSlotMap, def.properties.targetDeterminer);
-        const talentColumnId = statusIdToColumnId(def.properties.id);
+        const talentColumnId = def.properties.id;
         if (!events.some(ev => ev.columnId === talentColumnId && ev.ownerId === talentOwnerId)) {
           talentEvents.push({
             uid: `${def.properties.id.toLowerCase()}-talent-${slotId}`,

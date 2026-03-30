@@ -2,7 +2,6 @@
   "properties": {
     "name": "Aspect of Wrath",
     "description": "When the controlled operator performs a Final Strike on an enemy with Physical Susceptibility or Breach. Unleashes an aspect that performs a spear thrust to deal Physical DMG and grants Link.",
-    "windowFrames": 720,
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "COMBO_SKILL",
     "element": "PHYSICAL",
@@ -250,41 +249,56 @@
     "originId": "LIFENG",
     "icon": "skills/combo_lifeng.png"
   },
-  "onTriggerClause": [
-    {
-      "conditions": [
-        {
-          "subjectDeterminer": "CONTROLLED",
-          "subject": "OPERATOR",
-          "verb": "PERFORM",
-          "object": "FINAL_STRIKE"
-        },
-        {
-          "subject": "ENEMY",
-          "verb": "HAVE",
-          "object": "STATUS",
-          "objectId": "SUSCEPTIBILITY",
-          "objectQualifier": "PHYSICAL"
-        }
-      ]
+  "clauseType": "ALL",
+  "activationWindow": {
+    "properties": {
+      "maxSkills": 1
     },
-    {
-      "conditions": [
-        {
-          "subjectDeterminer": "CONTROLLED",
-          "subject": "OPERATOR",
-          "verb": "PERFORM",
-          "object": "FINAL_STRIKE"
-        },
-        {
-          "subject": "ENEMY",
-          "verb": "HAVE",
-          "object": "STATUS",
-          "objectId": "PHYSICAL",
-          "objectQualifier": "BREACH"
+    "onTriggerClause": [
+      {
+        "conditions": [
+          {
+            "subjectDeterminer": "CONTROLLED",
+            "subject": "OPERATOR",
+            "verb": "PERFORM",
+            "object": "FINAL_STRIKE"
+          },
+          {
+            "subject": "ENEMY",
+            "verb": "HAVE",
+            "object": "STATUS",
+            "objectId": "SUSCEPTIBILITY",
+            "objectQualifier": "PHYSICAL"
+          }
+        ]
+      },
+      {
+        "conditions": [
+          {
+            "subjectDeterminer": "CONTROLLED",
+            "subject": "OPERATOR",
+            "verb": "PERFORM",
+            "object": "FINAL_STRIKE"
+          },
+          {
+            "subject": "ENEMY",
+            "verb": "HAVE",
+            "object": "STATUS",
+            "objectId": "PHYSICAL",
+            "objectQualifier": "BREACH"
+          }
+        ]
+      }
+    ],
+    "segments": [
+      {
+        "properties": {
+          "duration": {
+            "value": 6,
+            "unit": "SECOND"
+          }
         }
-      ]
-    }
-  ],
-  "clauseType": "ALL"
+      }
+    ]
+  }
 }

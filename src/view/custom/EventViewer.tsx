@@ -113,7 +113,12 @@ export default function EventViewer({ value, onChange }: EventViewerProps) {
   const props = (value.properties ?? {}) as Record<string, JsonValue>;
   const meta = (value.metadata ?? {}) as Record<string, JsonValue>;
   const segments = (value.segments ?? []) as EventJson[];
-  const clauseTabs = kind === 'skill' ? CLAUSE_TABS_SKILL : CLAUSE_TABS_STATUS;
+  const allClauseTabs = kind === 'skill' ? CLAUSE_TABS_SKILL : CLAUSE_TABS_STATUS;
+  // Only show tabs that have content or are always relevant (clause).
+  // Gear/weapon statuses that aren't trigger holders won't show empty trigger tabs.
+  const clauseTabs = allClauseTabs.filter(tab =>
+    tab.key === 'clause' || (Array.isArray(value[tab.key]) && (value[tab.key] as unknown[]).length > 0)
+  );
 
   const updateProps = (patch: Record<string, JsonValue>) => onChange({ ...value, properties: { ...props, ...patch } });
   const updateMeta = (patch: Record<string, JsonValue>) => onChange({ ...value, metadata: { ...meta, ...patch } });

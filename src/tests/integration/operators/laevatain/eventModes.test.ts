@@ -29,7 +29,7 @@ import { FPS, TOTAL_FRAMES } from '../../../../utils/timeline';
 import { eventDuration } from '../../../../consts/viewTypes';
 import type { MiniTimeline } from '../../../../consts/viewTypes';
 import { computeTimelinePresentation } from '../../../../controller/timeline/eventPresentationController';
-import { findColumn, buildContextMenu, getMenuPayload } from '../../helpers';
+import { findColumn, buildContextMenu, getMenuPayload, setUltimateEnergyToMax } from '../../helpers';
 import type { AppResult, AddEventPayload } from '../../helpers';
 
 /* eslint-disable @typescript-eslint/no-require-imports */
@@ -293,6 +293,7 @@ describe('Strict events — engine-driven chains', () => {
     expect(mfBefore).toHaveLength(4);
 
     // Place ultimate via context menu after battle skills
+    act(() => { setUltimateEnergyToMax(result.current, SLOT_LAEVATAIN, 0); });
     const ultCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.ULTIMATE);
     expect(ultCol).toBeDefined();
     const ultPayload = getMenuPayload(result.current, ultCol!, 50 * FPS);
@@ -365,6 +366,7 @@ describe('Strict events — engine-driven chains', () => {
     expect(enhItemBefore!.disabled).toBe(true);
 
     // Place ultimate via context menu, then enhanced BS during active phase — accepted
+    act(() => { setUltimateEnergyToMax(result.current, SLOT_LAEVATAIN, 0); });
     const ultCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.ULTIMATE);
     expect(ultCol).toBeDefined();
     const ultPayload = getMenuPayload(result.current, ultCol!, 50 * FPS);
@@ -504,6 +506,7 @@ describe('Mixed freeform + strict — cross-mode interactions', () => {
     expect(getUnconsumedMf(result.current)).toHaveLength(4);
 
     // Place ultimate in freeform via context menu
+    act(() => { setUltimateEnergyToMax(result.current, SLOT_LAEVATAIN, 0); });
     const ultCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.ULTIMATE);
     expect(ultCol).toBeDefined();
     const ultPayload = getMenuPayload(result.current, ultCol!, 10 * FPS);

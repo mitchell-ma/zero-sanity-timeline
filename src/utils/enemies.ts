@@ -1,5 +1,5 @@
 import { Enemy } from "../consts/viewTypes";
-import { StatType } from "../consts/enums";
+import { StatType, ELEMENT_COLORS, ElementType } from "../consts/enums";
 import { getModelEnemy } from "../controller/calculation/enemyRegistry";
 import { BossEnemy } from "../model/enemies/bossEnemy";
 import { INFLICTION_COLUMNS } from "../model/channels";
@@ -65,10 +65,10 @@ import roadPlundererSprite from "../assets/enemies/road_plunderer_sprite.png";
 
 // ─── Default statuses (infliction columns on the timeline) ─────────────────
 const DEFAULT_STATUSES = [
-  { id: INFLICTION_COLUMNS.HEAT,     label: 'HEAT',     color: '#ff5522' },
-  { id: INFLICTION_COLUMNS.NATURE,   label: 'NATURE',   color: '#33cc66' },
-  { id: INFLICTION_COLUMNS.ELECTRIC, label: 'ELECTRIC', color: '#e8c840' },
-  { id: INFLICTION_COLUMNS.CRYO,     label: 'CRYO',     color: '#88ddff' },
+  { id: INFLICTION_COLUMNS.HEAT,     label: 'HEAT',     color: ELEMENT_COLORS[ElementType.HEAT] },
+  { id: INFLICTION_COLUMNS.NATURE,   label: 'NATURE',   color: ELEMENT_COLORS[ElementType.NATURE] },
+  { id: INFLICTION_COLUMNS.ELECTRIC, label: 'ELECTRIC', color: ELEMENT_COLORS[ElementType.ELECTRIC] },
+  { id: INFLICTION_COLUMNS.CRYO,     label: 'CRYO',     color: ELEMENT_COLORS[ElementType.CRYO] },
 ];
 
 function e(id: string, name: string, tier: string, sprite?: string): Enemy {

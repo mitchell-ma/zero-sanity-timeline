@@ -43,9 +43,9 @@ export class InflictionColumn implements EventColumn {
             consumed.eventStatusOwnerId = source.ownerId;
             consumed.eventStatusSkillName = source.skillName;
           }
-          // Read reaction duration from config
+          // Read reaction duration from JSON config via the resolved durationSeconds getter
           const reactionConfig = getStatusById(reactionColumnId);
-          const reactionDurSec = (reactionConfig?.duration as { value?: { value?: number } } | undefined)?.value?.value ?? 5;
+          const reactionDurSec = reactionConfig?.durationSeconds ?? 20;
           const reactionDurFrames = Math.round(reactionDurSec * 120);
           this.host.applyToColumn(reactionColumnId, ENEMY_OWNER_ID, frame, reactionDurFrames, source, {
             uid: `${options?.uid ?? this.columnId}-reaction`,

@@ -14,9 +14,16 @@ import type { TimelineEvent } from '../../consts/viewTypes';
 import { eventEndFrame, durationSegment, setEventDuration, eventDuration } from '../../consts/viewTypes';
 import { EventStatusType } from '../../consts/enums';
 import { ENEMY_OWNER_ID, INFLICTION_COLUMN_IDS, INFLICTION_TO_REACTION } from '../../model/channels';
+import { getStatusById } from '../gameDataStore';
 
 /** Default active duration for derived reaction events (20s at 120fps). */
 const REACTION_DURATION = 2400;
+
+/** Resolve reaction duration from JSON config, falling back to REACTION_DURATION. */
+function getReactionDurationFrames(reactionColumnId: string): number {
+  const cfg = getStatusById(reactionColumnId);
+  return cfg?.durationSeconds ? Math.round(cfg.durationSeconds * 120) : REACTION_DURATION;
+}
 
 interface StatusSource {
   ownerId: string;
@@ -74,7 +81,7 @@ export function deriveReactions(events: TimelineEvent[]): TimelineEvent[] {
         ownerId: ENEMY_OWNER_ID,
         columnId: reactionColumnId,
         startFrame: incoming.startFrame,
-        segments: durationSegment(REACTION_DURATION),
+        segments: durationSegment(getReactionDurationFrames(reactionColumnId)),
         sourceOwnerId: incoming.sourceOwnerId,
         sourceSkillName: incoming.sourceSkillName,
         stacks: Math.min(activeOther.length, 2),

@@ -2,7 +2,6 @@
   "properties": {
     "name": "MORE SPICE!",
     "description": "When an enemy reaches 4 stacks of Vulnerability. Swings the wok at the enemy to deal massive Physical DMG and Crush. This Crush also deals more DMG.",
-    "windowFrames": 720,
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "COMBO_SKILL",
     "element": "PHYSICAL",
@@ -184,19 +183,34 @@
     "originId": "DA_PAN",
     "icon": "skills/combo_da_pan.png"
   },
-  "onTriggerClause": [
-    {
-      "conditions": [
-        {
-          "subjectDeterminer": "THIS",
-          "subject": "OPERATOR",
-          "verb": "APPLY",
-          "object": "STATUS",
-          "objectId": "INFLICTION",
-          "objectQualifier": "VULNERABLE"
+  "clauseType": "ALL",
+  "activationWindow": {
+    "properties": {
+      "maxSkills": 1
+    },
+    "onTriggerClause": [
+      {
+        "conditions": [
+          {
+            "subjectDeterminer": "THIS",
+            "subject": "OPERATOR",
+            "verb": "APPLY",
+            "object": "STATUS",
+            "objectId": "INFLICTION",
+            "objectQualifier": "VULNERABLE"
+          }
+        ]
+      }
+    ],
+    "segments": [
+      {
+        "properties": {
+          "duration": {
+            "value": 6,
+            "unit": "SECOND"
+          }
         }
-      ]
-    }
-  ],
-  "clauseType": "ALL"
+      }
+    ]
+  }
 }

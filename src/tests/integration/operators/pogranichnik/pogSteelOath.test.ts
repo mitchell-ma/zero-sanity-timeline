@@ -26,7 +26,7 @@ import { EventStatusType, InteractionModeType } from '../../../../consts/enums';
 import { FPS } from '../../../../utils/timeline';
 import { eventDuration } from '../../../../consts/viewTypes';
 import { computeTimelinePresentation } from '../../../../controller/timeline/eventPresentationController';
-import { findColumn, buildContextMenu, getMenuPayload } from '../../helpers';
+import { findColumn, buildContextMenu, getMenuPayload, setUltimateEnergyToMax } from '../../helpers';
 
 // ── Status IDs from JSON (single source of truth) ──────────────────────────
 
@@ -54,6 +54,7 @@ describe('Pogranichnik Steel Oath — integration through useApp', () => {
 
   it('A1: Ultimate places in the ULTIMATE column', () => {
     const { result } = setupWithPogranichnik();
+    act(() => { setUltimateEnergyToMax(result.current, SLOT_1, 1); });
     const ultCol = findColumn(result.current, SLOT_1, NounType.ULTIMATE);
     expect(ultCol).toBeDefined();
 
@@ -80,6 +81,7 @@ describe('Pogranichnik Steel Oath — integration through useApp', () => {
 
   it('B1: Ultimate generates STEEL_OATH team status with 30s duration', () => {
     const { result } = setupWithPogranichnik();
+    act(() => { setUltimateEnergyToMax(result.current, SLOT_1, 1); });
     const ultCol = findColumn(result.current, SLOT_1, NounType.ULTIMATE);
 
     const payload = getMenuPayload(result.current, ultCol!, 1 * FPS);
@@ -112,6 +114,8 @@ describe('Pogranichnik Steel Oath — integration through useApp', () => {
 
   it('C1: Laevatain ultimate does NOT consume Steel Oath', () => {
     const { result } = setupWithPogranichnik();
+    act(() => { setUltimateEnergyToMax(result.current, SLOT_1, 1); });
+    act(() => { setUltimateEnergyToMax(result.current, SLOT_0, 0); });
     const pogUltCol = findColumn(result.current, SLOT_1, NounType.ULTIMATE);
     const laevUltCol = findColumn(result.current, SLOT_0, NounType.ULTIMATE);
 
@@ -141,6 +145,7 @@ describe('Pogranichnik Steel Oath — integration through useApp', () => {
 
   it('D1: Combo skill consumes Steel Oath and generates STEEL_OATH_HARASS', () => {
     const { result } = setupWithPogranichnik();
+    act(() => { setUltimateEnergyToMax(result.current, SLOT_1, 1); });
 
     act(() => {
       result.current.setInteractionMode(InteractionModeType.FREEFORM);
@@ -174,6 +179,7 @@ describe('Pogranichnik Steel Oath — integration through useApp', () => {
 
   it('D2: Consumption clamps old events and creates continuations with fewer stacks', () => {
     const { result } = setupWithPogranichnik();
+    act(() => { setUltimateEnergyToMax(result.current, SLOT_1, 1); });
 
     act(() => {
       result.current.setInteractionMode(InteractionModeType.FREEFORM);
@@ -222,6 +228,7 @@ describe('Pogranichnik Steel Oath — integration through useApp', () => {
 
   it('E1: Chen Qianyu APPLY LIFT triggers Steel Oath via APPLY STATUS PHYSICAL', () => {
     const { result } = setupWithPogranichnik();
+    act(() => { setUltimateEnergyToMax(result.current, SLOT_1, 1); });
 
     // Also add Chen Qianyu to slot 2
     act(() => {
@@ -272,6 +279,7 @@ describe('Pogranichnik Steel Oath — integration through useApp', () => {
 
   it('F1: Two consumptions produce descending stack counts: N → N-1 → N-2', () => {
     const { result } = setupWithPogranichnik();
+    act(() => { setUltimateEnergyToMax(result.current, SLOT_1, 1); });
     const pogUltCol = findColumn(result.current, SLOT_1, NounType.ULTIMATE);
     const pogComboCol = findColumn(result.current, SLOT_1, NounType.COMBO_SKILL);
 

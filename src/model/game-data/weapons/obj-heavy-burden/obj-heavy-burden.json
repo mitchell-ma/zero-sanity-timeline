@@ -5,7 +5,7 @@
     "EFFICACY_TENACIOUS_WILL"
   ],
   "properties": {
-    "name": "Obj Heavy Burden",
+    "name": "OBJ Heavy Burden",
     "id": "OBJ_HEAVY_BURDEN",
     "type": "GREAT_SWORD",
     "rarity": 5
@@ -23,7 +23,8 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "STAT", "objectId": "BASE_ATTACK",
+          "object": "STAT",
+          "objectId": "BASE_ATTACK",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {

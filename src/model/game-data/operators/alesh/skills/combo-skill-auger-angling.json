@@ -2,7 +2,6 @@
   "properties": {
     "name": "Auger Angling",
     "description": "When the Arts Reaction or Originium Crystals of a nearby target is consumed. Opens an angling hole beneath the enemy that deals Physical DMG and recovers some SP. The skill has a chance to hook a Rare Fin that greatly increases the DMG dealt and recovers some more SP.",
-    "windowFrames": 720,
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "COMBO_SKILL",
     "element": "PHYSICAL",
@@ -294,31 +293,46 @@
     "originId": "ALESH",
     "icon": "skills/combo_alesh.png"
   },
-  "onTriggerClause": [
-    {
-      "conditions": [
-        {
-          "subjectDeterminer": "ANY",
-          "subject": "OPERATOR",
-          "verb": "CONSUME",
-          "object": "REACTION",
-          "objectId": "ARTS",
-          "of": "ENEMY"
-        }
-      ]
+  "clauseType": "ALL",
+  "activationWindow": {
+    "properties": {
+      "maxSkills": 1
     },
-    {
-      "conditions": [
-        {
-          "subjectDeterminer": "ANY",
-          "subject": "OPERATOR",
-          "verb": "CONSUME",
-          "object": "STATUS",
-          "objectId": "ORIGINIUM_CRYSTAL",
-          "of": "ENEMY"
+    "onTriggerClause": [
+      {
+        "conditions": [
+          {
+            "subjectDeterminer": "ANY",
+            "subject": "OPERATOR",
+            "verb": "CONSUME",
+            "object": "REACTION",
+            "objectId": "ARTS",
+            "of": "ENEMY"
+          }
+        ]
+      },
+      {
+        "conditions": [
+          {
+            "subjectDeterminer": "ANY",
+            "subject": "OPERATOR",
+            "verb": "CONSUME",
+            "object": "STATUS",
+            "objectId": "ORIGINIUM_CRYSTAL",
+            "of": "ENEMY"
+          }
+        ]
+      }
+    ],
+    "segments": [
+      {
+        "properties": {
+          "duration": {
+            "value": 6,
+            "unit": "SECOND"
+          }
         }
-      ]
-    }
-  ],
-  "clauseType": "ALL"
+      }
+    ]
+  }
 }

@@ -5,7 +5,7 @@
     "INFLICTION_TIDAL_MURMURS"
   ],
   "properties": {
-    "name": "Dreams Of The Starry Beach",
+    "name": "Dreams of the Starry Beach",
     "id": "DREAMS_OF_THE_STARRY_BEACH",
     "type": "ARTS_UNIT",
     "rarity": 6
@@ -23,7 +23,8 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "STAT", "objectId": "BASE_ATTACK",
+          "object": "STAT",
+          "objectId": "BASE_ATTACK",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {

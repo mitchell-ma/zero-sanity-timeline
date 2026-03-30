@@ -24,7 +24,10 @@ import type { ValueNode } from '../../dsl/semantics';
 import { resolveValueNode, getSimpleValue, buildContextForSkillColumn } from '../calculation/valueResolver';
 import type { ValueResolutionContext } from '../calculation/valueResolver';
 import { TimelineEvent, eventDuration, setEventDuration } from '../../consts/viewTypes';
-import { ElementType, EventFrameType, PERMANENT_DURATION, PhysicalStatusType, StackInteractionType, UnitType } from '../../consts/enums';
+import { CritMode, DamageType, ElementType, EventFrameType, PERMANENT_DURATION, PhysicalStatusType, StackInteractionType, UnitType } from '../../consts/enums';
+import type { OverrideStore } from '../../consts/overrideTypes';
+import type { StatAccumulator } from '../calculation/statAccumulator';
+import { buildOverrideKey } from '../overrideController';
 import {
   BREACH_DURATION, ENEMY_OWNER_ID, ENEMY_ACTION_COLUMN_ID, ELEMENT_TO_INFLICTION_COLUMN,
   INFLICTION_COLUMN_IDS, INFLICTION_DURATION,
@@ -34,7 +37,6 @@ import {
   REACTION_STATUS_TO_COLUMN,
   SHATTER_DURATION, SKILL_COLUMN_ORDER,
 } from '../../model/channels';
-import { getTeamStatusColumnId } from '../gameDataStore';
 import { FPS, TOTAL_FRAMES } from '../../utils/timeline';
 import { getAllOperatorStatuses, getOperatorStatuses, getStatusById } from '../gameDataStore';
 import { getAllWeaponStatuses } from '../../model/game-data/weaponStatusesStore';
@@ -47,10 +49,10 @@ import type { HPController } from '../calculation/hpController';
 import { getPhysicalStatusBaseMultiplier, getShatterBaseMultiplier } from '../../model/calculation/damageFormulas';
 import type { StatusLevel } from '../../consts/types';
 import type { SlotTriggerWiring } from './eventQueueTypes';
-import { findClauseTriggerMatches, statusIdToColumnId } from './triggerMatch';
+import { findClauseTriggerMatches } from './triggerMatch';
 import { activeEventsAtFrame } from './timelineQueries';
 import { getComboTriggerClause, getComboTriggerInfo } from '../gameDataStore';
-import { PRIORITY, QueueFrameType } from './eventQueueTypes';
+import { PRIORITY, QueueFrameType, FrameHookType } from './eventQueueTypes';
 import { resolveClauseEffects } from './statusTriggerCollector';
 import type { EngineTriggerContext, DeriveContext, StatusEventDef } from './statusTriggerCollector';
 import type { TriggerIndex, TriggerDefEntry } from './triggerIndex';
@@ -260,6 +262,19 @@ export interface InterpretContext {
 
 // ══════════════════════════════════════════════════════════════════════════
 
+export interface InterpretorOptions {
+  loadoutProperties?: Record<string, LoadoutProperties>;
+  slotOperatorMap?: Record<string, string>;
+  slotWirings?: SlotTriggerWiring[];
+  getEnemyHpPercentage?: (frame: number) => number | null;
+  getControlledSlotAtFrame?: (frame: number) => string;
+  triggerIndex?: TriggerIndex;
+  hpController?: HPController;
+  statAccumulator?: StatAccumulator;
+  critMode?: CritMode;
+  overrides?: OverrideStore;
+}
+
 export class EventInterpretorController {
   controller!: DerivedEventController;
   private baseEvents: readonly TimelineEvent[] = [];
@@ -270,6 +285,9 @@ export class EventInterpretorController {
   private getControlledSlotAtFrame?: (frame: number) => string;
   private triggerIndex?: TriggerIndex;
   private hpController?: HPController;
+  private statAccumulator?: StatAccumulator;
+  private critMode?: CritMode;
+  private overrides?: OverrideStore;
   /** Dedup set for reactive triggers: prevents double-firing at the same frame. */
   private seenTriggers = new Set<string>();
   /** Usage counter for triggers with usageLimit (e.g. tacticals, gear sets). Key: "defId:slotId". */
@@ -283,27 +301,11 @@ export class EventInterpretorController {
   constructor(
     controller?: DerivedEventController,
     baseEvents?: readonly TimelineEvent[],
-    options?: {
-      loadoutProperties?: Record<string, LoadoutProperties>;
-      slotOperatorMap?: Record<string, string>;
-      slotWirings?: SlotTriggerWiring[];
-      getEnemyHpPercentage?: (frame: number) => number | null;
-      getControlledSlotAtFrame?: (frame: number) => string;
-      triggerIndex?: TriggerIndex;
-      hpController?: HPController;
-    },
+    options?: InterpretorOptions,
   ) {
     if (controller) this.controller = controller;
     if (baseEvents) this.baseEvents = baseEvents;
-    if (options) {
-      this.loadoutProperties = options.loadoutProperties;
-      this.slotOperatorMap = options.slotOperatorMap;
-      this.slotWirings = options.slotWirings;
-      this.getEnemyHpPercentage = options.getEnemyHpPercentage;
-      this.getControlledSlotAtFrame = options.getControlledSlotAtFrame;
-      this.triggerIndex = options.triggerIndex;
-      this.hpController = options.hpController;
-    }
+    if (options) this.applyOptions(options);
   }
 
   /**
@@ -312,20 +314,16 @@ export class EventInterpretorController {
   resetWith(
     controller: DerivedEventController,
     baseEvents: readonly TimelineEvent[],
-    options?: {
-      loadoutProperties?: Record<string, LoadoutProperties>;
-      slotOperatorMap?: Record<string, string>;
-      slotWirings?: SlotTriggerWiring[];
-      getEnemyHpPercentage?: (frame: number) => number | null;
-      getControlledSlotAtFrame?: (frame: number) => string;
-      triggerIndex?: TriggerIndex;
-      hpController?: HPController;
-    },
+    options?: InterpretorOptions,
   ) {
     this.controller = controller;
     this.baseEvents = baseEvents;
     this.seenTriggers.clear();
     this.triggerUsageCount.clear();
+    this.applyOptions(options);
+  }
+
+  private applyOptions(options?: InterpretorOptions) {
     this.loadoutProperties = options?.loadoutProperties;
     this.slotOperatorMap = options?.slotOperatorMap;
     this.slotWirings = options?.slotWirings;
@@ -333,6 +331,9 @@ export class EventInterpretorController {
     this.getControlledSlotAtFrame = options?.getControlledSlotAtFrame;
     this.triggerIndex = options?.triggerIndex;
     this.hpController = options?.hpController;
+    this.statAccumulator = options?.statAccumulator;
+    this.critMode = options?.critMode;
+    this.overrides = options?.overrides;
   }
 
   // ── DSL Effect interpretation ──────────────────────────────────────────
@@ -477,8 +478,13 @@ export class EventInterpretorController {
       const isForced = this.resolveWith(effect.with?.isForced, ctx) === 1;
       const dv = this.resolveWith(effect.with?.duration, ctx);
       const sl = this.resolveWith(effect.with?.stacks, ctx);
-      const defaultDuration = isForced ? (FORCED_REACTION_DURATION[columnId] ?? REACTION_DURATION) : REACTION_DURATION;
-      this.controller.applyEvent(columnId, ownerId, ctx.frame, typeof dv === 'number' ? Math.round(dv * FPS) : defaultDuration, source, {
+      // Forced reactions use FORCED_REACTION_DURATION (shorter, for ult-triggered reactions).
+      // Non-forced reactions read from JSON config via getStatusConfig.
+      const cfg = getStatusConfig(columnId);
+      const defaultDuration = typeof dv === 'number' ? Math.round(dv * FPS)
+        : isForced ? (FORCED_REACTION_DURATION[columnId] ?? cfg?.duration ?? REACTION_DURATION)
+        : cfg?.duration ?? REACTION_DURATION;
+      this.controller.applyEvent(columnId, ownerId, ctx.frame, defaultDuration, source, {
         stacks: typeof sl === 'number' ? sl : undefined,
         ...(isForced && { forcedReaction: true }),
         ...(freeformUid ? { uid: freeformUid } : {}),
@@ -508,14 +514,9 @@ export class EventInterpretorController {
         }
       }
       const isTeamTarget = effect.to === NounType.TEAM;
-      // When effect explicitly targets non-TEAM, skip team-status column routing even if the
-      // status config defaults to TEAM — the effect's "to" is authoritative.
-      const effectOverridesTeam = effect.to != null && effect.to !== NounType.TEAM;
       const statusOwnerId = isTeamTarget ? COMMON_OWNER_ID : ownerId;
       // Team statuses → team-status column; enemy statuses → raw objectId; operator statuses → name-based column
-      const columnId = isTeamTarget ? getTeamStatusColumnId(effect.objectId ?? '') ?? statusIdToColumnId(effect.objectId ?? '')
-        : statusOwnerId === ENEMY_OWNER_ID ? (effect.objectId ?? '')
-        : statusIdToColumnId(effect.objectId ?? '', effectOverridesTeam);
+      const columnId = effect.objectId ?? '';
       const cfg = getStatusConfig(effect.objectId);
       const def = getStatusDef(effect.objectId);
       const dv = this.resolveWith(effect.with?.duration, ctx);
@@ -653,14 +654,14 @@ export class EventInterpretorController {
     }
     // CONSUME THIS EVENT — consume one stack of the parent status (from ENGINE_TRIGGER context)
     if (effect.object === NounType.EVENT && ctx.parentStatusId) {
-      const columnId = statusIdToColumnId(ctx.parentStatusId);
+      const columnId = ctx.parentStatusId;
       const statusOwnerId = ctx.parentStatusOwnerId ?? ownerId;
       const consumed = this.controller.consumeEvent(columnId, statusOwnerId, ctx.frame, source, { count, restack: true });
       return consumed > 0;
     }
     // CONSUME STACKS — self-consumption of the parent status stacks (e.g. Auxiliary Crystal)
     if (effect.object === NounType.STACKS && ctx.parentStatusId) {
-      const columnId = statusIdToColumnId(ctx.parentStatusId);
+      const columnId = ctx.parentStatusId;
       const statusOwnerId = ctx.parentStatusOwnerId ?? ownerId;
       const consumed = this.controller.consumeEvent(columnId, statusOwnerId, ctx.frame, source, { count, restack: true });
       return consumed > 0;
@@ -1221,9 +1222,8 @@ export class EventInterpretorController {
 
     const pot = this.loadoutProperties?.[event.ownerId]?.operator.potential ?? 0;
 
-    // ── 1. Event-start hooks (si=-1, fi=-1 = no frame marker) ───────────
-    const isEventStart = si === -1 && fi === -1;
-    if (isEventStart) {
+    // ── 1. Lifecycle hooks (EVENT_START / EVENT_END) ─────────────────────
+    if (entry.hookType === FrameHookType.EVENT_START) {
       // Link consumption for battle skills and ultimates
       if (event.columnId === NounType.BATTLE_SKILL || event.columnId === NounType.ULTIMATE) {
         this.controller.consumeLink(event.uid, absFrame, source);
@@ -1232,7 +1232,12 @@ export class EventInterpretorController {
       // Generic PERFORM trigger (PERFORM BATTLE_SKILL, etc.)
       newEntries.push(...this.checkReactiveTriggers(VerbType.PERFORM, event.columnId, absFrame, event.ownerId, event.name, event.enhancementType));
 
-      return newEntries; // event-start entry has no frame marker to process
+      return newEntries;
+    }
+
+    if (entry.hookType === FrameHookType.EVENT_END) {
+      // Exit hooks — stat accumulator delta removal will be wired here in Phase 3
+      return newEntries;
     }
 
     if (!frame) return newEntries; // safety check
@@ -1345,13 +1350,36 @@ export class EventInterpretorController {
       }
     }
 
+    // ── 3c. Crit resolution for damage frames ──────────────────────────
+    if (this.statAccumulator && (frame.damageMultiplier || frame.dealDamage)) {
+      const isDot = frame.damageType === DamageType.DAMAGE_OVER_TIME;
+      if (!isDot) {
+        const overrideKey = buildOverrideKey(event);
+        const pin = this.overrides?.[overrideKey]?.segments?.[si]?.frames?.[fi]?.isCritical;
+        const critMode = this.critMode ?? CritMode.EXPECTED;
+        const result = this.statAccumulator.resolveCrit(overrideKey, si, fi, event.ownerId, critMode, pin);
+        // Only persist SIMULATION rolls to frame.isCrit when not already pinned
+        if (critMode === CritMode.SIMULATION && frame.isCrit == null && result !== undefined) {
+          frame.isCrit = result;
+        }
+        // Derive effective crit for trigger emission (transient, not written to frame)
+        const effectiveCrit = pin ?? (critMode === CritMode.ALWAYS ? true
+          : critMode === CritMode.NEVER ? false
+          : frame.isCrit);
+        // ── 3d. Emit PERFORM CRITICAL_HIT for crit damage frames ──────
+        if (effectiveCrit === true) {
+          newEntries.push(...this.checkReactiveTriggers(VerbType.PERFORM, NounType.CRITICAL_HIT, absFrame, event.ownerId, event.name));
+        }
+      }
+    }
+
     // ── 4. PERFORM triggers from frameTypes ─────────────────────────────
     if (frame.frameTypes) {
       for (const ft of frame.frameTypes) {
         if (ft === EventFrameType.FINAL_STRIKE || ft === EventFrameType.FINISHER || ft === EventFrameType.DIVE) {
           const performObject = ft === EventFrameType.FINAL_STRIKE ? NounType.FINAL_STRIKE
             : ft === EventFrameType.FINISHER ? NounType.FINISHER : NounType.DIVE_ATTACK;
-          newEntries.push(...this.checkPerformTriggers(performObject, event, absFrame));
+          newEntries.push(...this.checkReactiveTriggers(VerbType.PERFORM, performObject, absFrame, event.ownerId, event.name));
         }
       }
     }
@@ -1534,7 +1562,7 @@ export class EventInterpretorController {
 
   /** Resolve a consumeStatus target's column ID and owner from the status definition. */
   private resolveConsumeTarget(statusId: string, eventOwnerId: string): { columnId: string; ownerId: string } {
-    const columnId = statusIdToColumnId(statusId);
+    const columnId = statusId;
     const operatorId = this.slotOperatorMap?.[eventOwnerId];
     if (operatorId) {
       const statuses = getOperatorStatuses(operatorId);
@@ -1807,7 +1835,7 @@ export class EventInterpretorController {
     }
 
     // Compute parent status event end frames (for EXTEND UNTIL END OF SEGMENT/EVENT)
-    const parentColumnId = statusIdToColumnId(ctx.def.properties.id);
+    const parentColumnId = ctx.def.properties.id;
     const allEvents = [...this.baseEvents, ...this.controller.output];
     const parentEvents = activeEventsAtFrame(allEvents, parentColumnId, parentStatusOwnerId, entry.frame);
     const parentEv = parentEvents.length > 0 ? parentEvents[parentEvents.length - 1] : undefined;

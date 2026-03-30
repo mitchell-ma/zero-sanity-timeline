@@ -129,6 +129,20 @@ function getFrameElementColor(f: EventFrameMarker, skillElement?: string): strin
   return getElementColorMix(el) || undefined;
 }
 
+// Cached alternate-segment color shift — lightens odd-indexed segments slightly
+// so adjacent segments are visually distinct even with the same base color.
+const _altColorCache = new Map<string, string>();
+function alternateSegmentColor(hex: string): string {
+  let cached = _altColorCache.get(hex);
+  if (cached) return cached;
+  const r = Math.min(255, parseInt(hex.slice(1, 3), 16) + 10);
+  const g = Math.min(255, parseInt(hex.slice(3, 5), 16) + 10);
+  const b = Math.min(255, parseInt(hex.slice(5, 7), 16) + 10);
+  cached = `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+  _altColorCache.set(hex, cached);
+  return cached;
+}
+
 // ── Segment-type-aware styling ─────────────────────────────────────────────
 
 interface SegmentStyle {
@@ -139,7 +153,8 @@ interface SegmentStyle {
 }
 
 // Pre-allocated style constants — avoids object creation per segment per render.
-const STYLE_COOLDOWN: SegmentStyle = { bgAlpha: 0.35, borderAlpha: 0.2, labelColor: 'rgba(180,180,180,0.7)', glow: false };
+const STYLE_COOLDOWN_DARK: SegmentStyle = { bgAlpha: 0.2, borderAlpha: 0.2, labelColor: 'rgba(255,255,255,0.95)', glow: false };
+const STYLE_COOLDOWN_LIGHT: SegmentStyle = { bgAlpha: 0.4, borderAlpha: 0.35, labelColor: 'rgba(100,100,100,0.8)', glow: false };
 const STYLE_STASIS: SegmentStyle = { bgAlpha: 0.7, borderAlpha: 0.85, labelColor: '#fff', glow: false };
 const STYLE_ACTIVE: SegmentStyle = { bgAlpha: 0.9, borderAlpha: 1.0, labelColor: '#fff', glow: true };
 const STYLE_PASSIVE: SegmentStyle = { bgAlpha: 0.15, borderAlpha: 0, labelColor: '#fff', glow: false };
@@ -149,13 +164,21 @@ const _animStyleCache = new Map<string, SegmentStyle>();
 function getSegmentStyle(seg: EventSegmentData, color: string): SegmentStyle {
   const types = seg.properties.segmentTypes;
   if (types?.includes(SegmentType.COOLDOWN) || types?.includes(SegmentType.IMMEDIATE_COOLDOWN)) {
-    return STYLE_COOLDOWN;
+    return document.documentElement.getAttribute('data-theme') === 'light'
+      ? STYLE_COOLDOWN_LIGHT : STYLE_COOLDOWN_DARK;
   }
   if (types?.includes(SegmentType.ANIMATION)) {
-    let cached = _animStyleCache.get(color);
+    const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+    const cacheKey = `${color}\0${isLight ? 'L' : 'D'}`;
+    let cached = _animStyleCache.get(cacheKey);
     if (!cached) {
-      cached = { bgAlpha: 0.55, borderAlpha: 0.7, labelColor: hexAlpha(color, 0.9), glow: false };
-      _animStyleCache.set(color, cached);
+      cached = {
+        bgAlpha: isLight ? 0.4 : 0.2,
+        borderAlpha: isLight ? 0.35 : 0.2,
+        labelColor: isLight ? 'rgba(100,100,100,0.8)' : 'rgba(255,255,255,0.95)',
+        glow: false,
+      };
+      _animStyleCache.set(cacheKey, cached);
     }
     return cached;
   }
@@ -178,12 +201,14 @@ interface EventBlockProps {
   onDragStart: (e: React.MouseEvent, eventUid: string, startFrame: number) => void;
   onContextMenu: (e: React.MouseEvent, eventUid: string) => void;
   onSelect?: (e: React.MouseEvent, eventUid: string) => void;
+  onDoubleClick?: (e: React.MouseEvent, eventUid: string) => void;
   onHover?: (eventUid: string | null) => void;
   onTouchStart?: (e: React.TouchEvent, eventUid: string, startFrame: number) => void;
   onFrameClick?: (e: React.MouseEvent, eventUid: string, segmentIndex: number, frameIndex: number) => void;
   onFrameContextMenu?: (e: React.MouseEvent, eventUid: string, segmentIndex: number, frameIndex: number) => void;
   onFrameDragStart?: (e: React.MouseEvent, eventUid: string, segmentIndex: number, frameIndex: number) => void;
   onSegmentContextMenu?: (e: React.MouseEvent, eventUid: string, segmentIndex: number) => void;
+  onSegmentResizeDragStart?: (e: React.MouseEvent, eventUid: string, segmentIndex: number, edge: 'start' | 'end') => void;
   /** Currently selected frames for highlight. */
   selectedFrames?: { segmentIndex: number; frameIndex: number }[];
   /** If true, event cannot be dragged — shows pointer cursor instead of grab. */
@@ -230,12 +255,14 @@ function EventBlock({
   onDragStart,
   onContextMenu,
   onSelect,
+  onDoubleClick,
   onHover,
   onTouchStart,
   onFrameClick,
   onFrameContextMenu,
   onFrameDragStart,
   onSegmentContextMenu,
+  onSegmentResizeDragStart,
   selectedFrames,
   notDraggable = false,
   derived = false,
@@ -312,6 +339,7 @@ function EventBlock({
   let offsetFrames = 0;
   const segmentElements: React.ReactNode[] = [];
   const frameElements: React.ReactNode[] = [];
+  const segEndPositions: number[] = []; // px position of each segment's end edge
 
   for (let i = 0; i < segments.length; i++) {
     const seg = segments[i];
@@ -342,8 +370,11 @@ function EventBlock({
     const segHover = isSegmentHovered(segAbsStart, segAbsDur);
     const segLabelHover = segHover ? hoverLabelStyle(segAbsStart) : undefined;
 
+    // Alternate color for odd segments so adjacent segments are visually distinct
+    const segColor = !isSingleSegment && i % 2 === 1 ? alternateSegmentColor(color) : color;
+
     // Derive styling from segment types
-    const style = passive ? STYLE_PASSIVE : getSegmentStyle(seg, color);
+    const style = passive ? STYLE_PASSIVE : getSegmentStyle(seg, segColor);
 
     // Segment label: use segment name if present, otherwise empty for multi-segment.
     // For single-segment events, fall back to the display label.
@@ -372,17 +403,17 @@ function EventBlock({
         style={{
           [axis.framePos]: segTopPx,
           [axis.frameSize]: segH,
-          background: hexAlpha(color, style.bgAlpha),
-          border: passive ? 'none' : cachedBorder(color, style.borderAlpha),
-          [axis.framePos === 'top' ? 'borderTop' : 'borderLeft']: passive ? 'none' : isFirst ? undefined : cachedDashedBorder(color, Math.min(style.borderAlpha, 0.5)),
+          background: hexAlpha(segColor, style.bgAlpha),
+          border: passive ? 'none' : cachedBorder(segColor, style.borderAlpha),
+          [axis.framePos === 'top' ? 'borderTop' : 'borderLeft']: passive ? 'none' : isFirst ? undefined : cachedDashedBorder(segColor, Math.min(style.borderAlpha, 0.5)),
           borderRadius: passive ? '2px' : borderRadiusVal,
-          boxShadow: style.glow ? cachedGlowShadow(color) : undefined,
+          boxShadow: style.glow ? cachedGlowShadow(segColor) : undefined,
           zIndex: segments.length - i,
           padding: 0,
           margin: 0,
         } as React.CSSProperties}
         onMouseDown={(e) => { if (e.button === 0 && !notDraggable) onDragStart(e, uid, startFrame); }}
-        onContextMenu={segments.length > 1 ? (e) => { e.preventDefault(); e.stopPropagation(); onSegmentContextMenu?.(e, uid, i); } : undefined}
+        onContextMenu={segments.length > 1 ? (e) => { e.preventDefault(); if (!e.ctrlKey && !e.metaKey) return; e.stopPropagation(); onSegmentContextMenu?.(e, uid, i); } : undefined}
       >
         {(passive || segH > 14) && segLabel && (
           <span className="event-block-label" style={labelStyle}>{segLabel}</span>
@@ -400,13 +431,13 @@ function EventBlock({
       frameElements.push(
         <div
           key={`f-${i}-${fi}`}
-          className={`event-frame-diamond${isSelected ? ' event-frame-diamond--selected' : ''}${isHoverHighlight ? ' event-frame-diamond--hover-hit' : ''}${(f.frameTypes ?? []).includes(EventFrameType.FINAL_STRIKE) ? ' event-frame-diamond--final-strike' : ''}${(f.frameTypes ?? []).includes(EventFrameType.FINISHER) ? ' event-frame-diamond--finisher' : ''}${(f.frameTypes ?? []).includes(EventFrameType.DIVE) ? ' event-frame-diamond--dive' : ''}${hasInflictionOrStatus(f) ? ' event-frame-diamond--infliction' : ''}${f.statusLabel ? ' event-frame-diamond--status' : ''}`}
+          className={`event-frame-diamond${isSelected ? ' event-frame-diamond--selected' : ''}${isHoverHighlight ? ' event-frame-diamond--hover-hit' : ''}${f.isCrit ? ' event-frame-diamond--crit' : ''}${(f.frameTypes ?? []).includes(EventFrameType.FINISHER) ? ' event-frame-diamond--finisher' : ''}${(f.frameTypes ?? []).includes(EventFrameType.DIVE) ? ' event-frame-diamond--dive' : ''}${hasInflictionOrStatus(f) ? ' event-frame-diamond--infliction' : ''}${f.statusLabel ? ' event-frame-diamond--status' : ''}`}
           style={elColor && !isSelected && !isHoverHighlight
             ? { [axis.framePos]: framePx, background: elColor, boxShadow: `0 0 3px ${elColor}80` } as React.CSSProperties
             : { [axis.framePos]: framePx } as React.CSSProperties}
           title={f.statusLabel ?? undefined}
-          onMouseDown={(e) => { e.stopPropagation(); if (e.button === 0) onFrameDragStart?.(e, uid, i, fi); }}
-          onClick={(e) => { e.stopPropagation(); onFrameClick?.(e, uid, i, fi); }}
+          onMouseDown={(e) => { e.stopPropagation(); if (e.button === 0 && (e.ctrlKey || e.metaKey)) onFrameDragStart?.(e, uid, i, fi); }}
+          onClick={(e) => { if (e.button !== 0) return; e.stopPropagation(); onFrameClick?.(e, uid, i, fi); }}
           onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); onFrameContextMenu?.(e, uid, i, fi); }}
           onMouseOver={(e) => { e.stopPropagation(); onHover?.(null); }}
           onMouseOut={(e) => { e.stopPropagation(); }}
@@ -414,9 +445,40 @@ function EventBlock({
       );
     });
 
+    segEndPositions.push(segTopPx + segH);
+
     // Advance running offset
     if (seg.properties.offset == null) offsetFrames += seg.properties.duration;
     else offsetFrames = segOffset + seg.properties.duration;
+  }
+
+  // ── Boundary resize handles (shared between sibling segments) ──────────
+  const handleElements: React.ReactNode[] = [];
+  if (onSegmentResizeDragStart && !passive && segments.length > 0) {
+    // Boundary handles between adjacent segments
+    for (let i = 0; i < segEndPositions.length - 1; i++) {
+      const boundaryPx = segEndPositions[i];
+      handleElements.push(
+        <div
+          key={`rh-${i}`}
+          className="event-segment-resize-handle"
+          style={{ [axis.framePos]: boundaryPx - 3, [axis.frameSize]: 6 } as React.CSSProperties}
+          onMouseDown={(e) => { e.stopPropagation(); onSegmentResizeDragStart(e, uid, i, 'end'); }}
+        />,
+      );
+    }
+    // Trailing handle at end of last segment (resize without sibling)
+    const lastEnd = segEndPositions[segEndPositions.length - 1];
+    if (lastEnd != null) {
+      handleElements.push(
+        <div
+          key="rh-last"
+          className="event-segment-resize-handle"
+          style={{ [axis.framePos]: lastEnd - 3, [axis.frameSize]: 6 } as React.CSSProperties}
+          onMouseDown={(e) => { e.stopPropagation(); onSegmentResizeDragStart(e, uid, segments.length - 1, 'end'); }}
+        />,
+      );
+    }
   }
 
   return (
@@ -424,17 +486,19 @@ function EventBlock({
       className={wrapClass}
       data-event-uid={uid}
       style={{ transform: axis.framePos === 'top' ? `translateY(${topPx}px)` : `translateX(${topPx}px)`, [axis.frameSize]: totalHeight, ...wrapStyle } as React.CSSProperties}
-      onContextMenu={(e) => onContextMenu(e, uid)}
+      onContextMenu={(e) => { e.preventDefault(); if (passive) return; e.stopPropagation(); onContextMenu(e, uid); }}
       onMouseDown={(e) => {
         if (e.button === 0) { e.stopPropagation(); if (!notDraggable) onDragStart(e, uid, startFrame); }
       }}
       onClick={(e) => onSelect?.(e, uid)}
+      onDoubleClick={(e) => onDoubleClick?.(e, uid)}
       onMouseOver={() => onHover?.(uid)}
       onMouseOut={() => onHover?.(null)}
       onTouchStart={(e) => !notDraggable && onTouchStart?.(e, uid, startFrame)}
     >
       {segmentElements}
       {frameElements}
+      {handleElements}
       {comboWarning && (
         <WarningIcon messages={comboWarningMessages} />
       )}

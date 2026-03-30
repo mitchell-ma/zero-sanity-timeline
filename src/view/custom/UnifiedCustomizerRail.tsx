@@ -11,6 +11,8 @@ const RAIL_ITEMS: { category: ContentCategory; label: string; abbrev: string }[]
   { category: ContentCategory.WEAPON_EFFECTS, label: 'Weapon Effect', abbrev: 'WE' },
   { category: ContentCategory.OPERATOR_STATUSES, label: 'Operator Status', abbrev: 'ST' },
   { category: ContentCategory.OPERATOR_TALENTS, label: 'Operator Talent', abbrev: 'TL' },
+  { category: ContentCategory.CONSUMABLES, label: 'Consumable', abbrev: 'CS' },
+  { category: ContentCategory.TACTICALS, label: 'Tactical', abbrev: 'TC' },
 ];
 
 interface Props {

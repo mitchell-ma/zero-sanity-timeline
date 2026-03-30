@@ -2,7 +2,6 @@
   "properties": {
     "name": "Soar to the Stars",
     "description": "When an enemy becomes Vulnerable. A slashing dash that passes through the target enemy and deals Physical DMG and Lift to all enemies along the way.",
-    "windowFrames": 720,
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "COMBO_SKILL",
     "element": "PHYSICAL",
@@ -218,19 +217,34 @@
     "originId": "CHEN_QIANYU",
     "icon": "skills/combo_chen_qianyu.png"
   },
-  "onTriggerClause": [
-    {
-      "conditions": [
-        {
-          "subjectDeterminer": "THIS",
-          "subject": "OPERATOR",
-          "verb": "APPLY",
-          "object": "STATUS",
-          "objectId": "INFLICTION",
-          "objectQualifier": "VULNERABLE"
+  "clauseType": "ALL",
+  "activationWindow": {
+    "properties": {
+      "maxSkills": 1
+    },
+    "onTriggerClause": [
+      {
+        "conditions": [
+          {
+            "subjectDeterminer": "THIS",
+            "subject": "OPERATOR",
+            "verb": "APPLY",
+            "object": "STATUS",
+            "objectId": "INFLICTION",
+            "objectQualifier": "VULNERABLE"
+          }
+        ]
+      }
+    ],
+    "segments": [
+      {
+        "properties": {
+          "duration": {
+            "value": 6,
+            "unit": "SECOND"
+          }
         }
-      ]
-    }
-  ],
-  "clauseType": "ALL"
+      }
+    ]
+  }
 }

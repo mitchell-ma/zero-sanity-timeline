@@ -1,0 +1,67 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STAT",
+          "objectId": "ATTACK_BONUS",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "multiplier": {
+              "verb": "VARY_BY",
+              "object": "SKILL_LEVEL",
+              "value": [
+                0.07,
+                0.084,
+                0.098,
+                0.112,
+                0.126,
+                0.14,
+                0.154,
+                0.168,
+                0.196
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "onTriggerClause": [
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "PERFORM",
+          "object": "COMBO_SKILL"
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "HOME_LONGING_OLDEN_MOON",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "name": "Suppression: Olden Moon",
+    "description": "ATK +{atk_up:0.0%}. For {duration:0}s after the wielder casts a combo skill, the wielder's next battle skill gains Cryo and Nature DMG Dealt +{dmg_up:0.0%}. Max stacks: {max_stack:0}. Duration of each stack is counted separately.",
+    "id": "SUPPRESSION_OLDEN_MOON"
+  },
+  "metadata": {
+    "originId": "HOME_LONGING",
+    "dataSources": [
+      "WARFARIN"
+    ]
+  }
+}

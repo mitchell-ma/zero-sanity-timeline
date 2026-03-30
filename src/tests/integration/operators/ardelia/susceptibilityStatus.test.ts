@@ -20,7 +20,7 @@ import { renderHook, act } from '@testing-library/react';
 import { useApp } from '../../../../app/useApp';
 import { REACTION_COLUMNS, ENEMY_OWNER_ID, ENEMY_GROUP_COLUMNS } from '../../../../model/channels';
 import { ColumnType, InteractionModeType } from '../../../../consts/enums';
-import { NounType, AdjectiveType } from '../../../../dsl/semantics';
+import { NounType, AdjectiveType, isQualifiedId } from '../../../../dsl/semantics';
 import { FPS } from '../../../../utils/timeline';
 import { computeTimelinePresentation } from '../../../../controller/timeline/eventPresentationController';
 import type { MiniTimeline } from '../../../../consts/viewTypes';
@@ -95,7 +95,7 @@ describe('Ardelia Dolly Rush — Susceptibility Status', () => {
       // ── Controller layer ────────────────────────────────────────────
       // Verify susceptibility statuses on enemy
       const susceptEvents = result.current.allProcessedEvents.filter(
-        ev => ev.columnId === NounType.SUSCEPTIBILITY && ev.ownerId === ENEMY_OWNER_ID,
+        ev => isQualifiedId(ev.columnId, NounType.SUSCEPTIBILITY) && ev.ownerId === ENEMY_OWNER_ID,
       );
 
       // Should have 2 events: one Physical, one Arts
@@ -134,7 +134,7 @@ describe('Ardelia Dolly Rush — Susceptibility Status', () => {
       expect(vm).toBeDefined();
 
       const susceptInVM = vm!.events.filter(
-        ev => ev.columnId === NounType.SUSCEPTIBILITY && ev.ownerId === ENEMY_OWNER_ID,
+        ev => isQualifiedId(ev.columnId, NounType.SUSCEPTIBILITY) && ev.ownerId === ENEMY_OWNER_ID,
       );
       expect(susceptInVM).toHaveLength(2);
 
@@ -163,7 +163,7 @@ describe('Ardelia Dolly Rush — Susceptibility Status', () => {
 
       // No susceptibility should appear
       const susceptEvents = result.current.allProcessedEvents.filter(
-        ev => ev.columnId === NounType.SUSCEPTIBILITY && ev.ownerId === ENEMY_OWNER_ID,
+        ev => isQualifiedId(ev.columnId, NounType.SUSCEPTIBILITY) && ev.ownerId === ENEMY_OWNER_ID,
       );
       expect(susceptEvents).toHaveLength(0);
     });
@@ -206,7 +206,7 @@ describe('Ardelia Dolly Rush — Susceptibility Status', () => {
       });
 
       const susceptEvents = result.current.allProcessedEvents.filter(
-        ev => ev.columnId === NounType.SUSCEPTIBILITY && ev.ownerId === ENEMY_OWNER_ID,
+        ev => isQualifiedId(ev.columnId, NounType.SUSCEPTIBILITY) && ev.ownerId === ENEMY_OWNER_ID,
       );
       expect(susceptEvents).toHaveLength(2);
     });
@@ -265,7 +265,7 @@ describe('Ardelia Dolly Rush — Susceptibility Status', () => {
       });
 
       const susceptEvents = result.current.allProcessedEvents.filter(
-        ev => ev.columnId === NounType.SUSCEPTIBILITY && ev.ownerId === ENEMY_OWNER_ID,
+        ev => isQualifiedId(ev.columnId, NounType.SUSCEPTIBILITY) && ev.ownerId === ENEMY_OWNER_ID,
       );
       expect(susceptEvents).toHaveLength(2);
     });
@@ -312,7 +312,7 @@ describe('Ardelia Dolly Rush — Susceptibility Status', () => {
       });
 
       const susceptEvents = result.current.allProcessedEvents.filter(
-        ev => ev.columnId === NounType.SUSCEPTIBILITY && ev.ownerId === ENEMY_OWNER_ID,
+        ev => isQualifiedId(ev.columnId, NounType.SUSCEPTIBILITY) && ev.ownerId === ENEMY_OWNER_ID,
       );
       expect(susceptEvents).toHaveLength(2);
 

@@ -2631,6 +2631,7 @@
   background: var(--border-dim);
   pointer-events: none;
   transform: translateY(-0.5px);
+  z-index: 1;
 }
 
 .tl-gridline--minor {
@@ -2896,14 +2897,14 @@
   opacity: 1;
   box-shadow: 0 0 6px var(--overlay-80);
 }
-.event-frame-diamond--final-strike::after {
+.event-frame-diamond--crit::after {
   content: '';
   position: absolute;
   top: 50%;
   left: 50%;
   width: 4px;
   height: 4px;
-  background: var(--scrim-50);
+  background: #ffdd44;
   border: none;
   transform: translate(-50%, -50%);
 }
@@ -2944,6 +2945,70 @@
   transform: translateY(-5px) rotate(0deg);
   width: 10px;
   height: 10px;
+}
+
+/* ── Segment resize handles (boundary-based, siblings to segments) ───── */
+.event-segment-resize-handle {
+  position: absolute;
+  left: 0;
+  right: 0;
+  cursor: ns-resize;
+  z-index: 25;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.1s;
+}
+/* Show handles when ctrl is held and hovering the event */
+.ctrl-held .event-wrap:hover > .event-segment-resize-handle {
+  pointer-events: auto;
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.5);
+  box-shadow: 0 0 4px rgba(255, 255, 255, 0.3);
+  border-radius: 1px;
+}
+.ctrl-held .event-wrap:hover > .event-segment-resize-handle:hover {
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.6);
+}
+[data-theme="light"] .ctrl-held .event-wrap:hover > .event-segment-resize-handle {
+  background: rgba(0, 0, 0, 0.3);
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.15);
+}
+[data-theme="light"] .ctrl-held .event-wrap:hover > .event-segment-resize-handle:hover {
+  background: rgba(0, 0, 0, 0.6);
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.3);
+}
+/* During active resize drag, suppress all handle hover highlights */
+.segment-resizing .event-segment-resize-handle {
+  pointer-events: none !important;
+  opacity: 0 !important;
+}
+.segment-resizing .event-segment-resize-handle.resize-active {
+  pointer-events: auto !important;
+  opacity: 1 !important;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.6);
+}
+[data-theme="light"] .segment-resizing .event-segment-resize-handle.resize-active {
+  background: rgba(0, 0, 0, 0.6);
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.3);
+}
+/* When ctrl is held, suppress grab cursor on events — only resize handles and frame diamonds should show interactive cursors */
+.ctrl-held .event-wrap,
+.ctrl-held .event-wrap:active {
+  cursor: default;
+}
+.ctrl-held .event-frame-diamond {
+  cursor: grab;
+}
+
+/* Horizontal layout overrides */
+.timeline-outer--horizontal .event-segment-resize-handle {
+  top: 0;
+  bottom: 0;
+  left: auto;
+  right: auto;
+  cursor: ew-resize;
 }
 
 .event-segment-warning {
@@ -8489,6 +8554,17 @@
   overflow-y: auto;
   padding: 0.75rem;
 }
+.uc-edit-body:has(.ops-root--split) {
+  overflow-y: hidden;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+}
+@media (max-width: 900px) {
+  .uc-edit-body:has(.ops-root--split) {
+    overflow-y: auto;
+  }
+}
 .uc-header {
   padding: 0.75rem 1rem 0.5rem;
   border-bottom: 1px solid var(--border-dim);
@@ -8910,8 +8986,9 @@
 }
 .ops-field input:focus,
 .ops-field select:focus {
-  border-color: var(--border-bright);
+  border-color: var(--accent, var(--border-bright));
   background: var(--bg-elevated);
+  box-shadow: inset 2px 0 0 var(--accent, var(--border-bright));
 }
 .ops-field input::placeholder {
   color: var(--text-muted);
@@ -8944,8 +9021,9 @@
   font-variant-numeric: tabular-nums;
 }
 .ops-input-unit input:focus {
-  border-color: var(--border-bright);
+  border-color: var(--accent, var(--border-bright));
   background: var(--bg-elevated);
+  box-shadow: inset 2px 0 0 var(--accent, var(--border-bright));
 }
 .ops-input-unit input::-webkit-inner-spin-button,
 .ops-input-unit input::-webkit-outer-spin-button {
@@ -9124,7 +9202,7 @@
   outline: none;
 }
 .ops-stat-name-input:focus {
-  border-bottom-color: var(--border-bright);
+  border-bottom-color: var(--accent, var(--border-bright));
   color: var(--text-bright);
 }
 .ops-stat-name-input::placeholder {
@@ -9144,8 +9222,9 @@
   outline: none;
 }
 .ops-stat-val:focus {
-  border-color: var(--border-bright);
+  border-color: var(--accent, var(--border-bright));
   background: var(--bg-elevated);
+  box-shadow: inset 2px 0 0 var(--accent, var(--border-bright));
 }
 .ops-stat-val::-webkit-inner-spin-button,
 .ops-stat-val::-webkit-outer-spin-button {
@@ -9561,7 +9640,7 @@
 }
 .ops-vt-branch {
   position: relative;
-  padding-left: 1rem;
+  padding-left: 0.625rem;
 }
 .ops-vt-branch::before {
   content: '';
@@ -9569,7 +9648,7 @@
   left: 0;
   top: 0;
   height: 0.625em;
-  width: 0.625rem;
+  width: 0.375rem;
   border-left: 1px solid var(--border-dim);
   border-bottom: 1px solid var(--border-dim);
 }
@@ -9612,7 +9691,7 @@
   color: var(--text-muted);
 }
 .ops-prop-tree-children {
-  padding-left: 0.25rem;
+  padding-left: 0.125rem;
   padding-top: 0.25rem;
   overflow: hidden;
 }
@@ -9779,14 +9858,10 @@
   padding: 0.375rem 0;
 }
 .ops-clause-predicate {
-  margin-bottom: 0.5rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid var(--border-dim);
+  margin-bottom: 0.25rem;
 }
 .ops-clause-predicate:last-child {
-  border-bottom: none;
   margin-bottom: 0;
-  padding-bottom: 0;
 }
 .ops-clause-conditions {
   margin-bottom: 0.375rem;
@@ -9802,7 +9877,133 @@
   display: flex;
   flex-direction: column;
   gap: 0;
-  padding: 0.5rem;
+  padding: 0.625rem 0.75rem;
+  background: color-mix(in srgb, var(--bg-card) 60%, transparent);
+}
+
+/* ── Tab actions (add button row inside category tabs) ── */
+.ops-tab-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0.375rem 0;
+  border-bottom: 1px solid var(--border-dim);
+  margin-bottom: 0.5rem;
+}
+
+/* ── Builtin/Custom section labels ──────────────────── */
+.ops-builtin-section,
+.ops-linked-section {
+  margin-bottom: 0.5rem;
+}
+.ops-builtin-label {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  padding: 0.375rem 0 0.25rem;
+  border-bottom: 1px solid var(--border-dim);
+  margin-bottom: 0.375rem;
+}
+
+/* ── Custom entity card (editable, accent border) ──── */
+.ops-skill-card--custom {
+  border-left-color: color-mix(in srgb, var(--accent) 50%, transparent);
+}
+.ops-skill-card--custom .ops-skill-form {
+  padding: 0;
+}
+
+/* ── Linked entity card ─────────────────────────────── */
+.ops-linked-card {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 0.5rem;
+  margin-bottom: 0.25rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-dim);
+  border-left: 3px solid var(--border-dim);
+  transition: border-color 0.12s;
+}
+.ops-linked-card:hover {
+  border-left-color: var(--accent);
+}
+.ops-linked-card-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.0625rem;
+}
+.ops-linked-card-name {
+  font-family: var(--font-display);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--text-bright);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ops-linked-card-meta {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+}
+
+/* ── Link picker row ────────────────────────────────── */
+.ops-link-picker {
+  display: flex;
+  gap: 0.25rem;
+  margin-top: 0.5rem;
+  padding-top: 0.375rem;
+}
+.ops-link-picker-select {
+  flex: 1;
+  min-width: 0;
+  background: var(--bg-card);
+  border: 1px solid var(--border-dim);
+  color: var(--text-secondary);
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  padding: 0.25rem 0.375rem;
+  outline: none;
+}
+.ops-link-picker-select:focus {
+  border-color: var(--accent, var(--border-bright));
+}
+.ops-link-picker-btn {
+  padding: 0.25rem 0.5rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-dim);
+  color: var(--text-muted);
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: all 0.12s;
+  white-space: nowrap;
+}
+.ops-link-picker-btn:hover:not(:disabled) {
+  color: var(--text-bright);
+  border-color: var(--border-med);
+  background: var(--bg-elevated);
+}
+.ops-link-picker-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.ops-link-picker-btn--new {
+  color: var(--accent, var(--text-muted));
+  border-color: var(--accent, var(--border-dim));
+}
+.ops-link-picker-btn--new:hover {
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  color: var(--accent);
 }
 
 /* ── Add skill button ────────────────────────────────── */
@@ -9822,17 +10023,18 @@
   transition: all 0.12s;
 }
 .ops-add-skill-btn:hover {
-  color: var(--text-secondary);
-  border-color: var(--border-med);
-  background: var(--bg-card);
+  color: var(--accent);
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 6%, transparent);
 }
 
 /* ── Combo trigger block (inside Combo tab) ──────────── */
 .ops-combo-trigger-block {
   margin-bottom: 0.75rem;
-  padding: 0.5rem;
+  padding: 0.5rem 0.625rem;
   border: 1px solid var(--border-dim);
-  background: var(--bg-card);
+  border-left: 3px solid var(--accent);
+  background: color-mix(in srgb, var(--accent) 4%, var(--bg-card));
 }
 
 /* ── Sub-sections (segments, multipliers, clause) ────── */
@@ -9855,6 +10057,10 @@
   text-transform: uppercase;
   color: var(--text-muted);
 }
+.ops-sub-label::before {
+  content: '— ';
+  opacity: 0.4;
+}
 
 /* Segment cards */
 .ops-segment-card {
@@ -9862,6 +10068,11 @@
   padding: 0.3125rem 0.5rem;
   background: var(--bg-card);
   border: 1px solid var(--border-dim);
+  border-left: 3px solid var(--border-dim);
+  transition: border-color 0.12s;
+}
+.ops-segment-card:hover {
+  border-left-color: var(--accent);
 }
 .ops-segment-header {
   display: flex;
@@ -9977,14 +10188,22 @@
   display: flex;
   align-items: center;
   gap: 0.375rem;
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.375rem;
+  padding: 0.375rem 0.5rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-dim);
+  border-left: 3px solid var(--border-dim);
+  transition: border-color 0.12s;
+}
+.ops-potential-row:hover {
+  border-left-color: var(--accent);
 }
 .ops-potential-badge {
   font-family: var(--font-mono);
   font-size: 0.6875rem;
   font-weight: 700;
-  color: var(--text-muted);
-  background: var(--bg-elevated);
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
   padding: 0.125rem 0.375rem;
   flex-shrink: 0;
   letter-spacing: 0.04em;
@@ -10033,6 +10252,11 @@
   padding: 0.5rem;
   background: var(--bg-card);
   border: 1px solid var(--border-dim);
+  border-left: 3px solid var(--border-dim);
+  transition: border-color 0.12s;
+}
+.ops-status-card:hover {
+  border-left-color: var(--accent);
 }
 .ops-status-card .wz-subsection {
   border: none;

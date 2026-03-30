@@ -183,7 +183,7 @@ Skills live in a separate file (`operator-skills/<slug>-skills.json`), keyed by 
 
 Skill categories are inferred from naming conventions:
 - **BASIC_ATTACK**: The skill that has `_FINISHER` and `_DIVE` variants
-- **COMBO_SKILL**: The skill with a top-level `onTriggerClause`
+- **COMBO_SKILL**: The skill with an `activationWindow` (or legacy top-level `onTriggerClause`)
 - **ULTIMATE**: The skill with `ANIMATION` segment type
 - **BATTLE_SKILL**: The remaining base skill
 
@@ -204,6 +204,44 @@ Variant skills (enhanced, empowered, or both) carry an `enhancementTypes` array 
 | `ENHANCED` | Available during ultimate active phase |
 
 A skill can have multiple enhancement types (e.g., `["ENHANCED", "EMPOWERED"]` for skills that require both ultimate active and max status stacks). Base skills do not need this field — absence implies `NORMAL`.
+
+### Activation Window (Combo Skills)
+
+Combo skills define their activation window as an embedded Event structure:
+
+```json
+"activationWindow": {
+  "properties": {
+    "maxSkills": 2
+  },
+  "onTriggerClause": [
+    {
+      "conditions": [
+        { "subject": "ENEMY", "verb": "HAVE", "object": "STATUS", "objectId": "VULNERABLE" },
+        { "subject": "ENEMY", "verb": "HAVE", "object": "INFLICTION", "objectQualifier": "ARTS" }
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "properties": {
+        "duration": { "value": 6, "unit": "SECOND" }
+      }
+    }
+  ]
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `properties.maxSkills` | number | Maximum combo skills allowed within one activation window (default 1) |
+| `onTriggerClause` | array | Conditions that open the activation window (OR of ANDs) |
+| `segments` | array | Window duration as a segment structure |
+
+- `maxSkills > 1` enables combo chaining — multiple combo skills can overlap within the same window (cooldown overlap is bypassed for siblings in the same window).
+- The `onTriggerClause` moved from the combo skill's top level into `activationWindow`.
+- The window duration replaced the legacy `windowFrames` property.
+- The activation window is not created while any combo skill variant for the operator is on cooldown.
 
 ### Event / Segment / Frame Hierarchy
 
@@ -718,7 +756,7 @@ No other top-level keys are allowed. Legacy keys (`originId`, `stats`, `element`
 | `isForced` | boolean | No | Whether application bypasses normal rules |
 | `enhancementTypes` | string[] | No | `EnhancementType` values (e.g. `["EMPOWERED"]`) |
 | `stacks` | object | Yes | Stacking configuration (see below) |
-| `duration` | object | No | Duration struct (`{ value, unit }`). Omit for permanent statuses |
+| `duration` | object | No | Duration struct (`{ value, unit }`). Use `99999` (PERMANENT_DURATION) for permanent statuses |
 
 #### Stacks
 
@@ -774,8 +812,8 @@ Clauses define effects that are active while the status is alive. Each clause ha
 | `DEAL` | `DAMAGE` | element | Deals elemental damage with skill-level scaling | Frame: DEAL HEAT DAMAGE to TARGET |
 | `DEAL` | `STAGGER` | — | Deals stagger to enemy | Frame: DEAL STAGGER to ENEMY |
 | `RECOVER` | `SKILL_POINT` | — | Recovers SP | Frame: RECOVER SKILL_POINT |
-| `ENHANCE` | skill type | — | Enhances a skill type for operator | Ult: ENHANCE BASIC_ATTACK to THIS OPERATOR |
-| `DISABLE` | skill type | enhancement | Disables a variant tier for operator | Ult: DISABLE NORMAL BASIC_ATTACK to THIS OPERATOR |
+| `ENABLE` | skill type | objectId (variant ID) | Enables a specific skill variant by ID | Ult: ENABLE objectId:FLAMING_CINDERS_ENHANCED BATK to THIS OPERATOR |
+| `DISABLE` | skill type | objectId (variant ID) | Disables a specific skill variant by ID | Ult: DISABLE objectId:FLAMING_CINDERS BATK to THIS OPERATOR |
 
 #### Value Resolution
 

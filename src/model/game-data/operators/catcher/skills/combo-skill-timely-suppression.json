@@ -2,7 +2,6 @@
   "properties": {
     "name": "Timely Suppression",
     "description": "When an enemy starts charging up a skill, or when the controlled operator is attacked and falls below {trigger_hp_ratio:0%} HP. A powerful downward punch that deals Physical DMG to the enemy, while granting shields to self and another teammate (controlled operator prioritized). DEF can further increase Shield points.",
-    "windowFrames": 720,
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "COMBO_SKILL",
     "element": "PHYSICAL",
@@ -380,41 +379,56 @@
     "originId": "CATCHER",
     "icon": "skills/combo_catcher.png"
   },
-  "onTriggerClause": [
-    {
-      "conditions": [
-        {
-          "subject": "ENEMY",
-          "verb": "PERFORM",
-          "object": "STATUS",
-          "objectId": "CHARGE"
-        }
-      ]
+  "clauseType": "ALL",
+  "activationWindow": {
+    "properties": {
+      "maxSkills": 1
     },
-    {
-      "conditions": [
-        {
-          "subject": "ENEMY",
-          "verb": "DEAL",
-          "object": "DAMAGE",
-          "toDeterminer": "CONTROLLED",
-          "to": "OPERATOR"
-        },
-        {
-          "subjectDeterminer": "CONTROLLED",
-          "subject": "OPERATOR",
-          "verb": "HAVE",
-          "object": "HP",
-          "cardinalityConstraint": "AT_MOST",
-          "with": {
-            "value": {
-              "verb": "IS",
-              "value": 0.4
+    "onTriggerClause": [
+      {
+        "conditions": [
+          {
+            "subject": "ENEMY",
+            "verb": "PERFORM",
+            "object": "STATUS",
+            "objectId": "CHARGE"
+          }
+        ]
+      },
+      {
+        "conditions": [
+          {
+            "subject": "ENEMY",
+            "verb": "DEAL",
+            "object": "DAMAGE",
+            "toDeterminer": "CONTROLLED",
+            "to": "OPERATOR"
+          },
+          {
+            "subjectDeterminer": "CONTROLLED",
+            "subject": "OPERATOR",
+            "verb": "HAVE",
+            "object": "HP",
+            "cardinalityConstraint": "AT_MOST",
+            "with": {
+              "value": {
+                "verb": "IS",
+                "value": 0.4
+              }
             }
           }
+        ]
+      }
+    ],
+    "segments": [
+      {
+        "properties": {
+          "duration": {
+            "value": 6,
+            "unit": "SECOND"
+          }
         }
-      ]
-    }
-  ],
-  "clauseType": "ALL"
+      }
+    ]
+  }
 }

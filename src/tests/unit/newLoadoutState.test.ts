@@ -5,7 +5,7 @@
  * with no leaked data from a previous loadout. Covers the contract between
  * serializeSheet and applySheetData for derived event overrides.
  *
- * Bug context: handleNewLoadout was not resetting derivedEventOverrides,
+ * Bug context: handleNewLoadout was not resetting overrides,
  * causing stale overrides (e.g. Node Stagger position) to leak from the
  * previous loadout into the fresh one.
  */
@@ -50,7 +50,7 @@ jest.mock('../../view/OperatorLoadoutHeader', () => ({
 
 describe('New Loadout State Isolation', () => {
 
-  test('serializeSheet without derivedEventOverrides omits the field', () => {
+  test('serializeSheet without overrides omits the field', () => {
     const sheet = serializeSheet(
       [null, null, null, null],
       'rhodagn',
@@ -62,10 +62,10 @@ describe('New Loadout State Isolation', () => {
       1,
       {},
     );
-    expect(sheet.derivedEventOverrides).toBeUndefined();
+    expect(sheet.overrides).toBeUndefined();
   });
 
-  test('serializeSheet with empty derivedEventOverrides omits the field', () => {
+  test('serializeSheet with empty overrides omits the field', () => {
     const sheet = serializeSheet(
       [null, null, null, null],
       'rhodagn',
@@ -78,11 +78,11 @@ describe('New Loadout State Isolation', () => {
       {},
       {},
     );
-    expect(sheet.derivedEventOverrides).toBeUndefined();
+    expect(sheet.overrides).toBeUndefined();
   });
 
-  test('serializeSheet with non-empty derivedEventOverrides includes them', () => {
-    const overrides = { 'stagger-frailty-node-1-3360': { startFrame: 3400 } };
+  test('serializeSheet with non-empty overrides includes them', () => {
+    const overrides = { 'stagger-frailty-node-1-3360': { propertyOverrides: { startFrame: 3400 } } };
     const sheet = serializeSheet(
       [null, null, null, null],
       'rhodagn',
@@ -95,10 +95,10 @@ describe('New Loadout State Isolation', () => {
       {},
       overrides,
     );
-    expect(sheet.derivedEventOverrides).toEqual(overrides);
+    expect(sheet.overrides).toEqual(overrides);
   });
 
-  test('applySheetData returns empty derivedEventOverrides when field is missing', () => {
+  test('applySheetData returns empty overrides when field is missing', () => {
     const sheet = serializeSheet(
       [null, null, null, null],
       'rhodagn',
@@ -110,10 +110,10 @@ describe('New Loadout State Isolation', () => {
       1,
     );
     const resolved = applySheetData(sheet);
-    expect(resolved.derivedEventOverrides).toEqual({});
+    expect(resolved.overrides).toEqual({});
   });
 
-  test('applySheetData returns empty derivedEventOverrides when field is empty', () => {
+  test('applySheetData returns empty overrides when field is empty', () => {
     const sheet = serializeSheet(
       [null, null, null, null],
       'rhodagn',
@@ -127,14 +127,14 @@ describe('New Loadout State Isolation', () => {
       {},
     );
     const resolved = applySheetData(sheet);
-    expect(resolved.derivedEventOverrides).toEqual({});
+    expect(resolved.overrides).toEqual({});
   });
 
   test('new loadout sheet data round-trips with no stale overrides', () => {
     // Simulate: previous loadout had a node stagger override
     const previousOverrides = {
-      'stagger-frailty-node-1-3360': { startFrame: 3400 },
-      'stagger-frailty-node-2-6720': { startFrame: 6800 },
+      'stagger-frailty-node-1-3360': { propertyOverrides: { startFrame: 3400 } },
+      'stagger-frailty-node-2-6720': { propertyOverrides: { startFrame: 6800 } },
     };
     const previousSheet = serializeSheet(
       ['LAEVATAIN', 'AKEKURI', 'ANTAL', 'ARDELIA'],
@@ -148,7 +148,7 @@ describe('New Loadout State Isolation', () => {
       {},
       previousOverrides,
     );
-    expect(previousSheet.derivedEventOverrides).toEqual(previousOverrides);
+    expect(previousSheet.overrides).toEqual(previousOverrides);
 
     // Simulate: create new loadout (no overrides passed)
     const newSheet = serializeSheet(
@@ -162,10 +162,10 @@ describe('New Loadout State Isolation', () => {
       1,
     );
     // New sheet must NOT inherit previous overrides
-    expect(newSheet.derivedEventOverrides).toBeUndefined();
+    expect(newSheet.overrides).toBeUndefined();
 
     const resolved = applySheetData(newSheet);
-    expect(resolved.derivedEventOverrides).toEqual({});
+    expect(resolved.overrides).toEqual({});
     expect(resolved.events).toEqual([]);
   });
 });

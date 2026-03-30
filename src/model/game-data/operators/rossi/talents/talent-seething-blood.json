@@ -8,23 +8,62 @@
           "verb": "DEAL",
           "objectQualifier": "CRITICAL",
           "object": "DAMAGE"
+        },
+        {
+          "subject": "ENEMY",
+          "verb": "HAVE",
+          "object": "STATUS",
+          "objectId": "RAZOR_CLAWMARK"
+        },
+        {
+          "subject": "ENEMY",
+          "verb": "HAVE",
+          "object": "STATUS",
+          "objectId": "REACTION",
+          "objectQualifier": "COMBUSTION"
         }
       ],
       "effects": [
         {
           "verb": "DEAL",
           "object": "DAMAGE",
+          "objectQualifier": "HEAT",
           "to": "ENEMY",
           "with": {
             "value": {
-              "verb": "VARY_BY",
-              "object": "TALENT_LEVEL",
-              "value": [
-                0,
-                0
-              ],
-              "ofDeterminer": "THIS",
-              "of": "OPERATOR"
+              "operation": "MULT",
+              "left": {
+                "operation": "ADD",
+                "left": {
+                  "verb": "VARY_BY",
+                  "object": "TALENT_LEVEL",
+                  "value": [
+                    0,
+                    0.12,
+                    0.24
+                  ],
+                  "ofDeterminer": "THIS",
+                  "of": "OPERATOR"
+                },
+                "right": {
+                  "verb": "VARY_BY",
+                  "object": "POTENTIAL",
+                  "value": [
+                    0,
+                    0,
+                    0,
+                    0.08,
+                    0.08,
+                    0.08
+                  ],
+                  "ofDeterminer": "THIS",
+                  "of": "OPERATOR"
+                }
+              },
+              "right": {
+                "verb": "IS",
+                "value": 1.5
+              }
             },
             "mainStat": {
               "verb": "IS",
@@ -42,12 +81,149 @@
           "to": "OPERATOR",
           "with": {
             "value": {
-              "verb": "VARY_BY",
-              "object": "TALENT_LEVEL",
-              "value": [
-                0,
-                0
-              ],
+              "operation": "MULT",
+              "left": {
+                "operation": "ADD",
+                "left": {
+                  "verb": "VARY_BY",
+                  "object": "TALENT_LEVEL",
+                  "value": [
+                    0,
+                    0.04,
+                    0.08
+                  ],
+                  "ofDeterminer": "THIS",
+                  "of": "OPERATOR"
+                },
+                "right": {
+                  "verb": "VARY_BY",
+                  "object": "POTENTIAL",
+                  "value": [
+                    0,
+                    0,
+                    0,
+                    0.04,
+                    0.04,
+                    0.04
+                  ],
+                  "ofDeterminer": "THIS",
+                  "of": "OPERATOR"
+                }
+              },
+              "right": {
+                "verb": "IS",
+                "value": 1.5
+              }
+            },
+            "mainStat": {
+              "verb": "IS",
+              "object": "STAT",
+              "objectId": "INTELLECT",
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "DEAL",
+          "objectQualifier": "CRITICAL",
+          "object": "DAMAGE"
+        },
+        {
+          "subject": "ENEMY",
+          "verb": "HAVE",
+          "object": "STATUS",
+          "objectId": "RAZOR_CLAWMARK"
+        }
+      ],
+      "effects": [
+        {
+          "verb": "DEAL",
+          "object": "DAMAGE",
+          "objectQualifier": "HEAT",
+          "to": "ENEMY",
+          "with": {
+            "value": {
+              "operation": "ADD",
+              "left": {
+                "verb": "VARY_BY",
+                "object": "TALENT_LEVEL",
+                "value": [
+                  0,
+                  0.12,
+                  0.24
+                ],
+                "ofDeterminer": "THIS",
+                "of": "OPERATOR"
+              },
+              "right": {
+                "verb": "VARY_BY",
+                "object": "POTENTIAL",
+                "value": [
+                  0,
+                  0,
+                  0,
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "ofDeterminer": "THIS",
+                "of": "OPERATOR"
+              }
+            },
+            "mainStat": {
+              "verb": "IS",
+              "object": "STAT",
+              "objectId": "ATTACK",
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            }
+          }
+        },
+        {
+          "verb": "RECOVER",
+          "object": "HP",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "operation": "ADD",
+              "left": {
+                "verb": "VARY_BY",
+                "object": "TALENT_LEVEL",
+                "value": [
+                  0,
+                  0.04,
+                  0.08
+                ],
+                "ofDeterminer": "THIS",
+                "of": "OPERATOR"
+              },
+              "right": {
+                "verb": "VARY_BY",
+                "object": "POTENTIAL",
+                "value": [
+                  0,
+                  0,
+                  0,
+                  0.04,
+                  0.04,
+                  0.04
+                ],
+                "ofDeterminer": "THIS",
+                "of": "OPERATOR"
+              }
+            },
+            "mainStat": {
+              "verb": "IS",
+              "object": "STAT",
+              "objectId": "INTELLECT",
               "ofDeterminer": "THIS",
               "of": "OPERATOR"
             }
@@ -56,22 +232,25 @@
       ]
     }
   ],
-  "clauseType": "ALL",
+  "clauseType": "FIRST_MATCH",
   "properties": {
     "id": "SEETHING_BLOOD_TALENT",
-    "maxLevel": { "verb": "IS", "value": 2 },
+    "maxLevel": {
+      "verb": "IS",
+      "value": 2
+    },
     "name": "Seething Blood (Talent)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
     "eventCategoryType": "TALENT",
-    "description": "Crits on Razor Clawmark targets deal extra damage and recover HP. Amplified vs Combusted targets."
+    "description": "When Rossi's skill deals Critical DMG to a Razor Clawmarked enemy, triggers another hit dealing Heat DMG (ATK%) and restoring HP (INT%). If target is also Combusted, DMG and heal are 1.5x. Trigger interval: 1s (P3: 0.5s). P3: +8% ATK DMG, +INT x0.04 heal."
   },
   "metadata": {
     "originId": "ROSSI",
     "dataSources": [
-      "ENDFIELD_WIKI"
-    ],
-    "isEnabled": false
+      "ENDFIELD_WIKI",
+      "WARFARIN"
+    ]
   }
 }

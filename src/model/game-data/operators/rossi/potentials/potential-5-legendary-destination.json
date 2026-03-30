@@ -1,0 +1,13 @@
+{
+  "properties": {
+    "id": "ROSSI_P5_LEGENDARY_DESTINATION",
+    "name": "Legendary Destination",
+    "level": 5,
+    "eventType": "POTENTIAL_EVENT",
+    "eventCategoryType": "POTENTIAL",
+    "description": "Ultimate \"Razorclaw\" Ambuscade improved: DMG Multiplier is increased to 1.1 times of the original; Critical DMG Dealt is increased by +30%."
+  },
+  "metadata": {
+    "originId": "ROSSI"
+  }
+}

@@ -174,8 +174,8 @@ All three sources feed the **same 4-stack pool**:
 
 | # | Test | Status |
 |---|------|--------|
-| D1 | Trigger clause: ENEMY IS COMBUSTED or ENEMY IS CORRODED | ✅ |
-| D2 | Activation window: 720 frames (6s) | ✅ |
+| D1 | Trigger clause (activationWindow.onTriggerClause): ENEMY IS COMBUSTED or ENEMY IS CORRODED | ✅ |
+| D2 | Activation window duration: 6s (from activationWindow.segments), maxSkills: 1 | ✅ |
 | D5 | Stagger recovery: 10 on first frame | ✅ |
 
 ### E. Ultimate & Enhanced Variants ✅

@@ -36,7 +36,7 @@
   "properties": {
     "name": "Electric DMG Boost [M]",
     "description": "Electric DMG Dealt +",
-    "id": "ELECTRIC_DMG_BOOST_M"
+    "id": "ELECTRIC_DAMAGE_BOOST_M"
   },
   "metadata": {
     "originId": "game",

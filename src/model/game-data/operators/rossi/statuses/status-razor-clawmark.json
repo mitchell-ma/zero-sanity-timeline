@@ -4,65 +4,228 @@
       "conditions": [],
       "effects": [
         {
-          "verb": "DEAL",
-          "objectQualifier": "PHYSICAL",
-          "object": "DAMAGE",
-          "to": "ENEMY",
-          "with": {
-            "value": {
-              "verb": "VARY_BY",
-              "object": "TALENT_LEVEL",
-              "value": [
-                0,
-                0
-              ],
-              "ofDeterminer": "THIS",
-              "of": "OPERATOR"
-            },
-            "mainStat": {
-              "verb": "IS",
-              "object": "STAT",
-              "objectId": "ATTACK",
-              "ofDeterminer": "THIS",
-              "of": "OPERATOR"
-            }
-          }
-        },
-        {
-          "verb": "AMP",
-          "object": "DAMAGE",
+          "verb": "APPLY",
+          "object": "FRAGILITY",
           "objectQualifier": "PHYSICAL",
           "to": "ENEMY",
           "with": {
             "value": {
-              "verb": "VARY_BY",
-              "object": "TALENT_LEVEL",
-              "value": [
-                0,
-                0
-              ],
-              "ofDeterminer": "THIS",
-              "of": "OPERATOR"
+              "value": {
+                "verb": "VARY_BY",
+                "object": "TALENT_LEVEL",
+                "value": [
+                  0,
+                  0.06,
+                  0.12
+                ],
+                "ofDeterminer": "THIS",
+                "of": "OPERATOR"
+              },
+              "unit": "PERCENTAGE"
             }
           }
         },
         {
-          "verb": "AMP",
-          "object": "DAMAGE",
+          "verb": "APPLY",
+          "object": "FRAGILITY",
           "objectQualifier": "HEAT",
           "to": "ENEMY",
           "with": {
             "value": {
-              "verb": "VARY_BY",
-              "object": "TALENT_LEVEL",
-              "value": [
-                0,
-                0
-              ],
-              "ofDeterminer": "THIS",
-              "of": "OPERATOR"
+              "value": {
+                "verb": "VARY_BY",
+                "object": "TALENT_LEVEL",
+                "value": [
+                  0,
+                  0.06,
+                  0.12
+                ],
+                "ofDeterminer": "THIS",
+                "of": "OPERATOR"
+              },
+              "unit": "PERCENTAGE"
             }
           }
+        }
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT",
+        "dataSources": [
+          "WARFARIN"
+        ]
+      },
+      "properties": {
+        "name": "Razor Clawmark",
+        "duration": {
+          "value": {
+            "verb": "VARY_BY",
+            "object": "TALENT_LEVEL",
+            "value": [
+              0,
+              15,
+              25
+            ],
+            "ofDeterminer": "THIS",
+            "of": "OPERATOR"
+          },
+          "unit": "SECOND"
+        },
+        "element": "PHYSICAL"
+      },
+      "frames": [
+        {
+          "metadata": { "eventComponentType": "FRAME", "dataSources": ["WARFARIN"] },
+          "properties": { "offset": { "value": 1, "unit": "SECOND" } },
+          "clause": [{ "conditions": [], "effects": [{ "verb": "DEAL", "objectQualifier": "PHYSICAL", "object": "DAMAGE", "to": "ENEMY", "with": { "value": { "verb": "VARY_BY", "object": "TALENT_LEVEL", "value": [0, 0.25, 0.3], "ofDeterminer": "THIS", "of": "OPERATOR" }, "mainStat": { "verb": "IS", "object": "STAT", "objectId": "ATTACK", "ofDeterminer": "THIS", "of": "OPERATOR" } } }] }],
+          "clauseType": "ALL"
+        },
+        {
+          "metadata": { "eventComponentType": "FRAME", "dataSources": ["WARFARIN"] },
+          "properties": { "offset": { "value": 2, "unit": "SECOND" } },
+          "clause": [{ "conditions": [], "effects": [{ "verb": "DEAL", "objectQualifier": "PHYSICAL", "object": "DAMAGE", "to": "ENEMY", "with": { "value": { "verb": "VARY_BY", "object": "TALENT_LEVEL", "value": [0, 0.25, 0.3], "ofDeterminer": "THIS", "of": "OPERATOR" }, "mainStat": { "verb": "IS", "object": "STAT", "objectId": "ATTACK", "ofDeterminer": "THIS", "of": "OPERATOR" } } }] }],
+          "clauseType": "ALL"
+        },
+        {
+          "metadata": { "eventComponentType": "FRAME", "dataSources": ["WARFARIN"] },
+          "properties": { "offset": { "value": 3, "unit": "SECOND" } },
+          "clause": [{ "conditions": [], "effects": [{ "verb": "DEAL", "objectQualifier": "PHYSICAL", "object": "DAMAGE", "to": "ENEMY", "with": { "value": { "verb": "VARY_BY", "object": "TALENT_LEVEL", "value": [0, 0.25, 0.3], "ofDeterminer": "THIS", "of": "OPERATOR" }, "mainStat": { "verb": "IS", "object": "STAT", "objectId": "ATTACK", "ofDeterminer": "THIS", "of": "OPERATOR" } } }] }],
+          "clauseType": "ALL"
+        },
+        {
+          "metadata": { "eventComponentType": "FRAME", "dataSources": ["WARFARIN"] },
+          "properties": { "offset": { "value": 4, "unit": "SECOND" } },
+          "clause": [{ "conditions": [], "effects": [{ "verb": "DEAL", "objectQualifier": "PHYSICAL", "object": "DAMAGE", "to": "ENEMY", "with": { "value": { "verb": "VARY_BY", "object": "TALENT_LEVEL", "value": [0, 0.25, 0.3], "ofDeterminer": "THIS", "of": "OPERATOR" }, "mainStat": { "verb": "IS", "object": "STAT", "objectId": "ATTACK", "ofDeterminer": "THIS", "of": "OPERATOR" } } }] }],
+          "clauseType": "ALL"
+        },
+        {
+          "metadata": { "eventComponentType": "FRAME", "dataSources": ["WARFARIN"] },
+          "properties": { "offset": { "value": 5, "unit": "SECOND" } },
+          "clause": [{ "conditions": [], "effects": [{ "verb": "DEAL", "objectQualifier": "PHYSICAL", "object": "DAMAGE", "to": "ENEMY", "with": { "value": { "verb": "VARY_BY", "object": "TALENT_LEVEL", "value": [0, 0.25, 0.3], "ofDeterminer": "THIS", "of": "OPERATOR" }, "mainStat": { "verb": "IS", "object": "STAT", "objectId": "ATTACK", "ofDeterminer": "THIS", "of": "OPERATOR" } } }] }],
+          "clauseType": "ALL"
+        },
+        {
+          "metadata": { "eventComponentType": "FRAME", "dataSources": ["WARFARIN"] },
+          "properties": { "offset": { "value": 6, "unit": "SECOND" } },
+          "clause": [{ "conditions": [], "effects": [{ "verb": "DEAL", "objectQualifier": "PHYSICAL", "object": "DAMAGE", "to": "ENEMY", "with": { "value": { "verb": "VARY_BY", "object": "TALENT_LEVEL", "value": [0, 0.25, 0.3], "ofDeterminer": "THIS", "of": "OPERATOR" }, "mainStat": { "verb": "IS", "object": "STAT", "objectId": "ATTACK", "ofDeterminer": "THIS", "of": "OPERATOR" } } }] }],
+          "clauseType": "ALL"
+        },
+        {
+          "metadata": { "eventComponentType": "FRAME", "dataSources": ["WARFARIN"] },
+          "properties": { "offset": { "value": 7, "unit": "SECOND" } },
+          "clause": [{ "conditions": [], "effects": [{ "verb": "DEAL", "objectQualifier": "PHYSICAL", "object": "DAMAGE", "to": "ENEMY", "with": { "value": { "verb": "VARY_BY", "object": "TALENT_LEVEL", "value": [0, 0.25, 0.3], "ofDeterminer": "THIS", "of": "OPERATOR" }, "mainStat": { "verb": "IS", "object": "STAT", "objectId": "ATTACK", "ofDeterminer": "THIS", "of": "OPERATOR" } } }] }],
+          "clauseType": "ALL"
+        },
+        {
+          "metadata": { "eventComponentType": "FRAME", "dataSources": ["WARFARIN"] },
+          "properties": { "offset": { "value": 8, "unit": "SECOND" } },
+          "clause": [{ "conditions": [], "effects": [{ "verb": "DEAL", "objectQualifier": "PHYSICAL", "object": "DAMAGE", "to": "ENEMY", "with": { "value": { "verb": "VARY_BY", "object": "TALENT_LEVEL", "value": [0, 0.25, 0.3], "ofDeterminer": "THIS", "of": "OPERATOR" }, "mainStat": { "verb": "IS", "object": "STAT", "objectId": "ATTACK", "ofDeterminer": "THIS", "of": "OPERATOR" } } }] }],
+          "clauseType": "ALL"
+        },
+        {
+          "metadata": { "eventComponentType": "FRAME", "dataSources": ["WARFARIN"] },
+          "properties": { "offset": { "value": 9, "unit": "SECOND" } },
+          "clause": [{ "conditions": [], "effects": [{ "verb": "DEAL", "objectQualifier": "PHYSICAL", "object": "DAMAGE", "to": "ENEMY", "with": { "value": { "verb": "VARY_BY", "object": "TALENT_LEVEL", "value": [0, 0.25, 0.3], "ofDeterminer": "THIS", "of": "OPERATOR" }, "mainStat": { "verb": "IS", "object": "STAT", "objectId": "ATTACK", "ofDeterminer": "THIS", "of": "OPERATOR" } } }] }],
+          "clauseType": "ALL"
+        },
+        {
+          "metadata": { "eventComponentType": "FRAME", "dataSources": ["WARFARIN"] },
+          "properties": { "offset": { "value": 10, "unit": "SECOND" } },
+          "clause": [{ "conditions": [], "effects": [{ "verb": "DEAL", "objectQualifier": "PHYSICAL", "object": "DAMAGE", "to": "ENEMY", "with": { "value": { "verb": "VARY_BY", "object": "TALENT_LEVEL", "value": [0, 0.25, 0.3], "ofDeterminer": "THIS", "of": "OPERATOR" }, "mainStat": { "verb": "IS", "object": "STAT", "objectId": "ATTACK", "ofDeterminer": "THIS", "of": "OPERATOR" } } }] }],
+          "clauseType": "ALL"
+        },
+        {
+          "metadata": { "eventComponentType": "FRAME", "dataSources": ["WARFARIN"] },
+          "properties": { "offset": { "value": 11, "unit": "SECOND" } },
+          "clause": [{ "conditions": [], "effects": [{ "verb": "DEAL", "objectQualifier": "PHYSICAL", "object": "DAMAGE", "to": "ENEMY", "with": { "value": { "verb": "VARY_BY", "object": "TALENT_LEVEL", "value": [0, 0.25, 0.3], "ofDeterminer": "THIS", "of": "OPERATOR" }, "mainStat": { "verb": "IS", "object": "STAT", "objectId": "ATTACK", "ofDeterminer": "THIS", "of": "OPERATOR" } } }] }],
+          "clauseType": "ALL"
+        },
+        {
+          "metadata": { "eventComponentType": "FRAME", "dataSources": ["WARFARIN"] },
+          "properties": { "offset": { "value": 12, "unit": "SECOND" } },
+          "clause": [{ "conditions": [], "effects": [{ "verb": "DEAL", "objectQualifier": "PHYSICAL", "object": "DAMAGE", "to": "ENEMY", "with": { "value": { "verb": "VARY_BY", "object": "TALENT_LEVEL", "value": [0, 0.25, 0.3], "ofDeterminer": "THIS", "of": "OPERATOR" }, "mainStat": { "verb": "IS", "object": "STAT", "objectId": "ATTACK", "ofDeterminer": "THIS", "of": "OPERATOR" } } }] }],
+          "clauseType": "ALL"
+        },
+        {
+          "metadata": { "eventComponentType": "FRAME", "dataSources": ["WARFARIN"] },
+          "properties": { "offset": { "value": 13, "unit": "SECOND" } },
+          "clause": [{ "conditions": [], "effects": [{ "verb": "DEAL", "objectQualifier": "PHYSICAL", "object": "DAMAGE", "to": "ENEMY", "with": { "value": { "verb": "VARY_BY", "object": "TALENT_LEVEL", "value": [0, 0.25, 0.3], "ofDeterminer": "THIS", "of": "OPERATOR" }, "mainStat": { "verb": "IS", "object": "STAT", "objectId": "ATTACK", "ofDeterminer": "THIS", "of": "OPERATOR" } } }] }],
+          "clauseType": "ALL"
+        },
+        {
+          "metadata": { "eventComponentType": "FRAME", "dataSources": ["WARFARIN"] },
+          "properties": { "offset": { "value": 14, "unit": "SECOND" } },
+          "clause": [{ "conditions": [], "effects": [{ "verb": "DEAL", "objectQualifier": "PHYSICAL", "object": "DAMAGE", "to": "ENEMY", "with": { "value": { "verb": "VARY_BY", "object": "TALENT_LEVEL", "value": [0, 0.25, 0.3], "ofDeterminer": "THIS", "of": "OPERATOR" }, "mainStat": { "verb": "IS", "object": "STAT", "objectId": "ATTACK", "ofDeterminer": "THIS", "of": "OPERATOR" } } }] }],
+          "clauseType": "ALL"
+        },
+        {
+          "metadata": { "eventComponentType": "FRAME", "dataSources": ["WARFARIN"] },
+          "properties": { "offset": { "value": 15, "unit": "SECOND" } },
+          "clause": [{ "conditions": [], "effects": [{ "verb": "DEAL", "objectQualifier": "PHYSICAL", "object": "DAMAGE", "to": "ENEMY", "with": { "value": { "verb": "VARY_BY", "object": "TALENT_LEVEL", "value": [0, 0.25, 0.3], "ofDeterminer": "THIS", "of": "OPERATOR" }, "mainStat": { "verb": "IS", "object": "STAT", "objectId": "ATTACK", "ofDeterminer": "THIS", "of": "OPERATOR" } } }] }],
+          "clauseType": "ALL"
+        },
+        {
+          "metadata": { "eventComponentType": "FRAME", "dataSources": ["WARFARIN"] },
+          "properties": { "offset": { "value": 16, "unit": "SECOND" } },
+          "clause": [{ "conditions": [], "effects": [{ "verb": "DEAL", "objectQualifier": "PHYSICAL", "object": "DAMAGE", "to": "ENEMY", "with": { "value": { "verb": "VARY_BY", "object": "TALENT_LEVEL", "value": [0, 0.25, 0.3], "ofDeterminer": "THIS", "of": "OPERATOR" }, "mainStat": { "verb": "IS", "object": "STAT", "objectId": "ATTACK", "ofDeterminer": "THIS", "of": "OPERATOR" } } }] }],
+          "clauseType": "ALL"
+        },
+        {
+          "metadata": { "eventComponentType": "FRAME", "dataSources": ["WARFARIN"] },
+          "properties": { "offset": { "value": 17, "unit": "SECOND" } },
+          "clause": [{ "conditions": [], "effects": [{ "verb": "DEAL", "objectQualifier": "PHYSICAL", "object": "DAMAGE", "to": "ENEMY", "with": { "value": { "verb": "VARY_BY", "object": "TALENT_LEVEL", "value": [0, 0.25, 0.3], "ofDeterminer": "THIS", "of": "OPERATOR" }, "mainStat": { "verb": "IS", "object": "STAT", "objectId": "ATTACK", "ofDeterminer": "THIS", "of": "OPERATOR" } } }] }],
+          "clauseType": "ALL"
+        },
+        {
+          "metadata": { "eventComponentType": "FRAME", "dataSources": ["WARFARIN"] },
+          "properties": { "offset": { "value": 18, "unit": "SECOND" } },
+          "clause": [{ "conditions": [], "effects": [{ "verb": "DEAL", "objectQualifier": "PHYSICAL", "object": "DAMAGE", "to": "ENEMY", "with": { "value": { "verb": "VARY_BY", "object": "TALENT_LEVEL", "value": [0, 0.25, 0.3], "ofDeterminer": "THIS", "of": "OPERATOR" }, "mainStat": { "verb": "IS", "object": "STAT", "objectId": "ATTACK", "ofDeterminer": "THIS", "of": "OPERATOR" } } }] }],
+          "clauseType": "ALL"
+        },
+        {
+          "metadata": { "eventComponentType": "FRAME", "dataSources": ["WARFARIN"] },
+          "properties": { "offset": { "value": 19, "unit": "SECOND" } },
+          "clause": [{ "conditions": [], "effects": [{ "verb": "DEAL", "objectQualifier": "PHYSICAL", "object": "DAMAGE", "to": "ENEMY", "with": { "value": { "verb": "VARY_BY", "object": "TALENT_LEVEL", "value": [0, 0.25, 0.3], "ofDeterminer": "THIS", "of": "OPERATOR" }, "mainStat": { "verb": "IS", "object": "STAT", "objectId": "ATTACK", "ofDeterminer": "THIS", "of": "OPERATOR" } } }] }],
+          "clauseType": "ALL"
+        },
+        {
+          "metadata": { "eventComponentType": "FRAME", "dataSources": ["WARFARIN"] },
+          "properties": { "offset": { "value": 20, "unit": "SECOND" } },
+          "clause": [{ "conditions": [], "effects": [{ "verb": "DEAL", "objectQualifier": "PHYSICAL", "object": "DAMAGE", "to": "ENEMY", "with": { "value": { "verb": "VARY_BY", "object": "TALENT_LEVEL", "value": [0, 0.25, 0.3], "ofDeterminer": "THIS", "of": "OPERATOR" }, "mainStat": { "verb": "IS", "object": "STAT", "objectId": "ATTACK", "ofDeterminer": "THIS", "of": "OPERATOR" } } }] }],
+          "clauseType": "ALL"
+        },
+        {
+          "metadata": { "eventComponentType": "FRAME", "dataSources": ["WARFARIN"] },
+          "properties": { "offset": { "value": 21, "unit": "SECOND" } },
+          "clause": [{ "conditions": [], "effects": [{ "verb": "DEAL", "objectQualifier": "PHYSICAL", "object": "DAMAGE", "to": "ENEMY", "with": { "value": { "verb": "VARY_BY", "object": "TALENT_LEVEL", "value": [0, 0.25, 0.3], "ofDeterminer": "THIS", "of": "OPERATOR" }, "mainStat": { "verb": "IS", "object": "STAT", "objectId": "ATTACK", "ofDeterminer": "THIS", "of": "OPERATOR" } } }] }],
+          "clauseType": "ALL"
+        },
+        {
+          "metadata": { "eventComponentType": "FRAME", "dataSources": ["WARFARIN"] },
+          "properties": { "offset": { "value": 22, "unit": "SECOND" } },
+          "clause": [{ "conditions": [], "effects": [{ "verb": "DEAL", "objectQualifier": "PHYSICAL", "object": "DAMAGE", "to": "ENEMY", "with": { "value": { "verb": "VARY_BY", "object": "TALENT_LEVEL", "value": [0, 0.25, 0.3], "ofDeterminer": "THIS", "of": "OPERATOR" }, "mainStat": { "verb": "IS", "object": "STAT", "objectId": "ATTACK", "ofDeterminer": "THIS", "of": "OPERATOR" } } }] }],
+          "clauseType": "ALL"
+        },
+        {
+          "metadata": { "eventComponentType": "FRAME", "dataSources": ["WARFARIN"] },
+          "properties": { "offset": { "value": 23, "unit": "SECOND" } },
+          "clause": [{ "conditions": [], "effects": [{ "verb": "DEAL", "objectQualifier": "PHYSICAL", "object": "DAMAGE", "to": "ENEMY", "with": { "value": { "verb": "VARY_BY", "object": "TALENT_LEVEL", "value": [0, 0.25, 0.3], "ofDeterminer": "THIS", "of": "OPERATOR" }, "mainStat": { "verb": "IS", "object": "STAT", "objectId": "ATTACK", "ofDeterminer": "THIS", "of": "OPERATOR" } } }] }],
+          "clauseType": "ALL"
+        },
+        {
+          "metadata": { "eventComponentType": "FRAME", "dataSources": ["WARFARIN"] },
+          "properties": { "offset": { "value": 24, "unit": "SECOND" } },
+          "clause": [{ "conditions": [], "effects": [{ "verb": "DEAL", "objectQualifier": "PHYSICAL", "object": "DAMAGE", "to": "ENEMY", "with": { "value": { "verb": "VARY_BY", "object": "TALENT_LEVEL", "value": [0, 0.25, 0.3], "ofDeterminer": "THIS", "of": "OPERATOR" }, "mainStat": { "verb": "IS", "object": "STAT", "objectId": "ATTACK", "ofDeterminer": "THIS", "of": "OPERATOR" } } }] }],
+          "clauseType": "ALL"
+        },
+        {
+          "metadata": { "eventComponentType": "FRAME", "dataSources": ["WARFARIN"] },
+          "properties": { "offset": { "value": 25, "unit": "SECOND" } },
+          "clause": [{ "conditions": [], "effects": [{ "verb": "DEAL", "objectQualifier": "PHYSICAL", "object": "DAMAGE", "to": "ENEMY", "with": { "value": { "verb": "VARY_BY", "object": "TALENT_LEVEL", "value": [0, 0.25, 0.3], "ofDeterminer": "THIS", "of": "OPERATOR" }, "mainStat": { "verb": "IS", "object": "STAT", "objectId": "ATTACK", "ofDeterminer": "THIS", "of": "OPERATOR" } } }] }],
+          "clauseType": "ALL"
         }
       ]
     }
@@ -77,7 +240,8 @@
         "object": "TALENT_LEVEL",
         "value": [
           0,
-          0
+          15,
+          25
         ],
         "ofDeterminer": "THIS",
         "of": "OPERATOR"
@@ -93,14 +257,14 @@
     },
     "eventType": "STATUS",
     "eventCategoryType": "STATUS",
-    "description": "Target takes Physical DMG per second and increased Physical + Heat DMG. Applied by Wolven Ambrage (Nicks and Scratches talent). Non-stacking."
+    "description": "Target takes Physical DMG per second and increased Physical + Heat DMG. Applied by Wolven Ambrage (Nicks and Scratches talent). Non-stacking. Tick interval: 1s."
   },
   "metadata": {
-    "originId": "NICKS_AND_SCRATCHES_TALENT",
+    "originId": "ROSSI",
     "dataSources": [
-      "ENDFIELD_WIKI"
-    ],
-    "isEnabled": false
+      "ENDFIELD_WIKI",
+      "WARFARIN"
+    ]
   },
   "clauseType": "ALL"
 }

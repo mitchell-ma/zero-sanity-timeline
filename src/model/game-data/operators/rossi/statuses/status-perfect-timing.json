@@ -1,0 +1,31 @@
+{
+  "properties": {
+    "id": "PERFECT_TIMING",
+    "name": "Perfect Timing",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": 6
+      },
+      "unit": "SECOND"
+    },
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 1
+      },
+      "interactionType": "RESET"
+    },
+    "eventType": "STATUS",
+    "eventCategoryType": "STATUS",
+    "description": "Combo timing window. Applied by Normal combo on last frame. Consumed by Empowered combo activation. Duration until end of activation window."
+  },
+  "metadata": {
+    "originId": "ROSSI",
+    "dataSources": [
+      "IN_GAME"
+    ]
+  }
+}

@@ -94,7 +94,7 @@ function inferSkillTypeMap(skills: Record<string, Record<string, unknown>>): Rec
   const baseSkills = ids.filter(id => id !== batkId && !variantSuffixes.some(s => id.endsWith(s)));
   for (const id of baseSkills) {
     const s = skills[id];
-    if ((s.onTriggerClause as unknown[])?.length) { typeMap.COMBO_SKILL = id; break; }
+    if ((s.activationWindow as Record<string, unknown>)?.onTriggerClause || (s.onTriggerClause as unknown[])?.length) { typeMap.COMBO_SKILL = id; break; }
   }
   const remaining = baseSkills.filter(id => id !== typeMap.COMBO_SKILL);
   for (const id of remaining) {
@@ -318,17 +318,17 @@ describe('B. Battle Skill (Burst of Passion)', () => {
 describe('C. Combo Skill (Flash and Dash)', () => {
   test('C1: Combo trigger requires enemy Node Stagger or Full Stagger (two clauses)', () => {
     const comboSkill = mockJson.skills[mockJson.skillTypeMap.COMBO_SKILL];
-    expect(comboSkill.onTriggerClause.length).toBe(2);
-    expect(comboSkill.onTriggerClause[0].conditions[0].subject).toBe(NounType.ENEMY);
-    expect(comboSkill.onTriggerClause[0].conditions[0].verb).toBe(VerbType.IS);
-    expect(comboSkill.onTriggerClause[0].conditions[0].object).toBe('NODE_STAGGERED');
-    expect(comboSkill.onTriggerClause[1].conditions[0].subject).toBe(NounType.ENEMY);
-    expect(comboSkill.onTriggerClause[1].conditions[0].verb).toBe(VerbType.IS);
-    expect(comboSkill.onTriggerClause[1].conditions[0].object).toBe('FULL_STAGGERED');
+    expect(comboSkill.activationWindow.onTriggerClause.length).toBe(2);
+    expect(comboSkill.activationWindow.onTriggerClause[0].conditions[0].subject).toBe(NounType.ENEMY);
+    expect(comboSkill.activationWindow.onTriggerClause[0].conditions[0].verb).toBe(VerbType.IS);
+    expect(comboSkill.activationWindow.onTriggerClause[0].conditions[0].object).toBe('NODE_STAGGERED');
+    expect(comboSkill.activationWindow.onTriggerClause[1].conditions[0].subject).toBe(NounType.ENEMY);
+    expect(comboSkill.activationWindow.onTriggerClause[1].conditions[0].verb).toBe(VerbType.IS);
+    expect(comboSkill.activationWindow.onTriggerClause[1].conditions[0].object).toBe('FULL_STAGGERED');
   });
 
   test('C2: Combo activation window is 720 frames (6 seconds)', () => {
-    expect(mockJson.skills[mockJson.skillTypeMap.COMBO_SKILL].properties.windowFrames).toBe(720);
+    expect(mockJson.skills[mockJson.skillTypeMap.COMBO_SKILL].activationWindow.segments[0].properties.duration.value).toBe(6);
   });
 
   test('C3: Combo has a cooldown segment with positive duration', () => {

@@ -34,7 +34,7 @@
   "properties": {
     "id": "KHRAVENGGER_BONECHILLING",
     "name": "Bonechilling",
-    "description": "Battle skill: +10-20%, Combo on Cryo: +20-40%",
+    "description": "Cryo DMG Dealt bonus from battle skill Cryo Infliction",
     "duration": {
       "value": {
         "verb": "IS",

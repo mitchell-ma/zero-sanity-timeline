@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { framesToSeconds, secondsToFrames } from '../../utils/timeline';
+import { evaluateMathExpr } from '../../utils/mathExpr';
 import { TimelineEvent, computeSegmentsSpan } from '../../consts/viewTypes';
 import NumberInputWithFastForwardButtons from '../components/inputs/NumberInputWithFastForwardButtons';
 
@@ -22,9 +23,8 @@ export function DurationField({ label, value, onChange, onCommit }: {
       <div className="edit-field-row">
         <input
           className="edit-input"
-          type="number"
-          step="0.1"
-          min="0"
+          type="text"
+          inputMode="decimal"
           value={value}
           onChange={(e) => onChange(e.target.value)}
           onBlur={onCommit}
@@ -114,8 +114,8 @@ export function FrameOffsetField({ eventId, segmentIndex, frameIndex, offsetFram
     const seg = segments[segmentIndex];
     const frames = seg?.frames;
     if (!frames) return;
-    const parsed = Number(sec);
-    const raw = secondsToFrames(isNaN(parsed) ? 0 : parsed);
+    const parsed = evaluateMathExpr(sec);
+    const raw = secondsToFrames(isFinite(parsed) ? parsed : 0);
     const lo = frameIndex > 0 ? frames[frameIndex - 1].offsetFrame : 0;
     const hi = frameIndex < frames.length - 1 ? frames[frameIndex + 1].offsetFrame : maxOffset;
     const newOffset = Math.max(lo, Math.min(hi, raw));
@@ -135,10 +135,8 @@ export function FrameOffsetField({ eventId, segmentIndex, frameIndex, offsetFram
     <div className="edit-field-row">
       <input
         className="edit-input"
-        type="number"
-        step="0.01"
-        min="0"
-        max={framesToSeconds(maxOffset)}
+        type="text"
+        inputMode="decimal"
         value={sec}
         onChange={(e) => setSec(e.target.value)}
         onBlur={commit}

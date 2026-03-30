@@ -5,7 +5,8 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "STAT", "objectId": "BASE_DEFENSE",
+          "object": "STAT",
+          "objectId": "BASE_DEFENSE",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
@@ -17,7 +18,8 @@
         },
         {
           "verb": "APPLY",
-          "object": "STAT", "objectId": "INTELLECT",
+          "object": "STAT",
+          "objectId": "INTELLECT",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
@@ -37,7 +39,8 @@
         },
         {
           "verb": "APPLY",
-          "object": "STAT", "objectId": "AGILITY",
+          "object": "STAT",
+          "objectId": "AGILITY",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
@@ -82,7 +85,7 @@
   ],
   "properties": {
     "id": "MI_SECURITY_OVERALLS",
-    "name": "Mi Security Overalls",
+    "name": "MI Security Overalls",
     "gearType": "ARMOR",
     "gearSet": "MI_SECURITY"
   },

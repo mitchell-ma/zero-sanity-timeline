@@ -1,9 +1,9 @@
 import { Column, MiniTimeline, MicroColumn, Operator, Enemy, VisibleSkills, EventFrameMarker } from '../../consts/viewTypes';
 import { DeterminerType, NounType, VerbType, type Effect, type Predicate } from '../../dsl/semantics';
 import type { FrameClausePredicate } from '../../model/event-frames/skillEventFrame';
-import { ColumnType, CombatSkillType, ELEMENT_COLORS, ElementType, EnhancementType, EventFrameType, HeaderVariant, MicroColumnAssignment, SegmentType, StatusType, TimeDependency, TimelineSourceType } from '../../consts/enums';
-import { ENEMY_OWNER_ID, ENEMY_GROUP_COLUMNS, ENEMY_ACTION_COLUMN_ID, OPERATOR_COLUMNS, OPERATOR_STATUS_COLUMN_ID, PHYSICAL_INFLICTION_COLUMNS, PHYSICAL_STATUS_COLUMNS, SKILL_COLUMN_ORDER as SKILL_ORDER, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID } from '../../model/channels';
-import { getTeamStatusColumnId } from '../gameDataStore';
+import { ColumnType, CombatSkillType, ELEMENT_COLORS, ElementType, EnhancementType, EventCategoryType, EventFrameType, HeaderVariant, MicroColumnAssignment, SegmentType, StatusType, TimeDependency, TimelineSourceType } from '../../consts/enums';
+import { ENEMY_OWNER_ID, ENEMY_GROUP_COLUMNS, ENEMY_ACTION_COLUMN_ID, OPERATOR_COLUMNS, OPERATOR_STATUS_COLUMN_ID, PHYSICAL_INFLICTION_COLUMNS, PHYSICAL_STATUS_COLUMNS, SKILL_COLUMN_ORDER as SKILL_ORDER, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID, COMBO_WINDOW_COLUMN_ID } from '../../model/channels';
+import { isTeamStatus } from '../gameDataStore';
 import { SKILL_LABELS, ColumnLabel, STATUS_LABELS, REACTION_MICRO_COLUMNS } from '../../consts/timelineColumnLabels';
 import { getWeapon, getWeaponEffectDefs, getGearEffectDefs, getAllStatusLabels, getStatusById } from '../gameDataStore';
 import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../slot/commonSlotController';
@@ -25,6 +25,7 @@ const OPERATOR_NON_STATUS_COLUMNS: ReadonlySet<string> = new Set([
   OPERATOR_COLUMNS.CONTROLLED,
   OPERATOR_COLUMNS.OTHER,
   OPERATOR_STATUS_COLUMN_ID,
+  COMBO_WINDOW_COLUMN_ID,
 ]);
 
 export interface Slot {
@@ -154,7 +155,7 @@ export function buildColumns(
     const statusEvents = [...getEnabledStatusEvents(s.operator.id), ...getEnabledStatusEvents('generic')];
     if (statusEvents.length) {
       for (const se of statusEvents) {
-        if (getTeamStatusColumnId(se.id)) continue;
+        if (isTeamStatus(se.id)) continue;
         if (se.target === NounType.OPERATOR && (!se.targetDeterminer || se.targetDeterminer === DeterminerType.THIS) && se.id) {
           const seDur = se.duration as { value?: { value?: number } | number | number[] } | undefined;
           const rawVal = seDur?.value;
@@ -173,7 +174,7 @@ export function buildColumns(
             duration: durationFrames,
             color: s.operator.color,
             source: 'talent',
-            statusType: se.type ?? 'STATUS',
+            statusType: se.eventCategoryType ?? EventCategoryType.SKILL_STATUS,
             ...(se.stacks ? { stacks: se.stacks as unknown as Record<string, unknown> } : {}),
           });
           operatorStatusMap.set(s.slotId, defs);
@@ -214,7 +215,7 @@ export function buildColumns(
                         duration: 10 * FPS,
                         color: targetSlot.operator.color,
                         source: 'other',
-                        statusType: statusDef?.type ?? 'STATUS',
+                        statusType: statusDef?.eventCategoryType ?? EventCategoryType.SKILL_STATUS,
                         ...(statusDef?.stacks ? { stacks: statusDef.stacks as unknown as Record<string, unknown> } : {}),
                       });
                       operatorStatusMap.set(targetSlot.slotId, targetDefs);
@@ -237,7 +238,7 @@ export function buildColumns(
                   duration: 10 * FPS,
                   color: s.operator!.color,
                   source: 'other',
-                  statusType: statusDef?.type ?? 'STATUS',
+                  statusType: statusDef?.eventCategoryType ?? EventCategoryType.SKILL_STATUS,
                   ...(statusDef?.stacks ? { stacks: statusDef.stacks as unknown as Record<string, unknown> } : {}),
                 });
                 operatorStatusMap.set(s.slotId, defs);
@@ -266,7 +267,7 @@ export function buildColumns(
             duration: durationFrames,
             color: s.operator!.color,
             source: equipSource,
-            statusType: equipSource === 'weapon' ? 'WEAPON_STATUS' : 'GEAR_STATUS',
+            statusType: equipSource === 'weapon' ? EventCategoryType.WEAPON_STATUS : EventCategoryType.GEAR_STATUS,
           });
           operatorStatusMap.set(s.slotId, defs);
         } else if (se.target === NounType.OPERATOR && se.targetDeterminer === DeterminerType.OTHER) {
@@ -629,13 +630,54 @@ export function buildColumns(
               ];
             }
           }
-          // Generic combo skill: data-driven frame sequences
-          const comboName = op?.skills[NounType.COMBO_SKILL]?.name;
-          const comboSeqs = op && comboName ? getFrameSequences(op.id, comboName) : undefined;
-          if (comboSeqs?.length && skillType === NounType.COMBO_SKILL) {
-            const comboLabels = getSegmentLabels(op!.id, comboName!);
-            const seg = SkillSegmentBuilder.buildSegments(comboSeqs, { labels: comboLabels, gaugeGain: skill.gaugeGain, teamGaugeGain: skill.teamGaugeGain, gaugeGainByEnemies: skill.gaugeGainByEnemies, ctx: skillCtx });
-            col.defaultEvent = { ...col.defaultEvent!, segments: seg.segments };
+          // Generic combo skill: load all skills matching COMBO_SKILL category
+          if (op && skillType === NounType.COMBO_SKILL) {
+            const allSkills = getOperatorSkills(op.id);
+            const comboSkills = allSkills
+              ? Array.from(allSkills.values()).filter((sk) => sk.eventCategoryType === EventCategoryType.COMBO_SKILL)
+              : [];
+            if (comboSkills.length > 0) {
+              const variants: NonNullable<MiniTimeline['eventVariants']> = [];
+              for (const cs of comboSkills) {
+                const seqs = getFrameSequences(op.id, cs.id);
+                if (!seqs?.length) continue;
+                const labels = getSegmentLabels(op.id, cs.id);
+                const eTypes = cs.enhancementTypes ?? [];
+                const isEnhanced = eTypes.includes(EnhancementType.ENHANCED);
+                const gg = isEnhanced ? 0 : skill.gaugeGain;
+                const tgg = isEnhanced ? 0 : skill.teamGaugeGain;
+                const seg = SkillSegmentBuilder.buildSegments(seqs, { labels, gaugeGain: gg, teamGaugeGain: tgg, gaugeGainByEnemies: skill.gaugeGainByEnemies, ctx: skillCtx });
+                const enhancementType = eTypes.includes(EnhancementType.EMPOWERED) ? EnhancementType.EMPOWERED
+                  : isEnhanced ? EnhancementType.ENHANCED
+                  : EnhancementType.NORMAL;
+                const raw = cs.serialize();
+                variants.push({
+                  ...col.defaultEvent!,
+                  id: cs.id,
+                  name: cs.id,
+                  displayName: resolveVariantDisplayName(cs.id, raw),
+                  enhancementType,
+                  segments: seg.segments,
+                  ...(raw.activationClause ? { activationClause: raw.activationClause as Predicate[] } : {}),
+                  gaugeGain: gg,
+                  teamGaugeGain: tgg,
+                });
+              }
+              // Sort: NORMAL variants first, then ENHANCED/EMPOWERED
+              variants.sort((a, b) => {
+                const aIsNormal = !a.enhancementType || a.enhancementType === EnhancementType.NORMAL;
+                const bIsNormal = !b.enhancementType || b.enhancementType === EnhancementType.NORMAL;
+                if (aIsNormal && !bIsNormal) return -1;
+                if (!aIsNormal && bIsNormal) return 1;
+                return 0;
+              });
+              if (variants.length === 1) {
+                col.defaultEvent = { ...col.defaultEvent!, ...variants[0] };
+              } else if (variants.length > 1) {
+                col.defaultEvent = { ...col.defaultEvent!, ...variants[0] };
+                col.eventVariants = variants;
+              }
+            }
           }
           // Generic ultimate: build segments from JSON data
           if (skillType === NounType.ULTIMATE) {

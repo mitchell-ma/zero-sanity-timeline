@@ -1,67 +1,120 @@
 /**
  * Business logic for custom operator talent CRUD operations.
+ *
+ * V2: Stores game data JSON (OperatorStatus[] per talent) with a wrapper for metadata.
+ * The editor still works with CustomOperatorTalent via adapters.
  */
 import { ElementType } from '../../consts/enums';
 import type { CustomOperatorTalent } from '../../model/custom/customOperatorTalentTypes';
-import { loadCustomOperatorTalents, saveCustomOperatorTalents, validateCustomOperatorTalent } from '../../utils/customContentStorage';
+import { loadGameDataArray, saveGameDataArray, STORAGE_KEYS, validateCustomOperatorTalent } from '../../utils/customContentStorage';
 import type { ValidationError } from '../../utils/customContentStorage';
+import { operatorTalentToFriendly, operatorTalentFromFriendly } from './gameDataAdapters';
 
-let _cache: CustomOperatorTalent[] | null = null;
+type GameDataJson = Record<string, unknown>;
 
-function getAll(): CustomOperatorTalent[] {
-  if (!_cache) _cache = loadCustomOperatorTalents();
+interface TalentBundle {
+  _wrapId: string;
+  _wrapName: string;
+  operatorId?: string;
+  slot: number;
+  maxLevel: number;
+  statuses: GameDataJson[];
+}
+
+let _cache: TalentBundle[] | null = null;
+
+function getAllBundles(): TalentBundle[] {
+  if (!_cache) {
+    const raw = loadGameDataArray(STORAGE_KEYS.operatorTalents);
+    _cache = raw.map(entry => {
+      if (entry._wrapId) return entry as unknown as TalentBundle;
+      // v1 format: CustomOperatorTalent
+      if (typeof entry.id === 'string' && Array.isArray(entry.statusEvents)) {
+        const friendly = entry as unknown as CustomOperatorTalent;
+        return {
+          _wrapId: friendly.id,
+          _wrapName: friendly.name,
+          operatorId: friendly.operatorId,
+          slot: friendly.slot,
+          maxLevel: friendly.maxLevel,
+          statuses: operatorTalentFromFriendly(friendly),
+        };
+      }
+      return { _wrapId: '', _wrapName: '', slot: 1, maxLevel: 3, statuses: [] };
+    });
+  }
   return _cache;
 }
 
-function persist(talents: CustomOperatorTalent[]): void {
-  _cache = talents;
-  saveCustomOperatorTalents(talents);
+function persist(bundles: TalentBundle[]): void {
+  _cache = bundles;
+  saveGameDataArray(STORAGE_KEYS.operatorTalents, bundles as unknown as GameDataJson[]);
 }
 
-/** Get all custom operator talents. */
+function bundleToFriendly(bundle: TalentBundle): CustomOperatorTalent {
+  return operatorTalentToFriendly(
+    bundle.statuses, bundle._wrapId, bundle._wrapName,
+    bundle.slot, bundle.maxLevel, bundle.operatorId,
+  );
+}
+
+function friendlyToBundle(talent: CustomOperatorTalent): TalentBundle {
+  return {
+    _wrapId: talent.id,
+    _wrapName: talent.name,
+    operatorId: talent.operatorId,
+    slot: talent.slot,
+    maxLevel: talent.maxLevel,
+    statuses: operatorTalentFromFriendly(talent),
+  };
+}
+
 export function getCustomOperatorTalents(): CustomOperatorTalent[] {
-  return getAll();
+  return getAllBundles().map(bundleToFriendly);
 }
 
-/** Create a new custom operator talent. Returns validation errors if any. */
 export function createCustomOperatorTalent(talent: CustomOperatorTalent): ValidationError[] {
-  const all = getAll();
-  const existingIds = new Set(all.map((t) => t.id));
+  const all = getAllBundles();
+  const existingIds = new Set(all.map(b => b._wrapId));
   const errors = validateCustomOperatorTalent(talent, existingIds);
   if (errors.length > 0) return errors;
-  persist([...all, talent]);
+  persist([...all, friendlyToBundle(talent)]);
   return [];
 }
 
-/** Update an existing custom operator talent. */
 export function updateCustomOperatorTalent(id: string, talent: CustomOperatorTalent): ValidationError[] {
-  const all = getAll();
-  if (!all.find((t) => t.id === id)) return [{ field: 'id', message: 'Custom operator talent not found' }];
-  const existingIds = new Set(all.map((t) => t.id));
+  const all = getAllBundles();
+  if (!all.find(b => b._wrapId === id)) return [{ field: 'id', message: 'Custom operator talent not found' }];
+  const existingIds = new Set(all.map(b => b._wrapId));
   const errors = validateCustomOperatorTalent(talent, existingIds, id);
   if (errors.length > 0) return errors;
-  persist(all.map((t) => (t.id === id ? talent : t)));
+  persist(all.map(b => (b._wrapId === id ? friendlyToBundle(talent) : b)));
   return [];
 }
 
-/** Delete a custom operator talent. */
 export function deleteCustomOperatorTalent(id: string): void {
-  const all = getAll();
-  persist(all.filter((t) => t.id !== id));
+  persist(getAllBundles().filter(b => b._wrapId !== id));
 }
 
-/** Duplicate a custom operator talent with a new id and name. */
 export function duplicateCustomOperatorTalent(id: string): CustomOperatorTalent | null {
-  const all = getAll();
-  const source = all.find((t) => t.id === id);
+  const source = getAllBundles().find(b => b._wrapId === id);
   if (!source) return null;
-  const clone: CustomOperatorTalent = JSON.parse(JSON.stringify(source));
-  clone.id = `custom-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
-  clone.name = `${source.name} (Copy)`;
-  return clone;
+  const friendly = bundleToFriendly(source);
+  friendly.id = `custom-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+  friendly.name = `${friendly.name} (Copy)`;
+  return friendly;
 }
 
-/** Generate a blank custom operator talent template. */
+export function getTalentsForOperator(operatorId: string): CustomOperatorTalent[] {
+  return getAllBundles().filter(b => b.operatorId === operatorId).map(bundleToFriendly);
+}
+
+export function linkTalentToOperator(talentId: string, operatorId: string | undefined): void {
+  const all = getAllBundles();
+  if (!all.find(b => b._wrapId === talentId)) return;
+  persist(all.map(b => (b._wrapId === talentId ? { ...b, operatorId } : b)));
+}
+
 export function getDefaultCustomOperatorTalent(): CustomOperatorTalent {
   return {
     id: `custom-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,

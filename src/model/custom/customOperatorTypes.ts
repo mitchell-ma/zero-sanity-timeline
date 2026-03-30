@@ -20,6 +20,8 @@ export interface CustomOperator {
   weaponTypes: WeaponType[];
   operatorRarity: 4 | 5 | 6;
   splashArt?: string;
+  /** Builtin operator ID this was cloned from (for showing readonly base data). */
+  baseOperatorId?: string;
   mainAttributeType: StatType | string;
   secondaryAttributeType?: StatType | string;
   baseStats: {
@@ -27,13 +29,14 @@ export interface CustomOperator {
     lv90: Partial<Record<StatType | string, number>>;
   };
   potentials: CustomPotentialEntry[];
-  /** All combat skills — grouped by combatSkillType in the UI. */
-  skills: CustomCombatSkillDef[];
+  /** @deprecated Use skill link table instead. Kept for migration. */
+  skills?: CustomCombatSkillDef[];
   combo: {
     onTriggerClause: Predicate[];
     description: string;
     windowFrames?: number;
   };
+  /** @deprecated Use standalone CustomOperatorStatus entities instead. */
   statusEvents?: import('./customStatusEventTypes').CustomStatusEventDef[];
 }
 

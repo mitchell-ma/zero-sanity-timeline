@@ -42,5 +42,26 @@
     "dataSources": [
       "ENDFIELD_WIKI"
     ]
-  }
+  },
+  "onTriggerClause": [
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "APPLY",
+          "object": "REACTION",
+          "objectId": "SOLIDIFICATION"
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "FINCHASER_3_0_FIN_CHASERS_INTENT",
+          "to": "ENEMY"
+        }
+      ]
+    }
+  ]
 }

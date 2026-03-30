@@ -2,7 +2,6 @@
   "properties": {
     "name": "Frontline Support",
     "description": "When the controlled operator is attacked. Leaps at the target enemy and unleashes a heavy slam that deals Physical DMG and Knock Down while giving HP treatment to the controlled operator. The attribute of Will increases the amount of HP treatment.",
-    "windowFrames": 720,
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "COMBO_SKILL",
     "element": "PHYSICAL",
@@ -332,18 +331,33 @@
     "originId": "EMBER",
     "icon": "skills/combo_ember.png"
   },
-  "onTriggerClause": [
-    {
-      "conditions": [
-        {
-          "subject": "ENEMY",
-          "verb": "DEAL",
-          "object": "DAMAGE",
-          "toDeterminer": "CONTROLLED",
-          "to": "OPERATOR"
+  "clauseType": "ALL",
+  "activationWindow": {
+    "properties": {
+      "maxSkills": 1
+    },
+    "onTriggerClause": [
+      {
+        "conditions": [
+          {
+            "subject": "ENEMY",
+            "verb": "DEAL",
+            "object": "DAMAGE",
+            "toDeterminer": "CONTROLLED",
+            "to": "OPERATOR"
+          }
+        ]
+      }
+    ],
+    "segments": [
+      {
+        "properties": {
+          "duration": {
+            "value": 6,
+            "unit": "SECOND"
+          }
         }
-      ]
-    }
-  ],
-  "clauseType": "ALL"
+      }
+    ]
+  }
 }

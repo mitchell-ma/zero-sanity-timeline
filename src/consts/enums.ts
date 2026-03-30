@@ -6,6 +6,11 @@ export enum QueueFrameType {
   COMBO_RESOLVE = 'COMBO_RESOLVE',
 }
 
+export enum FrameHookType {
+  EVENT_START = 'EVENT_START',
+  EVENT_END = 'EVENT_END',
+}
+
 export enum CombatSkillType {
   BASIC_ATTACK = "BASIC_ATTACK",
   BATK = "BATK",
@@ -155,6 +160,9 @@ export const ELEMENT_COLORS: Record<ElementType, string> = {
   [ElementType.ELECTRIC]: '#f0b030',
   [ElementType.ARTS]:     '#c080e0',
 };
+
+/** Default event color when no element is associated (indigo). */
+export const DEFAULT_EVENT_COLOR = '#6366f1';
 
 /** Arts reactions — triggered by arts infliction combinations. */
 export enum ArtsReactionType {
