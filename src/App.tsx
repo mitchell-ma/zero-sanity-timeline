@@ -315,6 +315,7 @@ export default function App() {
                     spInsufficiencyZones={app.spInsufficiencyZones}
                     dragThrottle={app.dragThrottle}
                     readOnly={app.readOnly}
+                    editingEventId={app.editingEventId}
                   />
                   {(app.hidePreview === 'left' || app.showPreview === 'left') && (
                     <div className="pane-hide-overlay">

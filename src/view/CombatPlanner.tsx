@@ -148,6 +148,8 @@ interface CombatPlannerProps {
   dragThrottle?: number;
   /** When true, all mutations are disabled (community/sample loadouts). */
   readOnly?: boolean;
+  /** ID of the event currently shown in the info pane (null = pane closed). */
+  editingEventId?: string | null;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -250,6 +252,7 @@ export default function CombatPlanner({
   onToggleOrientation,
   dragThrottle = 2,
   readOnly,
+  editingEventId: editingEventIdProp,
 }: CombatPlannerProps) {
   const axis = getAxisMap(orientation);
   const isHorizontal = orientation === 'horizontal';
@@ -1127,8 +1130,8 @@ export default function CombatPlanner({
         return new Set([eventUid]);
       });
     }
-    onEditEvent(eventUid);
-  }, [onContextMenu, onSelectedFramesChange, onEditEvent]);
+    if (editingEventIdProp != null) onEditEvent(eventUid);
+  }, [onContextMenu, onSelectedFramesChange, onEditEvent, editingEventIdProp]);
 
   // ─── Event double-click (open info pane) ──────────────────────────────────────
   const handleEventDoubleClick = useCallback((_e: React.MouseEvent, eventUid: string) => {

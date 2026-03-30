@@ -1607,7 +1607,7 @@ export function useApp() {
     columns, slots, allProcessedEvents, contentFrames, resourceGraphs, staggerBreaks, spConsumptionHistory, spInsufficiencyZones,
 
     // UI state
-    zoom, contextMenu, editingEvent, processedEditingEvent, editingEventReadOnly, editingEventIsDerived, editContext,
+    zoom, contextMenu, editingEventId, editingEvent, processedEditingEvent, editingEventReadOnly, editingEventIsDerived, editContext,
     editingSlot, editingEnemyOpen, editingResourceCol, editingResourceConfig, editingResourceKey,
     editingDamageRow,
     infoPaneClosing, infoPanePinned, infoPaneVerbose, selectedFrames, hoverFrameRef,

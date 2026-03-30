@@ -19,7 +19,7 @@
 - Status filter checkboxes in column headers now update instantly when toggled instead of requiring a menu re-open
 - Weapon status effects with trigger conditions (like Lupine Scarlet's Wolven Blood) now properly contribute to the trigger pipeline
 - New MI Security gear piece icons added
-- Single-clicking an event now opens the detail panel immediately for faster inspection
+- Single-clicking an event now switches the detail panel to that event when it's already open, without popping up unexpectedly when closed
 
 ## 2026-03-28
 - Status effects can now trigger actions when they appear or expire, enabling mechanics like Gilberta's Gravity Field extending Lift duration while the field is active
