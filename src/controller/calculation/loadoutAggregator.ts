@@ -297,7 +297,7 @@ export function aggregateLoadoutStats(
       if (entry) {
         gearSetDescription = entry.label;
         for (const [key, value] of Object.entries(entry.passiveStats)) {
-          addStat(key as StatType, value as number, 'Gear Set');
+          addStat(key as StatType, value as number, `${entry.label} (Gear Set)`);
         }
       }
     }

@@ -306,7 +306,10 @@
                   "object": "STATUS",
                   "objectId": "INFLICTION",
                   "objectQualifier": "ARTS",
-                  "from": "ENEMY"
+                  "from": "ENEMY",
+                  "with": {
+                    "stacks": "MAX"
+                  }
                 },
                 {
                   "verb": "APPLY",

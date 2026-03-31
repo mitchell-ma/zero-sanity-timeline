@@ -973,7 +973,7 @@ export function validateEmpowered(events: TimelineEvent[], slots: Slot[]): Map<s
     const opId = slot?.operator?.id;
     if (!opId) continue;
     // Empowered activation is governed by activationClause on the skill JSON
-    const clause = getVariantClause(opId, ev.name);
+    const clause = getVariantClause(opId, ev.id);
     if (clause) {
       const dec = getLastController();
       const result = evaluateActivationClause(
@@ -1008,7 +1008,7 @@ export function validateEnhanced(events: TimelineEvent[]): Map<string, string> {
 
     // Every segment start must fall within an active ENABLE clause targeting this variant
     for (const frame of segStarts) {
-      if (!hasEnableClauseAtFrame(events, ev.ownerId, ev.name, frame)) {
+      if (!hasEnableClauseAtFrame(events, ev.ownerId, ev.id, frame)) {
         map.set(ev.uid, 'Enhanced skill must be within an active ENABLE effect');
         break;
       }
@@ -1039,7 +1039,7 @@ export function validateDisabledVariants(events: TimelineEvent[]): Map<string, s
     }
 
     for (const frame of segStarts) {
-      if (hasDisableAtFrame(events, ev.ownerId, ev.name, frame)) {
+      if (hasDisableAtFrame(events, ev.ownerId, ev.id, frame)) {
         map.set(ev.uid, 'Variant cannot be used during DISABLE window');
         break;
       }
@@ -1140,11 +1140,11 @@ export function validateVariantClauses(
   }
 
   for (const ev of events) {
-    if (!ev.name) continue;
+    if (!ev.id) continue;
     const operatorId = slotOperatorId.get(ev.ownerId);
     if (!operatorId) continue;
 
-    const clause = getVariantClause(operatorId, ev.name);
+    const clause = getVariantClause(operatorId, ev.id);
     if (!clause) continue;
 
     const dec = getLastController();

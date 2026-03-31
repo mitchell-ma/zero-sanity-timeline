@@ -61,14 +61,20 @@ export function deriveComboActivationWindows(
     const slotCombos = comboEventsBySlot.get(wiring.slotId);
     if (slotCombos) {
       const onCooldown = slotCombos.some((ce) => {
+        // Use computeSegmentsSpan which handles IMMEDIATE_COOLDOWN offset correctly
+        const eventSpan = computeSegmentsSpan(ce.segments);
         let preCooldownDur = 0;
-        let totalDur = 0;
         for (const s of ce.segments) {
-          totalDur += s.properties.duration;
-          if (!s.properties.segmentTypes?.includes(SegmentType.COOLDOWN)) preCooldownDur += s.properties.duration;
+          if (s.properties.segmentTypes?.includes(SegmentType.COOLDOWN)) break;
+          // IMMEDIATE_COOLDOWN starts at offset 0 — active segments don't push cooldown later
+          if (s.properties.segmentTypes?.includes(SegmentType.IMMEDIATE_COOLDOWN)) break;
+          preCooldownDur += s.properties.duration;
         }
-        const cooldownStart = ce.startFrame + preCooldownDur;
-        const cooldownEnd = ce.startFrame + totalDur;
+        const hasCooldown = ce.segments.some(s => s.properties.segmentTypes?.includes(SegmentType.COOLDOWN) || s.properties.segmentTypes?.includes(SegmentType.IMMEDIATE_COOLDOWN));
+        if (!hasCooldown) return false;
+        const isImmediate = ce.segments.some(s => s.properties.segmentTypes?.includes(SegmentType.IMMEDIATE_COOLDOWN));
+        const cooldownStart = isImmediate ? ce.startFrame : ce.startFrame + preCooldownDur;
+        const cooldownEnd = ce.startFrame + eventSpan;
         return triggerFrame > cooldownStart && triggerFrame < cooldownEnd;
       });
       if (onCooldown) return;
@@ -145,7 +151,7 @@ export function deriveComboActivationWindows(
  */
 export function hasActiveEventInColumns(events: TimelineEvent[], columnIds: string[], frame: number): boolean {
   for (const ev of events) {
-    if (!columnIds.includes(ev.columnId) && !columnIds.includes(ev.name)) continue;
+    if (!columnIds.includes(ev.columnId) && !columnIds.includes(ev.id)) continue;
     const totalDuration = computeSegmentsSpan(ev.segments);
     if (frame >= ev.startFrame && frame < ev.startFrame + totalDuration) {
       return true;

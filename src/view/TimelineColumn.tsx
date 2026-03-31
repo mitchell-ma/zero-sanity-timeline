@@ -264,32 +264,17 @@ function TimelineColumn({
         );
       })()}
 
-      {/* SP zones on battle columns */}
-      {col.columnId === NounType.BATTLE_SKILL && (() => {
-        const insuffGaps = insufficiencyZones ?? [];
-        const sufficient: { start: number; end: number }[] = [];
-        let cursor = 0;
-        for (const gap of insuffGaps) {
-          if (gap.start > cursor) sufficient.push({ start: cursor, end: gap.start });
-          cursor = Math.max(cursor, gap.end);
-        }
-        if (cursor < totalRealFrames) sufficient.push({ start: cursor, end: totalRealFrames });
-        return (
-          <>
-            <div className="sp-stripes-bg" />
-            {sufficient.map((zone, i) => (
-              <div
-                key={`sp-ok-${i}`}
-                className="sp-sufficient-bg"
-                style={{
-                  [axis.framePos]: frameToPx(zone.start, zoom),
-                  [axis.frameSize]: durationToPx(zone.end - zone.start, zoom),
-                } as React.CSSProperties}
-              />
-            ))}
-          </>
-        );
-      })()}
+      {/* SP insufficiency zones on battle columns */}
+      {col.columnId === NounType.BATTLE_SKILL && insufficiencyZones && insufficiencyZones.length > 0 && insufficiencyZones.map((zone, i) => (
+        <div
+          key={`sp-insuff-${i}`}
+          className="sp-insufficient-zone"
+          style={{
+            [axis.framePos]: frameToPx(zone.start, zoom),
+            [axis.frameSize]: durationToPx(zone.end - zone.start, zoom),
+          } as React.CSSProperties}
+        />
+      ))}
 
       {/* Events */}
       {hasMicro ? (

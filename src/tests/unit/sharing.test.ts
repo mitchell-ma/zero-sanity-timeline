@@ -9,7 +9,7 @@
  */
 
 // @ts-nocheck
-import { ColumnType, LoadoutNodeType } from '../../consts/enums';
+import { ColumnType, LoadoutNodeType, SegmentType, TimeDependency } from '../../consts/enums';
 import { NounType } from '../../dsl/semantics';
 import { ultimateGraphKey } from '../../model/channels';
 // Polyfill browser APIs not available in Node test environment
@@ -138,7 +138,7 @@ describe('embedCodec', () => {
     test('empty sheet round-trips correctly', async () => {
       const original = makeSheetData();
       const encoded = await encodeEmbed(original, []);
-      const decoded = await decodeEmbed(encoded, []);
+      const { sheetData: decoded } = await decodeEmbed(encoded, []);
 
       expect(decoded.operatorIds).toEqual(original.operatorIds);
       expect(decoded.enemyId).toBe(original.enemyId);
@@ -169,7 +169,7 @@ describe('embedCodec', () => {
       });
 
       const encoded = await encodeEmbed(original, []);
-      const decoded = await decodeEmbed(encoded, []);
+      const { sheetData: decoded } = await decodeEmbed(encoded, []);
 
       expect(decoded.events).toHaveLength(2);
       expect(decoded.events[0].name).toBe('FLAMING_CINDERS');
@@ -196,7 +196,7 @@ describe('embedCodec', () => {
       });
 
       const encoded = await encodeEmbed(original, []);
-      const decoded = await decodeEmbed(encoded, []);
+      const { sheetData: decoded } = await decodeEmbed(encoded, []);
 
       expect(decoded.loadoutProperties['slot-0'].operator.potential).toBe(3);
       expect(decoded.loadoutProperties['slot-0'].skills.comboSkillLevel).toBe(8);
@@ -215,7 +215,7 @@ describe('embedCodec', () => {
       });
 
       const encoded = await encodeEmbed(original, []);
-      const decoded = await decodeEmbed(encoded, []);
+      const { sheetData: decoded } = await decodeEmbed(encoded, []);
 
       expect(decoded.loadouts['slot-0'].weaponId).toBe('FORGEBORN_SCATHE');
       expect(decoded.loadouts['slot-0'].armorId).toBe('TIDE_FALL');
@@ -276,7 +276,7 @@ describe('embedCodec', () => {
       });
 
       const encoded = await encodeEmbed(original, []);
-      const decoded = await decodeEmbed(encoded, []);
+      const { sheetData: decoded } = await decodeEmbed(encoded, []);
 
       expect(decoded.operatorIds[0]).toBe('LAEVATAIN');
       expect(decoded.operatorIds[1]).toBeNull();
@@ -297,7 +297,7 @@ describe('embedCodec', () => {
       });
 
       const encoded = await encodeEmbed(original, []);
-      const decoded = await decodeEmbed(encoded, []);
+      const { sheetData: decoded } = await decodeEmbed(encoded, []);
 
       expect(decoded.events[0].startFrame).toBeLessThanOrEqual(14400);
       expect(eventDuration(decoded.events[0])).toBeGreaterThanOrEqual(0);
@@ -314,7 +314,7 @@ describe('embedCodec', () => {
       });
 
       const encoded = await encodeEmbed(original, []);
-      const decoded = await decodeEmbed(encoded, []);
+      const { sheetData: decoded } = await decodeEmbed(encoded, []);
 
       expect(decoded.loadouts['slot-0'].weaponId).toBe('WEAPONNAME');
     });
@@ -360,7 +360,7 @@ describe('embedCodec', () => {
       });
 
       const encoded = await encodeEmbed(original, [segmentColumn]);
-      const decoded = await decodeEmbed(encoded, [segmentColumn]);
+      const { sheetData: decoded } = await decodeEmbed(encoded, [segmentColumn]);
 
       expect(decoded.events[0].startFrame).toBe(120);
       expect(eventDuration(decoded.events[0])).toBe(300);
@@ -382,7 +382,7 @@ describe('embedCodec', () => {
       });
 
       const encoded = await encodeEmbed(original, [segmentColumn]);
-      const decoded = await decodeEmbed(encoded, [segmentColumn]);
+      const { sheetData: decoded } = await decodeEmbed(encoded, [segmentColumn]);
 
       expect(decoded.overrides).toBeDefined();
       expect(decoded.overrides[key]?.segments?.[0]?.duration).toBe(80);
@@ -407,7 +407,7 @@ describe('embedCodec', () => {
       });
 
       const encoded = await encodeEmbed(original, [segmentColumn]);
-      const decoded = await decodeEmbed(encoded, [segmentColumn]);
+      const { sheetData: decoded } = await decodeEmbed(encoded, [segmentColumn]);
 
       expect(decoded.overrides).toBeDefined();
       expect(decoded.overrides[key]?.segments?.[0]?.frames?.[0]?.offsetFrame).toBe(25);
@@ -429,7 +429,7 @@ describe('embedCodec', () => {
       });
 
       const encoded = await encodeEmbed(original, [segmentColumn]);
-      const decoded = await decodeEmbed(encoded, [segmentColumn]);
+      const { sheetData: decoded } = await decodeEmbed(encoded, [segmentColumn]);
 
       expect(decoded.overrides).toBeDefined();
       expect(decoded.overrides[key]?.segments?.[1]?.frames?.[0]?.offsetFrame).toBe(40);
@@ -452,7 +452,7 @@ describe('embedCodec', () => {
       expect(cleaned.overrides).toBeDefined();
 
       const encoded = await encodeEmbed(sheet, [segmentColumn]);
-      const decoded = await decodeEmbed(encoded, [segmentColumn]);
+      const { sheetData: decoded } = await decodeEmbed(encoded, [segmentColumn]);
 
       expect(decoded.overrides).toBeDefined();
       expect(decoded.overrides[key]?.segments?.[1]?.frames?.[0]?.offsetFrame).toBe(40);
@@ -472,7 +472,7 @@ describe('embedCodec', () => {
       });
 
       const encoded = await encodeEmbed(original, [segmentColumn]);
-      const decoded = await decodeEmbed(encoded, [segmentColumn]);
+      const { sheetData: decoded } = await decodeEmbed(encoded, [segmentColumn]);
 
       expect(decoded.overrides).toBeDefined();
       expect(decoded.overrides[key]?.segments?.[1]?.frames?.[0]?.offsetFrame).toBe(45);
@@ -496,7 +496,7 @@ describe('embedCodec', () => {
       });
 
       const encoded = await encodeEmbed(original, [segmentColumn]);
-      const decoded = await decodeEmbed(encoded, [segmentColumn]);
+      const { sheetData: decoded } = await decodeEmbed(encoded, [segmentColumn]);
 
       expect(decoded.overrides).toBeDefined();
       expect(decoded.overrides[key]?.segments?.[0]?.duration).toBe(90);
@@ -509,7 +509,7 @@ describe('embedCodec', () => {
     test('decoded sheets have all skills visible', async () => {
       const original = makeSheetData();
       const encoded = await encodeEmbed(original, []);
-      const decoded = await decodeEmbed(encoded, []);
+      const { sheetData: decoded } = await decodeEmbed(encoded, []);
 
       for (const slotId of ['slot-0', 'slot-1', 'slot-2', 'slot-3']) {
         expect(decoded.visibleSkills[slotId][NounType.BASIC_ATTACK]).toBe(true);
@@ -547,31 +547,36 @@ describe('embedCodec', () => {
       Object.defineProperty(window, 'history', { writable: true, value: savedHistory });
     });
 
-    test('buildShareUrl includes loadout name as n= param', async () => {
+    test('buildShareUrl embeds name in binary payload (no &n= param)', async () => {
       const sheet = makeSheetData();
       const url = await buildShareUrl(sheet, [], 'My Build');
-      expect(url).toContain('&n=My%20Build');
-      expect(url).toMatch(/^https:\/\/example\.com\/app\/\?d=.+&n=My%20Build$/);
+      expect(url).not.toContain('&n=');
+      expect(url).toMatch(/^https:\/\/example\.com\/app\/\?d=.+$/);
+      // Round-trip: decode the URL and verify name is inside
+      const encoded = url.split('?d=')[1];
+      const { name } = await decodeEmbed(encoded, []);
+      expect(name).toBe('My Build');
     });
 
-    test('buildShareUrl truncates name to 32 chars', async () => {
+    test('buildShareUrl truncates name to 32 chars inside payload', async () => {
       const sheet = makeSheetData();
       const longName = 'A'.repeat(50);
       const url = await buildShareUrl(sheet, [], longName);
-      const parsed = new URLSearchParams(url.split('?')[1]);
-      expect(parsed.get('n').length).toBe(32);
+      const encoded = url.split('?d=')[1];
+      const { name } = await decodeEmbed(encoded, []);
+      expect(name.length).toBe(32);
     });
 
-    test('getEmbedParams extracts data and name', () => {
+    test('getEmbedParams extracts data and legacy n= param', () => {
       window.location.search = '?d=somedata&n=Cool%20Rotation';
       const result = getEmbedParams();
       expect(result).toEqual({ data: 'somedata', name: 'Cool Rotation' });
     });
 
-    test('getEmbedParams defaults name to Shared Loadout when n= missing', () => {
+    test('getEmbedParams returns null name when n= missing (v2 URLs)', () => {
       window.location.search = '?d=somedata';
       const result = getEmbedParams();
-      expect(result).toEqual({ data: 'somedata', name: 'Shared Loadout' });
+      expect(result).toEqual({ data: 'somedata', name: null });
     });
 
     test('getEmbedParams returns null when d= missing', () => {
@@ -743,7 +748,7 @@ describe('full state round-trip (current state → share → load → assert equ
     const encoded = await encodeEmbed(currentState, columns);
 
     // ── Step 2: Decode (simulates mount-time decode) ────────────────────
-    const decoded = await decodeEmbed(encoded, []);
+    const { sheetData: decoded } = await decodeEmbed(encoded, []);
 
     // ── Assertions: event positions and names ───────────────────────────
     expect(decoded.events).toHaveLength(4);
@@ -789,6 +794,96 @@ describe('full state round-trip (current state → share → load → assert equ
     // ── Assertions: operator and enemy IDs ──────────────────────────────
     expect(decoded.operatorIds).toEqual(['LAEVATAIN', 'AKEKURI', 'ANTAL', 'ARDELIA']);
     expect(decoded.enemyId).toBe('training_dummy');
+  });
+});
+
+describe('animation + active duration round-trip', () => {
+  // Simulates a skill with animation + short active segment (like Gilberta's Gravity Field:
+  // 240-frame animation + 16-frame active = 256 total).
+  // The bug: encode stores ad = total (256), decode used 256 as active, then prepended
+  // animation (240) on top → 496 total instead of 256.
+  test('event with animation segment preserves correct total duration', async () => {
+    const animDuration = 240;
+    const activeDuration = 16;
+    const totalDuration = animDuration + activeDuration;
+
+    const original = makeSheetData({
+      events: [{
+        id: 'GRAVITY_FIELD', uid: 'ev-1', name: 'GRAVITY_FIELD', ownerId: 'slot-2',
+        columnId: NounType.ULTIMATE, startFrame: 841,
+        segments: [
+          { properties: { segmentTypes: [SegmentType.ANIMATION], duration: animDuration, name: 'Animation', timeDependency: TimeDependency.REAL_TIME } },
+          { properties: { duration: activeDuration } },
+        ],
+      }],
+    });
+
+    const encoded = await encodeEmbed(original, []);
+    const { sheetData: decoded } = await decodeEmbed(encoded, []);
+
+    expect(decoded.events).toHaveLength(1);
+    const ev = decoded.events[0];
+    expect(ev.name).toBe('GRAVITY_FIELD');
+    expect(ev.startFrame).toBe(841);
+
+    // Total duration must equal original (animation + active), not animation + total
+    expect(eventDuration(ev)).toBe(totalDuration);
+
+    // Must have an animation segment
+    const animSeg = ev.segments.find(s => s.properties.segmentTypes?.includes(SegmentType.ANIMATION));
+    expect(animSeg).toBeDefined();
+    expect(animSeg.properties.duration).toBe(animDuration);
+
+    // Active portion = total minus animation
+    const nonAnimSegs = ev.segments.filter(s => !s.properties.segmentTypes?.includes(SegmentType.ANIMATION));
+    const activeTotal = nonAnimSegs.reduce((sum, s) => sum + s.properties.duration, 0);
+    expect(activeTotal).toBe(activeDuration);
+  });
+
+  test('event with only active duration (no animation) is unaffected', async () => {
+    const original = makeSheetData({
+      events: [{
+        id: 'FLAMING_CINDERS', uid: 'ev-1', name: 'FLAMING_CINDERS', ownerId: 'slot-0',
+        columnId: NounType.BATTLE_SKILL, startFrame: 100,
+        segments: [{ properties: { duration: 300 } }],
+      }],
+    });
+
+    const encoded = await encodeEmbed(original, []);
+    const { sheetData: decoded } = await decodeEmbed(encoded, []);
+
+    expect(eventDuration(decoded.events[0])).toBe(300);
+    expect(decoded.events[0].segments).toHaveLength(1);
+  });
+
+  test('modified event duration with animation round-trips', async () => {
+    // User dragged the event to change active duration from 16 to 60
+    const animDuration = 240;
+    const activeDuration = 60;
+    const totalDuration = animDuration + activeDuration;
+
+    const original = makeSheetData({
+      events: [{
+        id: 'GRAVITY_FIELD', uid: 'ev-1', name: 'GRAVITY_FIELD', ownerId: 'slot-2',
+        columnId: NounType.ULTIMATE, startFrame: 500,
+        segments: [
+          { properties: { segmentTypes: [SegmentType.ANIMATION], duration: animDuration, name: 'Animation', timeDependency: TimeDependency.REAL_TIME } },
+          { properties: { duration: activeDuration } },
+        ],
+      }],
+    });
+
+    const encoded = await encodeEmbed(original, []);
+    const { sheetData: decoded } = await decodeEmbed(encoded, []);
+
+    expect(eventDuration(decoded.events[0])).toBe(totalDuration);
+
+    const animSeg = decoded.events[0].segments.find(s => s.properties.segmentTypes?.includes(SegmentType.ANIMATION));
+    expect(animSeg.properties.duration).toBe(animDuration);
+
+    const nonAnimSegs = decoded.events[0].segments.filter(s => !s.properties.segmentTypes?.includes(SegmentType.ANIMATION));
+    const activeTotal = nonAnimSegs.reduce((sum, s) => sum + s.properties.duration, 0);
+    expect(activeTotal).toBe(activeDuration);
   });
 });
 

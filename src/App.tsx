@@ -316,6 +316,8 @@ export default function App() {
                     dragThrottle={app.dragThrottle}
                     readOnly={app.readOnly}
                     editingEventId={app.editingEventId}
+                    changedUidsRef={app.changedUidsRef}
+                    infoPaneOpen={!!(app.editingEventId || app.editingSlot || app.editingEnemyOpen || app.editingResourceKey || app.editingDamageRow)}
                   />
                   {(app.hidePreview === 'left' || app.showPreview === 'left') && (
                     <div className="pane-hide-overlay">

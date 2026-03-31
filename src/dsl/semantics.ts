@@ -339,7 +339,7 @@ export const ObjectType = { ...NounType, ...AdjectiveType } as typeof NounType &
  * Defines which NounType/ObjectType values each verb can take as its object.
  */
 export const VERB_OBJECTS: Partial<Record<VerbType, ObjectType[]>> = {
-  [VerbType.APPLY]:      [ObjectType.INFLICTION, ObjectType.REACTION, ObjectType.ARTS_BURST, ObjectType.STATUS, ObjectType.STAT, ObjectType.STAGGER, ObjectType.SUSCEPTIBILITY, ObjectType.TIME_STOP, ObjectType.EVENT],
+  [VerbType.APPLY]:      [ObjectType.INFLICTION, ObjectType.REACTION, ObjectType.ARTS_BURST, ObjectType.STATUS, ObjectType.STAT, ObjectType.STAGGER, ObjectType.SUSCEPTIBILITY, ObjectType.FRAGILITY, ObjectType.TIME_STOP, ObjectType.EVENT],
   [VerbType.CONSUME]:    [ObjectType.INFLICTION, ObjectType.REACTION, ObjectType.STATUS, ObjectType.SKILL_POINT, ObjectType.ULTIMATE_ENERGY, ObjectType.COOLDOWN, ObjectType.STAGGER, ObjectType.STACKS, ObjectType.EVENT],
   [VerbType.RECOVER]:    [ObjectType.SKILL_POINT, ObjectType.ULTIMATE_ENERGY, ObjectType.HP],
   [VerbType.RETURN]:     [ObjectType.SKILL_POINT],

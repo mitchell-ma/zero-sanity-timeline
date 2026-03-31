@@ -52,6 +52,27 @@
   "segments": [
     {
       "metadata": {
+        "eventComponentType": "SEGMENT"
+      },
+      "properties": {
+        "segmentTypes": [
+          "ANIMATION"
+        ],
+        "name": "Animation",
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 1.9
+          },
+          "unit": "SECOND"
+        },
+        "timeDependency": "REAL_TIME",
+        "timeInteractionType": "TIME_STOP"
+      },
+      "frames": []
+    },
+    {
+      "metadata": {
         "eventComponentType": "SEGMENT",
         "dataSources": [
           "SKILL_DATA",
@@ -59,19 +80,15 @@
         ]
       },
       "properties": {
-        "segmentTypes": [
-          "ANIMATION"
-        ],
         "name": "Stab Flurry",
         "duration": {
           "value": {
             "verb": "IS",
-            "value": 2.5
+            "value": 2.1
           },
           "unit": "SECOND"
         },
         "timeDependency": "REAL_TIME",
-        "timeInteractionType": "TIME_STOP",
         "element": "HEAT"
       },
       "frames": [
@@ -85,7 +102,7 @@
           },
           "properties": {
             "offset": {
-              "value": 1.9,
+              "value": 0.2,
               "unit": "SECOND"
             }
           },
@@ -180,7 +197,7 @@
           },
           "properties": {
             "offset": {
-              "value": 1.908,
+              "value": 0.267,
               "unit": "SECOND"
             }
           },
@@ -275,7 +292,7 @@
           },
           "properties": {
             "offset": {
-              "value": 1.916,
+              "value": 0.3,
               "unit": "SECOND"
             }
           },
@@ -370,7 +387,7 @@
           },
           "properties": {
             "offset": {
-              "value": 1.924,
+              "value": 0.4,
               "unit": "SECOND"
             }
           },
@@ -465,7 +482,7 @@
           },
           "properties": {
             "offset": {
-              "value": 1.932,
+              "value": 0.467,
               "unit": "SECOND"
             }
           },
@@ -560,7 +577,7 @@
           },
           "properties": {
             "offset": {
-              "value": 1.94,
+              "value": 0.567,
               "unit": "SECOND"
             }
           },
@@ -655,7 +672,7 @@
           },
           "properties": {
             "offset": {
-              "value": 1.948,
+              "value": 0.6,
               "unit": "SECOND"
             }
           },
@@ -750,7 +767,7 @@
           },
           "properties": {
             "offset": {
-              "value": 1.956,
+              "value": 0.667,
               "unit": "SECOND"
             }
           },
@@ -845,7 +862,7 @@
           },
           "properties": {
             "offset": {
-              "value": 1.964,
+              "value": 0.7,
               "unit": "SECOND"
             }
           },
@@ -940,7 +957,7 @@
           },
           "properties": {
             "offset": {
-              "value": 1.972,
+              "value": 0.767,
               "unit": "SECOND"
             }
           },
@@ -1035,7 +1052,7 @@
           },
           "properties": {
             "offset": {
-              "value": 1.98,
+              "value": 0.867,
               "unit": "SECOND"
             }
           },
@@ -1130,7 +1147,7 @@
           },
           "properties": {
             "offset": {
-              "value": 1.988,
+              "value": 0.9,
               "unit": "SECOND"
             }
           },
@@ -1225,7 +1242,7 @@
           },
           "properties": {
             "offset": {
-              "value": 1.996,
+              "value": 1,
               "unit": "SECOND"
             }
           },
@@ -1320,7 +1337,7 @@
           },
           "properties": {
             "offset": {
-              "value": 2.004,
+              "value": 1.033,
               "unit": "SECOND"
             }
           },
@@ -1415,7 +1432,7 @@
           },
           "properties": {
             "offset": {
-              "value": 2.012,
+              "value": 1.1,
               "unit": "SECOND"
             }
           },
@@ -1510,7 +1527,7 @@
           },
           "properties": {
             "offset": {
-              "value": 2.02,
+              "value": 1.167,
               "unit": "SECOND"
             }
           },
@@ -1605,7 +1622,7 @@
           },
           "properties": {
             "offset": {
-              "value": 2.028,
+              "value": 1.233,
               "unit": "SECOND"
             }
           },
@@ -1700,7 +1717,7 @@
           },
           "properties": {
             "offset": {
-              "value": 2.036,
+              "value": 1.3,
               "unit": "SECOND"
             }
           },
@@ -1795,7 +1812,7 @@
           },
           "properties": {
             "offset": {
-              "value": 2.044,
+              "value": 1.333,
               "unit": "SECOND"
             }
           },
@@ -1890,7 +1907,7 @@
           },
           "properties": {
             "offset": {
-              "value": 2.052,
+              "value": 1.4,
               "unit": "SECOND"
             }
           },
@@ -1985,7 +2002,7 @@
           },
           "properties": {
             "offset": {
-              "value": 2.06,
+              "value": 1.5,
               "unit": "SECOND"
             }
           },
@@ -2080,7 +2097,7 @@
           },
           "properties": {
             "offset": {
-              "value": 2.068,
+              "value": 1.533,
               "unit": "SECOND"
             }
           },
@@ -2175,7 +2192,7 @@
           },
           "properties": {
             "offset": {
-              "value": 2.076,
+              "value": 1.633,
               "unit": "SECOND"
             }
           },
@@ -2270,7 +2287,7 @@
           },
           "properties": {
             "offset": {
-              "value": 2.084,
+              "value": 1.7,
               "unit": "SECOND"
             }
           },
@@ -2365,7 +2382,7 @@
           },
           "properties": {
             "offset": {
-              "value": 2.092,
+              "value": 1.8,
               "unit": "SECOND"
             }
           },
@@ -2464,7 +2481,7 @@
         "duration": {
           "value": {
             "verb": "IS",
-            "value": 2.667
+            "value": 1.167
           },
           "unit": "SECOND"
         },
@@ -2482,7 +2499,7 @@
           },
           "properties": {
             "offset": {
-              "value": 0.5,
+              "value": 0.067,
               "unit": "SECOND"
             }
           },
@@ -2570,7 +2587,7 @@
           },
           "properties": {
             "offset": {
-              "value": 1.5,
+              "value": 0.367,
               "unit": "SECOND"
             }
           },
@@ -2665,7 +2682,7 @@
           },
           "properties": {
             "offset": {
-              "value": 1.6,
+              "value": 0.467,
               "unit": "SECOND"
             }
           },

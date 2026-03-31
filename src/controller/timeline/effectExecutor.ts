@@ -28,7 +28,7 @@ import { COMMON_OWNER_ID } from '../slot/commonSlotController';
 import { evaluateConditions, ConditionContext } from './conditionEvaluator';
 import { activeEventsAtFrame, activeInflictionsOfElement, isActiveAtFrame } from './timelineQueries';
 import { LoadoutProperties } from '../../view/InformationPane';
-import { genEventUid } from './inputEventController';
+import { derivedEventUid } from './inputEventController';
 import { allocDerivedEvent } from './objectPool';
 
 // ── Types ────────────────────────────────────────────────────────────────
@@ -195,7 +195,7 @@ function executeApply(effect: Effect, ctx: ExecutionContext): MutationSet {
     const duration = durationValue != null ? Math.round(durationValue * FPS) : FPS;
 
     const ev = allocDerivedEvent();
-    ev.uid = `infliction-${genEventUid()}`;
+    ev.uid = derivedEventUid(columnId, ctx.sourceOwnerId, ctx.frame);
     ev.id = effect.objectId ?? String(effect.objectQualifier);
     ev.name = effect.objectId ?? String(effect.objectQualifier);
     ev.ownerId = ownerId;
@@ -215,7 +215,7 @@ function executeApply(effect: Effect, ctx: ExecutionContext): MutationSet {
     const duration = durationValue != null ? Math.round(durationValue * FPS) : 2400;
 
     const ev = allocDerivedEvent();
-    ev.uid = `status-${genEventUid()}`;
+    ev.uid = derivedEventUid(columnId, ctx.sourceOwnerId, ctx.frame);
     ev.id = effect.objectId ?? 'UNKNOWN_STATUS';
     ev.name = effect.objectId ?? 'UNKNOWN_STATUS';
     ev.ownerId = ownerId;
@@ -237,7 +237,7 @@ function executeApply(effect: Effect, ctx: ExecutionContext): MutationSet {
     const stacksValue = resolveWith(effect.with?.stacks, ctx);
 
     const ev = allocDerivedEvent();
-    ev.uid = `reaction-${genEventUid()}`;
+    ev.uid = derivedEventUid(columnId, ctx.sourceOwnerId, ctx.frame);
     ev.id = String(effect.objectQualifier);
     ev.name = String(effect.objectQualifier);
     ev.ownerId = ownerId;

@@ -349,15 +349,16 @@ function EventBlock({
       ? 0
       : seg.properties.offset != null ? seg.properties.offset : offsetFrames;
 
-    const segH = segLayout
-      ? durationToPx(segLayout.realDuration, zoom)
-      : durationToPx(seg.properties.duration, zoom);
+    const segTopPx = Math.round(segLayout
+      ? durationToPx(segLayout.realOffset, zoom)
+      : durationToPx(segOffset, zoom));
+
+    const segEndPx = Math.round(segLayout
+      ? durationToPx(segLayout.realOffset + segLayout.realDuration, zoom)
+      : durationToPx(segOffset + seg.properties.duration, zoom));
+    const segH = segEndPx - segTopPx;
 
     if (segH <= 0) { offsetFrames = seg.properties.offset == null ? offsetFrames + seg.properties.duration : segOffset + seg.properties.duration; continue; }
-
-    const segTopPx = segLayout
-      ? durationToPx(segLayout.realOffset, zoom)
-      : durationToPx(segOffset, zoom);
 
     const isFirst = i === 0;
     const isLast = i === segments.length - 1;
@@ -404,8 +405,14 @@ function EventBlock({
           [axis.framePos]: segTopPx,
           [axis.frameSize]: segH,
           background: hexAlpha(segColor, style.bgAlpha),
-          border: passive ? 'none' : cachedBorder(segColor, style.borderAlpha),
-          [axis.framePos === 'top' ? 'borderTop' : 'borderLeft']: passive ? 'none' : isFirst ? undefined : cachedDashedBorder(segColor, Math.min(style.borderAlpha, 0.5)),
+          borderRight: passive ? 'none' : cachedBorder(segColor, style.borderAlpha),
+          borderBottom: passive ? 'none' : cachedBorder(segColor, style.borderAlpha),
+          borderLeft: passive ? 'none' : axis.framePos === 'top'
+            ? cachedBorder(segColor, style.borderAlpha)
+            : (isFirst ? cachedBorder(segColor, style.borderAlpha) : cachedDashedBorder(segColor, Math.min(style.borderAlpha, 0.5))),
+          borderTop: passive ? 'none' : axis.framePos === 'top'
+            ? (isFirst ? cachedBorder(segColor, style.borderAlpha) : cachedDashedBorder(segColor, Math.min(style.borderAlpha, 0.5)))
+            : cachedBorder(segColor, style.borderAlpha),
           borderRadius: passive ? '2px' : borderRadiusVal,
           boxShadow: style.glow ? cachedGlowShadow(segColor) : undefined,
           zIndex: segments.length - i,
@@ -511,10 +518,22 @@ function EventBlock({
 function eventBlockPropsEqual(prev: EventBlockProps, next: EventBlockProps): boolean {
   // Fast identity check on the event object — covers no-change case
   if (prev.event !== next.event) {
-    // Check if the event actually changed in a way that affects rendering
     if (prev.event.uid !== next.event.uid ||
-        prev.event.startFrame !== next.event.startFrame ||
-        prev.event.segments !== next.event.segments) return false;
+        prev.event.startFrame !== next.event.startFrame) return false;
+    // Check segment content: count + per-segment duration + frame offsets
+    if (prev.event.segments.length !== next.event.segments.length) return false;
+    for (let i = 0; i < prev.event.segments.length; i++) {
+      const ps = prev.event.segments[i], ns = next.event.segments[i];
+      if (ps.properties.duration !== ns.properties.duration) return false;
+      // Check frame marker offsets — always compare values since frames are
+      // mutated in place by the pipeline (derivedOffsetFrame changes with time-stops)
+      const pf = ps.frames, nf = ns.frames;
+      if (!pf && !nf) continue;
+      if (!pf || !nf || pf.length !== nf.length) return false;
+      for (let j = 0; j < pf.length; j++) {
+        if ((pf[j].derivedOffsetFrame ?? pf[j].offsetFrame) !== (nf[j].derivedOffsetFrame ?? nf[j].offsetFrame)) return false;
+      }
+    }
   }
   return prev.color === next.color
     && prev.zoom === next.zoom

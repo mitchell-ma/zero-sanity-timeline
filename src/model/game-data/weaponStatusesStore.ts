@@ -48,7 +48,7 @@ export interface DurationConfig {
 const VALID_DURATION_KEYS = new Set(['value', 'unit']);
 const VALID_STATUS_LEVEL_KEYS = new Set(['limit', 'interactionType']);
 const VALID_PROPERTIES_KEYS = new Set(['id', 'name', 'description', 'to', 'toDeterminer', 'duration', 'stacks', 'eventType', 'eventCategoryType']);
-const VALID_TOP_KEYS = new Set(['clause', 'clauseType', 'properties', 'metadata']);
+const VALID_TOP_KEYS = new Set(['clause', 'clauseType', 'onTriggerClause', 'onExitClause', 'properties', 'metadata']);
 
 function validateValueNode(wv: Record<string, unknown>, path: string): string[] {
   const errors = checkKeys(wv, VALID_VALUE_NODE_KEYS, path);
@@ -85,6 +85,14 @@ export function validateWeaponStatus(json: Record<string, unknown>): string[] {
   if (json.clause) {
     if (!Array.isArray(json.clause)) errors.push('root.clause: must be an array');
     else (json.clause as Record<string, unknown>[]).forEach((c, i) => errors.push(...validateClause(c, `clause[${i}]`)));
+  }
+  if (json.onTriggerClause) {
+    if (!Array.isArray(json.onTriggerClause)) errors.push('root.onTriggerClause: must be an array');
+    else (json.onTriggerClause as Record<string, unknown>[]).forEach((c, i) => errors.push(...validateClause(c, `onTriggerClause[${i}]`)));
+  }
+  if (json.onExitClause) {
+    if (!Array.isArray(json.onExitClause)) errors.push('root.onExitClause: must be an array');
+    else (json.onExitClause as Record<string, unknown>[]).forEach((c, i) => errors.push(...validateClause(c, `onExitClause[${i}]`)));
   }
 
   const props = json.properties as Record<string, unknown> | undefined;

@@ -194,6 +194,7 @@ enum _StatusType {
   SHIELD = "SHIELD",
   // ── Enemy debuffs ─────────────────────────────────────────────────────────
   FOCUS = "FOCUS",
+  FOCUS_EMPOWERED = "FOCUS_EMPOWERED",
   SUSCEPTIBILITY = "SUSCEPTIBILITY",
   FRAGILITY = "FRAGILITY",
   WEAKEN = "WEAKEN",

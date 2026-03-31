@@ -60,86 +60,8 @@
                 {
                   "verb": "APPLY",
                   "object": "STATUS",
-                  "objectId": "FOCUS",
-                  "to": "ENEMY",
-                  "eventName": "Empowered Focus",
-                  "stackingInteraction": "RESET",
-                  "with": {
-                    "duration": {
-                      "verb": "IS",
-                      "value": 60
-                    }
-                  },
-                  "segments": [
-                    {
-                      "name": "Focus",
-                      "duration": 20,
-                      "susceptibility": {
-                        "ELECTRIC": [
-                          0.05,
-                          0.05,
-                          0.06,
-                          0.06,
-                          0.07,
-                          0.07,
-                          0.08,
-                          0.08,
-                          0.08,
-                          0.09,
-                          0.09,
-                          0.1
-                        ],
-                        "HEAT": [
-                          0.05,
-                          0.05,
-                          0.06,
-                          0.06,
-                          0.07,
-                          0.07,
-                          0.08,
-                          0.08,
-                          0.08,
-                          0.09,
-                          0.09,
-                          0.1
-                        ]
-                      }
-                    },
-                    {
-                      "name": "Focus (Empowered)",
-                      "duration": 40,
-                      "susceptibility": {
-                        "ELECTRIC": [
-                          0.09,
-                          0.09,
-                          0.1,
-                          0.1,
-                          0.11,
-                          0.11,
-                          0.12,
-                          0.12,
-                          0.12,
-                          0.13,
-                          0.13,
-                          0.14
-                        ],
-                        "HEAT": [
-                          0.09,
-                          0.09,
-                          0.1,
-                          0.1,
-                          0.11,
-                          0.11,
-                          0.12,
-                          0.12,
-                          0.12,
-                          0.13,
-                          0.13,
-                          0.14
-                        ]
-                      }
-                    }
-                  ]
+                  "objectId": "FOCUS_EMPOWERED",
+                  "to": "ENEMY"
                 }
               ]
             },
@@ -158,45 +80,7 @@
                   "verb": "APPLY",
                   "object": "STATUS",
                   "objectId": "FOCUS",
-                  "to": "ENEMY",
-                  "eventName": "Focus",
-                  "stackingInteraction": "RESET",
-                  "with": {
-                    "duration": {
-                      "verb": "IS",
-                      "value": 60
-                    }
-                  },
-                  "susceptibility": {
-                    "ELECTRIC": [
-                      0.05,
-                      0.05,
-                      0.06,
-                      0.06,
-                      0.07,
-                      0.07,
-                      0.08,
-                      0.08,
-                      0.08,
-                      0.09,
-                      0.09,
-                      0.1
-                    ],
-                    "HEAT": [
-                      0.05,
-                      0.05,
-                      0.06,
-                      0.06,
-                      0.07,
-                      0.07,
-                      0.08,
-                      0.08,
-                      0.08,
-                      0.09,
-                      0.09,
-                      0.1
-                    ]
-                  }
+                  "to": "ENEMY"
                 }
               ]
             },

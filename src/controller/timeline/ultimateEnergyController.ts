@@ -67,6 +67,12 @@ export class UltimateEnergyController {
     this.slotConfigs.set(slotId, config);
   }
 
+  /** Update a slot's efficiency from the stat accumulator (after APPLY STAT deltas). */
+  updateSlotEfficiency(slotId: string, efficiency: number) {
+    const cfg = this.slotConfigs.get(slotId);
+    if (cfg) cfg.efficiency = efficiency;
+  }
+
   // ── Clear (called at pipeline start) ─────────────────────────────────────
 
   clear() {

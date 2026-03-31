@@ -281,13 +281,13 @@ describe('B. Battle Skill (Specified Research Subject)', () => {
     expect(spCost.with.value.value).toBe(100);
   });
 
-  test('B4: Focus duration is 60s at all skill levels', () => {
-    const effects = mockAntalJson.skills.BATTLE_SKILL.segments[0].frames[0].clause.flatMap((c: { effects: unknown[] }) => c.effects);
-    const focusEffect = effects.find(
-      (e: Record<string, unknown>) => e.verb === VerbType.APPLY && e.object === NounType.STATUS && e.objectId === StatusType.FOCUS
-    );
-    expect(focusEffect).toBeDefined();
-    expect(durVal(focusEffect.with.duration.value)).toBe(60);
+  test('B4: Focus duration is 60s (from status config)', () => {
+    // Duration is defined on the FOCUS status config, not inlined on the skill effect
+    const focusStatus = require('../../model/game-data/operators/antal/statuses/status-focus.json');
+    expect(durVal(focusStatus.properties.duration.value)).toBe(60);
+    // Empowered variant also has 60s total (20s Focus + 40s Empowered)
+    const empoweredStatus = require('../../model/game-data/operators/antal/statuses/status-focus-empowered.json');
+    expect(durVal(empoweredStatus.properties.duration.value)).toBe(60);
   });
 
   test('B5: Susceptibility rate scales from 0.05 (lv1) to 0.10 (lv12)', () => {

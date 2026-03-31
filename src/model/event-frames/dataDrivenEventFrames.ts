@@ -298,7 +298,10 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
           case VerbType.DEAL:
             if (ef.object === NounType.DAMAGE) {
               const multipliers = wp?.value;
-              const mulArr = multipliers && Array.isArray(multipliers.value) ? multipliers.value : [];
+              // Simple VARY_BY nodes have a flat .value array; compound expressions
+              // (MULT, ADD) are left empty so the damage table builder falls through
+              // to getSkillMultiplier() which resolves with full level+potential context.
+              const mulArr = multipliers && Array.isArray(multipliers.value) ? multipliers.value as number[] : [];
               const mainStatNode = wp?.mainStat as Record<string, unknown> | undefined;
               const mainStat = mainStatNode?.objectId as DamageScalingStatType | undefined;
               const dd: FrameDealDamage = {

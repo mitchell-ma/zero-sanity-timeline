@@ -13,9 +13,10 @@ import { CombatSkillType, ColumnType, CritMode, DamageScalingStatType, DamageTyp
 import { SkillLevel, Potential } from '../../consts/types';
 import { StatusDamageParams } from '../../model/calculation/damageFormulas';
 import { getModelEnemy } from './enemyRegistry';
-import { getSkillMultiplier } from './jsonMultiplierEngine';
+import { getSkillMultiplier, isDamageSegment } from './jsonMultiplierEngine';
 import { aggregateLoadoutStats } from './loadoutAggregator';
 import { OperatorLoadoutState, EMPTY_LOADOUT } from '../../view/OperatorLoadoutHeader';
+import type { MultiplierSource } from '../../model/calculation/damageFormulas';
 import {
   calculateDamage,
   DamageParams,
@@ -73,6 +74,8 @@ export interface DamageTableRow {
   statusParams?: StatusDamageParams | null;
   /** Damage type: NORMAL or DAMAGE_OVER_TIME. DOT cannot crit. */
   damageType?: DamageType;
+  /** Child frame rows when this row is a folded segment/event aggregate. */
+  foldedFrames?: DamageTableRow[];
 }
 
 /** Column descriptor for the damage table header. */
@@ -176,6 +179,8 @@ interface OperatorCalcData {
   mainAttrValue: number;
   secondaryAttrType: StatType;
   secondaryAttrValue: number;
+  // Source breakdown
+  statSources: Partial<Record<StatType, { source: string; value: number }[]>>;
 }
 
 function buildOperatorCalcData(
@@ -211,7 +216,28 @@ function buildOperatorCalcData(
     mainAttrValue: agg.stats[agg.mainAttributeType] ?? 0,
     secondaryAttrType: agg.secondaryAttributeType,
     secondaryAttrValue: agg.stats[agg.secondaryAttributeType] ?? 0,
+    statSources: agg.statSources,
   };
+}
+
+const ALL_DISPLAY_ELEMENTS: ElementType[] = [
+  ElementType.PHYSICAL, ElementType.HEAT, ElementType.CRYO,
+  ElementType.NATURE, ElementType.ELECTRIC,
+];
+
+function buildAllElementSources(
+  frame: number,
+  query: EventsQueryService,
+  type: 'fragility' | 'susceptibility',
+): Partial<Record<ElementType, MultiplierSource[]>> {
+  const result: Partial<Record<ElementType, MultiplierSource[]>> = {};
+  for (const el of ALL_DISPLAY_ELEMENTS) {
+    const sources = type === 'fragility'
+      ? query.getFragilitySources(frame, el)
+      : query.getSusceptibilitySources(frame, el);
+    if (sources.length > 0) result[el] = sources;
+  }
+  return result;
 }
 
 // ── Main builder functions ───────────────────────────────────────────────────
@@ -264,7 +290,7 @@ export function buildDamageTableRows(
   const bossMaxHp = modelEnemy ? modelEnemy.getHp() : null;
 
   for (const ev of events) {
-    const effectiveColumnId = isUltEnhanced(ev.name) ? NounType.ULTIMATE : ev.columnId;
+    const effectiveColumnId = isUltEnhanced(ev.id) ? NounType.ULTIMATE : ev.columnId;
     const col = colLookup.get(`${ev.ownerId}-${effectiveColumnId}`)
       ?? colLookup.get(`${ev.ownerId}-${ev.columnId}`);
     if (!col) continue;
@@ -282,9 +308,11 @@ export function buildDamageTableRows(
 
     if (ev.segments.length > 0) {
       let segmentFrameOffset = 0;
+      let damageSegIdx = 0;
       for (let si = 0; si < ev.segments.length; si++) {
         const seg = ev.segments[si];
-        const segLabel = seg.properties.name ?? `Seg ${si + 1}`;
+        const segLabel = seg.properties.name ?? `Segment ${si + 1}`;
+        const isDmgSeg = isDamageSegment(seg.properties.segmentTypes);
 
         if (seg.frames) {
           // Max frames from default segment (not current, which may have deletions)
@@ -311,8 +339,8 @@ export function buildDamageTableRows(
               } else {
                 multiplier = getSkillMultiplier(
                   operatorId,
-                  ev.name as CombatSkillType,
-                  si,
+                  ev.id as CombatSkillType,
+                  damageSegIdx,
                   skillLevel,
                   potential,
                 );
@@ -444,7 +472,9 @@ export function buildDamageTableRows(
                   ignoredResistance: subIgnoredRes,
                   fragilityBonus: subFragilityBonus,
                   fragilitySources: statusQuery?.getFragilitySources(absFrame, element) ?? [],
+                  allFragilitySources: statusQuery ? buildAllElementSources(absFrame, statusQuery, 'fragility') : {},
                   susceptibilitySources: statusQuery?.getSusceptibilitySources(absFrame, element) ?? [],
+                  allSusceptibilitySources: statusQuery ? buildAllElementSources(absFrame, statusQuery, 'susceptibility') : {},
                   ampSources: statusQuery?.getAmpSources(absFrame) ?? [],
                   weakenEffects: subWeakenEffects,
                   dmgReductionEffects: subDmgReductionEffects,
@@ -452,6 +482,8 @@ export function buildDamageTableRows(
                   segmentMultiplier: segmentMultiplier ?? undefined,
                   segmentFrameCount: (segmentMultiplier != null && maxFrames > 1) ? maxFrames : undefined,
                   isPerTickMultiplier: isPerTick,
+                  statSources: opData.statSources,
+                  skillTypeDmgBonusStat: skillTypeBonusStat,
                 };
 
                 const mainStatValue = frame.dealDamage?.mainStat === DamageScalingStatType.DEFENSE ? opData.totalDefense
@@ -486,7 +518,7 @@ export function buildDamageTableRows(
             rows.push({
               key: `${ev.uid}-s${si}-f${fi}`,
               absoluteFrame: absFrame,
-              label: `${eventName} > ${segLabel} > Tick ${fi + 1}`,
+              label: `${eventName} > ${segLabel} > Frame ${fi + 1}`,
               columnKey: col.key,
               ownerId: ev.ownerId,
               columnId: effectiveColumnId,
@@ -504,6 +536,7 @@ export function buildDamageTableRows(
           }
         }
         segmentFrameOffset += seg.properties.duration;
+        if (isDmgSeg) damageSegIdx++;
       }
     }
   }

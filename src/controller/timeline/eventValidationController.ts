@@ -6,7 +6,9 @@
  * instead of 10+ separate useMemos.
  */
 import { TimelineEvent } from '../../consts/viewTypes';
+import { NounType } from '../../dsl/semantics';
 import type { InteractionModeType } from '../../consts/enums';
+import { INFLICTION_COLUMN_IDS, OPERATOR_COLUMNS, SKILL_COLUMN_ORDER } from '../../model/channels';
 import type { Slot } from './columnBuilder';
 import type { ResourceGraphData } from '../../app/useResourceGraphs';
 import type { StaggerBreak } from './staggerTimeline';
@@ -103,8 +105,79 @@ export function computeAllValidations(
   staggerBreaks: readonly StaggerBreak[] | undefined,
   draggingIds: Set<string> | null,
   interactionMode?: InteractionModeType,
+  changedUids?: ReadonlySet<string>,
 ): ValidationResult {
   const prev = _prevValidation;
+
+  // ── Fast path: if few events changed and we have previous results, only
+  // re-run validators that could be affected by the changed events. ──────
+  if (changedUids && changedUids.size > 0 && prev
+    && changedUids.size < events.length * 0.5) {
+    // Classify what kind of events changed to determine which validators to skip
+    let hasSkillChange = false;
+    let hasTimeStopChange = false;
+    let hasInflictionChange = false;
+    for (const ev of events) {
+      if (!changedUids.has(ev.uid)) continue;
+      // Match computeTimeStopRegions logic: ult, combo, or perfect dodge
+      if (ev.columnId === NounType.ULTIMATE || ev.columnId === NounType.COMBO_SKILL
+        || (ev.columnId === OPERATOR_COLUMNS.INPUT && ev.isPerfectDodge)) hasTimeStopChange = true;
+      if ((SKILL_COLUMN_ORDER as readonly string[]).includes(ev.columnId)) hasSkillChange = true;
+      if (INFLICTION_COLUMN_IDS.has(ev.columnId)) hasInflictionChange = true;
+    }
+
+    const timeStopRegionsRaw = hasTimeStopChange ? computeTimeStopRegions(events) : null;
+    const timeStopRegions = timeStopRegionsRaw
+      ? (prev && timeStopRegionsEqual(timeStopRegionsRaw, prev.timeStopRegions) ? prev.timeStopRegions : timeStopRegionsRaw)
+      : prev.timeStopRegions;
+
+    // Position-dependent validators (timeStop, resource, combo) always run — any event
+    // could have moved into/out of a zone. Type-specific validators only run when relevant.
+    const maps: ValidationMaps = {
+      combo: stableMap(validateComboWindows(events, slots, draggingIds), prev.maps.combo),
+      resource: resourceGraphs
+        ? stableMap(validateResources(events, resourceGraphs, slots, draggingIds ?? undefined), prev.maps.resource)
+        : (prev.maps.resource.size === 0 ? prev.maps.resource : EMPTY_MAP),
+      empowered: hasSkillChange ? stableMap(validateEmpowered(events, slots), prev.maps.empowered) : prev.maps.empowered,
+      enhanced: hasSkillChange ? stableMap(validateEnhanced(events), prev.maps.enhanced) : prev.maps.enhanced,
+      regularBasic: hasSkillChange ? stableMap(validateDisabledVariants(events), prev.maps.regularBasic) : prev.maps.regularBasic,
+      clause: hasSkillChange ? stableMap(validateVariantClauses(events, slots), prev.maps.clause) : prev.maps.clause,
+      finisherStagger: staggerBreaks && hasSkillChange
+        ? stableMap(validateFinisherStaggerBreak(events, getEffectiveStaggerWindows(events, staggerBreaks)), prev.maps.finisherStagger)
+        : prev.maps.finisherStagger,
+      timeStop: stableMap(validateTimeStops(events, timeStopRegions), prev.maps.timeStop),
+      infliction: hasInflictionChange ? stableMap(validateInflictionStacks(events), prev.maps.infliction) : prev.maps.infliction,
+    };
+
+    const stableMaps = maps.combo === prev.maps.combo
+      && maps.resource === prev.maps.resource
+      && maps.empowered === prev.maps.empowered
+      && maps.enhanced === prev.maps.enhanced
+      && maps.regularBasic === prev.maps.regularBasic
+      && maps.clause === prev.maps.clause
+      && maps.finisherStagger === prev.maps.finisherStagger
+      && maps.timeStop === prev.maps.timeStop
+      && maps.infliction === prev.maps.infliction
+      ? prev.maps
+      : maps;
+
+    const autoFinisherIdsRaw = staggerBreaks && hasSkillChange
+      ? getAutoFinisherIds(events, getEffectiveStaggerWindows(events, staggerBreaks))
+      : null;
+    const autoFinisherIds = autoFinisherIdsRaw
+      ? stableSet(autoFinisherIdsRaw, prev.autoFinisherIds)
+      : prev.autoFinisherIds;
+
+    if (stableMaps === prev.maps && timeStopRegions === prev.timeStopRegions && autoFinisherIds === prev.autoFinisherIds) {
+      return prev;
+    }
+
+    const result: ValidationResult = { maps: stableMaps, timeStopRegions, autoFinisherIds };
+    _prevValidation = result;
+    return result;
+  }
+
+  // ── Full computation (no changedUids or too many changes) ──────────────
   const timeStopRegionsRaw = computeTimeStopRegions(events);
   const timeStopRegions = prev && timeStopRegionsEqual(timeStopRegionsRaw, prev.timeStopRegions)
     ? prev.timeStopRegions
@@ -126,7 +199,6 @@ export function computeAllValidations(
     infliction: stableMap(validateInflictionStacks(events), prev?.maps.infliction),
   };
 
-  // Reuse previous ValidationMaps object if all individual maps are reference-equal
   const stableMaps = prev
     && maps.combo === prev.maps.combo
     && maps.resource === prev.maps.resource
@@ -144,6 +216,10 @@ export function computeAllValidations(
     ? getAutoFinisherIds(events, getEffectiveStaggerWindows(events, staggerBreaks))
     : EMPTY_SET;
   const autoFinisherIds = stableSet(autoFinisherIdsRaw, prev?.autoFinisherIds);
+
+  if (prev && stableMaps === prev.maps && timeStopRegions === prev.timeStopRegions && autoFinisherIds === prev.autoFinisherIds) {
+    return prev;
+  }
 
   const result: ValidationResult = { maps: stableMaps, timeStopRegions, autoFinisherIds };
   _prevValidation = result;

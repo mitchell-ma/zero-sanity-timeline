@@ -145,6 +145,11 @@ export function allocQueueFrame(): QueueFrame {
 export function resetPools() {
   _eventPoolIdx = 0;
   _qfPoolIdx = 0;
+  // Lazy import to avoid circular dependency
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { resetSegmentCloneCache, resetDerivedEventUids } = require('./inputEventController');
+  resetSegmentCloneCache();
+  resetDerivedEventUids();
 }
 
 // ── Debug stats ─────────────────────────────────────────────────────────────

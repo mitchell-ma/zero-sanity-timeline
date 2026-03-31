@@ -29,7 +29,7 @@ import { SkillType } from '../consts/viewTypes';
 import { t } from '../locales/locale';
 import { ultimateGraphKey } from '../model/channels';
 
-const ROW_HEIGHT = 22;
+const ROW_HEIGHT = 28;
 const MARQUEE_THRESHOLD = 4;
 
 // ── Sheet column definitions ────────────────────────────────────────────────
@@ -185,7 +185,8 @@ function foldRows(rows: DamageTableRow[], mode: FoldMode, events: TimelineEvent[
       absoluteFrame: startFrame,
       damage: totalDamage,
       hpRemaining: lastRow.hpRemaining,
-      params: null,
+      params: first.params,
+      foldedFrames: group.length > 1 ? group : undefined,
     });
   }
   return folded;
@@ -310,17 +311,46 @@ export default React.memo(function CombatSheet({
     setHeaderMenu({ x: e.clientX, y: e.clientY });
   }, []);
 
-  /** Read live header child rects and find which column index the cursor is over. */
-  const getTargetIndex = useCallback((cursorX: number): number => {
+  /** Read live header child rects and find which column index the cursor is over.
+   *  Skips the dragged column to prevent oscillation — measures gaps between
+   *  non-dragged columns, then maps back to the full index. */
+  const getTargetIndex = useCallback((cursorX: number, dragCol?: SheetCol | null): number => {
     const header = headerRef.current;
     if (!header) return -1;
     const children = Array.from(header.children) as HTMLElement[];
-    for (let i = 0; i < children.length; i++) {
-      const rect = children[i].getBoundingClientRect();
-      if (cursorX < rect.left + rect.width / 2) return i;
+    const vis = colOrderRef.current.filter((id) => colVisible[id]);
+
+    if (!dragCol) {
+      for (let i = 0; i < children.length; i++) {
+        const rect = children[i].getBoundingClientRect();
+        if (cursorX < rect.left + rect.width / 2) return i;
+      }
+      return children.length - 1;
     }
-    return children.length - 1;
-  }, []);
+
+    // Build list of non-dragged column indices and their rects
+    const others: { visIdx: number; rect: DOMRect }[] = [];
+    for (let i = 0; i < children.length; i++) {
+      if (vis[i] === dragCol) continue;
+      others.push({ visIdx: i, rect: children[i].getBoundingClientRect() });
+    }
+
+    // Find insertion point among non-dragged columns
+    let insertBefore = others.length; // default: after all
+    for (let i = 0; i < others.length; i++) {
+      const r = others[i].rect;
+      if (cursorX < r.left + r.width / 2) {
+        insertBefore = i;
+        break;
+      }
+    }
+
+    // Map back to visible index: insert before the i-th non-dragged column
+    if (insertBefore >= others.length) return children.length - 1;
+    return others[insertBefore].visIdx > vis.indexOf(dragCol)
+      ? others[insertBefore].visIdx - 1
+      : others[insertBefore].visIdx;
+  }, [colVisible]);
 
   /** Compute the dragged column's rect from flex ratios — no DOM measurement needed. */
   const computeColRect = useCallback((visOrder: SheetCol[], col: SheetCol) => {
@@ -369,7 +399,7 @@ export default React.memo(function CombatSheet({
       // Throttle reorder to animation frames
       cancelAnimationFrame(rafId);
       rafId = requestAnimationFrame(() => {
-        const targetIdx = getTargetIndex(me.clientX);
+        const targetIdx = getTargetIndex(me.clientX, col);
         if (targetIdx === -1) return;
 
         const current = colOrderRef.current;
@@ -839,7 +869,7 @@ export default React.memo(function CombatSheet({
           <div
             key={def.id}
             className={`${def.headerClass}${def.id === draggingCol ? ' dmg-header--dragging' : ''}`}
-            style={{ flex: def.flex, textAlign: 'left' }}
+            style={{ flex: def.flex, textAlign: 'center' }}
             onMouseDown={(e) => handleMouseDown(def.id, e)}
           >
             {def.label}

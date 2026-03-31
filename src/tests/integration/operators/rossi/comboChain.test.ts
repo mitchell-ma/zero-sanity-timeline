@@ -31,6 +31,7 @@ import { InteractionModeType, EventStatusType, SegmentType } from '../../../../c
 import { FPS } from '../../../../utils/timeline';
 import { getComboTriggerInfo } from '../../../../controller/gameDataStore';
 import { computeTimelinePresentation } from '../../../../controller/timeline/eventPresentationController';
+import { eventEndFrame, computeSegmentsSpan } from '../../../../consts/viewTypes';
 import { findColumn, buildContextMenu, getMenuPayload, type AppResult } from '../../helpers';
 
 /* eslint-disable @typescript-eslint/no-require-imports */
@@ -374,9 +375,9 @@ describe('D. Chain validation — maxSkills enforcement', () => {
     expect(clampedCooldown).toBeDefined();
     expect(clampedCooldown!.properties.duration).toBeLessThan(fullCooldown);
 
-    // First combo's total duration should end at or before second combo's start
-    const firstTotal = firstCombo.segments.reduce((sum, s) => sum + s.properties.duration, 0);
-    expect(firstCombo.startFrame + firstTotal).toBeLessThanOrEqual(secondCombo.startFrame);
+    // First combo's end frame should be at or before second combo's start
+    // (uses eventEndFrame which accounts for IMMEDIATE_COOLDOWN overlap)
+    expect(eventEndFrame(firstCombo)).toBeLessThanOrEqual(secondCombo.startFrame);
   });
 });
 
@@ -537,6 +538,116 @@ describe('G. Trigger order independence', () => {
     const comboCol = findColumn(result.current, SLOT_ROSSI, NounType.COMBO_SKILL);
     expect(comboCol).toBeDefined();
     const menu = buildContextMenu(result.current, comboCol!, 3 * FPS);
+    expect(menu).not.toBeNull();
+    const addItem = menu!.find(i => i.actionId === 'addEvent');
+    expect(addItem).toBeDefined();
+    expect(addItem!.disabled).toBeFalsy();
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// H. IMMEDIATE_COOLDOWN handling
+// ═══════════════════════════════════════════════════════════════════════════════
+
+describe('H. IMMEDIATE_COOLDOWN handling', () => {
+  it('H1: Combo cooldown segment has IMMEDIATE_COOLDOWN type and event span uses it', () => {
+    const { result } = setupRossi();
+    placeComboTriggers(result, 1);
+
+    const comboCol = findColumn(result.current, SLOT_ROSSI, NounType.COMBO_SKILL);
+    const payload = getMenuPayload(result.current, comboCol!, 2 * FPS);
+    act(() => {
+      result.current.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+    });
+
+    const combos = findComboEvents(result);
+    expect(combos).toHaveLength(1);
+    const combo = combos[0];
+
+    // Cooldown segment must have IMMEDIATE_COOLDOWN type
+    const cdSeg = combo.segments.find(
+      s => s.properties.segmentTypes?.includes(SegmentType.IMMEDIATE_COOLDOWN),
+    );
+    expect(cdSeg).toBeDefined();
+
+    // Active segments exist before the cooldown
+    const activeSegs = combo.segments.filter(
+      s => !s.properties.segmentTypes?.includes(SegmentType.COOLDOWN)
+        && !s.properties.segmentTypes?.includes(SegmentType.IMMEDIATE_COOLDOWN),
+    );
+    const activeDur = activeSegs.reduce((sum, s) => sum + s.properties.duration, 0);
+    expect(activeDur).toBeGreaterThan(0);
+
+    // IMMEDIATE_COOLDOWN starts at offset 0 — event span = max(activeDur, cdDuration), NOT activeDur + cdDuration
+    const naiveSum = combo.segments.reduce((sum, s) => sum + s.properties.duration, 0);
+    const correctSpan = computeSegmentsSpan(combo.segments);
+    expect(correctSpan).toBeLessThan(naiveSum);
+    expect(correctSpan).toBe(cdSeg!.properties.duration);
+  });
+
+  it('H2: Clamped IMMEDIATE_COOLDOWN ends at next combo start, not earlier', () => {
+    const { result } = setupRossi();
+    placeComboTriggers(result, 1);
+
+    const comboCol = findColumn(result.current, SLOT_ROSSI, NounType.COMBO_SKILL);
+
+    // Place first combo at 2s, second at 5s
+    const payload1 = getMenuPayload(result.current, comboCol!, 2 * FPS);
+    act(() => {
+      result.current.handleAddEvent(payload1.ownerId, payload1.columnId, payload1.atFrame, payload1.defaultSkill);
+    });
+    const payload2 = getMenuPayload(result.current, comboCol!, 5 * FPS);
+    act(() => {
+      result.current.handleAddEvent(payload2.ownerId, payload2.columnId, payload2.atFrame, payload2.defaultSkill);
+    });
+
+    const combos = findComboEvents(result).sort((a, b) => a.startFrame - b.startFrame);
+    expect(combos).toHaveLength(2);
+    const first = combos[0];
+
+    // The clamped IMMEDIATE_COOLDOWN duration should equal secondStart - firstStart
+    // (because IMMEDIATE_COOLDOWN starts at offset 0 = event start)
+    const cdSeg = first.segments.find(
+      s => s.properties.segmentTypes?.includes(SegmentType.IMMEDIATE_COOLDOWN),
+    );
+    expect(cdSeg).toBeDefined();
+    expect(cdSeg!.properties.duration).toBe(5 * FPS - 2 * FPS);
+
+    // Event end frame must equal second combo start
+    expect(eventEndFrame(first)).toBe(5 * FPS);
+  });
+
+  it('H3: New activation window triggers after IMMEDIATE_COOLDOWN expires', () => {
+    const { result } = setupRossi();
+
+    // Place trigger conditions at 1s
+    placeComboTriggers(result, 1);
+
+    // Place combo at 2s — enters IMMEDIATE_COOLDOWN
+    const comboCol = findColumn(result.current, SLOT_ROSSI, NounType.COMBO_SKILL);
+    const payload = getMenuPayload(result.current, comboCol!, 2 * FPS);
+    act(() => {
+      result.current.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+    });
+
+    // Determine when the combo's cooldown actually ends (IMMEDIATE_COOLDOWN starts at event start)
+    const combos = findComboEvents(result);
+    expect(combos).toHaveLength(1);
+    const comboEnd = eventEndFrame(combos[0]);
+
+    // Place new trigger conditions 1s after cooldown ends
+    const triggerSec = Math.ceil(comboEnd / FPS) + 1;
+    placeComboTriggers(result, triggerSec, 10);
+
+    // A new activation window should appear after the cooldown
+    const windows = findComboWindows(result);
+    const postCooldownWindows = windows.filter(w => w.startFrame >= comboEnd);
+    expect(postCooldownWindows.length).toBeGreaterThanOrEqual(1);
+
+    // Combo should be available within that new window
+    const newWindow = postCooldownWindows[0];
+    const menuFrame = newWindow.startFrame + 1 * FPS;
+    const menu = buildContextMenu(result.current, comboCol!, menuFrame);
     expect(menu).not.toBeNull();
     const addItem = menu!.find(i => i.actionId === 'addEvent');
     expect(addItem).toBeDefined();

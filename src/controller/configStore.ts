@@ -533,31 +533,41 @@ export function getAllInflictionIds(): StatusIdEntry[] {
 }
 
 export function getTeamStatusIds(operatorId: string): string[] {
-  const skills = getOperatorSkills(operatorId);
-  if (!skills) return [];
-
   const ids = new Set<string>();
-  skills.forEach((skill) => {
-    const raw = skill.serialize();
-    const segments = raw.segments as { frames?: { clause?: { effects?: Record<string, unknown>[] }[] }[] }[] | undefined;
-    if (!segments) return;
-    for (const seg of segments) {
-      for (const frame of seg.frames ?? []) {
-        for (const pred of frame.clause ?? []) {
-          for (const ef of pred.effects ?? []) {
-            if (ef.to === NounType.TEAM && ef.object === NounType.STATUS && ef.objectId) {
-              // Qualified status → element-specific ID (e.g. CRYO + AMP → CRYO_AMP)
-              if (ef.objectQualifier) {
-                ids.add(flattenQualifiedId(ef.objectQualifier as string, ef.objectId as string));
-              } else {
-                ids.add(ef.objectId as string);
+
+  // Scan skill frame clauses for APPLY STATUS to TEAM
+  const skills = getOperatorSkills(operatorId);
+  if (skills) {
+    skills.forEach((skill) => {
+      const raw = skill.serialize();
+      const segments = raw.segments as { frames?: { clause?: { effects?: Record<string, unknown>[] }[] }[] }[] | undefined;
+      if (!segments) return;
+      for (const seg of segments) {
+        for (const frame of seg.frames ?? []) {
+          for (const pred of frame.clause ?? []) {
+            for (const ef of pred.effects ?? []) {
+              if (ef.to === NounType.TEAM && ef.object === NounType.STATUS && ef.objectId) {
+                if (ef.objectQualifier) {
+                  ids.add(flattenQualifiedId(ef.objectQualifier as string, ef.objectId as string));
+                } else {
+                  ids.add(ef.objectId as string);
+                }
               }
             }
           }
         }
       }
+    });
+  }
+
+  // Scan ALL status defs (talents, operator statuses, etc.) for team-targeted statuses
+  for (const status of getEnabledStatusEvents(operatorId)) {
+    const raw = status.serialize() as { properties?: { target?: string; id?: string } };
+    if (raw.properties?.target === NounType.TEAM && raw.properties.id) {
+      ids.add(raw.properties.id);
     }
-  });
+  }
+
   return Array.from(ids);
 }
 

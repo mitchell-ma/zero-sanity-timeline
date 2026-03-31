@@ -167,6 +167,8 @@ export interface EventSegmentData {
   frames?: EventFrameMarker[];
   /** Clause effects active during this segment (from JSON clause data). */
   clause?: { conditions: Record<string, unknown>[]; effects: { verb: string; objectId?: string; objectQualifier?: string; object: string; nounQualifier?: string; toDeterminer?: string; to?: string; ofDeterminer?: string; ofObject?: string }[] }[];
+  /** Absolute start frame on the timeline (set by processCombatSimulation, not raw JSON). */
+  absoluteStartFrame?: number;
   /** Catch-all for domain-specific fields not part of the core segment model. */
   unknown?: Record<string, unknown>;
 }

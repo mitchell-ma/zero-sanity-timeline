@@ -155,8 +155,11 @@ export class StaggerTimeline extends ResourceTimeline {
         const breakEnd = this.frameAfterEffectiveFrames(breakStart, this.breakDurationFrames);
         breaks.push({ startFrame: breakStart, endFrame: breakEnd });
 
-        // Add drain graph points: max at start, 0 at end
-        points.push({ frame: breakEnd, value: 0 });
+        // Add drain graph points with time-stop pauses:
+        // The drain is linear in game-time (max→0 over breakDurationFrames).
+        // At time-stop boundaries, insert intermediate points so the graph
+        // shows the drain pausing (flat) during stopped time.
+        this.insertDrainPoints(points, breakStart, breakEnd, this.max);
 
         value = 0;
         lastFrame = breakEnd;
@@ -187,6 +190,58 @@ export class StaggerTimeline extends ResourceTimeline {
 
   /** No-op — crossings computed inline in recompute. */
   protected onRecompute(): void {}
+
+  /**
+   * Insert drain graph points from `startMax` at `breakStart` to 0 at `breakEnd`,
+   * with intermediate points at time-stop boundaries so the graph shows the drain
+   * pausing during time-stops.
+   */
+  private insertDrainPoints(
+    points: ResourcePoint[],
+    breakStart: number,
+    breakEnd: number,
+    startMax: number,
+  ): void {
+    if (this.timeStops.length === 0 || this.breakDurationFrames <= 0) {
+      points.push({ frame: breakEnd, value: 0 });
+      return;
+    }
+
+    // Walk through time-stops that overlap the break range.
+    // Drain value at any point = max * (1 - effectiveElapsed / breakDurationFrames)
+    let effectiveElapsed = 0;
+    let cursor = breakStart;
+
+    for (const ts of this.timeStops) {
+      if (ts.endFrame <= cursor) continue;
+      if (ts.startFrame >= breakEnd) break;
+
+      const stopStart = Math.max(ts.startFrame, cursor);
+      const stopEnd = Math.min(ts.endFrame, breakEnd);
+
+      // Drain from cursor to stopStart (game-time frames)
+      const gapBefore = stopStart - cursor;
+      if (gapBefore > 0) {
+        effectiveElapsed += gapBefore;
+      }
+
+      // Insert point at time-stop start (drain value just before pause)
+      const drainAtPause = startMax * (1 - effectiveElapsed / this.breakDurationFrames);
+      if (stopStart > breakStart) {
+        points.push({ frame: stopStart, value: Math.max(0, drainAtPause) });
+      }
+
+      // Insert point at time-stop end (same value — drain paused during stop)
+      if (stopEnd < breakEnd && stopEnd > stopStart) {
+        points.push({ frame: stopEnd, value: Math.max(0, drainAtPause) });
+      }
+
+      cursor = stopEnd;
+    }
+
+    // Final drain to 0
+    points.push({ frame: breakEnd, value: 0 });
+  }
 
   /**
    * Generate derived TimelineEvent objects for stagger frailty.

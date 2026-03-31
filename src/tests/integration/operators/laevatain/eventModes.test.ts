@@ -308,7 +308,7 @@ describe('Strict events — engine-driven chains', () => {
       (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === NounType.ULTIMATE,
     );
     const ultSegs = ultEvents[0].segments;
-    const activationEnd = ultEvents[0].startFrame + ultSegs[0].properties.duration + ultSegs[1].properties.duration;
+    const activationEnd = ultEvents[0].startFrame + ultSegs[0].properties.duration;
 
     // Place enhanced BS during active phase via context menu with variant displayName
     const enhancedVariant = battleCol!.eventVariants?.find(
@@ -380,7 +380,7 @@ describe('Strict events — engine-driven chains', () => {
       (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === NounType.ULTIMATE,
     );
     const ultSegs = ultEvents[0].segments;
-    const activationEnd = ultEvents[0].startFrame + ultSegs[0].properties.duration + ultSegs[1].properties.duration;
+    const activationEnd = ultEvents[0].startFrame + ultSegs[0].properties.duration;
 
     const enhPayload = getMenuPayload(
       result.current, battleCol!, activationEnd + FPS, enhancedVariant!.displayName,
@@ -520,7 +520,7 @@ describe('Mixed freeform + strict — cross-mode interactions', () => {
       (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === NounType.ULTIMATE,
     );
     const ultSegs = ultEvents[0].segments;
-    const activationEnd = ultEvents[0].startFrame + ultSegs[0].properties.duration + ultSegs[1].properties.duration;
+    const activationEnd = ultEvents[0].startFrame + ultSegs[0].properties.duration;
 
     // Switch to strict — enhanced BS accepted because freeform ultimate is active + 4 MF stacks
     act(() => { result.current.setInteractionMode(InteractionModeType.STRICT); });

@@ -25,6 +25,25 @@ export interface TranslatedEffect {
 const titleCase = (s: string) =>
   s.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
 
+/** Format a ValueNode (or raw value) into a compact display string. */
+function displayValue(v: unknown): string {
+  if (v == null) return '?';
+  if (typeof v === 'number' || typeof v === 'string') return String(v);
+  const node = v as ValueNode;
+  if (isValueLiteral(node)) return String(node.value);
+  if (isValueVariable(node)) {
+    if (Array.isArray(node.value)) {
+      const arr = node.value as number[];
+      return arr.length <= 3 ? arr.join('/') : `${arr[0]}–${arr[arr.length - 1]}`;
+    }
+    if (typeof node.value === 'number') return String(node.value);
+    return `(${titleCase(node.object)})`;
+  }
+  if (isValueStat(node)) return titleCase(node.objectId ?? '?');
+  if (isValueExpression(node)) return `(expr)`;
+  return String(v);
+}
+
 export const SUBJECT_LABELS: Record<string, string> = {
   OPERATOR: t('dsl.subject.OPERATOR'),
   ENEMY: t('dsl.subject.ENEMY'),
@@ -181,7 +200,7 @@ export function translateCondition(c: Record<string, unknown>): string {
   }
   if (c.cardinalityConstraint) {
     parts.push(translateDslToken(String(c.cardinalityConstraint)).toLowerCase());
-    if (c.value != null) parts.push(String(c.value));
+    if (c.value != null) parts.push(displayValue(c.value));
   }
   return parts.join(' ');
 }
@@ -314,7 +333,7 @@ export function translateEffect(e: Effect): TranslatedEffect {
 
   // Cardinality (e.g. "Apply 3 Heat infliction")
   const card = !inlinedValue && e.value != null && e.value !== 'MAX'
-    ? `${isValueLiteral(e.value) ? e.value.value : e.value} `
+    ? `${displayValue(e.value)} `
     : !inlinedValue && e.value === 'MAX' ? 'max ' : '';
 
   // Object
@@ -338,7 +357,7 @@ export function translateEffect(e: Effect): TranslatedEffect {
   // FOR
   if (e.for) {
     const fc = e.for.cardinalityConstraint.replace(/_/g, ' ').toLowerCase();
-    const forVal = e.for.value === 'MAX' ? 'max' : isValueLiteral(e.for.value) ? e.for.value.value : e.for.value;
+    const forVal = e.for.value === 'MAX' ? 'max' : displayValue(e.for.value);
     parts.push(`for ${fc} ${forVal}`);
   } else if (e.cardinalityConstraint && e.value == null) {
     parts.push(e.cardinalityConstraint.replace(/_/g, ' ').toLowerCase());

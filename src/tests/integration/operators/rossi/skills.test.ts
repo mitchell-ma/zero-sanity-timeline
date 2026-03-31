@@ -354,8 +354,9 @@ describe('D. Ultimate', () => {
     const events = result.current.allProcessedEvents.filter(
       ev => ev.ownerId === SLOT_ROSSI && ev.columnId === NounType.ULTIMATE,
     );
-    // Segment 0 = stab flurry with 25 frames
-    expect(events[0].segments[0].frames).toHaveLength(25);
+    // Segment 0 = animation (no frames), segment 1 = stab flurry with 25 frames
+    expect(events[0].segments[0].frames ?? []).toHaveLength(0);
+    expect(events[0].segments[1].frames).toHaveLength(25);
   });
 
   it('D4: Ultimate slash segment has 3 frames (SEQ 1 + SEQ 2 x2)', () => {
@@ -370,8 +371,8 @@ describe('D. Ultimate', () => {
     const events = result.current.allProcessedEvents.filter(
       ev => ev.ownerId === SLOT_ROSSI && ev.columnId === NounType.ULTIMATE,
     );
-    // Segment 1 = slash with 3 frames
-    expect(events[0].segments[1].frames).toHaveLength(3);
+    // Segment 2 = slash with 3 frames
+    expect(events[0].segments[2].frames).toHaveLength(3);
   });
 
   it('D5: Ultimate produces Heat Infliction on enemy', () => {

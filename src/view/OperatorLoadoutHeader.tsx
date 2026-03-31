@@ -204,8 +204,6 @@ export default React.memo(function OperatorLoadoutHeader({
       ) : (
         <div className="lo-splash-fallback" />
       )}
-      <div className="lo-splash-fade" />
-
       {/* Equipment icons — static display */}
       <EquipmentSlots
         operatorWeaponTypes={operatorWeaponTypes}

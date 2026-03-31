@@ -226,14 +226,20 @@
                   "object": "INFLICTION",
                   "objectQualifier": "CRYO",
                   "fromDeterminer": "ALL",
-                  "from": "OPERATOR"
+                  "from": "OPERATOR",
+                  "with": {
+                    "stacks": "MAX"
+                  }
                 },
                 {
                   "verb": "CONSUME",
                   "object": "REACTION",
                   "objectQualifier": "SOLIDIFICATION",
                   "fromDeterminer": "ALL",
-                  "from": "OPERATOR"
+                  "from": "OPERATOR",
+                  "with": {
+                    "stacks": "MAX"
+                  }
                 }
               ]
             }

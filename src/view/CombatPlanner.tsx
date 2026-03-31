@@ -22,6 +22,7 @@ import {
   TIMELINE_TOP_PAD,
 } from '../utils/timeline';
 import { OPERATOR_COLUMNS, COMBO_WINDOW_COLUMN_ID, ENEMY_ACTION_COLUMN_ID } from '../model/channels';
+import { COMMON_COLUMN_IDS } from '../controller/slot/commonSlotController';
 import { TimelineSourceType, InteractionModeType, CombatSkillType, EventCategoryType, ColumnType } from '../consts/enums';
 import {
   Operator,
@@ -37,7 +38,6 @@ import {
 import { computeMonotonicBounds } from '../controller/timeline/microColumnController';
 import type { Slot } from '../controller/timeline/columnBuilder';
 import { formatSegmentShortName } from '../dsl/semanticsTranslation';
-// COMMON_COLUMN_IDS moved to TimelineColumn
 import {
   getAlwaysAvailableComboSlots,
   computeResourceInsufficiencyZones,
@@ -150,6 +150,10 @@ interface CombatPlannerProps {
   readOnly?: boolean;
   /** ID of the event currently shown in the info pane (null = pane closed). */
   editingEventId?: string | null;
+  /** Whether any info pane is currently open (event, damage, loadout, etc.). */
+  infoPaneOpen?: boolean;
+  /** Ref to changed event UIDs from the last pipeline run (for incremental view updates). */
+  changedUidsRef?: React.RefObject<ReadonlySet<string>>;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -253,6 +257,8 @@ export default function CombatPlanner({
   dragThrottle = 2,
   readOnly,
   editingEventId: editingEventIdProp,
+  infoPaneOpen,
+  changedUidsRef,
 }: CombatPlannerProps) {
   const axis = getAxisMap(orientation);
   const isHorizontal = orientation === 'horizontal';
@@ -456,8 +462,8 @@ export default function CombatPlanner({
 
   // ── Event validation (controller) ─────────────────────────────────────────
   const { maps: validationMaps, timeStopRegions, autoFinisherIds } = useMemo(
-    () => computeAllValidations(events, slots, resourceGraphs, staggerBreaks, draggingIds, interactionMode),
-    [events, slots, resourceGraphs, staggerBreaks, draggingIds, interactionMode],
+    () => computeAllValidations(events, slots, resourceGraphs, staggerBreaks, draggingIds, interactionMode, changedUidsRef?.current),
+    [events, slots, resourceGraphs, staggerBreaks, draggingIds, interactionMode], // eslint-disable-line react-hooks/exhaustive-deps
   );
 
   const resourceInsufficiencyZones = useMemo(() => {
@@ -656,7 +662,7 @@ export default function CombatPlanner({
       }
     }
     const enemyCols = columns.filter((c): c is MiniTimeline => c.type === 'mini-timeline' && c.source === TimelineSourceType.ENEMY);
-    const enemyWeights = enemyCols.map((c) => c.columnId === ENEMY_ACTION_COLUMN_ID ? 1 : 3);
+    const enemyWeights = enemyCols.map((c) => (c.columnId === ENEMY_ACTION_COLUMN_ID || c.columnId === COMMON_COLUMN_IDS.STAGGER) ? 1 : 3);
     const totalEnemyWeight = enemyWeights.reduce((s, w) => s + w, 0);
     for (const w of enemyWeights) {
       values.push(ENEMY_FR * w / totalEnemyWeight);
@@ -966,8 +972,8 @@ export default function CombatPlanner({
 
   // ─── Timeline presentation: column view models ──────────────────────────────
   const columnViewModels = useMemo(
-    () => computeTimelinePresentation(events, columns),
-    [events, columns],
+    () => computeTimelinePresentation(events, columns, changedUidsRef?.current),
+    [events, columns], // eslint-disable-line react-hooks/exhaustive-deps
   );
 
   // ─── Pre-computed event presentations (avoids per-event computation in render) ─
@@ -1021,7 +1027,17 @@ export default function CombatPlanner({
   }, [columnViewModels, validationMaps, dragResourceWarnings, slotElementColors, alwaysAvailableComboSlots, autoFinisherIds, interactionMode, events]);
 
   // ─── Pre-computed combo window events by owner (avoids per-column filter in render) ─
+  const prevComboWindowsRef = useRef<Map<string, TimelineEvent[]>>(new Map());
   const comboWindowEventsByOwner = useMemo(() => {
+    // Skip rebuild if no combo window events changed
+    const changed = changedUidsRef?.current;
+    if (changed && changed.size > 0 && prevComboWindowsRef.current.size > 0) {
+      let hasComboChange = false;
+      for (const ev of events) {
+        if (ev.columnId === COMBO_WINDOW_COLUMN_ID && changed.has(ev.uid)) { hasComboChange = true; break; }
+      }
+      if (!hasComboChange) return prevComboWindowsRef.current;
+    }
     const map = new Map<string, TimelineEvent[]>();
     for (const ev of events) {
       if (ev.columnId !== COMBO_WINDOW_COLUMN_ID) continue;
@@ -1029,8 +1045,9 @@ export default function CombatPlanner({
       if (!arr) { arr = []; map.set(ev.ownerId, arr); }
       arr.push(ev);
     }
+    prevComboWindowsRef.current = map;
     return map;
-  }, [events]);
+  }, [events]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ─── Marquee intersection helper ────────────────────────────────────────────
   // Rect coords: in vertical mode {left=lane, top=frame}, in horizontal mode {left=frame, top=lane}
@@ -1130,8 +1147,8 @@ export default function CombatPlanner({
         return new Set([eventUid]);
       });
     }
-    if (editingEventIdProp != null) onEditEvent(eventUid);
-  }, [onContextMenu, onSelectedFramesChange, onEditEvent, editingEventIdProp]);
+    if (editingEventIdProp != null || infoPaneOpen) onEditEvent(eventUid);
+  }, [onContextMenu, onSelectedFramesChange, onEditEvent, editingEventIdProp, infoPaneOpen]);
 
   // ─── Event double-click (open info pane) ──────────────────────────────────────
   const handleEventDoubleClick = useCallback((_e: React.MouseEvent, eventUid: string) => {
@@ -1248,8 +1265,8 @@ export default function CombatPlanner({
       const strict = (e.ctrlKey || e.metaKey) ? !baseStrict : baseStrict;
       const { clampedDelta, overlapExempt } = clampDragDelta(deltaFrames, dragRef.current, eventsRef.current, strict);
 
-      // Hover line updates immediately (no throttle) for visual responsiveness.
-      // The event block position updates are throttled below.
+      // Hover line + dragged event positions update immediately (no throttle)
+      // for visual responsiveness. The state update (pipeline + React) is throttled below.
       const pnf = (startFrames.get(primaryId) ?? 0) + clampedDelta;
       const scrollEl = scrollRef.current;
       const bTop = bodyTopRef.current;
@@ -1258,6 +1275,18 @@ export default function CombatPlanner({
         const scrollFrame = scrollEl[axis.scrollPos];
         const snappedRel = frameToPx(pnf, zoomRef.current);
         updateHoverLineDOM(snappedRel - scrollFrame + sRect[axis.rectFrameStart] + bTop);
+      }
+
+      // Imperatively update dragged event DOM positions at 60fps (GPU-accelerated transforms)
+      const currentZoom = zoomRef.current;
+      for (const eid of eventUids) {
+        const orig = startFrames.get(eid) ?? 0;
+        const newFrame = orig + clampedDelta;
+        const newPx = frameToPx(newFrame, currentZoom);
+        const el = scrollRef.current?.querySelector(`[data-event-uid="${eid}"]`) as HTMLElement | null;
+        if (el) {
+          el.style.transform = axis.framePos === 'top' ? `translateY(${newPx}px)` : `translateX(${newPx}px)`;
+        }
       }
 
       // Throttled state update — triggers React re-render + pipeline

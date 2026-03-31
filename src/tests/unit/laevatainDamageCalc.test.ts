@@ -268,7 +268,7 @@ describe('Laevatain damage calculation — Seethe (combo skill)', () => {
   it('combo skill hit → 26908', () => {
     const ctx = buildCalcContext(FULL_LOADOUT, FULL_LOADOUT_PROPERTIES);
 
-    const segMult = getSkillMultiplier(OPERATOR_ID, SKILL_SEETHE, undefined, SKILL_LEVEL, POTENTIAL);
+    const segMult = getSkillMultiplier(OPERATOR_ID, SKILL_SEETHE, 0, SKILL_LEVEL, POTENTIAL);
     expect(segMult).not.toBeNull();
 
     const multiplierGroup = getDamageBonus(
@@ -443,7 +443,7 @@ describe.skip('Laevatain damage calculation — bare loadout (Tarr 11 lv1, no ge
   });
 
   it('combo skill (Seethe) → 3068', () => {
-    const segMult = getSkillMultiplier(OPERATOR_ID, SKILL_SEETHE, undefined, SKILL_LEVEL, POTENTIAL);
+    const segMult = getSkillMultiplier(OPERATOR_ID, SKILL_SEETHE, 0, SKILL_LEVEL, POTENTIAL);
     expect(segMult).not.toBeNull();
 
     const comboMg = getDamageBonus(0, 0, 0, 0);

@@ -19,7 +19,7 @@ import { LoadoutProperties, DEFAULT_LOADOUT_PROPERTIES } from '../../view/Inform
 import { OperatorLoadoutState, EMPTY_LOADOUT } from '../../view/OperatorLoadoutHeader';
 import { aggregateLoadoutStats } from './loadoutAggregator';
 import { buildDamageTableRows, DamageTableRow } from './damageTableBuilder';
-import { getSkillMultiplier } from './jsonMultiplierEngine';
+import { getSkillMultiplier, isDamageSegment } from './jsonMultiplierEngine';
 import { getModelEnemy } from './enemyRegistry';
 import {
   EventsQueryService,
@@ -105,8 +105,10 @@ export function precomputeDamageByFrame(
     const potential = (props.operator.potential ?? 5) as Potential;
 
     let segOffset = 0;
+    let damageSegIdx = 0;
     for (let si = 0; si < ev.segments.length; si++) {
       const seg = ev.segments[si];
+      const isDmgSeg = isDamageSegment(seg.properties.segmentTypes);
       if (seg.frames) {
         const maxFrames = seg.frames.length;
         for (let fi = 0; fi < seg.frames.length; fi++) {
@@ -121,7 +123,7 @@ export function precomputeDamageByFrame(
             multiplier = f.dealDamage.multipliers[idx];
           } else {
             // Segment multiplier divided by frame count
-            const segMult = getSkillMultiplier(op.operatorId, ev.name as CombatSkillType, si, skillLevel, potential);
+            const segMult = getSkillMultiplier(op.operatorId, ev.id as CombatSkillType, damageSegIdx, skillLevel, potential);
             if (segMult != null) {
               multiplier = maxFrames > 1 ? segMult / maxFrames : segMult;
             }
@@ -137,6 +139,7 @@ export function precomputeDamageByFrame(
         }
       }
       segOffset += seg.properties.duration;
+      if (isDmgSeg) damageSegIdx++;
     }
   }
 
@@ -301,6 +304,13 @@ function resolvePhysicalStatusStagger(
  * 3. Create EventsQueryService for frame-based status lookups
  * 4. Build damage table rows with all sub-components resolved
  */
+let _calculationEnabled = true;
+let _cachedResult: CalculationResult | null = null;
+
+/** Enable or disable the damage calculation pipeline. When disabled, returns cached/empty results. */
+export function setCalculationEnabled(enabled: boolean) { _calculationEnabled = enabled; }
+export function isCalculationEnabled() { return _calculationEnabled; }
+
 export function runCalculation(
   events: TimelineEvent[],
   columns: Column[],
@@ -312,6 +322,9 @@ export function runCalculation(
   critMode?: CritMode,
   overrides?: OverrideStore,
 ): CalculationResult {
+  if (!_calculationEnabled) {
+    return _cachedResult ?? { aggregatedStats: {}, statusQuery: undefined as unknown as EventsQueryService, rows: [] };
+  }
   const aggregatedStats = buildAggregatedStats(slots, loadoutProperties, loadouts);
   const weaponFragility = buildWeaponFragility(slots);
   const talentFragility = buildTalentFragility(slots, loadoutProperties);
@@ -333,5 +346,7 @@ export function runCalculation(
     loadoutProperties, loadouts, statusQuery, critMode, overrides,
   );
 
-  return { aggregatedStats, statusQuery, rows };
+  const result = { aggregatedStats, statusQuery, rows };
+  _cachedResult = result;
+  return result;
 }

@@ -141,6 +141,15 @@ These sets have HP-threshold conditions but are metadata-only with zero clauses:
 
 12. **Multiple operators** — Status descriptions copied from skill descriptions instead of describing the status itself (Arclight Wildland Trekker trigger/buff, Endministrator Originium Crystal, Avywenna Thunderlance).
 
+## ~~DSL: APPLY STAT with operator class filtering~~ — DONE (2026-03-30)
+
+Implemented APPLY STAT handling + operator class filtering via `toQualifier` on effects.
+- `doApply` handles `APPLY STAT` → `StatAccumulator.applyStatDelta`
+- ALL OPERATOR loop filters by `toQualifier` against `getOperatorBase().operatorClassType`
+- Passive talent APPLY STAT clauses interpreted in `runEventQueue` before queue runs
+- UE controller reads accumulated efficiency after queue via `updateSlotEfficiency`
+- Test: `src/tests/integration/operators/gilberta/messengersSong.test.ts`
+
 ## DSL migrations completed (2026-03-29)
 
 - Non-standard verbs migrated: CAST→PERFORM, INTERRUPT→HAVE CHARGE, RECOVER_SP→RECOVER+SKILL_POINT, RESTORE→RECOVER, HP_BELOW→HAVE HP+AT_MOST, IS_HIT→ENEMY DEAL DAMAGE, TRIGGER→APPLY SHATTER, LESS_THAN→HAVE+AT_MOST, HIT_WITH→description-only

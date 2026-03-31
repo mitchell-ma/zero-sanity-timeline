@@ -428,6 +428,8 @@ export function getPhysicalHiddenMultiplier(operatorLevel: number): number {
 export interface MultiplierSource {
   label: string;
   value: number;
+  /** Category for grouping in the breakdown tree (e.g. 'Physical', 'Arts', 'Weapon', 'Talent'). */
+  category?: string;
 }
 
 /** Sub-component values for multipliers that aggregate multiple sources. */
@@ -460,8 +462,12 @@ export interface DamageSubComponents {
   // Fragility sub-components
   fragilityBonus: number;
   fragilitySources: MultiplierSource[];
+  /** Per-element fragility sources for full breakdown. */
+  allFragilitySources: Partial<Record<ElementType, MultiplierSource[]>>;
   // Susceptibility sub-components
   susceptibilitySources: MultiplierSource[];
+  /** Per-element susceptibility sources for full breakdown. */
+  allSusceptibilitySources: Partial<Record<ElementType, MultiplierSource[]>>;
   // Amp sub-components
   ampSources: MultiplierSource[];
   // Weaken sub-components
@@ -476,6 +482,10 @@ export interface DamageSubComponents {
   segmentFrameCount?: number;
   /** True when the multiplier is a per-tick value (e.g. ramping skills), not segment ÷ frames. */
   isPerTickMultiplier?: boolean;
+  /** Per-stat source breakdown from loadout aggregation. */
+  statSources?: Partial<Record<StatType, { source: string; value: number }[]>>;
+  /** Which StatType was used for the skill type DMG bonus (for source lookup). */
+  skillTypeDmgBonusStat?: StatType;
 }
 
 export interface DamageParams {

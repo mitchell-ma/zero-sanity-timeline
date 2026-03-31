@@ -19,7 +19,7 @@ import { evaluateConditions, ConditionContext } from './conditionEvaluator';
 import { executeEffects, applyMutations } from './effectExecutor';
 import type { ExecutionContext } from './effectExecutor';
 import { VerbType, NounType, DeterminerType, ClauseEvaluationType } from '../../dsl/semantics';
-import { genEventUid } from './inputEventController';
+import { derivedEventUid } from './inputEventController';
 import type { Interaction, Effect as SemanticEffect, ValueNode } from '../../dsl/semantics';
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT, buildContextForSkillColumn } from '../calculation/valueResolver';
 import type { ValueResolutionContext } from '../calculation/valueResolver';
@@ -319,7 +319,7 @@ function findOperatorSlot(
   const skillNames = getSkillIds(operatorId);
   for (const ev of events) {
     if (ev.ownerId === ENEMY_OWNER_ID || ev.ownerId === COMMON_OWNER_ID) continue;
-    if (skillNames.has(ev.name)) return ev.ownerId;
+    if (skillNames.has(ev.id)) return ev.ownerId;
   }
   return null;
 }
@@ -461,7 +461,7 @@ interface DeriveResult {
 
 function findTriggerMatches(
   def: StatusEventDef,
-  events: TimelineEvent[],
+  events: readonly TimelineEvent[],
   operatorSlotId: string,
 ): TriggerMatch[] {
   return findClauseTriggerMatches(def.onTriggerClause ?? [], events, operatorSlotId);
@@ -470,7 +470,7 @@ function findTriggerMatches(
 // ── Derive events ───────────────────────────────────────────────────────────
 
 export interface DeriveContext {
-  events: TimelineEvent[];
+  events: readonly TimelineEvent[];
   operatorId: string;
   operatorSlotId: string;
   potential: number;
@@ -610,7 +610,7 @@ function deriveStatusEvents(
     }
 
     for (let ci = 0; ci < createCount; ci++) {
-      const evId = `${outputDef.properties.id.toLowerCase()}-${genEventUid()}`;
+      const evId = derivedEventUid(columnId, ctx.operatorId, trigger.frame, `${ci}`);
 
       // RESET overflow: clamp oldest when at capacity
       if (outputDef.properties.stacks?.interactionType === StackInteractionType.RESET && activeAtFrame >= maxStacks) {
@@ -813,7 +813,7 @@ function evaluateThresholdClauses(
           }
 
           thresholdDerived.push({
-            uid: `${targetStatusId.toLowerCase()}-${genEventUid()}`,
+            uid: derivedEventUid(targetColumnId, ctx.operatorId, ev.startFrame),
             id: targetStatusId,
             name: targetStatusId,
             ownerId: targetOwnerId,

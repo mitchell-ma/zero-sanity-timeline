@@ -17,6 +17,7 @@ import { COMBAT_SKILL_LABELS } from '../../consts/timelineColumnLabels';
 import { getBaseSkillId, formatSkillDisplayName } from '../../dsl/semanticsTranslation';
 import { buildContextForSkillColumn } from '../calculation/valueResolver';
 import { aggregateLoadoutStats } from '../calculation/loadoutAggregator';
+import { ATTRIBUTE_INCREASE_LOOKUP } from '../../model/operators/dataDrivenOperator';
 
 /** Column IDs that are NOT status columns — excluded from the operator status catch-all. */
 const OPERATOR_NON_STATUS_COLUMNS: ReadonlySet<string> = new Set([
@@ -156,6 +157,7 @@ export function buildColumns(
     if (statusEvents.length) {
       for (const se of statusEvents) {
         if (isTeamStatus(se.id)) continue;
+        if (se.id in ATTRIBUTE_INCREASE_LOOKUP) continue;
         if (se.target === NounType.OPERATOR && (!se.targetDeterminer || se.targetDeterminer === DeterminerType.THIS) && se.id) {
           const seDur = se.duration as { value?: { value?: number } | number | number[] } | undefined;
           const rawVal = seDur?.value;

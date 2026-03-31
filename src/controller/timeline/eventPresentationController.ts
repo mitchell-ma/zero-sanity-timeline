@@ -740,11 +740,94 @@ function columnEventsMatch(current: TimelineEvent[], previous: TimelineEvent[]):
 export function computeTimelinePresentation(
   events: TimelineEvent[],
   columns: Column[],
+  changedUids?: ReadonlySet<string>,
 ): Map<string, ColumnViewModel> {
+  // ── Fast path: if changedUids is available and small, skip expensive per-column
+  // computation (statusOverrides, greedySlots, microPositions) for unchanged columns.
+  // ALWAYS rebuild event grouping to ensure current event references are used.
+  if (changedUids && changedUids.size > 0 && _prevColumnViewModels
+    && changedUids.size < events.length * 0.5) {
+    const changedKeys = new Set<string>();
+    for (const ev of events) {
+      if (changedUids.has(ev.uid)) changedKeys.add(`${ev.ownerId}\0${ev.columnId}`);
+    }
+
+    // Always group ALL events (cheap O(n) — ensures current event references)
+    const eventsByOwnerColumn = new Map<string, TimelineEvent[]>();
+    for (const ev of events) {
+      const key = `${ev.ownerId}\0${ev.columnId}`;
+      let arr = eventsByOwnerColumn.get(key);
+      if (!arr) { arr = []; eventsByOwnerColumn.set(key, arr); }
+      arr.push(ev);
+    }
+
+    // Lazily compute cross-column data on first column that needs rebuilding
+    let allStatusOverrides: Map<string, StatusViewOverride> | undefined;
+    let allGreedySlots: Map<string, number> | undefined;
+    let crossColumnComputed = false;
+    const ensureCrossColumn = () => {
+      if (crossColumnComputed) return;
+      crossColumnComputed = true;
+      allStatusOverrides = computeStatusViewOverrides(events, columns);
+      allGreedySlots = computeGreedySlotAssignments(events, columns);
+    };
+
+    const result = new Map<string, ColumnViewModel>();
+    let allReused = true;
+
+    for (const col of columns) {
+      if (col.type !== 'mini-timeline') continue;
+
+      // Always rebuild event list with current references
+      let colEvents = getEventsForColumnGrouped(col, eventsByOwnerColumn);
+      colEvents = sortColumnEvents(col, colEvents);
+      colEvents = truncateDerivedEvents(col, colEvents);
+
+      const prevVM = _prevColumnViewModels.get(col.key);
+      if (prevVM && columnEventsMatch(colEvents, prevVM.events)) {
+        result.set(col.key, prevVM);
+        continue;
+      }
+
+      // Column events changed — rebuild VM (lazily compute cross-column data on first miss)
+      allReused = false;
+      if (col.microColumns) ensureCrossColumn();
+
+      const colStatusOverrides = new Map<string, StatusViewOverride>();
+      if (allStatusOverrides) {
+        for (const ev of colEvents) {
+          const override = allStatusOverrides.get(ev.uid);
+          if (override) colStatusOverrides.set(ev.uid, override);
+        }
+      }
+
+      const microPositions = col.microColumns && allGreedySlots && allStatusOverrides
+        ? computeMicroPositions(col, colEvents, allGreedySlots, allStatusOverrides)
+        : new Map<string, MicroPosition>();
+
+      const overlapLanes = col.microColumns
+        ? new Map<string, OverlapLane>()
+        : computeOverlapLanes(colEvents);
+
+      result.set(col.key, {
+        column: col,
+        events: colEvents,
+        microPositions,
+        statusOverrides: colStatusOverrides,
+        overlapLanes,
+      });
+    }
+
+    if (allReused && result.size === _prevColumnViewModels.size) {
+      return _prevColumnViewModels;
+    }
+    _prevColumnViewModels = result;
+    return result;
+  }
+
+  // ── Full computation (no changedUids or too many changes) ──────────────────
   const result = new Map<string, ColumnViewModel>();
 
-  // Pre-group events by ownerId:columnId for O(1) column lookups
-  // (replaces O(events × columns) filtering)
   const eventsByOwnerColumn = new Map<string, TimelineEvent[]>();
   for (const ev of events) {
     const key = `${ev.ownerId}\0${ev.columnId}`;
@@ -753,7 +836,6 @@ export function computeTimelinePresentation(
     arr.push(ev);
   }
 
-  // Pre-compute cross-column data
   const allStatusOverrides = computeStatusViewOverrides(events, columns);
   const allGreedySlots = computeGreedySlotAssignments(events, columns);
 
@@ -764,16 +846,12 @@ export function computeTimelinePresentation(
     colEvents = sortColumnEvents(col, colEvents);
     colEvents = truncateDerivedEvents(col, colEvents);
 
-    // Check if this column's events are identical to the previous run.
-    // If so, reuse the cached ColumnViewModel to preserve reference identity.
     const prevVM = _prevColumnViewModels?.get(col.key);
     if (prevVM && columnEventsMatch(colEvents, prevVM.events)) {
       result.set(col.key, prevVM);
       continue;
     }
 
-
-    // Collect status overrides for this column's events
     const colStatusOverrides = new Map<string, StatusViewOverride>();
     for (const ev of colEvents) {
       const override = allStatusOverrides.get(ev.uid);
@@ -795,6 +873,14 @@ export function computeTimelinePresentation(
       statusOverrides: colStatusOverrides,
       overlapLanes,
     });
+  }
+
+  if (_prevColumnViewModels && result.size === _prevColumnViewModels.size) {
+    let allReused = true;
+    for (const [key, vm] of Array.from(result.entries())) {
+      if (vm !== _prevColumnViewModels.get(key)) { allReused = false; break; }
+    }
+    if (allReused) return _prevColumnViewModels;
   }
 
   _prevColumnViewModels = result;

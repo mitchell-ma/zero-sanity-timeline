@@ -24,7 +24,7 @@ export function checkKeys(obj: Record<string, unknown>, valid: Set<string>, path
 // ── Shared valid-key sets ───────────────────────────────────────────────────
 
 export const VALID_VALUE_NODE_KEYS = new Set([
-  'verb', 'value', 'object', 'objectId', 'operation', 'left', 'right', 'ofDeterminer', 'of',
+  'verb', 'value', 'object', 'objectId', 'operation', 'left', 'right', 'ofDeterminer', 'of', 'unit',
 ]);
 
 export const VALID_CLAUSE_KEYS = new Set(['conditions', 'effects']);

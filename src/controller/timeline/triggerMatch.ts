@@ -95,7 +95,7 @@ export interface TriggerMatch {
 }
 
 interface VerbHandlerContext {
-  events: TimelineEvent[];
+  events: readonly TimelineEvent[];
   operatorSlotId: string;
   secondaryConditions: Predicate[];
   clauseEffects?: TriggerEffect[];
@@ -117,7 +117,7 @@ interface VerbHandler {
  */
 function checkPredicate(
   pred: Predicate,
-  events: TimelineEvent[],
+  events: readonly TimelineEvent[],
   operatorSlotId: string,
   candidateFrame: number,
   triggerOwnerId?: string,
@@ -259,7 +259,7 @@ function checkSecondary(ctx: VerbHandlerContext, frame: number, triggerOwnerId?:
 }
 
 function makeMatch(frame: number, ev: TimelineEvent, effects?: TriggerEffect[]): TriggerMatch {
-  return { frame, sourceOwnerId: ev.ownerId, sourceSkillName: ev.name, originOwnerId: ev.sourceOwnerId, sourceColumnId: ev.columnId, effects };
+  return { frame, sourceOwnerId: ev.ownerId, sourceSkillName: ev.id, originOwnerId: ev.sourceOwnerId, sourceColumnId: ev.columnId, effects };
 }
 
 /**
@@ -600,7 +600,7 @@ const VERB_HANDLER_REGISTRY = new Map<string, VerbHandler>([
  */
 export function findClauseTriggerMatches(
   onTriggerClauses: readonly { conditions: Predicate[]; effects?: TriggerEffect[] }[],
-  events: TimelineEvent[],
+  events: readonly TimelineEvent[],
   operatorSlotId: string,
   stops?: readonly TimeStopRegion[],
 ): TriggerMatch[] {

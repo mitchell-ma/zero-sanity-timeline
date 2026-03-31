@@ -153,11 +153,16 @@ export class DerivedEventController implements ColumnHost {
    * No separate extendAll() call needed.
    */
   registerEvents(events: TimelineEvent[]) {
+    // Dedup: skip events already registered (prevents double-registration
+    // when React strict mode double-invokes pipeline useMemo with cached singletons)
+    const filtered = events.filter(ev => !this.registeredEvents.some(r => r.uid === ev.uid));
+    if (filtered.length === 0) return;
+
     const startIdx = this.registeredEvents.length;
 
     // Pass 1: combo chaining, reaction segments, stop discovery
-    for (let i = 0; i < events.length; i++) {
-      let ev = events[i];
+    for (let i = 0; i < filtered.length; i++) {
+      let ev = filtered[i];
 
       // Combo chaining: truncate overlapping combo animations
       if (ev.columnId === NounType.COMBO_SKILL && getAnimationDuration(ev) > 0) {
@@ -286,7 +291,7 @@ export class DerivedEventController implements ColumnHost {
         for (const seg of ev.segments) {
           for (const f of seg.frames ?? []) {
             if (f.skillPointRecovery && f.skillPointRecovery > 0 && f.absoluteFrame != null) {
-              this.spController.addRecovery(f.absoluteFrame, f.skillPointRecovery, ev.ownerId, ev.name);
+              this.spController.addRecovery(f.absoluteFrame, f.skillPointRecovery, ev.ownerId, ev.id);
             }
           }
         }
@@ -301,7 +306,7 @@ export class DerivedEventController implements ColumnHost {
       if (ev.columnId === OPERATOR_COLUMNS.INPUT && ev.isPerfectDodge) {
         this.spController.addRecovery(
           ev.startFrame, GENERAL_MECHANICS.skillPoints.perfectDodgeRecovery,
-          ev.ownerId, ev.name,
+          ev.ownerId, ev.id,
         );
       }
     }
@@ -349,18 +354,17 @@ export class DerivedEventController implements ColumnHost {
    */
   private computeFramePositions(ev: TimelineEvent): TimelineEvent {
     const fStops = this.foreignStopsFor(ev);
-    let hasFrames = false;
-    for (const seg of ev.segments) {
-      if (seg.frames && seg.frames.length > 0) { hasFrames = true; break; }
-    }
-    if (!hasFrames) return ev;
 
     let cumulativeOffset = 0;
     for (const seg of ev.segments) {
       const segStart = cumulativeOffset;
+      const segAbsStart = ev.startFrame + segStart;
+
+      // Bake absolute start frame onto each segment for view-layer positioning
+      seg.absoluteStartFrame = segAbsStart;
+
       cumulativeOffset += seg.properties.duration;
       if (!seg.frames) continue;
-      const segAbsStart = ev.startFrame + segStart;
       if (this.stops.length === 0) {
         for (const f of seg.frames) {
           f.derivedOffsetFrame = f.offsetFrame;
@@ -386,7 +390,7 @@ export class DerivedEventController implements ColumnHost {
   validateAll() {
     const byKey = new Map<string, TimelineEvent[]>();
     for (const ev of this.registeredEvents) {
-      const k = `${ev.ownerId}:${ev.columnId}:${ev.name}`;
+      const k = `${ev.ownerId}:${ev.columnId}:${ev.id}`;
       const arr = byKey.get(k) ?? [];
       arr.push(ev);
       byKey.set(k, arr);
@@ -475,7 +479,7 @@ export class DerivedEventController implements ColumnHost {
     return this.triggerAssociations.filter(assoc =>
       assoc.triggerClause.some(clause =>
         clause.conditions.some(cond =>
-          cond.object === event.name || cond.object === event.columnId
+          cond.object === event.id || cond.object === event.columnId
         )
       )
     );
@@ -911,7 +915,9 @@ export class DerivedEventController implements ColumnHost {
       let preCooldownDur = 0;
       for (const s of ev.segments) {
         if (s.properties.name === 'Cooldown') {
-          s.properties.duration = Math.max(0, resetFrame - ev.startFrame - preCooldownDur);
+          // IMMEDIATE_COOLDOWN starts at event offset 0, so don't subtract pre-cooldown duration
+          const isImmediate = s.properties.segmentTypes?.includes(SegmentType.IMMEDIATE_COOLDOWN);
+          s.properties.duration = Math.max(0, resetFrame - ev.startFrame - (isImmediate ? 0 : preCooldownDur));
         } else {
           preCooldownDur += s.properties.duration;
         }

@@ -86,7 +86,7 @@ import { applyEventOverrides } from '../controller/timeline/overrideApplicator';
 import { GlobalSettings, loadSettings, saveSettings, migrateLegacySettings, PERFORMANCE_THROTTLE } from '../consts/settings';
 import { configurePool } from '../controller/timeline/objectPool';
 import { COMBO_WINDOW_COLUMN_ID, ultimateGraphKey } from '../model/channels';
-import type { SkillPointConsumptionHistory, ResourceZone } from '../controller/timeline/skillPointTimeline';
+// SkillPointConsumptionHistory/ResourceZone types inferred via useMemo from controller
 
 // ── Module-scope initialization ──────────────────────────────────────────────
 
@@ -189,8 +189,7 @@ export function useApp() {
   const [editingResourceKey, setEditingResourceKey] = useState<string | null>(null);
   const [editingDamageRow, setEditingDamageRow] = useState<DamageTableRow | null>(null);
   const [damageRows, setDamageRows] = useState<DamageTableRow[]>([]);
-  const [spConsumptionHistory, setSpConsumptionHistory] = useState<SkillPointConsumptionHistory[]>([]);
-  const [spInsufficiencyZones, setSpInsufficiencyZones] = useState<Map<string, ResourceZone[]>>(new Map());
+  // spConsumptionHistory and spInsufficiencyZones derived via useMemo below (after processedEvents)
   const [infoPaneClosing,  setInfoPaneClosing]  = useState(false);
   const [infoPanePinned,   setInfoPanePinned]   = useState(false);
   const [infoPaneVerbose,  setInfoPaneVerbose]  = useState(InfoLevel.DETAILED);
@@ -349,7 +348,7 @@ export function useApp() {
     embedLoadedRef.current = true;
     // Async decode — columns may not match yet but attachDefaultSegments
     // will rebuild segments once operators are set and columns recompute.
-    decodeEmbed(embedParams.data, []).then((sheetData) => {
+    decodeEmbed(embedParams.data, []).then(({ sheetData, name: embeddedName }) => {
       const resolved = applySheetData(sheetData);
 
       // Save current loadout before creating the imported one
@@ -358,7 +357,9 @@ export function useApp() {
       }
 
       // Create a new loadout with the shared name (deduplicated)
-      const dedupedName = uniqueName(loadoutTree, embedParams.name, null);
+      // Prefer name from binary payload (v2); fall back to URL param (v1) or default
+      const loadoutName = embeddedName || embedParams.name || 'Shared Loadout';
+      const dedupedName = uniqueName(loadoutTree, loadoutName, null);
       const { tree: newTree, node } = addLoadoutNode(loadoutTree, dedupedName, null);
       setLoadoutTree(newTree);
       saveLoadoutTree(newTree);
@@ -489,6 +490,7 @@ export function useApp() {
     [processedEvents, staggerFrailtyEvents],
   );
 
+  // Apply user overrides to derived events + dedup by UID
   // Apply user overrides to derived events
   const allProcessedEvents = useMemo(() => {
     const keys = Object.keys(overrides);
@@ -502,6 +504,28 @@ export function useApp() {
 
   const processedEventsRef = useRef(allProcessedEvents);
   processedEventsRef.current = allProcessedEvents;
+
+  // Track which event UIDs changed in the last pipeline run (for incremental view updates).
+  // Computed by comparing current vs previous processedEvents by reference — immune to
+  // React strict mode double-invocation issues with module-level mutable state.
+  const prevProcessedRef = useRef<TimelineEvent[]>([]);
+  const changedUidsRef = useRef<ReadonlySet<string>>(new Set());
+  if (processedEvents !== prevProcessedRef.current) {
+    const prev = prevProcessedRef.current;
+    const prevByUid = new Map<string, TimelineEvent>();
+    for (const ev of prev) prevByUid.set(ev.uid, ev);
+    const changed = new Set<string>();
+    for (const ev of processedEvents) {
+      if (prevByUid.get(ev.uid) !== ev) changed.add(ev.uid);
+    }
+    // Also detect removed events
+    const currentUids = new Set(processedEvents.map(ev => ev.uid));
+    prevByUid.forEach((_, uid) => {
+      if (!currentUids.has(uid)) changed.add(uid);
+    });
+    changedUidsRef.current = changed;
+    prevProcessedRef.current = processedEvents;
+  }
 
   // Dynamic timeline length: grow to furthest event + buffer, minimum 2 minutes
   const contentFrames = useMemo(() => {
@@ -627,11 +651,15 @@ export function useApp() {
   // (Stagger sync handled by commonSlot.syncStaggerEvents above)
 
   // SP results are computed inside processCombatSimulation via finalize().
-  // Read the already-computed results after each pipeline run.
-  useEffect(() => {
-    setSpConsumptionHistory(combatLoadout.commonSlot.skillPoints.consumptionHistory);
-    setSpInsufficiencyZones(combatLoadout.commonSlot.skillPoints.insufficiencyZones);
-  }, [processedEvents, combatLoadout]);
+  // Read synchronously after the pipeline useMemo so zones are available on the same render.
+  const spConsumptionHistoryDerived = useMemo(
+    () => combatLoadout.commonSlot.skillPoints.consumptionHistory,
+    [processedEvents, combatLoadout], // eslint-disable-line react-hooks/exhaustive-deps
+  );
+  const spInsufficiencyZonesDerived = useMemo(
+    () => combatLoadout.commonSlot.skillPoints.insufficiencyZones,
+    [processedEvents, combatLoadout], // eslint-disable-line react-hooks/exhaustive-deps
+  );
 
   // ─── Ctrl+S to save, Escape to close info pane ─────────────────────────
   useEffect(() => {
@@ -669,8 +697,12 @@ export function useApp() {
     const hasPaneOpen = editingEventId || editingSlotId || editingEnemyOpen || editingResourceKey || editingDamageRow;
     if (!hasPaneOpen) return;
     const handler = (e: MouseEvent) => {
-      const panel = (e.target as Element).closest('.event-edit-panel');
-      if (!panel) setInfoPaneClosing(true);
+      const target = e.target as Element;
+      // Don't close when clicking inside the info pane itself
+      if (target.closest('.event-edit-panel')) return;
+      // Don't close when clicking a focusable element (damage cell, event block, loadout header)
+      if (target.closest('.dmg-cell-clickable') || target.closest('[data-event-uid]') || target.closest('.lo-cell')) return;
+      setInfoPaneClosing(true);
     };
     window.addEventListener('mousedown', handler);
     return () => window.removeEventListener('mousedown', handler);
@@ -1604,7 +1636,8 @@ export function useApp() {
   return {
     // Core state
     operators, enemy, enemyStats, events, loadouts, loadoutProperties, visibleSkills, resourceConfigs, overrides, buildSheetData,
-    columns, slots, allProcessedEvents, contentFrames, resourceGraphs, staggerBreaks, spConsumptionHistory, spInsufficiencyZones,
+    columns, slots, allProcessedEvents, contentFrames, resourceGraphs, staggerBreaks,
+    spConsumptionHistory: spConsumptionHistoryDerived, spInsufficiencyZones: spInsufficiencyZonesDerived,
 
     // UI state
     zoom, contextMenu, editingEventId, editingEvent, processedEditingEvent, editingEventReadOnly, editingEventIsDerived, editContext,
@@ -1621,7 +1654,7 @@ export function useApp() {
     readOnly: isCommunityLoadoutId(activeLoadoutId),
 
     // Refs
-    appBodyRef, sidebarRef,
+    appBodyRef, sidebarRef, changedUidsRef,
 
     // Event handlers
     handleAddEvent, handleUpdateEvent, handleMoveEvent, handleMoveEvents,

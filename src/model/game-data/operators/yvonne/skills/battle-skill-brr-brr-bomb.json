@@ -61,7 +61,10 @@
                   "verb": "CONSUME",
                   "object": "INFLICTION",
                   "objectQualifier": "ARTS",
-                  "from": "ENEMY"
+                  "from": "ENEMY",
+                  "with": {
+                    "stacks": "MAX"
+                  }
                 },
                 {
                   "verb": "APPLY",
@@ -153,7 +156,10 @@
                   "verb": "CONSUME",
                   "object": "INFLICTION",
                   "objectQualifier": "ARTS",
-                  "from": "ENEMY"
+                  "from": "ENEMY",
+                  "with": {
+                    "stacks": "MAX"
+                  }
                 },
                 {
                   "verb": "APPLY",

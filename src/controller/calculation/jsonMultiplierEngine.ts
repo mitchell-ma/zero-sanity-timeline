@@ -7,6 +7,7 @@
  * via resolveValueNode.
  */
 import { Potential, SkillLevel } from '../../consts/types';
+import { SegmentType } from '../../consts/enums';
 import { VerbType, NounType } from '../../dsl/semantics';
 import type { ValueNode } from '../../dsl/semantics';
 import { resolveValueNode } from './valueResolver';
@@ -86,8 +87,10 @@ function buildCategoryCache(operatorId: string, category: string, level: SkillLe
 
   if (skillCat.segments) {
     for (const seg of skillCat.segments) {
-      // Skip ANIMATION segments (no frames, no damage data)
-      if (seg.properties?.segmentTypes?.includes('ANIMATION')) continue;
+      // Skip non-damage segments — callers pass a damage-segment index that
+      // also skips ANIMATION/COOLDOWN, keeping indices aligned.
+      const types = seg.properties?.segmentTypes ?? [];
+      if (types.includes(SegmentType.ANIMATION) || types.includes(SegmentType.COOLDOWN) || types.includes(SegmentType.IMMEDIATE_COOLDOWN)) continue;
       segments.push({ frames: seg.frames ?? [], label: seg.name });
     }
   } else if (skillCat.frames) {
@@ -152,6 +155,14 @@ function resolveSkillKey(operatorId: string, skillName: string): string | null {
 
 // ── Public API ──────────────────────────────────────────────────────────────
 
+const NON_DAMAGE_SEGMENT_TYPES = new Set([SegmentType.ANIMATION, SegmentType.COOLDOWN, SegmentType.IMMEDIATE_COOLDOWN]);
+
+/** True if the segment carries damage frames (not ANIMATION, COOLDOWN, etc.). */
+export function isDamageSegment(segmentTypes?: readonly string[]): boolean {
+  if (!segmentTypes?.length) return true;
+  return !segmentTypes.some(t => NON_DAMAGE_SEGMENT_TYPES.has(t as SegmentType));
+}
+
 /**
  * Get the segment-total skill multiplier.
  * This is the sum of damage multiplier across all frames in the segment.
@@ -162,7 +173,7 @@ function resolveSkillKey(operatorId: string, skillName: string): string | null {
 export function getSkillMultiplier(
   operatorId: string,
   skillName: string,
-  segmentIndex: number | undefined,
+  segmentIndex: number,
   level: SkillLevel,
   potential: Potential,
 ): number | null {
@@ -172,10 +183,9 @@ export function getSkillMultiplier(
   const data = getCategoryCache(operatorId, category, level, potential);
   if (!data) return null;
 
-  const segIdx = segmentIndex ?? 0;
-  if (segIdx >= data.segmentMultipliers.length) return null;
+  if (segmentIndex >= data.segmentMultipliers.length) return null;
 
-  const baseMult = data.segmentMultipliers[segIdx];
+  const baseMult = data.segmentMultipliers[segmentIndex];
   if (baseMult === 0) return null;
 
   return baseMult;

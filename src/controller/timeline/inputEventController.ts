@@ -29,6 +29,46 @@ const SKILL_COLUMN_SET: ReadonlySet<string> = new Set(SKILL_COLUMN_ORDER);
  * Input events go into DEC.registerEvents (registeredEvents).
  * Derived events are seeded into the queue and processed via create* methods.
  */
+// ── Segment clone cache ─────────────────────────────────────────────────────
+// Keyed by event UID. Caches individual segment + properties objects for reuse.
+// Each tick creates a NEW array (so React sees a new reference after pipeline
+// mutation), but reuses the segment/properties objects inside — resetting them
+// to source values via Object.assign. This avoids ~600 spread allocations per
+// tick while keeping React's reference-based change detection working.
+let _segObjCache = new Map<string, { ref: readonly EventSegmentData[]; objs: EventSegmentData[] }>();
+let _segObjCacheNext = new Map<string, { ref: readonly EventSegmentData[]; objs: EventSegmentData[] }>();
+
+/** Clear segment clone cache. Call from resetPools(). */
+export function resetSegmentCloneCache() {
+  const tmp = _segObjCache;
+  _segObjCache = _segObjCacheNext;
+  _segObjCacheNext = tmp;
+  _segObjCacheNext.clear();
+}
+
+function cloneSegments(uid: string, segments: readonly EventSegmentData[]): EventSegmentData[] {
+  const cached = _segObjCache.get(uid);
+  if (cached && cached.ref === segments && cached.objs.length === segments.length) {
+    // Same source — reuse both segment objects AND array. Reset to source values
+    // so pipeline mutations from the previous tick don't carry over.
+    // The reconciler detects changes via per-segment fingerprints (duration + absoluteStartFrame),
+    // not via array/object reference equality.
+    const objs = cached.objs;
+    for (let i = 0; i < segments.length; i++) {
+      const cachedProps = objs[i].properties;
+      Object.assign(objs[i], segments[i]);
+      objs[i].properties = cachedProps;
+      Object.assign(cachedProps, segments[i].properties);
+    }
+    _segObjCacheNext.set(uid, { ref: segments, objs });
+    return objs;
+  }
+  // New or changed — allocate fresh objects
+  const objs = segments.map(s => ({ ...s, properties: { ...s.properties } }));
+  _segObjCacheNext.set(uid, { ref: segments, objs });
+  return objs;
+}
+
 export function cloneAndSplitEvents(rawEvents: TimelineEvent[]): { inputEvents: TimelineEvent[]; derivedEvents: TimelineEvent[] } {
   const inputEvents: TimelineEvent[] = [];
   const derivedEvents: TimelineEvent[] = [];
@@ -43,10 +83,7 @@ export function cloneAndSplitEvents(rawEvents: TimelineEvent[]): { inputEvents: 
     Object.assign(copy, ev);
     // Deep-clone segment properties so pipeline mutations (time-stop duration
     // extension) don't leak back to raw state and cause double-extension.
-    copy.segments = ev.segments.map(s => ({
-      ...s,
-      properties: { ...s.properties },
-    }));
+    copy.segments = cloneSegments(ev.uid, ev.segments);
     if (isDerived) {
       derivedEvents.push(copy);
     } else {
@@ -75,6 +112,24 @@ export function hasSufficientSP(ownerId: string, frame: number): boolean {
 
 export function genEventUid(): string {
   return `ev-${_uid++}-${uuidv4()}`;
+}
+
+/**
+ * Deterministic UID for pipeline-derived events.
+ * Uses a per-prefix sequence counter that resets each pipeline run.
+ * Same pipeline execution order → same UIDs across ticks.
+ */
+const _derivedSeq = new Map<string, number>();
+
+export function resetDerivedEventUids() { _derivedSeq.clear(); }
+
+export function derivedEventUid(columnId: string, sourceOwnerId: string, frame: number, disambiguator?: string) {
+  const prefix = disambiguator
+    ? `d-${columnId}-${sourceOwnerId}-${frame}-${disambiguator}`
+    : `d-${columnId}-${sourceOwnerId}-${frame}`;
+  const seq = _derivedSeq.get(prefix) ?? 0;
+  _derivedSeq.set(prefix, seq + 1);
+  return seq === 0 ? prefix : `${prefix}-${seq}`;
 }
 
 export function setNextEventUid(id: number): void {

@@ -9,7 +9,7 @@
 import { EventStatusType, StackInteractionType } from '../../../consts/enums';
 import { eventDuration, setEventDuration } from '../../../consts/viewTypes';
 import { allocDerivedEvent } from '../objectPool';
-import { genEventUid } from '../inputEventController';
+import { genEventUid, derivedEventUid } from '../inputEventController';
 import { getStatusStackLimit } from '../derivedEventController';
 import { getStatusStackingMode } from '../eventPresentationController';
 import type { EventColumn, ColumnHost, EventSource, AddOptions, ConsumeOptions } from './eventColumn';
@@ -169,7 +169,7 @@ export class ConfigDrivenStatusColumn implements EventColumn {
     if (remaining > 0 && maxRemainingDuration > 0) {
       for (let i = 0; i < remaining; i++) {
         const ev = allocDerivedEvent();
-        ev.uid = `${templateEvent.id.toLowerCase()}-${genEventUid()}`;
+        ev.uid = derivedEventUid(this.columnId, templateEvent.sourceOwnerId ?? ownerId, frame, `restack-${i}`);
         ev.id = templateEvent.id;
         ev.name = templateEvent.id;
         ev.ownerId = ownerId;

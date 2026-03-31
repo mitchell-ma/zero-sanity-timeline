@@ -226,7 +226,7 @@ export class SkillPointController {
                 startFrame: absoluteFrame(event.startFrame, cumulativeOffset, frame.offsetFrame, fStops),
                 segments: [{ properties: { duration: -(frame.skillPointRecovery!) } }],
                 sourceOwnerId: event.ownerId,
-                sourceSkillName: event.name,
+                sourceSkillName: event.id,
               });
             }
           }
@@ -247,7 +247,7 @@ export class SkillPointController {
           startFrame: event.startFrame,
           segments: [{ properties: { duration: -GENERAL_MECHANICS.skillPoints.perfectDodgeRecovery } }],
           sourceOwnerId: event.ownerId,
-          sourceSkillName: event.name,
+          sourceSkillName: event.id,
         });
       }
     }

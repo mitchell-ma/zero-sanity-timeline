@@ -340,7 +340,7 @@ export class EventsQueryService {
     for (const ev of this.susceptibilityEvents) {
       if (!this.isActive(ev, frame)) continue;
       const bonus = this.resolveSegmentSusceptibility(ev, frame, element);
-      if (bonus) sources.push({ label: this.resolveSegmentLabel(ev, frame), value: bonus });
+      if (bonus) sources.push({ label: this.resolveSegmentLabel(ev, frame), value: bonus, category: ev.name });
     }
     return sources;
   }
@@ -352,7 +352,7 @@ export class EventsQueryService {
         if (!this.isActive(ev, frame)) continue;
         const stackCount = Math.min(ev.stacks ?? 1, 4);
         const value = ELECTRIFICATION_ARTS_FRAGILITY[stackCount] ?? 0;
-        if (value > 0) sources.push({ label: `Electrification Lv${stackCount}`, value });
+        if (value > 0) sources.push({ label: `Electrification Lv${stackCount}`, value, category: 'Arts' });
       }
     }
     if (element === ElementType.PHYSICAL) {
@@ -360,7 +360,7 @@ export class EventsQueryService {
         if (!this.isActive(ev, frame)) continue;
         const stackCount = Math.min(ev.stacks ?? 1, 4);
         const value = BREACH_PHYSICAL_FRAGILITY[stackCount] ?? 0;
-        if (value > 0) sources.push({ label: `Breach Lv${stackCount}`, value });
+        if (value > 0) sources.push({ label: `Breach Lv${stackCount}`, value, category: 'Physical' });
       }
     }
     for (const ev of this.weaponFragilityEvents) {
@@ -369,13 +369,13 @@ export class EventsQueryService {
       const effects = this.weaponFragility[slotId];
       if (!effects) continue;
       for (const eff of effects) {
-        if (eff.elements.includes(element)) sources.push({ label: `Weapon debuff (${slotId})`, value: eff.bonus });
+        if (eff.elements.includes(element)) sources.push({ label: `Weapon debuff (${slotId})`, value: eff.bonus, category: 'Weapon' });
       }
     }
     for (const tf of this.talentFragility) {
       if (!tf.elements.includes(element)) continue;
       const events = this.getColumnEvents(tf.requiredColumnId);
-      if (events.some(ev => this.isActive(ev, frame))) sources.push({ label: 'Talent fragility', value: tf.bonus });
+      if (events.some(ev => this.isActive(ev, frame))) sources.push({ label: 'Talent fragility', value: tf.bonus, category: 'Talent' });
     }
     return sources;
   }
@@ -384,7 +384,7 @@ export class EventsQueryService {
     const sources: MultiplierSource[] = [];
     for (const ev of this.artsAmpEvents) {
       if (!this.isActive(ev, frame)) continue;
-      sources.push({ label: ev.name ?? 'Arts Amp', value: ev.statusValue ?? DEFAULT_AMP_BONUS });
+      sources.push({ label: ev.name ?? 'Arts Amp', value: ev.statusValue ?? DEFAULT_AMP_BONUS, category: ev.name ?? 'Arts Amp' });
     }
     return sources;
   }

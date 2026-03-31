@@ -165,6 +165,7 @@ function resolveTargetOwnerId(
   determiner?: string,
 ): string {
   if (target === NounType.ENEMY) return ENEMY_OWNER_ID;
+  if (target === NounType.TEAM) return COMMON_OWNER_ID;
   if (target === NounType.OPERATOR || !target) {
     if (determiner === DeterminerType.ALL) return COMMON_OWNER_ID;
     if (determiner === DeterminerType.OTHER) return COMMON_OWNER_ID;
@@ -336,7 +337,7 @@ export class TriggerIndex {
         const skillNames = getSkillIds(opId);
         for (const ev of registeredEvents) {
           if (ev.ownerId === ENEMY_OWNER_ID || ev.ownerId === COMMON_OWNER_ID) continue;
-          if (skillNames.has(ev.name)) { operatorSlotMap[opId] = ev.ownerId; break; }
+          if (skillNames.has(ev.id)) { operatorSlotMap[opId] = ev.ownerId; break; }
         }
       }
     }
@@ -425,8 +426,14 @@ export class TriggerIndex {
           this.talentsBySlot.set(slotId, existing);
           // Fall through to onTriggerClause indexing below (don't continue)
         } else {
-          // Skip if already exists in registered events
+          // Skip if already exists in registered events or already indexed in this build (any slot)
           if (registeredEvents?.some(ev => ev.columnId === talentColumnId && ev.ownerId === talentOwnerId)) continue;
+          let alreadyIndexed = false;
+          this.talentsBySlot.forEach(entries => {
+            if (alreadyIndexed) return;
+            if (entries.some(t => t.talentEvent?.columnId === talentColumnId && t.talentEvent?.ownerId === talentOwnerId)) alreadyIndexed = true;
+          });
+          if (alreadyIndexed) continue;
 
           const talentEvent: TimelineEvent = {
             uid: `${def.properties.id.toLowerCase()}-talent-${slotId}`,
@@ -447,7 +454,12 @@ export class TriggerIndex {
       }
 
       // ── Lifecycle clauses (clause with HAVE conditions) ──────────────
-      if (def.clause && Array.isArray(def.clause)) {
+      // Skip lifecycle indexing for passive talents — they're pre-registered as permanent
+      // presence events and shouldn't be re-created by the lifecycle trigger system.
+      const isTalentType = (def.properties.eventCategoryType ?? def.properties.type) === EventCategoryType.TALENT;
+      const talentDur = def.properties.duration;
+      const isPassiveTalent = isTalentType && (!talentDur || getDurationFrames(talentDur) >= TOTAL_FRAMES);
+      if (!isPassiveTalent && def.clause && Array.isArray(def.clause)) {
         for (const c of def.clause) {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const clause = c as any;

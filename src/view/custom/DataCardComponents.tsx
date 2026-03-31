@@ -112,27 +112,16 @@ export function ReadonlySection({ label, children }: { label: string; children: 
 
 // ── VaryTable ──────────────────────────────────────────────────────────────
 
-const VARY_HEADER_WEIGHT = 3;
-
-export function VaryTable({ headerLabel, columnLabels, rows, style }: {
-  headerLabel: string;
+export function VaryTable({ columnLabels, rows, style }: {
   columnLabels: (string | number)[];
   rows: { label: string; values: (string | number)[] }[];
   style?: React.CSSProperties;
 }) {
-  const dataCols = columnLabels.length;
-  const totalWeight = VARY_HEADER_WEIGHT + dataCols;
-  const headerPct = `${(VARY_HEADER_WEIGHT / totalWeight) * 100}%`;
-  const dataPct = `${(1 / totalWeight) * 100}%`;
   return (
     <table className="ops-frame-vary-table" style={style}>
-      <colgroup>
-        <col style={{ width: headerPct }} />
-        {columnLabels.map((_, i) => <col key={i} style={{ width: dataPct }} />)}
-      </colgroup>
-      <thead><tr><th className="ops-frame-vary-header">{headerLabel}</th>{columnLabels.map((l, i) => <th key={i}>{l}</th>)}</tr></thead>
+      <thead><tr>{columnLabels.map((l, i) => <th key={i}>{l}</th>)}</tr></thead>
       <tbody>{rows.map((r, ri) => (
-        <tr key={ri}><td className="ops-frame-vary-header">{r.label}</td>{r.values.map((v, vi) => <td key={vi}>{v}</td>)}</tr>
+        <tr key={ri}>{r.values.map((v, vi) => <td key={vi}>{v}</td>)}</tr>
       ))}</tbody>
     </table>
   );
@@ -217,12 +206,11 @@ function PropertiesView({ props }: { props: Record<string, unknown> }) {
           const obj = val as Record<string, unknown>;
           if (obj.verb === VerbType.VARY_BY && Array.isArray(obj.value)) {
             const vals = obj.value as number[];
-            const byLabel = String(obj.object ?? 'LEVEL').replace(/_/g, ' ').toLowerCase();
             return (
               <div key={key} className="ops-frame-effect">
                 <div className="ops-frame-effect-sentence"><span className="ops-frame-effect-verb">{label}</span></div>
                 <div className="ops-frame-effect-with"><div className="ops-frame-vary">
-                  <VaryTable headerLabel={byLabel} columnLabels={vals.map((_v, vi) => vi + 1)} rows={[{ label: 'value', values: vals }]} />
+                  <VaryTable columnLabels={vals.map((_v, vi) => vi + 1)} rows={[{ label: 'value', values: vals }]} />
                 </div></div>
               </div>
             );
@@ -232,13 +220,12 @@ function PropertiesView({ props }: { props: Record<string, unknown> }) {
             const inner = obj.value as Record<string, unknown>;
             const vals = inner.value as number[];
             if (Array.isArray(vals)) {
-              const byLabel = String(inner.object ?? 'LEVEL').replace(/_/g, ' ').toLowerCase();
               const unit = typeof obj.unit === 'string' ? obj.unit.replace(/_/g, ' ').toLowerCase() : '';
               return (
                 <div key={key} className="ops-frame-effect">
                   <div className="ops-frame-effect-sentence"><span className="ops-frame-effect-verb">{label}</span></div>
                   <div className="ops-frame-effect-with"><div className="ops-frame-vary">
-                    <VaryTable headerLabel={byLabel} columnLabels={vals.map((_v, vi) => vi + 1)} rows={[{ label: unit, values: vals }]} />
+                    <VaryTable columnLabels={vals.map((_v, vi) => vi + 1)} rows={[{ label: unit, values: vals }]} />
                   </div></div>
                 </div>
               );
@@ -276,7 +263,6 @@ function VaryByLeaf({ node, label }: { node: Record<string, unknown>; label?: st
       {label && <span className="ops-frame-prop-label">{label}</span>}
       <span className="ops-vt-vary-desc">vary by {axis}{of}</span>
       <VaryTable
-        headerLabel={axis}
         columnLabels={vals.map((_, i) => labelFn(i))}
         rows={[{ label: '', values: vals }]}
         style={{ marginTop: 2 }}
@@ -688,7 +674,7 @@ export function TabbedSegmentView({ entry }: { entry: { id: string; label: strin
                       <span className="ops-frame-effect-verb">Duration</span>
                     </div>
                     <div className="ops-frame-effect-with"><div className="ops-frame-vary">
-                      <VaryTable headerLabel="skill level" columnLabels={range.map((_v, vi) => vi + 1)} rows={[{ label: unit, values: range.map(fmtN) }]} />
+                      <VaryTable columnLabels={range.map((_v, vi) => vi + 1)} rows={[{ label: unit, values: range.map(fmtN) }]} />
                     </div></div>
                   </div>
                 );
@@ -708,7 +694,7 @@ export function TabbedSegmentView({ entry }: { entry: { id: string; label: strin
                     <span className="ops-frame-effect-verb">Total Multiplier</span>
                   </div>
                   <div className="ops-frame-effect-with"><div className="ops-frame-vary">
-                    <VaryTable headerLabel="skill level" columnLabels={totals.map((_v, vi) => vi + 1)} rows={[{ label: 'value', values: totals.map(v => Math.round(v * 1000) / 1000) }]} />
+                    <VaryTable columnLabels={totals.map((_v, vi) => vi + 1)} rows={[{ label: 'value', values: totals.map(v => Math.round(v * 1000) / 1000) }]} />
                   </div></div>
                 </div>
               );

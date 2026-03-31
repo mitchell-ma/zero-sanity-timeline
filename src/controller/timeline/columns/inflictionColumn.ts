@@ -48,7 +48,7 @@ export class InflictionColumn implements EventColumn {
           const reactionDurSec = reactionConfig?.durationSeconds ?? 20;
           const reactionDurFrames = Math.round(reactionDurSec * 120);
           this.host.applyToColumn(reactionColumnId, ENEMY_OWNER_ID, frame, reactionDurFrames, source, {
-            uid: `${options?.uid ?? this.columnId}-reaction`,
+            uid: `${options?.uid ?? `${this.columnId}-${genEventUid()}`}-reaction`,
             stacks: otherActive.length,
           });
           // Emit a consumed copy of the incoming infliction for freeform state tracking

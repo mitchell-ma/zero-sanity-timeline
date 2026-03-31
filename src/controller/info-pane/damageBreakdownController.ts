@@ -1,4 +1,6 @@
-import type { DamageParams, StatusDamageParams } from '../../model/calculation/damageFormulas';
+import type { DamageParams, DamageSubComponents, StatusDamageParams } from '../../model/calculation/damageFormulas';
+import { getElementDamageBonusStat } from '../../model/calculation/damageFormulas';
+import type { DamageTableRow } from '../calculation/damageTableBuilder';
 import { ElementType, StatType } from '../../consts/enums';
 
 /** Multiplier display entry for the breakdown table. */
@@ -70,28 +72,89 @@ const ELEMENT_DMG_LABELS: Record<ElementType, string> = {
   [ElementType.ARTS]: 'Arts DMG%',
 };
 
-/** The display elements (no NONE — Physical covers it). */
-const DISPLAY_ELEMENTS: ElementType[] = [
-  ElementType.PHYSICAL,
-  ElementType.HEAT,
-  ElementType.CRYO,
-  ElementType.NATURE,
-  ElementType.ELECTRIC,
+
+function buildSourceSubEntries(
+  sub: DamageSubComponents,
+  statType: StatType,
+): MultiplierEntry[] | undefined {
+  const sources = sub.statSources?.[statType];
+  if (!sources || sources.length === 0) return undefined;
+  return sources
+    .filter((s) => Math.abs(s.value) > 0.00001)
+    .map((s) => makeSubEntry(s.source, s.value, ''));
+}
+
+/** Order: Physical, Arts, Heat, Cryo, Nature, Electric */
+function buildDamageBonusSubEntries(sub: DamageSubComponents): MultiplierEntry[] {
+  const entries: MultiplierEntry[] = [];
+  // Physical
+  const physEntry = makeElementEntry(sub, ElementType.PHYSICAL);
+  entries.push(physEntry);
+  // Arts DMG% — between Physical and Heat
+  const artsEntry = makeSubEntry('Arts DMG%', sub.artsDmgBonus, 'Arts damage bonus');
+  artsEntry.subEntries = buildSourceSubEntries(sub, StatType.ARTS_DAMAGE_BONUS);
+  entries.push(artsEntry);
+  // Heat, Cryo, Nature, Electric
+  for (const el of [ElementType.HEAT, ElementType.CRYO, ElementType.NATURE, ElementType.ELECTRIC]) {
+    entries.push(makeElementEntry(sub, el));
+  }
+  return entries;
+}
+
+function makeElementEntry(sub: DamageSubComponents, el: ElementType): MultiplierEntry {
+  const value = sub.allElementDmgBonuses[el] ?? 0;
+  const isActive = el === sub.element || (el === ElementType.PHYSICAL && sub.element === ElementType.NONE);
+  const label = ELEMENT_DMG_LABELS[el];
+  const entry = makeSubEntry(label, value, isActive ? 'Active element bonus' : 'Does not apply to this hit');
+  if (isActive) {
+    entry.subEntries = buildSourceSubEntries(sub, getElementDamageBonusStat(el));
+  }
+  return entry;
+}
+
+const BREAKDOWN_ELEMENTS: { el: ElementType; label: string }[] = [
+  { el: ElementType.PHYSICAL, label: 'Physical' },
+  { el: ElementType.ARTS, label: 'Arts' },
+  { el: ElementType.HEAT, label: 'Heat' },
+  { el: ElementType.CRYO, label: 'Cryo' },
+  { el: ElementType.NATURE, label: 'Nature' },
+  { el: ElementType.ELECTRIC, label: 'Electric' },
 ];
 
-function buildElementDmgSubEntries(sub: import('../../model/calculation/damageFormulas').DamageSubComponents): MultiplierEntry[] {
-  return DISPLAY_ELEMENTS.map((el) => {
-    const value = sub.allElementDmgBonuses[el] ?? 0;
-    const isActive = el === sub.element || (el === ElementType.PHYSICAL && sub.element === ElementType.NONE);
-    const label = isActive
-      ? ELEMENT_DMG_LABELS[el]
-      : `${ELEMENT_DMG_LABELS[el]} (n/a)`;
-    return makeSubEntry(label, value, isActive ? 'Active element bonus' : 'Does not apply to this hit');
+/** Build per-element sub-entries from a per-element source map. Active element is highlighted. */
+function buildPerElementSubEntries(
+  allSources: Partial<Record<ElementType, import('../../model/calculation/damageFormulas').MultiplierSource[]>>,
+  activeElement: ElementType,
+): MultiplierEntry[] {
+  return BREAKDOWN_ELEMENTS.map(({ el, label }) => {
+    const sources = allSources[el] ?? [];
+    const total = sources.reduce((sum: number, s) => sum + s.value, 0);
+    const isActive = el === activeElement || (el === ElementType.PHYSICAL && activeElement === ElementType.NONE);
+    const entry = makeSubEntry(
+      label,
+      total,
+      isActive ? 'Active element' : 'Does not apply to this hit',
+    );
+    if (sources.length > 0) {
+      entry.subEntries = sources.map((s) => makeSubEntry(s.label, s.value, ''));
+    }
+    return entry;
   });
 }
 
-export function buildMultiplierEntries(params: DamageParams): MultiplierEntry[] {
+export function buildMultiplierEntries(params: DamageParams, foldedFrames?: DamageTableRow[]): MultiplierEntry[] {
   const sub = params.sub;
+  const isFolded = foldedFrames && foldedFrames.length > 1;
+
+  // Build frame children for segment multiplier in folded mode
+  const frameChildren: MultiplierEntry[] | undefined = isFolded
+    ? foldedFrames.map((fr, i) => makeSubEntry(
+      `Frame ${i + 1}`,
+      fr.params?.baseMultiplier ?? 0,
+      fr.damage != null ? `${Math.round(fr.damage).toLocaleString()} dmg` : '',
+      'percent',
+    ))
+    : undefined;
 
   const raw: { label: string; value: number; format: MultiplierEntry['format']; source: string; subEntries?: MultiplierEntry[] }[] = [
     {
@@ -102,28 +165,29 @@ export function buildMultiplierEntries(params: DamageParams): MultiplierEntry[] 
       subEntries: sub ? [
         makeSubEntry('Operator Base ATK', sub.operatorBaseAttack, 'From operator level', 'flat'),
         makeSubEntry('Weapon Base ATK', sub.weaponBaseAttack, 'From weapon level', 'flat'),
-        makeSubEntry('ATK%', sub.atkBonusPct, 'Sum of all ATK% sources'),
+        { ...makeSubEntry('ATK%', sub.atkBonusPct, 'Sum of all ATK% sources'), subEntries: buildSourceSubEntries(sub, StatType.ATTACK_BONUS) },
         ...(sub.flatAtkBonuses > 0 ? [makeSubEntry('Flat ATK Bonus', sub.flatAtkBonuses, 'Gear effects, consumables, tacticals', 'flat')] : []),
       ] : undefined,
     },
-    ...(sub?.segmentMultiplier != null ? [{
+    ...(isFolded && sub?.segmentMultiplier != null ? [{
       label: 'Skill Segment Multiplier',
       value: sub.segmentMultiplier,
       format: 'percent' as const,
       source: sub.segmentFrameCount != null
-        ? `Total segment ATK% spread across ${sub.segmentFrameCount} frames`
+        ? `Total segment ATK% across ${sub.segmentFrameCount} frames`
         : 'Total segment ATK%',
+      subEntries: frameChildren,
     }] : []),
-    {
-      label: sub?.isPerTickMultiplier ? 'Skill Tick Multiplier' : 'Skill Frame Multiplier',
+    ...(!isFolded ? [{
+      label: 'Skill Frame Multiplier',
       value: params.baseMultiplier,
-      format: 'percent',
+      format: 'percent' as const,
       source: sub?.isPerTickMultiplier
-        ? 'Per-tick ATK% (ramping: base + increment × tick)'
+        ? 'Per-frame ATK% (ramping: base + increment × frame)'
         : sub?.segmentFrameCount != null
           ? `Per-frame ATK% (segment ÷ ${sub.segmentFrameCount} frames)`
           : 'Skill scaling (% of ATK)',
-    },
+    }] : []),
     {
       label: 'Attribute Bonus',
       value: params.attributeBonus,
@@ -150,20 +214,20 @@ export function buildMultiplierEntries(params: DamageParams): MultiplierEntry[] 
       format: 'multiplier',
       source: '1 + Element DMG% + Skill Type DMG% + Skill DMG% + Arts DMG%',
       subEntries: sub ? [
-        ...buildElementDmgSubEntries(sub),
-        makeSubEntry('Skill Type DMG%', sub.skillTypeDmgBonus, 'Basic/Battle/Combo/Ultimate DMG bonus'),
-        makeSubEntry('Skill DMG%', sub.skillDmgBonus, 'Generic skill damage bonus'),
-        makeSubEntry('Arts DMG%', sub.artsDmgBonus, 'Arts damage bonus'),
+        ...buildDamageBonusSubEntries(sub),
+        { ...makeSubEntry('Skill Type DMG%', sub.skillTypeDmgBonus, 'Basic/Battle/Combo/Ultimate DMG bonus'), subEntries: sub.skillTypeDmgBonusStat ? buildSourceSubEntries(sub, sub.skillTypeDmgBonusStat) : undefined },
+        { ...makeSubEntry('Skill DMG%', sub.skillDmgBonus, 'Generic skill damage bonus'), subEntries: buildSourceSubEntries(sub, StatType.SKILL_DAMAGE_BONUS) },
         ...(sub.staggerDmgBonus > 0 ? [makeSubEntry('Stagger DMG%', sub.staggerDmgBonus, 'DMG Bonus vs. Staggered')] : []),
       ] : undefined,
     },
     {
-      label: 'Arts Amp',
+      label: 'Amp',
       value: params.ampMultiplier,
       format: 'multiplier',
-      source: params.ampMultiplier > 1.001 ? 'Arts Amp active' : 'No Arts Amp',
-      subEntries: sub && sub.ampSources.length > 0 ? sub.ampSources.map((s) =>
-        makeSubEntry(s.label, s.value, 'Amp bonus source'),
+      source: params.ampMultiplier > 1.001 ? 'Amp active' : 'No Amp',
+      subEntries: sub && sub.ampSources.length > 0 ? buildPerElementSubEntries(
+        { [ElementType.ARTS]: sub.ampSources },
+        sub.element,
       ) : undefined,
     },
     {
@@ -198,18 +262,14 @@ export function buildMultiplierEntries(params: DamageParams): MultiplierEntry[] 
       value: params.susceptibilityMultiplier,
       format: 'multiplier',
       source: params.susceptibilityMultiplier > 1.001 ? 'Element susceptibility active' : 'No susceptibility',
-      subEntries: sub && sub.susceptibilitySources.length > 0 ? sub.susceptibilitySources.map((s) =>
-        makeSubEntry(s.label, s.value, 'Susceptibility source'),
-      ) : undefined,
+      subEntries: sub?.allSusceptibilitySources ? buildPerElementSubEntries(sub.allSusceptibilitySources, sub.element) : undefined,
     },
     {
       label: 'Fragility',
       value: params.fragilityMultiplier,
       format: 'multiplier',
       source: params.fragilityMultiplier > 1.001 ? 'Increased DMG Taken active' : 'No fragility debuff',
-      subEntries: sub && sub.fragilitySources.length > 0 ? sub.fragilitySources.map((s) =>
-        makeSubEntry(s.label, s.value, 'Fragility source'),
-      ) : undefined,
+      subEntries: sub?.allFragilitySources ? buildPerElementSubEntries(sub.allFragilitySources, sub.element) : undefined,
     },
     {
       label: 'DMG Reduction',
