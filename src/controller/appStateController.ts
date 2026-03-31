@@ -230,6 +230,7 @@ export function computeSlots(
       operator: op,
       potential: loadoutProperties[slotId]?.operator.potential,
       weaponId: lo?.weaponId ?? undefined,
+      consumableId: lo?.consumableId ?? undefined,
       tacticalId: lo?.tacticalId ?? undefined,
       gearSetType,
       comboSkillLevel: loadoutProperties[slotId]?.skills.comboSkillLevel,

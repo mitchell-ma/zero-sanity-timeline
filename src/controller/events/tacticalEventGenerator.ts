@@ -1,6 +1,7 @@
 import { TimelineEvent, EventSegmentData } from '../../consts/viewTypes';
 import { getTactical } from '../gameDataStore';
 import type { Interaction } from '../../dsl/semantics';
+import { EventCategoryType } from '../../consts/enums';
 import { FPS } from '../../utils/timeline';
 
 /**
@@ -98,7 +99,7 @@ export function generateTacticalEvents(
       id: config.name,
       name: config.name,
       ownerId: slotId,
-      columnId: 'tactical',
+      columnId: EventCategoryType.TACTICAL,
       startFrame: triggerFrame,
       segments: [segment],
       sourceOwnerId: slotId,

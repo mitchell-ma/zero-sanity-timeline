@@ -7,6 +7,7 @@ import {
 } from '../utils/timeline';
 import { COMBO_WINDOW_COLUMN_ID } from '../model/channels';
 import { InteractionModeType, ColumnType, MicroColumnAssignment } from '../consts/enums';
+import { getCritModeGeneration } from '../controller/combatStateController';
 import {
   TimelineEvent,
   Column,
@@ -173,6 +174,7 @@ function TimelineColumn({
     onSegmentResizeDragStart: pres.passive ? undefined : onSegmentResizeDragStart,
     selectedFrames: pres.passive ? undefined : selectedFramesByEvent?.get(ev.uid),
     hoverFrame: draggingIds?.has(ev.uid) ? null : hoverFrame,
+    critModeGeneration: getCritModeGeneration(),
   });
 
   return (

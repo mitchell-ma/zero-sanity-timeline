@@ -1423,20 +1423,7 @@ export class EventInterpretorController {
       }
     }
 
-    // ── 3c. Crit resolution ─────────────────────────────────────────────
-    // Write isCrit for ALL frames (not just damage frames) so the timeline
-    // visual always reflects the current crit mode. Deterministic modes
-    // (NEVER/ALWAYS/EXPECTED) override any existing isCrit or pin value.
-    {
-      const critMode = this.critMode ?? CritMode.EXPECTED;
-      if (critMode === CritMode.ALWAYS || critMode === CritMode.EXPECTED) {
-        frame.isCrit = true;
-      } else if (critMode === CritMode.NEVER) {
-        frame.isCrit = false;
-      }
-    }
-
-    // ── 3d. Crit resolution for damage frames (stat accumulator + trigger emission)
+    // ── 3c. Crit resolution for damage frames (stat accumulator + trigger emission)
     if (this.statAccumulator && (frame.damageMultiplier || frame.dealDamage)) {
       const isDot = frame.damageType === DamageType.DAMAGE_OVER_TIME;
       if (!isDot) {

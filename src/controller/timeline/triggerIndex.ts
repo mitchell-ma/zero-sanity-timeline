@@ -476,7 +476,7 @@ export class TriggerIndex {
               id: def.properties.id,
               name: def.properties.id,
               ownerId,
-              columnId: def.properties.id,
+              columnId: EventCategoryType.CONSUMABLE,
               startFrame: 0,
               segments: durationSegment(dur),
               sourceOwnerId: operatorId,

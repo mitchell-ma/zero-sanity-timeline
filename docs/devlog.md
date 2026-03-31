@@ -1,5 +1,12 @@
 # Devlog
 
+## 2026-03-31
+- Crit mode now correctly affects damage calculations without overwriting saved crit data — switching between Never, Always, and Expected no longer permanently mutates your per-frame crit rolls, so toggling back to Random or Manual preserves your previous results
+- Crit-triggered buff stacks (like MI Security gear) now accumulate frame-by-frame in all modes — Always mode correctly shows stacks building up over time instead of instantly applying maximum stacks, producing more accurate damage numbers
+- Expected mode damage is now properly bounded between Never and Always for every frame
+- Consumable and tactical item buffs now appear as status columns on the timeline, so you can see when passive item effects are active on each operator
+- Fixed tactical item events using an incorrect internal column ID
+
 ## 2026-03-30
 - Shared URLs are now dramatically smaller — the encoding was rebuilt from scratch using binary compression, so complex 4-operator loadouts produce much shorter links
 - Damage breakdown panel redesigned as a drill-down tree — click into skill segments to see per-frame multipliers, and expand damage bonus nodes to see individual element and stat contributions

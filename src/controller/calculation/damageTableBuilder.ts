@@ -22,7 +22,6 @@ import {
   DamageParams,
   DamageSubComponents,
   getAmpMultiplier,
-  getCritMultiplier,
   getDamageBonus,
   getDefenseMultiplier,
   getDmgReductionMultiplier,
@@ -286,9 +285,9 @@ export function buildDamageTableRows(
     opIdCache.set(slot.slotId, slot.operator.id);
   }
 
-  // Build crit expectation models per slot (EXPECTED mode only)
+  // Build crit expectation models per slot (all modes — needed for stat deltas)
   const critModels = new Map<string, CritExpectationModel>();
-  if (resolvedCritMode === CritMode.EXPECTED) {
+  {
     const triggerIndex = getLastTriggerIndex();
     if (triggerIndex) {
       for (const slot of slots) {
@@ -384,17 +383,32 @@ export function buildDamageTableRows(
                 const isArts = element !== ElementType.PHYSICAL && element !== ElementType.NONE;
                 const isStaggered = statusQuery?.isStaggered(absFrame) ?? false;
 
-                // Step crit model early (before stat bonuses) so expectedStatDeltas are available
+                // Step crit model for ALL modes. The model tracks stack accumulation
+                // over time — frame 1 has 1 stack, frame 2 has 2, etc. Even ALWAYS
+                // mode needs the model to know the correct stack count at each frame.
+                // The model is stepped with the mode's expectation: ALWAYS→1.0, NEVER→0.0, etc.
                 const isDot = frame.damageType === DamageType.DAMAGE_OVER_TIME;
                 const canCrit = !isDot;
                 let earlySnapshot: CritFrameSnapshot | undefined;
-                if (canCrit && resolvedCritMode === CritMode.EXPECTED) {
-                  const critModel = critModels.get(ev.ownerId);
-                  if (critModel) {
-                    earlySnapshot = critModel.step(absFrame);
+                const critModel = canCrit ? critModels.get(ev.ownerId) : undefined;
+                if (critModel) {
+                  // Override E for deterministic modes so the model tracks correct stack accumulation:
+                  // ALWAYS: E=1.0 (every frame crits → stacks build up 1 per frame)
+                  // NEVER: E=0.0 (no crits → stacks stay at 0)
+                  // RANDOM/MANUAL: E from frame.isCrit (binary per frame)
+                  // EXPECTED: undefined → model uses its own feedback-computed E(T)
+                  const overrideE = resolvedCritMode === CritMode.ALWAYS ? 1.0
+                    : resolvedCritMode === CritMode.NEVER ? 0.0
+                    : resolvedCritMode === CritMode.EXPECTED ? undefined
+                    : (frame.isCrit ? 1.0 : 0.0);
+                  earlySnapshot = critModel.step(absFrame, overrideE);
+                  if (resolvedCritMode === CritMode.EXPECTED) {
                     frame.expectedCritRate = earlySnapshot.expectedCritRate;
                   }
                 }
+                // Use the model's expectedStatDeltas for all modes.
+                // The model was stepped with the mode's E(T) (via getFrameExpectation),
+                // so the deltas already reflect the correct stack accumulation per mode.
                 const critDeltas = earlySnapshot?.expectedStatDeltas;
 
                 // Damage Bonus sub-components
@@ -467,6 +481,8 @@ export function buildDamageTableRows(
                 }
 
                 // Crit multiplier — unified via getFrameExpectation()
+                // Deterministic modes (NEVER/ALWAYS/EXPECTED) are authoritative over pins.
+                // Pins only matter for RANDOM and MANUAL.
                 let frameCrit: boolean | undefined;
                 let expectedCrit: number;
                 const critSnapshot = earlySnapshot;
@@ -474,25 +490,23 @@ export function buildDamageTableRows(
                   expectedCrit = 1;
                 } else {
                   const critPin = overrides?.[buildOverrideKey(ev)]?.segments?.[si]?.frames?.[fi]?.isCritical;
-                  if (critPin !== undefined) {
-                    frameCrit = critPin;
-                  } else if (resolvedCritMode === CritMode.ALWAYS || resolvedCritMode === CritMode.EXPECTED) {
+                  if (resolvedCritMode === CritMode.ALWAYS || resolvedCritMode === CritMode.EXPECTED) {
                     frameCrit = true;
                   } else if (resolvedCritMode === CritMode.NEVER) {
                     frameCrit = false;
+                  } else if (resolvedCritMode === CritMode.MANUAL) {
+                    frameCrit = critPin ?? false;
+                  } else if (critPin !== undefined) {
+                    frameCrit = critPin;
                   } else {
                     frameCrit = frame.isCrit;
                   }
-                  // Always write crit state to the frame
-                  if (frameCrit !== undefined) frame.isCrit = frameCrit;
+                  // Note: isCrit is set by the pipeline (eventInterpretorController), not here.
+                  // The builder reads it but doesn't write it to avoid double-mutation.
 
                   // Unified: critMultiplier = 1 + critDamage × expectation
-                  if (critPin !== undefined) {
-                    expectedCrit = getCritMultiplier(critPin, opData.critDamage);
-                  } else {
-                    const expectation = getFrameExpectation(resolvedCritMode, critSnapshot, frameCrit, opData.critRate);
-                    expectedCrit = 1 + opData.critDamage * expectation;
-                  }
+                  const expectation = getFrameExpectation(resolvedCritMode, critSnapshot, frameCrit, opData.critRate);
+                  expectedCrit = 1 + opData.critDamage * expectation;
                 }
 
                 // Finisher: applies when the event is a finisher attack during stagger break

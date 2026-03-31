@@ -2,7 +2,8 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 import ReactDOM from 'react-dom';
 import { frameToPx, durationToPx, pxPerFrame } from '../utils/timeline';
 import { TimelineEvent, EventFrameMarker, EventSegmentData } from "../consts/viewTypes";
-import { ELEMENT_COLORS, ElementType, EventFrameType, SegmentType } from '../consts/enums';
+import { ELEMENT_COLORS, CritMode, ElementType, EventFrameType, SegmentType } from '../consts/enums';
+import { getRuntimeCritMode } from '../controller/combatStateController';
 import { getStatusElementMap } from '../controller/gameDataStore';
 import type { EventLayout } from '../controller/timeline/timelineLayout';
 // validateSegmentContiguity removed — no longer needed in render path
@@ -241,6 +242,8 @@ interface EventBlockProps {
   eventLayout?: EventLayout;
   /** Additional inline styles for the event wrapper (e.g. overlap lane positioning). */
   wrapStyle?: React.CSSProperties;
+  /** Generation counter for crit mode changes — triggers re-render when mode toggles. */
+  critModeGeneration?: number;
 }
 
 // Cached hex→rgba conversion — avoids string allocation for repeated color+alpha combos.
@@ -289,6 +292,14 @@ function EventBlock({
 }: EventBlockProps) {
   const { uid, startFrame, segments } = event;
   const displayLabel = isAutoFinisher ? 'Finisher' : label;
+
+  /** Resolve visual crit state for a frame based on runtime crit mode. */
+  const isFrameVisualCrit = (f: EventFrameMarker): boolean => {
+    const mode = getRuntimeCritMode();
+    if (mode === CritMode.ALWAYS || mode === CritMode.EXPECTED) return !!(f.damageMultiplier || f.dealDamage);
+    if (mode === CritMode.NEVER) return false;
+    return !!f.isCrit;
+  };
 
   // ── Layout-aware positioning ────────────────────────────────────────────────
   const layout = eventLayout;
@@ -455,7 +466,7 @@ function EventBlock({
         <div
           key={`f-${i}-${fi}`}
           data-frame-id={`${uid}-${i}-${fi}`}
-          className={`event-frame-diamond${isSelected ? ' event-frame-diamond--selected' : ''}${isHoverHighlight ? ' event-frame-diamond--hover-hit' : ''}${f.isCrit ? ' event-frame-diamond--crit' : ''}${(f.frameTypes ?? []).includes(EventFrameType.FINISHER) ? ' event-frame-diamond--finisher' : ''}${(f.frameTypes ?? []).includes(EventFrameType.DIVE) ? ' event-frame-diamond--dive' : ''}${hasInflictionOrStatus(f) ? ' event-frame-diamond--infliction' : ''}${f.statusLabel ? ' event-frame-diamond--status' : ''}`}
+          className={`event-frame-diamond${isSelected ? ' event-frame-diamond--selected' : ''}${isHoverHighlight ? ' event-frame-diamond--hover-hit' : ''}${isFrameVisualCrit(f) ? ' event-frame-diamond--crit' : ''}${(f.frameTypes ?? []).includes(EventFrameType.FINISHER) ? ' event-frame-diamond--finisher' : ''}${(f.frameTypes ?? []).includes(EventFrameType.DIVE) ? ' event-frame-diamond--dive' : ''}${hasInflictionOrStatus(f) ? ' event-frame-diamond--infliction' : ''}${f.statusLabel ? ' event-frame-diamond--status' : ''}`}
           style={elColor && !isSelected && !isHoverHighlight
             ? { [axis.framePos]: framePx, background: elColor, boxShadow: `0 0 3px ${elColor}80` } as React.CSSProperties
             : { [axis.framePos]: framePx } as React.CSSProperties}
@@ -549,6 +560,7 @@ function eventBlockPropsEqual(prev: EventBlockProps, next: EventBlockProps): boo
       if (!pf || !nf || pf.length !== nf.length) return false;
       for (let j = 0; j < pf.length; j++) {
         if ((pf[j].derivedOffsetFrame ?? pf[j].offsetFrame) !== (nf[j].derivedOffsetFrame ?? nf[j].offsetFrame)) return false;
+        if (pf[j].isCrit !== nf[j].isCrit) return false;
       }
     }
   }
@@ -563,6 +575,7 @@ function eventBlockPropsEqual(prev: EventBlockProps, next: EventBlockProps): boo
     && prev.notDraggable === next.notDraggable
     && prev.derived === next.derived
     && prev.isAutoFinisher === next.isAutoFinisher
+    && prev.critModeGeneration === next.critModeGeneration
     && prev.comboWarning === next.comboWarning
     && prev.skillElement === next.skillElement
     && prev.selectedFrames === next.selectedFrames

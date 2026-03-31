@@ -564,12 +564,29 @@ export class CritExpectationModel {
     return this.feedbackModels.length > 0 || this.dependentModels.length > 0;
   }
 
+  /** Get full stat values (max stacks for all statuses) without stepping the model. */
+  getFullStatValues(): Partial<Record<StatType, number>> {
+    const full: Partial<Record<StatType, number>> = {};
+    const allModels = [...this.feedbackModels, ...this.dependentModels];
+    for (const model of allModels) {
+      for (const ps of model.config.perStackStats) {
+        full[ps.stat] = (full[ps.stat] ?? 0) + model.config.stackCap * ps.valuePerStack;
+      }
+      for (const ts of model.config.thresholdStats) {
+        full[ts.stat] = (full[ts.stat] ?? 0) + ts.value;
+      }
+    }
+    return full;
+  }
+
   /**
    * Step the model forward to a damage frame at the given absolute frame.
+   * @param overrideE — Force the crit rate for this step (e.g. 1.0 for ALWAYS, 0.0 for NEVER).
+   *   When provided, bypasses the feedback loop and uses this value directly.
    * Returns a snapshot of the expected crit state at this frame.
    */
-  step(absoluteFrame: number): CritFrameSnapshot {
-    const ePrev = this.lastE;
+  step(absoluteFrame: number, overrideE?: number): CritFrameSnapshot {
+    const ePrev = overrideE ?? this.lastE;
 
     // Layer 1: update feedback models using E(T-1)
     for (const model of this.feedbackModels) {
@@ -601,7 +618,8 @@ export class CritExpectationModel {
     }
 
     eTotal = Math.min(Math.max(eTotal, 0), 1);
-    this.lastE = eTotal;
+    // When overrideE is provided, use it as the output E as well (deterministic modes)
+    this.lastE = overrideE ?? eTotal;
 
     // Layer 2: update dependent models using E(T-1) (same input as feedback)
     for (const model of this.dependentModels) {

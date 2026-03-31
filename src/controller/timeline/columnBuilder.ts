@@ -5,7 +5,7 @@ import { ColumnType, CombatSkillType, ELEMENT_COLORS, ElementType, EnhancementTy
 import { ENEMY_OWNER_ID, ENEMY_GROUP_COLUMNS, ENEMY_ACTION_COLUMN_ID, OPERATOR_COLUMNS, OPERATOR_STATUS_COLUMN_ID, PHYSICAL_INFLICTION_COLUMNS, PHYSICAL_STATUS_COLUMNS, SKILL_COLUMN_ORDER as SKILL_ORDER, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID, COMBO_WINDOW_COLUMN_ID } from '../../model/channels';
 import { isTeamStatus } from '../gameDataStore';
 import { SKILL_LABELS, ColumnLabel, STATUS_LABELS, REACTION_MICRO_COLUMNS } from '../../consts/timelineColumnLabels';
-import { getWeapon, getWeaponEffectDefs, getGearEffectDefs, getAllStatusLabels, getStatusById } from '../gameDataStore';
+import { getWeapon, getWeaponEffectDefs, getGearEffectDefs, getAllStatusLabels, getStatusById, getConsumablePassiveDef, getTacticalTriggerDef } from '../gameDataStore';
 import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../slot/commonSlotController';
 import { FPS, TOTAL_FRAMES } from '../../utils/timeline';
 import GENERAL_MECHANICS from '../../model/game-data/generalMechanics.json';
@@ -294,6 +294,48 @@ export function buildColumns(
     const weaponDisplayName = s.weaponId ? getWeapon(s.weaponId)?.name : undefined;
     if (weaponDisplayName) addEquipDefs(getWeaponEffectDefs(weaponDisplayName), 'weapon');
     if (s.gearSetType) addEquipDefs(getGearEffectDefs(s.gearSetType), 'gear');
+
+    // Scan consumable passive def → operator status micro-column
+    if (s.consumableId) {
+      const cDef = getConsumablePassiveDef(s.consumableId);
+      if (cDef && cDef.target === NounType.OPERATOR) {
+        const durVal = (cDef.properties?.duration?.value as { value?: number })?.value ?? 0;
+        const durationFrames = durVal > 0 ? Math.round(durVal * FPS) : TOTAL_FRAMES;
+        const defs = operatorStatusMap.get(s.slotId) ?? [];
+        defs.push({
+          statusId: cDef.id,
+          label: cDef.name ?? cDef.id,
+          columnId: EventCategoryType.CONSUMABLE,
+          duration: durationFrames,
+          durationSec: durVal > 0 ? durVal : TOTAL_FRAMES / FPS,
+          color: s.operator!.color,
+          source: 'other',
+          statusType: EventCategoryType.CONSUMABLE,
+        });
+        operatorStatusMap.set(s.slotId, defs);
+      }
+    }
+
+    // Scan tactical trigger def → operator status micro-column
+    if (s.tacticalId) {
+      const tDef = getTacticalTriggerDef(s.tacticalId);
+      if (tDef && tDef.target === NounType.OPERATOR) {
+        const durVal = (tDef.properties?.duration?.value as { value?: number })?.value ?? 0;
+        const durationFrames = durVal > 0 ? Math.round(durVal * FPS) : TOTAL_FRAMES;
+        const defs = operatorStatusMap.get(s.slotId) ?? [];
+        defs.push({
+          statusId: tDef.id,
+          label: tDef.name ?? tDef.id,
+          columnId: EventCategoryType.TACTICAL,
+          duration: durationFrames,
+          durationSec: durVal > 0 ? durVal : TOTAL_FRAMES / FPS,
+          color: s.operator!.color,
+          source: 'other',
+          statusType: EventCategoryType.TACTICAL,
+        });
+        operatorStatusMap.set(s.slotId, defs);
+      }
+    }
   }
 
   // Common (global) columns — before operator slots

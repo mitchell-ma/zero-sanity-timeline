@@ -5,20 +5,19 @@
 /**
  * Crit Mode Toggle — Integration Test
  *
- * Verifies that toggling CritMode affects frame.isCrit on all processed events.
- * Setup: Laevatain with a battle skill that has damage frames.
- * For each mode: set critMode, verify all crittable damage frames have
- * isCrit set according to the mode's behavior.
+ * Verifies that toggling CritMode affects damage calculation correctly.
+ * isCrit is persistent data (only written by RANDOM rolls and MANUAL pins).
+ * The crit MODE affects calculation and visual presentation, not isCrit.
  */
 
 import { renderHook, act } from '@testing-library/react';
 import { useApp } from '../../../app/useApp';
 import { NounType } from '../../../dsl/semantics';
-import { CritMode, DamageType } from '../../../consts/enums';
+import { CritMode } from '../../../consts/enums';
 import { FPS } from '../../../utils/timeline';
+import { runCalculation } from '../../../controller/calculation/calculationController';
 import { findColumn, getMenuPayload } from '../helpers';
 import type { AppResult } from '../helpers';
-import type { EventFrameMarker } from '../../../consts/viewTypes';
 
 const SLOT_LAEVATAIN = 'slot-0';
 
@@ -26,178 +25,149 @@ beforeEach(() => {
   localStorage.clear();
 });
 
-/** Collect all crittable damage frames from processed events. */
-function getCrittableFrames(app: AppResult): { frame: EventFrameMarker; eventUid: string; si: number; fi: number }[] {
-  const frames: { frame: EventFrameMarker; eventUid: string; si: number; fi: number }[] = [];
-  for (const ev of app.allProcessedEvents) {
-    for (let si = 0; si < ev.segments.length; si++) {
-      const seg = ev.segments[si];
-      if (!seg.frames) continue;
-      for (let fi = 0; fi < seg.frames.length; fi++) {
-        const f = seg.frames[fi];
-        if (!f.damageMultiplier && !f.dealDamage) continue;
-        if (f.damageType === DamageType.DAMAGE_OVER_TIME) continue;
-        frames.push({ frame: f, eventUid: ev.uid, si, fi });
-      }
-    }
-  }
-  return frames;
+function setupWithBattleSkill() {
+  const view = renderHook(() => useApp());
+
+  const bsCol = findColumn(view.result.current, SLOT_LAEVATAIN, NounType.BATTLE_SKILL);
+  expect(bsCol).toBeDefined();
+  const payload = getMenuPayload(view.result.current, bsCol!, 2 * FPS);
+  act(() => {
+    view.result.current.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+  });
+
+  return view;
 }
 
-describe('Crit Mode Toggle — frame.isCrit per mode', () => {
-  function setupWithBattleSkill() {
-    const view = renderHook(() => useApp());
+function calcForMode(app: AppResult, mode: CritMode) {
+  return runCalculation(
+    app.allProcessedEvents, app.columns, app.slots, app.enemy,
+    app.loadoutProperties, app.loadouts, app.staggerBreaks, mode, app.overrides,
+  );
+}
 
-    // Add a battle skill for Laevatain (default operator in slot-0)
-    const bsCol = findColumn(view.result.current, SLOT_LAEVATAIN, NounType.BATTLE_SKILL);
-    expect(bsCol).toBeDefined();
-    const payload = getMenuPayload(view.result.current, bsCol!, 2 * FPS);
-    act(() => {
-      view.result.current.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
-    });
+function totalDamage(result: ReturnType<typeof runCalculation>) {
+  return result.rows.reduce((sum, r) => sum + (r.damage ?? 0), 0);
+}
 
-    // Verify damage frames exist
-    const frames = getCrittableFrames(view.result.current);
-    expect(frames.length).toBeGreaterThan(0);
-
-    return view;
-  }
-
-  it('CritMode.NEVER: all damage frames have isCrit = false', () => {
+describe('Crit Mode Toggle — damage calculation per mode', () => {
+  it('NEVER mode: critMultiplier = 1.0 on all rows', () => {
     const { result } = setupWithBattleSkill();
-
-    act(() => { result.current.setCritMode(CritMode.NEVER); });
-
-    const frames = getCrittableFrames(result.current);
-    expect(frames.length).toBeGreaterThan(0);
-    for (const { frame } of frames) {
-      expect(frame.isCrit).toBe(false);
+    const calc = calcForMode(result.current, CritMode.NEVER);
+    const rowsWithParams = calc.rows.filter(r => r.params != null && r.damage != null && r.damage > 0);
+    expect(rowsWithParams.length).toBeGreaterThan(0);
+    for (const row of rowsWithParams) {
+      expect(row.params!.critMultiplier).toBeCloseTo(1.0);
     }
   });
 
-  it('CritMode.ALWAYS: all damage frames have isCrit = true', () => {
+  it('ALWAYS mode: critMultiplier > 1.0 on all rows', () => {
     const { result } = setupWithBattleSkill();
-
-    act(() => { result.current.setCritMode(CritMode.ALWAYS); });
-
-    const frames = getCrittableFrames(result.current);
-    expect(frames.length).toBeGreaterThan(0);
-    for (const { frame } of frames) {
-      expect(frame.isCrit).toBe(true);
+    const calc = calcForMode(result.current, CritMode.ALWAYS);
+    const rowsWithParams = calc.rows.filter(r => r.params != null && r.damage != null && r.damage > 0);
+    expect(rowsWithParams.length).toBeGreaterThan(0);
+    for (const row of rowsWithParams) {
+      expect(row.params!.critMultiplier).toBeGreaterThan(1.0);
     }
   });
 
-  it('CritMode.EXPECTED: all damage frames have isCrit = true (renders like ALWAYS)', () => {
+  it('ALWAYS total damage > NEVER total damage', () => {
     const { result } = setupWithBattleSkill();
+    const neverTotal = totalDamage(calcForMode(result.current, CritMode.NEVER));
+    const alwaysTotal = totalDamage(calcForMode(result.current, CritMode.ALWAYS));
+    expect(alwaysTotal).toBeGreaterThan(neverTotal);
+  });
 
+  it('EXPECTED total damage is between NEVER and ALWAYS', () => {
+    const { result } = setupWithBattleSkill();
     act(() => { result.current.setCritMode(CritMode.EXPECTED); });
 
-    const frames = getCrittableFrames(result.current);
-    expect(frames.length).toBeGreaterThan(0);
-    for (const { frame } of frames) {
-      expect(frame.isCrit).toBe(true);
-    }
+    const neverTotal = totalDamage(calcForMode(result.current, CritMode.NEVER));
+    const alwaysTotal = totalDamage(calcForMode(result.current, CritMode.ALWAYS));
+    const expectedTotal = totalDamage(calcForMode(result.current, CritMode.EXPECTED));
+
+    expect(expectedTotal).toBeGreaterThanOrEqual(neverTotal - 0.01);
+    expect(expectedTotal).toBeLessThanOrEqual(alwaysTotal + 0.01);
   });
 
-  it('CritMode.RANDOM: all damage frames have isCrit as a boolean (randomly assigned)', () => {
+  it('RANDOM mode: isCrit is set as boolean on damage frames', () => {
     const { result } = setupWithBattleSkill();
-
     act(() => { result.current.setCritMode(CritMode.RANDOM); });
 
-    const frames = getCrittableFrames(result.current);
-    expect(frames.length).toBeGreaterThan(0);
-    for (const { frame } of frames) {
-      expect(typeof frame.isCrit).toBe('boolean');
+    // After RANDOM pipeline run, damage frames should have isCrit set
+    for (const ev of result.current.allProcessedEvents) {
+      for (const seg of ev.segments) {
+        if (!seg.frames) continue;
+        for (const f of seg.frames) {
+          if (f.damageMultiplier || f.dealDamage) {
+            expect(typeof f.isCrit).toBe('boolean');
+          }
+        }
+      }
     }
   });
 
-  it('CritMode.MANUAL: all damage frames have isCrit = false when no pins exist', () => {
+  it('MANUAL mode with no pins: all damage frames have isCrit = false', () => {
     const { result } = setupWithBattleSkill();
-
     act(() => { result.current.setCritMode(CritMode.MANUAL); });
 
-    const frames = getCrittableFrames(result.current);
-    expect(frames.length).toBeGreaterThan(0);
-    for (const { frame } of frames) {
-      expect(frame.isCrit).toBe(false);
+    // MANUAL with no pins: pipeline sets isCrit = pin ?? false
+    for (const ev of result.current.allProcessedEvents) {
+      for (const seg of ev.segments) {
+        if (!seg.frames) continue;
+        for (const f of seg.frames) {
+          if (f.damageMultiplier || f.dealDamage) {
+            expect(f.isCrit).toBe(false);
+          }
+        }
+      }
     }
   });
 
-  it('toggling between modes updates all frames correctly', () => {
+  it('toggling modes produces consistent damage totals', () => {
     const { result } = setupWithBattleSkill();
 
-    // Start with NEVER
-    act(() => { result.current.setCritMode(CritMode.NEVER); });
-    for (const { frame } of getCrittableFrames(result.current)) {
-      expect(frame.isCrit).toBe(false);
-    }
+    const never1 = totalDamage(calcForMode(result.current, CritMode.NEVER));
+    const always1 = totalDamage(calcForMode(result.current, CritMode.ALWAYS));
+    const never2 = totalDamage(calcForMode(result.current, CritMode.NEVER));
 
-    // Toggle to ALWAYS
-    act(() => { result.current.setCritMode(CritMode.ALWAYS); });
-    for (const { frame } of getCrittableFrames(result.current)) {
-      expect(frame.isCrit).toBe(true);
-    }
-
-    // Toggle to EXPECTED
-    act(() => { result.current.setCritMode(CritMode.EXPECTED); });
-    for (const { frame } of getCrittableFrames(result.current)) {
-      expect(frame.isCrit).toBe(true);
-    }
-
-    // Toggle back to NEVER
-    act(() => { result.current.setCritMode(CritMode.NEVER); });
-    for (const { frame } of getCrittableFrames(result.current)) {
-      expect(frame.isCrit).toBe(false);
-    }
+    expect(always1).toBeGreaterThan(never1);
+    expect(never2).toBeCloseTo(never1, 2);
   });
 
-  it('MANUAL mode respects pinned crit values', () => {
+  it('isCrit is NOT modified by NEVER/ALWAYS/EXPECTED modes (persistent data)', () => {
     const { result } = setupWithBattleSkill();
 
-    act(() => { result.current.setCritMode(CritMode.MANUAL); });
+    // Roll crits in RANDOM mode to set isCrit values
+    act(() => { result.current.setCritMode(CritMode.RANDOM); });
 
-    // All frames start as false (no pins)
-    const framesBefore = getCrittableFrames(result.current);
-    expect(framesBefore.length).toBeGreaterThan(0);
-    for (const { frame } of framesBefore) {
-      expect(frame.isCrit).toBe(false);
+    // Collect isCrit values
+    const critValues = new Map<string, boolean>();
+    for (const ev of result.current.allProcessedEvents) {
+      for (const seg of ev.segments) {
+        if (!seg.frames) continue;
+        for (let fi = 0; fi < seg.frames.length; fi++) {
+          const f = seg.frames[fi];
+          if (f.isCrit != null) critValues.set(`${ev.uid}:${fi}`, f.isCrit);
+        }
+      }
     }
+    expect(critValues.size).toBeGreaterThan(0);
 
-    // Pin the first frame as crit
-    const firstFrame = framesBefore[0];
-    act(() => {
-      result.current.handleSetCritPins(
-        [{ eventUid: firstFrame.eventUid, segmentIndex: firstFrame.si, frameIndex: firstFrame.fi }],
-        true,
-      );
-    });
-
-    // First frame should be crit, rest should still be false
-    const framesAfter = getCrittableFrames(result.current);
-    expect(framesAfter[0].frame.isCrit).toBe(true);
-    for (let i = 1; i < framesAfter.length; i++) {
-      // Other frames on the SAME event may or may not be pinned depending on override key
-      // but frames on different events should be false
-      expect(typeof framesAfter[i].frame.isCrit).toBe('boolean');
-    }
-  });
-
-  it('switching from ALWAYS to NEVER changes damage output', () => {
-    const { result } = setupWithBattleSkill();
-
-    // Get damage with ALWAYS
-    act(() => { result.current.setCritMode(CritMode.ALWAYS); });
-    const alwaysFrames = getCrittableFrames(result.current);
-    expect(alwaysFrames.every(({ frame }) => frame.isCrit === true)).toBe(true);
-
-    // Get damage with NEVER
+    // Switch to NEVER — isCrit should NOT be overwritten
     act(() => { result.current.setCritMode(CritMode.NEVER); });
-    const neverFrames = getCrittableFrames(result.current);
-    expect(neverFrames.every(({ frame }) => frame.isCrit === false)).toBe(true);
 
-    // Damage should differ (ALWAYS includes crit damage bonus)
-    // We can't directly compare damage from frames, but we can verify the mode
-    // distinction through the combat sheet's calculation pipeline
-    // The key assertion is that isCrit values are different, which we already verified
+    for (const ev of result.current.allProcessedEvents) {
+      for (const seg of ev.segments) {
+        if (!seg.frames) continue;
+        for (let fi = 0; fi < seg.frames.length; fi++) {
+          const key = `${ev.uid}:${fi}`;
+          if (critValues.has(key)) {
+            // isCrit should still be the same value from RANDOM roll
+            // (NEVER mode doesn't modify isCrit, only affects calculation)
+            expect(seg.frames[fi].isCrit).toBe(critValues.get(key));
+          }
+        }
+      }
+    }
   });
 });

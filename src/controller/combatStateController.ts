@@ -7,6 +7,7 @@
  */
 
 import type { TimelineEvent, Column } from '../consts/viewTypes';
+import { CritMode } from '../consts/enums';
 import type { CombatState } from './appStateController';
 import {
   swapOperator as appSwapOperator,
@@ -36,6 +37,23 @@ import {
   clearAllCritPins as clearAllCritPinsFromStore,
 } from './overrideController';
 import type { LoadoutProperties } from '../view/InformationPane';
+
+// ── Runtime crit mode (read by view layer, set by useApp) ────────────
+
+let _runtimeCritMode = CritMode.NEVER;
+let _critModeGeneration = 0;
+
+/** Get the current crit mode for visual presentation. */
+export function getRuntimeCritMode(): CritMode { return _runtimeCritMode; }
+
+/** Generation counter — incremented on each crit mode change, used by EventBlock memo. */
+export function getCritModeGeneration(): number { return _critModeGeneration; }
+
+/** Set the current crit mode (called by useApp when user toggles). */
+export function setRuntimeCritMode(mode: CritMode) {
+  if (mode !== _runtimeCritMode) _critModeGeneration++;
+  _runtimeCritMode = mode;
+}
 
 // ── Context types for methods that need runtime state ────────────────
 

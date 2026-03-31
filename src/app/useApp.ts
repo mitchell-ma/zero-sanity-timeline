@@ -82,6 +82,7 @@ import { resolveGainEfficiencies } from '../controller/timeline/ultimateEnergyCo
 import { StatType, DamageType, InteractionModeType, InfoLevel, CritMode, EnhancementType, ThemeType, ColumnType, LoadoutNodeType } from '../consts/enums';
 import { buildOverrideKey } from '../controller/overrideController';
 import type { MoveContext } from '../controller/combatStateController';
+import { setRuntimeCritMode } from '../controller/combatStateController';
 import { applyEventOverrides } from '../controller/timeline/overrideApplicator';
 import { GlobalSettings, loadSettings, saveSettings, migrateLegacySettings, PERFORMANCE_THROTTLE } from '../consts/settings';
 import { configurePool } from '../controller/timeline/objectPool';
@@ -293,6 +294,7 @@ export function useApp() {
   });
   useEffect(() => {
     try { localStorage.setItem('zst-crit-mode', critMode); } catch { /* ignore */ }
+    setRuntimeCritMode(critMode);
   }, [critMode]);
 
   // ─── Refs ────────────────────────────────────────────────────────────────
