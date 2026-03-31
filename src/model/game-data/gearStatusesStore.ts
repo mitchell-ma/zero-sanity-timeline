@@ -192,7 +192,7 @@ export class GearSetEffect {
         targetDeterminer: DeterminerType.THIS,
         stacks: { limit: { verb: VerbType.IS, value: 1 }, interactionType: StackInteractionType.NONE },
         eventType: EventType.STATUS,
-        eventCategoryType: EventCategoryType.TALENT,
+        eventCategoryType: EventCategoryType.GEAR_SET_EFFECT,
       },
       metadata: {
         originId: this.originId,

@@ -1,7 +1,9 @@
 import React from 'react';
-import { frameToTimeLabelPrecise } from '../../utils/timeline';
+import { frameToTimeLabelPrecise, fmtN } from '../../utils/timeline';
 import type { DamageTableRow } from '../../controller/calculation/damageTableBuilder';
 import { buildMultiplierEntries, buildStatusMultiplierEntries, MultiplierEntry } from '../../controller/info-pane/damageBreakdownController';
+import { DamageType } from '../../consts/enums';
+import type { EventFrameMarker } from '../../consts/viewTypes';
 import { t } from '../../locales/locale';
 
 function LeafContent({ entry }: { entry: MultiplierEntry }) {
@@ -54,7 +56,13 @@ function TopEntry({ entry }: { entry: MultiplierEntry }) {
   );
 }
 
-function DamageBreakdownPane({ row }: { row: DamageTableRow }) {
+interface DamageBreakdownPaneProps {
+  row: DamageTableRow;
+  frame?: EventFrameMarker;
+  onToggleCrit?: (eventUid: string, segIdx: number, frameIdx: number, value: boolean) => void;
+}
+
+function DamageBreakdownPane({ row, frame, onToggleCrit }: DamageBreakdownPaneProps) {
   const hasParams = row.params || row.statusParams;
   if (!hasParams) {
     return (
@@ -98,6 +106,29 @@ function DamageBreakdownPane({ row }: { row: DamageTableRow }) {
             <TopEntry key={entry.label} entry={entry} />
           ))}
         </div>
+        {frame && (
+          <div className="edit-panel-section">
+            <span className="edit-section-label">Frame</span>
+            <div className="edit-info-text">
+              {frame.absoluteFrame != null && <div>Time: {frameToTimeLabelPrecise(frame.absoluteFrame)}</div>}
+              {frame.damageMultiplier != null && <div>Multiplier: {fmtN(frame.damageMultiplier * 100)}%</div>}
+              {frame.skillPointRecovery != null && <div>SP Recovery: {frame.skillPointRecovery}</div>}
+              {frame.stagger != null && <div>Stagger: {frame.stagger}</div>}
+              {frame.gaugeGain != null && <div>Gauge: {frame.gaugeGain}</div>}
+              {frame.teamGaugeGain != null && <div>Team Gauge: {frame.teamGaugeGain}</div>}
+            </div>
+            {frame.damageType !== DamageType.DAMAGE_OVER_TIME && onToggleCrit && (
+              <div className="edit-field">
+                <span className="edit-field-label">Critical Hit</span>
+                <label className="crit-toggle" onClick={() => onToggleCrit(row.eventUid, row.segmentIndex, row.frameIndex, !frame.isCrit)}>
+                  <span className={`crit-toggle-track${frame.isCrit ? ' crit-toggle-track--on' : ''}`}>
+                    <span className="crit-toggle-thumb" />
+                  </span>
+                </label>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </>
   );

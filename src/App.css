@@ -102,6 +102,45 @@
   gap: 0.75rem;
 }
 
+.app-bar-crit-toggle {
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--border-med);
+  border-radius: 3px;
+  background: var(--overlay-05);
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.app-bar-crit-toggle:hover {
+  background: var(--overlay-10);
+  color: var(--text-primary);
+}
+.app-bar-crit-toggle--expected {
+  border-color: #e8c840;
+  color: #e8c840;
+}
+.app-bar-crit-toggle--always {
+  border-color: #e85535;
+  color: #e85535;
+}
+.app-bar-crit-toggle--never {
+  border-color: var(--border-med);
+  color: var(--text-muted);
+}
+.app-bar-crit-toggle--random {
+  border-color: #40b8e8;
+  color: #40b8e8;
+}
+.app-bar-crit-toggle--manual {
+  border-color: #b080e0;
+  color: #b080e0;
+}
+
 .btn-devlog {
   padding: 0.3125rem 0.75rem;
   font-family: var(--font-display);
@@ -3266,17 +3305,19 @@
   position: absolute;
   top: 50%;
   transform: translate(-50%, -50%);
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: rgba(15, 15, 15, 0.9);
+  min-width: 26px;
+  height: 26px;
+  padding: 0 5px;
+  border-radius: 13px;
+  background: var(--bg-panel);
   border: 1.5px solid;
   display: flex;
   align-items: center;
   justify-content: center;
   font-family: var(--font-mono);
-  font-size: 7px;
+  font-size: 9px;
   font-weight: 700;
+  color: var(--text-primary);
   pointer-events: none;
 }
 
@@ -4824,6 +4865,9 @@
 }
 .dmg-breakdown-negative .dmg-tree-value {
   color: var(--red);
+}
+.dmg-breakdown-active .dmg-tree-value {
+  color: var(--accent);
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -9525,6 +9569,21 @@
 }
 .ops-conjoined-row--frame {
   gap: 0.375rem;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+.ops-conjoined-row--frame::-webkit-scrollbar {
+  height: 4px;
+}
+.ops-conjoined-row--frame::-webkit-scrollbar-button {
+  display: none;
+}
+.ops-conjoined-row--frame::-webkit-scrollbar-track {
+  background: transparent;
+}
+.ops-conjoined-row--frame::-webkit-scrollbar-thumb {
+  background: var(--border-dim);
+  border-radius: 2px;
 }
 .ops-conjoined-seg {
   flex: 1;
@@ -9560,8 +9619,8 @@
   display: flex;
   border: 1px solid var(--border-dim);
   border-top: none;
-  overflow-x: auto;
   min-width: 0;
+  flex-shrink: 0;
 }
 .ops-conjoined-btn {
   flex: 1 0 auto;
@@ -9638,6 +9697,43 @@
   font-family: var(--font-mono);
   font-size: 0.75rem;
   color: var(--text-bright);
+}
+
+/* ── Crit toggle switch ─────────────────────────────────────── */
+.crit-toggle {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+.ops-frame-prop:has(.crit-toggle) {
+  align-items: center;
+}
+.crit-toggle-track {
+  position: relative;
+  width: 24px;
+  height: 12px;
+  border-radius: 2px;
+  border: 1px solid var(--overlay-20);
+  background: var(--overlay-06);
+  transition: background 0.15s, border-color 0.15s;
+}
+.crit-toggle-track--on {
+  background: color-mix(in srgb, var(--gold) 25%, transparent);
+  border-color: var(--gold);
+}
+.crit-toggle-thumb {
+  position: absolute;
+  top: 1px;
+  left: 1px;
+  width: 8px;
+  height: 8px;
+  border-radius: 1px;
+  background: var(--text-muted);
+  transition: left 0.15s, background 0.15s;
+}
+.crit-toggle-track--on .crit-toggle-thumb {
+  left: 13px;
+  background: var(--gold);
 }
 .ops-frame-section-label {
   font-family: var(--font-display);

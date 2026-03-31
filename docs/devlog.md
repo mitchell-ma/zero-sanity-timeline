@@ -1,5 +1,29 @@
 # Devlog
 
+## 2026-03-30
+- Shared URLs are now dramatically smaller — the encoding was rebuilt from scratch using binary compression, so complex 4-operator loadouts produce much shorter links
+- Damage breakdown panel redesigned as a drill-down tree — click into skill segments to see per-frame multipliers, and expand damage bonus nodes to see individual element and stat contributions
+- Gilberta's Messenger's Song talent now correctly applies buffs only to matching operator classes (Guard, Caster, Supporter) instead of the whole team — Strikers and other non-matching classes are properly excluded
+- Antal's Focus passive at P5 now correctly applies class-filtered stat bonuses
+- Laevatain's Ultimate Twilight timing refined to match in-game data (2.07s → 2.43s)
+- Rossi's Ultimate Razorclaw Ambuscade and empowered combo skill data cleaned up for accuracy
+- Timeline performance improved — dragging events is smoother, and edits to a few events no longer re-validate the entire timeline
+- Operator name labels on the loadout row now have a translucent backdrop for better readability over splash art
+- SP insufficiency zones now display as red diagonal stripes, making it clearer when an operator can't afford a battle skill
+- Stagger timeline column spacing rebalanced for better proportions
+- Column header text is now centered
+- New crit analysis modes — choose between Never, Expected, Always, Random, or Manual to control how critical hits factor into damage calculations
+- Expected crit mode uses a probability model that accounts for crit-triggered feedback loops (e.g. weapons that gain crit rate from crit-triggered buffs) to compute realistic average damage
+- Random mode rolls crits stochastically per frame based on each operator's crit rate — re-roll anytime with the dice button
+- Manual mode lets you pin individual frames as crit or non-crit for precise "what if" scenarios
+- Crit mode selector added to the top bar with color-coded mode indicators
+- Damage breakdown now shows crit source probabilities and expected status uptimes when using Expected mode
+- Antal's EMP Test Site combo skill now triggers additional effects when the enemy has Focus (Empowered)
+- Lupine Scarlet's Wolven Blood status consume effects now correctly trigger lifecycle transitions
+- Status effects can now execute actions when they expire, enabling mechanics like buff-on-consume weapon effects
+- Permanent-duration statuses (like consumable buffs active from the start) now have their own filter group in column headers
+- Old planning documents cleaned up
+
 ## 2026-03-29
 - Introduced an override system for event segments — you can now resize, pin, or remove individual segments and frames without losing the original skill data, so your edits survive round-trips through shared URLs
 - Combo skill activation windows now support multiple skills per window — operators with multi-combo windows can queue several skills in the same activation period

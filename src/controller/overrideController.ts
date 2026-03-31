@@ -317,7 +317,7 @@ export function clearAllCritPins(store: OverrideStore): OverrideStore {
   return result;
 }
 
-/** Persist unpinned crit results from SIMULATION mode into the override store.
+/** Persist unpinned crit results from RANDOM mode into the override store.
  *  Only writes frames that don't already have a pin — avoids overwriting user-pinned values. */
 export function persistUnpinnedCrits(
   store: OverrideStore,

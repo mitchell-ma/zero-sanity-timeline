@@ -47,7 +47,7 @@
         "verb": "IS",
         "value": 3
       },
-      "interactionType": "NONE"
+      "interactionType": "RESET"
     },
     "to": "OPERATOR",
     "toDeterminer": "THIS",

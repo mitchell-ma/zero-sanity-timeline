@@ -10,7 +10,7 @@ import { StatField } from './SharedFields';
 import type { LoadoutProperties } from '../InformationPane';
 import { resolveEventIdentity, resolveSpReturn, resolveActiveModifiers, resolveComboChain } from '../../controller/info-pane/eventPaneController';
 import { getOperatorSkill } from '../../controller/gameDataStore';
-import { DataCardBody } from '../custom/DataCardComponents';
+import { DataCardBody, FrameCritState } from '../custom/DataCardComponents';
 import { ENEMY_OWNER_ID, OPERATOR_COLUMNS, REACTION_COLUMN_IDS, SKILL_COLUMN_ORDER } from '../../model/channels';
 import { getLastController, getReconcileStats } from '../../controller/timeline/eventQueueController';
 import { getPoolStats } from '../../controller/timeline/objectPool';
@@ -100,6 +100,24 @@ function EventPane({
     if (skillCardData) return null; // skill card takes precedence
     return getAnyStatusSerialized(event.name);
   }, [event.name, verbose, skillCardData]);
+
+  const critState = useMemo<FrameCritState | undefined>(() => {
+    if (readOnly) return undefined;
+    const segs = event.segments ?? [];
+    if (segs.length === 0) return undefined;
+    // Read isCrit from processed event (pipeline-resolved), write to raw event
+    const procSegs = processedEvent?.segments ?? segs;
+    return {
+      getIsCrit: (si, fi) => procSegs[si]?.frames?.[fi]?.isCrit,
+      onToggle: (si, fi, value) => {
+        const updatedSegs = [...segs];
+        const seg = { ...updatedSegs[si], frames: [...(updatedSegs[si].frames ?? [])] };
+        seg.frames[fi] = { ...seg.frames[fi], isCrit: value };
+        updatedSegs[si] = seg;
+        onUpdate(event.uid, { segments: updatedSegs });
+      },
+    };
+  }, [event, processedEvent, readOnly, onUpdate]);
 
   const selectedFrameElRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
@@ -245,7 +263,7 @@ function EventPane({
         {skillCardData && (
           <div className="edit-panel-section">
             <span className="edit-section-label">Skill Definition</span>
-            <DataCardBody data={skillCardData} />
+            <DataCardBody data={skillCardData} critState={critState} />
           </div>
         )}
 
@@ -642,6 +660,7 @@ function EventPane({
             </div>
           );
         })()}
+
         </>
         )}
 
@@ -779,6 +798,7 @@ function DebugPane({ event, processedEvent, rawEvents, allProcessedEvents }: { e
                           {dFrame.skillPointRecovery != null && <div>sp: {dFrame.skillPointRecovery}</div>}
                           {dFrame.stagger != null && <div>stagger: {dFrame.stagger}</div>}
                           {dFrame.gaugeGain != null && <div>gauge: {dFrame.gaugeGain}</div>}
+                          {dFrame.isCrit != null && <div>isCrit: {String(dFrame.isCrit)}</div>}
                         </div>
                       );
                     })}

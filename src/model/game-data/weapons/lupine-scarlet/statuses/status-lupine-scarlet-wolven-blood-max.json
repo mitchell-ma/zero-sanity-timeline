@@ -68,8 +68,8 @@
           "verb": "CONSUME",
           "object": "STATUS",
           "objectId": "LUPINE_SCARLET_WOLVEN_BLOOD",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR",
+          "fromDeterminer": "THIS",
+          "from": "OPERATOR",
           "with": {
             "stacks": "MAX"
           }
@@ -81,19 +81,19 @@
     "id": "LUPINE_SCARLET_WOLVEN_BLOOD_MAX",
     "name": "Wolven Blood (Max Stacks)",
     "description": "Additional Physical and Heat DMG Dealt at max stacks. On expiry, removes all Wolven Blood stacks.",
-    "duration": {
-      "value": {
-        "verb": "IS",
-        "value": 20
-      },
-      "unit": "SECOND"
-    },
     "stacks": {
       "limit": {
         "verb": "IS",
         "value": 1
       },
       "interactionType": "RESET"
+    },
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": 20
+      },
+      "unit": "SECOND"
     },
     "to": "OPERATOR",
     "toDeterminer": "THIS",

@@ -224,6 +224,9 @@ function executeApply(effect: Effect, ctx: ExecutionContext): MutationSet {
     ev.segments = durationSegment(duration);
     ev.sourceOwnerId = ctx.sourceOwnerId;
     ev.sourceSkillName = ctx.sourceSkillName;
+    if (ctx.chanceMultiplier != null && ctx.chanceMultiplier < 1) {
+      ev.expectedUptime = ctx.chanceMultiplier;
+    }
     result.produced.push(ev);
     return result;
   }
@@ -537,7 +540,8 @@ function executeChance(effect: Effect, ctx: ExecutionContext): MutationSet {
     switch (critMode) {
       case CritMode.ALWAYS:     shouldExecute = true; break;
       case CritMode.NEVER:      shouldExecute = false; break;
-      case CritMode.SIMULATION: shouldExecute = Math.random() < chance; break;
+      case CritMode.RANDOM:     shouldExecute = Math.random() < chance; break;
+      case CritMode.MANUAL:     shouldExecute = true; break;
       case CritMode.EXPECTED:
         shouldExecute = true;
         childChanceMultiplier *= chance;

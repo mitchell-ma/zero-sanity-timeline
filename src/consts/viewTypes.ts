@@ -119,6 +119,8 @@ export interface EventFrameMarker {
   suppliedParameters?: Record<string, { id: string; name: string; lowerRange: number; upperRange: number; default: number }[]>;
   /** Whether this frame scored a critical hit (runtime state for simulation mode). */
   isCrit?: boolean;
+  /** Expected crit rate E(T) at this frame (EXPECTED mode only). */
+  expectedCritRate?: number;
   /** Template SP recovery for this frame when it is the final strike (from model data). */
   templateFinalStrikeSP?: number;
   /** Template stagger for this frame when it is the final strike (from model data). */
@@ -259,6 +261,8 @@ export interface TimelineEvent {
   creationInteractionMode?: InteractionModeType;
   /** Indices of segments from the full variant chain placed at creation. Undefined = full chain. */
   segmentOrigin?: number[];
+  /** Expected probability this event is active (0.0-1.0). Omitted for deterministic events (implicitly 1.0). Set for CHANCE-gated or crit-triggered status events in EXPECTED mode. */
+  expectedUptime?: number;
 }
 
 export interface ContextMenuItem {
@@ -312,6 +316,8 @@ export interface MicroColumn {
   color: string;      // render color for events in this micro-column
   /** Status category type (TALENT, TALENT_STATUS, GEAR_STATUS, WEAPON_STATUS, etc.). */
   statusType?: string;
+  /** Whether this status has permanent/infinite duration (99999 frames). */
+  permanent?: boolean;
   /** Maximum concurrent events for this micro-column (from status stacks limit). */
   maxEvents?: number;
   /** Per-micro-column default event overrides (id, duration). Used by dynamic-split context menu. */

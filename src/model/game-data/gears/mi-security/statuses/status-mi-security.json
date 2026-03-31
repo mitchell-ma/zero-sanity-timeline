@@ -63,7 +63,7 @@
         "verb": "IS",
         "value": 5
       },
-      "interactionType": "NONE"
+      "interactionType": "RESET"
     },
     "description": "ATK +5% per stack for 5s after crit. At 5 stacks, also Critical Rate +5%.",
     "eventType": "STATUS",

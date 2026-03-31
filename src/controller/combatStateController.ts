@@ -32,6 +32,8 @@ import {
   migrateOverrideKey,
   setPropertyOverride,
   persistUnpinnedCrits,
+  setCritPin,
+  clearAllCritPins as clearAllCritPinsFromStore,
 } from './overrideController';
 import type { LoadoutProperties } from '../view/InformationPane';
 
@@ -84,6 +86,19 @@ export class CombatStateController {
     for (const { target, segmentIndex, frameIndex } of frames) {
       overrides = deleteFrame(overrides, target, segmentIndex, frameIndex);
     }
+    return overrides === state.overrides ? state : { ...state, overrides };
+  }
+
+  setCritPins(state: CombatState, frames: { target: TimelineEvent; segmentIndex: number; frameIndex: number }[], value: boolean): CombatState {
+    let overrides = state.overrides;
+    for (const { target, segmentIndex, frameIndex } of frames) {
+      overrides = setCritPin(overrides, target, segmentIndex, frameIndex, value);
+    }
+    return overrides === state.overrides ? state : { ...state, overrides };
+  }
+
+  clearAllCritPins(state: CombatState): CombatState {
+    const overrides = clearAllCritPinsFromStore(state.overrides);
     return overrides === state.overrides ? state : { ...state, overrides };
   }
 

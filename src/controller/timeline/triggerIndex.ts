@@ -20,7 +20,7 @@ import type { ValueNode } from '../../dsl/semantics';
 import { VerbType, NounType, ObjectType, AdjectiveType, DeterminerType, THRESHOLD_MAX } from '../../dsl/semantics';
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from '../calculation/valueResolver';
 import { getAllOperatorIds, getSkillIds, getEnabledStatusEvents, getOperatorSkills } from '../gameDataStore';
-import { getWeaponTriggerDefs, getGearTriggerDefs, getConsumablePassiveDef, getTacticalTriggerDef } from '../gameDataStore';
+import { getWeaponTriggerDefs, getWeaponStatusTriggerDefs, getGearTriggerDefs, getGearStatusTriggerDefs, getConsumablePassiveDef, getTacticalTriggerDef } from '../gameDataStore';
 import type { NormalizedEffectDef } from '../gameDataStore';
 import { ENEMY_OWNER_ID, ENEMY_ACTION_COLUMN_ID, REACTION_COLUMNS, INFLICTION_COLUMNS, PHYSICAL_STATUS_COLUMNS, PHYSICAL_STATUS_COLUMN_IDS } from '../../model/channels';
 import { COMMON_OWNER_ID } from '../slot/commonSlotController';
@@ -351,12 +351,14 @@ export class TriggerIndex {
       idx.processDefsForSlot(slotId, opId, defs, false, loadoutProperties, operatorSlotMap, registeredEvents);
     }
 
-    // Process weapon trigger defs (trigger sources with full conditions + effects)
+    // Process weapon trigger defs (weapon skill triggers)
     if (slotWeapons) {
       for (const [slotId, weaponId] of Object.entries(slotWeapons)) {
         if (!weaponId) continue;
         const opId = slotOperatorMap?.[slotId] ?? '';
         idx.processDefsForSlot(slotId, opId, getWeaponTriggerDefs(weaponId).map(normalizeEquipDef), true, loadoutProperties, operatorSlotMap, registeredEvents);
+        // Weapon status triggers (e.g., BECOME STACKS on Wolven Blood)
+        idx.processDefsForSlot(slotId, opId, getWeaponStatusTriggerDefs(weaponId).map(normalizeEquipDef), true, loadoutProperties, operatorSlotMap, registeredEvents);
       }
     }
 
@@ -366,6 +368,8 @@ export class TriggerIndex {
         if (!gearSetType) continue;
         const opId = slotOperatorMap?.[slotId] ?? '';
         idx.processDefsForSlot(slotId, opId, getGearTriggerDefs(gearSetType).map(normalizeEquipDef), true, loadoutProperties, operatorSlotMap, registeredEvents);
+        // Gear status triggers
+        idx.processDefsForSlot(slotId, opId, getGearStatusTriggerDefs(gearSetType).map(normalizeEquipDef), true, loadoutProperties, operatorSlotMap, registeredEvents);
       }
     }
 
@@ -453,10 +457,42 @@ export class TriggerIndex {
         }
       }
 
+      // ── Non-talent equip defs with passive clauses ──────────────
+      // Weapons, gear, consumables, and tacticals can have passive APPLY STAT
+      // clauses. Register these for passive stat interpretation at frame 0.
+      // Consumables also get a presence event (they're active-at-start buffs).
+      const ect = def.properties.eventCategoryType ?? def.properties.type;
+      if (isEquip && ect !== EventCategoryType.TALENT && def.clause && Array.isArray(def.clause)) {
+        const hasPassiveStats = (def.clause as { conditions?: unknown[]; effects?: { verb?: string; object?: string }[] }[])
+          .some(c => (!c.conditions || c.conditions.length === 0) && c.effects?.some(e => e.verb === VerbType.APPLY && e.object === NounType.STAT));
+        if (hasPassiveStats) {
+          // Consumables are active-at-start buffs — create a presence event like talents.
+          let presenceEvent: TimelineEvent | null = null;
+          if (ect === EventCategoryType.CONSUMABLE) {
+            const dur = def.properties.duration ? getDurationFrames(def.properties.duration) : TOTAL_FRAMES;
+            const ownerId = resolveTargetOwnerId(def.properties.target, slotId, opSlotMap, def.properties.targetDeterminer);
+            presenceEvent = {
+              uid: `${def.properties.id.toLowerCase()}-consumable-${slotId}`,
+              id: def.properties.id,
+              name: def.properties.id,
+              ownerId,
+              columnId: def.properties.id,
+              startFrame: 0,
+              segments: durationSegment(dur),
+              sourceOwnerId: operatorId,
+              sourceSkillName: def.properties.id,
+            };
+          }
+          const existing = this.talentsBySlot.get(slotId) ?? [];
+          existing.push({ def, operatorId, operatorSlotId: slotId, talentEvent: presenceEvent });
+          this.talentsBySlot.set(slotId, existing);
+        }
+      }
+
       // ── Lifecycle clauses (clause with HAVE conditions) ──────────────
       // Skip lifecycle indexing for passive talents — they're pre-registered as permanent
       // presence events and shouldn't be re-created by the lifecycle trigger system.
-      const isTalentType = (def.properties.eventCategoryType ?? def.properties.type) === EventCategoryType.TALENT;
+      const isTalentType = ect === EventCategoryType.TALENT;
       const talentDur = def.properties.duration;
       const isPassiveTalent = isTalentType && (!talentDur || getDurationFrames(talentDur) >= TOTAL_FRAMES);
       if (!isPassiveTalent && def.clause && Array.isArray(def.clause)) {

@@ -159,7 +159,7 @@ export class WeaponSkill {
         targetDeterminer: DeterminerType.THIS,
         stacks: { limit: { verb: VerbType.IS, value: 1 }, interactionType: StackInteractionType.NONE },
         eventType: EventType.STATUS,
-        eventCategoryType: EventCategoryType.TALENT,
+        eventCategoryType: EventCategoryType.WEAPON_STATUS,
       },
       metadata: {
         ...(this.originId ? { originId: this.originId } : {}),

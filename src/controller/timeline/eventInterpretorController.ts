@@ -55,6 +55,7 @@ import { derivedEventUid } from './inputEventController';
 import { activeEventsAtFrame } from './timelineQueries';
 import { getComboTriggerClause, getComboTriggerInfo } from '../gameDataStore';
 import { PRIORITY, QueueFrameType, FrameHookType } from './eventQueueTypes';
+import { allocQueueFrame } from './objectPool';
 import { resolveClauseEffects } from './statusTriggerCollector';
 import type { EngineTriggerContext, DeriveContext, StatusEventDef } from './statusTriggerCollector';
 import type { TriggerIndex, TriggerDefEntry } from './triggerIndex';
@@ -226,6 +227,9 @@ function getStatusConfig(statusId?: string): StatusConfig | undefined {
 
 let _statusDefCache: Map<string, StatusEventDef> | null = null;
 
+/** Clear the status def cache so it's rebuilt on next access. Called each pipeline run. */
+export function clearStatusDefCache() { _statusDefCache = null; }
+
 function getStatusDef(statusId?: string): StatusEventDef | undefined {
   if (!statusId) return undefined;
   if (!_statusDefCache) {
@@ -293,6 +297,8 @@ export class EventInterpretorController {
   private overrides?: OverrideStore;
   /** Dedup set for reactive triggers: prevents double-firing at the same frame. */
   private seenTriggers = new Set<string>();
+  /** Pending STATUS_EXIT queue frames to be flushed into the queue. */
+  private pendingExitFrames: QueueFrame[] = [];
   /** Usage counter for triggers with usageLimit (e.g. tacticals, gear sets). Key: "defId:slotId". */
   private triggerUsageCount = new Map<string, number>();
 
@@ -409,11 +415,20 @@ export class EventInterpretorController {
   // ── QueueFrame processing ──────────────────────────────────────────────
 
   processQueueFrame(entry: QueueFrame): QueueFrame[] {
+    let result: QueueFrame[];
     switch (entry.type) {
-      case QueueFrameType.PROCESS_FRAME:  return this.handleProcessFrame(entry);
-      case QueueFrameType.ENGINE_TRIGGER: return this.handleEngineTrigger(entry);
-      case QueueFrameType.COMBO_RESOLVE:  return this.handleComboResolve(entry);
+      case QueueFrameType.PROCESS_FRAME:  result = this.handleProcessFrame(entry); break;
+      case QueueFrameType.ENGINE_TRIGGER: result = this.handleEngineTrigger(entry); break;
+      case QueueFrameType.COMBO_RESOLVE:  result = this.handleComboResolve(entry); break;
+      case QueueFrameType.STATUS_EXIT:    result = this.handleStatusExit(entry); break;
+      default: result = [];
     }
+    // Flush any STATUS_EXIT frames queued by processNewStatusEvent
+    if (this.pendingExitFrames.length > 0) {
+      result = [...result, ...this.pendingExitFrames];
+      this.pendingExitFrames.length = 0;
+    }
+    return result;
   }
 
   // ── DSL verb handlers (private) ────────────────────────────────────────
@@ -1408,7 +1423,20 @@ export class EventInterpretorController {
       }
     }
 
-    // ── 3c. Crit resolution for damage frames ──────────────────────────
+    // ── 3c. Crit resolution ─────────────────────────────────────────────
+    // Write isCrit for ALL frames (not just damage frames) so the timeline
+    // visual always reflects the current crit mode. Deterministic modes
+    // (NEVER/ALWAYS/EXPECTED) override any existing isCrit or pin value.
+    {
+      const critMode = this.critMode ?? CritMode.EXPECTED;
+      if (critMode === CritMode.ALWAYS || critMode === CritMode.EXPECTED) {
+        frame.isCrit = true;
+      } else if (critMode === CritMode.NEVER) {
+        frame.isCrit = false;
+      }
+    }
+
+    // ── 3d. Crit resolution for damage frames (stat accumulator + trigger emission)
     if (this.statAccumulator && (frame.damageMultiplier || frame.dealDamage)) {
       const isDot = frame.damageType === DamageType.DAMAGE_OVER_TIME;
       if (!isDot) {
@@ -1416,14 +1444,18 @@ export class EventInterpretorController {
         const pin = this.overrides?.[overrideKey]?.segments?.[si]?.frames?.[fi]?.isCritical;
         const critMode = this.critMode ?? CritMode.EXPECTED;
         const result = this.statAccumulator.resolveCrit(overrideKey, si, fi, event.ownerId, critMode, pin);
-        // Only persist SIMULATION rolls to frame.isCrit when not already pinned
-        if (critMode === CritMode.SIMULATION && frame.isCrit == null && result !== undefined) {
+        // For non-deterministic modes, write isCrit from roll/pin
+        if (critMode === CritMode.RANDOM && frame.isCrit == null && result !== undefined) {
           frame.isCrit = result;
+        } else if (critMode === CritMode.MANUAL) {
+          frame.isCrit = pin ?? false;
         }
-        // Derive effective crit for trigger emission (transient, not written to frame)
-        const effectiveCrit = pin ?? (critMode === CritMode.ALWAYS ? true
+        // Derive effective crit for trigger emission
+        // NEVER/ALWAYS override pins — the mode is authoritative
+        const effectiveCrit = critMode === CritMode.ALWAYS || critMode === CritMode.EXPECTED ? true
           : critMode === CritMode.NEVER ? false
-          : frame.isCrit);
+          : critMode === CritMode.MANUAL ? (pin ?? false)
+          : (pin ?? frame.isCrit);
         // ── 3d. Emit PERFORM CRITICAL_HIT for crit damage frames ──────
         if (effectiveCrit === true) {
           this.checkReactiveTriggers(VerbType.PERFORM, NounType.CRITICAL_HIT, absFrame, event.ownerId, event.id, undefined, newEntries);
@@ -1565,6 +1597,56 @@ export class EventInterpretorController {
       }
       cumOffset += seg.properties.duration;
     }
+
+    // ── onExitClause: schedule effects at the status end frame ────────────
+    // Deferred via the queue so stacks created after this status are included.
+    if (statusDef?.onExitClause?.length) {
+      const exitFrame = allocQueueFrame();
+      exitFrame.frame = parentEventEnd;
+      exitFrame.priority = PRIORITY[QueueFrameType.STATUS_EXIT];
+      exitFrame.type = QueueFrameType.STATUS_EXIT;
+      exitFrame.statusId = statusId;
+      exitFrame.ownerId = statusOwnerId;
+      exitFrame.sourceOwnerId = source.ownerId;
+      exitFrame.sourceSkillName = source.skillName;
+      exitFrame.operatorSlotId = statusOwnerId;
+      exitFrame.statusExitClauses = statusDef.onExitClause as { conditions: unknown[]; effects?: unknown[] }[];
+      exitFrame.statusExitOwnerId = statusOwnerId;
+      this.pendingExitFrames.push(exitFrame);
+    }
+  }
+
+  /** Handle a deferred STATUS_EXIT queue frame — execute onExitClause effects. */
+  private handleStatusExit(entry: QueueFrame): QueueFrame[] {
+    const clauses = entry.statusExitClauses;
+    if (!clauses?.length) return [];
+
+    const statusOwnerId = entry.statusExitOwnerId ?? entry.ownerId;
+    const exitCtx: InterpretContext = {
+      frame: entry.frame,
+      sourceOwnerId: entry.sourceOwnerId,
+      sourceSlotId: statusOwnerId,
+      sourceSkillName: entry.sourceSkillName,
+      parentStatusId: entry.statusId,
+      parentStatusOwnerId: statusOwnerId,
+    };
+
+    for (const clause of clauses) {
+      if (!clause.effects?.length) continue;
+      const condCtx: ConditionContext = {
+        events: this.getAllEvents(),
+        frame: entry.frame,
+        sourceOwnerId: statusOwnerId,
+      };
+      if (clause.conditions.length > 0 &&
+          !evaluateConditions(clause.conditions as unknown as import('../../dsl/semantics').Interaction[], condCtx)) continue;
+      for (const rawEffect of clause.effects) {
+        const raw = rawEffect as Record<string, unknown>;
+        const effect = { ...raw, ofObject: raw.of ?? raw.ofObject, ofDeterminer: raw.ofDeterminer } as unknown as Effect;
+        this.interpret(effect, exitCtx);
+      }
+    }
+    return [];
   }
 
   private checkPerformTriggers(performObject: string, event: TimelineEvent, absFrame: number): QueueFrame[] {

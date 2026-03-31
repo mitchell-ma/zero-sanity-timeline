@@ -495,9 +495,34 @@ export function ClauseTabs({ clause, onTrigger, onEntry, onExit }: { clause: unk
   );
 }
 
+// ── Frame crit state (threaded from EventPane) ────────────────────────────
+
+export interface FrameCritState {
+  getIsCrit: (segIndex: number, frameIndex: number) => boolean | undefined;
+  onToggle: (segIndex: number, frameIndex: number, value: boolean) => void;
+}
+
+function CritToggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <div className="ops-frame-prop" style={{ marginTop: 4 }}>
+      <span className="ops-frame-prop-label">Crit</span>
+      <label className="crit-toggle" onClick={() => onChange(!checked)}>
+        <span className={`crit-toggle-track${checked ? ' crit-toggle-track--on' : ''}`}>
+          <span className="crit-toggle-thumb" />
+        </span>
+      </label>
+    </div>
+  );
+}
+
 // ── Frame & Segment rendering ──────────────────────────────────────────────
 
-function FrameDetail({ frame, label }: { frame: JsonSkillData; label?: string }) {
+function FrameDetail({ frame, label, isCrit, onToggleCrit }: {
+  frame: JsonSkillData;
+  label?: string;
+  isCrit?: boolean;
+  onToggleCrit?: (value: boolean) => void;
+}) {
   const offset = frame.properties?.offset ?? frame.offset as { value: unknown; unit: string } | undefined;
   const offsetStr = formatDuration(offset);
   const clause = (frame.clause ?? []) as unknown as { conditions?: unknown[]; effects?: Record<string, unknown>[] }[];
@@ -541,6 +566,9 @@ function FrameDetail({ frame, label }: { frame: JsonSkillData; label?: string })
       ) : (
         <div className="ops-frame-empty">No effects</div>
       )}
+      {onToggleCrit && (
+        <CritToggle checked={!!isCrit} onChange={onToggleCrit} />
+      )}
     </div>
   );
 }
@@ -570,7 +598,7 @@ function sumFrameMultipliers(frames: JsonSkillData[]): number[] | null {
   return totals;
 }
 
-export function TabbedSegmentView({ entry }: { entry: { id: string; label: string; data: JsonSkillData } }) {
+export function TabbedSegmentView({ entry, critState }: { entry: { id: string; label: string; data: JsonSkillData }; critState?: FrameCritState }) {
   const segments = entry.data.segments ?? [];
   const topFrames = entry.data.frames ?? [];
   const [activeSegTab, setActiveSegTab] = useState(0);
@@ -588,7 +616,14 @@ export function TabbedSegmentView({ entry }: { entry: { id: string; label: strin
     return (
       <div className="ops-seg-view">
         <div className="ops-conjoined-tabs">
-          <div className="ops-conjoined-row">
+          <div
+            className="ops-conjoined-row ops-conjoined-row--frame"
+            onWheel={(e) => {
+              if (e.deltaY === 0) return;
+              e.currentTarget.scrollLeft += e.deltaY;
+              e.preventDefault();
+            }}
+          >
             {topFrames.map((_f, fi) => (
               <button
                 key={fi}
@@ -602,7 +637,12 @@ export function TabbedSegmentView({ entry }: { entry: { id: string; label: strin
           </div>
         </div>
         {topFrames[flatFrame] && (
-          <FrameDetail frame={topFrames[flatFrame]} label={`Frame ${toRoman(flatFrame + 1)}`} />
+          <FrameDetail
+            frame={topFrames[flatFrame]}
+            label={`Frame ${toRoman(flatFrame + 1)}`}
+            isCrit={critState?.getIsCrit(0, flatFrame)}
+            onToggleCrit={critState ? (v) => critState.onToggle(0, flatFrame, v) : undefined}
+          />
         )}
       </div>
     );
@@ -633,7 +673,14 @@ export function TabbedSegmentView({ entry }: { entry: { id: string; label: strin
             );
           })}
         </div>
-        <div className="ops-conjoined-row ops-conjoined-row--frame">
+        <div
+          className="ops-conjoined-row ops-conjoined-row--frame"
+          onWheel={(e) => {
+            if (e.deltaY === 0) return;
+            e.currentTarget.scrollLeft += e.deltaY;
+            e.preventDefault();
+          }}
+        >
           {segments.map((s, si) => {
             const frames = (s.frames ?? []) as JsonSkillData[];
             return (
@@ -658,7 +705,12 @@ export function TabbedSegmentView({ entry }: { entry: { id: string; label: strin
 
       <div className="ops-seg-detail">
         {viewingFrame ? (
-          <FrameDetail frame={segFrames[activeFrameTab!]} label={`Frame ${toRoman(activeFrameTab! + 1)}`} />
+          <FrameDetail
+            frame={segFrames[activeFrameTab!]}
+            label={`Frame ${toRoman(activeFrameTab! + 1)}`}
+            isCrit={critState?.getIsCrit(safeSeg, activeFrameTab!)}
+            onToggleCrit={critState ? (v) => critState.onToggle(safeSeg, activeFrameTab!, v) : undefined}
+          />
         ) : (
           <div className="ops-frame-detail ops-frame-detail--accented">
             <div className="ops-frame-accent-label">{seg.properties?.name || `Segment ${safeSeg + 1}`}</div>
@@ -724,6 +776,9 @@ export function TabbedSegmentView({ entry }: { entry: { id: string; label: strin
                       <FrameClauseView clauses={fClause} />
                     </div>
                   )}
+                  {critState && (
+                    <CritToggle checked={!!critState.getIsCrit(safeSeg, fi)} onChange={(v) => critState.onToggle(safeSeg, fi, v)} />
+                  )}
                 </div>
               );
             })}
@@ -736,9 +791,10 @@ export function TabbedSegmentView({ entry }: { entry: { id: string; label: strin
 
 // ── DataCardBody ───────────────────────────────────────────────────────────
 
-export function DataCardBody({ data, extraFields }: {
+export function DataCardBody({ data, extraFields, critState }: {
   data: Record<string, unknown>;
   extraFields?: React.ReactNode;
+  critState?: FrameCritState;
 }) {
   const props = (data.properties ?? {}) as Record<string, unknown>;
   const meta = (data.metadata ?? {}) as Record<string, unknown>;
@@ -773,7 +829,7 @@ export function DataCardBody({ data, extraFields }: {
         <ClauseTabs clause={clause} onTrigger={onTrigger} onEntry={onEntry} onExit={onExit} />
       )}
       {segments.length > 0 && (
-        <TabbedSegmentView entry={{ id: id ?? 'entry', label: name, data: data as JsonSkillData }} />
+        <TabbedSegmentView entry={{ id: id ?? 'entry', label: name, data: data as JsonSkillData }} critState={critState} />
       )}
     </div>
   );

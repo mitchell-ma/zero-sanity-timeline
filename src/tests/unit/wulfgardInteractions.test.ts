@@ -549,27 +549,34 @@ describe('E. Empowered Battle Skill', () => {
     expect(frames[3].properties.offset.value).toBe(2.07);
   });
 
-  test('E4: Frame 4 uses FIRST_MATCH with 3 consume predicates: both→combustion, combustion-only, electrification-only', () => {
+  test('E4: Frame 4 uses FIRST_MATCH with 6 predicates: SF+P3 variants, then base consume variants', () => {
     const frame4 = mockJson.skills.EMPOWERED_BATTLE_SKILL.segments[0].frames[3];
     expect(frame4.clauseType).toBe('FIRST_MATCH');
     const clauses = frame4.clause;
-    // Predicate 1 (conditional): both reactions → consume Combustion (priority)
-    expect(clauses[0].conditions).toHaveLength(2);
+    expect(clauses).toHaveLength(6);
+    // Predicates 1-3 (conditional): SF + P3 + reaction combos → consume + apply SF + SF_MINOR + damage + SP
+    expect(clauses[0].conditions).toHaveLength(4);
     expect(clauses[0].effects[0].verb).toBe(VerbType.CONSUME);
-    expect(clauses[0].effects[0].objectId).toBe(NounType.REACTION);
     expect(clauses[0].effects[0].objectQualifier).toBe(StatusType.COMBUSTION);
-    // Predicate 2 (conditional): combustion only → consume Combustion
-    expect(clauses[1].conditions).toHaveLength(1);
+    expect(clauses[1].conditions).toHaveLength(4);
     expect(clauses[1].effects[0].verb).toBe(VerbType.CONSUME);
-    expect(clauses[1].effects[0].objectId).toBe(NounType.REACTION);
     expect(clauses[1].effects[0].objectQualifier).toBe(StatusType.COMBUSTION);
-    // Predicate 3 (conditional): electrification only → consume Electrification
-    expect(clauses[2].conditions).toHaveLength(1);
+    expect(clauses[2].conditions).toHaveLength(4);
     expect(clauses[2].effects[0].verb).toBe(VerbType.CONSUME);
-    expect(clauses[2].effects[0].objectId).toBe(NounType.REACTION);
     expect(clauses[2].effects[0].objectQualifier).toBe(StatusType.ELECTRIFICATION);
-    // Predicate 4 (unconditional): damage + stagger + SP return
-    expect(clauses[3].conditions).toHaveLength(0);
+    // Predicate 4 (conditional): both reactions → consume Combustion (priority)
+    expect(clauses[3].conditions).toHaveLength(2);
+    expect(clauses[3].effects[0].verb).toBe(VerbType.CONSUME);
+    expect(clauses[3].effects[0].objectQualifier).toBe(StatusType.COMBUSTION);
+    // Predicate 5 (conditional): combustion only → consume Combustion
+    expect(clauses[4].conditions).toHaveLength(1);
+    expect(clauses[4].effects[0].verb).toBe(VerbType.CONSUME);
+    expect(clauses[4].effects[0].objectQualifier).toBe(StatusType.COMBUSTION);
+    // Predicate 6 (conditional): electrification only → consume Electrification
+    expect(clauses[5].conditions).toHaveLength(1);
+    expect(clauses[5].effects[0].verb).toBe(VerbType.CONSUME);
+    expect(clauses[5].effects[0].objectQualifier).toBe(StatusType.ELECTRIFICATION);
+    // All predicates include stagger + SP return in effects
     const stagger = clauses[3].effects.find(
       (e: Record<string, unknown>) => e.object === NounType.STAGGER
     );

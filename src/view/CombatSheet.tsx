@@ -111,14 +111,6 @@ function loadColOrder(): SheetCol[] {
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
-const CRIT_MODE_CYCLE: CritMode[] = [CritMode.EXPECTED, CritMode.NEVER, CritMode.ALWAYS, CritMode.SIMULATION];
-const CRIT_MODE_LABELS: Record<CritMode, string> = {
-  [CritMode.EXPECTED]: t('sheet.crit.expected'),
-  [CritMode.NEVER]: t('sheet.crit.never'),
-  [CritMode.ALWAYS]: t('sheet.crit.always'),
-  [CritMode.SIMULATION]: t('sheet.crit.simulation'),
-};
-
 const FOLD_MODE_CYCLE: FoldMode[] = [FoldMode.FRAME, FoldMode.SEGMENT, FoldMode.EVENT];
 const FOLD_MODE_LABELS: Record<FoldMode, string> = {
   [FoldMode.FRAME]: t('sheet.fold.frame'),
@@ -726,17 +718,6 @@ export default React.memo(function CombatSheet({
           <div className="dmg-team-total">
             <span className="dmg-team-total-label">Team Total</span>
             <span className="dmg-team-total-value">{formatDamage(statistics.teamTotalDamage)}</span>
-            <button
-              className={`dmg-crit-toggle dmg-crit-toggle--${critMode.toLowerCase()}`}
-              onClick={() => {
-                const idx = CRIT_MODE_CYCLE.indexOf(critMode);
-                const next = CRIT_MODE_CYCLE[(idx + 1) % CRIT_MODE_CYCLE.length];
-                onCritModeChange?.(next);
-              }}
-              title={`Crit mode: ${CRIT_MODE_LABELS[critMode]}. Click to cycle.`}
-            >
-              {CRIT_MODE_LABELS[critMode]}
-            </button>
             <button
               className={`dmg-fold-toggle dmg-fold-toggle--${foldMode.toLowerCase()}`}
               onClick={() => {

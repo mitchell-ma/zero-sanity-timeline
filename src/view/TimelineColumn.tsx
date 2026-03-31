@@ -187,13 +187,16 @@ function TimelineColumn({
       {gridlineElements}
 
       {/* Micro-column dividers (skip for dynamic-split — no fixed lanes) */}
-      {hasMicro && col.microColumnAssignment !== MicroColumnAssignment.DYNAMIC_SPLIT && Array.from({ length: microCount - 1 }, (_, i) => (
-        <div
-          key={`mc-div-${i}`}
-          className="mf-micro-divider"
-          style={{ [axis.lanePos]: `${((i + 1) / microCount) * 100}%` } as React.CSSProperties}
-        />
-      ))}
+      {hasMicro && col.microColumnAssignment !== MicroColumnAssignment.DYNAMIC_SPLIT && (() => {
+        const microW = Math.min(1 / microCount, 0.25);
+        return Array.from({ length: microCount - 1 }, (_, i) => (
+          <div
+            key={`mc-div-${i}`}
+            className="mf-micro-divider"
+            style={{ [axis.lanePos]: `${(i + 1) * microW * 100}%` } as React.CSSProperties}
+          />
+        ));
+      })()}
 
       {/* Resource line graph */}
       {resourceGraph && (() => {

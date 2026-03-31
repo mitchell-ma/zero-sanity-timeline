@@ -4,6 +4,7 @@ export enum QueueFrameType {
   PROCESS_FRAME = 'PROCESS_FRAME',
   ENGINE_TRIGGER = 'ENGINE_TRIGGER',
   COMBO_RESOLVE = 'COMBO_RESOLVE',
+  STATUS_EXIT = 'STATUS_EXIT',
 }
 
 export enum FrameHookType {
@@ -381,6 +382,8 @@ export enum EventCategoryType {
   GEAR_STATUS = "GEAR_STATUS",
   GEAR_SET_EFFECT = "GEAR_SET_EFFECT",
   GEAR_SET_STATUS = "GEAR_SET_STATUS",
+  CONSUMABLE = "CONSUMABLE",
+  TACTICAL = "TACTICAL",
 }
 
 export enum EventOriginType {
@@ -565,7 +568,8 @@ export enum CritMode {
   NEVER = 'NEVER',
   EXPECTED = 'EXPECTED',
   ALWAYS = 'ALWAYS',
-  SIMULATION = 'SIMULATION',
+  RANDOM = 'RANDOM',
+  MANUAL = 'MANUAL',
 }
 
 export enum FoldMode {

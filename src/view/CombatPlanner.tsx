@@ -23,7 +23,7 @@ import {
 } from '../utils/timeline';
 import { OPERATOR_COLUMNS, COMBO_WINDOW_COLUMN_ID, ENEMY_ACTION_COLUMN_ID } from '../model/channels';
 import { COMMON_COLUMN_IDS } from '../controller/slot/commonSlotController';
-import { TimelineSourceType, InteractionModeType, CombatSkillType, EventCategoryType, ColumnType } from '../consts/enums';
+import { TimelineSourceType, InteractionModeType, CombatSkillType, EventCategoryType, ColumnType, DamageType } from '../consts/enums';
 import {
   Operator,
   Enemy,
@@ -112,6 +112,7 @@ interface CombatPlannerProps {
   onFrameClick?: (e: React.MouseEvent, eventUid: string, segmentIndex: number, frameIndex: number) => void;
   onRemoveFrame?: (eventUid: string, segmentIndex: number, frameIndex: number) => void;
   onRemoveFrames?: (frames: import('../consts/viewTypes').SelectedFrame[]) => void;
+  onSetCritPins?: (frames: import('../consts/viewTypes').SelectedFrame[], value: boolean) => void;
   onRemoveSegment?: (eventUid: string, segmentIndex: number) => void;
   onAddSegment?: (eventUid: string, segmentLabel: string) => void;
   onAddFrame?: (eventUid: string, segmentIndex: number, frameOffsetFrame: number) => void;
@@ -164,6 +165,7 @@ const noop2 = (_a: unknown, _b: unknown) => {};
 const noop3 = (_a: unknown, _b: unknown, _c: unknown) => {};
 
 const STATUS_TYPE_LABELS: Record<string, string> = {
+  'STATUS': 'Combat Status',
   [EventCategoryType.SKILL_STATUS]: 'Skill Status',
   [EventCategoryType.TALENT]: 'Talent',
   [EventCategoryType.TALENT_STATUS]: 'Talent Status',
@@ -173,15 +175,21 @@ const STATUS_TYPE_LABELS: Record<string, string> = {
   [EventCategoryType.GEAR_SET_STATUS]: 'Gear Set Status',
   [EventCategoryType.POTENTIAL]: 'Potential',
   [EventCategoryType.POTENTIAL_STATUS]: 'Potential Status',
+  [EventCategoryType.CONSUMABLE]: 'Consumable',
+  [EventCategoryType.TACTICAL]: 'Tactical',
 };
 
+/** Special key for the cross-cutting "Permanent" filter (not an EventCategoryType). */
+const PERMANENT_FILTER_KEY = 'PERMANENT';
+
 /** Groups of status types for the filter menu, with display order. */
-const STATUS_FILTER_GROUPS: { label: string; types: EventCategoryType[] }[] = [
-  { label: 'Talents', types: [EventCategoryType.TALENT, EventCategoryType.TALENT_STATUS] },
-  { label: 'Skills', types: [EventCategoryType.SKILL_STATUS] },
+const STATUS_FILTER_GROUPS: { label: string; types: EventCategoryType[]; permanent?: boolean }[] = [
+  { label: 'Passive', types: [], permanent: true },
+  { label: 'Skills', types: ['STATUS' as EventCategoryType, EventCategoryType.SKILL_STATUS, EventCategoryType.TALENT, EventCategoryType.TALENT_STATUS, EventCategoryType.POTENTIAL, EventCategoryType.POTENTIAL_STATUS] },
   { label: 'Weapons', types: [EventCategoryType.WEAPON_STATUS] },
   { label: 'Gears', types: [EventCategoryType.GEAR_STATUS, EventCategoryType.GEAR_SET_EFFECT, EventCategoryType.GEAR_SET_STATUS] },
-  { label: 'Potentials', types: [EventCategoryType.POTENTIAL, EventCategoryType.POTENTIAL_STATUS] },
+  { label: 'Consumables', types: [EventCategoryType.CONSUMABLE] },
+  { label: 'Tacticals', types: [EventCategoryType.TACTICAL] },
 ];
 
 // Column width weight — used for grid proportions within operator groups
@@ -190,7 +198,7 @@ function getColWeight(col: Column) {
   if (col.type === 'placeholder') return 1;
   const cid = col.type === 'mini-timeline' ? col.columnId : undefined;
   if (cid === OPERATOR_COLUMNS.INPUT) return 1;
-  if (cid === 'operator-status') return 2;
+  if (cid === 'operator-status') return 4;
   if (cid && COL_WEIGHT_SKILL_IDS.has(cid)) return 2;
   return 2; // tactical, etc.
 }
@@ -230,6 +238,7 @@ export default function CombatPlanner({
   onFrameClick,
   onRemoveFrame,
   onRemoveFrames,
+  onSetCritPins,
   onRemoveSegment,
   onAddSegment,
   onAddFrame,
@@ -410,22 +419,23 @@ export default function CombatPlanner({
   // Keep unfiltered reference for header context menu (to show all types)
   const columns = useMemo(() => {
     if (hiddenStatusTypes.size === 0) return columnsProp;
+    const hidePermanent = hiddenStatusTypes.has(PERMANENT_FILTER_KEY);
     return columnsProp.map((col) => {
       if (col.type !== 'mini-timeline' || !col.microColumns || col.microColumnAssignment !== 'dynamic-split') return col;
-      const hasFilterable = col.microColumns.some((mc) => mc.statusType);
+      const hasFilterable = col.microColumns.some((mc) => mc.statusType || mc.permanent);
       if (!hasFilterable) return col;
-      const filtered = col.microColumns.filter((mc) => {
+      const isMcHidden = (mc: import('../consts/viewTypes').MicroColumn) => {
         const effectiveType = mc.statusType ?? EventCategoryType.SKILL_STATUS;
-        return !hiddenStatusTypes.has(effectiveType);
-      });
+        if (hiddenStatusTypes.has(effectiveType)) return true;
+        if (hidePermanent && mc.permanent) return true;
+        return false;
+      };
+      const filtered = col.microColumns.filter((mc) => !isMcHidden(mc));
       if (filtered.length === col.microColumns.length) return col;
       // Collect hidden micro-column IDs to exclude from event matching
       const hiddenIds = new Set<string>();
       for (const mc of col.microColumns) {
-        const effectiveType = mc.statusType ?? EventCategoryType.SKILL_STATUS;
-        if (hiddenStatusTypes.has(effectiveType)) {
-          hiddenIds.add(mc.id);
-        }
+        if (isMcHidden(mc)) hiddenIds.add(mc.id);
       }
       // Extend matchAllExcept to also exclude hidden status column IDs
       const extendedExcept = new Set<string>();
@@ -1277,18 +1287,6 @@ export default function CombatPlanner({
         updateHoverLineDOM(snappedRel - scrollFrame + sRect[axis.rectFrameStart] + bTop);
       }
 
-      // Imperatively update dragged event DOM positions at 60fps (GPU-accelerated transforms)
-      const currentZoom = zoomRef.current;
-      for (const eid of eventUids) {
-        const orig = startFrames.get(eid) ?? 0;
-        const newFrame = orig + clampedDelta;
-        const newPx = frameToPx(newFrame, currentZoom);
-        const el = scrollRef.current?.querySelector(`[data-event-uid="${eid}"]`) as HTMLElement | null;
-        if (el) {
-          el.style.transform = axis.framePos === 'top' ? `translateY(${newPx}px)` : `translateX(${newPx}px)`;
-        }
-      }
-
       // Throttled state update — triggers React re-render + pipeline
       const dragState = dragRef.current;
       const strictForMove = strict;
@@ -1769,19 +1767,20 @@ export default function CombatPlanner({
 
   // ─── Right-click on status column header ───────────────────────────────────
   // Collect all status types across all status columns (global setting)
-  const allStatusTypes = useMemo(() => {
+  const { statusTypeCounts, permanentCount } = useMemo(() => {
     const types = new Map<string, number>();
+    let permCount = 0;
     for (const col of columnsProp) {
       if (col.type !== 'mini-timeline' || !col.microColumns || col.microColumnAssignment !== 'dynamic-split') continue;
-      // Only count columns that have at least one micro-column with a statusType
       const hasTyped = col.microColumns.some((mc) => mc.statusType);
       if (!hasTyped) continue;
       for (const mc of col.microColumns) {
         const effectiveType = mc.statusType ?? EventCategoryType.SKILL_STATUS;
         types.set(effectiveType, (types.get(effectiveType) ?? 0) + 1);
+        if (mc.permanent) permCount++;
       }
     }
-    return types;
+    return { statusTypeCounts: types, permanentCount: permCount };
   }, [columnsProp]);
 
   // Ref for checked getters to read current hidden state without stale closures
@@ -1801,35 +1800,54 @@ export default function CombatPlanner({
     e.preventDefault();
     e.stopPropagation();
     if (col.type !== 'mini-timeline' || col.microColumnAssignment !== 'dynamic-split') return;
-    if (allStatusTypes.size === 0) return;
+    if (statusTypeCounts.size === 0) return;
     const unfilteredCol = columnsProp.find((c) => c.key === col.key);
     if (!unfilteredCol || unfilteredCol.type !== 'mini-timeline' || !unfilteredCol.microColumns?.some((mc) => mc.statusType)) return;
     const items: import('../consts/viewTypes').ContextMenuItem[] = [
       { label: 'Status Filters', header: true },
     ];
     for (const group of STATUS_FILTER_GROUPS) {
-      const groupTypes = group.types.filter((t) => allStatusTypes.has(t));
+      // Permanent group: cross-cutting, uses PERMANENT_FILTER_KEY
+      if (group.permanent) {
+        if (permanentCount === 0) continue;
+        items.push({
+          label: `${group.label} (${permanentCount})`,
+          checked: () => !hiddenStatusTypesRef.current.has(PERMANENT_FILTER_KEY),
+          keepOpen: true,
+          action: () => {
+            toggleHiddenStatusTypes((prev) => {
+              const next = new Set(prev);
+              if (next.has(PERMANENT_FILTER_KEY)) next.delete(PERMANENT_FILTER_KEY); else next.add(PERMANENT_FILTER_KEY);
+              return next;
+            });
+          },
+        });
+        continue;
+      }
+      // Source-based groups — flat list of individually toggleable types
+      const groupTypes = group.types.filter((t) => statusTypeCounts.has(t));
       if (groupTypes.length === 0) continue;
-      const groupTotal = groupTypes.reduce((sum, t) => sum + (allStatusTypes.get(t) ?? 0), 0);
-      items.push({
-        label: `${group.label} (${groupTotal})`,
-        checked: () => groupTypes.every((t) => !hiddenStatusTypesRef.current.has(t)),
-        keepOpen: true,
-        action: () => {
-          toggleHiddenStatusTypes((prev) => {
-            const next = new Set(prev);
-            const allVisible = groupTypes.every((t) => !prev.has(t));
-            if (allVisible) { for (const t of groupTypes) next.add(t); }
-            else { for (const t of groupTypes) next.delete(t); }
-            return next;
-          });
-        },
-      });
-      if (groupTypes.length > 1) {
+      if (groupTypes.length === 1) {
+        const type = groupTypes[0];
+        const count = statusTypeCounts.get(type) ?? 0;
+        items.push({
+          label: `${group.label} (${count})`,
+          checked: () => !hiddenStatusTypesRef.current.has(type),
+          keepOpen: true,
+          action: () => {
+            toggleHiddenStatusTypes((prev) => {
+              const next = new Set(prev);
+              if (next.has(type)) next.delete(type); else next.add(type);
+              return next;
+            });
+          },
+        });
+      } else {
+        items.push({ label: group.label, header: true });
         for (const type of groupTypes) {
-          const count = allStatusTypes.get(type) ?? 0;
+          const count = statusTypeCounts.get(type) ?? 0;
           items.push({
-            label: `  ${STATUS_TYPE_LABELS[type] ?? type} (${count})`,
+            label: `${STATUS_TYPE_LABELS[type] ?? type} (${count})`,
             checked: () => !hiddenStatusTypesRef.current.has(type),
             keepOpen: true,
             action: () => {
@@ -1843,7 +1861,7 @@ export default function CombatPlanner({
         }
       }
     }
-    for (const [type, count] of Array.from(allStatusTypes.entries())) {
+    for (const [type, count] of Array.from(statusTypeCounts.entries())) {
       if (STATUS_FILTER_GROUPS.some((g) => g.types.includes(type as EventCategoryType))) continue;
       items.push({
         label: `${STATUS_TYPE_LABELS[type] ?? type} (${count})`,
@@ -1859,7 +1877,7 @@ export default function CombatPlanner({
       });
     }
     onContextMenu({ x: e.clientX, y: e.clientY, items });
-  }, [allStatusTypes, onContextMenu, columnsProp, toggleHiddenStatusTypes]);
+  }, [statusTypeCounts, permanentCount, onContextMenu, columnsProp, toggleHiddenStatusTypes]);
 
   // ─── Right-click on event ────────────────────────────────────────────────────
   const handleEventContextMenu = useCallback((
@@ -1938,35 +1956,62 @@ export default function CombatPlanner({
     const isInSelection = selectedFrames?.some(
       (sf) => sf.eventUid === eventUid && sf.segmentIndex === segmentIndex && sf.frameIndex === frameIndex,
     );
-    if (isInSelection && selectedFrames && selectedFrames.length > 1) {
-      const frames = selectedFrames;
-      onContextMenu({
-        x: e.clientX, y: e.clientY,
-        items: [
-          {
-            label: `Remove ${frames.length} Frames`,
-            action: () => {
-              onRemoveFrames?.(frames);
-              onSelectedFramesChange?.([]);
-              onContextMenu(null);
-            },
-            danger: true,
-          },
-        ],
-      });
-    } else {
-      onContextMenu({
-        x: e.clientX, y: e.clientY,
-        items: [
-          {
-            label: 'Remove Frame',
-            action: () => { onRemoveFrame?.(eventUid, segmentIndex, frameIndex); onContextMenu(null); },
-            danger: true,
-          },
-        ],
+    const isBatch = isInSelection && selectedFrames && selectedFrames.length > 1;
+    const targetFrames = isBatch ? selectedFrames : [{ eventUid, segmentIndex, frameIndex }];
+
+    // Filter out DOT frames (cannot crit)
+    const crittableFrames = targetFrames.filter((sf) => {
+      const ev = events.find((ev) => ev.uid === sf.eventUid);
+      return ev?.segments[sf.segmentIndex]?.frames?.[sf.frameIndex]?.damageType !== DamageType.DAMAGE_OVER_TIME;
+    });
+
+    // Resolve crit state for toggle: mixed/no-crit → crit, all crit → no-crit
+    const resolveCrit = (sf: import('../consts/viewTypes').SelectedFrame) => {
+      const ev = events.find((ev) => ev.uid === sf.eventUid);
+      return ev?.segments[sf.segmentIndex]?.frames?.[sf.frameIndex]?.isCrit ?? false;
+    };
+    const allCrit = crittableFrames.length > 0 && crittableFrames.every(resolveCrit);
+    const critTarget = !allCrit;
+
+    const items: import('../consts/viewTypes').ContextMenuItem[] = [];
+
+    if (onSetCritPins && crittableFrames.length > 0) {
+      items.push({
+        label: isBatch
+          ? (allCrit ? `Set ${crittableFrames.length} Frames No-Crit` : `Set ${crittableFrames.length} Frames Crit`)
+          : (allCrit ? 'Set No-Crit' : 'Set Crit'),
+        action: () => {
+          // Imperative DOM update for instant visual feedback
+          for (const sf of crittableFrames) {
+            const el = document.querySelector(`[data-frame-id="${sf.eventUid}-${sf.segmentIndex}-${sf.frameIndex}"]`);
+            if (el) el.classList.toggle('event-frame-diamond--crit', critTarget);
+          }
+          onSetCritPins(crittableFrames, critTarget);
+          onContextMenu(null);
+        },
       });
     }
-  }, [readOnly, onContextMenu, onRemoveFrame, onRemoveFrames, selectedFrames, onSelectedFramesChange]);
+
+    if (isBatch) {
+      items.push({
+        label: `Remove ${targetFrames.length} Frames`,
+        action: () => {
+          onRemoveFrames?.(targetFrames);
+          onSelectedFramesChange?.([]);
+          onContextMenu(null);
+        },
+        danger: true,
+      });
+    } else {
+      items.push({
+        label: 'Remove Frame',
+        action: () => { onRemoveFrame?.(eventUid, segmentIndex, frameIndex); onContextMenu(null); },
+        danger: true,
+      });
+    }
+
+    onContextMenu({ x: e.clientX, y: e.clientY, items });
+  }, [readOnly, onContextMenu, onRemoveFrame, onRemoveFrames, onSetCritPins, selectedFrames, onSelectedFramesChange, events]);
 
   // ─── Right-click on segment (multi-segment events only) ────────────────────
   const handleSegmentContextMenu = useCallback((
@@ -2376,9 +2421,9 @@ export default function CombatPlanner({
                       <div
                         key={colKey}
                         className="hover-line-resource-dot hover-line-resource-dot--horizontal"
-                        style={{ top: yInLine, borderColor: dotColor, color: dotColor, boxShadow: `0 0 6px ${dotColor}55` }}
+                        style={{ top: yInLine, borderColor: dotColor, boxShadow: `0 0 6px ${dotColor}55` }}
                       >
-                        {Math.round(value)}
+                        {value.toFixed(1)}
                       </div>
                     );
                   }
@@ -2390,9 +2435,9 @@ export default function CombatPlanner({
                     <div
                       key={colKey}
                       className="hover-line-resource-dot"
-                      style={{ left: xInLine, borderColor: dotColor, color: dotColor, boxShadow: `0 0 6px ${dotColor}55` }}
+                      style={{ left: xInLine, borderColor: dotColor, boxShadow: `0 0 6px ${dotColor}55` }}
                     >
-                      {Math.round(value)}
+                      {value.toFixed(1)}
                     </div>
                   );
                 }

@@ -324,9 +324,9 @@ describe('B. Battle Skill (Specified Research Subject)', () => {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 describe('C. Combo Skill (EMP Test Site)', () => {
-  test('C1: Combo trigger has two clauses (Physical Status OR Arts Infliction while Focus)', () => {
+  test('C1: Combo trigger has four clauses (Physical Status OR Arts Infliction while Focus/Focus Empowered)', () => {
     const comboSkill = mockAntalJson.skills.COMBO_SKILL;
-    expect(comboSkill.activationWindow.onTriggerClause.length).toBe(2);
+    expect(comboSkill.activationWindow.onTriggerClause.length).toBe(4);
   });
 
   test('C2: First clause — ANY_OPERATOR APPLY Physical Status + ENEMY HAVE FOCUS', () => {

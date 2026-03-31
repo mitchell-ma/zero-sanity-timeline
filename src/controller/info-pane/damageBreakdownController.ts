@@ -1,7 +1,8 @@
 import type { DamageParams, DamageSubComponents, StatusDamageParams } from '../../model/calculation/damageFormulas';
 import { getElementDamageBonusStat } from '../../model/calculation/damageFormulas';
 import type { DamageTableRow } from '../calculation/damageTableBuilder';
-import { ElementType, StatType } from '../../consts/enums';
+import { getCritMultiplier, getExpectedCritMultiplier } from '../../model/calculation/damageFormulas';
+import { CritMode, ElementType, StatType } from '../../consts/enums';
 
 /** Multiplier display entry for the breakdown table. */
 export interface MultiplierEntry {
@@ -142,6 +143,71 @@ function buildPerElementSubEntries(
   });
 }
 
+function buildCritSubEntries(sub: DamageSubComponents): MultiplierEntry[] {
+  const { critRate, critDamage, critMode, isCrit, critSnapshot } = sub;
+
+  // EXPECTED mode with crit model: show sources with probabilities
+  if (critSnapshot && critMode === CritMode.EXPECTED) {
+    const entries: MultiplierEntry[] = [];
+
+    // E(T) effective crit rate
+    entries.push(makeSubEntry(
+      'Expected Crit Rate',
+      critSnapshot.expectedCritRate,
+      `Effective E(T) at this frame`,
+    ));
+
+    // Crit DMG
+    entries.push(makeSubEntry('Crit DMG', critDamage, 'Bonus damage on crit'));
+
+    // Sources breakdown
+    for (const source of critSnapshot.critSources) {
+      const entry = makeSubEntry(
+        source.label,
+        source.value,
+        source.probability != null
+          ? `${formatPercent(source.probability)} chance active`
+          : 'Unconditional',
+      );
+      entries.push(entry);
+    }
+
+    // Status uptimes
+    critSnapshot.statusDistributions.forEach((dist, statusId) => {
+      const uptime = 1 - dist[0];
+      if (uptime > 1e-6) {
+        entries.push(makeSubEntry(
+          `${statusId} uptime`,
+          uptime,
+          `P(stacks > 0)`,
+        ));
+      }
+    });
+
+    return entries;
+  }
+
+  // Non-model modes: show all 4 static calculations
+  const neverValue = getCritMultiplier(false, critDamage);
+  const alwaysValue = getCritMultiplier(true, critDamage);
+  const expectedValue = getExpectedCritMultiplier(critRate, critDamage);
+  const simValue = getCritMultiplier(!!isCrit, critDamage);
+
+  const modes: { label: string; mode: CritMode; value: number; source: string }[] = [
+    { label: 'Never Crit', mode: CritMode.NEVER, value: neverValue, source: 'No crit contribution' },
+    { label: 'Always Crit', mode: CritMode.ALWAYS, value: alwaysValue, source: `1 + ${formatPercent(critDamage)} Crit DMG` },
+    { label: 'Expected', mode: CritMode.EXPECTED, value: expectedValue, source: `1 + ${formatPercent(critRate)} Rate x ${formatPercent(critDamage)} DMG` },
+    { label: 'Random', mode: CritMode.RANDOM, value: simValue, source: isCrit ? 'This frame crits' : 'This frame does not crit' },
+    { label: 'Manual', mode: CritMode.MANUAL, value: simValue, source: isCrit ? 'Pinned crit' : 'Pinned no crit' },
+  ];
+
+  return modes.map(({ label, mode, value, source }) => {
+    const entry = makeSubEntry(label, value, mode === critMode ? 'Active' : source, 'multiplier');
+    if (mode === critMode) entry.cssClass = 'dmg-breakdown-active';
+    return entry;
+  });
+}
+
 export function buildMultiplierEntries(params: DamageParams, foldedFrames?: DamageTableRow[]): MultiplierEntry[] {
   const sub = params.sub;
   const isFolded = foldedFrames && foldedFrames.length > 1;
@@ -221,14 +287,18 @@ export function buildMultiplierEntries(params: DamageParams, foldedFrames?: Dama
       ] : undefined,
     },
     {
+      label: 'Crit',
+      value: params.critMultiplier,
+      format: 'multiplier',
+      source: params.critMultiplier > 1.001 ? 'Critical hit' : 'No crit',
+      subEntries: sub ? buildCritSubEntries(sub) : undefined,
+    },
+    {
       label: 'Amp',
       value: params.ampMultiplier,
       format: 'multiplier',
       source: params.ampMultiplier > 1.001 ? 'Amp active' : 'No Amp',
-      subEntries: sub && sub.ampSources.length > 0 ? buildPerElementSubEntries(
-        { [ElementType.ARTS]: sub.ampSources },
-        sub.element,
-      ) : undefined,
+      subEntries: sub?.allAmpSources ? buildPerElementSubEntries(sub.allAmpSources, sub.element) : undefined,
     },
     {
       label: 'Stagger',

@@ -52,6 +52,18 @@ const ROMAN_RE = /^\d+$/;
 const toDisplayLabel = (label: string | undefined) =>
   label && ROMAN_RE.test(label) ? formatSegmentShortName(undefined, Number(label) - 1) : label;
 
+/** Match trailing roman numeral (I–XX) or arabic number at end of label. */
+const TRAILING_NUMERAL_RE = /\s+((?:X{0,2}(?:IX|IV|V?I{0,3}))|(?:\d+))$/;
+/** If a label has a trailing numeral/roman, return just that suffix; otherwise undefined. */
+function extractTrailingNumeral(label: string): string | undefined {
+  const m = label.match(TRAILING_NUMERAL_RE);
+  return m?.[1] || undefined;
+}
+
+/** Approximate px height a vertical label needs (10px font ≈ 7px per char + 8px padding). */
+const CHAR_PX = 7;
+const LABEL_PAD_PX = 8;
+
 function hasInflictionOrStatus(f: EventFrameMarker): boolean {
   if (!f.clauses) return false;
   for (const pred of f.clauses) {
@@ -379,9 +391,13 @@ function EventBlock({
 
     // Segment label: use segment name if present, otherwise empty for multi-segment.
     // For single-segment events, fall back to the display label.
-    const segLabel = seg.properties.name
+    const segLabelFull = seg.properties.name
       ? toDisplayLabel(seg.properties.name)
       : (isSingleSegment ? displayLabel : undefined);
+    // If full label won't fit the segment, show just the trailing numeral (if any)
+    const segLabelFits = !segLabelFull || segH >= segLabelFull.length * CHAR_PX + LABEL_PAD_PX;
+    const segLabel = segLabelFits ? segLabelFull
+      : (extractTrailingNumeral(segLabelFull) ?? segLabelFull);
 
     // For IMMEDIATE_COOLDOWN segments that start at offset 0, push the label below
     // where the active segments end so it doesn't overlap with active segment text.
@@ -438,6 +454,7 @@ function EventBlock({
       frameElements.push(
         <div
           key={`f-${i}-${fi}`}
+          data-frame-id={`${uid}-${i}-${fi}`}
           className={`event-frame-diamond${isSelected ? ' event-frame-diamond--selected' : ''}${isHoverHighlight ? ' event-frame-diamond--hover-hit' : ''}${f.isCrit ? ' event-frame-diamond--crit' : ''}${(f.frameTypes ?? []).includes(EventFrameType.FINISHER) ? ' event-frame-diamond--finisher' : ''}${(f.frameTypes ?? []).includes(EventFrameType.DIVE) ? ' event-frame-diamond--dive' : ''}${hasInflictionOrStatus(f) ? ' event-frame-diamond--infliction' : ''}${f.statusLabel ? ' event-frame-diamond--status' : ''}`}
           style={elColor && !isSelected && !isHoverHighlight
             ? { [axis.framePos]: framePx, background: elColor, boxShadow: `0 0 3px ${elColor}80` } as React.CSSProperties

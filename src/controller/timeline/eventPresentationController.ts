@@ -20,6 +20,8 @@ import { CombatSkillType, StackInteractionType, UNLIMITED_STACKS } from '../../c
 import { COMBO_WINDOW_COLUMN_ID, REACTION_COLUMNS } from '../../model/channels';
 import { formatSegmentShortName } from '../../dsl/semanticsTranslation';
 import { getAllOperatorStatuses } from '../gameDataStore';
+import { getAllWeaponStatuses } from '../../model/game-data/weaponStatusesStore';
+import { getAllGearStatuses } from '../../model/game-data/gearStatusesStore';
 
 import type { Slot } from './columnBuilder';
 import type { ValidationMaps } from './eventValidationController';
@@ -32,6 +34,7 @@ import { aggregateEventWarnings } from './eventValidationController';
 
 const REACTION_COLUMN_IDS: Set<string> = new Set(Object.values(REACTION_COLUMNS));
 const MAX_ROMAN = 9;
+const MAX_MICRO_WIDTH_FRAC = 0.25;
 
 function stackLabel(stackNumber: number): string {
   if (stackNumber <= MAX_ROMAN) return formatSegmentShortName(undefined, stackNumber - 1);
@@ -48,7 +51,7 @@ let statusStackCache: Map<string, StatusStackInfo> | null = null;
 function getStatusStackInfo(statusId: string): StatusStackInfo | undefined {
   if (!statusStackCache) {
     statusStackCache = new Map();
-    for (const se of getAllOperatorStatuses()) {
+    for (const se of [...getAllOperatorStatuses(), ...getAllWeaponStatuses(), ...getAllGearStatuses()]) {
       if (!se.id || statusStackCache.has(se.id)) continue;
       const limit = (se.stacks?.limit as { value?: number } | undefined)?.value ?? 1;
       const verb = se.stacks?.interactionType ?? StackInteractionType.NONE;
@@ -585,7 +588,7 @@ function computeMicroPositions(
 
     // Compute widthFrac from actual slot count so all slots fit within the column
     const slotCount = Math.max(slots.length, 1);
-    const slotFrac = 1 / slotCount;
+    const slotFrac = Math.min(1 / slotCount, MAX_MICRO_WIDTH_FRAC);
 
     for (const ev of sorted) {
       const slot = eventSlots.get(ev.uid) ?? 0;
@@ -596,7 +599,7 @@ function computeMicroPositions(
       });
     }
   } else if (col.microColumnAssignment === 'by-order') {
-    const microW = 1 / microCount;
+    const microW = Math.min(1 / microCount, MAX_MICRO_WIDTH_FRAC);
     const sorted = [...colEvents].sort((a, b) => a.startFrame - b.startFrame);
     sorted.forEach((ev, i) => {
       const microIdx = greedySlots.get(ev.uid) ?? Math.min(i, microCount - 1);
@@ -611,7 +614,7 @@ function computeMicroPositions(
     });
   } else {
     // by-column-id
-    const microW = 1 / microCount;
+    const microW = Math.min(1 / microCount, MAX_MICRO_WIDTH_FRAC);
     col.microColumns.forEach((mc, mcIdx) => {
       const mcEvents = colEvents.filter(
         (ev) => ev.columnId === mc.id,
@@ -730,6 +733,7 @@ function columnEventsMatch(current: TimelineEvent[], previous: TimelineEvent[]):
         if (!cFrames || !pFrames || cFrames.length !== pFrames.length) return false;
         for (let f = 0; f < cFrames.length; f++) {
           if (cFrames[f].derivedOffsetFrame !== pFrames[f].derivedOffsetFrame) return false;
+          if (cFrames[f].isCrit !== pFrames[f].isCrit) return false;
         }
       }
     }

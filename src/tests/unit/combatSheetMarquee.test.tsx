@@ -166,10 +166,10 @@ describe('CombatSheet marquee selection', () => {
   it('selects rows intersecting the marquee and sums their damage', () => {
     const { container } = render(<CombatSheet {...DEFAULT_PROPS} compact />);
 
-    // In compact mode, rows are at top = index * 22 (ROW_HEIGHT)
-    // Row 0: top=0, Row 1: top=22, Row 2: top=44, Row 3: top=66, Row 4: top=88
-    // Drag from y=10 to y=55 should cover rows 0,1,2 (top 0-44, height 22 each)
-    dragMarquee(container, 10, 55);
+    // In compact mode, rows are at top = index * 28 (ROW_HEIGHT)
+    // Row 0: top=0, Row 1: top=28, Row 2: top=56, Row 3: top=84, Row 4: top=112
+    // Drag from y=10 to y=75 should cover rows 0,1,2 (top 0-56, height 28 each)
+    dragMarquee(container, 10, 75);
 
     const selected = container.querySelectorAll('.dmg-row--selected');
     expect(selected.length).toBe(3);
@@ -186,9 +186,9 @@ describe('CombatSheet marquee selection', () => {
   it('excludes null-damage rows from the sum but still selects them visually', () => {
     const { container } = render(<CombatSheet {...DEFAULT_PROPS} compact />);
 
-    // Drag to cover rows 2 (3000), 3 (null), 4 (4000): tops 44, 66, 88
-    // Row 1 (top=22, bottom=44) also touches the boundary at y=44
-    dragMarquee(container, 44, 110);
+    // Drag to cover rows 2 (3000), 3 (null), 4 (4000): tops 56, 84, 112
+    // Row 1 (top=28, bottom=56) also touches the boundary at y=56
+    dragMarquee(container, 56, 140);
 
     const selected = container.querySelectorAll('.dmg-row--selected');
     expect(selected.length).toBe(4);

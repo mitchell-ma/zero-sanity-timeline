@@ -154,7 +154,8 @@
   "sheet.crit.expected": "E[CRIT]",
   "sheet.crit.never": "NO CRIT",
   "sheet.crit.always": "MAX CRIT",
-  "sheet.crit.simulation": "SIM",
+  "sheet.crit.random": "RANDOM",
+  "sheet.crit.manual": "MANUAL",
 
   "sheet.fold.frame": "FRAME",
   "sheet.fold.segment": "SEGMENT",

@@ -1,7 +1,7 @@
 import { Column, MiniTimeline, MicroColumn, Operator, Enemy, VisibleSkills, EventFrameMarker } from '../../consts/viewTypes';
 import { DeterminerType, NounType, VerbType, type Effect, type Predicate } from '../../dsl/semantics';
 import type { FrameClausePredicate } from '../../model/event-frames/skillEventFrame';
-import { ColumnType, CombatSkillType, ELEMENT_COLORS, ElementType, EnhancementType, EventCategoryType, EventFrameType, HeaderVariant, MicroColumnAssignment, SegmentType, StatusType, TimeDependency, TimelineSourceType } from '../../consts/enums';
+import { ColumnType, CombatSkillType, ELEMENT_COLORS, ElementType, EnhancementType, EventCategoryType, EventFrameType, HeaderVariant, MicroColumnAssignment, PERMANENT_DURATION, SegmentType, StatusType, TimeDependency, TimelineSourceType } from '../../consts/enums';
 import { ENEMY_OWNER_ID, ENEMY_GROUP_COLUMNS, ENEMY_ACTION_COLUMN_ID, OPERATOR_COLUMNS, OPERATOR_STATUS_COLUMN_ID, PHYSICAL_INFLICTION_COLUMNS, PHYSICAL_STATUS_COLUMNS, SKILL_COLUMN_ORDER as SKILL_ORDER, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID, COMBO_WINDOW_COLUMN_ID } from '../../model/channels';
 import { isTeamStatus } from '../gameDataStore';
 import { SKILL_LABELS, ColumnLabel, STATUS_LABELS, REACTION_MICRO_COLUMNS } from '../../consts/timelineColumnLabels';
@@ -79,7 +79,7 @@ function syntheticSegments(duration: number, effect: Partial<Effect>) {
 function buildStatusMicroColumn(
   statusId: string,
   color: string,
-  overrides?: { label?: string; statusType?: string },
+  overrides?: { label?: string; statusType?: string; permanent?: boolean },
 ): MicroColumn {
   const cfg = getStatusById(statusId);
   const label = overrides?.label ?? getAllStatusLabels()[statusId] ?? cfg?.name ?? statusId;
@@ -120,6 +120,7 @@ function buildStatusMicroColumn(
     label,
     color,
     ...(overrides?.statusType ? { statusType: overrides.statusType } : {}),
+    ...(overrides?.permanent || durSec >= PERMANENT_DURATION ? { permanent: true } : {}),
     defaultEvent: {
       id: statusId,
       name: statusId,
@@ -142,7 +143,7 @@ export function buildColumns(
   type TeamStatusDef = { sourceSlot: Slot; statusId: string; label: string; duration: number };
   const teamStatusDefs: TeamStatusDef[] = [];
   // Pre-scan: collect THIS_OPERATOR status defs per operator for operator status column
-  type OperatorStatusDef = { statusId: string; label: string; columnId: string; duration: number; color: string; source: 'talent' | 'weapon' | 'gear' | 'other'; statusType?: string; stacks?: Record<string, unknown> };
+  type OperatorStatusDef = { statusId: string; label: string; columnId: string; duration: number; durationSec: number; color: string; source: 'talent' | 'weapon' | 'gear' | 'other'; statusType?: string; stacks?: Record<string, unknown> };
   const operatorStatusMap = new Map<string, OperatorStatusDef[]>();
   // Pre-scan: collect team-targeting weapon/gear effects
   type TeamEquipDef = { slotId: string; statusId: string; label: string; durationFrames: number; color: string };
@@ -159,13 +160,8 @@ export function buildColumns(
         if (isTeamStatus(se.id)) continue;
         if (se.id in ATTRIBUTE_INCREASE_LOOKUP) continue;
         if (se.target === NounType.OPERATOR && (!se.targetDeterminer || se.targetDeterminer === DeterminerType.THIS) && se.id) {
-          const seDur = se.duration as { value?: { value?: number } | number | number[] } | undefined;
-          const rawVal = seDur?.value;
-          const durVal = typeof rawVal === 'object' && rawVal !== null && !Array.isArray(rawVal)
-            ? (rawVal as { value?: number }).value
-            : Array.isArray(rawVal) ? rawVal[0] : rawVal;
-          const dur = durVal ?? -1;
-          const durationFrames = dur === -1 ? TOTAL_FRAMES : dur > 0 ? Math.round(dur * FPS) : 10 * FPS;
+          const durSec = se.durationSeconds;
+          const durationFrames = durSec <= 0 ? TOTAL_FRAMES : Math.round(durSec * FPS);
           const colId = (OPERATOR_COLUMNS as Record<string, string>)[se.id]
             ?? se.id;
           const defs = operatorStatusMap.get(s.slotId) ?? [];
@@ -174,6 +170,7 @@ export function buildColumns(
             label: STATUS_LABELS[se.id as StatusType] ?? se.id,
             columnId: colId,
             duration: durationFrames,
+            durationSec: durSec,
             color: s.operator.color,
             source: 'talent',
             statusType: se.eventCategoryType ?? EventCategoryType.SKILL_STATUS,
@@ -215,6 +212,7 @@ export function buildColumns(
                         label: STATUS_LABELS[statusId as StatusType] ?? statusDef?.name ?? statusId,
                         columnId: colId,
                         duration: 10 * FPS,
+                        durationSec: 10,
                         color: targetSlot.operator.color,
                         source: 'other',
                         statusType: statusDef?.eventCategoryType ?? EventCategoryType.SKILL_STATUS,
@@ -238,6 +236,7 @@ export function buildColumns(
                   label: STATUS_LABELS[statusId as StatusType] ?? statusDef?.name ?? statusId,
                   columnId: colId,
                   duration: 10 * FPS,
+                  durationSec: 10,
                   color: s.operator!.color,
                   source: 'other',
                   statusType: statusDef?.eventCategoryType ?? EventCategoryType.SKILL_STATUS,
@@ -267,6 +266,7 @@ export function buildColumns(
             label: (se.label as string) ?? equipId,
             columnId: colId,
             duration: durationFrames,
+            durationSec: dur,
             color: s.operator!.color,
             source: equipSource,
             statusType: equipSource === 'weapon' ? EventCategoryType.WEAPON_STATUS : EventCategoryType.GEAR_STATUS,
@@ -739,7 +739,10 @@ export function buildColumns(
         .slice()
         .sort((a, b) => (STATUS_SOURCE_ORDER[a.source] ?? 3) - (STATUS_SOURCE_ORDER[b.source] ?? 3));
       for (const def of ownDefs) {
-        const mc = buildStatusMicroColumn(def.statusId, def.color, { label: def.label, statusType: def.statusType });
+        const isPermanent = def.durationSec >= PERMANENT_DURATION
+          || def.statusType === EventCategoryType.TALENT
+          || def.statusType === EventCategoryType.TALENT_STATUS;
+        const mc = buildStatusMicroColumn(def.statusId, def.color, { label: def.label, statusType: def.statusType, permanent: isPermanent });
         // Use columnId (may differ from statusId for OPERATOR_COLUMNS entries)
         mc.id = def.columnId;
         statusMicroCols.push(mc);

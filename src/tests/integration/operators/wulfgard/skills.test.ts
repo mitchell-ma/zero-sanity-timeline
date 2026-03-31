@@ -209,6 +209,7 @@ describe('B. Infliction & Reaction Pipeline', () => {
 
   it('B2: Ultimate forces Combustion on enemy (strict)', () => {
     const { result } = setupWulfgard();
+    act(() => { setUltimateEnergyToMax(result.current, SLOT_WULFGARD, 0); });
     const col = findColumn(result.current, SLOT_WULFGARD, NounType.ULTIMATE);
 
     const payload = getMenuPayload(result.current, col!, 2 * FPS);
@@ -417,6 +418,7 @@ describe('D. Empowered Battle Skill', () => {
 describe('E. Scorching Fangs (Talent 1)', () => {
   it('E1: Ultimate Combustion triggers Scorching Fangs on Wulfgard (strict)', () => {
     const { result } = setupWulfgard();
+    act(() => { setUltimateEnergyToMax(result.current, SLOT_WULFGARD, 0); });
     const ultCol = findColumn(result.current, SLOT_WULFGARD, NounType.ULTIMATE);
 
     const payload = getMenuPayload(result.current, ultCol!, 2 * FPS);
@@ -508,6 +510,7 @@ describe('G. Potential Interactions', () => {
     const durationBefore = eventDuration(comboBefore!);
 
     // Ult at 10s — should reset combo cooldown (P5 default)
+    act(() => { setUltimateEnergyToMax(result.current, SLOT_WULFGARD, 0); });
     const ultCol = findColumn(result.current, SLOT_WULFGARD, NounType.ULTIMATE);
     const ultPayload = getMenuPayload(result.current, ultCol!, 10 * FPS);
     act(() => {
@@ -556,6 +559,7 @@ describe('G. Potential Interactions', () => {
     const durationBefore = eventDuration(comboBefore!);
 
     // Ult at 10s — should NOT reset cooldown at P4
+    act(() => { setUltimateEnergyToMax(result.current, SLOT_WULFGARD, 0); });
     const ultCol = findColumn(result.current, SLOT_WULFGARD, NounType.ULTIMATE);
     const ultPayload = getMenuPayload(result.current, ultCol!, 10 * FPS);
     act(() => {
@@ -602,6 +606,7 @@ describe('H. Cross-Mechanic Chains', () => {
     });
 
     // 2. Ult at 10s (forces Combustion, triggers Scorching Fangs, resets combo CD)
+    act(() => { setUltimateEnergyToMax(result.current, SLOT_WULFGARD, 0); });
     const ultCol = findColumn(result.current, SLOT_WULFGARD, NounType.ULTIMATE);
     const ultPayload = getMenuPayload(result.current, ultCol!, 10 * FPS);
     act(() => {
@@ -637,6 +642,7 @@ describe('H. Cross-Mechanic Chains', () => {
     const { result } = setupWulfgard();
 
     // 1. Ult at 2s — forces Combustion
+    act(() => { setUltimateEnergyToMax(result.current, SLOT_WULFGARD, 0); });
     const ultCol = findColumn(result.current, SLOT_WULFGARD, NounType.ULTIMATE);
     const ultPayload = getMenuPayload(result.current, ultCol!, 2 * FPS);
     act(() => {
@@ -1051,6 +1057,7 @@ describe('J. Normal vs Empowered — Mutual Exclusivity', () => {
 describe('K. Scorching Fangs — Detailed Behavior', () => {
   it('K1: Scorching Fangs has 10s duration (1200 frames)', () => {
     const { result } = setupWulfgard();
+    act(() => { setUltimateEnergyToMax(result.current, SLOT_WULFGARD, 0); });
     const col = findColumn(result.current, SLOT_WULFGARD, NounType.ULTIMATE);
 
     // Ult forces Combustion -> triggers Scorching Fangs
@@ -1091,6 +1098,7 @@ describe('K. Scorching Fangs — Detailed Behavior', () => {
     const { result } = setupWulfgard();
 
     // Place ult to force Combustion -> trigger SF
+    act(() => { setUltimateEnergyToMax(result.current, SLOT_WULFGARD, 0); });
     const col = findColumn(result.current, SLOT_WULFGARD, NounType.ULTIMATE);
     const payload = getMenuPayload(result.current, col!, 2 * FPS);
     act(() => {
@@ -1138,6 +1146,7 @@ describe('L. P5 Natural Predator — Combo Cooldown Reset', () => {
     });
 
     // Place ult at 5s — should reset combo cooldown
+    act(() => { setUltimateEnergyToMax(result.current, SLOT_WULFGARD, 0); });
     const ultCol = findColumn(result.current, SLOT_WULFGARD, NounType.ULTIMATE);
     const ultPayload = getMenuPayload(result.current, ultCol!, 5 * FPS);
     act(() => {
@@ -1183,6 +1192,7 @@ describe('L. P5 Natural Predator — Combo Cooldown Reset', () => {
       );
     });
 
+    act(() => { setUltimateEnergyToMax(result.current, SLOT_WULFGARD, 0); });
     const ultCol = findColumn(result.current, SLOT_WULFGARD, NounType.ULTIMATE);
     const ultPayload = getMenuPayload(result.current, ultCol!, 5 * FPS);
     act(() => {

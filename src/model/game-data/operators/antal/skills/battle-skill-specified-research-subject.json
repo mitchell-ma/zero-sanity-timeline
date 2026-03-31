@@ -44,7 +44,7 @@
               "unit": "SECOND"
             }
           },
-          "clauseType": "ALL",
+          "clauseType": "FIRST_MATCH",
           "clause": [
             {
               "conditions": [

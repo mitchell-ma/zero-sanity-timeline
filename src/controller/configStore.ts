@@ -817,6 +817,17 @@ export function getWeaponStatusTriggerDefs(weaponId: string): NormalizedEffectDe
   return defs;
 }
 
+export function getGearStatusTriggerDefs(gearSetType: string): NormalizedEffectDef[] {
+  const statuses = getGearStatuses(gearSetType);
+  const defs: NormalizedEffectDef[] = [];
+  for (const s of statuses) {
+    const raw = s.serialize();
+    if (!(raw.onTriggerClause as unknown[])?.length) continue;
+    defs.push(normalizeEffectEntry(raw as NormalizedEffectDef));
+  }
+  return defs;
+}
+
 /**
  * Get gear set effect as a talent-shaped trigger source def.
  * Returns one def per gear set with the effect's real ID and all onTriggerClause entries.

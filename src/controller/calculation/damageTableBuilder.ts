@@ -27,7 +27,6 @@ import {
   getDefenseMultiplier,
   getDmgReductionMultiplier,
   getElementDamageBonusStat,
-  getExpectedCritMultiplier,
   getFinisherMultiplier,
   getFragilityMultiplier,
   getLinkMultiplier,
@@ -44,6 +43,9 @@ import { LoadoutProperties, DEFAULT_LOADOUT_PROPERTIES } from '../../view/Inform
 import type { Slot } from '../timeline/columnBuilder';
 import { ENEMY_OWNER_ID, OPERATOR_COLUMNS, REACTION_COLUMN_IDS } from '../../model/channels';
 import { buildReactionDamageRows, ReactionOperatorContext } from './artsReactionController';
+import { buildCritExpectationModel, getFrameExpectation } from './critExpectationModel';
+import type { CritExpectationModel, CritFrameSnapshot } from './critExpectationModel';
+import { getLastTriggerIndex } from '../timeline/eventQueueController';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -258,6 +260,7 @@ export function buildDamageTableRows(
   overrides?: OverrideStore,
 ): DamageTableRow[] {
   const rows: DamageTableRow[] = [];
+  const resolvedCritMode = critMode ?? CritMode.EXPECTED;
 
   // Build column lookup: ownerId-columnId → Column
   const colLookup = new Map<string, MiniTimeline>();
@@ -281,6 +284,21 @@ export function buildDamageTableRows(
     const data = buildOperatorCalcData(slot.operator.id, slotLoadout, slotStats);
     opCache.set(slot.slotId, data);
     opIdCache.set(slot.slotId, slot.operator.id);
+  }
+
+  // Build crit expectation models per slot (EXPECTED mode only)
+  const critModels = new Map<string, CritExpectationModel>();
+  if (resolvedCritMode === CritMode.EXPECTED) {
+    const triggerIndex = getLastTriggerIndex();
+    if (triggerIndex) {
+      for (const slot of slots) {
+        if (!slot.operator) continue;
+        const opData = opCache.get(slot.slotId);
+        if (!opData) continue;
+        const model = buildCritExpectationModel(triggerIndex, slot.slotId, opData.critRate);
+        if (model) critModels.set(slot.slotId, model);
+      }
+    }
   }
 
   // Get model enemy for DEF/resistance/HP
@@ -366,6 +384,19 @@ export function buildDamageTableRows(
                 const isArts = element !== ElementType.PHYSICAL && element !== ElementType.NONE;
                 const isStaggered = statusQuery?.isStaggered(absFrame) ?? false;
 
+                // Step crit model early (before stat bonuses) so expectedStatDeltas are available
+                const isDot = frame.damageType === DamageType.DAMAGE_OVER_TIME;
+                const canCrit = !isDot;
+                let earlySnapshot: CritFrameSnapshot | undefined;
+                if (canCrit && resolvedCritMode === CritMode.EXPECTED) {
+                  const critModel = critModels.get(ev.ownerId);
+                  if (critModel) {
+                    earlySnapshot = critModel.step(absFrame);
+                    frame.expectedCritRate = earlySnapshot.expectedCritRate;
+                  }
+                }
+                const critDeltas = earlySnapshot?.expectedStatDeltas;
+
                 // Damage Bonus sub-components
                 const allElementDmgBonuses = {
                   [ElementType.NONE]: opData.stats[StatType.PHYSICAL_DAMAGE_BONUS],
@@ -380,13 +411,35 @@ export function buildDamageTableRows(
                 if (intellectDmgBonus > 0) {
                   allElementDmgBonuses[ElementType.ELECTRIC] = (allElementDmgBonuses[ElementType.ELECTRIC] ?? 0) + intellectDmgBonus;
                 }
+                // Add crit-dependent element DMG deltas to the per-element map
+                if (critDeltas) {
+                  const elementStatMap: Partial<Record<ElementType, StatType>> = {
+                    [ElementType.PHYSICAL]: StatType.PHYSICAL_DAMAGE_BONUS,
+                    [ElementType.NONE]: StatType.PHYSICAL_DAMAGE_BONUS,
+                    [ElementType.HEAT]: StatType.HEAT_DAMAGE_BONUS,
+                    [ElementType.CRYO]: StatType.CRYO_DAMAGE_BONUS,
+                    [ElementType.NATURE]: StatType.NATURE_DAMAGE_BONUS,
+                    [ElementType.ELECTRIC]: StatType.ELECTRIC_DAMAGE_BONUS,
+                  };
+                  for (const [el, stat] of Object.entries(elementStatMap)) {
+                    const delta = critDeltas[stat as StatType] ?? 0;
+                    if (delta > 0) {
+                      allElementDmgBonuses[el as ElementType] = (allElementDmgBonuses[el as ElementType] ?? 0) + delta;
+                    }
+                  }
+                }
 
+                // Element and skill damage bonuses (with crit-dependent deltas)
+                const critElementDelta = critDeltas?.[elementBonusStat] ?? 0;
                 const subElementDmg = (element === ElementType.ELECTRIC)
-                  ? opData.stats[elementBonusStat] + intellectDmgBonus
-                  : opData.stats[elementBonusStat];
-                const subSkillTypeDmg = opData.stats[skillTypeBonusStat];
-                const subSkillDmg = opData.stats[StatType.SKILL_DAMAGE_BONUS];
-                const subArtsDmg = isArts ? opData.stats[StatType.ARTS_DAMAGE_BONUS] : 0;
+                  ? opData.stats[elementBonusStat] + intellectDmgBonus + critElementDelta
+                  : opData.stats[elementBonusStat] + critElementDelta;
+                const critSkillTypeDelta = critDeltas?.[skillTypeBonusStat] ?? 0;
+                const subSkillTypeDmg = opData.stats[skillTypeBonusStat] + critSkillTypeDelta;
+                const critSkillDelta = critDeltas?.[StatType.SKILL_DAMAGE_BONUS] ?? 0;
+                const subSkillDmg = opData.stats[StatType.SKILL_DAMAGE_BONUS] + critSkillDelta;
+                const critArtsDelta = isArts ? (critDeltas?.[StatType.ARTS_DAMAGE_BONUS] ?? 0) : 0;
+                const subArtsDmg = isArts ? opData.stats[StatType.ARTS_DAMAGE_BONUS] + critArtsDelta : 0;
                 const subStaggerDmg = isStaggered ? (opData.stats[StatType.STAGGER_DAMAGE_BONUS] ?? 0) : 0;
 
                 const multiplierGroup = getDamageBonus(
@@ -413,26 +466,32 @@ export function buildDamageTableRows(
                   }
                 }
 
-                // Crit multiplier — reads resolved crit state from overrides (set by CombatStateController)
-                const isDot = frame.damageType === DamageType.DAMAGE_OVER_TIME;
-                const canCrit = !isDot;
+                // Crit multiplier — unified via getFrameExpectation()
                 let frameCrit: boolean | undefined;
                 let expectedCrit: number;
+                const critSnapshot = earlySnapshot;
                 if (!canCrit) {
                   expectedCrit = 1;
                 } else {
                   const critPin = overrides?.[buildOverrideKey(ev)]?.segments?.[si]?.frames?.[fi]?.isCritical;
                   if (critPin !== undefined) {
                     frameCrit = critPin;
-                    frame.isCrit = frameCrit;
-                    expectedCrit = getCritMultiplier(frameCrit, opData.critDamage);
-                  } else if (critMode === CritMode.ALWAYS) {
-                    expectedCrit = getCritMultiplier(true, opData.critDamage);
-                  } else if (critMode === CritMode.NEVER) {
-                    expectedCrit = 1;
+                  } else if (resolvedCritMode === CritMode.ALWAYS || resolvedCritMode === CritMode.EXPECTED) {
+                    frameCrit = true;
+                  } else if (resolvedCritMode === CritMode.NEVER) {
+                    frameCrit = false;
                   } else {
-                    // EXPECTED or SIMULATION without a pin — use expected value
-                    expectedCrit = getExpectedCritMultiplier(opData.critRate, opData.critDamage);
+                    frameCrit = frame.isCrit;
+                  }
+                  // Always write crit state to the frame
+                  if (frameCrit !== undefined) frame.isCrit = frameCrit;
+
+                  // Unified: critMultiplier = 1 + critDamage × expectation
+                  if (critPin !== undefined) {
+                    expectedCrit = getCritMultiplier(critPin, opData.critDamage);
+                  } else {
+                    const expectation = getFrameExpectation(resolvedCritMode, critSnapshot, frameCrit, opData.critRate);
+                    expectedCrit = 1 + opData.critDamage * expectation;
                   }
                 }
 
@@ -452,7 +511,7 @@ export function buildDamageTableRows(
                 const sub: DamageSubComponents = {
                   operatorBaseAttack: opData.operatorBaseAttack,
                   weaponBaseAttack: opData.weaponBaseAttack,
-                  atkBonusPct: opData.atkBonusPct,
+                  atkBonusPct: opData.atkBonusPct + (critDeltas?.[StatType.ATTACK_BONUS] ?? 0),
                   flatAtkBonuses: opData.flatAtkBonuses,
                   mainAttrType: opData.mainAttrType,
                   mainAttrValue: opData.mainAttrValue,
@@ -467,6 +526,9 @@ export function buildDamageTableRows(
                   staggerDmgBonus: subStaggerDmg,
                   critRate: opData.critRate,
                   critDamage: opData.critDamage,
+                  critMode: critMode ?? CritMode.EXPECTED,
+                  isCrit: frameCrit,
+                  critSnapshot,
                   baseResistance,
                   corrosionReduction: subCorrosionReduction,
                   ignoredResistance: subIgnoredRes,
@@ -476,6 +538,7 @@ export function buildDamageTableRows(
                   susceptibilitySources: statusQuery?.getSusceptibilitySources(absFrame, element) ?? [],
                   allSusceptibilitySources: statusQuery ? buildAllElementSources(absFrame, statusQuery, 'susceptibility') : {},
                   ampSources: statusQuery?.getAmpSources(absFrame) ?? [],
+                  allAmpSources: { [ElementType.ARTS]: statusQuery?.getAmpSources(absFrame) ?? [] },
                   weakenEffects: subWeakenEffects,
                   dmgReductionEffects: subDmgReductionEffects,
                   protectionEffects: subProtectionEffects,
@@ -486,9 +549,14 @@ export function buildDamageTableRows(
                   skillTypeDmgBonusStat: skillTypeBonusStat,
                 };
 
+                // Compute attack with crit-dependent ATK% adjustment
+                const critAtkDelta = critDeltas?.[StatType.ATTACK_BONUS] ?? 0;
+                const effectiveAttack = critAtkDelta > 0
+                  ? getTotalAttack(opData.operatorBaseAttack, opData.weaponBaseAttack, opData.atkBonusPct + critAtkDelta, opData.flatAtkBonuses)
+                  : opData.totalAttack;
                 const mainStatValue = frame.dealDamage?.mainStat === DamageScalingStatType.DEFENSE ? opData.totalDefense
                   : frame.dealDamage?.mainStat === DamageScalingStatType.HP ? opData.effectiveHp
-                  : opData.totalAttack;
+                  : effectiveAttack;
 
                 params = {
                   attack: mainStatValue,

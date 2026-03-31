@@ -1,7 +1,16 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { IS_DEV } from '../consts/devFlags';
-import { InteractionModeType } from '../consts/enums';
+import { CritMode, InteractionModeType } from '../consts/enums';
 import { t } from '../locales/locale';
+
+const CRIT_MODE_CYCLE: CritMode[] = [CritMode.EXPECTED, CritMode.NEVER, CritMode.ALWAYS, CritMode.RANDOM, CritMode.MANUAL];
+const CRIT_MODE_LABELS: Record<CritMode, string> = {
+  [CritMode.EXPECTED]: t('sheet.crit.expected'),
+  [CritMode.NEVER]: t('sheet.crit.never'),
+  [CritMode.ALWAYS]: t('sheet.crit.always'),
+  [CritMode.RANDOM]: t('sheet.crit.random'),
+  [CritMode.MANUAL]: t('sheet.crit.manual'),
+};
 
 interface AppBarProps {
   activeLoadoutName: string;
@@ -14,20 +23,22 @@ interface AppBarProps {
   onDevlog: () => void;
   onSettings: () => void;
   onKeys: () => void;
-  onCustomContent: () => void;
-  onExprEditor?: () => void;
   interactionMode?: InteractionModeType;
   onToggleInteractionMode?: () => void;
   lightMode?: boolean;
   onToggleTheme?: () => void;
+  onRandomizeCrit?: () => void;
+  critMode?: CritMode;
+  onCritModeChange?: (mode: CritMode) => void;
 }
 
 export default function AppBar({
   activeLoadoutName, onRenameLoadout,
   onClearLoadout, onClearAll,
-  onExport, onImport, onShare, onDevlog, onSettings, onKeys, onCustomContent, onExprEditor,
+  onExport, onImport, onShare, onDevlog, onSettings, onKeys,
   interactionMode, onToggleInteractionMode,
-  lightMode, onToggleTheme,
+  lightMode, onToggleTheme, onRandomizeCrit,
+  critMode = CritMode.EXPECTED, onCritModeChange,
 }: AppBarProps) {
   const [renaming, setRenaming] = useState(false);
   const [renameValue, setRenameValue] = useState('');
@@ -122,14 +133,6 @@ export default function AppBar({
       <button className="btn-devlog" onClick={onImport}>
         {t('app.btn.import')}
       </button>
-      <button className="btn-devlog" onClick={onCustomContent}>
-        {t('app.btn.custom')}
-      </button>
-      {IS_DEV && onExprEditor && (
-        <button className="btn-devlog" onClick={onExprEditor}>
-          {t('app.btn.expr')}
-        </button>
-      )}
       <button
         className={`btn-devlog${shareStatus === 'copied' ? ' btn-share--copied' : ''}`}
         onClick={handleShare}
@@ -138,6 +141,26 @@ export default function AppBar({
       >
         {shareStatus === 'copied' ? t('app.btn.share.copied') : shareStatus === 'error' ? t('app.btn.share.failed') : t('app.btn.share')}
       </button>
+      <button
+        className={`app-bar-crit-toggle app-bar-crit-toggle--${critMode.toLowerCase()}`}
+        onClick={() => {
+          const idx = CRIT_MODE_CYCLE.indexOf(critMode);
+          const next = CRIT_MODE_CYCLE[(idx + 1) % CRIT_MODE_CYCLE.length];
+          onCritModeChange?.(next);
+        }}
+        title={`Crit mode: ${CRIT_MODE_LABELS[critMode]}. Click to cycle.`}
+      >
+        {CRIT_MODE_LABELS[critMode]}
+      </button>
+      {onRandomizeCrit && critMode === CritMode.RANDOM && (
+        <button
+          className="btn-devlog"
+          onClick={onRandomizeCrit}
+          title="Roll crit for all damage frames based on each operator's crit rate"
+        >
+          Roll Crit
+        </button>
+      )}
       <div className="app-bar-right">
         <button
           className="btn-theme"

@@ -153,16 +153,16 @@ export class DerivedEventController implements ColumnHost {
    * No separate extendAll() call needed.
    */
   registerEvents(events: TimelineEvent[]) {
-    // Dedup: skip events already registered (prevents double-registration
-    // when React strict mode double-invokes pipeline useMemo with cached singletons)
-    const filtered = events.filter(ev => !this.registeredEvents.some(r => r.uid === ev.uid));
-    if (filtered.length === 0) return;
+    // Dedup by UID — prevents double-registration when React strict mode
+    // double-invokes pipeline useMemo with cached TriggerIndex singletons.
+    const deduped = events.filter(ev => !this.registeredEvents.some(r => r.uid === ev.uid));
+    if (deduped.length === 0) return;
 
     const startIdx = this.registeredEvents.length;
 
     // Pass 1: combo chaining, reaction segments, stop discovery
-    for (let i = 0; i < filtered.length; i++) {
-      let ev = filtered[i];
+    for (let i = 0; i < deduped.length; i++) {
+      let ev = deduped[i];
 
       // Combo chaining: truncate overlapping combo animations
       if (ev.columnId === NounType.COMBO_SKILL && getAnimationDuration(ev) > 0) {

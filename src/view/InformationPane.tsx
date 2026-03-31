@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { TimelineEvent, Operator, Enemy, SelectedFrame, ResourceConfig, Column } from '../consts/viewTypes';
+import { TimelineEvent, Operator, Enemy, SelectedFrame, ResourceConfig, Column, EventFrameMarker } from '../consts/viewTypes';
 import { OperatorLoadoutState } from './OperatorLoadoutHeader';
 import { EnemyStats } from '../controller/appStateController';
 import type { DamageTableRow } from '../controller/calculation/damageTableBuilder';
@@ -161,6 +161,8 @@ type InformationPaneProps = {
       mode: 'damage';
       damageRow: DamageTableRow;
       onClose: () => void;
+      frame?: EventFrameMarker;
+      onToggleCrit?: (eventUid: string, segIdx: number, frameIdx: number, value: boolean) => void;
     }
 );
 
@@ -281,7 +283,7 @@ export default function InformationPane(props: InformationPaneProps) {
           wasted={props.wasted}
         />
       ) : (
-        <DamageBreakdownPane row={props.damageRow} />
+        <DamageBreakdownPane row={props.damageRow} frame={props.frame} onToggleCrit={props.onToggleCrit} />
       )}
     </div>
   );

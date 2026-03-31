@@ -68,19 +68,18 @@ function castUltimate(app: AppResult, atSecond: number) {
 // ═════════════════════════════════════════════════════════════════════════════
 
 describe('Weapon Trigger Firing — Presence Event', () => {
-  it('WT1: Weapon trigger presence event exists at startFrame 0', () => {
+  it('WT1: No phantom presence event at startFrame 0 for weapon triggers', () => {
     const { result } = renderHook(() => useApp());
 
     equipWeapon(result.current);
 
+    // Weapon statuses should NOT create a permanent presence event —
+    // they only appear when their trigger condition fires.
     const presenceEvents = result.current.allProcessedEvents.filter(
       ev => ev.ownerId === SLOT_LAEVATAIN && ev.name === WEAPON_SKILL_ID && ev.startFrame === 0,
     );
 
-    expect(presenceEvents).toHaveLength(1);
-    const presence = presenceEvents[0];
-    expect(presence.startFrame).toBe(0);
-    expect(presence.id).toBe(WEAPON_SKILL_ID);
+    expect(presenceEvents).toHaveLength(0);
   });
 });
 

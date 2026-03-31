@@ -17,7 +17,6 @@ import { createCustomOperatorStatus, updateCustomOperatorStatus } from './contro
 import { createCustomOperatorTalent, updateCustomOperatorTalent } from './controller/custom/customOperatorTalentController';
 import { addSkillLink } from './controller/custom/customSkillLinkController';
 import { InteractionModeType, CombatSkillType, InfoLevel, InfoPaneMode, SidebarMode as SidebarModeEnum } from './consts/enums';
-import { VerbType } from './dsl/semantics';
 import { getAnimationDuration, eventDuration } from './consts/viewTypes';
 import type { SkillType } from './consts/viewTypes';
 import type { CustomWeapon } from './model/custom/customWeaponTypes';
@@ -43,7 +42,6 @@ const DevlogModal = lazy(() => import('./view/DevlogModal'));
 const SettingsModal = lazy(() => import('./view/SettingsModal'));
 const ExportModal = lazy(() => import('./view/ExportModal'));
 const KeyboardShortcutsModal = lazy(() => import('./view/KeyboardShortcutsModal'));
-const ExpressionEditorModal = lazy(() => import('./view/custom/ExpressionEditorModal'));
 const UnifiedCustomizer = lazy(() => import('./view/custom/UnifiedCustomizer'));
 
 const UI_STATE_KEY = 'zst-ui-state';
@@ -200,16 +198,14 @@ export default function App() {
         }}
         onDevlog={() => app.setDevlogOpen(true)}
         onKeys={() => app.setKeysOpen((p) => !p)}
-        onCustomContent={() => {
-          setWorkbenchOpen(true);
-          setSidebarMode(SidebarModeEnum.WORKBENCH);
-        }}
-        onExprEditor={() => app.setExprEditorOpen(true)}
         interactionMode={app.interactionMode}
         onToggleInteractionMode={() => app.setInteractionMode(m => m === InteractionModeType.STRICT ? InteractionModeType.FREEFORM : InteractionModeType.STRICT)}
         lightMode={app.lightMode}
         onToggleTheme={app.handleToggleTheme}
         onSettings={() => app.setSettingsOpen(true)}
+        onRandomizeCrit={app.handleRandomizeCrit}
+        critMode={app.critMode}
+        onCritModeChange={app.setCritMode}
       />
 
       <div ref={app.appBodyRef} className="app-body" style={{ '--tl-flex': `${app.splitPct} 0 0`, '--sheet-flex': `${100 - app.splitPct} 0 0` } as React.CSSProperties}>
@@ -291,6 +287,7 @@ export default function App() {
                     onFrameClick={app.handleFrameClick}
                     onRemoveFrame={app.handleRemoveFrame}
                     onRemoveFrames={app.handleRemoveFrames}
+                    onSetCritPins={app.handleSetCritPins}
                     onRemoveSegment={app.handleRemoveSegment}
                     onAddSegment={app.handleAddSegment}
                     onAddFrame={app.handleAddFrame}
@@ -525,6 +522,16 @@ export default function App() {
           <InformationPane
             mode="damage"
             damageRow={app.editingDamageRow}
+            frame={app.allProcessedEvents.find((e) => e.uid === app.editingDamageRow!.eventUid)?.segments?.[app.editingDamageRow!.segmentIndex]?.frames?.[app.editingDamageRow!.frameIndex]}
+            onToggleCrit={(uid, si, fi, value) => {
+              const ev = app.events.find((e) => e.uid === uid);
+              if (!ev) return;
+              const segs = [...(ev.segments ?? [])];
+              const seg = { ...segs[si], frames: [...(segs[si].frames ?? [])] };
+              seg.frames[fi] = { ...seg.frames[fi], isCrit: value };
+              segs[si] = seg;
+              app.handleUpdateEvent(uid, { segments: segs });
+            }}
             onClose={app.handleCloseDamagePane}
             triggerClose={app.infoPaneClosing}
             pinned={app.infoPanePinned}
@@ -542,15 +549,6 @@ export default function App() {
           onUpdate={app.handleUpdateSetting}
         />
         {app.keysOpen && <KeyboardShortcutsModal onClose={() => app.setKeysOpen(false)} />}
-        {app.exprEditorOpen && <ExpressionEditorModal
-          value={{ verb: VerbType.IS, value: 0 }}
-          onChange={(node) => {
-            // eslint-disable-next-line no-console
-            console.log('[ExprEditor] result:', JSON.stringify(node, null, 2));
-          }}
-          onClose={() => app.setExprEditorOpen(false)}
-        />}
-
         <ExportModal
           open={app.exportModalOpen}
           tree={app.loadoutTree}

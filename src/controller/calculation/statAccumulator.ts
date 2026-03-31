@@ -169,17 +169,18 @@ export class StatAccumulator {
 
     if (critMode === CritMode.ALWAYS) return true;
     if (critMode === CritMode.NEVER) return false;
-    if (critMode === CritMode.EXPECTED) return undefined;
 
-    // SIMULATION — roll against current crit rate
+    // Roll against current crit rate for RANDOM (and legacy EXPECTED pre-model)
     const critRate = Math.min(Math.max(this.getStat(slotId, StatType.CRITICAL_RATE), 0), 1);
     const result = Math.random() < critRate;
 
-    // Store for write-back
-    if (!this.resolvedCrits.has(overrideKey)) this.resolvedCrits.set(overrideKey, new Map());
-    const segMap = this.resolvedCrits.get(overrideKey)!;
-    if (!segMap.has(segIdx)) segMap.set(segIdx, new Map());
-    segMap.get(segIdx)!.set(frameIdx, result);
+    // Only store for write-back in RANDOM mode (persists rolls to overrides)
+    if (critMode === CritMode.RANDOM) {
+      if (!this.resolvedCrits.has(overrideKey)) this.resolvedCrits.set(overrideKey, new Map());
+      const segMap = this.resolvedCrits.get(overrideKey)!;
+      if (!segMap.has(segIdx)) segMap.set(segIdx, new Map());
+      segMap.get(segIdx)!.set(frameIdx, result);
+    }
 
     return result;
   }

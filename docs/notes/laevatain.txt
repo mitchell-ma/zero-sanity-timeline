@@ -1,5 +1,0 @@
-Normal battle skill's ticks have individual damage calculations
-- Tick1/Base: 140% has its damage calculated first
-- Tick2: 14%'s damage is added to the base
-- Tick3: 14%'s damage is added to Tick1/Tick2
-This means that if any previous ticks crit, the current tick adds on to it. This means we shouldn't calculate Tick3's damage by summing 140%+14%+14% and applying crit calculation since it's not everything-or-nothing crits. Crit expectation/no crit/always crit calculations remain the same; this only affects simulation calculations.

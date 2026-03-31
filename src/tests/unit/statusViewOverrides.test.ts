@@ -108,14 +108,14 @@ describe('computeStatusViewOverrides', () => {
       expect(label1).toBe(label2);
     });
 
-    it('still truncates overlapping events visually', () => {
+    it('does not truncate single-instance overlapping events (independent rendering)', () => {
       const events = [
         statusEvent('sh1', SCORCHING_HEART_ID, SCORCHING_HEART_ID, 'slot1', 0, 20 * FPS),
         statusEvent('sh2', SCORCHING_HEART_ID, SCORCHING_HEART_ID, 'slot1', 5 * FPS, 20 * FPS),
       ];
       const overrides = computeStatusViewOverrides(events, [col]);
 
-      expect(overrides.get('sh1')?.visualActivationDuration).toBe(5 * FPS);
+      expect(overrides.get('sh1')?.visualActivationDuration).toBeUndefined();
     });
   });
 

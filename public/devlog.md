@@ -12,6 +12,17 @@
 - SP insufficiency zones now display as red diagonal stripes, making it clearer when an operator can't afford a battle skill
 - Stagger timeline column spacing rebalanced for better proportions
 - Column header text is now centered
+- New crit analysis modes — choose between Never, Expected, Always, Random, or Manual to control how critical hits factor into damage calculations
+- Expected crit mode uses a probability model that accounts for crit-triggered feedback loops (e.g. weapons that gain crit rate from crit-triggered buffs) to compute realistic average damage
+- Random mode rolls crits stochastically per frame based on each operator's crit rate — re-roll anytime with the dice button
+- Manual mode lets you pin individual frames as crit or non-crit for precise "what if" scenarios
+- Crit mode selector added to the top bar with color-coded mode indicators
+- Damage breakdown now shows crit source probabilities and expected status uptimes when using Expected mode
+- Antal's EMP Test Site combo skill now triggers additional effects when the enemy has Focus (Empowered)
+- Lupine Scarlet's Wolven Blood status consume effects now correctly trigger lifecycle transitions
+- Status effects can now execute actions when they expire, enabling mechanics like buff-on-consume weapon effects
+- Permanent-duration statuses (like consumable buffs active from the start) now have their own filter group in column headers
+- Old planning documents cleaned up
 
 ## 2026-03-29
 - Introduced an override system for event segments — you can now resize, pin, or remove individual segments and frames without losing the original skill data, so your edits survive round-trips through shared URLs

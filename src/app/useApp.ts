@@ -17,7 +17,7 @@ import { ALL_ENEMIES, DEFAULT_ENEMY } from '../utils/enemies';
 import { TimelineEvent, VisibleSkills, ContextMenuState, SkillType, SelectedFrame, ResourceConfig, MiniTimeline, computeSegmentsSpan, eventEndFrame } from '../consts/viewTypes';
 import type { DamageTableRow } from '../controller/calculation/damageTableBuilder';
 import { getModelEnemy } from '../controller/calculation/enemyRegistry';
-import { processCombatSimulation, getLastCritResults } from '../controller/timeline/eventQueueController';
+import { processCombatSimulation, getLastCritResults, getLastStatAccumulator } from '../controller/timeline/eventQueueController';
 import { SlotTriggerWiring } from '../controller/timeline/eventQueueTypes';
 import { getComboTriggerClause } from '../controller/gameDataStore';
 import { buildColumns } from '../controller/timeline/columnBuilder';
@@ -79,7 +79,7 @@ import {
   getDefaultEnemyStats,
 } from '../controller/appStateController';
 import { resolveGainEfficiencies } from '../controller/timeline/ultimateEnergyController';
-import { StatType, InteractionModeType, InfoLevel, CritMode, EnhancementType, ThemeType, ColumnType, LoadoutNodeType } from '../consts/enums';
+import { StatType, DamageType, InteractionModeType, InfoLevel, CritMode, EnhancementType, ThemeType, ColumnType, LoadoutNodeType } from '../consts/enums';
 import { buildOverrideKey } from '../controller/overrideController';
 import type { MoveContext } from '../controller/combatStateController';
 import { applyEventOverrides } from '../controller/timeline/overrideApplicator';
@@ -219,7 +219,6 @@ export function useApp() {
   const [devlogOpen,       setDevlogOpen]       = useState(false);
   const [settingsOpen,     setSettingsOpen]     = useState(false);
   const [keysOpen,         setKeysOpen]         = useState(false);
-  const [exprEditorOpen,   setExprEditorOpen]   = useState(false);
   // ─── Global settings ─────────────────────────────────────────────────
   const [settings, setSettings] = useState<GlobalSettings>(initialSettings);
   useEffect(() => {
@@ -461,9 +460,9 @@ export function useApp() {
     [validEvents, loadoutProperties, slotWeapons, slotWirings, slotOperatorMap, slotGearSets, bossMaxHp, enemy.id, loadouts, combatLoadout, operators, resourceConfigs, critMode, overrides, enemyStats],
   );
 
-  // Write back crit results from SIMULATION mode (one-time per new event)
+  // Write back crit results from RANDOM mode (one-time per new event)
   useEffect(() => {
-    if (critMode !== CritMode.SIMULATION) return;
+    if (critMode !== CritMode.RANDOM) return;
     const crits = getLastCritResults();
     if (!crits || crits.size === 0) return;
     setCombatState((prev) => ctrl.persistCritResults(prev, crits));
@@ -490,8 +489,7 @@ export function useApp() {
     [processedEvents, staggerFrailtyEvents],
   );
 
-  // Apply user overrides to derived events + dedup by UID
-  // Apply user overrides to derived events
+  // Apply user property overrides to derived events
   const allProcessedEvents = useMemo(() => {
     const keys = Object.keys(overrides);
     if (keys.length === 0) return allProcessedEventsRaw;
@@ -504,6 +502,23 @@ export function useApp() {
 
   const processedEventsRef = useRef(allProcessedEvents);
   processedEventsRef.current = allProcessedEvents;
+
+  // Purge orphaned override keys (e.g. derived events that no longer exist after pipeline re-run)
+  useEffect(() => {
+    const keys = Object.keys(overrides);
+    if (keys.length === 0) return;
+    const liveKeys = new Set(allProcessedEvents.map(buildOverrideKey));
+    const staleKeys = keys.filter((k) => !liveKeys.has(k));
+    if (staleKeys.length === 0) return;
+    setCombatState((prev) => {
+      let next = prev.overrides;
+      for (const k of staleKeys) {
+        const { [k]: _, ...rest } = next;
+        next = rest;
+      }
+      return next === prev.overrides ? prev : { ...prev, overrides: next };
+    });
+  }, [allProcessedEvents, overrides, setCombatState]);
 
   // Track which event UIDs changed in the last pipeline run (for incremental view updates).
   // Computed by comparing current vs previous processedEvents by reference — immune to
@@ -1091,6 +1106,49 @@ export function useApp() {
     setSelectedFrames([]);
   }, [validEvents, ctrl, setCombatState]);
 
+  const handleSetCritPins = useCallback((frames: SelectedFrame[], value: boolean) => {
+    const all = processedEventsRef.current;
+    const targets = frames.map((f) => {
+      const target = all.find((ev) => ev.uid === f.eventUid);
+      return target ? { target, segmentIndex: f.segmentIndex, frameIndex: f.frameIndex } : null;
+    }).filter(Boolean) as { target: TimelineEvent; segmentIndex: number; frameIndex: number }[];
+    setCombatState((prev) => ctrl.setCritPins(prev, targets, value));
+  }, [ctrl, setCombatState]);
+
+  const handleRandomizeCrit = useCallback(() => {
+    const accumulator = getLastStatAccumulator();
+    if (!accumulator) throw new Error('[handleRandomizeCrit] StatAccumulator not available — pipeline must run before rolling crits');
+    const all = processedEventsRef.current;
+
+    const critTargets: { target: TimelineEvent; segmentIndex: number; frameIndex: number }[] = [];
+    const noCritTargets: { target: TimelineEvent; segmentIndex: number; frameIndex: number }[] = [];
+
+    for (const ev of all) {
+      const critRate = Math.min(Math.max(accumulator.getStat(ev.ownerId, StatType.CRITICAL_RATE), 0), 1);
+      for (let si = 0; si < ev.segments.length; si++) {
+        const seg = ev.segments[si];
+        if (!seg.frames) continue;
+        for (let fi = 0; fi < seg.frames.length; fi++) {
+          const frame = seg.frames[fi];
+          if (!frame.damageMultiplier && !frame.dealDamage) continue;
+          if (frame.damageType === DamageType.DAMAGE_OVER_TIME) continue;
+          const isCrit = Math.random() < critRate;
+          (isCrit ? critTargets : noCritTargets).push({ target: ev, segmentIndex: si, frameIndex: fi });
+          // Imperative DOM update for instant visual feedback
+          const el = document.querySelector(`[data-frame-id="${ev.uid}-${si}-${fi}"]`);
+          if (el) el.classList.toggle('event-frame-diamond--crit', isCrit);
+        }
+      }
+    }
+
+    setCombatState((prev) => {
+      let state = ctrl.clearAllCritPins(prev);
+      if (critTargets.length > 0) state = ctrl.setCritPins(state, critTargets, true);
+      if (noCritTargets.length > 0) state = ctrl.setCritPins(state, noCritTargets, false);
+      return state;
+    });
+  }, [ctrl, setCombatState]);
+
   const handleAddSegment = useCallback((eventUid: string, segmentLabel: string) => {
     const target = validEvents.find((ev) => ev.uid === eventUid);
     if (!target) return;
@@ -1647,7 +1705,7 @@ export function useApp() {
     scrollSynced, showRealTime, splitPct, interactionMode, lightMode, warningMessage, hiddenPane, hidePreview, showPreview, critMode, orientation,
     loadoutRowHeight, headerRowHeight, selectEventIds,
     settings, settingsOpen,
-    devlogOpen, keysOpen, exprEditorOpen, exportModalOpen, confirmClearLoadout, confirmClearAll, saveFlash,
+    devlogOpen, keysOpen, exportModalOpen, confirmClearLoadout, confirmClearAll, saveFlash,
 
     // Loadout tree
     loadoutTree, activeLoadoutId, sidebarCollapsed,
@@ -1660,7 +1718,7 @@ export function useApp() {
     handleAddEvent, handleUpdateEvent, handleMoveEvent, handleMoveEvents,
     handleRemoveEvent, handleRemoveEvents, handleDuplicateEvents,
     handleResetEvent, handleResetEvents, handleResetSegments, handleResetFrames,
-    handleRemoveFrame, handleRemoveFrames, handleAddFrame, handleAddSegment,
+    handleRemoveFrame, handleRemoveFrames, handleSetCritPins, handleRandomizeCrit, handleAddFrame, handleAddSegment,
     handleRemoveSegment, handleMoveFrame, handleResizeSegment, handleFrameClick,
 
     // Loadout/operator handlers
@@ -1685,7 +1743,7 @@ export function useApp() {
     // Setters for simple inline handlers
     setContextMenu, setSelectedFrames, setLoadoutRowHeight, setHeaderRowHeight,
     setHoverFrame, setInfoPanePinned, setInfoPaneVerbose, setWarningMessage,
-    setDevlogOpen, setSettingsOpen, setKeysOpen, setExprEditorOpen, setInteractionMode, setLightMode, setShowRealTime, setCritMode,
+    setDevlogOpen, setSettingsOpen, setKeysOpen, setInteractionMode, setLightMode, setShowRealTime, setCritMode,
     handleUpdateSetting,
     setSplitPct, setSelectEventIds, setExportModalOpen,
     setConfirmClearLoadout, setConfirmClearAll,

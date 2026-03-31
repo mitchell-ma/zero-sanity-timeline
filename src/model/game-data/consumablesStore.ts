@@ -175,7 +175,7 @@ export class ConsumableData {
         stacks: { limit: { verb: VerbType.IS, value: 1 }, interactionType: StackInteractionType.NONE },
         duration: this.duration,
         eventType: EventType.STATUS,
-        eventCategoryType: EventCategoryType.TALENT,
+        eventCategoryType: EventCategoryType.CONSUMABLE,
       },
       metadata: {},
     };
@@ -242,7 +242,7 @@ export class TacticalData {
         targetDeterminer: DeterminerType.THIS,
         stacks: { limit: { verb: VerbType.IS, value: 1 }, interactionType: StackInteractionType.NONE },
         eventType: EventType.STATUS,
-        eventCategoryType: EventCategoryType.TALENT,
+        eventCategoryType: EventCategoryType.TACTICAL,
       },
       metadata: {},
       usageLimit: this.resolvedUsageLimit,

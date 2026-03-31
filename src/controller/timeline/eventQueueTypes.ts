@@ -19,6 +19,8 @@ export const PRIORITY = {
   [QueueFrameType.ENGINE_TRIGGER]: 22,
   /** Combo trigger resolution — fires after engine triggers so absorption resolves first. */
   [QueueFrameType.COMBO_RESOLVE]: 25,
+  /** Status exit clause — fires after all frame processing at the exit frame. */
+  [QueueFrameType.STATUS_EXIT]: 30,
 } as const;
 
 export interface QueueFrame {
@@ -57,6 +59,12 @@ export interface QueueFrame {
   // ── COMBO_RESOLVE fields ──────────────────────────────────────────────
   /** The combo event to resolve trigger column for. */
   comboResolveEvent?: TimelineEvent;
+
+  // ── STATUS_EXIT fields ───────────────────────────────────────────────
+  /** onExitClause effects to execute at the status end frame. */
+  statusExitClauses?: { conditions: unknown[]; effects?: unknown[] }[];
+  /** Owner ID of the parent status (for resolveOwnerId context). */
+  statusExitOwnerId?: string;
 }
 
 /** Slot-level trigger wiring for the pipeline. */

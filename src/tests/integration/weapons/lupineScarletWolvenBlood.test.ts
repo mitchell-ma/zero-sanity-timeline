@@ -221,9 +221,15 @@ describe('C. Max stacks triggers Wolven Blood Max', () => {
     }
     act(() => { result.current.setInteractionMode(InteractionModeType.STRICT); });
 
-    // Controller: should have 16 stacks (capped)
-    const stacks = findWolvenBloodStacks(result.current);
-    expect(stacks.length).toBe(16);
+    // Controller: exactly 16 wolven blood events (stack limit enforced, no uncapped leaks)
+    const allWbEvents = result.current.allProcessedEvents.filter(
+      (ev) => ev.ownerId === SLOT_ROSSI && ev.name === WOLVEN_BLOOD_ID,
+    );
+    expect(allWbEvents.length).toBe(16);
+
+    // Controller: ALL stacks consumed by MAX onExitClause — no unconsumed stacks
+    const unconsumed = allWbEvents.filter(ev => ev.eventStatus !== EventStatusType.CONSUMED);
+    expect(unconsumed).toEqual([]);
 
     // Controller: Wolven Blood Max should exist
     const maxEvents = findWolvenBloodMaxEvents(result.current);
@@ -233,23 +239,15 @@ describe('C. Max stacks triggers Wolven Blood Max', () => {
     const maxDur = maxEvents[0].segments.reduce((sum, s) => sum + s.properties.duration, 0);
     expect(maxDur).toBe(20 * FPS);
 
-    // View: both Wolven Blood stacks and Wolven Blood Max visible in status column
-    const statusCol = findStatusColumn(result.current, SLOT_ROSSI);
-    if (statusCol) {
-      const viewModels = computeTimelinePresentation(result.current.allProcessedEvents, result.current.columns);
-      const vm = viewModels.get(statusCol.key);
-      if (vm) {
-        const wbInView = vm.events.filter(ev => ev.name === WOLVEN_BLOOD_ID);
-        expect(wbInView.length).toBe(16);
-        const wbMaxInView = vm.events.filter(ev => ev.name === WOLVEN_BLOOD_MAX_ID);
-        expect(wbMaxInView.length).toBeGreaterThanOrEqual(1);
-      }
+    // Controller: all stacks end exactly at the MAX event's end frame
+    const maxEndFrame = maxEvents[0].startFrame + maxDur;
+    for (const ev of allWbEvents) {
+      const evDur = ev.segments.reduce((sum, s) => sum + s.properties.duration, 0);
+      expect(ev.startFrame + evDur).toBe(maxEndFrame);
     }
   });
 
   it('C2: Wolven Blood Max onExitClause consumes all Wolven Blood stacks (config check)', () => {
-    // This is a config-level assertion — the engine onExitClause processing
-    // is not yet wired, so we verify the config is correct for when it is.
     const wbm = require('../../../model/game-data/weapons/lupine-scarlet/statuses/status-lupine-scarlet-wolven-blood-max.json');
     const exitEffects = wbm.onExitClause[0].effects;
     expect(exitEffects).toHaveLength(1);
@@ -257,7 +255,99 @@ describe('C. Max stacks triggers Wolven Blood Max', () => {
     expect(exitEffects[0].object).toBe('STATUS');
     expect(exitEffects[0].objectId).toBe(WOLVEN_BLOOD_ID);
     expect(exitEffects[0].with.stacks).toBe('MAX');
-    expect(exitEffects[0].toDeterminer).toBe('THIS');
-    expect(exitEffects[0].to).toBe('OPERATOR');
+    expect(exitEffects[0].fromDeterminer).toBe('THIS');
+    expect(exitEffects[0].from).toBe('OPERATOR');
+  });
+
+  it('C3: Wolven Blood Max has no stack label (single-instance RESET status)', () => {
+    const { result } = setupRossiWithLupineScarlet();
+
+    // Place enough BSes to reach 16 stacks
+    placeBattleSkill(result.current, 2);
+    const bsEvent = result.current.allProcessedEvents.find(
+      ev => ev.ownerId === SLOT_ROSSI && ev.columnId === NounType.BATTLE_SKILL,
+    );
+    expect(bsEvent).toBeDefined();
+
+    act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
+    const bsNeeded = Math.ceil(16 / DAMAGE_FRAMES_PER_BS);
+    for (let i = 1; i < bsNeeded; i++) {
+      act(() => {
+        result.current.handleAddEvent(
+          SLOT_ROSSI, NounType.BATTLE_SKILL, (2 + i * 3) * FPS,
+          { name: bsEvent!.name, segments: bsEvent!.segments },
+        );
+      });
+    }
+    act(() => { result.current.setInteractionMode(InteractionModeType.STRICT); });
+
+    // Verify Wolven Blood Max exists
+    const maxEvents = findWolvenBloodMaxEvents(result.current);
+    expect(maxEvents.length).toBeGreaterThanOrEqual(1);
+
+    // View: Wolven Blood Max should NOT have a roman numeral stack label
+    const statusCol = findStatusColumn(result.current, SLOT_ROSSI);
+    expect(statusCol).toBeDefined();
+    const viewModels = computeTimelinePresentation(result.current.allProcessedEvents, result.current.columns);
+    const vm = viewModels.get(statusCol!.key);
+    expect(vm).toBeDefined();
+
+    const maxInView = vm!.events.filter(ev => ev.name === WOLVEN_BLOOD_MAX_ID);
+    expect(maxInView.length).toBeGreaterThanOrEqual(1);
+
+    // Status override label should be just the base name — no "I", "II", etc.
+    for (const ev of maxInView) {
+      const override = vm!.statusOverrides.get(ev.uid);
+      if (override) {
+        // Label should not end with a roman numeral (I, II, III, IV, etc.)
+        expect(override.label).not.toMatch(/\s[IVX]+$/);
+      }
+    }
+  });
+
+  it('C4: No Wolven Blood stacks active after MAX expires (E2E duration check)', () => {
+    const { result } = setupRossiWithLupineScarlet();
+
+    // Place first BS normally
+    placeBattleSkill(result.current, 2);
+    const bsEvent = result.current.allProcessedEvents.find(
+      ev => ev.ownerId === SLOT_ROSSI && ev.columnId === NounType.BATTLE_SKILL,
+    );
+    expect(bsEvent).toBeDefined();
+
+    // Place enough BSes to trigger 16 stacks → MAX
+    act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
+    const bsNeeded = Math.ceil(16 / DAMAGE_FRAMES_PER_BS);
+    for (let i = 1; i < bsNeeded; i++) {
+      act(() => {
+        result.current.handleAddEvent(
+          SLOT_ROSSI, NounType.BATTLE_SKILL, (2 + i * 3) * FPS,
+          { name: bsEvent!.name, segments: bsEvent!.segments },
+        );
+      });
+    }
+    act(() => { result.current.setInteractionMode(InteractionModeType.STRICT); });
+
+    // Find the MAX event and compute its end frame
+    const maxEvents = findWolvenBloodMaxEvents(result.current);
+    expect(maxEvents.length).toBeGreaterThanOrEqual(1);
+    const maxEv = maxEvents[0];
+    const maxEndFrame = maxEv.startFrame + maxEv.segments.reduce((s, seg) => s + seg.properties.duration, 0);
+
+    // Check every Wolven Blood event in allProcessedEvents:
+    // None should be active at maxEndFrame + 1
+    const allWb = result.current.allProcessedEvents.filter(
+      ev => ev.ownerId === SLOT_ROSSI && ev.name === WOLVEN_BLOOD_ID,
+    );
+    expect(allWb.length).toBeGreaterThanOrEqual(16);
+
+    const checkFrame = maxEndFrame + 1;
+    const activeAtCheckFrame = allWb.filter(ev => {
+      const evEnd = ev.startFrame + ev.segments.reduce((s, seg) => s + seg.properties.duration, 0);
+      return ev.startFrame <= checkFrame && checkFrame < evEnd;
+    });
+
+    // No wolven blood stacks should be active after MAX expires
+    expect(activeAtCheckFrame).toEqual([]);
   });
 });

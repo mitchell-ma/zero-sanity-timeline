@@ -18,7 +18,7 @@ import type { SlotTriggerWiring } from './eventQueueTypes';
 import { SkillPointController } from '../slot/skillPointController';
 import { PRIORITY, QueueFrameType, FrameHookType } from './eventQueueTypes';
 import type { QueueFrame } from './eventQueueTypes';
-import { EventInterpretorController } from './eventInterpretorController';
+import { EventInterpretorController, clearStatusDefCache } from './eventInterpretorController';
 import { PriorityQueue } from './priorityQueue';
 import { TriggerIndex } from './triggerIndex';
 import { SKILL_COLUMN_ORDER } from '../../model/channels';
@@ -29,6 +29,7 @@ import { initHpTracker, getEnemyHpPercentage, precomputeDamageByFrame } from '..
 import type { HPController } from '../calculation/hpController';
 import { StatAccumulator } from '../calculation/statAccumulator';
 import type { OverrideStore } from '../../consts/overrideTypes';
+import { buildOverrideKey } from '../overrideController';
 import { CritMode, StatType } from '../../consts/enums';
 import type { OperatorLoadoutState } from '../../view/OperatorLoadoutHeader';
 import type { EnemyStats } from '../appStateController';
@@ -231,12 +232,15 @@ export function runEventQueue(
 
   // Use pre-built trigger index from CombatLoadoutController, or build ad-hoc as fallback
   const triggerIdx = triggerIndex ?? TriggerIndex.build(slotOperatorMap, loadoutProperties, slotWeapons, slotGearSets, registeredEvents);
+  _lastTriggerIndex = triggerIdx;
 
   // Register talent events (permanent presence) before queue processing.
-  // Dedup against already-registered events (talent events from a previous run or embed decode).
+  // Dedup against already-registered events AND already-registered in this run
+  // (strict mode double-invocation can re-register same TriggerIndex talent objects).
   const talentEvents = triggerIdx.getAllTalentEvents();
+  const allRegistered = state.getRegisteredEvents();
   const newTalents = talentEvents.filter(t =>
-    !registeredEvents.some(ev => ev.columnId === t.columnId && ev.ownerId === t.ownerId)
+    !allRegistered.some(ev => ev.columnId === t.columnId && ev.ownerId === t.ownerId)
   );
   if (newTalents.length > 0) state.registerEvents(newTalents);
 
@@ -256,7 +260,7 @@ export function runEventQueue(
   if (slotOperatorMap) {
     for (const slotId of Object.keys(slotOperatorMap)) {
       for (const talent of triggerIdx.getTalents(slotId)) {
-        if (!talent.def.clause?.length || !talent.talentEvent) continue;
+        if (!talent.def.clause?.length) continue;
         for (const clause of talent.def.clause as unknown as { conditions?: unknown[]; effects?: Record<string, unknown>[] }[]) {
           if (!clause.effects?.length) continue;
           for (const raw of clause.effects) {
@@ -300,6 +304,23 @@ export function runEventQueue(
   state.clampMultiSkillComboCooldowns();
 
   state.validateAll();
+
+  // Apply crit pin overrides to all derived event frames
+  if (overrides) {
+    for (const ev of queueEvents) {
+      const key = buildOverrideKey(ev);
+      const evOverride = overrides[key];
+      if (!evOverride?.segments) continue;
+      for (let si = 0; si < ev.segments.length; si++) {
+        const segOverride = evOverride.segments[si];
+        if (!segOverride?.frames || !ev.segments[si].frames) continue;
+        for (let fi = 0; fi < ev.segments[si].frames!.length; fi++) {
+          const pin = segOverride.frames[fi]?.isCritical;
+          if (pin != null) ev.segments[si].frames![fi].isCrit = pin;
+        }
+      }
+    }
+  }
 }
 
 // ── Pipeline entry point ─────────────────────────────────────────────────────
@@ -307,11 +328,17 @@ export function runEventQueue(
 // Lazily created DerivedEventController singleton — reset() clears all state.
 let _decSingleton: DerivedEventController | null = null;
 let _lastController: DerivedEventController | null = null;
+let _lastTriggerIndex: TriggerIndex | null = null;
 let _statAccumulator: StatAccumulator | null = null;
 
 /** Get the DerivedEventController from the most recent processCombatSimulation run. */
 export function getLastController(): DerivedEventController {
   return _lastController!;
+}
+
+/** Get the TriggerIndex from the most recent processCombatSimulation run. */
+export function getLastTriggerIndex(): TriggerIndex | null {
+  return _lastTriggerIndex;
 }
 
 /** Get the StatAccumulator from the most recent processCombatSimulation run. */
@@ -363,8 +390,9 @@ export function processCombatSimulation(
   /** Enemy stats for stat accumulator initialization. */
   enemyStats?: EnemyStats,
 ): TimelineEvent[] {
-  // ── 0. Reset object pools for this pipeline run ─────────────────────────
+  // ── 0. Reset object pools and caches for this pipeline run ──────────────
   resetPools();
+  clearStatusDefCache();
 
   // ── 0a. Initialize HP tracker for live HP% queries during queue processing
   if (hpController) {
@@ -490,10 +518,14 @@ function buildSegFingerprints(ev: TimelineEvent): number[] {
     // detects time-stop shifts within segments
     if (seg.frames) {
       let frameSum = 0;
-      for (let j = 0; j < seg.frames.length; j++) frameSum += seg.frames[j].derivedOffsetFrame ?? seg.frames[j].offsetFrame;
-      fp.push(frameSum);
+      let critBits = 0;
+      for (let j = 0; j < seg.frames.length; j++) {
+        frameSum += seg.frames[j].derivedOffsetFrame ?? seg.frames[j].offsetFrame;
+        if (seg.frames[j].isCrit) critBits |= (1 << (j & 31));
+      }
+      fp.push(frameSum, critBits);
     } else {
-      fp.push(0);
+      fp.push(0, 0);
     }
   }
   return fp;
@@ -519,18 +551,25 @@ function snapshotMatches(snap: EventSnapshot, ev: TimelineEvent): boolean {
   if (snap.comboTriggerColumnId !== ev.comboTriggerColumnId) return false;
   if (snap.reductionFloor !== ev.reductionFloor) return false;
   if (snap.comboChainFreezeEnd !== ev.comboChainFreezeEnd) return false;
-  // Per-segment fingerprint: detects duration, position, and frame offset changes
+  // Per-segment fingerprint: detects duration, position, frame offset, and crit changes
   const fp = snap.segFingerprints;
-  if (fp.length !== ev.segments.length * 3) return false;
+  const stride = 4;
+  if (fp.length !== ev.segments.length * stride) return false;
   for (let i = 0; i < ev.segments.length; i++) {
     const seg = ev.segments[i];
-    if (fp[i * 3] !== seg.properties.duration) return false;
-    if (fp[i * 3 + 1] !== (seg.absoluteStartFrame ?? 0)) return false;
+    const base = i * stride;
+    if (fp[base] !== seg.properties.duration) return false;
+    if (fp[base + 1] !== (seg.absoluteStartFrame ?? 0)) return false;
     let frameSum = 0;
+    let critBits = 0;
     if (seg.frames) {
-      for (let j = 0; j < seg.frames.length; j++) frameSum += seg.frames[j].derivedOffsetFrame ?? seg.frames[j].offsetFrame;
+      for (let j = 0; j < seg.frames.length; j++) {
+        frameSum += seg.frames[j].derivedOffsetFrame ?? seg.frames[j].offsetFrame;
+        if (seg.frames[j].isCrit) critBits |= (1 << (j & 31));
+      }
     }
-    if (fp[i * 3 + 2] !== frameSum) return false;
+    if (fp[base + 2] !== frameSum) return false;
+    if (fp[base + 3] !== critBits) return false;
   }
   if (snap.warnLen !== (ev.warnings?.length ?? 0)) return false;
   return true;

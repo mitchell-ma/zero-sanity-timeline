@@ -1046,19 +1046,19 @@ describe('CHANCE compound effects', () => {
     expect(eventDuration(result.produced[0])).toBe(600); // 10 * 0.5 * 120
   });
 
-  test('SIMULATION mode: respects Math.random', () => {
+  test('RANDOM mode: respects Math.random', () => {
     const effect = chanceEffect(0.5, [applyStatus('BUFF')]);
 
     // Mock Math.random to return 0.3 (< 0.5, passes)
     const origRandom = Math.random;
     Math.random = () => 0.3;
-    const passCtx = makeCtx({ critMode: CritMode.SIMULATION });
+    const passCtx = makeCtx({ critMode: CritMode.RANDOM });
     const passResult = executeEffect(effect, passCtx);
     expect(passResult.produced).toHaveLength(1);
 
     // Mock Math.random to return 0.7 (>= 0.5, fails)
     Math.random = () => 0.7;
-    const failCtx = makeCtx({ critMode: CritMode.SIMULATION });
+    const failCtx = makeCtx({ critMode: CritMode.RANDOM });
     const failResult = executeEffect(effect, failCtx);
     expect(failResult.produced).toHaveLength(0);
 
@@ -1098,14 +1098,14 @@ describe('CHANCE compound effects', () => {
       callCount++;
       return callCount === 1 ? 0.3 : 0.7;
     };
-    const ctx = makeCtx({ critMode: CritMode.SIMULATION });
+    const ctx = makeCtx({ critMode: CritMode.RANDOM });
     const result = executeEffect(outer, ctx);
     expect(result.produced).toHaveLength(0);
 
     // Both pass
     callCount = 0;
     Math.random = () => 0.1;
-    const ctx2 = makeCtx({ critMode: CritMode.SIMULATION });
+    const ctx2 = makeCtx({ critMode: CritMode.RANDOM });
     const result2 = executeEffect(outer, ctx2);
     expect(result2.produced).toHaveLength(1);
 

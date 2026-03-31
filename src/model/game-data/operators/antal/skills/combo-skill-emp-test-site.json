@@ -211,6 +211,39 @@
             "objectId": "FOCUS"
           }
         ]
+      },
+      {
+        "conditions": [
+          {
+            "subjectDeterminer": "ANY",
+            "subject": "OPERATOR",
+            "verb": "APPLY",
+            "object": "STATUS",
+            "objectId": "PHYSICAL"
+          },
+          {
+            "subject": "ENEMY",
+            "verb": "HAVE",
+            "object": "STATUS",
+            "objectId": "FOCUS_EMPOWERED"
+          }
+        ]
+      },
+      {
+        "conditions": [
+          {
+            "subjectDeterminer": "ANY",
+            "subject": "OPERATOR",
+            "verb": "APPLY",
+            "object": "INFLICTION"
+          },
+          {
+            "subject": "ENEMY",
+            "verb": "HAVE",
+            "object": "STATUS",
+            "objectId": "FOCUS_EMPOWERED"
+          }
+        ]
       }
     ],
     "segments": [

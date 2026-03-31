@@ -1,5 +1,6 @@
 import {
   CombatSkillType,
+  CritMode,
   ElementType,
   EnemyTierType,
   StatType,
@@ -455,6 +456,10 @@ export interface DamageSubComponents {
   // Critical sub-components
   critRate: number;
   critDamage: number;
+  critMode: CritMode;
+  isCrit?: boolean;
+  /** Crit expectation model snapshot for this frame (EXPECTED mode with crit-dependent statuses). */
+  critSnapshot?: import('../../controller/calculation/critExpectationModel').CritFrameSnapshot;
   // Resistance sub-components
   baseResistance: number;
   corrosionReduction: number;
@@ -470,6 +475,8 @@ export interface DamageSubComponents {
   allSusceptibilitySources: Partial<Record<ElementType, MultiplierSource[]>>;
   // Amp sub-components
   ampSources: MultiplierSource[];
+  /** Per-element Amp sources for full breakdown. */
+  allAmpSources: Partial<Record<ElementType, MultiplierSource[]>>;
   // Weaken sub-components
   weakenEffects: number[];
   // DMG Reduction sub-components
