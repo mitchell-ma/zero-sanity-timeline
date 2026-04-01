@@ -273,7 +273,28 @@ export function resolveEventLabel(ev: TimelineEvent): string {
 }
 
 /**
+ * Resolves the dominant element from an event's segments by frame count.
+ * Returns the element with the most damage frames, or undefined if no
+ * segment carries an element.
+ */
+function getDominantSegmentElement(ev: TimelineEvent): string | undefined {
+  const counts: Partial<Record<string, number>> = {};
+  for (const seg of ev.segments) {
+    const el = seg.properties.element;
+    if (!el) continue;
+    counts[el] = (counts[el] ?? 0) + (seg.frames?.length ?? 1);
+  }
+  let best: string | undefined;
+  let bestCount = 0;
+  for (const [el, count] of Object.entries(counts)) {
+    if (count! > bestCount) { best = el; bestCount = count!; }
+  }
+  return best;
+}
+
+/**
  * Resolves the color for an event based on column config and sequencing.
+ * Uses the dominant element across the event's segments when available.
  */
 export function resolveEventColor(
   ev: TimelineEvent,
@@ -281,10 +302,12 @@ export function resolveEventColor(
   slotElementColors: Record<string, string>,
 ): string {
   if (col.type !== 'mini-timeline') return col.color;
-  const skillElColor = col.skillElement
-    ? ELEMENT_COLORS[col.skillElement as ElementType]
-    : undefined;
-  return skillElColor ?? slotElementColors[col.ownerId] ?? DEFAULT_EVENT_COLOR;
+  // Prefer the dominant element from the event's own segments
+  const dominant = getDominantSegmentElement(ev);
+  const elColor = dominant
+    ? ELEMENT_COLORS[dominant as ElementType]
+    : col.skillElement ? ELEMENT_COLORS[col.skillElement as ElementType] : undefined;
+  return elColor ?? slotElementColors[col.ownerId] ?? DEFAULT_EVENT_COLOR;
 }
 
 /**

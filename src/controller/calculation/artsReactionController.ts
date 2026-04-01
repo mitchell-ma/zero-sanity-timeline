@@ -344,6 +344,7 @@ export function buildReactionDamageRows(
     params: null,
     statusParams: tick.params,
     damageType: tick.damageType,
+    element: REACTION_ELEMENT[reactionEvent.columnId],
   }));
 }
 

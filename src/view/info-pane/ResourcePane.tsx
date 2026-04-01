@@ -2,6 +2,7 @@ import React from 'react';
 import { ResourceConfig } from '../../consts/viewTypes';
 import { StatField } from './SharedFields';
 import { t } from '../../locales/locale';
+import { formatFlat } from '../../controller/info-pane/loadoutPaneController';
 
 interface ResourcePaneProps {
   label: string;
@@ -72,7 +73,7 @@ function ResourcePane({ label, color, config, onChange, onClose, wasted }: Resou
             }}>
               <span style={{ color: 'var(--text-secondary)' }}>{t('resourcePane.label.wasted')}</span>
               <span style={{ fontFamily: 'var(--font-mono)', color: '#cc6644' }}>
-                {wasted.toFixed(1)}
+                {formatFlat(wasted)}
               </span>
             </div>
           </div>

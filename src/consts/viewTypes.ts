@@ -158,6 +158,8 @@ export interface EventSegmentData {
     offset?: number;
     /** Display name for this segment (e.g. "1", "2", "Wind-up", "Cooldown"). */
     name?: string;
+    /** Element type of this segment (e.g. "PHYSICAL", "HEAT"). */
+    element?: string;
     /** Whether this segment's duration is game-time or real-time dependent. Defaults to GAME_TIME. */
     timeDependency?: TimeDependency;
     /** How this segment interacts with other timelines (e.g. TIME_STOP). */
@@ -225,6 +227,9 @@ export interface TimelineEvent {
   sourceOwnerId?: string;
   /** Skill name of the operator event that produced this derived event. */
   sourceSkillName?: string;
+  /** Source damage frame identity ("eventUid:si:fi") for intra-frame ordering.
+   *  Set when this status was created by a damage frame's clause effects or trigger chain. */
+  sourceFrameKey?: string;
   /** Outcome of a derived event: how it ended. */
   eventStatus?: EventStatusType;
   /** Operator slot ID responsible for this event status change. */

@@ -427,6 +427,7 @@
   "stat.CRITICAL_DAMAGE": "Crit DMG",
   "stat.ARTS_INTENSITY": "Arts Intensity",
   "stat.PHYSICAL_RESISTANCE": "Phys RES",
+  "stat.ARTS_RESISTANCE": "Arts RES",
   "stat.HEAT_RESISTANCE": "Heat RES",
   "stat.ELECTRIC_RESISTANCE": "Elec RES",
   "stat.CRYO_RESISTANCE": "Cryo RES",

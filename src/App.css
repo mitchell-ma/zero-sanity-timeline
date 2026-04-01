@@ -2708,6 +2708,7 @@
   border-right: 1px solid var(--border-dim);
   background: var(--bg-root);
   cursor: crosshair;
+  overflow: hidden;
 }
 
 .tl-sub-timeline:nth-child(even) {

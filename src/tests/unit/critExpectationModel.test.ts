@@ -353,10 +353,12 @@ describe('CritExpectationModel', () => {
     });
     model.addModel(new SharedTimerModel(config));
 
-    // 3 frames at 100% crit → guaranteed 3 stacks → expected ATK% = 3 * 0.10 = 0.30
+    // 4 steps at 100% crit; snapshot-before-advance means 4th snapshot sees 3 stacks
+    // → expected ATK% = 3 * 0.10 = 0.30
     model.step(0);
     model.step(FPS);
-    const snap = model.step(2 * FPS);
+    model.step(2 * FPS);
+    const snap = model.step(3 * FPS);
     expect(snap.expectedStatDeltas[StatType.ATTACK_BONUS]).toBeCloseTo(0.30);
   });
 
@@ -371,10 +373,12 @@ describe('CritExpectationModel', () => {
     });
     model.addModel(new SharedTimerModel(config));
 
-    // 3 frames at 100% crit → P(3 stacks) = 1.0 → expected crit bonus = 0.05
+    // 4 steps at 100% crit; snapshot-before-advance means 4th snapshot sees 3 stacks
+    // → P(3 stacks) = 1.0 → expected crit bonus = 0.05
     model.step(0);
     model.step(FPS);
-    const snap = model.step(2 * FPS);
+    model.step(2 * FPS);
+    const snap = model.step(3 * FPS);
     // E = base(1.0) + threshold(0.05) = 1.05, clamped to 1.0
     expect(snap.expectedCritRate).toBeCloseTo(1.0);
     expect(snap.expectedStatDeltas[StatType.CRITICAL_RATE]).toBeCloseTo(0.05);

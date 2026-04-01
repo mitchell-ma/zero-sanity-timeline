@@ -394,8 +394,14 @@ function EventBlock({
     const segHover = isSegmentHovered(segAbsStart, segAbsDur);
     const segLabelHover = segHover ? hoverLabelStyle(segAbsStart) : undefined;
 
-    // Alternate color for odd segments so adjacent segments are visually distinct
-    const segColor = !isSingleSegment && i % 2 === 1 ? alternateSegmentColor(color) : color;
+    // Damage segments use their own element color; animation/cooldown use the event color
+    const isNonDamageSegment = seg.properties.segmentTypes?.some(
+      t => t === SegmentType.ANIMATION || t === SegmentType.COOLDOWN || t === SegmentType.IMMEDIATE_COOLDOWN,
+    );
+    const segElementColor = !isNonDamageSegment && seg.properties.element
+      ? ELEMENT_COLORS[seg.properties.element as ElementType] : undefined;
+    const segColor = segElementColor
+      ?? (!isSingleSegment && i % 2 === 1 ? alternateSegmentColor(color) : color);
 
     // Derive styling from segment types
     const style = passive ? STYLE_PASSIVE : getSegmentStyle(seg, segColor);
@@ -461,7 +467,7 @@ function EventBlock({
       const isSelected = selectedFrames?.some((sf) => sf.segmentIndex === i && sf.frameIndex === fi) ?? false;
       const frameAbsReal = f.absoluteFrame ?? (startFrame + segOffset + f.offsetFrame);
       const isHoverHighlight = !isSelected && isFrameHovered(frameAbsReal);
-      const elColor = getFrameElementColor(f, skillElement);
+      const elColor = getFrameElementColor(f, seg.properties.element ?? skillElement);
       frameElements.push(
         <div
           key={`f-${i}-${fi}`}

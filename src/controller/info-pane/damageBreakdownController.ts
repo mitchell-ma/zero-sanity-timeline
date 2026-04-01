@@ -2,7 +2,8 @@ import type { DamageParams, DamageSubComponents, StatusDamageParams } from '../.
 import { getElementDamageBonusStat } from '../../model/calculation/damageFormulas';
 import type { DamageTableRow } from '../calculation/damageTableBuilder';
 import { getCritMultiplier, getExpectedCritMultiplier } from '../../model/calculation/damageFormulas';
-import { CritMode, ElementType, StatType } from '../../consts/enums';
+import { CritMode, ElementType, NumberFormatType, StatType } from '../../consts/enums';
+import type { StatusStatContribution } from '../calculation/critExpectationModel';
 
 /** Multiplier display entry for the breakdown table. */
 export interface MultiplierEntry {
@@ -18,13 +19,17 @@ export interface MultiplierEntry {
   subEntries?: MultiplierEntry[];
 }
 
+/** Module-level formatting state for the current breakdown build. Set by entry functions. */
+let _dp = 1;
+let _decimal = false;
+
 function formatValue(value: number, format: MultiplierEntry['format']): string {
   if (format === 'flat') {
     const rounded = Math.round(value);
     return rounded >= 1_000_000 ? rounded.toLocaleString() : String(rounded);
   }
-  if (format === 'percent') return `${(value * 100).toFixed(1)}%`;
-  return `x${value.toFixed(4)}`;
+  if (format === 'percent') return formatPercent(value);
+  return `x${value.toFixed(_dp)}`;
 }
 
 function classifyValue(value: number, format: MultiplierEntry['format']): string {
@@ -41,7 +46,8 @@ function classifyBonus(value: number): string {
 }
 
 function formatPercent(value: number): string {
-  return `${(value * 100).toFixed(1)}%`;
+  if (_decimal) return value.toFixed(_dp);
+  return `${(value * 100).toFixed(_dp)}%`;
 }
 
 function makeSubEntry(label: string, value: number, source: string, format: 'percent' | 'multiplier' | 'flat' = 'percent'): MultiplierEntry {
@@ -74,15 +80,57 @@ const ELEMENT_DMG_LABELS: Record<ElementType, string> = {
 };
 
 
+/** Build sub-branch entries for a runtime status contribution (stacks, per-stack, uptime). */
+function buildContributionSubEntries(c: StatusStatContribution, critMode: CritMode): MultiplierEntry[] {
+  const valueFormat: 'flat' | 'percent' = FLAT_STAT_TYPES.has(c.stat) ? 'flat' : 'percent';
+  const isExpected = critMode === CritMode.EXPECTED;
+
+  if (c.threshold) {
+    const entries = [
+      makeSubEntry(`Value (${c.threshold.atStacks} stacks)`, c.threshold.probability > 0 ? c.total / c.threshold.probability : 0, '', valueFormat),
+    ];
+    if (isExpected) entries.push(makeSubEntry('Uptime', c.threshold.probability, ''));
+    return entries;
+  }
+  const stacksEntry: MultiplierEntry = {
+    label: 'Stacks',
+    value: c.expectedStacks,
+    format: 'flat',
+    source: '',
+    formattedValue: c.expectedStacks.toFixed(_dp),
+    cssClass: '',
+  };
+  const entries = [stacksEntry, makeSubEntry('Per Stack', c.valuePerStack, '', valueFormat)];
+  return entries;
+}
+
+/** Stat types that are flat integer values (not percentages). */
+const FLAT_STAT_TYPES: ReadonlySet<StatType> = new Set([
+  StatType.STRENGTH, StatType.AGILITY, StatType.INTELLECT, StatType.WILL,
+  StatType.BASE_ATTACK, StatType.BASE_HP, StatType.BASE_DEFENSE, StatType.FLAT_HP,
+  StatType.ARTS_INTENSITY,
+]);
+
 function buildSourceSubEntries(
   sub: DamageSubComponents,
   statType: StatType,
 ): MultiplierEntry[] | undefined {
   const sources = sub.statSources?.[statType];
   if (!sources || sources.length === 0) return undefined;
+
+  const format: 'flat' | 'percent' = FLAT_STAT_TYPES.has(statType) ? 'flat' : 'percent';
+  const contributions = sub.statContributions;
+
   return sources
     .filter((s) => Math.abs(s.value) > 0.00001)
-    .map((s) => makeSubEntry(s.source, s.value, ''));
+    .map((s) => {
+      const entry = makeSubEntry(s.source, s.value, '', format);
+      // Use contributionIndex for exact matching (avoids label collisions)
+      if (s.contributionIndex != null && contributions?.[s.contributionIndex]) {
+        entry.subEntries = buildContributionSubEntries(contributions[s.contributionIndex], sub.critMode ?? CritMode.EXPECTED);
+      }
+      return entry;
+    });
 }
 
 /** Order: Physical, Arts, Heat, Cryo, Nature, Electric */
@@ -109,6 +157,8 @@ function makeElementEntry(sub: DamageSubComponents, el: ElementType): Multiplier
   const entry = makeSubEntry(label, value, isActive ? 'Active element bonus' : 'Does not apply to this hit');
   if (isActive) {
     entry.subEntries = buildSourceSubEntries(sub, getElementDamageBonusStat(el));
+  } else {
+    entry.cssClass = 'dmg-breakdown-neutral';
   }
   return entry;
 }
@@ -136,58 +186,65 @@ function buildPerElementSubEntries(
       total,
       isActive ? 'Active element' : 'Does not apply to this hit',
     );
-    if (sources.length > 0) {
+    if (isActive && sources.length > 0) {
       entry.subEntries = sources.map((s) => makeSubEntry(s.label, s.value, ''));
+    }
+    if (!isActive) {
+      entry.cssClass = 'dmg-breakdown-neutral';
     }
     return entry;
   });
 }
 
+function buildCritRateSourceEntries(sub: DamageSubComponents): MultiplierEntry[] {
+  const critRateEntry = makeSubEntry('Crit Rate', sub.critRate, 'Sum of all crit rate sources');
+  critRateEntry.subEntries = buildSourceSubEntries(sub, StatType.CRITICAL_RATE);
+  const critDmgEntry = makeSubEntry('Crit DMG', sub.critDamage, 'Sum of all crit damage sources');
+  critDmgEntry.subEntries = buildSourceSubEntries(sub, StatType.CRITICAL_DAMAGE);
+  return [critRateEntry, critDmgEntry];
+}
+
 function buildCritSubEntries(sub: DamageSubComponents): MultiplierEntry[] {
   const { critRate, critDamage, critMode, isCrit, critSnapshot } = sub;
 
-  // EXPECTED mode with crit model: show sources with probabilities
-  if (critSnapshot && critMode === CritMode.EXPECTED) {
+  // Crit model available: show sources with mode-appropriate values
+  if (critSnapshot) {
     const entries: MultiplierEntry[] = [];
-
-    // E(T) effective crit rate
-    entries.push(makeSubEntry(
-      'Expected Crit Rate',
+    // Expected Crit Rate with static source breakdown as sub-entries
+    const critRateEntry = makeSubEntry(
+      critMode === CritMode.EXPECTED ? 'Expected Crit Rate' : 'Crit Rate',
       critSnapshot.expectedCritRate,
-      `Effective E(T) at this frame`,
-    ));
+      critMode === CritMode.EXPECTED ? 'Effective E(T) at this frame' : '',
+    );
+    critRateEntry.subEntries = buildSourceSubEntries(sub, StatType.CRITICAL_RATE);
+    entries.push(critRateEntry);
 
     // Crit DMG
-    entries.push(makeSubEntry('Crit DMG', critDamage, 'Bonus damage on crit'));
+    const critDmgEntry = makeSubEntry('Crit DMG', critDamage, 'Bonus damage on crit');
+    critDmgEntry.subEntries = buildSourceSubEntries(sub, StatType.CRITICAL_DAMAGE);
+    entries.push(critDmgEntry);
 
-    // Sources breakdown
+    // Conditional crit sources (threshold-gated, e.g. MI Security at 5 stacks)
+    const isExpectedCrit = critMode === CritMode.EXPECTED;
     for (const source of critSnapshot.critSources) {
-      const entry = makeSubEntry(
-        source.label,
-        source.value,
-        source.probability != null
-          ? `${formatPercent(source.probability)} chance active`
-          : 'Unconditional',
-      );
+      if (source.probability == null) continue;
+      const expectedValue = source.value * source.probability;
+      const entry = makeSubEntry(source.label, expectedValue, '');
+      const stacksLabel = source.thresholdStacks != null
+        ? `Value (${source.thresholdStacks} stacks)`
+        : 'Value';
+      const subEntries = [makeSubEntry(stacksLabel, source.value, '')];
+      if (isExpectedCrit) subEntries.push(makeSubEntry('Uptime', source.probability, ''));
+      entry.subEntries = subEntries;
       entries.push(entry);
     }
-
-    // Status uptimes
-    critSnapshot.statusDistributions.forEach((dist, statusId) => {
-      const uptime = 1 - dist[0];
-      if (uptime > 1e-6) {
-        entries.push(makeSubEntry(
-          `${statusId} uptime`,
-          uptime,
-          `P(stacks > 0)`,
-        ));
-      }
-    });
 
     return entries;
   }
 
-  // Non-model modes: show all 4 static calculations
+  // Non-model modes: show crit rate/damage sources, then mode calculations
+  const sourceEntries = buildCritRateSourceEntries(sub);
+
   const neverValue = getCritMultiplier(false, critDamage);
   const alwaysValue = getCritMultiplier(true, critDamage);
   const expectedValue = getExpectedCritMultiplier(critRate, critDamage);
@@ -201,14 +258,18 @@ function buildCritSubEntries(sub: DamageSubComponents): MultiplierEntry[] {
     { label: 'Manual', mode: CritMode.MANUAL, value: simValue, source: isCrit ? 'Pinned crit' : 'Pinned no crit' },
   ];
 
-  return modes.map(({ label, mode, value, source }) => {
+  const modeEntries = modes.map(({ label, mode, value, source }) => {
     const entry = makeSubEntry(label, value, mode === critMode ? 'Active' : source, 'multiplier');
     if (mode === critMode) entry.cssClass = 'dmg-breakdown-active';
     return entry;
   });
+
+  return [...sourceEntries, ...modeEntries];
 }
 
-export function buildMultiplierEntries(params: DamageParams, foldedFrames?: DamageTableRow[]): MultiplierEntry[] {
+export function buildMultiplierEntries(params: DamageParams, foldedFrames?: DamageTableRow[], decimalPlaces?: number, numberFormat?: NumberFormatType): MultiplierEntry[] {
+  _dp = decimalPlaces ?? 1;
+  _decimal = numberFormat === NumberFormatType.DECIMAL;
   const sub = params.sub;
   const isFolded = foldedFrames && foldedFrames.length > 1;
 
@@ -260,18 +321,24 @@ export function buildMultiplierEntries(params: DamageParams, foldedFrames?: Dama
       format: 'multiplier',
       source: '1 + 0.005 x Main Attr + 0.002 x Secondary Attr',
       subEntries: sub ? [
-        makeSubEntry(
-          `${STAT_LABELS[sub.mainAttrType] ?? sub.mainAttrType} (Main)`,
-          sub.mainAttrValue,
-          `+${(sub.mainAttrValue * 0.005 * 100).toFixed(1)}% (x0.005)`,
-          'flat',
-        ),
-        makeSubEntry(
-          `${STAT_LABELS[sub.secondaryAttrType] ?? sub.secondaryAttrType} (Secondary)`,
-          sub.secondaryAttrValue,
-          `+${(sub.secondaryAttrValue * 0.002 * 100).toFixed(1)}% (x0.002)`,
-          'flat',
-        ),
+        {
+          ...makeSubEntry(
+            `${STAT_LABELS[sub.mainAttrType] ?? sub.mainAttrType} (Main)`,
+            sub.mainAttrValue,
+            `+${(sub.mainAttrValue * 0.005 * 100).toFixed(_dp)}% (x0.005)`,
+            'flat',
+          ),
+          subEntries: buildSourceSubEntries(sub, sub.mainAttrType),
+        },
+        {
+          ...makeSubEntry(
+            `${STAT_LABELS[sub.secondaryAttrType] ?? sub.secondaryAttrType} (Secondary)`,
+            sub.secondaryAttrValue,
+            `+${(sub.secondaryAttrValue * 0.002 * 100).toFixed(_dp)}% (x0.002)`,
+            'flat',
+          ),
+          subEntries: buildSourceSubEntries(sub, sub.secondaryAttrType),
+        },
       ] : undefined,
     },
     {
@@ -283,7 +350,7 @@ export function buildMultiplierEntries(params: DamageParams, foldedFrames?: Dama
         ...buildDamageBonusSubEntries(sub),
         { ...makeSubEntry('Skill Type DMG%', sub.skillTypeDmgBonus, 'Basic/Battle/Combo/Ultimate DMG bonus'), subEntries: sub.skillTypeDmgBonusStat ? buildSourceSubEntries(sub, sub.skillTypeDmgBonusStat) : undefined },
         { ...makeSubEntry('Skill DMG%', sub.skillDmgBonus, 'Generic skill damage bonus'), subEntries: buildSourceSubEntries(sub, StatType.SKILL_DAMAGE_BONUS) },
-        ...(sub.staggerDmgBonus > 0 ? [makeSubEntry('Stagger DMG%', sub.staggerDmgBonus, 'DMG Bonus vs. Staggered')] : []),
+        ...(sub.staggerDmgBonus > 0 ? [{ ...makeSubEntry('Stagger DMG%', sub.staggerDmgBonus, 'DMG Bonus vs. Staggered'), subEntries: buildSourceSubEntries(sub, StatType.STAGGER_DAMAGE_BONUS) }] : []),
       ] : undefined,
     },
     {
@@ -323,9 +390,11 @@ export function buildMultiplierEntries(params: DamageParams, foldedFrames?: Dama
       value: params.weakenMultiplier,
       format: 'multiplier',
       source: params.weakenMultiplier < 0.999 ? 'Enemy weakened' : 'No weaken debuff',
-      subEntries: sub && sub.weakenEffects.length > 0 ? sub.weakenEffects.map((eff, i) =>
-        makeSubEntry(`Weaken #${i + 1}`, eff, `Reduces DMG by ${formatPercent(eff)}`),
-      ) : undefined,
+      subEntries: sub && sub.weakenSources.length > 0
+        ? sub.weakenSources.map((s) => makeSubEntry(s.label, s.value, `Reduces DMG by ${formatPercent(s.value)}`))
+        : sub && sub.weakenEffects.length > 0
+          ? sub.weakenEffects.map((eff, i) => makeSubEntry(`Weaken #${i + 1}`, eff, `Reduces DMG by ${formatPercent(eff)}`))
+          : undefined,
     },
     {
       label: 'Susceptibility',
@@ -346,18 +415,22 @@ export function buildMultiplierEntries(params: DamageParams, foldedFrames?: Dama
       value: params.dmgReductionMultiplier,
       format: 'multiplier',
       source: params.dmgReductionMultiplier < 0.999 ? 'Enemy has DMG reduction' : 'No DMG reduction',
-      subEntries: sub && sub.dmgReductionEffects.length > 0 ? sub.dmgReductionEffects.map((eff, i) =>
-        makeSubEntry(`DMG Reduction #${i + 1}`, eff, `Reduces DMG by ${formatPercent(eff)}`),
-      ) : undefined,
+      subEntries: sub && sub.dmgReductionSources.length > 0
+        ? sub.dmgReductionSources.map((s) => makeSubEntry(s.label, s.value, `Reduces DMG by ${formatPercent(s.value)}`))
+        : sub && sub.dmgReductionEffects.length > 0
+          ? sub.dmgReductionEffects.map((eff, i) => makeSubEntry(`DMG Reduction #${i + 1}`, eff, `Reduces DMG by ${formatPercent(eff)}`))
+          : undefined,
     },
     {
       label: 'Protection',
       value: params.protectionMultiplier,
       format: 'multiplier',
       source: params.protectionMultiplier < 0.999 ? 'Enemy has protection' : 'No protection',
-      subEntries: sub && sub.protectionEffects.length > 0 ? sub.protectionEffects.map((eff, i) =>
-        makeSubEntry(`Protection #${i + 1}`, eff, `Reduces DMG by ${formatPercent(eff)}`),
-      ) : undefined,
+      subEntries: sub && sub.protectionSources.length > 0
+        ? sub.protectionSources.map((s) => makeSubEntry(s.label, s.value, `Reduces DMG by ${formatPercent(s.value)}`))
+        : sub && sub.protectionEffects.length > 0
+          ? sub.protectionEffects.map((eff, i) => makeSubEntry(`Protection #${i + 1}`, eff, `Reduces DMG by ${formatPercent(eff)}`))
+          : undefined,
     },
     {
       label: 'Defense',
@@ -397,7 +470,9 @@ export function buildMultiplierEntries(params: DamageParams, foldedFrames?: Dama
  * Build multiplier entries for status/reaction damage breakdown.
  * Uses the status damage formula (no crit, attribute bonus, damage bonus group, etc.)
  */
-export function buildStatusMultiplierEntries(params: StatusDamageParams): MultiplierEntry[] {
+export function buildStatusMultiplierEntries(params: StatusDamageParams, decimalPlaces?: number, numberFormat?: NumberFormatType): MultiplierEntry[] {
+  _dp = decimalPlaces ?? 1;
+  _decimal = numberFormat === NumberFormatType.DECIMAL;
   const raw: { label: string; value: number; format: MultiplierEntry['format']; source: string }[] = [
     {
       label: 'Attack',

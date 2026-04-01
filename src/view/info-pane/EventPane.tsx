@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { NounType } from '../../dsl/semantics';
-import { framesToSeconds, secondsToFrames, frameToDetailLabel, frameToTimeLabelPrecise, FPS, fmtN } from '../../utils/timeline';
+import { framesToSeconds, secondsToFrames, frameToDetailLabel, frameToTimeLabelPrecise, FPS } from '../../utils/timeline';
+import { formatPct, formatFlat } from '../../controller/info-pane/loadoutPaneController';
 import { parseMathInput } from '../../utils/mathExpr';
 import { getAllSkillLabels, getAllStatusLabels } from '../../controller/gameDataStore';
 import { CombatSkillType, ELEMENT_COLORS, ELEMENT_LABELS, ElementType, EventStatusType, InfoLevel, InteractionModeType, SegmentType, StatusType } from '../../consts/enums';
@@ -396,7 +397,7 @@ function EventPane({
                       type="text"
                       inputMode="numeric"
                       style={{ width: 60 }}
-                      value={fmtN(event.statusValue * 100)}
+                      value={formatFlat(event.statusValue * 100)}
                       onChange={(e) => {
                         const pct = parseFloat(e.target.value);
                         if (!isNaN(pct)) onUpdate(event.uid, { statusValue: pct / 100 });
@@ -474,7 +475,7 @@ function EventPane({
                       type="text"
                       inputMode="numeric"
                       style={{ width: 60 }}
-                      value={fmtN(event.statusValue * 100)}
+                      value={formatFlat(event.statusValue * 100)}
                       onChange={(e) => {
                         const pct = parseFloat(e.target.value);
                         if (!isNaN(pct)) onUpdate(event.uid, { statusValue: pct / 100 });
@@ -540,7 +541,7 @@ function EventPane({
                 const label = ELEMENT_LABELS[element as ElementType] ?? element;
                 return (
                   <div key={element}>
-                    <span style={{ color }}>{label}</span>: {fmtN(value * 100)}%
+                    <span style={{ color }}>{label}</span>: {formatPct(value)}
                   </div>
                 );
               })}
@@ -620,7 +621,7 @@ function EventPane({
           const spData = resolveSpReturn(event, slots, consumptionRecord);
           if (!spData) return null;
           const { summary: sp, spNotes } = spData;
-          const r = fmtN;
+          const r = formatFlat;
           const spInfo = (
             <div className="edit-info-text">
               {sp.totalSpReturn > 0 && <div>Return: {r(sp.totalSpReturn)}</div>}

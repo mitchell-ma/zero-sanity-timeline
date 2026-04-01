@@ -94,7 +94,7 @@ interface JsonOffset {
 
 interface JsonFrame {
   metadata?: { eventComponentType?: string; dataSources?: string[] };
-  properties?: { offset?: JsonOffset; dependencyTypes?: string[]; suppliedParameters?: Record<string, { id: string; name: string; lowerRange: number; upperRange: number; default: number }[]> };
+  properties?: { offset?: JsonOffset; element?: string; dependencyTypes?: string[]; suppliedParameters?: Record<string, { id: string; name: string; lowerRange: number; upperRange: number; default: number }[]> };
   clause?: JsonClausePredicate[];
   clauseType?: string;
   damageElement?: string;
@@ -102,7 +102,7 @@ interface JsonFrame {
 
 interface JsonSegment {
   metadata?: { eventComponentType?: string; dataSources?: string[] };
-  properties: { segmentTypes?: string[]; duration?: JsonDuration; name?: string; delayedHitLabel?: string; timeDependency?: string; timeInteractionType?: string; suppliedParameters?: Record<string, { id: string; name: string; lowerRange: number; upperRange: number; default: number }[]> };
+  properties: { segmentTypes?: string[]; duration?: JsonDuration; name?: string; element?: string; delayedHitLabel?: string; timeDependency?: string; timeInteractionType?: string; suppliedParameters?: Record<string, { id: string; name: string; lowerRange: number; upperRange: number; default: number }[]> };
   clause?: { conditions: JsonClauseCondition[]; effects: { verb: string; objectQualifier?: string; object: string; toDeterminer?: string; to?: string }[] }[];
   frames: JsonFrame[];
 }
@@ -224,7 +224,7 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
   constructor(frame: JsonFrame) {
     super();
     this._offsetSeconds = frame.properties!.offset!.value;
-    this._damageElement = frame.damageElement ?? null;
+    this._damageElement = frame.properties?.element ?? frame.damageElement ?? null;
     let duplicateSource = false;
     const frameTypes: EventFrameType[] = [];
 
@@ -363,6 +363,7 @@ export class DataDrivenSkillEventSequence extends SkillEventSequence {
   private readonly _durationNode: ValueNode | null;
   private readonly _frames: readonly DataDrivenSkillEventFrame[];
   readonly segmentName?: string;
+  readonly segmentElement?: string;
   readonly segmentTypes?: string[];
   readonly timeDependency?: string;
   readonly timeInteractionType?: string;
@@ -375,6 +376,7 @@ export class DataDrivenSkillEventSequence extends SkillEventSequence {
     this._durationSeconds = resolveDur(segment.properties!.duration!);
     this._frames = segment.frames.map(f => new DataDrivenSkillEventFrame(f));
     this.segmentName = segment.properties?.name;
+    this.segmentElement = segment.properties?.element;
     this.segmentTypes = segment.properties.segmentTypes;
     if (segment.properties?.delayedHitLabel) this.delayedHitLabel = segment.properties.delayedHitLabel;
     this.timeDependency = segment.properties?.timeDependency;

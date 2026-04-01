@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { TimelineEvent, Operator } from '../../consts/viewTypes';
 import { StatType, StatOwnerType, InfoLevel } from '../../consts/enums';
-import { fmtN } from '../../utils/timeline';
 import { OperatorLoadoutState } from '../OperatorLoadoutHeader';
 import { getStarredOperators, toggleStarredOperator } from '../../utils/starredOperators';
 import {
@@ -15,14 +14,16 @@ import { GearCategory } from '../../consts/enums';
 import { LoadoutProperties } from '../InformationPane';
 import { StatField } from './SharedFields';
 import {
-  formatStatValue,
+  formatStatValue, formatFlat, formatPct,
   resolveWeaponBreakdown,
+  buildLoadoutBreakdownEntries,
   resolveGearBreakdown,
   resolveGearBonusSummary,
   resolveTactical,
   resolveAggregatedStats,
 } from '../../controller/info-pane/loadoutPaneController';
 import type { StatSourceEntry } from '../../controller/calculation/loadoutAggregator';
+import { TopEntry } from './BreakdownTree';
 import { t } from '../../locales/locale';
 import {
   getNamedWeaponSkill,
@@ -52,6 +53,7 @@ const STAT_LABEL_KEYS: Record<StatType, string> = {
   [StatType.CRITICAL_DAMAGE]: 'stat.CRITICAL_DAMAGE',
   [StatType.ARTS_INTENSITY]: 'stat.ARTS_INTENSITY',
   [StatType.PHYSICAL_RESISTANCE]: 'stat.PHYSICAL_RESISTANCE',
+  [StatType.ARTS_RESISTANCE]: 'stat.ARTS_RESISTANCE',
   [StatType.HEAT_RESISTANCE]: 'stat.HEAT_RESISTANCE',
   [StatType.ELECTRIC_RESISTANCE]: 'stat.ELECTRIC_RESISTANCE',
   [StatType.CRYO_RESISTANCE]: 'stat.CRYO_RESISTANCE',
@@ -574,7 +576,7 @@ function LoadoutPane({ operatorId, slotId, operator, loadout, stats, onStatsChan
             ))}
             <div style={{ ...statRowStyle, marginTop: 4 }}>
               <span style={statLabelStyle}>ATK (Base)</span>
-              <span style={statValueStyle}>{fmtN(weaponData.baseAtk)}</span>
+              <span style={statValueStyle}>{formatFlat(weaponData.baseAtk)}</span>
             </div>
             {weaponData.statContributions.map((c) => (
               <div key={`stat-${c.skillIndex}`} style={statRowStyle}>
@@ -601,7 +603,7 @@ function LoadoutPane({ operatorId, slotId, operator, loadout, stats, onStatsChan
                 {eff.secondaryAttrBonus && (
                   <div style={statRowStyle}>
                     <span style={statLabelStyle}>Secondary Attr% ({getStatLabel(eff.secondaryAttrBonus.label as StatType)}%)</span>
-                    <span style={statValueStyle}>{fmtN(eff.secondaryAttrBonus.value * 100)}%</span>
+                    <span style={statValueStyle}>{formatPct(eff.secondaryAttrBonus.value)}</span>
                   </div>
                 )}
                 {eff.buffs.map((b, bi) => (
@@ -761,133 +763,53 @@ function AggregatedStatsSection({ operatorId, loadout, stats, color, verbose }: 
   if (!data) return null;
 
   const { agg } = data;
-  const hasHpBonus = agg.hpBonus !== 0 || agg.flatHpBonuses !== 0;
-  const hasDefSources = agg.statSources[StatType.BASE_DEFENSE] && agg.statSources[StatType.BASE_DEFENSE]!.length > 0;
-
   const showBreakdowns = verbose >= InfoLevel.DETAILED;
+  const mainEntries = buildLoadoutBreakdownEntries(agg);
 
   return (
     <>
       <div className="edit-panel-section">
         <span className="edit-section-label">Main Stats</span>
-        {/* ── HP ────────────────────────────────────────────────────────── */}
-        <div style={{ ...statRowStyle, fontWeight: 600, fontSize: 12 }}>
-          <span style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)', letterSpacing: '0.04em' }}>HP</span>
-          <span style={statValueStyle}>{fmtN(agg.effectiveHp)}</span>
+        <div className="dmg-tree">
+          {mainEntries.map((entry) => (
+            <TopEntry key={entry.label} entry={showBreakdowns ? entry : { ...entry, subEntries: undefined }} />
+          ))}
         </div>
-        {showBreakdowns && hasHpBonus && (
-          <div style={{ borderLeft: '2px solid var(--text-muted)', marginLeft: 4, paddingLeft: 8 }}>
-            <div style={statRowStyle}>
-              <span style={statLabelStyle}>Base HP</span>
-              <span style={statValueStyle}>{fmtN(agg.operatorBaseHp)}</span>
-            </div>
-            {agg.hpBonus !== 0 && (
-              <div style={statRowStyle}>
-                <span style={statLabelStyle}>HP Bonus</span>
-                <span style={statValueStyle}>{formatStatValue(StatType.HP_BONUS, agg.hpBonus)} → {fmtN(agg.hpPercentageBonus)}</span>
-              </div>
-            )}
-            {agg.flatHpBonuses !== 0 && (
-              <div style={statRowStyle}>
-                <span style={statLabelStyle}>Flat HP</span>
-                <span style={statValueStyle}>+{fmtN(agg.flatHpBonuses)}</span>
-              </div>
-            )}
-          </div>
-        )}
-        {/* ── ATK ───────────────────────────────────────────────────────── */}
-        <div style={{ ...statRowStyle, fontWeight: 600, fontSize: 12, marginTop: 4 }}>
-          <span style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)', letterSpacing: '0.04em' }}>ATK</span>
-          <span style={statValueStyle}>{fmtN(agg.effectiveAttack)}</span>
-        </div>
-        {showBreakdowns && (
-          <div style={{ borderLeft: '2px solid var(--text-muted)', marginLeft: 4, paddingLeft: 8 }}>
-            <div style={{ ...statRowStyle, fontWeight: 600, fontSize: 13, marginTop: 2 }}>
-              <span style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)', letterSpacing: '0.04em' }}>Base ATK</span>
-              <span style={statValueStyle}>{fmtN(agg.baseAttack)}</span>
-            </div>
-            <div style={{ borderLeft: '2px solid var(--text-muted)', marginLeft: 4, paddingLeft: 8 }}>
-              <div style={statRowStyle}>
-                <span style={statLabelStyle}>Operator</span>
-                <span style={statValueStyle}>{fmtN(agg.operatorBaseAttack)}</span>
-              </div>
-              <div style={statRowStyle}>
-                <span style={statLabelStyle}>Weapon</span>
-                <span style={statValueStyle}>{fmtN(agg.weaponBaseAttack)}</span>
-              </div>
-            </div>
-            <div style={{ ...statRowStyle, fontWeight: 600, fontSize: 13, marginTop: 2 }}>
-              <span style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)', letterSpacing: '0.04em' }}>ATK Bonus</span>
-              <span style={statValueStyle}>{fmtN(agg.atkPercentageBonus)}</span>
-            </div>
-            <div style={{ borderLeft: '2px solid var(--text-muted)', marginLeft: 4, paddingLeft: 8 }}>
-              <div style={statRowStyle}>
-                <span style={statLabelStyle}>Percentage Bonus</span>
-                <span style={statValueStyle}>{formatStatValue(StatType.ATTACK_BONUS, agg.atkBonus)} → {fmtN(agg.atkPercentageBonus)}</span>
-              </div>
-            </div>
-            <div style={{ ...statRowStyle, fontWeight: 600, fontSize: 13, marginTop: 2 }}>
-              <span style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)', letterSpacing: '0.04em' }}>Attribute Bonus</span>
-              <span style={statValueStyle}>{fmtN((agg.displayMainAttributeBonus + agg.displaySecondaryAttributeBonus) * 100)}%</span>
-            </div>
-            <div style={{ borderLeft: '2px solid var(--text-muted)', marginLeft: 4, paddingLeft: 8 }}>
-              <div style={statRowStyle}>
-                <span style={statLabelStyle}>ATK bonus from {getStatLabel(agg.mainAttributeType)}</span>
-                <span style={statValueStyle}>{fmtN(agg.displayMainAttributeBonus * 100)}%</span>
-              </div>
-              <div style={statRowStyle}>
-                <span style={statLabelStyle}>ATK bonus from {getStatLabel(agg.secondaryAttributeType)}</span>
-                <span style={statValueStyle}>{fmtN(agg.displaySecondaryAttributeBonus * 100)}%</span>
-              </div>
-            </div>
-          </div>
-        )}
-        {/* ── DEF ───────────────────────────────────────────────────────── */}
-        <div style={{ ...statRowStyle, fontWeight: 600, fontSize: 12, marginTop: 4 }}>
-          <span style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)', letterSpacing: '0.04em' }}>Defense</span>
-          <span style={{ ...statValueStyle, color: agg.totalDefense === 0 ? 'var(--text-muted)' : undefined }}>{agg.totalDefense > 0 ? agg.totalDefense.toFixed(0) : '—'}</span>
-        </div>
-        {showBreakdowns && hasDefSources && agg.totalDefense > 0 && (
-          <div style={{ borderLeft: '2px solid var(--text-muted)', marginLeft: 4, paddingLeft: 8 }}>
-            {agg.statSources[StatType.BASE_DEFENSE]!.map((s, i) => (
-              <div key={i} style={statRowStyle}>
-                <span style={statLabelStyle}>{s.source}</span>
-                <span style={statValueStyle}>{s.value.toFixed(0)}</span>
-              </div>
-            ))}
-          </div>
-        )}
       </div>
 
       <div className="edit-panel-section">
         <span className="edit-section-label">Attributes</span>
-        {data.attributes.map((a) => (
-          <StatWithSources
-            key={a.stat}
-            stat={a.stat}
-            value={a.isZero ? undefined : a.value}
-            sources={showBreakdowns ? agg.statSources[a.stat] : undefined}
-          />
-        ))}
+        <div className="dmg-tree">
+          {data.attributes.map((a) => (
+            <StatWithSources
+              key={a.stat}
+              stat={a.stat}
+              value={a.isZero ? undefined : a.value}
+              sources={showBreakdowns ? agg.statSources[a.stat] : undefined}
+            />
+          ))}
+        </div>
       </div>
 
       <div className="edit-panel-section">
         <span className="edit-section-label">Other Stats</span>
-        {data.otherStats.map((s) => (
-          <StatWithSources
-            key={s.stat}
-            stat={s.stat}
-            value={s.isZero ? undefined : s.value}
-            displayValue={s.isZero ? undefined : formatStatValue(s.stat, s.value)}
-            sources={showBreakdowns ? agg.statSources[s.stat] : undefined}
-          />
-        ))}
+        <div className="dmg-tree">
+          {data.otherStats.map((s) => (
+            <StatWithSources
+              key={s.stat}
+              stat={s.stat}
+              value={s.isZero ? undefined : s.value}
+              displayValue={s.isZero ? undefined : formatStatValue(s.stat, s.value)}
+              sources={showBreakdowns ? agg.statSources[s.stat] : undefined}
+            />
+          ))}
+        </div>
       </div>
     </>
   );
 }
 
-// ── Stat with permanent source breakdown (nested | lines like ATK) ───────────
+// ── Stat with permanent source breakdown (tree structure) ───────────────────
 
 function StatWithSources({ stat, value, displayValue, sources }: {
   stat: StatType;
@@ -896,30 +818,30 @@ function StatWithSources({ stat, value, displayValue, sources }: {
   sources?: StatSourceEntry[];
 }) {
   const isZero = value == null;
-  const hasSources = sources && sources.length > 0 && !isZero;
+  const subEntries = !isZero && sources && sources.length > 0
+    ? sources
+      .filter((s) => Math.abs(s.value) > 0.00001)
+      .map((s) => ({
+        label: s.source,
+        value: s.value,
+        format: 'flat' as const,
+        source: '',
+        formattedValue: formatStatValue(stat, s.value),
+        cssClass: '',
+      }))
+    : undefined;
 
-  return (
-    <>
-      <div style={{ ...statRowStyle, fontWeight: 600, fontSize: 12, marginTop: 4 }}>
-        <span style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)', letterSpacing: '0.04em' }}>
-          {getStatLabel(stat)}
-        </span>
-        <span style={{ ...statValueStyle, color: isZero ? 'var(--text-muted)' : undefined }}>
-          {isZero ? '—' : (displayValue ?? formatStatValue(stat, value!))}
-        </span>
-      </div>
-      {hasSources && (
-        <div style={{ borderLeft: '2px solid var(--text-muted)', marginLeft: 4, paddingLeft: 8 }}>
-          {sources!.map((s, i) => (
-            <div key={i} style={statRowStyle}>
-              <span style={statLabelStyle}>{s.source}</span>
-              <span style={statValueStyle}>{formatStatValue(stat, s.value)}</span>
-            </div>
-          ))}
-        </div>
-      )}
-    </>
-  );
+  const entry = {
+    label: getStatLabel(stat),
+    value: value ?? 0,
+    format: 'flat' as const,
+    source: '',
+    formattedValue: isZero ? '—' : (displayValue ?? formatStatValue(stat, value!)),
+    cssClass: isZero ? 'dmg-breakdown-neutral' : '',
+    subEntries,
+  };
+
+  return <TopEntry entry={entry} />;
 }
 
 // ── Detail card sub-components ──────────────────────────────────────────────

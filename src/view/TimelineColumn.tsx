@@ -7,7 +7,6 @@ import {
 } from '../utils/timeline';
 import { COMBO_WINDOW_COLUMN_ID } from '../model/channels';
 import { InteractionModeType, ColumnType, MicroColumnAssignment } from '../consts/enums';
-import { getCritModeGeneration } from '../controller/combatStateController';
 import {
   TimelineEvent,
   Column,
@@ -67,6 +66,7 @@ export interface TimelineColumnProps {
   draggingIds: Set<string> | null;
   selectedFramesByEvent: Map<string, import('../consts/viewTypes').SelectedFrame[]> | null;
   interactionMode: InteractionModeType | undefined;
+  critModeGeneration: number;
   // Handlers
   onSubTimelineContextMenu: (e: React.MouseEvent, col: Column) => void;
   onTimelineMouseDown: (e: React.MouseEvent) => void;
@@ -112,6 +112,7 @@ function TimelineColumn({
   draggingIds,
   selectedFramesByEvent,
   interactionMode,
+  critModeGeneration,
   onSubTimelineContextMenu,
   onTimelineMouseDown,
   onDragStart,
@@ -174,7 +175,7 @@ function TimelineColumn({
     onSegmentResizeDragStart: pres.passive ? undefined : onSegmentResizeDragStart,
     selectedFrames: pres.passive ? undefined : selectedFramesByEvent?.get(ev.uid),
     hoverFrame: draggingIds?.has(ev.uid) ? null : hoverFrame,
-    critModeGeneration: getCritModeGeneration(),
+    critModeGeneration,
   });
 
   return (
@@ -371,7 +372,8 @@ function timelineColumnEqual(prev: TimelineColumnProps, next: TimelineColumnProp
     && prev.hoverFrame === next.hoverFrame
     && prev.draggingIds === next.draggingIds
     && prev.selectedFramesByEvent === next.selectedFramesByEvent
-    && prev.interactionMode === next.interactionMode;
+    && prev.interactionMode === next.interactionMode
+    && prev.critModeGeneration === next.critModeGeneration;
   // Intentionally skip: allEvents, validationMaps, autoFinisherIds,
   // comboWindowEvents, slotElementColors, alwaysAvailableComboSlots
   // — these change identity every tick but only affect presentation

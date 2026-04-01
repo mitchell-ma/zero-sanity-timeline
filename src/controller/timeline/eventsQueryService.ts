@@ -146,8 +146,29 @@ export class EventsQueryService {
     return (endFrame - startFrame) - paused;
   }
 
+  // ── Intra-frame exclusion ────────────────────────────────────────────────
+  // The damage builder sets these before querying to exclude statuses that
+  // were created by the current or later damage frames at the same absFrame.
+  private _exclusionFrame = -1;
+  private _exclusionKeys: Set<string> | null = null;
+
+  setFrameExclusion(frame: number, keys: Set<string>) {
+    this._exclusionFrame = frame;
+    this._exclusionKeys = keys;
+  }
+
+  clearFrameExclusion() {
+    this._exclusionFrame = -1;
+    this._exclusionKeys = null;
+  }
+
   private isActive(ev: TimelineEvent, frame: number): boolean {
-    return ev.startFrame <= frame && frame < ev.startFrame + eventDuration(ev);
+    if (ev.startFrame > frame || frame >= ev.startFrame + eventDuration(ev)) return false;
+    if (this._exclusionKeys && ev.startFrame === this._exclusionFrame
+        && ev.sourceFrameKey && this._exclusionKeys.has(ev.sourceFrameKey)) {
+      return false;
+    }
+    return true;
   }
 
   private resolveSegmentSusceptibility(ev: TimelineEvent, frame: number, element: ElementType): number {
@@ -237,6 +258,17 @@ export class EventsQueryService {
     return effects;
   }
 
+  getWeakenSources(frame: number): MultiplierSource[] {
+    const sources: MultiplierSource[] = [];
+    for (const ev of this.weakenEvents) {
+      if (!this.isActive(ev, frame)) continue;
+      if (ev.statusValue != null && ev.statusValue > 0) {
+        sources.push({ label: ev.name ?? ev.columnId, value: ev.statusValue });
+      }
+    }
+    return sources;
+  }
+
   getDmgReductionEffects(frame: number): number[] {
     const effects: number[] = [];
     for (const ev of this.dmgReductionEvents) {
@@ -246,6 +278,17 @@ export class EventsQueryService {
     return effects;
   }
 
+  getDmgReductionSources(frame: number): MultiplierSource[] {
+    const sources: MultiplierSource[] = [];
+    for (const ev of this.dmgReductionEvents) {
+      if (!this.isActive(ev, frame)) continue;
+      if (ev.statusValue != null && ev.statusValue > 0) {
+        sources.push({ label: ev.name ?? ev.columnId, value: ev.statusValue });
+      }
+    }
+    return sources;
+  }
+
   getProtectionEffects(frame: number): number[] {
     const effects: number[] = [];
     for (const ev of this.protectionEvents) {
@@ -253,6 +296,17 @@ export class EventsQueryService {
       if (ev.statusValue != null && ev.statusValue > 0) effects.push(ev.statusValue);
     }
     return effects;
+  }
+
+  getProtectionSources(frame: number): MultiplierSource[] {
+    const sources: MultiplierSource[] = [];
+    for (const ev of this.protectionEvents) {
+      if (!this.isActive(ev, frame)) continue;
+      if (ev.statusValue != null && ev.statusValue > 0) {
+        sources.push({ label: ev.name ?? ev.columnId, value: ev.statusValue });
+      }
+    }
+    return sources;
   }
 
   /** Get events for a given column ID. */

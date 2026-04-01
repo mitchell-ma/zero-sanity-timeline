@@ -12,6 +12,8 @@ import {
 import { aggregateLoadoutStats, AggregatedStats } from '../calculation/loadoutAggregator';
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from '../calculation/valueResolver';
 import { fmtN } from '../../utils/timeline';
+import { NumberFormatType } from '../../consts/enums';
+import { loadSettings } from '../../consts/settings';
 import { getSkillMultiplier } from '../calculation/jsonMultiplierEngine';
 import { getSkillTypeMap, getRawSkillTypeMap, getComboTriggerInfo, getOperatorSkill } from '../gameDataStore';
 import { getUltimateEnergyCost, getUltimateEnergyCostForPotential } from '../operators/operatorRegistry';
@@ -20,6 +22,8 @@ import type { SkillType } from '../../consts/viewTypes';
 import { NounType, VerbType } from '../../dsl/semantics';
 import { resolveEffectStat } from '../../model/enums/stats';
 import type { Clause } from '../../dsl/semantics';
+import type { MultiplierEntry } from './damageBreakdownController';
+import type { StatSourceEntry } from '../calculation/loadoutAggregator';
 
 // ── Stat display helpers (shared with view) ─────────────────────────────────
 
@@ -27,7 +31,8 @@ const PERCENT_STATS = new Set<StatType>([
   StatType.ATTACK_BONUS, StatType.STRENGTH_BONUS, StatType.AGILITY_BONUS,
   StatType.INTELLECT_BONUS, StatType.WILL_BONUS,
   StatType.CRITICAL_RATE, StatType.CRITICAL_DAMAGE, StatType.ARTS_INTENSITY,
-  StatType.PHYSICAL_RESISTANCE, StatType.HEAT_RESISTANCE, StatType.ELECTRIC_RESISTANCE,
+  StatType.PHYSICAL_RESISTANCE, StatType.ARTS_RESISTANCE,
+  StatType.HEAT_RESISTANCE, StatType.ELECTRIC_RESISTANCE,
   StatType.CRYO_RESISTANCE, StatType.NATURE_RESISTANCE, StatType.AETHER_RESISTANCE,
   StatType.TREATMENT_BONUS, StatType.TREATMENT_RECEIVED_BONUS,
   StatType.COMBO_SKILL_COOLDOWN_REDUCTION, StatType.ULTIMATE_GAIN_EFFICIENCY,
@@ -41,9 +46,97 @@ const PERCENT_STATS = new Set<StatType>([
   StatType.HP_BONUS,
 ]);
 
+/** Format a stat value respecting user settings for decimal places and number format. */
 export function formatStatValue(stat: StatType, value: number): string {
-  if (PERCENT_STATS.has(stat)) return `${fmtN(value * 100)}%`;
+  const { decimalPlaces: dp, numberFormat: nf } = loadSettings();
+  if (PERCENT_STATS.has(stat)) {
+    return nf === NumberFormatType.DECIMAL ? value.toFixed(dp) : `${(value * 100).toFixed(dp)}%`;
+  }
   return fmtN(value);
+}
+
+/** Format a raw number (non-stat) as a percentage or decimal, respecting settings. */
+export function formatPct(value: number): string {
+  const { decimalPlaces: dp, numberFormat: nf } = loadSettings();
+  return nf === NumberFormatType.DECIMAL ? value.toFixed(dp) : `${(value * 100).toFixed(dp)}%`;
+}
+
+/** Format a flat number respecting decimal places setting. */
+export function formatFlat(value: number): string {
+  const { decimalPlaces: dp } = loadSettings();
+  return value.toFixed(dp).replace(/\.?0+$/, '');
+}
+
+// ── Stat labels ────────────────────────────────────────────────────────────
+
+const STAT_LABELS: Partial<Record<StatType, string>> = {
+  [StatType.STRENGTH]: 'STR',
+  [StatType.AGILITY]: 'AGI',
+  [StatType.INTELLECT]: 'INT',
+  [StatType.WILL]: 'WIL',
+};
+
+// ── Loadout tree builder ────────────────────────────────────────────────────
+
+function makeEntry(label: string, formattedValue: string, source = '', subEntries?: MultiplierEntry[]): MultiplierEntry {
+  return { label, value: 0, format: 'flat', source, formattedValue, cssClass: '', subEntries };
+}
+
+function buildSourceChildren(stat: StatType, sources?: StatSourceEntry[]): MultiplierEntry[] | undefined {
+  if (!sources || sources.length === 0) return undefined;
+  return sources
+    .filter((s) => Math.abs(s.value) > 0.00001)
+    .map((s) => makeEntry(s.source, formatStatValue(stat, s.value)));
+}
+
+/** Build MultiplierEntry tree from aggregated loadout stats for the breakdown tree display. */
+export function buildLoadoutBreakdownEntries(agg: AggregatedStats): MultiplierEntry[] {
+  const entries: MultiplierEntry[] = [];
+
+  // HP
+  const hpChildren: MultiplierEntry[] = [
+    makeEntry('Base HP', formatFlat(agg.operatorBaseHp)),
+  ];
+  if (agg.hpFromStrength > 0) {
+    hpChildren.push(makeEntry('STR', `+${formatFlat(agg.hpFromStrength)}`));
+  }
+  if (agg.hpBonus !== 0) {
+    hpChildren.push(makeEntry('HP%', `${formatStatValue(StatType.HP_BONUS, agg.hpBonus)} → ${formatFlat(agg.hpPercentageBonus)}`,
+      '', buildSourceChildren(StatType.HP_BONUS, agg.statSources[StatType.HP_BONUS])));
+  }
+  if (agg.flatHpBonuses !== 0) {
+    hpChildren.push(makeEntry('Flat HP', `+${formatFlat(agg.flatHpBonuses)}`));
+  }
+  entries.push(makeEntry('HP', formatFlat(agg.effectiveHp), '', hpChildren));
+
+  // ATK
+  const baseAtkChildren: MultiplierEntry[] = [
+    makeEntry('Operator', formatFlat(agg.operatorBaseAttack)),
+    makeEntry('Weapon', formatFlat(agg.weaponBaseAttack)),
+  ];
+  const atkBonusChildren = buildSourceChildren(StatType.ATTACK_BONUS, agg.statSources[StatType.ATTACK_BONUS]);
+  const mainAttrLabel = STAT_LABELS[agg.mainAttributeType] ?? String(agg.mainAttributeType);
+  const secAttrLabel = STAT_LABELS[agg.secondaryAttributeType] ?? String(agg.secondaryAttributeType);
+  const atkChildren: MultiplierEntry[] = [
+    makeEntry('Base ATK', formatFlat(agg.baseAttack), '', baseAtkChildren),
+    makeEntry('ATK%', `${formatStatValue(StatType.ATTACK_BONUS, agg.atkBonus)} → ${formatFlat(agg.atkPercentageBonus)}`, '', atkBonusChildren),
+    ...(agg.flatAttackBonuses > 0 ? [makeEntry('Flat ATK', `+${formatFlat(agg.flatAttackBonuses)}`)] : []),
+    makeEntry('Attribute Bonus', formatPct(agg.displayMainAttributeBonus + agg.displaySecondaryAttributeBonus), '', [
+      makeEntry(`${mainAttrLabel} (Main)`, formatPct(agg.displayMainAttributeBonus)),
+      makeEntry(`${secAttrLabel} (Secondary)`, formatPct(agg.displaySecondaryAttributeBonus)),
+    ]),
+  ];
+  entries.push(makeEntry('ATK', formatFlat(agg.effectiveAttack), '', atkChildren));
+
+  // DEF
+  if (agg.totalDefense > 0) {
+    const defSources = buildSourceChildren(StatType.BASE_DEFENSE, agg.statSources[StatType.BASE_DEFENSE]);
+    entries.push(makeEntry('Defense', formatFlat(agg.totalDefense), '', defSources));
+  } else {
+    entries.push(makeEntry('Defense', '—'));
+  }
+
+  return entries;
 }
 
 // ── Weapon Breakdown ────────────────────────────────────────────────────────
@@ -358,7 +451,8 @@ const STAT_OTHER: StatType[] = [
   StatType.COMBO_SKILL_DAMAGE_BONUS, StatType.ULTIMATE_DAMAGE_BONUS,
   StatType.SKILL_DAMAGE_BONUS,
   StatType.FINAL_DAMAGE_REDUCTION,
-  StatType.PHYSICAL_RESISTANCE, StatType.HEAT_RESISTANCE, StatType.ELECTRIC_RESISTANCE,
+  StatType.PHYSICAL_RESISTANCE, StatType.ARTS_RESISTANCE,
+  StatType.HEAT_RESISTANCE, StatType.ELECTRIC_RESISTANCE,
   StatType.CRYO_RESISTANCE, StatType.NATURE_RESISTANCE, StatType.AETHER_RESISTANCE,
 ];
 

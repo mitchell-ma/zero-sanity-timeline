@@ -423,7 +423,7 @@ describe('getFrameExpectation', () => {
   });
 
   it('EXPECTED returns snapshot expectedCritRate', () => {
-    const snap: CritFrameSnapshot = { expectedCritRate: 0.12, critSources: [], statusDistributions: new Map(), expectedStatDeltas: {}, fullStatValues: {} };
+    const snap: CritFrameSnapshot = { expectedCritRate: 0.12, critSources: [], statusDistributions: new Map(), expectedStatDeltas: {}, fullStatValues: {}, statContributions: [] };
     expect(getFrameExpectation(CritMode.EXPECTED, snap)).toBeCloseTo(0.12);
   });
 
@@ -442,6 +442,7 @@ describe('getStatusExpectation', () => {
     ]),
     expectedStatDeltas: {},
     fullStatValues: {},
+    statContributions: [],
   };
 
   it('NEVER returns 0', () => {

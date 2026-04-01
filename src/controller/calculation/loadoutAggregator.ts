@@ -26,12 +26,20 @@ import {
   getNamedSkillPassiveStats,
   getConsumable,
 } from '../gameDataStore';
+import {
+  getHpFromStrength,
+  getPhysicalResistanceFromAgility,
+  getArtsResistanceFromIntellect,
+  getTreatmentReceivedFromWill,
+} from '../../model/calculation/damageFormulas';
 
 // ── Result type ─────────────────────────────────────────────────────────
 
 export interface StatSourceEntry {
   source: string;
   value: number;
+  /** Index into DamageSubComponents.statContributions for runtime status sources. */
+  contributionIndex?: number;
 }
 
 export interface AggregatedStats {
@@ -65,13 +73,15 @@ export interface AggregatedStats {
   // ── HP breakdown ───────────────────────────────────────────────────────
   /** Operator base HP from level table. */
   operatorBaseHp: number;
+  /** HP contributed by STR attribute (5 × effective STR). */
+  hpFromStrength: number;
   /** Total HP% bonus from all sources. */
   hpBonus: number;
-  /** Flat HP gained from percentage bonus (baseHP * hpBonus). */
+  /** Flat HP gained from percentage bonus ((baseHP + hpFromStr) * hpBonus). */
   hpPercentageBonus: number;
   /** Flat HP bonuses from gear set effects, etc. */
   flatHpBonuses: number;
-  /** Effective HP: baseHP * (1 + HP%) + flatHP. */
+  /** Effective HP: (baseHP + hpFromStr) * (1 + HP%) + flatHP. */
   effectiveHp: number;
 
   // ── DEF breakdown ──────────────────────────────────────────────────────
@@ -335,10 +345,36 @@ export function aggregateLoadoutStats(
   const attributeBonus = 1 + mainAttributeBonus + secondaryAttributeBonus;
   const effectiveAttack = totalAttack * attributeBonus;
 
-  // HP breakdown: baseHP * (1 + HP%) + flatHP
+  // ── Attribute-derived stats ────────────────────────────────────────────────
+  // Compute effective values for all four attributes (applying % bonuses, floored).
+  const effectiveStr = Math.floor(stats[StatType.STRENGTH] * (1 + stats[StatType.STRENGTH_BONUS]));
+  const effectiveAgi = Math.floor(stats[StatType.AGILITY] * (1 + stats[StatType.AGILITY_BONUS]));
+  const effectiveInt = Math.floor(stats[StatType.INTELLECT] * (1 + stats[StatType.INTELLECT_BONUS]));
+  const effectiveWil = Math.floor(stats[StatType.WILL] * (1 + stats[StatType.WILL_BONUS]));
+
+  // STR → HP (added to base HP pool before HP% bonus)
+  const hpFromStr = getHpFromStrength(effectiveStr);
+
+  // AGI → Physical Resistance
+  const physResFromAgi = getPhysicalResistanceFromAgility(effectiveAgi);
+  stats[StatType.PHYSICAL_RESISTANCE] += physResFromAgi;
+  trackSource(StatType.PHYSICAL_RESISTANCE, 'AGI', physResFromAgi);
+
+  // INT → Arts Resistance
+  const artsResFromInt = getArtsResistanceFromIntellect(effectiveInt);
+  stats[StatType.ARTS_RESISTANCE] += artsResFromInt;
+  trackSource(StatType.ARTS_RESISTANCE, 'INT', artsResFromInt);
+
+  // WILL → Treatment Received Bonus
+  const treatReceivedFromWil = getTreatmentReceivedFromWill(effectiveWil);
+  stats[StatType.TREATMENT_RECEIVED_BONUS] += treatReceivedFromWil;
+  trackSource(StatType.TREATMENT_RECEIVED_BONUS, 'WIL', treatReceivedFromWil);
+
+  // HP breakdown: (baseHP + hpFromStr) * (1 + HP%) + flatHP
   const hpBonus = stats[StatType.HP_BONUS] ?? 0;
-  const hpPercentageBonus = operatorBaseHp * hpBonus;
-  const effectiveHp = operatorBaseHp * (1 + hpBonus) + flatHpBonuses;
+  const effectiveBaseHp = operatorBaseHp + hpFromStr;
+  const hpPercentageBonus = effectiveBaseHp * hpBonus;
+  const effectiveHp = effectiveBaseHp * (1 + hpBonus) + flatHpBonuses;
 
   // DEF: sum from all sources
   const totalDefense = stats[StatType.BASE_DEFENSE] ?? 0;
@@ -358,6 +394,7 @@ export function aggregateLoadoutStats(
     displayMainAttributeBonus,
     displaySecondaryAttributeBonus,
     operatorBaseHp,
+    hpFromStrength: hpFromStr,
     hpBonus,
     hpPercentageBonus,
     flatHpBonuses,

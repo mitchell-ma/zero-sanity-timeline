@@ -8,7 +8,7 @@
 import React, { useState, useCallback } from 'react';
 import { VerbType, NounType } from '../../dsl/semantics';
 import { translateCondition, translateEffectParts, translateNounPhrase } from '../../dsl/semanticsTranslation';
-import { fmtN } from '../../utils/timeline';
+import { formatFlat } from '../../controller/info-pane/loadoutPaneController';
 import ClauseEditor from './ClauseEditor';
 import type { JsonSkillData } from './OperatorEventEditor';
 import type { NormalizedEffectDef } from '../../controller/gameDataStore';
@@ -44,7 +44,7 @@ function formatDuration(dur: { value: unknown; unit: string } | undefined): stri
   const val = resolveLeaf(dur.value);
   if (val == null) return '';
   const unit = dur.unit === 'FRAME' ? 'f' : 's';
-  return `${fmtN(val)}${unit}`;
+  return `${formatFlat(val)}${unit}`;
 }
 
 export function formatWithValue(w: Record<string, unknown>): string {
@@ -726,7 +726,7 @@ export function TabbedSegmentView({ entry, critState }: { entry: { id: string; l
                       <span className="ops-frame-effect-verb">Duration</span>
                     </div>
                     <div className="ops-frame-effect-with"><div className="ops-frame-vary">
-                      <VaryTable columnLabels={range.map((_v, vi) => vi + 1)} rows={[{ label: unit, values: range.map(fmtN) }]} />
+                      <VaryTable columnLabels={range.map((_v, vi) => vi + 1)} rows={[{ label: unit, values: range.map(formatFlat) }]} />
                     </div></div>
                   </div>
                 );

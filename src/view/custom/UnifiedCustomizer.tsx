@@ -56,7 +56,7 @@ import { resolveComboTrigger, resolveUltimateEnergy } from '../../controller/inf
 import { buildSkillEntries } from './OperatorEventEditor';
 import EventBlock from '../EventBlock';
 import type { JsonSkillData } from './OperatorEventEditor';
-import { fmtN } from '../../utils/timeline';
+import { formatFlat, formatPct as formatPctSetting } from '../../controller/info-pane/loadoutPaneController';
 import {
   DataCardBody, ReadonlyField, ReadonlySection, ClauseTabs,
   normalizedDefToData, EffectDefExtraFields, TabbedSegmentView,
@@ -1303,7 +1303,7 @@ function SkillTimeline({ operatorId, skillType, color, selectedEntryId }: { oper
                 className="ops-skill-timeline-tick"
                 style={{ top: bufferPx + (totalSec > 0 ? (t / totalSec) * eventHeightPx : 0) }}
               >
-                {fmtN(t)}s
+                {formatFlat(t)}s
               </div>
             ))}
           </div>
@@ -1785,9 +1785,9 @@ function formatStatVal(key: string, val: number): string {
     'HP_BONUS', 'TREATMENT_BONUS', 'FINAL_DAMAGE_REDUCTION',
     'STAGGER_EFFICIENCY_BONUS', 'ULTIMATE_GAIN_EFFICIENCY', 'COMBO_SKILL_COOLDOWN_REDUCTION',
   ]);
-  if (PCT_STATS.has(key) || (val > 0 && val < 1)) return `${(val * 100).toFixed(1)}%`;
+  if (PCT_STATS.has(key) || (val > 0 && val < 1)) return formatPctSetting(val);
   if (Number.isInteger(val)) return String(val);
-  return val.toFixed(1);
+  return formatFlat(val);
 }
 
 const GEAR_CATEGORY_ORDER = [GearCategory.ARMOR, GearCategory.GLOVES, GearCategory.KIT];
@@ -1972,9 +1972,9 @@ function BuiltinSkillView({ id }: { id: string }) {
             const activationDur = totalDur - cooldownDur;
             return (
               <>
-                <Field label="Activation" value={`${activationDur}f (${(activationDur / 120).toFixed(2)}s)`} />
-                <Field label="Active" value={`${activeDur}f (${(activeDur / 120).toFixed(2)}s)`} />
-                <Field label="Cooldown" value={`${cooldownDur}f (${(cooldownDur / 120).toFixed(2)}s)`} />
+                <Field label="Activation" value={`${activationDur}f (${formatFlat(activationDur / 120)}s)`} />
+                <Field label="Active" value={`${activeDur}f (${formatFlat(activeDur / 120)}s)`} />
+                <Field label="Cooldown" value={`${cooldownDur}f (${formatFlat(cooldownDur / 120)}s)`} />
               </>
             );
           })()}

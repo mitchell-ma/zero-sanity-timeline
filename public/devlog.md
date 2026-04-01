@@ -6,6 +6,21 @@
 - Expected mode damage is now properly bounded between Never and Always for every frame
 - Consumable and tactical item buffs now appear as status columns on the timeline, so you can see when passive item effects are active on each operator
 - Fixed tactical item events using an incorrect internal column ID
+- Damage breakdown tree now shows full source drill-downs for every stat — expand ATK, HP, Crit Rate, Crit DMG, element bonuses, weaken, DMG reduction, and protection to see exactly which gear, weapon, talent, or status is contributing each value
+- Runtime status buff contributions (e.g. MI Security crit rate at 5 stacks) now appear in the breakdown with stack count, per-stack value, and uptime probability
+- Loadout stats panel redesigned as a collapsible tree matching the damage breakdown style — HP, ATK, and Defense each expand to show base values, percentage bonuses, attribute contributions, and individual sources
+- Attribute-derived stats now calculated and displayed: STR adds HP, AGI adds Physical RES, INT adds Arts RES, WIL adds Treatment Received bonus
+- Arts Resistance added as a tracked stat for operators
+- Damage sheet rows now highlight the corresponding frame on the timeline when you hover — and hovering a timeline frame highlights the matching sheet row
+- Clicking a damage sheet row selects that frame in the timeline and opens its detail panel
+- Skill segments now display in their element's color (e.g. Heat segments glow orange) instead of all using the operator's base color — animation and cooldown segments keep the operator color
+- Event block colors now use the dominant element across the event's segments for a more accurate visual representation
+- Timeline auto-expands when you scroll near the bottom, so you no longer need to manually extend it for longer rotations — minimum length reduced to 60 seconds for quicker setups
+- Damage breakdown pane now auto-refreshes when you switch crit modes, so the detail view always matches the current calculation
+- Number formatting settings (decimal places, percentage vs decimal display) now apply consistently across the loadout panel, damage sheet, and breakdown tree
+- Rossi's Ultimate Razorclaw Ambuscade updated with correct Heat element on all damage frames
+- Rossi's empowered Crimson Shadow battle skill data refined
+- Intra-frame ordering fix: when a damage frame triggers a status buff at the same moment, that buff no longer incorrectly boosts the frame that created it — statuses take effect starting from the next damage frame
 
 ## 2026-03-30
 - Shared URLs are now dramatically smaller — the encoding was rebuilt from scratch using binary compression, so complex 4-operator loadouts produce much shorter links

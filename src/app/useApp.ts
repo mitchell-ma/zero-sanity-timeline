@@ -285,16 +285,22 @@ export function useApp() {
     setLightMode((v) => !v);
   }, [setLightMode]);
 
-  const [critMode, setCritMode] = useState<import('../consts/enums').CritMode>(() => {
+  const [critMode, setCritModeRaw] = useState<import('../consts/enums').CritMode>(() => {
     try {
       const v = localStorage.getItem('zst-crit-mode');
-      if (v && Object.values(CritMode).includes(v as CritMode)) return v as CritMode;
+      if (v && Object.values(CritMode).includes(v as CritMode)) {
+        setRuntimeCritMode(v as CritMode);
+        return v as CritMode;
+      }
     } catch { /* ignore */ }
     return CritMode.NEVER;
   });
+  const setCritMode = useCallback((mode: CritMode) => {
+    setRuntimeCritMode(mode);
+    setCritModeRaw(mode);
+  }, []);
   useEffect(() => {
     try { localStorage.setItem('zst-crit-mode', critMode); } catch { /* ignore */ }
-    setRuntimeCritMode(critMode);
   }, [critMode]);
 
   // ─── Refs ────────────────────────────────────────────────────────────────
@@ -303,6 +309,7 @@ export function useApp() {
   const dmgScrollRef = useRef<HTMLDivElement | null>(null);
   const tlScrollRef = useRef<HTMLDivElement | null>(null);
   const scrollSourceRef = useRef<'tl' | 'dmg' | null>(null);
+  const [scrollFloorFrames, setScrollFloorFrames] = useState(0);
 
   // ─── Loadout tree state ──────────────────────────────────────────────────
   const { tree: loadoutTree, setTree: setLoadoutTree, undo: treeUndo, redo: treeRedo, resetTree: resetLoadoutTree } = useTreeHistory(initialLoadouts.tree);
@@ -544,17 +551,21 @@ export function useApp() {
     prevProcessedRef.current = processedEvents;
   }
 
-  // Dynamic timeline length: grow to furthest event + buffer, minimum 2 minutes
+  // Dynamic timeline length: grow to furthest event + buffer, minimum 60 seconds.
+  // Events that reach TOTAL_FRAMES (control, passives, permanent statuses) are
+  // excluded — they are unbounded scaffolding and should not inflate the scrollbar.
   const contentFrames = useMemo(() => {
-    const MIN_FRAMES = FPS * 120;
+    const MIN_FRAMES = FPS * 60;
     const BUFFER_FRAMES = FPS * 30;
     let maxEnd = 0;
     for (const ev of allProcessedEvents) {
       const dur = computeSegmentsSpan(ev.segments);
-      maxEnd = Math.max(maxEnd, ev.startFrame + dur);
+      const end = ev.startFrame + dur;
+      if (end >= TOTAL_FRAMES) continue;
+      maxEnd = Math.max(maxEnd, end);
     }
-    return Math.min(TOTAL_FRAMES, Math.max(MIN_FRAMES, maxEnd + BUFFER_FRAMES));
-  }, [allProcessedEvents]);
+    return Math.min(TOTAL_FRAMES, Math.max(MIN_FRAMES, scrollFloorFrames, maxEnd + BUFFER_FRAMES));
+  }, [allProcessedEvents, scrollFloorFrames]);
 
   const spKey = `${COMMON_OWNER_ID}-${COMMON_COLUMN_IDS.SKILL_POINTS}`;
   const staggerKey = `enemy-${COMMON_COLUMN_IDS.STAGGER}`;
@@ -771,6 +782,19 @@ export function useApp() {
   }, []);
 
   const handleTimelineScroll = useCallback((st: number) => {
+    // Expand timeline when user scrolls near the bottom
+    const EXPAND_BUFFER_PX = 200;
+    const EXPAND_INCREMENT = FPS * 30;
+    const el = tlScrollRef.current;
+    if (el) {
+      const remaining = el.scrollHeight - el.clientHeight - st;
+      if (remaining < EXPAND_BUFFER_PX) {
+        setScrollFloorFrames((prev) => {
+          const next = prev + EXPAND_INCREMENT;
+          return next >= TOTAL_FRAMES ? TOTAL_FRAMES : next;
+        });
+      }
+    }
     if (!scrollSynced || orientation === 'horizontal') return;
     if (scrollSourceRef.current === 'dmg') { scrollSourceRef.current = null; return; }
     scrollSourceRef.current = 'tl';
@@ -1682,6 +1706,13 @@ export function useApp() {
     setInfoPaneClosing(false);
     setInfoPanePinned(false);
   }, []);
+
+  // Refresh the damage breakdown pane when damageRows are recomputed (e.g. crit mode change)
+  useEffect(() => {
+    if (!editingDamageRow) return;
+    const updated = damageRows.find((r) => r.key === editingDamageRow.key);
+    if (updated && updated !== editingDamageRow) setEditingDamageRow(updated);
+  }, [damageRows, editingDamageRow]);
 
   const handleToggleScrollSync = useCallback(() => {
     setScrollSynced((p) => {

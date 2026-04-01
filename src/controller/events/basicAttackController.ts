@@ -99,11 +99,12 @@ export class SkillSegmentBuilder {
       // Drop frames beyond the segment duration — they belong in a separate segment in the JSON.
       const inBound = frames.filter(f => f.offsetFrame <= durationFrames);
 
-      const seqRecord = seq as SkillEventSequence & { segmentTypes?: string[]; timeDependency?: string; clause?: EventSegmentData['clause'] };
+      const seqRecord = seq as SkillEventSequence & { segmentElement?: string; segmentTypes?: string[]; timeDependency?: string; clause?: EventSegmentData['clause'] };
       const segData: EventSegmentData = {
         properties: {
           duration: durationFrames,
           name: label,
+          ...(seqRecord.segmentElement ? { element: seqRecord.segmentElement } : {}),
           ...(seqRecord.timeDependency ? { timeDependency: seqRecord.timeDependency as TimeDependency } : {}),
           ...(seqRecord.segmentTypes ? { segmentTypes: seqRecord.segmentTypes as SegmentType[] } : {}),
         },

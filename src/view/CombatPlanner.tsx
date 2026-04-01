@@ -22,6 +22,7 @@ import {
   TIMELINE_TOP_PAD,
 } from '../utils/timeline';
 import { OPERATOR_COLUMNS, COMBO_WINDOW_COLUMN_ID, ENEMY_ACTION_COLUMN_ID } from '../model/channels';
+import { formatFlat } from '../controller/info-pane/loadoutPaneController';
 import { COMMON_COLUMN_IDS } from '../controller/slot/commonSlotController';
 import { TimelineSourceType, InteractionModeType, CombatSkillType, EventCategoryType, ColumnType, DamageType } from '../consts/enums';
 import {
@@ -51,6 +52,7 @@ import {
 } from '../controller/timeline/contextMenuController';
 import { useTouchHandlers } from '../utils/useTouchHandlers';
 import TimelineColumn from './TimelineColumn';
+import { getCritModeGeneration } from '../controller/combatStateController';
 import { throttleByRAF } from '../utils/throttle';
 import type { ResourcePoint } from '../controller/timeline/resourceTimeline';
 import { getAxisMap, type Orientation } from '../utils/axisMap';
@@ -2286,6 +2288,7 @@ export default function CombatPlanner({
                 draggingIds={draggingIds}
                 selectedFramesByEvent={selectedFramesByEvent}
                 interactionMode={interactionMode}
+                critModeGeneration={getCritModeGeneration()}
                 onSubTimelineContextMenu={handleSubTimelineContextMenu}
                 onTimelineMouseDown={handleTimelineMouseDown}
                 onDragStart={handleEventDragStart}
@@ -2423,7 +2426,7 @@ export default function CombatPlanner({
                         className="hover-line-resource-dot hover-line-resource-dot--horizontal"
                         style={{ top: yInLine, borderColor: dotColor, boxShadow: `0 0 6px ${dotColor}55` }}
                       >
-                        {value.toFixed(1)}
+                        {formatFlat(value)}
                       </div>
                     );
                   }
@@ -2437,7 +2440,7 @@ export default function CombatPlanner({
                       className="hover-line-resource-dot"
                       style={{ left: xInLine, borderColor: dotColor, boxShadow: `0 0 6px ${dotColor}55` }}
                     >
-                      {value.toFixed(1)}
+                      {formatFlat(value)}
                     </div>
                   );
                 }

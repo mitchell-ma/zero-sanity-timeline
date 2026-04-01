@@ -265,6 +265,9 @@ export interface InterpretContext {
   parentStatusOwnerId?: string;
   /** UID of the source event — passed to column add() so derived events can be matched back to their raw event. */
   sourceEventUid?: string;
+  /** Source damage frame key ("eventUid:si:fi") for intra-frame ordering.
+   *  Propagated to status events so the damage builder can exclude same-frame provenance. */
+  sourceFrameKey?: string;
 }
 
 // ══════════════════════════════════════════════════════════════════════════
@@ -608,6 +611,9 @@ export class EventInterpretorController {
           eventProps.segments = statusObj.segments;
         }
       }
+
+      // Intra-frame ordering: stamp status with the damage frame that created it
+      if (ctx.sourceFrameKey) eventProps.sourceFrameKey = ctx.sourceFrameKey;
 
       // Susceptibility status: extract inline value + qualifier into event.susceptibility
       // Matches both base (SUSCEPTIBILITY + qualifier) and qualified (PHYSICAL_SUSCEPTIBILITY) objectIds
@@ -1361,6 +1367,10 @@ export class EventInterpretorController {
         potential: pot,
         parentEventEndFrame: parentEventEnd,
         parentSegmentEndFrame: parentSegEnd,
+        // Stamp damage frames for intra-frame ordering — status events created by
+        // this frame carry the key so the damage builder can exclude them.
+        sourceFrameKey: (frame.damageMultiplier || frame.dealDamage)
+          ? `${event.uid}:${si}:${fi}` : undefined,
       };
       // Resolve supplied parameters: user-set values on event, or defaults from frame/event definitions
       const resolvedParams: Record<string, number> = {};
@@ -1459,6 +1469,14 @@ export class EventInterpretorController {
           this.checkReactiveTriggers(VerbType.PERFORM, performObject, absFrame, event.ownerId, event.id, undefined, newEntries);
         }
       }
+    }
+
+    // Propagate source frame key to all outgoing trigger entries so trigger-chain
+    // statuses inherit the originating damage frame's identity.
+    const sourceFrameKey = (frame.damageMultiplier || frame.dealDamage)
+      ? `${event.uid}:${si}:${fi}` : undefined;
+    if (sourceFrameKey) {
+      for (const ne of newEntries) ne.sourceFrameKey = sourceFrameKey;
     }
 
     return newEntries;
@@ -2017,6 +2035,7 @@ export class EventInterpretorController {
       parentStatusOwnerId,
       parentEventEndFrame,
       parentSegmentEndFrame,
+      sourceFrameKey: entry.sourceFrameKey,
     };
 
     const cascadeFrames = this._engineTriggerOut;
@@ -2031,7 +2050,10 @@ export class EventInterpretorController {
       if (applied) {
         const before = cascadeFrames.length;
         this.reactiveTriggersForEffect(effect, entry.frame, ctx.operatorSlotId, trigger.sourceSkillName, cascadeFrames);
-        for (let j = before; j < cascadeFrames.length; j++) cascadeFrames[j].cascadeDepth = depth + 1;
+        for (let j = before; j < cascadeFrames.length; j++) {
+          cascadeFrames[j].cascadeDepth = depth + 1;
+          cascadeFrames[j].sourceFrameKey = entry.sourceFrameKey;
+        }
       }
     }
 

@@ -399,6 +399,7 @@ export default function App() {
                     headerRowHeight={app.headerRowHeight}
                     selectedFrames={app.selectedFrames}
                     hoverFrameRef={app.hoverFrameRef}
+                    onHoverFrame={app.setHoverFrame}
                     onScrollRef={app.handleDmgScrollRef}
                     onScroll={app.handleSheetScroll}
                     onZoom={app.handleZoom}
@@ -407,6 +408,7 @@ export default function App() {
                     contentFrames={app.contentFrames}
                     onDamageClick={app.handleDamageClick}
                     onDamageRows={app.setDamageRows}
+                    onSelectFrame={(sf) => app.setSelectedFrames([sf])}
                     critMode={app.critMode}
                     onCritModeChange={app.setCritMode}
                     overrides={app.overrides}

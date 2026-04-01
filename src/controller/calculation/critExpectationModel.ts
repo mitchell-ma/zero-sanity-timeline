@@ -36,6 +36,26 @@ export interface CritSource {
   value: number;
   /** P(this source is active). Omitted for unconditional sources (base crit). */
   probability?: number;
+  /** For threshold sources: the required stack count. */
+  thresholdStacks?: number;
+}
+
+/** Per-status, per-stat contribution with stack info for breakdown display. */
+export interface StatusStatContribution {
+  /** Status display name. */
+  label: string;
+  statusId: string;
+  stat: StatType;
+  /** Expected (or actual) stack count contributing to this stat. */
+  expectedStacks: number;
+  /** Value per stack (0 for threshold effects). */
+  valuePerStack: number;
+  /** Total expected contribution (expected stacks × perStack, or probability × threshold value). */
+  total: number;
+  /** P(stacks > 0) — probability the status is active at all. */
+  uptime: number;
+  /** For threshold effects: required stacks and probability of reaching them. */
+  threshold?: { atStacks: number; probability: number };
 }
 
 export interface CritFrameSnapshot {
@@ -49,6 +69,8 @@ export interface CritFrameSnapshot {
   expectedStatDeltas: Partial<Record<StatType, number>>;
   /** Full-value stats if all crit statuses were at max stacks (what ALWAYS mode gives). */
   fullStatValues: Partial<Record<StatType, number>>;
+  /** Per-status, per-stat contributions for breakdown display. */
+  statContributions: StatusStatContribution[];
 }
 
 /** Configuration extracted from a crit-triggered status config. */
@@ -64,7 +86,7 @@ interface CritStatusConfig {
   /** Stat effects per stack (from clause effects). */
   perStackStats: { stat: StatType; valuePerStack: number }[];
   /** Threshold-conditional stat effects (e.g. MI Security +5% crit at 5 stacks). */
-  thresholdStats: { stat: StatType; value: number; atStacks: number }[];
+  thresholdStats: { stat: StatType; value: number; atStacks: number; label?: string }[];
   /** Lifecycle: spawned buff status ID, buff duration in frames, or undefined if not lifecycle. */
   lifecycle?: { buffStatusId: string; buffDurationFrames: number };
 }
@@ -242,7 +264,8 @@ function extractStatusConfig(entry: TriggerDefEntry, skillLevel: number): CritSt
                 bResolved = resolveValue(bValueNode);
               }
               // Threshold at cap = buff is active when stacks reached cap
-              thresholdStats.push({ stat: bStat, value: bResolved, atStacks: stackCap });
+              const buffLabel = buffDef.properties.name ?? buffStatusId;
+              thresholdStats.push({ stat: bStat, value: bResolved, atStacks: stackCap, label: buffLabel });
             }
           }
         }
@@ -588,12 +611,12 @@ export class CritExpectationModel {
   step(absoluteFrame: number, overrideE?: number): CritFrameSnapshot {
     const ePrev = overrideE ?? this.lastE;
 
-    // Layer 1: update feedback models using E(T-1)
-    for (const model of this.feedbackModels) {
-      model.step(absoluteFrame, ePrev);
-    }
+    // ── Snapshot BEFORE advancing ───────────────────────────────────────────
+    // The crit trigger fires AFTER the damage frame, so the snapshot must
+    // reflect the state that existed when damage was dealt — before this
+    // frame's crit updates the stack distributions.
 
-    // Compute new E_total from feedback distributions
+    // Compute E_total from current (pre-step) feedback distributions
     const critSources: CritSource[] = [
       { label: 'Base', value: this.baseCritRate },
     ];
@@ -608,10 +631,11 @@ export class CritExpectationModel {
         eTotal += contribution;
         if (prob > 1e-6) {
           critSources.push({
-            label: `${model.config.label} (${ts.atStacks} stacks)`,
+            label: ts.label ?? model.config.label,
             statusId: model.config.statusId,
             value: ts.value,
             probability: prob,
+            thresholdStacks: ts.atStacks,
           });
         }
       }
@@ -621,20 +645,25 @@ export class CritExpectationModel {
     // When overrideE is provided, use it as the output E as well (deterministic modes)
     this.lastE = overrideE ?? eTotal;
 
-    // Layer 2: update dependent models using E(T-1) (same input as feedback)
-    for (const model of this.dependentModels) {
-      model.step(absoluteFrame, ePrev);
-    }
-
-    // Collect distributions, expected stat deltas, and full (ALWAYS) stat values
+    // Collect distributions, expected stat deltas, full (ALWAYS) stat values, and per-status contributions
     const statusDistributions = new Map<string, number[]>();
     const expectedStatDeltas: Partial<Record<StatType, number>> = {};
     const fullStatValues: Partial<Record<StatType, number>> = {};
+    const statContributions: StatusStatContribution[] = [];
     const allModels = [...this.feedbackModels, ...this.dependentModels];
 
     for (const model of allModels) {
       const dist = model.getDistribution();
-      statusDistributions.set(model.config.statusId, dist);
+      statusDistributions.set(model.config.statusId, [...dist]);
+
+      // Expected stack count for per-stack contributions: E[stacks] = Σ P(s) × s
+      let expectedStacks = 0;
+      for (let s = 1; s < dist.length; s++) {
+        expectedStacks += dist[s] * s;
+      }
+
+      // Uptime: P(stacks > 0)
+      const uptime = 1 - dist[0];
 
       // Per-stack stat contributions
       for (const ps of model.config.perStackStats) {
@@ -646,6 +675,16 @@ export class CritExpectationModel {
         expectedStatDeltas[ps.stat] = (expectedStatDeltas[ps.stat] ?? 0) + expected;
         // Full (ALWAYS): cap × valuePerStack
         fullStatValues[ps.stat] = (fullStatValues[ps.stat] ?? 0) + model.config.stackCap * ps.valuePerStack;
+
+        statContributions.push({
+          label: model.config.label,
+          statusId: model.config.statusId,
+          stat: ps.stat,
+          expectedStacks,
+          valuePerStack: ps.valuePerStack,
+          total: expected,
+          uptime,
+        });
       }
 
       // Threshold stat contributions
@@ -660,7 +699,29 @@ export class CritExpectationModel {
         expectedStatDeltas[ts.stat] = (expectedStatDeltas[ts.stat] ?? 0) + prob * ts.value;
         // Full (ALWAYS): threshold always met
         fullStatValues[ts.stat] = (fullStatValues[ts.stat] ?? 0) + ts.value;
+
+        statContributions.push({
+          label: ts.label ?? model.config.label,
+          statusId: model.config.statusId,
+          stat: ts.stat,
+          expectedStacks: 0,
+          valuePerStack: 0,
+          total: prob * ts.value,
+          uptime,
+          threshold: { atStacks: ts.atStacks, probability: prob },
+        });
       }
+    }
+
+    // ── Advance models AFTER snapshot ───────────────────────────────────────
+    // Crit trigger fires after damage — stack distributions advance now,
+    // so the next frame sees the updated state.
+
+    for (const model of this.feedbackModels) {
+      model.step(absoluteFrame, ePrev);
+    }
+    for (const model of this.dependentModels) {
+      model.step(absoluteFrame, ePrev);
     }
 
     return {
@@ -669,6 +730,7 @@ export class CritExpectationModel {
       statusDistributions,
       expectedStatDeltas,
       fullStatValues,
+      statContributions,
     };
   }
 }

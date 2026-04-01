@@ -21,6 +21,7 @@ export const DEFAULT_STATS: Readonly<Record<StatType, number>> = {
   [StatType.CRITICAL_DAMAGE]: 0.5,
   [StatType.ARTS_INTENSITY]: 0,
   [StatType.PHYSICAL_RESISTANCE]: 0,
+  [StatType.ARTS_RESISTANCE]: 0,
   [StatType.HEAT_RESISTANCE]: 0,
   [StatType.ELECTRIC_RESISTANCE]: 0,
   [StatType.CRYO_RESISTANCE]: 0,

@@ -8,6 +8,29 @@ import {
 } from "../../consts/enums";
 import { StatusLevel, TalentLevel } from "../../consts/types";
 import { Enemy } from "../enemies/enemy";
+import type { StatSourceEntry } from "../../controller/calculation/loadoutAggregator";
+
+// ── Attribute-Derived Stats ─────────────────────────────────────────────────
+
+/** HP bonus from Strength: 5 × STR. Added to base HP pool before HP% bonuses. */
+export function getHpFromStrength(strength: number): number {
+  return 5 * strength;
+}
+
+/** Physical DMG Reduction from Agility: 1 − 1/(AGI × 0.001 + 1). Returns decimal (0–1). */
+export function getPhysicalResistanceFromAgility(agility: number): number {
+  return 1 - 1 / (agility * 0.001 + 1);
+}
+
+/** Arts DMG Reduction from Intellect: 1 − 1/(INT × 0.001 + 1). Returns decimal (0–1). */
+export function getArtsResistanceFromIntellect(intellect: number): number {
+  return 1 - 1 / (intellect * 0.001 + 1);
+}
+
+/** Treatment Received Bonus from Will: 0.001 × WILL. Returns decimal. */
+export function getTreatmentReceivedFromWill(will: number): number {
+  return 0.001 * will;
+}
 
 // ── Attack ──────────────────────────────────────────────────────────────────
 
@@ -479,18 +502,23 @@ export interface DamageSubComponents {
   allAmpSources: Partial<Record<ElementType, MultiplierSource[]>>;
   // Weaken sub-components
   weakenEffects: number[];
+  weakenSources: MultiplierSource[];
   // DMG Reduction sub-components
   dmgReductionEffects: number[];
+  dmgReductionSources: MultiplierSource[];
   // Protection sub-components
   protectionEffects: number[];
+  protectionSources: MultiplierSource[];
   /** Raw segment multiplier before dividing by frame count (for display). */
   segmentMultiplier?: number;
   /** Number of frames the segment multiplier is spread across. */
   segmentFrameCount?: number;
   /** True when the multiplier is a per-tick value (e.g. ramping skills), not segment ÷ frames. */
   isPerTickMultiplier?: boolean;
-  /** Per-stat source breakdown from loadout aggregation. */
-  statSources?: Partial<Record<StatType, { source: string; value: number }[]>>;
+  /** Per-stat source breakdown from loadout aggregation + runtime status contributions. */
+  statSources?: Partial<Record<StatType, StatSourceEntry[]>>;
+  /** Detailed runtime status stat contributions for breakdown sub-branches. */
+  statContributions?: import('../../controller/calculation/critExpectationModel').StatusStatContribution[];
   /** Which StatType was used for the skill type DMG bonus (for source lookup). */
   skillTypeDmgBonusStat?: StatType;
 }

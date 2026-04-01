@@ -14,7 +14,7 @@ import { SkillLevel, Potential } from '../../consts/types';
 import { StatusDamageParams } from '../../model/calculation/damageFormulas';
 import { getModelEnemy } from './enemyRegistry';
 import { getSkillMultiplier, isDamageSegment } from './jsonMultiplierEngine';
-import { aggregateLoadoutStats } from './loadoutAggregator';
+import { aggregateLoadoutStats, StatSourceEntry } from './loadoutAggregator';
 import { OperatorLoadoutState, EMPTY_LOADOUT } from '../../view/OperatorLoadoutHeader';
 import type { MultiplierSource } from '../../model/calculation/damageFormulas';
 import {
@@ -43,7 +43,7 @@ import type { Slot } from '../timeline/columnBuilder';
 import { ENEMY_OWNER_ID, OPERATOR_COLUMNS, REACTION_COLUMN_IDS } from '../../model/channels';
 import { buildReactionDamageRows, ReactionOperatorContext } from './artsReactionController';
 import { buildCritExpectationModel, getFrameExpectation } from './critExpectationModel';
-import type { CritExpectationModel, CritFrameSnapshot } from './critExpectationModel';
+import type { CritExpectationModel, CritFrameSnapshot, StatusStatContribution } from './critExpectationModel';
 import { getLastTriggerIndex } from '../timeline/eventQueueController';
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -75,6 +75,8 @@ export interface DamageTableRow {
   statusParams?: StatusDamageParams | null;
   /** Damage type: NORMAL or DAMAGE_OVER_TIME. DOT cannot crit. */
   damageType?: DamageType;
+  /** Element used for this tick's damage calculation. */
+  element?: ElementType;
   /** Child frame rows when this row is a folded segment/event aggregate. */
   foldedFrames?: DamageTableRow[];
 }
@@ -157,6 +159,31 @@ function getSkillLevel(columnId: string, props: LoadoutProperties): SkillLevel {
     case NounType.ULTIMATE: return props.skills.ultimateLevel as SkillLevel;
     default: return 12 as SkillLevel;
   }
+}
+
+/**
+ * Merge runtime status stat contributions from the crit model into the static
+ * stat sources from loadout aggregation. Returns a new map with entries appended.
+ *
+ * Skips CRITICAL_RATE threshold contributions — those are displayed separately
+ * via critSources in the crit breakdown section.
+ */
+function mergeRuntimeStatSources(
+  base: Partial<Record<StatType, StatSourceEntry[]>>,
+  contributions: StatusStatContribution[],
+): Partial<Record<StatType, StatSourceEntry[]>> {
+  if (contributions.length === 0) return base;
+  const merged = { ...base };
+  for (let i = 0; i < contributions.length; i++) {
+    const c = contributions[i];
+    if (Math.abs(c.total) < 1e-8) continue;
+    // Threshold CRITICAL_RATE contributions are shown via critSources, not statSources
+    if (c.stat === StatType.CRITICAL_RATE && c.threshold) continue;
+    if (!merged[c.stat]) merged[c.stat] = [...(base[c.stat] ?? [])];
+    else if (merged[c.stat] === base[c.stat]) merged[c.stat] = [...(base[c.stat] ?? [])];
+    merged[c.stat]!.push({ source: c.label, value: c.total, contributionIndex: i });
+  }
+  return merged;
 }
 
 // ── Cached model data per operator ───────────────────────────────────────────
@@ -306,6 +333,72 @@ export function buildDamageTableRows(
   const defMultiplier = getDefenseMultiplier(enemyDef);
   const bossMaxHp = modelEnemy ? modelEnemy.getHp() : null;
 
+  // ── Pre-pass: step crit models chronologically per operator ───────────────
+  // Events are ordered by column, not by absolute frame. When events overlap
+  // (e.g. BATK frame 5 at t=2.5s vs BS frame 1 at t=1.0s), processing
+  // event-by-event steps the model out of order. Collect all crittable frames
+  // per operator, sort by absolute frame, then step in chronological order.
+  const critSnapshots = new Map<string, CritFrameSnapshot>();
+  // Global frame position index for intra-frame ordering.
+  // Status events created by a damage frame carry a sourceFrameKey; the damage
+  // builder excludes statuses whose source frame is at-or-after the current
+  // damage frame in the chronological sequence at the same absFrame.
+  const allDamageFrameKeys: { absFrame: number; key: string }[] = [];
+  {
+    // Collect frames per owner
+    const ownerFrames = new Map<string, { absFrame: number; key: string; isCrit?: boolean; isDot: boolean }[]>();
+    for (const ev of events) {
+      if (!ev.segments.length) continue;
+      let segOff = 0;
+      for (let si = 0; si < ev.segments.length; si++) {
+        const seg = ev.segments[si];
+        if (seg.frames) {
+          for (let fi = 0; fi < seg.frames.length; fi++) {
+            const f = seg.frames[fi];
+            const absFrame = f.absoluteFrame ?? (ev.startFrame + segOff + f.offsetFrame);
+            const isDot = f.damageType === DamageType.DAMAGE_OVER_TIME;
+            const key = `${ev.uid}:${si}:${fi}`;
+            // All damage frames participate in intra-frame ordering
+            if (f.damageMultiplier || f.dealDamage) {
+              allDamageFrameKeys.push({ absFrame, key });
+            }
+            if (isDot) continue; // DOT can't crit
+            let arr = ownerFrames.get(ev.ownerId);
+            if (!arr) { arr = []; ownerFrames.set(ev.ownerId, arr); }
+            arr.push({ absFrame, key, isCrit: f.isCrit, isDot });
+          }
+        }
+        segOff += seg.properties.duration;
+      }
+    }
+    // Sort each owner's frames chronologically and step the model
+    ownerFrames.forEach((frames, ownerId) => {
+      const model = critModels.get(ownerId);
+      if (!model) return;
+      frames.sort((a, b) => a.absFrame - b.absFrame);
+      for (const fr of frames) {
+        const overrideE = resolvedCritMode === CritMode.ALWAYS ? 1.0
+          : resolvedCritMode === CritMode.NEVER ? 0.0
+          : resolvedCritMode === CritMode.EXPECTED ? undefined
+          : (fr.isCrit ? 1.0 : 0.0);
+        const snapshot = model.step(fr.absFrame, overrideE);
+        critSnapshots.set(fr.key, snapshot);
+      }
+    });
+  }
+
+  // Build global position map and per-absFrame lookup for exclusion sets
+  allDamageFrameKeys.sort((a, b) => a.absFrame - b.absFrame);
+  const framePosition = new Map<string, number>();
+  const frameKeysByAbsFrame = new Map<number, { key: string; pos: number }[]>();
+  for (let i = 0; i < allDamageFrameKeys.length; i++) {
+    const f = allDamageFrameKeys[i];
+    framePosition.set(f.key, i);
+    let arr = frameKeysByAbsFrame.get(f.absFrame);
+    if (!arr) { arr = []; frameKeysByAbsFrame.set(f.absFrame, arr); }
+    arr.push({ key: f.key, pos: i });
+  }
+
   for (const ev of events) {
     const effectiveColumnId = isUltEnhanced(ev.id) ? NounType.ULTIMATE : ev.columnId;
     const col = colLookup.get(`${ev.ownerId}-${effectiveColumnId}`)
@@ -370,6 +463,21 @@ export function buildDamageTableRows(
               }
 
               if (multiplier != null && multiplier > 0) {
+                // Intra-frame ordering: exclude statuses created by this or later
+                // damage frames at the same absFrame so they don't affect this frame's damage.
+                const currentFrameKey = `${ev.uid}:${si}:${fi}`;
+                const currentPos = framePosition.get(currentFrameKey);
+                if (statusQuery && currentPos !== undefined) {
+                  const sameFrame = frameKeysByAbsFrame.get(absFrame);
+                  if (sameFrame && sameFrame.length > 1) {
+                    const excludeKeys = new Set<string>();
+                    for (const entry of sameFrame) {
+                      if (entry.pos >= currentPos) excludeKeys.add(entry.key);
+                    }
+                    statusQuery.setFrameExclusion(absFrame, excludeKeys);
+                  }
+                }
+
                 // Get element from inline DEAL DAMAGE, frame marker, or skill column
                 const frameElement = frame.dealDamage?.element
                   ?? frame.damageElement
@@ -383,28 +491,12 @@ export function buildDamageTableRows(
                 const isArts = element !== ElementType.PHYSICAL && element !== ElementType.NONE;
                 const isStaggered = statusQuery?.isStaggered(absFrame) ?? false;
 
-                // Step crit model for ALL modes. The model tracks stack accumulation
-                // over time — frame 1 has 1 stack, frame 2 has 2, etc. Even ALWAYS
-                // mode needs the model to know the correct stack count at each frame.
-                // The model is stepped with the mode's expectation: ALWAYS→1.0, NEVER→0.0, etc.
+                // Look up pre-computed crit snapshot (stepped chronologically in the pre-pass)
                 const isDot = frame.damageType === DamageType.DAMAGE_OVER_TIME;
                 const canCrit = !isDot;
-                let earlySnapshot: CritFrameSnapshot | undefined;
-                const critModel = canCrit ? critModels.get(ev.ownerId) : undefined;
-                if (critModel) {
-                  // Override E for deterministic modes so the model tracks correct stack accumulation:
-                  // ALWAYS: E=1.0 (every frame crits → stacks build up 1 per frame)
-                  // NEVER: E=0.0 (no crits → stacks stay at 0)
-                  // RANDOM/MANUAL: E from frame.isCrit (binary per frame)
-                  // EXPECTED: undefined → model uses its own feedback-computed E(T)
-                  const overrideE = resolvedCritMode === CritMode.ALWAYS ? 1.0
-                    : resolvedCritMode === CritMode.NEVER ? 0.0
-                    : resolvedCritMode === CritMode.EXPECTED ? undefined
-                    : (frame.isCrit ? 1.0 : 0.0);
-                  earlySnapshot = critModel.step(absFrame, overrideE);
-                  if (resolvedCritMode === CritMode.EXPECTED) {
-                    frame.expectedCritRate = earlySnapshot.expectedCritRate;
-                  }
+                const earlySnapshot = canCrit ? critSnapshots.get(`${ev.uid}:${si}:${fi}`) : undefined;
+                if (earlySnapshot && resolvedCritMode === CritMode.EXPECTED) {
+                  frame.expectedCritRate = earlySnapshot.expectedCritRate;
                 }
                 // Use the model's expectedStatDeltas for all modes.
                 // The model was stepped with the mode's E(T) (via getFrameExpectation),
@@ -554,12 +646,18 @@ export function buildDamageTableRows(
                   ampSources: statusQuery?.getAmpSources(absFrame) ?? [],
                   allAmpSources: { [ElementType.ARTS]: statusQuery?.getAmpSources(absFrame) ?? [] },
                   weakenEffects: subWeakenEffects,
+                  weakenSources: statusQuery?.getWeakenSources(absFrame) ?? [],
                   dmgReductionEffects: subDmgReductionEffects,
+                  dmgReductionSources: statusQuery?.getDmgReductionSources(absFrame) ?? [],
                   protectionEffects: subProtectionEffects,
+                  protectionSources: statusQuery?.getProtectionSources(absFrame) ?? [],
                   segmentMultiplier: segmentMultiplier ?? undefined,
                   segmentFrameCount: (segmentMultiplier != null && maxFrames > 1) ? maxFrames : undefined,
                   isPerTickMultiplier: isPerTick,
-                  statSources: opData.statSources,
+                  statSources: critSnapshot?.statContributions
+                    ? mergeRuntimeStatSources(opData.statSources, critSnapshot.statContributions)
+                    : opData.statSources,
+                  statContributions: critSnapshot?.statContributions,
                   skillTypeDmgBonusStat: skillTypeBonusStat,
                 };
 
@@ -594,9 +692,11 @@ export function buildDamageTableRows(
                 };
 
                 damage = calculateDamage(params);
+                statusQuery?.clearFrameExclusion();
               }
             }
 
+            const rowElement = ((frame.dealDamage?.element ?? frame.damageElement ?? col.skillElement) as ElementType | undefined) ?? opData?.element;
             rows.push({
               key: `${ev.uid}-s${si}-f${fi}`,
               absoluteFrame: absFrame,
@@ -614,6 +714,7 @@ export function buildDamageTableRows(
               hpRemaining: null, // computed after sorting
               params,
               damageType: frame.damageType,
+              element: rowElement,
             });
           }
         }

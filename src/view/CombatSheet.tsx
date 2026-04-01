@@ -12,7 +12,8 @@ import { runCalculation } from '../controller/calculation/calculationController'
 import type { Slot } from '../controller/timeline/columnBuilder';
 import type { StaggerBreak } from '../controller/timeline/staggerTimeline';
 import { ResourcePoint } from '../controller/timeline/resourceTimeline';
-import { CritMode, CombatSkillType, FoldMode } from '../consts/enums';
+import { CritMode, CombatSkillType, ELEMENT_COLORS, FoldMode, NumberFormatType } from '../consts/enums';
+import { loadSettings } from '../consts/settings';
 import type { OverrideStore } from '../consts/overrideTypes';
 import { LoadoutProperties } from './InformationPane';
 import { OperatorLoadoutState } from './OperatorLoadoutHeader';
@@ -192,7 +193,8 @@ function formatDamage(n: number): string {
 }
 
 function formatPct(n: number): string {
-  return `${(n * 100).toFixed(1)}%`;
+  const { decimalPlaces: dp, numberFormat: nf } = loadSettings();
+  return nf === NumberFormatType.DECIMAL ? n.toFixed(dp) : `${(n * 100).toFixed(dp)}%`;
 }
 
 function getSkillDisplayName(skillName: string): string {
@@ -244,6 +246,8 @@ interface CombatSheetProps {
   selectedFrames?: SelectedFrame[];
   /** Ref-based hover frame — avoids re-renders on every mouse pixel move. */
   hoverFrameRef?: React.RefObject<number | null>;
+  /** Callback to set the hover frame (e.g. when hovering a sheet row). */
+  onHoverFrame?: (frame: number | null) => void;
   onScrollRef?: (el: HTMLDivElement | null) => void;
   onScroll?: (scrollTop: number) => void;
   onZoom?: (deltaY: number) => void;
@@ -253,6 +257,7 @@ interface CombatSheetProps {
   contentFrames?: number;
   onDamageClick?: (row: DamageTableRow) => void;
   onDamageRows?: (rows: DamageTableRow[]) => void;
+  onSelectFrame?: (frame: SelectedFrame) => void;
   critMode?: CritMode;
   onCritModeChange?: (mode: CritMode) => void;
   overrides?: OverrideStore;
@@ -262,8 +267,8 @@ interface CombatSheetProps {
 
 export default React.memo(function CombatSheet({
   slots, events, columns, enemy, loadoutProperties, loadouts, zoom, loadoutRowHeight, headerRowHeight,
-  selectedFrames, hoverFrameRef, onScrollRef, onScroll: onScrollProp, onZoom,
-  staggerBreaks, compact, showRealTime = true, contentFrames: contentFramesProp, onDamageClick, onDamageRows,
+  selectedFrames, hoverFrameRef, onHoverFrame, onScrollRef, onScroll: onScrollProp, onZoom,
+  staggerBreaks, compact, showRealTime = true, contentFrames: contentFramesProp, onDamageClick, onDamageRows, onSelectFrame,
   critMode = CritMode.NEVER, onCritModeChange, overrides, plannerHidden, resourceGraphs,
 }: CombatSheetProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -505,6 +510,8 @@ export default React.memo(function CombatSheet({
   // to avoid React re-renders on every mouse pixel move.
   const prevHoveredRowRef = useRef<HTMLElement | null>(null);
   const hoverRafRef = useRef<number | null>(null);
+  /** True while the sheet itself is driving hoverFrame — skip RAF re-highlight to avoid feedback. */
+  const sheetHoverActiveRef = useRef(false);
   useEffect(() => {
     if (!hoverFrameRef) return;
     let lastFrame: number | null | undefined = undefined;
@@ -512,28 +519,31 @@ export default React.memo(function CombatSheet({
       const hf = hoverFrameRef.current;
       if (hf !== lastFrame) {
         lastFrame = hf;
-        // Remove previous highlight
-        if (prevHoveredRowRef.current) {
-          prevHoveredRowRef.current.classList.remove('dmg-row--hovered');
-          prevHoveredRowRef.current = null;
-        }
-        // Find nearest row
-        if (hf != null && rows.length > 0) {
-          const toleranceFrames = Math.ceil(8 / pxPerFrame(zoom));
-          let best: DamageTableRow | null = null;
-          let bestDist = Infinity;
-          for (const row of rows) {
-            const dist = Math.abs(row.absoluteFrame - hf);
-            if (dist < bestDist && dist <= toleranceFrames) {
-              bestDist = dist;
-              best = row;
-            }
+        // Skip row highlighting when the sheet itself is the hover source
+        if (!sheetHoverActiveRef.current) {
+          // Remove previous highlight
+          if (prevHoveredRowRef.current) {
+            prevHoveredRowRef.current.classList.remove('dmg-row--hovered');
+            prevHoveredRowRef.current = null;
           }
-          if (best) {
-            const el = scrollRef.current?.querySelector(`[data-row-key="${best.key}"]`) as HTMLElement | null;
-            if (el) {
-              el.classList.add('dmg-row--hovered');
-              prevHoveredRowRef.current = el;
+          // Find nearest row
+          if (hf != null && rows.length > 0) {
+            const toleranceFrames = Math.ceil(8 / pxPerFrame(zoom));
+            let best: DamageTableRow | null = null;
+            let bestDist = Infinity;
+            for (const row of rows) {
+              const dist = Math.abs(row.absoluteFrame - hf);
+              if (dist < bestDist && dist <= toleranceFrames) {
+                bestDist = dist;
+                best = row;
+              }
+            }
+            if (best) {
+              const el = scrollRef.current?.querySelector(`[data-row-key="${best.key}"]`) as HTMLElement | null;
+              if (el) {
+                el.classList.add('dmg-row--hovered');
+                prevHoveredRowRef.current = el;
+              }
             }
           }
         }
@@ -549,6 +559,54 @@ export default React.memo(function CombatSheet({
       }
     };
   }, [hoverFrameRef, rows, zoom]);
+
+  // Row key → absoluteFrame lookup for sheet → timeline hover
+  const rowFrameMap = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const row of rows) map.set(row.key, row.absoluteFrame);
+    return map;
+  }, [rows]);
+
+  // Sheet row hover → set hoverFrame so the timeline shows the guide line
+  const handleBodyMouseMove = useCallback((e: React.MouseEvent) => {
+    if (!onHoverFrame) return;
+    const target = (e.target as HTMLElement).closest('[data-row-key]') as HTMLElement | null;
+    if (target) {
+      const key = target.getAttribute('data-row-key');
+      const frame = key != null ? rowFrameMap.get(key) : undefined;
+      if (frame != null) {
+        sheetHoverActiveRef.current = true;
+        onHoverFrame(frame);
+        // Imperatively manage the row highlight ourselves
+        if (prevHoveredRowRef.current && prevHoveredRowRef.current !== target) {
+          prevHoveredRowRef.current.classList.remove('dmg-row--hovered');
+        }
+        target.classList.add('dmg-row--hovered');
+        prevHoveredRowRef.current = target;
+        return;
+      }
+    }
+    // Not over a row — clear sheet hover
+    if (sheetHoverActiveRef.current) {
+      sheetHoverActiveRef.current = false;
+      onHoverFrame(null);
+      if (prevHoveredRowRef.current) {
+        prevHoveredRowRef.current.classList.remove('dmg-row--hovered');
+        prevHoveredRowRef.current = null;
+      }
+    }
+  }, [onHoverFrame, rowFrameMap]);
+
+  const handleBodyMouseLeave = useCallback(() => {
+    if (sheetHoverActiveRef.current) {
+      sheetHoverActiveRef.current = false;
+      onHoverFrame?.(null);
+      if (prevHoveredRowRef.current) {
+        prevHoveredRowRef.current.classList.remove('dmg-row--hovered');
+        prevHoveredRowRef.current = null;
+      }
+    }
+  }, [onHoverFrame]);
 
   // ── Marquee selection ────────────────────────────────────────────────────
   const [marqueeSelectedKeys, setMarqueeSelectedKeys] = useState<Set<string>>(new Set());
@@ -626,7 +684,20 @@ export default React.memo(function CombatSheet({
     document.addEventListener('mouseup', onMouseUp);
   }, [getRowsInRect]);
 
+  // Row key → DamageTableRow lookup for click selection
+  const rowByKey = useMemo(() => {
+    const map = new Map<string, DamageTableRow>();
+    for (const row of rows) map.set(row.key, row);
+    return map;
+  }, [rows]);
+
   const handleRowClick = useCallback((key: string, e: React.MouseEvent) => {
+    // Select the corresponding frame in the timeline
+    const row = rowByKey.get(key);
+    if (row) {
+      onSelectFrame?.({ eventUid: row.eventUid, segmentIndex: row.segmentIndex, frameIndex: row.frameIndex });
+    }
+
     if (!(e.ctrlKey || e.metaKey)) return;
     e.stopPropagation();
     setMarqueeSelectedKeys((prev) => {
@@ -635,7 +706,7 @@ export default React.memo(function CombatSheet({
       else next.add(key);
       return next;
     });
-  }, []);
+  }, [rowByKey, onSelectFrame]);
 
   // Compute selected damage sum
   const marqueeSelectionStats = useMemo(() => {
@@ -891,6 +962,8 @@ export default React.memo(function CombatSheet({
         className={`dmg-table-scroll${marqueeRect ? ' dmg-table-scroll--selecting' : ''}`}
         onScroll={handleScroll}
         onMouseDown={handleBodyMouseDown}
+        onMouseMove={handleBodyMouseMove}
+        onMouseLeave={handleBodyMouseLeave}
       >
         <div
           className="dmg-body"
@@ -1036,16 +1109,16 @@ function SheetCell({ def, row, opInfo, opColor, bossMaxHp, formatTime, onDamageC
       if (row.damage != null) {
         displayDamage = formatDamage(row.damage);
       } else if (row.multiplier != null) {
-        displayDamage = `${(row.multiplier * 100).toFixed(1)}%`;
+        displayDamage = formatPct(row.multiplier);
       } else {
         displayDamage = '\u2014';
       }
       return (
         <div
           className={`dmg-cell ${def.cellClass}${row.params ? ' dmg-cell-clickable' : ''}`}
-          style={{ ...style, color: opColor }}
+          style={{ ...style, color: row.element ? ELEMENT_COLORS[row.element] ?? opColor : opColor }}
           onClick={row.params ? () => onDamageClick?.(row) : undefined}
-          title={row.damage != null ? `${row.label}\n${Math.round(row.damage).toLocaleString()} damage${row.multiplier != null ? ` (${(row.multiplier * 100).toFixed(1)}% ATK)` : ''}` : undefined}
+          title={row.damage != null ? `${row.label}\n${Math.round(row.damage).toLocaleString()} damage${row.multiplier != null ? ` (${formatPct(row.multiplier)} ATK)` : ''}` : undefined}
         >
           {displayDamage}
         </div>
