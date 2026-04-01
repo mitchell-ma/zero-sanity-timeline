@@ -71,7 +71,42 @@ const SHEET_COL_DEFS: SheetColDef[] = [
 
 const COL_DEF_MAP = new Map(SHEET_COL_DEFS.map((d) => [d.id, d]));
 
+/** Pre-computed base cell styles per column (avoids creating { flex, textAlign } per cell per render). */
+const COL_BASE_STYLES = new Map<SheetCol, React.CSSProperties>(
+  SHEET_COL_DEFS.map((d) => [d.id, { flex: d.flex, textAlign: d.align }]),
+);
+
+/**
+ * Cache for colored cell styles keyed by "colId:color".
+ * Avoids creating { flex, textAlign, color } spread objects per cell per render.
+ * Bounded by (columns × operators) ≈ 40 entries.
+ */
+const _coloredStyleCache = new Map<string, React.CSSProperties>();
+function getColoredStyle(colId: SheetCol, color: string): React.CSSProperties {
+  const key = `${colId}:${color}`;
+  let cached = _coloredStyleCache.get(key);
+  if (!cached) {
+    const base = COL_BASE_STYLES.get(colId)!;
+    cached = { ...base, color };
+    _coloredStyleCache.set(key, cached);
+  }
+  return cached;
+}
+function getOpVarStyle(colId: SheetCol, color: string): React.CSSProperties {
+  const key = `${colId}:var:${color}`;
+  let cached = _coloredStyleCache.get(key);
+  if (!cached) {
+    const base = COL_BASE_STYLES.get(colId)!;
+    cached = { ...base, '--op-color': color } as React.CSSProperties;
+    _coloredStyleCache.set(key, cached);
+  }
+  return cached;
+}
+
 const DEFAULT_ORDER: SheetCol[] = SHEET_COL_DEFS.map((d) => d.id);
+
+/** Stable empty set for selectedRowKeys when no frames are selected. */
+const EMPTY_ROW_KEYS: ReadonlySet<string> = new Set();
 
 function buildDefaultVisible(): Record<SheetCol, boolean> {
   const v = {} as Record<SheetCol, boolean>;
@@ -500,10 +535,25 @@ export default React.memo(function CombatSheet({
     return () => onScrollRef?.(null);
   }, [onScrollRef]);
 
+  // Track scroll position for row virtualization (ref avoids re-render on every scroll pixel).
+  const scrollTopRef = useRef(0);
+  const [visibleRange, setVisibleRange] = useState({ start: 0, end: 2000 });
+  // Initialize visible range after mount
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const OVERSCAN = ROW_HEIGHT * 10;
+    setVisibleRange({ start: -OVERSCAN, end: el.clientHeight + OVERSCAN });
+  }, []);
   const handleScroll = useCallback(() => {
-    if (scrollRef.current && onScrollProp) {
-      onScrollProp(scrollRef.current.scrollTop);
-    }
+    const el = scrollRef.current;
+    if (!el) return;
+    scrollTopRef.current = el.scrollTop;
+    if (onScrollProp) onScrollProp(el.scrollTop);
+    // Update visible range — debounced via state batching
+    const viewportH = el.clientHeight;
+    const OVERSCAN = ROW_HEIGHT * 10;
+    setVisibleRange({ start: el.scrollTop - OVERSCAN, end: el.scrollTop + viewportH + OVERSCAN });
   }, [onScrollProp]);
 
   // Find nearest row for hover highlighting — imperative DOM updates via rAF
@@ -722,6 +772,16 @@ export default React.memo(function CombatSheet({
     if (count === 0) return null;
     return { totalDamage, count };
   }, [marqueeSelectedKeys, rows]);
+
+  // Pre-compute selected row keys to avoid passing full selectedFrames array to every FlatRow.
+  const selectedRowKeys = useMemo(() => {
+    if (!selectedFrames || selectedFrames.length === 0) return EMPTY_ROW_KEYS;
+    const keys = new Set<string>();
+    for (const sf of selectedFrames) {
+      keys.add(`${sf.eventUid}-s${sf.segmentIndex}-f${sf.frameIndex}`);
+    }
+    return keys;
+  }, [selectedFrames]);
 
   // Compute row layout (top positions) — one row per DamageTableRow
   const rowLayout = useMemo(() => {
@@ -974,23 +1034,27 @@ export default React.memo(function CombatSheet({
               Add events to the timeline to see damage calculations
             </div>
           ) : (
-            rowLayout.map(({ row, top }) => (
-              <FlatRow
-                key={row.key}
-                row={row}
-                opInfo={opInfoMap.get(row.ownerId)}
-                top={top}
-                selectedFrames={selectedFrames}
-                hovered={false}
-                marqueeSelected={marqueeSelectedKeys.has(row.key)}
-                onDamageClick={onDamageClick}
-                onRowClick={handleRowClick}
-                visibleCols={visibleCols}
-                bossMaxHp={bossMaxHp}
-                formatTime={formatTime}
-                resourceGraphs={resourceGraphs}
-              />
-            ))
+            rowLayout.map(({ row, top }) => {
+              // Virtualization: skip rows outside the visible scroll viewport + overscan
+              if (top + ROW_HEIGHT < visibleRange.start || top > visibleRange.end) return null;
+              return (
+                <FlatRow
+                  key={row.key}
+                  row={row}
+                  opInfo={opInfoMap.get(row.ownerId)}
+                  top={top}
+                  selected={selectedRowKeys.has(row.key)}
+                  hovered={false}
+                  marqueeSelected={marqueeSelectedKeys.has(row.key)}
+                  onDamageClick={onDamageClick}
+                  onRowClick={handleRowClick}
+                  visibleCols={visibleCols}
+                  bossMaxHp={bossMaxHp}
+                  formatTime={formatTime}
+                  resourceGraphs={resourceGraphs}
+                />
+              );
+            })
           )}
           {marqueeRect && (
             <div
@@ -1018,11 +1082,11 @@ export default React.memo(function CombatSheet({
 
 // ── Row component ───────────────────────────────────────────────────────────
 
-const FlatRow = React.memo(function FlatRow({ row, opInfo, top, selectedFrames, hovered, marqueeSelected, onDamageClick, onRowClick, visibleCols, bossMaxHp, formatTime, resourceGraphs }: {
+const FlatRow = React.memo(function FlatRow({ row, opInfo, top, selected: frameSelected, hovered, marqueeSelected, onDamageClick, onRowClick, visibleCols, bossMaxHp, formatTime, resourceGraphs }: {
   row: DamageTableRow;
   opInfo?: OperatorInfo;
   top: number;
-  selectedFrames?: SelectedFrame[];
+  selected: boolean;
   hovered: boolean;
   marqueeSelected?: boolean;
   onDamageClick?: (row: DamageTableRow) => void;
@@ -1032,16 +1096,16 @@ const FlatRow = React.memo(function FlatRow({ row, opInfo, top, selectedFrames, 
   formatTime: (frame: number) => string;
   resourceGraphs?: Map<string, { points: ReadonlyArray<ResourcePoint>; min: number; max: number }>;
 }) {
-  const hasSelection = selectedFrames?.some(
-    (sf) => sf.eventUid === row.eventUid && sf.segmentIndex === row.segmentIndex && sf.frameIndex === row.frameIndex,
-  ) ?? false;
-  const selected = hasSelection || marqueeSelected;
+  const selected = frameSelected || marqueeSelected;
 
   const opColor = opInfo?.color ?? '#666';
   const cls = `dmg-row${selected ? ' dmg-row--selected' : ''}${hovered && !selected ? ' dmg-row--hovered' : ''}`;
 
+  const rowStyle = useMemo(() => ({ top }), [top]);
+  const handleClick = useCallback((e: React.MouseEvent) => onRowClick?.(row.key, e), [onRowClick, row.key]);
+
   return (
-    <div className={cls} data-row-key={row.key} style={{ top }} onClick={(e) => onRowClick?.(row.key, e)}>
+    <div className={cls} data-row-key={row.key} style={rowStyle} onClick={handleClick}>
       {visibleCols.map((def) => (
         <SheetCell
           key={def.id}
@@ -1075,7 +1139,7 @@ function SheetCell({ def, row, opInfo, opColor, bossMaxHp, formatTime, onDamageC
   onDamageClick?: (row: DamageTableRow) => void;
   resourceGraphs?: Map<string, { points: ReadonlyArray<ResourcePoint>; min: number; max: number }>;
 }) {
-  const style: React.CSSProperties = { flex: def.flex, textAlign: def.align };
+  const style = COL_BASE_STYLES.get(def.id)!;
 
   switch (def.id) {
     case SheetCol.TIME:
@@ -1086,7 +1150,7 @@ function SheetCell({ def, row, opInfo, opColor, bossMaxHp, formatTime, onDamageC
       );
     case SheetCol.OPERATOR:
       return (
-        <div className={`dmg-cell ${def.cellClass}`} style={{ ...style, '--op-color': opColor } as React.CSSProperties}>
+        <div className={`dmg-cell ${def.cellClass}`} style={getOpVarStyle(def.id, opColor)}>
           {opInfo?.icon && (
             <img className="dmg-flat-op-icon" src={opInfo.icon} alt={opInfo.name} />
           )}
@@ -1094,13 +1158,13 @@ function SheetCell({ def, row, opInfo, opColor, bossMaxHp, formatTime, onDamageC
       );
     case SheetCol.TYPE:
       return (
-        <div className={`dmg-cell ${def.cellClass}`} style={{ ...style, color: opColor }}>
+        <div className={`dmg-cell ${def.cellClass}`} style={getColoredStyle(def.id, opColor)}>
           {getCategoryLabel(row.columnId)}
         </div>
       );
     case SheetCol.SOURCE:
       return (
-        <div className={`dmg-cell ${def.cellClass}`} style={{ ...style, color: opColor }}>
+        <div className={`dmg-cell ${def.cellClass}`} style={getColoredStyle(def.id, opColor)}>
           {getSkillDisplayName(row.skillName)}
         </div>
       );
@@ -1113,10 +1177,11 @@ function SheetCell({ def, row, opInfo, opColor, bossMaxHp, formatTime, onDamageC
       } else {
         displayDamage = '\u2014';
       }
+      const dmgColor = row.element ? ELEMENT_COLORS[row.element] ?? opColor : opColor;
       return (
         <div
           className={`dmg-cell ${def.cellClass}${row.params ? ' dmg-cell-clickable' : ''}`}
-          style={{ ...style, color: row.element ? ELEMENT_COLORS[row.element] ?? opColor : opColor }}
+          style={getColoredStyle(def.id, dmgColor)}
           onClick={row.params ? () => onDamageClick?.(row) : undefined}
           title={row.damage != null ? `${row.label}\n${Math.round(row.damage).toLocaleString()} damage${row.multiplier != null ? ` (${formatPct(row.multiplier)} ATK)` : ''}` : undefined}
         >

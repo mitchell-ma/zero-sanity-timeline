@@ -263,7 +263,7 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
 
         switch (ef.verb) {
           case VerbType.RECOVER:
-            if (ef.object === NounType.SKILL_POINT) { sp = withValue(wp?.value); clauseEffects.push({ type: 'recoverSP' }); }
+            if (ef.object === NounType.SKILL_POINT) { sp = withValue(wp?.value); clauseEffects.push({ type: 'dsl', dslEffect: ef as unknown as Effect }); }
             else if (ef.object === NounType.ULTIMATE_ENERGY) gaugeGain = withValue(wp?.value);
             else if (ef.object === NounType.HP) clauseEffects.push({ type: 'dsl', dslEffect: ef as unknown as Effect });
             break;

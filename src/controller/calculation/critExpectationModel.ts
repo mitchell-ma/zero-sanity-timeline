@@ -97,6 +97,20 @@ const enum ModelType {
   FIFO = 3,
 }
 
+// Numeric key encoding for Markov state maps.
+// Encodes (stacks, frame) as a single number to avoid string alloc/parse overhead.
+// frame is stored as (frame + 1) so that -1 (no crit) maps to 0.
+const FRAME_MULTIPLIER = 1_000_000;
+function encodeKey(stacks: number, frame: number): number {
+  return stacks * FRAME_MULTIPLIER + (frame + 1);
+}
+function decodeStacks(key: number): number {
+  return (key / FRAME_MULTIPLIER) | 0;
+}
+function decodeFrame(key: number): number {
+  return (key % FRAME_MULTIPLIER) - 1;
+}
+
 // ── Status config loading ────────────────────────────────────────────────────
 
 let _statusDefCache: Map<string, StatusEventDef> | undefined;
@@ -316,72 +330,78 @@ interface StatusModel {
 class SharedTimerModel implements StatusModel {
   readonly modelType = ModelType.SHARED_TIMER;
 
-  private stateMap = new Map<string, number>();
+  private stateMap: Map<number, number>;
+  private swapMap = new Map<number, number>();
   private readonly cap: number;
   private readonly durationFrames: number;
+  private cachedDist: number[] | undefined;
+  /** Reusable buffer for keys to prune (avoids per-step allocation). */
+  private _pruneKeys = new Array<number>(64);
 
   constructor(readonly config: CritStatusConfig) {
     this.cap = config.stackCap;
     this.durationFrames = config.durationFrames;
-    // Initial: P(0 stacks, never crit) = 1
-    this.stateMap.set(this.stateKey(0, -1), 1.0);
+    this.stateMap = new Map<number, number>();
+    this.stateMap.set(encodeKey(0, -1), 1.0);
   }
 
   step(absoluteFrame: number, eCrit: number): void {
-    const newMap = new Map<string, number>();
+    const newMap = this.swapMap;
+    newMap.clear();
     const clampedE = Math.min(Math.max(eCrit, 0), 1);
+    const dur = this.durationFrames;
+    const cap = this.cap;
 
     this.stateMap.forEach((prob, key) => {
       if (prob < 1e-15) return;
-      const [stacks, lastCritFrame] = this.parseKey(key);
+      const stacks = decodeStacks(key);
+      const lastCritFrame = decodeFrame(key);
 
       // Check expiry: if last crit is too old, force stacks to 0
       let effectiveStacks = stacks;
-      if (effectiveStacks > 0 && lastCritFrame >= 0 && absoluteFrame - lastCritFrame > this.durationFrames) {
+      if (effectiveStacks > 0 && lastCritFrame >= 0 && absoluteFrame - lastCritFrame > dur) {
         effectiveStacks = 0;
       }
 
       // Branch: crit
-      const newStacks = Math.min(effectiveStacks + 1, this.cap);
-      const critKey = this.stateKey(newStacks, absoluteFrame);
+      const newStacks = Math.min(effectiveStacks + 1, cap);
+      const critKey = encodeKey(newStacks, absoluteFrame);
       newMap.set(critKey, (newMap.get(critKey) ?? 0) + prob * clampedE);
 
       // Branch: no crit
-      const noCritKey = this.stateKey(effectiveStacks, effectiveStacks > 0 ? lastCritFrame : -1);
+      const noCritKey = encodeKey(effectiveStacks, effectiveStacks > 0 ? lastCritFrame : -1);
       newMap.set(noCritKey, (newMap.get(noCritKey) ?? 0) + prob * (1 - clampedE));
     });
 
     // Prune tiny probabilities and merge expired states
-    const keysToDelete: string[] = [];
+    const zeroKey = encodeKey(0, -1);
+    let pruneIdx = 0;
     newMap.forEach((prob, key) => {
-      if (prob < 1e-15) { keysToDelete.push(key); return; }
-      const [stacks, lastCritFrame] = this.parseKey(key);
-      if (stacks > 0 && lastCritFrame >= 0 && absoluteFrame - lastCritFrame > this.durationFrames) {
-        const zeroKey = this.stateKey(0, -1);
-        newMap.set(zeroKey, (newMap.get(zeroKey) ?? 0) + prob);
-        keysToDelete.push(key);
+      if (prob < 1e-15) { this._pruneKeys[pruneIdx++] = key; return; }
+      const stacks = decodeStacks(key);
+      if (stacks > 0) {
+        const lastCritFrame = decodeFrame(key);
+        if (lastCritFrame >= 0 && absoluteFrame - lastCritFrame > dur) {
+          newMap.set(zeroKey, (newMap.get(zeroKey) ?? 0) + prob);
+          this._pruneKeys[pruneIdx++] = key;
+        }
       }
     });
-    for (const k of keysToDelete) newMap.delete(k);
+    for (let i = 0; i < pruneIdx; i++) newMap.delete(this._pruneKeys[i]);
 
+    // Swap buffers instead of allocating
+    this.swapMap = this.stateMap;
     this.stateMap = newMap;
-  }
-
-  private stateKey(stacks: number, lastCritFrame: number): string {
-    return `${stacks}:${lastCritFrame}`;
-  }
-
-  private parseKey(key: string): [number, number] {
-    const idx = key.indexOf(':');
-    return [parseInt(key.substring(0, idx), 10), parseInt(key.substring(idx + 1), 10)];
+    this.cachedDist = undefined;
   }
 
   getDistribution(): number[] {
+    if (this.cachedDist) return this.cachedDist;
     const dist = new Array<number>(this.cap + 1).fill(0);
     this.stateMap.forEach((prob, key) => {
-      const [stacks] = this.parseKey(key);
-      dist[stacks] += prob;
+      dist[decodeStacks(key)] += prob;
     });
+    this.cachedDist = dist;
     return dist;
   }
 }
@@ -397,18 +417,29 @@ class FifoModel implements StatusModel {
 
   /** History of (absoluteFrame, E(T)) for frames within the duration window. */
   private history: { frame: number; eCrit: number }[] = [];
+  /** Start index into history (avoids O(n) shift). */
+  private startIdx = 0;
   private cachedDist: number[] | undefined;
 
   constructor(readonly config: CritStatusConfig) {}
+
+  /** Number of active entries in the sliding window. */
+  private get length() { return this.history.length - this.startIdx; }
 
   step(absoluteFrame: number, eCrit: number): void {
     // Add current frame
     this.history.push({ frame: absoluteFrame, eCrit: Math.min(Math.max(eCrit, 0), 1) });
 
-    // Prune expired entries
+    // Prune expired entries by advancing startIdx
     const durationFrames = this.config.durationFrames;
-    while (this.history.length > 0 && absoluteFrame - this.history[0].frame > durationFrames) {
-      this.history.shift();
+    while (this.startIdx < this.history.length && absoluteFrame - this.history[this.startIdx].frame > durationFrames) {
+      this.startIdx++;
+    }
+
+    // Compact when dead entries exceed half the array to prevent unbounded memory growth
+    if (this.startIdx > this.history.length >> 1) {
+      this.history = this.history.slice(this.startIdx);
+      this.startIdx = 0;
     }
 
     this.cachedDist = undefined;
@@ -418,29 +449,28 @@ class FifoModel implements StatusModel {
     if (this.cachedDist) return this.cachedDist;
 
     const cap = this.config.stackCap;
-    const n = this.history.length;
+    const n = this.length;
+    const startIdx = this.startIdx;
 
-    // Poisson binomial DP: dp[k] = P(exactly k crits in window)
-    // Then clamp to cap (FIFO replaces oldest, so effective stacks = min(crits, cap))
-    const dp = new Float64Array(n + 1);
+    // Cap-bounded Poisson binomial DP: O(n * cap) instead of O(n^2).
+    // dp[k] = P(capped stacks = k). At k = cap, absorb all overflow
+    // (both "was at cap, crit" and "was at cap, no crit" stay at cap).
+    const dp = new Float64Array(cap + 1);
     dp[0] = 1.0;
 
-    for (let i = 0; i < n; i++) {
+    for (let i = startIdx; i < startIdx + n; i++) {
       const p = this.history[i].eCrit;
-      // Process in reverse to avoid overwriting
-      for (let k = Math.min(i + 1, n); k >= 1; k--) {
-        dp[k] = dp[k] * (1 - p) + dp[k - 1] * p;
+      const q = 1 - p;
+      // k = cap: absorb overflow — P(stay at cap) + P(promoted from cap-1)
+      dp[cap] = dp[cap] + (cap > 0 ? dp[cap - 1] * p : 0);
+      // k < cap: standard recurrence (reverse order to avoid overwriting)
+      for (let k = cap - 1; k >= 1; k--) {
+        dp[k] = dp[k] * q + dp[k - 1] * p;
       }
-      dp[0] *= (1 - p);
+      dp[0] *= q;
     }
 
-    // Collapse to capped distribution
-    const dist = new Array<number>(cap + 1).fill(0);
-    for (let k = 0; k <= n; k++) {
-      const effectiveStacks = Math.min(k, cap);
-      dist[effectiveStacks] += dp[k];
-    }
-
+    const dist = Array.from(dp) as number[];
     this.cachedDist = dist;
     return dist;
   }
@@ -455,39 +485,41 @@ class FifoModel implements StatusModel {
 class LifecycleModel implements StatusModel {
   readonly modelType = ModelType.LIFECYCLE;
 
-  /** State map keyed by "stacks:buffTriggerFrame" where -1 = no buff active. */
-  private stateMap = new Map<string, number>();
+  private stateMap: Map<number, number>;
+  private swapMap = new Map<number, number>();
   private readonly cap: number;
   private readonly buffDurationFrames: number;
+  private cachedDist: number[] | undefined;
+  private _pruneKeys = new Array<number>(64);
 
   constructor(readonly config: CritStatusConfig) {
     this.cap = config.stackCap;
     this.buffDurationFrames = config.lifecycle!.buffDurationFrames;
-    // Initial: P(0 stacks, no buff) = 1
-    this.stateMap.set(this.stateKey(0, -1), 1.0);
+    this.stateMap = new Map<number, number>();
+    this.stateMap.set(encodeKey(0, -1), 1.0);
   }
 
   step(absoluteFrame: number, eCrit: number): void {
-    const newMap = new Map<string, number>();
+    const newMap = this.swapMap;
+    newMap.clear();
     const clampedE = Math.min(Math.max(eCrit, 0), 1);
     const cap = this.cap;
     const buffDur = this.buffDurationFrames;
 
     this.stateMap.forEach((prob, key) => {
       if (prob < 1e-15) return;
-      const [stacks, buffTrigger] = this.parseKey(key);
+      const stacks = decodeStacks(key);
+      const buffTrigger = decodeFrame(key);
 
       // Check buff expiry
       if (buffTrigger >= 0 && absoluteFrame - buffTrigger >= buffDur) {
-        // Buff expired → consume all stacks, back to ramping at 0
-        const resetKey = this.stateKey(0, -1);
+        const resetKey = encodeKey(0, -1);
         newMap.set(resetKey, (newMap.get(resetKey) ?? 0) + prob);
         return;
       }
 
       if (buffTrigger >= 0) {
-        // Buff active phase — state unchanged (crits don't add stacks at cap)
-        const key2 = this.stateKey(stacks, buffTrigger);
+        const key2 = encodeKey(stacks, buffTrigger);
         newMap.set(key2, (newMap.get(key2) ?? 0) + prob);
         return;
       }
@@ -496,52 +528,45 @@ class LifecycleModel implements StatusModel {
       const critStacks = Math.min(stacks + 1, cap);
 
       if (critStacks >= cap) {
-        // Reached cap → enter buff phase
-        const buffKey = this.stateKey(cap, absoluteFrame);
+        const buffKey = encodeKey(cap, absoluteFrame);
         newMap.set(buffKey, (newMap.get(buffKey) ?? 0) + prob * clampedE);
       } else {
-        const critKey = this.stateKey(critStacks, -1);
+        const critKey = encodeKey(critStacks, -1);
         newMap.set(critKey, (newMap.get(critKey) ?? 0) + prob * clampedE);
       }
 
-      // No crit — unchanged
-      const noCritKey = this.stateKey(stacks, -1);
+      const noCritKey = encodeKey(stacks, -1);
       newMap.set(noCritKey, (newMap.get(noCritKey) ?? 0) + prob * (1 - clampedE));
     });
 
     // Prune tiny probabilities
-    const keysToDelete: string[] = [];
-    newMap.forEach((prob, key) => { if (prob < 1e-15) keysToDelete.push(key); });
-    for (const k of keysToDelete) newMap.delete(k);
+    let pruneIdx = 0;
+    newMap.forEach((prob, key) => {
+      if (prob < 1e-15) this._pruneKeys[pruneIdx++] = key;
+    });
+    for (let i = 0; i < pruneIdx; i++) newMap.delete(this._pruneKeys[i]);
 
+    this.swapMap = this.stateMap;
     this.stateMap = newMap;
+    this.cachedDist = undefined;
   }
 
   getDistribution(): number[] {
+    if (this.cachedDist) return this.cachedDist;
     const dist = new Array<number>(this.cap + 1).fill(0);
     this.stateMap.forEach((prob, key) => {
-      const [stacks] = this.parseKey(key);
-      dist[stacks] += prob;
+      dist[decodeStacks(key)] += prob;
     });
+    this.cachedDist = dist;
     return dist;
   }
 
   getBuffProbability(): number {
     let buffProb = 0;
     this.stateMap.forEach((prob, key) => {
-      const [, buffTrigger] = this.parseKey(key);
-      if (buffTrigger >= 0) buffProb += prob;
+      if (decodeFrame(key) >= 0) buffProb += prob;
     });
     return buffProb;
-  }
-
-  private stateKey(stacks: number, buffTriggerFrame: number): string {
-    return `${stacks}:${buffTriggerFrame}`;
-  }
-
-  private parseKey(key: string): [number, number] {
-    const idx = key.indexOf(':');
-    return [parseInt(key.substring(0, idx), 10), parseInt(key.substring(idx + 1), 10)];
   }
 }
 
@@ -565,12 +590,21 @@ function createModel(config: CritStatusConfig): StatusModel {
 export class CritExpectationModel {
   private feedbackModels: StatusModel[] = [];
   private dependentModels: StatusModel[] = [];
+  /** Cached concatenation of feedback + dependent models, invalidated on addModel. */
+  private _allModels: StatusModel[] | undefined;
   private readonly baseCritRate: number;
   private lastE: number;
 
   constructor(baseCritRate: number) {
     this.baseCritRate = baseCritRate;
     this.lastE = baseCritRate;
+  }
+
+  private get allModels(): StatusModel[] {
+    if (!this._allModels) {
+      this._allModels = [...this.feedbackModels, ...this.dependentModels];
+    }
+    return this._allModels;
   }
 
   /** Add a status model. Feedback models contribute to E_total; dependent models only consume it. */
@@ -580,6 +614,7 @@ export class CritExpectationModel {
     } else {
       this.dependentModels.push(model);
     }
+    this._allModels = undefined;
   }
 
   /** Whether this model has any crit-dependent statuses registered. */
@@ -590,7 +625,7 @@ export class CritExpectationModel {
   /** Get full stat values (max stacks for all statuses) without stepping the model. */
   getFullStatValues(): Partial<Record<StatType, number>> {
     const full: Partial<Record<StatType, number>> = {};
-    const allModels = [...this.feedbackModels, ...this.dependentModels];
+    const allModels = this.allModels;
     for (const model of allModels) {
       for (const ps of model.config.perStackStats) {
         full[ps.stat] = (full[ps.stat] ?? 0) + model.config.stackCap * ps.valuePerStack;
@@ -650,11 +685,11 @@ export class CritExpectationModel {
     const expectedStatDeltas: Partial<Record<StatType, number>> = {};
     const fullStatValues: Partial<Record<StatType, number>> = {};
     const statContributions: StatusStatContribution[] = [];
-    const allModels = [...this.feedbackModels, ...this.dependentModels];
+    const allModels = this.allModels;
 
     for (const model of allModels) {
       const dist = model.getDistribution();
-      statusDistributions.set(model.config.statusId, [...dist]);
+      statusDistributions.set(model.config.statusId, dist);
 
       // Expected stack count for per-stack contributions: E[stacks] = Σ P(s) × s
       let expectedStacks = 0;

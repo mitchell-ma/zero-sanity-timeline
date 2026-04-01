@@ -1,4 +1,32 @@
 {
+  "onTriggerClause": [
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "RECOVER",
+          "object": "SKILL_POINT"
+        },
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "HAVE",
+          "object": "POTENTIAL",
+          "value": { "verb": "IS", "value": 1 }
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "AKEKURI_P1_POSITIVE_FEEDBACK",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
+        }
+      ]
+    }
+  ],
   "clause": [
     {
       "conditions": [],
@@ -6,6 +34,7 @@
         {
           "verb": "APPLY",
           "object": "STAT",
+          "objectId": "ATTACK_BONUS",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
@@ -13,14 +42,13 @@
               "verb": "IS",
               "value": 0.1
             }
-          },
-          "objectId": "ATTACK_BONUS"
+          }
         }
       ]
     }
   ],
   "properties": {
-    "id": "POSITIVE_FEEDBACK",
+    "id": "AKEKURI_P1_POSITIVE_FEEDBACK",
     "name": "Positive Feedback",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
@@ -40,10 +68,10 @@
     },
     "eventType": "STATUS",
     "eventCategoryType": "POTENTIAL_STATUS",
-    "description": "After recovering SP with skills, Akekuri gains ATK + for s. This effect can reach stacks."
+    "description": "After recovering SP with skills, Akekuri gains ATK +10% for 10s. This effect can reach 5 stacks."
   },
   "metadata": {
-    "originId": "POSITIVE_FEEDBACK_POTENTIAL",
+    "originId": "AKEKURI",
     "dataSources": [
       "ENDFIELD_WIKI"
     ]

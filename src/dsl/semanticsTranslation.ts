@@ -236,6 +236,7 @@ export function translateEffectParts(ef: Record<string, unknown>): {
   const targetParts: string[] = [];
   if (ef.to || ef.toDeterminer) {
     if (ef.toDeterminer) targetParts.push(translateDslToken(String(ef.toDeterminer)).toLowerCase());
+    if (ef.toQualifier) targetParts.push(titleCase(String(ef.toQualifier)));
     if (ef.to) targetParts.push(translateDslToken(String(ef.to)));
   }
   const target = targetParts.length > 0 ? `to ${targetParts.join(' ')}` : '';

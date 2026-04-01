@@ -1,0 +1,51 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STAT",
+          "objectId": "ATTACK_BONUS",
+          "toDeterminer": "ALL",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": 0.1
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "AKEKURI_P3_COMMITTED_TEAM_PLAYER",
+    "name": "Committed Team Player",
+    "to": "TEAM",
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": 3.425
+      },
+      "unit": "SECOND"
+    },
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 1
+      },
+      "interactionType": "RESET"
+    },
+    "eventType": "STATUS",
+    "eventCategoryType": "POTENTIAL_STATUS",
+    "description": "Ultimate SQUAD! ON ME! improved: While ultimate is active, entire team gains ATK +10%."
+  },
+  "metadata": {
+    "originId": "AKEKURI",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ]
+  },
+  "clauseType": "ALL"
+}

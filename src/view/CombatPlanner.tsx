@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback, useEffect, useLayoutEffect, useMemo } from 'react';
+import React, { useRef, useState, useCallback, useEffect, useLayoutEffect, useMemo } from 'react';
 import { NounType } from '../dsl/semantics';
 import { createPortal } from 'react-dom';
 // EventBlock rendering moved to TimelineColumn
@@ -21,8 +21,7 @@ import {
   TOTAL_FRAMES,
   TIMELINE_TOP_PAD,
 } from '../utils/timeline';
-import { OPERATOR_COLUMNS, COMBO_WINDOW_COLUMN_ID, ENEMY_ACTION_COLUMN_ID } from '../model/channels';
-import { formatFlat } from '../controller/info-pane/loadoutPaneController';
+import { OPERATOR_COLUMNS, OPERATOR_STATUS_COLUMN_ID, COMBO_WINDOW_COLUMN_ID, ENEMY_ACTION_COLUMN_ID } from '../model/channels';
 import { COMMON_COLUMN_IDS } from '../controller/slot/commonSlotController';
 import { TimelineSourceType, InteractionModeType, CombatSkillType, EventCategoryType, ColumnType, DamageType } from '../consts/enums';
 import {
@@ -101,6 +100,7 @@ interface CombatPlannerProps {
   onResetFrames?: (id: string) => void;
   onLoadoutChange: (slotId: string, state: OperatorLoadoutState) => void;
   onEditLoadout: (slotId: string) => void;
+  editingSlotId?: string | null;
   allOperators?: Operator[];
   onSwapOperator?: (slotId: string, newOperatorId: string | null) => void;
   allEnemies?: Enemy[];
@@ -199,13 +199,13 @@ const COL_WEIGHT_SKILL_IDS = new Set<string>([NounType.BASIC_ATTACK, NounType.BA
 function getColWeight(col: Column) {
   if (col.type === 'placeholder') return 1;
   const cid = col.type === 'mini-timeline' ? col.columnId : undefined;
-  if (cid === OPERATOR_COLUMNS.INPUT) return 1;
-  if (cid === 'operator-status') return 4;
+  if (cid === OPERATOR_COLUMNS.INPUT) return 2;
+  if (cid === OPERATOR_STATUS_COLUMN_ID) return 4;
   if (cid && COL_WEIGHT_SKILL_IDS.has(cid)) return 2;
   return 2; // tactical, etc.
 }
 
-export default function CombatPlanner({
+export default React.memo(function CombatPlanner({
   slots,
   enemy,
   events,
@@ -228,6 +228,7 @@ export default function CombatPlanner({
   onResetFrames,
   onLoadoutChange,
   onEditLoadout,
+  editingSlotId,
   allOperators,
   onSwapOperator,
   allEnemies,
@@ -2097,7 +2098,7 @@ export default function CombatPlanner({
             return (
               <div
                 key={`lo-${slot.slotId}`}
-                className="tl-loadout-cell tl-group-start"
+                className={`tl-loadout-cell tl-group-start${op ? ' tl-loadout-cell--occupied' : ''}${editingSlotId === slot.slotId ? ' tl-loadout-cell--editing' : ''}`}
                 style={{
                   [isHorizontal ? 'gridRow' : 'gridColumn']: `${group.startCol} / span ${group.columnCount}`,
                   '--op-color': op?.color ?? '#666',
@@ -2426,7 +2427,7 @@ export default function CombatPlanner({
                         className="hover-line-resource-dot hover-line-resource-dot--horizontal"
                         style={{ top: yInLine, borderColor: dotColor, boxShadow: `0 0 6px ${dotColor}55` }}
                       >
-                        {formatFlat(value)}
+                        {value.toFixed(1).replace(/\.0$/, '')}
                       </div>
                     );
                   }
@@ -2440,7 +2441,7 @@ export default function CombatPlanner({
                       className="hover-line-resource-dot"
                       style={{ left: xInLine, borderColor: dotColor, boxShadow: `0 0 6px ${dotColor}55` }}
                     >
-                      {formatFlat(value)}
+                      {value.toFixed(1).replace(/\.0$/, '')}
                     </div>
                   );
                 }
@@ -2462,4 +2463,4 @@ export default function CombatPlanner({
         </div>
     </div>
   );
-}
+});

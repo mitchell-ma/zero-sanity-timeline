@@ -1,7 +1,7 @@
 import { Column, MiniTimeline, MicroColumn, Operator, Enemy, VisibleSkills, EventFrameMarker } from '../../consts/viewTypes';
 import { DeterminerType, NounType, VerbType, type Effect, type Predicate } from '../../dsl/semantics';
 import type { FrameClausePredicate } from '../../model/event-frames/skillEventFrame';
-import { ColumnType, CombatSkillType, ELEMENT_COLORS, ElementType, EnhancementType, EventCategoryType, EventFrameType, HeaderVariant, MicroColumnAssignment, PERMANENT_DURATION, SegmentType, StatusType, TimeDependency, TimelineSourceType } from '../../consts/enums';
+import { ColumnType, CombatSkillType, DEFAULT_EVENT_COLOR, ElementType, EnhancementType, EventCategoryType, EventFrameType, HeaderVariant, MicroColumnAssignment, PERMANENT_DURATION, SegmentType, StatusType, TimeDependency, TimelineSourceType } from '../../consts/enums';
 import { ENEMY_OWNER_ID, ENEMY_GROUP_COLUMNS, ENEMY_ACTION_COLUMN_ID, OPERATOR_COLUMNS, OPERATOR_STATUS_COLUMN_ID, PHYSICAL_INFLICTION_COLUMNS, PHYSICAL_STATUS_COLUMNS, SKILL_COLUMN_ORDER as SKILL_ORDER, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID, COMBO_WINDOW_COLUMN_ID } from '../../model/channels';
 import { isTeamStatus } from '../gameDataStore';
 import { SKILL_LABELS, ColumnLabel, STATUS_LABELS, REACTION_MICRO_COLUMNS } from '../../consts/timelineColumnLabels';
@@ -120,7 +120,10 @@ function buildStatusMicroColumn(
     label,
     color,
     ...(overrides?.statusType ? { statusType: overrides.statusType } : {}),
-    ...(overrides?.permanent || durSec >= PERMANENT_DURATION ? { permanent: true } : {}),
+    ...(overrides?.permanent || durSec >= PERMANENT_DURATION
+      || cfg?.eventCategoryType === EventCategoryType.TALENT
+      || cfg?.eventCategoryType === EventCategoryType.POTENTIAL
+      ? { permanent: true } : {}),
     defaultEvent: {
       id: statusId,
       name: statusId,
@@ -422,8 +425,8 @@ export function buildColumns(
         source: TimelineSourceType.OPERATOR,
         ownerId: slot.slotId,
         columnId: OPERATOR_COLUMNS.INPUT,
-        label: 'INPUT',
-        color: ELEMENT_COLORS[ElementType.PHYSICAL],
+        label: ColumnLabel.ACTION,
+        color: DEFAULT_EVENT_COLOR,
         headerVariant: HeaderVariant.SKILL,
         eventVariants: [
           {

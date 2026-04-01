@@ -106,7 +106,7 @@ export function buildColumnContextMenu(
   const timeStopReason = timeStop.reason;
 
   if (col.microColumns && col.microColumnAssignment === MicroColumnAssignment.DYNAMIC_SPLIT) {
-    const mcItems = col.microColumns.map((mc) => {
+    const mcItems = col.microColumns.filter(mc => !mc.permanent).map((mc) => {
       // Check stack limit per micro-column
       const matchSet = col.matchColumnIds ? new Set(col.matchColumnIds) : null;
       const mcEvents = events.filter(

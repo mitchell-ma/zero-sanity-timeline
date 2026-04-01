@@ -307,6 +307,8 @@ export function resolveEventColor(
   const elColor = dominant
     ? ELEMENT_COLORS[dominant as ElementType]
     : col.skillElement ? ELEMENT_COLORS[col.skillElement as ElementType] : undefined;
+  // Non-skill columns (ACTION, status) use their own column color rather than the slot's element
+  if (!elColor && !col.skillElement) return col.color;
   return elColor ?? slotElementColors[col.ownerId] ?? DEFAULT_EVENT_COLOR;
 }
 

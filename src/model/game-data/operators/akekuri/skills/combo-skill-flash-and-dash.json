@@ -89,8 +89,25 @@
                   "object": "SKILL_POINT",
                   "with": {
                     "value": {
-                      "verb": "IS",
-                      "value": 7.5
+                      "operation": "MULT",
+                      "left": { "verb": "IS", "value": 7.5 },
+                      "right": {
+                        "operation": "ADD",
+                        "left": { "verb": "IS", "value": 1 },
+                        "right": {
+                          "operation": "MIN",
+                          "left": { "verb": "VARY_BY", "object": "TALENT_LEVEL", "value": [0, 0.50, 0.75], "ofDeterminer": "THIS", "of": "OPERATOR" },
+                          "right": {
+                            "operation": "MULT",
+                            "left": {
+                              "operation": "INTEGER_DIV",
+                              "left": { "verb": "IS", "object": "STAT", "objectId": "INTELLECT", "ofDeterminer": "THIS" },
+                              "right": { "verb": "IS", "value": 10 }
+                            },
+                            "right": { "verb": "VARY_BY", "object": "TALENT_LEVEL", "value": [0, 0.01, 0.015], "ofDeterminer": "THIS", "of": "OPERATOR" }
+                          }
+                        }
+                      }
                     }
                   }
                 },
@@ -167,8 +184,25 @@
                   "object": "SKILL_POINT",
                   "with": {
                     "value": {
-                      "verb": "IS",
-                      "value": 7.5
+                      "operation": "MULT",
+                      "left": { "verb": "IS", "value": 7.5 },
+                      "right": {
+                        "operation": "ADD",
+                        "left": { "verb": "IS", "value": 1 },
+                        "right": {
+                          "operation": "MIN",
+                          "left": { "verb": "VARY_BY", "object": "TALENT_LEVEL", "value": [0, 0.50, 0.75], "ofDeterminer": "THIS", "of": "OPERATOR" },
+                          "right": {
+                            "operation": "MULT",
+                            "left": {
+                              "operation": "INTEGER_DIV",
+                              "left": { "verb": "IS", "object": "STAT", "objectId": "INTELLECT", "ofDeterminer": "THIS" },
+                              "right": { "verb": "IS", "value": 10 }
+                            },
+                            "right": { "verb": "VARY_BY", "object": "TALENT_LEVEL", "value": [0, 0.01, 0.015], "ofDeterminer": "THIS", "of": "OPERATOR" }
+                          }
+                        }
+                      }
                     }
                   }
                 },

@@ -275,6 +275,7 @@ export default function App() {
                     onResetFrames={app.handleResetFrames}
                     onLoadoutChange={app.handleLoadoutChange}
                     onEditLoadout={app.handleEditLoadout}
+                    editingSlotId={app.editingSlot?.slotId}
                     allOperators={app.allOperators}
                     onSwapOperator={app.handleSwapOperator}
                     allEnemies={app.allEnemies}
@@ -303,9 +304,9 @@ export default function App() {
                     hideScrollbar={app.scrollSynced}
                     onDuplicateEvents={app.handleDuplicateEvents}
                     selectEventIds={app.selectEventIds}
-                    onSelectEventIdsConsumed={() => app.setSelectEventIds(undefined)}
+                    onSelectEventIdsConsumed={app.handleSelectEventIdsConsumed}
                     showRealTime={app.showRealTime}
-                    onToggleRealTime={() => app.setShowRealTime((v) => !v)}
+                    onToggleRealTime={app.handleToggleRealTime}
                     interactionMode={app.interactionMode}
                     staggerBreaks={app.staggerBreaks}
                     contentFrames={app.contentFrames}
@@ -408,7 +409,7 @@ export default function App() {
                     contentFrames={app.contentFrames}
                     onDamageClick={app.handleDamageClick}
                     onDamageRows={app.setDamageRows}
-                    onSelectFrame={(sf) => app.setSelectedFrames([sf])}
+                    onSelectFrame={app.handleSelectFrame}
                     critMode={app.critMode}
                     onCritModeChange={app.setCritMode}
                     overrides={app.overrides}

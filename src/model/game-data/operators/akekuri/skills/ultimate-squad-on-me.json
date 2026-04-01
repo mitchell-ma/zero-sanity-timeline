@@ -120,6 +120,34 @@
                   }
                 }
               ]
+            },
+            {
+              "conditions": [
+                {
+                  "subjectDeterminer": "THIS",
+                  "subject": "OPERATOR",
+                  "verb": "HAVE",
+                  "object": "POTENTIAL",
+                  "value": { "verb": "IS", "value": 3 }
+                }
+              ],
+              "effects": [
+                {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "AKEKURI_P3_COMMITTED_TEAM_PLAYER",
+                  "to": "TEAM",
+                  "with": {
+                    "duration": {
+                      "value": {
+                        "verb": "IS",
+                        "value": 3.425
+                      },
+                      "unit": "SECOND"
+                    }
+                  }
+                }
+              ]
             }
           ],
           "clauseType": "ALL"

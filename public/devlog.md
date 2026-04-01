@@ -21,6 +21,15 @@
 - Rossi's Ultimate Razorclaw Ambuscade updated with correct Heat element on all damage frames
 - Rossi's empowered Crimson Shadow battle skill data refined
 - Intra-frame ordering fix: when a damage frame triggers a status buff at the same moment, that buff no longer incorrectly boosts the frame that created it — statuses take effect starting from the next damage frame
+- Akekuri's game data fully implemented — combo skill Flash and Dash now models talent-scaled SP recovery based on Intellect, and ultimate SQUAD! ON ME! includes all frame timings and SP recovery pulses
+- Akekuri's potential effects modeled: P1 Positive Feedback (ATK +10% per SP recovery, stacking up to 5×), P3 Committed Team Player (team ATK +10% during ultimate), P4 ultimate energy discount, and P5 extended team link duration
+- Talent and potential statuses now appear as permanent columns — no need to manually add them from the context menu
+- Loadout cell now highlights with a colored border when its edit panel is open, making it clearer which operator you're editing
+- Damage sheet now virtualizes rows — only rows visible in the scroll viewport are rendered, improving performance for long rotations with hundreds of damage frames
+- Switching between Expected and Always crit modes no longer re-runs the full timeline pipeline, since both produce the same event sequence — only the damage sheet recalculates
+- New gear icons added for Bonekrusha, Frontiers, Lynx, Redeemer, Swordmancer, and Type-50 Yinglung sets
+- Hover dots on resource graphs now show cleaner number formatting
+- Action column label and color updated for clarity
 
 ## 2026-03-30
 - Shared URLs are now dramatically smaller — the encoding was rebuilt from scratch using binary compression, so complex 4-operator loadouts produce much shorter links

@@ -193,8 +193,24 @@ export function useApp() {
   // spConsumptionHistory and spInsufficiencyZones derived via useMemo below (after processedEvents)
   const [infoPaneClosing,  setInfoPaneClosing]  = useState(false);
   const [infoPanePinned,   setInfoPanePinned]   = useState(false);
+
+  // Refs mirroring editing state — read inside callbacks to keep deps stable (prevents
+  // CombatPlanner memo breaks when pane state changes recreate callback references).
+  const editingEventIdRef = useRef(editingEventId);
+  editingEventIdRef.current = editingEventId;
+  const editingSlotIdRef = useRef(editingSlotId);
+  editingSlotIdRef.current = editingSlotId;
+  const editingEnemyOpenRef = useRef(editingEnemyOpen);
+  editingEnemyOpenRef.current = editingEnemyOpen;
+  const editingResourceKeyRef = useRef(editingResourceKey);
+  editingResourceKeyRef.current = editingResourceKey;
+  const editingDamageRowRef = useRef<DamageTableRow | null>(editingDamageRow);
+  editingDamageRowRef.current = editingDamageRow;
+  const infoPanePinnedRef = useRef(infoPanePinned);
+  infoPanePinnedRef.current = infoPanePinned;
   const [infoPaneVerbose,  setInfoPaneVerbose]  = useState(InfoLevel.DETAILED);
   const [selectedFrames,   setSelectedFrames]   = useState<SelectedFrame[]>([]);
+  const handleSelectFrame = useCallback((sf: SelectedFrame) => setSelectedFrames([sf]), []);
   // hoverFrame is a ref — it does NOT trigger re-renders at the App level.
   // CombatPlanner manages its own local hoverFrame state; CombatSheet receives
   // updates via the onHoverFrame callback and a local ref.
@@ -202,6 +218,7 @@ export function useApp() {
   const setHoverFrame = useCallback((f: number | null) => { hoverFrameRef.current = f; }, []);
   const [scrollSynced,     setScrollSynced]     = useState(true);
   const [showRealTime,     setShowRealTime]     = useState(true);
+  const handleToggleRealTime = useCallback(() => setShowRealTime(v => !v), []);
   const [splitPct,         setSplitPct]         = useState(() => {
     try { const v = localStorage.getItem('zst-split-pct'); return v ? Number(v) : 65; } catch { return 65; }
   });
@@ -247,6 +264,7 @@ export function useApp() {
   const [loadoutRowHeight, setLoadoutRowHeight] = useState(LOADOUT_ROW_HEIGHT);
   const [headerRowHeight, setHeaderRowHeight] = useState(0);
   const [selectEventIds,   setSelectEventIds]   = useState<Set<string> | undefined>(undefined);
+  const handleSelectEventIdsConsumed = useCallback(() => setSelectEventIds(undefined), []);
   const [exportModalOpen,  setExportModalOpen]  = useState(false);
   const [saveFlash,        setSaveFlash]        = useState(false);
   const [confirmClearLoadout, setConfirmClearLoadout] = useState(false);
@@ -436,6 +454,12 @@ export function useApp() {
     return model ? model.getHp() : null;
   }, [enemy.id]);
 
+  // Pipeline crit mode: EXPECTED and ALWAYS produce identical pipeline events
+  // (both fire PERFORM CRITICAL_HIT on every damage frame). Normalizing avoids
+  // a full pipeline recompute when toggling between them — only the damage table
+  // in CombatSheet needs the actual critMode for multiplier calculation.
+  const pipelineCritMode = critMode === CritMode.ALWAYS ? CritMode.EXPECTED : critMode;
+
   const processedEvents = useMemo(
     () => {
       // Configure UE slots before pipeline run
@@ -462,11 +486,11 @@ export function useApp() {
         combatLoadout.commonSlot.hp,
         combatLoadout.getAllSpCosts(),
         combatLoadout.getTriggerIndex() ?? undefined,
-        critMode, overrides, enemyStats,
+        pipelineCritMode, overrides, enemyStats,
       );
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [validEvents, loadoutProperties, slotWeapons, slotWirings, slotOperatorMap, slotGearSets, bossMaxHp, enemy.id, loadouts, combatLoadout, operators, resourceConfigs, critMode, overrides, enemyStats],
+    [validEvents, loadoutProperties, slotWeapons, slotWirings, slotOperatorMap, slotGearSets, bossMaxHp, enemy.id, loadouts, combatLoadout, operators, resourceConfigs, pipelineCritMode, overrides, enemyStats],
   );
 
   // Write back crit results from RANDOM mode (one-time per new event)
@@ -1625,15 +1649,15 @@ export function useApp() {
       setEditingDamageRow(null);
       setSelectedFrames([]);
       setInfoPaneClosing(false);
-    } else if (!infoPanePinned) {
-      if (editingEventId || editingSlotId || editingEnemyOpen || editingResourceKey || editingDamageRow) setInfoPaneClosing(true);
+    } else if (!infoPanePinnedRef.current) {
+      if (editingEventIdRef.current || editingSlotIdRef.current || editingEnemyOpenRef.current || editingResourceKeyRef.current || editingDamageRowRef.current) setInfoPaneClosing(true);
       else { setEditingEventId(null); setEditContext(null); setSelectedFrames([]); }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [infoPanePinned, editingEventId, editingSlotId, editingResourceKey, editingDamageRow]);
+  }, []);
 
   const handleEditLoadout = useCallback((slotId: string) => {
-    if (editingSlotId === slotId) {
+    if (editingSlotIdRef.current === slotId) {
       setInfoPaneClosing(true);
     } else {
       setEditingSlotId(slotId);
@@ -1643,10 +1667,11 @@ export function useApp() {
       setEditingDamageRow(null);
       setInfoPaneClosing(false);
     }
-  }, [editingSlotId]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleEditEnemy = useCallback(() => {
-    if (editingEnemyOpen) {
+    if (editingEnemyOpenRef.current) {
       setInfoPaneClosing(true);
     } else {
       setEditingEnemyOpen(true);
@@ -1656,7 +1681,8 @@ export function useApp() {
       setEditingDamageRow(null);
       setInfoPaneClosing(false);
     }
-  }, [editingEnemyOpen]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleCloseEnemyPane = useCallback(() => {
     setEditingEnemyOpen(false);
@@ -1774,11 +1800,12 @@ export function useApp() {
     handleDmgScrollRef, handleTlScrollRef,
 
     // Setters for simple inline handlers
-    setContextMenu, setSelectedFrames, setLoadoutRowHeight, setHeaderRowHeight,
+    setContextMenu, setSelectedFrames, handleSelectFrame, setLoadoutRowHeight, setHeaderRowHeight,
     setHoverFrame, setInfoPanePinned, setInfoPaneVerbose, setWarningMessage,
     setDevlogOpen, setSettingsOpen, setKeysOpen, setInteractionMode, setLightMode, setShowRealTime, setCritMode,
     handleUpdateSetting,
-    setSplitPct, setSelectEventIds, setExportModalOpen,
+    setSplitPct, setSelectEventIds, handleSelectEventIdsConsumed, setExportModalOpen,
+    handleToggleRealTime,
     setConfirmClearLoadout, setConfirmClearAll,
 
     // Undo/redo
