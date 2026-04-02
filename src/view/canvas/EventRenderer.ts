@@ -384,7 +384,8 @@ export function renderEvent(
       labelObj.text = segLabelText;
       labelObj.visible = true;
       labelObj.alpha = 0.9;
-      labelObj.style.fill = 0xffffff;
+      const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+      labelObj.style.fill = presentation.passive && isLight ? 0x000000 : 0xffffff;
 
       // Alpha-gradient mask: Sprite stretched to segment bounds.
       // Texture is solid white with a fade-to-transparent at the bottom ~15%.
@@ -597,8 +598,8 @@ export function renderEvent(
   else { outline.roundRect(inset, 0, eventW, outlineH, 2); }
   outline.stroke({ color: darkenColor(baseColor, 0.4), alpha: presentation.passive ? 0.3 : 0.8, width: 1 });
 
-  // Selection outline: bright blue; Hover outline: warm amber
-  if (selected) {
+  // Selection outline: bright blue (skip for non-draggable derived events); Hover outline: warm amber
+  if (selected && !presentation.notDraggable) {
     if (isHorizontal) { outline.roundRect(0, inset, outlineH, eventW, 2); }
     else { outline.roundRect(inset, 0, eventW, outlineH, 2); }
     outline.stroke({ color: 0x64c8ff, alpha: 0.9, width: 2 });
