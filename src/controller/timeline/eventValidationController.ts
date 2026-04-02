@@ -6,9 +6,6 @@
  * instead of 10+ separate useMemos.
  */
 import { TimelineEvent } from '../../consts/viewTypes';
-import { NounType } from '../../dsl/semantics';
-import type { InteractionModeType } from '../../consts/enums';
-import { INFLICTION_COLUMN_IDS, OPERATOR_COLUMNS, SKILL_COLUMN_ORDER } from '../../model/channels';
 import type { Slot } from './columnBuilder';
 import type { ResourceGraphData } from '../../app/useResourceGraphs';
 import type { StaggerBreak } from './staggerTimeline';
@@ -53,50 +50,9 @@ export interface ValidationResult {
 const EMPTY_MAP: Map<string, string> = new Map();
 const EMPTY_SET: Set<string> = new Set();
 
-function mapsEqual(a: Map<string, string>, b: Map<string, string>): boolean {
-  if (a.size !== b.size) return false;
-  let equal = true;
-  a.forEach((v, k) => { if (equal && b.get(k) !== v) equal = false; });
-  return equal;
-}
-
-function setsEqual(a: Set<string>, b: Set<string>): boolean {
-  if (a.size !== b.size) return false;
-  let equal = true;
-  a.forEach((v) => { if (equal && !b.has(v)) equal = false; });
-  return equal;
-}
-
-function timeStopRegionsEqual(a: TimeStopRegion[], b: TimeStopRegion[]): boolean {
-  if (a.length !== b.length) return false;
-  for (let i = 0; i < a.length; i++) {
-    if (a[i].startFrame !== b[i].startFrame || a[i].durationFrames !== b[i].durationFrames) return false;
-  }
-  return true;
-}
-
-/** Reuse prev if structurally equal, otherwise return next. */
-function stableMap(next: Map<string, string>, prev: Map<string, string> | undefined): Map<string, string> {
-  if (prev && mapsEqual(next, prev)) return prev;
-  return next;
-}
-
-function stableSet(next: Set<string>, prev: Set<string> | undefined): Set<string> {
-  if (prev && setsEqual(next, prev)) return prev;
-  return next;
-}
-
-// Module-level cache for previous result
-let _prevValidation: ValidationResult | null = null;
-
 /**
  * Runs all event validators in one pass. Returns all validation maps,
  * time-stop regions, and auto-finisher IDs.
- *
- * Uses structural equality: if a validation map's content hasn't changed
- * since the last call, the previous Map reference is reused. This prevents
- * downstream React useMemos from invalidating on every drag tick when the
- * pipeline re-runs but most warnings stay the same.
  */
 export function computeAllValidations(
   events: TimelineEvent[],
@@ -104,126 +60,30 @@ export function computeAllValidations(
   resourceGraphs: Map<string, ResourceGraphData> | undefined,
   staggerBreaks: readonly StaggerBreak[] | undefined,
   draggingIds: Set<string> | null,
-  interactionMode?: InteractionModeType,
-  changedUids?: ReadonlySet<string>,
 ): ValidationResult {
-  const prev = _prevValidation;
-
-  // ── Fast path: if few events changed and we have previous results, only
-  // re-run validators that could be affected by the changed events. ──────
-  if (changedUids && changedUids.size > 0 && prev
-    && changedUids.size < events.length * 0.5) {
-    // Classify what kind of events changed to determine which validators to skip
-    let hasSkillChange = false;
-    let hasTimeStopChange = false;
-    let hasInflictionChange = false;
-    for (const ev of events) {
-      if (!changedUids.has(ev.uid)) continue;
-      // Match computeTimeStopRegions logic: ult, combo, or perfect dodge
-      if (ev.columnId === NounType.ULTIMATE || ev.columnId === NounType.COMBO_SKILL
-        || (ev.columnId === OPERATOR_COLUMNS.INPUT && ev.isPerfectDodge)) hasTimeStopChange = true;
-      if ((SKILL_COLUMN_ORDER as readonly string[]).includes(ev.columnId)) hasSkillChange = true;
-      if (INFLICTION_COLUMN_IDS.has(ev.columnId)) hasInflictionChange = true;
-    }
-
-    const timeStopRegionsRaw = hasTimeStopChange ? computeTimeStopRegions(events) : null;
-    const timeStopRegions = timeStopRegionsRaw
-      ? (prev && timeStopRegionsEqual(timeStopRegionsRaw, prev.timeStopRegions) ? prev.timeStopRegions : timeStopRegionsRaw)
-      : prev.timeStopRegions;
-
-    // Position-dependent validators (timeStop, resource, combo) always run — any event
-    // could have moved into/out of a zone. Type-specific validators only run when relevant.
-    const maps: ValidationMaps = {
-      combo: stableMap(validateComboWindows(events, slots, draggingIds), prev.maps.combo),
-      resource: resourceGraphs
-        ? stableMap(validateResources(events, resourceGraphs, slots, draggingIds ?? undefined), prev.maps.resource)
-        : (prev.maps.resource.size === 0 ? prev.maps.resource : EMPTY_MAP),
-      empowered: hasSkillChange ? stableMap(validateEmpowered(events, slots), prev.maps.empowered) : prev.maps.empowered,
-      enhanced: hasSkillChange ? stableMap(validateEnhanced(events), prev.maps.enhanced) : prev.maps.enhanced,
-      regularBasic: hasSkillChange ? stableMap(validateDisabledVariants(events), prev.maps.regularBasic) : prev.maps.regularBasic,
-      clause: hasSkillChange ? stableMap(validateVariantClauses(events, slots), prev.maps.clause) : prev.maps.clause,
-      finisherStagger: staggerBreaks && hasSkillChange
-        ? stableMap(validateFinisherStaggerBreak(events, getEffectiveStaggerWindows(events, staggerBreaks)), prev.maps.finisherStagger)
-        : prev.maps.finisherStagger,
-      timeStop: stableMap(validateTimeStops(events, timeStopRegions), prev.maps.timeStop),
-      infliction: hasInflictionChange ? stableMap(validateInflictionStacks(events), prev.maps.infliction) : prev.maps.infliction,
-    };
-
-    const stableMaps = maps.combo === prev.maps.combo
-      && maps.resource === prev.maps.resource
-      && maps.empowered === prev.maps.empowered
-      && maps.enhanced === prev.maps.enhanced
-      && maps.regularBasic === prev.maps.regularBasic
-      && maps.clause === prev.maps.clause
-      && maps.finisherStagger === prev.maps.finisherStagger
-      && maps.timeStop === prev.maps.timeStop
-      && maps.infliction === prev.maps.infliction
-      ? prev.maps
-      : maps;
-
-    const autoFinisherIdsRaw = staggerBreaks && hasSkillChange
-      ? getAutoFinisherIds(events, getEffectiveStaggerWindows(events, staggerBreaks))
-      : null;
-    const autoFinisherIds = autoFinisherIdsRaw
-      ? stableSet(autoFinisherIdsRaw, prev.autoFinisherIds)
-      : prev.autoFinisherIds;
-
-    if (stableMaps === prev.maps && timeStopRegions === prev.timeStopRegions && autoFinisherIds === prev.autoFinisherIds) {
-      return prev;
-    }
-
-    const result: ValidationResult = { maps: stableMaps, timeStopRegions, autoFinisherIds };
-    _prevValidation = result;
-    return result;
-  }
-
-  // ── Full computation (no changedUids or too many changes) ──────────────
-  const timeStopRegionsRaw = computeTimeStopRegions(events);
-  const timeStopRegions = prev && timeStopRegionsEqual(timeStopRegionsRaw, prev.timeStopRegions)
-    ? prev.timeStopRegions
-    : timeStopRegionsRaw;
+  const timeStopRegions = computeTimeStopRegions(events);
 
   const maps: ValidationMaps = {
-    combo: stableMap(validateComboWindows(events, slots, draggingIds), prev?.maps.combo),
+    combo: validateComboWindows(events, slots, draggingIds),
     resource: resourceGraphs
-      ? stableMap(validateResources(events, resourceGraphs, slots, draggingIds ?? undefined), prev?.maps.resource)
-      : (prev?.maps.resource?.size === 0 ? prev.maps.resource : EMPTY_MAP),
-    empowered: stableMap(validateEmpowered(events, slots), prev?.maps.empowered),
-    enhanced: stableMap(validateEnhanced(events), prev?.maps.enhanced),
-    regularBasic: stableMap(validateDisabledVariants(events), prev?.maps.regularBasic),
-    clause: stableMap(validateVariantClauses(events, slots), prev?.maps.clause),
+      ? validateResources(events, resourceGraphs, slots, draggingIds ?? undefined)
+      : EMPTY_MAP,
+    empowered: validateEmpowered(events, slots),
+    enhanced: validateEnhanced(events),
+    regularBasic: validateDisabledVariants(events),
+    clause: validateVariantClauses(events, slots),
     finisherStagger: staggerBreaks
-      ? stableMap(validateFinisherStaggerBreak(events, getEffectiveStaggerWindows(events, staggerBreaks)), prev?.maps.finisherStagger)
-      : (prev?.maps.finisherStagger?.size === 0 ? prev.maps.finisherStagger : EMPTY_MAP),
-    timeStop: stableMap(validateTimeStops(events, timeStopRegions), prev?.maps.timeStop),
-    infliction: stableMap(validateInflictionStacks(events), prev?.maps.infliction),
+      ? validateFinisherStaggerBreak(events, getEffectiveStaggerWindows(events, staggerBreaks))
+      : EMPTY_MAP,
+    timeStop: validateTimeStops(events, timeStopRegions),
+    infliction: validateInflictionStacks(events),
   };
 
-  const stableMaps = prev
-    && maps.combo === prev.maps.combo
-    && maps.resource === prev.maps.resource
-    && maps.empowered === prev.maps.empowered
-    && maps.enhanced === prev.maps.enhanced
-    && maps.regularBasic === prev.maps.regularBasic
-    && maps.clause === prev.maps.clause
-    && maps.finisherStagger === prev.maps.finisherStagger
-    && maps.timeStop === prev.maps.timeStop
-    && maps.infliction === prev.maps.infliction
-    ? prev.maps
-    : maps;
-
-  const autoFinisherIdsRaw = staggerBreaks
+  const autoFinisherIds = staggerBreaks
     ? getAutoFinisherIds(events, getEffectiveStaggerWindows(events, staggerBreaks))
     : EMPTY_SET;
-  const autoFinisherIds = stableSet(autoFinisherIdsRaw, prev?.autoFinisherIds);
 
-  if (prev && stableMaps === prev.maps && timeStopRegions === prev.timeStopRegions && autoFinisherIds === prev.autoFinisherIds) {
-    return prev;
-  }
-
-  const result: ValidationResult = { maps: stableMaps, timeStopRegions, autoFinisherIds };
-  _prevValidation = result;
-  return result;
+  return { maps, timeStopRegions, autoFinisherIds };
 }
 
 /**

@@ -18,7 +18,7 @@ import { TimelineSourceType, ELEMENT_COLORS, ElementType, InteractionModeType, E
 import { getAllSkillLabels, getAllStatusLabels, getAllInflictionLabels } from '../gameDataStore';
 import { CombatSkillType, StackInteractionType, UNLIMITED_STACKS } from '../../consts/enums';
 import { COMBO_WINDOW_COLUMN_ID, REACTION_COLUMNS } from '../../model/channels';
-import { formatSegmentShortName } from '../../dsl/semanticsTranslation';
+import { formatSegmentShortName, translateDslToken } from '../../dsl/semanticsTranslation';
 import { getAllOperatorStatuses } from '../gameDataStore';
 import { getAllWeaponStatuses } from '../../model/game-data/weaponStatusesStore';
 import { getAllGearStatuses } from '../../model/game-data/gearStatusesStore';
@@ -34,7 +34,6 @@ import { aggregateEventWarnings } from './eventValidationController';
 
 const REACTION_COLUMN_IDS: Set<string> = new Set(Object.values(REACTION_COLUMNS));
 const MAX_ROMAN = 9;
-const MAX_MICRO_WIDTH_FRAC = 0.25;
 
 function stackLabel(stackNumber: number): string {
   if (stackNumber <= MAX_ROMAN) return formatSegmentShortName(undefined, stackNumber - 1);
@@ -129,7 +128,7 @@ export function computeStatusViewOverrides(
       const allSorted = [...typeEvents].sort((a, b) => a.startFrame - b.startFrame || a.uid.localeCompare(b.uid));
       const activeSorted = [...active].sort((a, b) => a.startFrame - b.startFrame || a.uid.localeCompare(b.uid));
       if (allSorted.length === 0) continue;
-      const baseName = getAllInflictionLabels()[columnId] ?? getAllInflictionLabels()[allSorted[0].name] ?? getAllStatusLabels()[allSorted[0].name] ?? allSorted[0].name;
+      const baseName = getAllInflictionLabels()[columnId] ?? getAllInflictionLabels()[allSorted[0].name] ?? getAllStatusLabels()[allSorted[0].name] ?? translateDslToken(allSorted[0].name);
 
       const statusInfo = getStatusStackInfo(allSorted[0].name);
       const singleInstance = isSingleInstanceStatus(allSorted[0].name);
@@ -269,7 +268,7 @@ export function resolveEventLabel(ev: TimelineEvent): string {
   return getAllSkillLabels()[ev.name as CombatSkillType]
     ?? getAllInflictionLabels()[ev.name]
     ?? getAllStatusLabels()[ev.name]
-    ?? ev.name;
+    ?? translateDslToken(ev.name);
 }
 
 /**
@@ -302,13 +301,13 @@ export function resolveEventColor(
   slotElementColors: Record<string, string>,
 ): string {
   if (col.type !== 'mini-timeline') return col.color;
-  // Prefer the dominant element from the event's own segments
+  // Non-skill columns (ACTION, status) always use their own column color
+  if (!col.skillElement) return col.color;
+  // Skill columns: prefer the dominant element from the event's own segments
   const dominant = getDominantSegmentElement(ev);
   const elColor = dominant
     ? ELEMENT_COLORS[dominant as ElementType]
-    : col.skillElement ? ELEMENT_COLORS[col.skillElement as ElementType] : undefined;
-  // Non-skill columns (ACTION, status) use their own column color rather than the slot's element
-  if (!elColor && !col.skillElement) return col.color;
+    : ELEMENT_COLORS[col.skillElement as ElementType];
   return elColor ?? slotElementColors[col.ownerId] ?? DEFAULT_EVENT_COLOR;
 }
 
@@ -342,8 +341,10 @@ export function computeEventPresentation(
 ): EventPresentation {
   const { slotElementColors, autoFinisherIds, validationMaps, interactionMode, statusViewOverrides, events } = options;
   const isWindow = ev.columnId === COMBO_WINDOW_COLUMN_ID;
-  const isDerivedCol = col.type === 'mini-timeline' && !!col.derived && interactionMode === InteractionModeType.STRICT;
+  const isDerivedCol = col.type === 'mini-timeline' && !!col.derived;
   const isEnemy = col.type === 'mini-timeline' && col.source === TimelineSourceType.ENEMY;
+  // User-placed events (any creationInteractionMode) are draggable; engine-derived events are not
+  const isUserPlaced = ev.creationInteractionMode != null;
 
   const statusOverride = statusViewOverrides?.get(ev.uid);
   const label = isWindow
@@ -362,8 +363,8 @@ export function computeEventPresentation(
     : validationWarning ?? eventWarnings;
 
   const passive = isWindow;
-  const notDraggable = isWindow || isDerivedCol || (isEnemy && interactionMode === InteractionModeType.STRICT);
-  const derived = isDerivedCol;
+  const notDraggable = isWindow || (isDerivedCol && !isUserPlaced) || (isEnemy && !isUserPlaced);
+  const derived = isDerivedCol && interactionMode === InteractionModeType.STRICT;
   const isAutoFinisher = autoFinisherIds.has(ev.uid);
 
   const skillElement = isWindow
@@ -552,28 +553,58 @@ function computeMicroPositions(
   if (col.microColumnAssignment === 'dynamic-split') {
     const mcById = new Map(col.microColumns.map((mc) => [mc.id, mc]));
 
-    // True greedy left-pack: assign each event to the lowest slot index
-    // where no different-type event overlaps. Same-type events share slots.
-    // Processes events chronologically so earlier events claim lower slots.
+    // Stable slot assignment: assign each type a slot based on its position
+    // in the micro-column definitions, NOT based on chronological event order.
+    // This prevents micro-columns from visually swapping during drag.
     const sorted = [...colEvents].sort((a, b) => a.startFrame - b.startFrame);
 
-    // Each slot tracks active ranges: { type, start, end }
-    const slots: { type: string; start: number; end: number }[][] = [];
-    // type → assigned slot index (same-type events reuse their type's slot)
+    // Pre-assign slots by micro-column definition order for known types.
+    // Collect unique type keys from events, preserving definition order.
     const typeSlots = new Map<string, number>();
-    // eventUid → assigned slot index (for second pass)
+    const mcOrder = col.microColumns.map(mc => mc.id);
+
+    // First pass: assign slots to types that appear in the micro-column defs
+    // in their definition order (stable across re-renders).
+    let nextSlot = 0;
+    for (const mcId of mcOrder) {
+      if (typeSlots.has(mcId)) continue;
+      // Only assign if this type has events
+      if (sorted.some(ev => !isSingleInstanceStatus(ev.columnId) && ev.columnId === mcId)) {
+        typeSlots.set(mcId, nextSlot++);
+      }
+    }
+
+    // Second pass: assign slots to types not in micro-column defs
+    // (independent instances or unknown types), using greedy left-pack.
+    const slots: { type: string; start: number; end: number }[][] = [];
+    // Initialize slots for pre-assigned types
+    for (let s = 0; s < nextSlot; s++) slots.push([]);
+
+    // Populate pre-assigned slot ranges
+    for (const ev of sorted) {
+      const typeKey = isSingleInstanceStatus(ev.columnId) ? ev.uid : ev.columnId;
+      const preSlot = typeSlots.get(typeKey);
+      if (preSlot != null) {
+        slots[preSlot].push({ type: typeKey, start: ev.startFrame, end: eventEndFrame(ev) });
+      }
+    }
+
+    // eventUid → assigned slot index
     const eventSlots = new Map<string, number>();
 
     for (const ev of sorted) {
       const evStart = ev.startFrame;
       const evEnd = eventEndFrame(ev);
-
-      // Independent instances (unlimited stacks, NONE interaction) use unique
-      // type keys so overlapping events get separate slots instead of sharing.
       const typeKey = isSingleInstanceStatus(ev.columnId) ? ev.uid : ev.columnId;
 
-      // If this type already has a slot assigned, reuse it — unless a
-      // different-type event now overlaps in that slot.
+      // Use pre-assigned slot if available
+      const preSlot = typeSlots.get(typeKey);
+      if (preSlot != null) {
+        eventSlots.set(ev.uid, preSlot);
+        continue;
+      }
+
+      // Greedy left-pack for unknown types
       const existingSlot = typeSlots.get(typeKey);
       if (existingSlot != null) {
         let conflict = false;
@@ -590,7 +621,6 @@ function computeMicroPositions(
         }
       }
 
-      // Find the lowest slot with no overlapping different-type event
       let assignedSlot = -1;
       for (let s = 0; s < slots.length; s++) {
         const ranges = slots[s];
@@ -613,7 +643,7 @@ function computeMicroPositions(
 
     // Compute widthFrac from actual slot count so all slots fit within the column
     const slotCount = Math.max(slots.length, 1);
-    const slotFrac = Math.min(1 / slotCount, MAX_MICRO_WIDTH_FRAC);
+    const slotFrac = 1 / slotCount;
 
     for (const ev of sorted) {
       const slot = eventSlots.get(ev.uid) ?? 0;
@@ -624,7 +654,7 @@ function computeMicroPositions(
       });
     }
   } else if (col.microColumnAssignment === 'by-order') {
-    const microW = Math.min(1 / microCount, MAX_MICRO_WIDTH_FRAC);
+    const microW = 1 / microCount;
     const sorted = [...colEvents].sort((a, b) => a.startFrame - b.startFrame);
     sorted.forEach((ev, i) => {
       const microIdx = greedySlots.get(ev.uid) ?? Math.min(i, microCount - 1);
@@ -639,7 +669,7 @@ function computeMicroPositions(
     });
   } else {
     // by-column-id
-    const microW = Math.min(1 / microCount, MAX_MICRO_WIDTH_FRAC);
+    const microW = 1 / microCount;
     col.microColumns.forEach((mc, mcIdx) => {
       const mcEvents = colEvents.filter(
         (ev) => ev.columnId === mc.id,
@@ -734,127 +764,10 @@ function computeOverlapLanes(colEvents: TimelineEvent[]): Map<string, OverlapLan
  * Viewport culling is NOT applied — the view layer should filter
  * ColumnViewModel.events by visible frame range before rendering.
  */
-let _prevColumnViewModels: Map<string, ColumnViewModel> | null = null;
-
-/**
- * Check if a column's events match the previous run — same UIDs, positions, statuses.
- * Uses direct comparison instead of string fingerprinting to avoid allocation.
- */
-function columnEventsMatch(current: TimelineEvent[], previous: TimelineEvent[]): boolean {
-  if (current.length !== previous.length) return false;
-  for (let i = 0; i < current.length; i++) {
-    const c = current[i], p = previous[i];
-    if (c.uid !== p.uid || c.startFrame !== p.startFrame || c.eventStatus !== p.eventStatus
-      || c.segments.length !== p.segments.length) return false;
-    // Per-segment duration check — total span can be unchanged (e.g. cooldown
-    // longer than active) while internal segments shift from time-stop extension.
-    for (let s = 0; s < c.segments.length; s++) {
-      if (c.segments[s].properties.duration !== p.segments[s].properties.duration) return false;
-      // Per-frame derivedOffsetFrame check — when a time-stop shifts position,
-      // segment durations stay the same but frame positions within them change.
-      const cFrames = c.segments[s].frames;
-      const pFrames = p.segments[s].frames;
-      if (cFrames !== pFrames) {
-        if (!cFrames || !pFrames || cFrames.length !== pFrames.length) return false;
-        for (let f = 0; f < cFrames.length; f++) {
-          if (cFrames[f].derivedOffsetFrame !== pFrames[f].derivedOffsetFrame) return false;
-          if (cFrames[f].isCrit !== pFrames[f].isCrit) return false;
-        }
-      }
-    }
-  }
-  return true;
-}
-
 export function computeTimelinePresentation(
   events: TimelineEvent[],
   columns: Column[],
-  changedUids?: ReadonlySet<string>,
 ): Map<string, ColumnViewModel> {
-  // ── Fast path: if changedUids is available and small, skip expensive per-column
-  // computation (statusOverrides, greedySlots, microPositions) for unchanged columns.
-  // ALWAYS rebuild event grouping to ensure current event references are used.
-  if (changedUids && changedUids.size > 0 && _prevColumnViewModels
-    && changedUids.size < events.length * 0.5) {
-    const changedKeys = new Set<string>();
-    for (const ev of events) {
-      if (changedUids.has(ev.uid)) changedKeys.add(`${ev.ownerId}\0${ev.columnId}`);
-    }
-
-    // Always group ALL events (cheap O(n) — ensures current event references)
-    const eventsByOwnerColumn = new Map<string, TimelineEvent[]>();
-    for (const ev of events) {
-      const key = `${ev.ownerId}\0${ev.columnId}`;
-      let arr = eventsByOwnerColumn.get(key);
-      if (!arr) { arr = []; eventsByOwnerColumn.set(key, arr); }
-      arr.push(ev);
-    }
-
-    // Lazily compute cross-column data on first column that needs rebuilding
-    let allStatusOverrides: Map<string, StatusViewOverride> | undefined;
-    let allGreedySlots: Map<string, number> | undefined;
-    let crossColumnComputed = false;
-    const ensureCrossColumn = () => {
-      if (crossColumnComputed) return;
-      crossColumnComputed = true;
-      allStatusOverrides = computeStatusViewOverrides(events, columns);
-      allGreedySlots = computeGreedySlotAssignments(events, columns);
-    };
-
-    const result = new Map<string, ColumnViewModel>();
-    let allReused = true;
-
-    for (const col of columns) {
-      if (col.type !== 'mini-timeline') continue;
-
-      // Always rebuild event list with current references
-      let colEvents = getEventsForColumnGrouped(col, eventsByOwnerColumn);
-      colEvents = sortColumnEvents(col, colEvents);
-      colEvents = truncateDerivedEvents(col, colEvents);
-
-      const prevVM = _prevColumnViewModels.get(col.key);
-      if (prevVM && columnEventsMatch(colEvents, prevVM.events)) {
-        result.set(col.key, prevVM);
-        continue;
-      }
-
-      // Column events changed — rebuild VM (lazily compute cross-column data on first miss)
-      allReused = false;
-      if (col.microColumns) ensureCrossColumn();
-
-      const colStatusOverrides = new Map<string, StatusViewOverride>();
-      if (allStatusOverrides) {
-        for (const ev of colEvents) {
-          const override = allStatusOverrides.get(ev.uid);
-          if (override) colStatusOverrides.set(ev.uid, override);
-        }
-      }
-
-      const microPositions = col.microColumns && allGreedySlots && allStatusOverrides
-        ? computeMicroPositions(col, colEvents, allGreedySlots, allStatusOverrides)
-        : new Map<string, MicroPosition>();
-
-      const overlapLanes = col.microColumns
-        ? new Map<string, OverlapLane>()
-        : computeOverlapLanes(colEvents);
-
-      result.set(col.key, {
-        column: col,
-        events: colEvents,
-        microPositions,
-        statusOverrides: colStatusOverrides,
-        overlapLanes,
-      });
-    }
-
-    if (allReused && result.size === _prevColumnViewModels.size) {
-      return _prevColumnViewModels;
-    }
-    _prevColumnViewModels = result;
-    return result;
-  }
-
-  // ── Full computation (no changedUids or too many changes) ──────────────────
   const result = new Map<string, ColumnViewModel>();
 
   const eventsByOwnerColumn = new Map<string, TimelineEvent[]>();
@@ -874,12 +787,6 @@ export function computeTimelinePresentation(
     let colEvents = getEventsForColumnGrouped(col, eventsByOwnerColumn);
     colEvents = sortColumnEvents(col, colEvents);
     colEvents = truncateDerivedEvents(col, colEvents);
-
-    const prevVM = _prevColumnViewModels?.get(col.key);
-    if (prevVM && columnEventsMatch(colEvents, prevVM.events)) {
-      result.set(col.key, prevVM);
-      continue;
-    }
 
     const colStatusOverrides = new Map<string, StatusViewOverride>();
     for (const ev of colEvents) {
@@ -904,14 +811,5 @@ export function computeTimelinePresentation(
     });
   }
 
-  if (_prevColumnViewModels && result.size === _prevColumnViewModels.size) {
-    let allReused = true;
-    for (const [key, vm] of Array.from(result.entries())) {
-      if (vm !== _prevColumnViewModels.get(key)) { allReused = false; break; }
-    }
-    if (allReused) return _prevColumnViewModels;
-  }
-
-  _prevColumnViewModels = result;
   return result;
 }

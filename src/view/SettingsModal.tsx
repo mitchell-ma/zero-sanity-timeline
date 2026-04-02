@@ -129,57 +129,6 @@ export default function SettingsModal({ open, onClose, settings, onUpdate }: Set
             </div>
           </div>
 
-          {/* Object Pooling */}
-          <div className="settings-row">
-            <span className="settings-label">Object Pooling</span>
-            <div className="settings-toggle-group">
-              <button
-                className={`settings-toggle-btn${settings.enablePooling ? ' active' : ''}`}
-                onClick={() => onUpdate('enablePooling', true)}
-              >
-                On
-              </button>
-              <button
-                className={`settings-toggle-btn${!settings.enablePooling ? ' active' : ''}`}
-                onClick={() => onUpdate('enablePooling', false)}
-              >
-                Off
-              </button>
-            </div>
-          </div>
-
-          {/* Reconciler */}
-          <div className="settings-row">
-            <span className="settings-label">Reconciler</span>
-            <div className="settings-toggle-group">
-              <button
-                className={`settings-toggle-btn${settings.enableReconciler ? ' active' : ''}`}
-                onClick={() => onUpdate('enableReconciler', true)}
-              >
-                On
-              </button>
-              <button
-                className={`settings-toggle-btn${!settings.enableReconciler ? ' active' : ''}`}
-                onClick={() => onUpdate('enableReconciler', false)}
-              >
-                Off
-              </button>
-            </div>
-          </div>
-
-          {/* Event Pool Limit */}
-          <div className="settings-row">
-            <span className="settings-label">Event Pool Limit</span>
-            <select
-              className="settings-select"
-              value={settings.eventPoolLimit}
-              onChange={(e) => onUpdate('eventPoolLimit', Number(e.target.value))}
-            >
-              {[50, 100, 200, 500, 1000].map((n) => (
-                <option key={n} value={n}>{n}</option>
-              ))}
-            </select>
-          </div>
         </div>
       </div>
     </div>

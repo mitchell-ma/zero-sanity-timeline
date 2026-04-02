@@ -17,7 +17,7 @@ export class SkillSegmentBuilder {
    */
   static buildSegments(
     sequences: readonly SkillEventSequence[],
-    options?: { labels?: string[]; gaugeGain?: number; teamGaugeGain?: number; gaugeGainByEnemies?: Record<number, number>; delayedHitLabel?: string; ctx?: ValueResolutionContext },
+    options?: { labels?: string[]; gaugeGain?: number; teamGaugeGain?: number; gaugeGainByEnemies?: Record<number, number>; delayedHitLabel?: string; ctx?: ValueResolutionContext; useNumeralFallback?: boolean },
   ): {
     totalDurationFrames: number;
     segments: EventSegmentData[];
@@ -90,11 +90,10 @@ export class SkillSegmentBuilder {
 
       const seqName = 'segmentName' in seq ? (seq as SkillEventSequence & { segmentName?: string }).segmentName : undefined;
       const label = seqName
-        ?? (customLabels
-          ? customLabels[i]
-          : isMulti
-            ? formatSegmentShortName(undefined, i)
-            : undefined);
+        ?? customLabels?.[i]
+        ?? (isMulti && options?.useNumeralFallback
+          ? formatSegmentShortName(undefined, i)
+          : undefined);
 
       // Drop frames beyond the segment duration — they belong in a separate segment in the JSON.
       const inBound = frames.filter(f => f.offsetFrame <= durationFrames);

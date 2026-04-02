@@ -1,7 +1,12 @@
 # zero-sanity-timeline
 Arknights: Endfield timeline and rotation calculator
 
-React 19+. Typescript.
+React 19+. Typescript. PixiJS v8 (canvas rendering layer).
+
+PixiJS:
+- API docs: fetch https://pixijs.com/llms.txt
+- Display object updates MUST happen inside `app.ticker.add()` callbacks, NOT in React useEffect. The ticker runs callbacks first, then auto-renders. Modifying display objects outside the ticker callback will not produce visible output.
+- Use `app.renderer.events.autoPreventDefault = false` to prevent PixiJS from blocking native scroll events.
 
 Project structure:
 - Views/Components: src/view

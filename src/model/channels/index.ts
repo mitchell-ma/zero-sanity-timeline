@@ -194,28 +194,28 @@ export const REACTION_LABELS: Record<string, { label: string; color: string }> =
 // ── Physical infliction / status micro-columns ──────────────────────────────
 
 export const PHYSICAL_INFLICTION_LABELS: Record<string, { label: string; color: string }> = {
-  [PHYSICAL_INFLICTION_COLUMNS.VULNERABLE]: { label: t('physicalInfliction.vulnerable'), color: '#c0c8d0' },
+  [PHYSICAL_INFLICTION_COLUMNS.VULNERABLE]: { label: t('physicalInfliction.vulnerable'), color: ELEMENT_COLORS[ElementType.PHYSICAL] },
 };
 
 export const PHYSICAL_INFLICTION_MICRO_COLUMNS = [
-  { id: 'vuln-0', label: t('physicalInfliction.micro.vuln'), color: '#c0c8d0' },
-  { id: 'vuln-1', label: t('physicalInfliction.micro.vuln'), color: '#c0c8d0' },
-  { id: 'vuln-2', label: t('physicalInfliction.micro.vuln'), color: '#c0c8d0' },
-  { id: 'vuln-3', label: t('physicalInfliction.micro.vuln'), color: '#c0c8d0' },
+  { id: 'vuln-0', label: t('physicalInfliction.micro.vuln'), color: ELEMENT_COLORS[ElementType.PHYSICAL] },
+  { id: 'vuln-1', label: t('physicalInfliction.micro.vuln'), color: ELEMENT_COLORS[ElementType.PHYSICAL] },
+  { id: 'vuln-2', label: t('physicalInfliction.micro.vuln'), color: ELEMENT_COLORS[ElementType.PHYSICAL] },
+  { id: 'vuln-3', label: t('physicalInfliction.micro.vuln'), color: ELEMENT_COLORS[ElementType.PHYSICAL] },
 ];
 
 export const PHYSICAL_STATUS_LABELS: Record<string, { label: string; color: string }> = {
-  [PhysicalStatusType.LIFT]: { label: t('physicalStatus.LIFT'), color: '#c0c8d0' },
-  [PhysicalStatusType.KNOCK_DOWN]: { label: t('physicalStatus.KNOCK_DOWN'), color: '#c0c8d0' },
-  [PhysicalStatusType.CRUSH]: { label: t('physicalStatus.CRUSH'), color: '#c0c8d0' },
-  [PhysicalStatusType.BREACH]: { label: t('physicalStatus.BREACH'), color: '#c0c8d0' },
+  [PhysicalStatusType.LIFT]: { label: t('physicalStatus.LIFT'), color: ELEMENT_COLORS[ElementType.PHYSICAL] },
+  [PhysicalStatusType.KNOCK_DOWN]: { label: t('physicalStatus.KNOCK_DOWN'), color: ELEMENT_COLORS[ElementType.PHYSICAL] },
+  [PhysicalStatusType.CRUSH]: { label: t('physicalStatus.CRUSH'), color: ELEMENT_COLORS[ElementType.PHYSICAL] },
+  [PhysicalStatusType.BREACH]: { label: t('physicalStatus.BREACH'), color: ELEMENT_COLORS[ElementType.PHYSICAL] },
 };
 
 export const PHYSICAL_STATUS_MICRO_COLUMNS = [
-  { id: PhysicalStatusType.LIFT, label: t('physicalStatus.micro.LIFT'), color: '#c0c8d0' },
-  { id: PhysicalStatusType.KNOCK_DOWN, label: t('physicalStatus.micro.KNOCK_DOWN'), color: '#c0c8d0' },
-  { id: PhysicalStatusType.CRUSH, label: t('physicalStatus.micro.CRUSH'), color: '#c0c8d0' },
-  { id: PhysicalStatusType.BREACH, label: t('physicalStatus.micro.BREACH'), color: '#c0c8d0' },
+  { id: PhysicalStatusType.LIFT, label: t('physicalStatus.micro.LIFT'), color: ELEMENT_COLORS[ElementType.PHYSICAL] },
+  { id: PhysicalStatusType.KNOCK_DOWN, label: t('physicalStatus.micro.KNOCK_DOWN'), color: ELEMENT_COLORS[ElementType.PHYSICAL] },
+  { id: PhysicalStatusType.CRUSH, label: t('physicalStatus.micro.CRUSH'), color: ELEMENT_COLORS[ElementType.PHYSICAL] },
+  { id: PhysicalStatusType.BREACH, label: t('physicalStatus.micro.BREACH'), color: ELEMENT_COLORS[ElementType.PHYSICAL] },
 ];
 
 // ── Resource graph keys ──────────────────────────────────────────────────

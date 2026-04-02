@@ -224,8 +224,8 @@ const INFLICTION_COLUMN_COLORS: Record<string, string> = {
   cryoInfliction:       ELEMENT_COLORS[ElementType.CRYO],
   natureInfliction:     ELEMENT_COLORS[ElementType.NATURE],
   electricInfliction:   ELEMENT_COLORS[ElementType.ELECTRIC],
-  vulnerableInfliction: '#c0c8d0',
-  breach:               '#c0c8d0',
+  vulnerableInfliction: ELEMENT_COLORS[ElementType.PHYSICAL],
+  breach:               ELEMENT_COLORS[ElementType.PHYSICAL],
 };
 
 /**

@@ -91,8 +91,9 @@ export class DerivedEventController implements ColumnHost {
   }
 
   /**
-   * Reset all internal state for reuse without deallocating containers.
-   * Call this instead of creating a new DerivedEventController each pipeline run.
+   * Reset all internal state for the next pipeline run (singleton reuse).
+   * Arrays are cleared in-place (.length = 0) so the same references are reused —
+   * callers of getProcessedEvents() must copy the result if reference identity matters.
    */
   reset(
     triggerAssociations?: TriggerAssociation[],
@@ -721,7 +722,18 @@ export class DerivedEventController implements ColumnHost {
       let rawOffset = 0;
       let derivedOffset = 0;
       let changed = false;
-      for (const seg of ev.segments) {
+      // Deep-clone segments (including frame markers) before mutating — the
+      // source objects are shared with the raw state. Without cloning:
+      //   - seg.properties.duration mutations compound across pipeline runs
+      //   - f.derivedOffsetFrame / f.absoluteFrame mutations leak stale values
+      //     to the raw state, causing frame diamonds to render at wrong positions
+      //     between throttled drag ticks
+      const segments = ev.segments.map(s => ({
+        ...s,
+        properties: { ...s.properties },
+        ...(s.frames ? { frames: s.frames.map(f => ({ ...f })) } : {}),
+      }));
+      for (const seg of segments) {
         const rawSegStart = rawOffset;
         rawOffset += seg.properties.duration;
 
@@ -753,7 +765,10 @@ export class DerivedEventController implements ColumnHost {
 
       if (!changed) return ev;
       this.extendedIds.add(ev.uid);
-      return ev;
+      // Return a new event object — never mutate ev.segments in place, because
+      // ev may reference validEvents[] which is reused across React strict-mode
+      // double-invocations of useMemo. Mutating it compounds extensions.
+      return { ...ev, segments };
     }
 
     // All events should have segments at this point

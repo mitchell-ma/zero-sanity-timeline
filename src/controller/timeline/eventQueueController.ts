@@ -30,11 +30,11 @@ import type { HPController } from '../calculation/hpController';
 import { StatAccumulator } from '../calculation/statAccumulator';
 import type { OverrideStore } from '../../consts/overrideTypes';
 import { buildOverrideKey } from '../overrideController';
-import { CritMode, StatType } from '../../consts/enums';
+import { CritMode, InteractionModeType, StatType } from '../../consts/enums';
 import type { OperatorLoadoutState } from '../../view/OperatorLoadoutHeader';
 import type { EnemyStats } from '../appStateController';
 import { resolveControlledOperator } from './controlledOperatorResolver';
-import { allocQueueFrame, resetPools, isReconcilerEnabled } from './objectPool';
+import { allocQueueFrame, resetPools } from './objectPool';
 
 const SKILL_COLUMN_SET: ReadonlySet<string> = new Set(SKILL_COLUMN_ORDER);
 
@@ -471,191 +471,26 @@ export function processCombatSimulation(
     hpController.finalize();
   }
 
-  // ── 6. Output — reconcile with previous to reuse objects ─────────────────
+  // ── 6. Output ───────────────────────────────────────────────────────────────
   _lastController = state;
-  const freshEvents = state.getProcessedEvents();
-  return isReconcilerEnabled() ? reconcileEvents(freshEvents) : freshEvents;
-}
+  const processed = state.getProcessedEvents();
 
-// ── Event reconciliation ─────────────────────────────────────────────────────
-// Compares fresh pipeline output against previous output by UID.
-// - If an event is structurally identical: reuses the previous object reference
-//   (React memo comparators see same reference → skip re-render)
-// - If an event changed: uses the fresh object (new reference → triggers re-render)
-// - New/removed events: created/dropped naturally
-//
-// Reconciliation uses snapshots of scalar fields keyed by UID rather than
-// holding direct references to previous event objects. This is safe with
-// object pooling — pooled objects get recycled and overwritten, but the
-// snapshot captures the field values at the time they were stored.
-// If an event's snapshot matches the fresh output, we reuse the non-pooled
-// clone stored alongside it.
-
-interface EventSnapshot {
-  startFrame: number;
-  eventStatus?: string;
-  stacks?: number;
-  comboTriggerColumnId?: string;
-  reductionFloor?: number;
-  comboChainFreezeEnd?: number;
-  /** Per-segment fingerprint: [dur0, absStart0, dur1, absStart1, ...]. Detects duration and position changes. */
-  segFingerprints: number[];
-  warnLen: number;
-}
-
-// Double-buffered Maps — swap and .clear() instead of allocating new Maps each tick.
-let _prevSnapshots = new Map<string, EventSnapshot>();
-let _prevClones = new Map<string, TimelineEvent>();
-let _nextSnapshots = new Map<string, EventSnapshot>();
-let _nextClones = new Map<string, TimelineEvent>();
-
-function buildSegFingerprints(ev: TimelineEvent): number[] {
-  const fp: number[] = [];
-  for (let i = 0; i < ev.segments.length; i++) {
-    const seg = ev.segments[i];
-    fp.push(seg.properties.duration, seg.absoluteStartFrame ?? 0);
-    // Include frame offset fingerprint — sum of derivedOffsetFrame values
-    // detects time-stop shifts within segments
-    if (seg.frames) {
-      let frameSum = 0;
-      let critBits = 0;
-      for (let j = 0; j < seg.frames.length; j++) {
-        frameSum += seg.frames[j].derivedOffsetFrame ?? seg.frames[j].offsetFrame;
-        if (seg.frames[j].isCrit) critBits |= (1 << (j & 31));
-      }
-      fp.push(frameSum, critBits);
-    } else {
-      fp.push(0, 0);
+  // Propagate creationInteractionMode from user-placed seed events.
+  // User-placed freeform events on derived columns are classified as "derived"
+  // in cloneAndSplitEvents. The engine recreates them (new uid), losing the field.
+  // Match by ownerId+columnId+startFrame and copy creationInteractionMode.
+  const userDerived = derivedEvents.filter(ev => ev.creationInteractionMode != null);
+  if (userDerived.length > 0) {
+    const seedKeys = new Map<string, InteractionModeType>();
+    for (const ev of userDerived) {
+      seedKeys.set(`${ev.ownerId}\0${ev.columnId}\0${ev.startFrame}`, ev.creationInteractionMode!);
     }
-  }
-  return fp;
-}
-
-function snapshotEvent(ev: TimelineEvent): EventSnapshot {
-  return {
-    startFrame: ev.startFrame,
-    eventStatus: ev.eventStatus,
-    stacks: ev.stacks,
-    comboTriggerColumnId: ev.comboTriggerColumnId,
-    reductionFloor: ev.reductionFloor,
-    comboChainFreezeEnd: ev.comboChainFreezeEnd,
-    segFingerprints: buildSegFingerprints(ev),
-    warnLen: ev.warnings?.length ?? 0,
-  };
-}
-
-function snapshotMatches(snap: EventSnapshot, ev: TimelineEvent): boolean {
-  if (snap.startFrame !== ev.startFrame) return false;
-  if (snap.eventStatus !== ev.eventStatus) return false;
-  if (snap.stacks !== ev.stacks) return false;
-  if (snap.comboTriggerColumnId !== ev.comboTriggerColumnId) return false;
-  if (snap.reductionFloor !== ev.reductionFloor) return false;
-  if (snap.comboChainFreezeEnd !== ev.comboChainFreezeEnd) return false;
-  // Per-segment fingerprint: detects duration, position, frame offset, and crit changes
-  const fp = snap.segFingerprints;
-  const stride = 4;
-  if (fp.length !== ev.segments.length * stride) return false;
-  for (let i = 0; i < ev.segments.length; i++) {
-    const seg = ev.segments[i];
-    const base = i * stride;
-    if (fp[base] !== seg.properties.duration) return false;
-    if (fp[base + 1] !== (seg.absoluteStartFrame ?? 0)) return false;
-    let frameSum = 0;
-    let critBits = 0;
-    if (seg.frames) {
-      for (let j = 0; j < seg.frames.length; j++) {
-        frameSum += seg.frames[j].derivedOffsetFrame ?? seg.frames[j].offsetFrame;
-        if (seg.frames[j].isCrit) critBits |= (1 << (j & 31));
-      }
-    }
-    if (fp[base + 2] !== frameSum) return false;
-    if (fp[base + 3] !== critBits) return false;
-  }
-  if (snap.warnLen !== (ev.warnings?.length ?? 0)) return false;
-  return true;
-}
-
-let _reconcileReused = 0;
-let _reconcileFresh = 0;
-let _reconcileTotal = 0;
-let _changedUids = new Set<string>();
-
-/** UIDs of events that changed (or were added/removed) in the last reconcileEvents() call. */
-export function getChangedUids(): ReadonlySet<string> { return _changedUids; }
-
-function reconcileEvents(freshEvents: TimelineEvent[]): TimelineEvent[] {
-  // Swap buffers: previous "next" becomes current "prev", clear for reuse
-  const tmpSnaps = _prevSnapshots;
-  const tmpClones = _prevClones;
-  _prevSnapshots = _nextSnapshots;
-  _prevClones = _nextClones;
-  _nextSnapshots = tmpSnaps;
-  _nextClones = tmpClones;
-  _nextSnapshots.clear();
-  _nextClones.clear();
-
-  _changedUids.clear();
-  const result: TimelineEvent[] = [];
-  let reused = 0;
-
-  for (let i = 0; i < freshEvents.length; i++) {
-    const fresh = freshEvents[i];
-    const snap = _prevSnapshots.get(fresh.uid);
-    const clone = _prevClones.get(fresh.uid);
-
-    if (snap && clone && snapshotMatches(snap, fresh)) {
-      // Structurally identical — reuse the previous non-pooled clone.
-      // Sync mutable frame fields (isCrit) that the pipeline sets each tick
-      // but aren't part of the structural fingerprint.
-      for (let si = 0; si < clone.segments.length && si < fresh.segments.length; si++) {
-        const cf = clone.segments[si].frames;
-        const ff = fresh.segments[si].frames;
-        if (cf && ff) {
-          for (let fi = 0; fi < cf.length && fi < ff.length; fi++) {
-            cf[fi].isCrit = ff[fi].isCrit;
-          }
-        }
-      }
-      _nextSnapshots.set(fresh.uid, snap);
-      _nextClones.set(fresh.uid, clone);
-      result.push(clone);
-      reused++;
-    } else {
-      // Changed or new — create a non-pooled clone to hold across ticks.
-      // For events whose segments come from the clone cache (input events),
-      // deep-copy segments so EventBlock memo can compare prev vs next.
-      // For new/derived events (no previous snapshot), segments are already
-      // freshly allocated by the pipeline — just spread the event.
-      // Always deep-copy segments — pooled/cached segment objects get recycled
-      // on the next pipeline run, so the clone must hold independent copies.
-      const stable = { ...fresh, segments: fresh.segments.map(s => ({
-        ...s,
-        properties: { ...s.properties },
-        frames: s.frames?.map(f => ({ ...f })),
-      })) };
-      _nextSnapshots.set(fresh.uid, snapshotEvent(fresh));
-      _nextClones.set(fresh.uid, stable);
-      result.push(stable);
-      _changedUids.add(fresh.uid);
+    for (const ev of processed) {
+      const mode = seedKeys.get(`${ev.ownerId}\0${ev.columnId}\0${ev.startFrame}`);
+      if (mode != null) ev.creationInteractionMode = mode;
     }
   }
 
-  // Track removed events (in previous but not in fresh)
-  _prevClones.forEach((_, uid) => {
-    if (!_nextClones.has(uid)) _changedUids.add(uid);
-  });
-
-  _reconcileReused = reused;
-  _reconcileFresh = freshEvents.length - reused;
-  _reconcileTotal = freshEvents.length;
-  return result;
+  return processed;
 }
 
-export function getReconcileStats() {
-  return {
-    total: _reconcileTotal,
-    reused: _reconcileReused,
-    fresh: _reconcileFresh,
-    cacheSize: _nextClones.size,
-  };
-}

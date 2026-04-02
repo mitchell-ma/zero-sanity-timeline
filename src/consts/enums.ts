@@ -154,11 +154,11 @@ export const ELEMENT_LABELS: Record<ElementType, string> = {
 
 export const ELEMENT_COLORS: Record<ElementType, string> = {
   [ElementType.NONE]:     '#999999',
-  [ElementType.PHYSICAL]: '#a0a8b0',
+  [ElementType.PHYSICAL]: '#8890a0',
   [ElementType.HEAT]:     '#e06030',
   [ElementType.CRYO]:     '#40b8b0',
   [ElementType.NATURE]:   '#60a840',
-  [ElementType.ELECTRIC]: '#f0b030',
+  [ElementType.ELECTRIC]: '#d4a028',
   [ElementType.ARTS]:     '#c080e0',
 };
 

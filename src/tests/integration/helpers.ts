@@ -63,7 +63,6 @@ export function buildContextMenu(
     app.resourceGraphs,
     app.staggerBreaks,
     null,
-    app.interactionMode as InteractionModeType,
   );
 
   const ctx: ColumnContextMenuContext = {

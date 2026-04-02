@@ -1,5 +1,16 @@
 # Devlog
 
+## 2026-04-01
+- Major rendering performance overhaul — the timeline now uses a PixiJS canvas layer for event blocks, gridlines, and interaction highlights, drastically reducing the number of DOM elements and improving smoothness during scrolling, zooming, and dragging
+- Removed object pooling, reconciler, and incremental validation systems from the pipeline — these added complexity without benefiting the new canvas-based renderer, resulting in a cleaner and faster pipeline
+- Settings panel simplified — Object Pooling, Reconciler, and Event Pool Limit options removed since they're no longer needed
+- Segment resize handles are now always visible when holding Ctrl (no longer require hovering the event first), shown as subtle boundary lines instead of glowing bars
+- Tick marks and gridlines now scale smoothly across all zoom levels with consistent spacing — no more abrupt jumps between fixed zoom tiers
+- Rossi's empowered Crimson Shadow battle skill updated with correct frame timing for Wolven Ambrage and additional damage frame data
+- Vulnerable status category corrected from physical-only to general infliction, matching in-game behavior
+- New integration tests for battle skill segment labels, time-stop segment gaps, time-stop frame stability, and time-stop layout positioning
+- Timeline layout engine simplified — real-time expansion for time-stops is now handled entirely in the pipeline, so the layout layer just presents the pre-computed values directly
+
 ## 2026-03-31
 - Crit mode now correctly affects damage calculations without overwriting saved crit data — switching between Never, Always, and Expected no longer permanently mutates your per-frame crit rolls, so toggling back to Random or Manual preserves your previous results
 - Crit-triggered buff stacks (like MI Security gear) now accumulate frame-by-frame in all modes — Always mode correctly shows stacks building up over time instead of instantly applying maximum stacks, producing more accurate damage numbers

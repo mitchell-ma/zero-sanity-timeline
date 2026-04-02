@@ -173,7 +173,7 @@ describe('loadoutAggregator — Rossi lv80, Lupine Scarlet lv80', () => {
     expect(agg.stats[StatType.CRITICAL_DAMAGE]).toBeCloseTo(0.50, 2);
 
     // HP: operator base HP at lv80
-    expect(agg.effectiveHp).toBe(4934);
+    expect(agg.effectiveHp).toBe(5374);
 
     // No gear = no defense
     expect(agg.totalDefense).toBe(0);

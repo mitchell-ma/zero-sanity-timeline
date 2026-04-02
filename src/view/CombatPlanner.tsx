@@ -1,4 +1,10 @@
 import React, { useRef, useState, useCallback, useEffect, useLayoutEffect, useMemo } from 'react';
+import { TimelineCanvas } from './canvas/TimelineCanvas';
+import type { ColumnLayoutRecipe } from './canvas/TimelineCanvas';
+import type { TimelineRenderer } from './canvas/TimelineRenderer';
+import type { CanvasRenderData } from './canvas/canvasTypes';
+import { buildTimelineLayout } from '../controller/timeline/timelineLayout';
+import { contractByTimeStops } from '../controller/timeline/processTimeStop';
 import { NounType } from '../dsl/semantics';
 import { createPortal } from 'react-dom';
 // EventBlock rendering moved to TimelineColumn
@@ -156,7 +162,6 @@ interface CombatPlannerProps {
   /** Whether any info pane is currently open (event, damage, loadout, etc.). */
   infoPaneOpen?: boolean;
   /** Ref to changed event UIDs from the last pipeline run (for incremental view updates). */
-  changedUidsRef?: React.RefObject<ReadonlySet<string>>;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -270,12 +275,12 @@ export default React.memo(function CombatPlanner({
   readOnly,
   editingEventId: editingEventIdProp,
   infoPaneOpen,
-  changedUidsRef,
 }: CombatPlannerProps) {
   const axis = getAxisMap(orientation);
   const isHorizontal = orientation === 'horizontal';
   const scrollRef   = useRef<HTMLDivElement>(null);
   const outerRef    = useRef<HTMLDivElement>(null);
+  const warningTooltipRef = useRef<HTMLDivElement>(null);
   const loadoutRef  = useRef<HTMLDivElement>(null);
   const headerGridRef = useRef<HTMLDivElement>(null);
   const timeAxisRef = useRef<HTMLDivElement>(null);
@@ -319,8 +324,8 @@ export default React.memo(function CombatPlanner({
   // ── Hover state (refs + direct DOM for performance) ─────────────────────────
   // hoverClientY and hoverColKey drive only visual decoration (line position,
   // column highlight) and are updated imperatively to avoid React re-renders.
-  // hoverFrame is kept as state because EventBlock consumes it for diamond
-  // highlighting, but updates are batched to reduce re-render frequency.
+  // hoverFrame drives hover line display + resource indicators.
+  // Updates are batched to reduce re-render frequency.
   const hoverClientYRef    = useRef<number | null>(null);
   const hoverColKeyRef     = useRef<string | null>(null);
   const hoverLineRef       = useRef<HTMLDivElement>(null);
@@ -461,22 +466,17 @@ export default React.memo(function CombatPlanner({
     [slots],
   );
 
-  // ── Pre-group selectedFrames by eventUid (avoids per-event .filter() in render) ─
-  const selectedFramesByEvent = useMemo(() => {
-    if (!selectedFrames || selectedFrames.length === 0) return null;
-    const map = new Map<string, import('../consts/viewTypes').SelectedFrame[]>();
-    for (const sf of selectedFrames) {
-      let arr = map.get(sf.eventUid);
-      if (!arr) { arr = []; map.set(sf.eventUid, arr); }
-      arr.push(sf);
-    }
-    return map;
-  }, [selectedFrames]);
+
 
   // ── Event validation (controller) ─────────────────────────────────────────
   const { maps: validationMaps, timeStopRegions, autoFinisherIds } = useMemo(
-    () => computeAllValidations(events, slots, resourceGraphs, staggerBreaks, draggingIds, interactionMode, changedUidsRef?.current),
-    [events, slots, resourceGraphs, staggerBreaks, draggingIds, interactionMode], // eslint-disable-line react-hooks/exhaustive-deps
+    () => computeAllValidations(events, slots, resourceGraphs, staggerBreaks, draggingIds),
+    [events, slots, resourceGraphs, staggerBreaks, draggingIds],
+  );
+
+  const timelineLayoutData = useMemo(
+    () => buildTimelineLayout(events),
+    [events],
   );
 
   const resourceInsufficiencyZones = useMemo(() => {
@@ -713,8 +713,16 @@ export default React.memo(function CombatPlanner({
   const columnPositionsRef = useRef(columnPositions);
   columnPositionsRef.current = columnPositions;
 
-  const contentFrames = contentFramesProp ?? TOTAL_FRAMES;
-  const totalRealFrames = contentFrames + timeStopRegions.reduce((sum, s) => sum + s.durationFrames, 0);
+  // Column layout recipe for imperative resize recomputation in the canvas
+  const columnLayoutRef = useRef<ColumnLayoutRecipe>({ keys: [], frValues: [], totalFr: 0 });
+  const canvasRendererRef = useRef<TimelineRenderer | null>(null);
+  columnLayoutRef.current = useMemo(() => ({
+    keys: columns.map(c => c.key),
+    frValues: colFrValues,
+    totalFr: colFrValues.reduce((s, v) => s + v, 0),
+  }), [columns, colFrValues]);
+
+  const totalRealFrames = timelineLayoutData.totalRealFrames;
   const tlHeight = timelineHeight(zoom, totalRealFrames);
   // In vertical mode, headers are above → offset Y mouse coords by header height.
   // In horizontal mode, headers are to the left → no frame-axis (X) offset needed.
@@ -737,26 +745,8 @@ export default React.memo(function CombatPlanner({
     () => getVisibleFrameRange(effectiveScrollTop, viewportH, zoom),
     [effectiveScrollTop, viewportH, zoom],
   );
-  const ticks = useMemo(
-    () => getTickMarks(zoom, visibleRange.startFrame, visibleRange.endFrame, totalRealFrames),
-    [zoom, visibleRange, totalRealFrames],
-  );
-  const majorTicks = useMemo(() => ticks.filter((t) => t.major), [ticks]);
-
-  // Pre-render gridline elements — stable across drag (only changes on zoom/scroll).
-  // Avoids creating ~20 divs × ~20 columns = ~400 React elements per render.
-  const gridlineElements = useMemo(() =>
-    majorTicks.map((tick) => (
-      <div
-        key={tick.frame}
-        className="tl-gridline"
-        style={{ [axis.framePos]: frameToPx(tick.frame, zoom) } as React.CSSProperties}
-      />
-    )),
-  [majorTicks, zoom, axis]);
-
   const tickElements = useMemo(() =>
-    ticks.map((tick) => (
+    getTickMarks(zoom, visibleRange.startFrame, visibleRange.endFrame, totalRealFrames).map((tick) => (
       <div
         key={tick.frame}
         className={`tl-tick${tick.major ? ' tl-tick--major' : ' tl-tick--minor'}`}
@@ -767,10 +757,10 @@ export default React.memo(function CombatPlanner({
         )}
       </div>
     )),
-  [ticks, zoom, axis]);
+  [zoom, visibleRange, totalRealFrames, axis]);
 
-  // ─── Touch handlers ───────────────────────────────────────────────────────
-  const { handleEventTouchStart } = useTouchHandlers({
+  // ─── Touch handlers (pinch-to-zoom on mobile) ──────────────────────────────
+  useTouchHandlers({
     scrollRef,
     bodyTopRef,
     zoomRef,
@@ -985,14 +975,12 @@ export default React.memo(function CombatPlanner({
 
   // ─── Timeline presentation: column view models ──────────────────────────────
   const columnViewModels = useMemo(
-    () => computeTimelinePresentation(events, columns, changedUidsRef?.current),
+    () => computeTimelinePresentation(events, columns),
     [events, columns], // eslint-disable-line react-hooks/exhaustive-deps
   );
 
-  // ─── Pre-computed event presentations (avoids per-event computation in render) ─
-  const prevEventPresentationsRef = useRef<Map<string, import('../controller/timeline/eventPresentationController').EventPresentation>>(new Map());
+  // ─── Pre-computed event presentations (used by PixiJS canvas renderer) ─
   const eventPresentations = useMemo(() => {
-    const prev = prevEventPresentationsRef.current;
     const map = new Map<string, import('../controller/timeline/eventPresentationController').EventPresentation>();
     let mergedValidationMaps = validationMaps;
     if (dragResourceWarnings) {
@@ -1000,7 +988,6 @@ export default React.memo(function CombatPlanner({
       dragResourceWarnings.forEach((v, k) => merged.set(k, v));
       mergedValidationMaps = { ...validationMaps, resource: merged };
     }
-    let allReused = prev.size > 0;
     for (const [colKey, vm] of Array.from(columnViewModels.entries())) {
       const col = vm.column;
       const opts = {
@@ -1008,49 +995,39 @@ export default React.memo(function CombatPlanner({
         validationMaps: mergedValidationMaps, interactionMode, statusViewOverrides: vm.statusOverrides, events,
       };
       for (const ev of vm.events) {
-        const key = `${colKey}:${ev.uid}`;
-        const next = computeEventPresentation(ev, col, opts);
-        // Reuse previous object if content is identical — preserves reference
-        // identity so TimelineColumn/EventBlock memo comparators can bail out.
-        const cached = prev.get(key);
-        if (cached
-          && cached.label === next.label
-          && cached.color === next.color
-          && cached.comboWarning === next.comboWarning
-          && cached.passive === next.passive
-          && cached.notDraggable === next.notDraggable
-          && cached.derived === next.derived
-          && cached.isAutoFinisher === next.isAutoFinisher
-          && cached.skillElement === next.skillElement
-          && cached.visualActivationDuration === next.visualActivationDuration
-        ) {
-          map.set(key, cached);
-        } else {
-          map.set(key, next);
-          allReused = false;
-        }
+        map.set(`${colKey}:${ev.uid}`, computeEventPresentation(ev, col, opts));
       }
     }
-    if (allReused && map.size === prev.size) {
-      // All entries reused and no entries added/removed — return previous Map reference
-      return prev;
-    }
-    prevEventPresentationsRef.current = map;
     return map;
   }, [columnViewModels, validationMaps, dragResourceWarnings, slotElementColors, alwaysAvailableComboSlots, autoFinisherIds, interactionMode, events]);
 
+  // ─── PixiJS canvas render data ──────────────────────────────────────────────
+  const critModeGen = getCritModeGeneration();
+  const canvasRenderData = useMemo((): CanvasRenderData => ({
+    columns,
+    columnViewModels,
+    eventPresentations,
+    eventLayouts: timelineLayoutData.events,
+    columnPositions,
+    zoom,
+    axis,
+    isHorizontal,
+    tlHeight,
+    visibleStartFrame: visibleRange.startFrame,
+    visibleEndFrame: visibleRange.endFrame,
+    totalRealFrames,
+    selectedIds,
+    selectedFrames: selectedFrames ?? [],
+    draggingIds,
+    hoveredId,
+    hoverFrame,
+    critModeGeneration: critModeGen,
+    timeStopRegions,
+  }), [columns, columnViewModels, eventPresentations, timelineLayoutData, columnPositions, zoom, axis, isHorizontal,
+    tlHeight, visibleRange, totalRealFrames, selectedIds, selectedFrames, draggingIds, hoveredId, hoverFrame, timeStopRegions, critModeGen]);
+
   // ─── Pre-computed combo window events by owner (avoids per-column filter in render) ─
-  const prevComboWindowsRef = useRef<Map<string, TimelineEvent[]>>(new Map());
   const comboWindowEventsByOwner = useMemo(() => {
-    // Skip rebuild if no combo window events changed
-    const changed = changedUidsRef?.current;
-    if (changed && changed.size > 0 && prevComboWindowsRef.current.size > 0) {
-      let hasComboChange = false;
-      for (const ev of events) {
-        if (ev.columnId === COMBO_WINDOW_COLUMN_ID && changed.has(ev.uid)) { hasComboChange = true; break; }
-      }
-      if (!hasComboChange) return prevComboWindowsRef.current;
-    }
     const map = new Map<string, TimelineEvent[]>();
     for (const ev of events) {
       if (ev.columnId !== COMBO_WINDOW_COLUMN_ID) continue;
@@ -1058,9 +1035,8 @@ export default React.memo(function CombatPlanner({
       if (!arr) { arr = []; map.set(ev.ownerId, arr); }
       arr.push(ev);
     }
-    prevComboWindowsRef.current = map;
     return map;
-  }, [events]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [events]);
 
   // ─── Marquee intersection helper ────────────────────────────────────────────
   // Rect coords: in vertical mode {left=lane, top=frame}, in horizontal mode {left=frame, top=lane}
@@ -1175,6 +1151,7 @@ export default React.memo(function CombatPlanner({
     if (rmbMarqueeRef.current?.moved) {
       updateHoverLineDOM(null);
       setHoverFrame(null);
+      canvasRendererRef.current?.patchHoverFrame(null);
 
     } else if (dragRef.current || frameDragRef.current || segResizeDragRef.current) {
       // During drag, hover line is updated inside the throttled drag action — skip here.
@@ -1191,6 +1168,7 @@ export default React.memo(function CombatPlanner({
       const frameEnd = axis.framePos === 'top' ? 'bottom' as const : 'right' as const;
       if (frameClient < scrollRect[axis.rectFrameStart] || frameClient > scrollRect[frameEnd]) {
         setHoverFrame(null);
+        canvasRendererRef.current?.patchHoverFrame(null);
         updateHoverLineDOM(null);
         hoverClientFrameRef.current = null;
       } else {
@@ -1204,9 +1182,11 @@ export default React.memo(function CombatPlanner({
           const snappedRel = Math.max(TIMELINE_TOP_PAD, TIMELINE_TOP_PAD + Math.round((relFrame - TIMELINE_TOP_PAD) / ppf) * ppf);
           const frame = pxToFrame(snappedRel, zoomRef.current);
           setHoverFrame(frame);
+          canvasRendererRef.current?.patchHoverFrame(frame);
           updateHoverLineDOM(snappedRel - scrollFrame + scrollRect[axis.rectFrameStart] + bodyTop);
         } else {
           setHoverFrame(null);
+          canvasRendererRef.current?.patchHoverFrame(null);
           updateHoverLineDOM(null);
         }
       }
@@ -1494,9 +1474,10 @@ export default React.memo(function CombatPlanner({
     startFrame: number,
   ) => {
     if (readOnly || e.button !== 0) return;
-    // Block drag for derived columns (e.g. melting flame) unless freeform mode
+    // Block drag for naturally-derived events (engine-created) on derived columns.
+    // Freeform-placed events (creationInteractionMode set) remain draggable.
     const ev = events.find((ev) => ev.uid === eventUid);
-    if (ev && interactionMode === InteractionModeType.STRICT) {
+    if (ev && interactionMode === InteractionModeType.STRICT && ev.creationInteractionMode == null) {
       const col = columns.find((c): c is MiniTimeline => c.type === 'mini-timeline' && c.ownerId === ev.ownerId && c.columnId === ev.columnId);
       if (col?.derived) return;
     }
@@ -1591,16 +1572,24 @@ export default React.memo(function CombatPlanner({
     const sibling = ev.segments[siblingIndex] ?? null;
     const sibMaxFrame = sibling?.frames?.reduce((mx, f) => Math.max(mx, f.offsetFrame), -1) ?? -1;
     const siblingMinDuration = sibling ? (sibMaxFrame + 1 || 1) : 0;
+
+    // Contract durations from real-time back to game-time so the override
+    // stores raw durations — the pipeline will re-extend for time-stops.
+    const segAbsStart = seg.absoluteStartFrame ?? ev.startFrame;
+    const rawDuration = contractByTimeStops(segAbsStart, seg.properties.duration, timeStopRegions);
+    const sibAbsStart = sibling?.absoluteStartFrame ?? (segAbsStart + seg.properties.duration);
+    const rawSibDuration = sibling ? contractByTimeStops(sibAbsStart, sibling.properties.duration, timeStopRegions) : 0;
+
     onBatchStart?.();
     segResizeDragRef.current = {
       eventUid,
       segmentIndex,
       edge,
       startMouseFrame: e[axis.clientFrame],
-      startDuration: seg.properties.duration,
+      startDuration: rawDuration,
       minDuration,
       siblingIndex,
-      siblingStartDuration: sibling?.properties.duration ?? 0,
+      siblingStartDuration: rawSibDuration,
       siblingMinDuration,
     };
     dragMovedRef.current = false;
@@ -1610,10 +1599,10 @@ export default React.memo(function CombatPlanner({
     e.preventDefault();
     // Mark outer as resizing and highlight the active handle
     outerRef.current?.classList.add('segment-resizing');
-    const handle = e.currentTarget as HTMLElement;
-    handle.classList.add('resize-active');
+    const handle = e.currentTarget as HTMLElement | undefined;
+    handle?.classList.add('resize-active');
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [events, onBatchStart, axis]);
+  }, [events, onBatchStart, axis, timeStopRegions]);
 
   // ─── Marquee start (mousedown on empty timeline area) ─────────────────────────
   const handleTimelineMouseDown = useCallback((e: React.MouseEvent) => {
@@ -1754,7 +1743,7 @@ export default React.memo(function CombatPlanner({
     if (!items) return;
 
     // Check if click landed on an event — add Remove Event option
-    const eventEl = (e.target as HTMLElement).closest('[data-event-uid]');
+    const eventEl = (e.target as HTMLElement | undefined)?.closest?.('[data-event-uid]');
     const clickedEventUid = eventEl?.getAttribute('data-event-uid') ?? null;
     const removeItems: import('../consts/viewTypes').ContextMenuItem[] = [];
     if (clickedEventUid) {
@@ -1910,7 +1899,35 @@ export default React.memo(function CombatPlanner({
     // ── Single event ───────────────────────────────────────────────────
     const ev = events.find((ev) => ev.uid === eventUid);
     if (!ev) return;
-    if (ev.name === CombatSkillType.CONTROL) return;
+
+    // Control events: show remove + the column's add items (dash/dodge)
+    if (ev.name === CombatSkillType.CONTROL) {
+      const col = columns.find((c): c is MiniTimeline => c.type === ColumnType.MINI_TIMELINE && c.ownerId === ev.ownerId && c.columnId === ev.columnId);
+      const items: import('../consts/viewTypes').ContextMenuItem[] = [];
+      if (onRemoveEvent) {
+        items.push({ label: 'Remove Event', action: () => { onRemoveEvent(eventUid); onContextMenu(null); }, danger: true });
+      }
+      if (col) {
+        const clickFrame = hoverFrameRef.current ?? ev.startFrame;
+        const colMenu = buildColumnContextMenu(col, clickFrame, undefined, {
+          events, slots, resourceGraphs,
+          alwaysAvailableComboSlots: getAlwaysAvailableComboSlots(slots),
+          timeStopRegions,
+          staggerBreaks,
+          columnPositions: columnPositionsRef.current,
+          interactionMode,
+        });
+        if (colMenu) {
+          const addItems = colMenu.filter(i => i.actionId === 'addEvent').map(resolveMenuItemAction);
+          if (addItems.length > 0) {
+            items.push({ separator: true });
+            items.push(...addItems);
+          }
+        }
+      }
+      if (items.length > 0) onContextMenu({ x: e.clientX, y: e.clientY, items });
+      return;
+    }
     if (interactionMode === InteractionModeType.STRICT) {
       const col = columns.find((c): c is MiniTimeline => c.type === ColumnType.MINI_TIMELINE && c.ownerId === ev.ownerId && c.columnId === ev.columnId);
       if (col?.derived) return;
@@ -2040,6 +2057,49 @@ export default React.memo(function CombatPlanner({
     items.push({ label: 'Remove Event', action: () => onRemoveEvent(eventUid), danger: true });
     onContextMenu({ x: e.clientX, y: e.clientY, items });
   }, [readOnly, onContextMenu, onRemoveEvent, onResetEvent, onResetSegments, onSelectedFramesChange, events]);
+
+  // ─── Warning tooltip (canvas hover on warning icons) ────────────────────────
+  const handleWarningHover = useCallback((eventUid: string | null, clientX: number, clientY: number) => {
+    const tip = warningTooltipRef.current;
+    if (!tip) return;
+    if (!eventUid) {
+      tip.style.display = 'none';
+      return;
+    }
+    const pres = eventPresentations.get(
+      Array.from(eventPresentations.keys()).find(k => k.endsWith(`:${eventUid}`)) ?? eventUid
+    );
+    if (!pres?.comboWarning) { tip.style.display = 'none'; return; }
+    tip.textContent = pres.comboWarning;
+    tip.style.display = 'block';
+    tip.style.left = `${clientX + 12}px`;
+    tip.style.top = `${clientY - 8}px`;
+  }, [eventPresentations]);
+
+  // ─── PixiJS canvas interaction callbacks ────────────────────────────────────
+  const canvasCallbacks = useMemo((): import('./canvas/canvasTypes').CanvasCallbacks => ({
+    onEventDragStart: handleEventDragStart,
+    onEventSelect: handleEventSelect,
+    onEventDoubleClick: handleEventDoubleClick,
+    onEventContextMenu: handleEventContextMenu,
+    onEventHover: handleEventHover,
+    onFrameClick: handleFrameClickGuarded,
+    onFrameContextMenu: handleFrameContextMenu,
+    onFrameDragStart: handleFrameDragStart,
+    onSegmentContextMenu: handleSegmentContextMenu,
+    onSegmentResizeDragStart: handleSegmentResizeDragStart,
+    onColumnContextMenu: handleSubTimelineContextMenu,
+    onMarqueeStart: handleTimelineMouseDown,
+    onWarningHover: handleWarningHover,
+    onMouseMove: handleMouseMove,
+    onMouseUp: handleMouseUp,
+  }), [handleEventDragStart, handleEventSelect, handleEventDoubleClick,
+    handleEventContextMenu, handleEventHover, handleFrameClickGuarded,
+    handleFrameContextMenu, handleFrameDragStart, handleSegmentContextMenu,
+    handleSegmentResizeDragStart, handleSubTimelineContextMenu, handleTimelineMouseDown,
+    handleWarningHover, handleMouseMove, handleMouseUp]);
+  // NOTE: onMouseMove/onMouseUp are still needed — InteractionBridge forwards
+  // PixiJS pointermove/pointerup to these for drag tracking and hover line updates.
 
   return (
     <div
@@ -2226,6 +2286,15 @@ export default React.memo(function CombatPlanner({
 
       {/* ── Scrollable body ──────────────────────────────────── */}
       <div ref={scrollRef} className={`timeline-scroll${isHorizontal ? ' timeline-scroll--horizontal' : ''}${hideScrollbar ? ' timeline-scroll--no-bar' : ''}${draggingIds ? ' timeline-scroll--dragging' : ''}`}>
+        {/* PixiJS canvas — renders events, gridlines, selection; handles all interaction */}
+        <TimelineCanvas
+          data={canvasRenderData}
+          tlHeight={tlHeight}
+          scrollRef={scrollRef}
+          callbacks={canvasCallbacks}
+          columnLayoutRef={columnLayoutRef}
+          canvasRendererRef={canvasRendererRef}
+        />
         <div
           className={`timeline-body-grid${isHorizontal ? ' timeline-body-grid--horizontal' : ''}`}
           style={isHorizontal
@@ -2247,10 +2316,8 @@ export default React.memo(function CombatPlanner({
                   className={`tl-sub-timeline tl-sub-timeline--empty${groupStartKeys.has(col.key) ? ' tl-group-start' : ''}`}
                   data-col-key={col.key}
                   style={{ [axis.frameSize]: tlHeight } as React.CSSProperties}
-                  onMouseDown={handleTimelineMouseDown}
-                >
-                  {gridlineElements}
-                </div>
+                />
+
               );
             }
 
@@ -2263,60 +2330,24 @@ export default React.memo(function CombatPlanner({
                 key={`col-${col.key}`}
                 col={col}
                 viewModel={columnViewModels.get(col.key)}
-                eventPresentations={eventPresentations}
-                gridlineElements={gridlineElements}
                 zoom={zoom}
                 axis={axis}
                 isHorizontal={isHorizontal}
                 tlHeight={tlHeight}
-                visibleStartFrame={visibleRange.startFrame}
-                visibleEndFrame={visibleRange.endFrame}
-                totalRealFrames={totalRealFrames}
                 isGroupStart={groupStartKeys.has(col.key)}
                 resourceGraph={resourceGraphs?.get(col.key)}
                 insufficiencyZones={resourceInsufficiencyZones.get(`${col.ownerId}:${NounType.BATTLE_SKILL}`)}
                 alwaysAvailableCombo={alwaysAvailableComboSlots.has(col.ownerId)}
                 comboWindowEvents={comboWindowEvts}
                 enemyStaggerNodes={enemy.staggerNodes}
-                slotElementColors={slotElementColors}
-                alwaysAvailableComboSlots={alwaysAvailableComboSlots}
-                autoFinisherIds={autoFinisherIds}
-                validationMaps={validationMaps}
-                allEvents={events}
-                selectedIds={selectedIds}
-                hoveredId={hoveredId}
-                hoverFrame={hoverFrame}
-                draggingIds={draggingIds}
-                selectedFramesByEvent={selectedFramesByEvent}
                 interactionMode={interactionMode}
-                critModeGeneration={getCritModeGeneration()}
-                onSubTimelineContextMenu={handleSubTimelineContextMenu}
-                onTimelineMouseDown={handleTimelineMouseDown}
-                onDragStart={handleEventDragStart}
-                onContextMenu={handleEventContextMenu}
-                onSelect={handleEventSelect}
-                onDoubleClick={handleEventDoubleClick}
-                onHover={handleEventHover}
-                onTouchStart={handleEventTouchStart}
-                onFrameClick={handleFrameClickGuarded}
-                onFrameContextMenu={handleFrameContextMenu}
-                onFrameDragStart={handleFrameDragStart}
-                onSegmentContextMenu={handleSegmentContextMenu}
-                onSegmentResizeDragStart={handleSegmentResizeDragStart}
               />
             );
           })}
 
         </div>
 
-        {/* Time-stop overlay bands */}
-        {timeStopRegions.map((stop, i) => (
-          <div
-            key={`ts-${i}`}
-            className="time-stop-overlay"
-            style={{ [axis.framePos]: frameToPx(stop.startFrame, zoom), [axis.frameSize]: durationToPx(stop.durationFrames, zoom) } as React.CSSProperties}
-          />
-        ))}
+        {/* Time-stop overlays rendered on the canvas (TimelineRenderer) */}
 
         {/* Marquee selection box */}
         {marqueeRect && (
@@ -2360,6 +2391,7 @@ export default React.memo(function CombatPlanner({
             />
           );
         })}
+
       </div>
 
       {/* Hover line — always mounted, positioned imperatively via updateHoverLineDOM */}
@@ -2461,6 +2493,16 @@ export default React.memo(function CombatPlanner({
             );
           })()}
         </div>
+      {createPortal(
+        <div ref={warningTooltipRef} style={{
+          display: 'none', position: 'fixed', zIndex: 10000,
+          background: '#1a1a1a', border: '1px solid #555', borderRadius: 4,
+          padding: '4px 8px', fontSize: 11, color: '#f0a030',
+          fontFamily: 'Rajdhani, sans-serif', whiteSpace: 'pre-line',
+          pointerEvents: 'none', maxWidth: 260,
+        }} />,
+        document.body,
+      )}
     </div>
   );
 });

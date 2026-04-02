@@ -113,7 +113,7 @@ export function extendByTimeStops(
 export function contractByTimeStops(
   startFrame: number,
   realDuration: number,
-  stops: readonly TimeStopRegion[],
+  stops: readonly Pick<TimeStopRegion, 'startFrame' | 'durationFrames'>[],
 ): number {
   if (realDuration <= 0 || stops.length === 0) return realDuration;
   const endFrame = startFrame + realDuration;
@@ -148,7 +148,7 @@ export function applyTimeStopExtension(
   const result = events.map((ev) => {
     if (extended.has(ev.uid)) return ev;
 
-    // Control status is not affected by time-stops — its timer keeps ticking
+    // Control events are not affected by time-stops (timer keeps ticking)
     if (ev.id === CombatSkillType.CONTROL) return ev;
 
     const isOwn = isTimeStopEvent(ev);

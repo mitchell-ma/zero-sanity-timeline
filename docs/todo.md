@@ -157,12 +157,19 @@ Implemented APPLY STAT handling + operator class filtering via `toQualifier` on 
 - Non-standard `with` keys removed (~40 keys across 27 files)
 - Gilberta PARAMETER conditions normalized: subjectId for param name, verb IS, cardinalityConstraint AT_LEAST
 
+## Engine fixes (2026-03-31)
+
+- RECOVER SKILL_POINT frame effects now route through DSL interpret path (`type: 'dsl'` instead of `type: 'recoverSP'`) so reactive triggers fire (needed for Akekuri P1 Positive Feedback)
+
 ### Disabled configs still needing real data
 - **Rossi**: Both talents (Nicks and Scratches, Seething Blood) + Razor Clawmark status — all `isEnabled: false` with `[0, 0]` placeholder values
 - **Antal**: Improviser talent + Improviser status — `isEnabled: false`
 
-### Talents implemented (2026-03-29)
-- Akekuri Cheer of Victory (SP Recovery scaling)
+### Talents/potentials implemented
+- Akekuri Cheer of Victory — SP Recovery scaling baked into combo skill frames with VARY_BY TALENT_LEVEL + INTEGER_DIV(INTELLECT, 10) ValueExpression
+- Akekuri P1 Positive Feedback — ATK +10% on SP recovery, trigger on status file, gated HAVE POTENTIAL >= 1
+- Akekuri P3 Committed Team Player — team ATK +10% during ult, applied from ult frame with HAVE POTENTIAL >= 3
+- Akekuri P5 Tempo of Awareness — LINK +5s via VARY_BY POTENTIAL on LINK duration
 - Da Pan Salty or Mild (simplified Prep Ingredients from ult)
 - Last Rite Cryogenic Embrittlement (1.2x Cryo Susceptibility AMP)
 - Perlica Cycle Protocol (extra combo chain on Vulnerable)
@@ -170,7 +177,6 @@ Implemented APPLY STAT handling + operator class filtering via `toQualifier` on 
 - Ardelia Friendly Presence (simplified HP recovery on hit)
 - Estella Laziness Pays Off Now (Cryo Infliction ignore + DMG reduction)
 - Estella Commiseration (APPLY SHATTER → COMMISERATION, consumed on combo for SP return)
-- Akekuri LINK duration now scales with P5 (+5s via VARY_BY POTENTIAL)
 
 ### Talents left as description-only (passive/probabilistic/spatial)
 - Antal Subconscious Act (30% DMG immunity)

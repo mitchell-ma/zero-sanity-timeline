@@ -305,10 +305,11 @@ function EventBlock({
   const layout = eventLayout;
   const ppf = pxPerFrame(zoom);
 
-  /** Check if a frame diamond is near the hover line (within 4px). */
+  /** Check if a frame diamond is near the hover line (within diamond radius). */
+  const DIAMOND_HIT_PX = 9;
   const isFrameHovered = (frameAbsReal: number): boolean => {
     if (hoverFrameProp == null) return false;
-    return Math.abs((hoverFrameProp - frameAbsReal) * ppf) <= 4;
+    return Math.abs((hoverFrameProp - frameAbsReal) * ppf) <= DIAMOND_HIT_PX;
   };
 
   /** Check if the hover line falls within a segment's absolute frame range. */
@@ -318,9 +319,9 @@ function EventBlock({
   };
 
   /** Compute the label's position offset (px) within a hovered segment so it follows the hover line. */
-  const hoverLabelStyle = (segStartFrame: number): React.CSSProperties | undefined => {
+  const hoverLabelStyle = (segStartFrame: number, segHeightPx: number): React.CSSProperties | undefined => {
     if (hoverFrameProp == null) return undefined;
-    const px = durationToPx(hoverFrameProp - segStartFrame, zoom) + 6;
+    const px = Math.min(durationToPx(hoverFrameProp - segStartFrame, zoom) + 6, segHeightPx - 4);
     return axis.framePos === 'top' ? { top: px } : { left: px };
   };
 
@@ -376,8 +377,13 @@ function EventBlock({
       ? durationToPx(segLayout.realOffset, zoom)
       : durationToPx(segOffset, zoom));
 
+    // Use the shorter of layout duration and event segment duration — truncateDerivedEvents
+    // may shorten the event's segments without updating the layout.
+    const segVisualDur = segLayout
+      ? Math.min(segLayout.realDuration, seg.properties.duration)
+      : seg.properties.duration;
     const segEndPx = Math.round(segLayout
-      ? durationToPx(segLayout.realOffset + segLayout.realDuration, zoom)
+      ? durationToPx(segLayout.realOffset + segVisualDur, zoom)
       : durationToPx(segOffset + seg.properties.duration, zoom));
     const segH = segEndPx - segTopPx;
 
@@ -390,9 +396,9 @@ function EventBlock({
     const segAbsStart = segLayout
       ? layout!.realStartFrame + segLayout.realOffset
       : startFrame + segOffset;
-    const segAbsDur = segLayout ? segLayout.realDuration : seg.properties.duration;
+    const segAbsDur = segVisualDur;
     const segHover = isSegmentHovered(segAbsStart, segAbsDur);
-    const segLabelHover = segHover ? hoverLabelStyle(segAbsStart) : undefined;
+    const segLabelHover = segHover ? hoverLabelStyle(segAbsStart, segH) : undefined;
 
     // Damage segments use their own element color; animation/cooldown use the event color
     const isNonDamageSegment = seg.properties.segmentTypes?.some(
@@ -448,7 +454,7 @@ function EventBlock({
             : cachedBorder(segColor, style.borderAlpha),
           borderRadius: passive ? '2px' : borderRadiusVal,
           boxShadow: style.glow ? cachedGlowShadow(segColor) : undefined,
-          zIndex: segments.length - i,
+          zIndex: i,
           padding: 0,
           margin: 0,
         } as React.CSSProperties}
@@ -504,7 +510,7 @@ function EventBlock({
           key={`rh-${i}`}
           className="event-segment-resize-handle"
           style={{ [axis.framePos]: boundaryPx - 3, [axis.frameSize]: 6 } as React.CSSProperties}
-          onMouseDown={(e) => { e.stopPropagation(); onSegmentResizeDragStart(e, uid, i, 'end'); }}
+          onMouseDown={(e) => { e.stopPropagation(); if (e.ctrlKey || e.metaKey) onSegmentResizeDragStart(e, uid, i, 'end'); }}
         />,
       );
     }
@@ -516,7 +522,7 @@ function EventBlock({
           key="rh-last"
           className="event-segment-resize-handle"
           style={{ [axis.framePos]: lastEnd - 3, [axis.frameSize]: 6 } as React.CSSProperties}
-          onMouseDown={(e) => { e.stopPropagation(); onSegmentResizeDragStart(e, uid, segments.length - 1, 'end'); }}
+          onMouseDown={(e) => { e.stopPropagation(); if (e.ctrlKey || e.metaKey) onSegmentResizeDragStart(e, uid, segments.length - 1, 'end'); }}
         />,
       );
     }

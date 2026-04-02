@@ -371,6 +371,22 @@ export function getAllStatusLabels(): Record<string, string> {
   for (const status of getAllOperatorStatuses()) {
     if (status.name) labels[status.id] = status.name;
   }
+  // Weapon statuses
+  for (const originId of getAllWeaponStatusOriginIds()) {
+    for (const ws of getWeaponStatuses(originId)) {
+      if (ws.name && ws.id) labels[ws.id] = ws.name;
+    }
+  }
+  // Gear statuses
+  for (const originId of getAllGearStatusOriginIds()) {
+    for (const gs of getGearStatuses(originId)) {
+      if (gs.name && gs.id) labels[gs.id] = gs.name;
+    }
+  }
+  // Gear set effects
+  for (const gse of getAllGearSetEffects()) {
+    if (gse.name && gse.id) labels[gse.id] = gse.name;
+  }
   _statusLabels = labels;
   return _statusLabels;
 }

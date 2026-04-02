@@ -85,7 +85,6 @@ import type { MoveContext } from '../controller/combatStateController';
 import { setRuntimeCritMode } from '../controller/combatStateController';
 import { applyEventOverrides } from '../controller/timeline/overrideApplicator';
 import { GlobalSettings, loadSettings, saveSettings, migrateLegacySettings, PERFORMANCE_THROTTLE } from '../consts/settings';
-import { configurePool } from '../controller/timeline/objectPool';
 import { COMBO_WINDOW_COLUMN_ID, ultimateGraphKey } from '../model/channels';
 // SkillPointConsumptionHistory/ResourceZone types inferred via useMemo from controller
 
@@ -102,7 +101,6 @@ initCustomOperators();
 
 const initialLoad = loadInitialState();
 const initialSettings = migrateLegacySettings(loadSettings());
-configurePool(initialSettings.enablePooling, initialSettings.eventPoolLimit, initialSettings.enableReconciler);
 
 function initLoadouts() {
   let tree = loadLoadoutTree();
@@ -241,7 +239,6 @@ export function useApp() {
   const [settings, setSettings] = useState<GlobalSettings>(initialSettings);
   useEffect(() => {
     saveSettings(settings);
-    configurePool(settings.enablePooling, settings.eventPoolLimit, settings.enableReconciler);
   }, [settings]);
   const handleUpdateSetting = useCallback(<K extends keyof GlobalSettings>(key: K, value: GlobalSettings[K]) => {
     setSettings((prev) => ({ ...prev, [key]: value }));
@@ -478,7 +475,7 @@ export function useApp() {
         });
       }
 
-      return processCombatSimulation(
+      const result = processCombatSimulation(
         validEvents, loadoutProperties, slotWeapons, slotWirings, slotOperatorMap, slotGearSets,
         bossMaxHp, enemy.id, loadouts,
         combatLoadout.commonSlot.skillPoints,
@@ -488,6 +485,11 @@ export function useApp() {
         combatLoadout.getTriggerIndex() ?? undefined,
         pipelineCritMode, overrides, enemyStats,
       );
+      // Force new array reference — the pipeline reuses internal arrays across runs,
+      // so the returned reference can be identical even when contents changed.
+      // Without this, downstream useMemos (allProcessedEventsRaw, allProcessedEvents)
+      // see the same reference and skip recomputation.
+      return [...result];
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [validEvents, loadoutProperties, slotWeapons, slotWirings, slotOperatorMap, slotGearSets, bossMaxHp, enemy.id, loadouts, combatLoadout, operators, resourceConfigs, pipelineCritMode, overrides, enemyStats],
@@ -523,6 +525,7 @@ export function useApp() {
   );
 
   // Apply user property overrides to derived events
+  // Force new reference every time processedEvents changes (bypass memo chain)
   const allProcessedEvents = useMemo(() => {
     const keys = Object.keys(overrides);
     if (keys.length === 0) return allProcessedEventsRaw;
@@ -552,28 +555,6 @@ export function useApp() {
       return next === prev.overrides ? prev : { ...prev, overrides: next };
     });
   }, [allProcessedEvents, overrides, setCombatState]);
-
-  // Track which event UIDs changed in the last pipeline run (for incremental view updates).
-  // Computed by comparing current vs previous processedEvents by reference — immune to
-  // React strict mode double-invocation issues with module-level mutable state.
-  const prevProcessedRef = useRef<TimelineEvent[]>([]);
-  const changedUidsRef = useRef<ReadonlySet<string>>(new Set());
-  if (processedEvents !== prevProcessedRef.current) {
-    const prev = prevProcessedRef.current;
-    const prevByUid = new Map<string, TimelineEvent>();
-    for (const ev of prev) prevByUid.set(ev.uid, ev);
-    const changed = new Set<string>();
-    for (const ev of processedEvents) {
-      if (prevByUid.get(ev.uid) !== ev) changed.add(ev.uid);
-    }
-    // Also detect removed events
-    const currentUids = new Set(processedEvents.map(ev => ev.uid));
-    prevByUid.forEach((_, uid) => {
-      if (!currentUids.has(uid)) changed.add(uid);
-    });
-    changedUidsRef.current = changed;
-    prevProcessedRef.current = processedEvents;
-  }
 
   // Dynamic timeline length: grow to furthest event + buffer, minimum 60 seconds.
   // Events that reach TOTAL_FRAMES (control, passives, permanent statuses) are
@@ -1771,7 +1752,7 @@ export function useApp() {
     readOnly: isCommunityLoadoutId(activeLoadoutId),
 
     // Refs
-    appBodyRef, sidebarRef, changedUidsRef,
+    appBodyRef, sidebarRef,
 
     // Event handlers
     handleAddEvent, handleUpdateEvent, handleMoveEvent, handleMoveEvents,

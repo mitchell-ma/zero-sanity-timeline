@@ -13,8 +13,7 @@ import { resolveEventIdentity, resolveSpReturn, resolveActiveModifiers, resolveC
 import { getOperatorSkill } from '../../controller/gameDataStore';
 import { DataCardBody, FrameCritState } from '../custom/DataCardComponents';
 import { ENEMY_OWNER_ID, OPERATOR_COLUMNS, REACTION_COLUMN_IDS, SKILL_COLUMN_ORDER } from '../../model/channels';
-import { getLastController, getReconcileStats } from '../../controller/timeline/eventQueueController';
-import { getPoolStats } from '../../controller/timeline/objectPool';
+import { getLastController } from '../../controller/timeline/eventQueueController';
 import type { DamageTableRow } from '../../controller/calculation/damageTableBuilder';
 
 const SKILL_COLUMN_SET = new Set<string>(SKILL_COLUMN_ORDER);
@@ -821,9 +820,6 @@ function DebugPane({ event, processedEvent, rawEvents, allProcessedEvents }: { e
       {/* Pipeline internals — DerivedEventController snapshot */}
       <PipelineTimeline />
 
-      {/* Object pool + reconciler stats */}
-      <PoolReconcilerStats />
-
       {/* Controller Objects — tree view */}
       {(rawEvents || allProcessedEvents) && (() => {
         const rawIds = rawEvents ? new Set(rawEvents.map((ev) => ev.uid)) : null;
@@ -1040,21 +1036,5 @@ function DebugDiffRow({ label, raw, derived }: { label: string; raw?: number; de
 }
 
 // ── Pool + Reconciler stats ─────────────────────────────────────────────────
-
-function PoolReconcilerStats() {
-  const pool = getPoolStats();
-  const rec = getReconcileStats();
-  return (
-    <div style={{ marginTop: 8, paddingTop: 6, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-      <div style={{ color: 'var(--text-primary)', fontWeight: 600, marginBottom: 2 }}>Object Pool</div>
-      <div>Pooling: {pool.enabled ? 'ON' : 'OFF'}</div>
-      <div>Events: {pool.eventPoolUsed}/{pool.eventPoolSize} (limit {pool.eventPoolLimit})</div>
-      <div>QueueFrames: {pool.qfPoolUsed}/{pool.qfPoolSize}</div>
-      <div style={{ color: 'var(--text-primary)', fontWeight: 600, marginTop: 6, marginBottom: 2 }}>Reconciler</div>
-      <div>Total: {rec.total} | Reused: {rec.reused} | Fresh: {rec.fresh}</div>
-      <div>Cache: {rec.cacheSize}</div>
-    </div>
-  );
-}
 
 export default EventPane;

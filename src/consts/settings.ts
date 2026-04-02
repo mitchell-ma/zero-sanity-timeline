@@ -12,12 +12,6 @@ export interface GlobalSettings {
   decimalPlaces: number;
   numberFormat: NumberFormatType;
   performanceMode: PerformanceMode;
-  /** Enable object pooling for all pipeline objects (events, queue frames). */
-  enablePooling: boolean;
-  /** Maximum number of TimelineEvent objects retained in the pool. */
-  eventPoolLimit: number;
-  /** Enable output reconciliation (reuse unchanged event references for React). */
-  enableReconciler: boolean;
 }
 
 export const DEFAULT_SETTINGS: GlobalSettings = {
@@ -27,9 +21,6 @@ export const DEFAULT_SETTINGS: GlobalSettings = {
   decimalPlaces: 2,
   numberFormat: NumberFormatType.DECIMAL,
   performanceMode: PerformanceMode.BALANCED,
-  enablePooling: true,
-  eventPoolLimit: 200,
-  enableReconciler: true,
 };
 
 /** Maps PerformanceMode to throttleByRAF `every` parameter (frames to skip). */
@@ -55,10 +46,6 @@ export function loadSettings(): GlobalSettings {
             ? parsed.decimalPlaces : DEFAULT_SETTINGS.decimalPlaces,
           numberFormat: Object.values(NumberFormatType).includes(parsed.numberFormat) ? parsed.numberFormat : DEFAULT_SETTINGS.numberFormat,
           performanceMode: Object.values(PerformanceMode).includes(parsed.performanceMode) ? parsed.performanceMode : DEFAULT_SETTINGS.performanceMode,
-          enablePooling: typeof parsed.enablePooling === 'boolean' ? parsed.enablePooling
-            : (typeof parsed.poolInputEvents === 'boolean' ? parsed.poolInputEvents : DEFAULT_SETTINGS.enablePooling),
-          eventPoolLimit: typeof parsed.eventPoolLimit === 'number' && parsed.eventPoolLimit >= 0 ? parsed.eventPoolLimit : DEFAULT_SETTINGS.eventPoolLimit,
-          enableReconciler: typeof parsed.enableReconciler === 'boolean' ? parsed.enableReconciler : DEFAULT_SETTINGS.enableReconciler,
         };
       }
     }
