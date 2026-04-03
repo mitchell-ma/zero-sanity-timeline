@@ -8,6 +8,7 @@
     "description": "Ultimate Cryoblasting Pistolier improved: During the ultimate, ATK +10% and Critical DMG Dealt +30%."
   },
   "metadata": {
-    "originId": "YVONNE"
+    "originId": "YVONNE",
+    "dataStatus": "RECONCILED"
   }
 }

@@ -15,7 +15,8 @@
       "WARFARIN"
     ],
     "originId": "game",
-    "icon": "weapons/pathfinder%27s_beacon_icon.png"
+    "icon": "weapons/pathfinder%27s_beacon_icon.png",
+    "dataStatus": "RECONCILED"
   },
   "clause": [
     {

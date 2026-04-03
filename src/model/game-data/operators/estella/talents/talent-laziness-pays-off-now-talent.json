@@ -21,7 +21,10 @@
             "value": {
               "verb": "VARY_BY",
               "object": "TALENT_LEVEL",
-              "value": [0.15, 0.20],
+              "value": [
+                0.15,
+                0.2
+              ],
               "ofDeterminer": "THIS",
               "of": "OPERATOR"
             }
@@ -32,7 +35,10 @@
   ],
   "properties": {
     "id": "LAZINESS_PAYS_OFF_NOW_TALENT",
-    "maxLevel": { "verb": "IS", "value": 2 },
+    "maxLevel": {
+      "verb": "IS",
+      "value": 2
+    },
     "name": "Laziness Pays Off Now (Talent)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
@@ -45,7 +51,8 @@
     "dataSources": [
       "WARFARIN"
     ],
-    "icon": "skills/estella_talent_2_icon.png"
+    "icon": "skills/estella_talent_2_icon.png",
+    "dataStatus": "RECONCILED"
   },
   "clauseType": "ALL"
 }

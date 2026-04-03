@@ -1,7 +1,10 @@
 {
   "properties": {
     "id": "SCORCHING_HEART_TALENT",
-    "maxLevel": { "verb": "IS", "value": 3 },
+    "maxLevel": {
+      "verb": "IS",
+      "value": 3
+    },
     "target": "OPERATOR",
     "targetDeterminer": "THIS",
     "name": "Scorching Heart (Talent)",
@@ -26,7 +29,8 @@
   },
   "metadata": {
     "originId": "LAEVATAIN",
-    "icon": "skills/laevatain_talent_1_icon.png"
+    "icon": "skills/laevatain_talent_1_icon.png",
+    "dataStatus": "VERIFIED"
   },
   "onTriggerClause": [
     {

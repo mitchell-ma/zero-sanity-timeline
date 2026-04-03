@@ -5,7 +5,8 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "STAT", "objectId": "WILL",
+          "object": "STAT",
+          "objectId": "WILL",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
@@ -41,7 +42,8 @@
     "description": "Will +{Will:0}, Physical DMG Dealt +{PhysicalDamageIncrease:0%}."
   },
   "metadata": {
-    "originId": "POGRANICHNIK"
+    "originId": "POGRANICHNIK",
+    "dataStatus": "RECONCILED"
   },
   "clauseType": "ALL"
 }

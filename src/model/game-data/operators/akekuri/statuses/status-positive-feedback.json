@@ -13,7 +13,10 @@
           "subject": "OPERATOR",
           "verb": "HAVE",
           "object": "POTENTIAL",
-          "value": { "verb": "IS", "value": 1 }
+          "value": {
+            "verb": "IS",
+            "value": 1
+          }
         }
       ],
       "effects": [
@@ -74,7 +77,8 @@
     "originId": "AKEKURI",
     "dataSources": [
       "ENDFIELD_WIKI"
-    ]
+    ],
+    "dataStatus": "VERIFIED"
   },
   "clauseType": "ALL"
 }

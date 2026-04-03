@@ -398,7 +398,8 @@
   ],
   "metadata": {
     "originId": "LAST_RITE",
-    "icon": "skills/ult_lastrite.png"
+    "icon": "skills/ult_lastrite.png",
+    "dataStatus": "RECONCILED"
   },
   "clauseType": "ALL"
 }

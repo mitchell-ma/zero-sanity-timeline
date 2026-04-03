@@ -26,6 +26,7 @@
     "originId": "ROSSI",
     "dataSources": [
       "IN_GAME"
-    ]
+    ],
+    "dataStatus": "VERIFIED"
   }
 }

@@ -59,6 +59,7 @@
     "originId": "MOUNTAIN_BEARER",
     "dataSources": [
       "WARFARIN"
-    ]
+    ],
+    "dataStatus": "RECONCILED"
   }
 }

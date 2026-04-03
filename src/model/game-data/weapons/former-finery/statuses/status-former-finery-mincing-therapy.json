@@ -5,7 +5,8 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "STAT", "objectId": "TREATMENT_EFFICIENCY",
+          "object": "STAT",
+          "objectId": "TREATMENT_EFFICIENCY",
           "with": {
             "value": {
               "verb": "VARY_BY",
@@ -56,6 +57,7 @@
     "originId": "FORMER_FINERY",
     "dataSources": [
       "ENDFIELD_WIKI"
-    ]
+    ],
+    "dataStatus": "RECONCILED"
   }
 }

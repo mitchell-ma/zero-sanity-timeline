@@ -42,6 +42,7 @@
     "eventCategoryType": "GEAR_SET_STATUS"
   },
   "metadata": {
-    "originId": "HOT_WORK"
+    "originId": "HOT_WORK",
+    "dataStatus": "RECONCILED"
   }
 }

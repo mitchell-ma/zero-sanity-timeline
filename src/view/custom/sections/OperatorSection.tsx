@@ -60,6 +60,7 @@ const COMBAT_TO_NOUN: Record<string, SkillType> = {
   [CombatSkillType.BATTLE_SKILL]: NounType.BATTLE_SKILL as SkillType,
   [CombatSkillType.COMBO_SKILL]: NounType.COMBO_SKILL as SkillType,
   [CombatSkillType.ULTIMATE]: NounType.ULTIMATE as SkillType,
+  [CombatSkillType.ACTION]: NounType.ACTION as SkillType,
 };
 
 interface Props {

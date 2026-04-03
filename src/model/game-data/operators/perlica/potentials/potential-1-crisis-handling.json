@@ -8,6 +8,7 @@
     "description": "Combo skill Instant Protocol: Chain improved: Electrification duration +{duration-1:0%}."
   },
   "metadata": {
-    "originId": "PERLICA"
+    "originId": "PERLICA",
+    "dataStatus": "RECONCILED"
   }
 }

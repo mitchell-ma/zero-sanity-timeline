@@ -15,7 +15,8 @@
       "WARFARIN"
     ],
     "originId": "game",
-    "icon": "weapons/aggeloslayer_icon.png"
+    "icon": "weapons/aggeloslayer_icon.png",
+    "dataStatus": "RECONCILED"
   },
   "clause": [
     {
@@ -23,7 +24,8 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "STAT", "objectId": "BASE_ATTACK",
+          "object": "STAT",
+          "objectId": "BASE_ATTACK",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {

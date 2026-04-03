@@ -40,7 +40,7 @@ const VALID_CONSUMABLE_TOP_KEYS = new Set(['properties', 'clause', 'metadata']);
 const VALID_TACTICAL_TOP_KEYS = new Set(['properties', 'onTriggerClause', 'segments', 'metadata']);
 const VALID_CONSUMABLE_PROPERTIES_KEYS = new Set(['id', 'name', 'rarity', 'duration']);
 const VALID_TACTICAL_PROPERTIES_KEYS = new Set(['id', 'name', 'rarity', 'usageLimit']);
-const VALID_METADATA_KEYS = new Set(['dataSources', 'icon', 'originId']);
+const VALID_METADATA_KEYS = new Set(['dataSources', 'icon', 'originId', 'dataStatus']);
 
 function validateProperties(props: Record<string, unknown>, validKeys: Set<string>): string[] {
   const errors = checkKeys(props, validKeys, 'properties');

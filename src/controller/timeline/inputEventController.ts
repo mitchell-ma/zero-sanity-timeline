@@ -395,6 +395,8 @@ export function createEvent(
     enhancementType?: import('../../consts/enums').EnhancementType;
     stacks?: Record<string, unknown>;
     segmentOrigin?: number[];
+    suppliedParameters?: Record<string, { id: string; name: string; lowerRange: number; upperRange: number; default: number }[]>;
+    parameterValues?: Record<string, number>;
   } | null,
   interactionMode?: import('../../consts/enums').InteractionModeType,
 ): TimelineEvent {
@@ -429,6 +431,8 @@ export function createEvent(
     ...(defaultSkill?.enhancementType ? { enhancementType: defaultSkill.enhancementType } : {}),
     ...(interactionMode ? { creationInteractionMode: interactionMode } : {}),
     ...(defaultSkill?.segmentOrigin ? { segmentOrigin: defaultSkill.segmentOrigin } : {}),
+    ...(defaultSkill?.suppliedParameters ? { suppliedParameters: defaultSkill.suppliedParameters } : {}),
+    ...(defaultSkill?.parameterValues ? { parameterValues: defaultSkill.parameterValues } : {}),
   };
 }
 

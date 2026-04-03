@@ -251,6 +251,7 @@
     "dataSources": [
       "ENDFIELD_WIKI",
       "WARFARIN"
-    ]
+    ],
+    "dataStatus": "VERIFIED"
   }
 }

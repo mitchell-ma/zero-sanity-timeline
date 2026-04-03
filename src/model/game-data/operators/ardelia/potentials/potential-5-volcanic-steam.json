@@ -8,6 +8,7 @@
     "description": "Combo skill Eruption Column improved: Length of cooldown -{-coolDown:0}s; DMG multiplier is increased to 1.2 times the original; duration of Corrosion applied +4s."
   },
   "metadata": {
-    "originId": "ARDELIA"
+    "originId": "ARDELIA",
+    "dataStatus": "VERIFIED"
   }
 }

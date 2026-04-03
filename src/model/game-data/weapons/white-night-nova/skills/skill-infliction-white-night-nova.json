@@ -63,6 +63,7 @@
     "originId": "WHITE_NIGHT_NOVA",
     "dataSources": [
       "ENDFIELD_WIKI"
-    ]
+    ],
+    "dataStatus": "RECONCILED"
   }
 }

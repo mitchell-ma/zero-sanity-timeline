@@ -503,7 +503,8 @@
   ],
   "metadata": {
     "originId": "DA_PAN",
-    "icon": "skills/ult_da_pan.png"
+    "icon": "skills/ult_da_pan.png",
+    "dataStatus": "RECONCILED"
   },
   "clauseType": "ALL"
 }

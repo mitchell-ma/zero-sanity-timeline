@@ -181,7 +181,8 @@
   ],
   "metadata": {
     "originId": "DA_PAN",
-    "icon": "skills/combo_da_pan.png"
+    "icon": "skills/combo_da_pan.png",
+    "dataStatus": "RECONCILED"
   },
   "clauseType": "ALL",
   "activationWindow": {

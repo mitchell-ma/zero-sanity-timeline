@@ -23,6 +23,7 @@
     "description": "Nature element infliction. Stacks up to 4 times. At 4 stacks, triggers Corrosion arts reaction."
   },
   "metadata": {
-    "originId": "game"
+    "originId": "game",
+    "dataStatus": "RECONCILED"
   }
 }

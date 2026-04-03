@@ -3386,6 +3386,15 @@
   cursor: default;
 }
 
+.context-menu-inline-label {
+  padding: 0 0.875rem 0.125rem;
+  font-family: var(--font-display);
+  font-size: 0.5625rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
 .context-menu-inline-row {
   display: flex;
   gap: 2px;

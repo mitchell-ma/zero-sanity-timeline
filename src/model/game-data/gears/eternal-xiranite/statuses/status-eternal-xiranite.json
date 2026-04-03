@@ -41,6 +41,7 @@
     "eventCategoryType": "GEAR_SET_STATUS"
   },
   "metadata": {
-    "originId": "ETERNAL_XIRANITE"
+    "originId": "ETERNAL_XIRANITE",
+    "dataStatus": "RECONCILED"
   }
 }

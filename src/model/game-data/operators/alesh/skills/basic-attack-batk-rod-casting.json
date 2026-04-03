@@ -479,6 +479,7 @@
   },
   "metadata": {
     "originId": "ALESH",
-    "icon": "skills/attack_sword.png"
+    "icon": "skills/attack_sword.png",
+    "dataStatus": "RECONCILED"
   }
 }

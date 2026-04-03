@@ -1928,6 +1928,29 @@ export default React.memo(function CombatPlanner({
       if (items.length > 0) onContextMenu({ x: e.clientX, y: e.clientY, items });
       return;
     }
+
+    // Combo activation window: show combo skill column's add items (no remove/reset)
+    if (ev.columnId === COMBO_WINDOW_COLUMN_ID) {
+      const comboCol = columns.find((c): c is MiniTimeline => c.type === ColumnType.MINI_TIMELINE && c.ownerId === ev.ownerId && c.columnId === NounType.COMBO_SKILL);
+      if (comboCol) {
+        const clickFrame = hoverFrameRef.current ?? ev.startFrame;
+        const colMenu = buildColumnContextMenu(comboCol, clickFrame, undefined, {
+          events, slots, resourceGraphs,
+          alwaysAvailableComboSlots: getAlwaysAvailableComboSlots(slots),
+          timeStopRegions,
+          staggerBreaks,
+          columnPositions: columnPositionsRef.current,
+          interactionMode,
+        });
+        if (colMenu) {
+          const addItems = colMenu.filter(i => i.actionId === 'addEvent').map(resolveMenuItemAction);
+          if (addItems.length > 0) {
+            onContextMenu({ x: e.clientX, y: e.clientY, items: addItems });
+          }
+        }
+      }
+      return;
+    }
     if (interactionMode === InteractionModeType.STRICT) {
       const col = columns.find((c): c is MiniTimeline => c.type === ColumnType.MINI_TIMELINE && c.ownerId === ev.ownerId && c.columnId === ev.columnId);
       if (col?.derived) return;

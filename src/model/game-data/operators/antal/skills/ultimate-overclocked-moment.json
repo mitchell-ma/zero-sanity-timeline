@@ -116,7 +116,8 @@
   ],
   "metadata": {
     "originId": "ANTAL",
-    "icon": "skills/ult_antal.png"
+    "icon": "skills/ult_antal.png",
+    "dataStatus": "VERIFIED"
   },
   "clauseType": "ALL"
 }

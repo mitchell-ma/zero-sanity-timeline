@@ -11,7 +11,7 @@
   "secondaryAttributeType": "WILL",
   "talents": {
     "one": "INFLAMED_FOR_THE_ASSAULT_TALENT",
-    "two": "PAY_THE_FERRIC_PRICE_TALENT",
+    "two": "PAY_THE_FERRIC_PRICE",
     "attributeIncrease": {
       "id": "FORGED"
     }
@@ -1670,6 +1670,7 @@
     "originId": "game",
     "dataSources": [
       "WARFARIN"
-    ]
+    ],
+    "dataStatus": "VERIFIED"
   }
 }

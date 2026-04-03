@@ -40,6 +40,7 @@ export class TimelineRenderer {
     this.timeStopOverlay = new Graphics();
     this.timeStopOverlay.eventMode = 'none';
     this.eventsContainer = new Container();
+    this.eventsContainer.sortableChildren = true;
     this.diamondLayer = new Container();
     this.diamondLayer.sortableChildren = true;
     this.pool = new EventPool(this.eventsContainer, this.diamondLayer);
@@ -193,6 +194,8 @@ export class TimelineRenderer {
 
         const obj = this.pool.get(uid);
         if (obj) {
+          // Passive events (combo activation windows) render behind normal events
+          obj.container.zIndex = pres.passive ? 0 : 1;
           if (isHorizontal) {
             obj.container.x = topPx;
             obj.container.y = laneX;
@@ -215,6 +218,14 @@ export class TimelineRenderer {
   resize(width: number, height: number) {
     this.app.renderer.resize(width, height);
     this.lastGridKey = '';   // invalidate gridlines cache
+    // Rebuild display objects AND force an immediate pixel render so the canvas
+    // is never painted blank. rebuild() only updates display object state;
+    // without app.render(), pixels aren't drawn until the next ticker cycle.
+    if (this.currentData) {
+      this.dirty = false;
+      this.rebuild(this.currentData);
+      this.app.render();
+    }
   }
 
   destroy() {

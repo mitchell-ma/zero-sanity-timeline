@@ -5,7 +5,8 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "STAT", "objectId": "ARTS_INTENSITY",
+          "object": "STAT",
+          "objectId": "ARTS_INTENSITY",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
@@ -60,6 +61,7 @@
     "originId": "WILD_WANDERER",
     "dataSources": [
       "ENDFIELD_WIKI"
-    ]
+    ],
+    "dataStatus": "RECONCILED"
   }
 }

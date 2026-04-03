@@ -174,7 +174,8 @@
   ],
   "metadata": {
     "originId": "AVYWENNA",
-    "icon": "skills/combo_avywenna.png"
+    "icon": "skills/combo_avywenna.png",
+    "dataStatus": "RECONCILED"
   },
   "clauseType": "ALL",
   "activationWindow": {

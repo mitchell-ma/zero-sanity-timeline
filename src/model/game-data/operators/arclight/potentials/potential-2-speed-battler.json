@@ -8,6 +8,7 @@
     "description": "Agility +{Agi:0}, Intellect +15."
   },
   "metadata": {
-    "originId": "ARCLIGHT"
+    "originId": "ARCLIGHT",
+    "dataStatus": "RECONCILED"
   }
 }

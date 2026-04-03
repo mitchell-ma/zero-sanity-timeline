@@ -8,6 +8,7 @@
     "description": "Battle skill Turbid Avatar improved: Physical Susceptibility +5%; also triggers this additional effect to enemies with no more than 2 Vulnerability stacks."
   },
   "metadata": {
-    "originId": "LIFENG"
+    "originId": "LIFENG",
+    "dataStatus": "RECONCILED"
   }
 }

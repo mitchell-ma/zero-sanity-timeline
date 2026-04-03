@@ -8,6 +8,7 @@
     "description": "Battle skill Tempestuous Arc improved: After triggering additional effects, the skill recovers another 10 SP."
   },
   "metadata": {
-    "originId": "ARCLIGHT"
+    "originId": "ARCLIGHT",
+    "dataStatus": "RECONCILED"
   }
 }

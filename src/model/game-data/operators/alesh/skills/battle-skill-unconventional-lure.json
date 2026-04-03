@@ -50,7 +50,8 @@
   ],
   "metadata": {
     "originId": "ALESH",
-    "icon": "skills/skill_alesh.png"
+    "icon": "skills/skill_alesh.png",
+    "dataStatus": "RECONCILED"
   },
   "segments": [
     {

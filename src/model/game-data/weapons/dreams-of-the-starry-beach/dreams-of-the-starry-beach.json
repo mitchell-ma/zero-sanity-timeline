@@ -15,7 +15,8 @@
       "WARFARIN"
     ],
     "originId": "game",
-    "icon": "weapons/dreams_of_the_starry_beach_icon.png"
+    "icon": "weapons/dreams_of_the_starry_beach_icon.png",
+    "dataStatus": "RECONCILED"
   },
   "clause": [
     {

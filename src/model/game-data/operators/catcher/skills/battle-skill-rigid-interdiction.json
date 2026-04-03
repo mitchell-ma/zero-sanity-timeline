@@ -26,7 +26,8 @@
   ],
   "metadata": {
     "originId": "CATCHER",
-    "icon": "skills/skill_catcher.png"
+    "icon": "skills/skill_catcher.png",
+    "dataStatus": "RECONCILED"
   },
   "segments": [
     {

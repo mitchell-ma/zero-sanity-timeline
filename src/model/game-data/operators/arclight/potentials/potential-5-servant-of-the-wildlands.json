@@ -8,6 +8,7 @@
     "description": "Talent Wildland Trekker improved: Trigger requirement is reduced to 2 time(s)."
   },
   "metadata": {
-    "originId": "ARCLIGHT"
+    "originId": "ARCLIGHT",
+    "dataStatus": "RECONCILED"
   }
 }

@@ -67,6 +67,7 @@
     "originId": "FINISHING_CALL",
     "dataSources": [
       "ENDFIELD_WIKI"
-    ]
+    ],
+    "dataStatus": "RECONCILED"
   }
 }

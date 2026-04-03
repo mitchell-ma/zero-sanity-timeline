@@ -459,6 +459,7 @@
   },
   "metadata": {
     "originId": "LIFENG",
-    "icon": "skills/attack_polearm.png"
+    "icon": "skills/attack_polearm.png",
+    "dataStatus": "RECONCILED"
   }
 }

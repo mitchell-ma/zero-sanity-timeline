@@ -15,6 +15,17 @@ Cross-reference and validate consistency across weapon configs, weapon skills, w
 - Periodic audit to catch drift between configs
 - **Operator reconciliation**: verify skill/talent/potential/status DSL against wiki descriptions
 
+## Data status protection
+
+Every JSON file under `src/model/game-data/` has a `metadata.dataStatus` field (enum: `RECONCILED`, `PARTIALLY_VERIFIED`, `VERIFIED`). See `DataStatus` in `src/consts/enums.ts`.
+
+**VERIFIED files MUST NOT be modified by the reconciler.** These files have been manually audited against in-game data and wiki sources. Any automated reconciliation pass must skip files where `metadata.dataStatus === "VERIFIED"`.
+
+- **Before writing any JSON file**, read its `metadata.dataStatus`. If it is `VERIFIED`, do NOT write to it — log it as skipped and move on.
+- **Report VERIFIED mismatches as INFO, not auto-fix.** If a VERIFIED file appears inconsistent with wiki or other sources, report the discrepancy to the user but do NOT modify the file. The user will decide whether to update it manually.
+- **New files default to `RECONCILED`.** When generating skeleton configs for new operators, set `metadata.dataStatus` to `RECONCILED`.
+- **Only the user can promote to `VERIFIED`.** Never change a file's `dataStatus` to `VERIFIED` or `PARTIALLY_VERIFIED` unless the user explicitly requests it.
+
 ## What to check
 
 ### 1. Weapon → Weapon Skill cross-reference
@@ -78,12 +89,13 @@ Cross-reference and validate consistency across weapon configs, weapon skills, w
 1. **Read all weapon JSONs** — build a map of weaponId → skill IDs
 2. **Read all weapon-skill JSONs** — build maps of generic skills and named skills
 3. **Read all weapon-status JSONs** — build a map of originId → status entries
-4. **Run structural checks** (sections 1-4 above)
-5. **Report findings** — group by severity:
+4. **Filter by dataStatus** — skip all files where `metadata.dataStatus === "VERIFIED"`. Log skipped files as INFO.
+5. **Run structural checks** (sections 1-4 above) on non-VERIFIED files only
+6. **Report findings** — group by severity:
    - **ERROR**: Missing cross-references, broken links, wrong types
    - **WARNING**: Inconsistent values, missing optional fields, legacy keys
-   - **INFO**: Statistics (counts, coverage)
-6. **Discuss** any discrepancies with the user before making changes
+   - **INFO**: Statistics (counts, coverage), VERIFIED files skipped
+7. **Discuss** any discrepancies with the user before making changes
 
 ## Output format
 
@@ -595,8 +607,9 @@ Skills can declare `suppliedParameters` — values the user supplies when placin
 
 ## Operator reconciliation procedure
 
-1. **Read all operator JSONs** — `operators/<operator>/` directory: main json, skills, talents, potentials, statuses
-2. **Fetch wiki** — `https://endfield.wiki.gg/wiki/<Operator_Name>` — extract EVERY skill/talent/potential description with ALL per-rank values
+1. **Check dataStatus** — read `metadata.dataStatus` on the operator's main JSON. If `VERIFIED`, skip all writes for this operator's files and report findings as INFO only. Proceed with read-only audit.
+2. **Read all operator JSONs** — `operators/<operator>/` directory: main json, skills, talents, potentials, statuses
+3. **Fetch wiki** — `https://endfield.wiki.gg/wiki/<Operator_Name>` — extract EVERY skill/talent/potential description with ALL per-rank values
 3. **Map the interaction chain** — trace the complete cause→effect chain from wiki descriptions (e.g. "Heat Infliction → Combustion → Scorching Fangs → Empowered BS → Code of Restraint SP return → P3 SF refresh")
 4. **Cross-reference every value** — run the checklist from section 14 above, checking each item systematically
 5. **Verify IDs** — all potential/talent/status IDs follow `<OPERATOR>_P<N>_<NAME>` / `<OPERATOR>_TALENT<N>_<NAME>` convention
@@ -605,7 +618,7 @@ Skills can declare `suppliedParameters` — values the user supplies when placin
 8. **Verify trigger ownership** — triggers in correct files (`statuses/` or `talents/`, never `potentials/`)
 9. **Verify activation clauses** — empowered variants have `activationClause` matching wiki conditions. No hardcoded stack-scan fallback; activation is purely data-driven.
 10. **Write integration tests** — cover each link in the interaction chain (see strategy below)
-11. **Report and fix** — group by severity, discuss before making changes
+11. **Report and fix** — group by severity, discuss before making changes. **Never write to VERIFIED files.**
 
 ## Integration test strategy
 

@@ -61,6 +61,7 @@
     "originId": "UMBRAL_TORCH",
     "dataSources": [
       "ENDFIELD_WIKI"
-    ]
+    ],
+    "dataStatus": "RECONCILED"
   }
 }

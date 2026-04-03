@@ -8,6 +8,7 @@
     "description": "Combo skill Auger Angling improved: After catching a Rare Fin, the entire team gains ATK +15% for 10s. This effect cannot stack."
   },
   "metadata": {
-    "originId": "ALESH"
+    "originId": "ALESH",
+    "dataStatus": "RECONCILED"
   }
 }

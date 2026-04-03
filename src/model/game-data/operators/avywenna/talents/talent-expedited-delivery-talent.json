@@ -1,7 +1,10 @@
 {
   "properties": {
     "id": "EXPEDITED_DELIVERY_TALENT",
-    "maxLevel": { "verb": "IS", "value": 2 },
+    "maxLevel": {
+      "verb": "IS",
+      "value": 2
+    },
     "name": "EXPEDITED DELIVERY (Talent)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
@@ -14,6 +17,7 @@
     "dataSources": [
       "ENDFIELD_WIKI"
     ],
-    "icon": "skills/avywenna_talent_1_icon.png"
+    "icon": "skills/avywenna_talent_1_icon.png",
+    "dataStatus": "RECONCILED"
   }
 }

@@ -26,7 +26,8 @@
   ],
   "metadata": {
     "originId": "ANTAL",
-    "icon": "skills/skill_antal.png"
+    "icon": "skills/skill_antal.png",
+    "dataStatus": "VERIFIED"
   },
   "segments": [
     {
@@ -53,7 +54,10 @@
                   "verb": "HAVE",
                   "object": "POTENTIAL",
                   "cardinalityConstraint": "AT_LEAST",
-                  "value": { "verb": "IS", "value": 5 }
+                  "value": {
+                    "verb": "IS",
+                    "value": 5
+                  }
                 }
               ],
               "effects": [
@@ -72,7 +76,10 @@
                   "verb": "HAVE",
                   "object": "POTENTIAL",
                   "cardinalityConstraint": "AT_MOST",
-                  "value": { "verb": "IS", "value": 4 }
+                  "value": {
+                    "verb": "IS",
+                    "value": 4
+                  }
                 }
               ],
               "effects": [

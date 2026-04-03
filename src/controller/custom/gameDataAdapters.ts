@@ -204,6 +204,7 @@ export function skillToFriendly(json: GameDataJson, skillId?: string): CustomSki
   if (eventCategoryType === EventCategoryType.BATTLE_SKILL) combatSkillType = CombatSkillType.BATTLE_SKILL;
   else if (eventCategoryType === EventCategoryType.COMBO_SKILL) combatSkillType = CombatSkillType.COMBO_SKILL;
   else if (eventCategoryType === EventCategoryType.ULTIMATE_SKILL) combatSkillType = CombatSkillType.ULTIMATE;
+  else if (eventCategoryType === EventCategoryType.ACTION) combatSkillType = CombatSkillType.ACTION;
 
   return {
     id: skillId ?? (props.id as string) ?? '',

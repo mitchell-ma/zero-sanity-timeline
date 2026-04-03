@@ -26,7 +26,8 @@
   ],
   "metadata": {
     "originId": "ARDELIA",
-    "icon": "skills/skill_ardelia.png"
+    "icon": "skills/skill_ardelia.png",
+    "dataStatus": "VERIFIED"
   },
   "segments": [
     {

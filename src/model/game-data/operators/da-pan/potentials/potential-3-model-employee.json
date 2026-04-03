@@ -8,6 +8,7 @@
     "description": "Strength +{Str:0}, Physical DMG Dealt +{PhysicalDamageIncrease:0%}."
   },
   "metadata": {
-    "originId": "DA_PAN"
+    "originId": "DA_PAN",
+    "dataStatus": "RECONCILED"
   }
 }

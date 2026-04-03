@@ -8,6 +8,7 @@
     "description": "DEF +{Def:0}, Will +{Will:0}."
   },
   "metadata": {
-    "originId": "SNOWSHINE"
+    "originId": "SNOWSHINE",
+    "dataStatus": "RECONCILED"
   }
 }

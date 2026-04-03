@@ -19,7 +19,11 @@
             "value": {
               "verb": "VARY_BY",
               "object": "TALENT_LEVEL",
-              "value": [63, 63, 63],
+              "value": [
+                63,
+                63,
+                63
+              ],
               "ofDeterminer": "THIS",
               "of": "OPERATOR"
             },
@@ -38,7 +42,10 @@
   ],
   "properties": {
     "id": "FRIENDLY_PRESENCE_TALENT",
-    "maxLevel": { "verb": "IS", "value": 3 },
+    "maxLevel": {
+      "verb": "IS",
+      "value": 3
+    },
     "name": "Friendly Presence (Talent)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
@@ -51,6 +58,7 @@
     "dataSources": [
       "ENDFIELD_WIKI"
     ],
-    "icon": "skills/ardelia_talent_1_icon.png"
+    "icon": "skills/ardelia_talent_1_icon.png",
+    "dataStatus": "VERIFIED"
   }
 }

@@ -8,6 +8,7 @@
     "description": "Combo skill Instant Protocol: Chain improved: The Arts DMG Taken debuff effects on the enemy applied by the skill's Electrification are increased to {extra_scaling} times the original."
   },
   "metadata": {
-    "originId": "PERLICA"
+    "originId": "PERLICA",
+    "dataStatus": "RECONCILED"
   }
 }

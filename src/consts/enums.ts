@@ -10,6 +10,8 @@ export enum QueueFrameType {
 export enum FrameHookType {
   EVENT_START = 'EVENT_START',
   EVENT_END = 'EVENT_END',
+  SEGMENT_START = 'SEGMENT_START',
+  SEGMENT_END = 'SEGMENT_END',
 }
 
 export enum CombatSkillType {
@@ -25,6 +27,7 @@ export enum CombatSkillType {
   FINISHER = "FINISHER",
   DIVE = "DIVE",
   CONTROL = "CONTROL",
+  ACTION = "ACTION",
 }
 
 export enum MainStatType {
@@ -354,6 +357,12 @@ export enum GearSetEffectType {
   TIDE_SURGE = "TIDE_SURGE",
 }
 
+export enum DataStatus {
+  RECONCILED = 'RECONCILED',
+  PARTIALLY_VERIFIED = 'PARTIALLY_VERIFIED',
+  VERIFIED = 'VERIFIED',
+}
+
 export enum EventType {
   COMBAT_SKILL = "COMBAT_SKILL",
   STATUS = "STATUS",
@@ -365,6 +374,7 @@ export enum EventCategoryType {
   BATTLE_SKILL = "BATTLE_SKILL",
   COMBO_SKILL = "COMBO_SKILL",
   ULTIMATE_SKILL = "ULTIMATE_SKILL",
+  ACTION = "ACTION",
 
   // ── Built-in combat mechanics ──────────────────────────────────────────────
   INFLICTION = "INFLICTION",

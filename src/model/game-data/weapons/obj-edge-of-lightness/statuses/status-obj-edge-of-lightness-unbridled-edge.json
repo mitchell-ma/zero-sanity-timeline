@@ -87,6 +87,7 @@
     "originId": "OBJ_EDGE_OF_LIGHTNESS",
     "dataSources": [
       "ENDFIELD_WIKI"
-    ]
+    ],
+    "dataStatus": "RECONCILED"
   }
 }

@@ -5,7 +5,18 @@
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "COMBO_SKILL",
     "element": "PHYSICAL",
-    "id": "FRONTLINE_SUPPORT"
+    "id": "FRONTLINE_SUPPORT",
+    "suppliedParameters": {
+      "VARY_BY": [
+        {
+          "id": "ENEMY_HIT",
+          "name": "Enemy Hit",
+          "lowerRange": 0,
+          "upperRange": 1,
+          "default": 1
+        }
+      ]
+    }
   },
   "clause": [
     {
@@ -20,6 +31,81 @@
             "value": {
               "verb": "IS",
               "value": 10
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "onEntryClause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "INFLAMED_FOR_THE_ASSAULT",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "operation": "ADD",
+              "left": {
+                "verb": "VARY_BY",
+                "object": "TALENT_LEVEL",
+                "value": [
+                  0.3,
+                  0.5
+                ],
+                "ofDeterminer": "THIS",
+                "of": "OPERATOR"
+              },
+              "right": {
+                "verb": "VARY_BY",
+                "object": "POTENTIAL",
+                "value": [
+                  0,
+                  0.2,
+                  0.2,
+                  0.2,
+                  0.2,
+                  0.2
+                ],
+                "ofDeterminer": "THIS",
+                "of": "OPERATOR"
+              }
+            },
+            "duration": {
+              "operation": "ADD",
+              "left": {
+                "verb": "IS",
+                "value": 0.77
+              },
+              "right": {
+                "operation": "MULT",
+                "left": {
+                  "verb": "VARY_BY",
+                  "object": "ENEMY_HIT",
+                  "value": [
+                    0,
+                    1.5
+                  ]
+                },
+                "right": {
+                  "verb": "VARY_BY",
+                  "object": "POTENTIAL",
+                  "value": [
+                    0,
+                    1,
+                    1,
+                    1,
+                    1,
+                    1
+                  ],
+                  "ofDeterminer": "THIS",
+                  "of": "OPERATOR"
+                }
+              }
             }
           }
         }
@@ -140,6 +226,7 @@
                   "toDeterminer": "CONTROLLED",
                   "to": "OPERATOR",
                   "with": {
+                    "unit": "FLAT",
                     "value": {
                       "operation": "ADD",
                       "left": {
@@ -220,6 +307,7 @@
                   "toDeterminer": "OTHER_LOWEST_HP",
                   "to": "OPERATOR",
                   "with": {
+                    "unit": "FLAT",
                     "value": {
                       "operation": "MULT",
                       "left": {
@@ -329,7 +417,12 @@
   ],
   "metadata": {
     "originId": "EMBER",
-    "icon": "skills/combo_ember.png"
+    "icon": "skills/combo_ember.png",
+    "dataSources": [
+      "END_AXIS",
+      "ENDFIELD_WIKI"
+    ],
+    "dataStatus": "VERIFIED"
   },
   "clauseType": "ALL",
   "activationWindow": {

@@ -90,6 +90,7 @@ export class EventsQueryService {
   private weakenEvents: TimelineEvent[];
   private dmgReductionEvents: TimelineEvent[];
   private protectionEvents: TimelineEvent[];
+  private shieldEvents: TimelineEvent[];
   private weaponFragilityEvents: TimelineEvent[];
   private cryoInflictionEvents: TimelineEvent[];
   private solidificationEvents: TimelineEvent[];
@@ -127,6 +128,7 @@ export class EventsQueryService {
     this.weakenEvents = events.filter(e => e.columnId === StatusType.WEAKEN);
     this.dmgReductionEvents = events.filter(e => e.columnId === StatusType.DMG_REDUCTION);
     this.protectionEvents = events.filter(e => e.columnId === StatusType.PROTECTION);
+    this.shieldEvents = events.filter(e => e.columnId === StatusType.SHIELD);
     this.weaponFragilityEvents = events.filter(e => e.columnId.startsWith(FRAGILITY_COLUMN_PREFIX));
     this.cryoInflictionEvents = events.filter(e => e.ownerId === ENEMY_OWNER_ID && e.columnId === INFLICTION_COLUMNS.CRYO);
     this.solidificationEvents = events.filter(e => e.ownerId === ENEMY_OWNER_ID && e.columnId === REACTION_COLUMNS.SOLIDIFICATION);
@@ -307,6 +309,17 @@ export class EventsQueryService {
       }
     }
     return sources;
+  }
+
+  getShieldEffects(frame: number): { operatorId: string; value: number }[] {
+    const effects: { operatorId: string; value: number }[] = [];
+    for (const ev of this.shieldEvents) {
+      if (!this.isActive(ev, frame)) continue;
+      if (ev.statusValue != null && ev.statusValue > 0) {
+        effects.push({ operatorId: ev.ownerId, value: ev.statusValue });
+      }
+    }
+    return effects;
   }
 
   /** Get events for a given column ID. */

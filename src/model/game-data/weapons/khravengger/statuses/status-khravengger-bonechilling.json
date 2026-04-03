@@ -58,6 +58,7 @@
     "originId": "KHRAVENGGER",
     "dataSources": [
       "ENDFIELD_WIKI"
-    ]
+    ],
+    "dataStatus": "RECONCILED"
   }
 }

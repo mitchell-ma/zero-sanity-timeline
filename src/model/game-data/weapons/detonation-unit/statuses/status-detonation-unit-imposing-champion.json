@@ -57,6 +57,7 @@
     "originId": "DETONATION_UNIT",
     "dataSources": [
       "ENDFIELD_WIKI"
-    ]
+    ],
+    "dataStatus": "RECONCILED"
   }
 }

@@ -27,6 +27,7 @@
     "description": "Triggered by consuming Solidification. Deals Cryo DMG based on the consumed Solidification's status level."
   },
   "metadata": {
-    "originId": "game"
+    "originId": "game",
+    "dataStatus": "RECONCILED"
   }
 }

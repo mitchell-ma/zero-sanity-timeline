@@ -52,7 +52,8 @@
     "originId": "ESSENCE_DISINTEGRATION_TALENT",
     "dataSources": [
       "ENDFIELD_WIKI"
-    ]
+    ],
+    "dataStatus": "RECONCILED"
   },
   "clauseType": "ALL"
 }

@@ -58,6 +58,7 @@
     "originId": "ARTZY_TYRANNICAL",
     "dataSources": [
       "ENDFIELD_WIKI"
-    ]
+    ],
+    "dataStatus": "RECONCILED"
   }
 }

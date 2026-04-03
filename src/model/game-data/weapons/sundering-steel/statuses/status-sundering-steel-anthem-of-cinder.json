@@ -57,6 +57,7 @@
     "originId": "SUNDERING_STEEL",
     "dataSources": [
       "ENDFIELD_WIKI"
-    ]
+    ],
+    "dataStatus": "RECONCILED"
   }
 }

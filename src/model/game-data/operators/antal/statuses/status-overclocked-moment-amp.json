@@ -20,7 +20,8 @@
             {
               "verb": "APPLY",
               "objectQualifier": "ELECTRIC",
-              "object": "STATUS", "objectId": "AMP",
+              "object": "STATUS",
+              "objectId": "AMP",
               "to": "TEAM",
               "with": {
                 "value": {
@@ -48,7 +49,8 @@
             {
               "verb": "APPLY",
               "objectQualifier": "HEAT",
-              "object": "STATUS", "objectId": "AMP",
+              "object": "STATUS",
+              "objectId": "AMP",
               "to": "TEAM",
               "with": {
                 "value": {
@@ -105,6 +107,7 @@
     "originId": "OVERCLOCKED_MOMENT",
     "dataSources": [
       "ENDFIELD_WIKI"
-    ]
+    ],
+    "dataStatus": "VERIFIED"
   }
 }

@@ -8,6 +8,7 @@
     "description": "Talent The Living Banner improved: Amount of SP recovery needed to gain Fervent Morale is reduced to 60. Max Fervent Morale stacks on self +{max_stack_owner-3}."
   },
   "metadata": {
-    "originId": "POGRANICHNIK"
+    "originId": "POGRANICHNIK",
+    "dataStatus": "RECONCILED"
   }
 }

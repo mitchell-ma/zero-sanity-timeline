@@ -186,7 +186,8 @@
   ],
   "metadata": {
     "originId": "WULFGARD",
-    "icon": "skills/combo_wulfgard.png"
+    "icon": "skills/combo_wulfgard.png",
+    "dataStatus": "RECONCILED"
   },
   "clauseType": "ALL",
   "activationWindow": {

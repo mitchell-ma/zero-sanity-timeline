@@ -5,7 +5,10 @@
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "stacks": {
-      "limit": { "verb": "IS", "value": 1 },
+      "limit": {
+        "verb": "IS",
+        "value": 1
+      },
       "interactionType": "RESET"
     },
     "eventType": "STATUS",
@@ -13,6 +16,7 @@
     "description": "Damage reduction buff on operator."
   },
   "metadata": {
-    "originId": "generic"
+    "originId": "generic",
+    "dataStatus": "RECONCILED"
   }
 }

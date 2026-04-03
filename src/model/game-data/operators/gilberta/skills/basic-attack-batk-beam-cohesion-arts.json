@@ -630,6 +630,7 @@
   },
   "metadata": {
     "originId": "GILBERTA",
-    "icon": "skills/attack_orbiter.png"
+    "icon": "skills/attack_orbiter.png",
+    "dataStatus": "RECONCILED"
   }
 }

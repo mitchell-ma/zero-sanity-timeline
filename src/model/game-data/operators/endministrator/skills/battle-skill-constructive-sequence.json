@@ -26,7 +26,8 @@
   ],
   "metadata": {
     "originId": "ENDMINISTRATOR",
-    "icon": "skills/skill_endministrator.png"
+    "icon": "skills/skill_endministrator.png",
+    "dataStatus": "RECONCILED"
   },
   "segments": [
     {

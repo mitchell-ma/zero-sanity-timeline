@@ -13,7 +13,10 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "TALENT_LEVEL",
-                "value": [0.45, 0.55],
+                "value": [
+                  0.45,
+                  0.55
+                ],
                 "ofDeterminer": "THIS",
                 "of": "OPERATOR"
               },
@@ -33,7 +36,10 @@
             "value": {
               "verb": "VARY_BY",
               "object": "TALENT_LEVEL",
-              "value": [0.15, 0.25],
+              "value": [
+                0.15,
+                0.25
+              ],
               "ofDeterminer": "THIS",
               "of": "OPERATOR"
             }
@@ -44,7 +50,10 @@
   ],
   "properties": {
     "id": "POLAR_SURVIVAL_TALENT",
-    "maxLevel": { "verb": "IS", "value": 2 },
+    "maxLevel": {
+      "verb": "IS",
+      "value": 2
+    },
     "name": "Polar Survival (Talent)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
@@ -58,7 +67,8 @@
       "WARFARIN",
       "ENDFIELD_WIKI"
     ],
-    "icon": "skills/snowshine_talent_1_icon.png"
+    "icon": "skills/snowshine_talent_1_icon.png",
+    "dataStatus": "RECONCILED"
   },
   "clauseType": "ALL"
 }

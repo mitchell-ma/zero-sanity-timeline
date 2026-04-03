@@ -41,7 +41,8 @@
     "originId": "MOUNTAIN_BEARER",
     "dataSources": [
       "ENDFIELD_WIKI"
-    ]
+    ],
+    "dataStatus": "RECONCILED"
   },
   "onTriggerClause": [
     {

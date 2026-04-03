@@ -1,7 +1,7 @@
-import { Column, MiniTimeline, MicroColumn, Operator, Enemy, VisibleSkills, EventFrameMarker } from '../../consts/viewTypes';
-import { DeterminerType, NounType, VerbType, type Effect, type Predicate } from '../../dsl/semantics';
+import { Column, MiniTimeline, MicroColumn, Operator, Enemy, VisibleSkills, EventFrameMarker, EventSegmentData } from '../../consts/viewTypes';
+import { ClauseEvaluationType, DeterminerType, NounType, VerbType, type Effect, type Predicate } from '../../dsl/semantics';
 import type { FrameClausePredicate } from '../../model/event-frames/skillEventFrame';
-import { ColumnType, CombatSkillType, DEFAULT_EVENT_COLOR, ELEMENT_COLORS, ElementType, EnhancementType, EventCategoryType, EventFrameType, HeaderVariant, MicroColumnAssignment, PERMANENT_DURATION, SegmentType, StatusType, TimeDependency, TimelineSourceType } from '../../consts/enums';
+import { ColumnType, CombatSkillType, DEFAULT_EVENT_COLOR, ELEMENT_COLORS, ElementType, EnhancementType, EventCategoryType, EventFrameType, HeaderVariant, MicroColumnAssignment, PERMANENT_DURATION, SegmentType, StatusType, TimeDependency, TimelineSourceType, UNLIMITED_STACKS } from '../../consts/enums';
 import { ENEMY_OWNER_ID, ENEMY_GROUP_COLUMNS, ENEMY_ACTION_COLUMN_ID, OPERATOR_COLUMNS, OPERATOR_STATUS_COLUMN_ID, PHYSICAL_INFLICTION_COLUMNS, PHYSICAL_STATUS_COLUMNS, SKILL_COLUMN_ORDER as SKILL_ORDER, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID, COMBO_WINDOW_COLUMN_ID } from '../../model/channels';
 import { isTeamStatus } from '../gameDataStore';
 import { SKILL_LABELS, ColumnLabel, STATUS_LABELS, REACTION_MICRO_COLUMNS } from '../../consts/timelineColumnLabels';
@@ -49,6 +49,39 @@ export interface Slot {
   loadout?: import('../../view/OperatorLoadoutHeader').OperatorLoadoutState;
 }
 
+
+type SuppliedParamDef = { id: string; name: string; lowerRange: number; upperRange: number; default: number };
+type SuppliedParams = Record<string, SuppliedParamDef[]>;
+
+/** Collect all suppliedParameters from event-level, segment-level, and frame-level sources. */
+function collectSuppliedParameters(
+  eventLevel?: SuppliedParams,
+  segments?: import('../../consts/viewTypes').EventSegmentData[],
+): SuppliedParams | undefined {
+  const merged: Record<string, Map<string, SuppliedParamDef>> = {};
+  const addDefs = (params: SuppliedParams) => {
+    for (const [key, defs] of Object.entries(params)) {
+      if (!merged[key]) merged[key] = new Map();
+      for (const d of defs) merged[key].set(d.id, d);
+    }
+  };
+  if (eventLevel) addDefs(eventLevel);
+  if (segments) {
+    for (const seg of segments) {
+      if (seg.properties.suppliedParameters) addDefs(seg.properties.suppliedParameters);
+      if (seg.frames) {
+        for (const f of seg.frames) {
+          if (f.suppliedParameters) addDefs(f.suppliedParameters);
+        }
+      }
+    }
+  }
+  const keys = Object.keys(merged);
+  if (keys.length === 0) return undefined;
+  const result: SuppliedParams = {};
+  for (const k of keys) result[k] = Array.from(merged[k].values());
+  return result;
+}
 
 /** Resolve a variant skill's display name from its JSON data + base skill label. */
 function resolveVariantDisplayName(varId: string, varSkill: Record<string, unknown>): string {
@@ -174,7 +207,7 @@ export function buildColumns(
             columnId: colId,
             duration: durationFrames,
             durationSec: durSec,
-            color: ELEMENT_COLORS[s.operator.element as ElementType] ?? s.operator.color,
+            color: se.element ? (ELEMENT_COLORS[se.element as ElementType] ?? DEFAULT_EVENT_COLOR) : DEFAULT_EVENT_COLOR,
             source: 'talent',
             ...(se.stacks ? { stacks: se.stacks as unknown as Record<string, unknown> } : {}),
           });
@@ -215,7 +248,7 @@ export function buildColumns(
                         columnId: colId,
                         duration: 10 * FPS,
                         durationSec: 10,
-                        color: targetSlot.operator.color,
+                        color: statusDef?.element ? (ELEMENT_COLORS[statusDef.element as ElementType] ?? DEFAULT_EVENT_COLOR) : DEFAULT_EVENT_COLOR,
                         source: 'other',
                         ...(statusDef?.stacks ? { stacks: statusDef.stacks as unknown as Record<string, unknown> } : {}),
                       });
@@ -238,7 +271,7 @@ export function buildColumns(
                   columnId: colId,
                   duration: 10 * FPS,
                   durationSec: 10,
-                  color: s.operator!.color,
+                  color: statusDef?.element ? (ELEMENT_COLORS[statusDef.element as ElementType] ?? DEFAULT_EVENT_COLOR) : DEFAULT_EVENT_COLOR,
                   source: 'other',
                   ...(statusDef?.stacks ? { stacks: statusDef.stacks as unknown as Record<string, unknown> } : {}),
                 });
@@ -434,6 +467,28 @@ export function buildColumns(
             timeDependency: TimeDependency.REAL_TIME,
             segments: [{ properties: { segmentTypes: [SegmentType.ANIMATION], duration: DODGE_FRAMES, name: 'Animation', timeDependency: TimeDependency.REAL_TIME } }],
           },
+          ...(() => {
+            if (!op) return [];
+            const rawTypeMap = getRawSkillTypeMap(op.id) as Record<string, unknown> | undefined;
+            const actionSkillId = rawTypeMap?.[NounType.ACTION] as string | undefined;
+            if (!actionSkillId) return [];
+            const actionSkill = getOperatorSkill(op.id, actionSkillId);
+            if (!actionSkill) return [];
+            // Resolve DSL duration objects to frame counts
+            const actionSegs = (actionSkill.segments as EventSegmentData[]).map(seg => {
+              const dur = seg.properties.duration;
+              if (typeof dur === 'number') return seg;
+              const durObj = dur as { value: { value: number }; unit: string } | undefined;
+              const seconds = durObj?.value?.value ?? 0;
+              return { ...seg, properties: { ...seg.properties, duration: Math.round(seconds * FPS) } };
+            });
+            return [{
+              id: actionSkillId,
+              name: actionSkillId,
+              segments: actionSegs,
+              stacks: { limit: { value: UNLIMITED_STACKS }, interactionType: 'NONE' },
+            }];
+          })(),
         ],
         defaultEvent: {
           id: CombatSkillType.DASH,
@@ -466,6 +521,7 @@ export function buildColumns(
               ...(skill.gaugeGainByEnemies ? { gaugeGainByEnemies: skill.gaugeGainByEnemies } : {}),
               ...(skillType === NounType.ULTIMATE && slot.potential != null ? { operatorPotential: slot.potential } : {}),
               ...(skillType === NounType.BATTLE_SKILL && skill.skillPointCost != null ? { skillPointCost: skill.skillPointCost } : {}),
+              ...(() => { const sp = op ? collectSuppliedParameters(getOperatorSkill(op.id, skill.name)?.suppliedParameters, skill.defaultSegments) : undefined; return sp ? { suppliedParameters: sp } : {}; })(),
             },
           };
           // Combo columns: use model's level-dependent cooldown + match activation windows
@@ -528,22 +584,27 @@ export function buildColumns(
                 }
 
                 // Base category entry
+                const baCatSkill = getOperatorSkill(op!.id, baseId);
+                const baCatParams = collectSuppliedParameters(baCatSkill?.suppliedParameters, seg.segments);
                 col.eventVariants.push({
                   id: categoryId,
                   name: categoryId,
                   ...(baseId === batkId ? { enhancementType: EnhancementType.NORMAL } : {}),
                   segments: seg.segments,
+                  ...(baCatParams ? { suppliedParameters: baCatParams } : {}),
                 });
 
                 // Auto-discover _ENHANCED/_EMPOWERED variants for this category
                 for (const suffix of ['_ENHANCED', '_EMPOWERED']) {
                   const varId = baseId + suffix;
-                  const varSkill = (getOperatorSkill(op.id, varId)?.serialize() ?? null) as Record<string, unknown> | null;
+                  const baVarSkillObj = getOperatorSkill(op.id, varId);
+                  const varSkill = (baVarSkillObj?.serialize() ?? null) as Record<string, unknown> | null;
                   if (!varSkill) continue;
                   const variantSeqs = getFrameSequences(op.id, varId);
                   if (variantSeqs?.length) {
                     const variantSeg = SkillSegmentBuilder.buildSegments(variantSeqs, { ctx: skillCtx, useNumeralFallback: true });
                     const enhancementType = suffix === '_ENHANCED' ? EnhancementType.ENHANCED : EnhancementType.EMPOWERED;
+                    const baVarParams = collectSuppliedParameters(baVarSkillObj?.suppliedParameters, variantSeg.segments);
                     col.eventVariants.push({
                       id: varId,
                       name: varId,
@@ -552,6 +613,7 @@ export function buildColumns(
                       segments: variantSeg.segments,
                       ...(varSkill.triggerCondition ? { triggerCondition: varSkill.triggerCondition as string } : {}),
                       ...(varSkill.activationClause ? { activationClause: varSkill.activationClause as Predicate[] } : {}),
+                      ...(baVarParams ? { suppliedParameters: baVarParams } : {}),
                     });
                   }
                 }
@@ -573,11 +635,14 @@ export function buildColumns(
               gaugeGain: skill.gaugeGain,
               teamGaugeGain: skill.teamGaugeGain,
             };
-            col.eventVariants = [{ ...col.defaultEvent!, enhancementType: EnhancementType.NORMAL }];
+            const baseSkillObj = getOperatorSkill(op.id, skill.name);
+            const baseBsParams = collectSuppliedParameters(baseSkillObj?.suppliedParameters, baseSeg.segments);
+            col.eventVariants = [{ ...col.defaultEvent!, enhancementType: EnhancementType.NORMAL, ...(baseBsParams ? { suppliedParameters: baseBsParams } : {}) }];
             // Auto-discover variant skill IDs
             for (const suffix of ['_ENHANCED', '_EMPOWERED', '_ENHANCED_EMPOWERED']) {
               const varId = skill.name + suffix;
-              const varSkill = op ? (getOperatorSkill(op.id, varId)?.serialize() ?? null) as Record<string, unknown> | null : null;
+              const varSkillObj = op ? getOperatorSkill(op.id, varId) : undefined;
+              const varSkill = varSkillObj?.serialize() ?? null;
               if (!varSkill) continue;
               const variantSeqs = getFrameSequences(op.id, varId);
               if (!variantSeqs?.length) continue;
@@ -601,6 +666,7 @@ export function buildColumns(
               const enhancementType = suffix === '_ENHANCED' ? EnhancementType.ENHANCED
                 : suffix === '_EMPOWERED' ? EnhancementType.EMPOWERED
                 : EnhancementType.ENHANCED; // ENHANCED_EMPOWERED treated as ENHANCED
+              const varParams = collectSuppliedParameters(varSkillObj?.suppliedParameters, variantSeg.segments);
               col.eventVariants!.push({
                 ...col.defaultEvent!,
                 id: varId,
@@ -612,6 +678,7 @@ export function buildColumns(
                 ...(varSkill.activationClause ? { activationClause: varSkill.activationClause as Predicate[] } : {}),
                 gaugeGain: gg,
                 teamGaugeGain: tgg,
+                ...(varParams ? { suppliedParameters: varParams } : {}),
               });
             }
           }
@@ -641,9 +708,12 @@ export function buildColumns(
                 ? [...seg.segments, { properties: { segmentTypes: [SegmentType.COOLDOWN, SegmentType.IMMEDIATE_COOLDOWN], duration: battleCd, name: 'Cooldown', timeDependency: TimeDependency.REAL_TIME } }]
                 : seg.segments;
             }
+            const nonVarBattleSkill = battleName ? getOperatorSkill(op!.id, battleName) : undefined;
+            const nonVarBattleParams = collectSuppliedParameters(nonVarBattleSkill?.suppliedParameters, battleSegments);
             col.defaultEvent = {
               ...col.defaultEvent!,
               segments: battleSegments,
+              ...(nonVarBattleParams ? { suppliedParameters: nonVarBattleParams } : {}),
             };
             // Empowered battle skill variant (e.g. Arclight's additional attack on Electrification)
             const empoweredBattleId = battleName + '_EMPOWERED';
@@ -657,18 +727,24 @@ export function buildColumns(
               const empVarSegs = hasEmpCdSegment || !cdSeg
                 ? empowered.segments
                 : [...empowered.segments, cdSeg];
+              const baseBattleSkillObj = battleName ? getOperatorSkill(op!.id, battleName) : undefined;
+              const baseBattleParams = collectSuppliedParameters(baseBattleSkillObj?.suppliedParameters, battleSegments);
+              const empBattleSkillObj = getOperatorSkill(op!.id, empoweredBattleId);
+              const empBattleParams = collectSuppliedParameters(empBattleSkillObj?.suppliedParameters, empVarSegs);
               col.eventVariants = [
                 {
                   id: col.defaultEvent!.id,
                   name: col.defaultEvent!.name,
                   segments: battleSegments,
+                  ...(baseBattleParams ? { suppliedParameters: baseBattleParams } : {}),
                 },
                 {
                   id: empoweredName,
                   name: empoweredName,
-                  displayName: resolveVariantDisplayName(empoweredBattleId, getOperatorSkill(op!.id, empoweredBattleId)?.serialize() ?? {}),
+                  displayName: resolveVariantDisplayName(empoweredBattleId, empBattleSkillObj?.serialize() ?? {}),
                   segments: empVarSegs,
                   triggerCondition: 'Requires: Empowered condition',
+                  ...(empBattleParams ? { suppliedParameters: empBattleParams } : {}),
                 },
               ];
             }
@@ -694,6 +770,7 @@ export function buildColumns(
                   : isEnhanced ? EnhancementType.ENHANCED
                   : EnhancementType.NORMAL;
                 const raw = cs.serialize();
+                const comboParams = collectSuppliedParameters(cs.suppliedParameters, seg.segments);
                 variants.push({
                   ...col.defaultEvent!,
                   id: cs.id,
@@ -704,6 +781,7 @@ export function buildColumns(
                   ...(raw.activationClause ? { activationClause: raw.activationClause as Predicate[] } : {}),
                   gaugeGain: gg,
                   teamGaugeGain: tgg,
+                  ...(comboParams ? { suppliedParameters: comboParams } : {}),
                 });
               }
               // Sort: NORMAL variants first, then ENHANCED/EMPOWERED
@@ -797,7 +875,9 @@ export function buildColumns(
         const isSource = slot === tsd.sourceSlot;
         if (!isSource) {
           // Use statusId directly as ID — matches events from processStatus.ts
-          statusMicroCols.push(buildStatusMicroColumn(tsd.statusId, ELEMENT_COLORS[op.element as ElementType] ?? ELEMENT_COLORS[op.element as ElementType] ?? op.color, { label: tsd.label }));
+          const tsdCfg = getStatusById(tsd.statusId);
+          const tsdColor = tsdCfg?.element ? (ELEMENT_COLORS[tsdCfg.element as ElementType] ?? DEFAULT_EVENT_COLOR) : DEFAULT_EVENT_COLOR;
+          statusMicroCols.push(buildStatusMicroColumn(tsd.statusId, tsdColor, { label: tsd.label }));
           matchIds.push(tsd.statusId);
         }
       }
@@ -859,10 +939,17 @@ export function buildColumns(
       displayName: `Deal ${objectQualifier} damage`,
       segments: [{
         properties: { duration: 240, name: `Deal ${objectQualifier} DMG` },
-        frames: [{ offsetFrame: 0, damageElement: element }],
-        clause: [{
-          conditions: [],
-          effects: [{ verb: 'DEAL', objectQualifier, object: 'DAMAGE', toDeterminer: 'ALL', to: 'OPERATOR' }],
+        frames: [{
+          offsetFrame: 0,
+          damageElement: element,
+          clauses: [{
+            conditions: [],
+            effects: [{
+              type: 'dsl' as const,
+              dslEffect: { verb: VerbType.DEAL, objectQualifier, object: NounType.DAMAGE, toDeterminer: DeterminerType.ALL, to: NounType.OPERATOR, with: { value: { verb: VerbType.IS, value: 1 } } } as Effect,
+            }],
+          }],
+          clauseType: ClauseEvaluationType.ALL,
         }],
       }],
     })),

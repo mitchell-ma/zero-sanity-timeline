@@ -28,6 +28,7 @@
     "originId": "OBJ_RAZORHORN",
     "dataSources": [
       "ENDFIELD_WIKI"
-    ]
+    ],
+    "dataStatus": "RECONCILED"
   }
 }

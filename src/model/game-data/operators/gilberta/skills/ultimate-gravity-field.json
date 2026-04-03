@@ -191,7 +191,8 @@
   ],
   "metadata": {
     "originId": "GILBERTA",
-    "icon": "skills/ult_gilberta.png"
+    "icon": "skills/ult_gilberta.png",
+    "dataStatus": "RECONCILED"
   },
   "clauseType": "ALL"
 }

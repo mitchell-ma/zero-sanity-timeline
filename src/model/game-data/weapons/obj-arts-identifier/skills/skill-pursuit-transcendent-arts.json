@@ -39,7 +39,8 @@
           "subjectDeterminer": "THIS",
           "subject": "OPERATOR",
           "verb": "APPLY",
-          "object": "STATUS", "objectId": "ARTS_REACTION"
+          "object": "STATUS",
+          "objectId": "ARTS_REACTION"
         }
       ],
       "effects": [
@@ -62,6 +63,7 @@
     "originId": "OBJ_ARTS_IDENTIFIER",
     "dataSources": [
       "ENDFIELD_WIKI"
-    ]
+    ],
+    "dataStatus": "RECONCILED"
   }
 }

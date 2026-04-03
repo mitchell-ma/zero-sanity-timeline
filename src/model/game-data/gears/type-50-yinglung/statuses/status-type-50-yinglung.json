@@ -45,6 +45,7 @@
     "eventCategoryType": "GEAR_SET_STATUS"
   },
   "metadata": {
-    "originId": "TYPE_50_YINGLUNG"
+    "originId": "TYPE_50_YINGLUNG",
+    "dataStatus": "RECONCILED"
   }
 }

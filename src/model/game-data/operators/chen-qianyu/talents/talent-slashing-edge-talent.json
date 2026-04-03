@@ -61,7 +61,10 @@
   "clauseType": "ALL",
   "properties": {
     "id": "SLASHING_EDGE_TALENT",
-    "maxLevel": { "verb": "IS", "value": 2 },
+    "maxLevel": {
+      "verb": "IS",
+      "value": 2
+    },
     "name": "Slashing Edge (Talent)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
@@ -74,6 +77,7 @@
     "dataSources": [
       "ENDFIELD_WIKI"
     ],
-    "icon": "skills/chen_qianyu_talent_1_icon.png"
+    "icon": "skills/chen_qianyu_talent_1_icon.png",
+    "dataStatus": "RECONCILED"
   }
 }

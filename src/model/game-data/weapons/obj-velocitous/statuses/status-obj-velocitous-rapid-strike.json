@@ -60,6 +60,7 @@
     "originId": "OBJ_VELOCITOUS",
     "dataSources": [
       "WARFARIN"
-    ]
+    ],
+    "dataStatus": "RECONCILED"
   }
 }

@@ -203,13 +203,15 @@ export class InteractionBridge {
       this.lastClickTime = 0;
       return;
     }
-    // Skip selection for non-draggable (natural derived) events
+    this.lastClickUid = uid;
+    this.lastClickTime = now;
+
+    // Skip selection for non-draggable (natural derived) events,
+    // but still record click uid/time above so double-click detection works.
     const data2 = this.getData();
     const pres2 = data2 ? this.findPresentation(data2, uid) : null;
     if (pres2?.notDraggable) return;
 
-    this.lastClickUid = uid;
-    this.lastClickTime = now;
     this.getCallbacks().onEventSelect(toSynthetic(e), uid);
   };
 

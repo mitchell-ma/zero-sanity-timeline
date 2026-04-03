@@ -15,7 +15,8 @@
       "WARFARIN"
     ],
     "originId": "game",
-    "icon": "weapons/home_longing_icon.png"
+    "icon": "weapons/home_longing_icon.png",
+    "dataStatus": "RECONCILED"
   },
   "clause": [
     {

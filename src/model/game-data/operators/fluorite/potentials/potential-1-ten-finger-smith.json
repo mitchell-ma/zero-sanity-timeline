@@ -8,6 +8,7 @@
     "description": "Agility +{Agi:0}, Intellect +10."
   },
   "metadata": {
-    "originId": "FLUORITE"
+    "originId": "FLUORITE",
+    "dataStatus": "RECONCILED"
   }
 }

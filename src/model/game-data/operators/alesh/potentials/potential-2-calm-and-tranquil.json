@@ -8,6 +8,7 @@
     "description": "Strength +15, Intellect +15."
   },
   "metadata": {
-    "originId": "ALESH"
+    "originId": "ALESH",
+    "dataStatus": "RECONCILED"
   }
 }

@@ -22,7 +22,10 @@
   ],
   "properties": {
     "id": "SALTY_OR_MILD_TALENT",
-    "maxLevel": { "verb": "IS", "value": 2 },
+    "maxLevel": {
+      "verb": "IS",
+      "value": 2
+    },
     "name": "Salty or Mild (Talent)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
@@ -35,6 +38,7 @@
     "dataSources": [
       "WARFARIN"
     ],
-    "icon": "skills/da_pan_talent_2_icon.png"
+    "icon": "skills/da_pan_talent_2_icon.png",
+    "dataStatus": "RECONCILED"
   }
 }

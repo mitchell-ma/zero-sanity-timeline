@@ -5,7 +5,8 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "STAT", "objectId": "BASE_ATTACK",
+          "object": "STAT",
+          "objectId": "BASE_ATTACK",
           "with": {
             "value": {
               "verb": "IS",
@@ -40,6 +41,7 @@
     "eventCategoryType": "GEAR_SET_STATUS"
   },
   "metadata": {
-    "originId": "AIC_LIGHT"
+    "originId": "AIC_LIGHT",
+    "dataStatus": "RECONCILED"
   }
 }

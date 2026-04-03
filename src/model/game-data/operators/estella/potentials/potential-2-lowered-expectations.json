@@ -8,6 +8,7 @@
     "description": "Ultimate Tremolo improved: Ultimate Energy cost -{1-costValue:0%}."
   },
   "metadata": {
-    "originId": "ESTELLA"
+    "originId": "ESTELLA",
+    "dataStatus": "RECONCILED"
   }
 }

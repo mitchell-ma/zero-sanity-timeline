@@ -64,6 +64,7 @@
     "originId": "GLORIOUS_MEMORY",
     "dataSources": [
       "WARFARIN"
-    ]
+    ],
+    "dataStatus": "RECONCILED"
   }
 }

@@ -1,4 +1,50 @@
 {
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "SHIELD",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "operation": "MULT",
+              "left": {
+                "verb": "VARY_BY",
+                "object": "SKILL_LEVEL",
+                "value": [
+                  0.18,
+                  0.18,
+                  0.18,
+                  0.2,
+                  0.2,
+                  0.2,
+                  0.22,
+                  0.22,
+                  0.22,
+                  0.25,
+                  0.25,
+                  0.25
+                ],
+                "ofDeterminer": "SOURCE",
+                "of": "OPERATOR"
+              },
+              "right": {
+                "verb": "IS",
+                "object": "STAT",
+                "objectId": "BASE_HP",
+                "ofDeterminer": "SOURCE",
+                "of": "OPERATOR"
+              }
+            },
+            "unit": "FLAT"
+          }
+        }
+      ]
+    }
+  ],
   "properties": {
     "id": "THE_STEEL_OATH",
     "name": "The Steel Oath",
@@ -22,56 +68,12 @@
     "eventCategoryType": "SKILL_STATUS",
     "description": "Grants every teammate a Shield based on 18%-25% of Ember's Max HP for 10s."
   },
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "APPLY",
-          "object": "STATUS", "objectId": "SHIELD",
-          "toDeterminer": "ALL",
-          "to": "OPERATOR",
-          "with": {
-            "value": {
-              "operation": "MULT",
-              "left": {
-                "verb": "VARY_BY",
-                "object": "SKILL_LEVEL",
-                "value": [
-                  0.18,
-                  0.18,
-                  0.18,
-                  0.2,
-                  0.2,
-                  0.2,
-                  0.22,
-                  0.22,
-                  0.22,
-                  0.25,
-                  0.25,
-                  0.25
-                ],
-                "ofDeterminer": "THIS",
-                "of": "OPERATOR"
-              },
-              "right": {
-                "verb": "VARY_BY",
-                "object": "POTENTIAL",
-                "value": [1, 1, 1, 1, 1, 1.2],
-                "ofDeterminer": "THIS",
-                "of": "OPERATOR"
-              }
-            }
-          }
-        }
-      ]
-    }
-  ],
-  "clauseType": "ALL",
   "metadata": {
     "originId": "RE_IGNITED_OATH",
     "dataSources": [
       "ENDFIELD_WIKI"
-    ]
-  }
+    ],
+    "dataStatus": "VERIFIED"
+  },
+  "clauseType": "ALL"
 }

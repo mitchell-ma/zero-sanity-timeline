@@ -25,6 +25,7 @@
     "originId": "EXECUTE_PROCESS_TALENT",
     "dataSources": [
       "ENDFIELD_WIKI"
-    ]
+    ],
+    "dataStatus": "VERIFIED"
   }
 }

@@ -41,7 +41,8 @@
     "originId": "OPUS_ETCH_FIGURE",
     "dataSources": [
       "ENDFIELD_WIKI"
-    ]
+    ],
+    "dataStatus": "RECONCILED"
   },
   "onTriggerClause": [
     {

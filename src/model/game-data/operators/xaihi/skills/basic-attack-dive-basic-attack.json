@@ -12,7 +12,8 @@
   },
   "metadata": {
     "originId": "XAIHI",
-    "icon": "skills/attack_orbiter.png"
+    "icon": "skills/attack_orbiter.png",
+    "dataStatus": "VERIFIED"
   },
   "segments": [
     {

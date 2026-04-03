@@ -8,7 +8,7 @@
  * Interaction uses PixiJS-native events (eventMode, pointerdown/pointermove/
  * pointerup on stage + display objects) — matching the PixiJS dragging example.
  */
-import { useRef, useEffect, useState } from 'react';
+import { useRef, useEffect, useLayoutEffect, useState } from 'react';
 import { Application } from 'pixi.js';
 import { TimelineRenderer } from './TimelineRenderer';
 import { InteractionBridge } from './InteractionBridge';
@@ -56,7 +56,18 @@ export function TimelineCanvas({ data, tlHeight, scrollRef, callbacks, columnLay
   callbacksRef.current = callbacks;
 
   const [ready, setReady] = useState(false);
-  const viewportHeight = scrollRef.current?.clientHeight ?? 800;
+
+  // Set initial container size synchronously before first paint.
+  // ResizeObserver maintains it thereafter — React never touches height/marginBottom.
+  useLayoutEffect(() => {
+    const container = containerRef.current;
+    const se = scrollRef.current;
+    if (container && se) {
+      const h = se.clientHeight;
+      container.style.height = `${h}px`;
+      container.style.marginBottom = `${-h}px`;
+    }
+  }, [scrollRef]);
 
   // Initialize PixiJS application
   useEffect(() => {
@@ -221,6 +232,13 @@ export function TimelineCanvas({ data, tlHeight, scrollRef, callbacks, columnLay
           renderer.patchColumnPositions(livePositions);
         }
       }
+      // Update container div imperatively — keeps it in sync with the canvas
+      // resize in the same synchronous callback, preventing blank-frame flicker.
+      const container = containerRef.current;
+      if (container) {
+        container.style.height = `${h}px`;
+        container.style.marginBottom = `${-h}px`;
+      }
       renderer.resize(w, h);
     };
     const ro = new ResizeObserver(handleResize);
@@ -246,8 +264,6 @@ export function TimelineCanvas({ data, tlHeight, scrollRef, callbacks, columnLay
         top: 0,
         left: 0,
         width: '100%',
-        height: viewportHeight,
-        marginBottom: -viewportHeight, // don't push content down
         pointerEvents: callbacks ? 'auto' : 'none',
         zIndex: 10,
       }}

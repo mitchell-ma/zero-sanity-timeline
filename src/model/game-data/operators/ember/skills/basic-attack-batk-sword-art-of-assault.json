@@ -345,6 +345,7 @@
   },
   "metadata": {
     "originId": "EMBER",
-    "icon": "skills/attack_greatsword.png"
+    "icon": "skills/attack_greatsword.png",
+    "dataStatus": "VERIFIED"
   }
 }

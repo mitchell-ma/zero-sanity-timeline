@@ -247,7 +247,8 @@
   ],
   "metadata": {
     "originId": "LIFENG",
-    "icon": "skills/combo_lifeng.png"
+    "icon": "skills/combo_lifeng.png",
+    "dataStatus": "RECONCILED"
   },
   "clauseType": "ALL",
   "activationWindow": {

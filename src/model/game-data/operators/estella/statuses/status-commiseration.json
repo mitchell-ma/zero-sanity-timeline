@@ -54,7 +54,8 @@
     "originId": "COMMISERATION_TALENT",
     "dataSources": [
       "ENDFIELD_WIKI"
-    ]
+    ],
+    "dataStatus": "RECONCILED"
   },
   "clauseType": "ALL"
 }

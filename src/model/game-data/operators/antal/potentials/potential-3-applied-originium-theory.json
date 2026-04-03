@@ -8,6 +8,7 @@
     "description": "When an enemy with an active Focus debuff is defeated, return 15 SP."
   },
   "metadata": {
-    "originId": "ANTAL"
+    "originId": "ANTAL",
+    "dataStatus": "VERIFIED"
   }
 }

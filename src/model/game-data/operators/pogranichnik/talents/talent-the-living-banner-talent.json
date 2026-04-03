@@ -28,7 +28,10 @@
   ],
   "properties": {
     "id": "THE_LIVING_BANNER_TALENT",
-    "maxLevel": { "verb": "IS", "value": 2 },
+    "maxLevel": {
+      "verb": "IS",
+      "value": 2
+    },
     "name": "The Living Banner (Talent)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
@@ -41,6 +44,7 @@
     "dataSources": [
       "ENDFIELD_WIKI"
     ],
-    "icon": "skills/pogranichnik_talent_1_icon.png"
+    "icon": "skills/pogranichnik_talent_1_icon.png",
+    "dataStatus": "RECONCILED"
   }
 }

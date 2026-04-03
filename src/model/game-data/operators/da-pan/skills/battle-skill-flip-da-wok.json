@@ -26,7 +26,8 @@
   ],
   "metadata": {
     "originId": "DA_PAN",
-    "icon": "skills/skill_da_pan.png"
+    "icon": "skills/skill_da_pan.png",
+    "dataStatus": "RECONCILED"
   },
   "segments": [
     {

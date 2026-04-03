@@ -8,7 +8,12 @@
       "value": {
         "verb": "VARY_BY",
         "object": "STATUS_LEVEL",
-        "value": [6, 7, 8, 9]
+        "value": [
+          6,
+          7,
+          8,
+          9
+        ]
       },
       "unit": "SECOND"
     },
@@ -28,6 +33,7 @@
     "description": "Cryo arts reaction. Deals initial Cryo DMG on activation. Duration scales with status level (6/7/8/9s). Can be shattered for additional Cryo DMG."
   },
   "metadata": {
-    "originId": "game"
+    "originId": "game",
+    "dataStatus": "RECONCILED"
   }
 }

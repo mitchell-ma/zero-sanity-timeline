@@ -41,6 +41,7 @@
     "eventCategoryType": "GEAR_SET_STATUS"
   },
   "metadata": {
-    "originId": "ABURREY_LEGACY"
+    "originId": "ABURREY_LEGACY",
+    "dataStatus": "RECONCILED"
   }
 }

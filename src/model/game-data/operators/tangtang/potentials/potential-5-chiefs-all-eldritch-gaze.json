@@ -5,7 +5,7 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "STATUS", "objectId": "BUFF",
+          "object": "STATUS",
           "objectId": "buff_chr_0027_tangtang_potential_5_effect",
           "toDeterminer": "THIS",
           "to": "OPERATOR"
@@ -22,7 +22,8 @@
     "description": "Ultimate DA CHIEF SEES YOU! improved: DMG Multiplier is increased to 1.15 times the original. Talent Riot Bringer improved: DMG effects of any Waterspout created by the ultimate DA CHIEF SEES YOU! are increased by +80%."
   },
   "metadata": {
-    "originId": "TANGTANG"
+    "originId": "TANGTANG",
+    "dataStatus": "RECONCILED"
   },
   "clauseType": "ALL"
 }

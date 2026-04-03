@@ -29,7 +29,7 @@ export const VALID_VALUE_NODE_KEYS = new Set([
 
 export const VALID_CLAUSE_KEYS = new Set(['conditions', 'effects']);
 
-export const VALID_METADATA_KEYS = new Set(['originId', 'dataSources', 'icon', 'isEnabled']);
+export const VALID_METADATA_KEYS = new Set(['originId', 'dataSources', 'icon', 'isEnabled', 'dataStatus']);
 
 export const VALID_EFFECT_KEYS = new Set([
   'verb', 'object', 'objectId', 'objectType', 'objectQualifier', 'objectDeterminer',

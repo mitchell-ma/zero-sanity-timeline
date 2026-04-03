@@ -41,7 +41,8 @@
     "originId": "FINCHASER_3_0",
     "dataSources": [
       "ENDFIELD_WIKI"
-    ]
+    ],
+    "dataStatus": "RECONCILED"
   },
   "onTriggerClause": [
     {

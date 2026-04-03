@@ -87,6 +87,8 @@ export enum NounType {
   FINISHER = "FINISHER",
   DIVE_ATTACK = "DIVE_ATTACK",
   CRITICAL_HIT = "CRITICAL_HIT",
+  /** Operator action — non-combat skill events (e.g. healing shadows, deployables). */
+  ACTION = "ACTION",
   /** Enemy skill charge-up action. */
   CHARGE = "CHARGE",
 
@@ -128,6 +130,8 @@ export enum NounType {
   FRAGILITY = "FRAGILITY",
   /** Damage reduction buff on operator (in-game: Sanctuary). */
   SANCTUARY = "SANCTUARY",
+  /** Absorptive shield barrier on operator. */
+  SHIELD = "SHIELD",
   /** Damage dealt reduction debuff on enemy (in-game: Weakness). */
   WEAKNESS = "WEAKNESS",
 
@@ -1049,6 +1053,7 @@ export const OBJECT_TARGET_MAPPING: Partial<Record<ObjectType, SubjectType[]>> =
   [ObjectType.PROTECTED]:      [SubjectType.OPERATOR, NounType.TEAM],
   [ObjectType.WEAKENED]:       [SubjectType.ENEMY],
   [ObjectType.SANCTUARY]:      [SubjectType.OPERATOR],
+  [ObjectType.SHIELD]:         [SubjectType.OPERATOR],
   [ObjectType.WEAKNESS]:       [SubjectType.ENEMY],
 };
 

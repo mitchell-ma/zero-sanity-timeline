@@ -6,6 +6,7 @@ import { SkillPointController } from './skillPointController';
 import { StaggerController } from './staggerController';
 import { UltimateEnergyController } from '../timeline/ultimateEnergyController';
 import { HPController } from '../calculation/hpController';
+import { ShieldController } from '../calculation/shieldController';
 
 // ── Column IDs ───────────────────────────────────────────────────────────────
 
@@ -38,6 +39,7 @@ export class CommonSlotController {
   readonly stagger: StaggerController;
   readonly ultimateEnergy: UltimateEnergyController;
   readonly hp: HPController;
+  readonly shield: ShieldController;
 
   private readonly teamStatusSubtimeline: Subtimeline;
   private readonly teamStatusSubtimelines = new Map<string, Subtimeline>();
@@ -48,6 +50,7 @@ export class CommonSlotController {
     this.stagger = new StaggerController();
     this.ultimateEnergy = new UltimateEnergyController();
     this.hp = new HPController();
+    this.shield = new ShieldController();
     this.skillPoints.setUltimateEnergyController(this.ultimateEnergy);
     this.teamStatusSubtimeline = new Subtimeline(COMMON_OWNER_ID, COMMON_COLUMN_IDS.TEAM_STATUS);
   }

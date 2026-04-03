@@ -115,6 +115,7 @@
     "originId": "game",
     "dataSources": [
       "WARFARIN"
-    ]
+    ],
+    "dataStatus": "RECONCILED"
   }
 }

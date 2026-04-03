@@ -29,6 +29,7 @@
     "originId": "QUENCHER",
     "dataSources": [
       "ENDFIELD_WIKI"
-    ]
+    ],
+    "dataStatus": "RECONCILED"
   }
 }

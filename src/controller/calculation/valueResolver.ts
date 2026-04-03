@@ -23,6 +23,8 @@ export interface ValueResolutionContext {
   stats: Partial<Record<string, number>>;
   /** Context for the SOURCE operator (talent owner), when different from the current operator. */
   sourceContext?: ValueResolutionContext;
+  /** User-supplied parameter values (e.g. { ENEMY_HIT: 2 }) for VARY_BY resolution. */
+  suppliedParameters?: Record<string, number>;
 }
 
 /** Default context when no loadout is available (uses max skill level, no potential). */
@@ -44,7 +46,12 @@ function getVariableArrayIndex(object: string, ctx: ValueResolutionContext): num
     case 'SKILL_LEVEL':       return ctx.skillLevel - 1;
     case 'POTENTIAL':         return ctx.potential;
     case 'TALENT_LEVEL':      return ctx.talentLevel ?? 0;
-    default:                  return undefined;
+    default: {
+      // Check user-supplied parameters (e.g. ENEMY_HIT from VARY_BY)
+      const paramValue = ctx.suppliedParameters?.[object];
+      if (paramValue != null) return paramValue;
+      return undefined;
+    }
   }
 }
 

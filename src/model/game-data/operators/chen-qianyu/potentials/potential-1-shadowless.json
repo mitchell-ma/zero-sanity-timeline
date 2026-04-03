@@ -1,72 +1,9 @@
 {
-  "onTriggerClause": [
-    {
-      "conditions": [
-        {
-          "subject": "ENEMY",
-          "verb": "HAVE",
-          "object": "HP",
-          "cardinalityConstraint": "AT_MOST",
-          "with": {
-            "value": {
-              "verb": "IS",
-              "value": 0.5
-            }
-          }
-        }
-      ],
-      "effects": [
-        {
-          "verb": "APPLY",
-          "object": "STATUS",
-          "objectId": "CHEN_QIANYU_POTENTIAL1_SHADOWLESS",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR"
-        }
-      ]
-    }
-  ],
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "APPLY",
-          "object": "STAT",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR",
-          "with": {
-            "value": {
-              "verb": "IS",
-              "value": 0.2
-            }
-          },
-          "objectId": "DAMAGE_BONUS"
-        }
-      ]
-    }
-  ],
   "properties": {
-    "id": "CHEN_QIANYU_POTENTIAL1_SHADOWLESS",
+    "id": "CHEN_QIANYU_POTENTIAL_1",
     "name": "Shadowless",
     "level": 1,
-    "to": "OPERATOR",
-    "toDeterminer": "THIS",
-    "duration": {
-      "value": {
-        "verb": "IS",
-        "value": 99999
-      },
-      "unit": "SECOND"
-    },
-    "stacks": {
-      "limit": {
-        "verb": "IS",
-        "value": 1
-      },
-      "interactionType": "RESET"
-    },
-    "eventType": "STATUS",
+    "eventType": "POTENTIAL_EVENT",
     "eventCategoryType": "POTENTIAL",
     "description": "DMG Dealt +20% to enemies below 50% HP."
   },
@@ -74,7 +11,7 @@
     "originId": "CHEN_QIANYU",
     "dataSources": [
       "ENDFIELD_WIKI"
-    ]
-  },
-  "clauseType": "ALL"
+    ],
+    "dataStatus": "RECONCILED"
+  }
 }

@@ -71,11 +71,12 @@
         "duration": {
           "value": {
             "verb": "IS",
-            "value": 0.04
+            "value": 2
           },
           "unit": "SECOND"
         },
-        "element": "HEAT"
+        "element": "HEAT",
+        "name": "Re-Ignited Oath"
       },
       "frames": [
         {
@@ -140,7 +141,26 @@
                       "value": 25
                     }
                   }
-                },
+                }
+              ]
+            },
+            {
+              "conditions": [
+                {
+                  "subjectDeterminer": "THIS",
+                  "subject": "OPERATOR",
+                  "verb": "HAVE",
+                  "object": "POTENTIAL",
+                  "cardinalityConstraint": "AT_MOST",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 4
+                    }
+                  }
+                }
+              ],
+              "effects": [
                 {
                   "verb": "APPLY",
                   "object": "STATUS",
@@ -149,8 +169,11 @@
                   "to": "OPERATOR",
                   "with": {
                     "duration": {
-                      "verb": "IS",
-                      "value": 10
+                      "value": {
+                        "verb": "IS",
+                        "value": 10
+                      },
+                      "unit": "SECOND"
                     }
                   }
                 }
@@ -163,6 +186,7 @@
                   "subject": "OPERATOR",
                   "verb": "HAVE",
                   "object": "POTENTIAL",
+                  "cardinalityConstraint": "AT_LEAST",
                   "with": {
                     "value": {
                       "verb": "IS",
@@ -176,8 +200,17 @@
                   "verb": "APPLY",
                   "object": "STATUS",
                   "objectId": "THE_STEEL_OATH_EMPOWERED",
-                  "toDeterminer": "THIS",
-                  "to": "OPERATOR"
+                  "toDeterminer": "ALL",
+                  "to": "OPERATOR",
+                  "with": {
+                    "duration": {
+                      "value": {
+                        "verb": "IS",
+                        "value": 10
+                      },
+                      "unit": "SECOND"
+                    }
+                  }
                 }
               ]
             }
@@ -189,7 +222,12 @@
   ],
   "metadata": {
     "originId": "EMBER",
-    "icon": "skills/ult_ember.png"
+    "icon": "skills/ult_ember.png",
+    "dataSources": [
+      "END_AXIS",
+      "ENDFIELD_WIKI"
+    ],
+    "dataStatus": "VERIFIED"
   },
   "clauseType": "ALL"
 }

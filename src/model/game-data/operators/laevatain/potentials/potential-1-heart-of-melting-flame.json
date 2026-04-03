@@ -8,6 +8,7 @@
     "description": "Battle skill Smouldering Fire improved: Additional attack multiplier is increased to 1.2 times the original, and scoring a hit returns 20 SP."
   },
   "metadata": {
-    "originId": "LAEVATAIN"
+    "originId": "LAEVATAIN",
+    "dataStatus": "VERIFIED"
   }
 }

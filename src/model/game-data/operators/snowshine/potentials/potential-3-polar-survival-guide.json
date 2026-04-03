@@ -8,6 +8,7 @@
     "description": "Ultimate Frigid Snowfield improved: Duration of the Solidification applied by the skill is increased by 2s."
   },
   "metadata": {
-    "originId": "SNOWSHINE"
+    "originId": "SNOWSHINE",
+    "dataStatus": "RECONCILED"
   }
 }

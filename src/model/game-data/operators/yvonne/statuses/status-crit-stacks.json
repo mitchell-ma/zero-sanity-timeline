@@ -36,8 +36,17 @@
           "with": {
             "value": {
               "operation": "MULT",
-              "left": { "verb": "IS", "value": 0.03 },
-              "right": { "verb": "IS", "objectId": "CRIT_STACKS", "object": "STACKS", "ofDeterminer": "THIS", "of": "OPERATOR" }
+              "left": {
+                "verb": "IS",
+                "value": 0.03
+              },
+              "right": {
+                "verb": "IS",
+                "objectId": "CRIT_STACKS",
+                "object": "STACKS",
+                "ofDeterminer": "THIS",
+                "of": "OPERATOR"
+              }
             }
           }
         }
@@ -52,7 +61,12 @@
           "object": "STATUS",
           "objectId": "CRIT_STACKS",
           "cardinalityConstraint": "AT_LEAST",
-          "with": { "stacks": { "verb": "IS", "value": 10 } }
+          "with": {
+            "stacks": {
+              "verb": "IS",
+              "value": 10
+            }
+          }
         }
       ],
       "effects": [
@@ -63,7 +77,10 @@
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
-            "value": { "verb": "IS", "value": 0.6 }
+            "value": {
+              "verb": "IS",
+              "value": 0.6
+            }
           }
         }
       ]
@@ -71,6 +88,7 @@
   ],
   "clauseType": "ALL",
   "metadata": {
-    "originId": "CRYOBLASTING_PISTOLIER"
+    "originId": "CRYOBLASTING_PISTOLIER",
+    "dataStatus": "RECONCILED"
   }
 }

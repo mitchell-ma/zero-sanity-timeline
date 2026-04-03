@@ -349,7 +349,10 @@ export function renderEvent(
     const isAnimOrCooldown = isNonDamage;
     const isBatk = event.columnId === NounType.BASIC_ATTACK;
     let segLabelText: string | undefined;
-    if (isSingleSeg) {
+    if (isSingleSeg && isBatk && event.segmentOrigin != null) {
+      // Individual BATK segment placed via context menu — show Roman numeral
+      segLabelText = seg.properties.name ?? formatSegmentShortName(undefined, event.segmentOrigin[0]);
+    } else if (isSingleSeg) {
       const fullLabel = presentation.label;
       if (fullLabel) {
         // Try full label first; fall back to trailing numeral (stack indicator) if too wide
@@ -383,9 +386,9 @@ export function renderEvent(
 
       labelObj.text = segLabelText;
       labelObj.visible = true;
-      labelObj.alpha = 0.9;
-      const isLight = document.documentElement.getAttribute('data-theme') === 'light';
-      labelObj.style.fill = presentation.passive && isLight ? 0x000000 : 0xffffff;
+      const isLight = presentation.passive && document.documentElement.getAttribute('data-theme') === 'light';
+      labelObj.alpha = isLight ? 0.25 : 0.9;
+      labelObj.style.fill = isLight ? 0x000000 : 0xffffff;
 
       // Alpha-gradient mask: Sprite stretched to segment bounds.
       // Texture is solid white with a fade-to-transparent at the bottom ~15%.

@@ -8,6 +8,7 @@
     "description": "Combo skill Timely Suppression improved: Shield duration +5s."
   },
   "metadata": {
-    "originId": "CATCHER"
+    "originId": "CATCHER",
+    "dataStatus": "RECONCILED"
   }
 }

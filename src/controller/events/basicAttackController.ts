@@ -59,6 +59,10 @@ export class SkillSegmentBuilder {
         if (deps.length > 0) marker.dependencyTypes = [...deps];
         const fts = f.getFrameTypes();
         if (fts.length > 0) marker.frameTypes = [...fts];
+        const sp = (f as { getSuppliedParameters?: () => Record<string, { id: string; name: string; lowerRange: number; upperRange: number; default: number }[]> | undefined }).getSuppliedParameters?.();
+        if (sp) marker.suppliedParameters = sp;
+        const ueNode = (f as { getUltimateEnergyGainNode?: () => import('../../dsl/semantics').ValueNode | undefined }).getUltimateEnergyGainNode?.();
+        if (ueNode) marker.ultimateEnergyGainNode = ueNode;
         return marker;
       });
 
@@ -98,7 +102,7 @@ export class SkillSegmentBuilder {
       // Drop frames beyond the segment duration — they belong in a separate segment in the JSON.
       const inBound = frames.filter(f => f.offsetFrame <= durationFrames);
 
-      const seqRecord = seq as SkillEventSequence & { segmentElement?: string; segmentTypes?: string[]; timeDependency?: string; clause?: EventSegmentData['clause'] };
+      const seqRecord = seq as SkillEventSequence & { segmentElement?: string; segmentTypes?: string[]; timeDependency?: string; clause?: EventSegmentData['clause']; suppliedParameters?: Record<string, { id: string; name: string; lowerRange: number; upperRange: number; default: number }[]> };
       const segData: EventSegmentData = {
         properties: {
           duration: durationFrames,
@@ -106,6 +110,7 @@ export class SkillSegmentBuilder {
           ...(seqRecord.segmentElement ? { element: seqRecord.segmentElement } : {}),
           ...(seqRecord.timeDependency ? { timeDependency: seqRecord.timeDependency as TimeDependency } : {}),
           ...(seqRecord.segmentTypes ? { segmentTypes: seqRecord.segmentTypes as SegmentType[] } : {}),
+          ...(seqRecord.suppliedParameters ? { suppliedParameters: seqRecord.suppliedParameters } : {}),
         },
         frames: inBound.length > 0 ? inBound : undefined,
         ...(seqRecord.clause ? { clause: seqRecord.clause } : {}),

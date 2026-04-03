@@ -11,7 +11,9 @@
  */
 import { CritMode, CombatSkillType, DamageScalingStatType, PhysicalStatusType, StatType } from '../../consts/enums';
 import type { OverrideStore } from '../../consts/overrideTypes';
-import { NounType } from '../../dsl/semantics';
+import { NounType, VerbType, ObjectType } from '../../dsl/semantics';
+import type { ValueNode } from '../../dsl/semantics';
+import { resolveValueNode } from './valueResolver';
 import { TimelineEvent, Column, Enemy as ViewEnemy } from '../../consts/viewTypes';
 import { PHYSICAL_STATUS_COLUMN_IDS, SKILL_COLUMN_ORDER, ENEMY_OWNER_ID } from '../../model/channels';
 import { getPhysicalStatusStagger, getDefenseMultiplier, getTotalAttack } from '../../model/calculation/damageFormulas';
@@ -126,6 +128,22 @@ export function precomputeDamageByFrame(
             const segMult = getSkillMultiplier(op.operatorId, ev.id as CombatSkillType, damageSegIdx, skillLevel, potential);
             if (segMult != null) {
               multiplier = maxFrames > 1 ? segMult / maxFrames : segMult;
+            }
+          }
+          // Fallback: extract multiplier from DSL clause DEAL DAMAGE effects
+          if (multiplier == null && f.clauses) {
+            for (const clause of f.clauses) {
+              for (const eff of clause.effects) {
+                const dsl = eff.dslEffect;
+                if (dsl && dsl.verb === VerbType.DEAL && dsl.object === ObjectType.DAMAGE && dsl.with) {
+                  const w = dsl.with as { value?: ValueNode };
+                  if (w.value) {
+                    const resolved = resolveValueNode(w.value, { skillLevel, potential, stats: {} });
+                    if (resolved != null && resolved > 0) { multiplier = resolved; break; }
+                  }
+                }
+              }
+              if (multiplier != null) break;
             }
           }
 

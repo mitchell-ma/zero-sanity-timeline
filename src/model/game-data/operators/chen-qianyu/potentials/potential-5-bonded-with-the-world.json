@@ -1,6 +1,6 @@
 {
   "properties": {
-    "id": "CHEN-QIANYU_POTENTIAL_5",
+    "id": "CHEN_QIANYU_POTENTIAL_5",
     "name": "Bonded with the World",
     "level": 5,
     "eventType": "POTENTIAL_EVENT",
@@ -8,6 +8,7 @@
     "description": "Combo skill Soar to the Stars improved: Length of cooldown is now {coolDown:0}s."
   },
   "metadata": {
-    "originId": "CHEN-QIANYU"
+    "originId": "CHEN_QIANYU",
+    "dataStatus": "RECONCILED"
   }
 }

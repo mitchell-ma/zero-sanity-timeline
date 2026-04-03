@@ -27,7 +27,10 @@
   ],
   "properties": {
     "id": "REALSPACE_STASIS_TALENT",
-    "maxLevel": { "verb": "IS", "value": 2 },
+    "maxLevel": {
+      "verb": "IS",
+      "value": 2
+    },
     "name": "Realspace Stasis (Talent)",
     "to": "ENEMY",
     "toDeterminer": "THIS",
@@ -55,7 +58,8 @@
       "WARFARIN",
       "ENDFIELD_WIKI"
     ],
-    "icon": "skills/endministrator_talent_2_icon.png"
+    "icon": "skills/endministrator_talent_2_icon.png",
+    "dataStatus": "RECONCILED"
   },
   "clauseType": "ALL"
 }

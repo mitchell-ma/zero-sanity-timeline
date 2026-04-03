@@ -63,6 +63,7 @@
     "originId": "WEDGE",
     "dataSources": [
       "ENDFIELD_WIKI"
-    ]
+    ],
+    "dataStatus": "RECONCILED"
   }
 }

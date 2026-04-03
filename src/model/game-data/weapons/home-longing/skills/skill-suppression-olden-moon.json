@@ -62,6 +62,7 @@
     "originId": "HOME_LONGING",
     "dataSources": [
       "WARFARIN"
-    ]
+    ],
+    "dataStatus": "RECONCILED"
   }
 }

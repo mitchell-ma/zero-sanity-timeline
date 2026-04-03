@@ -34,7 +34,10 @@
   "clauseType": "ALL",
   "properties": {
     "id": "TACTFUL_APPROACH_TALENT",
-    "maxLevel": { "verb": "IS", "value": 2 },
+    "maxLevel": {
+      "verb": "IS",
+      "value": 2
+    },
     "name": "Tactful Approach (Talent)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
@@ -47,6 +50,7 @@
     "dataSources": [
       "WARFARIN"
     ],
-    "icon": "skills/avywenna_talent_2_icon.png"
+    "icon": "skills/avywenna_talent_2_icon.png",
+    "dataStatus": "RECONCILED"
   }
 }

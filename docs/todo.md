@@ -162,7 +162,6 @@ Implemented APPLY STAT handling + operator class filtering via `toQualifier` on 
 - RECOVER SKILL_POINT frame effects now route through DSL interpret path (`type: 'dsl'` instead of `type: 'recoverSP'`) so reactive triggers fire (needed for Akekuri P1 Positive Feedback)
 
 ### Disabled configs still needing real data
-- **Rossi**: Both talents (Nicks and Scratches, Seething Blood) + Razor Clawmark status — all `isEnabled: false` with `[0, 0]` placeholder values
 - **Antal**: Improviser talent + Improviser status — `isEnabled: false`
 
 ### Talents/potentials implemented

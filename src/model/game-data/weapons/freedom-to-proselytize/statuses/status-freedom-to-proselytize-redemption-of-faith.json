@@ -26,6 +26,7 @@
     "originId": "FREEDOM_TO_PROSELYTIZE",
     "dataSources": [
       "ENDFIELD_WIKI"
-    ]
+    ],
+    "dataStatus": "RECONCILED"
   }
 }

@@ -369,7 +369,8 @@
   ],
   "metadata": {
     "originId": "GILBERTA",
-    "icon": "skills/combo_gilberta.png"
+    "icon": "skills/combo_gilberta.png",
+    "dataStatus": "RECONCILED"
   },
   "clauseType": "ALL",
   "activationWindow": {

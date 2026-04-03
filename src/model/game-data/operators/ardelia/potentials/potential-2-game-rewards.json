@@ -8,6 +8,7 @@
     "description": "Talent Friendly Presence improved: When the controlled operator touches the Shadow of Mr. Dolly, Ardelia also treats another allied operator with the lowest percentage HP with half of the treatment effects."
   },
   "metadata": {
-    "originId": "ARDELIA"
+    "originId": "ARDELIA",
+    "dataStatus": "VERIFIED"
   }
 }

@@ -29,7 +29,10 @@
   ],
   "properties": {
     "id": "RE_IGNITION_TALENT",
-    "maxLevel": { "verb": "IS", "value": 2 },
+    "maxLevel": {
+      "verb": "IS",
+      "value": 2
+    },
     "name": "Re-Ignition (Talent)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
@@ -42,6 +45,7 @@
     "dataSources": [
       "ENDFIELD_WIKI"
     ],
-    "icon": "skills/laevatain_talent_2_icon.png"
+    "icon": "skills/laevatain_talent_2_icon.png",
+    "dataStatus": "VERIFIED"
   }
 }

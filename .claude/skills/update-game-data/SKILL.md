@@ -7,6 +7,12 @@ description: Fetch and parse game data from external sources (Warfarin API, End-
 
 This skill covers all external data fetching and parsing for the Arknights: Endfield timeline calculator.
 
+## Data status protection
+
+Every JSON file under `src/model/game-data/` has a `metadata.dataStatus` field (enum: `RECONCILED`, `PARTIALLY_VERIFIED`, `VERIFIED`). See `DataStatus` in `src/consts/enums.ts`.
+
+**VERIFIED files MUST NOT be overwritten by automated data updates.** Before writing any game-data JSON file, check its `metadata.dataStatus`. If `VERIFIED`, skip the file and log it. New files default to `RECONCILED`.
+
 ---
 
 # Part 1: Operator Data Parsing

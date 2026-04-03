@@ -53,7 +53,8 @@
     "originId": "REDUCE_AND_THICKEN_TALENT",
     "dataSources": [
       "ENDFIELD_WIKI"
-    ]
+    ],
+    "dataStatus": "RECONCILED"
   },
   "clauseType": "ALL"
 }

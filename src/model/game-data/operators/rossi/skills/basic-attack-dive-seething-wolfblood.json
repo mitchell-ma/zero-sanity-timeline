@@ -16,7 +16,8 @@
     "dataSources": [
       "WARFARIN",
       "ENDFIELD_WIKI"
-    ]
+    ],
+    "dataStatus": "VERIFIED"
   },
   "segments": [
     {

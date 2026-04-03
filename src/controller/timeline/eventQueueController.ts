@@ -21,7 +21,7 @@ import type { QueueFrame } from './eventQueueTypes';
 import { EventInterpretorController, clearStatusDefCache } from './eventInterpretorController';
 import { PriorityQueue } from './priorityQueue';
 import { TriggerIndex } from './triggerIndex';
-import { SKILL_COLUMN_ORDER } from '../../model/channels';
+import { SKILL_COLUMN_ORDER, ENEMY_OWNER_ID, ENEMY_ACTION_COLUMN_ID } from '../../model/channels';
 import type { SkillType } from '../../consts/viewTypes';
 import { getAllTriggerAssociations } from '../gameDataStore';
 import { cloneAndSplitEvents } from './inputEventController';
@@ -90,6 +90,27 @@ function collectFrameEntries(
     let hasFrames = false;
     for (let si = 0; si < event.segments.length; si++) {
       const seg = event.segments[si];
+
+      // SEGMENT_START lifecycle hook
+      const segStartFrame = absoluteFrame(event.startFrame, cumulativeOffset, 0, fStops);
+      const segStart = allocQueueFrame();
+      segStart.frame = segStartFrame;
+      segStart.priority = PRIORITY.PROCESS_FRAME;
+      segStart.type = QueueFrameType.PROCESS_FRAME;
+      segStart.hookType = FrameHookType.SEGMENT_START;
+      segStart.statusId = event.id;
+      segStart.columnId = event.columnId;
+      segStart.ownerId = event.ownerId;
+      segStart.sourceOwnerId = event.ownerId;
+      segStart.sourceSkillName = event.id;
+      segStart.maxStacks = 0;
+      segStart.durationFrames = 0;
+      segStart.operatorSlotId = event.ownerId;
+      segStart.sourceEvent = event;
+      segStart.segmentIndex = si;
+      segStart.frameIndex = -1;
+      entries.push(segStart);
+
       if (seg.frames && seg.frames.length > 0) {
         hasFrames = true;
         for (let fi = 0; fi < seg.frames.length; fi++) {
@@ -116,6 +137,28 @@ function collectFrameEntries(
         }
       }
       cumulativeOffset += seg.properties.duration;
+
+      // SEGMENT_END lifecycle hook
+      const segEndFrame = absoluteFrame(event.startFrame, cumulativeOffset, 0, fStops);
+      if (segEndFrame > segStartFrame) {
+        const segEnd = allocQueueFrame();
+        segEnd.frame = segEndFrame;
+        segEnd.priority = PRIORITY.PROCESS_FRAME;
+        segEnd.type = QueueFrameType.PROCESS_FRAME;
+        segEnd.hookType = FrameHookType.SEGMENT_END;
+        segEnd.statusId = event.id;
+        segEnd.columnId = event.columnId;
+        segEnd.ownerId = event.ownerId;
+        segEnd.sourceOwnerId = event.ownerId;
+        segEnd.sourceSkillName = event.id;
+        segEnd.maxStacks = 0;
+        segEnd.durationFrames = 0;
+        segEnd.operatorSlotId = event.ownerId;
+        segEnd.sourceEvent = event;
+        segEnd.segmentIndex = si;
+        segEnd.frameIndex = -1;
+        entries.push(segEnd);
+      }
     }
 
     // Synthesize a frame entry for non-skill events with no frame markers.
@@ -220,6 +263,7 @@ export function runEventQueue(
   getEnemyHpPercentage?: (frame: number) => number | null,
   getControlledSlotAtFrame?: (frame: number) => string,
   hpController?: HPController,
+  shieldController?: import('../calculation/shieldController').ShieldController,
   /** Pre-built TriggerIndex from CombatLoadoutController. Falls back to ad-hoc build if not provided. */
   triggerIndex?: TriggerIndex,
   statAccumulator?: StatAccumulator,
@@ -252,7 +296,7 @@ export function runEventQueue(
   const interpretor = getInterpretor();
   interpretor.resetWith(state, registeredEvents, {
     loadoutProperties, slotOperatorMap, slotWirings, getEnemyHpPercentage,
-    getControlledSlotAtFrame, triggerIndex: triggerIdx, hpController,
+    getControlledSlotAtFrame, triggerIndex: triggerIdx, hpController, shieldController,
     statAccumulator, critMode, overrides,
   });
 
@@ -379,6 +423,8 @@ export function processCombatSimulation(
   ueController?: import('../timeline/ultimateEnergyController').UltimateEnergyController,
   /** HP controller for operator/enemy HP tracking. */
   hpController?: HPController,
+  /** Shield controller for operator shield tracking. */
+  shieldController?: import('../calculation/shieldController').ShieldController,
   /** All slots' SP costs for insufficiency zone computation. */
   allSlotSpCosts?: ReadonlyMap<string, number>,
   /** Pre-built TriggerIndex from CombatLoadoutController. */
@@ -425,6 +471,11 @@ export function processCombatSimulation(
   state.seedControlledOperator(slotIds[0], firstSlotOperatorId);
   state.registerEvents(inputEvents);
 
+  // Register enemy action events so they appear in processed output (for canvas rendering).
+  // They're classified as derived (non-skill column) but need to be in the output like input events.
+  const enemyActionEvents = derivedEvents.filter(ev => ev.ownerId === ENEMY_OWNER_ID && ev.columnId === ENEMY_ACTION_COLUMN_ID);
+  if (enemyActionEvents.length > 0) state.registerEvents(enemyActionEvents);
+
   // ── 3. SP recovery + talent events ────────────────────────────────────────
   const withSPRecovery = SkillPointController.deriveSPRecoveryEvents(state.getRegisteredEvents(), state.getStops());
   const spEvents = withSPRecovery.slice(state.getRegisteredEvents().length);
@@ -448,7 +499,7 @@ export function processCombatSimulation(
     ? hpController.getEnemyHpPercentage
     : (bossMaxHp != null ? getEnemyHpPercentage : undefined);
   runEventQueue(state, derivedEvents, loadoutProperties, slotWeapons, slotOperatorMap, slotGearSets,
-    hpPercentageFn, getControlledSlotAtFrame, hpController, triggerIndex,
+    hpPercentageFn, getControlledSlotAtFrame, hpController, shieldController, triggerIndex,
     _statAccumulator, critMode, overrides);
 
   // ── 5. Finalize resource controllers ──────────────────────────────────────
@@ -469,6 +520,9 @@ export function processCombatSimulation(
   }
   if (hpController) {
     hpController.finalize();
+  }
+  if (shieldController) {
+    shieldController.finalize();
   }
 
   // ── 6. Output ───────────────────────────────────────────────────────────────

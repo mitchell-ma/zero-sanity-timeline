@@ -5,7 +5,8 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "STAT", "objectId": "DEF",
+          "object": "STAT",
+          "objectId": "DEF",
           "with": {
             "value": {
               "verb": "VARY_BY",
@@ -56,6 +57,7 @@
     "originId": "OBJ_HEAVY_BURDEN",
     "dataSources": [
       "ENDFIELD_WIKI"
-    ]
+    ],
+    "dataStatus": "RECONCILED"
   }
 }

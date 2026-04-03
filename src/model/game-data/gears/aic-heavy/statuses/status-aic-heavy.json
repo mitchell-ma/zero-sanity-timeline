@@ -41,6 +41,7 @@
     "eventCategoryType": "GEAR_SET_STATUS"
   },
   "metadata": {
-    "originId": "AIC_HEAVY"
+    "originId": "AIC_HEAVY",
+    "dataStatus": "RECONCILED"
   }
 }

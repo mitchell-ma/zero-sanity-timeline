@@ -58,6 +58,7 @@
     "originId": "ASPIRANT",
     "dataSources": [
       "ENDFIELD_WIKI"
-    ]
+    ],
+    "dataStatus": "RECONCILED"
   }
 }

@@ -65,6 +65,7 @@
     "originId": "TWELVE_QUESTIONS",
     "dataSources": [
       "ENDFIELD_WIKI"
-    ]
+    ],
+    "dataStatus": "RECONCILED"
   }
 }

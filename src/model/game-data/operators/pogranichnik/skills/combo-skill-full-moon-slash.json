@@ -400,7 +400,8 @@
   ],
   "metadata": {
     "originId": "POGRANICHNIK",
-    "icon": "skills/combo_pogranichnik.png"
+    "icon": "skills/combo_pogranichnik.png",
+    "dataStatus": "RECONCILED"
   },
   "clauseType": "ALL",
   "activationWindow": {

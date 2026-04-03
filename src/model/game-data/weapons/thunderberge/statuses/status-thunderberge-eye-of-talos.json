@@ -5,7 +5,8 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "STATUS", "objectId": "SHIELD",
+          "object": "STATUS",
+          "objectId": "SHIELD",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
@@ -58,6 +59,7 @@
     "originId": "THUNDERBERGE",
     "dataSources": [
       "ENDFIELD_WIKI"
-    ]
+    ],
+    "dataStatus": "RECONCILED"
   }
 }

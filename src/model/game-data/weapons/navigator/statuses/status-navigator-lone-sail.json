@@ -113,6 +113,7 @@
     "originId": "NAVIGATOR",
     "dataSources": [
       "WARFARIN"
-    ]
+    ],
+    "dataStatus": "RECONCILED"
   }
 }

@@ -43,6 +43,7 @@
     "eventCategoryType": "GEAR_SET_STATUS"
   },
   "metadata": {
-    "originId": "AETHERTECH"
+    "originId": "AETHERTECH",
+    "dataStatus": "RECONCILED"
   }
 }

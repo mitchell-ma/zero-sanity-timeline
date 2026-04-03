@@ -183,7 +183,8 @@
   ],
   "metadata": {
     "originId": "LAEVATAIN",
-    "icon": "skills/combo_laevatain.png"
+    "icon": "skills/combo_laevatain.png",
+    "dataStatus": "VERIFIED"
   },
   "clauseType": "ALL",
   "activationWindow": {

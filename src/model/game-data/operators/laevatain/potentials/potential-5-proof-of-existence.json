@@ -22,7 +22,8 @@
     "description": "Ultimate Twilight improved: Enhanced basic attack DMG multiplier is increased to 1.2 times the original; during the ultimate, every enemy defeated by Laevatain extends ultimate duration by +1s (max: +7s)."
   },
   "metadata": {
-    "originId": "LAEVATAIN"
+    "originId": "LAEVATAIN",
+    "dataStatus": "VERIFIED"
   },
   "clauseType": "ALL"
 }

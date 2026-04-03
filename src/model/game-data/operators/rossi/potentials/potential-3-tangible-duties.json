@@ -8,6 +8,7 @@
     "description": "Talent Seething Blood improved: When triggered, it grants Base DMG Multiplier +8% and restores HP +[Intellect x 04]."
   },
   "metadata": {
-    "originId": "ROSSI"
+    "originId": "ROSSI",
+    "dataStatus": "VERIFIED"
   }
 }

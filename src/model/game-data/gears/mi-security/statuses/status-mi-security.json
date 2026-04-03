@@ -28,7 +28,10 @@
           "verb": "HAVE",
           "object": "STACKS",
           "cardinalityConstraint": "EXACTLY",
-          "value": { "verb": "IS", "value": 5 }
+          "value": {
+            "verb": "IS",
+            "value": 5
+          }
         }
       ],
       "effects": [
@@ -70,6 +73,7 @@
     "eventCategoryType": "GEAR_SET_STATUS"
   },
   "metadata": {
-    "originId": "MI_SECURITY"
+    "originId": "MI_SECURITY",
+    "dataStatus": "RECONCILED"
   }
 }

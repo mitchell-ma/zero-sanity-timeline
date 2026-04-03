@@ -1024,7 +1024,8 @@
   ],
   "metadata": {
     "originId": "ARDELIA",
-    "icon": "skills/ult_ardelia.png"
+    "icon": "skills/ult_ardelia.png",
+    "dataStatus": "VERIFIED"
   },
   "clauseType": "ALL"
 }

@@ -392,7 +392,8 @@
   ],
   "metadata": {
     "originId": "YVONNE",
-    "icon": "skills/combo_yvonne.png"
+    "icon": "skills/combo_yvonne.png",
+    "dataStatus": "RECONCILED"
   },
   "clauseType": "ALL",
   "activationWindow": {

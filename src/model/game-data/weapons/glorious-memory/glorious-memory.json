@@ -15,7 +15,8 @@
       "WARFARIN"
     ],
     "originId": "game",
-    "icon": "weapons/glorious_memory_icon.png"
+    "icon": "weapons/glorious_memory_icon.png",
+    "dataStatus": "RECONCILED"
   },
   "clause": [
     {

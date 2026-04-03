@@ -593,6 +593,7 @@
   },
   "metadata": {
     "originId": "CHEN_QIANYU",
-    "icon": "skills/attack_sword.png"
+    "icon": "skills/attack_sword.png",
+    "dataStatus": "RECONCILED"
   }
 }

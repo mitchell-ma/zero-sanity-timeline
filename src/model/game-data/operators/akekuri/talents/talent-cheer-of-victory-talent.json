@@ -1,7 +1,10 @@
 {
   "properties": {
     "id": "CHEER_OF_VICTORY_TALENT",
-    "maxLevel": { "verb": "IS", "value": 2 },
+    "maxLevel": {
+      "verb": "IS",
+      "value": 2
+    },
     "name": "Cheer of Victory (Talent)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
@@ -14,6 +17,7 @@
     "dataSources": [
       "ENDFIELD_WIKI"
     ],
-    "icon": "skills/akekuri_talent_1_icon.png"
+    "icon": "skills/akekuri_talent_1_icon.png",
+    "dataStatus": "VERIFIED"
   }
 }

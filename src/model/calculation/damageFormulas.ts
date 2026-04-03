@@ -115,6 +115,7 @@ export function getSkillTypeDamageBonusStat(skillType: CombatSkillType): StatTyp
     [CombatSkillType.FINISHER]: StatType.BASIC_ATTACK_DAMAGE_BONUS,
     [CombatSkillType.DIVE]: StatType.BASIC_ATTACK_DAMAGE_BONUS,
     [CombatSkillType.CONTROL]: StatType.BASIC_ATTACK_DAMAGE_BONUS,
+    [CombatSkillType.ACTION]: StatType.SKILL_DAMAGE_BONUS,
   };
   return map[skillType];
 }

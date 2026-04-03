@@ -27,6 +27,7 @@
     "description": "Physical status. Slams the enemy for 1 second. Damage scales with status level from consumed Vulnerable stacks (120%/180%/240%/300% ATK)."
   },
   "metadata": {
-    "originId": "game"
+    "originId": "game",
+    "dataStatus": "RECONCILED"
   }
 }

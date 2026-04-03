@@ -1,7 +1,10 @@
 {
   "properties": {
     "id": "SUBCONSCIOUS_ACT_TALENT",
-    "maxLevel": { "verb": "IS", "value": 2 },
+    "maxLevel": {
+      "verb": "IS",
+      "value": 2
+    },
     "name": "Subconscious Act (Talent)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
@@ -14,6 +17,7 @@
     "dataSources": [
       "WARFARIN"
     ],
-    "icon": "skills/antal_talent_2_icon.png"
+    "icon": "skills/antal_talent_2_icon.png",
+    "dataStatus": "VERIFIED"
   }
 }

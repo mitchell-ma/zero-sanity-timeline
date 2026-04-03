@@ -34,7 +34,10 @@
   ],
   "properties": {
     "id": "LOVE_THE_STAB_AND_TWIST_TALENT",
-    "maxLevel": { "verb": "IS", "value": 2 },
+    "maxLevel": {
+      "verb": "IS",
+      "value": 2
+    },
     "name": "Love the Stab and Twist (Talent)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
@@ -48,7 +51,8 @@
       "WARFARIN",
       "ENDFIELD_WIKI"
     ],
-    "icon": "skills/fluorite_talent_1_icon.png"
+    "icon": "skills/fluorite_talent_1_icon.png",
+    "dataStatus": "RECONCILED"
   },
   "clauseType": "ALL"
 }

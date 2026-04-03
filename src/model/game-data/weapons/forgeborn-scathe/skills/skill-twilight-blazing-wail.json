@@ -63,6 +63,7 @@
     "originId": "FORGEBORN_SCATHE",
     "dataSources": [
       "ENDFIELD_WIKI"
-    ]
+    ],
+    "dataStatus": "RECONCILED"
   }
 }

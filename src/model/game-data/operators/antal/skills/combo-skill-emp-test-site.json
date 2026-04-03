@@ -171,7 +171,8 @@
   ],
   "metadata": {
     "originId": "ANTAL",
-    "icon": "skills/combo_antal.png"
+    "icon": "skills/combo_antal.png",
+    "dataStatus": "VERIFIED"
   },
   "clauseType": "ALL",
   "activationWindow": {

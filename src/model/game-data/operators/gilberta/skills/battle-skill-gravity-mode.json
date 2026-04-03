@@ -26,7 +26,8 @@
   ],
   "metadata": {
     "originId": "GILBERTA",
-    "icon": "skills/skill_gilberta.png"
+    "icon": "skills/skill_gilberta.png",
+    "dataStatus": "RECONCILED"
   },
   "segments": [
     {

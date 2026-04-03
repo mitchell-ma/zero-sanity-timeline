@@ -165,11 +165,21 @@ function evaluateHave(cond: Interaction, ctx: ConditionContext): boolean {
     const withBlock = (cond as unknown as Record<string, unknown>).with as Record<string, unknown> | undefined;
     const valueWrapper = withBlock?.value as Record<string, unknown> | undefined;
     if (valueWrapper?.unit === UnitType.PERCENTAGE) {
-      const ownerId = resolveOwnerId(cond.subject, ctx, cond.subjectDeterminer);
-      if (!ownerId || !ctx.getOperatorPercentageHp) return true;
-      const hpPct = ctx.getOperatorPercentageHp(ownerId, ctx.frame);
       const innerValue = valueWrapper.value as Record<string, unknown> | undefined;
       const target = innerValue ? resolveValueNode(innerValue as unknown as ValueNode, DEFAULT_VALUE_CONTEXT) ?? 100 : 100;
+      // Route by subject: ENEMY → enemy HP tracker, OPERATOR → operator HP tracker
+      const isEnemy = cond.subject === NounType.ENEMY;
+      let hpPct: number;
+      if (isEnemy) {
+        if (!ctx.getEnemyHpPercentage) return false;
+        const pct = ctx.getEnemyHpPercentage(ctx.frame);
+        if (pct == null) return false;
+        hpPct = pct;
+      } else {
+        const ownerId = resolveOwnerId(cond.subject, ctx, cond.subjectDeterminer);
+        if (!ownerId || !ctx.getOperatorPercentageHp) return true;
+        hpPct = ctx.getOperatorPercentageHp(ownerId, ctx.frame);
+      }
       switch (cond.cardinalityConstraint) {
         case CardinalityConstraintType.AT_MOST: return hpPct <= target;
         case CardinalityConstraintType.AT_LEAST: return hpPct >= target;

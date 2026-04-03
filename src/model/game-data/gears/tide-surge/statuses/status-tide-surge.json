@@ -42,6 +42,7 @@
     "eventCategoryType": "GEAR_SET_STATUS"
   },
   "metadata": {
-    "originId": "TIDE_SURGE"
+    "originId": "TIDE_SURGE",
+    "dataStatus": "RECONCILED"
   }
 }

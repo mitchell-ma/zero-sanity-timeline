@@ -8,6 +8,7 @@
     "description": "Strength +{Str:0}, Cryo DMG Dealt +{CrystDamageIncrease:0%}."
   },
   "metadata": {
-    "originId": "LAST_RITE"
+    "originId": "LAST_RITE",
+    "dataStatus": "RECONCILED"
   }
 }

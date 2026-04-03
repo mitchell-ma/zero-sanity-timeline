@@ -377,7 +377,8 @@
   ],
   "metadata": {
     "originId": "CATCHER",
-    "icon": "skills/combo_catcher.png"
+    "icon": "skills/combo_catcher.png",
+    "dataStatus": "RECONCILED"
   },
   "clauseType": "ALL",
   "activationWindow": {

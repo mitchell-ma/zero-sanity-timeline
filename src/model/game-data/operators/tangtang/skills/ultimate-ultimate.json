@@ -194,7 +194,8 @@
   ],
   "metadata": {
     "originId": "TANGTANG",
-    "icon": "skills/ult_tangtang.png"
+    "icon": "skills/ult_tangtang.png",
+    "dataStatus": "RECONCILED"
   },
   "clauseType": "ALL"
 }

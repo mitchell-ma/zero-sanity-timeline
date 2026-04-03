@@ -81,6 +81,7 @@
     "originId": "THERMITE_CUTTER",
     "dataSources": [
       "ENDFIELD_WIKI"
-    ]
+    ],
+    "dataStatus": "RECONCILED"
   }
 }

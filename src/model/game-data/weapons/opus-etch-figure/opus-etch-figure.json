@@ -15,7 +15,8 @@
       "WARFARIN"
     ],
     "originId": "game",
-    "icon": "weapons/opus_etch_figure_icon.png"
+    "icon": "weapons/opus_etch_figure_icon.png",
+    "dataStatus": "RECONCILED"
   },
   "clause": [
     {

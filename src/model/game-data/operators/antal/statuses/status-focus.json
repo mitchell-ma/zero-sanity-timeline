@@ -100,6 +100,7 @@
     "description": "Applies Focus with a long duration on the enemy and deals Electric DMG. An enemy with an active Focus also suffers Electric Susceptibility and Heat Susceptibility. Focus can only be applied to 1 enemy at any given time."
   },
   "metadata": {
-    "originId": "SPECIFIED_RESEARCH_SUBJECT"
+    "originId": "SPECIFIED_RESEARCH_SUBJECT",
+    "dataStatus": "VERIFIED"
   }
 }

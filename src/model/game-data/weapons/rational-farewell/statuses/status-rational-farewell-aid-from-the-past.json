@@ -82,6 +82,7 @@
     "originId": "RATIONAL_FAREWELL",
     "dataSources": [
       "ENDFIELD_WIKI"
-    ]
+    ],
+    "dataStatus": "RECONCILED"
   }
 }

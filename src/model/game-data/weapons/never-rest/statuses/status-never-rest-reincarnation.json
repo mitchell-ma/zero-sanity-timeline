@@ -58,6 +58,7 @@
     "originId": "NEVER_REST",
     "dataSources": [
       "ENDFIELD_WIKI"
-    ]
+    ],
+    "dataStatus": "RECONCILED"
   }
 }

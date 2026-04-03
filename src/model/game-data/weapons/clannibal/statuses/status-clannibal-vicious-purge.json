@@ -58,6 +58,7 @@
     "originId": "CLANNIBAL",
     "dataSources": [
       "ENDFIELD_WIKI"
-    ]
+    ],
+    "dataStatus": "RECONCILED"
   }
 }

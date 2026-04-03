@@ -8,6 +8,7 @@
     "description": "Talent Essence Disintegration improved: When the Endministrator gains the ATK buff, other allied operators gain half of this ATK buff."
   },
   "metadata": {
-    "originId": "ENDMINISTRATOR"
+    "originId": "ENDMINISTRATOR",
+    "dataStatus": "RECONCILED"
   }
 }

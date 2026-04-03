@@ -30,7 +30,10 @@
   ],
   "properties": {
     "id": "IMPROVISER_TALENT",
-    "maxLevel": { "verb": "IS", "value": 2 },
+    "maxLevel": {
+      "verb": "IS",
+      "value": 2
+    },
     "name": "IMPROVISER (Talent)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
@@ -44,6 +47,7 @@
     "dataSources": [
       "ENDFIELD_WIKI"
     ],
-    "icon": "skills/antal_talent_1_icon.png"
+    "icon": "skills/antal_talent_1_icon.png",
+    "dataStatus": "VERIFIED"
   }
 }

@@ -224,6 +224,27 @@ export function buildColumnContextMenu(
             : !comboAvail.available ? comboAvail.reason
             : availability.disabled ? availability.reason
             : overlap ? t('ctx.overlap') : undefined;
+          // Build supplied-parameter expansion buttons for combo variants
+          const comboParamDefs = v.suppliedParameters?.VARY_BY;
+          const comboParamButtons = comboParamDefs && comboParamDefs.length > 0 && !disabled
+            ? comboParamDefs.flatMap((param) => {
+              const buttons: NonNullable<ContextMenuItem['inlineButtons']> = [];
+              for (let val = param.lowerRange; val <= param.upperRange; val++) {
+                buttons.push({
+                  label: `×${val}`,
+                  actionId: 'addEvent' as const,
+                  actionPayload: {
+                    ownerId: col.ownerId,
+                    columnId: col.columnId,
+                    atFrame,
+                    defaultSkill: { ...v, comboTriggerColumnId: comboAvail.comboTriggerColumnId, parameterValues: { [param.id]: val } },
+                  },
+                  disabled: false,
+                });
+              }
+              return buttons;
+            })
+            : undefined;
           return {
             label: displayName,
             actionId: 'addEvent' as const,
@@ -235,6 +256,8 @@ export function buildColumnContextMenu(
             },
             disabled,
             disabledReason: reason,
+            ...(comboParamButtons ? { inlineLabel: comboParamDefs![0].name } : {}),
+            inlineButtons: comboParamButtons,
           };
         }),
         ...(ctrlItem ? [{ separator: true } as ContextMenuItem, ctrlItem] : []),
@@ -247,6 +270,28 @@ export function buildColumnContextMenu(
     const reason = inTimeStop ? timeStopReason
       : !comboAvail.available ? comboAvail.reason
       : overlap ? t('ctx.overlap') : undefined;
+
+    // Build supplied-parameter expansion buttons for single combo
+    const singleComboParams = col.defaultEvent?.suppliedParameters?.VARY_BY;
+    const singleComboParamButtons = singleComboParams && singleComboParams.length > 0 && !disabled
+      ? singleComboParams.flatMap((param) => {
+        const buttons: NonNullable<ContextMenuItem['inlineButtons']> = [];
+        for (let val = param.lowerRange; val <= param.upperRange; val++) {
+          buttons.push({
+            label: `×${val}`,
+            actionId: 'addEvent' as const,
+            actionPayload: {
+              ownerId: col.ownerId,
+              columnId: col.columnId,
+              atFrame,
+              defaultSkill: { ...col.defaultEvent, comboTriggerColumnId: comboAvail.comboTriggerColumnId, parameterValues: { [param.id]: val } },
+            },
+            disabled: false,
+          });
+        }
+        return buttons;
+      })
+      : undefined;
 
     return [
       headerItem,
@@ -261,6 +306,8 @@ export function buildColumnContextMenu(
         },
         disabled,
         disabledReason: reason,
+        ...(singleComboParamButtons ? { inlineLabel: singleComboParams![0].name } : {}),
+        inlineButtons: singleComboParamButtons,
       },
       ...(ctrlItem ? [{ separator: true } as ContextMenuItem, ctrlItem] : []),
     ];
@@ -294,7 +341,7 @@ export function buildColumnContextMenu(
         }
         const disabled = interactionMode === InteractionModeType.STRICT && (inTimeStop || v.disabled || availability.disabled || overlap || spInsufficient || !!finisherBlock);
         const displayName = v.isPerfectDodge ? 'Dodge'
-          : col.columnId === OPERATOR_COLUMNS.INPUT ? 'Dash'
+          : v.id === CombatSkillType.DASH ? 'Dash'
           : v.displayName ?? getAllSkillLabels()[v.id as CombatSkillType] ?? getAllInflictionLabels()[v.id] ?? v.name ?? v.id;
         const reason = v.disabledReason
           ?? (inTimeStop ? timeStopReason
@@ -338,6 +385,47 @@ export function buildColumnContextMenu(
           })
           : undefined;
 
+        // Build supplied-parameter expansion buttons (e.g. "×1", "×2", "×3" for Enemies Hit)
+        const paramDefs = v.suppliedParameters?.VARY_BY;
+        const paramButtons = paramDefs && paramDefs.length > 0 && !disabled
+          ? paramDefs.flatMap((param) => {
+            const buttons: NonNullable<ContextMenuItem['inlineButtons']> = [];
+            for (let val = param.lowerRange; val <= param.upperRange; val++) {
+              buttons.push({
+                label: `×${val}`,
+                actionId: 'addEvent' as const,
+                actionPayload: {
+                  ownerId: col.ownerId,
+                  columnId: col.columnId,
+                  atFrame,
+                  defaultSkill: {
+                    id: v.id,
+                    name: v.name,
+                    ...(v.segments ? { segments: v.segments } : {}),
+                    ...(v.gaugeGain != null ? { gaugeGain: v.gaugeGain } : {}),
+                    ...(v.teamGaugeGain != null ? { teamGaugeGain: v.teamGaugeGain } : {}),
+                    ...(v.gaugeGainByEnemies ? { gaugeGainByEnemies: v.gaugeGainByEnemies } : {}),
+                    ...(v.timeInteraction ? { timeInteraction: v.timeInteraction } : {}),
+                    ...(v.isPerfectDodge ? { isPerfectDodge: v.isPerfectDodge } : {}),
+                    ...(v.timeDependency ? { timeDependency: v.timeDependency } : {}),
+                    ...(v.skillPointCost != null ? { skillPointCost: v.skillPointCost } : {}),
+                    ...(v.enhancementType ? { enhancementType: v.enhancementType } : {}),
+                    ...(v.activationClause ? { activationClause: v.activationClause } : {}),
+                    suppliedParameters: v.suppliedParameters,
+                    parameterValues: { [param.id]: val },
+                  },
+                },
+                disabled: false,
+              });
+            }
+            return buttons;
+          })
+          : undefined;
+
+        // Merge BATK inline buttons with parameter buttons (in practice they won't coexist)
+        const allInlineButtons = inlineButtons ?? paramButtons
+          ?? undefined;
+
         return {
           label: displayName,
           disabledReason: reason,
@@ -359,10 +447,12 @@ export function buildColumnContextMenu(
               ...(v.skillPointCost != null ? { skillPointCost: v.skillPointCost } : {}),
               ...(v.enhancementType ? { enhancementType: v.enhancementType } : {}),
               ...(v.activationClause ? { activationClause: v.activationClause } : {}),
+              ...(v.suppliedParameters ? { suppliedParameters: v.suppliedParameters } : {}),
             },
           },
           disabled,
-          inlineButtons,
+          ...(paramButtons && paramDefs ? { inlineLabel: paramDefs[0].name } : {}),
+          inlineButtons: allInlineButtons,
         };
       }),
       ...(ctrlItem ? [{ separator: true } as ContextMenuItem, ctrlItem] : []),
@@ -386,13 +476,32 @@ export function buildColumnContextMenu(
       { label: t('ctx.editResource'), actionId: 'editResource' as const, actionPayload: col.key },
       { separator: true } as ContextMenuItem,
     ] : []),
-    {
-      label: eventName,
-      actionId: 'addEvent',
-      actionPayload: { ownerId: col.ownerId, columnId: col.columnId, atFrame, defaultSkill: col.defaultEvent ?? null },
-      disabled,
-      disabledReason: reason,
-    },
+    (() => {
+      const defs = col.defaultEvent?.suppliedParameters?.VARY_BY;
+      const defParamButtons = defs && defs.length > 0 && !disabled
+        ? defs.flatMap((param) => {
+          const buttons: NonNullable<ContextMenuItem['inlineButtons']> = [];
+          for (let val = param.lowerRange; val <= param.upperRange; val++) {
+            buttons.push({
+              label: `×${val}`,
+              actionId: 'addEvent' as const,
+              actionPayload: { ownerId: col.ownerId, columnId: col.columnId, atFrame, defaultSkill: { ...col.defaultEvent, parameterValues: { [param.id]: val } } },
+              disabled: false,
+            });
+          }
+          return buttons;
+        })
+        : undefined;
+      return {
+        label: eventName,
+        actionId: 'addEvent' as const,
+        actionPayload: { ownerId: col.ownerId, columnId: col.columnId, atFrame, defaultSkill: col.defaultEvent ?? null },
+        disabled,
+        disabledReason: reason,
+        ...(defParamButtons && defs ? { inlineLabel: defs[0].name } : {}),
+        inlineButtons: defParamButtons,
+      };
+    })(),
     ...(ctrlItem ? [{ separator: true } as ContextMenuItem, ctrlItem] : []),
   ];
 }

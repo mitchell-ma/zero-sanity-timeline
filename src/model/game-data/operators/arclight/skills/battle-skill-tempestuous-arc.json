@@ -26,7 +26,8 @@
   ],
   "metadata": {
     "originId": "ARCLIGHT",
-    "icon": "skills/skill_arclight.png"
+    "icon": "skills/skill_arclight.png",
+    "dataStatus": "RECONCILED"
   },
   "segments": [
     {

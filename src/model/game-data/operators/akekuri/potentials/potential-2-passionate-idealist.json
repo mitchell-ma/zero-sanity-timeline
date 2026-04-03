@@ -5,7 +5,8 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "STAT", "objectId": "AGILITY",
+          "object": "STAT",
+          "objectId": "AGILITY",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
@@ -17,7 +18,8 @@
         },
         {
           "verb": "APPLY",
-          "object": "STAT", "objectId": "INTELLECT",
+          "object": "STAT",
+          "objectId": "INTELLECT",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
@@ -39,7 +41,8 @@
     "description": "Agility +{Agi:0}, Intellect +10."
   },
   "metadata": {
-    "originId": "AKEKURI"
+    "originId": "AKEKURI",
+    "dataStatus": "VERIFIED"
   },
   "clauseType": "ALL"
 }

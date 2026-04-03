@@ -8,7 +8,12 @@
       "value": {
         "verb": "VARY_BY",
         "object": "STATUS_LEVEL",
-        "value": [12, 18, 24, 30]
+        "value": [
+          12,
+          18,
+          24,
+          30
+        ]
       },
       "unit": "SECOND"
     },
@@ -28,6 +33,7 @@
     "description": "Physical status. Increases Physical DMG taken by the enemy. Duration and effect scale with status level from consumed Vulnerable stacks (11%/14%/17%/20% increased Physical DMG taken, 12/18/24/30s)."
   },
   "metadata": {
-    "originId": "game"
+    "originId": "game",
+    "dataStatus": "RECONCILED"
   }
 }

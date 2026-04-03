@@ -5,7 +5,8 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "STAT", "objectId": "FINAL_DAMAGE_REDUCTION",
+          "object": "STAT",
+          "objectId": "FINAL_DAMAGE_REDUCTION",
           "toDeterminer": "OTHER",
           "to": "OPERATOR",
           "with": {
@@ -40,6 +41,7 @@
     "eventCategoryType": "GEAR_SET_STATUS"
   },
   "metadata": {
-    "originId": "LYNX"
+    "originId": "LYNX",
+    "dataStatus": "RECONCILED"
   }
 }

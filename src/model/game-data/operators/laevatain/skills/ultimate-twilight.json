@@ -216,7 +216,8 @@
   },
   "metadata": {
     "originId": "LAEVATAIN",
-    "icon": "skills/ult_laevatain.png"
+    "icon": "skills/ult_laevatain.png",
+    "dataStatus": "VERIFIED"
   },
   "clauseType": "ALL"
 }

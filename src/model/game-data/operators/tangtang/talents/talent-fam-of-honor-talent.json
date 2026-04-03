@@ -5,7 +5,8 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "STAT", "objectId": "HASTE",
+          "object": "STAT",
+          "objectId": "HASTE",
           "toDeterminer": "ALL",
           "to": "OPERATOR",
           "with": {
@@ -23,7 +24,8 @@
         },
         {
           "verb": "APPLY",
-          "object": "STATUS", "objectId": "SLOW",
+          "object": "STATUS",
+          "objectId": "SLOW",
           "to": "ENEMY",
           "with": {
             "value": {
@@ -43,7 +45,10 @@
   ],
   "properties": {
     "id": "FAM_OF_HONOR_TALENT",
-    "maxLevel": { "verb": "IS", "value": 2 },
+    "maxLevel": {
+      "verb": "IS",
+      "value": 2
+    },
     "name": "Fam of Honor (Talent)",
     "to": "OPERATOR",
     "toDeterminer": "ALL",
@@ -57,7 +62,8 @@
       "WARFARIN",
       "ENDFIELD_WIKI"
     ],
-    "icon": "skills/tangtang_talent_1_icon.png"
+    "icon": "skills/tangtang_talent_1_icon.png",
+    "dataStatus": "RECONCILED"
   },
   "clauseType": "ALL"
 }

@@ -23,6 +23,7 @@
     "description": "Heat element infliction. Stacks up to 4 times. At 4 stacks, triggers Combustion arts reaction."
   },
   "metadata": {
-    "originId": "game"
+    "originId": "game",
+    "dataStatus": "RECONCILED"
   }
 }

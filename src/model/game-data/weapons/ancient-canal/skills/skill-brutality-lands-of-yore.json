@@ -5,7 +5,8 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "STAT", "objectId": "ARTS_INTENSITY",
+          "object": "STAT",
+          "objectId": "ARTS_INTENSITY",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
@@ -41,7 +42,9 @@
           "object": "STATUS",
           "objectId": "INFLICTION",
           "objectQualifier": "VULNERABLE",
-          "with": { "stacks": "MAX" }
+          "with": {
+            "stacks": "MAX"
+          }
         }
       ],
       "effects": [
@@ -64,6 +67,7 @@
     "originId": "ANCIENT_CANAL",
     "dataSources": [
       "ENDFIELD_WIKI"
-    ]
+    ],
+    "dataStatus": "RECONCILED"
   }
 }

@@ -225,6 +225,7 @@ function inferSkillTypeMap(skills: ReadonlyMap<string, { onTriggerClause: unknow
     if (cat === EventCategoryType.COMBO_SKILL && !typeMap.COMBO_SKILL) typeMap.COMBO_SKILL = id;
     else if (cat === EventCategoryType.BATTLE_SKILL && !typeMap.BATTLE_SKILL) typeMap.BATTLE_SKILL = id;
     else if (cat === EventCategoryType.ULTIMATE_SKILL && !typeMap.ULTIMATE) typeMap.ULTIMATE = id;
+    else if (cat === EventCategoryType.ACTION && !typeMap.ACTION) typeMap.ACTION = id;
   }
 
   // Fallback: heuristic detection for anything not yet resolved

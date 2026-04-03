@@ -10,7 +10,10 @@
           "cardinalityConstraint": "AT_LEAST",
           "with": {
             "value": {
-              "value": { "verb": "IS", "value": 80 },
+              "value": {
+                "verb": "IS",
+                "value": 80
+              },
               "unit": "PERCENTAGE"
             }
           }
@@ -40,6 +43,7 @@
     "originId": "game",
     "dataSources": [
       "WARFARIN"
-    ]
+    ],
+    "dataStatus": "RECONCILED"
   }
 }

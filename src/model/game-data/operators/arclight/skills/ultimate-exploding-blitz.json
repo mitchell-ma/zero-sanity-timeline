@@ -227,7 +227,8 @@
   ],
   "metadata": {
     "originId": "ARCLIGHT",
-    "icon": "skills/ult_arclight.png"
+    "icon": "skills/ult_arclight.png",
+    "dataStatus": "RECONCILED"
   },
   "clauseType": "ALL"
 }

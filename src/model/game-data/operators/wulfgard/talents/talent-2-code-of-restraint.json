@@ -1,7 +1,10 @@
 {
   "properties": {
     "id": "WULFGARD_TALENT2_CODE_OF_RESTRAINT",
-    "maxLevel": { "verb": "IS", "value": 2 },
+    "maxLevel": {
+      "verb": "IS",
+      "value": 2
+    },
     "name": "Code of Restraint (Talent)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
@@ -14,6 +17,7 @@
     "dataSources": [
       "ENDFIELD_WIKI"
     ],
-    "icon": "skills/wulfgard_talent_2_icon.png"
+    "icon": "skills/wulfgard_talent_2_icon.png",
+    "dataStatus": "RECONCILED"
   }
 }

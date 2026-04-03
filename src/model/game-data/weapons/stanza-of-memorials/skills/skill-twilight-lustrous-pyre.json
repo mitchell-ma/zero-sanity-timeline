@@ -62,6 +62,7 @@
     "originId": "STANZA_OF_MEMORIALS",
     "dataSources": [
       "ENDFIELD_WIKI"
-    ]
+    ],
+    "dataStatus": "RECONCILED"
   }
 }

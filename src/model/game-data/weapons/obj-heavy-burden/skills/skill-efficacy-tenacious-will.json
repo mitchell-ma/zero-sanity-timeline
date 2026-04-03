@@ -63,6 +63,7 @@
     "originId": "OBJ_HEAVY_BURDEN",
     "dataSources": [
       "ENDFIELD_WIKI"
-    ]
+    ],
+    "dataStatus": "RECONCILED"
   }
 }

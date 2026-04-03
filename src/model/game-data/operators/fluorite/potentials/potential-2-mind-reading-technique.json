@@ -8,6 +8,7 @@
     "description": "Talent Unpredictable improved: Chance to ignore Arts DMG +10%."
   },
   "metadata": {
-    "originId": "FLUORITE"
+    "originId": "FLUORITE",
+    "dataStatus": "RECONCILED"
   }
 }

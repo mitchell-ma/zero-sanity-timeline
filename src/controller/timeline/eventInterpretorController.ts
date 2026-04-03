@@ -40,6 +40,7 @@ import {
 import { FPS, TOTAL_FRAMES } from '../../utils/timeline';
 import { getAllOperatorStatuses, getOperatorStatuses, getStatusById } from '../gameDataStore';
 import { getOperatorBase } from '../../model/game-data/operatorsStore';
+import { getOperatorSkill } from '../../model/game-data/operatorSkillsStore';
 import { getAllWeaponStatuses } from '../../model/game-data/weaponStatusesStore';
 import { getAllGearStatuses } from '../../model/game-data/gearStatusesStore';
 import { getAllStatusLabels } from '../gameDataStore';
@@ -47,6 +48,7 @@ import { COMMON_OWNER_ID } from '../slot/commonSlotController';
 import { evaluateConditions } from './conditionEvaluator';
 import type { ConditionContext } from './conditionEvaluator';
 import type { HPController } from '../calculation/hpController';
+import type { ShieldController } from '../calculation/shieldController';
 import { getPhysicalStatusBaseMultiplier, getShatterBaseMultiplier } from '../../model/calculation/damageFormulas';
 import type { StatusLevel } from '../../consts/types';
 import type { SlotTriggerWiring } from './eventQueueTypes';
@@ -268,6 +270,8 @@ export interface InterpretContext {
   /** Source damage frame key ("eventUid:si:fi") for intra-frame ordering.
    *  Propagated to status events so the damage builder can exclude same-frame provenance. */
   sourceFrameKey?: string;
+  /** User-supplied parameter values (e.g. { ENEMY_HIT: 2 }) for VARY_BY resolution in value nodes. */
+  suppliedParameters?: Record<string, number>;
 }
 
 // ══════════════════════════════════════════════════════════════════════════
@@ -280,6 +284,7 @@ export interface InterpretorOptions {
   getControlledSlotAtFrame?: (frame: number) => string;
   triggerIndex?: TriggerIndex;
   hpController?: HPController;
+  shieldController?: ShieldController;
   statAccumulator?: StatAccumulator;
   critMode?: CritMode;
   overrides?: OverrideStore;
@@ -295,6 +300,7 @@ export class EventInterpretorController {
   private getControlledSlotAtFrame?: (frame: number) => string;
   private triggerIndex?: TriggerIndex;
   private hpController?: HPController;
+  private shieldController?: ShieldController;
   private statAccumulator?: StatAccumulator;
   private critMode?: CritMode;
   private overrides?: OverrideStore;
@@ -371,6 +377,7 @@ export class EventInterpretorController {
     this.getControlledSlotAtFrame = options?.getControlledSlotAtFrame;
     this.triggerIndex = options?.triggerIndex;
     this.hpController = options?.hpController;
+    this.shieldController = options?.shieldController;
     this.statAccumulator = options?.statAccumulator;
     this.critMode = options?.critMode;
     this.overrides = options?.overrides;
@@ -395,8 +402,10 @@ export class EventInterpretorController {
 
       case VerbType.EXTEND:  return this.doExtend(effect, ctx);
 
+      case VerbType.DEAL:    return this.doDeal(effect, ctx);
+
       case VerbType.REFRESH:
-      case VerbType.RETURN: case VerbType.DEAL:
+      case VerbType.RETURN:
       case VerbType.HIT: case VerbType.DEFEAT: case VerbType.PERFORM:
       case VerbType.IGNORE: case VerbType.OVERHEAL: case VerbType.EXPERIENCE:
       case VerbType.MERGE:
@@ -425,6 +434,11 @@ export class EventInterpretorController {
       case QueueFrameType.COMBO_RESOLVE:  result = this.handleComboResolve(entry); break;
       case QueueFrameType.STATUS_EXIT:    result = this.handleStatusExit(entry); break;
       default: result = [];
+    }
+    // HP-threshold statuses: check after every PROCESS_FRAME since inline skill
+    // damage doesn't fire DEAL:DAMAGE reactive triggers.
+    if (entry.type === QueueFrameType.PROCESS_FRAME) {
+      this.maybeApplyHpThresholdStatuses(entry.frame, entry.ownerId, entry.sourceSkillName, result);
     }
     // Flush any STATUS_EXIT frames queued by processNewStatusEvent
     if (this.pendingExitFrames.length > 0) {
@@ -583,7 +597,6 @@ export class EventInterpretorController {
         : cfg?.duration != null ? cfg.duration
         : (isTeamTarget && remainingDuration != null ? remainingDuration
           : TOTAL_FRAMES);
-
       // Resolve clause effects (susceptibility, statusValue) from the status def
       const eventProps: Partial<TimelineEvent> = {};
       if (def) {
@@ -683,6 +696,16 @@ export class EventInterpretorController {
     if (effect.object === NounType.STAGGER) {
       const v = this.resolveWith(effect.with?.staggerValue, ctx);
       this.controller.createStagger('stagger', ownerId, ctx.frame, typeof v === 'number' ? v : 0, source);
+      return true;
+    }
+    // APPLY SHIELD — record shield value on target operator via ShieldController.
+    if (effect.object === ObjectType.SHIELD) {
+      if (!this.shieldController) return true;
+      const shieldValue = this.resolveWith(effect.with?.value, ctx);
+      if (typeof shieldValue !== 'number' || shieldValue <= 0) return true;
+      const targetOpId = this.resolveOperatorId(ownerId);
+      const expirationFrame = ctx.parentEventEndFrame ?? (ctx.frame + 10 * FPS);
+      this.shieldController.applyShield(targetOpId, ctx.frame, shieldValue, expirationFrame);
       return true;
     }
     // APPLY EVENT — create a new instance of the parent status definition on the target.
@@ -813,6 +836,7 @@ export class EventInterpretorController {
     const loadout = this.loadoutProperties?.[ctx.sourceSlotId ?? ctx.sourceOwnerId];
     const baseCtx = buildContextForSkillColumn(loadout, NounType.BATTLE_SKILL);
     if (ctx.potential != null) baseCtx.potential = ctx.potential;
+    if (ctx.suppliedParameters) baseCtx.suppliedParameters = ctx.suppliedParameters;
     return baseCtx;
   }
 
@@ -971,6 +995,37 @@ export class EventInterpretorController {
 
     const finalHeal = rawHeal * (1 + treatmentBonus) * (1 + treatmentReceivedBonus);
     this.hpController.applyHeal(targetOperatorId, ctx.frame, finalHeal);
+    return true;
+  }
+
+  private doDeal(effect: Effect, ctx: InterpretContext) {
+    // DEAL DAMAGE to OPERATOR: absorb through shield first, then reduce HP
+    if (effect.object !== NounType.DAMAGE) return true;
+    if (effect.to !== NounType.OPERATOR) return true;
+
+    const rawDamage = this.resolveWith(effect.with?.value, ctx);
+    if (typeof rawDamage !== 'number' || rawDamage <= 0) return true;
+
+    // Resolve target operators
+    const toDeterminer = (effect as unknown as Record<string, unknown>).toDeterminer as string | undefined;
+    const targetSlots = toDeterminer === DeterminerType.ALL
+      ? Object.keys(this.slotOperatorMap ?? {})
+      : [ctx.sourceSlotId ?? ctx.sourceOwnerId];
+
+    for (const slotId of targetSlots) {
+      const opId = this.resolveOperatorId(slotId);
+      let remainingDamage = rawDamage;
+
+      // Shield absorbs first
+      if (this.shieldController) {
+        remainingDamage = this.shieldController.absorbDamage(opId, ctx.frame, remainingDamage);
+      }
+
+      // Overflow damage reduces HP
+      if (remainingDamage > 0 && this.hpController) {
+        this.hpController.applyHeal(opId, ctx.frame, -remainingDamage);
+      }
+    }
     return true;
   }
 
@@ -1312,11 +1367,131 @@ export class EventInterpretorController {
       // Generic PERFORM trigger (PERFORM BATTLE_SKILL, etc.)
       this.checkReactiveTriggers(VerbType.PERFORM, event.columnId, absFrame, event.ownerId, event.id, event.enhancementType, newEntries);
 
+      // Skill-level onEntryClause: look up the OperatorSkill and execute effects
+      const operatorId = this.slotOperatorMap?.[event.ownerId];
+      const skillDef = operatorId ? getOperatorSkill(operatorId, event.id) : undefined;
+      if (skillDef?.onEntryClause?.length) {
+        const eventEnd = event.startFrame + eventDuration(event);
+        // Resolve supplied parameters from event
+        const entryParams: Record<string, number> = {};
+        const paramDefs = event.suppliedParameters;
+        if (paramDefs) {
+          const userValues = (event as { parameterValues?: Record<string, number> }).parameterValues;
+          const varyByDefs = paramDefs.VARY_BY ?? (paramDefs as unknown as { id: string; default: number }[]);
+          const defs = Array.isArray(varyByDefs) ? varyByDefs : [];
+          for (const def of defs) {
+            const rawEntryVal = userValues?.[def.id] ?? (def as { default?: number }).default ?? def.lowerRange;
+            entryParams[def.id] = rawEntryVal - def.lowerRange;
+          }
+        }
+        const hasEntryParams = Object.keys(entryParams).length > 0;
+        const entryCtx: InterpretContext = {
+          frame: absFrame,
+          sourceOwnerId: source.ownerId,
+          sourceSlotId: event.ownerId,
+          sourceSkillName: event.id,
+          potential: pot,
+          parentEventEndFrame: eventEnd,
+          ...(hasEntryParams ? { suppliedParameters: entryParams } : {}),
+        };
+        for (const clause of skillDef.onEntryClause as { conditions?: unknown[]; effects?: unknown[] }[]) {
+          if (!clause.effects?.length) continue;
+          if (clause.conditions?.length) {
+            const condCtx: ConditionContext = {
+              events: this.getAllEvents(),
+              frame: absFrame,
+              sourceOwnerId: event.ownerId,
+              potential: pot,
+              ...(hasEntryParams ? { suppliedParameters: entryParams } : {}),
+            };
+            if (!evaluateConditions(clause.conditions as unknown as import('../../dsl/semantics').Interaction[], condCtx)) continue;
+          }
+          for (const rawEffect of clause.effects) {
+            const raw = rawEffect as Record<string, unknown>;
+            const effect = { ...raw, ofObject: raw.of ?? raw.ofObject, ofDeterminer: raw.ofDeterminer } as unknown as Effect;
+            this.interpret(effect, entryCtx);
+          }
+        }
+      }
+
       return newEntries;
     }
 
     if (entry.hookType === FrameHookType.EVENT_END) {
-      // Exit hooks — stat accumulator delta removal will be wired here in Phase 3
+      // Skill-level onExitClause: look up the OperatorSkill and execute effects
+      const exitOperatorId = this.slotOperatorMap?.[event.ownerId];
+      const exitSkillDef = exitOperatorId ? getOperatorSkill(exitOperatorId, event.id) : undefined;
+      if (exitSkillDef?.onExitClause?.length) {
+        const exitCtx: InterpretContext = {
+          frame: absFrame,
+          sourceOwnerId: source.ownerId,
+          sourceSlotId: event.ownerId,
+          sourceSkillName: event.id,
+          potential: pot,
+        };
+        for (const clause of exitSkillDef.onExitClause as { conditions?: unknown[]; effects?: unknown[] }[]) {
+          if (!clause.effects?.length) continue;
+          if (clause.conditions?.length) {
+            const condCtx: ConditionContext = {
+              events: this.getAllEvents(),
+              frame: absFrame,
+              sourceOwnerId: event.ownerId,
+            };
+            if (!evaluateConditions(clause.conditions as unknown as import('../../dsl/semantics').Interaction[], condCtx)) continue;
+          }
+          for (const rawEffect of clause.effects) {
+            const raw = rawEffect as Record<string, unknown>;
+            const effect = { ...raw, ofObject: raw.of ?? raw.ofObject, ofDeterminer: raw.ofDeterminer } as unknown as Effect;
+            this.interpret(effect, exitCtx);
+          }
+        }
+      }
+      return newEntries;
+    }
+
+    // ── Segment lifecycle hooks (SEGMENT_START / SEGMENT_END) ──────────
+    if (entry.hookType === FrameHookType.SEGMENT_START || entry.hookType === FrameHookType.SEGMENT_END) {
+      const segOperatorId = this.slotOperatorMap?.[event.ownerId];
+      const segSkillDef = segOperatorId ? getOperatorSkill(segOperatorId, event.id) : undefined;
+      const segIdx = entry.segmentIndex ?? -1;
+      const segJson = (segSkillDef?.segments as unknown as Record<string, unknown>[] | undefined)?.[segIdx];
+      const clauseKey = entry.hookType === FrameHookType.SEGMENT_START ? 'onEntryClause' : 'onExitClause';
+      const segClauses = (segJson as Record<string, unknown> | undefined)?.[clauseKey] as { conditions?: unknown[]; effects?: unknown[] }[] | undefined;
+      if (segClauses?.length) {
+        // Compute segment end frame for context
+        let segStartFrame = event.startFrame;
+        for (let i = 0; i < segIdx; i++) {
+          segStartFrame += event.segments[i]?.properties.duration ?? 0;
+        }
+        const segEndFrame = segStartFrame + (event.segments[segIdx]?.properties.duration ?? 0);
+        const eventEnd = event.startFrame + eventDuration(event);
+        const segCtx: InterpretContext = {
+          frame: absFrame,
+          sourceOwnerId: source.ownerId,
+          sourceSlotId: event.ownerId,
+          sourceSkillName: event.id,
+          potential: pot,
+          parentEventEndFrame: eventEnd,
+          parentSegmentEndFrame: segEndFrame,
+        };
+        for (const clause of segClauses) {
+          if (!clause.effects?.length) continue;
+          if (clause.conditions?.length) {
+            const condCtx: ConditionContext = {
+              events: this.getAllEvents(),
+              frame: absFrame,
+              sourceOwnerId: event.ownerId,
+              potential: pot,
+            };
+            if (!evaluateConditions(clause.conditions as unknown as import('../../dsl/semantics').Interaction[], condCtx)) continue;
+          }
+          for (const rawEffect of clause.effects) {
+            const raw = rawEffect as Record<string, unknown>;
+            const effect = { ...raw, ofObject: raw.of ?? raw.ofObject, ofDeterminer: raw.ofDeterminer } as unknown as Effect;
+            this.interpret(effect, segCtx);
+          }
+        }
+      }
       return newEntries;
     }
 
@@ -1356,22 +1531,6 @@ export class EventInterpretorController {
         segStart = segEnd;
       }
 
-      const interpretCtx: InterpretContext = {
-        frame: absFrame,
-        sourceOwnerId: this.resolveOperatorId(event.ownerId),
-        sourceSlotId: event.ownerId,
-        sourceSkillName: event.id,
-        // Derived (non-skill) events carry their uid so the column-created event preserves it.
-        // Skill events don't — their frame effects create independent events (inflictions, statuses).
-        sourceEventUid: !SKILL_COLUMN_SET.has(event.columnId) ? event.uid : undefined,
-        potential: pot,
-        parentEventEndFrame: parentEventEnd,
-        parentSegmentEndFrame: parentSegEnd,
-        // Stamp damage frames for intra-frame ordering — status events created by
-        // this frame carry the key so the damage builder can exclude them.
-        sourceFrameKey: (frame.damageMultiplier || frame.dealDamage)
-          ? `${event.uid}:${si}:${fi}` : undefined,
-      };
       // Resolve supplied parameters: user-set values on event, or defaults from frame/event definitions
       const resolvedParams: Record<string, number> = {};
       const paramDefs = frame.suppliedParameters ?? event.suppliedParameters;
@@ -1380,9 +1539,24 @@ export class EventInterpretorController {
         const varyByDefs = paramDefs.VARY_BY ?? (paramDefs as unknown as { id: string; lowerRange: number }[]);
         const defs = Array.isArray(varyByDefs) ? varyByDefs : [];
         for (const def of defs) {
-          resolvedParams[def.id] = userValues?.[def.id] ?? def.lowerRange;
+          const rawVal = userValues?.[def.id] ?? def.lowerRange;
+          resolvedParams[def.id] = rawVal - def.lowerRange;
         }
       }
+      const hasSuppliedParams = Object.keys(resolvedParams).length > 0;
+      const interpretCtx: InterpretContext = {
+        frame: absFrame,
+        sourceOwnerId: this.resolveOperatorId(event.ownerId),
+        sourceSlotId: event.ownerId,
+        sourceSkillName: event.id,
+        sourceEventUid: !SKILL_COLUMN_SET.has(event.columnId) ? event.uid : undefined,
+        potential: pot,
+        parentEventEndFrame: parentEventEnd,
+        parentSegmentEndFrame: parentSegEnd,
+        sourceFrameKey: (frame.damageMultiplier || frame.dealDamage)
+          ? `${event.uid}:${si}:${fi}` : undefined,
+        ...(hasSuppliedParams ? { suppliedParameters: resolvedParams } : {}),
+      };
       const condCtx: ConditionContext = {
         events: this.getAllEvents(),
         frame: absFrame,
@@ -1460,6 +1634,14 @@ export class EventInterpretorController {
       }
     }
 
+    // ── 3e. DEAL DAMAGE triggers for enemy action frames ──────────────────
+    // Fires reactive triggers for talents like Pay the Ferric Price
+    // (ENEMY DEAL DAMAGE to THIS OPERATOR). Only enemy action events qualify —
+    // operator damage frames are the operator dealing damage TO the enemy.
+    if (event.ownerId === ENEMY_OWNER_ID && event.columnId === ENEMY_ACTION_COLUMN_ID && frame.damageElement) {
+      this.checkReactiveTriggers(VerbType.DEAL, NounType.DAMAGE, absFrame, event.ownerId, event.id, undefined, newEntries);
+    }
+
     // ── 4. PERFORM triggers from frameTypes ─────────────────────────────
     if (frame.frameTypes) {
       for (const ft of frame.frameTypes) {
@@ -1483,9 +1665,44 @@ export class EventInterpretorController {
   }
 
   /**
-   * Fire PERFORM triggers for a specific PERFORM object (FINAL_STRIKE, FINISHER, DIVE_ATTACK).
-   * Looks up the trigger index for matching defs.
+   * Check HP-threshold status defs and apply them when the condition is first met.
+   * Inline skill damage doesn't fire DEAL:DAMAGE reactive triggers, so HP
+   * thresholds are checked after every PROCESS_FRAME instead.
    */
+  private maybeApplyHpThresholdStatuses(frame: number, slotId: string, sourceSkillName: string, out: QueueFrame[]) {
+    if (!this.triggerIndex || !this.getEnemyHpPercentage) return;
+    for (const entry of this.triggerIndex.getHpThresholdDefs()) {
+      const dedupKey = `hp-threshold:${entry.def.properties.id}:${entry.operatorSlotId}`;
+      if (this.seenTriggers.has(dedupKey)) continue;
+
+      const condCtx: ConditionContext = {
+        events: this.getAllEvents(),
+        frame,
+        sourceOwnerId: entry.operatorSlotId,
+        potential: entry.potential,
+        getEnemyHpPercentage: this.getEnemyHpPercentage,
+      };
+      if (!evaluateConditions(entry.haveConditions as unknown as import('../../dsl/semantics').Interaction[], condCtx)) continue;
+
+      this.seenTriggers.add(dedupKey);
+
+      const triggerCtx: EngineTriggerContext = {
+        def: entry.def, operatorId: entry.operatorId, operatorSlotId: entry.operatorSlotId,
+        potential: entry.potential, operatorSlotMap: entry.operatorSlotMap,
+        loadoutProperties: entry.loadoutProperties,
+        haveConditions: [], triggerEffects: entry.triggerEffects,
+      };
+      out.push({
+        frame, priority: PRIORITY.ENGINE_TRIGGER, type: QueueFrameType.ENGINE_TRIGGER,
+        statusId: entry.def.properties.id, columnId: '', ownerId: entry.operatorSlotId,
+        sourceOwnerId: entry.operatorId, sourceSkillName, maxStacks: 0, durationFrames: 0,
+        operatorSlotId: entry.operatorSlotId,
+        engineTrigger: { frame, sourceOwnerId: entry.operatorId, triggerSlotId: slotId,
+          sourceSkillName, ctx: triggerCtx, isEquip: entry.isEquip ?? false },
+      });
+    }
+  }
+
   /**
    * Synchronously process a newly created status event's lifecycle clauses
    * and segment frame markers. Called inline from doApply — no queueing.
@@ -1808,7 +2025,6 @@ export class EventInterpretorController {
     // objectId is already a resolved column ID or status name — use directly for matching.
     // For FIRST_MATCH defs, group clauses and select the first matching one.
     const firstMatchGroups = new Map<string, TriggerDefEntry[]>();
-
     for (const entry of this.triggerIndex.matchEvent(verb, objectId)) {
       // Enhancement type filter: entries for enhanced/empowered variants only match
       // events with the corresponding enhancement type.

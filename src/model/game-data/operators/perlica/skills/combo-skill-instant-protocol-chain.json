@@ -210,7 +210,8 @@
   ],
   "metadata": {
     "originId": "PERLICA",
-    "icon": "skills/combo_perlica.png"
+    "icon": "skills/combo_perlica.png",
+    "dataStatus": "RECONCILED"
   },
   "clauseType": "ALL",
   "activationWindow": {

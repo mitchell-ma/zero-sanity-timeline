@@ -678,7 +678,8 @@
   ],
   "metadata": {
     "originId": "CHEN_QIANYU",
-    "icon": "skills/ult_chen_qianyu.png"
+    "icon": "skills/ult_chen_qianyu.png",
+    "dataStatus": "RECONCILED"
   },
   "clauseType": "ALL"
 }

@@ -8,6 +8,7 @@
     "description": "Talent Salty or Mild improved: Prep Ingredients buff duration +10s, max stacks +1."
   },
   "metadata": {
-    "originId": "DA_PAN"
+    "originId": "DA_PAN",
+    "dataStatus": "RECONCILED"
   }
 }

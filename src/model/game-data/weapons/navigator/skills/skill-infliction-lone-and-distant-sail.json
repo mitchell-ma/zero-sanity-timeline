@@ -41,7 +41,8 @@
     "originId": "NAVIGATOR",
     "dataSources": [
       "ENDFIELD_WIKI"
-    ]
+    ],
+    "dataStatus": "RECONCILED"
   },
   "onTriggerClause": [
     {

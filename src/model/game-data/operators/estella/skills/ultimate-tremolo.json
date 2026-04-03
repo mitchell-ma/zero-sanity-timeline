@@ -190,7 +190,8 @@
   ],
   "metadata": {
     "originId": "ESTELLA",
-    "icon": "skills/ult_estella.png"
+    "icon": "skills/ult_estella.png",
+    "dataStatus": "RECONCILED"
   },
   "clauseType": "ALL"
 }

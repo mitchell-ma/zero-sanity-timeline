@@ -40,6 +40,7 @@
     "eventCategoryType": "GEAR_SET_STATUS"
   },
   "metadata": {
-    "originId": "FRONTIERS"
+    "originId": "FRONTIERS",
+    "dataStatus": "RECONCILED"
   }
 }

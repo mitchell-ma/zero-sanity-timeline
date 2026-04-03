@@ -8,6 +8,7 @@
     "description": "Battle skill Dolly Rush improved: Consuming Corrosion now applies Physical Susceptibility and Arts Susceptibility with effects +8%."
   },
   "metadata": {
-    "originId": "ARDELIA"
+    "originId": "ARDELIA",
+    "dataStatus": "VERIFIED"
   }
 }

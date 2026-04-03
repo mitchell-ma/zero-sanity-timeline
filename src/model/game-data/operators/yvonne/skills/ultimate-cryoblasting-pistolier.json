@@ -204,7 +204,8 @@
   ],
   "metadata": {
     "originId": "YVONNE",
-    "icon": "skills/ult_yvonne.png"
+    "icon": "skills/ult_yvonne.png",
+    "dataStatus": "RECONCILED"
   },
   "clauseType": "ALL"
 }

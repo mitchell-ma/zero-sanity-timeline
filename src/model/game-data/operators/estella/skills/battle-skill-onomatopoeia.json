@@ -26,7 +26,8 @@
   ],
   "metadata": {
     "originId": "ESTELLA",
-    "icon": "skills/skill_estella.png"
+    "icon": "skills/skill_estella.png",
+    "dataStatus": "RECONCILED"
   },
   "segments": [
     {

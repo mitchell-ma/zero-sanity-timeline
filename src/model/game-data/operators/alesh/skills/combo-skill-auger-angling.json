@@ -291,7 +291,8 @@
   ],
   "metadata": {
     "originId": "ALESH",
-    "icon": "skills/combo_alesh.png"
+    "icon": "skills/combo_alesh.png",
+    "dataStatus": "RECONCILED"
   },
   "clauseType": "ALL",
   "activationWindow": {

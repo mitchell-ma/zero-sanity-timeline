@@ -6,7 +6,8 @@
           "subjectDeterminer": "THIS",
           "subject": "OPERATOR",
           "verb": "APPLY",
-          "object": "REACTION", "objectId": "SHATTER"
+          "object": "REACTION",
+          "objectId": "SHATTER"
         }
       ],
       "effects": [
@@ -22,7 +23,10 @@
   ],
   "properties": {
     "id": "COMMISERATION_TALENT",
-    "maxLevel": { "verb": "IS", "value": 2 },
+    "maxLevel": {
+      "verb": "IS",
+      "value": 2
+    },
     "name": "Commiseration (Talent)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
@@ -35,6 +39,7 @@
     "dataSources": [
       "ENDFIELD_WIKI"
     ],
-    "icon": "skills/estella_talent_1_icon.png"
+    "icon": "skills/estella_talent_1_icon.png",
+    "dataStatus": "RECONCILED"
   }
 }

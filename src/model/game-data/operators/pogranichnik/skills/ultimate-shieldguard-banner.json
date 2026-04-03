@@ -166,7 +166,8 @@
   ],
   "metadata": {
     "originId": "POGRANICHNIK",
-    "icon": "skills/ult_pogranichnik.png"
+    "icon": "skills/ult_pogranichnik.png",
+    "dataStatus": "RECONCILED"
   },
   "clauseType": "ALL"
 }

@@ -5,7 +5,7 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "STATUS", "objectId": "BUFF",
+          "object": "STATUS",
           "objectId": "POGRANICHNIK_POTENTIAL5_NEWLY_FORGED_BLADE",
           "toDeterminer": "THIS",
           "to": "OPERATOR"
@@ -22,7 +22,8 @@
     "description": "Combo skill Full Moon Slash improved: Length of cooldown {coolDown:0}s; SP recovery is increased to 1.2 times the original."
   },
   "metadata": {
-    "originId": "POGRANICHNIK"
+    "originId": "POGRANICHNIK",
+    "dataStatus": "RECONCILED"
   },
   "clauseType": "ALL"
 }

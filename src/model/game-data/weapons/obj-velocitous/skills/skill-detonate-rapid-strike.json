@@ -41,7 +41,8 @@
     "originId": "OBJ_VELOCITOUS",
     "dataSources": [
       "ENDFIELD_WIKI"
-    ]
+    ],
+    "dataStatus": "RECONCILED"
   },
   "onTriggerClause": [
     {

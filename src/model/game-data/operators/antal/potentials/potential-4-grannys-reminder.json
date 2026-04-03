@@ -5,7 +5,8 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "STAT", "objectId": "INTELLECT",
+          "object": "STAT",
+          "objectId": "INTELLECT",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
@@ -17,7 +18,8 @@
         },
         {
           "verb": "APPLY",
-          "object": "STAT", "objectId": "BASE_HP",
+          "object": "STAT",
+          "objectId": "BASE_HP",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
@@ -39,7 +41,8 @@
     "description": "Intellect +10, Max HP +{MaxHp:0%}."
   },
   "metadata": {
-    "originId": "ANTAL"
+    "originId": "ANTAL",
+    "dataStatus": "VERIFIED"
   },
   "clauseType": "ALL"
 }

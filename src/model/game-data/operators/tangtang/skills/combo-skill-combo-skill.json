@@ -208,7 +208,8 @@
   ],
   "metadata": {
     "originId": "TANGTANG",
-    "icon": "skills/combo_tangtang.png"
+    "icon": "skills/combo_tangtang.png",
+    "dataStatus": "RECONCILED"
   },
   "clauseType": "ALL",
   "activationWindow": {

@@ -344,7 +344,8 @@
   ],
   "metadata": {
     "originId": "ARDELIA",
-    "icon": "skills/combo_ardelia.png"
+    "icon": "skills/combo_ardelia.png",
+    "dataStatus": "VERIFIED"
   },
   "clauseType": "ALL",
   "activationWindow": {

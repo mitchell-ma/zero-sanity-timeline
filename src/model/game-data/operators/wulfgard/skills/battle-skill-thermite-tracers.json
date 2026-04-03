@@ -26,7 +26,8 @@
   ],
   "metadata": {
     "originId": "WULFGARD",
-    "icon": "skills/skill_wulfgard.png"
+    "icon": "skills/skill_wulfgard.png",
+    "dataStatus": "RECONCILED"
   },
   "segments": [
     {

@@ -87,6 +87,7 @@
     "originId": "WILD_WANDERER",
     "dataSources": [
       "ENDFIELD_WIKI"
-    ]
+    ],
+    "dataStatus": "RECONCILED"
   }
 }

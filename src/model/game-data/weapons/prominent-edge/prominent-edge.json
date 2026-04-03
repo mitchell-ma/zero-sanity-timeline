@@ -15,7 +15,8 @@
       "WARFARIN"
     ],
     "originId": "game",
-    "icon": "weapons/prominent_edge_icon.png"
+    "icon": "weapons/prominent_edge_icon.png",
+    "dataStatus": "RECONCILED"
   },
   "clause": [
     {

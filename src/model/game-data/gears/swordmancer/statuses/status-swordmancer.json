@@ -53,6 +53,7 @@
     "eventCategoryType": "GEAR_SET_STATUS"
   },
   "metadata": {
-    "originId": "SWORDMANCER"
+    "originId": "SWORDMANCER",
+    "dataStatus": "RECONCILED"
   }
 }

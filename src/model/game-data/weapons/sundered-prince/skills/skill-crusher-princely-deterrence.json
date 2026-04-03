@@ -29,6 +29,7 @@
     "originId": "SUNDERED_PRINCE",
     "dataSources": [
       "ENDFIELD_WIKI"
-    ]
+    ],
+    "dataStatus": "RECONCILED"
   }
 }

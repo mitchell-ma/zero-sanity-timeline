@@ -96,6 +96,8 @@ interface EventCompact {
   ti?: string;
   /** Segment origin indices from the full variant chain. Absent = full chain. */
   so?: number[];
+  /** User-selected parameter values (e.g. { ENEMY_HIT: 2 }). */
+  pv?: Record<string, number>;
 }
 
 // ── Hash helpers ────────────────────────────────────────────────────────────
@@ -713,6 +715,7 @@ function sanitizeBinaryEmbed(raw: EmbedData): EmbedData {
     if (ev.fc) compact.fc = true;
     if (ev.ti) compact.ti = sanitizeStr(ev.ti, 50) ?? undefined;
     if (ev.so) compact.so = ev.so.slice(0, 20).map(v => sanitizeNum(v, 0, 19, 0));
+    if (ev.pv && typeof ev.pv === 'object') compact.pv = ev.pv;
     evs.push(compact);
   }
 
@@ -1028,6 +1031,7 @@ export async function encodeEmbed(
     if (animSeg?.properties.duration) compact.an = animSeg.properties.duration;
 
     if (origEv?.segmentOrigin) compact.so = origEv.segmentOrigin;
+    if (origEv?.parameterValues && Object.keys(origEv.parameterValues).length > 0) compact.pv = origEv.parameterValues;
 
     embed.evs.push(compact);
   }
@@ -1240,6 +1244,15 @@ function parseAndValidate(json: string): EmbedData {
       if (so.length > 0) compact.so = so;
     }
 
+    // Parameter values
+    if (evRaw.pv && typeof evRaw.pv === 'object' && !Array.isArray(evRaw.pv)) {
+      const pv: Record<string, number> = {};
+      for (const [k, v] of Object.entries(evRaw.pv as Record<string, unknown>)) {
+        if (typeof v === 'number' && Number.isFinite(v)) pv[sanitizeStr(k, 50)!] = v;
+      }
+      if (Object.keys(pv).length > 0) compact.pv = pv;
+    }
+
     evs.push(compact);
   }
 
@@ -1425,6 +1438,7 @@ export async function decodeEmbed(
     if (compact.ti) ev.timeInteraction = compact.ti;
 
     if (compact.so) ev.segmentOrigin = compact.so;
+    if (compact.pv && typeof compact.pv === 'object') ev.parameterValues = compact.pv as Record<string, number>;
 
     events.push(ev);
   }

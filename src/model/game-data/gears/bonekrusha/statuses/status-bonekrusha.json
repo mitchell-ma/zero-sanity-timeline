@@ -45,6 +45,7 @@
     "eventCategoryType": "GEAR_SET_STATUS"
   },
   "metadata": {
-    "originId": "BONEKRUSHA"
+    "originId": "BONEKRUSHA",
+    "dataStatus": "RECONCILED"
   }
 }

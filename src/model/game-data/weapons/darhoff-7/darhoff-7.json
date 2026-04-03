@@ -14,7 +14,8 @@
       "WARFARIN"
     ],
     "originId": "game",
-    "icon": "weapons/darhoff_7_icon.png"
+    "icon": "weapons/darhoff_7_icon.png",
+    "dataStatus": "RECONCILED"
   },
   "clause": [
     {
@@ -22,7 +23,8 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "STAT", "objectId": "BASE_ATTACK",
+          "object": "STAT",
+          "objectId": "BASE_ATTACK",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {

@@ -12,7 +12,8 @@
   },
   "metadata": {
     "originId": "SNOWSHINE",
-    "icon": "skills/attack_greatsword.png"
+    "icon": "skills/attack_greatsword.png",
+    "dataStatus": "RECONCILED"
   },
   "segments": [
     {

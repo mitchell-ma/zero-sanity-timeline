@@ -8,6 +8,7 @@
     "description": "All attributes +{Str:0}."
   },
   "metadata": {
-    "originId": "LIFENG"
+    "originId": "LIFENG",
+    "dataStatus": "RECONCILED"
   }
 }

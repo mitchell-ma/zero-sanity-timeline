@@ -8,6 +8,7 @@
     "description": "Battle skill Onomatopoeia improved: Freezing sound wave range +50% and DMG Dealt +40% to the first enemy hit."
   },
   "metadata": {
-    "originId": "ESTELLA"
+    "originId": "ESTELLA",
+    "dataStatus": "RECONCILED"
   }
 }

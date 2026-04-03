@@ -8,6 +8,7 @@
     "description": "Will +{Will:0}, Electric DMG Dealt +{PulseDamageIncrease:0%}."
   },
   "metadata": {
-    "originId": "AVYWENNA"
+    "originId": "AVYWENNA",
+    "dataStatus": "RECONCILED"
   }
 }

@@ -57,6 +57,7 @@
     "originId": "DREAMS_OF_THE_STARRY_BEACH",
     "dataSources": [
       "ENDFIELD_WIKI"
-    ]
+    ],
+    "dataStatus": "RECONCILED"
   }
 }

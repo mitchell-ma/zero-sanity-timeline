@@ -58,6 +58,7 @@
     "originId": "EXEMPLAR",
     "dataSources": [
       "ENDFIELD_WIKI"
-    ]
+    ],
+    "dataStatus": "RECONCILED"
   }
 }

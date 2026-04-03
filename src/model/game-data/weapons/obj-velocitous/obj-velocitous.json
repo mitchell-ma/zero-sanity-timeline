@@ -15,7 +15,8 @@
       "WARFARIN"
     ],
     "originId": "game",
-    "icon": "weapons/obj_velocitous_icon.png"
+    "icon": "weapons/obj_velocitous_icon.png",
+    "dataStatus": "RECONCILED"
   },
   "clause": [
     {

@@ -87,6 +87,7 @@
     "originId": "DELIVERY_GUARANTEED",
     "dataSources": [
       "ENDFIELD_WIKI"
-    ]
+    ],
+    "dataStatus": "RECONCILED"
   }
 }

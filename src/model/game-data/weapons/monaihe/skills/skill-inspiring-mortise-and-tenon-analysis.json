@@ -31,7 +31,8 @@
         },
         {
           "verb": "APPLY",
-          "object": "STAT", "objectId": "ARTS_INTENSITY",
+          "object": "STAT",
+          "objectId": "ARTS_INTENSITY",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
@@ -66,6 +67,7 @@
     "originId": "MONAIHE",
     "dataSources": [
       "ENDFIELD_WIKI"
-    ]
+    ],
+    "dataStatus": "RECONCILED"
   }
 }

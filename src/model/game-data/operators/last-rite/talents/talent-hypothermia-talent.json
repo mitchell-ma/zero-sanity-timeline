@@ -44,7 +44,10 @@
   ],
   "properties": {
     "id": "HYPOTHERMIA_TALENT",
-    "maxLevel": { "verb": "IS", "value": 2 },
+    "maxLevel": {
+      "verb": "IS",
+      "value": 2
+    },
     "name": "Hypothermia (Talent)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
@@ -57,6 +60,7 @@
     "dataSources": [
       "ENDFIELD_WIKI"
     ],
-    "icon": "skills/lastrite_talent_1_icon.png"
+    "icon": "skills/lastrite_talent_1_icon.png",
+    "dataStatus": "RECONCILED"
   }
 }

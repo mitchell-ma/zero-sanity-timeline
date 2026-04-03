@@ -46,7 +46,10 @@
   ],
   "properties": {
     "id": "UNPREDICTABLE_TALENT",
-    "maxLevel": { "verb": "IS", "value": 2 },
+    "maxLevel": {
+      "verb": "IS",
+      "value": 2
+    },
     "name": "Unpredictable (Talent)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
@@ -59,6 +62,7 @@
     "dataSources": [
       "ENDFIELD_WIKI"
     ],
-    "icon": "skills/fluorite_talent_2_icon.png"
+    "icon": "skills/fluorite_talent_2_icon.png",
+    "dataStatus": "RECONCILED"
   }
 }

@@ -8,6 +8,7 @@
     "description": "Ultimate Re-Ignited Oath improved: Shield effect is multiplied by 1.2; while this shield is active, the wielder gains ATK +10%."
   },
   "metadata": {
-    "originId": "EMBER"
+    "originId": "EMBER",
+    "dataStatus": "VERIFIED"
   }
 }

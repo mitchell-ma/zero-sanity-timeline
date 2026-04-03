@@ -27,7 +27,10 @@
   ],
   "properties": {
     "id": "CRYOGENIC_EMBRITTLEMENT_TALENT",
-    "maxLevel": { "verb": "IS", "value": 2 },
+    "maxLevel": {
+      "verb": "IS",
+      "value": 2
+    },
     "name": "Cryogenic Embrittlement (Talent)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
@@ -40,6 +43,7 @@
     "dataSources": [
       "WARFARIN"
     ],
-    "icon": "skills/lastrite_talent_2_icon.png"
+    "icon": "skills/lastrite_talent_2_icon.png",
+    "dataStatus": "RECONCILED"
   }
 }

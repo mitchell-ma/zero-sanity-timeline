@@ -87,6 +87,7 @@
     "originId": "OBJ_ARTS_IDENTIFIER",
     "dataSources": [
       "ENDFIELD_WIKI"
-    ]
+    ],
+    "dataStatus": "RECONCILED"
   }
 }

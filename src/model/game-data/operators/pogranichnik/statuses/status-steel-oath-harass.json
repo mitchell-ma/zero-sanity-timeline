@@ -120,6 +120,7 @@
     "originId": "SHIELDGUARD_BANNER",
     "dataSources": [
       "ENDFIELD_WIKI"
-    ]
+    ],
+    "dataStatus": "RECONCILED"
   }
 }

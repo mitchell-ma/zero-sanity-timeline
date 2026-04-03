@@ -8,6 +8,7 @@
     "description": "While Scorching Fangs is active, triggering the battle skill's additional effects immediately resets the Scorching Fangs duration and grants other teammates Scorching Fangs with 50% of the base effects."
   },
   "metadata": {
-    "originId": "WULFGARD"
+    "originId": "WULFGARD",
+    "dataStatus": "RECONCILED"
   }
 }

@@ -13,6 +13,7 @@
     "originId": "DA_PAN",
     "dataSources": [
       "ENDFIELD_WIKI"
-    ]
+    ],
+    "dataStatus": "RECONCILED"
   }
 }

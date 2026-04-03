@@ -74,7 +74,8 @@
     "originId": "SUBDUER_OF_EVIL_P5_TALENT",
     "dataSources": [
       "ENDFIELD_WIKI"
-    ]
+    ],
+    "dataStatus": "RECONCILED"
   },
   "clauseType": "ALL"
 }

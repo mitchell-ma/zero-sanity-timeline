@@ -26,7 +26,8 @@
   ],
   "metadata": {
     "originId": "TANGTANG",
-    "icon": "skills/skill_tangtang.png"
+    "icon": "skills/skill_tangtang.png",
+    "dataStatus": "RECONCILED"
   },
   "segments": [
     {

@@ -31,7 +31,20 @@
               "left": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "value": [144, 173, 202, 230, 245, 259, 274, 288, 302, 310, 317, 324],
+                "value": [
+                  144,
+                  173,
+                  202,
+                  230,
+                  245,
+                  259,
+                  274,
+                  288,
+                  302,
+                  310,
+                  317,
+                  324
+                ],
                 "ofDeterminer": "THIS",
                 "of": "OPERATOR"
               },
@@ -40,7 +53,20 @@
                 "left": {
                   "verb": "VARY_BY",
                   "object": "SKILL_LEVEL",
-                  "value": [0.34, 0.40, 0.47, 0.54, 0.57, 0.60, 0.64, 0.67, 0.71, 0.72, 0.74, 0.76],
+                  "value": [
+                    0.34,
+                    0.4,
+                    0.47,
+                    0.54,
+                    0.57,
+                    0.6,
+                    0.64,
+                    0.67,
+                    0.71,
+                    0.72,
+                    0.74,
+                    0.76
+                  ],
                   "ofDeterminer": "THIS",
                   "of": "OPERATOR"
                 },
@@ -92,14 +118,34 @@
               "left": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "value": [0.09, 0.09, 0.09, 0.09, 0.09, 0.11, 0.11, 0.11, 0.13, 0.13, 0.13, 0.15],
+                "value": [
+                  0.09,
+                  0.09,
+                  0.09,
+                  0.09,
+                  0.09,
+                  0.11,
+                  0.11,
+                  0.11,
+                  0.13,
+                  0.13,
+                  0.13,
+                  0.15
+                ],
                 "ofDeterminer": "THIS",
                 "of": "OPERATOR"
               },
               "right": {
                 "verb": "VARY_BY",
                 "object": "POTENTIAL",
-                "value": [0, 0.05, 0.05, 0.05, 0.05, 0.05],
+                "value": [
+                  0,
+                  0.05,
+                  0.05,
+                  0.05,
+                  0.05,
+                  0.05
+                ],
                 "ofDeterminer": "THIS",
                 "of": "OPERATOR"
               }
@@ -141,6 +187,9 @@
   },
   "metadata": {
     "originId": "DISTRIBUTED_DOS",
-    "dataSources": ["ENDFIELD_WIKI"]
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ],
+    "dataStatus": "VERIFIED"
   }
 }

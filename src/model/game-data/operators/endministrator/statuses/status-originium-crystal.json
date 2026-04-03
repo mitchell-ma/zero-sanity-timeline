@@ -18,6 +18,7 @@
     "originId": "CONSTRUCTIVE_SEQUENCE",
     "dataSources": [
       "ENDFIELD_WIKI"
-    ]
+    ],
+    "dataStatus": "RECONCILED"
   }
 }

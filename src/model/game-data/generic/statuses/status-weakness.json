@@ -4,7 +4,10 @@
     "name": "Weakness",
     "to": "ENEMY",
     "stacks": {
-      "limit": { "verb": "IS", "value": 1 },
+      "limit": {
+        "verb": "IS",
+        "value": 1
+      },
       "interactionType": "RESET"
     },
     "eventType": "STATUS",
@@ -12,6 +15,7 @@
     "description": "Reduces damage dealt by enemy."
   },
   "metadata": {
-    "originId": "generic"
+    "originId": "generic",
+    "dataStatus": "RECONCILED"
   }
 }

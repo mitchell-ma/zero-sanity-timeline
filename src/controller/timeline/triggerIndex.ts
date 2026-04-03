@@ -256,6 +256,8 @@ export class TriggerIndex {
   private lifecycleIndex = new Map<string, LifecycleDefEntry>();
   /** Talent defs indexed by slot ID. */
   private talentsBySlot = new Map<string, TalentDefEntry[]>();
+  /** HP-threshold defs (evaluated inline after every PROCESS_FRAME). */
+  private hpThresholdDefs: TriggerDefEntry[] = [];
 
   // ── Lookup API ──────────────────────────────────────────────────────────
 
@@ -310,6 +312,11 @@ export class TriggerIndex {
     return events;
   }
 
+  /** Get HP-threshold defs for inline evaluation on damage frames. */
+  getHpThresholdDefs(): readonly TriggerDefEntry[] {
+    return this.hpThresholdDefs;
+  }
+
   // ── Build ───────────────────────────────────────────────────────────────
 
   static build(
@@ -349,6 +356,29 @@ export class TriggerIndex {
       const slotId = operatorSlotMap[opId];
       if (!slotId) continue;
       idx.processDefsForSlot(slotId, opId, defs, false, loadoutProperties, operatorSlotMap, registeredEvents);
+    }
+
+    // Process operator skill onTriggerClause defs
+    for (const opId of getAllOperatorIds()) {
+      const skills = getOperatorSkills(opId);
+      if (!skills) continue;
+      const slotId = operatorSlotMap[opId];
+      if (!slotId) continue;
+      const skillTriggerDefs: StatusEventDef[] = [];
+      skills.forEach((skill) => {
+        if (!skill.onTriggerClause?.length) return;
+        // Wrap skill onTriggerClause into a pseudo-StatusEventDef so processDefsForSlot can index it
+        skillTriggerDefs.push({
+          properties: {
+            id: skill.id,
+            eventCategoryType: skill.eventCategoryType,
+          },
+          onTriggerClause: skill.onTriggerClause as unknown as StatusEventDef['onTriggerClause'],
+        } as unknown as StatusEventDef);
+      });
+      if (skillTriggerDefs.length) {
+        idx.processDefsForSlot(slotId, opId, skillTriggerDefs, false, loadoutProperties, operatorSlotMap, registeredEvents);
+      }
     }
 
     // Process weapon trigger defs (weapon skill triggers)
@@ -552,6 +582,33 @@ export class TriggerIndex {
           }
         }
         if (!primaryVerb) continue;
+
+        // HAVE-only clauses with HP PERCENTAGE: collect separately for inline
+        // evaluation after every PROCESS_FRAME (HP changes from cumulative damage,
+        // and inline skill damage doesn't fire DEAL:DAMAGE reactive triggers).
+        if (primaryVerb === VerbType.HAVE && clause.conditions.some((c: Predicate) => {
+          if (c.object !== NounType.HP) return false;
+          const w = (c as unknown as Record<string, unknown>).with as Record<string, unknown> | undefined;
+          const v = w?.value as Record<string, unknown> | undefined;
+          return v?.unit === UnitType.PERCENTAGE;
+        })) {
+          this.hpThresholdDefs.push({
+            def,
+            operatorId,
+            operatorSlotId: slotId,
+            potential,
+            operatorSlotMap: opSlotMap,
+            loadoutProperties: props,
+            isEquip,
+            primaryVerb: VerbType.HAVE,
+            primaryCondition: clause.conditions[0],
+            secondaryConditions: [],
+            haveConditions: clause.conditions as Predicate[],
+            triggerEffects: clause.effects,
+            clauseIndex: ci,
+          });
+          continue;
+        }
 
         let primaryCond = clause.conditions.find(c => c.verb === primaryVerb)!;
         const rawDeferredConds = clause.conditions.filter((c: Predicate) =>

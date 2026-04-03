@@ -12,7 +12,8 @@
   },
   "metadata": {
     "originId": "DA_PAN",
-    "icon": "skills/attack_greatsword.png"
+    "icon": "skills/attack_greatsword.png",
+    "dataStatus": "RECONCILED"
   },
   "segments": [
     {

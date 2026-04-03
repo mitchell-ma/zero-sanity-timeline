@@ -47,7 +47,8 @@
     "originId": "FINE_COOKING_POTENTIAL",
     "dataSources": [
       "ENDFIELD_WIKI"
-    ]
+    ],
+    "dataStatus": "RECONCILED"
   },
   "clauseType": "ALL"
 }

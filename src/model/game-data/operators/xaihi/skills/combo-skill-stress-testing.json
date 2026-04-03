@@ -213,7 +213,8 @@
   ],
   "metadata": {
     "originId": "XAIHI",
-    "icon": "skills/combo_xaihi.png"
+    "icon": "skills/combo_xaihi.png",
+    "dataStatus": "VERIFIED"
   },
   "clauseType": "ALL",
   "activationWindow": {

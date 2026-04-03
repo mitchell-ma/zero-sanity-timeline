@@ -39,7 +39,8 @@
     "originId": "BARRAGE_OF_TECHNOLOGY_TALENT",
     "dataSources": [
       "ENDFIELD_WIKI"
-    ]
+    ],
+    "dataStatus": "RECONCILED"
   },
   "clauseType": "ALL"
 }

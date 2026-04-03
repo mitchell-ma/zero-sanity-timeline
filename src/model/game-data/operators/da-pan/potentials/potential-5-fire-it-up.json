@@ -8,6 +8,7 @@
     "description": "Battle skill FLIP DA WOK! improved: If the skill hits only one enemy, apply 1 more stack of Vulnerability on the target. Effect only triggers once every 45s."
   },
   "metadata": {
-    "originId": "DA_PAN"
+    "originId": "DA_PAN",
+    "dataStatus": "RECONCILED"
   }
 }

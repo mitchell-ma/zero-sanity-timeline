@@ -26,7 +26,8 @@
   ],
   "metadata": {
     "originId": "YVONNE",
-    "icon": "skills/skill_yvonne.png"
+    "icon": "skills/skill_yvonne.png",
+    "dataStatus": "RECONCILED"
   },
   "segments": [
     {

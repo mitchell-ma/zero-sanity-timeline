@@ -8,6 +8,7 @@
     "description": "Combo skill Distortion improved: Physical Susceptibility duration +3s."
   },
   "metadata": {
-    "originId": "ESTELLA"
+    "originId": "ESTELLA",
+    "dataStatus": "RECONCILED"
   }
 }

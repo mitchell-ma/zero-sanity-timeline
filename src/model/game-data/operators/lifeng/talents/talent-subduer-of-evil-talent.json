@@ -42,7 +42,10 @@
   ],
   "properties": {
     "id": "SUBDUER_OF_EVIL_TALENT",
-    "maxLevel": { "verb": "IS", "value": 2 },
+    "maxLevel": {
+      "verb": "IS",
+      "value": 2
+    },
     "name": "Subduer of Evil (Talent)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
@@ -55,6 +58,7 @@
     "dataSources": [
       "ENDFIELD_WIKI"
     ],
-    "icon": "skills/lifeng_talent_2_icon.png"
+    "icon": "skills/lifeng_talent_2_icon.png",
+    "dataStatus": "RECONCILED"
   }
 }

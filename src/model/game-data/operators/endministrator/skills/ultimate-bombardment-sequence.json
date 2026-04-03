@@ -190,7 +190,8 @@
   ],
   "metadata": {
     "originId": "ENDMINISTRATOR",
-    "icon": "skills/ult_endministrator.png"
+    "icon": "skills/ult_endministrator.png",
+    "dataStatus": "RECONCILED"
   },
   "clauseType": "ALL"
 }

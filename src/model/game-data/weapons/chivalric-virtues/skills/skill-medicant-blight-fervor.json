@@ -62,6 +62,7 @@
     "originId": "CHIVALRIC_VIRTUES",
     "dataSources": [
       "ENDFIELD_WIKI"
-    ]
+    ],
+    "dataStatus": "RECONCILED"
   }
 }

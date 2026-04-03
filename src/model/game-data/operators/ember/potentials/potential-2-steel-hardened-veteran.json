@@ -8,6 +8,7 @@
     "description": "Strength +{Str:0}, Will +{Will:0}."
   },
   "metadata": {
-    "originId": "EMBER"
+    "originId": "EMBER",
+    "dataStatus": "VERIFIED"
   }
 }

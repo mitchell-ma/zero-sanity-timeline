@@ -479,6 +479,7 @@
   },
   "metadata": {
     "originId": "AVYWENNA",
-    "icon": "skills/attack_polearm.png"
+    "icon": "skills/attack_polearm.png",
+    "dataStatus": "RECONCILED"
   }
 }

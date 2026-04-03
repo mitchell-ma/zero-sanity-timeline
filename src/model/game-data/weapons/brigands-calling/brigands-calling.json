@@ -15,7 +15,8 @@
       "WARFARIN"
     ],
     "originId": "game",
-    "icon": "weapons/brigands_calling_icon.png"
+    "icon": "weapons/brigands_calling_icon.png",
+    "dataStatus": "RECONCILED"
   },
   "clause": [
     {

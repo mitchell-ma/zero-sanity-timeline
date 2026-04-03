@@ -60,6 +60,7 @@
     "originId": "OPUS_ETCH_FIGURE",
     "dataSources": [
       "WARFARIN"
-    ]
+    ],
+    "dataStatus": "RECONCILED"
   }
 }

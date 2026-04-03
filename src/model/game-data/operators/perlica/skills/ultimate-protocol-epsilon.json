@@ -174,7 +174,8 @@
   ],
   "metadata": {
     "originId": "PERLICA",
-    "icon": "skills/ult_perlica.png"
+    "icon": "skills/ult_perlica.png",
+    "dataStatus": "RECONCILED"
   },
   "clauseType": "ALL"
 }

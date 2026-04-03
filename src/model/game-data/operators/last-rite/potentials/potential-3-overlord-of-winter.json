@@ -8,6 +8,7 @@
     "description": "Combo skill Winter's Devourer and ultimate Vigil Services improved: DMG multiplier increased to 1.15 times the original."
   },
   "metadata": {
-    "originId": "LAST_RITE"
+    "originId": "LAST_RITE",
+    "dataStatus": "RECONCILED"
   }
 }

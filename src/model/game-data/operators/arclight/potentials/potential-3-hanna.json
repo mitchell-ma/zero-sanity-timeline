@@ -8,6 +8,7 @@
     "description": "Talent Wildland Trekker improved: DMG Boost effect increased to 1.3 times the original."
   },
   "metadata": {
-    "originId": "ARCLIGHT"
+    "originId": "ARCLIGHT",
+    "dataStatus": "RECONCILED"
   }
 }

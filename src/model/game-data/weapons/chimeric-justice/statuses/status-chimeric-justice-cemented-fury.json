@@ -5,7 +5,8 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "STAT", "objectId": "CRITICAL_RATE",
+          "object": "STAT",
+          "objectId": "CRITICAL_RATE",
           "with": {
             "value": {
               "verb": "VARY_BY",
@@ -80,6 +81,7 @@
     "originId": "CHIMERIC_JUSTICE",
     "dataSources": [
       "ENDFIELD_WIKI"
-    ]
+    ],
+    "dataStatus": "RECONCILED"
   }
 }

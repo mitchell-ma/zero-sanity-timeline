@@ -8,6 +8,7 @@
     "description": "Battle skill Saturated Defense improved: Successfully retaliating an enemy attack returns 10 SP."
   },
   "metadata": {
-    "originId": "SNOWSHINE"
+    "originId": "SNOWSHINE",
+    "dataStatus": "RECONCILED"
   }
 }

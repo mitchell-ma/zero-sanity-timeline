@@ -39,7 +39,10 @@
           "object": "INFLICTION",
           "objectId": "VULNERABLE",
           "cardinalityConstraint": "EXACTLY",
-          "value": { "verb": "IS", "value": 4 }
+          "value": {
+            "verb": "IS",
+            "value": 4
+          }
         }
       ],
       "effects": [
@@ -66,6 +69,7 @@
     "originId": "game",
     "dataSources": [
       "WARFARIN"
-    ]
+    ],
+    "dataStatus": "RECONCILED"
   }
 }

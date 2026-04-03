@@ -215,7 +215,8 @@
   ],
   "metadata": {
     "originId": "CHEN_QIANYU",
-    "icon": "skills/combo_chen_qianyu.png"
+    "icon": "skills/combo_chen_qianyu.png",
+    "dataStatus": "RECONCILED"
   },
   "clauseType": "ALL",
   "activationWindow": {

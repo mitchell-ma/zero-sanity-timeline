@@ -32,6 +32,7 @@ import { collectNoGainWindowsForEvent } from './ultimateEnergyController';
 import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../slot/commonSlotController';
 import GENERAL_MECHANICS from '../../model/game-data/generalMechanics.json';
 import { getAllOperatorStatuses } from '../gameDataStore';
+import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from '../calculation/valueResolver';
 import { allocInputEvent } from './objectPool';
 import type { ColumnHost, EventSource, AddOptions, ConsumeOptions } from './columns/eventColumn';
 import { ColumnRegistry } from './columns/columnRegistry';
@@ -275,6 +276,19 @@ export class DerivedEventController implements ColumnHost {
     }
   }
 
+  /** Build a ValueResolutionContext with suppliedParameters for runtime VARY_BY resolution. */
+  private buildUltimateEnergyValueContext(ev: TimelineEvent) {
+    const resolved: Record<string, number> = {};
+    const defs = ev.suppliedParameters?.VARY_BY;
+    if (defs && ev.parameterValues) {
+      for (const d of defs) {
+        const raw = ev.parameterValues[d.id] ?? d.lowerRange;
+        resolved[d.id] = raw - d.lowerRange;
+      }
+    }
+    return { ...DEFAULT_VALUE_CONTEXT, suppliedParameters: resolved };
+  }
+
   /**
    * Notify SP and UE controllers about resource effects on a newly registered event.
    * Called per-event after extension and frame position computation in pass 2.
@@ -318,7 +332,12 @@ export class DerivedEventController implements ColumnHost {
       if (ev.columnId === NounType.COMBO_SKILL) {
         for (const seg of ev.segments) {
           for (const f of seg.frames ?? []) {
-            const selfGain = f.gaugeGain ?? 0;
+            // Resolve UE gain: re-resolve raw ValueNode with suppliedParameters when available
+            let selfGain = f.gaugeGain ?? 0;
+            if (f.ultimateEnergyGainNode && ev.parameterValues) {
+              const ctx = this.buildUltimateEnergyValueContext(ev);
+              selfGain = resolveValueNode(f.ultimateEnergyGainNode, ctx);
+            }
             const teamGain = f.teamGaugeGain ?? 0;
             if ((selfGain > 0 || teamGain > 0) && f.absoluteFrame != null) {
               this.ueController.addGaugeGain(f.absoluteFrame, ev.ownerId, selfGain, teamGain);

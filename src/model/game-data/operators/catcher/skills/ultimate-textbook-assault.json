@@ -494,7 +494,8 @@
   ],
   "metadata": {
     "originId": "CATCHER",
-    "icon": "skills/ult_catcher.png"
+    "icon": "skills/ult_catcher.png",
+    "dataStatus": "RECONCILED"
   },
   "clauseType": "ALL"
 }

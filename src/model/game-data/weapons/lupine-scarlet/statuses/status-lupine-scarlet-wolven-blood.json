@@ -114,6 +114,7 @@
     "originId": "LUPINE_SCARLET",
     "dataSources": [
       "WARFARIN"
-    ]
+    ],
+    "dataStatus": "RECONCILED"
   }
 }

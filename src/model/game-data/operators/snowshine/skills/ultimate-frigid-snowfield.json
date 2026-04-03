@@ -165,7 +165,8 @@
   ],
   "metadata": {
     "originId": "SNOWSHINE",
-    "icon": "skills/ult_snowshine.png"
+    "icon": "skills/ult_snowshine.png",
+    "dataStatus": "RECONCILED"
   },
   "clauseType": "ALL"
 }

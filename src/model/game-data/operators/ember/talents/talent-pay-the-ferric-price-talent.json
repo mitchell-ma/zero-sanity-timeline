@@ -5,6 +5,7 @@
         {
           "subject": "ENEMY",
           "verb": "DEAL",
+          "objectQualifier": "ANY",
           "object": "DAMAGE",
           "toDeterminer": "THIS",
           "to": "OPERATOR"
@@ -13,20 +14,63 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "STATUS",
-          "objectId": "PAY_THE_FERRIC_PRICE",
+          "object": "EVENT",
+          "objectDeterminer": "THIS",
           "toDeterminer": "THIS",
           "to": "OPERATOR"
         }
       ]
     }
   ],
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STAT",
+          "objectId": "ATTACK_BONUS",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "VARY_BY",
+              "object": "TALENT_LEVEL",
+              "value": [
+                0.06,
+                0.09
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            }
+          }
+        }
+      ]
+    }
+  ],
   "properties": {
-    "id": "PAY_THE_FERRIC_PRICE_TALENT",
-    "maxLevel": { "verb": "IS", "value": 2 },
-    "name": "Pay the Ferric Price (Talent)",
+    "id": "PAY_THE_FERRIC_PRICE",
+    "maxLevel": {
+      "verb": "IS",
+      "value": 2
+    },
+    "name": "Pay the Ferric Price",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": 7
+      },
+      "unit": "SECOND"
+    },
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 3
+      },
+      "interactionType": "RESET"
+    },
     "eventType": "STATUS",
     "eventCategoryType": "TALENT",
     "description": "When Ember receives DMG from the enemy, she gains ATK +{attack:0%} for {duration:0}s. This effect can reach 3 stacks."
@@ -36,6 +80,7 @@
     "dataSources": [
       "ENDFIELD_WIKI"
     ],
-    "icon": "skills/ember_talent_2_icon.png"
+    "icon": "skills/ember_talent_2_icon.png",
+    "dataStatus": "VERIFIED"
   }
 }

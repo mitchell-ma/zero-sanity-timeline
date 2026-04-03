@@ -1,7 +1,10 @@
 {
   "properties": {
     "id": "RIOT_BRINGER_TALENT",
-    "maxLevel": { "verb": "IS", "value": 2 },
+    "maxLevel": {
+      "verb": "IS",
+      "value": 2
+    },
     "name": "Riot Bringer (Talent)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
@@ -49,6 +52,7 @@
       "WARFARIN",
       "ENDFIELD_WIKI"
     ],
-    "icon": "skills/tangtang_talent_2_icon.png"
+    "icon": "skills/tangtang_talent_2_icon.png",
+    "dataStatus": "RECONCILED"
   }
 }

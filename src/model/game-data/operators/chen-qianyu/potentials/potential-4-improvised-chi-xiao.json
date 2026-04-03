@@ -1,6 +1,6 @@
 {
   "properties": {
-    "id": "CHEN-QIANYU_POTENTIAL_4",
+    "id": "CHEN_QIANYU_POTENTIAL_4",
     "name": "Improvised Chi Xiao",
     "level": 4,
     "eventType": "POTENTIAL_EVENT",
@@ -8,6 +8,7 @@
     "description": "Ultimate Blade Gale improved: Ultimate Energy cost -15%."
   },
   "metadata": {
-    "originId": "CHEN-QIANYU"
+    "originId": "CHEN_QIANYU",
+    "dataStatus": "RECONCILED"
   }
 }

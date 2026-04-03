@@ -19,7 +19,8 @@
           "effects": [
             {
               "verb": "APPLY",
-              "object": "STATUS", "objectId": "SLOW",
+              "object": "STATUS",
+              "objectId": "SLOW",
               "to": "ENEMY",
               "with": {
                 "value": {
@@ -43,10 +44,18 @@
                     "verb": "VARY_BY",
                     "object": "SKILL_LEVEL",
                     "value": [
-                      0.18, 0.18, 0.18,
-                      0.22, 0.22, 0.22,
-                      0.26, 0.26, 0.26,
-                      0.30, 0.30, 0.30
+                      0.18,
+                      0.18,
+                      0.18,
+                      0.22,
+                      0.22,
+                      0.22,
+                      0.26,
+                      0.26,
+                      0.26,
+                      0.3,
+                      0.3,
+                      0.3
                     ],
                     "ofDeterminer": "SOURCE",
                     "of": "OPERATOR"
@@ -59,10 +68,18 @@
                         "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
-                          0.018, 0.018, 0.018,
-                          0.022, 0.022, 0.022,
-                          0.026, 0.026, 0.026,
-                          0.030, 0.030, 0.030
+                          0.018,
+                          0.018,
+                          0.018,
+                          0.022,
+                          0.022,
+                          0.022,
+                          0.026,
+                          0.026,
+                          0.026,
+                          0.03,
+                          0.03,
+                          0.03
                         ],
                         "ofDeterminer": "SOURCE",
                         "of": "OPERATOR"
@@ -70,7 +87,14 @@
                       "right": {
                         "verb": "VARY_BY",
                         "object": "POTENTIAL",
-                        "value": [1, 1, 2, 2, 2, 2],
+                        "value": [
+                          1,
+                          1,
+                          2,
+                          2,
+                          2,
+                          2
+                        ],
                         "ofDeterminer": "SOURCE",
                         "of": "OPERATOR"
                       }
@@ -94,7 +118,14 @@
                         "right": {
                           "verb": "VARY_BY",
                           "object": "POTENTIAL",
-                          "value": [0, 0, 1, 1, 1, 1],
+                          "value": [
+                            0,
+                            0,
+                            1,
+                            1,
+                            1,
+                            1
+                          ],
                           "ofDeterminer": "SOURCE",
                           "of": "OPERATOR"
                         }
@@ -126,7 +157,11 @@
           "objectId": "PHYSICAL",
           "object": "STATUS",
           "of": "ENEMY",
-          "until": { "object": "END", "of": "SEGMENT", "ofDeterminer": "THIS" }
+          "until": {
+            "object": "END",
+            "of": "SEGMENT",
+            "ofDeterminer": "THIS"
+          }
         }
       ]
     }
@@ -149,7 +184,11 @@
           "objectId": "PHYSICAL",
           "object": "STATUS",
           "of": "ENEMY",
-          "until": { "object": "END", "of": "SEGMENT", "ofDeterminer": "THIS" }
+          "until": {
+            "object": "END",
+            "of": "SEGMENT",
+            "ofDeterminer": "THIS"
+          }
         }
       ]
     }
@@ -180,6 +219,7 @@
     "originId": "GRAVITY_FIELD",
     "dataSources": [
       "ENDFIELD_WIKI"
-    ]
+    ],
+    "dataStatus": "RECONCILED"
   }
 }

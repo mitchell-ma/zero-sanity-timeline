@@ -58,6 +58,7 @@
     "originId": "BRIGANDS_CALLING",
     "dataSources": [
       "WARFARIN"
-    ]
+    ],
+    "dataStatus": "RECONCILED"
   }
 }

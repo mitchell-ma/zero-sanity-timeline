@@ -24,7 +24,8 @@
         },
         {
           "verb": "APPLY",
-          "object": "STAT", "objectId": "ARTS_INTENSITY",
+          "object": "STAT",
+          "objectId": "ARTS_INTENSITY",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
@@ -70,7 +71,8 @@
     "originId": "THE_LIVING_BANNER_TALENT",
     "dataSources": [
       "ENDFIELD_WIKI"
-    ]
+    ],
+    "dataStatus": "RECONCILED"
   },
   "clauseType": "ALL"
 }

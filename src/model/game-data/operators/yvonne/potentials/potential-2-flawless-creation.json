@@ -8,6 +8,7 @@
     "description": "Intellect +20, Critical Rate +{CriticalRate:0%}."
   },
   "metadata": {
-    "originId": "YVONNE"
+    "originId": "YVONNE",
+    "dataStatus": "RECONCILED"
   }
 }

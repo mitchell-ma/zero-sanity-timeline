@@ -79,6 +79,7 @@
     "originId": "RAPID_ASCENT",
     "dataSources": [
       "ENDFIELD_WIKI"
-    ]
+    ],
+    "dataStatus": "RECONCILED"
   }
 }

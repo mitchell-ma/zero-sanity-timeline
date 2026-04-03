@@ -5,7 +5,8 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "STAT", "objectId": "DEFENSE",
+          "object": "STAT",
+          "objectId": "DEFENSE",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
@@ -26,7 +27,10 @@
   ],
   "properties": {
     "id": "RESILIENT_DEFENSE_TALENT",
-    "maxLevel": { "verb": "IS", "value": 2 },
+    "maxLevel": {
+      "verb": "IS",
+      "value": 2
+    },
     "name": "Resilient Defense (Talent)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
@@ -40,7 +44,8 @@
       "WARFARIN",
       "ENDFIELD_WIKI"
     ],
-    "icon": "skills/catcher_talent_1_icon.png"
+    "icon": "skills/catcher_talent_1_icon.png",
+    "dataStatus": "RECONCILED"
   },
   "clauseType": "ALL"
 }

@@ -67,6 +67,7 @@
     "originId": "EMINENT_REPUTE",
     "dataSources": [
       "ENDFIELD_WIKI"
-    ]
+    ],
+    "dataStatus": "RECONCILED"
   }
 }

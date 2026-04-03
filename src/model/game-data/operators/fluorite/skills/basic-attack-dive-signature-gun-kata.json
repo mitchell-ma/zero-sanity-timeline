@@ -12,7 +12,8 @@
   },
   "metadata": {
     "originId": "FLUORITE",
-    "icon": "skills/attack_guns.png"
+    "icon": "skills/attack_guns.png",
+    "dataStatus": "RECONCILED"
   },
   "segments": [
     {

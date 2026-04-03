@@ -2,7 +2,10 @@
   "clauseType": "ALL",
   "properties": {
     "id": "NICKS_AND_SCRATCHES_TALENT",
-    "maxLevel": { "verb": "IS", "value": 2 },
+    "maxLevel": {
+      "verb": "IS",
+      "value": 2
+    },
     "name": "Nicks and Scratches (Talent)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
@@ -14,6 +17,7 @@
     "originId": "ROSSI",
     "dataSources": [
       "ENDFIELD_WIKI"
-    ]
+    ],
+    "dataStatus": "VERIFIED"
   }
 }

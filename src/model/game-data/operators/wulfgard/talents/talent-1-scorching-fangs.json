@@ -27,7 +27,8 @@
     "dataSources": [
       "WARFARIN"
     ],
-    "icon": "skills/wulfgard_talent_1_icon.png"
+    "icon": "skills/wulfgard_talent_1_icon.png",
+    "dataStatus": "RECONCILED"
   },
   "onTriggerClause": [
     {

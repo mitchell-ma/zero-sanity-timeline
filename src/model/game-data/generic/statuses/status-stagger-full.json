@@ -22,6 +22,7 @@
     "description": "Full stagger break. Enemy is staggered and takes increased damage."
   },
   "metadata": {
-    "originId": "game"
+    "originId": "game",
+    "dataStatus": "RECONCILED"
   }
 }

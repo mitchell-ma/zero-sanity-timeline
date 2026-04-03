@@ -6,7 +6,8 @@
           "subjectDeterminer": "THIS",
           "subject": "OPERATOR",
           "verb": "CONSUME",
-          "object": "STATUS", "objectId": "ORIGINIUM_CRYSTAL",
+          "object": "STATUS",
+          "objectId": "ORIGINIUM_CRYSTAL",
           "with": {
             "stacks": "MAX"
           }
@@ -41,7 +42,8 @@
           "subjectDeterminer": "THIS",
           "subject": "OPERATOR",
           "verb": "CONSUME",
-          "object": "STATUS", "objectId": "ORIGINIUM_CRYSTAL",
+          "object": "STATUS",
+          "objectId": "ORIGINIUM_CRYSTAL",
           "with": {
             "stacks": "MAX"
           }
@@ -80,7 +82,10 @@
   ],
   "properties": {
     "id": "ESSENCE_DISINTEGRATION_TALENT",
-    "maxLevel": { "verb": "IS", "value": 2 },
+    "maxLevel": {
+      "verb": "IS",
+      "value": 2
+    },
     "name": "Essence Disintegration (Talent)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
@@ -93,6 +98,7 @@
     "dataSources": [
       "ENDFIELD_WIKI"
     ],
-    "icon": "skills/endministrator_talent_1_icon.png"
+    "icon": "skills/endministrator_talent_1_icon.png",
+    "dataStatus": "RECONCILED"
   }
 }

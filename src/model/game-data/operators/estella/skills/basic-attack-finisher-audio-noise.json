@@ -12,7 +12,8 @@
   },
   "metadata": {
     "originId": "ESTELLA",
-    "icon": "skills/attack_polearm.png"
+    "icon": "skills/attack_polearm.png",
+    "dataStatus": "RECONCILED"
   },
   "segments": [
     {

@@ -83,6 +83,7 @@
     "originId": "COHESIVE_TRACTION",
     "dataSources": [
       "ENDFIELD_WIKI"
-    ]
+    ],
+    "dataStatus": "RECONCILED"
   }
 }

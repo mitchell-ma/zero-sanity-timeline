@@ -62,6 +62,7 @@
     "originId": "VALIANT",
     "dataSources": [
       "ENDFIELD_WIKI"
-    ]
+    ],
+    "dataStatus": "RECONCILED"
   }
 }

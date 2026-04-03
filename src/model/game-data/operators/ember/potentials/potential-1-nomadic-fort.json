@@ -8,6 +8,7 @@
     "description": "Talent Inflamed for the Assault improved: Protection effect +20%; hitting an enemy extends the duration by 1.5s."
   },
   "metadata": {
-    "originId": "EMBER"
+    "originId": "EMBER",
+    "dataStatus": "VERIFIED"
   }
 }

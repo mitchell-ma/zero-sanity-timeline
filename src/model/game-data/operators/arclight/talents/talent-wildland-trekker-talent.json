@@ -1,7 +1,10 @@
 {
   "properties": {
     "id": "WILDLAND_TREKKER_TALENT",
-    "maxLevel": { "verb": "IS", "value": 2 },
+    "maxLevel": {
+      "verb": "IS",
+      "value": 2
+    },
     "name": "Wildland Trekker (Talent)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
@@ -14,6 +17,7 @@
     "dataSources": [
       "WARFARIN"
     ],
-    "icon": "skills/arclight_talent_1_icon.png"
+    "icon": "skills/arclight_talent_1_icon.png",
+    "dataStatus": "RECONCILED"
   }
 }

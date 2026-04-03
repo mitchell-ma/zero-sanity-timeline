@@ -13,7 +13,20 @@
             "value": {
               "verb": "VARY_BY",
               "object": "SKILL_LEVEL",
-              "value": [0.15, 0.15, 0.15, 0.17, 0.17, 0.17, 0.19, 0.19, 0.21, 0.21, 0.23, 0.25],
+              "value": [
+                0.15,
+                0.15,
+                0.15,
+                0.17,
+                0.17,
+                0.17,
+                0.19,
+                0.19,
+                0.21,
+                0.21,
+                0.23,
+                0.25
+              ],
               "ofDeterminer": "THIS",
               "of": "OPERATOR"
             }
@@ -29,7 +42,20 @@
             "value": {
               "verb": "VARY_BY",
               "object": "SKILL_LEVEL",
-              "value": [0.30, 0.30, 0.30, 0.34, 0.34, 0.34, 0.38, 0.38, 0.42, 0.42, 0.46, 0.50],
+              "value": [
+                0.3,
+                0.3,
+                0.3,
+                0.34,
+                0.34,
+                0.34,
+                0.38,
+                0.38,
+                0.42,
+                0.42,
+                0.46,
+                0.5
+              ],
               "ofDeterminer": "THIS",
               "of": "OPERATOR"
             }
@@ -66,7 +92,8 @@
     "dataSources": [
       "ENDFIELD_WIKI",
       "WARFARIN"
-    ]
+    ],
+    "dataStatus": "VERIFIED"
   },
   "clauseType": "ALL"
 }

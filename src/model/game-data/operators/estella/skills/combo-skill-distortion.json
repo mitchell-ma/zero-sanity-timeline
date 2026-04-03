@@ -308,7 +308,8 @@
   ],
   "metadata": {
     "originId": "ESTELLA",
-    "icon": "skills/combo_estella.png"
+    "icon": "skills/combo_estella.png",
+    "dataStatus": "RECONCILED"
   },
   "clauseType": "ALL",
   "activationWindow": {

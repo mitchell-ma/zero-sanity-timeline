@@ -15,7 +15,8 @@
       "WARFARIN"
     ],
     "originId": "game",
-    "icon": "weapons/opus_the_living_icon.png"
+    "icon": "weapons/opus_the_living_icon.png",
+    "dataStatus": "RECONCILED"
   },
   "clause": [
     {

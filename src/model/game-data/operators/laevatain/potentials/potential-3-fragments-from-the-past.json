@@ -8,6 +8,7 @@
     "description": "Battle skill Smouldering Fire improved: Duration of the Combustion applied by the skill is increased by {duration-1:0%}. DMG of the Combustion applied by the skills is increased to 1.5 times the original."
   },
   "metadata": {
-    "originId": "LAEVATAIN"
+    "originId": "LAEVATAIN",
+    "dataStatus": "VERIFIED"
   }
 }

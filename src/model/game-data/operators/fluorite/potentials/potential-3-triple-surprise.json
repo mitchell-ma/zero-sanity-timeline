@@ -8,6 +8,7 @@
     "description": "Battle skill Tiny Surprise improved: After Improvised Explosive explodes, the slow effect is applied to all enemies hit and lasts 6s."
   },
   "metadata": {
-    "originId": "FLUORITE"
+    "originId": "FLUORITE",
+    "dataStatus": "RECONCILED"
   }
 }

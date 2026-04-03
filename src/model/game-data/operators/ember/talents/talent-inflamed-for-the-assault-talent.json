@@ -1,47 +1,10 @@
 {
-  "onTriggerClause": [
-    {
-      "conditions": [
-        {
-          "subjectDeterminer": "THIS",
-          "subject": "OPERATOR",
-          "verb": "PERFORM",
-          "object": "STATUS", "objectId": "FORWARD_MARCH"
-        }
-      ],
-      "effects": [
-        {
-          "verb": "APPLY",
-          "object": "STATUS",
-          "objectId": "INFLAMED_FOR_THE_ASSAULT",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR"
-        }
-      ]
-    },
-    {
-      "conditions": [
-        {
-          "subjectDeterminer": "THIS",
-          "subject": "OPERATOR",
-          "verb": "PERFORM",
-          "object": "STATUS", "objectId": "FRONTLINE_SUPPORT"
-        }
-      ],
-      "effects": [
-        {
-          "verb": "APPLY",
-          "object": "STATUS",
-          "objectId": "INFLAMED_FOR_THE_ASSAULT",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR"
-        }
-      ]
-    }
-  ],
   "properties": {
     "id": "INFLAMED_FOR_THE_ASSAULT_TALENT",
-    "maxLevel": { "verb": "IS", "value": 2 },
+    "maxLevel": {
+      "verb": "IS",
+      "value": 2
+    },
     "name": "Inflamed for the Assault (Talent)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
@@ -54,6 +17,7 @@
     "dataSources": [
       "ENDFIELD_WIKI"
     ],
-    "icon": "skills/ember_talent_1_icon.png"
+    "icon": "skills/ember_talent_1_icon.png",
+    "dataStatus": "VERIFIED"
   }
 }

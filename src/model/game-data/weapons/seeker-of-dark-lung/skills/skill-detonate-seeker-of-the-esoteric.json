@@ -62,6 +62,7 @@
     "originId": "SEEKER_OF_DARK_LUNG",
     "dataSources": [
       "ENDFIELD_WIKI"
-    ]
+    ],
+    "dataStatus": "RECONCILED"
   }
 }

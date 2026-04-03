@@ -15,7 +15,8 @@
       "WARFARIN"
     ],
     "originId": "game",
-    "icon": "weapons/obj_edge_of_lightness_icon.png"
+    "icon": "weapons/obj_edge_of_lightness_icon.png",
+    "dataStatus": "RECONCILED"
   },
   "clause": [
     {

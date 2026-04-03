@@ -8,6 +8,7 @@
     "description": "Combo skill Free Giveaway improved: Whenever Cryo Infliction or Nature Infliction is applied to the enemy, cooldown is shortened by 1s. Effect can only trigger once every 1s."
   },
   "metadata": {
-    "originId": "FLUORITE"
+    "originId": "FLUORITE",
+    "dataStatus": "RECONCILED"
   }
 }

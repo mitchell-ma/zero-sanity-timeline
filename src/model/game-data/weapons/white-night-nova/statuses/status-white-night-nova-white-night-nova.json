@@ -30,7 +30,8 @@
         },
         {
           "verb": "APPLY",
-          "object": "STAT", "objectId": "ARTS_INTENSITY",
+          "object": "STAT",
+          "objectId": "ARTS_INTENSITY",
           "with": {
             "value": {
               "verb": "VARY_BY",
@@ -81,6 +82,7 @@
     "originId": "WHITE_NIGHT_NOVA",
     "dataSources": [
       "ENDFIELD_WIKI"
-    ]
+    ],
+    "dataStatus": "RECONCILED"
   }
 }

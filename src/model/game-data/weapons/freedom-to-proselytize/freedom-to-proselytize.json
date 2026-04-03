@@ -15,7 +15,8 @@
       "WARFARIN"
     ],
     "originId": "game",
-    "icon": "weapons/freedom_to_proselytize_icon.png"
+    "icon": "weapons/freedom_to_proselytize_icon.png",
+    "dataStatus": "RECONCILED"
   },
   "clause": [
     {

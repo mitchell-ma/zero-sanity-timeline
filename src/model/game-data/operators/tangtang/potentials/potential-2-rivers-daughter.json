@@ -5,7 +5,8 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "STAT", "objectId": "AGILITY",
+          "object": "STAT",
+          "objectId": "AGILITY",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
@@ -41,7 +42,8 @@
     "description": "Agility +{Agi:0}, Cryo DMG Dealt +{CrystDamageIncrease:0%}"
   },
   "metadata": {
-    "originId": "TANGTANG"
+    "originId": "TANGTANG",
+    "dataStatus": "RECONCILED"
   },
   "clauseType": "ALL"
 }

@@ -6,7 +6,8 @@
           "subjectDeterminer": "THIS",
           "subject": "OPERATOR",
           "verb": "APPLY",
-          "object": "STATUS", "objectId": "SOLIDIFICATION"
+          "object": "STATUS",
+          "objectId": "SOLIDIFICATION"
         }
       ],
       "effects": [
@@ -22,7 +23,10 @@
   ],
   "properties": {
     "id": "BARRAGE_OF_TECHNOLOGY_TALENT",
-    "maxLevel": { "verb": "IS", "value": 2 },
+    "maxLevel": {
+      "verb": "IS",
+      "value": 2
+    },
     "name": "Barrage of Technology (Talent)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
@@ -35,6 +39,7 @@
     "dataSources": [
       "ENDFIELD_WIKI"
     ],
-    "icon": "skills/yvonne_talent_1_icon.png"
+    "icon": "skills/yvonne_talent_1_icon.png",
+    "dataStatus": "RECONCILED"
   }
 }

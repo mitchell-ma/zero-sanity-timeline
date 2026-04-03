@@ -5,7 +5,8 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "STAT", "objectId": "INTELLECT",
+          "object": "STAT",
+          "objectId": "INTELLECT",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
@@ -40,7 +41,8 @@
     "description": "Intellect +15, Treatment Efficiency +{HealOutputIncrease:0%}."
   },
   "metadata": {
-    "originId": "XAIHI"
+    "originId": "XAIHI",
+    "dataStatus": "VERIFIED"
   },
   "clauseType": "ALL"
 }

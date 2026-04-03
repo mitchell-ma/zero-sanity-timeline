@@ -1,5 +1,19 @@
 # Devlog
 
+## 2026-04-02
+- Skills with variable parameters (like number of enemies hit) now show inline buttons in the context menu — pick ×1, ×2, ×3, etc. when placing the skill, and damage calculations adjust accordingly
+- Shield system added — operators with shield-granting abilities now show absorptive barriers that soak incoming damage before HP is reduced
+- HP threshold triggers now work correctly — talents and statuses that activate when HP drops below a percentage (e.g. "below 50% HP") fire reliably during combat simulation
+- Right-clicking a combo activation window now opens the combo skill's add menu directly, so you don't need to find the combo column separately
+- Individual basic attack segments placed from the context menu now show their sequence number (I, II, III) for easier identification
+- Double-clicking derived events (like combo windows) now correctly opens the detail panel instead of being ignored
+- Canvas no longer flickers blank when the browser window is resized — the renderer immediately redraws during resize instead of waiting for the next frame
+- Passive event labels (like combo activation windows) are now subtler in light mode to better distinguish them from active skill events
+- Enemy action events now appear on the timeline canvas alongside player skill events
+- Damage calculation now picks up multipliers from skill effect definitions when frame-level multiplier data isn't available, improving coverage for skills that define damage through DSL clauses
+- Full data reconciliation pass across all 26 operators, 20 gear sets, consumables, and generic statuses — every config file has been audited and marked with a verification status
+- New segment lifecycle hooks in the event engine enable per-segment trigger evaluation, supporting skills that activate effects at the start or end of specific segments
+
 ## 2026-04-01
 - Major rendering performance overhaul — the timeline now uses a PixiJS canvas layer for event blocks, gridlines, and interaction highlights, drastically reducing the number of DOM elements and improving smoothness during scrolling, zooming, and dragging
 - Removed object pooling, reconciler, and incremental validation systems from the pipeline — these added complexity without benefiting the new canvas-based renderer, resulting in a cleaner and faster pipeline

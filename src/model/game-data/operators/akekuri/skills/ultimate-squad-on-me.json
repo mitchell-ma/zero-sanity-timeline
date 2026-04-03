@@ -110,7 +110,14 @@
                         "right": {
                           "verb": "VARY_BY",
                           "object": "POTENTIAL",
-                          "value": [0, 0, 0, 0, 0, 5],
+                          "value": [
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            5
+                          ],
                           "ofDeterminer": "THIS",
                           "of": "OPERATOR"
                         }
@@ -128,7 +135,10 @@
                   "subject": "OPERATOR",
                   "verb": "HAVE",
                   "object": "POTENTIAL",
-                  "value": { "verb": "IS", "value": 3 }
+                  "value": {
+                    "verb": "IS",
+                    "value": 3
+                  }
                 }
               ],
               "effects": [
@@ -292,7 +302,8 @@
   ],
   "metadata": {
     "originId": "AKEKURI",
-    "icon": "skills/ult_akekuri.png"
+    "icon": "skills/ult_akekuri.png",
+    "dataStatus": "VERIFIED"
   },
   "clauseType": "ALL"
 }

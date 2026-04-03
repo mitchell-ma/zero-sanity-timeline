@@ -399,7 +399,8 @@
   ],
   "metadata": {
     "originId": "WULFGARD",
-    "icon": "skills/ult_wulfgard.png"
+    "icon": "skills/ult_wulfgard.png",
+    "dataStatus": "RECONCILED"
   },
   "clauseType": "ALL"
 }

@@ -386,7 +386,8 @@
   ],
   "metadata": {
     "originId": "FLUORITE",
-    "icon": "skills/ult_fluorite.png"
+    "icon": "skills/ult_fluorite.png",
+    "dataStatus": "RECONCILED"
   },
   "clauseType": "ALL"
 }

@@ -5,7 +5,8 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "STAT", "objectId": "MAIN_ATTRIBUTE",
+          "object": "STAT",
+          "objectId": "MAIN_ATTRIBUTE",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
@@ -66,6 +67,7 @@
     "originId": "game",
     "dataSources": [
       "ENDFIELD_WIKI"
-    ]
+    ],
+    "dataStatus": "RECONCILED"
   }
 }

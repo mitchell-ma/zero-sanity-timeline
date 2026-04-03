@@ -50,7 +50,10 @@
   ],
   "properties": {
     "id": "COMPREHENSIVE_MINDSET_TALENT",
-    "maxLevel": { "verb": "IS", "value": 2 },
+    "maxLevel": {
+      "verb": "IS",
+      "value": 2
+    },
     "name": "Comprehensive Mindset (Talent)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
@@ -63,6 +66,7 @@
     "dataSources": [
       "ENDFIELD_WIKI"
     ],
-    "icon": "skills/catcher_talent_2_icon.png"
+    "icon": "skills/catcher_talent_2_icon.png",
+    "dataStatus": "RECONCILED"
   }
 }

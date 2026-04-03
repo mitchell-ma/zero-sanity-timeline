@@ -15,7 +15,8 @@
       "WARFARIN"
     ],
     "originId": "game",
-    "icon": "weapons/delivery_guaranteed_icon.png"
+    "icon": "weapons/delivery_guaranteed_icon.png",
+    "dataStatus": "RECONCILED"
   },
   "clause": [
     {
@@ -23,7 +24,8 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "STAT", "objectId": "BASE_ATTACK",
+          "object": "STAT",
+          "objectId": "BASE_ATTACK",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {

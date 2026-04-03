@@ -30,7 +30,7 @@ export interface ActivationWindowDef {
 // ── Validation ──────────────────────────────────────────────────────────────
 
 const VALID_SKILL_ENTRY_KEYS = new Set([
-  'segments', 'clause', 'clauseType', 'onTriggerClause', 'activationClause', 'activationWindow', 'properties', 'metadata',
+  'segments', 'clause', 'clauseType', 'onTriggerClause', 'onEntryClause', 'onExitClause', 'activationClause', 'activationWindow', 'properties', 'metadata',
 ]);
 
 const VALID_SKILL_PROPERTIES_KEYS = new Set([
@@ -39,7 +39,7 @@ const VALID_SKILL_PROPERTIES_KEYS = new Set([
   'eventType', 'eventCategoryType', 'suppliedParameters',
 ]);
 
-const VALID_SKILL_METADATA_KEYS = new Set(['originId', 'eventComponentType', 'dataSources', 'icon']);
+const VALID_SKILL_METADATA_KEYS = new Set(['originId', 'eventComponentType', 'dataSources', 'icon', 'dataStatus']);
 
 /** Validate a single skill entry. Returns an array of error messages (empty = valid). */
 export function validateOperatorSkill(json: Record<string, unknown>, skillId: string): string[] {
@@ -62,6 +62,14 @@ export function validateOperatorSkill(json: Record<string, unknown>, skillId: st
     errors.push(`${path}.onTriggerClause: must be an array`);
   }
 
+  if (json.onEntryClause && !Array.isArray(json.onEntryClause)) {
+    errors.push(`${path}.onEntryClause: must be an array`);
+  }
+
+  if (json.onExitClause && !Array.isArray(json.onExitClause)) {
+    errors.push(`${path}.onExitClause: must be an array`);
+  }
+
   // Walk effects in clauses, segments, and frames to warn about missing targets
   const walkEffects = (clauses: unknown[], clausePath: string) => {
     if (!Array.isArray(clauses)) return;
@@ -76,6 +84,8 @@ export function validateOperatorSkill(json: Record<string, unknown>, skillId: st
   };
   walkEffects(json.clause as unknown[] ?? [], `${path}.clause`);
   walkEffects(json.onTriggerClause as unknown[] ?? [], `${path}.onTriggerClause`);
+  walkEffects(json.onEntryClause as unknown[] ?? [], `${path}.onEntryClause`);
+  walkEffects(json.onExitClause as unknown[] ?? [], `${path}.onExitClause`);
   if (Array.isArray(json.segments)) {
     for (let si = 0; si < (json.segments as unknown[]).length; si++) {
       const seg = (json.segments as Record<string, unknown>[])[si];
@@ -109,6 +119,8 @@ export class OperatorSkill {
   readonly clause: unknown[];
   readonly activationClause: unknown[];
   readonly onTriggerClause: TriggerClause[];
+  readonly onEntryClause: unknown[];
+  readonly onExitClause: unknown[];
   readonly name: string;
   readonly description: string;
   readonly duration?: SkillDuration;
@@ -121,6 +133,7 @@ export class OperatorSkill {
   readonly activationWindow?: ActivationWindowDef;
   readonly originId?: string;
   readonly icon?: string;
+  readonly suppliedParameters?: Record<string, { id: string; name: string; lowerRange: number; upperRange: number; default: number }[]>;
 
   constructor(id: string, json: Record<string, unknown>) {
     const props = (json.properties ?? {}) as Record<string, unknown>;
@@ -131,6 +144,8 @@ export class OperatorSkill {
     this.clause = (json.clause ?? []) as unknown[];
     this.activationClause = (json.activationClause ?? []) as unknown[];
     this.onTriggerClause = (json.onTriggerClause ?? []) as TriggerClause[];
+    this.onEntryClause = (json.onEntryClause ?? []) as unknown[];
+    this.onExitClause = (json.onExitClause ?? []) as unknown[];
     this.name = (props.name ?? '') as string;
     this.description = (props.description ?? '') as string;
     if (props.duration) this.duration = props.duration as SkillDuration;
@@ -143,6 +158,7 @@ export class OperatorSkill {
     if (json.activationWindow) this.activationWindow = json.activationWindow as ActivationWindowDef;
     if (meta.originId) this.originId = meta.originId as string;
     if (meta.icon) this.icon = meta.icon as string;
+    if (props.suppliedParameters) this.suppliedParameters = props.suppliedParameters as Record<string, { id: string; name: string; lowerRange: number; upperRange: number; default: number }[]>;
   }
 
   /** Serialize back to the JSON shape. */
@@ -152,6 +168,8 @@ export class OperatorSkill {
       ...(this.clause.length > 0 ? { clause: this.clause } : {}),
       ...(this.activationClause.length > 0 ? { activationClause: this.activationClause } : {}),
       ...(this.onTriggerClause.length > 0 ? { onTriggerClause: this.onTriggerClause } : {}),
+      ...(this.onEntryClause.length > 0 ? { onEntryClause: this.onEntryClause } : {}),
+      ...(this.onExitClause.length > 0 ? { onExitClause: this.onExitClause } : {}),
       ...(this.activationWindow ? { activationWindow: this.activationWindow } : {}),
       properties: {
         id: this.id,
@@ -164,6 +182,7 @@ export class OperatorSkill {
         ...(this.element ? { element: this.element } : {}),
         eventType: this.eventType,
         ...(this.eventCategoryType ? { eventCategoryType: this.eventCategoryType } : {}),
+        ...(this.suppliedParameters ? { suppliedParameters: this.suppliedParameters } : {}),
       },
       ...(this.originId || this.icon ? { metadata: { ...(this.originId ? { originId: this.originId } : {}), ...(this.icon ? { icon: this.icon } : {}) } } : {}),
     };

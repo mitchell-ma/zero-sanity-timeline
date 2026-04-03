@@ -8,6 +8,7 @@
     "description": "Battle skill Rigid Interdiction improved: Hitting an enemy while the shield is active returns 10 SP."
   },
   "metadata": {
-    "originId": "CATCHER"
+    "originId": "CATCHER",
+    "dataStatus": "RECONCILED"
   }
 }

@@ -14,7 +14,7 @@ export default function ContextMenu({ x, y, items, onClose }: ContextMenuProps) 
 
   const menuW = 220;
   const menuH = items.reduce((h, item) =>
-    h + (item.separator ? 9 : item.header ? 28 : 36) + (item.inlineButtons ? 32 : 0),
+    h + (item.separator ? 9 : item.header ? 28 : 36) + (item.inlineButtons ? 32 : 0) + (item.inlineLabel && item.inlineButtons ? 16 : 0),
     10);
   const maxH = Math.min(384, window.innerHeight - 16);
   const effectiveH = Math.min(menuH, maxH);
@@ -75,6 +75,9 @@ export default function ContextMenu({ x, y, items, onClose }: ContextMenuProps) 
                 <span className="context-menu-reason">{item.disabledReason}</span>
               )}
             </button>
+            {item.inlineLabel && item.inlineButtons && (
+              <div className="context-menu-inline-label">{item.inlineLabel}</div>
+            )}
             {item.inlineButtons && (
               <div className="context-menu-inline-row">
                 {item.inlineButtons.map((btn, j) => (

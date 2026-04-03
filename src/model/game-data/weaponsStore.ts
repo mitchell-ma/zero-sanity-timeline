@@ -12,7 +12,7 @@ import { checkKeys, VALID_VALUE_NODE_KEYS, VALID_CLAUSE_KEYS, VALID_EFFECT_KEYS,
 
 // ── Validation ──────────────────────────────────────────────────────────────
 const VALID_PROPERTIES_KEYS = new Set(['id', 'name', 'type', 'rarity']);
-const VALID_METADATA_KEYS = new Set(['originId', 'dataSources', 'icon', 'nameId']);
+const VALID_METADATA_KEYS = new Set(['originId', 'dataSources', 'icon', 'nameId', 'dataStatus']);
 const VALID_TOP_KEYS = new Set(['skills', 'properties', 'metadata', 'clause']);
 
 function validateValueNode(wv: Record<string, unknown>, path: string): string[] {

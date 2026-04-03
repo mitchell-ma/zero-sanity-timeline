@@ -6,7 +6,8 @@
           "subjectDeterminer": "THIS",
           "subject": "OPERATOR",
           "verb": "APPLY",
-          "object": "STATUS", "objectId": "SOLIDIFICATION"
+          "object": "STATUS",
+          "objectId": "SOLIDIFICATION"
         },
         {
           "subjectDeterminer": "THIS",
@@ -35,7 +36,10 @@
   ],
   "properties": {
     "id": "SURVIVAL_IS_A_WIN_P5_TALENT",
-    "maxLevel": { "verb": "IS", "value": 1 },
+    "maxLevel": {
+      "verb": "IS",
+      "value": 1
+    },
     "name": "Survival is a Win (P5)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
@@ -47,6 +51,7 @@
     "originId": "ESTELLA",
     "dataSources": [
       "ENDFIELD_WIKI"
-    ]
+    ],
+    "dataStatus": "RECONCILED"
   }
 }

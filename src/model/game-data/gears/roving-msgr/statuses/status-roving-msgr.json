@@ -13,7 +13,7 @@
           "with": {
             "value": {
               "verb": "IS",
-              "value": 0.20
+              "value": 0.2
             }
           }
         }
@@ -42,6 +42,7 @@
     "eventCategoryType": "GEAR_SET_STATUS"
   },
   "metadata": {
-    "originId": "ROVING_MSGR"
+    "originId": "ROVING_MSGR",
+    "dataStatus": "RECONCILED"
   }
 }

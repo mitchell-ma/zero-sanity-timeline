@@ -5,7 +5,8 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "STAT", "objectId": "WILL",
+          "object": "STAT",
+          "objectId": "WILL",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
@@ -17,7 +18,8 @@
         },
         {
           "verb": "APPLY",
-          "object": "STAT", "objectId": "STRENGTH",
+          "object": "STAT",
+          "objectId": "STRENGTH",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
@@ -39,7 +41,8 @@
     "description": "Will +{Will:0}, Strength +{Str:0}."
   },
   "metadata": {
-    "originId": "ESTELLA"
+    "originId": "ESTELLA",
+    "dataStatus": "RECONCILED"
   },
   "clauseType": "ALL"
 }

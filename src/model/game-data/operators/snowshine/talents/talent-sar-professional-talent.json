@@ -33,7 +33,10 @@
   ],
   "properties": {
     "id": "SAR_PROFESSIONAL_TALENT",
-    "maxLevel": { "verb": "IS", "value": 2 },
+    "maxLevel": {
+      "verb": "IS",
+      "value": 2
+    },
     "name": "SAR Professional (Talent)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
@@ -46,6 +49,7 @@
     "dataSources": [
       "ENDFIELD_WIKI"
     ],
-    "icon": "skills/snowshine_talent_2_icon.png"
+    "icon": "skills/snowshine_talent_2_icon.png",
+    "dataStatus": "RECONCILED"
   }
 }

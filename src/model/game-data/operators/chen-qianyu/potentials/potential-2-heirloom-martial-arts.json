@@ -1,13 +1,49 @@
 {
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STAT",
+          "objectId": "AGILITY",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": 15
+            }
+          }
+        },
+        {
+          "verb": "APPLY",
+          "object": "STAT",
+          "objectId": "DAMAGE_BONUS",
+          "objectQualifier": "PHYSICAL",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": 0.08
+            }
+          }
+        }
+      ]
+    }
+  ],
   "properties": {
-    "id": "CHEN-QIANYU_POTENTIAL_2",
+    "id": "CHEN_QIANYU_POTENTIAL_2",
     "name": "Heirloom Martial Arts",
     "level": 2,
     "eventType": "POTENTIAL_EVENT",
     "eventCategoryType": "POTENTIAL",
-    "description": "Agility +{Agi:0}, Physical DMG Dealt +{PhysicalDamageIncrease:0%}."
+    "description": "Agility +15, Physical DMG Dealt +8%."
   },
   "metadata": {
-    "originId": "CHEN-QIANYU"
-  }
+    "originId": "CHEN_QIANYU",
+    "dataStatus": "RECONCILED"
+  },
+  "clauseType": "ALL"
 }

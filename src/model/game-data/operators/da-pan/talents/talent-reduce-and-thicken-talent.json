@@ -31,7 +31,10 @@
   ],
   "properties": {
     "id": "REDUCE_AND_THICKEN_TALENT",
-    "maxLevel": { "verb": "IS", "value": 2 },
+    "maxLevel": {
+      "verb": "IS",
+      "value": 2
+    },
     "name": "Reduce and Thicken (Talent)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
@@ -44,6 +47,7 @@
     "dataSources": [
       "ENDFIELD_WIKI"
     ],
-    "icon": "skills/da_pan_talent_1_icon.png"
+    "icon": "skills/da_pan_talent_1_icon.png",
+    "dataStatus": "RECONCILED"
   }
 }

@@ -5,42 +5,54 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "STATUS", "objectId": "SHIELD",
-          "toDeterminer": "ALL",
+          "object": "SHIELD",
+          "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
             "value": {
               "operation": "MULT",
               "left": {
-                "verb": "VARY_BY",
-                "object": "SKILL_LEVEL",
-                "value": [
-                  0.18,
-                  0.18,
-                  0.18,
-                  0.2,
-                  0.2,
-                  0.2,
-                  0.22,
-                  0.22,
-                  0.22,
-                  0.25,
-                  0.25,
-                  0.25
-                ],
-                "ofDeterminer": "THIS",
-                "of": "OPERATOR"
-              },
-              "right": {
                 "verb": "IS",
                 "value": 1.2
+              },
+              "right": {
+                "operation": "MULT",
+                "left": {
+                  "verb": "VARY_BY",
+                  "object": "SKILL_LEVEL",
+                  "value": [
+                    0.18,
+                    0.18,
+                    0.18,
+                    0.2,
+                    0.2,
+                    0.2,
+                    0.22,
+                    0.22,
+                    0.22,
+                    0.25,
+                    0.25,
+                    0.25
+                  ],
+                  "ofDeterminer": "SOURCE",
+                  "of": "OPERATOR"
+                },
+                "right": {
+                  "verb": "IS",
+                  "object": "STAT",
+                  "objectId": "BASE_HP",
+                  "ofDeterminer": "SOURCE",
+                  "of": "OPERATOR"
+                }
               }
-            }
+            },
+            "unit": "FLAT"
           }
         },
         {
           "verb": "APPLY",
           "object": "STAT",
+          "objectId": "ATTACK_BONUS",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
@@ -48,8 +60,7 @@
               "verb": "IS",
               "value": 0.1
             }
-          },
-          "objectId": "ATTACK_BONUS"
+          }
         }
       ]
     }
@@ -58,7 +69,7 @@
     "id": "THE_STEEL_OATH_EMPOWERED",
     "name": "The Steel Oath (Empowered)",
     "to": "OPERATOR",
-    "toDeterminer": "THIS",
+    "toDeterminer": "ALL",
     "duration": {
       "value": {
         "verb": "IS",
@@ -75,13 +86,14 @@
     },
     "eventType": "STATUS",
     "eventCategoryType": "POTENTIAL_STATUS",
-    "description": "Ultimate Re-Ignited Oath improved: Shield effect is multiplied by ; while this shield is active, the wielder gains ATK +."
+    "description": "Ultimate Re-Ignited Oath improved: Shield effect is multiplied by 1.2; while this shield is active, the wielder gains ATK +10%."
   },
   "metadata": {
     "originId": "THE_STEEL_OATH",
     "dataSources": [
       "ENDFIELD_WIKI"
-    ]
+    ],
+    "dataStatus": "VERIFIED"
   },
   "clauseType": "ALL"
 }

@@ -205,7 +205,8 @@
   ],
   "metadata": {
     "originId": "ENDMINISTRATOR",
-    "icon": "skills/combo_endministrator.png"
+    "icon": "skills/combo_endministrator.png",
+    "dataStatus": "RECONCILED"
   },
   "clauseType": "ALL",
   "activationWindow": {

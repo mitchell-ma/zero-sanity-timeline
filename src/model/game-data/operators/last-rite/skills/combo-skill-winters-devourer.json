@@ -327,7 +327,8 @@
   ],
   "metadata": {
     "originId": "LAST_RITE",
-    "icon": "skills/combo_lastrite.png"
+    "icon": "skills/combo_lastrite.png",
+    "dataStatus": "RECONCILED"
   },
   "clauseType": "ALL",
   "activationWindow": {

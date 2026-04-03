@@ -8,6 +8,7 @@
     "description": "Battle skill Unconventional Lure improved: SP Recovery grants an additional 10 SP."
   },
   "metadata": {
-    "originId": "ALESH"
+    "originId": "ALESH",
+    "dataStatus": "RECONCILED"
   }
 }

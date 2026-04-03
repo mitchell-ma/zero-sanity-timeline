@@ -5,7 +5,8 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "STAT", "objectId": "INTELLECT",
+          "object": "STAT",
+          "objectId": "INTELLECT",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
@@ -41,7 +42,8 @@
     "description": "Intellect +20, Basic Attack DMG Dealt +15%."
   },
   "metadata": {
-    "originId": "LAEVATAIN"
+    "originId": "LAEVATAIN",
+    "dataStatus": "VERIFIED"
   },
   "clauseType": "ALL"
 }

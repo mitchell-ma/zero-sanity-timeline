@@ -8,6 +8,7 @@
     "description": "Battle skill The Pulverizing Front improved: When hitting at least 2 enemies, 15 SP is returned."
   },
   "metadata": {
-    "originId": "POGRANICHNIK"
+    "originId": "POGRANICHNIK",
+    "dataStatus": "RECONCILED"
   }
 }

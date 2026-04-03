@@ -26,7 +26,8 @@
   ],
   "metadata": {
     "originId": "POGRANICHNIK",
-    "icon": "skills/skill_pogranichnik.png"
+    "icon": "skills/skill_pogranichnik.png",
+    "dataStatus": "RECONCILED"
   },
   "segments": [
     {

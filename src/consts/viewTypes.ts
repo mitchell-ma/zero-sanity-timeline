@@ -131,6 +131,8 @@ export interface EventFrameMarker {
   teamGaugeGain?: number;
   /** Per-enemy-count gauge gain map (e.g. {1: 25, 2: 30, 3: 35}). */
   gaugeGainByEnemies?: Record<number, number>;
+  /** Raw ValueNode for ultimate energy gain — stored when the value depends on suppliedParameters (VARY_BY). Resolved at runtime. */
+  ultimateEnergyGainNode?: import('../dsl/semantics').ValueNode;
 }
 
 /** Identifies a specific frame within a sequenced event. */
@@ -288,6 +290,8 @@ export interface ContextMenuItem {
   checked?: boolean | (() => boolean);
   /** If true, clicking this item does NOT close the menu. */
   keepOpen?: boolean;
+  /** Label shown above inline buttons (e.g. parameter name). */
+  inlineLabel?: string;
   /** Inline sub-buttons rendered as a horizontal row (e.g. individual BATK segments). */
   inlineButtons?: {
     label: string;
@@ -384,6 +388,8 @@ export type MiniTimeline = {
     timeDependency?: TimeDependency;
     /** SP cost for battle skills. */
     skillPointCost?: number;
+    /** User-supplied parameters available as VARY_BY dimensions (e.g. Enemies Hit). */
+    suppliedParameters?: Record<string, { id: string; name: string; lowerRange: number; upperRange: number; default: number }[]>;
   };
 
   /** Multiple event variants selectable from the context menu (e.g. Laevatain battle skill). */
@@ -420,6 +426,8 @@ export type MiniTimeline = {
     skillPointCost?: number;
     /** Preconditions for placing this variant (OR of predicates). */
     activationClause?: import('../dsl/semantics').Predicate[];
+    /** User-supplied parameters available as VARY_BY dimensions (e.g. Enemies Hit). */
+    suppliedParameters?: Record<string, { id: string; name: string; lowerRange: number; upperRange: number; default: number }[]>;
   }[];
 
   /** Element type of this skill column (for per-skill coloring). */

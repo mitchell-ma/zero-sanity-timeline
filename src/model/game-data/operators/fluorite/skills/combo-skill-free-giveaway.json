@@ -238,7 +238,8 @@
   ],
   "metadata": {
     "originId": "FLUORITE",
-    "icon": "skills/combo_fluorite.png"
+    "icon": "skills/combo_fluorite.png",
+    "dataStatus": "RECONCILED"
   },
   "clauseType": "ALL",
   "activationWindow": {

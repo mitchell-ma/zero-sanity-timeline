@@ -8,6 +8,7 @@
     "description": "Battle skill Saturated Defense improved: During the blocking effect, Arts Inflictions cannot be applied to allied operators with Protection."
   },
   "metadata": {
-    "originId": "SNOWSHINE"
+    "originId": "SNOWSHINE",
+    "dataStatus": "RECONCILED"
   }
 }

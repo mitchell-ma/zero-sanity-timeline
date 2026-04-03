@@ -8,6 +8,7 @@
     "description": "Ultimate Frigid Snowfield improved: Effect radius +20%."
   },
   "metadata": {
-    "originId": "SNOWSHINE"
+    "originId": "SNOWSHINE",
+    "dataStatus": "RECONCILED"
   }
 }

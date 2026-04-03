@@ -23,7 +23,10 @@
   ],
   "properties": {
     "id": "TACTICAL_INSTRUCTION_TALENT",
-    "maxLevel": { "verb": "IS", "value": 2 },
+    "maxLevel": {
+      "verb": "IS",
+      "value": 2
+    },
     "name": "Tactical Instruction (Talent)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
@@ -36,6 +39,7 @@
     "dataSources": [
       "WARFARIN"
     ],
-    "icon": "skills/pogranichnik_talent_2_icon.png"
+    "icon": "skills/pogranichnik_talent_2_icon.png",
+    "dataStatus": "RECONCILED"
   }
 }

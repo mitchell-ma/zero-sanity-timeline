@@ -220,17 +220,21 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
   private readonly _gaugeGain: number;
   private readonly _dependencyTypes: readonly string[];
   private readonly _frameTypes: readonly EventFrameType[];
+  private readonly _suppliedParameters?: Record<string, { id: string; name: string; lowerRange: number; upperRange: number; default: number }[]>;
+  private readonly _ultimateEnergyGainNode?: ValueNode;
 
   constructor(frame: JsonFrame) {
     super();
     this._offsetSeconds = frame.properties!.offset!.value;
     this._damageElement = frame.properties?.element ?? frame.damageElement ?? null;
+    if (frame.properties?.suppliedParameters) this._suppliedParameters = frame.properties.suppliedParameters;
     let duplicateSource = false;
     const frameTypes: EventFrameType[] = [];
 
     let sp = 0;
     let stagger = 0;
     let gaugeGain = 0;
+    let ultimateEnergyGainNode: ValueNode | undefined;
 
     // ── Clause parsing ─────────────────────────────────────────────────────
     const clauses: FrameClausePredicate[] = [];
@@ -264,7 +268,13 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
         switch (ef.verb) {
           case VerbType.RECOVER:
             if (ef.object === NounType.SKILL_POINT) { sp = withValue(wp?.value); clauseEffects.push({ type: 'dsl', dslEffect: ef as unknown as Effect }); }
-            else if (ef.object === NounType.ULTIMATE_ENERGY) gaugeGain = withValue(wp?.value);
+            else if (ef.object === NounType.ULTIMATE_ENERGY) {
+              gaugeGain = withValue(wp?.value);
+              // Store raw ValueNode when it depends on VARY_BY (suppliedParameters) for runtime resolution
+              if (wp?.value && typeof wp.value === 'object' && !Array.isArray(wp.value)) {
+                ultimateEnergyGainNode = wp.value as ValueNode;
+              }
+            }
             else if (ef.object === NounType.HP) clauseEffects.push({ type: 'dsl', dslEffect: ef as unknown as Effect });
             break;
 
@@ -341,6 +351,7 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
     this._duplicateTriggerSource = duplicateSource;
     this._dependencyTypes = (frame.properties?.dependencyTypes ?? []) as string[];
     this._frameTypes = frameTypes;
+    this._ultimateEnergyGainNode = ultimateEnergyGainNode;
   }
 
   getOffsetSeconds(): number { return this._offsetSeconds; }
@@ -354,6 +365,8 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
   getGaugeGain(): number { return this._gaugeGain; }
   getDependencyTypes(): readonly string[] { return this._dependencyTypes; }
   getFrameTypes(): readonly EventFrameType[] { return this._frameTypes; }
+  getSuppliedParameters(): Record<string, { id: string; name: string; lowerRange: number; upperRange: number; default: number }[]> | undefined { return this._suppliedParameters; }
+  getUltimateEnergyGainNode(): ValueNode | undefined { return this._ultimateEnergyGainNode; }
 }
 
 // ── DataDrivenSkillEventSequence ────────────────────────────────────────────
@@ -368,6 +381,7 @@ export class DataDrivenSkillEventSequence extends SkillEventSequence {
   readonly timeDependency?: string;
   readonly timeInteractionType?: string;
   readonly delayedHitLabel?: string;
+  readonly suppliedParameters?: Record<string, { id: string; name: string; lowerRange: number; upperRange: number; default: number }[]>;
   readonly clause?: { effects: { verb: string; object: string; toDeterminer?: string; to?: string }[] }[];
 
   constructor(segment: JsonSegment) {
@@ -381,6 +395,7 @@ export class DataDrivenSkillEventSequence extends SkillEventSequence {
     if (segment.properties?.delayedHitLabel) this.delayedHitLabel = segment.properties.delayedHitLabel;
     this.timeDependency = segment.properties?.timeDependency;
     this.timeInteractionType = segment.properties?.timeInteractionType;
+    if (segment.properties?.suppliedParameters) this.suppliedParameters = segment.properties.suppliedParameters;
     this.clause = segment.clause;
   }
 

@@ -56,7 +56,8 @@
     "originId": "SURVIVAL_IS_A_WIN_P5_TALENT",
     "dataSources": [
       "ENDFIELD_WIKI"
-    ]
+    ],
+    "dataStatus": "RECONCILED"
   },
   "clauseType": "ALL"
 }

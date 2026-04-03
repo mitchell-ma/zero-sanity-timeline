@@ -26,7 +26,8 @@
   ],
   "metadata": {
     "originId": "FLUORITE",
-    "icon": "skills/skill_fluorite.png"
+    "icon": "skills/skill_fluorite.png",
+    "dataStatus": "RECONCILED"
   },
   "segments": [
     {

@@ -15,7 +15,8 @@
       "WARFARIN"
     ],
     "originId": "game",
-    "icon": "weapons/jet_icon.png"
+    "icon": "weapons/jet_icon.png",
+    "dataStatus": "RECONCILED"
   },
   "clause": [
     {
