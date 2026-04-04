@@ -1,0 +1,89 @@
+{
+  "properties": {
+    "name": "Mr. Dolly Shadow",
+    "description": "When the controlled operator touches a Shadow of Mr. Dolly, Ardelia restores that operator's HP. If the controlled operator is at max HP, heals the teammate with lowest percentage HP instead.",
+    "eventType": "COMBAT_SKILL",
+    "eventCategoryType": "ACTION",
+    "id": "MR_DOLLY_SHADOW"
+  },
+  "clause": [],
+  "segments": [
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT"
+      },
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 2
+          },
+          "unit": "SECOND"
+        },
+        "name": "Mr. Dolly Shadow"
+      },
+      "frames": [
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "ENDFIELD_WIKI"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 0,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "RECOVER",
+                  "object": "HP",
+                  "toDeterminer": "CONTROLLED",
+                  "to": "OPERATOR",
+                  "with": {
+                    "healBase": {
+                      "verb": "VARY_BY",
+                      "object": "TALENT_LEVEL",
+                      "value": [
+                        45,
+                        63,
+                        90
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    },
+                    "willAdditive": {
+                      "verb": "VARY_BY",
+                      "object": "TALENT_LEVEL",
+                      "value": [
+                        0.38,
+                        0.53,
+                        0.75
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "originId": "ARDELIA",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ],
+    "dataStatus": "VERIFIED"
+  },
+  "clauseType": "ALL"
+}

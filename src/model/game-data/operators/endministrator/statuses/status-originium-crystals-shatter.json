@@ -1,0 +1,104 @@
+{
+  "segments": [
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT"
+      },
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 2
+          },
+          "unit": "SECOND"
+        }
+      },
+      "frames": [
+        {
+          "metadata": {
+            "eventComponentType": "FRAME"
+          },
+          "properties": {
+            "offset": {
+              "value": 0,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "objectQualifier": "PHYSICAL",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        1.78,
+                        1.96,
+                        2.13,
+                        2.31,
+                        2.49,
+                        2.67,
+                        2.84,
+                        3.02,
+                        3.20,
+                        3.42,
+                        3.69,
+                        4.00
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "ORIGINIUM_CRYSTALS_SHATTER",
+    "name": "Originium Crystals Shatter",
+    "to": "ENEMY",
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": 2
+      },
+      "unit": "SECOND"
+    },
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 1
+      },
+      "interactionType": "RESET"
+    },
+    "eventType": "STATUS",
+    "eventCategoryType": "SKILL_STATUS",
+    "description": "Shattering Originium Crystals deals additional Physical DMG."
+  },
+  "metadata": {
+    "originId": "SEALING_SEQUENCE",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ],
+    "dataStatus": "VERIFIED"
+  },
+  "clauseType": "ALL"
+}

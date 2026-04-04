@@ -1,0 +1,92 @@
+{
+  "properties": {
+    "id": "PERLICA_POTENTIAL3_SUPERVISORY_DUTIES",
+    "name": "Supervisory Duties",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": 5
+      },
+      "unit": "SECOND"
+    },
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 2
+      },
+      "interactionType": "RESET"
+    },
+    "eventType": "STATUS",
+    "eventCategoryType": "TALENT",
+    "description": "After Perlica applies Electrification, ATK +20% for 5s. Max 2 stacks."
+  },
+  "metadata": {
+    "originId": "PERLICA",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ],
+    "icon": "skills/perlica_talent_1_icon.png",
+    "dataStatus": "RECONCILED"
+  },
+  "onTriggerClause": [
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "APPLY",
+          "object": "REACTION",
+          "objectQualifier": "ELECTRIFICATION",
+          "to": "ENEMY"
+        },
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "HAVE",
+          "object": "POTENTIAL",
+          "value": {
+            "verb": "IS",
+            "value": 3
+          }
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "EVENT",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "stacks": {
+              "verb": "IS",
+              "value": 1
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STAT",
+          "objectId": "ATTACK_BONUS",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": 0.2
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "clauseType": "ALL"
+}

@@ -1,0 +1,64 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STAT",
+          "objectId": "CRITICAL_DAMAGE",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "operation": "ADD",
+              "left": {
+                "verb": "VARY_BY",
+                "object": "TALENT_LEVEL",
+                "value": [0.1, 0.2],
+                "ofDeterminer": "THIS",
+                "of": "OPERATOR"
+              },
+              "right": {
+                "verb": "VARY_BY",
+                "object": "POTENTIAL",
+                "value": [0, 0, 0, 0.1, 0.1, 0.1],
+                "ofDeterminer": "THIS",
+                "of": "OPERATOR"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "FREEZING_POINT_CRYO",
+    "name": "Freezing Point (Cryo)",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": -1
+      },
+      "unit": "SECOND"
+    },
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 1
+      },
+      "interactionType": "RESET"
+    },
+    "eventType": "STATUS",
+    "eventCategoryType": "TALENT_STATUS",
+    "description": "Against enemies with active Cryo Infliction, gains Critical DMG Dealt bonus."
+  },
+  "metadata": {
+    "originId": "FREEZING_POINT_TALENT",
+    "dataSources": ["ENDFIELD_WIKI"],
+    "dataStatus": "RECONCILED"
+  },
+  "clauseType": "ALL"
+}

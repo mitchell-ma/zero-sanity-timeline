@@ -1,0 +1,172 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "FRAGILITY",
+          "objectQualifier": "PHYSICAL",
+          "to": "ENEMY",
+          "with": {
+            "value": {
+              "verb": "VARY_BY",
+              "object": "TALENT_LEVEL",
+              "value": [
+                0.10,
+                0.20
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "onTriggerClause": [
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "ANY",
+          "subject": "OPERATOR",
+          "verb": "APPLY",
+          "object": "VULNERABLE",
+          "to": "ENEMY"
+        }
+      ],
+      "effects": [
+        {
+          "verb": "CONSUME",
+          "objectDeterminer": "THIS",
+          "object": "EVENT"
+        },
+        {
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "ORIGINIUM_CRYSTALS_SHATTER",
+          "to": "ENEMY"
+        }
+      ]
+    },
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "ANY",
+          "subject": "OPERATOR",
+          "verb": "APPLY",
+          "object": "LIFT",
+          "to": "ENEMY"
+        }
+      ],
+      "effects": [
+        {
+          "verb": "CONSUME",
+          "objectDeterminer": "THIS",
+          "object": "EVENT"
+        },
+        {
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "ORIGINIUM_CRYSTALS_SHATTER",
+          "to": "ENEMY"
+        }
+      ]
+    },
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "ANY",
+          "subject": "OPERATOR",
+          "verb": "APPLY",
+          "object": "CRUSH",
+          "to": "ENEMY"
+        }
+      ],
+      "effects": [
+        {
+          "verb": "CONSUME",
+          "objectDeterminer": "THIS",
+          "object": "EVENT"
+        },
+        {
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "ORIGINIUM_CRYSTALS_SHATTER",
+          "to": "ENEMY"
+        }
+      ]
+    },
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "ANY",
+          "subject": "OPERATOR",
+          "verb": "APPLY",
+          "object": "KNOCK_DOWN",
+          "to": "ENEMY"
+        }
+      ],
+      "effects": [
+        {
+          "verb": "CONSUME",
+          "objectDeterminer": "THIS",
+          "object": "EVENT"
+        },
+        {
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "ORIGINIUM_CRYSTALS_SHATTER",
+          "to": "ENEMY"
+        }
+      ]
+    },
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "ANY",
+          "subject": "OPERATOR",
+          "verb": "APPLY",
+          "object": "BREACH",
+          "to": "ENEMY"
+        }
+      ],
+      "effects": [
+        {
+          "verb": "CONSUME",
+          "objectDeterminer": "THIS",
+          "object": "EVENT"
+        },
+        {
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "ORIGINIUM_CRYSTALS_SHATTER",
+          "to": "ENEMY"
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "REALSPACE_STASIS_TALENT",
+    "name": "Originium Crystals",
+    "to": "ENEMY",
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 1
+      },
+      "interactionType": "RESET"
+    },
+    "eventType": "STATUS",
+    "eventCategoryType": "TALENT",
+    "description": "Originium Crystals that temporarily seal the enemy. Applying Physical Status or Vulnerability shatters the crystals. Enemies with attached crystals suffer Physical DMG Taken +10%/+20%."
+  },
+  "metadata": {
+    "originId": "SEALING_SEQUENCE",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ],
+    "dataStatus": "VERIFIED"
+  },
+  "clauseType": "ALL"
+}

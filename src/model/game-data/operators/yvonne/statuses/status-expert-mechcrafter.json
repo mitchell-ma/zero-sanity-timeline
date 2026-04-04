@@ -1,0 +1,59 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STAT",
+          "objectId": "ATTACK_BONUS",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": 0.1
+            }
+          }
+        },
+        {
+          "verb": "APPLY",
+          "object": "STAT",
+          "objectId": "CRITICAL_DAMAGE",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": 0.3
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "EXPERT_MECHCRAFTER",
+    "name": "Expert Mechcrafter",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": 7
+      },
+      "unit": "SECOND"
+    },
+    "eventType": "STATUS",
+    "eventCategoryType": "TALENT_STATUS",
+    "description": "During Cryoblasting Pistolier, ATK +10% and Critical DMG Dealt +30%."
+  },
+  "metadata": {
+    "originId": "YVONNE",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ],
+    "dataStatus": "RECONCILED"
+  },
+  "clauseType": "ALL"
+}

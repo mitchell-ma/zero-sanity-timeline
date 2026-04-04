@@ -1,0 +1,285 @@
+{
+  "properties": {
+    "enhancementTypes": [
+      "EMPOWERED"
+    ],
+    "name": "Forward March (Empowered)",
+    "description": "A leap followed by a heavy slam that deals Heat DMG, Knock Down, and Stagger to all enemies in a fan-shaped area. Ember took DMG from enemies during casting, so the slam deals more Stagger when it hits.",
+    "eventType": "COMBAT_SKILL",
+    "eventCategoryType": "BATTLE_SKILL",
+    "element": "HEAT",
+    "id": "FORWARD_MARCH_EMPOWERED",
+    "suppliedParameters": {
+      "VARY_BY": [
+        {
+          "id": "ENEMY_HIT",
+          "name": "Enemy Hit",
+          "lowerRange": 0,
+          "upperRange": 1,
+          "default": 1
+        }
+      ]
+    }
+  },
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "CONSUME",
+          "object": "SKILL_POINT",
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": 100
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "onEntryClause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "INFLAMED_FOR_THE_ASSAULT",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "operation": "ADD",
+              "left": {
+                "verb": "VARY_BY",
+                "object": "TALENT_LEVEL",
+                "value": [
+                  0.3,
+                  0.5
+                ],
+                "ofDeterminer": "THIS",
+                "of": "OPERATOR"
+              },
+              "right": {
+                "verb": "VARY_BY",
+                "object": "POTENTIAL",
+                "value": [
+                  0,
+                  0.2,
+                  0.2,
+                  0.2,
+                  0.2,
+                  0.2
+                ],
+                "ofDeterminer": "THIS",
+                "of": "OPERATOR"
+              }
+            },
+            "duration": {
+              "operation": "ADD",
+              "left": {
+                "verb": "IS",
+                "value": 1.7
+              },
+              "right": {
+                "operation": "MULT",
+                "left": {
+                  "verb": "VARY_BY",
+                  "object": "ENEMY_HIT",
+                  "value": [
+                    0,
+                    1.5
+                  ]
+                },
+                "right": {
+                  "verb": "VARY_BY",
+                  "object": "POTENTIAL",
+                  "value": [
+                    0,
+                    1,
+                    1,
+                    1,
+                    1,
+                    1
+                  ],
+                  "ofDeterminer": "THIS",
+                  "of": "OPERATOR"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT"
+      },
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 1.7
+          },
+          "unit": "SECOND"
+        },
+        "element": "HEAT",
+        "name": "Forward March"
+      },
+      "frames": [
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "END_AXIS"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 0.33,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "objectQualifier": "HEAT",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.32,
+                        0.36,
+                        0.39,
+                        0.42,
+                        0.45,
+                        0.49,
+                        0.52,
+                        0.55,
+                        0.58,
+                        0.62,
+                        0.67,
+                        0.73
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
+        },
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "END_AXIS"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 1.27,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "object": "STAGGER",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "operation": "ADD",
+                      "left": {
+                        "verb": "IS",
+                        "value": 10
+                      },
+                      "right": {
+                        "verb": "IS",
+                        "value": 10
+                      }
+                    }
+                  }
+                },
+                {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "PHYSICAL",
+                  "objectQualifier": "KNOCK_DOWN",
+                  "to": "ENEMY"
+                },
+                {
+                  "verb": "DEAL",
+                  "objectQualifier": "HEAT",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        1.41,
+                        1.55,
+                        1.69,
+                        1.83,
+                        1.97,
+                        2.11,
+                        2.26,
+                        2.4,
+                        2.54,
+                        2.71,
+                        2.92,
+                        3.17
+                      ],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "originId": "EMBER",
+    "icon": "skills/skill_ember.png",
+    "dataSources": [
+      "END_AXIS",
+      "ENDFIELD_WIKI"
+    ],
+    "dataStatus": "VERIFIED"
+  },
+  "clauseType": "ALL"
+}
