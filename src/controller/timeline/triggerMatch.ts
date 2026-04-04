@@ -17,12 +17,13 @@ import {
   PHYSICAL_STATUS_COLUMN_IDS,
 } from '../../model/channels';
 import { resolveColumnIds } from './conditionEvaluator';
+import { STATE_TO_COLUMN } from './triggerIndex';
 import { FPS, TOTAL_FRAMES } from '../../utils/timeline';
 import { getFinalStrikeTriggerFrame } from './processComboSkill';
 import { evaluateInteraction } from './conditionEvaluator';
 import type { ConditionContext } from './conditionEvaluator';
 import type { TimeStopRegion } from './processTimeStop';
-import { VerbType, NounType, ObjectType, DeterminerType, CardinalityConstraintType } from '../../dsl/semantics';
+import { VerbType, NounType, DeterminerType, CardinalityConstraintType } from '../../dsl/semantics';
 import type { Interaction } from '../../dsl/semantics';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -91,6 +92,8 @@ export interface TriggerMatch {
   originOwnerId?: string;
   /** The column ID of the source event that matched this trigger. */
   sourceColumnId?: string;
+  /** Status level of the triggering physical status (= Vulnerability stacks consumed). */
+  triggerStacks?: number;
   effects?: TriggerEffect[];
 }
 
@@ -149,12 +152,6 @@ export function getFirstEventFrame(ev: TimelineEvent): number {
 // ── Column + owner resolution ─────────────────────────────────────────────────
 
 
-const STATE_TO_REACTION_COLUMN: Record<string, string> = {
-  [ObjectType.COMBUSTED]:     REACTION_COLUMNS.COMBUSTION,
-  [ObjectType.SOLIDIFIED]:    REACTION_COLUMNS.SOLIDIFICATION,
-  [ObjectType.CORRODED]:      REACTION_COLUMNS.CORROSION,
-  [ObjectType.ELECTRIFIED]:   REACTION_COLUMNS.ELECTRIFICATION,
-};
 
 const SKIP_COLUMNS = new Set<string>([
   NounType.BASIC_ATTACK, NounType.BATTLE_SKILL, NounType.COMBO_SKILL, NounType.ULTIMATE,
@@ -220,6 +217,7 @@ function resolveColumns(cond: Predicate): Set<string> | undefined {
 function resolveOwnerFilter(cond: Predicate, operatorSlotId: string, verb?: string) {
   const det = cond.subjectDeterminer;
   const isAnyOperator = cond.subject === NounType.OPERATOR && (det === DeterminerType.ANY || det === DeterminerType.CONTROLLED);
+  const isAnyOtherOperator = cond.subject === NounType.OPERATOR && det === DeterminerType.ANY_OTHER;
   const toObj = cond.to;
   const toDet = cond.toDeterminer;
 
@@ -227,7 +225,7 @@ function resolveOwnerFilter(cond: Predicate, operatorSlotId: string, verb?: stri
   const isActionVerb = verb === VerbType.APPLY || verb === VerbType.CONSUME;
 
   return {
-    isAnyOperator,
+    isAnyOperator: isAnyOperator || isAnyOtherOperator,
     matchesOwner(ownerId: string) {
       if (isActionVerb && toObj) {
         // Explicit target — match event owner against target
@@ -246,6 +244,7 @@ function resolveOwnerFilter(cond: Predicate, operatorSlotId: string, verb?: stri
       }
       // Subject-based filtering (PERFORM, HAVE, IS, RECEIVE, DEAL, RECOVER, etc.)
       if (cond.subject === NounType.ENEMY) return ownerId === ENEMY_OWNER_ID;
+      if (isAnyOtherOperator) return ownerId !== operatorSlotId && ownerId !== ENEMY_OWNER_ID && ownerId !== COMMON_OWNER_ID;
       if (isAnyOperator) return ownerId !== ENEMY_OWNER_ID && ownerId !== COMMON_OWNER_ID;
       return ownerId === operatorSlotId;
     },
@@ -259,7 +258,7 @@ function checkSecondary(ctx: VerbHandlerContext, frame: number, triggerOwnerId?:
 }
 
 function makeMatch(frame: number, ev: TimelineEvent, effects?: TriggerEffect[]): TriggerMatch {
-  return { frame, sourceOwnerId: ev.ownerId, sourceSkillName: ev.id, originOwnerId: ev.sourceOwnerId, sourceColumnId: ev.columnId, effects };
+  return { frame, sourceOwnerId: ev.ownerId, sourceSkillName: ev.id, originOwnerId: ev.sourceOwnerId, sourceColumnId: ev.columnId, triggerStacks: ev.stacks, effects };
 }
 
 /**
@@ -416,15 +415,18 @@ function handleRecover(primaryCond: Predicate, ctx: VerbHandlerContext): Trigger
 // ── IS / BECOME handlers ─────────────────────────────────────────────────────
 
 function handleIs(primaryCond: Predicate, ctx: VerbHandlerContext): TriggerMatch[] {
-  const colId = STATE_TO_REACTION_COLUMN[primaryCond.object ?? ''];
+  const colId = STATE_TO_COLUMN[primaryCond.object ?? ''];
   if (!colId) return [];
 
+  const isPhysicalStatus = PHYSICAL_STATUS_COLUMN_IDS.has(colId);
   const matches: TriggerMatch[] = [];
   const { matchesOwner } = resolveOwnerFilter(primaryCond, ctx.operatorSlotId, VerbType.IS);
 
   for (const ev of ctx.events) {
     if (ev.columnId !== colId) continue;
     if (!matchesOwner(ev.ownerId)) continue;
+    // Skip forced physical statuses — no Vulnerability was consumed
+    if (isPhysicalStatus && (ev.isForced || ev.forcedReaction)) continue;
     if (!checkSecondary(ctx, ev.startFrame, ev.ownerId)) continue;
     matches.push(makeMatch(ev.startFrame, ev, ctx.clauseEffects));
   }
@@ -466,9 +468,9 @@ function handleBecome(primaryCond: Predicate, ctx: VerbHandlerContext): TriggerM
       transitionFrames.add(endFrame);
     }
 
-    const countAt = (frame: number) => statusEvents.filter(ev =>
-      ev.startFrame <= frame && frame < ev.startFrame + computeSegmentsSpan(ev.segments),
-    ).length;
+    const countAt = (frame: number) => statusEvents
+      .filter(ev => ev.startFrame <= frame && frame < ev.startFrame + computeSegmentsSpan(ev.segments))
+      .reduce((sum, ev) => sum + (ev.stacks ?? 1), 0);
 
     const matches: TriggerMatch[] = [];
     for (const frame of Array.from(transitionFrames)) {

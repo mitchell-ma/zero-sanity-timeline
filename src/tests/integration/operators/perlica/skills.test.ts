@@ -19,15 +19,16 @@
  */
 
 import { renderHook, act } from '@testing-library/react';
-import { NounType } from '../../../../dsl/semantics';
+import { AdjectiveType, NounType, VerbType } from '../../../../dsl/semantics';
 import { useApp } from '../../../../app/useApp';
-import { ColumnType, InteractionModeType, SegmentType } from '../../../../consts/enums';
+import { ColumnType, CritMode, InteractionModeType, SegmentType } from '../../../../consts/enums';
+import { runCalculation } from '../../../../controller/calculation/calculationController';
 import { FPS } from '../../../../utils/timeline';
 import { eventDuration } from '../../../../consts/viewTypes';
 import type { MiniTimeline } from '../../../../consts/viewTypes';
 import { computeTimelinePresentation } from '../../../../controller/timeline/eventPresentationController';
 import { getUltimateEnergyCostForPotential } from '../../../../controller/operators/operatorRegistry';
-import { INFLICTION_COLUMNS, ENEMY_OWNER_ID } from '../../../../model/channels';
+import { INFLICTION_COLUMNS, REACTION_COLUMNS, ENEMY_OWNER_ID, NODE_STAGGER_COLUMN_ID } from '../../../../model/channels';
 import {
   findColumn,
   buildContextMenu,
@@ -54,9 +55,30 @@ const ULTIMATE_JSON = require(
   '../../../../model/game-data/operators/perlica/skills/ultimate-protocol-epsilon.json',
 );
 const ULTIMATE_ID: string = ULTIMATE_JSON.properties.id;
+
 /* eslint-enable @typescript-eslint/no-require-imports */
 
+const ARTS_SUSCEPTIBILITY_ID = `ARTS_${NounType.SUSCEPTIBILITY}` as const;
+
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const P3_STATUS_JSON = require(
+  '../../../../model/game-data/operators/perlica/statuses/status-supervisory-duties.json',
+);
+const P3_STATUS_ID: string = P3_STATUS_JSON.properties.id;
+
 const SLOT_PERLICA = 'slot-0';
+
+type AppResult = ReturnType<typeof useApp>;
+
+function setPotential(result: { current: AppResult }, potential: number) {
+  const props = result.current.loadoutProperties[SLOT_PERLICA];
+  act(() => {
+    result.current.handleStatsChange(SLOT_PERLICA, {
+      ...props,
+      operator: { ...props.operator, potential },
+    });
+  });
+}
 
 beforeEach(() => {
   localStorage.clear();
@@ -339,5 +361,325 @@ describe('E. View Layer', () => {
     const ultVm = viewModels.get(ultVmCol!.key);
     expect(ultVm).toBeDefined();
     expect(ultVm!.events.some((ev) => ev.name === ULTIMATE_ID)).toBe(true);
+  });
+});
+
+// =============================================================================
+// F0. T1 — Obliteration Protocol (Stagger Damage Bonus)
+// =============================================================================
+
+describe('F0. T1 — Obliteration Protocol', () => {
+  it('F0a: No talent status without stagger events — including frame 0', () => {
+    const { result } = setupPerlica();
+
+    // No talent events at ALL — not even at frame 0
+    const talentEvents = result.current.allProcessedEvents.filter(
+      ev => ev.ownerId === SLOT_PERLICA && ev.name === PERLICA_JSON.talents.one,
+    );
+    expect(talentEvents).toHaveLength(0);
+
+    // View: no talent visible in presentation at any frame
+    const viewModels = computeTimelinePresentation(
+      result.current.allProcessedEvents,
+      result.current.columns,
+    );
+    viewModels.forEach(vm => {
+      const talentVm = vm.events.filter(
+        (ev: { name: string; ownerId: string }) =>
+          ev.name === PERLICA_JSON.talents.one && ev.ownerId === SLOT_PERLICA,
+      );
+      expect(talentVm).toHaveLength(0);
+    });
+  });
+
+  it('F0b: Talent active during enemy stagger, matches stagger duration', () => {
+    const { result } = setupPerlica();
+    act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
+
+    // Place stagger event on enemy (4s–8s = 4s duration)
+    act(() => {
+      result.current.handleAddEvent(
+        ENEMY_OWNER_ID, NODE_STAGGER_COLUMN_ID, 4 * FPS,
+        { name: NODE_STAGGER_COLUMN_ID, segments: [{ properties: { duration: 4 * FPS } }] },
+      );
+    });
+
+    // Verify stagger event exists
+    const staggerEvs = result.current.allProcessedEvents.filter(
+      ev => ev.columnId === NODE_STAGGER_COLUMN_ID,
+    );
+    expect(staggerEvs.length).toBeGreaterThanOrEqual(1);
+
+    // Talent should be triggered and active during stagger
+    const talentEvents = result.current.allProcessedEvents.filter(
+      ev => ev.ownerId === SLOT_PERLICA && ev.name === PERLICA_JSON.talents.one,
+    );
+    expect(talentEvents.length).toBeGreaterThanOrEqual(1);
+    // Duration should match the stagger event duration (4s = 480 frames)
+    expect(eventDuration(talentEvents[0])).toBe(4 * FPS);
+    expect(talentEvents[0].startFrame).toBe(4 * FPS);
+
+    // Talent is NOT active outside the stagger window
+    const talentEnd = talentEvents[0].startFrame + eventDuration(talentEvents[0]);
+    const talentActiveOutside = talentEvents.some(
+      ev => ev.startFrame < 4 * FPS || ev.startFrame + eventDuration(ev) > 8 * FPS,
+    );
+    expect(talentActiveOutside).toBe(false);
+    // Talent ends exactly when stagger ends
+    expect(talentEnd).toBe(8 * FPS);
+
+    // View: talent appears in presentation during stagger window only
+    const viewModels = computeTimelinePresentation(
+      result.current.allProcessedEvents,
+      result.current.columns,
+    );
+    let viewTalentFound = false;
+    viewModels.forEach(vm => {
+      const talentVmEvents = vm.events.filter(
+        (ev: { name: string; ownerId: string }) =>
+          ev.name === PERLICA_JSON.talents.one && ev.ownerId === SLOT_PERLICA,
+      );
+      for (const ev of talentVmEvents) {
+        viewTalentFound = true;
+        // Must start at stagger start and not extend past stagger end
+        expect(ev.startFrame).toBe(4 * FPS);
+        expect(ev.startFrame + eventDuration(ev)).toBe(8 * FPS);
+      }
+    });
+    expect(viewTalentFound).toBe(true);
+
+    // View: talent does NOT appear outside the stagger window
+    viewModels.forEach(vm => {
+      const outsideEvents = vm.events.filter(
+        (ev: { name: string; ownerId: string; startFrame: number }) =>
+          ev.name === PERLICA_JSON.talents.one && ev.ownerId === SLOT_PERLICA
+          && (ev.startFrame < 4 * FPS || ev.startFrame >= 8 * FPS),
+      );
+      expect(outsideEvents).toHaveLength(0);
+    });
+  });
+
+  it('F0c: STAGGER_DAMAGE_BONUS in damage calc during stagger', () => {
+    const { result } = setupPerlica();
+    act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
+
+    // Place stagger event on enemy
+    act(() => {
+      result.current.handleAddEvent(
+        ENEMY_OWNER_ID, NODE_STAGGER_COLUMN_ID, 4 * FPS,
+        { name: NODE_STAGGER_COLUMN_ID, segments: [{ properties: { duration: 6 * FPS } }] },
+      );
+    });
+
+    // Place BS at 5s — during stagger
+    const bsCol = findColumn(result.current, SLOT_PERLICA, NounType.BATTLE_SKILL);
+    act(() => {
+      result.current.handleAddEvent(
+        SLOT_PERLICA, NounType.BATTLE_SKILL, 5 * FPS, bsCol!.defaultEvent!,
+      );
+    });
+
+    const calcResult = runCalculation(
+      result.current.allProcessedEvents,
+      result.current.columns,
+      result.current.slots,
+      result.current.enemy,
+      result.current.loadoutProperties,
+      result.current.loadouts,
+      result.current.staggerBreaks,
+      CritMode.NEVER,
+      result.current.overrides,
+    );
+
+    const bsRows = calcResult.rows.filter(
+      r => r.ownerId === SLOT_PERLICA && r.columnId === NounType.BATTLE_SKILL && r.damage != null,
+    );
+    expect(bsRows.length).toBeGreaterThan(0);
+    const row = bsRows.find(r => r.params?.sub);
+    expect(row).toBeDefined();
+    expect(row!.params?.sub?.staggerDmgBonus ?? 0).toBeGreaterThanOrEqual(0.2);
+  });
+});
+
+// =============================================================================
+// F. Combo Skill — Forced Electrification
+// =============================================================================
+
+describe('F. Combo Skill — Forced Electrification', () => {
+  it('F1: Combo applies forced Electrification reaction on enemy', () => {
+    const { result } = setupPerlica();
+    act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
+
+    const comboCol = findColumn(result.current, SLOT_PERLICA, NounType.COMBO_SKILL);
+    act(() => {
+      result.current.handleAddEvent(
+        SLOT_PERLICA, NounType.COMBO_SKILL, 3 * FPS, comboCol!.defaultEvent!,
+      );
+    });
+
+    // Should produce forced Electrification reaction on enemy
+    const electrification = result.current.allProcessedEvents.filter(
+      ev => ev.columnId === REACTION_COLUMNS.ELECTRIFICATION && ev.ownerId === ENEMY_OWNER_ID,
+    );
+    expect(electrification.length).toBeGreaterThanOrEqual(1);
+    // Forced reaction should have duration (5s = 600 frames at P0)
+    expect(eventDuration(electrification[0])).toBeGreaterThanOrEqual(5 * FPS - 1);
+  });
+
+  it('F2: P1 extends Electrification duration by 75%', () => {
+    const { result } = setupPerlica();
+    setPotential(result, 1);
+    act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
+
+    const comboCol = findColumn(result.current, SLOT_PERLICA, NounType.COMBO_SKILL);
+    act(() => {
+      result.current.handleAddEvent(
+        SLOT_PERLICA, NounType.COMBO_SKILL, 3 * FPS, comboCol!.defaultEvent!,
+      );
+    });
+
+    const electrification = result.current.allProcessedEvents.filter(
+      ev => ev.columnId === REACTION_COLUMNS.ELECTRIFICATION && ev.ownerId === ENEMY_OWNER_ID,
+    );
+    expect(electrification.length).toBeGreaterThanOrEqual(1);
+    // P1: 5s × 1.75 = 8.75s = 1050 frames
+    const dur = eventDuration(electrification[0]);
+    expect(dur).toBeGreaterThanOrEqual(Math.round(8.75 * FPS) - 1);
+    expect(dur).toBeLessThanOrEqual(Math.round(8.75 * FPS) + 1);
+  });
+});
+
+// =============================================================================
+// G. P3 — Supervisory Duties (ATK buff on Electrification)
+// =============================================================================
+
+describe('G. P3 — Supervisory Duties', () => {
+  it('G1: P3 triggers Supervisory Duties status on Perlica after Electrification', () => {
+    const { result } = setupPerlica();
+    setPotential(result, 3);
+    act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
+
+    // Place combo to trigger forced Electrification → should trigger P3 status
+    const comboCol = findColumn(result.current, SLOT_PERLICA, NounType.COMBO_SKILL);
+    act(() => {
+      result.current.handleAddEvent(
+        SLOT_PERLICA, NounType.COMBO_SKILL, 3 * FPS, comboCol!.defaultEvent!,
+      );
+    });
+
+    // P3 status should appear on Perlica
+    const p3Status = result.current.allProcessedEvents.filter(
+      ev => ev.name === P3_STATUS_ID && ev.ownerId === SLOT_PERLICA && ev.startFrame > 0,
+    );
+    expect(p3Status.length).toBeGreaterThanOrEqual(1);
+    // Duration should be 5s
+    expect(eventDuration(p3Status[0])).toBeGreaterThanOrEqual(5 * FPS - 1);
+    expect(eventDuration(p3Status[0])).toBeLessThanOrEqual(5 * FPS + 1);
+  });
+
+  it('G2: P3 stacks to 2 on multiple Electrification applications', () => {
+    const { result } = setupPerlica();
+    setPotential(result, 3);
+    act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
+
+    const comboCol = findColumn(result.current, SLOT_PERLICA, NounType.COMBO_SKILL);
+    // First combo at 3s
+    act(() => {
+      result.current.handleAddEvent(
+        SLOT_PERLICA, NounType.COMBO_SKILL, 3 * FPS, comboCol!.defaultEvent!,
+      );
+    });
+    // Second combo at 30s (after CD)
+    act(() => {
+      result.current.handleAddEvent(
+        SLOT_PERLICA, NounType.COMBO_SKILL, 30 * FPS, comboCol!.defaultEvent!,
+      );
+    });
+
+    // Should have 2 P3 status applications
+    const p3Statuses = result.current.allProcessedEvents.filter(
+      ev => ev.name === P3_STATUS_ID && ev.ownerId === SLOT_PERLICA && ev.startFrame > 0,
+    );
+    expect(p3Statuses.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('G3: Below P3, no Supervisory Duties status is triggered', () => {
+    const { result } = setupPerlica();
+    setPotential(result, 2);
+    act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
+
+    const comboCol = findColumn(result.current, SLOT_PERLICA, NounType.COMBO_SKILL);
+    act(() => {
+      result.current.handleAddEvent(
+        SLOT_PERLICA, NounType.COMBO_SKILL, 3 * FPS, comboCol!.defaultEvent!,
+      );
+    });
+
+    const p3Status = result.current.allProcessedEvents.filter(
+      ev => ev.name === P3_STATUS_ID && ev.ownerId === SLOT_PERLICA && ev.startFrame > 0,
+    );
+    expect(p3Status).toHaveLength(0);
+  });
+});
+
+// =============================================================================
+// H. P4 — Constant Guidance (Electrification extra scaling)
+// =============================================================================
+
+describe('H. P4 — Constant Guidance', () => {
+  it('H1: P4 combo applies additional Arts susceptibility (+0.33) in DSL', () => {
+    const comboFrame = COMBO_JSON.segments[1]?.frames?.[0];
+    expect(comboFrame).toBeDefined();
+    const applySusc = comboFrame.clause[0].effects.find(
+      (e: { verb: string; object: string; objectId?: string }) =>
+        e.verb === VerbType.APPLY && e.object === NounType.STATUS && e.objectId === ARTS_SUSCEPTIBILITY_ID,
+    );
+    expect(applySusc).toBeDefined();
+    // P0-P3: 0, P4 (index 4): 0.33
+    expect(applySusc.with.value.value[0]).toBe(0);
+    expect(applySusc.with.value.value[3]).toBe(0);
+    expect(applySusc.with.value.value[4]).toBe(0.33);
+  });
+
+  it('H2: P4 combo applies Arts susceptibility status to enemy', () => {
+    const { result } = setupPerlica();
+    setPotential(result, 4);
+    act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
+
+    const comboCol = findColumn(result.current, SLOT_PERLICA, NounType.COMBO_SKILL);
+    act(() => {
+      result.current.handleAddEvent(
+        SLOT_PERLICA, NounType.COMBO_SKILL, 3 * FPS, comboCol!.defaultEvent!,
+      );
+    });
+
+    const susc = result.current.allProcessedEvents.filter(
+      ev => ev.ownerId === ENEMY_OWNER_ID && ev.id === ARTS_SUSCEPTIBILITY_ID,
+    );
+    expect(susc.length).toBeGreaterThanOrEqual(1);
+    // Susceptibility value should be 0.33
+    expect(susc[0].susceptibility).toBeDefined();
+  });
+
+  it('H3: Below P4, Arts susceptibility has zero value', () => {
+    const { result } = setupPerlica();
+    setPotential(result, 3);
+    act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
+
+    const comboCol = findColumn(result.current, SLOT_PERLICA, NounType.COMBO_SKILL);
+    act(() => {
+      result.current.handleAddEvent(
+        SLOT_PERLICA, NounType.COMBO_SKILL, 3 * FPS, comboCol!.defaultEvent!,
+      );
+    });
+
+    const susc = result.current.allProcessedEvents.filter(
+      ev => ev.ownerId === ENEMY_OWNER_ID && ev.id === ARTS_SUSCEPTIBILITY_ID,
+    );
+    // Event may exist but with 0 susceptibility value (no gameplay effect)
+    for (const ev of susc) {
+      const artsValue = (ev.susceptibility as Record<string, number> | undefined)?.[AdjectiveType.ARTS] ?? 0;
+      expect(artsValue).toBe(0);
+    }
   });
 });

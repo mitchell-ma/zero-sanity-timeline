@@ -216,7 +216,7 @@ export function buildColumnContextMenu(
       return [
         headerItem,
         ...variants.map((v) => {
-          const availability = checkVariantAvailability(v.id, col.ownerId, events, atFrame, col.columnId, slots, v.enhancementType);
+          const availability = checkVariantAvailability(v.id, col.ownerId, events, atFrame, col.columnId, slots);
           const overlap = checkOverlap(col.ownerId, col.columnId, computeProspectiveRange(v, atFrame, timeStopRegions));
           const disabled = interactionMode === InteractionModeType.STRICT && (inTimeStop || !comboAvail.available || availability.disabled || overlap);
           const displayName = v.displayName ?? getAllSkillLabels()[v.id as CombatSkillType] ?? v.name ?? v.id;
@@ -323,8 +323,9 @@ export function buildColumnContextMenu(
     return [
       headerItem,
       ...col.eventVariants.map((v) => {
-        const availability = checkVariantAvailability(v.id, col.ownerId, events, atFrame, col.columnId, slots, v.enhancementType);
-        const overlap = checkOverlap(col.ownerId, col.columnId, computeProspectiveRange(v, atFrame, timeStopRegions));
+        const availability = checkVariantAvailability(v.id, col.ownerId, events, atFrame, col.columnId, slots);
+        const variantStackLimit = (v.stacks?.limit as { value?: number } | undefined)?.value ?? 1;
+        const overlap = variantStackLimit > 1 ? false : checkOverlap(col.ownerId, col.columnId, computeProspectiveRange(v, atFrame, timeStopRegions));
         let finisherBlock: string | undefined;
         if (v.id === CombatSkillType.FINISHER && staggerBreaks) {
           const effectiveBreaks = getEffectiveStaggerWindows(events, staggerBreaks);
@@ -339,12 +340,14 @@ export function buildColumnContextMenu(
             if (existing) finisherBlock = t('ctx.finisher.duplicate');
           }
         }
-        const disabled = interactionMode === InteractionModeType.STRICT && (inTimeStop || v.disabled || availability.disabled || overlap || spInsufficient || !!finisherBlock);
+        const hasSegmentDisable = (availability.disabledSegments?.size ?? 0) > 0;
+        const disabled = interactionMode === InteractionModeType.STRICT && (inTimeStop || v.disabled || availability.disabled || overlap || spInsufficient || !!finisherBlock || hasSegmentDisable);
         const displayName = v.isPerfectDodge ? 'Dodge'
           : v.id === CombatSkillType.DASH ? 'Dash'
           : v.displayName ?? getAllSkillLabels()[v.id as CombatSkillType] ?? getAllInflictionLabels()[v.id] ?? v.name ?? v.id;
         const reason = v.disabledReason
-          ?? (inTimeStop ? timeStopReason
+          ?? (hasSegmentDisable ? t('ctx.segmentDisabled')
+          : inTimeStop ? timeStopReason
           : spInsufficient ? spReason
           : availability.disabled ? availability.reason
           : finisherBlock ? finisherBlock
@@ -357,9 +360,11 @@ export function buildColumnContextMenu(
         const inlineButtons = isBatkChain
           ? v.segments!.map((seg, segIdx) => {
             const segOverlap = checkOverlap(col.ownerId, col.columnId, computeProspectiveRange({ segments: [seg] }, atFrame, timeStopRegions));
-            const segDisabled = interactionMode === InteractionModeType.STRICT && (inTimeStop || v.disabled || availability.disabled || segOverlap || spInsufficient);
+            const segStatusDisabled = availability.disabledSegments?.has(segIdx) ?? false;
+            const segDisabled = interactionMode === InteractionModeType.STRICT && (inTimeStop || v.disabled || availability.disabled || segOverlap || spInsufficient || segStatusDisabled);
             const segReason = v.disabledReason
-              ?? (inTimeStop ? timeStopReason
+              ?? (segStatusDisabled ? t('ctx.segmentDisabled')
+              : inTimeStop ? timeStopReason
               : spInsufficient ? spReason
               : availability.disabled ? availability.reason
               : segOverlap ? t('ctx.overlap')
@@ -448,6 +453,7 @@ export function buildColumnContextMenu(
               ...(v.enhancementType ? { enhancementType: v.enhancementType } : {}),
               ...(v.activationClause ? { activationClause: v.activationClause } : {}),
               ...(v.suppliedParameters ? { suppliedParameters: v.suppliedParameters } : {}),
+              ...(v.stacks ? { stacks: v.stacks } : {}),
             },
           },
           disabled,

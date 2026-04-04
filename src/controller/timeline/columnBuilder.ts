@@ -1,7 +1,7 @@
 import { Column, MiniTimeline, MicroColumn, Operator, Enemy, VisibleSkills, EventFrameMarker, EventSegmentData } from '../../consts/viewTypes';
 import { ClauseEvaluationType, DeterminerType, NounType, VerbType, type Effect, type Predicate } from '../../dsl/semantics';
 import type { FrameClausePredicate } from '../../model/event-frames/skillEventFrame';
-import { ColumnType, CombatSkillType, DEFAULT_EVENT_COLOR, ELEMENT_COLORS, ElementType, EnhancementType, EventCategoryType, EventFrameType, HeaderVariant, MicroColumnAssignment, PERMANENT_DURATION, SegmentType, StatusType, TimeDependency, TimelineSourceType, UNLIMITED_STACKS } from '../../consts/enums';
+import { ColumnType, CombatSkillType, DEFAULT_EVENT_COLOR, ELEMENT_COLORS, ElementType, EnhancementType, EventCategoryType, EventFrameType, HeaderVariant, MicroColumnAssignment, SegmentType, StackInteractionType, StatusType, TimeDependency, TimelineSourceType, UNLIMITED_STACKS } from '../../consts/enums';
 import { ENEMY_OWNER_ID, ENEMY_GROUP_COLUMNS, ENEMY_ACTION_COLUMN_ID, OPERATOR_COLUMNS, OPERATOR_STATUS_COLUMN_ID, PHYSICAL_INFLICTION_COLUMNS, PHYSICAL_STATUS_COLUMNS, SKILL_COLUMN_ORDER as SKILL_ORDER, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID, COMBO_WINDOW_COLUMN_ID } from '../../model/channels';
 import { isTeamStatus } from '../gameDataStore';
 import { SKILL_LABELS, ColumnLabel, STATUS_LABELS, REACTION_MICRO_COLUMNS } from '../../consts/timelineColumnLabels';
@@ -153,9 +153,10 @@ function buildStatusMicroColumn(
     label,
     color,
     ...(cfg?.eventCategoryType ? { statusType: cfg.eventCategoryType } : {}),
-    ...(overrides?.permanent || durSec >= PERMANENT_DURATION
-      || cfg?.eventCategoryType === EventCategoryType.TALENT
-      || cfg?.eventCategoryType === EventCategoryType.POTENTIAL
+    ...(overrides?.permanent
+      || ((cfg?.eventCategoryType === EventCategoryType.TALENT
+        || cfg?.eventCategoryType === EventCategoryType.POTENTIAL)
+        && !(cfg?.stacks?.interactionType === StackInteractionType.NONE && cfg?.maxStacks >= UNLIMITED_STACKS))
       ? { permanent: true } : {}),
     defaultEvent: {
       id: statusId,
@@ -603,7 +604,9 @@ export function buildColumns(
                   const variantSeqs = getFrameSequences(op.id, varId);
                   if (variantSeqs?.length) {
                     const variantSeg = SkillSegmentBuilder.buildSegments(variantSeqs, { ctx: skillCtx, useNumeralFallback: true });
-                    const enhancementType = suffix === '_ENHANCED' ? EnhancementType.ENHANCED : EnhancementType.EMPOWERED;
+                    const jsonEnhTypes = ((varSkill as Record<string, unknown>).enhancementTypes ?? (varSkill.properties as Record<string, unknown> | undefined)?.enhancementTypes) as string[] | undefined;
+                    const enhancementType = jsonEnhTypes?.includes(EnhancementType.ENHANCED) ? EnhancementType.ENHANCED
+                      : EnhancementType.EMPOWERED;
                     const baVarParams = collectSuppliedParameters(baVarSkillObj?.suppliedParameters, variantSeg.segments);
                     col.eventVariants.push({
                       id: varId,
@@ -859,9 +862,10 @@ export function buildColumns(
         .sort((a, b) => (STATUS_SOURCE_ORDER[a.source] ?? 3) - (STATUS_SOURCE_ORDER[b.source] ?? 3));
       for (const def of ownDefs) {
         const cfg = getStatusById(def.statusId);
-        const isPermanent = def.durationSec >= PERMANENT_DURATION
-          || cfg?.eventCategoryType === EventCategoryType.TALENT
-          || cfg?.eventCategoryType === EventCategoryType.TALENT_STATUS;
+        const isCounter = cfg?.stacks?.interactionType === StackInteractionType.NONE && (cfg?.maxStacks ?? 0) >= UNLIMITED_STACKS;
+        const isPermanent = !isCounter
+          && (cfg?.eventCategoryType === EventCategoryType.TALENT
+            || cfg?.eventCategoryType === EventCategoryType.POTENTIAL);
         const mc = buildStatusMicroColumn(def.statusId, def.color, { label: def.label, permanent: isPermanent });
         // Use columnId (may differ from statusId for OPERATOR_COLUMNS entries)
         mc.id = def.columnId;

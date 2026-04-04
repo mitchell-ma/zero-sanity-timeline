@@ -7,7 +7,7 @@
           "subject": "OPERATOR",
           "verb": "CONSUME",
           "object": "STATUS",
-          "objectId": "ORIGINIUM_CRYSTAL",
+          "objectId": "REALSPACE_STASIS_TALENT",
           "with": {
             "stacks": "MAX"
           }
@@ -43,7 +43,7 @@
           "subject": "OPERATOR",
           "verb": "CONSUME",
           "object": "STATUS",
-          "objectId": "ORIGINIUM_CRYSTAL",
+          "objectId": "REALSPACE_STASIS_TALENT",
           "with": {
             "stacks": "MAX"
           }
@@ -99,6 +99,6 @@
       "ENDFIELD_WIKI"
     ],
     "icon": "skills/endministrator_talent_1_icon.png",
-    "dataStatus": "RECONCILED"
+    "dataStatus": "VERIFIED"
   }
 }

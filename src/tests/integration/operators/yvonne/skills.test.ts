@@ -22,7 +22,7 @@
 import { renderHook, act } from '@testing-library/react';
 import { NounType } from '../../../../dsl/semantics';
 import { useApp } from '../../../../app/useApp';
-import { InteractionModeType, SegmentType } from '../../../../consts/enums';
+import { InteractionModeType, SegmentType, StackInteractionType } from '../../../../consts/enums';
 import { FPS } from '../../../../utils/timeline';
 import { computeTimelinePresentation } from '../../../../controller/timeline/eventPresentationController';
 import { getUltimateEnergyCost } from '../../../../controller/operators/operatorRegistry';
@@ -251,8 +251,8 @@ describe('Yvonne Skills -- integration through useApp', () => {
     expect(BARRAGE_ID).toBeDefined();
     // Crit stacks has a stack limit of 10
     expect(CRIT_STACKS_JSON.properties.stacks.limit.value).toBe(10);
-    // Barrage of Technology has CONSUME interaction type
-    expect(BARRAGE_JSON.properties.stacks.interactionType).toBe('CONSUME');
+    // Barrage of Technology has RESET interaction type (refreshes on re-trigger)
+    expect(BARRAGE_JSON.properties.stacks.interactionType).toBe(StackInteractionType.RESET);
   });
 
   // =========================================================================
@@ -307,5 +307,132 @@ describe('Yvonne Skills -- integration through useApp', () => {
       (ev) => ev.ownerId === SLOT_YVONNE && ev.columnId === NounType.ULTIMATE,
     );
     expect(ultEvents).toHaveLength(1);
+  });
+
+  // =========================================================================
+  // G. View Layer — Applied Status Durations
+  // =========================================================================
+
+  it('Barrage of Technology visible in view with correct duration after BS + cryo infliction', () => {
+    const { result } = setupYvonne();
+    act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
+    act(() => {
+      result.current.handleAddEvent(
+        'enemy', 'CRYO_INFLICTION', 1 * FPS,
+        { name: 'CRYO_INFLICTION', segments: [{ properties: { duration: 20 * FPS } }] },
+      );
+    });
+    const bsCol = findColumn(result.current, SLOT_YVONNE, NounType.BATTLE_SKILL)!;
+    const bsPayload = getMenuPayload(result.current, bsCol, 5 * FPS);
+    act(() => {
+      result.current.handleAddEvent(bsPayload.ownerId, bsPayload.columnId, bsPayload.atFrame, bsPayload.defaultSkill);
+    });
+
+    const viewModels = computeTimelinePresentation(
+      result.current.allProcessedEvents,
+      result.current.columns,
+    );
+    // Find Barrage event in processed events
+    const barrage = result.current.allProcessedEvents.find(
+      ev => ev.id === BARRAGE_ID && ev.ownerId === SLOT_YVONNE,
+    );
+    expect(barrage).toBeDefined();
+    // Barrage duration should be infinite (99999s)
+    const dur = barrage!.segments.reduce(
+      (sum: number, s: { properties: { duration: number } }) => sum + s.properties.duration, 0,
+    );
+    expect(dur).toBe(Math.round(99999 * FPS));
+    // Should be visible in view
+    const statusCol = findColumn(result.current, SLOT_YVONNE, 'operator-status');
+    expect(statusCol).toBeDefined();
+    const vm = viewModels.get(statusCol!.key);
+    expect(vm).toBeDefined();
+    expect(vm!.events.some(ev => ev.id === BARRAGE_ID)).toBe(true);
+  });
+
+  it('Freezing Point Cryo visible in view with correct duration after cryo infliction placed', () => {
+    const { result } = setupYvonne();
+    act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
+    act(() => {
+      result.current.handleAddEvent(
+        'enemy', 'CRYO_INFLICTION', 1 * FPS,
+        { name: 'CRYO_INFLICTION', segments: [{ properties: { duration: 5 * FPS } }] },
+      );
+    });
+
+    const fpCryo = result.current.allProcessedEvents.find(
+      ev => ev.id === 'FREEZING_POINT_CRYO' && ev.ownerId === SLOT_YVONNE,
+    );
+    expect(fpCryo).toBeDefined();
+    const dur = fpCryo!.segments.reduce(
+      (sum: number, s: { properties: { duration: number } }) => sum + s.properties.duration, 0,
+    );
+    // Cryo infliction is 5s, status should be consumed when infliction expires
+    // so duration should be <= 5s
+    expect(dur).toBeLessThanOrEqual(5 * FPS);
+    // Should be visible in view
+    const viewModels = computeTimelinePresentation(
+      result.current.allProcessedEvents,
+      result.current.columns,
+    );
+    const statusCol = findColumn(result.current, SLOT_YVONNE, 'operator-status');
+    const vm = viewModels.get(statusCol!.key);
+    expect(vm).toBeDefined();
+    expect(vm!.events.some(ev => ev.id === 'FREEZING_POINT_CRYO')).toBe(true);
+  });
+
+  it('Expert Mechcrafter visible in view with 7s duration at P5', () => {
+    const { result } = setupYvonne();
+    act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
+    const props = result.current.loadoutProperties[SLOT_YVONNE];
+    act(() => {
+      result.current.handleStatsChange(SLOT_YVONNE, { ...props, operator: { ...props.operator, potential: 5 } });
+    });
+    act(() => { setUltimateEnergyToMax(result.current, SLOT_YVONNE, 0); });
+    const ultCol = findColumn(result.current, SLOT_YVONNE, NounType.ULTIMATE)!;
+    const ultPayload = getMenuPayload(result.current, ultCol, 5 * FPS);
+    act(() => {
+      result.current.handleAddEvent(ultPayload.ownerId, ultPayload.columnId, ultPayload.atFrame, ultPayload.defaultSkill);
+    });
+
+    const expert = result.current.allProcessedEvents.find(
+      ev => ev.id === 'EXPERT_MECHCRAFTER' && ev.ownerId === SLOT_YVONNE,
+    );
+    expect(expert).toBeDefined();
+    const dur = expert!.segments.reduce(
+      (sum: number, s: { properties: { duration: number } }) => sum + s.properties.duration, 0,
+    );
+    expect(dur).toBe(Math.round(7 * FPS));
+    // Starts at active segment start (after animation)
+    const ult = result.current.allProcessedEvents.find(
+      ev => ev.ownerId === SLOT_YVONNE && ev.columnId === NounType.ULTIMATE,
+    )!;
+    const animDur = ult.segments[0].properties.duration;
+    expect(expert!.startFrame).toBe(ult.startFrame + animDur);
+    // Visible in view
+    const viewModels = computeTimelinePresentation(
+      result.current.allProcessedEvents,
+      result.current.columns,
+    );
+    const statusCol = findColumn(result.current, SLOT_YVONNE, 'operator-status');
+    const vm = viewModels.get(statusCol!.key);
+    expect(vm).toBeDefined();
+    expect(vm!.events.some(ev => ev.id === 'EXPERT_MECHCRAFTER')).toBe(true);
+  });
+
+  it('Expert Mechcrafter NOT visible at P0', () => {
+    const { result } = setupYvonne();
+    act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
+    act(() => { setUltimateEnergyToMax(result.current, SLOT_YVONNE, 0); });
+    const ultCol = findColumn(result.current, SLOT_YVONNE, NounType.ULTIMATE)!;
+    const ultPayload = getMenuPayload(result.current, ultCol, 5 * FPS);
+    act(() => {
+      result.current.handleAddEvent(ultPayload.ownerId, ultPayload.columnId, ultPayload.atFrame, ultPayload.defaultSkill);
+    });
+
+    const expert = result.current.allProcessedEvents.filter(
+      ev => ev.id === 'EXPERT_MECHCRAFTER' && ev.ownerId === SLOT_YVONNE,
+    );
+    expect(expert).toHaveLength(0);
   });
 });

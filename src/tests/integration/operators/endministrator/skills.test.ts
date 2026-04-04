@@ -33,6 +33,7 @@ import {
   ENEMY_OWNER_ID,
   ENEMY_GROUP_COLUMNS,
   OPERATOR_STATUS_COLUMN_ID,
+  COMBO_WINDOW_COLUMN_ID,
 } from '../../../../model/channels';
 import { DEFAULT_LOADOUT_PROPERTIES } from '../../../../view/InformationPane';
 import type { LoadoutProperties } from '../../../../view/InformationPane';
@@ -65,12 +66,20 @@ const ULTIMATE_JSON = require(
 const ULTIMATE_ID: string = ULTIMATE_JSON.properties.id;
 const ULTIMATE_ENERGY_COST: number = ULTIMATE_JSON.clause[0].effects[0].with.value.value;
 
-const ORIGINIUM_CRYSTAL_ID: string = require(
-  '../../../../model/game-data/operators/endministrator/statuses/status-originium-crystal.json',
+const REALSPACE_STASIS_ID: string = require(
+  '../../../../model/game-data/operators/endministrator/talents/talent-realspace-stasis.json',
 ).properties.id;
 
 const ESSENCE_DISINTEGRATION_ID: string = require(
   '../../../../model/game-data/operators/endministrator/statuses/status-essence-disintegration.json',
+).properties.id;
+
+const ORIGINIUM_CRYSTALS_SHATTER_ID: string = require(
+  '../../../../model/game-data/operators/endministrator/statuses/status-originium-crystals-shatter.json',
+).properties.id;
+
+const ESSENCE_DISINTEGRATION_MINOR_ID: string = require(
+  '../../../../model/game-data/operators/endministrator/statuses/status-essence-disintegration-minor.json',
 ).properties.id;
 /* eslint-enable @typescript-eslint/no-require-imports */
 
@@ -188,6 +197,57 @@ describe('A. Core Skill Placement', () => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// A2. Combo Activation — ANY_OTHER operator trigger
+// ═══════════════════════════════════════════════════════════════════════════════
+
+describe('A2. Combo Activation (ANY_OTHER)', () => {
+  const SLOT_OTHER = 'slot-1'; // Default: Akekuri
+
+  it('A2a: another operator combo opens Endministrator combo window', () => {
+    const { result } = setupEndministratorFreeform();
+
+    // Place a combo for Akekuri (slot-1) in freeform to trigger Endministrator's window
+    const otherComboCol = findColumn(result.current, SLOT_OTHER, NounType.COMBO_SKILL);
+    expect(otherComboCol).toBeDefined();
+    const payload = getMenuPayload(result.current, otherComboCol!, 3 * FPS);
+    act(() => {
+      result.current.handleAddEvent(
+        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+      );
+    });
+
+    // Endministrator should have a combo activation window sourced from the other operator
+    const windows = result.current.allProcessedEvents.filter(
+      ev => ev.columnId === COMBO_WINDOW_COLUMN_ID
+        && ev.ownerId === SLOT_ENDMINISTRATOR
+        && ev.sourceOwnerId === SLOT_OTHER,
+    );
+    expect(windows.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('A2b: Endministrator own combo does NOT open own combo window', () => {
+    const { result } = setupEndministratorFreeform();
+
+    // Place Endministrator's combo in freeform
+    const comboCol = findColumn(result.current, SLOT_ENDMINISTRATOR, NounType.COMBO_SKILL);
+    const payload = getMenuPayload(result.current, comboCol!, 3 * FPS);
+    act(() => {
+      result.current.handleAddEvent(
+        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+      );
+    });
+
+    // Endministrator should NOT have combo windows sourced from own combo
+    const windows = result.current.allProcessedEvents.filter(
+      ev => ev.columnId === COMBO_WINDOW_COLUMN_ID
+        && ev.ownerId === SLOT_ENDMINISTRATOR
+        && ev.sourceOwnerId === SLOT_ENDMINISTRATOR,
+    );
+    expect(windows).toHaveLength(0);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // B. Originium Crystal Cycle
 // ═══════════════════════════════════════════════════════════════════════════════
 
@@ -207,7 +267,7 @@ describe('B. Originium Crystal Cycle', () => {
 
     // Controller: Originium Crystal status generated on enemy
     const crystals = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === ORIGINIUM_CRYSTAL_ID && ev.ownerId === ENEMY_OWNER_ID,
+      ev => ev.columnId === REALSPACE_STASIS_ID && ev.ownerId === ENEMY_OWNER_ID,
     );
     expect(crystals.length).toBeGreaterThanOrEqual(1);
 
@@ -227,7 +287,7 @@ describe('B. Originium Crystal Cycle', () => {
     const enemyVM = viewModels.get(enemyStatusCol!.key);
     expect(enemyVM).toBeDefined();
     expect(enemyVM!.events.some(
-      ev => ev.columnId === ORIGINIUM_CRYSTAL_ID,
+      ev => ev.columnId === REALSPACE_STASIS_ID,
     )).toBe(true);
   });
 
@@ -246,7 +306,7 @@ describe('B. Originium Crystal Cycle', () => {
 
     // Verify crystal exists before battle skill
     const crystalsBefore = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === ORIGINIUM_CRYSTAL_ID
+      ev => ev.columnId === REALSPACE_STASIS_ID
         && ev.ownerId === ENEMY_OWNER_ID
         && ev.eventStatus !== EventStatusType.CONSUMED,
     );
@@ -264,7 +324,7 @@ describe('B. Originium Crystal Cycle', () => {
 
     // Controller: Originium Crystal consumed
     const crystalsConsumed = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === ORIGINIUM_CRYSTAL_ID
+      ev => ev.columnId === REALSPACE_STASIS_ID
         && ev.ownerId === ENEMY_OWNER_ID
         && ev.eventStatus === EventStatusType.CONSUMED,
     );
@@ -297,7 +357,7 @@ describe('C. Ultimate', () => {
 
     // Verify crystal exists
     const crystalsBefore = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === ORIGINIUM_CRYSTAL_ID
+      ev => ev.columnId === REALSPACE_STASIS_ID
         && ev.ownerId === ENEMY_OWNER_ID
         && ev.eventStatus !== EventStatusType.CONSUMED,
     );
@@ -315,7 +375,7 @@ describe('C. Ultimate', () => {
 
     // Controller: Originium Crystal consumed by ultimate
     const crystalsConsumed = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === ORIGINIUM_CRYSTAL_ID
+      ev => ev.columnId === REALSPACE_STASIS_ID
         && ev.ownerId === ENEMY_OWNER_ID
         && ev.eventStatus === EventStatusType.CONSUMED,
     );
@@ -377,6 +437,233 @@ describe('D. Talent-Derived Statuses', () => {
       ev => ev.columnId === ESSENCE_DISINTEGRATION_ID
         && ev.ownerId === SLOT_ENDMINISTRATOR,
     )).toBe(true);
+  });
+
+  it('D2: P2 crystal consume shares half ATK buff to teammates', () => {
+    const SLOT_TEAMMATE = 'slot-1';
+    const { result } = setupEndministratorWithPotential(2);
+
+    // Place combo to create crystal
+    const comboCol = findColumn(result.current, SLOT_ENDMINISTRATOR, NounType.COMBO_SKILL);
+    const comboPayload = getMenuPayload(result.current, comboCol!, 2 * FPS);
+    act(() => {
+      result.current.handleAddEvent(
+        comboPayload.ownerId, comboPayload.columnId,
+        comboPayload.atFrame, comboPayload.defaultSkill,
+      );
+    });
+
+    // Place BS to consume crystal
+    const battleCol = findColumn(result.current, SLOT_ENDMINISTRATOR, NounType.BATTLE_SKILL);
+    const battlePayload = getMenuPayload(result.current, battleCol!, 5 * FPS);
+    act(() => {
+      result.current.handleAddEvent(
+        battlePayload.ownerId, battlePayload.columnId,
+        battlePayload.atFrame, battlePayload.defaultSkill,
+      );
+    });
+
+    // Controller: Essence Disintegration (full) on Endministrator
+    const selfBuff = result.current.allProcessedEvents.filter(
+      ev => ev.columnId === ESSENCE_DISINTEGRATION_ID
+        && ev.ownerId === SLOT_ENDMINISTRATOR,
+    );
+    expect(selfBuff.length).toBeGreaterThanOrEqual(1);
+
+    // Controller: Essence Disintegration Minor (half) on teammate
+    const teamBuff = result.current.allProcessedEvents.filter(
+      ev => ev.columnId === ESSENCE_DISINTEGRATION_MINOR_ID
+        && ev.ownerId === SLOT_TEAMMATE,
+    );
+    expect(teamBuff.length).toBeGreaterThanOrEqual(1);
+
+    // Self buff has 15s duration
+    for (const ev of selfBuff) {
+      expect(eventDuration(ev)).toBe(15 * FPS);
+    }
+
+    // Team buff has 15s duration
+    for (const ev of teamBuff) {
+      expect(eventDuration(ev)).toBe(15 * FPS);
+    }
+  });
+
+  it('D3: P1 does NOT share ATK buff to teammates', () => {
+    const SLOT_TEAMMATE = 'slot-1';
+    const { result } = setupEndministratorWithPotential(1);
+
+    // Place combo + BS to consume crystal
+    const comboCol = findColumn(result.current, SLOT_ENDMINISTRATOR, NounType.COMBO_SKILL);
+    const comboPayload = getMenuPayload(result.current, comboCol!, 2 * FPS);
+    act(() => {
+      result.current.handleAddEvent(
+        comboPayload.ownerId, comboPayload.columnId,
+        comboPayload.atFrame, comboPayload.defaultSkill,
+      );
+    });
+    const battleCol = findColumn(result.current, SLOT_ENDMINISTRATOR, NounType.BATTLE_SKILL);
+    const battlePayload = getMenuPayload(result.current, battleCol!, 5 * FPS);
+    act(() => {
+      result.current.handleAddEvent(
+        battlePayload.ownerId, battlePayload.columnId,
+        battlePayload.atFrame, battlePayload.defaultSkill,
+      );
+    });
+
+    // P1: self buff exists
+    const selfBuff = result.current.allProcessedEvents.filter(
+      ev => ev.columnId === ESSENCE_DISINTEGRATION_ID
+        && ev.ownerId === SLOT_ENDMINISTRATOR,
+    );
+    expect(selfBuff.length).toBeGreaterThanOrEqual(1);
+
+    // P1: NO team buff
+    const teamBuff = result.current.allProcessedEvents.filter(
+      ev => ev.columnId === ESSENCE_DISINTEGRATION_MINOR_ID
+        && ev.ownerId === SLOT_TEAMMATE,
+    );
+    expect(teamBuff).toHaveLength(0);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// D2. Realspace Stasis — Physical Fragility & Crystal Shatter Trigger
+// ═══════════════════════════════════════════════════════════════════════════════
+
+describe('D2. Realspace Stasis', () => {
+  it('D2a: combo-applied crystals carry Realspace Stasis status ID', () => {
+    const { result } = setupEndministratorFreeform();
+
+    const comboCol = findColumn(result.current, SLOT_ENDMINISTRATOR, NounType.COMBO_SKILL);
+    const payload = getMenuPayload(result.current, comboCol!, 2 * FPS);
+    act(() => {
+      result.current.handleAddEvent(
+        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+      );
+    });
+
+    const crystals = result.current.allProcessedEvents.filter(
+      ev => ev.columnId === REALSPACE_STASIS_ID && ev.ownerId === ENEMY_OWNER_ID,
+    );
+    expect(crystals.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('D2b: Realspace Stasis status has PHYSICAL FRAGILITY clause in its definition', () => {
+    // Verify the status JSON is wired up — clause applies FRAGILITY PHYSICAL
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const statusJson = require(
+      '../../../../model/game-data/operators/endministrator/talents/talent-realspace-stasis.json',
+    );
+    expect(statusJson.clause).toBeDefined();
+    const fragilityEffect = statusJson.clause[0].effects.find(
+      (e: Record<string, unknown>) => e.object === 'FRAGILITY' && e.objectQualifier === 'PHYSICAL',
+    );
+    expect(fragilityEffect).toBeDefined();
+    expect(fragilityEffect.with.value.value).toEqual([0.10, 0.20]);
+  });
+
+  it('D2c: Realspace Stasis has onTriggerClause for physical status shattering', () => {
+    // Verify the onTriggerClause covers all 5 physical statuses/vulnerability
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const statusJson = require(
+      '../../../../model/game-data/operators/endministrator/talents/talent-realspace-stasis.json',
+    );
+    expect(statusJson.onTriggerClause).toBeDefined();
+    expect(statusJson.onTriggerClause).toHaveLength(5);
+
+    const triggerObjects = statusJson.onTriggerClause.map(
+      (t: { conditions: { object: string }[] }) => t.conditions[0].object,
+    );
+    expect(triggerObjects).toContain('VULNERABLE');
+    expect(triggerObjects).toContain('LIFT');
+    expect(triggerObjects).toContain('CRUSH');
+    expect(triggerObjects).toContain('KNOCK_DOWN');
+    expect(triggerObjects).toContain('BREACH');
+
+    // Each trigger consumes THIS EVENT and applies ORIGINIUM_CRYSTALS_SHATTER
+    // (ESSENCE_DISINTEGRATION is applied by the talent trigger via CONSUME cascade)
+    for (const trigger of statusJson.onTriggerClause) {
+      const consumeEffect = trigger.effects.find(
+        (e: Record<string, unknown>) => e.verb === 'CONSUME' && e.object === 'EVENT',
+      );
+      expect(consumeEffect).toBeDefined();
+
+      const shatterEffect = trigger.effects.find(
+        (e: Record<string, unknown>) => e.verb === 'APPLY' && e.objectId === 'ORIGINIUM_CRYSTALS_SHATTER',
+      );
+      expect(shatterEffect).toBeDefined();
+    }
+  });
+
+  it('D2d: BS crush triggers Originium Crystals Shatter on enemy with 2s duration', () => {
+    const { result } = setupEndministratorWithPotential(1);
+
+    // Place combo to apply crystals
+    const comboCol = findColumn(result.current, SLOT_ENDMINISTRATOR, NounType.COMBO_SKILL);
+    const comboPayload = getMenuPayload(result.current, comboCol!, 2 * FPS);
+    act(() => {
+      result.current.handleAddEvent(
+        comboPayload.ownerId, comboPayload.columnId,
+        comboPayload.atFrame, comboPayload.defaultSkill,
+      );
+    });
+
+    // Place BS — CRUSH triggers REALSPACE_STASIS onTriggerClause → SHATTER
+    const battleCol = findColumn(result.current, SLOT_ENDMINISTRATOR, NounType.BATTLE_SKILL);
+    const battlePayload = getMenuPayload(result.current, battleCol!, 5 * FPS);
+    act(() => {
+      result.current.handleAddEvent(
+        battlePayload.ownerId, battlePayload.columnId,
+        battlePayload.atFrame, battlePayload.defaultSkill,
+      );
+    });
+
+    // Controller: Originium Crystals Shatter on enemy
+    const shatterEvents = result.current.allProcessedEvents.filter(
+      ev => ev.columnId === ORIGINIUM_CRYSTALS_SHATTER_ID
+        && ev.ownerId === ENEMY_OWNER_ID,
+    );
+    expect(shatterEvents.length).toBeGreaterThanOrEqual(1);
+
+    // Shatter has 2s duration
+    for (const ev of shatterEvents) {
+      expect(eventDuration(ev)).toBe(2 * FPS);
+    }
+  });
+
+  it('D2e: ultimate crystal consume also triggers shatter', () => {
+    const { result } = setupEndministratorFreeform();
+    act(() => { setUltimateEnergyToMax(result.current, SLOT_ENDMINISTRATOR, 0); });
+
+    // Place combo to apply crystals
+    const comboCol = findColumn(result.current, SLOT_ENDMINISTRATOR, NounType.COMBO_SKILL);
+    const comboPayload = getMenuPayload(result.current, comboCol!, 2 * FPS);
+    act(() => {
+      result.current.handleAddEvent(
+        comboPayload.ownerId, comboPayload.columnId,
+        comboPayload.atFrame, comboPayload.defaultSkill,
+      );
+    });
+
+    // Place ultimate — explicit CONSUME REALSPACE_STASIS_TALENT
+    const ultCol = findColumn(result.current, SLOT_ENDMINISTRATOR, NounType.ULTIMATE);
+    const ultPayload = getMenuPayload(result.current, ultCol!, 5 * FPS);
+    act(() => {
+      result.current.handleAddEvent(
+        ultPayload.ownerId, ultPayload.columnId,
+        ultPayload.atFrame, ultPayload.defaultSkill,
+      );
+    });
+
+    // Controller: shatter should NOT appear from ult (ult consumes directly, no physical status trigger)
+    // The ult's CONSUME doesn't go through REALSPACE_STASIS onTriggerClause — it's a direct CONSUME
+    const shatterEvents = result.current.allProcessedEvents.filter(
+      ev => ev.columnId === ORIGINIUM_CRYSTALS_SHATTER_ID
+        && ev.ownerId === ENEMY_OWNER_ID,
+    );
+    // Ult consumes crystals directly — the shatter damage is baked into the ult's own bonus DMG multiplier
+    // REALSPACE_STASIS onTriggerClause fires on physical status application, NOT on direct CONSUME
+    expect(shatterEvents).toHaveLength(0);
   });
 });
 

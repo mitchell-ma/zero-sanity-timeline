@@ -5,7 +5,7 @@
     "level": 4,
     "eventType": "POTENTIAL_EVENT",
     "eventCategoryType": "POTENTIAL",
-    "description": "Combo skill Instant Protocol: Chain improved: The Arts DMG Taken debuff effects on the enemy applied by the skill's Electrification are increased to {extra_scaling} times the original."
+    "description": "Combo skill Instant Protocol: Chain improved: The Arts DMG Taken debuff effects on the enemy applied by the skill's Electrification are increased to 1.33 times the original."
   },
   "metadata": {
     "originId": "PERLICA",

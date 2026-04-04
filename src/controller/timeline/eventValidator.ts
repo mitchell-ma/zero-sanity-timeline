@@ -55,6 +55,50 @@ export function hasEnableClauseAtFrame(
 }
 
 /**
+ * Check if any skill definition for this operator has an ENABLE clause targeting
+ * the variant. If so, the variant is ENABLE-gated and requires an active ENABLE
+ * to be placed. Checks JSON skill configs, not placed events.
+ */
+function isEnableGated(
+  events: readonly TimelineEvent[],
+  ownerId: string,
+  variantId: string,
+  slots?: Slot[],
+): boolean {
+  const slot = slots?.find(s => s.slotId === ownerId);
+  const opId = slot?.operator?.id;
+  if (opId) {
+    const skillMap = getOperatorSkills(opId);
+    if (skillMap) for (const skill of Array.from(skillMap.values())) {
+      const serialized = skill.serialize() as Record<string, unknown>;
+      const segments = serialized.segments as { clause?: { effects?: { verb: string; objectId?: string }[] }[] }[] | undefined;
+      if (!segments) continue;
+      for (const seg of segments) {
+        if (!seg.clause) continue;
+        if (seg.clause.some(c => c.effects?.some(e =>
+          e.verb === VerbType.ENABLE && e.objectId === variantId,
+        ))) {
+          return true;
+        }
+      }
+    }
+  }
+  // Fallback: check placed events (for non-operator-owned events or custom skills)
+  for (const ev of events) {
+    if (ev.ownerId !== ownerId) continue;
+    for (const seg of ev.segments) {
+      if (!seg.clause) continue;
+      if (seg.clause.some(c => c.effects.some(e =>
+        e.verb === VerbType.ENABLE && e.objectId === variantId,
+      ))) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+/**
  * Check if any overlapping segment has a DISABLE clause targeting the specified
  * variant ID at the given frame.
  */
@@ -71,7 +115,7 @@ function hasDisableAtFrame(
       const segEnd = cursor + seg.properties.duration;
       if (atFrame >= cursor && atFrame < segEnd && seg.clause) {
         if (seg.clause.some(c => c.effects.some(e =>
-          e.verb === VerbType.DISABLE && e.objectId === variantId,
+          e.verb === VerbType.DISABLE && e.objectId === variantId && !e.with?.segments,
         ))) {
           return true;
         }
@@ -80,6 +124,39 @@ function hasDisableAtFrame(
     }
   }
   return false;
+}
+
+/**
+ * Collect segment indices that are disabled by DISABLE clauses with a `with.segments`
+ * array targeting the specified variant ID at the given frame.
+ *
+ * Returns an empty set if no segment-level DISABLE is active.
+ */
+export function getDisabledSegmentIndices(
+  events: readonly TimelineEvent[],
+  ownerId: string,
+  variantId: string,
+  atFrame: number,
+): Set<number> {
+  const disabled = new Set<number>();
+  for (const ev of events) {
+    if (ev.ownerId !== ownerId) continue;
+    let cursor = ev.startFrame;
+    for (const seg of ev.segments) {
+      const segEnd = cursor + seg.properties.duration;
+      if (atFrame >= cursor && atFrame < segEnd && seg.clause) {
+        for (const c of seg.clause) {
+          for (const e of c.effects) {
+            if (e.verb === VerbType.DISABLE && e.objectId === variantId && e.with?.segments) {
+              for (const idx of e.with.segments) disabled.add(idx);
+            }
+          }
+        }
+      }
+      cursor = segEnd;
+    }
+  }
+  return disabled;
 }
 
 // ── Time-stop regions ─────────────────────────────────────────────────────────
@@ -723,15 +800,17 @@ export function checkComboWindowAvailability(
   }
 
   const windowEnd = eventEndFrame(matchingWindow);
-  let usedCount = 0;
+  // Count only combos whose event (including CD) hasn't ended before atFrame
+  let activeCount = 0;
   for (const ev of events) {
     if (ev.columnId === NounType.COMBO_SKILL && ev.ownerId === ownerId &&
-        ev.startFrame >= matchingWindow.startFrame && ev.startFrame < windowEnd) {
-      usedCount++;
+        ev.startFrame >= matchingWindow.startFrame && ev.startFrame < windowEnd &&
+        eventEndFrame(ev) > atFrame) {
+      activeCount++;
     }
   }
   const max = matchingWindow.maxSkills ?? 1;
-  if (usedCount >= max) {
+  if (activeCount >= max) {
     return { available: false, reason: 'Combo skill limit reached' };
   }
 
@@ -802,6 +881,8 @@ export function validateSegmentContiguity(
 export type VariantAvailability = {
   disabled: boolean;
   reason?: string;
+  /** Segment indices disabled by an active DISABLE clause with `with.segments`. */
+  disabledSegments?: Set<number>;
 };
 
 /**
@@ -812,9 +893,6 @@ export type VariantAvailability = {
  * - Non-enhanced variants are unavailable while ultimate is active
  * - Empowered variants require max Melting Flame stacks (4)
  */
-/** Column types whose variants are affected by ultimate active/enhanced logic. */
-const ENHANCED_VARIANT_COLUMNS = new Set([NounType.BASIC_ATTACK, NounType.BATTLE_SKILL, NounType.COMBO_SKILL]);
-
 export function checkVariantAvailability(
   variantName: string,
   ownerId: string,
@@ -822,16 +900,9 @@ export function checkVariantAvailability(
   atFrame: number,
   columnId?: string,
   slots?: Slot[],
-  enhancementType?: string,
 ): VariantAvailability {
-  // Resolve enhancement types from JSON if available (supports dual ENHANCED+EMPOWERED)
   const slot = slots?.find((s) => s.slotId === ownerId);
   const opId = slot?.operator?.id;
-  const variantTypes = opId ? getVariantEnhancementTypes(opId, variantName) : null;
-  const isEnhanced = variantTypes ? variantTypes.includes(EnhancementType.ENHANCED) : enhancementType === EnhancementType.ENHANCED;
-
-  // Enhanced/non-enhanced checks only apply to basic, battle, and combo skills
-  const hasEnhancedVariants = columnId ? ENHANCED_VARIANT_COLUMNS.has(columnId as NounType) : true;
 
   // Evaluate segment clause conditions (e.g. variant-specific activation rules)
   if (opId) {
@@ -846,8 +917,10 @@ export function checkVariantAvailability(
     }
   }
 
-  // Enhanced variant: requires an active ENABLE clause targeting this variant ID
-  if (isEnhanced && hasEnhancedVariants) {
+  // ENABLE-gated variant: if any skill definition has an ENABLE clause for this variant,
+  // require an active ENABLE at the current frame. This replaces enhancementType checks —
+  // the ENABLE/DISABLE system on segment clauses is the sole gating mechanism.
+  if (isEnableGated(events, ownerId, variantName, slots)) {
     if (!hasEnableClauseAtFrame(events, ownerId, variantName, atFrame)) {
       return { disabled: true, reason: t('ctx.activationNotMet') };
     }
@@ -858,7 +931,10 @@ export function checkVariantAvailability(
     return { disabled: true, reason: `${variantName} disabled during this window` };
   }
 
-  return { disabled: false };
+  // Segment-level DISABLE: collect indices that are individually disabled
+  const disabledSegments = getDisabledSegmentIndices(events, ownerId, variantName, atFrame);
+
+  return { disabled: false, ...(disabledSegments.size > 0 ? { disabledSegments } : {}) };
 }
 
 // ── Validation functions ──────────────────────────────────────────────────────
@@ -873,8 +949,8 @@ export function validateComboWindows(
   const alwaysAvailable = getAlwaysAvailableComboSlots(slots);
 
   const windowEvents = events.filter((ev) => ev.columnId === COMBO_WINDOW_COLUMN_ID);
-  // Track how many skills have been placed in each window
-  const windowUsage = new Map<string, number>();
+  // Track active combo events per window (only count combos whose cooldown hasn't ended yet)
+  const windowCombos = new Map<string, TimelineEvent[]>();
 
   // First pass: non-dragged events consume window slots
   for (const ev of events) {
@@ -894,13 +970,15 @@ export function validateComboWindows(
       map.set(ev.uid, 'Outside combo trigger window');
       continue;
     }
-    const used = windowUsage.get(matchingWindow.uid) ?? 0;
+    // Count active combos: only those whose event (including CD) hasn't ended before this combo starts
+    const prevCombos = windowCombos.get(matchingWindow.uid) ?? [];
+    const activeAtStart = prevCombos.filter(c => eventEndFrame(c) > ev.startFrame).length;
     const max = matchingWindow.maxSkills ?? 1;
-    if (used >= max) {
+    if (activeAtStart >= max) {
       map.set(ev.uid, 'Combo skill limit reached for this window');
-    } else {
-      windowUsage.set(matchingWindow.uid, used + 1);
     }
+    if (!windowCombos.has(matchingWindow.uid)) windowCombos.set(matchingWindow.uid, []);
+    windowCombos.get(matchingWindow.uid)!.push(ev);
   }
 
   // Second pass: dragged events check windows without consuming
@@ -922,9 +1000,10 @@ export function validateComboWindows(
         map.set(ev.uid, 'Outside combo trigger window');
         continue;
       }
-      const used = windowUsage.get(matchingWindow.uid) ?? 0;
+      const prevCombos = windowCombos.get(matchingWindow.uid) ?? [];
+      const activeAtStart = prevCombos.filter(c => eventEndFrame(c) > ev.startFrame).length;
       const max = matchingWindow.maxSkills ?? 1;
-      if (used >= max) {
+      if (activeAtStart >= max) {
         map.set(ev.uid, 'Combo skill limit reached for this window');
       }
     }
@@ -988,11 +1067,12 @@ export function validateEmpowered(events: TimelineEvent[], slots: Slot[]): Map<s
   return map;
 }
 
-export function validateEnhanced(events: TimelineEvent[]): Map<string, string> {
+export function validateEnhanced(events: TimelineEvent[], slots?: Slot[]): Map<string, string> {
   const map = new Map<string, string>();
   for (const ev of events) {
-    if (ev.enhancementType !== EnhancementType.ENHANCED) continue;
     if (ev.columnId === NounType.ULTIMATE) continue;
+    // Only validate ENABLE-gated variants (those with an ENABLE clause somewhere)
+    if (!isEnableGated(events, ev.ownerId, ev.id, slots)) continue;
 
     // Collect all segment start frames; fall back to event start if no segments
     const segStarts: number[] = [];
@@ -1039,9 +1119,26 @@ export function validateDisabledVariants(events: TimelineEvent[]): Map<string, s
     }
 
     for (const frame of segStarts) {
+      // Full variant DISABLE
       if (hasDisableAtFrame(events, ev.ownerId, ev.id, frame)) {
-        map.set(ev.uid, 'Variant cannot be used during DISABLE window');
+        map.set(ev.uid, t('ctx.variantDisabled'));
         break;
+      }
+      // Segment-level DISABLE: check if the placed segment(s) are in the disabled set
+      const disabledSegs = getDisabledSegmentIndices(events, ev.ownerId, ev.id, frame);
+      if (disabledSegs.size > 0) {
+        const origins = ev.segmentOrigin;
+        if (origins) {
+          // Single segment placement — check if its origin index is disabled
+          if (origins.some(idx => disabledSegs.has(idx))) {
+            map.set(ev.uid, t('ctx.segmentDisabled'));
+            break;
+          }
+        } else {
+          // Full chain — any disabled segment means the whole chain is invalid
+          map.set(ev.uid, t('ctx.segmentDisabled'));
+          break;
+        }
       }
     }
   }
@@ -1053,15 +1150,6 @@ export function validateDisabledVariants(events: TimelineEvent[]): Map<string, s
  * Searches all skill categories for segments with a matching name and a clause,
  * or for a skill category with a matching id and a clause.
  */
-/**
- * Look up the enhancementTypes array for a variant skill from the operator JSON.
- * Returns null if not found.
- */
-function getVariantEnhancementTypes(operatorId: string, variantName: string): string[] | null {
-  const skill = getOperatorSkill(operatorId, variantName);
-  return skill?.enhancementTypes ?? null;
-}
-
 function getVariantClause(operatorId: string, variantName: string): Predicate[] | null {
   // Check by skill key (e.g. "TWILIGHT", "THERMITE_TRACERS_EMPOWERED")
   const direct = getOperatorSkill(operatorId, variantName);

@@ -86,6 +86,44 @@ function placeReaction(
   });
 }
 
+// E2E Regression: No spurious SF/SF Minor at frame 0
+
+describe('E2E: No spurious Scorching Fangs at timeline start', () => {
+  it('Wulfgard alone - no SF or SF Minor without any skills placed', () => {
+    const { result } = setupWulfgard();
+
+    // No skills placed - neither SF nor SF Minor should exist
+    const sfEvents = result.current.allProcessedEvents.filter(
+      ev => ev.name === TALENT1_ID || ev.name === SF_MINOR_ID,
+    );
+    expect(sfEvents).toHaveLength(0);
+  });
+
+  it('Wulfgard with teammates - no SF Minor on any slot without triggers', () => {
+    const { result } = setupWulfgard();
+
+    // No skills placed - SF Minor must not appear on any slot
+    const sfMinorEvents = result.current.allProcessedEvents.filter(
+      ev => ev.name === SF_MINOR_ID,
+    );
+    expect(sfMinorEvents).toHaveLength(0);
+
+    // View layer: no SF Minor in any operator-status column
+    const viewModels = computeTimelinePresentation(
+      result.current.allProcessedEvents,
+      result.current.columns,
+    );
+    for (const slot of [SLOT_WULFGARD, SLOT_1, SLOT_2, SLOT_3]) {
+      const statusCol = findColumn(result.current, slot, OPERATOR_STATUS_COLUMN_ID);
+      if (!statusCol) continue;
+      const statusVM = viewModels.get(statusCol.key);
+      if (!statusVM) continue;
+      const minorInVM = statusVM.events.filter(ev => ev.name === SF_MINOR_ID);
+      expect(minorInVM).toHaveLength(0);
+    }
+  });
+});
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // A. Trigger & View Layer
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -161,14 +199,13 @@ describe('B. Negative Triggers', () => {
       );
     });
 
-    // Controller: no additional SF triggered (Electrification doesn't trigger SF)
-    // SF template may exist at startFrame 0, but no new triggered SF should appear
+    // Controller: no SF triggered (Electrification doesn't trigger SF)
     const sfAfter = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.name === TALENT1_ID && ev.startFrame > 0,
+      ev => ev.ownerId === SLOT_WULFGARD && ev.name === TALENT1_ID,
     );
     expect(sfAfter).toHaveLength(0);
 
-    // View: no triggered SF in operator-status column (only baseline template)
+    // View: no SF in operator-status column
     const statusCol = findColumn(result.current, SLOT_WULFGARD, OPERATOR_STATUS_COLUMN_ID);
     expect(statusCol).toBeDefined();
     const viewModels = computeTimelinePresentation(
@@ -177,10 +214,10 @@ describe('B. Negative Triggers', () => {
     );
     const statusVM = viewModels.get(statusCol!.key);
     expect(statusVM).toBeDefined();
-    const triggeredSfInVM = statusVM!.events.filter(
-      ev => ev.name === TALENT1_ID && ev.startFrame > 0,
+    const sfInVM = statusVM!.events.filter(
+      ev => ev.name === TALENT1_ID,
     );
-    expect(triggeredSfInVM).toHaveLength(0);
+    expect(sfInVM).toHaveLength(0);
   });
 
   it('B2: SF does NOT trigger from freeform Corrosion or Solidification', () => {
@@ -189,10 +226,9 @@ describe('B. Negative Triggers', () => {
     placeReaction(result, REACTION_COLUMNS.CORROSION, 1);
     placeReaction(result, REACTION_COLUMNS.SOLIDIFICATION, 1);
 
-    // No triggered SF should appear (no Combustion was applied)
-    // Template SF at startFrame 0 may exist; only check for triggered instances
+    // No SF should appear (no Combustion was applied)
     const triggeredSf = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.name === TALENT1_ID && ev.startFrame > 0,
+      ev => ev.ownerId === SLOT_WULFGARD && ev.name === TALENT1_ID,
     );
     expect(triggeredSf).toHaveLength(0);
   });
@@ -323,29 +359,26 @@ describe('D. P3 — Minor Scorching Fangs', () => {
       );
     });
 
-    // Controller: no triggered SF Minor at P2 (template at startFrame 0 may still exist)
-    const sfMinorTriggered = result.current.allProcessedEvents.filter(
-      ev => ev.name === SF_MINOR_ID && ev.startFrame > 0,
+    // Controller: no SF Minor at P2
+    const sfMinorAll = result.current.allProcessedEvents.filter(
+      ev => ev.name === SF_MINOR_ID,
     );
-    expect(sfMinorTriggered).toHaveLength(0);
+    expect(sfMinorAll).toHaveLength(0);
 
-    // View: no triggered SF Minor in any teammate status column
+    // View: no SF Minor in any teammate status column
     const viewModels = computeTimelinePresentation(
       result.current.allProcessedEvents,
       result.current.columns,
     );
-    // No triggered SF Minor on any teammate
-    let triggeredMinorCount = 0;
+    let minorCount = 0;
     for (const slot of [SLOT_1, SLOT_2, SLOT_3]) {
       const statusCol = findColumn(result.current, slot, OPERATOR_STATUS_COLUMN_ID);
       if (!statusCol) continue;
       const statusVM = viewModels.get(statusCol.key);
       if (!statusVM) continue;
-      triggeredMinorCount += statusVM.events.filter(
-        ev => ev.name === SF_MINOR_ID && ev.startFrame > 0,
-      ).length;
+      minorCount += statusVM.events.filter(ev => ev.name === SF_MINOR_ID).length;
     }
-    expect(triggeredMinorCount).toBe(0);
+    expect(minorCount).toBe(0);
   });
 
   it('D3: SF Minor has MINOR enhancement type', () => {

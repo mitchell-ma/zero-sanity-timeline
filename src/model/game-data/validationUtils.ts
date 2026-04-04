@@ -40,6 +40,7 @@ export const VALID_EFFECT_KEYS = new Set([
 
 export const VALID_EFFECT_WITH_KEYS = new Set([
   'value', 'duration', 'unit', 'stacks', 'multiplier', 'stagger', 'mainStat', 'cardinality',
+  'segments', 'isForced',
 ]);
 
 export const VALID_TRIGGER_CONDITION_KEYS = new Set([

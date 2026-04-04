@@ -130,7 +130,7 @@
                 {
                   "verb": "APPLY",
                   "object": "STATUS",
-                  "objectId": "ORIGINIUM_CRYSTAL",
+                  "objectId": "REALSPACE_STASIS_TALENT",
                   "to": "ENEMY",
                   "with": {
                     "duration": {
@@ -206,7 +206,7 @@
   "metadata": {
     "originId": "ENDMINISTRATOR",
     "icon": "skills/combo_endministrator.png",
-    "dataStatus": "RECONCILED"
+    "dataStatus": "VERIFIED"
   },
   "clauseType": "ALL",
   "activationWindow": {
@@ -217,7 +217,7 @@
       {
         "conditions": [
           {
-            "subjectDeterminer": "THIS",
+            "subjectDeterminer": "ANY_OTHER",
             "subject": "OPERATOR",
             "verb": "PERFORM",
             "object": "COMBO_SKILL"

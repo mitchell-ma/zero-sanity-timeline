@@ -107,59 +107,31 @@ These sets have HP-threshold conditions but are metadata-only with zero clauses:
 
 ## Operator talent/skill DSL reconciliation issues
 
-### Previously tracked (from earlier review)
-
-1. ~~**Last Rite "Cryogenic Embrittlement"**~~ — DONE (2026-03-29): Added onTriggerClause with AMP SUSCEPTIBILITY CRYO x1.2 on PERFORM ULTIMATE.
-
-2. ~~**Pogranichnik "Tactical Instruction"**~~ — DONE (2026-03-29): Added onTriggerClause: ANY OPERATOR CONSUME STEEL_OATH → APPLY FERVENT_MORALE.
-
 ### From 2026-03-26 batch reconciliation (18 operators)
 
 #### Missing VARY_BY POTENTIAL (needs engine support for HP conditions)
 
-3. **Alesh P5** — "Hitting a target below 50% HP increases the DMG Multiplier to 1.5 times the original." Needs enemy HP<50% condition on ultimate damage. Engine does not support HP threshold conditions yet.
+1. **Alesh P5** — "Hitting a target below 50% HP increases the DMG Multiplier to 1.5 times the original." Needs enemy HP<50% condition on ultimate damage. Engine does not support HP threshold conditions yet.
 
-4. **Chen Qianyu P1** — Status `status-chen-qianyu-potential1-shadowless.json` applies +20% DAMAGE_BONUS unconditionally but wiki says "to enemies below 50% HP." Same HP condition gap as Alesh P5.
+2. **Chen Qianyu P1** — Status `status-chen-qianyu-potential1-shadowless.json` applies +20% DAMAGE_BONUS unconditionally but wiki says "to enemies below 50% HP." Same HP condition gap as Alesh P5.
 
-5. **Ardelia P1** — Susceptibility +8% was baked in, but verify the `rateVulBase` ADD wrapper in the conditional DEAL DAMAGE clause is also applied (currently only the susceptibility arrays were wrapped).
-
-#### Missing Talent/Status Effects
-
-6. ~~**Da Pan "Salty or Mild"**~~ — DONE (2026-03-29): Added simplified onTriggerClause: PERFORM ULTIMATE → APPLY PREP_INGREDIENTS. Full stack-per-enemy-hit and cooldown reduction left as description-only.
+3. **Ardelia P1** — Susceptibility +8% was baked in, but verify the `rateVulBase` ADD wrapper in the conditional DEAL DAMAGE clause is also applied (currently only the susceptibility arrays were wrapped).
 
 #### Structural / Data Issues
 
-7. **Arclight empowered battle skill** — Damage multiplier values [0.45...1.01] for the two Physical slashes were taken from the normal variant. Verify these are correct for the empowered version (wiki doesn't distinguish normal vs empowered BS multipliers for Arclight).
+4. **Arclight empowered battle skill** — Damage multiplier values [0.45...1.01] for the two Physical slashes were taken from the normal variant. Verify these are correct for the empowered version (wiki doesn't distinguish normal vs empowered BS multipliers for Arclight).
 
-8. **Endministrator basic attack SEQ 3/4** — Rounding discrepancies (1-2%) vs wiki at several skill levels due to per-hit division.
+5. **Endministrator basic attack SEQ 3/4** — Rounding discrepancies (1-2%) vs wiki at several skill levels due to per-hit division. Per-hit values from Warfarin `atk_scale` are correct for damage calc; wiki `display_atk_scale` is a rounded sum.
 
-9. **Arclight combo** — Total multiplier 1% over across all levels (156% vs wiki 155%). Per-hit values may need slight adjustment.
+6. **Arclight combo** — Total multiplier 1% over across all levels (156% vs wiki 155%). Per-hit values may need slight adjustment.
 
-10. **Yvonne empowered basic attack** — Segment 0 has 3 frames with empty `effects: []`. These serve no purpose and should be removed or populated.
+7. **Yvonne empowered basic attack** — Segment 0 has 3 frames with empty `effects: []`. These serve no purpose and should be removed or populated.
 
-11. **Multiple operators** — Description template placeholders unresolved ({trigger_hp_ratio:0%}, {extra_scaling}, {duration-1:0%}, etc.). Cosmetic only but should be filled in.
+8. **Multiple operators** — Description template placeholders unresolved ({trigger_hp_ratio:0%}, {extra_scaling}, {duration-1:0%}, etc.). Cosmetic only but should be filled in.
 
-12. **Multiple operators** — Status descriptions copied from skill descriptions instead of describing the status itself (Arclight Wildland Trekker trigger/buff, Endministrator Originium Crystal, Avywenna Thunderlance).
+9. **Multiple operators** — Status descriptions copied from skill descriptions instead of describing the status itself (Arclight Wildland Trekker trigger/buff, Avywenna Thunderlance).
 
-## ~~DSL: APPLY STAT with operator class filtering~~ — DONE (2026-03-30)
-
-Implemented APPLY STAT handling + operator class filtering via `toQualifier` on effects.
-- `doApply` handles `APPLY STAT` → `StatAccumulator.applyStatDelta`
-- ALL OPERATOR loop filters by `toQualifier` against `getOperatorBase().operatorClassType`
-- Passive talent APPLY STAT clauses interpreted in `runEventQueue` before queue runs
-- UE controller reads accumulated efficiency after queue via `updateSlotEfficiency`
-- Test: `src/tests/integration/operators/gilberta/messengersSong.test.ts`
-
-## DSL migrations completed (2026-03-29)
-
-- Non-standard verbs migrated: CAST→PERFORM, INTERRUPT→HAVE CHARGE, RECOVER_SP→RECOVER+SKILL_POINT, RESTORE→RECOVER, HP_BELOW→HAVE HP+AT_MOST, IS_HIT→ENEMY DEAL DAMAGE, TRIGGER→APPLY SHATTER, LESS_THAN→HAVE+AT_MOST, HIT_WITH→description-only
-- AT_LEAST/AT_MOST formalized: moved from ValueNode verbs to cardinalityConstraint on Interaction (~25 occurrences across 13 files)
-- Non-standard `with` keys removed (~40 keys across 27 files)
-- Gilberta PARAMETER conditions normalized: subjectId for param name, verb IS, cardinalityConstraint AT_LEAST
-
-## Engine fixes (2026-03-31)
-
-- RECOVER SKILL_POINT frame effects now route through DSL interpret path (`type: 'dsl'` instead of `type: 'recoverSP'`) so reactive triggers fire (needed for Akekuri P1 Positive Feedback)
+## Engine fixes
 
 ### Disabled configs still needing real data
 - **Antal**: Improviser talent + Improviser status — `isEnabled: false`
@@ -195,7 +167,6 @@ The following deeper mechanic-specific tests remain:
 | Catcher | RETURN vs RECOVER SP distinction, P1 DEF-scaling bonus damage on BS/ult hit, Weaken status from ult |
 | Da Pan | Reduce & Thicken multi-stack accumulation (4 stacks), Vulnerability 4-stack combo trigger in strict mode, P5 extra Vulnerability stack |
 | Lifeng | LINK consume bonus hit on ult (Vajra Impact conditional), Subduer of Evil talent chain (Knock Down → Physical DMG), Illumination ATK scaling from INT+WILL |
-| Endministrator | Teammate combo trigger in strict mode (another op's combo fires Endministrator's), Realspace Stasis passive debuff, P1 SP return on crystal consume |
 | Arclight | Wildland Trekker counter accumulation + buff activation, empowered battle skill variant, Tactful Approach status |
 | Fluorite | 2+ infliction stack threshold combo trigger in strict mode, Slow status application, Unpredictable talent stacking |
 | Gilberta | Arts Reaction combo trigger in strict mode, Gravity Field Lift extension, Messenger's Song UE gain buff |

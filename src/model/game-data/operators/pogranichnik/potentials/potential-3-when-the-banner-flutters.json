@@ -1,11 +1,27 @@
 {
   "properties": {
-    "id": "POGRANICHNIK_POTENTIAL_3",
+    "id": "WHEN_THE_BANNER_FLUTTERS",
     "name": "When the Banner Flutters",
     "level": 3,
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
-    "description": "Talent The Living Banner improved: Amount of SP recovery needed to gain Fervent Morale is reduced to 60. Max Fervent Morale stacks on self +{max_stack_owner-3}."
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": 99999
+      },
+      "unit": "SECOND"
+    },
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 1
+      },
+      "interactionType": "RESET"
+    },
+    "eventType": "STATUS",
+    "eventCategoryType": "POTENTIAL_STATUS",
+    "description": "Talent The Living Banner improved: Amount of SP recovery needed to gain Fervent Morale is reduced to 60. Max Fervent Morale stacks on self +2."
   },
   "metadata": {
     "originId": "POGRANICHNIK",

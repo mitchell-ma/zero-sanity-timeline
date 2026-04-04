@@ -753,6 +753,14 @@
                   }
                 },
                 {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "THE_LIVING_BANNER_TALENT",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": { "stacks": { "verb": "IS", "value": 20 } }
+                },
+                {
                   "verb": "DEAL",
                   "object": "STAGGER",
                   "to": "ENEMY",

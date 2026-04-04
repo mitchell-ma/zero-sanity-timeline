@@ -62,6 +62,66 @@
         },
         "name": "Cryoblasting Pistolier"
       },
+      "onEntryClause": [
+        {
+          "conditions": [
+            {
+              "subjectDeterminer": "THIS",
+              "subject": "OPERATOR",
+              "verb": "HAVE",
+              "object": "POTENTIAL",
+              "cardinalityConstraint": "AT_LEAST",
+              "value": {
+                "verb": "IS",
+                "value": 5
+              }
+            }
+          ],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STATUS",
+              "objectId": "EXPERT_MECHCRAFTER",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR",
+              "with": {
+                "duration": {
+                  "verb": "IS",
+                  "value": 7
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "ENABLE",
+              "objectId": "EXUBERANT_TRIGGER_EMPOWERED",
+              "object": "BATK",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR"
+            },
+            {
+              "verb": "DISABLE",
+              "objectId": "EXUBERANT_TRIGGER",
+              "object": "BATK",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR"
+            },
+            {
+              "verb": "DISABLE",
+              "objectId": "FINISHER",
+              "object": "FINISHER",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR"
+            }
+          ]
+        }
+      ],
       "frames": [
         {
           "metadata": {
@@ -69,7 +129,7 @@
           },
           "properties": {
             "offset": {
-              "value": 6.5,
+              "value": 7,
               "unit": "SECOND"
             }
           },
@@ -77,6 +137,14 @@
             {
               "conditions": [],
               "effects": [
+                {
+                  "verb": "CONSUME",
+                  "object": "BASIC_ATTACK",
+                  "objectId": "BATK",
+                  "objectQualifier": "EXUBERANT_TRIGGER_EMPOWERED",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR"
+                },
                 {
                   "verb": "DEAL",
                   "objectQualifier": "CRYO",
@@ -119,32 +187,25 @@
                   "with": {
                     "value": {
                       "verb": "IS",
-                      "value": 10
+                      "value": 20
                     }
                   }
+                },
+                {
+                  "verb": "PERFORM",
+                  "object": "FINAL_STRIKE",
+                  "to": "ENEMY"
                 }
               ]
-            }
-          ],
-          "clauseType": "ALL"
-        },
-        {
-          "metadata": {
-            "eventComponentType": "FRAME"
-          },
-          "properties": {
-            "offset": {
-              "value": 7,
-              "unit": "SECOND"
-            }
-          },
-          "clause": [
+            },
             {
               "conditions": [
                 {
                   "subject": "ENEMY",
-                  "verb": "IS",
-                  "object": "SOLIDIFIED"
+                  "verb": "HAVE",
+                  "object": "STATUS",
+                  "objectId": "REACTION",
+                  "objectQualifier": "SOLIDIFICATION"
                 }
               ],
               "effects": [
@@ -193,6 +254,12 @@
                       "value": 10
                     }
                   }
+                },
+                {
+                  "verb": "CONSUME",
+                  "object": "REACTION",
+                  "objectId": "SOLIDIFICATION",
+                  "from": "ENEMY"
                 }
               ]
             }

@@ -10,11 +10,52 @@
           "to": "OPERATOR",
           "with": {
             "value": {
-              "verb": "IS",
-              "value": 0.5
+              "verb": "VARY_BY",
+              "object": "TALENT_LEVEL",
+              "value": [
+                0,
+                0.5
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
             }
           },
-          "objectId": "DAMAGE_BONUS"
+          "objectId": "DAMAGE_BONUS",
+          "objectQualifier": "BASIC_ATTACK"
+        }
+      ]
+    },
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "DISABLE",
+          "object": "BATK",
+          "objectId": "EXUBERANT_TRIGGER",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "segments": [0, 1, 2, 3]
+          }
+        }
+      ]
+    }
+  ],
+  "onTriggerClause": [
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "PERFORM",
+          "object": "FINAL_STRIKE"
+        }
+      ],
+      "effects": [
+        {
+          "verb": "CONSUME",
+          "objectDeterminer": "THIS",
+          "object": "EVENT"
         }
       ]
     }
@@ -29,7 +70,14 @@
         "verb": "IS",
         "value": 1
       },
-      "interactionType": "CONSUME"
+      "interactionType": "RESET"
+    },
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": 99999
+      },
+      "unit": "SECOND"
     },
     "eventType": "STATUS",
     "eventCategoryType": "STATUS",

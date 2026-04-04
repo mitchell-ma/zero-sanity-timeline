@@ -65,6 +65,7 @@
       },
       "frames": [
         {
+          "_note": "SEQ 1 — always fires (1+ Vulnerability consumed)",
           "metadata": {
             "eventComponentType": "FRAME",
             "dataSources": [
@@ -79,28 +80,70 @@
           },
           "clause": [
             {
+              "_note": "Steel Oath Decisive Assault — last stack consumed by combo first hit",
+              "conditions": [
+                {
+                  "subject": "TEAM",
+                  "verb": "HAVE",
+                  "object": "STATUS",
+                  "objectId": "STEEL_OATH",
+                  "cardinalityConstraint": "EXACTLY",
+                  "with": { "value": { "verb": "IS", "value": 1 } }
+                }
+              ],
+              "effects": [
+                {
+                  "verb": "CONSUME",
+                  "object": "STATUS",
+                  "objectId": "STEEL_OATH",
+                  "from": "TEAM",
+                  "with": { "stacks": { "verb": "IS", "value": 1 } }
+                },
+                { "verb": "APPLY", "object": "STATUS", "objectId": "STEEL_OATH_DECISIVE_ASSAULT", "to": "ENEMY" }
+              ]
+            },
+            {
+              "_note": "Steel Oath Harass — stacks > 1 consumed by combo first hit",
+              "conditions": [
+                {
+                  "subject": "TEAM",
+                  "verb": "HAVE",
+                  "object": "STATUS",
+                  "objectId": "STEEL_OATH"
+                }
+              ],
+              "effects": [
+                {
+                  "verb": "CONSUME",
+                  "object": "STATUS",
+                  "objectId": "STEEL_OATH",
+                  "from": "TEAM",
+                  "with": { "stacks": { "verb": "IS", "value": 1 } }
+                },
+                { "verb": "APPLY", "object": "STATUS", "objectId": "STEEL_OATH_HARASS", "to": "ENEMY" }
+              ]
+            },
+            {
               "conditions": [],
               "effects": [
                 {
                   "verb": "RECOVER",
                   "object": "SKILL_POINT",
-                  "with": {
-                    "value": {
-                      "verb": "IS",
-                      "value": 5
-                    }
-                  }
+                  "with": { "value": { "verb": "IS", "value": 5 } }
+                },
+                {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "THE_LIVING_BANNER_TALENT",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": { "stacks": { "verb": "IS", "value": 5 } }
                 },
                 {
                   "verb": "DEAL",
                   "object": "STAGGER",
                   "to": "ENEMY",
-                  "with": {
-                    "value": {
-                      "verb": "IS",
-                      "value": 3
-                    }
-                  }
+                  "with": { "value": { "verb": "IS", "value": 3 } }
                 },
                 {
                   "verb": "DEAL",
@@ -108,61 +151,23 @@
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
-                    "damageMultiplierIncrement": {
-                      "verb": "VARY_BY",
-                      "object": "SKILL_LEVEL",
-                      "value": [
-                        0.54,
-                        0.59,
-                        0.65,
-                        0.7,
-                        0.76,
-                        0.81,
-                        0.86,
-                        0.92,
-                        0.97,
-                        1.04,
-                        1.12,
-                        1.22
-                      ],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
-                    },
                     "value": {
                       "verb": "VARY_BY",
                       "object": "SKILL_LEVEL",
-                      "value": [
-                        0.42,
-                        0.46,
-                        0.5,
-                        0.55,
-                        0.59,
-                        0.63,
-                        0.67,
-                        0.71,
-                        0.76,
-                        0.81,
-                        0.87,
-                        0.95
-                      ],
+                      "value": [0.42, 0.46, 0.50, 0.55, 0.59, 0.63, 0.67, 0.71, 0.76, 0.81, 0.87, 0.95],
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
                     },
-                    "mainStat": {
-                      "verb": "IS",
-                      "object": "STAT",
-                      "objectId": "ATTACK",
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
-                    }
+                    "mainStat": { "verb": "IS", "object": "STAT", "objectId": "ATTACK", "ofDeterminer": "THIS", "of": "OPERATOR" }
                   }
                 }
               ]
             }
           ],
-          "clauseType": "ALL"
+          "clauseType": "FIRST_MATCH"
         },
         {
+          "_note": "SEQ 2 — fires when 2+ Vulnerability consumed (status level >= 2)",
           "metadata": {
             "eventComponentType": "FRAME",
             "dataSources": [
@@ -182,12 +187,15 @@
                 {
                   "verb": "RECOVER",
                   "object": "SKILL_POINT",
-                  "with": {
-                    "value": {
-                      "verb": "IS",
-                      "value": 7
-                    }
-                  }
+                  "with": { "value": { "verb": "IS", "value": 7 } }
+                },
+                {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "THE_LIVING_BANNER_TALENT",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": { "stacks": { "verb": "IS", "value": 7 } }
                 },
                 {
                   "verb": "DEAL",
@@ -206,43 +214,10 @@
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
-                    "damageMultiplierIncrement": {
-                      "verb": "VARY_BY",
-                      "object": "SKILL_LEVEL",
-                      "value": [
-                        0.54,
-                        0.59,
-                        0.65,
-                        0.7,
-                        0.76,
-                        0.81,
-                        0.86,
-                        0.92,
-                        0.97,
-                        1.04,
-                        1.12,
-                        1.22
-                      ],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
-                    },
                     "value": {
                       "verb": "VARY_BY",
                       "object": "SKILL_LEVEL",
-                      "value": [
-                        0.42,
-                        0.46,
-                        0.5,
-                        0.55,
-                        0.59,
-                        0.63,
-                        0.67,
-                        0.71,
-                        0.76,
-                        0.81,
-                        0.87,
-                        0.95
-                      ],
+                      "value": [0.54, 0.59, 0.65, 0.70, 0.76, 0.81, 0.86, 0.92, 0.97, 1.04, 1.12, 1.22],
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
                     },
@@ -261,6 +236,7 @@
           "clauseType": "ALL"
         },
         {
+          "_note": "SEQ 3 — fires when 3+ Vulnerability consumed. FIRST_MATCH: Enhanced (4 stacks) vs Normal (3 stacks).",
           "metadata": {
             "eventComponentType": "FRAME",
             "dataSources": [
@@ -275,28 +251,35 @@
           },
           "clause": [
             {
-              "conditions": [],
+              "_note": "Enhanced SEQ 3 — 4 Vulnerability consumed (status level 4)",
+              "conditions": [
+                {
+                  "subject": "ENEMY",
+                  "verb": "IS",
+                  "object": "CRUSHED",
+                  "cardinalityConstraint": "AT_LEAST",
+                  "with": { "value": { "verb": "IS", "value": 4 } }
+                }
+              ],
               "effects": [
                 {
                   "verb": "RECOVER",
                   "object": "SKILL_POINT",
-                  "with": {
-                    "value": {
-                      "verb": "IS",
-                      "value": 23
-                    }
-                  }
+                  "with": { "value": { "verb": "IS", "value": 23 } }
+                },
+                {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "THE_LIVING_BANNER_TALENT",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": { "stacks": { "verb": "IS", "value": 23 } }
                 },
                 {
                   "verb": "DEAL",
                   "object": "STAGGER",
                   "to": "ENEMY",
-                  "with": {
-                    "value": {
-                      "verb": "IS",
-                      "value": 9
-                    }
-                  }
+                  "with": { "value": { "verb": "IS", "value": 9 } }
                 },
                 {
                   "verb": "DEAL",
@@ -304,43 +287,57 @@
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
-                    "damageMultiplierIncrement": {
-                      "verb": "VARY_BY",
-                      "object": "SKILL_LEVEL",
-                      "value": [
-                        0.54,
-                        0.59,
-                        0.65,
-                        0.7,
-                        0.76,
-                        0.81,
-                        0.86,
-                        0.92,
-                        0.97,
-                        1.04,
-                        1.12,
-                        1.22
-                      ],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
-                    },
                     "value": {
                       "verb": "VARY_BY",
                       "object": "SKILL_LEVEL",
-                      "value": [
-                        0.42,
-                        0.46,
-                        0.5,
-                        0.55,
-                        0.59,
-                        0.63,
-                        0.67,
-                        0.71,
-                        0.76,
-                        0.81,
-                        0.87,
-                        0.95
-                      ],
+                      "value": [1.32, 1.45, 1.58, 1.72, 1.85, 1.98, 2.11, 2.24, 2.38, 2.54, 2.74, 2.97],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "_note": "Normal SEQ 3 — 3 Vulnerability consumed (status level 3)",
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "RECOVER",
+                  "object": "SKILL_POINT",
+                  "with": { "value": { "verb": "IS", "value": 13 } }
+                },
+                {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "THE_LIVING_BANNER_TALENT",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": { "stacks": { "verb": "IS", "value": 13 } }
+                },
+                {
+                  "verb": "DEAL",
+                  "object": "STAGGER",
+                  "to": "ENEMY",
+                  "with": { "value": { "verb": "IS", "value": 4 } }
+                },
+                {
+                  "verb": "DEAL",
+                  "objectQualifier": "PHYSICAL",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [0.66, 0.73, 0.79, 0.86, 0.92, 0.99, 1.06, 1.12, 1.19, 1.27, 1.37, 1.49],
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
                     },
@@ -356,7 +353,7 @@
               ]
             }
           ],
-          "clauseType": "ALL"
+          "clauseType": "FIRST_MATCH"
         }
       ]
     },
@@ -374,20 +371,7 @@
           "value": {
             "verb": "VARY_BY",
             "object": "SKILL_LEVEL",
-            "value": [
-              18,
-              18,
-              18,
-              18,
-              18,
-              18,
-              18,
-              18,
-              18,
-              18,
-              18,
-              17
-            ],
+            "value": [18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 17],
             "ofDeterminer": "THIS",
             "of": "OPERATOR"
           },
@@ -412,11 +396,18 @@
       {
         "conditions": [
           {
-            "subjectDeterminer": "THIS",
-            "subject": "OPERATOR",
-            "verb": "APPLY",
-            "object": "STATUS",
-            "objectId": "PHYSICAL"
+            "subject": "ENEMY",
+            "verb": "BECOME",
+            "object": "CRUSHED"
+          }
+        ]
+      },
+      {
+        "conditions": [
+          {
+            "subject": "ENEMY",
+            "verb": "BECOME",
+            "object": "BREACHED"
           }
         ]
       }

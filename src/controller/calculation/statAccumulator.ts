@@ -57,6 +57,12 @@ export class StatAccumulator {
   /** Per-entity running state — mutated in-place as deltas arrive. */
   private current = new Map<string, StatSnapshot>();
 
+  /** Per-entity base stats (set during init, never mutated). */
+  private base = new Map<string, Partial<Record<StatType, number>>>();
+
+  /** Per-frame stat deltas: frameKey → entityId → stat deltas from base. */
+  private frameDeltas = new Map<string, Map<string, Partial<Record<StatType, number>>>>();
+
   /** Collected crit results from SIMULATION mode (for write-back to overrides). */
   private resolvedCrits = new Map<string, Map<number, Map<number, boolean>>>();
 
@@ -74,6 +80,8 @@ export class StatAccumulator {
     enemyStats: EnemyStats | undefined,
   ): void {
     this.current.clear();
+    this.base.clear();
+    this.frameDeltas.clear();
     this.resolvedCrits.clear();
 
     // Per operator slot: aggregate from operator + weapon + gear + consumable
@@ -98,6 +106,7 @@ export class StatAccumulator {
         stats: { ...agg.stats },
         factors: { ...DEFAULT_FACTORS },
       });
+      this.base.set(slotId, { ...agg.stats });
     }
 
     // Enemy stats
@@ -148,6 +157,34 @@ export class StatAccumulator {
     return this.current.get(entityId);
   }
 
+  // ── Frame-level stat snapshots ──────────────────────────────────
+
+  /** Record the current stat deltas (from base) for an entity at a damage frame. */
+  snapshotDeltas(frameKey: string, entityId: string): void {
+    const current = this.current.get(entityId);
+    const base = this.base.get(entityId);
+    if (!current || !base) return;
+
+    const deltas: Partial<Record<StatType, number>> = {};
+    let hasDelta = false;
+    for (const key of Object.keys(current.stats) as StatType[]) {
+      const diff = (current.stats[key] ?? 0) - (base[key] ?? 0);
+      if (diff !== 0) {
+        deltas[key] = diff;
+        hasDelta = true;
+      }
+    }
+    if (!hasDelta) return;
+
+    if (!this.frameDeltas.has(frameKey)) this.frameDeltas.set(frameKey, new Map());
+    this.frameDeltas.get(frameKey)!.set(entityId, deltas);
+  }
+
+  /** Get the stat deltas for an entity at a specific damage frame. */
+  getFrameStatDeltas(frameKey: string, entityId: string): Partial<Record<StatType, number>> | undefined {
+    return this.frameDeltas.get(frameKey)?.get(entityId);
+  }
+
   // ── Crit resolution ────────────────────────────────────────────
 
   /**
@@ -195,6 +232,8 @@ export class StatAccumulator {
   /** Reset all state for the next pipeline run. */
   clear(): void {
     this.current.clear();
+    this.base.clear();
+    this.frameDeltas.clear();
     this.resolvedCrits.clear();
   }
 }

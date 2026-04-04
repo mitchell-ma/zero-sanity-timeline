@@ -1,26 +1,4 @@
 {
-  "onTriggerClause": [
-    {
-      "conditions": [
-        {
-          "subjectDeterminer": "THIS",
-          "subject": "OPERATOR",
-          "verb": "APPLY",
-          "object": "STATUS",
-          "objectId": "SOLIDIFICATION"
-        }
-      ],
-      "effects": [
-        {
-          "verb": "APPLY",
-          "object": "STATUS",
-          "objectId": "BARRAGE_OF_TECHNOLOGY",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR"
-        }
-      ]
-    }
-  ],
   "properties": {
     "id": "BARRAGE_OF_TECHNOLOGY_TALENT",
     "maxLevel": {

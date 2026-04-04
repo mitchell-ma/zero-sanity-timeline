@@ -44,7 +44,7 @@ import { ENEMY_OWNER_ID, OPERATOR_COLUMNS, REACTION_COLUMN_IDS } from '../../mod
 import { buildReactionDamageRows, ReactionOperatorContext } from './artsReactionController';
 import { buildCritExpectationModel, getFrameExpectation } from './critExpectationModel';
 import type { CritExpectationModel, CritFrameSnapshot, StatusStatContribution } from './critExpectationModel';
-import { getLastTriggerIndex } from '../timeline/eventQueueController';
+import { getLastTriggerIndex, getLastStatAccumulator } from '../timeline/eventQueueController';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -436,7 +436,14 @@ export function buildDamageTableRows(
             let damage: number | null = null;
             let params: DamageParams | null = null;
 
-            if (operatorId && opData) {
+            // Runtime stat deltas from status effects (e.g. SF Minor APPLY STAT DAMAGE_BONUS HEAT)
+            const accumulator = getLastStatAccumulator();
+            const currentFrameKey = `${ev.uid}:${si}:${fi}`;
+            const runtimeDeltas = accumulator?.getFrameStatDeltas(currentFrameKey, ev.ownerId);
+
+            if (frame.frameSkipped) {
+              // All conditional clauses evaluated and none matched — row shows "-"
+            } else if (operatorId && opData) {
               let segmentMultiplier: number | null;
               let isPerTick = false;
 
@@ -503,14 +510,18 @@ export function buildDamageTableRows(
                 // so the deltas already reflect the correct stack accumulation per mode.
                 const critDeltas = earlySnapshot?.expectedStatDeltas;
 
+                // Runtime stat helper: base + runtime deltas from status effects
+                const rd = runtimeDeltas;
+                const stat = (s: StatType) => (opData.stats[s] ?? 0) + (rd?.[s] ?? 0);
+
                 // Damage Bonus sub-components
                 const allElementDmgBonuses = {
-                  [ElementType.NONE]: opData.stats[StatType.PHYSICAL_DAMAGE_BONUS],
-                  [ElementType.PHYSICAL]: opData.stats[StatType.PHYSICAL_DAMAGE_BONUS],
-                  [ElementType.HEAT]: opData.stats[StatType.HEAT_DAMAGE_BONUS],
-                  [ElementType.CRYO]: opData.stats[StatType.CRYO_DAMAGE_BONUS],
-                  [ElementType.NATURE]: opData.stats[StatType.NATURE_DAMAGE_BONUS],
-                  [ElementType.ELECTRIC]: opData.stats[StatType.ELECTRIC_DAMAGE_BONUS],
+                  [ElementType.NONE]: stat(StatType.PHYSICAL_DAMAGE_BONUS),
+                  [ElementType.PHYSICAL]: stat(StatType.PHYSICAL_DAMAGE_BONUS),
+                  [ElementType.HEAT]: stat(StatType.HEAT_DAMAGE_BONUS),
+                  [ElementType.CRYO]: stat(StatType.CRYO_DAMAGE_BONUS),
+                  [ElementType.NATURE]: stat(StatType.NATURE_DAMAGE_BONUS),
+                  [ElementType.ELECTRIC]: stat(StatType.ELECTRIC_DAMAGE_BONUS),
                 } as Record<ElementType, number>;
                 // Intellect-scaled damage bonus (e.g. Wildland Trekker talent)
                 const intellectDmgBonus = statusQuery?.getIntellectScaledDamageBonus(absFrame) ?? 0;
@@ -535,18 +546,18 @@ export function buildDamageTableRows(
                   }
                 }
 
-                // Element and skill damage bonuses (with crit-dependent deltas)
+                // Element and skill damage bonuses (with runtime + crit-dependent deltas)
                 const critElementDelta = critDeltas?.[elementBonusStat] ?? 0;
                 const subElementDmg = (element === ElementType.ELECTRIC)
-                  ? opData.stats[elementBonusStat] + intellectDmgBonus + critElementDelta
-                  : opData.stats[elementBonusStat] + critElementDelta;
+                  ? stat(elementBonusStat) + intellectDmgBonus + critElementDelta
+                  : stat(elementBonusStat) + critElementDelta;
                 const critSkillTypeDelta = critDeltas?.[skillTypeBonusStat] ?? 0;
-                const subSkillTypeDmg = opData.stats[skillTypeBonusStat] + critSkillTypeDelta;
+                const subSkillTypeDmg = stat(skillTypeBonusStat) + critSkillTypeDelta;
                 const critSkillDelta = critDeltas?.[StatType.SKILL_DAMAGE_BONUS] ?? 0;
-                const subSkillDmg = opData.stats[StatType.SKILL_DAMAGE_BONUS] + critSkillDelta;
+                const subSkillDmg = stat(StatType.SKILL_DAMAGE_BONUS) + critSkillDelta;
                 const critArtsDelta = isArts ? (critDeltas?.[StatType.ARTS_DAMAGE_BONUS] ?? 0) : 0;
-                const subArtsDmg = isArts ? opData.stats[StatType.ARTS_DAMAGE_BONUS] + critArtsDelta : 0;
-                const subStaggerDmg = isStaggered ? (opData.stats[StatType.STAGGER_DAMAGE_BONUS] ?? 0) : 0;
+                const subArtsDmg = isArts ? stat(StatType.ARTS_DAMAGE_BONUS) + critArtsDelta : 0;
+                const subStaggerDmg = isStaggered ? stat(StatType.STAGGER_DAMAGE_BONUS) : 0;
 
                 const multiplierGroup = getDamageBonus(
                   subElementDmg, subSkillTypeDmg, subSkillDmg, subArtsDmg, subStaggerDmg,
@@ -617,7 +628,7 @@ export function buildDamageTableRows(
                 const sub: DamageSubComponents = {
                   operatorBaseAttack: opData.operatorBaseAttack,
                   weaponBaseAttack: opData.weaponBaseAttack,
-                  atkBonusPct: opData.atkBonusPct + (critDeltas?.[StatType.ATTACK_BONUS] ?? 0),
+                  atkBonusPct: opData.atkBonusPct + (rd?.[StatType.ATTACK_BONUS] ?? 0) + (critDeltas?.[StatType.ATTACK_BONUS] ?? 0),
                   flatAtkBonuses: opData.flatAtkBonuses,
                   mainAttrType: opData.mainAttrType,
                   mainAttrValue: opData.mainAttrValue,
@@ -661,10 +672,12 @@ export function buildDamageTableRows(
                   skillTypeDmgBonusStat: skillTypeBonusStat,
                 };
 
-                // Compute attack with crit-dependent ATK% adjustment
+                // Compute attack with runtime + crit-dependent ATK% adjustment
+                const runtimeAtkDelta = rd?.[StatType.ATTACK_BONUS] ?? 0;
                 const critAtkDelta = critDeltas?.[StatType.ATTACK_BONUS] ?? 0;
-                const effectiveAttack = critAtkDelta > 0
-                  ? getTotalAttack(opData.operatorBaseAttack, opData.weaponBaseAttack, opData.atkBonusPct + critAtkDelta, opData.flatAtkBonuses)
+                const totalAtkDelta = runtimeAtkDelta + critAtkDelta;
+                const effectiveAttack = totalAtkDelta > 0
+                  ? getTotalAttack(opData.operatorBaseAttack, opData.weaponBaseAttack, opData.atkBonusPct + totalAtkDelta, opData.flatAtkBonuses)
                   : opData.totalAttack;
                 const mainStatValue = frame.dealDamage?.mainStat === DamageScalingStatType.DEFENSE ? opData.totalDefense
                   : frame.dealDamage?.mainStat === DamageScalingStatType.HP ? opData.effectiveHp

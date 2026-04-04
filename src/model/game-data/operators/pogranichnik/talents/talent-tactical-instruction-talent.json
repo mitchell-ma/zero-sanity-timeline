@@ -16,7 +16,19 @@
           "object": "STATUS",
           "objectId": "FERVENT_MORALE",
           "toDeterminer": "TRIGGER",
-          "to": "OPERATOR"
+          "to": "OPERATOR",
+          "with": {
+            "duration": {
+              "value": {
+                "verb": "VARY_BY",
+                "object": "TALENT_LEVEL",
+                "value": [5, 10],
+                "ofDeterminer": "THIS",
+                "of": "OPERATOR"
+              },
+              "unit": "SECOND"
+            }
+          }
         }
       ]
     }

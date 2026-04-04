@@ -58,8 +58,26 @@
     },
     "stacks": {
       "limit": {
-        "verb": "IS",
-        "value": 3
+        "operation": "ADD",
+        "left": { "verb": "IS", "value": 3 },
+        "right": {
+          "operation": "MULT",
+          "left": {
+            "verb": "VARY_BY",
+            "object": "POTENTIAL",
+            "value": [0, 0, 0, 2, 2, 2],
+            "ofDeterminer": "THIS",
+            "of": "OPERATOR"
+          },
+          "right": {
+            "verb": "VARY_BY",
+            "object": "STATUS",
+            "objectId": "WHEN_THE_BANNER_FLUTTERS",
+            "value": [0, 1],
+            "ofDeterminer": "THIS",
+            "of": "OPERATOR"
+          }
+        }
       },
       "interactionType": "RESET"
     },

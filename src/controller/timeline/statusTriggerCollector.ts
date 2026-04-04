@@ -7,7 +7,7 @@
  * queue entry construction.
  */
 import { TimelineEvent, EventSegmentData, eventEndFrame, durationSegment, setEventDuration } from '../../consts/viewTypes';
-import { CritMode, EventCategoryType, EventFrameType, EventStatusType, StackInteractionType, UnitType } from '../../consts/enums';
+import { CritMode, EventCategoryType, EventFrameType, EventStatusType, StackInteractionType, UnitType, UNLIMITED_STACKS } from '../../consts/enums';
 import { COMMON_OWNER_ID } from '../slot/commonSlotController';
 import { ENEMY_OWNER_ID, ELEMENT_TO_INFLICTION_COLUMN, REACTION_COLUMNS } from '../../model/channels';
 import { FPS, TOTAL_FRAMES } from '../../utils/timeline';
@@ -1118,7 +1118,14 @@ export function deriveStatusesFromEngine(
         const talentOwnerId = resolveOwnerId(def.properties.target, slotId, operatorSlotMap, def.properties.targetDeterminer);
         const talentColumnId = def.properties.id;
         // Only create if not already present
-        if (!result.some(ev => ev.columnId === talentColumnId && ev.ownerId === talentOwnerId)) {
+        // Counter talents (NONE + unlimited stacks) start at 0 — no presence event.
+        const stackLimit = def.properties.stacks?.limit;
+        const resolvedLimit = typeof stackLimit === 'number' ? stackLimit
+          : typeof (stackLimit as { value?: number })?.value === 'number' ? (stackLimit as { value?: number }).value! : 0;
+        const isCounter = def.properties.stacks?.interactionType === StackInteractionType.NONE
+          && resolvedLimit >= UNLIMITED_STACKS;
+        if (!isCounter
+          && !result.some(ev => ev.columnId === talentColumnId && ev.ownerId === talentOwnerId)) {
           result.push({
             uid: `${def.properties.id.toLowerCase()}-talent-${slotId}`,
             id: def.properties.id,
@@ -1234,6 +1241,8 @@ export interface EngineTriggerEntry {
   sourceSkillName: string;
   /** Slot ID of the operator that triggered this entry (for TRIGGER determiner resolution). */
   triggerSlotId?: string;
+  /** Column ID of the event that matched the trigger (e.g. CRYO_INFLICTION). */
+  triggerObjectId?: string;
   ctx: EngineTriggerContext;
   isEquip: boolean;
 }
@@ -1281,7 +1290,14 @@ export function collectEngineTriggerEntries(
         const talentDurationFrames = talentDuration ? getDurationFrames(talentDuration) : TOTAL_FRAMES;
         const talentOwnerId = resolveOwnerId(def.properties.target, slotId, operatorSlotMap, def.properties.targetDeterminer);
         const talentColumnId = def.properties.id;
-        if (!events.some(ev => ev.columnId === talentColumnId && ev.ownerId === talentOwnerId)) {
+        // Counter talents (NONE + unlimited stacks) start at 0 — no presence event.
+        const stackLimit2 = def.properties.stacks?.limit;
+        const resolvedLimit2 = typeof stackLimit2 === 'number' ? stackLimit2
+          : typeof (stackLimit2 as { value?: number })?.value === 'number' ? (stackLimit2 as { value?: number }).value! : 0;
+        const isCounter2 = def.properties.stacks?.interactionType === StackInteractionType.NONE
+          && resolvedLimit2 >= UNLIMITED_STACKS;
+        if (!isCounter2
+          && !events.some(ev => ev.columnId === talentColumnId && ev.ownerId === talentOwnerId)) {
           talentEvents.push({
             uid: `${def.properties.id.toLowerCase()}-talent-${slotId}`,
             id: def.properties.id,

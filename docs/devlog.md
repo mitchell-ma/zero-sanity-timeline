@@ -1,5 +1,17 @@
 # Devlog
 
+## 2026-04-03
+- Endministrator fully reworked — Originium Crystals now trigger reactive shatter when any physical status (Vulnerable, Lift, Crush, Knock Down, Breach) is applied to a crystallized enemy, dealing bonus Physical DMG and granting Essence Disintegration ATK buffs. Battle skill no longer needs to explicitly consume crystals; applying Crush naturally triggers the chain. P1 SP refund and P2 team ATK share at half value both work correctly
+- Pogranichnik fully implemented — The Living Banner talent tracks SP gains as a running counter, triggering Fervent Morale ATK/Arts Intensity buffs when the threshold is reached. Steel Oath team stacks from ultimate are consumed by combo skill, branching into Harass or Decisive Assault based on remaining stacks. All potentials functional including P1 conditional SP on multi-hit, P3 reduced threshold and increased buff cap
+- Perlica's Obliteration Protocol talent reworked with reactive triggers for node stagger and full stagger events, segment-level DISABLE support for battle skill sequences, and proper CONSUME of active battle skill on ultimate cast
+- Yvonne's empowered basic attack expanded with full frame data across all skill levels, battle skill and combo skill configs updated, and Flawless Creation P2 potential added
+- Combo activation windows now properly split when a combo skill's cooldown ends between two trigger windows, preventing a single merged window from incorrectly allowing multiple combos
+- Right-click marquee selection now works on the canvas — right-dragging selects events, and right-clicking without dragging opens the context menu as before
+- Status effects that grant temporary stat bonuses (like ATK% or element damage bonus) now correctly affect damage calculations for the duration they're active, with per-frame stat tracking
+- Counter-style talents (like Living Banner) that accumulate stacks over time now display correctly — starting invisible at 0 stacks and showing running totals as stacks are gained or consumed
+- Segment-level skill disabling added — statuses can now disable individual segments of a skill (e.g. disabling specific battle skill sequences) rather than the entire skill, with disabled segments greyed out in the context menu
+- Combo window availability now correctly accounts for active combo events rather than total placed combos, so re-triggering a combo after the previous one's cooldown ends works properly
+
 ## 2026-04-02
 - Skills with variable parameters (like number of enemies hit) now show inline buttons in the context menu — pick ×1, ×2, ×3, etc. when placing the skill, and damage calculations adjust accordingly
 - Shield system added — operators with shield-granting abilities now show absorptive barriers that soak incoming damage before HP is reduced

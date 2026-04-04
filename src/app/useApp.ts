@@ -525,12 +525,31 @@ export function useApp() {
     [processedEvents, staggerFrailtyEvents],
   );
 
-  // Apply user property overrides to derived events
-  // Force new reference every time processedEvents changes (bypass memo chain)
+  // Apply user overrides to pipeline output.
+  // Input events (skill columns) already have overrides applied pre-pipeline via validEvents.
+  // Pipeline-recreated derived events (freeform placements) need overrides applied post-pipeline
+  // since the engine recreates them from scratch, discarding the pre-pipeline overrides.
+  // Only apply full overrides to freeform-placed events to avoid double-applying on input events.
   const allProcessedEvents = useMemo(() => {
     const keys = Object.keys(overrides);
     if (keys.length === 0) return allProcessedEventsRaw;
+    // Split: freeform events get full overrides, others get only property overrides
+    const hasFreeform = allProcessedEventsRaw.some(ev => ev.creationInteractionMode != null);
+    if (!hasFreeform) {
+      // Fast path: no freeform events, only apply property overrides
+      return allProcessedEventsRaw.map((ev) => {
+        const key = buildOverrideKey(ev);
+        const override = overrides[key];
+        return override?.propertyOverrides ? { ...ev, ...override.propertyOverrides } : ev;
+      });
+    }
+    // Slow path: apply full overrides only to freeform events
+    const freeformOnly = allProcessedEventsRaw.filter(ev => ev.creationInteractionMode != null);
+    const overriddenFreeform = freeformOnly.length > 0 ? applyEventOverrides(freeformOnly, overrides) : freeformOnly;
+    const freeformMap = new Map(overriddenFreeform.map(ev => [ev.uid, ev]));
     return allProcessedEventsRaw.map((ev) => {
+      const overridden = freeformMap.get(ev.uid);
+      if (overridden) return overridden;
       const key = buildOverrideKey(ev);
       const override = overrides[key];
       return override?.propertyOverrides ? { ...ev, ...override.propertyOverrides } : ev;
@@ -1234,13 +1253,17 @@ export function useApp() {
   }, []);
 
   const handleMoveFrame = useCallback((eventUid: string, segmentIndex: number, frameIndex: number, newOffsetFrame: number) => {
-    const target = validEvents.find((ev) => ev.uid === eventUid);
+    // Fall back to processed events for pipeline-recreated derived events (different UID than raw state)
+    const target = validEvents.find((ev) => ev.uid === eventUid)
+      ?? processedEventsRef.current?.find((ev) => ev.uid === eventUid);
     if (!target) return;
     setCombatState((prev) => ctrl.moveFrame(prev, target, segmentIndex, frameIndex, newOffsetFrame));
   }, [validEvents, ctrl, setCombatState]);
 
   const handleResizeSegment = useCallback((eventUid: string, updates: { segmentIndex: number; newDuration: number }[]) => {
-    const target = validEvents.find((ev) => ev.uid === eventUid);
+    // Fall back to processed events for pipeline-recreated derived events (different UID than raw state)
+    const target = validEvents.find((ev) => ev.uid === eventUid)
+      ?? processedEventsRef.current?.find((ev) => ev.uid === eventUid);
     if (!target) return;
     setCombatState((prev) => ctrl.resizeSegment(prev, target, updates));
   }, [validEvents, ctrl, setCombatState]);

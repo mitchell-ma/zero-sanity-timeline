@@ -69,7 +69,7 @@ export function computeAllValidations(
       ? validateResources(events, resourceGraphs, slots, draggingIds ?? undefined)
       : EMPTY_MAP,
     empowered: validateEmpowered(events, slots),
-    enhanced: validateEnhanced(events),
+    enhanced: validateEnhanced(events, slots),
     regularBasic: validateDisabledVariants(events),
     clause: validateVariantClauses(events, slots),
     finisherStagger: staggerBreaks

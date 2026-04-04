@@ -88,6 +88,9 @@ export interface ExecutionContext {
   overrideKey?: string;
   /** Current clause path for chance override matching. */
   clausePath?: string;
+  /** Remaining game-time duration of the source event that triggered this effect.
+   *  Used as fallback duration for APPLY STATUS when no explicit duration is specified. */
+  sourceEventRemainingDuration?: number;
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────

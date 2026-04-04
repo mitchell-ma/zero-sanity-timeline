@@ -956,6 +956,7 @@ export class DerivedEventController implements ColumnHost {
           preCooldownDur += s.properties.duration;
         }
       }
+      ev.nonOverlappableRange = computeSegmentsSpan(ev.segments);
       return;
     }
   }
@@ -968,7 +969,44 @@ export class DerivedEventController implements ColumnHost {
           s.properties.duration = Math.max(0, newCooldownDuration);
         }
       }
+      this.registeredEvents[i].nonOverlappableRange = computeSegmentsSpan(this.registeredEvents[i].segments);
       return;
+    }
+  }
+
+  /** Replace all combo activation windows with a fresh set. */
+  replaceComboWindows(freshWindows: TimelineEvent[]) {
+    // Remove old windows
+    this.registeredEvents = this.registeredEvents.filter(ev => ev.columnId !== COMBO_WINDOW_COLUMN_ID);
+    // Register new ones
+    for (const w of freshWindows) {
+      this.registeredEvents.push(w);
+      this.extendedIds.add(w.uid);
+    }
+  }
+
+  /**
+   * Clamp combo activation windows so they don't extend past the combo event's end.
+   * Called after the queue run when CD resets may have shortened combo events.
+   */
+  clampComboWindowsToEventEnd() {
+    const windows = this.registeredEvents.filter(ev => ev.columnId === COMBO_WINDOW_COLUMN_ID);
+    for (const win of windows) {
+      const winEnd = win.startFrame + computeSegmentsSpan(win.segments);
+      const combos = this.registeredEvents.filter(ev =>
+        ev.columnId === NounType.COMBO_SKILL &&
+        ev.ownerId === win.ownerId &&
+        ev.startFrame >= win.startFrame &&
+        ev.startFrame < winEnd,
+      );
+      if (combos.length === 0) continue;
+      // Use the earliest combo end that falls before the window end (the CD-reset combo)
+      const comboEnds = combos.map(c => c.startFrame + computeSegmentsSpan(c.segments)).filter(e => e < winEnd);
+      if (comboEnds.length === 0) continue;
+      const clampEnd = Math.min(...comboEnds);
+      if (win.segments.length > 0) {
+        win.segments[0].properties.duration = Math.max(0, clampEnd - win.startFrame);
+      }
     }
   }
 

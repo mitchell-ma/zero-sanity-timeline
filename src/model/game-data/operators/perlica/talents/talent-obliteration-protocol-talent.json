@@ -1,17 +1,67 @@
 {
-  "clause": [
+  "properties": {
+    "id": "OBLITERATION_PROTOCOL_TALENT",
+    "maxLevel": {
+      "verb": "IS",
+      "value": 2
+    },
+    "name": "Obliteration Protocol",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": -1
+      },
+      "unit": "SECOND"
+    },
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 1
+      },
+      "interactionType": "RESET"
+    },
+    "eventType": "STATUS",
+    "eventCategoryType": "TALENT",
+    "description": "DMG Dealt +20%/+30% to Staggered enemies."
+  },
+  "metadata": {
+    "originId": "PERLICA",
+    "dataSources": [
+      "WARFARIN",
+      "ENDFIELD_WIKI"
+    ],
+    "icon": "skills/perlica_talent_1_icon.png",
+    "dataStatus": "RECONCILED"
+  },
+  "onTriggerClause": [
     {
       "conditions": [
         {
           "subject": "ENEMY",
-          "verb": "IS",
+          "verb": "BECOME",
           "object": "NODE_STAGGERED"
         }
       ],
       "effects": [
         {
           "verb": "APPLY",
+          "object": "EVENT",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
+        }
+      ]
+    }
+  ],
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
           "object": "STAT",
+          "objectId": "STAGGER_DAMAGE_BONUS",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
@@ -25,33 +75,10 @@
               "ofDeterminer": "THIS",
               "of": "OPERATOR"
             }
-          },
-          "objectId": "DAMAGE_BONUS"
+          }
         }
       ]
     }
   ],
-  "properties": {
-    "id": "OBLITERATION_PROTOCOL_TALENT",
-    "maxLevel": {
-      "verb": "IS",
-      "value": 2
-    },
-    "name": "Obliteration Protocol (Talent)",
-    "to": "OPERATOR",
-    "toDeterminer": "THIS",
-    "eventType": "STATUS",
-    "eventCategoryType": "TALENT",
-    "description": "DMG Dealt +30% to Staggered enemies."
-  },
-  "metadata": {
-    "originId": "PERLICA",
-    "dataSources": [
-      "WARFARIN",
-      "ENDFIELD_WIKI"
-    ],
-    "icon": "skills/perlica_talent_1_icon.png",
-    "dataStatus": "RECONCILED"
-  },
   "clauseType": "ALL"
 }

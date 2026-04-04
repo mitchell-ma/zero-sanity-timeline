@@ -76,6 +76,7 @@ function resolveOwnerId(subject: string, ctx: ConditionContext, determiner?: str
   switch (subject) {
     case NounType.EVENT: return ctx.parentStatusOwnerId ?? ctx.sourceOwnerId;
     case NounType.ENEMY: return ENEMY_OWNER_ID;
+    case NounType.TEAM: return COMMON_OWNER_ID;
     default: return ctx.sourceOwnerId;
   }
 }
@@ -215,8 +216,9 @@ function evaluateHave(cond: Interaction, ctx: ConditionContext): boolean {
 
   if (count === 0) return false;
 
-  if (cond.value != null) {
-    const target = resolveValueNode(cond.value!, DEFAULT_VALUE_CONTEXT) ?? 0;
+  const condValue = cond.value ?? (cond as unknown as { with?: { value?: ValueNode } }).with?.value;
+  if (condValue != null) {
+    const target = resolveValueNode(condValue as ValueNode, DEFAULT_VALUE_CONTEXT) ?? 0;
     switch (cond.cardinalityConstraint) {
       case CardinalityConstraintType.EXACTLY: return count === target;
       case CardinalityConstraintType.AT_LEAST: return count >= target;
@@ -285,12 +287,21 @@ function evaluateBecome(cond: Interaction, ctx: ConditionContext): boolean {
     let countNow = 0;
     let countBefore = 0;
     for (const colId of columnIds) {
-      countNow += activeCountAtFrame(ctx.events, colId, ownerId, ctx.frame);
-      if (ctx.frame > 0) countBefore += activeCountAtFrame(ctx.events, colId, ownerId, ctx.frame - 1);
+      // Use the stacks field of the latest active event when available (counter pattern),
+      // otherwise fall back to the number of active events.
+      const activeNow = activeEventsAtFrame(ctx.events, colId, ownerId, ctx.frame);
+      const lastNow = activeNow.length > 0 ? activeNow[activeNow.length - 1] : undefined;
+      countNow += lastNow?.stacks != null ? lastNow.stacks : activeNow.length;
+      if (ctx.frame > 0) {
+        const activeBefore = activeEventsAtFrame(ctx.events, colId, ownerId, ctx.frame - 1);
+        const lastBefore = activeBefore.length > 0 ? activeBefore[activeBefore.length - 1] : undefined;
+        countBefore += lastBefore?.stacks != null ? lastBefore.stacks : activeBefore.length;
+      }
     }
     if (countNow === countBefore) return false;
     if (cond.value != null) {
-      const target = resolveValueNode(cond.value!, DEFAULT_VALUE_CONTEXT) ?? 0;
+      const valueCtx = ctx.potential != null ? { ...DEFAULT_VALUE_CONTEXT, potential: ctx.potential } : DEFAULT_VALUE_CONTEXT;
+      const target = resolveValueNode(cond.value!, valueCtx) ?? 0;
       switch (cond.cardinalityConstraint) {
         case CardinalityConstraintType.EXACTLY: return countNow === target;
         case CardinalityConstraintType.AT_LEAST: return countNow >= target;

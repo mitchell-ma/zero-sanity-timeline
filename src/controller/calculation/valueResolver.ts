@@ -25,6 +25,8 @@ export interface ValueResolutionContext {
   sourceContext?: ValueResolutionContext;
   /** User-supplied parameter values (e.g. { ENEMY_HIT: 2 }) for VARY_BY resolution. */
   suppliedParameters?: Record<string, number>;
+  /** Runtime query: active stack count for a status on the resolved operator (0 if not present). */
+  getStatusStacks?: (statusId: string) => number;
 }
 
 /** Default context when no loadout is available (uses max skill level, no potential). */
@@ -41,12 +43,16 @@ export const DEFAULT_VALUE_CONTEXT: ValueResolutionContext = {
  * SKILL_LEVEL is 1-indexed (1–12 → array[0–11]).
  * POTENTIAL and TALENT levels are 0-indexed (0–5 → array[0–5]).
  */
-function getVariableArrayIndex(object: string, ctx: ValueResolutionContext): number | undefined {
+function getVariableArrayIndex(object: string, ctx: ValueResolutionContext, objectId?: string): number | undefined {
   switch (object) {
     case 'SKILL_LEVEL':       return ctx.skillLevel - 1;
     case 'POTENTIAL':         return ctx.potential;
     case 'TALENT_LEVEL':      return ctx.talentLevel ?? 0;
     default: {
+      // VARY_BY STATUS <objectId>: active stack count of the status on the resolved operator
+      if (object === NounType.STATUS && objectId && ctx.getStatusStacks) {
+        return ctx.getStatusStacks(objectId);
+      }
       // Check user-supplied parameters (e.g. ENEMY_HIT from VARY_BY)
       const paramValue = ctx.suppliedParameters?.[object];
       if (paramValue != null) return paramValue;
@@ -76,7 +82,8 @@ export function resolveValueNode(node: ValueNode, ctx: ValueResolutionContext): 
       ? ctx.sourceContext : ctx;
     // Array lookup: index by dependency
     if (Array.isArray(node.value)) {
-      const index = getVariableArrayIndex(node.object, resolveCtx);
+      const varNode = node as ValueVariableType & { objectId?: string };
+      const index = getVariableArrayIndex(node.object, resolveCtx, varNode.objectId);
       if (index != null) {
         const clamped = Math.max(0, Math.min(index, node.value.length - 1));
         return node.value[clamped] ?? node.value[0] ?? 0;

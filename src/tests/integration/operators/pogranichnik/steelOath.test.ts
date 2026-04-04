@@ -40,6 +40,8 @@ const CHEN_QIANYU_ID: string = require('../../../../model/game-data/operators/ch
 const STEEL_OATH_ID: string = require('../../../../model/game-data/operators/pogranichnik/statuses/status-steel-oath.json').properties.id;
 const STEEL_OATH_HARASS_ID: string = require('../../../../model/game-data/operators/pogranichnik/statuses/status-steel-oath-harass.json').properties.id;
 const STEEL_OATH_DECISIVE_ASSAULT_ID: string = require('../../../../model/game-data/operators/pogranichnik/statuses/status-steel-oath-decisive-assault.json').properties.id;
+const FERVENT_MORALE_ID: string = require('../../../../model/game-data/operators/pogranichnik/statuses/status-fervent-morale.json').properties.id;
+const LIVING_BANNER_ID: string = require('../../../../model/game-data/operators/pogranichnik/talents/talent-the-living-banner-talent.json').properties.id;
 /* eslint-enable @typescript-eslint/no-require-imports */
 
 const SLOT_POG = 'slot-3';
@@ -540,5 +542,179 @@ describe('FIRST_MATCH clause selection in reactive triggers', () => {
       (ev) => ev.ownerId === ENEMY_OWNER_ID && ev.id === STEEL_OATH_DECISIVE_ASSAULT_ID,
     );
     expect(assaultEvents).toHaveLength(0);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// G. Fervent Morale — Steel Oath trigger targets TRIGGER operator
+// ═══════════════════════════════════════════════════════════════════════════════
+
+describe('G. Fervent Morale from Steel Oath targets TRIGGER operator', () => {
+  const SLOT_CHEN = 'slot-2';
+
+  it('G1: Chen triggering Steel Oath gains Fervent Morale on Chen, not Pog', () => {
+    const { result } = setupPogranichnik();
+    act(() => { result.current.handleSwapOperator(SLOT_CHEN, CHEN_QIANYU_ID); });
+    act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
+
+    act(() => { setUltimateEnergyToMax(result.current, SLOT_POG, 3); });
+    addUltimate(result.current, 1 * FPS);
+
+    // Two Chen BSes: first adds Vulnerable, second creates LIFT → triggers Steel Oath
+    const chenBattleCol = findColumn(result.current, SLOT_CHEN, NounType.BATTLE_SKILL);
+    expect(chenBattleCol).toBeDefined();
+    act(() => {
+      result.current.handleAddEvent(SLOT_CHEN, NounType.BATTLE_SKILL, 3 * FPS, chenBattleCol!.defaultEvent!);
+    });
+    act(() => {
+      result.current.handleAddEvent(SLOT_CHEN, NounType.BATTLE_SKILL, 5 * FPS, chenBattleCol!.defaultEvent!);
+    });
+
+    // Fervent Morale on Chen (the operator who triggered the physical status)
+    const chenMorale = result.current.allProcessedEvents.filter(
+      ev => ev.columnId === FERVENT_MORALE_ID && ev.ownerId === SLOT_CHEN,
+    );
+    expect(chenMorale.length).toBeGreaterThanOrEqual(1);
+
+    // Pog should NOT have Fervent Morale from this trigger
+    const pogMorale = result.current.allProcessedEvents.filter(
+      ev => ev.columnId === FERVENT_MORALE_ID && ev.ownerId === SLOT_POG,
+    );
+    expect(pogMorale).toHaveLength(0);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// H. Living Banner — combo first frame triggers stacks
+// ═══════════════════════════════════════════════════════════════════════════════
+
+describe('H. Living Banner stacks from combo first frame', () => {
+  it('H-2: Pog ult → 5 Steel Oath → combo → Harass + Fervent Morale at first frame, not event-level', () => {
+    const { result } = setupPogranichnik();
+    act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
+
+    // Place ult → Steel Oath stacks
+    act(() => { setUltimateEnergyToMax(result.current, SLOT_POG, 3); });
+    addUltimate(result.current, 0);
+
+    // Place combo at 5s
+    addComboSkill(result.current, 5 * FPS);
+
+    const comboEvents = result.current.allProcessedEvents.filter(
+      ev => ev.ownerId === SLOT_POG && ev.columnId === NounType.COMBO_SKILL,
+    );
+    expect(comboEvents).toHaveLength(1);
+    const comboStart = comboEvents[0].startFrame;
+
+    const harassEvents = result.current.allProcessedEvents.filter(
+      ev => ev.ownerId === ENEMY_OWNER_ID && ev.id === STEEL_OATH_HARASS_ID,
+    );
+    const assaultEvents = result.current.allProcessedEvents.filter(
+      ev => ev.ownerId === ENEMY_OWNER_ID && ev.id === STEEL_OATH_DECISIVE_ASSAULT_ID,
+    );
+    const moraleEvents = result.current.allProcessedEvents.filter(
+      ev => ev.columnId === FERVENT_MORALE_ID && ev.ownerId === SLOT_POG,
+    );
+
+    // Combo first frame consumes 1 Steel Oath stack → Harass (stacks > 1, not Decisive)
+    expect(harassEvents).toHaveLength(1);
+    expect(assaultEvents).toHaveLength(0);
+
+    // Fervent Morale on Pog (from combo frame Steel Oath consumption → Tactical Instruction)
+    expect(moraleEvents.length).toBeGreaterThanOrEqual(1);
+
+    // All effects happen AFTER combo start (frame-level, not event-level)
+    for (const ev of [...harassEvents, ...moraleEvents]) {
+      expect(ev.startFrame).toBeGreaterThan(comboStart);
+    }
+  });
+
+  it('H-1: Pog combo first frame consumes Steel Oath and triggers Fervent Morale (not at event-level)', () => {
+    const { result } = setupPogranichnik();
+    act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
+
+    // Place ult to create Steel Oath
+    act(() => { setUltimateEnergyToMax(result.current, SLOT_POG, 3); });
+    addUltimate(result.current, 0);
+
+    // Place combo — first FRAME (not event placement) consumes Steel Oath
+    addComboSkill(result.current, 5 * FPS);
+
+    const comboEvents = result.current.allProcessedEvents.filter(
+      ev => ev.ownerId === SLOT_POG && ev.columnId === NounType.COMBO_SKILL,
+    );
+    expect(comboEvents).toHaveLength(1);
+    const comboStart = comboEvents[0].startFrame;
+
+    // Fervent Morale should exist on Pog (from first frame Steel Oath consumption)
+    const pogMorale = result.current.allProcessedEvents.filter(
+      ev => ev.columnId === FERVENT_MORALE_ID && ev.ownerId === SLOT_POG,
+    );
+    expect(pogMorale.length).toBeGreaterThanOrEqual(1);
+
+    // Fervent Morale should NOT start at the combo event start (animation segment)
+    // It should start at or after the first damage frame offset
+    for (const ev of pogMorale) {
+      expect(ev.startFrame).toBeGreaterThan(comboStart);
+    }
+
+    // Steel Oath should have been consumed (at least 1 stack)
+    const steelOathConsumed = result.current.allProcessedEvents.filter(
+      ev => ev.id === STEEL_OATH_ID && ev.eventStatus === EventStatusType.CONSUMED,
+    );
+    expect(steelOathConsumed.length).toBeGreaterThanOrEqual(1);
+
+    // Harass or Decisive Assault should appear on enemy
+    const harassOrAssault = result.current.allProcessedEvents.filter(
+      ev => ev.ownerId === ENEMY_OWNER_ID
+        && (ev.id === STEEL_OATH_HARASS_ID || ev.id === STEEL_OATH_DECISIVE_ASSAULT_ID),
+    );
+    expect(harassOrAssault.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('H0: Pog combo does NOT trigger Fervent Morale at event-level (only from frame SP recovery)', () => {
+    const { result } = setupPogranichnik();
+    act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
+
+    // Place combo WITHOUT Steel Oath active — no Fervent Morale should appear
+    addComboSkill(result.current, 3 * FPS);
+
+    const comboEvents = result.current.allProcessedEvents.filter(
+      ev => ev.ownerId === SLOT_POG && ev.columnId === NounType.COMBO_SKILL,
+    );
+    expect(comboEvents).toHaveLength(1);
+    const comboStart = comboEvents[0].startFrame;
+
+    // No Fervent Morale should exist at the combo's start frame (event-level)
+    // Fervent Morale only comes from Living Banner threshold (80 SP accumulated)
+    const moraleAtComboStart = result.current.allProcessedEvents.filter(
+      ev => ev.columnId === FERVENT_MORALE_ID
+        && ev.ownerId === SLOT_POG
+        && ev.startFrame === comboStart,
+    );
+    expect(moraleAtComboStart).toHaveLength(0);
+  });
+
+  it('H1: Pog combo frames create clamped Living Banner segments with running totals (not event-level clause)', () => {
+    const { result } = setupPogranichnik();
+    act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
+
+    addComboSkill(result.current, 3 * FPS);
+
+    const bannerEvents = result.current.allProcessedEvents
+      .filter(ev => ev.columnId === LIVING_BANNER_ID && ev.ownerId === SLOT_POG)
+      .sort((a, b) => a.startFrame - b.startFrame);
+
+    // 3 clamped segments with running totals: 5, 12 (5+7), 25 (5+7+13)
+    expect(bannerEvents).toHaveLength(3);
+    expect(bannerEvents[0].stacks).toBe(5);
+    expect(bannerEvents[1].stacks).toBe(12);
+    expect(bannerEvents[2].stacks).toBe(25);
+
+    // Combo event-level clause only has RECOVER ULTIMATE_ENERGY — no Living Banner stacks
+    const comboEvents = result.current.allProcessedEvents.filter(
+      ev => ev.ownerId === SLOT_POG && ev.columnId === NounType.COMBO_SKILL,
+    );
+    expect(comboEvents).toHaveLength(1);
   });
 });

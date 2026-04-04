@@ -22,7 +22,7 @@ export function deriveComboActivationWindows(
   stops: readonly TimeStopRegion[],
 ): TimelineEvent[] {
   // Intermediate accumulator: slotId → unsorted windows
-  const windowsBySlot = new Map<string, { startFrame: number; endFrame: number; sourceEventId: string; sourceOwnerId?: string; sourceSkillName?: string; sourceColumnId?: string }[]>();
+  const windowsBySlot = new Map<string, { startFrame: number; endFrame: number; sourceEventId: string; sourceOwnerId?: string; sourceSkillName?: string; sourceColumnId?: string; triggerStacks?: number }[]>();
 
   // Build slotId → index for event ownership lookup
   const slotIdToIndex = new Map<string, number>();
@@ -53,6 +53,7 @@ export function deriveComboActivationWindows(
     sourceOwnerId: string,
     sourceSkillName: string,
     originOwnerId?: string,
+    triggerStacks?: number,
   ) => {
     // Skip self-trigger: don't let an operator's own action trigger their combo.
     if (originOwnerId === wiring.slotId) return;
@@ -94,6 +95,7 @@ export function deriveComboActivationWindows(
       sourceOwnerId,
       sourceSkillName,
       sourceColumnId: sourceSkillName,
+      triggerStacks,
     });
   };
 
@@ -103,7 +105,7 @@ export function deriveComboActivationWindows(
     if (!clause?.length) continue;
     const matches = findClauseTriggerMatches(clause, events, wiring.slotId, stops);
     for (const match of matches) {
-      addWindowDirect(wiring, match.frame, match.sourceOwnerId, match.sourceSkillName, match.originOwnerId);
+      addWindowDirect(wiring, match.frame, match.sourceOwnerId, match.sourceSkillName, match.originOwnerId, match.triggerStacks);
     }
   }
 
@@ -111,12 +113,23 @@ export function deriveComboActivationWindows(
   const derived: TimelineEvent[] = [];
   windowsBySlot.forEach((wins, slotId) => {
     wins.sort((a, b) => a.startFrame - b.startFrame);
-    // Merge overlapping
+    // Merge overlapping, but don't merge across combo event boundaries.
+    // If a combo event (active + CD) ends between two windows, keep them separate.
+    const slotCombos = comboEventsBySlot.get(slotId) ?? [];
     const merged: typeof wins = [];
     for (const w of wins) {
       const prev = merged.length > 0 ? merged[merged.length - 1] : null;
       if (prev && w.startFrame <= prev.endFrame) {
-        prev.endFrame = Math.max(prev.endFrame, w.endFrame);
+        // Check if a combo event's end falls between prev.startFrame and w.startFrame
+        const comboSplit = slotCombos.some(ce => {
+          const ceEnd = ce.startFrame + computeSegmentsSpan(ce.segments);
+          return ceEnd > prev!.startFrame && ceEnd <= w.startFrame;
+        });
+        if (comboSplit) {
+          merged.push({ ...w });
+        } else {
+          prev.endFrame = Math.max(prev.endFrame, w.endFrame);
+        }
       } else {
         merged.push({ ...w });
       }
@@ -136,6 +149,7 @@ export function deriveComboActivationWindows(
         sourceOwnerId: w.sourceOwnerId,
         sourceSkillName: w.sourceSkillName,
         comboTriggerColumnId: w.sourceColumnId,
+        triggerStacks: w.triggerStacks,
         maxSkills: triggerInfo?.maxSkills ?? 1,
         segments: [{ properties: { duration } }],
       });
@@ -234,7 +248,7 @@ export function resolveComboTriggerColumns(
   if (slotWirings.length === 0) return events;
 
   // Build combo windows per slot via findClauseTriggerMatches
-  type WindowInfo = { startFrame: number; endFrame: number; sourceColumnId?: string };
+  type WindowInfo = { startFrame: number; endFrame: number; sourceColumnId?: string; triggerStacks?: number };
   const windowsBySlot = new Map<string, WindowInfo[]>();
 
   for (const wiring of slotWirings) {
@@ -250,6 +264,7 @@ export function resolveComboTriggerColumns(
         startFrame: match.frame,
         endFrame: match.frame + extDuration,
         sourceColumnId: match.sourceColumnId,
+        triggerStacks: match.triggerStacks,
       });
     }
   }
@@ -281,10 +296,10 @@ export function resolveComboTriggerColumns(
     );
 
     if (match?.sourceColumnId != null) {
-      // Combo is in a valid window — update trigger column if it changed
-      if (match.sourceColumnId !== ev.comboTriggerColumnId) {
+      // Combo is in a valid window — update trigger column and stacks if changed
+      if (match.sourceColumnId !== ev.comboTriggerColumnId || match.triggerStacks !== ev.triggerStacks) {
         changed = true;
-        return { ...ev, comboTriggerColumnId: match.sourceColumnId };
+        return { ...ev, comboTriggerColumnId: match.sourceColumnId, triggerStacks: match.triggerStacks };
       }
     } else if (ev.comboTriggerColumnId != null) {
       // Combo is outside all windows — clear trigger column so no inflictions derive

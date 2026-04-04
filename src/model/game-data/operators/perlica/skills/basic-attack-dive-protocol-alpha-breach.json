@@ -24,7 +24,7 @@
           },
           "properties": {
             "offset": {
-              "value": 1,
+              "value": 0.1,
               "unit": "SECOND"
             }
           },
@@ -80,7 +80,7 @@
         "duration": {
           "value": {
             "verb": "IS",
-            "value": 1
+            "value": 0.1
           },
           "unit": "SECOND"
         },

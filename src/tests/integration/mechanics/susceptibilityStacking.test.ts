@@ -109,12 +109,9 @@ describe('Susceptibility stacking — freeform same-element', () => {
     for (const ev of suscInVM) {
       expect(evm!.microPositions.has(ev.uid)).toBe(true);
     }
-    // Labels should be base name only — no "II" stack numbering
-    for (const ev of suscInVM) {
-      const override = evm!.statusOverrides.get(ev.uid);
-      if (override) {
-        expect(override.label).not.toContain('II');
-      }
-    }
+    // Labels should include stack numbering (I, II) like MF stacking
+    const labels = suscInVM.map(ev => evm!.statusOverrides.get(ev.uid)?.label).filter(Boolean);
+    expect(labels.some(l => l!.includes('I'))).toBe(true);
+    expect(labels.some(l => l!.includes('II'))).toBe(true);
   });
 });

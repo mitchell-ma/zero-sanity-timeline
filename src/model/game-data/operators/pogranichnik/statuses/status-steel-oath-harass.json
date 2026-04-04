@@ -90,20 +90,23 @@
                     "value": {
                       "verb": "VARY_BY",
                       "object": "SKILL_LEVEL",
-                      "value": [
-                        7.5,
-                        7.5,
-                        7.5,
-                        7.5,
-                        7.5,
-                        7.5,
-                        7.5,
-                        7.5,
-                        7.5,
-                        10,
-                        10,
-                        10
-                      ],
+                      "value": [7.5, 7.5, 7.5, 7.5, 7.5, 7.5, 7.5, 7.5, 7.5, 10, 10, 10],
+                      "ofDeterminer": "SOURCE",
+                      "of": "OPERATOR"
+                    }
+                  }
+                },
+                {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "THE_LIVING_BANNER_TALENT",
+                  "toDeterminer": "SOURCE",
+                  "to": "OPERATOR",
+                  "with": {
+                    "stacks": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [7.5, 7.5, 7.5, 7.5, 7.5, 7.5, 7.5, 7.5, 7.5, 10, 10, 10],
                       "ofDeterminer": "SOURCE",
                       "of": "OPERATOR"
                     }

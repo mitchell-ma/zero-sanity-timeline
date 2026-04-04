@@ -492,6 +492,7 @@ describe('UE gauge gains — natural SP consumption via controllers', () => {
 // Uses real TWILIGHT segments from laevatain-skills.json
 describe('ENABLE/DISABLE clause variant validation', () => {
   const SLOT = 'slot-0';
+  const mockSlots = [{ slotId: SLOT, operator: { id: 'LAEVATAIN' } }] as import('../../controller/timeline/columnBuilder').Slot[];
   const totalDuration = twilightSegments.reduce((s: number, seg: EventSegmentData) => s + seg.properties.duration, 0);
 
   function ultEvent(startFrame: number): TimelineEvent {
@@ -503,32 +504,32 @@ describe('ENABLE/DISABLE clause variant validation', () => {
 
   test('enhanced variant is available during ENABLE window', () => {
     const events = [ultEvent(0)];
-    const result = checkVariantAvailability('FLAMING_CINDERS_ENHANCED', SLOT, events, 500, NounType.BASIC_ATTACK, undefined, EnhancementType.ENHANCED);
+    const result = checkVariantAvailability('FLAMING_CINDERS_ENHANCED', SLOT, events, 500, NounType.BASIC_ATTACK);
     expect(result.disabled).toBe(false);
   });
 
   test('enhanced variant is disabled outside ENABLE window (past ultimate)', () => {
     const events = [ultEvent(0)];
-    const result = checkVariantAvailability('FLAMING_CINDERS_ENHANCED', SLOT, events, totalDuration + 100, NounType.BASIC_ATTACK, undefined, EnhancementType.ENHANCED);
+    const result = checkVariantAvailability('FLAMING_CINDERS_ENHANCED', SLOT, events, totalDuration + 100, NounType.BASIC_ATTACK);
     expect(result.disabled).toBe(true);
     expect(result.reason).toContain('Activation condition not met');
   });
 
   test('enhanced variant is disabled when no ultimate placed', () => {
-    const result = checkVariantAvailability('FLAMING_CINDERS_ENHANCED', SLOT, [], 500, NounType.BASIC_ATTACK, undefined, EnhancementType.ENHANCED);
+    const result = checkVariantAvailability('FLAMING_CINDERS_ENHANCED', SLOT, [], 500, NounType.BASIC_ATTACK, mockSlots);
     expect(result.disabled).toBe(true);
   });
 
   test('regular basic is blocked during DISABLE window', () => {
     const events = [ultEvent(0)];
-    const result = checkVariantAvailability('FLAMING_CINDERS', SLOT, events, 500, NounType.BASIC_ATTACK, undefined, EnhancementType.NORMAL);
+    const result = checkVariantAvailability('FLAMING_CINDERS', SLOT, events, 500, NounType.BASIC_ATTACK);
     expect(result.disabled).toBe(true);
     expect(result.reason).toContain('FLAMING_CINDERS disabled');
   });
 
   test('regular basic is allowed outside DISABLE window (past ultimate)', () => {
     const events = [ultEvent(0)];
-    const result = checkVariantAvailability('FLAMING_CINDERS', SLOT, events, totalDuration + 100, NounType.BASIC_ATTACK, undefined, EnhancementType.NORMAL);
+    const result = checkVariantAvailability('FLAMING_CINDERS', SLOT, events, totalDuration + 100, NounType.BASIC_ATTACK);
     expect(result.disabled).toBe(false);
   });
 

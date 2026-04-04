@@ -109,6 +109,8 @@ export interface EventFrameMarker {
   clauses?: readonly FrameClausePredicate[];
   /** Clause evaluation mode: 'FIRST_MATCH' stops after first matching conditional; default 'ALL'. */
   clauseType?: string;
+  /** True when all conditional clauses were evaluated and none matched (frame produced no effects). */
+  frameSkipped?: boolean;
   /** Inline DEAL DAMAGE data (element + per-level multipliers). */
   dealDamage?: FrameDealDamage;
   /** Frame type classifications (defaults to [NORMAL]). */
@@ -172,7 +174,7 @@ export interface EventSegmentData {
   /** Damage frame markers within this segment. */
   frames?: EventFrameMarker[];
   /** Clause effects active during this segment (from JSON clause data). */
-  clause?: { conditions: Record<string, unknown>[]; effects: { verb: string; objectId?: string; objectQualifier?: string; object: string; nounQualifier?: string; toDeterminer?: string; to?: string; ofDeterminer?: string; ofObject?: string }[] }[];
+  clause?: { conditions: Record<string, unknown>[]; effects: { verb: string; objectId?: string; objectQualifier?: string; object: string; nounQualifier?: string; toDeterminer?: string; to?: string; ofDeterminer?: string; ofObject?: string; with?: { segments?: number[] } }[] }[];
   /** Absolute start frame on the timeline (set by processCombatSimulation, not raw JSON). */
   absoluteStartFrame?: number;
   /** Catch-all for domain-specific fields not part of the core segment model. */
@@ -217,6 +219,8 @@ export interface TimelineEvent {
   susceptibility?: Partial<Record<ElementType, number>>;
   /** For combo events: the trigger source's columnId (e.g. INFLICTION_COLUMNS.HEAT, PhysicalStatusType.BREACH). */
   comboTriggerColumnId?: string;
+  /** For combo events: the status level of the triggering physical status (= Vulnerability stacks consumed). */
+  triggerStacks?: number;
   /** How this event interacts with other timelines (TIME_STOP for ultimates and perfect dodges, NONE otherwise). */
   timeInteraction?: string;
   /** If true, this dash includes a perfect dodge (i-frame), applying TIME_STOP and generating 7.5 SP. */
@@ -428,6 +432,8 @@ export type MiniTimeline = {
     activationClause?: import('../dsl/semantics').Predicate[];
     /** User-supplied parameters available as VARY_BY dimensions (e.g. Enemies Hit). */
     suppliedParameters?: Record<string, { id: string; name: string; lowerRange: number; upperRange: number; default: number }[]>;
+    /** Stacking config — events with limit > 1 are allowed to overlap. */
+    stacks?: Record<string, unknown>;
   }[];
 
   /** Element type of this skill column (for per-skill coloring). */

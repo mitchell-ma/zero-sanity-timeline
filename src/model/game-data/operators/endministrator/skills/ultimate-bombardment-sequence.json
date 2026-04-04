@@ -132,14 +132,14 @@
                   "subject": "ENEMY",
                   "verb": "HAVE",
                   "object": "STATUS",
-                  "objectId": "ORIGINIUM_CRYSTAL"
+                  "objectId": "REALSPACE_STASIS_TALENT"
                 }
               ],
               "effects": [
                 {
                   "verb": "CONSUME",
                   "object": "STATUS",
-                  "objectId": "ORIGINIUM_CRYSTAL",
+                  "objectId": "REALSPACE_STASIS_TALENT",
                   "from": "ENEMY",
                   "with": {
                     "stacks": "MAX"
@@ -191,7 +191,7 @@
   "metadata": {
     "originId": "ENDMINISTRATOR",
     "icon": "skills/ult_endministrator.png",
-    "dataStatus": "RECONCILED"
+    "dataStatus": "VERIFIED"
   },
   "clauseType": "ALL"
 }

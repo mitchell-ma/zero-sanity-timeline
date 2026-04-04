@@ -1,34 +1,82 @@
 {
-  "clause": [
+  "onTriggerClause": [
     {
       "conditions": [
         {
-          "subject": "ENEMY",
-          "verb": "HAVE",
-          "object": "STATUS",
-          "objectId": "INFLICTION",
+          "subjectDeterminer": "ANY",
+          "subject": "OPERATOR",
+          "verb": "APPLY",
+          "object": "INFLICTION",
           "objectQualifier": "CRYO"
         }
       ],
       "effects": [
         {
           "verb": "APPLY",
-          "object": "STAT",
-          "objectId": "CRITICAL_DAMAGE_BONUS",
+          "object": "STATUS",
+          "objectId": "FREEZING_POINT_CRYO",
           "toDeterminer": "THIS",
-          "to": "OPERATOR",
-          "with": {
-            "value": {
-              "verb": "VARY_BY",
-              "object": "TALENT_LEVEL",
-              "value": [
-                0.1,
-                0.2
-              ],
-              "ofDeterminer": "THIS",
-              "of": "OPERATOR"
-            }
-          }
+          "to": "OPERATOR"
+        }
+      ]
+    },
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "ANY",
+          "subject": "OPERATOR",
+          "verb": "CONSUME",
+          "object": "INFLICTION",
+          "objectQualifier": "CRYO"
+        }
+      ],
+      "effects": [
+        {
+          "verb": "CONSUME",
+          "object": "STATUS",
+          "objectId": "FREEZING_POINT_CRYO",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
+        }
+      ]
+    },
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "ANY",
+          "subject": "OPERATOR",
+          "verb": "APPLY",
+          "object": "REACTION",
+          "objectId": "SOLIDIFICATION"
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "FREEZING_POINT_SOLIDIFICATION",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
+        }
+      ]
+    },
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "ANY",
+          "subject": "OPERATOR",
+          "verb": "CONSUME",
+          "object": "REACTION",
+          "objectId": "SOLIDIFICATION"
+        }
+      ],
+      "effects": [
+        {
+          "verb": "CONSUME",
+          "object": "STATUS",
+          "objectId": "FREEZING_POINT_SOLIDIFICATION",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
         }
       ]
     }
@@ -54,6 +102,5 @@
     ],
     "icon": "skills/yvonne_talent_2_icon.png",
     "dataStatus": "RECONCILED"
-  },
-  "clauseType": "ALL"
+  }
 }

@@ -13,6 +13,7 @@
  */
 import { Application, Container, FederatedPointerEvent } from 'pixi.js';
 import type { CanvasRenderData, CanvasCallbacks } from './canvasTypes';
+import type { Column } from '../../consts/viewTypes';
 
 // ── Synthetic React.MouseEvent from PixiJS FederatedPointerEvent ─────────
 
@@ -107,6 +108,8 @@ export class InteractionBridge {
   private lastWarningHover = false;
   private lastClickTime = 0;
   private lastClickUid = '';
+  /** Deferred column context menu — stored on rightdown, fired on rightup if no drag. */
+  private pendingRmbColumn: { se: React.MouseEvent; col: Column } | null = null;
 
   constructor(config: InteractionBridgeConfig) {
     this.app = config.app;
@@ -126,6 +129,8 @@ export class InteractionBridge {
     stage.on('pointerupoutside', this.onStagePointerUp);
     stage.on('pointerdown', this.onStagePointerDown);
     stage.on('rightdown', this.onStageRightDown);
+    stage.on('rightup', this.onStageRightUp);
+    stage.on('rightupoutside', this.onStageRightUp);
 
     // DOM: suppress browser context menu
     this.canvasDiv.addEventListener('contextmenu', this.onDomContextMenu);
@@ -269,18 +274,21 @@ export class InteractionBridge {
     }
   };
 
-  /** Stage rightdown — context menus. */
+  /** Stage rightdown — context menus (deferred for empty space to allow marquee drag). */
   private onStageRightDown = (e: FederatedPointerEvent) => {
     const target = e.target as Container;
     const uid = findEventUid(target);
     const se = toSynthetic(e);
 
     if (!uid) {
+      // Empty space: start marquee, defer column context menu to rightup
+      this.pendingRmbColumn = null;
       const data = this.getData();
       if (data) {
         const col = this.findColumnAtPoint(e, data);
-        if (col) this.getCallbacks().onColumnContextMenu(se, col);
+        if (col) this.pendingRmbColumn = { se, col };
       }
+      this.getCallbacks().onMarqueeStart(toSyntheticPassive(e));
       return;
     }
 
@@ -309,6 +317,17 @@ export class InteractionBridge {
     }
 
     this.getCallbacks().onEventContextMenu(se, uid);
+  };
+
+  /** Stage rightup — fire deferred column context menu if no drag occurred. */
+  private onStageRightUp = () => {
+    const pending = this.pendingRmbColumn;
+    this.pendingRmbColumn = null;
+    if (!pending) return;
+    // rmbDraggedRef is set by CombatPlanner when motion exceeds threshold.
+    // onMouseUp runs first (via handleMouseUp), clearing rmbMarqueeRef.
+    // onColumnContextMenu checks rmbDraggedRef and skips if drag occurred.
+    this.getCallbacks().onColumnContextMenu(pending.se, pending.col);
   };
 
   // ── DOM handler ────────────────────────────────────────────────────────
@@ -358,6 +377,8 @@ export class InteractionBridge {
     stage.off('pointerupoutside', this.onStagePointerUp);
     stage.off('pointerdown', this.onStagePointerDown);
     stage.off('rightdown', this.onStageRightDown);
+    stage.off('rightup', this.onStageRightUp);
+    stage.off('rightupoutside', this.onStageRightUp);
 
     this.canvasDiv.removeEventListener('contextmenu', this.onDomContextMenu);
     this.canvasDiv.style.cursor = '';

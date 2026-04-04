@@ -1,21 +1,40 @@
 {
   "onTriggerClause": [
     {
+      "_note": "When accumulated SP reaches 80, consume 80 stacks and grant Fervent Morale",
       "conditions": [
         {
+          "subject": "EVENT",
           "subjectDeterminer": "THIS",
-          "subject": "OPERATOR",
-          "verb": "RECOVER",
-          "object": "SKILL_POINT",
+          "verb": "BECOME",
+          "object": "STACKS",
+          "cardinalityConstraint": "AT_LEAST",
           "with": {
-            "threshold": {
-              "verb": "IS",
-              "value": 80
+            "value": {
+              "verb": "VARY_BY",
+              "object": "POTENTIAL",
+              "value": [80, 80, 80, 60, 60, 60],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
             }
           }
         }
       ],
       "effects": [
+        {
+          "verb": "CONSUME",
+          "objectDeterminer": "THIS",
+          "object": "EVENT",
+          "with": {
+            "stacks": {
+              "verb": "VARY_BY",
+              "object": "POTENTIAL",
+              "value": [80, 80, 80, 60, 60, 60],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
+            }
+          }
+        },
         {
           "verb": "APPLY",
           "object": "STATUS",
@@ -35,6 +54,13 @@
     "name": "The Living Banner (Talent)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 99999
+      },
+      "interactionType": "NONE"
+    },
     "eventType": "STATUS",
     "eventCategoryType": "TALENT",
     "description": "During battle, recovering {atb_gain:0} SP with his own skills grants Fervent Morale for {duration:0}s. Fervent Morale effects: ATK +{atk_up:0%} and Arts Intensity +{physpell_up:0}. This effect can reach 3 stacks. Duration of each stack is counted separately."

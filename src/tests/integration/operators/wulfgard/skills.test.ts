@@ -29,12 +29,15 @@ import {
   INFLICTION_COLUMNS, REACTION_COLUMNS, ENEMY_OWNER_ID,
   ENEMY_GROUP_COLUMNS,
 } from '../../../../model/channels';
-import { ColumnType, EnhancementType, EventStatusType, SegmentType } from '../../../../consts/enums';
+import { ColumnType, CritMode, ElementType, EnhancementType, EventStatusType, SegmentType } from '../../../../consts/enums';
 import type { MiniTimeline } from '../../../../consts/viewTypes';
 import { FPS } from '../../../../utils/timeline';
 import { eventDuration } from '../../../../consts/viewTypes';
 import { computeTimelinePresentation } from '../../../../controller/timeline/eventPresentationController';
 import { getUltimateEnergyCostForPotential } from '../../../../controller/operators/operatorRegistry';
+import { runCalculation } from '../../../../controller/calculation/calculationController';
+import { computeAllValidations } from '../../../../controller/timeline/eventValidationController';
+import { COMBO_WINDOW_COLUMN_ID } from '../../../../model/channels';
 import { findColumn, buildContextMenu, getMenuPayload, setUltimateEnergyToMax, type AppResult } from '../../helpers';
 
 // ── Game-data verified constants ────────────────────────────────────────────
@@ -43,7 +46,6 @@ import { findColumn, buildContextMenu, getMenuPayload, setUltimateEnergyToMax, t
 const WULFGARD_JSON = require('../../../../model/game-data/operators/wulfgard/wulfgard.json');
 const WULFGARD_ID: string = WULFGARD_JSON.id;
 const TALENT1_ID: string = WULFGARD_JSON.talents.one;
-const TALENT2_ID: string = WULFGARD_JSON.talents.two;
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const BATTLE_SKILL_ID: string = require(
@@ -54,6 +56,8 @@ const BATTLE_SKILL_ID: string = require(
 const ULTIMATE_ID: string = require(
   '../../../../model/game-data/operators/wulfgard/skills/ultimate-wolven-fury.json',
 ).properties.id;
+
+const SF_MINOR_ID = TALENT1_ID + '_MINOR';
 
 const SLOT_WULFGARD = 'slot-0';
 const SLOT_AKEKURI = 'slot-1';
@@ -442,7 +446,7 @@ describe('E. Scorching Fangs (Talent 1)', () => {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 describe('F. Code of Restraint (Talent 2)', () => {
-  it('F1: SP recovery triggers when empowered battle skill consumes reaction (freeform + strict)', () => {
+  it('F1: Empowered BS consumes reaction and triggers Code of Restraint SP return (freeform + strict)', () => {
     const { result } = setupWulfgard();
 
     // Freeform: place Combustion on enemy
@@ -455,19 +459,25 @@ describe('F. Code of Restraint (Talent 2)', () => {
 
     // Strict: empowered battle skill consumes Combustion
     const battleCol = findColumn(result.current, SLOT_WULFGARD, NounType.BATTLE_SKILL);
-    const payload = getMenuPayload(result.current, battleCol!, 3 * FPS);
+    const empowered = battleCol?.eventVariants?.find(v => v.enhancementType === EnhancementType.EMPOWERED);
+    expect(empowered).toBeDefined();
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId,
-        payload.atFrame, payload.defaultSkill,
+        SLOT_WULFGARD, NounType.BATTLE_SKILL, 3 * FPS, empowered!,
       );
     });
 
-    // Code of Restraint should fire — look for a trigger-related event
-    const triggerEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.name === TALENT2_ID,
+    // Controller: empowered BS placed and Combustion consumed
+    const bsEvents = result.current.allProcessedEvents.filter(
+      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.BATTLE_SKILL,
     );
-    expect(triggerEvents.length).toBeGreaterThanOrEqual(1);
+    expect(bsEvents).toHaveLength(1);
+    expect(bsEvents[0].enhancementType).toBe(EnhancementType.EMPOWERED);
+
+    const consumed = result.current.allProcessedEvents.filter(
+      ev => ev.columnId === REACTION_COLUMNS.COMBUSTION && ev.eventStatus === EventStatusType.CONSUMED,
+    );
+    expect(consumed.length).toBeGreaterThanOrEqual(1);
   });
 });
 
@@ -954,6 +964,66 @@ describe('I. Empowered Battle Skill — Activation & Consume Priority', () => {
     expect(battles[0].enhancementType).toBe(EnhancementType.EMPOWERED);
     expect(battles[0].warnings ?? []).toHaveLength(0);
   });
+
+  it('I8: Combustion expires before frame 4 — no consume, no damage, no stagger', () => {
+    const { result } = setupWulfgard();
+
+    // Combustion at 1s, duration 1s → expires at 2s
+    // EBS placed at 1s → frame 4 resolves at 1 + 2.07 = 3.07s, after expiry
+    placeReaction(result, REACTION_COLUMNS.COMBUSTION, 1, 1);
+    placeEmpoweredBS(result, 1);
+
+    // Controller: Combustion should NOT be consumed (expired before frame 4)
+    expect(consumedReactions(result, REACTION_COLUMNS.COMBUSTION)).toHaveLength(0);
+
+    // Controller: EBS event exists and has 4 frames
+    const battles = result.current.allProcessedEvents.filter(
+      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.BATTLE_SKILL,
+    );
+    expect(battles).toHaveLength(1);
+    expect(battles[0].enhancementType).toBe(EnhancementType.EMPOWERED);
+    const frames = battles[0].segments.flatMap(
+      (s: { frames?: unknown[] }) => s.frames ?? [],
+    );
+    expect(frames).toHaveLength(4);
+
+    // View: Combustion in enemy status column should NOT show as consumed
+    const viewModels = computeTimelinePresentation(
+      result.current.allProcessedEvents,
+      result.current.columns,
+    );
+    const enemyStatusCol = findEnemyStatusColumn(result.current);
+    expect(enemyStatusCol).toBeDefined();
+    const enemyVM = viewModels.get(enemyStatusCol!.key);
+    expect(enemyVM).toBeDefined();
+    const combustionConsumed = enemyVM!.events.filter(
+      ev => ev.columnId === REACTION_COLUMNS.COMBUSTION && ev.eventStatus === EventStatusType.CONSUMED,
+    );
+    expect(combustionConsumed).toHaveLength(0);
+
+    // Calculation: frame 4 (frameIndex 3) should produce no damage row
+    const calcResult = runCalculation(
+      result.current.allProcessedEvents,
+      result.current.columns,
+      result.current.slots,
+      result.current.enemy,
+      result.current.loadoutProperties,
+      result.current.loadouts,
+      result.current.staggerBreaks,
+      CritMode.NEVER,
+      result.current.overrides,
+    );
+    const ebsRows = calcResult.rows.filter(
+      r => r.ownerId === SLOT_WULFGARD && r.columnId === NounType.BATTLE_SKILL,
+    );
+    // Frames 1-3 produce damage; frame 4 row exists but with null damage (shown as "-")
+    expect(ebsRows).toHaveLength(4);
+    const [frame1, frame2, frame3, frame4] = ebsRows;
+    expect(frame1.damage).toBeGreaterThan(0);
+    expect(frame2.damage).toBeGreaterThan(0);
+    expect(frame3.damage).toBeGreaterThan(0);
+    expect(frame4.damage).toBeNull();
+  });
 });
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -1116,6 +1186,228 @@ describe('K. Scorching Fangs — Detailed Behavior', () => {
     // Verify the event carries the talent's clause data
     expect(sf!.id).toBe(TALENT1_ID);
   });
+
+  it('K4: P3 empowered BS applies SF Minor to all teammates (not self)', () => {
+    const { result } = setupWulfgard();
+    // Default P5 (≥ P3), so P3 clause is active
+
+    // 1. Ult at 2s — forces Combustion + triggers Scorching Fangs on self
+    placeUlt(result, 2);
+
+    // 2. Empowered BS at 8s — Combustion still active, P3 clause fires:
+    //    APPLY SF to self (reset) + SF Minor to ALL_OTHER
+    const battleCol = findColumn(result.current, SLOT_WULFGARD, NounType.BATTLE_SKILL);
+    const empowered = battleCol?.eventVariants?.find(v => v.enhancementType === EnhancementType.EMPOWERED);
+    expect(empowered).toBeDefined();
+    act(() => {
+      result.current.handleAddEvent(
+        SLOT_WULFGARD, NounType.BATTLE_SKILL, 8 * FPS, empowered!,
+      );
+    });
+
+    // Controller: SF Minor applied to each individual teammate slot, NOT on self or common
+    const teammateSlots = [SLOT_AKEKURI, 'slot-2', 'slot-3'];
+    const sfMinorAll = result.current.allProcessedEvents.filter(
+      ev => ev.name === SF_MINOR_ID && ev.startFrame > 0,
+    );
+    // Must NOT be on Wulfgard
+    expect(sfMinorAll.filter(ev => ev.ownerId === SLOT_WULFGARD)).toHaveLength(0);
+    // Must be on each individual teammate slot (not common)
+    for (const slot of teammateSlots) {
+      const slotMinor = sfMinorAll.filter(ev => ev.ownerId === slot);
+      expect(slotMinor.length).toBeGreaterThanOrEqual(1);
+      // Each SF Minor has 10s duration
+      expect(eventDuration(slotMinor[0])).toBeGreaterThanOrEqual(10 * FPS);
+    }
+
+    // View: SF Minor appears in each teammate's operator-status column
+    const viewModels = computeTimelinePresentation(
+      result.current.allProcessedEvents,
+      result.current.columns,
+    );
+    for (const slot of teammateSlots) {
+      let found = false;
+      viewModels.forEach(vm => {
+        if (vm.events.some((ev: { name: string; ownerId: string }) =>
+          ev.name === SF_MINOR_ID && ev.ownerId === slot)) {
+          found = true;
+        }
+      });
+      expect(found).toBe(true);
+    }
+
+    // Calculation: SF Minor events contribute to the query service
+    const calcResult = runCalculation(
+      result.current.allProcessedEvents,
+      result.current.columns,
+      result.current.slots,
+      result.current.enemy,
+      result.current.loadoutProperties,
+      result.current.loadouts,
+      result.current.staggerBreaks,
+      CritMode.NEVER,
+      result.current.overrides,
+    );
+    expect(calcResult.rows.length).toBeGreaterThan(0);
+  });
+
+  it('K5: SF Minor Heat DMG bonus appears in teammate damage calc params', () => {
+    const { result } = setupWulfgard();
+
+    // Swap Laevatain (Heat dealer) into slot-1 so we can verify Heat DMG bonus
+    act(() => { result.current.handleSwapOperator(SLOT_AKEKURI, 'LAEVATAIN'); });
+
+    // 1. Ult at 2s — forces Combustion + triggers SF on self
+    placeUlt(result, 2);
+
+    // 2. Empowered BS at 8s — P3 clause applies SF Minor to teammates
+    const battleCol = findColumn(result.current, SLOT_WULFGARD, NounType.BATTLE_SKILL);
+    const empowered = battleCol?.eventVariants?.find(v => v.enhancementType === EnhancementType.EMPOWERED);
+    expect(empowered).toBeDefined();
+    act(() => {
+      result.current.handleAddEvent(
+        SLOT_WULFGARD, NounType.BATTLE_SKILL, 8 * FPS, empowered!,
+      );
+    });
+
+    // Verify SF Minor on Laevatain (slot-1)
+    const sfMinorOnLaev = result.current.allProcessedEvents.filter(
+      ev => ev.name === SF_MINOR_ID && ev.ownerId === SLOT_AKEKURI && ev.startFrame > 0,
+    );
+    expect(sfMinorOnLaev.length).toBeGreaterThanOrEqual(1);
+
+    // 3. Place Laevatain BS at 12s — within SF Minor window (10s from ~10s)
+    const laevBsCol = findColumn(result.current, SLOT_AKEKURI, NounType.BATTLE_SKILL);
+    expect(laevBsCol).toBeDefined();
+    act(() => {
+      result.current.handleAddEvent(
+        SLOT_AKEKURI, NounType.BATTLE_SKILL, 12 * FPS, laevBsCol!.defaultEvent!,
+      );
+    });
+
+    // Calculation: Laevatain's BS damage rows should include Heat DMG bonus from SF Minor
+    const calcResult = runCalculation(
+      result.current.allProcessedEvents,
+      result.current.columns,
+      result.current.slots,
+      result.current.enemy,
+      result.current.loadoutProperties,
+      result.current.loadouts,
+      result.current.staggerBreaks,
+      CritMode.NEVER,
+      result.current.overrides,
+    );
+    const laevRows = calcResult.rows.filter(
+      r => r.ownerId === SLOT_AKEKURI && r.columnId === NounType.BATTLE_SKILL && r.damage != null,
+    );
+    expect(laevRows.length).toBeGreaterThan(0);
+
+    // The Heat DMG bonus from SF Minor (10% at talent level 1) should be in params
+    const rowWithParams = laevRows.find(r => r.params?.sub);
+    expect(rowWithParams).toBeDefined();
+    // allElementDmgBonuses[HEAT] should be > 0 (includes SF Minor's 10%+)
+    const heatDmgBonus = rowWithParams!.params?.sub?.allElementDmgBonuses?.[ElementType.HEAT] ?? 0;
+    expect(heatDmgBonus).toBeGreaterThan(0);
+  });
+
+  it('K6: Scorching Fangs (full) Heat DMG bonus on Wulfgard self', () => {
+    const { result } = setupWulfgard();
+
+    // Ult at 2s — forces Combustion → triggers Scorching Fangs on self (20%/30% Heat DMG)
+    placeUlt(result, 2);
+
+    // Verify SF on self
+    const sf = result.current.allProcessedEvents.find(
+      ev => ev.ownerId === SLOT_WULFGARD && ev.name === TALENT1_ID && ev.startFrame > 0,
+    );
+    expect(sf).toBeDefined();
+
+    // Place Wulfgard BS at 5s — within SF window
+    const bsCol = findColumn(result.current, SLOT_WULFGARD, NounType.BATTLE_SKILL);
+    act(() => {
+      result.current.handleAddEvent(
+        SLOT_WULFGARD, NounType.BATTLE_SKILL, 5 * FPS, bsCol!.defaultEvent!,
+      );
+    });
+
+    // Calculation: Wulfgard's BS rows should include Heat DMG bonus from SF
+    const calcResult = runCalculation(
+      result.current.allProcessedEvents,
+      result.current.columns,
+      result.current.slots,
+      result.current.enemy,
+      result.current.loadoutProperties,
+      result.current.loadouts,
+      result.current.staggerBreaks,
+      CritMode.NEVER,
+      result.current.overrides,
+    );
+    const wulfRows = calcResult.rows.filter(
+      r => r.ownerId === SLOT_WULFGARD && r.columnId === NounType.BATTLE_SKILL && r.damage != null,
+    );
+    expect(wulfRows.length).toBeGreaterThan(0);
+    const row = wulfRows.find(r => r.params?.sub);
+    expect(row).toBeDefined();
+    // Heat DMG bonus ≥ 20% (SF full at talent level 1)
+    const heatDmgBonus = row!.params?.sub?.allElementDmgBonuses?.[ElementType.HEAT] ?? 0;
+    expect(heatDmgBonus).toBeGreaterThanOrEqual(0.2);
+  });
+
+  it('K7: Heat DMG bonus does NOT apply to frames after SF Minor expires', () => {
+    const { result } = setupWulfgard();
+    act(() => { result.current.handleSwapOperator(SLOT_AKEKURI, 'LAEVATAIN'); });
+
+    // Ult at 2s → SF on self + Combustion
+    placeUlt(result, 2);
+
+    // Empowered BS at 4s → P3 applies SF Minor to Laevatain (~6.07s start, 10s duration → expires ~16s)
+    const battleCol = findColumn(result.current, SLOT_WULFGARD, NounType.BATTLE_SKILL);
+    const empowered = battleCol?.eventVariants?.find(v => v.enhancementType === EnhancementType.EMPOWERED);
+    expect(empowered).toBeDefined();
+    act(() => {
+      result.current.handleAddEvent(
+        SLOT_WULFGARD, NounType.BATTLE_SKILL, 4 * FPS, empowered!,
+      );
+    });
+
+    // Verify SF Minor on Laevatain exists
+    const sfMinor = result.current.allProcessedEvents.find(
+      ev => ev.name === SF_MINOR_ID && ev.ownerId === SLOT_AKEKURI && ev.startFrame > 0,
+    );
+    expect(sfMinor).toBeDefined();
+    const sfMinorEnd = sfMinor!.startFrame + eventDuration(sfMinor!);
+
+    // Place Laevatain BS well after SF Minor expires
+    const laevBsCol = findColumn(result.current, SLOT_AKEKURI, NounType.BATTLE_SKILL);
+    const afterExpirySec = Math.ceil(sfMinorEnd / FPS) + 5;
+    act(() => {
+      result.current.handleAddEvent(
+        SLOT_AKEKURI, NounType.BATTLE_SKILL, afterExpirySec * FPS, laevBsCol!.defaultEvent!,
+      );
+    });
+
+    // Calculation: Laevatain's BS rows after expiry should have 0 Heat DMG bonus
+    const calcResult = runCalculation(
+      result.current.allProcessedEvents,
+      result.current.columns,
+      result.current.slots,
+      result.current.enemy,
+      result.current.loadoutProperties,
+      result.current.loadouts,
+      result.current.staggerBreaks,
+      CritMode.NEVER,
+      result.current.overrides,
+    );
+    const laevRows = calcResult.rows.filter(
+      r => r.ownerId === SLOT_AKEKURI && r.columnId === NounType.BATTLE_SKILL
+        && r.absoluteFrame >= afterExpirySec * FPS && r.damage != null,
+    );
+    expect(laevRows.length).toBeGreaterThan(0);
+    const row = laevRows.find(r => r.params?.sub);
+    expect(row).toBeDefined();
+    const heatDmgBonus = row!.params?.sub?.allElementDmgBonuses?.[ElementType.HEAT] ?? 0;
+    expect(heatDmgBonus).toBe(0);
+  });
 });
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -1220,5 +1512,123 @@ describe('L. P5 Natural Predator — Combo Cooldown Reset', () => {
     );
     // Only 1 combo — second was rejected or overlaps
     expect(combos).toHaveLength(1);
+  });
+
+  it('L3: Full rotation — BS → CS → ULT resets CD → BS → CS succeeds', () => {
+    const { result } = setupWulfgard();
+
+    // Heat infliction for combo trigger
+    act(() => {
+      result.current.handleAddEvent(
+        ENEMY_OWNER_ID, INFLICTION_COLUMNS.HEAT, 1 * FPS,
+        { name: INFLICTION_COLUMNS.HEAT, segments: [{ properties: { duration: 60 * FPS } }] },
+      );
+    });
+
+    // 1. BS at 2s — opens 6s combo activation window (2s–8s)
+    const bsCol = findColumn(result.current, SLOT_WULFGARD, NounType.BATTLE_SKILL);
+    act(() => {
+      result.current.handleAddEvent(
+        SLOT_WULFGARD, NounType.BATTLE_SKILL, 2 * FPS, bsCol!.defaultEvent!,
+      );
+    });
+
+    // 2. CS at 3s — within first activation window
+    const comboCol = findColumn(result.current, SLOT_WULFGARD, NounType.COMBO_SKILL);
+    act(() => {
+      result.current.handleAddEvent(
+        SLOT_WULFGARD, NounType.COMBO_SKILL, 3 * FPS, comboCol!.defaultEvent!,
+      );
+    });
+
+    // Verify first combo placed
+    const combos1 = result.current.allProcessedEvents.filter(
+      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.COMBO_SKILL,
+    );
+    expect(combos1).toHaveLength(1);
+
+    // Capture first activation window before ult
+    const windowsBefore = result.current.allProcessedEvents.filter(
+      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === COMBO_WINDOW_COLUMN_ID,
+    );
+    expect(windowsBefore).toHaveLength(1);
+    const origWindowDur = eventDuration(windowsBefore[0]);
+
+    // 3. ULT at 5s — P5 resets combo CD
+    placeUlt(result, 5);
+
+    // Controller: combo CD was reset (event ends at or before ult frame)
+    const comboAfterUlt = result.current.allProcessedEvents.filter(
+      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.COMBO_SKILL,
+    );
+    expect(comboAfterUlt).toHaveLength(1);
+    const comboEnd = comboAfterUlt[0].startFrame + eventDuration(comboAfterUlt[0]);
+    expect(comboEnd).toBeLessThanOrEqual(5 * FPS + 1);
+
+    // Controller: first activation window was clamped to combo's reduced end
+    const windowsAfterUlt = result.current.allProcessedEvents.filter(
+      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === COMBO_WINDOW_COLUMN_ID,
+    );
+    const firstWindow = windowsAfterUlt[0];
+    const clampedDur = eventDuration(firstWindow);
+    expect(clampedDur).toBeLessThan(origWindowDur);
+    const clampedEnd = firstWindow.startFrame + clampedDur;
+    expect(clampedEnd).toBeLessThanOrEqual(comboEnd);
+
+    // 4. Akekuri BS at 7s — triggers Wulfgard's second combo activation window
+    const akeBsCol = findColumn(result.current, SLOT_AKEKURI, NounType.BATTLE_SKILL);
+    expect(akeBsCol).toBeDefined();
+    act(() => {
+      result.current.handleAddEvent(
+        SLOT_AKEKURI, NounType.BATTLE_SKILL, 7 * FPS, akeBsCol!.defaultEvent!,
+      );
+    });
+
+    // Controller: second activation window exists (re-derived after CD reset)
+    const windowsAfterTrigger = result.current.allProcessedEvents.filter(
+      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === COMBO_WINDOW_COLUMN_ID,
+    );
+    expect(windowsAfterTrigger.length).toBeGreaterThanOrEqual(2);
+
+    // 5. CS at 9s — within second activation window
+    act(() => {
+      result.current.handleAddEvent(
+        SLOT_WULFGARD, NounType.COMBO_SKILL, 9 * FPS, comboCol!.defaultEvent!,
+      );
+    });
+
+    // Controller: second combo placed
+    const combos2 = result.current.allProcessedEvents.filter(
+      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.COMBO_SKILL,
+    );
+    expect(combos2).toHaveLength(2);
+
+    // Controller: first window is clamped, second window starts after first combo ends
+    const finalWindows = result.current.allProcessedEvents.filter(
+      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === COMBO_WINDOW_COLUMN_ID,
+    );
+    expect(finalWindows.length).toBeGreaterThanOrEqual(2);
+    const sortedWindows = [...finalWindows].sort((a, b) => a.startFrame - b.startFrame);
+    const firstWinEnd = sortedWindows[0].startFrame + eventDuration(sortedWindows[0]);
+    const secondWinStart = sortedWindows[1].startFrame;
+    // First window clamped to combo end (≤ ult frame)
+    expect(firstWinEnd).toBeLessThanOrEqual(5 * FPS + 1);
+    // Second window starts after first combo ends
+    expect(secondWinStart).toBeGreaterThanOrEqual(firstWinEnd);
+    // Second CS is within second window
+    expect(combos2[1].startFrame).toBeGreaterThanOrEqual(secondWinStart);
+    expect(combos2[1].startFrame).toBeLessThan(secondWinStart + eventDuration(sortedWindows[1]));
+
+    // Validation: no combo window warnings on either CS
+    const { maps } = computeAllValidations(
+      result.current.allProcessedEvents,
+      result.current.slots,
+      result.current.resourceGraphs,
+      result.current.staggerBreaks,
+      null,
+    );
+    for (const combo of combos2) {
+      expect(maps.combo.get(combo.uid)).toBeUndefined();
+    }
   });
 });

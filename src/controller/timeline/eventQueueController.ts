@@ -274,8 +274,9 @@ export function runEventQueue(
   const registeredEvents = state.getRegisteredEvents();
   const stops = state.getStops();
 
-  // Use pre-built trigger index from CombatLoadoutController, or build ad-hoc as fallback
-  const triggerIdx = triggerIndex ?? TriggerIndex.build(slotOperatorMap, loadoutProperties, slotWeapons, slotGearSets, registeredEvents);
+  // Always build trigger index with registered events so runtime triggers
+  // (e.g. ENEMY BECOME NODE_STAGGERED) can match user-placed events.
+  const triggerIdx = TriggerIndex.build(slotOperatorMap, loadoutProperties, slotWeapons, slotGearSets, registeredEvents);
   _lastTriggerIndex = triggerIdx;
 
   // Register talent events (permanent presence) before queue processing.
@@ -502,6 +503,21 @@ export function processCombatSimulation(
     hpPercentageFn, getControlledSlotAtFrame, hpController, shieldController, triggerIndex,
     _statAccumulator, critMode, overrides);
 
+  // ── 4b. Post-queue combo window fixup ─────────────────────────────────────
+  // After the queue run, combo CDs may have been reset. Two fixups:
+  // 1. Clamp existing windows so they don't extend past the combo's reduced end.
+  // 2. Re-derive windows using the now-reduced combo events to pick up windows
+  //    that were blocked by the original (unreduced) CD.
+  state.clampComboWindowsToEventEnd();
+  if (slotWirings && slotWirings.length > 0) {
+    // Re-derive windows using post-queue events (reduced CDs). Replace all
+    // combo windows with the fresh derivation, then re-clamp.
+    const postQueueEvents = [...state.getRegisteredEvents(), ...state.output];
+    const freshWindows = deriveComboActivationWindows(postQueueEvents, slotWirings, state.getStops());
+    state.replaceComboWindows(freshWindows);
+    state.clampComboWindowsToEventEnd();
+  }
+
   // ── 5. Finalize resource controllers ──────────────────────────────────────
   if (spController) {
     if (allSlotSpCosts) spController.seedSlotCosts(allSlotSpCosts);
@@ -529,19 +545,24 @@ export function processCombatSimulation(
   _lastController = state;
   const processed = state.getProcessedEvents();
 
-  // Propagate creationInteractionMode from user-placed seed events.
+  // Propagate creationInteractionMode and original UID from user-placed seed events.
   // User-placed freeform events on derived columns are classified as "derived"
   // in cloneAndSplitEvents. The engine recreates them (new uid), losing the field.
-  // Match by ownerId+columnId+startFrame and copy creationInteractionMode.
+  // Match by ownerId+columnId+startFrame and copy creationInteractionMode + uid.
+  // Preserving the original UID ensures drag handlers, override keys, and other
+  // UID-based lookups match between raw state and pipeline output.
   const userDerived = derivedEvents.filter(ev => ev.creationInteractionMode != null);
   if (userDerived.length > 0) {
-    const seedKeys = new Map<string, InteractionModeType>();
+    const seedKeys = new Map<string, { mode: InteractionModeType; uid: string }>();
     for (const ev of userDerived) {
-      seedKeys.set(`${ev.ownerId}\0${ev.columnId}\0${ev.startFrame}`, ev.creationInteractionMode!);
+      seedKeys.set(`${ev.ownerId}\0${ev.columnId}\0${ev.startFrame}`, { mode: ev.creationInteractionMode!, uid: ev.uid });
     }
     for (const ev of processed) {
-      const mode = seedKeys.get(`${ev.ownerId}\0${ev.columnId}\0${ev.startFrame}`);
-      if (mode != null) ev.creationInteractionMode = mode;
+      const seed = seedKeys.get(`${ev.ownerId}\0${ev.columnId}\0${ev.startFrame}`);
+      if (seed != null) {
+        ev.creationInteractionMode = seed.mode;
+        ev.uid = seed.uid;
+      }
     }
   }
 

@@ -28,7 +28,7 @@
       "WARFARIN"
     ],
     "icon": "skills/wulfgard_talent_1_icon.png",
-    "dataStatus": "RECONCILED"
+    "dataStatus": "VERIFIED"
   },
   "onTriggerClause": [
     {

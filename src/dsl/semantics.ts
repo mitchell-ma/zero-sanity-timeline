@@ -42,6 +42,8 @@ export enum DeterminerType {
   ALL_OTHER = "ALL_OTHER",
   /** Any operator (wildcard for triggers). */
   ANY = "ANY",
+  /** Any operator except the owner (wildcard for triggers, excludes self). */
+  ANY_OTHER = "ANY_OTHER",
   /** The operator currently controlled by the player. */
   CONTROLLED = "CONTROLLED",
   /** The operator who triggered this effect (e.g. dealt damage that activated a talent). */
@@ -344,7 +346,7 @@ export const ObjectType = { ...NounType, ...AdjectiveType } as typeof NounType &
  */
 export const VERB_OBJECTS: Partial<Record<VerbType, ObjectType[]>> = {
   [VerbType.APPLY]:      [ObjectType.INFLICTION, ObjectType.REACTION, ObjectType.ARTS_BURST, ObjectType.STATUS, ObjectType.STAT, ObjectType.STAGGER, ObjectType.SUSCEPTIBILITY, ObjectType.FRAGILITY, ObjectType.TIME_STOP, ObjectType.EVENT],
-  [VerbType.CONSUME]:    [ObjectType.INFLICTION, ObjectType.REACTION, ObjectType.STATUS, ObjectType.SKILL_POINT, ObjectType.ULTIMATE_ENERGY, ObjectType.COOLDOWN, ObjectType.STAGGER, ObjectType.STACKS, ObjectType.EVENT],
+  [VerbType.CONSUME]:    [ObjectType.INFLICTION, ObjectType.REACTION, ObjectType.STATUS, ObjectType.SKILL_POINT, ObjectType.ULTIMATE_ENERGY, ObjectType.COOLDOWN, ObjectType.STAGGER, ObjectType.STACKS, ObjectType.EVENT, ObjectType.BASIC_ATTACK, ObjectType.BATTLE_SKILL, ObjectType.COMBO_SKILL, ObjectType.ULTIMATE],
   [VerbType.RECOVER]:    [ObjectType.SKILL_POINT, ObjectType.ULTIMATE_ENERGY, ObjectType.HP],
   [VerbType.RETURN]:     [ObjectType.SKILL_POINT],
   [VerbType.DEAL]:       [ObjectType.DAMAGE, ObjectType.STAGGER],
@@ -826,13 +828,14 @@ export type Clause = Predicate[];
  * - Cardinality: ignored for matching (cardinality is an assertion, not a filter).
  */
 export function matchInteraction(published: Interaction, required: Interaction): boolean {
-  // Subject: ANY determiner on OPERATOR matches any operator subject
-  const reqIsAnyOperator = required.subject === NounType.OPERATOR && (required.subjectDeterminer as string) === DeterminerType.ANY;
+  // Subject: ANY/ANY_OTHER determiner on OPERATOR matches any operator subject
+  const reqDet = required.subjectDeterminer ?? DeterminerType.THIS;
+  const reqIsAnyOperator = required.subject === NounType.OPERATOR
+    && (reqDet === DeterminerType.ANY || reqDet === DeterminerType.ANY_OTHER);
   if (!reqIsAnyOperator && published.subject !== required.subject) return false;
-  // When both are OPERATOR, check determiner match (unless required is ANY)
+  // When both are OPERATOR, check determiner match (unless required is ANY/ANY_OTHER)
   if (!reqIsAnyOperator && published.subject === NounType.OPERATOR && required.subject === NounType.OPERATOR) {
     const pubDet = published.subjectDeterminer ?? DeterminerType.THIS;
-    const reqDet = required.subjectDeterminer ?? DeterminerType.THIS;
     if (pubDet !== reqDet) return false;
   }
   // Verb

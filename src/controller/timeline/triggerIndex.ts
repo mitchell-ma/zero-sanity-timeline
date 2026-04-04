@@ -12,7 +12,7 @@
  *
  * Replaces the pre-queue collectEngineTriggerEntries scan.
  */
-import { StackInteractionType, EventCategoryType, UnitType } from '../../consts/enums';
+import { StackInteractionType, EventCategoryType, UnitType, UNLIMITED_STACKS } from '../../consts/enums';
 import type { LoadoutProperties } from '../../view/InformationPane';
 import type { StatusEventDef } from './statusTriggerCollector';
 import type { Predicate, TriggerEffect } from './triggerMatch';
@@ -22,7 +22,7 @@ import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from '../calculation/valueRes
 import { getAllOperatorIds, getSkillIds, getEnabledStatusEvents, getOperatorSkills } from '../gameDataStore';
 import { getWeaponTriggerDefs, getWeaponStatusTriggerDefs, getGearTriggerDefs, getGearStatusTriggerDefs, getConsumablePassiveDef, getTacticalTriggerDef } from '../gameDataStore';
 import type { NormalizedEffectDef } from '../gameDataStore';
-import { ENEMY_OWNER_ID, ENEMY_ACTION_COLUMN_ID, REACTION_COLUMNS, INFLICTION_COLUMNS, PHYSICAL_STATUS_COLUMNS, PHYSICAL_STATUS_COLUMN_IDS } from '../../model/channels';
+import { ENEMY_OWNER_ID, ENEMY_ACTION_COLUMN_ID, REACTION_COLUMNS, INFLICTION_COLUMNS, PHYSICAL_STATUS_COLUMNS, PHYSICAL_STATUS_COLUMN_IDS, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID } from '../../model/channels';
 import { COMMON_OWNER_ID } from '../slot/commonSlotController';
 import { TOTAL_FRAMES, FPS } from '../../utils/timeline';
 import { TimelineEvent, durationSegment } from '../../consts/viewTypes';
@@ -46,6 +46,9 @@ export const STATE_TO_COLUMN: Record<string, string> = {
   [ObjectType.KNOCKED_DOWN]: PHYSICAL_STATUS_COLUMNS.KNOCK_DOWN,
   [ObjectType.CRUSHED]: PHYSICAL_STATUS_COLUMNS.CRUSH,
   [ObjectType.BREACHED]: PHYSICAL_STATUS_COLUMNS.BREACH,
+  // Stagger states
+  [ObjectType.NODE_STAGGERED]: NODE_STAGGER_COLUMN_ID,
+  [ObjectType.FULL_STAGGERED]: FULL_STAGGER_COLUMN_ID,
 };
 
 /** Maps APPLY INFLICTION element qualifiers to infliction column IDs. */
@@ -444,6 +447,13 @@ export class TriggerIndex {
     for (const def of defs) {
       // ── Talent defs ──────────────────────────────────────────────────
       if ((def.properties.eventCategoryType ?? def.properties.type) === EventCategoryType.TALENT) {
+        // Description-only talents (no trigger, no clause, no segments) are metadata-only — skip.
+        // Their effects are baked into skill frames; the talent JSON is just a label.
+        const hasTrigger = def.onTriggerClause && def.onTriggerClause.length > 0;
+        const hasClause = def.clause && def.clause.length > 0;
+        const hasSegments = def.segments && def.segments.length > 0;
+        if (!hasTrigger && !hasClause && !hasSegments) continue;
+
         const talentDuration = def.properties.duration;
         const talentDurationFrames = talentDuration ? getDurationFrames(talentDuration) : TOTAL_FRAMES;
         const talentOwnerId = resolveTargetOwnerId(def.properties.target, slotId, opSlotMap, def.properties.targetDeterminer);
@@ -452,13 +462,20 @@ export class TriggerIndex {
         // Trigger-only talents (have onTriggerClause + finite duration) create instances
         // via APPLY EVENT during queue processing — no template event. Template events
         // for these falsely satisfy HAVE STATUS conditions.
-        const hasTrigger = def.onTriggerClause && def.onTriggerClause.length > 0;
-        const isPassive = talentDurationFrames >= TOTAL_FRAMES;
+        const hasNegativeDuration = talentDuration && getDurationFrames(talentDuration) === TOTAL_FRAMES
+          && resolveValueNode(talentDuration.value, DEFAULT_VALUE_CONTEXT) < 0;
+        const isPassive = talentDurationFrames >= TOTAL_FRAMES && !hasNegativeDuration;
         if (hasTrigger && !isPassive) {
           const existing = this.talentsBySlot.get(slotId) ?? [];
           existing.push({ def, operatorId, operatorSlotId: slotId, talentEvent: null });
           this.talentsBySlot.set(slotId, existing);
           // Fall through to onTriggerClause indexing below (don't continue)
+        } else if (!isPassive) {
+          // Finite-duration talent with no trigger: template-only status.
+          // These are applied dynamically by other effects (e.g. APPLY STATUS from
+          // empowered battle skill clauses) — do NOT create a presence event or
+          // register for passive stat interpretation at frame 0.
+          continue;
         } else {
           // Skip if already exists in registered events or already indexed in this build (any slot)
           if (registeredEvents?.some(ev => ev.columnId === talentColumnId && ev.ownerId === talentOwnerId)) continue;
@@ -468,6 +485,20 @@ export class TriggerIndex {
             if (entries.some(t => t.talentEvent?.columnId === talentColumnId && t.talentEvent?.ownerId === talentOwnerId)) alreadyIndexed = true;
           });
           if (alreadyIndexed) continue;
+
+          // Counter talents (NONE + unlimited stacks, e.g. Living Banner) start at 0 —
+          // no presence event. The first APPLY creates the event at the frame where stacks are gained.
+          const stackLimit = def.properties.stacks?.limit;
+          const resolvedLimit = typeof stackLimit === 'number' ? stackLimit
+            : typeof (stackLimit as { value?: number })?.value === 'number' ? (stackLimit as { value?: number }).value! : 0;
+          const isCounter = def.properties.stacks?.interactionType === StackInteractionType.NONE
+            && resolvedLimit >= UNLIMITED_STACKS;
+          if (isCounter) {
+            const existing = this.talentsBySlot.get(slotId) ?? [];
+            existing.push({ def, operatorId, operatorSlotId: slotId, talentEvent: null });
+            this.talentsBySlot.set(slotId, existing);
+            // Fall through to onTriggerClause indexing below
+          } else {
 
           const talentEvent: TimelineEvent = {
             uid: `${def.properties.id.toLowerCase()}-talent-${slotId}`,
@@ -484,6 +515,7 @@ export class TriggerIndex {
           const existing = this.talentsBySlot.get(slotId) ?? [];
           existing.push({ def, operatorId, operatorSlotId: slotId, talentEvent });
           this.talentsBySlot.set(slotId, existing);
+          }
         }
       }
 
@@ -652,7 +684,7 @@ export class TriggerIndex {
           const stateCol = STATE_TO_COLUMN[primaryCond.object as string];
           if (stateCol) {
             primaryVerb = VerbType.APPLY;
-            primaryCond = { verb: VerbType.APPLY, object: NounType.STATUS, objectId: stateCol } as Predicate;
+            primaryCond = { ...primaryCond, verb: VerbType.APPLY, object: NounType.STATUS, objectId: stateCol } as Predicate;
           }
         }
 

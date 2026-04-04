@@ -326,9 +326,16 @@ function findMicroColumnStacks(
       c.ownerId === ev.ownerId &&
       (c.columnId === ev.columnId || (c.matchColumnIds?.includes(ev.columnId) ?? false)),
   );
-  if (!col?.microColumns) return undefined;
-  const mc = col.microColumns.find((m) => m.id === ev.columnId);
-  return mc?.defaultEvent?.stacks;
+  if (col?.microColumns) {
+    const mc = col.microColumns.find((m) => m.id === ev.columnId);
+    if (mc?.defaultEvent?.stacks) return mc.defaultEvent.stacks;
+  }
+  // Also check eventVariants (e.g. ACTION skills on the INPUT column)
+  if (col?.eventVariants) {
+    const variant = col.eventVariants.find((v) => v.id === ev.id || v.id === ev.name);
+    if (variant?.stacks) return variant.stacks;
+  }
+  return undefined;
 }
 
 /**
@@ -380,19 +387,19 @@ export function attachDefaultSegments(
     // Only skill events get segment rebuilding (COOLDOWN/ANIMATION refresh from config).
     if (!SKILL_COLUMN_SET.has(ev.columnId)) return patched;
 
-    // Start from column defaults, refreshing typed segment durations (COOLDOWN, ANIMATION, etc.)
-    // from column definitions. Preserve user-customized durations only on untyped segments.
+    // Start from column defaults — always use resolved segment durations and frames.
+    // This ensures VARY_BY expressions (POTENTIAL, SKILL_LEVEL) re-resolve on loadout change.
+    // User-modified frame offsets are preserved when segment structure matches.
+    const segCountMatch = !isPlaceholder && ev.segments.length === defaults.segments.length;
     const segments = defaults.segments.slice().map((defSeg, i) => {
       const copy = { ...defSeg, frames: defSeg.frames?.map((f) => ({ ...f })) };
-      // Preserve user-modified duration only for untyped segments (no segmentTypes)
-      const isTyped = defSeg.properties.segmentTypes && defSeg.properties.segmentTypes.length > 0;
-      if (!isPlaceholder && !isTyped && i < ev.segments.length && ev.segments[i].properties.duration !== undefined) {
-        copy.properties = { ...copy.properties, duration: ev.segments[i].properties.duration };
-      }
-      // Preserve user-modified frame offsets from the raw event
-      if (!isPlaceholder && copy.frames && i < ev.segments.length && ev.segments[i].frames) {
+      // Preserve user-modified frame offsets from the raw event, but only when
+      // the frame count matches (same structural shape). When frame counts differ
+      // (e.g. VARY_BY POTENTIAL changed the frame set), use column defaults.
+      if (segCountMatch && copy.frames && i < ev.segments.length && ev.segments[i].frames
+        && copy.frames.length === ev.segments[i].frames!.length) {
         const rawFrames = ev.segments[i].frames!;
-        for (let fi = 0; fi < copy.frames.length && fi < rawFrames.length; fi++) {
+        for (let fi = 0; fi < copy.frames.length; fi++) {
           copy.frames[fi].offsetFrame = rawFrames[fi].offsetFrame;
         }
       }

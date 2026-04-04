@@ -16,7 +16,9 @@ import { TimelineEvent, Column, MiniTimeline, EventSegmentData, eventEndFrame } 
 import { NounType } from '../../dsl/semantics';
 import { TimelineSourceType, ELEMENT_COLORS, ElementType, InteractionModeType, EventStatusType, DEFAULT_EVENT_COLOR } from '../../consts/enums';
 import { getAllSkillLabels, getAllStatusLabels, getAllInflictionLabels } from '../gameDataStore';
-import { CombatSkillType, StackInteractionType, UNLIMITED_STACKS } from '../../consts/enums';
+import { CombatSkillType, StackInteractionType } from '../../consts/enums';
+import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from '../calculation/valueResolver';
+import type { ValueNode } from '../../dsl/semantics';
 import { COMBO_WINDOW_COLUMN_ID, REACTION_COLUMNS } from '../../model/channels';
 import { formatSegmentShortName, translateDslToken } from '../../dsl/semanticsTranslation';
 import { getAllOperatorStatuses } from '../gameDataStore';
@@ -52,7 +54,11 @@ function getStatusStackInfo(statusId: string): StatusStackInfo | undefined {
     statusStackCache = new Map();
     for (const se of [...getAllOperatorStatuses(), ...getAllWeaponStatuses(), ...getAllGearStatuses()]) {
       if (!se.id || statusStackCache.has(se.id)) continue;
-      const limit = (se.stacks?.limit as { value?: number } | undefined)?.value ?? 1;
+      const rawLimit = se.stacks?.limit;
+      const limit = rawLimit == null ? 1
+        : typeof rawLimit === 'number' ? rawLimit
+        : typeof (rawLimit as { value?: number }).value === 'number' ? (rawLimit as { value?: number }).value!
+        : resolveValueNode(rawLimit as unknown as ValueNode, DEFAULT_VALUE_CONTEXT);
       const verb = se.stacks?.interactionType ?? StackInteractionType.NONE;
       const info = { instances: limit, verb };
       statusStackCache.set(se.id, info);
@@ -63,9 +69,7 @@ function getStatusStackInfo(statusId: string): StatusStackInfo | undefined {
 
 function isSingleInstanceStatus(statusId: string): boolean {
   const info = getStatusStackInfo(statusId);
-  if (!info) return false;
-  // Unlimited stacks with NONE interaction = independent instances (no stack labels)
-  if (info.instances >= UNLIMITED_STACKS && info.verb === StackInteractionType.NONE) return true;
+  if (!info) return true; // No config found → treat as independent single-instance
   return info.instances <= 1 && (info.verb === StackInteractionType.NONE || info.verb === StackInteractionType.RESET);
 }
 
@@ -141,30 +145,32 @@ export function computeStatusViewOverrides(
       for (const ev of allSorted) {
         // Use stacks recorded at creation time; fall back to dynamic position from active events
         let position: number;
-        if (ev.stacks != null) {
-          position = ev.stacks;
-        } else {
-          let activeEarlier = 0;
-          for (const prev of activeSorted) {
-            if (prev.uid === ev.uid) break;
-            if (eventEndFrame(prev) > ev.startFrame) activeEarlier++;
-          }
-          position = activeEarlier + 1;
+        // Position = number of earlier active events + 1 (determines roman numeral label)
+        let activeEarlier = 0;
+        for (const prev of activeSorted) {
+          if (prev.uid === ev.uid) break;
+          if (eventEndFrame(prev) > ev.startFrame) activeEarlier++;
         }
+        position = activeEarlier + 1;
         // Clamp to stack limit — events beyond the cap repeat the max label
         if (stackLimit != null && position > stackLimit) position = stackLimit;
 
+        const labelValue = ev.stacks != null ? ev.stacks : position;
+        const displayLabel = singleInstance ? baseName : `${baseName} ${stackLabel(labelValue)}`;
+
         const override: StatusViewOverride = {
-          label: singleInstance ? baseName : `${baseName} ${stackLabel(position)}`,
+          label: displayLabel,
         };
 
         // Visual truncation: truncate at the next event's start frame so
         // stacking events tile without overlapping wrappers.  Applies to all
         // events (including consumed) because consumed inflictions can be
         // extended before eviction and their tall wrappers overlap later events.
-        // Skip for single-instance statuses (independent, no tiling needed).
+        // Single-instance RESET statuses render independently (no tiling).
+        // Single-instance NONE statuses with unlimited stacks (accumulators) DO clamp.
+        const isIndependentReset = singleInstance && statusInfo?.verb === StackInteractionType.RESET;
         const allIdx = allSorted.indexOf(ev);
-        if (!singleInstance && allIdx >= 0 && allIdx < allSorted.length - 1) {
+        if (!isIndependentReset && allIdx >= 0 && allIdx < allSorted.length - 1) {
           const nextStart = allSorted[allIdx + 1].startFrame;
           const evEnd = eventEndFrame(ev);
           if (nextStart < evEnd) {
@@ -364,7 +370,7 @@ export function computeEventPresentation(
 
   const passive = isWindow;
   const notDraggable = isWindow || (isDerivedCol && !isUserPlaced) || (isEnemy && !isUserPlaced);
-  const derived = isDerivedCol && interactionMode === InteractionModeType.STRICT;
+  const derived = isDerivedCol && interactionMode === InteractionModeType.STRICT && !isUserPlaced;
   const isAutoFinisher = autoFinisherIds.has(ev.uid);
 
   const skillElement = isWindow
@@ -787,6 +793,8 @@ export function computeTimelinePresentation(
     let colEvents = getEventsForColumnGrouped(col, eventsByOwnerColumn);
     colEvents = sortColumnEvents(col, colEvents);
     colEvents = truncateDerivedEvents(col, colEvents);
+    // Hide events with 0 stacks (e.g. Living Banner presence before any SP is gained)
+    colEvents = colEvents.filter(ev => ev.stacks !== 0);
 
     const colStatusOverrides = new Map<string, StatusViewOverride>();
     for (const ev of colEvents) {

@@ -5,7 +5,18 @@
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "BATTLE_SKILL",
     "element": "PHYSICAL",
-    "id": "THE_PULVERIZING_FRONT"
+    "id": "THE_PULVERIZING_FRONT",
+    "suppliedParameters": {
+      "VARY_BY": [
+        {
+          "id": "ENEMY_HIT",
+          "name": "Enemies Hit",
+          "lowerRange": 1,
+          "upperRange": 2,
+          "default": 1
+        }
+      ]
+    }
   },
   "clause": [
     {
@@ -47,18 +58,114 @@
           },
           "clause": [
             {
+              "_note": "SP return based on Vulnerability stacks — FIRST_MATCH highest to lowest, unconditional clause always fires",
+              "conditions": [
+                {
+                  "subject": "ENEMY",
+                  "verb": "HAVE",
+                  "object": "INFLICTION",
+                  "objectQualifier": "VULNERABLE",
+                  "cardinalityConstraint": "AT_LEAST",
+                  "with": { "value": { "verb": "IS", "value": 4 } }
+                }
+              ],
+              "effects": [
+                {
+                  "verb": "RETURN",
+                  "object": "SKILL_POINT",
+                  "with": {
+                    "value": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [30, 30, 30, 30, 30, 30, 30, 30, 30, 35, 35, 35],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "conditions": [
+                {
+                  "subject": "ENEMY",
+                  "verb": "HAVE",
+                  "object": "INFLICTION",
+                  "objectQualifier": "VULNERABLE",
+                  "cardinalityConstraint": "AT_LEAST",
+                  "with": { "value": { "verb": "IS", "value": 3 } }
+                }
+              ],
+              "effects": [
+                {
+                  "verb": "RETURN",
+                  "object": "SKILL_POINT",
+                  "with": {
+                    "value": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [20, 20, 20, 20, 20, 20, 20, 20, 20, 25, 25, 25],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "conditions": [
+                {
+                  "subject": "ENEMY",
+                  "verb": "HAVE",
+                  "object": "INFLICTION",
+                  "objectQualifier": "VULNERABLE",
+                  "cardinalityConstraint": "AT_LEAST",
+                  "with": { "value": { "verb": "IS", "value": 2 } }
+                }
+              ],
+              "effects": [
+                {
+                  "verb": "RETURN",
+                  "object": "SKILL_POINT",
+                  "with": {
+                    "value": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [10, 10, 10, 10, 10, 10, 10, 10, 10, 15, 15, 15],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "conditions": [
+                {
+                  "subject": "ENEMY",
+                  "verb": "HAVE",
+                  "object": "INFLICTION",
+                  "objectQualifier": "VULNERABLE",
+                  "cardinalityConstraint": "AT_LEAST",
+                  "with": { "value": { "verb": "IS", "value": 1 } }
+                }
+              ],
+              "effects": [
+                {
+                  "verb": "RETURN",
+                  "object": "SKILL_POINT",
+                  "with": { "value": { "verb": "IS", "value": 5 } }
+                }
+              ]
+            },
+            {
               "conditions": [],
               "effects": [
                 {
                   "verb": "DEAL",
                   "object": "STAGGER",
                   "to": "ENEMY",
-                  "with": {
-                    "value": {
-                      "verb": "IS",
-                      "value": 5
-                    }
-                  }
+                  "with": { "value": { "verb": "IS", "value": 5 } }
                 },
                 {
                   "verb": "DEAL",
@@ -69,36 +176,18 @@
                     "value": {
                       "verb": "VARY_BY",
                       "object": "SKILL_LEVEL",
-                      "value": [
-                        0.86,
-                        0.94,
-                        1.03,
-                        1.11,
-                        1.2,
-                        1.28,
-                        1.37,
-                        1.45,
-                        1.54,
-                        1.65,
-                        1.77,
-                        1.92
-                      ],
+                      "value": [0.86, 0.94, 1.03, 1.11, 1.2, 1.28, 1.37, 1.45, 1.54, 1.65, 1.77, 1.92],
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
                     },
-                    "mainStat": {
-                      "verb": "IS",
-                      "object": "STAT",
-                      "objectId": "ATTACK",
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
-                    }
+                    "mainStat": { "verb": "IS", "object": "STAT", "objectId": "ATTACK", "ofDeterminer": "THIS", "of": "OPERATOR" }
                   }
-                }
+                },
+                { "verb": "APPLY", "object": "STATUS", "objectId": "PHYSICAL", "objectQualifier": "BREACH", "to": "ENEMY" }
               ]
             }
           ],
-          "clauseType": "ALL"
+          "clauseType": "FIRST_MATCH"
         },
         {
           "metadata": {
@@ -115,18 +204,41 @@
           },
           "clause": [
             {
+              "_note": "P1: hitting 2+ enemies returns 15 SP",
+              "conditions": [
+                {
+                  "subjectDeterminer": "THIS",
+                  "subject": "OPERATOR",
+                  "verb": "HAVE",
+                  "object": "POTENTIAL",
+                  "cardinalityConstraint": "AT_LEAST",
+                  "with": { "value": { "verb": "IS", "value": 1 } }
+                }
+              ],
+              "effects": [
+                {
+                  "verb": "RETURN",
+                  "object": "SKILL_POINT",
+                  "with": {
+                    "value": {
+                      "verb": "VARY_BY",
+                      "object": "ENEMY_HIT",
+                      "value": [0, 15],
+                      "ofDeterminer": "THIS",
+                      "of": "OPERATOR"
+                    }
+                  }
+                }
+              ]
+            },
+            {
               "conditions": [],
               "effects": [
                 {
                   "verb": "DEAL",
                   "object": "STAGGER",
                   "to": "ENEMY",
-                  "with": {
-                    "value": {
-                      "verb": "IS",
-                      "value": 5
-                    }
-                  }
+                  "with": { "value": { "verb": "IS", "value": 5 } }
                 },
                 {
                   "verb": "DEAL",
@@ -137,30 +249,11 @@
                     "value": {
                       "verb": "VARY_BY",
                       "object": "SKILL_LEVEL",
-                      "value": [
-                        1.06,
-                        1.16,
-                        1.27,
-                        1.37,
-                        1.48,
-                        1.58,
-                        1.69,
-                        1.8,
-                        1.9,
-                        2.03,
-                        2.19,
-                        2.38
-                      ],
+                      "value": [1.06, 1.16, 1.27, 1.37, 1.48, 1.58, 1.69, 1.8, 1.9, 2.03, 2.19, 2.38],
                       "ofDeterminer": "THIS",
                       "of": "OPERATOR"
                     },
-                    "mainStat": {
-                      "verb": "IS",
-                      "object": "STAT",
-                      "objectId": "ATTACK",
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
-                    }
+                    "mainStat": { "verb": "IS", "object": "STAT", "objectId": "ATTACK", "ofDeterminer": "THIS", "of": "OPERATOR" }
                   }
                 }
               ]

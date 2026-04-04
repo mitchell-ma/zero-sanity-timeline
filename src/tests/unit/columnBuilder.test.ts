@@ -14,7 +14,7 @@
  *
  * B. Enemy-targeted statuses do NOT create operator status columns
  *    - Antal: FOCUS / FOCUS_EMPOWERED (ENEMY target)
- *    - Endministrator: ORIGINIUM_CRYSTAL (ENEMY target)
+ *    - Endministrator: REALSPACE_STASIS (ENEMY target)
  *
  * C. Talent columns
  *    - Laevatain: SCORCHING_HEART talent (permanent, OPERATOR/THIS)
@@ -35,7 +35,7 @@ const SCORCHING_FANGS_ID: string = require('../../model/game-data/operators/wulf
 const CRIT_STACKS_ID: string = require('../../model/game-data/operators/yvonne/statuses/status-crit-stacks.json').properties.id;
 const FOCUS_ID: string = require('../../model/game-data/operators/antal/statuses/status-focus.json').properties.id;
 const FOCUS_EMPOWERED_ID: string = require('../../model/game-data/operators/antal/statuses/status-focus-empowered.json').properties.id;
-const ORIGINIUM_CRYSTAL_ID: string = require('../../model/game-data/operators/endministrator/statuses/status-originium-crystal.json').properties.id;
+const REALSPACE_STASIS_ID: string = require('../../model/game-data/operators/endministrator/talents/talent-realspace-stasis.json').properties.id;
 /* eslint-enable @typescript-eslint/no-require-imports */
 
 // ── Test fixtures ───────────────────────────────────────────────────────────
@@ -132,13 +132,13 @@ describe('buildColumns — enemy-targeted statuses excluded from operator status
     expect(microIds).not.toContain(FOCUS_EMPOWERED_ID);
   });
 
-  it('does not include ORIGINIUM_CRYSTAL in operator status column for Endministrator (targets ENEMY)', () => {
+  it('does not include REALSPACE_STASIS in operator status column for Endministrator (targets ENEMY)', () => {
     const op = findOperator('ENDMINISTRATOR');
     const slot = makeSlot('slot1', op);
     const columns = buildColumns([slot], ENEMY, allSkillsVisible('slot1'));
     const statusCol = findStatusColumn(columns, 'slot1');
     const microIds = statusCol?.microColumns?.map(mc => mc.id) ?? [];
-    expect(microIds).not.toContain(ORIGINIUM_CRYSTAL_ID);
+    expect(microIds).not.toContain(REALSPACE_STASIS_ID);
   });
 });
 

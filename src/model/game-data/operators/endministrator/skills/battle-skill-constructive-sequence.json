@@ -1,7 +1,7 @@
 {
   "properties": {
     "name": "Constructive Sequence",
-    "description": "A forceful burst of Originium Arts that attacks enemies within the area of effect. Deals Physical DMG and applies Crush.",
+    "description": "A forceful burst of Originium Crystals that attacks enemies within the area of effect. Deals Physical DMG and applies Crush.",
     "eventType": "COMBAT_SKILL",
     "eventCategoryType": "BATTLE_SKILL",
     "element": "PHYSICAL",
@@ -27,7 +27,7 @@
   "metadata": {
     "originId": "ENDMINISTRATOR",
     "icon": "skills/skill_endministrator.png",
-    "dataStatus": "RECONCILED"
+    "dataStatus": "VERIFIED"
   },
   "segments": [
     {
@@ -52,19 +52,10 @@
                   "subject": "ENEMY",
                   "verb": "HAVE",
                   "object": "STATUS",
-                  "objectId": "ORIGINIUM_CRYSTAL"
+                  "objectId": "REALSPACE_STASIS_TALENT"
                 }
               ],
               "effects": [
-                {
-                  "verb": "CONSUME",
-                  "object": "STATUS",
-                  "objectId": "ORIGINIUM_CRYSTAL",
-                  "from": "ENEMY",
-                  "with": {
-                    "stacks": "MAX"
-                  }
-                },
                 {
                   "verb": "RETURN",
                   "object": "SKILL_POINT",
@@ -84,72 +75,11 @@
                       "of": "OPERATOR"
                     }
                   }
-                },
-                {
-                  "verb": "DEAL",
-                  "object": "STAGGER",
-                  "to": "ENEMY",
-                  "with": {
-                    "value": {
-                      "verb": "IS",
-                      "value": 10
-                    }
-                  }
-                },
-                {
-                  "verb": "DEAL",
-                  "objectQualifier": "PHYSICAL",
-                  "object": "DAMAGE",
-                  "to": "ENEMY",
-                  "with": {
-                    "value": {
-                      "verb": "VARY_BY",
-                      "object": "SKILL_LEVEL",
-                      "value": [
-                        1.56,
-                        1.71,
-                        1.87,
-                        2.02,
-                        2.18,
-                        2.34,
-                        2.49,
-                        2.65,
-                        2.8,
-                        3,
-                        3.23,
-                        3.5
-                      ],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
-                    },
-                    "mainStat": {
-                      "verb": "IS",
-                      "object": "STAT",
-                      "objectId": "ATTACK",
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
-                    }
-                  }
-                },
-                {
-                  "verb": "APPLY",
-                  "object": "STATUS",
-                  "objectId": "PHYSICAL",
-                  "objectQualifier": "CRUSH",
-                  "to": "ENEMY"
                 }
               ]
             },
             {
-              "conditions": [
-                {
-                  "subject": "ENEMY",
-                  "verb": "HAVE",
-                  "negated": true,
-                  "object": "STATUS",
-                  "objectId": "ORIGINIUM_CRYSTAL"
-                }
-              ],
+              "conditions": [],
               "effects": [
                 {
                   "verb": "DEAL",

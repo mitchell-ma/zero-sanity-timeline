@@ -24,7 +24,8 @@ import type { ValueNode } from '../../dsl/semantics';
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT, buildContextForSkillColumn } from '../calculation/valueResolver';
 import type { ValueResolutionContext } from '../calculation/valueResolver';
 import { TimelineEvent, eventDuration, setEventDuration } from '../../consts/viewTypes';
-import { CritMode, DamageType, ElementType, EventFrameType, PERMANENT_DURATION, PhysicalStatusType, StackInteractionType, StatType, UnitType } from '../../consts/enums';
+import { CritMode, DamageType, ElementType, EventFrameType, EventStatusType, PERMANENT_DURATION, PhysicalStatusType, SegmentType, StackInteractionType, UnitType } from '../../consts/enums';
+import { resolveEffectStat } from '../../model/enums/stats';
 import type { OverrideStore } from '../../consts/overrideTypes';
 import type { StatAccumulator } from '../calculation/statAccumulator';
 import { buildOverrideKey } from '../overrideController';
@@ -191,6 +192,8 @@ interface StatusConfig {
   duration: number;
   stackingMode?: string;
   maxStacks?: number;
+  /** Raw ValueNode for maxStacks — stored when the limit is a runtime expression (e.g. status-dependent). */
+  maxStacksNode?: unknown;
   cooldownFrames?: number;
   segments?: import('../../consts/viewTypes').EventSegmentData[];
   susceptibility?: Record<string, number>;
@@ -207,7 +210,8 @@ function getStatusConfig(statusId?: string): StatusConfig | undefined {
       const dur = s.durationSeconds;
       const durationFrames = dur === PERMANENT_DURATION || dur === 0 ? TOTAL_FRAMES : Math.round(dur * FPS);
       const stackLimit = s.stacks?.limit;
-      const maxStacks = stackLimit
+      const isExpression = stackLimit && typeof stackLimit === 'object' && 'operation' in stackLimit;
+      const maxStacks = stackLimit && !isExpression
         ? (typeof stackLimit === 'number' ? stackLimit
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           : resolveValueNode(stackLimit as any, DEFAULT_VALUE_CONTEXT) ?? undefined)
@@ -217,6 +221,7 @@ function getStatusConfig(statusId?: string): StatusConfig | undefined {
         duration: durationFrames,
         stackingMode: s.stacks?.interactionType,
         maxStacks: typeof maxStacks === 'number' ? maxStacks : undefined,
+        ...(isExpression ? { maxStacksNode: stackLimit } : {}),
         cooldownFrames: cdSecs && cdSecs > 0 ? Math.round(cdSecs * FPS) : undefined,
       };
       _statusConfigCache.set(s.id, cfg);
@@ -272,6 +277,9 @@ export interface InterpretContext {
   sourceFrameKey?: string;
   /** User-supplied parameter values (e.g. { ENEMY_HIT: 2 }) for VARY_BY resolution in value nodes. */
   suppliedParameters?: Record<string, number>;
+  /** Remaining game-time duration of the source event that triggered this context.
+   *  Used as fallback duration for APPLY STATUS when no explicit duration is specified. */
+  sourceEventRemainingDuration?: number;
 }
 
 // ══════════════════════════════════════════════════════════════════════════
@@ -302,6 +310,10 @@ export class EventInterpretorController {
   private hpController?: HPController;
   private shieldController?: ShieldController;
   private statAccumulator?: StatAccumulator;
+  /** Pending stat reversals: negative deltas scheduled at status expiry frames. */
+  _statReversals?: { frame: number; entityId: string; stat: import('../../consts/enums').StatType; value: number }[];
+  /** Temporary frame-scoped stat reversals (reversed immediately after snapshot). */
+  private _frameStatReversals?: { stat: import('../../consts/enums').StatType; value: number }[];
   private critMode?: CritMode;
   private overrides?: OverrideStore;
   /** Dedup set for reactive triggers: prevents double-firing at the same frame. */
@@ -366,6 +378,7 @@ export class EventInterpretorController {
     this.triggerUsageCount.clear();
     this._cachedBaseLen = 0;
     this._cachedOutputLen = 0;
+    this._statReversals = undefined;
     this.applyOptions(options);
   }
 
@@ -427,6 +440,22 @@ export class EventInterpretorController {
   // ── QueueFrame processing ──────────────────────────────────────────────
 
   processQueueFrame(entry: QueueFrame): QueueFrame[] {
+    // Apply pending stat reversals for statuses that expired at or before this frame
+    if (this._statReversals?.length && this.statAccumulator) {
+      const currentFrame = entry.frame;
+      let i = 0;
+      while (i < this._statReversals.length) {
+        const r = this._statReversals[i];
+        if (r.frame <= currentFrame) {
+          this.statAccumulator.applyStatDelta(r.entityId, { [r.stat]: r.value });
+          this._statReversals[i] = this._statReversals[this._statReversals.length - 1];
+          this._statReversals.length--;
+        } else {
+          i++;
+        }
+      }
+    }
+
     let result: QueueFrame[];
     switch (entry.type) {
       case QueueFrameType.PROCESS_FRAME:  result = this.handleProcessFrame(entry); break;
@@ -461,6 +490,8 @@ export class EventInterpretorController {
         case DeterminerType.ANY: return ctx.targetOwnerId ?? slotId;
         case DeterminerType.CONTROLLED:
           return this.getControlledSlotAtFrame?.(ctx.frame) ?? slotId;
+        case DeterminerType.TRIGGER:
+          return ctx.targetOwnerId ?? slotId;
         default: return slotId;
       }
     }
@@ -512,11 +543,16 @@ export class EventInterpretorController {
         effectToDeterminer = effectToDeterminer ?? statusDef.toDeterminer as typeof effectToDeterminer;
       }
     }
-    // ALL OPERATOR: apply to each operator slot individually, not COMMON_OWNER_ID
-    if (effectTo === NounType.OPERATOR && effectToDeterminer === DeterminerType.ALL && this.slotOperatorMap) {
+    // ALL / ALL_OTHER OPERATOR: apply to each operator slot individually
+    if (effectTo === NounType.OPERATOR
+      && (effectToDeterminer === DeterminerType.ALL || effectToDeterminer === DeterminerType.ALL_OTHER)
+      && this.slotOperatorMap) {
+      const excludeSelf = effectToDeterminer === DeterminerType.ALL_OTHER;
+      const selfSlot = ctx.sourceSlotId ?? ctx.sourceOwnerId;
       // Class filter: toClassFilter (typed) or toQualifier (raw JSON duck-typed)
       const classFilter = effect.toClassFilter ?? (effect as unknown as Record<string, unknown>).toQualifier as string | undefined;
       for (const slotId of Object.keys(this.slotOperatorMap)) {
+        if (excludeSelf && slotId === selfSlot) continue;
         if (classFilter) {
           const operatorId = this.slotOperatorMap[slotId];
           const base = getOperatorBase(operatorId);
@@ -593,10 +629,13 @@ export class EventInterpretorController {
       const remainingDuration = ctx.parentEventEndFrame != null
         ? Math.max(0, ctx.parentEventEndFrame - ctx.frame)
         : undefined;
+      const cfgDur = cfg?.duration;
+      const inheritFromSource = cfgDur != null && cfgDur < 0;
       const duration = typeof dv === 'number' ? Math.round(dv * FPS)
-        : cfg?.duration != null ? cfg.duration
-        : (isTeamTarget && remainingDuration != null ? remainingDuration
-          : TOTAL_FRAMES);
+        : inheritFromSource && ctx.sourceEventRemainingDuration != null ? ctx.sourceEventRemainingDuration
+        : cfgDur != null && !inheritFromSource ? cfgDur
+        : isTeamTarget && remainingDuration != null ? remainingDuration
+        : TOTAL_FRAMES;
       // Resolve clause effects (susceptibility, statusValue) from the status def
       const eventProps: Partial<TimelineEvent> = {};
       if (def) {
@@ -662,14 +701,23 @@ export class EventInterpretorController {
 
       // Resolve stack count from effect (e.g. "with": { "stacks": { "verb": "IS", "value": 5 } })
       const sv = this.resolveWith(effect.with?.stacks, ctx);
-      const stackCount = typeof sv === 'number' && sv > 1 ? sv : 1;
+      // NONE interaction: create 1 event with stacks = N (accumulator pattern, e.g. Living Banner)
+      // Other interactions (RESET, etc.): create N separate events (e.g. Steel Oath 5 stacks)
+      const isAccumulatorApply = cfg?.stackingMode === StackInteractionType.NONE && typeof sv === 'number' && sv > 1;
+      const stackCount = isAccumulatorApply ? 1 : (typeof sv === 'number' && sv > 1 ? sv : 1);
+      const applyStacks = isAccumulatorApply ? sv : undefined;
 
       for (let si = 0; si < stackCount; si++) {
+        const runtimeMaxStacks = cfg?.maxStacksNode
+          ? resolveValueNode(cfg.maxStacksNode as ValueNode, this.buildValueContext({ ...ctx, sourceSlotId: statusOwnerId }))
+          : cfg?.maxStacks;
         this.controller.applyEvent(columnId, statusOwnerId, ctx.frame, duration, source, {
           statusId: effect.objectId,
           ...(cfg?.stackingMode ? { stackingMode: cfg.stackingMode } : {}),
-          ...(cfg?.maxStacks != null ? { maxStacks: cfg.maxStacks } : {}),
-          ...(Object.keys(eventProps).length > 0 ? { event: eventProps } : {}),
+          ...(runtimeMaxStacks != null ? { maxStacks: runtimeMaxStacks } : {}),
+          ...(Object.keys(eventProps).length > 0 || applyStacks != null
+            ? { event: { ...eventProps, ...(applyStacks != null ? { stacks: applyStacks } : {}) } }
+            : {}),
           uid: freeformUid && si === 0 ? freeformUid : derivedEventUid(columnId, source.ownerId, ctx.frame, stackCount > 1 ? `${si}` : undefined),
         });
       }
@@ -681,8 +729,8 @@ export class EventInterpretorController {
     }
     // APPLY STAT — accumulate into the stat accumulator for the target entity.
     if (effect.object === NounType.STAT && effect.objectId) {
-      const statKey = effect.objectId as StatType;
-      if (statKey in StatType && this.statAccumulator) {
+      const statKey = resolveEffectStat(NounType.STAT, effect.objectId, effect.objectQualifier);
+      if (statKey && this.statAccumulator) {
         const v = this.resolveWith(effect.with?.value, ctx);
         if (typeof v === 'number') {
           this.statAccumulator.applyStatDelta(ownerId, { [statKey]: v });
@@ -740,14 +788,41 @@ export class EventInterpretorController {
       });
       return true;
     }
+    // CONSUME BASIC_ATTACK / BATTLE_SKILL / COMBO_SKILL / ULTIMATE — skill event consumption.
+    // The object IS the column ID; objectQualifier identifies the variant.
+    // Uses inclusive end boundary (<=) since the consuming frame often fires at the exact end.
+    if (SKILL_COLUMN_SET.has(effect.object as NounType)) {
+      const columnId = effect.object as string;
+      const variantId = effect.objectQualifier;
+      const allEvents = this.getAllEvents();
+      const target = allEvents
+        .filter(ev =>
+          ev.columnId === columnId
+          && ev.ownerId === ownerId
+          && ev.startFrame <= ctx.frame
+          && ctx.frame <= ev.startFrame + eventDuration(ev)
+          && ev.eventStatus !== EventStatusType.CONSUMED
+          && (!variantId || ev.id === variantId),
+        )
+        .sort((a, b) => a.startFrame - b.startFrame)[0];
+      if (target) {
+        setEventDuration(target, Math.max(0, ctx.frame - target.startFrame));
+        target.eventStatus = EventStatusType.CONSUMED;
+        target.eventStatusOwnerId = source.ownerId;
+        target.eventStatusSkillName = source.skillName;
+        return true;
+      }
+      return false;
+    }
     const consumeCol = resolveEffectColumnId(effect.object, effect.objectId, effect.objectQualifier);
     if (consumeCol) {
       const statusOwner = effect.to === NounType.TEAM ? COMMON_OWNER_ID : ownerId;
       // For inflictions, pass explicit count; for statuses, let the controller handle stack semantics
       const isInflictionConsume = effect.object === NounType.INFLICTION
         || (effect.object === NounType.STATUS && effect.objectId === NounType.INFLICTION);
+      const hasExplicitCount = count !== Infinity && rawStacks != null;
       const consumed = this.controller.consumeEvent(consumeCol, statusOwner, ctx.frame, source,
-        isInflictionConsume ? { count } : undefined);
+        isInflictionConsume ? { count } : hasExplicitCount ? { count, restack: true } : undefined);
       return consumed > 0;
     }
     // CONSUME THIS EVENT — consume one stack of the parent status (from ENGINE_TRIGGER context)
@@ -755,6 +830,7 @@ export class EventInterpretorController {
       const columnId = ctx.parentStatusId;
       const statusOwnerId = ctx.parentStatusOwnerId ?? ownerId;
       const consumed = this.controller.consumeEvent(columnId, statusOwnerId, ctx.frame, source, { count, restack: true });
+      this.lastConsumedParentStatusId = consumed > 0 ? columnId : undefined;
       return consumed > 0;
     }
     // CONSUME STACKS — self-consumption of the parent status stacks (e.g. Auxiliary Crystal)
@@ -777,8 +853,15 @@ export class EventInterpretorController {
     const verb = effect.verb;
 
     if (verb === VerbType.APPLY || verb === VerbType.CONSUME || verb === VerbType.RECEIVE) {
-      // Physical status: only fire if a status was actually created
-      if (effect.objectId === AdjectiveType.PHYSICAL && !this.lastPhysicalStatusCreated) return undefined;
+      // Physical status: if the status wasn't created but Vulnerable was added,
+      // fire VULNERABLE trigger instead (e.g. CRUSH with no existing Vulnerable stacks).
+      if (effect.objectId === AdjectiveType.PHYSICAL && !this.lastPhysicalStatusCreated) {
+        return PHYSICAL_INFLICTION_COLUMNS.VULNERABLE;
+      }
+      // CONSUME THIS EVENT: use the actual consumed status ID for trigger dispatch
+      if (verb === VerbType.CONSUME && effect.object === NounType.EVENT && this.lastConsumedParentStatusId) {
+        return this.lastConsumedParentStatusId;
+      }
       return resolveEffectColumnId(effect.object, effect.objectId, effect.objectQualifier);
     }
     if (verb === VerbType.PERFORM) return effect.object;
@@ -837,6 +920,15 @@ export class EventInterpretorController {
     const baseCtx = buildContextForSkillColumn(loadout, NounType.BATTLE_SKILL);
     if (ctx.potential != null) baseCtx.potential = ctx.potential;
     if (ctx.suppliedParameters) baseCtx.suppliedParameters = ctx.suppliedParameters;
+    const ownerId = ctx.sourceSlotId ?? ctx.sourceOwnerId;
+    const frame = ctx.frame;
+    baseCtx.getStatusStacks = (statusId: string) => {
+      const active = activeEventsAtFrame(this.getAllEvents(), statusId, ownerId, frame);
+      if (active.length === 0) return 0;
+      // If the latest event has an explicit stacks field, use it; otherwise count events
+      const last = active[active.length - 1];
+      return last.stacks != null ? last.stacks : active.length;
+    };
     return baseCtx;
   }
 
@@ -910,16 +1002,19 @@ export class EventInterpretorController {
 
       let preCooldownDur = 0;
       let cooldownDur = 0;
+      let isImmediateCd = false;
       for (const s of ev.segments) {
         if (s.properties.name === 'Cooldown') {
           cooldownDur = s.properties.duration;
+          if (s.properties.segmentTypes?.includes(SegmentType.IMMEDIATE_COOLDOWN)) isImmediateCd = true;
         } else {
           preCooldownDur += s.properties.duration;
         }
       }
-      const activeEnd = ev.startFrame + preCooldownDur;
-      const cooldownEnd = ev.startFrame + preCooldownDur + cooldownDur;
-      if (ctx.frame < activeEnd || ctx.frame >= cooldownEnd) continue;
+      // IMMEDIATE_COOLDOWN starts at event offset 0, not after active segments
+      const cooldownStart = ev.startFrame + (isImmediateCd ? 0 : preCooldownDur);
+      const cooldownEnd = cooldownStart + cooldownDur;
+      if (ctx.frame < cooldownStart || ctx.frame >= cooldownEnd) continue;
 
       // Convert by value to frames based on unit
       let reductionFrames: number;
@@ -938,7 +1033,7 @@ export class EventInterpretorController {
       // Subtract from remaining cooldown at ctx.frame
       const remainingCooldown = cooldownEnd - ctx.frame;
       const newRemaining = Math.max(0, remainingCooldown - reductionFrames);
-      const newCooldownDuration = (ctx.frame - activeEnd) + newRemaining;
+      const newCooldownDuration = (ctx.frame - cooldownStart) + newRemaining;
       this.controller.reduceCooldown(ev.uid, newCooldownDuration);
     }
     return true;
@@ -1083,6 +1178,8 @@ export class EventInterpretorController {
    * was actually created, so the caller can gate reactive triggers.
    */
   private lastPhysicalStatusCreated = false;
+  /** Tracks the actual status ID consumed by CONSUME THIS EVENT, for reactive trigger dispatch. */
+  private lastConsumedParentStatusId: string | undefined;
   private applyPhysicalStatus(effect: Effect, ctx: InterpretContext): boolean {
     const qualifier = resolveQualifier(effect.objectQualifier);
     if (!qualifier || !PHYSICAL_STATUS_VALUES.has(qualifier)) return false;
@@ -1569,9 +1666,31 @@ export class EventInterpretorController {
       const accepted = filterClauses(frame.clauses, frame.clauseType, pred =>
         evaluateConditions(pred.conditions as unknown as import('../../dsl/semantics').Interaction[], condCtx),
       );
+      // If no clause matched, mark frame as skipped so the damage table builder skips it
+      if (accepted.length === 0) {
+        frame.frameSkipped = true;
+      }
       for (const pred of accepted) {
         for (const ef of pred.effects) {
           if (ef.dslEffect) {
+            // Track frame-level APPLY STAT for reversal after snapshot.
+            // Frame-level stats are frame-scoped — they only affect this frame's damage calc.
+            if (ef.dslEffect.verb === VerbType.APPLY && ef.dslEffect.object === NounType.STAT
+                && ef.dslEffect.objectId && this.statAccumulator) {
+              const statKey = resolveEffectStat(NounType.STAT, ef.dslEffect.objectId, ef.dslEffect.objectQualifier);
+              if (statKey) {
+                const before = this.statAccumulator.getStat(event.ownerId, statKey);
+                this.interpret(ef.dslEffect, interpretCtx);
+                const after = this.statAccumulator.getStat(event.ownerId, statKey);
+                const diff = after - before;
+                if (diff !== 0) {
+                  if (!this._frameStatReversals) this._frameStatReversals = [];
+                  this._frameStatReversals.push({ stat: statKey, value: -diff });
+                }
+                this.reactiveTriggersForEffect(ef.dslEffect, absFrame, event.ownerId, event.id, newEntries);
+                continue;
+              }
+            }
             this.interpret(ef.dslEffect, interpretCtx);
             this.reactiveTriggersForEffect(ef.dslEffect, absFrame, event.ownerId, event.id, newEntries);
           }
@@ -1607,7 +1726,21 @@ export class EventInterpretorController {
       }
     }
 
-    // ── 3c. Crit resolution for damage frames (stat accumulator + trigger emission)
+    // ── 3c. Snapshot stat deltas for damage frames (captures runtime APPLY STAT effects)
+    if (this.statAccumulator && (frame.damageMultiplier || frame.dealDamage) && !frame.frameSkipped) {
+      const frameKey = `${event.uid}:${si}:${fi}`;
+      this.statAccumulator.snapshotDeltas(frameKey, event.ownerId);
+    }
+
+    // Reverse frame-scoped APPLY STAT deltas so they don't persist to later frames
+    if (this._frameStatReversals?.length && this.statAccumulator) {
+      for (const r of this._frameStatReversals) {
+        this.statAccumulator.applyStatDelta(event.ownerId, { [r.stat]: r.value });
+      }
+      this._frameStatReversals = undefined;
+    }
+
+    // ── 3d. Crit resolution for damage frames (stat accumulator + trigger emission)
     if (this.statAccumulator && (frame.damageMultiplier || frame.dealDamage)) {
       const isDot = frame.damageType === DamageType.DAMAGE_OVER_TIME;
       if (!isDot) {
@@ -1754,6 +1887,7 @@ export class EventInterpretorController {
     }
 
     // ── clause: interpret APPLY STAT effects (e.g. talent passive stat buffs) ──
+    const appliedStatDeltas: { entityId: string; stat: import('../../consts/enums').StatType; value: number }[] = [];
     if (statusDef?.clause?.length) {
       const clauseCtx: InterpretContext = {
         ...ctx,
@@ -1774,8 +1908,54 @@ export class EventInterpretorController {
         for (const rawEffect of clause.effects) {
           const raw = rawEffect as Record<string, unknown>;
           if (raw.verb !== VerbType.APPLY || raw.object !== NounType.STAT) continue;
+          // Snapshot stat before interpret, then capture delta after
+          const trackStat = this.statAccumulator
+            ? resolveEffectStat(NounType.STAT, raw.objectId as string, raw.objectQualifier as string)
+            : undefined;
+          const statBefore = trackStat ? this.statAccumulator!.getStat(statusOwnerId, trackStat) : 0;
           const effect = { ...raw, ofObject: raw.of ?? raw.ofObject, ofDeterminer: raw.ofDeterminer } as unknown as Effect;
           this.interpret(effect, clauseCtx);
+          // Track the applied delta for reversal at expiry
+          if (trackStat) {
+            const statAfter = this.statAccumulator!.getStat(statusOwnerId, trackStat);
+            const delta = statAfter - statBefore;
+            if (delta !== 0) {
+              appliedStatDeltas.push({ entityId: statusOwnerId, stat: trackStat, value: delta });
+            }
+          }
+        }
+      }
+    }
+
+    // Schedule stat delta reversals at status expiry
+    if (appliedStatDeltas.length > 0 && this.statAccumulator) {
+      const endFrame = parentEventEnd;
+      if (!this._statReversals) this._statReversals = [];
+      for (const d of appliedStatDeltas) {
+        this._statReversals.push({ frame: endFrame, entityId: d.entityId, stat: d.stat, value: -d.value });
+      }
+    }
+
+    // ── clause: propagate DISABLE/ENABLE effects onto the derived event's segment ──
+    // This allows hasDisableAtFrame / hasEnableClauseAtFrame to discover them.
+    // Guard: only propagate once to avoid duplicates on pipeline re-processing.
+    if (statusDef?.clause?.length && statusEv.segments.length > 0) {
+      const seg = statusEv.segments[0];
+      const alreadyPropagated = seg.clause?.some(c =>
+        c.effects.some(e => e.verb === VerbType.DISABLE || e.verb === VerbType.ENABLE),
+      );
+      if (!alreadyPropagated) {
+        const propagated: { conditions: unknown[]; effects: unknown[] }[] = [];
+        for (const clause of statusDef.clause as { conditions: unknown[]; effects?: { verb: string }[] }[]) {
+          const disableEnableEffects = (clause.effects ?? []).filter(e =>
+            e.verb === VerbType.DISABLE || e.verb === VerbType.ENABLE,
+          );
+          if (disableEnableEffects.length > 0) {
+            propagated.push({ conditions: clause.conditions ?? [], effects: disableEnableEffects });
+          }
+        }
+        if (propagated.length > 0) {
+          seg.clause = [...(seg.clause ?? []), ...(propagated as unknown as NonNullable<typeof seg.clause>)];
         }
       }
     }
@@ -2050,8 +2230,8 @@ export class EventInterpretorController {
         continue;
       }
 
-      // Non-FIRST_MATCH: dedup by def ID and emit directly
-      const defKey = `${entry.def.properties.id}:${entry.operatorSlotId}:${frame}`;
+      // Non-FIRST_MATCH: dedup by def ID + clause index and emit directly
+      const defKey = `${entry.def.properties.id}:${entry.operatorSlotId}:${entry.clauseIndex}:${frame}`;
       if (this.seenTriggers.has(defKey)) continue;
       this.seenTriggers.add(defKey);
 
@@ -2077,7 +2257,7 @@ export class EventInterpretorController {
         maxStacks: 0,
         durationFrames: 0,
         operatorSlotId: entry.operatorSlotId,
-        engineTrigger: { frame, sourceOwnerId: this.resolveOperatorId(slotId), triggerSlotId: slotId, sourceSkillName, ctx: triggerCtx, isEquip: entry.isEquip },
+        engineTrigger: { frame, sourceOwnerId: this.resolveOperatorId(slotId), triggerSlotId: slotId, sourceSkillName, ctx: triggerCtx, isEquip: entry.isEquip, triggerObjectId: objectId },
       });
     }
 
@@ -2141,7 +2321,7 @@ export class EventInterpretorController {
         maxStacks: 0,
         durationFrames: 0,
         operatorSlotId: selected.operatorSlotId,
-        engineTrigger: { frame, sourceOwnerId: this.resolveOperatorId(slotId), triggerSlotId: slotId, sourceSkillName, ctx: triggerCtx, isEquip: selected.isEquip },
+        engineTrigger: { frame, sourceOwnerId: this.resolveOperatorId(slotId), triggerSlotId: slotId, sourceSkillName, ctx: triggerCtx, isEquip: selected.isEquip, triggerObjectId: objectId },
       });
     }
   }
@@ -2241,6 +2421,23 @@ export class EventInterpretorController {
       if (parentSegmentEndFrame == null) parentSegmentEndFrame = parentEventEndFrame;
     }
 
+    // Compute source event's remaining duration (for APPLY STATUS duration inheritance).
+    // When a talent trigger fires from an infliction/reaction, the produced status should
+    // last as long as the source infliction/reaction's remaining game-time duration.
+    // Look up the active event on the trigger's matched column (e.g. CRYO_INFLICTION).
+    let sourceEventRemainingDuration: number | undefined;
+    const triggerColumnId = trigger.triggerObjectId;
+    if (triggerColumnId) {
+      const sourceEvents = this.getAllEvents().filter(
+        ev => ev.columnId === triggerColumnId && ev.startFrame <= entry.frame
+          && entry.frame < ev.startFrame + eventDuration(ev),
+      );
+      if (sourceEvents.length > 0) {
+        const src = sourceEvents[sourceEvents.length - 1];
+        sourceEventRemainingDuration = (src.startFrame + eventDuration(src)) - entry.frame;
+      }
+    }
+
     const interpretCtx: InterpretContext = {
       frame: entry.frame,
       sourceOwnerId: ctx.operatorId,
@@ -2252,6 +2449,8 @@ export class EventInterpretorController {
       parentEventEndFrame,
       parentSegmentEndFrame,
       sourceFrameKey: entry.sourceFrameKey,
+      targetOwnerId: trigger.triggerSlotId,
+      sourceEventRemainingDuration,
     };
 
     const cascadeFrames = this._engineTriggerOut;
@@ -2266,9 +2465,13 @@ export class EventInterpretorController {
       if (applied) {
         const before = cascadeFrames.length;
         this.reactiveTriggersForEffect(effect, entry.frame, ctx.operatorSlotId, trigger.sourceSkillName, cascadeFrames);
+        // Cascade triggers inherit the original trigger operator for TRIGGER determiner resolution
         for (let j = before; j < cascadeFrames.length; j++) {
           cascadeFrames[j].cascadeDepth = depth + 1;
           cascadeFrames[j].sourceFrameKey = entry.sourceFrameKey;
+          if (cascadeFrames[j].engineTrigger && trigger.triggerSlotId) {
+            cascadeFrames[j].engineTrigger!.triggerSlotId = trigger.triggerSlotId;
+          }
         }
       }
     }

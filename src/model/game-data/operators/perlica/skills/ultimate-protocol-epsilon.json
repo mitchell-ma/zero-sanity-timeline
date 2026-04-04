@@ -54,7 +54,7 @@
         "duration": {
           "value": {
             "verb": "IS",
-            "value": 1.583
+            "value": 1.667
           },
           "unit": "SECOND"
         },
@@ -71,7 +71,7 @@
         "duration": {
           "value": {
             "verb": "IS",
-            "value": 0.517
+            "value": 2.133
           },
           "unit": "SECOND"
         },
@@ -87,7 +87,7 @@
           },
           "properties": {
             "offset": {
-              "value": 0.347,
+              "value": 0.267,
               "unit": "SECOND"
             }
           },
