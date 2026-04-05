@@ -98,9 +98,8 @@ describe('Crit Mode Toggle — damage calculation per mode', () => {
       for (const seg of ev.segments) {
         if (!seg.frames) continue;
         for (const f of seg.frames) {
-          if (f.damageMultiplier || f.dealDamage) {
-            expect(f.isCrit).toBe(false);
-          }
+          if (!f.damageMultiplier && !f.dealDamage) continue;
+          expect(f.isCrit).toBe(false);
         }
       }
     }
@@ -144,11 +143,10 @@ describe('Crit Mode Toggle — damage calculation per mode', () => {
         if (!seg.frames) continue;
         for (let fi = 0; fi < seg.frames.length; fi++) {
           const key = `${ev.uid}:${fi}`;
-          if (critValues.has(key)) {
-            // isCrit should still be the same value from MANUAL pin
-            // (NEVER mode doesn't modify isCrit, only affects calculation)
-            expect(seg.frames[fi].isCrit).toBe(critValues.get(key));
-          }
+          if (!critValues.has(key)) continue;
+          // isCrit should still be the same value from MANUAL pin
+          // (NEVER mode doesn't modify isCrit, only affects calculation)
+          expect(seg.frames[fi].isCrit).toBe(critValues.get(key));
         }
       }
     }

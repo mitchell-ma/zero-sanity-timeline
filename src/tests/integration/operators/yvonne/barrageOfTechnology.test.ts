@@ -15,7 +15,7 @@
  */
 
 import { renderHook, act } from '@testing-library/react';
-import { NounType, VerbType, AdjectiveType } from '../../../../dsl/semantics';
+import { NounType, VerbType } from '../../../../dsl/semantics';
 import { useApp } from '../../../../app/useApp';
 import { InteractionModeType, StackInteractionType } from '../../../../consts/enums';
 import { FPS } from '../../../../utils/timeline';
@@ -29,7 +29,6 @@ import type { AppResult } from '../../helpers';
 const YVONNE_ID: string = require('../../../../model/game-data/operators/yvonne/yvonne.json').id;
 const BARRAGE_JSON = require('../../../../model/game-data/operators/yvonne/statuses/status-barrage-of-technology.json');
 const BARRAGE_ID: string = BARRAGE_JSON.properties.id;
-const BS_ID: string = require('../../../../model/game-data/operators/yvonne/skills/battle-skill-brr-brr-bomb.json').properties.id;
 const BATK_ID: string = require('../../../../model/game-data/operators/yvonne/skills/basic-attack-batk-exuberant-trigger.json').properties.id;
 /* eslint-enable @typescript-eslint/no-require-imports */
 

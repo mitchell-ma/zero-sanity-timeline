@@ -181,8 +181,7 @@ for (const [key, val] of Object.entries(laevatainSkillEntries2)) {
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { buildSkillTypeMap: _laevatainBuildSkillTypeMap } = require('../../utils/skillTypeMap');
 const _skTypeMap2 = _laevatainBuildSkillTypeMap(laevatainSkillCategories);
-{
-  for (const [key, value] of Object.entries(_skTypeMap2 as Record<string, string[] | Record<string, string[]>>)) {
+for (const [key, value] of Object.entries(_skTypeMap2 as Record<string, string[] | Record<string, string[]>>)) {
     if (Array.isArray(value)) {
       if (value[0] && laevatainSkillCategories[value[0]]) laevatainSkillCategories[key] = laevatainSkillCategories[value[0]];
     } else if (typeof value === 'object' && value !== null) {
@@ -193,7 +192,6 @@ const _skTypeMap2 = _laevatainBuildSkillTypeMap(laevatainSkillCategories);
       if (batkIds?.[0] && laevatainSkillCategories[batkIds[0]]) laevatainSkillCategories[key] = laevatainSkillCategories[batkIds[0]];
     }
   }
-}
 const mockLaevatainJson = { ...laevatainOperatorJson, skills: laevatainSkillCategories, skillTypeMap: _skTypeMap2, ...(_mergedStatusEvents.length > 0 ? { statusEvents: _mergedStatusEvents } : {}) };
 // ── Test helpers ─────────────────────────────────────────────────────────────
 

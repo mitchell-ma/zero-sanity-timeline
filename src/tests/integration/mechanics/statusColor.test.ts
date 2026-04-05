@@ -45,15 +45,13 @@ describe('Status micro-column colors', () => {
 
     // Inflamed for the Assault — talent status, no element
     const inflamed = getStatusMicroColumn(result.current.columns, SLOT, 'INFLAMED_FOR_THE_ASSAULT');
-    if (inflamed) {
-      expect(inflamed.color).toBe(DEFAULT_EVENT_COLOR);
-    }
+    expect(inflamed).toBeDefined();
+    expect(inflamed!.color).toBe(DEFAULT_EVENT_COLOR);
 
     // Pay the Ferric Price — talent status, no element
     const pftp = getStatusMicroColumn(result.current.columns, SLOT, 'PAY_THE_FERRIC_PRICE');
-    if (pftp) {
-      expect(pftp.color).toBe(DEFAULT_EVENT_COLOR);
-    }
+    expect(pftp).toBeDefined();
+    expect(pftp!.color).toBe(DEFAULT_EVENT_COLOR);
   });
 
   it('elemental status (Laevatain Scorching Heart) uses element color', () => {
@@ -88,12 +86,11 @@ describe('Status micro-column colors', () => {
       const mt = col as MiniTimeline;
       if (mt.ownerId !== SLOT || mt.columnId !== OPERATOR_STATUS_COLUMN_ID) continue;
       for (const mc of mt.microColumns ?? []) {
-        if (mc.color === HEAT_COLOR) {
-          // If a status uses HEAT color, it must have element: HEAT in its config
-          const { getStatusById } = require('../../../controller/gameDataStore');
-          const cfg = getStatusById(mc.id);
-          expect(cfg?.element).toBe(ElementType.HEAT);
-        }
+        if (mc.color !== HEAT_COLOR) continue;
+        // If a status uses HEAT color, it must have element: HEAT in its config
+        const { getStatusById } = require('../../../controller/gameDataStore');
+        const cfg = getStatusById(mc.id);
+        expect(cfg?.element).toBe(ElementType.HEAT);
       }
     }
   });
@@ -110,9 +107,9 @@ describe('Status micro-column colors', () => {
     act(() => { result.current.handleSwapOperator('slot-1', LAEVATAIN_ID); });
 
     // Steel Oath on Laevatain's status column (team-shared from Ember)
+    // Steel Oath only appears if Ember's ultimate is placed; verify color if present
     const steelOath = getStatusMicroColumn(result.current.columns, 'slot-1', 'THE_STEEL_OATH');
-    if (steelOath) {
-      expect(steelOath.color).toBe(DEFAULT_EVENT_COLOR);
-    }
+    // eslint-disable-next-line jest/no-conditional-expect
+    if (steelOath) expect(steelOath.color).toBe(DEFAULT_EVENT_COLOR);
   });
 });

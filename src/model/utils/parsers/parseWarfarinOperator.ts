@@ -9,7 +9,7 @@
  *   npx tsx src/model/utils/parsers/parseWarfarinOperator.ts laevatain
  */
 
-import { NounType, AdjectiveType } from '../../../dsl/semantics';
+import { NounType } from '../../../dsl/semantics';
 import * as fs from 'fs';
 import * as path from 'path';
 import { OperatorInformationType } from '../../enums/operators';

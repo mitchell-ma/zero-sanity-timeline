@@ -15,7 +15,7 @@
 
 import { renderHook, act } from '@testing-library/react';
 import {
-  NounType, VerbType, AdjectiveType,
+  NounType, VerbType,
   ValueOperation, CardinalityConstraintType,
 } from '../../../../dsl/semantics';
 import { InteractionModeType } from '../../../../consts/enums';
@@ -288,18 +288,9 @@ describe('B. Freezing Point — two-part status system', () => {
     expect(infliction).toBeDefined();
     expect(status).toBeDefined();
 
-    const inflictionEnd = infliction.startFrame + infliction.segments.reduce(
-      (sum: number, s: { properties: { duration: number } }) => sum + s.properties.duration, 0,
-    );
-    const statusEnd = status.startFrame + status.segments.reduce(
-      (sum: number, s: { properties: { duration: number } }) => sum + s.properties.duration, 0,
-    );
-
     // Both have the same game-time duration (before TIME_STOP extension).
     // TIME_STOP extends them by different amounts based on column ownership,
     // but the underlying game-time duration is identical.
-    const inflictionGameDur = Math.round(5 * FPS); // 5s placed
-    const statusGameDur = statusEnd - status.startFrame;
     // Status game-time duration before extension should match infliction's 5s
     // (The actual displayed durations may differ due to TIME_STOP owner differences)
     expect(status).toBeDefined();

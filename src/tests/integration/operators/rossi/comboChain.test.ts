@@ -206,18 +206,18 @@ describe('C. Perfect Timing status lifecycle', () => {
       i => i.actionId === 'addEvent' && i.label?.includes('Empowered'),
     );
 
-    // If empowered variant is available, place it
-    if (empoweredItem && !empoweredItem.disabled) {
-      const empPayload = empoweredItem.actionPayload as { ownerId: string; columnId: string; atFrame: number; defaultSkill: Record<string, unknown> };
-      act(() => {
-        result.current.handleAddEvent(empPayload.ownerId, empPayload.columnId, empPayload.atFrame, empPayload.defaultSkill);
-      });
+    // Empowered variant must be available
+    expect(empoweredItem).toBeDefined();
+    expect(empoweredItem!.disabled).toBeFalsy();
+    const empPayload = empoweredItem!.actionPayload as { ownerId: string; columnId: string; atFrame: number; defaultSkill: Record<string, unknown> };
+    act(() => {
+      result.current.handleAddEvent(empPayload.ownerId, empPayload.columnId, empPayload.atFrame, empPayload.defaultSkill);
+    });
 
-      // Verify PERFECT_TIMING was consumed
-      const ptEvents = findPerfectTimingEvents(result);
-      const consumed = ptEvents.filter(ev => ev.eventStatus === EventStatusType.CONSUMED);
-      expect(consumed.length).toBeGreaterThanOrEqual(1);
-    }
+    // Verify PERFECT_TIMING was consumed
+    const ptEvents = findPerfectTimingEvents(result);
+    const consumed = ptEvents.filter(ev => ev.eventStatus === EventStatusType.CONSUMED);
+    expect(consumed.length).toBeGreaterThanOrEqual(1);
   });
 
   it('C3: Empowered combo NOT available without PERFECT_TIMING (cannot start with empowered)', () => {
@@ -235,9 +235,7 @@ describe('C. Perfect Timing status lifecycle', () => {
     );
 
     // Empowered should either not appear or be disabled (no PERFECT_TIMING active)
-    if (empoweredItem) {
-      expect(empoweredItem.disabled).toBe(true);
-    }
+    expect(!empoweredItem || empoweredItem.disabled).toBe(true);
   });
 });
 
@@ -263,26 +261,26 @@ describe('D. Chain validation — maxSkills enforcement', () => {
     const menu = buildContextMenu(result.current, comboCol!, 5 * FPS);
     expect(menu).not.toBeNull();
     const empItem = menu!.find(i => i.actionId === 'addEvent' && i.label?.includes('Empowered'));
-    if (empItem && !empItem.disabled) {
-      const empPayload = empItem.actionPayload as { ownerId: string; columnId: string; atFrame: number; defaultSkill: Record<string, unknown> };
-      act(() => {
-        result.current.handleAddEvent(empPayload.ownerId, empPayload.columnId, empPayload.atFrame, empPayload.defaultSkill);
-      });
+    expect(empItem).toBeDefined();
+    expect(empItem!.disabled).toBeFalsy();
+    const empPayload = empItem!.actionPayload as { ownerId: string; columnId: string; atFrame: number; defaultSkill: Record<string, unknown> };
+    act(() => {
+      result.current.handleAddEvent(empPayload.ownerId, empPayload.columnId, empPayload.atFrame, empPayload.defaultSkill);
+    });
 
-      // Both combos placed
-      const combos = findComboEvents(result);
-      expect(combos).toHaveLength(2);
+    // Both combos placed
+    const combos = findComboEvents(result);
+    expect(combos).toHaveLength(2);
 
-      // View layer: both visible in column
-      const viewModels = computeTimelinePresentation(
-        result.current.allProcessedEvents,
-        result.current.columns,
-      );
-      const comboVM = viewModels.get(comboCol!.key);
-      expect(comboVM).toBeDefined();
-      const rossiCombos = comboVM!.events.filter(ev => ev.ownerId === SLOT_ROSSI);
-      expect(rossiCombos).toHaveLength(2);
-    }
+    // View layer: both visible in column
+    const viewModels = computeTimelinePresentation(
+      result.current.allProcessedEvents,
+      result.current.columns,
+    );
+    const comboVM = viewModels.get(comboCol!.key);
+    expect(comboVM).toBeDefined();
+    const rossiCombos = comboVM!.events.filter(ev => ev.ownerId === SLOT_ROSSI);
+    expect(rossiCombos).toHaveLength(2);
   });
 
   it('D2: Normal combo → normal combo overlap bypass in multi-skill window', () => {
@@ -406,9 +404,8 @@ describe('E. Cooldown suppression', () => {
     const menuDuringCooldown = buildContextMenu(result.current, comboCol!, 16 * FPS);
     expect(menuDuringCooldown).not.toBeNull();
     const addItem = menuDuringCooldown!.find(i => i.actionId === 'addEvent');
-    if (addItem) {
-      expect(addItem.disabled).toBe(true);
-    }
+    expect(addItem).toBeDefined();
+    expect(addItem!.disabled).toBe(true);
   });
 });
 

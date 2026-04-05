@@ -55,12 +55,6 @@ const SKILL_CATEGORY_LABELS: Record<string, string> = {
   ULTIMATE: 'Ultimate',
 };
 
-const BATK_VARIANT_LABELS: Record<string, string> = {
-  BATK: 'Normal Chain',
-  FINISHER: 'Finisher',
-  DIVE: 'Dive Attack',
-};
-
 export interface SkillEntryData {
   id: string;
   label: string;

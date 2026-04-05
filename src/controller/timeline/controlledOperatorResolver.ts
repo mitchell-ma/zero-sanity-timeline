@@ -7,9 +7,8 @@
  *
  * Only one operator can be controlled at a time. The first operator (slot-0) starts controlled.
  */
-import { NounType, AdjectiveType } from '../../dsl/semantics';
+import { NounType } from '../../dsl/semantics';
 import { TimelineEvent } from '../../consts/viewTypes';
-import {  } from '../../consts/enums';
 
 
 interface ControlSegment {

@@ -149,17 +149,17 @@ describe('A. Basic Attack', () => {
     expect(menu).not.toBeNull();
 
     const diveItem = menu!.find(i => i.actionId === 'addEvent' && i.label?.includes('Dive'));
-    if (diveItem && !diveItem.disabled) {
-      const divePayload = diveItem.actionPayload as { ownerId: string; columnId: string; atFrame: number; defaultSkill: Record<string, unknown> };
-      act(() => {
-        result.current.handleAddEvent(divePayload.ownerId, divePayload.columnId, divePayload.atFrame, divePayload.defaultSkill);
-      });
+    expect(diveItem).toBeDefined();
+    expect(diveItem!.disabled).toBeFalsy();
+    const divePayload = diveItem!.actionPayload as { ownerId: string; columnId: string; atFrame: number; defaultSkill: Record<string, unknown> };
+    act(() => {
+      result.current.handleAddEvent(divePayload.ownerId, divePayload.columnId, divePayload.atFrame, divePayload.defaultSkill);
+    });
 
-      const events = result.current.allProcessedEvents.filter(
-        ev => ev.ownerId === SLOT_ROSSI && ev.columnId === NounType.BASIC_ATTACK,
-      );
-      expect(events).toHaveLength(1);
-    }
+    const events = result.current.allProcessedEvents.filter(
+      ev => ev.ownerId === SLOT_ROSSI && ev.columnId === NounType.BASIC_ATTACK,
+    );
+    expect(events).toHaveLength(1);
   });
 });
 
@@ -243,9 +243,7 @@ describe('C. Battle Skill — Empowered', () => {
     expect(menu).not.toBeNull();
 
     const empItem = menu!.find(i => i.actionId === 'addEvent' && i.label?.includes('Empowered'));
-    if (empItem) {
-      expect(empItem.disabled).toBe(true);
-    }
+    expect(!empItem || empItem.disabled).toBe(true);
   });
 
   it('C3: Empowered BS has 2 segments (Physical + Heat)', () => {
@@ -255,20 +253,19 @@ describe('C. Battle Skill — Empowered', () => {
     const col = findColumn(result.current, SLOT_ROSSI, NounType.BATTLE);
     const menu = buildContextMenu(result.current, col!, 2 * FPS);
     const empItem = menu!.find(i => i.actionId === 'addEvent' && i.label?.includes('Empowered'));
+    expect(empItem).toBeDefined();
+    expect(empItem!.disabled).toBeFalsy();
+    const empPayload = empItem!.actionPayload as { ownerId: string; columnId: string; atFrame: number; defaultSkill: Record<string, unknown> };
+    act(() => {
+      result.current.handleAddEvent(empPayload.ownerId, empPayload.columnId, empPayload.atFrame, empPayload.defaultSkill);
+    });
 
-    if (empItem && !empItem.disabled) {
-      const empPayload = empItem.actionPayload as { ownerId: string; columnId: string; atFrame: number; defaultSkill: Record<string, unknown> };
-      act(() => {
-        result.current.handleAddEvent(empPayload.ownerId, empPayload.columnId, empPayload.atFrame, empPayload.defaultSkill);
-      });
-
-      const events = result.current.allProcessedEvents.filter(
-        ev => ev.ownerId === SLOT_ROSSI && ev.columnId === NounType.BATTLE,
-      );
-      expect(events).toHaveLength(1);
-      expect(events[0].name).toBe(BS_EMP_ID);
-      expect(events[0].segments).toHaveLength(BS_EMP_JSON.segments.length);
-    }
+    const events = result.current.allProcessedEvents.filter(
+      ev => ev.ownerId === SLOT_ROSSI && ev.columnId === NounType.BATTLE,
+    );
+    expect(events).toHaveLength(1);
+    expect(events[0].name).toBe(BS_EMP_ID);
+    expect(events[0].segments).toHaveLength(BS_EMP_JSON.segments.length);
   });
 
   it('C4: Empowered BS produces Razor Clawmark on enemy', () => {
@@ -278,29 +275,27 @@ describe('C. Battle Skill — Empowered', () => {
     const col = findColumn(result.current, SLOT_ROSSI, NounType.BATTLE);
     const menu = buildContextMenu(result.current, col!, 2 * FPS);
     const empItem = menu!.find(i => i.actionId === 'addEvent' && i.label?.includes('Empowered'));
+    expect(empItem).toBeDefined();
+    expect(empItem!.disabled).toBeFalsy();
+    const empPayload = empItem!.actionPayload as { ownerId: string; columnId: string; atFrame: number; defaultSkill: Record<string, unknown> };
+    act(() => {
+      result.current.handleAddEvent(empPayload.ownerId, empPayload.columnId, empPayload.atFrame, empPayload.defaultSkill);
+    });
 
-    if (empItem && !empItem.disabled) {
-      const empPayload = empItem.actionPayload as { ownerId: string; columnId: string; atFrame: number; defaultSkill: Record<string, unknown> };
-      act(() => {
-        result.current.handleAddEvent(empPayload.ownerId, empPayload.columnId, empPayload.atFrame, empPayload.defaultSkill);
-      });
+    // Razor Clawmark should appear on enemy
+    const clawmarkEvents = result.current.allProcessedEvents.filter(
+      ev => ev.name === RAZOR_CLAWMARK_ID && ev.ownerId === ENEMY_OWNER_ID,
+    );
+    expect(clawmarkEvents.length).toBeGreaterThanOrEqual(1);
 
-      // Razor Clawmark should appear on enemy
-      const clawmarkEvents = result.current.allProcessedEvents.filter(
-        ev => ev.name === RAZOR_CLAWMARK_ID && ev.ownerId === ENEMY_OWNER_ID,
-      );
-      expect(clawmarkEvents.length).toBeGreaterThanOrEqual(1);
-
-      // Verify in enemy status column view
-      const enemyCol = findEnemyStatusColumn(result.current);
-      if (enemyCol) {
-        const viewModels = computeTimelinePresentation(result.current.allProcessedEvents, result.current.columns);
-        const enemyVM = viewModels.get(enemyCol.key);
-        expect(enemyVM).toBeDefined();
-        const clawmarkInView = enemyVM!.events.filter(ev => ev.name === RAZOR_CLAWMARK_ID);
-        expect(clawmarkInView.length).toBeGreaterThanOrEqual(1);
-      }
-    }
+    // Verify in enemy status column view
+    const enemyCol = findEnemyStatusColumn(result.current);
+    expect(enemyCol).toBeDefined();
+    const viewModels = computeTimelinePresentation(result.current.allProcessedEvents, result.current.columns);
+    const enemyVM = viewModels.get(enemyCol!.key);
+    expect(enemyVM).toBeDefined();
+    const clawmarkInView = enemyVM!.events.filter(ev => ev.name === RAZOR_CLAWMARK_ID);
+    expect(clawmarkInView.length).toBeGreaterThanOrEqual(1);
   });
 });
 
@@ -437,10 +432,9 @@ describe('E. Potential Effects', () => {
     );
     const costP4 = eventsP4[0].skillPointCost;
 
-    // P4 cost should be less than P0
-    if (costP0 !== undefined && costP4 !== undefined) {
-      expect(costP4).toBeLessThan(costP0);
-    }
+    // P4 cost should be less than P0 (skillPointCost may not be set if ultimate isn't configured)
+    // eslint-disable-next-line jest/no-conditional-expect
+    if (costP0 !== undefined && costP4 !== undefined) expect(costP4).toBeLessThan(costP0);
   });
 });
 
@@ -485,17 +479,17 @@ describe('G. Physical Status — Lift', () => {
     const col = findColumn(result.current, SLOT_ROSSI, NounType.BATTLE);
     const menu = buildContextMenu(result.current, col!, 2 * FPS);
     const empItem = menu!.find(i => i.actionId === 'addEvent' && i.label?.includes('Empowered'));
-    if (empItem && !empItem.disabled) {
-      const empPayload = empItem.actionPayload as { ownerId: string; columnId: string; atFrame: number; defaultSkill: Record<string, unknown> };
-      act(() => {
-        result.current.handleAddEvent(empPayload.ownerId, empPayload.columnId, empPayload.atFrame, empPayload.defaultSkill);
-      });
+    expect(empItem).toBeDefined();
+    expect(empItem!.disabled).toBeFalsy();
+    const empPayload = empItem!.actionPayload as { ownerId: string; columnId: string; atFrame: number; defaultSkill: Record<string, unknown> };
+    act(() => {
+      result.current.handleAddEvent(empPayload.ownerId, empPayload.columnId, empPayload.atFrame, empPayload.defaultSkill);
+    });
 
-      const liftEvents = result.current.allProcessedEvents.filter(
-        ev => ev.columnId === PhysicalStatusType.LIFT && ev.ownerId === ENEMY_OWNER_ID,
-      );
-      expect(liftEvents.length).toBeGreaterThanOrEqual(1);
-    }
+    const liftEvents = result.current.allProcessedEvents.filter(
+      ev => ev.columnId === PhysicalStatusType.LIFT && ev.ownerId === ENEMY_OWNER_ID,
+    );
+    expect(liftEvents.length).toBeGreaterThanOrEqual(1);
   });
 });
 
@@ -511,20 +505,20 @@ describe('H. Razor Clawmark', () => {
     const col = findColumn(result.current, SLOT_ROSSI, NounType.BATTLE);
     const menu = buildContextMenu(result.current, col!, 2 * FPS);
     const empItem = menu!.find(i => i.actionId === 'addEvent' && i.label?.includes('Empowered'));
-    if (empItem && !empItem.disabled) {
-      const empPayload = empItem.actionPayload as { ownerId: string; columnId: string; atFrame: number; defaultSkill: Record<string, unknown> };
-      act(() => {
-        result.current.handleAddEvent(empPayload.ownerId, empPayload.columnId, empPayload.atFrame, empPayload.defaultSkill);
-      });
+    expect(empItem).toBeDefined();
+    expect(empItem!.disabled).toBeFalsy();
+    const empPayload = empItem!.actionPayload as { ownerId: string; columnId: string; atFrame: number; defaultSkill: Record<string, unknown> };
+    act(() => {
+      result.current.handleAddEvent(empPayload.ownerId, empPayload.columnId, empPayload.atFrame, empPayload.defaultSkill);
+    });
 
-      const clawmarkEvents = result.current.allProcessedEvents.filter(
-        ev => ev.name === RAZOR_CLAWMARK_ID && ev.ownerId === ENEMY_OWNER_ID,
-      );
-      expect(clawmarkEvents.length).toBeGreaterThanOrEqual(1);
-      // Duration should be non-zero (scales with talent level: 0/15/25s)
-      const dur = eventDuration(clawmarkEvents[0]);
-      expect(dur).toBeGreaterThan(0);
-    }
+    const clawmarkEvents = result.current.allProcessedEvents.filter(
+      ev => ev.name === RAZOR_CLAWMARK_ID && ev.ownerId === ENEMY_OWNER_ID,
+    );
+    expect(clawmarkEvents.length).toBeGreaterThanOrEqual(1);
+    // Duration should be non-zero (scales with talent level: 0/15/25s)
+    const dur = eventDuration(clawmarkEvents[0]);
+    expect(dur).toBeGreaterThan(0);
   });
 });
 
@@ -589,27 +583,27 @@ describe('K. Cross-skill interaction chain', () => {
     const col = findColumn(result.current, SLOT_ROSSI, NounType.BATTLE);
     const menu = buildContextMenu(result.current, col!, 2 * FPS);
     const empItem = menu!.find(i => i.actionId === 'addEvent' && i.label?.includes('Empowered'));
-    if (empItem && !empItem.disabled) {
-      const empPayload = empItem.actionPayload as { ownerId: string; columnId: string; atFrame: number; defaultSkill: Record<string, unknown> };
-      act(() => {
-        result.current.handleAddEvent(empPayload.ownerId, empPayload.columnId, empPayload.atFrame, empPayload.defaultSkill);
-      });
+    expect(empItem).toBeDefined();
+    expect(empItem!.disabled).toBeFalsy();
+    const empPayload = empItem!.actionPayload as { ownerId: string; columnId: string; atFrame: number; defaultSkill: Record<string, unknown> };
+    act(() => {
+      result.current.handleAddEvent(empPayload.ownerId, empPayload.columnId, empPayload.atFrame, empPayload.defaultSkill);
+    });
 
-      // Three-layer: verify Razor Clawmark in view
-      const enemyCol = findEnemyStatusColumn(result.current);
-      expect(enemyCol).toBeDefined();
-      const viewModels = computeTimelinePresentation(result.current.allProcessedEvents, result.current.columns);
-      const enemyVM = viewModels.get(enemyCol!.key);
-      expect(enemyVM).toBeDefined();
+    // Three-layer: verify Razor Clawmark in view
+    const enemyCol = findEnemyStatusColumn(result.current);
+    expect(enemyCol).toBeDefined();
+    const viewModels = computeTimelinePresentation(result.current.allProcessedEvents, result.current.columns);
+    const enemyVM = viewModels.get(enemyCol!.key);
+    expect(enemyVM).toBeDefined();
 
-      // Razor Clawmark should be visible
-      const clawmarkInView = enemyVM!.events.filter(ev => ev.name === RAZOR_CLAWMARK_ID);
-      expect(clawmarkInView.length).toBeGreaterThanOrEqual(1);
+    // Razor Clawmark should be visible
+    const clawmarkInView = enemyVM!.events.filter(ev => ev.name === RAZOR_CLAWMARK_ID);
+    expect(clawmarkInView.length).toBeGreaterThanOrEqual(1);
 
-      // Lift should also be visible
-      const liftInView = enemyVM!.events.filter(ev => ev.columnId === PhysicalStatusType.LIFT);
-      expect(liftInView.length).toBeGreaterThanOrEqual(1);
-    }
+    // Lift should also be visible
+    const liftInView = enemyVM!.events.filter(ev => ev.columnId === PhysicalStatusType.LIFT);
+    expect(liftInView.length).toBeGreaterThanOrEqual(1);
   });
 });
 
@@ -625,18 +619,19 @@ describe('L. BA Finisher', () => {
     expect(menu).not.toBeNull();
 
     const finisherItem = menu!.find(i => i.actionId === 'addEvent' && i.label?.includes('Finisher'));
-    if (finisherItem && !finisherItem.disabled) {
-      const payload = finisherItem.actionPayload as { ownerId: string; columnId: string; atFrame: number; defaultSkill: Record<string, unknown> };
-      act(() => {
-        result.current.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
-      });
+    expect(finisherItem).toBeDefined();
+    // Finisher may require preceding BA segments — skip placement if disabled
+    if (finisherItem!.disabled) return;
+    const payload = finisherItem!.actionPayload as { ownerId: string; columnId: string; atFrame: number; defaultSkill: Record<string, unknown> };
+    act(() => {
+      result.current.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+    });
 
-      const events = result.current.allProcessedEvents.filter(
-        ev => ev.ownerId === SLOT_ROSSI && ev.columnId === NounType.BASIC_ATTACK,
-      );
-      expect(events).toHaveLength(1);
-      // Finisher has 1 segment with 3 frames (10:10:80 weight)
-      expect(events[0].segments[0].frames).toHaveLength(3);
-    }
+    const events = result.current.allProcessedEvents.filter(
+      ev => ev.ownerId === SLOT_ROSSI && ev.columnId === NounType.BASIC_ATTACK,
+    );
+    expect(events).toHaveLength(1);
+    // Finisher has 1 segment with 3 frames (10:10:80 weight)
+    expect(events[0].segments[0].frames).toHaveLength(3);
   });
 });

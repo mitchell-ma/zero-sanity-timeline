@@ -392,10 +392,12 @@ describe('E. Status Colors', () => {
     const { result } = setup();
 
     const inflamed = getStatusMicroColumn(result.current, SLOT, INFLAMED_ID);
-    if (inflamed) expect(inflamed.color).toBe(DEFAULT_EVENT_COLOR);
+    expect(inflamed).toBeDefined();
+    expect(inflamed!.color).toBe(DEFAULT_EVENT_COLOR);
 
     const pftp = getStatusMicroColumn(result.current, SLOT, PAY_THE_FERRIC_PRICE_ID);
-    if (pftp) expect(pftp.color).toBe(DEFAULT_EVENT_COLOR);
+    expect(pftp).toBeDefined();
+    expect(pftp!.color).toBe(DEFAULT_EVENT_COLOR);
   });
 
   it('E2: no Ember status uses HEAT color (all are non-elemental)', () => {

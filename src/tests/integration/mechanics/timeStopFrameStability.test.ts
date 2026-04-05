@@ -27,7 +27,7 @@ import { InteractionModeType } from '../../../consts/enums';
 import { FPS } from '../../../utils/timeline';
 import { getAnimationDuration, computeSegmentsSpan } from '../../../consts/viewTypes';
 import { computeTimelinePresentation } from '../../../controller/timeline/eventPresentationController';
-import { findColumn, getMenuPayload, setUltimateEnergyToMax, type AppResult } from '../helpers';
+import { findColumn, getMenuPayload, type AppResult } from '../helpers';
 
 // ── Game-data verified constants ────────────────────────────────────────────
 
@@ -38,7 +38,6 @@ const ROSSI_ID: string = ROSSI_JSON.id;
 const BS_JSON = require('../../../model/game-data/operators/rossi/skills/battle-skill-crimson-shadow.json');
 const BS_ID: string = BS_JSON.properties.id;
 
-const COMBO_JSON = require('../../../model/game-data/operators/rossi/skills/combo-skill-moment-of-blazing-shadow.json');
 /* eslint-enable @typescript-eslint/no-require-imports */
 
 const SLOT_ROSSI = 'slot-0';

@@ -17,7 +17,7 @@
 
 import { renderHook, act } from '@testing-library/react';
 import {
-  NounType, VerbType, AdjectiveType,
+  NounType, VerbType,
 } from '../../../../dsl/semantics';
 import { EventStatusType, InteractionModeType } from '../../../../consts/enums';
 import { useApp } from '../../../../app/useApp';

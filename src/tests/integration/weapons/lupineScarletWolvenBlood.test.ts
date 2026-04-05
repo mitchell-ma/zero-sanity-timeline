@@ -159,14 +159,12 @@ describe('B. Wolven Blood stack generation', () => {
 
     // View: Wolven Blood stacks visible in operator status column
     const statusCol = findStatusColumn(result.current, SLOT_ROSSI);
-    if (statusCol) {
-      const viewModels = computeTimelinePresentation(result.current.allProcessedEvents, result.current.columns);
-      const vm = viewModels.get(statusCol.key);
-      if (vm) {
-        const wbEvents = vm.events.filter(ev => ev.name === WOLVEN_BLOOD_ID);
-        expect(wbEvents.length).toBe(DAMAGE_FRAMES_PER_BS);
-      }
-    }
+    expect(statusCol).toBeDefined();
+    const viewModels = computeTimelinePresentation(result.current.allProcessedEvents, result.current.columns);
+    const vm = viewModels.get(statusCol!.key);
+    expect(vm).toBeDefined();
+    const wbEvents = vm!.events.filter(ev => ev.name === WOLVEN_BLOOD_ID);
+    expect(wbEvents.length).toBe(DAMAGE_FRAMES_PER_BS);
   });
 
   it('B2: Multiple battle skills accumulate Wolven Blood stacks', () => {
@@ -181,15 +179,13 @@ describe('B. Wolven Blood stack generation', () => {
     expect(stacks.length).toBe(DAMAGE_FRAMES_PER_BS * 2);
 
     // View: all stacks visible
-    const statusCol = findStatusColumn(result.current, SLOT_ROSSI);
-    if (statusCol) {
-      const viewModels = computeTimelinePresentation(result.current.allProcessedEvents, result.current.columns);
-      const vm = viewModels.get(statusCol.key);
-      if (vm) {
-        const wbEvents = vm.events.filter(ev => ev.name === WOLVEN_BLOOD_ID);
-        expect(wbEvents.length).toBe(DAMAGE_FRAMES_PER_BS * 2);
-      }
-    }
+    const statusCol2 = findStatusColumn(result.current, SLOT_ROSSI);
+    expect(statusCol2).toBeDefined();
+    const viewModels2 = computeTimelinePresentation(result.current.allProcessedEvents, result.current.columns);
+    const vm2 = viewModels2.get(statusCol2!.key);
+    expect(vm2).toBeDefined();
+    const wbEvents2 = vm2!.events.filter(ev => ev.name === WOLVEN_BLOOD_ID);
+    expect(wbEvents2.length).toBe(DAMAGE_FRAMES_PER_BS * 2);
   });
 });
 
@@ -298,10 +294,9 @@ describe('C. Max stacks triggers Wolven Blood Max', () => {
     // Status override label should be just the base name — no "I", "II", etc.
     for (const ev of maxInView) {
       const override = vm!.statusOverrides.get(ev.uid);
-      if (override) {
-        // Label should not end with a roman numeral (I, II, III, IV, etc.)
-        expect(override.label).not.toMatch(/\s[IVX]+$/);
-      }
+      if (!override) continue;
+      // Label should not end with a roman numeral (I, II, III, IV, etc.)
+      expect(override.label).not.toMatch(/\s[IVX]+$/);
     }
   });
 
