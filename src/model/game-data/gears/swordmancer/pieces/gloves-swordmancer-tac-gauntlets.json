@@ -32,8 +32,10 @@
                 78,
                 84
               ],
-              "ofDeterminer": "THIS",
-              "of": "OPERATOR"
+              "of": {
+                "object": "OPERATOR",
+                "determiner": "THIS"
+              }
             }
           }
         },
@@ -53,8 +55,10 @@
                 51,
                 55
               ],
-              "ofDeterminer": "THIS",
-              "of": "OPERATOR"
+              "of": {
+                "object": "OPERATOR",
+                "determiner": "THIS"
+              }
             }
           }
         },
@@ -73,8 +77,10 @@
                 0.5175,
                 0.560625
               ],
-              "ofDeterminer": "THIS",
-              "of": "OPERATOR"
+              "of": {
+                "object": "OPERATOR",
+                "determiner": "THIS"
+              }
             }
           },
           "objectId": "DAMAGE_BONUS",

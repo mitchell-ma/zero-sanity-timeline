@@ -17,7 +17,7 @@ import { ALL_ENEMIES, DEFAULT_ENEMY } from '../utils/enemies';
 import { TimelineEvent, VisibleSkills, ContextMenuState, SkillType, SelectedFrame, ResourceConfig, MiniTimeline, computeSegmentsSpan, eventEndFrame } from '../consts/viewTypes';
 import type { DamageTableRow } from '../controller/calculation/damageTableBuilder';
 import { getModelEnemy } from '../controller/calculation/enemyRegistry';
-import { processCombatSimulation, getLastCritResults, getLastStatAccumulator } from '../controller/timeline/eventQueueController';
+import { processCombatSimulation, getLastStatAccumulator } from '../controller/timeline/eventQueueController';
 import { SlotTriggerWiring } from '../controller/timeline/eventQueueTypes';
 import { getComboTriggerClause } from '../controller/gameDataStore';
 import { buildColumns } from '../controller/timeline/columnBuilder';
@@ -495,15 +495,6 @@ export function useApp() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [validEvents, loadoutProperties, slotWeapons, slotWirings, slotOperatorMap, slotGearSets, bossMaxHp, enemy.id, loadouts, combatLoadout, operators, resourceConfigs, pipelineCritMode, overrides, enemyStats],
   );
-
-  // Write back crit results from RANDOM mode (one-time per new event)
-  useEffect(() => {
-    if (critMode !== CritMode.RANDOM) return;
-    const crits = getLastCritResults();
-    if (!crits || crits.size === 0) return;
-    setCombatState((prev) => ctrl.persistCritResults(prev, crits));
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [processedEvents]);
 
   const { resourceGraphs } = useResourceGraphs(
     operators, SLOT_IDS, processedEvents, combatLoadout, resourceConfigs,
@@ -1027,7 +1018,7 @@ export function useApp() {
       if (interactionModeRef.current === InteractionModeType.STRICT) {
         if (wouldOverlapNonOverlappable(prev, ev, ev.startFrame, processedEventsRef.current)) return prev;
         // Check SP sufficiency for battle skills
-        if (columnId === NounType.BATTLE_SKILL && !hasSufficientSP(ownerId, atFrame)) return prev;
+        if (columnId === NounType.BATTLE && !hasSufficientSP(ownerId, atFrame)) return prev;
         // Enhanced skills require an active ultimate
         if (ev.enhancementType === EnhancementType.ENHANCED) {
           // Use processed events (full segments) for the ultimate check;

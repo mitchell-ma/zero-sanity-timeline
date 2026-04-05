@@ -2,8 +2,8 @@
   "properties": {
     "name": "Brr-Brr-Bomb β",
     "description": "Throws a freezing bomb. The bomb explodes when it hits the enemy to deal Cryo DMG. If hitting an enemy with Cryo Infliction or Nature Infliction, then consume all Arts Infliction stacks, forcibly apply Solidification, and deal Cryo DMG to the target based on the number of stacks consumed.\nAfter the battle skill successfully applies Solidification, Yvonne gains additional Ultimate Energy based on the number of stacks consumed. This Ultimate Energy Gain effect can only trigger 1 time, even if the skill hits multiple enemies.",
-    "eventType": "COMBAT_SKILL",
-    "eventCategoryType": "BATTLE_SKILL",
+    "eventType": "SKILL",
+    "eventIdType": "BATTLE",
     "element": "CRYO",
     "id": "BRR_BRR_BOMB",
     "suppliedParameters": {
@@ -83,15 +83,19 @@
                         2.3,
                         2.5
                       ],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     },
                     "mainStat": {
                       "verb": "IS",
                       "object": "STAT",
                       "objectId": "ATTACK",
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     }
                   }
                 },
@@ -127,10 +131,15 @@
                         "right": {
                           "verb": "IS",
                           "object": "STACKS",
-                          "objectId": "INFLICTION",
-                          "objectQualifier": "ARTS",
-                          "ofDeterminer": "THIS",
-                          "of": "ENEMY"
+                          "of": {
+                            "object": "STATUS",
+                            "objectId": "INFLICTION",
+                            "of": {
+                              "object": "ENEMY",
+                              "determiner": "THIS"
+                            },
+                            "objectQualifier": "ARTS"
+                          }
                         }
                       }
                     }
@@ -152,16 +161,30 @@
                       "left": {
                         "verb": "VARY_BY",
                         "object": "POTENTIAL",
-                        "value": [0, 0, 0, 0, 10, 10],
-                        "ofDeterminer": "THIS",
-                        "of": "OPERATOR"
+                        "value": [
+                          0,
+                          0,
+                          0,
+                          0,
+                          10,
+                          10
+                        ],
+                        "of": {
+                          "object": "OPERATOR",
+                          "determiner": "THIS"
+                        }
                       },
                       "right": {
                         "verb": "VARY_BY",
                         "object": "ENEMY_HIT",
-                        "value": [1, 0],
-                        "ofDeterminer": "THIS",
-                        "of": "OPERATOR"
+                        "value": [
+                          1,
+                          0
+                        ],
+                        "of": {
+                          "object": "OPERATOR",
+                          "determiner": "THIS"
+                        }
                       }
                     }
                   }
@@ -216,8 +239,10 @@
                           1.38,
                           1.5
                         ],
-                        "ofDeterminer": "THIS",
-                        "of": "OPERATOR"
+                        "of": {
+                          "object": "OPERATOR",
+                          "determiner": "THIS"
+                        }
                       },
                       "right": {
                         "operation": "MULT",
@@ -238,16 +263,23 @@
                             1.84,
                             2
                           ],
-                          "ofDeterminer": "THIS",
-                          "of": "OPERATOR"
+                          "of": {
+                            "object": "OPERATOR",
+                            "determiner": "THIS"
+                          }
                         },
                         "right": {
                           "verb": "IS",
                           "object": "STACKS",
-                          "objectId": "INFLICTION",
-                          "objectQualifier": "CRYO",
-                          "ofDeterminer": "THIS",
-                          "of": "ENEMY"
+                          "of": {
+                            "object": "STATUS",
+                            "objectId": "INFLICTION",
+                            "of": {
+                              "object": "ENEMY",
+                              "determiner": "THIS"
+                            },
+                            "objectQualifier": "CRYO"
+                          }
                         }
                       }
                     },
@@ -255,8 +287,10 @@
                       "verb": "IS",
                       "object": "STAT",
                       "objectId": "ATTACK",
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     }
                   }
                 },
@@ -332,8 +366,10 @@
                           1.38,
                           1.5
                         ],
-                        "ofDeterminer": "THIS",
-                        "of": "OPERATOR"
+                        "of": {
+                          "object": "OPERATOR",
+                          "determiner": "THIS"
+                        }
                       },
                       "right": {
                         "operation": "MULT",
@@ -354,16 +390,23 @@
                             1.84,
                             2
                           ],
-                          "ofDeterminer": "THIS",
-                          "of": "OPERATOR"
+                          "of": {
+                            "object": "OPERATOR",
+                            "determiner": "THIS"
+                          }
                         },
                         "right": {
                           "verb": "IS",
                           "object": "STACKS",
-                          "objectId": "INFLICTION",
-                          "objectQualifier": "NATURE",
-                          "ofDeterminer": "THIS",
-                          "of": "ENEMY"
+                          "of": {
+                            "object": "STATUS",
+                            "objectId": "INFLICTION",
+                            "of": {
+                              "object": "ENEMY",
+                              "determiner": "THIS"
+                            },
+                            "objectQualifier": "NATURE"
+                          }
                         }
                       }
                     },
@@ -371,8 +414,10 @@
                       "verb": "IS",
                       "object": "STAT",
                       "objectId": "ATTACK",
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     }
                   }
                 },

@@ -4,7 +4,7 @@
     "name": "Delayed Work",
     "level": 3,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
+    "eventIdType": "POTENTIAL",
     "description": "Battle skill Onomatopoeia improved: Freezing sound wave range +50% and DMG Dealt +40% to the first enemy hit."
   },
   "metadata": {

@@ -83,7 +83,7 @@ describe('Gilberta Skills — integration through useApp', () => {
 
   it('A1: battle skill placed in BATTLE_SKILL column', () => {
     const { result } = setupGilberta();
-    const col = findColumn(result.current, SLOT_GILBERTA, NounType.BATTLE_SKILL);
+    const col = findColumn(result.current, SLOT_GILBERTA, NounType.BATTLE);
     expect(col).toBeDefined();
 
     const menuItems = buildContextMenu(result.current, col!, 5 * FPS);
@@ -98,7 +98,7 @@ describe('Gilberta Skills — integration through useApp', () => {
     });
 
     const battles = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_GILBERTA && ev.columnId === NounType.BATTLE_SKILL,
+      (ev) => ev.ownerId === SLOT_GILBERTA && ev.columnId === NounType.BATTLE,
     );
     expect(battles).toHaveLength(1);
     expect(battles[0].name).toBe(BATTLE_SKILL_ID);
@@ -110,7 +110,7 @@ describe('Gilberta Skills — integration through useApp', () => {
     // Combo requires activation conditions — switch to freeform
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
-    const col = findColumn(result.current, SLOT_GILBERTA, NounType.COMBO_SKILL);
+    const col = findColumn(result.current, SLOT_GILBERTA, NounType.COMBO);
     expect(col).toBeDefined();
 
     const menuItems = buildContextMenu(result.current, col!, 5 * FPS);
@@ -125,7 +125,7 @@ describe('Gilberta Skills — integration through useApp', () => {
     });
 
     const combos = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_GILBERTA && ev.columnId === NounType.COMBO_SKILL,
+      (ev) => ev.ownerId === SLOT_GILBERTA && ev.columnId === NounType.COMBO,
     );
     expect(combos).toHaveLength(1);
     expect(combos[0].name).toBe(COMBO_SKILL_ID);
@@ -167,7 +167,7 @@ describe('Gilberta Skills — integration through useApp', () => {
 
   it('B1: battle skill has 5 damage frames (4 pull ticks + explosion)', () => {
     const { result } = setupGilberta();
-    const col = findColumn(result.current, SLOT_GILBERTA, NounType.BATTLE_SKILL);
+    const col = findColumn(result.current, SLOT_GILBERTA, NounType.BATTLE);
     expect(col).toBeDefined();
 
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
@@ -178,7 +178,7 @@ describe('Gilberta Skills — integration through useApp', () => {
     });
 
     const battles = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_GILBERTA && ev.columnId === NounType.BATTLE_SKILL,
+      (ev) => ev.ownerId === SLOT_GILBERTA && ev.columnId === NounType.BATTLE,
     );
     expect(battles).toHaveLength(1);
 
@@ -190,7 +190,7 @@ describe('Gilberta Skills — integration through useApp', () => {
 
   it('B2: battle skill applies nature infliction', () => {
     const { result } = setupGilberta();
-    const col = findColumn(result.current, SLOT_GILBERTA, NounType.BATTLE_SKILL);
+    const col = findColumn(result.current, SLOT_GILBERTA, NounType.BATTLE);
     expect(col).toBeDefined();
 
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
@@ -220,7 +220,7 @@ describe('Gilberta Skills — integration through useApp', () => {
     // Lift requires existing Vulnerable on enemy — place one first
     addVulnerableInfliction(result.current, 2 * FPS);
 
-    const comboCol = findColumn(result.current, SLOT_GILBERTA, NounType.COMBO_SKILL);
+    const comboCol = findColumn(result.current, SLOT_GILBERTA, NounType.COMBO);
     expect(comboCol).toBeDefined();
 
     const payload = getMenuPayload(result.current, comboCol!, 5 * FPS);
@@ -232,7 +232,7 @@ describe('Gilberta Skills — integration through useApp', () => {
 
     // Verify combo was added
     const combos = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_GILBERTA && ev.columnId === NounType.COMBO_SKILL,
+      (ev) => ev.ownerId === SLOT_GILBERTA && ev.columnId === NounType.COMBO,
     );
     expect(combos).toHaveLength(1);
 
@@ -289,7 +289,7 @@ describe('Gilberta Skills — integration through useApp', () => {
 
   it('E1: battle skill visible in presentation', () => {
     const { result } = setupGilberta();
-    const col = findColumn(result.current, SLOT_GILBERTA, NounType.BATTLE_SKILL);
+    const col = findColumn(result.current, SLOT_GILBERTA, NounType.BATTLE);
     expect(col).toBeDefined();
 
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
@@ -306,7 +306,7 @@ describe('Gilberta Skills — integration through useApp', () => {
     const vm = viewModels.get(col!.key);
     expect(vm).toBeDefined();
     const bsEvents = vm!.events.filter(
-      (ev) => ev.ownerId === SLOT_GILBERTA && ev.columnId === NounType.BATTLE_SKILL,
+      (ev) => ev.ownerId === SLOT_GILBERTA && ev.columnId === NounType.BATTLE,
     );
     expect(bsEvents).toHaveLength(1);
   });
@@ -317,7 +317,7 @@ describe('Gilberta Skills — integration through useApp', () => {
     // Place combo in freeform
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
-    const comboCol = findColumn(result.current, SLOT_GILBERTA, NounType.COMBO_SKILL);
+    const comboCol = findColumn(result.current, SLOT_GILBERTA, NounType.COMBO);
     expect(comboCol).toBeDefined();
     const comboPayload = getMenuPayload(result.current, comboCol!, 5 * FPS);
     act(() => {
@@ -346,7 +346,7 @@ describe('Gilberta Skills — integration through useApp', () => {
     const comboVm = viewModels.get(comboCol!.key);
     expect(comboVm).toBeDefined();
     const comboEvents = comboVm!.events.filter(
-      (ev) => ev.ownerId === SLOT_GILBERTA && ev.columnId === NounType.COMBO_SKILL,
+      (ev) => ev.ownerId === SLOT_GILBERTA && ev.columnId === NounType.COMBO,
     );
     expect(comboEvents).toHaveLength(1);
 

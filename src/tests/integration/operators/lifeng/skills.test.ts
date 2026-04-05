@@ -66,7 +66,7 @@ function setupLifeng() {
 describe('A. Core Skill Placement', () => {
   it('A1: Battle skill placed in BATTLE_SKILL column', () => {
     const { result } = setupLifeng();
-    const col = findColumn(result.current, SLOT_LIFENG, NounType.BATTLE_SKILL);
+    const col = findColumn(result.current, SLOT_LIFENG, NounType.BATTLE);
     expect(col).toBeDefined();
 
     const menuItems = buildContextMenu(result.current, col!, 5 * FPS);
@@ -81,7 +81,7 @@ describe('A. Core Skill Placement', () => {
     });
 
     const battles = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_LIFENG && ev.columnId === NounType.BATTLE_SKILL,
+      ev => ev.ownerId === SLOT_LIFENG && ev.columnId === NounType.BATTLE,
     );
     expect(battles).toHaveLength(1);
     expect(battles[0].name).toBe(BS_ID);
@@ -93,7 +93,7 @@ describe('A. Core Skill Placement', () => {
     // Switch to freeform to bypass activation conditions
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
-    const col = findColumn(result.current, SLOT_LIFENG, NounType.COMBO_SKILL);
+    const col = findColumn(result.current, SLOT_LIFENG, NounType.COMBO);
     expect(col).toBeDefined();
 
     const menuItems = buildContextMenu(result.current, col!, 5 * FPS);
@@ -108,7 +108,7 @@ describe('A. Core Skill Placement', () => {
     });
 
     const combos = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_LIFENG && ev.columnId === NounType.COMBO_SKILL,
+      ev => ev.ownerId === SLOT_LIFENG && ev.columnId === NounType.COMBO,
     );
     expect(combos).toHaveLength(1);
     expect(combos[0].name).toBe(COMBO_ID);
@@ -155,7 +155,7 @@ describe('B. Battle Skill — Knock Down and Susceptibility', () => {
   it('B1: BS adds Vulnerable stack to enemy (Knock Down requires prior Vulnerable)', () => {
     const { result } = setupLifeng();
 
-    const col = findColumn(result.current, SLOT_LIFENG, NounType.BATTLE_SKILL);
+    const col = findColumn(result.current, SLOT_LIFENG, NounType.BATTLE);
     expect(col).toBeDefined();
 
     const payload = getMenuPayload(result.current, col!, 2 * FPS);
@@ -176,7 +176,7 @@ describe('B. Battle Skill — Knock Down and Susceptibility', () => {
   it('B2: Two BSs produce Knock Down (second BS has Vulnerable from first)', () => {
     const { result } = setupLifeng();
 
-    const col = findColumn(result.current, SLOT_LIFENG, NounType.BATTLE_SKILL);
+    const col = findColumn(result.current, SLOT_LIFENG, NounType.BATTLE);
     expect(col).toBeDefined();
 
     // First BS at 2s — adds Vulnerable but no Knock Down
@@ -214,7 +214,7 @@ describe('C. Combo — LINK Status', () => {
     // Freeform to bypass activation conditions
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
-    const col = findColumn(result.current, SLOT_LIFENG, NounType.COMBO_SKILL);
+    const col = findColumn(result.current, SLOT_LIFENG, NounType.COMBO);
     expect(col).toBeDefined();
 
     const payload = getMenuPayload(result.current, col!, 3 * FPS);
@@ -240,7 +240,7 @@ describe('C. Combo — LINK Status', () => {
 
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
-    const col = findColumn(result.current, SLOT_LIFENG, NounType.COMBO_SKILL);
+    const col = findColumn(result.current, SLOT_LIFENG, NounType.COMBO);
     expect(col).toBeDefined();
 
     const payload = getMenuPayload(result.current, col!, 3 * FPS);
@@ -251,7 +251,7 @@ describe('C. Combo — LINK Status', () => {
     });
 
     const combos = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_LIFENG && ev.columnId === NounType.COMBO_SKILL,
+      ev => ev.ownerId === SLOT_LIFENG && ev.columnId === NounType.COMBO,
     );
     expect(combos).toHaveLength(1);
 
@@ -291,7 +291,7 @@ describe('D. Ultimate — Vajra Impact with LINK Consume', () => {
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
     // Place combo skill at 2s to produce LINK
-    const comboCol = findColumn(result.current, SLOT_LIFENG, NounType.COMBO_SKILL);
+    const comboCol = findColumn(result.current, SLOT_LIFENG, NounType.COMBO);
     expect(comboCol).toBeDefined();
     const comboPayload = getMenuPayload(result.current, comboCol!, 2 * FPS);
     act(() => {
@@ -338,7 +338,7 @@ describe('E. View Layer', () => {
   it('E1: Battle skill visible in computeTimelinePresentation', () => {
     const { result } = setupLifeng();
 
-    const col = findColumn(result.current, SLOT_LIFENG, NounType.BATTLE_SKILL);
+    const col = findColumn(result.current, SLOT_LIFENG, NounType.BATTLE);
     expect(col).toBeDefined();
 
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
@@ -355,7 +355,7 @@ describe('E. View Layer', () => {
     const bsVm = viewModels.get(col!.key);
     expect(bsVm).toBeDefined();
     const bsEvents = bsVm!.events.filter(
-      ev => ev.ownerId === SLOT_LIFENG && ev.columnId === NounType.BATTLE_SKILL,
+      ev => ev.ownerId === SLOT_LIFENG && ev.columnId === NounType.BATTLE,
     );
     expect(bsEvents.length).toBeGreaterThanOrEqual(1);
   });
@@ -368,7 +368,7 @@ describe('E. View Layer', () => {
     act(() => { setUltimateEnergyToMax(result.current, SLOT_LIFENG, 0); });
 
     // Place battle skill
-    const bsCol = findColumn(result.current, SLOT_LIFENG, NounType.BATTLE_SKILL);
+    const bsCol = findColumn(result.current, SLOT_LIFENG, NounType.BATTLE);
     expect(bsCol).toBeDefined();
     const bsPayload = getMenuPayload(result.current, bsCol!, 2 * FPS);
     act(() => {
@@ -378,7 +378,7 @@ describe('E. View Layer', () => {
     });
 
     // Place combo skill
-    const comboCol = findColumn(result.current, SLOT_LIFENG, NounType.COMBO_SKILL);
+    const comboCol = findColumn(result.current, SLOT_LIFENG, NounType.COMBO);
     expect(comboCol).toBeDefined();
     const comboPayload = getMenuPayload(result.current, comboCol!, 10 * FPS);
     act(() => {

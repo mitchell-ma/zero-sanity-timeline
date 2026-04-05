@@ -23,8 +23,10 @@
                 0.198,
                 0.234
               ],
-              "ofDeterminer": "THIS",
-              "of": "OPERATOR"
+              "of": {
+                "object": "OPERATOR",
+                "determiner": "THIS"
+              }
             }
           },
           "objectId": "ATTACK_BONUS"

@@ -56,7 +56,7 @@ describe('Chen Qianyu — combo skill placement and Lift', () => {
     const { result } = setupChenFreeform();
 
     // Context menu: combo column exists and addEvent is enabled in freeform
-    const comboCol = findColumn(result.current, SLOT_CHEN, NounType.COMBO_SKILL);
+    const comboCol = findColumn(result.current, SLOT_CHEN, NounType.COMBO);
     expect(comboCol).toBeDefined();
 
     const comboMenu = buildContextMenu(result.current, comboCol!, 2 * FPS);
@@ -70,7 +70,7 @@ describe('Chen Qianyu — combo skill placement and Lift', () => {
     const { result } = setupChenFreeform();
 
     // Place combo skill at t=2s
-    const comboCol = findColumn(result.current, SLOT_CHEN, NounType.COMBO_SKILL);
+    const comboCol = findColumn(result.current, SLOT_CHEN, NounType.COMBO);
     expect(comboCol).toBeDefined();
 
     const payload = getMenuPayload(result.current, comboCol!, 2 * FPS);
@@ -82,7 +82,7 @@ describe('Chen Qianyu — combo skill placement and Lift', () => {
 
     // Controller layer: combo event placed
     const comboEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_CHEN && ev.columnId === NounType.COMBO_SKILL,
+      (ev) => ev.ownerId === SLOT_CHEN && ev.columnId === NounType.COMBO,
     );
     expect(comboEvents).toHaveLength(1);
 
@@ -100,7 +100,7 @@ describe('Chen Qianyu — combo skill placement and Lift', () => {
     const comboVM = viewModels.get(comboCol!.key);
     expect(comboVM).toBeDefined();
     expect(comboVM!.events.filter(
-      (ev) => ev.ownerId === SLOT_CHEN && ev.columnId === NounType.COMBO_SKILL,
+      (ev) => ev.ownerId === SLOT_CHEN && ev.columnId === NounType.COMBO,
     )).toHaveLength(1);
 
     // View layer: Vulnerable appears in enemy status presentation
@@ -123,7 +123,7 @@ describe('Chen Qianyu — combo skill placement and Lift', () => {
     const { result } = setupChenFreeform();
 
     // Place BS at t=2s (applies 1 Vulnerable)
-    const battleCol = findColumn(result.current, SLOT_CHEN, NounType.BATTLE_SKILL);
+    const battleCol = findColumn(result.current, SLOT_CHEN, NounType.BATTLE);
     expect(battleCol).toBeDefined();
     const bsPayload = getMenuPayload(result.current, battleCol!, 2 * FPS);
     act(() => {
@@ -133,7 +133,7 @@ describe('Chen Qianyu — combo skill placement and Lift', () => {
     });
 
     // Place combo at t=5s (applies another Vulnerable + Lift)
-    const comboCol = findColumn(result.current, SLOT_CHEN, NounType.COMBO_SKILL);
+    const comboCol = findColumn(result.current, SLOT_CHEN, NounType.COMBO);
     expect(comboCol).toBeDefined();
     const comboPayload = getMenuPayload(result.current, comboCol!, 5 * FPS);
     act(() => {
@@ -161,7 +161,7 @@ describe('Chen Qianyu — combo cooldown', () => {
     const { result } = setupChenFreeform();
 
     // Place first combo at t=2s
-    const comboCol = findColumn(result.current, SLOT_CHEN, NounType.COMBO_SKILL);
+    const comboCol = findColumn(result.current, SLOT_CHEN, NounType.COMBO);
     expect(comboCol).toBeDefined();
     const payload = getMenuPayload(result.current, comboCol!, 2 * FPS);
     act(() => {
@@ -172,7 +172,7 @@ describe('Chen Qianyu — combo cooldown', () => {
 
     // Verify the combo event has a cooldown segment
     const comboEvent = result.current.allProcessedEvents.find(
-      (ev) => ev.ownerId === SLOT_CHEN && ev.columnId === NounType.COMBO_SKILL,
+      (ev) => ev.ownerId === SLOT_CHEN && ev.columnId === NounType.COMBO,
     );
     expect(comboEvent).toBeDefined();
     const cdSeg = comboEvent!.segments.find(
@@ -195,7 +195,7 @@ describe('Chen Qianyu — combo cooldown', () => {
     const { result } = setupChenFreeform();
 
     // Place first combo at t=2s
-    const comboCol = findColumn(result.current, SLOT_CHEN, NounType.COMBO_SKILL);
+    const comboCol = findColumn(result.current, SLOT_CHEN, NounType.COMBO);
     expect(comboCol).toBeDefined();
     const payload = getMenuPayload(result.current, comboCol!, 2 * FPS);
     act(() => {

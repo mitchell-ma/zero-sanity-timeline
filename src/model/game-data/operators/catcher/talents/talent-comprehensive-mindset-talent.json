@@ -13,8 +13,10 @@
               "verb": "IS",
               "object": "STAT",
               "objectId": "ATTACK",
-              "ofDeterminer": "THIS",
-              "of": "OPERATOR"
+              "of": {
+                "object": "OPERATOR",
+                "determiner": "THIS"
+              }
             }
           }
         }
@@ -33,15 +35,19 @@
                 0.3,
                 0.45
               ],
-              "ofDeterminer": "THIS",
-              "of": "OPERATOR"
+              "of": {
+                "object": "OPERATOR",
+                "determiner": "THIS"
+              }
             },
             "mainStat": {
               "verb": "IS",
               "object": "STAT",
               "objectId": "ATTACK",
-              "ofDeterminer": "THIS",
-              "of": "OPERATOR"
+              "of": {
+                "object": "OPERATOR",
+                "determiner": "THIS"
+              }
             }
           }
         }
@@ -58,7 +64,7 @@
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
-    "eventCategoryType": "TALENT",
+    "eventIdType": "TALENT",
     "description": "Ultimate Textbook Assault improved: Final hit creates {talent_1+1:0} shockwave(s), each dealing 30% ATK of Physical DMG."
   },
   "metadata": {

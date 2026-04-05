@@ -125,7 +125,7 @@ function setupEndministratorWithPotential(potential: number) {
 describe('A. Core Skill Placement', () => {
   it('A1: battle skill added without crash', () => {
     const { result } = setupEndministrator();
-    const col = findColumn(result.current, SLOT_ENDMINISTRATOR, NounType.BATTLE_SKILL);
+    const col = findColumn(result.current, SLOT_ENDMINISTRATOR, NounType.BATTLE);
     expect(col).toBeDefined();
 
     const menuItems = buildContextMenu(result.current, col!, 5 * FPS);
@@ -140,7 +140,7 @@ describe('A. Core Skill Placement', () => {
     });
 
     const battles = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_ENDMINISTRATOR && ev.columnId === NounType.BATTLE_SKILL,
+      ev => ev.ownerId === SLOT_ENDMINISTRATOR && ev.columnId === NounType.BATTLE,
     );
     expect(battles).toHaveLength(1);
     expect(battles[0].name).toBe(BATTLE_SKILL_ID);
@@ -149,7 +149,7 @@ describe('A. Core Skill Placement', () => {
   it('A2: combo skill added in freeform without crash', () => {
     const { result } = setupEndministratorFreeform();
 
-    const col = findColumn(result.current, SLOT_ENDMINISTRATOR, NounType.COMBO_SKILL);
+    const col = findColumn(result.current, SLOT_ENDMINISTRATOR, NounType.COMBO);
     expect(col).toBeDefined();
 
     const menuItems = buildContextMenu(result.current, col!, 5 * FPS);
@@ -164,7 +164,7 @@ describe('A. Core Skill Placement', () => {
     });
 
     const combos = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_ENDMINISTRATOR && ev.columnId === NounType.COMBO_SKILL,
+      ev => ev.ownerId === SLOT_ENDMINISTRATOR && ev.columnId === NounType.COMBO,
     );
     expect(combos).toHaveLength(1);
     expect(combos[0].name).toBe(COMBO_ID);
@@ -207,7 +207,7 @@ describe('A2. Combo Activation (ANY_OTHER)', () => {
     const { result } = setupEndministratorFreeform();
 
     // Place a combo for Akekuri (slot-1) in freeform to trigger Endministrator's window
-    const otherComboCol = findColumn(result.current, SLOT_OTHER, NounType.COMBO_SKILL);
+    const otherComboCol = findColumn(result.current, SLOT_OTHER, NounType.COMBO);
     expect(otherComboCol).toBeDefined();
     const payload = getMenuPayload(result.current, otherComboCol!, 3 * FPS);
     act(() => {
@@ -229,7 +229,7 @@ describe('A2. Combo Activation (ANY_OTHER)', () => {
     const { result } = setupEndministratorFreeform();
 
     // Place Endministrator's combo in freeform
-    const comboCol = findColumn(result.current, SLOT_ENDMINISTRATOR, NounType.COMBO_SKILL);
+    const comboCol = findColumn(result.current, SLOT_ENDMINISTRATOR, NounType.COMBO);
     const payload = getMenuPayload(result.current, comboCol!, 3 * FPS);
     act(() => {
       result.current.handleAddEvent(
@@ -255,7 +255,7 @@ describe('B. Originium Crystal Cycle', () => {
   it('B1: combo skill applies Originium Crystal status on enemy', () => {
     const { result } = setupEndministratorFreeform();
 
-    const comboCol = findColumn(result.current, SLOT_ENDMINISTRATOR, NounType.COMBO_SKILL);
+    const comboCol = findColumn(result.current, SLOT_ENDMINISTRATOR, NounType.COMBO);
     expect(comboCol).toBeDefined();
 
     const payload = getMenuPayload(result.current, comboCol!, 2 * FPS);
@@ -295,7 +295,7 @@ describe('B. Originium Crystal Cycle', () => {
     const { result } = setupEndministratorFreeform();
 
     // Place combo first to create Originium Crystal
-    const comboCol = findColumn(result.current, SLOT_ENDMINISTRATOR, NounType.COMBO_SKILL);
+    const comboCol = findColumn(result.current, SLOT_ENDMINISTRATOR, NounType.COMBO);
     const comboPayload = getMenuPayload(result.current, comboCol!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
@@ -313,7 +313,7 @@ describe('B. Originium Crystal Cycle', () => {
     expect(crystalsBefore.length).toBeGreaterThanOrEqual(1);
 
     // Place battle skill after combo (BS frame checks for crystal and consumes)
-    const battleCol = findColumn(result.current, SLOT_ENDMINISTRATOR, NounType.BATTLE_SKILL);
+    const battleCol = findColumn(result.current, SLOT_ENDMINISTRATOR, NounType.BATTLE);
     const battlePayload = getMenuPayload(result.current, battleCol!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
@@ -346,7 +346,7 @@ describe('C. Ultimate', () => {
     act(() => { setUltimateEnergyToMax(result.current, SLOT_ENDMINISTRATOR, 0); });
 
     // Place combo to create crystal
-    const comboCol = findColumn(result.current, SLOT_ENDMINISTRATOR, NounType.COMBO_SKILL);
+    const comboCol = findColumn(result.current, SLOT_ENDMINISTRATOR, NounType.COMBO);
     const comboPayload = getMenuPayload(result.current, comboCol!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
@@ -393,7 +393,7 @@ describe('D. Talent-Derived Statuses', () => {
     const { result } = setupEndministratorWithPotential(1);
 
     // Place combo to create crystal
-    const comboCol = findColumn(result.current, SLOT_ENDMINISTRATOR, NounType.COMBO_SKILL);
+    const comboCol = findColumn(result.current, SLOT_ENDMINISTRATOR, NounType.COMBO);
     const comboPayload = getMenuPayload(result.current, comboCol!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
@@ -403,7 +403,7 @@ describe('D. Talent-Derived Statuses', () => {
     });
 
     // Place BS to consume crystal (triggers Essence Disintegration talent)
-    const battleCol = findColumn(result.current, SLOT_ENDMINISTRATOR, NounType.BATTLE_SKILL);
+    const battleCol = findColumn(result.current, SLOT_ENDMINISTRATOR, NounType.BATTLE);
     const battlePayload = getMenuPayload(result.current, battleCol!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
@@ -444,7 +444,7 @@ describe('D. Talent-Derived Statuses', () => {
     const { result } = setupEndministratorWithPotential(2);
 
     // Place combo to create crystal
-    const comboCol = findColumn(result.current, SLOT_ENDMINISTRATOR, NounType.COMBO_SKILL);
+    const comboCol = findColumn(result.current, SLOT_ENDMINISTRATOR, NounType.COMBO);
     const comboPayload = getMenuPayload(result.current, comboCol!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
@@ -454,7 +454,7 @@ describe('D. Talent-Derived Statuses', () => {
     });
 
     // Place BS to consume crystal
-    const battleCol = findColumn(result.current, SLOT_ENDMINISTRATOR, NounType.BATTLE_SKILL);
+    const battleCol = findColumn(result.current, SLOT_ENDMINISTRATOR, NounType.BATTLE);
     const battlePayload = getMenuPayload(result.current, battleCol!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
@@ -493,7 +493,7 @@ describe('D. Talent-Derived Statuses', () => {
     const { result } = setupEndministratorWithPotential(1);
 
     // Place combo + BS to consume crystal
-    const comboCol = findColumn(result.current, SLOT_ENDMINISTRATOR, NounType.COMBO_SKILL);
+    const comboCol = findColumn(result.current, SLOT_ENDMINISTRATOR, NounType.COMBO);
     const comboPayload = getMenuPayload(result.current, comboCol!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
@@ -501,7 +501,7 @@ describe('D. Talent-Derived Statuses', () => {
         comboPayload.atFrame, comboPayload.defaultSkill,
       );
     });
-    const battleCol = findColumn(result.current, SLOT_ENDMINISTRATOR, NounType.BATTLE_SKILL);
+    const battleCol = findColumn(result.current, SLOT_ENDMINISTRATOR, NounType.BATTLE);
     const battlePayload = getMenuPayload(result.current, battleCol!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
@@ -534,7 +534,7 @@ describe('D2. Realspace Stasis', () => {
   it('D2a: combo-applied crystals carry Realspace Stasis status ID', () => {
     const { result } = setupEndministratorFreeform();
 
-    const comboCol = findColumn(result.current, SLOT_ENDMINISTRATOR, NounType.COMBO_SKILL);
+    const comboCol = findColumn(result.current, SLOT_ENDMINISTRATOR, NounType.COMBO);
     const payload = getMenuPayload(result.current, comboCol!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
@@ -599,7 +599,7 @@ describe('D2. Realspace Stasis', () => {
     const { result } = setupEndministratorWithPotential(1);
 
     // Place combo to apply crystals
-    const comboCol = findColumn(result.current, SLOT_ENDMINISTRATOR, NounType.COMBO_SKILL);
+    const comboCol = findColumn(result.current, SLOT_ENDMINISTRATOR, NounType.COMBO);
     const comboPayload = getMenuPayload(result.current, comboCol!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
@@ -609,7 +609,7 @@ describe('D2. Realspace Stasis', () => {
     });
 
     // Place BS — CRUSH triggers REALSPACE_STASIS onTriggerClause → SHATTER
-    const battleCol = findColumn(result.current, SLOT_ENDMINISTRATOR, NounType.BATTLE_SKILL);
+    const battleCol = findColumn(result.current, SLOT_ENDMINISTRATOR, NounType.BATTLE);
     const battlePayload = getMenuPayload(result.current, battleCol!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
@@ -636,7 +636,7 @@ describe('D2. Realspace Stasis', () => {
     act(() => { setUltimateEnergyToMax(result.current, SLOT_ENDMINISTRATOR, 0); });
 
     // Place combo to apply crystals
-    const comboCol = findColumn(result.current, SLOT_ENDMINISTRATOR, NounType.COMBO_SKILL);
+    const comboCol = findColumn(result.current, SLOT_ENDMINISTRATOR, NounType.COMBO);
     const comboPayload = getMenuPayload(result.current, comboCol!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
@@ -675,7 +675,7 @@ describe('E. View Layer', () => {
   it('E1: battle skill appears in presentation view model', () => {
     const { result } = setupEndministrator();
 
-    const battleCol = findColumn(result.current, SLOT_ENDMINISTRATOR, NounType.BATTLE_SKILL);
+    const battleCol = findColumn(result.current, SLOT_ENDMINISTRATOR, NounType.BATTLE);
     expect(battleCol).toBeDefined();
 
     const payload = getMenuPayload(result.current, battleCol!, 5 * FPS);
@@ -699,7 +699,7 @@ describe('E. View Layer', () => {
   it('E2: combo skill with cooldown appears in presentation view model', () => {
     const { result } = setupEndministratorFreeform();
 
-    const comboCol = findColumn(result.current, SLOT_ENDMINISTRATOR, NounType.COMBO_SKILL);
+    const comboCol = findColumn(result.current, SLOT_ENDMINISTRATOR, NounType.COMBO);
     expect(comboCol).toBeDefined();
 
     const payload = getMenuPayload(result.current, comboCol!, 2 * FPS);
@@ -711,7 +711,7 @@ describe('E. View Layer', () => {
 
     // Controller: combo has cooldown segment
     const combos = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_ENDMINISTRATOR && ev.columnId === NounType.COMBO_SKILL,
+      ev => ev.ownerId === SLOT_ENDMINISTRATOR && ev.columnId === NounType.COMBO,
     );
     expect(combos).toHaveLength(1);
     const cdSeg = combos[0].segments.find(

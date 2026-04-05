@@ -190,7 +190,7 @@ describe('BS + ULT timestop — segment gap must not appear on drag', () => {
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
     act(() => { setUltimateEnergyToMax(result.current, SLOT_ROSSI, 0); });
 
-    const battleCol = findColumn(result.current, SLOT_ROSSI, NounType.BATTLE_SKILL)!;
+    const battleCol = findColumn(result.current, SLOT_ROSSI, NounType.BATTLE)!;
     const ultCol = findColumn(result.current, SLOT_ROSSI, NounType.ULTIMATE)!;
 
     // Place ULT

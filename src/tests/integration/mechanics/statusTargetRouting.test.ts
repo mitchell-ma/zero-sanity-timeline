@@ -140,7 +140,7 @@ describe('Status target routing — effect to OPERATOR, config default OPERATOR'
     });
 
     // 1. Context menu: Battle Skill column available
-    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE_SKILL);
+    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE);
     expect(battleCol).toBeDefined();
 
     const battleMenu = buildContextMenu(result.current, battleCol!, 1 * FPS);
@@ -204,7 +204,7 @@ describe('Status target routing — no effect target, uses config default', () =
     });
 
     // 1. Context menu: Battle Skill column available
-    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE_SKILL);
+    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE);
     expect(battleCol).toBeDefined();
 
     const battlePayload = getMenuPayload(result.current, battleCol!, 2 * FPS);
@@ -242,7 +242,7 @@ describe('Status target routing — cross-operator consistency', () => {
 
     // 1. Context menu: both columns available
     const ultCol = findColumn(result.current, SLOT_AKEKURI, NounType.ULTIMATE);
-    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE_SKILL);
+    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE);
     expect(ultCol).toBeDefined();
     expect(battleCol).toBeDefined();
 

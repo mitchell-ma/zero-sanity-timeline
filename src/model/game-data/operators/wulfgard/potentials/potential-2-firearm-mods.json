@@ -4,7 +4,7 @@
     "name": "Firearm Mods",
     "level": 2,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
+    "eventIdType": "POTENTIAL",
     "description": "Talent Code of Restraint improved: Returns 10 additional SP."
   },
   "metadata": {

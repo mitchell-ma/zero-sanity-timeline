@@ -11,7 +11,7 @@
       "unit": "SECOND"
     },
     "eventType": "STATUS",
-    "eventCategoryType": "SKILL_STATUS",
+    "eventIdType": "SKILL_STATUS",
     "description": "All 4 Shieldguards initiate a Decisive Assault, dealing massive Physical DMG and recovering plenty of SP."
   },
   "segments": [
@@ -82,15 +82,19 @@
                         4.15,
                         4.5
                       ],
-                      "ofDeterminer": "SOURCE",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "SOURCE"
+                      }
                     },
                     "mainStat": {
                       "verb": "IS",
                       "object": "STAT",
                       "objectId": "ATTACK",
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     }
                   }
                 },
@@ -101,9 +105,24 @@
                     "value": {
                       "verb": "VARY_BY",
                       "object": "SKILL_LEVEL",
-                      "value": [30, 30, 30, 30, 30, 30, 30, 30, 30, 40, 40, 40],
-                      "ofDeterminer": "SOURCE",
-                      "of": "OPERATOR"
+                      "value": [
+                        30,
+                        30,
+                        30,
+                        30,
+                        30,
+                        30,
+                        30,
+                        30,
+                        30,
+                        40,
+                        40,
+                        40
+                      ],
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "SOURCE"
+                      }
                     }
                   }
                 },
@@ -117,9 +136,24 @@
                     "stacks": {
                       "verb": "VARY_BY",
                       "object": "SKILL_LEVEL",
-                      "value": [30, 30, 30, 30, 30, 30, 30, 30, 30, 40, 40, 40],
-                      "ofDeterminer": "SOURCE",
-                      "of": "OPERATOR"
+                      "value": [
+                        30,
+                        30,
+                        30,
+                        30,
+                        30,
+                        30,
+                        30,
+                        30,
+                        30,
+                        40,
+                        40,
+                        40
+                      ],
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "SOURCE"
+                      }
                     }
                   }
                 }
@@ -135,6 +169,6 @@
     "dataSources": [
       "ENDFIELD_WIKI"
     ],
-    "dataStatus": "RECONCILED"
+    "dataStatus": "VERIFIED"
   }
 }

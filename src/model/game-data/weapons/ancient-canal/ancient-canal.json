@@ -124,8 +124,10 @@
                 407,
                 411
               ],
-              "ofDeterminer": "THIS",
-              "of": "OPERATOR"
+              "of": {
+                "object": "OPERATOR",
+                "determiner": "THIS"
+              }
             }
           }
         }

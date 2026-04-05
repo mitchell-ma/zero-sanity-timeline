@@ -123,7 +123,7 @@ describe('Akekuri Ultimate → Link Team Status', () => {
 
     // 1. Context menu: columns available
     const ultCol = findColumn(result.current, SLOT_AKEKURI, NounType.ULTIMATE);
-    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE_SKILL);
+    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE);
     expect(ultCol).toBeDefined();
     expect(battleCol).toBeDefined();
 
@@ -146,7 +146,7 @@ describe('Akekuri Ultimate → Link Team Status', () => {
     // 2. Controller: Battle skill consumed 1 Link stack
     const controller = getLastController();
     const battleEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === NounType.BATTLE_SKILL,
+      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === NounType.BATTLE,
     );
     expect(battleEvents).toHaveLength(1);
     expect(controller.getLinkStacks(battleEvents[0].uid)).toBe(1);
@@ -160,7 +160,7 @@ describe('Akekuri Ultimate → Link Team Status', () => {
     });
 
     const ultCol = findColumn(result.current, SLOT_AKEKURI, NounType.ULTIMATE);
-    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE_SKILL);
+    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE);
     expect(ultCol).toBeDefined();
     expect(battleCol).toBeDefined();
 
@@ -183,7 +183,7 @@ describe('Akekuri Ultimate → Link Team Status', () => {
     // 2. Controller: no Link consumed
     const controller = getLastController();
     const battleEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === NounType.BATTLE_SKILL,
+      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === NounType.BATTLE,
     );
     expect(battleEvents).toHaveLength(1);
     expect(controller.getLinkStacks(battleEvents[0].uid)).toBe(0);
@@ -231,7 +231,7 @@ describe('Freeform LINK stacking', () => {
       result.current.setInteractionMode(InteractionModeType.FREEFORM);
     });
 
-    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE_SKILL);
+    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE);
     expect(battleCol).toBeDefined();
 
     // 1. Context menu: add two LINK events via team-status column
@@ -260,7 +260,7 @@ describe('Freeform LINK stacking', () => {
     // 2. Controller: 2 Link stacks consumed
     const controller = getLastController();
     const battleEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === NounType.BATTLE_SKILL,
+      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === NounType.BATTLE,
     );
     expect(battleEvents).toHaveLength(1);
     expect(controller.getLinkStacks(battleEvents[0].uid)).toBe(2);

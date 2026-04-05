@@ -4,7 +4,7 @@
     "name": "Rock Blossom",
     "level": 4,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
+    "eventIdType": "POTENTIAL",
     "description": "Ultimate Wooly Party improved: Ultimate Energy cost -15%."
   },
   "metadata": {

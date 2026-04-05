@@ -2,10 +2,10 @@
   "properties": {
     "name": "IMA WAVERIDAAH!",
     "description": "Tangtang jumps out from the water and fires a point-blank shot that deals Cryo DMG to the enemy and creates a Waterspout.\nCasting the battle skill also consumes all nearby Whirlpools to create additional Waterspouts and return some SP based on the number of Waterspouts created.\nWaterspout: Applies 1 stack of Cryo Infliction on enemies within range and deals Cryo DMG over time. If the battle skill creates multiple Waterspouts, they also apply Arts Susceptibility to enemies (but not another stack of Cryo Infliction).\nDMG dealt by the Waterspout is treated as Battle Skill DMG.",
-    "eventType": "COMBAT_SKILL",
-    "eventCategoryType": "BATTLE_SKILL",
+    "eventType": "SKILL",
+    "eventIdType": "BATTLE",
     "element": "CRYO",
-    "id": "BATTLE_SKILL"
+    "id": "BATTLE"
   },
   "clause": [
     {
@@ -86,15 +86,19 @@
                         1.66,
                         1.8
                       ],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     },
                     "mainStat": {
                       "verb": "IS",
                       "object": "STAT",
                       "objectId": "ATTACK",
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     }
                   }
                 },
@@ -179,8 +183,10 @@
                           0.332,
                           0.36
                         ],
-                        "ofDeterminer": "THIS",
-                        "of": "OPERATOR"
+                        "of": {
+                          "object": "OPERATOR",
+                          "determiner": "THIS"
+                        }
                       },
                       "right": {
                         "verb": "VARY_BY",
@@ -193,16 +199,20 @@
                           1.1,
                           1.1
                         ],
-                        "ofDeterminer": "THIS",
-                        "of": "OPERATOR"
+                        "of": {
+                          "object": "OPERATOR",
+                          "determiner": "THIS"
+                        }
                       }
                     },
                     "mainStat": {
                       "verb": "IS",
                       "object": "STAT",
                       "objectId": "ATTACK",
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     }
                   }
                 }

@@ -149,7 +149,7 @@ describe('Enemy Action — Reactive Triggers', () => {
     act(() => { result.current.handleSwapOperator(SLOT_0, EMBER_ID); });
 
     // Place a battle skill (operator dealing damage TO enemy — should NOT trigger)
-    const bsCol = findColumn(result.current, SLOT_0, NounType.BATTLE_SKILL);
+    const bsCol = findColumn(result.current, SLOT_0, NounType.BATTLE);
     const bsPayload = getMenuPayload(result.current, bsCol!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(

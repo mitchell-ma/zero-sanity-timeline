@@ -123,6 +123,10 @@ export interface EventFrameMarker {
   isCrit?: boolean;
   /** Expected crit rate E(T) at this frame (EXPECTED mode only). */
   expectedCritRate?: number;
+  /** CHANCE probability gate on this frame (0.0–1.0). Omitted = no CHANCE gate (expectation 1). */
+  chance?: number;
+  /** Whether this frame's CHANCE gate fired (runtime state for MANUAL mode). */
+  isChance?: boolean;
   /** Template SP recovery for this frame when it is the final strike (from model data). */
   templateFinalStrikeSP?: number;
   /** Template stagger for this frame when it is the final strike (from model data). */
@@ -174,7 +178,7 @@ export interface EventSegmentData {
   /** Damage frame markers within this segment. */
   frames?: EventFrameMarker[];
   /** Clause effects active during this segment (from JSON clause data). */
-  clause?: { conditions: Record<string, unknown>[]; effects: { verb: string; objectId?: string; objectQualifier?: string; object: string; nounQualifier?: string; toDeterminer?: string; to?: string; ofDeterminer?: string; ofObject?: string; with?: { segments?: number[] } }[] }[];
+  clause?: { conditions: Record<string, unknown>[]; effects: { verb: string; objectId?: string; objectQualifier?: string; object: string; toDeterminer?: string; to?: string; of?: Record<string, unknown>; with?: { segments?: number[] } }[] }[];
   /** Absolute start frame on the timeline (set by processCombatSimulation, not raw JSON). */
   absoluteStartFrame?: number;
   /** Catch-all for domain-specific fields not part of the core segment model. */
@@ -184,7 +188,7 @@ export interface EventSegmentData {
 export interface TimelineEvent {
   /** Unique instance identifier (e.g. `ev-1-abc4`). Not the game-data config ID. */
   uid: string;
-  /** Game-data config ID (e.g. `CombatSkillType.DASH`, `"BURST_OF_PASSION"`). Used for all identity comparisons. */
+  /** Game-data config ID (e.g. `NounType.DASH`, `"BURST_OF_PASSION"`). Used for all identity comparisons. */
   id: string;
   /** Display name. Not used for logic — use `id` for comparisons. */
   name: string;
@@ -296,6 +300,8 @@ export interface ContextMenuItem {
   keepOpen?: boolean;
   /** Label shown above inline buttons (e.g. parameter name). */
   inlineLabel?: string;
+  /** When true, inline buttons render as conjoined segment tabs (skill-card style). */
+  segmentTabs?: boolean;
   /** Inline sub-buttons rendered as a horizontal row (e.g. individual BATK segments). */
   inlineButtons?: {
     label: string;

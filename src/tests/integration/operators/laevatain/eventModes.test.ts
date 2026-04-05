@@ -153,7 +153,7 @@ describe('Freeform events — engine interactions', () => {
     expect(getUnconsumedMf(result.current)).toHaveLength(3);
 
     // ── Context menu layer: verify battle skill menu items exist and are enabled ──
-    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE_SKILL);
+    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE);
     expect(battleCol).toBeDefined();
     const battleMenu = buildContextMenu(result.current, battleCol!, 10 * FPS);
     expect(battleMenu).not.toBeNull();
@@ -214,7 +214,7 @@ describe('Freeform events — engine interactions', () => {
 
     // Place 1 freeform MF via context menu and 1 battle skill (engine-derived MF) via context menu
     placeMfStacks(result.current, 1, 2 * FPS);
-    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE_SKILL);
+    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE);
     expect(battleCol).toBeDefined();
     const bsPayload = getMenuPayload(result.current, battleCol!, 10 * FPS);
     act(() => {
@@ -242,7 +242,7 @@ describe('Strict events — engine-driven chains', () => {
     const { result } = renderHook(() => useApp());
     act(() => { result.current.setInteractionMode(InteractionModeType.STRICT); });
 
-    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE_SKILL);
+    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE);
     expect(battleCol).toBeDefined();
 
     // Build up 4 MF stacks via 4 battle skills via context menu
@@ -278,7 +278,7 @@ describe('Strict events — engine-driven chains', () => {
     act(() => { result.current.setInteractionMode(InteractionModeType.STRICT); });
 
     // Enhanced BS activation clause requires exactly 4 MF stacks — generate via 4 battle skills
-    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE_SKILL);
+    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE);
     expect(battleCol).toBeDefined();
     for (let i = 0; i < 4; i++) {
       const atFrame = (2 + i * 10) * FPS;
@@ -326,7 +326,7 @@ describe('Strict events — engine-driven chains', () => {
 
     // Enhanced BS is accepted and has damage frames
     const enhancedBattles = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === NounType.BATTLE_SKILL
+      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === NounType.BATTLE
         && ev.enhancementType === EnhancementType.ENHANCED,
     );
     expect(enhancedBattles).toHaveLength(1);
@@ -337,7 +337,7 @@ describe('Strict events — engine-driven chains', () => {
     const { result } = renderHook(() => useApp());
     act(() => { result.current.setInteractionMode(InteractionModeType.STRICT); });
 
-    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE_SKILL);
+    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE);
     expect(battleCol).toBeDefined();
     const enhancedVariant = battleCol!.eventVariants?.find(
       (v) => v.enhancementType === EnhancementType.ENHANCED,
@@ -392,7 +392,7 @@ describe('Strict events — engine-driven chains', () => {
     });
 
     const enhancedBattles = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === NounType.BATTLE_SKILL
+      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === NounType.BATTLE
         && ev.enhancementType === EnhancementType.ENHANCED,
     );
     expect(enhancedBattles).toHaveLength(1);
@@ -402,7 +402,7 @@ describe('Strict events — engine-driven chains', () => {
     const { result } = renderHook(() => useApp());
     act(() => { result.current.setInteractionMode(InteractionModeType.STRICT); });
 
-    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE_SKILL);
+    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE);
     expect(battleCol).toBeDefined();
 
     // Add battle skill via context menu, then try to overlap — rejected
@@ -421,7 +421,7 @@ describe('Strict events — engine-driven chains', () => {
 
     // Only 1 battle skill → only 1 MF
     const battles = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === NounType.BATTLE_SKILL,
+      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === NounType.BATTLE,
     );
     expect(battles).toHaveLength(1);
     expect(getMfEvents(result.current)).toHaveLength(1);
@@ -443,7 +443,7 @@ describe('Mixed freeform + strict — cross-mode interactions', () => {
 
     // Switch to strict — empowered BS consumes the freeform MF via context menu
     act(() => { result.current.setInteractionMode(InteractionModeType.STRICT); });
-    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE_SKILL);
+    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE);
     expect(battleCol).toBeDefined();
     const empoweredVariant = battleCol!.eventVariants?.find(
       (v) => v.enhancementType === EnhancementType.EMPOWERED,
@@ -466,7 +466,7 @@ describe('Mixed freeform + strict — cross-mode interactions', () => {
     act(() => { result.current.setInteractionMode(InteractionModeType.STRICT); });
 
     // Build 4 MF stacks via strict battle skills via context menu
-    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE_SKILL);
+    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE);
     expect(battleCol).toBeDefined();
     for (let i = 0; i < 4; i++) {
       const atFrame = (2 + i * 10) * FPS;
@@ -524,7 +524,7 @@ describe('Mixed freeform + strict — cross-mode interactions', () => {
 
     // Switch to strict — enhanced BS accepted because freeform ultimate is active + 4 MF stacks
     act(() => { result.current.setInteractionMode(InteractionModeType.STRICT); });
-    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE_SKILL);
+    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE);
     expect(battleCol).toBeDefined();
     const enhancedVariant = battleCol!.eventVariants?.find(
       (v) => v.enhancementType === EnhancementType.ENHANCED,
@@ -540,7 +540,7 @@ describe('Mixed freeform + strict — cross-mode interactions', () => {
     });
 
     const enhancedBattles = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === NounType.BATTLE_SKILL
+      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === NounType.BATTLE
         && ev.enhancementType === EnhancementType.ENHANCED,
     );
     expect(enhancedBattles).toHaveLength(1);
@@ -584,7 +584,7 @@ describe('Mixed freeform + strict — cross-mode interactions', () => {
 
     // Add 3 strict battle skills via context menu — only the first 2 should produce MF (cap = 4)
     act(() => { result.current.setInteractionMode(InteractionModeType.STRICT); });
-    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE_SKILL);
+    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE);
     expect(battleCol).toBeDefined();
     for (let i = 0; i < 3; i++) {
       const atFrame = (10 + i * 10) * FPS;

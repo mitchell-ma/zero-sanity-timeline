@@ -2,8 +2,8 @@
   "properties": {
     "name": "Constructive Sequence",
     "description": "A forceful burst of Originium Crystals that attacks enemies within the area of effect. Deals Physical DMG and applies Crush.",
-    "eventType": "COMBAT_SKILL",
-    "eventCategoryType": "BATTLE_SKILL",
+    "eventType": "SKILL",
+    "eventIdType": "BATTLE",
     "element": "PHYSICAL",
     "id": "CONSTRUCTIVE_SEQUENCE"
   },
@@ -71,8 +71,10 @@
                         50,
                         50
                       ],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     }
                   }
                 }
@@ -115,15 +117,19 @@
                         3.23,
                         3.5
                       ],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     },
                     "mainStat": {
                       "verb": "IS",
                       "object": "STAT",
                       "objectId": "ATTACK",
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     }
                   }
                 },

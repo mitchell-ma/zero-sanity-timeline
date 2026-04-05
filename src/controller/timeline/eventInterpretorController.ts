@@ -20,7 +20,7 @@ import {
   flattenQualifiedId,
   isQualifiedId,
 } from '../../dsl/semantics';
-import type { ValueNode } from '../../dsl/semantics';
+import type { Interaction, ValueNode } from '../../dsl/semantics';
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT, buildContextForSkillColumn } from '../calculation/valueResolver';
 import type { ValueResolutionContext } from '../calculation/valueResolver';
 import { TimelineEvent, eventDuration, setEventDuration } from '../../consts/viewTypes';
@@ -54,13 +54,13 @@ import { getPhysicalStatusBaseMultiplier, getShatterBaseMultiplier } from '../..
 import type { StatusLevel } from '../../consts/types';
 import type { SlotTriggerWiring } from './eventQueueTypes';
 import { findClauseTriggerMatches } from './triggerMatch';
+import type { Predicate } from './triggerMatch';
 import { derivedEventUid } from './inputEventController';
 import { activeEventsAtFrame } from './timelineQueries';
 import { getComboTriggerClause, getComboTriggerInfo } from '../gameDataStore';
 import { PRIORITY, QueueFrameType, FrameHookType } from './eventQueueTypes';
 import { allocQueueFrame } from './objectPool';
-import { resolveClauseEffects } from './statusTriggerCollector';
-import type { EngineTriggerContext, DeriveContext, StatusEventDef } from './statusTriggerCollector';
+import type { EngineTriggerContext, DeriveContext, StatusEventDef } from './eventQueueTypes';
 import type { TriggerIndex, TriggerDefEntry } from './triggerIndex';
 import { STATE_TO_COLUMN } from './triggerIndex';
 import { DerivedEventController } from './derivedEventController';
@@ -70,6 +70,7 @@ import type { FrameClausePredicate } from '../../model/event-frames/skillEventFr
 
 const STATUS_LABELS: Record<string, string> = getAllStatusLabels();
 const SKILL_COLUMN_SET: ReadonlySet<string> = new Set(SKILL_COLUMN_ORDER);
+
 
 // ── Clause filtering ──────────────────────────────────────────────────────
 
@@ -110,7 +111,7 @@ export function filterClauses(
 const PHYSICAL_STATUS_VALUES = new Set<string>(Object.values(PhysicalStatusType));
 
 
-function resolveQualifier(objectQualifier?: AdjectiveType) {
+function resolveQualifier(objectQualifier?: AdjectiveType | NounType) {
   return objectQualifier;
 }
 
@@ -118,7 +119,7 @@ function resolveQualifier(objectQualifier?: AdjectiveType) {
  * Resolve column ID from effect fields: object + objectId + objectQualifier.
  * Handles both legacy format (object=INFLICTION) and correct grammar (object=STATUS, objectId=INFLICTION).
  */
-function resolveEffectColumnId(object?: string, objectId?: string, objectQualifier?: AdjectiveType): string | undefined {
+function resolveEffectColumnId(object?: string, objectId?: string, objectQualifier?: AdjectiveType | NounType): string | undefined {
   const qualifier = resolveQualifier(objectQualifier);
 
   // Correct grammar: object=STATUS, objectId is the category
@@ -296,6 +297,190 @@ export interface InterpretorOptions {
   statAccumulator?: StatAccumulator;
   critMode?: CritMode;
   overrides?: OverrideStore;
+}
+
+// ── Clause effect resolution ────────────────────────────────────────────────
+// Moved from statusTriggerCollector — resolves susceptibility/statusValue from
+// a status def's clause array onto a timeline event.
+
+/** Shape of a with-value block inside a clause effect (IS or VARY_BY). */
+interface ClauseWithValue {
+  verb: string;
+  object?: string | string[];
+  value: number | number[] | Record<string, unknown>;
+}
+
+/** Effect shape inside clause arrays: supports objectQualifier + with block. */
+interface ClauseEffectEntry {
+  verb: string;
+  object: string;
+  objectQualifier?: string;
+  with?: { value: ClauseWithValue };
+}
+
+/** A clause with conditions and clause-style effects. */
+interface ResolvedClause {
+  conditions: Predicate[];
+  effects: ClauseEffectEntry[];
+}
+
+/**
+ * Resolve the talent level for a status def, based on which talent slot it belongs to.
+ */
+function resolveTalentLevel(def: StatusEventDef, ctx: DeriveContext): number {
+  const props = ctx.loadoutProperties?.operator;
+  if (!props) return 0;
+  const op = getOperatorBase(ctx.operatorId);
+  if (!op) return props.talentOneLevel;
+  const talentOneId = op.talents.one?.id;
+  const talentTwoId = op.talents.two?.id;
+  const defId = def.properties.id;
+  const originId = def.metadata?.originId;
+  if (defId === talentTwoId || originId === talentTwoId) return props.talentTwoLevel;
+  if (defId === talentOneId || originId === talentOneId) return props.talentOneLevel;
+  return props.talentOneLevel;
+}
+
+/**
+ * Resolve a dimension key for a multi-dimensional VARY_BY lookup.
+ * Finds the highest key whose numeric value ≤ the actual context value.
+ */
+function resolveClauseDimensionKey(
+  dim: string,
+  ctx: DeriveContext,
+  def: StatusEventDef,
+  keys: string[],
+): string | undefined {
+  if (dim === 'POTENTIAL') {
+    let best: string | undefined;
+    let bestN = -1;
+    for (const k of keys) {
+      const m = k.match(/^P(\d+)$/);
+      if (!m) continue;
+      const n = Number(m[1]);
+      if (n <= ctx.potential && n > bestN) { bestN = n; best = k; }
+    }
+    return best;
+  }
+  if (dim === 'TALENT_LEVEL' || dim === 'INTELLECT') {
+    const talentLevel = resolveTalentLevel(def, ctx);
+    let best: string | undefined;
+    let bestN = 0;
+    for (const k of keys) {
+      const n = Number(k);
+      if (!isNaN(n) && n <= talentLevel && n > bestN) { bestN = n; best = k; }
+    }
+    return best;
+  }
+  if (dim === 'SKILL_LEVEL') {
+    const sl = ctx.loadoutProperties?.skills.battleSkillLevel ?? 12;
+    let best: string | undefined;
+    let bestN = 0;
+    for (const k of keys) {
+      const n = Number(k);
+      if (!isNaN(n) && n <= sl && n > bestN) { bestN = n; best = k; }
+    }
+    return best;
+  }
+  return undefined;
+}
+
+function resolveClauseEffectsFromClauses(
+  ev: TimelineEvent,
+  clauses: ResolvedClause[],
+  ctx: DeriveContext,
+  def: StatusEventDef,
+  skipConditional = true,
+): void {
+  for (const clause of clauses) {
+    if (clause.conditions && clause.conditions.length > 0) {
+      if (skipConditional) {
+        const hasThisEvent = clause.conditions.some((c: Predicate) => c.subject === NounType.EVENT);
+        if (hasThisEvent) continue;
+
+        const condCtx: ConditionContext = {
+          events: ctx.events,
+          frame: ev.startFrame,
+          sourceOwnerId: ctx.operatorSlotId,
+        };
+        if (!evaluateConditions(clause.conditions as unknown as Interaction[], condCtx)) continue;
+      } else {
+        continue;
+      }
+    }
+    if (!clause.effects) continue;
+
+    for (const effect of clause.effects) {
+      const verb = effect.verb;
+      const object = effect.object;
+      const objectQualifier = effect.objectQualifier;
+      const withBlock = effect.with;
+      const wp = withBlock?.value;
+      if (!wp) continue;
+
+      const resolveValue = (): number | undefined => {
+        if (wp.verb === VerbType.IS && typeof wp.value === 'number') return wp.value;
+        if (wp.verb !== VerbType.VARY_BY) return undefined;
+
+        const dims = wp.object;
+        const val = wp.value;
+
+        // Single dimension: object is a string, value is a flat array
+        if (typeof dims === 'string' && Array.isArray(val)) {
+          const arr = val as number[];
+          if (dims === 'SKILL_LEVEL') {
+            const skillLevel = ctx.loadoutProperties?.skills.battleSkillLevel ?? 12;
+            return arr[Math.min(skillLevel, arr.length) - 1] ?? arr[0];
+          }
+          if (dims === 'TALENT_LEVEL' || dims === 'INTELLECT') {
+            const talentLevel = resolveTalentLevel(def, ctx);
+            return arr[Math.min(talentLevel, arr.length) - 1] ?? arr[0];
+          }
+          return undefined;
+        }
+
+        // Multi-dimension: object is an array, value is a nested map
+        if (Array.isArray(dims) && typeof val === 'object' && !Array.isArray(val)) {
+          let current: unknown = val;
+          for (const dim of dims as string[]) {
+            if (typeof current !== 'object' || current === null) return undefined;
+            const currentObj = current as Record<string, unknown>;
+            const keys = Object.keys(currentObj);
+            const key = resolveClauseDimensionKey(dim, ctx, def, keys);
+            if (!key) return undefined;
+            current = currentObj[key];
+          }
+          return typeof current === 'number' ? current : undefined;
+        }
+
+        return undefined;
+      };
+
+      if (verb === VerbType.APPLY && object === NounType.SUSCEPTIBILITY && objectQualifier) {
+        const val = resolveValue();
+        if (val != null) {
+          if (!ev.susceptibility) ev.susceptibility = {};
+          (ev.susceptibility as Record<string, number>)[objectQualifier] = val;
+        }
+      }
+
+      if (verb === VerbType.APPLY && object === NounType.DAMAGE_BONUS) {
+        const val = resolveValue();
+        if (val != null) ev.statusValue = val;
+      }
+
+      if (verb === 'IGNORE' && object === 'RESISTANCE') {
+        const val = resolveValue();
+        if (val != null) ev.statusValue = val;
+      }
+    }
+  }
+}
+
+function resolveClauseEffects(ev: TimelineEvent, def: StatusEventDef, ctx: DeriveContext): void {
+  const clauses = def.clause as ResolvedClause[] | undefined;
+  if (!clauses) return;
+  resolveClauseEffectsFromClauses(ev, clauses, ctx, def);
 }
 
 export class EventInterpretorController {
@@ -788,11 +973,12 @@ export class EventInterpretorController {
       });
       return true;
     }
-    // CONSUME BASIC_ATTACK / BATTLE_SKILL / COMBO_SKILL / ULTIMATE — skill event consumption.
-    // The object IS the column ID; objectQualifier identifies the variant.
+    // CONSUME SKILL — skill event consumption.
+    // Normalized: object=SKILL, objectId=BASIC_ATTACK/BATTLE/etc., objectQualifier=variant.
     // Uses inclusive end boundary (<=) since the consuming frame often fires at the exact end.
-    if (SKILL_COLUMN_SET.has(effect.object as NounType)) {
-      const columnId = effect.object as string;
+    const consumeSkillCol = effect.object === NounType.SKILL && effect.objectId && SKILL_COLUMN_SET.has(effect.objectId) ? effect.objectId : undefined;
+    if (consumeSkillCol) {
+      const columnId = consumeSkillCol;
       const variantId = effect.objectQualifier;
       const allEvents = this.getAllEvents();
       const target = allEvents
@@ -864,7 +1050,7 @@ export class EventInterpretorController {
       }
       return resolveEffectColumnId(effect.object, effect.objectId, effect.objectQualifier);
     }
-    if (verb === VerbType.PERFORM) return effect.object;
+    if (verb === VerbType.PERFORM) return effect.object === NounType.SKILL ? effect.objectId : effect.object;
     if (verb === VerbType.DEAL) return NounType.DAMAGE;
     if (verb === VerbType.RECOVER) return effect.object;
     if (verb === VerbType.HIT) return ENEMY_ACTION_COLUMN_ID;
@@ -917,7 +1103,7 @@ export class EventInterpretorController {
 
   private buildValueContext(ctx: InterpretContext): ValueResolutionContext {
     const loadout = this.loadoutProperties?.[ctx.sourceSlotId ?? ctx.sourceOwnerId];
-    const baseCtx = buildContextForSkillColumn(loadout, NounType.BATTLE_SKILL);
+    const baseCtx = buildContextForSkillColumn(loadout, NounType.BATTLE);
     if (ctx.potential != null) baseCtx.potential = ctx.potential;
     if (ctx.suppliedParameters) baseCtx.suppliedParameters = ctx.suppliedParameters;
     const ownerId = ctx.sourceSlotId ?? ctx.sourceOwnerId;
@@ -947,8 +1133,8 @@ export class EventInterpretorController {
   private doExtend(effect: Effect, ctx: InterpretContext) {
     if (!effect.until || effect.until.object !== NounType.END) return true;
 
-    // Resolve which end frame to extend to based on until.of scope
-    const endFrame = effect.until.of === NounType.SEGMENT
+    // Resolve which end frame to extend to based on until.of.object scope
+    const endFrame = effect.until.of.object === NounType.SEGMENT
       ? ctx.parentSegmentEndFrame
       : ctx.parentEventEndFrame;
     if (endFrame == null) return true;
@@ -956,7 +1142,7 @@ export class EventInterpretorController {
     // Resolve target column and owner
     const columnId = resolveEffectColumnId(effect.object, effect.objectId, effect.objectQualifier);
     if (!columnId) return true;
-    const ownerId = this.resolveOwnerId(effect.ofObject ?? effect.to, ctx, effect.ofDeterminer ?? effect.toDeterminer);
+    const ownerId = this.resolveOwnerId(effect.of?.object ?? effect.to, ctx, effect.of?.determiner ?? effect.toDeterminer);
 
     // Extend active target events to persist until the resolved end frame
     for (const ev of this.controller.output) {
@@ -977,8 +1163,8 @@ export class EventInterpretorController {
   private doReduce(effect: Effect, ctx: InterpretContext) {
     if (effect.object !== ObjectType.COOLDOWN) return true;
 
-    // Resolve which skill column's cooldown to reduce — from objectId or nounQualifier
-    const targetColumnId = effect.objectId ?? effect.nounQualifier;
+    // Resolve which skill column's cooldown to reduce — from of clause (SKILL possessor)
+    const targetColumnId = effect.of?.objectId;
     if (!targetColumnId || !SKILL_COLUMN_SET.has(targetColumnId)) return true;
 
     // Resolve reduction amount from `by` (preposition) or `with` (properties)
@@ -1085,7 +1271,7 @@ export class EventInterpretorController {
 
     // Apply Treatment Received Bonus from target
     const targetSlot = Object.entries(this.slotOperatorMap ?? {}).find(([, opId]) => opId === targetOperatorId)?.[0];
-    const targetCtx = targetSlot ? buildContextForSkillColumn(this.loadoutProperties?.[targetSlot], NounType.BATTLE_SKILL) : undefined;
+    const targetCtx = targetSlot ? buildContextForSkillColumn(this.loadoutProperties?.[targetSlot], NounType.BATTLE) : undefined;
     const treatmentReceivedBonus = targetCtx?.stats?.TREATMENT_RECEIVED_BONUS ?? 0;
 
     const finalHeal = rawHeal * (1 + treatmentBonus) * (1 + treatmentReceivedBonus);
@@ -1457,7 +1643,7 @@ export class EventInterpretorController {
     // ── 1. Lifecycle hooks (EVENT_START / EVENT_END) ─────────────────────
     if (entry.hookType === FrameHookType.EVENT_START) {
       // Link consumption for battle skills and ultimates
-      if (event.columnId === NounType.BATTLE_SKILL || event.columnId === NounType.ULTIMATE) {
+      if (event.columnId === NounType.BATTLE || event.columnId === NounType.ULTIMATE) {
         this.controller.consumeLink(event.uid, absFrame, source);
       }
 
@@ -1505,7 +1691,7 @@ export class EventInterpretorController {
           }
           for (const rawEffect of clause.effects) {
             const raw = rawEffect as Record<string, unknown>;
-            const effect = { ...raw, ofObject: raw.of ?? raw.ofObject, ofDeterminer: raw.ofDeterminer } as unknown as Effect;
+            const effect = raw as unknown as Effect;
             this.interpret(effect, entryCtx);
           }
         }
@@ -1538,7 +1724,7 @@ export class EventInterpretorController {
           }
           for (const rawEffect of clause.effects) {
             const raw = rawEffect as Record<string, unknown>;
-            const effect = { ...raw, ofObject: raw.of ?? raw.ofObject, ofDeterminer: raw.ofDeterminer } as unknown as Effect;
+            const effect = raw as unknown as Effect;
             this.interpret(effect, exitCtx);
           }
         }
@@ -1584,7 +1770,7 @@ export class EventInterpretorController {
           }
           for (const rawEffect of clause.effects) {
             const raw = rawEffect as Record<string, unknown>;
-            const effect = { ...raw, ofObject: raw.of ?? raw.ofObject, ofDeterminer: raw.ofDeterminer } as unknown as Effect;
+            const effect = raw as unknown as Effect;
             this.interpret(effect, segCtx);
           }
         }
@@ -1722,7 +1908,11 @@ export class EventInterpretorController {
           statusId: event.id, uid: event.uid,
           ...(event.susceptibility && { event: { susceptibility: event.susceptibility, segments: event.segments } }),
         });
+        // eslint-disable-next-line no-console
+        if (event.columnId === 'node-stagger') console.log(`[INTERP] freeform stagger at ${absFrame}, checking APPLY:${event.id ?? event.columnId}, triggerIndex exists: ${!!this.triggerIndex}`);
         this.checkReactiveTriggers(VerbType.APPLY, event.id ?? event.columnId, absFrame, event.ownerId, event.id, undefined, newEntries);
+        // eslint-disable-next-line no-console
+        if (event.columnId === 'node-stagger') console.log(`[INTERP] newEntries after trigger: ${newEntries.length}`);
       }
     }
 
@@ -1744,22 +1934,17 @@ export class EventInterpretorController {
     if (this.statAccumulator && (frame.damageMultiplier || frame.dealDamage)) {
       const isDot = frame.damageType === DamageType.DAMAGE_OVER_TIME;
       if (!isDot) {
-        const overrideKey = buildOverrideKey(event);
-        const pin = this.overrides?.[overrideKey]?.segments?.[si]?.frames?.[fi]?.isCritical;
+        const pin = this.overrides?.[buildOverrideKey(event)]?.segments?.[si]?.frames?.[fi]?.isCritical;
         const critMode = this.critMode ?? CritMode.EXPECTED;
-        const result = this.statAccumulator.resolveCrit(overrideKey, si, fi, event.ownerId, critMode, pin);
-        // For non-deterministic modes, write isCrit from roll/pin
-        if (critMode === CritMode.RANDOM && frame.isCrit == null && result !== undefined) {
-          frame.isCrit = result;
-        } else if (critMode === CritMode.MANUAL) {
+        // MANUAL mode: write isCrit from pin
+        if (critMode === CritMode.MANUAL) {
           frame.isCrit = pin ?? false;
         }
         // Derive effective crit for trigger emission
-        // NEVER/ALWAYS override pins — the mode is authoritative
+        // NEVER/ALWAYS/EXPECTED override pins — the mode is authoritative
         const effectiveCrit = critMode === CritMode.ALWAYS || critMode === CritMode.EXPECTED ? true
           : critMode === CritMode.NEVER ? false
-          : critMode === CritMode.MANUAL ? (pin ?? false)
-          : (pin ?? frame.isCrit);
+          : (pin ?? false);
         // ── 3d. Emit PERFORM CRITICAL_HIT for crit damage frames ──────
         if (effectiveCrit === true) {
           this.checkReactiveTriggers(VerbType.PERFORM, NounType.CRITICAL_HIT, absFrame, event.ownerId, event.id, undefined, newEntries);
@@ -1780,7 +1965,7 @@ export class EventInterpretorController {
       for (const ft of frame.frameTypes) {
         if (ft === EventFrameType.FINAL_STRIKE || ft === EventFrameType.FINISHER || ft === EventFrameType.DIVE) {
           const performObject = ft === EventFrameType.FINAL_STRIKE ? NounType.FINAL_STRIKE
-            : ft === EventFrameType.FINISHER ? NounType.FINISHER : NounType.DIVE_ATTACK;
+            : ft === EventFrameType.FINISHER ? NounType.FINISHER : NounType.DIVE;
           this.checkReactiveTriggers(VerbType.PERFORM, performObject, absFrame, event.ownerId, event.id, undefined, newEntries);
         }
       }
@@ -1878,9 +2063,9 @@ export class EventInterpretorController {
         if (clause.conditions.length > 0 &&
             !evaluateConditions(clause.conditions as unknown as import('../../dsl/semantics').Interaction[], condCtx)) continue;
         for (const rawEffect of clause.effects) {
-          // Normalize JSON "of" → Effect.ofObject (same as triggerEffectToEffect)
+          // Cast raw JSON effect to Effect (of clause is already nested OfClause)
           const raw = rawEffect as Record<string, unknown>;
-          const effect = { ...raw, ofObject: raw.of ?? raw.ofObject, ofDeterminer: raw.ofDeterminer } as unknown as Effect;
+          const effect = raw as unknown as Effect;
           this.interpret(effect, entryCtx);
         }
       }
@@ -1913,7 +2098,7 @@ export class EventInterpretorController {
             ? resolveEffectStat(NounType.STAT, raw.objectId as string, raw.objectQualifier as string)
             : undefined;
           const statBefore = trackStat ? this.statAccumulator!.getStat(statusOwnerId, trackStat) : 0;
-          const effect = { ...raw, ofObject: raw.of ?? raw.ofObject, ofDeterminer: raw.ofDeterminer } as unknown as Effect;
+          const effect = raw as unknown as Effect;
           this.interpret(effect, clauseCtx);
           // Track the applied delta for reversal at expiry
           if (trackStat) {
@@ -2044,7 +2229,7 @@ export class EventInterpretorController {
           !evaluateConditions(clause.conditions as unknown as import('../../dsl/semantics').Interaction[], condCtx)) continue;
       for (const rawEffect of clause.effects) {
         const raw = rawEffect as Record<string, unknown>;
-        const effect = { ...raw, ofObject: raw.of ?? raw.ofObject, ofDeterminer: raw.ofDeterminer } as unknown as Effect;
+        const effect = raw as unknown as Effect;
         this.interpret(effect, exitCtx);
       }
     }
@@ -2348,8 +2533,7 @@ export class EventInterpretorController {
           toDeterminer: se.toDeterminer as Effect['toDeterminer'],
           with: se.with as Effect['with'],
           until: se.until as Effect['until'],
-          ofObject: se.of as Effect['ofObject'],
-          ofDeterminer: se.ofDeterminer as Effect['ofDeterminer'],
+          of: se.of as Effect['of'],
         })),
       };
     }
@@ -2363,8 +2547,7 @@ export class EventInterpretorController {
       toDeterminer: te.toDeterminer as Effect['toDeterminer'],
       with: te.with as Effect['with'],
       until: te.until as Effect['until'],
-      ofObject: te.of as Effect['ofObject'],
-      ofDeterminer: te.ofDeterminer as Effect['ofDeterminer'],
+      of: te.of as Effect['of'],
       cardinalityConstraint: te.cardinalityConstraint as Effect['cardinalityConstraint'],
       value: te.value === 'MAX' ? THRESHOLD_MAX : te.value as Effect['value'],
     };

@@ -47,7 +47,7 @@ describe('Laevatain — ultimate energy suppression during Twilight', () => {
     // ── Find columns ───────────────────────────────────────────────────────
     const ultCol = findColumn(result.current, SLOT, NounType.ULTIMATE);
     expect(ultCol).toBeDefined();
-    const bsCol = findColumn(result.current, SLOT, NounType.BATTLE_SKILL);
+    const bsCol = findColumn(result.current, SLOT, NounType.BATTLE);
     expect(bsCol).toBeDefined();
 
     // ── Place ultimate at t=2s ─────────────────────────────────────────────

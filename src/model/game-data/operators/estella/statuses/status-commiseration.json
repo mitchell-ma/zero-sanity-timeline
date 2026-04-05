@@ -6,7 +6,8 @@
           "subjectDeterminer": "THIS",
           "subject": "OPERATOR",
           "verb": "PERFORM",
-          "object": "COMBO_SKILL"
+          "object": "SKILL",
+          "objectId": "COMBO"
         }
       ],
       "effects": [
@@ -21,8 +22,10 @@
                 7.5,
                 15
               ],
-              "ofDeterminer": "THIS",
-              "of": "OPERATOR"
+              "of": {
+                "object": "OPERATOR",
+                "determiner": "THIS"
+              }
             }
           }
         },
@@ -47,7 +50,7 @@
       "interactionType": "CONSUME"
     },
     "eventType": "STATUS",
-    "eventCategoryType": "STATUS",
+    "eventIdType": "STATUS",
     "description": "When triggering Shatter, the next battle skill Onomatopoeia cast returns 7.5 SP. This effect cannot stack."
   },
   "metadata": {

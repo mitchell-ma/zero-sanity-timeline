@@ -23,8 +23,10 @@
                 0.192,
                 0.224
               ],
-              "ofDeterminer": "THIS",
-              "of": "OPERATOR"
+              "of": {
+                "object": "OPERATOR",
+                "determiner": "THIS"
+              }
             }
           },
           "objectId": "DAMAGE_BONUS",
@@ -50,8 +52,10 @@
                 0.192,
                 0.224
               ],
-              "ofDeterminer": "THIS",
-              "of": "OPERATOR"
+              "of": {
+                "object": "OPERATOR",
+                "determiner": "THIS"
+              }
             }
           },
           "objectId": "DAMAGE_BONUS",
@@ -80,7 +84,7 @@
     "to": "OPERATOR",
     "toDeterminer": "OTHER",
     "eventType": "STATUS",
-    "eventCategoryType": "WEAPON_STATUS",
+    "eventIdType": "WEAPON_STATUS",
     "description": "Arts Intensity +{phy_spell_up:0}. When the wielder applies Electrification, the team gains Physical DMG Dealt and Electric DMG Dealt +{dmg_up:0.0%} for {duration:0}s. Effects of the same name cannot stack."
   },
   "metadata": {

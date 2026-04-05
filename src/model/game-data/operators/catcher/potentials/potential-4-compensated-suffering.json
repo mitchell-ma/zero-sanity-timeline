@@ -4,7 +4,7 @@
     "name": "Compensated Suffering",
     "level": 4,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
+    "eventIdType": "POTENTIAL",
     "description": "Ultimate Textbook Assault improved: Ultimate Energy cost -{1-costValue:0%}."
   },
   "metadata": {

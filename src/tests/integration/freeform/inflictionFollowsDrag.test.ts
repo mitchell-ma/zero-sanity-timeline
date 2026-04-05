@@ -83,7 +83,7 @@ describe('Infliction follows drag — Akekuri battle skill heat infliction', () 
     const { result } = renderHook(() => useApp());
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
-    const battleCol = findColumn(result.current, SLOT_AKEKURI, NounType.BATTLE_SKILL);
+    const battleCol = findColumn(result.current, SLOT_AKEKURI, NounType.BATTLE);
     expect(battleCol).toBeDefined();
 
     // Context menu flow: right-click column → get addEvent payload → add event
@@ -102,7 +102,7 @@ describe('Infliction follows drag — Akekuri battle skill heat infliction', () 
     expect(inflictions.length).toBeGreaterThanOrEqual(1);
 
     const battleEvent = result.current.allProcessedEvents.find(
-      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === NounType.BATTLE_SKILL,
+      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === NounType.BATTLE,
     )!;
     expect(inflictions[0].startFrame).toBeGreaterThanOrEqual(battleEvent.startFrame);
   });
@@ -111,7 +111,7 @@ describe('Infliction follows drag — Akekuri battle skill heat infliction', () 
     const { result } = renderHook(() => useApp());
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
-    const battleCol = findColumn(result.current, SLOT_AKEKURI, NounType.BATTLE_SKILL);
+    const battleCol = findColumn(result.current, SLOT_AKEKURI, NounType.BATTLE);
 
     const payload = getMenuPayload(result.current, battleCol!, 2 * FPS);
     act(() => {
@@ -121,7 +121,7 @@ describe('Infliction follows drag — Akekuri battle skill heat infliction', () 
     });
 
     const battleUid = result.current.allProcessedEvents.find(
-      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === NounType.BATTLE_SKILL,
+      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === NounType.BATTLE,
     )!.uid;
 
     const inflictionStartBefore = getHeatInflictions(result.current)[0].startFrame;
@@ -136,7 +136,7 @@ describe('Infliction follows drag — Akekuri battle skill heat infliction', () 
     const { result } = renderHook(() => useApp());
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
-    const battleCol = findColumn(result.current, SLOT_AKEKURI, NounType.BATTLE_SKILL);
+    const battleCol = findColumn(result.current, SLOT_AKEKURI, NounType.BATTLE);
 
     const payload = getMenuPayload(result.current, battleCol!, 2 * FPS);
     act(() => {
@@ -146,7 +146,7 @@ describe('Infliction follows drag — Akekuri battle skill heat infliction', () 
     });
 
     const battleUid = result.current.allProcessedEvents.find(
-      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === NounType.BATTLE_SKILL,
+      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === NounType.BATTLE,
     )!.uid;
 
     // Get infliction from ColumnViewModel at battle=2s
@@ -170,7 +170,7 @@ describe('Infliction follows drag — Akekuri battle skill heat infliction', () 
     const { result } = renderHook(() => useApp());
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
-    const battleCol = findColumn(result.current, SLOT_AKEKURI, NounType.BATTLE_SKILL);
+    const battleCol = findColumn(result.current, SLOT_AKEKURI, NounType.BATTLE);
 
     const payload = getMenuPayload(result.current, battleCol!, 1 * FPS);
     act(() => {
@@ -180,7 +180,7 @@ describe('Infliction follows drag — Akekuri battle skill heat infliction', () 
     });
 
     const battleUid = result.current.allProcessedEvents.find(
-      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === NounType.BATTLE_SKILL,
+      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === NounType.BATTLE,
     )!.uid;
 
     // Get infliction from ColumnViewModel and render EventBlock (battle at 1s)

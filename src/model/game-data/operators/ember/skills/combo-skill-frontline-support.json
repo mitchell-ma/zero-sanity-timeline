@@ -2,8 +2,8 @@
   "properties": {
     "name": "Frontline Support",
     "description": "When the controlled operator is attacked. Leaps at the target enemy and unleashes a heavy slam that deals Physical DMG and Knock Down while giving HP treatment to the controlled operator. The attribute of Will increases the amount of HP treatment.",
-    "eventType": "COMBAT_SKILL",
-    "eventCategoryType": "COMBO_SKILL",
+    "eventType": "SKILL",
+    "eventIdType": "COMBO",
     "element": "PHYSICAL",
     "id": "FRONTLINE_SUPPORT",
     "suppliedParameters": {
@@ -57,8 +57,10 @@
                   0.3,
                   0.5
                 ],
-                "ofDeterminer": "THIS",
-                "of": "OPERATOR"
+                "of": {
+                  "object": "OPERATOR",
+                  "determiner": "THIS"
+                }
               },
               "right": {
                 "verb": "VARY_BY",
@@ -71,8 +73,10 @@
                   0.2,
                   0.2
                 ],
-                "ofDeterminer": "THIS",
-                "of": "OPERATOR"
+                "of": {
+                  "object": "OPERATOR",
+                  "determiner": "THIS"
+                }
               }
             },
             "duration": {
@@ -102,8 +106,10 @@
                     1,
                     1
                   ],
-                  "ofDeterminer": "THIS",
-                  "of": "OPERATOR"
+                  "of": {
+                    "object": "OPERATOR",
+                    "determiner": "THIS"
+                  }
                 }
               }
             }
@@ -208,15 +214,19 @@
                         2.12,
                         2.3
                       ],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     },
                     "mainStat": {
                       "verb": "IS",
                       "object": "STAT",
                       "objectId": "ATTACK",
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     }
                   }
                 },
@@ -246,8 +256,10 @@
                           660,
                           675
                         ],
-                        "ofDeterminer": "THIS",
-                        "of": "OPERATOR"
+                        "of": {
+                          "object": "OPERATOR",
+                          "determiner": "THIS"
+                        }
                       },
                       "right": {
                         "operation": "MULT",
@@ -268,15 +280,19 @@
                             1.54,
                             1.58
                           ],
-                          "ofDeterminer": "THIS",
-                          "of": "OPERATOR"
+                          "of": {
+                            "object": "OPERATOR",
+                            "determiner": "THIS"
+                          }
                         },
                         "right": {
                           "verb": "IS",
                           "objectId": "WILL",
                           "object": "STAT",
-                          "ofDeterminer": "THIS",
-                          "of": "OPERATOR"
+                          "of": {
+                            "object": "OPERATOR",
+                            "determiner": "THIS"
+                          }
                         }
                       }
                     }
@@ -291,7 +307,7 @@
                   "subject": "OPERATOR",
                   "verb": "HAVE",
                   "object": "POTENTIAL",
-                  "cardinalityConstraint": "AT_LEAST",
+                  "cardinalityConstraint": "GREATER_THAN_EQUAL",
                   "with": {
                     "value": {
                       "verb": "IS",
@@ -333,8 +349,10 @@
                             660,
                             675
                           ],
-                          "ofDeterminer": "THIS",
-                          "of": "OPERATOR"
+                          "of": {
+                            "object": "OPERATOR",
+                            "determiner": "THIS"
+                          }
                         },
                         "right": {
                           "operation": "MULT",
@@ -355,15 +373,19 @@
                               1.54,
                               1.58
                             ],
-                            "ofDeterminer": "THIS",
-                            "of": "OPERATOR"
+                            "of": {
+                              "object": "OPERATOR",
+                              "determiner": "THIS"
+                            }
                           },
                           "right": {
                             "verb": "IS",
                             "objectId": "WILL",
                             "object": "STAT",
-                            "ofDeterminer": "THIS",
-                            "of": "OPERATOR"
+                            "of": {
+                              "object": "OPERATOR",
+                              "determiner": "THIS"
+                            }
                           }
                         }
                       }
@@ -405,8 +427,10 @@
               19,
               18
             ],
-            "ofDeterminer": "THIS",
-            "of": "OPERATOR"
+            "of": {
+              "object": "OPERATOR",
+              "determiner": "THIS"
+            }
           },
           "unit": "SECOND"
         },

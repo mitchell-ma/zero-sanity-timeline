@@ -2,8 +2,8 @@
   "properties": {
     "name": "Cryoblasting Pistolier",
     "description": "Immediately deploys the support bot Tink-a-Bella and makes Yvonne the controlled operator.\nTemporarily enhances Yvonne's basic attack (BATK). Each enhanced BATK sequence performed grants a stack of Critical Rate buff. After reaching max stacks, Yvonne also gains a Critical DMG buff. When the skill is about to end, Yvonne's last enhanced BATK becomes an enhanced Final Strike that deals massive Cryo DMG.\nIf the enemy is Solidified, Yvonne performs an additional attack that deals Cryo DMG and then consumes the enemy's Solidification.",
-    "eventType": "COMBAT_SKILL",
-    "eventCategoryType": "ULTIMATE_SKILL",
+    "eventType": "SKILL",
+    "eventIdType": "ULTIMATE",
     "id": "CRYOBLASTING_PISTOLIER"
   },
   "clause": [
@@ -70,7 +70,7 @@
               "subject": "OPERATOR",
               "verb": "HAVE",
               "object": "POTENTIAL",
-              "cardinalityConstraint": "AT_LEAST",
+              "cardinalityConstraint": "GREATER_THAN_EQUAL",
               "value": {
                 "verb": "IS",
                 "value": 5
@@ -100,24 +100,33 @@
           "effects": [
             {
               "verb": "ENABLE",
-              "objectId": "EXUBERANT_TRIGGER_EMPOWERED",
-              "object": "BATK",
-              "toDeterminer": "THIS",
-              "to": "OPERATOR"
+              "object": "SKILL",
+              "objectId": "BASIC_ATTACK",
+              "objectQualifier": "EXUBERANT_TRIGGER_BATK_EMPOWERED",
+              "of": {
+                "determiner": "THIS",
+                "object": "OPERATOR"
+              }
             },
             {
               "verb": "DISABLE",
-              "objectId": "EXUBERANT_TRIGGER",
-              "object": "BATK",
-              "toDeterminer": "THIS",
-              "to": "OPERATOR"
+              "object": "SKILL",
+              "objectId": "BASIC_ATTACK",
+              "objectQualifier": "EXUBERANT_TRIGGER_BATK",
+              "of": {
+                "determiner": "THIS",
+                "object": "OPERATOR"
+              }
             },
             {
               "verb": "DISABLE",
-              "objectId": "FINISHER",
-              "object": "FINISHER",
-              "toDeterminer": "THIS",
-              "to": "OPERATOR"
+              "object": "SKILL",
+              "objectId": "BASIC_ATTACK",
+              "objectQualifier": "FINISHER",
+              "of": {
+                "determiner": "THIS",
+                "object": "OPERATOR"
+              }
             }
           ]
         }
@@ -139,9 +148,9 @@
               "effects": [
                 {
                   "verb": "CONSUME",
-                  "object": "BASIC_ATTACK",
-                  "objectId": "BATK",
-                  "objectQualifier": "EXUBERANT_TRIGGER_EMPOWERED",
+                  "object": "SKILL",
+                  "objectId": "BASIC_ATTACK",
+                  "objectQualifier": "EXUBERANT_TRIGGER_BATK_EMPOWERED",
                   "toDeterminer": "THIS",
                   "to": "OPERATOR"
                 },
@@ -193,11 +202,26 @@
                 },
                 {
                   "verb": "PERFORM",
-                  "object": "FINAL_STRIKE",
+                  "object": "SKILL",
+                  "objectId": "FINAL_STRIKE",
                   "to": "ENEMY"
                 }
               ]
-            },
+            }
+          ],
+          "clauseType": "ALL"
+        },
+        {
+          "metadata": {
+            "eventComponentType": "FRAME"
+          },
+          "properties": {
+            "offset": {
+              "value": 7,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
             {
               "conditions": [
                 {

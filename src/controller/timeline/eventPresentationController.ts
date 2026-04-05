@@ -16,7 +16,7 @@ import { TimelineEvent, Column, MiniTimeline, EventSegmentData, eventEndFrame } 
 import { NounType } from '../../dsl/semantics';
 import { TimelineSourceType, ELEMENT_COLORS, ElementType, InteractionModeType, EventStatusType, DEFAULT_EVENT_COLOR } from '../../consts/enums';
 import { getAllSkillLabels, getAllStatusLabels, getAllInflictionLabels } from '../gameDataStore';
-import { CombatSkillType, StackInteractionType } from '../../consts/enums';
+import { StackInteractionType } from '../../consts/enums';
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from '../calculation/valueResolver';
 import type { ValueNode } from '../../dsl/semantics';
 import { COMBO_WINDOW_COLUMN_ID, REACTION_COLUMNS } from '../../model/channels';
@@ -240,7 +240,7 @@ function isWindowConsumed(windowEv: TimelineEvent, events: readonly TimelineEven
   const max = windowEv.maxSkills ?? 1;
   let count = 0;
   for (const ev of events) {
-    if (ev.columnId === NounType.COMBO_SKILL &&
+    if (ev.columnId === NounType.COMBO &&
         ev.ownerId === windowEv.ownerId &&
         ev.startFrame >= windowEv.startFrame &&
         ev.startFrame < endFrame) {
@@ -271,7 +271,7 @@ export interface EventPresentation {
  */
 export function resolveEventLabel(ev: TimelineEvent): string {
   if (ev.isPerfectDodge) return 'Dodge';
-  return getAllSkillLabels()[ev.name as CombatSkillType]
+  return getAllSkillLabels()[ev.name as string]
     ?? getAllInflictionLabels()[ev.name]
     ?? getAllStatusLabels()[ev.name]
     ?? translateDslToken(ev.name);

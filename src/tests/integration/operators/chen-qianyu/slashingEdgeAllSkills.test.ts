@@ -68,7 +68,7 @@ describe('Chen Qianyu — Slashing Edge from combo skill', () => {
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
     // Place 2 battle skills — first applies Vulnerable, second triggers Lift (and makes enemy Vulnerable)
-    const battleCol = findColumn(result.current, SLOT_CHEN, NounType.BATTLE_SKILL);
+    const battleCol = findColumn(result.current, SLOT_CHEN, NounType.BATTLE);
     expect(battleCol).toBeDefined();
 
     const bs1Payload = getMenuPayload(result.current, battleCol!, 2 * FPS);
@@ -86,7 +86,7 @@ describe('Chen Qianyu — Slashing Edge from combo skill', () => {
     });
 
     // Place combo skill (Soar to the Stars) — combo window should be open from Vulnerable trigger
-    const comboCol = findColumn(result.current, SLOT_CHEN, NounType.COMBO_SKILL);
+    const comboCol = findColumn(result.current, SLOT_CHEN, NounType.COMBO);
     expect(comboCol).toBeDefined();
 
     // Context menu: verify combo skill is available
@@ -193,7 +193,7 @@ describe('Chen Qianyu — Slashing Edge mixed rotation', () => {
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
     // 1. Battle skill at t=2s
-    const battleCol = findColumn(result.current, SLOT_CHEN, NounType.BATTLE_SKILL);
+    const battleCol = findColumn(result.current, SLOT_CHEN, NounType.BATTLE);
     expect(battleCol).toBeDefined();
 
     const bs1Payload = getMenuPayload(result.current, battleCol!, 2 * FPS);
@@ -212,7 +212,7 @@ describe('Chen Qianyu — Slashing Edge mixed rotation', () => {
     });
 
     // 3. Combo skill at t=7s
-    const comboCol = findColumn(result.current, SLOT_CHEN, NounType.COMBO_SKILL);
+    const comboCol = findColumn(result.current, SLOT_CHEN, NounType.COMBO);
     expect(comboCol).toBeDefined();
 
     const comboPayload = getMenuPayload(result.current, comboCol!, 7 * FPS);
@@ -283,7 +283,7 @@ describe('Chen Qianyu — Slashing Edge duration RESET', () => {
     // Freeform mode to bypass resource gates
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
-    const battleCol = findColumn(result.current, SLOT_CHEN, NounType.BATTLE_SKILL);
+    const battleCol = findColumn(result.current, SLOT_CHEN, NounType.BATTLE);
     expect(battleCol).toBeDefined();
 
     // Place 5 battle skills at 2s intervals within the 10s duration window

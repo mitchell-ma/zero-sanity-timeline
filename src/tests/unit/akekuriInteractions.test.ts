@@ -78,55 +78,19 @@ for (const [key, val] of Object.entries(mockSkillsJson as Record<string, unknown
 }
 
 // Infer skillTypeMap from naming conventions (same logic as operatorJsonLoader)
-function inferSkillTypeMap(skills: Record<string, Record<string, unknown>>): Record<string, unknown> {
-  const ids = Object.keys(skills);
-  const typeMap: Record<string, unknown> = {};
-  const variantSuffixes = ['_FINISHER', '_DIVE', '_ENHANCED', '_EMPOWERED', '_ENHANCED_EMPOWERED'];
-  const finisherId = ids.find(id => id.endsWith('_FINISHER'));
-  let batkId: string | undefined;
-  if (finisherId) {
-    batkId = finisherId.replace(/_FINISHER$/, '');
-    const batk: Record<string, string> = { BATK: batkId, FINISHER: finisherId };
-    const diveId = ids.find(id => id === `${batkId}_DIVE`);
-    if (diveId) batk.DIVE = diveId;
-    typeMap.BASIC_ATTACK = batk;
-  }
-  const baseSkills = ids.filter(id => id !== batkId && !variantSuffixes.some(s => id.endsWith(s)));
-  for (const id of baseSkills) {
-    const s = skills[id];
-    if ((s.activationWindow as Record<string, unknown>)?.onTriggerClause || (s.onTriggerClause as unknown[])?.length) { typeMap.COMBO_SKILL = id; break; }
-  }
-  const remaining = baseSkills.filter(id => id !== typeMap.COMBO_SKILL);
-  for (const id of remaining) {
-    const segs = (skills[id].segments ?? []) as { properties: { segmentTypes?: string[] } }[];
-    if (segs.some(s => s.properties.segmentTypes?.includes('ANIMATION'))) { typeMap.ULTIMATE = id; break; }
-  }
-  const battleCandidates = remaining.filter(id => id !== typeMap.ULTIMATE);
-  if (battleCandidates.length === 1) typeMap.BATTLE_SKILL = battleCandidates[0];
-  return typeMap;
-}
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { buildSkillTypeMap: _buildSkillTypeMap } = require('../../utils/skillTypeMap');
 
-const _skTypeMap = inferSkillTypeMap(akekuriSkills);
-const _variantSuffixes = ['ENHANCED', 'EMPOWERED', 'ENHANCED_EMPOWERED'];
-for (const [category, value] of Object.entries(_skTypeMap)) {
-  if (typeof value === 'string') {
-    if (akekuriSkills[value]) akekuriSkills[category] = akekuriSkills[value];
-    for (const suffix of _variantSuffixes) {
-      const variantSkillId = `${value}_${suffix}`;
-      if (akekuriSkills[variantSkillId]) akekuriSkills[`${suffix}_${category}`] = akekuriSkills[variantSkillId];
-    }
+const _skTypeMap = _buildSkillTypeMap(akekuriSkills);
+for (const [key, value] of Object.entries(_skTypeMap)) {
+  if (Array.isArray(value)) {
+    if (value[0] && akekuriSkills[value[0]]) akekuriSkills[key] = akekuriSkills[value[0]];
   } else if (typeof value === 'object' && value !== null) {
-    const bId = (value as Record<string, unknown>).BATK as string | undefined;
-    if (bId && akekuriSkills[bId]) akekuriSkills[category] = akekuriSkills[bId];
-    for (const [subKey, subId] of Object.entries(value as Record<string, string>)) {
-      if (akekuriSkills[subId]) akekuriSkills[subKey] = akekuriSkills[subId];
+    for (const [subKey, subIds] of Object.entries(value as Record<string, string[]>)) {
+      if (subIds[0] && akekuriSkills[subIds[0]]) akekuriSkills[subKey] = akekuriSkills[subIds[0]];
     }
-    if (bId) {
-      for (const suffix of _variantSuffixes) {
-        const variantSkillId = `${bId}_${suffix}`;
-        if (akekuriSkills[variantSkillId]) akekuriSkills[`${suffix}_${category}`] = akekuriSkills[variantSkillId];
-      }
-    }
+    const batkIds = (value as Record<string, string[]>).BATK;
+    if (batkIds?.[0] && akekuriSkills[batkIds[0]]) akekuriSkills[key] = akekuriSkills[batkIds[0]];
   }
 }
 const mockJson = { ...mockOperatorJson, skills: akekuriSkills, skillTypeMap: _skTypeMap };
@@ -167,12 +131,12 @@ describe('Akekuri Combat Simulation', () => {
 
 describe('A. Basic Attack (Sword of Aspiration)', () => {
   test('A1: Basic attack has 4 segments', () => {
-    const sequences = getSequences('BASIC_ATTACK');
+    const sequences = getSequences(NounType.BATK);
     expect(sequences.length).toBe(4);
   });
 
   test('A2: Segment durations match JSON data', () => {
-    const rawSegments = mockJson.skills[mockJson.skillTypeMap.BASIC_ATTACK.BATK].segments;
+    const rawSegments = mockJson.skills[mockJson.skillTypeMap.BASIC_ATTACK.BATK[0]].segments;
     expect(durVal(rawSegments[0].properties.duration.value)).toBe(0.5);
     expect(durVal(rawSegments[1].properties.duration.value)).toBe(0.767);
     expect(durVal(rawSegments[2].properties.duration.value)).toBe(0.733);
@@ -180,7 +144,7 @@ describe('A. Basic Attack (Sword of Aspiration)', () => {
   });
 
   test('A3: Final Strike (segment 4, last frame) has no SP or Stagger effects (zero-value effects removed)', () => {
-    const rawSegments = mockJson.skills[mockJson.skillTypeMap.BASIC_ATTACK.BATK].segments;
+    const rawSegments = mockJson.skills[mockJson.skillTypeMap.BASIC_ATTACK.BATK[0]].segments;
     const finalStrikeFrames = rawSegments[3].frames;
     const lastFrame = finalStrikeFrames[finalStrikeFrames.length - 1];
     const spEffect = lastFrame.clause[0].effects.find(
@@ -194,7 +158,7 @@ describe('A. Basic Attack (Sword of Aspiration)', () => {
   });
 
   test('A4: Earlier frames in segment 4 have no SP effects (zero-value effects removed)', () => {
-    const rawSegments = mockJson.skills[mockJson.skillTypeMap.BASIC_ATTACK.BATK].segments;
+    const rawSegments = mockJson.skills[mockJson.skillTypeMap.BASIC_ATTACK.BATK[0]].segments;
     const frames = rawSegments[3].frames;
     for (let i = 0; i < frames.length; i++) {
       const spEffect = frames[i].clause[0].effects.find(
@@ -205,7 +169,7 @@ describe('A. Basic Attack (Sword of Aspiration)', () => {
   });
 
   test('A5: First 3 segments have no SP effects (zero-value effects removed)', () => {
-    const rawSegments = mockJson.skills[mockJson.skillTypeMap.BASIC_ATTACK.BATK].segments;
+    const rawSegments = mockJson.skills[mockJson.skillTypeMap.BASIC_ATTACK.BATK[0]].segments;
     for (let i = 0; i < 3; i++) {
       const frame = rawSegments[i].frames[0];
       expect(getFrameEffectValue(frame, VerbType.RECOVER, NounType.SKILL_POINT, 'value')).toBeUndefined();
@@ -213,7 +177,7 @@ describe('A. Basic Attack (Sword of Aspiration)', () => {
   });
 
   test('A6: No infliction on any basic attack frame', () => {
-    const sequences = getSequences('BASIC_ATTACK');
+    const sequences = getSequences(NounType.BATK);
     for (const seq of sequences) {
       for (const frame of seq.getFrames()) {
         expect(frame.getClauses().flatMap(c => c.effects).find(e => e.dslEffect?.verb === VerbType.APPLY && e.dslEffect?.object === NounType.INFLICTION)).toBeUndefined();
@@ -222,17 +186,17 @@ describe('A. Basic Attack (Sword of Aspiration)', () => {
   });
 
   test('A7: Segment 2 has 2 frames (double hit)', () => {
-    const rawSegments = mockJson.skills[mockJson.skillTypeMap.BASIC_ATTACK.BATK].segments;
+    const rawSegments = mockJson.skills[mockJson.skillTypeMap.BASIC_ATTACK.BATK[0]].segments;
     expect(rawSegments[1].frames.length).toBe(2);
   });
 
   test('A8: Segment 4 has 3 frames (triple hit)', () => {
-    const rawSegments = mockJson.skills[mockJson.skillTypeMap.BASIC_ATTACK.BATK].segments;
+    const rawSegments = mockJson.skills[mockJson.skillTypeMap.BASIC_ATTACK.BATK[0]].segments;
     expect(rawSegments[3].frames.length).toBe(3);
   });
 
   test('A9: Damage multipliers scale from lv1 to lv12', () => {
-    const rawSegments = mockJson.skills[mockJson.skillTypeMap.BASIC_ATTACK.BATK].segments;
+    const rawSegments = mockJson.skills[mockJson.skillTypeMap.BASIC_ATTACK.BATK[0]].segments;
     // Segment 1: 0.2 → 0.45
     const seg1Dmg = getDamageMultipliers(rawSegments[0].frames[0]);
     expect(seg1Dmg[0]).toBe(0.2);
@@ -250,13 +214,13 @@ describe('A. Basic Attack (Sword of Aspiration)', () => {
 
 describe('B. Battle Skill (Burst of Passion)', () => {
   test('B1: Battle skill has single frame at 0.67s offset', () => {
-    const battleSkill = mockJson.skills[mockJson.skillTypeMap.BATTLE_SKILL];
+    const battleSkill = mockJson.skills[mockJson.skillTypeMap.BATTLE[0]];
     expect(battleSkill.segments[0].frames.length).toBe(1);
     expect(battleSkill.segments[0].frames[0].properties.offset.value).toBe(0.67);
   });
 
   test('B2: Battle skill costs 100 SP', () => {
-    const battleSkill = mockJson.skills[mockJson.skillTypeMap.BATTLE_SKILL];
+    const battleSkill = mockJson.skills[mockJson.skillTypeMap.BATTLE[0]];
     const spCost = battleSkill.clause[0].effects.find(
       (e: Record<string, unknown>) => e.object === NounType.SKILL_POINT && e.verb === VerbType.CONSUME
     );
@@ -265,7 +229,7 @@ describe('B. Battle Skill (Burst of Passion)', () => {
   });
 
   test('B3: Battle skill has SP cost effect in clause', () => {
-    const battleSkill = mockJson.skills[mockJson.skillTypeMap.BATTLE_SKILL];
+    const battleSkill = mockJson.skills[mockJson.skillTypeMap.BATTLE[0]];
     const spCost = battleSkill.clause[0].effects.find(
       (e: Record<string, unknown>) => e.object === NounType.SKILL_POINT && e.verb === VerbType.CONSUME
     );
@@ -274,13 +238,13 @@ describe('B. Battle Skill (Burst of Passion)', () => {
   });
 
   test('B4: Battle skill stagger recovery is 10', () => {
-    const sequences = getSequences('BATTLE_SKILL');
+    const sequences = getSequences('BATTLE');
     const firstFrame = sequences[0].getFrames()[0];
     expect(firstFrame.getStagger()).toBe(10);
   });
 
   test('B5: Battle skill applies Heat infliction to enemy', () => {
-    const battleFrame = mockJson.skills[mockJson.skillTypeMap.BATTLE_SKILL].segments[0].frames[0];
+    const battleFrame = mockJson.skills[mockJson.skillTypeMap.BATTLE[0]].segments[0].frames[0];
     const infliction = battleFrame.clause[0].effects.find(
       (e: Record<string, unknown>) => e.verb === VerbType.APPLY && e.object === NounType.INFLICTION
     );
@@ -290,24 +254,24 @@ describe('B. Battle Skill (Burst of Passion)', () => {
   });
 
   test('B6: Damage multiplier scales from 1.42 (lv1) to 3.2 (lv12)', () => {
-    const dmgValues = getDamageMultipliers(mockJson.skills[mockJson.skillTypeMap.BATTLE_SKILL].segments[0].frames[0]);
+    const dmgValues = getDamageMultipliers(mockJson.skills[mockJson.skillTypeMap.BATTLE[0]].segments[0].frames[0]);
     expect(dmgValues[0]).toBe(1.42);
     expect(dmgValues[11]).toBe(3.2);
   });
 
   test('B7: Stagger is constant 10 across all levels', () => {
-    const frame = mockJson.skills[mockJson.skillTypeMap.BATTLE_SKILL].segments[0].frames[0];
+    const frame = mockJson.skills[mockJson.skillTypeMap.BATTLE[0]].segments[0].frames[0];
     expect(getFrameEffectValue(frame, VerbType.DEAL, NounType.STAGGER, 'value')).toBe(10);
   });
 
   test('B8: Battle skill duration is 1.33 seconds', () => {
-    const battleSkill = mockJson.skills[mockJson.skillTypeMap.BATTLE_SKILL];
+    const battleSkill = mockJson.skills[mockJson.skillTypeMap.BATTLE[0]];
     expect(durVal(battleSkill.segments[0].properties.duration.value)).toBe(1.33);
     expect(battleSkill.segments[0].properties.duration.unit).toBe('SECOND');
   });
 
   test('B9: Battle skill ID is BURST_OF_PASSION', () => {
-    expect(mockJson.skills[mockJson.skillTypeMap.BATTLE_SKILL].id).toBe('BURST_OF_PASSION');
+    expect(mockJson.skills[mockJson.skillTypeMap.BATTLE[0]].id).toBe('BURST_OF_PASSION');
   });
 });
 
@@ -317,7 +281,7 @@ describe('B. Battle Skill (Burst of Passion)', () => {
 
 describe('C. Combo Skill (Flash and Dash)', () => {
   test('C1: Combo trigger requires enemy Node Stagger or Full Stagger (two clauses)', () => {
-    const comboSkill = mockJson.skills[mockJson.skillTypeMap.COMBO_SKILL];
+    const comboSkill = mockJson.skills[mockJson.skillTypeMap.COMBO[0]];
     expect(comboSkill.activationWindow.onTriggerClause.length).toBe(2);
     expect(comboSkill.activationWindow.onTriggerClause[0].conditions[0].subject).toBe(NounType.ENEMY);
     expect(comboSkill.activationWindow.onTriggerClause[0].conditions[0].verb).toBe(VerbType.IS);
@@ -328,11 +292,11 @@ describe('C. Combo Skill (Flash and Dash)', () => {
   });
 
   test('C2: Combo activation window is 720 frames (6 seconds)', () => {
-    expect(mockJson.skills[mockJson.skillTypeMap.COMBO_SKILL].activationWindow.segments[0].properties.duration.value).toBe(6);
+    expect(mockJson.skills[mockJson.skillTypeMap.COMBO[0]].activationWindow.segments[0].properties.duration.value).toBe(6);
   });
 
   test('C3: Combo has a cooldown segment with positive duration', () => {
-    const comboSkill = mockJson.skills[mockJson.skillTypeMap.COMBO_SKILL];
+    const comboSkill = mockJson.skills[mockJson.skillTypeMap.COMBO[0]];
     const cdSeg = comboSkill.segments.find(
       (s: Record<string, unknown>) => ((s.properties as Record<string, unknown>)?.segmentTypes as string[] | undefined)?.includes('COOLDOWN')
     );
@@ -341,7 +305,7 @@ describe('C. Combo Skill (Flash and Dash)', () => {
   });
 
   test('C4: Combo has 2 frames with SP recovery and Stagger effects', () => {
-    const frames = mockJson.skills[mockJson.skillTypeMap.COMBO_SKILL].segments[1].frames;
+    const frames = mockJson.skills[mockJson.skillTypeMap.COMBO[0]].segments[1].frames;
     expect(frames.length).toBe(2);
     for (const f of frames) {
       const sp = f.clause?.[0]?.effects.find((e: Record<string, unknown>) => e.object === NounType.SKILL_POINT);
@@ -352,7 +316,7 @@ describe('C. Combo Skill (Flash and Dash)', () => {
   });
 
   test('C5: Combo animation is TIME_STOP (0.488s)', () => {
-    const combo = mockJson.skills[mockJson.skillTypeMap.COMBO_SKILL];
+    const combo = mockJson.skills[mockJson.skillTypeMap.COMBO[0]];
     const animSeg = combo.segments.find((s: Record<string, unknown>) => ((s.properties as Record<string, unknown>)?.segmentTypes as string[] | undefined)?.includes('ANIMATION'));
     expect(animSeg).toBeDefined();
     expect(durVal(animSeg.properties.duration.value)).toBe(0.488);
@@ -360,13 +324,13 @@ describe('C. Combo Skill (Flash and Dash)', () => {
   });
 
   test('C6: Combo base duration is 1.27 seconds', () => {
-    const comboSkill = mockJson.skills[mockJson.skillTypeMap.COMBO_SKILL];
+    const comboSkill = mockJson.skills[mockJson.skillTypeMap.COMBO[0]];
     const totalDuration = durVal(comboSkill.segments[0].properties.duration.value) + durVal(comboSkill.segments[1].properties.duration.value);
     expect(totalDuration).toBeCloseTo(1.27, 2);
   });
 
   test('C7: Combo recovers 10 ultimate energy to self', () => {
-    const effects = mockJson.skills[mockJson.skillTypeMap.COMBO_SKILL].clause[0].effects;
+    const effects = mockJson.skills[mockJson.skillTypeMap.COMBO[0]].clause[0].effects;
     const energy = effects.find(
       (e: Record<string, unknown>) => e.object === NounType.ULTIMATE_ENERGY && e.verb === VerbType.RECOVER
     );
@@ -377,13 +341,13 @@ describe('C. Combo Skill (Flash and Dash)', () => {
   });
 
   test('C8: Combo damage multiplier: 0.8 (lv1) → 1.8 (lv12)', () => {
-    const dmgValues = getDamageMultipliers(mockJson.skills[mockJson.skillTypeMap.COMBO_SKILL].segments[1].frames[0]);
+    const dmgValues = getDamageMultipliers(mockJson.skills[mockJson.skillTypeMap.COMBO[0]].segments[1].frames[0]);
     expect(dmgValues[0]).toBe(0.8);
     expect(dmgValues[11]).toBe(1.8);
   });
 
   test('C9: Combo skill ID is FLASH_AND_DASH', () => {
-    expect(mockJson.skills[mockJson.skillTypeMap.COMBO_SKILL].id).toBe('FLASH_AND_DASH');
+    expect(mockJson.skills[mockJson.skillTypeMap.COMBO[0]].id).toBe('FLASH_AND_DASH');
   });
 });
 
@@ -393,7 +357,7 @@ describe('C. Combo Skill (Flash and Dash)', () => {
 
 describe('D. Ultimate (Squad on Me)', () => {
   test('D1: Ultimate energy cost is MULT(base, VARY_BY POTENTIAL)', () => {
-    const effects = mockJson.skills[mockJson.skillTypeMap.ULTIMATE].clause[0].effects;
+    const effects = mockJson.skills[mockJson.skillTypeMap.ULTIMATE[0]].clause[0].effects;
     const energyCost = effects.find(
       (e: Record<string, unknown>) => e.object === NounType.ULTIMATE_ENERGY && e.verb === VerbType.CONSUME
     );
@@ -410,7 +374,7 @@ describe('D. Ultimate (Squad on Me)', () => {
   });
 
   test('D2: Ultimate active duration is 3.425 seconds (from ACTIVE segment)', () => {
-    const ultimate = mockJson.skills[mockJson.skillTypeMap.ULTIMATE];
+    const ultimate = mockJson.skills[mockJson.skillTypeMap.ULTIMATE[0]];
     const activeSeg = ultimate.segments.find(
       (s: Record<string, unknown>) => ((s.properties as Record<string, unknown>)?.segmentTypes as string[] | undefined)?.includes('ACTIVE')
     );
@@ -418,7 +382,7 @@ describe('D. Ultimate (Squad on Me)', () => {
   });
 
   test('D3: Ultimate animation is TIME_STOP (1.683s within 5.108s total)', () => {
-    const ultimate = mockJson.skills[mockJson.skillTypeMap.ULTIMATE];
+    const ultimate = mockJson.skills[mockJson.skillTypeMap.ULTIMATE[0]];
     const totalDuration = ultimate.segments.reduce(
       (sum: number, s: Record<string, unknown>) => sum + (durVal((s.properties as Record<string, Record<string, number>>)?.duration?.value) ?? 0), 0
     );
@@ -430,7 +394,7 @@ describe('D. Ultimate (Squad on Me)', () => {
   });
 
   test('D4: Ultimate has no damage frames', () => {
-    const ultimate = mockJson.skills[mockJson.skillTypeMap.ULTIMATE];
+    const ultimate = mockJson.skills[mockJson.skillTypeMap.ULTIMATE[0]];
     const activeSeg = ultimate.segments[1];
     // Active segment has frames (SP recovery, Link), but none with damage multipliers
     const damageFrames = activeSeg.frames.filter(
@@ -441,7 +405,7 @@ describe('D. Ultimate (Squad on Me)', () => {
   });
 
   test('D5: Ultimate skill ID is SQUAD_ON_ME', () => {
-    expect(mockJson.skills[mockJson.skillTypeMap.ULTIMATE].id).toBe('SQUAD_ON_ME');
+    expect(mockJson.skills[mockJson.skillTypeMap.ULTIMATE[0]].id).toBe('SQUAD_ON_ME');
   });
 });
 
@@ -546,14 +510,14 @@ describe('G. Cooldown Interactions', () => {
     const bsDuration = Math.round(1.33 * FPS); // 1.33s
     const bs1 = makeEvent({
       uid: 'bs-1',
-      columnId: NounType.BATTLE_SKILL,
+      columnId: NounType.BATTLE,
       startFrame: 0,
       segments: [{ properties: { duration: bsDuration } }],
       nonOverlappableRange: bsDuration,
     });
     // Place second battle skill right after the first ends
     const overlap = wouldOverlapSiblings(
-      SLOT_ID, NounType.BATTLE_SKILL, bsDuration, bsDuration, [bs1],
+      SLOT_ID, NounType.BATTLE, bsDuration, bsDuration, [bs1],
     );
     expect(overlap).toBe(false);
   });
@@ -564,7 +528,7 @@ describe('G. Cooldown Interactions', () => {
     const totalRange = comboDuration + comboCooldown;
     const cs1 = makeEvent({
       uid: 'cs-1',
-      columnId: NounType.COMBO_SKILL,
+      columnId: NounType.COMBO,
       startFrame: 0,
       segments: [{ properties: { duration: comboDuration } }],
       nonOverlappableRange: totalRange,
@@ -573,17 +537,17 @@ describe('G. Cooldown Interactions', () => {
     // During cooldown: should be blocked
     const midCooldown = comboDuration + Math.round(7.5 * FPS);
     expect(wouldOverlapSiblings(
-      SLOT_ID, NounType.COMBO_SKILL, midCooldown, 1, [cs1],
+      SLOT_ID, NounType.COMBO, midCooldown, 1, [cs1],
     )).toBe(true);
 
     // After cooldown ends: should be allowed
     expect(wouldOverlapSiblings(
-      SLOT_ID, NounType.COMBO_SKILL, totalRange, 1, [cs1],
+      SLOT_ID, NounType.COMBO, totalRange, 1, [cs1],
     )).toBe(false);
   });
 
   test('G4: Combo cooldown segment exists and has positive duration', () => {
-    const comboSkill = mockJson.skills[mockJson.skillTypeMap.COMBO_SKILL];
+    const comboSkill = mockJson.skills[mockJson.skillTypeMap.COMBO[0]];
     const cdSeg = comboSkill.segments.find(
       (s: Record<string, unknown>) => ((s.properties as Record<string, unknown>)?.segmentTypes as string[] | undefined)?.includes('COOLDOWN')
     );
@@ -597,14 +561,14 @@ describe('G. Cooldown Interactions', () => {
     const totalRange = comboDuration + comboCooldown;
     const cs1 = makeEvent({
       uid: 'cs-1',
-      columnId: NounType.COMBO_SKILL,
+      columnId: NounType.COMBO,
       startFrame: 0,
       segments: [{ properties: { duration: comboDuration } }],
       nonOverlappableRange: totalRange,
     });
     // 1 frame before cooldown ends
     expect(wouldOverlapSiblings(
-      SLOT_ID, NounType.COMBO_SKILL, totalRange - 1, 1, [cs1],
+      SLOT_ID, NounType.COMBO, totalRange - 1, 1, [cs1],
     )).toBe(true);
   });
 
@@ -612,14 +576,14 @@ describe('G. Cooldown Interactions', () => {
     const cs1 = makeEvent({
       uid: 'cs-1',
       ownerId: 'slot-0',
-      columnId: NounType.COMBO_SKILL,
+      columnId: NounType.COMBO,
       startFrame: 0,
       segments: [{ properties: { duration: 152 } }],
       nonOverlappableRange: 1952,
     });
     // Different owner at frame 0 — no overlap
     expect(wouldOverlapSiblings(
-      'slot-1', NounType.COMBO_SKILL, 0, 1, [cs1],
+      'slot-1', NounType.COMBO, 0, 1, [cs1],
     )).toBe(false);
   });
 });

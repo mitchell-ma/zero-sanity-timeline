@@ -2,7 +2,7 @@
  * Type definitions for user-created custom operators.
  * See docs/customizationSpec.md § 1.
  */
-import { WeaponType, ElementType, CombatSkillType, TimeInteractionType } from '../../consts/enums';
+import { WeaponType, ElementType, TimeInteractionType } from '../../consts/enums';
 import type { Clause, Predicate } from '../../dsl/semantics';
 import type { StatType } from '../enums';
 import type { OperatorClassType } from '../enums/operators';
@@ -43,7 +43,7 @@ export interface CustomOperator {
 /** A custom combat skill definition. */
 export interface CustomCombatSkillDef {
   name: string;
-  combatSkillType: CombatSkillType;
+  combatSkillType: string;
   element?: ElementType;
   durationSeconds: number;
   cooldownSeconds?: number;

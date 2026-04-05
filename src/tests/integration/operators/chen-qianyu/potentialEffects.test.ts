@@ -8,7 +8,7 @@
  * Tests potential-driven value resolution through the full useApp pipeline:
  *   - P3: Damage multiplier x1.1 on battle skill, combo skill, and ultimate
  *   - P4: Ultimate energy cost reduction (70 x 0.85 = 59.5)
- *   - P5: Combo skill cooldown reduction (-3s when HAVE POTENTIAL AT_LEAST 5)
+ *   - P5: Combo skill cooldown reduction (-3s when HAVE POTENTIAL GREATER_THAN_EQUAL 5)
  *
  * Verification layers:
  *   1. Game data: buildMergedOperatorJson + getUltimateEnergyCost resolve
@@ -147,7 +147,7 @@ describe('Chen Qianyu — P3 damage multiplier', () => {
     // Freeform to bypass SP gating
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
-    const battleCol = findColumn(result.current, SLOT_CHEN, NounType.BATTLE_SKILL);
+    const battleCol = findColumn(result.current, SLOT_CHEN, NounType.BATTLE);
     expect(battleCol).toBeDefined();
 
     // Context menu: verify battle skill is available at P3
@@ -161,7 +161,7 @@ describe('Chen Qianyu — P3 damage multiplier', () => {
 
     // Controller layer: event was placed
     const bsEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_CHEN && ev.columnId === NounType.BATTLE_SKILL,
+      (ev) => ev.ownerId === SLOT_CHEN && ev.columnId === NounType.BATTLE,
     );
     expect(bsEvents).toHaveLength(1);
 
@@ -173,7 +173,7 @@ describe('Chen Qianyu — P3 damage multiplier', () => {
     const colVm = viewModels.get(battleCol!.key);
     expect(colVm).toBeDefined();
     expect(colVm!.events.filter(
-      (ev) => ev.ownerId === SLOT_CHEN && ev.columnId === NounType.BATTLE_SKILL,
+      (ev) => ev.ownerId === SLOT_CHEN && ev.columnId === NounType.BATTLE,
     )).toHaveLength(1);
   });
 });
@@ -185,7 +185,7 @@ describe('Chen Qianyu — P5 combo cooldown reduction', () => {
     const { result } = setupChenWithPotential(0);
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
-    const comboCol = findColumn(result.current, SLOT_CHEN, NounType.COMBO_SKILL);
+    const comboCol = findColumn(result.current, SLOT_CHEN, NounType.COMBO);
     expect(comboCol).toBeDefined();
 
     const payload = getMenuPayload(result.current, comboCol!, 2 * FPS);
@@ -197,7 +197,7 @@ describe('Chen Qianyu — P5 combo cooldown reduction', () => {
 
     // Controller layer: cooldown segment is 15s (ADD: 15 + 0 at P0)
     const cdDuration = getCooldownDuration(
-      result.current.allProcessedEvents, SLOT_CHEN, NounType.COMBO_SKILL,
+      result.current.allProcessedEvents, SLOT_CHEN, NounType.COMBO,
     );
     expect(cdDuration).toBe(Math.round(15 * FPS));
 
@@ -209,7 +209,7 @@ describe('Chen Qianyu — P5 combo cooldown reduction', () => {
     const colVm = viewModels.get(comboCol!.key);
     expect(colVm).toBeDefined();
     expect(colVm!.events.filter(
-      (ev) => ev.ownerId === SLOT_CHEN && ev.columnId === NounType.COMBO_SKILL,
+      (ev) => ev.ownerId === SLOT_CHEN && ev.columnId === NounType.COMBO,
     )).toHaveLength(1);
   });
 
@@ -218,7 +218,7 @@ describe('Chen Qianyu — P5 combo cooldown reduction', () => {
     const { result } = setupChenWithPotential(5);
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
-    const comboCol = findColumn(result.current, SLOT_CHEN, NounType.COMBO_SKILL);
+    const comboCol = findColumn(result.current, SLOT_CHEN, NounType.COMBO);
     expect(comboCol).toBeDefined();
 
     const payload = getMenuPayload(result.current, comboCol!, 2 * FPS);
@@ -230,7 +230,7 @@ describe('Chen Qianyu — P5 combo cooldown reduction', () => {
 
     // Controller layer: cooldown is 12s (ADD: 15 + (-3) at P5)
     const cdDuration = getCooldownDuration(
-      result.current.allProcessedEvents, SLOT_CHEN, NounType.COMBO_SKILL,
+      result.current.allProcessedEvents, SLOT_CHEN, NounType.COMBO,
     );
     expect(cdDuration).toBe(Math.round(12 * FPS));
 
@@ -242,7 +242,7 @@ describe('Chen Qianyu — P5 combo cooldown reduction', () => {
     const colVm = viewModels.get(comboCol!.key);
     expect(colVm).toBeDefined();
     expect(colVm!.events.filter(
-      (ev) => ev.ownerId === SLOT_CHEN && ev.columnId === NounType.COMBO_SKILL,
+      (ev) => ev.ownerId === SLOT_CHEN && ev.columnId === NounType.COMBO,
     )).toHaveLength(1);
   });
 
@@ -251,7 +251,7 @@ describe('Chen Qianyu — P5 combo cooldown reduction', () => {
     const { result } = setupChenWithPotential(4);
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
-    const comboCol = findColumn(result.current, SLOT_CHEN, NounType.COMBO_SKILL);
+    const comboCol = findColumn(result.current, SLOT_CHEN, NounType.COMBO);
     expect(comboCol).toBeDefined();
 
     const payload = getMenuPayload(result.current, comboCol!, 2 * FPS);
@@ -261,10 +261,10 @@ describe('Chen Qianyu — P5 combo cooldown reduction', () => {
       );
     });
 
-    // Controller layer: cooldown segment is 15s (P4 does not meet AT_LEAST 5,
+    // Controller layer: cooldown segment is 15s (P4 does not meet GREATER_THAN_EQUAL 5,
     // but even P5 currently shows 15s because modifier is not resolved)
     const cdDuration = getCooldownDuration(
-      result.current.allProcessedEvents, SLOT_CHEN, NounType.COMBO_SKILL,
+      result.current.allProcessedEvents, SLOT_CHEN, NounType.COMBO,
     );
     expect(cdDuration).toBe(Math.round(15 * FPS));
   });

@@ -58,15 +58,19 @@
                         0.79,
                         0.86
                       ],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     },
                     "mainStat": {
                       "verb": "IS",
                       "object": "STAT",
                       "objectId": "ATTACK",
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     }
                   }
                 }
@@ -135,15 +139,19 @@
                         1.11,
                         1.2
                       ],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     },
                     "mainStat": {
                       "verb": "IS",
                       "object": "STAT",
                       "objectId": "ATTACK",
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     }
                   }
                 }
@@ -212,15 +220,19 @@
                         1.38,
                         1.49
                       ],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     },
                     "mainStat": {
                       "verb": "IS",
                       "object": "STAT",
                       "objectId": "ATTACK",
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     }
                   }
                 }
@@ -310,22 +322,27 @@
                         1.69,
                         1.84
                       ],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     },
                     "mainStat": {
                       "verb": "IS",
                       "object": "STAT",
                       "objectId": "ATTACK",
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     }
                   }
                 },
                 {
                   "verb": "PERFORM",
-                  "object": "FINAL_STRIKE",
-                  "to": "ENEMY"
+                  "object": "SKILL",
+                  "to": "ENEMY",
+                  "objectId": "FINAL_STRIKE"
                 }
               ]
             }
@@ -338,10 +355,11 @@
   "properties": {
     "name": "Sword Art of Assault",
     "description": "An attack with up to 4 sequences that deals Physical DMG. As the controlled operator, Final Strike also deals {poise:0} Stagger.",
-    "eventType": "COMBAT_SKILL",
-    "eventCategoryType": "BASIC_ATTACK",
+    "eventType": "SKILL",
+    "eventIdType": "BASIC_ATTACK",
+    "eventQualifierType": "BATK",
     "element": "PHYSICAL",
-    "id": "SWORD_ART_OF_ASSAULT"
+    "id": "SWORD_ART_OF_ASSAULT_BATK"
   },
   "metadata": {
     "originId": "EMBER",

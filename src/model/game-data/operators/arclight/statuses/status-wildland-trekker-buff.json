@@ -42,8 +42,10 @@
                   "2": 0.00104
                 }
               },
-              "ofDeterminer": "THIS",
-              "of": "OPERATOR"
+              "of": {
+                "object": "OPERATOR",
+                "determiner": "THIS"
+              }
             }
           },
           "objectId": "DAMAGE_BONUS"
@@ -72,7 +74,7 @@
       "unit": "SECOND"
     },
     "eventType": "STATUS",
-    "eventCategoryType": "SKILL_STATUS",
+    "eventIdType": "SKILL_STATUS",
     "description": "Talent Wildland Trekker improved: DMG Boost effect increased to times the original."
   },
   "metadata": {

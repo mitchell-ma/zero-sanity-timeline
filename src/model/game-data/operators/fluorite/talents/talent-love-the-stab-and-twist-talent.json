@@ -23,8 +23,10 @@
                 0.1,
                 0.2
               ],
-              "ofDeterminer": "THIS",
-              "of": "OPERATOR"
+              "of": {
+                "object": "OPERATOR",
+                "determiner": "THIS"
+              }
             }
           },
           "objectId": "DAMAGE_BONUS"
@@ -42,7 +44,7 @@
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
-    "eventCategoryType": "TALENT",
+    "eventIdType": "TALENT",
     "description": "Fluorite gains DMG Dealt +{dmg_up:0%} against Slowed targets."
   },
   "metadata": {

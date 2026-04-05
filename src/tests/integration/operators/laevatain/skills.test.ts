@@ -102,7 +102,7 @@ describe('Laevatain Skills — integration through useApp', () => {
 
   it('battle skill added without crash', () => {
     const { result } = renderHook(() => useApp());
-    const col = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE_SKILL);
+    const col = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE);
     expect(col).toBeDefined();
 
     // Context menu layer: verify menu item is available and enabled
@@ -118,7 +118,7 @@ describe('Laevatain Skills — integration through useApp', () => {
     });
 
     const battles = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === NounType.BATTLE_SKILL,
+      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === NounType.BATTLE,
     );
     expect(battles).toHaveLength(1);
   });
@@ -129,7 +129,7 @@ describe('Laevatain Skills — integration through useApp', () => {
     // Combo skill requires activation conditions — switch to freeform to bypass
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
-    const col = findColumn(result.current, SLOT_LAEVATAIN, NounType.COMBO_SKILL);
+    const col = findColumn(result.current, SLOT_LAEVATAIN, NounType.COMBO);
     expect(col).toBeDefined();
 
     // Context menu layer: verify menu item is available in freeform
@@ -145,7 +145,7 @@ describe('Laevatain Skills — integration through useApp', () => {
     });
 
     const combos = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === NounType.COMBO_SKILL,
+      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === NounType.COMBO,
     );
     expect(combos).toHaveLength(1);
   });
@@ -180,7 +180,7 @@ describe('Laevatain Skills — integration through useApp', () => {
 
   it('battle skill generates 1 Melting Flame stack', () => {
     const { result } = renderHook(() => useApp());
-    const col = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE_SKILL);
+    const col = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE);
     expect(col).toBeDefined();
 
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
@@ -321,7 +321,7 @@ describe('Laevatain Skills — integration through useApp', () => {
 
   it('empowered battle skill consumes all 4 MF stacks', () => {
     const { result } = renderHook(() => useApp());
-    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE_SKILL);
+    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE);
     expect(battleCol).toBeDefined();
 
     // Place 4 battle skills well-spaced to generate 4 MF stacks via context menu
@@ -337,7 +337,7 @@ describe('Laevatain Skills — integration through useApp', () => {
 
     // Verify all 4 battle skills were added
     const battleEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === NounType.BATTLE_SKILL,
+      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === NounType.BATTLE,
     );
     expect(battleEvents).toHaveLength(4);
 
@@ -383,7 +383,7 @@ describe('Laevatain Skills — integration through useApp', () => {
   it('at max MF stacks, basic attack does not consume heat inflictions', () => {
     const { result } = renderHook(() => useApp());
     const basicCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BASIC_ATTACK);
-    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE_SKILL);
+    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE);
 
     // 1. Generate 4 MF stacks via 4 battle skills (each produces 1 MF)
     for (let i = 0; i < 4; i++) {

@@ -16,8 +16,10 @@
                 0.04,
                 0.08
               ],
-              "ofDeterminer": "THIS",
-              "of": "OPERATOR"
+              "of": {
+                "object": "OPERATOR",
+                "determiner": "THIS"
+              }
             }
           },
           "objectId": "ATTACK_BONUS"
@@ -36,8 +38,10 @@
                 4,
                 8
               ],
-              "ofDeterminer": "THIS",
-              "of": "OPERATOR"
+              "of": {
+                "object": "OPERATOR",
+                "determiner": "THIS"
+              }
             }
           }
         }
@@ -59,30 +63,47 @@
     "stacks": {
       "limit": {
         "operation": "ADD",
-        "left": { "verb": "IS", "value": 3 },
+        "left": {
+          "verb": "IS",
+          "value": 3
+        },
         "right": {
           "operation": "MULT",
           "left": {
             "verb": "VARY_BY",
             "object": "POTENTIAL",
-            "value": [0, 0, 0, 2, 2, 2],
-            "ofDeterminer": "THIS",
-            "of": "OPERATOR"
+            "value": [
+              0,
+              0,
+              0,
+              2,
+              2,
+              2
+            ],
+            "of": {
+              "object": "OPERATOR",
+              "determiner": "THIS"
+            }
           },
           "right": {
             "verb": "VARY_BY",
             "object": "STATUS",
             "objectId": "WHEN_THE_BANNER_FLUTTERS",
-            "value": [0, 1],
-            "ofDeterminer": "THIS",
-            "of": "OPERATOR"
+            "value": [
+              0,
+              1
+            ],
+            "of": {
+              "object": "OPERATOR",
+              "determiner": "THIS"
+            }
           }
         }
       },
       "interactionType": "RESET"
     },
     "eventType": "STATUS",
-    "eventCategoryType": "STATUS",
+    "eventIdType": "STATUS",
     "description": "During battle, recovering {atb_gain:0} SP with his own skills grants Fervent Morale for {duration:0}s. Fervent Morale effects: ATK +{atk_up:0%} and Arts Intensity +{physpell_up:0}. This effect can reach 3 stacks. Duration of each stack is counted separately."
   },
   "metadata": {
@@ -90,7 +111,7 @@
     "dataSources": [
       "ENDFIELD_WIKI"
     ],
-    "dataStatus": "RECONCILED"
+    "dataStatus": "VERIFIED"
   },
   "clauseType": "ALL"
 }

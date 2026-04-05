@@ -6,7 +6,8 @@
           "subjectDeterminer": "THIS",
           "subject": "OPERATOR",
           "verb": "PERFORM",
-          "object": "BATTLE_SKILL"
+          "object": "SKILL",
+          "objectId": "BATTLE"
         }
       ],
       "effects": [
@@ -27,7 +28,7 @@
     "piecesRequired": 3,
     "description": "3-piece set effect: Wearer's Ultimate Gain Efficiency +{ultimate_gain_up:0%}. The wearer casts a battle skill, the action returns {atb_recover:0} SP. This effect only triggers 1 time per battle.",
     "eventType": "STATUS",
-    "eventCategoryType": "GEAR_SET_EFFECT"
+    "eventIdType": "GEAR_SET_EFFECT"
   },
   "metadata": {
     "originId": "game",

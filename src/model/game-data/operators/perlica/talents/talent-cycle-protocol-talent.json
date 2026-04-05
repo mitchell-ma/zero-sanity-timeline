@@ -6,7 +6,8 @@
           "subjectDeterminer": "THIS",
           "subject": "OPERATOR",
           "verb": "PERFORM",
-          "object": "COMBO_SKILL"
+          "object": "SKILL",
+          "objectId": "COMBO"
         },
         {
           "subject": "ENEMY",
@@ -31,8 +32,10 @@
                 1,
                 1
               ],
-              "ofDeterminer": "THIS",
-              "of": "OPERATOR"
+              "of": {
+                "object": "OPERATOR",
+                "determiner": "THIS"
+              }
             }
           }
         }
@@ -49,7 +52,7 @@
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
-    "eventCategoryType": "TALENT",
+    "eventIdType": "TALENT",
     "description": "Combo skill Instant Protocol: Chain improved: When hitting a Vulnerable enemy, the hit chains 1 more time."
   },
   "metadata": {

@@ -2,8 +2,8 @@
   "properties": {
     "name": "Stack Overflow",
     "description": "Applies temporary Cryo Amp and Nature Amp to the entire team. The attribute of Intellect increases the Amp effect.",
-    "eventType": "COMBAT_SKILL",
-    "eventCategoryType": "ULTIMATE_SKILL",
+    "eventType": "SKILL",
+    "eventIdType": "ULTIMATE",
     "id": "STACK_OVERFLOW"
   },
   "clause": [
@@ -31,8 +31,10 @@
                   0.9,
                   0.9
                 ],
-                "ofDeterminer": "THIS",
-                "of": "OPERATOR"
+                "of": {
+                  "object": "OPERATOR",
+                  "determiner": "THIS"
+                }
               }
             }
           }
@@ -116,8 +118,10 @@
                           0.3,
                           0.36
                         ],
-                        "ofDeterminer": "THIS",
-                        "of": "OPERATOR"
+                        "of": {
+                          "object": "OPERATOR",
+                          "determiner": "THIS"
+                        }
                       },
                       "right": {
                         "operation": "ADD",
@@ -140,8 +144,10 @@
                               0.22,
                               0.24
                             ],
-                            "ofDeterminer": "THIS",
-                            "of": "OPERATOR"
+                            "of": {
+                              "object": "OPERATOR",
+                              "determiner": "THIS"
+                            }
                           },
                           "right": {
                             "verb": "VARY_BY",
@@ -154,8 +160,10 @@
                               1,
                               1.1
                             ],
-                            "ofDeterminer": "THIS",
-                            "of": "OPERATOR"
+                            "of": {
+                              "object": "OPERATOR",
+                              "determiner": "THIS"
+                            }
                           }
                         },
                         "right": {
@@ -177,15 +185,19 @@
                               0.00028,
                               0.0003
                             ],
-                            "ofDeterminer": "THIS",
-                            "of": "OPERATOR"
+                            "of": {
+                              "object": "OPERATOR",
+                              "determiner": "THIS"
+                            }
                           },
                           "right": {
                             "verb": "IS",
                             "object": "STAT",
                             "objectId": "INTELLECT",
-                            "ofDeterminer": "THIS",
-                            "of": "OPERATOR"
+                            "of": {
+                              "object": "OPERATOR",
+                              "determiner": "THIS"
+                            }
                           }
                         }
                       }
@@ -225,8 +237,10 @@
                           0.3,
                           0.36
                         ],
-                        "ofDeterminer": "THIS",
-                        "of": "OPERATOR"
+                        "of": {
+                          "object": "OPERATOR",
+                          "determiner": "THIS"
+                        }
                       },
                       "right": {
                         "operation": "ADD",
@@ -249,8 +263,10 @@
                               0.22,
                               0.24
                             ],
-                            "ofDeterminer": "THIS",
-                            "of": "OPERATOR"
+                            "of": {
+                              "object": "OPERATOR",
+                              "determiner": "THIS"
+                            }
                           },
                           "right": {
                             "verb": "VARY_BY",
@@ -263,8 +279,10 @@
                               1,
                               1.1
                             ],
-                            "ofDeterminer": "THIS",
-                            "of": "OPERATOR"
+                            "of": {
+                              "object": "OPERATOR",
+                              "determiner": "THIS"
+                            }
                           }
                         },
                         "right": {
@@ -286,15 +304,19 @@
                               0.00028,
                               0.0003
                             ],
-                            "ofDeterminer": "THIS",
-                            "of": "OPERATOR"
+                            "of": {
+                              "object": "OPERATOR",
+                              "determiner": "THIS"
+                            }
                           },
                           "right": {
                             "verb": "IS",
                             "object": "STAT",
                             "objectId": "INTELLECT",
-                            "ofDeterminer": "THIS",
-                            "of": "OPERATOR"
+                            "of": {
+                              "object": "OPERATOR",
+                              "determiner": "THIS"
+                            }
                           }
                         }
                       }
@@ -317,7 +339,7 @@
                   "subject": "OPERATOR",
                   "verb": "HAVE",
                   "object": "TALENT_LEVEL",
-                  "cardinalityConstraint": "AT_LEAST",
+                  "cardinalityConstraint": "GREATER_THAN_EQUAL",
                   "value": {
                     "verb": "IS",
                     "value": 2

@@ -32,8 +32,10 @@
                 31,
                 31
               ],
-              "ofDeterminer": "THIS",
-              "of": "OPERATOR"
+              "of": {
+                "object": "OPERATOR",
+                "determiner": "THIS"
+              }
             }
           }
         },
@@ -52,12 +54,14 @@
                 0.312,
                 0.312
               ],
-              "ofDeterminer": "THIS",
-              "of": "OPERATOR"
+              "of": {
+                "object": "OPERATOR",
+                "determiner": "THIS"
+              }
             }
           },
           "objectId": "DAMAGE_BONUS",
-          "objectQualifier": "COMBO_SKILL"
+          "objectQualifier": "COMBO"
         }
       ]
     }

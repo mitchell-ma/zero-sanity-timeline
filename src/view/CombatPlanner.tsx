@@ -29,7 +29,7 @@ import {
 } from '../utils/timeline';
 import { OPERATOR_COLUMNS, OPERATOR_STATUS_COLUMN_ID, COMBO_WINDOW_COLUMN_ID, ENEMY_ACTION_COLUMN_ID } from '../model/channels';
 import { COMMON_COLUMN_IDS } from '../controller/slot/commonSlotController';
-import { TimelineSourceType, InteractionModeType, CombatSkillType, EventCategoryType, ColumnType, DamageType } from '../consts/enums';
+import { TimelineSourceType, InteractionModeType, ColumnType, DamageType } from '../consts/enums';
 import {
   Operator,
   Enemy,
@@ -173,34 +173,34 @@ const noop3 = (_a: unknown, _b: unknown, _c: unknown) => {};
 
 const STATUS_TYPE_LABELS: Record<string, string> = {
   'STATUS': 'Combat Status',
-  [EventCategoryType.SKILL_STATUS]: 'Skill Status',
-  [EventCategoryType.TALENT]: 'Talent',
-  [EventCategoryType.TALENT_STATUS]: 'Talent Status',
-  [EventCategoryType.WEAPON_STATUS]: 'Weapon Status',
-  [EventCategoryType.GEAR_STATUS]: 'Gear Status',
-  [EventCategoryType.GEAR_SET_EFFECT]: 'Gear Set Effect',
-  [EventCategoryType.GEAR_SET_STATUS]: 'Gear Set Status',
-  [EventCategoryType.POTENTIAL]: 'Potential',
-  [EventCategoryType.POTENTIAL_STATUS]: 'Potential Status',
-  [EventCategoryType.CONSUMABLE]: 'Consumable',
-  [EventCategoryType.TACTICAL]: 'Tactical',
+  [NounType.SKILL_STATUS]: 'Skill Status',
+  [NounType.TALENT]: 'Talent',
+  [NounType.TALENT_STATUS]: 'Talent Status',
+  [NounType.WEAPON_STATUS]: 'Weapon Status',
+  [NounType.GEAR_STATUS]: 'Gear Status',
+  [NounType.GEAR_SET_EFFECT]: 'Gear Set Effect',
+  [NounType.GEAR_SET_STATUS]: 'Gear Set Status',
+  [NounType.POTENTIAL]: 'Potential',
+  [NounType.POTENTIAL_STATUS]: 'Potential Status',
+  [NounType.CONSUMABLE]: 'Consumable',
+  [NounType.TACTICAL]: 'Tactical',
 };
 
-/** Special key for the cross-cutting "Permanent" filter (not an EventCategoryType). */
+/** Special key for the cross-cutting "Permanent" filter (not an ). */
 const PERMANENT_FILTER_KEY = 'PERMANENT';
 
 /** Groups of status types for the filter menu, with display order. */
-const STATUS_FILTER_GROUPS: { label: string; types: EventCategoryType[]; permanent?: boolean }[] = [
+const STATUS_FILTER_GROUPS: { label: string; types: string[]; permanent?: boolean }[] = [
   { label: 'Passive', types: [], permanent: true },
-  { label: 'Skills', types: ['STATUS' as EventCategoryType, EventCategoryType.SKILL_STATUS, EventCategoryType.TALENT, EventCategoryType.TALENT_STATUS, EventCategoryType.POTENTIAL, EventCategoryType.POTENTIAL_STATUS] },
-  { label: 'Weapons', types: [EventCategoryType.WEAPON_STATUS] },
-  { label: 'Gears', types: [EventCategoryType.GEAR_STATUS, EventCategoryType.GEAR_SET_EFFECT, EventCategoryType.GEAR_SET_STATUS] },
-  { label: 'Consumables', types: [EventCategoryType.CONSUMABLE] },
-  { label: 'Tacticals', types: [EventCategoryType.TACTICAL] },
+  { label: 'Skills', types: [NounType.SKILL_STATUS, NounType.TALENT, NounType.TALENT_STATUS, NounType.POTENTIAL, NounType.POTENTIAL_STATUS] },
+  { label: 'Weapons', types: [NounType.WEAPON_STATUS] },
+  { label: 'Gears', types: [NounType.GEAR_STATUS, NounType.GEAR_SET_EFFECT, NounType.GEAR_SET_STATUS] },
+  { label: 'Consumables', types: [NounType.CONSUMABLE] },
+  { label: 'Tacticals', types: [NounType.TACTICAL] },
 ];
 
 // Column width weight — used for grid proportions within operator groups
-const COL_WEIGHT_SKILL_IDS = new Set<string>([NounType.BASIC_ATTACK, NounType.BATTLE_SKILL, NounType.COMBO_SKILL, NounType.ULTIMATE]);
+const COL_WEIGHT_SKILL_IDS = new Set<string>([NounType.BASIC_ATTACK, NounType.BATTLE, NounType.COMBO, NounType.ULTIMATE]);
 function getColWeight(col: Column) {
   if (col.type === 'placeholder') return 1;
   const cid = col.type === 'mini-timeline' ? col.columnId : undefined;
@@ -433,7 +433,7 @@ export default React.memo(function CombatPlanner({
       const hasFilterable = col.microColumns.some((mc) => mc.statusType || mc.permanent);
       if (!hasFilterable) return col;
       const isMcHidden = (mc: import('../consts/viewTypes').MicroColumn) => {
-        const effectiveType = mc.statusType ?? EventCategoryType.SKILL_STATUS;
+        const effectiveType = mc.statusType ?? NounType.SKILL_STATUS;
         if (hiddenStatusTypes.has(effectiveType)) return true;
         if (hidePermanent && mc.permanent) return true;
         return false;
@@ -489,7 +489,7 @@ export default React.memo(function CombatPlanner({
       const ultZones = computeResourceInsufficiencyZones(resourceGraphs, slots);
       // Only merge ultimate zones (SP zones already in controller output)
       ultZones.forEach((val, key) => {
-        if (!key.endsWith(`:${NounType.BATTLE_SKILL}`)) zones.set(key, val);
+        if (!key.endsWith(`:${NounType.BATTLE}`)) zones.set(key, val);
       });
     }
     return zones;
@@ -503,12 +503,12 @@ export default React.memo(function CombatPlanner({
     const warnings = new Map<string, string>();
     for (const ev of events) {
       if (!draggingIds.has(ev.uid)) continue;
-      if (ev.columnId !== NounType.BATTLE_SKILL && ev.columnId !== NounType.ULTIMATE) continue;
+      if (ev.columnId !== NounType.BATTLE && ev.columnId !== NounType.ULTIMATE) continue;
       const zones = dragZonesSnapshot.get(`${ev.ownerId}:${ev.columnId}`);
       if (!zones) continue;
       for (const zone of zones) {
         if (ev.startFrame >= zone.start && ev.startFrame < zone.end) {
-          const label = ev.columnId === NounType.BATTLE_SKILL ? 'SP' : 'ultimate energy';
+          const label = ev.columnId === NounType.BATTLE ? 'SP' : 'ultimate energy';
           warnings.set(ev.uid, `Not enough ${label}`);
           break;
         }
@@ -1537,9 +1537,9 @@ export default React.memo(function CombatPlanner({
     const frame = seg.frames[frameIndex];
     if (!frame) return;
 
-    // Compute bounds: must stay within segment [0, segDuration-1] and preserve order with neighbors
-    const prevOffset = frameIndex > 0 ? seg.frames[frameIndex - 1].offsetFrame + 1 : 0;
-    const nextOffset = frameIndex < seg.frames.length - 1 ? seg.frames[frameIndex + 1].offsetFrame - 1 : seg.properties.duration - 1;
+    // Compute bounds: must stay within segment [0, segDuration-1]
+    const prevOffset = 0;
+    const nextOffset = seg.properties.duration - 1;
 
     onBatchStart?.();
     frameDragRef.current = {
@@ -1767,7 +1767,7 @@ export default React.memo(function CombatPlanner({
       const hasTyped = col.microColumns.some((mc) => mc.statusType);
       if (!hasTyped) continue;
       for (const mc of col.microColumns) {
-        const effectiveType = mc.statusType ?? EventCategoryType.SKILL_STATUS;
+        const effectiveType = mc.statusType ?? NounType.SKILL_STATUS;
         types.set(effectiveType, (types.get(effectiveType) ?? 0) + 1);
         if (mc.permanent) permCount++;
       }
@@ -1854,7 +1854,7 @@ export default React.memo(function CombatPlanner({
       }
     }
     for (const [type, count] of Array.from(statusTypeCounts.entries())) {
-      if (STATUS_FILTER_GROUPS.some((g) => g.types.includes(type as EventCategoryType))) continue;
+      if (STATUS_FILTER_GROUPS.some((g) => g.types.includes(type as string))) continue;
       items.push({
         label: `${STATUS_TYPE_LABELS[type] ?? type} (${count})`,
         checked: () => !hiddenStatusTypesRef.current.has(type),
@@ -1901,7 +1901,7 @@ export default React.memo(function CombatPlanner({
     if (!ev) return;
 
     // Control events: show remove + the column's add items (dash/dodge)
-    if (ev.name === CombatSkillType.CONTROL) {
+    if (ev.name === NounType.CONTROL) {
       const col = columns.find((c): c is MiniTimeline => c.type === ColumnType.MINI_TIMELINE && c.ownerId === ev.ownerId && c.columnId === ev.columnId);
       const items: import('../consts/viewTypes').ContextMenuItem[] = [];
       if (onRemoveEvent) {
@@ -1931,7 +1931,7 @@ export default React.memo(function CombatPlanner({
 
     // Combo activation window: show combo skill column's add items (no remove/reset)
     if (ev.columnId === COMBO_WINDOW_COLUMN_ID) {
-      const comboCol = columns.find((c): c is MiniTimeline => c.type === ColumnType.MINI_TIMELINE && c.ownerId === ev.ownerId && c.columnId === NounType.COMBO_SKILL);
+      const comboCol = columns.find((c): c is MiniTimeline => c.type === ColumnType.MINI_TIMELINE && c.ownerId === ev.ownerId && c.columnId === NounType.COMBO);
       if (comboCol) {
         const clickFrame = hoverFrameRef.current ?? ev.startFrame;
         const colMenu = buildColumnContextMenu(comboCol, clickFrame, undefined, {
@@ -1957,7 +1957,7 @@ export default React.memo(function CombatPlanner({
     }
 
     const multiSegment = ev.segments.length > 1;
-    const isCombo = ev.columnId === NounType.COMBO_SKILL;
+    const isCombo = ev.columnId === NounType.COMBO;
 
     // Determine which segment the click landed on
     const evEl = scrollRef.current?.querySelector(`[data-event-uid="${eventUid}"]`) as HTMLElement | null;
@@ -2071,7 +2071,7 @@ export default React.memo(function CombatPlanner({
     if (!ev) return;
     const segLabel = ev.segments[segmentIndex]?.properties.name ?? formatSegmentShortName(undefined, segmentIndex);
     const multiSegment = ev.segments.length > 1;
-    const isCombo = ev.columnId === NounType.COMBO_SKILL;
+    const isCombo = ev.columnId === NounType.COMBO;
     const items: import('../consts/viewTypes').ContextMenuItem[] = [];
     if (onResetEvent) items.push({ label: 'Reset Event to Default', action: () => { onResetEvent(eventUid); } });
     if (multiSegment && !isCombo && onResetSegments) {
@@ -2344,7 +2344,7 @@ export default React.memo(function CombatPlanner({
               );
             }
 
-            const comboWindowEvts = col.columnId === NounType.COMBO_SKILL
+            const comboWindowEvts = col.columnId === NounType.COMBO
               ? (comboWindowEventsByOwner.get(col.ownerId) ?? EMPTY_COMBO_WINDOW_EVENTS)
               : EMPTY_COMBO_WINDOW_EVENTS;
 
@@ -2359,7 +2359,7 @@ export default React.memo(function CombatPlanner({
                 tlHeight={tlHeight}
                 isGroupStart={groupStartKeys.has(col.key)}
                 resourceGraph={resourceGraphs?.get(col.key)}
-                insufficiencyZones={resourceInsufficiencyZones.get(`${col.ownerId}:${NounType.BATTLE_SKILL}`)}
+                insufficiencyZones={resourceInsufficiencyZones.get(`${col.ownerId}:${NounType.BATTLE}`)}
                 alwaysAvailableCombo={alwaysAvailableComboSlots.has(col.ownerId)}
                 comboWindowEvents={comboWindowEvts}
                 enemyStaggerNodes={enemy.staggerNodes}

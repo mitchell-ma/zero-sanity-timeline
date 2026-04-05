@@ -62,8 +62,10 @@ export const OBJECT_QUALIFIER_LABELS: Record<string, string> = {
 
 export const CARDINALITY_LABELS: Record<string, string> = {
   EXACTLY: t('dsl.cardinality.EXACTLY'),
-  AT_LEAST: t('dsl.cardinality.AT_LEAST'),
-  AT_MOST: t('dsl.cardinality.AT_MOST'),
+  GREATER_THAN: t('dsl.cardinality.GREATER_THAN'),
+  GREATER_THAN_EQUAL: t('dsl.cardinality.GREATER_THAN_EQUAL'),
+  LESS_THAN: t('dsl.cardinality.LESS_THAN'),
+  LESS_THAN_EQUAL: t('dsl.cardinality.LESS_THAN_EQUAL'),
 };
 
 export const DETERMINER_LABELS: Record<string, string> = {
@@ -351,8 +353,8 @@ export function translateEffect(e: Effect): TranslatedEffect {
   if (e.onObject) parts.push(`on ${formatTarget(String(e.onObject), e.onDeterminer)}`);
   // UNTIL
   if (e.until) {
-    const scope = e.until.of?.toLowerCase() ?? 'event';
-    const det = e.until.ofDeterminer?.toLowerCase() ?? 'this';
+    const scope = String(e.until.of?.object ?? 'EVENT').toLowerCase();
+    const det = e.until.of?.determiner?.toLowerCase() ?? 'this';
     parts.push(`until ${e.until.object.toLowerCase()} of ${det} ${scope}`);
   }
   // FOR

@@ -1,5 +1,4 @@
 import {
-  CombatSkillType,
   ElementType,
   EventOriginType,
   EventType,
@@ -18,7 +17,7 @@ export interface TriggerCondition {
   source: { target: DslTarget };
   action: {
     interactionType: Interaction;
-    combatSkillType?: CombatSkillType;
+    combatSkillType?: string;
     statusType?: StatusType;
     threshold?: number;
   };

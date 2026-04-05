@@ -449,9 +449,22 @@ export function renderEvent(
 
     // ── Frame diamonds ────────────────────────────────────────────────
     if (seg.frames) {
+      // Pre-compute lateral offsets for co-located frames (same offset → adjacent diamonds)
+      const frameLateralOffsets: number[] = [];
+      for (let fi = 0; fi < seg.frames.length; fi++) {
+        const offset = seg.frames[fi].derivedOffsetFrame ?? seg.frames[fi].offsetFrame;
+        let groupIdx = 0;
+        for (let pfi = 0; pfi < fi; pfi++) {
+          const prevOffset = seg.frames[pfi].derivedOffsetFrame ?? seg.frames[pfi].offsetFrame;
+          if (prevOffset === offset) groupIdx++;
+        }
+        frameLateralOffsets.push(groupIdx);
+      }
+
       for (let fi = 0; fi < seg.frames.length; fi++) {
         const f = seg.frames[fi];
         const framePx = segTopPx + durationToPx(f.derivedOffsetFrame ?? f.offsetFrame, zoom);
+        const lateralShift = frameLateralOffsets[fi] * DIAMOND_HALF * 2;
         const dg = obj.diamonds[diamondIdx];
         dg.clear();
         dg.cursor = presentation.notDraggable ? 'default' : 'pointer';
@@ -485,7 +498,7 @@ export function renderEvent(
 
         if (isHorizontal) {
           const cx = framePx - segTopPx;
-          const cy = inset + eventW;
+          const cy = inset + eventW + lateralShift;
           dg.moveTo(cx, cy - DIAMOND_HALF);
           dg.lineTo(cx + DIAMOND_HALF, cy);
           dg.lineTo(cx, cy + DIAMOND_HALF);
@@ -499,7 +512,7 @@ export function renderEvent(
           }
           dg.x = ox + segTopPx; dg.y = oy;
         } else {
-          const cx = inset + eventW;
+          const cx = inset + eventW - lateralShift;
           const cy = framePx - segTopPx;
           dg.moveTo(cx, cy - DIAMOND_HALF);
           dg.lineTo(cx + DIAMOND_HALF, cy);

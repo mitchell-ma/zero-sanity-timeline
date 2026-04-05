@@ -24,8 +24,10 @@
                 0.12,
                 0.14
               ],
-              "ofDeterminer": "THIS",
-              "of": "OPERATOR"
+              "of": {
+                "object": "OPERATOR",
+                "determiner": "THIS"
+              }
             }
           }
         }
@@ -39,7 +41,8 @@
           "subjectDeterminer": "THIS",
           "subject": "OPERATOR",
           "verb": "PERFORM",
-          "object": "ULTIMATE"
+          "object": "SKILL",
+          "objectId": "ULTIMATE"
         }
       ],
       "effects": [

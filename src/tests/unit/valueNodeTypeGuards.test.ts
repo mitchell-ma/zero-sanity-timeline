@@ -2,7 +2,7 @@
  * ValueNode type guards — unit tests for isValueLiteral, isValueStat, isValueExpression.
  *
  * Tests the widened type guards after:
- * - ValueStat extended form (valueType + stat + ofDeterminer)
+ * - ValueStat extended form (valueType + stat + of clause)
  * - ValueExpression operator → operation rename
  * - isValueLiteral excluding valueType field
  */
@@ -29,7 +29,7 @@ describe('ValueNode type guards', () => {
         verb: VerbType.IS,
         valueType: NounType.STAT,
         stat: 'STRENGTH',
-        ofDeterminer: DeterminerType.SOURCE,
+        of: { determiner: DeterminerType.SOURCE, object: NounType.OPERATOR },
       } as ValueNode;
       expect(isValueLiteral(node)).toBe(false);
     });
@@ -60,7 +60,7 @@ describe('ValueNode type guards', () => {
         verb: VerbType.IS,
         valueType: NounType.STAT,
         stat: 'STRENGTH',
-        ofDeterminer: DeterminerType.SOURCE,
+        of: { determiner: DeterminerType.SOURCE, object: NounType.OPERATOR },
       } as ValueNode;
       expect(isValueStat(node)).toBe(true);
     });
@@ -82,12 +82,11 @@ describe('ValueNode type guards', () => {
       expect(isValueVariable(node)).toBe(true);
     });
 
-    it('matches VARY_BY with ofDeterminer', () => {
+    it('matches VARY_BY with of clause', () => {
       const node = {
         verb: VerbType.VARY_BY,
         object: 'TALENT_LEVEL',
-        ofDeterminer: DeterminerType.SOURCE,
-        of: 'OPERATOR',
+        of: { determiner: DeterminerType.SOURCE, object: NounType.OPERATOR },
         value: [72, 108],
       } as ValueNode;
       expect(isValueVariable(node)).toBe(true);

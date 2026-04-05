@@ -19,7 +19,7 @@
       "interactionType": "REFRESH"
     },
     "eventType": "STATUS",
-    "eventCategoryType": "INFLICTION",
+    "eventIdType": "INFLICTION",
     "description": "Nature element infliction. Stacks up to 4 times. At 4 stacks, triggers Corrosion arts reaction."
   },
   "metadata": {

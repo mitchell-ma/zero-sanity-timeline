@@ -4,7 +4,7 @@
     "name": "Aldertone's Teachings",
     "level": 4,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
+    "eventIdType": "POTENTIAL",
     "description": "Ultimate Exploding Blitz improved: Ultimate Energy cost -15%."
   },
   "metadata": {

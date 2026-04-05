@@ -1,6 +1,6 @@
 {
   "properties": {
-    "id": "STAGGER",
+    "id": "full-stagger",
     "name": "Stagger (Full)",
     "to": "ENEMY",
     "duration": {
@@ -18,8 +18,8 @@
       "interactionType": "RESET"
     },
     "eventType": "STATUS",
-    "eventCategoryType": "SKILL_STATUS",
-    "description": "Full stagger break. Enemy is staggered and takes increased damage."
+    "eventIdType": "SKILL_STATUS",
+    "description": "Full stagger break. Enemy is fully staggered and takes increased damage."
   },
   "metadata": {
     "originId": "game",

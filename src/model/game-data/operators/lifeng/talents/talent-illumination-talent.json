@@ -18,8 +18,10 @@
                   0.001,
                   0.0015
                 ],
-                "ofDeterminer": "THIS",
-                "of": "OPERATOR"
+                "of": {
+                  "object": "OPERATOR",
+                  "determiner": "THIS"
+                }
               },
               "right": {
                 "verb": "VARY_BY",
@@ -32,8 +34,10 @@
                   0.0005,
                   0.0005
                 ],
-                "ofDeterminer": "THIS",
-                "of": "OPERATOR"
+                "of": {
+                  "object": "OPERATOR",
+                  "determiner": "THIS"
+                }
               }
             }
           },
@@ -52,7 +56,7 @@
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
-    "eventCategoryType": "TALENT",
+    "eventIdType": "TALENT",
     "description": "Every point of Intellect and Will further grants ATK +{atk_up:0.00%}."
   },
   "metadata": {

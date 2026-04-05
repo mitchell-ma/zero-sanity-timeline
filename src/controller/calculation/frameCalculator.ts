@@ -17,7 +17,7 @@ export function computeSpReturnSummary(
   consumptionRecord?: { naturalConsumed: number; returnedConsumed: number },
 ): SpReturnSummary {
   let totalSpReturn = 0;
-  if (event.columnId === NounType.BATTLE_SKILL && event.segments) {
+  if (event.columnId === NounType.BATTLE && event.segments) {
     for (const seg of event.segments) {
       if (!seg.frames) continue;
       for (const f of seg.frames) {

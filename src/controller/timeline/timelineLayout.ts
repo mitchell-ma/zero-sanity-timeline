@@ -97,7 +97,7 @@ function collectRawStops(events: TimelineEvent[]): RawTimeStop[] {
     if (anim <= 0) continue;
     const isTimeStop =
       ev.columnId === NounType.ULTIMATE ||
-      ev.columnId === NounType.COMBO_SKILL ||
+      ev.columnId === NounType.COMBO ||
       (ev.columnId === OPERATOR_COLUMNS.INPUT && ev.isPerfectDodge);
     if (!isTimeStop) continue;
     stops.push({

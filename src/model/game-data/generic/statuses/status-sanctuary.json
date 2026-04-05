@@ -12,7 +12,7 @@
       "interactionType": "RESET"
     },
     "eventType": "STATUS",
-    "eventCategoryType": "STATUS",
+    "eventIdType": "STATUS",
     "description": "Damage reduction buff on operator."
   },
   "metadata": {

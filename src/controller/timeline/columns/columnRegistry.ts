@@ -2,7 +2,7 @@
  * ColumnRegistry — lazy-creates EventColumn instances from status configs.
  *
  * All column behavior is derived from JSON configs (generic, operator, weapon,
- * gear, custom). The eventCategoryType determines the column class:
+ * gear, custom). The eventIdType determines the column class:
  *   INFLICTION / PHYSICAL_INFLICTION → InflictionColumn
  *   REACTION                         → ReactionColumn
  *   PHYSICAL_STATUS                  → PhysicalStatusColumn
@@ -11,7 +11,8 @@
  * No hardcoded column ID sets — the registry reads the config for any status ID.
  */
 
-import { EventCategoryType } from '../../../consts/enums';
+import { NounType } from '../../../dsl/semantics';
+import {  } from '../../../consts/enums';
 import { getStatusById } from '../../gameDataStore';
 import type { EventColumn, ColumnHost } from './eventColumn';
 import { InflictionColumn } from './inflictionColumn';
@@ -44,15 +45,15 @@ export class ColumnRegistry {
 
   private createColumn(columnId: string): EventColumn {
     const config = getStatusById(columnId);
-    const category = config?.eventCategoryType as string | undefined;
+    const category = config?.eventIdType as string | undefined;
 
     switch (category) {
-      case EventCategoryType.INFLICTION:
-      case EventCategoryType.PHYSICAL_INFLICTION:
+      case NounType.INFLICTION:
+      case NounType.PHYSICAL_INFLICTION:
         return new InflictionColumn(columnId, this.host);
-      case EventCategoryType.REACTION:
+      case NounType.REACTION:
         return new ReactionColumn(columnId, this.host);
-      case EventCategoryType.PHYSICAL_STATUS:
+      case NounType.PHYSICAL_STATUS:
         return new PhysicalStatusColumn(columnId, this.host);
       default:
         return new ConfigDrivenStatusColumn(columnId, this.host);

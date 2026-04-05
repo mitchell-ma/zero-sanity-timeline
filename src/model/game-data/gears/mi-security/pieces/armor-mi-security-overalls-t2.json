@@ -32,8 +32,10 @@
                 104,
                 113
               ],
-              "ofDeterminer": "THIS",
-              "of": "OPERATOR"
+              "of": {
+                "object": "OPERATOR",
+                "determiner": "THIS"
+              }
             }
           }
         },
@@ -53,8 +55,10 @@
                 69,
                 75
               ],
-              "ofDeterminer": "THIS",
-              "of": "OPERATOR"
+              "of": {
+                "object": "OPERATOR",
+                "determiner": "THIS"
+              }
             }
           }
         },
@@ -73,12 +77,14 @@
                 0.2484,
                 0.2691
               ],
-              "ofDeterminer": "THIS",
-              "of": "OPERATOR"
+              "of": {
+                "object": "OPERATOR",
+                "determiner": "THIS"
+              }
             }
           },
           "objectId": "DAMAGE_BONUS",
-          "objectQualifier": "BATTLE_SKILL"
+          "objectQualifier": "BATTLE"
         }
       ]
     }

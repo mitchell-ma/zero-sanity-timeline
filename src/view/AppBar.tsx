@@ -3,12 +3,11 @@ import { IS_DEV } from '../consts/devFlags';
 import { CritMode, InteractionModeType } from '../consts/enums';
 import { t } from '../locales/locale';
 
-const CRIT_MODE_CYCLE: CritMode[] = [CritMode.EXPECTED, CritMode.NEVER, CritMode.ALWAYS, CritMode.RANDOM, CritMode.MANUAL];
+const CRIT_MODE_CYCLE: CritMode[] = [CritMode.EXPECTED, CritMode.NEVER, CritMode.ALWAYS, CritMode.MANUAL];
 const CRIT_MODE_LABELS: Record<CritMode, string> = {
   [CritMode.EXPECTED]: t('sheet.crit.expected'),
   [CritMode.NEVER]: t('sheet.crit.never'),
   [CritMode.ALWAYS]: t('sheet.crit.always'),
-  [CritMode.RANDOM]: t('sheet.crit.random'),
   [CritMode.MANUAL]: t('sheet.crit.manual'),
 };
 
@@ -152,7 +151,7 @@ export default function AppBar({
       >
         {CRIT_MODE_LABELS[critMode]}
       </button>
-      {onRandomizeCrit && critMode === CritMode.RANDOM && (
+      {onRandomizeCrit && critMode === CritMode.MANUAL && (
         <button
           className="btn-devlog"
           onClick={onRandomizeCrit}

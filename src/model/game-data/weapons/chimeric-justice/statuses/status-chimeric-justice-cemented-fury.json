@@ -22,8 +22,10 @@
                 0.072,
                 0.084
               ],
-              "ofDeterminer": "THIS",
-              "of": "OPERATOR"
+              "of": {
+                "object": "OPERATOR",
+                "determiner": "THIS"
+              }
             }
           }
         },
@@ -45,8 +47,10 @@
                 0.36,
                 0.42
               ],
-              "ofDeterminer": "THIS",
-              "of": "OPERATOR"
+              "of": {
+                "object": "OPERATOR",
+                "determiner": "THIS"
+              }
             }
           },
           "objectId": "ATTACK_BONUS"
@@ -75,7 +79,7 @@
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
-    "eventCategoryType": "WEAPON_STATUS"
+    "eventIdType": "WEAPON_STATUS"
   },
   "metadata": {
     "originId": "CHIMERIC_JUSTICE",

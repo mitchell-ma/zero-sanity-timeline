@@ -6,20 +6,24 @@
           "subjectDeterminer": "THIS",
           "subject": "OPERATOR",
           "verb": "PERFORM",
-          "object": "ULTIMATE"
+          "object": "SKILL",
+          "objectId": "ULTIMATE"
         }
       ],
       "effects": [
         {
           "verb": "REDUCE",
           "object": "COOLDOWN",
-          "objectId": "COMBO_SKILL",
           "with": {
             "value": {
               "verb": "IS",
               "value": 1
             },
             "unit": "PERCENTAGE"
+          },
+          "of": {
+            "object": "SKILL",
+            "objectId": "COMBO"
           }
         }
       ]
@@ -32,7 +36,7 @@
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
+    "eventIdType": "POTENTIAL",
     "description": "Casting the ultimate Wolven Fury immediately resets the cooldown of the combo skill Frag Grenade·β."
   },
   "metadata": {

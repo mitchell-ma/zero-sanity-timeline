@@ -4,7 +4,7 @@ import { framesToSeconds, secondsToFrames, frameToDetailLabel, frameToTimeLabelP
 import { formatPct, formatFlat } from '../../controller/info-pane/loadoutPaneController';
 import { parseMathInput } from '../../utils/mathExpr';
 import { getAllSkillLabels, getAllStatusLabels } from '../../controller/gameDataStore';
-import { CombatSkillType, ELEMENT_COLORS, ELEMENT_LABELS, ElementType, EventStatusType, InfoLevel, InteractionModeType, SegmentType, StatusType } from '../../consts/enums';
+import { ELEMENT_COLORS, ELEMENT_LABELS, ElementType, EventStatusType, InfoLevel, InteractionModeType, SegmentType, StatusType } from '../../consts/enums';
 import { getStatusElementMap, getStatusById, getAnyStatusSerialized } from '../../controller/gameDataStore';
 import { TimelineEvent, Operator, Enemy, SelectedFrame, Column, computeSegmentsSpan, getAnimationDuration, eventDuration } from '../../consts/viewTypes';
 import { StatField } from './SharedFields';
@@ -231,7 +231,7 @@ function EventPane({
                     const statusOpName = statusSlot?.operator?.name ?? event.eventStatusOwnerId;
                     const statusOpColor = statusSlot?.operator?.color;
                     const statusSkillLabel = event.eventStatusSkillName
-                      ? getAllSkillLabels()[event.eventStatusSkillName as CombatSkillType]
+                      ? getAllSkillLabels()[event.eventStatusSkillName as string]
                         ?? getAllStatusLabels()[event.eventStatusSkillName as StatusType]
                         ?? event.eventStatusSkillName
                       : null;
@@ -723,7 +723,7 @@ function DebugPane({ event, processedEvent, rawEvents, allProcessedEvents }: { e
 
       {/* Time-stop region */}
       {getAnimationDuration(event) > 0 && (
-        event.columnId === NounType.ULTIMATE || event.columnId === NounType.COMBO_SKILL ||
+        event.columnId === NounType.ULTIMATE || event.columnId === NounType.COMBO ||
         (event.columnId === OPERATOR_COLUMNS.INPUT && event.isPerfectDodge)
       ) && (() => {
         const rawStart = event.startFrame;
@@ -855,7 +855,7 @@ function DebugPane({ event, processedEvent, rawEvents, allProcessedEvents }: { e
           const pipes = '│'.repeat(depth);
           const prefix = depth > 0 ? pipes + ' ' : '';
           const color = isRaw ? '#88cc44' : '#dd8844';
-          const label = getAllSkillLabels()[ev.name as CombatSkillType] ?? getAllStatusLabels()[ev.name as StatusType] ?? ev.name;
+          const label = getAllSkillLabels()[ev.name as string] ?? getAllStatusLabels()[ev.name as StatusType] ?? ev.name;
           const children = childrenMap.get(ev.uid) ?? [];
           return (
             <div key={ev.uid}>

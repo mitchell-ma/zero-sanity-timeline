@@ -18,7 +18,7 @@
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "objectId": "DAMAGE_BONUS",
-          "objectQualifier": "BATTLE_SKILL"
+          "objectQualifier": "BATTLE"
         }
       ]
     }
@@ -42,7 +42,7 @@
     },
     "description": "Consumed on next battle skill cast",
     "eventType": "STATUS",
-    "eventCategoryType": "GEAR_SET_STATUS"
+    "eventIdType": "GEAR_SET_STATUS"
   },
   "metadata": {
     "originId": "BONEKRUSHA",

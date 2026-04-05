@@ -37,7 +37,7 @@
     },
     "description": "Team DMG +16%",
     "eventType": "STATUS",
-    "eventCategoryType": "GEAR_SET_STATUS"
+    "eventIdType": "GEAR_SET_STATUS"
   },
   "metadata": {
     "originId": "FRONTIERS",

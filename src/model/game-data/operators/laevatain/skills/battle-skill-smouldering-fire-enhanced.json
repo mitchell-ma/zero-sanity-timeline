@@ -21,8 +21,8 @@
     "enhancementTypes": [
       "ENHANCED"
     ],
-    "eventType": "COMBAT_SKILL",
-    "eventCategoryType": "BATTLE_SKILL",
+    "eventType": "SKILL",
+    "eventIdType": "BATTLE",
     "element": "HEAT",
     "id": "SMOULDERING_FIRE_ENHANCED",
     "name": "Smouldering Fire (Enhanced)"
@@ -88,8 +88,10 @@
                           3.41,
                           3.7
                         ],
-                        "ofDeterminer": "THIS",
-                        "of": "OPERATOR"
+                        "of": {
+                          "object": "OPERATOR",
+                          "determiner": "THIS"
+                        }
                       },
                       "right": {
                         "verb": "VARY_BY",
@@ -102,8 +104,10 @@
                           1,
                           1.2
                         ],
-                        "ofDeterminer": "THIS",
-                        "of": "OPERATOR"
+                        "of": {
+                          "object": "OPERATOR",
+                          "determiner": "THIS"
+                        }
                       }
                     },
                     "poiseExtra": {
@@ -136,8 +140,10 @@
                           3.04,
                           3.3
                         ],
-                        "ofDeterminer": "THIS",
-                        "of": "OPERATOR"
+                        "of": {
+                          "object": "OPERATOR",
+                          "determiner": "THIS"
+                        }
                       },
                       "right": {
                         "verb": "VARY_BY",
@@ -150,16 +156,20 @@
                           1,
                           1.2
                         ],
-                        "ofDeterminer": "THIS",
-                        "of": "OPERATOR"
+                        "of": {
+                          "object": "OPERATOR",
+                          "determiner": "THIS"
+                        }
                       }
                     },
                     "mainStat": {
                       "verb": "IS",
                       "object": "STAT",
                       "objectId": "ATTACK",
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     }
                   }
                 }
@@ -221,8 +231,10 @@
                           3.41,
                           3.7
                         ],
-                        "ofDeterminer": "THIS",
-                        "of": "OPERATOR"
+                        "of": {
+                          "object": "OPERATOR",
+                          "determiner": "THIS"
+                        }
                       },
                       "right": {
                         "verb": "VARY_BY",
@@ -235,8 +247,10 @@
                           1,
                           1.2
                         ],
-                        "ofDeterminer": "THIS",
-                        "of": "OPERATOR"
+                        "of": {
+                          "object": "OPERATOR",
+                          "determiner": "THIS"
+                        }
                       }
                     },
                     "value": {
@@ -258,8 +272,10 @@
                           3.04,
                           3.3
                         ],
-                        "ofDeterminer": "THIS",
-                        "of": "OPERATOR"
+                        "of": {
+                          "object": "OPERATOR",
+                          "determiner": "THIS"
+                        }
                       },
                       "right": {
                         "verb": "VARY_BY",
@@ -272,16 +288,20 @@
                           1,
                           1.2
                         ],
-                        "ofDeterminer": "THIS",
-                        "of": "OPERATOR"
+                        "of": {
+                          "object": "OPERATOR",
+                          "determiner": "THIS"
+                        }
                       }
                     },
                     "mainStat": {
                       "verb": "IS",
                       "object": "STAT",
                       "objectId": "ATTACK",
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     }
                   }
                 }

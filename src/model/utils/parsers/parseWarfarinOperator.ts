@@ -9,10 +9,11 @@
  *   npx tsx src/model/utils/parsers/parseWarfarinOperator.ts laevatain
  */
 
+import { NounType, AdjectiveType } from '../../../dsl/semantics';
 import * as fs from 'fs';
 import * as path from 'path';
 import { OperatorInformationType } from '../../enums/operators';
-import { CombatSkillType } from '../../../consts/enums';
+import {  } from '../../../consts/enums';
 import { WarfarinAttributeType, warfarinToStat } from './warfarin';
 
 const API_BASE = 'https://api.warfarin.wiki/v1/en/operators';
@@ -73,78 +74,78 @@ const ELEMENT_MAP: Record<string, string> = {
 };
 
 /**
- * Maps warfarin skill IDs → CombatSkillType enum values.
+ * Maps warfarin skill IDs →  enum values.
  * Warfarin uses: {charId}_{suffix} where suffix is attack/normal_skill/combo_skill/ultimate_skill.
  * Variants: _during_ult (enhanced), ult_attack1-4 (enhanced basic sequences).
  */
 const WARFARIN_SKILL_ID_MAP: Record<string, string> = {
   // Laevatain
-  'chr_0016_laevat_attack': 'FLAMING_CINDERS',
+  'chr_0016_laevat_attack': 'FLAMING_CINDERS_BATK',
   'chr_0016_laevat_normal_skill': 'SMOULDERING_FIRE',
   'chr_0016_laevat_normal_skill_during_ult': 'SMOULDERING_FIRE_ENHANCED',
   'chr_0016_laevat_combo_skill': 'SEETHE',
   'chr_0016_laevat_ultimate_skill': 'TWILIGHT',
-  'chr_0016_laevat_ult_attack1': 'FLAMING_CINDERS_ENHANCED',
-  'chr_0016_laevat_ult_attack2': 'FLAMING_CINDERS_ENHANCED',
-  'chr_0016_laevat_ult_attack3': 'FLAMING_CINDERS_ENHANCED',
-  'chr_0016_laevat_ult_attack4': 'FLAMING_CINDERS_ENHANCED',
+  'chr_0016_laevat_ult_attack1': 'FLAMING_CINDERS_BATK_ENHANCED',
+  'chr_0016_laevat_ult_attack2': 'FLAMING_CINDERS_BATK_ENHANCED',
+  'chr_0016_laevat_ult_attack3': 'FLAMING_CINDERS_BATK_ENHANCED',
+  'chr_0016_laevat_ult_attack4': 'FLAMING_CINDERS_BATK_ENHANCED',
   // Antal
-  'chr_0023_antal_attack': 'EXCHANGE_CURRENT',
+  'chr_0023_antal_attack': 'EXCHANGE_CURRENT_BATK',
   'chr_0023_antal_normal_skill': 'SPECIFIED_RESEARCH_SUBJECT',
   'chr_0023_antal_combo_skill': 'EMP_TEST_SITE',
   'chr_0023_antal_ultimate_skill': 'OVERCLOCKED_MOMENT',
   // Akekuri
-  'chr_0019_karin_attack': 'SWORD_OF_ASPIRATION',
+  'chr_0019_karin_attack': 'SWORD_OF_ASPIRATION_BATK',
   'chr_0019_karin_normal_skill': 'BURST_OF_PASSION',
   'chr_0019_karin_combo_skill': 'FLASH_AND_DASH',
   'chr_0019_karin_ultimate_skill': 'SQUAD_ON_ME',
   // Wulfgard
-  'chr_0006_wolfgd_attack': 'RAPID_FIRE_AKIMBO',
+  'chr_0006_wolfgd_attack': 'RAPID_FIRE_AKIMBO_BATK',
   'chr_0006_wolfgd_normal_skill': 'THERMITE_TRACERS',
   'chr_0006_wolfgd_combo_skill': 'FRAG_GRENADE_BETA',
   'chr_0006_wolfgd_ultimate_skill': 'WOLVEN_FURY',
   // Ardelia
-  'chr_0025_ardelia_attack': 'ROCKY_WHISPERS',
+  'chr_0025_ardelia_attack': 'ROCKY_WHISPERS_BATK',
   'chr_0025_ardelia_normal_skill': 'DOLLY_RUSH',
   'chr_0025_ardelia_combo_skill': 'ERUPTION_COLUMN',
   'chr_0025_ardelia_ultimate_skill': 'WOOLY_PARTY',
   // Endministrator
-  'chr_0003_endminf_attack': 'DESTRUCTIVE_SEQUENCE',
+  'chr_0003_endminf_attack': 'DESTRUCTIVE_SEQUENCE_BATK',
   'chr_0003_endminf_normal_skill': 'CONSTRUCTIVE_SEQUENCE',
   'chr_0003_endminf_combo_skill': 'SEALING_SEQUENCE',
   'chr_0003_endminf_ultimate_skill': 'BOMBARDMENT_SEQUENCE',
   // Lifeng
-  'chr_0015_lifeng_attack': 'RUINATION',
+  'chr_0015_lifeng_attack': 'RUINATION_BATK',
   'chr_0015_lifeng_normal_skill': 'TURBID_AVATAR',
   'chr_0015_lifeng_combo_skill': 'ASPECT_OF_WRATH',
   'chr_0015_lifeng_ultimate_skill': 'HEART_OF_THE_UNMOVING',
   // Chen Qianyu
-  'chr_0005_chen_attack': 'SOARING_BREAK',
+  'chr_0005_chen_attack': 'SOARING_BREAK_BATK',
   'chr_0005_chen_normal_skill': 'ASCENDING_STRIKE',
   'chr_0005_chen_combo_skill': 'SOAR_TO_THE_STARS',
   'chr_0005_chen_ultimate_skill': 'BLADE_GALE',
   // Estella
-  'chr_0021_whiten_attack': 'AUDIO_NOISE',
+  'chr_0021_whiten_attack': 'AUDIO_NOISE_BATK',
   'chr_0021_whiten_normal_skill': 'ONOMATOPOEIA',
   'chr_0021_whiten_combo_skill': 'DISTORTION',
   'chr_0021_whiten_ultimate_skill': 'TREMOLO',
   // Ember
-  'chr_0009_azrila_attack': 'SWORD_ART_OF_ASSAULT',
+  'chr_0009_azrila_attack': 'SWORD_ART_OF_ASSAULT_BATK',
   'chr_0009_azrila_normal_skill': 'FORWARD_MARCH',
   'chr_0009_azrila_combo_skill': 'FRONTLINE_SUPPORT',
   'chr_0009_azrila_ultimate_skill': 'RE_IGNITED_OATH',
   // Snowshine
-  'chr_0014_aurora_attack': 'HYPOTHERMIC_ASSAULT',
+  'chr_0014_aurora_attack': 'HYPOTHERMIC_ASSAULT_BATK',
   'chr_0014_aurora_normal_skill': 'SATURATED_DEFENSE',
   'chr_0014_aurora_combo_skill': 'POLAR_RESCUE',
   'chr_0014_aurora_ultimate_skill': 'FRIGID_SNOWFIELD',
   // Catcher
-  'chr_0020_meurs_attack': 'RIGID_INTERDICTION_BASIC',
+  'chr_0020_meurs_attack': 'RIGID_INTERDICTION_BASIC_BATK',
   'chr_0020_meurs_normal_skill': 'RIGID_INTERDICTION',
   'chr_0020_meurs_combo_skill': 'TIMELY_SUPPRESSION',
   'chr_0020_meurs_ultimate_skill': 'TEXTBOOK_ASSAULT',
   // Gilberta
-  'chr_0013_aglina_attack': 'BEAM_COHESION_ARTS',
+  'chr_0013_aglina_attack': 'BEAM_COHESION_ARTS_BATK',
   'chr_0013_aglina_normal_skill': 'GRAVITY_MODE',
   'chr_0013_aglina_combo_skill': 'MATRIX_DISPLACEMENT',
   'chr_0013_aglina_ultimate_skill': 'GRAVITY_FIELD',
@@ -154,54 +155,54 @@ const WARFARIN_SKILL_ID_MAP: Record<string, string> = {
   'chr_0011_seraph_combo_skill': 'STRESS_TESTING',
   'chr_0011_seraph_ultimate_skill': 'STACK_OVERFLOW',
   // Perlica
-  'chr_0004_pelica_attack': 'PROTOCOL_ALPHA_BREACH',
+  'chr_0004_pelica_attack': 'PROTOCOL_ALPHA_BREACH_BATK',
   'chr_0004_pelica_normal_skill': 'PROTOCOL_OMEGA_STRIKE',
   'chr_0004_pelica_combo_skill': 'INSTANT_PROTOCOL_CHAIN',
   'chr_0004_pelica_ultimate_skill': 'PROTOCOL_EPSILON',
   // Fluorite
-  'chr_0022_bounda_attack': 'SIGNATURE_GUN_KATA',
+  'chr_0022_bounda_attack': 'SIGNATURE_GUN_KATA_BATK',
   'chr_0022_bounda_normal_skill': 'TINY_SURPRISE',
   'chr_0022_bounda_combo_skill': 'FREE_GIVEAWAY',
   'chr_0022_bounda_ultimate_skill': 'APEX_PRANKSTER',
   // Last Rite
-  'chr_0026_lastrite_attack': 'DANCE_OF_RIME',
+  'chr_0026_lastrite_attack': 'DANCE_OF_RIME_BATK',
   'chr_0026_lastrite_normal_skill': 'ESOTERIC_LEGACY',
   'chr_0026_lastrite_combo_skill': 'WINTERS_DEVOURER',
   'chr_0026_lastrite_ultimate_skill': 'VIGIL_SERVICES',
   // Yvonne
-  'chr_0017_yvonne_attack': 'EXUBERANT_TRIGGER',
+  'chr_0017_yvonne_attack': 'EXUBERANT_TRIGGER_BATK',
   'chr_0017_yvonne_normal_skill': 'BRR_BRR_BOMB',
   'chr_0017_yvonne_combo_skill': 'FLASHFREEZER',
   'chr_0017_yvonne_ultimate_skill': 'CRYOBLASTING_PISTOLIER',
   // Avywenna
-  'chr_0012_avywen_attack': 'THUNDERLANCE_BLITZ',
+  'chr_0012_avywen_attack': 'THUNDERLANCE_BLITZ_BATK',
   'chr_0012_avywen_normal_skill': 'THUNDERLANCE_INTERDICTION',
   'chr_0012_avywen_combo_skill': 'THUNDERLANCE_STRIKE',
   'chr_0012_avywen_ultimate_skill': 'THUNDERLANCE_FINAL_SHOCK',
   // Da Pan
-  'chr_0018_dapan_attack': 'ROLLING_CUT',
+  'chr_0018_dapan_attack': 'ROLLING_CUT_BATK',
   'chr_0018_dapan_normal_skill': 'FLIP_DA_WOK',
   'chr_0018_dapan_combo_skill': 'MORE_SPICE',
   'chr_0018_dapan_ultimate_skill': 'CHOP_N_DUNK',
   // Pogranichnik
-  'chr_0029_pograni_attack': 'ALL_OUT_OFFENSIVE',
+  'chr_0029_pograni_attack': 'ALL_OUT_OFFENSIVE_BATK',
   'chr_0029_pograni_normal_skill': 'THE_PULVERIZING_FRONT',
   'chr_0029_pograni_combo_skill': 'FULL_MOON_SLASH',
   'chr_0029_pograni_ultimate_skill': 'SHIELDGUARD_BANNER',
   // Alesh
-  'chr_0024_deepfin_attack': 'ROD_CASTING',
+  'chr_0024_deepfin_attack': 'ROD_CASTING_BATK',
   'chr_0024_deepfin_normal_skill': 'UNCONVENTIONAL_LURE',
   'chr_0024_deepfin_combo_skill': 'AUGER_ANGLING',
   'chr_0024_deepfin_ultimate_skill': 'ONE_MONSTER_CATCH',
   // Arclight
-  'chr_0007_ikut_attack': 'SEEK_AND_HUNT',
+  'chr_0007_ikut_attack': 'SEEK_AND_HUNT_BATK',
   'chr_0007_ikut_normal_skill': 'TEMPESTUOUS_ARC',
   'chr_0007_ikut_combo_skill': 'PEAL_OF_THUNDER',
   'chr_0007_ikut_ultimate_skill': 'EXPLODING_BLITZ',
   // Tangtang
   'chr_0027_tangtang_attack': 'BASIC_ATTACK',
-  'chr_0027_tangtang_normal_skill': 'BATTLE_SKILL',
-  'chr_0027_tangtang_combo_skill': 'COMBO_SKILL',
+  'chr_0027_tangtang_normal_skill': 'BATTLE',
+  'chr_0027_tangtang_combo_skill': 'COMBO',
   'chr_0027_tangtang_ultimate_skill': 'ULTIMATE',
 };
 
@@ -391,12 +392,12 @@ function buildPotentials(
 
 // ── Skill descriptions ──────────────────────────────────────────────────────
 
-/** Warfarin skillGroupType → CombatSkillType mapping. */
+/** Warfarin skillGroupType →  mapping. */
 const SKILL_GROUP_TYPE_MAP: Record<number, string> = {
-  0: CombatSkillType.BASIC_ATTACK,
-  1: CombatSkillType.BATTLE_SKILL,
-  2: CombatSkillType.ULTIMATE,
-  3: CombatSkillType.COMBO_SKILL,
+  0: NounType.BASIC_ATTACK,
+  1: NounType.BATTLE,
+  2: NounType.ULTIMATE,
+  3: NounType.COMBO,
 };
 
 // ── Skill multiplier extraction ────────────────────────────────────────────
@@ -434,7 +435,7 @@ function classifyWarfarinSkillId(skillId: string): SkillClassification | null {
   if (attackMatch) {
     const seqNum = parseInt(attackMatch[1], 10);
     const subIndex = attackMatch[2] ? parseInt(attackMatch[2], 10) : 0;
-    return { category: CombatSkillType.BASIC_ATTACK, index: (seqNum - 1) + subIndex };
+    return { category: NounType.BASIC_ATTACK, index: (seqNum - 1) + subIndex };
   }
 
   // Enhanced basic attack (during ult): ult_attack1..N
@@ -452,7 +453,7 @@ function classifyWarfarinSkillId(skillId: string): SkillClassification | null {
 
   // Battle skill
   if (suffix === 'normal_skill') {
-    return { category: CombatSkillType.BATTLE_SKILL, index: 0 };
+    return { category: NounType.BATTLE, index: 0 };
   }
 
   // Enhanced battle skill (during ult)
@@ -462,12 +463,12 @@ function classifyWarfarinSkillId(skillId: string): SkillClassification | null {
 
   // Combo skill
   if (suffix === 'combo_skill') {
-    return { category: CombatSkillType.COMBO_SKILL, index: 0 };
+    return { category: NounType.COMBO, index: 0 };
   }
 
   // Ultimate
   if (suffix === 'ultimate_skill') {
-    return { category: CombatSkillType.ULTIMATE, index: 0 };
+    return { category: NounType.ULTIMATE, index: 0 };
   }
 
   // Special attacks
@@ -475,10 +476,10 @@ function classifyWarfarinSkillId(skillId: string): SkillClassification | null {
     return { category: 'DASH_ATTACK', index: 0 };
   }
   if (suffix === 'plunging_attack_end') {
-    return { category: 'DIVE_ATTACK', index: 0 };
+    return { category: 'DIVE', index: 0 };
   }
   if (suffix === 'power_attack' || suffix === 'power_attack2') {
-    return { category: CombatSkillType.FINISHER, index: 0 };
+    return { category: NounType.FINISHER, index: 0 };
   }
 
   // Talent entries (no multipliers we need)
@@ -552,7 +553,7 @@ function buildSkillMultipliers(
 }
 
 /**
- * Builds a map of skill category → CombatSkillType enum ID from WARFARIN_SKILL_ID_MAP.
+ * Builds a map of skill category →  enum ID from WARFARIN_SKILL_ID_MAP.
  * For segmented skills (basic attacks), uses the first segment's ID.
  */
 function buildSkillIds(
@@ -605,7 +606,7 @@ function buildSkillTimingOverrides(
     if (!bundles.length) continue;
     const first = bundles[0];
 
-    if (classification.category === CombatSkillType.ULTIMATE) {
+    if (classification.category === NounType.ULTIMATE) {
       const duration = first.blackboard.find(b => b.key === 'duration');
       if (duration) overrides.ultimateActiveDuration = duration.value;
     }

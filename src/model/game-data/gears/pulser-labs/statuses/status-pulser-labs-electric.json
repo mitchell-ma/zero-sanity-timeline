@@ -39,7 +39,7 @@
     },
     "description": "Electric DMG +50% for 10s after applying Electrification. Cannot stack.",
     "eventType": "STATUS",
-    "eventCategoryType": "GEAR_SET_STATUS"
+    "eventIdType": "GEAR_SET_STATUS"
   },
   "metadata": {
     "originId": "PULSER_LABS",

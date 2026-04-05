@@ -58,15 +58,19 @@
                         0.73,
                         0.79
                       ],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     },
                     "mainStat": {
                       "verb": "IS",
                       "object": "STAT",
                       "objectId": "ATTACK",
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     }
                   }
                 }
@@ -135,15 +139,19 @@
                         0.8,
                         0.87
                       ],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     },
                     "mainStat": {
                       "verb": "IS",
                       "object": "STAT",
                       "objectId": "ATTACK",
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     }
                   }
                 }
@@ -212,15 +220,19 @@
                         1.12,
                         1.22
                       ],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     },
                     "mainStat": {
                       "verb": "IS",
                       "object": "STAT",
                       "objectId": "ATTACK",
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     }
                   }
                 }
@@ -310,22 +322,27 @@
                         1.47,
                         1.6
                       ],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     },
                     "mainStat": {
                       "verb": "IS",
                       "object": "STAT",
                       "objectId": "ATTACK",
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     }
                   }
                 },
                 {
                   "verb": "PERFORM",
-                  "object": "FINAL_STRIKE",
-                  "to": "ENEMY"
+                  "object": "SKILL",
+                  "to": "ENEMY",
+                  "objectId": "FINAL_STRIKE"
                 }
               ]
             }
@@ -338,10 +355,11 @@
   "properties": {
     "name": "Basic Tactics",
     "description": "An attack with up to 4 sequences that deals Physical DMG. As the controlled operator, Final Strike also deals {poise:0} Stagger.",
-    "eventType": "COMBAT_SKILL",
-    "eventCategoryType": "BASIC_ATTACK",
+    "eventType": "SKILL",
+    "eventIdType": "BASIC_ATTACK",
+    "eventQualifierType": "BATK",
     "element": "PHYSICAL",
-    "id": "RIGID_INTERDICTION_BASIC"
+    "id": "RIGID_INTERDICTION_BASIC_BATK"
   },
   "metadata": {
     "originId": "CATCHER",

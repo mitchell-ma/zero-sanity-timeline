@@ -17,7 +17,7 @@
  */
 import { TimelineEvent, EventSegmentData, computeSegmentsSpan, getAnimationDuration, eventDuration, setEventDuration } from '../../consts/viewTypes';
 import { NounType } from '../../dsl/semantics';
-import { CombatSkillType, EventStatusType, SegmentType, StatusType, TimeDependency } from '../../consts/enums';
+import { EventStatusType, SegmentType, StatusType, TimeDependency } from '../../consts/enums';
 import { TimeStopRegion, extendByTimeStops, isTimeStopEvent } from './processTimeStop';
 import { buildReactionSegment, buildCorrosionSegments, mergeReactions, attachReactionFrames } from './processInfliction';
 import { OPERATOR_COLUMNS, REACTION_COLUMNS, REACTION_COLUMN_IDS, COMBO_WINDOW_COLUMN_ID } from '../../model/channels';
@@ -134,14 +134,14 @@ export class DerivedEventController implements ColumnHost {
     if (!firstOccupiedSlotId) return;
     const ev = allocInputEvent();
     ev.uid = `controlled-seed-${firstOccupiedSlotId}`;
-    ev.id = CombatSkillType.CONTROL;
-    ev.name = CombatSkillType.CONTROL;
+    ev.id = NounType.CONTROL;
+    ev.name = NounType.CONTROL;
     ev.ownerId = firstOccupiedSlotId;
     ev.columnId = OPERATOR_COLUMNS.INPUT;
     ev.startFrame = 0;
     ev.segments = [{ properties: { duration: TOTAL_FRAMES } }];
     ev.sourceOwnerId = operatorId ?? firstOccupiedSlotId;
-    ev.sourceSkillName = CombatSkillType.CONTROL;
+    ev.sourceSkillName = NounType.CONTROL;
     this.registerEvents([ev]);
   }
 
@@ -167,7 +167,7 @@ export class DerivedEventController implements ColumnHost {
       let ev = deduped[i];
 
       // Combo chaining: truncate overlapping combo animations
-      if (ev.columnId === NounType.COMBO_SKILL && getAnimationDuration(ev) > 0) {
+      if (ev.columnId === NounType.COMBO && getAnimationDuration(ev) > 0) {
         ev = this.handleComboChaining(ev);
       }
 
@@ -189,10 +189,10 @@ export class DerivedEventController implements ColumnHost {
       }
 
       // Controlled operator: clamp earlier CONTROL events on other owners
-      if (ev.id === CombatSkillType.CONTROL && ev.columnId === OPERATOR_COLUMNS.INPUT) {
+      if (ev.id === NounType.CONTROL && ev.columnId === OPERATOR_COLUMNS.INPUT) {
         for (let j = 0; j < this.registeredEvents.length; j++) {
           const prev = this.registeredEvents[j];
-          if (prev.id !== CombatSkillType.CONTROL || prev.columnId !== OPERATOR_COLUMNS.INPUT) continue;
+          if (prev.id !== NounType.CONTROL || prev.columnId !== OPERATOR_COLUMNS.INPUT) continue;
           if (prev.ownerId === ev.ownerId) continue;
           const prevEnd = prev.startFrame + computeSegmentsSpan(prev.segments);
           if (prevEnd <= ev.startFrame) continue;
@@ -265,7 +265,7 @@ export class DerivedEventController implements ColumnHost {
     // Update combo events that fall within trigger windows
     for (let i = 0; i < this.registeredEvents.length; i++) {
       const ev = this.registeredEvents[i];
-      if (ev.columnId !== NounType.COMBO_SKILL) continue;
+      if (ev.columnId !== NounType.COMBO) continue;
       const merged = mergedBySlot.get(ev.ownerId);
       const match = merged?.find(w => ev.startFrame >= w.startFrame && ev.startFrame < w.endFrame);
       if (match?.sourceColumnId != null && match.sourceColumnId !== ev.comboTriggerColumnId) {
@@ -297,7 +297,7 @@ export class DerivedEventController implements ColumnHost {
     // ── SP notifications ──────────────────────────────────────────────────
     if (this.spController) {
       // Battle skill with SP cost → event-level cost + frame-level returns
-      if (ev.columnId === NounType.BATTLE_SKILL && ev.skillPointCost) {
+      if (ev.columnId === NounType.BATTLE && ev.skillPointCost) {
         const firstFrame = ev.segments[0]?.frames?.[0];
         const gaugeGainFrame = firstFrame?.absoluteFrame ?? ev.startFrame;
         this.spController.addCost(ev.uid, ev.startFrame, ev.skillPointCost, ev.ownerId, gaugeGainFrame);
@@ -329,7 +329,7 @@ export class DerivedEventController implements ColumnHost {
     // ── UE notifications ──────────────────────────────────────────────────
     if (this.ueController) {
       // Combo skill → gauge gain from frames
-      if (ev.columnId === NounType.COMBO_SKILL) {
+      if (ev.columnId === NounType.COMBO) {
         for (const seg of ev.segments) {
           for (const f of seg.frames ?? []) {
             // Resolve UE gain: re-resolve raw ValueNode with suppliedParameters when available
@@ -347,7 +347,7 @@ export class DerivedEventController implements ColumnHost {
       }
 
       // Battle skill → frame-level gaugeGain markers (not SP-based)
-      if (ev.columnId === NounType.BATTLE_SKILL) {
+      if (ev.columnId === NounType.BATTLE) {
         for (const seg of ev.segments) {
           for (const f of seg.frames ?? []) {
             if (f.gaugeGain && f.gaugeGain > 0 && f.absoluteFrame != null) {
@@ -727,7 +727,7 @@ export class DerivedEventController implements ColumnHost {
    */
   private extendSingleEvent(ev: TimelineEvent): TimelineEvent {
     // Control status is not affected by time-stops — its timer keeps ticking
-    if (ev.id === CombatSkillType.CONTROL) return ev;
+    if (ev.id === NounType.CONTROL) return ev;
 
     const isOwn = isTimeStopEvent(ev);
     const animDur = getAnimationDuration(ev);
@@ -823,7 +823,7 @@ export class DerivedEventController implements ColumnHost {
       if (!source) continue;
 
       // Control swap cannot occur during any time-stop (including dodge)
-      if (ev.id === CombatSkillType.CONTROL) {
+      if (ev.id === NounType.CONTROL) {
         warnings.push('Control swap cannot occur during time-stop');
         continue;
       }
@@ -832,7 +832,7 @@ export class DerivedEventController implements ColumnHost {
       if (sourceIsDodge) continue;
 
       const sourceIsUltimate = source.columnId === NounType.ULTIMATE;
-      if (ev.columnId === NounType.COMBO_SKILL && sourceIsUltimate) {
+      if (ev.columnId === NounType.COMBO && sourceIsUltimate) {
         warnings.push('Combo skill cannot start during ultimate animation time-stop');
       }
       if (ev.columnId === NounType.ULTIMATE && sourceIsUltimate) {
@@ -869,7 +869,7 @@ export class DerivedEventController implements ColumnHost {
   /** Check if a given operator is the controlled operator at a given frame. */
   isControlledAt(ownerId: string, frame: number): boolean {
     return this._activeEventsIn(OPERATOR_COLUMNS.INPUT, ownerId, frame)
-      .some((ev) => ev.id === CombatSkillType.CONTROL);
+      .some((ev) => ev.id === NounType.CONTROL);
   }
 
   // ── Generic event insertion ──────────────────────────────────────────────
@@ -928,7 +928,7 @@ export class DerivedEventController implements ColumnHost {
       // Find all combo events in this window, sorted by startFrame
       const combos = this.registeredEvents
         .filter((ev) =>
-          ev.columnId === NounType.COMBO_SKILL &&
+          ev.columnId === NounType.COMBO &&
           ev.ownerId === win.ownerId &&
           ev.startFrame >= win.startFrame &&
           ev.startFrame < winEnd,
@@ -994,7 +994,7 @@ export class DerivedEventController implements ColumnHost {
     for (const win of windows) {
       const winEnd = win.startFrame + computeSegmentsSpan(win.segments);
       const combos = this.registeredEvents.filter(ev =>
-        ev.columnId === NounType.COMBO_SKILL &&
+        ev.columnId === NounType.COMBO &&
         ev.ownerId === win.ownerId &&
         ev.startFrame >= win.startFrame &&
         ev.startFrame < winEnd,

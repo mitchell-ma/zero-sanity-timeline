@@ -16,7 +16,7 @@ import { createCustomGearEffect, updateCustomGearEffect } from './controller/cus
 import { createCustomOperatorStatus, updateCustomOperatorStatus } from './controller/custom/customOperatorStatusController';
 import { createCustomOperatorTalent, updateCustomOperatorTalent } from './controller/custom/customOperatorTalentController';
 import { addSkillLink } from './controller/custom/customSkillLinkController';
-import { InteractionModeType, CombatSkillType, InfoLevel, InfoPaneMode, SidebarMode as SidebarModeEnum } from './consts/enums';
+import { InteractionModeType, InfoLevel, InfoPaneMode, SidebarMode as SidebarModeEnum } from './consts/enums';
 import { getAnimationDuration, eventDuration } from './consts/viewTypes';
 import type { SkillType } from './consts/viewTypes';
 import type { CustomWeapon } from './model/custom/customWeaponTypes';
@@ -155,7 +155,7 @@ export default function App() {
   }, [workbenchInitial, bumpContentRefresh]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const COLUMN_TO_SKILL_TYPE: Record<string, string> = {
-    basic: 'BASIC_ATTACK', battle: 'BATTLE_SKILL', combo: 'COMBO_SKILL', ultimate: 'ULTIMATE',
+    basic: 'BASIC_ATTACK', battle: 'BATTLE', combo: 'COMBO', ultimate: 'ULTIMATE',
   };
 
   const handleSaveAsCustomSkill = useCallback((event: import('./consts/viewTypes').TimelineEvent) => {
@@ -163,11 +163,11 @@ export default function App() {
     if (!skillType) return;
 
     const id = `skill_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
-    const label = getAllSkillLabels()[event.name as CombatSkillType] || event.name;
+    const label = getAllSkillLabels()[event.name as string] || event.name;
     const skill: CustomSkill = {
       id,
       name: `${label} (Custom)`,
-      combatSkillType: skillType as CombatSkillType,
+      combatSkillType: skillType as string,
       durationSeconds: eventDuration(event) / 120,
       cooldownSeconds: undefined,
       animationSeconds: getAnimationDuration(event) / 120 || undefined,

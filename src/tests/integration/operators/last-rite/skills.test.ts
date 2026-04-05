@@ -97,7 +97,7 @@ describe('Last Rite Skills — Core Placement', () => {
 
   it('A1: battle skill placed in BATTLE_SKILL column', () => {
     const { result } = setupLastRite();
-    const col = findColumn(result.current, SLOT_LAST_RITE, NounType.BATTLE_SKILL);
+    const col = findColumn(result.current, SLOT_LAST_RITE, NounType.BATTLE);
     expect(col).toBeDefined();
 
     const menuItems = buildContextMenu(result.current, col!, 5 * FPS);
@@ -112,7 +112,7 @@ describe('Last Rite Skills — Core Placement', () => {
     });
 
     const battles = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_LAST_RITE && ev.columnId === NounType.BATTLE_SKILL,
+      (ev) => ev.ownerId === SLOT_LAST_RITE && ev.columnId === NounType.BATTLE,
     );
     expect(battles).toHaveLength(1);
     expect(battles[0].name).toBe(BATTLE_SKILL_ID);
@@ -127,7 +127,7 @@ describe('Last Rite Skills — Core Placement', () => {
     // Place Solidification on enemy
     placeSolidification(result, 1);
 
-    const col = findColumn(result.current, SLOT_LAST_RITE, NounType.COMBO_SKILL);
+    const col = findColumn(result.current, SLOT_LAST_RITE, NounType.COMBO);
     expect(col).toBeDefined();
 
     const menuItems = buildContextMenu(result.current, col!, 3 * FPS);
@@ -142,7 +142,7 @@ describe('Last Rite Skills — Core Placement', () => {
     });
 
     const combos = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_LAST_RITE && ev.columnId === NounType.COMBO_SKILL,
+      (ev) => ev.ownerId === SLOT_LAST_RITE && ev.columnId === NounType.COMBO,
     );
     expect(combos).toHaveLength(1);
     expect(combos[0].name).toBe(COMBO_SKILL_ID);
@@ -181,7 +181,7 @@ describe('Last Rite Skills — Core Placement', () => {
 describe('Last Rite Skills — Battle Skill Cryo DOT', () => {
   it('B1: battle skill has active segment and processes without crash', () => {
     const { result } = setupLastRite();
-    const col = findColumn(result.current, SLOT_LAST_RITE, NounType.BATTLE_SKILL);
+    const col = findColumn(result.current, SLOT_LAST_RITE, NounType.BATTLE);
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
@@ -190,7 +190,7 @@ describe('Last Rite Skills — Battle Skill Cryo DOT', () => {
     });
 
     const battles = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_LAST_RITE && ev.columnId === NounType.BATTLE_SKILL,
+      (ev) => ev.ownerId === SLOT_LAST_RITE && ev.columnId === NounType.BATTLE,
     );
     expect(battles).toHaveLength(1);
 
@@ -214,7 +214,7 @@ describe('Last Rite Skills — Combo Skill', () => {
 
     placeSolidification(result, 1);
 
-    const col = findColumn(result.current, SLOT_LAST_RITE, NounType.COMBO_SKILL);
+    const col = findColumn(result.current, SLOT_LAST_RITE, NounType.COMBO);
     const payload = getMenuPayload(result.current, col!, 3 * FPS);
     act(() => {
       result.current.handleAddEvent(
@@ -223,7 +223,7 @@ describe('Last Rite Skills — Combo Skill', () => {
     });
 
     const combos = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_LAST_RITE && ev.columnId === NounType.COMBO_SKILL,
+      (ev) => ev.ownerId === SLOT_LAST_RITE && ev.columnId === NounType.COMBO,
     );
     expect(combos).toHaveLength(1);
 
@@ -253,7 +253,7 @@ describe('Last Rite Skills — Combo Skill', () => {
     expect(solidsBefore.length).toBeGreaterThanOrEqual(1);
 
     // Place combo
-    const col = findColumn(result.current, SLOT_LAST_RITE, NounType.COMBO_SKILL);
+    const col = findColumn(result.current, SLOT_LAST_RITE, NounType.COMBO);
     const payload = getMenuPayload(result.current, col!, 3 * FPS);
     act(() => {
       result.current.handleAddEvent(
@@ -263,7 +263,7 @@ describe('Last Rite Skills — Combo Skill', () => {
 
     // Combo should be placed
     const combos = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_LAST_RITE && ev.columnId === NounType.COMBO_SKILL,
+      (ev) => ev.ownerId === SLOT_LAST_RITE && ev.columnId === NounType.COMBO,
     );
     expect(combos).toHaveLength(1);
     expect(combos[0].eventStatus).not.toBe(EventStatusType.CONSUMED);
@@ -319,7 +319,7 @@ describe('Last Rite Skills — Ultimate Energy', () => {
 describe('Last Rite Skills — View Layer', () => {
   it('E1: battle skill visible in presentation', () => {
     const { result } = setupLastRite();
-    const col = findColumn(result.current, SLOT_LAST_RITE, NounType.BATTLE_SKILL);
+    const col = findColumn(result.current, SLOT_LAST_RITE, NounType.BATTLE);
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
@@ -334,7 +334,7 @@ describe('Last Rite Skills — View Layer', () => {
     const vm = viewModels.get(col!.key);
     expect(vm).toBeDefined();
     const bsEvents = vm!.events.filter(
-      (ev) => ev.ownerId === SLOT_LAST_RITE && ev.columnId === NounType.BATTLE_SKILL,
+      (ev) => ev.ownerId === SLOT_LAST_RITE && ev.columnId === NounType.BATTLE,
     );
     expect(bsEvents).toHaveLength(1);
   });
@@ -345,7 +345,7 @@ describe('Last Rite Skills — View Layer', () => {
 
     placeSolidification(result, 1);
 
-    const col = findColumn(result.current, SLOT_LAST_RITE, NounType.COMBO_SKILL);
+    const col = findColumn(result.current, SLOT_LAST_RITE, NounType.COMBO);
     const payload = getMenuPayload(result.current, col!, 3 * FPS);
     act(() => {
       result.current.handleAddEvent(
@@ -360,7 +360,7 @@ describe('Last Rite Skills — View Layer', () => {
     const vm = viewModels.get(col!.key);
     expect(vm).toBeDefined();
     const comboEvents = vm!.events.filter(
-      (ev) => ev.ownerId === SLOT_LAST_RITE && ev.columnId === NounType.COMBO_SKILL,
+      (ev) => ev.ownerId === SLOT_LAST_RITE && ev.columnId === NounType.COMBO,
     );
     expect(comboEvents).toHaveLength(1);
   });

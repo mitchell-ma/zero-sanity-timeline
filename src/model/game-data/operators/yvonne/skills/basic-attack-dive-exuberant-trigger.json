@@ -5,8 +5,9 @@
     ],
     "name": "Exuberant Trigger (Dive)",
     "description": "Basic attack performed in mid-air becomes a dive attack that deals Cryo DMG to nearby enemies.",
-    "eventType": "COMBAT_SKILL",
-    "eventCategoryType": "BASIC_ATTACK",
+    "eventType": "SKILL",
+    "eventIdType": "BASIC_ATTACK",
+    "eventQualifierType": "DIVE",
     "element": "CRYO",
     "id": "EXUBERANT_TRIGGER_DIVE"
   },
@@ -55,15 +56,19 @@
                         1.66,
                         1.8
                       ],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     },
                     "mainStat": {
                       "verb": "IS",
                       "object": "STAT",
                       "objectId": "ATTACK",
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     }
                   }
                 }

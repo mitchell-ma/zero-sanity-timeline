@@ -23,8 +23,10 @@
                 0.12,
                 0.14
               ],
-              "ofDeterminer": "THIS",
-              "of": "OPERATOR"
+              "of": {
+                "object": "OPERATOR",
+                "determiner": "THIS"
+              }
             }
           },
           "objectId": "ATTACK_BONUS"
@@ -52,7 +54,7 @@
     "to": "OPERATOR",
     "toDeterminer": "OTHER",
     "eventType": "STATUS",
-    "eventCategoryType": "WEAPON_STATUS",
+    "eventIdType": "WEAPON_STATUS",
     "description": "ATK +{atk_up:0.0%}. After the wielder's skill recovers SP or grants a Link state, the entire team gains ATK +{atk_up2:0.0%} for {duration:0}s. Max stacks for effects of the same name: {max_stack:0}. Duration of each stack is counted separately."
   },
   "metadata": {

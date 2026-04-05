@@ -16,8 +16,10 @@
                 0.075,
                 0.15
               ],
-              "ofDeterminer": "THIS",
-              "of": "OPERATOR"
+              "of": {
+                "object": "OPERATOR",
+                "determiner": "THIS"
+              }
             }
           },
           "objectId": "ATTACK_BONUS"
@@ -45,7 +47,7 @@
       "interactionType": "RESET"
     },
     "eventType": "STATUS",
-    "eventCategoryType": "POTENTIAL_STATUS",
+    "eventIdType": "POTENTIAL_STATUS",
     "description": "When the Originium Crystals attached to the enemy are consumed, the Endministrator gains ATK +30% for 15s. This effect cannot stack."
   },
   "metadata": {

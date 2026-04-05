@@ -20,7 +20,7 @@
       "unit": "SECOND"
     },
     "eventType": "STATUS",
-    "eventCategoryType": "SKILL_STATUS",
+    "eventIdType": "SKILL_STATUS",
     "description": "Immediately deploys the support bot Tink-a-Bella and makes Yvonne the controlled operator.\nTemporarily enhances Yvonne's basic attack (BATK). Each enhanced BATK sequence performed grants a stack of Critical Rate buff. After reaching max stacks, Yvonne also gains a Critical DMG buff. When the skill is about to end, Yvonne's last enhanced BATK becomes an enhanced Final Strike that deals massive Cryo DMG.\nIf the enemy is Solidified, Yvonne performs an additional attack that deals Cryo DMG and then consumes the enemy's Solidification."
   },
   "clause": [
@@ -42,10 +42,15 @@
               },
               "right": {
                 "verb": "IS",
-                "objectId": "CRIT_STACKS",
                 "object": "STACKS",
-                "ofDeterminer": "THIS",
-                "of": "OPERATOR"
+                "of": {
+                  "object": "STATUS",
+                  "objectId": "CRIT_STACKS",
+                  "of": {
+                    "object": "OPERATOR",
+                    "determiner": "THIS"
+                  }
+                }
               }
             }
           }
@@ -60,7 +65,7 @@
           "verb": "HAVE",
           "object": "STATUS",
           "objectId": "CRIT_STACKS",
-          "cardinalityConstraint": "AT_LEAST",
+          "cardinalityConstraint": "GREATER_THAN_EQUAL",
           "with": {
             "stacks": {
               "verb": "IS",

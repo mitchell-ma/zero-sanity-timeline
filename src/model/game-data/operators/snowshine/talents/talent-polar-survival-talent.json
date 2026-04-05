@@ -6,7 +6,7 @@
           "subject": "OPERATOR",
           "verb": "HAVE",
           "object": "HP",
-          "cardinalityConstraint": "AT_MOST",
+          "cardinalityConstraint": "LESS_THAN_EQUAL",
           "with": {
             "value": {
               "verb": "IS",
@@ -17,8 +17,10 @@
                   0.45,
                   0.55
                 ],
-                "ofDeterminer": "THIS",
-                "of": "OPERATOR"
+                "of": {
+                  "object": "OPERATOR",
+                  "determiner": "THIS"
+                }
               },
               "unit": "PERCENTAGE"
             }
@@ -40,8 +42,10 @@
                 0.15,
                 0.25
               ],
-              "ofDeterminer": "THIS",
-              "of": "OPERATOR"
+              "of": {
+                "object": "OPERATOR",
+                "determiner": "THIS"
+              }
             }
           }
         }
@@ -58,7 +62,7 @@
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
-    "eventCategoryType": "TALENT",
+    "eventIdType": "TALENT",
     "description": "Treatment Effect +25% for targets of 55% HP or below."
   },
   "metadata": {

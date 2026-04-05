@@ -45,8 +45,10 @@
           4,
           8
         ],
-        "ofDeterminer": "THIS",
-        "of": "OPERATOR"
+        "of": {
+          "object": "OPERATOR",
+          "determiner": "THIS"
+        }
       },
       "unit": "SECOND"
     },
@@ -58,7 +60,7 @@
       "interactionType": "RESET"
     },
     "eventType": "STATUS",
-    "eventCategoryType": "STATUS",
+    "eventIdType": "STATUS",
     "description": "When HP drops below 40%, gain 90% Protection and restore 5% Max HP per second for 4s. This effect triggers once every 120s."
   },
   "segments": [

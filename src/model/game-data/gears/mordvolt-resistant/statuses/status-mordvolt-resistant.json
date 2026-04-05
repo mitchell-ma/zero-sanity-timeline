@@ -38,7 +38,7 @@
     },
     "description": "Treatment Effect +30% when HP below 50%.",
     "eventType": "STATUS",
-    "eventCategoryType": "GEAR_SET_STATUS"
+    "eventIdType": "GEAR_SET_STATUS"
   },
   "metadata": {
     "originId": "MORDVOLT_RESISTANT",

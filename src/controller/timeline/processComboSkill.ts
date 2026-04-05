@@ -34,7 +34,7 @@ export function deriveComboActivationWindows(
   // time stops don't extend its combo activation window duration.
   const comboStopIdsBySlot = new Map<string, Set<string>>();
   for (const ev of events) {
-    if (ev.columnId !== NounType.COMBO_SKILL || !isTimeStopEvent(ev)) continue;
+    if (ev.columnId !== NounType.COMBO || !isTimeStopEvent(ev)) continue;
     if (!comboStopIdsBySlot.has(ev.ownerId)) comboStopIdsBySlot.set(ev.ownerId, new Set());
     comboStopIdsBySlot.get(ev.ownerId)!.add(ev.uid);
   }
@@ -42,7 +42,7 @@ export function deriveComboActivationWindows(
   // Pre-index combo events per slot for cooldown checks
   const comboEventsBySlot = new Map<string, TimelineEvent[]>();
   for (const ev of events) {
-    if (ev.columnId !== NounType.COMBO_SKILL) continue;
+    if (ev.columnId !== NounType.COMBO) continue;
     if (!comboEventsBySlot.has(ev.ownerId)) comboEventsBySlot.set(ev.ownerId, []);
     comboEventsBySlot.get(ev.ownerId)!.push(ev);
   }
@@ -288,7 +288,7 @@ export function resolveComboTriggerColumns(
   // Resolve combo events: update or clear comboTriggerColumnId
   let changed = false;
   const result = events.map((ev) => {
-    if (ev.columnId !== NounType.COMBO_SKILL) return ev;
+    if (ev.columnId !== NounType.COMBO) return ev;
 
     const merged = mergedBySlot.get(ev.ownerId);
     const match = merged?.find(

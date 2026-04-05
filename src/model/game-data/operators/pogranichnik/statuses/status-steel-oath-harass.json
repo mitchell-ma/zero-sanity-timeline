@@ -11,7 +11,7 @@
       "unit": "SECOND"
     },
     "eventType": "STATUS",
-    "eventCategoryType": "SKILL_STATUS",
+    "eventIdType": "SKILL_STATUS",
     "description": "A Shieldguard harasses the enemy, dealing Physical DMG and recovering SP."
   },
   "segments": [
@@ -71,15 +71,19 @@
                         0.92,
                         1
                       ],
-                      "ofDeterminer": "SOURCE",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "SOURCE"
+                      }
                     },
                     "mainStat": {
                       "verb": "IS",
                       "object": "STAT",
                       "objectId": "ATTACK",
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     }
                   }
                 },
@@ -90,9 +94,24 @@
                     "value": {
                       "verb": "VARY_BY",
                       "object": "SKILL_LEVEL",
-                      "value": [7.5, 7.5, 7.5, 7.5, 7.5, 7.5, 7.5, 7.5, 7.5, 10, 10, 10],
-                      "ofDeterminer": "SOURCE",
-                      "of": "OPERATOR"
+                      "value": [
+                        7.5,
+                        7.5,
+                        7.5,
+                        7.5,
+                        7.5,
+                        7.5,
+                        7.5,
+                        7.5,
+                        7.5,
+                        10,
+                        10,
+                        10
+                      ],
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "SOURCE"
+                      }
                     }
                   }
                 },
@@ -106,9 +125,24 @@
                     "stacks": {
                       "verb": "VARY_BY",
                       "object": "SKILL_LEVEL",
-                      "value": [7.5, 7.5, 7.5, 7.5, 7.5, 7.5, 7.5, 7.5, 7.5, 10, 10, 10],
-                      "ofDeterminer": "SOURCE",
-                      "of": "OPERATOR"
+                      "value": [
+                        7.5,
+                        7.5,
+                        7.5,
+                        7.5,
+                        7.5,
+                        7.5,
+                        7.5,
+                        7.5,
+                        7.5,
+                        10,
+                        10,
+                        10
+                      ],
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "SOURCE"
+                      }
                     }
                   }
                 }
@@ -124,6 +158,6 @@
     "dataSources": [
       "ENDFIELD_WIKI"
     ],
-    "dataStatus": "RECONCILED"
+    "dataStatus": "VERIFIED"
   }
 }

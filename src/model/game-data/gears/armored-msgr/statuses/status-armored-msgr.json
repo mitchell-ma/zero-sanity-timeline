@@ -38,7 +38,7 @@
     },
     "description": "30% DMG Reduction when HP below 50%.",
     "eventType": "STATUS",
-    "eventCategoryType": "GEAR_SET_STATUS"
+    "eventIdType": "GEAR_SET_STATUS"
   },
   "metadata": {
     "originId": "ARMORED_MSGR",

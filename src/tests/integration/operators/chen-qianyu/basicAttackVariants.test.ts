@@ -19,7 +19,7 @@
 import { renderHook, act } from '@testing-library/react';
 import { NounType } from '../../../../dsl/semantics';
 import { useApp } from '../../../../app/useApp';
-import { CombatSkillType } from '../../../../consts/enums';
+import {  } from '../../../../consts/enums';
 import { FPS } from '../../../../utils/timeline';
 import { computeTimelinePresentation } from '../../../../controller/timeline/eventPresentationController';
 import { findColumn, getMenuPayload, buildContextMenu } from '../../helpers';
@@ -64,7 +64,7 @@ describe('Chen Qianyu — basic attack variants', () => {
     const diveItem = menuItems!.find(
       (i) =>
         i.actionId === 'addEvent' &&
-        ((i.actionPayload as { defaultSkill?: { id?: string } })?.defaultSkill?.id === CombatSkillType.DIVE ||
+        ((i.actionPayload as { defaultSkill?: { id?: string } })?.defaultSkill?.id === NounType.DIVE ||
          (i.actionPayload as { defaultSkill?: { id?: string } })?.defaultSkill?.id === SOARING_BREAK_DIVE_ID),
     );
     expect(diveItem).toBeDefined();
@@ -82,7 +82,7 @@ describe('Chen Qianyu — basic attack variants', () => {
     const finisherItem = menuItems!.find(
       (i) =>
         i.actionId === 'addEvent' &&
-        ((i.actionPayload as { defaultSkill?: { id?: string } })?.defaultSkill?.id === CombatSkillType.FINISHER ||
+        ((i.actionPayload as { defaultSkill?: { id?: string } })?.defaultSkill?.id === NounType.FINISHER ||
          (i.actionPayload as { defaultSkill?: { id?: string } })?.defaultSkill?.id === SOARING_BREAK_FINISHER_ID),
     );
     expect(finisherItem).toBeDefined();

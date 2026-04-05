@@ -9,7 +9,7 @@
  * and MI Security gear. Places a basic attack and battle skill, then tests
  * damage calculation across crit modes.
  *
- * isCrit is persistent data — only RANDOM/MANUAL modify it.
+ * isCrit is persistent data — only MANUAL mode modifies it.
  * NEVER/ALWAYS/EXPECTED only affect calculation via getFrameExpectation().
  */
 
@@ -56,7 +56,7 @@ function addSkillEvents(app: AppResult) {
   const baPayload = getMenuPayload(app, baCol!, 1 * FPS);
   app.handleAddEvent(baPayload.ownerId, baPayload.columnId, baPayload.atFrame, baPayload.defaultSkill);
 
-  const bsCol = findColumn(app, SLOT_ROSSI, NounType.BATTLE_SKILL);
+  const bsCol = findColumn(app, SLOT_ROSSI, NounType.BATTLE);
   expect(bsCol).toBeDefined();
   const bsPayload = getMenuPayload(app, bsCol!, 5 * FPS);
   app.handleAddEvent(bsPayload.ownerId, bsPayload.columnId, bsPayload.atFrame, bsPayload.defaultSkill);

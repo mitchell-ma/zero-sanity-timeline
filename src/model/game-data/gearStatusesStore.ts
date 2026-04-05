@@ -6,7 +6,7 @@
  * Each file is an array: first entry is the set-level effect (GEAR_SET_EFFECT),
  * followed by individual status entries (GEAR_SET_STATUS).
  */
-import { UnitType, EventType, EventCategoryType, StackInteractionType } from '../../consts/enums';
+import { UnitType, EventType, StackInteractionType } from '../../consts/enums';
 import { VerbType, NounType, DeterminerType } from '../../dsl/semantics';
 import type { Interaction } from '../../dsl/semantics';
 import type { ClausePredicate, StacksConfig, DurationConfig } from './weaponStatusesStore';
@@ -47,7 +47,7 @@ function validateClause(clause: Record<string, unknown>, path: string): string[]
 // ── GearSetEffect validation ────────────────────────────────────────────────
 
 const VALID_SET_EFFECT_TOP_KEYS = new Set(['onTriggerClause', 'properties', 'metadata']);
-const VALID_SET_EFFECT_PROPS_KEYS = new Set(['id', 'name', 'rarity', 'piecesRequired', 'description', 'eventType', 'eventCategoryType']);
+const VALID_SET_EFFECT_PROPS_KEYS = new Set(['id', 'name', 'rarity', 'piecesRequired', 'description', 'eventType', 'eventIdType']);
 
 /** Validate a raw gear set effect JSON entry. */
 export function validateGearSetEffect(json: Record<string, unknown>): string[] {
@@ -78,7 +78,7 @@ export function validateGearSetEffect(json: Record<string, unknown>): string[] {
 // ── GearStatus validation ───────────────────────────────────────────────────
 
 const VALID_STATUS_TOP_KEYS = new Set(['clause', 'properties', 'metadata']);
-const VALID_STATUS_PROPS_KEYS = new Set(['id', 'name', 'description', 'duration', 'stacks', 'cooldownSeconds', 'usageLimit', 'enhancementType', 'eventType', 'eventCategoryType']);
+const VALID_STATUS_PROPS_KEYS = new Set(['id', 'name', 'description', 'duration', 'stacks', 'cooldownSeconds', 'usageLimit', 'enhancementType', 'eventType', 'eventIdType']);
 const VALID_DURATION_KEYS = new Set(['value', 'unit']);
 const VALID_STATUS_LEVEL_KEYS = new Set(['limit', 'interactionType']);
 
@@ -125,7 +125,7 @@ interface TriggerClauseEntry {
   effects: { verb: string; object: string; objectId?: string }[];
 }
 
-/** A gear set effect definition (eventCategoryType=GEAR_SET_EFFECT). Set-level metadata + triggers. */
+/** A gear set effect definition (eventIdType=GEAR_SET_EFFECT). Set-level metadata + triggers. */
 export class GearSetEffect {
   readonly onTriggerClause: TriggerClauseEntry[];
   readonly id: string;
@@ -134,7 +134,7 @@ export class GearSetEffect {
   readonly piecesRequired?: number;
   readonly description?: string;
   readonly eventType: EventType;
-  readonly eventCategoryType: EventCategoryType;
+  readonly eventIdType: string;
   readonly originId: string;
   readonly dataSources: string[];
 
@@ -149,7 +149,7 @@ export class GearSetEffect {
     if (props.piecesRequired) this.piecesRequired = props.piecesRequired as number;
     if (props.description) this.description = props.description as string;
     this.eventType = (props.eventType as EventType) ?? EventType.STATUS;
-    this.eventCategoryType = (props.eventCategoryType as EventCategoryType) ?? EventCategoryType.GEAR_SET_EFFECT;
+    this.eventIdType = props.eventIdType as string ?? NounType.GEAR_SET_EFFECT;
     this.originId = (meta.originId ?? '') as string;
     this.dataSources = (meta.dataSources ?? []) as string[];
   }
@@ -172,7 +172,7 @@ export class GearSetEffect {
         ...(this.piecesRequired ? { piecesRequired: this.piecesRequired } : {}),
         ...(this.description ? { description: this.description } : {}),
         eventType: this.eventType,
-        eventCategoryType: this.eventCategoryType,
+        eventIdType: this.eventIdType,
       },
       metadata: {
         originId: this.originId,
@@ -192,7 +192,7 @@ export class GearSetEffect {
         targetDeterminer: DeterminerType.THIS,
         stacks: { limit: { verb: VerbType.IS, value: 1 }, interactionType: StackInteractionType.NONE },
         eventType: EventType.STATUS,
-        eventCategoryType: EventCategoryType.GEAR_SET_EFFECT,
+        eventIdType: NounType.GEAR_SET_EFFECT,
       },
       metadata: {
         originId: this.originId,
@@ -212,7 +212,7 @@ export class GearSetEffect {
 
 // ── GearStatus class ────────────────────────────────────────────────────────
 
-/** A single gear status definition (eventCategoryType=GEAR_SET_STATUS). */
+/** A single gear status definition (eventIdType=GEAR_SET_STATUS). */
 export class GearStatus {
   readonly clause: ClausePredicate[];
   readonly id: string;
@@ -223,7 +223,7 @@ export class GearStatus {
   readonly cooldownSeconds?: number;
   readonly usageLimit?: { verb: string; value: number };
   readonly eventType: EventType;
-  readonly eventCategoryType: EventCategoryType;
+  readonly eventIdType: string;
   readonly originId: string;
 
   constructor(json: Record<string, unknown>) {
@@ -242,7 +242,7 @@ export class GearStatus {
     if (props.cooldownSeconds) this.cooldownSeconds = props.cooldownSeconds as number;
     if (props.usageLimit) this.usageLimit = props.usageLimit as { verb: string; value: number };
     this.eventType = (props.eventType as EventType) ?? EventType.STATUS;
-    this.eventCategoryType = (props.eventCategoryType as EventCategoryType) ?? EventCategoryType.GEAR_SET_STATUS;
+    this.eventIdType = props.eventIdType as string ?? NounType.GEAR_SET_STATUS;
     this.originId = (meta.originId ?? '') as string;
   }
 
@@ -265,7 +265,7 @@ export class GearStatus {
         stacks: this.stacks,
         ...(this.cooldownSeconds ? { cooldownSeconds: this.cooldownSeconds } : {}),
         eventType: this.eventType,
-        eventCategoryType: this.eventCategoryType,
+        eventIdType: this.eventIdType,
       },
       ...(this.usageLimit ? { usageLimit: this.usageLimit.value } : {}),
       metadata: {
@@ -297,8 +297,8 @@ for (const key of gearSetEffectContext.keys()) {
   // Skip pieces/ and statuses/ subdirs
   if (key.includes('/pieces/') || key.includes('/statuses/')) continue;
   const json = gearSetEffectContext(key) as Record<string, unknown>;
-  const catType = ((json.properties ?? {}) as Record<string, unknown>).eventCategoryType as string;
-  if (catType === EventCategoryType.GEAR_SET_EFFECT) {
+  const catType = ((json.properties ?? {}) as Record<string, unknown>).eventIdType as string;
+  if (catType === NounType.GEAR_SET_EFFECT) {
     const effect = GearSetEffect.deserialize(json, key);
     if (effect.id) gearSetEffectCache.set(effect.id, effect);
   }

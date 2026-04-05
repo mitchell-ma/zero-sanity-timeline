@@ -38,12 +38,12 @@
     "name": "\"Advance\"",
     "level": 2,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
+    "eventIdType": "POTENTIAL",
     "description": "Will +{Will:0}, Physical DMG Dealt +{PhysicalDamageIncrease:0%}."
   },
   "metadata": {
     "originId": "POGRANICHNIK",
-    "dataStatus": "RECONCILED"
+    "dataStatus": "VERIFIED"
   },
   "clauseType": "ALL"
 }

@@ -24,8 +24,10 @@
                 0.48,
                 0.56
               ],
-              "ofDeterminer": "THIS",
-              "of": "OPERATOR"
+              "of": {
+                "object": "OPERATOR",
+                "determiner": "THIS"
+              }
             }
           }
         }
@@ -60,7 +62,7 @@
           "subject": "OPERATOR",
           "verb": "DEAL",
           "object": "DAMAGE",
-          "objectQualifier": "COMBO_SKILL"
+          "objectQualifier": "COMBO"
         },
         {
           "subject": "ENEMY",

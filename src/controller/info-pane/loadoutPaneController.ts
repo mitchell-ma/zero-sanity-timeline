@@ -1,4 +1,4 @@
-import { CombatSkillType, StatType, StatOwnerType, STAT_ATTRIBUTION } from '../../consts/enums';
+import { StatType, StatOwnerType, STAT_ATTRIBUTION } from '../../consts/enums';
 import { OperatorLoadoutState } from '../../view/OperatorLoadoutHeader';
 import { LoadoutProperties } from '../../view/InformationPane';
 import { DataDrivenOperator } from '../../model/operators/dataDrivenOperator';
@@ -541,10 +541,10 @@ export interface UltimateEnergyDisplay {
 }
 
 const SKILL_TYPE_TO_JSON_KEY: Record<SkillType, string> = {
-  basic: CombatSkillType.BASIC_ATTACK,
-  battle: CombatSkillType.BATTLE_SKILL,
-  combo: CombatSkillType.COMBO_SKILL,
-  ultimate: CombatSkillType.ULTIMATE,
+  basic: NounType.BASIC_ATTACK,
+  battle: NounType.BATTLE,
+  combo: NounType.COMBO,
+  ultimate: NounType.ULTIMATE,
 };
 
 /**
@@ -634,33 +634,22 @@ const BATK_VARIANT_LABELS: Record<string, string> = {
  */
 export function resolveSubSkills(operatorId: string, skillType: SkillType): SubSkillDetail[] {
   const rawMap = getRawSkillTypeMap(operatorId);
-  const mapping = rawMap[skillType];
-  if (!mapping) return [];
+  const entry = rawMap[skillType];
+  if (!entry) return [];
 
-  if (typeof mapping === 'string') {
-    const skill = getOperatorSkill(operatorId, mapping);
-    return [{
-      variantKey: skillType,
-      variantLabel: '',
-      skillId: mapping,
-      skillName: skill?.name ?? mapping,
-      description: skill?.description,
-      detail: resolveSkillDetailForId(operatorId, mapping, 0),
-      clause: (skill?.clause ?? []) as Clause,
-    }];
-  }
+  // Flatten: for nested entries (BASIC_ATTACK → { BATK, FINISHER, DIVE }), collect all sub-type IDs
+  const allIds: string[] = Array.isArray(entry) ? entry
+    : Object.values(entry).flat();
+  if (allIds.length === 0) return [];
 
-  // Object mapping: { BATK: id, FINISHER: id, DIVE: id }
   const entries: SubSkillDetail[] = [];
-  const seenIds = new Set<string>();
-  for (const [variant, skillId] of Object.entries(mapping as Record<string, string>)) {
-    if (seenIds.has(skillId)) continue;
-    seenIds.add(skillId);
+  for (const skillId of allIds) {
     const skill = getOperatorSkill(operatorId, skillId);
     if (!skill) continue;
+    const variantKey = skill.eventQualifierType ?? skillType;
     entries.push({
-      variantKey: variant,
-      variantLabel: BATK_VARIANT_LABELS[variant] ?? variant,
+      variantKey,
+      variantLabel: BATK_VARIANT_LABELS[variantKey] ?? variantKey,
       skillId,
       skillName: skill.name ?? skillId,
       description: skill.description,

@@ -2,8 +2,8 @@
   "properties": {
     "name": "Winter's Devourer",
     "description": "When an enemy has {count:0} or more Cryo Infliction stacks. Encases the target enemy in icicles and shatters them to consume all Cryo Infliction stacks of the said enemy. The number of Cryo Infliction stacks consumed determines the amount of Cryo DMG dealt to the said enemy and Ultimate Energy gained by Last Rite.",
-    "eventType": "COMBAT_SKILL",
-    "eventCategoryType": "COMBO_SKILL",
+    "eventType": "SKILL",
+    "eventIdType": "COMBO",
     "element": "CRYO",
     "id": "WINTERS_DEVOURER"
   },
@@ -31,11 +31,16 @@
                 },
                 "right": {
                   "verb": "IS",
-                  "objectQualifier": "CRYO",
-                  "objectId": "INFLICTION",
                   "object": "STACKS",
-                  "ofDeterminer": "THIS",
-                  "of": "ENEMY"
+                  "of": {
+                    "object": "STATUS",
+                    "objectId": "INFLICTION",
+                    "of": {
+                      "object": "ENEMY",
+                      "determiner": "THIS"
+                    },
+                    "objectQualifier": "CRYO"
+                  }
                 }
               }
             }
@@ -122,8 +127,10 @@
                         1.47,
                         1.6
                       ],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     },
                     "count": {
                       "verb": "IS",
@@ -148,8 +155,10 @@
                           1.47,
                           1.6
                         ],
-                        "ofDeterminer": "THIS",
-                        "of": "OPERATOR"
+                        "of": {
+                          "object": "OPERATOR",
+                          "determiner": "THIS"
+                        }
                       },
                       "right": {
                         "verb": "VARY_BY",
@@ -162,16 +171,20 @@
                           1.15,
                           1.15
                         ],
-                        "ofDeterminer": "THIS",
-                        "of": "OPERATOR"
+                        "of": {
+                          "object": "OPERATOR",
+                          "determiner": "THIS"
+                        }
                       }
                     },
                     "mainStat": {
                       "verb": "IS",
                       "object": "STAT",
                       "objectId": "ATTACK",
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     }
                   }
                 }
@@ -231,8 +244,10 @@
                         1.47,
                         1.6
                       ],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     },
                     "value": {
                       "operation": "MULT",
@@ -253,8 +268,10 @@
                           1.47,
                           1.6
                         ],
-                        "ofDeterminer": "THIS",
-                        "of": "OPERATOR"
+                        "of": {
+                          "object": "OPERATOR",
+                          "determiner": "THIS"
+                        }
                       },
                       "right": {
                         "verb": "VARY_BY",
@@ -267,16 +284,20 @@
                           1.15,
                           1.15
                         ],
-                        "ofDeterminer": "THIS",
-                        "of": "OPERATOR"
+                        "of": {
+                          "object": "OPERATOR",
+                          "determiner": "THIS"
+                        }
                       }
                     },
                     "mainStat": {
                       "verb": "IS",
                       "object": "STAT",
                       "objectId": "ATTACK",
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     }
                   }
                 }
@@ -315,8 +336,10 @@
               9,
               8
             ],
-            "ofDeterminer": "THIS",
-            "of": "OPERATOR"
+            "of": {
+              "object": "OPERATOR",
+              "determiner": "THIS"
+            }
           },
           "unit": "SECOND"
         },

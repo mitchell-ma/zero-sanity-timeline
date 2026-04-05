@@ -2,8 +2,8 @@
   "properties": {
     "name": "Distortion",
     "description": "When an enemy suffers Solidification. Quickly moves to the enemy's side to deal Physical DMG and forcibly Lift enemies in a small area. If the skill hits a target with Solidification, the skill deals additional DMG and applies Physical Susceptibility.",
-    "eventType": "COMBAT_SKILL",
-    "eventCategoryType": "COMBO_SKILL",
+    "eventType": "SKILL",
+    "eventIdType": "COMBO",
     "element": "PHYSICAL",
     "id": "DISTORTION"
   },
@@ -131,15 +131,19 @@
                         3.32,
                         3.6
                       ],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     },
                     "mainStat": {
                       "verb": "IS",
                       "object": "STAT",
                       "objectId": "ATTACK",
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     }
                   }
                 }
@@ -197,15 +201,19 @@
                         5.81,
                         6.3
                       ],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     },
                     "mainStat": {
                       "verb": "IS",
                       "object": "STAT",
                       "objectId": "ATTACK",
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     }
                   }
                 },
@@ -232,8 +240,10 @@
                         0.15,
                         0.15
                       ],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     },
                     "duration": {
                       "value": {
@@ -253,8 +263,10 @@
                             3,
                             3
                           ],
-                          "ofDeterminer": "THIS",
-                          "of": "OPERATOR"
+                          "of": {
+                            "object": "OPERATOR",
+                            "determiner": "THIS"
+                          }
                         }
                       },
                       "unit": "SECOND"
@@ -296,8 +308,10 @@
               18,
               17
             ],
-            "ofDeterminer": "THIS",
-            "of": "OPERATOR"
+            "of": {
+              "object": "OPERATOR",
+              "determiner": "THIS"
+            }
           },
           "unit": "SECOND"
         },

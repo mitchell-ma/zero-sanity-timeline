@@ -4,7 +4,7 @@
     "name": "Rebellious Mood",
     "level": 4,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
+    "eventIdType": "POTENTIAL",
     "description": "Battle skill Brr-Brr-Bomb β improved: If the explosion hits only one enemy, return 10 SP."
   },
   "metadata": {

@@ -23,8 +23,10 @@
                 0.216,
                 0.252
               ],
-              "ofDeterminer": "THIS",
-              "of": "OPERATOR"
+              "of": {
+                "object": "OPERATOR",
+                "determiner": "THIS"
+              }
             }
           },
           "objectId": "ATTACK_BONUS"
@@ -52,7 +54,7 @@
     "to": "OPERATOR",
     "toDeterminer": "OTHER",
     "eventType": "STATUS",
-    "eventCategoryType": "WEAPON_STATUS",
+    "eventIdType": "WEAPON_STATUS",
     "description": "Treatment Efficiency +{heal_up:0.0%}. After the wielder's skill provides HP treatment, the entire team gains ATK +{atk_up:0.0%} for {duration:0}s. Effects of the same name cannot stack."
   },
   "metadata": {

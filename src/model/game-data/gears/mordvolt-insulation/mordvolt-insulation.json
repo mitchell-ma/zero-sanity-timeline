@@ -7,7 +7,7 @@
           "subject": "OPERATOR",
           "verb": "HAVE",
           "object": "HP",
-          "cardinalityConstraint": "AT_LEAST",
+          "cardinalityConstraint": "GREATER_THAN_EQUAL",
           "with": {
             "value": {
               "value": {
@@ -37,7 +37,7 @@
     "piecesRequired": 3,
     "description": "3-piece set effect: Wearer's Intellect +50. When the wearer's HP exceeds 80%, the wearer's Arts DMG increases by 20%.",
     "eventType": "STATUS",
-    "eventCategoryType": "GEAR_SET_EFFECT"
+    "eventIdType": "GEAR_SET_EFFECT"
   },
   "metadata": {
     "originId": "game",

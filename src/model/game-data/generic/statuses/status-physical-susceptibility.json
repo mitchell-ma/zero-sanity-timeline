@@ -4,7 +4,7 @@
     "name": "Physical Susceptibility",
     "to": "ENEMY",
     "eventType": "STATUS",
-    "eventCategoryType": "STATUS",
+    "eventIdType": "STATUS",
     "description": "Physical Susceptibility applied to enemy.",
     "duration": {
       "value": {

@@ -8,7 +8,7 @@
  */
 import { TimelineEvent, eventDuration } from '../../consts/viewTypes';
 import { NounType } from '../../dsl/semantics';
-import { CombatSkillType, DamageFactorType, ElementType, StatType, StatusType } from '../../consts/enums';
+import { DamageFactorType, ElementType, StatType, StatusType } from '../../consts/enums';
 import { isQualifiedId } from '../../dsl/semantics';
 import { StaggerBreak } from './staggerTimeline';
 import {
@@ -223,16 +223,16 @@ export class EventsQueryService {
     return this.linkEvents.some(ev => this.isActive(ev, frame));
   }
 
-  getLinkBonus(frame: number, skillType: CombatSkillType): number {
-    if (skillType !== CombatSkillType.BATTLE_SKILL && skillType !== CombatSkillType.ULTIMATE) return 0;
+  getLinkBonus(frame: number, skillType: string): number {
+    if (skillType !== NounType.BATTLE && skillType !== NounType.ULTIMATE) return 0;
     // Find the registered event that owns this frame and check if it consumed Link
     const events = this.state.getRegisteredEvents();
     for (const ev of events) {
-      if (ev.columnId !== NounType.BATTLE_SKILL && ev.columnId !== NounType.ULTIMATE) continue;
+      if (ev.columnId !== NounType.BATTLE && ev.columnId !== NounType.ULTIMATE) continue;
       if (ev.startFrame > frame || frame >= ev.startFrame + eventDuration(ev)) continue;
       const stacks = this.state.getLinkStacks(ev.uid);
       if (stacks === 0) continue;
-      const table = skillType === CombatSkillType.ULTIMATE ? LINK_ULTIMATE_BONUS : LINK_BATTLE_SKILL_BONUS;
+      const table = skillType === NounType.ULTIMATE ? LINK_ULTIMATE_BONUS : LINK_BATTLE_SKILL_BONUS;
       return table[stacks] ?? 0;
     }
     return 0;

@@ -80,7 +80,7 @@ export function operatorToCustomOperator(operatorId: string): CustomOperator | n
   const placeholderStats: Partial<Record<string, number>> = { BASE_HP: 800, BASE_ATTACK: 100, BASE_DEFENSE: 0 };
   const onTriggerClause: Predicate[] = info
     ? (info.onTriggerClause as Predicate[])
-    : [{ conditions: [{ subjectDeterminer: DeterminerType.THIS, subject: SubjectType.OPERATOR, verb: VerbType.PERFORM, object: ObjectType.BATTLE_SKILL }], effects: [] }];
+    : [{ conditions: [{ subjectDeterminer: DeterminerType.THIS, subject: SubjectType.OPERATOR, verb: VerbType.PERFORM, object: ObjectType.BATTLE }], effects: [] }];
 
   return {
     id: `clone_${operatorId}_${Date.now()}`,

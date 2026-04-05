@@ -4,11 +4,11 @@
     "name": "Frontline Sweep",
     "level": 1,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
+    "eventIdType": "POTENTIAL",
     "description": "Battle skill The Pulverizing Front improved: When hitting at least 2 enemies, 15 SP is returned."
   },
   "metadata": {
     "originId": "POGRANICHNIK",
-    "dataStatus": "RECONCILED"
+    "dataStatus": "VERIFIED"
   }
 }

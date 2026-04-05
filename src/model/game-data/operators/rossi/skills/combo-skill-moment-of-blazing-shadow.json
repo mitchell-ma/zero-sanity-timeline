@@ -2,8 +2,8 @@
   "properties": {
     "name": "Moment of Blazing Shadow",
     "description": "When an enemy has both Vulnerability and Arts Infliction stacks. Fire erupts beneath the enemy's feet, dealing Physical DMG.",
-    "eventType": "COMBAT_SKILL",
-    "eventCategoryType": "COMBO_SKILL",
+    "eventType": "SKILL",
+    "eventIdType": "COMBO",
     "element": "PHYSICAL",
     "id": "MOMENT_OF_BLAZING_SHADOW"
   },
@@ -103,8 +103,10 @@
                             0.83,
                             0.9
                           ],
-                          "ofDeterminer": "THIS",
-                          "of": "OPERATOR"
+                          "of": {
+                            "object": "OPERATOR",
+                            "determiner": "THIS"
+                          }
                         },
                         "right": {
                           "verb": "IS",
@@ -122,16 +124,20 @@
                           1.15,
                           1.15
                         ],
-                        "ofDeterminer": "THIS",
-                        "of": "OPERATOR"
+                        "of": {
+                          "object": "OPERATOR",
+                          "determiner": "THIS"
+                        }
                       }
                     },
                     "mainStat": {
                       "verb": "IS",
                       "object": "STAT",
                       "objectId": "ATTACK",
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     }
                   }
                 }
@@ -206,8 +212,10 @@
                             0.83,
                             0.9
                           ],
-                          "ofDeterminer": "THIS",
-                          "of": "OPERATOR"
+                          "of": {
+                            "object": "OPERATOR",
+                            "determiner": "THIS"
+                          }
                         },
                         "right": {
                           "verb": "IS",
@@ -225,16 +233,20 @@
                           1.15,
                           1.15
                         ],
-                        "ofDeterminer": "THIS",
-                        "of": "OPERATOR"
+                        "of": {
+                          "object": "OPERATOR",
+                          "determiner": "THIS"
+                        }
                       }
                     },
                     "mainStat": {
                       "verb": "IS",
                       "object": "STAT",
                       "objectId": "ATTACK",
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     }
                   }
                 }
@@ -324,8 +336,10 @@
               14,
               14
             ],
-            "ofDeterminer": "THIS",
-            "of": "OPERATOR"
+            "of": {
+              "object": "OPERATOR",
+              "determiner": "THIS"
+            }
           },
           "unit": "SECOND"
         },

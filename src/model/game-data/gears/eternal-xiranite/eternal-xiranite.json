@@ -92,7 +92,7 @@
     "piecesRequired": 3,
     "description": "3-piece set effect: Wearer's HP +{hp_up}. After the wearer applies Amp, Protected, Susceptibility, or Weakened, other teammates gain DMG Dealt +{dmg_up:0%} for {duration}s. This effect cannot stack.",
     "eventType": "STATUS",
-    "eventCategoryType": "GEAR_SET_EFFECT"
+    "eventIdType": "GEAR_SET_EFFECT"
   },
   "metadata": {
     "originId": "game",

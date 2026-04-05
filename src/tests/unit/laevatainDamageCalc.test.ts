@@ -94,8 +94,8 @@ const OPERATOR_ID = 'LAEVATAIN';
 const SKILL_LEVEL = 12 as SkillLevel;
 const POTENTIAL = 5 as Potential;
 
-const SKILL_FLAMING_CINDERS = 'FLAMING_CINDERS';
-const SKILL_FLAMING_CINDERS_ENHANCED = 'FLAMING_CINDERS_ENHANCED';
+const SKILL_FLAMING_CINDERS = 'FLAMING_CINDERS_BATK';
+const SKILL_FLAMING_CINDERS_ENHANCED = 'FLAMING_CINDERS_BATK_ENHANCED';
 const SKILL_SMOULDERING_FIRE = 'SMOULDERING_FIRE';
 const SKILL_SMOULDERING_FIRE_ENHANCED = 'SMOULDERING_FIRE_ENHANCED';
 const SKILL_SEETHE = 'SEETHE';
@@ -293,7 +293,7 @@ describe('Laevatain damage calculation — Seethe (combo skill)', () => {
 
 describe('Laevatain damage calculation — Enhanced basic attack (during ultimate, full loadout)', () => {
   // Twilight Blazing Wail adds +2.1 BASIC_ATTACK_DAMAGE_BONUS during ultimate.
-  // P5 Proof of Existence ×1.2 is baked into FLAMING_CINDERS_ENHANCED JSON via VARY_BY POTENTIAL.
+  // P5 Proof of Existence ×1.2 is baked into FLAMING_CINDERS_BATK_ENHANCED JSON via VARY_BY POTENTIAL.
   const EXPECTED: [number, number, number[]][] = [
     [0, 1, [20304]],
     [1, 2, [12655, 12655]],

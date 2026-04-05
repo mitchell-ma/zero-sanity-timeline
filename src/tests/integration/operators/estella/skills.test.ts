@@ -121,7 +121,7 @@ function placeShatter(
 describe('A. Core Skill Placement', () => {
   it('A1: battle skill placed in BATTLE_SKILL column', () => {
     const { result } = setupEstella();
-    const col = findColumn(result.current, SLOT_ESTELLA, NounType.BATTLE_SKILL);
+    const col = findColumn(result.current, SLOT_ESTELLA, NounType.BATTLE);
     expect(col).toBeDefined();
 
     const menuItems = buildContextMenu(result.current, col!, 5 * FPS);
@@ -136,7 +136,7 @@ describe('A. Core Skill Placement', () => {
     });
 
     const battles = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_ESTELLA && ev.columnId === NounType.BATTLE_SKILL,
+      (ev) => ev.ownerId === SLOT_ESTELLA && ev.columnId === NounType.BATTLE,
     );
     expect(battles).toHaveLength(1);
     expect(battles[0].name).toBe(BATTLE_SKILL_ID);
@@ -149,7 +149,7 @@ describe('A. Core Skill Placement', () => {
     placeCryoInfliction(result, 1);
     placeSolidification(result, 2);
 
-    const comboCol = findColumn(result.current, SLOT_ESTELLA, NounType.COMBO_SKILL);
+    const comboCol = findColumn(result.current, SLOT_ESTELLA, NounType.COMBO);
     expect(comboCol).toBeDefined();
 
     const menuItems = buildContextMenu(result.current, comboCol!, 3 * FPS);
@@ -166,7 +166,7 @@ describe('A. Core Skill Placement', () => {
     });
 
     const combos = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_ESTELLA && ev.columnId === NounType.COMBO_SKILL,
+      (ev) => ev.ownerId === SLOT_ESTELLA && ev.columnId === NounType.COMBO,
     );
     expect(combos).toHaveLength(1);
     expect(combos[0].name).toBe(COMBO_ID);
@@ -233,7 +233,7 @@ describe('B. Battle Skill Cryo Infliction', () => {
       (ev) => ev.columnId === INFLICTION_COLUMNS.CRYO && ev.ownerId === ENEMY_OWNER_ID,
     ).length;
 
-    const battleCol = findColumn(result.current, SLOT_ESTELLA, NounType.BATTLE_SKILL);
+    const battleCol = findColumn(result.current, SLOT_ESTELLA, NounType.BATTLE);
     const payload = getMenuPayload(result.current, battleCol!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
@@ -278,7 +278,7 @@ describe('C. Combo Solidification Trigger', () => {
     // Switch to freeform to bypass activation window
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
-    const comboCol = findColumn(result.current, SLOT_ESTELLA, NounType.COMBO_SKILL);
+    const comboCol = findColumn(result.current, SLOT_ESTELLA, NounType.COMBO);
     expect(comboCol).toBeDefined();
 
     const menuItems = buildContextMenu(result.current, comboCol!, 5 * FPS);
@@ -289,7 +289,7 @@ describe('C. Combo Solidification Trigger', () => {
   it('C2: combo disabled without Solidification in strict mode', () => {
     const { result } = setupEstella();
 
-    const comboCol = findColumn(result.current, SLOT_ESTELLA, NounType.COMBO_SKILL);
+    const comboCol = findColumn(result.current, SLOT_ESTELLA, NounType.COMBO);
     expect(comboCol).toBeDefined();
 
     const menuItems = buildContextMenu(result.current, comboCol!, 5 * FPS);
@@ -305,7 +305,7 @@ describe('C. Combo Solidification Trigger', () => {
     placeCryoInfliction(result, 1);
     placeSolidification(result, 2);
 
-    const comboCol = findColumn(result.current, SLOT_ESTELLA, NounType.COMBO_SKILL);
+    const comboCol = findColumn(result.current, SLOT_ESTELLA, NounType.COMBO);
     const payload = getMenuPayload(result.current, comboCol!, 3 * FPS);
     act(() => {
       result.current.handleAddEvent(
@@ -314,7 +314,7 @@ describe('C. Combo Solidification Trigger', () => {
     });
 
     const combos = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_ESTELLA && ev.columnId === NounType.COMBO_SKILL,
+      (ev) => ev.ownerId === SLOT_ESTELLA && ev.columnId === NounType.COMBO,
     );
     expect(combos).toHaveLength(1);
 
@@ -359,7 +359,7 @@ describe('E. Talent-Derived Statuses', () => {
     const { result } = setupEstella();
 
     // Place a battle skill first (to apply cryo infliction that could trigger Shatter)
-    const battleCol = findColumn(result.current, SLOT_ESTELLA, NounType.BATTLE_SKILL);
+    const battleCol = findColumn(result.current, SLOT_ESTELLA, NounType.BATTLE);
     const bsPayload = getMenuPayload(result.current, battleCol!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
@@ -390,7 +390,7 @@ describe('F. View Layer', () => {
   it('F1: battle skill visible in timeline presentation', () => {
     const { result } = setupEstella();
 
-    const battleCol = findColumn(result.current, SLOT_ESTELLA, NounType.BATTLE_SKILL);
+    const battleCol = findColumn(result.current, SLOT_ESTELLA, NounType.BATTLE);
     const payload = getMenuPayload(result.current, battleCol!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
@@ -415,7 +415,7 @@ describe('F. View Layer', () => {
     placeCryoInfliction(result, 1);
     placeSolidification(result, 2);
 
-    const comboCol = findColumn(result.current, SLOT_ESTELLA, NounType.COMBO_SKILL);
+    const comboCol = findColumn(result.current, SLOT_ESTELLA, NounType.COMBO);
     const payload = getMenuPayload(result.current, comboCol!, 3 * FPS);
     act(() => {
       result.current.handleAddEvent(
@@ -460,7 +460,7 @@ describe('F. View Layer', () => {
   it('F4: battle skill event has nonzero duration', () => {
     const { result } = setupEstella();
 
-    const battleCol = findColumn(result.current, SLOT_ESTELLA, NounType.BATTLE_SKILL);
+    const battleCol = findColumn(result.current, SLOT_ESTELLA, NounType.BATTLE);
     const payload = getMenuPayload(result.current, battleCol!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
@@ -469,7 +469,7 @@ describe('F. View Layer', () => {
     });
 
     const battles = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_ESTELLA && ev.columnId === NounType.BATTLE_SKILL,
+      (ev) => ev.ownerId === SLOT_ESTELLA && ev.columnId === NounType.BATTLE,
     );
     expect(battles).toHaveLength(1);
     expect(eventDuration(battles[0])).toBeGreaterThan(0);

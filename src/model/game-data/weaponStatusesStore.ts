@@ -5,7 +5,8 @@
  * Auto-discovers weapons/weapon-statuses/*.json via require.context.
  * Each file contains an array of weapon status entries sharing an originId.
  */
-import { UnitType, EventType, EventCategoryType } from '../../consts/enums';
+import { NounType } from '../../dsl/semantics';
+import { UnitType, EventType } from '../../consts/enums';
 import { VerbType } from '../../dsl/semantics';
 import type { Interaction, ValueNode } from '../../dsl/semantics';
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from '../../controller/calculation/valueResolver';
@@ -47,7 +48,7 @@ export interface DurationConfig {
 
 const VALID_DURATION_KEYS = new Set(['value', 'unit']);
 const VALID_STATUS_LEVEL_KEYS = new Set(['limit', 'interactionType']);
-const VALID_PROPERTIES_KEYS = new Set(['id', 'name', 'description', 'to', 'toDeterminer', 'duration', 'stacks', 'eventType', 'eventCategoryType']);
+const VALID_PROPERTIES_KEYS = new Set(['id', 'name', 'description', 'to', 'toDeterminer', 'duration', 'stacks', 'eventType', 'eventIdType']);
 const VALID_TOP_KEYS = new Set(['clause', 'clauseType', 'onTriggerClause', 'onExitClause', 'properties', 'metadata']);
 
 function validateValueNode(wv: Record<string, unknown>, path: string): string[] {
@@ -145,7 +146,7 @@ export class WeaponStatus {
   readonly duration: DurationConfig;
   readonly stacks: StacksConfig;
   readonly eventType: EventType;
-  readonly eventCategoryType: EventCategoryType;
+  readonly eventIdType: string;
   readonly originId: string;
 
   constructor(json: Record<string, unknown>) {
@@ -166,7 +167,7 @@ export class WeaponStatus {
       interactionType: 'NONE',
     }) as StacksConfig;
     this.eventType = (props.eventType as EventType) ?? EventType.STATUS;
-    this.eventCategoryType = (props.eventCategoryType as EventCategoryType) ?? EventCategoryType.WEAPON_STATUS;
+    this.eventIdType = props.eventIdType as string ?? NounType.WEAPON_STATUS;
     this.originId = (meta.originId ?? '') as string;
   }
 
@@ -193,7 +194,7 @@ export class WeaponStatus {
         duration: this.duration,
         stacks: this.stacks,
         eventType: this.eventType,
-        eventCategoryType: this.eventCategoryType,
+        eventIdType: this.eventIdType,
       },
       metadata: {
         originId: this.originId,

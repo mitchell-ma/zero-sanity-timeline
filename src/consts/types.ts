@@ -1,4 +1,4 @@
-import { CombatResourceType, CombatSkillType, StatusType } from "./enums";
+import { CombatResourceType, StatusType } from "./enums";
 
 /** Valid weapon rarity values. */
 export type WeaponRarity = 3 | 4 | 5 | 6;
@@ -25,10 +25,4 @@ export type StatusLevel = 1 | 2 | 3 | 4;
 export type GearRank = 1 | 2 | 3 | 4;
 
 /** Union of all types that can be used as a requirement subject. */
-export type RequirementType = StatusType | CombatResourceType | CombatSkillType;
-
-/** CombatSkillType values that an ultimate can empower (excludes ULTIMATE itself). */
-export type EmpowerSkillTarget = Exclude<
-  CombatSkillType,
-  CombatSkillType.ULTIMATE
->;
+export type RequirementType = StatusType | CombatResourceType | string;

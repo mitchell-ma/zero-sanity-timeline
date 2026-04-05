@@ -4,7 +4,7 @@
     "name": "Polar Survival Guide",
     "level": 3,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
+    "eventIdType": "POTENTIAL",
     "description": "Ultimate Frigid Snowfield improved: Duration of the Solidification applied by the skill is increased by 2s."
   },
   "metadata": {

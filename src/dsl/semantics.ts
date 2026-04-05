@@ -82,22 +82,30 @@ export enum NounType {
   BASIC_ATTACK = "BASIC_ATTACK",
   /** Basic attack subcategory (normal attack sequence). Distinct from BASIC_ATTACK which is the skill category. */
   BATK = "BATK",
-  BATTLE_SKILL = "BATTLE_SKILL",
-  COMBO_SKILL = "COMBO_SKILL",
+  /** Battle skill column / category ID. */
+  BATTLE = "BATTLE",
+  /** Combo skill column / category ID. */
+  COMBO = "COMBO",
   ULTIMATE = "ULTIMATE",
   FINAL_STRIKE = "FINAL_STRIKE",
   FINISHER = "FINISHER",
-  DIVE_ATTACK = "DIVE_ATTACK",
+  DIVE = "DIVE",
   CRITICAL_HIT = "CRITICAL_HIT",
   /** Operator action — non-combat skill events (e.g. healing shadows, deployables). */
   ACTION = "ACTION",
+  /** Dash action (basic attack variant). */
+  DASH = "DASH",
+  /** Enemy control action. */
+  CONTROL = "CONTROL",
+  /** Ultimate skill (event category alias). */
+  ULTIMATE_SKILL = "ULTIMATE_SKILL",
   /** Enemy skill charge-up action. */
   CHARGE = "CHARGE",
 
   // Damage
   NORMAL_ATTACK = "NORMAL_ATTACK",
   DAMAGE = "DAMAGE",
-  /** Generic "all skills" qualifier (e.g. [SKILL] DAMAGE_BONUS). */
+  /** Generic "all skills" qualifier (e.g. [SKILL] DAMAGE_BONUS). Base object for normalized skill references. */
   SKILL = "SKILL",
 
   // Statuses
@@ -175,6 +183,19 @@ export enum NounType {
   TALENT_LEVEL = "TALENT_LEVEL",
   /** Attribute increase level of an operator (0–4). */
   ATTRIBUTE_INCREASE_LEVEL = "ATTRIBUTE_INCREASE_LEVEL",
+  // Event categories (replaces )
+  PHYSICAL_INFLICTION = "PHYSICAL_INFLICTION",
+  PHYSICAL_STATUS = "PHYSICAL_STATUS",
+  TALENT = "TALENT",
+  TALENT_STATUS = "TALENT_STATUS",
+  POTENTIAL_STATUS = "POTENTIAL_STATUS",
+  SKILL_STATUS = "SKILL_STATUS",
+  WEAPON_STATUS = "WEAPON_STATUS",
+  GEAR_STATUS = "GEAR_STATUS",
+  GEAR_SET_EFFECT = "GEAR_SET_EFFECT",
+  GEAR_SET_STATUS = "GEAR_SET_STATUS",
+  CONSUMABLE = "CONSUMABLE",
+  TACTICAL = "TACTICAL",
 }
 
 // ── Subject ─────────────────────────────────────────────────────────────────
@@ -196,7 +217,7 @@ export interface DslTarget {
 
 export enum VerbType {
   // ── Compound (structural wrappers, can nest) ────────────────────────────
-  /** Evaluate all predicates in order, execute each one that passes. Optional cardinality (ALL AT_MOST 4). */
+  /** Evaluate all predicates in order, execute each one that passes. Optional cardinality (ALL LESS_THAN_EQUAL 4). */
   ALL = "ALL",
   /** Evaluate predicates in order, execute the first that passes. */
   ANY = "ANY",
@@ -240,9 +261,9 @@ export enum VerbType {
   // ── Stat ────────────────────────────────────────────────────────────────
   /** Ignore a resistance/stat (e.g. IGNORE HEAT_RESISTANCE ON ENEMY). */
   IGNORE = "IGNORE",
-  /** Enable a specific skill variant by ID (e.g. ENABLE FLAMING_CINDERS_ENHANCED BATK OF THIS OPERATOR). */
+  /** Enable a specific skill variant by ID (e.g. ENABLE FLAMING_CINDERS_BATK_ENHANCED BATK OF THIS OPERATOR). */
   ENABLE = "ENABLE",
-  /** Disable a specific skill variant by ID (e.g. DISABLE FLAMING_CINDERS BATK OF THIS OPERATOR). */
+  /** Disable a specific skill variant by ID (e.g. DISABLE FLAMING_CINDERS_BATK BATK OF THIS OPERATOR). */
   DISABLE = "DISABLE",
 
   // ── Time ────────────────────────────────────────────────────────────────
@@ -316,7 +337,6 @@ export enum AdjectiveType {
   FULL_STAGGERED = "FULL_STAGGERED",
 
   // Time stop adjectives (APPLY <adj> TIME_STOP FOR <duration>)
-  COMBO = "COMBO",
   DODGE = "DODGE",
   ANIMATION = "ANIMATION",
 
@@ -346,11 +366,11 @@ export const ObjectType = { ...NounType, ...AdjectiveType } as typeof NounType &
  */
 export const VERB_OBJECTS: Partial<Record<VerbType, ObjectType[]>> = {
   [VerbType.APPLY]:      [ObjectType.INFLICTION, ObjectType.REACTION, ObjectType.ARTS_BURST, ObjectType.STATUS, ObjectType.STAT, ObjectType.STAGGER, ObjectType.SUSCEPTIBILITY, ObjectType.FRAGILITY, ObjectType.TIME_STOP, ObjectType.EVENT],
-  [VerbType.CONSUME]:    [ObjectType.INFLICTION, ObjectType.REACTION, ObjectType.STATUS, ObjectType.SKILL_POINT, ObjectType.ULTIMATE_ENERGY, ObjectType.COOLDOWN, ObjectType.STAGGER, ObjectType.STACKS, ObjectType.EVENT, ObjectType.BASIC_ATTACK, ObjectType.BATTLE_SKILL, ObjectType.COMBO_SKILL, ObjectType.ULTIMATE],
+  [VerbType.CONSUME]:    [ObjectType.INFLICTION, ObjectType.REACTION, ObjectType.STATUS, ObjectType.SKILL_POINT, ObjectType.ULTIMATE_ENERGY, ObjectType.COOLDOWN, ObjectType.STAGGER, ObjectType.STACKS, ObjectType.EVENT, ObjectType.SKILL],
   [VerbType.RECOVER]:    [ObjectType.SKILL_POINT, ObjectType.ULTIMATE_ENERGY, ObjectType.HP],
   [VerbType.RETURN]:     [ObjectType.SKILL_POINT],
   [VerbType.DEAL]:       [ObjectType.DAMAGE, ObjectType.STAGGER],
-  [VerbType.PERFORM]:    [ObjectType.BASIC_ATTACK, ObjectType.BATTLE_SKILL, ObjectType.COMBO_SKILL, ObjectType.ULTIMATE, ObjectType.FINAL_STRIKE, ObjectType.FINISHER, ObjectType.DIVE_ATTACK, ObjectType.NORMAL_ATTACK, ObjectType.CHARGE, ObjectType.CRITICAL_HIT],
+  [VerbType.PERFORM]:    [ObjectType.SKILL, ObjectType.NORMAL_ATTACK, ObjectType.CHARGE, ObjectType.CRITICAL_HIT],
   [VerbType.HIT]:        [ObjectType.ENEMY],
   [VerbType.DEFEAT]:     [ObjectType.ENEMY],
   [VerbType.REFRESH]:    [ObjectType.STATUS, ObjectType.INFLICTION, ObjectType.REACTION],
@@ -358,8 +378,8 @@ export const VERB_OBJECTS: Partial<Record<VerbType, ObjectType[]>> = {
   [VerbType.MERGE]:      [ObjectType.STATUS, ObjectType.INFLICTION],
   [VerbType.RESET]:      [ObjectType.STACKS],
   [VerbType.IGNORE]:     [ObjectType.STATUS, ObjectType.STAT, ObjectType.ULTIMATE_ENERGY],
-  [VerbType.ENABLE]:     [ObjectType.BATK, ObjectType.BATTLE_SKILL, ObjectType.COMBO_SKILL, ObjectType.ULTIMATE, ObjectType.FINISHER, ObjectType.DIVE_ATTACK],
-  [VerbType.DISABLE]:    [ObjectType.BATK, ObjectType.BATTLE_SKILL, ObjectType.COMBO_SKILL, ObjectType.ULTIMATE, ObjectType.FINISHER, ObjectType.DIVE_ATTACK],
+  [VerbType.ENABLE]:     [ObjectType.SKILL],
+  [VerbType.DISABLE]:    [ObjectType.SKILL],
   [VerbType.EXPERIENCE]: [ObjectType.GAME_TIME, ObjectType.REAL_TIME],
   [VerbType.HAVE]:       [ObjectType.STATUS, ObjectType.INFLICTION, ObjectType.REACTION, ObjectType.STACKS, ObjectType.SKILL_POINT, ObjectType.ULTIMATE_ENERGY, ObjectType.HP, ObjectType.POTENTIAL],
   [VerbType.IS]:         [ObjectType.ACTIVE, ObjectType.CONTROLLED_STATE, ObjectType.LIFTED, ObjectType.KNOCKED_DOWN, ObjectType.CRUSHED, ObjectType.BREACHED, ObjectType.COMBUSTED, ObjectType.CORRODED, ObjectType.ELECTRIFIED, ObjectType.SOLIDIFIED, ObjectType.NODE_STAGGERED, ObjectType.FULL_STAGGERED],
@@ -376,7 +396,7 @@ export const EXPERIENCE_OBJECTS: ObjectType[] = [
 ];
 
 /** Valid object qualifiers per object type (noun adjuncts like NORMAL_ATTACK, FINAL_STRIKE handled separately). */
-export const OBJECT_QUALIFIERS: Partial<Record<ObjectType, AdjectiveType[]>> = {
+export const OBJECT_QUALIFIERS: Partial<Record<ObjectType, (AdjectiveType | NounType)[]>> = {
   [ObjectType.DAMAGE]: [
     // Element prefix: DEAL HEAT DAMAGE, DEAL PHYSICAL DAMAGE
     AdjectiveType.HEAT, AdjectiveType.CRYO, AdjectiveType.NATURE, AdjectiveType.ELECTRIC, AdjectiveType.PHYSICAL,
@@ -395,7 +415,7 @@ export const OBJECT_QUALIFIERS: Partial<Record<ObjectType, AdjectiveType[]>> = {
     AdjectiveType.LIFT, AdjectiveType.KNOCK_DOWN, AdjectiveType.BREACH, AdjectiveType.CRUSH,
   ],
   [ObjectType.TIME_STOP]: [
-    AdjectiveType.COMBO, AdjectiveType.DODGE, AdjectiveType.ANIMATION,
+    NounType.COMBO, AdjectiveType.DODGE, AdjectiveType.ANIMATION,
   ],
   [ObjectType.STAGGER]: [
     AdjectiveType.NODE_STAGGERED, AdjectiveType.FULL_STAGGERED,
@@ -441,26 +461,14 @@ export const NOUN_UNITS: Partial<Record<NounType, UnitType[]>> = {
 };
 
 /**
- * Valid qualifier modifiers per noun.
- * Maps nouns to the NounType or AdjectiveType values that can appear in qualifier position.
- * e.g. "ULTIMATE COOLDOWN", "COMBO_SKILL COOLDOWN", "HEAT DAMAGE".
+ * Valid object qualifiers per noun — combined map for both adjective qualifiers
+ * and skill/stat category qualifiers.
+ * Skill types (COMBO, BATTLE, etc.) and element adjectives both use objectQualifier.
  */
-export type QualifierType = NounType | AdjectiveType | DeterminerType;
-
-export const NOUN_QUALIFIER_MAPPING: Partial<Record<NounType, QualifierType[]>> = {
-  [NounType.COOLDOWN]: [NounType.ULTIMATE, NounType.COMBO_SKILL],
-  [NounType.DAMAGE]: [AdjectiveType.HEAT, AdjectiveType.CRYO, AdjectiveType.NATURE, AdjectiveType.ELECTRIC, AdjectiveType.PHYSICAL],
-  [NounType.AMP]: [AdjectiveType.HEAT, AdjectiveType.CRYO, AdjectiveType.NATURE, AdjectiveType.ELECTRIC, AdjectiveType.PHYSICAL, AdjectiveType.ARTS, DeterminerType.ANY],
-  [NounType.SUSCEPTIBILITY]: [AdjectiveType.HEAT, AdjectiveType.CRYO, AdjectiveType.NATURE, AdjectiveType.ELECTRIC, AdjectiveType.PHYSICAL, AdjectiveType.ARTS],
-  [NounType.FRAGILITY]: [AdjectiveType.HEAT, AdjectiveType.CRYO, AdjectiveType.NATURE, AdjectiveType.ELECTRIC, AdjectiveType.PHYSICAL, AdjectiveType.ARTS],
-  [NounType.DAMAGE_BONUS]: [AdjectiveType.HEAT, AdjectiveType.CRYO, AdjectiveType.NATURE, AdjectiveType.ELECTRIC, AdjectiveType.PHYSICAL, AdjectiveType.ARTS, NounType.BASIC_ATTACK, NounType.BATTLE_SKILL, NounType.COMBO_SKILL, NounType.ULTIMATE, NounType.STAGGER, NounType.SKILL],
+export const OBJECT_QUALIFIER_MAPPING: Partial<Record<NounType, (AdjectiveType | NounType | DeterminerType)[]>> = {
+  [NounType.DAMAGE_BONUS]: [AdjectiveType.HEAT, AdjectiveType.CRYO, AdjectiveType.NATURE, AdjectiveType.ELECTRIC, AdjectiveType.PHYSICAL, AdjectiveType.ARTS, NounType.BASIC_ATTACK, NounType.BATTLE, NounType.COMBO, NounType.ULTIMATE, NounType.STAGGER, NounType.SKILL],
   [NounType.DAMAGE_TAKEN_BONUS]: [AdjectiveType.HEAT, AdjectiveType.CRYO, AdjectiveType.NATURE, AdjectiveType.ELECTRIC, AdjectiveType.PHYSICAL, AdjectiveType.ARTS],
-  [NounType.BATK]: [AdjectiveType.NORMAL, AdjectiveType.ENHANCED, AdjectiveType.EMPOWERED],
-  [NounType.BATTLE_SKILL]: [AdjectiveType.NORMAL, AdjectiveType.ENHANCED, AdjectiveType.EMPOWERED],
-  [NounType.COMBO_SKILL]: [AdjectiveType.NORMAL, AdjectiveType.ENHANCED, AdjectiveType.EMPOWERED],
-  [NounType.ULTIMATE]: [AdjectiveType.NORMAL, AdjectiveType.ENHANCED, AdjectiveType.EMPOWERED],
-  [NounType.FINISHER]: [AdjectiveType.NORMAL, AdjectiveType.ENHANCED, AdjectiveType.EMPOWERED],
-  [NounType.DIVE_ATTACK]: [AdjectiveType.NORMAL, AdjectiveType.ENHANCED, AdjectiveType.EMPOWERED],
+  [NounType.SKILL]: [AdjectiveType.NORMAL, AdjectiveType.ENHANCED, AdjectiveType.EMPOWERED],
   [NounType.HP]: [AdjectiveType.LOWEST, AdjectiveType.HIGHEST, AdjectiveType.FULL],
 };
 
@@ -478,17 +486,11 @@ export const DETERMINER_FILTER_SUPPORT: DeterminerType[] = [
  * e.g. "REDUCE COOLDOWN OF THIS OPERATOR", "REDUCE COOLDOWN OF EVENT".
  */
 export const NOUN_POSSESSOR_MAPPING: Partial<Record<NounType, NounType[]>> = {
-  [NounType.STACKS]: [NounType.EVENT],
-  [NounType.COOLDOWN]: [NounType.OPERATOR, NounType.EVENT],
+  [NounType.STACKS]: [NounType.EVENT, NounType.STATUS],
+  [NounType.COOLDOWN]: [NounType.OPERATOR, NounType.EVENT, NounType.SKILL],
   [NounType.TALENT_LEVEL]: [NounType.OPERATOR],
   [NounType.STAT]: [NounType.OPERATOR],
-  [NounType.BASIC_ATTACK]: [NounType.OPERATOR],
-  [NounType.BATK]: [NounType.OPERATOR],
-  [NounType.BATTLE_SKILL]: [NounType.OPERATOR],
-  [NounType.COMBO_SKILL]: [NounType.OPERATOR],
-  [NounType.ULTIMATE]: [NounType.OPERATOR],
-  [NounType.FINISHER]: [NounType.OPERATOR],
-  [NounType.DIVE_ATTACK]: [NounType.OPERATOR],
+  [NounType.SKILL]: [NounType.OPERATOR],
 };
 
 /**
@@ -505,10 +507,14 @@ export const VERB_OBJECT_MAPPING: Partial<Record<VerbType, NounType[]>> = {
 export enum CardinalityConstraintType {
   /** == N */
   EXACTLY = "EXACTLY",
+  /** > N */
+  GREATER_THAN = "GREATER_THAN",
   /** >= N */
-  AT_LEAST = "AT_LEAST",
+  GREATER_THAN_EQUAL = "GREATER_THAN_EQUAL",
+  /** < N */
+  LESS_THAN = "LESS_THAN",
   /** <= N */
-  AT_MOST = "AT_MOST",
+  LESS_THAN_EQUAL = "LESS_THAN_EQUAL",
 }
 
 // ── Interaction (condition) ──────────────────────────────────────────────────
@@ -526,19 +532,17 @@ export interface Interaction {
   subjectId?: string;
   /** Possessive — "This Operator's ULTIMATE". Used with IS and OVERHEAL. */
   subjectProperty?: ObjectType;
-  /** OF — possessor entity type: "[STATUS] OF [OPERATOR]". */
-  ofSubject?: SubjectType;
-  /** Determiner for the OF possessor: "STATUS OF [CONTROLLED] OPERATOR". */
-  ofDeterminer?: DeterminerType;
+  /** OF — possessor: "[STATUS] OF [CONTROLLED OPERATOR]". */
+  of?: OfClause;
   verb: VerbType;
   /** NOT — "IS NOT ACTIVE". */
   negated?: boolean;
   object: ObjectType;
   /** Specific identifier (StatusType, skill name, etc.). */
   objectId?: string;
-  /** Object qualifier — element or type modifier (e.g. HEAT, PHYSICAL, CRYO). */
-  objectQualifier?: AdjectiveType;
-  /** Constraint type for cardinality assertions (EXACTLY, AT_LEAST, AT_MOST). */
+  /** Object qualifier — element or type modifier (e.g. HEAT, PHYSICAL, CRYO, COMBO_SKILL). */
+  objectQualifier?: AdjectiveType | NounType;
+  /** Constraint type for cardinality assertions (EXACTLY, GREATER_THAN_EQUAL, LESS_THAN_EQUAL, etc.). */
   cardinalityConstraint?: CardinalityConstraintType;
   /** The count N in a cardinality assertion. */
   value?: ValueNode;
@@ -560,7 +564,7 @@ export enum PrepositionType {
   ON = "ON",
   /** Properties/qualifiers: "PERFORM HEAT DAMAGE TO ENEMY *WITH* MULTIPLIER ..., STAGGER_VALUE ...". */
   WITH = "WITH",
-  /** Cardinality limit: "ALL *FOR* AT_MOST 4" — how many times a compound action can occur. */
+  /** Cardinality limit: "ALL *FOR* LESS_THAN_EQUAL 4" — how many times a compound action can occur. */
   FOR = "FOR",
   /** Duration cap: "EXTEND LIFT STATUS ON ENEMY *UNTIL* END". */
   UNTIL = "UNTIL",
@@ -580,6 +584,30 @@ export const VERB_PREPOSITION_MAPPING: Partial<Record<VerbType, PrepositionType[
   [VerbType.RECOVER]: [PrepositionType.BY],
   [VerbType.EXTEND]: [PrepositionType.UNTIL],
 };
+
+// ── OF clause (possessor chain) ─────────────────────────────────────────────
+
+/**
+ * Recursive possessor clause — "X of Y of Z".
+ *
+ * Examples:
+ *   { determiner: "THIS", object: "OPERATOR" }                          — of THIS OPERATOR
+ *   { object: "STATUS", objectId: "INFLICTION", objectQualifier: "CRYO",
+ *     of: { determiner: "THIS", object: "ENEMY" } }                     — of CRYO INFLICTION STATUS of THIS ENEMY
+ *   { object: "SKILL", objectId: "COMBO" }                              — of COMBO SKILL
+ */
+export interface OfClause {
+  /** Determiner for this possessor (THIS, SOURCE, CONTROLLED, etc.). */
+  determiner?: DeterminerType;
+  /** The possessor noun type. */
+  object: NounType | string;
+  /** Specific identifier for the possessor (e.g. status ID, skill category). */
+  objectId?: string;
+  /** Qualifier for the possessor (e.g. element adjective). */
+  objectQualifier?: AdjectiveType;
+  /** Chained possessor — the next "of" in the chain. */
+  of?: OfClause;
+}
 
 // ── Value expression tree ────────────────────────────────────────────────────
 
@@ -603,16 +631,14 @@ export interface ValueLiteral {
  * Leaf node: a variable lookup — indexed table.
  *
  * The `value` array is indexed by the dependency (SKILL_LEVEL → 12 entries, POTENTIAL → 6).
- * When `ofDeterminer` is set (e.g. SOURCE), the lookup uses that operator's context instead of THIS.
+ * When `of.determiner` is set (e.g. SOURCE), the lookup uses that operator's context instead of THIS.
  */
 export interface ValueVariable {
   verb: VerbType.VARY_BY;
   object: string;
   value?: number | number[];
-  /** Whose context to resolve against (e.g. SOURCE for talent owner's talent level). */
-  ofDeterminer?: string;
-  /** The entity type for the determiner (e.g. OPERATOR). */
-  of?: string;
+  /** Possessor chain — whose context to resolve against. */
+  of?: OfClause;
 }
 
 /**
@@ -622,7 +648,7 @@ export interface ValueVariable {
  *
  * Two forms:
  *   Existing: { verb: IS, object: STAT, objectId: "INTELLECT" }
- *   Extended: { verb: IS, valueType: STAT, stat: "STRENGTH", ofDeterminer: "SOURCE" }
+ *   Extended: { verb: IS, valueType: STAT, stat: "STRENGTH", of: { determiner: "SOURCE", object: "OPERATOR" } }
  */
 export interface ValueStat {
   verb: VerbType.IS;
@@ -634,8 +660,23 @@ export interface ValueStat {
   valueType?: NounType.STAT;
   /** Extended form: stat key. */
   stat?: string;
-  /** Whose stat to look up (e.g. SOURCE for the talent owner's stats). */
-  ofDeterminer?: string;
+  /** Possessor chain — whose stat to look up. */
+  of?: OfClause;
+}
+
+/**
+ * Leaf node: a runtime status query.
+ *
+ * Resolves to a property of an active status on the timeline (e.g. stack count).
+ * { verb: IS, object: STACKS, of: { object: STATUS, objectId: "INFLICTION", objectQualifier: "CRYO",
+ *   of: { determiner: THIS, object: ENEMY } } }
+ */
+export interface ValueStatus {
+  verb: VerbType.IS;
+  /** The status property to read (STACKS). */
+  object: NounType.STACKS;
+  /** Possessor chain — which status and whose entity. */
+  of?: OfClause;
 }
 
 /** Binary operation node: applies an operation to two operands. */
@@ -654,7 +695,7 @@ export interface ValueExpression {
  *   { verb: "IS", object: "STAT", objectId: "INTELLECT" }
  *   { operation: "MULT", left: { verb: "IS", value: 7.5 }, right: { verb: "IS", object: "STAT", objectId: "INTELLECT" } }
  */
-export type ValueNode = ValueLiteral | ValueVariable | ValueStat | ValueExpression;
+export type ValueNode = ValueLiteral | ValueVariable | ValueStat | ValueStatus | ValueExpression;
 
 // ── Type guards ─────────────────────────────────────────────────────────────
 
@@ -672,6 +713,12 @@ export function isValueStat(node: ValueNode): node is ValueStat {
   if ('object' in node && (node as ValueStat).object === NounType.STAT) return true;
   if ('valueType' in node && (node as ValueStat).valueType === NounType.STAT) return true;
   return false;
+}
+
+export function isValueStatus(node: ValueNode): node is ValueStatus {
+  if (node == null || typeof node !== 'object') return false;
+  if (!('verb' in node) || node.verb !== VerbType.IS) return false;
+  return 'object' in node && (node as ValueStatus).object === NounType.STACKS;
 }
 
 export function isValueExpression(node: ValueNode): node is ValueExpression {
@@ -702,10 +749,8 @@ export type WithPreposition = Record<string, ValueNode>;
 export interface UntilPreposition {
   /** The object of the UNTIL clause — NounType.END. */
   object: NounType.END;
-  /** What "END" refers to — SEGMENT or EVENT. */
-  of: NounType.SEGMENT | NounType.EVENT;
-  /** Determiner for the scope — typically THIS. */
-  ofDeterminer?: DeterminerType;
+  /** Possessor — what "END" refers to (SEGMENT or EVENT). */
+  of: OfClause;
 }
 
 // ── Effect ──────────────────────────────────────────────────────────────────
@@ -727,7 +772,7 @@ export interface UntilPreposition {
  *   CONSUME HEAT INFLICTION FROM ENEMY WITH STACKS IS 1
  *
  * Compound effects use ALL/ANY as structural wrappers:
- *   ALL FOR AT_MOST MAX:
+ *   ALL FOR LESS_THAN_EQUAL MAX:
  *     [unconditional]:
  *       CONSUME HEAT INFLICTION FROM ENEMY WITH STACKS IS 1
  *       APPLY MELTING_FLAME STATUS TO THIS_OPERATOR WITH STACKS IS 1
@@ -737,13 +782,11 @@ export interface Effect {
   object?: ObjectType;
   /** Specific identifier (StatusType, skill name, etc.). */
   objectId?: string;
-  /** Object qualifier — modifies the object (e.g. COMBUSTION REACTION, HEAT DAMAGE). */
-  objectQualifier?: AdjectiveType;
-  /** Noun qualifier — modifies the object: "REDUCE ULTIMATE COOLDOWN". */
-  nounQualifier?: QualifierType;
-  /** Constraint on cardinality (AT_MOST, AT_LEAST, EXACTLY) — for compound ALL/ANY grouping. */
+  /** Object qualifier — modifies the object (e.g. COMBUSTION REACTION, HEAT DAMAGE, COMBO_SKILL DAMAGE_BONUS). */
+  objectQualifier?: AdjectiveType | NounType;
+  /** Constraint on cardinality (LESS_THAN_EQUAL, GREATER_THAN_EQUAL, EXACTLY, etc.) — for compound ALL/ANY grouping. */
   cardinalityConstraint?: CardinalityConstraintType;
-  /** Value for compound constraints (e.g. ALL AT_MOST MAX). */
+  /** Value for compound constraints (e.g. ALL LESS_THAN_EQUAL MAX). */
   value?: ValueNode | typeof THRESHOLD_MAX;
   /** TO — target/recipient. */
   to?: SubjectType | string;
@@ -761,14 +804,12 @@ export interface Effect {
   onDeterminer?: DeterminerType;
   /** WITH — properties of this effect (duration, stacks, value, multiplier, etc.). */
   with?: WithPreposition;
-  /** FOR — cardinality limit on compound actions: "ALL FOR AT_MOST 4". */
+  /** FOR — cardinality limit on compound actions: "ALL FOR LESS_THAN_EQUAL 4". */
   for?: { cardinalityConstraint: CardinalityConstraintType; value: ValueNode | typeof THRESHOLD_MAX };
   /** UNTIL — duration cap: "EXTEND STATUS UNTIL END OF THIS SEGMENT". */
   until?: UntilPreposition;
-  /** OF — ownership/possession: "REDUCE COOLDOWN OF THIS OPERATOR". */
-  ofObject?: SubjectType | string;
-  /** Determiner for OF target (THIS, OTHER, ALL, ANY). */
-  ofDeterminer?: DeterminerType;
+  /** OF — ownership/possession: "REDUCE COOLDOWN OF COMBO SKILL". */
+  of?: OfClause;
   /** BY — amount: "REDUCE COOLDOWN BY PERCENTAGE VALUE IS 2". */
   by?: { unit: UnitType; value: ValueNode };
 
@@ -784,6 +825,15 @@ export interface Effect {
    * Used for ALL/ANY with flat effect lists (no predicate conditions).
    */
   effects?: Effect[];
+
+  /**
+   * Alternative effects for CHANCE — executed when the probability gate fails.
+   * EXPECTED mode: executed with (1 - chance) multiplier.
+   * ALWAYS: never executed (main path always fires).
+   * NEVER: always executed (main path never fires).
+   * MANUAL: executed when isCrit is false (chance doesn't fire).
+   */
+  elseEffects?: Effect[];
 }
 
 // ── Predicate ──────────────────────────────────────────────────────────────
@@ -941,7 +991,7 @@ const CARDINALITY_VERBS = new Set([VerbType.HAVE, VerbType.HIT, VerbType.PERFORM
 // Verbs that support subjectProperty
 const PROPERTY_VERBS = new Set([VerbType.IS, VerbType.OVERHEAL]);
 // Objects that need an objectId
-const NEEDS_OBJECT_ID = new Set<string>([ObjectType.STATUS, ObjectType.INFLICTION, ObjectType.REACTION, ObjectType.COOLDOWN, ObjectType.STAT]);
+const NEEDS_OBJECT_ID = new Set<string>([ObjectType.STATUS, ObjectType.INFLICTION, ObjectType.REACTION, ObjectType.COOLDOWN, ObjectType.STAT, ObjectType.SKILL]);
 
 /** Which fields are visible in the interaction builder. */
 export interface InteractionFieldVisibility {
@@ -975,7 +1025,6 @@ const NEEDS_DURATION = new Set([VerbType.APPLY]);
 export interface EffectFieldVisibility {
   showCardinality: boolean;
   showObjectQualifier: boolean;
-  showNounQualifier: boolean;
   showObjectId: boolean;
   showObjectIdIsStatus: boolean;
   showObjectIdIsInfliction: boolean;
@@ -988,14 +1037,13 @@ export interface EffectFieldVisibility {
   showDuration: boolean;
   showUntilEnd: boolean;
   showQualifierRow: boolean;
-  nounQualifiers: QualifierType[];
   withProperties: string[];
 }
 
 /** Compute effect field visibility based on current effect state. */
 export function getEffectFieldVisibility(value: Effect): EffectFieldVisibility {
   const qualifiers = value.object ? (OBJECT_QUALIFIERS[value.object] ?? []) : [];
-  const nounQualifiers = value.object ? (NOUN_QUALIFIER_MAPPING[value.object as NounType] ?? []) : [];
+  const extraQualifiers = value.object ? (OBJECT_QUALIFIER_MAPPING[value.object as NounType] ?? []) : [];
   const showObjectId = NEEDS_OBJECT_ID.has(value.object ?? '');
   const showTo = NEEDS_TO.has(value.verb);
   const showFrom = NEEDS_FROM.has(value.verb);
@@ -1008,8 +1056,7 @@ export function getEffectFieldVisibility(value: Effect): EffectFieldVisibility {
 
   return {
     showCardinality: new Set([VerbType.APPLY, VerbType.CONSUME, VerbType.RECOVER, VerbType.RETURN]).has(value.verb),
-    showObjectQualifier: qualifiers.length > 0 && value.object !== ObjectType.STATUS,
-    showNounQualifier: nounQualifiers.length > 0,
+    showObjectQualifier: (qualifiers.length > 0 && value.object !== ObjectType.STATUS) || extraQualifiers.length > 0,
     showObjectId,
     showObjectIdIsStatus: value.object === ObjectType.STATUS,
     showObjectIdIsInfliction: value.object === ObjectType.INFLICTION,
@@ -1022,7 +1069,6 @@ export function getEffectFieldVisibility(value: Effect): EffectFieldVisibility {
     showDuration,
     showUntilEnd,
     showQualifierRow: showTo || showFrom || showOn || showOf || showBy || showDuration || showUntilEnd,
-    nounQualifiers,
     withProperties: value.object ? getWithProperties(value.verb, value.object, value.objectId) : [],
   };
 }
@@ -1216,8 +1262,8 @@ export const OBJECT_LABELS: Record<string, string> = {
   [ObjectType.GAME_TIME]: 'Game Time',
   [ObjectType.REAL_TIME]: 'Real Time',
   [ObjectType.BASIC_ATTACK]: 'Basic Attack',
-  [ObjectType.BATTLE_SKILL]: 'Battle Skill',
-  [ObjectType.COMBO_SKILL]: 'Combo Skill',
+  [ObjectType.BATTLE]: 'Battle Skill',
+  [ObjectType.COMBO]: 'Combo Skill',
   [ObjectType.ULTIMATE]: 'Ultimate',
   [ObjectType.FINAL_STRIKE]: 'Final Strike',
   [ObjectType.NORMAL_ATTACK]: 'Normal Attack',
@@ -1245,7 +1291,9 @@ export const TARGET_LABELS: Record<string, string> = {
 
 export const CARDINALITY_LABELS: Record<string, string> = {
   [CardinalityConstraintType.EXACTLY]: 'Exactly',
-  [CardinalityConstraintType.AT_LEAST]: 'At Least',
-  [CardinalityConstraintType.AT_MOST]: 'At Most',
+  [CardinalityConstraintType.GREATER_THAN]: 'Greater Than',
+  [CardinalityConstraintType.GREATER_THAN_EQUAL]: 'Greater Than or Equal',
+  [CardinalityConstraintType.LESS_THAN]: 'Less Than',
+  [CardinalityConstraintType.LESS_THAN_EQUAL]: 'Less Than or Equal',
 };
 

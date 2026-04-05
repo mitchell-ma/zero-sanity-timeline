@@ -54,13 +54,13 @@ function setPotential(app: AppResult, potential: number) {
 }
 
 function addBS(app: AppResult, atFrame: number) {
-  const col = findColumn(app, SLOT, NounType.BATTLE_SKILL);
+  const col = findColumn(app, SLOT, NounType.BATTLE);
   const payload = getMenuPayload(app, col!, atFrame);
   app.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
 }
 
 function addCombo(app: AppResult, atFrame: number) {
-  const col = findColumn(app, SLOT, NounType.COMBO_SKILL);
+  const col = findColumn(app, SLOT, NounType.COMBO);
   const payload = getMenuPayload(app, col!, atFrame);
   app.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
 }
@@ -102,7 +102,7 @@ describe('A. Forward March (BS)', () => {
     act(() => { addBS(result.current, 5 * FPS); });
 
     const bs = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT && ev.columnId === NounType.BATTLE_SKILL,
+      ev => ev.ownerId === SLOT && ev.columnId === NounType.BATTLE,
     );
     expect(bs).toHaveLength(1);
     const frames = bs[0].segments.flatMap(s => s.frames ?? []);
@@ -150,7 +150,7 @@ describe('A. Forward March (BS)', () => {
 
   it('A5: empowered variant available in context menu', () => {
     const { result } = setup();
-    const col = findColumn(result.current, SLOT, NounType.BATTLE_SKILL);
+    const col = findColumn(result.current, SLOT, NounType.BATTLE);
     const menu = buildContextMenu(result.current, col!, 5 * FPS);
     expect(menu).not.toBeNull();
     const empowered = menu!.find(i => i.label?.includes('Empowered'));
@@ -169,7 +169,7 @@ describe('B. Frontline Support (Combo)', () => {
     act(() => { addCombo(result.current, 5 * FPS); });
 
     const combos = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT && ev.columnId === NounType.COMBO_SKILL,
+      ev => ev.ownerId === SLOT && ev.columnId === NounType.COMBO,
     );
     expect(combos).toHaveLength(1);
   });
@@ -180,7 +180,7 @@ describe('B. Frontline Support (Combo)', () => {
     act(() => { addCombo(result.current, 5 * FPS); });
 
     const combos = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT && ev.columnId === NounType.COMBO_SKILL,
+      ev => ev.ownerId === SLOT && ev.columnId === NounType.COMBO,
     );
     const cd = combos[0].segments.find(
       (s: { properties: { segmentTypes?: string[] } }) =>

@@ -1,4 +1,5 @@
-import { CombatSkillType } from "../../consts/enums";
+import { NounType } from "../../dsl/semantics";
+import {  } from "../../consts/enums";
 import type { DslTarget } from "../../dsl/semantics";
 import { CombatSkillEvent } from "./combatSkillEvent";
 
@@ -14,7 +15,7 @@ export class BasicSkillEvent extends CombatSkillEvent {
     skillPointCost?: number;
   }) {
     super({
-      combatSkillType: CombatSkillType.BATTLE_SKILL,
+      combatSkillType: NounType.BATTLE,
       name: params.name,
       target: params.target,
       sourceOperator: params.sourceOperator,

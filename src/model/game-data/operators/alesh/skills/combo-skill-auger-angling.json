@@ -2,8 +2,8 @@
   "properties": {
     "name": "Auger Angling",
     "description": "When the Arts Reaction or Originium Crystals of a nearby target is consumed. Opens an angling hole beneath the enemy that deals Physical DMG and recovers some SP. The skill has a chance to hook a Rare Fin that greatly increases the DMG dealt and recovers some more SP.",
-    "eventType": "COMBAT_SKILL",
-    "eventCategoryType": "COMBO_SKILL",
+    "eventType": "SKILL",
+    "eventIdType": "COMBO",
     "element": "PHYSICAL",
     "id": "AUGER_ANGLING"
   },
@@ -34,8 +34,10 @@
                 13,
                 15
               ],
-              "ofDeterminer": "THIS",
-              "of": "OPERATOR"
+              "of": {
+                "object": "OPERATOR",
+                "determiner": "THIS"
+              }
             }
           }
         }
@@ -141,8 +143,10 @@
                         2.08,
                         2.25
                       ],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     },
                     "value": {
                       "verb": "VARY_BY",
@@ -161,15 +165,19 @@
                         0.69,
                         0.75
                       ],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     },
                     "mainStat": {
                       "verb": "IS",
                       "object": "STAT",
                       "objectId": "ATTACK",
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     }
                   }
                 }
@@ -213,7 +221,7 @@
                   "subject": "OPERATOR",
                   "verb": "HAVE",
                   "object": "POTENTIAL",
-                  "cardinalityConstraint": "AT_LEAST",
+                  "cardinalityConstraint": "GREATER_THAN_EQUAL",
                   "with": {
                     "value": {
                       "verb": "IS",
@@ -279,8 +287,10 @@
               9,
               8
             ],
-            "ofDeterminer": "THIS",
-            "of": "OPERATOR"
+            "of": {
+              "object": "OPERATOR",
+              "determiner": "THIS"
+            }
           },
           "unit": "SECOND"
         },
@@ -308,7 +318,9 @@
             "verb": "CONSUME",
             "object": "REACTION",
             "objectId": "ARTS",
-            "of": "ENEMY"
+            "of": {
+              "object": "ENEMY"
+            }
           }
         ]
       },
@@ -320,7 +332,9 @@
             "verb": "CONSUME",
             "object": "STATUS",
             "objectId": "ORIGINIUM_CRYSTAL",
-            "of": "ENEMY"
+            "of": {
+              "object": "ENEMY"
+            }
           }
         ]
       }

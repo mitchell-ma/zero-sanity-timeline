@@ -4,7 +4,7 @@
     "name": "Nature Fragility",
     "to": "ENEMY",
     "eventType": "STATUS",
-    "eventCategoryType": "STATUS",
+    "eventIdType": "STATUS",
     "description": "Nature Fragility applied to enemy.",
     "duration": {
       "value": {

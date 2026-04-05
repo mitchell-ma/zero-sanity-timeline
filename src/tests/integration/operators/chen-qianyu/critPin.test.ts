@@ -59,8 +59,8 @@ describe('Chen Qianyu — Crit pin on derived Lift event', () => {
     const { result } = setupChen();
 
     // ── Add 2 battle skills to create Vulnerable → Lift ──
-    act(() => { addViaContextMenu(result.current, SLOT_CHEN, NounType.BATTLE_SKILL, 2 * FPS); });
-    act(() => { addViaContextMenu(result.current, SLOT_CHEN, NounType.BATTLE_SKILL, 4 * FPS); });
+    act(() => { addViaContextMenu(result.current, SLOT_CHEN, NounType.BATTLE, 2 * FPS); });
+    act(() => { addViaContextMenu(result.current, SLOT_CHEN, NounType.BATTLE, 4 * FPS); });
 
     // ── Verify Lift event exists with a damage frame ──
     const liftEvents = getLiftEvents(result.current);
@@ -90,7 +90,7 @@ describe('Chen Qianyu — Crit pin on derived Lift event', () => {
 
     // ── Pipeline re-run: move the first battle skill — triggers pipeline re-run, crit should persist ──
     const firstBS = result.current.allProcessedEvents.find(
-      (ev) => ev.columnId === NounType.BATTLE_SKILL && ev.ownerId === SLOT_CHEN && ev.startFrame === 2 * FPS,
+      (ev) => ev.columnId === NounType.BATTLE && ev.ownerId === SLOT_CHEN && ev.startFrame === 2 * FPS,
     );
     expect(firstBS).toBeDefined();
     act(() => { result.current.handleMoveEvent(firstBS!.uid, 1 * FPS); });
@@ -104,8 +104,8 @@ describe('Chen Qianyu — Crit pin on derived Lift event', () => {
     const { result } = setupChen();
 
     // Setup: 2 BS → Lift
-    act(() => { addViaContextMenu(result.current, SLOT_CHEN, NounType.BATTLE_SKILL, 2 * FPS); });
-    act(() => { addViaContextMenu(result.current, SLOT_CHEN, NounType.BATTLE_SKILL, 4 * FPS); });
+    act(() => { addViaContextMenu(result.current, SLOT_CHEN, NounType.BATTLE, 2 * FPS); });
+    act(() => { addViaContextMenu(result.current, SLOT_CHEN, NounType.BATTLE, 4 * FPS); });
 
     const liftEv = getLiftEvents(result.current)[0];
 
@@ -132,8 +132,8 @@ describe('Chen Qianyu — Crit pin on derived Lift event', () => {
     const { result } = setupChen();
 
     // Add 2 BS → creates Vulnerable + Lift with damage frames
-    act(() => { addViaContextMenu(result.current, SLOT_CHEN, NounType.BATTLE_SKILL, 2 * FPS); });
-    act(() => { addViaContextMenu(result.current, SLOT_CHEN, NounType.BATTLE_SKILL, 4 * FPS); });
+    act(() => { addViaContextMenu(result.current, SLOT_CHEN, NounType.BATTLE, 2 * FPS); });
+    act(() => { addViaContextMenu(result.current, SLOT_CHEN, NounType.BATTLE, 4 * FPS); });
 
     // Collect all crittable damage frames before rolling
     const crittableFrames: { uid: string; si: number; fi: number }[] = [];
@@ -176,8 +176,8 @@ describe('Chen Qianyu — Crit pin on derived Lift event', () => {
     const { result } = setupChen();
 
     // Add 2 BS → Lift
-    act(() => { addViaContextMenu(result.current, SLOT_CHEN, NounType.BATTLE_SKILL, 2 * FPS); });
-    act(() => { addViaContextMenu(result.current, SLOT_CHEN, NounType.BATTLE_SKILL, 4 * FPS); });
+    act(() => { addViaContextMenu(result.current, SLOT_CHEN, NounType.BATTLE, 2 * FPS); });
+    act(() => { addViaContextMenu(result.current, SLOT_CHEN, NounType.BATTLE, 4 * FPS); });
 
     // Manually pin crit on Lift frame
     const liftEv = getLiftEvents(result.current)[0];
@@ -206,8 +206,8 @@ describe('Chen Qianyu — Crit pin on derived Lift event', () => {
     const { result } = setupChen();
 
     // Setup: 2 BS → Lift, set crit
-    act(() => { addViaContextMenu(result.current, SLOT_CHEN, NounType.BATTLE_SKILL, 2 * FPS); });
-    act(() => { addViaContextMenu(result.current, SLOT_CHEN, NounType.BATTLE_SKILL, 4 * FPS); });
+    act(() => { addViaContextMenu(result.current, SLOT_CHEN, NounType.BATTLE, 2 * FPS); });
+    act(() => { addViaContextMenu(result.current, SLOT_CHEN, NounType.BATTLE, 4 * FPS); });
 
     const liftEv = getLiftEvents(result.current)[0];
     const overrideKey = buildOverrideKey(liftEv);
@@ -222,7 +222,7 @@ describe('Chen Qianyu — Crit pin on derived Lift event', () => {
 
     // Remove the 2nd battle skill — Lift disappears (only 1 Vulnerable, no trigger)
     const secondBS = result.current.allProcessedEvents.find(
-      (ev) => ev.columnId === NounType.BATTLE_SKILL && ev.ownerId === SLOT_CHEN && ev.startFrame === 4 * FPS,
+      (ev) => ev.columnId === NounType.BATTLE && ev.ownerId === SLOT_CHEN && ev.startFrame === 4 * FPS,
     );
     expect(secondBS).toBeDefined();
 

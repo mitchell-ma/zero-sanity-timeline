@@ -8,7 +8,7 @@
  */
 import type { Interaction } from '../../dsl/semantics';
 import { NounType, DeterminerType, VerbType } from '../../dsl/semantics';
-import { EventType, EventCategoryType, StackInteractionType } from '../../consts/enums';
+import { EventType, StackInteractionType } from '../../consts/enums';
 import type { ClauseEffect, ClausePredicate } from './weaponStatusesStore';
 import { resolveEffectStat } from '../enums/stats';
 import { checkKeys, VALID_VALUE_NODE_KEYS, VALID_CLAUSE_KEYS, VALID_METADATA_KEYS, VALID_EFFECT_KEYS, VALID_EFFECT_WITH_KEYS, VALID_TRIGGER_CONDITION_KEYS, validateEffect as validateEffectSemantics } from './validationUtils';
@@ -159,7 +159,7 @@ export class WeaponSkill {
         targetDeterminer: DeterminerType.THIS,
         stacks: { limit: { verb: VerbType.IS, value: 1 }, interactionType: StackInteractionType.NONE },
         eventType: EventType.STATUS,
-        eventCategoryType: EventCategoryType.WEAPON_STATUS,
+        eventIdType: NounType.WEAPON_STATUS,
       },
       metadata: {
         ...(this.originId ? { originId: this.originId } : {}),

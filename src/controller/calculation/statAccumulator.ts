@@ -63,8 +63,6 @@ export class StatAccumulator {
   /** Per-frame stat deltas: frameKey → entityId → stat deltas from base. */
   private frameDeltas = new Map<string, Map<string, Partial<Record<StatType, number>>>>();
 
-  /** Collected crit results from SIMULATION mode (for write-back to overrides). */
-  private resolvedCrits = new Map<string, Map<number, Map<number, boolean>>>();
 
   // ── Init ────────────────────────────────────────────────────────
 
@@ -82,7 +80,6 @@ export class StatAccumulator {
     this.current.clear();
     this.base.clear();
     this.frameDeltas.clear();
-    this.resolvedCrits.clear();
 
     // Per operator slot: aggregate from operator + weapon + gear + consumable
     for (const slotId of slotIds) {
@@ -191,7 +188,7 @@ export class StatAccumulator {
    * Resolve crit for a damage frame. Reads current crit stats from the accumulator.
    *
    * @param existingPin - If defined, the frame already has a pinned crit value (user or previous sim).
-   * @returns boolean for SIMULATION/ALWAYS/NEVER, undefined for EXPECTED (use formula downstream).
+   * @returns boolean for ALWAYS/NEVER/MANUAL, undefined for EXPECTED (use formula downstream).
    */
   resolveCrit(
     overrideKey: string,
@@ -206,34 +203,49 @@ export class StatAccumulator {
 
     if (critMode === CritMode.ALWAYS) return true;
     if (critMode === CritMode.NEVER) return false;
+    if (critMode === CritMode.EXPECTED) return undefined;
 
-    // Roll against current crit rate for RANDOM (and legacy EXPECTED pre-model)
-    const critRate = Math.min(Math.max(this.getStat(slotId, StatType.CRITICAL_RATE), 0), 1);
-    const result = Math.random() < critRate;
+    // MANUAL without a pin: default to false (user must explicitly pin)
+    return false;
+  }
 
-    // Only store for write-back in RANDOM mode (persists rolls to overrides)
-    if (critMode === CritMode.RANDOM) {
-      if (!this.resolvedCrits.has(overrideKey)) this.resolvedCrits.set(overrideKey, new Map());
-      const segMap = this.resolvedCrits.get(overrideKey)!;
-      if (!segMap.has(segIdx)) segMap.set(segIdx, new Map());
-      segMap.get(segIdx)!.set(frameIdx, result);
-    }
+  // ── Chance resolution ───────────────────────────────────────────
 
-    return result;
+  /**
+   * Resolve a CHANCE gate for a damage frame. Analogous to resolveCrit but uses
+   * an explicit probability rather than the entity's crit rate stat.
+   *
+   * @param chance      Probability 0.0–1.0 from the CHANCE effect's WITH value.
+   * @param critMode    Current CritMode.
+   * @param existingPin If defined, a user-pinned outcome (true/false).
+   * @returns boolean for ALWAYS/NEVER/MANUAL, undefined for EXPECTED
+   *          (caller should use getChanceExpectation for the weighted multiplier).
+   */
+  resolveChance(
+    overrideKey: string,
+    segIdx: number,
+    frameIdx: number,
+    chance: number,
+    critMode: CritMode,
+    existingPin?: boolean,
+  ): boolean | undefined {
+    // Already pinned — return as-is
+    if (existingPin !== undefined) return existingPin;
+
+    if (critMode === CritMode.ALWAYS) return true;
+    if (critMode === CritMode.NEVER) return false;
+    if (critMode === CritMode.EXPECTED) return undefined;
+
+    // MANUAL without a pin: default to false (user must explicitly pin)
+    return false;
   }
 
   // ── Results ────────────────────────────────────────────────────
-
-  /** Get all crit results from this pipeline run (for persistence to overrides). */
-  getResolvedCrits(): Map<string, Map<number, Map<number, boolean>>> {
-    return this.resolvedCrits;
-  }
 
   /** Reset all state for the next pipeline run. */
   clear(): void {
     this.current.clear();
     this.base.clear();
     this.frameDeltas.clear();
-    this.resolvedCrits.clear();
   }
 }

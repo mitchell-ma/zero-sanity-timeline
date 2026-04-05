@@ -4,7 +4,7 @@
     "name": "Final Awakening",
     "level": 1,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
+    "eventIdType": "POTENTIAL",
     "description": "Battle skill Constructive Sequence improved: Consuming Originium Crystals returns 50 SP."
   },
   "metadata": {

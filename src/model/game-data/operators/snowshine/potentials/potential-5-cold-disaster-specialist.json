@@ -4,7 +4,7 @@
     "name": "Cold Disaster Specialist",
     "level": 5,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
+    "eventIdType": "POTENTIAL",
     "description": "Battle skill Saturated Defense improved: Successfully retaliating an enemy attack returns 10 SP."
   },
   "metadata": {

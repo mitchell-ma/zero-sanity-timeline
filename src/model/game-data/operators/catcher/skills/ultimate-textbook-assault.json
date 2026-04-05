@@ -2,8 +2,8 @@
   "properties": {
     "name": "Textbook Assault",
     "description": "Swings the greatsword to perform 2 consecutive slashes to deal Physical DMG and apply Weaken, followed by a powerful downward slam that deals massive Physical DMG and applies Knock Down to all enemies within the area of effect.",
-    "eventType": "COMBAT_SKILL",
-    "eventCategoryType": "ULTIMATE_SKILL",
+    "eventType": "SKILL",
+    "eventIdType": "ULTIMATE",
     "element": "PHYSICAL",
     "id": "TEXTBOOK_ASSAULT"
   },
@@ -32,8 +32,10 @@
                   0.9,
                   0.9
                 ],
-                "ofDeterminer": "THIS",
-                "of": "OPERATOR"
+                "of": {
+                  "object": "OPERATOR",
+                  "determiner": "THIS"
+                }
               }
             }
           }
@@ -129,15 +131,19 @@
                         1.85,
                         2
                       ],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     },
                     "mainStat": {
                       "verb": "IS",
                       "object": "STAT",
                       "objectId": "ATTACK",
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     }
                   }
                 },
@@ -164,8 +170,10 @@
                         0.3,
                         0.3
                       ],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     },
                     "duration": {
                       "value": {
@@ -185,7 +193,7 @@
                   "subject": "OPERATOR",
                   "verb": "HAVE",
                   "object": "POTENTIAL",
-                  "cardinalityConstraint": "AT_LEAST",
+                  "cardinalityConstraint": "GREATER_THAN_EQUAL",
                   "with": {
                     "value": {
                       "verb": "IS",
@@ -217,8 +225,10 @@
                           "verb": "IS",
                           "objectId": "BASE_DEFENSE",
                           "object": "STAT",
-                          "ofDeterminer": "THIS",
-                          "of": "OPERATOR"
+                          "of": {
+                            "object": "OPERATOR",
+                            "determiner": "THIS"
+                          }
                         }
                       }
                     },
@@ -226,8 +236,10 @@
                       "verb": "IS",
                       "object": "STAT",
                       "objectId": "DEFENSE",
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     }
                   }
                 }
@@ -287,15 +299,19 @@
                         2.49,
                         2.7
                       ],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     },
                     "mainStat": {
                       "verb": "IS",
                       "object": "STAT",
                       "objectId": "ATTACK",
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     }
                   }
                 }
@@ -308,7 +324,7 @@
                   "subject": "OPERATOR",
                   "verb": "HAVE",
                   "object": "POTENTIAL",
-                  "cardinalityConstraint": "AT_LEAST",
+                  "cardinalityConstraint": "GREATER_THAN_EQUAL",
                   "with": {
                     "value": {
                       "verb": "IS",
@@ -340,8 +356,10 @@
                           "verb": "IS",
                           "objectId": "BASE_DEFENSE",
                           "object": "STAT",
-                          "ofDeterminer": "THIS",
-                          "of": "OPERATOR"
+                          "of": {
+                            "object": "OPERATOR",
+                            "determiner": "THIS"
+                          }
                         }
                       }
                     },
@@ -349,8 +367,10 @@
                       "verb": "IS",
                       "object": "STAT",
                       "objectId": "DEFENSE",
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     }
                   }
                 }
@@ -417,15 +437,19 @@
                         3.69,
                         4
                       ],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     },
                     "mainStat": {
                       "verb": "IS",
                       "object": "STAT",
                       "objectId": "ATTACK",
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     }
                   }
                 }
@@ -438,7 +462,7 @@
                   "subject": "OPERATOR",
                   "verb": "HAVE",
                   "object": "POTENTIAL",
-                  "cardinalityConstraint": "AT_LEAST",
+                  "cardinalityConstraint": "GREATER_THAN_EQUAL",
                   "with": {
                     "value": {
                       "verb": "IS",
@@ -470,8 +494,10 @@
                           "verb": "IS",
                           "objectId": "BASE_DEFENSE",
                           "object": "STAT",
-                          "ofDeterminer": "THIS",
-                          "of": "OPERATOR"
+                          "of": {
+                            "object": "OPERATOR",
+                            "determiner": "THIS"
+                          }
                         }
                       }
                     },
@@ -479,8 +505,10 @@
                       "verb": "IS",
                       "object": "STAT",
                       "objectId": "DEFENSE",
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     }
                   }
                 }

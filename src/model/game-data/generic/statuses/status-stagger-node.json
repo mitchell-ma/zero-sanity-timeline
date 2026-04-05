@@ -1,6 +1,6 @@
 {
   "properties": {
-    "id": "STAGGER_NODE",
+    "id": "node-stagger",
     "name": "Stagger (Partial)",
     "to": "ENEMY",
     "duration": {
@@ -18,8 +18,8 @@
       "interactionType": "NONE"
     },
     "eventType": "STATUS",
-    "eventCategoryType": "SKILL_STATUS",
-    "description": "Partial stagger node. Accumulates toward a full stagger break."
+    "eventIdType": "SKILL_STATUS",
+    "description": "Partial stagger break. Enemy is staggered at a node threshold."
   },
   "metadata": {
     "originId": "game",

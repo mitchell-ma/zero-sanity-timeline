@@ -52,7 +52,7 @@ describe('Ardelia combo skill — Corrosion application', () => {
 
     // ── Context menu layer: combo skill ─────────────────────────────────
     // 2. Ardelia uses combo skill — triggered by her own finisher, no inflictions on enemy
-    const comboCol = findColumn(result.current, SLOT_ARDELIA, NounType.COMBO_SKILL);
+    const comboCol = findColumn(result.current, SLOT_ARDELIA, NounType.COMBO);
     expect(comboCol).toBeDefined();
 
     const comboMenu = buildContextMenu(result.current, comboCol!, 10 * FPS);
@@ -71,7 +71,7 @@ describe('Ardelia combo skill — Corrosion application', () => {
     // ── Controller layer ────────────────────────────────────────────────
     // 3. Verify: combo event exists
     const comboEvent = result.current.allProcessedEvents.find(
-      (ev) => ev.ownerId === SLOT_ARDELIA && ev.columnId === NounType.COMBO_SKILL,
+      (ev) => ev.ownerId === SLOT_ARDELIA && ev.columnId === NounType.COMBO,
     );
     expect(comboEvent).toBeDefined();
 

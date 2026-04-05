@@ -23,8 +23,10 @@
                 0.12,
                 0.14
               ],
-              "ofDeterminer": "THIS",
-              "of": "OPERATOR"
+              "of": {
+                "object": "OPERATOR",
+                "determiner": "THIS"
+              }
             }
           },
           "objectId": "SECONDARY_ATTRIBUTE_BONUS"

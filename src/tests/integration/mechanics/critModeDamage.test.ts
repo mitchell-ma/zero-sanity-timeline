@@ -29,7 +29,7 @@ describe('Crit Mode Damage — NEVER vs ALWAYS produce different damage', () => 
     const { result } = renderHook(() => useApp());
 
     // Add a battle skill
-    const bsCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE_SKILL);
+    const bsCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE);
     expect(bsCol).toBeDefined();
     const payload = getMenuPayload(result.current, bsCol!, 2 * FPS);
     act(() => {
@@ -87,7 +87,7 @@ describe('Crit Mode Damage — NEVER vs ALWAYS produce different damage', () => 
     const { result } = renderHook(() => useApp());
 
     // Add a battle skill
-    const bsCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE_SKILL);
+    const bsCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE);
     expect(bsCol).toBeDefined();
     const payload = getMenuPayload(result.current, bsCol!, 2 * FPS);
     act(() => {
@@ -147,7 +147,7 @@ describe('Crit Mode Damage — NEVER vs ALWAYS produce different damage', () => 
   it('critMultiplier differs between NEVER and ALWAYS in DamageParams', () => {
     const { result } = renderHook(() => useApp());
 
-    const bsCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE_SKILL);
+    const bsCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE);
     const payload = getMenuPayload(result.current, bsCol!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);

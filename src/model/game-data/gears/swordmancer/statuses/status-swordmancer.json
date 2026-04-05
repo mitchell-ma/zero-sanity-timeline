@@ -22,8 +22,10 @@
               "verb": "IS",
               "object": "STAT",
               "objectId": "ATTACK",
-              "ofDeterminer": "THIS",
-              "of": "OPERATOR"
+              "of": {
+                "object": "OPERATOR",
+                "determiner": "THIS"
+              }
             }
           }
         }
@@ -50,7 +52,7 @@
     },
     "cooldownSeconds": 15,
     "eventType": "STATUS",
-    "eventCategoryType": "GEAR_SET_STATUS"
+    "eventIdType": "GEAR_SET_STATUS"
   },
   "metadata": {
     "originId": "SWORDMANCER",

@@ -4,7 +4,7 @@
     "name": "Hard Negotiator",
     "level": 3,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
+    "eventIdType": "POTENTIAL",
     "description": "Will +{Will:0}, Electric DMG Dealt +{PulseDamageIncrease:0%}."
   },
   "metadata": {

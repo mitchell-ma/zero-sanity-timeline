@@ -59,7 +59,7 @@ function simpleBattleSkill(startFrame: number, duration = 2 * FPS): TimelineEven
     id: 'TEST_BATTLE_SKILL',
     name: 'TEST_BATTLE_SKILL',
     ownerId: SLOT_ID,
-    columnId: NounType.BATTLE_SKILL,
+    columnId: NounType.BATTLE,
     startFrame,
     segments: [{ properties: { duration }, frames: [{ offsetFrame: 0 }] }],
   };
@@ -98,7 +98,7 @@ function simpleComboSkill(startFrame: number, duration = 2 * FPS): TimelineEvent
     id: 'TEST_COMBO_SKILL',
     name: 'TEST_COMBO_SKILL',
     ownerId: SLOT_ID,
-    columnId: NounType.COMBO_SKILL,
+    columnId: NounType.COMBO,
     startFrame,
     segments: [{ properties: { duration }, frames: [{ offsetFrame: 0 }] }],
   };
@@ -321,7 +321,7 @@ function battleSkillFor(slotId: string, startFrame: number, duration = 2 * FPS):
     id: 'TEST_BATTLE_SKILL',
     name: 'TEST_BATTLE_SKILL',
     ownerId: slotId,
-    columnId: NounType.BATTLE_SKILL,
+    columnId: NounType.BATTLE,
     startFrame,
     segments: [{ properties: { duration }, frames: [{ offsetFrame: 0 }] }],
   };
@@ -357,7 +357,7 @@ function comboSkillFor(slotId: string, startFrame: number, duration = 2 * FPS): 
     id: 'TEST_COMBO',
     name: 'TEST_COMBO',
     ownerId: slotId,
-    columnId: NounType.COMBO_SKILL,
+    columnId: NounType.COMBO,
     startFrame,
     segments: [{ properties: { duration }, frames: [{ offsetFrame: 0 }] }],
   };

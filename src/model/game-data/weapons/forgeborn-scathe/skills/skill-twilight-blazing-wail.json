@@ -23,8 +23,10 @@
                 0.384,
                 0.448
               ],
-              "ofDeterminer": "THIS",
-              "of": "OPERATOR"
+              "of": {
+                "object": "OPERATOR",
+                "determiner": "THIS"
+              }
             }
           },
           "objectId": "DAMAGE_BONUS",
@@ -40,7 +42,8 @@
           "subjectDeterminer": "THIS",
           "subject": "OPERATOR",
           "verb": "PERFORM",
-          "object": "ULTIMATE"
+          "object": "SKILL",
+          "objectId": "ULTIMATE"
         }
       ],
       "effects": [

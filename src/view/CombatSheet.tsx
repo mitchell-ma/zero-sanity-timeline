@@ -12,7 +12,7 @@ import { runCalculation } from '../controller/calculation/calculationController'
 import type { Slot } from '../controller/timeline/columnBuilder';
 import type { StaggerBreak } from '../controller/timeline/staggerTimeline';
 import { ResourcePoint } from '../controller/timeline/resourceTimeline';
-import { CritMode, CombatSkillType, ELEMENT_COLORS, FoldMode, NumberFormatType } from '../consts/enums';
+import { CritMode, ELEMENT_COLORS, FoldMode, NumberFormatType } from '../consts/enums';
 import { loadSettings } from '../consts/settings';
 import type { OverrideStore } from '../consts/overrideTypes';
 import { LoadoutProperties } from './InformationPane';
@@ -233,7 +233,7 @@ function formatPct(n: number): string {
 }
 
 function getSkillDisplayName(skillName: string): string {
-  return getAllSkillLabels()[skillName as CombatSkillType] ?? skillName;
+  return getAllSkillLabels()[skillName as string] ?? skillName;
 }
 
 function getCategoryLabel(columnId: string): string {

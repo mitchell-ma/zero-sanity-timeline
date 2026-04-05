@@ -2,8 +2,8 @@
   "properties": {
     "name": "Tremolo",
     "description": "Estella expends all her strength to unleash a powerful slam of the spear shaft, dealing Physical DMG to all enemies in a circular area around self. To enemies with Physical Susceptibility, the skill forcibly applies Lift to them.",
-    "eventType": "COMBAT_SKILL",
-    "eventCategoryType": "ULTIMATE_SKILL",
+    "eventType": "SKILL",
+    "eventIdType": "ULTIMATE",
     "element": "PHYSICAL",
     "id": "TREMOLO"
   },
@@ -32,8 +32,10 @@
                   0.9,
                   0.9
                 ],
-                "ofDeterminer": "THIS",
-                "of": "OPERATOR"
+                "of": {
+                  "object": "OPERATOR",
+                  "determiner": "THIS"
+                }
               }
             }
           }
@@ -117,8 +119,10 @@
                         20,
                         20
                       ],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     }
                   }
                 },
@@ -145,15 +149,19 @@
                         10.14,
                         11
                       ],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     },
                     "mainStat": {
                       "verb": "IS",
                       "object": "STAT",
                       "objectId": "ATTACK",
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     }
                   }
                 }

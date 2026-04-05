@@ -23,8 +23,10 @@
                 0.12,
                 0.14
               ],
-              "ofDeterminer": "THIS",
-              "of": "OPERATOR"
+              "of": {
+                "object": "OPERATOR",
+                "determiner": "THIS"
+              }
             }
           },
           "objectId": "PRIMARY_ATTRIBUTE_BONUS"
@@ -50,8 +52,10 @@
                 60,
                 70
               ],
-              "ofDeterminer": "THIS",
-              "of": "OPERATOR"
+              "of": {
+                "object": "OPERATOR",
+                "determiner": "THIS"
+              }
             }
           }
         }

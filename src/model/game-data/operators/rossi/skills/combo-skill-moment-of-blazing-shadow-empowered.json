@@ -18,8 +18,8 @@
     ],
     "name": "Moment of Blazing Shadow (Empowered)",
     "description": "Consumes all Arts Infliction stacks on the target, dealing Physical DMG scaled by the number of stacks consumed. Applies Lift and grants increased Critical Rate and Critical DMG Dealt.",
-    "eventType": "COMBAT_SKILL",
-    "eventCategoryType": "COMBO_SKILL",
+    "eventType": "SKILL",
+    "eventIdType": "COMBO",
     "element": "PHYSICAL",
     "id": "MOMENT_OF_BLAZING_SHADOW_EMPOWERED"
   },
@@ -133,8 +133,10 @@
                             2.77,
                             3
                           ],
-                          "ofDeterminer": "THIS",
-                          "of": "OPERATOR"
+                          "of": {
+                            "object": "OPERATOR",
+                            "determiner": "THIS"
+                          }
                         },
                         "right": {
                           "verb": "IS",
@@ -152,16 +154,20 @@
                           1.15,
                           1.15
                         ],
-                        "ofDeterminer": "THIS",
-                        "of": "OPERATOR"
+                        "of": {
+                          "object": "OPERATOR",
+                          "determiner": "THIS"
+                        }
                       }
                     },
                     "mainStat": {
                       "verb": "IS",
                       "object": "STAT",
                       "objectId": "ATTACK",
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     }
                   }
                 }
@@ -238,8 +244,10 @@
                               2.77,
                               3
                             ],
-                            "ofDeterminer": "THIS",
-                            "of": "OPERATOR"
+                            "of": {
+                              "object": "OPERATOR",
+                              "determiner": "THIS"
+                            }
                           },
                           "right": {
                             "verb": "IS",
@@ -265,16 +273,23 @@
                               1.66,
                               1.8
                             ],
-                            "ofDeterminer": "THIS",
-                            "of": "OPERATOR"
+                            "of": {
+                              "object": "OPERATOR",
+                              "determiner": "THIS"
+                            }
                           },
                           "right": {
                             "verb": "IS",
-                            "objectQualifier": "ARTS",
-                            "objectId": "INFLICTION",
                             "object": "STACKS",
-                            "ofDeterminer": "THIS",
-                            "of": "ENEMY"
+                            "of": {
+                              "object": "STATUS",
+                              "objectId": "INFLICTION",
+                              "of": {
+                                "object": "ENEMY",
+                                "determiner": "THIS"
+                              },
+                              "objectQualifier": "ARTS"
+                            }
                           }
                         }
                       },
@@ -289,16 +304,20 @@
                           1.15,
                           1.15
                         ],
-                        "ofDeterminer": "THIS",
-                        "of": "OPERATOR"
+                        "of": {
+                          "object": "OPERATOR",
+                          "determiner": "THIS"
+                        }
                       }
                     },
                     "mainStat": {
                       "verb": "IS",
                       "object": "STAT",
                       "objectId": "ATTACK",
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     }
                   }
                 },
@@ -382,8 +401,10 @@
               14,
               14
             ],
-            "ofDeterminer": "THIS",
-            "of": "OPERATOR"
+            "of": {
+              "object": "OPERATOR",
+              "determiner": "THIS"
+            }
           },
           "unit": "SECOND"
         },

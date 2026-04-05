@@ -9,7 +9,7 @@
  * estimated damage per frame from registered skill events, stores cumulative
  * damage by frame, and exposes getEnemyHpPercentage() for HP threshold predicates.
  */
-import { CritMode, CombatSkillType, DamageScalingStatType, PhysicalStatusType, StatType } from '../../consts/enums';
+import { CritMode, DamageScalingStatType, PhysicalStatusType, StatType } from '../../consts/enums';
 import type { OverrideStore } from '../../consts/overrideTypes';
 import { NounType, VerbType, ObjectType } from '../../dsl/semantics';
 import type { ValueNode } from '../../dsl/semantics';
@@ -125,7 +125,7 @@ export function precomputeDamageByFrame(
             multiplier = f.dealDamage.multipliers[idx];
           } else {
             // Segment multiplier divided by frame count
-            const segMult = getSkillMultiplier(op.operatorId, ev.id as CombatSkillType, damageSegIdx, skillLevel, potential);
+            const segMult = getSkillMultiplier(op.operatorId, ev.id, damageSegIdx, skillLevel, potential);
             if (segMult != null) {
               multiplier = maxFrames > 1 ? segMult / maxFrames : segMult;
             }
@@ -205,8 +205,8 @@ export function getEnemyHpPercentage(frame: number): number | null {
 function getSkillLevelForColumn(columnId: string, props: LoadoutProperties): SkillLevel {
   switch (columnId) {
     case NounType.BASIC_ATTACK: return props.skills.basicAttackLevel as SkillLevel;
-    case NounType.BATTLE_SKILL: return props.skills.battleSkillLevel as SkillLevel;
-    case NounType.COMBO_SKILL: return props.skills.comboSkillLevel as SkillLevel;
+    case NounType.BATTLE: return props.skills.battleSkillLevel as SkillLevel;
+    case NounType.COMBO: return props.skills.comboSkillLevel as SkillLevel;
     case NounType.ULTIMATE: return props.skills.ultimateLevel as SkillLevel;
     default: return 12 as SkillLevel;
   }

@@ -88,14 +88,14 @@ describe('Gilberta Gravity Field + Chen Qianyu BS → Lift duration extension', 
     expect(fieldEvents.length).toBeGreaterThanOrEqual(1);
 
     // ── Context menu: verify Chen BS is available ──────────────────────
-    const bsCol = findColumn(result.current, SLOT_CHEN, NounType.BATTLE_SKILL);
+    const bsCol = findColumn(result.current, SLOT_CHEN, NounType.BATTLE);
     expect(bsCol).toBeDefined();
     const bsMenu = buildContextMenu(result.current, bsCol!, 4 * FPS);
     expect(bsMenu).not.toBeNull();
     expect(bsMenu!.some(i => i.actionId === 'addEvent' && !i.disabled)).toBe(true);
 
     // 1st Chen BS at 4s — applies Vulnerable (no Lift yet, need existing Vulnerable)
-    act(() => { addViaContextMenu(result.current, SLOT_CHEN, NounType.BATTLE_SKILL, 4 * FPS); });
+    act(() => { addViaContextMenu(result.current, SLOT_CHEN, NounType.BATTLE, 4 * FPS); });
 
     // Controller: Vulnerable infliction on enemy
     const vulnAfterFirst = result.current.allProcessedEvents.filter(
@@ -104,7 +104,7 @@ describe('Gilberta Gravity Field + Chen Qianyu BS → Lift duration extension', 
     expect(vulnAfterFirst.length).toBeGreaterThanOrEqual(1);
 
     // 2nd Chen BS at 5s — Vulnerable exists, so Lift is applied
-    act(() => { addViaContextMenu(result.current, SLOT_CHEN, NounType.BATTLE_SKILL, 5 * FPS); });
+    act(() => { addViaContextMenu(result.current, SLOT_CHEN, NounType.BATTLE, 5 * FPS); });
 
     // Controller: Lift status exists on enemy
     const liftEvents = getLiftEvents(result.current);
@@ -149,10 +149,10 @@ describe('Gilberta Gravity Field + Chen Qianyu BS → Lift duration extension', 
 
     // ── Chen 2x BS first — creates Lift ─────────────────────────────────
     // 1st BS at 2s — applies Vulnerable
-    act(() => { addViaContextMenu(result.current, SLOT_CHEN, NounType.BATTLE_SKILL, 2 * FPS); });
+    act(() => { addViaContextMenu(result.current, SLOT_CHEN, NounType.BATTLE, 2 * FPS); });
 
     // 2nd BS at 3s — Vulnerable exists, Lift applied (base ~1s)
-    act(() => { addViaContextMenu(result.current, SLOT_CHEN, NounType.BATTLE_SKILL, 3 * FPS); });
+    act(() => { addViaContextMenu(result.current, SLOT_CHEN, NounType.BATTLE, 3 * FPS); });
 
     // Controller: Lift exists with base duration before Gilberta ULT
     const liftBefore = getLiftEvents(result.current);
@@ -202,10 +202,10 @@ describe('Gilberta Gravity Field + Chen Qianyu BS → Lift duration extension', 
     act(() => { result.current.handleSwapOperator(SLOT_CHEN, CHEN_ID); });
 
     // 1st BS at 2s — Vulnerable
-    act(() => { addViaContextMenu(result.current, SLOT_CHEN, NounType.BATTLE_SKILL, 2 * FPS); });
+    act(() => { addViaContextMenu(result.current, SLOT_CHEN, NounType.BATTLE, 2 * FPS); });
 
     // 2nd BS at 4s — Lift applied (Vulnerable exists)
-    act(() => { addViaContextMenu(result.current, SLOT_CHEN, NounType.BATTLE_SKILL, 4 * FPS); });
+    act(() => { addViaContextMenu(result.current, SLOT_CHEN, NounType.BATTLE, 4 * FPS); });
 
     // Controller: Lift exists with base duration (no field to extend it)
     const liftEvents = getLiftEvents(result.current);

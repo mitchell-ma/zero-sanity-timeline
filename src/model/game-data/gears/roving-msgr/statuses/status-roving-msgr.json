@@ -39,7 +39,7 @@
     },
     "description": "Physical DMG +20% when HP above 80%.",
     "eventType": "STATUS",
-    "eventCategoryType": "GEAR_SET_STATUS"
+    "eventIdType": "GEAR_SET_STATUS"
   },
   "metadata": {
     "originId": "ROVING_MSGR",

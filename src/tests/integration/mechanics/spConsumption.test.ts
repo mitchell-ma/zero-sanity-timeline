@@ -39,7 +39,7 @@ describe('SP Consumption — integration through useApp', () => {
 
     // ── Context menu layer ──────────────────────────────────────────────
     // Find the battle skill column
-    const battleCol = findColumn(result.current, SLOT_AKEKURI, NounType.BATTLE_SKILL);
+    const battleCol = findColumn(result.current, SLOT_AKEKURI, NounType.BATTLE);
     expect(battleCol).toBeDefined();
 
     // Build context menu at 5s — verify the add-event item is available
@@ -68,7 +68,7 @@ describe('SP Consumption — integration through useApp', () => {
 
     // Verify the battle skill event exists in processed events
     const battleEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === NounType.BATTLE_SKILL,
+      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === NounType.BATTLE,
     );
     expect(battleEvents).toHaveLength(1);
     expect(battleEvents[0].skillPointCost).toBe(expectedSpCost);
@@ -90,7 +90,7 @@ describe('SP Consumption — integration through useApp', () => {
     expect(vm).toBeDefined();
 
     const battleEventsInVM = vm!.events.filter(
-      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === NounType.BATTLE_SKILL,
+      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === NounType.BATTLE,
     );
     expect(battleEventsInVM).toHaveLength(1);
     expect(battleEventsInVM[0].uid).toBe(battleEvents[0].uid);

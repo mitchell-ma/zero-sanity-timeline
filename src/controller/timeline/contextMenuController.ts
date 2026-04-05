@@ -7,7 +7,7 @@
  */
 import { TimelineEvent, Column, MiniTimeline, ContextMenuItem, getAnimationDurationFromSegments } from '../../consts/viewTypes';
 import { NounType } from '../../dsl/semantics';
-import { CombatSkillType, ColumnType, MicroColumnAssignment, InteractionModeType } from '../../consts/enums';
+import { ColumnType, MicroColumnAssignment, InteractionModeType } from '../../consts/enums';
 import { getAllSkillLabels, getAllInflictionLabels } from '../gameDataStore';
 import { REACTION_LABELS } from '../../model/channels';
 import { t } from '../../locales/locale';
@@ -66,7 +66,7 @@ export function controlledItem(ownerId: string, atFrame: number, timeStopRegions
       ownerId,
       columnId: OPERATOR_COLUMNS.INPUT,
       atFrame,
-      defaultSkill: { id: CombatSkillType.CONTROL, name: CombatSkillType.CONTROL, segments: [{ properties: { duration: TOTAL_FRAMES - atFrame, name: 'Control' } }] },
+      defaultSkill: { id: NounType.CONTROL, name: NounType.CONTROL, segments: [{ properties: { duration: TOTAL_FRAMES - atFrame, name: 'Control' } }] },
     },
     disabled,
     disabledReason,
@@ -182,7 +182,7 @@ export function buildColumnContextMenu(
     const strict = interactionMode === InteractionModeType.STRICT;
     const disabled = full || (strict && (inTimeStop || beforePrev));
     const rawName = col.defaultEvent?.id ?? col.label;
-    const eventName = getAllSkillLabels()[rawName as CombatSkillType] ?? getAllInflictionLabels()[rawName] ?? col.defaultEvent?.name ?? rawName;
+    const eventName = getAllSkillLabels()[rawName as string] ?? getAllInflictionLabels()[rawName] ?? col.defaultEvent?.name ?? rawName;
     const disabledReason = inTimeStop
       ? t('ctx.ultimateActive')
       : full
@@ -205,9 +205,9 @@ export function buildColumnContextMenu(
 
   // Simple single-column mini-timeline (skill columns)
   const rawName = col.defaultEvent?.id ?? col.label;
-  const eventName = getAllSkillLabels()[rawName as CombatSkillType] ?? getAllInflictionLabels()[rawName] ?? col.defaultEvent?.name ?? rawName;
+  const eventName = getAllSkillLabels()[rawName as string] ?? getAllInflictionLabels()[rawName] ?? col.defaultEvent?.name ?? rawName;
 
-  if (col.columnId === NounType.COMBO_SKILL) {
+  if (col.columnId === NounType.COMBO) {
     const comboAvail = checkComboWindowAvailability(col.ownerId, atFrame, events, alwaysAvailableComboSlots);
     const variants = col.eventVariants && col.eventVariants.length > 1 ? col.eventVariants : null;
 
@@ -219,7 +219,7 @@ export function buildColumnContextMenu(
           const availability = checkVariantAvailability(v.id, col.ownerId, events, atFrame, col.columnId, slots);
           const overlap = checkOverlap(col.ownerId, col.columnId, computeProspectiveRange(v, atFrame, timeStopRegions));
           const disabled = interactionMode === InteractionModeType.STRICT && (inTimeStop || !comboAvail.available || availability.disabled || overlap);
-          const displayName = v.displayName ?? getAllSkillLabels()[v.id as CombatSkillType] ?? v.name ?? v.id;
+          const displayName = v.displayName ?? getAllSkillLabels()[v.id as string] ?? v.name ?? v.id;
           const reason = inTimeStop ? timeStopReason
             : !comboAvail.available ? comboAvail.reason
             : availability.disabled ? availability.reason
@@ -327,14 +327,14 @@ export function buildColumnContextMenu(
         const variantStackLimit = (v.stacks?.limit as { value?: number } | undefined)?.value ?? 1;
         const overlap = variantStackLimit > 1 ? false : checkOverlap(col.ownerId, col.columnId, computeProspectiveRange(v, atFrame, timeStopRegions));
         let finisherBlock: string | undefined;
-        if (v.id === CombatSkillType.FINISHER && staggerBreaks) {
+        if (v.id === NounType.FINISHER && staggerBreaks) {
           const effectiveBreaks = getEffectiveStaggerWindows(events, staggerBreaks);
           const inBreak = effectiveBreaks.find((b) => atFrame >= b.startFrame && atFrame < b.endFrame);
           if (!inBreak) {
             finisherBlock = t('ctx.finisher.outsideBreak');
           } else {
             const existing = events.some((ev) =>
-              ev.id === CombatSkillType.FINISHER
+              ev.id === NounType.FINISHER
               && ev.startFrame >= inBreak.startFrame && ev.startFrame < inBreak.endFrame,
             );
             if (existing) finisherBlock = t('ctx.finisher.duplicate');
@@ -343,8 +343,8 @@ export function buildColumnContextMenu(
         const hasSegmentDisable = (availability.disabledSegments?.size ?? 0) > 0;
         const disabled = interactionMode === InteractionModeType.STRICT && (inTimeStop || v.disabled || availability.disabled || overlap || spInsufficient || !!finisherBlock || hasSegmentDisable);
         const displayName = v.isPerfectDodge ? 'Dodge'
-          : v.id === CombatSkillType.DASH ? 'Dash'
-          : v.displayName ?? getAllSkillLabels()[v.id as CombatSkillType] ?? getAllInflictionLabels()[v.id] ?? v.name ?? v.id;
+          : v.id === NounType.DASH ? 'Dash'
+          : v.displayName ?? getAllSkillLabels()[v.id as string] ?? getAllInflictionLabels()[v.id] ?? v.name ?? v.id;
         const reason = v.disabledReason
           ?? (hasSegmentDisable ? t('ctx.segmentDisabled')
           : inTimeStop ? timeStopReason
@@ -356,7 +356,7 @@ export function buildColumnContextMenu(
         // Build inline segment buttons for BATK variants with multiple segments
         const isBatkChain = col.columnId === NounType.BASIC_ATTACK
           && v.segments && v.segments.length > 1
-          && v.id !== CombatSkillType.FINISHER && v.id !== CombatSkillType.DIVE;
+          && v.id !== NounType.FINISHER && v.id !== NounType.DIVE;
         const inlineButtons = isBatkChain
           ? v.segments!.map((seg, segIdx) => {
             const segOverlap = checkOverlap(col.ownerId, col.columnId, computeProspectiveRange({ segments: [seg] }, atFrame, timeStopRegions));
@@ -458,6 +458,7 @@ export function buildColumnContextMenu(
           },
           disabled,
           ...(paramButtons && paramDefs ? { inlineLabel: paramDefs[0].name } : {}),
+          ...(isBatkChain ? { segmentTabs: true } : {}),
           inlineButtons: allInlineButtons,
         };
       }),
@@ -551,7 +552,7 @@ export function buildEventAddItems(
   );
   const maxLabel = col.maxEvents ?? '?';
   const rawName = col.defaultEvent?.id ?? col.label;
-  const eventName = getAllSkillLabels()[rawName as CombatSkillType] ?? getAllInflictionLabels()[rawName] ?? col.defaultEvent?.name ?? rawName;
+  const eventName = getAllSkillLabels()[rawName as string] ?? getAllInflictionLabels()[rawName] ?? col.defaultEvent?.name ?? rawName;
   const disabledReason = full
     ? `${maxLabel}/${maxLabel} stacks`
     : beforePrev

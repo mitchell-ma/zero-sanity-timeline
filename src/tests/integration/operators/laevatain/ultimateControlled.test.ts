@@ -22,7 +22,7 @@ import { renderHook, act } from '@testing-library/react';
 import { NounType } from '../../../../dsl/semantics';
 import { useApp } from '../../../../app/useApp';
 import { OPERATOR_COLUMNS } from '../../../../model/channels';
-import { CombatSkillType, ColumnType, InteractionModeType } from '../../../../consts/enums';
+import { ColumnType, InteractionModeType } from '../../../../consts/enums';
 import { FPS } from '../../../../utils/timeline';
 import { checkVariantAvailability, validateVariantClauses } from '../../../../controller/timeline/eventValidator';
 import { computeTimelinePresentation } from '../../../../controller/timeline/eventPresentationController';
@@ -90,7 +90,7 @@ function getControlEventsFromVM(app: AppResult) {
   const controlEvents = [];
   for (const [, vm] of Array.from(vms.entries())) {
     for (const ev of vm.events) {
-      if (ev.id === CombatSkillType.CONTROL && ev.columnId === OPERATOR_COLUMNS.INPUT) {
+      if (ev.id === NounType.CONTROL && ev.columnId === OPERATOR_COLUMNS.INPUT) {
         controlEvents.push(ev);
       }
     }

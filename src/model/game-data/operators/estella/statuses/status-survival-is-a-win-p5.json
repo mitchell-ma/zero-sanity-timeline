@@ -49,7 +49,7 @@
       "interactionType": "RESET"
     },
     "eventType": "STATUS",
-    "eventCategoryType": "POTENTIAL_STATUS",
+    "eventIdType": "POTENTIAL_STATUS",
     "description": "After applying Solidification to an enemy, Estella gains 5 Ultimate Energy. Effect can only trigger once every 1s."
   },
   "metadata": {

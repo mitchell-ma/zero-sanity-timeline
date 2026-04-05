@@ -150,9 +150,9 @@ describe('embedCodec', () => {
         events: [
           {
             id: 'ev-1',
-            name: 'FLAMING_CINDERS',
+            name: 'FLAMING_CINDERS_BATK',
             ownerId: 'slot-0',
-            columnId: NounType.BATTLE_SKILL,
+            columnId: NounType.BATTLE,
             startFrame: 360,
             segments: [{ properties: { duration: 188 } }],
           },
@@ -160,7 +160,7 @@ describe('embedCodec', () => {
             id: 'ev-2',
             name: 'ERUPTION_COLUMN',
             ownerId: 'slot-3',
-            columnId: NounType.COMBO_SKILL,
+            columnId: NounType.COMBO,
             startFrame: 720,
                         segments: [{ properties: { segmentTypes: ['ANIMATION'], duration: 60, timeDependency: 'REAL_TIME' } }],
           },
@@ -172,7 +172,7 @@ describe('embedCodec', () => {
       const { sheetData: decoded } = await decodeEmbed(encoded, []);
 
       expect(decoded.events).toHaveLength(2);
-      expect(decoded.events[0].name).toBe('FLAMING_CINDERS');
+      expect(decoded.events[0].name).toBe('FLAMING_CINDERS_BATK');
       expect(decoded.events[0].startFrame).toBe(360);
       expect(eventDuration(decoded.events[0])).toBe(188);
       expect(decoded.events[1].name).toBe('ERUPTION_COLUMN');
@@ -233,13 +233,13 @@ describe('embedCodec', () => {
     test('events with template-matching durations produce smaller output', async () => {
       const mockColumn = {
         type: ColumnType.MINI_TIMELINE,
-        key: NounType.BATTLE_SKILL,
-        columnId: NounType.BATTLE_SKILL,
+        key: NounType.BATTLE,
+        columnId: NounType.BATTLE,
         label: 'Battle',
         color: '#fff',
         ownerId: 'slot-0',
         defaultEvent: {
-          name: 'FLAMING_CINDERS',
+          name: 'FLAMING_CINDERS_BATK',
           defaultActivationDuration: 188,
           defaultActiveDuration: 0,
           defaultCooldownDuration: 0,
@@ -249,9 +249,9 @@ describe('embedCodec', () => {
       const original = makeSheetData({
         events: [{
           id: 'ev-1',
-          name: 'FLAMING_CINDERS',
+          name: 'FLAMING_CINDERS_BATK',
           ownerId: 'slot-0',
-          columnId: NounType.BATTLE_SKILL,
+          columnId: NounType.BATTLE,
           startFrame: 360,
           segments: [{ properties: { duration: 188 } }],
         }],
@@ -288,9 +288,9 @@ describe('embedCodec', () => {
       const original = makeSheetData({
         events: [{
           id: 'ev-1',
-          name: 'FLAMING_CINDERS',
+          name: 'FLAMING_CINDERS_BATK',
           ownerId: 'slot-0',
-          columnId: NounType.BATTLE_SKILL,
+          columnId: NounType.BATTLE,
           startFrame: 99999,
           segments: [{ properties: { duration: -50 } }],
         }],
@@ -513,8 +513,8 @@ describe('embedCodec', () => {
 
       for (const slotId of ['slot-0', 'slot-1', 'slot-2', 'slot-3']) {
         expect(decoded.visibleSkills[slotId][NounType.BASIC_ATTACK]).toBe(true);
-        expect(decoded.visibleSkills[slotId][NounType.BATTLE_SKILL]).toBe(true);
-        expect(decoded.visibleSkills[slotId][NounType.COMBO_SKILL]).toBe(true);
+        expect(decoded.visibleSkills[slotId][NounType.BATTLE]).toBe(true);
+        expect(decoded.visibleSkills[slotId][NounType.COMBO]).toBe(true);
         expect(decoded.visibleSkills[slotId][NounType.ULTIMATE]).toBe(true);
       }
     });
@@ -599,7 +599,7 @@ describe('full state round-trip (current state → share → load → assert equ
       color: '#f0a040',
       headerVariant: 'skill',
       defaultEvent: {
-        name: 'SWORD_OF_ASPIRATION',
+        name: 'SWORD_OF_ASPIRATION_BATK',
         defaultActivationDuration: 240,
         defaultActiveDuration: 0,
         defaultCooldownDuration: 0,
@@ -617,7 +617,7 @@ describe('full state round-trip (current state → share → load → assert equ
     {
       type: ColumnType.MINI_TIMELINE,
       key: 'slot-0-battle',
-      columnId: NounType.BATTLE_SKILL,
+      columnId: NounType.BATTLE,
       ownerId: 'slot-0',
       label: 'Battle',
       color: '#f0a040',
@@ -642,7 +642,7 @@ describe('full state round-trip (current state → share → load → assert equ
     {
       type: ColumnType.MINI_TIMELINE,
       key: 'slot-0-combo',
-      columnId: NounType.COMBO_SKILL,
+      columnId: NounType.COMBO,
       ownerId: 'slot-0',
       label: 'Combo',
       color: '#f0a040',
@@ -679,33 +679,33 @@ describe('full state round-trip (current state → share → load → assert equ
 
   test('full app state survives encode → decode with overrides', async () => {
     // ── Build "current app state" ───────────────────────────────────────
-    const baKey = 'SWORD_OF_ASPIRATION:slot-0:BASIC_ATTACK:0';
-    const bsKey = 'SMOULDERING_FIRE:slot-0:BATTLE_SKILL:240';
+    const baKey = 'SWORD_OF_ASPIRATION_BATK:slot-0:BASIC_ATTACK:0';
+    const bsKey = 'SMOULDERING_FIRE:slot-0:BATTLE:240';
     const currentState = makeSheetData({
       events: [
         // Basic attack (raw, unedited segments — overrides stored separately)
         {
-          id: 'SWORD_OF_ASPIRATION', uid: 'ev-1', name: 'SWORD_OF_ASPIRATION', ownerId: 'slot-0',
+          id: 'SWORD_OF_ASPIRATION_BATK', uid: 'ev-1', name: 'SWORD_OF_ASPIRATION_BATK', ownerId: 'slot-0',
           columnId: NounType.BASIC_ATTACK, startFrame: 0,
           segments: [{ properties: { duration: 300 } }],
         },
         // Battle skill with SP cost
         {
           id: 'SMOULDERING_FIRE', uid: 'ev-2', name: 'SMOULDERING_FIRE', ownerId: 'slot-0',
-          columnId: NounType.BATTLE_SKILL, startFrame: 240,
+          columnId: NounType.BATTLE, startFrame: 240,
           skillPointCost: 100,
           segments: [{ properties: { duration: 264 } }],
         },
         // Combo skill (has animation + time interaction)
         {
           id: 'ERUPTION_COLUMN', uid: 'ev-3', name: 'ERUPTION_COLUMN', ownerId: 'slot-0',
-          columnId: NounType.COMBO_SKILL, startFrame: 600,
+          columnId: NounType.COMBO, startFrame: 600,
           segments: [{ properties: { segmentTypes: ['ANIMATION'], duration: 60, timeDependency: 'REAL_TIME' } }],
           timeInteraction: 'TIME_STOP',
         },
         // Unedited basic attack
         {
-          id: 'SWORD_OF_ASPIRATION', uid: 'ev-4', name: 'SWORD_OF_ASPIRATION', ownerId: 'slot-0',
+          id: 'SWORD_OF_ASPIRATION_BATK', uid: 'ev-4', name: 'SWORD_OF_ASPIRATION_BATK', ownerId: 'slot-0',
           columnId: NounType.BASIC_ATTACK, startFrame: 720,
           segments: [{ properties: { duration: 240 } }],
         },
@@ -752,13 +752,13 @@ describe('full state round-trip (current state → share → load → assert equ
 
     // ── Assertions: event positions and names ───────────────────────────
     expect(decoded.events).toHaveLength(4);
-    expect(decoded.events[0].name).toBe('SWORD_OF_ASPIRATION');
+    expect(decoded.events[0].name).toBe('SWORD_OF_ASPIRATION_BATK');
     expect(decoded.events[0].startFrame).toBe(0);
     expect(decoded.events[1].name).toBe('SMOULDERING_FIRE');
     expect(decoded.events[1].startFrame).toBe(240);
     expect(decoded.events[2].name).toBe('ERUPTION_COLUMN');
     expect(decoded.events[2].startFrame).toBe(600);
-    expect(decoded.events[3].name).toBe('SWORD_OF_ASPIRATION');
+    expect(decoded.events[3].name).toBe('SWORD_OF_ASPIRATION_BATK');
     expect(decoded.events[3].startFrame).toBe(720);
 
     // ── Assertions: overrides round-tripped ─────────────────────────────
@@ -843,8 +843,8 @@ describe('animation + active duration round-trip', () => {
   test('event with only active duration (no animation) is unaffected', async () => {
     const original = makeSheetData({
       events: [{
-        id: 'FLAMING_CINDERS', uid: 'ev-1', name: 'FLAMING_CINDERS', ownerId: 'slot-0',
-        columnId: NounType.BATTLE_SKILL, startFrame: 100,
+        id: 'FLAMING_CINDERS_BATK', uid: 'ev-1', name: 'FLAMING_CINDERS_BATK', ownerId: 'slot-0',
+        columnId: NounType.BATTLE, startFrame: 100,
         segments: [{ properties: { duration: 300 } }],
       }],
     });

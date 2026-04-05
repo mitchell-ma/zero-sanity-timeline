@@ -11,7 +11,7 @@ import { COMBO_WINDOW_COLUMN_ID } from '../../model/channels';
  */
 export class ComboSkillEventController {
   static isCombo(event: TimelineEvent): boolean {
-    return event.columnId === NounType.COMBO_SKILL;
+    return event.columnId === NounType.COMBO;
   }
 
   /** Get combo activation window events for a given ownerId from processed events. */

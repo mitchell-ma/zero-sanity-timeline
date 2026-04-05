@@ -14,7 +14,7 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import { CombatSkillType, UnitType } from '../../../consts/enums';
+import { UnitType } from '../../../consts/enums';
 import { NounType, VerbType } from '../../../dsl/semantics';
 
 const GAMEDATA_URL = 'https://raw.githubusercontent.com/Lieyuan621/Endaxis/main/public/gamedata.json';
@@ -593,7 +593,7 @@ async function parseOne(slug: string, roster: unknown[]) {
     if (skillMultipliers) {
       for (const [category, subIndexMap] of Object.entries(skillMultipliers)) {
         const indices = Object.keys(subIndexMap).map(Number);
-        if (category === CombatSkillType.BASIC_ATTACK || category === 'ENHANCED_BASIC_ATTACK' || category === 'EMPOWERED_BASIC_ATTACK') {
+        if (category === NounType.BASIC_ATTACK || category === 'ENHANCED_BASIC_ATTACK' || category === 'EMPOWERED_BASIC_ATTACK') {
           // Segmented: create segments with frames derived from hit count
           skeleton[category] = {
             segments: indices.map(idx => {
@@ -667,7 +667,7 @@ async function parseOne(slug: string, roster: unknown[]) {
     console.log(`  Warfarin: ${Object.keys(skillDescriptions).length} skill descriptions merged`);
   }
 
-  // Merge skill IDs (CombatSkillType enum values) from Warfarin into skill categories
+  // Merge skill IDs ( enum values) from Warfarin into skill categories
   if (skillIds && merged.skills) {
     const skills = merged.skills as Record<string, Record<string, unknown>>;
     for (const [categoryKey, id] of Object.entries(skillIds)) {

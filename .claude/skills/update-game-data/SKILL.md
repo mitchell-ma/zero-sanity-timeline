@@ -831,7 +831,7 @@ Apply these conventions across all skill entries:
 | Counter-attack/retaliation frames | Frames triggered by being hit (e.g. Snowshine shield retaliation) can have arbitrary offsets from End-Axis. Users edit these after default placement. Don't add conditional predicates — the offset is the user-adjustable part. |
 | Cast-time effects vs hit-time effects | When a skill has instant effects on cast (e.g. APPLY PROTECTION, RECOVER SP) plus delayed effects on hit/retaliation, split into separate frames: frame 0 at offset 0 for cast-time effects, later frame for hit effects. |
 | Healing DSL | Write full heal DSL (APPLY TREATMENT with healBase + willAdditive, APPLY CONTINUOUS_TREATMENT with duration + interval + healBase + willAdditive). These are no-op in the engine currently but should be complete in configs for future implementation. |
-| Potential modifying a number | When a potential just changes a numeric value on an existing effect (e.g. "retaliation returns 10 SP"), bake it into the skill frame as a conditional clause with `THIS OPERATOR HAVE POTENTIAL AT_LEAST X`. Don't create separate statuses. |
+| Potential modifying a number | When a potential just changes a numeric value on an existing effect (e.g. "retaliation returns 10 SP"), bake it into the skill frame as a conditional clause with `THIS OPERATOR HAVE POTENTIAL GREATER_THAN_EQUAL X`. Don't create separate statuses. |
 
 ## Step 4: Create operator statuses
 
@@ -878,7 +878,7 @@ When a potential modifies a talent's behavior, use multiple onTriggerClause entr
   {
     "conditions": [
       { "subject": "...", "verb": "...", "object": "..." },
-      { "subjectDeterminer": "THIS", "subject": "OPERATOR", "verb": "HAVE", "object": "POTENTIAL", "with": { "value": { "verb": "AT_LEAST", "value": 2 } } }
+      { "subjectDeterminer": "THIS", "subject": "OPERATOR", "verb": "HAVE", "object": "POTENTIAL", "with": { "value": { "verb": "GREATER_THAN_EQUAL", "value": 2 } } }
     ],
     "effects": [
       { "verb": "APPLY", "object": "STATUS", "objectId": "BUFF_SELF", ... },

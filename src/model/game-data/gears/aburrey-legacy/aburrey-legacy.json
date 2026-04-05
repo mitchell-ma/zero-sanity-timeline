@@ -6,7 +6,8 @@
           "subjectDeterminer": "THIS",
           "subject": "OPERATOR",
           "verb": "PERFORM",
-          "object": "BATTLE_SKILL"
+          "object": "SKILL",
+          "objectId": "BATTLE"
         }
       ],
       "effects": [
@@ -25,7 +26,8 @@
           "subjectDeterminer": "THIS",
           "subject": "OPERATOR",
           "verb": "PERFORM",
-          "object": "COMBO_SKILL"
+          "object": "SKILL",
+          "objectId": "COMBO"
         }
       ],
       "effects": [
@@ -44,7 +46,8 @@
           "subjectDeterminer": "THIS",
           "subject": "OPERATOR",
           "verb": "PERFORM",
-          "object": "ULTIMATE"
+          "object": "SKILL",
+          "objectId": "ULTIMATE"
         }
       ],
       "effects": [
@@ -65,7 +68,7 @@
     "piecesRequired": 3,
     "description": "3-piece set effect: Wearer's Skill DMG +{dmg_up:0%}. When the wearer casts a battle skill, combo skill, or ultimate, the wearer gains ATK +{atk_up:0%} for {duration}s. The buff from each of the three skill types is unique and does not stack with itself.",
     "eventType": "STATUS",
-    "eventCategoryType": "GEAR_SET_EFFECT"
+    "eventIdType": "GEAR_SET_EFFECT"
   },
   "metadata": {
     "originId": "game",

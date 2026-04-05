@@ -23,8 +23,10 @@
                 0.24,
                 0.28
               ],
-              "ofDeterminer": "THIS",
-              "of": "OPERATOR"
+              "of": {
+                "object": "OPERATOR",
+                "determiner": "THIS"
+              }
             }
           },
           "objectId": "TREATMENT_BONUS"

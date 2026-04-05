@@ -1,11 +1,11 @@
 import {
-  CombatSkillType,
   CritMode,
   ElementType,
   EnemyTierType,
   StatType,
   PhysicalStatusType,
 } from "../../consts/enums";
+import { NounType, AdjectiveType } from '../../dsl/semantics';
 import { StatusLevel, TalentLevel } from "../../consts/types";
 import { Enemy } from "../enemies/enemy";
 import type { StatSourceEntry } from "../../controller/calculation/loadoutAggregator";
@@ -101,21 +101,21 @@ export function getElementDamageBonusStat(element: ElementType): StatType {
 }
 
 /** Map a combat skill type to its corresponding damage bonus stat. */
-export function getSkillTypeDamageBonusStat(skillType: CombatSkillType): StatType {
-  const map: Record<CombatSkillType, StatType> = {
-    [CombatSkillType.BASIC_ATTACK]: StatType.BASIC_ATTACK_DAMAGE_BONUS,
-    [CombatSkillType.BATK]: StatType.BASIC_ATTACK_DAMAGE_BONUS,
-    [CombatSkillType.FINAL_STRIKE]: StatType.BASIC_ATTACK_DAMAGE_BONUS,
-    [CombatSkillType.NORMAL]: StatType.BASIC_ATTACK_DAMAGE_BONUS,
-    [CombatSkillType.BATTLE_SKILL]: StatType.BATTLE_SKILL_DAMAGE_BONUS,
-    [CombatSkillType.COMBO_SKILL]: StatType.COMBO_SKILL_DAMAGE_BONUS,
-    [CombatSkillType.ULTIMATE]: StatType.ULTIMATE_DAMAGE_BONUS,
-    [CombatSkillType.ULTIMATE_SKILL]: StatType.ULTIMATE_DAMAGE_BONUS,
-    [CombatSkillType.DASH]: StatType.BASIC_ATTACK_DAMAGE_BONUS,
-    [CombatSkillType.FINISHER]: StatType.BASIC_ATTACK_DAMAGE_BONUS,
-    [CombatSkillType.DIVE]: StatType.BASIC_ATTACK_DAMAGE_BONUS,
-    [CombatSkillType.CONTROL]: StatType.BASIC_ATTACK_DAMAGE_BONUS,
-    [CombatSkillType.ACTION]: StatType.SKILL_DAMAGE_BONUS,
+export function getSkillTypeDamageBonusStat(skillType: string): StatType {
+  const map: Record<string, StatType> = {
+    [NounType.BASIC_ATTACK]: StatType.BASIC_ATTACK_DAMAGE_BONUS,
+    [NounType.BATK]: StatType.BASIC_ATTACK_DAMAGE_BONUS,
+    [NounType.FINAL_STRIKE]: StatType.BASIC_ATTACK_DAMAGE_BONUS,
+    [AdjectiveType.NORMAL]: StatType.BASIC_ATTACK_DAMAGE_BONUS,
+    [NounType.BATTLE]: StatType.BATTLE_SKILL_DAMAGE_BONUS,
+    [NounType.COMBO]: StatType.COMBO_SKILL_DAMAGE_BONUS,
+    [NounType.ULTIMATE]: StatType.ULTIMATE_DAMAGE_BONUS,
+    [NounType.ULTIMATE_SKILL]: StatType.ULTIMATE_DAMAGE_BONUS,
+    [NounType.DASH]: StatType.BASIC_ATTACK_DAMAGE_BONUS,
+    [NounType.FINISHER]: StatType.BASIC_ATTACK_DAMAGE_BONUS,
+    [NounType.DIVE]: StatType.BASIC_ATTACK_DAMAGE_BONUS,
+    [NounType.CONTROL]: StatType.BASIC_ATTACK_DAMAGE_BONUS,
+    [NounType.ACTION]: StatType.SKILL_DAMAGE_BONUS,
   };
   return map[skillType];
 }
@@ -484,6 +484,11 @@ export interface DamageSubComponents {
   isCrit?: boolean;
   /** Crit expectation model snapshot for this frame (EXPECTED mode with crit-dependent statuses). */
   critSnapshot?: import('../../controller/calculation/critExpectationModel').CritFrameSnapshot;
+  // Chance sub-components
+  /** CHANCE probability gate (0.0–1.0). Undefined = no CHANCE (expectation 1). */
+  chance?: number;
+  /** Resolved CHANCE outcome for MANUAL mode. */
+  isChance?: boolean;
   // Resistance sub-components
   baseResistance: number;
   corrosionReduction: number;
@@ -559,6 +564,8 @@ export interface DamageParams {
   resistanceMultiplier: number;
   /** Operator talent special multiplier (e.g. Last Rite T2, Avywenna P5). Default 1. */
   specialMultiplier?: number;
+  /** CHANCE expectation multiplier (0..1). Default 1 (no CHANCE gate). */
+  chanceMultiplier?: number;
   /** Individual sub-component values for breakdown display. */
   sub?: DamageSubComponents;
 }
@@ -567,11 +574,11 @@ export interface DamageParams {
  * Full damage formula:
  *
  * Damage = Attack × BaseMultiplier × AttributeBonus × MultiplierGroup
- *        × CritMultiplier × AmpMultiplier × StaggerMultiplier
- *        × FinisherMultiplier × LinkMultiplier × WeakenMultiplier
- *        × SusceptibilityMultiplier × IncreasedDMGTakenMultiplier
- *        × DMGReductionMultiplier × ProtectionMultiplier
- *        × DefenseMultiplier × ResistanceMultiplier
+ *        × CritMultiplier × ChanceMultiplier × AmpMultiplier
+ *        × StaggerMultiplier × FinisherMultiplier × LinkMultiplier
+ *        × WeakenMultiplier × SusceptibilityMultiplier
+ *        × IncreasedDMGTakenMultiplier × DMGReductionMultiplier
+ *        × ProtectionMultiplier × DefenseMultiplier × ResistanceMultiplier
  */
 export function calculateDamage(params: DamageParams): number {
   const effectiveAttack = Math.round(params.attack * params.attributeBonus * 10) / 10;
@@ -580,6 +587,7 @@ export function calculateDamage(params: DamageParams): number {
     params.baseMultiplier *
     params.multiplierGroup *
     params.critMultiplier *
+    (params.chanceMultiplier ?? 1) *
     params.ampMultiplier *
     params.staggerMultiplier *
     params.finisherMultiplier *

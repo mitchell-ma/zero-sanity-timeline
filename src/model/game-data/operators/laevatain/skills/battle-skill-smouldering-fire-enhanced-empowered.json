@@ -22,8 +22,8 @@
       "ENHANCED",
       "EMPOWERED"
     ],
-    "eventType": "COMBAT_SKILL",
-    "eventCategoryType": "BATTLE_SKILL",
+    "eventType": "SKILL",
+    "eventIdType": "BATTLE",
     "element": "HEAT",
     "id": "SMOULDERING_FIRE_ENHANCED_EMPOWERED",
     "name": "Smouldering Fire (Enhanced + Empowered)"
@@ -82,8 +82,10 @@
                         3.41,
                         3.7
                       ],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     },
                     "poiseExtra": {
                       "verb": "IS",
@@ -113,15 +115,19 @@
                         3.04,
                         3.3
                       ],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     },
                     "mainStat": {
                       "verb": "IS",
                       "object": "STAT",
                       "objectId": "ATTACK",
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     }
                   }
                 }
@@ -181,8 +187,10 @@
                         3.41,
                         3.7
                       ],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     },
                     "value": {
                       "verb": "VARY_BY",
@@ -201,15 +209,19 @@
                         3.04,
                         3.3
                       ],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     },
                     "mainStat": {
                       "verb": "IS",
                       "object": "STAT",
                       "objectId": "ATTACK",
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     }
                   }
                 }
@@ -240,10 +252,7 @@
                   "object": "STATUS",
                   "objectId": "MELTING_FLAME",
                   "fromDeterminer": "THIS",
-                  "from": "OPERATOR",
-                  "with": {
-                    "stacks": 1
-                  }
+                  "from": "OPERATOR"
                 },
                 {
                   "verb": "DEAL",

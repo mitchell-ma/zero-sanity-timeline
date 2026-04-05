@@ -41,7 +41,7 @@
       "value": 1
     },
     "eventType": "STATUS",
-    "eventCategoryType": "GEAR_SET_STATUS"
+    "eventIdType": "GEAR_SET_STATUS"
   },
   "metadata": {
     "originId": "CATASTROPHE",

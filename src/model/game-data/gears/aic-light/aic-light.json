@@ -27,7 +27,7 @@
     "piecesRequired": 3,
     "description": "3-piece set effect: Wearer's HP +{hp_up}. After the wearer defeats an enemy, the wearer gains ATK +{atk_up} for {duration}s.",
     "eventType": "STATUS",
-    "eventCategoryType": "GEAR_SET_EFFECT"
+    "eventIdType": "GEAR_SET_EFFECT"
   },
   "metadata": {
     "originId": "game",

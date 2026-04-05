@@ -16,7 +16,7 @@
           "subject": "OPERATOR",
           "verb": "HAVE",
           "object": "ULTIMATE_ENERGY",
-          "cardinalityConstraint": "AT_MOST",
+          "cardinalityConstraint": "LESS_THAN_EQUAL",
           "with": {
             "value": {
               "verb": "IS",

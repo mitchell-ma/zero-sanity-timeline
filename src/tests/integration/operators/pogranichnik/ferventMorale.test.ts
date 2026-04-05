@@ -54,9 +54,9 @@ describe('A. Fervent Morale RESET stacking', () => {
     act(() => { result.current.handleAddEvent(ultPayload.ownerId, ultPayload.columnId, ultPayload.atFrame, ultPayload.defaultSkill); });
 
     // Two combos → two Steel Oath consumptions → two Fervent Morale applications
-    const comboCol = findColumn(result.current, SLOT_POG, NounType.COMBO_SKILL);
-    act(() => { result.current.handleAddEvent(SLOT_POG, NounType.COMBO_SKILL, 3 * FPS, comboCol!.defaultEvent!); });
-    act(() => { result.current.handleAddEvent(SLOT_POG, NounType.COMBO_SKILL, 30 * FPS, comboCol!.defaultEvent!); });
+    const comboCol = findColumn(result.current, SLOT_POG, NounType.COMBO);
+    act(() => { result.current.handleAddEvent(SLOT_POG, NounType.COMBO, 3 * FPS, comboCol!.defaultEvent!); });
+    act(() => { result.current.handleAddEvent(SLOT_POG, NounType.COMBO, 30 * FPS, comboCol!.defaultEvent!); });
 
     const moraleEvents = result.current.allProcessedEvents.filter(
       ev => ev.columnId === FERVENT_MORALE_ID && ev.ownerId === SLOT_POG,
@@ -80,8 +80,8 @@ describe('A. Fervent Morale RESET stacking', () => {
     const ultPayload = getMenuPayload(result.current, ultCol!, 0);
     act(() => { result.current.handleAddEvent(ultPayload.ownerId, ultPayload.columnId, ultPayload.atFrame, ultPayload.defaultSkill); });
 
-    const comboCol = findColumn(result.current, SLOT_POG, NounType.COMBO_SKILL);
-    act(() => { result.current.handleAddEvent(SLOT_POG, NounType.COMBO_SKILL, 3 * FPS, comboCol!.defaultEvent!); });
+    const comboCol = findColumn(result.current, SLOT_POG, NounType.COMBO);
+    act(() => { result.current.handleAddEvent(SLOT_POG, NounType.COMBO, 3 * FPS, comboCol!.defaultEvent!); });
 
     const statusCol = findColumn(result.current, SLOT_POG, OPERATOR_STATUS_COLUMN_ID);
     expect(statusCol).toBeDefined();
@@ -122,7 +122,7 @@ describe('B. Living Banner rendering', () => {
   it('B2: combo creates 3 clamped Living Banner segments with running totals', () => {
     const { result } = setupPog();
 
-    const comboCol = findColumn(result.current, SLOT_POG, NounType.COMBO_SKILL);
+    const comboCol = findColumn(result.current, SLOT_POG, NounType.COMBO);
     const payload = getMenuPayload(result.current, comboCol!, 3 * FPS);
     act(() => { result.current.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill); });
 
@@ -173,8 +173,8 @@ describe('C. No duplicate Fervent Morale', () => {
     act(() => { result.current.handleAddEvent(ultPayload.ownerId, ultPayload.columnId, ultPayload.atFrame, ultPayload.defaultSkill); });
 
     // Single combo → 1 Steel Oath consumption
-    const comboCol = findColumn(result.current, SLOT_POG, NounType.COMBO_SKILL);
-    act(() => { result.current.handleAddEvent(SLOT_POG, NounType.COMBO_SKILL, 3 * FPS, comboCol!.defaultEvent!); });
+    const comboCol = findColumn(result.current, SLOT_POG, NounType.COMBO);
+    act(() => { result.current.handleAddEvent(SLOT_POG, NounType.COMBO, 3 * FPS, comboCol!.defaultEvent!); });
 
     const moraleEvents = result.current.allProcessedEvents.filter(
       ev => ev.columnId === FERVENT_MORALE_ID && ev.ownerId === SLOT_POG,

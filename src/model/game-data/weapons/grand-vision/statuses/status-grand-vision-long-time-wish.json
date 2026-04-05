@@ -22,8 +22,10 @@
                 72,
                 84
               ],
-              "ofDeterminer": "THIS",
-              "of": "OPERATOR"
+              "of": {
+                "object": "OPERATOR",
+                "determiner": "THIS"
+              }
             }
           }
         },
@@ -45,8 +47,10 @@
                 0.864,
                 1.008
               ],
-              "ofDeterminer": "THIS",
-              "of": "OPERATOR"
+              "of": {
+                "object": "OPERATOR",
+                "determiner": "THIS"
+              }
             }
           },
           "objectId": "DAMAGE_BONUS",
@@ -76,7 +80,7 @@
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
-    "eventCategoryType": "WEAPON_STATUS"
+    "eventIdType": "WEAPON_STATUS"
   },
   "metadata": {
     "originId": "GRAND_VISION",

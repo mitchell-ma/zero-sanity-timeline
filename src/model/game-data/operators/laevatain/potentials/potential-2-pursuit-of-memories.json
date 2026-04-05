@@ -38,7 +38,7 @@
     "name": "Pursuit of Memories",
     "level": 2,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
+    "eventIdType": "POTENTIAL",
     "description": "Intellect +20, Basic Attack DMG Dealt +15%."
   },
   "metadata": {

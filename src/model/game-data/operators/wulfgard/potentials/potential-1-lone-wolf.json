@@ -37,7 +37,7 @@
     "name": "Lone Wolf",
     "level": 1,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
+    "eventIdType": "POTENTIAL",
     "description": "Strength +{Str:0}, Agility +{Agi:0}."
   },
   "metadata": {

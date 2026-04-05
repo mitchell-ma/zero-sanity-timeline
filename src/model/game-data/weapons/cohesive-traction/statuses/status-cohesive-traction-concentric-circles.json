@@ -21,12 +21,14 @@
                 0.24,
                 0.28
               ],
-              "ofDeterminer": "THIS",
-              "of": "OPERATOR"
+              "of": {
+                "object": "OPERATOR",
+                "determiner": "THIS"
+              }
             }
           },
           "objectId": "DAMAGE_BONUS",
-          "objectQualifier": "COMBO_SKILL"
+          "objectQualifier": "COMBO"
         },
         {
           "verb": "APPLY",
@@ -46,8 +48,10 @@
                 0.24,
                 0.28
               ],
-              "ofDeterminer": "THIS",
-              "of": "OPERATOR"
+              "of": {
+                "object": "OPERATOR",
+                "determiner": "THIS"
+              }
             }
           },
           "objectId": "DAMAGE_BONUS",
@@ -77,7 +81,7 @@
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
-    "eventCategoryType": "WEAPON_STATUS"
+    "eventIdType": "WEAPON_STATUS"
   },
   "metadata": {
     "originId": "COHESIVE_TRACTION",

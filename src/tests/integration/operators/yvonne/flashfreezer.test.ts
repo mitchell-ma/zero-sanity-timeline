@@ -66,7 +66,8 @@ describe('A. Combo trigger conditions', () => {
     expect(cond.subjectDeterminer).toBe(DeterminerType.CONTROLLED);
     expect(cond.subject).toBe(NounType.OPERATOR);
     expect(cond.verb).toBe(VerbType.PERFORM);
-    expect(cond.object).toBe(NounType.FINAL_STRIKE);
+    expect(cond.object).toBe(NounType.SKILL);
+    expect(cond.objectId).toBe(NounType.FINAL_STRIKE);
   });
 
   it('A3: second condition is ENEMY HAVE STATUS REACTION SOLIDIFICATION', () => {
@@ -102,11 +103,11 @@ describe('B. Frame structure', () => {
     expect(FRAMES[4].clause[0].conditions).toEqual([]);
     expect(FRAMES[4].clause[0].effects[0].verb).toBe(VerbType.DEAL);
     expect(FRAMES[4].clause[0].effects[0].object).toBe(NounType.DAMAGE);
-    // Clause 1: P AT_MOST 0 → stagger + Solidification
+    // Clause 1: P LESS_THAN_EQUAL 0 → stagger + Solidification
     const p0Cond = FRAMES[4].clause[1].conditions[0];
     expect(p0Cond.verb).toBe(VerbType.HAVE);
     expect(p0Cond.object).toBe(NounType.POTENTIAL);
-    expect(p0Cond.cardinalityConstraint).toBe(CardinalityConstraintType.AT_MOST);
+    expect(p0Cond.cardinalityConstraint).toBe(CardinalityConstraintType.LESS_THAN_EQUAL);
     expect(p0Cond.value.value).toBe(0);
     expect(FRAMES[4].clause[1].effects.some((e: { verb: string; object: string }) => e.verb === VerbType.DEAL && e.object === NounType.STAGGER)).toBe(true);
     expect(FRAMES[4].clause[1].effects.some((e: { verb: string }) => e.verb === VerbType.APPLY)).toBe(true);
@@ -128,7 +129,7 @@ describe('B. Frame structure', () => {
       const cond = FRAMES[i].clause[0].conditions[0];
       expect(cond.verb).toBe(VerbType.HAVE);
       expect(cond.object).toBe(NounType.POTENTIAL);
-      expect(cond.cardinalityConstraint).toBe(CardinalityConstraintType.AT_LEAST);
+      expect(cond.cardinalityConstraint).toBe(CardinalityConstraintType.GREATER_THAN_EQUAL);
       expect(cond.value.value).toBe(1);
     }
   });
@@ -201,8 +202,8 @@ describe('D. Segment duration varies by potential', () => {
 // =============================================================================
 
 describe('E. Stagger + Solidification effects', () => {
-  // Frame 5 (P0): stagger+Solidification in clause 1 (AT_MOST 0)
-  // Frame 7 (P1): stagger+Solidification in clause 0 (AT_LEAST 1)
+  // Frame 5 (P0): stagger+Solidification in clause 1 (LESS_THAN_EQUAL 0)
+  // Frame 7 (P1): stagger+Solidification in clause 0 (GREATER_THAN_EQUAL 1)
 
   for (const [label, frameIdx, clauseIdx] of [['P0 (frame 5)', 4, 1], ['P1 (frame 7)', 6, 0]] as const) {
     const effects = FRAMES[frameIdx].clause[clauseIdx].effects;
@@ -295,7 +296,7 @@ describe('G. Energy release multipliers', () => {
 describe('H. Pipeline placement', () => {
   it('H1: combo places in pipeline with correct ID', () => {
     const { result } = setup();
-    const col = findColumn(result.current, SLOT, NounType.COMBO_SKILL);
+    const col = findColumn(result.current, SLOT, NounType.COMBO);
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
@@ -304,7 +305,7 @@ describe('H. Pipeline placement', () => {
     });
 
     const combos = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT && ev.columnId === NounType.COMBO_SKILL,
+      ev => ev.ownerId === SLOT && ev.columnId === NounType.COMBO,
     );
     expect(combos).toHaveLength(1);
     expect(combos[0].name).toBe(COMBO_ID);
@@ -312,7 +313,7 @@ describe('H. Pipeline placement', () => {
 
   it('H2: combo has 3 segments (animation + active + cooldown)', () => {
     const { result } = setup();
-    const col = findColumn(result.current, SLOT, NounType.COMBO_SKILL);
+    const col = findColumn(result.current, SLOT, NounType.COMBO);
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
@@ -321,14 +322,14 @@ describe('H. Pipeline placement', () => {
     });
 
     const combos = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT && ev.columnId === NounType.COMBO_SKILL,
+      ev => ev.ownerId === SLOT && ev.columnId === NounType.COMBO,
     );
     expect(combos[0].segments).toHaveLength(3);
   });
 
   it('H3: at P0, active segment duration is 2.5s', () => {
     const { result } = setup();
-    const col = findColumn(result.current, SLOT, NounType.COMBO_SKILL);
+    const col = findColumn(result.current, SLOT, NounType.COMBO);
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
@@ -337,7 +338,7 @@ describe('H. Pipeline placement', () => {
     });
 
     const combo = result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT && ev.columnId === NounType.COMBO_SKILL,
+      ev => ev.ownerId === SLOT && ev.columnId === NounType.COMBO,
     )!;
     // segments[0] = animation, segments[1] = active
     expect(combo.segments[1].properties.duration).toBe(Math.round(2.5 * FPS));
@@ -350,7 +351,7 @@ describe('H. Pipeline placement', () => {
       result.current.handleStatsChange(SLOT, { ...props, operator: { ...props.operator, potential: 1 } });
     });
 
-    const col = findColumn(result.current, SLOT, NounType.COMBO_SKILL);
+    const col = findColumn(result.current, SLOT, NounType.COMBO);
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
@@ -359,14 +360,14 @@ describe('H. Pipeline placement', () => {
     });
 
     const combo = result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT && ev.columnId === NounType.COMBO_SKILL,
+      ev => ev.ownerId === SLOT && ev.columnId === NounType.COMBO,
     )!;
     expect(combo.segments[1].properties.duration).toBe(Math.round(3.5 * FPS));
   });
 
   it('H5: at P0, active segment has 5 frames (4 energy + explosion via FIRST_MATCH fallback)', () => {
     const { result } = setup();
-    const col = findColumn(result.current, SLOT, NounType.COMBO_SKILL);
+    const col = findColumn(result.current, SLOT, NounType.COMBO);
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
@@ -375,7 +376,7 @@ describe('H. Pipeline placement', () => {
     });
 
     const combo = result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT && ev.columnId === NounType.COMBO_SKILL,
+      ev => ev.ownerId === SLOT && ev.columnId === NounType.COMBO,
     )!;
     const activeFrames = combo.segments[1].frames ?? [];
     // At P0 (duration 2.5s): frames at offsets 0.5, 1.0, 1.5, 2.0, 2.5 survive
@@ -390,7 +391,7 @@ describe('H. Pipeline placement', () => {
       result.current.handleStatsChange(SLOT, { ...props, operator: { ...props.operator, potential: 1 } });
     });
 
-    const col = findColumn(result.current, SLOT, NounType.COMBO_SKILL);
+    const col = findColumn(result.current, SLOT, NounType.COMBO);
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
@@ -399,7 +400,7 @@ describe('H. Pipeline placement', () => {
     });
 
     const combo = result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT && ev.columnId === NounType.COMBO_SKILL,
+      ev => ev.ownerId === SLOT && ev.columnId === NounType.COMBO,
     )!;
     const activeFrames = combo.segments[1].frames ?? [];
     // At P1 (duration 3.5s): all 7 frames survive duration filter
@@ -413,7 +414,7 @@ describe('H. Pipeline placement', () => {
 
 describe('I. Combo updates on loadout potential change', () => {
   function addCombo(result: { current: AppResult }, atFrame: number) {
-    const col = findColumn(result.current, SLOT, NounType.COMBO_SKILL);
+    const col = findColumn(result.current, SLOT, NounType.COMBO);
     const payload = getMenuPayload(result.current, col!, atFrame);
     act(() => {
       result.current.handleAddEvent(
@@ -424,7 +425,7 @@ describe('I. Combo updates on loadout potential change', () => {
 
   function getCombo(result: { current: AppResult }) {
     return result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT && ev.columnId === NounType.COMBO_SKILL,
+      ev => ev.ownerId === SLOT && ev.columnId === NounType.COMBO,
     )!;
   }
 

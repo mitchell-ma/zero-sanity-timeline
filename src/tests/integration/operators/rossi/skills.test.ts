@@ -170,7 +170,7 @@ describe('A. Basic Attack', () => {
 describe('B. Battle Skill — Base', () => {
   it('B1: Base BS places in BATTLE_SKILL column', () => {
     const { result } = setupRossi();
-    const col = findColumn(result.current, SLOT_ROSSI, NounType.BATTLE_SKILL);
+    const col = findColumn(result.current, SLOT_ROSSI, NounType.BATTLE);
     expect(col?.defaultEvent).toBeDefined();
 
     const payload = getMenuPayload(result.current, col!, 2 * FPS);
@@ -179,7 +179,7 @@ describe('B. Battle Skill — Base', () => {
     });
 
     const events = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_ROSSI && ev.columnId === NounType.BATTLE_SKILL,
+      ev => ev.ownerId === SLOT_ROSSI && ev.columnId === NounType.BATTLE,
     );
     expect(events).toHaveLength(1);
     expect(events[0].name).toBe(BS_ID);
@@ -190,21 +190,21 @@ describe('B. Battle Skill — Base', () => {
 
   it('B2: Base BS has 3 frames in its segment (30/30/40 weight hits)', () => {
     const { result } = setupRossi();
-    const col = findColumn(result.current, SLOT_ROSSI, NounType.BATTLE_SKILL);
+    const col = findColumn(result.current, SLOT_ROSSI, NounType.BATTLE);
     const payload = getMenuPayload(result.current, col!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
     });
 
     const events = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_ROSSI && ev.columnId === NounType.BATTLE_SKILL,
+      ev => ev.ownerId === SLOT_ROSSI && ev.columnId === NounType.BATTLE,
     );
     expect(events[0].segments[0].frames).toHaveLength(3);
   });
 
   it('B3: Base BS visible in view layer', () => {
     const { result } = setupRossi();
-    const col = findColumn(result.current, SLOT_ROSSI, NounType.BATTLE_SKILL);
+    const col = findColumn(result.current, SLOT_ROSSI, NounType.BATTLE);
     const payload = getMenuPayload(result.current, col!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
@@ -226,7 +226,7 @@ describe('C. Battle Skill — Empowered', () => {
     const { result } = setupRossi();
     placeVulnerableOnEnemy(result, 0);
 
-    const col = findColumn(result.current, SLOT_ROSSI, NounType.BATTLE_SKILL);
+    const col = findColumn(result.current, SLOT_ROSSI, NounType.BATTLE);
     const menu = buildContextMenu(result.current, col!, 2 * FPS);
     expect(menu).not.toBeNull();
 
@@ -238,7 +238,7 @@ describe('C. Battle Skill — Empowered', () => {
   it('C2: Empowered BS NOT available without Vulnerable', () => {
     const { result } = setupRossi();
 
-    const col = findColumn(result.current, SLOT_ROSSI, NounType.BATTLE_SKILL);
+    const col = findColumn(result.current, SLOT_ROSSI, NounType.BATTLE);
     const menu = buildContextMenu(result.current, col!, 2 * FPS);
     expect(menu).not.toBeNull();
 
@@ -252,7 +252,7 @@ describe('C. Battle Skill — Empowered', () => {
     const { result } = setupRossi();
     placeVulnerableOnEnemy(result, 0);
 
-    const col = findColumn(result.current, SLOT_ROSSI, NounType.BATTLE_SKILL);
+    const col = findColumn(result.current, SLOT_ROSSI, NounType.BATTLE);
     const menu = buildContextMenu(result.current, col!, 2 * FPS);
     const empItem = menu!.find(i => i.actionId === 'addEvent' && i.label?.includes('Empowered'));
 
@@ -263,7 +263,7 @@ describe('C. Battle Skill — Empowered', () => {
       });
 
       const events = result.current.allProcessedEvents.filter(
-        ev => ev.ownerId === SLOT_ROSSI && ev.columnId === NounType.BATTLE_SKILL,
+        ev => ev.ownerId === SLOT_ROSSI && ev.columnId === NounType.BATTLE,
       );
       expect(events).toHaveLength(1);
       expect(events[0].name).toBe(BS_EMP_ID);
@@ -275,7 +275,7 @@ describe('C. Battle Skill — Empowered', () => {
     const { result } = setupRossi();
     placeVulnerableOnEnemy(result, 0);
 
-    const col = findColumn(result.current, SLOT_ROSSI, NounType.BATTLE_SKILL);
+    const col = findColumn(result.current, SLOT_ROSSI, NounType.BATTLE);
     const menu = buildContextMenu(result.current, col!, 2 * FPS);
     const empItem = menu!.find(i => i.actionId === 'addEvent' && i.label?.includes('Empowered'));
 
@@ -466,7 +466,7 @@ describe('G. Physical Status — Lift', () => {
     // Lift requires pre-existing Vulnerable — place it first
     placeVulnerableOnEnemy(result, 0);
 
-    const col = findColumn(result.current, SLOT_ROSSI, NounType.BATTLE_SKILL);
+    const col = findColumn(result.current, SLOT_ROSSI, NounType.BATTLE);
     const payload = getMenuPayload(result.current, col!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
@@ -482,7 +482,7 @@ describe('G. Physical Status — Lift', () => {
     const { result } = setupRossi();
     placeVulnerableOnEnemy(result, 0);
 
-    const col = findColumn(result.current, SLOT_ROSSI, NounType.BATTLE_SKILL);
+    const col = findColumn(result.current, SLOT_ROSSI, NounType.BATTLE);
     const menu = buildContextMenu(result.current, col!, 2 * FPS);
     const empItem = menu!.find(i => i.actionId === 'addEvent' && i.label?.includes('Empowered'));
     if (empItem && !empItem.disabled) {
@@ -508,7 +508,7 @@ describe('H. Razor Clawmark', () => {
     const { result } = setupRossi();
     placeVulnerableOnEnemy(result, 0);
 
-    const col = findColumn(result.current, SLOT_ROSSI, NounType.BATTLE_SKILL);
+    const col = findColumn(result.current, SLOT_ROSSI, NounType.BATTLE);
     const menu = buildContextMenu(result.current, col!, 2 * FPS);
     const empItem = menu!.find(i => i.actionId === 'addEvent' && i.label?.includes('Empowered'));
     if (empItem && !empItem.disabled) {
@@ -586,7 +586,7 @@ describe('K. Cross-skill interaction chain', () => {
     const { result } = setupRossi();
     placeVulnerableOnEnemy(result, 0);
 
-    const col = findColumn(result.current, SLOT_ROSSI, NounType.BATTLE_SKILL);
+    const col = findColumn(result.current, SLOT_ROSSI, NounType.BATTLE);
     const menu = buildContextMenu(result.current, col!, 2 * FPS);
     const empItem = menu!.find(i => i.actionId === 'addEvent' && i.label?.includes('Empowered'));
     if (empItem && !empItem.disabled) {

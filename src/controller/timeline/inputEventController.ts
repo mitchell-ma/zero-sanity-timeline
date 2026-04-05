@@ -7,7 +7,7 @@
 
 import { v4 as uuidv4 } from 'uuid';
 import { NounType } from '../../dsl/semantics';
-import { CombatSkillType, ColumnType, EnhancementType, EventFrameType } from '../../consts/enums';
+import { ColumnType, EnhancementType, EventFrameType } from '../../consts/enums';
 import { TimelineEvent, EventSegmentData, Operator, computeSegmentsSpan, getAnimationDuration, eventEndFrame, durationSegment } from '../../consts/viewTypes';
 import { ENEMY_OWNER_ID, USER_ID, OPERATOR_COLUMNS, REACTION_COLUMN_IDS, INFLICTION_COLUMN_IDS, SKILL_COLUMN_ORDER, COMBO_WINDOW_COLUMN_ID } from '../../model/channels';
 
@@ -175,7 +175,7 @@ export function wouldOverlapNonOverlappable(
   if (ev.ownerId === ENEMY_OWNER_ID && INFLICTION_COLUMN_IDS.has(ev.columnId)) return false;
   const evIsReset = ev.id && isResetStatus(ev.id);
   // Combo skills in multi-skill activation windows bypass overlap against siblings in the same window
-  const comboWindowBypass = ev.columnId === NounType.COMBO_SKILL && processedEvents
+  const comboWindowBypass = ev.columnId === NounType.COMBO && processedEvents
     ? findMultiSkillWindow(ev.ownerId, startFrame, processedEvents)
     : undefined;
   const evRange = getSibRange(ev, processedEvents);
@@ -184,7 +184,7 @@ export function wouldOverlapNonOverlappable(
     // RESET statuses clamp same-id siblings — skip overlap check only for those
     if (evIsReset && sib.id === ev.id) continue;
     // Combo skills in the same multi-skill activation window bypass overlap
-    if (comboWindowBypass && sib.columnId === NounType.COMBO_SKILL &&
+    if (comboWindowBypass && sib.columnId === NounType.COMBO &&
         sib.startFrame >= comboWindowBypass.startFrame &&
         sib.startFrame < eventEndFrame(comboWindowBypass)) continue;
     const sibRange = getSibRange(sib, processedEvents);
@@ -218,7 +218,7 @@ export function clampNonOverlappable(
   processedEvents?: readonly TimelineEvent[],
 ): number {
   const evIsReset = ev.id && isResetStatus(ev.id);
-  const comboWindowBypass = ev.columnId === NounType.COMBO_SKILL && processedEvents
+  const comboWindowBypass = ev.columnId === NounType.COMBO && processedEvents
     ? findMultiSkillWindow(ev.ownerId, desiredFrame, processedEvents)
     : undefined;
   const evRange = getSibRange(ev, processedEvents);
@@ -229,7 +229,7 @@ export function clampNonOverlappable(
     if (sib.uid === ev.uid || sib.ownerId !== ev.ownerId || sib.columnId !== ev.columnId) continue;
     // RESET statuses clamp same-id siblings — skip overlap check only for those
     if (evIsReset && sib.id === ev.id) continue;
-    if (comboWindowBypass && sib.columnId === NounType.COMBO_SKILL &&
+    if (comboWindowBypass && sib.columnId === NounType.COMBO &&
         sib.startFrame >= comboWindowBypass.startFrame &&
         sib.startFrame < eventEndFrame(comboWindowBypass)) continue;
     const sibRange = getSibRange(sib, processedEvents);
@@ -277,7 +277,7 @@ export function clampDeltaByOverlap(
   const ev = allEvents.find((e) => e.uid === eventUid);
   if (!ev) return clampedDelta;
   // Control events are passive state markers — no overlap constraints
-  if (ev.id === CombatSkillType.CONTROL) return clampedDelta;
+  if (ev.id === NounType.CONTROL) return clampedDelta;
   const evIsReset = ev.id && isResetStatus(ev.id);
   const evRange = getSibRange(ev, processedEvents);
   if (evRange === 0) return clampedDelta;
@@ -494,7 +494,7 @@ export function isInComboAnimation(
 ): boolean {
   for (const ev of allEvents) {
     if (ev.uid === excludeEventId) continue;
-    if (ev.columnId !== NounType.COMBO_SKILL) continue;
+    if (ev.columnId !== NounType.COMBO) continue;
     const animDur = getAnimationDuration(ev);
     if (animDur <= 0) continue;
     if (frame >= ev.startFrame && frame < ev.startFrame + animDur) return true;
@@ -514,7 +514,7 @@ function clampToComboEdge(
   const movingForward = desiredFrame >= target.startFrame;
   let result = desiredFrame;
   for (const ev of allEvents) {
-    if (ev.uid === target.uid || ev.columnId !== NounType.COMBO_SKILL) continue;
+    if (ev.uid === target.uid || ev.columnId !== NounType.COMBO) continue;
     const animDur = getAnimationDuration(ev);
     if (animDur <= 0) continue;
     const animEnd = ev.startFrame + animDur;
@@ -597,7 +597,7 @@ export function validateUpdate(
   // Block non-ultimate events from being placed during an ultimate animation
   if (merged.columnId !== NounType.ULTIMATE && isInUltimateAnimation(allEvents, merged.startFrame, merged.uid)) return null;
   // Block battle skills from being placed during a combo animation
-  if (merged.columnId === NounType.BATTLE_SKILL && isInComboAnimation(allEvents, merged.startFrame, merged.uid)) return null;
+  if (merged.columnId === NounType.BATTLE && isInComboAnimation(allEvents, merged.startFrame, merged.uid)) return null;
   // Enhanced skills require an active ultimate
   if (merged.enhancementType === EnhancementType.ENHANCED) {
     const ultActive = allEvents.some(
@@ -624,7 +624,7 @@ export function validateMove(
   let clamped = Math.max(0, Math.min(TOTAL_FRAMES - 1, newStartFrame));
   // Control events are passive state markers — no overlap or animation-edge
   // constraints apply. Only timeline bounds matter.
-  if (target.id === CombatSkillType.CONTROL) return clamped;
+  if (target.id === NounType.CONTROL) return clamped;
   // Combo events are constrained only by their activation window — no other
   // validator (overlap, ultimate edge, etc.) may override the window boundary.
   if (ComboSkillEventController.isCombo(target)) {
@@ -641,7 +641,7 @@ export function validateMove(
       clamped = clampToUltimateEdge(allEvents, target, clamped);
     }
     // Clamp battle/basic skills to the edge of combo animation regions
-    if (target.columnId === NounType.BATTLE_SKILL || target.columnId === NounType.BASIC_ATTACK) {
+    if (target.columnId === NounType.BATTLE || target.columnId === NounType.BASIC_ATTACK) {
       clamped = clampToComboEdge(allEvents, target, clamped);
     }
     // Clamp enhanced events within the ENABLE clause window

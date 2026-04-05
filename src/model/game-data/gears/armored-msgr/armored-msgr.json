@@ -7,7 +7,7 @@
           "subject": "OPERATOR",
           "verb": "HAVE",
           "object": "HP",
-          "cardinalityConstraint": "AT_MOST",
+          "cardinalityConstraint": "LESS_THAN_EQUAL",
           "with": {
             "value": {
               "value": {
@@ -37,7 +37,7 @@
     "piecesRequired": 3,
     "description": "3-piece set effect: Wearer's Strength +50. When the wearer's HP drops below 50%, the wearer gains 30% DMG Reduction against all types of DMG.",
     "eventType": "STATUS",
-    "eventCategoryType": "GEAR_SET_EFFECT"
+    "eventIdType": "GEAR_SET_EFFECT"
   },
   "metadata": {
     "originId": "game",

@@ -588,12 +588,12 @@ function parseCharacter(char: GameDataCharacter): { operatorType: string; skills
 
   // Battle skill
   if (char.skill_duration > 0 || char.skill_damage_ticks?.length > 0) {
-    skills.BATTLE_SKILL = parseBattleSkill(char);
+    skills.BATTLE = parseBattleSkill(char);
   }
 
   // Combo skill
   if (char.link_duration > 0 || char.link_damage_ticks?.length > 0) {
-    skills.COMBO_SKILL = parseComboSkill(char);
+    skills.COMBO = parseComboSkill(char);
   }
 
   // Ultimate

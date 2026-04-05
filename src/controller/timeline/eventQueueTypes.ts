@@ -2,8 +2,119 @@
  * Shared types, constants, and configuration for the event queue pipeline.
  */
 import type { TimelineEvent, EventFrameMarker } from '../../consts/viewTypes';
+import type { ValueNode } from '../../dsl/semantics';
+import type { ClauseEvaluationType } from '../../dsl/semantics';
+import type { Predicate, TriggerEffect } from './triggerMatch';
+import type { LoadoutProperties } from '../../view/InformationPane';
 import { QueueFrameType, FrameHookType } from '../../consts/enums';
 export { QueueFrameType, FrameHookType };
+
+// ── Status event definition types ─────────────────────────────────────────
+
+interface StatusFrameDef {
+  metadata?: { eventComponentType?: string };
+  properties?: { offset?: { value: number; unit: string } };
+  clause?: EffectClause[];
+}
+
+interface StatusSegmentDef {
+  metadata?: { eventComponentType?: string };
+  properties?: { name?: string; duration?: { value: ValueNode; unit: string }; segmentTypes?: string[] };
+  clause?: EffectClause[];
+  frames?: StatusFrameDef[];
+  onTriggerClause?: TriggerClause[];
+  onEntryClause?: EffectClause[];
+  onExitClause?: EffectClause[];
+}
+
+/** Properties block nested inside a status event definition. */
+interface StatusProperties {
+  id: string;
+  name?: string;
+  type?: string;
+  eventIdType?: string;
+  element?: string;
+  target?: string;
+  targetDeterminer?: string;
+  isForced?: boolean;
+  enhancementTypes?: string[];
+  stacks: {
+    interactionType: string;
+    limit: ValueNode;
+  };
+  duration?: { value: ValueNode; unit: string };
+  susceptibility?: Record<string, number[]>;
+  cooldownSeconds?: number;
+}
+
+export interface StatusEventDef {
+  properties: StatusProperties;
+  metadata?: { originId?: string; isEnabled?: boolean };
+  onTriggerClause?: TriggerClause[];
+  onEntryClause?: EffectClause[];
+  clause?: EffectClause[];
+  onExitClause?: EffectClause[];
+  /** Multi-phase segments (e.g. Antal Focus: 20s Focus + 40s Empowered Focus). */
+  segments?: StatusSegmentDef[];
+  /** Clause evaluation mode: FIRST_MATCH evaluates clauses in order, fires first match only. */
+  clauseType?: ClauseEvaluationType;
+}
+
+interface TriggerClause {
+  conditions: Predicate[];
+  effects?: TriggerEffect[];
+}
+
+interface EffectClause {
+  conditions: Predicate[];
+  effects: Effect[];
+}
+
+interface Effect {
+  verb: string;
+  object: string;
+  objectId?: string;
+  to?: string;
+  toDeterminer?: string;
+}
+
+// ── Derive context ────────────────────────────────────────────────────────
+
+export interface DeriveContext {
+  events: readonly TimelineEvent[];
+  operatorId: string;
+  operatorSlotId: string;
+  potential: number;
+  /** Maps operator ID (lowercase) → slot ID for cross-operator target resolution. */
+  operatorSlotMap: Record<string, string>;
+  /** Loadout properties for the operator's slot (talent levels, etc.). */
+  loadoutProperties?: LoadoutProperties;
+}
+
+// ── Engine trigger types ──────────────────────────────────────────────────
+
+export interface EngineTriggerContext {
+  def: StatusEventDef;
+  operatorId: string;
+  operatorSlotId: string;
+  potential: number;
+  operatorSlotMap: Record<string, string>;
+  loadoutProperties?: LoadoutProperties;
+  haveConditions: Predicate[];
+  triggerEffects?: TriggerEffect[];
+}
+
+export interface EngineTriggerEntry {
+  frame: number;
+  sourceOwnerId: string;
+  sourceSkillName: string;
+  /** Slot ID of the operator that triggered this entry (for TRIGGER determiner resolution). */
+  triggerSlotId?: string;
+  /** Column ID of the event that matched the trigger (e.g. CRYO_INFLICTION). */
+  triggerObjectId?: string;
+  ctx: EngineTriggerContext;
+  isEquip: boolean;
+}
 
 // ── Constants ──────────────────────────────────────────────────────────────
 
@@ -52,7 +163,7 @@ export interface QueueFrame {
 
   // ── ENGINE_TRIGGER fields ─────────────────────────────────────────────
   /** Engine trigger context for ENGINE_TRIGGER entries. */
-  engineTrigger?: import('./statusTriggerCollector').EngineTriggerEntry;
+  engineTrigger?: EngineTriggerEntry;
   /** Cascade depth for ENGINE_TRIGGER chains (0 = top-level, capped at MAX_CASCADE_DEPTH). */
   cascadeDepth?: number;
   /** Source damage frame key for intra-frame ordering propagation through trigger chains. */

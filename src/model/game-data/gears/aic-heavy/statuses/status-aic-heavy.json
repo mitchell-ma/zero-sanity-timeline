@@ -38,7 +38,7 @@
     "cooldownSeconds": 5,
     "description": "Restores 100 HP on defeating an enemy. 5s cooldown.",
     "eventType": "STATUS",
-    "eventCategoryType": "GEAR_SET_STATUS"
+    "eventIdType": "GEAR_SET_STATUS"
   },
   "metadata": {
     "originId": "AIC_HEAVY",

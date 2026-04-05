@@ -23,7 +23,7 @@
       "interactionType": "RESET"
     },
     "eventType": "STATUS",
-    "eventCategoryType": "TALENT",
+    "eventIdType": "TALENT",
     "description": "DMG Dealt +20%/+30% to Staggered enemies."
   },
   "metadata": {
@@ -42,6 +42,23 @@
           "subject": "ENEMY",
           "verb": "BECOME",
           "object": "NODE_STAGGERED"
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "EVENT",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
+        }
+      ]
+    },
+    {
+      "conditions": [
+        {
+          "subject": "ENEMY",
+          "verb": "BECOME",
+          "object": "FULL_STAGGERED"
         }
       ],
       "effects": [
@@ -72,8 +89,10 @@
                 0.2,
                 0.3
               ],
-              "ofDeterminer": "THIS",
-              "of": "OPERATOR"
+              "of": {
+                "object": "OPERATOR",
+                "determiner": "THIS"
+              }
             }
           }
         }

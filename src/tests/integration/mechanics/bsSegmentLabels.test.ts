@@ -87,7 +87,7 @@ describe('BS segment labels use properties.name, not Roman numerals', () => {
     placeVulnerableOnEnemy(result, 0);
 
     // 1. Context menu — empowered variant available
-    const col = findColumn(result.current, SLOT_ROSSI, NounType.BATTLE_SKILL);
+    const col = findColumn(result.current, SLOT_ROSSI, NounType.BATTLE);
     expect(col).toBeDefined();
     const menu = buildContextMenu(result.current, col!, 2 * FPS);
     expect(menu).not.toBeNull();
@@ -103,7 +103,7 @@ describe('BS segment labels use properties.name, not Roman numerals', () => {
     });
 
     const events = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_ROSSI && ev.columnId === NounType.BATTLE_SKILL,
+      ev => ev.ownerId === SLOT_ROSSI && ev.columnId === NounType.BATTLE,
     );
     expect(events).toHaveLength(1);
     expect(events[0].name).toBe(BS_EMP_ID);
@@ -139,7 +139,7 @@ describe('BS segment labels use properties.name, not Roman numerals', () => {
 
     // Verify event is on BATTLE_SKILL column (not BASIC_ATTACK) — the renderer
     // only falls back to Roman numerals for BASIC_ATTACK column events
-    expect(events[0].columnId).toBe(NounType.BATTLE_SKILL);
+    expect(events[0].columnId).toBe(NounType.BATTLE);
     expect(events[0].columnId).not.toBe(NounType.BASIC_ATTACK);
   });
 

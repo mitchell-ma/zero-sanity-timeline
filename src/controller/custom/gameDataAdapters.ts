@@ -11,8 +11,8 @@
 import { VerbType, NounType, DeterminerType } from '../../dsl/semantics';
 import type { Predicate, Interaction, Clause } from '../../dsl/semantics';
 import {
-  CombatSkillType, UnitType, StackInteractionType, ElementType,
-  WeaponType, GearCategory, EventType, EventCategoryType,
+  UnitType, StackInteractionType, ElementType,
+  WeaponType, GearCategory, EventType,
 } from '../../consts/enums';
 import type { StatType } from '../../model/enums';
 import type { OperatorClassType } from '../../model/enums/operators';
@@ -198,13 +198,13 @@ export function skillToFriendly(json: GameDataJson, skillId?: string): CustomSki
     };
   });
 
-  // Determine combat skill type from eventCategoryType
-  const eventCategoryType = props.eventCategoryType as string | undefined;
-  let combatSkillType = CombatSkillType.BASIC_ATTACK;
-  if (eventCategoryType === EventCategoryType.BATTLE_SKILL) combatSkillType = CombatSkillType.BATTLE_SKILL;
-  else if (eventCategoryType === EventCategoryType.COMBO_SKILL) combatSkillType = CombatSkillType.COMBO_SKILL;
-  else if (eventCategoryType === EventCategoryType.ULTIMATE_SKILL) combatSkillType = CombatSkillType.ULTIMATE;
-  else if (eventCategoryType === EventCategoryType.ACTION) combatSkillType = CombatSkillType.ACTION;
+  // Determine combat skill type from eventIdType
+  const eventIdType = props.eventIdType as string | undefined;
+  let combatSkillType = NounType.BASIC_ATTACK;
+  if (eventIdType === NounType.BATTLE) combatSkillType = NounType.BATTLE;
+  else if (eventIdType === NounType.COMBO) combatSkillType = NounType.COMBO;
+  else if (eventIdType === NounType.ULTIMATE_SKILL) combatSkillType = NounType.ULTIMATE;
+  else if (eventIdType === NounType.ACTION) combatSkillType = NounType.ACTION;
 
   return {
     id: skillId ?? (props.id as string) ?? '',
@@ -226,10 +226,10 @@ export function skillFromFriendly(skill: CustomSkill, operatorId?: string): Game
 
   // Map combat skill type to event category
   const categoryMap: Record<string, string> = {
-    [CombatSkillType.BASIC_ATTACK]: EventCategoryType.BASIC_ATTACK,
-    [CombatSkillType.BATTLE_SKILL]: EventCategoryType.BATTLE_SKILL,
-    [CombatSkillType.COMBO_SKILL]: EventCategoryType.COMBO_SKILL,
-    [CombatSkillType.ULTIMATE]: EventCategoryType.ULTIMATE_SKILL,
+    [NounType.BASIC_ATTACK]: NounType.BASIC_ATTACK,
+    [NounType.BATTLE]: NounType.BATTLE,
+    [NounType.COMBO]: NounType.COMBO,
+    [NounType.ULTIMATE]: NounType.ULTIMATE_SKILL,
   };
 
   // Build clause from resource interactions
@@ -260,8 +260,8 @@ export function skillFromFriendly(skill: CustomSkill, operatorId?: string): Game
       ...(skill.description ? { description: skill.description } : {}),
       ...(skill.durationSeconds ? { duration: dslDuration(skill.durationSeconds) } : {}),
       ...(skill.element ? { element: skill.element } : {}),
-      eventType: EventType.COMBAT_SKILL,
-      eventCategoryType: categoryMap[skill.combatSkillType] ?? EventCategoryType.BASIC_ATTACK,
+      eventType: EventType.SKILL,
+      eventIdType: categoryMap[skill.combatSkillType] ?? NounType.BASIC_ATTACK,
     },
     metadata: {
       originId: operatorId ?? skill.originId ?? '',
@@ -289,7 +289,7 @@ export function operatorStatusToFriendly(json: GameDataJson, wrapId?: string): C
 
 /** Convert CustomOperatorStatus → game data OperatorStatus JSON. */
 export function operatorStatusFromFriendly(status: CustomOperatorStatus, operatorId?: string): GameDataJson {
-  return customDefToStatusJson(status.statusEvent, operatorId ?? status.operatorId ?? '', EventCategoryType.SKILL_STATUS);
+  return customDefToStatusJson(status.statusEvent, operatorId ?? status.operatorId ?? '', NounType.SKILL_STATUS);
 }
 
 // ── Operator Talent Adapters ───────────────────────────────────────────────
@@ -309,7 +309,7 @@ export function operatorTalentToFriendly(talentStatuses: GameDataJson[], talentI
 /** Convert CustomOperatorTalent → game data OperatorStatus JSONs. */
 export function operatorTalentFromFriendly(talent: CustomOperatorTalent): GameDataJson[] {
   return talent.statusEvents.map(se =>
-    customDefToStatusJson(se, talent.operatorId ?? '', EventCategoryType.TALENT),
+    customDefToStatusJson(se, talent.operatorId ?? '', NounType.TALENT),
   );
 }
 
@@ -488,7 +488,7 @@ export function weaponNamedEffectsToStatuses(weapon: CustomWeapon): GameDataJson
           interactionType: ne.maxStacks > 1 ? StackInteractionType.NONE : StackInteractionType.RESET,
         },
         eventType: EventType.STATUS,
-        eventCategoryType: EventCategoryType.WEAPON_STATUS,
+        eventIdType: NounType.WEAPON_STATUS,
         ...(ne.cooldownSeconds ? { cooldownSeconds: ne.cooldownSeconds } : {}),
       },
       onTriggerClause: ne.triggers.map(t => ({ conditions: [t] })),
@@ -517,7 +517,7 @@ export function weaponEffectToFriendly(statuses: GameDataJson[], effectId: strin
 /** Convert CustomWeaponEffect → game data WeaponStatus JSONs. */
 export function weaponEffectFromFriendly(effect: CustomWeaponEffect): GameDataJson[] {
   return effect.statusEvents.map(se =>
-    customDefToStatusJson(se, effect.weaponId ?? effect.id, EventCategoryType.WEAPON_STATUS),
+    customDefToStatusJson(se, effect.weaponId ?? effect.id, NounType.WEAPON_STATUS),
   );
 }
 
@@ -685,7 +685,7 @@ export function gearSetEffectFromFriendly(gearSet: CustomGearSet): GameDataJson 
       name: gearSet.setName,
       rarity: gearSet.rarity,
       eventType: EventType.STATUS,
-      eventCategoryType: EventCategoryType.GEAR_SET_EFFECT,
+      eventIdType: NounType.GEAR_SET_EFFECT,
     },
     metadata: {
       originId: gearSetId,
@@ -726,7 +726,7 @@ export function gearSetStatusesFromFriendly(gearSet: CustomGearSet): GameDataJso
         },
         ...(ef.cooldownSeconds ? { cooldownSeconds: ef.cooldownSeconds } : {}),
         eventType: EventType.STATUS,
-        eventCategoryType: EventCategoryType.GEAR_SET_STATUS,
+        eventIdType: NounType.GEAR_SET_STATUS,
       },
       metadata: {
         originId: gearSetId,
@@ -751,7 +751,7 @@ export function gearEffectToFriendly(statuses: GameDataJson[], effectId: string,
 /** Convert CustomGearEffect → game data GearStatus JSONs. */
 export function gearEffectFromFriendly(effect: CustomGearEffect): GameDataJson[] {
   return effect.statusEvents.map(se =>
-    customDefToStatusJson(se, effect.gearSetId ?? effect.id, EventCategoryType.GEAR_SET_STATUS),
+    customDefToStatusJson(se, effect.gearSetId ?? effect.id, NounType.GEAR_SET_STATUS),
   );
 }
 
@@ -817,7 +817,7 @@ function statusJsonToCustomDef(json: GameDataJson): CustomStatusEventDef {
 }
 
 /** Convert a CustomStatusEventDef → game data status JSON. */
-function customDefToStatusJson(def: CustomStatusEventDef, originId: string, eventCategoryType: string): GameDataJson {
+function customDefToStatusJson(def: CustomStatusEventDef, originId: string, eventIdType: string): GameDataJson {
   const statusId = toGameDataId(def.name);
 
   // Build clause from stats
@@ -862,7 +862,7 @@ function customDefToStatusJson(def: CustomStatusEventDef, originId: string, even
         interactionType: def.stack.interactionType ?? StackInteractionType.NONE,
       },
       eventType: EventType.STATUS,
-      eventCategoryType,
+      eventIdType,
     },
     metadata: {
       originId,

@@ -4,7 +4,7 @@
     "name": "Nature Amp",
     "to": "TEAM",
     "eventType": "STATUS",
-    "eventCategoryType": "STATUS",
+    "eventIdType": "STATUS",
     "description": "Nature Amp applied to the team.",
     "duration": {
       "value": {

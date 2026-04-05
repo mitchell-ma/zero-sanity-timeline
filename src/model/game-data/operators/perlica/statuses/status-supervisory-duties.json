@@ -19,7 +19,7 @@
       "interactionType": "RESET"
     },
     "eventType": "STATUS",
-    "eventCategoryType": "TALENT",
+    "eventIdType": "TALENT",
     "description": "After Perlica applies Electrification, ATK +20% for 5s. Max 2 stacks."
   },
   "metadata": {

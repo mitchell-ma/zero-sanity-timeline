@@ -22,8 +22,10 @@
                 0.168,
                 0.196
               ],
-              "ofDeterminer": "THIS",
-              "of": "OPERATOR"
+              "of": {
+                "object": "OPERATOR",
+                "determiner": "THIS"
+              }
             }
           }
         }
@@ -50,7 +52,7 @@
     },
     "to": "ENEMY",
     "eventType": "STATUS",
-    "eventCategoryType": "WEAPON_STATUS"
+    "eventIdType": "WEAPON_STATUS"
   },
   "metadata": {
     "originId": "FINCHASER_3_0",

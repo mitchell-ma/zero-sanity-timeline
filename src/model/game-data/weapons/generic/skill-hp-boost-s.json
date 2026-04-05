@@ -23,8 +23,10 @@
                 0.396,
                 0.468
               ],
-              "ofDeterminer": "THIS",
-              "of": "OPERATOR"
+              "of": {
+                "object": "OPERATOR",
+                "determiner": "THIS"
+              }
             }
           },
           "objectId": "HP_BONUS"

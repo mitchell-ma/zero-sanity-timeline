@@ -9,7 +9,7 @@ import type { OverrideStore } from '../../consts/overrideTypes';
 import { buildOverrideKey } from '../overrideController';
 import { NounType } from '../../dsl/semantics';
 import { getAllSkillLabels } from '../gameDataStore';
-import { CombatSkillType, ColumnType, CritMode, DamageScalingStatType, DamageType, ElementType, EnemyTierType, StatType, TimelineSourceType } from '../../consts/enums';
+import { ColumnType, CritMode, DamageScalingStatType, DamageType, ElementType, EnemyTierType, StatType, TimelineSourceType } from '../../consts/enums';
 import { SkillLevel, Potential } from '../../consts/types';
 import { StatusDamageParams } from '../../model/calculation/damageFormulas';
 import { getModelEnemy } from './enemyRegistry';
@@ -65,7 +65,7 @@ export interface DamageTableRow {
   multiplier: number | null;
   /** Segment label (e.g. "1", "2") for multiplier lookup. */
   segmentLabel: string | undefined;
-  /** Skill name (CombatSkillType) for this tick. */
+  /** Skill name () for this tick. */
   skillName: string;
   /** Remaining boss HP after this tick's damage (can go negative). Null if HP unknown. */
   hpRemaining: number | null;
@@ -131,22 +131,22 @@ export interface DamageStatistics {
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 function getEventDisplayName(name: string): string {
-  return getAllSkillLabels()[name as CombatSkillType] ?? name;
+  return getAllSkillLabels()[name as string] ?? name;
 }
 
 function isUltEnhanced(name: string): boolean {
   return name.includes('_ENHANCED');
 }
 
-/** Map columnId to the CombatSkillType enum for damage bonus lookup. */
-function columnIdToSkillType(columnId: string): CombatSkillType {
+/** Map columnId to the skill NounType for damage bonus lookup. */
+function columnIdToSkillType(columnId: string): string {
   switch (columnId) {
-    case NounType.BASIC_ATTACK: return CombatSkillType.BASIC_ATTACK;
-    case NounType.BATTLE_SKILL: return CombatSkillType.BATTLE_SKILL;
-    case NounType.COMBO_SKILL: return CombatSkillType.COMBO_SKILL;
-    case NounType.ULTIMATE: return CombatSkillType.ULTIMATE;
-    case OPERATOR_COLUMNS.OTHER: return CombatSkillType.BASIC_ATTACK;
-    default: return CombatSkillType.BASIC_ATTACK;
+    case NounType.BASIC_ATTACK: return NounType.BASIC_ATTACK;
+    case NounType.BATTLE: return NounType.BATTLE;
+    case NounType.COMBO: return NounType.COMBO;
+    case NounType.ULTIMATE: return NounType.ULTIMATE;
+    case OPERATOR_COLUMNS.OTHER: return NounType.BASIC_ATTACK;
+    default: return NounType.BASIC_ATTACK;
   }
 }
 
@@ -154,8 +154,8 @@ function columnIdToSkillType(columnId: string): CombatSkillType {
 function getSkillLevel(columnId: string, props: LoadoutProperties): SkillLevel {
   switch (columnId) {
     case NounType.BASIC_ATTACK: return props.skills.basicAttackLevel as SkillLevel;
-    case NounType.BATTLE_SKILL: return props.skills.battleSkillLevel as SkillLevel;
-    case NounType.COMBO_SKILL: return props.skills.comboSkillLevel as SkillLevel;
+    case NounType.BATTLE: return props.skills.battleSkillLevel as SkillLevel;
+    case NounType.COMBO: return props.skills.comboSkillLevel as SkillLevel;
     case NounType.ULTIMATE: return props.skills.ultimateLevel as SkillLevel;
     default: return 12 as SkillLevel;
   }
@@ -456,7 +456,7 @@ export function buildDamageTableRows(
               } else {
                 multiplier = getSkillMultiplier(
                   operatorId,
-                  ev.id as CombatSkillType,
+                  ev.id as string,
                   damageSegIdx,
                   skillLevel,
                   potential,
@@ -585,7 +585,7 @@ export function buildDamageTableRows(
 
                 // Crit multiplier — unified via getFrameExpectation()
                 // Deterministic modes (NEVER/ALWAYS/EXPECTED) are authoritative over pins.
-                // Pins only matter for RANDOM and MANUAL.
+                // Pins only matter for MANUAL.
                 let frameCrit: boolean | undefined;
                 let expectedCrit: number;
                 const critSnapshot = earlySnapshot;
@@ -597,15 +597,10 @@ export function buildDamageTableRows(
                     frameCrit = true;
                   } else if (resolvedCritMode === CritMode.NEVER) {
                     frameCrit = false;
-                  } else if (resolvedCritMode === CritMode.MANUAL) {
-                    frameCrit = critPin ?? false;
-                  } else if (critPin !== undefined) {
-                    frameCrit = critPin;
                   } else {
-                    frameCrit = frame.isCrit;
+                    // MANUAL: use pin, default false
+                    frameCrit = critPin ?? false;
                   }
-                  // Note: isCrit is set by the pipeline (eventInterpretorController), not here.
-                  // The builder reads it but doesn't write it to avoid double-mutation.
 
                   // Unified: critMultiplier = 1 + critDamage × expectation
                   const expectation = getFrameExpectation(resolvedCritMode, critSnapshot, frameCrit, opData.critRate);
@@ -613,7 +608,7 @@ export function buildDamageTableRows(
                 }
 
                 // Finisher: applies when the event is a finisher attack during stagger break
-                const isFinisher = ev.id === CombatSkillType.FINISHER;
+                const isFinisher = ev.id === NounType.FINISHER;
                 const enemyTier = modelEnemy?.tier ?? EnemyTierType.COMMON;
 
                 // Link bonus depends on stacks and skill type (battle skill vs ultimate)

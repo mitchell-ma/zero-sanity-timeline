@@ -28,15 +28,19 @@
                   0.25,
                   0.25
                 ],
-                "ofDeterminer": "SOURCE",
-                "of": "OPERATOR"
+                "of": {
+                  "object": "OPERATOR",
+                  "determiner": "SOURCE"
+                }
               },
               "right": {
                 "verb": "IS",
                 "object": "STAT",
                 "objectId": "BASE_HP",
-                "ofDeterminer": "SOURCE",
-                "of": "OPERATOR"
+                "of": {
+                  "object": "OPERATOR",
+                  "determiner": "SOURCE"
+                }
               }
             },
             "unit": "FLAT"
@@ -65,7 +69,7 @@
       "interactionType": "RESET"
     },
     "eventType": "STATUS",
-    "eventCategoryType": "SKILL_STATUS",
+    "eventIdType": "SKILL_STATUS",
     "description": "Grants every teammate a Shield based on 18%-25% of Ember's Max HP for 10s."
   },
   "metadata": {

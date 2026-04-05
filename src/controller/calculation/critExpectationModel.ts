@@ -21,7 +21,7 @@ import { VerbType, NounType } from '../../dsl/semantics';
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from './valueResolver';
 import type { ValueNode } from '../../dsl/semantics';
 import type { TriggerIndex, TriggerDefEntry } from '../timeline/triggerIndex';
-import type { StatusEventDef } from '../timeline/statusTriggerCollector';
+import type { StatusEventDef } from '../timeline/eventQueueTypes';
 import { getAllOperatorStatuses } from '../../controller/gameDataStore';
 import { getAllWeaponStatuses } from '../../model/game-data/weaponStatusesStore';
 import { getAllGearStatuses } from '../../model/game-data/gearStatusesStore';
@@ -826,7 +826,6 @@ export function getFrameExpectation(
     case CritMode.NEVER:      return 0;
     case CritMode.ALWAYS:     return 1;
     case CritMode.EXPECTED:   return critSnapshot?.expectedCritRate ?? baseCritRate;
-    case CritMode.RANDOM:     return frameCrit ? 1 : 0;
     case CritMode.MANUAL:     return frameCrit ? 1 : 0;
   }
 }
@@ -848,7 +847,6 @@ export function getStatusExpectation(
       const dist = critSnapshot?.statusDistributions.get(statusId);
       return dist ? 1 - dist[0] : 1;
     }
-    case CritMode.RANDOM:     return frameCrit ? 1 : 0;
     case CritMode.MANUAL:     return frameCrit ? 1 : 0;
   }
 }

@@ -117,11 +117,11 @@ function buildViewOperatorFromJson(operatorId: string, opJson: Record<string, un
       defaultSegments: buildSegments(basicActivation, 0),
       triggerCondition: null,
     },
-    [NounType.BATTLE_SKILL]: {
+    [NounType.BATTLE]: {
       defaultSegments: buildSegments(battleActivation, battleCooldown),
       triggerCondition: null,
     },
-    [NounType.COMBO_SKILL]: {
+    [NounType.COMBO]: {
       triggerCondition: null,
     },
     [NounType.ULTIMATE]: {
@@ -140,15 +140,15 @@ function buildViewOperatorFromJson(operatorId: string, opJson: Record<string, un
   }
 
   // SP cost from JSON
-  if (skills[NounType.BATTLE_SKILL]) {
+  if (skills[NounType.BATTLE]) {
     const spCost = loadBattleSkillSpCost(opJson);
-    if (spCost > 0) skills[NounType.BATTLE_SKILL] = { ...skills[NounType.BATTLE_SKILL], skillPointCost: spCost };
+    if (spCost > 0) skills[NounType.BATTLE] = { ...skills[NounType.BATTLE], skillPointCost: spCost };
   }
 
   // Gauge gains
-  if (skills[NounType.COMBO_SKILL]) {
-    skills[NounType.COMBO_SKILL] = {
-      ...skills[NounType.COMBO_SKILL],
+  if (skills[NounType.COMBO]) {
+    skills[NounType.COMBO] = {
+      ...skills[NounType.COMBO],
       gaugeGain: gg.comboGaugeGain,
       teamGaugeGain: gg.comboTeamGaugeGain,
       ...(gg.comboGaugeGainByEnemies ? { gaugeGainByEnemies: gg.comboGaugeGainByEnemies } : {}),
@@ -156,10 +156,10 @@ function buildViewOperatorFromJson(operatorId: string, opJson: Record<string, un
   }
 
   // SP return notes from JSON (resolve via skillTypeMap)
-  const battleSkillId = typeMap[NounType.BATTLE_SKILL];
+  const battleSkillId = typeMap[NounType.BATTLE];
   const spReturnNotes = (battleSkillId ? opSkills?.[battleSkillId]?.spReturnNotes : undefined) as string[] | undefined;
-  if (skills[NounType.BATTLE_SKILL] && spReturnNotes?.length) {
-    skills[NounType.BATTLE_SKILL] = { ...skills[NounType.BATTLE_SKILL], spReturnNotes };
+  if (skills[NounType.BATTLE] && spReturnNotes?.length) {
+    skills[NounType.BATTLE] = { ...skills[NounType.BATTLE], spReturnNotes };
   }
 
   return {

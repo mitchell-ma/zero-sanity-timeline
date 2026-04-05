@@ -112,7 +112,7 @@ describe('J. P2 — Ultimate Energy Cost', () => {
 describe('I. P1 — BS Arts AMP +5%', () => {
   function placeBS_BA_and_getAmp(result: { current: AppResult }) {
     // Place BS at 2s
-    const bsCol = findColumn(result.current, SLOT_XAIHI, NounType.BATTLE_SKILL);
+    const bsCol = findColumn(result.current, SLOT_XAIHI, NounType.BATTLE);
     const bsPayload = getMenuPayload(result.current, bsCol!, 2 * FPS);
     act(() => { result.current.handleAddEvent(bsPayload.ownerId, bsPayload.columnId, bsPayload.atFrame, bsPayload.defaultSkill); });
     // Place BA at 5s (final strike triggers AMP)

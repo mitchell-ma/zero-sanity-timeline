@@ -4,7 +4,7 @@
     "name": "Choice Without Regrets",
     "level": 5,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
+    "eventIdType": "POTENTIAL",
     "description": "Battle skill Rigid Interdiction improved: Hitting an enemy while the shield is active returns 10 SP."
   },
   "metadata": {

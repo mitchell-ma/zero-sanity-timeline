@@ -48,7 +48,7 @@ function findTeamStatusColumn(app: AppResult) {
 }
 
 function addCombo(app: AppResult, atFrame: number) {
-  const comboCol = findColumn(app, SLOT_AKEKURI, NounType.COMBO_SKILL);
+  const comboCol = findColumn(app, SLOT_AKEKURI, NounType.COMBO);
   expect(comboCol).toBeDefined();
   const payload = getMenuPayload(app, comboCol!, atFrame);
   app.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);

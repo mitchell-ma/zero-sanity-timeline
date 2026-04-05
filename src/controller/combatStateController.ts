@@ -32,7 +32,6 @@ import {
   clearFrameOverrides,
   migrateOverrideKey,
   setPropertyOverride,
-  persistUnpinnedCrits,
   setCritPin,
   clearAllCritPins as clearAllCritPinsFromStore,
 } from './overrideController';
@@ -327,11 +326,5 @@ export class CombatStateController {
 
   setResourceConfig(state: CombatState, key: string, config: CombatState['resourceConfigs'][string]): CombatState {
     return { ...state, resourceConfigs: { ...state.resourceConfigs, [key]: config } };
-  }
-
-  /** Persist SIMULATION crit results into overrides (only for unpinned frames). */
-  persistCritResults(state: CombatState, resolvedCrits: Map<string, Map<number, Map<number, boolean>>>): CombatState {
-    const newOverrides = persistUnpinnedCrits(state.overrides, resolvedCrits);
-    return newOverrides === state.overrides ? state : { ...state, overrides: newOverrides };
   }
 }

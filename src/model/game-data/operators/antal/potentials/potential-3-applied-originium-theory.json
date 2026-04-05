@@ -4,7 +4,7 @@
     "name": "Applied Originium Theory",
     "level": 3,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
+    "eventIdType": "POTENTIAL",
     "description": "When an enemy with an active Focus debuff is defeated, return 15 SP."
   },
   "metadata": {

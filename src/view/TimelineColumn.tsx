@@ -125,7 +125,7 @@ function TimelineColumn({
       })()}
 
       {/* Combo disabled background */}
-      {col.columnId === NounType.COMBO_SKILL && !alwaysAvailableCombo && (() => {
+      {col.columnId === NounType.COMBO && !alwaysAvailableCombo && (() => {
         const enabled: { start: number; end: number }[] = [];
         for (const w of comboWindowEvents) {
           enabled.push({ start: w.startFrame, end: eventEndFrame(w) });
@@ -148,7 +148,7 @@ function TimelineColumn({
       })()}
 
       {/* SP insufficiency zones on battle columns */}
-      {col.columnId === NounType.BATTLE_SKILL && insufficiencyZones && insufficiencyZones.length > 0 && insufficiencyZones.map((zone, i) => (
+      {col.columnId === NounType.BATTLE && insufficiencyZones && insufficiencyZones.length > 0 && insufficiencyZones.map((zone, i) => (
         <div
           key={`sp-insuff-${i}`}
           className="sp-insufficient-zone"

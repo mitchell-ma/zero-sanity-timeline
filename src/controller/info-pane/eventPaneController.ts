@@ -1,4 +1,4 @@
-import { CombatSkillType, DamageFactorType, ElementType, ELEMENT_COLORS, ELEMENT_LABELS, StatusType } from '../../consts/enums';
+import { DamageFactorType, ElementType, ELEMENT_COLORS, ELEMENT_LABELS, StatusType } from '../../consts/enums';
 import { TimelineEvent, Operator, Enemy, SkillType, getAnimationDuration, eventDuration, eventEndFrame } from '../../consts/viewTypes';
 import { getAllSkillLabels, getAllStatusLabels, getAllInflictionLabels } from '../gameDataStore';
 import { REACTION_LABELS, PHYSICAL_INFLICTION_LABELS, PHYSICAL_STATUS_LABELS } from '../../model/channels';
@@ -148,7 +148,7 @@ export function resolveEventIdentity(
           triggerCondition = skill.triggerCondition;
           columnLabel = event.columnId.charAt(0).toUpperCase() + event.columnId.slice(1) + ' skill';
         }
-        if (event.columnId === NounType.COMBO_SKILL) {
+        if (event.columnId === NounType.COMBO) {
           const info = getComboTriggerInfo(op.id);
           if (info) {
             for (const pred of info.onTriggerClause) {
@@ -178,14 +178,14 @@ export function resolveEventIdentity(
       sourceColor = sourceSlot.operator.color;
     }
     if (event.sourceSkillName) {
-      sourceSkillLabel = getAllSkillLabels()[event.sourceSkillName as CombatSkillType]
+      sourceSkillLabel = getAllSkillLabels()[event.sourceSkillName as string]
         ?? getAllStatusLabels()[event.sourceSkillName as StatusType]
         ?? event.sourceSkillName;
     }
   }
 
   // Override skill name with combat label if available
-  const combatLabel = getAllSkillLabels()[event.name as CombatSkillType];
+  const combatLabel = getAllSkillLabels()[event.name as string];
   if (combatLabel) {
     skillName = combatLabel;
   } else if (getAllInflictionLabels()[event.name]) {
@@ -238,7 +238,7 @@ export function resolveComboChain(
   allProcessedEvents: readonly TimelineEvent[],
   slots: { slotId: string; operator: Operator | null }[],
 ): ComboChainLink[] | null {
-  if (event.columnId !== NounType.COMBO_SKILL) return null;
+  if (event.columnId !== NounType.COMBO) return null;
 
   // Find the combo activation window that contains this combo event
   const window = allProcessedEvents.find((e) =>
@@ -276,7 +276,7 @@ export function resolveComboChain(
     }
 
     const originalSkillLabel = bestMatch?.sourceSkillName
-      ? (getAllSkillLabels()[bestMatch.sourceSkillName as CombatSkillType]
+      ? (getAllSkillLabels()[bestMatch.sourceSkillName as string]
         ?? getAllStatusLabels()[bestMatch.sourceSkillName as StatusType]
         ?? bestMatch.sourceSkillName)
       : undefined;
@@ -301,7 +301,7 @@ export function resolveComboChain(
   } else {
     // Direct operator trigger (e.g. FINAL_STRIKE from basic attack)
     const skillLabel = window.sourceSkillName
-      ? (getAllSkillLabels()[window.sourceSkillName as CombatSkillType]
+      ? (getAllSkillLabels()[window.sourceSkillName as string]
         ?? getAllStatusLabels()[window.sourceSkillName as StatusType]
         ?? window.sourceSkillName)
       : undefined;
@@ -332,7 +332,7 @@ export function resolveSpReturn(
 
   const summary = computeSpReturnSummary(event, consumptionRecord);
   const slot = slots.find((s) => s.slotId === event.ownerId);
-  const spNotes = slot?.operator?.skills[NounType.BATTLE_SKILL]?.spReturnNotes ?? [];
+  const spNotes = slot?.operator?.skills[NounType.BATTLE]?.spReturnNotes ?? [];
 
   return { summary, spNotes };
 }
@@ -689,7 +689,7 @@ export function resolveEventDsl(
 
 /** Complete structured detail for the verbose event pane. */
 export interface EventFullDetail {
-  /** Skill ID (e.g. "FLAMING_CINDERS") */
+  /** Skill ID (e.g. "FLAMING_CINDERS_BATK") */
   skillId: string;
   /** Origin operator ID from the skill JSON */
   originId: string | null;
@@ -718,7 +718,7 @@ export interface EventFullDetail {
   }[];
   /** Metadata from JSON (dataSources, etc.) */
   metadata: Record<string, unknown> | null;
-  /** skillTypeMap entry for this skill (e.g. BASIC_ATTACK → FLAMING_CINDERS) */
+  /** skillTypeMap entry for this skill (e.g. BASIC_ATTACK → FLAMING_CINDERS_BATK) */
   skillTypeMapping: string | null;
 }
 

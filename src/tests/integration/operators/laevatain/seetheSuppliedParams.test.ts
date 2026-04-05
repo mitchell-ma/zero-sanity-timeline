@@ -33,7 +33,7 @@ function setup() {
 
 /** Find the Seethe menu item from the combo skill context menu. */
 function findSeetheItem(app: ReturnType<typeof useApp>, atFrame: number) {
-  const comboCol = findColumn(app, SLOT, NounType.COMBO_SKILL);
+  const comboCol = findColumn(app, SLOT, NounType.COMBO);
   expect(comboCol).toBeDefined();
   const items = buildContextMenu(app, comboCol!, atFrame);
   expect(items).not.toBeNull();
@@ -72,7 +72,7 @@ function placeSeetheAndGetUE(enemyHit: number) {
 
   // Verify the event was created with correct parameterValues
   const seetheEvents = result.current.allProcessedEvents.filter(
-    ev => ev.ownerId === SLOT && ev.columnId === NounType.COMBO_SKILL && ev.id === SEETHE_ID,
+    ev => ev.ownerId === SLOT && ev.columnId === NounType.COMBO && ev.id === SEETHE_ID,
   );
   expect(seetheEvents).toHaveLength(1);
   expect(seetheEvents[0].parameterValues).toEqual({ ENEMY_HIT: enemyHit });

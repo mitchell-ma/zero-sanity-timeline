@@ -38,7 +38,7 @@
     "name": "River's Daughter",
     "level": 2,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
+    "eventIdType": "POTENTIAL",
     "description": "Agility +{Agi:0}, Cryo DMG Dealt +{CrystDamageIncrease:0%}"
   },
   "metadata": {

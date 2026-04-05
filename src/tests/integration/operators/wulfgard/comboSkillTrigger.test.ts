@@ -82,7 +82,7 @@ describe('A. Activation Window', () => {
     placeHeatInfliction(result, 2);
 
     // Combo at 7s (5s after infliction at 2s) — within 6s window
-    const comboCol = findColumn(result.current, SLOT_WULFGARD, NounType.COMBO_SKILL);
+    const comboCol = findColumn(result.current, SLOT_WULFGARD, NounType.COMBO);
     expect(comboCol).toBeDefined();
 
     const menuItems = buildContextMenu(result.current, comboCol!, 7 * FPS);
@@ -100,7 +100,7 @@ describe('A. Activation Window', () => {
     placeHeatInfliction(result, 2);
 
     // Combo at 10s — beyond the 6s window
-    const comboCol = findColumn(result.current, SLOT_WULFGARD, NounType.COMBO_SKILL);
+    const comboCol = findColumn(result.current, SLOT_WULFGARD, NounType.COMBO);
     expect(comboCol).toBeDefined();
 
     const menuItems = buildContextMenu(result.current, comboCol!, 10 * FPS);
@@ -121,7 +121,7 @@ describe('B. Cooldown', () => {
 
     placeHeatInfliction(result, 1);
 
-    const comboCol = findColumn(result.current, SLOT_WULFGARD, NounType.COMBO_SKILL);
+    const comboCol = findColumn(result.current, SLOT_WULFGARD, NounType.COMBO);
     const payload = getMenuPayload(result.current, comboCol!, 3 * FPS);
     act(() => {
       result.current.handleAddEvent(
@@ -132,7 +132,7 @@ describe('B. Cooldown', () => {
 
     // Controller: cooldown segment exists and is ~20s (2400 frames)
     const combos = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.COMBO_SKILL,
+      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.COMBO,
     );
     expect(combos).toHaveLength(1);
     const cdSeg = combos[0].segments.find(
@@ -150,7 +150,7 @@ describe('B. Cooldown', () => {
 
     placeHeatInfliction(result, 1, 30);
 
-    const comboCol = findColumn(result.current, SLOT_WULFGARD, NounType.COMBO_SKILL);
+    const comboCol = findColumn(result.current, SLOT_WULFGARD, NounType.COMBO);
     const payload = getMenuPayload(result.current, comboCol!, 3 * FPS);
     act(() => {
       result.current.handleAddEvent(
@@ -185,7 +185,7 @@ describe('C. Combo Frame Effects', () => {
       ev => ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerId === ENEMY_OWNER_ID,
     ).length;
 
-    const comboCol = findColumn(result.current, SLOT_WULFGARD, NounType.COMBO_SKILL);
+    const comboCol = findColumn(result.current, SLOT_WULFGARD, NounType.COMBO);
     const payload = getMenuPayload(result.current, comboCol!, 3 * FPS);
     act(() => {
       result.current.handleAddEvent(
@@ -224,7 +224,7 @@ describe('C. Combo Frame Effects', () => {
 
     placeHeatInfliction(result, 1);
 
-    const comboCol = findColumn(result.current, SLOT_WULFGARD, NounType.COMBO_SKILL);
+    const comboCol = findColumn(result.current, SLOT_WULFGARD, NounType.COMBO);
     const payload = getMenuPayload(result.current, comboCol!, 3 * FPS);
     act(() => {
       result.current.handleAddEvent(
@@ -266,7 +266,7 @@ describe('D. Negative Triggers', () => {
     });
 
     // Combo should not be triggerable from physical infliction alone
-    const comboCol = findColumn(result.current, SLOT_WULFGARD, NounType.COMBO_SKILL);
+    const comboCol = findColumn(result.current, SLOT_WULFGARD, NounType.COMBO);
     expect(comboCol).toBeDefined();
 
     const menuItems = buildContextMenu(result.current, comboCol!, 3 * FPS);
@@ -288,7 +288,7 @@ describe('E. Multi-Operator Trigger', () => {
     const { result } = setupWulfgard();
 
     // Akekuri battle skill at 2s — applies Arts infliction
-    const akekuriBattleCol = findColumn(result.current, SLOT_AKEKURI, NounType.BATTLE_SKILL);
+    const akekuriBattleCol = findColumn(result.current, SLOT_AKEKURI, NounType.BATTLE);
     if (!akekuriBattleCol?.defaultEvent) return;
 
     const akekuriPayload = getMenuPayload(result.current, akekuriBattleCol, 2 * FPS);
@@ -300,7 +300,7 @@ describe('E. Multi-Operator Trigger', () => {
     });
 
     // Wulfgard combo at 5s — should trigger from Akekuri's infliction
-    const comboCol = findColumn(result.current, SLOT_WULFGARD, NounType.COMBO_SKILL);
+    const comboCol = findColumn(result.current, SLOT_WULFGARD, NounType.COMBO);
     const comboPayload = getMenuPayload(result.current, comboCol!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
@@ -311,7 +311,7 @@ describe('E. Multi-Operator Trigger', () => {
 
     // Controller: combo placed
     const combos = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.COMBO_SKILL,
+      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.COMBO,
     );
     expect(combos).toHaveLength(1);
 

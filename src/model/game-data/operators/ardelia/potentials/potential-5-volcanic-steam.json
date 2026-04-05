@@ -4,7 +4,7 @@
     "name": "Volcanic Steam",
     "level": 5,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
+    "eventIdType": "POTENTIAL",
     "description": "Combo skill Eruption Column improved: Length of cooldown -{-coolDown:0}s; DMG multiplier is increased to 1.2 times the original; duration of Corrosion applied +4s."
   },
   "metadata": {

@@ -37,7 +37,7 @@
     "name": "Passionate Idealist",
     "level": 2,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
+    "eventIdType": "POTENTIAL",
     "description": "Agility +{Agi:0}, Intellect +10."
   },
   "metadata": {

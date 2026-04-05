@@ -50,7 +50,7 @@ function setPotential(app: AppResult, potential: number) {
 }
 
 function addBattleSkill(app: AppResult, atFrame: number) {
-  const col = findColumn(app, SLOT_EMBER, NounType.BATTLE_SKILL);
+  const col = findColumn(app, SLOT_EMBER, NounType.BATTLE);
   expect(col).toBeDefined();
   const payload = getMenuPayload(app, col!, atFrame);
   app.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);

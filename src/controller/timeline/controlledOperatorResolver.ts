@@ -7,8 +7,9 @@
  *
  * Only one operator can be controlled at a time. The first operator (slot-0) starts controlled.
  */
+import { NounType, AdjectiveType } from '../../dsl/semantics';
 import { TimelineEvent } from '../../consts/viewTypes';
-import { CombatSkillType } from '../../consts/enums';
+import {  } from '../../consts/enums';
 
 
 interface ControlSegment {
@@ -31,7 +32,7 @@ export function resolveControlledOperator(
   const transferPoints: { frame: number; slotId: string }[] = [];
 
   for (const ev of events) {
-    if (ev.id === CombatSkillType.CONTROL) {
+    if (ev.id === NounType.CONTROL) {
       transferPoints.push({ frame: ev.startFrame, slotId: ev.ownerId });
     }
   }

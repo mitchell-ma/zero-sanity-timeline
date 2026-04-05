@@ -4,8 +4,9 @@
  * V2: Stores game data JSON (OperatorSkill format) with a wrapper for id/associations.
  * The editor still works with CustomSkill via adapters.
  */
+import { NounType, AdjectiveType } from '../../dsl/semantics';
 import type { CustomSkill } from '../../model/custom/customSkillTypes';
-import { CombatSkillType } from '../../consts/enums';
+import {  } from '../../consts/enums';
 import { checkIdConflict, loadGameDataArray, saveGameDataArray, STORAGE_KEYS } from '../../utils/customContentStorage';
 import { removeAllLinksForSkill } from './customSkillLinkController';
 import { skillToFriendly, skillFromFriendly } from './gameDataAdapters';
@@ -142,7 +143,7 @@ export function getDefaultCustomSkill(): CustomSkill {
   return {
     id: `skill_${Date.now()}`,
     name: '',
-    combatSkillType: CombatSkillType.BASIC_ATTACK,
+    combatSkillType: NounType.BASIC_ATTACK,
     durationSeconds: 1,
   };
 }

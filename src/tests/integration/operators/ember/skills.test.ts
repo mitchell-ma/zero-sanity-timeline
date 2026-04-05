@@ -75,7 +75,7 @@ function setupEmber() {
 describe('A. Core Skill Placement', () => {
   it('A1: battle skill placed in BATTLE_SKILL column', () => {
     const { result } = setupEmber();
-    const col = findColumn(result.current, SLOT_EMBER, NounType.BATTLE_SKILL);
+    const col = findColumn(result.current, SLOT_EMBER, NounType.BATTLE);
     expect(col).toBeDefined();
 
     // Context menu layer
@@ -92,7 +92,7 @@ describe('A. Core Skill Placement', () => {
 
     // Controller layer
     const battles = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_EMBER && ev.columnId === NounType.BATTLE_SKILL,
+      (ev) => ev.ownerId === SLOT_EMBER && ev.columnId === NounType.BATTLE,
     );
     expect(battles).toHaveLength(1);
     expect(battles[0].name).toBe(BATTLE_SKILL_ID);
@@ -104,7 +104,7 @@ describe('A. Core Skill Placement', () => {
     // Combo trigger is enemy attacking controlled operator -- use freeform to bypass
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
-    const col = findColumn(result.current, SLOT_EMBER, NounType.COMBO_SKILL);
+    const col = findColumn(result.current, SLOT_EMBER, NounType.COMBO);
     expect(col).toBeDefined();
 
     const menuItems = buildContextMenu(result.current, col!, 5 * FPS);
@@ -120,7 +120,7 @@ describe('A. Core Skill Placement', () => {
 
     // Controller layer
     const combos = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_EMBER && ev.columnId === NounType.COMBO_SKILL,
+      (ev) => ev.ownerId === SLOT_EMBER && ev.columnId === NounType.COMBO,
     );
     expect(combos).toHaveLength(1);
     expect(combos[0].name).toBe(COMBO_SKILL_ID);
@@ -167,7 +167,7 @@ describe('A. Core Skill Placement', () => {
 describe('B. Battle Skill Mechanics', () => {
   it('B1: battle skill deals heat damage (frames processed without crash)', () => {
     const { result } = setupEmber();
-    const col = findColumn(result.current, SLOT_EMBER, NounType.BATTLE_SKILL);
+    const col = findColumn(result.current, SLOT_EMBER, NounType.BATTLE);
     expect(col).toBeDefined();
 
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
@@ -179,7 +179,7 @@ describe('B. Battle Skill Mechanics', () => {
 
     // Controller: battle skill processed with frames intact
     const battles = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_EMBER && ev.columnId === NounType.BATTLE_SKILL,
+      (ev) => ev.ownerId === SLOT_EMBER && ev.columnId === NounType.BATTLE,
     );
     expect(battles).toHaveLength(1);
     // Frames carry the heat damage effects; verify they exist
@@ -191,7 +191,7 @@ describe('B. Battle Skill Mechanics', () => {
 
   it('B2: battle skill applies knock down physical status', () => {
     const { result } = setupEmber();
-    const col = findColumn(result.current, SLOT_EMBER, NounType.BATTLE_SKILL);
+    const col = findColumn(result.current, SLOT_EMBER, NounType.BATTLE);
     expect(col).toBeDefined();
 
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
@@ -203,7 +203,7 @@ describe('B. Battle Skill Mechanics', () => {
 
     // Controller: battle skill event has frames that include knock_down effects
     const battles = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_EMBER && ev.columnId === NounType.BATTLE_SKILL,
+      (ev) => ev.ownerId === SLOT_EMBER && ev.columnId === NounType.BATTLE,
     );
     expect(battles).toHaveLength(1);
     // Verify the event was processed without crashing (knock down is applied via frames)
@@ -269,7 +269,7 @@ describe('C. Ultimate Mechanics', () => {
 describe('D. Talent-Derived Statuses', () => {
   it('D1: battle skill triggers Inflamed for the Assault on operator', () => {
     const { result } = setupEmber();
-    const col = findColumn(result.current, SLOT_EMBER, NounType.BATTLE_SKILL);
+    const col = findColumn(result.current, SLOT_EMBER, NounType.BATTLE);
     expect(col).toBeDefined();
 
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
@@ -306,7 +306,7 @@ describe('D. Talent-Derived Statuses', () => {
     // Freeform to bypass combo trigger requirement
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
-    const col = findColumn(result.current, SLOT_EMBER, NounType.COMBO_SKILL);
+    const col = findColumn(result.current, SLOT_EMBER, NounType.COMBO);
     expect(col).toBeDefined();
 
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
@@ -331,7 +331,7 @@ describe('D. Talent-Derived Statuses', () => {
 describe('E. View Layer', () => {
   it('E1: battle skill visible in presentation', () => {
     const { result } = setupEmber();
-    const col = findColumn(result.current, SLOT_EMBER, NounType.BATTLE_SKILL);
+    const col = findColumn(result.current, SLOT_EMBER, NounType.BATTLE);
     expect(col).toBeDefined();
 
     const payload = getMenuPayload(result.current, col!, 5 * FPS);

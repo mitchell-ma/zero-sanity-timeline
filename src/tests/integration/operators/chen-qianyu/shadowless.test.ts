@@ -6,7 +6,7 @@
  * Chen Qianyu P1 — Shadowless Integration Test
  *
  * P1 (Shadowless): "DMG Dealt +20% to enemies below 50% HP."
- *   Self-applying status triggered by ENEMY HAVE HP AT_MOST 0.5.
+ *   Self-applying status triggered by ENEMY HAVE HP LESS_THAN_EQUAL 0.5.
  *   Gated by HAVE POTENTIAL >= 1.
  *
  * Three-layer verification:
@@ -59,7 +59,7 @@ function findMatchingColumn(app: AppResult, ownerId: string, matchId: string) {
 }
 
 function addBattleSkill(app: AppResult, atFrame: number) {
-  const col = findColumn(app, SLOT_CHEN, NounType.BATTLE_SKILL);
+  const col = findColumn(app, SLOT_CHEN, NounType.BATTLE);
   expect(col).toBeDefined();
   const payload = getMenuPayload(app, col!, atFrame);
   app.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);

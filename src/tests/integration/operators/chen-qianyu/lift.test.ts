@@ -62,7 +62,7 @@ describe('Chen Qianyu — Vulnerable → Lift physical status', () => {
     const { result } = setupChen();
 
     // ── Context menu: verify battle skill column exists and menu is available ──
-    const battleCol = findColumn(result.current, SLOT_CHEN, NounType.BATTLE_SKILL);
+    const battleCol = findColumn(result.current, SLOT_CHEN, NounType.BATTLE);
     expect(battleCol).toBeDefined();
     expect(battleCol!.defaultEvent).toBeDefined();
 
@@ -72,7 +72,7 @@ describe('Chen Qianyu — Vulnerable → Lift physical status', () => {
 
     // ── First battle skill at t=2s via context menu ──
     act(() => {
-      addViaContextMenu(result.current, SLOT_CHEN, NounType.BATTLE_SKILL, 2 * FPS);
+      addViaContextMenu(result.current, SLOT_CHEN, NounType.BATTLE, 2 * FPS);
     });
 
     // Controller layer: Enemy should have exactly 1 Vulnerable infliction
@@ -89,7 +89,7 @@ describe('Chen Qianyu — Vulnerable → Lift physical status', () => {
 
     // ── Second battle skill while Vulnerable is still active via context menu ──
     act(() => {
-      addViaContextMenu(result.current, SLOT_CHEN, NounType.BATTLE_SKILL, 4 * FPS);
+      addViaContextMenu(result.current, SLOT_CHEN, NounType.BATTLE, 4 * FPS);
     });
 
     // Controller layer: Enemy should now have 2 Vulnerable infliction stacks

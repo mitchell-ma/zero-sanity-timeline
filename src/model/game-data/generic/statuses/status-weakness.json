@@ -11,7 +11,7 @@
       "interactionType": "RESET"
     },
     "eventType": "STATUS",
-    "eventCategoryType": "STATUS",
+    "eventIdType": "STATUS",
     "description": "Reduces damage dealt by enemy."
   },
   "metadata": {

@@ -14,20 +14,20 @@
  */
 
 import { renderHook, act } from '@testing-library/react';
-import { NounType } from '../../../dsl/semantics';
-import { useApp } from '../../../app/useApp';
-import { buildColumnContextMenu, ColumnContextMenuContext } from '../../../controller/timeline/contextMenuController';
-import { INFLICTION_COLUMNS, ENEMY_OWNER_ID } from '../../../model/channels';
-import { ColumnType, InteractionModeType, EventStatusType } from '../../../consts/enums';
-import { FPS } from '../../../utils/timeline';
-import { eventDuration } from '../../../consts/viewTypes';
-import type { MiniTimeline, ContextMenuItem } from '../../../consts/viewTypes';
-import { getEnabledStatusEvents } from '../../../controller/gameDataStore';
-import { computeTimelinePresentation } from '../../../controller/timeline/eventPresentationController';
+import { NounType } from '../../../../dsl/semantics';
+import { useApp } from '../../../../app/useApp';
+import { buildColumnContextMenu, ColumnContextMenuContext } from '../../../../controller/timeline/contextMenuController';
+import { INFLICTION_COLUMNS, ENEMY_OWNER_ID } from '../../../../model/channels';
+import { ColumnType, InteractionModeType, EventStatusType } from '../../../../consts/enums';
+import { FPS } from '../../../../utils/timeline';
+import { eventDuration } from '../../../../consts/viewTypes';
+import type { MiniTimeline, ContextMenuItem } from '../../../../consts/viewTypes';
+import { getEnabledStatusEvents } from '../../../../controller/gameDataStore';
+import { computeTimelinePresentation } from '../../../../controller/timeline/eventPresentationController';
 
 /* eslint-disable @typescript-eslint/no-require-imports */
-const MF_COLUMN_ID: string = require('../../../model/game-data/operators/laevatain/statuses/status-melting-flame.json').properties.id;
-const SH_COLUMN_ID: string = require('../../../model/game-data/operators/laevatain/statuses/status-scorching-heart.json').properties.id;
+const MF_COLUMN_ID: string = require('../../../../model/game-data/operators/laevatain/statuses/status-melting-flame.json').properties.id;
+const SH_COLUMN_ID: string = require('../../../../model/game-data/operators/laevatain/statuses/status-scorching-heart.json').properties.id;
 /* eslint-enable @typescript-eslint/no-require-imports */
 
 const SLOT_LAEVATAIN = 'slot-0';
@@ -104,7 +104,7 @@ describe('Final Strike → Melting Flame exchange timing', () => {
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
     // Context menu: add Akekuri battle skill at 2s
-    const battleCol = findColumn(result.current, SLOT_AKEKURI, NounType.BATTLE_SKILL);
+    const battleCol = findColumn(result.current, SLOT_AKEKURI, NounType.BATTLE);
     expect(battleCol).toBeDefined();
     const battleMenu = buildContextMenu(result.current, battleCol!, 2 * FPS);
     expect(battleMenu).not.toBeNull();
@@ -140,7 +140,7 @@ describe('Final Strike → Melting Flame exchange timing', () => {
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
     // Context menu: add only the battle skill
-    const battleCol = findColumn(result.current, SLOT_AKEKURI, NounType.BATTLE_SKILL);
+    const battleCol = findColumn(result.current, SLOT_AKEKURI, NounType.BATTLE);
     expect(battleCol).toBeDefined();
     const menu = buildContextMenu(result.current, battleCol!, 2 * FPS);
     expect(menu).not.toBeNull();
@@ -161,7 +161,7 @@ describe('4 Akekuri BS + BATK Final Strike → Melting Flame IV → Scorching He
     const { result } = renderHook(() => useApp());
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
-    const battleCol = findColumn(result.current, SLOT_AKEKURI, NounType.BATTLE_SKILL);
+    const battleCol = findColumn(result.current, SLOT_AKEKURI, NounType.BATTLE);
     const basicCol = findColumn(result.current, SLOT_AKEKURI, NounType.BASIC_ATTACK);
     expect(battleCol).toBeDefined();
     expect(basicCol).toBeDefined();
@@ -250,7 +250,7 @@ describe('4 Akekuri BS + BATK Final Strike → Melting Flame IV → Scorching He
     const { result } = renderHook(() => useApp());
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
-    const battleCol = findColumn(result.current, SLOT_AKEKURI, NounType.BATTLE_SKILL);
+    const battleCol = findColumn(result.current, SLOT_AKEKURI, NounType.BATTLE);
     const basicCol = findColumn(result.current, SLOT_AKEKURI, NounType.BASIC_ATTACK);
 
     // Context menu: 3 battle skills

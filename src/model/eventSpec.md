@@ -77,8 +77,10 @@ Subjects use DeterminerType + NounType. e.g. `THIS OPERATOR`, `ANY OPERATOR`, `E
 | Value | Meaning |
 |-------|---------|
 | `EXACTLY` | == N |
-| `AT_LEAST` | >= N |
-| `AT_MOST` | <= N |
+| `GREATER_THAN` | > N |
+| `GREATER_THAN_EQUAL` | >= N |
+| `LESS_THAN` | < N |
+| `LESS_THAN_EQUAL` | <= N |
 
 ### Interaction
 
@@ -91,7 +93,7 @@ interface Interaction {
   negated?: boolean;                   // NOT — "IS NOT ACTIVE"
   object: ObjectType;
   objectId?: string;                   // specific identifier (StatusType, skill name, etc.)
-  cardinalityConstraint?: CardinalityConstraintType;  // EXACTLY, AT_LEAST, AT_MOST
+  cardinalityConstraint?: CardinalityConstraintType;  // EXACTLY, GREATER_THAN_EQUAL, LESS_THAN_EQUAL, etc.
   cardinality?: number;                // the count N in a cardinality assertion
   stacks?: number;                     // stacks to apply/consume
   element?: string;                    // element filter
@@ -516,7 +518,7 @@ the infliction and applies Melting Flame to Laevatain (PERFORM_ALL with output r
       "effects": [
         {
           "verb": "PERFORM_ALL",
-          "cardinalityConstraint": "AT_MOST",
+          "cardinalityConstraint": "LESS_THAN_EQUAL",
           "cardinality": "MAX",
           "effects": [
             { "verb": "ABSORB", "cardinality": 1, "object": "INFLICTION", "element": "HEAT", "fromObject": "ENEMY" },
@@ -579,7 +581,7 @@ Provides Heat Resistance Ignore scaling by talent level.
           "verb": "HAVE",
           "object": "INFLICTION",
           "objectId": "ELECTRIC",
-          "cardinalityConstraint": "AT_LEAST",
+          "cardinalityConstraint": "GREATER_THAN_EQUAL",
           "cardinality": 2
         }
       ],
@@ -639,7 +641,7 @@ Provides Heat Resistance Ignore scaling by talent level.
           "verb": "HAVE",
           "object": "INFLICTION",
           "objectId": "NATURE",
-          "cardinalityConstraint": "AT_LEAST",
+          "cardinalityConstraint": "GREATER_THAN_EQUAL",
           "cardinality": 2
         }
       ],
@@ -737,7 +739,7 @@ Provides Heat Resistance Ignore scaling by talent level.
           "verb": "HAVE",
           "object": "INFLICTION",
           "objectId": "HEAT",
-          "cardinalityConstraint": "AT_LEAST",
+          "cardinalityConstraint": "GREATER_THAN_EQUAL",
           "cardinality": 2
         }
       ],
@@ -1171,7 +1173,7 @@ Reads as: "Perform all at most MAX times: absorb 1 heat infliction from enemy, a
   "effects": [
     {
       "verb": "PERFORM_ALL",
-      "cardinalityConstraint": "AT_MOST",
+      "cardinalityConstraint": "LESS_THAN_EQUAL",
       "cardinality": "MAX",
       "effects": [
         {
@@ -1203,7 +1205,7 @@ Skills can have variants that are available under specific conditions. The namin
 | Prefix | Meaning | Clause condition |
 |--------|---------|-----------------|
 | **Enhanced** | Active during ultimate | `THIS_OPERATOR's ULTIMATE IS ACTIVE` |
-| **Empowered** | Requires consuming a status event or resource (e.g. stacks, reaction) | `THIS_OPERATOR HAVE STATUS <X> AT_LEAST <N>` or similar |
+| **Empowered** | Requires consuming a status event or resource (e.g. stacks, reaction) | `THIS_OPERATOR HAVE STATUS <X> GREATER_THAN_EQUAL <N>` or similar |
 
 Enhanced and Empowered are combinable (e.g. `ENHANCED_EMPOWERED_BATTLE_SKILL` — during ultimate AND consuming stacks).
 
@@ -1276,7 +1278,7 @@ The adjective (`COMBO`, `DODGE`, `ANIMATION`) determines the chaining rules the 
           "verb": "HAVE",
           "object": "STATUS",
           "objectId": "MELTING_FLAME",
-          "cardinalityConstraint": "AT_LEAST",
+          "cardinalityConstraint": "GREATER_THAN_EQUAL",
           "cardinality": 4
         }
       ],
@@ -1298,7 +1300,7 @@ The adjective (`COMBO`, `DODGE`, `ANIMATION`) determines the chaining rules the 
       "cardinality": 25,
       "conditions": {
         "enemiesHit": {
-          "cardinalityConstraint": "AT_LEAST",
+          "cardinalityConstraint": "GREATER_THAN_EQUAL",
           "cardinality": 1
         }
       }
@@ -1310,7 +1312,7 @@ The adjective (`COMBO`, `DODGE`, `ANIMATION`) determines the chaining rules the 
       "cardinality": 30,
       "conditions": {
         "enemiesHit": {
-          "cardinalityConstraint": "AT_LEAST",
+          "cardinalityConstraint": "GREATER_THAN_EQUAL",
           "cardinality": 2
         }
       }
@@ -1322,7 +1324,7 @@ The adjective (`COMBO`, `DODGE`, `ANIMATION`) determines the chaining rules the 
       "cardinality": 35,
       "conditions": {
         "enemiesHit": {
-          "cardinalityConstraint": "AT_LEAST",
+          "cardinalityConstraint": "GREATER_THAN_EQUAL",
           "cardinality": 3
         }
       }

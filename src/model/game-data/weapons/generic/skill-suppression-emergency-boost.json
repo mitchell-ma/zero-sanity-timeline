@@ -6,7 +6,8 @@
           "subjectDeterminer": "THIS",
           "subject": "OPERATOR",
           "verb": "PERFORM",
-          "object": "BATTLE_SKILL"
+          "object": "SKILL",
+          "objectId": "BATTLE"
         }
       ],
       "effects": [

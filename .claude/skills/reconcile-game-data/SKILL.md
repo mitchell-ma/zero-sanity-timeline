@@ -380,7 +380,7 @@ Frame clauseType: FIRST_MATCH
   clause[0]: unconditional
     DEAL DAMAGE, DEAL STAGGER, etc. (always fires — FIRST_MATCH skips unconditional clauses)
 
-  clause[1]: ENEMY_HIT AT_LEAST 2, CONTROLLED OPERATOR HAVE FULL HP
+  clause[1]: ENEMY_HIT GREATER_THAN_EQUAL 2, CONTROLLED OPERATOR HAVE FULL HP
     RECOVER HP TO ANY OPERATOR WITH
       filter { objectQualifier: LOWEST, objectId: HP, object: STAT }
       value ADD(
@@ -388,7 +388,7 @@ Frame clauseType: FIRST_MATCH
         MULT(VARY_BY TALENT_LEVEL [0, 0.6, 0.9], ValueStat INTELLECT OF THIS OPERATOR)
       )
 
-  clause[2]: ENEMY_HIT AT_LEAST 2, CONTROLLED OPERATOR NOT_HAVE FULL HP
+  clause[2]: ENEMY_HIT GREATER_THAN_EQUAL 2, CONTROLLED OPERATOR NOT_HAVE FULL HP
     RECOVER HP TO CONTROLLED OPERATOR WITH
       value ADD(
         VARY_BY TALENT_LEVEL [0, 72, 108] OF THIS OPERATOR,
@@ -588,7 +588,7 @@ Skills can declare `suppliedParameters` — values the user supplies when placin
 ```json
 {
   "subject": "PARAMETER",
-  "verb": "AT_LEAST",
+  "verb": "GREATER_THAN_EQUAL",
   "object": "ENEMY_HIT",
   "with": { "value": { "verb": "IS", "value": 2 } }
 }
@@ -622,75 +622,19 @@ Skills can declare `suppliedParameters` — values the user supplies when placin
 
 ## Integration test strategy
 
-Integration tests exercise the full pipeline through `useApp` — placing events via `handleAddEvent` and verifying results through `allProcessedEvents`.
+**Load the `add-integration-test` skill before writing any integration tests.** It contains the full guide for structure, helpers, rules, and examples.
 
-### Test categories to cover
+### What to test per operator
 
-For each operator, write tests in these categories:
-
-**A. Core Skill Placement** — Each skill type (basic, battle, combo, ultimate) places correctly in its column.
-
-**B. Infliction & Reaction Pipeline** — Skills that apply infliction produce the correct element on the enemy. Ultimate forced reactions appear on the enemy. Combo skill triggers from the correct condition.
-
-**C. Combo Trigger Conditions** — Verify the EXACT trigger: "any operator applies arts infliction" vs "this operator applies heat infliction" vs "enemy has combustion." Test with own infliction AND teammate infliction.
-
-**D. Empowered Variant Activation** — Empowered variant is disabled when conditions aren't met. Enabled when they are. Test with each valid reaction/status type. Test that irrelevant statuses don't enable it.
-
-**E. Talent Effects** — Talents trigger from the correct event. Duration matches. Stacking behavior (RESET vs STACK) works. Passive effects (stat modifiers, AMP, damage bonus) are present on the status event.
-
-**F. Potential-Gated Effects** — Test at potential N-1 (should NOT fire) and potential N (should fire). Use `handleStatsChange` to set potential:
-```typescript
-const props = result.current.loadoutProperties[SLOT_ID];
-act(() => {
-  result.current.handleStatsChange(SLOT_ID, {
-    ...props,
-    operator: { ...props.operator, potential: N },
-  });
-});
-```
-
-**G. Cross-Mechanic Chains** — Full rotation tests that exercise the complete interaction chain. E.g.: "ult forces Combustion → triggers Scorching Fangs → next empowered BS consumes Combustion + returns SP + resets SF duration + applies SF Minor to teammates + P5 ult resets combo CD."
-
-**H. Mutual Exclusivity** — Normal vs empowered variant differences. E.g.: normal BS applies infliction, empowered does NOT. Empowered has more frames. Verify the correct variant fires based on conditions.
-
-**I. Consume Priority** — When multiple valid targets exist, verify the correct one is consumed. Use `FIRST_MATCH` clauseType ordering. E.g.: "both Combustion and Electrification → consume Combustion."
-
-### Test patterns
-
-**Freeform setup + strict skill placement:**
-Place enemy reactions/inflictions via freeform (`handleAddEvent` on `ENEMY_OWNER_ID`), then place skill events strictly on operator columns.
-
-**Checking activation/warnings:**
-```typescript
-const battles = result.current.allProcessedEvents.filter(
-  ev => ev.ownerId === SLOT && ev.columnId === SKILL_COLUMNS.BATTLE,
-);
-expect(battles[0].warnings ?? []).toHaveLength(0); // no activation warnings
-```
-
-**Checking consumed reactions:**
-```typescript
-const consumed = result.current.allProcessedEvents.filter(
-  ev => ev.columnId === REACTION_COLUMNS.COMBUSTION &&
-    ev.ownerId === ENEMY_OWNER_ID &&
-    ev.eventStatus === EventStatusType.CONSUMED,
-);
-```
-
-**Checking derived status events:**
-```typescript
-const sf = result.current.allProcessedEvents.filter(
-  ev => ev.ownerId === SLOT && ev.name === 'OPERATOR_TALENT1_NAME',
-);
-expect(sf.length).toBeGreaterThanOrEqual(1);
-expect(eventDuration(sf[0])).toBeGreaterThanOrEqual(10 * FPS);
-```
-
-### What NOT to test
-
-- **Exact config values** — don't hardcode multiplier arrays or SP amounts. The JSON config is the source of truth. Test structure and behavior, not values.
-- **String literals** — use enum constants (`VerbType.CONSUME`, `NounType.REACTION`, `StatusType.COMBUSTION`, `SKILL_COLUMNS.BATTLE`, etc.) for all comparisons.
-- **Engine internals** — test through the public `useApp` API, not internal controller methods.
+- **Skill placement** — each skill type places correctly with expected segments/duration
+- **Infliction/reaction pipeline** — skills produce correct element on enemy, forced reactions appear
+- **Combo triggers** — exact trigger condition (own vs teammate infliction, specific element)
+- **Empowered activation** — disabled when conditions unmet, enabled when met, irrelevant statuses don't enable
+- **Talents** — trigger from correct source, correct duration/stacks/statusValue, RESET vs STACK
+- **Potentials** — test at N-1 (should NOT fire) and N (should fire)
+- **Cross-mechanic chains** — full rotation exercising the complete interaction chain
+- **Mutual exclusivity** — normal vs empowered variant differences
+- **Consume priority** — correct target consumed when multiple valid targets exist
 
 ## Operator skill skeleton generation (new operators)
 

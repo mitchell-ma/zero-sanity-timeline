@@ -4,7 +4,7 @@
     "name": "Tundra Aegis",
     "level": 4,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
+    "eventIdType": "POTENTIAL",
     "description": "DEF +{Def:0}, Will +{Will:0}."
   },
   "metadata": {

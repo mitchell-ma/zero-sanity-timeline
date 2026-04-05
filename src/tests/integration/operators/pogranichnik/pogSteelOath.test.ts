@@ -152,7 +152,7 @@ describe('Pogranichnik Steel Oath — integration through useApp', () => {
     });
 
     const pogUltCol = findColumn(result.current, SLOT_1, NounType.ULTIMATE);
-    const pogComboCol = findColumn(result.current, SLOT_1, NounType.COMBO_SKILL);
+    const pogComboCol = findColumn(result.current, SLOT_1, NounType.COMBO);
 
     // Pogranichnik ult at 0s → creates Steel Oath (5 stacks)
     const ultPayload = getMenuPayload(result.current, pogUltCol!, 0);
@@ -186,7 +186,7 @@ describe('Pogranichnik Steel Oath — integration through useApp', () => {
     });
 
     const pogUltCol = findColumn(result.current, SLOT_1, NounType.ULTIMATE);
-    const pogComboCol = findColumn(result.current, SLOT_1, NounType.COMBO_SKILL);
+    const pogComboCol = findColumn(result.current, SLOT_1, NounType.COMBO);
 
     // Pogranichnik ult at 0s → creates Steel Oath (5 stacks)
     const ultPayload = getMenuPayload(result.current, pogUltCol!, 0);
@@ -240,7 +240,7 @@ describe('Pogranichnik Steel Oath — integration through useApp', () => {
     });
 
     const pogUltCol = findColumn(result.current, SLOT_1, NounType.ULTIMATE);
-    const chenBattleCol = findColumn(result.current, SLOT_2, NounType.BATTLE_SKILL);
+    const chenBattleCol = findColumn(result.current, SLOT_2, NounType.BATTLE);
 
     // ── Context menu layer ──────────────────────────────────────────────
     const chenMenu = buildContextMenu(result.current, chenBattleCol!, 3 * FPS);
@@ -281,7 +281,7 @@ describe('Pogranichnik Steel Oath — integration through useApp', () => {
     const { result } = setupWithPogranichnik();
     act(() => { setUltimateEnergyToMax(result.current, SLOT_1, 1); });
     const pogUltCol = findColumn(result.current, SLOT_1, NounType.ULTIMATE);
-    const pogComboCol = findColumn(result.current, SLOT_1, NounType.COMBO_SKILL);
+    const pogComboCol = findColumn(result.current, SLOT_1, NounType.COMBO);
 
     act(() => {
       result.current.setInteractionMode(InteractionModeType.FREEFORM);

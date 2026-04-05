@@ -94,7 +94,7 @@ describe('B. maxSkills=1 enforcement', () => {
     const { result } = setupWulfgard();
     placeHeatInfliction(result, 1);
 
-    const comboCol = findColumn(result.current, SLOT_WULFGARD, NounType.COMBO_SKILL);
+    const comboCol = findColumn(result.current, SLOT_WULFGARD, NounType.COMBO);
     expect(comboCol).toBeDefined();
 
     // First combo should be available
@@ -112,7 +112,7 @@ describe('B. maxSkills=1 enforcement', () => {
 
     // Verify combo exists
     const combos = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.COMBO_SKILL,
+      (ev) => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.COMBO,
     );
     expect(combos).toHaveLength(1);
   });
@@ -121,7 +121,7 @@ describe('B. maxSkills=1 enforcement', () => {
     const { result } = setupWulfgard();
     placeHeatInfliction(result, 1);
 
-    const comboCol = findColumn(result.current, SLOT_WULFGARD, NounType.COMBO_SKILL);
+    const comboCol = findColumn(result.current, SLOT_WULFGARD, NounType.COMBO);
 
     // Place first combo
     const payload = getMenuPayload(result.current, comboCol!, 3 * FPS);

@@ -4,7 +4,7 @@
     "name": "Origin of Admiration",
     "level": 1,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
+    "eventIdType": "POTENTIAL",
     "description": "Battle skill Crimson Shadow and combo skill Moment of Blazing Shadow improved: The DMG Multipliers of these skills are increased to 1.15 times of the original. Wolven Ambrage of the battle skill also returns 10 SP after hitting the enemy."
   },
   "metadata": {

@@ -9,7 +9,7 @@
       "interactionType": "RESET"
     },
     "eventType": "STATUS",
-    "eventCategoryType": "STATUS",
+    "eventIdType": "STATUS",
     "description": "Absorbs incoming damage before HP is reduced."
   },
   "metadata": {

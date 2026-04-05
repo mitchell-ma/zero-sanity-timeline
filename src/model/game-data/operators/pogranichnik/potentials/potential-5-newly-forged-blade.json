@@ -18,12 +18,12 @@
     "name": "Newly Forged Blade",
     "level": 5,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
+    "eventIdType": "POTENTIAL",
     "description": "Combo skill Full Moon Slash improved: Length of cooldown {coolDown:0}s; SP recovery is increased to 1.2 times the original."
   },
   "metadata": {
     "originId": "POGRANICHNIK",
-    "dataStatus": "RECONCILED"
+    "dataStatus": "VERIFIED"
   },
   "clauseType": "ALL"
 }

@@ -19,7 +19,8 @@
       "interactionType": "RESET"
     },
     "eventType": "STATUS",
-    "eventCategoryType": "PHYSICAL_STATUS",
+    "eventIdType": "PHYSICAL_STATUS",
+    "crowdControls": ["KNOCK_DOWN"],
     "description": "Physical status. Knocks the enemy down for 1 second. Deals 120% ATK Physical DMG. Requires Vulnerable on the enemy (or forced application)."
   },
   "metadata": {

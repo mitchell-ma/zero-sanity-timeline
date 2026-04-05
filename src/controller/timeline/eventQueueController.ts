@@ -207,7 +207,7 @@ function collectFrameEntries(
     }
 
     // Seed COMBO_RESOLVE for combo events (fires after engine triggers)
-    if (event.columnId === NounType.COMBO_SKILL && !event.comboTriggerColumnId) {
+    if (event.columnId === NounType.COMBO && !event.comboTriggerColumnId) {
       const combo = allocQueueFrame();
       combo.frame = event.startFrame;
       combo.priority = PRIORITY.COMBO_RESOLVE;
@@ -278,6 +278,8 @@ export function runEventQueue(
   // (e.g. ENEMY BECOME NODE_STAGGERED) can match user-placed events.
   const triggerIdx = TriggerIndex.build(slotOperatorMap, loadoutProperties, slotWeapons, slotGearSets, registeredEvents);
   _lastTriggerIndex = triggerIdx;
+  // eslint-disable-next-line no-console
+  if (registeredEvents.some(e => e.columnId === 'node-stagger')) console.log('[PIPELINE] stagger events found in registeredEvents, triggerIndex has APPLY:node-stagger entries:', triggerIdx.matchEvent('APPLY', 'node-stagger').length);
 
   // Register talent events (permanent presence) before queue processing.
   // Dedup against already-registered events AND already-registered in this run
@@ -310,7 +312,7 @@ export function runEventQueue(
           if (!clause.effects?.length) continue;
           for (const raw of clause.effects) {
             if (raw.verb !== VerbType.APPLY || raw.object !== NounType.STAT) continue;
-            const effect = { ...raw, ofObject: raw.of ?? raw.ofObject, ofDeterminer: raw.ofDeterminer } as unknown as Effect;
+            const effect = raw as unknown as Effect;
             interpretor.interpret(effect, {
               frame: 0,
               sourceOwnerId: talent.operatorId,
@@ -389,11 +391,6 @@ export function getLastTriggerIndex(): TriggerIndex | null {
 /** Get the StatAccumulator from the most recent processCombatSimulation run. */
 export function getLastStatAccumulator(): StatAccumulator | null {
   return _statAccumulator;
-}
-
-/** Get crit results resolved during the most recent SIMULATION pipeline run. */
-export function getLastCritResults(): Map<string, Map<number, Map<number, boolean>>> | undefined {
-  return _statAccumulator?.getResolvedCrits();
 }
 
 /**

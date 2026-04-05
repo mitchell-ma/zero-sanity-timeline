@@ -9,7 +9,7 @@
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
-    "eventCategoryType": "TALENT",
+    "eventIdType": "TALENT",
     "description": "Gains 30% chance of Physical DMG immunity and restores HP of self by [45 + Strength×0.38]."
   },
   "metadata": {

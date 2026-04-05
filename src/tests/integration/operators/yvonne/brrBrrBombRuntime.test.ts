@@ -41,7 +41,7 @@ function setup() {
 }
 
 function addBS(app: AppResult, atFrame: number) {
-  const col = findColumn(app, SLOT, NounType.BATTLE_SKILL);
+  const col = findColumn(app, SLOT, NounType.BATTLE);
   const payload = getMenuPayload(app, col!, atFrame);
   app.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
 }

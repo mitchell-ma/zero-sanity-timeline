@@ -9,7 +9,7 @@
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
-    "eventCategoryType": "TALENT",
+    "eventIdType": "TALENT",
     "description": "Ultimate SQUAD! ON ME! improved: When ultimate is active, gains Link."
   },
   "metadata": {

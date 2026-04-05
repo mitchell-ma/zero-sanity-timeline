@@ -17,26 +17,26 @@
  */
 
 import { renderHook, act } from '@testing-library/react';
-import { NounType } from '../../../dsl/semantics';
-import { useApp } from '../../../app/useApp';
-import { EnhancementType, EventStatusType, InteractionModeType } from '../../../consts/enums';
-import { FPS } from '../../../utils/timeline';
-import { eventDuration } from '../../../consts/viewTypes';
-import { computeTimelinePresentation } from '../../../controller/timeline/eventPresentationController';
-import { findColumn, buildContextMenu, getMenuPayload } from '../helpers';
-import type { AppResult } from '../helpers';
-import { OPERATOR_STATUS_COLUMN_ID } from '../../../model/channels';
+import { NounType } from '../../../../dsl/semantics';
+import { useApp } from '../../../../app/useApp';
+import { EnhancementType, EventStatusType, InteractionModeType } from '../../../../consts/enums';
+import { FPS } from '../../../../utils/timeline';
+import { eventDuration } from '../../../../consts/viewTypes';
+import { computeTimelinePresentation } from '../../../../controller/timeline/eventPresentationController';
+import { findColumn, buildContextMenu, getMenuPayload } from '../../helpers';
+import type { AppResult } from '../../helpers';
+import { OPERATOR_STATUS_COLUMN_ID } from '../../../../model/channels';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const MELTING_FLAME_ID: string = require('../../../model/game-data/operators/laevatain/statuses/status-melting-flame.json').properties.id;
+const MELTING_FLAME_ID: string = require('../../../../model/game-data/operators/laevatain/statuses/status-melting-flame.json').properties.id;
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const SH_COLUMN: string = require('../../../model/game-data/operators/laevatain/statuses/status-scorching-heart.json').properties.id;
+const SH_COLUMN: string = require('../../../../model/game-data/operators/laevatain/statuses/status-scorching-heart.json').properties.id;
 const SLOT_LAEVATAIN = 'slot-0';
 const SLOT_AKEKURI = 'slot-1';
 
 /** Add battle skills for Laevatain via context menu flow. */
 function addBattleSkills(app: AppResult, count: number, startAt: number, spacing: number) {
-  const col = findColumn(app, SLOT_LAEVATAIN, NounType.BATTLE_SKILL);
+  const col = findColumn(app, SLOT_LAEVATAIN, NounType.BATTLE);
   for (let i = 0; i < count; i++) {
     const atFrame = (startAt + i * spacing) * FPS;
     const payload = getMenuPayload(app, col!, atFrame);
@@ -50,7 +50,7 @@ function addBattleSkills(app: AppResult, count: number, startAt: number, spacing
 
 /** Add an empowered battle skill for Laevatain via context menu flow. */
 function addEmpoweredBattleSkill(app: AppResult, atSecond: number) {
-  const col = findColumn(app, SLOT_LAEVATAIN, NounType.BATTLE_SKILL);
+  const col = findColumn(app, SLOT_LAEVATAIN, NounType.BATTLE);
   const empoweredVariant = col!.eventVariants?.find(
     (v) => v.enhancementType === EnhancementType.EMPOWERED,
   );
@@ -96,7 +96,7 @@ describe('Scorching Heart — Basic Activation', () => {
 
     // ── Context menu layer ──────────────────────────────────────────────
     // Verify battle skill menu item is enabled before adding
-    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE_SKILL);
+    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE);
     expect(battleCol).toBeDefined();
     const menuItems = buildContextMenu(result.current, battleCol!, 2 * FPS);
     expect(menuItems).not.toBeNull();
@@ -248,7 +248,7 @@ describe('Scorching Heart — Under Threshold', () => {
 describe('Scorching Heart — Cross-operator Isolation', () => {
   it('SH8: Akekuri battle skills do NOT contribute to Laevatain SH', () => {
     const { result } = renderHook(() => useApp());
-    const akekuriCol = findColumn(result.current, SLOT_AKEKURI, NounType.BATTLE_SKILL);
+    const akekuriCol = findColumn(result.current, SLOT_AKEKURI, NounType.BATTLE);
     expect(akekuriCol).toBeDefined();
 
     // 4 Akekuri battle skills via context menu

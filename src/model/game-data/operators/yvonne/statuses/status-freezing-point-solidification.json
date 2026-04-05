@@ -15,16 +15,30 @@
               "left": {
                 "verb": "VARY_BY",
                 "object": "TALENT_LEVEL",
-                "value": [0.2, 0.4],
-                "ofDeterminer": "THIS",
-                "of": "OPERATOR"
+                "value": [
+                  0.2,
+                  0.4
+                ],
+                "of": {
+                  "object": "OPERATOR",
+                  "determiner": "THIS"
+                }
               },
               "right": {
                 "verb": "VARY_BY",
                 "object": "POTENTIAL",
-                "value": [0, 0, 0, 0.2, 0.2, 0.2],
-                "ofDeterminer": "THIS",
-                "of": "OPERATOR"
+                "value": [
+                  0,
+                  0,
+                  0,
+                  0.2,
+                  0.2,
+                  0.2
+                ],
+                "of": {
+                  "object": "OPERATOR",
+                  "determiner": "THIS"
+                }
               }
             }
           }
@@ -52,12 +66,14 @@
       "interactionType": "RESET"
     },
     "eventType": "STATUS",
-    "eventCategoryType": "TALENT_STATUS",
+    "eventIdType": "TALENT_STATUS",
     "description": "Against enemies with Solidification, gains Critical DMG Dealt bonus (doubled)."
   },
   "metadata": {
     "originId": "FREEZING_POINT_TALENT",
-    "dataSources": ["ENDFIELD_WIKI"],
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ],
     "dataStatus": "RECONCILED"
   },
   "clauseType": "ALL"

@@ -40,7 +40,7 @@
       "interactionType": "RESET"
     },
     "eventType": "STATUS",
-    "eventCategoryType": "POTENTIAL_STATUS",
+    "eventIdType": "POTENTIAL_STATUS",
     "description": "Ultimate CHOP 'N DUNK! improved: If the ultimate defeats at least one enemy, Da Pan deals + Physical DMG for s. This effect cannot stack."
   },
   "metadata": {

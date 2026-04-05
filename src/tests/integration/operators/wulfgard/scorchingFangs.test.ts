@@ -187,7 +187,7 @@ describe('B. Negative Triggers', () => {
     placeReaction(result, REACTION_COLUMNS.ELECTRIFICATION, 1);
 
     // Place empowered battle skill that consumes Electrification
-    const battleCol = findColumn(result.current, SLOT_WULFGARD, NounType.BATTLE_SKILL);
+    const battleCol = findColumn(result.current, SLOT_WULFGARD, NounType.BATTLE);
     const empowered = battleCol?.eventVariants?.find(
       v => v.enhancementType === EnhancementType.EMPOWERED,
     );
@@ -195,7 +195,7 @@ describe('B. Negative Triggers', () => {
 
     act(() => {
       result.current.handleAddEvent(
-        SLOT_WULFGARD, NounType.BATTLE_SKILL, 3 * FPS, empowered,
+        SLOT_WULFGARD, NounType.BATTLE, 3 * FPS, empowered,
       );
     });
 
@@ -293,7 +293,7 @@ describe('D. P3 — Minor Scorching Fangs', () => {
 
     // 2. Empowered battle skill at 8s — matches H3 setup from skills.test.ts
     //    P3 clause fires: apply SF to self (reset) + SF Minor to ALL_OTHER
-    const battleCol = findColumn(result.current, SLOT_WULFGARD, NounType.BATTLE_SKILL);
+    const battleCol = findColumn(result.current, SLOT_WULFGARD, NounType.BATTLE);
     const empowered = battleCol?.eventVariants?.find(
       v => v.enhancementType === EnhancementType.EMPOWERED,
     );
@@ -301,7 +301,7 @@ describe('D. P3 — Minor Scorching Fangs', () => {
 
     act(() => {
       result.current.handleAddEvent(
-        SLOT_WULFGARD, NounType.BATTLE_SKILL, 8 * FPS, empowered!,
+        SLOT_WULFGARD, NounType.BATTLE, 8 * FPS, empowered!,
       );
     });
 
@@ -347,7 +347,7 @@ describe('D. P3 — Minor Scorching Fangs', () => {
     // Place Combustion + empowered BS
     placeReaction(result, REACTION_COLUMNS.COMBUSTION, 5, 20);
 
-    const battleCol = findColumn(result.current, SLOT_WULFGARD, NounType.BATTLE_SKILL);
+    const battleCol = findColumn(result.current, SLOT_WULFGARD, NounType.BATTLE);
     const empowered = battleCol?.eventVariants?.find(
       v => v.enhancementType === EnhancementType.EMPOWERED,
     );
@@ -355,7 +355,7 @@ describe('D. P3 — Minor Scorching Fangs', () => {
 
     act(() => {
       result.current.handleAddEvent(
-        SLOT_WULFGARD, NounType.BATTLE_SKILL, 8 * FPS, empowered,
+        SLOT_WULFGARD, NounType.BATTLE, 8 * FPS, empowered,
       );
     });
 
@@ -388,7 +388,7 @@ describe('D. P3 — Minor Scorching Fangs', () => {
     // Same setup as D1: ult + empowered BS (no separate freeform Combustion)
     placeUlt(result, 2);
 
-    const battleCol = findColumn(result.current, SLOT_WULFGARD, NounType.BATTLE_SKILL);
+    const battleCol = findColumn(result.current, SLOT_WULFGARD, NounType.BATTLE);
     const empowered = battleCol?.eventVariants?.find(
       v => v.enhancementType === EnhancementType.EMPOWERED,
     );
@@ -396,7 +396,7 @@ describe('D. P3 — Minor Scorching Fangs', () => {
 
     act(() => {
       result.current.handleAddEvent(
-        SLOT_WULFGARD, NounType.BATTLE_SKILL, 8 * FPS, empowered,
+        SLOT_WULFGARD, NounType.BATTLE, 8 * FPS, empowered,
       );
     });
 

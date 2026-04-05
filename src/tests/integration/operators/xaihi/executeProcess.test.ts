@@ -39,7 +39,7 @@ function setupXaihiWithCombo() {
   act(() => { view.result.current.handleSwapOperator(SLOT_XAIHI, XAIHI_ID); });
 
   // BS at 2s → AC on controlled (slot-0)
-  const bsCol = findColumn(view.result.current, SLOT_XAIHI, NounType.BATTLE_SKILL);
+  const bsCol = findColumn(view.result.current, SLOT_XAIHI, NounType.BATTLE);
   const bsPayload = getMenuPayload(view.result.current, bsCol!, 2 * FPS);
   act(() => { view.result.current.handleAddEvent(bsPayload.ownerId, bsPayload.columnId, bsPayload.atFrame, bsPayload.defaultSkill); });
 
@@ -51,7 +51,7 @@ function setupXaihiWithCombo() {
   act(() => { view.result.current.handleAddEvent(ba2.ownerId, ba2.columnId, ba2.atFrame, ba2.defaultSkill); });
 
   // Place combo in the window
-  const comboCol = findColumn(view.result.current, SLOT_XAIHI, NounType.COMBO_SKILL);
+  const comboCol = findColumn(view.result.current, SLOT_XAIHI, NounType.COMBO);
   const lastConsumed = Math.max(
     ...view.result.current.allProcessedEvents
       .filter(ev => ev.name === 'AUXILIARY_CRYSTAL' && ev.eventStatus === EventStatusType.CONSUMED)
@@ -73,7 +73,7 @@ describe('F. Execute Process — Cryo Fragility', () => {
 
     // ── Controller layer: combo event exists ──
     const comboEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_XAIHI && ev.columnId === NounType.COMBO_SKILL,
+      ev => ev.ownerId === SLOT_XAIHI && ev.columnId === NounType.COMBO,
     );
     expect(comboEvents).toHaveLength(1);
 

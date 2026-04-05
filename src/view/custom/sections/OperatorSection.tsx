@@ -10,7 +10,7 @@
  *   3. Link picker + New button
  */
 import { useState, useMemo, useCallback } from 'react';
-import { WeaponType, ElementType, CombatSkillType, ELEMENT_COLORS } from '../../../consts/enums';
+import { WeaponType, ElementType, ELEMENT_COLORS } from '../../../consts/enums';
 import { OperatorClassType } from '../../../model/enums/operators';
 import type { CustomOperator, CustomPotentialEntry } from '../../../model/custom/customOperatorTypes';
 import type { SkillType } from '../../../consts/viewTypes';
@@ -35,32 +35,32 @@ const ELEMENT_TYPES = Object.values(ElementType).filter((e) => e !== ElementType
 const WEAPON_TYPES = Object.values(WeaponType);
 
 const SKILL_TYPE_ORDER = [
-  CombatSkillType.BASIC_ATTACK,
-  CombatSkillType.BATTLE_SKILL,
-  CombatSkillType.COMBO_SKILL,
-  CombatSkillType.ULTIMATE,
+  NounType.BASIC_ATTACK,
+  NounType.BATTLE,
+  NounType.COMBO,
+  NounType.ULTIMATE,
 ] as const;
 
 const SKILL_TAB_LABELS: Record<string, string> = {
-  [CombatSkillType.BASIC_ATTACK]: 'Basic',
-  [CombatSkillType.BATTLE_SKILL]: 'Battle',
-  [CombatSkillType.COMBO_SKILL]: 'Combo',
-  [CombatSkillType.ULTIMATE]: 'Ultimate',
+  [NounType.BASIC_ATTACK]: 'Basic',
+  [NounType.BATTLE]: 'Battle',
+  [NounType.COMBO]: 'Combo',
+  [NounType.ULTIMATE]: 'Ultimate',
 };
 const SKILL_TAB_ABBREV: Record<string, string> = {
-  [CombatSkillType.BASIC_ATTACK]: 'BATK',
-  [CombatSkillType.BATTLE_SKILL]: 'BSKL',
-  [CombatSkillType.COMBO_SKILL]: 'CMB',
-  [CombatSkillType.ULTIMATE]: 'ULT',
+  [NounType.BASIC_ATTACK]: 'BATK',
+  [NounType.BATTLE]: 'BSKL',
+  [NounType.COMBO]: 'CMB',
+  [NounType.ULTIMATE]: 'ULT',
 };
 
-/** Maps CombatSkillType → NounType (SkillType) for the link table. */
+/** Maps  → NounType (SkillType) for the link table. */
 const COMBAT_TO_NOUN: Record<string, SkillType> = {
-  [CombatSkillType.BASIC_ATTACK]: NounType.BASIC_ATTACK as SkillType,
-  [CombatSkillType.BATTLE_SKILL]: NounType.BATTLE_SKILL as SkillType,
-  [CombatSkillType.COMBO_SKILL]: NounType.COMBO_SKILL as SkillType,
-  [CombatSkillType.ULTIMATE]: NounType.ULTIMATE as SkillType,
-  [CombatSkillType.ACTION]: NounType.ACTION as SkillType,
+  [NounType.BASIC_ATTACK]: NounType.BASIC_ATTACK as SkillType,
+  [NounType.BATTLE]: NounType.BATTLE as SkillType,
+  [NounType.COMBO]: NounType.COMBO as SkillType,
+  [NounType.ULTIMATE]: NounType.ULTIMATE as SkillType,
+  [NounType.ACTION]: NounType.ACTION as SkillType,
 };
 
 interface Props {
@@ -246,7 +246,7 @@ function PotentialRow({ pot, onChange, onRemove }: {
 // ── Main component ────────────────────────────────────────────────────────────
 
 export default function OperatorSection({ data, onChange, originalId }: Props) {
-  const [activeSkillType, setActiveSkillType] = useState<CombatSkillType>(CombatSkillType.BASIC_ATTACK);
+  const [activeSkillType, setActiveSkillType] = useState<string>(NounType.BASIC_ATTACK);
   const [activeCategory, setActiveCategory] = useState<'skills' | 'potentials' | 'talents' | 'statuses'>('skills');
   const [, setRefreshKey] = useState(0);
   const [openBuiltinSkills, setOpenBuiltinSkills] = useState<Set<number>>(new Set());
@@ -268,13 +268,13 @@ export default function OperatorSection({ data, onChange, originalId }: Props) {
     if (!baseId) return [];
     return getOperatorStatuses(baseId)
       .map((s) => s.serialize() as Record<string, unknown>)
-      .filter((s) => (s.properties as Record<string, unknown> | undefined)?.eventCategoryType === 'TALENT');
+      .filter((s) => (s.properties as Record<string, unknown> | undefined)?.eventIdType === 'TALENT');
   }, [baseId]);
   const builtinStatuses = useMemo(() => {
     if (!baseId) return [];
     return getOperatorStatuses(baseId)
       .map((s) => s.serialize() as Record<string, unknown>)
-      .filter((s) => (s.properties as Record<string, unknown> | undefined)?.eventCategoryType !== 'TALENT');
+      .filter((s) => (s.properties as Record<string, unknown> | undefined)?.eventIdType !== 'TALENT');
   }, [baseId]);
   const builtinSkillEntries = useMemo(() => {
     if (!baseId) return [];
@@ -367,7 +367,7 @@ export default function OperatorSection({ data, onChange, originalId }: Props) {
   }, [data.id, bump]);
 
   // ── Combo trigger helpers ────────────────────────────────────────────────
-  const isComboTab = activeSkillType === CombatSkillType.COMBO_SKILL;
+  const isComboTab = activeSkillType === NounType.COMBO;
 
   const updateTriggerClause = (index: number, condition: Interaction) => {
     const onTriggerClause = [...data.combo.onTriggerClause];
@@ -389,7 +389,7 @@ export default function OperatorSection({ data, onChange, originalId }: Props) {
   };
 
   // ── Skill count for tab badges ───────────────────────────────────────────
-  const skillCountByType = (type: CombatSkillType) => {
+  const skillCountByType = (type: string) => {
     const nounType = COMBAT_TO_NOUN[type];
     const linked = getLinksForSlot(data.id, nounType).length;
     const builtin = baseId ? (buildSkillEntries(baseId, nounType as SkillType) ?? []).length : 0;

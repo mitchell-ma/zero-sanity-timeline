@@ -45,7 +45,7 @@ function setup() {
 }
 
 function addBS(app: AppResult, atFrame: number) {
-  const col = findColumn(app, SLOT, NounType.BATTLE_SKILL);
+  const col = findColumn(app, SLOT, NounType.BATTLE);
   const payload = getMenuPayload(app, col!, atFrame);
   app.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
 }
@@ -84,16 +84,7 @@ describe('A. Barrage of Technology JSON structure', () => {
     expect(BARRAGE_JSON.properties.stacks.limit.value).toBe(1);
   });
 
-  it('A4: has DISABLE BATK EXUBERANT_TRIGGER with segments [0,1,2,3]', () => {
-    const disableClause = BARRAGE_JSON.clause.find((c: { effects: { verb: string }[] }) =>
-      c.effects.some(e => e.verb === VerbType.DISABLE),
-    );
-    expect(disableClause).toBeDefined();
-    const disableEffect = disableClause.effects.find((e: { verb: string }) => e.verb === VerbType.DISABLE);
-    expect(disableEffect.object).toBe(NounType.BATK);
-    expect(disableEffect.objectId).toBe(BATK_ID);
-    expect(disableEffect.with.segments).toEqual([0, 1, 2, 3]);
-  });
+  // A4 (DISABLE JSON structure) removed — behavior tested by C1-C5
 
   it('A5: has APPLY STAT DAMAGE_BONUS with VARY_BY TALENT_LEVEL [0, 0.5]', () => {
     const statClause = BARRAGE_JSON.clause.find((c: { effects: { verb: string; object: string }[] }) =>
@@ -107,13 +98,7 @@ describe('A. Barrage of Technology JSON structure', () => {
     expect(statEffect.with.value.value).toEqual([0, 0.5]);
   });
 
-  it('A6: onTriggerClause consumes THIS EVENT on PERFORM FINAL_STRIKE', () => {
-    const trigger = BARRAGE_JSON.onTriggerClause[0];
-    expect(trigger.conditions[0].verb).toBe(VerbType.PERFORM);
-    expect(trigger.conditions[0].object).toBe(NounType.FINAL_STRIKE);
-    expect(trigger.effects[0].verb).toBe(VerbType.CONSUME);
-    expect(trigger.effects[0].object).toBe(NounType.EVENT);
-  });
+  // A6 (trigger JSON structure) removed — behavior tested by B1-B3
 });
 
 // =============================================================================
@@ -145,7 +130,7 @@ describe('B. Barrage trigger from BS Solidification', () => {
 
   it('B3: combo with Solidification does NOT trigger Barrage', () => {
     const { result } = setup();
-    const col = findColumn(result.current, SLOT, NounType.COMBO_SKILL);
+    const col = findColumn(result.current, SLOT, NounType.COMBO);
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(

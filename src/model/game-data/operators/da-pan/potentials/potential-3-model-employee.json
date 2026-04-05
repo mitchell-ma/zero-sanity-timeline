@@ -4,7 +4,7 @@
     "name": "Model Employee",
     "level": 3,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
+    "eventIdType": "POTENTIAL",
     "description": "Strength +{Str:0}, Physical DMG Dealt +{PhysicalDamageIncrease:0%}."
   },
   "metadata": {

@@ -255,7 +255,8 @@ const VARY_AXIS_LABELS: Record<string, (i: number) => string> = {
 function VaryByLeaf({ node, label }: { node: Record<string, unknown>; label?: string }) {
   const vals = node.value as number[];
   const axis = String(node.object ?? 'LEVEL').replace(/_/g, ' ').toLowerCase();
-  const of = node.ofDeterminer ? ` of ${String(node.ofDeterminer).toLowerCase()} ${String(node.of ?? 'OPERATOR').toLowerCase()}` : '';
+  const ofClause = node.of as { determiner?: string; object?: string } | undefined;
+  const of = ofClause ? ` of ${(ofClause.determiner ?? '').toLowerCase()} ${(ofClause.object ?? 'OPERATOR').toLowerCase()}`.trim() : '';
   const labelFn = VARY_AXIS_LABELS[String(node.object)] ?? ((i: number) => String(i + 1));
 
   return (
@@ -274,14 +275,16 @@ function VaryByLeaf({ node, label }: { node: Record<string, unknown>; label?: st
 function ValueLeaf({ node, label }: { node: Record<string, unknown>; label?: string }) {
   if (node.verb === VerbType.IS && node.object === NounType.STAT) {
     const stat = String(node.objectId ?? node.stat ?? 'STAT').replace(/_/g, ' ');
-    const of = node.ofDeterminer ? ` of ${String(node.ofDeterminer).toLowerCase()} operator` : '';
+    const statOfClause = node.of as { determiner?: string; object?: string } | undefined;
+    const of = statOfClause?.determiner ? ` of ${statOfClause.determiner.toLowerCase()} operator` : '';
     return <span className="ops-vt-leaf">{label && <span className="ops-prop-tree-leaf-label">{label}</span>} {stat}{of}</span>;
   }
   if (node.verb === VerbType.IS) return <span className="ops-vt-leaf">{String(node.value)}</span>;
   if (node.verb === VerbType.VARY_BY && Array.isArray(node.value)) return <VaryByLeaf node={node} label={label} />;
-  if (node.object && node.objectId) {
-    const of = node.ofDeterminer ? ` of ${String(node.ofDeterminer).toLowerCase()}` : '';
-    return <span className="ops-vt-leaf">{String(node.objectId).replace(/_/g, ' ')} {String(node.object).toLowerCase()} stacks{of}</span>;
+  if (node.object && node.of) {
+    const stackOfClause = node.of as { object?: string; objectId?: string; determiner?: string };
+    const ofLabel = stackOfClause.objectId ? ` of ${String(stackOfClause.objectId).replace(/_/g, ' ').toLowerCase()}` : '';
+    return <span className="ops-vt-leaf">{String(node.object).toLowerCase()}{ofLabel}</span>;
   }
   if (node.object) return <span className="ops-vt-leaf">{String(node.object).toLowerCase()} stacks</span>;
   return <span className="ops-vt-leaf">{JSON.stringify(node)}</span>;
@@ -849,7 +852,7 @@ export function normalizedDefToData(def: NormalizedEffectDef): Record<string, un
     stacks: def.stacks,
     ...(def.properties ?? {}),
     ...(def.cooldownSeconds ? { cooldownSeconds: def.cooldownSeconds } : {}),
-    ...(def.eventCategoryType ? { eventCategoryType: def.eventCategoryType } : {}),
+    ...(def.eventIdType ? { eventIdType: def.eventIdType } : {}),
     ...(def.usageLimit ? { usageLimit: def.usageLimit } : {}),
     ...(def.statusValue != null ? { statusValue: def.statusValue } : {}),
   };

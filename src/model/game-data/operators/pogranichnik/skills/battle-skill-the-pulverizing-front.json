@@ -2,8 +2,8 @@
   "properties": {
     "name": "The Pulverizing Front",
     "description": "Pogranichnik performs a 2-sequence slash attack at enemies in front of him, dealing Physical DMG, applying Breach, and recovering SP based on the number of Vulnerability stacks consumed. The SP recovery effect can only trigger 1 time, even if the skill hits multiple targets.",
-    "eventType": "COMBAT_SKILL",
-    "eventCategoryType": "BATTLE_SKILL",
+    "eventType": "SKILL",
+    "eventIdType": "BATTLE",
     "element": "PHYSICAL",
     "id": "THE_PULVERIZING_FRONT",
     "suppliedParameters": {
@@ -38,7 +38,7 @@
   "metadata": {
     "originId": "POGRANICHNIK",
     "icon": "skills/skill_pogranichnik.png",
-    "dataStatus": "RECONCILED"
+    "dataStatus": "VERIFIED"
   },
   "segments": [
     {
@@ -65,8 +65,13 @@
                   "verb": "HAVE",
                   "object": "INFLICTION",
                   "objectQualifier": "VULNERABLE",
-                  "cardinalityConstraint": "AT_LEAST",
-                  "with": { "value": { "verb": "IS", "value": 4 } }
+                  "cardinalityConstraint": "GREATER_THAN_EQUAL",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 4
+                    }
+                  }
                 }
               ],
               "effects": [
@@ -77,9 +82,24 @@
                     "value": {
                       "verb": "VARY_BY",
                       "object": "SKILL_LEVEL",
-                      "value": [30, 30, 30, 30, 30, 30, 30, 30, 30, 35, 35, 35],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "value": [
+                        30,
+                        30,
+                        30,
+                        30,
+                        30,
+                        30,
+                        30,
+                        30,
+                        30,
+                        35,
+                        35,
+                        35
+                      ],
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     }
                   }
                 }
@@ -92,8 +112,13 @@
                   "verb": "HAVE",
                   "object": "INFLICTION",
                   "objectQualifier": "VULNERABLE",
-                  "cardinalityConstraint": "AT_LEAST",
-                  "with": { "value": { "verb": "IS", "value": 3 } }
+                  "cardinalityConstraint": "GREATER_THAN_EQUAL",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 3
+                    }
+                  }
                 }
               ],
               "effects": [
@@ -104,9 +129,24 @@
                     "value": {
                       "verb": "VARY_BY",
                       "object": "SKILL_LEVEL",
-                      "value": [20, 20, 20, 20, 20, 20, 20, 20, 20, 25, 25, 25],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "value": [
+                        20,
+                        20,
+                        20,
+                        20,
+                        20,
+                        20,
+                        20,
+                        20,
+                        20,
+                        25,
+                        25,
+                        25
+                      ],
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     }
                   }
                 }
@@ -119,8 +159,13 @@
                   "verb": "HAVE",
                   "object": "INFLICTION",
                   "objectQualifier": "VULNERABLE",
-                  "cardinalityConstraint": "AT_LEAST",
-                  "with": { "value": { "verb": "IS", "value": 2 } }
+                  "cardinalityConstraint": "GREATER_THAN_EQUAL",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 2
+                    }
+                  }
                 }
               ],
               "effects": [
@@ -131,9 +176,24 @@
                     "value": {
                       "verb": "VARY_BY",
                       "object": "SKILL_LEVEL",
-                      "value": [10, 10, 10, 10, 10, 10, 10, 10, 10, 15, 15, 15],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "value": [
+                        10,
+                        10,
+                        10,
+                        10,
+                        10,
+                        10,
+                        10,
+                        10,
+                        10,
+                        15,
+                        15,
+                        15
+                      ],
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     }
                   }
                 }
@@ -146,15 +206,25 @@
                   "verb": "HAVE",
                   "object": "INFLICTION",
                   "objectQualifier": "VULNERABLE",
-                  "cardinalityConstraint": "AT_LEAST",
-                  "with": { "value": { "verb": "IS", "value": 1 } }
+                  "cardinalityConstraint": "GREATER_THAN_EQUAL",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  }
                 }
               ],
               "effects": [
                 {
                   "verb": "RETURN",
                   "object": "SKILL_POINT",
-                  "with": { "value": { "verb": "IS", "value": 5 } }
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 5
+                    }
+                  }
                 }
               ]
             },
@@ -165,7 +235,12 @@
                   "verb": "DEAL",
                   "object": "STAGGER",
                   "to": "ENEMY",
-                  "with": { "value": { "verb": "IS", "value": 5 } }
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 5
+                    }
+                  }
                 },
                 {
                   "verb": "DEAL",
@@ -176,14 +251,43 @@
                     "value": {
                       "verb": "VARY_BY",
                       "object": "SKILL_LEVEL",
-                      "value": [0.86, 0.94, 1.03, 1.11, 1.2, 1.28, 1.37, 1.45, 1.54, 1.65, 1.77, 1.92],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "value": [
+                        0.86,
+                        0.94,
+                        1.03,
+                        1.11,
+                        1.2,
+                        1.28,
+                        1.37,
+                        1.45,
+                        1.54,
+                        1.65,
+                        1.77,
+                        1.92
+                      ],
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     },
-                    "mainStat": { "verb": "IS", "object": "STAT", "objectId": "ATTACK", "ofDeterminer": "THIS", "of": "OPERATOR" }
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
+                    }
                   }
                 },
-                { "verb": "APPLY", "object": "STATUS", "objectId": "PHYSICAL", "objectQualifier": "BREACH", "to": "ENEMY" }
+                {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "PHYSICAL",
+                  "objectQualifier": "BREACH",
+                  "to": "ENEMY"
+                }
               ]
             }
           ],
@@ -211,8 +315,13 @@
                   "subject": "OPERATOR",
                   "verb": "HAVE",
                   "object": "POTENTIAL",
-                  "cardinalityConstraint": "AT_LEAST",
-                  "with": { "value": { "verb": "IS", "value": 1 } }
+                  "cardinalityConstraint": "GREATER_THAN_EQUAL",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  }
                 }
               ],
               "effects": [
@@ -223,9 +332,14 @@
                     "value": {
                       "verb": "VARY_BY",
                       "object": "ENEMY_HIT",
-                      "value": [0, 15],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "value": [
+                        0,
+                        15
+                      ],
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     }
                   }
                 }
@@ -238,7 +352,12 @@
                   "verb": "DEAL",
                   "object": "STAGGER",
                   "to": "ENEMY",
-                  "with": { "value": { "verb": "IS", "value": 5 } }
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 5
+                    }
+                  }
                 },
                 {
                   "verb": "DEAL",
@@ -249,11 +368,34 @@
                     "value": {
                       "verb": "VARY_BY",
                       "object": "SKILL_LEVEL",
-                      "value": [1.06, 1.16, 1.27, 1.37, 1.48, 1.58, 1.69, 1.8, 1.9, 2.03, 2.19, 2.38],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "value": [
+                        1.06,
+                        1.16,
+                        1.27,
+                        1.37,
+                        1.48,
+                        1.58,
+                        1.69,
+                        1.8,
+                        1.9,
+                        2.03,
+                        2.19,
+                        2.38
+                      ],
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     },
-                    "mainStat": { "verb": "IS", "object": "STAT", "objectId": "ATTACK", "ofDeterminer": "THIS", "of": "OPERATOR" }
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
+                    }
                   }
                 }
               ]

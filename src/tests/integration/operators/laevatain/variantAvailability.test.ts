@@ -26,7 +26,7 @@ import { NounType } from '../../../../dsl/semantics';
 import { useApp } from '../../../../app/useApp';
 import { NODE_STAGGER_COLUMN_ID, ENEMY_OWNER_ID, USER_ID, ultimateGraphKey } from '../../../../model/channels';
 import { getUltimateEnergyCost } from '../../../../controller/operators/operatorRegistry';
-import { ColumnType, InteractionModeType, CombatSkillType } from '../../../../consts/enums';
+import { ColumnType, InteractionModeType } from '../../../../consts/enums';
 import { EnhancementType } from '../../../../consts/enums';
 import { FPS } from '../../../../utils/timeline';
 import { checkVariantAvailability } from '../../../../controller/timeline/eventValidator';
@@ -148,11 +148,11 @@ describe('Laevatain variant availability — integration through useApp', () => 
 
     it('normal battle skill is available', () => {
       const { result } = renderHook(() => useApp());
-      const r = isAvailable(result.current, SMOULDERING_FIRE_ID, NounType.BATTLE_SKILL, 5 * FPS);
+      const r = isAvailable(result.current, SMOULDERING_FIRE_ID, NounType.BATTLE, 5 * FPS);
       expect(r.disabled).toBe(false);
 
       // Context menu: normal BS variant is enabled
-      const bsCol = findMatchingColumn(result.current, SLOT, NounType.BATTLE_SKILL);
+      const bsCol = findMatchingColumn(result.current, SLOT, NounType.BATTLE);
       const menu = buildContextMenu(result.current, bsCol!, 5 * FPS);
       expect(menu).not.toBeNull();
       const item = findVariantMenuItem(menu!, SMOULDERING_FIRE_ID);
@@ -176,11 +176,11 @@ describe('Laevatain variant availability — integration through useApp', () => 
 
     it('empowered battle skill is disabled (no MF stacks)', () => {
       const { result } = renderHook(() => useApp());
-      const r = isAvailable(result.current, SMOULDERING_FIRE_EMPOWERED_ID, NounType.BATTLE_SKILL, 5 * FPS);
+      const r = isAvailable(result.current, SMOULDERING_FIRE_EMPOWERED_ID, NounType.BATTLE, 5 * FPS);
       expect(r.disabled).toBe(true);
 
       // Context menu: empowered BS variant is disabled
-      const bsCol = findMatchingColumn(result.current, SLOT, NounType.BATTLE_SKILL);
+      const bsCol = findMatchingColumn(result.current, SLOT, NounType.BATTLE);
       const menu = buildContextMenu(result.current, bsCol!, 5 * FPS);
       expect(menu).not.toBeNull();
       const item = findVariantMenuItem(menu!, SMOULDERING_FIRE_EMPOWERED_ID);
@@ -200,11 +200,11 @@ describe('Laevatain variant availability — integration through useApp', () => 
     it('empowered battle skill is available (4 MF stacks)', () => {
       const { result } = renderHook(() => useApp());
       place4MfStacks(result, 2 * FPS);
-      const r = isAvailable(result.current, SMOULDERING_FIRE_EMPOWERED_ID, NounType.BATTLE_SKILL, 8 * FPS);
+      const r = isAvailable(result.current, SMOULDERING_FIRE_EMPOWERED_ID, NounType.BATTLE, 8 * FPS);
       expect(r.disabled).toBe(false);
 
       // Context menu: empowered BS variant is enabled after MF stacks
-      const bsCol = findMatchingColumn(result.current, SLOT, NounType.BATTLE_SKILL);
+      const bsCol = findMatchingColumn(result.current, SLOT, NounType.BATTLE);
       const menu = buildContextMenu(result.current, bsCol!, 8 * FPS);
       expect(menu).not.toBeNull();
       const item = findVariantMenuItem(menu!, SMOULDERING_FIRE_EMPOWERED_ID);
@@ -239,11 +239,11 @@ describe('Laevatain variant availability — integration through useApp', () => 
     it('enhanced battle skill requires 4 MF stacks (disabled without them even during ultimate)', () => {
       const { result } = renderHook(() => useApp());
       placeUltimate(result, ULT_START);
-      const r = isAvailable(result.current, SMOULDERING_FIRE_ENHANCED_ID, NounType.BATTLE_SKILL, ACTIVE_FRAME);
+      const r = isAvailable(result.current, SMOULDERING_FIRE_ENHANCED_ID, NounType.BATTLE, ACTIVE_FRAME);
       expect(r.disabled).toBe(true);
     });
 
-    it('normal basic attack is disabled during ultimate (DISABLE FLAMING_CINDERS)', () => {
+    it('normal basic attack is disabled during ultimate (DISABLE FLAMING_CINDERS_BATK)', () => {
       const { result } = renderHook(() => useApp());
       placeUltimate(result, ULT_START);
       const r = isAvailable(result.current, FLAMING_CINDERS_ID, NounType.BASIC_ATTACK, ACTIVE_FRAME);
@@ -261,21 +261,21 @@ describe('Laevatain variant availability — integration through useApp', () => 
     it('normal battle skill is disabled during ultimate (DISABLE SMOULDERING_FIRE)', () => {
       const { result } = renderHook(() => useApp());
       placeUltimate(result, ULT_START);
-      const r = isAvailable(result.current, SMOULDERING_FIRE_ID, NounType.BATTLE_SKILL, ACTIVE_FRAME);
+      const r = isAvailable(result.current, SMOULDERING_FIRE_ID, NounType.BATTLE, ACTIVE_FRAME);
       expect(r.disabled).toBe(true);
     });
 
     it('finisher is disabled during ultimate (DISABLE FINISHER)', () => {
       const { result } = renderHook(() => useApp());
       placeUltimate(result, ULT_START);
-      const r = isAvailable(result.current, CombatSkillType.FINISHER, NounType.BASIC_ATTACK, ACTIVE_FRAME);
+      const r = isAvailable(result.current, NounType.FINISHER, NounType.BASIC_ATTACK, ACTIVE_FRAME);
       expect(r.disabled).toBe(true);
 
       // Context menu: finisher variant is disabled during ultimate
       const batkCol = findMatchingColumn(result.current, SLOT, NounType.BASIC_ATTACK);
       const menu = buildContextMenu(result.current, batkCol!, ACTIVE_FRAME);
       expect(menu).not.toBeNull();
-      const item = findVariantMenuItem(menu!, CombatSkillType.FINISHER);
+      const item = findVariantMenuItem(menu!, NounType.FINISHER);
       expect(item).toBeDefined();
       expect(item!.disabled).toBe(true);
     });
@@ -310,21 +310,21 @@ describe('Laevatain variant availability — integration through useApp', () => 
         result.current.setInteractionMode(InteractionModeType.STRICT);
       });
       // Finisher should still be disabled by the DISABLE clause targeting its ID
-      const r = isAvailable(result.current, CombatSkillType.FINISHER, NounType.BASIC_ATTACK, ACTIVE_FRAME);
+      const r = isAvailable(result.current, NounType.FINISHER, NounType.BASIC_ATTACK, ACTIVE_FRAME);
       expect(r.disabled).toBe(true);
     });
 
     it('empowered battle skill is disabled during ultimate (DISABLE SMOULDERING_FIRE_EMPOWERED)', () => {
       const { result } = renderHook(() => useApp());
       placeUltimate(result, ULT_START);
-      const r = isAvailable(result.current, SMOULDERING_FIRE_EMPOWERED_ID, NounType.BATTLE_SKILL, ACTIVE_FRAME);
+      const r = isAvailable(result.current, SMOULDERING_FIRE_EMPOWERED_ID, NounType.BATTLE, ACTIVE_FRAME);
       expect(r.disabled).toBe(true);
     });
 
     it('enhanced+empowered battle skill is disabled (no MF stacks)', () => {
       const { result } = renderHook(() => useApp());
       placeUltimate(result, ULT_START);
-      const r = isAvailable(result.current, SMOULDERING_FIRE_ENHANCED_EMPOWERED_ID, NounType.BATTLE_SKILL, ACTIVE_FRAME);
+      const r = isAvailable(result.current, SMOULDERING_FIRE_ENHANCED_EMPOWERED_ID, NounType.BATTLE, ACTIVE_FRAME);
       expect(r.disabled).toBe(true);
     });
 
@@ -335,12 +335,12 @@ describe('Laevatain variant availability — integration through useApp', () => 
       placeUltimate(result, ULT_START);
 
       // Place an enhanced battle skill during the active window (generates gauge gain normally)
-      const battleCol = findMatchingColumn(result.current, SLOT, NounType.BATTLE_SKILL);
+      const battleCol = findMatchingColumn(result.current, SLOT, NounType.BATTLE);
       const enhancedVariant = battleCol!.eventVariants?.find(
         (v) => v.enhancementType === EnhancementType.ENHANCED,
       );
       act(() => {
-        result.current.handleAddEvent(SLOT, NounType.BATTLE_SKILL, ACTIVE_FRAME, enhancedVariant!);
+        result.current.handleAddEvent(SLOT, NounType.BATTLE, ACTIVE_FRAME, enhancedVariant!);
       });
 
       // Check the resource graph — energy should not increase during the active phase
@@ -386,7 +386,7 @@ describe('Laevatain variant availability — integration through useApp', () => 
       const { result } = renderHook(() => useApp());
       place4MfStacks(result, 2 * FPS);
       placeUltimate(result, ULT_START);
-      const r = isAvailable(result.current, SMOULDERING_FIRE_ENHANCED_ID, NounType.BATTLE_SKILL, ACTIVE_FRAME);
+      const r = isAvailable(result.current, SMOULDERING_FIRE_ENHANCED_ID, NounType.BATTLE, ACTIVE_FRAME);
       expect(r.disabled).toBe(false);
     });
 
@@ -394,11 +394,11 @@ describe('Laevatain variant availability — integration through useApp', () => 
       const { result } = renderHook(() => useApp());
       place4MfStacks(result, 2 * FPS);
       placeUltimate(result, ULT_START);
-      const r = isAvailable(result.current, SMOULDERING_FIRE_ENHANCED_EMPOWERED_ID, NounType.BATTLE_SKILL, ACTIVE_FRAME);
+      const r = isAvailable(result.current, SMOULDERING_FIRE_ENHANCED_EMPOWERED_ID, NounType.BATTLE, ACTIVE_FRAME);
       expect(r.disabled).toBe(false);
 
       // Context menu: enhanced+empowered BS variant is enabled with Ult + 4 MF
-      const bsCol = findMatchingColumn(result.current, SLOT, NounType.BATTLE_SKILL);
+      const bsCol = findMatchingColumn(result.current, SLOT, NounType.BATTLE);
       const menu = buildContextMenu(result.current, bsCol!, ACTIVE_FRAME);
       expect(menu).not.toBeNull();
       const item = findVariantMenuItem(menu!, SMOULDERING_FIRE_ENHANCED_EMPOWERED_ID);
@@ -418,7 +418,7 @@ describe('Laevatain variant availability — integration through useApp', () => 
       const { result } = renderHook(() => useApp());
       place4MfStacks(result, 2 * FPS);
       placeUltimate(result, ULT_START);
-      const r = isAvailable(result.current, SMOULDERING_FIRE_EMPOWERED_ID, NounType.BATTLE_SKILL, ACTIVE_FRAME);
+      const r = isAvailable(result.current, SMOULDERING_FIRE_EMPOWERED_ID, NounType.BATTLE, ACTIVE_FRAME);
       expect(r.disabled).toBe(true);
     });
   });

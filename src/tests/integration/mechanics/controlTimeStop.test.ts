@@ -20,7 +20,7 @@
 import { renderHook, act } from '@testing-library/react';
 import { NounType } from '../../../dsl/semantics';
 import { useApp } from '../../../app/useApp';
-import { CombatSkillType, ColumnType, InteractionModeType } from '../../../consts/enums';
+import { ColumnType, InteractionModeType } from '../../../consts/enums';
 import { OPERATOR_COLUMNS } from '../../../model/channels';
 import { eventDuration, getAnimationDuration } from '../../../consts/viewTypes';
 import type { MiniTimeline, ContextMenuItem } from '../../../consts/viewTypes';
@@ -36,7 +36,7 @@ const CONTROL_LABEL = 'Set as Controlled Operator';
 
 function getControlEvents(app: AppResult) {
   return app.allProcessedEvents.filter(
-    (ev) => ev.id === CombatSkillType.CONTROL && ev.columnId === OPERATOR_COLUMNS.INPUT,
+    (ev) => ev.id === NounType.CONTROL && ev.columnId === OPERATOR_COLUMNS.INPUT,
   );
 }
 
@@ -73,7 +73,7 @@ function getControlEventsFromVM(app: AppResult) {
   const controlEvents = [];
   for (const [, vm] of Array.from(vms.entries())) {
     for (const ev of vm.events) {
-      if (ev.id === CombatSkillType.CONTROL && ev.columnId === OPERATOR_COLUMNS.INPUT) {
+      if (ev.id === NounType.CONTROL && ev.columnId === OPERATOR_COLUMNS.INPUT) {
         controlEvents.push(ev);
       }
     }
@@ -92,7 +92,7 @@ describe('Control status × time-stop — integration through useApp', () => {
       act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
       // Context menu layer: place combo via context menu flow
-      const comboCol = findColumn(result.current, SLOT_0, NounType.COMBO_SKILL);
+      const comboCol = findColumn(result.current, SLOT_0, NounType.COMBO);
       expect(comboCol).toBeDefined();
 
       const comboPayload = getMenuPayload(result.current, comboCol!, 0);
@@ -102,7 +102,7 @@ describe('Control status × time-stop — integration through useApp', () => {
 
       // Verify combo has animation duration (i.e. creates a time-stop)
       const comboEvent = result.current.allProcessedEvents.find(
-        (ev) => ev.ownerId === SLOT_0 && ev.columnId === NounType.COMBO_SKILL,
+        (ev) => ev.ownerId === SLOT_0 && ev.columnId === NounType.COMBO,
       )!;
       const animDur = getAnimationDuration(comboEvent);
       expect(animDur).toBeGreaterThan(0);
@@ -174,7 +174,7 @@ describe('Control status × time-stop — integration through useApp', () => {
       act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
       // Context menu layer: place combo via context menu flow
-      const comboCol = findColumn(result.current, SLOT_0, NounType.COMBO_SKILL);
+      const comboCol = findColumn(result.current, SLOT_0, NounType.COMBO);
       expect(comboCol).toBeDefined();
 
       const comboPayload = getMenuPayload(result.current, comboCol!, 0);
@@ -183,7 +183,7 @@ describe('Control status × time-stop — integration through useApp', () => {
       });
 
       const comboEvent = result.current.allProcessedEvents.find(
-        (ev) => ev.ownerId === SLOT_0 && ev.columnId === NounType.COMBO_SKILL,
+        (ev) => ev.ownerId === SLOT_0 && ev.columnId === NounType.COMBO,
       )!;
       const animDur = getAnimationDuration(comboEvent);
       expect(animDur).toBeGreaterThan(0);
@@ -207,7 +207,7 @@ describe('Control status × time-stop — integration through useApp', () => {
 
       // Controller layer: the control event should have a time-stop warning
       const slot1Control = result.current.allProcessedEvents.find(
-        (ev) => ev.id === CombatSkillType.CONTROL && ev.ownerId === SLOT_1,
+        (ev) => ev.id === NounType.CONTROL && ev.ownerId === SLOT_1,
       )!;
       expect(slot1Control).toBeDefined();
       expect(slot1Control.warnings).toBeDefined();
@@ -247,7 +247,7 @@ describe('Control status × time-stop — integration through useApp', () => {
 
       // Find the raw control event uid
       const slot1Control = result.current.allProcessedEvents.find(
-        (ev) => ev.id === CombatSkillType.CONTROL && ev.ownerId === SLOT_1
+        (ev) => ev.id === NounType.CONTROL && ev.ownerId === SLOT_1
           && !ev.uid.startsWith('controlled-seed-'),
       )!;
       expect(slot1Control).toBeDefined();
@@ -292,7 +292,7 @@ describe('Control status × time-stop — integration through useApp', () => {
       });
 
       const slot1Control = result.current.allProcessedEvents.find(
-        (ev) => ev.id === CombatSkillType.CONTROL && ev.ownerId === SLOT_1
+        (ev) => ev.id === NounType.CONTROL && ev.ownerId === SLOT_1
           && !ev.uid.startsWith('controlled-seed-'),
       )!;
       expect(slot1Control).toBeDefined();

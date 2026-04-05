@@ -4,7 +4,7 @@
  * Validates the DSL interpreter with canDo/do verb dispatch:
  * - APPLY INFLICTION, STATUS, REACTION
  * - CONSUME INFLICTION, STATUS, REACTION
- * - ALL compound with FOR AT_MOST (absorption pattern)
+ * - ALL compound with FOR LESS_THAN_EQUAL (absorption pattern)
  * - ANY first-match predicate evaluation
  * - Validation against VERB_OBJECTS
  * - Resource/display verbs are no-ops
@@ -256,7 +256,7 @@ describe('EventInterpretorController: CONSUME', () => {
 // ── ALL compound tests ───────────────────────────────────────────────────
 
 describe('EventInterpretorController: ALL', () => {
-  test('ALL FOR AT_MOST 4: CONSUME + APPLY (absorption pattern)', () => {
+  test('ALL FOR LESS_THAN_EQUAL 4: CONSUME + APPLY (absorption pattern)', () => {
     const interp = makeInterpretor();
     // Pre-populate with 2 heat inflictions
     interp.controller.addEvent(makeInflictionEvent(INFLICTION_COLUMNS.HEAT, 50, 200));
@@ -268,7 +268,7 @@ describe('EventInterpretorController: ALL', () => {
     const effect: Effect = {
       verb: VerbType.ALL,
       for: {
-        cardinalityConstraint: CardinalityConstraintType.AT_MOST,
+        cardinalityConstraint: CardinalityConstraintType.LESS_THAN_EQUAL,
         value: { verb: VerbType.IS, value: 4 },
       },
       predicates: [{
@@ -345,7 +345,7 @@ describe('EventInterpretorController: ALL', () => {
 
   test('ALL stops when canDo returns false', () => {
     const interp = makeInterpretor();
-    // Only 1 infliction — ALL FOR AT_MOST 4 should stop after 1 iteration
+    // Only 1 infliction — ALL FOR LESS_THAN_EQUAL 4 should stop after 1 iteration
     interp.controller.addEvent(makeInflictionEvent(INFLICTION_COLUMNS.HEAT, 50, 200));
 
     const ctx = makeCtx(interp);
@@ -354,7 +354,7 @@ describe('EventInterpretorController: ALL', () => {
     const effect: Effect = {
       verb: VerbType.ALL,
       for: {
-        cardinalityConstraint: CardinalityConstraintType.AT_MOST,
+        cardinalityConstraint: CardinalityConstraintType.LESS_THAN_EQUAL,
         value: { verb: VerbType.IS, value: 4 },
       },
       predicates: [{

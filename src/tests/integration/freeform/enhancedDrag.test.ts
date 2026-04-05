@@ -39,7 +39,7 @@ const ENHANCED_BS_ID: string = require('../../../model/game-data/operators/laeva
 
 /** Find the battle skill column for slot-0 and return it (asserts it exists). */
 function getBattleCol(app: AppResult) {
-  const col = findColumn(app, SLOT, NounType.BATTLE_SKILL);
+  const col = findColumn(app, SLOT, NounType.BATTLE);
   expect(col).toBeDefined();
   return col!;
 }
@@ -199,7 +199,7 @@ describe('Freeform enhanced/empowered drag — no ultimate required', () => {
     act(() => { result.current.setInteractionMode(InteractionModeType.STRICT); });
 
     const ev = result.current.events.find(
-      (e) => e.enhancementType === EnhancementType.ENHANCED && e.columnId === NounType.BATTLE_SKILL && e.name === ENHANCED_BS_ID,
+      (e) => e.enhancementType === EnhancementType.ENHANCED && e.columnId === NounType.BATTLE && e.name === ENHANCED_BS_ID,
     );
     expect(ev).toBeDefined();
 

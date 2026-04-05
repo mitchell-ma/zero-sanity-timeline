@@ -1448,8 +1448,8 @@ export async function decodeEmbed(
   for (const slotId of SLOT_IDS) {
     visibleSkills[slotId] = {
       [NounType.BASIC_ATTACK]: true,
-      [NounType.BATTLE_SKILL]: true,
-      [NounType.COMBO_SKILL]: true,
+      [NounType.BATTLE]: true,
+      [NounType.COMBO]: true,
       [NounType.ULTIMATE]: true,
     };
   }

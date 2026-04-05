@@ -49,7 +49,7 @@ function setupAlesh() {
 describe('Alesh Skills — Core Skill Placement', () => {
   it('A1: battle skill placed in BATTLE_SKILL column', () => {
     const { result } = setupAlesh();
-    const col = findColumn(result.current, SLOT_ALESH, NounType.BATTLE_SKILL);
+    const col = findColumn(result.current, SLOT_ALESH, NounType.BATTLE);
     expect(col).toBeDefined();
 
     const menuItems = buildContextMenu(result.current, col!, 5 * FPS);
@@ -64,7 +64,7 @@ describe('Alesh Skills — Core Skill Placement', () => {
     });
 
     const battles = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_ALESH && ev.columnId === NounType.BATTLE_SKILL,
+      (ev) => ev.ownerId === SLOT_ALESH && ev.columnId === NounType.BATTLE,
     );
     expect(battles).toHaveLength(1);
   });
@@ -75,7 +75,7 @@ describe('Alesh Skills — Core Skill Placement', () => {
     // Combo requires activation conditions — switch to freeform to bypass
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
-    const col = findColumn(result.current, SLOT_ALESH, NounType.COMBO_SKILL);
+    const col = findColumn(result.current, SLOT_ALESH, NounType.COMBO);
     expect(col).toBeDefined();
 
     const menuItems = buildContextMenu(result.current, col!, 5 * FPS);
@@ -90,7 +90,7 @@ describe('Alesh Skills — Core Skill Placement', () => {
     });
 
     const combos = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_ALESH && ev.columnId === NounType.COMBO_SKILL,
+      (ev) => ev.ownerId === SLOT_ALESH && ev.columnId === NounType.COMBO,
     );
     expect(combos).toHaveLength(1);
   });
@@ -127,7 +127,7 @@ describe('Alesh Skills — Core Skill Placement', () => {
 describe('Alesh Skills — Battle Skill', () => {
   it('B1: battle skill processes with correct skill name', () => {
     const { result } = setupAlesh();
-    const col = findColumn(result.current, SLOT_ALESH, NounType.BATTLE_SKILL);
+    const col = findColumn(result.current, SLOT_ALESH, NounType.BATTLE);
     expect(col).toBeDefined();
 
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
@@ -138,7 +138,7 @@ describe('Alesh Skills — Battle Skill', () => {
     });
 
     const battles = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_ALESH && ev.columnId === NounType.BATTLE_SKILL,
+      (ev) => ev.ownerId === SLOT_ALESH && ev.columnId === NounType.BATTLE,
     );
     expect(battles).toHaveLength(1);
     expect(battles[0].name).toBe(BATTLE_SKILL_ID);
@@ -156,7 +156,7 @@ describe('Alesh Skills — Combo Cooldown', () => {
     // Switch to freeform for combo placement
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
-    const col = findColumn(result.current, SLOT_ALESH, NounType.COMBO_SKILL);
+    const col = findColumn(result.current, SLOT_ALESH, NounType.COMBO);
     expect(col).toBeDefined();
 
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
@@ -167,7 +167,7 @@ describe('Alesh Skills — Combo Cooldown', () => {
     });
 
     const combos = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_ALESH && ev.columnId === NounType.COMBO_SKILL,
+      (ev) => ev.ownerId === SLOT_ALESH && ev.columnId === NounType.COMBO,
     );
     expect(combos).toHaveLength(1);
 
@@ -223,7 +223,7 @@ describe('Alesh Skills — Ultimate', () => {
 describe('Alesh Skills — View Layer', () => {
   it('E1: battle skill visible in presentation', () => {
     const { result } = setupAlesh();
-    const col = findColumn(result.current, SLOT_ALESH, NounType.BATTLE_SKILL);
+    const col = findColumn(result.current, SLOT_ALESH, NounType.BATTLE);
     expect(col).toBeDefined();
 
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
@@ -240,7 +240,7 @@ describe('Alesh Skills — View Layer', () => {
     const battleVm = viewModels.get(col!.key);
     expect(battleVm).toBeDefined();
     const battleEvents = battleVm!.events.filter(
-      (ev) => ev.ownerId === SLOT_ALESH && ev.columnId === NounType.BATTLE_SKILL,
+      (ev) => ev.ownerId === SLOT_ALESH && ev.columnId === NounType.BATTLE,
     );
     expect(battleEvents).toHaveLength(1);
   });

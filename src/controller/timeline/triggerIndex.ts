@@ -12,9 +12,9 @@
  *
  * Replaces the pre-queue collectEngineTriggerEntries scan.
  */
-import { StackInteractionType, EventCategoryType, UnitType, UNLIMITED_STACKS } from '../../consts/enums';
+import { StackInteractionType, UnitType, UNLIMITED_STACKS } from '../../consts/enums';
 import type { LoadoutProperties } from '../../view/InformationPane';
-import type { StatusEventDef } from './statusTriggerCollector';
+import type { StatusEventDef } from './eventQueueTypes';
 import type { Predicate, TriggerEffect } from './triggerMatch';
 import type { ValueNode } from '../../dsl/semantics';
 import { VerbType, NounType, ObjectType, AdjectiveType, DeterminerType, THRESHOLD_MAX } from '../../dsl/semantics';
@@ -29,7 +29,7 @@ import { TimelineEvent, durationSegment } from '../../consts/viewTypes';
 
 // ── Skill-alias-to-column mapping ────────────────────────────────────────────
 
-/** Maps legacy skill aliases to their NounType column ID (identity for NounType values). */
+/** Maps legacy skill aliases to their NounType column ID. */
 const SKILL_ALIAS_TO_COLUMN: Record<string, string> = {
   ULTIMATE_SKILL: NounType.ULTIMATE,
 };
@@ -114,7 +114,7 @@ const VERB_PRIORITIES: Record<string, number> = {
   [VerbType.DEFEAT]: 40, [VerbType.RECEIVE]: 50, [VerbType.BECOME]: 55, [VerbType.RECOVER]: 60, [VerbType.HAVE]: 70, [VerbType.IS]: 80,
 };
 
-// ── Equip def normalization (mirrors statusTriggerCollector.ts) ─────────────
+// ── Equip def normalization ─────────────────────────────────────────────────
 
 function normalizeEquipDef(raw: NormalizedEffectDef): StatusEventDef {
   const rp = raw.properties as Record<string, unknown> | undefined;
@@ -153,7 +153,7 @@ function normalizeEquipDef(raw: NormalizedEffectDef): StatusEventDef {
       duration: rp?.duration as StatusEventDef['properties']['duration'],
       susceptibility: raw.susceptibility ?? (rp?.susceptibility as string),
       cooldownSeconds: raw.cooldownSeconds ?? (rp?.cooldownSeconds as number),
-      ...(raw.eventCategoryType ? { eventCategoryType: raw.eventCategoryType } : {}),
+      ...(raw.eventIdType ? { eventIdType: raw.eventIdType } : {}),
     },
     onTriggerClause: raw.onTriggerClause as StatusEventDef['onTriggerClause'] ?? [],
   } as StatusEventDef;
@@ -196,11 +196,13 @@ function getDurationFrames(duration: { value: ValueNode; unit: string }): number
 /** Resolve primary verb key for indexing: verb + resolved column/object. */
 function resolveTriggerKey(verb: string, cond: Predicate): string {
   if (verb === VerbType.PERFORM) {
-    // Frame-level perform actions keep their own key so they are only matched
-    // by checkPerformTriggers (not by generic column-level reactive triggers).
-    if (cond.object === NounType.FINAL_STRIKE || cond.object === NounType.FINISHER || cond.object === NounType.DIVE_ATTACK) {
-      return `${VerbType.PERFORM}:${cond.object}`;
+    // Normalized skill: object=SKILL, objectId=BASIC_ATTACK/BATTLE_SKILL/etc.
+    // Resolve to the specific skill column via objectId.
+    if (cond.object === NounType.SKILL && cond.objectId) {
+      const col = SKILL_ALIAS_TO_COLUMN[cond.objectId] ?? cond.objectId;
+      return `${VerbType.PERFORM}:${col}`;
     }
+    // Legacy/non-skill frame-level actions (NORMAL_ATTACK, CHARGE, CRITICAL_HIT)
     const col = SKILL_ALIAS_TO_COLUMN[cond.object ?? ''] ?? cond.object;
     return `${VerbType.PERFORM}:${col}`;
   }
@@ -374,7 +376,7 @@ export class TriggerIndex {
         skillTriggerDefs.push({
           properties: {
             id: skill.id,
-            eventCategoryType: skill.eventCategoryType,
+            eventIdType: skill.eventIdType,
           },
           onTriggerClause: skill.onTriggerClause as unknown as StatusEventDef['onTriggerClause'],
         } as unknown as StatusEventDef);
@@ -446,7 +448,7 @@ export class TriggerIndex {
 
     for (const def of defs) {
       // ── Talent defs ──────────────────────────────────────────────────
-      if ((def.properties.eventCategoryType ?? def.properties.type) === EventCategoryType.TALENT) {
+      if ((def.properties.eventIdType ?? def.properties.type) === NounType.TALENT) {
         // Description-only talents (no trigger, no clause, no segments) are metadata-only — skip.
         // Their effects are baked into skill frames; the talent JSON is just a label.
         const hasTrigger = def.onTriggerClause && def.onTriggerClause.length > 0;
@@ -523,14 +525,14 @@ export class TriggerIndex {
       // Weapons, gear, consumables, and tacticals can have passive APPLY STAT
       // clauses. Register these for passive stat interpretation at frame 0.
       // Consumables also get a presence event (they're active-at-start buffs).
-      const ect = def.properties.eventCategoryType ?? def.properties.type;
-      if (isEquip && ect !== EventCategoryType.TALENT && def.clause && Array.isArray(def.clause)) {
+      const ect = def.properties.eventIdType ?? def.properties.type;
+      if (isEquip && ect !== NounType.TALENT && def.clause && Array.isArray(def.clause)) {
         const hasPassiveStats = (def.clause as { conditions?: unknown[]; effects?: { verb?: string; object?: string }[] }[])
           .some(c => (!c.conditions || c.conditions.length === 0) && c.effects?.some(e => e.verb === VerbType.APPLY && e.object === NounType.STAT));
         if (hasPassiveStats) {
           // Consumables are active-at-start buffs — create a presence event like talents.
           let presenceEvent: TimelineEvent | null = null;
-          if (ect === EventCategoryType.CONSUMABLE) {
+          if (ect === NounType.CONSUMABLE) {
             const dur = def.properties.duration ? getDurationFrames(def.properties.duration) : TOTAL_FRAMES;
             const ownerId = resolveTargetOwnerId(def.properties.target, slotId, opSlotMap, def.properties.targetDeterminer);
             presenceEvent = {
@@ -538,7 +540,7 @@ export class TriggerIndex {
               id: def.properties.id,
               name: def.properties.id,
               ownerId,
-              columnId: EventCategoryType.CONSUMABLE,
+              columnId: NounType.CONSUMABLE,
               startFrame: 0,
               segments: durationSegment(dur),
               sourceOwnerId: operatorId,
@@ -554,7 +556,7 @@ export class TriggerIndex {
       // ── Lifecycle clauses (clause with HAVE conditions) ──────────────
       // Skip lifecycle indexing for passive talents — they're pre-registered as permanent
       // presence events and shouldn't be re-created by the lifecycle trigger system.
-      const isTalentType = ect === EventCategoryType.TALENT;
+      const isTalentType = ect === NounType.TALENT;
       const talentDur = def.properties.duration;
       const isPassiveTalent = isTalentType && (!talentDur || getDurationFrames(talentDur) >= TOTAL_FRAMES);
       if (!isPassiveTalent && def.clause && Array.isArray(def.clause)) {
@@ -599,7 +601,7 @@ export class TriggerIndex {
 
       const hasEffects = def.onTriggerClause.some(c => c.effects && c.effects.length > 0);
       const hasClauseEffects = (def.clause as { effects?: unknown[] }[] | undefined)?.some(c => c.effects && c.effects.length > 0);
-      if (!hasEffects && !hasClauseEffects && (def.properties.eventCategoryType ?? def.properties.type) !== EventCategoryType.TALENT) continue;
+      if (!hasEffects && !hasClauseEffects && (def.properties.eventIdType ?? def.properties.type) !== NounType.TALENT) continue;
 
       for (let ci = 0; ci < def.onTriggerClause.length; ci++) {
         const clause = def.onTriggerClause[ci];

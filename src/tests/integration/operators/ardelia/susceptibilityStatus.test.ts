@@ -51,8 +51,8 @@ describe('Ardelia Dolly Rush — Susceptibility Status', () => {
 
       // ── Context menu layer ──────────────────────────────────────────
       const basicCol = findColumn(result.current, SLOT_ARDELIA, NounType.BASIC_ATTACK);
-      const comboCol = findColumn(result.current, SLOT_ARDELIA, NounType.COMBO_SKILL);
-      const battleCol = findColumn(result.current, SLOT_ARDELIA, NounType.BATTLE_SKILL);
+      const comboCol = findColumn(result.current, SLOT_ARDELIA, NounType.COMBO);
+      const battleCol = findColumn(result.current, SLOT_ARDELIA, NounType.BATTLE);
       expect(basicCol).toBeDefined();
       expect(comboCol).toBeDefined();
       expect(battleCol).toBeDefined();
@@ -148,7 +148,7 @@ describe('Ardelia Dolly Rush — Susceptibility Status', () => {
     it('does not apply susceptibility when enemy has no Corrosion', () => {
       const { result } = renderHook(() => useApp());
 
-      const battleCol = findColumn(result.current, SLOT_ARDELIA, NounType.BATTLE_SKILL);
+      const battleCol = findColumn(result.current, SLOT_ARDELIA, NounType.BATTLE);
       expect(battleCol).toBeDefined();
 
       // Context menu available for battle skill
@@ -180,8 +180,8 @@ describe('Ardelia Dolly Rush — Susceptibility Status', () => {
       });
 
       const basicCol = findColumn(result.current, SLOT_ARDELIA, NounType.BASIC_ATTACK);
-      const comboCol = findColumn(result.current, SLOT_ARDELIA, NounType.COMBO_SKILL);
-      const battleCol = findColumn(result.current, SLOT_ARDELIA, NounType.BATTLE_SKILL);
+      const comboCol = findColumn(result.current, SLOT_ARDELIA, NounType.COMBO);
+      const battleCol = findColumn(result.current, SLOT_ARDELIA, NounType.BATTLE);
 
       // Basic → Combo → Battle all via freeform context menu
       const basicPayload = getMenuPayload(result.current, basicCol!, 0);
@@ -256,7 +256,7 @@ describe('Ardelia Dolly Rush — Susceptibility Status', () => {
         result.current.setInteractionMode(InteractionModeType.STRICT);
       });
 
-      const battleCol = findColumn(result.current, SLOT_ARDELIA, NounType.BATTLE_SKILL);
+      const battleCol = findColumn(result.current, SLOT_ARDELIA, NounType.BATTLE);
       const battlePayload = getMenuPayload(result.current, battleCol!, 12 * FPS);
       act(() => {
         result.current.handleAddEvent(
@@ -287,8 +287,8 @@ describe('Ardelia Dolly Rush — Susceptibility Status', () => {
       });
 
       const basicCol = findColumn(result.current, SLOT_ARDELIA, NounType.BASIC_ATTACK);
-      const comboCol = findColumn(result.current, SLOT_ARDELIA, NounType.COMBO_SKILL);
-      const battleCol = findColumn(result.current, SLOT_ARDELIA, NounType.BATTLE_SKILL);
+      const comboCol = findColumn(result.current, SLOT_ARDELIA, NounType.COMBO);
+      const battleCol = findColumn(result.current, SLOT_ARDELIA, NounType.BATTLE);
 
       const basicPayload = getMenuPayload(result.current, basicCol!, 0);
       act(() => {

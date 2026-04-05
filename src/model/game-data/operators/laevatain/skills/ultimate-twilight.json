@@ -43,52 +43,73 @@
             },
             {
               "verb": "ENABLE",
-              "objectId": "FLAMING_CINDERS_ENHANCED",
-              "object": "BATK",
-              "toDeterminer": "THIS",
-              "to": "OPERATOR"
+              "object": "SKILL",
+              "objectId": "BASIC_ATTACK",
+              "objectQualifier": "FLAMING_CINDERS_BATK_ENHANCED",
+              "of": {
+                "determiner": "THIS",
+                "object": "OPERATOR"
+              }
             },
             {
               "verb": "DISABLE",
-              "objectId": "FLAMING_CINDERS",
-              "object": "BATK",
-              "toDeterminer": "THIS",
-              "to": "OPERATOR"
+              "object": "SKILL",
+              "objectId": "BASIC_ATTACK",
+              "objectQualifier": "FLAMING_CINDERS_BATK",
+              "of": {
+                "determiner": "THIS",
+                "object": "OPERATOR"
+              }
             },
             {
               "verb": "DISABLE",
-              "objectId": "FINISHER",
-              "object": "FINISHER",
-              "toDeterminer": "THIS",
-              "to": "OPERATOR"
+              "object": "SKILL",
+              "objectId": "BASIC_ATTACK",
+              "objectQualifier": "FINISHER",
+              "of": {
+                "determiner": "THIS",
+                "object": "OPERATOR"
+              }
             },
             {
               "verb": "ENABLE",
-              "objectId": "SMOULDERING_FIRE_ENHANCED",
-              "object": "BATTLE_SKILL",
-              "toDeterminer": "THIS",
-              "to": "OPERATOR"
+              "object": "SKILL",
+              "objectId": "BATTLE",
+              "objectQualifier": "SMOULDERING_FIRE_ENHANCED",
+              "of": {
+                "determiner": "THIS",
+                "object": "OPERATOR"
+              }
             },
             {
               "verb": "ENABLE",
-              "objectId": "SMOULDERING_FIRE_ENHANCED_EMPOWERED",
-              "object": "BATTLE_SKILL",
-              "toDeterminer": "THIS",
-              "to": "OPERATOR"
+              "object": "SKILL",
+              "objectId": "BATTLE",
+              "objectQualifier": "SMOULDERING_FIRE_ENHANCED_EMPOWERED",
+              "of": {
+                "determiner": "THIS",
+                "object": "OPERATOR"
+              }
             },
             {
               "verb": "DISABLE",
-              "objectId": "SMOULDERING_FIRE",
-              "object": "BATTLE_SKILL",
-              "toDeterminer": "THIS",
-              "to": "OPERATOR"
+              "object": "SKILL",
+              "objectId": "BATTLE",
+              "objectQualifier": "SMOULDERING_FIRE",
+              "of": {
+                "determiner": "THIS",
+                "object": "OPERATOR"
+              }
             },
             {
               "verb": "DISABLE",
-              "objectId": "SMOULDERING_FIRE_EMPOWERED",
-              "object": "BATTLE_SKILL",
-              "toDeterminer": "THIS",
-              "to": "OPERATOR"
+              "object": "SKILL",
+              "objectId": "BATTLE",
+              "objectQualifier": "SMOULDERING_FIRE_EMPOWERED",
+              "of": {
+                "determiner": "THIS",
+                "object": "OPERATOR"
+              }
             }
           ]
         }
@@ -119,52 +140,73 @@
           "effects": [
             {
               "verb": "ENABLE",
-              "objectId": "FLAMING_CINDERS_ENHANCED",
-              "object": "BATK",
-              "toDeterminer": "THIS",
-              "to": "OPERATOR"
+              "object": "SKILL",
+              "objectId": "BASIC_ATTACK",
+              "objectQualifier": "FLAMING_CINDERS_BATK_ENHANCED",
+              "of": {
+                "determiner": "THIS",
+                "object": "OPERATOR"
+              }
             },
             {
               "verb": "DISABLE",
-              "objectId": "FLAMING_CINDERS",
-              "object": "BATK",
-              "toDeterminer": "THIS",
-              "to": "OPERATOR"
+              "object": "SKILL",
+              "objectId": "BASIC_ATTACK",
+              "objectQualifier": "FLAMING_CINDERS_BATK",
+              "of": {
+                "determiner": "THIS",
+                "object": "OPERATOR"
+              }
             },
             {
               "verb": "ENABLE",
-              "objectId": "SMOULDERING_FIRE_ENHANCED",
-              "object": "BATTLE_SKILL",
-              "toDeterminer": "THIS",
-              "to": "OPERATOR"
+              "object": "SKILL",
+              "objectId": "BATTLE",
+              "objectQualifier": "SMOULDERING_FIRE_ENHANCED",
+              "of": {
+                "determiner": "THIS",
+                "object": "OPERATOR"
+              }
             },
             {
               "verb": "ENABLE",
-              "objectId": "SMOULDERING_FIRE_ENHANCED_EMPOWERED",
-              "object": "BATTLE_SKILL",
-              "toDeterminer": "THIS",
-              "to": "OPERATOR"
+              "object": "SKILL",
+              "objectId": "BATTLE",
+              "objectQualifier": "SMOULDERING_FIRE_ENHANCED_EMPOWERED",
+              "of": {
+                "determiner": "THIS",
+                "object": "OPERATOR"
+              }
             },
             {
               "verb": "DISABLE",
-              "objectId": "SMOULDERING_FIRE",
-              "object": "BATTLE_SKILL",
-              "toDeterminer": "THIS",
-              "to": "OPERATOR"
+              "object": "SKILL",
+              "objectId": "BATTLE",
+              "objectQualifier": "SMOULDERING_FIRE",
+              "of": {
+                "determiner": "THIS",
+                "object": "OPERATOR"
+              }
             },
             {
               "verb": "DISABLE",
-              "objectId": "SMOULDERING_FIRE_EMPOWERED",
-              "object": "BATTLE_SKILL",
-              "toDeterminer": "THIS",
-              "to": "OPERATOR"
+              "object": "SKILL",
+              "objectId": "BATTLE",
+              "objectQualifier": "SMOULDERING_FIRE_EMPOWERED",
+              "of": {
+                "determiner": "THIS",
+                "object": "OPERATOR"
+              }
             },
             {
               "verb": "DISABLE",
-              "objectId": "FINISHER",
-              "object": "FINISHER",
-              "toDeterminer": "THIS",
-              "to": "OPERATOR"
+              "object": "SKILL",
+              "objectId": "BASIC_ATTACK",
+              "objectQualifier": "FINISHER",
+              "of": {
+                "determiner": "THIS",
+                "object": "OPERATOR"
+              }
             }
           ]
         }
@@ -198,8 +240,10 @@
                   0.85,
                   0.85
                 ],
-                "ofDeterminer": "THIS",
-                "of": "OPERATOR"
+                "of": {
+                  "object": "OPERATOR",
+                  "determiner": "THIS"
+                }
               }
             }
           }
@@ -210,8 +254,8 @@
   "properties": {
     "name": "Twilight",
     "description": "Laevatain summons her Sviga Lævi and becomes the controlled operator. \nFor a certain duration, her basic attacks (BATK) are enhanced and the Sviga Lævi strikes together with Laevatain, with each attack dealing Heat DMG. BATK sequence 3 also applies Heat Infliction.",
-    "eventType": "COMBAT_SKILL",
-    "eventCategoryType": "ULTIMATE_SKILL",
+    "eventType": "SKILL",
+    "eventIdType": "ULTIMATE",
     "id": "TWILIGHT"
   },
   "metadata": {

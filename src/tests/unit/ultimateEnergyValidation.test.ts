@@ -320,20 +320,20 @@ describe('hasEnableClauseAtFrame', () => {
 
   test('returns true when frame falls within a segment with ENABLE clause', () => {
     const ev = ultWithSegments(0, twilightSegments);
-    // All three pre-cooldown segments (Animation, Stasis, Active) have ENABLE for FLAMING_CINDERS_ENHANCED
-    expect(hasEnableClauseAtFrame([ev], SLOT, 'FLAMING_CINDERS_ENHANCED', 100)).toBe(true);
-    expect(hasEnableClauseAtFrame([ev], SLOT, 'FLAMING_CINDERS_ENHANCED', 500)).toBe(true);
+    // All three pre-cooldown segments (Animation, Stasis, Active) have ENABLE for FLAMING_CINDERS_BATK_ENHANCED
+    expect(hasEnableClauseAtFrame([ev], SLOT, 'FLAMING_CINDERS_BATK_ENHANCED', 100)).toBe(true);
+    expect(hasEnableClauseAtFrame([ev], SLOT, 'FLAMING_CINDERS_BATK_ENHANCED', 500)).toBe(true);
   });
 
   test('returns false after ultimate ends (past all segments)', () => {
     const ev = ultWithSegments(0, twilightSegments);
     const totalDuration = twilightSegments.reduce((s, seg) => s + seg.properties.duration, 0);
-    expect(hasEnableClauseAtFrame([ev], SLOT, 'FLAMING_CINDERS_ENHANCED', totalDuration + 100)).toBe(false);
+    expect(hasEnableClauseAtFrame([ev], SLOT, 'FLAMING_CINDERS_BATK_ENHANCED', totalDuration + 100)).toBe(false);
   });
 
   test('returns false before ultimate starts', () => {
     const ev = ultWithSegments(1000, twilightSegments);
-    expect(hasEnableClauseAtFrame([ev], SLOT, 'FLAMING_CINDERS_ENHANCED', 500)).toBe(false);
+    expect(hasEnableClauseAtFrame([ev], SLOT, 'FLAMING_CINDERS_BATK_ENHANCED', 500)).toBe(false);
   });
 
   test('returns false for non-enabled variant ID', () => {
@@ -344,12 +344,12 @@ describe('hasEnableClauseAtFrame', () => {
 
   test('returns false for different owner', () => {
     const ev = ultWithSegments(0, twilightSegments);
-    expect(hasEnableClauseAtFrame([ev], 'slot-1', 'FLAMING_CINDERS_ENHANCED', 500)).toBe(false);
+    expect(hasEnableClauseAtFrame([ev], 'slot-1', 'FLAMING_CINDERS_BATK_ENHANCED', 500)).toBe(false);
   });
 
   test('returns false when event has no segments', () => {
     const ev = makeEvent({ uid: 'ult-1', ownerId: SLOT, columnId: NounType.ULTIMATE, startFrame: 0 });
-    expect(hasEnableClauseAtFrame([ev], SLOT, 'FLAMING_CINDERS_ENHANCED', 0)).toBe(false);
+    expect(hasEnableClauseAtFrame([ev], SLOT, 'FLAMING_CINDERS_BATK_ENHANCED', 0)).toBe(false);
   });
 });
 
@@ -504,32 +504,32 @@ describe('ENABLE/DISABLE clause variant validation', () => {
 
   test('enhanced variant is available during ENABLE window', () => {
     const events = [ultEvent(0)];
-    const result = checkVariantAvailability('FLAMING_CINDERS_ENHANCED', SLOT, events, 500, NounType.BASIC_ATTACK);
+    const result = checkVariantAvailability('FLAMING_CINDERS_BATK_ENHANCED', SLOT, events, 500, NounType.BASIC_ATTACK);
     expect(result.disabled).toBe(false);
   });
 
   test('enhanced variant is disabled outside ENABLE window (past ultimate)', () => {
     const events = [ultEvent(0)];
-    const result = checkVariantAvailability('FLAMING_CINDERS_ENHANCED', SLOT, events, totalDuration + 100, NounType.BASIC_ATTACK);
+    const result = checkVariantAvailability('FLAMING_CINDERS_BATK_ENHANCED', SLOT, events, totalDuration + 100, NounType.BASIC_ATTACK);
     expect(result.disabled).toBe(true);
     expect(result.reason).toContain('Activation condition not met');
   });
 
   test('enhanced variant is disabled when no ultimate placed', () => {
-    const result = checkVariantAvailability('FLAMING_CINDERS_ENHANCED', SLOT, [], 500, NounType.BASIC_ATTACK, mockSlots);
+    const result = checkVariantAvailability('FLAMING_CINDERS_BATK_ENHANCED', SLOT, [], 500, NounType.BASIC_ATTACK, mockSlots);
     expect(result.disabled).toBe(true);
   });
 
   test('regular basic is blocked during DISABLE window', () => {
     const events = [ultEvent(0)];
-    const result = checkVariantAvailability('FLAMING_CINDERS', SLOT, events, 500, NounType.BASIC_ATTACK);
+    const result = checkVariantAvailability('FLAMING_CINDERS_BATK', SLOT, events, 500, NounType.BASIC_ATTACK);
     expect(result.disabled).toBe(true);
-    expect(result.reason).toContain('FLAMING_CINDERS disabled');
+    expect(result.reason).toContain('FLAMING_CINDERS_BATK disabled');
   });
 
   test('regular basic is allowed outside DISABLE window (past ultimate)', () => {
     const events = [ultEvent(0)];
-    const result = checkVariantAvailability('FLAMING_CINDERS', SLOT, events, totalDuration + 100, NounType.BASIC_ATTACK);
+    const result = checkVariantAvailability('FLAMING_CINDERS_BATK', SLOT, events, totalDuration + 100, NounType.BASIC_ATTACK);
     expect(result.disabled).toBe(false);
   });
 
@@ -562,7 +562,7 @@ describe('validateEnhanced and validateDisabledVariants', () => {
   test('enhanced basic during ENABLE window: no warning', () => {
     const events = [
       ultEvent(0),
-      makeEvent({ uid: 'basic-1', ownerId: SLOT, columnId: NounType.BASIC_ATTACK, name: 'FLAMING_CINDERS_ENHANCED', startFrame: 500, enhancementType: EnhancementType.ENHANCED }),
+      makeEvent({ uid: 'basic-1', ownerId: SLOT, columnId: NounType.BASIC_ATTACK, name: 'FLAMING_CINDERS_BATK_ENHANCED', startFrame: 500, enhancementType: EnhancementType.ENHANCED }),
     ];
     const warnings = validateEnhanced(events);
     expect(warnings.has('basic-1')).toBe(false);
@@ -571,7 +571,7 @@ describe('validateEnhanced and validateDisabledVariants', () => {
   test('enhanced basic outside ENABLE window: warning', () => {
     const events = [
       ultEvent(0),
-      makeEvent({ uid: 'basic-1', ownerId: SLOT, columnId: NounType.BASIC_ATTACK, name: 'FLAMING_CINDERS_ENHANCED', startFrame: totalDuration + 100, enhancementType: EnhancementType.ENHANCED }),
+      makeEvent({ uid: 'basic-1', ownerId: SLOT, columnId: NounType.BASIC_ATTACK, name: 'FLAMING_CINDERS_BATK_ENHANCED', startFrame: totalDuration + 100, enhancementType: EnhancementType.ENHANCED }),
     ];
     const warnings = validateEnhanced(events);
     expect(warnings.has('basic-1')).toBe(true);
@@ -580,7 +580,7 @@ describe('validateEnhanced and validateDisabledVariants', () => {
   test('regular basic during DISABLE window: warning', () => {
     const events = [
       ultEvent(0),
-      makeEvent({ uid: 'basic-1', ownerId: SLOT, columnId: NounType.BASIC_ATTACK, name: 'FLAMING_CINDERS', startFrame: 500 }),
+      makeEvent({ uid: 'basic-1', ownerId: SLOT, columnId: NounType.BASIC_ATTACK, name: 'FLAMING_CINDERS_BATK', startFrame: 500 }),
     ];
     const warnings = validateDisabledVariants(events);
     expect(warnings.has('basic-1')).toBe(true);
@@ -589,7 +589,7 @@ describe('validateEnhanced and validateDisabledVariants', () => {
   test('regular basic outside DISABLE window (past ultimate): no warning', () => {
     const events = [
       ultEvent(0),
-      makeEvent({ uid: 'basic-1', ownerId: SLOT, columnId: NounType.BASIC_ATTACK, name: 'FLAMING_CINDERS', startFrame: totalDuration + 100 }),
+      makeEvent({ uid: 'basic-1', ownerId: SLOT, columnId: NounType.BASIC_ATTACK, name: 'FLAMING_CINDERS_BATK', startFrame: totalDuration + 100 }),
     ];
     const warnings = validateDisabledVariants(events);
     expect(warnings.has('basic-1')).toBe(false);

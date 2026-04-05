@@ -139,7 +139,7 @@ describe('Weapon Trigger Firing — Status Applied on Ultimate', () => {
     equipWeapon(result.current);
 
     // Add a battle skill instead — should NOT trigger weapon status
-    const bsCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE_SKILL);
+    const bsCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE);
     expect(bsCol).toBeDefined();
     const payload = getMenuPayload(result.current, bsCol!, 5 * FPS);
     act(() => {

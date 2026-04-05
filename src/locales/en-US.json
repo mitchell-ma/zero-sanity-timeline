@@ -154,7 +154,6 @@
   "sheet.crit.expected": "E[CRIT]",
   "sheet.crit.never": "NO CRIT",
   "sheet.crit.always": "MAX CRIT",
-  "sheet.crit.random": "RANDOM",
   "sheet.crit.manual": "MANUAL",
 
   "sheet.fold.frame": "FRAME",
@@ -325,8 +324,10 @@
   "dsl.objectQualifier.ANIMATION": "Animation",
 
   "dsl.cardinality.EXACTLY": "exactly",
-  "dsl.cardinality.AT_LEAST": "at least",
-  "dsl.cardinality.AT_MOST": "at most",
+  "dsl.cardinality.GREATER_THAN": "greater than",
+  "dsl.cardinality.GREATER_THAN_EQUAL": "at least",
+  "dsl.cardinality.LESS_THAN": "less than",
+  "dsl.cardinality.LESS_THAN_EQUAL": "at most",
 
   "dsl.determiner.THIS": "this",
   "dsl.determiner.OTHER": "other",
@@ -638,8 +639,10 @@
   "dsl.target.TEAM": "Team",
 
   "dsl.cardinality.EXACTLY": "exactly",
-  "dsl.cardinality.AT_LEAST": "at least",
-  "dsl.cardinality.AT_MOST": "at most",
+  "dsl.cardinality.GREATER_THAN": "greater than",
+  "dsl.cardinality.GREATER_THAN_EQUAL": "at least",
+  "dsl.cardinality.LESS_THAN": "less than",
+  "dsl.cardinality.LESS_THAN_EQUAL": "at most",
 
   "dsl.enhancement.EMPOWERED": "Empowered",
   "dsl.enhancement.ENHANCED": "Enhanced",

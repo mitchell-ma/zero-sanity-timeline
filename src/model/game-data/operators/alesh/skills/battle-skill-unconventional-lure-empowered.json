@@ -3,8 +3,8 @@
     "enhancementTypes": [
       "EMPOWERED"
     ],
-    "eventType": "COMBAT_SKILL",
-    "eventCategoryType": "BATTLE_SKILL",
+    "eventType": "SKILL",
+    "eventIdType": "BATTLE",
     "id": "UNCONVENTIONAL_LURE_EMPOWERED",
     "name": "Unconventional Lure (Empowered)"
   },

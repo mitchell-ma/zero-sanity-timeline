@@ -4,7 +4,7 @@
     "name": "Improved Automation",
     "level": 2,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
+    "eventIdType": "POTENTIAL",
     "description": "Ultimate Overclocked Moment improved: Ultimate Energy cost -10%."
   },
   "metadata": {

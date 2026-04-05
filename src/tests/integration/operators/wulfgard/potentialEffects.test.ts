@@ -106,7 +106,7 @@ describe('B. P5 — Natural Predator', () => {
     placeHeatInfliction(result, 1);
 
     // Combo at 2s
-    const comboCol = findColumn(result.current, SLOT_WULFGARD, NounType.COMBO_SKILL);
+    const comboCol = findColumn(result.current, SLOT_WULFGARD, NounType.COMBO);
     const comboPayload = getMenuPayload(result.current, comboCol!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
@@ -116,7 +116,7 @@ describe('B. P5 — Natural Predator', () => {
     });
 
     const comboBefore = result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.COMBO_SKILL,
+      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.COMBO,
     );
     const durationBefore = eventDuration(comboBefore!);
 
@@ -132,7 +132,7 @@ describe('B. P5 — Natural Predator', () => {
     });
 
     const comboAfter = result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.COMBO_SKILL,
+      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.COMBO,
     );
     expect(eventDuration(comboAfter!)).toBeLessThan(durationBefore);
   });
@@ -143,7 +143,7 @@ describe('B. P5 — Natural Predator', () => {
     placeHeatInfliction(result, 1);
 
     // Place combo at 2s
-    const comboCol = findColumn(result.current, SLOT_WULFGARD, NounType.COMBO_SKILL);
+    const comboCol = findColumn(result.current, SLOT_WULFGARD, NounType.COMBO);
     const comboPayload = getMenuPayload(result.current, comboCol!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
@@ -153,7 +153,7 @@ describe('B. P5 — Natural Predator', () => {
     });
 
     const comboBefore = result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.COMBO_SKILL,
+      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.COMBO,
     );
     const durationBefore = eventDuration(comboBefore!);
 
@@ -170,7 +170,7 @@ describe('B. P5 — Natural Predator', () => {
 
     // Combo duration should be shorter after cooldown reset
     const comboAfter = result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.COMBO_SKILL,
+      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.COMBO,
     );
     const durationAfter = eventDuration(comboAfter!);
     expect(durationAfter).toBeLessThan(durationBefore);
@@ -207,7 +207,7 @@ describe('C. P0 — No Potential Effects', () => {
     placeHeatInfliction(result, 1);
 
     // Combo at 2s
-    const comboCol = findColumn(result.current, SLOT_WULFGARD, NounType.COMBO_SKILL);
+    const comboCol = findColumn(result.current, SLOT_WULFGARD, NounType.COMBO);
     const comboPayload = getMenuPayload(result.current, comboCol!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
@@ -217,7 +217,7 @@ describe('C. P0 — No Potential Effects', () => {
     });
 
     const comboBefore = result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.COMBO_SKILL,
+      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.COMBO,
     );
     const durationBefore = eventDuration(comboBefore!);
 
@@ -233,7 +233,7 @@ describe('C. P0 — No Potential Effects', () => {
     });
 
     const comboAfter = result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.COMBO_SKILL,
+      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.COMBO,
     );
     const durationAfter = eventDuration(comboAfter!);
 

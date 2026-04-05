@@ -52,7 +52,7 @@ describe('Skill Level → Cooldown Update — integration through useApp', () =>
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
     // ── Context menu layer: verify add action is available ────────────
-    const comboCol = findColumn(result.current, SLOT_ARDELIA, NounType.COMBO_SKILL);
+    const comboCol = findColumn(result.current, SLOT_ARDELIA, NounType.COMBO);
     expect(comboCol).toBeDefined();
 
     const atFrame = 5 * FPS;
@@ -70,7 +70,7 @@ describe('Skill Level → Cooldown Update — integration through useApp', () =>
 
     // ── Controller layer: verify cooldown at level 12 ────────────────
     const cdAtLevel12 = getCooldownDuration(
-      result.current.allProcessedEvents, SLOT_ARDELIA, NounType.COMBO_SKILL,
+      result.current.allProcessedEvents, SLOT_ARDELIA, NounType.COMBO,
     );
     expect(cdAtLevel12).toBe(COMBO_CD_LEVEL_12_FRAMES);
 
@@ -82,7 +82,7 @@ describe('Skill Level → Cooldown Update — integration through useApp', () =>
     const colVmBefore = vmBefore.get(comboCol!.key);
     expect(colVmBefore).toBeDefined();
     const comboEventsBefore = colVmBefore!.events.filter(
-      (ev) => ev.ownerId === SLOT_ARDELIA && ev.columnId === NounType.COMBO_SKILL,
+      (ev) => ev.ownerId === SLOT_ARDELIA && ev.columnId === NounType.COMBO,
     );
     expect(comboEventsBefore.length).toBe(1);
 
@@ -97,7 +97,7 @@ describe('Skill Level → Cooldown Update — integration through useApp', () =>
 
     // ── Controller layer: verify cooldown updated to level 11 ────────
     const cdAtLevel11 = getCooldownDuration(
-      result.current.allProcessedEvents, SLOT_ARDELIA, NounType.COMBO_SKILL,
+      result.current.allProcessedEvents, SLOT_ARDELIA, NounType.COMBO,
     );
     expect(cdAtLevel11).toBe(COMBO_CD_LEVEL_11_FRAMES);
 
@@ -109,7 +109,7 @@ describe('Skill Level → Cooldown Update — integration through useApp', () =>
     const colVmAfter = vmAfter.get(comboCol!.key);
     expect(colVmAfter).toBeDefined();
     const comboEventsAfter = colVmAfter!.events.filter(
-      (ev) => ev.ownerId === SLOT_ARDELIA && ev.columnId === NounType.COMBO_SKILL,
+      (ev) => ev.ownerId === SLOT_ARDELIA && ev.columnId === NounType.COMBO,
     );
     expect(comboEventsAfter.length).toBe(1);
   });

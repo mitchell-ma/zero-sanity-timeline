@@ -83,7 +83,7 @@ function setPotential(result: { current: AppResult }, potential: number) {
 describe('Da Pan Skills — core placement', () => {
   it('A1: battle skill added without crash', () => {
     const { result } = setupDaPan();
-    const col = findColumn(result.current, SLOT_DA_PAN, NounType.BATTLE_SKILL);
+    const col = findColumn(result.current, SLOT_DA_PAN, NounType.BATTLE);
     expect(col).toBeDefined();
 
     const menuItems = buildContextMenu(result.current, col!, 5 * FPS);
@@ -98,7 +98,7 @@ describe('Da Pan Skills — core placement', () => {
     });
 
     const battles = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_DA_PAN && ev.columnId === NounType.BATTLE_SKILL,
+      (ev) => ev.ownerId === SLOT_DA_PAN && ev.columnId === NounType.BATTLE,
     );
     expect(battles).toHaveLength(1);
     expect(battles[0].name).toBe(BATTLE_SKILL_ID);
@@ -108,7 +108,7 @@ describe('Da Pan Skills — core placement', () => {
     const { result } = setupDaPan();
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
-    const col = findColumn(result.current, SLOT_DA_PAN, NounType.COMBO_SKILL);
+    const col = findColumn(result.current, SLOT_DA_PAN, NounType.COMBO);
     expect(col).toBeDefined();
 
     const menuItems = buildContextMenu(result.current, col!, 5 * FPS);
@@ -123,7 +123,7 @@ describe('Da Pan Skills — core placement', () => {
     });
 
     const combos = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_DA_PAN && ev.columnId === NounType.COMBO_SKILL,
+      (ev) => ev.ownerId === SLOT_DA_PAN && ev.columnId === NounType.COMBO,
     );
     expect(combos).toHaveLength(1);
     expect(combos[0].name).toBe(COMBO_SKILL_ID);
@@ -173,7 +173,7 @@ describe('Da Pan Skills — core placement', () => {
 describe('Da Pan Skills — battle skill Vulnerable and Lift', () => {
   it('B1: first battle skill adds Vulnerable but no Lift', () => {
     const { result } = setupDaPan();
-    const col = findColumn(result.current, SLOT_DA_PAN, NounType.BATTLE_SKILL);
+    const col = findColumn(result.current, SLOT_DA_PAN, NounType.BATTLE);
     expect(col).toBeDefined();
 
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
@@ -198,7 +198,7 @@ describe('Da Pan Skills — battle skill Vulnerable and Lift', () => {
 
   it('B2: second battle skill triggers Lift (Vulnerable gate met)', () => {
     const { result } = setupDaPan();
-    const col = findColumn(result.current, SLOT_DA_PAN, NounType.BATTLE_SKILL);
+    const col = findColumn(result.current, SLOT_DA_PAN, NounType.BATTLE);
     expect(col).toBeDefined();
 
     // 1st BS at 2s — adds Vulnerable
@@ -340,7 +340,7 @@ describe('Da Pan Skills — potential effects', () => {
     const { result } = setupDaPan();
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
-    const col = findColumn(result.current, SLOT_DA_PAN, NounType.COMBO_SKILL);
+    const col = findColumn(result.current, SLOT_DA_PAN, NounType.COMBO);
     expect(col).toBeDefined();
 
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
@@ -351,7 +351,7 @@ describe('Da Pan Skills — potential effects', () => {
     });
 
     const combos = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_DA_PAN && ev.columnId === NounType.COMBO_SKILL,
+      (ev) => ev.ownerId === SLOT_DA_PAN && ev.columnId === NounType.COMBO,
     );
     expect(combos).toHaveLength(1);
 
@@ -375,8 +375,8 @@ describe('Da Pan Skills — view layer presentation', () => {
     const { result } = setupDaPan();
 
     const basicCol = findColumn(result.current, SLOT_DA_PAN, NounType.BASIC_ATTACK);
-    const battleCol = findColumn(result.current, SLOT_DA_PAN, NounType.BATTLE_SKILL);
-    const comboCol = findColumn(result.current, SLOT_DA_PAN, NounType.COMBO_SKILL);
+    const battleCol = findColumn(result.current, SLOT_DA_PAN, NounType.BATTLE);
+    const comboCol = findColumn(result.current, SLOT_DA_PAN, NounType.COMBO);
     const ultCol = findColumn(result.current, SLOT_DA_PAN, NounType.ULTIMATE);
 
     expect(basicCol).toBeDefined();
@@ -392,7 +392,7 @@ describe('Da Pan Skills — view layer presentation', () => {
 
   it('E2: battle skill event appears in view presentation', () => {
     const { result } = setupDaPan();
-    const col = findColumn(result.current, SLOT_DA_PAN, NounType.BATTLE_SKILL);
+    const col = findColumn(result.current, SLOT_DA_PAN, NounType.BATTLE);
     expect(col).toBeDefined();
 
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
@@ -410,7 +410,7 @@ describe('Da Pan Skills — view layer presentation', () => {
     const battleVm = viewModels.get(col!.key);
     expect(battleVm).toBeDefined();
     const battleEvents = battleVm!.events.filter(
-      (ev) => ev.ownerId === SLOT_DA_PAN && ev.columnId === NounType.BATTLE_SKILL,
+      (ev) => ev.ownerId === SLOT_DA_PAN && ev.columnId === NounType.BATTLE,
     );
     expect(battleEvents).toHaveLength(1);
   });
@@ -419,7 +419,7 @@ describe('Da Pan Skills — view layer presentation', () => {
     const { result } = setupDaPan();
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
-    const comboCol = findColumn(result.current, SLOT_DA_PAN, NounType.COMBO_SKILL);
+    const comboCol = findColumn(result.current, SLOT_DA_PAN, NounType.COMBO);
     expect(comboCol).toBeDefined();
 
     const comboPayload = getMenuPayload(result.current, comboCol!, 5 * FPS);
@@ -437,7 +437,7 @@ describe('Da Pan Skills — view layer presentation', () => {
     const comboVm = viewModels.get(comboCol!.key);
     expect(comboVm).toBeDefined();
     const comboEvents = comboVm!.events.filter(
-      (ev) => ev.ownerId === SLOT_DA_PAN && ev.columnId === NounType.COMBO_SKILL,
+      (ev) => ev.ownerId === SLOT_DA_PAN && ev.columnId === NounType.COMBO,
     );
     expect(comboEvents).toHaveLength(1);
   });

@@ -39,13 +39,15 @@
           2,
           2
         ],
-        "ofDeterminer": "THIS",
-        "of": "OPERATOR"
+        "of": {
+          "object": "OPERATOR",
+          "determiner": "THIS"
+        }
       },
       "interactionType": "NONE"
     },
     "eventType": "STATUS",
-    "eventCategoryType": "SKILL_STATUS",
+    "eventIdType": "SKILL_STATUS",
     "description": "Instantly blinks to the enemy's side to deal 2 slashes that deal some Physical DMG. If the enemy has active Electrification, consume the Electrification to unleash an additional attack that deals Electric DMG and recovers some SP."
   },
   "metadata": {
@@ -59,7 +61,8 @@
           "subjectDeterminer": "THIS",
           "subject": "OPERATOR",
           "verb": "PERFORM",
-          "object": "BATTLE_SKILL"
+          "object": "SKILL",
+          "objectId": "BATTLE"
         },
         {
           "subject": "ENEMY",

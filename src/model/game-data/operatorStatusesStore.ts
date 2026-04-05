@@ -5,7 +5,7 @@
  * Auto-discovers operator-statuses/*.json via require.context.
  * Each file contains an array of operator status entries sharing an originId.
  */
-import { EventType, EventCategoryType, UNLIMITED_STACKS } from '../../consts/enums';
+import { EventType, UNLIMITED_STACKS } from '../../consts/enums';
 import type { EventSegmentData, EventFrameMarker } from '../../consts/viewTypes';
 import type { ClauseEffect, ClausePredicate, StacksConfig, DurationConfig } from './weaponStatusesStore';
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from '../../controller/calculation/valueResolver';
@@ -48,7 +48,7 @@ interface StatusSegment {
 const VALID_DURATION_KEYS = new Set(['value', 'unit', 'modifier']);
 const VALID_STATUS_LEVEL_KEYS = new Set(['limit', 'interactionType', 'level']);
 const VALID_SEGMENT_KEYS = new Set(['metadata', 'properties', 'clause', 'clauseType', 'frames']);
-const VALID_PROPERTIES_KEYS = new Set(['id', 'name', 'description', 'type', 'element', 'target', 'targetDeterminer', 'to', 'toDeterminer', 'duration', 'stacks', 'enhancementType', 'enhancementTypes', 'eventType', 'eventCategoryType', 'maxLevel']);
+const VALID_PROPERTIES_KEYS = new Set(['id', 'name', 'description', 'type', 'element', 'target', 'targetDeterminer', 'to', 'toDeterminer', 'duration', 'stacks', 'enhancementType', 'enhancementTypes', 'eventType', 'eventIdType', 'maxLevel', 'crowdControls']);
 const VALID_TOP_KEYS = new Set(['clause', 'clauseType', 'onTriggerClause', 'onEntryClause', 'onExitClause', 'segments', 'properties', 'metadata']);
 
 function validateValueNode(wv: Record<string, unknown>, path: string): string[] {
@@ -163,7 +163,7 @@ export class OperatorStatus {
   readonly stacks?: StacksConfig;
   readonly enhancementTypes?: string[];
   readonly eventType: EventType;
-  readonly eventCategoryType?: EventCategoryType;
+  readonly eventIdType?: string;
   readonly isEnabled?: boolean;
   readonly originId: string;
   readonly dataSources: string[];
@@ -217,7 +217,7 @@ export class OperatorStatus {
     }
     if (props.enhancementTypes) this.enhancementTypes = props.enhancementTypes as string[];
     this.eventType = (props.eventType as EventType) ?? EventType.STATUS;
-    if (props.eventCategoryType) this.eventCategoryType = props.eventCategoryType as EventCategoryType;
+    if (props.eventIdType) this.eventIdType = props.eventIdType as string;
     if (meta.isEnabled === false) this.isEnabled = false;
     this.originId = (meta.originId ?? '') as string;
     this.dataSources = (meta.dataSources ?? []) as string[];
@@ -255,7 +255,7 @@ export class OperatorStatus {
         ...(this.stacks ? { stacks: this.stacks } : {}),
         ...(this.enhancementTypes ? { enhancementTypes: this.enhancementTypes } : {}),
         eventType: this.eventType,
-        ...(this.eventCategoryType ? { eventCategoryType: this.eventCategoryType } : {}),
+        ...(this.eventIdType ? { eventIdType: this.eventIdType } : {}),
       },
       metadata: {
         ...(this.isEnabled === false ? { isEnabled: false } : {}),

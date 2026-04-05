@@ -165,9 +165,10 @@ describe('C. UE Recovery expression', () => {
     expect(mult.operation).toBe(ValueOperation.MULT);
     expect(mult.left.value).toBe(30);
     expect(mult.right.object).toBe(NounType.STACKS);
-    expect(mult.right.objectId).toBe(NounType.INFLICTION);
-    expect(mult.right.objectQualifier).toBe(AdjectiveType.ARTS);
-    expect(mult.right.of).toBe(NounType.ENEMY);
+    expect(mult.right.of.object).toBe(NounType.STATUS);
+    expect(mult.right.of.objectId).toBe(NounType.INFLICTION);
+    expect(mult.right.of.objectQualifier).toBe(AdjectiveType.ARTS);
+    expect(mult.right.of.of.object).toBe(NounType.ENEMY);
   });
 });
 
@@ -198,17 +199,19 @@ describe('D. Conditional damage expression', () => {
   it('D4: Cryo branch reads CRYO INFLICTION STACKS from ENEMY', () => {
     const stackRef = cryoDmg.with.value.right.right;
     expect(stackRef.object).toBe(NounType.STACKS);
-    expect(stackRef.objectId).toBe(NounType.INFLICTION);
-    expect(stackRef.objectQualifier).toBe(AdjectiveType.CRYO);
-    expect(stackRef.of).toBe(NounType.ENEMY);
+    expect(stackRef.of.object).toBe(NounType.STATUS);
+    expect(stackRef.of.objectId).toBe(NounType.INFLICTION);
+    expect(stackRef.of.objectQualifier).toBe(AdjectiveType.CRYO);
+    expect(stackRef.of.of.object).toBe(NounType.ENEMY);
   });
 
   it('D5: Nature branch reads NATURE INFLICTION STACKS from ENEMY', () => {
     const stackRef = natureDmg.with.value.right.right;
     expect(stackRef.object).toBe(NounType.STACKS);
-    expect(stackRef.objectId).toBe(NounType.INFLICTION);
-    expect(stackRef.objectQualifier).toBe(AdjectiveType.NATURE);
-    expect(stackRef.of).toBe(NounType.ENEMY);
+    expect(stackRef.of.object).toBe(NounType.STATUS);
+    expect(stackRef.of.objectId).toBe(NounType.INFLICTION);
+    expect(stackRef.of.objectQualifier).toBe(AdjectiveType.NATURE);
+    expect(stackRef.of.of.object).toBe(NounType.ENEMY);
   });
 
   it('D6: both branches scale off ATK mainStat', () => {
@@ -282,7 +285,7 @@ describe('F. Base damage multipliers & SP cost', () => {
 describe('G. Pipeline placement', () => {
   it('G1: battle skill places in pipeline with correct ID', () => {
     const { result } = setup();
-    const col = findColumn(result.current, SLOT, NounType.BATTLE_SKILL);
+    const col = findColumn(result.current, SLOT, NounType.BATTLE);
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
@@ -291,7 +294,7 @@ describe('G. Pipeline placement', () => {
     });
 
     const bs = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT && ev.columnId === NounType.BATTLE_SKILL,
+      ev => ev.ownerId === SLOT && ev.columnId === NounType.BATTLE,
     );
     expect(bs).toHaveLength(1);
     expect(bs[0].name).toBe(BS_ID);
@@ -299,7 +302,7 @@ describe('G. Pipeline placement', () => {
 
   it('G2: battle skill has exactly 1 segment', () => {
     const { result } = setup();
-    const col = findColumn(result.current, SLOT, NounType.BATTLE_SKILL);
+    const col = findColumn(result.current, SLOT, NounType.BATTLE);
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
@@ -308,14 +311,14 @@ describe('G. Pipeline placement', () => {
     });
 
     const bs = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT && ev.columnId === NounType.BATTLE_SKILL,
+      ev => ev.ownerId === SLOT && ev.columnId === NounType.BATTLE,
     );
     expect(bs[0].segments).toHaveLength(1);
   });
 
   it('G3: segment duration is 1.13s in frames', () => {
     const { result } = setup();
-    const col = findColumn(result.current, SLOT, NounType.BATTLE_SKILL);
+    const col = findColumn(result.current, SLOT, NounType.BATTLE);
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
@@ -324,7 +327,7 @@ describe('G. Pipeline placement', () => {
     });
 
     const bs = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT && ev.columnId === NounType.BATTLE_SKILL,
+      ev => ev.ownerId === SLOT && ev.columnId === NounType.BATTLE,
     );
     expect(bs[0].segments[0].properties.duration).toBe(Math.round(1.13 * FPS));
   });
@@ -347,7 +350,7 @@ describe('H. P4 SINGLE_TARGET supplied parameter', () => {
 
   it('H2: BS context menu shows supplied parameter buttons', () => {
     const { result } = setup();
-    const col = findColumn(result.current, SLOT, NounType.BATTLE_SKILL);
+    const col = findColumn(result.current, SLOT, NounType.BATTLE);
     const menuItems = buildContextMenu(result.current, col!, 5 * FPS);
     expect(menuItems).not.toBeNull();
 
@@ -363,7 +366,7 @@ describe('H. P4 SINGLE_TARGET supplied parameter', () => {
 
   it('H3: placed BS event has suppliedParameters with SINGLE_TARGET', () => {
     const { result } = setup();
-    const col = findColumn(result.current, SLOT, NounType.BATTLE_SKILL);
+    const col = findColumn(result.current, SLOT, NounType.BATTLE);
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
@@ -372,7 +375,7 @@ describe('H. P4 SINGLE_TARGET supplied parameter', () => {
     });
 
     const bs = result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT && ev.columnId === NounType.BATTLE_SKILL,
+      ev => ev.ownerId === SLOT && ev.columnId === NounType.BATTLE,
     );
     expect(bs).toBeDefined();
     expect(bs!.suppliedParameters).toBeDefined();

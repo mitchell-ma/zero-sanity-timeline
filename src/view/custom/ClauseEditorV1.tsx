@@ -287,6 +287,7 @@ function ChanceEffectBranch({ effect, onChange }: {
   onChange: (e: Effect) => void;
 }) {
   const childEffects = effect.effects ?? [];
+  const elseEffects = effect.elseEffects ?? [];
 
   const addEffect = () => {
     onChange({ ...effect, effects: [...childEffects, defaultEffect()] });
@@ -298,6 +299,17 @@ function ChanceEffectBranch({ effect, onChange }: {
   };
   const removeChildEffect = (i: number) => {
     onChange({ ...effect, effects: childEffects.filter((_, j) => j !== i) });
+  };
+  const addElseEffect = () => {
+    onChange({ ...effect, elseEffects: [...elseEffects, defaultEffect()] });
+  };
+  const updateElseEffect = (i: number, e: Effect) => {
+    const next = [...elseEffects];
+    next[i] = e;
+    onChange({ ...effect, elseEffects: next });
+  };
+  const removeElseEffect = (i: number) => {
+    onChange({ ...effect, elseEffects: elseEffects.filter((_, j) => j !== i) });
   };
 
   const chanceValue = effect.with?.value && isValueLiteral(effect.with.value)
@@ -354,6 +366,26 @@ function ChanceEffectBranch({ effect, onChange }: {
           <button className="ce-line-btn ce-line-btn--add" onClick={addEffect} title="Add effect">+</button>
         </li>
       </ul>
+
+      {/* ELSE branch */}
+      <div className="ce-label-row">
+        <span className="ce-badge ce-badge--keyword">ELSE</span>
+      </div>
+      <ul className="ce-ul">
+        {elseEffects.map((eff, ei) => (
+          <li key={ei} className="ce-li ce-li--leaf">
+            <button className="ce-line-btn ce-line-btn--remove" onClick={() => removeElseEffect(ei)} title="Remove">&times;</button>
+            <EffectBuilder
+              value={eff}
+              onChange={(e) => updateElseEffect(ei, e)}
+              compact
+            />
+          </li>
+        ))}
+        <li className="ce-li ce-li--last ce-li--addrow">
+          <button className="ce-line-btn ce-line-btn--add" onClick={addElseEffect} title="Add else effect">+</button>
+        </li>
+      </ul>
     </>
   );
 }
@@ -402,7 +434,7 @@ function CompoundEffectBranch({ effect, onChange }: {
             }
           }}
         />
-        {/* FOR cardinality: ALL FOR AT_MOST MAX */}
+        {/* FOR cardinality: ALL FOR LESS_THAN_EQUAL MAX */}
         <span className="ce-badge ce-badge--keyword">FOR</span>
         <CustomSelect
           className="ib-cardinality"

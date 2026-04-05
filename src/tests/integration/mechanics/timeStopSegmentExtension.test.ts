@@ -40,7 +40,7 @@ const noop3 = (_a: unknown, _b: unknown, _c: unknown) => {};
 /** Get the battle skill event from the ColumnViewModel (same path as real rendering). */
 function getBattleEventFromVM(app: AppResult) {
   const vms = computeTimelinePresentation(app.allProcessedEvents, app.columns);
-  const battleCol = findColumn(app, SLOT_LAEVATAIN, NounType.BATTLE_SKILL);
+  const battleCol = findColumn(app, SLOT_LAEVATAIN, NounType.BATTLE);
   const vm = vms.get(battleCol!.key);
   return vm?.events.find(ev => ev.ownerId === SLOT_LAEVATAIN) ?? null;
 }
@@ -80,8 +80,8 @@ describe('Time-stop segment extension — battle skill + combo overlap', () => {
     const { result } = renderHook(() => useApp());
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
-    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE_SKILL)!;
-    const comboCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.COMBO_SKILL)!;
+    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE)!;
+    const comboCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.COMBO)!;
     expect(battleCol).toBeDefined();
     expect(comboCol).toBeDefined();
 
@@ -103,10 +103,10 @@ describe('Time-stop segment extension — battle skill + combo overlap', () => {
     });
 
     const battleEvent = result.current.allProcessedEvents.find(
-      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === NounType.BATTLE_SKILL,
+      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === NounType.BATTLE,
     )!;
     const comboEvent = result.current.allProcessedEvents.find(
-      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === NounType.COMBO_SKILL,
+      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === NounType.COMBO,
     )!;
     const animDur = getAnimationDuration(comboEvent);
     expect(animDur).toBeGreaterThan(0);
@@ -121,8 +121,8 @@ describe('Time-stop segment extension — battle skill + combo overlap', () => {
     const { result } = renderHook(() => useApp());
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
-    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE_SKILL)!;
-    const comboCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.COMBO_SKILL)!;
+    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE)!;
+    const comboCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.COMBO)!;
 
     // Add battle skill via context menu flow
     const battlePayload = getMenuPayload(result.current, battleCol, 0);
@@ -137,7 +137,7 @@ describe('Time-stop segment extension — battle skill + combo overlap', () => {
     });
 
     const comboEvent = result.current.allProcessedEvents.find(
-      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === NounType.COMBO_SKILL,
+      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === NounType.COMBO,
     )!;
     const animDur = getAnimationDuration(comboEvent);
 
@@ -169,8 +169,8 @@ describe('Time-stop segment extension — battle skill + combo overlap', () => {
     const { result } = renderHook(() => useApp());
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
-    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE_SKILL)!;
-    const comboCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.COMBO_SKILL)!;
+    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE)!;
+    const comboCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.COMBO)!;
 
     // Add battle skill via context menu flow
     const battlePayload = getMenuPayload(result.current, battleCol, 0);
@@ -185,7 +185,7 @@ describe('Time-stop segment extension — battle skill + combo overlap', () => {
     });
 
     const comboUid = result.current.allProcessedEvents.find(
-      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === NounType.COMBO_SKILL,
+      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === NounType.COMBO,
     )!.uid;
 
     // Capture ColumnViewModel event at combo=0s
@@ -209,8 +209,8 @@ describe('Time-stop segment extension — battle skill + combo overlap', () => {
     const { result } = renderHook(() => useApp());
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
-    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE_SKILL)!;
-    const comboCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.COMBO_SKILL)!;
+    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE)!;
+    const comboCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.COMBO)!;
 
     // Add battle skill via context menu flow
     const battlePayload = getMenuPayload(result.current, battleCol, 0);
@@ -225,7 +225,7 @@ describe('Time-stop segment extension — battle skill + combo overlap', () => {
     });
 
     const comboUid = result.current.allProcessedEvents.find(
-      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === NounType.COMBO_SKILL,
+      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === NounType.COMBO,
     )!.uid;
 
     // Render EventBlock with the ColumnViewModel event (combo at 0s)

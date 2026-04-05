@@ -6,7 +6,7 @@
           "subject": "ENEMY",
           "verb": "HAVE",
           "object": "HP",
-          "cardinalityConstraint": "AT_MOST",
+          "cardinalityConstraint": "LESS_THAN_EQUAL",
           "with": {
             "value": {
               "verb": "IS",
@@ -77,7 +77,7 @@
       "interactionType": "RESET"
     },
     "eventType": "STATUS",
-    "eventCategoryType": "POTENTIAL_STATUS",
+    "eventIdType": "POTENTIAL_STATUS",
     "description": "DMG Dealt +20% to enemies below 50% HP."
   },
   "metadata": {

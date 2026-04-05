@@ -1,6 +1,6 @@
 import { TimelineEvent, getAnimationDuration } from '../../consts/viewTypes';
 import { NounType } from '../../dsl/semantics';
-import { CombatSkillType, TimeDependency } from '../../consts/enums';
+import { TimeDependency } from '../../consts/enums';
 import { OPERATOR_COLUMNS } from '../../model/channels';
 import type { TimeStopRange } from './resourceTimeline';
 
@@ -15,7 +15,7 @@ export interface TimeStopRegion {
 export function isTimeStopEvent(ev: TimelineEvent): boolean {
   const anim = getAnimationDuration(ev);
   if (anim <= 0) return false;
-  return ev.columnId === NounType.ULTIMATE || ev.columnId === NounType.COMBO_SKILL ||
+  return ev.columnId === NounType.ULTIMATE || ev.columnId === NounType.COMBO ||
     (ev.columnId === OPERATOR_COLUMNS.INPUT && !!ev.isPerfectDodge);
 }
 
@@ -149,7 +149,7 @@ export function applyTimeStopExtension(
     if (extended.has(ev.uid)) return ev;
 
     // Control events are not affected by time-stops (timer keeps ticking)
-    if (ev.id === CombatSkillType.CONTROL) return ev;
+    if (ev.id === NounType.CONTROL) return ev;
 
     const isOwn = isTimeStopEvent(ev);
     const animDur = getAnimationDuration(ev);
@@ -283,7 +283,7 @@ export function validateTimeStopStarts(
       if (!source) continue;
 
       // Control swap cannot occur during any time-stop (including dodge)
-      if (ev.id === CombatSkillType.CONTROL) {
+      if (ev.id === NounType.CONTROL) {
         warnings.push(`Control swap cannot occur during time-stop`);
         continue;
       }
@@ -295,7 +295,7 @@ export function validateTimeStopStarts(
       if (sourceIsDodge) continue;
 
       // Combo cannot start during ultimate animation time-stop
-      if (ev.columnId === NounType.COMBO_SKILL && sourceIsUltimate) {
+      if (ev.columnId === NounType.COMBO && sourceIsUltimate) {
         warnings.push(`Combo skill cannot start during ultimate animation time-stop`);
       }
 

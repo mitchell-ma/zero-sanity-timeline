@@ -4,7 +4,7 @@
     "name": "Absolute Zero Armament",
     "level": 2,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
+    "eventIdType": "POTENTIAL",
     "description": "Strength +{Str:0}, Cryo DMG Dealt +{CrystDamageIncrease:0%}."
   },
   "metadata": {

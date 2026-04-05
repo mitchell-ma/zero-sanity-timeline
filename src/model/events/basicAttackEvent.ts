@@ -1,6 +1,6 @@
+import { NounType } from "../../dsl/semantics";
 import {
   BasicAttackType,
-  CombatSkillType,
 } from "../../consts/enums";
 import type { DslTarget } from "../../dsl/semantics";
 import { CombatSkillEvent } from "./combatSkillEvent";
@@ -17,7 +17,7 @@ export class BasicAttackEvent extends CombatSkillEvent {
     cooldownSeconds: number;
   }) {
     super({
-      combatSkillType: CombatSkillType.BASIC_ATTACK,
+      combatSkillType: NounType.BASIC_ATTACK,
       name: params.name,
       target: params.target,
       sourceOperator: params.sourceOperator,

@@ -65,8 +65,8 @@ const makeSlot = (slotId: string, operator: Operator): Slot => ({
 const allSkillsVisible = (slotId: string): VisibleSkills => ({
   [slotId]: {
     [NounType.BASIC_ATTACK]: true,
-    [NounType.BATTLE_SKILL]: true,
-    [NounType.COMBO_SKILL]: true,
+    [NounType.BATTLE]: true,
+    [NounType.COMBO]: true,
     [NounType.ULTIMATE]: true,
   } as Record<string, boolean>,
 });

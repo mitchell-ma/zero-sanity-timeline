@@ -2,8 +2,8 @@
   "properties": {
     "name": "Overclocked Moment",
     "description": "Applies temporary Electric Amp and Heat Amp to the entire team.",
-    "eventType": "COMBAT_SKILL",
-    "eventCategoryType": "ULTIMATE_SKILL",
+    "eventType": "SKILL",
+    "eventIdType": "ULTIMATE",
     "id": "OVERCLOCKED_MOMENT"
   },
   "clause": [
@@ -31,8 +31,10 @@
                   0.9,
                   0.9
                 ],
-                "ofDeterminer": "THIS",
-                "of": "OPERATOR"
+                "of": {
+                  "object": "OPERATOR",
+                  "determiner": "THIS"
+                }
               }
             }
           }

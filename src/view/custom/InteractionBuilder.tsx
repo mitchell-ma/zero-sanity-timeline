@@ -74,7 +74,7 @@ export default function InteractionBuilder({ value, onChange, onRemove, compact 
             value={value.subjectProperty ?? ''}
             options={[
               { value: '', label: '—' },
-              ...[ObjectType.ULTIMATE, ObjectType.BATTLE_SKILL, ObjectType.COMBO_SKILL, ObjectType.BASIC_ATTACK, ObjectType.HP].map((o) => ({ value: o, label: OBJECT_LABELS[o] ?? o })),
+              ...[ObjectType.ULTIMATE, ObjectType.BATTLE, ObjectType.COMBO, ObjectType.BASIC_ATTACK, ObjectType.HP].map((o) => ({ value: o, label: OBJECT_LABELS[o] ?? o })),
             ]}
             onChange={(v) => update({ subjectProperty: (v || undefined) as ObjectType | undefined })}
           />

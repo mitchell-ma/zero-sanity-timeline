@@ -2,8 +2,8 @@
   "properties": {
     "name": "Thunderlance: Strike",
     "description": "When controlled operator performs a Final Strike on a target with active Electric Infliction or Electrification. Leaps into mid-air and throws 3 Thunderlances at the target, then deals 1 hit of Electric DMG to enemies in the area of effect.",
-    "eventType": "COMBAT_SKILL",
-    "eventCategoryType": "COMBO_SKILL",
+    "eventType": "SKILL",
+    "eventIdType": "COMBO",
     "element": "ELECTRIC",
     "id": "THUNDERLANCE_STRIKE"
   },
@@ -115,15 +115,19 @@
                         3.5,
                         3.8
                       ],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     },
                     "mainStat": {
                       "verb": "IS",
                       "object": "STAT",
                       "objectId": "ATTACK",
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     }
                   }
                 }
@@ -162,8 +166,10 @@
               13,
               12
             ],
-            "ofDeterminer": "THIS",
-            "of": "OPERATOR"
+            "of": {
+              "object": "OPERATOR",
+              "determiner": "THIS"
+            }
           },
           "unit": "SECOND"
         },
@@ -189,7 +195,8 @@
             "subjectDeterminer": "CONTROLLED",
             "subject": "OPERATOR",
             "verb": "PERFORM",
-            "object": "FINAL_STRIKE"
+            "object": "SKILL",
+            "objectId": "FINAL_STRIKE"
           },
           {
             "subject": "ENEMY",
@@ -206,7 +213,8 @@
             "subjectDeterminer": "CONTROLLED",
             "subject": "OPERATOR",
             "verb": "PERFORM",
-            "object": "FINAL_STRIKE"
+            "object": "SKILL",
+            "objectId": "FINAL_STRIKE"
           },
           {
             "subject": "ENEMY",

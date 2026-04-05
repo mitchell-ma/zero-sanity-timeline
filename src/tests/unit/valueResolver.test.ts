@@ -45,13 +45,12 @@ describe('resolveValueNode', () => {
     });
   });
 
-  describe('ValueVariable — ofDeterminer SOURCE', () => {
-    it('uses sourceContext talent level when ofDeterminer is SOURCE', () => {
+  describe('ValueVariable — of.determiner SOURCE', () => {
+    it('uses sourceContext talent level when of.determiner is SOURCE', () => {
       const node: ValueNode = {
         verb: VerbType.VARY_BY,
         object: 'TALENT_LEVEL',
-        ofDeterminer: DeterminerType.SOURCE,
-        of: 'OPERATOR',
+        of: { determiner: DeterminerType.SOURCE, object: NounType.OPERATOR },
         value: [72, 108],
       } as ValueNode;
       const ctx = makeCtx({
@@ -66,15 +65,14 @@ describe('resolveValueNode', () => {
       const node: ValueNode = {
         verb: VerbType.VARY_BY,
         object: 'TALENT_LEVEL',
-        ofDeterminer: DeterminerType.SOURCE,
-        of: 'OPERATOR',
+        of: { determiner: DeterminerType.SOURCE, object: NounType.OPERATOR },
         value: [72, 108],
       } as ValueNode;
       const ctx = makeCtx({ talentLevel: 0 });
       expect(resolveValueNode(node, ctx)).toBe(72);
     });
 
-    it('uses main context when ofDeterminer is not SOURCE', () => {
+    it('uses main context when of.determiner is not SOURCE', () => {
       const node: ValueNode = {
         verb: VerbType.VARY_BY,
         object: 'TALENT_LEVEL',
@@ -100,13 +98,13 @@ describe('resolveValueNode', () => {
     });
   });
 
-  describe('ValueStat — extended form with ofDeterminer', () => {
-    it('resolves stat from sourceContext when ofDeterminer is SOURCE', () => {
+  describe('ValueStat — extended form with of clause', () => {
+    it('resolves stat from sourceContext when of.determiner is SOURCE', () => {
       const node: ValueNode = {
         verb: VerbType.IS,
         valueType: NounType.STAT,
         stat: 'STRENGTH',
-        ofDeterminer: DeterminerType.SOURCE,
+        of: { determiner: DeterminerType.SOURCE, object: NounType.OPERATOR },
       } as ValueNode;
       const ctx = makeCtx({
         stats: { STRENGTH: 100 },
@@ -120,13 +118,13 @@ describe('resolveValueNode', () => {
         verb: VerbType.IS,
         valueType: NounType.STAT,
         stat: 'STRENGTH',
-        ofDeterminer: DeterminerType.SOURCE,
+        of: { determiner: DeterminerType.SOURCE, object: NounType.OPERATOR },
       } as ValueNode;
       const ctx = makeCtx({ stats: { STRENGTH: 100 } });
       expect(resolveValueNode(node, ctx)).toBe(100);
     });
 
-    it('resolves stat from main context when ofDeterminer is absent', () => {
+    it('resolves stat from main context when of is absent', () => {
       const node: ValueNode = {
         verb: VerbType.IS,
         valueType: NounType.STAT,
@@ -177,8 +175,7 @@ describe('resolveValueNode', () => {
         left: {
           verb: VerbType.VARY_BY,
           object: 'TALENT_LEVEL',
-          ofDeterminer: DeterminerType.SOURCE,
-          of: 'OPERATOR',
+          of: { determiner: DeterminerType.SOURCE, object: NounType.OPERATOR },
           value: [72, 108],
         } as ValueNode,
         right: {
@@ -186,15 +183,14 @@ describe('resolveValueNode', () => {
           left: {
             verb: VerbType.VARY_BY,
             object: 'TALENT_LEVEL',
-            ofDeterminer: DeterminerType.SOURCE,
-            of: 'OPERATOR',
+            of: { determiner: DeterminerType.SOURCE, object: NounType.OPERATOR },
             value: [0.6, 0.9],
           } as ValueNode,
           right: {
             verb: VerbType.IS,
             valueType: NounType.STAT,
             stat: 'STRENGTH',
-            ofDeterminer: DeterminerType.SOURCE,
+            of: { determiner: DeterminerType.SOURCE, object: NounType.OPERATOR },
           } as ValueNode,
         },
       };
@@ -212,8 +208,7 @@ describe('resolveValueNode', () => {
         left: {
           verb: VerbType.VARY_BY,
           object: 'TALENT_LEVEL',
-          ofDeterminer: DeterminerType.SOURCE,
-          of: 'OPERATOR',
+          of: { determiner: DeterminerType.SOURCE, object: NounType.OPERATOR },
           value: [72, 108],
         } as ValueNode,
         right: {
@@ -221,15 +216,14 @@ describe('resolveValueNode', () => {
           left: {
             verb: VerbType.VARY_BY,
             object: 'TALENT_LEVEL',
-            ofDeterminer: DeterminerType.SOURCE,
-            of: 'OPERATOR',
+            of: { determiner: DeterminerType.SOURCE, object: NounType.OPERATOR },
             value: [0.6, 0.9],
           } as ValueNode,
           right: {
             verb: VerbType.IS,
             valueType: NounType.STAT,
             stat: 'STRENGTH',
-            ofDeterminer: DeterminerType.SOURCE,
+            of: { determiner: DeterminerType.SOURCE, object: NounType.OPERATOR },
           } as ValueNode,
         },
       };

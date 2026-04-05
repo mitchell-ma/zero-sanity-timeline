@@ -74,7 +74,7 @@ function setupRossiWithLupineScarlet() {
 }
 
 function placeBattleSkill(app: AppResult, atSecond: number) {
-  const col = findColumn(app, SLOT_ROSSI, NounType.BATTLE_SKILL);
+  const col = findColumn(app, SLOT_ROSSI, NounType.BATTLE);
   expect(col).toBeDefined();
   const payload = getMenuPayload(app, col!, atSecond * FPS);
   act(() => {
@@ -204,7 +204,7 @@ describe('C. Max stacks triggers Wolven Blood Max', () => {
     // Place first BS normally to get the payload template
     placeBattleSkill(result.current, 2);
     const bsEvent = result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT_ROSSI && ev.columnId === NounType.BATTLE_SKILL,
+      ev => ev.ownerId === SLOT_ROSSI && ev.columnId === NounType.BATTLE,
     );
     expect(bsEvent).toBeDefined();
 
@@ -214,7 +214,7 @@ describe('C. Max stacks triggers Wolven Blood Max', () => {
     for (let i = 1; i < bsNeeded; i++) {
       act(() => {
         result.current.handleAddEvent(
-          SLOT_ROSSI, NounType.BATTLE_SKILL, (2 + i * 3) * FPS,
+          SLOT_ROSSI, NounType.BATTLE, (2 + i * 3) * FPS,
           { name: bsEvent!.name, segments: bsEvent!.segments },
         );
       });
@@ -265,7 +265,7 @@ describe('C. Max stacks triggers Wolven Blood Max', () => {
     // Place enough BSes to reach 16 stacks
     placeBattleSkill(result.current, 2);
     const bsEvent = result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT_ROSSI && ev.columnId === NounType.BATTLE_SKILL,
+      ev => ev.ownerId === SLOT_ROSSI && ev.columnId === NounType.BATTLE,
     );
     expect(bsEvent).toBeDefined();
 
@@ -274,7 +274,7 @@ describe('C. Max stacks triggers Wolven Blood Max', () => {
     for (let i = 1; i < bsNeeded; i++) {
       act(() => {
         result.current.handleAddEvent(
-          SLOT_ROSSI, NounType.BATTLE_SKILL, (2 + i * 3) * FPS,
+          SLOT_ROSSI, NounType.BATTLE, (2 + i * 3) * FPS,
           { name: bsEvent!.name, segments: bsEvent!.segments },
         );
       });
@@ -311,7 +311,7 @@ describe('C. Max stacks triggers Wolven Blood Max', () => {
     // Place first BS normally
     placeBattleSkill(result.current, 2);
     const bsEvent = result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT_ROSSI && ev.columnId === NounType.BATTLE_SKILL,
+      ev => ev.ownerId === SLOT_ROSSI && ev.columnId === NounType.BATTLE,
     );
     expect(bsEvent).toBeDefined();
 
@@ -321,7 +321,7 @@ describe('C. Max stacks triggers Wolven Blood Max', () => {
     for (let i = 1; i < bsNeeded; i++) {
       act(() => {
         result.current.handleAddEvent(
-          SLOT_ROSSI, NounType.BATTLE_SKILL, (2 + i * 3) * FPS,
+          SLOT_ROSSI, NounType.BATTLE, (2 + i * 3) * FPS,
           { name: bsEvent!.name, segments: bsEvent!.segments },
         );
       });

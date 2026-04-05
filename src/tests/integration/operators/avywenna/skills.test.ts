@@ -70,7 +70,7 @@ function setupAvywenna() {
 describe('A. Core Skill Placement', () => {
   it('A1: Battle skill appears in BATTLE_SKILL column', () => {
     const { result } = setupAvywenna();
-    const col = findColumn(result.current, SLOT_AVYWENNA, NounType.BATTLE_SKILL);
+    const col = findColumn(result.current, SLOT_AVYWENNA, NounType.BATTLE);
     expect(col).toBeDefined();
     expect(col?.defaultEvent).toBeDefined();
 
@@ -87,7 +87,7 @@ describe('A. Core Skill Placement', () => {
     });
 
     const events = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_AVYWENNA && ev.columnId === NounType.BATTLE_SKILL,
+      ev => ev.ownerId === SLOT_AVYWENNA && ev.columnId === NounType.BATTLE,
     );
     expect(events).toHaveLength(1);
     expect(events[0].name).toBe(BATTLE_SKILL_ID);
@@ -97,7 +97,7 @@ describe('A. Core Skill Placement', () => {
     const { result } = setupAvywenna();
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
-    const col = findColumn(result.current, SLOT_AVYWENNA, NounType.COMBO_SKILL);
+    const col = findColumn(result.current, SLOT_AVYWENNA, NounType.COMBO);
     expect(col).toBeDefined();
     expect(col?.defaultEvent).toBeDefined();
 
@@ -110,7 +110,7 @@ describe('A. Core Skill Placement', () => {
     });
 
     const events = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_AVYWENNA && ev.columnId === NounType.COMBO_SKILL,
+      ev => ev.ownerId === SLOT_AVYWENNA && ev.columnId === NounType.COMBO,
     );
     expect(events).toHaveLength(1);
     expect(events[0].name).toBe(COMBO_SKILL_ID);
@@ -154,7 +154,7 @@ describe('A. Core Skill Placement', () => {
 describe('B. Battle Skill — Electric Damage', () => {
   it('B1: Battle skill has correct skill ID', () => {
     const { result } = setupAvywenna();
-    const col = findColumn(result.current, SLOT_AVYWENNA, NounType.BATTLE_SKILL);
+    const col = findColumn(result.current, SLOT_AVYWENNA, NounType.BATTLE);
 
     const payload = getMenuPayload(result.current, col!, 2 * FPS);
     act(() => {
@@ -165,7 +165,7 @@ describe('B. Battle Skill — Electric Damage', () => {
     });
 
     const battles = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_AVYWENNA && ev.columnId === NounType.BATTLE_SKILL,
+      ev => ev.ownerId === SLOT_AVYWENNA && ev.columnId === NounType.BATTLE,
     );
     expect(battles).toHaveLength(1);
     expect(battles[0].name).toBe(BATTLE_SKILL_ID);
@@ -193,7 +193,7 @@ describe('C. Combo Cooldown', () => {
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
     // Default skill level is 12 for 5-star operators — no need to change it
-    const col = findColumn(result.current, SLOT_AVYWENNA, NounType.COMBO_SKILL);
+    const col = findColumn(result.current, SLOT_AVYWENNA, NounType.COMBO);
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
@@ -203,7 +203,7 @@ describe('C. Combo Cooldown', () => {
     });
 
     const events = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_AVYWENNA && ev.columnId === NounType.COMBO_SKILL,
+      ev => ev.ownerId === SLOT_AVYWENNA && ev.columnId === NounType.COMBO,
     );
     expect(events).toHaveLength(1);
 
@@ -280,7 +280,7 @@ describe('E. Thunderlance Status', () => {
 describe('F. View Layer', () => {
   it('F1: Battle skill visible in presentation', () => {
     const { result } = setupAvywenna();
-    const col = findColumn(result.current, SLOT_AVYWENNA, NounType.BATTLE_SKILL);
+    const col = findColumn(result.current, SLOT_AVYWENNA, NounType.BATTLE);
 
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
@@ -305,7 +305,7 @@ describe('F. View Layer', () => {
     const { result } = setupAvywenna();
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
-    const col = findColumn(result.current, SLOT_AVYWENNA, NounType.COMBO_SKILL);
+    const col = findColumn(result.current, SLOT_AVYWENNA, NounType.COMBO);
 
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {

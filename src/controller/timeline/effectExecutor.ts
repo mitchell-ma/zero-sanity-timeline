@@ -88,6 +88,8 @@ export interface ExecutionContext {
   overrideKey?: string;
   /** Current clause path for chance override matching. */
   clausePath?: string;
+  /** Frame-level crit outcome — used by CHANCE in MANUAL mode. */
+  isCrit?: boolean;
   /** Remaining game-time duration of the source event that triggered this effect.
    *  Used as fallback duration for APPLY STATUS when no explicit duration is specified. */
   sourceEventRemainingDuration?: number;
@@ -102,7 +104,7 @@ function emptyMutationSet(): MutationSet {
 
 function buildValueContext(ctx: ExecutionContext): ValueResolutionContext {
   const loadout = ctx.loadoutProperties?.[ctx.sourceOwnerId];
-  const baseCtx = buildContextForSkillColumn(loadout, NounType.BATTLE_SKILL);
+  const baseCtx = buildContextForSkillColumn(loadout, NounType.BATTLE);
   // Override potential from execution context if provided (e.g. cross-operator effects)
   if (ctx.potential != null) baseCtx.potential = ctx.potential;
   return baseCtx;
@@ -174,12 +176,12 @@ const ELEMENT_TO_INFLICTION_COLUMN: Record<string, string> = {
 };
 
 
-function resolveInflictionColumnId(objectQualifier?: AdjectiveType): string | undefined {
+function resolveInflictionColumnId(objectQualifier?: AdjectiveType | NounType): string | undefined {
   if (!objectQualifier) return undefined;
   return ELEMENT_TO_INFLICTION_COLUMN[objectQualifier];
 }
 
-function resolveReactionColumnId(objectQualifier?: AdjectiveType): string | undefined {
+function resolveReactionColumnId(objectQualifier?: AdjectiveType | NounType): string | undefined {
   if (!objectQualifier) return undefined;
   return REACTION_STATUS_TO_COLUMN[objectQualifier];
 }
@@ -392,7 +394,7 @@ function resolveExtendColumnId(effect: Effect): string | undefined {
 function executeExtend(effect: Effect, ctx: ExecutionContext): MutationSet {
   if (!effect.until || effect.until.object !== NounType.END) return emptyMutationSet();
 
-  const endFrame = effect.until.of === NounType.SEGMENT
+  const endFrame = effect.until.of.object === NounType.SEGMENT
     ? ctx.parentSegmentEndFrame
     : ctx.parentEventEndFrame;
   if (endFrame == null) return emptyMutationSet();
@@ -401,9 +403,9 @@ function executeExtend(effect: Effect, ctx: ExecutionContext): MutationSet {
   if (!columnId) return emptyMutationSet();
 
   const ownerId = resolveOwnerId(
-    (effect.ofObject ?? effect.to) as string,
+    (effect.of?.object ?? effect.to) as string,
     ctx,
-    effect.ofDeterminer ?? effect.toDeterminer,
+    effect.of?.determiner ?? effect.toDeterminer,
   );
 
   // Mutate matching active events in-place (same pattern as statusTriggerCollector)
@@ -423,7 +425,7 @@ function executeExtend(effect: Effect, ctx: ExecutionContext): MutationSet {
 
 function executeAll(effect: Effect, ctx: ExecutionContext): MutationSet {
   const result = emptyMutationSet();
-  // Iterate multiple times when an explicit cardinality is set (e.g. ALL AT_MOST MAX, ALL FOR AT_MOST 4).
+  // Iterate multiple times when an explicit cardinality is set (e.g. ALL LESS_THAN_EQUAL MAX, ALL FOR LESS_THAN_EQUAL 4).
   // Without it, ALL executes its predicates once (single pass). Hard cap at 10 for safety.
   const explicitCardinality = effect.for?.value ?? effect.value;
   const maxIterations = Math.min(
@@ -524,16 +526,17 @@ function executeAny(effect: Effect, ctx: ExecutionContext): MutationSet {
 
 function executeChance(effect: Effect, ctx: ExecutionContext): MutationSet {
   const childEffects = effect.effects ?? [];
-  if (childEffects.length === 0) return emptyMutationSet();
+  const elseEffects = effect.elseEffects ?? [];
+  if (childEffects.length === 0 && elseEffects.length === 0) return emptyMutationSet();
 
   const chanceNode = effect.with?.value;
   const chance = chanceNode
     ? resolveValueNode(chanceNode, buildValueContext(ctx))
     : 1;
   const critMode = ctx.critMode ?? CritMode.EXPECTED;
+  const baseMultiplier = ctx.chanceMultiplier ?? 1;
 
   let shouldExecute: boolean;
-  let childChanceMultiplier = ctx.chanceMultiplier ?? 1;
 
   // Check for pinned chance override
   const chancePin = findChancePin(ctx);
@@ -543,25 +546,57 @@ function executeChance(effect: Effect, ctx: ExecutionContext): MutationSet {
     switch (critMode) {
       case CritMode.ALWAYS:     shouldExecute = true; break;
       case CritMode.NEVER:      shouldExecute = false; break;
-      case CritMode.RANDOM:     shouldExecute = Math.random() < chance; break;
-      case CritMode.MANUAL:     shouldExecute = true; break;
+      case CritMode.MANUAL:     shouldExecute = ctx.isCrit ?? false; break;
       case CritMode.EXPECTED:
+        // In EXPECTED mode with ELSE, run both paths with complementary multipliers
+        if (elseEffects.length > 0) {
+          const result = emptyMutationSet();
+          const mainCtx = { ...ctx, chanceMultiplier: baseMultiplier * chance };
+          for (const child of childEffects) {
+            const childResult = executeEffect(child, mainCtx);
+            if (childResult.failed) return childResult;
+            mergeMutations(result, childResult);
+          }
+          const elseCtx = { ...ctx, chanceMultiplier: baseMultiplier * (1 - chance) };
+          for (const child of elseEffects) {
+            const childResult = executeEffect(child, elseCtx);
+            if (childResult.failed) return childResult;
+            mergeMutations(result, childResult);
+          }
+          return result;
+        }
         shouldExecute = true;
-        childChanceMultiplier *= chance;
         break;
     }
   }
 
-  if (!shouldExecute) return emptyMutationSet();
-
-  const result = emptyMutationSet();
-  const childCtx = { ...ctx, chanceMultiplier: childChanceMultiplier };
-  for (const child of childEffects) {
-    const childResult = executeEffect(child, childCtx);
-    if (childResult.failed) return childResult;
-    mergeMutations(result, childResult);
+  // Non-EXPECTED modes (or EXPECTED without elseEffects): binary branch
+  if (shouldExecute) {
+    const result = emptyMutationSet();
+    const childCtx = critMode === CritMode.EXPECTED
+      ? { ...ctx, chanceMultiplier: baseMultiplier * chance }
+      : { ...ctx, chanceMultiplier: baseMultiplier };
+    for (const child of childEffects) {
+      const childResult = executeEffect(child, childCtx);
+      if (childResult.failed) return childResult;
+      mergeMutations(result, childResult);
+    }
+    return result;
   }
-  return result;
+
+  // Main path didn't fire — run else branch if present
+  if (elseEffects.length > 0) {
+    const result = emptyMutationSet();
+    const elseCtx = { ...ctx, chanceMultiplier: baseMultiplier };
+    for (const child of elseEffects) {
+      const childResult = executeEffect(child, elseCtx);
+      if (childResult.failed) return childResult;
+      mergeMutations(result, childResult);
+    }
+    return result;
+  }
+
+  return emptyMutationSet();
 }
 
 /** Look up a pinned chance outcome from the override store. */
@@ -570,6 +605,47 @@ function findChancePin(ctx: ExecutionContext): boolean | undefined {
   const entry = ctx.overrides[ctx.overrideKey];
   if (!entry?.chanceOverrides) return undefined;
   return entry.chanceOverrides.find((c) => c.clausePath === ctx.clausePath)?.outcome;
+}
+
+// ── Chance expectation utility ───────────────────────────────────────────
+
+/**
+ * Get the chance expectation multiplier for a damage frame.
+ * Returns 0..1: the probability the CHANCE gate fires (or binary 0/1 for deterministic modes).
+ *
+ * Mirrors getFrameExpectation from critExpectationModel — same CritMode semantics:
+ * - EXPECTED: returns the raw chance probability (weighted into the damage formula)
+ * - ALWAYS:   returns 1 (always fires)
+ * - NEVER:    returns 0 (never fires)
+ * - MANUAL:   returns 1 if pinned true, 0 if false
+ *
+ * @param critMode    Current CritMode.
+ * @param chance      Probability 0.0–1.0 from the CHANCE effect's WITH value.
+ * @param resolved    Binary outcome from resolveChance (MANUAL mode).
+ */
+export function getChanceExpectation(
+  critMode: CritMode,
+  chance: number,
+  resolved?: boolean,
+): number {
+  switch (critMode) {
+    case CritMode.NEVER:      return 0;
+    case CritMode.ALWAYS:     return 1;
+    case CritMode.EXPECTED:   return chance;
+    case CritMode.MANUAL:     return resolved ? 1 : 0;
+  }
+}
+
+/**
+ * Get the ELSE-branch expectation (complementary probability).
+ * Returns (1 - chanceExpectation) — the weight for the alternative path.
+ */
+export function getChanceElseExpectation(
+  critMode: CritMode,
+  chance: number,
+  resolved?: boolean,
+): number {
+  return 1 - getChanceExpectation(critMode, chance, resolved);
 }
 
 // ── Main dispatcher ──────────────────────────────────────────────────────

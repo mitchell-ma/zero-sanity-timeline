@@ -89,7 +89,7 @@ function addFreeformVulnerables(ref: AppRef, count: number, startSecond: number)
 function addBattleSkills(ref: AppRef, count: number, startSecond: number) {
   for (let i = 0; i < count; i++) {
     const atFrame = (startSecond + i * 2) * FPS;
-    const col = findColumn(ref.current, SLOT_CHEN, NounType.BATTLE_SKILL);
+    const col = findColumn(ref.current, SLOT_CHEN, NounType.BATTLE);
     expect(col).toBeDefined();
     const payload = getMenuPayload(ref.current, col!, atFrame);
     act(() => {
@@ -116,7 +116,7 @@ describe('Vulnerable stacking — strict mode (Chen Qianyu battle skills)', () =
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
     // Context menu layer: verify battle skill menu item is available
-    const battleCol = findColumn(result.current, SLOT_CHEN, NounType.BATTLE_SKILL);
+    const battleCol = findColumn(result.current, SLOT_CHEN, NounType.BATTLE);
     expect(battleCol).toBeDefined();
     const battleMenu = buildContextMenu(result.current, battleCol!, 2 * FPS);
     expect(battleMenu).not.toBeNull();

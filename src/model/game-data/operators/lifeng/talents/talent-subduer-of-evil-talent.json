@@ -25,15 +25,19 @@
                 0.5,
                 1
               ],
-              "ofDeterminer": "THIS",
-              "of": "OPERATOR"
+              "of": {
+                "object": "OPERATOR",
+                "determiner": "THIS"
+              }
             },
             "mainStat": {
               "verb": "IS",
               "object": "STAT",
               "objectId": "ATTACK",
-              "ofDeterminer": "THIS",
-              "of": "OPERATOR"
+              "of": {
+                "object": "OPERATOR",
+                "determiner": "THIS"
+              }
             }
           }
         }
@@ -50,7 +54,7 @@
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
-    "eventCategoryType": "TALENT",
+    "eventIdType": "TALENT",
     "description": "Applying Knock Down also deals 100% ATK of Physical DMG."
   },
   "metadata": {

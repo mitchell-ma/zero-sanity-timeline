@@ -42,8 +42,10 @@
                     0.12,
                     0.24
                   ],
-                  "ofDeterminer": "THIS",
-                  "of": "OPERATOR"
+                  "of": {
+                    "object": "OPERATOR",
+                    "determiner": "THIS"
+                  }
                 },
                 "right": {
                   "verb": "VARY_BY",
@@ -56,8 +58,10 @@
                     0.08,
                     0.08
                   ],
-                  "ofDeterminer": "THIS",
-                  "of": "OPERATOR"
+                  "of": {
+                    "object": "OPERATOR",
+                    "determiner": "THIS"
+                  }
                 }
               },
               "right": {
@@ -69,8 +73,10 @@
               "verb": "IS",
               "object": "STAT",
               "objectId": "ATTACK",
-              "ofDeterminer": "THIS",
-              "of": "OPERATOR"
+              "of": {
+                "object": "OPERATOR",
+                "determiner": "THIS"
+              }
             }
           }
         },
@@ -92,8 +98,10 @@
                     0.04,
                     0.08
                   ],
-                  "ofDeterminer": "THIS",
-                  "of": "OPERATOR"
+                  "of": {
+                    "object": "OPERATOR",
+                    "determiner": "THIS"
+                  }
                 },
                 "right": {
                   "verb": "VARY_BY",
@@ -106,8 +114,10 @@
                     0.04,
                     0.04
                   ],
-                  "ofDeterminer": "THIS",
-                  "of": "OPERATOR"
+                  "of": {
+                    "object": "OPERATOR",
+                    "determiner": "THIS"
+                  }
                 }
               },
               "right": {
@@ -119,8 +129,10 @@
               "verb": "IS",
               "object": "STAT",
               "objectId": "INTELLECT",
-              "ofDeterminer": "THIS",
-              "of": "OPERATOR"
+              "of": {
+                "object": "OPERATOR",
+                "determiner": "THIS"
+              }
             }
           }
         }
@@ -159,8 +171,10 @@
                   0.12,
                   0.24
                 ],
-                "ofDeterminer": "THIS",
-                "of": "OPERATOR"
+                "of": {
+                  "object": "OPERATOR",
+                  "determiner": "THIS"
+                }
               },
               "right": {
                 "verb": "VARY_BY",
@@ -173,16 +187,20 @@
                   0.08,
                   0.08
                 ],
-                "ofDeterminer": "THIS",
-                "of": "OPERATOR"
+                "of": {
+                  "object": "OPERATOR",
+                  "determiner": "THIS"
+                }
               }
             },
             "mainStat": {
               "verb": "IS",
               "object": "STAT",
               "objectId": "ATTACK",
-              "ofDeterminer": "THIS",
-              "of": "OPERATOR"
+              "of": {
+                "object": "OPERATOR",
+                "determiner": "THIS"
+              }
             }
           }
         },
@@ -202,8 +220,10 @@
                   0.04,
                   0.08
                 ],
-                "ofDeterminer": "THIS",
-                "of": "OPERATOR"
+                "of": {
+                  "object": "OPERATOR",
+                  "determiner": "THIS"
+                }
               },
               "right": {
                 "verb": "VARY_BY",
@@ -216,16 +236,20 @@
                   0.04,
                   0.04
                 ],
-                "ofDeterminer": "THIS",
-                "of": "OPERATOR"
+                "of": {
+                  "object": "OPERATOR",
+                  "determiner": "THIS"
+                }
               }
             },
             "mainStat": {
               "verb": "IS",
               "object": "STAT",
               "objectId": "INTELLECT",
-              "ofDeterminer": "THIS",
-              "of": "OPERATOR"
+              "of": {
+                "object": "OPERATOR",
+                "determiner": "THIS"
+              }
             }
           }
         }
@@ -243,7 +267,7 @@
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
-    "eventCategoryType": "TALENT",
+    "eventIdType": "TALENT",
     "description": "When Rossi's skill deals Critical DMG to a Razor Clawmarked enemy, triggers another hit dealing Heat DMG (ATK%) and restoring HP (INT%). If target is also Combusted, DMG and heal are 1.5x. Trigger interval: 1s (P3: 0.5s). P3: +8% ATK DMG, +INT x0.04 heal."
   },
   "metadata": {

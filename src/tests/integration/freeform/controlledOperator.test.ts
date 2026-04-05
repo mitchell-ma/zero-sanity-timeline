@@ -21,7 +21,7 @@
 import { renderHook, act } from '@testing-library/react';
 import { NounType } from '../../../dsl/semantics';
 import { useApp } from '../../../app/useApp';
-import { CombatSkillType, ColumnType } from '../../../consts/enums';
+import { ColumnType } from '../../../consts/enums';
 import { OPERATOR_COLUMNS } from '../../../model/channels';
 import { eventDuration } from '../../../consts/viewTypes';
 import type { MiniTimeline, ContextMenuItem } from '../../../consts/viewTypes';
@@ -39,7 +39,7 @@ const CONTROL_LABEL = 'Set as Controlled Operator';
 
 function getControlEvents(app: AppResult) {
   return app.allProcessedEvents.filter(
-    (ev) => ev.id === CombatSkillType.CONTROL && ev.columnId === OPERATOR_COLUMNS.INPUT,
+    (ev) => ev.id === NounType.CONTROL && ev.columnId === OPERATOR_COLUMNS.INPUT,
   );
 }
 
@@ -76,7 +76,7 @@ function getControlEventsFromVM(app: AppResult) {
   const controlEvents = [];
   for (const [, vm] of Array.from(vms.entries())) {
     for (const ev of vm.events) {
-      if (ev.id === CombatSkillType.CONTROL && ev.columnId === OPERATOR_COLUMNS.INPUT) {
+      if (ev.id === NounType.CONTROL && ev.columnId === OPERATOR_COLUMNS.INPUT) {
         controlEvents.push(ev);
       }
     }

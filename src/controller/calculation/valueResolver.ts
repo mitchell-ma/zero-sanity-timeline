@@ -6,7 +6,8 @@
  */
 import {
   NounType, ValueNode, ValueOperation, DeterminerType,
-  isValueLiteral, isValueVariable, isValueStat, isValueExpression,
+  isValueLiteral, isValueVariable, isValueStat, isValueStatus, isValueExpression,
+  flattenQualifiedId,
 } from '../../dsl/semantics';
 import type { ValueVariable as ValueVariableType, ValueStat as ValueStatType } from '../../dsl/semantics';
 import type { LoadoutProperties } from '../../view/InformationPane';
@@ -77,8 +78,8 @@ export function resolveValueNode(node: ValueNode, ctx: ValueResolutionContext): 
   }
 
   if (isValueVariable(node)) {
-    // Resolve against SOURCE context when ofDeterminer is SOURCE
-    const resolveCtx = (node as ValueVariableType).ofDeterminer === DeterminerType.SOURCE && ctx.sourceContext
+    // Resolve against SOURCE context when of.determiner is SOURCE
+    const resolveCtx = (node as ValueVariableType).of?.determiner === DeterminerType.SOURCE && ctx.sourceContext
       ? ctx.sourceContext : ctx;
     // Array lookup: index by dependency
     if (Array.isArray(node.value)) {
@@ -101,9 +102,20 @@ export function resolveValueNode(node: ValueNode, ctx: ValueResolutionContext): 
   if (isValueStat(node)) {
     const statNode = node as ValueStatType;
     const statKey = statNode.objectId ?? statNode.stat;
-    const resolveCtx = statNode.ofDeterminer === DeterminerType.SOURCE && ctx.sourceContext
+    const resolveCtx = statNode.of?.determiner === DeterminerType.SOURCE && ctx.sourceContext
       ? ctx.sourceContext : ctx;
     return statKey ? (resolveCtx.stats[statKey] ?? 0) : 0;
+  }
+
+  if (isValueStatus(node)) {
+    const ofClause = node.of;
+    if (ofClause && ctx.getStatusStacks) {
+      const statusId = ofClause.objectQualifier && ofClause.objectId
+        ? flattenQualifiedId(String(ofClause.objectQualifier), ofClause.objectId)
+        : ofClause.objectId;
+      if (statusId) return ctx.getStatusStacks(statusId);
+    }
+    return 0;
   }
 
   if (isValueExpression(node)) {
@@ -155,8 +167,8 @@ export function getLeafValue(node: ValueNode): number | number[] | undefined {
 /** Map skill column ID to the corresponding LoadoutProperties.skills field. */
 const SKILL_COLUMN_LEVEL_KEY: Record<string, keyof LoadoutProperties['skills']> = {
   [NounType.BASIC_ATTACK]:    'basicAttackLevel',
-  [NounType.BATTLE_SKILL]:   'battleSkillLevel',
-  [NounType.COMBO_SKILL]:    'comboSkillLevel',
+  [NounType.BATTLE]:   'battleSkillLevel',
+  [NounType.COMBO]:    'comboSkillLevel',
   [NounType.ULTIMATE]: 'ultimateLevel',
 };
 

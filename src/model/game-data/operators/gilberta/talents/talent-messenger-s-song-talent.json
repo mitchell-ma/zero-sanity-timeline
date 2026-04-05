@@ -20,8 +20,10 @@
                   0.04,
                   0.07
                 ],
-                "ofDeterminer": "THIS",
-                "of": "OPERATOR"
+                "of": {
+                  "object": "OPERATOR",
+                  "determiner": "THIS"
+                }
               },
               "right": {
                 "verb": "VARY_BY",
@@ -34,8 +36,10 @@
                   0.05,
                   0.05
                 ],
-                "ofDeterminer": "THIS",
-                "of": "OPERATOR"
+                "of": {
+                  "object": "OPERATOR",
+                  "determiner": "THIS"
+                }
               }
             }
           }
@@ -57,8 +61,10 @@
                   0.04,
                   0.07
                 ],
-                "ofDeterminer": "THIS",
-                "of": "OPERATOR"
+                "of": {
+                  "object": "OPERATOR",
+                  "determiner": "THIS"
+                }
               },
               "right": {
                 "verb": "VARY_BY",
@@ -71,8 +77,10 @@
                   0.05,
                   0.05
                 ],
-                "ofDeterminer": "THIS",
-                "of": "OPERATOR"
+                "of": {
+                  "object": "OPERATOR",
+                  "determiner": "THIS"
+                }
               }
             }
           }
@@ -94,8 +102,10 @@
                   0.04,
                   0.07
                 ],
-                "ofDeterminer": "THIS",
-                "of": "OPERATOR"
+                "of": {
+                  "object": "OPERATOR",
+                  "determiner": "THIS"
+                }
               },
               "right": {
                 "verb": "VARY_BY",
@@ -108,8 +118,10 @@
                   0.05,
                   0.05
                 ],
-                "ofDeterminer": "THIS",
-                "of": "OPERATOR"
+                "of": {
+                  "object": "OPERATOR",
+                  "determiner": "THIS"
+                }
               }
             }
           }
@@ -126,7 +138,7 @@
     "name": "Messenger's Song (Talent)",
     "to": "TEAM",
     "eventType": "STATUS",
-    "eventCategoryType": "TALENT",
+    "eventIdType": "TALENT",
     "description": "When fighting in the battlefield, all allied guards, casters, and supporters gain Ultimate Gain Efficiency +{add:0%}."
   },
   "metadata": {

@@ -7,7 +7,7 @@
           "subject": "OPERATOR",
           "verb": "HAVE",
           "object": "HP",
-          "cardinalityConstraint": "AT_MOST",
+          "cardinalityConstraint": "LESS_THAN_EQUAL",
           "with": {
             "value": {
               "verb": "IS",
@@ -37,7 +37,7 @@
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
-    "eventCategoryType": "TALENT",
+    "eventIdType": "TALENT",
     "description": "When HP drops below 40%, gain 90% Protection and restore 5% Max HP per second for 4s. This effect triggers once every 120s."
   },
   "metadata": {

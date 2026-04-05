@@ -13,11 +13,13 @@
               "verb": "VARY_BY",
               "object": "TALENT_LEVEL",
               "value": [
-                0.10,
-                0.20
+                0.1,
+                0.2
               ],
-              "ofDeterminer": "THIS",
-              "of": "OPERATOR"
+              "of": {
+                "object": "OPERATOR",
+                "determiner": "THIS"
+              }
             }
           }
         }
@@ -158,7 +160,7 @@
       "interactionType": "RESET"
     },
     "eventType": "STATUS",
-    "eventCategoryType": "TALENT",
+    "eventIdType": "TALENT",
     "description": "Originium Crystals that temporarily seal the enemy. Applying Physical Status or Vulnerability shatters the crystals. Enemies with attached crystals suffer Physical DMG Taken +10%/+20%."
   },
   "metadata": {

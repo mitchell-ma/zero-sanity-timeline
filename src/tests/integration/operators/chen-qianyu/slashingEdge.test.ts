@@ -60,7 +60,7 @@ function setupChen() {
 describe('Chen Qianyu — Slashing Edge', () => {
   it('single battle skill produces 1 Slashing Edge stack with label "Slashing Edge"', () => {
     const { result } = setupChen();
-    const battleCol = findColumn(result.current, SLOT_CHEN, NounType.BATTLE_SKILL);
+    const battleCol = findColumn(result.current, SLOT_CHEN, NounType.BATTLE);
     expect(battleCol?.defaultEvent).toBeDefined();
 
     // ── Context menu: verify battle skill is available and enabled ───────
@@ -106,7 +106,7 @@ describe('Chen Qianyu — Slashing Edge', () => {
 
   it('10 battle skills produce 5 Slashing Edge stacks with labels I–V', () => {
     const { result } = setupChen();
-    const battleCol = findColumn(result.current, SLOT_CHEN, NounType.BATTLE_SKILL);
+    const battleCol = findColumn(result.current, SLOT_CHEN, NounType.BATTLE);
     expect(battleCol?.defaultEvent).toBeDefined();
 
     // Freeform so all 10 are accepted (no SP gate)

@@ -40,7 +40,7 @@
     },
     "description": "Physical DMG +16% for 10s. Activates at 4 stacks of Vulnerability.",
     "eventType": "STATUS",
-    "eventCategoryType": "GEAR_SET_STATUS"
+    "eventIdType": "GEAR_SET_STATUS"
   },
   "metadata": {
     "originId": "AETHERTECH",

@@ -69,7 +69,7 @@ describe('A. Core Skill Placement', () => {
     const { result } = setupFluorite();
 
     // ── Context menu layer ──
-    const col = findColumn(result.current, SLOT_FLUORITE, NounType.BATTLE_SKILL);
+    const col = findColumn(result.current, SLOT_FLUORITE, NounType.BATTLE);
     expect(col).toBeDefined();
     const menuItems = buildContextMenu(result.current, col!, 5 * FPS);
     expect(menuItems).not.toBeNull();
@@ -84,7 +84,7 @@ describe('A. Core Skill Placement', () => {
 
     // ── Controller layer ──
     const events = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_FLUORITE && ev.columnId === NounType.BATTLE_SKILL,
+      (ev) => ev.ownerId === SLOT_FLUORITE && ev.columnId === NounType.BATTLE,
     );
     expect(events).toHaveLength(1);
     expect(events[0].name).toBe(BATTLE_SKILL_ID);
@@ -107,7 +107,7 @@ describe('A. Core Skill Placement', () => {
     // Combo requires activation conditions -- switch to freeform to bypass
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
-    const col = findColumn(result.current, SLOT_FLUORITE, NounType.COMBO_SKILL);
+    const col = findColumn(result.current, SLOT_FLUORITE, NounType.COMBO);
     expect(col).toBeDefined();
 
     const menuItems = buildContextMenu(result.current, col!, 5 * FPS);
@@ -123,7 +123,7 @@ describe('A. Core Skill Placement', () => {
 
     // ── Controller layer ──
     const combos = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_FLUORITE && ev.columnId === NounType.COMBO_SKILL,
+      (ev) => ev.ownerId === SLOT_FLUORITE && ev.columnId === NounType.COMBO,
     );
     expect(combos).toHaveLength(1);
     expect(combos[0].name).toBe(COMBO_SKILL_ID);
@@ -177,7 +177,7 @@ describe('B. Battle Skill Effects', () => {
   it('B1: BS generates nature infliction event on enemy', () => {
     const { result } = setupFluorite();
 
-    const col = findColumn(result.current, SLOT_FLUORITE, NounType.BATTLE_SKILL);
+    const col = findColumn(result.current, SLOT_FLUORITE, NounType.BATTLE);
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
@@ -188,7 +188,7 @@ describe('B. Battle Skill Effects', () => {
     // BS has frame at 2.97s that applies nature infliction to enemy
     // The infliction should appear as a derived event in the processed events
     const battleEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_FLUORITE && ev.columnId === NounType.BATTLE_SKILL,
+      (ev) => ev.ownerId === SLOT_FLUORITE && ev.columnId === NounType.BATTLE,
     );
     expect(battleEvents).toHaveLength(1);
 
@@ -203,7 +203,7 @@ describe('B. Battle Skill Effects', () => {
   it('B2: BS segment has correct duration (1.13s)', () => {
     const { result } = setupFluorite();
 
-    const col = findColumn(result.current, SLOT_FLUORITE, NounType.BATTLE_SKILL);
+    const col = findColumn(result.current, SLOT_FLUORITE, NounType.BATTLE);
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
@@ -212,7 +212,7 @@ describe('B. Battle Skill Effects', () => {
     });
 
     const battleEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_FLUORITE && ev.columnId === NounType.BATTLE_SKILL,
+      (ev) => ev.ownerId === SLOT_FLUORITE && ev.columnId === NounType.BATTLE,
     );
     expect(battleEvents).toHaveLength(1);
 
@@ -233,7 +233,7 @@ describe('C. Combo Cooldown', () => {
     const { result } = setupFluorite();
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
-    const col = findColumn(result.current, SLOT_FLUORITE, NounType.COMBO_SKILL);
+    const col = findColumn(result.current, SLOT_FLUORITE, NounType.COMBO);
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
@@ -242,7 +242,7 @@ describe('C. Combo Cooldown', () => {
     });
 
     const combos = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_FLUORITE && ev.columnId === NounType.COMBO_SKILL,
+      (ev) => ev.ownerId === SLOT_FLUORITE && ev.columnId === NounType.COMBO,
     );
     expect(combos).toHaveLength(1);
 
@@ -289,12 +289,12 @@ describe('E. View Layer', () => {
     );
 
     // Battle skill column exists
-    const battleCol = findColumn(result.current, SLOT_FLUORITE, NounType.BATTLE_SKILL);
+    const battleCol = findColumn(result.current, SLOT_FLUORITE, NounType.BATTLE);
     expect(battleCol).toBeDefined();
     expect(viewModels.has(battleCol!.key)).toBe(true);
 
     // Combo column exists
-    const comboCol = findColumn(result.current, SLOT_FLUORITE, NounType.COMBO_SKILL);
+    const comboCol = findColumn(result.current, SLOT_FLUORITE, NounType.COMBO);
     expect(comboCol).toBeDefined();
     expect(viewModels.has(comboCol!.key)).toBe(true);
 
@@ -312,7 +312,7 @@ describe('E. View Layer', () => {
   it('E2: Battle skill event appears in presentation after placement', () => {
     const { result } = setupFluorite();
 
-    const col = findColumn(result.current, SLOT_FLUORITE, NounType.BATTLE_SKILL);
+    const col = findColumn(result.current, SLOT_FLUORITE, NounType.BATTLE);
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(

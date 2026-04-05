@@ -23,7 +23,7 @@
       "interactionType": "MERGE"
     },
     "eventType": "STATUS",
-    "eventCategoryType": "REACTION",
+    "eventIdType": "REACTION",
     "description": "Nature arts reaction. Deals initial Nature DMG on activation. Reduces enemy DEF over 10 seconds, scaling with status level."
   },
   "metadata": {

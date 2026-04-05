@@ -36,14 +36,14 @@ export function computeInvalidSet(
   const invalid = new Set<string>();
   for (const de of draggedEvents) {
     // Resource zone: check live zones (includes the event's own contribution)
-    if (de.columnId === NounType.BATTLE_SKILL || de.columnId === NounType.ULTIMATE) {
+    if (de.columnId === NounType.BATTLE || de.columnId === NounType.ULTIMATE) {
       const zones = resourceZones.get(`${de.ownerId}:${de.columnId}`);
       if (zones?.some((z) => de.startFrame >= z.start && de.startFrame < z.end)) {
         invalid.add(de.uid);
       }
     }
     // Combo window: check if event is outside all combo windows
-    if (de.columnId === NounType.COMBO_SKILL) {
+    if (de.columnId === NounType.COMBO) {
       const windows = allEvents.filter(
         (w) => w.columnId === COMBO_WINDOW_COLUMN_ID && w.ownerId === de.ownerId,
       );

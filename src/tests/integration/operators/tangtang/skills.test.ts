@@ -104,7 +104,7 @@ describe('A. Core Skill Placement', () => {
     const { result } = setupTangtang();
 
     // ── Context menu layer ──
-    const col = findColumn(result.current, SLOT_TANGTANG, NounType.BATTLE_SKILL);
+    const col = findColumn(result.current, SLOT_TANGTANG, NounType.BATTLE);
     expect(col).toBeDefined();
     const menuItems = buildContextMenu(result.current, col!, 5 * FPS);
     expect(menuItems).not.toBeNull();
@@ -120,7 +120,7 @@ describe('A. Core Skill Placement', () => {
 
     // ── Controller layer ──
     const events = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_TANGTANG && ev.columnId === NounType.BATTLE_SKILL,
+      ev => ev.ownerId === SLOT_TANGTANG && ev.columnId === NounType.BATTLE,
     );
     expect(events).toHaveLength(1);
     expect(events[0].name).toBe(BATTLE_SKILL_ID);
@@ -144,7 +144,7 @@ describe('A. Core Skill Placement', () => {
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
     // ── Context menu layer ──
-    const col = findColumn(result.current, SLOT_TANGTANG, NounType.COMBO_SKILL);
+    const col = findColumn(result.current, SLOT_TANGTANG, NounType.COMBO);
     expect(col).toBeDefined();
     const menuItems = buildContextMenu(result.current, col!, 5 * FPS);
     expect(menuItems).not.toBeNull();
@@ -160,7 +160,7 @@ describe('A. Core Skill Placement', () => {
 
     // ── Controller layer ──
     const combos = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_TANGTANG && ev.columnId === NounType.COMBO_SKILL,
+      ev => ev.ownerId === SLOT_TANGTANG && ev.columnId === NounType.COMBO,
     );
     expect(combos).toHaveLength(1);
     expect(combos[0].name).toBe(COMBO_ID);
@@ -217,7 +217,7 @@ describe('B. Battle Skill — Cryo Infliction', () => {
       ev => ev.columnId === INFLICTION_COLUMNS.CRYO && ev.ownerId === ENEMY_OWNER_ID,
     ).length;
 
-    const col = findColumn(result.current, SLOT_TANGTANG, NounType.BATTLE_SKILL);
+    const col = findColumn(result.current, SLOT_TANGTANG, NounType.BATTLE);
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
@@ -261,7 +261,7 @@ describe('C. Combo Cooldown', () => {
     const { result } = setupTangtang();
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
-    const col = findColumn(result.current, SLOT_TANGTANG, NounType.COMBO_SKILL);
+    const col = findColumn(result.current, SLOT_TANGTANG, NounType.COMBO);
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
@@ -272,7 +272,7 @@ describe('C. Combo Cooldown', () => {
 
     // ── Controller layer ──
     const combos = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_TANGTANG && ev.columnId === NounType.COMBO_SKILL,
+      ev => ev.ownerId === SLOT_TANGTANG && ev.columnId === NounType.COMBO,
     );
     expect(combos).toHaveLength(1);
 
@@ -350,7 +350,7 @@ describe('E. View Layer', () => {
   it('E1: Battle skill visible in battle skill column view model', () => {
     const { result } = setupTangtang();
 
-    const col = findColumn(result.current, SLOT_TANGTANG, NounType.BATTLE_SKILL);
+    const col = findColumn(result.current, SLOT_TANGTANG, NounType.BATTLE);
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
@@ -366,7 +366,7 @@ describe('E. View Layer', () => {
     const battleVM = viewModels.get(col!.key);
     expect(battleVM).toBeDefined();
     expect(battleVM!.events.filter(
-      ev => ev.ownerId === SLOT_TANGTANG && ev.columnId === NounType.BATTLE_SKILL,
+      ev => ev.ownerId === SLOT_TANGTANG && ev.columnId === NounType.BATTLE,
     ).length).toBeGreaterThanOrEqual(1);
   });
 
@@ -374,7 +374,7 @@ describe('E. View Layer', () => {
     const { result } = setupTangtang();
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
-    const col = findColumn(result.current, SLOT_TANGTANG, NounType.COMBO_SKILL);
+    const col = findColumn(result.current, SLOT_TANGTANG, NounType.COMBO);
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(

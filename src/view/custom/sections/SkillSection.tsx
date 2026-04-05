@@ -2,12 +2,13 @@
  * Skill form section for the Unified Customizer.
  * Extracted from CustomSkillWizard — same fields, collapsible layout.
  */
-import { CombatSkillType, ElementType, TimeInteractionType } from '../../../consts/enums';
+import { ElementType, TimeInteractionType } from '../../../consts/enums';
+import { NounType } from '../../../dsl/semantics';
 import type { CustomSkill } from '../../../model/custom/customSkillTypes';
 import CollapsibleSection from '../CollapsibleSection';
 import IdField from '../IdField';
 
-const SKILL_TYPES = Object.values(CombatSkillType);
+const SKILL_TYPES = [NounType.BASIC_ATTACK, NounType.BATK, NounType.BATTLE, NounType.COMBO, NounType.ULTIMATE, NounType.FINISHER, NounType.DIVE, NounType.ACTION];
 const ELEMENT_TYPES = Object.values(ElementType);
 const TIME_INTERACTION_TYPES = Object.values(TimeInteractionType);
 
@@ -34,7 +35,7 @@ export default function SkillSection({ data, onChange, originalId }: Props) {
           <div className="wz-field-row">
             <label className="wz-field">
               <span>Skill Type</span>
-              <select value={data.combatSkillType} onChange={(e) => update({ combatSkillType: e.target.value as CombatSkillType })}>
+              <select value={data.combatSkillType} onChange={(e) => update({ combatSkillType: e.target.value as string })}>
                 {SKILL_TYPES.map((t) => <option key={t} value={t}>{t.replace(/_/g, ' ')}</option>)}
               </select>
             </label>

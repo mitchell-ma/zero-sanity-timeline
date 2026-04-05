@@ -2,8 +2,8 @@
   "properties": {
     "name": "Free Giveaway",
     "description": "When an enemy has 2 or more stacks of Cryo Infliction or Nature Infliction. Shoots the target enemy to trigger a special explosion that deals Nature DMG and applies another Arts Infliction of the element already on the enemy.",
-    "eventType": "COMBAT_SKILL",
-    "eventCategoryType": "COMBO_SKILL",
+    "eventType": "SKILL",
+    "eventIdType": "COMBO",
     "element": "NATURE",
     "id": "FREE_GIVEAWAY"
   },
@@ -115,15 +115,19 @@
                         3.51,
                         3.8
                       ],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     },
                     "mainStat": {
                       "verb": "IS",
                       "object": "STAT",
                       "objectId": "ATTACK",
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     }
                   }
                 }
@@ -137,7 +141,7 @@
                   "object": "STATUS",
                   "objectId": "INFLICTION",
                   "objectQualifier": "CRYO",
-                  "cardinalityConstraint": "AT_LEAST",
+                  "cardinalityConstraint": "GREATER_THAN_EQUAL",
                   "with": {
                     "stacks": {
                       "verb": "IS",
@@ -169,7 +173,7 @@
                   "object": "STATUS",
                   "objectId": "INFLICTION",
                   "objectQualifier": "NATURE",
-                  "cardinalityConstraint": "AT_LEAST",
+                  "cardinalityConstraint": "GREATER_THAN_EQUAL",
                   "with": {
                     "stacks": {
                       "verb": "IS",
@@ -226,8 +230,10 @@
               40,
               38
             ],
-            "ofDeterminer": "THIS",
-            "of": "OPERATOR"
+            "of": {
+              "object": "OPERATOR",
+              "determiner": "THIS"
+            }
           },
           "unit": "SECOND"
         },
@@ -254,7 +260,7 @@
             "verb": "HAVE",
             "object": "INFLICTION",
             "objectQualifier": "CRYO",
-            "cardinalityConstraint": "AT_LEAST",
+            "cardinalityConstraint": "GREATER_THAN_EQUAL",
             "with": {
               "stacks": {
                 "verb": "IS",
@@ -271,7 +277,7 @@
             "verb": "HAVE",
             "object": "INFLICTION",
             "objectQualifier": "NATURE",
-            "cardinalityConstraint": "AT_LEAST",
+            "cardinalityConstraint": "GREATER_THAN_EQUAL",
             "with": {
               "stacks": {
                 "verb": "IS",

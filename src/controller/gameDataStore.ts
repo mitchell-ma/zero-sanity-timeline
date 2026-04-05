@@ -4,7 +4,7 @@
  * All consumers import from here. configStore and sub-stores are internal.
  */
 
-import { CombatSkillType, ElementType, ArtsReactionType, PhysicalStatusType, StatusType } from '../consts/enums';
+import { ElementType, ArtsReactionType, PhysicalStatusType, StatusType } from '../consts/enums';
 import { NounType } from '../dsl/semantics';
 import { t } from '../locales/locale';
 import {
@@ -324,10 +324,10 @@ let _skillLabels: Record<string, string> | null = null;
 export function getAllSkillLabels(): Record<string, string> {
   if (_skillLabels) return _skillLabels;
   const labels: Record<string, string> = {
-    [CombatSkillType.DASH]: t('skill.DASH'),
-    [CombatSkillType.FINISHER]: t('skill.FINISHER'),
-    [CombatSkillType.DIVE]: t('skill.DIVE'),
-    [CombatSkillType.CONTROL]: t('skill.CONTROL'),
+    [NounType.DASH]: t('skill.DASH'),
+    [NounType.FINISHER]: t('skill.FINISHER'),
+    [NounType.DIVE]: t('skill.DIVE'),
+    [NounType.CONTROL]: t('skill.CONTROL'),
   };
   for (const operatorId of getAllOperatorSkillSetIds()) {
     const skills = getOperatorSkills(operatorId);

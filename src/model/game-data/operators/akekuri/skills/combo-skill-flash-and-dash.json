@@ -2,8 +2,8 @@
   "properties": {
     "name": "Flash and Dash",
     "description": "When an enemy becomes Staggered or hits a Stagger Node. Performs a returning dash with 2 thrust sequences, with each sequence dealing Physical DMG and recovering some SP.",
-    "eventType": "COMBAT_SKILL",
-    "eventCategoryType": "COMBO_SKILL",
+    "eventType": "SKILL",
+    "eventIdType": "COMBO",
     "element": "PHYSICAL",
     "id": "FLASH_AND_DASH"
   },
@@ -110,8 +110,10 @@
                               0.5,
                               0.75
                             ],
-                            "ofDeterminer": "THIS",
-                            "of": "OPERATOR"
+                            "of": {
+                              "object": "OPERATOR",
+                              "determiner": "THIS"
+                            }
                           },
                           "right": {
                             "operation": "MULT",
@@ -121,7 +123,10 @@
                                 "verb": "IS",
                                 "object": "STAT",
                                 "objectId": "INTELLECT",
-                                "ofDeterminer": "THIS"
+                                "of": {
+                                  "determiner": "THIS",
+                                  "object": "OPERATOR"
+                                }
                               },
                               "right": {
                                 "verb": "IS",
@@ -136,8 +141,10 @@
                                 0.01,
                                 0.015
                               ],
-                              "ofDeterminer": "THIS",
-                              "of": "OPERATOR"
+                              "of": {
+                                "object": "OPERATOR",
+                                "determiner": "THIS"
+                              }
                             }
                           }
                         }
@@ -179,15 +186,19 @@
                         1.66,
                         1.8
                       ],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     },
                     "mainStat": {
                       "verb": "IS",
                       "object": "STAT",
                       "objectId": "ATTACK",
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     }
                   }
                 }
@@ -239,8 +250,10 @@
                               0.5,
                               0.75
                             ],
-                            "ofDeterminer": "THIS",
-                            "of": "OPERATOR"
+                            "of": {
+                              "object": "OPERATOR",
+                              "determiner": "THIS"
+                            }
                           },
                           "right": {
                             "operation": "MULT",
@@ -250,7 +263,10 @@
                                 "verb": "IS",
                                 "object": "STAT",
                                 "objectId": "INTELLECT",
-                                "ofDeterminer": "THIS"
+                                "of": {
+                                  "determiner": "THIS",
+                                  "object": "OPERATOR"
+                                }
                               },
                               "right": {
                                 "verb": "IS",
@@ -265,8 +281,10 @@
                                 0.01,
                                 0.015
                               ],
-                              "ofDeterminer": "THIS",
-                              "of": "OPERATOR"
+                              "of": {
+                                "object": "OPERATOR",
+                                "determiner": "THIS"
+                              }
                             }
                           }
                         }
@@ -308,15 +326,19 @@
                         1.66,
                         1.8
                       ],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     },
                     "mainStat": {
                       "verb": "IS",
                       "object": "STAT",
                       "objectId": "ATTACK",
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     }
                   }
                 }
@@ -355,8 +377,10 @@
               15,
               9
             ],
-            "ofDeterminer": "THIS",
-            "of": "OPERATOR"
+            "of": {
+              "object": "OPERATOR",
+              "determiner": "THIS"
+            }
           },
           "unit": "SECOND"
         },

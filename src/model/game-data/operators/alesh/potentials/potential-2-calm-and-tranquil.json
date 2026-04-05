@@ -4,7 +4,7 @@
     "name": "Calm and Tranquil",
     "level": 2,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
+    "eventIdType": "POTENTIAL",
     "description": "Strength +15, Intellect +15."
   },
   "metadata": {

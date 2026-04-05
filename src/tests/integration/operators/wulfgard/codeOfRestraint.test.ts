@@ -67,20 +67,20 @@ function placeReaction(result: { current: AppResult }, reactionCol: string, star
 }
 
 function placeEmpoweredBS(result: { current: AppResult }, startSec: number) {
-  const battleCol = findColumn(result.current, SLOT_WULFGARD, NounType.BATTLE_SKILL);
+  const battleCol = findColumn(result.current, SLOT_WULFGARD, NounType.BATTLE);
   const empowered = battleCol?.eventVariants?.find(
     v => v.enhancementType === EnhancementType.EMPOWERED,
   );
   expect(empowered).toBeDefined();
   act(() => {
     result.current.handleAddEvent(
-      SLOT_WULFGARD, NounType.BATTLE_SKILL, startSec * FPS, empowered!,
+      SLOT_WULFGARD, NounType.BATTLE, startSec * FPS, empowered!,
     );
   });
 }
 
 function placeNormalBS(result: { current: AppResult }, startSec: number) {
-  const battleCol = findColumn(result.current, SLOT_WULFGARD, NounType.BATTLE_SKILL);
+  const battleCol = findColumn(result.current, SLOT_WULFGARD, NounType.BATTLE);
   const payload = getMenuPayload(result.current, battleCol!, startSec * FPS);
   act(() => {
     result.current.handleAddEvent(
@@ -103,7 +103,7 @@ describe('A. Empowered BS Consumes Reaction', () => {
 
     // Controller: empowered BS placed
     const bsEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.BATTLE_SKILL,
+      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.BATTLE,
     );
     expect(bsEvents).toHaveLength(1);
     expect(bsEvents[0].enhancementType).toBe(EnhancementType.EMPOWERED);
@@ -115,7 +115,7 @@ describe('A. Empowered BS Consumes Reaction', () => {
     expect(combustionEvents.length).toBeGreaterThanOrEqual(1);
 
     // View: empowered BS appears in battle column VM
-    const battleCol = findColumn(result.current, SLOT_WULFGARD, NounType.BATTLE_SKILL);
+    const battleCol = findColumn(result.current, SLOT_WULFGARD, NounType.BATTLE);
     const viewModels = computeTimelinePresentation(
       result.current.allProcessedEvents,
       result.current.columns,
@@ -135,7 +135,7 @@ describe('A. Empowered BS Consumes Reaction', () => {
 
     // Controller: empowered BS placed, reaction consumed
     const bsEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.BATTLE_SKILL,
+      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.BATTLE,
     );
     expect(bsEvents[0].enhancementType).toBe(EnhancementType.EMPOWERED);
 
@@ -158,13 +158,13 @@ describe('B. Negative — Normal BS', () => {
 
     // Controller: normal BS placed (not empowered)
     const bsEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.BATTLE_SKILL,
+      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.BATTLE,
     );
     expect(bsEvents).toHaveLength(1);
     expect(bsEvents[0].enhancementType).not.toBe(EnhancementType.EMPOWERED);
 
     // View: BS event appears in battle column VM
-    const battleCol = findColumn(result.current, SLOT_WULFGARD, NounType.BATTLE_SKILL);
+    const battleCol = findColumn(result.current, SLOT_WULFGARD, NounType.BATTLE);
     const viewModels = computeTimelinePresentation(
       result.current.allProcessedEvents,
       result.current.columns,
@@ -188,7 +188,7 @@ describe('C. Potential Independence', () => {
     placeEmpoweredBS(result, 3);
 
     const bsEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.BATTLE_SKILL,
+      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.BATTLE,
     );
     expect(bsEvents[0].enhancementType).toBe(EnhancementType.EMPOWERED);
   });
@@ -201,7 +201,7 @@ describe('C. Potential Independence', () => {
     placeEmpoweredBS(result, 3);
 
     const bsEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.BATTLE_SKILL,
+      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.BATTLE,
     );
     expect(bsEvents[0].enhancementType).toBe(EnhancementType.EMPOWERED);
   });

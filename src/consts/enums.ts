@@ -14,21 +14,6 @@ export enum FrameHookType {
   SEGMENT_END = 'SEGMENT_END',
 }
 
-export enum CombatSkillType {
-  BASIC_ATTACK = "BASIC_ATTACK",
-  BATK = "BATK",
-  FINAL_STRIKE = "FINAL_STRIKE",
-  NORMAL = "NORMAL",
-  BATTLE_SKILL = "BATTLE_SKILL",
-  COMBO_SKILL = "COMBO_SKILL",
-  ULTIMATE = "ULTIMATE",
-  ULTIMATE_SKILL = "ULTIMATE_SKILL",
-  DASH = "DASH",
-  FINISHER = "FINISHER",
-  DIVE = "DIVE",
-  CONTROL = "CONTROL",
-  ACTION = "ACTION",
-}
 
 export enum MainStatType {
   BASE_HP = "BASE_HP",
@@ -187,6 +172,15 @@ export enum PhysicalStatusType {
 
 /** All built-in reaction types = arts reactions + physical statuses. */
 export type ReactionType = ArtsReactionType | PhysicalStatusType;
+
+/** Crowd control effects — statuses that restrict enemy movement/actions. */
+export enum CrowdControlType {
+  LIFT = "LIFT",
+  KNOCK_DOWN = "KNOCK_DOWN",
+  LOCK_DOWN = "LOCK_DOWN",
+  IMMOBILIZE = "IMMOBILIZE",
+  SOLIDIFICATION = "SOLIDIFICATION",
+}
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ReactionType = { ...ArtsReactionType, ...PhysicalStatusType } as typeof ArtsReactionType & typeof PhysicalStatusType;
 
@@ -364,37 +358,10 @@ export enum DataStatus {
 }
 
 export enum EventType {
-  COMBAT_SKILL = "COMBAT_SKILL",
+  SKILL = "SKILL",
   STATUS = "STATUS",
 }
 
-export enum EventCategoryType {
-  // ── Combat skill categories ──────────────────────────────────────────────────
-  BASIC_ATTACK = "BASIC_ATTACK",
-  BATTLE_SKILL = "BATTLE_SKILL",
-  COMBO_SKILL = "COMBO_SKILL",
-  ULTIMATE_SKILL = "ULTIMATE_SKILL",
-  ACTION = "ACTION",
-
-  // ── Built-in combat mechanics ──────────────────────────────────────────────
-  INFLICTION = "INFLICTION",
-  PHYSICAL_INFLICTION = "PHYSICAL_INFLICTION",
-  REACTION = "REACTION",
-  PHYSICAL_STATUS = "PHYSICAL_STATUS",
-
-  // ── Status categories ────────────────────────────────────────────────────────
-  TALENT = "TALENT",
-  TALENT_STATUS = "TALENT_STATUS",
-  POTENTIAL = "POTENTIAL",
-  POTENTIAL_STATUS = "POTENTIAL_STATUS",
-  SKILL_STATUS = "SKILL_STATUS",
-  WEAPON_STATUS = "WEAPON_STATUS",
-  GEAR_STATUS = "GEAR_STATUS",
-  GEAR_SET_EFFECT = "GEAR_SET_EFFECT",
-  GEAR_SET_STATUS = "GEAR_SET_STATUS",
-  CONSUMABLE = "CONSUMABLE",
-  TACTICAL = "TACTICAL",
-}
 
 export enum EventOriginType {
   OPERATOR = "OPERATOR",
@@ -578,7 +545,6 @@ export enum CritMode {
   NEVER = 'NEVER',
   EXPECTED = 'EXPECTED',
   ALWAYS = 'ALWAYS',
-  RANDOM = 'RANDOM',
   MANUAL = 'MANUAL',
 }
 

@@ -134,7 +134,7 @@ describe('B. Battle Skill', () => {
     const { result } = setupXaihi();
 
     // ── Context menu layer ──
-    const col = findColumn(result.current, SLOT_XAIHI, NounType.BATTLE_SKILL);
+    const col = findColumn(result.current, SLOT_XAIHI, NounType.BATTLE);
     expect(col?.defaultEvent).toBeDefined();
     const menuItems = buildContextMenu(result.current, col!, 5 * FPS);
     expect(menuItems).not.toBeNull();
@@ -149,7 +149,7 @@ describe('B. Battle Skill', () => {
 
     // ── Controller layer ──
     const events = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_XAIHI && ev.columnId === NounType.BATTLE_SKILL,
+      ev => ev.ownerId === SLOT_XAIHI && ev.columnId === NounType.BATTLE,
     );
     expect(events).toHaveLength(1);
     expect(events[0].name).toBe(BATTLE_SKILL_ID);

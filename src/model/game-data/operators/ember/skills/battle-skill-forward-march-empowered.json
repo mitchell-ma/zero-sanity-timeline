@@ -5,8 +5,8 @@
     ],
     "name": "Forward March (Empowered)",
     "description": "A leap followed by a heavy slam that deals Heat DMG, Knock Down, and Stagger to all enemies in a fan-shaped area. Ember took DMG from enemies during casting, so the slam deals more Stagger when it hits.",
-    "eventType": "COMBAT_SKILL",
-    "eventCategoryType": "BATTLE_SKILL",
+    "eventType": "SKILL",
+    "eventIdType": "BATTLE",
     "element": "HEAT",
     "id": "FORWARD_MARCH_EMPOWERED",
     "suppliedParameters": {
@@ -58,8 +58,10 @@
                   0.3,
                   0.5
                 ],
-                "ofDeterminer": "THIS",
-                "of": "OPERATOR"
+                "of": {
+                  "object": "OPERATOR",
+                  "determiner": "THIS"
+                }
               },
               "right": {
                 "verb": "VARY_BY",
@@ -72,8 +74,10 @@
                   0.2,
                   0.2
                 ],
-                "ofDeterminer": "THIS",
-                "of": "OPERATOR"
+                "of": {
+                  "object": "OPERATOR",
+                  "determiner": "THIS"
+                }
               }
             },
             "duration": {
@@ -103,8 +107,10 @@
                     1,
                     1
                   ],
-                  "ofDeterminer": "THIS",
-                  "of": "OPERATOR"
+                  "of": {
+                    "object": "OPERATOR",
+                    "determiner": "THIS"
+                  }
                 }
               }
             }
@@ -170,15 +176,19 @@
                         0.67,
                         0.73
                       ],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     },
                     "mainStat": {
                       "verb": "IS",
                       "object": "STAT",
                       "objectId": "ATTACK",
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     }
                   }
                 }
@@ -252,15 +262,19 @@
                         2.92,
                         3.17
                       ],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     },
                     "mainStat": {
                       "verb": "IS",
                       "object": "STAT",
                       "objectId": "ATTACK",
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     }
                   }
                 }

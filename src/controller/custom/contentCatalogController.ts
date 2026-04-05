@@ -8,7 +8,7 @@ import { getAllConsumables, getAllTacticals } from '../../model/game-data/consum
 import { getGearSetData } from '../gameDataStore';
 import { getGearSetEffects } from '../../consts/gearSetEffects';
 import { getAllSkillLabels } from '../gameDataStore';
-import { CombatSkillType } from '../../consts/enums';
+import {  } from '../../consts/enums';
 import { getCustomWeapons } from './customWeaponController';
 import { getCustomGearSets } from './customGearController';
 import { getCustomOperators } from './customOperatorController';
@@ -60,7 +60,7 @@ export function getAllContentItems(): ContentBrowserItem[] {
   for (const op of ALL_OPERATORS) {
     if (customOpIds.has(op.id)) continue;
     for (const [key, skill] of Object.entries(op.skills)) {
-      const skillName = skill.name as CombatSkillType;
+      const skillName = skill.name as string;
       const label = getAllSkillLabels()[skillName] || skill.name;
       items.push({
         id: `skill:${op.id}:${key}`,

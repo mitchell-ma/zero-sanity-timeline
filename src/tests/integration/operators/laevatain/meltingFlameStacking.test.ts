@@ -17,17 +17,17 @@
  */
 
 import { renderHook, act } from '@testing-library/react';
-import { NounType } from '../../../dsl/semantics';
-import { useApp } from '../../../app/useApp';
-import { EnhancementType, EventStatusType, InteractionModeType } from '../../../consts/enums';
-import { FPS } from '../../../utils/timeline';
-import { computeTimelinePresentation } from '../../../controller/timeline/eventPresentationController';
-import { OPERATOR_STATUS_COLUMN_ID } from '../../../model/channels';
-import { findColumn, buildContextMenu, getMenuPayload } from '../helpers';
-import type { AppResult, AddEventPayload } from '../helpers';
+import { NounType } from '../../../../dsl/semantics';
+import { useApp } from '../../../../app/useApp';
+import { EnhancementType, EventStatusType, InteractionModeType } from '../../../../consts/enums';
+import { FPS } from '../../../../utils/timeline';
+import { computeTimelinePresentation } from '../../../../controller/timeline/eventPresentationController';
+import { OPERATOR_STATUS_COLUMN_ID } from '../../../../model/channels';
+import { findColumn, buildContextMenu, getMenuPayload } from '../../helpers';
+import type { AppResult, AddEventPayload } from '../../helpers';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const MELTING_FLAME_ID: string = require('../../../model/game-data/operators/laevatain/statuses/status-melting-flame.json').properties.id;
+const MELTING_FLAME_ID: string = require('../../../../model/game-data/operators/laevatain/statuses/status-melting-flame.json').properties.id;
 const SLOT_LAEVATAIN = 'slot-0';
 
 /** Ref container from renderHook — always read .current for latest state. */
@@ -73,7 +73,7 @@ function addMfStacks(ref: AppRef, count: number, startSecond: number) {
 
 /** Add an empowered battle skill for Laevatain via context menu flow. */
 function addEmpoweredBattleSkill(ref: AppRef, atSecond: number) {
-  const col = findColumn(ref.current, SLOT_LAEVATAIN, NounType.BATTLE_SKILL);
+  const col = findColumn(ref.current, SLOT_LAEVATAIN, NounType.BATTLE);
   expect(col).toBeDefined();
   const empoweredVariant = col!.eventVariants?.find(
     (v) => v.enhancementType === EnhancementType.EMPOWERED,
@@ -172,7 +172,7 @@ describe('Melting Flame stacking — freeform add', () => {
     expect(mfBefore).toHaveLength(4);
 
     // ── Context menu layer: empowered battle skill ──────────────────────
-    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE_SKILL);
+    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE);
     expect(battleCol).toBeDefined();
     const battleMenu = buildContextMenu(result.current, battleCol!, 10 * FPS);
     expect(battleMenu).not.toBeNull();
@@ -223,7 +223,7 @@ describe('Melting Flame stacking — freeform add', () => {
 
     // Verify empowered BS was undone
     const battleAfterUndo = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === NounType.BATTLE_SKILL,
+      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === NounType.BATTLE,
     );
     expect(battleAfterUndo).toHaveLength(0);
 

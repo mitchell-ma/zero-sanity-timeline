@@ -7,7 +7,7 @@
 
 import { TimelineEvent } from '../../consts/viewTypes';
 import { NounType } from '../../dsl/semantics';
-import { CombatSkillType, SegmentType } from '../../consts/enums';
+import { SegmentType } from '../../consts/enums';
 import {
   applyTimeStopExtension,
   validateTimeStopStarts,
@@ -34,8 +34,8 @@ function makeEvent(overrides: Partial<TimelineEvent> & { uid: string; columnId: 
 function makeControlEvent(startFrame: number, duration: number, ownerId = 'op-1'): TimelineEvent {
   return makeEvent({
     uid: uid(),
-    id: CombatSkillType.CONTROL,
-    name: CombatSkillType.CONTROL,
+    id: NounType.CONTROL,
+    name: NounType.CONTROL,
     columnId: OPERATOR_COLUMNS.INPUT,
     ownerId,
     startFrame,
@@ -58,7 +58,7 @@ function makeUltimateEvent(startFrame: number, animDuration: number): TimelineEv
 function makeComboEvent(startFrame: number, animDuration: number): TimelineEvent {
   return makeEvent({
     uid: uid(),
-    columnId: NounType.COMBO_SKILL,
+    columnId: NounType.COMBO,
     startFrame,
     segments: [
       { properties: { duration: animDuration, name: 'Animation', segmentTypes: [SegmentType.ANIMATION] } },
@@ -111,7 +111,7 @@ describe('control events are NOT extended by time-stops', () => {
     const ult = makeUltimateEvent(100, 30);
     const battle = makeEvent({
       uid: uid(),
-      columnId: NounType.BATTLE_SKILL,
+      columnId: NounType.BATTLE,
       startFrame: 80,
       segments: [{ properties: { duration: 200 } }],
     });
@@ -133,7 +133,7 @@ describe('control swap cannot start during any time-stop', () => {
     const stops = collectTimeStopRegions([ult]);
 
     const results = validateTimeStopStarts([ult, control], stops);
-    const result = results.find(ev => ev.id === CombatSkillType.CONTROL)!;
+    const result = results.find(ev => ev.id === NounType.CONTROL)!;
     expect(result.warnings).toBeDefined();
     expect(result.warnings!.some(w => w.includes('Control swap'))).toBe(true);
   });
@@ -144,7 +144,7 @@ describe('control swap cannot start during any time-stop', () => {
     const stops = collectTimeStopRegions([combo]);
 
     const results = validateTimeStopStarts([combo, control], stops);
-    const result = results.find(ev => ev.id === CombatSkillType.CONTROL)!;
+    const result = results.find(ev => ev.id === NounType.CONTROL)!;
     expect(result.warnings).toBeDefined();
     expect(result.warnings!.some(w => w.includes('Control swap'))).toBe(true);
   });
@@ -155,7 +155,7 @@ describe('control swap cannot start during any time-stop', () => {
     const stops = collectTimeStopRegions([dodge]);
 
     const results = validateTimeStopStarts([dodge, control], stops);
-    const result = results.find(ev => ev.id === CombatSkillType.CONTROL)!;
+    const result = results.find(ev => ev.id === NounType.CONTROL)!;
     expect(result.warnings).toBeDefined();
     expect(result.warnings!.some(w => w.includes('Control swap'))).toBe(true);
   });
@@ -166,7 +166,7 @@ describe('control swap cannot start during any time-stop', () => {
     const stops = collectTimeStopRegions([ult]);
 
     const results = validateTimeStopStarts([ult, control], stops);
-    const result = results.find(ev => ev.id === CombatSkillType.CONTROL)!;
+    const result = results.find(ev => ev.id === NounType.CONTROL)!;
     expect(result.warnings ?? []).toHaveLength(0);
   });
 
@@ -176,7 +176,7 @@ describe('control swap cannot start during any time-stop', () => {
     const stops = collectTimeStopRegions([ult]);
 
     const results = validateTimeStopStarts([ult, control], stops);
-    const result = results.find(ev => ev.id === CombatSkillType.CONTROL)!;
+    const result = results.find(ev => ev.id === NounType.CONTROL)!;
     expect(result.warnings ?? []).toHaveLength(0);
   });
 });

@@ -414,14 +414,6 @@ describe('getFrameExpectation', () => {
     expect(getFrameExpectation(CritMode.ALWAYS)).toBe(1);
   });
 
-  it('RANDOM returns 1 when frameCrit is true', () => {
-    expect(getFrameExpectation(CritMode.RANDOM, undefined, true)).toBe(1);
-  });
-
-  it('RANDOM returns 0 when frameCrit is false', () => {
-    expect(getFrameExpectation(CritMode.RANDOM, undefined, false)).toBe(0);
-  });
-
   it('EXPECTED returns snapshot expectedCritRate', () => {
     const snap: CritFrameSnapshot = { expectedCritRate: 0.12, critSources: [], statusDistributions: new Map(), expectedStatDeltas: {}, fullStatValues: {}, statContributions: [] };
     expect(getFrameExpectation(CritMode.EXPECTED, snap)).toBeCloseTo(0.12);
@@ -465,10 +457,6 @@ describe('getStatusExpectation', () => {
     expect(getStatusExpectation(CritMode.EXPECTED, snap, 'UNKNOWN')).toBe(1);
   });
 
-  it('RANDOM returns binary from frameCrit', () => {
-    expect(getStatusExpectation(CritMode.RANDOM, snap, 'MI', true)).toBe(1);
-    expect(getStatusExpectation(CritMode.RANDOM, snap, 'MI', false)).toBe(0);
-  });
 });
 
 // ── EXPECTED mode clamping between NEVER and ALWAYS ──────────────────────────

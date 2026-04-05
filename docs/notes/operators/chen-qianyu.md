@@ -50,7 +50,7 @@
 | P2 | Heirloom Martial Arts | AGI +15, Physical DMG +8% | |
 | P3 | Dual-Wielding Swordmancer | BS, Combo, Ult: DAMAGE ×1.1 | VARY_BY POTENTIAL [1,1,1,1.1,1.1,1.1] |
 | P4 | Improvised Chi Xiao | Blade Gale energy cost ×0.85 | VARY_BY POTENTIAL [1,1,1,1,0.85,0.85] |
-| P5 | Bonded with the World | Combo CD -3s | Modifier: SUBTRACT 3s when HAVE POTENTIAL AT_LEAST 5 |
+| P5 | Bonded with the World | Combo CD -3s | Modifier: SUBTRACT 3s when HAVE POTENTIAL GREATER_THAN_EQUAL 5 |
 
 ## Talents
 

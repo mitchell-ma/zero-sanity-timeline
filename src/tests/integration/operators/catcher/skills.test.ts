@@ -63,7 +63,7 @@ function setupCatcher() {
 describe('A. Core Skill Placement', () => {
   it('A1: Battle skill places in BATTLE_SKILL column with correct ID', () => {
     const { result } = setupCatcher();
-    const col = findColumn(result.current, SLOT_CATCHER, NounType.BATTLE_SKILL);
+    const col = findColumn(result.current, SLOT_CATCHER, NounType.BATTLE);
     expect(col?.defaultEvent).toBeDefined();
 
     const menuItems = buildContextMenu(result.current, col!, 5 * FPS);
@@ -79,7 +79,7 @@ describe('A. Core Skill Placement', () => {
     });
 
     const events = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_CATCHER && ev.columnId === NounType.BATTLE_SKILL,
+      ev => ev.ownerId === SLOT_CATCHER && ev.columnId === NounType.BATTLE,
     );
     expect(events).toHaveLength(1);
     expect(events[0].name).toBe(BATTLE_SKILL_ID);
@@ -91,7 +91,7 @@ describe('A. Core Skill Placement', () => {
     // Switch to freeform — Catcher combo trigger not directly simulatable
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
-    const col = findColumn(result.current, SLOT_CATCHER, NounType.COMBO_SKILL);
+    const col = findColumn(result.current, SLOT_CATCHER, NounType.COMBO);
     expect(col?.defaultEvent).toBeDefined();
 
     const menuItems = buildContextMenu(result.current, col!, 5 * FPS);
@@ -107,7 +107,7 @@ describe('A. Core Skill Placement', () => {
     });
 
     const events = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_CATCHER && ev.columnId === NounType.COMBO_SKILL,
+      ev => ev.ownerId === SLOT_CATCHER && ev.columnId === NounType.COMBO,
     );
     expect(events).toHaveLength(1);
     expect(events[0].name).toBe(COMBO_SKILL_ID);
@@ -150,7 +150,7 @@ describe('A. Core Skill Placement', () => {
 describe('B. Battle Skill -- Protection and Vulnerability', () => {
   it('B1: Battle skill has frame at offset 0s (Protection + SP Return)', () => {
     const { result } = setupCatcher();
-    const col = findColumn(result.current, SLOT_CATCHER, NounType.BATTLE_SKILL);
+    const col = findColumn(result.current, SLOT_CATCHER, NounType.BATTLE);
 
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
@@ -161,7 +161,7 @@ describe('B. Battle Skill -- Protection and Vulnerability', () => {
     });
 
     const events = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_CATCHER && ev.columnId === NounType.BATTLE_SKILL,
+      ev => ev.ownerId === SLOT_CATCHER && ev.columnId === NounType.BATTLE,
     );
     expect(events).toHaveLength(1);
 
@@ -174,7 +174,7 @@ describe('B. Battle Skill -- Protection and Vulnerability', () => {
 
   it('B2: Battle skill has retaliation frame at 2.77s with Vulnerability', () => {
     const { result } = setupCatcher();
-    const col = findColumn(result.current, SLOT_CATCHER, NounType.BATTLE_SKILL);
+    const col = findColumn(result.current, SLOT_CATCHER, NounType.BATTLE);
 
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
@@ -185,7 +185,7 @@ describe('B. Battle Skill -- Protection and Vulnerability', () => {
     });
 
     const events = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_CATCHER && ev.columnId === NounType.BATTLE_SKILL,
+      ev => ev.ownerId === SLOT_CATCHER && ev.columnId === NounType.BATTLE,
     );
     expect(events).toHaveLength(1);
 
@@ -279,7 +279,7 @@ describe('D. Combo -- Shield', () => {
     // Use freeform for combo placement
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
-    const col = findColumn(result.current, SLOT_CATCHER, NounType.COMBO_SKILL);
+    const col = findColumn(result.current, SLOT_CATCHER, NounType.COMBO);
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
@@ -289,7 +289,7 @@ describe('D. Combo -- Shield', () => {
     });
 
     const events = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_CATCHER && ev.columnId === NounType.COMBO_SKILL,
+      ev => ev.ownerId === SLOT_CATCHER && ev.columnId === NounType.COMBO,
     );
     expect(events).toHaveLength(1);
     expect(eventDuration(events[0])).toBeGreaterThan(0);
@@ -311,7 +311,7 @@ describe('D. Combo -- Shield', () => {
 describe('E. View Layer', () => {
   it('E1: Battle skill visible in computeTimelinePresentation', () => {
     const { result } = setupCatcher();
-    const col = findColumn(result.current, SLOT_CATCHER, NounType.BATTLE_SKILL);
+    const col = findColumn(result.current, SLOT_CATCHER, NounType.BATTLE);
 
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
@@ -336,7 +336,7 @@ describe('E. View Layer', () => {
     const { result } = setupCatcher();
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
-    const col = findColumn(result.current, SLOT_CATCHER, NounType.COMBO_SKILL);
+    const col = findColumn(result.current, SLOT_CATCHER, NounType.COMBO);
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(

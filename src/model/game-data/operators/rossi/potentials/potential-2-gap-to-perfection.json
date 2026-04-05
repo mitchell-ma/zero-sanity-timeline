@@ -4,7 +4,7 @@
     "name": "Gap to Perfection",
     "level": 2,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
+    "eventIdType": "POTENTIAL",
     "description": "Agility +20, Critical Rate +7%."
   },
   "metadata": {

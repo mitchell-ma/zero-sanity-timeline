@@ -25,8 +25,8 @@ const ELEMENT_TO_INFLICTION_COLUMN: Record<string, string> = {
 
 const SKILL_TYPE_TO_COLUMN: Record<string, string> = {
   BASIC_ATTACK:  NounType.BASIC_ATTACK,
-  BATTLE_SKILL:  NounType.BATTLE_SKILL,
-  COMBO_SKILL:   NounType.COMBO_SKILL,
+  BATTLE_SKILL:  NounType.BATTLE,
+  COMBO_SKILL:   NounType.COMBO,
   ULTIMATE:      NounType.ULTIMATE,
 };
 
@@ -133,8 +133,10 @@ function evaluateParameter(cond: Interaction, ctx: ConditionContext): boolean {
   if (target == null) return false;
   const constraint = cond.cardinalityConstraint ?? cond.verb;
   switch (constraint) {
-    case CardinalityConstraintType.AT_LEAST: return paramValue >= target;
-    case CardinalityConstraintType.AT_MOST: return paramValue <= target;
+    case CardinalityConstraintType.GREATER_THAN: return paramValue > target;
+    case CardinalityConstraintType.GREATER_THAN_EQUAL: return paramValue >= target;
+    case CardinalityConstraintType.LESS_THAN: return paramValue < target;
+    case CardinalityConstraintType.LESS_THAN_EQUAL: return paramValue <= target;
     case CardinalityConstraintType.EXACTLY: return paramValue === target;
   }
   return paramValue >= target;
@@ -146,8 +148,10 @@ function evaluateHave(cond: Interaction, ctx: ConditionContext): boolean {
     const pot = ctx.potential ?? 0;
     const { target, constraint } = resolveConditionThreshold(cond);
     switch (constraint) {
-      case CardinalityConstraintType.AT_LEAST: return pot >= target;
-      case CardinalityConstraintType.AT_MOST: return pot <= target;
+      case CardinalityConstraintType.GREATER_THAN: return pot > target;
+      case CardinalityConstraintType.GREATER_THAN_EQUAL: return pot >= target;
+      case CardinalityConstraintType.LESS_THAN: return pot < target;
+      case CardinalityConstraintType.LESS_THAN_EQUAL: return pot <= target;
       case CardinalityConstraintType.EXACTLY: return pot === target;
     }
     return pot >= target;
@@ -162,7 +166,7 @@ function evaluateHave(cond: Interaction, ctx: ConditionContext): boolean {
       if (!ownerId || !ctx.getOperatorPercentageHp) return true; // default to full if no tracker
       return ctx.getOperatorPercentageHp(ownerId, ctx.frame) >= 100;
     }
-    // Value+unit PERCENTAGE pattern: HAVE HP AT_MOST/AT_LEAST N (UNIT PERCENTAGE)
+    // Value+unit PERCENTAGE pattern: HAVE HP LESS_THAN_EQUAL/GREATER_THAN_EQUAL N (UNIT PERCENTAGE)
     const withBlock = (cond as unknown as Record<string, unknown>).with as Record<string, unknown> | undefined;
     const valueWrapper = withBlock?.value as Record<string, unknown> | undefined;
     if (valueWrapper?.unit === UnitType.PERCENTAGE) {
@@ -182,8 +186,10 @@ function evaluateHave(cond: Interaction, ctx: ConditionContext): boolean {
         hpPct = ctx.getOperatorPercentageHp(ownerId, ctx.frame);
       }
       switch (cond.cardinalityConstraint) {
-        case CardinalityConstraintType.AT_MOST: return hpPct <= target;
-        case CardinalityConstraintType.AT_LEAST: return hpPct >= target;
+        case CardinalityConstraintType.GREATER_THAN: return hpPct > target;
+        case CardinalityConstraintType.GREATER_THAN_EQUAL: return hpPct >= target;
+        case CardinalityConstraintType.LESS_THAN: return hpPct < target;
+        case CardinalityConstraintType.LESS_THAN_EQUAL: return hpPct <= target;
         case CardinalityConstraintType.EXACTLY: return Math.round(hpPct) === target;
       }
       return false;
@@ -198,8 +204,10 @@ function evaluateHave(cond: Interaction, ctx: ConditionContext): boolean {
     if (hpPct == null) return false;
     const target = (cond.value ? resolveValueNode(cond.value!, DEFAULT_VALUE_CONTEXT) : undefined) ?? 100;
     switch (cond.cardinalityConstraint) {
-      case CardinalityConstraintType.AT_MOST: return hpPct <= target;
-      case CardinalityConstraintType.AT_LEAST: return hpPct >= target;
+      case CardinalityConstraintType.GREATER_THAN: return hpPct > target;
+      case CardinalityConstraintType.GREATER_THAN_EQUAL: return hpPct >= target;
+      case CardinalityConstraintType.LESS_THAN: return hpPct < target;
+      case CardinalityConstraintType.LESS_THAN_EQUAL: return hpPct <= target;
       case CardinalityConstraintType.EXACTLY: return Math.round(hpPct) === target;
     }
     return false;
@@ -221,8 +229,10 @@ function evaluateHave(cond: Interaction, ctx: ConditionContext): boolean {
     const target = resolveValueNode(condValue as ValueNode, DEFAULT_VALUE_CONTEXT) ?? 0;
     switch (cond.cardinalityConstraint) {
       case CardinalityConstraintType.EXACTLY: return count === target;
-      case CardinalityConstraintType.AT_LEAST: return count >= target;
-      case CardinalityConstraintType.AT_MOST: return count <= target;
+      case CardinalityConstraintType.GREATER_THAN: return count > target;
+      case CardinalityConstraintType.GREATER_THAN_EQUAL: return count >= target;
+      case CardinalityConstraintType.LESS_THAN: return count < target;
+      case CardinalityConstraintType.LESS_THAN_EQUAL: return count <= target;
       default: return count === target;
     }
   }
@@ -274,16 +284,16 @@ function evaluateIs(cond: Interaction, ctx: ConditionContext): boolean {
 function evaluateBecome(cond: Interaction, ctx: ConditionContext): boolean {
   // BECOME STACKS: count-based transition — current count meets cardinality AND differs from previous.
   // e.g. MF III → MF IV triggers, MF IV → MF IV does not.
-  // For external monitoring (e.g. combo watches AUXILIARY_CRYSTAL), use ofSubject/ofDeterminer
+  // For external monitoring (e.g. combo watches AUXILIARY_CRYSTAL), use of clause
   // to resolve the possessor (whose status to check).
   if (cond.object === NounType.STATUS || cond.object === NounType.STACKS) {
     const statusId = cond.subjectId ?? cond.objectId;
     const columnIds = resolveColumnIds(cond.object === NounType.STACKS ? NounType.STATUS : cond.object, statusId, cond.objectQualifier);
     if (columnIds.length === 0) return false;
-    // Use ofSubject/ofDeterminer for possessor resolution if available, otherwise fall back to subject
-    const ownerSubject = cond.ofSubject ?? cond.subject;
-    const ownerDeterminer = cond.ofDeterminer ?? cond.subjectDeterminer;
-    const ownerId = resolveOwnerId(ownerSubject, ctx, ownerDeterminer);
+    // Use of clause for possessor resolution if available, otherwise fall back to subject
+    const ownerSubject = cond.of?.object ?? cond.subject;
+    const ownerDeterminer = cond.of?.determiner ?? cond.subjectDeterminer;
+    const ownerId = resolveOwnerId(ownerSubject as string, ctx, ownerDeterminer);
     let countNow = 0;
     let countBefore = 0;
     for (const colId of columnIds) {
@@ -304,8 +314,10 @@ function evaluateBecome(cond: Interaction, ctx: ConditionContext): boolean {
       const target = resolveValueNode(cond.value!, valueCtx) ?? 0;
       switch (cond.cardinalityConstraint) {
         case CardinalityConstraintType.EXACTLY: return countNow === target;
-        case CardinalityConstraintType.AT_LEAST: return countNow >= target;
-        case CardinalityConstraintType.AT_MOST: return countNow <= target;
+        case CardinalityConstraintType.GREATER_THAN: return countNow > target;
+        case CardinalityConstraintType.GREATER_THAN_EQUAL: return countNow >= target;
+        case CardinalityConstraintType.LESS_THAN: return countNow < target;
+        case CardinalityConstraintType.LESS_THAN_EQUAL: return countNow <= target;
       }
     }
     return true;

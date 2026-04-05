@@ -39,7 +39,7 @@
     },
     "description": "Arts DMG +35% for 15s after applying 2+ stacks of Arts Infliction. Cannot stack.",
     "eventType": "STATUS",
-    "eventCategoryType": "GEAR_SET_STATUS"
+    "eventIdType": "GEAR_SET_STATUS"
   },
   "metadata": {
     "originId": "TIDE_SURGE",

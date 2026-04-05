@@ -8,7 +8,7 @@
  * predicates at each candidate frame.
  */
 import { TimelineEvent, computeSegmentsSpan } from '../../consts/viewTypes';
-import { CombatSkillType, EventStatusType } from '../../consts/enums';
+import { EventStatusType } from '../../consts/enums';
 import { COMMON_OWNER_ID } from '../slot/commonSlotController';
 import {
   ELEMENT_TO_INFLICTION_COLUMN,
@@ -39,10 +39,8 @@ export interface Predicate {
   element?: string;
   objectQualifier?: string;
   subjectDeterminer?: string;
-  /** OF — possessor entity type for the subject. */
-  ofSubject?: string;
-  /** Determiner for the OF possessor. */
-  ofDeterminer?: string;
+  /** OF — possessor clause for the subject. */
+  of?: Record<string, unknown>;
   to?: string;
   toDeterminer?: string;
   with?: Record<string, unknown>;
@@ -64,8 +62,7 @@ export interface TriggerEffect {
   toDeterminer?: string;
   with?: Record<string, unknown>;
   until?: Record<string, unknown>;
-  of?: string;
-  ofDeterminer?: string;
+  of?: Record<string, unknown>;
 }
 
 export interface TriggerSubEffect {
@@ -80,8 +77,7 @@ export interface TriggerSubEffect {
   toDeterminer?: string;
   with?: Record<string, unknown>;
   until?: Record<string, unknown>;
-  of?: string;
-  ofDeterminer?: string;
+  of?: Record<string, unknown>;
 }
 
 export interface TriggerMatch {
@@ -154,7 +150,7 @@ export function getFirstEventFrame(ev: TimelineEvent): number {
 
 
 const SKIP_COLUMNS = new Set<string>([
-  NounType.BASIC_ATTACK, NounType.BATTLE_SKILL, NounType.COMBO_SKILL, NounType.ULTIMATE,
+  NounType.BASIC_ATTACK, NounType.BATTLE, NounType.COMBO, NounType.ULTIMATE,
 ]);
 
 /**
@@ -294,11 +290,14 @@ function handlePerform(primaryCond: Predicate, ctx: VerbHandlerContext): Trigger
   const matches: TriggerMatch[] = [];
   const { matchesOwner, isAnyOperator } = resolveOwnerFilter(primaryCond, ctx.operatorSlotId, VerbType.PERFORM);
 
-  if (primaryCond.object === 'FINAL_STRIKE') {
+  // Resolve the effective skill ID: for normalized SKILL objects, use objectId
+  const skillId = primaryCond.object === NounType.SKILL ? primaryCond.objectId : primaryCond.object;
+
+  if (skillId === NounType.FINAL_STRIKE) {
     for (const ev of ctx.events) {
       if (!matchesOwner(ev.ownerId)) continue;
       if (ev.columnId !== NounType.BASIC_ATTACK) continue;
-      if (ev.id === CombatSkillType.FINISHER || ev.id === CombatSkillType.DIVE) continue;
+      if (ev.id === NounType.FINISHER || ev.id === NounType.DIVE) continue;
 
       const triggerFrame = getFinalStrikeTriggerFrame(ev, ctx.stops);
       if (triggerFrame == null) continue;
@@ -310,8 +309,8 @@ function handlePerform(primaryCond: Predicate, ctx: VerbHandlerContext): Trigger
   }
 
   // FINISHER / DIVE_ATTACK — match events on basic column by skill name
-  if (primaryCond.object === 'FINISHER' || primaryCond.object === 'DIVE_ATTACK') {
-    const targetName = primaryCond.object === 'FINISHER' ? CombatSkillType.FINISHER : CombatSkillType.DIVE;
+  if (skillId === NounType.FINISHER || skillId === NounType.DIVE) {
+    const targetName = skillId === NounType.FINISHER ? NounType.FINISHER : NounType.DIVE;
     for (const ev of ctx.events) {
       if (!matchesOwner(ev.ownerId)) continue;
       if (ev.columnId !== NounType.BASIC_ATTACK) continue;
@@ -325,7 +324,7 @@ function handlePerform(primaryCond: Predicate, ctx: VerbHandlerContext): Trigger
     return matches;
   }
 
-  const matchingColumn = primaryCond.object;
+  const matchingColumn = skillId;
 
   for (const ev of ctx.events) {
     if (!isAnyOperator && ev.ownerId !== ctx.operatorSlotId) continue;
@@ -440,8 +439,9 @@ function handleBecome(primaryCond: Predicate, ctx: VerbHandlerContext): TriggerM
     const statusId = primaryCond.subjectId ?? primaryCond.objectId;
     if (!statusId) return [];
     const colId = statusId;
-    const possessorSubject = primaryCond.ofSubject ?? primaryCond.subject;
-    const possessorDeterminer = primaryCond.ofDeterminer ?? primaryCond.subjectDeterminer;
+    const ofClause = primaryCond.of as { object?: string; determiner?: string } | undefined;
+    const possessorSubject = ofClause?.object ?? primaryCond.subject;
+    const possessorDeterminer = ofClause?.determiner ?? primaryCond.subjectDeterminer;
     const { matchesOwner } = resolveOwnerFilter(
       { ...primaryCond, subject: possessorSubject, subjectDeterminer: possessorDeterminer } as Predicate,
       ctx.operatorSlotId, VerbType.BECOME,
@@ -480,8 +480,10 @@ function handleBecome(primaryCond: Predicate, ctx: VerbHandlerContext): TriggerM
       if (countNow === countBefore) continue;
       if (targetValue != null) {
         const passes = constraint === CardinalityConstraintType.EXACTLY ? countNow === targetValue
-          : constraint === CardinalityConstraintType.AT_LEAST ? countNow >= targetValue
-          : constraint === CardinalityConstraintType.AT_MOST ? countNow <= targetValue
+          : constraint === CardinalityConstraintType.GREATER_THAN ? countNow > targetValue
+          : constraint === CardinalityConstraintType.GREATER_THAN_EQUAL ? countNow >= targetValue
+          : constraint === CardinalityConstraintType.LESS_THAN ? countNow < targetValue
+          : constraint === CardinalityConstraintType.LESS_THAN_EQUAL ? countNow <= targetValue
           : countNow === targetValue;
         if (!passes) continue;
       }
@@ -652,7 +654,7 @@ export function findClauseTriggerMatches(
  * (i.e., all conditions use verbs like HIT or HAVE that don't require specific
  * event-based triggers — the combo window spans the entire timeline).
  *
- * HAVE with a stacks threshold (e.g. HAVE VULNERABLE WITH stacks AT_LEAST 4)
+ * HAVE with a stacks threshold (e.g. HAVE VULNERABLE WITH stacks GREATER_THAN_EQUAL 4)
  * is NOT always available — it requires a specific stack count to be reached.
  */
 const ALWAYS_AVAILABLE_VERBS = new Set([VerbType.HIT]);

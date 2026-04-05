@@ -467,7 +467,7 @@ describe('F. StaggerController.sync', () => {
       id: 'test-combo',
       name: 'test-combo',
       ownerId: 'slot-0',
-      columnId: NounType.COMBO_SKILL,
+      columnId: NounType.COMBO,
       startFrame: 100,
             segments: [
         { properties: { segmentTypes: [SegmentType.ANIMATION], duration: 60, timeDependency: TimeDependency.REAL_TIME } },

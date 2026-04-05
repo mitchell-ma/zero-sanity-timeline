@@ -22,7 +22,7 @@ export const USER_ID = 'user';
 
 /** Skill column ID constants — use these instead of magic strings. */
 export const SKILL_COLUMN_ORDER = [
-  NounType.BASIC_ATTACK, NounType.BATTLE_SKILL, NounType.COMBO_SKILL, NounType.ULTIMATE,
+  NounType.BASIC_ATTACK, NounType.BATTLE, NounType.COMBO, NounType.ULTIMATE,
 ] as const;
 
 // ── Infliction columns ─────────────────────────────────────────────────────

@@ -50,7 +50,7 @@
     "piecesRequired": 3,
     "description": "3-piece set effect: Wearer's Arts Intensity +{phy_spell_up:0}. After the wearer applies Combustion, the wearer gains Heat DMG +{fire_dmg_up:0%} for {duration}s. After the wearer applies Corrosion, the wearer gains Nature DMG +{nature_dmg_up:0%} for {duration2}s. The aforementioned effects cannot stack.",
     "eventType": "STATUS",
-    "eventCategoryType": "GEAR_SET_EFFECT"
+    "eventIdType": "GEAR_SET_EFFECT"
   },
   "metadata": {
     "originId": "game",

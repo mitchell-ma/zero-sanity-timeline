@@ -17,7 +17,7 @@
 import { renderHook, act } from '@testing-library/react';
 import { NounType } from '../../../dsl/semantics';
 import { useApp } from '../../../app/useApp';
-import { CombatSkillType } from '../../../consts/enums';
+import {  } from '../../../consts/enums';
 import { FPS } from '../../../utils/timeline';
 import { computeTimelinePresentation } from '../../../controller/timeline/eventPresentationController';
 import { findColumn, buildContextMenu, getMenuPayload } from '../helpers';
@@ -84,11 +84,11 @@ describe('A. Context Menu Inline Segment Buttons', () => {
 
     const diveItem = menuItems.find(
       (i) => i.actionId === 'addEvent' &&
-        (i.actionPayload as { defaultSkill?: { id?: string } })?.defaultSkill?.id === CombatSkillType.DIVE,
+        (i.actionPayload as { defaultSkill?: { id?: string } })?.defaultSkill?.id === NounType.DIVE,
     );
     const finisherItem = menuItems.find(
       (i) => i.actionId === 'addEvent' &&
-        (i.actionPayload as { defaultSkill?: { id?: string } })?.defaultSkill?.id === CombatSkillType.FINISHER,
+        (i.actionPayload as { defaultSkill?: { id?: string } })?.defaultSkill?.id === NounType.FINISHER,
     );
     expect(diveItem?.inlineButtons).toBeUndefined();
     expect(finisherItem?.inlineButtons).toBeUndefined();

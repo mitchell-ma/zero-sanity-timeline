@@ -679,7 +679,7 @@ const SKILL_TYPE_LABELS: Record<string, string> = {
   basic: 'Basic Attack', battle: 'Battle Skill', combo: 'Combo Skill', ultimate: 'Ultimate',
 };
 const SKILL_TYPE_TO_JSON_KEY: Record<string, string> = {
-  basic: 'BASIC_ATTACK', battle: 'BATTLE_SKILL', combo: 'COMBO_SKILL', ultimate: 'ULTIMATE',
+  basic: 'BASIC_ATTACK', battle: 'BATTLE', combo: 'COMBO', ultimate: 'ULTIMATE',
 };
 const HIT_NAMES = ['Hit 1', 'Hit 2', 'Hit 3', 'Hit 4', 'Hit 5', 'Hit 6', 'Hit 7', 'Hit 8'];
 
@@ -1103,7 +1103,7 @@ function BuiltinOperatorSkillSection({ operatorId, skillType, skill, onExpandedC
   skill: SkillDef;
   onExpandedChange?: (entryId: string | null) => void;
 }) {
-  const JSON_KEYS: Record<string, string> = { [NounType.BASIC_ATTACK]: NounType.BASIC_ATTACK, [NounType.BATTLE_SKILL]: NounType.BATTLE_SKILL, [NounType.COMBO_SKILL]: NounType.COMBO_SKILL, [NounType.ULTIMATE]: NounType.ULTIMATE };
+  const JSON_KEYS: Record<string, string> = { [NounType.BASIC_ATTACK]: NounType.BASIC_ATTACK, [NounType.BATTLE]: NounType.BATTLE, [NounType.COMBO]: NounType.COMBO, [NounType.ULTIMATE]: NounType.ULTIMATE };
   const skillEntries = useMemo(
     () => buildSkillEntries(operatorId, JSON_KEYS[skillType]),
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1125,7 +1125,7 @@ function BuiltinOperatorSkillSection({ operatorId, skillType, skill, onExpandedC
   useEffect(() => { setExpandedIds(new Set()); onExpandedChange?.(null); }, [skillType, onExpandedChange]);
 
   const comboTrigger = useMemo(
-    () => skillType === NounType.COMBO_SKILL ? resolveComboTrigger(operatorId) : null,
+    () => skillType === NounType.COMBO ? resolveComboTrigger(operatorId) : null,
     [operatorId, skillType],
   );
 
@@ -1195,7 +1195,7 @@ function BuiltinOperatorSkillSection({ operatorId, skillType, skill, onExpandedC
 }
 
 
-const JSON_SKILL_KEYS: Record<string, string> = { [NounType.BASIC_ATTACK]: NounType.BASIC_ATTACK, [NounType.BATTLE_SKILL]: NounType.BATTLE_SKILL, [NounType.COMBO_SKILL]: NounType.COMBO_SKILL, [NounType.ULTIMATE]: NounType.ULTIMATE };
+const JSON_SKILL_KEYS: Record<string, string> = { [NounType.BASIC_ATTACK]: NounType.BASIC_ATTACK, [NounType.BATTLE]: NounType.BATTLE, [NounType.COMBO]: NounType.COMBO, [NounType.ULTIMATE]: NounType.ULTIMATE };
 
 const FPS = 120;
 
@@ -1378,7 +1378,7 @@ function BuiltinOperatorStatusesView({ operatorId }: { operatorId: string }) {
       : [];
 
     return [...operatorStatuses, ...genericStatuses]
-      .filter(s => (s.properties as Record<string, unknown> | undefined)?.eventCategoryType !== 'TALENT');
+      .filter(s => (s.properties as Record<string, unknown> | undefined)?.eventIdType !== 'TALENT');
   }, [operatorId]);
   const [openIdxSet, setOpenIdxSet] = useState<Set<number>>(new Set());
 
@@ -1412,9 +1412,9 @@ function BuiltinOperatorStatusesView({ operatorId }: { operatorId: string }) {
 }
 
 
-const VIEWER_SKILL_TYPES = [NounType.BASIC_ATTACK, NounType.BATTLE_SKILL, NounType.COMBO_SKILL, NounType.ULTIMATE] as const;
+const VIEWER_SKILL_TYPES = [NounType.BASIC_ATTACK, NounType.BATTLE, NounType.COMBO, NounType.ULTIMATE] as const;
 const VIEWER_SKILL_TAB_LABELS: Record<string, string> = {
-  [NounType.BASIC_ATTACK]: 'Basic Attack', [NounType.BATTLE_SKILL]: 'Battle Skill', [NounType.COMBO_SKILL]: 'Combo Skill', [NounType.ULTIMATE]: 'Ultimate',
+  [NounType.BASIC_ATTACK]: 'Basic Attack', [NounType.BATTLE]: 'Battle Skill', [NounType.COMBO]: 'Combo Skill', [NounType.ULTIMATE]: 'Ultimate',
 };
 function BuiltinOperatorView({ id }: { id: string }) {
   const op = ALL_OPERATORS.find((o) => o.id === id);
@@ -1580,7 +1580,7 @@ function BuiltinOperatorView({ id }: { id: string }) {
         {activeCategory === 'talents' && (() => {
           const talentStatuses = getOperatorStatuses(id)
             .map(s => s.serialize() as Record<string, unknown>)
-            .filter(s => (s.properties as Record<string, unknown> | undefined)?.eventCategoryType === 'TALENT');
+            .filter(s => (s.properties as Record<string, unknown> | undefined)?.eventIdType === 'TALENT');
           return talentStatuses.length > 0 ? talentStatuses.map((s, i) => {
             const props = s.properties as Record<string, unknown>;
             const name = (props.name as string) ?? (props.id as string) ?? `Talent ${i + 1}`;

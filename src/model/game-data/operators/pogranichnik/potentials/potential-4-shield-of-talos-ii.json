@@ -4,11 +4,11 @@
     "name": "Shield of Talos-II",
     "level": 4,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
+    "eventIdType": "POTENTIAL",
     "description": "Ultimate Shieldguard Banner, Forward improved: Ultimate Energy cost -15%."
   },
   "metadata": {
     "originId": "POGRANICHNIK",
-    "dataStatus": "RECONCILED"
+    "dataStatus": "VERIFIED"
   }
 }

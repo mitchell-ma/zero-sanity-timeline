@@ -6,7 +6,8 @@
  * Cross-element reaction mapping still uses INFLICTION_TO_REACTION.
  */
 
-import { EventCategoryType, EventStatusType } from '../../../consts/enums';
+import { NounType } from '../../../dsl/semantics';
+import { EventStatusType } from '../../../consts/enums';
 import { eventDuration, setEventDuration } from '../../../consts/viewTypes';
 import { ENEMY_OWNER_ID, INFLICTION_TO_REACTION } from '../../../model/channels';
 import { getStatusById } from '../../gameDataStore';
@@ -24,7 +25,7 @@ export class InflictionColumn implements EventColumn {
     this.columnId = columnId;
     this.host = host;
     const config = getStatusById(columnId);
-    this.isArts = config?.eventCategoryType === EventCategoryType.INFLICTION;
+    this.isArts = config?.eventIdType === NounType.INFLICTION;
     this.maxStacks = (config?.stacks?.limit as { value?: number } | undefined)?.value ?? 4;
   }
 

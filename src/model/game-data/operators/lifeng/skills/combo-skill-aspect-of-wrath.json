@@ -2,8 +2,8 @@
   "properties": {
     "name": "Aspect of Wrath",
     "description": "When the controlled operator performs a Final Strike on an enemy with Physical Susceptibility or Breach. Unleashes an aspect that performs a spear thrust to deal Physical DMG and grants Link.",
-    "eventType": "COMBAT_SKILL",
-    "eventCategoryType": "COMBO_SKILL",
+    "eventType": "SKILL",
+    "eventIdType": "COMBO",
     "element": "PHYSICAL",
     "id": "ASPECT_OF_WRATH"
   },
@@ -104,15 +104,19 @@
                         0.97,
                         1.05
                       ],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     },
                     "mainStat": {
                       "verb": "IS",
                       "object": "STAT",
                       "objectId": "ATTACK",
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     }
                   }
                 },
@@ -188,15 +192,19 @@
                         3.46,
                         3.75
                       ],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     },
                     "mainStat": {
                       "verb": "IS",
                       "object": "STAT",
                       "objectId": "ATTACK",
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     }
                   }
                 }
@@ -235,8 +243,10 @@
               16,
               15
             ],
-            "ofDeterminer": "THIS",
-            "of": "OPERATOR"
+            "of": {
+              "object": "OPERATOR",
+              "determiner": "THIS"
+            }
           },
           "unit": "SECOND"
         },
@@ -262,7 +272,8 @@
             "subjectDeterminer": "CONTROLLED",
             "subject": "OPERATOR",
             "verb": "PERFORM",
-            "object": "FINAL_STRIKE"
+            "object": "SKILL",
+            "objectId": "FINAL_STRIKE"
           },
           {
             "subject": "ENEMY",
@@ -279,7 +290,8 @@
             "subjectDeterminer": "CONTROLLED",
             "subject": "OPERATOR",
             "verb": "PERFORM",
-            "object": "FINAL_STRIKE"
+            "object": "SKILL",
+            "objectId": "FINAL_STRIKE"
           },
           {
             "subject": "ENEMY",

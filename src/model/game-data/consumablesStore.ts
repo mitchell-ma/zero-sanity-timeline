@@ -5,7 +5,7 @@
  *   consumables/consumables/*.json  → ConsumableData
  *   consumables/tacticals/*.json    → TacticalData
  */
-import { StatType, UnitType, EventType, EventCategoryType, StackInteractionType } from '../../consts/enums';
+import { StatType, UnitType, EventType, StackInteractionType } from '../../consts/enums';
 import { VerbType, NounType, DeterminerType } from '../../dsl/semantics';
 import type { Interaction, ValueNode } from '../../dsl/semantics';
 import { checkKeys, VALID_CLAUSE_KEYS } from './validationUtils';
@@ -175,7 +175,7 @@ export class ConsumableData {
         stacks: { limit: { verb: VerbType.IS, value: 1 }, interactionType: StackInteractionType.NONE },
         duration: this.duration,
         eventType: EventType.STATUS,
-        eventCategoryType: EventCategoryType.CONSUMABLE,
+        eventIdType: NounType.CONSUMABLE,
       },
       metadata: {},
     };
@@ -242,7 +242,7 @@ export class TacticalData {
         targetDeterminer: DeterminerType.THIS,
         stacks: { limit: { verb: VerbType.IS, value: 1 }, interactionType: StackInteractionType.NONE },
         eventType: EventType.STATUS,
-        eventCategoryType: EventCategoryType.TACTICAL,
+        eventIdType: NounType.TACTICAL,
       },
       metadata: {},
       usageLimit: this.resolvedUsageLimit,

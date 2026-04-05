@@ -29,8 +29,8 @@ describe('Ardelia Dolly Rush — Corrosion consumption', () => {
     const { result } = renderHook(() => useApp());
 
     const basicCol = findColumn(result.current, SLOT_ARDELIA, NounType.BASIC_ATTACK);
-    const comboCol = findColumn(result.current, SLOT_ARDELIA, NounType.COMBO_SKILL);
-    const battleCol = findColumn(result.current, SLOT_ARDELIA, NounType.BATTLE_SKILL);
+    const comboCol = findColumn(result.current, SLOT_ARDELIA, NounType.COMBO);
+    const battleCol = findColumn(result.current, SLOT_ARDELIA, NounType.BATTLE);
     expect(basicCol).toBeDefined();
     expect(comboCol).toBeDefined();
     expect(battleCol).toBeDefined();

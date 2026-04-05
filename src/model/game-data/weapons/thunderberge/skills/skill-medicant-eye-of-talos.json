@@ -23,8 +23,10 @@
                 0.576,
                 0.672
               ],
-              "ofDeterminer": "THIS",
-              "of": "OPERATOR"
+              "of": {
+                "object": "OPERATOR",
+                "determiner": "THIS"
+              }
             }
           },
           "objectId": "SHIELD_BONUS"

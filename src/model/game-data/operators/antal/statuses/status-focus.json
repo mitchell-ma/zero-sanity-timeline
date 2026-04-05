@@ -38,8 +38,10 @@
                     0.09,
                     0.1
                   ],
-                  "ofDeterminer": "THIS",
-                  "of": "OPERATOR"
+                  "of": {
+                    "object": "OPERATOR",
+                    "determiner": "THIS"
+                  }
                 }
               }
             },
@@ -66,8 +68,10 @@
                     0.09,
                     0.1
                   ],
-                  "ofDeterminer": "THIS",
-                  "of": "OPERATOR"
+                  "of": {
+                    "object": "OPERATOR",
+                    "determiner": "THIS"
+                  }
                 }
               }
             }
@@ -96,7 +100,7 @@
       "unit": "SECOND"
     },
     "eventType": "STATUS",
-    "eventCategoryType": "SKILL_STATUS",
+    "eventIdType": "SKILL_STATUS",
     "description": "Applies Focus with a long duration on the enemy and deals Electric DMG. An enemy with an active Focus also suffers Electric Susceptibility and Heat Susceptibility. Focus can only be applied to 1 enemy at any given time."
   },
   "metadata": {

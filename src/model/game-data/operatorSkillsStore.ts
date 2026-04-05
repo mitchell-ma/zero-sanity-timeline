@@ -3,9 +3,9 @@
  * into typed OperatorSkill class instances.
  *
  * Auto-discovers operator-skills/*-skills.json via require.context.
- * Each file contains skill entries keyed by skill ID (e.g. "FLAMING_CINDERS").
+ * Each file contains skill entries keyed by skill ID (e.g. "FLAMING_CINDERS_BATK").
  */
-import { EventType, EventCategoryType } from '../../consts/enums';
+import { EventType } from '../../consts/enums';
 import type { Interaction, ValueNode } from '../../dsl/semantics';
 import { checkKeys, validateEffect } from './validationUtils';
 
@@ -36,7 +36,7 @@ const VALID_SKILL_ENTRY_KEYS = new Set([
 const VALID_SKILL_PROPERTIES_KEYS = new Set([
   'id', 'name', 'description', 'duration', 'windowFrames',
   'enhancementTypes', 'dependencyTypes', 'element',
-  'eventType', 'eventCategoryType', 'suppliedParameters',
+  'eventType', 'eventIdType', 'eventQualifierType', 'suppliedParameters',
 ]);
 
 const VALID_SKILL_METADATA_KEYS = new Set(['originId', 'eventComponentType', 'dataSources', 'icon', 'dataStatus']);
@@ -129,7 +129,8 @@ export class OperatorSkill {
   readonly dependencyTypes?: string[];
   readonly element?: string;
   readonly eventType: EventType;
-  readonly eventCategoryType?: EventCategoryType;
+  readonly eventIdType?: string;
+  readonly eventQualifierType?: string;
   readonly activationWindow?: ActivationWindowDef;
   readonly originId?: string;
   readonly icon?: string;
@@ -153,8 +154,9 @@ export class OperatorSkill {
     if (props.enhancementTypes) this.enhancementTypes = props.enhancementTypes as string[];
     if (props.dependencyTypes) this.dependencyTypes = props.dependencyTypes as string[];
     if (props.element) this.element = props.element as string;
-    this.eventType = (props.eventType as EventType) ?? EventType.COMBAT_SKILL;
-    if (props.eventCategoryType) this.eventCategoryType = props.eventCategoryType as EventCategoryType;
+    this.eventType = (props.eventType as EventType) ?? EventType.SKILL;
+    if (props.eventIdType) this.eventIdType = props.eventIdType as string;
+    if (props.eventQualifierType) this.eventQualifierType = props.eventQualifierType as string;
     if (json.activationWindow) this.activationWindow = json.activationWindow as ActivationWindowDef;
     if (meta.originId) this.originId = meta.originId as string;
     if (meta.icon) this.icon = meta.icon as string;
@@ -181,7 +183,8 @@ export class OperatorSkill {
         ...(this.dependencyTypes ? { dependencyTypes: this.dependencyTypes } : {}),
         ...(this.element ? { element: this.element } : {}),
         eventType: this.eventType,
-        ...(this.eventCategoryType ? { eventCategoryType: this.eventCategoryType } : {}),
+        ...(this.eventIdType ? { eventIdType: this.eventIdType } : {}),
+        ...(this.eventQualifierType ? { eventQualifierType: this.eventQualifierType } : {}),
         ...(this.suppliedParameters ? { suppliedParameters: this.suppliedParameters } : {}),
       },
       ...(this.originId || this.icon ? { metadata: { ...(this.originId ? { originId: this.originId } : {}), ...(this.icon ? { icon: this.icon } : {}) } } : {}),

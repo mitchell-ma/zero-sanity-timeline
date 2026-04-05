@@ -1,6 +1,6 @@
-import { CombatSkillType, TimeInteractionType } from "../../consts/enums";
+import { TimeInteractionType } from "../../consts/enums";
+import { NounType } from "../../dsl/semantics";
 import type { DslTarget } from "../../dsl/semantics";
-import { EmpowerSkillTarget } from "../../consts/types";
 import { CombatSkillEvent } from "./combatSkillEvent";
 
 export class UltimateEvent extends CombatSkillEvent {
@@ -10,9 +10,6 @@ export class UltimateEvent extends CombatSkillEvent {
   /** What interaction applies during the animation time. */
   animationTimeInteraction: TimeInteractionType;
 
-  /** The skill type that this ultimate empowers (if any). */
-  empowerSkillTarget: EmpowerSkillTarget | null;
-
   constructor(params: {
     name: string;
     target: DslTarget;
@@ -21,10 +18,9 @@ export class UltimateEvent extends CombatSkillEvent {
     cooldownSeconds: number;
     animationDuration: number;
     animationTimeInteraction: TimeInteractionType;
-    empowerSkillTarget?: EmpowerSkillTarget;
   }) {
     super({
-      combatSkillType: CombatSkillType.ULTIMATE,
+      combatSkillType: NounType.ULTIMATE,
       name: params.name,
       target: params.target,
       sourceOperator: params.sourceOperator,
@@ -33,6 +29,5 @@ export class UltimateEvent extends CombatSkillEvent {
     });
     this.animationDuration = params.animationDuration;
     this.animationTimeInteraction = params.animationTimeInteraction;
-    this.empowerSkillTarget = params.empowerSkillTarget ?? null;
   }
 }

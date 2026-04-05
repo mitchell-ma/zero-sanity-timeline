@@ -97,7 +97,7 @@ function setupPerlica() {
 describe('A. Core Skill Placement', () => {
   it('A1: Battle skill placed in BATTLE_SKILL column', () => {
     const { result } = setupPerlica();
-    const col = findColumn(result.current, SLOT_PERLICA, NounType.BATTLE_SKILL);
+    const col = findColumn(result.current, SLOT_PERLICA, NounType.BATTLE);
     expect(col).toBeDefined();
 
     const menuItems = buildContextMenu(result.current, col!, 5 * FPS);
@@ -112,7 +112,7 @@ describe('A. Core Skill Placement', () => {
     });
 
     const battles = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_PERLICA && ev.columnId === NounType.BATTLE_SKILL,
+      (ev) => ev.ownerId === SLOT_PERLICA && ev.columnId === NounType.BATTLE,
     );
     expect(battles).toHaveLength(1);
     expect(battles[0].name).toBe(BATTLE_SKILL_ID);
@@ -124,7 +124,7 @@ describe('A. Core Skill Placement', () => {
     // Combo requires activation trigger — switch to freeform to bypass
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
-    const col = findColumn(result.current, SLOT_PERLICA, NounType.COMBO_SKILL);
+    const col = findColumn(result.current, SLOT_PERLICA, NounType.COMBO);
     expect(col).toBeDefined();
 
     const menuItems = buildContextMenu(result.current, col!, 5 * FPS);
@@ -139,7 +139,7 @@ describe('A. Core Skill Placement', () => {
     });
 
     const combos = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_PERLICA && ev.columnId === NounType.COMBO_SKILL,
+      (ev) => ev.ownerId === SLOT_PERLICA && ev.columnId === NounType.COMBO,
     );
     expect(combos).toHaveLength(1);
     expect(combos[0].name).toBe(COMBO_ID);
@@ -184,7 +184,7 @@ describe('A. Core Skill Placement', () => {
 describe('B. Battle Skill — Electric Infliction', () => {
   it('B1: Battle skill applies electric infliction to enemy', () => {
     const { result } = setupPerlica();
-    const col = findColumn(result.current, SLOT_PERLICA, NounType.BATTLE_SKILL);
+    const col = findColumn(result.current, SLOT_PERLICA, NounType.BATTLE);
     expect(col).toBeDefined();
 
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
@@ -275,7 +275,7 @@ describe('D. Ultimate — Energy Cost', () => {
 describe('E. View Layer', () => {
   it('E1: Skills visible in presentation for battle skill', () => {
     const { result } = setupPerlica();
-    const col = findColumn(result.current, SLOT_PERLICA, NounType.BATTLE_SKILL);
+    const col = findColumn(result.current, SLOT_PERLICA, NounType.BATTLE);
     expect(col).toBeDefined();
 
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
@@ -295,7 +295,7 @@ describe('E. View Layer', () => {
       (c): c is MiniTimeline =>
         c.type === ColumnType.MINI_TIMELINE
         && c.ownerId === SLOT_PERLICA
-        && c.columnId === NounType.BATTLE_SKILL,
+        && c.columnId === NounType.BATTLE,
     );
     expect(battleCol).toBeDefined();
 
@@ -313,7 +313,7 @@ describe('E. View Layer', () => {
     // Place combo in freeform
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
-    const comboCol = findColumn(result.current, SLOT_PERLICA, NounType.COMBO_SKILL);
+    const comboCol = findColumn(result.current, SLOT_PERLICA, NounType.COMBO);
     expect(comboCol).toBeDefined();
     const comboPayload = getMenuPayload(result.current, comboCol!, 5 * FPS);
     act(() => {
@@ -343,7 +343,7 @@ describe('E. View Layer', () => {
       (c): c is MiniTimeline =>
         c.type === ColumnType.MINI_TIMELINE
         && c.ownerId === SLOT_PERLICA
-        && c.columnId === NounType.COMBO_SKILL,
+        && c.columnId === NounType.COMBO,
     );
     expect(comboVmCol).toBeDefined();
     const comboVm = viewModels.get(comboVmCol!.key);
@@ -459,6 +459,61 @@ describe('F0. T1 — Obliteration Protocol', () => {
     });
   });
 
+  it('F0d: Freeform node stagger → talent present → resize stagger → talent resized', () => {
+    const { result } = setupPerlica();
+    act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
+
+    // 1. Add node stagger event at 4s, 4s duration
+    act(() => {
+      result.current.handleAddEvent(
+        ENEMY_OWNER_ID, NODE_STAGGER_COLUMN_ID, 4 * FPS,
+        { name: NODE_STAGGER_COLUMN_ID, segments: [{ properties: { duration: 4 * FPS } }] },
+      );
+    });
+
+    // 2. Verify Obliteration Protocol talent is present and matches stagger
+    const talentId = PERLICA_JSON.talents.one;
+    let talent = result.current.allProcessedEvents.find(
+      ev => ev.ownerId === SLOT_PERLICA && ev.name === talentId,
+    );
+    expect(talent).toBeDefined();
+    expect(talent!.startFrame).toBe(4 * FPS);
+    expect(eventDuration(talent!)).toBe(4 * FPS);
+
+    // 3. Resize stagger from 4s to 6s
+    const staggerEv = result.current.allProcessedEvents.find(
+      ev => ev.columnId === NODE_STAGGER_COLUMN_ID,
+    )!;
+    act(() => {
+      result.current.handleResizeSegment(staggerEv.uid, [{ segmentIndex: 0, newDuration: 6 * FPS }]);
+    });
+
+    // 4. Verify talent has been resized to match new 6s stagger
+    talent = result.current.allProcessedEvents.find(
+      ev => ev.ownerId === SLOT_PERLICA && ev.name === talentId,
+    );
+    expect(talent).toBeDefined();
+    expect(talent!.startFrame).toBe(4 * FPS);
+    expect(eventDuration(talent!)).toBe(6 * FPS);
+
+    // 5. View layer confirms resized talent
+    const viewModels = computeTimelinePresentation(
+      result.current.allProcessedEvents,
+      result.current.columns,
+    );
+    const viewTalents: { startFrame: number; endFrame: number }[] = [];
+    viewModels.forEach(vm => {
+      for (const ev of vm.events) {
+        if (ev.name === talentId && ev.ownerId === SLOT_PERLICA) {
+          viewTalents.push({ startFrame: ev.startFrame, endFrame: ev.startFrame + eventDuration(ev) });
+        }
+      }
+    });
+    expect(viewTalents.length).toBeGreaterThanOrEqual(1);
+    expect(viewTalents[0].startFrame).toBe(4 * FPS);
+    expect(viewTalents[0].endFrame).toBe(10 * FPS);
+  });
+
   it('F0c: STAGGER_DAMAGE_BONUS in damage calc during stagger', () => {
     const { result } = setupPerlica();
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
@@ -472,10 +527,10 @@ describe('F0. T1 — Obliteration Protocol', () => {
     });
 
     // Place BS at 5s — during stagger
-    const bsCol = findColumn(result.current, SLOT_PERLICA, NounType.BATTLE_SKILL);
+    const bsCol = findColumn(result.current, SLOT_PERLICA, NounType.BATTLE);
     act(() => {
       result.current.handleAddEvent(
-        SLOT_PERLICA, NounType.BATTLE_SKILL, 5 * FPS, bsCol!.defaultEvent!,
+        SLOT_PERLICA, NounType.BATTLE, 5 * FPS, bsCol!.defaultEvent!,
       );
     });
 
@@ -492,7 +547,7 @@ describe('F0. T1 — Obliteration Protocol', () => {
     );
 
     const bsRows = calcResult.rows.filter(
-      r => r.ownerId === SLOT_PERLICA && r.columnId === NounType.BATTLE_SKILL && r.damage != null,
+      r => r.ownerId === SLOT_PERLICA && r.columnId === NounType.BATTLE && r.damage != null,
     );
     expect(bsRows.length).toBeGreaterThan(0);
     const row = bsRows.find(r => r.params?.sub);
@@ -510,10 +565,10 @@ describe('F. Combo Skill — Forced Electrification', () => {
     const { result } = setupPerlica();
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
-    const comboCol = findColumn(result.current, SLOT_PERLICA, NounType.COMBO_SKILL);
+    const comboCol = findColumn(result.current, SLOT_PERLICA, NounType.COMBO);
     act(() => {
       result.current.handleAddEvent(
-        SLOT_PERLICA, NounType.COMBO_SKILL, 3 * FPS, comboCol!.defaultEvent!,
+        SLOT_PERLICA, NounType.COMBO, 3 * FPS, comboCol!.defaultEvent!,
       );
     });
 
@@ -531,10 +586,10 @@ describe('F. Combo Skill — Forced Electrification', () => {
     setPotential(result, 1);
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
-    const comboCol = findColumn(result.current, SLOT_PERLICA, NounType.COMBO_SKILL);
+    const comboCol = findColumn(result.current, SLOT_PERLICA, NounType.COMBO);
     act(() => {
       result.current.handleAddEvent(
-        SLOT_PERLICA, NounType.COMBO_SKILL, 3 * FPS, comboCol!.defaultEvent!,
+        SLOT_PERLICA, NounType.COMBO, 3 * FPS, comboCol!.defaultEvent!,
       );
     });
 
@@ -560,10 +615,10 @@ describe('G. P3 — Supervisory Duties', () => {
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
     // Place combo to trigger forced Electrification → should trigger P3 status
-    const comboCol = findColumn(result.current, SLOT_PERLICA, NounType.COMBO_SKILL);
+    const comboCol = findColumn(result.current, SLOT_PERLICA, NounType.COMBO);
     act(() => {
       result.current.handleAddEvent(
-        SLOT_PERLICA, NounType.COMBO_SKILL, 3 * FPS, comboCol!.defaultEvent!,
+        SLOT_PERLICA, NounType.COMBO, 3 * FPS, comboCol!.defaultEvent!,
       );
     });
 
@@ -582,17 +637,17 @@ describe('G. P3 — Supervisory Duties', () => {
     setPotential(result, 3);
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
-    const comboCol = findColumn(result.current, SLOT_PERLICA, NounType.COMBO_SKILL);
+    const comboCol = findColumn(result.current, SLOT_PERLICA, NounType.COMBO);
     // First combo at 3s
     act(() => {
       result.current.handleAddEvent(
-        SLOT_PERLICA, NounType.COMBO_SKILL, 3 * FPS, comboCol!.defaultEvent!,
+        SLOT_PERLICA, NounType.COMBO, 3 * FPS, comboCol!.defaultEvent!,
       );
     });
     // Second combo at 30s (after CD)
     act(() => {
       result.current.handleAddEvent(
-        SLOT_PERLICA, NounType.COMBO_SKILL, 30 * FPS, comboCol!.defaultEvent!,
+        SLOT_PERLICA, NounType.COMBO, 30 * FPS, comboCol!.defaultEvent!,
       );
     });
 
@@ -608,10 +663,10 @@ describe('G. P3 — Supervisory Duties', () => {
     setPotential(result, 2);
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
-    const comboCol = findColumn(result.current, SLOT_PERLICA, NounType.COMBO_SKILL);
+    const comboCol = findColumn(result.current, SLOT_PERLICA, NounType.COMBO);
     act(() => {
       result.current.handleAddEvent(
-        SLOT_PERLICA, NounType.COMBO_SKILL, 3 * FPS, comboCol!.defaultEvent!,
+        SLOT_PERLICA, NounType.COMBO, 3 * FPS, comboCol!.defaultEvent!,
       );
     });
 
@@ -646,10 +701,10 @@ describe('H. P4 — Constant Guidance', () => {
     setPotential(result, 4);
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
-    const comboCol = findColumn(result.current, SLOT_PERLICA, NounType.COMBO_SKILL);
+    const comboCol = findColumn(result.current, SLOT_PERLICA, NounType.COMBO);
     act(() => {
       result.current.handleAddEvent(
-        SLOT_PERLICA, NounType.COMBO_SKILL, 3 * FPS, comboCol!.defaultEvent!,
+        SLOT_PERLICA, NounType.COMBO, 3 * FPS, comboCol!.defaultEvent!,
       );
     });
 
@@ -666,10 +721,10 @@ describe('H. P4 — Constant Guidance', () => {
     setPotential(result, 3);
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
-    const comboCol = findColumn(result.current, SLOT_PERLICA, NounType.COMBO_SKILL);
+    const comboCol = findColumn(result.current, SLOT_PERLICA, NounType.COMBO);
     act(() => {
       result.current.handleAddEvent(
-        SLOT_PERLICA, NounType.COMBO_SKILL, 3 * FPS, comboCol!.defaultEvent!,
+        SLOT_PERLICA, NounType.COMBO, 3 * FPS, comboCol!.defaultEvent!,
       );
     });
 

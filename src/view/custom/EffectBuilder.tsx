@@ -179,7 +179,7 @@ export default function EffectBuilder({ value, onChange, onRemove, compact }: Ef
               <input
                 type="checkbox"
                 checked={value.until?.object === NounType.END}
-                onChange={(e) => update({ until: e.target.checked ? { object: NounType.END, of: NounType.EVENT } : undefined })}
+                onChange={(e) => update({ until: e.target.checked ? { object: NounType.END, of: { object: NounType.EVENT } } : undefined })}
               />
               UNTIL END
             </label>

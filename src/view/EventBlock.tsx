@@ -468,20 +468,35 @@ function EventBlock({
     );
 
     // Collect frame diamonds into a separate layer above all segments
-    seg.frames?.forEach((f, fi) => {
+    // Pre-compute lateral offsets for co-located frames (same offset → adjacent diamonds)
+    const frames = seg.frames ?? [];
+    const frameLateralOffsets: number[] = [];
+    for (let fi = 0; fi < frames.length; fi++) {
+      const offset = frames[fi].derivedOffsetFrame ?? frames[fi].offsetFrame;
+      let groupIdx = 0;
+      for (let pfi = 0; pfi < fi; pfi++) {
+        const prevOffset = frames[pfi].derivedOffsetFrame ?? frames[pfi].offsetFrame;
+        if (prevOffset === offset) groupIdx++;
+      }
+      frameLateralOffsets.push(groupIdx);
+    }
+    frames.forEach((f, fi) => {
       const framePx = segTopPx + durationToPx(f.derivedOffsetFrame ?? f.offsetFrame, zoom);
       const isSelected = selectedFrames?.some((sf) => sf.segmentIndex === i && sf.frameIndex === fi) ?? false;
       const frameAbsReal = f.absoluteFrame ?? (startFrame + segOffset + f.offsetFrame);
       const isHoverHighlight = !isSelected && isFrameHovered(frameAbsReal);
       const elColor = getFrameElementColor(f, seg.properties.element ?? skillElement);
+      const lateralPx = frameLateralOffsets[fi] * DIAMOND_HIT_PX * 2;
+      const lateralProp = axis.framePos === 'top' ? 'right' : 'bottom';
+      const baseStyle: React.CSSProperties = { [axis.framePos]: framePx, ...(lateralPx > 0 ? { [lateralProp]: -5 + lateralPx } : {}) };
       frameElements.push(
         <div
           key={`f-${i}-${fi}`}
           data-frame-id={`${uid}-${i}-${fi}`}
           className={`event-frame-diamond${isSelected ? ' event-frame-diamond--selected' : ''}${isHoverHighlight ? ' event-frame-diamond--hover-hit' : ''}${isFrameVisualCrit(f) ? ' event-frame-diamond--crit' : ''}${(f.frameTypes ?? []).includes(EventFrameType.FINISHER) ? ' event-frame-diamond--finisher' : ''}${(f.frameTypes ?? []).includes(EventFrameType.DIVE) ? ' event-frame-diamond--dive' : ''}${hasInflictionOrStatus(f) ? ' event-frame-diamond--infliction' : ''}${f.statusLabel ? ' event-frame-diamond--status' : ''}`}
           style={elColor && !isSelected && !isHoverHighlight
-            ? { [axis.framePos]: framePx, background: elColor, boxShadow: `0 0 3px ${elColor}80` } as React.CSSProperties
-            : { [axis.framePos]: framePx } as React.CSSProperties}
+            ? { ...baseStyle, background: elColor, boxShadow: `0 0 3px ${elColor}80` } as React.CSSProperties
+            : baseStyle as React.CSSProperties}
           title={f.statusLabel ?? undefined}
           onMouseDown={(e) => { e.stopPropagation(); if (e.button === 0 && (e.ctrlKey || e.metaKey)) onFrameDragStart?.(e, uid, i, fi); }}
           onClick={(e) => { if (e.button !== 0) return; e.stopPropagation(); onFrameClick?.(e, uid, i, fi); }}

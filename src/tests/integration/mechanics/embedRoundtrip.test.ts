@@ -18,7 +18,7 @@ import type { AppResult } from '../helpers';
 import type { MiniTimeline } from '../../../consts/viewTypes';
 
 const SLOT_IDS = ['slot-0', 'slot-1', 'slot-2', 'slot-3'];
-const SKILL_COLUMN_IDS = [NounType.BASIC_ATTACK, NounType.BATTLE_SKILL, NounType.COMBO_SKILL, NounType.ULTIMATE];
+const SKILL_COLUMN_IDS = [NounType.BASIC_ATTACK, NounType.BATTLE, NounType.COMBO, NounType.ULTIMATE];
 
 function getSkillColumns(app: AppResult, slotId: string) {
   return app.columns.filter(
@@ -63,7 +63,7 @@ describe('Embed roundtrip — skill columns preserved', () => {
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
     // Add a battle skill event
-    const bsCol = findColumn(result.current, 'slot-0', NounType.BATTLE_SKILL);
+    const bsCol = findColumn(result.current, 'slot-0', NounType.BATTLE);
     expect(bsCol).toBeDefined();
     const payload = getMenuPayload(result.current, bsCol!, 2 * FPS);
     act(() => {

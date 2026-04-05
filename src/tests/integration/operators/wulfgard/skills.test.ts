@@ -105,7 +105,7 @@ function setPotential(result: { current: AppResult }, potential: number) {
 describe('A. Core Skill Placement', () => {
   it('A1: Battle skill appears in BATTLE column (strict)', () => {
     const { result } = setupWulfgard();
-    const col = findColumn(result.current, SLOT_WULFGARD, NounType.BATTLE_SKILL);
+    const col = findColumn(result.current, SLOT_WULFGARD, NounType.BATTLE);
     expect(col?.defaultEvent).toBeDefined();
 
     // Context menu layer
@@ -124,7 +124,7 @@ describe('A. Core Skill Placement', () => {
     });
 
     const events = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.BATTLE_SKILL,
+      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.BATTLE,
     );
     expect(events).toHaveLength(1);
     expect(events[0].name).toBe(BATTLE_SKILL_ID);
@@ -152,7 +152,7 @@ describe('A. Core Skill Placement', () => {
       );
     });
 
-    const col = findColumn(result.current, SLOT_WULFGARD, NounType.COMBO_SKILL);
+    const col = findColumn(result.current, SLOT_WULFGARD, NounType.COMBO);
     expect(col?.defaultEvent).toBeDefined();
 
     // Context menu layer
@@ -165,7 +165,7 @@ describe('A. Core Skill Placement', () => {
     });
 
     const events = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.COMBO_SKILL,
+      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.COMBO,
     );
     expect(events).toHaveLength(1);
     // Should have a cooldown segment
@@ -195,7 +195,7 @@ describe('A. Core Skill Placement', () => {
 describe('B. Infliction & Reaction Pipeline', () => {
   it('B1: Battle skill applies heat infliction to enemy (strict)', () => {
     const { result } = setupWulfgard();
-    const col = findColumn(result.current, SLOT_WULFGARD, NounType.BATTLE_SKILL);
+    const col = findColumn(result.current, SLOT_WULFGARD, NounType.BATTLE);
 
     const payload = getMenuPayload(result.current, col!, 2 * FPS);
     act(() => {
@@ -241,7 +241,7 @@ describe('B. Infliction & Reaction Pipeline', () => {
       );
     });
 
-    const col = findColumn(result.current, SLOT_WULFGARD, NounType.COMBO_SKILL);
+    const col = findColumn(result.current, SLOT_WULFGARD, NounType.COMBO);
     const payload = getMenuPayload(result.current, col!, 3 * FPS);
     act(() => {
       result.current.handleAddEvent(
@@ -267,7 +267,7 @@ describe('C. Combo Trigger', () => {
     const { result } = setupWulfgard();
 
     // Battle skill at 2s — applies heat infliction at frame 3 (~0.767s offset)
-    const battleCol = findColumn(result.current, SLOT_WULFGARD, NounType.BATTLE_SKILL);
+    const battleCol = findColumn(result.current, SLOT_WULFGARD, NounType.BATTLE);
     const battlePayload = getMenuPayload(result.current, battleCol!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
@@ -277,7 +277,7 @@ describe('C. Combo Trigger', () => {
     });
 
     // Combo at 5s — after infliction has landed
-    const comboCol = findColumn(result.current, SLOT_WULFGARD, NounType.COMBO_SKILL);
+    const comboCol = findColumn(result.current, SLOT_WULFGARD, NounType.COMBO);
     const comboPayload = getMenuPayload(result.current, comboCol!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
@@ -287,7 +287,7 @@ describe('C. Combo Trigger', () => {
     });
 
     const combos = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.COMBO_SKILL,
+      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.COMBO,
     );
     expect(combos).toHaveLength(1);
   });
@@ -296,7 +296,7 @@ describe('C. Combo Trigger', () => {
     const { result } = setupWulfgard();
 
     // Akekuri battle skill at 2s — applies heat infliction
-    const akekuriBattleCol = findColumn(result.current, SLOT_AKEKURI, NounType.BATTLE_SKILL);
+    const akekuriBattleCol = findColumn(result.current, SLOT_AKEKURI, NounType.BATTLE);
     expect(akekuriBattleCol).toBeDefined();
     expect(akekuriBattleCol!.defaultEvent).toBeDefined();
 
@@ -309,7 +309,7 @@ describe('C. Combo Trigger', () => {
     });
 
     // Wulfgard combo at 5s — should trigger from Akekuri's infliction
-    const comboCol = findColumn(result.current, SLOT_WULFGARD, NounType.COMBO_SKILL);
+    const comboCol = findColumn(result.current, SLOT_WULFGARD, NounType.COMBO);
     const comboPayload = getMenuPayload(result.current, comboCol!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
@@ -319,7 +319,7 @@ describe('C. Combo Trigger', () => {
     });
 
     const combos = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.COMBO_SKILL,
+      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.COMBO,
     );
     expect(combos).toHaveLength(1);
   });
@@ -331,7 +331,7 @@ describe('C. Combo Trigger', () => {
 
 describe('D. Empowered Battle Skill', () => {
   function getEmpoweredVariant(app: AppResult) {
-    const battleCol = findColumn(app, SLOT_WULFGARD, NounType.BATTLE_SKILL);
+    const battleCol = findColumn(app, SLOT_WULFGARD, NounType.BATTLE);
     const empowered = battleCol?.eventVariants?.find(
       v => v.enhancementType === EnhancementType.EMPOWERED,
     );
@@ -355,12 +355,12 @@ describe('D. Empowered Battle Skill', () => {
 
     act(() => {
       result.current.handleAddEvent(
-        SLOT_WULFGARD, NounType.BATTLE_SKILL, 3 * FPS, empowered!,
+        SLOT_WULFGARD, NounType.BATTLE, 3 * FPS, empowered!,
       );
     });
 
     const battles = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.BATTLE_SKILL,
+      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.BATTLE,
     );
     expect(battles).toHaveLength(1);
     // Empowered variant has 4 frames, normal has 3
@@ -386,7 +386,7 @@ describe('D. Empowered Battle Skill', () => {
 
     act(() => {
       result.current.handleAddEvent(
-        SLOT_WULFGARD, NounType.BATTLE_SKILL, 3 * FPS, empowered!,
+        SLOT_WULFGARD, NounType.BATTLE, 3 * FPS, empowered!,
       );
     });
 
@@ -458,18 +458,18 @@ describe('F. Code of Restraint (Talent 2)', () => {
     });
 
     // Strict: empowered battle skill consumes Combustion
-    const battleCol = findColumn(result.current, SLOT_WULFGARD, NounType.BATTLE_SKILL);
+    const battleCol = findColumn(result.current, SLOT_WULFGARD, NounType.BATTLE);
     const empowered = battleCol?.eventVariants?.find(v => v.enhancementType === EnhancementType.EMPOWERED);
     expect(empowered).toBeDefined();
     act(() => {
       result.current.handleAddEvent(
-        SLOT_WULFGARD, NounType.BATTLE_SKILL, 3 * FPS, empowered!,
+        SLOT_WULFGARD, NounType.BATTLE, 3 * FPS, empowered!,
       );
     });
 
     // Controller: empowered BS placed and Combustion consumed
     const bsEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.BATTLE_SKILL,
+      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.BATTLE,
     );
     expect(bsEvents).toHaveLength(1);
     expect(bsEvents[0].enhancementType).toBe(EnhancementType.EMPOWERED);
@@ -505,7 +505,7 @@ describe('G. Potential Interactions', () => {
     });
 
     // Combo at 3s -> goes to cooldown (20s CD, ends at ~24s)
-    const comboCol = findColumn(result.current, SLOT_WULFGARD, NounType.COMBO_SKILL);
+    const comboCol = findColumn(result.current, SLOT_WULFGARD, NounType.COMBO);
     const comboPayload = getMenuPayload(result.current, comboCol!, 3 * FPS);
     act(() => {
       result.current.handleAddEvent(
@@ -515,7 +515,7 @@ describe('G. Potential Interactions', () => {
     });
 
     const comboBefore = result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.COMBO_SKILL,
+      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.COMBO,
     );
     const durationBefore = eventDuration(comboBefore!);
 
@@ -531,7 +531,7 @@ describe('G. Potential Interactions', () => {
     });
 
     const comboAfter = result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.COMBO_SKILL,
+      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.COMBO,
     );
     const durationAfter = eventDuration(comboAfter!);
 
@@ -554,7 +554,7 @@ describe('G. Potential Interactions', () => {
     });
 
     // Combo at 3s
-    const comboCol = findColumn(result.current, SLOT_WULFGARD, NounType.COMBO_SKILL);
+    const comboCol = findColumn(result.current, SLOT_WULFGARD, NounType.COMBO);
     const comboPayload = getMenuPayload(result.current, comboCol!, 3 * FPS);
     act(() => {
       result.current.handleAddEvent(
@@ -564,7 +564,7 @@ describe('G. Potential Interactions', () => {
     });
 
     const comboBefore = result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.COMBO_SKILL,
+      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.COMBO,
     );
     const durationBefore = eventDuration(comboBefore!);
 
@@ -580,7 +580,7 @@ describe('G. Potential Interactions', () => {
     });
 
     const comboAfter = result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.COMBO_SKILL,
+      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.COMBO,
     );
     const durationAfter = eventDuration(comboAfter!);
 
@@ -606,7 +606,7 @@ describe('H. Cross-Mechanic Chains', () => {
     });
 
     // 1. Combo at 3s (triggers from infliction)
-    const comboCol = findColumn(result.current, SLOT_WULFGARD, NounType.COMBO_SKILL);
+    const comboCol = findColumn(result.current, SLOT_WULFGARD, NounType.COMBO);
     const comboPayload = getMenuPayload(result.current, comboCol!, 3 * FPS);
     act(() => {
       result.current.handleAddEvent(
@@ -640,7 +640,7 @@ describe('H. Cross-Mechanic Chains', () => {
 
     // Verify: combo cooldown was reset (duration shortened)
     const combo = result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.COMBO_SKILL,
+      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.COMBO,
     );
     // Combo total duration should end near the ult frame (10s), not at 3s + 1s + 20s = 24s
     const comboEnd = combo!.startFrame + eventDuration(combo!);
@@ -663,19 +663,19 @@ describe('H. Cross-Mechanic Chains', () => {
     });
 
     // 2. Place empowered battle skill at 4s (Combustion active from ult's forced apply at ~2.77s, 5s duration)
-    const battleCol = findColumn(result.current, SLOT_WULFGARD, NounType.BATTLE_SKILL);
+    const battleCol = findColumn(result.current, SLOT_WULFGARD, NounType.BATTLE);
     const empowered = battleCol?.eventVariants?.find(v => v.enhancementType === EnhancementType.EMPOWERED);
     expect(empowered).toBeDefined();
 
     act(() => {
       result.current.handleAddEvent(
-        SLOT_WULFGARD, NounType.BATTLE_SKILL, 4 * FPS, empowered!,
+        SLOT_WULFGARD, NounType.BATTLE, 4 * FPS, empowered!,
       );
     });
 
     // Controller: empowered has 4 frames
     const battles = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.BATTLE_SKILL,
+      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.BATTLE,
     );
     expect(battles).toHaveLength(1);
     const frames = battles[0].segments.flatMap(
@@ -729,13 +729,13 @@ describe('H. Cross-Mechanic Chains', () => {
 
     // 2. Empowered battle skill at 8s — Combustion still active, empowered variant consumes it
     //    P3 trigger: PERFORM EMPOWERED BATTLE_SKILL -> apply SF to self (reset) + SF Minor to ALL_OTHER
-    const battleCol = findColumn(result.current, SLOT_WULFGARD, NounType.BATTLE_SKILL);
+    const battleCol = findColumn(result.current, SLOT_WULFGARD, NounType.BATTLE);
     const empowered = battleCol?.eventVariants?.find(v => v.enhancementType === EnhancementType.EMPOWERED);
     expect(empowered).toBeDefined();
 
     act(() => {
       result.current.handleAddEvent(
-        SLOT_WULFGARD, NounType.BATTLE_SKILL, 8 * FPS, empowered!,
+        SLOT_WULFGARD, NounType.BATTLE, 8 * FPS, empowered!,
       );
     });
 
@@ -777,12 +777,12 @@ describe('I. Empowered Battle Skill — Activation & Consume Priority', () => {
     result: ReturnType<typeof setupWulfgard>['result'],
     startSec: number,
   ) {
-    const battleCol = findColumn(result.current, SLOT_WULFGARD, NounType.BATTLE_SKILL);
+    const battleCol = findColumn(result.current, SLOT_WULFGARD, NounType.BATTLE);
     const empowered = battleCol?.eventVariants?.find(v => v.enhancementType === EnhancementType.EMPOWERED);
     expect(empowered).toBeDefined();
     act(() => {
       result.current.handleAddEvent(
-        SLOT_WULFGARD, NounType.BATTLE_SKILL, startSec * FPS, empowered!,
+        SLOT_WULFGARD, NounType.BATTLE, startSec * FPS, empowered!,
       );
     });
   }
@@ -805,20 +805,20 @@ describe('I. Empowered Battle Skill — Activation & Consume Priority', () => {
     placeReaction(result, REACTION_COLUMNS.SOLIDIFICATION, 1);
 
     // Empowered variant should exist in the column definition but placing it should be invalid
-    const battleCol = findColumn(result.current, SLOT_WULFGARD, NounType.BATTLE_SKILL);
+    const battleCol = findColumn(result.current, SLOT_WULFGARD, NounType.BATTLE);
     const empowered = battleCol?.eventVariants?.find(v => v.enhancementType === EnhancementType.EMPOWERED);
     expect(empowered).toBeDefined();
 
     // Place it anyway — should be flagged as invalid by the validator
     act(() => {
       result.current.handleAddEvent(
-        SLOT_WULFGARD, NounType.BATTLE_SKILL, 3 * FPS, empowered!,
+        SLOT_WULFGARD, NounType.BATTLE, 3 * FPS, empowered!,
       );
     });
 
     // The placed event should have a validation warning (activation not met)
     const battles = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.BATTLE_SKILL,
+      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.BATTLE,
     );
     expect(battles).toHaveLength(1);
     // Corrosion and Solidification should NOT be consumed
@@ -944,7 +944,7 @@ describe('I. Empowered Battle Skill — Activation & Consume Priority', () => {
 
     // EBS should exist and have no activation warnings
     const battles = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.BATTLE_SKILL,
+      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.BATTLE,
     );
     expect(battles).toHaveLength(1);
     expect(battles[0].enhancementType).toBe(EnhancementType.EMPOWERED);
@@ -958,7 +958,7 @@ describe('I. Empowered Battle Skill — Activation & Consume Priority', () => {
     placeEmpoweredBS(result, 3);
 
     const battles = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.BATTLE_SKILL,
+      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.BATTLE,
     );
     expect(battles).toHaveLength(1);
     expect(battles[0].enhancementType).toBe(EnhancementType.EMPOWERED);
@@ -978,7 +978,7 @@ describe('I. Empowered Battle Skill — Activation & Consume Priority', () => {
 
     // Controller: EBS event exists and has 4 frames
     const battles = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.BATTLE_SKILL,
+      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.BATTLE,
     );
     expect(battles).toHaveLength(1);
     expect(battles[0].enhancementType).toBe(EnhancementType.EMPOWERED);
@@ -1014,7 +1014,7 @@ describe('I. Empowered Battle Skill — Activation & Consume Priority', () => {
       result.current.overrides,
     );
     const ebsRows = calcResult.rows.filter(
-      r => r.ownerId === SLOT_WULFGARD && r.columnId === NounType.BATTLE_SKILL,
+      r => r.ownerId === SLOT_WULFGARD && r.columnId === NounType.BATTLE,
     );
     // Frames 1-3 produce damage; frame 4 row exists but with null damage (shown as "-")
     expect(ebsRows).toHaveLength(4);
@@ -1033,7 +1033,7 @@ describe('I. Empowered Battle Skill — Activation & Consume Priority', () => {
 describe('J. Normal vs Empowered — Mutual Exclusivity', () => {
   it('J1: Normal BS applies heat infliction on frame 3', () => {
     const { result } = setupWulfgard();
-    const col = findColumn(result.current, SLOT_WULFGARD, NounType.BATTLE_SKILL);
+    const col = findColumn(result.current, SLOT_WULFGARD, NounType.BATTLE);
 
     const payload = getMenuPayload(result.current, col!, 2 * FPS);
     act(() => {
@@ -1051,7 +1051,7 @@ describe('J. Normal vs Empowered — Mutual Exclusivity', () => {
 
   it('J2: Normal BS has 3 frames, empowered has 4', () => {
     const { result } = setupWulfgard();
-    const col = findColumn(result.current, SLOT_WULFGARD, NounType.BATTLE_SKILL);
+    const col = findColumn(result.current, SLOT_WULFGARD, NounType.BATTLE);
 
     // Normal BS
     const payload = getMenuPayload(result.current, col!, 2 * FPS);
@@ -1063,7 +1063,7 @@ describe('J. Normal vs Empowered — Mutual Exclusivity', () => {
     });
 
     const normalBattle = result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.BATTLE_SKILL,
+      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.BATTLE,
     );
     const normalFrames = normalBattle!.segments.flatMap(
       (s: { frames?: unknown[] }) => s.frames ?? [],
@@ -1082,7 +1082,7 @@ describe('J. Normal vs Empowered — Mutual Exclusivity', () => {
       );
     });
 
-    const battleCol = findColumn(result.current, SLOT_WULFGARD, NounType.BATTLE_SKILL);
+    const battleCol = findColumn(result.current, SLOT_WULFGARD, NounType.BATTLE);
     const empowered = battleCol?.eventVariants?.find(v => v.enhancementType === EnhancementType.EMPOWERED);
 
     // Count heat inflictions BEFORE placing empowered BS
@@ -1092,7 +1092,7 @@ describe('J. Normal vs Empowered — Mutual Exclusivity', () => {
 
     act(() => {
       result.current.handleAddEvent(
-        SLOT_WULFGARD, NounType.BATTLE_SKILL, 3 * FPS, empowered!,
+        SLOT_WULFGARD, NounType.BATTLE, 3 * FPS, empowered!,
       );
     });
 
@@ -1196,12 +1196,12 @@ describe('K. Scorching Fangs — Detailed Behavior', () => {
 
     // 2. Empowered BS at 8s — Combustion still active, P3 clause fires:
     //    APPLY SF to self (reset) + SF Minor to ALL_OTHER
-    const battleCol = findColumn(result.current, SLOT_WULFGARD, NounType.BATTLE_SKILL);
+    const battleCol = findColumn(result.current, SLOT_WULFGARD, NounType.BATTLE);
     const empowered = battleCol?.eventVariants?.find(v => v.enhancementType === EnhancementType.EMPOWERED);
     expect(empowered).toBeDefined();
     act(() => {
       result.current.handleAddEvent(
-        SLOT_WULFGARD, NounType.BATTLE_SKILL, 8 * FPS, empowered!,
+        SLOT_WULFGARD, NounType.BATTLE, 8 * FPS, empowered!,
       );
     });
 
@@ -1261,12 +1261,12 @@ describe('K. Scorching Fangs — Detailed Behavior', () => {
     placeUlt(result, 2);
 
     // 2. Empowered BS at 8s — P3 clause applies SF Minor to teammates
-    const battleCol = findColumn(result.current, SLOT_WULFGARD, NounType.BATTLE_SKILL);
+    const battleCol = findColumn(result.current, SLOT_WULFGARD, NounType.BATTLE);
     const empowered = battleCol?.eventVariants?.find(v => v.enhancementType === EnhancementType.EMPOWERED);
     expect(empowered).toBeDefined();
     act(() => {
       result.current.handleAddEvent(
-        SLOT_WULFGARD, NounType.BATTLE_SKILL, 8 * FPS, empowered!,
+        SLOT_WULFGARD, NounType.BATTLE, 8 * FPS, empowered!,
       );
     });
 
@@ -1277,11 +1277,11 @@ describe('K. Scorching Fangs — Detailed Behavior', () => {
     expect(sfMinorOnLaev.length).toBeGreaterThanOrEqual(1);
 
     // 3. Place Laevatain BS at 12s — within SF Minor window (10s from ~10s)
-    const laevBsCol = findColumn(result.current, SLOT_AKEKURI, NounType.BATTLE_SKILL);
+    const laevBsCol = findColumn(result.current, SLOT_AKEKURI, NounType.BATTLE);
     expect(laevBsCol).toBeDefined();
     act(() => {
       result.current.handleAddEvent(
-        SLOT_AKEKURI, NounType.BATTLE_SKILL, 12 * FPS, laevBsCol!.defaultEvent!,
+        SLOT_AKEKURI, NounType.BATTLE, 12 * FPS, laevBsCol!.defaultEvent!,
       );
     });
 
@@ -1298,7 +1298,7 @@ describe('K. Scorching Fangs — Detailed Behavior', () => {
       result.current.overrides,
     );
     const laevRows = calcResult.rows.filter(
-      r => r.ownerId === SLOT_AKEKURI && r.columnId === NounType.BATTLE_SKILL && r.damage != null,
+      r => r.ownerId === SLOT_AKEKURI && r.columnId === NounType.BATTLE && r.damage != null,
     );
     expect(laevRows.length).toBeGreaterThan(0);
 
@@ -1323,10 +1323,10 @@ describe('K. Scorching Fangs — Detailed Behavior', () => {
     expect(sf).toBeDefined();
 
     // Place Wulfgard BS at 5s — within SF window
-    const bsCol = findColumn(result.current, SLOT_WULFGARD, NounType.BATTLE_SKILL);
+    const bsCol = findColumn(result.current, SLOT_WULFGARD, NounType.BATTLE);
     act(() => {
       result.current.handleAddEvent(
-        SLOT_WULFGARD, NounType.BATTLE_SKILL, 5 * FPS, bsCol!.defaultEvent!,
+        SLOT_WULFGARD, NounType.BATTLE, 5 * FPS, bsCol!.defaultEvent!,
       );
     });
 
@@ -1343,7 +1343,7 @@ describe('K. Scorching Fangs — Detailed Behavior', () => {
       result.current.overrides,
     );
     const wulfRows = calcResult.rows.filter(
-      r => r.ownerId === SLOT_WULFGARD && r.columnId === NounType.BATTLE_SKILL && r.damage != null,
+      r => r.ownerId === SLOT_WULFGARD && r.columnId === NounType.BATTLE && r.damage != null,
     );
     expect(wulfRows.length).toBeGreaterThan(0);
     const row = wulfRows.find(r => r.params?.sub);
@@ -1361,12 +1361,12 @@ describe('K. Scorching Fangs — Detailed Behavior', () => {
     placeUlt(result, 2);
 
     // Empowered BS at 4s → P3 applies SF Minor to Laevatain (~6.07s start, 10s duration → expires ~16s)
-    const battleCol = findColumn(result.current, SLOT_WULFGARD, NounType.BATTLE_SKILL);
+    const battleCol = findColumn(result.current, SLOT_WULFGARD, NounType.BATTLE);
     const empowered = battleCol?.eventVariants?.find(v => v.enhancementType === EnhancementType.EMPOWERED);
     expect(empowered).toBeDefined();
     act(() => {
       result.current.handleAddEvent(
-        SLOT_WULFGARD, NounType.BATTLE_SKILL, 4 * FPS, empowered!,
+        SLOT_WULFGARD, NounType.BATTLE, 4 * FPS, empowered!,
       );
     });
 
@@ -1378,11 +1378,11 @@ describe('K. Scorching Fangs — Detailed Behavior', () => {
     const sfMinorEnd = sfMinor!.startFrame + eventDuration(sfMinor!);
 
     // Place Laevatain BS well after SF Minor expires
-    const laevBsCol = findColumn(result.current, SLOT_AKEKURI, NounType.BATTLE_SKILL);
+    const laevBsCol = findColumn(result.current, SLOT_AKEKURI, NounType.BATTLE);
     const afterExpirySec = Math.ceil(sfMinorEnd / FPS) + 5;
     act(() => {
       result.current.handleAddEvent(
-        SLOT_AKEKURI, NounType.BATTLE_SKILL, afterExpirySec * FPS, laevBsCol!.defaultEvent!,
+        SLOT_AKEKURI, NounType.BATTLE, afterExpirySec * FPS, laevBsCol!.defaultEvent!,
       );
     });
 
@@ -1399,7 +1399,7 @@ describe('K. Scorching Fangs — Detailed Behavior', () => {
       result.current.overrides,
     );
     const laevRows = calcResult.rows.filter(
-      r => r.ownerId === SLOT_AKEKURI && r.columnId === NounType.BATTLE_SKILL
+      r => r.ownerId === SLOT_AKEKURI && r.columnId === NounType.BATTLE
         && r.absoluteFrame >= afterExpirySec * FPS && r.damage != null,
     );
     expect(laevRows.length).toBeGreaterThan(0);
@@ -1428,7 +1428,7 @@ describe('L. P5 Natural Predator — Combo Cooldown Reset', () => {
     });
 
     // Place combo at 2s
-    const comboCol = findColumn(result.current, SLOT_WULFGARD, NounType.COMBO_SKILL);
+    const comboCol = findColumn(result.current, SLOT_WULFGARD, NounType.COMBO);
     const comboPayload1 = getMenuPayload(result.current, comboCol!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
@@ -1453,12 +1453,12 @@ describe('L. P5 Natural Predator — Combo Cooldown Reset', () => {
     // the validator doesn't account for cooldown resets within the same timeline.
     act(() => {
       result.current.handleAddEvent(
-        SLOT_WULFGARD, NounType.COMBO_SKILL, 8 * FPS, comboCol!.defaultEvent!,
+        SLOT_WULFGARD, NounType.COMBO, 8 * FPS, comboCol!.defaultEvent!,
       );
     });
 
     const combos = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.COMBO_SKILL,
+      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.COMBO,
     );
     expect(combos).toHaveLength(2);
   });
@@ -1475,7 +1475,7 @@ describe('L. P5 Natural Predator — Combo Cooldown Reset', () => {
       );
     });
 
-    const comboCol = findColumn(result.current, SLOT_WULFGARD, NounType.COMBO_SKILL);
+    const comboCol = findColumn(result.current, SLOT_WULFGARD, NounType.COMBO);
     const comboPayload = getMenuPayload(result.current, comboCol!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
@@ -1503,12 +1503,12 @@ describe('L. P5 Natural Predator — Combo Cooldown Reset', () => {
     // Also verify via handleAddEvent that only 1 combo exists
     act(() => {
       result.current.handleAddEvent(
-        SLOT_WULFGARD, NounType.COMBO_SKILL, 8 * FPS, comboCol!.defaultEvent!,
+        SLOT_WULFGARD, NounType.COMBO, 8 * FPS, comboCol!.defaultEvent!,
       );
     });
 
     const combos = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.COMBO_SKILL,
+      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.COMBO,
     );
     // Only 1 combo — second was rejected or overlaps
     expect(combos).toHaveLength(1);
@@ -1526,24 +1526,24 @@ describe('L. P5 Natural Predator — Combo Cooldown Reset', () => {
     });
 
     // 1. BS at 2s — opens 6s combo activation window (2s–8s)
-    const bsCol = findColumn(result.current, SLOT_WULFGARD, NounType.BATTLE_SKILL);
+    const bsCol = findColumn(result.current, SLOT_WULFGARD, NounType.BATTLE);
     act(() => {
       result.current.handleAddEvent(
-        SLOT_WULFGARD, NounType.BATTLE_SKILL, 2 * FPS, bsCol!.defaultEvent!,
+        SLOT_WULFGARD, NounType.BATTLE, 2 * FPS, bsCol!.defaultEvent!,
       );
     });
 
     // 2. CS at 3s — within first activation window
-    const comboCol = findColumn(result.current, SLOT_WULFGARD, NounType.COMBO_SKILL);
+    const comboCol = findColumn(result.current, SLOT_WULFGARD, NounType.COMBO);
     act(() => {
       result.current.handleAddEvent(
-        SLOT_WULFGARD, NounType.COMBO_SKILL, 3 * FPS, comboCol!.defaultEvent!,
+        SLOT_WULFGARD, NounType.COMBO, 3 * FPS, comboCol!.defaultEvent!,
       );
     });
 
     // Verify first combo placed
     const combos1 = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.COMBO_SKILL,
+      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.COMBO,
     );
     expect(combos1).toHaveLength(1);
 
@@ -1559,7 +1559,7 @@ describe('L. P5 Natural Predator — Combo Cooldown Reset', () => {
 
     // Controller: combo CD was reset (event ends at or before ult frame)
     const comboAfterUlt = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.COMBO_SKILL,
+      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.COMBO,
     );
     expect(comboAfterUlt).toHaveLength(1);
     const comboEnd = comboAfterUlt[0].startFrame + eventDuration(comboAfterUlt[0]);
@@ -1576,11 +1576,11 @@ describe('L. P5 Natural Predator — Combo Cooldown Reset', () => {
     expect(clampedEnd).toBeLessThanOrEqual(comboEnd);
 
     // 4. Akekuri BS at 7s — triggers Wulfgard's second combo activation window
-    const akeBsCol = findColumn(result.current, SLOT_AKEKURI, NounType.BATTLE_SKILL);
+    const akeBsCol = findColumn(result.current, SLOT_AKEKURI, NounType.BATTLE);
     expect(akeBsCol).toBeDefined();
     act(() => {
       result.current.handleAddEvent(
-        SLOT_AKEKURI, NounType.BATTLE_SKILL, 7 * FPS, akeBsCol!.defaultEvent!,
+        SLOT_AKEKURI, NounType.BATTLE, 7 * FPS, akeBsCol!.defaultEvent!,
       );
     });
 
@@ -1593,13 +1593,13 @@ describe('L. P5 Natural Predator — Combo Cooldown Reset', () => {
     // 5. CS at 9s — within second activation window
     act(() => {
       result.current.handleAddEvent(
-        SLOT_WULFGARD, NounType.COMBO_SKILL, 9 * FPS, comboCol!.defaultEvent!,
+        SLOT_WULFGARD, NounType.COMBO, 9 * FPS, comboCol!.defaultEvent!,
       );
     });
 
     // Controller: second combo placed
     const combos2 = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.COMBO_SKILL,
+      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.COMBO,
     );
     expect(combos2).toHaveLength(2);
 

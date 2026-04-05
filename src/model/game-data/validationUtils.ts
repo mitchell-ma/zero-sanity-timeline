@@ -1,7 +1,7 @@
 import {
   VerbType, DeterminerType,
   VERB_OBJECTS, OBJECT_QUALIFIERS, OBJECT_REQUIRED_QUALIFIER, OBJECT_TARGET_MAPPING,
-  CONSUME_TARGET_MAPPING, NOUN_QUALIFIER_MAPPING,
+  CONSUME_TARGET_MAPPING, OBJECT_QUALIFIER_MAPPING,
 } from '../../dsl/semantics';
 import type { ObjectType, NounType } from '../../dsl/semantics';
 import { OperatorClassType } from '../../consts/enums';
@@ -24,7 +24,7 @@ export function checkKeys(obj: Record<string, unknown>, valid: Set<string>, path
 // ── Shared valid-key sets ───────────────────────────────────────────────────
 
 export const VALID_VALUE_NODE_KEYS = new Set([
-  'verb', 'value', 'object', 'objectId', 'operation', 'left', 'right', 'ofDeterminer', 'of', 'unit',
+  'verb', 'value', 'object', 'objectId', 'objectQualifier', 'operation', 'left', 'right', 'of', 'unit',
 ]);
 
 export const VALID_CLAUSE_KEYS = new Set(['conditions', 'effects']);
@@ -46,7 +46,7 @@ export const VALID_EFFECT_WITH_KEYS = new Set([
 export const VALID_TRIGGER_CONDITION_KEYS = new Set([
   'subjectDeterminer', 'subject', 'subjectId', 'verb', 'object', 'objectId', 'objectQualifier', 'objectDeterminer',
   'element', 'negated', 'cardinalityConstraint', 'value', 'to', 'toDeterminer', 'from', 'fromDeterminer', 'with',
-  'ofSubject', 'ofDeterminer',
+  'of',
 ]);
 
 // ── Effect validation (all checks driven by semantics.ts mappings) ──────────
@@ -73,7 +73,7 @@ function warnInvalidQualifier(ef: Record<string, unknown>, path: string): string
   // When objectId is present (e.g. object=STATUS, objectId=REACTION), validate qualifier
   // against the objectId's noun qualifier set; otherwise use the object's own qualifiers
   const validQualifiers = ef.objectId
-    ? NOUN_QUALIFIER_MAPPING[ef.objectId as NounType]
+    ? OBJECT_QUALIFIER_MAPPING[ef.objectId as NounType]
     : OBJECT_QUALIFIERS[obj as ObjectType];
   if (validQualifiers && ef.objectQualifier) {
     if (!(validQualifiers as string[]).includes(ef.objectQualifier as string)) {

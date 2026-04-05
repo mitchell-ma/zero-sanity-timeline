@@ -124,7 +124,7 @@ function setupElectrification(
 describe('A. Core Skill Placement', () => {
   it('A1: battle skill placed in BATTLE_SKILL column', () => {
     const { result } = setupArclight();
-    const col = findColumn(result.current, SLOT_ARCLIGHT, NounType.BATTLE_SKILL);
+    const col = findColumn(result.current, SLOT_ARCLIGHT, NounType.BATTLE);
     expect(col).toBeDefined();
 
     const menuItems = buildContextMenu(result.current, col!, 5 * FPS);
@@ -139,7 +139,7 @@ describe('A. Core Skill Placement', () => {
     });
 
     const battles = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_ARCLIGHT && ev.columnId === NounType.BATTLE_SKILL,
+      ev => ev.ownerId === SLOT_ARCLIGHT && ev.columnId === NounType.BATTLE,
     );
     expect(battles).toHaveLength(1);
     expect(battles[0].name).toBe(BATTLE_SKILL_ID);
@@ -158,7 +158,7 @@ describe('A. Core Skill Placement', () => {
     expect(electrifications.length).toBeGreaterThanOrEqual(1);
 
     // Combo should be available within the activation window
-    const comboCol = findColumn(result.current, SLOT_ARCLIGHT, NounType.COMBO_SKILL);
+    const comboCol = findColumn(result.current, SLOT_ARCLIGHT, NounType.COMBO);
     expect(comboCol).toBeDefined();
 
     const menuItems = buildContextMenu(result.current, comboCol!, 3 * FPS);
@@ -175,7 +175,7 @@ describe('A. Core Skill Placement', () => {
     });
 
     const combos = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_ARCLIGHT && ev.columnId === NounType.COMBO_SKILL,
+      ev => ev.ownerId === SLOT_ARCLIGHT && ev.columnId === NounType.COMBO,
     );
     expect(combos).toHaveLength(1);
     expect(combos[0].name).toBe(COMBO_SKILL_ID);
@@ -214,7 +214,7 @@ describe('A. Core Skill Placement', () => {
 describe('B. Electric Infliction Pipeline', () => {
   it('B1: battle skill applies electric infliction to enemy', () => {
     const { result } = setupArclight();
-    const col = findColumn(result.current, SLOT_ARCLIGHT, NounType.BATTLE_SKILL);
+    const col = findColumn(result.current, SLOT_ARCLIGHT, NounType.BATTLE);
 
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
@@ -242,7 +242,7 @@ describe('C. Combo — Short Cooldown', () => {
     const { result } = setupArclight();
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
-    const comboCol = findColumn(result.current, SLOT_ARCLIGHT, NounType.COMBO_SKILL);
+    const comboCol = findColumn(result.current, SLOT_ARCLIGHT, NounType.COMBO);
     expect(comboCol).toBeDefined();
 
     const menuItems = buildContextMenu(result.current, comboCol!, 5 * FPS);
@@ -257,7 +257,7 @@ describe('C. Combo — Short Cooldown', () => {
     });
 
     const combos = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_ARCLIGHT && ev.columnId === NounType.COMBO_SKILL,
+      ev => ev.ownerId === SLOT_ARCLIGHT && ev.columnId === NounType.COMBO,
     );
     expect(combos).toHaveLength(1);
   });
@@ -280,7 +280,7 @@ describe('D. Wildland Trekker Talent', () => {
     );
     expect(electrifications.length).toBeGreaterThanOrEqual(1);
 
-    const battleCol = findColumn(result.current, SLOT_ARCLIGHT, NounType.BATTLE_SKILL);
+    const battleCol = findColumn(result.current, SLOT_ARCLIGHT, NounType.BATTLE);
     const payload = getMenuPayload(result.current, battleCol!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
@@ -290,7 +290,7 @@ describe('D. Wildland Trekker Talent', () => {
 
     // Battle skill should be placed successfully
     const battleEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_ARCLIGHT && ev.columnId === NounType.BATTLE_SKILL,
+      ev => ev.ownerId === SLOT_ARCLIGHT && ev.columnId === NounType.BATTLE,
     );
     expect(battleEvents).toHaveLength(1);
 
@@ -350,7 +350,7 @@ describe('E. Ultimate', () => {
 describe('F. View Layer', () => {
   it('F1: battle skill visible in presentation', () => {
     const { result } = setupArclight();
-    const battleCol = findColumn(result.current, SLOT_ARCLIGHT, NounType.BATTLE_SKILL);
+    const battleCol = findColumn(result.current, SLOT_ARCLIGHT, NounType.BATTLE);
 
     const payload = getMenuPayload(result.current, battleCol!, 5 * FPS);
     act(() => {
@@ -367,7 +367,7 @@ describe('F. View Layer', () => {
     const battleVm = viewModels.get(battleCol!.key);
     expect(battleVm).toBeDefined();
     const battleEvents = battleVm!.events.filter(
-      ev => ev.ownerId === SLOT_ARCLIGHT && ev.columnId === NounType.BATTLE_SKILL,
+      ev => ev.ownerId === SLOT_ARCLIGHT && ev.columnId === NounType.BATTLE,
     );
     expect(battleEvents).toHaveLength(1);
   });
@@ -378,7 +378,7 @@ describe('F. View Layer', () => {
     // Setup: cross-element inflictions → Electrification
     setupElectrification(result, 1 * FPS);
 
-    const comboCol = findColumn(result.current, SLOT_ARCLIGHT, NounType.COMBO_SKILL);
+    const comboCol = findColumn(result.current, SLOT_ARCLIGHT, NounType.COMBO);
     const payload = getMenuPayload(result.current, comboCol!, 3 * FPS);
     act(() => {
       result.current.handleAddEvent(
@@ -394,7 +394,7 @@ describe('F. View Layer', () => {
     const comboVm = viewModels.get(comboCol!.key);
     expect(comboVm).toBeDefined();
     const comboEvents = comboVm!.events.filter(
-      ev => ev.ownerId === SLOT_ARCLIGHT && ev.columnId === NounType.COMBO_SKILL,
+      ev => ev.ownerId === SLOT_ARCLIGHT && ev.columnId === NounType.COMBO,
     );
     expect(comboEvents).toHaveLength(1);
   });

@@ -42,7 +42,7 @@
     },
     "description": "Physical DMG +8% for 15s after applying Vulnerability. Max 4 stacks.",
     "eventType": "STATUS",
-    "eventCategoryType": "GEAR_SET_STATUS"
+    "eventIdType": "GEAR_SET_STATUS"
   },
   "metadata": {
     "originId": "AETHERTECH",

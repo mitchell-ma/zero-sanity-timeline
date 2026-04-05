@@ -41,8 +41,10 @@
                     0.18,
                     0.2
                   ],
-                  "ofDeterminer": "SOURCE",
-                  "of": "OPERATOR"
+                  "of": {
+                    "object": "OPERATOR",
+                    "determiner": "SOURCE"
+                  }
                 }
               }
             },
@@ -70,8 +72,10 @@
                     0.18,
                     0.2
                   ],
-                  "ofDeterminer": "SOURCE",
-                  "of": "OPERATOR"
+                  "of": {
+                    "object": "OPERATOR",
+                    "determiner": "SOURCE"
+                  }
                 }
               }
             }
@@ -100,7 +104,7 @@
       "unit": "SECOND"
     },
     "eventType": "STATUS",
-    "eventCategoryType": "SKILL_STATUS",
+    "eventIdType": "SKILL_STATUS",
     "description": "Applies temporary Electric Amp and Heat Amp to the entire team."
   },
   "metadata": {

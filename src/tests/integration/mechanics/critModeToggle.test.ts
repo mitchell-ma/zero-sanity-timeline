@@ -6,7 +6,7 @@
  * Crit Mode Toggle — Integration Test
  *
  * Verifies that toggling CritMode affects damage calculation correctly.
- * isCrit is persistent data (only written by RANDOM rolls and MANUAL pins).
+ * isCrit is persistent data (only written by MANUAL pins/randomize).
  * The crit MODE affects calculation and visual presentation, not isCrit.
  */
 
@@ -28,7 +28,7 @@ beforeEach(() => {
 function setupWithBattleSkill() {
   const view = renderHook(() => useApp());
 
-  const bsCol = findColumn(view.result.current, SLOT_LAEVATAIN, NounType.BATTLE_SKILL);
+  const bsCol = findColumn(view.result.current, SLOT_LAEVATAIN, NounType.BATTLE);
   expect(bsCol).toBeDefined();
   const payload = getMenuPayload(view.result.current, bsCol!, 2 * FPS);
   act(() => {
@@ -89,23 +89,6 @@ describe('Crit Mode Toggle — damage calculation per mode', () => {
     expect(expectedTotal).toBeLessThanOrEqual(alwaysTotal + 0.01);
   });
 
-  it('RANDOM mode: isCrit is set as boolean on damage frames', () => {
-    const { result } = setupWithBattleSkill();
-    act(() => { result.current.setCritMode(CritMode.RANDOM); });
-
-    // After RANDOM pipeline run, damage frames should have isCrit set
-    for (const ev of result.current.allProcessedEvents) {
-      for (const seg of ev.segments) {
-        if (!seg.frames) continue;
-        for (const f of seg.frames) {
-          if (f.damageMultiplier || f.dealDamage) {
-            expect(typeof f.isCrit).toBe('boolean');
-          }
-        }
-      }
-    }
-  });
-
   it('MANUAL mode with no pins: all damage frames have isCrit = false', () => {
     const { result } = setupWithBattleSkill();
     act(() => { result.current.setCritMode(CritMode.MANUAL); });
@@ -137,8 +120,8 @@ describe('Crit Mode Toggle — damage calculation per mode', () => {
   it('isCrit is NOT modified by NEVER/ALWAYS/EXPECTED modes (persistent data)', () => {
     const { result } = setupWithBattleSkill();
 
-    // Roll crits in RANDOM mode to set isCrit values
-    act(() => { result.current.setCritMode(CritMode.RANDOM); });
+    // Pin crits in MANUAL mode to set isCrit values
+    act(() => { result.current.setCritMode(CritMode.MANUAL); });
 
     // Collect isCrit values
     const critValues = new Map<string, boolean>();
@@ -162,7 +145,7 @@ describe('Crit Mode Toggle — damage calculation per mode', () => {
         for (let fi = 0; fi < seg.frames.length; fi++) {
           const key = `${ev.uid}:${fi}`;
           if (critValues.has(key)) {
-            // isCrit should still be the same value from RANDOM roll
+            // isCrit should still be the same value from MANUAL pin
             // (NEVER mode doesn't modify isCrit, only affects calculation)
             expect(seg.frames[fi].isCrit).toBe(critValues.get(key));
           }

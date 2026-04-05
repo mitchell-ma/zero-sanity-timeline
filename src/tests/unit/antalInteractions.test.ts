@@ -88,60 +88,19 @@ for (const [key, val] of Object.entries(mockSkillsJson as Record<string, unknown
 }
 
 // Infer skillTypeMap from naming conventions (same logic as operatorJsonLoader)
-function inferSkillTypeMap(skills: Record<string, Record<string, unknown>>): Record<string, unknown> {
-  const ids = Object.keys(skills);
-  const typeMap: Record<string, unknown> = {};
-  const variantSuffixes = ['_FINISHER', '_DIVE', '_ENHANCED', '_EMPOWERED', '_ENHANCED_EMPOWERED'];
-  // BASIC_ATTACK: has _FINISHER variant
-  const finisherId = ids.find(id => id.endsWith('_FINISHER'));
-  let batkId: string | undefined;
-  if (finisherId) {
-    batkId = finisherId.replace(/_FINISHER$/, '');
-    const batk: Record<string, string> = { BATK: batkId, FINISHER: finisherId };
-    const diveId = ids.find(id => id === `${batkId}_DIVE`);
-    if (diveId) batk.DIVE = diveId;
-    typeMap.BASIC_ATTACK = batk;
-  }
-  const baseSkills = ids.filter(id => id !== batkId && !variantSuffixes.some(s => id.endsWith(s)));
-  // COMBO_SKILL: has onTriggerClause
-  for (const id of baseSkills) {
-    const s = skills[id];
-    if ((s.activationWindow as Record<string, unknown>)?.onTriggerClause || (s.onTriggerClause as unknown[])?.length) { typeMap.COMBO_SKILL = id; break; }
-  }
-  const remaining = baseSkills.filter(id => id !== typeMap.COMBO_SKILL);
-  // ULTIMATE: has ANIMATION segment
-  for (const id of remaining) {
-    const segs = (skills[id].segments ?? []) as { properties: { segmentTypes?: string[] } }[];
-    if (segs.some(s => s.properties.segmentTypes?.includes('ANIMATION'))) { typeMap.ULTIMATE = id; break; }
-  }
-  // BATTLE_SKILL: the remaining one
-  const battleCandidates = remaining.filter(id => id !== typeMap.ULTIMATE);
-  if (battleCandidates.length === 1) typeMap.BATTLE_SKILL = battleCandidates[0];
-  return typeMap;
-}
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { buildSkillTypeMap: _buildSkillTypeMap } = require("../../utils/skillTypeMap");
 
-const _skTypeMap = inferSkillTypeMap(antalSkills);
-// Build category aliases so tests can access by category name
-const _variantSuffixes = ['ENHANCED', 'EMPOWERED', 'ENHANCED_EMPOWERED'];
-for (const [category, value] of Object.entries(_skTypeMap)) {
-  if (typeof value === 'string') {
-    if (antalSkills[value]) antalSkills[category] = antalSkills[value];
-    for (const suffix of _variantSuffixes) {
-      const variantSkillId = `${value}_${suffix}`;
-      if (antalSkills[variantSkillId]) antalSkills[`${suffix}_${category}`] = antalSkills[variantSkillId];
-    }
+const _skTypeMap = _buildSkillTypeMap(antalSkills);
+for (const [key, value] of Object.entries(_skTypeMap)) {
+  if (Array.isArray(value)) {
+    if (value[0] && antalSkills[value[0]]) antalSkills[key] = antalSkills[value[0]];
   } else if (typeof value === 'object' && value !== null) {
-    const batkId = (value as Record<string, unknown>).BATK as string | undefined;
-    if (batkId && antalSkills[batkId]) antalSkills[category] = antalSkills[batkId];
-    for (const [subKey, subId] of Object.entries(value as Record<string, string>)) {
-      if (antalSkills[subId]) antalSkills[subKey] = antalSkills[subId];
+    for (const [subKey, subIds] of Object.entries(value as Record<string, string[]>)) {
+      if (subIds[0] && antalSkills[subIds[0]]) antalSkills[subKey] = antalSkills[subIds[0]];
     }
-    if (batkId) {
-      for (const suffix of _variantSuffixes) {
-        const variantSkillId = `${batkId}_${suffix}`;
-        if (antalSkills[variantSkillId]) antalSkills[`${suffix}_${category}`] = antalSkills[variantSkillId];
-      }
-    }
+    const batkIds = (value as Record<string, string[]>).BATK;
+    if (batkIds?.[0] && antalSkills[batkIds[0]]) antalSkills[key] = antalSkills[batkIds[0]];
   }
 }
 const mockAntalJson = { ...mockOperatorJson, skills: antalSkills, skillTypeMap: _skTypeMap };
@@ -166,7 +125,7 @@ describe('Antal Combat Simulation', () => {
 
 describe('A. Basic Attack (Exchange Current)', () => {
   test('A1: Basic attack has 4 segments', () => {
-    const sequences = getSequences('BASIC_ATTACK');
+    const sequences = getSequences(NounType.BATK);
     // 4 real segments + 1 empty terminator
     expect(sequences.length).toBe(4);
   });
@@ -210,7 +169,7 @@ describe('A. Basic Attack (Exchange Current)', () => {
   });
 
   test('A5: No infliction on any basic attack frame', () => {
-    const sequences = getSequences('BASIC_ATTACK');
+    const sequences = getSequences(NounType.BATK);
     for (const seq of sequences) {
       for (const frame of seq.getFrames()) {
         expect(frame.getClauses().flatMap(c => c.effects).find(e => e.dslEffect?.verb === VerbType.APPLY && e.dslEffect?.object === NounType.INFLICTION)).toBeUndefined();
@@ -256,13 +215,13 @@ describe('A. Basic Attack (Exchange Current)', () => {
 
 describe('B. Battle Skill (Specified Research Subject)', () => {
   test('B1: Battle skill has single frame at 0.67s offset', () => {
-    const battleSkill = mockAntalJson.skills.BATTLE_SKILL;
+    const battleSkill = mockAntalJson.skills.BATTLE;
     expect(battleSkill.segments[0].frames.length).toBe(1);
     expect(battleSkill.segments[0].frames[0].properties.offset.value).toBe(0.67);
   });
 
   test('B2: Battle skill costs 100 SP', () => {
-    const battleSkill = mockAntalJson.skills.BATTLE_SKILL;
+    const battleSkill = mockAntalJson.skills.BATTLE;
     const effects = battleSkill.clause[0].effects;
     const spCost = effects.find(
       (e: Record<string, unknown>) => e.object === NounType.SKILL_POINT && e.verb === VerbType.CONSUME
@@ -272,7 +231,7 @@ describe('B. Battle Skill (Specified Research Subject)', () => {
   });
 
   test('B3: Battle skill has SP cost effect in clause', () => {
-    const battleSkill = mockAntalJson.skills.BATTLE_SKILL;
+    const battleSkill = mockAntalJson.skills.BATTLE;
     const effects = battleSkill.clause[0].effects;
     const spCost = effects.find(
       (e: Record<string, unknown>) => e.object === NounType.SKILL_POINT && e.verb === VerbType.CONSUME
@@ -291,7 +250,7 @@ describe('B. Battle Skill (Specified Research Subject)', () => {
   });
 
   test('B5: Susceptibility rate scales from 0.05 (lv1) to 0.10 (lv12)', () => {
-    const effects = mockAntalJson.skills.BATTLE_SKILL.segments[0].frames[0].clause.flatMap((c: { effects: unknown[] }) => c.effects);
+    const effects = mockAntalJson.skills.BATTLE.segments[0].frames[0].clause.flatMap((c: { effects: unknown[] }) => c.effects);
     const dmgEffect = effects.find(
       (e: Record<string, unknown>) => e.verb === VerbType.DEAL && e.object === NounType.DAMAGE
     );
@@ -300,7 +259,7 @@ describe('B. Battle Skill (Specified Research Subject)', () => {
   });
 
   test('B6: Damage multiplier scales from 0.89 (lv1) to 2.0 (lv12)', () => {
-    const effects = mockAntalJson.skills.BATTLE_SKILL.segments[0].frames[0].clause.flatMap((c: { effects: unknown[] }) => c.effects);
+    const effects = mockAntalJson.skills.BATTLE.segments[0].frames[0].clause.flatMap((c: { effects: unknown[] }) => c.effects);
     const dmgEffect = effects.find(
       (e: Record<string, unknown>) => e.verb === VerbType.DEAL && e.object === NounType.DAMAGE
     );
@@ -309,13 +268,13 @@ describe('B. Battle Skill (Specified Research Subject)', () => {
   });
 
   test('B7: Battle skill duration is 1 second', () => {
-    const battleSkill = mockAntalJson.skills.BATTLE_SKILL;
+    const battleSkill = mockAntalJson.skills.BATTLE;
     expect(durVal(battleSkill.segments[0].properties.duration.value)).toBe(1);
     expect(battleSkill.segments[0].properties.duration.unit).toBe('SECOND');
   });
 
   test('B8: Battle skill ID is ANTAL_SPECIFIED_RESEARCH_SUBJECT', () => {
-    expect(mockAntalJson.skills.BATTLE_SKILL.id).toBe('SPECIFIED_RESEARCH_SUBJECT');
+    expect(mockAntalJson.skills.BATTLE.id).toBe('SPECIFIED_RESEARCH_SUBJECT');
   });
 });
 
@@ -325,12 +284,12 @@ describe('B. Battle Skill (Specified Research Subject)', () => {
 
 describe('C. Combo Skill (EMP Test Site)', () => {
   test('C1: Combo trigger has four clauses (Physical Status OR Arts Infliction while Focus/Focus Empowered)', () => {
-    const comboSkill = mockAntalJson.skills.COMBO_SKILL;
+    const comboSkill = mockAntalJson.skills.COMBO;
     expect(comboSkill.activationWindow.onTriggerClause.length).toBe(4);
   });
 
   test('C2: First clause — ANY_OPERATOR APPLY Physical Status + ENEMY HAVE FOCUS', () => {
-    const clause = mockAntalJson.skills.COMBO_SKILL.activationWindow.onTriggerClause[0];
+    const clause = mockAntalJson.skills.COMBO.activationWindow.onTriggerClause[0];
     expect(clause.conditions.length).toBe(2);
 
     // Condition 1: any operator applies physical status
@@ -348,7 +307,7 @@ describe('C. Combo Skill (EMP Test Site)', () => {
   });
 
   test('C3: Second clause — ANY_OPERATOR APPLY Infliction + ENEMY HAVE FOCUS', () => {
-    const clause = mockAntalJson.skills.COMBO_SKILL.activationWindow.onTriggerClause[1];
+    const clause = mockAntalJson.skills.COMBO.activationWindow.onTriggerClause[1];
     expect(clause.conditions.length).toBe(2);
 
     // Condition 1: any operator applies arts infliction
@@ -365,11 +324,11 @@ describe('C. Combo Skill (EMP Test Site)', () => {
   });
 
   test('C4: Combo activation window is 720 frames (6 seconds)', () => {
-    expect(mockAntalJson.skills.COMBO_SKILL.activationWindow.segments[0].properties.duration.value).toBe(6);
+    expect(mockAntalJson.skills.COMBO.activationWindow.segments[0].properties.duration.value).toBe(6);
   });
 
   test('C5: Combo cooldown is 24 seconds', () => {
-    const comboSkill = mockAntalJson.skills.COMBO_SKILL;
+    const comboSkill = mockAntalJson.skills.COMBO;
     const cdSeg = comboSkill.segments.find(
       (s: Record<string, unknown>) => ((s.properties as Record<string, unknown>)?.segmentTypes as string[] | undefined)?.includes('COOLDOWN')
     );
@@ -378,7 +337,7 @@ describe('C. Combo Skill (EMP Test Site)', () => {
   });
 
   test('C6: Combo stagger recovery is 10', () => {
-    const sequences = getSequences('COMBO_SKILL');
+    const sequences = getSequences('COMBO');
     // segments[0] is ANIMATION (no frames), segments[1] has the actual frames, segments[2] is COOLDOWN
     expect(sequences.length).toBeGreaterThanOrEqual(2);
     const firstFrame = sequences[1].getFrames()[0];
@@ -386,7 +345,7 @@ describe('C. Combo Skill (EMP Test Site)', () => {
   });
 
   test('C7: Combo animation is TIME_STOP (0.5s within 0.8s)', () => {
-    const comboSkill = mockAntalJson.skills.COMBO_SKILL;
+    const comboSkill = mockAntalJson.skills.COMBO;
     const totalDuration = durVal(comboSkill.segments[0].properties.duration.value) + durVal(comboSkill.segments[1].properties.duration.value);
     expect(totalDuration).toBeCloseTo(0.8, 2);
     const animSeg = comboSkill.segments.find((s: Record<string, unknown>) => ((s.properties as Record<string, unknown>)?.segmentTypes as string[] | undefined)?.includes('ANIMATION'));
@@ -396,7 +355,7 @@ describe('C. Combo Skill (EMP Test Site)', () => {
   });
 
   test('C8: Combo recovers 10 ultimate energy to self', () => {
-    const effects = mockAntalJson.skills.COMBO_SKILL.clause[0].effects;
+    const effects = mockAntalJson.skills.COMBO.clause[0].effects;
     const energy = effects.find(
       (e: Record<string, unknown>) => e.object === NounType.ULTIMATE_ENERGY && e.verb === VerbType.RECOVER
     );
@@ -407,7 +366,7 @@ describe('C. Combo Skill (EMP Test Site)', () => {
   });
 
   test('C9: Combo damage multiplier: 1.51 (lv1) → 3.4 (lv12)', () => {
-    const effects = mockAntalJson.skills.COMBO_SKILL.segments[1].frames[0].clause[0].effects;
+    const effects = mockAntalJson.skills.COMBO.segments[1].frames[0].clause[0].effects;
     const dmgEffect = effects.find(
       (e: Record<string, unknown>) => e.verb === VerbType.DEAL && e.object === NounType.DAMAGE
     );
@@ -416,7 +375,7 @@ describe('C. Combo Skill (EMP Test Site)', () => {
   });
 
   test('C10: Combo skill ID is ANTAL_EMP_TEST_SITE', () => {
-    expect(mockAntalJson.skills.COMBO_SKILL.id).toBe('EMP_TEST_SITE');
+    expect(mockAntalJson.skills.COMBO.id).toBe('EMP_TEST_SITE');
   });
 });
 
@@ -426,7 +385,7 @@ describe('C. Combo Skill (EMP Test Site)', () => {
 
 describe('C2. Combo Skill Source Infliction Duplication', () => {
   test('C2.1: Combo frame has APPLY TRIGGER INFLICTION DSL effect', () => {
-    const comboFrame = mockAntalJson.skills.COMBO_SKILL.segments[1].frames[0];
+    const comboFrame = mockAntalJson.skills.COMBO.segments[1].frames[0];
     const effects = comboFrame.clause[0].effects;
     const sourceInfliction = effects.find(
       (e: Record<string, unknown>) => e.verb === VerbType.APPLY && e.objectDeterminer === DeterminerType.TRIGGER && e.object === NounType.INFLICTION
@@ -436,7 +395,7 @@ describe('C2. Combo Skill Source Infliction Duplication', () => {
   });
 
   test('C2.2: Combo frame has APPLY TRIGGER PHYSICAL STATUS DSL effect', () => {
-    const comboFrame = mockAntalJson.skills.COMBO_SKILL.segments[1].frames[0];
+    const comboFrame = mockAntalJson.skills.COMBO.segments[1].frames[0];
     const effects = comboFrame.clause[0].effects;
     const sourceStatus = effects.find(
       (e: Record<string, unknown>) => e.verb === VerbType.APPLY && e.objectDeterminer === DeterminerType.TRIGGER && e.object === NounType.STATUS && e.objectId === AdjectiveType.PHYSICAL
@@ -446,7 +405,7 @@ describe('C2. Combo Skill Source Infliction Duplication', () => {
   });
 
   test('C2.3: Frame class reports getDuplicateTriggerSource() as true from DSL', () => {
-    const sequences = getSequences('COMBO_SKILL');
+    const sequences = getSequences('COMBO');
     // segments[0] is ANIMATION (no frames), segments[1] has actual frames, segments[2] is COOLDOWN
     expect(sequences.length).toBeGreaterThanOrEqual(2);
     const frame = sequences[1].getFrames()[0];
@@ -454,7 +413,7 @@ describe('C2. Combo Skill Source Infliction Duplication', () => {
   });
 
   test('C2.4: Basic attack frames do NOT duplicate source infliction', () => {
-    const sequences = getSequences('BASIC_ATTACK');
+    const sequences = getSequences(NounType.BATK);
     for (const seq of sequences) {
       for (const frame of seq.getFrames()) {
         expect(frame.getDuplicateTriggerSource()).toBe(false);
@@ -463,7 +422,7 @@ describe('C2. Combo Skill Source Infliction Duplication', () => {
   });
 
   test('C2.5: Battle skill frames do NOT duplicate source infliction', () => {
-    const sequences = getSequences('BATTLE_SKILL');
+    const sequences = getSequences('BATTLE');
     for (const seq of sequences) {
       for (const frame of seq.getFrames()) {
         expect(frame.getDuplicateTriggerSource()).toBe(false);
@@ -472,7 +431,7 @@ describe('C2. Combo Skill Source Infliction Duplication', () => {
   });
 
   test('C2.6: No legacy duplicateTriggerSource flag on combo frame', () => {
-    const comboFrame = mockAntalJson.skills.COMBO_SKILL.segments[1].frames[0];
+    const comboFrame = mockAntalJson.skills.COMBO.segments[1].frames[0];
     expect(comboFrame.duplicateTriggerSource).toBeUndefined();
   });
 });
@@ -630,7 +589,7 @@ describe('H. Cooldown Interactions', () => {
   });
 
   test('H2: Battle skill has no COOLDOWN effect in DSL', () => {
-    const bs = mockAntalJson.skills.BATTLE_SKILL;
+    const bs = mockAntalJson.skills.BATTLE;
     const cooldown = (bs.clause?.[0]?.effects as Record<string, unknown>[] | undefined)?.find(
       (e) => e.object === NounType.COOLDOWN
     );
@@ -638,7 +597,7 @@ describe('H. Cooldown Interactions', () => {
   });
 
   test('H3: Combo skill (EMP Test Site) has 24s cooldown', () => {
-    const comboSkill = mockAntalJson.skills.COMBO_SKILL;
+    const comboSkill = mockAntalJson.skills.COMBO;
     const cdSeg = comboSkill.segments.find(
       (s: Record<string, unknown>) => ((s.properties as Record<string, unknown>)?.segmentTypes as string[] | undefined)?.includes('COOLDOWN')
     );
@@ -655,14 +614,14 @@ describe('H. Cooldown Interactions', () => {
     const comboCooldown = 15 * FPS; // 1800 frames
     const totalRange = comboDuration + comboCooldown;
     const cs1 = makeEvent({
-      uid: 'cs-1', columnId: NounType.COMBO_SKILL, startFrame: 0,
+      uid: 'cs-1', columnId: NounType.COMBO, startFrame: 0,
       segments: [{ properties: { duration: comboDuration } }],
       nonOverlappableRange: totalRange,
     });
     // Mid-cooldown
-    expect(wouldOverlapSiblings(SLOT_ID, NounType.COMBO_SKILL, comboDuration + 600, 1, [cs1])).toBe(true);
+    expect(wouldOverlapSiblings(SLOT_ID, NounType.COMBO, comboDuration + 600, 1, [cs1])).toBe(true);
     // After cooldown
-    expect(wouldOverlapSiblings(SLOT_ID, NounType.COMBO_SKILL, totalRange, 1, [cs1])).toBe(false);
+    expect(wouldOverlapSiblings(SLOT_ID, NounType.COMBO, totalRange, 1, [cs1])).toBe(false);
   });
 
   test('H6: Ultimate placement during cooldown is blocked', () => {
@@ -684,10 +643,10 @@ describe('H. Cooldown Interactions', () => {
   test('H7: Battle skill has no cooldown — back-to-back is valid', () => {
     const bsDuration = Math.round(1 * FPS); // 120 frames
     const bs1 = makeEvent({
-      uid: 'bs-1', columnId: NounType.BATTLE_SKILL, startFrame: 0,
+      uid: 'bs-1', columnId: NounType.BATTLE, startFrame: 0,
       segments: [{ properties: { duration: bsDuration } }], nonOverlappableRange: bsDuration,
     });
-    expect(wouldOverlapSiblings(SLOT_ID, NounType.BATTLE_SKILL, bsDuration, bsDuration, [bs1])).toBe(false);
+    expect(wouldOverlapSiblings(SLOT_ID, NounType.BATTLE, bsDuration, bsDuration, [bs1])).toBe(false);
   });
 });
 
@@ -718,8 +677,8 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
 
   function makeLaevBattle(startFrame: number): TimelineEvent {
     return makeEv({
-      uid: `laev-bs-${startFrame}`, name: 'FLAMING_CINDERS', ownerId: SLOT_LAEV,
-      columnId: NounType.BATTLE_SKILL, startFrame,
+      uid: `laev-bs-${startFrame}`, name: 'FLAMING_CINDERS_BATK', ownerId: SLOT_LAEV,
+      columnId: NounType.BATTLE, startFrame,
       segments: [{
         properties: { duration: FPS },
         frames: [{
@@ -735,7 +694,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
       uid: `antal-combo-${startFrame}`,
       name: 'EMP_TEST_SITE',
       ownerId: SLOT_ANTAL,
-      columnId: NounType.COMBO_SKILL,
+      columnId: NounType.COMBO,
       startFrame,
       comboTriggerColumnId,
       segments: [
@@ -792,7 +751,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
     const electricWiring: SlotTriggerWiring = { slotId: 'slot-2', operatorId: '' };
     const arcBattle = makeEv({
       uid: 'arc-bs-100', name: 'LIGHTNING_STRIKE', ownerId: 'slot-2',
-      columnId: NounType.BATTLE_SKILL, startFrame: 100,
+      columnId: NounType.BATTLE, startFrame: 100,
       segments: [{
         properties: { duration: FPS },
         frames: [{
@@ -829,7 +788,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
     const heatInfliction = makeEv({
       uid: 'heat-inf-1', name: INFLICTION_COLUMNS.HEAT, ownerId: ENEMY_OWNER_ID,
       columnId: INFLICTION_COLUMNS.HEAT, startFrame: 220, segments: [{ properties: { duration: 10 * FPS } }],
-      sourceOwnerId: SLOT_LAEV, sourceSkillName: 'FLAMING_CINDERS',
+      sourceOwnerId: SLOT_LAEV, sourceSkillName: 'FLAMING_CINDERS_BATK',
     });
     const wirings = [laevWiring(), antalWiring()];
 
@@ -917,7 +876,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
     // Antal's own battle skill — publishes APPLY INFLICTION element:ELECTRIC
     const antalBattle = makeEv({
       uid: 'antal-bs-0', name: 'SPECIFIED_RESEARCH_SUBJECT', ownerId: SLOT_ANTAL,
-      columnId: NounType.BATTLE_SKILL, startFrame: 0, segments: [{ properties: { duration: FPS } }],
+      columnId: NounType.BATTLE, startFrame: 0, segments: [{ properties: { duration: FPS } }],
     });
     // Antal combo placed after battle skill
     const antalCombo = makeAntalCombo(250);
@@ -944,7 +903,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
     // Akekuri heat infliction on enemy. Combo window should appear.
     const antalBattle = makeEv({
       uid: 'antal-bs-0', name: 'SPECIFIED_RESEARCH_SUBJECT', ownerId: SLOT_ANTAL,
-      columnId: NounType.BATTLE_SKILL, startFrame: 0,
+      columnId: NounType.BATTLE, startFrame: 0,
       segments: [{
         properties: { duration: FPS },
         frames: [{
@@ -1013,7 +972,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
     // Antal battle skill with applyStatus Focus frame effect
     const antalBattle = makeEv({
       uid: 'antal-bs-0', name: 'SPECIFIED_RESEARCH_SUBJECT', ownerId: SLOT_ANTAL,
-      columnId: NounType.BATTLE_SKILL, startFrame: 0,
+      columnId: NounType.BATTLE, startFrame: 0,
       segments: [{
         properties: { duration: FPS },
         frames: [{
@@ -1026,7 +985,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
     // Akekuri battle skill (source of heat infliction trigger) with infliction frame
     const akekuriBattle = makeEv({
       uid: 'akekuri-bs-0', name: 'BURST_OF_PASSION', ownerId: SLOT_AKEKURI,
-      columnId: NounType.BATTLE_SKILL, startFrame: 100,
+      columnId: NounType.BATTLE, startFrame: 100,
       segments: [{
         properties: { duration: FPS },
         frames: [{
@@ -1076,7 +1035,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
     // Antal battle skill at frame 0 — derives Focus at offset 0.67s
     const antalBattle = makeEv({
       uid: 'antal-bs-0', name: 'SPECIFIED_RESEARCH_SUBJECT', ownerId: SLOT_ANTAL,
-      columnId: NounType.BATTLE_SKILL, startFrame: 0, // 1s = 120f,
+      columnId: NounType.BATTLE, startFrame: 0, // 1s = 120f,
       segments: [{
         properties: { duration: FPS },
         frames: [{
@@ -1090,7 +1049,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
     const akekuriBattleDur = Math.round(1.33 * FPS); // 160f
     const akekuriBattle = makeEv({
       uid: 'akekuri-bs-0', name: 'BURST_OF_PASSION', ownerId: SLOT_AKEKURI,
-      columnId: NounType.BATTLE_SKILL, startFrame: FPS,
+      columnId: NounType.BATTLE, startFrame: FPS,
       segments: [{
         properties: { duration: akekuriBattleDur },
         frames: [{
@@ -1135,7 +1094,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
     // Both battle skills at frame 0
     const antalBattle = makeEv({
       uid: 'antal-bs-0', name: 'SPECIFIED_RESEARCH_SUBJECT', ownerId: SLOT_ANTAL,
-      columnId: NounType.BATTLE_SKILL, startFrame: 0,
+      columnId: NounType.BATTLE, startFrame: 0,
       segments: [{
         properties: { duration: FPS },
         frames: [{
@@ -1147,7 +1106,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
 
     const akekuriBattle = makeEv({
       uid: 'akekuri-bs-0', name: 'BURST_OF_PASSION', ownerId: SLOT_AKEKURI,
-      columnId: NounType.BATTLE_SKILL, startFrame: 0,
+      columnId: NounType.BATTLE, startFrame: 0,
       segments: [{
         properties: { duration: Math.round(1.33 * FPS) },
         frames: [{

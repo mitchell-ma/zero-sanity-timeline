@@ -38,7 +38,7 @@
     },
     "description": "ATK +5% for 15s. Refreshes on ultimate cast.",
     "eventType": "STATUS",
-    "eventCategoryType": "GEAR_SET_STATUS"
+    "eventIdType": "GEAR_SET_STATUS"
   },
   "metadata": {
     "originId": "ABURREY_LEGACY",

@@ -176,7 +176,7 @@ export class SkillPointController {
     this.slotSpCosts.forEach((cost, slotId) => {
       const zones = this.timeline.insufficiencyZones(cost);
       if (zones.length > 0) {
-        this.insufficiencyZones.set(`${slotId}:${NounType.BATTLE_SKILL}`, zones);
+        this.insufficiencyZones.set(`${slotId}:${NounType.BATTLE}`, zones);
       }
     });
 

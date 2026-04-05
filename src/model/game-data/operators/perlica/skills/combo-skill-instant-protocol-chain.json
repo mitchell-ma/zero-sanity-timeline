@@ -2,8 +2,8 @@
   "properties": {
     "name": "Instant Protocol: Chain",
     "description": "When controlled operator performs a Final Strike on any enemy. Unleashes stored electro-magnetic energy to bombard the target, dealing Electric DMG and forcibly inflicting temporary Electrification.",
-    "eventType": "COMBAT_SKILL",
-    "eventCategoryType": "COMBO_SKILL",
+    "eventType": "SKILL",
+    "eventIdType": "COMBO",
     "element": "ELECTRIC",
     "id": "INSTANT_PROTOCOL_CHAIN"
   },
@@ -115,15 +115,19 @@
                         1.66,
                         1.8
                       ],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     },
                     "mainStat": {
                       "verb": "IS",
                       "object": "STAT",
                       "objectId": "ATTACK",
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     }
                   }
                 },
@@ -155,8 +159,10 @@
                             1.75,
                             1.75
                           ],
-                          "ofDeterminer": "THIS",
-                          "of": "OPERATOR"
+                          "of": {
+                            "object": "OPERATOR",
+                            "determiner": "THIS"
+                          }
                         }
                       },
                       "unit": "SECOND"
@@ -180,8 +186,10 @@
                         0.33,
                         0.33
                       ],
-                      "ofDeterminer": "THIS",
-                      "of": "OPERATOR"
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     },
                     "duration": {
                       "value": {
@@ -201,8 +209,10 @@
                             1.75,
                             1.75
                           ],
-                          "ofDeterminer": "THIS",
-                          "of": "OPERATOR"
+                          "of": {
+                            "object": "OPERATOR",
+                            "determiner": "THIS"
+                          }
                         }
                       },
                       "unit": "SECOND"
@@ -244,8 +254,10 @@
               20,
               19
             ],
-            "ofDeterminer": "THIS",
-            "of": "OPERATOR"
+            "of": {
+              "object": "OPERATOR",
+              "determiner": "THIS"
+            }
           },
           "unit": "SECOND"
         },
@@ -271,7 +283,8 @@
             "subjectDeterminer": "THIS",
             "subject": "OPERATOR",
             "verb": "PERFORM",
-            "object": "FINAL_STRIKE"
+            "object": "SKILL",
+            "objectId": "FINAL_STRIKE"
           }
         ]
       }

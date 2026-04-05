@@ -78,9 +78,9 @@ function makeFocusEvent(startFrame: number, durationFrames: number): TimelineEve
 function makeLaevBattle(startFrame: number): TimelineEvent {
   return makeEvent({
     uid: `laev-battle-${startFrame}`,
-    name: 'FLAMING_CINDERS',
+    name: 'FLAMING_CINDERS_BATK',
     ownerId: SLOT_LAEV,
-    columnId: NounType.BATTLE_SKILL,
+    columnId: NounType.BATTLE,
     startFrame,
     segments: [{
       properties: { duration: FPS },
@@ -102,7 +102,7 @@ function makeHeatInfliction(startFrame: number): TimelineEvent {
     startFrame,
     segments: [{ properties: { duration: 20 * FPS } }],
     sourceOwnerId: SLOT_LAEV,
-    sourceSkillName: 'FLAMING_CINDERS',
+    sourceSkillName: 'FLAMING_CINDERS_BATK',
   });
 }
 
@@ -112,7 +112,7 @@ function makeAntalCombo(startFrame: number, comboTriggerColumnId: string): Timel
     uid: `antal-combo-${startFrame}`,
     name: 'EMP_TEST_SITE',
     ownerId: SLOT_ANTAL,
-    columnId: NounType.COMBO_SKILL,
+    columnId: NounType.COMBO,
     startFrame,
     comboTriggerColumnId,
     segments: [
@@ -221,7 +221,7 @@ describe('B. ComboSkillEventController.resolveComboTriggerColumnId', () => {
 
   test('B3: Returns existing value for non-combo events', () => {
     const battle = makeEvent({
-      uid: 'battle-1', ownerId: SLOT_LAEV, columnId: NounType.BATTLE_SKILL,
+      uid: 'battle-1', ownerId: SLOT_LAEV, columnId: NounType.BATTLE,
       startFrame: 100, comboTriggerColumnId: INFLICTION_COLUMNS.HEAT,
     });
     const result = ComboSkillEventController.resolveComboTriggerColumnId(battle, 100, []);
@@ -284,7 +284,7 @@ describe('C. Pipeline integration', () => {
       startFrame: 220,
       segments: [{ properties: { duration: 10 * FPS } }],
       sourceOwnerId: SLOT_LAEV,
-      sourceSkillName: 'FLAMING_CINDERS',
+      sourceSkillName: 'FLAMING_CINDERS_BATK',
     });
 
     const processed = processCombatSimulation(
@@ -515,7 +515,7 @@ describe('D. Antal battle skill → Focus, Akekuri battle skill → infliction t
       uid: 'antal-combo-500',
       name: 'EMP_TEST_SITE',
       ownerId: ANTAL_SLOT,
-      columnId: NounType.COMBO_SKILL,
+      columnId: NounType.COMBO,
       startFrame: 500,
       comboTriggerColumnId: INFLICTION_COLUMNS.HEAT,
       segments: [

@@ -16,8 +16,10 @@
                 0,
                 0.5
               ],
-              "ofDeterminer": "THIS",
-              "of": "OPERATOR"
+              "of": {
+                "object": "OPERATOR",
+                "determiner": "THIS"
+              }
             }
           },
           "objectId": "DAMAGE_BONUS",
@@ -30,12 +32,20 @@
       "effects": [
         {
           "verb": "DISABLE",
-          "object": "BATK",
-          "objectId": "EXUBERANT_TRIGGER",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR",
+          "object": "SKILL",
+          "objectId": "BASIC_ATTACK",
+          "objectQualifier": "EXUBERANT_TRIGGER_BATK",
+          "of": {
+            "determiner": "THIS",
+            "object": "OPERATOR"
+          },
           "with": {
-            "segments": [0, 1, 2, 3]
+            "segments": [
+              0,
+              1,
+              2,
+              3
+            ]
           }
         }
       ]
@@ -48,7 +58,8 @@
           "subjectDeterminer": "THIS",
           "subject": "OPERATOR",
           "verb": "PERFORM",
-          "object": "FINAL_STRIKE"
+          "object": "SKILL",
+          "objectId": "FINAL_STRIKE"
         }
       ],
       "effects": [
@@ -80,7 +91,7 @@
       "unit": "SECOND"
     },
     "eventType": "STATUS",
-    "eventCategoryType": "STATUS",
+    "eventIdType": "STATUS",
     "description": "Battle skill Brr-Brr-Bomb β improved: After applying Solidification, the next basic attack directly becomes a Final Strike with DMG Dealt +{dmg_up:0%}."
   },
   "metadata": {

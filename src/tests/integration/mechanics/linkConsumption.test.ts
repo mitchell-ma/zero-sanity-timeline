@@ -108,7 +108,7 @@ describe('Link Consumption — Integration', () => {
     // Layer 1: Context menu — battle skill available at 5s
     const battleFrame = 5 * FPS;
     const payload = addSkillViaContextMenu(
-      result.current, SLOT_AKEKURI, NounType.BATTLE_SKILL, battleFrame,
+      result.current, SLOT_AKEKURI, NounType.BATTLE, battleFrame,
     );
 
     // Add battle skill via context menu payload
@@ -120,7 +120,7 @@ describe('Link Consumption — Integration', () => {
 
     // Layer 2: Controller — verify event placed
     const battleEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === NounType.BATTLE_SKILL,
+      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === NounType.BATTLE,
     );
     expect(battleEvents).toHaveLength(1);
 
@@ -194,7 +194,7 @@ describe('Link Consumption — Integration', () => {
   it('combo skill does NOT consume Link', () => {
     const { result } = renderHook(() => useApp());
 
-    const comboCol = findColumn(result.current, SLOT_AKEKURI, NounType.COMBO_SKILL);
+    const comboCol = findColumn(result.current, SLOT_AKEKURI, NounType.COMBO);
     if (!comboCol?.defaultEvent) {
       // Some operators may not have combo skills with defaults
       return;
@@ -216,7 +216,7 @@ describe('Link Consumption — Integration', () => {
     });
 
     const comboEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === NounType.COMBO_SKILL,
+      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === NounType.COMBO,
     );
     if (comboEvents.length === 0) return;
 
@@ -233,7 +233,7 @@ describe('Link Consumption — Integration', () => {
 
     // Layer 1: Context menu — first battle skill at 5s
     const payload1 = addSkillViaContextMenu(
-      result.current, SLOT_AKEKURI, NounType.BATTLE_SKILL, 5 * FPS,
+      result.current, SLOT_AKEKURI, NounType.BATTLE, 5 * FPS,
     );
 
     act(() => {
@@ -244,7 +244,7 @@ describe('Link Consumption — Integration', () => {
 
     // Layer 1: Context menu — second battle skill at 15s
     const payload2 = addSkillViaContextMenu(
-      result.current, SLOT_AKEKURI, NounType.BATTLE_SKILL, 15 * FPS,
+      result.current, SLOT_AKEKURI, NounType.BATTLE, 15 * FPS,
     );
 
     act(() => {
@@ -254,7 +254,7 @@ describe('Link Consumption — Integration', () => {
     });
 
     const battleEvents = result.current.allProcessedEvents
-      .filter((ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === NounType.BATTLE_SKILL)
+      .filter((ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === NounType.BATTLE)
       .sort((a, b) => a.startFrame - b.startFrame);
     expect(battleEvents).toHaveLength(2);
 
@@ -275,7 +275,7 @@ describe('Link Consumption — Integration', () => {
 
     // Layer 1: Context menu — battle skill at 3s
     const payload = addSkillViaContextMenu(
-      result.current, SLOT_AKEKURI, NounType.BATTLE_SKILL, 3 * FPS,
+      result.current, SLOT_AKEKURI, NounType.BATTLE, 3 * FPS,
     );
 
     act(() => {
@@ -285,7 +285,7 @@ describe('Link Consumption — Integration', () => {
     });
 
     const battleEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === NounType.BATTLE_SKILL,
+      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === NounType.BATTLE,
     );
     expect(battleEvents).toHaveLength(1);
 
@@ -318,7 +318,7 @@ describe('Link Consumption — Freeform mode events', () => {
     // Layer 1: Context menu — battle skill available in freeform at 1s
     const battleFrame = 1 * FPS;
     const payload = addSkillViaContextMenu(
-      result.current, SLOT_AKEKURI, NounType.BATTLE_SKILL, battleFrame,
+      result.current, SLOT_AKEKURI, NounType.BATTLE, battleFrame,
     );
 
     act(() => {
@@ -328,7 +328,7 @@ describe('Link Consumption — Freeform mode events', () => {
     });
 
     const battleEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === NounType.BATTLE_SKILL,
+      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === NounType.BATTLE,
     );
     expect(battleEvents).toHaveLength(1);
 
@@ -411,7 +411,7 @@ describe('Link Consumption — Freeform mode events', () => {
       result.current.setInteractionMode(InteractionModeType.FREEFORM);
     });
 
-    const comboCol = findColumn(result.current, SLOT_AKEKURI, NounType.COMBO_SKILL);
+    const comboCol = findColumn(result.current, SLOT_AKEKURI, NounType.COMBO);
     if (!comboCol?.defaultEvent) return;
 
     // Layer 1: Context menu — combo may be disabled even in freeform (requires trigger)
@@ -430,7 +430,7 @@ describe('Link Consumption — Freeform mode events', () => {
     });
 
     const comboEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === NounType.COMBO_SKILL,
+      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === NounType.COMBO,
     );
     if (comboEvents.length === 0) return;
 

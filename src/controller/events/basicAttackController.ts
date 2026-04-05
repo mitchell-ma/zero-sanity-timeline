@@ -1,8 +1,9 @@
 import { SkillEventSequence } from "../../model/event-frames/skillEventSequence";
-import { CombatSkillType, EventFrameType, SegmentType, TimeDependency } from "../../consts/enums";
+import { EventFrameType, SegmentType, TimeDependency } from "../../consts/enums";
 import { EventFrameMarker, EventSegmentData } from "../../consts/viewTypes";
 import { FPS } from "../../utils/timeline";
 import { formatSegmentShortName } from "../../dsl/semanticsTranslation";
+import { NounType } from "../../dsl/semantics";
 import type { ValueResolutionContext } from "../calculation/valueResolver";
 
 /** Convert skill event sequences into view-layer segment data. */
@@ -79,9 +80,9 @@ export class SkillSegmentBuilder {
 
       // Mark all frames in Finisher / Dive segments with the appropriate hit type
       const segLabel = customLabels?.[i];
-      if (segLabel === CombatSkillType.FINISHER && frames.length > 0) {
+      if (segLabel === NounType.FINISHER && frames.length > 0) {
         for (const f of frames) f.frameTypes = [EventFrameType.FINISHER];
-      } else if (segLabel === CombatSkillType.DIVE && frames.length > 0) {
+      } else if (segLabel === NounType.DIVE && frames.length > 0) {
         for (const f of frames) f.frameTypes = [EventFrameType.DIVE];
       }
 

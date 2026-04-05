@@ -65,7 +65,7 @@ function collectAbsoluteFrames(app: AppResult, eventUid: string) {
 /** Collect absoluteFrame values from the ColumnViewModel (view layer). */
 function collectVMAbsoluteFrames(app: AppResult, eventUid: string) {
   const vms = computeTimelinePresentation(app.allProcessedEvents, app.columns);
-  const battleCol = findColumn(app, SLOT_ROSSI, NounType.BATTLE_SKILL);
+  const battleCol = findColumn(app, SLOT_ROSSI, NounType.BATTLE);
   const vm = vms.get(battleCol!.key);
   const vmEvent = vm?.events.find(e => e.uid === eventUid);
   if (!vmEvent) return [];
@@ -81,8 +81,8 @@ describe('Time-stop frame stability — frame diamonds must not drift on drag', 
     const { result } = setupRossi();
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
-    const battleCol = findColumn(result.current, SLOT_ROSSI, NounType.BATTLE_SKILL)!;
-    const comboCol = findColumn(result.current, SLOT_ROSSI, NounType.COMBO_SKILL)!;
+    const battleCol = findColumn(result.current, SLOT_ROSSI, NounType.BATTLE)!;
+    const comboCol = findColumn(result.current, SLOT_ROSSI, NounType.COMBO)!;
     expect(battleCol).toBeDefined();
     expect(comboCol).toBeDefined();
 
@@ -93,7 +93,7 @@ describe('Time-stop frame stability — frame diamonds must not drift on drag', 
     });
 
     const comboEvent = result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT_ROSSI && ev.columnId === NounType.COMBO_SKILL,
+      ev => ev.ownerId === SLOT_ROSSI && ev.columnId === NounType.COMBO,
     )!;
     const animDur = getAnimationDuration(comboEvent);
     expect(animDur).toBeGreaterThan(0);
@@ -106,7 +106,7 @@ describe('Time-stop frame stability — frame diamonds must not drift on drag', 
     });
 
     const bsEvent = result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT_ROSSI && ev.columnId === NounType.BATTLE_SKILL,
+      ev => ev.ownerId === SLOT_ROSSI && ev.columnId === NounType.BATTLE,
     )!;
     expect(bsEvent).toBeDefined();
     expect(bsEvent.name).toBe(BS_ID);
@@ -132,8 +132,8 @@ describe('Time-stop frame stability — frame diamonds must not drift on drag', 
     const { result } = setupRossi();
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
-    const battleCol = findColumn(result.current, SLOT_ROSSI, NounType.BATTLE_SKILL)!;
-    const comboCol = findColumn(result.current, SLOT_ROSSI, NounType.COMBO_SKILL)!;
+    const battleCol = findColumn(result.current, SLOT_ROSSI, NounType.BATTLE)!;
+    const comboCol = findColumn(result.current, SLOT_ROSSI, NounType.COMBO)!;
 
     // Place combo at 2s
     const comboPayload = getMenuPayload(result.current, comboCol, 2 * FPS);
@@ -142,7 +142,7 @@ describe('Time-stop frame stability — frame diamonds must not drift on drag', 
     });
 
     const comboEvent = result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT_ROSSI && ev.columnId === NounType.COMBO_SKILL,
+      ev => ev.ownerId === SLOT_ROSSI && ev.columnId === NounType.COMBO,
     )!;
     const animDur = getAnimationDuration(comboEvent);
     const timeStopEnd = comboEvent.startFrame + animDur;
@@ -154,7 +154,7 @@ describe('Time-stop frame stability — frame diamonds must not drift on drag', 
     });
 
     const bsUid = result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT_ROSSI && ev.columnId === NounType.BATTLE_SKILL,
+      ev => ev.ownerId === SLOT_ROSSI && ev.columnId === NounType.BATTLE,
     )!.uid;
 
     // Record baseline absolute frames
@@ -178,8 +178,8 @@ describe('Time-stop frame stability — frame diamonds must not drift on drag', 
     const { result } = setupRossi();
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
-    const battleCol = findColumn(result.current, SLOT_ROSSI, NounType.BATTLE_SKILL)!;
-    const comboCol = findColumn(result.current, SLOT_ROSSI, NounType.COMBO_SKILL)!;
+    const battleCol = findColumn(result.current, SLOT_ROSSI, NounType.BATTLE)!;
+    const comboCol = findColumn(result.current, SLOT_ROSSI, NounType.COMBO)!;
 
     // Place combo at 2s
     const comboPayload = getMenuPayload(result.current, comboCol, 2 * FPS);
@@ -188,7 +188,7 @@ describe('Time-stop frame stability — frame diamonds must not drift on drag', 
     });
 
     const comboEvent = result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT_ROSSI && ev.columnId === NounType.COMBO_SKILL,
+      ev => ev.ownerId === SLOT_ROSSI && ev.columnId === NounType.COMBO,
     )!;
     const animDur = getAnimationDuration(comboEvent);
     const timeStopEnd = comboEvent.startFrame + animDur;
@@ -203,7 +203,7 @@ describe('Time-stop frame stability — frame diamonds must not drift on drag', 
     const rawTotal = computeSegmentsSpan(battleCol.defaultEvent!.segments!);
 
     const bsUid = result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT_ROSSI && ev.columnId === NounType.BATTLE_SKILL,
+      ev => ev.ownerId === SLOT_ROSSI && ev.columnId === NounType.BATTLE,
     )!.uid;
 
     // Move BS into time-stop — total should be rawTotal + animDur

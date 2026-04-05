@@ -71,7 +71,7 @@ describe('Segment Element Color — event-level dominant element', () => {
     placeVulnerableOnEnemy(result, 0);
 
     // Place the empowered battle skill via context menu (label includes 'Empowered')
-    const bsCol = findColumn(result.current, SLOT_ROSSI, NounType.BATTLE_SKILL);
+    const bsCol = findColumn(result.current, SLOT_ROSSI, NounType.BATTLE);
     expect(bsCol).toBeDefined();
     const menu = buildContextMenu(result.current, bsCol!, 2 * FPS);
     expect(menu).not.toBeNull();
@@ -117,7 +117,7 @@ describe('Segment Element Color — event-level dominant element', () => {
 
     placeVulnerableOnEnemy(result, 0);
 
-    const bsCol = findColumn(result.current, SLOT_ROSSI, NounType.BATTLE_SKILL);
+    const bsCol = findColumn(result.current, SLOT_ROSSI, NounType.BATTLE);
     expect(bsCol).toBeDefined();
     const payload = getMenuPayload(result.current, bsCol!, 2 * FPS);
     act(() => {
@@ -126,7 +126,7 @@ describe('Segment Element Color — event-level dominant element', () => {
 
     // Check placed events — either base or empowered BS
     const bsEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_ROSSI && ev.columnId === NounType.BATTLE_SKILL,
+      ev => ev.ownerId === SLOT_ROSSI && ev.columnId === NounType.BATTLE,
     );
     expect(bsEvents.length).toBeGreaterThan(0);
 
@@ -147,7 +147,7 @@ describe('Segment Element Color — presentation layer', () => {
 
     placeVulnerableOnEnemy(result, 0);
 
-    const bsCol = findColumn(result.current, SLOT_ROSSI, NounType.BATTLE_SKILL);
+    const bsCol = findColumn(result.current, SLOT_ROSSI, NounType.BATTLE);
     expect(bsCol).toBeDefined();
     const payload = getMenuPayload(result.current, bsCol!, 2 * FPS);
     act(() => {

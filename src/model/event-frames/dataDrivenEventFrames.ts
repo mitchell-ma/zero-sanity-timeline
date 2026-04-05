@@ -27,8 +27,7 @@ interface JsonWithValue {
   operation?: string;
   left?: JsonWithValue;
   right?: JsonWithValue;
-  ofDeterminer?: string;
-  of?: string;
+  of?: { determiner?: string; object: string };
 }
 
 /** DSL Effect: Verb-Object with optional object qualifier and prepositional phrases. */
@@ -331,9 +330,10 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
             const PERFORM_TO_FRAME_TYPE: Record<string, EventFrameType> = {
               [NounType.FINAL_STRIKE]: EventFrameType.FINAL_STRIKE,
               [NounType.FINISHER]: EventFrameType.FINISHER,
-              [NounType.DIVE_ATTACK]: EventFrameType.DIVE,
+              [NounType.DIVE]: EventFrameType.DIVE,
             };
-            const ft = PERFORM_TO_FRAME_TYPE[ef.object ?? ''];
+            const skillKey = ef.object === NounType.SKILL ? (ef.objectId ?? '') : (ef.object ?? '');
+            const ft = PERFORM_TO_FRAME_TYPE[skillKey];
             if (ft && !frameTypes.includes(ft)) frameTypes.push(ft);
             break;
           }
@@ -446,14 +446,8 @@ export function buildSequencesFromOperatorJson(
 ): readonly DataDrivenSkillEventSequence[] {
   const skills = operatorJson.skills as Record<string, JsonSkillCategory> | undefined;
   if (!skills) return [];
-  // Resolve via skillTypeMap if the key is a category (BASIC_ATTACK, BATTLE_SKILL, etc.)
-  const typeMap = operatorJson.skillTypeMap as Record<string, unknown> | undefined;
-  const rawEntry = typeMap?.[skillCategoryKey];
-  const resolvedKey = rawEntry
-    ? (typeof rawEntry === 'string' ? rawEntry : (rawEntry as Record<string, string>).BATK ?? skillCategoryKey)
-    : skillCategoryKey;
-  // Try resolved key first, fall back to raw key
-  const cat = skills[resolvedKey] ?? skills[skillCategoryKey];
+  // Skills are aliased by category/sub-type key in buildMergedOperatorJson — direct access
+  const cat = skills[skillCategoryKey];
   if (!cat) return [];
   return buildSequencesFromSkillCategory(cat);
 }
@@ -494,14 +488,13 @@ export interface SkillTimings {
 
 export function getSkillTimings(operatorJson: Record<string, unknown>, ctx?: ValueResolutionContext): SkillTimings {
   const skills = (operatorJson.skills ?? {}) as Record<string, JsonSkillCategory>;
-  const typeMap = operatorJson.skillTypeMap as Record<string, string> | undefined;
 
   // Battle skill duration
-  const battleSkill = skills[typeMap?.BATTLE_SKILL ?? 'BATTLE_SKILL'];
+  const battleSkill = skills[NounType.BATTLE];
   const battleDur = dur(catDuration(battleSkill, ctx));
 
   // Combo skill
-  const comboSkill = skills[typeMap?.COMBO_SKILL ?? 'COMBO_SKILL'];
+  const comboSkill = skills[NounType.COMBO];
   // Duration: prefer top-level property, fall back to sum of non-cooldown segments
   const comboTopDur = catDuration(comboSkill, ctx);
   const comboDur = dur(comboTopDur || ((comboSkill?.segments as JsonSegment[] | undefined)
@@ -517,7 +510,7 @@ export function getSkillTimings(operatorJson: Record<string, unknown>, ctx?: Val
   const comboAnimDur = dur(catAnimationDur(comboSkill, ctx) || 0.5);
 
   // Ultimate — read from flat properties or derive from typed segments
-  const ultimate = skills[typeMap?.ULTIMATE ?? 'ULTIMATE'];
+  const ultimate = skills[NounType.ULTIMATE];
   const ultSegs = (ultimate?.segments as JsonSegment[] | undefined)?.filter(
     s => s.properties.segmentTypes?.length,
   );
@@ -557,8 +550,7 @@ export function getSkillTimings(operatorJson: Record<string, unknown>, ctx?: Val
 
 export function getUltimateEnergyCost(operatorJson: Record<string, unknown>, ctx?: ValueResolutionContext): number {
   const skills = operatorJson.skills as Record<string, JsonSkillCategory>;
-  const typeMap = operatorJson.skillTypeMap as Record<string, string> | undefined;
-  const ultimate = skills?.[typeMap?.ULTIMATE ?? 'ULTIMATE'];
+  const ultimate = skills?.[NounType.ULTIMATE];
   return findValue(ultimate, NounType.ULTIMATE_ENERGY, VerbType.CONSUME, undefined, ctx) ?? 0;
 }
 
@@ -572,11 +564,10 @@ export interface SkillGaugeGains {
 
 export function getSkillGaugeGains(operatorJson: Record<string, unknown>, ctx?: ValueResolutionContext): SkillGaugeGains {
   const skills = operatorJson.skills as Record<string, JsonSkillCategory>;
-  const typeMap = operatorJson.skillTypeMap as Record<string, string> | undefined;
   const result: SkillGaugeGains = { battleGaugeGain: 0, battleTeamGaugeGain: 0, comboGaugeGain: 0, comboTeamGaugeGain: 0 };
 
   // Battle skill gauge gains
-  const battleSkillId = typeMap?.BATTLE_SKILL ?? 'BATTLE_SKILL';
+  const battleSkillId = NounType.BATTLE;
   const bs = skills?.[battleSkillId];
   if (bs?.clause) {
     result.battleGaugeGain = findValue(bs, NounType.ULTIMATE_ENERGY, VerbType.RECOVER, 'SELF', ctx) ?? 0;
@@ -584,7 +575,7 @@ export function getSkillGaugeGains(operatorJson: Record<string, unknown>, ctx?: 
   }
 
   // Combo skill gauge gains
-  const comboSkillId = typeMap?.COMBO_SKILL ?? 'COMBO_SKILL';
+  const comboSkillId = NounType.COMBO;
   const cs = skills?.[comboSkillId];
   if (cs?.clause) {
     const byEnemies = findConditionalGaugeGains(cs, ctx);
@@ -603,8 +594,7 @@ export function getSkillGaugeGains(operatorJson: Record<string, unknown>, ctx?: 
 /** Extract the SP cost for battle skill from merged operator JSON (skills keyed by skill ID). */
 export function getBattleSkillSpCost(operatorJson: Record<string, unknown>, ctx?: ValueResolutionContext): number {
   const skills = operatorJson.skills as Record<string, JsonSkillCategory> | undefined;
-  const typeMap = operatorJson.skillTypeMap as Record<string, string> | undefined;
-  const battleSkillId = typeMap?.BATTLE_SKILL ?? 'BATTLE_SKILL';
+  const battleSkillId = NounType.BATTLE;
   return findValue(skills?.[battleSkillId], NounType.SKILL_POINT, VerbType.CONSUME, undefined, ctx) ?? 0;
 }
 
@@ -628,9 +618,8 @@ export function getSkillCategoryData(
   ctx?: ValueResolutionContext,
 ): SkillCategoryData {
   const skills = operatorJson.skills as Record<string, JsonSkillCategory>;
-  const typeMap = operatorJson.skillTypeMap as Record<string, string> | undefined;
   const cat = skills?.[skillCategory];
-  const baseBattle = skills?.[typeMap?.BATTLE_SKILL ?? 'BATTLE_SKILL'];
+  const baseBattle = skills?.[NounType.BATTLE];
 
   return {
     duration: catDuration(cat, ctx),
@@ -651,10 +640,8 @@ export function getSkillCategoryData(
  */
 export function getBasicAttackDurations(operatorJson: Record<string, unknown>, ctx?: ValueResolutionContext): number[] {
   const skills = operatorJson.skills as Record<string, JsonSkillCategory>;
-  const typeMap = operatorJson.skillTypeMap as Record<string, string> | undefined;
-  const basicEntry = typeMap?.BASIC_ATTACK as string | Record<string, string> | undefined;
-  const basicId = typeof basicEntry === 'string' ? basicEntry : (basicEntry as Record<string, string> | undefined)?.BATK ?? 'BASIC_ATTACK';
-  const basicAttack = skills?.[basicId];
+  // BATK is aliased to skills[BATK] by buildMergedOperatorJson; also try BASIC_ATTACK key
+  const basicAttack = skills?.[NounType.BATK] ?? skills?.[NounType.BASIC_ATTACK];
   if (!basicAttack?.segments) return [];
   return basicAttack.segments.map(seg => resolveDur(seg.properties!.duration!, ctx));
 }

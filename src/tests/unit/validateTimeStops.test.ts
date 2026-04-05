@@ -40,7 +40,7 @@ function makeUltTimeStop(startFrame: number, durationFrames: number): TimeStopRe
 }
 
 function makeComboTimeStop(startFrame: number, durationFrames: number): TimeStopRegion {
-  return { startFrame, durationFrames, ownerId: 'op-1', sourceColumnId: NounType.COMBO_SKILL };
+  return { startFrame, durationFrames, ownerId: 'op-1', sourceColumnId: NounType.COMBO };
 }
 
 // ── Tests ────────────────────────────────────────────────────────────────
@@ -56,13 +56,13 @@ describe('validateTimeStops', () => {
     });
 
     it('warns for battle skill inside ult time-stop', () => {
-      const events = [makeEvent({ uid: 'e1', columnId: NounType.BATTLE_SKILL, startFrame: 110 })];
+      const events = [makeEvent({ uid: 'e1', columnId: NounType.BATTLE, startFrame: 110 })];
       const map = validateTimeStops(events, stops);
       expect(map.has('e1')).toBe(true);
     });
 
     it('warns for combo skill inside ult time-stop', () => {
-      const events = [makeEvent({ uid: 'e1', columnId: NounType.COMBO_SKILL, startFrame: 115 })];
+      const events = [makeEvent({ uid: 'e1', columnId: NounType.COMBO, startFrame: 115 })];
       const map = validateTimeStops(events, stops);
       expect(map.has('e1')).toBe(true);
     });
@@ -78,7 +78,7 @@ describe('validateTimeStops', () => {
     });
 
     it('warns for battle skill inside combo time-stop', () => {
-      const events = [makeEvent({ uid: 'e1', columnId: NounType.BATTLE_SKILL, startFrame: 210 })];
+      const events = [makeEvent({ uid: 'e1', columnId: NounType.BATTLE, startFrame: 210 })];
       const map = validateTimeStops(events, stops);
       expect(map.has('e1')).toBe(true);
     });
@@ -122,7 +122,7 @@ describe('validateTimeStops', () => {
     });
 
     it('allows battle skill before time-stop starts', () => {
-      const events = [makeEvent({ uid: 'e1', columnId: NounType.BATTLE_SKILL, startFrame: 99 })];
+      const events = [makeEvent({ uid: 'e1', columnId: NounType.BATTLE, startFrame: 99 })];
       const map = validateTimeStops(events, stops);
       expect(map.has('e1')).toBe(false);
     });

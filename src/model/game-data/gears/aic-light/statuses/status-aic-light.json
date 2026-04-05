@@ -38,7 +38,7 @@
     },
     "description": "ATK +20 for 5s after defeating an enemy.",
     "eventType": "STATUS",
-    "eventCategoryType": "GEAR_SET_STATUS"
+    "eventIdType": "GEAR_SET_STATUS"
   },
   "metadata": {
     "originId": "AIC_LIGHT",

@@ -19,7 +19,7 @@ import { renderHook, act } from '@testing-library/react';
 import { NounType } from '../../../../dsl/semantics';
 import { useApp } from '../../../../app/useApp';
 import { OPERATOR_COLUMNS, OPERATOR_STATUS_COLUMN_ID, COMBO_WINDOW_COLUMN_ID, INFLICTION_COLUMNS, ENEMY_OWNER_ID, ENEMY_GROUP_COLUMNS } from '../../../../model/channels';
-import { ColumnType, CombatSkillType, EventStatusType } from '../../../../consts/enums';
+import { ColumnType, EventStatusType } from '../../../../consts/enums';
 import type { MiniTimeline } from '../../../../consts/viewTypes';
 import { FPS } from '../../../../utils/timeline';
 import { computeTimelinePresentation } from '../../../../controller/timeline/eventPresentationController';
@@ -58,7 +58,7 @@ describe('D. Auxiliary Crystal targeting', () => {
     const { result } = setupXaihiInSlot2();
 
     // ── Context menu layer ──
-    const col = findColumn(result.current, SLOT_XAIHI, NounType.BATTLE_SKILL);
+    const col = findColumn(result.current, SLOT_XAIHI, NounType.BATTLE);
     expect(col).toBeDefined();
     const menuItems = buildContextMenu(result.current, col!, 5 * FPS);
     expect(menuItems).not.toBeNull();
@@ -111,7 +111,7 @@ describe('D. Auxiliary Crystal targeting', () => {
     const { result } = setupXaihiInSlot2();
 
     // ── Place Xaihi BS at 2s → AC with 2 stacks on slot-0 (default controlled) ──
-    const bsCol = findColumn(result.current, SLOT_XAIHI, NounType.BATTLE_SKILL);
+    const bsCol = findColumn(result.current, SLOT_XAIHI, NounType.BATTLE);
     const bsPayload = getMenuPayload(result.current, bsCol!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
@@ -185,7 +185,7 @@ describe('D. Auxiliary Crystal targeting', () => {
     const { result } = setupXaihiInSlot2();
 
     // ── Place Xaihi BS at 2s → AC with 2 stacks on slot-0 ──
-    const bsCol = findColumn(result.current, SLOT_XAIHI, NounType.BATTLE_SKILL);
+    const bsCol = findColumn(result.current, SLOT_XAIHI, NounType.BATTLE);
     const bsPayload = getMenuPayload(result.current, bsCol!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
@@ -243,7 +243,7 @@ describe('D. Auxiliary Crystal targeting', () => {
     const { result } = setupXaihiInSlot2();
 
     // ── Place BS at 2s → AC with 2 stacks on slot-0 ──
-    const bsCol = findColumn(result.current, SLOT_XAIHI, NounType.BATTLE_SKILL);
+    const bsCol = findColumn(result.current, SLOT_XAIHI, NounType.BATTLE);
     const bsPayload = getMenuPayload(result.current, bsCol!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
@@ -277,7 +277,7 @@ describe('D. Auxiliary Crystal targeting', () => {
     expect(comboWindows.length).toBeGreaterThanOrEqual(1);
 
     // ── Context menu: combo should be placeable within the window ──
-    const comboCol = findColumn(result.current, SLOT_XAIHI, NounType.COMBO_SKILL);
+    const comboCol = findColumn(result.current, SLOT_XAIHI, NounType.COMBO);
     expect(comboCol).toBeDefined();
     // Place combo after the last AC consumption
     const lastConsumedFrame = Math.max(
@@ -297,7 +297,7 @@ describe('D. Auxiliary Crystal targeting', () => {
 
     // ── Controller layer: combo event exists with correct effects ──
     const comboEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_XAIHI && ev.columnId === NounType.COMBO_SKILL,
+      ev => ev.ownerId === SLOT_XAIHI && ev.columnId === NounType.COMBO,
     );
     expect(comboEvents).toHaveLength(1);
 
@@ -315,7 +315,7 @@ describe('D. Auxiliary Crystal targeting', () => {
     );
     const comboVM = viewModels.get(comboCol!.key);
     expect(comboVM).toBeDefined();
-    expect(comboVM!.events.some(ev => ev.columnId === NounType.COMBO_SKILL)).toBe(true);
+    expect(comboVM!.events.some(ev => ev.columnId === NounType.COMBO)).toBe(true);
 
     // Cryo infliction visible in enemy status column
     const enemyStatusCol = result.current.columns.find(
@@ -344,7 +344,7 @@ describe('D. Auxiliary Crystal targeting', () => {
     const controlItem = menuItems!.find(
       i => i.actionId === 'addEvent' &&
         (i.actionPayload as Record<string, unknown>)?.defaultSkill &&
-        ((i.actionPayload as Record<string, Record<string, unknown>>).defaultSkill?.id === CombatSkillType.CONTROL),
+        ((i.actionPayload as Record<string, Record<string, unknown>>).defaultSkill?.id === NounType.CONTROL),
     );
     expect(controlItem).toBeDefined();
     expect(controlItem!.disabled).toBeFalsy();
@@ -357,7 +357,7 @@ describe('D. Auxiliary Crystal targeting', () => {
     });
 
     // ── Context menu layer: place BS ──
-    const bsCol = findColumn(result.current, SLOT_XAIHI, NounType.BATTLE_SKILL);
+    const bsCol = findColumn(result.current, SLOT_XAIHI, NounType.BATTLE);
     expect(bsCol).toBeDefined();
     const bsPayload = getMenuPayload(result.current, bsCol!, 5 * FPS);
     act(() => {

@@ -1,8 +1,8 @@
 import { Column, MiniTimeline, MicroColumn, Operator, Enemy, VisibleSkills, EventFrameMarker, EventSegmentData } from '../../consts/viewTypes';
 import { ClauseEvaluationType, DeterminerType, NounType, VerbType, type Effect, type Predicate } from '../../dsl/semantics';
 import type { FrameClausePredicate } from '../../model/event-frames/skillEventFrame';
-import { ColumnType, CombatSkillType, DEFAULT_EVENT_COLOR, ELEMENT_COLORS, ElementType, EnhancementType, EventCategoryType, EventFrameType, HeaderVariant, MicroColumnAssignment, SegmentType, StackInteractionType, StatusType, TimeDependency, TimelineSourceType, UNLIMITED_STACKS } from '../../consts/enums';
-import { ENEMY_OWNER_ID, ENEMY_GROUP_COLUMNS, ENEMY_ACTION_COLUMN_ID, OPERATOR_COLUMNS, OPERATOR_STATUS_COLUMN_ID, PHYSICAL_INFLICTION_COLUMNS, PHYSICAL_STATUS_COLUMNS, SKILL_COLUMN_ORDER as SKILL_ORDER, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID, COMBO_WINDOW_COLUMN_ID } from '../../model/channels';
+import { ColumnType, DEFAULT_EVENT_COLOR, ELEMENT_COLORS, ElementType, EnhancementType, EventFrameType, HeaderVariant, MicroColumnAssignment, SegmentType, StackInteractionType, StatusType, TimeDependency, TimelineSourceType, UNLIMITED_STACKS } from '../../consts/enums';
+import { ENEMY_OWNER_ID, ENEMY_GROUP_COLUMNS, ENEMY_ACTION_COLUMN_ID, OPERATOR_COLUMNS, OPERATOR_STATUS_COLUMN_ID, PHYSICAL_INFLICTION_COLUMNS, PHYSICAL_STATUS_COLUMNS, SKILL_COLUMN_ORDER as SKILL_ORDER, COMBO_WINDOW_COLUMN_ID } from '../../model/channels';
 import { isTeamStatus } from '../gameDataStore';
 import { SKILL_LABELS, ColumnLabel, STATUS_LABELS, REACTION_MICRO_COLUMNS } from '../../consts/timelineColumnLabels';
 import { getWeapon, getWeaponEffectDefs, getGearEffectDefs, getAllStatusLabels, getStatusById, getConsumablePassiveDef, getTacticalTriggerDef } from '../gameDataStore';
@@ -85,7 +85,7 @@ function collectSuppliedParameters(
 
 /** Resolve a variant skill's display name from its JSON data + base skill label. */
 function resolveVariantDisplayName(varId: string, varSkill: Record<string, unknown>): string {
-  const baseName = COMBAT_SKILL_LABELS[getBaseSkillId(varId) as CombatSkillType] ?? (varSkill.name as string);
+  const baseName = COMBAT_SKILL_LABELS[getBaseSkillId(varId) as string] ?? (varSkill.name as string);
   return formatSkillDisplayName(baseName, (varSkill.properties as Record<string, unknown> | undefined)?.enhancementTypes as string[] | undefined, varSkill.name as string | undefined);
 }
 
@@ -152,11 +152,12 @@ function buildStatusMicroColumn(
     id: statusId,
     label,
     color,
-    ...(cfg?.eventCategoryType ? { statusType: cfg.eventCategoryType } : {}),
+    ...(cfg?.eventIdType ? { statusType: cfg.eventIdType } : {}),
     ...(overrides?.permanent
-      || ((cfg?.eventCategoryType === EventCategoryType.TALENT
-        || cfg?.eventCategoryType === EventCategoryType.POTENTIAL)
-        && !(cfg?.stacks?.interactionType === StackInteractionType.NONE && cfg?.maxStacks >= UNLIMITED_STACKS))
+      || ((cfg?.eventIdType === NounType.TALENT
+        || cfg?.eventIdType === NounType.POTENTIAL)
+        && !(cfg?.stacks?.interactionType === StackInteractionType.NONE && cfg?.maxStacks >= UNLIMITED_STACKS)
+        && !cfg?.onTriggerClause?.length)
       ? { permanent: true } : {}),
     defaultEvent: {
       id: statusId,
@@ -338,7 +339,7 @@ export function buildColumns(
         defs.push({
           statusId: cDef.id,
           label: cDef.name ?? cDef.id,
-          columnId: EventCategoryType.CONSUMABLE,
+          columnId: NounType.CONSUMABLE,
           duration: durationFrames,
           durationSec: durVal > 0 ? durVal : TOTAL_FRAMES / FPS,
           color: s.operator!.color,
@@ -358,7 +359,7 @@ export function buildColumns(
         defs.push({
           statusId: tDef.id,
           label: tDef.name ?? tDef.id,
-          columnId: EventCategoryType.TACTICAL,
+          columnId: NounType.TACTICAL,
           duration: durationFrames,
           durationSec: durVal > 0 ? durVal : TOTAL_FRAMES / FPS,
           color: s.operator!.color,
@@ -430,7 +431,7 @@ export function buildColumns(
     const op = slot.operator;
     // Detect variants by presence of _ENHANCED/_EMPOWERED skill ID suffixes
     const basicName = op?.skills[NounType.BASIC_ATTACK]?.name;
-    const battleName = op?.skills[NounType.BATTLE_SKILL]?.name;
+    const battleName = op?.skills[NounType.BATTLE]?.name;
     // hasBasicVariants removed — BA categories (BATK/DIVE/FINISHER) are now always discovered
     const hasBattleVariants = op && battleName && (!!getOperatorSkill(op.id, battleName + '_ENHANCED') || !!getOperatorSkill(op.id, battleName + '_EMPOWERED'));
     let slotHasCols = false;
@@ -458,11 +459,11 @@ export function buildColumns(
         headerVariant: HeaderVariant.SKILL,
         eventVariants: [
           {
-            id: CombatSkillType.DASH,
+            id: NounType.DASH,
             segments: [{ properties: { duration: DASH_FRAMES } }],
           },
           {
-            id: CombatSkillType.DASH,
+            id: NounType.DASH,
             isPerfectDodge: true,
             timeInteraction: 'TIME_STOP',
             timeDependency: TimeDependency.REAL_TIME,
@@ -470,8 +471,9 @@ export function buildColumns(
           },
           ...(() => {
             if (!op) return [];
-            const rawTypeMap = getRawSkillTypeMap(op.id) as Record<string, unknown> | undefined;
-            const actionSkillId = rawTypeMap?.[NounType.ACTION] as string | undefined;
+            const rawTypeMap = getRawSkillTypeMap(op.id);
+            const actionEntry = rawTypeMap[NounType.ACTION];
+            const actionSkillId = Array.isArray(actionEntry) ? actionEntry[0] : undefined;
             if (!actionSkillId) return [];
             const actionSkill = getOperatorSkill(op.id, actionSkillId);
             if (!actionSkill) return [];
@@ -492,7 +494,7 @@ export function buildColumns(
           })(),
         ],
         defaultEvent: {
-          id: CombatSkillType.DASH,
+          id: NounType.DASH,
           segments: [{ properties: { duration: DASH_FRAMES } }],
         },
       });
@@ -521,23 +523,24 @@ export function buildColumns(
               teamGaugeGain: skill.teamGaugeGain,
               ...(skill.gaugeGainByEnemies ? { gaugeGainByEnemies: skill.gaugeGainByEnemies } : {}),
               ...(skillType === NounType.ULTIMATE && slot.potential != null ? { operatorPotential: slot.potential } : {}),
-              ...(skillType === NounType.BATTLE_SKILL && skill.skillPointCost != null ? { skillPointCost: skill.skillPointCost } : {}),
+              ...(skillType === NounType.BATTLE && skill.skillPointCost != null ? { skillPointCost: skill.skillPointCost } : {}),
               ...(() => { const sp = op ? collectSuppliedParameters(getOperatorSkill(op.id, skill.name)?.suppliedParameters, skill.defaultSegments) : undefined; return sp ? { suppliedParameters: sp } : {}; })(),
             },
           };
           // Combo columns: use model's level-dependent cooldown + match activation windows
-          if (skillType === NounType.COMBO_SKILL) {
-            col.matchColumnIds = [NounType.COMBO_SKILL, 'comboActivationWindow'];
+          if (skillType === NounType.COMBO) {
+            col.matchColumnIds = [NounType.COMBO, 'comboActivationWindow'];
           }
           // Basic attack categories: BATK, FINISHER, DIVE are independent categories.
           // Each category can have its own _ENHANCED/_EMPOWERED variants.
           const skillCtx = ctxFor(skillType);
           if (skillType === NounType.BASIC_ATTACK && op) {
-            const rawTypeMap = getRawSkillTypeMap(op.id) as Record<string, unknown> | undefined;
-            const basicEntry = rawTypeMap?.BASIC_ATTACK as Record<string, string> | undefined;
-            const batkId = basicEntry?.BATK ?? skill.name;
-            const finisherId = basicEntry?.FINISHER;
-            const diveId = basicEntry?.DIVE;
+            const rawTypeMap = getRawSkillTypeMap(op.id);
+            const basicEntry = rawTypeMap?.[NounType.BASIC_ATTACK];
+            const basicSubs = !Array.isArray(basicEntry) ? basicEntry as Record<string, string[]> | undefined : undefined;
+            const batkId = basicSubs?.[NounType.BATK]?.[0] ?? skill.name;
+            const finisherId = basicSubs?.[NounType.FINISHER]?.[0];
+            const diveId = basicSubs?.[NounType.DIVE]?.[0];
 
             // Only build from frame sequences if BATK has frame data
             const batkSeqs = getFrameSequences(op.id, batkId);
@@ -554,8 +557,8 @@ export function buildColumns(
             const categories: { baseId: string; categoryId: string; label?: string }[] = [
               { baseId: batkId, categoryId: batkId },
             ];
-            if (finisherId) categories.push({ baseId: finisherId, categoryId: CombatSkillType.FINISHER, label: 'Finisher' });
-            if (diveId) categories.push({ baseId: diveId, categoryId: CombatSkillType.DIVE, label: 'Dive' });
+            if (finisherId) categories.push({ baseId: finisherId, categoryId: NounType.FINISHER, label: 'Finisher' });
+            if (diveId) categories.push({ baseId: diveId, categoryId: NounType.DIVE, label: 'Dive' });
 
             // Only populate eventVariants if there are multiple categories or any category has variants
             const hasMultipleCategories = categories.length > 1;
@@ -574,8 +577,8 @@ export function buildColumns(
 
                 if (!seg) {
                   // Fallback for missing frame data
-                  const fallbackFrames = categoryId === CombatSkillType.FINISHER ? FINISHER_FRAMES : DIVE_FRAMES;
-                  const fallbackType = categoryId === CombatSkillType.FINISHER ? EventFrameType.FINISHER : EventFrameType.DIVE;
+                  const fallbackFrames = categoryId === NounType.FINISHER ? FINISHER_FRAMES : DIVE_FRAMES;
+                  const fallbackType = categoryId === NounType.FINISHER ? EventFrameType.FINISHER : EventFrameType.DIVE;
                   col.eventVariants.push({
                     id: categoryId,
                     name: categoryId,
@@ -624,7 +627,7 @@ export function buildColumns(
             }
           }
           // Battle skill variants (derived from ENHANCED_*/EMPOWERED_* skill categories)
-          if (hasBattleVariants && skillType === NounType.BATTLE_SKILL && op) {
+          if (hasBattleVariants && skillType === NounType.BATTLE && op) {
             const bsLabels = getSegmentLabels(op.id, skill.name);
             const baseSeg = SkillSegmentBuilder.buildSegments(
               getFrameSequences(op.id, skill.name),
@@ -697,7 +700,7 @@ export function buildColumns(
           }
           // Generic battle skill: data-driven frame sequences
           const battleSeqs = op && battleName ? getFrameSequences(op.id, battleName) : undefined;
-          if (battleSeqs?.length && skillType === NounType.BATTLE_SKILL && !hasBattleVariants) {
+          if (battleSeqs?.length && skillType === NounType.BATTLE && !hasBattleVariants) {
             const seg = SkillSegmentBuilder.buildSegments(battleSeqs, { gaugeGain: skill.gaugeGain, teamGaugeGain: skill.teamGaugeGain, ctx: skillCtx });
             // Only append cooldown if the data-driven segments don't already include one
             const hasBattleCdSegment = seg.segments.some(s => s.properties.segmentTypes?.includes(SegmentType.COOLDOWN));
@@ -723,7 +726,7 @@ export function buildColumns(
             const empoweredBattleSeqs = battleName ? getFrameSequences(op!.id, empoweredBattleId) : undefined;
             if (empoweredBattleSeqs?.length) {
               const empowered = SkillSegmentBuilder.buildSegments(empoweredBattleSeqs, { ctx: skillCtx });
-              const empoweredName = empoweredBattleId as CombatSkillType;
+              const empoweredName = empoweredBattleId as string;
               const hasEmpCdSegment = empowered.segments.some(s => s.properties.segmentTypes?.includes(SegmentType.COOLDOWN));
               // Append cooldown from base skill if empowered segments don't have one
               const cdSeg = battleSegments.find(s => s.properties.segmentTypes?.includes(SegmentType.COOLDOWN));
@@ -753,10 +756,10 @@ export function buildColumns(
             }
           }
           // Generic combo skill: load all skills matching COMBO_SKILL category
-          if (op && skillType === NounType.COMBO_SKILL) {
+          if (op && skillType === NounType.COMBO) {
             const allSkills = getOperatorSkills(op.id);
             const comboSkills = allSkills
-              ? Array.from(allSkills.values()).filter((sk) => sk.eventCategoryType === EventCategoryType.COMBO_SKILL)
+              ? Array.from(allSkills.values()).filter((sk) => sk.eventIdType === NounType.COMBO || sk.eventIdType === NounType.COMBO)
               : [];
             if (comboSkills.length > 0) {
               const variants: NonNullable<MiniTimeline['eventVariants']> = [];
@@ -864,8 +867,8 @@ export function buildColumns(
         const cfg = getStatusById(def.statusId);
         const isCounter = cfg?.stacks?.interactionType === StackInteractionType.NONE && (cfg?.maxStacks ?? 0) >= UNLIMITED_STACKS;
         const isPermanent = !isCounter
-          && (cfg?.eventCategoryType === EventCategoryType.TALENT
-            || cfg?.eventCategoryType === EventCategoryType.POTENTIAL);
+          && (cfg?.eventIdType === NounType.TALENT
+            || cfg?.eventIdType === NounType.POTENTIAL);
         const mc = buildStatusMicroColumn(def.statusId, def.color, { label: def.label, permanent: isPermanent });
         // Use columnId (may differ from statusId for OPERATOR_COLUMNS entries)
         mc.id = def.columnId;
@@ -976,9 +979,6 @@ export function buildColumns(
   // Single column collecting all enemy statuses: inflictions, reactions, physical
   // statuses, stagger frailty, and debuffs.
   const statusMicroColumns = [
-    // Stagger
-    buildStatusMicroColumn(NODE_STAGGER_COLUMN_ID, '#dd8844'),
-    buildStatusMicroColumn(FULL_STAGGER_COLUMN_ID, '#ee6633'),
     // Arts inflictions
     ...enemy.statuses.map((s) => buildStatusMicroColumn(s.id, s.color, { label: s.label })),
     // Arts reactions
@@ -998,7 +998,6 @@ export function buildColumns(
     // from operator defs and generic defs (deduped by id)
     ...(() => {
       const seen = new Set<string>([
-        NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID,
         ...enemy.statuses.map(s => s.id),
         ...REACTION_MICRO_COLUMNS.map(mc => mc.id),
         PHYSICAL_INFLICTION_COLUMNS.VULNERABLE,

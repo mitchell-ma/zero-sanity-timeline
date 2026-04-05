@@ -178,70 +178,19 @@ const laevatainSkillCategories: Record<string, any> = {};
 for (const [key, val] of Object.entries(laevatainSkillEntries2)) {
   laevatainSkillCategories[key] = { ...(val as Record<string, unknown>), id: key };
 }
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- infer skillTypeMap from skill entries
-function _inferSkillTypeMap(skills: Record<string, any>): Record<string, any> {
-  const ids = Object.keys(skills);
-  const finishers = ids.filter(id => id.endsWith('_FINISHER'));
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- inferred map
-  const map: Record<string, any> = {};
-  for (const fId of finishers) {
-    const base = fId.replace(/_FINISHER$/, '');
-    if (skills[base]) {
-      const batk: Record<string, string> = { BATK: base, FINISHER: fId };
-      const diveId = ids.find(d => d === base + '_DIVE');
-      if (diveId) batk.DIVE = diveId;
-      map.BASIC_ATTACK = batk;
-      break;
-    }
-  }
-  const varSuffixes = ['_FINISHER', '_DIVE', '_ENHANCED', '_EMPOWERED', '_ENHANCED_EMPOWERED'];
-  const baseSkills = ids.filter(id => {
-    const batkId = typeof map.BASIC_ATTACK === 'object' ? (map.BASIC_ATTACK as Record<string,string>).BATK : undefined;
-    if (id === batkId) return false;
-    return !varSuffixes.some(s => id.endsWith(s));
-  });
-  for (const id of baseSkills) {
-    const skill = skills[id] as Record<string, unknown>;
-    if ((skill?.activationWindow as Record<string, unknown>)?.onTriggerClause || (skill?.onTriggerClause && (skill.onTriggerClause as unknown[]).length > 0)) {
-      map.COMBO_SKILL = id;
-      break;
-    }
-  }
-  const remaining = baseSkills.filter(id => id !== map.COMBO_SKILL);
-  for (const id of remaining) {
-    const skill = skills[id] as Record<string, unknown>;
-    const segs = skill?.segments as { properties: { segmentTypes?: string[] } }[] | undefined;
-    if (segs?.some(s => s.properties.segmentTypes?.includes('ANIMATION'))) {
-      map.ULTIMATE = id;
-      break;
-    }
-  }
-  const battleCandidates = remaining.filter(id => id !== map.ULTIMATE);
-  if (battleCandidates.length === 1) map.BATTLE_SKILL = battleCandidates[0];
-  return map;
-}
-const _skTypeMap2 = _inferSkillTypeMap(laevatainSkillCategories);
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { buildSkillTypeMap: _laevatainBuildSkillTypeMap } = require('../../utils/skillTypeMap');
+const _skTypeMap2 = _laevatainBuildSkillTypeMap(laevatainSkillCategories);
 {
-  const variantSuffixes = ['ENHANCED', 'EMPOWERED', 'ENHANCED_EMPOWERED'];
-  for (const [category, value] of Object.entries(_skTypeMap2)) {
-    if (typeof value === 'string') {
-      if (laevatainSkillCategories[value]) laevatainSkillCategories[category] = laevatainSkillCategories[value];
-      for (const suffix of variantSuffixes) {
-        const variantSkillId = `${value}_${suffix}`;
-        if (laevatainSkillCategories[variantSkillId]) laevatainSkillCategories[`${suffix}_${category}`] = laevatainSkillCategories[variantSkillId];
-      }
+  for (const [key, value] of Object.entries(_skTypeMap2 as Record<string, string[] | Record<string, string[]>>)) {
+    if (Array.isArray(value)) {
+      if (value[0] && laevatainSkillCategories[value[0]]) laevatainSkillCategories[key] = laevatainSkillCategories[value[0]];
     } else if (typeof value === 'object' && value !== null) {
-      const batkId = (value as Record<string, string>).BATK;
-      if (batkId && laevatainSkillCategories[batkId]) laevatainSkillCategories[category] = laevatainSkillCategories[batkId];
-      for (const [subKey, subId] of Object.entries(value as Record<string, string>)) {
-        if (laevatainSkillCategories[subId]) laevatainSkillCategories[subKey] = laevatainSkillCategories[subId];
+      for (const [subKey, subIds] of Object.entries(value as Record<string, string[]>)) {
+        if (subIds[0] && laevatainSkillCategories[subIds[0]]) laevatainSkillCategories[subKey] = laevatainSkillCategories[subIds[0]];
       }
-      if (batkId) {
-        for (const suffix of variantSuffixes) {
-          const variantSkillId = `${batkId}_${suffix}`;
-          if (laevatainSkillCategories[variantSkillId]) laevatainSkillCategories[`${suffix}_${category}`] = laevatainSkillCategories[variantSkillId];
-        }
-      }
+      const batkIds = (value as Record<string, string[]>).BATK;
+      if (batkIds?.[0] && laevatainSkillCategories[batkIds[0]]) laevatainSkillCategories[key] = laevatainSkillCategories[batkIds[0]];
     }
   }
 }
@@ -265,7 +214,7 @@ describe('Laevatain Combat Simulation', () => {
 
 describe('B2. Melting Flame Consumption', () => {
   test('B2.1: Empowered battle skill last frame has CONSUME STATUS MELTING_FLAME', () => {
-    const sequences = getSequences('EMPOWERED_BATTLE_SKILL');
+    const sequences = getSequences('SMOULDERING_FIRE_EMPOWERED');
     const frames = sequences[0].getFrames();
     const lastFrame = frames[frames.length - 1];
     const consumeEffect = lastFrame.getClauses().flatMap(c => c.effects).find(e => e.dslEffect?.verb === VerbType.CONSUME && e.dslEffect?.object === NounType.STATUS);
@@ -296,7 +245,7 @@ describe('B2. Melting Flame Consumption', () => {
 
 describe('C. Empowered Battle Skill & Combustion', () => {
   test('C1: Empowered battle skill last frame applies forced Combustion', () => {
-    const sequences = getSequences('EMPOWERED_BATTLE_SKILL');
+    const sequences = getSequences('SMOULDERING_FIRE_EMPOWERED');
     expect(sequences.length).toBeGreaterThan(0);
 
     // Single-segment skill — get all frames
@@ -309,7 +258,7 @@ describe('C. Empowered Battle Skill & Combustion', () => {
   });
 
   test('C2: Normal battle skill does NOT have forced Combustion on any frame', () => {
-    const sequences = getSequences('BATTLE_SKILL');
+    const sequences = getSequences('BATTLE');
     for (const seq of sequences) {
       for (const frame of seq.getFrames()) {
         expect(frame.getClauses().flatMap(c => c.effects).find(e => e.dslEffect?.verb === VerbType.APPLY && e.dslEffect?.object === NounType.REACTION)).toBeUndefined();
@@ -319,7 +268,7 @@ describe('C. Empowered Battle Skill & Combustion', () => {
 
   test('C3: Battle skill first frame applies MELTING_FLAME status to operator', () => {
     const rawSkills = mockLaevatainJson.skills;
-    const battleFrames = rawSkills.BATTLE_SKILL.segments[0].frames;
+    const battleFrames = rawSkills.BATTLE.segments[0].frames;
     const firstFrameEffects = battleFrames[0].clause[0].effects;
     const mfEffect = firstFrameEffects.find(
       (e: Record<string, unknown>) => e.verb === VerbType.APPLY && e.objectId === 'MELTING_FLAME'
@@ -333,7 +282,7 @@ describe('C. Empowered Battle Skill & Combustion', () => {
   test('C4: Empowered battle skill last frame applies forced Combustion reaction', () => {
     // The empowered battle skill last frame applies forced combustion via APPLY REACTION
     const rawSkills = mockLaevatainJson.skills;
-    const empoweredFrames = rawSkills.EMPOWERED_BATTLE_SKILL.segments[0].frames;
+    const empoweredFrames = rawSkills.SMOULDERING_FIRE_EMPOWERED.segments[0].frames;
     const lastFrame = empoweredFrames[empoweredFrames.length - 1];
     const effects = lastFrame.clause[0].effects;
     const applyReaction = effects.find(
@@ -352,7 +301,7 @@ describe('C. Empowered Battle Skill & Combustion', () => {
 
 describe('D. Combo Skill (Seethe) Triggers', () => {
   test('D1: Combo trigger clause requires Combustion or Corrosion', () => {
-    const comboSkill = mockLaevatainJson.skills.COMBO_SKILL;
+    const comboSkill = mockLaevatainJson.skills.COMBO;
     const onTriggerClause = comboSkill.activationWindow.onTriggerClause;
     expect(onTriggerClause).toBeDefined();
     expect(onTriggerClause.length).toBe(2);
@@ -367,12 +316,12 @@ describe('D. Combo Skill (Seethe) Triggers', () => {
   });
 
   test('D2: Combo activation window is 720 frames (6 seconds)', () => {
-    const comboSkill = mockLaevatainJson.skills.COMBO_SKILL;
+    const comboSkill = mockLaevatainJson.skills.COMBO;
     expect(comboSkill.activationWindow.segments[0].properties.duration.value).toBe(6);
   });
 
   test('D5: Combo skill frame data includes stagger recovery', () => {
-    const sequences = getSequences('COMBO_SKILL');
+    const sequences = getSequences('COMBO');
     // segments[0] is ANIMATION (no frames), segments[1] has actual frames, segments[2] is COOLDOWN
     expect(sequences.length).toBeGreaterThanOrEqual(2);
 
@@ -390,21 +339,21 @@ describe('D. Combo Skill (Seethe) Triggers', () => {
 
 describe('E. Ultimate & Enhanced Variants', () => {
   test('E1: Enhanced basic attack (ENHANCED_BASIC_ATTACK) has 4 segments', () => {
-    const sequences = getSequences('ENHANCED_BASIC_ATTACK');
+    const sequences = getSequences('FLAMING_CINDERS_BATK_ENHANCED');
     expect(sequences.length).toBe(4);
   });
 
   test('E2: Enhanced battle skill (ENHANCED_BATTLE_SKILL) exists in JSON', () => {
-    expect(mockLaevatainJson.skills.ENHANCED_BATTLE_SKILL).toBeDefined();
-    expect(mockLaevatainJson.skills.ENHANCED_BATTLE_SKILL.id).toBe('SMOULDERING_FIRE_ENHANCED');
+    expect(mockLaevatainJson.skills.SMOULDERING_FIRE_ENHANCED).toBeDefined();
+    expect(mockLaevatainJson.skills.SMOULDERING_FIRE_ENHANCED.id).toBe('SMOULDERING_FIRE_ENHANCED');
   });
 
   test('E3: Enhanced + Empowered battle skill variant exists', () => {
-    expect(mockLaevatainJson.skills.ENHANCED_EMPOWERED_BATTLE_SKILL).toBeDefined();
+    expect(mockLaevatainJson.skills.SMOULDERING_FIRE_ENHANCED_EMPOWERED).toBeDefined();
   });
 
   test('E4: Enhanced basic segment 3 applies Heat Infliction to enemy', () => {
-    const sequences = getSequences('ENHANCED_BASIC_ATTACK');
+    const sequences = getSequences('FLAMING_CINDERS_BATK_ENHANCED');
     // Segment 3 (index 2) — "BATK sequence 3 also applies Heat Infliction"
     const segment3 = sequences[2];
     const frames = segment3.getFrames();
@@ -418,7 +367,7 @@ describe('E. Ultimate & Enhanced Variants', () => {
   });
 
   test('E5: Normal basic attack segments do NOT have Heat infliction', () => {
-    const sequences = getSequences('BASIC_ATTACK');
+    const sequences = getSequences(NounType.BATK);
     for (const seq of sequences) {
       for (const frame of seq.getFrames()) {
         expect(frame.getClauses().flatMap(c => c.effects).find(e => e.dslEffect?.verb === VerbType.APPLY && e.dslEffect?.object === NounType.INFLICTION)).toBeUndefined();
@@ -452,7 +401,7 @@ describe('E. Ultimate & Enhanced Variants', () => {
   });
 
   test('E8: SMOULDERING_FIRE has 11 frames and second frame has no RECOVER ULTIMATE_ENERGY', () => {
-    const sequences = getSequences('BATTLE_SKILL');
+    const sequences = getSequences('BATTLE');
     const allFrames = sequences.flatMap(s => s.getFrames());
     expect(allFrames.length).toBe(11);
 
@@ -486,7 +435,7 @@ describe('H. Cooldown Interactions', () => {
   }
 
   test('H1: Battle skill (Smouldering Fire) has no COOLDOWN segment or effect', () => {
-    const bs = mockLaevatainJson.skills.BATTLE_SKILL;
+    const bs = mockLaevatainJson.skills.BATTLE;
     // No COOLDOWN segment
     const cooldownSeg = bs.segments?.find((s: any) => /* eslint-disable-line @typescript-eslint/no-explicit-any */ s.properties.segmentTypes?.includes('COOLDOWN'));
     expect(cooldownSeg).toBeUndefined();
@@ -497,7 +446,7 @@ describe('H. Cooldown Interactions', () => {
   });
 
   test('H2: Combo skill (Seethe) has 10s cooldown', () => {
-    const cs = mockLaevatainJson.skills.COMBO_SKILL;
+    const cs = mockLaevatainJson.skills.COMBO;
     const cdSeg = cs.segments.find((s: any) => /* eslint-disable-line @typescript-eslint/no-explicit-any */ s.properties.segmentTypes?.includes('COOLDOWN'));
     expect(cdSeg).toBeDefined();
     const cdVal = cdSeg.properties.duration.value;
@@ -516,14 +465,14 @@ describe('H. Cooldown Interactions', () => {
     const comboCooldown = 10 * FPS; // 1200 frames
     const totalRange = comboDuration + comboCooldown;
     const cs1 = makeEvent({
-      uid: 'cs-1', columnId: NounType.COMBO_SKILL, startFrame: 0,
+      uid: 'cs-1', columnId: NounType.COMBO, startFrame: 0,
       segments: [{ properties: { duration: comboDuration } }],
       nonOverlappableRange: totalRange,
     });
     // During cooldown
-    expect(wouldOverlapSiblings(SLOT_ID, NounType.COMBO_SKILL, comboDuration + 300, 1, [cs1])).toBe(true);
+    expect(wouldOverlapSiblings(SLOT_ID, NounType.COMBO, comboDuration + 300, 1, [cs1])).toBe(true);
     // After cooldown
-    expect(wouldOverlapSiblings(SLOT_ID, NounType.COMBO_SKILL, totalRange, 1, [cs1])).toBe(false);
+    expect(wouldOverlapSiblings(SLOT_ID, NounType.COMBO, totalRange, 1, [cs1])).toBe(false);
   });
 
   test('H5: Ultimate placement during cooldown is blocked', () => {
@@ -545,10 +494,10 @@ describe('H. Cooldown Interactions', () => {
   test('H6: Battle skill back-to-back is valid (no cooldown)', () => {
     const bsDuration = Math.round(2.2 * FPS); // 264 frames
     const bs1 = makeEvent({
-      uid: 'bs-1', columnId: NounType.BATTLE_SKILL, startFrame: 0,
+      uid: 'bs-1', columnId: NounType.BATTLE, startFrame: 0,
       segments: [{ properties: { duration: bsDuration } }], nonOverlappableRange: bsDuration,
     });
-    expect(wouldOverlapSiblings(SLOT_ID, NounType.BATTLE_SKILL, bsDuration, bsDuration, [bs1])).toBe(false);
+    expect(wouldOverlapSiblings(SLOT_ID, NounType.BATTLE, bsDuration, bsDuration, [bs1])).toBe(false);
   });
 });
 
@@ -599,7 +548,7 @@ describe('K. Scorching Heart absorbs Antal combo mirrored heat', () => {
     // Antal combo with comboTriggerColumnId set (mirrors heat)
     const antalCombo = makeEv({
       uid: 'antal-combo-1', name: 'EMP_TEST_SITE', ownerId: SLOT_ANTAL,
-      columnId: NounType.COMBO_SKILL, startFrame: 400,
+      columnId: NounType.COMBO, startFrame: 400,
       comboTriggerColumnId: INFLICTION_COLUMNS.HEAT,
       segments: [{
         properties: { duration: Math.round(0.8 * FPS) },
@@ -608,7 +557,7 @@ describe('K. Scorching Heart absorbs Antal combo mirrored heat', () => {
     });
     // Laevatain final strike after both heat inflictions exist
     const laevBasic = makeEv({
-      uid: 'laev-basic-1', name: 'FLAMING_CINDERS', ownerId: SLOT_LAEV,
+      uid: 'laev-basic-1', name: 'FLAMING_CINDERS_BATK', ownerId: SLOT_LAEV,
       columnId: NounType.BASIC_ATTACK, startFrame: 600,
             segments: [
         { properties: { duration: 120, name: '1' } },
@@ -673,8 +622,8 @@ describe('L. Freeform infliction + Final Strike absorption', () => {
 
     const basic: TimelineEvent = {
       uid: 'laev-basic-l1',
-      id: 'FLAMING_CINDERS',
-      name: 'FLAMING_CINDERS',
+      id: 'FLAMING_CINDERS_BATK',
+      name: 'FLAMING_CINDERS_BATK',
       ownerId: LAEV_SLOT,
       columnId: NounType.BASIC_ATTACK,
       startFrame: 100,
@@ -710,8 +659,8 @@ describe('M. Normal basic attack without external infliction', () => {
 
     const basic: TimelineEvent = {
       uid: 'laev-basic-m1',
-      id: 'FLAMING_CINDERS',
-      name: 'FLAMING_CINDERS',
+      id: 'FLAMING_CINDERS_BATK',
+      name: 'FLAMING_CINDERS_BATK',
       ownerId: LAEV_SLOT,
       columnId: NounType.BASIC_ATTACK,
       startFrame: 92,

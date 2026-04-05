@@ -4,7 +4,7 @@
     "name": "Storm Region",
     "level": 2,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
+    "eventIdType": "POTENTIAL",
     "description": "Ultimate Frigid Snowfield improved: Effect radius +20%."
   },
   "metadata": {

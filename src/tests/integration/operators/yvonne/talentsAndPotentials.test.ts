@@ -526,7 +526,7 @@ describe('E. Crit Stacks on EBATK', () => {
     expect(critRateEffect.with.value.left.value).toBe(0.03);
     // Crit DMG clause: at 10 stacks, +0.6
     const critDmgClause = CRIT_STACKS_JSON.clause[1];
-    expect(critDmgClause.conditions[0].cardinalityConstraint).toBe(CardinalityConstraintType.AT_LEAST);
+    expect(critDmgClause.conditions[0].cardinalityConstraint).toBe(CardinalityConstraintType.GREATER_THAN_EQUAL);
     expect(critDmgClause.effects[0].objectId).toBe('CRITICAL_DAMAGE');
     expect(critDmgClause.effects[0].with.value.value).toBe(0.6);
   });

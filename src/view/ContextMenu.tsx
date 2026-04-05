@@ -14,7 +14,7 @@ export default function ContextMenu({ x, y, items, onClose }: ContextMenuProps) 
 
   const menuW = 220;
   const menuH = items.reduce((h, item) =>
-    h + (item.separator ? 9 : item.header ? 28 : 36) + (item.inlineButtons ? 32 : 0) + (item.inlineLabel && item.inlineButtons ? 16 : 0),
+    h + (item.separator ? 9 : item.header ? 28 : item.segmentTabs ? 56 : 36) + (item.inlineButtons && !item.segmentTabs ? 32 : 0) + (item.inlineLabel && item.inlineButtons ? 16 : 0),
     10);
   const maxH = Math.min(384, window.innerHeight - 16);
   const effectiveH = Math.min(menuH, maxH);
@@ -55,6 +55,40 @@ export default function ContextMenu({ x, y, items, onClose }: ContextMenuProps) 
           return <div key={i} className="context-menu-header">{item.label}</div>;
         }
         const checked = typeof item.checked === 'function' ? item.checked() : item.checked;
+        if (item.segmentTabs && item.inlineButtons) {
+          return (
+            <div key={i} className="context-menu-seg-card">
+              <button
+                className={`context-menu-seg-card-label${item.disabled ? ' disabled' : ''}`}
+                disabled={item.disabled}
+                onClick={() => {
+                  if (item.disabled) return;
+                  item.action?.();
+                  onClose();
+                }}
+              >
+                {item.label}
+              </button>
+              <div className="context-menu-seg-row">
+                {item.inlineButtons.map((btn, j) => (
+                  <button
+                    key={j}
+                    className={`context-menu-seg-btn${btn.disabled ? ' disabled' : ''}`}
+                    disabled={btn.disabled}
+                    title={btn.disabledReason}
+                    onClick={() => {
+                      if (btn.disabled) return;
+                      btn.action?.();
+                      onClose();
+                    }}
+                  >
+                    {btn.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          );
+        }
         return (
           <div key={i}>
             <button

@@ -9,7 +9,7 @@
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
-    "eventCategoryType": "TALENT",
+    "eventIdType": "TALENT",
     "description": "Combo skill Flash and Dash improved: For every 10 points of Intellect, SP Recovery +{sp_rate:0%} (max: {sp_cap:0%})."
   },
   "metadata": {

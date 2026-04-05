@@ -85,7 +85,7 @@ function findComboWindows(result: { current: AppResult }) {
 
 function findComboEvents(result: { current: AppResult }) {
   return result.current.allProcessedEvents.filter(
-    (ev) => ev.ownerId === SLOT_ROSSI && ev.columnId === NounType.COMBO_SKILL,
+    (ev) => ev.ownerId === SLOT_ROSSI && ev.columnId === NounType.COMBO,
   );
 }
 
@@ -134,7 +134,7 @@ describe('B. Activation window basics', () => {
   it('B1: Combo is NOT available without trigger conditions', () => {
     const { result } = setupRossi();
 
-    const comboCol = findColumn(result.current, SLOT_ROSSI, NounType.COMBO_SKILL);
+    const comboCol = findColumn(result.current, SLOT_ROSSI, NounType.COMBO);
     expect(comboCol).toBeDefined();
 
     // Without Vulnerable + Arts infliction, combo should be disabled
@@ -175,7 +175,7 @@ describe('C. Perfect Timing status lifecycle', () => {
     placeComboTriggers(result, 1);
 
     // Place normal combo
-    const comboCol = findColumn(result.current, SLOT_ROSSI, NounType.COMBO_SKILL);
+    const comboCol = findColumn(result.current, SLOT_ROSSI, NounType.COMBO);
     expect(comboCol).toBeDefined();
     const payload = getMenuPayload(result.current, comboCol!, 3 * FPS);
     act(() => {
@@ -193,7 +193,7 @@ describe('C. Perfect Timing status lifecycle', () => {
     placeComboTriggers(result, 1);
 
     // Place normal combo first (creates PERFECT_TIMING)
-    const comboCol = findColumn(result.current, SLOT_ROSSI, NounType.COMBO_SKILL);
+    const comboCol = findColumn(result.current, SLOT_ROSSI, NounType.COMBO);
     const payload1 = getMenuPayload(result.current, comboCol!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(payload1.ownerId, payload1.columnId, payload1.atFrame, payload1.defaultSkill);
@@ -225,7 +225,7 @@ describe('C. Perfect Timing status lifecycle', () => {
     placeComboTriggers(result, 1);
 
     // Try to place empowered combo directly without placing normal first
-    const comboCol = findColumn(result.current, SLOT_ROSSI, NounType.COMBO_SKILL);
+    const comboCol = findColumn(result.current, SLOT_ROSSI, NounType.COMBO);
     expect(comboCol).toBeDefined();
     const menu = buildContextMenu(result.current, comboCol!, 3 * FPS);
     expect(menu).not.toBeNull();
@@ -251,7 +251,7 @@ describe('D. Chain validation — maxSkills enforcement', () => {
     const { result } = setupRossi();
     placeComboTriggers(result, 1);
 
-    const comboCol = findColumn(result.current, SLOT_ROSSI, NounType.COMBO_SKILL);
+    const comboCol = findColumn(result.current, SLOT_ROSSI, NounType.COMBO);
 
     // Place normal combo at 2s
     const payload1 = getMenuPayload(result.current, comboCol!, 2 * FPS);
@@ -289,7 +289,7 @@ describe('D. Chain validation — maxSkills enforcement', () => {
     const { result } = setupRossi();
     placeComboTriggers(result, 1);
 
-    const comboCol = findColumn(result.current, SLOT_ROSSI, NounType.COMBO_SKILL);
+    const comboCol = findColumn(result.current, SLOT_ROSSI, NounType.COMBO);
 
     // Place first normal combo at 2s
     const payload1 = getMenuPayload(result.current, comboCol!, 2 * FPS);
@@ -311,7 +311,7 @@ describe('D. Chain validation — maxSkills enforcement', () => {
     const { result } = setupRossi();
     placeComboTriggers(result, 1);
 
-    const comboCol = findColumn(result.current, SLOT_ROSSI, NounType.COMBO_SKILL);
+    const comboCol = findColumn(result.current, SLOT_ROSSI, NounType.COMBO);
 
     // Place two combos
     const payload1 = getMenuPayload(result.current, comboCol!, 2 * FPS);
@@ -335,7 +335,7 @@ describe('D. Chain validation — maxSkills enforcement', () => {
     const { result } = setupRossi();
     placeComboTriggers(result, 1);
 
-    const comboCol = findColumn(result.current, SLOT_ROSSI, NounType.COMBO_SKILL);
+    const comboCol = findColumn(result.current, SLOT_ROSSI, NounType.COMBO);
 
     // Place first combo at 2s
     const payload1 = getMenuPayload(result.current, comboCol!, 2 * FPS);
@@ -393,7 +393,7 @@ describe('E. Cooldown suppression', () => {
     placeComboTriggers(result, 1);
 
     // Place combo at 2s (enters cooldown after animation)
-    const comboCol = findColumn(result.current, SLOT_ROSSI, NounType.COMBO_SKILL);
+    const comboCol = findColumn(result.current, SLOT_ROSSI, NounType.COMBO);
     const payload = getMenuPayload(result.current, comboCol!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
@@ -467,7 +467,7 @@ describe('F. Razor Clawmark DOT ticks', () => {
 describe('G0. Combo column variants', () => {
   it('G0: Combo column has both normal and empowered variants', () => {
     const { result } = setupRossi();
-    const comboCol = findColumn(result.current, SLOT_ROSSI, NounType.COMBO_SKILL);
+    const comboCol = findColumn(result.current, SLOT_ROSSI, NounType.COMBO);
     expect(comboCol).toBeDefined();
     expect(comboCol!.eventVariants).toBeDefined();
     expect(comboCol!.eventVariants!.length).toBeGreaterThanOrEqual(2);
@@ -502,7 +502,7 @@ describe('G. Trigger order independence', () => {
     expect(windows.length).toBeGreaterThanOrEqual(1);
 
     // Combo should be available at 3s (within window)
-    const comboCol = findColumn(result.current, SLOT_ROSSI, NounType.COMBO_SKILL);
+    const comboCol = findColumn(result.current, SLOT_ROSSI, NounType.COMBO);
     expect(comboCol).toBeDefined();
     const menu = buildContextMenu(result.current, comboCol!, 3 * FPS);
     expect(menu).not.toBeNull();
@@ -535,7 +535,7 @@ describe('G. Trigger order independence', () => {
     expect(windows.length).toBeGreaterThanOrEqual(1);
 
     // Combo should be available at 3s (within window)
-    const comboCol = findColumn(result.current, SLOT_ROSSI, NounType.COMBO_SKILL);
+    const comboCol = findColumn(result.current, SLOT_ROSSI, NounType.COMBO);
     expect(comboCol).toBeDefined();
     const menu = buildContextMenu(result.current, comboCol!, 3 * FPS);
     expect(menu).not.toBeNull();
@@ -554,7 +554,7 @@ describe('H. IMMEDIATE_COOLDOWN handling', () => {
     const { result } = setupRossi();
     placeComboTriggers(result, 1);
 
-    const comboCol = findColumn(result.current, SLOT_ROSSI, NounType.COMBO_SKILL);
+    const comboCol = findColumn(result.current, SLOT_ROSSI, NounType.COMBO);
     const payload = getMenuPayload(result.current, comboCol!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
@@ -589,7 +589,7 @@ describe('H. IMMEDIATE_COOLDOWN handling', () => {
     const { result } = setupRossi();
     placeComboTriggers(result, 1);
 
-    const comboCol = findColumn(result.current, SLOT_ROSSI, NounType.COMBO_SKILL);
+    const comboCol = findColumn(result.current, SLOT_ROSSI, NounType.COMBO);
 
     // Place first combo at 2s, second at 5s
     const payload1 = getMenuPayload(result.current, comboCol!, 2 * FPS);
@@ -624,7 +624,7 @@ describe('H. IMMEDIATE_COOLDOWN handling', () => {
     placeComboTriggers(result, 1);
 
     // Place combo at 2s — enters IMMEDIATE_COOLDOWN
-    const comboCol = findColumn(result.current, SLOT_ROSSI, NounType.COMBO_SKILL);
+    const comboCol = findColumn(result.current, SLOT_ROSSI, NounType.COMBO);
     const payload = getMenuPayload(result.current, comboCol!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);

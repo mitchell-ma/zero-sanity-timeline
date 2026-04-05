@@ -4,7 +4,7 @@
     "name": "Reentry Control",
     "level": 5,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
+    "eventIdType": "POTENTIAL",
     "description": "Ultimate Protocol ε: 70.41K improved: Critical Rate +30%."
   },
   "metadata": {

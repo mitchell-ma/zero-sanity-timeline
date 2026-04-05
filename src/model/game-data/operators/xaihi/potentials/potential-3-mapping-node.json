@@ -4,7 +4,7 @@
     "name": "Mapping Node",
     "level": 3,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
+    "eventIdType": "POTENTIAL",
     "description": "Combo skill Stress Testing improved: When hitting the target, the hit chains 1 time to 1 additional target nearby."
   },
   "metadata": {

@@ -4,7 +4,7 @@
     "name": "Ice Cream Furnace",
     "level": 4,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
+    "eventIdType": "POTENTIAL",
     "description": "Ultimate Twilight improved: Ultimate Energy cost -15%."
   },
   "metadata": {

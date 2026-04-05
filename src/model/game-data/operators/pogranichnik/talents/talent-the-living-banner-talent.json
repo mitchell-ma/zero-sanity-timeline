@@ -8,14 +8,23 @@
           "subjectDeterminer": "THIS",
           "verb": "BECOME",
           "object": "STACKS",
-          "cardinalityConstraint": "AT_LEAST",
+          "cardinalityConstraint": "GREATER_THAN_EQUAL",
           "with": {
             "value": {
               "verb": "VARY_BY",
               "object": "POTENTIAL",
-              "value": [80, 80, 80, 60, 60, 60],
-              "ofDeterminer": "THIS",
-              "of": "OPERATOR"
+              "value": [
+                80,
+                80,
+                80,
+                60,
+                60,
+                60
+              ],
+              "of": {
+                "object": "OPERATOR",
+                "determiner": "THIS"
+              }
             }
           }
         }
@@ -29,9 +38,18 @@
             "stacks": {
               "verb": "VARY_BY",
               "object": "POTENTIAL",
-              "value": [80, 80, 80, 60, 60, 60],
-              "ofDeterminer": "THIS",
-              "of": "OPERATOR"
+              "value": [
+                80,
+                80,
+                80,
+                60,
+                60,
+                60
+              ],
+              "of": {
+                "object": "OPERATOR",
+                "determiner": "THIS"
+              }
             }
           }
         },
@@ -62,7 +80,7 @@
       "interactionType": "NONE"
     },
     "eventType": "STATUS",
-    "eventCategoryType": "TALENT",
+    "eventIdType": "TALENT",
     "description": "During battle, recovering {atb_gain:0} SP with his own skills grants Fervent Morale for {duration:0}s. Fervent Morale effects: ATK +{atk_up:0%} and Arts Intensity +{physpell_up:0}. This effect can reach 3 stacks. Duration of each stack is counted separately."
   },
   "metadata": {
@@ -71,6 +89,6 @@
       "ENDFIELD_WIKI"
     ],
     "icon": "skills/pogranichnik_talent_1_icon.png",
-    "dataStatus": "RECONCILED"
+    "dataStatus": "VERIFIED"
   }
 }

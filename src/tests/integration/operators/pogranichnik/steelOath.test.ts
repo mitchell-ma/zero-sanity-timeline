@@ -72,7 +72,7 @@ function addUltimate(app: AppResult, atFrame: number) {
 
 /** Add a combo skill via context menu flow. */
 function addComboSkill(app: AppResult, atFrame: number) {
-  const comboCol = findColumn(app, SLOT_POG, NounType.COMBO_SKILL);
+  const comboCol = findColumn(app, SLOT_POG, NounType.COMBO);
   expect(comboCol).toBeDefined();
 
   const payload = getMenuPayload(app, comboCol!, atFrame);
@@ -382,7 +382,7 @@ describe('Chen Qianyu BS consumes Steel Oath → 4 Harass + 1 Decisive Assault',
     addUltimate(result.current, 0);
 
     // ── Context menu layer: Chen BS ─────────────────────────────────────
-    const chenBattleCol = findColumn(result.current, SLOT_CHEN, NounType.BATTLE_SKILL);
+    const chenBattleCol = findColumn(result.current, SLOT_CHEN, NounType.BATTLE);
     expect(chenBattleCol).toBeDefined();
 
     const chenMenu = buildContextMenu(result.current, chenBattleCol!, 3 * FPS);
@@ -470,8 +470,8 @@ describe('FIRST_MATCH clause selection in reactive triggers', () => {
     act(() => { result.current.handleSwapOperator(SLOT_CHEN, CHEN_QIANYU_ID); });
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
-    const chenBattleCol = findColumn(result.current, SLOT_CHEN, NounType.BATTLE_SKILL);
-    const pogComboCol = findColumn(result.current, SLOT_POG, NounType.COMBO_SKILL);
+    const chenBattleCol = findColumn(result.current, SLOT_CHEN, NounType.BATTLE);
+    const pogComboCol = findColumn(result.current, SLOT_POG, NounType.COMBO);
 
     // Pog ultimate at 0s → 5 Steel Oath stacks
     act(() => { setUltimateEnergyToMax(result.current, SLOT_POG, 3); });
@@ -561,13 +561,13 @@ describe('G. Fervent Morale from Steel Oath targets TRIGGER operator', () => {
     addUltimate(result.current, 1 * FPS);
 
     // Two Chen BSes: first adds Vulnerable, second creates LIFT → triggers Steel Oath
-    const chenBattleCol = findColumn(result.current, SLOT_CHEN, NounType.BATTLE_SKILL);
+    const chenBattleCol = findColumn(result.current, SLOT_CHEN, NounType.BATTLE);
     expect(chenBattleCol).toBeDefined();
     act(() => {
-      result.current.handleAddEvent(SLOT_CHEN, NounType.BATTLE_SKILL, 3 * FPS, chenBattleCol!.defaultEvent!);
+      result.current.handleAddEvent(SLOT_CHEN, NounType.BATTLE, 3 * FPS, chenBattleCol!.defaultEvent!);
     });
     act(() => {
-      result.current.handleAddEvent(SLOT_CHEN, NounType.BATTLE_SKILL, 5 * FPS, chenBattleCol!.defaultEvent!);
+      result.current.handleAddEvent(SLOT_CHEN, NounType.BATTLE, 5 * FPS, chenBattleCol!.defaultEvent!);
     });
 
     // Fervent Morale on Chen (the operator who triggered the physical status)
@@ -601,7 +601,7 @@ describe('H. Living Banner stacks from combo first frame', () => {
     addComboSkill(result.current, 5 * FPS);
 
     const comboEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_POG && ev.columnId === NounType.COMBO_SKILL,
+      ev => ev.ownerId === SLOT_POG && ev.columnId === NounType.COMBO,
     );
     expect(comboEvents).toHaveLength(1);
     const comboStart = comboEvents[0].startFrame;
@@ -641,7 +641,7 @@ describe('H. Living Banner stacks from combo first frame', () => {
     addComboSkill(result.current, 5 * FPS);
 
     const comboEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_POG && ev.columnId === NounType.COMBO_SKILL,
+      ev => ev.ownerId === SLOT_POG && ev.columnId === NounType.COMBO,
     );
     expect(comboEvents).toHaveLength(1);
     const comboStart = comboEvents[0].startFrame;
@@ -680,7 +680,7 @@ describe('H. Living Banner stacks from combo first frame', () => {
     addComboSkill(result.current, 3 * FPS);
 
     const comboEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_POG && ev.columnId === NounType.COMBO_SKILL,
+      ev => ev.ownerId === SLOT_POG && ev.columnId === NounType.COMBO,
     );
     expect(comboEvents).toHaveLength(1);
     const comboStart = comboEvents[0].startFrame;
@@ -713,7 +713,7 @@ describe('H. Living Banner stacks from combo first frame', () => {
 
     // Combo event-level clause only has RECOVER ULTIMATE_ENERGY — no Living Banner stacks
     const comboEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_POG && ev.columnId === NounType.COMBO_SKILL,
+      ev => ev.ownerId === SLOT_POG && ev.columnId === NounType.COMBO,
     );
     expect(comboEvents).toHaveLength(1);
   });

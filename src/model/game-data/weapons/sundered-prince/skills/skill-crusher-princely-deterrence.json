@@ -6,7 +6,8 @@
           "subjectDeterminer": "THIS",
           "subject": "OPERATOR",
           "verb": "PERFORM",
-          "object": "FINAL_STRIKE"
+          "object": "SKILL",
+          "objectId": "FINAL_STRIKE"
         }
       ],
       "effects": [

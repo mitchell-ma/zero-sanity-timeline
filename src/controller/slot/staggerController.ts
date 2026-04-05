@@ -81,7 +81,7 @@ export class StaggerController {
     // Extract stagger damage events from skill segments
     const staggerEvents: TimelineEvent[] = [];
     for (const ev of processedEvents) {
-      const animOffset = (ev.columnId === NounType.COMBO_SKILL || ev.columnId === NounType.ULTIMATE)
+      const animOffset = (ev.columnId === NounType.COMBO || ev.columnId === NounType.ULTIMATE)
         ? getAnimationDuration(ev) : 0;
       let segOffset = 0;
       for (const seg of ev.segments) {

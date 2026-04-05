@@ -254,7 +254,6 @@ function buildCritSubEntries(sub: DamageSubComponents): MultiplierEntry[] {
     { label: 'Never Crit', mode: CritMode.NEVER, value: neverValue, source: 'No crit contribution' },
     { label: 'Always Crit', mode: CritMode.ALWAYS, value: alwaysValue, source: `1 + ${formatPercent(critDamage)} Crit DMG` },
     { label: 'Expected', mode: CritMode.EXPECTED, value: expectedValue, source: `1 + ${formatPercent(critRate)} Rate x ${formatPercent(critDamage)} DMG` },
-    { label: 'Random', mode: CritMode.RANDOM, value: simValue, source: isCrit ? 'This frame crits' : 'This frame does not crit' },
     { label: 'Manual', mode: CritMode.MANUAL, value: simValue, source: isCrit ? 'Pinned crit' : 'Pinned no crit' },
   ];
 

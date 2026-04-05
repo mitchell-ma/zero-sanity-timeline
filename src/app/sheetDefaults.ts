@@ -28,8 +28,8 @@ export const INITIAL_VISIBLE: VisibleSkills = Object.fromEntries(
     slotId,
     {
       [NounType.BASIC_ATTACK]: true,
-      [NounType.BATTLE_SKILL]: true,
-      [NounType.COMBO_SKILL]: true,
+      [NounType.BATTLE]: true,
+      [NounType.COMBO]: true,
       [NounType.ULTIMATE]: true,
     },
   ]),

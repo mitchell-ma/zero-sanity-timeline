@@ -9,7 +9,7 @@ import { useState, useCallback, useMemo } from 'react';
 import { getOperatorSkills, getOperatorStatuses, getRawSkillTypeMap } from '../../controller/gameDataStore';
 import { ALL_OPERATORS } from '../../controller/operators/operatorRegistry';
 import { getAllSkillLabels } from '../../controller/gameDataStore';
-import type { CombatSkillType } from '../../consts/enums';
+import type {  } from '../../consts/enums';
 import type { Clause } from '../../dsl/semantics';
 import ClauseEditor from './ClauseEditor';
 
@@ -43,8 +43,8 @@ interface Props {
 
 const SKILL_CATEGORY_ORDER = [
   'BASIC_ATTACK',
-  'BATTLE_SKILL',
-  'COMBO_SKILL',
+  'BATTLE',
+  'COMBO',
   'ULTIMATE',
 ] as const;
 
@@ -78,38 +78,17 @@ export function buildSkillEntries(
   const skills: Record<string, JsonSkillData> = {};
   opSkills.forEach((skill, skillId) => { skills[skillId] = skill.serialize() as JsonSkillData; });
   const skillTypeMap = getRawSkillTypeMap(operatorId);
-  const mapping = skillTypeMap[categoryKey];
-  if (!mapping) return [];
+  const entry = skillTypeMap[categoryKey];
+  if (!entry) return [];
+  const allIds: string[] = Array.isArray(entry) ? entry : Object.values(entry).flat();
+  if (allIds.length === 0) return [];
 
   const entries: SkillEntryData[] = [];
 
-  if (typeof mapping === 'string') {
-    const data = skills[mapping];
+  for (const skillId of allIds) {
+    const data = skills[skillId];
     if (data) {
-      entries.push({ id: mapping, label: getAllSkillLabels()[mapping as CombatSkillType] || data.properties?.name || mapping, data });
-    }
-    for (const [key, val] of Object.entries(skills)) {
-      if (key !== mapping && key.startsWith(mapping + '_')) {
-        const suffix = key.slice(mapping.length + 1);
-        entries.push({ id: key, label: getAllSkillLabels()[key as CombatSkillType] || (val as JsonSkillData).properties?.name as string || key, data: val as JsonSkillData, subLabel: suffix.replace(/_/g, ' ') });
-      }
-    }
-  } else if (typeof mapping === 'object') {
-    const seenIds = new Set<string>();
-    for (const [variant, skillId] of Object.entries(mapping)) {
-      if (seenIds.has(skillId as string)) continue;
-      seenIds.add(skillId as string);
-      const data = skills[skillId as string];
-      if (data) {
-        entries.push({ id: skillId as string, label: getAllSkillLabels()[skillId as CombatSkillType] || (data as JsonSkillData).properties?.name as string || (skillId as string), data, subLabel: BATK_VARIANT_LABELS[variant] || variant });
-      }
-      for (const [key, val] of Object.entries(skills)) {
-        if (key !== skillId && key.startsWith((skillId as string) + '_') && !seenIds.has(key)) {
-          seenIds.add(key);
-          const suffix = key.slice((skillId as string).length + 1);
-          entries.push({ id: key, label: getAllSkillLabels()[key as CombatSkillType] || (val as JsonSkillData).properties?.name as string || key, data: val as JsonSkillData, subLabel: `${BATK_VARIANT_LABELS[variant] || variant} (${suffix.replace(/_/g, ' ')})` });
-        }
-      }
+      entries.push({ id: skillId, label: getAllSkillLabels()[skillId as string] || data.properties?.name || skillId, data });
     }
   }
 
@@ -139,43 +118,14 @@ export default function OperatorEventEditor({ operatorId, onBack }: Props) {
     const mapping = skillTypeMap[cat];
     const entries: { id: string; label: string; data: JsonSkillData; subLabel?: string }[] = [];
 
-    if (!mapping) return { category: cat, entries };
+    const skillIds = mapping as string[] | undefined;
+    if (!skillIds || skillIds.length === 0) return { category: cat, entries };
 
-    if (typeof mapping === 'string') {
-      // Simple mapping: one skill ID
-      const data = skills[mapping];
-      if (data) {
-        const displayLabel = getAllSkillLabels()[mapping as CombatSkillType] || data.properties?.name || mapping;
-        entries.push({ id: mapping, label: displayLabel, data });
-      }
-      // Also find variants (ENHANCED_, EMPOWERED_)
-      for (const [key, val] of Object.entries(skills)) {
-        if (key !== mapping && key.startsWith(mapping + '_')) {
-          const suffix = key.slice(mapping.length + 1);
-          const variantLabel = suffix.replace(/_/g, ' ');
-          entries.push({ id: key, label: getAllSkillLabels()[key as CombatSkillType] || (val as JsonSkillData).properties?.name as string || key, data: val as JsonSkillData, subLabel: variantLabel });
-        }
-      }
-    } else if (typeof mapping === 'object') {
-      // BASIC_ATTACK: { BATK, FINISHER, DIVE }
-      const seenIds = new Set<string>();
-      for (const [variant, skillId] of Object.entries(mapping)) {
-        if (seenIds.has(skillId as string)) continue;
-        seenIds.add(skillId as string);
-        const data = skills[skillId as string];
-        if (data) {
-          const displayLabel = getAllSkillLabels()[skillId as CombatSkillType] || (data as JsonSkillData).properties?.name as string || (skillId as string);
-          entries.push({ id: skillId as string, label: displayLabel, data, subLabel: BATK_VARIANT_LABELS[variant] || variant });
-        }
-        // Variants of this BATK skill (ENHANCED_, etc.)
-        for (const [key, val] of Object.entries(skills)) {
-          if (key !== skillId && key.startsWith((skillId as string) + '_') && !seenIds.has(key)) {
-            seenIds.add(key);
-            const suffix = key.slice((skillId as string).length + 1);
-            entries.push({ id: key, label: getAllSkillLabels()[key as CombatSkillType] || (val as JsonSkillData).properties?.name as string || key, data: val as JsonSkillData, subLabel: `${BATK_VARIANT_LABELS[variant] || variant} (${suffix.replace(/_/g, ' ')})` });
-          }
-        }
-      }
+    for (const skillId of skillIds) {
+      const data = skills[skillId];
+      if (!data) continue;
+      const displayLabel = getAllSkillLabels()[skillId as string] || data.properties?.name || skillId;
+      entries.push({ id: skillId, label: displayLabel, data });
     }
 
     return { category: cat, entries };

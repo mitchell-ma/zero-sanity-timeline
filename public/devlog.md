@@ -1,5 +1,17 @@
 # Devlog
 
+## 2026-04-04
+- Laevatain's Empowered Battle Skill now properly consumes all Melting Flame stacks at once, matching in-game behavior — previously it consumed only one stack per use, leaving leftover stacks that incorrectly triggered Scorching Heart
+- Scorching Heart activation condition updated — now reliably fires when Melting Flame reaches max stacks and won't re-trigger from leftover stacks after consumption
+- Context menu now shows individual basic attack segments as cards with numbered buttons (I, II, III, etc.), making it easier to place specific segments
+- Crowd control effects (stun, bind, etc.) now tracked in the timeline system
+- DSL grammar expanded with new noun types for finer-grained control over battle skills, combo skills, dive attacks, dash attacks, and talent statuses
+- Massive gear data update — all gear set pieces across every gear family updated with standardized stat scaling and effect definitions
+- Weapon data pass — all weapon skill and status configs updated with consistent formatting and effect structures
+- Perlica skill configs expanded with additional frame data and segment hooks
+- Yvonne's Cryoblasting Pistolier talent and Flashfreezer talent reworked with updated frame data and potential effects
+- Internal engine cleanup — legacy pre-queue status derivation system removed, reducing codebase by ~1400 lines while keeping all functionality intact through the modern reactive trigger pipeline
+
 ## 2026-04-03
 - Endministrator fully reworked — Originium Crystals now trigger reactive shatter when any physical status (Vulnerable, Lift, Crush, Knock Down, Breach) is applied to a crystallized enemy, dealing bonus Physical DMG and granting Essence Disintegration ATK buffs. Battle skill no longer needs to explicitly consume crystals; applying Crush naturally triggers the chain. P1 SP refund and P2 team ATK share at half value both work correctly
 - Pogranichnik fully implemented — The Living Banner talent tracks SP gains as a running counter, triggering Fervent Morale ATK/Arts Intensity buffs when the threshold is reached. Steel Oath team stacks from ultimate are consumed by combo skill, branching into Harass or Decisive Assault based on remaining stacks. All potentials functional including P1 conditional SP on multi-hit, P3 reduced threshold and increased buff cap

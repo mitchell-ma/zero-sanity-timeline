@@ -1,6 +1,6 @@
 import {
-  CombatSkillType,
 } from "../../consts/enums";
+import { NounType } from "../../dsl/semantics";
 import type { DslTarget } from "../../dsl/semantics";
 import type { Interaction } from "../../dsl/semantics";
 import { CombatSkillEvent } from "./combatSkillEvent";
@@ -17,7 +17,7 @@ export class ComboSkillEvent extends CombatSkillEvent {
     triggerConditions: Set<Interaction>;
   }) {
     super({
-      combatSkillType: CombatSkillType.COMBO_SKILL,
+      combatSkillType: NounType.COMBO,
       name: params.name,
       target: params.target,
       sourceOperator: params.sourceOperator,

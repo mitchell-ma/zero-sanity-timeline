@@ -110,7 +110,7 @@ All three sources feed the **same 4-stack pool**:
 ### Engine Bugs Fixed
 
 1. **Max stack cap** — `deriveStatusEvents()` now counts active events at each trigger frame and skips if at `stack.max`.
-2. **HAVE predicate cardinality** — `checkPredicate()` and `findTriggerMatches()` now enforce `cardinalityConstraint` (EXACTLY, AT_LEAST) on HAVE STATUS predicates instead of boolean "exists?" check.
+2. **HAVE predicate cardinality** — `checkPredicate()` and `findTriggerMatches()` now enforce `cardinalityConstraint` (EXACTLY, GREATER_THAN_EQUAL) on HAVE STATUS predicates instead of boolean "exists?" check.
 3. **Dedup broadened** — Dedup check uses columnId only (ignoring ownerId) and excludes CONSUMED events, preventing double-derivation while allowing post-consumption re-accumulation.
 4. **Threshold target resolution** — `evaluateThresholdClauses()` resolves target owner from the target status def's own `target` field (e.g. SCORCHING_HEART_EFFECT → THIS_OPERATOR) instead of the clause's `toObjectType`.
 5. **Consumption** — All status consumption uses frame-level `consumeStatus` markers processed by `consumeOperatorStatuses`. No engine-level consume logic.

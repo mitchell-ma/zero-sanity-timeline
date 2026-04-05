@@ -37,7 +37,7 @@
     "name": "Grayscale Release",
     "level": 4,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
+    "eventIdType": "POTENTIAL",
     "description": "Intellect +15, Treatment Efficiency +{HealOutputIncrease:0%}."
   },
   "metadata": {

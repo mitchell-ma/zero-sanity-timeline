@@ -4,7 +4,7 @@
     "name": "Servant of the Wildlands",
     "level": 5,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
+    "eventIdType": "POTENTIAL",
     "description": "Talent Wildland Trekker improved: Trigger requirement is reduced to 2 time(s)."
   },
   "metadata": {

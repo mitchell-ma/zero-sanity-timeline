@@ -10,9 +10,10 @@
 
 import type { EventSegmentData } from '../consts/viewTypes';
 import type { FrameClausePredicate } from '../model/event-frames/skillEventFrame';
-import { CombatSkillType, EventCategoryType, StackInteractionType, UnitType } from '../consts/enums';
+import { StackInteractionType, UnitType } from '../consts/enums';
 import { VerbType, NounType, DeterminerType, flattenQualifiedId } from '../dsl/semantics';
 import type { Interaction, ValueNode } from '../dsl/semantics';
+import { buildSkillTypeMap, type SkillTypeMap } from '../utils/skillTypeMap';
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from './calculation/valueResolver';
 
 // ── Sub-stores (private to this module) ──────────────────────────────────────
@@ -171,96 +172,6 @@ export type { SkillTimings, SkillGaugeGains, SkillCategoryData };
 
 // ── SkillTypeMap inference ──────────────────────────────────────────────────
 
-function inferSkillTypeMap(skills: ReadonlyMap<string, { onTriggerClause: unknown[]; segments: unknown[]; eventCategoryType?: string; activationWindow?: { onTriggerClause?: unknown[] } }>): Record<string, unknown> {
-  const typeMap: Record<string, unknown> = {};
-  const skillIds: string[] = [];
-  skills.forEach((_, id) => skillIds.push(id));
-
-  const finisherIds = skillIds.filter(id => id.endsWith('_FINISHER'));
-  const diveIds = skillIds.filter(id => id.endsWith('_DIVE'));
-
-  // Primary: use eventCategoryType from JSON if available
-  let batkId: string | undefined;
-  for (const id of skillIds) {
-    const skill = skills.get(id);
-    const cat = skill?.eventCategoryType;
-    if (cat === EventCategoryType.BASIC_ATTACK && !id.endsWith('_FINISHER') && !id.endsWith('_DIVE') && !id.endsWith('_ENHANCED') && !id.endsWith('_EMPOWERED')) {
-      batkId = id;
-      const batk: Record<string, string> = { BATK: id };
-      const finisherId = finisherIds.find(f => f.replace(/_FINISHER$/, '') === id);
-      if (finisherId) batk.FINISHER = finisherId;
-      const diveId = diveIds.find(d => d.replace(/_DIVE$/, '') === id);
-      if (diveId) batk.DIVE = diveId;
-      typeMap.BASIC_ATTACK = batk;
-      break;
-    }
-  }
-
-  // Fallback: detect BATK from finisher suffix
-  if (!batkId) {
-    for (const fId of finisherIds) {
-      const base = fId.replace(/_FINISHER$/, '');
-      if (skills.has(base)) {
-        batkId = base;
-        const batk: Record<string, string> = { BATK: base };
-        batk.FINISHER = fId;
-        const diveId = diveIds.find(d => d.replace(/_DIVE$/, '') === base);
-        if (diveId) batk.DIVE = diveId;
-        typeMap.BASIC_ATTACK = batk;
-        break;
-      }
-    }
-  }
-
-  const variantSuffixes = ['_FINISHER', '_DIVE', '_ENHANCED', '_EMPOWERED', '_ENHANCED_EMPOWERED'];
-  const baseSkills = skillIds.filter(id => {
-    if (id === batkId) return false;
-    return !variantSuffixes.some(s => id.endsWith(s));
-  });
-
-  // Primary: use eventCategoryType for combo/battle/ult
-  for (const id of baseSkills) {
-    const skill = skills.get(id);
-    const cat = skill?.eventCategoryType;
-    if (cat === EventCategoryType.COMBO_SKILL && !typeMap.COMBO_SKILL) typeMap.COMBO_SKILL = id;
-    else if (cat === EventCategoryType.BATTLE_SKILL && !typeMap.BATTLE_SKILL) typeMap.BATTLE_SKILL = id;
-    else if (cat === EventCategoryType.ULTIMATE_SKILL && !typeMap.ULTIMATE) typeMap.ULTIMATE = id;
-    else if (cat === EventCategoryType.ACTION && !typeMap.ACTION) typeMap.ACTION = id;
-  }
-
-  // Fallback: heuristic detection for anything not yet resolved
-  if (!typeMap.COMBO_SKILL) {
-    for (const id of baseSkills) {
-      const skill = skills.get(id);
-      if (skill?.activationWindow?.onTriggerClause?.length || skill?.onTriggerClause?.length) {
-        typeMap.COMBO_SKILL = id;
-        break;
-      }
-    }
-  }
-
-  const remaining = baseSkills.filter(id => id !== typeMap.COMBO_SKILL && id !== typeMap.BATTLE_SKILL);
-
-  if (!typeMap.ULTIMATE) {
-    for (const id of remaining) {
-      const skill = skills.get(id);
-      const segs = skill?.segments as { properties: { segmentTypes?: string[] } }[] | undefined;
-      if (segs?.some(s => s.properties.segmentTypes?.includes('ANIMATION'))) {
-        typeMap.ULTIMATE = id;
-        break;
-      }
-    }
-  }
-
-  if (!typeMap.BATTLE_SKILL) {
-    const battleCandidates = remaining.filter(id => id !== typeMap.ULTIMATE);
-    if (battleCandidates.length === 1) {
-      typeMap.BATTLE_SKILL = battleCandidates[0];
-    }
-  }
-
-  return typeMap;
-}
 
 // ── Internal merged JSON builder (for dataDrivenEventFrames interop) ────────
 
@@ -281,7 +192,23 @@ function buildMergedOperatorJson(operatorId: string): Record<string, unknown> | 
     skills.forEach((skill, skillId) => {
       skillEntries[skillId] = skill.serialize();
     });
-    skillTypeMap = inferSkillTypeMap(skills);
+    skillTypeMap = buildSkillTypeMap(skills);
+    // Alias skills by category/sub-type key so consumers can access skills[BATTLE] or skills[BATK] directly
+    for (const [key, value] of Object.entries(skillTypeMap)) {
+      if (Array.isArray(value)) {
+        // Flat: BATTLE → [id1, id2] — alias the first id under the category key
+        if (value.length > 0 && !skillEntries[key]) skillEntries[key] = skillEntries[value[0]];
+      } else {
+        // Nested: BASIC_ATTACK → { BATK: [...], FINISHER: [...] } — alias each sub-type
+        const subMap = value as Record<string, string[]>;
+        for (const [subKey, subIds] of Object.entries(subMap)) {
+          if (subIds.length > 0 && !skillEntries[subKey]) skillEntries[subKey] = skillEntries[subIds[0]];
+        }
+        // Also alias the category key to the BATK default
+        const batkIds = subMap[NounType.BATK];
+        if (batkIds?.length && !skillEntries[key]) skillEntries[key] = skillEntries[batkIds[0]];
+      }
+    }
   }
 
   return {
@@ -308,25 +235,38 @@ export function getSkillIds(operatorId: string): Set<string> {
   return ids;
 }
 
+/** Get skill type map: flattened to key = type/sub-type, value = first skill ID. */
 export function getSkillTypeMap(operatorId: string): Record<string, string> {
   const skills = getOperatorSkills(operatorId);
   if (!skills) return {};
-  const raw = inferSkillTypeMap(skills);
+  const raw = buildSkillTypeMap(skills);
   const flat: Record<string, string> = {};
-  for (const [key, val] of Object.entries(raw)) {
-    flat[key] = typeof val === 'string' ? val : (val as Record<string, string> | undefined)?.BATK ?? key;
+  for (const [key, value] of Object.entries(raw)) {
+    if (Array.isArray(value)) {
+      if (value.length > 0) flat[key] = value[0];
+    } else {
+      // Nested (BASIC_ATTACK → { BATK, FINISHER, DIVE }) — flatten sub-types + category default
+      const subMap = value as Record<string, string[]>;
+      for (const [subKey, subIds] of Object.entries(subMap)) {
+        if (subIds.length > 0) flat[subKey] = subIds[0];
+      }
+      // Category key defaults to BATK
+      const batkIds = subMap[NounType.BATK];
+      if (batkIds?.length) flat[key] = batkIds[0];
+    }
   }
   return flat;
 }
 
-export function getRawSkillTypeMap(operatorId: string): Record<string, unknown> {
+/** Get skill type map with full hierarchy. */
+export function getRawSkillTypeMap(operatorId: string): SkillTypeMap {
   const skills = getOperatorSkills(operatorId);
   if (!skills) return {};
-  return inferSkillTypeMap(skills);
+  return buildSkillTypeMap(skills);
 }
 
 export function resolveSkillType(operatorId: string, skillId: string): string | null {
-  if (skillId === CombatSkillType.FINISHER || skillId === CombatSkillType.DIVE) return CombatSkillType.BASIC_ATTACK;
+  if (skillId === NounType.FINISHER || skillId === NounType.DIVE) return NounType.BASIC_ATTACK;
   const typeMap = getSkillTypeMap(operatorId);
   for (const [type, baseId] of Object.entries(typeMap)) {
     if (baseId === skillId) return type;
@@ -459,7 +399,7 @@ export function getComboSkillIds(operatorId: string): string[] {
   if (!skills) return [];
   const ids: string[] = [];
   skills.forEach(skill => {
-    if (skill.eventCategoryType === EventCategoryType.COMBO_SKILL) {
+    if (skill.eventIdType === NounType.COMBO) {
       ids.push(skill.id);
     }
   });
@@ -601,7 +541,7 @@ export interface NormalizedEffectDef {
   isForced?: boolean;
   enhancementTypes?: string[];
   susceptibility?: Record<string, number[]>;
-  eventCategoryType?: string;
+  eventIdType?: string;
   usageLimit?: number;
   segments?: unknown[];
   stats?: unknown[];
@@ -678,7 +618,7 @@ function normalizeEffectEntry(raw: Record<string, unknown>): NormalizedEffectDef
     ...(raw.clause ? { clause: raw.clause as NormalizedEffectDef['clause'] } : {}),
     ...(raw.note ? { note: raw.note as string } : {}),
     ...(raw.cooldownSeconds ?? (props.cooldownSeconds as number | undefined) ? { cooldownSeconds: (raw.cooldownSeconds ?? props.cooldownSeconds) as number } : {}),
-    ...(props.eventCategoryType ? { eventCategoryType: props.eventCategoryType as string } : {}),
+    ...(props.eventIdType ? { eventIdType: props.eventIdType as string } : {}),
     ...(raw.usageLimit != null ? { usageLimit: raw.usageLimit as number }
       : (props.usageLimit as Record<string, unknown> | undefined)?.value != null
         ? { usageLimit: (props.usageLimit as { value?: number }).value! }
@@ -1061,7 +1001,7 @@ function parseStatusEvent(raw: Record<string, unknown>): StatusEventConfig {
     ...(metadata.isEnabled === false ? { isEnabled: false } : {}),
     target: (props.target ?? raw.target ?? NounType.OPERATOR) as string,
     targetDeterminer: (props.targetDeterminer ?? raw.targetDeterminer ?? DeterminerType.THIS) as string,
-    type: (props.eventCategoryType ?? props.type) as string | undefined,
+    type: (props.eventIdType ?? props.type) as string | undefined,
     element: props.element as string | undefined,
     duration: parseDurationFrames(props),
     ...(sl ? {

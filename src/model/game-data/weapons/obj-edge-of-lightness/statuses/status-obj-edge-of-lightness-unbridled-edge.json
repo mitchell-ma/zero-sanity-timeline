@@ -23,8 +23,10 @@
                 0.072,
                 0.084
               ],
-              "ofDeterminer": "THIS",
-              "of": "OPERATOR"
+              "of": {
+                "object": "OPERATOR",
+                "determiner": "THIS"
+              }
             }
           },
           "objectId": "DAMAGE_BONUS",
@@ -50,8 +52,10 @@
                 0.072,
                 0.084
               ],
-              "ofDeterminer": "THIS",
-              "of": "OPERATOR"
+              "of": {
+                "object": "OPERATOR",
+                "determiner": "THIS"
+              }
             }
           },
           "objectId": "DAMAGE_BONUS",
@@ -80,7 +84,7 @@
     "to": "OPERATOR",
     "toDeterminer": "OTHER",
     "eventType": "STATUS",
-    "eventCategoryType": "WEAPON_STATUS",
+    "eventIdType": "WEAPON_STATUS",
     "description": "Secondary Attribute +{second_attr_up:0.0%}. After the wielder's skill recovers SP, the entire team gains Heat DMG Dealt and Electric DMG Dealt +{dmg_up:0.0%} for {duration:0}s. Max stacks for effects of the same name: {max_stack:0}. Duration of each stack is counted separately."
   },
   "metadata": {

@@ -22,9 +22,14 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "TALENT_LEVEL",
-                "value": [5, 10],
-                "ofDeterminer": "THIS",
-                "of": "OPERATOR"
+                "value": [
+                  5,
+                  10
+                ],
+                "of": {
+                  "object": "OPERATOR",
+                  "determiner": "THIS"
+                }
               },
               "unit": "SECOND"
             }
@@ -43,7 +48,7 @@
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
-    "eventCategoryType": "TALENT",
+    "eventIdType": "TALENT",
     "description": "Ultimate Shieldguard Banner, Forward improved: Any operator triggering the ultimate's subsequent effects also gains Fervent Morale for 10s. Requires activation of talent: The Living Banner."
   },
   "metadata": {
@@ -52,6 +57,6 @@
       "WARFARIN"
     ],
     "icon": "skills/pogranichnik_talent_2_icon.png",
-    "dataStatus": "RECONCILED"
+    "dataStatus": "VERIFIED"
   }
 }

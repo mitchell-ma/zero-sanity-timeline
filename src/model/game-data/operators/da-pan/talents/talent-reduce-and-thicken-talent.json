@@ -9,7 +9,7 @@
           "object": "STATUS",
           "objectId": "INFLICTION",
           "objectQualifier": "VULNERABLE",
-          "cardinalityConstraint": "AT_LEAST",
+          "cardinalityConstraint": "GREATER_THAN_EQUAL",
           "with": {
             "stacks": {
               "verb": "IS",
@@ -39,7 +39,7 @@
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
-    "eventCategoryType": "TALENT",
+    "eventIdType": "TALENT",
     "description": "After consuming 1 Vulnerability stack, Da Pan gains Physical DMG Dealt +4% for 10s. This effect can reach 4 stacks."
   },
   "metadata": {

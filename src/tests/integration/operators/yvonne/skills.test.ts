@@ -66,7 +66,7 @@ describe('Yvonne Skills -- integration through useApp', () => {
 
   it('battle skill placed in BATTLE_SKILL column', () => {
     const { result } = setupYvonne();
-    const col = findColumn(result.current, SLOT_YVONNE, NounType.BATTLE_SKILL);
+    const col = findColumn(result.current, SLOT_YVONNE, NounType.BATTLE);
     expect(col).toBeDefined();
 
     const menuItems = buildContextMenu(result.current, col!, 5 * FPS);
@@ -81,7 +81,7 @@ describe('Yvonne Skills -- integration through useApp', () => {
     });
 
     const battles = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_YVONNE && ev.columnId === NounType.BATTLE_SKILL,
+      (ev) => ev.ownerId === SLOT_YVONNE && ev.columnId === NounType.BATTLE,
     );
     expect(battles).toHaveLength(1);
   });
@@ -90,7 +90,7 @@ describe('Yvonne Skills -- integration through useApp', () => {
     const { result } = setupYvonne();
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
-    const col = findColumn(result.current, SLOT_YVONNE, NounType.COMBO_SKILL);
+    const col = findColumn(result.current, SLOT_YVONNE, NounType.COMBO);
     expect(col).toBeDefined();
 
     const menuItems = buildContextMenu(result.current, col!, 5 * FPS);
@@ -105,7 +105,7 @@ describe('Yvonne Skills -- integration through useApp', () => {
     });
 
     const combos = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_YVONNE && ev.columnId === NounType.COMBO_SKILL,
+      (ev) => ev.ownerId === SLOT_YVONNE && ev.columnId === NounType.COMBO,
     );
     expect(combos).toHaveLength(1);
 
@@ -149,7 +149,7 @@ describe('Yvonne Skills -- integration through useApp', () => {
 
   it('battle skill has correct skill ID', () => {
     const { result } = setupYvonne();
-    const col = findColumn(result.current, SLOT_YVONNE, NounType.BATTLE_SKILL);
+    const col = findColumn(result.current, SLOT_YVONNE, NounType.BATTLE);
     expect(col).toBeDefined();
 
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
@@ -160,7 +160,7 @@ describe('Yvonne Skills -- integration through useApp', () => {
     });
 
     const battles = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_YVONNE && ev.columnId === NounType.BATTLE_SKILL,
+      (ev) => ev.ownerId === SLOT_YVONNE && ev.columnId === NounType.BATTLE,
     );
     expect(battles).toHaveLength(1);
     expect(battles[0].name).toBe(BS_ID);
@@ -194,7 +194,7 @@ describe('Yvonne Skills -- integration through useApp', () => {
     const { result } = setupYvonne();
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
-    const col = findColumn(result.current, SLOT_YVONNE, NounType.COMBO_SKILL);
+    const col = findColumn(result.current, SLOT_YVONNE, NounType.COMBO);
     expect(col).toBeDefined();
 
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
@@ -205,7 +205,7 @@ describe('Yvonne Skills -- integration through useApp', () => {
     });
 
     const combos = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_YVONNE && ev.columnId === NounType.COMBO_SKILL,
+      (ev) => ev.ownerId === SLOT_YVONNE && ev.columnId === NounType.COMBO,
     );
     expect(combos).toHaveLength(1);
     expect(combos[0].name).toBe(COMBO_ID);
@@ -261,7 +261,7 @@ describe('Yvonne Skills -- integration through useApp', () => {
 
   it('battle skill visible in timeline presentation', () => {
     const { result } = setupYvonne();
-    const col = findColumn(result.current, SLOT_YVONNE, NounType.BATTLE_SKILL);
+    const col = findColumn(result.current, SLOT_YVONNE, NounType.BATTLE);
     expect(col).toBeDefined();
 
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
@@ -278,7 +278,7 @@ describe('Yvonne Skills -- integration through useApp', () => {
     const bsVm = viewModels.get(col!.key);
     expect(bsVm).toBeDefined();
     const bsEvents = bsVm!.events.filter(
-      (ev) => ev.ownerId === SLOT_YVONNE && ev.columnId === NounType.BATTLE_SKILL,
+      (ev) => ev.ownerId === SLOT_YVONNE && ev.columnId === NounType.BATTLE,
     );
     expect(bsEvents).toHaveLength(1);
   });
@@ -322,7 +322,7 @@ describe('Yvonne Skills -- integration through useApp', () => {
         { name: 'CRYO_INFLICTION', segments: [{ properties: { duration: 20 * FPS } }] },
       );
     });
-    const bsCol = findColumn(result.current, SLOT_YVONNE, NounType.BATTLE_SKILL)!;
+    const bsCol = findColumn(result.current, SLOT_YVONNE, NounType.BATTLE)!;
     const bsPayload = getMenuPayload(result.current, bsCol, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(bsPayload.ownerId, bsPayload.columnId, bsPayload.atFrame, bsPayload.defaultSkill);

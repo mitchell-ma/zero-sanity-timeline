@@ -45,7 +45,7 @@ function setupAntal(potential: number) {
 }
 
 function placeBattleSkill(result: { current: AppResult }) {
-  const col = findColumn(result.current, SLOT_ANTAL, NounType.BATTLE_SKILL);
+  const col = findColumn(result.current, SLOT_ANTAL, NounType.BATTLE);
   expect(col).toBeDefined();
   const payload = getMenuPayload(result.current, col!, 2 * FPS);
   act(() => {

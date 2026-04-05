@@ -12,8 +12,8 @@ import {
 
 export const SKILL_LABELS: Record<string, string> = {
   [NounType.BASIC_ATTACK]: t('skill.type.basic'),
-  [NounType.BATTLE_SKILL]: t('skill.type.battle'),
-  [NounType.COMBO_SKILL]:  t('skill.type.combo'),
+  [NounType.BATTLE]: t('skill.type.battle'),
+  [NounType.COMBO]:  t('skill.type.combo'),
   [NounType.ULTIMATE]:     t('skill.type.ultimate'),
 };
 
