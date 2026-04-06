@@ -196,8 +196,8 @@ function findValue(
   return findEffectValue(flattenClauseEffects(category), object, verb, target, ctx);
 }
 
-/** Get all conditional gauge gains (by enemies hit) from clause effects. */
-function findConditionalGaugeGains(category: JsonSkillCategory | undefined, ctx?: ValueResolutionContext): Record<number, number> {
+/** Get all conditional ultimate energy gains (by enemies hit) from clause effects. */
+function findConditionalUltimateEnergyGains(category: JsonSkillCategory | undefined, ctx?: ValueResolutionContext): Record<number, number> {
   const byEnemies: Record<number, number> = {};
   for (const ef of flattenClauseEffects(category)) {
     if (ef.object === NounType.ULTIMATE_ENERGY && ef.verb === VerbType.RECOVER && ef.conditions?.enemiesHitThreshold) {
@@ -218,7 +218,7 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
   private readonly _clauses: readonly FrameClausePredicate[];
   private readonly _clauseType: string | undefined;
   private readonly _dealDamage: FrameDealDamage | null;
-  private readonly _gaugeGain: number;
+  private readonly _ultimateEnergyGain: number;
   private readonly _dependencyTypes: readonly string[];
   private readonly _frameTypes: readonly EventFrameType[];
   private readonly _suppliedParameters?: Record<string, { id: string; name: string; lowerRange: number; upperRange: number; default: number }[]>;
@@ -234,7 +234,7 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
 
     let sp = 0;
     let stagger = 0;
-    let gaugeGain = 0;
+    let ultimateEnergyGain = 0;
     let ultimateEnergyGainNode: ValueNode | undefined;
 
     // ── Clause parsing ─────────────────────────────────────────────────────
@@ -271,7 +271,7 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
           case VerbType.RECOVER:
             if (ef.object === NounType.SKILL_POINT) { sp = withValue(wp?.value); clauseEffects.push({ type: 'dsl', dslEffect: ef as unknown as Effect }); }
             else if (ef.object === NounType.ULTIMATE_ENERGY) {
-              gaugeGain = withValue(wp?.value);
+              ultimateEnergyGain = withValue(wp?.value);
               // Store raw ValueNode when it depends on VARY_BY (suppliedParameters) for runtime resolution
               if (wp?.value && typeof wp.value === 'object' && !Array.isArray(wp.value)) {
                 ultimateEnergyGainNode = wp.value as ValueNode;
@@ -349,7 +349,7 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
     this._clauses = clauses;
     this._clauseType = frame.clauseType;
     this._dealDamage = dealDamage;
-    this._gaugeGain = gaugeGain;
+    this._ultimateEnergyGain = ultimateEnergyGain;
     this._skillPointRecovery = sp;
     this._stagger = stagger;
     this._duplicateTriggerSource = duplicateSource;
@@ -372,7 +372,7 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
   getClauses(): readonly FrameClausePredicate[] { return this._clauses; }
   getClauseType(): string | undefined { return this._clauseType; }
   getDealDamage(): FrameDealDamage | null { return this._dealDamage; }
-  getGaugeGain(): number { return this._gaugeGain; }
+  getUltimateEnergyGain(): number { return this._ultimateEnergyGain; }
   getDependencyTypes(): readonly string[] { return this._dependencyTypes; }
   getFrameTypes(): readonly EventFrameType[] { return this._frameTypes; }
   getSuppliedParameters(): Record<string, { id: string; name: string; lowerRange: number; upperRange: number; default: number }[]> | undefined { return this._suppliedParameters; }
@@ -584,38 +584,38 @@ export function getUltimateEnergyCost(operatorJson: Record<string, unknown>, ctx
   return findValue(ultimate, NounType.ULTIMATE_ENERGY, VerbType.CONSUME, undefined, ctx) ?? 0;
 }
 
-export interface SkillGaugeGains {
-  battleGaugeGain: number;
-  battleTeamGaugeGain: number;
-  comboGaugeGain: number;
-  comboTeamGaugeGain: number;
-  comboGaugeGainByEnemies?: Record<number, number>;
+export interface SkillUltimateEnergyGains {
+  battleUltimateEnergyGain: number;
+  battleTeamUltimateEnergyGain: number;
+  comboUltimateEnergyGain: number;
+  comboTeamUltimateEnergyGain: number;
+  comboUltimateEnergyGainByEnemies?: Record<number, number>;
 }
 
-export function getSkillGaugeGains(operatorJson: Record<string, unknown>, ctx?: ValueResolutionContext): SkillGaugeGains {
+export function getSkillUltimateEnergyGains(operatorJson: Record<string, unknown>, ctx?: ValueResolutionContext): SkillUltimateEnergyGains {
   const skills = operatorJson.skills as Record<string, JsonSkillCategory>;
-  const result: SkillGaugeGains = { battleGaugeGain: 0, battleTeamGaugeGain: 0, comboGaugeGain: 0, comboTeamGaugeGain: 0 };
+  const result: SkillUltimateEnergyGains = { battleUltimateEnergyGain: 0, battleTeamUltimateEnergyGain: 0, comboUltimateEnergyGain: 0, comboTeamUltimateEnergyGain: 0 };
 
-  // Battle skill gauge gains
+  // Battle skill ultimate energy gains
   const battleSkillId = NounType.BATTLE;
   const bs = skills?.[battleSkillId];
   if (bs?.clause) {
-    result.battleGaugeGain = findValue(bs, NounType.ULTIMATE_ENERGY, VerbType.RECOVER, 'SELF', ctx) ?? 0;
-    result.battleTeamGaugeGain = findValue(bs, NounType.ULTIMATE_ENERGY, VerbType.RECOVER, 'TEAM', ctx) ?? 0;
+    result.battleUltimateEnergyGain = findValue(bs, NounType.ULTIMATE_ENERGY, VerbType.RECOVER, 'SELF', ctx) ?? 0;
+    result.battleTeamUltimateEnergyGain = findValue(bs, NounType.ULTIMATE_ENERGY, VerbType.RECOVER, 'TEAM', ctx) ?? 0;
   }
 
-  // Combo skill gauge gains
+  // Combo skill ultimate energy gains
   const comboSkillId = NounType.COMBO;
   const cs = skills?.[comboSkillId];
   if (cs?.clause) {
-    const byEnemies = findConditionalGaugeGains(cs, ctx);
+    const byEnemies = findConditionalUltimateEnergyGains(cs, ctx);
     if (Object.keys(byEnemies).length > 0) {
-      result.comboGaugeGainByEnemies = byEnemies;
-      result.comboGaugeGain = byEnemies[1] ?? 0;
+      result.comboUltimateEnergyGainByEnemies = byEnemies;
+      result.comboUltimateEnergyGain = byEnemies[1] ?? 0;
     } else {
-      result.comboGaugeGain = findValue(cs, NounType.ULTIMATE_ENERGY, VerbType.RECOVER, 'SELF', ctx) ?? 0;
+      result.comboUltimateEnergyGain = findValue(cs, NounType.ULTIMATE_ENERGY, VerbType.RECOVER, 'SELF', ctx) ?? 0;
     }
-    result.comboTeamGaugeGain = findValue(cs, NounType.ULTIMATE_ENERGY, VerbType.RECOVER, 'TEAM', ctx) ?? 0;
+    result.comboTeamUltimateEnergyGain = findValue(cs, NounType.ULTIMATE_ENERGY, VerbType.RECOVER, 'TEAM', ctx) ?? 0;
   }
 
   return result;
@@ -633,7 +633,7 @@ export function getBattleSkillSpCost(operatorJson: Record<string, unknown>, ctx?
 export interface SkillCategoryData {
   duration: number;
   spCost: number;
-  gaugeGain: number;
+  ultimateEnergyGain: number;
   cooldown: number;
   energyCost: number;
 }
@@ -656,7 +656,7 @@ export function getSkillCategoryData(
     spCost: findValue(cat, NounType.SKILL_POINT, VerbType.CONSUME, undefined, ctx)
          ?? findValue(baseBattle, NounType.SKILL_POINT, VerbType.CONSUME, undefined, ctx)
          ?? 0,
-    gaugeGain: findValue(cat, NounType.ULTIMATE_ENERGY, VerbType.RECOVER, 'SELF', ctx)
+    ultimateEnergyGain: findValue(cat, NounType.ULTIMATE_ENERGY, VerbType.RECOVER, 'SELF', ctx)
             ?? findValue(baseBattle, NounType.ULTIMATE_ENERGY, VerbType.RECOVER, 'SELF', ctx)
             ?? 0,
     cooldown: findValue(cat, NounType.COOLDOWN, VerbType.CONSUME, undefined, ctx) ?? 0,

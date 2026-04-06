@@ -593,7 +593,7 @@ function EventPane({
           </div>
         )}
 
-        {event.gaugeGainByEnemies && (
+        {event.ultimateEnergyGainByEnemies && (
           <div className="edit-panel-section">
             <span className="edit-section-label">Enemies Hit</span>
             <div className="edit-field">
@@ -603,27 +603,27 @@ function EventPane({
                 value={event.enemiesHit ?? 1}
                 onChange={(e) => {
                   const n = Number(e.target.value);
-                  const gain = event.gaugeGainByEnemies![n] ?? event.gaugeGainByEnemies![1] ?? 0;
-                  // Update first frame's gaugeGain so the ult energy system picks it up
+                  const gain = event.ultimateEnergyGainByEnemies![n] ?? event.ultimateEnergyGainByEnemies![1] ?? 0;
+                  // Update first frame's ultimateEnergyGain so the ult energy system picks it up
                   const segments = event.segments ? [...event.segments] : [];
                   if (segments[0]?.frames?.[0]) {
                     const updatedFrames = [...segments[0].frames];
-                    updatedFrames[0] = { ...updatedFrames[0], gaugeGain: gain };
+                    updatedFrames[0] = { ...updatedFrames[0], ultimateEnergyGain: gain };
                     segments[0] = { ...segments[0], frames: updatedFrames };
                   }
                   onUpdate(event.uid, {
                     enemiesHit: n,
-                    gaugeGain: gain,
+                    ultimateEnergyGain: gain,
                     segments,
                   });
                 }}
               >
-                {Object.keys(event.gaugeGainByEnemies)
+                {Object.keys(event.ultimateEnergyGainByEnemies)
                   .map(Number)
                   .sort((a, b) => a - b)
                   .map((n) => (
                     <option key={n} value={n}>
-                      {n} — {event.gaugeGainByEnemies![n]} Ultimate Energy
+                      {n} — {event.ultimateEnergyGainByEnemies![n]} Ultimate Energy
                     </option>
                   ))}
               </select>
@@ -813,7 +813,7 @@ function DebugPane({ event, processedEvent, rawEvents, allProcessedEvents }: { e
                           )}
                           {dFrame.skillPointRecovery != null && <div>sp: {dFrame.skillPointRecovery}</div>}
                           {dFrame.stagger != null && <div>stagger: {dFrame.stagger}</div>}
-                          {dFrame.gaugeGain != null && <div>gauge: {dFrame.gaugeGain}</div>}
+                          {dFrame.ultimateEnergyGain != null && <div>gauge: {dFrame.ultimateEnergyGain}</div>}
                           {dFrame.isCrit != null && <div>isCrit: {String(dFrame.isCrit)}</div>}
                         </div>
                       );

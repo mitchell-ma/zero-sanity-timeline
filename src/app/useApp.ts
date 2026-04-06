@@ -12,7 +12,7 @@ import { useCombatState } from './useCombatState';
 import type { Orientation } from '../utils/axisMap';
 import { LoadoutProperties } from '../view/InformationPane';
 import { OperatorLoadoutState } from '../view/OperatorLoadoutHeader';
-import { ALL_OPERATORS, getUltimateEnergyCost, hasSelfOnlyUltimateEnergy } from '../controller/operators/operatorRegistry';
+import { ALL_OPERATORS, getUltimateEnergyCost } from '../controller/operators/operatorRegistry';
 import { ALL_ENEMIES, DEFAULT_ENEMY } from '../utils/enemies';
 import { TimelineEvent, VisibleSkills, ContextMenuState, SkillType, SelectedFrame, ResourceConfig, MiniTimeline, computeSegmentsSpan, eventEndFrame } from '../consts/viewTypes';
 import type { DamageTableRow } from '../controller/calculation/damageTableBuilder';
@@ -472,7 +472,6 @@ export function useApp() {
           startValue: cfg?.startValue ?? 0,
           chargePerFrame: (cfg?.regenPerSecond ?? 0) / FPS,
           efficiency: base[slotId] ?? 0,
-          selfOnlyGain: hasSelfOnlyUltimateEnergy(op.id),
         });
       }
 
@@ -1021,7 +1020,7 @@ export function useApp() {
     ownerId: string,
     columnId: string,
     atFrame: number,
-    defaultSkill: { id?: string; name?: string; segments?: import('../consts/viewTypes').EventSegmentData[]; gaugeGain?: number; teamGaugeGain?: number; comboTriggerColumnId?: string; operatorPotential?: number; timeInteraction?: string; isPerfectDodge?: boolean; timeDilation?: number; timeDependency?: import('../consts/enums').TimeDependency; skillPointCost?: number; sourceOwnerId?: string; sourceSkillName?: string; enhancementType?: import('../consts/enums').EnhancementType; stacks?: Record<string, unknown>; segmentOrigin?: number[]; suppliedParameters?: Record<string, { id: string; name: string; lowerRange: number; upperRange: number; default: number }[]>; parameterValues?: Record<string, number> } | null,
+    defaultSkill: { id?: string; name?: string; segments?: import('../consts/viewTypes').EventSegmentData[]; ultimateEnergyGain?: number; teamUltimateEnergyGain?: number; comboTriggerColumnId?: string; operatorPotential?: number; timeInteraction?: string; isPerfectDodge?: boolean; timeDilation?: number; timeDependency?: import('../consts/enums').TimeDependency; skillPointCost?: number; sourceOwnerId?: string; sourceSkillName?: string; enhancementType?: import('../consts/enums').EnhancementType; stacks?: Record<string, unknown>; segmentOrigin?: number[]; suppliedParameters?: Record<string, { id: string; name: string; lowerRange: number; upperRange: number; default: number }[]>; parameterValues?: Record<string, number> } | null,
   ) => {
     // Validate against controller-derived columns before adding
     if (!validColumnPairsRef.current.has(`${ownerId}:${columnId}`)) return;

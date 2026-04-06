@@ -18,7 +18,7 @@ export class SkillSegmentBuilder {
    */
   static buildSegments(
     sequences: readonly SkillEventSequence[],
-    options?: { labels?: string[]; gaugeGain?: number; teamGaugeGain?: number; gaugeGainByEnemies?: Record<number, number>; delayedHitLabel?: string; ctx?: ValueResolutionContext; useNumeralFallback?: boolean },
+    options?: { labels?: string[]; ultimateEnergyGain?: number; teamUltimateEnergyGain?: number; ultimateEnergyGainByEnemies?: Record<number, number>; delayedHitLabel?: string; ctx?: ValueResolutionContext; useNumeralFallback?: boolean },
   ): {
     totalDurationFrames: number;
     segments: EventSegmentData[];
@@ -54,8 +54,8 @@ export class SkillSegmentBuilder {
         }
         const dd = f.getDealDamage();
         if (dd) marker.dealDamage = dd;
-        const gg = f.getGaugeGain();
-        if (gg) marker.gaugeGain = gg;
+        const gg = f.getUltimateEnergyGain();
+        if (gg) marker.ultimateEnergyGain = gg;
         const deps = f.getDependencyTypes();
         if (deps.length > 0) marker.dependencyTypes = [...deps];
         const fts = f.getFrameTypes();
@@ -86,11 +86,11 @@ export class SkillSegmentBuilder {
         for (const f of frames) f.frameTypes = [EventFrameType.DIVE];
       }
 
-      // Assign gauge gain to the first frame of the first segment
+      // Assign ultimate energy gain to the first frame of the first segment
       if (i === 0 && frames.length > 0) {
-        if (options?.gaugeGain) frames[0].gaugeGain = options.gaugeGain;
-        if (options?.teamGaugeGain) frames[0].teamGaugeGain = options.teamGaugeGain;
-        if (options?.gaugeGainByEnemies) frames[0].gaugeGainByEnemies = options.gaugeGainByEnemies;
+        if (options?.ultimateEnergyGain) frames[0].ultimateEnergyGain = options.ultimateEnergyGain;
+        if (options?.teamUltimateEnergyGain) frames[0].teamUltimateEnergyGain = options.teamUltimateEnergyGain;
+        if (options?.ultimateEnergyGainByEnemies) frames[0].ultimateEnergyGainByEnemies = options.ultimateEnergyGainByEnemies;
       }
 
       const seqName = 'segmentName' in seq ? (seq as SkillEventSequence & { segmentName?: string }).segmentName : undefined;

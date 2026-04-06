@@ -169,19 +169,19 @@ The following deeper mechanic-specific tests remain:
 | Ember | P5 Steel Oath Empowered (shield ×1.2 + ATK +10%), Pay the Ferric Price 3-stack accumulation, Protection duration extension on hit |
 | Catcher | RETURN vs RECOVER SP distinction, P1 DEF-scaling bonus damage on BS/ult hit, Weaken status from ult |
 | Da Pan | Reduce & Thicken multi-stack accumulation (4 stacks), Vulnerability 4-stack combo trigger in strict mode, P5 extra Vulnerability stack |
-| Lifeng | LINK consume bonus hit on ult (Vajra Impact conditional), Subduer of Evil talent chain (Knock Down → Physical DMG), Illumination ATK scaling from INT+WILL |
+| ~~Lifeng~~ | ~~DONE — 25 E2E tests covering all skills, potentials, talents, combo activation~~ |
 | Arclight | Wildland Trekker counter accumulation + buff activation, empowered battle skill variant, Tactful Approach status |
 | Fluorite | T2 (Unpredictable) chance probability gate + Antal immunity — implement together |
 | Gilberta | Arts Reaction combo trigger in strict mode, Gravity Field Lift extension, Messenger's Song UE gain buff |
 | Alesh | Flash-frozen talent (Cryo→Solidification chain), arts reaction consume combo trigger in strict mode |
-| Avywenna | Thunderlance deploy/retrieve exchange mechanic (basic attack interaction) |
+| Avywenna | ~~Thunderlance deploy/retrieve~~ DONE — per-lance damage, T1 UE baked, E2E tests. Remaining: P5 conditional (1.15× on Electric Susceptible — condition not modeled) |
 | Tangtang | Waterspout/Whirlpool status application, Fam of Honor team Haste |
 | Yvonne | Empowered basic attack variant, Crit Stacks accumulation (10 max), Barrage of Technology consume interaction |
-| Last Rite | Cryogenic Embrittlement (1.2× Cryo Susceptibility AMP on ult), Hypothermia talent |
+| Last Rite | MITIGATE DAMAGE during ult (damage immunity), Cryogenic Embrittlement E2E (frame-level susceptibility stat resolution) |
 | Snowshine | P1 Protection blocks Arts Inflictions, P5 retaliation SP return |
 
 ### Engine blockers for some deeper tests
-- `isForced: true` as raw boolean in JSON doesn't resolve through `resolveWith()` (affects forced Lift/Knock Down for Da Pan, Gilberta, Estella, Lifeng)
+- ~~`isForced: true` as raw boolean — FIXED: migrated all to `{"verb":"IS","value":1}` ValueNode + added store validator~~
 - Strict-mode combo triggering requires the engine to evaluate `onTriggerClause` conditions against pipeline state
 - HP threshold conditions not supported (affects Alesh P5, Chen Qianyu P1, Catcher combo trigger)
 - Remove priority registry from `triggerMatch.ts` — predicates are independent bools evaluated left-to-right, not primary/secondary. Each condition should produce candidate frames independently, then ALL conditions are AND'd at each candidate. The current priority-based system couples conditions and has caused bugs where the "primary" handler's scanning logic doesn't match secondary condition semantics.

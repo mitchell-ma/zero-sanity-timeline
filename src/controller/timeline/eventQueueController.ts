@@ -462,7 +462,7 @@ export function processCombatSimulation(
   // the queue via collectFrameEntries → handleProcessFrame → create*.
   const triggerAssociations = getAllTriggerAssociations();
   if (!_decSingleton) _decSingleton = new DerivedEventController();
-  _decSingleton.reset(triggerAssociations, slotWirings, spController, ueController);
+  _decSingleton.reset(triggerAssociations, slotWirings, spController, ueController, loadoutProperties);
   const state = _decSingleton;
   const slotIds = slotOperatorMap ? Object.keys(slotOperatorMap) : [];
   const firstSlotOperatorId = slotIds[0] && slotOperatorMap ? slotOperatorMap[slotIds[0]] : undefined;

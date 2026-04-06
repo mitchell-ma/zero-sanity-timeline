@@ -243,14 +243,16 @@ A Verb-Object sentence with optional adjective and prepositional phrases.
 
 #### WITH preposition keys (cardinalities)
 
-| Key | Meaning | Applies to |
-|-----|---------|------------|
-| `cardinality` | Generic count | Resources (SP, energy, cooldown) |
-| `duration` | Seconds | TIME_STOP, REACTION, STATUS |
-| `multiplier` | Damage multiplier | DAMAGE |
-| `stagger` | Stagger amount | STAGGER |
-| `skillPoint` | SP value | SKILL_POINT |
-| `stacks` | Stack count (reactions, operator statuses, inflictions) | STATUS, INFLICTION, ARTS_REACTION, PHYSICAL_STATUS |
+| Key | Meaning | Semantic | Applies to |
+|-----|---------|----------|------------|
+| `value` | Additive amount | Values are **summed** within a damage/stat bucket | APPLY STAT (+20 STR), DEAL DAMAGE, RECOVER, CONSUME |
+| `multiplier` | Multiplicative factor | Values **multiply** existing aggregate in a bucket | APPLY STAT (×1.2 existing susceptibility — e.g. LR T2 Cryogenic Embrittlement) |
+| `duration` | Seconds | Duration of effect | TIME_STOP, REACTION, STATUS |
+| `stagger` | Stagger amount | Additive | STAGGER |
+| `skillPoint` | SP value | Additive | SKILL_POINT |
+| `stacks` | Stack count | Count of stacks to apply/consume | STATUS, INFLICTION, ARTS_REACTION, PHYSICAL_STATUS |
+
+**`value` vs `multiplier` for APPLY STAT:** Most stat effects use `value` (additive delta via `applyStatDelta`). Only effects that multiply the current aggregate use `multiplier` (via `applyStatMultiplier`). Currently only Last Rite's T2 Cryogenic Embrittlement uses `multiplier`.
 
 #### WITH value verbs
 

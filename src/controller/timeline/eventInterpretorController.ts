@@ -203,6 +203,8 @@ function resolveCardinality(cardinality: ValueNode | typeof THRESHOLD_MAX | unde
 
 interface StatusConfig {
   duration: number;
+  /** Raw duration ValueNode — stored for runtime resolution with operator-specific context (e.g. potential). */
+  durationNode?: import('../../dsl/semantics').ValueNode;
   stackingMode?: string;
   maxStacks?: number;
   /** Raw ValueNode for maxStacks — stored when the limit is a runtime expression (e.g. status-dependent). */
@@ -232,6 +234,7 @@ function getStatusConfig(statusId?: string): StatusConfig | undefined {
       const cdSecs = (s as unknown as { cooldownSeconds?: number }).cooldownSeconds;
       const cfg: StatusConfig = {
         duration: durationFrames,
+        ...(s.duration?.value ? { durationNode: s.duration.value as import('../../dsl/semantics').ValueNode } : {}),
         stackingMode: s.stacks?.interactionType,
         maxStacks: typeof maxStacks === 'number' ? maxStacks : undefined,
         ...(isExpression ? { maxStacksNode: stackLimit } : {}),
@@ -877,7 +880,13 @@ export class EventInterpretorController {
       const remainingDuration = ctx.parentEventEndFrame != null
         ? Math.max(0, ctx.parentEventEndFrame - ctx.frame)
         : undefined;
-      const cfgDur = cfg?.duration;
+      // Resolve duration with operator's actual potential when available
+      const cfgDur = cfg?.durationNode && ctx.potential != null && ctx.potential > 0
+        ? (() => {
+          const resolved = resolveValueNode(cfg.durationNode, { ...DEFAULT_VALUE_CONTEXT, potential: ctx.potential });
+          return resolved === PERMANENT_DURATION || resolved === 0 ? TOTAL_FRAMES : Math.round(resolved * FPS);
+        })()
+        : cfg?.duration;
       const inheritFromSource = cfgDur != null && cfgDur < 0;
       const duration = typeof dv === 'number' ? Math.round(dv * FPS)
         : inheritFromSource && ctx.sourceEventRemainingDuration != null ? ctx.sourceEventRemainingDuration

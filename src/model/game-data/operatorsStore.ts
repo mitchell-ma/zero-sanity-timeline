@@ -101,8 +101,6 @@ export class OperatorBase {
   readonly talents: TalentsConfig;
   readonly originId: string;
   readonly dataSources: string[];
-  /** When true, this operator only gains UE from her own battle/combo skills. */
-  readonly selfOnlyUltimateEnergy: boolean;
   /** Resolved icon URL (set by loader after construction). */
   icon?: string;
 
@@ -122,7 +120,6 @@ export class OperatorBase {
     this.talents = (json.talents ?? {}) as TalentsConfig;
     this.originId = (meta.originId ?? '') as string;
     this.dataSources = (meta.dataSources ?? []) as string[];
-    this.selfOnlyUltimateEnergy = (json.selfOnlyUltimateEnergy ?? false) as boolean;
   }
 
   /** Get attributes at a specific level and promotion stage. */

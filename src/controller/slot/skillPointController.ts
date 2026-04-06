@@ -35,7 +35,7 @@ export class SkillPointController {
   /** Accumulated SP events (costs and recoveries) during pipeline. */
   private pendingSpEvents: TimelineEvent[] = [];
 
-  /** Map of battle skill event UID → { frame, ownerId } for UE gauge gain placement. */
+  /** Map of battle skill event UID → { frame, ownerId } for UE ultimate energy gain placement. */
   private battleSkillGainFrames = new Map<string, { frame: number; slotId: string }>();
 
   /** Per-slot SP cost tracking (for insufficiency zones). */
@@ -88,9 +88,9 @@ export class SkillPointController {
    * @param frame The frame at which SP is consumed.
    * @param amount SP cost amount.
    * @param ownerId Slot that owns the battle skill.
-   * @param gaugeGainFrame Frame where UE gauge gain should be placed for this BS.
+   * @param ultimateEnergyGainFrame Frame where UE ultimate energy gain should be placed for this BS.
    */
-  addCost(eventUid: string, frame: number, amount: number, ownerId: string, gaugeGainFrame: number) {
+  addCost(eventUid: string, frame: number, amount: number, ownerId: string, ultimateEnergyGainFrame: number) {
     this.pendingSpEvents.push({
       uid: `${eventUid}-sp`,
       id: SP_COST_EVENT_ID,
@@ -100,7 +100,7 @@ export class SkillPointController {
       startFrame: frame,
       segments: durationSegment(amount),
     });
-    this.battleSkillGainFrames.set(eventUid, { frame: gaugeGainFrame, slotId: ownerId });
+    this.battleSkillGainFrames.set(eventUid, { frame: ultimateEnergyGainFrame, slotId: ownerId });
     // Track per-slot SP cost for insufficiency zones
     if (!this.slotSpCosts.has(ownerId)) {
       this.slotSpCosts.set(ownerId, amount);

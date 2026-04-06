@@ -55,7 +55,7 @@
     "dataSources": [
       "ENDFIELD_WIKI"
     ],
-    "dataStatus": "RECONCILED"
+    "dataStatus": "VERIFIED"
   },
   "clauseType": "ALL"
 }

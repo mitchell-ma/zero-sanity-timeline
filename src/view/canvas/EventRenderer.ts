@@ -448,7 +448,8 @@ export function renderEvent(
     }
 
     // ── Frame diamonds ────────────────────────────────────────────────
-    if (seg.frames) {
+    // Skip frames in 0-duration segments (conditional segments like Vajra Impact without LINK)
+    if (seg.frames && seg.properties.duration > 0) {
       // Pre-compute lateral offsets for co-located frames (same offset → adjacent diamonds)
       const frameLateralOffsets: number[] = [];
       for (let fi = 0; fi < seg.frames.length; fi++) {
@@ -545,6 +546,11 @@ export function renderEvent(
     segEndPositions.push(segTopPx + segH);
     if (seg.properties.offset == null) offsetFrames += seg.properties.duration;
     else offsetFrames = segOffset + seg.properties.duration;
+  }
+
+  // Hide excess diamonds (e.g. conditional segment went from active → 0 duration)
+  for (let i = diamondIdx; i < obj.diamonds.length; i++) {
+    obj.diamonds[i].visible = false;
   }
 
   // Hide excess labels and masks

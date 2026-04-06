@@ -589,7 +589,7 @@ describe('J. BS retrieval applies Electric Infliction from EX lances', () => {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 describe('K. Ultimate — T2 Electric Susceptibility', () => {
-  it.skip('K1: Ult applies Electric Susceptibility to enemy (T2 baked) — skipped: VARY_BY TALENT_LEVEL [0, 0.06, 0.10] resolves to 0 at default talent level 0', () => {
+  it('K1: Ult applies Electric Susceptibility to enemy (T2 baked)', () => {
     const { result } = setupAvywenna();
     act(() => { setUltimateEnergyToMax(result.current, SLOT_AVYWENNA, 0); });
 

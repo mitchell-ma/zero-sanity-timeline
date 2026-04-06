@@ -153,10 +153,12 @@ Additive. Sources: Electrification (arts), Breach (physical+arts).
 ### Susceptibility
 
 ```
-Susceptibility = 1 + ElementSusceptibility
+Susceptibility = (1 + ElementSusceptibility) × SusceptibilityMultiplier
 ```
 
-From Focus, gear effects, etc. Element-specific.
+`ElementSusceptibility` is additive (from Focus, gear effects, Hypothermia talent — all use `with.value`).
+`SusceptibilityMultiplier` is multiplicative (from Cryogenic Embrittlement T2 — uses `with.multiplier`).
+Element-specific.
 
 ### Stagger Bonus
 

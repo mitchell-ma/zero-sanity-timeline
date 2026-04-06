@@ -120,7 +120,9 @@ Domain methods (all operate on individual events, no batch processing):
 
 Routes DSL verbs to DEC methods:
 - `APPLY INFLICTION/STATUS/REACTION/PHYSICAL_STATUS/STAGGER`
+- `APPLY STAT` — `with.value` (additive via `applyStatDelta`) or `with.multiplier` (multiplicative via `applyStatMultiplier`)
 - `CONSUME INFLICTION/REACTION/STATUS`
+- `IGNORE ULTIMATE_ENERGY` — detected on status clauses by `notifyResourceControllers` → marks slot as `ignoreExternalGain`
 - `REFRESH` — reset active events in column
 - `EXTEND` — extend duration (by frames or UNTIL END)
 - `ALL/ANY` — compound predicates with condition evaluation

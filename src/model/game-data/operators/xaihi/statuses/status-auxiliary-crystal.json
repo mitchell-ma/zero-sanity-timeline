@@ -62,7 +62,7 @@
                 ],
                 "of": {
                   "object": "OPERATOR",
-                  "determiner": "THIS"
+                  "determiner": "SOURCE"
                 }
               },
               "right": {
@@ -86,7 +86,7 @@
                   ],
                   "of": {
                     "object": "OPERATOR",
-                    "determiner": "THIS"
+                    "determiner": "SOURCE"
                   }
                 },
                 "right": {
@@ -94,16 +94,10 @@
                   "object": "STAT",
                   "objectId": "WILL",
                   "of": {
-                    "determiner": "THIS",
+                    "determiner": "SOURCE",
                     "object": "OPERATOR"
                   }
                 }
-              }
-            },
-            "cardinality": {
-              "value": {
-                "verb": "IS",
-                "value": 2
               }
             }
           }

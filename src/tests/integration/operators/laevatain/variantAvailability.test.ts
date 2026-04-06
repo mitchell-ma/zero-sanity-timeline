@@ -334,7 +334,7 @@ describe('Laevatain variant availability — integration through useApp', () => 
       // Place ultimate via context menu
       placeUltimate(result, ULT_START);
 
-      // Place an enhanced battle skill during the active window (generates gauge gain normally)
+      // Place an enhanced battle skill during the active window (generates ultimate energy gain normally)
       const battleCol = findMatchingColumn(result.current, SLOT, NounType.BATTLE);
       const enhancedVariant = battleCol!.eventVariants?.find(
         (v) => v.enhancementType === EnhancementType.ENHANCED,

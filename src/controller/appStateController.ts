@@ -360,9 +360,9 @@ export function attachDefaultSegments(
       const props: Partial<TimelineEvent> = {};
       if (ev.skillPointCost === undefined && defaults.skillPointCost != null) props.skillPointCost = defaults.skillPointCost;
       const ext = defaults as Record<string, unknown>;
-      if (ev.gaugeGain === undefined && ext.gaugeGain != null) props.gaugeGain = ext.gaugeGain as number;
-      if (ev.teamGaugeGain === undefined && ext.teamGaugeGain != null) props.teamGaugeGain = ext.teamGaugeGain as number;
-      if (ev.gaugeGainByEnemies === undefined && ext.gaugeGainByEnemies != null) props.gaugeGainByEnemies = ext.gaugeGainByEnemies as Record<number, number>;
+      if (ev.ultimateEnergyGain === undefined && ext.ultimateEnergyGain != null) props.ultimateEnergyGain = ext.ultimateEnergyGain as number;
+      if (ev.teamUltimateEnergyGain === undefined && ext.teamUltimateEnergyGain != null) props.teamUltimateEnergyGain = ext.teamUltimateEnergyGain as number;
+      if (ev.ultimateEnergyGainByEnemies === undefined && ext.ultimateEnergyGainByEnemies != null) props.ultimateEnergyGainByEnemies = ext.ultimateEnergyGainByEnemies as Record<number, number>;
       if (ev.timeInteraction === undefined && ext.timeInteraction != null) props.timeInteraction = ext.timeInteraction as string;
       if (ev.isPerfectDodge === undefined && ext.isPerfectDodge != null) props.isPerfectDodge = ext.isPerfectDodge as boolean;
       if (ev.timeStop === undefined && ext.timeStop != null) props.timeStop = ext.timeStop as number;

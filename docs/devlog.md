@@ -25,6 +25,12 @@
 - Susceptibility values on freeform status events are now editable — click a susceptibility event to adjust the percentage in the event editor instead of being read-only
 - Combo skill activation now correctly checks which operator is being controlled at the time of the trigger — previously any operator's final strike could activate any combo, now only the actively controlled operator's actions count
 - Lift and Knock Down physical status effects now properly calculate and display their damage in the damage breakdown
+- Avywenna's Thunderlance talent now properly recovers ultimate energy based on talent level and potential — each thunderlance throw during combo skill and ultimate grants scaling energy, rewarding investment in talent upgrades and potentials
+- Last Rite's ultimate energy isolation is now fully data-driven — her restriction to only gaining energy from her own skills is properly enforced through the Vigil Services status rather than a hardcoded exception
+- Conditional skill segments (like Lifeng's Vajra Impact without LINK) no longer show phantom frame markers when the condition isn't met — the timeline cleanly reflects the actual skill animation
+- Xaihi's Auxiliary Crystal stat scaling now correctly references the source operator's stats instead of the crystal's own
+- Fluorite, Lifeng, and Perlica operator data fully verified against in-game values
+- New integration tests for Avywenna (thunderlance ultimate energy recovery, combo controlled triggers, full kit, potential status duration) and Last Rite (battle skill, combo skill, UE lockout and talents)
 
 ## 2026-04-04
 - Laevatain's Empowered Battle Skill now properly consumes all Melting Flame stacks at once, matching in-game behavior — previously it consumed only one stack per use, leaving leftover stacks that incorrectly triggered Scorching Heart

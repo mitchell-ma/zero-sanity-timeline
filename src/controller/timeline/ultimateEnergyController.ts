@@ -1,10 +1,10 @@
 /**
- * UltimateEnergyController — persistent singleton that receives gauge gain,
+ * UltimateEnergyController — persistent singleton that receives ultimate energy gain,
  * consume, and no-gain-window notifications incrementally from
  * DerivedEventController and SkillPointController.
  *
  * Pure receiver: never scans the event array. DerivedEventController calls
- * addGaugeGain / addConsume / addNoGainWindow per event/frame; SPController
+ * addUltimateEnergyGain / addConsume / addNoGainWindow per event/frame; SPController
  * calls onNaturalSpConsumed per battle skill after its own finalize.
  */
 
@@ -18,10 +18,10 @@ import { UltEnergyEvent, computeUltimateEnergyGraph, UltimateEnergyResult } from
 import { NATURAL_SP_TO_ULTIMATE_RATIO } from '../../consts/stats';
 import type { SkillPointConsumptionHistory } from './skillPointTimeline';
 
-// ── Raw gauge gain type (still exported for tests) ───────────────────────────
+// ── Raw ultimate energy gain type (still exported for tests) ───────────────────────────
 
-/** A raw gauge gain event before efficiency is applied. */
-export interface RawGaugeGainEvent {
+/** A raw ultimate energy gain event before efficiency is applied. */
+export interface RawUltimateEnergyGainEvent {
   frame: number;
   /** Slot ID of the skill's owner (who cast the skill). */
   sourceSlotId: string;
@@ -38,8 +38,8 @@ interface SlotConfig {
   startValue: number;
   chargePerFrame: number;
   efficiency: number;
-  /** When true, this slot only gains UE from its own skills (no team gains from other operators). */
-  selfOnlyGain: boolean;
+  /** When true, this slot ignores external UE gains (IGNORE ULTIMATE_ENERGY status clause). */
+  ignoreExternalGain: boolean;
 }
 
 // ── UltimateEnergyController class ───────────────────────────────────────────
@@ -48,8 +48,8 @@ export class UltimateEnergyController {
   /** Per-slot configuration. */
   private slotConfigs = new Map<string, SlotConfig>();
 
-  /** Accumulated raw gauge gains (from combo/battle frames). */
-  private rawGaugeGains: RawGaugeGainEvent[] = [];
+  /** Accumulated raw ultimate energy gains (from combo/battle frames). */
+  private rawUltimateEnergyGains: RawUltimateEnergyGainEvent[] = [];
 
   /** Per-slot no-gain windows. */
   private noGainWindows = new Map<string, { start: number; end: number }[]>();
@@ -65,14 +65,14 @@ export class UltimateEnergyController {
 
   // ── Configuration ────────────────────────────────────────────────────────
 
-  configureSlot(slotId: string, config: Omit<SlotConfig, 'selfOnlyGain'> & { selfOnlyGain?: boolean }) {
-    this.slotConfigs.set(slotId, { ...config, selfOnlyGain: config.selfOnlyGain ?? false });
+  configureSlot(slotId: string, config: Omit<SlotConfig, 'ignoreExternalGain'> & { ignoreExternalGain?: boolean }) {
+    this.slotConfigs.set(slotId, { ...config, ignoreExternalGain: config.ignoreExternalGain ?? false });
   }
 
-  /** Mark a slot as self-only for UE gains (e.g. Last Rite — only gains UE from her own BS/CS). */
-  setSelfOnlyGain(slotId: string, selfOnly: boolean) {
+  /** Mark a slot as ignoring external UE gains (driven by IGNORE ULTIMATE_ENERGY status clause). */
+  setIgnoreExternalGain(slotId: string, ignore: boolean) {
     const cfg = this.slotConfigs.get(slotId);
-    if (cfg) cfg.selfOnlyGain = selfOnly;
+    if (cfg) cfg.ignoreExternalGain = ignore;
   }
 
   /** Update a slot's efficiency from the stat accumulator (after APPLY STAT deltas). */
@@ -84,7 +84,7 @@ export class UltimateEnergyController {
   // ── Clear (called at pipeline start) ─────────────────────────────────────
 
   clear() {
-    this.rawGaugeGains = [];
+    this.rawUltimateEnergyGains = [];
     this.noGainWindows.clear();
     this.consumeEvents.clear();
     this.naturalSpMap.clear();
@@ -95,19 +95,19 @@ export class UltimateEnergyController {
   // ── Accumulation methods (called by DerivedEventController) ──────────────
 
   /**
-   * Called per frame that has gaugeGain or teamGaugeGain.
-   * @param frame Absolute frame of the gauge gain.
+   * Called per frame that has ultimateEnergyGain or teamUltimateEnergyGain.
+   * @param frame Absolute frame of the ultimate energy gain.
    * @param selfGain Gain for the source operator only.
    * @param teamGain Gain for all operators on the team.
    * @param sourceSlotId Slot that produced this gain.
    */
-  addGaugeGain(frame: number, sourceSlotId: string, selfGain: number, teamGain: number) {
+  addUltimateEnergyGain(frame: number, sourceSlotId: string, selfGain: number, teamGain: number) {
     if (selfGain <= 0 && teamGain <= 0) return;
-    this.rawGaugeGains.push({ frame, sourceSlotId, selfGain, teamGain });
+    this.rawUltimateEnergyGains.push({ frame, sourceSlotId, selfGain, teamGain });
   }
 
   /**
-   * Called per ultimate event (consume the full gauge).
+   * Called per ultimate event (consume the full ultimate energy).
    */
   addConsume(frame: number, slotId: string) {
     const cfg = this.slotConfigs.get(slotId);
@@ -130,7 +130,7 @@ export class UltimateEnergyController {
 
   /**
    * Receives natural SP consumption data for a single battle skill.
-   * The natural SP consumed converts to team-wide gauge gain.
+   * The natural SP consumed converts to team-wide ultimate energy gain.
    */
   onNaturalSpConsumed(record: SkillPointConsumptionHistory) {
     if (record.naturalConsumed > 0) {
@@ -141,19 +141,19 @@ export class UltimateEnergyController {
   // ── Finalize (called after SPController.finalize) ────────────────────────
 
   /**
-   * Converts natural SP consumption to gauge gains, applies per-slot
+   * Converts natural SP consumption to ultimate energy gains, applies per-slot
    * efficiency, and computes per-slot UE graphs.
    *
-   * @param battleSkillGainFrames Map of eventUid → frame where the gauge gain
+   * @param battleSkillGainFrames Map of eventUid → frame where the ultimate energy gain
    *   should be placed (the battle skill's first frame or startFrame).
    */
   finalize(battleSkillGainFrames: ReadonlyMap<string, { frame: number; slotId: string }>) {
-    // Convert natural SP consumption to gauge gains
+    // Convert natural SP consumption to ultimate energy gains
     for (const [eventUid, naturalConsumed] of Array.from(this.naturalSpMap)) {
       const info = battleSkillGainFrames.get(eventUid);
       if (!info) continue;
       const gain = naturalConsumed * NATURAL_SP_TO_ULTIMATE_RATIO;
-      this.rawGaugeGains.push({
+      this.rawUltimateEnergyGains.push({
         frame: info.frame,
         sourceSlotId: info.slotId,
         selfGain: gain,
@@ -162,12 +162,12 @@ export class UltimateEnergyController {
     }
 
     // Sort raw gains
-    this.rawGaugeGains.sort((a, b) => a.frame - b.frame);
+    this.rawUltimateEnergyGains.sort((a, b) => a.frame - b.frame);
 
     // Compute per-slot graphs
     for (const [slotId, cfg] of Array.from(this.slotConfigs)) {
       const windows = this.noGainWindows.get(slotId) ?? [];
-      const gains = applyGainEfficiency(this.rawGaugeGains, slotId, cfg.efficiency, windows, cfg.selfOnlyGain);
+      const gains = applyGainEfficiency(this.rawUltimateEnergyGains, slotId, cfg.efficiency, windows, cfg.ignoreExternalGain);
       const consumes = this.consumeEvents.get(slotId) ?? [];
       const timeline = [...gains, ...consumes]
         .sort((a, b) => a.frame - b.frame || (a.type === 'gain' ? -1 : 1));
@@ -225,25 +225,25 @@ export function collectNoGainWindowsForEvent(
 // ── Pure helper functions (kept for internal use and tests) ──────────────────
 
 /**
- * Applies ultimate gain efficiency to raw gauge gain events for a specific operator slot.
+ * Applies ultimate gain efficiency to raw ultimate energy gain events for a specific operator slot.
  */
 export function applyGainEfficiency(
-  gaugeEvents: readonly RawGaugeGainEvent[],
+  ultimateEnergyEvents: readonly RawUltimateEnergyGainEvent[],
   slotId: string,
   efficiencyBonus: number,
   ultActiveWindows: readonly { start: number; end: number }[],
-  selfOnlyGain = false,
+  ignoreExternalGain = false,
 ): UltEnergyEvent[] {
   const multiplier = 1 + efficiencyBonus;
   const gains: UltEnergyEvent[] = [];
 
-  for (const ge of gaugeEvents) {
+  for (const ge of ultimateEnergyEvents) {
     // Skip gains during no-gain windows (active phase, IGNORE ULTIMATE_ENERGY segments).
     // Exclusive start: gains at the boundary frame happen before the window opens.
     if (ultActiveWindows.some(w => ge.frame > w.start && ge.frame < w.end)) continue;
 
-    // Self-only restriction (e.g. Last Rite): skip all gains from other operators' skills
-    if (selfOnlyGain && ge.sourceSlotId !== slotId) continue;
+    // IGNORE ULTIMATE_ENERGY status: skip all gains from other operators' skills
+    if (ignoreExternalGain && ge.sourceSlotId !== slotId) continue;
 
     const rawGain = (ge.sourceSlotId === slotId ? ge.selfGain : 0) + ge.teamGain;
     if (rawGain > 0) {

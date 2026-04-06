@@ -495,7 +495,7 @@ Status interactions describe how a frame applies, absorbs, or consumes statuses.
 | `statusType`      | string  | `StatusType`            | The status being interacted with    |
 | `stacks`          | number  | —                       | Optional. Number of stacks          |
 | `target`          | object  | `DslTarget`             | Optional. Who the status is applied to (`{ determiner?, noun }`) |
-| `isForced`        | boolean | —                       | Optional. True for forced reactions |
+| `isForced`        | ValueNode | —                     | Optional. `{"verb":"IS","value":1}` for forced reactions. Raw booleans are rejected by the store validator. |
 | `durationSeconds` | number  | —                       | Optional. Override duration         |
 | `conversion`      | object  | —                       | Optional. For ABSORB — what the absorbed stacks convert into |
 
@@ -753,7 +753,7 @@ No other top-level keys are allowed. Legacy keys (`originId`, `stats`, `element`
 | `element` | string | No | `ElementType` associated with this status |
 | `target` | string | No | Target of the status (`OPERATOR`, `ENEMY`). Defaults to `OPERATOR` |
 | `targetDeterminer` | string | No | `THIS`, `OTHER`, `ALL`, `ANY`. Defaults to `THIS` |
-| `isForced` | boolean | No | Whether application bypasses normal rules |
+| `isForced` | ValueNode | No | `{"verb":"IS","value":1}` to bypass normal rules. Raw booleans rejected by validator. |
 | `enhancementTypes` | string[] | No | `EnhancementType` values (e.g. `["EMPOWERED"]`) |
 | `stacks` | object | Yes | Stacking configuration (see below) |
 | `duration` | object | No | Duration struct (`{ value, unit }`). Use `99999` (PERMANENT_DURATION) for permanent statuses |

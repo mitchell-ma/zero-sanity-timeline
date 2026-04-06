@@ -155,6 +155,33 @@
                   "with": { "stacks": { "verb": "IS", "value": 1 } }
                 },
                 {
+                  "verb": "RECOVER",
+                  "object": "ULTIMATE_ENERGY",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "value": {
+                      "operation": "MULT",
+                      "left": {
+                        "operation": "ADD",
+                        "left": {
+                          "verb": "VARY_BY",
+                          "object": "TALENT_LEVEL",
+                          "value": [0, 3, 4],
+                          "of": { "object": "OPERATOR", "determiner": "THIS" }
+                        },
+                        "right": {
+                          "verb": "VARY_BY",
+                          "object": "POTENTIAL",
+                          "value": [0, 2, 2, 2, 2, 2],
+                          "of": { "object": "OPERATOR", "determiner": "THIS" }
+                        }
+                      },
+                      "right": { "verb": "IS", "value": 1 }
+                    }
+                  }
+                },
+                {
                   "verb": "APPLY",
                   "objectQualifier": "ELECTRIC",
                   "object": "STATUS", "objectId": "SUSCEPTIBILITY",

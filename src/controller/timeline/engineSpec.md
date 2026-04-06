@@ -188,6 +188,21 @@ The stagger status defs (`status-stagger-node.json`, `status-stagger-full.json`)
 
 ---
 
+## APPLY STAT — value vs multiplier
+
+`APPLY STAT` supports two `with` keys with distinct semantics:
+
+| Key | Operation | Engine method | Example |
+|-----|-----------|---------------|---------|
+| `value` | **Additive** — summed into the stat bucket | `statAccumulator.applyStatDelta()` | `APPLY STAT STRENGTH with value IS 20` → STR += 20 |
+| `multiplier` | **Multiplicative** — scales the current aggregate | `statAccumulator.applyStatMultiplier()` | `APPLY STAT SUSCEPTIBILITY CRYO with multiplier VARY_BY TALENT_LEVEL [1.2, 1.5]` → susceptibility ×= 1.2 |
+
+Most stat effects use `value`. Only effects that scale existing accumulated values use `multiplier` (currently only Last Rite T2 Cryogenic Embrittlement on ultimate frames).
+
+**IGNORE ULTIMATE_ENERGY:** Status clauses with `IGNORE ULTIMATE_ENERGY` are detected by `notifyResourceControllers` in `DerivedEventController`. When found on a talent/status event, the UE controller marks that slot as `ignoreExternalGain` — the operator only receives UE from their own skills (e.g. Last Rite's VIGIL_SERVICES_ULTIMATE_ENERGY_LOCKOUT status).
+
+---
+
 ## Time-Stop Handling
 
 Time-stop adjustment happens in two places depending on the event path:
@@ -222,3 +237,54 @@ Read-only interface backed by DerivedEventController. Pre-filters events by colu
 | `getProtectionEffects(frame)` | Active protection fractions |
 | `is*Active(frame)` | Boolean status checks (stagger, cryo, solidification, link, amp) |
 | `get*Sources(frame, element)` | Itemized multiplier sources for damage breakdown |
+
+---
+
+## Runtime Conditional Segment Durations
+
+Segments can have durations that depend on runtime event state via `STACKS of <STATUS> of EVENT` in a ValueExpression. This enables conditional segments like Lifeng's Vajra Impact (only appears when LINK is consumed).
+
+### DSL Pattern
+
+```json
+"duration": {
+  "value": {
+    "operation": "MULT",
+    "left": { "verb": "IS", "object": "STACKS", "of": { "object": "EVENT", "objectId": "LINK" } },
+    "right": { "verb": "IS", "value": 2.03 }
+  },
+  "unit": "SECOND"
+}
+```
+
+`STACKS of LINK of EVENT` resolves to the consumed LINK stack count on the current event (0 if no LINK consumed → segment duration = 0).
+
+### Resolution Flow
+
+1. **Event creation** (column builder): `resolveValueNode` has no `getEventStacks` callback → `STACKS of EVENT` returns 0 → duration = 0.
+2. **Segment preservation**: `dataDrivenEventFrames.ts` detects `hasRuntimeConditionalDuration()` and preserves the segment + its frames despite 0 duration.
+3. **Frame preservation**: `BasicAttackController.buildSegments` skips the `inBound` frame filter for runtime-conditional segments.
+4. **Runtime re-resolution**: At `EVENT_START` in the interpretor, after `consumeLink()`, segment durations with `operation` ValueNodes are re-resolved with `getEventStacks` wired to `getLinkStacks(eventUid)`.
+5. **View gating**: `EventRenderer.ts` (canvas) and `EventBlock.tsx` (React) skip frame rendering for segments with `duration === 0`.
+
+### Value Resolution Context
+
+`ValueResolutionContext.getEventStacks(statusId)` — returns consumed stack count for a status on the current event. Only available during EVENT_START re-resolution. `isValueStatus` routes to `getEventStacks` when `of.object === "EVENT"`.
+
+---
+
+## CONTROLLED Determiner in Combo Activation
+
+Combo trigger conditions with `subjectDeterminer: "CONTROLLED"` require the performing operator to be the controlled operator at the trigger frame.
+
+### Implementation
+
+`triggerMatch.ts` → `resolveOwnerFilter` accepts `controlledSlotId` as either a static string or a `(frame: number) => string` function. For CONTROLLED determiners, `matchesOwner(ownerId, atFrame)` resolves the controlled slot at the candidate frame and checks ownership.
+
+`getControlledSlotAtFrame` is threaded from `eventQueueController.ts` → `deriveComboActivationWindows` → `findClauseTriggerMatches` → `VerbHandlerContext.controlledSlotId`.
+
+---
+
+## isForced ValueNode Convention
+
+`with.isForced` in effect configs MUST be a ValueNode (`{"verb":"IS","value":1}`), not a raw boolean. The store validator (`validationUtils.ts` → `warnRawBooleanIsForced`) rejects raw booleans at load time. `resolveWith()` resolves the ValueNode to 1 (forced) or 0 (not forced).

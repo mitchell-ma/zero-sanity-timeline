@@ -749,9 +749,9 @@ export type WithValue = ValueLiteral | ValueVariable | ValueStat;
  * Each key is a named property whose value is a ValueNode expression tree.
  *
  * Key hierarchy:
- *   value            — generic count (e.g. RECOVER 100 SKILL_POINT, CONSUME 300 ULTIMATE_ENERGY)
+ *   value            — additive amount (e.g. RECOVER 100 SKILL_POINT, APPLY STAT +20 STRENGTH)
  *   duration         — seconds (e.g. TIME_STOP, REACTION, STATUS duration)
- *   multiplier       — damage multiplier (VARY_BY SKILL_LEVEL → per-level array)
+ *   multiplier       — multiplicative factor (e.g. APPLY STAT SUSCEPTIBILITY ×1.2 for T2 Cryogenic Embrittlement)
  *   stagger          — stagger amount
  *   skillPoint       — SP value
  *   stacks           — stack count (STATUS, INFLICTION, ARTS_REACTION)
@@ -1157,6 +1157,7 @@ export const OBJECT_FORCED_TARGET: Partial<Record<ObjectType, SubjectType>> = Ob
 export const VERB_OBJECT_WITH_PROPERTIES: Record<string, Record<string, string[]>> = {
   [VerbType.APPLY]: {
     [ObjectType.STATUS]:          ['duration', 'stacks', 'value'],
+    [ObjectType.STAT]:            ['value', 'multiplier'],
     [ObjectType.INFLICTION]:      ['stacks'],
     [ObjectType.REACTION]:        [...Reaction.EDITABLE_PROPERTIES],
     [ObjectType.TIME_STOP]:       ['duration'],

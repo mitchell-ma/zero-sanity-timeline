@@ -229,6 +229,12 @@ export class OperatorStatus {
     return resolveValueNode(this.duration.value, DEFAULT_VALUE_CONTEXT);
   }
 
+  /** Resolve duration with a specific potential level (for potential-dependent status durations). */
+  resolveDurationSeconds(potential: number): number {
+    if (!this.duration) return 0;
+    return resolveValueNode(this.duration.value, { ...DEFAULT_VALUE_CONTEXT, potential });
+  }
+
   get maxStacks(): number {
     if (!this.stacks) return 1;
     return resolveValueNode(this.stacks.limit, DEFAULT_VALUE_CONTEXT);

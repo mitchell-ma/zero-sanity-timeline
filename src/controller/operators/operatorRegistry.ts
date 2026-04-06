@@ -16,7 +16,7 @@ import {
   getOperatorBase,
   getSkillTypeMap,
   getSkillTimings as loadSkillTimings,
-  getSkillGaugeGains as loadSkillGaugeGains,
+  getSkillUltimateEnergyGains as loadSkillUltimateEnergyGains,
   getUltimateEnergyCost as loadUltimateEnergyCost,
   getBattleSkillSpCost as loadBattleSkillSpCost,
 } from '../gameDataStore';
@@ -76,7 +76,7 @@ const PLACEHOLDER_EQUIPMENT = {
  */
 function buildViewOperatorFromJson(operatorId: string, opJson: Record<string, unknown>): ViewOperator {
   const timings = loadSkillTimings(opJson);
-  const gg = loadSkillGaugeGains(opJson);
+  const gg = loadSkillUltimateEnergyGains(opJson);
   const elementType = opJson.elementType as string;
   const talents = opJson.talents as {
     one?: { name: string; maxLevel: number };
@@ -145,13 +145,13 @@ function buildViewOperatorFromJson(operatorId: string, opJson: Record<string, un
     if (spCost > 0) skills[NounType.BATTLE] = { ...skills[NounType.BATTLE], skillPointCost: spCost };
   }
 
-  // Gauge gains
+  // Ultimate energy gains
   if (skills[NounType.COMBO]) {
     skills[NounType.COMBO] = {
       ...skills[NounType.COMBO],
-      gaugeGain: gg.comboGaugeGain,
-      teamGaugeGain: gg.comboTeamGaugeGain,
-      ...(gg.comboGaugeGainByEnemies ? { gaugeGainByEnemies: gg.comboGaugeGainByEnemies } : {}),
+      ultimateEnergyGain: gg.comboUltimateEnergyGain,
+      teamUltimateEnergyGain: gg.comboTeamUltimateEnergyGain,
+      ...(gg.comboUltimateEnergyGainByEnemies ? { ultimateEnergyGainByEnemies: gg.comboUltimateEnergyGainByEnemies } : {}),
     };
   }
 
@@ -280,12 +280,6 @@ export function deregisterCustomOperatorById(operatorId: string): void {
 }
 
 // ── Ultimate energy cost ─────────────────────────────────────────────────────
-
-/** Check if an operator only gains UE from her own skills (e.g. Last Rite). */
-export function hasSelfOnlyUltimateEnergy(operatorId: string): boolean {
-  const base = getOperatorBase(operatorId);
-  return base?.selfOnlyUltimateEnergy ?? false;
-}
 
 export function getUltimateEnergyCost(operatorId: string): number {
   const json = buildMergedOperatorJson(operatorId);

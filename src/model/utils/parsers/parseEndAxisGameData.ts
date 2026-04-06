@@ -359,12 +359,12 @@ function parseBattleSkill(char: GameDataCharacter): SkillCategory {
     effects.push(buildResourceEffect(CombatResourceType.SKILL_POINT, VerbType.CONSUME, char.skill_spCost));
   }
 
-  // Gauge gain (self)
+  // Ultimate energy gain (self)
   if (char.skill_gaugeGain) {
     effects.push(buildResourceEffect(CombatResourceType.ULTIMATE_ENERGY, VerbType.RECOVER, char.skill_gaugeGain, 'SELF'));
   }
 
-  // Gauge gain (team)
+  // Ultimate energy gain (team)
   if (char.skill_teamGaugeGain) {
     effects.push(buildResourceEffect(CombatResourceType.ULTIMATE_ENERGY, VerbType.RECOVER, char.skill_teamGaugeGain, NounType.TEAM));
   }
@@ -392,7 +392,7 @@ function parseComboSkill(char: GameDataCharacter): SkillCategory {
     effects.push(buildResourceEffect(CombatResourceType.COOLDOWN, VerbType.CONSUME, char.link_cooldown));
   }
 
-  // Gauge gain
+  // Ultimate energy gain
   if (char.link_gaugeGain) {
     effects.push(buildResourceEffect(CombatResourceType.ULTIMATE_ENERGY, VerbType.RECOVER, char.link_gaugeGain, 'SELF'));
   }

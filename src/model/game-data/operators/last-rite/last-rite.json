@@ -9,7 +9,6 @@
   ],
   "mainAttributeType": "STRENGTH",
   "secondaryAttributeType": "WILL",
-  "selfOnlyUltimateEnergy": true,
   "talents": {
     "one": "HYPOTHERMIA_TALENT",
     "two": "CRYOGENIC_EMBRITTLEMENT_TALENT",

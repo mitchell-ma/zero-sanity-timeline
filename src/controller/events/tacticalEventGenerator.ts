@@ -43,8 +43,8 @@ function getTacticalConfig(tacticalId: string): TacticalEventConfig | null {
 export interface TacticalEventResult {
   /** Derived tactical events to display on the tactical column. */
   events: TimelineEvent[];
-  /** Gauge gain entries to inject into the ult energy calculation. */
-  gaugeGains: { frame: number; amount: number }[];
+  /** Ultimate energy gain entries to inject into the ult energy calculation. */
+  ultimateEnergyGains: { frame: number; amount: number }[];
 }
 
 /**
@@ -77,7 +77,7 @@ export function generateTacticalEvents(
   const threshold = config.ultThreshold * ultMax;
   const restoreAmount = config.ultEnergyRestore * ultMax;
   const events: TimelineEvent[] = [];
-  const gaugeGains: { frame: number; amount: number }[] = [];
+  const ultimateEnergyGains: { frame: number; amount: number }[] = [];
 
   // Build a mutable working timeline that we'll augment with tactical gains
   const workingTimeline = ultTimeline.map((t) => ({ ...t }));
@@ -107,14 +107,14 @@ export function generateTacticalEvents(
       sourceSkillName: config.name,
     });
 
-    gaugeGains.push({ frame: triggerFrame, amount: restoreAmount });
+    ultimateEnergyGains.push({ frame: triggerFrame, amount: restoreAmount });
 
     // Insert the tactical gain into the working timeline for next iteration
     workingTimeline.push({ frame: triggerFrame, type: 'gain', amount: restoreAmount });
     workingTimeline.sort((a, b) => a.frame - b.frame || (a.type === 'gain' ? -1 : 1));
   }
 
-  return events.length > 0 ? { events, gaugeGains } : null;
+  return events.length > 0 ? { events, ultimateEnergyGains } : null;
 }
 
 /**

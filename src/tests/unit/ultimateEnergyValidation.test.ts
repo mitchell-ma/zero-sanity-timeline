@@ -1,14 +1,14 @@
 /**
  * Ultimate Energy Validation Tests
  *
- * Verifies that ultimate energy from battle skill gauge gains
+ * Verifies that ultimate energy from battle skill ultimate energy gains
  * is correctly accounted for when validating ultimate placement.
  */
 
 import { computeUltimateEnergyGraph, UltEnergyEvent } from '../../controller/timeline/ultimateEnergyTimeline';
 import { NounType } from '../../dsl/semantics';
 import { preConsumptionValue, validateResources, hasEnableClauseAtFrame, checkVariantAvailability, validateEnhanced, validateDisabledVariants } from '../../controller/timeline/eventValidator';
-import { applyGainEfficiency, collectNoGainWindowsForEvent, UltimateEnergyController, RawGaugeGainEvent } from '../../controller/timeline/ultimateEnergyController';
+import { applyGainEfficiency, collectNoGainWindowsForEvent, UltimateEnergyController, RawUltimateEnergyGainEvent } from '../../controller/timeline/ultimateEnergyController';
 import { ultimateGraphKey } from '../../model/channels';
 import { SkillPointController } from '../../controller/slot/skillPointController';
 import { TimelineEvent, EventSegmentData } from '../../consts/viewTypes';
@@ -32,7 +32,7 @@ jest.mock('../../controller/operators/operatorRegistry', () => ({
 describe('Ultimate Energy Validation', () => {
   const MAX_ENERGY = 300;
 
-  test('Battle skill gauge gain at frame X is visible to ultimate at frame X+1', () => {
+  test('Battle skill ultimate energy gain at frame X is visible to ultimate at frame X+1', () => {
     const timeline: UltEnergyEvent[] = [
       { frame: 100, type: 'gain', amount: 15 },
       { frame: 101, type: 'consume', amount: MAX_ENERGY },
@@ -42,7 +42,7 @@ describe('Ultimate Energy Validation', () => {
     expect(val).toBeGreaterThanOrEqual(MAX_ENERGY);
   });
 
-  test('Battle skill gauge gain at same frame as ultimate is processed first', () => {
+  test('Battle skill ultimate energy gain at same frame as ultimate is processed first', () => {
     // Timeline sorted: gains before consumes at same frame
     const timeline: UltEnergyEvent[] = [
       { frame: 100, type: 'gain', amount: 15 },
@@ -66,7 +66,7 @@ describe('Ultimate Energy Validation', () => {
     expect(val).toBeGreaterThanOrEqual(MAX_ENERGY);
   });
 
-  test('Multiple gauge gains accumulate before ultimate validation', () => {
+  test('Multiple ultimate energy gains accumulate before ultimate validation', () => {
     const timeline: UltEnergyEvent[] = [
       { frame: 50, type: 'gain', amount: 25 },
       { frame: 150, type: 'gain', amount: 25 },
@@ -97,7 +97,7 @@ describe('Ultimate Energy Validation', () => {
     expect(val).toBeGreaterThanOrEqual(MAX_ENERGY);
   });
 
-  test('Gauge gain during ACTIVE phase is suppressed (no energy gain)', () => {
+  test('Ultimate energy gain during ACTIVE phase is suppressed (no energy gain)', () => {
     // Ultimate consumes at frame 0, no gains during active (filtered by no-gain windows)
     const timeline: UltEnergyEvent[] = [
       { frame: 0, type: 'consume', amount: MAX_ENERGY },
@@ -112,13 +112,13 @@ describe('Ultimate Energy Validation', () => {
     expect(post).toBeGreaterThanOrEqual(50);
   });
 
-  test('E2E: empowered battle skill frame-level gaugeGain at same frame as ultimate consume', () => {
-    // Simulate: energy at 290, empowered battle skill has gaugeGain=15 on its last hit at frame 500
+  test('E2E: empowered battle skill frame-level ultimateEnergyGain at same frame as ultimate consume', () => {
+    // Simulate: energy at 290, empowered battle skill has ultimateEnergyGain=15 on its last hit at frame 500
     // Ultimate is placed at exactly frame 500
     const SLOT_ID = 'slot-0';
     const lastHitFrame = 500;
 
-    // Use UltimateEnergyController + SkillPointController for gauge gain collection
+    // Use UltimateEnergyController + SkillPointController for ultimate energy gain collection
     const ueController = new UltimateEnergyController();
     const spController = new SkillPointController();
     spController.setUltimateEnergyController(ueController);
@@ -127,8 +127,8 @@ describe('Ultimate Energy Validation', () => {
     // Battle skill SP cost
     spController.addCost('battle-1', 400, 100, SLOT_ID, lastHitFrame);
 
-    // Frame-level gaugeGain from the battle skill
-    ueController.addGaugeGain(lastHitFrame, SLOT_ID, 15, 0);
+    // Frame-level ultimateEnergyGain from the battle skill
+    ueController.addUltimateEnergyGain(lastHitFrame, SLOT_ID, 15, 0);
 
     // Ultimate consume
     ueController.addConsume(lastHitFrame, SLOT_ID);
@@ -144,32 +144,32 @@ describe('Ultimate Energy Validation', () => {
     expect(val).toBeGreaterThanOrEqual(MAX_ENERGY);
   });
 
-  test('E2E: gauge gain at exact start of no-gain window is NOT filtered out', () => {
-    // Bug repro: battle skill gaugeGain at frame 500, ultimate starts at frame 500.
+  test('E2E: ultimate energy gain at exact start of no-gain window is NOT filtered out', () => {
+    // Bug repro: battle skill ultimateEnergyGain at frame 500, ultimate starts at frame 500.
     // The ultimate's Animation segment has IGNORE ULTIMATE_ENERGY, creating a no-gain window
-    // starting at frame 500. The gauge gain at frame 500 should NOT be filtered because
+    // starting at frame 500. The ultimate energy gain at frame 500 should NOT be filtered because
     // it happens at the boundary (exclusive start).
     const SLOT_ID = 'slot-0';
     const sharedFrame = 500;
 
     const noGainWindows = [{ start: sharedFrame, end: sharedFrame + 249 }]; // Animation segment
-    const gaugeEvents: RawGaugeGainEvent[] = [
+    const ultimateEnergyEvents: RawUltimateEnergyGainEvent[] = [
       { frame: sharedFrame, sourceSlotId: SLOT_ID, selfGain: 15, teamGain: 0 },
     ];
 
-    const gains = applyGainEfficiency(gaugeEvents, SLOT_ID, 0, noGainWindows);
+    const gains = applyGainEfficiency(ultimateEnergyEvents, SLOT_ID, 0, noGainWindows);
     expect(gains.length).toBe(1);
     expect(gains[0].amount).toBe(15);
   });
 
-  test('E2E: gauge gain inside no-gain window IS filtered out', () => {
+  test('E2E: ultimate energy gain inside no-gain window IS filtered out', () => {
     const SLOT_ID = 'slot-0';
     const noGainWindows = [{ start: 500, end: 749 }];
-    const gaugeEvents: RawGaugeGainEvent[] = [
+    const ultimateEnergyEvents: RawUltimateEnergyGainEvent[] = [
       { frame: 600, sourceSlotId: SLOT_ID, selfGain: 15, teamGain: 0 },
     ];
 
-    const gains = applyGainEfficiency(gaugeEvents, SLOT_ID, 0, noGainWindows);
+    const gains = applyGainEfficiency(ultimateEnergyEvents, SLOT_ID, 0, noGainWindows);
     expect(gains.length).toBe(0);
   });
 
@@ -183,9 +183,9 @@ describe('Ultimate Energy Validation', () => {
     spController.setUltimateEnergyController(ueController);
     ueController.configureSlot(SLOT_ID, { max: MAX_ENERGY, startValue: 290, chargePerFrame: 0, efficiency: 0 });
 
-    // Battle skill SP cost + frame-level gaugeGain
+    // Battle skill SP cost + frame-level ultimateEnergyGain
     spController.addCost('battle-1', 400, 100, SLOT_ID, lastHitFrame);
-    ueController.addGaugeGain(lastHitFrame, SLOT_ID, 15, 0);
+    ueController.addUltimateEnergyGain(lastHitFrame, SLOT_ID, 15, 0);
 
     // Ultimate consume + no-gain window
     ueController.addConsume(lastHitFrame, SLOT_ID);
@@ -402,12 +402,12 @@ describe('collectNoGainWindowsForEvent', () => {
   });
 });
 
-// ── UE gauge gains via UltimateEnergyController + SkillPointController ──────
-describe('UE gauge gains — natural SP consumption via controllers', () => {
+// ── UE ultimate energy gains via UltimateEnergyController + SkillPointController ──────
+describe('UE ultimate energy gains — natural SP consumption via controllers', () => {
   const SLOT = 'slot-0';
   const NATURAL_SP_RATIO = 0.065; // NATURAL_SP_TO_ULTIMATE_RATIO
 
-  test('battle skill SP cost converts to gauge gain via natural SP', () => {
+  test('battle skill SP cost converts to ultimate energy gain via natural SP', () => {
     const ueController = new UltimateEnergyController();
     const spController = new SkillPointController();
     spController.setUltimateEnergyController(ueController);
@@ -425,7 +425,7 @@ describe('UE gauge gains — natural SP consumption via controllers', () => {
     expect(gainPoint!.value).toBeCloseTo(13, 1);
   });
 
-  test('frame-level gaugeGain is collected separately from SP-based gain', () => {
+  test('frame-level ultimateEnergyGain is collected separately from SP-based gain', () => {
     const ueController = new UltimateEnergyController();
     const spController = new SkillPointController();
     spController.setUltimateEnergyController(ueController);
@@ -433,8 +433,8 @@ describe('UE gauge gains — natural SP consumption via controllers', () => {
 
     // Battle skill SP cost
     spController.addCost('battle-1', 400, 100, SLOT, 500);
-    // Frame-level gaugeGain from a battle skill hit (selfGain only)
-    ueController.addGaugeGain(500, SLOT, 15, 0);
+    // Frame-level ultimateEnergyGain from a battle skill hit (selfGain only)
+    ueController.addUltimateEnergyGain(500, SLOT, 15, 0);
 
     spController.finalize([]);
     ueController.finalize(spController.getBattleSkillGainFrames());
@@ -473,11 +473,11 @@ describe('UE gauge gains — natural SP consumption via controllers', () => {
     expect(maxAt200).toBeCloseTo(100 * NATURAL_SP_RATIO * 2 + 50 * NATURAL_SP_RATIO * 2, 1);
   });
 
-  test('combo skill gauge gain is collected directly', () => {
+  test('combo skill ultimate energy gain is collected directly', () => {
     const ueController = new UltimateEnergyController();
     ueController.configureSlot(SLOT, { max: 300, startValue: 0, chargePerFrame: 0, efficiency: 0 });
 
-    ueController.addGaugeGain(350, SLOT, 20, 10);
+    ueController.addUltimateEnergyGain(350, SLOT, 20, 10);
     ueController.finalize(new Map());
 
     const graph = ueController.getGraph(SLOT)!;

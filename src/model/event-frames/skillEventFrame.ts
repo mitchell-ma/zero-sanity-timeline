@@ -69,8 +69,8 @@ export abstract class SkillEventFrame {
   /** Inline DEAL DAMAGE data (element + per-level multiplier array), or null. */
   getDealDamage(): FrameDealDamage | null { return null; }
 
-  /** Ultimate gauge gained on this frame, or 0. */
-  getGaugeGain(): number { return 0; }
+  /** Ultimate energy gained on this frame, or 0. */
+  getUltimateEnergyGain(): number { return 0; }
 
   /** Frame dependency types. */
   getDependencyTypes(): readonly string[] { return []; }
@@ -108,8 +108,8 @@ export abstract class SkillEventFrame {
     }
     const dd = this.getDealDamage();
     if (dd) marker.dealDamage = dd;
-    const gg = this.getGaugeGain();
-    if (gg) marker.gaugeGain = gg;
+    const gg = this.getUltimateEnergyGain();
+    if (gg) marker.ultimateEnergyGain = gg;
     const deps = this.getDependencyTypes();
     if (deps.length > 0) marker.dependencyTypes = [...deps];
     const fts = this.getFrameTypes();

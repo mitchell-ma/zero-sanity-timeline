@@ -33,7 +33,7 @@
       "ENDFIELD_WIKI"
     ],
     "icon": "skills/perlica_talent_1_icon.png",
-    "dataStatus": "RECONCILED"
+    "dataStatus": "VERIFIED"
   },
   "onTriggerClause": [
     {

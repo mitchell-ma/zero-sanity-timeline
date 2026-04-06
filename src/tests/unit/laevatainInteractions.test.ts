@@ -403,8 +403,8 @@ describe('E. Ultimate & Enhanced Variants', () => {
     const allFrames = sequences.flatMap(s => s.getFrames());
     expect(allFrames.length).toBe(11);
 
-    // Second frame (index 1) is a damage frame — it should not have gauge gain
-    expect(allFrames[1].getGaugeGain()).toBe(0);
+    // Second frame (index 1) is a damage frame — it should not have ultimate energy gain
+    expect(allFrames[1].getUltimateEnergyGain()).toBe(0);
   });
 });
 

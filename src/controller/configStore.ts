@@ -106,13 +106,13 @@ import {
 import {
   getSkillTimings,
   getUltimateEnergyCost,
-  getSkillGaugeGains,
+  getSkillUltimateEnergyGains,
   getBattleSkillSpCost,
   getSkillCategoryData,
   getBasicAttackDurations,
 } from '../model/event-frames/dataDrivenEventFrames';
 
-import type { SkillTimings, SkillGaugeGains, SkillCategoryData } from '../model/event-frames/dataDrivenEventFrames';
+import type { SkillTimings, SkillUltimateEnergyGains, SkillCategoryData } from '../model/event-frames/dataDrivenEventFrames';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Re-export sub-store APIs (surfaced through gameDataStore)
@@ -163,8 +163,8 @@ export { getWeaponStatuses, getAllWeaponStatusOriginIds };
 
 // Frame pipeline
 export { buildSequencesFromOperatorJson, DataDrivenSkillEventSequence };
-export { getSkillTimings, getUltimateEnergyCost, getSkillGaugeGains, getBattleSkillSpCost, getSkillCategoryData, getBasicAttackDurations };
-export type { SkillTimings, SkillGaugeGains, SkillCategoryData };
+export { getSkillTimings, getUltimateEnergyCost, getSkillUltimateEnergyGains, getBattleSkillSpCost, getSkillCategoryData, getBasicAttackDurations };
+export type { SkillTimings, SkillUltimateEnergyGains, SkillCategoryData };
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Operator JSON composition (absorbed from operatorJsonLoader)

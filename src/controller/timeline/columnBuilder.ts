@@ -208,7 +208,7 @@ export function buildColumns(
         if (isTeamStatus(se.id)) continue;
         if (se.id in ATTRIBUTE_INCREASE_LOOKUP) continue;
         if (se.target === NounType.OPERATOR && (!se.targetDeterminer || se.targetDeterminer === DeterminerType.THIS) && se.id) {
-          const durSec = se.durationSeconds;
+          const durSec = s.potential != null ? se.resolveDurationSeconds(s.potential) : se.durationSeconds;
           const durationFrames = durSec <= 0 ? TOTAL_FRAMES : Math.round(durSec * FPS);
           const colId = (OPERATOR_COLUMNS as Record<string, string>)[se.id]
             ?? se.id;
@@ -529,9 +529,9 @@ export function buildColumns(
               name: skill.name,
               segments: skill.defaultSegments,
               triggerCondition: skill.triggerCondition,
-              gaugeGain: skill.gaugeGain,
-              teamGaugeGain: skill.teamGaugeGain,
-              ...(skill.gaugeGainByEnemies ? { gaugeGainByEnemies: skill.gaugeGainByEnemies } : {}),
+              ultimateEnergyGain: skill.ultimateEnergyGain,
+              teamUltimateEnergyGain: skill.teamUltimateEnergyGain,
+              ...(skill.ultimateEnergyGainByEnemies ? { ultimateEnergyGainByEnemies: skill.ultimateEnergyGainByEnemies } : {}),
               ...(skillType === NounType.ULTIMATE && slot.potential != null ? { operatorPotential: slot.potential } : {}),
               ...(skillType === NounType.BATTLE && skill.skillPointCost != null ? { skillPointCost: skill.skillPointCost } : {}),
               ...(() => { const sp = op ? collectSuppliedParameters(getOperatorSkill(op.id, skill.name)?.suppliedParameters, skill.defaultSegments) : undefined; return sp ? { suppliedParameters: sp } : {}; })(),
@@ -641,15 +641,15 @@ export function buildColumns(
             const bsLabels = getSegmentLabels(op.id, skill.name);
             const baseSeg = SkillSegmentBuilder.buildSegments(
               getFrameSequences(op.id, skill.name),
-              { labels: bsLabels, gaugeGain: skill.gaugeGain, teamGaugeGain: skill.teamGaugeGain, ctx: skillCtx },
+              { labels: bsLabels, ultimateEnergyGain: skill.ultimateEnergyGain, teamUltimateEnergyGain: skill.teamUltimateEnergyGain, ctx: skillCtx },
             );
             col.defaultEvent = {
               ...col.defaultEvent!,
               id: skill.name,
               name: skill.name,
               segments: baseSeg.segments,
-              gaugeGain: skill.gaugeGain,
-              teamGaugeGain: skill.teamGaugeGain,
+              ultimateEnergyGain: skill.ultimateEnergyGain,
+              teamUltimateEnergyGain: skill.teamUltimateEnergyGain,
             };
             const baseSkillObj = getOperatorSkill(op.id, skill.name);
             const baseBsParams = collectSuppliedParameters(baseSkillObj?.suppliedParameters, baseSeg.segments);
@@ -662,20 +662,20 @@ export function buildColumns(
               if (!varSkill) continue;
               const variantSeqs = getFrameSequences(op.id, varId);
               if (!variantSeqs?.length) continue;
-              // Enhanced variants default to 0 gauge gain; empowered inherits base
+              // Enhanced variants default to 0 ultimate energy gain; empowered inherits base
               const isEnhanced = suffix.includes('ENHANCED');
-              const gg = isEnhanced ? 0 : skill.gaugeGain;
-              const tgg = isEnhanced ? 0 : skill.teamGaugeGain;
+              const gg = isEnhanced ? 0 : skill.ultimateEnergyGain;
+              const tgg = isEnhanced ? 0 : skill.teamUltimateEnergyGain;
               const varLabels = getSegmentLabels(op.id, varId);
-              const variantSeg = SkillSegmentBuilder.buildSegments(variantSeqs, { labels: varLabels, gaugeGain: gg, teamGaugeGain: tgg, ctx: skillCtx });
+              const variantSeg = SkillSegmentBuilder.buildSegments(variantSeqs, { labels: varLabels, ultimateEnergyGain: gg, teamUltimateEnergyGain: tgg, ctx: skillCtx });
               // Apply frame modifications if defined on the variant
               if (varSkill.frameModifications) {
-                for (const fm of varSkill.frameModifications as { segmentIndex: number; frameIndex: number; stagger?: number; gaugeGain?: number; consumeStatus?: string; removeConsumeArtsInfliction?: boolean; spReturnP1?: number }[]) {
+                for (const fm of varSkill.frameModifications as { segmentIndex: number; frameIndex: number; stagger?: number; ultimateEnergyGain?: number; consumeStatus?: string; removeConsumeArtsInfliction?: boolean; spReturnP1?: number }[]) {
                   const seg = variantSeg.segments[fm.segmentIndex];
                   const frame = seg?.frames?.[fm.frameIndex];
                   if (frame) {
                     if (fm.stagger != null) frame.stagger = fm.stagger;
-                    if (fm.gaugeGain != null) frame.gaugeGain = fm.gaugeGain;
+                    if (fm.ultimateEnergyGain != null) frame.ultimateEnergyGain = fm.ultimateEnergyGain;
                   }
                 }
               }
@@ -692,8 +692,8 @@ export function buildColumns(
                 segments: variantSeg.segments,
                 ...(varSkill.triggerCondition ? { triggerCondition: varSkill.triggerCondition as string } : {}),
                 ...(varSkill.activationClause ? { activationClause: varSkill.activationClause as Predicate[] } : {}),
-                gaugeGain: gg,
-                teamGaugeGain: tgg,
+                ultimateEnergyGain: gg,
+                teamUltimateEnergyGain: tgg,
                 ...(varParams ? { suppliedParameters: varParams } : {}),
               });
             }
@@ -711,7 +711,7 @@ export function buildColumns(
           // Generic battle skill: data-driven frame sequences
           const battleSeqs = op && battleName ? getFrameSequences(op.id, battleName) : undefined;
           if (battleSeqs?.length && skillType === NounType.BATTLE && !hasBattleVariants) {
-            const seg = SkillSegmentBuilder.buildSegments(battleSeqs, { gaugeGain: skill.gaugeGain, teamGaugeGain: skill.teamGaugeGain, ctx: skillCtx });
+            const seg = SkillSegmentBuilder.buildSegments(battleSeqs, { ultimateEnergyGain: skill.ultimateEnergyGain, teamUltimateEnergyGain: skill.teamUltimateEnergyGain, ctx: skillCtx });
             // Only append cooldown if the data-driven segments don't already include one
             const hasBattleCdSegment = seg.segments.some(s => s.properties.segmentTypes?.includes(SegmentType.COOLDOWN));
             let battleSegments: import('../../consts/viewTypes').EventSegmentData[];
@@ -779,9 +779,9 @@ export function buildColumns(
                 const labels = getSegmentLabels(op.id, cs.id);
                 const eTypes = cs.enhancementTypes ?? [];
                 const isEnhanced = eTypes.includes(EnhancementType.ENHANCED);
-                const gg = isEnhanced ? 0 : skill.gaugeGain;
-                const tgg = isEnhanced ? 0 : skill.teamGaugeGain;
-                const seg = SkillSegmentBuilder.buildSegments(seqs, { labels, gaugeGain: gg, teamGaugeGain: tgg, gaugeGainByEnemies: skill.gaugeGainByEnemies, ctx: skillCtx });
+                const gg = isEnhanced ? 0 : skill.ultimateEnergyGain;
+                const tgg = isEnhanced ? 0 : skill.teamUltimateEnergyGain;
+                const seg = SkillSegmentBuilder.buildSegments(seqs, { labels, ultimateEnergyGain: gg, teamUltimateEnergyGain: tgg, ultimateEnergyGainByEnemies: skill.ultimateEnergyGainByEnemies, ctx: skillCtx });
                 const enhancementType = eTypes.includes(EnhancementType.EMPOWERED) ? EnhancementType.EMPOWERED
                   : isEnhanced ? EnhancementType.ENHANCED
                   : EnhancementType.NORMAL;
@@ -795,8 +795,8 @@ export function buildColumns(
                   enhancementType,
                   segments: seg.segments,
                   ...(raw.activationClause ? { activationClause: raw.activationClause as Predicate[] } : {}),
-                  gaugeGain: gg,
-                  teamGaugeGain: tgg,
+                  ultimateEnergyGain: gg,
+                  teamUltimateEnergyGain: tgg,
                   ...(comboParams ? { suppliedParameters: comboParams } : {}),
                 });
               }

@@ -1,0 +1,46 @@
+{
+  "properties": {
+    "id": "VIGIL_SERVICES_ULTIMATE_ENERGY_LOCKOUT",
+    "name": "Vigil Services (Ultimate Energy Lockout)",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
+    "eventType": "STATUS",
+    "eventIdType": "TALENT",
+    "description": "Last Rite can only gain Ultimate Energy from her own battle skills and combo skills.",
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": 99999
+      },
+      "unit": "SECOND"
+    },
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 1
+      },
+      "interactionType": "RESET"
+    }
+  },
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "IGNORE",
+          "object": "ULTIMATE_ENERGY",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "originId": "LAST_RITE",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ],
+    "icon": "skills/ult_lastrite.png",
+    "dataStatus": "RECONCILED"
+  }
+}

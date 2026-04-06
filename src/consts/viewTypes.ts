@@ -14,12 +14,12 @@ export interface SkillDef {
   /** Default segments for this skill. Optional — defaults to a single segment with the activation duration. */
   defaultSegments?: EventSegmentData[];
   triggerCondition: string | null;
-  /** Ultimate gauge gained by this operator when skill is used. */
-  gaugeGain?: number;
-  /** Ultimate gauge gained by all team operators when skill is used. */
-  teamGaugeGain?: number;
-  /** Per-enemy-count gauge gain map (e.g. {1: 25, 2: 30, 3: 35}). */
-  gaugeGainByEnemies?: Record<number, number>;
+  /** Ultimate energy gained by this operator when skill is used. */
+  ultimateEnergyGain?: number;
+  /** Ultimate energy gained by all team operators when skill is used. */
+  teamUltimateEnergyGain?: number;
+  /** Per-enemy-count ultimate energy gain map (e.g. {1: 25, 2: 30, 3: 35}). */
+  ultimateEnergyGainByEnemies?: Record<number, number>;
   /** SP cost for battle skills. */
   skillPointCost?: number;
   /** Description of SP return mechanics (potentials, talents, gear effects). */
@@ -131,12 +131,12 @@ export interface EventFrameMarker {
   templateFinalStrikeSP?: number;
   /** Template stagger for this frame when it is the final strike (from model data). */
   templateFinalStrikeStagger?: number;
-  /** Ultimate gauge gained by this operator on this frame. */
-  gaugeGain?: number;
-  /** Ultimate gauge gained by all team operators on this frame. */
-  teamGaugeGain?: number;
-  /** Per-enemy-count gauge gain map (e.g. {1: 25, 2: 30, 3: 35}). */
-  gaugeGainByEnemies?: Record<number, number>;
+  /** Ultimate energy gained by this operator on this frame. */
+  ultimateEnergyGain?: number;
+  /** Ultimate energy gained by all team operators on this frame. */
+  teamUltimateEnergyGain?: number;
+  /** Per-enemy-count ultimate energy gain map (e.g. {1: 25, 2: 30, 3: 35}). */
+  ultimateEnergyGainByEnemies?: Record<number, number>;
   /** Raw ValueNode for ultimate energy gain — stored when the value depends on suppliedParameters (VARY_BY). Resolved at runtime. */
   ultimateEnergyGainNode?: import('../dsl/semantics').ValueNode;
 }
@@ -207,13 +207,13 @@ export interface TimelineEvent {
    * Default is 0 (no restriction — events can always overlap).
    */
   nonOverlappableRange?: number;
-  /** Ultimate gauge gained by this operator when event fires. */
-  gaugeGain?: number;
-  /** Ultimate gauge gained by all team operators when event fires. */
-  teamGaugeGain?: number;
-  /** Per-enemy-count gauge gain map (e.g. {1: 25, 2: 30, 3: 35}). */
-  gaugeGainByEnemies?: Record<number, number>;
-  /** Number of enemies hit (selectable in info pane when gaugeGainByEnemies exists). */
+  /** Ultimate energy gained by this operator when event fires. */
+  ultimateEnergyGain?: number;
+  /** Ultimate energy gained by all team operators when event fires. */
+  teamUltimateEnergyGain?: number;
+  /** Per-enemy-count ultimate energy gain map (e.g. {1: 25, 2: 30, 3: 35}). */
+  ultimateEnergyGainByEnemies?: Record<number, number>;
+  /** Number of enemies hit (selectable in info pane when ultimateEnergyGainByEnemies exists). */
   enemiesHit?: number;
   /** User-supplied parameters available as VARY_BY dimensions on this event. */
   suppliedParameters?: Record<string, { id: string; name: string; lowerRange: number; upperRange: number; default: number }[]>;
@@ -382,12 +382,12 @@ export type MiniTimeline = {
     triggerCondition?: string | null;
     /** Segment definitions for this event. */
     segments?: EventSegmentData[];
-    /** Ultimate gauge gained by this operator. */
-    gaugeGain?: number;
-    /** Ultimate gauge gained by all team operators. */
-    teamGaugeGain?: number;
-    /** Per-enemy-count gauge gain map. */
-    gaugeGainByEnemies?: Record<number, number>;
+    /** Ultimate energy gained by this operator. */
+    ultimateEnergyGain?: number;
+    /** Ultimate energy gained by all team operators. */
+    teamUltimateEnergyGain?: number;
+    /** Per-enemy-count ultimate energy gain map. */
+    ultimateEnergyGainByEnemies?: Record<number, number>;
     /** How this event interacts with other timelines. */
     timeInteraction?: string;
     /** If true, this is a perfect dodge. */
@@ -418,12 +418,12 @@ export type MiniTimeline = {
     disabled?: boolean;
     /** Reason shown when disabled. */
     disabledReason?: string;
-    /** Ultimate gauge gained by this operator. */
-    gaugeGain?: number;
-    /** Ultimate gauge gained by all team operators. */
-    teamGaugeGain?: number;
-    /** Per-enemy-count gauge gain map. */
-    gaugeGainByEnemies?: Record<number, number>;
+    /** Ultimate energy gained by this operator. */
+    ultimateEnergyGain?: number;
+    /** Ultimate energy gained by all team operators. */
+    teamUltimateEnergyGain?: number;
+    /** Per-enemy-count ultimate energy gain map. */
+    ultimateEnergyGainByEnemies?: Record<number, number>;
     /** How this event interacts with other timelines. */
     timeInteraction?: string;
     /** If true, this is a perfect dodge. */

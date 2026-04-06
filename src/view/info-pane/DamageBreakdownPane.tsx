@@ -67,8 +67,8 @@ function DamageBreakdownPane({ row, frame, onToggleCrit }: DamageBreakdownPanePr
               {frame.damageMultiplier != null && <div>Multiplier: {nf === NumberFormatType.DECIMAL ? frame.damageMultiplier.toFixed(dp) : `${(frame.damageMultiplier * 100).toFixed(dp)}%`}</div>}
               {frame.skillPointRecovery != null && <div>SP Recovery: {frame.skillPointRecovery}</div>}
               {frame.stagger != null && <div>Stagger: {frame.stagger}</div>}
-              {frame.gaugeGain != null && <div>Gauge: {frame.gaugeGain}</div>}
-              {frame.teamGaugeGain != null && <div>Team Gauge: {frame.teamGaugeGain}</div>}
+              {frame.ultimateEnergyGain != null && <div>Gauge: {frame.ultimateEnergyGain}</div>}
+              {frame.teamUltimateEnergyGain != null && <div>Team Gauge: {frame.teamUltimateEnergyGain}</div>}
             </div>
             {frame.damageType !== DamageType.DAMAGE_OVER_TIME && onToggleCrit && (
               <div className="edit-field">

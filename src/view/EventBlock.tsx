@@ -468,8 +468,8 @@ function EventBlock({
     );
 
     // Collect frame diamonds into a separate layer above all segments
-    // Pre-compute lateral offsets for co-located frames (same offset → adjacent diamonds)
-    const frames = seg.frames ?? [];
+    // Filter out frames in 0-duration segments (conditional segments like Vajra Impact without LINK)
+    const frames = seg.properties.duration === 0 ? [] : (seg.frames ?? []);
     const frameLateralOffsets: number[] = [];
     for (let fi = 0; fi < frames.length; fi++) {
       const offset = frames[fi].derivedOffsetFrame ?? frames[fi].offsetFrame;

@@ -1130,8 +1130,8 @@ function BuiltinOperatorSkillSection({ operatorId, skillType, skill, onExpandedC
   );
 
   const ultEnergy = useMemo(
-    () => skillType === NounType.ULTIMATE ? resolveUltimateEnergy(operatorId, 0, skill.gaugeGain, skill.teamGaugeGain) : null,
-    [operatorId, skillType, skill.gaugeGain, skill.teamGaugeGain],
+    () => skillType === NounType.ULTIMATE ? resolveUltimateEnergy(operatorId, 0, skill.ultimateEnergyGain, skill.teamUltimateEnergyGain) : null,
+    [operatorId, skillType, skill.ultimateEnergyGain, skill.teamUltimateEnergyGain],
   );
 
 
@@ -1181,8 +1181,8 @@ function BuiltinOperatorSkillSection({ operatorId, skillType, skill, onExpandedC
                 {ultEnergy && (
                   <>
                     <ReadonlyField label="Energy Cost" value={String(ultEnergy.adjustedCost)} />
-                    {ultEnergy.gaugeGain != null && ultEnergy.gaugeGain > 0 && <ReadonlyField label="Gauge Gain" value={String(ultEnergy.gaugeGain)} />}
-                    {ultEnergy.teamGaugeGain != null && ultEnergy.teamGaugeGain > 0 && <ReadonlyField label="Team Gauge" value={String(ultEnergy.teamGaugeGain)} />}
+                    {ultEnergy.ultimateEnergyGain != null && ultEnergy.ultimateEnergyGain > 0 && <ReadonlyField label="Gauge Gain" value={String(ultEnergy.ultimateEnergyGain)} />}
+                    {ultEnergy.teamUltimateEnergyGain != null && ultEnergy.teamUltimateEnergyGain > 0 && <ReadonlyField label="Team Gauge" value={String(ultEnergy.teamUltimateEnergyGain)} />}
                   </>
                 )}
               </>} />
@@ -1987,8 +1987,8 @@ function BuiltinSkillView({ id }: { id: string }) {
       <GSection title="Resources">
         <div className="ev-field-grid">
           {skill.skillPointCost != null && <Field label="SP Cost" value={String(skill.skillPointCost)} />}
-          {skill.gaugeGain != null && <Field label="Gauge Gain" value={String(skill.gaugeGain)} />}
-          {skill.teamGaugeGain != null && <Field label="Team Gauge" value={String(skill.teamGaugeGain)} />}
+          {skill.ultimateEnergyGain != null && <Field label="Gauge Gain" value={String(skill.ultimateEnergyGain)} />}
+          {skill.teamUltimateEnergyGain != null && <Field label="Team Gauge" value={String(skill.teamUltimateEnergyGain)} />}
         </div>
       </GSection>
 
