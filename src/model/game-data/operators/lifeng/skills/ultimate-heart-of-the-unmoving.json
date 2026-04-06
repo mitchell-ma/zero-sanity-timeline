@@ -44,6 +44,7 @@
           },
           "unit": "SECOND"
         },
+        "name": "Sequence 1",
         "element": "PHYSICAL"
       },
       "frames": [
@@ -80,10 +81,7 @@
                   "object": "STATUS",
                   "objectId": "PHYSICAL",
                   "objectQualifier": "KNOCK_DOWN",
-                  "to": "ENEMY",
-                  "with": {
-                    "isForced": { "verb": "IS", "value": 1 }
-                  }
+                  "to": "ENEMY"
                 },
                 {
                   "verb": "DEAL",
@@ -146,7 +144,7 @@
           },
           "unit": "SECOND"
         },
-        "name": "Vajra Impact",
+        "name": "Sequence 2",
         "element": "PHYSICAL"
       },
       "frames": [
@@ -183,10 +181,7 @@
                   "object": "STATUS",
                   "objectId": "PHYSICAL",
                   "objectQualifier": "KNOCK_DOWN",
-                  "to": "ENEMY",
-                  "with": {
-                    "isForced": { "verb": "IS", "value": 1 }
-                  }
+                  "to": "ENEMY"
                 },
                 {
                   "verb": "DEAL",
@@ -228,36 +223,47 @@
                   }
                 }
               ]
+            }
+          ],
+          "clauseType": "ALL"
+        }
+      ]
+    },
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT"
+      },
+      "properties": {
+        "duration": {
+          "value": {
+            "operation": "MULT",
+            "left": {
+              "verb": "IS",
+              "object": "STACKS",
+              "of": { "object": "EVENT", "objectId": "LINK" }
             },
+            "right": { "verb": "IS", "value": 2.03 }
+          },
+          "unit": "SECOND"
+        },
+        "name": "Vajra Impact",
+        "element": "PHYSICAL"
+      },
+      "frames": [
+        {
+          "metadata": { "eventComponentType": "FRAME" },
+          "properties": {
+            "offset": { "value": 1.93, "unit": "SECOND" }
+          },
+          "clause": [
             {
-              "conditions": [
-                {
-                  "subject": "EVENT",
-                  "verb": "HAVE",
-                  "object": "STATUS",
-                  "objectId": "LINK"
-                }
-              ],
+              "conditions": [],
               "effects": [
-                {
-                  "verb": "CONSUME",
-                  "object": "STATUS",
-                  "objectId": "LINK",
-                  "from": "TEAM",
-                  "with": {
-                    "stacks": "MAX"
-                  }
-                },
                 {
                   "verb": "DEAL",
                   "object": "STAGGER",
                   "to": "ENEMY",
-                  "with": {
-                    "value": {
-                      "verb": "IS",
-                      "value": 5
-                    }
-                  }
+                  "with": { "value": { "verb": "IS", "value": 5 } }
                 },
                 {
                   "verb": "DEAL",
@@ -268,33 +274,14 @@
                     "value": {
                       "verb": "VARY_BY",
                       "object": "SKILL_LEVEL",
-                      "value": [
-                        2.67,
-                        2.94,
-                        3.2,
-                        3.47,
-                        3.74,
-                        4,
-                        4.27,
-                        4.54,
-                        4.8,
-                        5.14,
-                        5.54,
-                        6
-                      ],
-                      "of": {
-                        "object": "OPERATOR",
-                        "determiner": "THIS"
-                      }
+                      "value": [2.67, 2.94, 3.2, 3.47, 3.74, 4, 4.27, 4.54, 4.8, 5.14, 5.54, 6],
+                      "of": { "object": "OPERATOR", "determiner": "THIS" }
                     },
                     "mainStat": {
                       "verb": "IS",
                       "object": "STAT",
                       "objectId": "ATTACK",
-                      "of": {
-                        "object": "OPERATOR",
-                        "determiner": "THIS"
-                      }
+                      "of": { "object": "OPERATOR", "determiner": "THIS" }
                     }
                   }
                 }

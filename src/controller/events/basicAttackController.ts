@@ -101,7 +101,9 @@ export class SkillSegmentBuilder {
           : undefined);
 
       // Drop frames beyond the segment duration — they belong in a separate segment in the JSON.
-      const inBound = frames.filter(f => f.offsetFrame <= durationFrames);
+      // Preserve all frames for runtime-conditional-duration segments (re-resolved during queue processing).
+      const hasRuntimeDur = 'hasRuntimeConditionalDuration' in seq && (seq as { hasRuntimeConditionalDuration: () => boolean }).hasRuntimeConditionalDuration();
+      const inBound = hasRuntimeDur ? frames : frames.filter(f => f.offsetFrame <= durationFrames);
 
       const seqRecord = seq as SkillEventSequence & { segmentElement?: string; segmentTypes?: string[]; timeDependency?: string; clause?: EventSegmentData['clause']; suppliedParameters?: Record<string, { id: string; name: string; lowerRange: number; upperRange: number; default: number }[]> };
       const segData: EventSegmentData = {

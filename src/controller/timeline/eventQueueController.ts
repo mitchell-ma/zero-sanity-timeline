@@ -342,7 +342,7 @@ export function runEventQueue(
 
   const allEvents = [...registeredEvents, ...queueEvents];
   const comboWindows = slotWirings && slotWirings.length > 0
-    ? deriveComboActivationWindows(allEvents, slotWirings, stops)
+    ? deriveComboActivationWindows(allEvents, slotWirings, stops, getControlledSlotAtFrame)
     : [];
   state.markExtended(comboWindows.map(ev => ev.uid));
   state.registerEvents([...queueEvents, ...comboWindows]);
@@ -510,7 +510,7 @@ export function processCombatSimulation(
     // Re-derive windows using post-queue events (reduced CDs). Replace all
     // combo windows with the fresh derivation, then re-clamp.
     const postQueueEvents = [...state.getRegisteredEvents(), ...state.output];
-    const freshWindows = deriveComboActivationWindows(postQueueEvents, slotWirings, state.getStops());
+    const freshWindows = deriveComboActivationWindows(postQueueEvents, slotWirings, state.getStops(), getControlledSlotAtFrame);
     state.replaceComboWindows(freshWindows);
     state.clampComboWindowsToEventEnd();
   }

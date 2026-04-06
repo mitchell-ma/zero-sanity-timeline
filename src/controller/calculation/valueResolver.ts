@@ -28,6 +28,8 @@ export interface ValueResolutionContext {
   suppliedParameters?: Record<string, number>;
   /** Runtime query: active stack count for a status on the resolved operator (0 if not present). */
   getStatusStacks?: (statusId: string) => number;
+  /** Runtime query: consumed stack count for a status on the current event (e.g. LINK consumed by ult). */
+  getEventStacks?: (statusId: string) => number;
 }
 
 /** Default context when no loadout is available (uses max skill level, no potential). */
@@ -109,11 +111,17 @@ export function resolveValueNode(node: ValueNode, ctx: ValueResolutionContext): 
 
   if (isValueStatus(node)) {
     const ofClause = node.of;
-    if (ofClause && ctx.getStatusStacks) {
+    if (ofClause) {
       const statusId = ofClause.objectQualifier && ofClause.objectId
         ? flattenQualifiedId(String(ofClause.objectQualifier), ofClause.objectId)
         : ofClause.objectId;
-      if (statusId) return ctx.getStatusStacks(statusId);
+      if (!statusId) return 0;
+      // STACKS of <STATUS> of EVENT → consumed stacks on the current event
+      if (ofClause.object === NounType.EVENT && ctx.getEventStacks) {
+        return ctx.getEventStacks(statusId);
+      }
+      // STACKS of <STATUS> of OPERATOR → active stacks on the operator
+      if (ctx.getStatusStacks) return ctx.getStatusStacks(statusId);
     }
     return 0;
   }

@@ -230,7 +230,7 @@ function resolveTriggerKey(verb: string, cond: Predicate): string {
   if (verb === VerbType.IS || verb === VerbType.BECOME) {
     // Map state qualifiers (COMBUSTED) to column IDs (combustion) for matching
     const stateCol = STATE_TO_COLUMN[cond.object ?? ''];
-    // Negated IS/BECOME conditions (BECOME NOT SLOWED) register under BECOME_NOT key
+    // Negated IS/BECOME conditions (IS NOT SLOWED, BECOME NOT STAGGERED) register under verb_NOT key
     const negPrefix = cond.negated ? `${verb}_NOT` : verb;
     return `${negPrefix}:${stateCol ?? cond.object ?? '*'}`;
   }

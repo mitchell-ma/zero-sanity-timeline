@@ -100,6 +100,7 @@ interface VerbHandlerContext {
   secondaryConditions: Predicate[];
   clauseEffects?: TriggerEffect[];
   stops?: readonly TimeStopRegion[];
+  controlledSlotId?: string | ((frame: number) => string);
 }
 
 type VerbHandlerFn = (primaryCond: Predicate, ctx: VerbHandlerContext) => TriggerMatch[];
@@ -211,9 +212,10 @@ function resolveColumns(cond: Predicate): Set<string> | undefined {
  * For state/possession verbs (HAVE, IS, RECEIVE), the subject is the entity.
  * For skill verbs (PERFORM, DEAL, RECOVER), the subject is the performer.
  */
-function resolveOwnerFilter(cond: Predicate, operatorSlotId: string, verb?: string) {
+function resolveOwnerFilter(cond: Predicate, operatorSlotId: string, verb?: string, controlledSlotId?: string | ((frame: number) => string)) {
   const det = cond.subjectDeterminer;
-  const isAnyOperator = cond.subject === NounType.OPERATOR && (det === DeterminerType.ANY || det === DeterminerType.CONTROLLED);
+  const isControlledOperator = cond.subject === NounType.OPERATOR && det === DeterminerType.CONTROLLED;
+  const isAnyOperator = cond.subject === NounType.OPERATOR && (det === DeterminerType.ANY || (isControlledOperator && !controlledSlotId));
   const isAnyOtherOperator = cond.subject === NounType.OPERATOR && det === DeterminerType.ANY_OTHER;
   const toObj = cond.to;
   const toDet = cond.toDeterminer;
@@ -223,24 +225,24 @@ function resolveOwnerFilter(cond: Predicate, operatorSlotId: string, verb?: stri
 
   return {
     isAnyOperator: isAnyOperator || isAnyOtherOperator,
-    matchesOwner(ownerId: string) {
+    matchesOwner(ownerId: string, atFrame?: number) {
       if (isActionVerb && toObj) {
-        // Explicit target — match event owner against target
         if (toObj === NounType.ENEMY) return ownerId === ENEMY_OWNER_ID;
         if (toObj === NounType.OPERATOR) {
           if (toDet === DeterminerType.ANY) return ownerId !== ENEMY_OWNER_ID && ownerId !== COMMON_OWNER_ID;
-          if (toDet === DeterminerType.ALL) return true; // team-wide
+          if (toDet === DeterminerType.ALL) return true;
           if (toDet === DeterminerType.OTHER) return ownerId !== operatorSlotId && ownerId !== ENEMY_OWNER_ID && ownerId !== COMMON_OWNER_ID;
-          return ownerId === operatorSlotId; // THIS or default
+          return ownerId === operatorSlotId;
         }
         return true;
       }
-      if (isActionVerb) {
-        // No explicit target — wildcard (match any recipient)
-        return true;
-      }
-      // Subject-based filtering (PERFORM, HAVE, IS, RECEIVE, DEAL, RECOVER, etc.)
+      if (isActionVerb) return true;
+      // Subject-based filtering
       if (cond.subject === NounType.ENEMY) return ownerId === ENEMY_OWNER_ID;
+      if (isControlledOperator && controlledSlotId) {
+        const resolved = typeof controlledSlotId === 'function' ? controlledSlotId(atFrame ?? 0) : controlledSlotId;
+        return ownerId === resolved;
+      }
       if (isAnyOtherOperator) return ownerId !== operatorSlotId && ownerId !== ENEMY_OWNER_ID && ownerId !== COMMON_OWNER_ID;
       if (isAnyOperator) return ownerId !== ENEMY_OWNER_ID && ownerId !== COMMON_OWNER_ID;
       return ownerId === operatorSlotId;
@@ -289,19 +291,19 @@ function scanEvents(primaryCond: Predicate, ctx: VerbHandlerContext, verb: strin
 
 function handlePerform(primaryCond: Predicate, ctx: VerbHandlerContext): TriggerMatch[] {
   const matches: TriggerMatch[] = [];
-  const { matchesOwner, isAnyOperator } = resolveOwnerFilter(primaryCond, ctx.operatorSlotId, VerbType.PERFORM);
+  const { matchesOwner, isAnyOperator } = resolveOwnerFilter(primaryCond, ctx.operatorSlotId, VerbType.PERFORM, ctx.controlledSlotId);
 
   // Resolve the effective skill ID: for normalized SKILL objects, use objectId
   const skillId = primaryCond.object === NounType.SKILL ? primaryCond.objectId : primaryCond.object;
 
   if (skillId === NounType.FINAL_STRIKE) {
     for (const ev of ctx.events) {
-      if (!matchesOwner(ev.ownerId)) continue;
       if (ev.columnId !== NounType.BASIC_ATTACK) continue;
       if (ev.id === NounType.FINISHER || ev.id === NounType.DIVE) continue;
 
       const triggerFrame = getFinalStrikeTriggerFrame(ev, ctx.stops);
       if (triggerFrame == null) continue;
+      if (!matchesOwner(ev.ownerId, triggerFrame)) continue;
       if (!checkSecondary(ctx, triggerFrame, ev.ownerId)) continue;
 
       matches.push(makeMatch(triggerFrame, ev, ctx.clauseEffects));
@@ -645,6 +647,7 @@ export function findClauseTriggerMatches(
   events: readonly TimelineEvent[],
   operatorSlotId: string,
   stops?: readonly TimeStopRegion[],
+  controlledSlotId?: string | ((frame: number) => string),
 ): TriggerMatch[] {
   const matches: TriggerMatch[] = [];
 
@@ -673,6 +676,7 @@ export function findClauseTriggerMatches(
       secondaryConditions,
       clauseEffects: clause.effects,
       stops,
+      controlledSlotId,
     };
 
     matches.push(...handler.findMatches(primaryCond, ctx));

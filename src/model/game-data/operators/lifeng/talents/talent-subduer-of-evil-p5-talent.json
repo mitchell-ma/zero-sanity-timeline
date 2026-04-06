@@ -9,6 +9,14 @@
           "object": "STATUS",
           "objectId": "PHYSICAL",
           "objectQualifier": "KNOCK_DOWN"
+        },
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "HAVE",
+          "object": "POTENTIAL",
+          "cardinalityConstraint": "GREATER_THAN_EQUAL",
+          "value": { "verb": "IS", "value": 5 }
         }
       ],
       "effects": [
@@ -16,8 +24,7 @@
           "verb": "APPLY",
           "object": "STATUS",
           "objectId": "SUBDUER_OF_EVIL_P5",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR"
+          "to": "ENEMY"
         }
       ]
     }

@@ -20,6 +20,11 @@
 - Operator data updates for Perlica (Obliteration Protocol), Rossi (Razor Clawmark), Gilberta (Anomalous Gravity Field), Arclight (Tactful Approach), Estella (Distortion, Tremolo), Da-Pan (Chop N Dunk), Endministrator (Realspace Stasis), and Antal (Focus, Focus Empowered)
 - Stagger status configs (node stagger, full stagger) updated with proper stat-based triggers
 - New integration tests for Fluorite slow talent, skill column noun type verification, and Perlica Obliteration Protocol
+- Lifeng's ultimate reworked — Vajra Impact is now a conditional segment that only activates when LINK is consumed. Without LINK, the ultimate skips the Vajra Impact phase entirely, resulting in a shorter animation. With LINK, the full extended attack plays out with bonus damage
+- Lifeng's Subduer of Evil P5 talent now correctly targets the enemy (applying Physical DMG debuff) and only activates at Potential 5
+- Susceptibility values on freeform status events are now editable — click a susceptibility event to adjust the percentage in the event editor instead of being read-only
+- Combo skill activation now correctly checks which operator is being controlled at the time of the trigger — previously any operator's final strike could activate any combo, now only the actively controlled operator's actions count
+- Lift and Knock Down physical status effects now properly calculate and display their damage in the damage breakdown
 
 ## 2026-04-04
 - Laevatain's Empowered Battle Skill now properly consumes all Melting Flame stacks at once, matching in-game behavior — previously it consumed only one stack per use, leaving leftover stacks that incorrectly triggered Scorching Heart

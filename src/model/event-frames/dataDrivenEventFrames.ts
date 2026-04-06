@@ -411,6 +411,19 @@ export class DataDrivenSkillEventSequence extends SkillEventSequence {
 
   getDurationSeconds(): number { return this._durationSeconds; }
 
+  /** True if the duration depends on runtime event state (e.g. STACKS of LINK of EVENT). */
+  hasRuntimeConditionalDuration(): boolean {
+    if (!this._durationNode || typeof this._durationNode !== 'object') return false;
+    // Recursively check if any node in the expression references EVENT stacks
+    const check = (n: unknown): boolean => {
+      if (!n || typeof n !== 'object') return false;
+      const obj = n as Record<string, unknown>;
+      if (obj.object === 'STACKS' && (obj.of as Record<string, unknown>)?.object === 'EVENT') return true;
+      return check(obj.left) || check(obj.right);
+    };
+    return check(this._durationNode);
+  }
+
   getDurationSecondsWithContext(ctx?: ValueResolutionContext): number {
     if (!ctx || !this._durationNode) return this._durationSeconds;
     return resolveValueNode(this._durationNode, ctx);
@@ -430,7 +443,14 @@ export function buildSequencesFromSkillCategory(
 ): readonly DataDrivenSkillEventSequence[] {
   if (skillCategory.segments) {
     return skillCategory.segments
-      .filter(seg => resolveDur(seg.properties!.duration!) > 0)
+      .filter(seg => {
+        const dur = seg.properties!.duration!;
+        // Preserve segments with runtime-conditional durations (e.g. STACKS of LINK of EVENT)
+        // even if they resolve to 0 at build time — they are re-resolved during queue processing.
+        const seq = new DataDrivenSkillEventSequence(seg);
+        if (seq.hasRuntimeConditionalDuration()) return true;
+        return resolveDur(dur) > 0;
+      })
       .map(seg => new DataDrivenSkillEventSequence(seg));
   }
 

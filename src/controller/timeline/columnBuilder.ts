@@ -1,5 +1,5 @@
 import { Column, MiniTimeline, MicroColumn, Operator, Enemy, VisibleSkills, EventFrameMarker, EventSegmentData } from '../../consts/viewTypes';
-import { DeterminerType, NounType, VerbType, type Effect, type Predicate } from '../../dsl/semantics';
+import { DeterminerType, NounType, VerbType, isQualifiedId, type Effect, type Predicate } from '../../dsl/semantics';
 import type { FrameClausePredicate } from '../../model/event-frames/skillEventFrame';
 import { ColumnType, DEFAULT_EVENT_COLOR, ELEMENT_COLORS, ElementType, EnhancementType, EventFrameType, HeaderVariant, MicroColumnAssignment, SegmentType, StackInteractionType, StatusType, TimeDependency, TimelineSourceType, UNLIMITED_STACKS } from '../../consts/enums';
 import { ENEMY_OWNER_ID, ENEMY_GROUP_COLUMNS, ENEMY_ACTION_COLUMN_ID, OPERATOR_COLUMNS, OPERATOR_STATUS_COLUMN_ID, PHYSICAL_INFLICTION_COLUMNS, PHYSICAL_STATUS_COLUMNS, SKILL_COLUMN_ORDER as SKILL_ORDER, COMBO_WINDOW_COLUMN_ID, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID } from '../../model/channels';
@@ -126,11 +126,21 @@ function buildStatusMicroColumn(
     inheritDuration: true,
   };
 
-  // Freeform status events use a synthetic segment with only the APPLY clause.
+  // Susceptibility events use plain segments (no APPLY frame) so the queue's
+  // section 3b handles them — it passes event.susceptibility through to the
+  // created event. With APPLY frames, section 3a would create a new event via
+  // doApply which doesn't carry susceptibility data.
+  const isSusceptibility = statusId === StatusType.SUSCEPTIBILITY
+    || statusId === StatusType.FOCUS
+    || isQualifiedId(statusId, StatusType.SUSCEPTIBILITY);
+
+  // Other freeform status events use a synthetic segment with only the APPLY clause.
   // The APPLY creates the status via doApply → processNewStatusEvent, which handles
   // the status's own frame markers inline. Including the status's real frames here
   // would cause double processing (once by the queue's PROCESS_FRAME, once inline).
-  const segments = syntheticSegments(durFrames, applyEffect);
+  const segments = isSusceptibility
+    ? [{ properties: { duration: durFrames } }]
+    : syntheticSegments(durFrames, applyEffect);
 
   return {
     id: statusId,
@@ -148,8 +158,24 @@ function buildStatusMicroColumn(
       name: statusId,
       segments,
       ...(cfg?.stacks ? { stacks: { limit: { value: cfg.maxStacks }, interactionType: cfg.stacks.interactionType } } : {}),
+      ...buildDefaultSusceptibility(statusId),
     },
   };
+}
+
+/** For element-qualified susceptibility statuses (e.g. HEAT_SUSCEPTIBILITY),
+ *  initialize a default susceptibility map so the damage calc recognizes the event. */
+function buildDefaultSusceptibility(statusId: string): { susceptibility: Partial<Record<ElementType, number>> } | undefined {
+  if (statusId === StatusType.SUSCEPTIBILITY || statusId === StatusType.FOCUS) {
+    return { susceptibility: {} };
+  }
+  if (isQualifiedId(statusId, StatusType.SUSCEPTIBILITY)) {
+    const element = statusId.slice(0, statusId.length - `_${StatusType.SUSCEPTIBILITY}`.length) as ElementType;
+    if (Object.values(ElementType).includes(element)) {
+      return { susceptibility: { [element]: 0 } };
+    }
+  }
+  return undefined;
 }
 
 /** Build the full ordered list of timeline columns from app state. */

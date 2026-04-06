@@ -319,7 +319,11 @@ export enum AdjectiveType {
   CORROSION = "CORROSION",
   ELECTRIFICATION = "ELECTRIFICATION",
 
-  // State adjectives (ENEMY IS <adj>, ENEMY BECOME <adj>)
+  // State adjectives:
+  //   IS <adj>     = existence check (is the entity currently in this state?)
+  //   BECOME <adj> = transition trigger (did the entity just enter/leave this state?)
+  // Stat-based states (SLOWED, STAGGERED) use the stat accumulator for both.
+  // Column-based states (LIFTED, COMBUSTED, etc.) check active events on their column.
   SLOWED = "SLOWED",
   LIFTED = "LIFTED",
   KNOCKED_DOWN = "KNOCKED_DOWN",
@@ -390,7 +394,7 @@ export const VERB_OBJECTS: Partial<Record<VerbType, ObjectType[]>> = {
   [VerbType.DISABLE]:    [ObjectType.SKILL],
   [VerbType.EXPERIENCE]: [ObjectType.GAME_TIME, ObjectType.REAL_TIME],
   [VerbType.HAVE]:       [ObjectType.STATUS, ObjectType.INFLICTION, ObjectType.REACTION, ObjectType.STACKS, ObjectType.SKILL_POINT, ObjectType.ULTIMATE_ENERGY, ObjectType.HP, ObjectType.POTENTIAL],
-  [VerbType.IS]:         [ObjectType.ACTIVE, ObjectType.CONTROLLED_STATE, ObjectType.SLOWED, ObjectType.LIFTED, ObjectType.KNOCKED_DOWN, ObjectType.CRUSHED, ObjectType.BREACHED, ObjectType.COMBUSTED, ObjectType.CORRODED, ObjectType.ELECTRIFIED, ObjectType.SOLIDIFIED, ObjectType.NODE_STAGGERED, ObjectType.FULL_STAGGERED, ObjectType.STACKS],
+  [VerbType.IS]:         [ObjectType.ACTIVE, ObjectType.CONTROLLED_STATE, ObjectType.SLOWED, ObjectType.STAGGERED, ObjectType.LIFTED, ObjectType.KNOCKED_DOWN, ObjectType.CRUSHED, ObjectType.BREACHED, ObjectType.COMBUSTED, ObjectType.CORRODED, ObjectType.ELECTRIFIED, ObjectType.SOLIDIFIED, ObjectType.NODE_STAGGERED, ObjectType.FULL_STAGGERED, ObjectType.STACKS],
   [VerbType.BECOME]:     [ObjectType.STACKS, ObjectType.ACTIVE, ObjectType.STAGGERED, ObjectType.SLOWED, ObjectType.LIFTED, ObjectType.KNOCKED_DOWN, ObjectType.CRUSHED, ObjectType.BREACHED, ObjectType.COMBUSTED, ObjectType.CORRODED, ObjectType.ELECTRIFIED, ObjectType.SOLIDIFIED, ObjectType.NODE_STAGGERED, ObjectType.FULL_STAGGERED],
   [VerbType.RECEIVE]:    [ObjectType.STATUS, ObjectType.INFLICTION, ObjectType.REACTION, ObjectType.STAGGER],
   [VerbType.OVERHEAL]:   [ObjectType.HP],

@@ -30,6 +30,8 @@ processCombatSimulation(rawEvents, loadoutContext...)
   4. SkillPointController.deriveSPRecoveryEvents(...)     → SP recovery events → state.registerEvents
   5. runEventQueue(state, derivedEvents, ...)             → builds TriggerIndex, seeds talent + derived + triggers, runs EventInterpretorController
   6. state.getProcessedEvents()                           → final output (reactions merged)
+  7. StaggerController.sync(result)                        → frailty events from stagger HP graph
+  8. If frailty events: re-run steps 1–6 with frailty events appended to rawEvents
 ```
 
 ### Components
@@ -43,7 +45,7 @@ processCombatSimulation(rawEvents, loadoutContext...)
 | `EventInterpretorController` | `eventInterpretorController.ts` | Per-invocation | DSL interpreter + queue frame handler. Routes effects through DerivedEventController domain methods. Reactive trigger evaluation via TriggerIndex after each DEC mutation. |
 | `CombatLoadoutController` | `combatLoadoutController.ts` | Persistent (React) | Manages operator/weapon/gear selection. Provides loadout context to the pipeline. |
 | `SkillPointController` | `skillPointController.ts` | Persistent (React) | SP resource timeline. `deriveSPRecoveryEvents` derives SP events; `sync` post-processes after pipeline. |
-| `StaggerController` | `staggerController.ts` | Persistent (React) | Stagger resource timeline. `sync` post-processes after pipeline. |
+| `StaggerController` | `staggerController.ts` | Persistent (React) | Stagger resource timeline. `sync` post-processes after pipeline. Generates frailty events (node/full stagger) with `STAGGER_FRAILTY` stat clauses. Frailty events are fed back into a second pipeline pass so `BECOME STAGGERED` triggers fire. |
 | `EventsQueryService` | `eventsQueryService.ts` | Per-invocation | Read-only query interface backed by DerivedEventController for damage calculation. |
 
 ### Supporting Utilities
@@ -139,7 +141,9 @@ processCombatSimulation(rawEvents, loadoutContext)
     ▼
 Post-pipeline (app layer):
     SkillPointController.sync(processedEvents) → SP resource timeline
-    StaggerController.sync(processedEvents) → stagger resource timeline
+    StaggerController.sync(processedEvents) → stagger resource timeline + frailty events
+      If frailty events exist → re-run pipeline with frailty events included
+      (two-pass: pass 1 computes stagger damage, pass 2 fires BECOME STAGGERED triggers)
     EventsQueryService(controller) → damage table queries
 ```
 
@@ -154,6 +158,33 @@ Entries ordered by `(frame, priority)`. Lower priority fires first at the same f
 | 5 | `PROCESS_FRAME` | Unified frame processing — DSL clause interpretation for skill events, freeform event creation (inflictions, reactions, statuses) via step 3b for non-skill events. Post-hook: reactive trigger evaluation. |
 | 22 | `ENGINE_TRIGGER` | Evaluate HAVE conditions + create derived statuses. Seeded from input events (PERFORM), from reactive post-hooks (APPLY/CONSUME/lifecycle), and from TriggerIndex. Fires before COMBO_RESOLVE so trigger effects (e.g. Scorching Heart infliction absorption) resolve first. |
 | 25 | `COMBO_RESOLVE` | Deferred combo trigger resolution. Fires after ENGINE_TRIGGER so that trigger-consumed inflictions are gone before combo HAVE conditions are checked. |
+
+---
+
+## Stat-Based State Triggers
+
+Some state conditions are tracked via the stat accumulator rather than column-based events.
+These use a counter pattern: the stat is incremented when a source is applied, decremented when it expires.
+Triggers fire on the 0→positive transition (BECOME) and positive→0 transition (BECOME NOT).
+
+| Adjective | StatType | Trigger Verb | Example |
+|-----------|----------|-------------|---------|
+| `SLOWED` | `SLOW` | `BECOME` / `BECOME_NOT` | Fluorite T1 — DMG bonus vs slowed |
+| `STAGGERED` | `STAGGER_FRAILTY` | `BECOME` / `BECOME_NOT` | Perlica T1 — DMG bonus during stagger |
+
+**Firing rules:**
+- `BECOME <adj>`: fired from the `APPLY STAT` handler when `statBefore <= 0` (transition from inactive to active)
+- `BECOME_NOT <adj>`: fired from EVENT_END and CONSUME handlers when the status def has a clause that applies the tracked stat
+
+**Implementation:** Both mappings are defined in `STAT_TO_STATE_ADJECTIVE` (eventInterpretorController.ts) and `ADJECTIVE_TO_STAT` (conditionEvaluator.ts). Adding a new stat-based state requires entries in both maps.
+
+**Condition evaluation:** Both `IS <adj>` and `BECOME <adj>` check the stat accumulator for existence (stat > 0). The difference is semantic — `IS` checks current state, `BECOME` checks state for transition triggers. Both use the shared `ADJECTIVE_TO_STAT` map.
+
+**Freeform status `inheritDuration`:** Freeform-placed statuses use a synthetic `APPLY STATUS` clause with `inheritDuration: true`. This makes `doApply` use the parent event's remaining duration instead of the status config's fixed duration, so user drag-resizing the freeform event propagates to the derived status effect.
+
+**Stagger frailty two-pass pipeline:** Stagger frailty events are generated post-pipeline by `StaggerController.sync()`.
+If frailty events exist, the pipeline re-runs with them included so `BECOME STAGGERED` triggers fire.
+The stagger status defs (`status-stagger-node.json`, `status-stagger-full.json`) contain `APPLY STAT STAGGER_FRAILTY` clauses.
 
 ---
 

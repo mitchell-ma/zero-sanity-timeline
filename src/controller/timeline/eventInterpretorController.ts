@@ -25,7 +25,7 @@ import type { Interaction, ValueNode, ValueExpression } from '../../dsl/semantic
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT, buildContextForSkillColumn } from '../calculation/valueResolver';
 import type { ValueResolutionContext } from '../calculation/valueResolver';
 import { TimelineEvent, eventDuration, setEventDuration } from '../../consts/viewTypes';
-import { CritMode, DamageType, ElementType, EventFrameType, EventStatusType, PERMANENT_DURATION, PhysicalStatusType, SegmentType, StackInteractionType, StatType, UnitType } from '../../consts/enums';
+import { CritMode, DamageScalingStatType, DamageType, ElementType, EventFrameType, EventStatusType, PERMANENT_DURATION, PhysicalStatusType, SegmentType, StackInteractionType, StatType, StatusType, UnitType } from '../../consts/enums';
 import { resolveEffectStat } from '../../model/enums/stats';
 import type { OverrideStore } from '../../consts/overrideTypes';
 import type { StatAccumulator, StatSource } from '../calculation/statAccumulator';
@@ -159,6 +159,15 @@ const LIFT_KNOCK_DOWN_DURATION = 1 * FPS;
 /** Lift / Knock Down damage multiplier (120% ATK). */
 const LIFT_KNOCK_DOWN_DAMAGE_MULTIPLIER = 1.2;
 
+/**
+ * Maps stat types to their BECOME state adjective for reactive triggers.
+ * When a stat transitions 0→positive, the engine fires BECOME:<adjective>.
+ * When it drops back to 0, the engine fires BECOME_NOT:<adjective>.
+ */
+const STAT_TO_STATE_ADJECTIVE: Partial<Record<StatType, AdjectiveType>> = {
+  [StatType.SLOW]: AdjectiveType.SLOWED,
+  [StatType.STAGGER_FRAILTY]: AdjectiveType.STAGGERED,
+};
 
 const NOOP_VERBS = new Set<string>([
   VerbType.RETURN, VerbType.DEAL, VerbType.HIT,
@@ -688,8 +697,6 @@ export class EventInterpretorController {
     }
 
     let result: QueueFrame[];
-    // eslint-disable-next-line no-console
-    if (entry.type === QueueFrameType.ENGINE_TRIGGER && entry.engineTrigger?.ctx?.def?.properties?.id === 'LOVE_THE_STAB_AND_TWIST_TALENT') console.log(`[processQueueFrame] T1 ENGINE_TRIGGER at frame=${entry.frame} effects=${entry.engineTrigger?.ctx?.triggerEffects?.length} haveConditions=${entry.engineTrigger?.ctx?.haveConditions?.length}`);
     switch (entry.type) {
       case QueueFrameType.PROCESS_FRAME:  result = this.handleProcessFrame(entry); break;
       case QueueFrameType.ENGINE_TRIGGER: result = this.handleEngineTrigger(entry); break;
@@ -995,17 +1002,11 @@ export class EventInterpretorController {
             // Snapshot stat before delta to detect 0→positive transitions
             const statBefore = this.statAccumulator.getStat(ownerId, statKey);
             this.statAccumulator.applyStatDelta(ownerId, { [statKey]: v });
-            // Fire stat-based triggers only on 0→positive transition (not when already active)
-            if (statKey === StatType.SLOW && (statBefore ?? 0) <= 0) {
+            // Fire BECOME state trigger on 0→positive transition (not when already active)
+            const stateAdj = STAT_TO_STATE_ADJECTIVE[statKey];
+            if (stateAdj && (statBefore ?? 0) <= 0) {
               this._statTriggerOut.length = 0;
-              this.checkReactiveTriggers(VerbType.BECOME, AdjectiveType.SLOWED, ctx.frame, ctx.sourceSlotId ?? ctx.sourceOwnerId, ctx.sourceSkillName, undefined, this._statTriggerOut);
-              // eslint-disable-next-line no-console
-              console.log(`[SLOW→BECOME] frame=${ctx.frame} statBefore=${statBefore} triggerOut=${this._statTriggerOut.length} indexKeys=[${Array.from(this.triggerIndex?.keys() ?? []).filter(k => k.includes('SLOW') || k.includes('BECOME')).join(',')}]`);
-              if (this._statTriggerOut.length > 0) this.pendingExitFrames.push(...this._statTriggerOut);
-            }
-            if (statKey === StatType.STAGGER_FRAILTY && (statBefore ?? 0) <= 0) {
-              this._statTriggerOut.length = 0;
-              this.checkReactiveTriggers(VerbType.BECOME, AdjectiveType.STAGGERED, ctx.frame, ctx.sourceSlotId ?? ctx.sourceOwnerId, ctx.sourceSkillName, undefined, this._statTriggerOut);
+              this.checkReactiveTriggers(VerbType.BECOME, stateAdj, ctx.frame, ctx.sourceSlotId ?? ctx.sourceOwnerId, ctx.sourceSkillName, undefined, this._statTriggerOut);
               if (this._statTriggerOut.length > 0) this.pendingExitFrames.push(...this._statTriggerOut);
             }
           }
@@ -1031,10 +1032,9 @@ export class EventInterpretorController {
     // APPLY EVENT — create a new instance of the parent status definition on the target.
     // Equivalent to APPLY STATUS <parentStatusId> with the parent's duration and stacking.
     if (effect.object === NounType.EVENT && ctx.parentStatusId) {
-      // eslint-disable-next-line no-console
-      console.log(`[APPLY EVENT] parentStatusId=${ctx.parentStatusId} frame=${ctx.frame}`);
       return this.doApply({ ...effect, object: NounType.STATUS, objectId: ctx.parentStatusId }, ctx);
     }
+    // eslint-disable-next-line no-console
     console.warn(`[EventInterpretor] APPLY: unsupported object ${effect.object}`);
     return false;
   }
@@ -1163,17 +1163,15 @@ export class EventInterpretorController {
     const objectId = this.resolveObjectIdForTrigger(effect);
     if (!objectId) return;
     this.checkReactiveTriggers(effect.verb, objectId, absFrame, eventOwnerId, eventName, undefined, out);
-    // CONSUME a status with SLOW/STAGGER_FRAILTY clause → fire BECOME_NOT (stat may have ended)
+    // CONSUME a status with stat-based state clause → fire BECOME_NOT (stat may have ended)
     if (effect.verb === VerbType.CONSUME && effect.object === NounType.STATUS && effect.objectId) {
       const consumedDef = getStatusDef(effect.objectId);
       if (consumedDef?.clause) {
         for (const clause of consumedDef.clause as { effects?: { verb?: string; object?: string; objectId?: string }[] }[]) {
           for (const ef of clause.effects ?? []) {
-            if (ef.verb === VerbType.APPLY && ef.object === NounType.STAT && ef.objectId === NounType.SLOW) {
-              this.checkReactiveTriggers(`${VerbType.BECOME}_NOT`, AdjectiveType.SLOWED, absFrame, eventOwnerId, eventName, undefined, out);
-            }
-            if (ef.verb === VerbType.APPLY && ef.object === NounType.STAT && ef.objectId === NounType.STAGGER_FRAILTY) {
-              this.checkReactiveTriggers(`${VerbType.BECOME}_NOT`, AdjectiveType.STAGGERED, absFrame, eventOwnerId, eventName, undefined, out);
+            if (ef.verb === VerbType.APPLY && ef.object === NounType.STAT) {
+              const adj = STAT_TO_STATE_ADJECTIVE[ef.objectId as StatType];
+              if (adj) this.checkReactiveTriggers(`${VerbType.BECOME}_NOT`, adj, absFrame, eventOwnerId, eventName, undefined, out);
             }
           }
         }
@@ -1575,12 +1573,18 @@ export class EventInterpretorController {
         maxStacks: 1,
         uid: derivedEventUid(columnId, source.ownerId, frame),
         event: {
+          name: label,
           segments: [{
             properties: { duration: LIFT_KNOCK_DOWN_DURATION, name: label },
             frames: [{
               offsetFrame: 0,
               damageElement: ElementType.PHYSICAL,
               damageMultiplier: LIFT_KNOCK_DOWN_DAMAGE_MULTIPLIER,
+              dealDamage: {
+                element: ElementType.PHYSICAL,
+                multipliers: [LIFT_KNOCK_DOWN_DAMAGE_MULTIPLIER],
+                mainStat: 'ATTACK' as DamageScalingStatType,
+              },
             }],
           }],
         },
@@ -1789,6 +1793,33 @@ export class EventInterpretorController {
       // Link consumption for battle skills and ultimates
       if (event.columnId === NounType.BATTLE || event.columnId === NounType.ULTIMATE) {
         this.controller.consumeLink(event.uid, absFrame, source);
+
+        // Re-resolve conditional segment durations that depend on LINK consumption.
+        // STACKS of LINK of THIS EVENT resolves to consumed LINK count via getEventStacks.
+        // At event creation time getEventStacks wasn't available — re-resolve now.
+        const linkStacks = this.controller.getLinkStacks(event.uid);
+        if (linkStacks > 0) {
+          const operatorIdForLink = this.slotOperatorMap?.[event.ownerId];
+          const skillDefForLink = operatorIdForLink ? getOperatorSkill(operatorIdForLink, event.id) : undefined;
+          if (skillDefForLink?.segments) {
+            const skillCtx = this.buildValueContext({ frame: absFrame, sourceOwnerId: source.ownerId, sourceSlotId: event.ownerId, sourceSkillName: event.id, potential: pot });
+            const eventCtx: ValueResolutionContext = {
+              ...skillCtx,
+              getEventStacks: (statusId) => statusId === StatusType.LINK ? linkStacks : 0,
+            };
+            for (let si = 0; si < event.segments.length && si < (skillDefForLink.segments as unknown[]).length; si++) {
+              const rawSeg = (skillDefForLink.segments as { properties?: { duration?: { value?: unknown; unit?: string } } }[])[si];
+              const rawDur = rawSeg?.properties?.duration;
+              if (rawDur?.value && typeof rawDur.value === 'object' && 'operation' in (rawDur.value as Record<string, unknown>)) {
+                const resolved = resolveValueNode(rawDur.value as ValueNode, eventCtx);
+                const resolvedFrames = Math.round(resolved * FPS);
+                if (resolvedFrames !== event.segments[si].properties.duration) {
+                  event.segments[si].properties.duration = resolvedFrames;
+                }
+              }
+            }
+          }
+        }
       }
 
       // Generic PERFORM trigger (PERFORM BATTLE_SKILL, etc.)
@@ -1850,23 +1881,18 @@ export class EventInterpretorController {
     }
 
     if (entry.hookType === FrameHookType.EVENT_END) {
-      // Fire IS_NOT state triggers for status events (e.g. IE expired → IS NOT SLOWED may fire)
-      // The negated condition is re-evaluated in handleEngineTrigger via haveConditions,
-      // so if other SLOW sources still exist, the trigger won't execute.
-      // Fire IS_NOT state triggers for stat-based states when a status expires.
-      // Check if the expiring event's status def applies SLOW stat — if so, SLOWED may have ended.
+      // Fire IS_NOT column triggers for non-skill status events (e.g. MF stack expiry).
+      // Stat-based BECOME_NOT triggers (SLOWED, STAGGERED) are fired separately below.
       if (!SKILL_COLUMN_SET.has(event.columnId)) {
         this.checkReactiveTriggers(`${VerbType.IS}_NOT`, event.columnId, absFrame, event.ownerId, event.id, undefined, newEntries);
-        // Generic stat-based: fire IS_NOT/HAVE_NOT for each stat-adjective the status provides
+        // Generic stat-based: fire BECOME_NOT for each stat-adjective the status provides
         const statusDef = getStatusDef(event.id);
         if (statusDef?.clause) {
           for (const clause of statusDef.clause as { effects?: { verb?: string; object?: string; objectId?: string }[] }[]) {
             for (const ef of clause.effects ?? []) {
-              if (ef.verb === VerbType.APPLY && ef.object === NounType.STAT && ef.objectId === NounType.SLOW) {
-                this.checkReactiveTriggers(`${VerbType.BECOME}_NOT`, AdjectiveType.SLOWED, absFrame, event.ownerId, event.id, undefined, newEntries);
-              }
-              if (ef.verb === VerbType.APPLY && ef.object === NounType.STAT && ef.objectId === NounType.STAGGER_FRAILTY) {
-                this.checkReactiveTriggers(`${VerbType.BECOME}_NOT`, AdjectiveType.STAGGERED, absFrame, event.ownerId, event.id, undefined, newEntries);
+              if (ef.verb === VerbType.APPLY && ef.object === NounType.STAT) {
+                const adj = STAT_TO_STATE_ADJECTIVE[ef.objectId as StatType];
+                if (adj) this.checkReactiveTriggers(`${VerbType.BECOME}_NOT`, adj, absFrame, event.ownerId, event.id, undefined, newEntries);
               }
             }
           }
@@ -2538,7 +2564,8 @@ export class EventInterpretorController {
     const info = getComboTriggerInfo(wiring.operatorId);
     const windowFrames = info?.windowFrames ?? 720;
 
-    const matches = findClauseTriggerMatches(clause, this.getAllEvents(), wiring.slotId);
+    const controlledSlot = this.getControlledSlotAtFrame?.(absFrame);
+    const matches = findClauseTriggerMatches(clause, this.getAllEvents(), wiring.slotId, undefined, controlledSlot);
     let triggerCol: string | undefined;
     for (const match of matches) {
       if (match.originOwnerId === combo.ownerId) continue;

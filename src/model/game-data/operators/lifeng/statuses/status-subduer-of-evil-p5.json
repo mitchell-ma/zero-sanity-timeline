@@ -4,12 +4,13 @@
       "metadata": { "eventComponentType": "SEGMENT" },
       "properties": {
         "duration": { "value": { "verb": "IS", "value": 2 }, "unit": "SECOND" },
-        "name": "Subduer of Evil (P5)"
+        "name": "Subduer of Evil (P5)",
+        "element": "PHYSICAL"
       },
       "frames": [
         {
           "metadata": { "eventComponentType": "FRAME" },
-          "properties": { "offset": { "value": 0, "unit": "SECOND" } },
+          "properties": { "offset": { "value": 0, "unit": "SECOND" }, "element": "PHYSICAL" },
           "clause": [
             {
               "conditions": [],
@@ -56,8 +57,7 @@
   "properties": {
     "id": "SUBDUER_OF_EVIL_P5",
     "name": "Subduer of Evil (P5 Empowered)",
-    "to": "OPERATOR",
-    "toDeterminer": "THIS",
+    "to": "ENEMY",
     "stacks": {
       "limit": {
         "verb": "IS",

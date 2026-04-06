@@ -534,17 +534,33 @@ function EventPane({
         {event.susceptibility && Object.keys(event.susceptibility).length > 0 && (
           <div className="edit-panel-section">
             <span className="edit-section-label">Susceptibility</span>
-            <div className="edit-info-text">
-              {Object.entries(event.susceptibility).map(([element, value]) => {
-                const color = ELEMENT_COLORS[element as ElementType] ?? 'var(--text-muted)';
-                const label = ELEMENT_LABELS[element as ElementType] ?? element;
-                return (
-                  <div key={element}>
-                    <span style={{ color }}>{label}</span>: {formatPct(value)}
+            {Object.entries(event.susceptibility).map(([element, value]) => {
+              const color = ELEMENT_COLORS[element as ElementType] ?? 'var(--text-muted)';
+              const label = ELEMENT_LABELS[element as ElementType] ?? element;
+              return readOnly ? (
+                <div key={element} className="edit-info-text">
+                  <span style={{ color }}>{label}</span>: {formatPct(value)}
+                </div>
+              ) : (
+                <div key={element} className="edit-field">
+                  <span className="edit-field-label" style={{ color }}>{label}</span>
+                  <div className="edit-field-row">
+                    <input
+                      className="edit-input"
+                      type="text"
+                      inputMode="numeric"
+                      style={{ width: 60 }}
+                      value={formatFlat(value * 100)}
+                      onChange={(e) => {
+                        const pct = parseFloat(e.target.value);
+                        if (!isNaN(pct)) onUpdate(event.uid, { susceptibility: { ...event.susceptibility, [element]: pct / 100 } });
+                      }}
+                    />
+                    <span className="edit-input-unit">%</span>
                   </div>
-                );
-              })}
-            </div>
+                </div>
+              );
+            })}
           </div>
         )}
 

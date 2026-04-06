@@ -398,6 +398,7 @@ export function createEvent(
     segmentOrigin?: number[];
     suppliedParameters?: Record<string, { id: string; name: string; lowerRange: number; upperRange: number; default: number }[]>;
     parameterValues?: Record<string, number>;
+    susceptibility?: Partial<Record<import('../../consts/enums').ElementType, number>>;
   } | null,
   interactionMode?: import('../../consts/enums').InteractionModeType,
 ): TimelineEvent {
@@ -434,6 +435,7 @@ export function createEvent(
     ...(defaultSkill?.segmentOrigin ? { segmentOrigin: defaultSkill.segmentOrigin } : {}),
     ...(defaultSkill?.suppliedParameters ? { suppliedParameters: defaultSkill.suppliedParameters } : {}),
     ...(defaultSkill?.parameterValues ? { parameterValues: defaultSkill.parameterValues } : {}),
+    ...(defaultSkill?.susceptibility ? { susceptibility: defaultSkill.susceptibility } : {}),
   };
 }
 

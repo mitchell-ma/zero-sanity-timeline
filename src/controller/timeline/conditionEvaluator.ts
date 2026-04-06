@@ -14,6 +14,14 @@ import { ENEMY_OWNER_ID, INFLICTION_COLUMNS, PHYSICAL_INFLICTION_COLUMNS, PHYSIC
 import { COMMON_OWNER_ID } from '../slot/commonSlotController';
 import { activeEventsAtFrame, activeCountAtFrame } from './timelineQueries';
 
+// ── Stat-based state adjective mapping ────────────────────────────────────
+// Maps state adjectives to their underlying stat for IS/BECOME evaluation.
+
+const ADJECTIVE_TO_STAT: Partial<Record<string, StatType>> = {
+  [AdjectiveType.SLOWED]: StatType.SLOW,
+  [AdjectiveType.STAGGERED]: StatType.STAGGER_FRAILTY,
+};
+
 // ── Column ID resolution ─────────────────────────────────────────────────
 
 const ELEMENT_TO_INFLICTION_COLUMN: Record<string, string> = {
@@ -242,8 +250,7 @@ function evaluateHave(cond: Interaction, ctx: ConditionContext): boolean {
   // For LESS_THAN / LESS_THAN_EQUAL, count=0 is a valid result (0 ≤ N).
   // Only early-exit when no cardinality constraint accepts 0.
   const hasLessThanConstraint = cond.cardinalityConstraint === CardinalityConstraintType.LESS_THAN
-    || cond.cardinalityConstraint === CardinalityConstraintType.LESS_THAN_EQUAL
-    || cond.cardinalityConstraint === CardinalityConstraintType.EXACTLY;
+    || cond.cardinalityConstraint === CardinalityConstraintType.LESS_THAN_EQUAL;
   if (count === 0 && !hasLessThanConstraint) return false;
 
   const condValue = cond.value ?? (cond as unknown as { with?: { value?: ValueNode } }).with?.value;
@@ -280,14 +287,15 @@ function evaluateIs(cond: Interaction, ctx: ConditionContext): boolean {
     FULL_STAGGERED: FULL_STAGGER_COLUMN_ID,
   };
 
-  // SLOWED: check if the stat accumulator has SLOW > 0 for the target entity.
-  // Any status with APPLY STAT SLOW contributes — not tied to specific columns.
-  if (cond.object === AdjectiveType.SLOWED) {
+  // Stat-based states (SLOWED, STAGGERED): check stat accumulator for existence.
+  // IS handles its own negation (line 512 skips negation for IS verb).
+  const isStatKey = ADJECTIVE_TO_STAT[cond.object as string];
+  if (isStatKey) {
     if (!ctx.getStatValue) return cond.negated ? true : false;
     const ownerId = resolveOwnerId(cond.subject, ctx, cond.subjectDeterminer);
     if (!ownerId) return cond.negated ? true : false;
-    const slowValue = ctx.getStatValue(ownerId, StatType.SLOW);
-    const hasActive = slowValue != null && slowValue > 0;
+    const val = ctx.getStatValue(ownerId, isStatKey);
+    const hasActive = val != null && val > 0;
     return cond.negated ? !hasActive : hasActive;
   }
 
@@ -363,15 +371,16 @@ function evaluateBecome(cond: Interaction, ctx: ConditionContext): boolean {
     return true;
   }
 
-  // STAGGERED: stat-based transition via STAGGER_FRAILTY counter.
-  // BECOME STAGGERED = counter went from 0 to >0; BECOME NOT STAGGERED = counter went to 0.
+  // Stat-based state transitions: BECOME SLOWED / BECOME STAGGERED.
   // The transition is detected by the trigger firing logic (0→positive guard);
   // at evaluation time we just check whether the stat is currently non-zero.
-  if (cond.object === AdjectiveType.STAGGERED) {
+  // Negation is handled by evaluateInteraction (line 512) for BECOME verb.
+  const becomeStatKey = ADJECTIVE_TO_STAT[cond.object as string];
+  if (becomeStatKey) {
     if (!ctx.getStatValue) return false;
     const ownerId = resolveOwnerId(cond.subject, ctx, cond.subjectDeterminer);
     if (!ownerId) return false;
-    const val = ctx.getStatValue(ownerId, StatType.STAGGER_FRAILTY);
+    const val = ctx.getStatValue(ownerId, becomeStatKey);
     return val != null && val > 0;
   }
 

@@ -21,7 +21,12 @@
 - CS restructured: FIRST_MATCH → ALL + TRIGGER INFLICTION (Antal pattern), P5 REDUCE COOLDOWN baked in
 - ULT frame 1: detonation conditional added (CONSUME IMPROVISED_EXPLOSIVE, +30% damage, SLOW, stagger, infliction)
 - ULT stagger corrected: 5 per sequence (20 total) instead of 20 on last frame only
-- T1: Perlica-style onTriggerClause added (ENEMY RECEIVE STATUS SLOW) for timeline visibility
+- T1: stat-based BECOME SLOWED / BECOME NOT SLOWED trigger (mirrors Perlica BECOME STAGGERED pattern)
+  - ENEMY BECOME SLOWED → APPLY EVENT (create T1 presence)
+  - ENEMY BECOME NOT SLOWED → CONSUME EVENT (remove T1)
+  - Clause: APPLY STAT DAMAGE_BONUS (10%/20% by talent level)
+- Generic SLOW status: 2s duration, APPLY STAT SLOW (0.3) clause, RESET stacking
+- Freeform SLOW placement uses inheritDuration — resize propagates to status effect duration
 
 ## Remaining Work
 

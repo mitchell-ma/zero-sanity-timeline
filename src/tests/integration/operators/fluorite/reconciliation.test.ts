@@ -11,7 +11,7 @@
  * 3. CS uses TRIGGER INFLICTION pattern (re-applies triggering element)
  * 4. ULT detonates IMPROVISED_EXPLOSIVE with +30% damage on frame 1
  * 5. ULT frame 4 FIRST_MATCH infliction reapply
- * 6. T1 DAMAGE_BONUS during SLOW (Perlica-style trigger)
+ * 6. T1 DAMAGE_BONUS via BECOME SLOWED stat-based trigger
  * 7. P3 extends Slow duration from 3s to 6s
  *
  * Three-layer verification:
@@ -675,11 +675,11 @@ describe('H. ULT Mechanics', () => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// I. T1 — Love the Stab and Twist (SLOW → DAMAGE_BONUS)
+// I. T1 — Love the Stab and Twist (BECOME SLOWED → DAMAGE_BONUS)
 // ═══════════════════════════════════════════════════════════════════════════════
 
-describe('I. T1 Damage Bonus (IS SLOWED trigger)', () => {
-  it('I1: T1 talent appears when enemy IS SLOWED (IE on enemy)', () => {
+describe('I. T1 Damage Bonus (BECOME SLOWED trigger)', () => {
+  it('I1: T1 talent appears when enemy BECOME SLOWED (IE on enemy)', () => {
     const { result } = setupFluorite();
 
     // Before BS: no triggered T1 event
@@ -688,7 +688,7 @@ describe('I. T1 Damage Bonus (IS SLOWED trigger)', () => {
     );
     expect(t1Before).toHaveLength(0);
 
-    // Place BS — creates IE on enemy (IS SLOWED becomes true)
+    // Place BS — creates IE on enemy (SLOW stat applied, BECOME SLOWED fires)
     placeBattleSkill(result, 2 * FPS);
 
     // T1 should appear as a triggered instance
@@ -702,7 +702,7 @@ describe('I. T1 Damage Bonus (IS SLOWED trigger)', () => {
     expect(t1After[0].startFrame).toBeGreaterThanOrEqual(bsHitFrame);
   });
 
-  it('I2: T1 does NOT appear when no IE on enemy (IS NOT SLOWED)', () => {
+  it('I2: T1 does NOT appear when no IE on enemy (SLOW stat = 0)', () => {
     const { result } = setupFluorite();
 
     const t1Triggered = result.current.allProcessedEvents.filter(
@@ -743,7 +743,7 @@ describe('I. T1 Damage Bonus (IS SLOWED trigger)', () => {
   it('I4: T1 consumed at ULT detonation frame (not IE natural expiry)', () => {
     const { result } = setupFluorite();
 
-    // Place BS at 2s — IE + T1 active
+    // Place BS at 2s — IE active, SLOW stat > 0, T1 triggered
     placeBattleSkill(result, 2 * FPS);
 
     const t1Before = result.current.allProcessedEvents.filter(
@@ -752,7 +752,7 @@ describe('I. T1 Damage Bonus (IS SLOWED trigger)', () => {
     expect(t1Before).toHaveLength(1);
     const t1FullDuration = eventDuration(t1Before[0]);
 
-    // Place ULT at 3s — consumes IE → IS NOT SLOWED → CONSUME T1
+    // Place ULT at 3s — consumes IE → SLOW stat drops to 0 → BECOME NOT SLOWED → CONSUME T1
     placeUltimate(result, 3 * FPS);
 
     // T1 should be consumed (clamped duration shorter than full)

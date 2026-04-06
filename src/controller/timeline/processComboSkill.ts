@@ -20,6 +20,7 @@ export function deriveComboActivationWindows(
   events: TimelineEvent[],
   slotWirings: SlotTriggerWiring[],
   stops: readonly TimeStopRegion[],
+  getControlledSlotAtFrame?: (frame: number) => string,
 ): TimelineEvent[] {
   // Intermediate accumulator: slotId → unsorted windows
   const windowsBySlot = new Map<string, { startFrame: number; endFrame: number; sourceEventId: string; sourceOwnerId?: string; sourceSkillName?: string; sourceColumnId?: string; triggerStacks?: number }[]>();
@@ -103,7 +104,7 @@ export function deriveComboActivationWindows(
   for (const wiring of slotWirings) {
     const clause = getComboTriggerClause(wiring.operatorId);
     if (!clause?.length) continue;
-    const matches = findClauseTriggerMatches(clause, events, wiring.slotId, stops);
+    const matches = findClauseTriggerMatches(clause, events, wiring.slotId, stops, getControlledSlotAtFrame);
     for (const match of matches) {
       addWindowDirect(wiring, match.frame, match.sourceOwnerId, match.sourceSkillName, match.originOwnerId, match.triggerStacks);
     }
@@ -244,6 +245,7 @@ export function resolveComboTriggerColumns(
   events: TimelineEvent[],
   slotWirings: SlotTriggerWiring[],
   stops: readonly TimeStopRegion[],
+  getControlledSlotAtFrame?: (frame: number) => string,
 ): TimelineEvent[] {
   if (slotWirings.length === 0) return events;
 
@@ -256,7 +258,7 @@ export function resolveComboTriggerColumns(
     if (!clause?.length) continue;
     const info = getComboTriggerInfo(wiring.operatorId);
     const baseDuration = info?.windowFrames ?? 720;
-    const matches = findClauseTriggerMatches(clause, events, wiring.slotId, stops);
+    const matches = findClauseTriggerMatches(clause, events, wiring.slotId, stops, getControlledSlotAtFrame);
     for (const match of matches) {
       const extDuration = extendByTimeStops(match.frame, baseDuration, stops);
       if (!windowsBySlot.has(wiring.slotId)) windowsBySlot.set(wiring.slotId, []);
