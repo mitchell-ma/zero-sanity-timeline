@@ -9,12 +9,12 @@
     "eventIdType": "BASIC_ATTACK",
     "eventQualifierType": "DIVE",
     "element": "CRYO",
-    "id": "BASIC_ATTACK_DIVE"
+    "id": "ILL_BLOW_YOUR_MIND_DIVE"
   },
   "metadata": {
     "originId": "TANGTANG",
     "icon": "skills/attack_guns.png",
-    "dataStatus": "RECONCILED"
+    "dataStatus": "VERIFIED"
   },
   "segments": [
     {

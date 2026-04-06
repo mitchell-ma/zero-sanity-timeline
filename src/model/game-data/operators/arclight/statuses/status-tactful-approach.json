@@ -6,7 +6,7 @@
         {
           "verb": "APPLY",
           "objectQualifier": "ELECTRIC",
-          "object": "SUSCEPTIBILITY",
+          "object": "STATUS", "objectId": "SUSCEPTIBILITY",
           "to": "ENEMY",
           "with": {
             "value": {

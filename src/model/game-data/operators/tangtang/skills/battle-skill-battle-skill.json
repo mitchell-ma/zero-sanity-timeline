@@ -27,7 +27,12 @@
   "metadata": {
     "originId": "TANGTANG",
     "icon": "skills/skill_tangtang.png",
-    "dataStatus": "RECONCILED"
+    "dataSources": [
+      "END_AXIS",
+      "ENDFIELD_WIKI",
+      "SELF"
+    ],
+    "dataStatus": "VERIFIED"
   },
   "segments": [
     {
@@ -70,118 +75,23 @@
                   "to": "ENEMY",
                   "with": {
                     "value": {
-                      "verb": "VARY_BY",
-                      "object": "SKILL_LEVEL",
-                      "value": [
-                        0.8,
-                        0.88,
-                        0.96,
-                        1.04,
-                        1.12,
-                        1.2,
-                        1.28,
-                        1.36,
-                        1.44,
-                        1.54,
-                        1.66,
-                        1.8
-                      ],
-                      "of": {
-                        "object": "OPERATOR",
-                        "determiner": "THIS"
-                      }
-                    },
-                    "mainStat": {
-                      "verb": "IS",
-                      "object": "STAT",
-                      "objectId": "ATTACK",
-                      "of": {
-                        "object": "OPERATOR",
-                        "determiner": "THIS"
-                      }
-                    }
-                  }
-                },
-                {
-                  "verb": "DEAL",
-                  "object": "STAGGER",
-                  "to": "ENEMY",
-                  "with": {
-                    "value": {
-                      "verb": "IS",
-                      "value": 10
-                    }
-                  }
-                }
-              ]
-            }
-          ],
-          "clauseType": "ALL"
-        },
-        {
-          "metadata": {
-            "eventComponentType": "FRAME",
-            "dataSources": [
-              "END_AXIS"
-            ]
-          },
-          "properties": {
-            "offset": {
-              "value": 1,
-              "unit": "SECOND"
-            }
-          },
-          "clause": [
-            {
-              "conditions": [],
-              "effects": [
-                {
-                  "verb": "DEAL",
-                  "object": "STAGGER",
-                  "to": "ENEMY",
-                  "with": {
-                    "value": {
-                      "verb": "IS",
-                      "value": 10
-                    }
-                  }
-                },
-                {
-                  "verb": "APPLY",
-                  "object": "INFLICTION",
-                  "objectQualifier": "CRYO",
-                  "to": "ENEMY",
-                  "with": {
-                    "stacks": {
-                      "verb": "IS",
-                      "value": 1
-                    }
-                  }
-                },
-                {
-                  "verb": "DEAL",
-                  "objectQualifier": "CRYO",
-                  "object": "DAMAGE",
-                  "to": "ENEMY",
-                  "with": {
-                    "value": {
                       "operation": "MULT",
                       "left": {
                         "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
-                          0.16,
-                          0.176,
-                          0.192,
-                          0.208,
-                          0.224,
-                          0.24,
-                          0.256,
-                          0.272,
-                          0.288,
-                          0.308,
-                          0.332,
-                          0.36
+                          0.8,
+                          0.88,
+                          0.96,
+                          1.04,
+                          1.12,
+                          1.2,
+                          1.28,
+                          1.36,
+                          1.44,
+                          1.54,
+                          1.66,
+                          1.8
                         ],
                         "of": {
                           "object": "OPERATOR",
@@ -215,6 +125,202 @@
                       }
                     }
                   }
+                },
+                {
+                  "verb": "DEAL",
+                  "object": "STAGGER",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 10
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
+        },
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "END_AXIS",
+              "ENDFIELD_WIKI"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 1,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "object": "STAGGER",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 10
+                    }
+                  }
+                },
+                {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "WATERSPOUT",
+                  "to": "ENEMY",
+                  "with": {
+                    "stacks": {
+                      "operation": "ADD",
+                      "left": {
+                        "verb": "IS",
+                        "value": 1
+                      },
+                      "right": {
+                        "verb": "IS",
+                        "object": "STACKS",
+                        "of": {
+                          "object": "STATUS",
+                          "objectId": "WHIRLPOOL",
+                          "of": {
+                            "object": "OPERATOR",
+                            "determiner": "THIS"
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "verb": "APPLY",
+                  "objectQualifier": "ARTS",
+                  "object": "STATUS", "objectId": "SUSCEPTIBILITY",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "operation": "MULT",
+                      "left": {
+                        "verb": "IS",
+                        "object": "STACKS",
+                        "of": {
+                          "object": "STATUS",
+                          "objectId": "WHIRLPOOL",
+                          "of": {
+                            "object": "OPERATOR",
+                            "determiner": "THIS"
+                          }
+                        }
+                      },
+                      "right": {
+                        "operation": "ADD",
+                        "left": {
+                          "verb": "VARY_BY",
+                          "object": "SKILL_LEVEL",
+                          "value": [
+                            0.03,
+                            0.033,
+                            0.036,
+                            0.039,
+                            0.042,
+                            0.044,
+                            0.046,
+                            0.047,
+                            0.048,
+                            0.049,
+                            0.05,
+                            0.05
+                          ],
+                          "of": {
+                            "object": "OPERATOR",
+                            "determiner": "THIS"
+                          }
+                        },
+                        "right": {
+                          "verb": "VARY_BY",
+                          "object": "POTENTIAL",
+                          "value": [
+                            0,
+                            0,
+                            0,
+                            0.05,
+                            0.05,
+                            0.05
+                          ],
+                          "of": {
+                            "object": "OPERATOR",
+                            "determiner": "THIS"
+                          }
+                        }
+                      }
+                    },
+                    "duration": {
+                      "value": {
+                        "verb": "IS",
+                        "value": 15
+                      },
+                      "unit": "SECOND"
+                    }
+                  }
+                },
+                {
+                  "verb": "RETURN",
+                  "object": "SKILL_POINT",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "value": {
+                      "operation": "MULT",
+                      "left": {
+                        "verb": "IS",
+                        "object": "STACKS",
+                        "of": {
+                          "object": "STATUS",
+                          "objectId": "WHIRLPOOL",
+                          "of": {
+                            "object": "OPERATOR",
+                            "determiner": "THIS"
+                          }
+                        }
+                      },
+                      "right": {
+                        "operation": "ADD",
+                        "left": {
+                          "verb": "IS",
+                          "value": 20
+                        },
+                        "right": {
+                          "verb": "VARY_BY",
+                          "object": "POTENTIAL",
+                          "value": [
+                            0,
+                            5,
+                            5,
+                            5,
+                            5,
+                            5
+                          ],
+                          "of": {
+                            "object": "OPERATOR",
+                            "determiner": "THIS"
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "verb": "CONSUME",
+                  "object": "STATUS",
+                  "objectId": "WHIRLPOOL",
+                  "fromDeterminer": "THIS",
+                  "from": "OPERATOR"
                 }
               ]
             }

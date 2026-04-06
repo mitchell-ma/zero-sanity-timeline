@@ -27,7 +27,7 @@
           },
           "properties": {
             "offset": {
-              "value": 0.4,
+              "value": 0.2,
               "unit": "SECOND"
             }
           },
@@ -108,7 +108,7 @@
           },
           "properties": {
             "offset": {
-              "value": 0.33,
+              "value": 0.167,
               "unit": "SECOND"
             }
           },
@@ -169,7 +169,7 @@
           },
           "properties": {
             "offset": {
-              "value": 0.8,
+              "value": 0.4,
               "unit": "SECOND"
             }
           },
@@ -250,7 +250,7 @@
           },
           "properties": {
             "offset": {
-              "value": 0.3,
+              "value": 0.15,
               "unit": "SECOND"
             }
           },
@@ -311,7 +311,7 @@
           },
           "properties": {
             "offset": {
-              "value": 0.9,
+              "value": 0.45,
               "unit": "SECOND"
             }
           },
@@ -392,7 +392,7 @@
           },
           "properties": {
             "offset": {
-              "value": 0.7,
+              "value": 0.35,
               "unit": "SECOND"
             }
           },

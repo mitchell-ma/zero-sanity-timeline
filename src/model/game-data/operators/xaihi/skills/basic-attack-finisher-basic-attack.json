@@ -9,7 +9,7 @@
     "eventIdType": "BASIC_ATTACK",
     "eventQualifierType": "FINISHER",
     "element": "CRYO",
-    "id": "BASIC_ATTACK_FINISHER"
+    "id": "COOLDOWN_FINISHER"
   },
   "metadata": {
     "originId": "XAIHI",

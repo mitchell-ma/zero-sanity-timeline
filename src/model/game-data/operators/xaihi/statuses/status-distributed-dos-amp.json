@@ -1,0 +1,89 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STAT",
+          "objectId": "AMP",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "operation": "ADD",
+              "left": {
+                "verb": "VARY_BY",
+                "object": "SKILL_LEVEL",
+                "value": [
+                  0.09,
+                  0.09,
+                  0.09,
+                  0.09,
+                  0.09,
+                  0.11,
+                  0.11,
+                  0.11,
+                  0.13,
+                  0.13,
+                  0.13,
+                  0.15
+                ],
+                "of": {
+                  "object": "OPERATOR",
+                  "determiner": "THIS"
+                }
+              },
+              "right": {
+                "verb": "VARY_BY",
+                "object": "POTENTIAL",
+                "value": [
+                  0,
+                  0.05,
+                  0.05,
+                  0.05,
+                  0.05,
+                  0.05
+                ],
+                "of": {
+                  "object": "OPERATOR",
+                  "determiner": "THIS"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "DISTRIBUTED_DOS_AMP",
+    "name": "Distributed DoS (Amp)",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 1
+      },
+      "interactionType": "RESET"
+    },
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": 25
+      },
+      "unit": "SECOND"
+    },
+    "eventType": "STATUS",
+    "eventIdType": "SKILL_STATUS",
+    "description": "When the controlled operator is already at Max HP when triggering the Auxiliary Crystal HP restoration, grants a temporary Arts Amp."
+  },
+  "metadata": {
+    "originId": "DISTRIBUTED_DOS",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ],
+    "dataStatus": "VERIFIED"
+  }
+}

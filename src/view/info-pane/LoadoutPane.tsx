@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { TimelineEvent, Operator } from '../../consts/viewTypes';
 import { StatType, StatOwnerType, InfoLevel } from '../../consts/enums';
+import { NounType } from '../../dsl/semantics';
 import { OperatorLoadoutState } from '../OperatorLoadoutHeader';
 import { getStarredOperators, toggleStarredOperator } from '../../utils/starredOperators';
 import {
@@ -74,6 +75,7 @@ const STAT_LABEL_KEYS: Record<StatType, string> = {
   [StatType.COMBO_SKILL_DAMAGE_BONUS]: 'stat.COMBO_SKILL_DAMAGE_BONUS',
   [StatType.ULTIMATE_DAMAGE_BONUS]: 'stat.ULTIMATE_DAMAGE_BONUS',
   [StatType.STAGGER_DAMAGE_BONUS]: 'stat.STAGGER_DAMAGE_BONUS',
+  [StatType.FINAL_STRIKE_DAMAGE_BONUS]: 'stat.FINAL_STRIKE_DAMAGE_BONUS',
   [StatType.FINAL_DAMAGE_REDUCTION]: 'stat.FINAL_DAMAGE_REDUCTION',
   [StatType.SKILL_DAMAGE_BONUS]: 'stat.SKILL_DAMAGE_BONUS',
   [StatType.ARTS_DAMAGE_BONUS]: 'stat.ARTS_DAMAGE_BONUS',
@@ -84,6 +86,11 @@ const STAT_LABEL_KEYS: Record<StatType, string> = {
   [StatType.DAMAGE_TAKEN_BONUS]: 'stat.DAMAGE_TAKEN_BONUS',
   [StatType.AMP]: 'stat.AMP',
   [StatType.SUSCEPTIBILITY]: 'stat.SUSCEPTIBILITY',
+  [StatType.HEAT_SUSCEPTIBILITY]: 'stat.HEAT_SUSCEPTIBILITY',
+  [StatType.CRYO_SUSCEPTIBILITY]: 'stat.CRYO_SUSCEPTIBILITY',
+  [StatType.NATURE_SUSCEPTIBILITY]: 'stat.NATURE_SUSCEPTIBILITY',
+  [StatType.ELECTRIC_SUSCEPTIBILITY]: 'stat.ELECTRIC_SUSCEPTIBILITY',
+  [StatType.PHYSICAL_SUSCEPTIBILITY]: 'stat.PHYSICAL_SUSCEPTIBILITY',
   // ── Enemy stats ──────────────────────────────────────────────────────────────
   [StatType.STAGGER_HP]: 'stat.STAGGER_HP',
   [StatType.STAGGER_RECOVERY]: 'stat.STAGGER_RECOVERY',
@@ -91,6 +98,8 @@ const STAT_LABEL_KEYS: Record<StatType, string> = {
   [StatType.FINISHER_SP_GAIN]: 'stat.FINISHER_SP_GAIN',
   [StatType.ATTACK_RANGE]: 'stat.ATTACK_RANGE',
   [StatType.WEIGHT]: 'stat.WEIGHT',
+  [StatType.SLOW]: 'stat.SLOW',
+  [StatType.STAGGER_FRAILTY]: 'stat.STAGGER_FRAILTY',
 };
 
 function getStatLabel(stat: StatType) {
@@ -525,10 +534,10 @@ function LoadoutPane({ operatorId, slotId, operator, loadout, stats, onStatsChan
 
         <div className="edit-panel-section">
           <span className="edit-section-label">Skills</span>
-          {(['basic', 'battle', 'combo', 'ultimate'] as const).map((skillType) => {
+          {([NounType.BASIC_ATTACK, NounType.BATTLE, NounType.COMBO, NounType.ULTIMATE] as const).map((skillType) => {
             const skill = operator.skills[skillType];
-            const levelKey = ({ basic: 'basicAttackLevel', battle: 'battleSkillLevel', combo: 'comboSkillLevel', ultimate: 'ultimateLevel' } as const)[skillType];
-            const labelText = ({ basic: 'Basic Attack', battle: 'Battle Skill', combo: 'Combo Skill', ultimate: 'Ultimate Skill' })[skillType];
+            const levelKey = ({ [NounType.BASIC_ATTACK]: 'basicAttackLevel', [NounType.BATTLE]: 'battleSkillLevel', [NounType.COMBO]: 'comboSkillLevel', [NounType.ULTIMATE]: 'ultimateLevel' } as const)[skillType];
+            const labelText = ({ [NounType.BASIC_ATTACK]: 'Basic Attack', [NounType.BATTLE]: 'Battle Skill', [NounType.COMBO]: 'Combo Skill', [NounType.ULTIMATE]: 'Ultimate Skill' })[skillType];
             return (
               <React.Fragment key={skillType}>
                 <StatField

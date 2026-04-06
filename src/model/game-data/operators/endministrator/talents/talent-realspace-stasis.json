@@ -5,7 +5,7 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "FRAGILITY",
+          "object": "STATUS", "objectId": "FRAGILITY",
           "objectQualifier": "PHYSICAL",
           "to": "ENEMY",
           "with": {

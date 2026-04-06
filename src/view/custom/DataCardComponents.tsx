@@ -279,7 +279,7 @@ function ValueLeaf({ node, label }: { node: Record<string, unknown>; label?: str
     const of = statOfClause?.determiner ? ` of ${statOfClause.determiner.toLowerCase()} operator` : '';
     return <span className="ops-vt-leaf">{label && <span className="ops-prop-tree-leaf-label">{label}</span>} {stat}{of}</span>;
   }
-  if (node.verb === VerbType.IS) return <span className="ops-vt-leaf">{String(node.value)}</span>;
+  if (node.verb === VerbType.IS && !node.object) return <span className="ops-vt-leaf">{String(node.value)}</span>;
   if (node.verb === VerbType.VARY_BY && Array.isArray(node.value)) return <VaryByLeaf node={node} label={label} />;
   if (node.object && node.of) {
     const stackOfClause = node.of as { object?: string; objectId?: string; determiner?: string };

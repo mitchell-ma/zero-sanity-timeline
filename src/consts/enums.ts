@@ -764,11 +764,3 @@ export const enum ColumnLabel {
   OTHER                = 'OTHER',
 }
 
-// ── Skill column display labels ──────────────────────────────────────────────
-
-export const SKILL_LABELS: Record<string, string> = {
-  basic:    t('skill.type.basic'),
-  battle:   t('skill.type.battle'),
-  combo:    t('skill.type.combo'),
-  ultimate: t('skill.type.ultimate'),
-};

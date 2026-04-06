@@ -101,7 +101,7 @@
                   "objectQualifier": "LIFT",
                   "to": "ENEMY",
                   "with": {
-                    "isForced": true
+                    "isForced": { "verb": "IS", "value": 1 }
                   }
                 }
               ]
@@ -481,7 +481,7 @@
                   "objectQualifier": "KNOCK_DOWN",
                   "to": "ENEMY",
                   "with": {
-                    "isForced": true
+                    "isForced": { "verb": "IS", "value": 1 }
                   }
                 },
                 {

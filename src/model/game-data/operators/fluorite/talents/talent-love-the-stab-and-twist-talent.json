@@ -1,14 +1,43 @@
 {
-  "clause": [
+  "onTriggerClause": [
     {
       "conditions": [
         {
           "subject": "ENEMY",
-          "verb": "HAVE",
-          "object": "STATUS",
-          "objectId": "SLOW"
+          "verb": "BECOME",
+          "object": "SLOWED"
         }
       ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "EVENT",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
+        }
+      ]
+    },
+    {
+      "conditions": [
+        {
+          "subject": "ENEMY",
+          "verb": "BECOME",
+          "negated": true,
+          "object": "SLOWED"
+        }
+      ],
+      "effects": [
+        {
+          "verb": "CONSUME",
+          "object": "EVENT",
+          "objectDeterminer": "THIS"
+        }
+      ]
+    }
+  ],
+  "clause": [
+    {
+      "conditions": [],
       "effects": [
         {
           "verb": "APPLY",
@@ -43,6 +72,17 @@
     "name": "Love the Stab and Twist (Talent)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
+    "duration": {
+      "verb": "IS",
+      "value": 99999
+    },
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 1
+      },
+      "interactionType": "RESET"
+    },
     "eventType": "STATUS",
     "eventIdType": "TALENT",
     "description": "Fluorite gains DMG Dealt +{dmg_up:0%} against Slowed targets."
@@ -54,7 +94,7 @@
       "ENDFIELD_WIKI"
     ],
     "icon": "skills/fluorite_talent_1_icon.png",
-    "dataStatus": "RECONCILED"
+    "dataStatus": "VERIFIED"
   },
   "clauseType": "ALL"
 }

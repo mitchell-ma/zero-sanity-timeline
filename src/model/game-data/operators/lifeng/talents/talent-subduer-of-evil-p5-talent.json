@@ -9,19 +9,6 @@
           "object": "STATUS",
           "objectId": "PHYSICAL",
           "objectQualifier": "KNOCK_DOWN"
-        },
-        {
-          "subjectDeterminer": "THIS",
-          "subject": "OPERATOR",
-          "verb": "HAVE",
-          "object": "STATUS",
-          "objectId": "SUBDUER_OF_EVIL_P5",
-          "with": {
-            "value": {
-              "verb": "IS",
-              "value": "OFF_COOLDOWN"
-            }
-          }
         }
       ],
       "effects": [

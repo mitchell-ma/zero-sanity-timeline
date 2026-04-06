@@ -24,5 +24,25 @@
   "metadata": {
     "originId": "game",
     "dataStatus": "RECONCILED"
-  }
+  },
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STAT",
+          "objectId": "STAGGER_FRAILTY",
+          "to": "ENEMY",
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": 1
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "clauseType": "ALL"
 }

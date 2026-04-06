@@ -9,7 +9,7 @@
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
-            "multiplier": {
+            "value": {
               "verb": "VARY_BY",
               "object": "SKILL_LEVEL",
               "value": [
@@ -50,7 +50,7 @@
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
-            "multiplier": {
+            "value": {
               "verb": "VARY_BY",
               "object": "SKILL_LEVEL",
               "value": [

@@ -269,8 +269,8 @@ export class StaggerTimeline extends ResourceTimeline {
       const activationDuration = endFrame - crossing.frame;
       events.push({
         uid: `${idPrefix}-node-${crossing.nodeIndex}-${crossing.frame}`,
-        id: 'Node Stagger',
-        name: 'Node Stagger',
+        id: nodeColumnId,
+        name: nodeColumnId,
         ownerId,
         columnId: nodeColumnId,
         startFrame: crossing.frame,
@@ -282,8 +282,8 @@ export class StaggerTimeline extends ResourceTimeline {
       const duration = brk.endFrame - brk.startFrame;
       events.push({
         uid: `${idPrefix}-full-${brk.startFrame}`,
-        id: 'Full Stagger',
-        name: 'Full Stagger',
+        id: fullColumnId,
+        name: fullColumnId,
         ownerId,
         columnId: fullColumnId,
         startFrame: brk.startFrame,

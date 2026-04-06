@@ -7,7 +7,8 @@
  */
 import { Interaction, CardinalityConstraintType, NounType, DeterminerType, VerbType, AdjectiveType, type ValueNode } from '../../dsl/semantics';
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from '../calculation/valueResolver';
-import { UnitType } from '../../consts/enums';
+import { StatusType, UnitType } from '../../consts/enums';
+import { StatType } from '../../model/enums/stats';
 import { TimelineEvent } from '../../consts/viewTypes';
 import { ENEMY_OWNER_ID, INFLICTION_COLUMNS, PHYSICAL_INFLICTION_COLUMNS, PHYSICAL_STATUS_COLUMNS, PHYSICAL_STATUS_COLUMN_IDS, REACTION_COLUMNS, REACTION_STATUS_TO_COLUMN, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID, SKILL_COLUMN_ORDER } from '../../model/channels';
 import { COMMON_OWNER_ID } from '../slot/commonSlotController';
@@ -56,6 +57,15 @@ export interface ConditionContext {
   getOperatorPercentageHp?: (operatorId: string, frame: number) => number;
   /** Owner ID of the parent status event (for THIS EVENT resolution in trigger contexts). */
   parentStatusOwnerId?: string;
+  /** UID of the source skill event (for EVENT HAVE LINK — checks consumed LINK stacks). */
+  sourceEventUid?: string;
+  /** Query consumed LINK stacks for an event UID. */
+  getLinkStacks?: (uid: string) => number;
+  /** Query stat accumulator value for an entity. */
+  getStatValue?: (entityId: string, stat: StatType) => number | undefined;
+  /** Override for BECOME: the stack count before this specific trigger was created.
+   *  When set, BECOME uses this instead of querying frame-1 state. */
+  previousStackCount?: number;
 }
 
 // ── Subject resolution ───────────────────────────────────────────────────
@@ -182,8 +192,9 @@ function evaluateHave(cond: Interaction, ctx: ConditionContext): boolean {
         hpPct = pct;
       } else {
         const ownerId = resolveOwnerId(cond.subject, ctx, cond.subjectDeterminer);
-        if (!ownerId || !ctx.getOperatorPercentageHp) return true;
-        hpPct = ctx.getOperatorPercentageHp(ownerId, ctx.frame);
+        // Default to 100% HP when no tracker is available (assume full health)
+        if (!ownerId || !ctx.getOperatorPercentageHp) { hpPct = 100; }
+        else { hpPct = ctx.getOperatorPercentageHp(ownerId, ctx.frame); }
       }
       switch (cond.cardinalityConstraint) {
         case CardinalityConstraintType.GREATER_THAN: return hpPct > target;
@@ -213,6 +224,12 @@ function evaluateHave(cond: Interaction, ctx: ConditionContext): boolean {
     return false;
   }
 
+  // EVENT HAVE STATUS LINK: check if the source event consumed LINK stacks
+  if (cond.subject === NounType.EVENT && cond.objectId === StatusType.LINK
+    && ctx.sourceEventUid && ctx.getLinkStacks) {
+    return ctx.getLinkStacks(ctx.sourceEventUid) > 0;
+  }
+
   const columnIds = resolveColumnIds(cond.object, cond.objectId, cond.objectQualifier);
   if (columnIds.length === 0) return false;
 
@@ -222,11 +239,19 @@ function evaluateHave(cond: Interaction, ctx: ConditionContext): boolean {
     count += activeCountAtFrame(ctx.events, colId, ownerId, ctx.frame);
   }
 
-  if (count === 0) return false;
+  // For LESS_THAN / LESS_THAN_EQUAL, count=0 is a valid result (0 ≤ N).
+  // Only early-exit when no cardinality constraint accepts 0.
+  const hasLessThanConstraint = cond.cardinalityConstraint === CardinalityConstraintType.LESS_THAN
+    || cond.cardinalityConstraint === CardinalityConstraintType.LESS_THAN_EQUAL
+    || cond.cardinalityConstraint === CardinalityConstraintType.EXACTLY;
+  if (count === 0 && !hasLessThanConstraint) return false;
 
   const condValue = cond.value ?? (cond as unknown as { with?: { value?: ValueNode } }).with?.value;
   if (condValue != null) {
-    const target = resolveValueNode(condValue as ValueNode, DEFAULT_VALUE_CONTEXT) ?? 0;
+    const valueCtx = ctx.potential != null
+      ? { ...DEFAULT_VALUE_CONTEXT, potential: ctx.potential }
+      : DEFAULT_VALUE_CONTEXT;
+    const target = resolveValueNode(condValue as ValueNode, valueCtx) ?? 0;
     switch (cond.cardinalityConstraint) {
       case CardinalityConstraintType.EXACTLY: return count === target;
       case CardinalityConstraintType.GREATER_THAN: return count > target;
@@ -254,6 +279,17 @@ function evaluateIs(cond: Interaction, ctx: ConditionContext): boolean {
     NODE_STAGGERED: NODE_STAGGER_COLUMN_ID,
     FULL_STAGGERED: FULL_STAGGER_COLUMN_ID,
   };
+
+  // SLOWED: check if the stat accumulator has SLOW > 0 for the target entity.
+  // Any status with APPLY STAT SLOW contributes — not tied to specific columns.
+  if (cond.object === AdjectiveType.SLOWED) {
+    if (!ctx.getStatValue) return cond.negated ? true : false;
+    const ownerId = resolveOwnerId(cond.subject, ctx, cond.subjectDeterminer);
+    if (!ownerId) return cond.negated ? true : false;
+    const slowValue = ctx.getStatValue(ownerId, StatType.SLOW);
+    const hasActive = slowValue != null && slowValue > 0;
+    return cond.negated ? !hasActive : hasActive;
+  }
 
   if (cond.object === NounType.ACTIVE) {
     // Check if the subject has any active skill events at this frame
@@ -296,16 +332,20 @@ function evaluateBecome(cond: Interaction, ctx: ConditionContext): boolean {
     const ownerId = resolveOwnerId(ownerSubject as string, ctx, ownerDeterminer);
     let countNow = 0;
     let countBefore = 0;
-    for (const colId of columnIds) {
-      // Use the stacks field of the latest active event when available (counter pattern),
-      // otherwise fall back to the number of active events.
-      const activeNow = activeEventsAtFrame(ctx.events, colId, ownerId, ctx.frame);
-      const lastNow = activeNow.length > 0 ? activeNow[activeNow.length - 1] : undefined;
-      countNow += lastNow?.stacks != null ? lastNow.stacks : activeNow.length;
-      if (ctx.frame > 0) {
-        const activeBefore = activeEventsAtFrame(ctx.events, colId, ownerId, ctx.frame - 1);
-        const lastBefore = activeBefore.length > 0 ? activeBefore[activeBefore.length - 1] : undefined;
-        countBefore += lastBefore?.stacks != null ? lastBefore.stacks : activeBefore.length;
+    if (ctx.previousStackCount != null) {
+      // Compound iteration: use the per-iteration before/after counts
+      countBefore = ctx.previousStackCount;
+      countNow = ctx.previousStackCount + 1;
+    } else {
+      for (const colId of columnIds) {
+        const activeNow = activeEventsAtFrame(ctx.events, colId, ownerId, ctx.frame);
+        const lastNow = activeNow.length > 0 ? activeNow[activeNow.length - 1] : undefined;
+        countNow += lastNow?.stacks != null ? lastNow.stacks : activeNow.length;
+        if (ctx.frame > 0) {
+          const activeBefore = activeEventsAtFrame(ctx.events, colId, ownerId, ctx.frame - 1);
+          const lastBefore = activeBefore.length > 0 ? activeBefore[activeBefore.length - 1] : undefined;
+          countBefore += lastBefore?.stacks != null ? lastBefore.stacks : activeBefore.length;
+        }
       }
     }
     if (countNow === countBefore) return false;
@@ -321,6 +361,18 @@ function evaluateBecome(cond: Interaction, ctx: ConditionContext): boolean {
       }
     }
     return true;
+  }
+
+  // STAGGERED: stat-based transition via STAGGER_FRAILTY counter.
+  // BECOME STAGGERED = counter went from 0 to >0; BECOME NOT STAGGERED = counter went to 0.
+  // The transition is detected by the trigger firing logic (0→positive guard);
+  // at evaluation time we just check whether the stat is currently non-zero.
+  if (cond.object === AdjectiveType.STAGGERED) {
+    if (!ctx.getStatValue) return false;
+    const ownerId = resolveOwnerId(cond.subject, ctx, cond.subjectDeterminer);
+    if (!ownerId) return false;
+    const val = ctx.getStatValue(ownerId, StatType.STAGGER_FRAILTY);
+    return val != null && val > 0;
   }
 
   // State transition: active at current frame AND not active at previous frame.
@@ -391,6 +443,38 @@ function evaluatePerform(cond: Interaction, ctx: ConditionContext): boolean {
   );
 }
 
+// ── STACKS subject ──────────────────────────────────────────────────────
+
+/** Evaluate "STACKS of X of OWNER IS >= N" — count-based assertion via OF clause. */
+function evaluateStacksSubject(cond: Interaction, ctx: ConditionContext): boolean {
+  const ofClause = cond.of as { object?: string; objectId?: string; objectQualifier?: string; determiner?: string; of?: { object?: string; determiner?: string } } | undefined;
+  const statusId = ofClause?.objectId;
+  const qualifier = ofClause?.objectQualifier;
+  const columnIds = resolveColumnIds(NounType.STATUS, statusId, qualifier);
+  if (columnIds.length === 0) return false;
+  const ownerSubject = ofClause?.of?.object ?? NounType.ENEMY;
+  const ownerDeterminer = ofClause?.of?.determiner;
+  const ownerId = resolveOwnerId(ownerSubject as string, ctx, ownerDeterminer);
+  let count = 0;
+  for (const colId of columnIds) {
+    const active = activeEventsAtFrame(ctx.events, colId, ownerId, ctx.frame);
+    const last = active.length > 0 ? active[active.length - 1] : undefined;
+    count += last?.stacks != null ? last.stacks : active.length;
+  }
+  if (cond.value != null) {
+    const valueCtx = ctx.potential != null ? { ...DEFAULT_VALUE_CONTEXT, potential: ctx.potential } : DEFAULT_VALUE_CONTEXT;
+    const target = resolveValueNode(cond.value!, valueCtx) ?? 0;
+    switch (cond.cardinalityConstraint) {
+      case CardinalityConstraintType.EXACTLY: return count === target;
+      case CardinalityConstraintType.GREATER_THAN: return count > target;
+      case CardinalityConstraintType.GREATER_THAN_EQUAL: return count >= target;
+      case CardinalityConstraintType.LESS_THAN: return count < target;
+      case CardinalityConstraintType.LESS_THAN_EQUAL: return count <= target;
+    }
+  }
+  return count > 0;
+}
+
 // ── Public API ───────────────────────────────────────────────────────────
 
 /**
@@ -403,15 +487,20 @@ export function evaluateInteraction(cond: Interaction, ctx: ConditionContext): b
     return cond.negated ? !result : result;
   }
 
+  // STACKS subject: count-based assertion — "STACKS of X of OWNER IS >= N"
+  if ((cond.subject as string) === NounType.STACKS) {
+    return evaluateStacksSubject(cond, ctx);
+  }
+
   let result: boolean;
 
   const verb = cond.verb as string;
   switch (verb) {
     case VerbType.HAVE: result = evaluateHave(cond, ctx); break;
-    case 'IS': result = evaluateIs(cond, ctx); break;
-    case 'PERFORM': result = evaluatePerform(cond, ctx); break;
-    case 'BECOME': result = evaluateBecome(cond, ctx); break;
-    case 'RECEIVE': result = evaluateReceive(cond, ctx); break;
+    case VerbType.IS: result = evaluateIs(cond, ctx); break;
+    case VerbType.PERFORM: result = evaluatePerform(cond, ctx); break;
+    case VerbType.BECOME: result = evaluateBecome(cond, ctx); break;
+    case VerbType.RECEIVE: result = evaluateReceive(cond, ctx); break;
     default: result = false;
   }
 

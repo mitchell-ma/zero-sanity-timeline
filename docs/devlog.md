@@ -1,5 +1,26 @@
 # Devlog
 
+## 2026-04-05
+- Tangtang fully implemented — all skills, talents, potentials, and five statuses (Whirlpool, Waterspout, Olden Stare, Early Rogue Wave, Waterspout Ult) with full integration tests covering basic attack chains, battle skill, combo skill, ultimate, and status interactions
+- Last Rite expanded — Hypothermic Perfusion status added, battle skill cryo DOT reworked, combo skill now checks cryo infliction stacks, P2 Absolute Zero Armament potential implemented, and Hypothermia talent updated with proper slow and susceptibility effects
+- Avywenna reworked — Thunderlance status split into regular and enhanced (EX) variants, battle skill interdiction updated with full stagger interaction data, combo and ultimate configs expanded, and Tactful Approach talent removed in favor of data-driven triggers
+- Lifeng's Subduer of Evil talent chain fully implemented — Knock Down triggers reactive talent with Physical DMG, Illumination talent reworked, status configs updated with proper stat-based triggers
+- Xaihi's Auxiliary Crystal expanded — Distributed DoS Amp status added for team damage amplification, crystal targeting and consumption tests added
+- Fluorite reworked — battle skill, combo skill, ultimate, and Love the Stab and Twist talent updated with new status configs (Improvised Explosive, Improvised Explosive Ult) and slow-based talent triggers
+- Slow effects now tracked as a stat — talents and statuses that check "enemy is slowed" work correctly through the stat accumulator rather than requiring a specific status column
+- Frame markers on the timeline now distinguish between damage frames (diamond) and non-damage frames (circle), making it easier to identify which frames deal damage at a glance
+- Stagger frailty stat added — enables talents that trigger effects while enemies are in any stagger state
+- Per-element susceptibility stats added (Heat, Cryo, Nature, Electric, Physical) for more granular debuff tracking
+- Final Strike damage bonus stat added for skills and operators that buff final strike damage specifically
+- Condition evaluator expanded — LESS_THAN and LESS_THAN_EQUAL comparisons now work correctly with zero counts, BECOME conditions support previous stack count overrides, and LINK stack consumption checks added
+- Stat source breakdowns now show sub-component labels (skill level vs potential contributions) in the damage breakdown panel
+- Freeform status events now inherit duration from the parent event's resize, so manually adjusting a status placement propagates correctly
+- Event editor now shows activation window trigger clauses for combo skills, making it easier to inspect combo trigger conditions
+- Massive weapon data pass — all 48 weapon skill configs updated with standardized formatting
+- Operator data updates for Perlica (Obliteration Protocol), Rossi (Razor Clawmark), Gilberta (Anomalous Gravity Field), Arclight (Tactful Approach), Estella (Distortion, Tremolo), Da-Pan (Chop N Dunk), Endministrator (Realspace Stasis), and Antal (Focus, Focus Empowered)
+- Stagger status configs (node stagger, full stagger) updated with proper stat-based triggers
+- New integration tests for Fluorite slow talent, skill column noun type verification, and Perlica Obliteration Protocol
+
 ## 2026-04-04
 - Laevatain's Empowered Battle Skill now properly consumes all Melting Flame stacks at once, matching in-game behavior — previously it consumed only one stack per use, leaving leftover stacks that incorrectly triggered Scorching Heart
 - Scorching Heart activation condition updated — now reliably fires when Melting Flame reaches max stacks and won't re-trigger from leftover stacks after consumption

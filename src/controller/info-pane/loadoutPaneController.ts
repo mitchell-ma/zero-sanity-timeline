@@ -245,7 +245,7 @@ export function resolveWeaponBreakdown(
             .filter(c => c.conditions?.length > 0)
             .flatMap(c => c.effects);
           for (const ef of conditionalEffects) {
-            const wv = ef.with?.multiplier ?? ef.with?.value;
+            const wv = ef.with?.value;
             if ((wv as { value?: unknown })?.value != null && ef.object === NounType.STAT && ef.objectId === NounType.DAMAGE_BONUS) {
               // Skip — these are shown as triggered effect buffs, not secondary attr
             }
@@ -262,7 +262,7 @@ export function resolveWeaponBreakdown(
         const stat = resolveEffectStat(e) ?? e.object;
         const wv = e.with!.value!;
         const isPercent = PERCENT_STATS.has(stat as StatType);
-        const perStack = wv.verb === VerbType.VARY_BY && wv.object === 'STATUS_LEVEL';
+        const perStack = wv.verb === VerbType.VARY_BY && wv.object === NounType.STATUS_LEVEL;
         const valueStr = wv.valueMin != null && wv.valueMax != null
           ? (isPercent
             ? `${fmtN(wv.valueMin * 100)}–${fmtN(wv.valueMax * 100)}%`
@@ -531,6 +531,8 @@ export interface SkillDetailData {
 export interface ComboTriggerDisplay {
   description: string;
   windowSeconds: number;
+  onTriggerClause: readonly { conditions: unknown[] }[];
+  maxSkills: number;
 }
 
 export interface UltimateEnergyDisplay {
@@ -701,6 +703,8 @@ export function resolveComboTrigger(operatorId: string): ComboTriggerDisplay | n
   return {
     description: info.description,
     windowSeconds: info.windowFrames / 120,
+    onTriggerClause: info.onTriggerClause,
+    maxSkills: info.maxSkills,
   };
 }
 

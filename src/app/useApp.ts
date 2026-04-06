@@ -12,7 +12,7 @@ import { useCombatState } from './useCombatState';
 import type { Orientation } from '../utils/axisMap';
 import { LoadoutProperties } from '../view/InformationPane';
 import { OperatorLoadoutState } from '../view/OperatorLoadoutHeader';
-import { ALL_OPERATORS, getUltimateEnergyCost } from '../controller/operators/operatorRegistry';
+import { ALL_OPERATORS, getUltimateEnergyCost, hasSelfOnlyUltimateEnergy } from '../controller/operators/operatorRegistry';
 import { ALL_ENEMIES, DEFAULT_ENEMY } from '../utils/enemies';
 import { TimelineEvent, VisibleSkills, ContextMenuState, SkillType, SelectedFrame, ResourceConfig, MiniTimeline, computeSegmentsSpan, eventEndFrame } from '../consts/viewTypes';
 import type { DamageTableRow } from '../controller/calculation/damageTableBuilder';
@@ -472,11 +472,12 @@ export function useApp() {
           startValue: cfg?.startValue ?? 0,
           chargePerFrame: (cfg?.regenPerSecond ?? 0) / FPS,
           efficiency: base[slotId] ?? 0,
+          selfOnlyGain: hasSelfOnlyUltimateEnergy(op.id),
         });
       }
 
-      const result = processCombatSimulation(
-        validEvents, loadoutProperties, slotWeapons, slotWirings, slotOperatorMap, slotGearSets,
+      const runPipeline = (events: TimelineEvent[]) => processCombatSimulation(
+        events, loadoutProperties, slotWeapons, slotWirings, slotOperatorMap, slotGearSets,
         bossMaxHp, enemy.id, loadouts,
         combatLoadout.commonSlot.skillPoints,
         combatLoadout.commonSlot.ultimateEnergy,
@@ -486,6 +487,20 @@ export function useApp() {
         combatLoadout.getTriggerIndex() ?? undefined,
         pipelineCritMode, overrides, enemyStats,
       );
+
+      // Pass 1: process skill events → produces stagger damage data
+      const pass1 = runPipeline(validEvents);
+
+      // Sync stagger HP graph from pass 1 output → generates frailty events
+      combatLoadout.commonSlot.stagger.sync(pass1, enemyStats);
+      const frailty = combatLoadout.commonSlot.stagger.frailtyEvents;
+
+      // Pass 2: if stagger generated frailty events, re-run pipeline with them
+      // included so STAGGER_FRAILTY triggers fire (e.g. Perlica Obliteration Protocol).
+      const result = frailty.length > 0
+        ? runPipeline([...validEvents, ...frailty])
+        : pass1;
+
       // Force new array reference — the pipeline reuses internal arrays across runs,
       // so the returned reference can be identical even when contents changed.
       // Without this, downstream useMemos (allProcessedEventsRaw, allProcessedEvents)

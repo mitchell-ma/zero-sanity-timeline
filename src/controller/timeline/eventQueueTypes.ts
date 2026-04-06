@@ -35,6 +35,7 @@ interface StatusProperties {
   eventIdType?: string;
   element?: string;
   target?: string;
+  to?: string;
   targetDeterminer?: string;
   isForced?: boolean;
   enhancementTypes?: string[];
@@ -114,6 +115,8 @@ export interface EngineTriggerEntry {
   triggerObjectId?: string;
   ctx: EngineTriggerContext;
   isEquip: boolean;
+  /** Stack count before this trigger was created (for BECOME incremental evaluation). */
+  previousStackCount?: number;
 }
 
 // ── Constants ──────────────────────────────────────────────────────────────

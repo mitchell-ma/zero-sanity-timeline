@@ -15,7 +15,7 @@
 import { TimelineEvent, Column, MiniTimeline, EventSegmentData, eventEndFrame } from '../../consts/viewTypes';
 import { NounType } from '../../dsl/semantics';
 import { TimelineSourceType, ELEMENT_COLORS, ElementType, InteractionModeType, EventStatusType, DEFAULT_EVENT_COLOR } from '../../consts/enums';
-import { getAllSkillLabels, getAllStatusLabels, getAllInflictionLabels } from '../gameDataStore';
+import { getAllSkillLabels, getAllStatusLabels, getAllInflictionLabels, getStatusById } from '../gameDataStore';
 import { StackInteractionType } from '../../consts/enums';
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from '../calculation/valueResolver';
 import type { ValueNode } from '../../dsl/semantics';
@@ -70,6 +70,10 @@ function getStatusStackInfo(statusId: string): StatusStackInfo | undefined {
 function isSingleInstanceStatus(statusId: string): boolean {
   const info = getStatusStackInfo(statusId);
   if (!info) return true; // No config found → treat as independent single-instance
+  // Statuses with segment frames (e.g. DoT waterspouts) are self-contained entities —
+  // each renders independently with its own micro-column, not as stacked counters.
+  const statusDef = getStatusById(statusId);
+  if (statusDef && statusDef.segments.some(s => s.frames && s.frames.length > 0)) return true;
   return info.instances <= 1 && (info.verb === StackInteractionType.NONE || info.verb === StackInteractionType.RESET);
 }
 
@@ -126,11 +130,9 @@ export function computeStatusViewOverrides(
     for (const [columnId, typeEvents] of Array.from(byType.entries())) {
       if (REACTION_COLUMN_IDS.has(columnId)) continue;
 
-      const active = typeEvents.filter((ev) => ev.eventStatus !== EventStatusType.CONSUMED);
       // Include all events (including consumed) for labeling — consumed events
       // with recorded stacks still need their stack label for display.
       const allSorted = [...typeEvents].sort((a, b) => a.startFrame - b.startFrame || a.uid.localeCompare(b.uid));
-      const activeSorted = [...active].sort((a, b) => a.startFrame - b.startFrame || a.uid.localeCompare(b.uid));
       if (allSorted.length === 0) continue;
       const baseName = getAllInflictionLabels()[columnId] ?? getAllInflictionLabels()[allSorted[0].name] ?? getAllStatusLabels()[allSorted[0].name] ?? translateDslToken(allSorted[0].name);
 
@@ -145,9 +147,10 @@ export function computeStatusViewOverrides(
       for (const ev of allSorted) {
         // Use stacks recorded at creation time; fall back to dynamic position from active events
         let position: number;
-        // Position = number of earlier active events + 1 (determines roman numeral label)
+        // Position = number of earlier overlapping events + 1 (determines roman numeral label)
+        // Uses allSorted (including consumed) so consumed events retain their position.
         let activeEarlier = 0;
-        for (const prev of activeSorted) {
+        for (const prev of allSorted) {
           if (prev.uid === ev.uid) break;
           if (eventEndFrame(prev) > ev.startFrame) activeEarlier++;
         }
@@ -495,7 +498,7 @@ function getEventsForColumnGrouped(
  * Returns a new array if sorting is needed, otherwise the original.
  */
 function sortColumnEvents(col: MiniTimeline, colEvents: TimelineEvent[]): TimelineEvent[] {
-  if (col.microColumnAssignment === 'by-order' || col.derived) {
+  if (col.microColumnAssignment === 'by-order' || col.microColumnAssignment === 'dynamic-split' || col.derived) {
     return [...colEvents].sort((a, b) => a.startFrame - b.startFrame);
   }
   return colEvents;

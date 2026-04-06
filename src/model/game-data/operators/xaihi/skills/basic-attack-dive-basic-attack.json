@@ -9,7 +9,7 @@
     "eventIdType": "BASIC_ATTACK",
     "eventQualifierType": "DIVE",
     "element": "CRYO",
-    "id": "BASIC_ATTACK_DIVE"
+    "id": "COOLDOWN_DIVE"
   },
   "metadata": {
     "originId": "XAIHI",

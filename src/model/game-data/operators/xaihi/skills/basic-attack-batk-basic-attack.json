@@ -501,7 +501,7 @@
     "eventIdType": "BASIC_ATTACK",
     "eventQualifierType": "BATK",
     "element": "CRYO",
-    "id": "BASIC_ATTACK_BATK"
+    "id": "COOLDOWN_BATK"
   },
   "metadata": {
     "originId": "XAIHI",

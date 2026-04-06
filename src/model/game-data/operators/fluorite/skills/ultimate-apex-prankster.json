@@ -135,6 +135,41 @@
                       }
                     }
                   }
+                },
+                {
+                  "verb": "DEAL",
+                  "object": "STAGGER",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 5
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "conditions": [
+                {
+                  "subject": "ENEMY",
+                  "verb": "HAVE",
+                  "object": "STATUS",
+                  "objectId": "IMPROVISED_EXPLOSIVE"
+                }
+              ],
+              "effects": [
+                {
+                  "verb": "CONSUME",
+                  "object": "STATUS",
+                  "objectId": "IMPROVISED_EXPLOSIVE",
+                  "from": "ENEMY"
+                },
+                {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "IMPROVISED_EXPLOSIVE_ULT",
+                  "to": "ENEMY"
                 }
               ]
             }
@@ -194,6 +229,17 @@
                         "object": "OPERATOR",
                         "determiner": "THIS"
                       }
+                    }
+                  }
+                },
+                {
+                  "verb": "DEAL",
+                  "object": "STAGGER",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 5
                     }
                   }
                 }
@@ -257,6 +303,17 @@
                       }
                     }
                   }
+                },
+                {
+                  "verb": "DEAL",
+                  "object": "STAGGER",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 5
+                    }
+                  }
                 }
               ]
             }
@@ -287,7 +344,7 @@
                   "with": {
                     "value": {
                       "verb": "IS",
-                      "value": 20
+                      "value": 5
                     }
                   }
                 },
@@ -335,18 +392,16 @@
             {
               "conditions": [
                 {
-                  "subject": "ENEMY",
-                  "verb": "HAVE",
-                  "object": "STATUS",
-                  "objectId": "INFLICTION",
-                  "objectQualifier": "CRYO",
+                  "subject": "STACKS",
+                  "of": {
+                    "object": "STATUS",
+                    "objectId": "INFLICTION",
+                    "objectQualifier": "CRYO",
+                    "of": { "object": "ENEMY" }
+                  },
+                  "verb": "IS",
                   "cardinalityConstraint": "GREATER_THAN_EQUAL",
-                  "with": {
-                    "stacks": {
-                      "verb": "IS",
-                      "value": 2
-                    }
-                  }
+                  "value": { "verb": "IS", "value": 2 }
                 }
               ],
               "effects": [
@@ -367,18 +422,16 @@
             {
               "conditions": [
                 {
-                  "subject": "ENEMY",
-                  "verb": "HAVE",
-                  "object": "STATUS",
-                  "objectId": "INFLICTION",
-                  "objectQualifier": "NATURE",
+                  "subject": "STACKS",
+                  "of": {
+                    "object": "STATUS",
+                    "objectId": "INFLICTION",
+                    "objectQualifier": "NATURE",
+                    "of": { "object": "ENEMY" }
+                  },
+                  "verb": "IS",
                   "cardinalityConstraint": "GREATER_THAN_EQUAL",
-                  "with": {
-                    "stacks": {
-                      "verb": "IS",
-                      "value": 2
-                    }
-                  }
+                  "value": { "verb": "IS", "value": 2 }
                 }
               ],
               "effects": [
@@ -405,7 +458,7 @@
   "metadata": {
     "originId": "FLUORITE",
     "icon": "skills/ult_fluorite.png",
-    "dataStatus": "RECONCILED"
+    "dataStatus": "VERIFIED"
   },
   "clauseType": "ALL"
 }

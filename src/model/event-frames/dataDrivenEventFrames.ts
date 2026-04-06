@@ -84,6 +84,7 @@ interface JsonClauseCondition {
   cardinalityConstraint?: string;
   value?: unknown;
   with?: Record<string, unknown>;
+  of?: import('../../dsl/semantics').OfClause;
 }
 
 interface JsonOffset {
@@ -96,6 +97,7 @@ interface JsonFrame {
   properties?: { offset?: JsonOffset; element?: string; dependencyTypes?: string[]; suppliedParameters?: Record<string, { id: string; name: string; lowerRange: number; upperRange: number; default: number }[]> };
   clause?: JsonClausePredicate[];
   clauseType?: string;
+  frameTypes?: string[];
   damageElement?: string;
 }
 
@@ -254,6 +256,7 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
           ...(c.cardinalityConstraint && { cardinalityConstraint: c.cardinalityConstraint }),
           ...(c.value != null && { value: c.value }),
           ...(c.with && { with: c.with }),
+          ...(c.of && { of: c.of }),
         };
       });
 
@@ -308,8 +311,7 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
             if (ef.object === NounType.DAMAGE) {
               const multipliers = wp?.value;
               // Simple VARY_BY nodes have a flat .value array; compound expressions
-              // (MULT, ADD) are left empty so the damage table builder falls through
-              // to getSkillMultiplier() which resolves with full level+potential context.
+              // (MULT, ADD) store the raw node for runtime resolution by the damage table builder.
               const mulArr = multipliers && Array.isArray(multipliers.value) ? multipliers.value as number[] : [];
               const mainStatNode = wp?.mainStat as Record<string, unknown> | undefined;
               const mainStat = mainStatNode?.objectId as DamageScalingStatType | undefined;
@@ -317,6 +319,8 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
                 ...(elementQualifier ? { element: elementQualifier } : {}),
                 multipliers: mulArr,
                 ...(mainStat ? { mainStat } : {}),
+                // Store raw ValueNode for compound expressions (resolved at damage-table-build time)
+                ...(mulArr.length === 0 && multipliers ? { multiplierNode: multipliers } : {}),
               };
               dealDamage = dd;
               clauseEffects.push({ type: 'dealDamage', dealDamage: dd });
@@ -350,6 +354,12 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
     this._stagger = stagger;
     this._duplicateTriggerSource = duplicateSource;
     this._dependencyTypes = (frame.properties?.dependencyTypes ?? []) as string[];
+    // Merge explicit frameTypes from JSON (e.g. "frameTypes": ["DIVE"]) with clause-derived ones
+    if (frame.frameTypes) {
+      for (const ft of frame.frameTypes as EventFrameType[]) {
+        if (!frameTypes.includes(ft)) frameTypes.push(ft);
+      }
+    }
     this._frameTypes = frameTypes;
     this._ultimateEnergyGainNode = ultimateEnergyGainNode;
   }

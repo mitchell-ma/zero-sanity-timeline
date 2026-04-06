@@ -10,7 +10,7 @@
           "toDeterminer": "THIS",
           "to": "ENEMY",
           "with": {
-            "multiplier": {
+            "value": {
               "verb": "IS",
               "value": 2.5
             },

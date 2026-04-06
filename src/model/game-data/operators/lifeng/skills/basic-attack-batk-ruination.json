@@ -394,7 +394,8 @@
             "offset": {
               "value": 0.8,
               "unit": "SECOND"
-            }
+            },
+            "frameTypes": ["FINAL_STRIKE"]
           },
           "clause": [
             {

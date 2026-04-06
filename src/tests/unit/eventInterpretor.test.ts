@@ -1179,3 +1179,62 @@ describe('EventInterpretorController: APPLY BREACH STATUS (PHYSICAL)', () => {
     expect(breachEvents[0].segments![0].frames![0].stagger).toBeUndefined();
   });
 });
+
+// ── sourceEventUid / freeformUid propagation ─────────────────────────────
+
+describe('EventInterpretorController: sourceEventUid uid propagation', () => {
+  test('sourceEventUid set: child inherits parent uid', () => {
+    const interp = makeInterpretor();
+    const ctx = makeCtx(interp, {
+      sourceEventUid: 'parent-uid',
+    });
+
+    const effect: Effect = {
+      verb: VerbType.APPLY,
+      object: ObjectType.INFLICTION,
+      objectQualifier: AdjectiveType.NATURE,
+      to: NounType.ENEMY,
+    };
+
+    interp.interpret(effect, ctx);
+    expect(interp.controller.output).toHaveLength(1);
+    expect(interp.controller.output[0].uid).toBe('parent-uid');
+  });
+
+  test('no sourceEventUid: child gets unique derived uid', () => {
+    const interp = makeInterpretor();
+    const ctx = makeCtx(interp);
+
+    const effect: Effect = {
+      verb: VerbType.APPLY,
+      object: ObjectType.INFLICTION,
+      objectQualifier: AdjectiveType.CRYO,
+      to: NounType.ENEMY,
+    };
+
+    interp.interpret(effect, ctx);
+    expect(interp.controller.output).toHaveLength(1);
+    expect(interp.controller.output[0].uid).toContain('CRYO_INFLICTION');
+  });
+
+  test('sourceEventUid set: status inherits parent uid', () => {
+    const interp = makeInterpretor();
+    const ctx = makeCtx(interp, {
+      sourceEventUid: 'parent-status-uid',
+    });
+
+    const effect: Effect = {
+      verb: VerbType.APPLY,
+      object: ObjectType.STATUS,
+      objectId: 'FOCUS',
+      to: NounType.OPERATOR,
+      with: {
+        duration: { verb: VerbType.IS, value: 10 },
+      },
+    };
+
+    interp.interpret(effect, ctx);
+    expect(interp.controller.output).toHaveLength(1);
+    expect(interp.controller.output[0].uid).toBe('parent-status-uid');
+  });
+});

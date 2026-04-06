@@ -1,0 +1,181 @@
+{
+  "properties": {
+    "id": "HYPOTHERMIC_PERFUSION",
+    "name": "Hypothermic Perfusion",
+    "to": "OPERATOR",
+    "toDeterminer": "CONTROLLED",
+    "eventType": "STATUS",
+    "eventIdType": "SKILL_STATUS",
+    "description": "The next Final Strike performed by the currently controlled operator within 15s creates Last Rite's Mirages that unleash an additional attack at the target. This attack deals Cryo DMG and applies Cryo Infliction.",
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": 15
+      },
+      "unit": "SECOND"
+    },
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 1
+      },
+      "interactionType": "RESET"
+    }
+  },
+  "onTriggerClause": [
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "CONTROLLED",
+          "subject": "OPERATOR",
+          "verb": "PERFORM",
+          "object": "SKILL",
+          "objectId": "FINAL_STRIKE"
+        }
+      ],
+      "effects": [
+        {
+          "verb": "DEAL",
+          "objectQualifier": "CRYO",
+          "object": "DAMAGE",
+          "to": "ENEMY",
+          "with": {
+            "value": {
+              "operation": "MULT",
+              "left": {
+                "verb": "VARY_BY",
+                "object": "SKILL_LEVEL",
+                "value": [
+                  1.42,
+                  1.56,
+                  1.71,
+                  1.85,
+                  1.99,
+                  2.13,
+                  2.28,
+                  2.42,
+                  2.56,
+                  2.74,
+                  2.95,
+                  3.2
+                ],
+                "of": {
+                  "object": "OPERATOR",
+                  "determiner": "THIS"
+                }
+              },
+              "right": {
+                "verb": "VARY_BY",
+                "object": "POTENTIAL",
+                "value": [
+                  1,
+                  1,
+                  1,
+                  1,
+                  1,
+                  1.2
+                ],
+                "of": {
+                  "object": "OPERATOR",
+                  "determiner": "THIS"
+                }
+              }
+            },
+            "mainStat": {
+              "verb": "IS",
+              "object": "STAT",
+              "objectId": "ATTACK",
+              "of": {
+                "object": "OPERATOR",
+                "determiner": "THIS"
+              }
+            }
+          }
+        },
+        {
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "INFLICTION",
+          "objectQualifier": "CRYO",
+          "to": "ENEMY",
+          "with": {
+            "stacks": {
+              "verb": "IS",
+              "value": 1
+            }
+          }
+        },
+        {
+          "verb": "DEAL",
+          "object": "STAGGER",
+          "to": "ENEMY",
+          "with": {
+            "value": {
+              "verb": "VARY_BY",
+              "object": "POTENTIAL",
+              "value": [
+                0,
+                5,
+                5,
+                5,
+                5,
+                5
+              ],
+              "of": {
+                "object": "OPERATOR",
+                "determiner": "THIS"
+              }
+            }
+          }
+        },
+        {
+          "verb": "CONSUME",
+          "object": "EVENT",
+          "objectDeterminer": "THIS"
+        }
+      ]
+    }
+  ],
+  "clause": [
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "HAVE",
+          "object": "POTENTIAL",
+          "cardinalityConstraint": "GREATER_THAN_EQUAL",
+          "value": {
+            "verb": "IS",
+            "value": 1
+          }
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STAT",
+          "objectId": "DAMAGE_BONUS",
+          "objectQualifier": "FINAL_STRIKE",
+          "toDeterminer": "CONTROLLED",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": 0.2
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "originId": "LAST_RITE",
+    "dataSources": [
+      "ENDFIELD_WIKI",
+      "WARFARIN"
+    ],
+    "icon": "skills/skill_lastrite.png",
+    "dataStatus": "RECONCILED"
+  }
+}

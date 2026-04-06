@@ -281,6 +281,12 @@ export function deregisterCustomOperatorById(operatorId: string): void {
 
 // ── Ultimate energy cost ─────────────────────────────────────────────────────
 
+/** Check if an operator only gains UE from her own skills (e.g. Last Rite). */
+export function hasSelfOnlyUltimateEnergy(operatorId: string): boolean {
+  const base = getOperatorBase(operatorId);
+  return base?.selfOnlyUltimateEnergy ?? false;
+}
+
 export function getUltimateEnergyCost(operatorId: string): number {
   const json = buildMergedOperatorJson(operatorId);
   if (!json) return 0;

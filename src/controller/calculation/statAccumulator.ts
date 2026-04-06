@@ -22,6 +22,12 @@ import { COMMON_OWNER_ID } from '../slot/commonSlotController';
 
 // ── Types ────────────────────────────────────────────────────────────────
 
+export interface StatSource {
+  label: string;
+  value: number;
+  subSources?: StatSource[];
+}
+
 export interface StatSnapshot {
   /** Operator/enemy base stats (all StatType values). */
   stats: Record<StatType, number>;
@@ -63,6 +69,12 @@ export class StatAccumulator {
   /** Per-frame stat deltas: frameKey → entityId → stat deltas from base. */
   private frameDeltas = new Map<string, Map<string, Partial<Record<StatType, number>>>>();
 
+  /** Active stat sources: entityId → stat → sources (pushed on apply, popped on reversal). */
+  private statSources = new Map<string, Map<StatType, StatSource[]>>();
+
+  /** Per-frame stat source snapshots: frameKey → entityId → stat → sources. */
+  private frameStatSources = new Map<string, Map<string, Map<StatType, StatSource[]>>>();
+
 
   // ── Init ────────────────────────────────────────────────────────
 
@@ -80,6 +92,8 @@ export class StatAccumulator {
     this.current.clear();
     this.base.clear();
     this.frameDeltas.clear();
+    this.statSources.clear();
+    this.frameStatSources.clear();
 
     // Per operator slot: aggregate from operator + weapon + gear + consumable
     for (const slotId of slotIds) {
@@ -133,11 +147,34 @@ export class StatAccumulator {
     }
   }
 
+  /** Multiply an existing stat value (e.g. T2 Cryogenic Embrittlement multiplying susceptibility). */
+  applyStatMultiplier(entityId: string, stat: StatType, multiplier: number): void {
+    const snap = this.current.get(entityId);
+    if (!snap) return;
+    snap.stats[stat] = (snap.stats[stat] ?? 0) * multiplier;
+  }
+
   /** Apply combat factor changes (e.g. AMP, SUSCEPTIBILITY, FRAGILITY status effects). */
   applyFactorDelta(entityId: string, factor: DamageFactorType, delta: number): void {
     const snap = this.current.get(entityId);
     if (!snap) return;
     snap.factors[factor] = (snap.factors[factor] ?? 0) + delta;
+  }
+
+  // ── Stat source tracking ───────────────────────────────────────
+
+  /** Register a source for a stat delta (e.g. "Distributed DoS (Amp)" providing AMP). */
+  pushStatSource(entityId: string, stat: StatType, source: StatSource): void {
+    let entityMap = this.statSources.get(entityId);
+    if (!entityMap) { entityMap = new Map(); this.statSources.set(entityId, entityMap); }
+    let sources = entityMap.get(stat);
+    if (!sources) { sources = []; entityMap.set(stat, sources); }
+    sources.push(source);
+  }
+
+  /** Remove the most recently pushed source for a stat (called on reversal). */
+  popStatSource(entityId: string, stat: StatType): void {
+    this.statSources.get(entityId)?.get(stat)?.pop();
   }
 
   // ── Queries (O(1)) ─────────────────────────────────────────────
@@ -175,11 +212,30 @@ export class StatAccumulator {
 
     if (!this.frameDeltas.has(frameKey)) this.frameDeltas.set(frameKey, new Map());
     this.frameDeltas.get(frameKey)!.set(entityId, deltas);
+
+    // Snapshot active stat sources for stats that have deltas
+    const entitySources = this.statSources.get(entityId);
+    if (entitySources) {
+      for (const stat of Object.keys(deltas) as StatType[]) {
+        const sources = entitySources.get(stat);
+        if (sources?.length) {
+          if (!this.frameStatSources.has(frameKey)) this.frameStatSources.set(frameKey, new Map());
+          const entityMap = this.frameStatSources.get(frameKey)!;
+          if (!entityMap.has(entityId)) entityMap.set(entityId, new Map());
+          entityMap.get(entityId)!.set(stat, [...sources]);
+        }
+      }
+    }
   }
 
   /** Get the stat deltas for an entity at a specific damage frame. */
   getFrameStatDeltas(frameKey: string, entityId: string): Partial<Record<StatType, number>> | undefined {
     return this.frameDeltas.get(frameKey)?.get(entityId);
+  }
+
+  /** Get the stat sources for an entity at a specific damage frame. */
+  getFrameStatSources(frameKey: string, entityId: string, stat: StatType): readonly StatSource[] | undefined {
+    return this.frameStatSources.get(frameKey)?.get(entityId)?.get(stat);
   }
 
   // ── Crit resolution ────────────────────────────────────────────
@@ -247,5 +303,7 @@ export class StatAccumulator {
     this.current.clear();
     this.base.clear();
     this.frameDeltas.clear();
+    this.statSources.clear();
+    this.frameStatSources.clear();
   }
 }

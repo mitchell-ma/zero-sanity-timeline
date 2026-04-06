@@ -11,7 +11,7 @@
     "duration": {
       "value": {
         "verb": "IS",
-        "value": -1
+        "value": 99999
       },
       "unit": "SECOND"
     },
@@ -41,7 +41,7 @@
         {
           "subject": "ENEMY",
           "verb": "BECOME",
-          "object": "NODE_STAGGERED"
+          "object": "STAGGERED"
         }
       ],
       "effects": [
@@ -58,15 +58,15 @@
         {
           "subject": "ENEMY",
           "verb": "BECOME",
-          "object": "FULL_STAGGERED"
+          "negated": true,
+          "object": "STAGGERED"
         }
       ],
       "effects": [
         {
-          "verb": "APPLY",
+          "verb": "CONSUME",
           "object": "EVENT",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR"
+          "objectDeterminer": "THIS"
         }
       ]
     }

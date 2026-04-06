@@ -35,7 +35,7 @@
             {
               "verb": "APPLY",
               "objectQualifier": "ARTS",
-              "object": "SUSCEPTIBILITY",
+              "object": "STATUS", "objectId": "SUSCEPTIBILITY",
               "to": "ENEMY",
               "with": {
                 "value": {

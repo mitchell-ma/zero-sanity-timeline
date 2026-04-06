@@ -14,13 +14,18 @@ export interface FrameCondition {
   cardinalityConstraint?: string;
   value?: unknown;
   with?: Record<string, unknown>;
+  /** OF — possessor chain (e.g. STACKS OF CRYO INFLICTION STATUS OF ENEMY). */
+  of?: import('../../dsl/semantics').OfClause;
 }
 
 /** Inline damage data from a DEAL DAMAGE effect. */
 export interface FrameDealDamage {
   element?: string;          // "NATURE", "HEAT", etc.
-  multipliers: number[];     // per skill level (12 entries)
+  multipliers: number[];     // per skill level (12 entries) — empty for compound expressions
   mainStat?: DamageScalingStatType;
+  /** Raw ValueNode for compound multiplier expressions (MULT, ADD, etc.).
+   *  Resolved at damage-table-build time with full skill level + potential context. */
+  multiplierNode?: unknown;
 }
 
 /** A single effect within a clause predicate. */
@@ -75,6 +80,9 @@ export abstract class SkillEventFrame {
 
   /** Whether this frame scored a critical hit (runtime state for simulation mode). */
   isCrit = false;
+
+  /** Whether this frame deals damage. */
+  hasDealDamage(): boolean { return this.getDealDamage() != null; }
 
   /** Whether this frame grants any skill points. */
   hasSkillPointRecovery(): boolean { return this.getSkillPointRecovery() > 0; }

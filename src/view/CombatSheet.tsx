@@ -24,9 +24,8 @@ import {
   getConsumable,
   getTactical,
 } from '../controller/gameDataStore';
-import { SKILL_LABELS } from '../consts/enums';
+import { SKILL_LABELS } from '../consts/timelineColumnLabels';
 import { getAllSkillLabels } from '../controller/gameDataStore';
-import { SkillType } from '../consts/viewTypes';
 import { t } from '../locales/locale';
 import { ultimateGraphKey } from '../model/channels';
 
@@ -237,7 +236,7 @@ function getSkillDisplayName(skillName: string): string {
 }
 
 function getCategoryLabel(columnId: string): string {
-  return SKILL_LABELS[columnId as SkillType] ?? columnId.toUpperCase();
+  return SKILL_LABELS[columnId] ?? columnId;
 }
 
 /** Get the resource value after all events at a given frame have been processed.

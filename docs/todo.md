@@ -133,6 +133,9 @@ These sets have HP-threshold conditions but are metadata-only with zero clauses:
 
 ## Engine fixes
 
+### Migrate combo activation window derivation from batch to reactive
+`processComboSkill.ts` → `deriveComboActivationWindows` is a batch pre-scan that iterates all events after the queue. This violates the "no batch processing" rule. Combo windows should be created reactively by the interpretor when trigger signals (PERFORM FINAL_STRIKE, APPLY INFLICTION, etc.) fire during queue processing. Requires handling: window merging, time-stop extension, multi-operator triggers, cooldown overlap, post-CD-reset re-derivation.
+
 ### Disabled configs still needing real data
 - **Antal**: Improviser talent + Improviser status — `isEnabled: false`
 
@@ -168,7 +171,7 @@ The following deeper mechanic-specific tests remain:
 | Da Pan | Reduce & Thicken multi-stack accumulation (4 stacks), Vulnerability 4-stack combo trigger in strict mode, P5 extra Vulnerability stack |
 | Lifeng | LINK consume bonus hit on ult (Vajra Impact conditional), Subduer of Evil talent chain (Knock Down → Physical DMG), Illumination ATK scaling from INT+WILL |
 | Arclight | Wildland Trekker counter accumulation + buff activation, empowered battle skill variant, Tactful Approach status |
-| Fluorite | 2+ infliction stack threshold combo trigger in strict mode, Slow status application, Unpredictable talent stacking |
+| Fluorite | T2 (Unpredictable) chance probability gate + Antal immunity — implement together |
 | Gilberta | Arts Reaction combo trigger in strict mode, Gravity Field Lift extension, Messenger's Song UE gain buff |
 | Alesh | Flash-frozen talent (Cryo→Solidification chain), arts reaction consume combo trigger in strict mode |
 | Avywenna | Thunderlance deploy/retrieve exchange mechanic (basic attack interaction) |
@@ -181,6 +184,7 @@ The following deeper mechanic-specific tests remain:
 - `isForced: true` as raw boolean in JSON doesn't resolve through `resolveWith()` (affects forced Lift/Knock Down for Da Pan, Gilberta, Estella, Lifeng)
 - Strict-mode combo triggering requires the engine to evaluate `onTriggerClause` conditions against pipeline state
 - HP threshold conditions not supported (affects Alesh P5, Chen Qianyu P1, Catcher combo trigger)
+- Remove priority registry from `triggerMatch.ts` — predicates are independent bools evaluated left-to-right, not primary/secondary. Each condition should produce candidate frames independently, then ALL conditions are AND'd at each candidate. The current priority-based system couples conditions and has caused bugs where the "primary" handler's scanning logic doesn't match secondary condition semantics.
 
 ## Fix laevatainDamageCalc.test.ts — broken after gameDataController mock removal
 

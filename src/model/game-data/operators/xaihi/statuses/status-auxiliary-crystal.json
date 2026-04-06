@@ -8,6 +8,20 @@
           "verb": "PERFORM",
           "object": "SKILL",
           "objectId": "FINAL_STRIKE"
+        },
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "HAVE",
+          "object": "HP",
+          "cardinalityConstraint": "LESS_THAN",
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": 100,
+              "unit": "PERCENTAGE"
+            }
+          }
         }
       ],
       "effects": [
@@ -109,68 +123,34 @@
           "subjectDeterminer": "THIS",
           "subject": "OPERATOR",
           "verb": "HAVE",
-          "objectQualifier": "FULL",
-          "object": "HP"
+          "object": "HP",
+          "cardinalityConstraint": "GREATER_THAN_EQUAL",
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": 100,
+              "unit": "PERCENTAGE"
+            }
+          }
         }
       ],
       "effects": [
         {
-          "verb": "APPLY",
-          "objectQualifier": "ARTS",
-          "object": "STATUS",
-          "objectId": "AMP",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR",
+          "verb": "CONSUME",
+          "object": "STACKS",
           "with": {
-            "value": {
-              "operation": "ADD",
-              "left": {
-                "verb": "VARY_BY",
-                "object": "SKILL_LEVEL",
-                "value": [
-                  0.09,
-                  0.09,
-                  0.09,
-                  0.09,
-                  0.09,
-                  0.11,
-                  0.11,
-                  0.11,
-                  0.13,
-                  0.13,
-                  0.13,
-                  0.15
-                ],
-                "of": {
-                  "object": "OPERATOR",
-                  "determiner": "THIS"
-                }
-              },
-              "right": {
-                "verb": "VARY_BY",
-                "object": "POTENTIAL",
-                "value": [
-                  0,
-                  0.05,
-                  0.05,
-                  0.05,
-                  0.05,
-                  0.05
-                ],
-                "of": {
-                  "object": "OPERATOR",
-                  "determiner": "THIS"
-                }
-              }
-            },
-            "duration": {
-              "value": {
-                "verb": "IS",
-                "value": 25
-              },
-              "unit": "SECOND"
+            "stacks": {
+              "verb": "IS",
+              "value": 1
             }
           }
+        },
+        {
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "DISTRIBUTED_DOS_AMP",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
         }
       ]
     }

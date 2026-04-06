@@ -168,7 +168,7 @@
                   "object": "STATUS",
                   "to": "ENEMY",
                   "with": {
-                    "isForced": true
+                    "isForced": { "verb": "IS", "value": 1 }
                   }
                 }
               ]

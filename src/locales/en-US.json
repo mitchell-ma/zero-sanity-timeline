@@ -651,5 +651,9 @@
   "dsl.property.stacks": "Stacks",
   "dsl.property.multiplier": "Multiplier",
   "dsl.property.stagger": "Stagger",
-  "dsl.property.skillPoint": "SP"
+  "dsl.property.skillPoint": "SP",
+
+  "breakdown.varyBy.SKILL_LEVEL": "Base",
+  "breakdown.varyBy.POTENTIAL": "Potential {level}",
+  "breakdown.varyBy.TALENT_LEVEL": "Talent Level"
 }

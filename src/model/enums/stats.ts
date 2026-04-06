@@ -39,6 +39,7 @@ export enum StatType {
   COMBO_SKILL_DAMAGE_BONUS = "COMBO_SKILL_DAMAGE_BONUS",
   ULTIMATE_DAMAGE_BONUS = "ULTIMATE_DAMAGE_BONUS",
   STAGGER_DAMAGE_BONUS = "STAGGER_DAMAGE_BONUS",
+  FINAL_STRIKE_DAMAGE_BONUS = "FINAL_STRIKE_DAMAGE_BONUS",
   FINAL_DAMAGE_REDUCTION = "FINAL_DAMAGE_REDUCTION",
   SKILL_DAMAGE_BONUS = "SKILL_DAMAGE_BONUS",
   ARTS_DAMAGE_BONUS = "ARTS_DAMAGE_BONUS",
@@ -53,6 +54,16 @@ export enum StatType {
   AMP = "AMP",
   /** Arts/elemental susceptibility (percentage increase to arts damage taken). Qualified by element in DSL. */
   SUSCEPTIBILITY = "SUSCEPTIBILITY",
+  HEAT_SUSCEPTIBILITY = "HEAT_SUSCEPTIBILITY",
+  CRYO_SUSCEPTIBILITY = "CRYO_SUSCEPTIBILITY",
+  NATURE_SUSCEPTIBILITY = "NATURE_SUSCEPTIBILITY",
+  ELECTRIC_SUSCEPTIBILITY = "ELECTRIC_SUSCEPTIBILITY",
+  PHYSICAL_SUSCEPTIBILITY = "PHYSICAL_SUSCEPTIBILITY",
+  // ── Debuff stats ─────────────────────────────────────────────────────────────
+  /** Movement speed reduction (percentage). Applied by statuses with SLOW effects. */
+  SLOW = "SLOW",
+  /** Stagger frailty — non-zero while enemy is in any stagger state. Stat-based trigger source. */
+  STAGGER_FRAILTY = "STAGGER_FRAILTY",
   // ── Enemy stats ──────────────────────────────────────────────────────────────
   STAGGER_HP = "STAGGER_HP",
   STAGGER_RECOVERY = "STAGGER_RECOVERY",
@@ -115,6 +126,7 @@ export const STAT_ATTRIBUTION: Record<StatType, StatOwnerType[]> = {
   [StatType.COMBO_SKILL_DAMAGE_BONUS]: [StatOwnerType.OPERATOR, StatOwnerType.WEAPON, StatOwnerType.SKILL],
   [StatType.ULTIMATE_DAMAGE_BONUS]: [StatOwnerType.OPERATOR],
   [StatType.STAGGER_DAMAGE_BONUS]: [StatOwnerType.OPERATOR],
+  [StatType.FINAL_STRIKE_DAMAGE_BONUS]: [StatOwnerType.OPERATOR, StatOwnerType.SKILL],
   [StatType.SKILL_DAMAGE_BONUS]: [StatOwnerType.OPERATOR, StatOwnerType.SKILL],
   [StatType.ARTS_DAMAGE_BONUS]: [StatOwnerType.OPERATOR, StatOwnerType.WEAPON, StatOwnerType.SKILL],
   // ── Damage factor stats ───────────────────────────────────────────────────
@@ -122,6 +134,11 @@ export const STAT_ATTRIBUTION: Record<StatType, StatOwnerType[]> = {
   [StatType.DAMAGE_TAKEN_BONUS]: [StatOwnerType.ENEMY],
   [StatType.AMP]: [StatOwnerType.OPERATOR],
   [StatType.SUSCEPTIBILITY]: [StatOwnerType.ENEMY],
+  [StatType.HEAT_SUSCEPTIBILITY]: [StatOwnerType.ENEMY],
+  [StatType.CRYO_SUSCEPTIBILITY]: [StatOwnerType.ENEMY],
+  [StatType.NATURE_SUSCEPTIBILITY]: [StatOwnerType.ENEMY],
+  [StatType.ELECTRIC_SUSCEPTIBILITY]: [StatOwnerType.ENEMY],
+  [StatType.PHYSICAL_SUSCEPTIBILITY]: [StatOwnerType.ENEMY],
   // ── Enemy only ────────────────────────────────────────────────────────────
   [StatType.STAGGER_HP]: [StatOwnerType.ENEMY],
   [StatType.STAGGER_RECOVERY]: [StatOwnerType.ENEMY],
@@ -129,6 +146,8 @@ export const STAT_ATTRIBUTION: Record<StatType, StatOwnerType[]> = {
   [StatType.FINISHER_SP_GAIN]: [StatOwnerType.ENEMY],
   [StatType.ATTACK_RANGE]: [StatOwnerType.ENEMY],
   [StatType.WEIGHT]: [StatOwnerType.ENEMY],
+  [StatType.SLOW]: [StatOwnerType.ENEMY],
+  [StatType.STAGGER_FRAILTY]: [StatOwnerType.ENEMY],
 };
 
 /** Returns stats that include the given owner type. */

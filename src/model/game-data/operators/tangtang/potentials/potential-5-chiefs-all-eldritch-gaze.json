@@ -1,18 +1,4 @@
 {
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "APPLY",
-          "object": "STATUS",
-          "objectId": "buff_chr_0027_tangtang_potential_5_effect",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR"
-        }
-      ]
-    }
-  ],
   "properties": {
     "id": "TANGTANG_POTENTIAL_5",
     "name": "Chief's All-Eldritch Gaze",
@@ -23,7 +9,6 @@
   },
   "metadata": {
     "originId": "TANGTANG",
-    "dataStatus": "RECONCILED"
-  },
-  "clauseType": "ALL"
+    "dataStatus": "VERIFIED"
+  }
 }

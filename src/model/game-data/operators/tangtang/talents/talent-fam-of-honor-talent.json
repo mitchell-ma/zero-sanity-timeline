@@ -31,16 +31,19 @@
           "to": "ENEMY",
           "with": {
             "value": {
-              "verb": "VARY_BY",
-              "object": "TALENT_LEVEL",
-              "value": [
-                0.2,
-                0.4
-              ],
-              "of": {
-                "object": "OPERATOR",
-                "determiner": "THIS"
-              }
+              "value": {
+                "verb": "VARY_BY",
+                "object": "TALENT_LEVEL",
+                "value": [
+                  0.2,
+                  0.4
+                ],
+                "of": {
+                  "object": "OPERATOR",
+                  "determiner": "THIS"
+                }
+              },
+              "unit": "PERCENTAGE"
             }
           }
         }
@@ -67,7 +70,7 @@
       "ENDFIELD_WIKI"
     ],
     "icon": "skills/tangtang_talent_1_icon.png",
-    "dataStatus": "RECONCILED"
+    "dataStatus": "VERIFIED"
   },
   "clauseType": "ALL"
 }

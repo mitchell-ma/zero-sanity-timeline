@@ -130,6 +130,15 @@ function warnInvalidConsumeTarget(ef: Record<string, unknown>, path: string): st
   return [];
 }
 
+/** Validate with.isForced is a ValueNode, not a raw boolean. */
+function warnRawBooleanIsForced(ef: Record<string, unknown>, path: string): string[] {
+  const w = ef.with as Record<string, unknown> | undefined;
+  if (w && typeof w.isForced === 'boolean') {
+    return [`${path}.with.isForced: raw boolean — must be a ValueNode (e.g. { "verb": "IS", "value": 1 })`];
+  }
+  return [];
+}
+
 /**
  * Run all effect validations against DSL semantics mappings.
  * Single entry point — replaces individual warnX calls at each call site.
@@ -142,5 +151,6 @@ export function validateEffect(ef: Record<string, unknown>, path: string): strin
     ...warnInvalidToQualifier(ef, path),
     ...warnInvalidApplyTarget(ef, path),
     ...warnInvalidConsumeTarget(ef, path),
+    ...warnRawBooleanIsForced(ef, path),
   ];
 }

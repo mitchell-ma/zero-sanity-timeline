@@ -1,0 +1,29 @@
+{
+  "properties": {
+    "id": "WHIRLPOOL",
+    "name": "Whirlpool",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 2
+      },
+      "interactionType": "RESET"
+    },
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": 30
+      },
+      "unit": "SECOND"
+    },
+    "eventType": "STATUS",
+    "eventIdType": "SKILL_STATUS",
+    "description": "A Whirlpool created by RIVER, TO ME! Up to 2 Whirlpools can exist at any time. Consumed by IMA WAVERIDAAH! and DA CHIEF SEES YOU! to create additional Waterspouts."
+  },
+  "metadata": {
+    "originId": "TANGTANG",
+    "dataStatus": "VERIFIED"
+  }
+}

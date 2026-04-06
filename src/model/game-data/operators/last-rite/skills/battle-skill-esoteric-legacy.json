@@ -91,64 +91,18 @@
                   }
                 },
                 {
-                  "verb": "DEAL",
-                  "objectQualifier": "CRYO",
-                  "object": "DAMAGE",
-                  "to": "ENEMY",
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "HYPOTHERMIC_PERFUSION",
+                  "toDeterminer": "CONTROLLED",
+                  "to": "OPERATOR",
                   "with": {
                     "duration": {
-                      "verb": "IS",
-                      "value": 15
-                    },
-                    "value": {
-                      "operation": "MULT",
-                      "left": {
-                        "verb": "VARY_BY",
-                        "object": "SKILL_LEVEL",
-                        "value": [
-                          1.42,
-                          1.56,
-                          1.71,
-                          1.85,
-                          1.99,
-                          2.13,
-                          2.28,
-                          2.42,
-                          2.56,
-                          2.74,
-                          2.95,
-                          3.2
-                        ],
-                        "of": {
-                          "object": "OPERATOR",
-                          "determiner": "THIS"
-                        }
+                      "value": {
+                        "verb": "IS",
+                        "value": 15
                       },
-                      "right": {
-                        "verb": "VARY_BY",
-                        "object": "POTENTIAL",
-                        "value": [
-                          1,
-                          1,
-                          1,
-                          1,
-                          1,
-                          1.2
-                        ],
-                        "of": {
-                          "object": "OPERATOR",
-                          "determiner": "THIS"
-                        }
-                      }
-                    },
-                    "mainStat": {
-                      "verb": "IS",
-                      "object": "STAT",
-                      "objectId": "ATTACK",
-                      "of": {
-                        "object": "OPERATOR",
-                        "determiner": "THIS"
-                      }
+                      "unit": "SECOND"
                     }
                   }
                 }

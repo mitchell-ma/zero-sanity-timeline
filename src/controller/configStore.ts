@@ -229,10 +229,7 @@ export function getEnabledStatusEvents(operatorId: string): readonly OperatorSta
 }
 
 export function getSkillIds(operatorId: string): Set<string> {
-  const ids = getOperatorSkillIds(operatorId);
-  ids.add('FINISHER');
-  ids.add('DIVE');
-  return ids;
+  return getOperatorSkillIds(operatorId);
 }
 
 /** Get skill type map: flattened to key = type/sub-type, value = first skill ID. */

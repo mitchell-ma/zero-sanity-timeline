@@ -187,6 +187,24 @@
                       }
                     }
                   }
+                },
+                {
+                  "verb": "APPLY",
+                  "object": "STAT",
+                  "objectId": "SUSCEPTIBILITY",
+                  "objectQualifier": "CRYO",
+                  "to": "ENEMY",
+                  "with": {
+                    "multiplier": {
+                      "verb": "VARY_BY",
+                      "object": "TALENT_LEVEL",
+                      "value": [1.2, 1.5],
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
+                    }
+                  }
                 }
               ]
             }
@@ -300,6 +318,24 @@
                       }
                     }
                   }
+                },
+                {
+                  "verb": "APPLY",
+                  "object": "STAT",
+                  "objectId": "SUSCEPTIBILITY",
+                  "objectQualifier": "CRYO",
+                  "to": "ENEMY",
+                  "with": {
+                    "multiplier": {
+                      "verb": "VARY_BY",
+                      "object": "TALENT_LEVEL",
+                      "value": [1.2, 1.5],
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
+                    }
+                  }
                 }
               ]
             }
@@ -407,6 +443,24 @@
                       "verb": "IS",
                       "object": "STAT",
                       "objectId": "ATTACK",
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
+                    }
+                  }
+                },
+                {
+                  "verb": "APPLY",
+                  "object": "STAT",
+                  "objectId": "SUSCEPTIBILITY",
+                  "objectQualifier": "CRYO",
+                  "to": "ENEMY",
+                  "with": {
+                    "multiplier": {
+                      "verb": "VARY_BY",
+                      "object": "TALENT_LEVEL",
+                      "value": [1.2, 1.5],
                       "of": {
                         "object": "OPERATOR",
                         "determiner": "THIS"

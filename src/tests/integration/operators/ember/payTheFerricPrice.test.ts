@@ -12,7 +12,7 @@
 import { renderHook, act } from '@testing-library/react';
 import { NounType } from '../../../../dsl/semantics';
 import { useApp } from '../../../../app/useApp';
-import { ColumnType } from '../../../../consts/enums';
+import { ColumnType, EventStatusType } from '../../../../consts/enums';
 import { FPS } from '../../../../utils/timeline';
 import { ENEMY_OWNER_ID, ENEMY_ACTION_COLUMN_ID } from '../../../../model/channels';
 import { findColumn, getMenuPayload } from '../../helpers';
@@ -135,7 +135,7 @@ describe('Pay the Ferric Price — DEAL DAMAGE trigger', () => {
     const activeEvents = pftpEvents.filter((ev) => !ev.eventStatus);
     expect(activeEvents).toHaveLength(3);
     const refreshedEvents = pftpEvents.filter(
-      (ev) => ev.eventStatus === 'REFRESHED',
+      (ev) => ev.eventStatus === EventStatusType.REFRESHED,
     );
     expect(refreshedEvents).toHaveLength(1);
   });

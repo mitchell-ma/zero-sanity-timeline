@@ -42,6 +42,7 @@ export const DEFAULT_STATS: Readonly<Record<StatType, number>> = {
   [StatType.COMBO_SKILL_DAMAGE_BONUS]: 0,
   [StatType.ULTIMATE_DAMAGE_BONUS]: 0,
   [StatType.STAGGER_DAMAGE_BONUS]: 0,
+  [StatType.FINAL_STRIKE_DAMAGE_BONUS]: 0,
   [StatType.FINAL_DAMAGE_REDUCTION]: 0,
   [StatType.SKILL_DAMAGE_BONUS]: 0,
   [StatType.ARTS_DAMAGE_BONUS]: 0,
@@ -52,6 +53,11 @@ export const DEFAULT_STATS: Readonly<Record<StatType, number>> = {
   [StatType.DAMAGE_TAKEN_BONUS]: 0,
   [StatType.AMP]: 0,
   [StatType.SUSCEPTIBILITY]: 0,
+  [StatType.HEAT_SUSCEPTIBILITY]: 0,
+  [StatType.CRYO_SUSCEPTIBILITY]: 0,
+  [StatType.NATURE_SUSCEPTIBILITY]: 0,
+  [StatType.ELECTRIC_SUSCEPTIBILITY]: 0,
+  [StatType.PHYSICAL_SUSCEPTIBILITY]: 0,
   // ── Enemy stats ──────────────────────────────────────────────────────────────
   [StatType.STAGGER_HP]: 0,
   [StatType.STAGGER_RECOVERY]: 0,
@@ -59,4 +65,6 @@ export const DEFAULT_STATS: Readonly<Record<StatType, number>> = {
   [StatType.FINISHER_SP_GAIN]: 0,
   [StatType.ATTACK_RANGE]: 0,
   [StatType.WEIGHT]: 0,
+  [StatType.SLOW]: 0,
+  [StatType.STAGGER_FRAILTY]: 0,
 };

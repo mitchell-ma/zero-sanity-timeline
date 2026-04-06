@@ -7,7 +7,7 @@
           "subject": "OPERATOR",
           "verb": "APPLY",
           "objectDeterminer": "ANY",
-          "object": "AMP",
+          "object": "STATUS", "objectId": "AMP",
           "to": "OPERATOR",
           "toDeterminer": "ANY"
         }
@@ -50,7 +50,7 @@
           "subject": "OPERATOR",
           "verb": "APPLY",
           "objectDeterminer": "ANY",
-          "object": "SUSCEPTIBILITY",
+          "object": "STATUS", "objectId": "SUSCEPTIBILITY",
           "to": "ENEMY"
         }
       ],

@@ -1170,7 +1170,11 @@ function BuiltinOperatorSkillSection({ operatorId, skillType, skill, onExpandedC
                     <div className="ops-sub-header">
                       <span className="ops-sub-label">Combo Trigger</span>
                     </div>
-                    <div className="ops-empty" style={{ fontStyle: 'normal', color: 'var(--text-secondary)' }}>{comboTrigger.description}</div>
+                    <div className="ops-combo-trigger-meta">
+                      <span className="ev-aw-tag">Window: {comboTrigger.windowSeconds}s</span>
+                      <span className="ev-aw-tag">Max: {comboTrigger.maxSkills}</span>
+                    </div>
+                    <ClauseTabs clause={[]} onTrigger={comboTrigger.onTriggerClause as unknown[]} onEntry={[]} onExit={[]} />
                   </div>
                 )}
                 {skill.skillPointCost != null && <ReadonlyField label="SP Cost" value={String(skill.skillPointCost)} />}

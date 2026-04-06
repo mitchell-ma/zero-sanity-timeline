@@ -1,31 +1,4 @@
 {
-  "onTriggerClause": [
-    {
-      "conditions": [
-        {
-          "subjectDeterminer": "THIS",
-          "subject": "OPERATOR",
-          "verb": "PERFORM",
-          "object": "SKILL",
-          "objectId": "ULTIMATE"
-        }
-      ],
-      "effects": [
-        {
-          "verb": "AMP",
-          "object": "SUSCEPTIBILITY",
-          "objectQualifier": "CRYO",
-          "to": "ENEMY",
-          "with": {
-            "value": {
-              "verb": "IS",
-              "value": 1.2
-            }
-          }
-        }
-      ]
-    }
-  ],
   "properties": {
     "id": "CRYOGENIC_EMBRITTLEMENT_TALENT",
     "maxLevel": {

@@ -98,103 +98,10 @@
               "conditions": [],
               "effects": [
                 {
-                  "verb": "DEAL",
-                  "objectQualifier": "CRYO",
-                  "object": "DAMAGE",
-                  "to": "ENEMY",
-                  "with": {
-                    "damageMultiplierIncrement": {
-                      "operation": "MULT",
-                      "left": {
-                        "verb": "VARY_BY",
-                        "object": "SKILL_LEVEL",
-                        "value": [
-                          1.778,
-                          1.956,
-                          2.134,
-                          2.311,
-                          2.489,
-                          2.667,
-                          2.845,
-                          3.023,
-                          3.2,
-                          3.423,
-                          3.689,
-                          4
-                        ],
-                        "of": {
-                          "object": "OPERATOR",
-                          "determiner": "THIS"
-                        }
-                      },
-                      "right": {
-                        "verb": "VARY_BY",
-                        "object": "POTENTIAL",
-                        "value": [
-                          1,
-                          1,
-                          1,
-                          1,
-                          1,
-                          1.15
-                        ],
-                        "of": {
-                          "object": "OPERATOR",
-                          "determiner": "THIS"
-                        }
-                      }
-                    },
-                    "value": {
-                      "operation": "MULT",
-                      "left": {
-                        "verb": "VARY_BY",
-                        "object": "SKILL_LEVEL",
-                        "value": [
-                          0.178,
-                          0.196,
-                          0.213,
-                          0.231,
-                          0.249,
-                          0.267,
-                          0.284,
-                          0.302,
-                          0.32,
-                          0.342,
-                          0.369,
-                          0.4
-                        ],
-                        "of": {
-                          "object": "OPERATOR",
-                          "determiner": "THIS"
-                        }
-                      },
-                      "right": {
-                        "verb": "VARY_BY",
-                        "object": "POTENTIAL",
-                        "value": [
-                          1,
-                          1,
-                          1,
-                          1,
-                          1,
-                          1.15
-                        ],
-                        "of": {
-                          "object": "OPERATOR",
-                          "determiner": "THIS"
-                        }
-                      }
-                    },
-                    "mainStat": {
-                      "verb": "IS",
-                      "object": "STAT",
-                      "objectId": "ATTACK",
-                      "of": {
-                        "object": "OPERATOR",
-                        "determiner": "THIS"
-                      }
-                    }
-                  }
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "OLDEN_STARE",
+                  "to": "ENEMY"
                 }
               ]
             }
@@ -207,7 +114,7 @@
   "metadata": {
     "originId": "TANGTANG",
     "icon": "skills/ult_tangtang.png",
-    "dataStatus": "RECONCILED"
+    "dataStatus": "VERIFIED"
   },
   "clauseType": "ALL"
 }

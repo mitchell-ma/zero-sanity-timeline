@@ -451,7 +451,7 @@ export class EventsQueryService {
     const sources: MultiplierSource[] = [];
     for (const ev of this.artsAmpEvents) {
       if (!this.isActive(ev, frame)) continue;
-      sources.push({ label: ev.name ?? 'Arts Amp', value: ev.statusValue ?? DEFAULT_AMP_BONUS, category: ev.name ?? 'Arts Amp' });
+      sources.push({ label: ev.name ?? NounType.ARTS_AMP, value: ev.statusValue ?? DEFAULT_AMP_BONUS, category: ev.name ?? NounType.ARTS_AMP });
     }
     return sources;
   }

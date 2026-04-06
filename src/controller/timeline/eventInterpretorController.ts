@@ -19,15 +19,17 @@ import {
   ClauseEvaluationType,
   flattenQualifiedId,
   isQualifiedId,
+  isValueExpression,
 } from '../../dsl/semantics';
-import type { Interaction, ValueNode } from '../../dsl/semantics';
+import type { Interaction, ValueNode, ValueExpression } from '../../dsl/semantics';
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT, buildContextForSkillColumn } from '../calculation/valueResolver';
 import type { ValueResolutionContext } from '../calculation/valueResolver';
 import { TimelineEvent, eventDuration, setEventDuration } from '../../consts/viewTypes';
-import { CritMode, DamageType, ElementType, EventFrameType, EventStatusType, PERMANENT_DURATION, PhysicalStatusType, SegmentType, StackInteractionType, UnitType } from '../../consts/enums';
+import { CritMode, DamageType, ElementType, EventFrameType, EventStatusType, PERMANENT_DURATION, PhysicalStatusType, SegmentType, StackInteractionType, StatType, UnitType } from '../../consts/enums';
 import { resolveEffectStat } from '../../model/enums/stats';
 import type { OverrideStore } from '../../consts/overrideTypes';
-import type { StatAccumulator } from '../calculation/statAccumulator';
+import type { StatAccumulator, StatSource } from '../calculation/statAccumulator';
+import { t } from '../../locales/locale';
 import { buildOverrideKey } from '../overrideController';
 import {
   BREACH_DURATION, ENEMY_OWNER_ID, ENEMY_ACTION_COLUMN_ID, ELEMENT_TO_INFLICTION_COLUMN,
@@ -56,6 +58,7 @@ import type { SlotTriggerWiring } from './eventQueueTypes';
 import { findClauseTriggerMatches } from './triggerMatch';
 import type { Predicate } from './triggerMatch';
 import { derivedEventUid } from './inputEventController';
+import { extendByTimeStops } from './processTimeStop';
 import { activeEventsAtFrame } from './timelineQueries';
 import { getComboTriggerClause, getComboTriggerInfo } from '../gameDataStore';
 import { PRIORITY, QueueFrameType, FrameHookType } from './eventQueueTypes';
@@ -299,6 +302,49 @@ export interface InterpretorOptions {
   overrides?: OverrideStore;
 }
 
+// ── Stat source helpers ─────────────────────────────────────────────────────
+
+/** Build a StatSource with sub-component breakdown from a clause effect's with.value. */
+function buildStatSource(
+  label: string,
+  totalValue: number,
+  rawEffect: Record<string, unknown>,
+  ctx: InterpretContext,
+): StatSource {
+  const source: StatSource = { label, value: totalValue };
+  const withBlock = rawEffect.with as { value?: unknown } | undefined;
+  const valueNode = withBlock?.value as Record<string, unknown> | undefined;
+  if (valueNode && isValueExpression(valueNode as unknown as ValueNode)) {
+    const expr = valueNode as unknown as ValueExpression;
+    const valueCtx = buildValueCtxForSource(ctx);
+    const leftVal = resolveValueNode(expr.left, valueCtx);
+    const rightVal = resolveValueNode(expr.right, valueCtx);
+    const subSources: StatSource[] = [];
+    if (leftVal !== 0) subSources.push({ label: resolveVaryByLabel(expr.left, ctx), value: leftVal });
+    if (rightVal !== 0) subSources.push({ label: resolveVaryByLabel(expr.right, ctx), value: rightVal });
+    if (subSources.length > 0) source.subSources = subSources;
+  }
+  return source;
+}
+
+function buildValueCtxForSource(ctx: InterpretContext) {
+  return {
+    ...DEFAULT_VALUE_CONTEXT,
+    potential: ctx.potential ?? 0,
+  };
+}
+
+function resolveVaryByLabel(node: ValueNode, ctx: InterpretContext): string {
+  if (node && typeof node === 'object' && 'object' in node) {
+    const obj = (node as unknown as Record<string, unknown>).object as string | undefined;
+    if (obj === NounType.SKILL_LEVEL) return t(`breakdown.varyBy.${NounType.SKILL_LEVEL}`);
+    if (obj === NounType.POTENTIAL) return t(`breakdown.varyBy.${NounType.POTENTIAL}`, { level: ctx.potential ?? 0 });
+    if (obj === NounType.TALENT_LEVEL) return t(`breakdown.varyBy.${NounType.TALENT_LEVEL}`);
+    return obj ?? 'Value';
+  }
+  return 'Value';
+}
+
 // ── Clause effect resolution ────────────────────────────────────────────────
 // Moved from statusTriggerCollector — resolves susceptibility/statusValue from
 // a status def's clause array onto a timeline event.
@@ -314,6 +360,7 @@ interface ClauseWithValue {
 interface ClauseEffectEntry {
   verb: string;
   object: string;
+  objectId?: string;
   objectQualifier?: string;
   with?: { value: ClauseWithValue };
 }
@@ -372,7 +419,7 @@ function resolveClauseDimensionKey(
     }
     return best;
   }
-  if (dim === 'SKILL_LEVEL') {
+  if (dim === NounType.SKILL_LEVEL) {
     const sl = ctx.loadoutProperties?.skills.battleSkillLevel ?? 12;
     let best: string | undefined;
     let bestN = 0;
@@ -412,7 +459,7 @@ function resolveClauseEffectsFromClauses(
 
     for (const effect of clause.effects) {
       const verb = effect.verb;
-      const object = effect.object;
+      const objectId = effect.objectId;
       const objectQualifier = effect.objectQualifier;
       const withBlock = effect.with;
       const wp = withBlock?.value;
@@ -428,11 +475,11 @@ function resolveClauseEffectsFromClauses(
         // Single dimension: object is a string, value is a flat array
         if (typeof dims === 'string' && Array.isArray(val)) {
           const arr = val as number[];
-          if (dims === 'SKILL_LEVEL') {
+          if (dims === NounType.SKILL_LEVEL) {
             const skillLevel = ctx.loadoutProperties?.skills.battleSkillLevel ?? 12;
             return arr[Math.min(skillLevel, arr.length) - 1] ?? arr[0];
           }
-          if (dims === 'TALENT_LEVEL' || dims === 'INTELLECT') {
+          if (dims === NounType.TALENT_LEVEL || dims === StatType.INTELLECT) {
             const talentLevel = resolveTalentLevel(def, ctx);
             return arr[Math.min(talentLevel, arr.length) - 1] ?? arr[0];
           }
@@ -456,7 +503,7 @@ function resolveClauseEffectsFromClauses(
         return undefined;
       };
 
-      if (verb === VerbType.APPLY && object === NounType.SUSCEPTIBILITY && objectQualifier) {
+      if (verb === VerbType.APPLY && objectId === NounType.SUSCEPTIBILITY && objectQualifier) {
         const val = resolveValue();
         if (val != null) {
           if (!ev.susceptibility) ev.susceptibility = {};
@@ -464,12 +511,7 @@ function resolveClauseEffectsFromClauses(
         }
       }
 
-      if (verb === VerbType.APPLY && object === NounType.DAMAGE_BONUS) {
-        const val = resolveValue();
-        if (val != null) ev.statusValue = val;
-      }
-
-      if (verb === 'IGNORE' && object === 'RESISTANCE') {
+      if (verb === VerbType.APPLY && objectId === NounType.DAMAGE_BONUS) {
         const val = resolveValue();
         if (val != null) ev.statusValue = val;
       }
@@ -501,8 +543,8 @@ export class EventInterpretorController {
   private _frameStatReversals?: { stat: import('../../consts/enums').StatType; value: number }[];
   private critMode?: CritMode;
   private overrides?: OverrideStore;
-  /** Dedup set for reactive triggers: prevents double-firing at the same frame. */
-  private seenTriggers = new Set<string>();
+  /** One-shot HP threshold triggers that have already fired this pipeline run. */
+  private firedHpThresholds = new Set<string>();
   /** Pending STATUS_EXIT queue frames to be flushed into the queue. */
   private pendingExitFrames: QueueFrame[] = [];
   /** Usage counter for triggers with usageLimit (e.g. tacticals, gear sets). Key: "defId:slotId". */
@@ -516,6 +558,9 @@ export class EventInterpretorController {
   // ── Reusable output arrays (avoids per-call allocation) ─────────────────
   private _processFrameOut: QueueFrame[] = [];
   private _engineTriggerOut: QueueFrame[] = [];
+  private _statTriggerOut: QueueFrame[] = [];
+  /** Cascade frames produced by reactive triggers inside ALL compound iterations. */
+  private _compoundCascadeFrames: QueueFrame[] = [];
 
   /** Resolve slot ID → operator ID. Returns the operator ID if mapped, or the input unchanged. */
   private resolveOperatorId(slotId: string): string {
@@ -550,7 +595,7 @@ export class EventInterpretorController {
   }
 
   /**
-   * Reset for reuse without deallocating the seenTriggers Set.
+   * Reset for reuse.
    */
   resetWith(
     controller: DerivedEventController,
@@ -559,7 +604,7 @@ export class EventInterpretorController {
   ) {
     this.controller = controller;
     this.baseEvents = baseEvents;
-    this.seenTriggers.clear();
+    this.firedHpThresholds.clear();
     this.triggerUsageCount.clear();
     this._cachedBaseLen = 0;
     this._cachedOutputLen = 0;
@@ -633,6 +678,7 @@ export class EventInterpretorController {
         const r = this._statReversals[i];
         if (r.frame <= currentFrame) {
           this.statAccumulator.applyStatDelta(r.entityId, { [r.stat]: r.value });
+          this.statAccumulator.popStatSource(r.entityId, r.stat);
           this._statReversals[i] = this._statReversals[this._statReversals.length - 1];
           this._statReversals.length--;
         } else {
@@ -642,6 +688,8 @@ export class EventInterpretorController {
     }
 
     let result: QueueFrame[];
+    // eslint-disable-next-line no-console
+    if (entry.type === QueueFrameType.ENGINE_TRIGGER && entry.engineTrigger?.ctx?.def?.properties?.id === 'LOVE_THE_STAB_AND_TWIST_TALENT') console.log(`[processQueueFrame] T1 ENGINE_TRIGGER at frame=${entry.frame} effects=${entry.engineTrigger?.ctx?.triggerEffects?.length} haveConditions=${entry.engineTrigger?.ctx?.haveConditions?.length}`);
     switch (entry.type) {
       case QueueFrameType.PROCESS_FRAME:  result = this.handleProcessFrame(entry); break;
       case QueueFrameType.ENGINE_TRIGGER: result = this.handleEngineTrigger(entry); break;
@@ -751,7 +799,7 @@ export class EventInterpretorController {
     const ownerId = this.resolveOwnerId(effectTo, ctx, effectToDeterminer);
     const source = { ownerId: ctx.sourceOwnerId, skillName: ctx.sourceSkillName };
 
-    // For freeform-derived events, carry the source uid so the created event can be matched to the raw event
+    // For freeform-derived events, carry the source uid so the created event can be matched to the raw event.
     const freeformUid = ctx.sourceEventUid;
 
     if (effect.object === NounType.INFLICTION) {
@@ -792,6 +840,14 @@ export class EventInterpretorController {
       }
       // Physical status (APPLY PHYSICAL STATUS LIFT TO ENEMY) → delegate to dedicated handler
       if (effect.objectId === AdjectiveType.PHYSICAL) return this.applyPhysicalStatus(effect, ctx);
+      // Unqualified SUSCEPTIBILITY / FRAGILITY — pure stat modifiers resolved by
+      // resolveClauseEffectsFromClauses. No timeline event created.
+      // Qualified ones (e.g. CRYO + SUSCEPTIBILITY → CRYO_SUSCEPTIBILITY) may have status defs
+      // and are handled by the qualified status path below.
+      if (!effect.objectQualifier
+          && (effect.objectId === NounType.SUSCEPTIBILITY || effect.objectId === NounType.FRAGILITY)) {
+        return true;
+      }
       // Qualified status: resolve objectId + objectQualifier → element-specific ID
       // (e.g. CRYO + AMP → CRYO_AMP, CRYO + FRAGILITY → CRYO_FRAGILITY)
       // Skip nouns with dedicated handling (SUSCEPTIBILITY, INFLICTION, REACTION, PHYSICAL).
@@ -818,6 +874,7 @@ export class EventInterpretorController {
       const inheritFromSource = cfgDur != null && cfgDur < 0;
       const duration = typeof dv === 'number' ? Math.round(dv * FPS)
         : inheritFromSource && ctx.sourceEventRemainingDuration != null ? ctx.sourceEventRemainingDuration
+        : effect.inheritDuration && remainingDuration != null ? remainingDuration
         : cfgDur != null && !inheritFromSource ? cfgDur
         : isTeamTarget && remainingDuration != null ? remainingDuration
         : TOTAL_FRAMES;
@@ -842,10 +899,15 @@ export class EventInterpretorController {
         resolveClauseEffects(tempEv, def, deriveCtx);
         if (tempEv.susceptibility) eventProps.susceptibility = tempEv.susceptibility;
         if (tempEv.statusValue != null) eventProps.statusValue = tempEv.statusValue;
-        // Copy parsed segments (with frame markers) from the game data layer
+        // Deep-clone parsed segments (with frame markers) from the game data layer.
+        // Must clone to avoid shared-reference mutation when consumption clamps duration/frames.
         const statusObj = effect.objectId ? getStatusById(effect.objectId) : undefined;
         if (statusObj && statusObj.segments.length > 0 && typeof dv !== 'number') {
-          eventProps.segments = statusObj.segments;
+          eventProps.segments = statusObj.segments.map(seg => ({
+            ...seg,
+            properties: { ...seg.properties },
+            ...(seg.frames ? { frames: seg.frames.map(f => ({ ...f })) } : {}),
+          }));
         }
       }
 
@@ -886,6 +948,13 @@ export class EventInterpretorController {
 
       // Resolve stack count from effect (e.g. "with": { "stacks": { "verb": "IS", "value": 5 } })
       const sv = this.resolveWith(effect.with?.stacks, ctx);
+      // When a dynamic stacks expression resolves to 0, skip the APPLY entirely.
+      // This handles cases like "create N waterspouts from N whirlpools" where N=0 means no events.
+      // Only skip for dynamic expressions (ValueStatus reads or operations), not literal values
+      // like { verb: "IS", value: 1 } which always produce a fixed count.
+      const stacksNode = effect.with?.stacks as Record<string, unknown> | undefined;
+      const isDynamicStacks = stacksNode && ('operation' in stacksNode || stacksNode.object === NounType.STACKS);
+      if (isDynamicStacks && typeof sv === 'number' && sv <= 0) return true;
       // NONE interaction: create 1 event with stacks = N (accumulator pattern, e.g. Living Banner)
       // Other interactions (RESET, etc.): create N separate events (e.g. Steel Oath 5 stacks)
       const isAccumulatorApply = cfg?.stackingMode === StackInteractionType.NONE && typeof sv === 'number' && sv > 1;
@@ -905,10 +974,9 @@ export class EventInterpretorController {
             : {}),
           uid: freeformUid && si === 0 ? freeformUid : derivedEventUid(columnId, source.ownerId, ctx.frame, stackCount > 1 ? `${si}` : undefined),
         });
+        // Process each new status event's lifecycle clauses inline (onEntryClause, etc.)
+        this.processNewStatusEvent(effect.objectId, statusOwnerId, ctx);
       }
-
-      // Synchronously process the new status event's lifecycle clauses and frame markers
-      this.processNewStatusEvent(effect.objectId, statusOwnerId, ctx);
 
       return true;
     }
@@ -916,16 +984,35 @@ export class EventInterpretorController {
     if (effect.object === NounType.STAT && effect.objectId) {
       const statKey = resolveEffectStat(NounType.STAT, effect.objectId, effect.objectQualifier);
       if (statKey && this.statAccumulator) {
-        const v = this.resolveWith(effect.with?.value, ctx);
-        if (typeof v === 'number') {
-          this.statAccumulator.applyStatDelta(ownerId, { [statKey]: v });
+        // multiplier key → multiply existing aggregate (e.g. T2 Cryogenic Embrittlement)
+        const m = this.resolveWith(effect.with?.multiplier, ctx);
+        if (typeof m === 'number') {
+          this.statAccumulator.applyStatMultiplier(ownerId, statKey, m);
+        } else {
+          // value key → additive delta (standard stat buff)
+          const v = this.resolveWith(effect.with?.value, ctx);
+          if (typeof v === 'number') {
+            // Snapshot stat before delta to detect 0→positive transitions
+            const statBefore = this.statAccumulator.getStat(ownerId, statKey);
+            this.statAccumulator.applyStatDelta(ownerId, { [statKey]: v });
+            // Fire stat-based triggers only on 0→positive transition (not when already active)
+            if (statKey === StatType.SLOW && (statBefore ?? 0) <= 0) {
+              this._statTriggerOut.length = 0;
+              this.checkReactiveTriggers(VerbType.BECOME, AdjectiveType.SLOWED, ctx.frame, ctx.sourceSlotId ?? ctx.sourceOwnerId, ctx.sourceSkillName, undefined, this._statTriggerOut);
+              // eslint-disable-next-line no-console
+              console.log(`[SLOW→BECOME] frame=${ctx.frame} statBefore=${statBefore} triggerOut=${this._statTriggerOut.length} indexKeys=[${Array.from(this.triggerIndex?.keys() ?? []).filter(k => k.includes('SLOW') || k.includes('BECOME')).join(',')}]`);
+              if (this._statTriggerOut.length > 0) this.pendingExitFrames.push(...this._statTriggerOut);
+            }
+            if (statKey === StatType.STAGGER_FRAILTY && (statBefore ?? 0) <= 0) {
+              this._statTriggerOut.length = 0;
+              this.checkReactiveTriggers(VerbType.BECOME, AdjectiveType.STAGGERED, ctx.frame, ctx.sourceSlotId ?? ctx.sourceOwnerId, ctx.sourceSkillName, undefined, this._statTriggerOut);
+              if (this._statTriggerOut.length > 0) this.pendingExitFrames.push(...this._statTriggerOut);
+            }
+          }
         }
       }
       return true;
     }
-    // APPLY SUSCEPTIBILITY is a pure stat modifier — resolved by resolveClauseEffects
-    // during status def processing for damage calc. No timeline event created.
-    if (effect.object === NounType.SUSCEPTIBILITY) return true;
     if (effect.object === NounType.STAGGER) {
       const v = this.resolveWith(effect.with?.staggerValue, ctx);
       this.controller.createStagger('stagger', ownerId, ctx.frame, typeof v === 'number' ? v : 0, source);
@@ -944,6 +1031,8 @@ export class EventInterpretorController {
     // APPLY EVENT — create a new instance of the parent status definition on the target.
     // Equivalent to APPLY STATUS <parentStatusId> with the parent's duration and stacking.
     if (effect.object === NounType.EVENT && ctx.parentStatusId) {
+      // eslint-disable-next-line no-console
+      console.log(`[APPLY EVENT] parentStatusId=${ctx.parentStatusId} frame=${ctx.frame}`);
       return this.doApply({ ...effect, object: NounType.STATUS, objectId: ctx.parentStatusId }, ctx);
     }
     console.warn(`[EventInterpretor] APPLY: unsupported object ${effect.object}`);
@@ -1009,6 +1098,12 @@ export class EventInterpretorController {
       const hasExplicitCount = count !== Infinity && rawStacks != null;
       const consumed = this.controller.consumeEvent(consumeCol, statusOwner, ctx.frame, source,
         isInflictionConsume ? { count } : hasExplicitCount ? { count, restack: true } : undefined);
+      // Reschedule stat reversals for consumed statuses to fire at consumption frame
+      if (consumed > 0 && this._statReversals?.length) {
+        for (const r of this._statReversals) {
+          if (r.frame > ctx.frame) r.frame = ctx.frame;
+        }
+      }
       return consumed > 0;
     }
     // CONSUME THIS EVENT — consume one stack of the parent status (from ENGINE_TRIGGER context)
@@ -1068,6 +1163,22 @@ export class EventInterpretorController {
     const objectId = this.resolveObjectIdForTrigger(effect);
     if (!objectId) return;
     this.checkReactiveTriggers(effect.verb, objectId, absFrame, eventOwnerId, eventName, undefined, out);
+    // CONSUME a status with SLOW/STAGGER_FRAILTY clause → fire BECOME_NOT (stat may have ended)
+    if (effect.verb === VerbType.CONSUME && effect.object === NounType.STATUS && effect.objectId) {
+      const consumedDef = getStatusDef(effect.objectId);
+      if (consumedDef?.clause) {
+        for (const clause of consumedDef.clause as { effects?: { verb?: string; object?: string; objectId?: string }[] }[]) {
+          for (const ef of clause.effects ?? []) {
+            if (ef.verb === VerbType.APPLY && ef.object === NounType.STAT && ef.objectId === NounType.SLOW) {
+              this.checkReactiveTriggers(`${VerbType.BECOME}_NOT`, AdjectiveType.SLOWED, absFrame, eventOwnerId, eventName, undefined, out);
+            }
+            if (ef.verb === VerbType.APPLY && ef.object === NounType.STAT && ef.objectId === NounType.STAGGER_FRAILTY) {
+              this.checkReactiveTriggers(`${VerbType.BECOME}_NOT`, AdjectiveType.STAGGERED, absFrame, eventOwnerId, eventName, undefined, out);
+            }
+          }
+        }
+      }
+    }
   }
 
   private doReset(effect: Effect, ctx: InterpretContext) {
@@ -1327,7 +1438,36 @@ export class EventInterpretorController {
         const condCtx: ConditionContext = { events: this.getAllEvents(), frame: ctx.frame, sourceOwnerId: ctx.sourceOwnerId, targetOwnerId: ctx.targetOwnerId, getControlledSlotAtFrame: this.getControlledSlotAtFrame };
         if (!evaluateConditions(pred.conditions, condCtx)) continue;
         if (!pred.effects.every(e => e.verb === VerbType.ALL || e.verb === VerbType.ANY || this.canDo(e, ctx))) continue;
+        // Track output and cascade frames before this iteration
+        const outputBefore = this.controller.output.length;
+        const cascadeBefore = this._compoundCascadeFrames.length;
         for (const child of pred.effects) this.interpret(child, ctx);
+        // Fire reactive triggers for events created in this iteration so downstream
+        // BECOME conditions see incremental state (e.g. MF 3→4, not 0→4).
+        // Stamp previousStackCount = iteration index (0-based) on the resulting
+        // ENGINE_TRIGGER frames so BECOME compares against the pre-iteration count.
+        for (let j = outputBefore; j < this.controller.output.length; j++) {
+          const ev = this.controller.output[j];
+          this.checkReactiveTriggers(VerbType.APPLY, ev.columnId, ctx.frame, ev.ownerId, ctx.sourceSkillName, undefined, this._compoundCascadeFrames);
+        }
+        // Evaluate BECOME/HAVE conditions immediately with incremental stack count,
+        // filtering out triggers that don't pass at this iteration.
+        let k = cascadeBefore;
+        while (k < this._compoundCascadeFrames.length) {
+          const qf = this._compoundCascadeFrames[k];
+          if (qf.engineTrigger?.ctx.haveConditions.length) {
+            const condCtx: ConditionContext = {
+              events: this.getAllEvents(), frame: ctx.frame,
+              sourceOwnerId: ctx.sourceOwnerId, previousStackCount: i,
+            };
+            if (!evaluateConditions(qf.engineTrigger.ctx.haveConditions as unknown as Interaction[], condCtx)) {
+              this._compoundCascadeFrames[k] = this._compoundCascadeFrames[this._compoundCascadeFrames.length - 1];
+              this._compoundCascadeFrames.length--;
+              continue;
+            }
+          }
+          k++;
+        }
         ran = true;
       }
       if (!ran) break;
@@ -1627,6 +1767,10 @@ export class EventInterpretorController {
    */
   private handleProcessFrame(entry: QueueFrame): QueueFrame[] {
     const event = entry.sourceEvent!;
+    // Skip if the source event was consumed before this frame fires
+    if (event.eventStatus === EventStatusType.CONSUMED && event.startFrame + eventDuration(event) <= entry.frame) {
+      return this._processFrameOut;
+    }
     const frame = entry.frameMarker;
     const si = entry.segmentIndex ?? -1;
     const fi = entry.frameIndex ?? -1;
@@ -1697,10 +1841,37 @@ export class EventInterpretorController {
         }
       }
 
+      // Non-skill status events: clause processing (APPLY STAT, onEntryClause,
+      // DISABLE/ENABLE propagation, segment frame markers) is handled by
+      // processNewStatusEvent in the synthetic PROCESS_FRAME path (section 3b).
+      // Do NOT process clauses here — it would double-fire stat triggers.
+
       return newEntries;
     }
 
     if (entry.hookType === FrameHookType.EVENT_END) {
+      // Fire IS_NOT state triggers for status events (e.g. IE expired → IS NOT SLOWED may fire)
+      // The negated condition is re-evaluated in handleEngineTrigger via haveConditions,
+      // so if other SLOW sources still exist, the trigger won't execute.
+      // Fire IS_NOT state triggers for stat-based states when a status expires.
+      // Check if the expiring event's status def applies SLOW stat — if so, SLOWED may have ended.
+      if (!SKILL_COLUMN_SET.has(event.columnId)) {
+        this.checkReactiveTriggers(`${VerbType.IS}_NOT`, event.columnId, absFrame, event.ownerId, event.id, undefined, newEntries);
+        // Generic stat-based: fire IS_NOT/HAVE_NOT for each stat-adjective the status provides
+        const statusDef = getStatusDef(event.id);
+        if (statusDef?.clause) {
+          for (const clause of statusDef.clause as { effects?: { verb?: string; object?: string; objectId?: string }[] }[]) {
+            for (const ef of clause.effects ?? []) {
+              if (ef.verb === VerbType.APPLY && ef.object === NounType.STAT && ef.objectId === NounType.SLOW) {
+                this.checkReactiveTriggers(`${VerbType.BECOME}_NOT`, AdjectiveType.SLOWED, absFrame, event.ownerId, event.id, undefined, newEntries);
+              }
+              if (ef.verb === VerbType.APPLY && ef.object === NounType.STAT && ef.objectId === NounType.STAGGER_FRAILTY) {
+                this.checkReactiveTriggers(`${VerbType.BECOME}_NOT`, AdjectiveType.STAGGERED, absFrame, event.ownerId, event.id, undefined, newEntries);
+              }
+            }
+          }
+        }
+      }
       // Skill-level onExitClause: look up the OperatorSkill and execute effects
       const exitOperatorId = this.slotOperatorMap?.[event.ownerId];
       const exitSkillDef = exitOperatorId ? getOperatorSkill(exitOperatorId, event.id) : undefined;
@@ -1832,7 +2003,7 @@ export class EventInterpretorController {
         sourceOwnerId: this.resolveOperatorId(event.ownerId),
         sourceSlotId: event.ownerId,
         sourceSkillName: event.id,
-        sourceEventUid: !SKILL_COLUMN_SET.has(event.columnId) ? event.uid : undefined,
+        sourceEventUid: undefined,
         potential: pot,
         parentEventEndFrame: parentEventEnd,
         parentSegmentEndFrame: parentSegEnd,
@@ -1848,6 +2019,9 @@ export class EventInterpretorController {
         suppliedParameters: resolvedParams,
         getControlledSlotAtFrame: this.getControlledSlotAtFrame,
         getOperatorPercentageHp: this.hpController ? (opId, f) => this.hpController!.getOperatorPercentageHp(opId, f) : undefined,
+        sourceEventUid: event.uid,
+        getLinkStacks: (uid) => this.controller.getLinkStacks(uid),
+        getStatValue: this.statAccumulator ? (entityId, stat) => this.statAccumulator!.getStat(entityId, stat) : undefined,
       };
       const accepted = filterClauses(frame.clauses, frame.clauseType, pred =>
         evaluateConditions(pred.conditions as unknown as import('../../dsl/semantics').Interaction[], condCtx),
@@ -1902,17 +2076,27 @@ export class EventInterpretorController {
           statusId: event.id, stackingMode: StackInteractionType.RESET, maxStacks: 1,
           uid: event.uid, event: { segments: event.segments },
         });
+        // Process status lifecycle (APPLY STAT clauses, onEntryClause, segment frames)
+        // same as doApply → processNewStatusEvent for skill-derived statuses.
+        const physCtx: InterpretContext = {
+          frame: absFrame, sourceOwnerId: source.ownerId,
+          sourceSlotId: event.ownerId, sourceSkillName: event.id, potential: pot,
+        };
+        this.processNewStatusEvent(event.id, event.ownerId, physCtx);
         this.checkReactiveTriggers(VerbType.APPLY, event.columnId, absFrame, event.ownerId, event.id, undefined, newEntries);
       } else if (event.ownerId === ENEMY_OWNER_ID || event.ownerId === COMMON_OWNER_ID) {
         this.controller.applyEvent(event.columnId, event.ownerId, absFrame, dur, source, {
           statusId: event.id, uid: event.uid,
           ...(event.susceptibility && { event: { susceptibility: event.susceptibility, segments: event.segments } }),
         });
-        // eslint-disable-next-line no-console
-        if (event.columnId === 'node-stagger') console.log(`[INTERP] freeform stagger at ${absFrame}, checking APPLY:${event.id ?? event.columnId}, triggerIndex exists: ${!!this.triggerIndex}`);
+        // Process status lifecycle (APPLY STAT clauses, onEntryClause, segment frames)
+        // same as doApply → processNewStatusEvent for skill-derived statuses.
+        const enemyCtx: InterpretContext = {
+          frame: absFrame, sourceOwnerId: source.ownerId,
+          sourceSlotId: event.ownerId, sourceSkillName: event.id, potential: pot,
+        };
+        this.processNewStatusEvent(event.id, event.ownerId, enemyCtx);
         this.checkReactiveTriggers(VerbType.APPLY, event.id ?? event.columnId, absFrame, event.ownerId, event.id, undefined, newEntries);
-        // eslint-disable-next-line no-console
-        if (event.columnId === 'node-stagger') console.log(`[INTERP] newEntries after trigger: ${newEntries.length}`);
       }
     }
 
@@ -1952,11 +2136,26 @@ export class EventInterpretorController {
       }
     }
 
-    // ── 3e. DEAL DAMAGE triggers for enemy action frames ──────────────────
-    // Fires reactive triggers for talents like Pay the Ferric Price
-    // (ENEMY DEAL DAMAGE to THIS OPERATOR). Only enemy action events qualify —
-    // operator damage frames are the operator dealing damage TO the enemy.
-    if (event.ownerId === ENEMY_OWNER_ID && event.columnId === ENEMY_ACTION_COLUMN_ID && frame.damageElement) {
+    // ── 3e. Enemy action: DEAL DAMAGE to all operators + fire reactive triggers ──
+    // Enemy action frames use dealDamage (no DSL clause). The engine handles
+    // HP/shield reduction and reactive triggers directly.
+    if (event.ownerId === ENEMY_OWNER_ID && event.columnId === ENEMY_ACTION_COLUMN_ID && frame.dealDamage) {
+      const dealCtx: InterpretContext = {
+        frame: absFrame,
+        sourceOwnerId: this.resolveOperatorId(event.ownerId),
+        sourceSlotId: event.ownerId,
+        sourceSkillName: event.id,
+        potential: 0,
+      };
+      const dealEffect: Effect = {
+        verb: VerbType.DEAL,
+        objectQualifier: frame.dealDamage.element as Effect['objectQualifier'],
+        object: NounType.DAMAGE,
+        to: NounType.OPERATOR,
+        toDeterminer: DeterminerType.ALL,
+        with: { value: { verb: VerbType.IS, value: 1 } as unknown as import('../../dsl/semantics').ValueNode },
+      };
+      this.doDeal(dealEffect, dealCtx);
       this.checkReactiveTriggers(VerbType.DEAL, NounType.DAMAGE, absFrame, event.ownerId, event.id, undefined, newEntries);
     }
 
@@ -1991,7 +2190,7 @@ export class EventInterpretorController {
     if (!this.triggerIndex || !this.getEnemyHpPercentage) return;
     for (const entry of this.triggerIndex.getHpThresholdDefs()) {
       const dedupKey = `hp-threshold:${entry.def.properties.id}:${entry.operatorSlotId}`;
-      if (this.seenTriggers.has(dedupKey)) continue;
+      if (this.firedHpThresholds.has(dedupKey)) continue;
 
       const condCtx: ConditionContext = {
         events: this.getAllEvents(),
@@ -2002,7 +2201,7 @@ export class EventInterpretorController {
       };
       if (!evaluateConditions(entry.haveConditions as unknown as import('../../dsl/semantics').Interaction[], condCtx)) continue;
 
-      this.seenTriggers.add(dedupKey);
+      this.firedHpThresholds.add(dedupKey);
 
       const triggerCtx: EngineTriggerContext = {
         def: entry.def, operatorId: entry.operatorId, operatorSlotId: entry.operatorSlotId,
@@ -2048,6 +2247,7 @@ export class EventInterpretorController {
       const parentSegEnd = statusEv.startFrame + (statusEv.segments[0]?.properties.duration ?? 0);
       const entryCtx: InterpretContext = {
         ...ctx,
+        sourceEventUid: undefined,
         parentEventEndFrame: parentEventEnd,
         parentSegmentEndFrame: parentSegEnd,
         parentStatusId: statusId,
@@ -2106,6 +2306,10 @@ export class EventInterpretorController {
             const delta = statAfter - statBefore;
             if (delta !== 0) {
               appliedStatDeltas.push({ entityId: statusOwnerId, stat: trackStat, value: delta });
+              // Push source for breakdown display
+              const statusName = statusDef.properties.name ?? statusId;
+              const source = buildStatSource(statusName, delta, raw, clauseCtx);
+              this.statAccumulator!.pushStatSource(statusOwnerId, trackStat, source);
             }
           }
         }
@@ -2145,22 +2349,52 @@ export class EventInterpretorController {
       }
     }
 
-    // ── Segment frame markers: process inline (same as handleProcessFrame) ──
+    // ── Segment frame markers ──────────────────────────────────────────────
+    // Offset-0 frames: process inline (immediate effects at status creation).
+    // Offset > 0 frames: defer to the queue so they fire at the correct time
+    // and can be skipped if the status is consumed before they're reached.
+    const statusStops = this.controller.foreignStopsFor(statusEv);
     let cumOffset = 0;
     for (let si = 0; si < statusEv.segments.length; si++) {
       const seg = statusEv.segments[si];
       if (seg.frames) {
         for (let fi = 0; fi < seg.frames.length; fi++) {
           const fm = seg.frames[fi];
-          const absFrame = statusEv.startFrame + cumOffset + fm.offsetFrame;
-          // Compute segment end for EXTEND UNTIL END OF SEGMENT
+
+          if (fm.offsetFrame > 0) {
+            // Defer to queue — the frame fires at the correct time and respects consumption
+            const segAbsStart = statusEv.startFrame + cumOffset;
+            const extOffset = statusStops.length > 0
+              ? extendByTimeStops(segAbsStart, fm.offsetFrame, statusStops)
+              : fm.offsetFrame;
+            const qf = allocQueueFrame();
+            qf.frame = segAbsStart + extOffset;
+            qf.priority = PRIORITY[QueueFrameType.PROCESS_FRAME];
+            qf.type = QueueFrameType.PROCESS_FRAME;
+            qf.statusId = statusId;
+            qf.columnId = statusEv.columnId;
+            qf.ownerId = statusEv.ownerId;
+            qf.sourceOwnerId = source.ownerId;
+            qf.sourceSkillName = source.skillName;
+            qf.operatorSlotId = statusEv.ownerId;
+            qf.frameMarker = fm;
+            qf.sourceEvent = statusEv;
+            qf.segmentIndex = si;
+            qf.frameIndex = fi;
+            this.pendingExitFrames.push(qf);
+            continue;
+          }
+
+          // Offset 0: process inline
+          const segAbsStart = statusEv.startFrame + cumOffset;
+          const absFrame = segAbsStart;
           const segEnd = statusEv.startFrame + cumOffset + (seg.properties.duration ?? 0);
           const frameCtx: InterpretContext = {
             frame: absFrame,
             sourceOwnerId: source.ownerId,
             sourceSlotId: statusEv.ownerId,
             sourceSkillName: statusEv.name,
-            sourceEventUid: statusEv.uid,
+            sourceEventUid: undefined,
             potential: pot,
             parentEventEndFrame: parentEventEnd,
             parentSegmentEndFrame: segEnd,
@@ -2183,6 +2417,26 @@ export class EventInterpretorController {
         }
       }
       cumOffset += seg.properties.duration;
+    }
+
+    // ── EVENT_END: fire IS_NOT state triggers when the status expires ──────
+    // Deferred so the event is no longer active at evaluation time.
+    {
+      const endHook = allocQueueFrame();
+      endHook.frame = parentEventEnd;
+      endHook.priority = PRIORITY[QueueFrameType.PROCESS_FRAME];
+      endHook.type = QueueFrameType.PROCESS_FRAME;
+      endHook.hookType = FrameHookType.EVENT_END;
+      endHook.statusId = statusId;
+      endHook.columnId = statusEv.columnId;
+      endHook.ownerId = statusEv.ownerId;
+      endHook.sourceOwnerId = source.ownerId;
+      endHook.sourceSkillName = source.skillName;
+      endHook.operatorSlotId = statusEv.ownerId;
+      endHook.sourceEvent = statusEv;
+      endHook.segmentIndex = -1;
+      endHook.frameIndex = -1;
+      this.pendingExitFrames.push(endHook);
     }
 
     // ── onExitClause: schedule effects at the status end frame ────────────
@@ -2243,10 +2497,6 @@ export class EventInterpretorController {
       if (entry.primaryVerb !== VerbType.PERFORM) continue;
       const isAny = entry.primaryCondition.subjectDeterminer === DeterminerType.ANY;
       if (!isAny && event.ownerId !== entry.operatorSlotId) continue;
-      const defKey = `${entry.def.properties.id}:${entry.operatorSlotId}:${absFrame}:${entry.clauseIndex}`;
-      if (this.seenTriggers.has(defKey)) continue;
-      this.seenTriggers.add(defKey);
-
       const triggerCtx: EngineTriggerContext = {
         def: entry.def,
         operatorId: entry.operatorId,
@@ -2343,9 +2593,6 @@ export class EventInterpretorController {
     // ── Lifecycle clause triggers (clause with HAVE conditions) ──────────
     const lifecycle = this.triggerIndex.getLifecycle(objectId);
     if (lifecycle) {
-      const key = `lifecycle:${lifecycle.def.properties.id}:${slotId}:${frame}`;
-      if (!this.seenTriggers.has(key)) {
-        this.seenTriggers.add(key);
         const operatorId = this.slotOperatorMap?.[slotId] ?? lifecycle.operatorId;
         const props = this.loadoutProperties?.[slotId];
         const potential = props?.operator.potential ?? 0;
@@ -2383,7 +2630,6 @@ export class EventInterpretorController {
           operatorSlotId: slotId,
           engineTrigger: { frame, sourceOwnerId: this.resolveOperatorId(slotId), triggerSlotId: slotId, sourceSkillName, ctx: triggerCtx, isEquip: false },
         });
-      }
     }
 
     // ── onTriggerClause triggers matching this event's column ──────────────
@@ -2415,11 +2661,9 @@ export class EventInterpretorController {
         continue;
       }
 
-      // Non-FIRST_MATCH: dedup by def ID + clause index and emit directly
-      const defKey = `${entry.def.properties.id}:${entry.operatorSlotId}:${entry.clauseIndex}:${frame}`;
-      if (this.seenTriggers.has(defKey)) continue;
-      this.seenTriggers.add(defKey);
-
+      // Dedup: the pipeline re-runs from scratch on each user action, so every
+      // event's triggers re-fire. Key by def+slot+clause+frame to prevent duplicates.
+      // Source skill name differentiates PERFORM triggers from different source events.
       const triggerCtx: EngineTriggerContext = {
         def: entry.def,
         operatorId: entry.operatorId,
@@ -2447,10 +2691,7 @@ export class EventInterpretorController {
     }
 
     // FIRST_MATCH: evaluate clauses in order, emit only the first matching one
-    for (const [groupKey, entries] of Array.from(firstMatchGroups.entries())) {
-      if (this.seenTriggers.has(groupKey)) continue;
-      this.seenTriggers.add(groupKey);
-
+    for (const [, entries] of Array.from(firstMatchGroups.entries())) {
       // Sort by clauseIndex to preserve declaration order
       entries.sort((a, b) => a.clauseIndex - b.clauseIndex);
 
@@ -2577,7 +2818,10 @@ export class EventInterpretorController {
         sourceOwnerId: ctx.operatorSlotId,
         potential: ctx.potential,
         getEnemyHpPercentage: this.getEnemyHpPercentage,
+        getOperatorPercentageHp: this.hpController ? (opId, f) => this.hpController!.getOperatorPercentageHp(opId, f) : undefined,
         parentStatusOwnerId,
+        getStatValue: this.statAccumulator ? (entityId, stat) => this.statAccumulator!.getStat(entityId, stat) : undefined,
+        previousStackCount: trigger.previousStackCount,
       };
       if (!evaluateConditions(ctx.haveConditions as unknown as import('../../dsl/semantics').Interaction[], condCtx)) return [];
     }
@@ -2586,6 +2830,23 @@ export class EventInterpretorController {
     const parentColumnId = ctx.def.properties.id;
     const parentEvents = activeEventsAtFrame(this.getAllEvents(), parentColumnId, parentStatusOwnerId, entry.frame);
     const parentEv = parentEvents.length > 0 ? parentEvents[parentEvents.length - 1] : undefined;
+
+    // Skill-status triggers require an active parent instance unless they are inherent
+    // capabilities (talents, potentials, or permanent-duration statuses like Natural Predator).
+    // Without this, template events at frame 0 fire onTriggerClause effects spuriously
+    // (e.g. OLDEN_STARE's dive trigger when no OLDEN_STARE is active on the enemy,
+    // or AUXILIARY_CRYSTAL's FINAL_STRIKE trigger when no crystal is active on the operator).
+    if (!parentEv) {
+      const parentEventIdType = ctx.def.properties.eventIdType ?? ctx.def.properties.type;
+      const isTalentOrPotential = parentEventIdType === NounType.TALENT
+        || parentEventIdType === NounType.POTENTIAL
+        || parentEventIdType === NounType.POTENTIAL_STATUS;
+      if (!isTalentOrPotential) {
+        const parentDuration = ctx.def.properties.duration
+          ? resolveValueNode(ctx.def.properties.duration.value, DEFAULT_VALUE_CONTEXT) : PERMANENT_DURATION;
+        if (parentDuration < PERMANENT_DURATION) return [];
+      }
+    }
     let parentEventEndFrame: number | undefined;
     let parentSegmentEndFrame: number | undefined;
     if (parentEv) {
@@ -2621,11 +2882,18 @@ export class EventInterpretorController {
       }
     }
 
+    // For enemy-targeted statuses with an active parent, inherit the parent's sourceSkillName
+    // so derived events (e.g. EARLY_ROGUE_WAVE from OLDEN_STARE) are attributed to the
+    // originating skill (ULTIMATE) rather than the triggering event (DIVE).
+    const resolvedSourceSkillName = (parentEv?.sourceSkillName && parentTarget === NounType.ENEMY)
+      ? parentEv.sourceSkillName
+      : trigger.sourceSkillName;
+
     const interpretCtx: InterpretContext = {
       frame: entry.frame,
       sourceOwnerId: ctx.operatorId,
       sourceSlotId: ctx.operatorSlotId,
-      sourceSkillName: trigger.sourceSkillName,
+      sourceSkillName: resolvedSourceSkillName,
       potential: ctx.potential,
       parentStatusId: ctx.def.properties.id,
       parentStatusOwnerId,
@@ -2665,15 +2933,13 @@ export class EventInterpretorController {
       this.triggerUsageCount.set(usageKey, (this.triggerUsageCount.get(usageKey) ?? 0) + 1);
     }
 
-    // Fire reactive triggers for events produced by compound effects (ALL/ANY).
-    // The top-level reactive trigger fires on the ALL wrapper which has no objectId,
-    // so individual status events created inside the compound are missed. Scan newly
-    // created events and fire reactive triggers for each APPLY STATUS.
-    for (let i = outputBefore; i < this.controller.output.length; i++) {
-      const ev = this.controller.output[i];
-      const before = cascadeFrames.length;
-      this.checkReactiveTriggers(VerbType.APPLY, ev.columnId, entry.frame, ev.ownerId, trigger.sourceSkillName, undefined, cascadeFrames);
-      for (let j = before; j < cascadeFrames.length; j++) cascadeFrames[j].cascadeDepth = depth + 1;
+    // Reactive triggers for compound effects (ALL/ANY) are fired inline within
+    // doAll after each iteration, so downstream BECOME conditions see
+    // incremental state transitions. Collect any cascade frames they produced.
+    while (this._compoundCascadeFrames.length > 0) {
+      const pf = this._compoundCascadeFrames.pop()!;
+      pf.cascadeDepth = depth + 1;
+      cascadeFrames.push(pf);
     }
 
     return cascadeFrames;

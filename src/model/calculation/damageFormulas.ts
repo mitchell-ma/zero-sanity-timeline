@@ -455,6 +455,8 @@ export interface MultiplierSource {
   value: number;
   /** Category for grouping in the breakdown tree (e.g. 'Physical', 'Arts', 'Weapon', 'Talent'). */
   category?: string;
+  /** Sub-component breakdown (e.g. base multiplier + potential bonus). */
+  subSources?: MultiplierSource[];
 }
 
 /** Sub-component values for multipliers that aggregate multiple sources. */

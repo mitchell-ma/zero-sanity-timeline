@@ -1,8 +1,8 @@
 import { Column, MiniTimeline, MicroColumn, Operator, Enemy, VisibleSkills, EventFrameMarker, EventSegmentData } from '../../consts/viewTypes';
-import { ClauseEvaluationType, DeterminerType, NounType, VerbType, type Effect, type Predicate } from '../../dsl/semantics';
+import { DeterminerType, NounType, VerbType, type Effect, type Predicate } from '../../dsl/semantics';
 import type { FrameClausePredicate } from '../../model/event-frames/skillEventFrame';
 import { ColumnType, DEFAULT_EVENT_COLOR, ELEMENT_COLORS, ElementType, EnhancementType, EventFrameType, HeaderVariant, MicroColumnAssignment, SegmentType, StackInteractionType, StatusType, TimeDependency, TimelineSourceType, UNLIMITED_STACKS } from '../../consts/enums';
-import { ENEMY_OWNER_ID, ENEMY_GROUP_COLUMNS, ENEMY_ACTION_COLUMN_ID, OPERATOR_COLUMNS, OPERATOR_STATUS_COLUMN_ID, PHYSICAL_INFLICTION_COLUMNS, PHYSICAL_STATUS_COLUMNS, SKILL_COLUMN_ORDER as SKILL_ORDER, COMBO_WINDOW_COLUMN_ID } from '../../model/channels';
+import { ENEMY_OWNER_ID, ENEMY_GROUP_COLUMNS, ENEMY_ACTION_COLUMN_ID, OPERATOR_COLUMNS, OPERATOR_STATUS_COLUMN_ID, PHYSICAL_INFLICTION_COLUMNS, PHYSICAL_STATUS_COLUMNS, SKILL_COLUMN_ORDER as SKILL_ORDER, COMBO_WINDOW_COLUMN_ID, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID } from '../../model/channels';
 import { isTeamStatus } from '../gameDataStore';
 import { SKILL_LABELS, ColumnLabel, STATUS_LABELS, REACTION_MICRO_COLUMNS } from '../../consts/timelineColumnLabels';
 import { getWeapon, getWeaponEffectDefs, getGearEffectDefs, getAllStatusLabels, getStatusById, getConsumablePassiveDef, getTacticalTriggerDef } from '../gameDataStore';
@@ -112,41 +112,25 @@ function syntheticSegments(duration: number, effect: Partial<Effect>) {
 function buildStatusMicroColumn(
   statusId: string,
   color: string,
-  overrides?: { label?: string; permanent?: boolean },
+  overrides?: { label?: string; permanent?: boolean; durationSeconds?: number },
 ): MicroColumn {
   const cfg = getStatusById(statusId);
   const label = overrides?.label ?? getAllStatusLabels()[statusId] ?? cfg?.name ?? statusId;
-  const durSec = cfg?.durationSeconds ?? 10;
+  const durSec = overrides?.durationSeconds ?? cfg?.durationSeconds ?? 10;
   const durFrames = durSec > 0 ? Math.round(durSec * FPS) : TOTAL_FRAMES;
   const target = cfg?.to ?? NounType.OPERATOR;
   const toDeterminer = cfg?.toDeterminer;
   const applyEffect: Partial<Effect> = {
     verb: VerbType.APPLY, object: NounType.STATUS, objectId: statusId,
     to: target, ...(toDeterminer ? { toDeterminer: toDeterminer as DeterminerType } : {}),
+    inheritDuration: true,
   };
 
-  // Use config segments when available (preserves real frame data like DEAL DAMAGE).
-  // Inject the synthetic APPLY clause into the first frame so freeform events go through interpret().
-  let segments;
-  if (cfg?.segments && cfg.segments.length > 0 && cfg.segments.some(s => s.frames?.length)) {
-    segments = cfg.segments.map((seg, si) => {
-      if (si === 0) {
-        const firstFrame = seg.frames?.[0];
-        const synClause: FrameClausePredicate = { conditions: [], effects: [{ type: 'dsl', dslEffect: applyEffect as Effect }] };
-        const existingClauses = firstFrame?.clauses ? [...firstFrame.clauses] : [];
-        return {
-          ...seg,
-          frames: [
-            { ...firstFrame, offsetFrame: firstFrame?.offsetFrame ?? 0, clauses: [synClause, ...existingClauses] },
-            ...(seg.frames?.slice(1) ?? []),
-          ],
-        };
-      }
-      return seg;
-    });
-  } else {
-    segments = syntheticSegments(durFrames, applyEffect);
-  }
+  // Freeform status events use a synthetic segment with only the APPLY clause.
+  // The APPLY creates the status via doApply → processNewStatusEvent, which handles
+  // the status's own frame markers inline. Including the status's real frames here
+  // would cause double processing (once by the queue's PROCESS_FRAME, once inline).
+  const segments = syntheticSegments(durFrames, applyEffect);
 
   return {
     id: statusId,
@@ -945,18 +929,10 @@ export function buildColumns(
       name: `AOE_${objectQualifier}`,
       displayName: `Deal ${objectQualifier} damage`,
       segments: [{
-        properties: { duration: 240, name: `Deal ${objectQualifier} DMG` },
+        properties: { duration: 240, name: `Deal ${objectQualifier} DMG`, element },
         frames: [{
           offsetFrame: 0,
-          damageElement: element,
-          clauses: [{
-            conditions: [],
-            effects: [{
-              type: 'dsl' as const,
-              dslEffect: { verb: VerbType.DEAL, objectQualifier, object: NounType.DAMAGE, toDeterminer: DeterminerType.ALL, to: NounType.OPERATOR, with: { value: { verb: VerbType.IS, value: 1 } } } as Effect,
-            }],
-          }],
-          clauseType: ClauseEvaluationType.ALL,
+          dealDamage: { element, multipliers: [] },
         }],
       }],
     })),
@@ -994,6 +970,9 @@ export function buildColumns(
     buildStatusMicroColumn(StatusType.FOCUS, '#55aadd'),
     buildStatusMicroColumn(StatusType.SUSCEPTIBILITY, '#cc8866'),
     buildStatusMicroColumn(StatusType.FRAGILITY, '#cc6644'),
+    // Stagger frailty — durations from enemy config, not static JSON defaults
+    buildStatusMicroColumn(NODE_STAGGER_COLUMN_ID, '#dd8844', { durationSeconds: enemy.staggerNodeRecoverySeconds }),
+    buildStatusMicroColumn(FULL_STAGGER_COLUMN_ID, '#dd8844', { durationSeconds: enemy.staggerBreakDurationSeconds }),
     // Data-driven enemy status entries: all statuses targeting ENEMY
     // from operator defs and generic defs (deduped by id)
     ...(() => {
@@ -1004,6 +983,7 @@ export function buildColumns(
         PHYSICAL_STATUS_COLUMNS.LIFT, PHYSICAL_STATUS_COLUMNS.KNOCK_DOWN,
         PHYSICAL_STATUS_COLUMNS.CRUSH, PHYSICAL_STATUS_COLUMNS.BREACH,
         StatusType.FOCUS, StatusType.SUSCEPTIBILITY, StatusType.FRAGILITY,
+        NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID,
       ]);
       const cols: MicroColumn[] = [];
       // Operator-specific statuses targeting ENEMY

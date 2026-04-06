@@ -1,56 +1,53 @@
 {
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "DEAL",
-          "objectQualifier": "PHYSICAL",
-          "object": "DAMAGE",
-          "to": "ENEMY",
-          "with": {
-            "value": {
-              "verb": "IS",
-              "value": 2.5
-            },
-            "mainStat": {
-              "verb": "IS",
-              "object": "STAT",
-              "objectId": "ATTACK",
-              "of": {
-                "object": "OPERATOR",
-                "determiner": "THIS"
-              }
-            }
-          }
-        },
-        {
-          "verb": "DEAL",
-          "object": "STAGGER",
-          "to": "ENEMY",
-          "with": {
-            "value": {
-              "verb": "IS",
-              "value": 5
-            }
-          }
-        }
-      ]
-    }
-  ],
   "segments": [
     {
-      "metadata": {
-        "eventComponentType": "SEGMENT"
-      },
+      "metadata": { "eventComponentType": "SEGMENT" },
       "properties": {
-        "duration": {
-          "value": {
-            "verb": "IS",
-            "value": 15
-          },
-          "unit": "SECOND"
-        },
+        "duration": { "value": { "verb": "IS", "value": 2 }, "unit": "SECOND" },
+        "name": "Subduer of Evil (P5)"
+      },
+      "frames": [
+        {
+          "metadata": { "eventComponentType": "FRAME" },
+          "properties": { "offset": { "value": 0, "unit": "SECOND" } },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "objectQualifier": "PHYSICAL",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": { "verb": "IS", "value": 2.5 },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "of": { "object": "OPERATOR", "determiner": "THIS" }
+                    }
+                  }
+                },
+                {
+                  "verb": "DEAL",
+                  "object": "STAGGER",
+                  "to": "ENEMY",
+                  "with": { "value": { "verb": "IS", "value": 5 } }
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
+        }
+      ]
+    },
+    {
+      "metadata": { "eventComponentType": "SEGMENT" },
+      "properties": {
+        "segmentTypes": ["COOLDOWN", "IMMEDIATE_COOLDOWN"],
+        "name": "Cooldown",
+        "duration": { "value": { "verb": "IS", "value": 13 }, "unit": "SECOND" },
         "timeDependency": "REAL_TIME"
       },
       "frames": []

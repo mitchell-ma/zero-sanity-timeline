@@ -1,0 +1,33 @@
+{
+  "properties": {
+    "id": "THUNDERLANCE_EX",
+    "name": "Thunderlance EX",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
+    "element": "ELECTRIC",
+    "stacks": {
+      "limit": { "verb": "IS", "value": 1 },
+      "interactionType": "NONE"
+    },
+    "duration": {
+      "value": {
+        "operation": "ADD",
+        "left": { "verb": "IS", "value": 30 },
+        "right": {
+          "verb": "VARY_BY",
+          "object": "POTENTIAL",
+          "value": [0, 0, 20, 20, 20, 20],
+          "of": { "object": "OPERATOR", "determiner": "THIS" }
+        }
+      },
+      "unit": "SECOND"
+    },
+    "eventType": "STATUS",
+    "eventIdType": "SKILL_STATUS",
+    "description": "Thunderlance EX deployed by ultimate. Retrieved by battle skill for increased Electric DMG and Electric Infliction."
+  },
+  "metadata": {
+    "originId": "THUNDERLANCE_FINAL_SHOCK",
+    "dataStatus": "RECONCILED"
+  }
+}

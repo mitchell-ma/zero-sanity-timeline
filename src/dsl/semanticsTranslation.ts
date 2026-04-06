@@ -186,6 +186,7 @@ export function translateCondition(c: Record<string, unknown>): string {
   if (c.subjectDeterminer) parts.push(translateDslToken(String(c.subjectDeterminer)).toLowerCase());
   if (c.subject) parts.push(translateDslToken(String(c.subject)));
   if (c.verb) parts.push(translateDslToken(String(c.verb)));
+  if (c.negated) parts.push('Not');
   if (c.objectQualifier) {
     parts.push(translateDslToken(String(c.objectQualifier)));
   }

@@ -119,22 +119,6 @@
                       }
                     }
                   }
-                },
-                {
-                  "verb": "APPLY",
-                  "object": "STATUS",
-                  "objectId": "LINK",
-                  "toDeterminer": "THIS",
-                  "to": "OPERATOR",
-                  "with": {
-                    "duration": {
-                      "value": {
-                        "verb": "IS",
-                        "value": 20
-                      },
-                      "unit": "SECOND"
-                    }
-                  }
                 }
               ]
             }
@@ -205,6 +189,18 @@
                         "object": "OPERATOR",
                         "determiner": "THIS"
                       }
+                    }
+                  }
+                },
+                {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "LINK",
+                  "to": "TEAM",
+                  "with": {
+                    "duration": {
+                      "value": { "verb": "IS", "value": 20 },
+                      "unit": "SECOND"
                     }
                   }
                 }
@@ -279,8 +275,7 @@
             "subject": "ENEMY",
             "verb": "HAVE",
             "object": "STATUS",
-            "objectId": "SUSCEPTIBILITY",
-            "objectQualifier": "PHYSICAL"
+            "objectId": "PHYSICAL_SUSCEPTIBILITY"
           }
         ]
       },

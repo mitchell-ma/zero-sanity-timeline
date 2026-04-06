@@ -53,12 +53,7 @@
                   "verb": "DEAL",
                   "object": "STAGGER",
                   "to": "ENEMY",
-                  "with": {
-                    "value": {
-                      "verb": "IS",
-                      "value": 5
-                    }
-                  }
+                  "with": { "value": { "verb": "IS", "value": 5 } }
                 },
                 {
                   "verb": "DEAL",
@@ -71,49 +66,184 @@
                       "left": {
                         "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
-                        "value": [
-                          0.67,
-                          0.73,
-                          0.8,
-                          0.87,
-                          0.93,
-                          1,
-                          1.07,
-                          1.13,
-                          1.2,
-                          1.28,
-                          1.38,
-                          1.5
-                        ],
-                        "of": {
-                          "object": "OPERATOR",
-                          "determiner": "THIS"
-                        }
+                        "value": [0.67, 0.73, 0.8, 0.87, 0.93, 1, 1.07, 1.13, 1.2, 1.28, 1.38, 1.5],
+                        "of": { "object": "OPERATOR", "determiner": "THIS" }
                       },
                       "right": {
                         "verb": "VARY_BY",
                         "object": "POTENTIAL",
-                        "value": [
-                          1,
-                          1,
-                          1,
-                          1,
-                          1,
-                          1.15
-                        ],
-                        "of": {
-                          "object": "OPERATOR",
-                          "determiner": "THIS"
-                        }
+                        "value": [1, 1, 1, 1, 1, 1.15],
+                        "of": { "object": "OPERATOR", "determiner": "THIS" }
                       }
                     },
                     "mainStat": {
                       "verb": "IS",
                       "object": "STAT",
                       "objectId": "ATTACK",
-                      "of": {
-                        "object": "OPERATOR",
-                        "determiner": "THIS"
+                      "of": { "object": "OPERATOR", "determiner": "THIS" }
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "conditions": [
+                {
+                  "subjectDeterminer": "THIS",
+                  "subject": "OPERATOR",
+                  "verb": "HAVE",
+                  "object": "STATUS",
+                  "objectId": "THUNDERLANCE"
+                }
+              ],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "objectQualifier": "ELECTRIC",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "operation": "MULT",
+                      "left": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [0.75, 0.82, 0.9, 0.97, 1.04, 1.12, 1.19, 1.27, 1.34, 1.44, 1.55, 1.68],
+                        "of": { "object": "OPERATOR", "determiner": "THIS" }
+                      },
+                      "right": {
+                        "verb": "VARY_BY",
+                        "object": "POTENTIAL",
+                        "value": [1, 1, 1, 1, 1, 1.15],
+                        "of": { "object": "OPERATOR", "determiner": "THIS" }
+                      }
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "of": { "object": "OPERATOR", "determiner": "THIS" }
+                    }
+                  }
+                },
+                {
+                  "verb": "DEAL",
+                  "object": "STAGGER",
+                  "to": "ENEMY",
+                  "with": { "value": { "verb": "IS", "value": 5 } }
+                },
+                {
+                  "verb": "CONSUME",
+                  "object": "STATUS",
+                  "objectId": "THUNDERLANCE",
+                  "from": "OPERATOR",
+                  "fromDeterminer": "THIS",
+                  "with": { "stacks": "MAX" }
+                },
+                {
+                  "verb": "RECOVER",
+                  "object": "ULTIMATE_ENERGY",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "value": {
+                      "operation": "ADD",
+                      "left": {
+                        "verb": "VARY_BY",
+                        "object": "TALENT_LEVEL",
+                        "value": [0, 3, 4],
+                        "of": { "object": "OPERATOR", "determiner": "THIS" }
+                      },
+                      "right": {
+                        "verb": "VARY_BY",
+                        "object": "POTENTIAL",
+                        "value": [0, 2, 2, 2, 2, 2],
+                        "of": { "object": "OPERATOR", "determiner": "THIS" }
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "conditions": [
+                {
+                  "subjectDeterminer": "THIS",
+                  "subject": "OPERATOR",
+                  "verb": "HAVE",
+                  "object": "STATUS",
+                  "objectId": "THUNDERLANCE_EX"
+                }
+              ],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "objectQualifier": "ELECTRIC",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "operation": "MULT",
+                      "left": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [1.92, 2.11, 2.3, 2.5, 2.69, 2.88, 3.07, 3.26, 3.46, 3.7, 3.98, 4.32],
+                        "of": { "object": "OPERATOR", "determiner": "THIS" }
+                      },
+                      "right": {
+                        "verb": "VARY_BY",
+                        "object": "POTENTIAL",
+                        "value": [1, 1, 1, 1, 1, 1.15],
+                        "of": { "object": "OPERATOR", "determiner": "THIS" }
+                      }
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "of": { "object": "OPERATOR", "determiner": "THIS" }
+                    }
+                  }
+                },
+                {
+                  "verb": "DEAL",
+                  "object": "STAGGER",
+                  "to": "ENEMY",
+                  "with": { "value": { "verb": "IS", "value": 10 } }
+                },
+                {
+                  "verb": "APPLY",
+                  "objectQualifier": "ELECTRIC",
+                  "object": "INFLICTION",
+                  "to": "ENEMY"
+                },
+                {
+                  "verb": "CONSUME",
+                  "object": "STATUS",
+                  "objectId": "THUNDERLANCE_EX",
+                  "from": "OPERATOR",
+                  "fromDeterminer": "THIS",
+                  "with": { "stacks": "MAX" }
+                },
+                {
+                  "verb": "RECOVER",
+                  "object": "ULTIMATE_ENERGY",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "value": {
+                      "operation": "ADD",
+                      "left": {
+                        "verb": "VARY_BY",
+                        "object": "TALENT_LEVEL",
+                        "value": [0, 3, 4],
+                        "of": { "object": "OPERATOR", "determiner": "THIS" }
+                      },
+                      "right": {
+                        "verb": "VARY_BY",
+                        "object": "POTENTIAL",
+                        "value": [0, 2, 2, 2, 2, 2],
+                        "of": { "object": "OPERATOR", "determiner": "THIS" }
                       }
                     }
                   }

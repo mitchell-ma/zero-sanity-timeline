@@ -10,7 +10,7 @@
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
-            "multiplier": {
+            "value": {
               "verb": "VARY_BY",
               "object": "SKILL_LEVEL",
               "value": [
@@ -75,7 +75,7 @@
           "subject": "OPERATOR",
           "verb": "APPLY",
           "objectQualifier": "PHYSICAL",
-          "object": "SUSCEPTIBILITY",
+          "object": "STATUS", "objectId": "SUSCEPTIBILITY",
           "to": "ENEMY"
         }
       ],

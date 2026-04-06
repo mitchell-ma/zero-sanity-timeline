@@ -27,17 +27,29 @@
   "metadata": {
     "originId": "FLUORITE",
     "icon": "skills/skill_fluorite.png",
-    "dataStatus": "RECONCILED"
+    "dataStatus": "VERIFIED"
   },
   "segments": [
     {
+      "metadata": {
+        "eventComponentType": "SEGMENT"
+      },
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 1.13
+          },
+          "unit": "SECOND"
+        },
+        "element": "NATURE",
+        "name": "Tiny Surprise"
+      },
       "frames": [
         {
           "metadata": {
             "eventComponentType": "FRAME",
-            "dataSources": [
-              "END_AXIS"
-            ]
+            "dataSources": ["END_AXIS"]
           },
           "properties": {
             "offset": {
@@ -52,168 +64,15 @@
                 {
                   "verb": "APPLY",
                   "object": "STATUS",
-                  "objectId": "SLOW",
-                  "to": "ENEMY",
-                  "with": {
-                    "value": {
-                      "value": {
-                        "verb": "IS",
-                        "value": 0.3
-                      },
-                      "unit": "PERCENTAGE"
-                    },
-                    "duration": {
-                      "value": {
-                        "verb": "IS",
-                        "value": 3
-                      },
-                      "unit": "SECOND"
-                    }
-                  }
-                },
-                {
-                  "verb": "DEAL",
-                  "objectQualifier": "NATURE",
-                  "object": "DAMAGE",
-                  "to": "ENEMY",
-                  "with": {
-                    "duration": {
-                      "verb": "IS",
-                      "value": 3
-                    },
-                    "value": {
-                      "verb": "VARY_BY",
-                      "object": "SKILL_LEVEL",
-                      "value": [
-                        1.87,
-                        2.06,
-                        2.24,
-                        2.43,
-                        2.62,
-                        2.8,
-                        2.99,
-                        3.18,
-                        3.36,
-                        3.6,
-                        3.88,
-                        4.2
-                      ],
-                      "of": {
-                        "object": "OPERATOR",
-                        "determiner": "THIS"
-                      }
-                    },
-                    "mainStat": {
-                      "verb": "IS",
-                      "object": "STAT",
-                      "objectId": "ATTACK",
-                      "of": {
-                        "object": "OPERATOR",
-                        "determiner": "THIS"
-                      }
-                    }
-                  }
-                }
-              ]
-            }
-          ],
-          "clauseType": "ALL"
-        },
-        {
-          "metadata": {
-            "eventComponentType": "FRAME",
-            "dataSources": [
-              "END_AXIS"
-            ]
-          },
-          "properties": {
-            "offset": {
-              "value": 2.97,
-              "unit": "SECOND"
-            }
-          },
-          "clause": [
-            {
-              "conditions": [],
-              "effects": [
-                {
-                  "verb": "DEAL",
-                  "object": "STAGGER",
-                  "to": "ENEMY",
-                  "with": {
-                    "value": {
-                      "verb": "IS",
-                      "value": 10
-                    }
-                  }
-                },
-                {
-                  "verb": "APPLY",
-                  "object": "INFLICTION",
-                  "objectQualifier": "NATURE",
-                  "to": "ENEMY",
-                  "with": {
-                    "stacks": {
-                      "verb": "IS",
-                      "value": 1
-                    }
-                  }
-                },
-                {
-                  "verb": "DEAL",
-                  "objectQualifier": "NATURE",
-                  "object": "DAMAGE",
-                  "to": "ENEMY",
-                  "with": {
-                    "value": {
-                      "verb": "VARY_BY",
-                      "object": "SKILL_LEVEL",
-                      "value": [
-                        1.87,
-                        2.06,
-                        2.24,
-                        2.43,
-                        2.62,
-                        2.8,
-                        2.99,
-                        3.18,
-                        3.36,
-                        3.6,
-                        3.88,
-                        4.2
-                      ],
-                      "of": {
-                        "object": "OPERATOR",
-                        "determiner": "THIS"
-                      }
-                    },
-                    "mainStat": {
-                      "verb": "IS",
-                      "object": "STAT",
-                      "objectId": "ATTACK",
-                      "of": {
-                        "object": "OPERATOR",
-                        "determiner": "THIS"
-                      }
-                    }
-                  }
+                  "objectId": "IMPROVISED_EXPLOSIVE",
+                  "to": "ENEMY"
                 }
               ]
             }
           ],
           "clauseType": "ALL"
         }
-      ],
-      "properties": {
-        "duration": {
-          "value": {
-            "verb": "IS",
-            "value": 1.13
-          },
-          "unit": "SECOND"
-        },
-        "element": "NATURE"
-      }
+      ]
     }
   ],
   "clauseType": "ALL"

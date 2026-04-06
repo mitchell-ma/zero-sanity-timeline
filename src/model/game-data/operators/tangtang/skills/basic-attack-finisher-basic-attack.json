@@ -9,12 +9,12 @@
     "eventIdType": "BASIC_ATTACK",
     "eventQualifierType": "FINISHER",
     "element": "CRYO",
-    "id": "BASIC_ATTACK_FINISHER"
+    "id": "ILL_BLOW_YOUR_MIND_FINISHER"
   },
   "metadata": {
     "originId": "TANGTANG",
     "icon": "skills/attack_guns.png",
-    "dataStatus": "RECONCILED"
+    "dataStatus": "VERIFIED"
   },
   "segments": [
     {

@@ -2,7 +2,8 @@
   "properties": {
     "id": "THUNDERLANCE",
     "name": "Thunderlance",
-    "target": "ENEMY",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
     "element": "ELECTRIC",
     "stacks": {
       "limit": {

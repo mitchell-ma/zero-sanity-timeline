@@ -82,7 +82,7 @@
                   "objectQualifier": "KNOCK_DOWN",
                   "to": "ENEMY",
                   "with": {
-                    "isForced": true
+                    "isForced": { "verb": "IS", "value": 1 }
                   }
                 },
                 {
@@ -185,7 +185,7 @@
                   "objectQualifier": "KNOCK_DOWN",
                   "to": "ENEMY",
                   "with": {
-                    "isForced": true
+                    "isForced": { "verb": "IS", "value": 1 }
                   }
                 },
                 {
@@ -232,8 +232,7 @@
             {
               "conditions": [
                 {
-                  "subjectDeterminer": "THIS",
-                  "subject": "OPERATOR",
+                  "subject": "EVENT",
                   "verb": "HAVE",
                   "object": "STATUS",
                   "objectId": "LINK"

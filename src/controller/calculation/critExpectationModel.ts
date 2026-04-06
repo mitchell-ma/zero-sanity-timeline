@@ -196,11 +196,11 @@ function extractStatusConfig(entry: TriggerDefEntry, skillLevel: number): CritSt
         const valueNode = withBlock.value;
         let resolvedValue: number;
 
-        if (valueNode.verb === 'VARY_BY' && valueNode.object === 'STATUS_LEVEL') {
+        if (valueNode.verb === VerbType.VARY_BY && valueNode.object === NounType.STATUS_LEVEL) {
           // Per-stack: value array indexed by status level (stack count)
           const values = valueNode.value as number[];
           resolvedValue = values[0] ?? 0;
-        } else if (valueNode.verb === 'VARY_BY' && valueNode.object === 'SKILL_LEVEL') {
+        } else if (valueNode.verb === VerbType.VARY_BY && valueNode.object === NounType.SKILL_LEVEL) {
           // Skill level dependent
           const values = valueNode.value as number[];
           const idx = Math.min(skillLevel - 1, values.length - 1);
@@ -212,7 +212,7 @@ function extractStatusConfig(entry: TriggerDefEntry, skillLevel: number): CritSt
         if (thresholdStacks !== undefined) {
           thresholdStats.push({ stat, value: resolvedValue, atStacks: thresholdStacks });
           if (stat === StatType.CRITICAL_RATE) isFeedback = true;
-        } else if (valueNode.verb === 'VARY_BY' && valueNode.object === 'STATUS_LEVEL') {
+        } else if (valueNode.verb === VerbType.VARY_BY && valueNode.object === NounType.STATUS_LEVEL) {
           perStackStats.push({ stat, valuePerStack: resolvedValue });
         } else {
           // Flat effect (always active while status is up) — treat as 1-stack threshold
@@ -270,7 +270,7 @@ function extractStatusConfig(entry: TriggerDefEntry, skillLevel: number): CritSt
               if (!bWith?.value) continue;
               const bValueNode = bWith.value;
               let bResolved: number;
-              if (bValueNode.verb === 'VARY_BY' && bValueNode.object === 'SKILL_LEVEL') {
+              if (bValueNode.verb === VerbType.VARY_BY && bValueNode.object === NounType.SKILL_LEVEL) {
                 const values = bValueNode.value as number[];
                 const idx = Math.min(skillLevel - 1, values.length - 1);
                 bResolved = values[idx] ?? 0;

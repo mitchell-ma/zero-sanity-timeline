@@ -126,6 +126,8 @@ export enum NounType {
   STACKS = "STACKS",
   /** Movement speed reduction (percentage, e.g. 0.8 = 80% slow). */
   SLOW = "SLOW",
+  /** Stagger frailty — non-zero while enemy is in any stagger state. Used in HAVE conditions. */
+  STAGGER_FRAILTY = "STAGGER_FRAILTY",
   /** Arts/elemental susceptibility debuff on enemy. Qualified by element (ARTS = all arts elements). */
   SUSCEPTIBILITY = "SUSCEPTIBILITY",
   /** Elemental/skill damage bonus. Qualified by element or skill type. */
@@ -179,6 +181,10 @@ export enum NounType {
   // Value resolution
   /** A raw operator stat reference (used in ValueStat). */
   STAT = "STAT",
+  /** Skill level of the owning operator (1-indexed, 1–12 → array[0–11]). */
+  SKILL_LEVEL = "SKILL_LEVEL",
+  /** Status level — distinct from stacks; a status can have 1 stack at varying levels. */
+  STATUS_LEVEL = "STATUS_LEVEL",
   /** Talent level of the current event's talent slot (resolved from operator's talent key-map). */
   TALENT_LEVEL = "TALENT_LEVEL",
   /** Attribute increase level of an operator (0–4). */
@@ -314,6 +320,7 @@ export enum AdjectiveType {
   ELECTRIFICATION = "ELECTRIFICATION",
 
   // State adjectives (ENEMY IS <adj>, ENEMY BECOME <adj>)
+  SLOWED = "SLOWED",
   LIFTED = "LIFTED",
   KNOCKED_DOWN = "KNOCKED_DOWN",
   CRUSHED = "CRUSHED",
@@ -332,7 +339,8 @@ export enum AdjectiveType {
   // Reaction modifier adjectives (APPLY 1 FORCED <reaction> REACTION TO ENEMY)
   FORCED = "FORCED",
 
-  // Stagger adjectives (ENEMY BECOME NODE_STAGGERED STAGGER, ENEMY IS FULL_STAGGERED STAGGER)
+  // Stagger adjectives (ENEMY BECOME STAGGERED, ENEMY IS NODE_STAGGERED/FULL_STAGGERED)
+  STAGGERED = "STAGGERED",
   NODE_STAGGERED = "NODE_STAGGERED",
   FULL_STAGGERED = "FULL_STAGGERED",
 
@@ -382,8 +390,8 @@ export const VERB_OBJECTS: Partial<Record<VerbType, ObjectType[]>> = {
   [VerbType.DISABLE]:    [ObjectType.SKILL],
   [VerbType.EXPERIENCE]: [ObjectType.GAME_TIME, ObjectType.REAL_TIME],
   [VerbType.HAVE]:       [ObjectType.STATUS, ObjectType.INFLICTION, ObjectType.REACTION, ObjectType.STACKS, ObjectType.SKILL_POINT, ObjectType.ULTIMATE_ENERGY, ObjectType.HP, ObjectType.POTENTIAL],
-  [VerbType.IS]:         [ObjectType.ACTIVE, ObjectType.CONTROLLED_STATE, ObjectType.LIFTED, ObjectType.KNOCKED_DOWN, ObjectType.CRUSHED, ObjectType.BREACHED, ObjectType.COMBUSTED, ObjectType.CORRODED, ObjectType.ELECTRIFIED, ObjectType.SOLIDIFIED, ObjectType.NODE_STAGGERED, ObjectType.FULL_STAGGERED],
-  [VerbType.BECOME]:     [ObjectType.STACKS, ObjectType.ACTIVE, ObjectType.LIFTED, ObjectType.KNOCKED_DOWN, ObjectType.CRUSHED, ObjectType.BREACHED, ObjectType.COMBUSTED, ObjectType.CORRODED, ObjectType.ELECTRIFIED, ObjectType.SOLIDIFIED, ObjectType.NODE_STAGGERED, ObjectType.FULL_STAGGERED],
+  [VerbType.IS]:         [ObjectType.ACTIVE, ObjectType.CONTROLLED_STATE, ObjectType.SLOWED, ObjectType.LIFTED, ObjectType.KNOCKED_DOWN, ObjectType.CRUSHED, ObjectType.BREACHED, ObjectType.COMBUSTED, ObjectType.CORRODED, ObjectType.ELECTRIFIED, ObjectType.SOLIDIFIED, ObjectType.NODE_STAGGERED, ObjectType.FULL_STAGGERED, ObjectType.STACKS],
+  [VerbType.BECOME]:     [ObjectType.STACKS, ObjectType.ACTIVE, ObjectType.STAGGERED, ObjectType.SLOWED, ObjectType.LIFTED, ObjectType.KNOCKED_DOWN, ObjectType.CRUSHED, ObjectType.BREACHED, ObjectType.COMBUSTED, ObjectType.CORRODED, ObjectType.ELECTRIFIED, ObjectType.SOLIDIFIED, ObjectType.NODE_STAGGERED, ObjectType.FULL_STAGGERED],
   [VerbType.RECEIVE]:    [ObjectType.STATUS, ObjectType.INFLICTION, ObjectType.REACTION, ObjectType.STAGGER],
   [VerbType.OVERHEAL]:   [ObjectType.HP],
   [VerbType.REDUCE]:     [ObjectType.COOLDOWN],
@@ -466,7 +474,7 @@ export const NOUN_UNITS: Partial<Record<NounType, UnitType[]>> = {
  * Skill types (COMBO, BATTLE, etc.) and element adjectives both use objectQualifier.
  */
 export const OBJECT_QUALIFIER_MAPPING: Partial<Record<NounType, (AdjectiveType | NounType | DeterminerType)[]>> = {
-  [NounType.DAMAGE_BONUS]: [AdjectiveType.HEAT, AdjectiveType.CRYO, AdjectiveType.NATURE, AdjectiveType.ELECTRIC, AdjectiveType.PHYSICAL, AdjectiveType.ARTS, NounType.BASIC_ATTACK, NounType.BATTLE, NounType.COMBO, NounType.ULTIMATE, NounType.STAGGER, NounType.SKILL],
+  [NounType.DAMAGE_BONUS]: [AdjectiveType.HEAT, AdjectiveType.CRYO, AdjectiveType.NATURE, AdjectiveType.ELECTRIC, AdjectiveType.PHYSICAL, AdjectiveType.ARTS, NounType.BASIC_ATTACK, NounType.BATTLE, NounType.COMBO, NounType.ULTIMATE, NounType.STAGGER, NounType.SKILL, NounType.FINAL_STRIKE],
   [NounType.DAMAGE_TAKEN_BONUS]: [AdjectiveType.HEAT, AdjectiveType.CRYO, AdjectiveType.NATURE, AdjectiveType.ELECTRIC, AdjectiveType.PHYSICAL, AdjectiveType.ARTS],
   [NounType.SKILL]: [AdjectiveType.NORMAL, AdjectiveType.ENHANCED, AdjectiveType.EMPOWERED],
   [NounType.HP]: [AdjectiveType.LOWEST, AdjectiveType.HIGHEST, AdjectiveType.FULL],
@@ -488,6 +496,7 @@ export const DETERMINER_FILTER_SUPPORT: DeterminerType[] = [
 export const NOUN_POSSESSOR_MAPPING: Partial<Record<NounType, NounType[]>> = {
   [NounType.STACKS]: [NounType.EVENT, NounType.STATUS],
   [NounType.COOLDOWN]: [NounType.OPERATOR, NounType.EVENT, NounType.SKILL],
+  [NounType.SKILL_LEVEL]: [NounType.OPERATOR],
   [NounType.TALENT_LEVEL]: [NounType.OPERATOR],
   [NounType.STAT]: [NounType.OPERATOR],
   [NounType.SKILL]: [NounType.OPERATOR],
@@ -834,6 +843,14 @@ export interface Effect {
    * MANUAL: executed when isCrit is false (chance doesn't fire).
    */
   elseEffects?: Effect[];
+
+  /**
+   * When true, the created status inherits its duration from the parent event's
+   * remaining duration instead of using the status config's fixed duration.
+   * Used by freeform status placement so user-resized segments propagate to the
+   * derived status effect.
+   */
+  inheritDuration?: boolean;
 }
 
 // ── Predicate ──────────────────────────────────────────────────────────────
@@ -910,15 +927,17 @@ export function interactionToLabel(i: Interaction): string {
   const fmt = (s: string) => s.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
 
   let subject: string;
-  if (i.subject === NounType.OPERATOR) {
+  if (!i.subject) {
+    subject = '';
+  } else if (i.subject === NounType.OPERATOR) {
     const det = i.subjectDeterminer ?? DeterminerType.THIS;
     subject = det === DeterminerType.THIS ? '' : `${fmt(det)} Operator `;
   } else {
     subject = fmt(i.subject) + ' ';
   }
 
-  const verb = fmt(i.verb);
-  const obj = fmt(i.object);
+  const verb = i.verb ? fmt(i.verb) : '';
+  const obj = i.object ? fmt(i.object) : '';
   const id = i.objectId ? ` (${fmt(i.objectId)})` : '';
   const el = i.element ? ` [${fmt(i.element)}]` : '';
   const neg = i.negated ? 'Not ' : '';
@@ -1270,6 +1289,7 @@ export const OBJECT_LABELS: Record<string, string> = {
   [ObjectType.CHARGE]: 'Charge',
   [ObjectType.ACTIVE]: 'Active',
   [ObjectType.STAT]: 'Stat',
+  [ObjectType.SKILL_LEVEL]: 'Skill Level',
   [ObjectType.TALENT_LEVEL]: 'Talent Level',
 };
 

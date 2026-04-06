@@ -8,8 +8,10 @@ import { TimelineEvent, Column, MiniTimeline, Enemy as ViewEnemy } from '../../c
 import type { OverrideStore } from '../../consts/overrideTypes';
 import { buildOverrideKey } from '../overrideController';
 import { NounType } from '../../dsl/semantics';
-import { getAllSkillLabels } from '../gameDataStore';
-import { ColumnType, CritMode, DamageScalingStatType, DamageType, ElementType, EnemyTierType, StatType, TimelineSourceType } from '../../consts/enums';
+import type { ValueNode } from '../../dsl/semantics';
+import { getAllSkillLabels, getOperatorSkill } from '../gameDataStore';
+import { resolveValueNode, buildContextForSkillColumn } from './valueResolver';
+import { ColumnType, CritMode, DamageScalingStatType, DamageType, ElementType, EnemyTierType, EventFrameType, StatType, TimelineSourceType } from '../../consts/enums';
 import { SkillLevel, Potential } from '../../consts/types';
 import { StatusDamageParams } from '../../model/calculation/damageFormulas';
 import { getModelEnemy } from './enemyRegistry';
@@ -136,6 +138,12 @@ function getEventDisplayName(name: string): string {
 
 function isUltEnhanced(name: string): boolean {
   return name.includes('_ENHANCED');
+}
+
+/** Resolve the column type (BATTLE, COMBO, etc.) for a source skill by looking up its eventIdType. */
+function getSourceSkillColumnId(operatorId: string, skillName: string): string {
+  const skill = getOperatorSkill(operatorId, skillName);
+  return skill?.eventIdType ?? NounType.BATTLE;
 }
 
 /** Map columnId to the skill NounType for damage bonus lookup. */
@@ -268,6 +276,25 @@ function buildAllElementSources(
   return result;
 }
 
+/** Combine event-based AMP sources with runtime stat accumulator AMP sources. */
+function buildAmpSources(
+  eventSources: MultiplierSource[],
+  runtimeDeltas: Partial<Record<StatType, number>> | undefined,
+  ampStatSources: readonly import('./statAccumulator').StatSource[] | undefined,
+): MultiplierSource[] {
+  const ampDelta = runtimeDeltas?.[StatType.AMP];
+  if (!ampDelta) return eventSources;
+  if (ampStatSources?.length) {
+    return [...eventSources, ...ampStatSources.map(s => ({
+      label: s.label,
+      value: s.value,
+      category: NounType.ARTS_AMP,
+      subSources: s.subSources?.map(ss => ({ label: ss.label, value: ss.value })),
+    }))];
+  }
+  return [...eventSources, { label: NounType.ARTS_AMP, value: ampDelta, category: NounType.ARTS_AMP }];
+}
+
 // ── Main builder functions ───────────────────────────────────────────────────
 
 /**
@@ -311,6 +338,9 @@ export function buildDamageTableRows(
     opCache.set(slot.slotId, data);
     opIdCache.set(slot.slotId, slot.operator.id);
   }
+  // Reverse map: operatorId → slotId (for attributing enemy status damage to source operator)
+  const opIdToSlot = new Map<string, string>();
+  opIdCache.forEach((opId, slotId) => { if (opId) opIdToSlot.set(opId, slotId); });
 
   // Build crit expectation models per slot (all modes — needed for stat deltas)
   const critModels = new Map<string, CritExpectationModel>();
@@ -400,15 +430,33 @@ export function buildDamageTableRows(
   }
 
   for (const ev of events) {
-    const effectiveColumnId = isUltEnhanced(ev.id) ? NounType.ULTIMATE : ev.columnId;
-    const col = colLookup.get(`${ev.ownerId}-${effectiveColumnId}`)
+    let effectiveColumnId = isUltEnhanced(ev.id) ? NounType.ULTIMATE : ev.columnId;
+    let col = colLookup.get(`${ev.ownerId}-${effectiveColumnId}`)
       ?? colLookup.get(`${ev.ownerId}-${ev.columnId}`);
+
+    // Enemy/status events with an operator source: attribute to the source operator's slot
+    // (e.g. IMPROVISED_EXPLOSIVE explosion frame deals damage using source operator's stats).
+    // Resolve skill type from the source skill's eventIdType so the damage row shows the
+    // correct type (BATTLE_SKILL, not the status column ID).
+    let resolvedOwnerId = ev.ownerId;
+    if (!col && ev.sourceOwnerId && ev.sourceOwnerId !== ev.ownerId) {
+      const sourceSlotId = opIdToSlot.get(ev.sourceOwnerId);
+      if (sourceSlotId) {
+        // Use the source skill's column type (look up by sourceSkillName → eventIdType)
+        const sourceSkillCol = ev.sourceSkillName
+          ? getSourceSkillColumnId(opIdCache.get(sourceSlotId) ?? '', ev.sourceSkillName)
+          : NounType.BATTLE;
+        col = colLookup.get(`${sourceSlotId}-${sourceSkillCol}`);
+        effectiveColumnId = sourceSkillCol;
+        resolvedOwnerId = sourceSlotId;
+      }
+    }
     if (!col) continue;
 
     const eventName = getEventDisplayName(ev.name);
-    const opData = opCache.get(ev.ownerId);
-    const operatorId = opIdCache.get(ev.ownerId);
-    const props = loadoutStats[ev.ownerId] ?? DEFAULT_LOADOUT_PROPERTIES;
+    const opData = opCache.get(resolvedOwnerId);
+    const operatorId = opIdCache.get(resolvedOwnerId);
+    const props = loadoutStats[resolvedOwnerId] ?? DEFAULT_LOADOUT_PROPERTIES;
     const skillLevel = getSkillLevel(effectiveColumnId, props);
     const potential = (props.operator.potential ?? 5) as Potential;
 
@@ -451,6 +499,15 @@ export function buildDamageTableRows(
               if (frame.dealDamage && frame.dealDamage.multipliers.length > 0) {
                 const levelIdx = Math.min(skillLevel - 1, frame.dealDamage.multipliers.length - 1);
                 multiplier = frame.dealDamage.multipliers[levelIdx];
+                segmentMultiplier = null;
+                isPerTick = true;
+              } else if (frame.dealDamage?.multiplierNode) {
+                // Compound expression (MULT, ADD, etc.) — resolve with full context
+                const ctx = buildContextForSkillColumn(props, effectiveColumnId);
+                if (ctx) {
+                  ctx.potential = potential;
+                }
+                multiplier = resolveValueNode(frame.dealDamage.multiplierNode as ValueNode, ctx);
                 segmentMultiplier = null;
                 isPerTick = true;
               } else {
@@ -558,9 +615,11 @@ export function buildDamageTableRows(
                 const critArtsDelta = isArts ? (critDeltas?.[StatType.ARTS_DAMAGE_BONUS] ?? 0) : 0;
                 const subArtsDmg = isArts ? stat(StatType.ARTS_DAMAGE_BONUS) + critArtsDelta : 0;
                 const subStaggerDmg = isStaggered ? stat(StatType.STAGGER_DAMAGE_BONUS) : 0;
+                const isFinalStrike = frame.frameTypes?.includes(EventFrameType.FINAL_STRIKE) ?? false;
+                const subFinalStrikeDmg = isFinalStrike ? stat(StatType.FINAL_STRIKE_DAMAGE_BONUS) : 0;
 
                 const multiplierGroup = getDamageBonus(
-                  subElementDmg, subSkillTypeDmg, subSkillDmg, subArtsDmg, subStaggerDmg,
+                  subElementDmg, subSkillTypeDmg, subSkillDmg, subArtsDmg, subStaggerDmg + subFinalStrikeDmg,
                 );
 
                 // Resistance (with corrosion reduction + ignored resistance)
@@ -649,8 +708,8 @@ export function buildDamageTableRows(
                   allFragilitySources: statusQuery ? buildAllElementSources(absFrame, statusQuery, 'fragility') : {},
                   susceptibilitySources: statusQuery?.getSusceptibilitySources(absFrame, element) ?? [],
                   allSusceptibilitySources: statusQuery ? buildAllElementSources(absFrame, statusQuery, 'susceptibility') : {},
-                  ampSources: statusQuery?.getAmpSources(absFrame) ?? [],
-                  allAmpSources: { [ElementType.ARTS]: statusQuery?.getAmpSources(absFrame) ?? [] },
+                  ampSources: buildAmpSources(statusQuery?.getAmpSources(absFrame) ?? [], rd, accumulator?.getFrameStatSources(currentFrameKey, ev.ownerId, StatType.AMP)),
+                  allAmpSources: { [ElementType.ARTS]: buildAmpSources(statusQuery?.getAmpSources(absFrame) ?? [], rd, accumulator?.getFrameStatSources(currentFrameKey, ev.ownerId, StatType.AMP)) },
                   weakenEffects: subWeakenEffects,
                   weakenSources: statusQuery?.getWeakenSources(absFrame) ?? [],
                   dmgReductionEffects: subDmgReductionEffects,
@@ -684,7 +743,7 @@ export function buildDamageTableRows(
                   attributeBonus: opData.attributeBonus,
                   multiplierGroup,
                   critMultiplier: expectedCrit,
-                  ampMultiplier: getAmpMultiplier(statusQuery?.getAmpBonus(absFrame) ?? 0),
+                  ampMultiplier: getAmpMultiplier((statusQuery?.getAmpBonus(absFrame) ?? 0) + (rd?.[StatType.AMP] ?? 0)),
                   staggerMultiplier: getStaggerMultiplier(isStaggered),
                   finisherMultiplier: getFinisherMultiplier(enemyTier, isFinisher),
                   linkMultiplier: getLinkMultiplier(linkBonus, linkBonus > 0),
@@ -710,7 +769,7 @@ export function buildDamageTableRows(
               absoluteFrame: absFrame,
               label: `${eventName} > ${segLabel} > Frame ${fi + 1}`,
               columnKey: col.key,
-              ownerId: ev.ownerId,
+              ownerId: resolvedOwnerId,
               columnId: effectiveColumnId,
               eventUid: ev.uid,
               segmentIndex: si,

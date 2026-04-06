@@ -149,6 +149,19 @@
                       }
                     }
                   }
+                },
+                {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "WHIRLPOOL",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  }
                 }
               ]
             }
@@ -219,7 +232,7 @@
   "metadata": {
     "originId": "TANGTANG",
     "icon": "skills/combo_tangtang.png",
-    "dataStatus": "RECONCILED"
+    "dataStatus": "VERIFIED"
   },
   "clauseType": "ALL",
   "activationWindow": {

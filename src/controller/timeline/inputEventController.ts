@@ -9,7 +9,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { NounType } from '../../dsl/semantics';
 import { ColumnType, EnhancementType, EventFrameType } from '../../consts/enums';
 import { TimelineEvent, EventSegmentData, Operator, computeSegmentsSpan, getAnimationDuration, eventEndFrame, durationSegment } from '../../consts/viewTypes';
-import { ENEMY_OWNER_ID, USER_ID, OPERATOR_COLUMNS, REACTION_COLUMN_IDS, INFLICTION_COLUMN_IDS, SKILL_COLUMN_ORDER, COMBO_WINDOW_COLUMN_ID } from '../../model/channels';
+import { ENEMY_OWNER_ID, USER_ID, OPERATOR_COLUMNS, REACTION_COLUMN_IDS, INFLICTION_COLUMN_IDS, SKILL_COLUMN_ORDER, COMBO_WINDOW_COLUMN_ID, ENEMY_ACTION_COLUMN_ID } from '../../model/channels';
 
 import { TOTAL_FRAMES } from '../../utils/timeline';
 import { ComboSkillEventController } from './comboSkillEventController';
@@ -78,7 +78,8 @@ export function cloneAndSplitEvents(rawEvents: TimelineEvent[]): { inputEvents: 
     // pooling is enabled to avoid per-tick allocation churn.
     const isDerived = !SKILL_COLUMN_SET.has(ev.columnId)
       && ev.columnId !== OPERATOR_COLUMNS.INPUT
-      && ev.columnId !== OPERATOR_COLUMNS.CONTROLLED;
+      && ev.columnId !== OPERATOR_COLUMNS.CONTROLLED
+      && ev.columnId !== ENEMY_ACTION_COLUMN_ID;
     const copy = isDerived ? allocDerivedEvent() : allocInputEvent();
     Object.assign(copy, ev);
     // Deep-clone segment properties so pipeline mutations (time-stop duration

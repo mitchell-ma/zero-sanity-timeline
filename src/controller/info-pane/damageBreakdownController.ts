@@ -180,14 +180,23 @@ function buildPerElementSubEntries(
   return BREAKDOWN_ELEMENTS.map(({ el, label }) => {
     const sources = allSources[el] ?? [];
     const total = sources.reduce((sum: number, s) => sum + s.value, 0);
-    const isActive = el === activeElement || (el === ElementType.PHYSICAL && activeElement === ElementType.NONE);
+    const isArtsElement = activeElement !== ElementType.PHYSICAL && activeElement !== ElementType.NONE;
+    const isActive = el === activeElement
+      || (el === ElementType.PHYSICAL && activeElement === ElementType.NONE)
+      || (el === ElementType.ARTS && isArtsElement);
     const entry = makeSubEntry(
       label,
       total,
       isActive ? 'Active element' : 'Does not apply to this hit',
     );
     if (isActive && sources.length > 0) {
-      entry.subEntries = sources.map((s) => makeSubEntry(s.label, s.value, ''));
+      entry.subEntries = sources.map((s) => {
+        const sub = makeSubEntry(s.label, s.value, '');
+        if (s.subSources?.length) {
+          sub.subEntries = s.subSources.map((ss) => makeSubEntry(ss.label, ss.value, ''));
+        }
+        return sub;
+      });
     }
     if (!isActive) {
       entry.cssClass = 'dmg-breakdown-neutral';

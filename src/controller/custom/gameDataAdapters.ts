@@ -368,7 +368,7 @@ export function weaponToFriendly(json: GameDataJson, weaponSkills?: GameDataJson
         .filter(e => e.verb === VerbType.APPLY && (e.with as GameDataJson)?.value)
         .map(e => {
           const wv = (e.with as GameDataJson).value as GameDataJson;
-          const perStack = wv.verb === VerbType.VARY_BY && wv.object === 'STATUS_LEVEL';
+          const perStack = wv.verb === VerbType.VARY_BY && wv.object === NounType.STATUS_LEVEL;
           return {
             stat: (e.objectId ?? e.object) as string,
             valueMin: (wv.valueMin as number) ?? (wv.value as number) ?? 0,
@@ -472,7 +472,7 @@ export function weaponNamedEffectsToStatuses(weapon: CustomWeapon): GameDataJson
           to: NounType.OPERATOR,
           with: {
             value: b.perStack
-              ? { verb: VerbType.VARY_BY, object: 'STATUS_LEVEL', valueMin: b.valueMin, valueMax: b.valueMax }
+              ? { verb: VerbType.VARY_BY, object: NounType.STATUS_LEVEL, valueMin: b.valueMin, valueMax: b.valueMax }
               : isNode(b.valueMax || b.valueMin),
           },
         })),
@@ -585,7 +585,7 @@ export function gearSetToFriendly(
           .filter(e => e.verb === VerbType.APPLY && (e.with as GameDataJson)?.value)
           .map(e => {
             const wv = (e.with as GameDataJson).value as GameDataJson;
-            const perStack = wv.verb === VerbType.VARY_BY && wv.object === 'STATUS_LEVEL';
+            const perStack = wv.verb === VerbType.VARY_BY && wv.object === NounType.STATUS_LEVEL;
             return {
               stat: (e.objectId ?? e.object) as string,
               value: (wv.value as number) ?? (wv.valueMin as number) ?? 0,
@@ -711,7 +711,7 @@ export function gearSetStatusesFromFriendly(gearSet: CustomGearSet): GameDataJso
           objectId: b.stat,
           with: {
             value: b.perStack
-              ? { verb: VerbType.VARY_BY, object: 'STATUS_LEVEL', value: b.value }
+              ? { verb: VerbType.VARY_BY, object: NounType.STATUS_LEVEL, value: b.value }
               : isNode(b.value),
           },
         })),

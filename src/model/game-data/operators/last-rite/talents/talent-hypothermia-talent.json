@@ -6,7 +6,9 @@
           "subjectDeterminer": "THIS",
           "subject": "OPERATOR",
           "verb": "CONSUME",
-          "object": "ARTS_INFLICTION",
+          "object": "STATUS",
+          "objectId": "INFLICTION",
+          "objectQualifier": "ARTS",
           "with": {
             "stacks": "MAX"
           }
@@ -21,15 +23,31 @@
           "to": "ENEMY",
           "with": {
             "value": {
-              "verb": "VARY_BY",
-              "object": "TALENT_LEVEL",
-              "value": [
-                0.02,
-                0.04
-              ],
-              "of": {
-                "object": "OPERATOR",
-                "determiner": "THIS"
+              "operation": "MULT",
+              "left": {
+                "verb": "IS",
+                "object": "STACKS",
+                "of": {
+                  "object": "STATUS",
+                  "objectId": "INFLICTION",
+                  "objectQualifier": "CRYO",
+                  "of": {
+                    "object": "ENEMY",
+                    "determiner": "THIS"
+                  }
+                }
+              },
+              "right": {
+                "verb": "VARY_BY",
+                "object": "TALENT_LEVEL",
+                "value": [
+                  0.02,
+                  0.04
+                ],
+                "of": {
+                  "object": "OPERATOR",
+                  "determiner": "THIS"
+                }
               }
             },
             "duration": {

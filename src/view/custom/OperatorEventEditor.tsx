@@ -9,8 +9,8 @@ import { useState, useCallback, useMemo } from 'react';
 import { getOperatorSkills, getOperatorStatuses, getRawSkillTypeMap } from '../../controller/gameDataStore';
 import { ALL_OPERATORS } from '../../controller/operators/operatorRegistry';
 import { getAllSkillLabels } from '../../controller/gameDataStore';
-import type {  } from '../../consts/enums';
 import type { Clause } from '../../dsl/semantics';
+import { NounType } from '../../dsl/semantics';
 import ClauseEditor from './ClauseEditor';
 
 /** Shape for JSON skill/segment/frame/status data flowing through the editor. */
@@ -42,17 +42,17 @@ interface Props {
 // ── Skill type ordering + labels ────────────────────────────────────────────
 
 const SKILL_CATEGORY_ORDER = [
-  'BASIC_ATTACK',
-  'BATTLE',
-  'COMBO',
-  'ULTIMATE',
+  NounType.BASIC_ATTACK,
+  NounType.BATTLE,
+  NounType.COMBO,
+  NounType.ULTIMATE,
 ] as const;
 
 const SKILL_CATEGORY_LABELS: Record<string, string> = {
-  BASIC_ATTACK: 'Basic Attack',
-  BATTLE_SKILL: 'Battle Skill',
-  COMBO_SKILL: 'Combo Skill',
-  ULTIMATE: 'Ultimate',
+  [NounType.BASIC_ATTACK]: 'Basic Attack',
+  [NounType.BATTLE]: 'Battle Skill',
+  [NounType.COMBO]: 'Combo Skill',
+  [NounType.ULTIMATE]: 'Ultimate',
 };
 
 export interface SkillEntryData {
@@ -185,6 +185,7 @@ export function SkillEntrySection({ entry, readOnly, defaultOpen }: { entry: { i
   const segments = data.segments ?? [];
   const frames = data.frames ?? [];
   const clause: Clause = data.clause ?? [];
+  const aw = data.activationWindow as { properties?: { maxSkills?: number }; onTriggerClause?: Clause; segments?: { properties?: { duration?: { value: number; unit: string } } }[] } | undefined;
 
   return (
     <div className="ev">
@@ -193,6 +194,10 @@ export function SkillEntrySection({ entry, readOnly, defaultOpen }: { entry: { i
       )}
       {data.properties?.description && (
         <div className="ev-row"><span className="ev-row-label">Description</span><div className="ev-row-controls"><span className="ev-field-value" style={{ fontSize: '0.6rem', color: 'var(--text-secondary)' }}>{data.properties.description}</span></div></div>
+      )}
+
+      {aw?.onTriggerClause && aw.onTriggerClause.length > 0 && (
+        <ActivationWindowSection activationWindow={aw} readOnly={readOnly} />
       )}
 
       {clause.length > 0 && <ClauseSection title="Clause" clause={clause} readOnly={readOnly} />}
@@ -204,6 +209,30 @@ export function SkillEntrySection({ entry, readOnly, defaultOpen }: { entry: { i
       {frames.length > 0 && segments.length === 0 && frames.map((frame, fi) => (
         <FrameSection key={fi} frame={frame} index={fi} readOnly={readOnly} />
       ))}
+    </div>
+  );
+}
+
+// ── Activation window section ──────────────────────────────────────────────
+
+function ActivationWindowSection({ activationWindow, readOnly }: {
+  activationWindow: { properties?: { maxSkills?: number }; onTriggerClause?: Clause; segments?: { properties?: { duration?: { value: number; unit: string } } }[] };
+  readOnly?: boolean;
+}) {
+  const triggerClause = activationWindow.onTriggerClause ?? [];
+  const dur = activationWindow.segments?.[0]?.properties?.duration;
+  const durVal = dur ? (typeof dur.value === 'number' ? dur.value : null) : null;
+  const durUnit = dur?.unit === 'FRAME' ? 'f' : 's';
+  const maxSkills = activationWindow.properties?.maxSkills;
+
+  return (
+    <div className="ev-aw">
+      <div className="ev-label">Activation Window</div>
+      <div className="ev-aw-meta">
+        {durVal != null && <span className="ev-aw-tag">Window: {durVal}{durUnit}</span>}
+        {maxSkills != null && <span className="ev-aw-tag">Max: {maxSkills}</span>}
+      </div>
+      <ClauseSection title="Trigger" clause={triggerClause} conditionsOnly readOnly={readOnly} />
     </div>
   );
 }

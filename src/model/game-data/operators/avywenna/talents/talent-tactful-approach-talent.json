@@ -1,39 +1,4 @@
 {
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "APPLY",
-          "objectQualifier": "ELECTRIC",
-          "object": "SUSCEPTIBILITY",
-          "to": "ENEMY",
-          "with": {
-            "value": {
-              "verb": "VARY_BY",
-              "object": "TALENT_LEVEL",
-              "value": [
-                0.06,
-                0.1
-              ],
-              "of": {
-                "object": "OPERATOR",
-                "determiner": "THIS"
-              }
-            },
-            "duration": {
-              "value": {
-                "verb": "IS",
-                "value": 10
-              },
-              "unit": "SECOND"
-            }
-          }
-        }
-      ]
-    }
-  ],
-  "clauseType": "ALL",
   "properties": {
     "id": "TACTFUL_APPROACH_TALENT",
     "maxLevel": {

@@ -1,0 +1,48 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STAT",
+          "objectId": "SLOW",
+          "to": "ENEMY",
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": 0.3
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "clauseType": "ALL",
+  "properties": {
+    "id": "SLOW",
+    "name": "Slow",
+    "to": "ENEMY",
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": 2
+      },
+      "unit": "SECOND"
+    },
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 1
+      },
+      "interactionType": "RESET"
+    },
+    "eventType": "STATUS",
+    "eventIdType": "STATUS",
+    "description": "Reduces movement speed."
+  },
+  "metadata": {
+    "originId": "generic",
+    "dataStatus": "VERIFIED"
+  }
+}

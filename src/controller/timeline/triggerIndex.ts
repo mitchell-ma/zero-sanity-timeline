@@ -193,12 +193,20 @@ function getDurationFrames(duration: { value: ValueNode; unit: string }): number
   return val;
 }
 
+/** BA frame-type qualifiers that narrow PERFORM:BASIC_ATTACK to a specific frame action. */
+const FRAME_TYPE_QUALIFIERS = new Set([NounType.DIVE, NounType.FINISHER, NounType.FINAL_STRIKE]);
+
 /** Resolve primary verb key for indexing: verb + resolved column/object. */
 function resolveTriggerKey(verb: string, cond: Predicate): string {
   if (verb === VerbType.PERFORM) {
     // Normalized skill: object=SKILL, objectId=BASIC_ATTACK/BATTLE_SKILL/etc.
     // Resolve to the specific skill column via objectId.
     if (cond.object === NounType.SKILL && cond.objectId) {
+      // When objectQualifier is a frame-type (DIVE, FINISHER, FINAL_STRIKE), use it
+      // as the key so the trigger only matches frame-level PERFORM, not generic BASIC_ATTACK.
+      if (cond.objectQualifier && FRAME_TYPE_QUALIFIERS.has(cond.objectQualifier as NounType)) {
+        return `${VerbType.PERFORM}:${cond.objectQualifier}`;
+      }
       const col = SKILL_ALIAS_TO_COLUMN[cond.objectId] ?? cond.objectId;
       return `${VerbType.PERFORM}:${col}`;
     }
@@ -222,7 +230,9 @@ function resolveTriggerKey(verb: string, cond: Predicate): string {
   if (verb === VerbType.IS || verb === VerbType.BECOME) {
     // Map state qualifiers (COMBUSTED) to column IDs (combustion) for matching
     const stateCol = STATE_TO_COLUMN[cond.object ?? ''];
-    return `${verb}:${stateCol ?? cond.object ?? '*'}`;
+    // Negated IS/BECOME conditions (BECOME NOT SLOWED) register under BECOME_NOT key
+    const negPrefix = cond.negated ? `${verb}_NOT` : verb;
+    return `${negPrefix}:${stateCol ?? cond.object ?? '*'}`;
   }
   if (verb === VerbType.DEAL) return `${VerbType.DEAL}:${NounType.DAMAGE}`;
   if (verb === VerbType.RECOVER) {
@@ -461,12 +471,16 @@ export class TriggerIndex {
         const talentOwnerId = resolveTargetOwnerId(def.properties.target, slotId, opSlotMap, def.properties.targetDeterminer);
         const talentColumnId = def.properties.id;
 
-        // Trigger-only talents (have onTriggerClause + finite duration) create instances
-        // via APPLY EVENT during queue processing — no template event. Template events
-        // for these falsely satisfy HAVE STATUS conditions.
+        // Trigger-only talents create instances via APPLY EVENT / CONSUME EVENT
+        // during queue processing — no template event. Template events for these
+        // falsely satisfy HAVE STATUS conditions.
+        // A talent is trigger-only if its triggers fire APPLY EVENT (self-creating) or
+        // CONSUME EVENT (self-removing) — indicating lifecycle is managed by triggers.
         const hasNegativeDuration = talentDuration && getDurationFrames(talentDuration) === TOTAL_FRAMES
           && resolveValueNode(talentDuration.value, DEFAULT_VALUE_CONTEXT) < 0;
-        const isPassive = talentDurationFrames >= TOTAL_FRAMES && !hasNegativeDuration;
+        const hasSelfApplyConsume = hasTrigger && def.onTriggerClause?.some((tc: { effects?: { verb?: string; object?: string }[] }) =>
+          tc.effects?.some(e => (e.verb === VerbType.APPLY || e.verb === VerbType.CONSUME) && e.object === NounType.EVENT));
+        const isPassive = talentDurationFrames >= TOTAL_FRAMES && !hasNegativeDuration && !hasSelfApplyConsume;
         if (hasTrigger && !isPassive) {
           const existing = this.talentsBySlot.get(slotId) ?? [];
           existing.push({ def, operatorId, operatorSlotId: slotId, talentEvent: null });
@@ -692,6 +706,11 @@ export class TriggerIndex {
 
         const key = resolveTriggerKey(primaryVerb, primaryCond);
         if (!key) continue;
+        // Negated IS/BECOME conditions (IS NOT SLOWED, BECOME NOT STAGGERED) need
+        // re-evaluation at execution time to handle overlapping sources
+        const allHaveConds = primaryCond.negated && (primaryVerb === VerbType.IS || primaryVerb === VerbType.BECOME)
+          ? [primaryCond, ...haveConds] : haveConds;
+
         const entry: TriggerDefEntry = {
           def,
           operatorId,
@@ -703,7 +722,7 @@ export class TriggerIndex {
           primaryVerb,
           primaryCondition: primaryCond,
           secondaryConditions: secondaryConds,
-          haveConditions: haveConds,
+          haveConditions: allHaveConds,
           triggerEffects: clause.effects,
           clauseIndex: ci,
           ...((def as unknown as { usageLimit?: number }).usageLimit != null

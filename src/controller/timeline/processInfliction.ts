@@ -1,6 +1,7 @@
-import { TimelineEvent, EventFrameMarker, EventSegmentData, SkillType, eventDuration } from '../../consts/viewTypes';
+import { TimelineEvent, EventFrameMarker, EventSegmentData, eventDuration } from '../../consts/viewTypes';
 import { LoadoutProperties, DEFAULT_LOADOUT_PROPERTIES } from '../../view/InformationPane';
 import { ElementType, EventFrameType, EventStatusType } from '../../consts/enums';
+import { NounType } from '../../dsl/semantics';
 import { StatusLevel } from '../../consts/types';
 import { getCorrosionBaseReduction, getCorrosionReductionMultiplier } from '../../model/calculation/damageFormulas';
 import {
@@ -37,11 +38,10 @@ export function resolveSusceptibility(
   loadoutProperties?: Record<string, LoadoutProperties>,
 ): Partial<Record<ElementType, number>> {
   const stats = loadoutProperties?.[sourceOwnerId] ?? DEFAULT_LOADOUT_PROPERTIES;
-  const skillType = sourceColumnId as SkillType;
   let skillLevel: number;
-  switch (skillType) {
-    case 'combo': skillLevel = stats.skills.comboSkillLevel; break;
-    case 'ultimate': skillLevel = stats.skills.ultimateLevel; break;
+  switch (sourceColumnId) {
+    case NounType.COMBO: skillLevel = stats.skills.comboSkillLevel; break;
+    case NounType.ULTIMATE: skillLevel = stats.skills.ultimateLevel; break;
     default: skillLevel = stats.skills.battleSkillLevel; break;
   }
   const idx = Math.max(0, Math.min(skillLevel - 1, MAX_SKILL_LEVEL_INDEX));

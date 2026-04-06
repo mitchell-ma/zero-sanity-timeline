@@ -130,30 +130,10 @@
                       }
                     }
                   }
-                }
-              ]
-            },
-            {
-              "conditions": [
-                {
-                  "subject": "ENEMY",
-                  "verb": "HAVE",
-                  "object": "STATUS",
-                  "objectId": "INFLICTION",
-                  "objectQualifier": "CRYO",
-                  "cardinalityConstraint": "GREATER_THAN_EQUAL",
-                  "with": {
-                    "stacks": {
-                      "verb": "IS",
-                      "value": 2
-                    }
-                  }
-                }
-              ],
-              "effects": [
+                },
                 {
                   "verb": "APPLY",
-                  "objectQualifier": "CRYO",
+                  "objectDeterminer": "TRIGGER",
                   "object": "INFLICTION",
                   "to": "ENEMY",
                   "with": {
@@ -162,43 +142,31 @@
                       "value": 1
                     }
                   }
-                }
-              ]
-            },
-            {
-              "conditions": [
+                },
                 {
-                  "subject": "ENEMY",
-                  "verb": "HAVE",
-                  "object": "STATUS",
-                  "objectId": "INFLICTION",
-                  "objectQualifier": "NATURE",
-                  "cardinalityConstraint": "GREATER_THAN_EQUAL",
+                  "verb": "REDUCE",
+                  "object": "COOLDOWN",
+                  "of": {
+                    "object": "SKILL",
+                    "objectId": "COMBO"
+                  },
                   "with": {
-                    "stacks": {
-                      "verb": "IS",
-                      "value": 2
-                    }
-                  }
-                }
-              ],
-              "effects": [
-                {
-                  "verb": "APPLY",
-                  "objectQualifier": "NATURE",
-                  "object": "INFLICTION",
-                  "to": "ENEMY",
-                  "with": {
-                    "stacks": {
-                      "verb": "IS",
-                      "value": 1
-                    }
+                    "value": {
+                      "verb": "VARY_BY",
+                      "object": "POTENTIAL",
+                      "value": [0, 0, 0, 0, 0, 1],
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
+                    },
+                    "unit": "SECOND"
                   }
                 }
               ]
             }
           ],
-          "clauseType": "FIRST_MATCH"
+          "clauseType": "ALL"
         }
       ]
     },
@@ -245,7 +213,7 @@
   "metadata": {
     "originId": "FLUORITE",
     "icon": "skills/combo_fluorite.png",
-    "dataStatus": "RECONCILED"
+    "dataStatus": "VERIFIED"
   },
   "clauseType": "ALL",
   "activationWindow": {
@@ -256,34 +224,32 @@
       {
         "conditions": [
           {
-            "subject": "ENEMY",
-            "verb": "HAVE",
-            "object": "INFLICTION",
-            "objectQualifier": "CRYO",
+            "subject": "STACKS",
+            "of": {
+              "object": "STATUS",
+              "objectId": "INFLICTION",
+              "objectQualifier": "CRYO",
+              "of": { "object": "ENEMY" }
+            },
+            "verb": "IS",
             "cardinalityConstraint": "GREATER_THAN_EQUAL",
-            "with": {
-              "stacks": {
-                "verb": "IS",
-                "value": 2
-              }
-            }
+            "value": { "verb": "IS", "value": 2 }
           }
         ]
       },
       {
         "conditions": [
           {
-            "subject": "ENEMY",
-            "verb": "HAVE",
-            "object": "INFLICTION",
-            "objectQualifier": "NATURE",
+            "subject": "STACKS",
+            "of": {
+              "object": "STATUS",
+              "objectId": "INFLICTION",
+              "objectQualifier": "NATURE",
+              "of": { "object": "ENEMY" }
+            },
+            "verb": "IS",
             "cardinalityConstraint": "GREATER_THAN_EQUAL",
-            "with": {
-              "stacks": {
-                "verb": "IS",
-                "value": 2
-              }
-            }
+            "value": { "verb": "IS", "value": 2 }
           }
         ]
       }

@@ -1,0 +1,139 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STAT",
+          "objectId": "SLOW",
+          "to": "ENEMY",
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": 0.3
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "IMPROVISED_EXPLOSIVE",
+    "name": "Improvised Explosive",
+    "to": "ENEMY",
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": 2.97
+      },
+      "unit": "SECOND"
+    },
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 1
+      },
+      "interactionType": "RESET"
+    },
+    "eventType": "STATUS",
+    "eventIdType": "SKILL_STATUS",
+    "element": "NATURE",
+    "description": "An Improvised Explosive stuck to the target. Slows the target and explodes after a short duration, dealing Nature DMG and applying Nature Infliction."
+  },
+  "segments": [
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT"
+      },
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 2.97
+          },
+          "unit": "SECOND"
+        },
+        "element": "NATURE",
+        "name": "Improvised Explosive"
+      },
+      "frames": [
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": ["END_AXIS"]
+          },
+          "properties": {
+            "offset": {
+              "value": 2.97,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "object": "STAGGER",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 10
+                    }
+                  }
+                },
+                {
+                  "verb": "APPLY",
+                  "objectQualifier": "NATURE",
+                  "object": "INFLICTION",
+                  "to": "ENEMY",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  }
+                },
+                {
+                  "verb": "DEAL",
+                  "objectQualifier": "NATURE",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [1.87, 2.06, 2.24, 2.43, 2.62, 2.8, 2.99, 3.18, 3.36, 3.6, 3.88, 4.2],
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "SOURCE"
+                      }
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "SOURCE"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "originId": "FLUORITE",
+    "dataSources": ["END_AXIS", "ENDFIELD_WIKI"],
+    "dataStatus": "VERIFIED"
+  },
+  "clauseType": "ALL"
+}

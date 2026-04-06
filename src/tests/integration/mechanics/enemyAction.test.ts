@@ -75,7 +75,7 @@ describe('Enemy Action — Event Pipeline', () => {
     expect(totalDuration).toBe(240);
   });
 
-  it('enemy action event has damageElement on frame', () => {
+  it('enemy action event has dealDamage on frame', () => {
     const { result } = renderHook(() => useApp());
 
     act(() => { addEnemyAction(result.current, 5 * FPS); });
@@ -84,7 +84,8 @@ describe('Enemy Action — Event Pipeline', () => {
     expect(events).toHaveLength(1);
     const frame = events[0].segments[0]?.frames?.[0];
     expect(frame).toBeDefined();
-    expect(frame!.damageElement).toBeDefined();
+    expect(frame!.dealDamage).toBeDefined();
+    expect(frame!.dealDamage!.element).toBeDefined();
   });
 
   it('multiple enemy actions can be placed at non-overlapping frames', () => {

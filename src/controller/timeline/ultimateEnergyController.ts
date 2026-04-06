@@ -38,6 +38,8 @@ interface SlotConfig {
   startValue: number;
   chargePerFrame: number;
   efficiency: number;
+  /** When true, this slot only gains UE from its own skills (no team gains from other operators). */
+  selfOnlyGain: boolean;
 }
 
 // ── UltimateEnergyController class ───────────────────────────────────────────
@@ -63,8 +65,14 @@ export class UltimateEnergyController {
 
   // ── Configuration ────────────────────────────────────────────────────────
 
-  configureSlot(slotId: string, config: SlotConfig) {
-    this.slotConfigs.set(slotId, config);
+  configureSlot(slotId: string, config: Omit<SlotConfig, 'selfOnlyGain'> & { selfOnlyGain?: boolean }) {
+    this.slotConfigs.set(slotId, { ...config, selfOnlyGain: config.selfOnlyGain ?? false });
+  }
+
+  /** Mark a slot as self-only for UE gains (e.g. Last Rite — only gains UE from her own BS/CS). */
+  setSelfOnlyGain(slotId: string, selfOnly: boolean) {
+    const cfg = this.slotConfigs.get(slotId);
+    if (cfg) cfg.selfOnlyGain = selfOnly;
   }
 
   /** Update a slot's efficiency from the stat accumulator (after APPLY STAT deltas). */
@@ -159,7 +167,7 @@ export class UltimateEnergyController {
     // Compute per-slot graphs
     for (const [slotId, cfg] of Array.from(this.slotConfigs)) {
       const windows = this.noGainWindows.get(slotId) ?? [];
-      const gains = applyGainEfficiency(this.rawGaugeGains, slotId, cfg.efficiency, windows);
+      const gains = applyGainEfficiency(this.rawGaugeGains, slotId, cfg.efficiency, windows, cfg.selfOnlyGain);
       const consumes = this.consumeEvents.get(slotId) ?? [];
       const timeline = [...gains, ...consumes]
         .sort((a, b) => a.frame - b.frame || (a.type === 'gain' ? -1 : 1));
@@ -224,6 +232,7 @@ export function applyGainEfficiency(
   slotId: string,
   efficiencyBonus: number,
   ultActiveWindows: readonly { start: number; end: number }[],
+  selfOnlyGain = false,
 ): UltEnergyEvent[] {
   const multiplier = 1 + efficiencyBonus;
   const gains: UltEnergyEvent[] = [];
@@ -232,6 +241,9 @@ export function applyGainEfficiency(
     // Skip gains during no-gain windows (active phase, IGNORE ULTIMATE_ENERGY segments).
     // Exclusive start: gains at the boundary frame happen before the window opens.
     if (ultActiveWindows.some(w => ge.frame > w.start && ge.frame < w.end)) continue;
+
+    // Self-only restriction (e.g. Last Rite): skip all gains from other operators' skills
+    if (selfOnlyGain && ge.sourceSlotId !== slotId) continue;
 
     const rawGain = (ge.sourceSlotId === slotId ? ge.selfGain : 0) + ge.teamGain;
     if (rawGain > 0) {

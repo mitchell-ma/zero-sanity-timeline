@@ -22,7 +22,7 @@
  */
 
 import { renderHook, act } from '@testing-library/react';
-import { NounType } from '../../../../dsl/semantics';
+import { NounType, AdjectiveType } from '../../../../dsl/semantics';
 import { useApp } from '../../../../app/useApp';
 import { ColumnType, EventStatusType, InteractionModeType, SegmentType } from '../../../../consts/enums';
 import { FPS } from '../../../../utils/timeline';
@@ -556,7 +556,7 @@ describe('D2. Realspace Stasis', () => {
     );
     expect(statusJson.clause).toBeDefined();
     const fragilityEffect = statusJson.clause[0].effects.find(
-      (e: Record<string, unknown>) => e.object === 'FRAGILITY' && e.objectQualifier === 'PHYSICAL',
+      (e: Record<string, unknown>) => e.objectId === NounType.FRAGILITY && e.objectQualifier === AdjectiveType.PHYSICAL,
     );
     expect(fragilityEffect).toBeDefined();
     expect(fragilityEffect.with.value.value).toEqual([0.10, 0.20]);

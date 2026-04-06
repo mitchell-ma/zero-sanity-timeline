@@ -46,9 +46,9 @@ export const DEFAULT_VALUE_CONTEXT: ValueResolutionContext = {
  */
 function getVariableArrayIndex(object: string, ctx: ValueResolutionContext, objectId?: string): number | undefined {
   switch (object) {
-    case 'SKILL_LEVEL':       return ctx.skillLevel - 1;
-    case 'POTENTIAL':         return ctx.potential;
-    case 'TALENT_LEVEL':      return ctx.talentLevel ?? 0;
+    case NounType.SKILL_LEVEL:  return ctx.skillLevel - 1;
+    case NounType.POTENTIAL:   return ctx.potential;
+    case NounType.TALENT_LEVEL: return ctx.talentLevel ?? 0;
     default: {
       // VARY_BY STATUS <objectId>: active stack count of the status on the resolved operator
       if (object === NounType.STATUS && objectId && ctx.getStatusStacks) {

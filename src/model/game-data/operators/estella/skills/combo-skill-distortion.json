@@ -220,7 +220,7 @@
                 {
                   "verb": "APPLY",
                   "objectQualifier": "PHYSICAL",
-                  "object": "SUSCEPTIBILITY",
+                  "object": "STATUS", "objectId": "SUSCEPTIBILITY",
                   "to": "ENEMY",
                   "with": {
                     "value": {

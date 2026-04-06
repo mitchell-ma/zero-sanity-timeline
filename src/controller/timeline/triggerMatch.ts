@@ -32,6 +32,7 @@ export interface Predicate {
   subject: string;
   subjectId?: string;
   verb: string;
+  negated?: boolean;
   object?: string;
   objectId?: string;
   cardinalityConstraint?: string;
@@ -414,6 +415,37 @@ function handleRecover(primaryCond: Predicate, ctx: VerbHandlerContext): Trigger
 // ── IS / BECOME handlers ─────────────────────────────────────────────────────
 
 function handleIs(primaryCond: Predicate, ctx: VerbHandlerContext): TriggerMatch[] {
+  // STACKS as subject: resolve columns from OF clause, scan for candidate frames,
+  // check threshold via checkPredicate → evaluateStacksSubject
+  if (primaryCond.subject === NounType.STACKS) {
+    const ofClause = primaryCond.of as { objectId?: string; objectQualifier?: string; of?: { object?: string; determiner?: string } } | undefined;
+    const columnIds = resolveColumnIds(NounType.STATUS, ofClause?.objectId, ofClause?.objectQualifier);
+    if (columnIds.length === 0) return [];
+    const ownerSubject = ofClause?.of?.object ?? NounType.ENEMY;
+    const ownerDeterminer = ofClause?.of?.determiner;
+    const { matchesOwner } = resolveOwnerFilter(
+      { ...primaryCond, subject: ownerSubject, subjectDeterminer: ownerDeterminer } as Predicate,
+      ctx.operatorSlotId, VerbType.IS,
+    );
+    const matches: TriggerMatch[] = [];
+    const candidateFrames = new Set<number>();
+    for (const ev of ctx.events) {
+      if (!columnIds.includes(ev.columnId)) continue;
+      if (!matchesOwner(ev.ownerId)) continue;
+      candidateFrames.add(ev.startFrame);
+    }
+    for (const frame of Array.from(candidateFrames)) {
+      if (!checkPredicate(primaryCond, ctx.events, ctx.operatorSlotId, frame)) continue;
+      if (!checkSecondary(ctx, frame)) continue;
+      const sourceEv = ctx.events.find(ev =>
+        columnIds.includes(ev.columnId) && matchesOwner(ev.ownerId) &&
+        ev.startFrame <= frame && frame < ev.startFrame + computeSegmentsSpan(ev.segments),
+      );
+      if (sourceEv) matches.push(makeMatch(frame, sourceEv, ctx.clauseEffects));
+    }
+    return matches;
+  }
+
   const colId = STATE_TO_COLUMN[primaryCond.object ?? ''];
   if (!colId) return [];
 
@@ -526,6 +558,10 @@ function handleReceive(primaryCond: Predicate, ctx: VerbHandlerContext): Trigger
 function handleDeal(primaryCond: Predicate, ctx: VerbHandlerContext): TriggerMatch[] {
   const matches: TriggerMatch[] = [];
   const { matchesOwner } = resolveOwnerFilter(primaryCond, ctx.operatorSlotId, VerbType.DEAL);
+  const qualifier = primaryCond.objectQualifier as string | undefined;
+  // ARTS_BURST is not a damage element — it's a reaction. DEAL ARTS_BURST DAMAGE matches
+  // arts burst infliction events, not regular damage frames. Skip all damage frames for it.
+  if (qualifier === NounType.ARTS_BURST) return matches;
 
   for (const ev of ctx.events) {
     if (!matchesOwner(ev.ownerId)) continue;
@@ -534,6 +570,8 @@ function handleDeal(primaryCond: Predicate, ctx: VerbHandlerContext): TriggerMat
     for (const seg of ev.segments) {
       if (seg.frames) {
         for (const frame of seg.frames) {
+          // Filter by damage element when qualifier is an element (CRYO, HEAT, etc.)
+          if (qualifier && frame.dealDamage?.element && frame.dealDamage.element !== qualifier) continue;
           const triggerFrame = ev.startFrame + cumulativeOffset + frame.offsetFrame;
           if (!checkSecondary(ctx, triggerFrame, ev.ownerId)) continue;
           matches.push(makeMatch(triggerFrame, ev, ctx.clauseEffects));

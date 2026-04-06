@@ -496,14 +496,19 @@ export function renderEvent(
         const ox = diamondOrigin?.x ?? 0;
         const oy = diamondOrigin?.y ?? 0;
 
+        const isDealDamage = f.dealDamage != null;
         if (isHorizontal) {
           const cx = framePx - segTopPx;
           const cy = inset + eventW + lateralShift;
-          dg.moveTo(cx, cy - DIAMOND_HALF);
-          dg.lineTo(cx + DIAMOND_HALF, cy);
-          dg.lineTo(cx, cy + DIAMOND_HALF);
-          dg.lineTo(cx - DIAMOND_HALF, cy);
-          dg.closePath();
+          if (isDealDamage) {
+            dg.moveTo(cx, cy - DIAMOND_HALF);
+            dg.lineTo(cx + DIAMOND_HALF, cy);
+            dg.lineTo(cx, cy + DIAMOND_HALF);
+            dg.lineTo(cx - DIAMOND_HALF, cy);
+            dg.closePath();
+          } else {
+            dg.circle(cx, cy, DIAMOND_HALF * 0.8);
+          }
           dg.fill({ color: fillColor, alpha });
           dg.stroke({ color: outlineColor, alpha: isHighlighted ? 1.0 : 0.8, width: strokeWidth });
           if (isCrit) {
@@ -514,11 +519,15 @@ export function renderEvent(
         } else {
           const cx = inset + eventW - lateralShift;
           const cy = framePx - segTopPx;
-          dg.moveTo(cx, cy - DIAMOND_HALF);
-          dg.lineTo(cx + DIAMOND_HALF, cy);
-          dg.lineTo(cx, cy + DIAMOND_HALF);
-          dg.lineTo(cx - DIAMOND_HALF, cy);
-          dg.closePath();
+          if (isDealDamage) {
+            dg.moveTo(cx, cy - DIAMOND_HALF);
+            dg.lineTo(cx + DIAMOND_HALF, cy);
+            dg.lineTo(cx, cy + DIAMOND_HALF);
+            dg.lineTo(cx - DIAMOND_HALF, cy);
+            dg.closePath();
+          } else {
+            dg.circle(cx, cy, DIAMOND_HALF * 0.8);
+          }
           dg.fill({ color: fillColor, alpha });
           dg.stroke({ color: outlineColor, alpha: isHighlighted ? 1.0 : 0.8, width: strokeWidth });
           if (isCrit) {

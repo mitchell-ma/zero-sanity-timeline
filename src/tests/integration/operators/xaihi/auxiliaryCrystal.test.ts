@@ -19,10 +19,11 @@ import { renderHook, act } from '@testing-library/react';
 import { NounType } from '../../../../dsl/semantics';
 import { useApp } from '../../../../app/useApp';
 import { OPERATOR_COLUMNS, OPERATOR_STATUS_COLUMN_ID, COMBO_WINDOW_COLUMN_ID, INFLICTION_COLUMNS, ENEMY_OWNER_ID, ENEMY_GROUP_COLUMNS } from '../../../../model/channels';
-import { ColumnType, EventStatusType } from '../../../../consts/enums';
+import { ColumnType, CritMode, EventStatusType, InteractionModeType } from '../../../../consts/enums';
 import type { MiniTimeline } from '../../../../consts/viewTypes';
 import { FPS } from '../../../../utils/timeline';
 import { computeTimelinePresentation } from '../../../../controller/timeline/eventPresentationController';
+import { runCalculation } from '../../../../controller/calculation/calculationController';
 import { findColumn, buildContextMenu, getMenuPayload, type AppResult } from '../../helpers';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -33,6 +34,15 @@ const XAIHI_ID: string = XAIHI_JSON.id;
 const AC_STATUS_ID: string = require(
   '../../../../model/game-data/operators/xaihi/statuses/status-auxiliary-crystal.json',
 ).properties.id;
+
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const DDA_STATUS_ID: string = require(
+  '../../../../model/game-data/operators/xaihi/statuses/status-distributed-dos-amp.json',
+).properties.id;
+
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const LAEVATAIN_JSON = require('../../../../model/game-data/operators/laevatain/laevatain.json');
+const LAEVATAIN_ID: string = LAEVATAIN_JSON.id;
 
 const SLOT_DEFAULT_CONTROLLED = 'slot-0';
 const SLOT_XAIHI = 'slot-2';
@@ -333,6 +343,116 @@ describe('D. Auxiliary Crystal targeting', () => {
     expect(inflictionsInVM.length).toBeGreaterThanOrEqual(1);
   });
 
+  it('D6: BA without active Auxiliary Crystal does NOT trigger Arts Amp', () => {
+    const { result } = setupXaihiInSlot2();
+
+    // ── Context menu layer ──
+    const baCol = findColumn(result.current, SLOT_DEFAULT_CONTROLLED, NounType.BASIC_ATTACK);
+    expect(baCol).toBeDefined();
+    const menuItems = buildContextMenu(result.current, baCol!, 5 * FPS);
+    expect(menuItems).not.toBeNull();
+
+    const baPayload = getMenuPayload(result.current, baCol!, 5 * FPS);
+    act(() => {
+      result.current.handleAddEvent(
+        baPayload.ownerId, baPayload.columnId,
+        baPayload.atFrame, baPayload.defaultSkill,
+      );
+    });
+
+    // ── Controller layer ──
+    // No AUXILIARY_CRYSTAL events should exist (no BS was placed)
+    const acEvents = result.current.allProcessedEvents.filter(
+      ev => ev.name === AC_STATUS_ID,
+    );
+    expect(acEvents).toHaveLength(0);
+
+    // No AMP events should exist on any operator
+    const ampEvents = result.current.allProcessedEvents.filter(
+      ev => ev.name === NounType.AMP || ev.columnId === NounType.AMP,
+    );
+    expect(ampEvents).toHaveLength(0);
+
+    // ── View layer ──
+    const viewModels = computeTimelinePresentation(
+      result.current.allProcessedEvents,
+      result.current.columns,
+    );
+
+    // Controlled operator's status column should have no AC or AMP events
+    const controlledStatusCol = findStatusColumn(result.current, SLOT_DEFAULT_CONTROLLED);
+    expect(controlledStatusCol).toBeDefined();
+    const controlledVM = viewModels.get(controlledStatusCol!.key);
+    expect(controlledVM).toBeDefined();
+    const acInVM = controlledVM!.events.filter(ev => ev.name === AC_STATUS_ID);
+    expect(acInVM).toHaveLength(0);
+    const ampInVM = controlledVM!.events.filter(
+      ev => ev.name === NounType.AMP || ev.columnId === NounType.AMP,
+    );
+    expect(ampInVM).toHaveLength(0);
+  });
+
+  it('D7: At full HP, BA final strike with active AC consumes 1 stack and applies Distributed DoS Amp', () => {
+    const { result } = setupXaihiInSlot2();
+
+    // ── Place Xaihi BS at 2s → AC with 2 stacks on slot-0 ──
+    const bsCol = findColumn(result.current, SLOT_XAIHI, NounType.BATTLE);
+    const bsPayload = getMenuPayload(result.current, bsCol!, 2 * FPS);
+    act(() => {
+      result.current.handleAddEvent(
+        bsPayload.ownerId, bsPayload.columnId,
+        bsPayload.atFrame, bsPayload.defaultSkill,
+      );
+    });
+
+    // ── Context menu layer ──
+    const baCol = findColumn(result.current, SLOT_DEFAULT_CONTROLLED, NounType.BASIC_ATTACK);
+    expect(baCol).toBeDefined();
+    const menuItems = buildContextMenu(result.current, baCol!, 5 * FPS);
+    expect(menuItems).not.toBeNull();
+
+    // ── Place 1 BA on slot-0 at 5s (operator at full HP → AMP clause fires) ──
+    const baPayload = getMenuPayload(result.current, baCol!, 5 * FPS);
+    act(() => {
+      result.current.handleAddEvent(
+        baPayload.ownerId, baPayload.columnId,
+        baPayload.atFrame, baPayload.defaultSkill,
+      );
+    });
+
+    // ── Controller layer ──
+    // AC should have 1 stack consumed, 1 remaining
+    const acEvents = result.current.allProcessedEvents.filter(
+      ev => ev.name === AC_STATUS_ID && ev.ownerId === SLOT_DEFAULT_CONTROLLED,
+    );
+    const acActive = acEvents.filter(ev => ev.eventStatus !== EventStatusType.CONSUMED);
+    expect(acActive.length).toBe(1);
+    expect(acActive[0].stacks).toBe(1);
+
+    // DDA_AMP should be applied to the controlled operator
+    const ddaEvents = result.current.allProcessedEvents.filter(
+      ev => ev.name === DDA_STATUS_ID && ev.ownerId === SLOT_DEFAULT_CONTROLLED,
+    );
+    expect(ddaEvents.length).toBe(1);
+    expect(ddaEvents[0].startFrame).toBeGreaterThan(0);
+
+    // ── View layer ──
+    const viewModels = computeTimelinePresentation(
+      result.current.allProcessedEvents,
+      result.current.columns,
+    );
+
+    const controlledStatusCol = findStatusColumn(result.current, SLOT_DEFAULT_CONTROLLED);
+    expect(controlledStatusCol).toBeDefined();
+    const controlledVM = viewModels.get(controlledStatusCol!.key);
+    expect(controlledVM).toBeDefined();
+
+    // DDA_AMP visible in the controlled operator's status column
+    const ddaInVM = controlledVM!.events.filter(ev => ev.name === DDA_STATUS_ID);
+    expect(ddaInVM.length).toBe(1);
+    expect(controlledVM!.microPositions.has(ddaInVM[0].uid)).toBe(true);
+  });
+
   it('D2: BS applies AUXILIARY_CRYSTAL to Xaihi when she IS the controlled operator', () => {
     const { result } = setupXaihiInSlot2();
 
@@ -392,5 +512,188 @@ describe('D. Auxiliary Crystal targeting', () => {
     for (const ev of acInXaihi) {
       expect(xaihiVM!.microPositions.has(ev.uid)).toBe(true);
     }
+  });
+});
+
+describe('E. Auxiliary Crystal — Laevatain cross-operator damage', () => {
+  const SLOT_LAEV = 'slot-0'; // controlled operator (default)
+
+  function setupLaevatainAndXaihi() {
+    const view = renderHook(() => useApp());
+    act(() => {
+      view.result.current.handleSwapOperator(SLOT_LAEV, LAEVATAIN_ID);
+      view.result.current.handleSwapOperator(SLOT_XAIHI, XAIHI_ID);
+    });
+    return view;
+  }
+
+  it('E1: Laevatain FINAL_STRIKE consumes AC (II→I), applies DDA Amp, second FINAL_STRIKE deals more damage', () => {
+    const { result } = setupLaevatainAndXaihi();
+
+    // ── Place Xaihi BS at 2s → 2 AC stacks on Laevatain (controlled op = slot-1) ──
+    const bsCol = findColumn(result.current, SLOT_XAIHI, NounType.BATTLE);
+    expect(bsCol).toBeDefined();
+    const bsPayload = getMenuPayload(result.current, bsCol!, 2 * FPS);
+    act(() => {
+      result.current.handleAddEvent(
+        bsPayload.ownerId, bsPayload.columnId,
+        bsPayload.atFrame, bsPayload.defaultSkill,
+      );
+    });
+
+    // Verify 2 AC stacks on Laevatain
+    const acBefore = result.current.allProcessedEvents.filter(
+      ev => ev.name === AC_STATUS_ID && ev.ownerId === SLOT_LAEV,
+    );
+    expect(acBefore.length).toBe(2);
+
+    // ── Place 1st Laevatain BA at 5s ──
+    const baCol = findColumn(result.current, SLOT_LAEV, NounType.BASIC_ATTACK);
+    expect(baCol).toBeDefined();
+    const ba1Payload = getMenuPayload(result.current, baCol!, 5 * FPS);
+    act(() => {
+      result.current.handleAddEvent(
+        ba1Payload.ownerId, ba1Payload.columnId,
+        ba1Payload.atFrame, ba1Payload.defaultSkill,
+      );
+    });
+
+    // ── Controller layer: AC consumed II→I, DDA Amp applied ──
+    const acAfter1 = result.current.allProcessedEvents.filter(
+      ev => ev.name === AC_STATUS_ID && ev.ownerId === SLOT_LAEV,
+    );
+    const acActive1 = acAfter1.filter(ev => ev.eventStatus !== EventStatusType.CONSUMED);
+    expect(acActive1.length).toBe(1);
+    expect(acActive1[0].stacks).toBe(1);
+
+    const ddaAfter1 = result.current.allProcessedEvents.filter(
+      ev => ev.name === DDA_STATUS_ID && ev.ownerId === SLOT_LAEV,
+    );
+    expect(ddaAfter1.length).toBe(1);
+
+    // ── Place 2nd Laevatain BA at 10s (with DDA Amp active → higher damage) ──
+    const ba2Payload = getMenuPayload(result.current, baCol!, 10 * FPS);
+    act(() => {
+      result.current.handleAddEvent(
+        ba2Payload.ownerId, ba2Payload.columnId,
+        ba2Payload.atFrame, ba2Payload.defaultSkill,
+      );
+    });
+
+    // ── Controller layer: AC fully consumed, second DDA Amp applied ──
+    const acAfter2 = result.current.allProcessedEvents.filter(
+      ev => ev.name === AC_STATUS_ID && ev.ownerId === SLOT_LAEV
+        && ev.eventStatus !== EventStatusType.CONSUMED,
+    );
+    expect(acAfter2.length).toBe(0);
+
+    // ── Damage comparison: 2nd BA FINAL_STRIKE > 1st BA FINAL_STRIKE (AMP active) ──
+    const calcResult = runCalculation(
+      result.current.allProcessedEvents,
+      result.current.columns,
+      result.current.slots,
+      result.current.enemy,
+      result.current.loadoutProperties,
+      result.current.loadouts,
+      result.current.staggerBreaks,
+      CritMode.NEVER,
+      result.current.overrides,
+    );
+
+    // Filter Laevatain BA damage rows
+    const laevatainBaRows = calcResult.rows.filter(
+      r => r.ownerId === SLOT_LAEV
+        && r.columnId === NounType.BASIC_ATTACK
+        && r.damage != null && r.damage > 0,
+    );
+    expect(laevatainBaRows.length).toBeGreaterThanOrEqual(2);
+
+    // 1st BA rows: frames before 2nd BA placement (10s)
+    const ba1Rows = laevatainBaRows.filter(r => r.absoluteFrame < 10 * FPS);
+    // 2nd BA rows: frames at or after 2nd BA placement
+    const ba2Rows = laevatainBaRows.filter(r => r.absoluteFrame >= 10 * FPS);
+    expect(ba1Rows.length).toBeGreaterThan(0);
+    expect(ba2Rows.length).toBeGreaterThan(0);
+
+    // Compare last frame damage of each BA (the FINAL_STRIKE frame)
+    const ba1FinalDamage = ba1Rows[ba1Rows.length - 1].damage!;
+    const ba2FinalDamage = ba2Rows[ba2Rows.length - 1].damage!;
+    expect(ba2FinalDamage).toBeGreaterThan(ba1FinalDamage);
+  });
+
+  it('E2: Two Laevatain BATKs at same offset fully consume AC (II → nothing)', () => {
+    const { result } = setupLaevatainAndXaihi();
+
+    // ── Place Xaihi BS at 2s → 2 AC stacks on Laevatain ──
+    const bsCol = findColumn(result.current, SLOT_XAIHI, NounType.BATTLE);
+    expect(bsCol).toBeDefined();
+    const bsPayload = getMenuPayload(result.current, bsCol!, 2 * FPS);
+    act(() => {
+      result.current.handleAddEvent(
+        bsPayload.ownerId, bsPayload.columnId,
+        bsPayload.atFrame, bsPayload.defaultSkill,
+      );
+    });
+
+    // ── Controller layer: verify AC II before consumption ──
+    const acBefore = result.current.allProcessedEvents.filter(
+      ev => ev.name === AC_STATUS_ID && ev.ownerId === SLOT_LAEV,
+    );
+    expect(acBefore.length).toBe(2);
+
+    // ── View layer: AC II label visible before consumption ──
+    const vmBefore = computeTimelinePresentation(
+      result.current.allProcessedEvents,
+      result.current.columns,
+    );
+    const statusColBefore = findStatusColumn(result.current, SLOT_LAEV);
+    expect(statusColBefore).toBeDefined();
+    const laevVMBefore = vmBefore.get(statusColBefore!.key);
+    expect(laevVMBefore).toBeDefined();
+    const acBeforeVM = laevVMBefore!.events.filter(ev => ev.name === AC_STATUS_ID);
+    const labelsBefore = acBeforeVM.map(ev => laevVMBefore!.statusOverrides.get(ev.uid)?.label);
+    expect(labelsBefore).toContain('Auxiliary Crystal II');
+
+    // ── Freeform: place two BATKs at the same frame (5s) ──
+    act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
+    const baCol = findColumn(result.current, SLOT_LAEV, NounType.BASIC_ATTACK);
+    expect(baCol).toBeDefined();
+    const baPayload = getMenuPayload(result.current, baCol!, 5 * FPS);
+    act(() => {
+      result.current.handleAddEvent(
+        baPayload.ownerId, baPayload.columnId,
+        baPayload.atFrame, baPayload.defaultSkill,
+      );
+    });
+    const ba2Payload = getMenuPayload(result.current, baCol!, 5 * FPS);
+    act(() => {
+      result.current.handleAddEvent(
+        ba2Payload.ownerId, ba2Payload.columnId,
+        ba2Payload.atFrame, ba2Payload.defaultSkill,
+      );
+    });
+
+    // ── Controller layer: AC fully consumed — no active stacks remain ──
+    const acAfter = result.current.allProcessedEvents.filter(
+      ev => ev.name === AC_STATUS_ID && ev.ownerId === SLOT_LAEV,
+    );
+    const acActive = acAfter.filter(ev => ev.eventStatus !== EventStatusType.CONSUMED);
+    expect(acActive.length).toBe(0);
+    const acConsumed = acAfter.filter(ev => ev.eventStatus === EventStatusType.CONSUMED);
+    expect(acConsumed.length).toBeGreaterThanOrEqual(2);
+
+    // ── View layer: no active AC events visible ──
+    const vmAfter = computeTimelinePresentation(
+      result.current.allProcessedEvents,
+      result.current.columns,
+    );
+    const statusColAfter = findStatusColumn(result.current, SLOT_LAEV);
+    expect(statusColAfter).toBeDefined();
+    const laevVMAfter = vmAfter.get(statusColAfter!.key);
+    expect(laevVMAfter).toBeDefined();
+    const acActiveVM = laevVMAfter!.events.filter(
+      ev => ev.name === AC_STATUS_ID && ev.eventStatus !== EventStatusType.CONSUMED,
+    );
+    expect(acActiveVM.length).toBe(0);
   });
 });

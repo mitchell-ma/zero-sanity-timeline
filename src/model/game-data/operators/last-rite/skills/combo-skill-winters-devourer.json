@@ -96,7 +96,7 @@
           },
           "properties": {
             "offset": {
-              "value": 0,
+              "value": 0.217,
               "unit": "SECOND"
             }
           },
@@ -104,6 +104,13 @@
             {
               "conditions": [],
               "effects": [
+                {
+                  "verb": "CONSUME",
+                  "object": "STATUS",
+                  "objectId": "INFLICTION",
+                  "objectQualifier": "CRYO",
+                  "fromObject": "ENEMY"
+                },
                 {
                   "verb": "DEAL",
                   "objectQualifier": "CRYO",
@@ -202,7 +209,7 @@
           },
           "properties": {
             "offset": {
-              "value": 1.6,
+              "value": 1.05,
               "unit": "SECOND"
             }
           },
@@ -362,9 +369,22 @@
       {
         "conditions": [
           {
-            "subject": "ENEMY",
+            "subject": "STACKS",
+            "of": {
+              "object": "STATUS",
+              "objectId": "INFLICTION",
+              "objectQualifier": "CRYO",
+              "of": {
+                "object": "ENEMY",
+                "determiner": "THIS"
+              }
+            },
             "verb": "IS",
-            "object": "SOLIDIFIED"
+            "cardinalityConstraint": "GREATER_THAN_EQUAL",
+            "value": {
+              "verb": "IS",
+              "value": 3
+            }
           }
         ]
       }
@@ -373,7 +393,10 @@
       {
         "properties": {
           "duration": {
-            "value": 6,
+            "value": {
+              "verb": "IS",
+              "value": 6
+            },
             "unit": "SECOND"
           }
         }
