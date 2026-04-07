@@ -53,8 +53,9 @@
           "subjectDeterminer": "THIS",
           "subject": "OPERATOR",
           "verb": "APPLY",
-          "object": "REACTION",
-          "objectId": "SOLIDIFICATION"
+          "object": "STATUS",
+          "objectId": "REACTION",
+          "objectQualifier": "SOLIDIFICATION"
         }
       ],
       "effects": [

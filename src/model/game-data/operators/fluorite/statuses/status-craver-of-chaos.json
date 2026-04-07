@@ -1,0 +1,163 @@
+{
+  "onTriggerClause": [
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "ANY",
+          "subject": "OPERATOR",
+          "verb": "APPLY",
+          "object": "INFLICTION",
+          "objectQualifier": "CRYO",
+          "to": "ENEMY"
+        },
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "HAVE",
+          "object": "POTENTIAL",
+          "cardinalityConstraint": "GREATER_THAN_EQUAL",
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": 5
+            }
+          }
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "EVENT",
+          "objectDeterminer": "THIS",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
+        }
+      ]
+    },
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "ANY",
+          "subject": "OPERATOR",
+          "verb": "APPLY",
+          "object": "INFLICTION",
+          "objectQualifier": "NATURE",
+          "to": "ENEMY"
+        },
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "HAVE",
+          "object": "POTENTIAL",
+          "cardinalityConstraint": "GREATER_THAN_EQUAL",
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": 5
+            }
+          }
+        }      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "EVENT",
+          "objectDeterminer": "THIS",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
+        }
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT"
+      },
+      "properties": {
+        "name": "Active",
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 1
+          },
+          "unit": "SECOND"
+        }
+      },
+      "frames": [
+        {
+          "metadata": {
+            "eventComponentType": "FRAME"
+          },
+          "properties": {
+            "offset": {
+              "value": 0,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "REDUCE",
+                  "object": "COOLDOWN",
+                  "of": {
+                    "object": "SKILL",
+                    "objectId": "COMBO"
+                  },
+                  "with": {
+                    "value": { "verb": "IS", "value": 1 },
+                    "unit": "SECOND"
+                  }
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
+        }
+      ]
+    },
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT"
+      },
+      "properties": {
+        "segmentTypes": [
+          "COOLDOWN",
+          "IMMEDIATE_COOLDOWN"
+        ],
+        "name": "Cooldown",
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 1
+          },
+          "unit": "SECOND"
+        }
+      },
+      "frames": []
+    }
+  ],
+  "properties": {
+    "id": "CRAVER_OF_CHAOS",
+    "name": "Craver of Chaos (P5)",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
+    "duration": {
+      "value": { "verb": "IS", "value": 1 },
+      "unit": "SECOND"
+    },
+    "stacks": {
+      "limit": { "verb": "IS", "value": 1 },
+      "interactionType": "RESET"
+    },
+    "eventType": "STATUS",
+    "eventIdType": "POTENTIAL_STATUS",
+    "description": "P5: When any operator applies Cryo or Nature Infliction, Fluorite's Combo Skill cooldown is reduced by 1s. Can only trigger once per 1s."
+  },
+  "metadata": {
+    "originId": "FLUORITE",
+    "dataStatus": "VERIFIED"
+  },
+  "clauseType": "ALL"
+}

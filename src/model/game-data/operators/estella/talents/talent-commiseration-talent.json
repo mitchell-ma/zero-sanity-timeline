@@ -6,8 +6,9 @@
           "subjectDeterminer": "THIS",
           "subject": "OPERATOR",
           "verb": "APPLY",
-          "object": "REACTION",
-          "objectId": "SHATTER"
+          "object": "STATUS",
+          "objectId": "REACTION",
+          "objectQualifier": "SHATTER"
         }
       ],
       "effects": [

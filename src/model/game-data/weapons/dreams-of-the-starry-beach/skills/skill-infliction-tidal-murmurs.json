@@ -41,11 +41,12 @@
           "subjectDeterminer": "THIS",
           "subject": "OPERATOR",
           "verb": "CONSUME",
-          "object": "REACTION",
-          "objectId": "CORROSION",
+          "object": "STATUS",
+          "objectId": "REACTION",
           "with": {
             "stacks": "MAX"
-          }
+          },
+          "objectQualifier": "CORROSION"
         }
       ],
       "effects": [
@@ -64,11 +65,12 @@
           "subjectDeterminer": "THIS",
           "subject": "OPERATOR",
           "verb": "CONSUME",
-          "object": "REACTION",
-          "objectId": "CORROSION",
+          "object": "STATUS",
+          "objectId": "REACTION",
           "with": {
             "stacks": "MAX"
-          }
+          },
+          "objectQualifier": "CORROSION"
         }
       ],
       "effects": [

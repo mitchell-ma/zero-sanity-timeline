@@ -79,25 +79,44 @@
                   "to": "ENEMY",
                   "with": {
                     "value": {
-                      "verb": "VARY_BY",
-                      "object": "SKILL_LEVEL",
-                      "value": [
-                        1.56,
-                        1.71,
-                        1.87,
-                        2.02,
-                        2.18,
-                        2.34,
-                        2.49,
-                        2.65,
-                        2.8,
-                        3,
-                        3.23,
-                        3.5
-                      ],
-                      "of": {
-                        "object": "OPERATOR",
-                        "determiner": "THIS"
+                      "operation": "MULT",
+                      "left": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          1.56,
+                          1.71,
+                          1.87,
+                          2.02,
+                          2.18,
+                          2.34,
+                          2.49,
+                          2.65,
+                          2.8,
+                          3,
+                          3.23,
+                          3.5
+                        ],
+                        "of": {
+                          "object": "OPERATOR",
+                          "determiner": "THIS"
+                        }
+                      },
+                      "right": {
+                        "verb": "VARY_BY",
+                        "object": "POTENTIAL",
+                        "value": [
+                          1,
+                          1,
+                          1,
+                          1.4,
+                          1.4,
+                          1.4
+                        ],
+                        "of": {
+                          "object": "OPERATOR",
+                          "determiner": "THIS"
+                        }
                       }
                     },
                     "mainStat": {

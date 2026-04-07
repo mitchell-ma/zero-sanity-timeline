@@ -52,8 +52,9 @@
         {
           "subject": "ENEMY",
           "verb": "RECEIVE",
-          "object": "REACTION",
-          "objectId": "SOLIDIFICATION"
+          "object": "STATUS",
+          "objectId": "REACTION",
+          "objectQualifier": "SOLIDIFICATION"
         }
       ],
       "effects": [
@@ -71,8 +72,9 @@
         {
           "subject": "ENEMY",
           "verb": "RECEIVE",
-          "object": "REACTION",
-          "objectId": "CORROSION"
+          "object": "STATUS",
+          "objectId": "REACTION",
+          "objectQualifier": "CORROSION"
         }
       ],
       "effects": [

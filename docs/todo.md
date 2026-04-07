@@ -1,5 +1,17 @@
 # TODO
 
+## DSL: IGNORE INFLICTION and elemental MITIGATE/DAMAGE_TAKEN_REDUCTION
+
+Estella T2 "Laziness Pays Off Now" requires:
+- `IGNORE` verb for operator-held status ignoring incoming `INFLICTION` of a given element
+  (e.g. Estella ignores Cryo Infliction stacks).
+- An elemental damage MITIGATE/DAMAGE_TAKEN_REDUCTION DSL construct for reducing incoming
+  damage of a given element (e.g. -10%/-20% Cryo damage taken at T1/T2).
+
+The talent file is currently description-only. Once the DSL is added, bake the effects
+into `src/model/game-data/operators/estella/talents/talent-laziness-pays-off-now-talent.json`
+using `VARY_BY TALENT_LEVEL`.
+
 ## Remove weaponSkillEffects.ts and related weapon effect infrastructure
 
 The weapon status timeline columns have been removed from the column builder and view.

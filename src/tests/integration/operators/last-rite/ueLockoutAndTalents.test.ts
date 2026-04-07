@@ -33,6 +33,7 @@ const AKEKURI_ID: string = require('../../../../model/game-data/operators/akekur
 const UE_LOCKOUT_JSON = require('../../../../model/game-data/operators/last-rite/statuses/status-vigil-services-ue-lockout.json');
 const HYPOTHERMIA_JSON = require('../../../../model/game-data/operators/last-rite/talents/talent-hypothermia-talent.json');
 const ULTIMATE_JSON = require('../../../../model/game-data/operators/last-rite/skills/ultimate-vigil-services.json');
+const BATTLE_SKILL_JSON = require('../../../../model/game-data/operators/last-rite/skills/battle-skill-esoteric-legacy.json');
 const POTENTIAL_2_JSON = require('../../../../model/game-data/operators/last-rite/potentials/potential-2-absolute-zero-armament.json');
 /* eslint-enable @typescript-eslint/no-require-imports */
 
@@ -161,29 +162,32 @@ describe('B. T1 Hypothermia — DSL structure', () => {
     expect(trigger.conditions[0].objectQualifier).toBe('ARTS');
   });
 
-  it('B2: effect is APPLY CRYO SUSCEPTIBILITY STATUS to ENEMY with value scaled by consumed stacks', () => {
+  it('B2: trigger effect is APPLY THIS EVENT (self-trigger)', () => {
     const effect = HYPOTHERMIA_JSON.onTriggerClause[0].effects[0];
     expect(effect.verb).toBe(VerbType.APPLY);
-    expect(effect.object).toBe(NounType.STATUS);
+    expect(effect.object).toBe(NounType.EVENT);
+    expect(effect.objectDeterminer).toBe('THIS');
+  });
+
+  it('B3: segment frame APPLY CRYO SUSCEPTIBILITY with value = MULT(STACKS CONSUMED, VARY_BY TALENT_LEVEL)', () => {
+    const frame = HYPOTHERMIA_JSON.segments[0].frames[0];
+    const effect = frame.clause[0].effects[0];
+    expect(effect.verb).toBe(VerbType.APPLY);
     expect(effect.objectId).toBe('SUSCEPTIBILITY');
     expect(effect.objectQualifier).toBe('CRYO');
     expect(effect.to).toBe(NounType.ENEMY);
-  });
-
-  it('B3: susceptibility value = MULT(consumed stacks, VARY_BY TALENT_LEVEL [0.02, 0.04])', () => {
-    const effect = HYPOTHERMIA_JSON.onTriggerClause[0].effects[0];
     const valueNode = effect.with.value;
     expect(valueNode.operation).toBe('MULT');
-    // Left: STACKS of CRYO INFLICTION STATUS
+    expect(valueNode.left.objectQualifier).toBe('CONSUMED');
     expect(valueNode.left.object).toBe(NounType.STACKS);
-    // Right: VARY_BY TALENT_LEVEL [0.02, 0.04]
     expect(valueNode.right.object).toBe('TALENT_LEVEL');
-    expect(valueNode.right.value[0]).toBe(0.02); // Talent level 1
-    expect(valueNode.right.value[1]).toBe(0.04); // Talent level 2
+    expect(valueNode.right.value[0]).toBe(0.02);
+    expect(valueNode.right.value[1]).toBe(0.04);
   });
 
-  it('B4: duration = 15s', () => {
-    const effect = HYPOTHERMIA_JSON.onTriggerClause[0].effects[0];
+  it('B4: susceptibility duration = 15s', () => {
+    const frame = HYPOTHERMIA_JSON.segments[0].frames[0];
+    const effect = frame.clause[0].effects[0];
     expect(effect.with.duration.value.value).toBe(15);
     expect(effect.with.duration.unit).toBe('SECOND');
   });
@@ -219,6 +223,103 @@ describe('B. T1 Hypothermia — E2E interaction with combo', () => {
     );
     // The combo's CONSUME INFLICTION triggers T1 → APPLY SUSCEPTIBILITY
     expect(susceptibilityEvents.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('B6: susceptibility value = consumed stacks × talent_level_multiplier (3 stacks × 0.04 = 0.12 at max talent)', () => {
+    const { result } = setupLrOnly();
+    act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
+
+    // Place 3 cryo inflictions
+    for (let i = 0; i < 3; i++) {
+      act(() => {
+        result.current.handleAddEvent(
+          ENEMY_OWNER_ID, INFLICTION_COLUMNS.CRYO, (2 * FPS) + i * 10,
+          { name: INFLICTION_COLUMNS.CRYO, segments: [{ properties: { duration: 20 * FPS } }] },
+        );
+      });
+    }
+
+    // Place combo at 3s
+    const col = findColumn(result.current, SLOT_LR, NounType.COMBO);
+    const payload = getMenuPayload(result.current, col!, 3 * FPS);
+    act(() => {
+      result.current.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+    });
+
+    const susceptibilityEvents = result.current.allProcessedEvents.filter(
+      ev => ev.ownerId === ENEMY_OWNER_ID
+        && ev.id?.includes('SUSCEPTIBILITY')
+        && ev.startFrame > 0,
+    );
+    expect(susceptibilityEvents.length).toBeGreaterThanOrEqual(1);
+    // 3 consumed stacks × 0.04 (talent level 2, max) = 0.12
+    const susc = susceptibilityEvents[0];
+    expect(susc.susceptibility).toBeDefined();
+    expect(susc.susceptibility!.CRYO).toBeCloseTo(0.12, 4);
+  });
+
+  // B7: parameterized — varying number of consumed cryo inflictions → progressive susceptibility
+  // Combo activation window requires >= 3 cryo infliction stacks; max stacks is 4.
+  // Talent level 2 (max) → multiplier 0.04 per consumed stack.
+  it.each([
+    { stacks: 3, expected: 0.12 },
+    { stacks: 4, expected: 0.16 },
+  ])('B7: $stacks freeform CRYO inflictions → combo consumes all → CRYO_SUSCEPTIBILITY = $expected', ({ stacks, expected }) => {
+    const { result } = setupLrOnly();
+    act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
+
+    // Place N cryo inflictions
+    for (let i = 0; i < stacks; i++) {
+      act(() => {
+        result.current.handleAddEvent(
+          ENEMY_OWNER_ID, INFLICTION_COLUMNS.CRYO, (2 * FPS) + i * 10,
+          { name: INFLICTION_COLUMNS.CRYO, segments: [{ properties: { duration: 20 * FPS } }] },
+        );
+      });
+    }
+
+    // Place combo at 3s — consumes all cryo infliction stacks, triggers Hypothermia
+    const col = findColumn(result.current, SLOT_LR, NounType.COMBO);
+    const payload = getMenuPayload(result.current, col!, 3 * FPS);
+    act(() => {
+      result.current.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+    });
+
+    // Verify a CRYO_SUSCEPTIBILITY status was applied
+    const susceptibilityEvents = result.current.allProcessedEvents.filter(
+      ev => ev.ownerId === ENEMY_OWNER_ID
+        && ev.id?.includes('SUSCEPTIBILITY')
+        && ev.startFrame > 0,
+    );
+    expect(susceptibilityEvents.length).toBeGreaterThanOrEqual(1);
+
+    // Verify the susceptibility VALUE scales with the consumed stack count
+    const susc = susceptibilityEvents[susceptibilityEvents.length - 1];
+    expect(susc.susceptibility).toBeDefined();
+    expect(susc.susceptibility!.CRYO).toBeCloseTo(expected, 4);
+  });
+
+  it('B8: combo placed with NO cryo inflictions → no susceptibility created (CONSUME-trigger gated on consumed > 0)', () => {
+    const { result } = setupLrOnly();
+    act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
+
+    // Place combo at 3s with NO cryo inflictions present.
+    // Freeform mode bypasses the activation window so we can force-place the combo
+    // and verify the engine itself doesn't fire Hypothermia from a 0-stack consume.
+    const col = findColumn(result.current, SLOT_LR, NounType.COMBO);
+    const payload = getMenuPayload(result.current, col!, 3 * FPS);
+    act(() => {
+      result.current.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+    });
+
+    // No CRYO_SUSCEPTIBILITY should be created — nothing was consumed, so Hypothermia
+    // shouldn't fire (its trigger is gated on actual consumption now).
+    const susceptibilityEvents = result.current.allProcessedEvents.filter(
+      ev => ev.ownerId === ENEMY_OWNER_ID
+        && ev.id?.includes('SUSCEPTIBILITY')
+        && ev.startFrame > 0,
+    );
+    expect(susceptibilityEvents).toHaveLength(0);
   });
 });
 
@@ -331,5 +432,48 @@ describe('F. P4 UE cost reduction (240 → 204)', () => {
     const costP4 = getUltimateEnergyCostForPotential(LAST_RITE_ID, 4);
     expect(costP0).toBe(240);
     expect(costP4).toBe(204);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// H. P5 — SP return and ult cost increases
+// ═══════════════════════════════════════════════════════════════════════════════
+
+describe('H. P5 — SP return and ult cost', () => {
+  it('H1: BS RETURN SKILL_POINT base 30, P5 adds 5 → 35 total', () => {
+    const frameClause = BATTLE_SKILL_JSON.segments[0].frames[0].clause[0];
+    const returnEffect = frameClause.effects.find(
+      (e: { verb: string; object: string }) => e.verb === VerbType.RETURN && e.object === NounType.SKILL_POINT,
+    );
+    expect(returnEffect).toBeDefined();
+    // Base = 30, P5 bonus from VARY_BY POTENTIAL [0,0,0,0,0,5]
+    expect(returnEffect.with.value.left.value).toBe(30);
+    const potBonus = returnEffect.with.value.right.value;
+    expect(potBonus[0]).toBe(0); // P0: 30 + 0 = 30
+    expect(potBonus[4]).toBe(0); // P4: 30 + 0 = 30
+    expect(potBonus[5]).toBe(5); // P5: 30 + 5 = 35
+  });
+
+  it('H2: ult cost VARY_BY POTENTIAL — P5 reduced to 0.85× (240 → 204)', () => {
+    const consumeEffect = ULTIMATE_JSON.clause[0].effects[0];
+    const potMult = consumeEffect.with.value.right.value;
+    expect(potMult[5]).toBe(0.85); // P5: 240 × 0.85 = 204
+  });
+
+  it('H3: registry returns 204 at P5', () => {
+    const costP5 = getUltimateEnergyCostForPotential(LAST_RITE_ID, 5);
+    expect(costP5).toBe(204);
+  });
+
+  it('H4: BS placed at P5 — pipeline processes without crash, BS event present', () => {
+    const { result } = setupLrOnly();
+    act(() => { setPotential(result.current, SLOT_LR, 5); });
+    act(() => { placeBattleSkill(result.current, SLOT_LR, 5 * FPS); });
+
+    const bsEvents = result.current.allProcessedEvents.filter(
+      ev => ev.ownerId === SLOT_LR && ev.columnId === NounType.BATTLE,
+    );
+    expect(bsEvents).toHaveLength(1);
+    expect(bsEvents[0].skillPointCost).toBe(100);
   });
 });

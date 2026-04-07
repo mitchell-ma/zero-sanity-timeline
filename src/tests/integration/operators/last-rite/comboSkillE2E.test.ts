@@ -179,9 +179,10 @@ describe('C. Combo consumes cryo infliction stacks', () => {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 describe('D. Combo UE gain scales with cryo infliction stacks', () => {
-  it('D1: UE formula is ADD(IS 40, MULT(IS 15, STACKS of CRYO INFLICTION))', () => {
-    // Verify from JSON
-    const ueEffect = COMBO_SKILL_JSON.clause[0].effects.find(
+  it('D1: UE formula is ADD(IS 40, MULT(IS 15, STACKS of CRYO INFLICTION)) on first frame', () => {
+    // UE recovery is on the first frame of the main segment (segment[1])
+    const firstFrame = COMBO_SKILL_JSON.segments[1].frames[0];
+    const ueEffect = firstFrame.clause[0].effects.find(
       (e: { verb: string; object: string }) =>
         e.verb === VerbType.RECOVER && e.object === NounType.ULTIMATE_ENERGY,
     );

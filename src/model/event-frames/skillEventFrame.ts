@@ -110,6 +110,8 @@ export abstract class SkillEventFrame {
     if (dd) marker.dealDamage = dd;
     const gg = this.getUltimateEnergyGain();
     if (gg) marker.ultimateEnergyGain = gg;
+    const ggNode = (this as { getUltimateEnergyGainNode?: () => import('../../dsl/semantics').ValueNode | undefined }).getUltimateEnergyGainNode?.();
+    if (ggNode) marker.ultimateEnergyGainNode = ggNode;
     const deps = this.getDependencyTypes();
     if (deps.length > 0) marker.dependencyTypes = [...deps];
     const fts = this.getFrameTypes();

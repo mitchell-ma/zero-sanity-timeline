@@ -17,47 +17,93 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "STATUS",
-          "objectId": "SUSCEPTIBILITY",
-          "objectQualifier": "CRYO",
-          "to": "ENEMY",
-          "with": {
-            "value": {
-              "operation": "MULT",
-              "left": {
-                "verb": "IS",
-                "object": "STACKS",
-                "of": {
-                  "object": "STATUS",
-                  "objectId": "INFLICTION",
-                  "objectQualifier": "CRYO",
-                  "of": {
-                    "object": "ENEMY",
-                    "determiner": "THIS"
-                  }
-                }
-              },
-              "right": {
-                "verb": "VARY_BY",
-                "object": "TALENT_LEVEL",
-                "value": [
-                  0.02,
-                  0.04
-                ],
-                "of": {
-                  "object": "OPERATOR",
-                  "determiner": "THIS"
-                }
-              }
-            },
-            "duration": {
-              "value": {
-                "verb": "IS",
-                "value": 15
-              },
+          "object": "EVENT",
+          "objectDeterminer": "THIS",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
+        }
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT"
+      },
+      "properties": {
+        "name": "Hypothermia",
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 2
+          },
+          "unit": "SECOND"
+        },
+        "element": "CRYO"
+      },
+      "frames": [
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "ENDFIELD_WIKI"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 0,
               "unit": "SECOND"
             }
-          }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "SUSCEPTIBILITY",
+                  "objectQualifier": "CRYO",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "operation": "MULT",
+                      "left": {
+                        "verb": "IS",
+                        "objectQualifier": "CONSUMED",
+                        "object": "STACKS",
+                        "of": {
+                          "object": "STATUS",
+                          "objectId": "INFLICTION",
+                          "objectQualifier": "CRYO"
+                        }
+                      },
+                      "right": {
+                        "verb": "VARY_BY",
+                        "object": "TALENT_LEVEL",
+                        "value": [
+                          0.02,
+                          0.04
+                        ],
+                        "of": {
+                          "object": "OPERATOR",
+                          "determiner": "THIS"
+                        }
+                      }
+                    },
+                    "duration": {
+                      "value": {
+                        "verb": "IS",
+                        "value": 15
+                      },
+                      "unit": "SECOND"
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
         }
       ]
     }
@@ -73,6 +119,20 @@
     "toDeterminer": "THIS",
     "eventType": "STATUS",
     "eventIdType": "TALENT",
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": 2
+      },
+      "unit": "SECOND"
+    },
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 1
+      },
+      "interactionType": "NONE"
+    },
     "description": "After Last Rite consumes any Arts Infliction, she applies Cryo Susceptibility to the target with the effect of [Number of Arts Infliction stacks consumed × 4%] for 15s. This effect cannot stack."
   },
   "metadata": {
@@ -81,6 +141,6 @@
       "ENDFIELD_WIKI"
     ],
     "icon": "skills/lastrite_talent_1_icon.png",
-    "dataStatus": "RECONCILED"
+    "dataStatus": "VERIFIED"
   }
 }

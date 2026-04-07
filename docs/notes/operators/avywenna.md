@@ -12,10 +12,11 @@
 
 ### Battle Skill: Thunderlance: Interdiction (1.13s, 100 SP)
 - Frame @0.6s:
+  - DEAL ELECTRIC DAMAGE MULT(VARY_BY SL [0.67→1.5], ADD(1, MULT(VARY_BY POT [0,0,0,0,0,0.15], MIN(1, STACKS of ELECTRIC SUSCEPTIBILITY of ENEMY))))
   - DEAL STAGGER 5
-  - DEAL ELECTRIC DAMAGE MULT(VARY_BY SL [0.67→1.5], VARY_BY POT [1,1,1,1,1,1.15])
-  - IF HAVE THUNDERLANCE: DEAL ELECTRIC DAMAGE [0.75→1.68] per lance × P5 1.15, STAGGER 5, CONSUME, RECOVER UE ADD(TL [0,3,4], POT [0,2,2,2,2,2])
-  - IF HAVE THUNDERLANCE_EX: DEAL ELECTRIC DAMAGE [1.92→4.32] per EX × P5 1.15, STAGGER 10, APPLY ELECTRIC INFLICTION, CONSUME, RECOVER UE
+  - IF HAVE THUNDERLANCE: APPLY THUNDERLANCE_PIERCE (stacks = THUNDERLANCE stacks), CONSUME THUNDERLANCE MAX
+  - IF HAVE THUNDERLANCE_EX: APPLY THUNDERLANCE_EX_PIERCE (stacks = THUNDERLANCE_EX stacks), CONSUME THUNDERLANCE_EX MAX
+- Per-lance damage + stagger + UE recovery are carried by the PIERCE / EX_PIERCE statuses; see Statuses section.
 
 ### Combo Skill: Thunderlance: Strike
 - Trigger: CONTROLLED OPERATOR PERFORM FINAL_STRIKE + ENEMY HAVE ELECTRIC INFLICTION or IS ELECTRIFIED
@@ -37,6 +38,8 @@
 |----|------|--------|--------|
 | THUNDERLANCE | SKILL_STATUS | OPERATOR (THIS) | Max 4 stacks, NONE interaction, duration ADD(30, VARY_BY POT [0,0,20,20,20,20])s |
 | THUNDERLANCE_EX | SKILL_STATUS | OPERATOR (THIS) | Max 1 stack, NONE interaction, same duration formula |
+| THUNDERLANCE_PIERCE | SKILL_STATUS | ENEMY | 2s duration, max 1 stack (RESET). Frame @0s: DEAL ELECTRIC DAMAGE MULT(VARY_BY SL [0.75→1.68], 1 + 0.15·P5·MIN(1, stacks of ELECTRIC SUSCEPTIBILITY of ENEMY)), DEAL STAGGER 5, RECOVER UE ADD(VARY_BY TL [0,3,4], VARY_BY POT [0,2,2,2,2,2]) to SOURCE OPERATOR. Engine fires the frame per applied stack (= lance count). |
+| THUNDERLANCE_EX_PIERCE | SKILL_STATUS | ENEMY | 2s duration, max 1 stack (RESET). Frame @0s: same as PIERCE with SL multipliers [1.92→4.32], DEAL STAGGER 10, APPLY ELECTRIC INFLICTION, RECOVER UE with same formula. |
 
 ## Potentials
 
@@ -46,7 +49,7 @@
 | P2 | Pole of Menace | Thunderlance/EX duration +20s | Baked: VARY_BY POTENTIAL in status duration |
 | P3 | Hard Negotiator | Will +15, Electric DMG +8% | Loadout aggregator |
 | P4 | Very Experienced | UE cost -15% | Baked: VARY_BY POTENTIAL on UE cost (100 × 0.85 = 85) |
-| P5 | Carrot and Sharp Stick | Returning lances on Electric Susceptible enemy → 1.15× DMG | Baked: VARY_BY POTENTIAL on BS damage. Condition (Electric Susceptible) not modeled |
+| P5 | Carrot and Sharp Stick | Returning lances on Electric Susceptible enemy → 1.15× DMG | Modeled as `(1 + 0.15 × MIN(1, STACKS of ELECTRIC SUSCEPTIBILITY of ENEMY))` on BS base damage and on PIERCE/EX_PIERCE damage. Existence of any Electric Susceptibility event (even 0% value) enables the bonus. |
 
 ## Talents
 
@@ -73,5 +76,4 @@
 
 ## Remaining Work
 
-- P5 conditional: 1.15× only on Electric Susceptible enemies (condition not modeled, flat multiplier)
-- T2 susceptibility test: needs non-zero talent level to verify
+_(none)_

@@ -17,7 +17,7 @@
 import { renderHook, act } from '@testing-library/react';
 import { NounType } from '../../../../dsl/semantics';
 import { useApp } from '../../../../app/useApp';
-import { InteractionModeType } from '../../../../consts/enums';
+import { EventStatusType, InteractionModeType } from '../../../../consts/enums';
 import { FPS } from '../../../../utils/timeline';
 import { OPERATOR_STATUS_COLUMN_ID } from '../../../../model/channels';
 import { computeTimelinePresentation } from '../../../../controller/timeline/eventPresentationController';
@@ -59,6 +59,19 @@ function getBannerEvents(result: { current: ReturnType<typeof useApp> }) {
     .sort((a, b) => a.startFrame - b.startFrame);
 }
 
+/** Sum stacks across all active (non-consumed) Living Banner events — the status total. */
+function getBannerStatusTotal(result: { current: ReturnType<typeof useApp> }, frame: number) {
+  return result.current.allProcessedEvents
+    .filter(ev =>
+      ev.columnId === LIVING_BANNER_ID
+      && ev.ownerId === SLOT_POG
+      && ev.startFrame <= frame
+      && frame < ev.startFrame + ev.segments.reduce((s, seg) => s + seg.properties.duration, 0)
+      && ev.eventStatus !== EventStatusType.CONSUMED,
+    )
+    .reduce((sum, ev) => sum + (ev.stacks ?? 0), 0);
+}
+
 function getPresentationVM(result: { current: ReturnType<typeof useApp> }) {
   const statusCol = findColumn(result.current, SLOT_POG, OPERATOR_STATUS_COLUMN_ID);
   expect(statusCol).toBeDefined();
@@ -98,7 +111,7 @@ describe('A. Living Banner Counter', () => {
     expect(bannerEvents[0].stacks).toBe(20);
   });
 
-  it('A3: second basic attack creates two clamped segments (20, then 40)', () => {
+  it('A3: two basic attacks produce two independent 20-stack events (status total 40)', () => {
     const { result } = setupPog();
 
     placeBasicAttack(result, 2 * FPS);
@@ -107,7 +120,10 @@ describe('A. Living Banner Counter', () => {
     const bannerEvents = getBannerEvents(result);
     expect(bannerEvents).toHaveLength(2);
     expect(bannerEvents[0].stacks).toBe(20);
-    expect(bannerEvents[1].stacks).toBe(40);
+    expect(bannerEvents[1].stacks).toBe(20);
+    // Status total = sum across active events — sample after both events have started.
+    const lastStart = Math.max(...bannerEvents.map(e => e.startFrame));
+    expect(getBannerStatusTotal(result, lastStart + 1)).toBe(40);
   });
 
   it('A4: four basic attacks reach 80 stacks → consume 80, apply Fervent Morale (P0)', () => {
@@ -119,11 +135,14 @@ describe('A. Living Banner Counter', () => {
     placeBasicAttack(result, 8 * FPS);
     placeBasicAttack(result, 11 * FPS);
 
-    // Living Banner segments: 20, 40, 60, 80 → then consume 80 → remaining = 0
+    // 4 events × 20 stacks = 80 total → all 4 marked CONSUMED, status total drops to 0
     const bannerEvents = getBannerEvents(result);
-    // The 80-stack segment gets consumed to 0
-    const lastBanner = bannerEvents[bannerEvents.length - 1];
-    expect(lastBanner.stacks).toBe(0);
+    expect(bannerEvents).toHaveLength(4);
+    const consumedCount = bannerEvents.filter(ev => ev.eventStatus === EventStatusType.CONSUMED).length;
+    expect(consumedCount).toBe(4);
+    // After all consumed, status total should be 0
+    const lastFrame = Math.max(...bannerEvents.map(e => e.startFrame)) + 10;
+    expect(getBannerStatusTotal(result, lastFrame)).toBe(0);
 
     // Fervent Morale should be applied
     const moraleEvents = result.current.allProcessedEvents.filter(
@@ -144,10 +163,13 @@ describe('A. Living Banner Counter', () => {
     placeBasicAttack(result, 5 * FPS);
     placeBasicAttack(result, 8 * FPS);
 
-    // Living Banner segments: 20, 40, 60 → then consume 60 → remaining = 0
+    // 3 events × 20 stacks = 60 total → all 3 marked CONSUMED, status total drops to 0
     const bannerEvents = getBannerEvents(result);
-    const lastBanner = bannerEvents[bannerEvents.length - 1];
-    expect(lastBanner.stacks).toBe(0);
+    expect(bannerEvents).toHaveLength(3);
+    const consumedCount = bannerEvents.filter(ev => ev.eventStatus === EventStatusType.CONSUMED).length;
+    expect(consumedCount).toBe(3);
+    const lastFrame = Math.max(...bannerEvents.map(e => e.startFrame)) + 10;
+    expect(getBannerStatusTotal(result, lastFrame)).toBe(0);
 
     // Fervent Morale should be applied
     const moraleEvents = result.current.allProcessedEvents.filter(

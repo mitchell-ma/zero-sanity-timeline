@@ -7,48 +7,7 @@
     "element": "CRYO",
     "id": "WINTERS_DEVOURER"
   },
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "RECOVER",
-          "object": "ULTIMATE_ENERGY",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR",
-          "with": {
-            "value": {
-              "operation": "ADD",
-              "left": {
-                "verb": "IS",
-                "value": 40
-              },
-              "right": {
-                "operation": "MULT",
-                "left": {
-                  "verb": "IS",
-                  "value": 15
-                },
-                "right": {
-                  "verb": "IS",
-                  "object": "STACKS",
-                  "of": {
-                    "object": "STATUS",
-                    "objectId": "INFLICTION",
-                    "of": {
-                      "object": "ENEMY",
-                      "determiner": "THIS"
-                    },
-                    "objectQualifier": "CRYO"
-                  }
-                }
-              }
-            }
-          }
-        }
-      ]
-    }
-  ],
+  "clause": [],
   "segments": [
     {
       "metadata": {
@@ -105,11 +64,39 @@
               "conditions": [],
               "effects": [
                 {
-                  "verb": "CONSUME",
-                  "object": "STATUS",
-                  "objectId": "INFLICTION",
-                  "objectQualifier": "CRYO",
-                  "fromObject": "ENEMY"
+                  "verb": "RECOVER",
+                  "object": "ULTIMATE_ENERGY",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "value": {
+                      "operation": "ADD",
+                      "left": {
+                        "verb": "IS",
+                        "value": 40
+                      },
+                      "right": {
+                        "operation": "MULT",
+                        "left": {
+                          "verb": "IS",
+                          "value": 15
+                        },
+                        "right": {
+                          "verb": "IS",
+                          "object": "STACKS",
+                          "of": {
+                            "object": "STATUS",
+                            "objectId": "INFLICTION",
+                            "of": {
+                              "object": "ENEMY",
+                              "determiner": "THIS"
+                            },
+                            "objectQualifier": "CRYO"
+                          }
+                        }
+                      }
+                    }
+                  }
                 },
                 {
                   "verb": "DEAL",
@@ -193,6 +180,16 @@
                         "determiner": "THIS"
                       }
                     }
+                  }
+                },
+                {
+                  "verb": "CONSUME",
+                  "object": "STATUS",
+                  "objectId": "INFLICTION",
+                  "objectQualifier": "CRYO",
+                  "fromObject": "ENEMY",
+                  "with": {
+                    "stacks": "MAX"
                   }
                 }
               ]
@@ -358,7 +355,7 @@
   "metadata": {
     "originId": "LAST_RITE",
     "icon": "skills/combo_lastrite.png",
-    "dataStatus": "RECONCILED"
+    "dataStatus": "VERIFIED"
   },
   "clauseType": "ALL",
   "activationWindow": {

@@ -117,6 +117,8 @@ export interface EngineTriggerEntry {
   isEquip: boolean;
   /** Stack count before this trigger was created (for BECOME incremental evaluation). */
   previousStackCount?: number;
+  /** Number of stacks consumed by the CONSUME effect that triggered this entry. */
+  consumedStacks?: number;
 }
 
 // ── Constants ──────────────────────────────────────────────────────────────

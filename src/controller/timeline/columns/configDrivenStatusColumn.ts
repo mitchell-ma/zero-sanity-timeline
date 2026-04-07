@@ -6,7 +6,7 @@
  * limits come from the status JSON config via getStatusStackingMode/getStatusStackLimit.
  */
 
-import { EventStatusType, StackInteractionType, UNLIMITED_STACKS } from '../../../consts/enums';
+import { EventStatusType, StackInteractionType } from '../../../consts/enums';
 import { eventDuration, setEventDuration } from '../../../consts/viewTypes';
 import { allocDerivedEvent } from '../objectPool';
 import { genEventUid, derivedEventUid } from '../inputEventController';
@@ -33,23 +33,6 @@ export class ConfigDrivenStatusColumn implements EventColumn {
     const statusId = options?.statusId ?? this.columnId;
     const mode = options?.stackingMode ?? this.stackingMode;
     const limit = options?.maxStacks ?? this.maxStacks;
-
-    // Counter (NONE + unlimited stacks): clamp previous event, create new with running total.
-    const isCounter = mode === StackInteractionType.NONE && (limit ?? 0) >= UNLIMITED_STACKS;
-    if (isCounter) {
-      const active = this.host.activeEventsIn(this.columnId, ownerId, frame);
-      if (active.length > 0) {
-        const prev = active[active.length - 1];
-        const addStacks = options?.event?.stacks ?? 1;
-        const newTotal = (prev.stacks ?? 0) + addStacks;
-        setEventDuration(prev, frame - prev.startFrame);
-        if (options) {
-          options.event = { ...options.event, stacks: newTotal };
-        } else {
-          options = { event: { stacks: newTotal } };
-        }
-      }
-    }
 
     // MERGE: subsume all active instances
     if (mode === StackInteractionType.MERGE) {
@@ -99,20 +82,6 @@ export class ConfigDrivenStatusColumn implements EventColumn {
   consume(ownerId: string, frame: number, source: EventSource,
     options?: ConsumeOptions): number {
 
-    // Counter (NONE + unlimited stacks): decrement stacks on the latest active event
-    const isCounter = this.stackingMode === StackInteractionType.NONE && (this.maxStacks ?? 0) >= UNLIMITED_STACKS;
-    if (isCounter) {
-      const active = this.host.activeEventsIn(this.columnId, ownerId, frame);
-      if (active.length > 0) {
-        const target = active[active.length - 1];
-        const count = options?.count ?? (target.stacks ?? 0);
-        const removed = Math.min(count, target.stacks ?? 0);
-        target.stacks = (target.stacks ?? 0) - removed;
-        return removed;
-      }
-      return 0;
-    }
-
     if (options?.restack) {
       return this.consumeWithRestack(ownerId, frame, options.count ?? 1, source);
     }
@@ -160,16 +129,22 @@ export class ConfigDrivenStatusColumn implements EventColumn {
   private consumeOldestN(ownerId: string, frame: number, count: number, source: EventSource) {
     const allActive = this.host.activeEventsIn(this.columnId, ownerId, frame)
       .sort((a, b) => a.startFrame - b.startFrame);
-    const toConsume = allActive.slice(0, count);
-    for (const ev of toConsume) {
+    let stacksConsumed = 0;
+    for (const ev of allActive) {
+      if (stacksConsumed >= count) break;
       setEventDuration(ev, frame - ev.startFrame);
       ev.eventStatus = EventStatusType.CONSUMED;
       ev.eventStatusOwnerId = source.ownerId;
       ev.eventStatusSkillName = source.skillName;
+      stacksConsumed += ev.stacks ?? 1;
     }
-    return toConsume.length;
+    return stacksConsumed;
   }
 
+  /**
+   * Consume N oldest with restacking — clamps ALL active, re-creates remaining
+   * events to produce a visual stack-count split (e.g. Steel Oath V → IV → III).
+   */
   /**
    * Consume N oldest with restacking — clamps ALL active, re-creates remaining
    * events to produce a visual stack-count split (e.g. Steel Oath V → IV → III).

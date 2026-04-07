@@ -6,7 +6,7 @@
     "toDeterminer": "THIS",
     "element": "ELECTRIC",
     "stacks": {
-      "limit": { "verb": "IS", "value": 1 },
+      "limit": { "verb": "IS", "value": 99999 },
       "interactionType": "NONE"
     },
     "duration": {

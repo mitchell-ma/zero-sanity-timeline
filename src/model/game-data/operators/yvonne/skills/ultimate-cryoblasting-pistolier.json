@@ -281,9 +281,10 @@
                 },
                 {
                   "verb": "CONSUME",
-                  "object": "REACTION",
-                  "objectId": "SOLIDIFICATION",
-                  "from": "ENEMY"
+                  "object": "STATUS",
+                  "objectId": "REACTION",
+                  "from": "ENEMY",
+                  "objectQualifier": "SOLIDIFICATION"
                 }
               ]
             }

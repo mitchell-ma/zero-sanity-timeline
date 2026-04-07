@@ -1,40 +1,4 @@
 {
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "IGNORE",
-          "object": "STATUS",
-          "objectId": "INFLICTION",
-          "objectQualifier": "CRYO",
-          "from": "ENEMY"
-        },
-        {
-          "verb": "APPLY",
-          "object": "STAT",
-          "objectId": "DAMAGE_TAKEN_REDUCTION",
-          "objectQualifier": "CRYO",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR",
-          "with": {
-            "value": {
-              "verb": "VARY_BY",
-              "object": "TALENT_LEVEL",
-              "value": [
-                0.15,
-                0.2
-              ],
-              "of": {
-                "object": "OPERATOR",
-                "determiner": "THIS"
-              }
-            }
-          }
-        }
-      ]
-    }
-  ],
   "properties": {
     "id": "LAZINESS_PAYS_OFF_NOW_TALENT",
     "maxLevel": {
@@ -46,15 +10,14 @@
     "toDeterminer": "THIS",
     "eventType": "STATUS",
     "eventIdType": "TALENT",
-    "description": "Ignores Cryo Infliction and takes -20% Cryo DMG."
+    "description": "Ignores Cryo Infliction and takes -10% (T1) / -20% (T2) Cryo DMG."
   },
   "metadata": {
     "originId": "ESTELLA",
     "dataSources": [
-      "WARFARIN"
+      "ENDFIELD_WIKI"
     ],
     "icon": "skills/estella_talent_2_icon.png",
     "dataStatus": "RECONCILED"
-  },
-  "clauseType": "ALL"
+  }
 }

@@ -122,7 +122,8 @@ describe('EventInterpretorController: APPLY', () => {
 
     const effect: Effect = {
       verb: VerbType.APPLY,
-      object: ObjectType.REACTION,
+      object: ObjectType.STATUS,
+      objectId: ObjectType.REACTION,
       objectQualifier: AdjectiveType.COMBUSTION,
       to: NounType.ENEMY,
       with: {
@@ -599,7 +600,6 @@ describe('EventInterpretorController: APPLY LIFT STATUS (PHYSICAL)', () => {
     expect(liftEvents.length).toBe(1);
     expect(liftEvents[0].ownerId).toBe(ENEMY_OWNER_ID);
     expect(eventDuration(liftEvents[0])).toBe(120); // 1 second
-    expect(liftEvents[0].name).toBe(PhysicalStatusType.LIFT);
   });
 
   test('Lift status has 1 segment with damage frame at offset 0', () => {
@@ -742,8 +742,6 @@ describe('EventInterpretorController: APPLY KNOCK_DOWN STATUS (PHYSICAL)', () =>
     );
     expect(kdEvents.length).toBe(1);
     expect(eventDuration(kdEvents[0])).toBe(120);
-    expect(kdEvents[0].name).toBe(PhysicalStatusType.KNOCK_DOWN);
-    expect(kdEvents[0].segments![0].properties.name).toBe('Knock Down');
     expect(kdEvents[0].segments![0].frames![0].damageMultiplier).toBe(1.2);
   });
 

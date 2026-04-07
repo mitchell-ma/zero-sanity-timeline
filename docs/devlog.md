@@ -1,5 +1,21 @@
 # Devlog
 
+## 2026-04-06
+- Avywenna fully verified — Thunderlance battle skill now models per-lance damage, stagger, and ultimate energy through new Pierce/Pierce-EX statuses applied to the enemy, with one frame fired per lance for accurate damage breakdown
+- Avywenna P5 Carrot and Sharp Stick now properly conditional — the 1.15× damage bonus only applies when the enemy has Electric Susceptibility, modeled directly through the susceptibility stack count rather than a flat multiplier
+- Last Rite fully verified — all skills, talents, potentials, and statuses marked as verified against in-game data
+- Last Rite Hypothermic Perfusion split into parent + Mirage child — the parent buff sits on the controlled operator and triggers a separate mirage attack on each Final Strike, with proper P5 damage scaling
+- Fluorite Craver of Chaos status added for the new combo skill flow
+- Akekuri battle skill ultimate energy generation now covered by integration tests
+- Avywenna P5 susceptibility damage scaling covered by integration tests
+- Counter-style status columns (running-total stacks) consolidated into the standard stacking path — the dedicated counter branch is gone, and oldest-first consume now respects per-event stack counts so multi-stack events are correctly drained
+- Reaction status routing simplified — the legacy REACTION_STATUS_TO_COLUMN map was removed in favor of the canonical STATUS / REACTION grammar
+- Estella Distortion, Onomatopoeia, Commiseration, Laziness Pays Off Now, and Survival Is a Win P5 talent reworked and consolidated (the standalone P5 status was folded back into the talent)
+- Yvonne Brr-Brr Bomb, Flashfreezer, Cryoblasting Pistolier, and Freezing Point talent updated with corrected damage and freeze interactions
+- Many smaller config polish passes across Alesh Auger Angling, Ardelia Eruption Column, Gilberta Matrix Displacement, Laevatain Smouldering Fire Empowered, Perlica Instant Protocol Chain, Wulfgard Wolven Fury, Xaihi Stack Overflow, Hot Work / Pulser Labs gear sets, and Last Rite's full kit
+- 8 weapon infliction skills (Clannibal, Dreams of the Starry Beach, Finchaser-30, Navigator, Opus the Living, Twelve Questions, Wedge, White Night Nova) tightened up
+- Damage breakdown now resolves enemy-side susceptibility stack counts in value formulas, enabling damage multipliers that scale off how susceptible the target currently is
+
 ## 2026-04-05
 - Tangtang fully implemented — all skills, talents, potentials, and five statuses (Whirlpool, Waterspout, Olden Stare, Early Rogue Wave, Waterspout Ult) with full integration tests covering basic attack chains, battle skill, combo skill, ultimate, and status interactions
 - Last Rite expanded — Hypothermic Perfusion status added, battle skill cryo DOT reworked, combo skill now checks cryo infliction stacks, P2 Absolute Zero Armament potential implemented, and Hypothermia talent updated with proper slow and susceptibility effects

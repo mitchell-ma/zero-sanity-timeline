@@ -79,16 +79,7 @@
           },
           "clause": [
             {
-              "conditions": [
-                {
-                  "subject": "ENEMY",
-                  "verb": "HAVE",
-                  "negated": true,
-                  "object": "STATUS",
-                  "objectId": "REACTION",
-                  "objectQualifier": "SOLIDIFICATION"
-                }
-              ],
+              "conditions": [],
               "effects": [
                 {
                   "verb": "DEAL",
@@ -106,7 +97,10 @@
                   "object": "STATUS",
                   "objectId": "PHYSICAL",
                   "objectQualifier": "LIFT",
-                  "to": "ENEMY"
+                  "to": "ENEMY",
+                  "with": {
+                    "isForced": { "verb": "IS", "value": 1 }
+                  }
                 },
                 {
                   "verb": "DEAL",
@@ -162,24 +156,6 @@
               "effects": [
                 {
                   "verb": "DEAL",
-                  "object": "STAGGER",
-                  "to": "ENEMY",
-                  "with": {
-                    "value": {
-                      "verb": "IS",
-                      "value": 10
-                    }
-                  }
-                },
-                {
-                  "verb": "APPLY",
-                  "object": "STATUS",
-                  "objectId": "PHYSICAL",
-                  "objectQualifier": "LIFT",
-                  "to": "ENEMY"
-                },
-                {
-                  "verb": "DEAL",
                   "objectQualifier": "PHYSICAL",
                   "object": "DAMAGE",
                   "to": "ENEMY",
@@ -188,18 +164,18 @@
                       "verb": "VARY_BY",
                       "object": "SKILL_LEVEL",
                       "value": [
-                        2.8,
-                        3.08,
-                        3.36,
-                        3.64,
-                        3.92,
-                        4.2,
-                        4.48,
-                        4.76,
-                        5.04,
-                        5.39,
-                        5.81,
-                        6.3
+                        1.2,
+                        1.32,
+                        1.44,
+                        1.56,
+                        1.68,
+                        1.8,
+                        1.92,
+                        2.04,
+                        2.16,
+                        2.31,
+                        2.49,
+                        2.7
                       ],
                       "of": {
                         "object": "OPERATOR",
@@ -220,7 +196,8 @@
                 {
                   "verb": "APPLY",
                   "objectQualifier": "PHYSICAL",
-                  "object": "STATUS", "objectId": "SUSCEPTIBILITY",
+                  "object": "STATUS",
+                  "objectId": "SUSCEPTIBILITY",
                   "to": "ENEMY",
                   "with": {
                     "value": {
@@ -334,9 +311,13 @@
       {
         "conditions": [
           {
-            "subject": "ENEMY",
-            "verb": "IS",
-            "object": "SOLIDIFIED"
+            "subjectDeterminer": "ANY",
+            "subject": "OPERATOR",
+            "verb": "APPLY",
+            "object": "STATUS",
+            "objectId": "REACTION",
+            "objectQualifier": "SOLIDIFICATION",
+            "to": "ENEMY"
           }
         ]
       }

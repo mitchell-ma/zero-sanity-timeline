@@ -343,7 +343,7 @@ describe('C. Combo Skill (Eruption Column)', () => {
   test('C5: Combo delayed explosion applies forced Corrosion reaction to enemy', () => {
     const explosionFrame = mockJson.skills.COMBO.segments[2].frames[0];
     const reaction = explosionFrame.clause[0].effects.find(
-      (e: Record<string, unknown>) => e.verb === VerbType.APPLY && e.object === NounType.REACTION
+      (e: Record<string, unknown>) => e.verb === VerbType.APPLY && e.objectId === NounType.REACTION
     );
     expect(reaction).toBeDefined();
     expect(reaction.objectQualifier).toBe(StatusType.CORROSION);

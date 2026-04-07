@@ -8,7 +8,7 @@
     "stacks": {
       "limit": {
         "verb": "IS",
-        "value": 4
+        "value": 99999
       },
       "interactionType": "NONE"
     },

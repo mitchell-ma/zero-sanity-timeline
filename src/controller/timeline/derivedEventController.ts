@@ -71,6 +71,7 @@ export class DerivedEventController implements ColumnHost {
   private spController: SkillPointController | null = null;
   private ueController: UltimateEnergyController | null = null;
   private loadoutProperties: Record<string, LoadoutProperties> = {};
+  private slotOperatorMap: Record<string, string> = {};
   /** Event UIDs that consumed Link, mapped to their stack count at consumption time. */
   private linkConsumptions = new Map<string, number>();
 
@@ -81,12 +82,14 @@ export class DerivedEventController implements ColumnHost {
     spController?: SkillPointController,
     ueController?: UltimateEnergyController,
     loadoutProperties?: Record<string, LoadoutProperties>,
+    slotOperatorMap?: Record<string, string>,
   ) {
     this.triggerAssociations = triggerAssociations ?? [];
     this.slotWirings = slotWirings ?? [];
     this.spController = spController ?? null;
     this.ueController = ueController ?? null;
     this.loadoutProperties = loadoutProperties ?? {};
+    this.slotOperatorMap = slotOperatorMap ?? {};
     if (baseEvents) {
       this.registeredEvents = baseEvents;
       for (const ev of baseEvents) {
@@ -106,6 +109,7 @@ export class DerivedEventController implements ColumnHost {
     spController?: SkillPointController,
     ueController?: UltimateEnergyController,
     loadoutProperties?: Record<string, LoadoutProperties>,
+    slotOperatorMap?: Record<string, string>,
   ) {
     this.stacks.clear();
     this.registry.clear();
@@ -123,6 +127,7 @@ export class DerivedEventController implements ColumnHost {
     this.spController = spController ?? null;
     this.ueController = ueController ?? null;
     this.loadoutProperties = loadoutProperties ?? {};
+    this.slotOperatorMap = slotOperatorMap ?? {};
   }
 
   private key(columnId: string, ownerId: string) {
@@ -388,6 +393,47 @@ export class DerivedEventController implements ColumnHost {
             }
             if (selfGain > 0 && f.absoluteFrame != null) {
               this.ueController.addUltimateEnergyGain(f.absoluteFrame, ev.ownerId, selfGain, 0);
+            }
+          }
+        }
+      }
+
+      // Derived status event with a source operator (e.g. THUNDERLANCE_PIERCE
+       // applied to enemy by Avywenna's BS) → frame-level ultimateEnergyGain
+       // routed to the source operator, with VARY_BY TL/POT resolved against
+       // the source operator's loadout and multiplied by the event's stack count.
+      if (
+        ev.sourceOwnerId
+        && ev.sourceOwnerId !== ev.ownerId
+        && ev.columnId !== NounType.COMBO
+        && ev.columnId !== NounType.BATTLE
+        && ev.columnId !== NounType.ULTIMATE
+      ) {
+        // sourceOwnerId is an operator ID (set via interpretor.resolveOperatorId);
+        // resolve it back to the slot ID that owns the UE pool.
+        let sourceSlotId: string | undefined = this.loadoutProperties[ev.sourceOwnerId]
+          ? ev.sourceOwnerId
+          : undefined;
+        if (!sourceSlotId) {
+          for (const [slotId, operatorId] of Object.entries(this.slotOperatorMap)) {
+            if (operatorId === ev.sourceOwnerId) { sourceSlotId = slotId; break; }
+          }
+        }
+        if (sourceSlotId) {
+          const sourceProps = this.loadoutProperties[sourceSlotId];
+          const stackCount = ev.stacks ?? 1;
+          for (const seg of ev.segments) {
+            for (const f of seg.frames ?? []) {
+              let selfGain = f.ultimateEnergyGain ?? 0;
+              if (f.ultimateEnergyGainNode && sourceProps) {
+                const ctx = buildContextForSkillColumn(sourceProps, NounType.BATTLE);
+                selfGain = resolveValueNode(f.ultimateEnergyGainNode, ctx);
+              }
+              if (selfGain > 0 && f.absoluteFrame != null) {
+                this.ueController.addUltimateEnergyGain(
+                  f.absoluteFrame, sourceSlotId, selfGain * stackCount, 0,
+                );
+              }
             }
           }
         }

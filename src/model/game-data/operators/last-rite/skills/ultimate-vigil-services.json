@@ -114,28 +114,6 @@
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
-                    "damageMultiplierIncrement": {
-                      "verb": "VARY_BY",
-                      "object": "SKILL_LEVEL",
-                      "value": [
-                        3.56,
-                        3.91,
-                        4.27,
-                        4.62,
-                        4.98,
-                        5.33,
-                        5.69,
-                        6.04,
-                        6.4,
-                        6.84,
-                        7.38,
-                        8
-                      ],
-                      "of": {
-                        "object": "OPERATOR",
-                        "determiner": "THIS"
-                      }
-                    },
                     "value": {
                       "operation": "MULT",
                       "left": {
@@ -245,28 +223,6 @@
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
-                    "damageMultiplierIncrement": {
-                      "verb": "VARY_BY",
-                      "object": "SKILL_LEVEL",
-                      "value": [
-                        3.56,
-                        3.91,
-                        4.27,
-                        4.62,
-                        4.98,
-                        5.33,
-                        5.69,
-                        6.04,
-                        6.4,
-                        6.84,
-                        7.38,
-                        8
-                      ],
-                      "of": {
-                        "object": "OPERATOR",
-                        "determiner": "THIS"
-                      }
-                    },
                     "value": {
                       "operation": "MULT",
                       "left": {
@@ -376,46 +332,24 @@
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
-                    "damageMultiplierIncrement": {
-                      "verb": "VARY_BY",
-                      "object": "SKILL_LEVEL",
-                      "value": [
-                        3.56,
-                        3.91,
-                        4.27,
-                        4.62,
-                        4.98,
-                        5.33,
-                        5.69,
-                        6.04,
-                        6.4,
-                        6.84,
-                        7.38,
-                        8
-                      ],
-                      "of": {
-                        "object": "OPERATOR",
-                        "determiner": "THIS"
-                      }
-                    },
                     "value": {
                       "operation": "MULT",
                       "left": {
                         "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
-                          1.78,
-                          1.96,
-                          2.13,
-                          2.31,
-                          2.49,
-                          2.67,
-                          2.84,
-                          3.02,
-                          3.2,
-                          3.42,
-                          3.69,
-                          4
+                          3.56,
+                          3.91,
+                          4.27,
+                          4.62,
+                          4.98,
+                          5.33,
+                          5.69,
+                          6.04,
+                          6.4,
+                          6.84,
+                          7.38,
+                          8
                         ],
                         "of": {
                           "object": "OPERATOR",
@@ -479,7 +413,7 @@
   "metadata": {
     "originId": "LAST_RITE",
     "icon": "skills/ult_lastrite.png",
-    "dataStatus": "RECONCILED"
+    "dataStatus": "VERIFIED"
   },
   "clauseType": "ALL"
 }

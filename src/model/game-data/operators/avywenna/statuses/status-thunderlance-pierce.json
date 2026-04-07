@@ -1,0 +1,129 @@
+{
+  "segments": [
+    {
+      "metadata": { "eventComponentType": "SEGMENT" },
+      "properties": {
+        "duration": {
+          "value": { "verb": "IS", "value": 2 },
+          "unit": "SECOND"
+        }
+      },
+      "frames": [
+        {
+          "metadata": { "eventComponentType": "FRAME" },
+          "properties": {
+            "offset": { "value": 0, "unit": "SECOND" }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "RECOVER",
+                  "object": "ULTIMATE_ENERGY",
+                  "toDeterminer": "SOURCE",
+                  "to": "OPERATOR",
+                  "with": {
+                    "value": {
+                      "operation": "ADD",
+                      "left": {
+                        "verb": "VARY_BY",
+                        "object": "TALENT_LEVEL",
+                        "value": [0, 3, 4],
+                        "of": { "object": "OPERATOR", "determiner": "SOURCE" }
+                      },
+                      "right": {
+                        "verb": "VARY_BY",
+                        "object": "POTENTIAL",
+                        "value": [0, 2, 2, 2, 2, 2],
+                        "of": { "object": "OPERATOR", "determiner": "SOURCE" }
+                      }
+                    }
+                  }
+                },
+                {
+                  "verb": "DEAL",
+                  "object": "STAGGER",
+                  "to": "ENEMY",
+                  "with": { "value": { "verb": "IS", "value": 5 } }
+                },
+                {
+                  "verb": "DEAL",
+                  "objectQualifier": "ELECTRIC",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "operation": "MULT",
+                      "left": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [0.75, 0.82, 0.9, 0.97, 1.04, 1.12, 1.19, 1.27, 1.34, 1.44, 1.55, 1.68],
+                        "of": { "object": "OPERATOR", "determiner": "THIS" }
+                      },
+                      "right": {
+                        "operation": "ADD",
+                        "left": { "verb": "IS", "value": 1 },
+                        "right": {
+                          "operation": "MULT",
+                          "left": {
+                            "verb": "VARY_BY",
+                            "object": "POTENTIAL",
+                            "value": [0, 0, 0, 0, 0, 0.15],
+                            "of": { "object": "OPERATOR", "determiner": "THIS" }
+                          },
+                          "right": {
+                            "operation": "MIN",
+                            "left": { "verb": "IS", "value": 1 },
+                            "right": {
+                              "verb": "IS",
+                              "object": "STACKS",
+                              "of": {
+                                "object": "STATUS",
+                                "objectId": "SUSCEPTIBILITY",
+                                "objectQualifier": "ELECTRIC",
+                                "of": { "object": "ENEMY", "determiner": "THIS" }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "of": { "object": "OPERATOR", "determiner": "THIS" }
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "THUNDERLANCE_PIERCE",
+    "name": "Thunderlances Pierce",
+    "to": "ENEMY",
+    "duration": {
+      "value": { "verb": "IS", "value": 2 },
+      "unit": "SECOND"
+    },
+    "stacks": {
+      "limit": { "verb": "IS", "value": 1 },
+      "interactionType": "RESET"
+    },
+    "eventType": "STATUS",
+    "eventIdType": "SKILL_STATUS",
+    "description": "Returning Thunderlances pierce enemies in their path, dealing Electric DMG per lance."
+  },
+  "metadata": {
+    "originId": "AVYWENNA",
+    "dataStatus": "RECONCILED"
+  },
+  "clauseType": "ALL"
+}

@@ -1671,6 +1671,6 @@
     "dataSources": [
       "WARFARIN"
     ],
-    "dataStatus": "RECONCILED"
+    "dataStatus": "VERIFIED"
   }
 }

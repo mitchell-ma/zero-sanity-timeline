@@ -101,8 +101,8 @@ describe('A. Brr-Brr-Bomb JSON structure', () => {
     const effects = clauses[2].effects;
     expect(effects).toHaveLength(4);
     expect(effects[0].verb).toBe(VerbType.APPLY);
-    expect(effects[0].object).toBe(NounType.REACTION);
-    expect(effects[0].objectId).toBe(AdjectiveType.SOLIDIFICATION);
+    expect(effects[0].objectId).toBe(NounType.REACTION);
+    expect(effects[0].objectQualifier).toBe(AdjectiveType.SOLIDIFICATION);
     expect(effects[1].verb).toBe(VerbType.DEAL);
     expect(effects[1].object).toBe(NounType.DAMAGE);
     expect(effects[2].verb).toBe(VerbType.CONSUME);
@@ -113,8 +113,8 @@ describe('A. Brr-Brr-Bomb JSON structure', () => {
     const effects = clauses[3].effects;
     expect(effects).toHaveLength(4);
     expect(effects[0].verb).toBe(VerbType.APPLY);
-    expect(effects[0].object).toBe(NounType.REACTION);
-    expect(effects[0].objectId).toBe(AdjectiveType.SOLIDIFICATION);
+    expect(effects[0].objectId).toBe(NounType.REACTION);
+    expect(effects[0].objectQualifier).toBe(AdjectiveType.SOLIDIFICATION);
     expect(effects[1].verb).toBe(VerbType.DEAL);
     expect(effects[1].object).toBe(NounType.DAMAGE);
     expect(effects[2].verb).toBe(VerbType.CONSUME);
@@ -131,15 +131,15 @@ describe('B. Forced Solidification', () => {
 
   it('B1: Cryo branch applies Solidification with isForced=true', () => {
     const applyEffect = frame.clause[2].effects[0];
-    expect(applyEffect.object).toBe(NounType.REACTION);
-    expect(applyEffect.objectId).toBe(AdjectiveType.SOLIDIFICATION);
+    expect(applyEffect.objectId).toBe(NounType.REACTION);
+    expect(applyEffect.objectQualifier).toBe(AdjectiveType.SOLIDIFICATION);
     expect(applyEffect.with.isForced.value).toBe(1);
   });
 
   it('B2: Nature branch applies Solidification with isForced=true', () => {
     const applyEffect = frame.clause[3].effects[0];
-    expect(applyEffect.object).toBe(NounType.REACTION);
-    expect(applyEffect.objectId).toBe(AdjectiveType.SOLIDIFICATION);
+    expect(applyEffect.objectId).toBe(NounType.REACTION);
+    expect(applyEffect.objectQualifier).toBe(AdjectiveType.SOLIDIFICATION);
     expect(applyEffect.with.isForced.value).toBe(1);
   });
 });

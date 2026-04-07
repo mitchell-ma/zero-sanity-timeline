@@ -37,9 +37,10 @@
           "subjectDeterminer": "THIS",
           "subject": "OPERATOR",
           "verb": "APPLY",
-          "object": "REACTION",
+          "object": "STATUS",
           "objectQualifier": "ELECTRIFICATION",
-          "to": "ENEMY"
+          "to": "ENEMY",
+          "objectId": "REACTION"
         },
         {
           "subjectDeterminer": "THIS",

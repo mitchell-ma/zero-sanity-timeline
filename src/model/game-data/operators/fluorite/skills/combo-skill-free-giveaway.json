@@ -142,26 +142,6 @@
                       "value": 1
                     }
                   }
-                },
-                {
-                  "verb": "REDUCE",
-                  "object": "COOLDOWN",
-                  "of": {
-                    "object": "SKILL",
-                    "objectId": "COMBO"
-                  },
-                  "with": {
-                    "value": {
-                      "verb": "VARY_BY",
-                      "object": "POTENTIAL",
-                      "value": [0, 0, 0, 0, 0, 1],
-                      "of": {
-                        "object": "OPERATOR",
-                        "determiner": "THIS"
-                      }
-                    },
-                    "unit": "SECOND"
-                  }
                 }
               ]
             }

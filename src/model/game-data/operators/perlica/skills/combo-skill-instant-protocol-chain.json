@@ -133,8 +133,8 @@
                 },
                 {
                   "verb": "APPLY",
-                  "object": "REACTION",
-                  "objectId": "ELECTRIFICATION",
+                  "object": "STATUS",
+                  "objectId": "REACTION",
                   "to": "ENEMY",
                   "with": {
                     "isForced": {
@@ -167,7 +167,8 @@
                       },
                       "unit": "SECOND"
                     }
-                  }
+                  },
+                  "objectQualifier": "ELECTRIFICATION"
                 },
                 {
                   "verb": "APPLY",

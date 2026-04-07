@@ -368,35 +368,19 @@ describe('Last Rite — Hypothermic Perfusion Status', () => {
     expect(cond.objectId).toBe(NounType.FINAL_STRIKE);
   });
 
-  it('F3: trigger effects — DEAL CRYO DAMAGE, APPLY INFLICTION, DEAL STAGGER, CONSUME EVENT', () => {
+  it('F3: trigger effects — APPLY STATUS HYPOTHERMIC_PERFUSION_MIRAGE to ENEMY, CONSUME EVENT', () => {
     const effects = PERFUSION_JSON.onTriggerClause[0].effects;
-    expect(effects).toHaveLength(4);
+    expect(effects).toHaveLength(2);
 
-    // DEAL CRYO DAMAGE with MULT(VARY_BY SKILL_LEVEL, VARY_BY POTENTIAL)
-    expect(effects[0].verb).toBe(VerbType.DEAL);
-    expect(effects[0].object).toBe(NounType.DAMAGE);
-    expect(effects[0].objectQualifier).toBe(AdjectiveType.CRYO);
-    expect(effects[0].with.value.operation).toBe(ValueOperation.MULT);
-    expect(effects[0].with.value.left.object).toBe(NounType.SKILL_LEVEL);
-    expect(effects[0].with.value.left.value).toHaveLength(12);
-    expect(effects[0].with.value.right.object).toBe(NounType.POTENTIAL);
-    expect(effects[0].with.value.right.value).toEqual([1, 1, 1, 1, 1, 1.2]);
-
-    // APPLY CRYO INFLICTION
-    expect(effects[1].verb).toBe(VerbType.APPLY);
-    expect(effects[1].object).toBe(NounType.STATUS);
-    expect(effects[1].objectId).toBe(NounType.INFLICTION);
-    expect(effects[1].objectQualifier).toBe(AdjectiveType.CRYO);
-
-    // DEAL STAGGER (P1+ gated via VARY_BY POTENTIAL)
-    expect(effects[2].verb).toBe(VerbType.DEAL);
-    expect(effects[2].object).toBe(NounType.STAGGER);
-    expect(effects[2].with.value.object).toBe(NounType.POTENTIAL);
-    expect(effects[2].with.value.value).toEqual([0, 5, 5, 5, 5, 5]);
+    // APPLY STATUS HYPOTHERMIC_PERFUSION_MIRAGE to ENEMY
+    expect(effects[0].verb).toBe(VerbType.APPLY);
+    expect(effects[0].object).toBe(NounType.STATUS);
+    expect(effects[0].objectId).toBe('HYPOTHERMIC_PERFUSION_MIRAGE');
+    expect(effects[0].to).toBe(NounType.ENEMY);
 
     // CONSUME THIS EVENT
-    expect(effects[3].verb).toBe(VerbType.CONSUME);
-    expect(effects[3].object).toBe(NounType.EVENT);
+    expect(effects[1].verb).toBe(VerbType.CONSUME);
+    expect(effects[1].object).toBe(NounType.EVENT);
   });
 
   it('F4: P1 passive clause — APPLY STAT DAMAGE_BONUS FINAL_STRIKE', () => {
@@ -485,8 +469,11 @@ describe('Last Rite — Combo Skill DSL Structure', () => {
     expect(consumeEffect.fromObject).toBe(NounType.ENEMY);
   });
 
-  it('H3: UE recovery — base 40 + 15 × STACKS of CRYO INFLICTION', () => {
-    const ueEffect = COMBO_SKILL_JSON.clause[0].effects[0];
+  it('H3: UE recovery on first frame — base 40 + 15 × STACKS of CRYO INFLICTION', () => {
+    const firstFrame = COMBO_SKILL_JSON.segments[1].frames[0];
+    const ueEffect = firstFrame.clause[0].effects.find(
+      (e: { verb: string; object: string }) => e.verb === VerbType.RECOVER && e.object === NounType.ULTIMATE_ENERGY,
+    );
     expect(ueEffect.verb).toBe(VerbType.RECOVER);
     expect(ueEffect.object).toBe(NounType.ULTIMATE_ENERGY);
     expect(ueEffect.with.value.operation).toBe(ValueOperation.ADD);
@@ -517,29 +504,42 @@ describe('Last Rite — T1 Hypothermia DSL', () => {
     expect(cond.objectQualifier).toBe(AdjectiveType.ARTS);
   });
 
-  it('I2: effect — APPLY SUSCEPTIBILITY CRYO with MULT(STACKS of CRYO INFLICTION, VARY_BY TALENT_LEVEL)', () => {
+  it('I2: trigger effect — APPLY THIS EVENT (self-trigger)', () => {
     const effect = HYPOTHERMIA_JSON.onTriggerClause[0].effects[0];
+    expect(effect.verb).toBe(VerbType.APPLY);
+    expect(effect.object).toBe(NounType.EVENT);
+    expect(effect.objectDeterminer).toBe(DeterminerType.THIS);
+  });
+
+  it('I3: segment frame at 0s — APPLY CRYO SUSCEPTIBILITY with MULT(STACKS CONSUMED, VARY_BY TALENT_LEVEL)', () => {
+    const frame = HYPOTHERMIA_JSON.segments[0].frames[0];
+    expect(frame.properties.offset.value).toBe(0);
+
+    const effect = frame.clause[0].effects[0];
     expect(effect.verb).toBe(VerbType.APPLY);
     expect(effect.object).toBe(NounType.STATUS);
     expect(effect.objectId).toBe(NounType.SUSCEPTIBILITY);
     expect(effect.objectQualifier).toBe(AdjectiveType.CRYO);
     expect(effect.to).toBe(NounType.ENEMY);
 
-    // value = MULT(IS STACKS of CRYO INFLICTION STATUS of ENEMY, VARY_BY TALENT_LEVEL [0.02, 0.04])
     const val = effect.with.value;
     expect(val.operation).toBe(ValueOperation.MULT);
-
-    // Left: IS STACKS of CRYO INFLICTION STATUS of ENEMY
+    // Left: CONSUMED STACKS of CRYO INFLICTION STATUS
     expect(val.left.verb).toBe(VerbType.IS);
+    expect(val.left.objectQualifier).toBe('CONSUMED');
     expect(val.left.object).toBe(NounType.STACKS);
     expect(val.left.of.objectId).toBe(NounType.INFLICTION);
     expect(val.left.of.objectQualifier).toBe(AdjectiveType.CRYO);
-    expect(val.left.of.of.object).toBe(NounType.ENEMY);
-
     // Right: VARY_BY TALENT_LEVEL [0.02, 0.04]
     expect(val.right.verb).toBe(VerbType.VARY_BY);
     expect(val.right.object).toBe(NounType.TALENT_LEVEL);
     expect(val.right.value).toEqual([0.02, 0.04]);
+  });
+
+  it('I4: properties — 2s duration, 1 limit, NONE interaction', () => {
+    expect(HYPOTHERMIA_JSON.properties.duration.value.value).toBe(2);
+    expect(HYPOTHERMIA_JSON.properties.stacks.limit.value).toBe(1);
+    expect(HYPOTHERMIA_JSON.properties.stacks.interactionType).toBe('NONE');
   });
 });
 

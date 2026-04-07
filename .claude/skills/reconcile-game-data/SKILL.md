@@ -131,6 +131,8 @@ When invoked with an operator name, perform a full audit of the operator's JSON 
 | DSL Pattern | Reference File | What to learn |
 |---|---|---|
 | Combo activationWindow (arts infliction trigger) | `wulfgard/skills/combo-skill-frag-grenade-beta.json` | `activationWindow.onTriggerClause`: ANY OPERATOR APPLY INFLICTION ARTS TO ENEMY |
+| Combo activationWindow (reaction trigger) | `yvonne/skills/ultimate-cryoblasting-pistolier.json`, `estella/skills/combo-skill-distortion.json` | `ANY OPERATOR APPLY STATUS REACTION SOLIDIFICATION TO ENEMY` — reactions use the `object: STATUS, objectId: REACTION, objectQualifier: <REACTION_NAME>` shape in both conditions and effects |
+| Talent trigger on reaction | `estella/talents/talent-commiseration-talent.json` | `THIS OPERATOR APPLY STATUS REACTION SHATTER` — same canonical reaction shape |
 | Combo activationWindow (multi-condition OR) | `antal/skills/combo-skill-emp-test-site.json` | Multiple clause entries = OR; conditions within one entry = AND |
 | Combo activationWindow (stagger state trigger) | `akekuri/skills/combo-skill-flash-and-dash.json` | IS NODE_STAGGERED / IS FULL_STAGGERED |
 | Combo activationWindow (maxSkills chaining) | `rossi/skills/combo-skill-moment-of-blazing-shadow.json` | `activationWindow.properties.maxSkills: 2` — allows two combo skills per window |
@@ -157,7 +159,8 @@ When invoked with an operator name, perform a full audit of the operator's JSON 
 3. Apply the same structural pattern to the new operator's JSON
 
 **Common mistakes caught by this process:**
-- Using bare nouns like `"object": "SOLIDIFICATION"` instead of qualifier+noun `"objectQualifier": "SOLIDIFICATION", "object": "REACTION"`
+- **REACTION references: `STATUS` is the `object`, `REACTION` is the `objectId`, and the specific reaction name is the `objectQualifier`.** The canonical shape is `"object": "STATUS", "objectId": "REACTION", "objectQualifier": "SOLIDIFICATION"` (or `SHATTER`, `COMBUSTION`, `ELECTRIFICATION`, `CORROSION`). This applies to both `conditions` (e.g. `ENEMY HAVE STATUS REACTION SOLIDIFICATION`) and `effects` (e.g. `APPLY STATUS REACTION SHATTER`, combo triggers like `ANY OPERATOR APPLY STATUS REACTION SOLIDIFICATION TO ENEMY`). NEVER use `"object": "REACTION"` with or without `objectQualifier`/`objectId` — that shape is legacy and will silently fail to match in the engine.
+- Using bare nouns like `"object": "SOLIDIFICATION"` instead of the canonical `"object": "STATUS", "objectId": "REACTION", "objectQualifier": "SOLIDIFICATION"`
 - Using `"object": "PHYSICAL_SUSCEPTIBILITY"` instead of `"objectQualifier": "PHYSICAL", "object": "SUSCEPTIBILITY"`
 - Using `"object": "CRYO", "objectType": "INFLICTION"` instead of `"object": "INFLICTION", "objectQualifier": "CRYO"`
 - Using `{ "verb": "ADD", "value": [...] }` instead of `{ "operation": "ADD", "left": {...}, "right": {...} }`

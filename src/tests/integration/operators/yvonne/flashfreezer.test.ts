@@ -219,8 +219,8 @@ describe('E. Stagger + Solidification effects', () => {
       const apply = effects.find((e: { verb: string; object: string }) =>
         e.verb === VerbType.APPLY,
       );
-      expect(apply.object).toBe(NounType.REACTION);
-      expect(apply.objectId).toBe(AdjectiveType.SOLIDIFICATION);
+      expect(apply.objectId).toBe(NounType.REACTION);
+      expect(apply.objectQualifier).toBe(AdjectiveType.SOLIDIFICATION);
       expect(apply.with.isForced.value).toBe(1);
     });
   }

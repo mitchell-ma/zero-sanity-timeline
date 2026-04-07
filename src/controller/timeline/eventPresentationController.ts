@@ -561,37 +561,38 @@ function computeMicroPositions(
 
   if (col.microColumnAssignment === 'dynamic-split') {
     const mcById = new Map(col.microColumns.map((mc) => [mc.id, mc]));
+    const mcIdSet = new Set(col.microColumns.map((mc) => mc.id));
 
-    // Stable slot assignment: assign each type a slot based on its position
-    // in the micro-column definitions, NOT based on chronological event order.
-    // This prevents micro-columns from visually swapping during drag.
+    // Stable slot assignment: assign each declared micro-column a slot based on its
+    // position in the micro-column definitions, NOT based on chronological event
+    // order. This prevents micro-columns from visually swapping during drag.
     const sorted = [...colEvents].sort((a, b) => a.startFrame - b.startFrame);
 
-    // Pre-assign slots by micro-column definition order for known types.
-    // Collect unique type keys from events, preserving definition order.
-    const typeSlots = new Map<string, number>();
-    const mcOrder = col.microColumns.map(mc => mc.id);
+    // typeKey resolution: events whose columnId matches a declared micro-column
+    // use the columnId as their typeKey (so all instances of the same declared
+    // type share one slot). Events whose columnId isn't declared fall back to uid.
+    const typeKeyOf = (ev: TimelineEvent) =>
+      mcIdSet.has(ev.columnId) ? ev.columnId : ev.uid;
 
-    // First pass: assign slots to types that appear in the micro-column defs
-    // in their definition order (stable across re-renders).
+    // Pre-assign slots to every declared micro-column that has at least one event,
+    // in definition order. This guarantees each declared type gets its own dedicated
+    // visual slot regardless of whether it is single-instance or stackable.
+    const typeSlots = new Map<string, number>();
     let nextSlot = 0;
-    for (const mcId of mcOrder) {
+    for (const mcId of col.microColumns.map(mc => mc.id)) {
       if (typeSlots.has(mcId)) continue;
-      // Only assign if this type has events
-      if (sorted.some(ev => !isSingleInstanceStatus(ev.columnId) && ev.columnId === mcId)) {
+      if (sorted.some(ev => ev.columnId === mcId)) {
         typeSlots.set(mcId, nextSlot++);
       }
     }
 
-    // Second pass: assign slots to types not in micro-column defs
-    // (independent instances or unknown types), using greedy left-pack.
+    // Initialize slot ranges for pre-assigned types.
     const slots: { type: string; start: number; end: number }[][] = [];
-    // Initialize slots for pre-assigned types
     for (let s = 0; s < nextSlot; s++) slots.push([]);
 
-    // Populate pre-assigned slot ranges
+    // Populate pre-assigned slot ranges for all events that have a pre-assigned slot.
     for (const ev of sorted) {
-      const typeKey = isSingleInstanceStatus(ev.columnId) ? ev.uid : ev.columnId;
+      const typeKey = typeKeyOf(ev);
       const preSlot = typeSlots.get(typeKey);
       if (preSlot != null) {
         slots[preSlot].push({ type: typeKey, start: ev.startFrame, end: eventEndFrame(ev) });
@@ -604,7 +605,7 @@ function computeMicroPositions(
     for (const ev of sorted) {
       const evStart = ev.startFrame;
       const evEnd = eventEndFrame(ev);
-      const typeKey = isSingleInstanceStatus(ev.columnId) ? ev.uid : ev.columnId;
+      const typeKey = typeKeyOf(ev);
 
       // Use pre-assigned slot if available
       const preSlot = typeSlots.get(typeKey);
@@ -613,23 +614,7 @@ function computeMicroPositions(
         continue;
       }
 
-      // Greedy left-pack for unknown types
-      const existingSlot = typeSlots.get(typeKey);
-      if (existingSlot != null) {
-        let conflict = false;
-        for (const r of slots[existingSlot]) {
-          if (r.type !== typeKey && r.start < evEnd && r.end > evStart) {
-            conflict = true;
-            break;
-          }
-        }
-        if (!conflict) {
-          slots[existingSlot].push({ type: typeKey, start: evStart, end: evEnd });
-          eventSlots.set(ev.uid, existingSlot);
-          continue;
-        }
-      }
-
+      // Greedy left-pack for events whose columnId isn't a declared micro-column.
       let assignedSlot = -1;
       for (let s = 0; s < slots.length; s++) {
         const ranges = slots[s];
@@ -650,7 +635,11 @@ function computeMicroPositions(
       eventSlots.set(ev.uid, assignedSlot);
     }
 
-    // Compute widthFrac from actual slot count so all slots fit within the column
+    // Each event renders at its assigned slot with fixed width 1/slotCount.
+    // We deliberately do NOT greedy-expand across slot boundaries: declared
+    // micro-columns have stable visual positions regardless of temporal gaps
+    // in neighboring slots, so users don't see a bar "taking over" an adjacent
+    // column at time ranges where the neighbor is momentarily empty.
     const slotCount = Math.max(slots.length, 1);
     const slotFrac = 1 / slotCount;
 

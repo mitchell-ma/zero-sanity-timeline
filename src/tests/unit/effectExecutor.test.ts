@@ -157,7 +157,8 @@ describe('APPLY effects', () => {
   test('APPLY COMBUSTION REACTION produces a reaction event', () => {
     const effect: Effect = {
       verb: VerbType.APPLY,
-      object: NounType.REACTION,
+      object: NounType.STATUS,
+      objectId: NounType.REACTION,
       objectQualifier: AdjectiveType.COMBUSTION,
       to: NounType.ENEMY,
       with: {
@@ -1471,7 +1472,8 @@ describe('CHANCE EXPECTED branching', () => {
     // Main: 5 * 0.4 = 2, Else: 3 * 0.6 = 1.8
     const applyReactionWithStacks = (stacks: number): Effect => ({
       verb: VerbType.APPLY,
-      object: NounType.REACTION,
+      object: NounType.STATUS,
+      objectId: NounType.REACTION,
       objectQualifier: AdjectiveType.COMBUSTION,
       to: NounType.ENEMY,
       with: { stacks: { verb: VerbType.IS, value: stacks } },

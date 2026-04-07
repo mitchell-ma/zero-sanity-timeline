@@ -1,0 +1,169 @@
+{
+  "properties": {
+    "id": "HYPOTHERMIC_PERFUSION_MIRAGE",
+    "name": "Hypothermic Perfusion (Mirage)",
+    "to": "ENEMY",
+    "eventType": "STATUS",
+    "eventIdType": "SKILL_STATUS",
+    "element": "CRYO",
+    "description": "Last Rite's Mirage unleashes an additional attack at the target. Deals Cryo DMG and applies Cryo Infliction.",
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": 2
+      },
+      "unit": "SECOND"
+    },
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 1
+      },
+      "interactionType": "RESET"
+    }
+  },
+  "segments": [
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT"
+      },
+      "properties": {
+        "name": "Hypothermic Perfusion (Mirage)",
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 2
+          },
+          "unit": "SECOND"
+        },
+        "element": "CRYO"
+      },
+      "frames": [
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "ENDFIELD_WIKI",
+              "WARFARIN"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 0,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "objectQualifier": "CRYO",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "operation": "MULT",
+                      "left": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          1.42,
+                          1.56,
+                          1.71,
+                          1.85,
+                          1.99,
+                          2.13,
+                          2.28,
+                          2.42,
+                          2.56,
+                          2.74,
+                          2.95,
+                          3.2
+                        ],
+                        "of": {
+                          "object": "OPERATOR",
+                          "determiner": "SOURCE"
+                        }
+                      },
+                      "right": {
+                        "verb": "VARY_BY",
+                        "object": "POTENTIAL",
+                        "value": [
+                          1,
+                          1,
+                          1,
+                          1,
+                          1,
+                          1.2
+                        ],
+                        "of": {
+                          "object": "OPERATOR",
+                          "determiner": "SOURCE"
+                        }
+                      }
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "SOURCE"
+                      }
+                    }
+                  }
+                },
+                {
+                  "verb": "APPLY",
+                  "object": "INFLICTION",
+                  "objectQualifier": "CRYO",
+                  "to": "ENEMY",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  }
+                },
+                {
+                  "verb": "DEAL",
+                  "object": "STAGGER",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "VARY_BY",
+                      "object": "POTENTIAL",
+                      "value": [
+                        0,
+                        5,
+                        5,
+                        5,
+                        5,
+                        5
+                      ],
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "SOURCE"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "originId": "LAST_RITE",
+    "dataSources": [
+      "ENDFIELD_WIKI",
+      "WARFARIN"
+    ],
+    "dataStatus": "VERIFIED"
+  }
+}

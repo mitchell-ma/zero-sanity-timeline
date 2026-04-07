@@ -28,8 +28,12 @@ export interface ValueResolutionContext {
   suppliedParameters?: Record<string, number>;
   /** Runtime query: active stack count for a status on the resolved operator (0 if not present). */
   getStatusStacks?: (statusId: string) => number;
+  /** Runtime query: active stack count for a status on the enemy (0 if not present). */
+  getEnemyStatusStacks?: (statusId: string) => number;
   /** Runtime query: consumed stack count for a status on the current event (e.g. LINK consumed by ult). */
   getEventStacks?: (statusId: string) => number;
+  /** Runtime: number of stacks consumed by the triggering CONSUME effect (for STACKS of STATUS CONSUMED). */
+  consumedStacks?: number;
 }
 
 /** Default context when no loadout is available (uses max skill level, no potential). */
@@ -110,6 +114,10 @@ export function resolveValueNode(node: ValueNode, ctx: ValueResolutionContext): 
   }
 
   if (isValueStatus(node)) {
+    // CONSUMED STACKS of <STATUS> → stacks consumed by the triggering CONSUME effect
+    if ((node as { objectQualifier?: string }).objectQualifier === 'CONSUMED' && ctx.consumedStacks != null) {
+      return ctx.consumedStacks;
+    }
     const ofClause = node.of;
     if (ofClause) {
       const statusId = ofClause.objectQualifier && ofClause.objectId
@@ -119,6 +127,10 @@ export function resolveValueNode(node: ValueNode, ctx: ValueResolutionContext): 
       // STACKS of <STATUS> of EVENT → consumed stacks on the current event
       if (ofClause.object === NounType.EVENT && ctx.getEventStacks) {
         return ctx.getEventStacks(statusId);
+      }
+      // STACKS of <STATUS> of ENEMY → active stacks on the enemy
+      if (ofClause.of?.object === NounType.ENEMY && ctx.getEnemyStatusStacks) {
+        return ctx.getEnemyStatusStacks(statusId);
       }
       // STACKS of <STATUS> of OPERATOR → active stacks on the operator
       if (ctx.getStatusStacks) return ctx.getStatusStacks(statusId);

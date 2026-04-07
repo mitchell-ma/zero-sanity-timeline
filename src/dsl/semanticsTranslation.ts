@@ -292,10 +292,10 @@ function formatObject(e: Effect): string {
     ? (OBJECT_LABELS[String(e.object)] ?? titleCase(String(e.object)))
     : '';
 
-  // For STATUS/INFLICTION/REACTION with an objectId, use objectId as the name
+  // For STATUS/INFLICTION with an objectId, use objectId as the name
   // e.g. APPLY STATUS (FOCUS) → "Apply Focus status"
   // e.g. APPLY STATUS (Empowered Focus) → "Apply Empowered Focus status"
-  if (e.objectId && (e.object === NounType.STATUS || e.object === NounType.INFLICTION || e.object === NounType.REACTION)) {
+  if (e.objectId && (e.object === NounType.STATUS || e.object === NounType.INFLICTION)) {
     const name = titleCase(e.objectId);
     return `${adjStr}${name} ${objLabel}`;
   }

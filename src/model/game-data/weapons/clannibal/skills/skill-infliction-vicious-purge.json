@@ -42,10 +42,11 @@
           "subjectDeterminer": "THIS",
           "subject": "OPERATOR",
           "verb": "CONSUME",
-          "object": "REACTION",
+          "object": "STATUS",
           "with": {
             "stacks": "MAX"
-          }
+          },
+          "objectId": "REACTION"
         }
       ],
       "effects": [
@@ -64,10 +65,11 @@
           "subjectDeterminer": "THIS",
           "subject": "OPERATOR",
           "verb": "CONSUME",
-          "object": "REACTION",
+          "object": "STATUS",
           "with": {
             "stacks": "MAX"
-          }
+          },
+          "objectId": "REACTION"
         }
       ],
       "effects": [

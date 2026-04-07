@@ -561,6 +561,7 @@ export default React.memo(function CombatPlanner({
 
   const outerRectRef = useRef(outerRect);
   outerRectRef.current = outerRect;
+  const prevScrollPosRef = useRef(0);
   const columnsRef = useRef(columns);
   columnsRef.current = columns;
   const eventsRef = useRef(events);
@@ -835,9 +836,14 @@ export default React.memo(function CombatPlanner({
     ro.observe(el);
     if (isHorizontal) setScrollClientHeight(el.clientHeight);
     const handler = () => {
-      setScrollTop(el[axis.scrollPos]);
-      onScrollProp?.(el[axis.scrollPos]);
-      onContextMenu(null);
+      const pos = el[axis.scrollPos];
+      setScrollTop(pos);
+      onScrollProp?.(pos);
+      // Only close context menu on meaningful scrolls, not micro-scrolls from layout reflow
+      if (Math.abs(pos - prevScrollPosRef.current) > 2) {
+        onContextMenu(null);
+      }
+      prevScrollPosRef.current = pos;
       // Recompute hoverFrame during scroll so segment highlights update
       const frameClient = hoverClientFrameRef.current;
       if (frameClient != null && bodyTopRef.current !== null) {

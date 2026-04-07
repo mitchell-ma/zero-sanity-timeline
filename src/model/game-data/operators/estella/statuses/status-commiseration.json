@@ -7,7 +7,7 @@
           "subject": "OPERATOR",
           "verb": "PERFORM",
           "object": "SKILL",
-          "objectId": "COMBO"
+          "objectId": "BATTLE"
         }
       ],
       "effects": [
@@ -32,7 +32,13 @@
         {
           "verb": "CONSUME",
           "object": "EVENT",
-          "objectDeterminer": "THIS"
+          "objectDeterminer": "THIS",
+          "with": {
+            "stacks": {
+              "verb": "IS",
+              "value": 1
+            }
+          }
         }
       ]
     }
@@ -47,7 +53,14 @@
         "verb": "IS",
         "value": 1
       },
-      "interactionType": "CONSUME"
+      "interactionType": "RESET"
+    },
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": 99999
+      },
+      "unit": "SECOND"
     },
     "eventType": "STATUS",
     "eventIdType": "STATUS",

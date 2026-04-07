@@ -7,7 +7,8 @@
 import { TimelineEvent, Column, MiniTimeline, Enemy as ViewEnemy } from '../../consts/viewTypes';
 import type { OverrideStore } from '../../consts/overrideTypes';
 import { buildOverrideKey } from '../overrideController';
-import { NounType } from '../../dsl/semantics';
+import { NounType, isQualifiedId } from '../../dsl/semantics';
+import { StatusType } from '../../consts/enums';
 import type { ValueNode } from '../../dsl/semantics';
 import { getAllSkillLabels, getOperatorSkill } from '../gameDataStore';
 import { resolveValueNode, buildContextForSkillColumn } from './valueResolver';
@@ -507,6 +508,19 @@ export function buildDamageTableRows(
                 if (ctx) {
                   ctx.potential = potential;
                 }
+                ctx.getStatusStacks = (statusId: string) => {
+                  if (!statusQuery) return 0;
+                  return statusQuery.getActiveOperatorStatusStacks(absFrame, ev.ownerId, statusId);
+                };
+                ctx.getEnemyStatusStacks = (statusId: string) => {
+                  if (!statusQuery) return 0;
+                  // Parse "<ELEMENT>_SUSCEPTIBILITY" → element
+                  if (isQualifiedId(statusId, StatusType.SUSCEPTIBILITY)) {
+                    const elem = statusId.slice(0, -(StatusType.SUSCEPTIBILITY.length + 1)) as ElementType;
+                    return statusQuery.getActiveSusceptibilityStacks(absFrame, elem);
+                  }
+                  return 0;
+                };
                 multiplier = resolveValueNode(frame.dealDamage.multiplierNode as ValueNode, ctx);
                 segmentMultiplier = null;
                 isPerTick = true;

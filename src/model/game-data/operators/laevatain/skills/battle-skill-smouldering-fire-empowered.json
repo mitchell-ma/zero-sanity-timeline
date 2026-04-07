@@ -593,8 +593,8 @@
                 },
                 {
                   "verb": "APPLY",
-                  "object": "REACTION",
-                  "objectId": "COMBUSTION",
+                  "object": "STATUS",
+                  "objectId": "REACTION",
                   "to": "ENEMY",
                   "with": {
                     "stacks": {
@@ -605,7 +605,8 @@
                       "verb": "IS",
                       "value": 1
                     }
-                  }
+                  },
+                  "objectQualifier": "COMBUSTION"
                 },
                 {
                   "verb": "RECOVER",

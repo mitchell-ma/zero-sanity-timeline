@@ -66,6 +66,14 @@ const THUNDERLANCE_STATUS_ID: string = require(
 const THUNDERLANCE_EX_STATUS_ID: string = require(
   '../../../../model/game-data/operators/avywenna/statuses/status-thunderlance-ex.json',
 ).properties.id;
+
+const THUNDERLANCE_PIERCE_STATUS_ID: string = require(
+  '../../../../model/game-data/operators/avywenna/statuses/status-thunderlance-pierce.json',
+).properties.id;
+
+const THUNDERLANCE_EX_PIERCE_STATUS_ID: string = require(
+  '../../../../model/game-data/operators/avywenna/statuses/status-thunderlance-ex-pierce.json',
+).properties.id;
 /* eslint-enable @typescript-eslint/no-require-imports */
 
 const SLOT = 'slot-0';
@@ -90,6 +98,26 @@ function setupAvywenna() {
   const view = renderHook(() => useApp());
   act(() => { view.result.current.handleSwapOperator(SLOT, AVYWENNA_ID); });
   act(() => { view.result.current.setInteractionMode(InteractionModeType.FREEFORM); });
+  return view;
+}
+
+// NOTE: VARY_BY TALENT_LEVEL in DSL resolves to `talentOneLevel` by default
+// (see valueResolver.buildContextForSkillColumn). The ult's Tactful Approach
+// susceptibility scales via this path, so we set talentOneLevel here even
+// though Tactful Approach is lore-wise the T2 talent.
+function setupAvywennaWithTalentLevel(talentLevel: number) {
+  const view = renderHook(() => useApp());
+  act(() => {
+    view.result.current.handleSwapOperator(SLOT, AVYWENNA_ID);
+    view.result.current.setInteractionMode(InteractionModeType.FREEFORM);
+  });
+  const props = view.result.current.loadoutProperties[SLOT];
+  act(() => {
+    view.result.current.handleStatsChange(SLOT, {
+      ...props,
+      operator: { ...props.operator, talentOneLevel: talentLevel },
+    });
+  });
   return view;
 }
 
@@ -261,9 +289,9 @@ describe('B. BS consumes Thunderlance — full effect chain', () => {
     expect(bsEvents).toHaveLength(1);
 
     // 3. Thunderlance should be consumed
+    // With infinite-stack counter mode, CONSUME drops stack count to 0 instead of marking CONSUMED.
     const lanceAfter = getThunderlanceEvents(result.current);
-    const consumed = lanceAfter.filter(ev => ev.eventStatus === EventStatusType.CONSUMED);
-    expect(consumed.length).toBeGreaterThanOrEqual(1);
+    expect(lanceAfter.some(ev => ev.eventStatus === EventStatusType.CONSUMED)).toBe(true);
 
     // 4. View layer: Thunderlance visible in operator-status column, BS in battle column
     const vm = getOperatorStatusVM(result.current);
@@ -279,7 +307,7 @@ describe('B. BS consumes Thunderlance — full effect chain', () => {
     expect(bsVM!.events.some(ev => ev.name === BATTLE_SKILL_ID)).toBe(true);
   });
 
-  it('B2: BS frame carries conditional Thunderlance clause with CONSUME + DEAL DAMAGE + STAGGER', () => {
+  it('B2: BS frame carries conditional Thunderlance clause with CONSUME (damage/stagger merged into unconditional)', () => {
     const { result } = setupAvywenna();
 
     placeCombo(result, 2);
@@ -311,14 +339,13 @@ describe('B. BS consumes Thunderlance — full effect chain', () => {
     );
     expect(consumeEffect).toBeDefined();
 
-    // Clause effects should include dealDamage (electric)
-    const dealEffect = thunderlanceClause!.effects.find(e => e.type === 'dealDamage');
+    // dealDamage and stagger live on the unconditional clause now (single merged dealDamage)
+    const unconditional = clauseFrame!.clauses!.find(c => !c.conditions || c.conditions.length === 0);
+    expect(unconditional).toBeDefined();
+    const dealEffect = unconditional!.effects.find(e => e.type === 'dealDamage');
     expect(dealEffect).toBeDefined();
     expect(dealEffect!.dealDamage!.element).toBe(AdjectiveType.ELECTRIC);
-
-    // Clause effects should include applyStagger
-    const staggerEffect = thunderlanceClause!.effects.find(e => e.type === 'applyStagger');
-    expect(staggerEffect).toBeDefined();
+    expect(unconditional!.effects.some(e => e.type === 'applyStagger')).toBe(true);
   });
 });
 
@@ -398,19 +425,13 @@ describe('C. BS consumes Thunderlance EX — full effect chain', () => {
         && e.dslEffect?.objectId === THUNDERLANCE_EX_STATUS_ID,
     )).toBe(true);
 
-    // dealDamage (electric, higher multiplier)
-    const dealEffect = exClause!.effects.find(e => e.type === 'dealDamage');
-    expect(dealEffect).toBeDefined();
-    expect(dealEffect!.dealDamage!.element).toBe(AdjectiveType.ELECTRIC);
-
-    // applyStagger
-    expect(exClause!.effects.some(e => e.type === 'applyStagger')).toBe(true);
-
-    // APPLY ELECTRIC INFLICTION (as dsl effect)
+    // EX damage is now produced by a separate THUNDERLANCE_EX_PIERCE status applied to enemy.
     expect(exClause!.effects.some(
       e => e.type === 'dsl' && e.dslEffect?.verb === VerbType.APPLY
-        && e.dslEffect?.object === NounType.INFLICTION,
+        && e.dslEffect?.objectId === THUNDERLANCE_EX_PIERCE_STATUS_ID,
     )).toBe(true);
+
+    // EX stagger and Electric Infliction live on the pierce status, not the BS clause
   });
 });
 
@@ -419,7 +440,7 @@ describe('C. BS consumes Thunderlance EX — full effect chain', () => {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 describe('D. P5 Carrot and Sharp Stick — 1.15× BS damage', () => {
-  it('D1: BS unconditional dealDamage has MULT(VARY_BY SL, VARY_BY POTENTIAL) multiplierNode', () => {
+  it('D1: BS unconditional dealDamage carries P5 conditional Electric Susceptibility multiplier', () => {
     const { result } = setupAvywenna();
 
     placeBattleSkill(result, 5);
@@ -441,19 +462,22 @@ describe('D. P5 Carrot and Sharp Stick — 1.15× BS damage', () => {
     expect(dealEffect).toBeDefined();
     expect(dealEffect!.dealDamage).toBeDefined();
 
-    // multiplierNode should be MULT(VARY_BY SKILL_LEVEL, VARY_BY POTENTIAL [1,1,1,1,1,1.15])
+    // multiplierNode: MULT(VARY_BY SL, ADD(1, MULT(VARY_BY POTENTIAL [0..0.15], MIN(1, STACKS))))
     const node = dealEffect!.dealDamage!.multiplierNode as Record<string, unknown>;
     expect(node).toBeDefined();
     expect(node.operation).toBe('MULT');
     const right = node.right as Record<string, unknown>;
-    expect(right.verb).toBe(VerbType.VARY_BY);
-    expect(right.object).toBe(NounType.POTENTIAL);
-    const potValues = right.value as number[];
-    expect(potValues[0]).toBe(1);     // P0: no bonus
-    expect(potValues[5]).toBe(1.15);  // P5: 1.15× bonus
+    expect(right.operation).toBe('ADD');
+    const inner = (right.right as Record<string, unknown>);
+    expect(inner.operation).toBe('MULT');
+    const potNode = inner.left as Record<string, unknown>;
+    expect(potNode.object).toBe(NounType.POTENTIAL);
+    const potValues = potNode.value as number[];
+    expect(potValues[0]).toBe(0);
+    expect(potValues[5]).toBe(0.15);
   });
 
-  it('D2: Thunderlance conditional dealDamage also carries P5 VARY_BY POTENTIAL', () => {
+  it('D2: Thunderlance conditional clause APPLIES pierce status (damage lives on pierce status)', () => {
     const { result } = setupAvywenna();
 
     placeCombo(result, 2);
@@ -471,18 +495,14 @@ describe('D. P5 Carrot and Sharp Stick — 1.15× BS damage', () => {
     );
     expect(lanceClause).toBeDefined();
 
-    const dealEffect = lanceClause!.effects.find(e => e.type === 'dealDamage');
-    expect(dealEffect).toBeDefined();
-
-    const node = dealEffect!.dealDamage!.multiplierNode as Record<string, unknown>;
-    expect(node).toBeDefined();
-    expect(node.operation).toBe('MULT');
-    const right = node.right as Record<string, unknown>;
-    expect(right.object).toBe(NounType.POTENTIAL);
-    expect((right.value as number[])[5]).toBe(1.15);
+    // The conditional clause applies THUNDERLANCE_PIERCE — damage is on that status
+    expect(lanceClause!.effects.some(
+      e => e.type === 'dsl' && e.dslEffect?.verb === VerbType.APPLY
+        && e.dslEffect?.objectId === THUNDERLANCE_PIERCE_STATUS_ID,
+    )).toBe(true);
   });
 
-  it('D3: Thunderlance EX conditional dealDamage also carries P5 VARY_BY POTENTIAL', () => {
+  it('D3: Thunderlance EX conditional clause APPLIES EX pierce status (damage lives on pierce status)', () => {
     const { result } = setupAvywenna();
     act(() => { setUltimateEnergyToMax(result.current, SLOT, SLOT_INDEX); });
 
@@ -501,15 +521,10 @@ describe('D. P5 Carrot and Sharp Stick — 1.15× BS damage', () => {
     );
     expect(exClause).toBeDefined();
 
-    const dealEffect = exClause!.effects.find(e => e.type === 'dealDamage');
-    expect(dealEffect).toBeDefined();
-
-    const node = dealEffect!.dealDamage!.multiplierNode as Record<string, unknown>;
-    expect(node).toBeDefined();
-    expect(node.operation).toBe('MULT');
-    const right = node.right as Record<string, unknown>;
-    expect(right.object).toBe(NounType.POTENTIAL);
-    expect((right.value as number[])[5]).toBe(1.15);
+    expect(exClause!.effects.some(
+      e => e.type === 'dsl' && e.dslEffect?.verb === VerbType.APPLY
+        && e.dslEffect?.objectId === THUNDERLANCE_EX_PIERCE_STATUS_ID,
+    )).toBe(true);
   });
 });
 
@@ -585,59 +600,52 @@ describe('E. P2 Pole of Menace — duration extends consumption window', () => {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 describe('F. T1 Expedited Delivery — UE recovery on BS lance consumption', () => {
-  it('F1: BS with lances recovers more UE than BS without lances', () => {
-    // Setup 1: BS without lances (baseline)
-    const { result: noLances } = setupAvywenna();
-    placeBattleSkill(noLances, 8);
-    const bsNoLance = noLances.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT && ev.columnId === NounType.BATTLE,
-    );
-    const bsNoLanceEnd = bsNoLance[0].startFrame
-      + bsNoLance[0].segments.reduce((s, seg) => s + seg.properties.duration, 0);
-    const ueNoLance = getMaxUeInRange(noLances.current, 8 * FPS, bsNoLanceEnd);
+  it('F1: BS after combo produces THUNDERLANCE_PIERCE events that each recover (tl + pot) UE', () => {
+    const { result } = setupAvywenna();
+    placeCombo(result, 2);
+    placeBattleSkill(result, 8);
 
-    // Setup 2: Combo → BS (consumes 3 lances)
-    const { result: withLances } = setupAvywenna();
-    placeCombo(withLances, 2);
-    placeBattleSkill(withLances, 8);
-    const bsWithLance = withLances.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT && ev.columnId === NounType.BATTLE,
+    const pierces = result.current.allProcessedEvents.filter(
+      ev => ev.id === THUNDERLANCE_PIERCE_STATUS_ID,
     );
-    const bsWithLanceEnd = bsWithLance[0].startFrame
-      + bsWithLance[0].segments.reduce((s, seg) => s + seg.properties.duration, 0);
-    // Account for combo UE (18) + BS UE with consumption
-    const ueWithLance = getMaxUeInRange(withLances.current, 8 * FPS, bsWithLanceEnd);
+    expect(pierces).toHaveLength(3);
 
-    // BS consuming lances should grant more UE than BS alone
-    // Extra UE = lance consumption recovery (UE_PER_LANCE × 3 = 18)
-    expect(ueWithLance - ueNoLance).toBe(UE_PER_LANCE_DEFAULT * 3);
+    // Walk the UE graph and count jumps that occur at a pierce start frame and
+    // equal the per-lance recovery exactly. There are other gains at the same
+    // frame (BS natural SP→UE), so we must filter by magnitude not by total.
+    const graph = result.current.resourceGraphs.get(ultimateGraphKey(SLOT));
+    const pierceFrames = new Set(pierces.map(p => p.startFrame));
+    let lanceJumps = 0;
+    for (let i = 1; i < (graph?.points.length ?? 0); i++) {
+      const prev = graph!.points[i - 1];
+      const cur = graph!.points[i];
+      if (!pierceFrames.has(cur.frame)) continue;
+      if (Math.abs((cur.value - prev.value) - UE_PER_LANCE_DEFAULT) < 1e-6) lanceJumps++;
+    }
+    expect(lanceJumps).toBe(pierces.length);
   });
 
-  it('F2: BS with EX lance recovers more UE than BS without lances', () => {
-    // Setup 1: BS alone (baseline)
-    const { result: noLances } = setupAvywenna();
-    placeBattleSkill(noLances, 10);
-    const bsNoLance = noLances.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT && ev.columnId === NounType.BATTLE,
-    );
-    const bsNoLanceEnd = bsNoLance[0].startFrame
-      + bsNoLance[0].segments.reduce((s, seg) => s + seg.properties.duration, 0);
-    const ueNoLance = getMaxUeInRange(noLances.current, 10 * FPS, bsNoLanceEnd);
+  it('F2: BS after ult produces a THUNDERLANCE_EX_PIERCE event that recovers (tl + pot) UE', () => {
+    const { result } = setupAvywenna();
+    act(() => { setUltimateEnergyToMax(result.current, SLOT, SLOT_INDEX); });
+    placeUltimate(result, 2);
+    placeBattleSkill(result, 10);
 
-    // Setup 2: Ult → BS (consumes 1 EX)
-    const { result: withEx } = setupAvywenna();
-    act(() => { setUltimateEnergyToMax(withEx.current, SLOT, SLOT_INDEX); });
-    placeUltimate(withEx, 2);
-    placeBattleSkill(withEx, 10);
-    const bsWithEx = withEx.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT && ev.columnId === NounType.BATTLE,
+    const pierces = result.current.allProcessedEvents.filter(
+      ev => ev.id === THUNDERLANCE_EX_PIERCE_STATUS_ID,
     );
-    const bsWithExEnd = bsWithEx[0].startFrame
-      + bsWithEx[0].segments.reduce((s, seg) => s + seg.properties.duration, 0);
-    const ueWithEx = getMaxUeInRange(withEx.current, 10 * FPS, bsWithExEnd);
+    expect(pierces).toHaveLength(1);
 
-    // BS consuming 1 EX should grant extra UE (UE_PER_LANCE × 1 = 6)
-    expect(ueWithEx - ueNoLance).toBe(UE_PER_LANCE_DEFAULT * 1);
+    const graph = result.current.resourceGraphs.get(ultimateGraphKey(SLOT));
+    const pierceFrames = new Set(pierces.map(p => p.startFrame));
+    let lanceJumps = 0;
+    for (let i = 1; i < (graph?.points.length ?? 0); i++) {
+      const prev = graph!.points[i - 1];
+      const cur = graph!.points[i];
+      if (!pierceFrames.has(cur.frame)) continue;
+      if (Math.abs((cur.value - prev.value) - UE_PER_LANCE_DEFAULT) < 1e-6) lanceJumps++;
+    }
+    expect(lanceJumps).toBe(pierces.length);
   });
 });
 
@@ -711,6 +719,21 @@ describe('G. T2 Tactful Approach — Electric Susceptibility', () => {
     expect(tlValues[0]).toBe(0);
     expect(tlValues[1]).toBe(0.06);
     expect(tlValues[2]).toBe(0.10);
+  });
+
+  it('G3: Ult susceptibility scales with talent level — 0 at TL0, 0.06 at TL1, 0.10 at TL2+', () => {
+    for (const [tl, expected] of [[0, 0], [1, 0.06], [2, 0.10]] as const) {
+      const { result } = setupAvywennaWithTalentLevel(tl);
+      act(() => { setUltimateEnergyToMax(result.current, SLOT, SLOT_INDEX); });
+      placeUltimate(result, 5);
+
+      const suscEvents = result.current.allProcessedEvents.filter(
+        ev => ev.ownerId === ENEMY_OWNER_ID && ev.columnId === ELECTRIC_SUSCEPTIBILITY_ID,
+      );
+      expect(suscEvents.length).toBeGreaterThanOrEqual(1);
+      const elecValue = (suscEvents[0].susceptibility as Record<string, number>)[AdjectiveType.ELECTRIC];
+      expect(elecValue).toBeCloseTo(expected, 6);
+    }
   });
 });
 

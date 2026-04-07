@@ -23,7 +23,7 @@ import { TimelineEvent, durationSegment, eventDuration, setEventDuration } from 
 import { FPS } from '../../utils/timeline';
 import { CritMode, EventStatusType } from '../../consts/enums';
 import type { OverrideStore } from '../../consts/overrideTypes';
-import { ENEMY_OWNER_ID, INFLICTION_COLUMNS, REACTION_STATUS_TO_COLUMN } from '../../model/channels/index';
+import { ENEMY_OWNER_ID, INFLICTION_COLUMNS, REACTION_COLUMNS } from '../../model/channels/index';
 import { COMMON_OWNER_ID } from '../slot/commonSlotController';
 import { evaluateConditions, ConditionContext } from './conditionEvaluator';
 import { activeEventsAtFrame, activeInflictionsOfElement, isActiveAtFrame } from './timelineQueries';
@@ -183,7 +183,7 @@ function resolveInflictionColumnId(objectQualifier?: AdjectiveType | NounType): 
 
 function resolveReactionColumnId(objectQualifier?: AdjectiveType | NounType): string | undefined {
   if (!objectQualifier) return undefined;
-  return REACTION_STATUS_TO_COLUMN[objectQualifier];
+  return (REACTION_COLUMNS as Record<string, string>)[objectQualifier];
 }
 
 // ── Verb Handlers ────────────────────────────────────────────────────────
@@ -214,6 +214,31 @@ function executeApply(effect: Effect, ctx: ExecutionContext): MutationSet {
   }
 
   if (effect.object === NounType.STATUS) {
+    // APPLY STATUS REACTION X — reaction application (canonical form).
+    // Route through reaction creation: qualifier holds the reaction name.
+    if (effect.objectId === NounType.REACTION) {
+      const columnId = resolveReactionColumnId(effect.objectQualifier);
+      if (!columnId) { result.failed = true; return result; }
+
+      const durationValue = resolveWith(effect.with?.duration, ctx);
+      const duration = durationValue != null ? Math.round(durationValue * FPS) : 2400;
+      const stacksValue = resolveWith(effect.with?.stacks, ctx);
+
+      const ev = allocDerivedEvent();
+      ev.uid = derivedEventUid(columnId, ctx.sourceOwnerId, ctx.frame);
+      ev.id = String(effect.objectQualifier);
+      ev.name = String(effect.objectQualifier);
+      ev.ownerId = ownerId;
+      ev.columnId = columnId;
+      ev.startFrame = ctx.frame;
+      ev.segments = durationSegment(duration);
+      ev.sourceOwnerId = ctx.sourceOwnerId;
+      ev.sourceSkillName = ctx.sourceSkillName;
+      ev.stacks = typeof stacksValue === 'number' ? stacksValue : undefined;
+      result.produced.push(ev);
+      return result;
+    }
+
     const columnId = effect.objectId ?? '';
 
     const durationValue = resolveWith(effect.with?.duration, ctx);
@@ -232,29 +257,6 @@ function executeApply(effect: Effect, ctx: ExecutionContext): MutationSet {
     if (ctx.chanceMultiplier != null && ctx.chanceMultiplier < 1) {
       ev.expectedUptime = ctx.chanceMultiplier;
     }
-    result.produced.push(ev);
-    return result;
-  }
-
-  if (effect.object === NounType.REACTION) {
-    const columnId = resolveReactionColumnId(effect.objectQualifier);
-    if (!columnId) { result.failed = true; return result; }
-
-    const durationValue = resolveWith(effect.with?.duration, ctx);
-    const duration = durationValue != null ? Math.round(durationValue * FPS) : 2400;
-    const stacksValue = resolveWith(effect.with?.stacks, ctx);
-
-    const ev = allocDerivedEvent();
-    ev.uid = derivedEventUid(columnId, ctx.sourceOwnerId, ctx.frame);
-    ev.id = String(effect.objectQualifier);
-    ev.name = String(effect.objectQualifier);
-    ev.ownerId = ownerId;
-    ev.columnId = columnId;
-    ev.startFrame = ctx.frame;
-    ev.segments = durationSegment(duration);
-    ev.sourceOwnerId = ctx.sourceOwnerId;
-    ev.sourceSkillName = ctx.sourceSkillName;
-    ev.stacks = typeof stacksValue === 'number' ? stacksValue : undefined;
     result.produced.push(ev);
     return result;
   }
@@ -287,6 +289,25 @@ function executeConsume(effect: Effect, ctx: ExecutionContext): MutationSet {
   }
 
   if (effect.object === NounType.STATUS) {
+    // CONSUME STATUS REACTION X — reaction consumption (canonical form).
+    if (effect.objectId === NounType.REACTION) {
+      const columnId = resolveReactionColumnId(effect.objectQualifier);
+      if (!columnId) { result.failed = true; return result; }
+
+      const targets = activeEventsAtFrame(ctx.events, columnId, ownerId, ctx.frame)
+        .filter(ev => ev.eventStatus !== EventStatusType.CONSUMED);
+      if (targets.length === 0) { result.failed = true; return result; }
+
+      const target = targets.sort((a, b) => a.startFrame - b.startFrame)[0];
+      result.clamped.set(target.uid, {
+        newDuration: Math.max(0, ctx.frame - target.startFrame),
+        eventStatus: EventStatusType.CONSUMED,
+        sourceOwnerId: ctx.sourceOwnerId,
+        sourceSkillName: ctx.sourceSkillName,
+      });
+      return result;
+    }
+
     const columnId = effect.objectId ?? '';
     const targets = activeEventsAtFrame(ctx.events, columnId, ownerId, ctx.frame)
       .filter(ev => ev.eventStatus !== EventStatusType.CONSUMED)
@@ -306,25 +327,6 @@ function executeConsume(effect: Effect, ctx: ExecutionContext): MutationSet {
         sourceSkillName: ctx.sourceSkillName,
       });
     }
-    return result;
-  }
-
-  if (effect.object === NounType.REACTION) {
-    const columnId = resolveReactionColumnId(effect.objectQualifier);
-    if (!columnId) { result.failed = true; return result; }
-
-    const targets = activeEventsAtFrame(ctx.events, columnId, ownerId, ctx.frame)
-      .filter(ev => ev.eventStatus !== EventStatusType.CONSUMED);
-
-    if (targets.length === 0) { result.failed = true; return result; }
-
-    const target = targets.sort((a, b) => a.startFrame - b.startFrame)[0];
-    result.clamped.set(target.uid, {
-      newDuration: Math.max(0, ctx.frame - target.startFrame),
-      eventStatus: EventStatusType.CONSUMED,
-      sourceOwnerId: ctx.sourceOwnerId,
-      sourceSkillName: ctx.sourceSkillName,
-    });
     return result;
   }
 

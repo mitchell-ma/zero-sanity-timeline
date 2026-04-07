@@ -12,7 +12,7 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import { CombatResourceType, UnitType } from '../../../consts/enums';
+import { ArtsReactionType, CombatResourceType, UnitType } from '../../../consts/enums';
 import { DeterminerType, NounType, VerbType } from '../../../dsl/semantics';
 
 const GAMEDATA_URL = 'https://raw.githubusercontent.com/Lieyuan621/Endaxis/main/public/gamedata.json';
@@ -28,6 +28,7 @@ interface Duration {
 interface Effect {
   verb: string;
   object: string;
+  objectId?: string;
   objectQualifier?: string;
   toDeterminer?: string;
   to?: string;
@@ -187,6 +188,7 @@ const GAMEDATA_ID_TO_OPERATOR: Record<string, string> = {
 interface AnomalyMapping {
   verb: string;
   object: string;
+  objectId?: string;
   objectQualifier?: string;
   isForced?: boolean;
   stacks?: number;
@@ -198,14 +200,14 @@ const ANOMALY_TYPE_MAP: Record<string, AnomalyMapping | null> = {
   cold_attach:    { verb: VerbType.APPLY, object: NounType.INFLICTION, objectQualifier: 'CRYO' },
   emag_attach:    { verb: VerbType.APPLY, object: NounType.INFLICTION, objectQualifier: 'ELECTRIC' },
   nature_attach:  { verb: VerbType.APPLY, object: NounType.INFLICTION, objectQualifier: 'NATURE' },
-  magma_0:        { verb: VerbType.APPLY, object: NounType.REACTION, objectQualifier: 'COMBUSTION', isForced: true, stacks: 1 },
+  magma_0:        { verb: VerbType.APPLY, object: NounType.STATUS, objectId: NounType.REACTION, objectQualifier: ArtsReactionType.COMBUSTION, isForced: true, stacks: 1 },
   magma_1:        { verb: VerbType.APPLY, object: NounType.INFLICTION, objectQualifier: 'MELTING_FLAME' },
   magma_2:        { verb: VerbType.APPLY, object: NounType.INFLICTION, objectQualifier: 'MELTING_FLAME' },
   magma_3:        { verb: VerbType.APPLY, object: NounType.INFLICTION, objectQualifier: 'MELTING_FLAME' },
   magma_4:        { verb: VerbType.CONSUME, object: NounType.INFLICTION, objectQualifier: 'HEAT', conversion: { statusType: 'MELTING_FLAME', ratio: '1:1' } },
-  blaze_burst:    { verb: VerbType.APPLY, object: NounType.REACTION, objectQualifier: 'COMBUSTION' },
-  burning:        { verb: VerbType.APPLY, object: NounType.REACTION, objectQualifier: 'COMBUSTION' },
-  corrosion:      { verb: VerbType.APPLY, object: NounType.REACTION, objectQualifier: 'CORROSION', isForced: true },
+  blaze_burst:    { verb: VerbType.APPLY, object: NounType.STATUS, objectId: NounType.REACTION, objectQualifier: ArtsReactionType.COMBUSTION },
+  burning:        { verb: VerbType.APPLY, object: NounType.STATUS, objectId: NounType.REACTION, objectQualifier: ArtsReactionType.COMBUSTION },
+  corrosion:      { verb: VerbType.APPLY, object: NounType.STATUS, objectId: NounType.REACTION, objectQualifier: ArtsReactionType.CORROSION, isForced: true },
 };
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -268,6 +270,7 @@ function convertTick(
     const effect: Effect = {
       verb: mapping.verb,
       object: mapping.object,
+      objectId: mapping.objectId,
       objectQualifier: mapping.objectQualifier,
       to: NounType.ENEMY,
     };

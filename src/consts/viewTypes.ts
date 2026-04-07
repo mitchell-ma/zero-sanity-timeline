@@ -278,6 +278,8 @@ export interface TimelineEvent {
   segmentOrigin?: number[];
   /** Expected probability this event is active (0.0-1.0). Omitted for deterministic events (implicitly 1.0). Set for CHANCE-gated or crit-triggered status events in EXPECTED mode. */
   expectedUptime?: number;
+  /** Number of stacks consumed by the CONSUME effect that triggered this event's creation (for STACKS CONSUMED resolution). */
+  consumedStacks?: number;
 }
 
 export interface ContextMenuItem {

@@ -419,10 +419,10 @@ describe('UE ultimate energy gains — natural SP consumption via controllers', 
 
     const graph = ueController.getGraph(SLOT)!;
     // SP starts at 200 (all natural), cost 100 → 100 natural consumed
-    // 100 * 0.065 = 6.5 per pool (selfGain + teamGain for same slot = 13)
+    // 100 * 0.065 = 6.5 (team gain only, no double-counting on source slot)
     const gainPoint = graph.points.find(p => p.frame === 500 && p.value > 0);
     expect(gainPoint).toBeDefined();
-    expect(gainPoint!.value).toBeCloseTo(13, 1);
+    expect(gainPoint!.value).toBeCloseTo(6.5, 1);
   });
 
   test('frame-level ultimateEnergyGain is collected separately from SP-based gain', () => {
@@ -440,10 +440,10 @@ describe('UE ultimate energy gains — natural SP consumption via controllers', 
     ueController.finalize(spController.getBattleSkillGainFrames());
 
     const graph = ueController.getGraph(SLOT)!;
-    // SP-based: 100 * 0.065 = 6.5 (self+team for same slot = 13) + frame-level: 15 = 28
+    // SP-based: 100 * 0.065 = 6.5 (team gain only) + frame-level selfGain: 15 = 21.5
     const gainPoints = graph.points.filter(p => p.frame === 500);
     const maxVal = Math.max(...gainPoints.map(p => p.value));
-    expect(maxVal).toBeCloseTo(13 + 15, 1);
+    expect(maxVal).toBeCloseTo(6.5 + 15, 1);
   });
 
   test('SP return reduces natural SP consumed (returned consumed first)', () => {
@@ -462,15 +462,15 @@ describe('UE ultimate energy gains — natural SP consumption via controllers', 
     ueController.finalize(spController.getBattleSkillGainFrames());
 
     const graph = ueController.getGraph(SLOT)!;
-    // First battle: 100 natural consumed → 6.5 per pool (self+team for same slot = 13)
+    // First battle: 100 natural consumed → 100 * 0.065 = 6.5 (team gain only)
     const gainAt0 = graph.points.find(p => p.frame === 0 && p.value > 0);
     expect(gainAt0).toBeDefined();
-    expect(gainAt0!.value).toBeCloseTo(100 * NATURAL_SP_RATIO * 2, 1);
-    // Second battle: 50 returned + ~50 natural → 50 * 0.065 * 2 = 6.5 per slot
-    // The graph accumulates, so at frame 200 the total should be ~13 + ~6.5 = ~19.5
+    expect(gainAt0!.value).toBeCloseTo(100 * NATURAL_SP_RATIO, 1);
+    // Second battle: 50 returned + ~50 natural → 50 * 0.065 = 3.25
+    // The graph accumulates, so at frame 200 the total should be ~6.5 + ~3.25 = ~9.75
     const pointsAt200 = graph.points.filter(p => p.frame === 200);
     const maxAt200 = Math.max(...pointsAt200.map(p => p.value));
-    expect(maxAt200).toBeCloseTo(100 * NATURAL_SP_RATIO * 2 + 50 * NATURAL_SP_RATIO * 2, 1);
+    expect(maxAt200).toBeCloseTo(100 * NATURAL_SP_RATIO + 50 * NATURAL_SP_RATIO, 1);
   });
 
   test('combo skill ultimate energy gain is collected directly', () => {

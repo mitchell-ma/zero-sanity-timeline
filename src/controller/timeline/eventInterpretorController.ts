@@ -37,7 +37,6 @@ import {
   PHYSICAL_INFLICTION_COLUMN_IDS, PHYSICAL_INFLICTION_COLUMNS, PHYSICAL_INFLICTION_DURATION, PHYSICAL_STATUS_COLUMNS, PHYSICAL_STATUS_COLUMN_IDS,
   REACTION_COLUMNS, REACTION_COLUMN_IDS, REACTION_DURATION,
   FORCED_REACTION_COLUMN, FORCED_REACTION_DURATION,
-  REACTION_STATUS_TO_COLUMN,
   SHATTER_DURATION, SKILL_COLUMN_ORDER,
 } from '../../model/channels';
 import { FPS, TOTAL_FRAMES } from '../../utils/timeline';
@@ -125,13 +124,13 @@ function resolveQualifier(objectQualifier?: AdjectiveType | NounType) {
 function resolveEffectColumnId(object?: string, objectId?: string, objectQualifier?: AdjectiveType | NounType): string | undefined {
   const qualifier = resolveQualifier(objectQualifier);
 
-  // Correct grammar: object=STATUS, objectId is the category
+  // Canonical grammar: object=STATUS, objectId is the category (REACTION/PHYSICAL/INFLICTION/custom-id)
   if (object === NounType.STATUS && objectId) {
     if (objectId === NounType.INFLICTION) {
       return qualifier ? ELEMENT_TO_INFLICTION_COLUMN[qualifier] : undefined;
     }
     if (objectId === NounType.REACTION) {
-      return qualifier ? REACTION_STATUS_TO_COLUMN[qualifier] : undefined;
+      return qualifier ? (REACTION_COLUMNS as Record<string, string>)[qualifier] : undefined;
     }
     if (objectId === AdjectiveType.PHYSICAL) {
       return qualifier && PHYSICAL_STATUS_VALUES.has(qualifier) ? qualifier : undefined;
@@ -139,13 +138,9 @@ function resolveEffectColumnId(object?: string, objectId?: string, objectQualifi
     return objectId;
   }
 
-  // Legacy: object is the category directly
+  // Direct INFLICTION object (still used in JSON configs for inflictions).
   if (object === NounType.INFLICTION) {
     return qualifier ? ELEMENT_TO_INFLICTION_COLUMN[qualifier] : undefined;
-  }
-  if (object === NounType.REACTION) {
-    return qualifier ? REACTION_STATUS_TO_COLUMN[qualifier]
-      : objectId ? REACTION_STATUS_TO_COLUMN[objectId] : undefined;
   }
 
   return objectId;
@@ -296,6 +291,8 @@ export interface InterpretContext {
   /** Remaining game-time duration of the source event that triggered this context.
    *  Used as fallback duration for APPLY STATUS when no explicit duration is specified. */
   sourceEventRemainingDuration?: number;
+  /** Number of stacks consumed by the triggering CONSUME effect (for STACKS CONSUMED resolution). */
+  consumedStacks?: number;
 }
 
 // ══════════════════════════════════════════════════════════════════════════
@@ -820,33 +817,31 @@ export class EventInterpretorController {
         { uid: freeformUid ?? derivedEventUid(columnId, source.ownerId, ctx.frame) });
       return true;
     }
-    if (effect.object === NounType.REACTION) {
-      const columnId = resolveEffectColumnId(effect.object, effect.objectId, effect.objectQualifier)
-        ?? FORCED_REACTION_COLUMN[resolveQualifier(effect.objectQualifier) ?? ''];
-      if (!columnId) return false;
-      const isForced = this.resolveWith(effect.with?.isForced, ctx) === 1;
-      const dv = this.resolveWith(effect.with?.duration, ctx);
-      const sl = this.resolveWith(effect.with?.stacks, ctx);
-      // Forced reactions use FORCED_REACTION_DURATION (shorter, for ult-triggered reactions).
-      // Non-forced reactions read from JSON config via getStatusConfig.
-      const cfg = getStatusConfig(columnId);
-      const defaultDuration = typeof dv === 'number' ? Math.round(dv * FPS)
-        : isForced ? (FORCED_REACTION_DURATION[columnId] ?? cfg?.duration ?? REACTION_DURATION)
-        : cfg?.duration ?? REACTION_DURATION;
-      this.controller.applyEvent(columnId, ownerId, ctx.frame, defaultDuration, source, {
-        stacks: typeof sl === 'number' ? sl : undefined,
-        ...(isForced && { forcedReaction: true }),
-        uid: freeformUid ?? derivedEventUid(columnId, source.ownerId, ctx.frame),
-      });
-      return true;
-    }
     if (effect.object === NounType.STATUS) {
       // Dispatch sub-categories: objectId indicates INFLICTION/REACTION/PHYSICAL
       if (effect.objectId === NounType.INFLICTION) {
         return this.doApply({ ...effect, object: NounType.INFLICTION, objectId: undefined }, ctx);
       }
+      // APPLY STATUS REACTION X — reaction application (canonical form).
       if (effect.objectId === NounType.REACTION) {
-        return this.doApply({ ...effect, object: NounType.REACTION, objectId: undefined }, ctx);
+        const columnId = resolveEffectColumnId(effect.object, effect.objectId, effect.objectQualifier)
+          ?? FORCED_REACTION_COLUMN[resolveQualifier(effect.objectQualifier) ?? ''];
+        if (!columnId) return false;
+        const isForced = this.resolveWith(effect.with?.isForced, ctx) === 1;
+        const dv = this.resolveWith(effect.with?.duration, ctx);
+        const sl = this.resolveWith(effect.with?.stacks, ctx);
+        // Forced reactions use FORCED_REACTION_DURATION (shorter, for ult-triggered reactions).
+        // Non-forced reactions read from JSON config via getStatusConfig.
+        const cfg = getStatusConfig(columnId);
+        const defaultDuration = typeof dv === 'number' ? Math.round(dv * FPS)
+          : isForced ? (FORCED_REACTION_DURATION[columnId] ?? cfg?.duration ?? REACTION_DURATION)
+          : cfg?.duration ?? REACTION_DURATION;
+        this.controller.applyEvent(columnId, ownerId, ctx.frame, defaultDuration, source, {
+          stacks: typeof sl === 'number' ? sl : undefined,
+          ...(isForced && { forcedReaction: true }),
+          uid: freeformUid ?? derivedEventUid(columnId, source.ownerId, ctx.frame),
+        });
+        return true;
       }
       // Physical status (APPLY PHYSICAL STATUS LIFT TO ENEMY) → delegate to dedicated handler
       if (effect.objectId === AdjectiveType.PHYSICAL) return this.applyPhysicalStatus(effect, ctx);
@@ -971,7 +966,7 @@ export class EventInterpretorController {
       const stacksNode = effect.with?.stacks as Record<string, unknown> | undefined;
       const isDynamicStacks = stacksNode && ('operation' in stacksNode || stacksNode.object === NounType.STACKS);
       if (isDynamicStacks && typeof sv === 'number' && sv <= 0) return true;
-      // NONE interaction: create 1 event with stacks = N (accumulator pattern, e.g. Living Banner)
+      // NONE interaction: create 1 event with stacks = N (events represent groupings of stacks)
       // Other interactions (RESET, etc.): create N separate events (e.g. Steel Oath 5 stacks)
       const isAccumulatorApply = cfg?.stackingMode === StackInteractionType.NONE && typeof sv === 'number' && sv > 1;
       const stackCount = isAccumulatorApply ? 1 : (typeof sv === 'number' && sv > 1 ? sv : 1);
@@ -981,13 +976,12 @@ export class EventInterpretorController {
         const runtimeMaxStacks = cfg?.maxStacksNode
           ? resolveValueNode(cfg.maxStacksNode as ValueNode, this.buildValueContext({ ...ctx, sourceSlotId: statusOwnerId }))
           : cfg?.maxStacks;
+        const eventOverrides = { ...eventProps, ...(applyStacks != null ? { stacks: applyStacks } : {}), ...(ctx.consumedStacks != null ? { consumedStacks: ctx.consumedStacks } : {}) };
         this.controller.applyEvent(columnId, statusOwnerId, ctx.frame, duration, source, {
           statusId: effect.objectId,
           ...(cfg?.stackingMode ? { stackingMode: cfg.stackingMode } : {}),
           ...(runtimeMaxStacks != null ? { maxStacks: runtimeMaxStacks } : {}),
-          ...(Object.keys(eventProps).length > 0 || applyStacks != null
-            ? { event: { ...eventProps, ...(applyStacks != null ? { stacks: applyStacks } : {}) } }
-            : {}),
+          ...(Object.keys(eventOverrides).length > 0 ? { event: eventOverrides } : {}),
           uid: freeformUid && si === 0 ? freeformUid : derivedEventUid(columnId, source.ownerId, ctx.frame, stackCount > 1 ? `${si}` : undefined),
         });
         // Process each new status event's lifecycle clauses inline (onEntryClause, etc.)
@@ -1066,9 +1060,11 @@ export class EventInterpretorController {
 
     // ARTS qualifier = consume all arts infliction stacks (not reactions — reactions only interact with themselves)
     if (resolveQualifier(effect.objectQualifier) === AdjectiveType.ARTS && (effect.objectId === NounType.INFLICTION || effect.object === NounType.INFLICTION)) {
+      let totalConsumed = 0;
       INFLICTION_COLUMN_IDS.forEach(col => {
-        this.controller.consumeEvent(col, ownerId, ctx.frame, source, { count });
+        totalConsumed += this.controller.consumeEvent(col, ownerId, ctx.frame, source, { count });
       });
+      this.lastConsumedStacks = totalConsumed > 0 ? totalConsumed : undefined;
       return true;
     }
     // CONSUME SKILL — skill event consumption.
@@ -1094,6 +1090,7 @@ export class EventInterpretorController {
         target.eventStatus = EventStatusType.CONSUMED;
         target.eventStatusOwnerId = source.ownerId;
         target.eventStatusSkillName = source.skillName;
+        this.lastConsumedStacks = 1;
         return true;
       }
       return false;
@@ -1107,6 +1104,7 @@ export class EventInterpretorController {
       const hasExplicitCount = count !== Infinity && rawStacks != null;
       const consumed = this.controller.consumeEvent(consumeCol, statusOwner, ctx.frame, source,
         isInflictionConsume ? { count } : hasExplicitCount ? { count, restack: true } : undefined);
+      if (consumed > 0) this.lastConsumedStacks = consumed;
       // Reschedule stat reversals for consumed statuses to fire at consumption frame
       if (consumed > 0 && this._statReversals?.length) {
         for (const r of this._statReversals) {
@@ -1121,6 +1119,7 @@ export class EventInterpretorController {
       const statusOwnerId = ctx.parentStatusOwnerId ?? ownerId;
       const consumed = this.controller.consumeEvent(columnId, statusOwnerId, ctx.frame, source, { count, restack: true });
       this.lastConsumedParentStatusId = consumed > 0 ? columnId : undefined;
+      if (consumed > 0) this.lastConsumedStacks = consumed;
       return consumed > 0;
     }
     // CONSUME STACKS — self-consumption of the parent status stacks (e.g. Auxiliary Crystal)
@@ -1128,6 +1127,7 @@ export class EventInterpretorController {
       const columnId = ctx.parentStatusId;
       const statusOwnerId = ctx.parentStatusOwnerId ?? ownerId;
       const consumed = this.controller.consumeEvent(columnId, statusOwnerId, ctx.frame, source, { count, restack: true });
+      if (consumed > 0) this.lastConsumedStacks = consumed;
       return consumed > 0;
     }
     return true;
@@ -1168,10 +1168,12 @@ export class EventInterpretorController {
   /**
    * Fire reactive triggers for a clause effect. Generic for all verb types.
    */
-  private reactiveTriggersForEffect(effect: Effect, absFrame: number, eventOwnerId: string, eventName: string, out: QueueFrame[]) {
+  private reactiveTriggersForEffect(effect: Effect, absFrame: number, eventOwnerId: string, eventName: string, out: QueueFrame[], consumedStacks?: number) {
+    // Skip CONSUME triggers when nothing was actually consumed (no stacks present to consume).
+    if (effect.verb === VerbType.CONSUME && (consumedStacks == null || consumedStacks === 0)) return;
     const objectId = this.resolveObjectIdForTrigger(effect);
     if (!objectId) return;
-    this.checkReactiveTriggers(effect.verb, objectId, absFrame, eventOwnerId, eventName, undefined, out);
+    this.checkReactiveTriggers(effect.verb, objectId, absFrame, eventOwnerId, eventName, undefined, out, consumedStacks);
     // CONSUME a status with stat-based state clause → fire BECOME_NOT (stat may have ended)
     if (effect.verb === VerbType.CONSUME && effect.object === NounType.STATUS && effect.objectId) {
       const consumedDef = getStatusDef(effect.objectId);
@@ -1233,6 +1235,7 @@ export class EventInterpretorController {
       const last = active[active.length - 1];
       return last.stacks != null ? last.stacks : active.length;
     };
+    if (ctx.consumedStacks != null) baseCtx.consumedStacks = ctx.consumedStacks;
     return baseCtx;
   }
 
@@ -1513,6 +1516,7 @@ export class EventInterpretorController {
   private lastPhysicalStatusCreated = false;
   /** Tracks the actual status ID consumed by CONSUME THIS EVENT, for reactive trigger dispatch. */
   private lastConsumedParentStatusId: string | undefined;
+  private lastConsumedStacks: number | undefined;
   private applyPhysicalStatus(effect: Effect, ctx: InterpretContext): boolean {
     const qualifier = resolveQualifier(effect.objectQualifier);
     if (!qualifier || !PHYSICAL_STATUS_VALUES.has(qualifier)) return false;
@@ -1542,7 +1546,7 @@ export class EventInterpretorController {
 
     // Any physical status application consumes active Solidification → Shatter
     if (result) {
-      this.tryConsumeSolidification(ctx.frame, source);
+      this.tryConsumeSolidification(ctx.frame, source, ctx.sourceSlotId ?? ctx.sourceOwnerId);
     }
 
     return result;
@@ -1728,6 +1732,7 @@ export class EventInterpretorController {
   private tryConsumeSolidification(
     frame: number,
     source: { ownerId: string; skillName: string },
+    triggerSlotId: string,
   ): void {
     const active = this.controller.getActiveEvents(
       REACTION_COLUMNS.SOLIDIFICATION, ENEMY_OWNER_ID, frame,
@@ -1769,6 +1774,18 @@ export class EventInterpretorController {
         }],
       }];
     }
+
+    // Fire reactive triggers for the derived Shatter event so talents like
+    // Commiseration (THIS OPERATOR APPLY STATUS REACTION SHATTER) can match.
+    // Use source.ownerId (the operator that caused the shatter) so THIS OPERATOR
+    // subject filters resolve to that slot, mirroring how clause-based APPLY
+    // REACTION effects route through reactiveTriggersForEffect with the parent
+    // event's owner. Queue directly into _processFrameOut so the main
+    // processFrame loop dispatches the triggered talent next.
+    this.checkReactiveTriggers(
+      VerbType.APPLY, REACTION_COLUMNS.SHATTER, frame, triggerSlotId, source.skillName,
+      undefined, this._processFrameOut,
+    );
   }
 
   // ── PROCESS_FRAME handler ──────────────────────────────────────────────
@@ -2045,6 +2062,7 @@ export class EventInterpretorController {
         sourceFrameKey: (frame.damageMultiplier || frame.dealDamage)
           ? `${event.uid}:${si}:${fi}` : undefined,
         ...(hasSuppliedParams ? { suppliedParameters: resolvedParams } : {}),
+        ...(event.consumedStacks != null ? { consumedStacks: event.consumedStacks } : {}),
       };
       const condCtx: ConditionContext = {
         events: this.getAllEvents(),
@@ -2082,12 +2100,14 @@ export class EventInterpretorController {
                   if (!this._frameStatReversals) this._frameStatReversals = [];
                   this._frameStatReversals.push({ stat: statKey, value: -diff });
                 }
-                this.reactiveTriggersForEffect(ef.dslEffect, absFrame, event.ownerId, event.id, newEntries);
+                this.reactiveTriggersForEffect(ef.dslEffect, absFrame, event.ownerId, event.id, newEntries, this.lastConsumedStacks);
+                this.lastConsumedStacks = undefined;
                 continue;
               }
             }
             this.interpret(ef.dslEffect, interpretCtx);
-            this.reactiveTriggersForEffect(ef.dslEffect, absFrame, event.ownerId, event.id, newEntries);
+            this.reactiveTriggersForEffect(ef.dslEffect, absFrame, event.ownerId, event.id, newEntries, this.lastConsumedStacks);
+            this.lastConsumedStacks = undefined;
           }
         }
       }
@@ -2433,6 +2453,7 @@ export class EventInterpretorController {
             potential: pot,
             parentEventEndFrame: parentEventEnd,
             parentSegmentEndFrame: segEnd,
+            ...(statusEv.consumedStacks != null ? { consumedStacks: statusEv.consumedStacks } : {}),
           };
           if (fm.clauses) {
             const condCtx: ConditionContext = {
@@ -2530,8 +2551,15 @@ export class EventInterpretorController {
     const results: QueueFrame[] = [];
     for (const entry of this.triggerIndex.lookup(`${VerbType.PERFORM}:${performObject}`)) {
       if (entry.primaryVerb !== VerbType.PERFORM) continue;
-      const isAny = entry.primaryCondition.subjectDeterminer === DeterminerType.ANY;
-      if (!isAny && event.ownerId !== entry.operatorSlotId) continue;
+      const det = entry.primaryCondition.subjectDeterminer;
+      const isAny = det === DeterminerType.ANY;
+      if (!isAny) {
+        if (det === DeterminerType.CONTROLLED) {
+          const controlledSlot = this.getControlledSlotAtFrame?.(absFrame);
+          if (controlledSlot && event.ownerId !== controlledSlot) continue;
+          if (!controlledSlot && event.ownerId !== entry.operatorSlotId) continue;
+        } else if (event.ownerId !== entry.operatorSlotId) continue;
+      }
       const triggerCtx: EngineTriggerContext = {
         def: entry.def,
         operatorId: entry.operatorId,
@@ -2622,6 +2650,7 @@ export class EventInterpretorController {
     verb: string, objectId: string, frame: number, slotId: string, sourceSkillName: string,
     enhancementType?: string,
     out?: QueueFrame[],
+    consumedStacks?: number,
   ) {
     if (!this.triggerIndex) return;
     const results = out!;
@@ -2679,6 +2708,11 @@ export class EventInterpretorController {
       const det = entry.primaryCondition.subjectDeterminer ?? DeterminerType.THIS;
       const subj = entry.primaryCondition.subject;
       if (det === DeterminerType.THIS && subj === NounType.OPERATOR && slotId !== entry.operatorSlotId) continue;
+      if (det === DeterminerType.CONTROLLED && subj === NounType.OPERATOR) {
+        const controlledSlot = this.getControlledSlotAtFrame?.(frame);
+        if (controlledSlot && slotId !== controlledSlot) continue;
+        if (!controlledSlot && slotId !== entry.operatorSlotId) continue;
+      }
 
       const entryEnhancement = entry.def.properties.enhancementTypes?.[0];
       if (entryEnhancement && entryEnhancement !== enhancementType) continue;
@@ -2722,7 +2756,7 @@ export class EventInterpretorController {
         maxStacks: 0,
         durationFrames: 0,
         operatorSlotId: entry.operatorSlotId,
-        engineTrigger: { frame, sourceOwnerId: this.resolveOperatorId(slotId), triggerSlotId: slotId, sourceSkillName, ctx: triggerCtx, isEquip: entry.isEquip, triggerObjectId: objectId },
+        engineTrigger: { frame, sourceOwnerId: this.resolveOperatorId(slotId), triggerSlotId: slotId, sourceSkillName, ctx: triggerCtx, isEquip: entry.isEquip, triggerObjectId: objectId, consumedStacks },
       });
     }
 
@@ -2883,6 +2917,48 @@ export class EventInterpretorController {
         if (parentDuration < PERMANENT_DURATION) return [];
       }
     }
+    // Self-apply lifecycle gate: a status with an ongoing instance (still inside
+    // its active segment OR any cooldown segment, including IMMEDIATE_COOLDOWN) is
+    // "busy" and cannot be re-applied to itself — same semantics as a skill's
+    // IMMEDIATE_COOLDOWN gating re-triggers. This is not dedupe/filtering; it's
+    // the normal status lifecycle. activeEventsAtFrame spans the full event via
+    // eventDuration (active + all cooldown segments), so parentEv being non-null
+    // means the status's full span still covers this frame, and any trigger that
+    // would APPLY the same status is suppressed until the span ends.
+    if (parentEv) {
+      const isSelfApply = (te: import('./triggerMatch').TriggerEffect): boolean => {
+        if (te.verb !== VerbType.APPLY) return false;
+        if (te.object === NounType.EVENT) return true;
+        if (te.object === NounType.STATUS && te.objectId === parentColumnId) return true;
+        return false;
+      };
+      // Stacking statuses (stacks.limit > 1) may self-apply additional concurrent
+      // instances up to the limit. Resolve the limit ValueNode the same way the
+      // status config cache does, then count currently-live instances.
+      const stackLimitNode = ctx.def.properties.stacks?.limit;
+      let stackLimit = 1;
+      if (stackLimitNode != null) {
+        if (typeof stackLimitNode === 'number') {
+          stackLimit = stackLimitNode;
+        } else {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const resolved = resolveValueNode(stackLimitNode as any, DEFAULT_VALUE_CONTEXT);
+          if (typeof resolved === 'number' && resolved > 0) stackLimit = resolved;
+        }
+      }
+      const liveCount = parentEvents.length;
+      const interactionType = ctx.def.properties.stacks?.interactionType;
+      const canRecycle = interactionType != null && interactionType !== StackInteractionType.NONE;
+      // Non-stacking statuses (limit <= 1) always gate self-APPLY while a live
+      // instance exists — the existing instance owns the lifecycle, dedupe via
+      // gate. Stacking statuses (limit > 1) only gate when at-cap AND there is
+      // no recycle interaction; otherwise the downstream APPLY path recycles
+      // the oldest instance and emits REFRESHED.
+      if (stackLimit <= 1 || (liveCount >= stackLimit && !canRecycle)) {
+        if (triggerEffects.some(isSelfApply)) return [];
+      }
+    }
+
     let parentEventEndFrame: number | undefined;
     let parentSegmentEndFrame: number | undefined;
     if (parentEv) {
@@ -2938,6 +3014,7 @@ export class EventInterpretorController {
       sourceFrameKey: entry.sourceFrameKey,
       targetOwnerId: trigger.triggerSlotId,
       sourceEventRemainingDuration,
+      consumedStacks: trigger.consumedStacks,
     };
 
     const cascadeFrames = this._engineTriggerOut;
@@ -2951,7 +3028,8 @@ export class EventInterpretorController {
       if (!applied && te.verb === VerbType.CONSUME && te.object === NounType.EVENT) break;
       if (applied) {
         const before = cascadeFrames.length;
-        this.reactiveTriggersForEffect(effect, entry.frame, ctx.operatorSlotId, trigger.sourceSkillName, cascadeFrames);
+        this.reactiveTriggersForEffect(effect, entry.frame, ctx.operatorSlotId, trigger.sourceSkillName, cascadeFrames, this.lastConsumedStacks);
+        this.lastConsumedStacks = undefined;
         // Cascade triggers inherit the original trigger operator for TRIGGER determiner resolution
         for (let j = before; j < cascadeFrames.length; j++) {
           cascadeFrames[j].cascadeDepth = depth + 1;

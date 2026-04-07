@@ -33,6 +33,12 @@ import type { AppResult } from '../../helpers';
 const AVYWENNA_ID: string = require(
   '../../../../model/game-data/operators/avywenna/avywenna.json',
 ).id;
+const THUNDERLANCE_PIERCE_STATUS_ID: string = require(
+  '../../../../model/game-data/operators/avywenna/statuses/status-thunderlance-pierce.json',
+).properties.id;
+const THUNDERLANCE_EX_PIERCE_STATUS_ID: string = require(
+  '../../../../model/game-data/operators/avywenna/statuses/status-thunderlance-ex-pierce.json',
+).properties.id;
 /* eslint-enable @typescript-eslint/no-require-imports */
 
 const SLOT = 'slot-0';
@@ -140,5 +146,75 @@ describe('B. Ultimate thunderlance EX UE recovery', () => {
     const ueAtEnd = getUeAtFrame(result.current, ultEnd);
 
     expect(ueAtEnd).toBe(UE_PER_LANCE * 1);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// C. BS consumes Thunderlances → PIERCE status recovers UE per lance
+// ═══════════════════════════════════════════════════════════════════════════════
+
+describe('C. PIERCE status UE recovery', () => {
+  it('C1: BS after combo recovers (talent + potential) × (# PIERCE stacks) UE via pierces', () => {
+    const { result } = setup();
+
+    const comboCol = findColumn(result.current, SLOT, NounType.COMBO);
+    act(() => {
+      const p = getMenuPayload(result.current, comboCol!, 1 * FPS);
+      result.current.handleAddEvent(p.ownerId, p.columnId, p.atFrame, p.defaultSkill);
+    });
+    const bsCol = findColumn(result.current, SLOT, NounType.BATTLE);
+    act(() => {
+      const p = getMenuPayload(result.current, bsCol!, 4 * FPS);
+      result.current.handleAddEvent(p.ownerId, p.columnId, p.atFrame, p.defaultSkill);
+    });
+
+    const pierceEvents = result.current.allProcessedEvents.filter(
+      ev => ev.id === THUNDERLANCE_PIERCE_STATUS_ID,
+    );
+    expect(pierceEvents).toHaveLength(3);
+
+    // Count raw UE gain jumps exactly equal to UE_PER_LANCE at a pierce start frame.
+    const graph = result.current.resourceGraphs.get(ultimateGraphKey(SLOT));
+    const pierceFrames = new Set(pierceEvents.map(p => p.startFrame));
+    let lanceJumps = 0;
+    for (let i = 1; i < (graph?.points.length ?? 0); i++) {
+      const prev = graph!.points[i - 1];
+      const cur = graph!.points[i];
+      if (!pierceFrames.has(cur.frame)) continue;
+      if (Math.abs((cur.value - prev.value) - UE_PER_LANCE) < 1e-6) lanceJumps++;
+    }
+    expect(lanceJumps).toBe(pierceEvents.length);
+  });
+
+  it('C2: BS after ult recovers (talent + potential) × 1 UE via the EX_PIERCE event', () => {
+    const { result } = setup();
+
+    act(() => { setUltimateEnergyToMax(result.current, SLOT, SLOT_INDEX); });
+    const ultCol = findColumn(result.current, SLOT, NounType.ULTIMATE);
+    act(() => {
+      const p = getMenuPayload(result.current, ultCol!, 1 * FPS);
+      result.current.handleAddEvent(p.ownerId, p.columnId, p.atFrame, p.defaultSkill);
+    });
+    const bsCol = findColumn(result.current, SLOT, NounType.BATTLE);
+    act(() => {
+      const p = getMenuPayload(result.current, bsCol!, 5 * FPS);
+      result.current.handleAddEvent(p.ownerId, p.columnId, p.atFrame, p.defaultSkill);
+    });
+
+    const pierceEvents = result.current.allProcessedEvents.filter(
+      ev => ev.id === THUNDERLANCE_EX_PIERCE_STATUS_ID,
+    );
+    expect(pierceEvents).toHaveLength(1);
+
+    const graph = result.current.resourceGraphs.get(ultimateGraphKey(SLOT));
+    const pierceFrames = new Set(pierceEvents.map(p => p.startFrame));
+    let lanceJumps = 0;
+    for (let i = 1; i < (graph?.points.length ?? 0); i++) {
+      const prev = graph!.points[i - 1];
+      const cur = graph!.points[i];
+      if (!pierceFrames.has(cur.frame)) continue;
+      if (Math.abs((cur.value - prev.value) - UE_PER_LANCE) < 1e-6) lanceJumps++;
+    }
+    expect(lanceJumps).toBe(pierceEvents.length);
   });
 });

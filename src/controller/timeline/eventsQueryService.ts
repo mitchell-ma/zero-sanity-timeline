@@ -209,6 +209,45 @@ export class EventsQueryService {
       || this.nodeStaggerEvents.some(e => this.isActive(e, frame));
   }
 
+  /**
+   * Count active operator-owned status events with the given columnId at the frame.
+   * Returns the sum of stacks across active matching events.
+   */
+  getActiveOperatorStatusStacks(frame: number, ownerId: string, statusId: string): number {
+    let n = 0;
+    for (const ev of this.state.getRegisteredEvents()) {
+      if (ev.ownerId !== ownerId || ev.columnId !== statusId) continue;
+      if (!this.isActive(ev, frame)) continue;
+      n += ev.stacks ?? 1;
+    }
+    return n;
+  }
+
+  /**
+   * Count active enemy susceptibility events at the given frame for the given element.
+   * Existence counts — a 0%-value susceptibility event still contributes 1 stack,
+   * so DSL formulas referencing `STACKS of <ELEMENT> SUSCEPTIBILITY of ENEMY` see
+   * the event as present.
+   */
+  getActiveSusceptibilityStacks(frame: number, element: ElementType): number {
+    let n = 0;
+    for (const ev of this.susceptibilityEvents) {
+      if (!this.isActive(ev, frame)) continue;
+      // Only count events targeting the requested element. Column ID is
+      // either `<ELEMENT>_SUSCEPTIBILITY` or a generic SUSCEPTIBILITY/FOCUS
+      // that carries per-element values on the event itself.
+      const qualified = isQualifiedId(ev.columnId, StatusType.SUSCEPTIBILITY);
+      if (qualified) {
+        const elem = ev.columnId.slice(0, -(StatusType.SUSCEPTIBILITY.length + 1));
+        if (elem !== element) continue;
+      } else if (ev.susceptibility?.[element] === undefined) {
+        continue;
+      }
+      n += ev.stacks ?? 1;
+    }
+    return n;
+  }
+
   getSusceptibilityBonus(frame: number, element: ElementType): number {
     let sum = 0;
     for (const ev of this.susceptibilityEvents) {

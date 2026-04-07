@@ -6,7 +6,8 @@
           "subject": "ENEMY",
           "verb": "RECEIVE",
           "objectQualifier": "SOLIDIFICATION",
-          "object": "REACTION"
+          "object": "STATUS",
+          "objectId": "REACTION"
         }
       ],
       "effects": [
@@ -71,8 +72,9 @@
           "subject": "OPERATOR",
           "verb": "APPLY",
           "objectQualifier": "SOLIDIFICATION",
-          "object": "REACTION",
-          "to": "ENEMY"
+          "object": "STATUS",
+          "to": "ENEMY",
+          "objectId": "REACTION"
         }
       ],
       "effects": [

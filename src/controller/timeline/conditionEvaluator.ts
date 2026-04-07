@@ -10,7 +10,7 @@ import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from '../calculation/valueRes
 import { StatusType, UnitType } from '../../consts/enums';
 import { StatType } from '../../model/enums/stats';
 import { TimelineEvent } from '../../consts/viewTypes';
-import { ENEMY_OWNER_ID, INFLICTION_COLUMNS, PHYSICAL_INFLICTION_COLUMNS, PHYSICAL_STATUS_COLUMNS, PHYSICAL_STATUS_COLUMN_IDS, REACTION_COLUMNS, REACTION_STATUS_TO_COLUMN, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID, SKILL_COLUMN_ORDER } from '../../model/channels';
+import { ENEMY_OWNER_ID, INFLICTION_COLUMNS, PHYSICAL_INFLICTION_COLUMNS, PHYSICAL_STATUS_COLUMNS, PHYSICAL_STATUS_COLUMN_IDS, REACTION_COLUMNS, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID, SKILL_COLUMN_ORDER } from '../../model/channels';
 import { COMMON_OWNER_ID } from '../slot/commonSlotController';
 import { activeEventsAtFrame, activeCountAtFrame } from './timelineQueries';
 
@@ -117,7 +117,7 @@ export function resolveColumnIds(object: string, objectId?: string, qualifier?: 
     return Object.values(INFLICTION_COLUMNS);
   }
   if (objectId === NounType.REACTION) {
-    if (qualifier) { const c = REACTION_STATUS_TO_COLUMN[qualifier]; return c ? [c] : []; }
+    if (qualifier) { const c = (REACTION_COLUMNS as Record<string, string>)[qualifier]; return c ? [c] : []; }
     return Object.values(REACTION_COLUMNS);
   }
   if (objectId === AdjectiveType.PHYSICAL) {
@@ -347,12 +347,14 @@ function evaluateBecome(cond: Interaction, ctx: ConditionContext): boolean {
     } else {
       for (const colId of columnIds) {
         const activeNow = activeEventsAtFrame(ctx.events, colId, ownerId, ctx.frame);
-        const lastNow = activeNow.length > 0 ? activeNow[activeNow.length - 1] : undefined;
-        countNow += lastNow?.stacks != null ? lastNow.stacks : activeNow.length;
+        for (const ev of activeNow) {
+          countNow += ev.stacks ?? 1;
+        }
         if (ctx.frame > 0) {
           const activeBefore = activeEventsAtFrame(ctx.events, colId, ownerId, ctx.frame - 1);
-          const lastBefore = activeBefore.length > 0 ? activeBefore[activeBefore.length - 1] : undefined;
-          countBefore += lastBefore?.stacks != null ? lastBefore.stacks : activeBefore.length;
+          for (const ev of activeBefore) {
+            countBefore += ev.stacks ?? 1;
+          }
         }
       }
     }

@@ -6,9 +6,10 @@
           "subjectDeterminer": "THIS",
           "subject": "OPERATOR",
           "verb": "APPLY",
-          "object": "REACTION",
-          "objectId": "ELECTRIFICATION",
-          "to": "ENEMY"
+          "object": "STATUS",
+          "objectId": "REACTION",
+          "to": "ENEMY",
+          "objectQualifier": "ELECTRIFICATION"
         }
       ],
       "effects": [
@@ -27,9 +28,10 @@
           "subjectDeterminer": "THIS",
           "subject": "OPERATOR",
           "verb": "APPLY",
-          "object": "REACTION",
-          "objectId": "SOLIDIFICATION",
-          "to": "ENEMY"
+          "object": "STATUS",
+          "objectId": "REACTION",
+          "to": "ENEMY",
+          "objectQualifier": "SOLIDIFICATION"
         }
       ],
       "effects": [

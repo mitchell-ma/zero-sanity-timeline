@@ -283,7 +283,7 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
           case VerbType.APPLY:
             if (isSource && (ef.object === NounType.INFLICTION || ef.object === NounType.STATUS)) {
               duplicateSource = true;
-            } else if (ef.object === NounType.INFLICTION || ef.object === NounType.REACTION || ef.object === NounType.SUSCEPTIBILITY) {
+            } else if (ef.object === NounType.INFLICTION || ef.object === NounType.SUSCEPTIBILITY) {
               clauseEffects.push({ type: 'dsl', dslEffect: ef as unknown as Effect });
             } else if (ef.object === NounType.STATUS || ef.objectType === NounType.STATUS) {
               // Normalize: objectType=STATUS with object=<id> → object: STATUS, objectId: <id>
@@ -328,6 +328,11 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
               stagger = withValue(wp?.value);
               clauseEffects.push({ type: 'applyStagger' });
             }
+            break;
+
+          case VerbType.REDUCE:
+            // REDUCE COOLDOWN (and any other REDUCE effects) — pass through to interpret() at frame time
+            clauseEffects.push({ type: 'dsl', dslEffect: ef as unknown as Effect });
             break;
 
           case VerbType.PERFORM: {

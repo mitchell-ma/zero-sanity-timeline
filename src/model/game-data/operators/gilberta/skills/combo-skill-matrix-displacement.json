@@ -168,7 +168,10 @@
                   "object": "STATUS",
                   "to": "ENEMY",
                   "with": {
-                    "isForced": { "verb": "IS", "value": 1 }
+                    "isForced": {
+                      "verb": "IS",
+                      "value": 1
+                    }
                   }
                 }
               ]
@@ -409,8 +412,9 @@
             "subject": "OPERATOR",
             "verb": "APPLY",
             "objectQualifier": "ARTS",
-            "object": "REACTION",
-            "to": "ENEMY"
+            "object": "STATUS",
+            "to": "ENEMY",
+            "objectId": "REACTION"
           }
         ]
       }

@@ -249,9 +249,9 @@ describe('C. Empowered Battle Skill & Combustion', () => {
     // Single-segment skill — get all frames
     const frames = sequences[0].getFrames();
     const lastFrame = frames[frames.length - 1];
-    const reactionEffect = lastFrame.getClauses().flatMap(c => c.effects).find(e => e.dslEffect?.verb === VerbType.APPLY && e.dslEffect?.object === NounType.REACTION);
+    const reactionEffect = lastFrame.getClauses().flatMap(c => c.effects).find(e => e.dslEffect?.verb === VerbType.APPLY && e.dslEffect?.objectId === NounType.REACTION);
     expect(reactionEffect).toBeDefined();
-    const q = reactionEffect!.dslEffect!.objectId ?? (Array.isArray(reactionEffect!.dslEffect!.objectQualifier) ? reactionEffect!.dslEffect!.objectQualifier[0] : reactionEffect!.dslEffect!.objectQualifier);
+    const q = Array.isArray(reactionEffect!.dslEffect!.objectQualifier) ? reactionEffect!.dslEffect!.objectQualifier[0] : reactionEffect!.dslEffect!.objectQualifier;
     expect(q).toBe(StatusType.COMBUSTION);
   });
 
@@ -259,7 +259,7 @@ describe('C. Empowered Battle Skill & Combustion', () => {
     const sequences = getSequences('BATTLE');
     for (const seq of sequences) {
       for (const frame of seq.getFrames()) {
-        expect(frame.getClauses().flatMap(c => c.effects).find(e => e.dslEffect?.verb === VerbType.APPLY && e.dslEffect?.object === NounType.REACTION)).toBeUndefined();
+        expect(frame.getClauses().flatMap(c => c.effects).find(e => e.dslEffect?.verb === VerbType.APPLY && e.dslEffect?.objectId === NounType.REACTION)).toBeUndefined();
       }
     }
   });
@@ -284,10 +284,10 @@ describe('C. Empowered Battle Skill & Combustion', () => {
     const lastFrame = empoweredFrames[empoweredFrames.length - 1];
     const effects = lastFrame.clause[0].effects;
     const applyReaction = effects.find(
-      (e: Record<string, unknown>) => e.verb === VerbType.APPLY && e.object === NounType.REACTION
+      (e: Record<string, unknown>) => e.verb === VerbType.APPLY && e.objectId === NounType.REACTION
     );
     expect(applyReaction).toBeDefined();
-    const reactionId = applyReaction.objectId ?? (Array.isArray(applyReaction.objectQualifier) ? applyReaction.objectQualifier[0] : applyReaction.objectQualifier);
+    const reactionId = Array.isArray(applyReaction.objectQualifier) ? applyReaction.objectQualifier[0] : applyReaction.objectQualifier;
     expect(reactionId).toBe(StatusType.COMBUSTION);
     expect(applyReaction.with?.isForced?.value).toBe(1);
   });

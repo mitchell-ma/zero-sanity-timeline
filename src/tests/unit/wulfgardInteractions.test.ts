@@ -604,7 +604,7 @@ describe('F. Scorching Fangs (Talent)', () => {
     expect(clause.conditions[0].subjectDeterminer).toBe(DeterminerType.THIS);
     expect(clause.conditions[0].subject).toBe(NounType.OPERATOR);
     expect(clause.conditions[0].verb).toBe(VerbType.APPLY);
-    expect(clause.conditions[0].object).toBe(NounType.REACTION);
+    expect(clause.conditions[0].objectId).toBe(NounType.REACTION);
     expect(clause.conditions[0].objectQualifier).toBe(StatusType.COMBUSTION);
   });
 

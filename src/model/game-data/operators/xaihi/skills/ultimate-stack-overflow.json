@@ -359,13 +359,14 @@
                 },
                 {
                   "verb": "CONSUME",
-                  "object": "REACTION",
+                  "object": "STATUS",
                   "objectQualifier": "SOLIDIFICATION",
                   "fromDeterminer": "ALL",
                   "from": "OPERATOR",
                   "with": {
                     "stacks": "MAX"
-                  }
+                  },
+                  "objectId": "REACTION"
                 }
               ]
             }

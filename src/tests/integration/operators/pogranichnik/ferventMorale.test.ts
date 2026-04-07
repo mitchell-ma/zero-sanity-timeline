@@ -119,7 +119,7 @@ describe('B. Living Banner rendering', () => {
     expect(bannerEvents[0].stacks).toBe(20);
   });
 
-  it('B2: combo creates 3 clamped Living Banner segments with running totals', () => {
+  it('B2: combo creates 3 independent Living Banner events (5, 7, 13) — status total 25', () => {
     const { result } = setupPog();
 
     const comboCol = findColumn(result.current, SLOT_POG, NounType.COMBO);
@@ -130,11 +130,13 @@ describe('B. Living Banner rendering', () => {
       .filter(ev => ev.columnId === LIVING_BANNER_ID && ev.ownerId === SLOT_POG)
       .sort((a, b) => a.startFrame - b.startFrame);
 
-    // 3 clamped segments: running totals 5, 12 (5+7), 25 (5+7+13)
+    // 3 independent events with own stacks: 5, 7, 13 (status total 25)
     expect(bannerEvents).toHaveLength(3);
     expect(bannerEvents[0].stacks).toBe(5);
-    expect(bannerEvents[1].stacks).toBe(12);
-    expect(bannerEvents[2].stacks).toBe(25);
+    expect(bannerEvents[1].stacks).toBe(7);
+    expect(bannerEvents[2].stacks).toBe(13);
+    const total = bannerEvents.reduce((s, ev) => s + (ev.stacks ?? 0), 0);
+    expect(total).toBe(25);
   });
 
   it('B3: Living Banner appears in view presentation', () => {

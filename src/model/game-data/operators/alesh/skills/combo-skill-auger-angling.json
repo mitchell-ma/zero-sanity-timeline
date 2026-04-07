@@ -316,11 +316,12 @@
             "subjectDeterminer": "ANY",
             "subject": "OPERATOR",
             "verb": "CONSUME",
-            "object": "REACTION",
-            "objectId": "ARTS",
+            "object": "STATUS",
+            "objectId": "REACTION",
             "of": {
               "object": "ENEMY"
-            }
+            },
+            "objectQualifier": "ARTS"
           }
         ]
       },

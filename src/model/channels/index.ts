@@ -136,15 +136,6 @@ export const FORCED_REACTION_COLUMN: Record<string, string> = {
   [StatusType.ELECTRIFICATION]: REACTION_COLUMNS.ELECTRIFICATION,
 };
 
-/** Maps reaction status name → reaction column ID. */
-export const REACTION_STATUS_TO_COLUMN: Record<string, string> = {
-  COMBUSTION:       REACTION_COLUMNS.COMBUSTION,
-  SOLIDIFICATION:   REACTION_COLUMNS.SOLIDIFICATION,
-  CORROSION:        REACTION_COLUMNS.CORROSION,
-  ELECTRIFICATION:  REACTION_COLUMNS.ELECTRIFICATION,
-};
-
-
 /** Default active duration for derived reaction events (20s at 120fps). */
 export const REACTION_DURATION = 2400;
 

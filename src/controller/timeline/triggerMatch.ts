@@ -12,7 +12,7 @@ import { EventStatusType } from '../../consts/enums';
 import { COMMON_OWNER_ID } from '../slot/commonSlotController';
 import {
   ELEMENT_TO_INFLICTION_COLUMN,
-  ENEMY_OWNER_ID, ENEMY_ACTION_COLUMN_ID, REACTION_COLUMNS,
+  ENEMY_OWNER_ID, ENEMY_ACTION_COLUMN_ID,
   REACTION_COLUMN_IDS, INFLICTION_COLUMN_IDS,
   PHYSICAL_STATUS_COLUMN_IDS,
 } from '../../model/channels';
@@ -163,13 +163,6 @@ function resolveColumns(cond: Predicate): Set<string> | undefined {
   const el = cond.element ?? cond.objectQualifier;
 
   switch (cond.object) {
-    case 'REACTION':
-      if (cond.objectId && cond.objectId !== 'ARTS') {
-        const colId = (REACTION_COLUMNS as Record<string, string>)[cond.objectId];
-        return colId ? new Set([colId]) : new Set();
-      }
-      return new Set(REACTION_COLUMN_IDS);
-
     case 'INFLICTION': {
       const ids = resolveColumnIds(cond.object, cond.objectId, cond.objectQualifier);
       if (ids.length > 0) return new Set(ids);

@@ -42,7 +42,8 @@
           "subjectDeterminer": "THIS",
           "subject": "OPERATOR",
           "verb": "APPLY",
-          "object": "REACTION"
+          "object": "STATUS",
+          "objectId": "REACTION"
         }
       ],
       "effects": [

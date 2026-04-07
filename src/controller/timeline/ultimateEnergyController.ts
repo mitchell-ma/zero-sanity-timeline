@@ -156,7 +156,7 @@ export class UltimateEnergyController {
       this.rawUltimateEnergyGains.push({
         frame: info.frame,
         sourceSlotId: info.slotId,
-        selfGain: gain,
+        selfGain: 0,
         teamGain: gain,
       });
     }

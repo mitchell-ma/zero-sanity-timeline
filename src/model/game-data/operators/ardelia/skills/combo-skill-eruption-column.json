@@ -199,7 +199,7 @@
                 },
                 {
                   "verb": "APPLY",
-                  "object": "REACTION",
+                  "object": "STATUS",
                   "objectQualifier": "CORROSION",
                   "to": "ENEMY",
                   "with": {
@@ -234,7 +234,8 @@
                         }
                       }
                     }
-                  }
+                  },
+                  "objectId": "REACTION"
                 },
                 {
                   "verb": "DEAL",

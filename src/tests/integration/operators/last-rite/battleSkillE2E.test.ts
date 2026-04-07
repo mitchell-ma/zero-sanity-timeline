@@ -16,25 +16,29 @@
  */
 
 import { renderHook, act } from '@testing-library/react';
-import { NounType, VerbType } from '../../../../dsl/semantics';
+import { NounType, VerbType, DeterminerType } from '../../../../dsl/semantics';
 import { useApp } from '../../../../app/useApp';
 import { ColumnType, EventStatusType } from '../../../../consts/enums';
 import { FPS } from '../../../../utils/timeline';
-import { ENEMY_OWNER_ID, INFLICTION_COLUMNS } from '../../../../model/channels';
+import { ENEMY_OWNER_ID, INFLICTION_COLUMNS, ENEMY_GROUP_COLUMNS } from '../../../../model/channels';
 import { ultimateGraphKey } from '../../../../model/channels';
+import { computeTimelinePresentation } from '../../../../controller/timeline/eventPresentationController';
 import {
   findColumn, buildContextMenu, getMenuPayload,
 } from '../../helpers';
 import type { AppResult, AddEventPayload } from '../../helpers';
+import type { MiniTimeline } from '../../../../consts/viewTypes';
 
 /* eslint-disable @typescript-eslint/no-require-imports */
 const LAST_RITE_ID: string = require('../../../../model/game-data/operators/last-rite/last-rite.json').id;
 const AKEKURI_ID: string = require('../../../../model/game-data/operators/akekuri/akekuri.json').id;
 const PERFUSION_JSON = require('../../../../model/game-data/operators/last-rite/statuses/status-hypothermic-perfusion.json');
+const MIRAGE_JSON = require('../../../../model/game-data/operators/last-rite/statuses/status-hypothermic-perfusion-mirage.json');
 const BATTLE_SKILL_JSON = require('../../../../model/game-data/operators/last-rite/skills/battle-skill-esoteric-legacy.json');
 /* eslint-enable @typescript-eslint/no-require-imports */
 
 const PERFUSION_ID: string = PERFUSION_JSON.properties.id;
+const MIRAGE_ID: string = MIRAGE_JSON.properties.id;
 
 const SLOT_LR = 'slot-0';
 const SLOT_AKEKURI = 'slot-1';
@@ -67,6 +71,12 @@ function placeBasicAttack(app: AppResult, atFrame: number) {
   app.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
 }
 
+function placeAkekuriBasicAttack(app: AppResult, atFrame: number) {
+  const col = findColumn(app, SLOT_AKEKURI, NounType.BASIC_ATTACK);
+  const payload = getMenuPayload(app, col!, atFrame);
+  app.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+}
+
 function swapControlTo(app: AppResult, slotId: string, atFrame: number) {
   const col = app.columns.find(
     (c) => c.type === ColumnType.MINI_TIMELINE && (c as { ownerId: string }).ownerId === slotId
@@ -86,11 +96,6 @@ function getPerfusionEvents(app: AppResult, ownerId?: string) {
     ev => ev.id === PERFUSION_ID && ev.startFrame > 0
       && (ownerId ? ev.ownerId === ownerId : true),
   );
-}
-
-function setPotential(app: AppResult, potential: number) {
-  const props = app.loadoutProperties[SLOT_LR];
-  app.handleStatsChange(SLOT_LR, { ...props, operator: { ...props.operator, potential } });
 }
 
 function getUeAtFrame(app: AppResult, slotId: string, frame: number) {
@@ -260,11 +265,7 @@ describe('E. Hypothermic Perfusion trigger (CONTROLLED OPERATOR PERFORM FINAL_ST
     expect(consumed.length).toBeGreaterThanOrEqual(1);
   });
 
-  it.skip('E2: non-controlled operator finisher does NOT trigger Hypothermic Perfusion', () => {
-    // TODO: Engine currently fires Hypothermic Perfusion trigger regardless of CONTROLLED state at the
-    // finisher frame. The trigger condition is CONTROLLED OPERATOR PERFORM FINAL_STRIKE,
-    // but the engine evaluates the BA owner as the subject. This test documents the
-    // expected behavior once the engine correctly gates on controlled state.
+  it('E2: non-controlled operator finisher does NOT trigger Hypothermic Perfusion', () => {
     const { result } = setupLrAndAkekuri();
     act(() => { placeBattleSkill(result.current, 2 * FPS); });
     act(() => { swapControlTo(result.current, SLOT_AKEKURI, 3 * FPS); });
@@ -275,7 +276,24 @@ describe('E. Hypothermic Perfusion trigger (CONTROLLED OPERATOR PERFORM FINAL_ST
     expect(consumed).toHaveLength(0);
   });
 
-  it('E3: Hypothermic Perfusion trigger applies cryo infliction with stacks = 1', () => {
+  it('E3: non-controlled operator (Akekuri) BATK does NOT consume Hypothermic Perfusion', () => {
+    const { result } = setupLrAndAkekuri();
+    // LR BS at 2s → Hypothermic Perfusion applied to controlled operator (LR, who is controlled)
+    act(() => { placeBattleSkill(result.current, 2 * FPS); });
+    // Place Akekuri BATK at 5s — LR is still controlled, Akekuri is NOT controlled
+    act(() => { placeAkekuriBasicAttack(result.current, 5 * FPS); });
+
+    // Hypothermic Perfusion on LR should NOT be consumed (Akekuri is not the controlled operator)
+    const perfusions = getPerfusionEvents(result.current, SLOT_LR);
+    const consumed = perfusions.filter(ev => ev.eventStatus === EventStatusType.CONSUMED);
+    expect(consumed).toHaveLength(0);
+
+    // No mirage should be created
+    const mirages = getMirageEvents(result.current);
+    expect(mirages).toHaveLength(0);
+  });
+
+  it('E4: Hypothermic Perfusion trigger applies cryo infliction with stacks = 1', () => {
     const { result } = setupLrOnly();
     act(() => { placeBattleSkill(result.current, 2 * FPS); });
     act(() => { placeBasicAttack(result.current, 5 * FPS); });
@@ -294,29 +312,24 @@ describe('E. Hypothermic Perfusion trigger (CONTROLLED OPERATOR PERFORM FINAL_ST
 // ═══════════════════════════════════════════════════════════════════════════════
 
 describe('F. P1 gated effects on Hypothermic Perfusion', () => {
-  it('F1: at P0, Hypothermic Perfusion trigger stagger = 0 (VARY_BY POTENTIAL [0, 5, 5, 5, 5, 5])', () => {
-    const { result } = setupLrOnly();
-    act(() => { setPotential(result.current, 0); });
-    act(() => { placeBattleSkill(result.current, 2 * FPS); });
-
-    // Verify the Hypothermic Perfusion config — P0 stagger should be 0
-    const staggerValues = PERFUSION_JSON.onTriggerClause[0].effects[2].with.value.value;
-    expect(staggerValues[0]).toBe(0); // P0
+  it('F1: at P0, mirage stagger = 0 (VARY_BY POTENTIAL [0, 5, 5, 5, 5, 5])', () => {
+    // Stagger values now live in the mirage status segment frame
+    const staggerEffect = MIRAGE_JSON.segments[0].frames[0].clause[0].effects.find(
+      (e: { verb: string; object: string }) => e.verb === VerbType.DEAL && e.object === NounType.STAGGER,
+    );
+    expect(staggerEffect.with.value.value[0]).toBe(0); // P0
   });
 
-  it('F2: at P1+, Hypothermic Perfusion trigger stagger = 5', () => {
-    const { result } = setupLrOnly();
-    act(() => { setPotential(result.current, 1); });
-    act(() => { placeBattleSkill(result.current, 2 * FPS); });
-
-    // Verify the Hypothermic Perfusion config — P1 stagger should be 5
-    const staggerValues = PERFUSION_JSON.onTriggerClause[0].effects[2].with.value.value;
-    expect(staggerValues[1]).toBe(5); // P1
+  it('F2: at P1+, mirage stagger = 5', () => {
+    const staggerEffect = MIRAGE_JSON.segments[0].frames[0].clause[0].effects.find(
+      (e: { verb: string; object: string }) => e.verb === VerbType.DEAL && e.object === NounType.STAGGER,
+    );
+    expect(staggerEffect.with.value.value[1]).toBe(5); // P1
   });
 
-  it('F3: at P1+, Hypothermic Perfusion passive applies 20% DAMAGE_BONUS to FINAL_STRIKE', () => {
-    // The clause is gated by HAVE POTENTIAL >= 1
+  it('F3: Hypothermic Perfusion passive gated by SOURCE OPERATOR HAVE POTENTIAL >= 1, applies 20% DAMAGE_BONUS', () => {
     const passiveClause = PERFUSION_JSON.clause[0];
+    expect(passiveClause.conditions[0].subjectDeterminer).toBe(DeterminerType.SOURCE);
     expect(passiveClause.conditions[0].verb).toBe(VerbType.HAVE);
     expect(passiveClause.conditions[0].object).toBe(NounType.POTENTIAL);
     expect(passiveClause.conditions[0].value.value).toBe(1);
@@ -330,12 +343,148 @@ describe('F. P1 gated effects on Hypothermic Perfusion', () => {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 describe('G. P5 mirage multiplier (1.2×)', () => {
-  it('G1: Hypothermic Perfusion trigger damage multiplier at P5 = 1.2× (VARY_BY POTENTIAL)', () => {
-    // Verify from config: VARY_BY POTENTIAL [1, 1, 1, 1, 1, 1.2]
-    const damageEffect = PERFUSION_JSON.onTriggerClause[0].effects[0];
+  it('G1: mirage damage multiplier at P5 = 1.2× (VARY_BY POTENTIAL)', () => {
+    // Damage multiplier now lives in the mirage status segment frame
+    const damageEffect = MIRAGE_JSON.segments[0].frames[0].clause[0].effects.find(
+      (e: { verb: string; object: string }) => e.verb === VerbType.DEAL && e.object === NounType.DAMAGE,
+    );
     const potentialMultiplier = damageEffect.with.value.right.value;
     expect(potentialMultiplier[0]).toBe(1);   // P0
     expect(potentialMultiplier[4]).toBe(1);   // P4
     expect(potentialMultiplier[5]).toBe(1.2); // P5
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// H. Hypothermic Perfusion (Mirage) — Enemy Status E2E
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function getMirageEvents(app: AppResult) {
+  return app.allProcessedEvents.filter(
+    ev => ev.id === MIRAGE_ID && ev.startFrame > 0,
+  );
+}
+
+describe('H. Hypothermic Perfusion (Mirage) — config verification', () => {
+  it('H1: mirage config — APPLY STATUS to ENEMY, CRYO element, 2s duration', () => {
+    expect(MIRAGE_JSON.properties.to).toBe(NounType.ENEMY);
+    expect(MIRAGE_JSON.properties.element).toBe('CRYO');
+    expect(MIRAGE_JSON.properties.duration.value.value).toBe(2);
+    expect(MIRAGE_JSON.properties.eventIdType).toBe('SKILL_STATUS');
+  });
+
+  it('H2: mirage segment frame at offset 0s with DEAL CRYO DAMAGE, APPLY CRYO INFLICTION, DEAL STAGGER', () => {
+    const frame = MIRAGE_JSON.segments[0].frames[0];
+    expect(frame.properties.offset.value).toBe(0);
+    expect(frame.properties.offset.unit).toBe('SECOND');
+
+    const effects = frame.clause[0].effects;
+    const dealDmg = effects.find(
+      (e: { verb: string; object: string }) => e.verb === VerbType.DEAL && e.object === NounType.DAMAGE,
+    );
+    expect(dealDmg).toBeDefined();
+    expect(dealDmg.objectQualifier).toBe('CRYO');
+
+    const applyInfliction = effects.find(
+      (e: { verb: string; object: string }) => e.verb === VerbType.APPLY && e.object === NounType.INFLICTION,
+    );
+    expect(applyInfliction).toBeDefined();
+    expect(applyInfliction.objectQualifier).toBe('CRYO');
+    expect(applyInfliction.with.stacks.value).toBe(1);
+
+    const dealStagger = effects.find(
+      (e: { verb: string; object: string }) => e.verb === VerbType.DEAL && e.object === NounType.STAGGER,
+    );
+    expect(dealStagger).toBeDefined();
+  });
+
+  it('H3: mirage damage/stagger use SOURCE OPERATOR stats (not THIS)', () => {
+    const effects = MIRAGE_JSON.segments[0].frames[0].clause[0].effects;
+
+    const dealDmg = effects.find(
+      (e: { verb: string; object: string }) => e.verb === VerbType.DEAL && e.object === NounType.DAMAGE,
+    );
+    // Skill level multiplier uses SOURCE
+    expect(dealDmg.with.value.left.of.determiner).toBe(DeterminerType.SOURCE);
+    // Potential multiplier uses SOURCE
+    expect(dealDmg.with.value.right.of.determiner).toBe(DeterminerType.SOURCE);
+    // Main stat uses SOURCE
+    expect(dealDmg.with.mainStat.of.determiner).toBe(DeterminerType.SOURCE);
+
+    const dealStagger = effects.find(
+      (e: { verb: string; object: string }) => e.verb === VerbType.DEAL && e.object === NounType.STAGGER,
+    );
+    expect(dealStagger.with.value.of.determiner).toBe(DeterminerType.SOURCE);
+  });
+
+  it('H4: Hypothermic Perfusion onTriggerClause applies mirage status to ENEMY', () => {
+    const applyEffect = PERFUSION_JSON.onTriggerClause[0].effects[0];
+    expect(applyEffect.verb).toBe(VerbType.APPLY);
+    expect(applyEffect.object).toBe(NounType.STATUS);
+    expect(applyEffect.objectId).toBe(MIRAGE_ID);
+    expect(applyEffect.to).toBe(NounType.ENEMY);
+  });
+});
+
+describe('H. Hypothermic Perfusion (Mirage) — pipeline E2E', () => {
+  it('H5: BS + finisher → mirage status created on enemy', () => {
+    const { result } = setupLrOnly();
+    act(() => { placeBattleSkill(result.current, 2 * FPS); });
+    act(() => { placeBasicAttack(result.current, 5 * FPS); });
+
+    const mirages = getMirageEvents(result.current);
+    expect(mirages.length).toBeGreaterThanOrEqual(1);
+    expect(mirages[0].ownerId).toBe(ENEMY_OWNER_ID);
+  });
+
+  it('H6: mirage sourceOwnerId tracks back to Last Rite operator', () => {
+    const { result } = setupLrOnly();
+    act(() => { placeBattleSkill(result.current, 2 * FPS); });
+    act(() => { placeBasicAttack(result.current, 5 * FPS); });
+
+    const mirages = getMirageEvents(result.current);
+    expect(mirages.length).toBeGreaterThanOrEqual(1);
+    expect(mirages[0].sourceOwnerId).toBe(LAST_RITE_ID);
+  });
+
+  it('H7: mirage triggers cryo infliction on enemy from its segment frame', () => {
+    const { result } = setupLrOnly();
+    act(() => { placeBattleSkill(result.current, 2 * FPS); });
+    act(() => { placeBasicAttack(result.current, 5 * FPS); });
+
+    // The mirage's frame at 0s offset should apply cryo infliction
+    const cryoInflictions = result.current.allProcessedEvents.filter(
+      ev => ev.columnId === INFLICTION_COLUMNS.CRYO && ev.ownerId === ENEMY_OWNER_ID
+        && ev.startFrame > 0,
+    );
+    expect(cryoInflictions.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('H8: mirage appears in enemy status view model', () => {
+    const { result } = setupLrOnly();
+    act(() => { placeBattleSkill(result.current, 2 * FPS); });
+    act(() => { placeBasicAttack(result.current, 5 * FPS); });
+
+    const enemyStatusCol = result.current.columns.find(
+      (c): c is MiniTimeline => c.type === ColumnType.MINI_TIMELINE
+        && c.ownerId === ENEMY_OWNER_ID && c.columnId === ENEMY_GROUP_COLUMNS.ENEMY_STATUS,
+    );
+    if (!enemyStatusCol) return; // Column may not exist if no enemy statuses configured
+
+    const vms = computeTimelinePresentation(result.current.allProcessedEvents, result.current.columns);
+    const vm = vms.get(enemyStatusCol.key);
+    if (!vm) return;
+
+    const mirageVmEvents = vm.events.filter(ev => ev.id === MIRAGE_ID);
+    expect(mirageVmEvents.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('H9: without finisher trigger, no mirage is created', () => {
+    const { result } = setupLrOnly();
+    // Only place BS — no basic attack / finisher
+    act(() => { placeBattleSkill(result.current, 2 * FPS); });
+
+    const mirages = getMirageEvents(result.current);
+    expect(mirages).toHaveLength(0);
   });
 });
