@@ -1,7 +1,7 @@
 {
   "properties": {
     "id": "WULFGARD_P3_HUNTING_HOUR",
-    "name": "Hunting Hour",
+    "name": "Hunting Hour (P3)",
     "level": 3,
     "eventType": "POTENTIAL_EVENT",
     "eventIdType": "POTENTIAL",

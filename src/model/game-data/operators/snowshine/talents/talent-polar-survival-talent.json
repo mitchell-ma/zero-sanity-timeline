@@ -58,7 +58,7 @@
       "verb": "IS",
       "value": 2
     },
-    "name": "Polar Survival (Talent)",
+    "name": "Polar Survival (T1)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",

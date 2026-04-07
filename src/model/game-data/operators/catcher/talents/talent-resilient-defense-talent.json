@@ -33,7 +33,7 @@
       "verb": "IS",
       "value": 2
     },
-    "name": "Resilient Defense (Talent)",
+    "name": "Resilient Defense (T1)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",

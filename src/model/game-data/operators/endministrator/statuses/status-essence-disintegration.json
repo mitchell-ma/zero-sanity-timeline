@@ -29,7 +29,7 @@
   ],
   "properties": {
     "id": "ESSENCE_DISINTEGRATION",
-    "name": "Essence Disintegration",
+    "name": "Essence Disintegration (T1)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "duration": {

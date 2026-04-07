@@ -5,7 +5,7 @@
       "verb": "IS",
       "value": 2
     },
-    "name": "Wildland Trekker (Talent)",
+    "name": "Wildland Trekker (T1)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",

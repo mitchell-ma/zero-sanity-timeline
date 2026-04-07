@@ -1,7 +1,7 @@
 {
   "properties": {
     "id": "ROSSI_P2_GAP_TO_PERFECTION",
-    "name": "Gap to Perfection",
+    "name": "Gap to Perfection (P2)",
     "level": 2,
     "eventType": "POTENTIAL_EVENT",
     "eventIdType": "POTENTIAL",

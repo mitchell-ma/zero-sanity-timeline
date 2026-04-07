@@ -1,11 +1,11 @@
 {
   "properties": {
     "id": "PERLICA_POTENTIAL_5",
-    "name": "Reentry Control",
+    "name": "Reentry Control (P5)",
     "level": 5,
     "eventType": "POTENTIAL_EVENT",
     "eventIdType": "POTENTIAL",
-    "description": "Ultimate Protocol ε: 70.41K improved: Critical Rate +30%."
+    "description": "Ultimate Protocol \u03b5: 70.41K improved: Critical Rate +30%."
   },
   "metadata": {
     "originId": "PERLICA",

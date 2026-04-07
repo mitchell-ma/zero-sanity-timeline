@@ -1,7 +1,7 @@
 {
   "properties": {
     "id": "PERLICA_POTENTIAL_1",
-    "name": "Crisis Handling",
+    "name": "Crisis Handling (P1)",
     "level": 1,
     "eventType": "POTENTIAL_EVENT",
     "eventIdType": "POTENTIAL",

@@ -1,7 +1,7 @@
 {
   "properties": {
     "id": "WULFGARD_P2_FIREARM_MODS",
-    "name": "Firearm Mods",
+    "name": "Firearm Mods (P2)",
     "level": 2,
     "eventType": "POTENTIAL_EVENT",
     "eventIdType": "POTENTIAL",

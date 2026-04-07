@@ -44,7 +44,7 @@
       "verb": "IS",
       "value": 2
     },
-    "name": "Tactical Instruction (Talent)",
+    "name": "Tactical Instruction (T2)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",

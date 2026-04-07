@@ -635,19 +635,54 @@ function computeMicroPositions(
       eventSlots.set(ev.uid, assignedSlot);
     }
 
-    // Each event renders at its assigned slot with fixed width 1/slotCount.
-    // We deliberately do NOT greedy-expand across slot boundaries: declared
-    // micro-columns have stable visual positions regardless of temporal gaps
-    // in neighboring slots, so users don't see a bar "taking over" an adjacent
-    // column at time ranges where the neighbor is momentarily empty.
+    // Greedy width expansion: each event expands into adjacent slots whose
+    // time ranges don't overlap the event's, so events are as wide as they
+    // can fit for visual clarity. Uses strict half-open interval overlap —
+    // two events that are temporally adjacent (A ends at frame X, B starts
+    // at frame X) don't block each other since they never coexist.
     const slotCount = Math.max(slots.length, 1);
     const slotFrac = 1 / slotCount;
 
+    // Expansion-aware occupancy: each slot tracks both its originally-assigned
+    // events AND ranges claimed by other events that have already expanded into
+    // it. This prevents two events from expanding into the same slot region and
+    // visually overlapping.
+    const expandedRanges: { start: number; end: number }[][] = slots.map(
+      (rs) => rs.map((r) => ({ start: r.start, end: r.end })),
+    );
+    const slotOccupiedDuring = (s: number, start: number, end: number) => {
+      for (const r of expandedRanges[s]) {
+        if (r.start < end && r.end > start) return true;
+      }
+      return false;
+    };
+
     for (const ev of sorted) {
-      const slot = eventSlots.get(ev.uid) ?? 0;
+      const s = eventSlots.get(ev.uid) ?? 0;
+      const evStart = ev.startFrame;
+      const evEnd = eventEndFrame(ev);
+
+      // Expand left into contiguous empty slots (respecting visual buffer).
+      let leftBound = s;
+      while (leftBound > 0 && !slotOccupiedDuring(leftBound - 1, evStart, evEnd)) {
+        leftBound--;
+      }
+      // Expand right into contiguous empty slots.
+      let rightBound = s;
+      while (rightBound < slotCount - 1 && !slotOccupiedDuring(rightBound + 1, evStart, evEnd)) {
+        rightBound++;
+      }
+
+      // Reserve the expanded range in every newly-claimed neighbor slot so
+      // subsequent events see this expansion when checking overlap.
+      for (let cs = leftBound; cs <= rightBound; cs++) {
+        if (cs === s) continue;
+        expandedRanges[cs].push({ start: evStart, end: evEnd });
+      }
+
       positions.set(ev.uid, {
-        leftFrac: slot * slotFrac,
-        widthFrac: slotFrac,
+        leftFrac: leftBound * slotFrac,
+        widthFrac: (rightBound - leftBound + 1) * slotFrac,
         color: mcById.get(ev.columnId)?.color ?? DEFAULT_EVENT_COLOR,
       });
     }

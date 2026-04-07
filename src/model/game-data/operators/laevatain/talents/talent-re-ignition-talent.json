@@ -33,7 +33,7 @@
       "verb": "IS",
       "value": 2
     },
-    "name": "Re-Ignition (Talent)",
+    "name": "Re-Ignition (T2)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",

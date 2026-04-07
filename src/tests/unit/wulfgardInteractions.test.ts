@@ -637,7 +637,7 @@ describe('G. Potentials', () => {
   test('G1: P1 — Lone Wolf', () => {
     const p1 = mockJson.potentials[0];
     expect(p1.level).toBe(1);
-    expect(p1.name).toBe('Lone Wolf');
+    expect(p1.name).toBe('Lone Wolf (P1)');
   });
 
   test('G6: All 5 potential levels are present', () => {

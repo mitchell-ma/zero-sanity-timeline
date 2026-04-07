@@ -416,7 +416,7 @@ describe('F. Potentials', () => {
   test('F5: P5 Proof of Existence', () => {
     const p5 = mockLaevatainJson.potentials[4];
     expect(p5.level).toBe(5);
-    expect(p5.name).toBe('Proof of Existence');
+    expect(p5.name).toBe('Proof of Existence (P5)');
   });
 
 });

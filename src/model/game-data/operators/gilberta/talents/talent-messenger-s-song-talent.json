@@ -135,7 +135,7 @@
       "verb": "IS",
       "value": 2
     },
-    "name": "Messenger's Song (Talent)",
+    "name": "Messenger's Song (T1)",
     "to": "TEAM",
     "eventType": "STATUS",
     "eventIdType": "TALENT",

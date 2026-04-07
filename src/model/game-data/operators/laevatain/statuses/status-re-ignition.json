@@ -34,7 +34,7 @@
   ],
   "properties": {
     "id": "RE_IGNITION",
-    "name": "Re-Ignition",
+    "name": "Re-Ignition (T2)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "duration": {

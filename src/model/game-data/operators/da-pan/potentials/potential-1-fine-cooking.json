@@ -1,7 +1,7 @@
 {
   "properties": {
     "id": "DA-PAN_POTENTIAL_1",
-    "name": "Fine Cooking",
+    "name": "Fine Cooking (P1)",
     "level": 1,
     "to": "OPERATOR",
     "toDeterminer": "THIS",

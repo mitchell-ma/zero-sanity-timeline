@@ -10766,3 +10766,112 @@
   color: var(--text-primary);
   margin-bottom: 0.375rem;
 }
+
+/* ── Hot-wire: inline value editing in info pane ─────────────────── */
+/* Shared affordance across DataCardBody contexts (skill card + status    */
+/* card + segment view). Readonly when EditState is absent, live when    */
+/* present. Palette: electric yellow accent, transparent backgrounds,    */
+/* monospace numerals — matches the existing .ops-* tactical aesthetic.  */
+
+.ops-value-editable {
+  cursor: text;
+  padding: 0 2px;
+  border-bottom: 1px solid transparent;
+  transition: border-color 90ms ease-out, color 90ms ease-out;
+  border-radius: 1px;
+}
+.ops-value-editable:hover {
+  border-bottom-color: color-mix(in srgb, var(--accent) 55%, transparent);
+  color: var(--text-bright);
+}
+
+.ops-value-input {
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid var(--accent);
+  outline: none;
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  padding: 0 2px;
+  width: 5.5ch;
+  text-shadow: 0 0 6px var(--accent-glow);
+  -moz-appearance: textfield;
+}
+.ops-value-input::-webkit-outer-spin-button,
+.ops-value-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.ops-value-input:focus {
+  box-shadow: 0 2px 0 -1px var(--accent);
+}
+
+.ops-value-overridden {
+  color: var(--accent) !important;
+  border-bottom: 1px dotted color-mix(in srgb, var(--accent) 60%, transparent);
+  padding-bottom: 1px;
+  text-shadow: 0 0 4px color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+.ops-reset-tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  margin-left: 6px;
+  padding: 0;
+  border-radius: 50%;
+  background: var(--bg-inset);
+  border: 1px solid color-mix(in srgb, var(--accent) 70%, transparent);
+  color: var(--accent);
+  font-size: 9px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 110ms ease-out, color 110ms ease-out, transform 180ms ease-out;
+  vertical-align: middle;
+  font-family: var(--font-mono);
+}
+.ops-reset-tab:hover {
+  background: var(--accent);
+  color: var(--bg-inset);
+  transform: rotate(-90deg);
+}
+.ops-reset-tab:active {
+  transform: rotate(-180deg) scale(0.92);
+}
+
+@keyframes ops-discharge {
+  0%   { color: var(--text-bright); text-shadow: 0 0 0 var(--accent-glow); }
+  40%  { color: var(--text-bright); text-shadow: 0 0 10px var(--accent); }
+  100% { color: var(--text-primary); text-shadow: none; }
+}
+.ops-value-discharging {
+  animation: ops-discharge 180ms ease-out;
+}
+
+/* VARY_BY table cell editing: per-cell underline + dot marker */
+.ops-frame-vary-table td.ops-cell--editable {
+  cursor: text;
+  transition: box-shadow 90ms ease-out;
+}
+.ops-frame-vary-table td.ops-cell--editable:hover {
+  box-shadow: inset 0 -1px 0 color-mix(in srgb, var(--accent) 55%, transparent);
+}
+.ops-frame-vary-table td.ops-cell--overridden {
+  color: var(--accent);
+  box-shadow: inset 0 -1px 0 color-mix(in srgb, var(--accent) 60%, transparent);
+}
+.ops-frame-vary-table td.ops-cell--overridden::before {
+  content: "";
+  display: inline-block;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--accent);
+  margin-right: 4px;
+  vertical-align: middle;
+  box-shadow: 0 0 4px var(--accent-glow);
+}

@@ -37,8 +37,85 @@ export function applyEventOverrides(
       patched = { ...patched, ...entry.propertyOverrides };
     }
 
+    // Apply JSON-path numeric overrides (deep clone, walk, write)
+    if (entry.jsonOverrides && Object.keys(entry.jsonOverrides).length > 0) {
+      patched = applyJsonOverrides(patched, entry.jsonOverrides);
+    }
+
     return patched;
   });
+}
+
+// ── JSON-path override application ───────────────────────────────────
+
+/** Parse "a.b[0].c" → ["a","b",0,"c"]. */
+function parseJsonPath(path: string): (string | number)[] {
+  const tokens: (string | number)[] = [];
+  const re = /([^.[\]]+)|\[(\d+)\]/g;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(path)) !== null) {
+    if (m[1] !== undefined) tokens.push(m[1]);
+    else if (m[2] !== undefined) tokens.push(Number(m[2]));
+  }
+  return tokens;
+}
+
+/**
+ * Deep-clone `event` and write each `jsonOverrides` value at its parsed path.
+ * Clones only along each path (path-copy), leaving unrelated subtrees shared.
+ * Silently skips paths that don't resolve (e.g. stale overrides after a config change).
+ */
+export function applyJsonOverrides(
+  event: TimelineEvent,
+  jsonOverrides: Record<string, number>,
+): TimelineEvent {
+  let out: TimelineEvent = event;
+  for (const [path, value] of Object.entries(jsonOverrides)) {
+    const tokens = parseJsonPath(path);
+    if (tokens.length === 0) continue;
+    const next = writePath(out as unknown as Record<string | number, unknown>, tokens, value);
+    if (next !== undefined) out = next as unknown as TimelineEvent;
+  }
+  return out;
+}
+
+/**
+ * Return a new node where `tokens` from `root` has been set to `value`.
+ * Returns undefined if the path doesn't resolve (missing intermediate node).
+ */
+function writePath(
+  root: Record<string | number, unknown>,
+  tokens: (string | number)[],
+  value: number,
+): Record<string | number, unknown> | undefined {
+  if (tokens.length === 0) return undefined;
+  const [head, ...rest] = tokens;
+  const current = root[head];
+
+  if (rest.length === 0) {
+    // Leaf: only write if current is a number (matches the intended leaf type)
+    if (typeof current !== 'number') return undefined;
+    return cloneWith(root, head, value);
+  }
+
+  if (current == null || typeof current !== 'object') return undefined;
+  const childWritten = writePath(current as Record<string | number, unknown>, rest, value);
+  if (childWritten === undefined) return undefined;
+  return cloneWith(root, head, childWritten);
+}
+
+/** Shallow-clone `root` (preserving array vs object) with one key replaced. */
+function cloneWith(
+  root: Record<string | number, unknown>,
+  key: string | number,
+  value: unknown,
+): Record<string | number, unknown> {
+  if (Array.isArray(root)) {
+    const copy = root.slice() as unknown[];
+    copy[key as number] = value;
+    return copy as unknown as Record<string | number, unknown>;
+  }
+  return { ...root, [key]: value };
 }
 
 function applyStructuralOverrides(ev: TimelineEvent, entry: EventOverride): TimelineEvent {

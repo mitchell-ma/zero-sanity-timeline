@@ -302,15 +302,28 @@ for (const k of _opCtx.keys()) {
 /** All operator statuses indexed by operator JSON ID. */
 const operatorStatusCache = new Map<string, OperatorStatus[]>();
 
-// Load individual status/talent files from operator subdirectories
-const operatorStatusContext = require.context('./operators', true, /\/(statuses|talents)\/[^/]+\.json$/);
+// Load individual status/talent/potential files from operator subdirectories.
+// Potentials are scanned too because self-triggering potentials (e.g. Estella
+// P5 "Survival is a Win") live in potentials/ and carry onTriggerClause.
+// Description-only potential files (no clause / no onTriggerClause) are skipped.
+const operatorStatusContext = require.context('./operators', true, /\/(statuses|talents|potentials)\/[^/]+\.json$/);
 for (const key of operatorStatusContext.keys()) {
   // Extract operatorId from path: ./laevatain/statuses/status-melting-flame.json → LAEVATAIN
-  const match = key.match(/^\.\/([^/]+)\/(statuses|talents)\/[^/]+\.json$/);
+  const match = key.match(/^\.\/([^/]+)\/(statuses|talents|potentials)\/[^/]+\.json$/);
   if (!match || match[1] === 'generic') continue;
   const operatorId = _dirToId.get(match[1]) ?? match[1];
 
   const json = operatorStatusContext(key) as Record<string, unknown>;
+  // Potential files are description-only by convention (their effects are
+  // baked into the skill/talent/status they modify via VARY_BY POTENTIAL).
+  // Only load potential files that are explicitly marked as STATUS (e.g.
+  // self-triggering potential statuses like Estella P5 Survival is a Win).
+  // Other potential files may still carry legacy clauses — skip them so
+  // they don't fire without proper potential-level gating.
+  if (match[2] === 'potentials') {
+    const props = json.properties as Record<string, unknown> | undefined;
+    if (props?.eventType !== EventType.STATUS) continue;
+  }
   const status = OperatorStatus.deserialize(json, key);
 
   if (!operatorStatusCache.has(operatorId)) {

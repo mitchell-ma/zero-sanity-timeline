@@ -52,7 +52,7 @@
       "verb": "IS",
       "value": 2
     },
-    "name": "Unpredictable (Talent)",
+    "name": "Unpredictable (T2)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",

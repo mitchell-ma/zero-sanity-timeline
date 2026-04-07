@@ -1,7 +1,7 @@
 {
   "properties": {
     "id": "DA_PAN_POTENTIAL_4",
-    "name": "Special Blend",
+    "name": "Special Blend (P4)",
     "level": 4,
     "eventType": "POTENTIAL_EVENT",
     "eventIdType": "POTENTIAL",

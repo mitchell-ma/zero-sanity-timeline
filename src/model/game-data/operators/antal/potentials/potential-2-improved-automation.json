@@ -1,7 +1,7 @@
 {
   "properties": {
     "id": "ANTAL_POTENTIAL_2",
-    "name": "Improved Automation",
+    "name": "Improved Automation (P2)",
     "level": 2,
     "eventType": "POTENTIAL_EVENT",
     "eventIdType": "POTENTIAL",

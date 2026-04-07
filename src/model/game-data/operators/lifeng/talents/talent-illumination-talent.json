@@ -16,14 +16,30 @@
                 "left": {
                   "verb": "VARY_BY",
                   "object": "TALENT_LEVEL",
-                  "value": [0.001, 0.0015],
-                  "of": { "object": "OPERATOR", "determiner": "THIS" }
+                  "value": [
+                    0.001,
+                    0.0015
+                  ],
+                  "of": {
+                    "object": "OPERATOR",
+                    "determiner": "THIS"
+                  }
                 },
                 "right": {
                   "verb": "VARY_BY",
                   "object": "POTENTIAL",
-                  "value": [0, 0, 0, 0.0005, 0.0005, 0.0005],
-                  "of": { "object": "OPERATOR", "determiner": "THIS" }
+                  "value": [
+                    0,
+                    0,
+                    0,
+                    0.0005,
+                    0.0005,
+                    0.0005
+                  ],
+                  "of": {
+                    "object": "OPERATOR",
+                    "determiner": "THIS"
+                  }
                 }
               },
               "right": {
@@ -32,13 +48,19 @@
                   "verb": "IS",
                   "object": "STAT",
                   "objectId": "WILL",
-                  "of": { "object": "OPERATOR", "determiner": "THIS" }
+                  "of": {
+                    "object": "OPERATOR",
+                    "determiner": "THIS"
+                  }
                 },
                 "right": {
                   "verb": "IS",
                   "object": "STAT",
                   "objectId": "INTELLECT",
-                  "of": { "object": "OPERATOR", "determiner": "THIS" }
+                  "of": {
+                    "object": "OPERATOR",
+                    "determiner": "THIS"
+                  }
                 }
               }
             }
@@ -54,7 +76,7 @@
       "verb": "IS",
       "value": 2
     },
-    "name": "Illumination (Talent)",
+    "name": "Illumination (T1)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",

@@ -1,7 +1,7 @@
 {
   "properties": {
     "id": "DA_PAN_POTENTIAL_3",
-    "name": "Model Employee",
+    "name": "Model Employee (P3)",
     "level": 3,
     "eventType": "POTENTIAL_EVENT",
     "eventIdType": "POTENTIAL",

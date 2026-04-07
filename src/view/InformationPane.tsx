@@ -125,6 +125,9 @@ type InformationPaneProps = {
       damageRows?: DamageTableRow[];
       spConsumptionHistory?: { eventUid: string; frame: number; naturalConsumed: number; returnedConsumed: number }[];
       onSaveAsCustomSkill?: (event: TimelineEvent) => void;
+      overrides?: import('../consts/overrideTypes').OverrideStore;
+      onSetJsonOverride?: (target: TimelineEvent, path: string, value: number) => void;
+      onClearJsonOverride?: (target: TimelineEvent, path: string) => void;
     }
   | {
       mode: InfoPaneMode.LOADOUT;
@@ -250,6 +253,9 @@ export default function InformationPane(props: InformationPaneProps) {
           spConsumptionHistory={props.spConsumptionHistory}
           onSaveAsCustomSkill={props.onSaveAsCustomSkill}
           verbose={verbose}
+          overrides={props.overrides}
+          onSetJsonOverride={props.onSetJsonOverride}
+          onClearJsonOverride={props.onClearJsonOverride}
         />
       ) : props.mode === InfoPaneMode.LOADOUT ? (
         <LoadoutPane

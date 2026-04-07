@@ -1,11 +1,11 @@
 {
   "properties": {
     "id": "CATCHER_POTENTIAL_1",
-    "name": "Multi-layered Readiness",
+    "name": "Multi-layered Readiness (P1)",
     "level": 1,
     "eventType": "POTENTIAL_EVENT",
     "eventIdType": "POTENTIAL",
-    "description": "Battle skill Rigid Interdiction and ultimate Textbook Assault improved: After hitting the enemy, deals another strike that deals [300 + DEF×5.0] of Physical DMG."
+    "description": "Battle skill Rigid Interdiction and ultimate Textbook Assault improved: After hitting the enemy, deals another strike that deals [300 + DEF\u00d75.0] of Physical DMG."
   },
   "metadata": {
     "originId": "CATCHER",

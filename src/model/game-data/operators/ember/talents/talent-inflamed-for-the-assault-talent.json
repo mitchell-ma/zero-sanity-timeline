@@ -5,7 +5,7 @@
       "verb": "IS",
       "value": 2
     },
-    "name": "Inflamed for the Assault (Talent)",
+    "name": "Inflamed for the Assault (T1)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",

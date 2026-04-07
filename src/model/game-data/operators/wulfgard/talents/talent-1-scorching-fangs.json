@@ -1,7 +1,7 @@
 {
   "properties": {
     "id": "WULFGARD_TALENT1_SCORCHING_FANGS",
-    "name": "Scorching Fangs (Talent)",
+    "name": "Scorching Fangs (T1)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "duration": {

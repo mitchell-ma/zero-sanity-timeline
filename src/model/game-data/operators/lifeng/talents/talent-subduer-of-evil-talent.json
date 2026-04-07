@@ -50,7 +50,7 @@
       "verb": "IS",
       "value": 2
     },
-    "name": "Subduer of Evil (Talent)",
+    "name": "Subduer of Evil (T2)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",

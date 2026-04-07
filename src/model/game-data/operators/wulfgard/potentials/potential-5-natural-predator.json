@@ -31,13 +31,13 @@
   ],
   "properties": {
     "id": "WULFGARD_P5_NATURAL_PREDATOR",
-    "name": "Natural Predator",
+    "name": "Natural Predator (P5)",
     "level": 5,
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "POTENTIAL_EVENT",
     "eventIdType": "POTENTIAL",
-    "description": "Casting the ultimate Wolven Fury immediately resets the cooldown of the combo skill Frag Grenade·β."
+    "description": "Casting the ultimate Wolven Fury immediately resets the cooldown of the combo skill Frag Grenade\u00b7\u03b2."
   },
   "metadata": {
     "originId": "WULFGARD",

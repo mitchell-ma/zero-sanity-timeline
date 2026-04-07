@@ -34,6 +34,8 @@ import {
   setPropertyOverride,
   setCritPin,
   clearAllCritPins as clearAllCritPinsFromStore,
+  setJsonOverride,
+  clearJsonOverride,
 } from './overrideController';
 import type { LoadoutProperties } from '../view/InformationPane';
 
@@ -133,6 +135,16 @@ export class CombatStateController {
 
   resetFrameOverrides(state: CombatState, target: TimelineEvent): CombatState {
     return { ...state, overrides: clearFrameOverrides(state.overrides, target) };
+  }
+
+  setJsonOverride(state: CombatState, target: TimelineEvent, path: string, value: number): CombatState {
+    const overrides = setJsonOverride(state.overrides, target, path, value);
+    return overrides === state.overrides ? state : { ...state, overrides };
+  }
+
+  clearJsonOverride(state: CombatState, target: TimelineEvent, path: string): CombatState {
+    const overrides = clearJsonOverride(state.overrides, target, path);
+    return overrides === state.overrides ? state : { ...state, overrides };
   }
 
   setPropertyOverride(state: CombatState, target: TimelineEvent, key: string, value: unknown): CombatState {

@@ -5,7 +5,7 @@
       "verb": "IS",
       "value": 1
     },
-    "name": "Freeze Protocol (Talent)",
+    "name": "Freeze Protocol (T2)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",

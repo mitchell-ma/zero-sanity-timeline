@@ -56,7 +56,7 @@
       "verb": "IS",
       "value": 2
     },
-    "name": "Pay the Ferric Price",
+    "name": "Pay the Ferric Price (T2)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "duration": {

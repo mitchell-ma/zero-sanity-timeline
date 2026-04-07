@@ -5,7 +5,7 @@
       "verb": "IS",
       "value": 2
     },
-    "name": "Hannabit Wisdom (Talent)",
+    "name": "Hannabit Wisdom (T2)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",

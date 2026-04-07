@@ -39,12 +39,12 @@
       "verb": "IS",
       "value": 2
     },
-    "name": "SAR Professional (Talent)",
+    "name": "SAR Professional (T2)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
     "eventIdType": "TALENT",
-    "description": "Battle skill Saturated Defense improved: After successfully retaliating an enemy attack, Snowshine gains another 10 Ultimate Energy. (RETALIATE is a placeholder verb — no DSL equivalent yet)"
+    "description": "Battle skill Saturated Defense improved: After successfully retaliating an enemy attack, Snowshine gains another 10 Ultimate Energy. (RETALIATE is a placeholder verb \u2014 no DSL equivalent yet)"
   },
   "metadata": {
     "originId": "SNOWSHINE",

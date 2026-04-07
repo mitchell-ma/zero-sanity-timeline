@@ -29,7 +29,7 @@
   ],
   "properties": {
     "id": "SLASHING_EDGE",
-    "name": "Slashing Edge",
+    "name": "Slashing Edge (T1)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "duration": {

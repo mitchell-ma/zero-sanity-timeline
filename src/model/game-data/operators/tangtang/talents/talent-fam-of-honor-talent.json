@@ -56,7 +56,7 @@
       "verb": "IS",
       "value": 2
     },
-    "name": "Fam of Honor (Talent)",
+    "name": "Fam of Honor (T1)",
     "to": "OPERATOR",
     "toDeterminer": "ALL",
     "eventType": "STATUS",

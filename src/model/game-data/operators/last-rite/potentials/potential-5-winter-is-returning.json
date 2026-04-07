@@ -1,11 +1,11 @@
 {
   "properties": {
     "id": "LAST_RITE_POTENTIAL_5",
-    "name": "Winter is Returning",
+    "name": "Winter is Returning (P5)",
     "level": 5,
     "eventType": "POTENTIAL_EVENT",
     "eventIdType": "POTENTIAL",
-    "description": "Battle skill Esoteric Legacy of Seš'qa improved: Amount of SP returned is increased by another 5; Mirage Additional ATK Multiplier is increased to 1.2 times the original."
+    "description": "Battle skill Esoteric Legacy of Se\u0161'qa improved: Amount of SP returned is increased by another 5; Mirage Additional ATK Multiplier is increased to 1.2 times the original."
   },
   "metadata": {
     "originId": "LAST_RITE",

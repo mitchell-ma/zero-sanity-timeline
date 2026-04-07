@@ -5,7 +5,7 @@
       "verb": "IS",
       "value": 2
     },
-    "name": "Cheer of Victory (Talent)",
+    "name": "Cheer of Victory (T1)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",

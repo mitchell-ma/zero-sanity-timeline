@@ -56,10 +56,10 @@ const ULTIMATE_JSON = require(
 const ULTIMATE_ID: string = ULTIMATE_JSON.properties.id;
 
 const COMMISERATION_ID: string = require(
-  '../../../../model/game-data/operators/estella/statuses/status-commiseration.json',
+  '../../../../model/game-data/operators/estella/talents/talent-commiseration-talent.json',
 ).properties.id;
 const SURVIVAL_P5_ID: string = require(
-  '../../../../model/game-data/operators/estella/talents/talent-survival-is-a-win-p5-talent.json',
+  '../../../../model/game-data/operators/estella/potentials/potential-5-survival-is-a-win.json',
 ).properties.id;
 const AUDIO_NOISE_BATK_ID: string = require(
   '../../../../model/game-data/operators/estella/skills/basic-attack-batk-audio-noise.json',
@@ -563,6 +563,59 @@ describe('G. Commiseration SP return (Estella BS only)', () => {
         && ev.startFrame + (ev.segments?.[0]?.properties?.duration ?? 0) > 8 * FPS,
     );
     expect(active.length).toBe(0);
+  });
+
+  it('G3: shatter applies Commiseration and Estella BS consumes it', () => {
+    const { result } = setupEstella();
+    act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
+
+    // APPLY path: shatter on Estella self-applies COMMISERATION_TALENT.
+    triggerCommiseration(result);
+
+    const applied = result.current.allProcessedEvents.filter(
+      (ev) => ev.columnId === COMMISERATION_ID && ev.ownerId === SLOT_ESTELLA,
+    );
+    expect(applied.length).toBeGreaterThanOrEqual(1);
+
+    // CONSUME path: Estella's own battle skill consumes THIS event.
+    const bsCol = findColumn(result.current, SLOT_ESTELLA, NounType.BATTLE);
+    const bsFrame = 8 * FPS;
+    const bsPayload = getMenuPayload(result.current, bsCol!, bsFrame);
+    act(() => {
+      result.current.handleAddEvent(
+        bsPayload.ownerId, bsPayload.columnId, bsPayload.atFrame, bsPayload.defaultSkill,
+      );
+    });
+
+    // After BS, no Commiseration event should remain active past the BS frame —
+    // CONSUME truncates the event so its end ≤ bsFrame.
+    const stillActive = result.current.allProcessedEvents.filter(
+      (ev) => ev.columnId === COMMISERATION_ID
+        && ev.ownerId === SLOT_ESTELLA
+        && ev.startFrame + eventDuration(ev) > bsFrame,
+    );
+    expect(stillActive.length).toBe(0);
+  });
+
+  it('G4: Commiseration second clause carries RETURN SKILL_POINT VARY_BY TALENT_LEVEL [7.5, 15]', () => {
+    /* eslint-disable @typescript-eslint/no-require-imports */
+    const TALENT_JSON = require(
+      '../../../../model/game-data/operators/estella/talents/talent-commiseration-talent.json',
+    );
+    /* eslint-enable @typescript-eslint/no-require-imports */
+    const consumeClause = TALENT_JSON.onTriggerClause[1];
+    const returnEffect = consumeClause.effects.find(
+      (e: { verb: string; object: string }) => e.verb === 'RETURN' && e.object === 'SKILL_POINT',
+    );
+    expect(returnEffect).toBeDefined();
+    expect(returnEffect.with.value.verb).toBe('VARY_BY');
+    expect(returnEffect.with.value.object).toBe('TALENT_LEVEL');
+    expect(returnEffect.with.value.value).toEqual([7.5, 15]);
+    // The clause must also CONSUME the talent event so the SP return is gated.
+    const consumeEffect = consumeClause.effects.find(
+      (e: { verb: string; object: string }) => e.verb === 'CONSUME' && e.object === 'EVENT',
+    );
+    expect(consumeEffect).toBeDefined();
   });
 });
 

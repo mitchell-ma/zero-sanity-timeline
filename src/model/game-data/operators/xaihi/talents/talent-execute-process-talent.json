@@ -5,7 +5,7 @@
       "verb": "IS",
       "value": 2
     },
-    "name": "Execute Process (Talent)",
+    "name": "Execute Process (T1)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",

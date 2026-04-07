@@ -191,6 +191,6 @@ describe('A. Living Banner Counter', () => {
 
     const override = vm.statusOverrides.get(bannerInView[0].uid);
     expect(override).toBeDefined();
-    expect(override!.label).toBe('The Living Banner (Talent) 20');
+    expect(override!.label).toBe('The Living Banner (T1) 20');
   });
 });

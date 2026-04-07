@@ -27,7 +27,7 @@
       "verb": "IS",
       "value": 2
     },
-    "name": "Salty or Mild (Talent)",
+    "name": "Salty or Mild (T2)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",

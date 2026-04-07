@@ -1,14 +1,138 @@
 {
+  "onTriggerClause": [
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "REACTION",
+          "objectQualifier": "SOLIDIFICATION",
+          "to": "ENEMY"
+        },
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "HAVE",
+          "negated": true,
+          "object": "STATUS",
+          "objectId": "SURVIVAL_IS_A_WIN_P5"
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "EVENT",
+          "objectDeterminer": "THIS",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
+        }
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT"
+      },
+      "properties": {
+        "name": "Survival is a Win",
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 1
+          },
+          "unit": "SECOND"
+        }
+      },
+      "frames": [
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "ENDFIELD_WIKI"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 0,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "RECOVER",
+                  "object": "ULTIMATE_ENERGY",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 5
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
+        }
+      ]
+    },
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT"
+      },
+      "properties": {
+        "segmentTypes": [
+          "IMMEDIATE_COOLDOWN"
+        ],
+        "name": "Cooldown",
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 1
+          },
+          "unit": "SECOND"
+        },
+        "timeDependency": "REAL_TIME"
+      },
+      "frames": []
+    }
+  ],
   "properties": {
-    "id": "ESTELLA_POTENTIAL_5",
-    "name": "Survival is a Win",
+    "id": "SURVIVAL_IS_A_WIN_P5",
     "level": 5,
-    "eventType": "POTENTIAL_EVENT",
+    "name": "Survival is a Win (P5)",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
+    "eventType": "STATUS",
     "eventIdType": "POTENTIAL",
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": 1
+      },
+      "unit": "SECOND"
+    },
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 1
+      },
+      "interactionType": "RESET"
+    },
     "description": "After applying Solidification to an enemy, Estella gains 5 Ultimate Energy. Effect can only trigger once every 1s."
   },
   "metadata": {
     "originId": "ESTELLA",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ],
     "dataStatus": "RECONCILED"
   }
 }

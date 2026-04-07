@@ -417,13 +417,13 @@ describe('E. Potentials', () => {
   test('E1: P1 — Positive Feedback', () => {
     const p1 = mockJson.potentials[0];
     expect(p1.level).toBe(1);
-    expect(p1.name).toBe('Positive Feedback');
+    expect(p1.name).toBe('Positive Feedback (P1)');
   });
 
   test('E2: P2 — Passionate Idealist', () => {
     const p2 = mockJson.potentials[1];
     expect(p2.level).toBe(2);
-    expect(p2.name).toBe('Passionate Idealist');
+    expect(p2.name).toBe('Passionate Idealist (P2)');
   });
 
   test('E5: All 5 potential levels are present', () => {

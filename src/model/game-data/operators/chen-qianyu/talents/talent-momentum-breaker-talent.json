@@ -42,7 +42,7 @@
       "verb": "IS",
       "value": 2
     },
-    "name": "Momentum Breaker (Talent)",
+    "name": "Momentum Breaker (T2)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",

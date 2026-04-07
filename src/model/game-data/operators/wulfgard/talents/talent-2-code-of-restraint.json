@@ -5,7 +5,7 @@
       "verb": "IS",
       "value": 2
     },
-    "name": "Code of Restraint (Talent)",
+    "name": "Code of Restraint (T2)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",

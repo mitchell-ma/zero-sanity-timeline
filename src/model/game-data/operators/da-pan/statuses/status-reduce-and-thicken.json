@@ -30,7 +30,7 @@
   ],
   "properties": {
     "id": "REDUCE_AND_THICKEN",
-    "name": "Reduce and Thicken",
+    "name": "Reduce and Thicken (T1)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "duration": {

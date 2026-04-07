@@ -1,7 +1,7 @@
 {
   "properties": {
     "id": "ROSSI_P3_TANGIBLE_DUTIES",
-    "name": "Tangible Duties",
+    "name": "Tangible Duties (P3)",
     "level": 3,
     "eventType": "POTENTIAL_EVENT",
     "eventIdType": "POTENTIAL",

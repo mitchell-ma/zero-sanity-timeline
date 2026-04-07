@@ -490,7 +490,7 @@ describe('E. Potentials', () => {
   test('E4: P4 — Granny\'s Reminder', () => {
     const p4 = mockAntalJson.potentials[3];
     expect(p4.level).toBe(4);
-    expect(p4.name).toBe("Granny's Reminder");
+    expect(p4.name).toBe("Granny's Reminder (P4)");
   });
 
   test('E6: All 5 potential levels are present', () => {

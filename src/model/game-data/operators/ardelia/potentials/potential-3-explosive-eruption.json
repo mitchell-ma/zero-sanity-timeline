@@ -1,7 +1,7 @@
 {
   "properties": {
     "id": "ARDELIA_POTENTIAL_3",
-    "name": "Explosive Eruption",
+    "name": "Explosive Eruption (P3)",
     "level": 3,
     "eventType": "POTENTIAL_EVENT",
     "eventIdType": "POTENTIAL",

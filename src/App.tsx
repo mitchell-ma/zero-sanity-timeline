@@ -472,6 +472,9 @@ export default function App() {
             damageRows={app.damageRows}
             spConsumptionHistory={app.spConsumptionHistory}
             onSaveAsCustomSkill={handleSaveAsCustomSkill}
+            overrides={app.overrides}
+            onSetJsonOverride={app.handleSetJsonOverride}
+            onClearJsonOverride={app.handleClearJsonOverride}
           />
         ) : app.editingSlot && app.editingSlot.operator ? (
           <InformationPane

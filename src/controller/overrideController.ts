@@ -63,6 +63,7 @@ function isEventOverrideEmpty(eo: EventOverride): boolean {
   if (eo.deletedFrames && eo.deletedFrames.length > 0) return false;
   if (eo.chanceOverrides && eo.chanceOverrides.length > 0) return false;
   if (eo.propertyOverrides && Object.keys(eo.propertyOverrides).length > 0) return false;
+  if (eo.jsonOverrides && Object.keys(eo.jsonOverrides).length > 0) return false;
   return true;
 }
 
@@ -204,6 +205,28 @@ export function setPropertyOverride(store: OverrideStore, event: TimelineEvent, 
   const entry = getOrCreateOverride(store, key);
   const propertyOverrides = { ...entry.propertyOverrides, [prop]: value };
   return setEntry(store, key, { ...entry, propertyOverrides });
+}
+
+// ── JSON-path numeric overrides ──────────────────────────────────────
+
+export function getJsonOverride(store: OverrideStore, event: TimelineEvent, path: string): number | undefined {
+  return store[buildOverrideKey(event)]?.jsonOverrides?.[path];
+}
+
+export function setJsonOverride(store: OverrideStore, event: TimelineEvent, path: string, value: number): OverrideStore {
+  const key = buildOverrideKey(event);
+  const entry = getOrCreateOverride(store, key);
+  const jsonOverrides = { ...entry.jsonOverrides, [path]: value };
+  return setEntry(store, key, { ...entry, jsonOverrides });
+}
+
+export function clearJsonOverride(store: OverrideStore, event: TimelineEvent, path: string): OverrideStore {
+  const key = buildOverrideKey(event);
+  const entry = store[key];
+  if (!entry?.jsonOverrides || !(path in entry.jsonOverrides)) return store;
+  const { [path]: _, ...rest } = entry.jsonOverrides;
+  const jsonOverrides = Object.keys(rest).length > 0 ? rest : undefined;
+  return setEntry(store, key, { ...entry, jsonOverrides });
 }
 
 // ── Undo deletions ──────────────────────────────────────────────────

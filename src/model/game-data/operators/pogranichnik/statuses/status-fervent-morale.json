@@ -50,7 +50,7 @@
   ],
   "properties": {
     "id": "FERVENT_MORALE",
-    "name": "Fervent Morale",
+    "name": "Fervent Morale (T1)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "duration": {

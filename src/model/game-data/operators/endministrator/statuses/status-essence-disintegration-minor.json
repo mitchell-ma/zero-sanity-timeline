@@ -29,7 +29,7 @@
   ],
   "properties": {
     "id": "ESSENCE_DISINTEGRATION_MINOR",
-    "name": "Essence Disintegration (Minor)",
+    "name": "Essence Disintegration (Minor) (T1)",
     "to": "OPERATOR",
     "toDeterminer": "ALL_OTHER",
     "duration": {

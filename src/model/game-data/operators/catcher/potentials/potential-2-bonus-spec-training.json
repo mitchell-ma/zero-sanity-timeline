@@ -34,7 +34,7 @@
   ],
   "properties": {
     "id": "CATCHER_POTENTIAL_2",
-    "name": "Bonus Spec Training",
+    "name": "Bonus Spec Training (P2)",
     "level": 2,
     "eventType": "POTENTIAL_EVENT",
     "eventIdType": "POTENTIAL",

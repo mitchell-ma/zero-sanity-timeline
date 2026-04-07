@@ -86,7 +86,7 @@
       "verb": "IS",
       "value": 2
     },
-    "name": "Essence Disintegration (Talent)",
+    "name": "Essence Disintegration (T1)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",

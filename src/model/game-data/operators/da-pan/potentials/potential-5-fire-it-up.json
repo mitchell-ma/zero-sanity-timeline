@@ -1,7 +1,7 @@
 {
   "properties": {
     "id": "DA_PAN_POTENTIAL_5",
-    "name": "Fire it Up",
+    "name": "Fire it Up (P5)",
     "level": 5,
     "eventType": "POTENTIAL_EVENT",
     "eventIdType": "POTENTIAL",

@@ -48,7 +48,7 @@
   ],
   "properties": {
     "id": "INFLAMED_FOR_THE_ASSAULT",
-    "name": "Inflamed for the Assault",
+    "name": "Inflamed for the Assault (T1)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "duration": {

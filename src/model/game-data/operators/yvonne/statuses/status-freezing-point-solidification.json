@@ -48,7 +48,7 @@
   ],
   "properties": {
     "id": "FREEZING_POINT_SOLIDIFICATION",
-    "name": "Freezing Point (Solidification)",
+    "name": "Freezing Point (Solidification) (T2)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "duration": {

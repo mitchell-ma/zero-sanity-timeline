@@ -89,7 +89,7 @@
       "verb": "IS",
       "value": 2
     },
-    "name": "Freezing Point (Talent)",
+    "name": "Freezing Point (T2)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",

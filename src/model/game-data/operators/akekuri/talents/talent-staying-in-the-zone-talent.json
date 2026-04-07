@@ -5,7 +5,7 @@
       "verb": "IS",
       "value": 1
     },
-    "name": "Staying in the Zone (Talent)",
+    "name": "Staying in the Zone (T2)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",

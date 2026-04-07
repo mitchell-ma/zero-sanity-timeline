@@ -5,7 +5,7 @@
       "verb": "IS",
       "value": 2
     },
-    "name": "EXPEDITED DELIVERY (Talent)",
+    "name": "EXPEDITED DELIVERY (T1)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",

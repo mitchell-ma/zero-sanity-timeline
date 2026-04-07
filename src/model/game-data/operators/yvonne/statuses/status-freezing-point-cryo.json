@@ -48,7 +48,7 @@
   ],
   "properties": {
     "id": "FREEZING_POINT_CRYO",
-    "name": "Freezing Point (Cryo)",
+    "name": "Freezing Point (Cryo) (T2)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "duration": {

@@ -5,12 +5,12 @@
       "verb": "IS",
       "value": 2
     },
-    "name": "Subconscious Act (Talent)",
+    "name": "Subconscious Act (T2)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
     "eventIdType": "TALENT",
-    "description": "Gains 30% chance of Physical DMG immunity and restores HP of self by [45 + Strength×0.38]."
+    "description": "Gains 30% chance of Physical DMG immunity and restores HP of self by [45 + Strength\u00d70.38]."
   },
   "metadata": {
     "originId": "ANTAL",

@@ -5,7 +5,7 @@
       "verb": "IS",
       "value": 2
     },
-    "name": "Veteran Angler (Talent)",
+    "name": "Veteran Angler (T2)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",

@@ -14,6 +14,125 @@ import type { JsonSkillData } from './OperatorEventEditor';
 import type { NormalizedEffectDef } from '../../controller/gameDataStore';
 import { t } from '../../locales/locale';
 
+// ── Edit state (for inline info-pane editing) ──────────────────────────────
+
+/**
+ * Opaque edit state passed from EventPane down through every leaf renderer.
+ * When present, numeric leaves render as inline editable inputs with an
+ * override + reset affordance. When undefined, the card is fully readonly.
+ */
+export interface EditState {
+  getOverride: (path: string) => number | undefined;
+  isOverridden: (path: string) => boolean;
+  setOverride: (path: string, value: number) => void;
+  clearOverride: (path: string) => void;
+}
+
+/**
+ * Inline editable numeric leaf. Readonly when `editState` is undefined.
+ *
+ * Visual states (see hot-wire CSS block in App.css):
+ *  - resting:     plain monospace numeral
+ *  - hover:       dim-yellow underline hint
+ *  - editing:     inline number input with accent underbar
+ *  - overridden:  accent-colored, dotted underline, reset tab on the right
+ *  - discharging: 180ms flash on reset
+ */
+export function EditableValue({
+  value,
+  path,
+  editState,
+  className,
+  format,
+}: {
+  value: number;
+  path?: string;
+  editState?: EditState;
+  className?: string;
+  format?: (v: number) => string;
+}) {
+  const [draft, setDraft] = useState<string | null>(null);
+  const [pulsing, setPulsing] = useState(false);
+  const fmt = format ?? formatFlat;
+
+  if (!editState || !path || !Number.isFinite(value)) {
+    return <span className={className}>{fmt(value)}</span>;
+  }
+
+  const overridden = editState.isOverridden(path);
+  const display = overridden ? (editState.getOverride(path) ?? value) : value;
+
+  if (draft !== null) {
+    const commit = () => {
+      const parsed = Number(draft);
+      if (Number.isFinite(parsed)) {
+        if (parsed === value) {
+          editState.clearOverride(path);
+        } else {
+          editState.setOverride(path, parsed);
+        }
+      }
+      setDraft(null);
+    };
+    const abs = Math.abs(value);
+    const step = abs > 0 && abs < 1 ? 0.01 : abs < 10 ? 0.1 : 1;
+    return (
+      <input
+        className="ops-value-input"
+        type="number"
+        step={step}
+        value={draft}
+        autoFocus
+        onFocus={(e) => e.currentTarget.select()}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') (e.currentTarget as HTMLInputElement).blur();
+          else if (e.key === 'Escape') { setDraft(null); }
+        }}
+        onClick={(e) => e.stopPropagation()}
+      />
+    );
+  }
+
+  const handleReset = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    editState.clearOverride(path);
+    setPulsing(true);
+    setTimeout(() => setPulsing(false), 200);
+  };
+
+  const spanClass = [
+    className,
+    'ops-value-editable',
+    overridden && 'ops-value-overridden',
+    pulsing && 'ops-value-discharging',
+  ].filter(Boolean).join(' ');
+
+  return (
+    <>
+      <span
+        className={spanClass}
+        onClick={(e) => { e.stopPropagation(); setDraft(String(display)); }}
+        title="Click to edit"
+      >
+        {fmt(display)}
+      </span>
+      {overridden && (
+        <button
+          type="button"
+          className="ops-reset-tab"
+          onClick={handleReset}
+          title="Reset to default"
+          aria-label="Reset value"
+        >
+          {'\u27F2'}
+        </button>
+      )}
+    </>
+  );
+}
+
 // ── Helpers ────────────────────────────────────────────────────────────────
 
 const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
@@ -112,16 +231,32 @@ export function ReadonlySection({ label, children }: { label: string; children: 
 
 // ── VaryTable ──────────────────────────────────────────────────────────────
 
-export function VaryTable({ columnLabels, rows, style }: {
+export function VaryTable({ columnLabels, rows, style, editState, basePath }: {
   columnLabels: (string | number)[];
   rows: { label: string; values: (string | number)[] }[];
   style?: React.CSSProperties;
+  /** When provided together with basePath, each numeric cell becomes editable. */
+  editState?: EditState;
+  /** Path to the parent VARY_BY value array (e.g. "properties.duration.value"). Cells append `[i]`. */
+  basePath?: string;
 }) {
   return (
     <table className="ops-frame-vary-table" style={style}>
       <thead><tr>{columnLabels.map((l, i) => <th key={i}>{l}</th>)}</tr></thead>
       <tbody>{rows.map((r, ri) => (
-        <tr key={ri}>{r.values.map((v, vi) => <td key={vi}>{v}</td>)}</tr>
+        <tr key={ri}>{r.values.map((v, vi) => {
+          if (editState && basePath && typeof v === 'number') {
+            const cellPath = `${basePath}[${vi}]`;
+            const overridden = editState.isOverridden(cellPath);
+            const cls = overridden ? 'ops-cell--editable ops-cell--overridden' : 'ops-cell--editable';
+            return (
+              <td key={vi} className={cls}>
+                <EditableValue value={v} path={cellPath} editState={editState} />
+              </td>
+            );
+          }
+          return <td key={vi}>{v}</td>;
+        })}</tr>
       ))}</tbody>
     </table>
   );
@@ -180,7 +315,11 @@ function hasNestedComplexity(obj: Record<string, unknown>): boolean {
   return false;
 }
 
-function PropertiesView({ props }: { props: Record<string, unknown> }) {
+function PropertiesView({ props, editState, basePath }: {
+  props: Record<string, unknown>;
+  editState?: EditState;
+  basePath?: string;
+}) {
   const entries = Object.entries(props).filter(([k]) => !OMIT_PROPERTY_KEYS.has(k));
   if (entries.length === 0) return null;
 
@@ -193,6 +332,8 @@ function PropertiesView({ props }: { props: Record<string, unknown> }) {
     }
   }
 
+  const pathFor = (key: string) => (basePath ? `${basePath}.${key}` : key);
+
   return (
     <>
       {combinedFields.map(({ key, label, value }) => (
@@ -201,6 +342,7 @@ function PropertiesView({ props }: { props: Record<string, unknown> }) {
       {entries.filter(([k]) => !renderedNounKeys.has(k)).map(([key, val]) => {
         if (val == null) return null;
         const label = key.replace(/([A-Z])/g, ' $1').replace(/^./, c => c.toUpperCase()).trim();
+        const keyPath = pathFor(key);
         // VARY_BY tables
         if (val && typeof val === 'object' && !Array.isArray(val)) {
           const obj = val as Record<string, unknown>;
@@ -210,7 +352,12 @@ function PropertiesView({ props }: { props: Record<string, unknown> }) {
               <div key={key} className="ops-frame-effect">
                 <div className="ops-frame-effect-sentence"><span className="ops-frame-effect-verb">{label}</span></div>
                 <div className="ops-frame-effect-with"><div className="ops-frame-vary">
-                  <VaryTable columnLabels={vals.map((_v, vi) => vi + 1)} rows={[{ label: 'value', values: vals }]} />
+                  <VaryTable
+                    columnLabels={vals.map((_v, vi) => vi + 1)}
+                    rows={[{ label: 'value', values: vals }]}
+                    editState={editState}
+                    basePath={`${keyPath}.value`}
+                  />
                 </div></div>
               </div>
             );
@@ -225,12 +372,60 @@ function PropertiesView({ props }: { props: Record<string, unknown> }) {
                 <div key={key} className="ops-frame-effect">
                   <div className="ops-frame-effect-sentence"><span className="ops-frame-effect-verb">{label}</span></div>
                   <div className="ops-frame-effect-with"><div className="ops-frame-vary">
-                    <VaryTable columnLabels={vals.map((_v, vi) => vi + 1)} rows={[{ label: unit, values: vals }]} />
+                    <VaryTable
+                      columnLabels={vals.map((_v, vi) => vi + 1)}
+                      rows={[{ label: unit, values: vals }]}
+                      editState={editState}
+                      basePath={`${keyPath}.value.value`}
+                    />
                   </div></div>
                 </div>
               );
             }
           }
+          // Scalar {verb:IS, value:N} — editable leaf
+          if (obj.verb === VerbType.IS && typeof obj.value === 'number') {
+            if (editState) {
+              return (
+                <div key={key} className="ops-field">
+                  <span className="ops-field-label">{label}</span>
+                  <span className="ops-field-value">
+                    <EditableValue value={obj.value} path={`${keyPath}.value`} editState={editState} />
+                  </span>
+                </div>
+              );
+            }
+            return <ReadonlyField key={key} label={label} value={formatFlat(obj.value)} />;
+          }
+          // Duration with scalar {verb:IS, value:N} inside .value
+          if ('value' in obj && obj.value && typeof obj.value === 'object') {
+            const inner = obj.value as Record<string, unknown>;
+            if (inner.verb === VerbType.IS && typeof inner.value === 'number') {
+              const unit = typeof obj.unit === 'string' ? obj.unit.replace(/_/g, ' ').toLowerCase() : '';
+              if (editState) {
+                return (
+                  <div key={key} className="ops-field">
+                    <span className="ops-field-label">{label}</span>
+                    <span className="ops-field-value">
+                      <EditableValue value={inner.value} path={`${keyPath}.value.value`} editState={editState} />
+                      {unit && <span style={{ marginLeft: 4, color: 'var(--text-muted)' }}>{unit}</span>}
+                    </span>
+                  </div>
+                );
+              }
+            }
+          }
+        }
+        // Top-level scalar number property (e.g. cooldownSeconds: 5)
+        if (typeof val === 'number' && editState) {
+          return (
+            <div key={key} className="ops-field">
+              <span className="ops-field-label">{label}</span>
+              <span className="ops-field-value">
+                <EditableValue value={val} path={keyPath} editState={editState} />
+              </span>
+            </div>
+          );
         }
         // Nested objects without verb — use flat line if all leaves are scalars, tree otherwise
         if (val && typeof val === 'object' && !Array.isArray(val) && !('verb' in (val as Record<string, unknown>))) {
@@ -252,7 +447,12 @@ const VARY_AXIS_LABELS: Record<string, (i: number) => string> = {
   TALENT_LEVEL: (i) => `T${i}`,
 };
 
-function VaryByLeaf({ node, label }: { node: Record<string, unknown>; label?: string }) {
+function VaryByLeaf({ node, label, editState, basePath }: {
+  node: Record<string, unknown>;
+  label?: string;
+  editState?: EditState;
+  basePath?: string;
+}) {
   const vals = node.value as number[];
   const axis = String(node.object ?? 'LEVEL').replace(/_/g, ' ').toLowerCase();
   const ofClause = node.of as { determiner?: string; object?: string } | undefined;
@@ -267,6 +467,8 @@ function VaryByLeaf({ node, label }: { node: Record<string, unknown>; label?: st
         columnLabels={vals.map((_, i) => labelFn(i))}
         rows={[{ label: '', values: vals }]}
         style={{ marginTop: 2 }}
+        editState={editState}
+        basePath={basePath}
       />
     </div>
   );
@@ -314,7 +516,11 @@ function ValueNodeTree({ node, depth = 0, label }: { node: Record<string, unknow
 
 // ── Clause rendering ───────────────────────────────────────────────────────
 
-function EffectView({ effect: ef }: { effect: Record<string, unknown> }) {
+function EffectView({ effect: ef, editState, basePath }: {
+  effect: Record<string, unknown>;
+  editState?: EditState;
+  basePath?: string;
+}) {
   const nestedEffects = Array.isArray(ef.effects) ? ef.effects as Record<string, unknown>[] : null;
   if (nestedEffects) {
     const constraint = ef.cardinalityConstraint as string | undefined;
@@ -329,7 +535,11 @@ function EffectView({ effect: ef }: { effect: Record<string, unknown> }) {
         <div className="ops-prop-tree-children">
           {nestedEffects.map((nested, ni) => (
             <div key={ni} className={`ops-vt-branch${ni === nestedEffects.length - 1 ? '' : ' ops-vt-branch--mid'}`}>
-              <EffectView effect={nested} />
+              <EffectView
+                effect={nested}
+                editState={editState}
+                basePath={basePath ? `${basePath}.effects[${ni}]` : undefined}
+              />
             </div>
           ))}
         </div>
@@ -380,14 +590,65 @@ function EffectView({ effect: ef }: { effect: Record<string, unknown> }) {
         <div className="ops-prop-tree-children">
           {allWithItems.map((item, wi) => {
             const isLast = wi === allWithItems.length - 1;
+            // Resolve the underlying raw value for this `with` key so we can
+            // determine whether it is an editable numeric leaf. We need to
+            // mirror the unwrapping that happens above: `{unit, value}` →
+            // inner is the `value`; otherwise raw `with[key]`.
+            const rawWith = (ef.with as Record<string, unknown> | undefined)?.[item.key];
+            const unwrapped = (rawWith && typeof rawWith === 'object' && 'unit' in (rawWith as Record<string, unknown>) && 'value' in (rawWith as Record<string, unknown>))
+              ? (rawWith as Record<string, unknown>).value
+              : rawWith;
+            const isScalarIs =
+              unwrapped && typeof unwrapped === 'object'
+              && (unwrapped as Record<string, unknown>).verb === VerbType.IS
+              && typeof (unwrapped as Record<string, unknown>).value === 'number';
+
+            // Build edit path: basePath points to the effect, then descend
+            // through .with.<key>. If the outer value had {unit,value}, we
+            // descend into .value first before hitting the IS node.
+            let editPath: string | undefined;
+            if (editState && basePath && isScalarIs) {
+              const hasUnitWrapper = rawWith !== unwrapped;
+              editPath = hasUnitWrapper
+                ? `${basePath}.with.${item.key}.value.value`
+                : `${basePath}.with.${item.key}.value`;
+            }
+
+            // Build VARY_BY cell path for complex nodes
+            let varyBasePath: string | undefined;
+            if (editState && basePath && item.type === 'complex'
+                && item.node
+                && item.node.verb === VerbType.VARY_BY
+                && Array.isArray(item.node.value)) {
+              const hasUnitWrapper = rawWith !== unwrapped;
+              varyBasePath = hasUnitWrapper
+                ? `${basePath}.with.${item.key}.value.value`
+                : `${basePath}.with.${item.key}.value`;
+            }
+
             return (
               <div key={item.key} className={`ops-vt-branch${isLast ? '' : ' ops-vt-branch--mid'}`}>
                 {item.type === 'scalar' ? (
-                  <span className="ops-prop-tree-leaf">
-                    <span className="ops-prop-tree-leaf-label">{item.label}</span> {item.display}
-                  </span>
+                  editPath && isScalarIs ? (
+                    <span className="ops-prop-tree-leaf">
+                      <span className="ops-prop-tree-leaf-label">{item.label}</span>{' '}
+                      <EditableValue
+                        value={(unwrapped as Record<string, unknown>).value as number}
+                        path={editPath}
+                        editState={editState}
+                      />
+                    </span>
+                  ) : (
+                    <span className="ops-prop-tree-leaf">
+                      <span className="ops-prop-tree-leaf-label">{item.label}</span> {item.display}
+                    </span>
+                  )
                 ) : (
-                  <ValueNodeTree node={item.node!} label={item.label} />
+                  varyBasePath ? (
+                    <VaryByLeaf node={item.node!} label={item.label} editState={editState} basePath={varyBasePath} />
+                  ) : (
+                    <ValueNodeTree node={item.node!} label={item.label} />
+                  )
                 )}
               </div>
             );
@@ -398,7 +659,11 @@ function EffectView({ effect: ef }: { effect: Record<string, unknown> }) {
   );
 }
 
-function ClausePredicateView({ predicate }: { predicate: Record<string, unknown> }) {
+function ClausePredicateView({ predicate, editState, basePath }: {
+  predicate: Record<string, unknown>;
+  editState?: EditState;
+  basePath?: string;
+}) {
   const conditions = (predicate.conditions ?? []) as Record<string, unknown>[];
   const effects = (predicate.effects ?? []) as Record<string, unknown>[];
 
@@ -421,7 +686,11 @@ function ClausePredicateView({ predicate }: { predicate: Record<string, unknown>
             idx++;
             return (
               <div key={`ef-${ei}`} className={`ops-vt-branch${idx === allChildren ? '' : ' ops-vt-branch--mid'}`}>
-                <EffectView effect={ef} />
+                <EffectView
+                  effect={ef}
+                  editState={editState}
+                  basePath={basePath ? `${basePath}.effects[${ei}]` : undefined}
+                />
               </div>
             );
           })}
@@ -433,34 +702,66 @@ function ClausePredicateView({ predicate }: { predicate: Record<string, unknown>
   return (
     <div className="ops-clause-predicate">
       {effects.map((ef, ei) => (
-        <EffectView key={ei} effect={ef} />
+        <EffectView
+          key={ei}
+          effect={ef}
+          editState={editState}
+          basePath={basePath ? `${basePath}.effects[${ei}]` : undefined}
+        />
       ))}
     </div>
   );
 }
 
-function FrameClauseView({ clauses }: { clauses: Record<string, unknown>[] }) {
+function FrameClauseView({ clauses, editState, basePath }: {
+  clauses: Record<string, unknown>[];
+  editState?: EditState;
+  basePath?: string;
+}) {
   return (
     <>
       {clauses.map((pred, pi) => (
-        <ClausePredicateView key={pi} predicate={pred} />
+        <ClausePredicateView
+          key={pi}
+          predicate={pred}
+          editState={editState}
+          basePath={basePath ? `${basePath}[${pi}]` : undefined}
+        />
       ))}
     </>
   );
 }
 
-function ClauseTabContent({ label, data }: { label: string; data: unknown[] }) {
+function ClauseTabContent({ label, data, editState, basePath }: {
+  label: string;
+  data: unknown[];
+  editState?: EditState;
+  basePath?: string;
+}) {
   return (
     <div className="ops-prop-tree">
       <span className="ops-prop-tree-label">{label}</span>
       {(data as Record<string, unknown>[]).map((pred, pi) => (
-        <ClausePredicateView key={pi} predicate={pred} />
+        <ClausePredicateView
+          key={pi}
+          predicate={pred}
+          editState={editState}
+          basePath={basePath ? `${basePath}[${pi}]` : undefined}
+        />
       ))}
     </div>
   );
 }
 
-export function ClauseTabs({ clause, onTrigger, onEntry, onExit }: { clause: unknown[]; onTrigger: unknown[]; onEntry: unknown[]; onExit: unknown[] }) {
+export function ClauseTabs({ clause, onTrigger, onEntry, onExit, editState, basePath }: {
+  clause: unknown[];
+  onTrigger: unknown[];
+  onEntry: unknown[];
+  onExit: unknown[];
+  editState?: EditState;
+  /** Path to the parent (e.g. "" for event root, "segments[i]" for segment). */
+  basePath?: string;
+}) {
   const tabs: { key: string; label: string; data: unknown[] }[] = [];
   if (clause.length > 0) tabs.push({ key: 'clause', label: t('dsl.clauseType.clause'), data: clause });
   if (onTrigger.length > 0) tabs.push({ key: 'onTriggerClause', label: t('dsl.clauseType.onTriggerClause'), data: onTrigger });
@@ -471,10 +772,20 @@ export function ClauseTabs({ clause, onTrigger, onEntry, onExit }: { clause: unk
   if (tabs.length === 0) return null;
   const safeTab = Math.min(activeTab, tabs.length - 1);
 
+  const buildPath = (tabKey: string) => {
+    if (!basePath) return tabKey;
+    return basePath.length > 0 ? `${basePath}.${tabKey}` : tabKey;
+  };
+
   if (tabs.length === 1) {
     return (
       <div className="ops-clause-tabs">
-        <ClauseTabContent label={tabs[0].label} data={tabs[0].data} />
+        <ClauseTabContent
+          label={tabs[0].label}
+          data={tabs[0].data}
+          editState={editState}
+          basePath={buildPath(tabs[0].key)}
+        />
       </div>
     );
   }
@@ -493,7 +804,12 @@ export function ClauseTabs({ clause, onTrigger, onEntry, onExit }: { clause: unk
           </button>
         ))}
       </div>
-      <ClauseTabContent label={tabs[safeTab].label} data={tabs[safeTab].data} />
+      <ClauseTabContent
+        label={tabs[safeTab].label}
+        data={tabs[safeTab].data}
+        editState={editState}
+        basePath={buildPath(tabs[safeTab].key)}
+      />
     </div>
   );
 }
@@ -520,25 +836,50 @@ function CritToggle({ checked, onChange }: { checked: boolean; onChange: (v: boo
 
 // ── Frame & Segment rendering ──────────────────────────────────────────────
 
-function FrameDetail({ frame, label, isCrit, onToggleCrit }: {
+function FrameDetail({ frame, label, isCrit, onToggleCrit, editState, basePath }: {
   frame: JsonSkillData;
   label?: string;
   isCrit?: boolean;
   onToggleCrit?: (value: boolean) => void;
+  editState?: EditState;
+  basePath?: string;
 }) {
   const offset = frame.properties?.offset ?? frame.offset as { value: unknown; unit: string } | undefined;
   const offsetStr = formatDuration(offset);
   const clause = (frame.clause ?? []) as unknown as { conditions?: unknown[]; effects?: Record<string, unknown>[] }[];
 
-  const props: { label: string; value: string }[] = [];
+  interface FrameProp { key: string; label: string; display: string; editPath?: string; numericValue?: number }
+  const props: FrameProp[] = [];
   const frameProps = frame.properties as Record<string, unknown> | undefined;
   if (frameProps) {
     for (const [k, v] of Object.entries(frameProps)) {
       if (k === 'offset' || k === 'name' || k === 'description') continue;
       if (v && typeof v === 'object' && 'value' in (v as Record<string, unknown>)) {
-        props.push({ label: k.replace(/_/g, ' '), value: formatWithValue(v as Record<string, unknown>) });
+        // Attempt to locate a numeric leaf for inline editing.
+        const obj = v as Record<string, unknown>;
+        if (obj.verb === VerbType.IS && typeof obj.value === 'number' && basePath) {
+          props.push({
+            key: k,
+            label: k.replace(/_/g, ' '),
+            display: formatWithValue(obj),
+            editPath: `${basePath}.properties.${k}.value`,
+            numericValue: obj.value,
+          });
+        } else {
+          props.push({ key: k, label: k.replace(/_/g, ' '), display: formatWithValue(obj) });
+        }
       } else if (v != null) {
-        props.push({ label: k.replace(/_/g, ' '), value: String(v) });
+        if (typeof v === 'number' && basePath) {
+          props.push({
+            key: k,
+            label: k.replace(/_/g, ' '),
+            display: String(v),
+            editPath: `${basePath}.properties.${k}`,
+            numericValue: v,
+          });
+        } else {
+          props.push({ key: k, label: k.replace(/_/g, ' '), display: String(v) });
+        }
       }
     }
   }
@@ -554,17 +895,27 @@ function FrameDetail({ frame, label, isCrit, onToggleCrit }: {
       )}
       {props.length > 0 && (
         <div className="ops-frame-props">
-          {props.map((p, i) => (
-            <div key={i} className="ops-frame-prop">
+          {props.map((p) => (
+            <div key={p.key} className="ops-frame-prop">
               <span className="ops-frame-prop-label">{p.label}</span>
-              <span className="ops-frame-prop-value">{p.value}</span>
+              <span className="ops-frame-prop-value">
+                {editState && p.editPath && p.numericValue != null ? (
+                  <EditableValue value={p.numericValue} path={p.editPath} editState={editState} />
+                ) : (
+                  p.display
+                )}
+              </span>
             </div>
           ))}
         </div>
       )}
       {clause.length > 0 ? (
         <div className="ops-frame-effects">
-          <FrameClauseView clauses={clause as unknown as Record<string, unknown>[]} />
+          <FrameClauseView
+            clauses={clause as unknown as Record<string, unknown>[]}
+            editState={editState}
+            basePath={basePath ? `${basePath}.clause` : undefined}
+          />
         </div>
       ) : (
         <div className="ops-frame-empty">No effects</div>
@@ -601,7 +952,11 @@ function sumFrameMultipliers(frames: JsonSkillData[]): number[] | null {
   return totals;
 }
 
-export function TabbedSegmentView({ entry, critState }: { entry: { id: string; label: string; data: JsonSkillData }; critState?: FrameCritState }) {
+export function TabbedSegmentView({ entry, critState, editState }: {
+  entry: { id: string; label: string; data: JsonSkillData };
+  critState?: FrameCritState;
+  editState?: EditState;
+}) {
   const segments = entry.data.segments ?? [];
   const topFrames = entry.data.frames ?? [];
   const [activeSegTab, setActiveSegTab] = useState(0);
@@ -645,6 +1000,8 @@ export function TabbedSegmentView({ entry, critState }: { entry: { id: string; l
             label={`Frame ${toRoman(flatFrame + 1)}`}
             isCrit={critState?.getIsCrit(0, flatFrame)}
             onToggleCrit={critState ? (v) => critState.onToggle(0, flatFrame, v) : undefined}
+            editState={editState}
+            basePath={`frames[${flatFrame}]`}
           />
         )}
       </div>
@@ -713,6 +1070,8 @@ export function TabbedSegmentView({ entry, critState }: { entry: { id: string; l
             label={`Frame ${toRoman(activeFrameTab! + 1)}`}
             isCrit={critState?.getIsCrit(safeSeg, activeFrameTab!)}
             onToggleCrit={critState ? (v) => critState.onToggle(safeSeg, activeFrameTab!, v) : undefined}
+            editState={editState}
+            basePath={`segments[${safeSeg}].frames[${activeFrameTab}]`}
           />
         ) : (
           <div className="ops-frame-detail ops-frame-detail--accented">
@@ -723,14 +1082,46 @@ export function TabbedSegmentView({ entry, critState }: { entry: { id: string; l
               const range = resolveLeafRange((segDur as { value: unknown }).value);
               const unit = (segDur as { unit: string }).unit === 'FRAME' ? 'f' : 's';
               if (range && range.length > 1 && new Set(range).size > 1) {
+                // VARY_BY duration — editable cells. Resolve the path to the inner values[] array.
+                const durObj = segDur as Record<string, unknown>;
+                const durValue = durObj.value as Record<string, unknown> | undefined;
+                const hasNestedVary = durValue && durValue.verb === VerbType.VARY_BY;
+                const varyBasePath = hasNestedVary
+                  ? `segments[${safeSeg}].properties.duration.value.value`
+                  : `segments[${safeSeg}].properties.duration.value`;
                 return (
                   <div className="ops-frame-effect">
                     <div className="ops-frame-effect-sentence">
                       <span className="ops-frame-effect-verb">Duration</span>
                     </div>
                     <div className="ops-frame-effect-with"><div className="ops-frame-vary">
-                      <VaryTable columnLabels={range.map((_v, vi) => vi + 1)} rows={[{ label: unit, values: range.map(formatFlat) }]} />
+                      <VaryTable
+                        columnLabels={range.map((_v, vi) => vi + 1)}
+                        rows={[{ label: unit, values: range }]}
+                        editState={editState}
+                        basePath={varyBasePath}
+                      />
                     </div></div>
+                  </div>
+                );
+              }
+              // Scalar duration — editable leaf.
+              const scalarVal = range && range.length > 0 ? range[0] : null;
+              if (scalarVal != null && editState) {
+                const durObj = segDur as Record<string, unknown>;
+                const durValue = durObj.value;
+                const hasIsWrapper = durValue && typeof durValue === 'object'
+                  && (durValue as Record<string, unknown>).verb === VerbType.IS;
+                const scalarPath = hasIsWrapper
+                  ? `segments[${safeSeg}].properties.duration.value.value`
+                  : `segments[${safeSeg}].properties.duration.value`;
+                return (
+                  <div className="ops-frame-prop">
+                    <span className="ops-frame-prop-label">Duration</span>
+                    <span className="ops-frame-prop-value">
+                      <EditableValue value={scalarVal} path={scalarPath} editState={editState} />
+                      <span style={{ marginLeft: 4, color: 'var(--text-muted)' }}>{unit}</span>
+                    </span>
                   </div>
                 );
               }
@@ -764,6 +1155,7 @@ export function TabbedSegmentView({ entry, critState }: { entry: { id: string; l
               const fOffset = f.properties?.offset ?? f.offset as { value: unknown; unit: string } | undefined;
               const fOffsetStr = formatDuration(fOffset);
               const fClause = (f.clause ?? []) as unknown as Record<string, unknown>[];
+              const framePath = `segments[${safeSeg}].frames[${fi}]`;
               return (
                 <div key={fi} className="ops-seg-inline-frame">
                   <div className="ops-seg-inline-frame-name">Frame {toRoman(fi + 1)}</div>
@@ -776,7 +1168,11 @@ export function TabbedSegmentView({ entry, critState }: { entry: { id: string; l
                   {fClause.length > 0 && (
                     <div className="ops-prop-tree">
                       <span className="ops-prop-tree-label">{t('dsl.clauseType.clause')}</span>
-                      <FrameClauseView clauses={fClause} />
+                      <FrameClauseView
+                        clauses={fClause}
+                        editState={editState}
+                        basePath={`${framePath}.clause`}
+                      />
                     </div>
                   )}
                   {critState && (
@@ -794,10 +1190,16 @@ export function TabbedSegmentView({ entry, critState }: { entry: { id: string; l
 
 // ── DataCardBody ───────────────────────────────────────────────────────────
 
-export function DataCardBody({ data, extraFields, critState }: {
+export function DataCardBody({ data, extraFields, critState, editState }: {
   data: Record<string, unknown>;
   extraFields?: React.ReactNode;
   critState?: FrameCritState;
+  /**
+   * Optional edit state — when provided, numeric leaves become inline-editable.
+   * Paths are rooted at the serialized data object (e.g. "properties.duration.value",
+   * "segments[0].frames[1].clause[0].effects[0].with.multiplier.value[2]").
+   */
+  editState?: EditState;
 }) {
   const props = (data.properties ?? {}) as Record<string, unknown>;
   const meta = (data.metadata ?? {}) as Record<string, unknown>;
@@ -821,6 +1223,14 @@ export function DataCardBody({ data, extraFields, critState }: {
       {name && <ReadonlyField label="Name" value={name} />}
       {element && <ReadonlyField label="Element" value={element} />}
       {desc && <ReadonlyField label="Description" value={desc} />}
+      {/*
+        Top-level properties and clauses live on the cached JSON, not on the
+        TimelineEvent itself — the DataCardBody data for a status or skill
+        comes from `getAnyStatusSerialized()` / `getOperatorSkill().serialize()`.
+        `jsonOverrides` are walked against the TimelineEvent, whose shape only
+        matches the `segments[*]` subtree. So top-level editing is intentionally
+        disabled here; only segment-rooted paths are threaded through.
+      */}
       <PropertiesView props={props} />
       {metaEntries.length > 0 && metaEntries.map(([key, val]) => {
         if (val == null) return null;
@@ -832,7 +1242,11 @@ export function DataCardBody({ data, extraFields, critState }: {
         <ClauseTabs clause={clause} onTrigger={onTrigger} onEntry={onEntry} onExit={onExit} />
       )}
       {segments.length > 0 && (
-        <TabbedSegmentView entry={{ id: id ?? 'entry', label: name, data: data as JsonSkillData }} critState={critState} />
+        <TabbedSegmentView
+          entry={{ id: id ?? 'entry', label: name, data: data as JsonSkillData }}
+          critState={critState}
+          editState={editState}
+        />
       )}
     </div>
   );

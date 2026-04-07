@@ -107,7 +107,7 @@
       "verb": "IS",
       "value": 2
     },
-    "name": "Flash-frozen for Freshness (Talent)",
+    "name": "Flash-frozen for Freshness (T1)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",

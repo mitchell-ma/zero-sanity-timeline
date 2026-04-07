@@ -83,7 +83,7 @@ import { StatType, DamageType, InteractionModeType, InfoLevel, CritMode, Enhance
 import { buildOverrideKey } from '../controller/overrideController';
 import type { MoveContext } from '../controller/combatStateController';
 import { setRuntimeCritMode } from '../controller/combatStateController';
-import { applyEventOverrides } from '../controller/timeline/overrideApplicator';
+import { applyEventOverrides, applyJsonOverrides } from '../controller/timeline/overrideApplicator';
 import { GlobalSettings, loadSettings, saveSettings, migrateLegacySettings, PERFORMANCE_THROTTLE } from '../consts/settings';
 import { COMBO_WINDOW_COLUMN_ID, ultimateGraphKey } from '../model/channels';
 // SkillPointConsumptionHistory/ResourceZone types inferred via useMemo from controller
@@ -541,11 +541,17 @@ export function useApp() {
     // Split: freeform events get full overrides, others get only property overrides
     const hasFreeform = allProcessedEventsRaw.some(ev => ev.creationInteractionMode != null);
     if (!hasFreeform) {
-      // Fast path: no freeform events, only apply property overrides
+      // Fast path: no freeform events, apply property + jsonOverrides
       return allProcessedEventsRaw.map((ev) => {
         const key = buildOverrideKey(ev);
         const override = overrides[key];
-        return override?.propertyOverrides ? { ...ev, ...override.propertyOverrides } : ev;
+        if (!override) return ev;
+        let out = ev;
+        if (override.propertyOverrides) out = { ...out, ...override.propertyOverrides };
+        if (override.jsonOverrides && Object.keys(override.jsonOverrides).length > 0) {
+          out = applyJsonOverrides(out, override.jsonOverrides);
+        }
+        return out;
       });
     }
     // Slow path: apply full overrides only to freeform events
@@ -557,7 +563,13 @@ export function useApp() {
       if (overridden) return overridden;
       const key = buildOverrideKey(ev);
       const override = overrides[key];
-      return override?.propertyOverrides ? { ...ev, ...override.propertyOverrides } : ev;
+      if (!override) return ev;
+      let out = ev;
+      if (override.propertyOverrides) out = { ...out, ...override.propertyOverrides };
+      if (override.jsonOverrides && Object.keys(override.jsonOverrides).length > 0) {
+        out = applyJsonOverrides(out, override.jsonOverrides);
+      }
+      return out;
     });
   }, [allProcessedEventsRaw, overrides]);
 
@@ -1161,6 +1173,14 @@ export function useApp() {
     setCombatState((prev) => ctrl.removeFrames(prev, targets));
     setSelectedFrames([]);
   }, [validEvents, ctrl, setCombatState]);
+
+  const handleSetJsonOverride = useCallback((target: TimelineEvent, path: string, value: number) => {
+    setCombatState((prev) => ctrl.setJsonOverride(prev, target, path, value));
+  }, [ctrl, setCombatState]);
+
+  const handleClearJsonOverride = useCallback((target: TimelineEvent, path: string) => {
+    setCombatState((prev) => ctrl.clearJsonOverride(prev, target, path));
+  }, [ctrl, setCombatState]);
 
   const handleSetCritPins = useCallback((frames: SelectedFrame[], value: boolean) => {
     const all = processedEventsRef.current;
@@ -1788,6 +1808,7 @@ export function useApp() {
     handleRemoveEvent, handleRemoveEvents, handleDuplicateEvents,
     handleResetEvent, handleResetEvents, handleResetSegments, handleResetFrames,
     handleRemoveFrame, handleRemoveFrames, handleSetCritPins, handleRandomizeCrit, handleAddFrame, handleAddSegment,
+    handleSetJsonOverride, handleClearJsonOverride,
     handleRemoveSegment, handleMoveFrame, handleResizeSegment, handleFrameClick,
 
     // Loadout/operator handlers

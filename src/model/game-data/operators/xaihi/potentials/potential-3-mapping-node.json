@@ -1,7 +1,7 @@
 {
   "properties": {
     "id": "XAIHI_POTENTIAL_3",
-    "name": "Mapping Node",
+    "name": "Mapping Node (P3)",
     "level": 3,
     "eventType": "POTENTIAL_EVENT",
     "eventIdType": "POTENTIAL",

@@ -263,7 +263,7 @@
       "verb": "IS",
       "value": 2
     },
-    "name": "Seething Blood (Talent)",
+    "name": "Seething Blood (T2)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",

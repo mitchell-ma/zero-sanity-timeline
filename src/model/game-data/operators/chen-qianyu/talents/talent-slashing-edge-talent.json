@@ -68,7 +68,7 @@
       "verb": "IS",
       "value": 2
     },
-    "name": "Slashing Edge (Talent)",
+    "name": "Slashing Edge (T1)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",

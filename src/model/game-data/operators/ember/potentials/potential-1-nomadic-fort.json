@@ -1,7 +1,7 @@
 {
   "properties": {
     "id": "EMBER_POTENTIAL_1",
-    "name": "Nomadic Fort",
+    "name": "Nomadic Fort (P1)",
     "level": 1,
     "eventType": "POTENTIAL_EVENT",
     "eventIdType": "POTENTIAL",

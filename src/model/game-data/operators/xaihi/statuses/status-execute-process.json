@@ -1,7 +1,7 @@
 {
   "properties": {
     "id": "EXECUTE_PROCESS",
-    "name": "Execute Process",
+    "name": "Execute Process (T1)",
     "to": "ENEMY",
     "duration": {
       "value": {

@@ -7,11 +7,12 @@ import { getAllSkillLabels, getAllStatusLabels } from '../../controller/gameData
 import { ELEMENT_COLORS, ELEMENT_LABELS, ElementType, EventStatusType, InfoLevel, InteractionModeType, SegmentType, StatusType } from '../../consts/enums';
 import { getStatusElementMap, getStatusById, getAnyStatusSerialized } from '../../controller/gameDataStore';
 import { TimelineEvent, Operator, Enemy, SelectedFrame, Column, computeSegmentsSpan, getAnimationDuration, eventDuration } from '../../consts/viewTypes';
-import { StatField } from './SharedFields';
 import type { LoadoutProperties } from '../InformationPane';
 import { resolveEventIdentity, resolveSpReturn, resolveActiveModifiers, resolveComboChain } from '../../controller/info-pane/eventPaneController';
 import { getOperatorSkill } from '../../controller/gameDataStore';
-import { DataCardBody, FrameCritState } from '../custom/DataCardComponents';
+import { DataCardBody, FrameCritState, EditState, EditableValue } from '../custom/DataCardComponents';
+import type { OverrideStore } from '../../consts/overrideTypes';
+import { buildOverrideKey } from '../../controller/overrideController';
 import { ENEMY_OWNER_ID, OPERATOR_COLUMNS, REACTION_COLUMN_IDS, SKILL_COLUMN_ORDER } from '../../model/channels';
 import { getLastController } from '../../controller/timeline/eventQueueController';
 import type { DamageTableRow } from '../../controller/calculation/damageTableBuilder';
@@ -43,6 +44,9 @@ interface EventPaneProps {
   spConsumptionHistory?: { eventUid: string; frame: number; naturalConsumed: number; returnedConsumed: number }[];
   onSaveAsCustomSkill?: (event: TimelineEvent) => void;
   verbose?: InfoLevel;
+  overrides?: OverrideStore;
+  onSetJsonOverride?: (target: TimelineEvent, path: string, value: number) => void;
+  onClearJsonOverride?: (target: TimelineEvent, path: string) => void;
 }
 
 function EventPane({
@@ -67,6 +71,9 @@ function EventPane({
   spConsumptionHistory,
   onSaveAsCustomSkill,
   verbose = InfoLevel.DETAILED,
+  overrides,
+  onSetJsonOverride,
+  onClearJsonOverride,
 }: EventPaneProps) {
   /** Format a real-time frame as a detail label. */
   const dualTimeLabel = (frame: number) => frameToDetailLabel(frame);
@@ -100,6 +107,28 @@ function EventPane({
     if (skillCardData) return null; // skill card takes precedence
     return getAnyStatusSerialized(event.name);
   }, [event.name, verbose, skillCardData]);
+
+  // Inline edit state for status/skill value overrides.
+  // Paths are rooted at the TimelineEvent's segments subtree (top-level
+  // serialized `properties.*` is intentionally readonly — those live on the
+  // cached JSON, not on the event).
+  const editState = useMemo<EditState | undefined>(() => {
+    if (readOnly || !onSetJsonOverride || !onClearJsonOverride) return undefined;
+    // Only freeform-placed events support value overrides — their segments are
+    // re-applied post-pipeline via applyEventOverrides. Column-bound events
+    // (skills, basic attacks) would lose overrides on every pipeline re-run.
+    if (event.creationInteractionMode == null) return undefined;
+    const key = buildOverrideKey(event);
+    const entry = overrides?.[key];
+    const jsonOverrides = entry?.jsonOverrides;
+    return {
+      getOverride: (path) => jsonOverrides?.[path],
+      isOverridden: (path) => !!jsonOverrides && path in jsonOverrides,
+      setOverride: (path, value) => onSetJsonOverride(event, path, value),
+      clearOverride: (path) => onClearJsonOverride(event, path),
+    };
+  // Depend on event identity (key ingredients) and the override entry for this event
+  }, [event, overrides, readOnly, onSetJsonOverride, onClearJsonOverride]);
 
   const critState = useMemo<FrameCritState | undefined>(() => {
     if (readOnly) return undefined;
@@ -260,19 +289,235 @@ function EventPane({
           <DebugPane event={event} processedEvent={processedEvent} rawEvents={rawEvents} allProcessedEvents={allProcessedEvents} />
         )}
 
-        {skillCardData && (
-          <div className="edit-panel-section">
-            <span className="edit-section-label">Skill Definition</span>
-            <DataCardBody data={skillCardData} critState={critState} />
-          </div>
-        )}
+        {skillCardData && (() => {
+          // ── Build Skill Definition card extraFields ──────────────────
+          // Consolidates SP cost, Enemies Hit (ultimate energy variants),
+          // and Type (dodge/dash for INPUT column) into the card's extra
+          // slot. Same hot-wire affordance for scalar numeric fields.
+          const consumptionRecord = spConsumptionHistory?.find((r) => r.eventUid === event.uid);
+          const spData = resolveSpReturn(event, slots, consumptionRecord);
+          const skillRows: React.ReactNode[] = [];
 
-        {statusCardData && (
-          <div className="edit-panel-section">
-            <span className="edit-section-label">Status Definition</span>
-            <DataCardBody data={statusCardData} />
-          </div>
-        )}
+          if (event.columnId === OPERATOR_COLUMNS.INPUT) {
+            skillRows.push(
+              <div key="type" className="ops-field">
+                <span className="ops-field-label">Type</span>
+                <span className="ops-field-value">
+                  {event.isPerfectDodge ? 'Dodge \u2014 Time Stop, +7.5 SP' : 'Dash'}
+                </span>
+              </div>
+            );
+          }
+
+          if (event.ultimateEnergyGainByEnemies) {
+            const variants = Object.keys(event.ultimateEnergyGainByEnemies)
+              .map(Number)
+              .sort((a, b) => a - b);
+            skillRows.push(
+              <div key="enemiesHit" className="ops-field">
+                <span className="ops-field-label">Enemies Hit</span>
+                <select
+                  className="edit-input"
+                  style={{ width: '100%' }}
+                  value={event.enemiesHit ?? 1}
+                  disabled={readOnly}
+                  onChange={(e) => {
+                    const n = Number(e.target.value);
+                    const gain = event.ultimateEnergyGainByEnemies![n] ?? event.ultimateEnergyGainByEnemies![1] ?? 0;
+                    const segments = event.segments ? [...event.segments] : [];
+                    if (segments[0]?.frames?.[0]) {
+                      const updatedFrames = [...segments[0].frames];
+                      updatedFrames[0] = { ...updatedFrames[0], ultimateEnergyGain: gain };
+                      segments[0] = { ...segments[0], frames: updatedFrames };
+                    }
+                    onUpdate(event.uid, { enemiesHit: n, ultimateEnergyGain: gain, segments });
+                  }}
+                >
+                  {variants.map((n) => (
+                    <option key={n} value={n}>
+                      {n} \u2014 {event.ultimateEnergyGainByEnemies![n]} Ultimate Energy
+                    </option>
+                  ))}
+                </select>
+              </div>
+            );
+          }
+
+          if (spData) {
+            const { summary: sp, spNotes } = spData;
+            skillRows.push(
+              <div key="spCost" className="ops-field">
+                <span className="ops-field-label">SP Cost</span>
+                <span className="ops-field-value">
+                  {editState ? (
+                    <EditableValue value={event.skillPointCost ?? 0} path="skillPointCost" editState={editState} />
+                  ) : (
+                    event.skillPointCost
+                  )}
+                </span>
+              </div>
+            );
+            // Readonly SP derived info (return, natural/returned, ult charge)
+            const derivedLines: string[] = [];
+            if (sp.totalSpReturn > 0) derivedLines.push(`Return: ${formatFlat(sp.totalSpReturn)}`);
+            if (sp.returnedConsumed > 0) derivedLines.push(`Natural SP: ${formatFlat(sp.naturalConsumed)} / Returned SP: ${formatFlat(sp.returnedConsumed)}`);
+            derivedLines.push(`Team Ult Charge: +${formatFlat(sp.derivedUltimateCharge)}`);
+            if (derivedLines.length > 0) {
+              skillRows.push(
+                <div key="spDerived" className="ops-field">
+                  <span className="ops-field-label">SP Info</span>
+                  <span className="ops-field-value" style={{ fontSize: 10, color: 'var(--text-secondary)' }}>
+                    {derivedLines.map((l, i) => <div key={i}>{l}</div>)}
+                    {spNotes.map((note, i) => (
+                      <div key={`note-${i}`} style={{ color: 'var(--text-muted)' }}>{note}</div>
+                    ))}
+                  </span>
+                </div>
+              );
+            }
+          }
+
+          const skillExtraFields = skillRows.length > 0 ? <>{skillRows}</> : undefined;
+          return (
+            <div className="edit-panel-section">
+              <span className="edit-section-label">Skill Definition</span>
+              <DataCardBody data={skillCardData} critState={critState} editState={editState} extraFields={skillExtraFields} />
+            </div>
+          );
+        })()}
+
+        {(() => {
+          // ── Build Status Definition card extraFields ─────────────────
+          // Consolidates susceptibility, reaction properties (element/
+          // stacks/statusValue/isForced) and non-reaction status properties
+          // (stacks/statusValue) — all formerly rendered as their own
+          // edit-panel-sections. Now they sit inside the Status Definition
+          // card, sharing the hot-wire edit affordance. TimelineEvent-rooted
+          // paths via jsonOverrides; freeform-only edits, auto reset.
+          const isReaction = event.ownerId === ENEMY_OWNER_ID && REACTION_COLUMN_IDS.has(event.columnId);
+          const reactionElement = isReaction
+            ? (getStatusElementMap()[event.columnId.toUpperCase()] as ElementType | undefined)
+            : undefined;
+          const statusDef = !isReaction && isDerived ? getStatusById(event.name) : null;
+          const hasStackInfo = event.stacks != null || statusDef?.stacks;
+
+          const statusRows: React.ReactNode[] = [];
+
+          if (isReaction && reactionElement) {
+            const color = ELEMENT_COLORS[reactionElement] ?? 'var(--text-muted)';
+            const label = ELEMENT_LABELS[reactionElement] ?? reactionElement;
+            statusRows.push(
+              <div key="element" className="ops-field">
+                <span className="ops-field-label">Element</span>
+                <span className="ops-field-value" style={{ color }}>{label}</span>
+              </div>
+            );
+          }
+
+          if (event.stacks != null && (isReaction || hasStackInfo)) {
+            const maxStacks = isReaction ? 4 : (statusDef?.maxStacks ?? 4);
+            statusRows.push(
+              <div key="stacks" className="ops-field">
+                <span className="ops-field-label">{isReaction ? 'Status Level' : 'Active Stacks'}</span>
+                <span className="ops-field-value">
+                  {editState ? (
+                    <EditableValue value={event.stacks} path="stacks" editState={editState} />
+                  ) : (
+                    event.stacks
+                  )}
+                  <span style={{ marginLeft: 4, color: 'var(--text-muted)', fontSize: 10 }}>/ {maxStacks}</span>
+                </span>
+              </div>
+            );
+          }
+
+          if (event.statusValue != null) {
+            statusRows.push(
+              <div key="statusValue" className="ops-field">
+                <span className="ops-field-label">Status Value</span>
+                <span className="ops-field-value">
+                  {editState ? (
+                    <EditableValue
+                      value={event.statusValue}
+                      path="statusValue"
+                      editState={editState}
+                      format={(v) => `${formatFlat(v * 100)}%`}
+                    />
+                  ) : (
+                    `${formatFlat(event.statusValue * 100)}%`
+                  )}
+                </span>
+              </div>
+            );
+          }
+
+          if (isReaction) {
+            const elColor = reactionElement ? ELEMENT_COLORS[reactionElement] : 'var(--text-muted)';
+            const isAutoReaction = !event.isForced;
+            statusRows.push(
+              <div key="isForced" className="ops-field">
+                <span className="ops-field-label">Forced</span>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: readOnly ? 'default' : 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={!!event.isForced}
+                    disabled={isAutoReaction || readOnly}
+                    onChange={(e) => onUpdate(event.uid, { isForced: e.target.checked, forcedReaction: e.target.checked })}
+                    style={{ accentColor: elColor }}
+                  />
+                  <span style={{ fontSize: 11, color: event.isForced ? '#ff5522' : 'var(--text-muted)' }}>
+                    {event.isForced ? 'Yes \u2014 no infliction stacks required' : 'No'}
+                  </span>
+                </label>
+              </div>
+            );
+          }
+
+          if (event.susceptibility) {
+            for (const [element, value] of Object.entries(event.susceptibility)) {
+              const color = ELEMENT_COLORS[element as ElementType] ?? 'var(--text-muted)';
+              const label = ELEMENT_LABELS[element as ElementType] ?? element;
+              statusRows.push(
+                <div key={`susc-${element}`} className="ops-field">
+                  <span className="ops-field-label" style={{ color }}>Susc. {label}</span>
+                  <span className="ops-field-value">
+                    {editState ? (
+                      <EditableValue
+                        value={value}
+                        path={`susceptibility.${element}`}
+                        editState={editState}
+                        format={(v) => `${formatFlat(v * 100)}%`}
+                      />
+                    ) : (
+                      formatPct(value)
+                    )}
+                  </span>
+                </div>
+              );
+            }
+          }
+
+          const statusExtraFields = statusRows.length > 0 ? <>{statusRows}</> : undefined;
+
+          if (!statusCardData && !statusExtraFields) return null;
+          if (!statusCardData && statusExtraFields) {
+            // Fallback: no serialized JSON available but we have per-event
+            // status fields to show. Render them in a standalone section so
+            // nothing is lost.
+            return (
+              <div className="edit-panel-section">
+                <span className="edit-section-label">Status Properties</span>
+                <div className="ops-skill-form">{statusExtraFields}</div>
+              </div>
+            );
+          }
+          return (
+            <div className="edit-panel-section">
+              <span className="edit-section-label">Status Definition</span>
+              <DataCardBody data={statusCardData!} editState={editState} extraFields={statusExtraFields} />
+            </div>
+          );
+        })()}
 
         {editContext?.startsWith('combo-trigger') ? (() => {
           const parts = editContext.split(':');
@@ -367,129 +612,7 @@ function EventPane({
         ) : null}
 
         {/* ── Status Properties (reaction events on enemy timeline) ────────── */}
-        {event.ownerId === ENEMY_OWNER_ID && REACTION_COLUMN_IDS.has(event.columnId) && (() => {
-          const element = getStatusElementMap()[event.columnId.toUpperCase()] as ElementType | undefined;
-          const elColor = element ? ELEMENT_COLORS[element] : 'var(--text-muted)';
-          const elLabel = element ? ELEMENT_LABELS[element] : event.columnId;
-          const isAutoReaction = !event.isForced;
-          return (
-            <div className="edit-panel-section">
-              <span className="edit-section-label">Status Properties</span>
-              <div className="edit-field">
-                <span className="edit-field-label">Element</span>
-                <span style={{ color: elColor, fontFamily: 'var(--font-mono)', fontSize: 12, fontWeight: 600 }}>{elLabel}</span>
-              </div>
-              <StatField
-                label="Status Level"
-                value={event.stacks ?? 1}
-                min={1}
-                max={4}
-                step={1}
-                onChange={(v) => onUpdate(event.uid, { stacks: v })}
-              />
-              {event.statusValue != null && (
-                <div className="edit-field">
-                  <span className="edit-field-label">Status Value</span>
-                  <div className="edit-field-row">
-                    <input
-                      className="edit-input"
-                      type="text"
-                      inputMode="numeric"
-                      style={{ width: 60 }}
-                      value={formatFlat(event.statusValue * 100)}
-                      onChange={(e) => {
-                        const pct = parseFloat(e.target.value);
-                        if (!isNaN(pct)) onUpdate(event.uid, { statusValue: pct / 100 });
-                      }}
-                    />
-                    <span className="edit-input-unit">%</span>
-                  </div>
-                </div>
-              )}
-              <div className="edit-field">
-                <span className="edit-field-label">Forced</span>
-                <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: readOnly ? 'default' : 'pointer' }}>
-                  <input
-                    type="checkbox"
-                    checked={!!event.isForced}
-                    disabled={isAutoReaction || readOnly}
-                    onChange={(e) => onUpdate(event.uid, { isForced: e.target.checked, forcedReaction: e.target.checked })}
-                    style={{ accentColor: elColor }}
-                  />
-                  <span style={{ fontSize: 11, color: event.isForced ? '#ff5522' : 'var(--text-muted)' }}>
-                    {event.isForced ? 'Yes — no infliction stacks required' : 'No'}
-                  </span>
-                </label>
-              </div>
-              {isAutoReaction && event.stacks != null && (
-                <div className="edit-field">
-                  <span className="edit-field-label">Stacks</span>
-                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{event.stacks}</span>
-                </div>
-              )}
-            </div>
-          );
-        })()}
-
-        {/* ── Status Properties (non-reaction status events: buffs, debuffs) ─── */}
-        {isDerived && !(event.ownerId === ENEMY_OWNER_ID && REACTION_COLUMN_IDS.has(event.columnId)) && (() => {
-          const statusDef = getStatusById(event.name);
-          const hasStackInfo = event.stacks != null || statusDef?.stacks;
-          if (!hasStackInfo && event.statusValue == null) return null;
-          return (
-            <div className="edit-panel-section">
-              <span className="edit-section-label">Status Properties</span>
-              {hasStackInfo && (
-                <>
-                  {event.stacks != null && (
-                    <StatField
-                      label="Active Stacks"
-                      value={event.stacks}
-                      min={1}
-                      max={statusDef?.maxStacks ?? 4}
-                      step={1}
-                      onChange={(v) => onUpdate(event.uid, { stacks: v })}
-                    />
-                  )}
-                  {statusDef?.stacks && (
-                    <>
-                      <div className="edit-field">
-                        <span className="edit-field-label">Stack Limit</span>
-                        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{statusDef.maxStacks}</span>
-                      </div>
-                      <div className="edit-field">
-                        <span className="edit-field-label">Interaction</span>
-                        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{statusDef.stacks.interactionType}</span>
-                      </div>
-                    </>
-                  )}
-                </>
-              )}
-              {event.statusValue != null && (
-                <div className="edit-field">
-                  <span className="edit-field-label">Status Value</span>
-                  <div className="edit-field-row">
-                    <input
-                      className="edit-input"
-                      type="text"
-                      inputMode="numeric"
-                      style={{ width: 60 }}
-                      value={formatFlat(event.statusValue * 100)}
-                      onChange={(e) => {
-                        const pct = parseFloat(e.target.value);
-                        if (!isNaN(pct)) onUpdate(event.uid, { statusValue: pct / 100 });
-                      }}
-                    />
-                    <span className="edit-input-unit">%</span>
-                  </div>
-                </div>
-              )}
-            </div>
-          );
-        })()}
-
-
-        <div className="edit-panel-section">
+<div className="edit-panel-section">
           <span className="edit-section-label">Timing</span>
           <div style={{ padding: '4px 6px' }}>
             {(readOnly || isDerived) ? (
@@ -531,39 +654,6 @@ function EventPane({
           </div>
         </div>
 
-        {event.susceptibility && Object.keys(event.susceptibility).length > 0 && (
-          <div className="edit-panel-section">
-            <span className="edit-section-label">Susceptibility</span>
-            {Object.entries(event.susceptibility).map(([element, value]) => {
-              const color = ELEMENT_COLORS[element as ElementType] ?? 'var(--text-muted)';
-              const label = ELEMENT_LABELS[element as ElementType] ?? element;
-              return readOnly ? (
-                <div key={element} className="edit-info-text">
-                  <span style={{ color }}>{label}</span>: {formatPct(value)}
-                </div>
-              ) : (
-                <div key={element} className="edit-field">
-                  <span className="edit-field-label" style={{ color }}>{label}</span>
-                  <div className="edit-field-row">
-                    <input
-                      className="edit-input"
-                      type="text"
-                      inputMode="numeric"
-                      style={{ width: 60 }}
-                      value={formatFlat(value * 100)}
-                      onChange={(e) => {
-                        const pct = parseFloat(e.target.value);
-                        if (!isNaN(pct)) onUpdate(event.uid, { susceptibility: { ...event.susceptibility, [element]: pct / 100 } });
-                      }}
-                    />
-                    <span className="edit-input-unit">%</span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-
         {(() => {
           if (!allProcessedEvents || event.ownerId === ENEMY_OWNER_ID) return null;
           const totalDuration = computeSegmentsSpan(event.segments);
@@ -579,99 +669,6 @@ function EventPane({
                     <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--green)' }}>{mod.formattedValue}</span>
                   </div>
                 ))}
-              </div>
-            </div>
-          );
-        })()}
-
-        {event.columnId === OPERATOR_COLUMNS.INPUT && (
-          <div className="edit-panel-section">
-            <span className="edit-section-label">Type</span>
-            <div className="edit-info-text">
-              {event.isPerfectDodge ? 'Dodge — Time Stop, +7.5 SP' : 'Dash'}
-            </div>
-          </div>
-        )}
-
-        {event.ultimateEnergyGainByEnemies && (
-          <div className="edit-panel-section">
-            <span className="edit-section-label">Enemies Hit</span>
-            <div className="edit-field">
-              <select
-                className="edit-input"
-                style={{ width: '100%' }}
-                value={event.enemiesHit ?? 1}
-                onChange={(e) => {
-                  const n = Number(e.target.value);
-                  const gain = event.ultimateEnergyGainByEnemies![n] ?? event.ultimateEnergyGainByEnemies![1] ?? 0;
-                  // Update first frame's ultimateEnergyGain so the ult energy system picks it up
-                  const segments = event.segments ? [...event.segments] : [];
-                  if (segments[0]?.frames?.[0]) {
-                    const updatedFrames = [...segments[0].frames];
-                    updatedFrames[0] = { ...updatedFrames[0], ultimateEnergyGain: gain };
-                    segments[0] = { ...segments[0], frames: updatedFrames };
-                  }
-                  onUpdate(event.uid, {
-                    enemiesHit: n,
-                    ultimateEnergyGain: gain,
-                    segments,
-                  });
-                }}
-              >
-                {Object.keys(event.ultimateEnergyGainByEnemies)
-                  .map(Number)
-                  .sort((a, b) => a - b)
-                  .map((n) => (
-                    <option key={n} value={n}>
-                      {n} — {event.ultimateEnergyGainByEnemies![n]} Ultimate Energy
-                    </option>
-                  ))}
-              </select>
-            </div>
-          </div>
-        )}
-
-        {(() => {
-          const consumptionRecord = spConsumptionHistory?.find((r) => r.eventUid === event.uid);
-          const spData = resolveSpReturn(event, slots, consumptionRecord);
-          if (!spData) return null;
-          const { summary: sp, spNotes } = spData;
-          const r = formatFlat;
-          const spInfo = (
-            <div className="edit-info-text">
-              {sp.totalSpReturn > 0 && <div>Return: {r(sp.totalSpReturn)}</div>}
-              {sp.returnedConsumed > 0 && <div>Natural SP: {r(sp.naturalConsumed)} / Returned SP: {r(sp.returnedConsumed)}</div>}
-              <div>Team Ult Charge: +{r(sp.derivedUltimateCharge)}</div>
-              {spNotes.map((note, i) => (
-                <div key={i} style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>{note}</div>
-              ))}
-            </div>
-          );
-          return (
-            <div className="edit-panel-section">
-              <span className="edit-section-label">SP</span>
-              <div style={{ padding: '4px 6px' }}>
-                {(readOnly || isDerived) ? (
-                  <>
-                    <div className="edit-info-text"><div>Cost: {event.skillPointCost}</div></div>
-                    {spInfo}
-                  </>
-                ) : (
-                  <>
-                    <div className="edit-field-row">
-                      <input
-                        className="edit-input"
-                        type="text" inputMode="numeric"
-                        value={event.skillPointCost}
-                        onChange={(e) => {
-                          const val = Math.max(0, Number(e.target.value) || 0);
-                          onUpdate(event.uid, { skillPointCost: val });
-                        }}
-                      />
-                    </div>
-                    {spInfo}
-                  </>
-                )}
               </div>
             </div>
           );

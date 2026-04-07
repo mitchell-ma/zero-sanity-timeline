@@ -5,7 +5,7 @@
       "verb": "IS",
       "value": 2
     },
-    "name": "Cryogenic Embrittlement (Talent)",
+    "name": "Cryogenic Embrittlement (T2)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",

@@ -5,7 +5,8 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "STATUS", "objectId": "FRAGILITY",
+          "object": "STATUS",
+          "objectId": "FRAGILITY",
           "objectQualifier": "PHYSICAL",
           "to": "ENEMY",
           "with": {
@@ -150,7 +151,7 @@
   ],
   "properties": {
     "id": "REALSPACE_STASIS_TALENT",
-    "name": "Originium Crystals",
+    "name": "Originium Crystals (T2)",
     "to": "ENEMY",
     "stacks": {
       "limit": {
