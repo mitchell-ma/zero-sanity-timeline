@@ -43,7 +43,7 @@ import type { ShieldController } from '../calculation/shieldController';
 import type { StatAccumulator, StatSource } from '../calculation/statAccumulator';
 import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../slot/commonSlotController';
 import GENERAL_MECHANICS from '../../model/game-data/generalMechanics.json';
-import { getStatusDef, getStatusConfig } from './configCache';
+import { getStatusConfig } from './configCache';
 import type { LoadoutProperties } from '../../view/InformationPane';
 import type { ColumnHost, EventSource, AddOptions, ConsumeOptions } from './columns/eventColumn';
 import { ColumnRegistry } from './columns/columnRegistry';
@@ -174,6 +174,16 @@ export class DerivedEventController implements ColumnHost {
     if (this.spController && amount > 0) {
       this.spController.addRecovery(frame, amount, sourceOwnerId, sourceSkillName);
     }
+  }
+
+  /**
+   * Mark a slot as ignoring external UE gains. Routed from interpret() when
+   * an IGNORE ULTIMATE_ENERGY effect fires (typically from a status def's
+   * clause during runStatusCreationLifecycle), so the flag takes effect at
+   * status creation time — not at post-drain re-registration.
+   */
+  setIgnoreExternalGain(slotId: string, ignore: boolean) {
+    if (this.ueController) this.ueController.setIgnoreExternalGain(slotId, ignore);
   }
 
   recordUltimateEnergyGain(frame: number, slotId: string, selfGain: number, teamGain = 0) {
@@ -628,18 +638,10 @@ export class DerivedEventController implements ColumnHost {
           this.ueController.addNoGainWindow(w.start, w.end, ev.ownerId);
         }
       }
-
-      // Status/talent events with IGNORE ULTIMATE_ENERGY clause → self-only UE gain
-      if (ev.id && ev.columnId !== NounType.ULTIMATE) {
-        const statusDef = getStatusDef(ev.id);
-        if (statusDef?.clause) {
-          const hasIgnoreUE = (statusDef.clause as { effects?: { verb?: string; object?: string }[] }[])
-            .some(c => c.effects?.some(e => e.verb === VerbType.IGNORE && e.object === NounType.ULTIMATE_ENERGY));
-          if (hasIgnoreUE) {
-            this.ueController.setIgnoreExternalGain(ev.ownerId, true);
-          }
-        }
-      }
+      // IGNORE ULTIMATE_ENERGY: previously detected via status def lookup
+      // here (which only fired at post-drain re-registration). Now handled
+      // by the IGNORE verb in interpret() during runStatusCreationLifecycle,
+      // so the flag takes effect at status creation time.
     }
   }
 

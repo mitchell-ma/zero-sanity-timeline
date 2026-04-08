@@ -104,7 +104,12 @@ export function runEventQueue(
         for (const clause of talent.def.clause as unknown as { conditions?: unknown[]; effects?: Record<string, unknown>[] }[]) {
           if (!clause.effects?.length) continue;
           for (const raw of clause.effects) {
-            if (raw.verb !== VerbType.APPLY || raw.object !== NounType.STAT) continue;
+            // Talent passive clauses fire APPLY STAT and IGNORE UE inline at
+            // pipeline start (frame 0). Other verbs (RECOVER, etc.) flow
+            // through the queue path normally.
+            const isApplyStat = raw.verb === VerbType.APPLY && raw.object === NounType.STAT;
+            const isIgnoreUe = raw.verb === VerbType.IGNORE && raw.object === NounType.ULTIMATE_ENERGY;
+            if (!isApplyStat && !isIgnoreUe) continue;
             const effect = raw as unknown as Effect;
             interpretor.interpret(effect, {
               frame: 0,

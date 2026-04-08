@@ -712,13 +712,15 @@ export class EventInterpretorController {
       // them on the effect side; the no-op return is defensive.
       case VerbType.HIT: case VerbType.DEFEAT: case VerbType.PERFORM:
         return true;
-      // IGNORE is a "tag verb": its presence in a status def's clause
-      // changes how DEC scans the status (e.g. IGNORE ULTIMATE_ENERGY
-      // sets the no-external-gain flag at registration time, see
-      // derivedEventController.ts notifyResourceControllers). interpret()
-      // explicitly does nothing when the tag fires per-frame — the work
-      // happens at scan time, not at dispatch time.
+      // IGNORE ULTIMATE_ENERGY: route to UE controller's setIgnoreExternalGain
+      // so the flag is set at the moment the status's clause is dispatched
+      // (during status creation lifecycle), not at post-drain re-registration.
+      // The recipient slot is the status owner — sourceSlotId in ctx.
       case VerbType.IGNORE:
+        if (effect.object === NounType.ULTIMATE_ENERGY) {
+          const slotId = ctx.sourceSlotId ?? ctx.sourceOwnerId;
+          this.controller.setIgnoreExternalGain(slotId, true);
+        }
         return true;
 
       default:
@@ -2482,9 +2484,14 @@ export class EventInterpretorController {
         }
         for (const rawEffect of clause.effects) {
           const raw = rawEffect as Record<string, unknown>;
-          if (raw.verb !== VerbType.APPLY || raw.object !== NounType.STAT) continue;
+          // APPLY STAT and IGNORE ULTIMATE_ENERGY both fire at status creation
+          // time. Other verbs (RECOVER, etc.) are deferred to the queue path
+          // and would double-fire if dispatched here.
+          const isApplyStat = raw.verb === VerbType.APPLY && raw.object === NounType.STAT;
+          const isIgnoreUe = raw.verb === VerbType.IGNORE && raw.object === NounType.ULTIMATE_ENERGY;
+          if (!isApplyStat && !isIgnoreUe) continue;
           // Snapshot stat before interpret, then capture delta after
-          const trackStat = this.controller.hasStatAccumulator()
+          const trackStat = isApplyStat && this.controller.hasStatAccumulator()
             ? resolveEffectStat(NounType.STAT, raw.objectId as string, raw.objectQualifier as string)
             : undefined;
           const statBefore = trackStat ? this.controller.getStat(statusOwnerId, trackStat) : 0;
