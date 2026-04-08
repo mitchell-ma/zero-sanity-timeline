@@ -1,7 +1,12 @@
 # Devlog
 
+## 2026-04-08
+- Ongoing internal engine cleanup — no player-facing changes, but the event pipeline is being restructured incrementally for more predictable behavior in future operator updates
+
 ## 2026-04-07
 - Estella's Commiseration SP refund moved into the battle skill itself — the talent now just grants the stack, and the skill checks for the stack and consumes it on use, fixing cases where the refund didn't fire reliably
+- Ember Pay The Ferric Price no longer triggers off her own damage frames — the talent now correctly fires only when the enemy hits Ember, not whenever Ember deals damage
+- Trigger conditions that name the enemy or "any other operator" as the subject now match correctly across all action verbs, fixing several latent edge cases in cascading-trigger interactions
 - Internal event pipeline unification pass — large engine cleanup with no intended player-facing change, but expect more consistent trigger and effect resolution across operators
 
 ## 2026-04-06
