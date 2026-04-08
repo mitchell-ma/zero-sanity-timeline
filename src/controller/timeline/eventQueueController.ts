@@ -19,7 +19,7 @@ import { invalidateConfigCache } from './configCache';
 import { TriggerIndex } from './triggerIndex';
 import { ENEMY_OWNER_ID, ENEMY_ACTION_COLUMN_ID } from '../../model/channels';
 import { getAllTriggerAssociations } from '../gameDataStore';
-import { cloneAndSplitEvents } from './inputEventController';
+import { cloneAndSplitEvents } from './parser';
 import { initHpTracker, getEnemyHpPercentage, precomputeDamageByFrame } from '../calculation/calculationController';
 import type { HPController } from '../calculation/hpController';
 import { StatAccumulator } from '../calculation/statAccumulator';

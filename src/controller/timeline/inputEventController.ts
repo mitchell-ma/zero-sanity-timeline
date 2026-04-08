@@ -9,16 +9,21 @@ import { v4 as uuidv4 } from 'uuid';
 import { NounType } from '../../dsl/semantics';
 import { ColumnType, EnhancementType, EventFrameType } from '../../consts/enums';
 import { TimelineEvent, EventSegmentData, Operator, computeSegmentsSpan, getAnimationDuration, eventEndFrame, durationSegment } from '../../consts/viewTypes';
-import { ENEMY_OWNER_ID, USER_ID, OPERATOR_COLUMNS, REACTION_COLUMN_IDS, INFLICTION_COLUMN_IDS, SKILL_COLUMN_ORDER, COMBO_WINDOW_COLUMN_ID, ENEMY_ACTION_COLUMN_ID } from '../../model/channels';
+import { ENEMY_OWNER_ID, USER_ID, REACTION_COLUMN_IDS, INFLICTION_COLUMN_IDS, COMBO_WINDOW_COLUMN_ID } from '../../model/channels';
 
 import { TOTAL_FRAMES } from '../../utils/timeline';
 import { ComboSkillEventController } from './comboSkillEventController';
 import { hasEnableClauseAtFrame } from './eventValidator';
 import { isResetStatus } from './eventPresentationController';
 import type { CombatLoadoutController } from '../combat-loadout/combatLoadoutController';
-import { allocInputEvent, allocDerivedEvent } from './objectPool';
 import { hasSkillPointClause, buildSkillPointRecoveryClause, hasStaggerClause, buildDealStaggerClause, stripStaggerClauses } from './clauseQueries';
 import GENERAL_MECHANICS from '../../model/game-data/generalMechanics.json';
+
+// Phase 8 step 7b: `cloneAndSplitEvents` + `resetSegmentCloneCache` + the
+// segment clone cache moved into `./parser/cloneAndSplit.ts`. Re-exported
+// here for existing external callers; new callers should import from
+// `./parser` directly.
+export { cloneAndSplitEvents, resetSegmentCloneCache } from './parser';
 
 /**
  * Append a synthetic RECOVER SKILL_POINT clause for the perfect-dodge bonus
@@ -35,83 +40,6 @@ function attachPerfectDodgeSpClause(segments: EventSegmentData[]): EventSegmentD
   frames[0] = { ...f0, clauses: [...(f0.clauses ?? []), clause] };
   out[0] = { ...seg0, frames };
   return out;
-}
-
-// ── Event classification ─────────────────────────────────────────────────────
-
-const SKILL_COLUMN_SET: ReadonlySet<string> = new Set(SKILL_COLUMN_ORDER);
-
-/**
- * Classify raw events into input events (strict-mode skills) and derived events
- * (freeform-placed inflictions, reactions, and statuses).
- *
- * Input events go into DEC.registerEvents (registeredEvents).
- * Derived events are seeded into the queue and processed via create* methods.
- */
-// ── Segment clone cache ─────────────────────────────────────────────────────
-// Keyed by event UID. Caches individual segment + properties objects for reuse.
-// Each tick creates a NEW array (so React sees a new reference after pipeline
-// mutation), but reuses the segment/properties objects inside — resetting them
-// to source values via Object.assign. This avoids ~600 spread allocations per
-// tick while keeping React's reference-based change detection working.
-let _segObjCache = new Map<string, { ref: readonly EventSegmentData[]; objs: EventSegmentData[] }>();
-let _segObjCacheNext = new Map<string, { ref: readonly EventSegmentData[]; objs: EventSegmentData[] }>();
-
-/** Clear segment clone cache. Call from resetPools(). */
-export function resetSegmentCloneCache() {
-  const tmp = _segObjCache;
-  _segObjCache = _segObjCacheNext;
-  _segObjCacheNext = tmp;
-  _segObjCacheNext.clear();
-}
-
-function cloneSegments(uid: string, segments: readonly EventSegmentData[]): EventSegmentData[] {
-  const cached = _segObjCache.get(uid);
-  if (cached && cached.ref === segments && cached.objs.length === segments.length) {
-    // Same source — reuse both segment objects AND array. Reset to source values
-    // so pipeline mutations from the previous tick don't carry over.
-    // The reconciler detects changes via per-segment fingerprints (duration + absoluteStartFrame),
-    // not via array/object reference equality.
-    const objs = cached.objs;
-    for (let i = 0; i < segments.length; i++) {
-      const cachedProps = objs[i].properties;
-      Object.assign(objs[i], segments[i]);
-      objs[i].properties = cachedProps;
-      Object.assign(cachedProps, segments[i].properties);
-    }
-    _segObjCacheNext.set(uid, { ref: segments, objs });
-    return objs;
-  }
-  // New or changed — allocate fresh objects
-  const objs = segments.map(s => ({ ...s, properties: { ...s.properties } }));
-  _segObjCacheNext.set(uid, { ref: segments, objs });
-  return objs;
-}
-
-export function cloneAndSplitEvents(rawEvents: TimelineEvent[]): { inputEvents: TimelineEvent[]; derivedEvents: TimelineEvent[] } {
-  const inputEvents: TimelineEvent[] = [];
-  const derivedEvents: TimelineEvent[] = [];
-  for (const ev of rawEvents) {
-    // Clone to prevent engine mutations (eventStatus, stacks, segments
-    // reassignment) from leaking back to raw state. Uses object pool when
-    // pooling is enabled to avoid per-tick allocation churn.
-    const isDerived = !SKILL_COLUMN_SET.has(ev.columnId)
-      && ev.columnId !== OPERATOR_COLUMNS.INPUT
-      && ev.columnId !== OPERATOR_COLUMNS.CONTROLLED
-      && ev.columnId !== ENEMY_ACTION_COLUMN_ID;
-    const copy = isDerived ? allocDerivedEvent() : allocInputEvent();
-    Object.assign(copy, ev);
-    // Deep-clone segment properties so pipeline mutations (time-stop duration
-    // extension) don't leak back to raw state and cause double-extension.
-    copy.segments = cloneSegments(ev.uid, ev.segments);
-    if (isDerived) {
-      derivedEvents.push(copy);
-    } else {
-      inputEvents.push(copy);
-    }
-  }
-  inputEvents.sort((a, b) => a.startFrame - b.startFrame);
-  return { inputEvents, derivedEvents };
 }
 
 // ── UID generation ──────────────────────────────────────────────────────────

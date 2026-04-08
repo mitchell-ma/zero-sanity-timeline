@@ -8,3 +8,4 @@
  * talent/control seed emission, and the `doApplySkill` route.
  */
 export { flattenEventsToQueueFrames } from './flattenEvents';
+export { cloneAndSplitEvents, resetSegmentCloneCache } from './cloneAndSplit';
