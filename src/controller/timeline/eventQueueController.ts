@@ -19,7 +19,7 @@ import { invalidateConfigCache } from './configCache';
 import { TriggerIndex } from './triggerIndex';
 import { ENEMY_OWNER_ID, ENEMY_ACTION_COLUMN_ID } from '../../model/channels';
 import { getAllTriggerAssociations } from '../gameDataStore';
-import { cloneAndSplitEvents } from './parser';
+import { cloneAndSplitEvents, selectNewTalents } from './parser';
 import { initHpTracker, getEnemyHpPercentage, precomputeDamageByFrame } from '../calculation/calculationController';
 import type { HPController } from '../calculation/hpController';
 import { StatAccumulator } from '../calculation/statAccumulator';
@@ -85,11 +85,7 @@ export function runEventQueue(
   // Register talent events (permanent presence) before queue processing.
   // Dedup against already-registered events AND already-registered in this run
   // (strict mode double-invocation can re-register same TriggerIndex talent objects).
-  const talentEvents = triggerIdx.getAllTalentEvents();
-  const allRegistered = state.getRegisteredEvents();
-  const newTalents = talentEvents.filter(t =>
-    !allRegistered.some(ev => ev.columnId === t.columnId && ev.ownerId === t.ownerId)
-  );
+  const newTalents = selectNewTalents(triggerIdx, state.getRegisteredEvents());
   if (newTalents.length > 0) state.registerEvents(newTalents);
 
   // ── Priority queue (owned by DEC; reset() above already cleared it) ────
