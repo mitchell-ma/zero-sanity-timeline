@@ -7,21 +7,17 @@
  * ALL game mechanics processing — time-stop resolution, infliction derivation,
  * exchange statuses, combo windows, frame positions, validation — happens here.
  */
-import { TimelineEvent, activeEndFrame } from '../../consts/viewTypes';
+import { TimelineEvent } from '../../consts/viewTypes';
 import { NounType, VerbType } from '../../dsl/semantics';
 import type { Effect } from '../../dsl/semantics';
 import { LoadoutProperties } from '../../view/InformationPane';
-import { TimeStopRegion, absoluteFrame, foreignStopsFor } from './processTimeStop';
 import { DerivedEventController } from './derivedEventController';
 import type { SlotTriggerWiring } from './eventQueueTypes';
 import { SkillPointController } from '../slot/skillPointController';
-import { PRIORITY, QueueFrameType, FrameHookType } from './eventQueueTypes';
-import type { QueueFrame } from './eventQueueTypes';
 import { EventInterpretorController } from './eventInterpretorController';
 import { invalidateConfigCache } from './configCache';
 import { TriggerIndex } from './triggerIndex';
-import { SKILL_COLUMN_ORDER, ENEMY_OWNER_ID, ENEMY_ACTION_COLUMN_ID } from '../../model/channels';
-import type { SkillType } from '../../consts/viewTypes';
+import { ENEMY_OWNER_ID, ENEMY_ACTION_COLUMN_ID } from '../../model/channels';
 import { getAllTriggerAssociations } from '../gameDataStore';
 import { cloneAndSplitEvents } from './inputEventController';
 import { initHpTracker, getEnemyHpPercentage, precomputeDamageByFrame } from '../calculation/calculationController';
@@ -33,200 +29,15 @@ import { CritMode, InteractionModeType, StatType } from '../../consts/enums';
 import type { OperatorLoadoutState } from '../../view/OperatorLoadoutHeader';
 import type { EnemyStats } from '../appStateController';
 import { resolveControlledOperator } from './controlledOperatorResolver';
-import { allocQueueFrame, resetPools } from './objectPool';
-
-const SKILL_COLUMN_SET: ReadonlySet<string> = new Set(SKILL_COLUMN_ORDER);
-
-/** Resource columns that should not generate synthetic PROCESS_FRAME entries. */
-let _resourceColumnSet: ReadonlySet<string> | null = null;
-function getResourceColumnSet(): ReadonlySet<string> {
-  if (!_resourceColumnSet) {
-    // Lazy init to avoid circular dependency with commonSlotController
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { COMMON_COLUMN_IDS } = require('../slot/commonSlotController');
-    _resourceColumnSet = new Set(Object.values(COMMON_COLUMN_IDS) as string[]);
-  }
-  return _resourceColumnSet;
-}
+import { resetPools } from './objectPool';
+import { flattenEventsToQueueFrames } from './parser';
 
 // TriggerIndex is now built and cached by CombatLoadoutController.syncSlots().
 // It is passed into the pipeline via the triggerIndex parameter.
 
-// ── Unified frame collection ────────────────────────────────────────────────
-
-/**
- * Collect one PROCESS_FRAME entry per frame marker on input skill events.
- * Uses a pre-allocated object pool to avoid per-frame allocation on drag ticks.
- */
-function collectFrameEntries(
-  events: readonly TimelineEvent[],
-  stops: readonly TimeStopRegion[],
-): QueueFrame[] {
-  const entries: QueueFrame[] = [];
-
-  for (const event of events) {
-    // Seed an event-start entry at the event's start frame
-    const start = allocQueueFrame();
-    start.frame = event.startFrame;
-    start.priority = PRIORITY.PROCESS_FRAME;
-    start.type = QueueFrameType.PROCESS_FRAME;
-    start.hookType = FrameHookType.EVENT_START;
-    start.statusId = event.id;
-    start.columnId = event.columnId;
-    start.ownerId = event.ownerId;
-    start.sourceOwnerId = event.ownerId;
-    start.sourceSkillName = event.id;
-    start.maxStacks = 0;
-    start.durationFrames = 0;
-    start.operatorSlotId = event.ownerId;
-    start.sourceEvent = event;
-    start.segmentIndex = -1;
-    start.frameIndex = -1;
-    entries.push(start);
-
-    const fStops = foreignStopsFor(event, stops);
-    let cumulativeOffset = 0;
-    let hasFrames = false;
-    for (let si = 0; si < event.segments.length; si++) {
-      const seg = event.segments[si];
-
-      // SEGMENT_START lifecycle hook
-      const segStartFrame = absoluteFrame(event.startFrame, cumulativeOffset, 0, fStops);
-      const segStart = allocQueueFrame();
-      segStart.frame = segStartFrame;
-      segStart.priority = PRIORITY.PROCESS_FRAME;
-      segStart.type = QueueFrameType.PROCESS_FRAME;
-      segStart.hookType = FrameHookType.SEGMENT_START;
-      segStart.statusId = event.id;
-      segStart.columnId = event.columnId;
-      segStart.ownerId = event.ownerId;
-      segStart.sourceOwnerId = event.ownerId;
-      segStart.sourceSkillName = event.id;
-      segStart.maxStacks = 0;
-      segStart.durationFrames = 0;
-      segStart.operatorSlotId = event.ownerId;
-      segStart.sourceEvent = event;
-      segStart.segmentIndex = si;
-      segStart.frameIndex = -1;
-      entries.push(segStart);
-
-      if (seg.frames && seg.frames.length > 0) {
-        hasFrames = true;
-        for (let fi = 0; fi < seg.frames.length; fi++) {
-          const frame = seg.frames[fi];
-          const absFrame = absoluteFrame(event.startFrame, cumulativeOffset, frame.offsetFrame, fStops);
-
-          const qf = allocQueueFrame();
-          qf.frame = absFrame;
-          qf.priority = PRIORITY.PROCESS_FRAME;
-          qf.type = QueueFrameType.PROCESS_FRAME;
-          qf.statusId = event.id;
-          qf.columnId = event.columnId;
-          qf.ownerId = event.ownerId;
-          qf.sourceOwnerId = event.ownerId;
-          qf.sourceSkillName = event.id;
-          qf.maxStacks = 0;
-          qf.durationFrames = 0;
-          qf.operatorSlotId = event.ownerId;
-          qf.frameMarker = frame;
-          qf.sourceEvent = event;
-          qf.segmentIndex = si;
-          qf.frameIndex = fi;
-          entries.push(qf);
-        }
-      }
-      cumulativeOffset += seg.properties.duration;
-
-      // SEGMENT_END lifecycle hook
-      const segEndFrame = absoluteFrame(event.startFrame, cumulativeOffset, 0, fStops);
-      if (segEndFrame > segStartFrame) {
-        const segEnd = allocQueueFrame();
-        segEnd.frame = segEndFrame;
-        segEnd.priority = PRIORITY.PROCESS_FRAME;
-        segEnd.type = QueueFrameType.PROCESS_FRAME;
-        segEnd.hookType = FrameHookType.SEGMENT_END;
-        segEnd.statusId = event.id;
-        segEnd.columnId = event.columnId;
-        segEnd.ownerId = event.ownerId;
-        segEnd.sourceOwnerId = event.ownerId;
-        segEnd.sourceSkillName = event.id;
-        segEnd.maxStacks = 0;
-        segEnd.durationFrames = 0;
-        segEnd.operatorSlotId = event.ownerId;
-        segEnd.sourceEvent = event;
-        segEnd.segmentIndex = si;
-        segEnd.frameIndex = -1;
-        entries.push(segEnd);
-      }
-    }
-
-    // Synthesize a frame entry for non-skill events with no frame markers.
-    // This routes freeform inflictions, reactions, and statuses through the same
-    // PROCESS_FRAME → interpret path as engine-created events.
-    if (!hasFrames && !SKILL_COLUMN_SET.has(event.columnId as SkillType) && !getResourceColumnSet().has(event.columnId)) {
-      const synth = allocQueueFrame();
-      synth.frame = event.startFrame;
-      synth.priority = PRIORITY.PROCESS_FRAME;
-      synth.type = QueueFrameType.PROCESS_FRAME;
-      synth.statusId = event.id;
-      synth.columnId = event.columnId;
-      synth.ownerId = event.ownerId;
-      synth.sourceOwnerId = event.ownerId;
-      synth.sourceSkillName = event.id;
-      synth.maxStacks = 0;
-      synth.durationFrames = 0;
-      synth.operatorSlotId = event.ownerId;
-      synth.frameMarker = { offsetFrame: 0 };
-      synth.sourceEvent = event;
-      synth.segmentIndex = 0;
-      synth.frameIndex = 0;
-      entries.push(synth);
-    }
-
-    // Seed an event-end entry at the active end frame (before cooldown segments)
-    const endFrame = activeEndFrame(event);
-    if (endFrame > event.startFrame) {
-      const end = allocQueueFrame();
-      end.frame = endFrame;
-      end.priority = PRIORITY.PROCESS_FRAME;
-      end.type = QueueFrameType.PROCESS_FRAME;
-      end.hookType = FrameHookType.EVENT_END;
-      end.statusId = event.id;
-      end.columnId = event.columnId;
-      end.ownerId = event.ownerId;
-      end.sourceOwnerId = event.ownerId;
-      end.sourceSkillName = event.id;
-      end.maxStacks = 0;
-      end.durationFrames = 0;
-      end.operatorSlotId = event.ownerId;
-      end.sourceEvent = event;
-      end.segmentIndex = -1;
-      end.frameIndex = -1;
-      entries.push(end);
-    }
-
-    // Seed COMBO_RESOLVE for combo events (fires after engine triggers)
-    if (event.columnId === NounType.COMBO && !event.comboTriggerColumnId) {
-      const combo = allocQueueFrame();
-      combo.frame = event.startFrame;
-      combo.priority = PRIORITY.COMBO_RESOLVE;
-      combo.type = QueueFrameType.COMBO_RESOLVE;
-      combo.statusId = event.id;
-      combo.columnId = event.columnId;
-      combo.ownerId = event.ownerId;
-      combo.sourceOwnerId = event.ownerId;
-      combo.sourceSkillName = event.id;
-      combo.maxStacks = 0;
-      combo.durationFrames = 0;
-      combo.operatorSlotId = event.ownerId;
-      combo.comboResolveEvent = event;
-      entries.push(combo);
-    }
-  }
-
-  return entries;
-}
-
+// Phase 8 step 7a: `collectFrameEntries` has been moved into
+// `./parser/flattenEvents.ts` as `flattenEventsToQueueFrames`. The parser
+// module is now the single authority for event → QueueFrame[] flattening.
 
 // ── Reusable singletons for pipeline runs ────────────────────────────────
 // These are lazily created on first use to avoid circular dependency issues
@@ -312,7 +123,7 @@ export function runEventQueue(
   }
 
   // Seed one PROCESS_FRAME entry per frame marker — all events (registered + derived)
-  const frameEntries = collectFrameEntries([...registeredEvents, ...derivedEvents], stops);
+  const frameEntries = flattenEventsToQueueFrames([...registeredEvents, ...derivedEvents], stops);
   state.insertQueueFrames(frameEntries);
 
   // ── Run the queue ─────────────────────────────────────────────────────────
