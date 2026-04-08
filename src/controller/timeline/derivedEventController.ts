@@ -28,6 +28,8 @@ import {
   computeFramePositions,
   type ComboStopEntry,
 } from './createSkillEvent';
+import { PriorityQueue } from './priorityQueue';
+import type { QueueFrame } from './eventQueueTypes';
 import { TOTAL_FRAMES } from '../../utils/timeline';
 import type { SlotTriggerWiring } from './eventQueueTypes';
 import { findClauseTriggerMatches } from './triggerMatch';
@@ -72,6 +74,9 @@ export class DerivedEventController implements ColumnHost {
   private rawDurations = new Map<string, number>();
   private extendedIds = new Set<string>();
   private comboStops: ComboStopEntry[] = [];
+  private queue = new PriorityQueue<QueueFrame>(
+    (a, b) => a.frame !== b.frame ? a.frame - b.frame : a.priority - b.priority,
+  );
   readonly output: TimelineEvent[] = [];
   private idCounter = 0;
   private triggerAssociations: TriggerAssociation[];
@@ -133,6 +138,7 @@ export class DerivedEventController implements ColumnHost {
     this.rawDurations.clear();
     this.extendedIds.clear();
     this.comboStops.length = 0;
+    this.queue.clear();
     (this.output as TimelineEvent[]).length = 0;
     this.idCounter = 0;
     this.linkConsumptions.clear();
@@ -259,6 +265,22 @@ export class DerivedEventController implements ColumnHost {
     ev.sourceOwnerId = operatorId ?? firstOccupiedSlotId;
     ev.sourceSkillName = NounType.CONTROL;
     this.registerEvents([ev]);
+  }
+
+  // ── Priority queue (Phase 8 step 4: ownership moved into DEC) ───────────
+
+  /** Pop the next queue frame in priority order, or undefined if empty. */
+  popNextFrame(): QueueFrame | undefined {
+    return this.queue.size > 0 ? this.queue.extractMin()! : undefined;
+  }
+
+  /** Insert one or more queue frames. Used by interpret handlers when they generate cascade work. */
+  insertQueueFrames(entries: readonly QueueFrame[]) {
+    for (const e of entries) this.queue.insert(e);
+  }
+
+  get queueSize(): number {
+    return this.queue.size;
   }
 
   // ── Registration ──────────────────────────────────────────────────────────

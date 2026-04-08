@@ -20,7 +20,6 @@ import { PRIORITY, QueueFrameType, FrameHookType } from './eventQueueTypes';
 import type { QueueFrame } from './eventQueueTypes';
 import { EventInterpretorController } from './eventInterpretorController';
 import { invalidateConfigCache } from './configCache';
-import { PriorityQueue } from './priorityQueue';
 import { TriggerIndex } from './triggerIndex';
 import { SKILL_COLUMN_ORDER, ENEMY_OWNER_ID, ENEMY_ACTION_COLUMN_ID } from '../../model/channels';
 import type { SkillType } from '../../consts/viewTypes';
@@ -234,13 +233,7 @@ function collectFrameEntries(
 // These are lazily created on first use to avoid circular dependency issues
 // at module initialization time. Once created, they are reused across ticks.
 
-let _queue: PriorityQueue<QueueFrame> | null = null;
 let _interpretor: EventInterpretorController | null = null;
-
-function getQueue(): PriorityQueue<QueueFrame> {
-  if (!_queue) _queue = new PriorityQueue<QueueFrame>((a, b) => a.frame !== b.frame ? a.frame - b.frame : a.priority - b.priority);
-  return _queue;
-}
 
 function getInterpretor(): EventInterpretorController {
   if (!_interpretor) _interpretor = new EventInterpretorController();
@@ -289,10 +282,7 @@ export function runEventQueue(
   );
   if (newTalents.length > 0) state.registerEvents(newTalents);
 
-  // ── Seed priority queue (reuse singleton) ──────────────────────────────
-  const queue = getQueue();
-  queue.clear();
-
+  // ── Priority queue (owned by DEC; reset() above already cleared it) ────
   // Reset interpreter (reuse singleton)
   const interpretor = getInterpretor();
   interpretor.resetWith(state, registeredEvents, {
@@ -324,13 +314,13 @@ export function runEventQueue(
 
   // Seed one PROCESS_FRAME entry per frame marker — all events (registered + derived)
   const frameEntries = collectFrameEntries([...registeredEvents, ...derivedEvents], stops);
-  for (const e of frameEntries) queue.insert(e);
+  state.insertQueueFrames(frameEntries);
 
   // ── Run the queue ─────────────────────────────────────────────────────────
-  while (queue.size > 0) {
-    const entry = queue.extractMin()!;
+  while (state.queueSize > 0) {
+    const entry = state.popNextFrame()!;
     const newEntries = interpretor.processQueueFrame(entry);
-    for (const e of newEntries) queue.insert(e);
+    state.insertQueueFrames(newEntries);
   }
 
   // Register queue-created events + combo windows into DEC
