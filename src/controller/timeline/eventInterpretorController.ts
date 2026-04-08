@@ -2105,16 +2105,12 @@ export class EventInterpretorController {
     // duplication uses the same dispatch surface as every other clause.
     // Replaces the legacy direct `controller.applyEvent` /
     // `applyPhysicalStatus` calls that bypassed `interpret()`.
-    // Phase 8 step 7.5: resolve trigger source via uid ref instead of the
-    // denormalized comboTriggerColumnId string. Falls back to the column id
-    // path only if the uid lookup fails (transitional safety net).
-    if (frame.duplicateTriggerSource && (event.triggerEventUid || event.comboTriggerColumnId)) {
-      let triggerCol: string | undefined;
-      if (event.triggerEventUid) {
-        const src = this.getAllEvents().find(e => e.uid === event.triggerEventUid);
-        triggerCol = src?.columnId;
-      }
-      if (triggerCol == null) triggerCol = event.comboTriggerColumnId;
+    // Phase 8 step 7.5 / Task #14: resolve trigger source via uid ref. The
+    // column-id fallback was removed; every duplicateTriggerSource path must
+    // populate triggerEventUid via openComboWindow → _applyComboWindowToCombos.
+    if (frame.duplicateTriggerSource && event.triggerEventUid) {
+      const src = this.getAllEvents().find(e => e.uid === event.triggerEventUid);
+      const triggerCol: string | undefined = src?.columnId;
       let synthEffect: Effect | undefined;
       if (triggerCol && INFLICTION_COLUMN_IDS.has(triggerCol)) {
         const element = INFLICTION_COLUMN_TO_ELEMENT[triggerCol];
@@ -2744,16 +2740,18 @@ export class EventInterpretorController {
     const controlledSlot = this.getControlledSlotAtFrame?.(absFrame);
     const matches = findClauseTriggerMatches(clause, this.getAllEvents(), wiring.slotId, undefined, controlledSlot);
     let triggerCol: string | undefined;
+    let triggerEventUid: string | undefined;
     for (const match of matches) {
       if (match.originOwnerId === combo.ownerId) continue;
       if (combo.startFrame >= match.frame && combo.startFrame < match.frame + windowFrames) {
         triggerCol = match.sourceColumnId;
+        triggerEventUid = match.sourceEventUid;
         break;
       }
     }
     if (!triggerCol) return;
 
-    this.controller.setComboTriggerColumnId(combo.uid, triggerCol);
+    this.controller.setComboTriggerColumnId(combo.uid, triggerCol, triggerEventUid);
     // Mirrored inflictions are handled by PROCESS_FRAME when it encounters
     // duplicateTriggerSource on subsequent frame markers.
   }

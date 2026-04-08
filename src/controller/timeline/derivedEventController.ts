@@ -701,12 +701,18 @@ export class DerivedEventController implements ColumnHost {
     return this.stops;
   }
 
-  /** Update comboTriggerColumnId on a registered combo event (deferred resolution). */
-  setComboTriggerColumnId(eventUid: string, columnId: string) {
+  /**
+   * Update comboTriggerColumnId + triggerEventUid on a registered combo event
+   * (deferred resolution path). Both fields are set together so the
+   * `duplicateTriggerSource` interpreter handler can look up the source event
+   * by uid (Phase 8 step 7.5 chain-of-action ref).
+   */
+  setComboTriggerColumnId(eventUid: string, columnId: string, sourceEventUid?: string) {
     for (let i = 0; i < this.registeredEvents.length; i++) {
       if (this.registeredEvents[i].uid === eventUid) {
         // Mutate in-place so PROCESS_FRAME entries referencing this event see the update
         this.registeredEvents[i].comboTriggerColumnId = columnId;
+        if (sourceEventUid != null) this.registeredEvents[i].triggerEventUid = sourceEventUid;
         return;
       }
     }
