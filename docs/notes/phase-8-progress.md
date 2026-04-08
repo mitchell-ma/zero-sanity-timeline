@@ -2,7 +2,7 @@
 
 Reference: [`docs/notes/phase-8-plan.md`](./phase-8-plan.md)
 
-## Status: steps 1–5 committed, steps 6–8 pending
+## Status: steps 1–5 committed, step 6 substeps a–c committed, 6d–8 pending
 
 Every step gated on full jest suite (163 suites / 2125 tests) + tsc + eslint
 on touched files. Baseline held identical at every commit.
@@ -14,7 +14,10 @@ on touched files. Baseline held identical at every commit.
 | 3 | `31b93637` | Add `DEC.createSkillEvent` single-event entrypoint | ✅ as planned |
 | 4 | `0aaca74e` | Move priority queue ownership into DEC | ✅ as planned |
 | 5 | `4b2e60ca` | Reactive time-stop re-positioning | ⚠️ minimal form — see below |
-| 6 | — | Reactive combo windows | ⏸️ pending |
+| 6a | `6c778deb` | `DEC.openComboWindow` reactive entrypoint, pass 3 routes through it | ✅ |
+| 6b | `7399b9d0` | Delete post-queue batch `deriveComboActivationWindows` call | ✅ |
+| 6c | `9152d736` | Delete post-queue re-derive + thread controlled-slot resolver | ✅ |
+| 6d+ | — | `clampComboWindowsToEventEnd` reactive integration + dead-code removal | ⏸️ pending |
 | 7 | — | Parser flattens all event sources to `QueueFrame[]` | ⏸️ pending |
 | 8 | — | Invariant pin + engineSpec rewrite | ⏸️ pending |
 
@@ -184,9 +187,113 @@ time-stop scenario is probably only exercised by specific integration tests
 Two bugs stacked — per-tick event creation that shouldn't happen, *and* a
 UID collision even if it did. Fix is outside Phase 8 scope; see `todo.md`.
 
+### Step 6a — openComboWindow (6c778deb)
+
+Introduced `DEC.openComboWindow(wiring, triggerFrame, sourceOwnerId,
+sourceSkillName, sourceColumnId, originOwnerId, triggerStacks)` as the
+single reactive entrypoint for combo window emission. It replicates the
+batch `deriveComboActivationWindows` semantics exactly: self-trigger skip,
+CD-block check against existing combo events on the slot, time-stop
+extension (excluding the slot's own combo-originated stops), overlap
+merge against the latest existing COMBO_WINDOW event on the slot,
+combo-event-end boundary split on merge, and first-wins application of
+`comboTriggerColumnId` / `triggerStacks` on any combo events that fall
+within the window.
+
+Rewrote `resolveComboTriggersInline` (pass 3 of `registerEvents`) to
+clear stale state and invoke `openComboWindow` per trigger match. At 6a
+time the post-queue re-derive still wiped everything, so tests stayed
+byte-equivalent — pure infrastructure install.
+
+### Step 6b — Delete post-queue batch derive (7399b9d0)
+
+Removed the `deriveComboActivationWindows` call at `runEventQueue`
+lines 326–335, plus the `state.registerEvents([...queueEvents,
+...comboWindows])` batch registration. Pass 3 of
+`registerEvents(queueEvents)` at line 335 now produces the same combo
+windows reactively via `openComboWindow`, since it runs
+`findClauseTriggerMatches` over the full (registered + queue) event list.
+
+`clampMultiSkillComboCooldowns` still runs after the final
+`registerEvents`. The post-queue re-derive at lines 492–505 is still
+alive as a safety net for CD-reduction cases.
+
+### Step 6c — Delete post-queue re-derive (9152d736)
+
+Removed the post-queue re-derive block (`deriveComboActivationWindows` +
+`replaceComboWindows` + re-clamp) from `processCombatSimulation`. To
+make pass 3 safely fully-reconstructive, two changes were needed:
+
+1. **`resolveComboTriggersInline` now clears all existing COMBO_WINDOW
+   events at the start** (in addition to clearing combo events'
+   `comboTriggerColumnId` / `triggerStacks`), then re-emits from scratch
+   via `openComboWindow`. This makes every `registerEvents` call rebuild
+   the window set, which is needed because the final pass has new
+   information (queue-created events + controlled-slot resolver).
+2. **Threaded `getControlledSlotAtFrame` into DEC** via
+   `setControlledSlotResolver(resolver)`. `runEventQueue` wires it in
+   before the final `registerEvents(queueEvents)` so pass 3's
+   `findClauseTriggerMatches` correctly filters CONTROLLED OPERATOR
+   combo triggers. Without this, Avywenna's controlled-operator combo
+   trigger test regressed (non-controlled Akekuri BATK was incorrectly
+   opening a Avywenna window).
+
+**Surviving fixup:** `clampComboWindowsToEventEnd` still runs post-queue
+in `processCombatSimulation`. This handles the case where a combo's CD
+is reduced mid-queue (e.g. Wulfgard P5 resetting combo CD on ult) and
+the already-emitted window needs to be clamped to the new combo end.
+Removing this regressed `wulfgard/skills.test.ts` (`clampedDur` check).
+Fully reactive integration is a 6d task — likely via a
+`DEC.reduceCooldown` hook that shrinks overlapping COMBO_WINDOW events.
+
+**Dead code left in place for a later cleanup step:**
+- `deriveComboActivationWindows` (still imported by
+  `comboTriggerResolution.test.ts` via `resolveComboTriggerColumns`,
+  sibling function in the same file)
+- `DEC.replaceComboWindows` (no callers now)
+- `DEC.clampMultiSkillComboCooldowns` — still called in
+  `runEventQueue`; may be re-implementable as a reactive hook later
+
+### Things surfaced during 6c implementation
+
+- **Test failures observed after the naive 6c (pre-fix):** 10 tests
+  across `avywenna/comboControlledTrigger`, `chen-qianyu/freeformInflictionTalent`,
+  `rossi/comboChain`, `lifeng/skills`, `wulfgard/skills`, `ardeliaInteractions`.
+  Most dropped to 0 after threading the controlled resolver; the last
+  two (wulfgard clampedDur, rossi D3 maxSkills) needed
+  `clampComboWindowsToEventEnd` restored.
+- **The naive `resolveComboTriggersInline` from 6a only cleared combo
+  events' trigger column IDs, not COMBO_WINDOW events.** That was
+  sufficient at 6a (because the post-queue re-derive wiped everything
+  later) but incorrect once that wipe was removed — the second pass 3
+  run would merge into stale windows from the first run. 6c fixed this
+  by clearing COMBO_WINDOW events at the top of each pass 3.
+
 ## Remaining steps (for next session)
 
-### Step 6 — Reactive combo windows
+### Step 6d+ — Finish step 6 cleanup
+
+- Make `clampComboWindowsToEventEnd` reactive: when `reduceCooldown`
+  fires on a combo event, walk overlapping COMBO_WINDOW events on the
+  same slot and clamp their segment duration. Then delete the post-queue
+  `state.clampComboWindowsToEventEnd()` call.
+- Move or re-implement `clampMultiSkillComboCooldowns` as a reactive
+  hook inside `openComboWindow` (or a new `createSkillEvent` step for
+  combo events that land inside existing windows).
+- Add `REDUCE_COOLDOWN` priority between `PROCESS_FRAME` (5) and
+  `ENGINE_TRIGGER` (22) so Fluorite P5's CD reduction fires before its
+  combo trigger evaluation at the same frame. Requires auditing whether
+  `doReduce` still works synchronously at PROCESS_FRAME time or needs
+  to be split into a queue entry.
+- Delete dead code: `deriveComboActivationWindows`,
+  `DEC.replaceComboWindows`, `clampComboWindowsToEventEnd` post-queue
+  call, possibly `DEC.clampMultiSkillComboCooldowns`.
+- `resolveComboTriggerColumns` in `processComboSkill.ts` is still used
+  only by `comboTriggerResolution.test.ts` — decide whether to delete
+  that test (since `openComboWindow` is the new path) or rewrite it to
+  exercise DEC directly.
+
+### Step 6 original plan — Reactive combo windows
 
 **Plan deliverables:**
 - `DEC.openComboWindow(slotId, startFrame, endFrame, sourceColumnId)` —
