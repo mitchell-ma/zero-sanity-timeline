@@ -1,7 +1,9 @@
 # Devlog
 
 ## 2026-04-08
-- Ongoing internal engine cleanup — no player-facing changes, but the event pipeline is being restructured incrementally for more predictable behavior in future operator updates
+- Combo activation windows now flow through a single reactive path — windows open the moment a matching trigger event fires, and the sidebar stays in sync with combo cooldown reductions (e.g. Wulfgard P5 ult resetting the combo CD)
+- CONTROLLED-operator combo triggers resolve more consistently — Avywenna's combo window correctly ignores a non-controlled Akekuri's basic attack, matching the in-game behavior
+- Ongoing internal engine cleanup — event pipeline continues to be restructured incrementally for more predictable behavior in future operator updates
 
 ## 2026-04-07
 - Estella's Commiseration SP refund moved into the battle skill itself — the talent now just grants the stack, and the skill checks for the stack and consumes it on use, fixing cases where the refund didn't fire reliably
