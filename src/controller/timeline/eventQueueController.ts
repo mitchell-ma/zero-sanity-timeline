@@ -263,11 +263,8 @@ export function runEventQueue(
   slotGearSets?: Record<string, string | undefined>,
   getEnemyHpPercentage?: (frame: number) => number | null,
   getControlledSlotAtFrame?: (frame: number) => string,
-  hpController?: HPController,
-  shieldController?: import('../calculation/shieldController').ShieldController,
   /** Pre-built TriggerIndex from CombatLoadoutController. Falls back to ad-hoc build if not provided. */
   triggerIndex?: TriggerIndex,
-  statAccumulator?: StatAccumulator,
   critMode?: CritMode,
   overrides?: OverrideStore,
 ): void {
@@ -300,8 +297,7 @@ export function runEventQueue(
   const interpretor = getInterpretor();
   interpretor.resetWith(state, registeredEvents, {
     loadoutProperties, slotOperatorMap, slotWirings, getEnemyHpPercentage,
-    getControlledSlotAtFrame, triggerIndex: triggerIdx, hpController, shieldController,
-    statAccumulator, critMode, overrides,
+    getControlledSlotAtFrame, triggerIndex: triggerIdx, critMode, overrides,
   });
 
   // Interpret APPLY STAT effects from passive talent clauses (e.g. Gilberta Messenger's Song UE efficiency)
@@ -462,7 +458,11 @@ export function processCombatSimulation(
   // the queue via collectFrameEntries → handleProcessFrame → create*.
   const triggerAssociations = getAllTriggerAssociations();
   if (!_decSingleton) _decSingleton = new DerivedEventController();
-  _decSingleton.reset(triggerAssociations, slotWirings, spController, ueController, loadoutProperties, slotOperatorMap);
+  _decSingleton.reset(
+    triggerAssociations, slotWirings, spController, ueController,
+    loadoutProperties, slotOperatorMap,
+    hpController, shieldController, _statAccumulator,
+  );
   const state = _decSingleton;
   const slotIds = slotOperatorMap ? Object.keys(slotOperatorMap) : [];
   const firstSlotOperatorId = slotIds[0] && slotOperatorMap ? slotOperatorMap[slotIds[0]] : undefined;
@@ -497,8 +497,7 @@ export function processCombatSimulation(
     ? hpController.getEnemyHpPercentage
     : (bossMaxHp != null ? getEnemyHpPercentage : undefined);
   runEventQueue(state, derivedEvents, loadoutProperties, slotWeapons, slotOperatorMap, slotGearSets,
-    hpPercentageFn, getControlledSlotAtFrame, hpController, shieldController, triggerIndex,
-    _statAccumulator, critMode, overrides);
+    hpPercentageFn, getControlledSlotAtFrame, triggerIndex, critMode, overrides);
 
   // ── 4b. Post-queue combo window fixup ─────────────────────────────────────
   // After the queue run, combo CDs may have been reset. Two fixups:

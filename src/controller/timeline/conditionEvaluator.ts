@@ -14,7 +14,6 @@ import { ENEMY_OWNER_ID, PHYSICAL_STATUS_COLUMNS, REACTION_COLUMNS, NODE_STAGGER
 import { COMMON_OWNER_ID } from '../slot/commonSlotController';
 import { activeEventsAtFrame, activeCountAtFrame } from './timelineQueries';
 import { resolveColumnIds } from './columnResolution';
-export { resolveColumnIds };
 
 // ── Stat-based state adjective mapping ────────────────────────────────────
 // Maps state adjectives to their underlying stat for IS/BECOME evaluation.

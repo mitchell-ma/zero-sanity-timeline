@@ -604,7 +604,6 @@ describe('full state round-trip (current state → share → load → assert equ
         defaultActiveDuration: 0,
         defaultCooldownDuration: 0,
         skillPointCost: undefined,
-        ultimateEnergyGain: 5,
         segments: [
           { properties: { duration: 48, name: '1' }, frames: [{ offsetFrame: 15 }, { offsetFrame: 35 }] },
           { properties: { duration: 52, name: '2' }, frames: [{ offsetFrame: 20 }] },
@@ -628,7 +627,6 @@ describe('full state round-trip (current state → share → load → assert equ
         defaultActiveDuration: 0,
         defaultCooldownDuration: 0,
         skillPointCost: 100,
-        ultimateEnergyGain: 10,
         segments: [
           { properties: { duration: 264 }, frames: [
             { offsetFrame: 30 }, { offsetFrame: 45 }, { offsetFrame: 60 },
@@ -654,8 +652,6 @@ describe('full state round-trip (current state → share → load → assert equ
         defaultCooldownDuration: 0,
         segments: [{ properties: { segmentTypes: ['ANIMATION'], duration: 60, timeDependency: 'REAL_TIME' } }],
         timeInteraction: 'TIME_STOP',
-        ultimateEnergyGain: 15,
-        teamUltimateEnergyGain: 5,
       },
     },
     {

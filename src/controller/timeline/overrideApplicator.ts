@@ -7,7 +7,7 @@
  * property overrides.
  *
  * Crit pins and chance pins are NOT applied here — they are consumed directly
- * by damageTableBuilder and effectExecutor at evaluation time.
+ * by damageTableBuilder and the interpreter at evaluation time.
  */
 
 import type { TimelineEvent, EventSegmentData, EventFrameMarker } from '../../consts/viewTypes';

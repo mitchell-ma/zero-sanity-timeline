@@ -126,7 +126,7 @@ export class SkillPointController {
   }
 
   /**
-   * Called per SP recovery event (already derived, e.g. from deriveSPRecoveryEvents).
+   * Called per SP recovery event (already derived by the interpret pipeline).
    */
   addSpRecoveryEvent(ev: TimelineEvent) {
     this.pendingSpEvents.push(ev);

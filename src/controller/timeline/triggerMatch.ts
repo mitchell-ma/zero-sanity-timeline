@@ -11,12 +11,11 @@ import { TimelineEvent, computeSegmentsSpan } from '../../consts/viewTypes';
 import { EventStatusType } from '../../consts/enums';
 import { COMMON_OWNER_ID } from '../slot/commonSlotController';
 import {
-  ELEMENT_TO_INFLICTION_COLUMN,
   ENEMY_OWNER_ID, ENEMY_ACTION_COLUMN_ID,
   REACTION_COLUMN_IDS, INFLICTION_COLUMN_IDS,
   PHYSICAL_STATUS_COLUMN_IDS,
 } from '../../model/channels';
-import { resolveColumnIds } from './conditionEvaluator';
+import { resolveColumnIds, ELEMENT_TO_INFLICTION_COLUMN } from './columnResolution';
 import { STATE_TO_COLUMN } from './triggerIndex';
 import { FPS, TOTAL_FRAMES } from '../../utils/timeline';
 import { getFinalStrikeTriggerFrame } from './processComboSkill';

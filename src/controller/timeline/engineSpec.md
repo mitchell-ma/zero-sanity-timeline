@@ -27,7 +27,7 @@ processCombatSimulation(rawEvents, loadoutContext...)
   2. new DerivedEventController(triggerAssociations)      → state
   2b. state.seedControlledOperator(firstOccupiedSlotId)  → seeds CONTROL for first operator (full timeline)
   3. state.registerEvents(inputEvents)                    → inline: extension, frame positions, combo triggers, CONTROL clamping, validation
-  4. SkillPointController.deriveSPRecoveryEvents(...)     → SP recovery events → state.registerEvents
+  4. (SP recovery is reactive — emitted via RECOVER/RETURN SKILL_POINT clauses during the queue; no pre-pass.)
   5. runEventQueue(state, derivedEvents, ...)             → builds TriggerIndex, seeds talent + derived + triggers, runs EventInterpretorController
   6. state.getProcessedEvents()                           → final output (reactions merged)
   7. StaggerController.sync(result)                        → frailty events from stagger HP graph
@@ -44,7 +44,7 @@ processCombatSimulation(rawEvents, loadoutContext...)
 | `TriggerIndex` | `triggerIndex.ts` | Per-invocation | Config-driven index mapping observable verbs to trigger defs. Built from operator/weapon/gear JSON. Used by EventInterpretorController for reactive trigger evaluation. |
 | `EventInterpretorController` | `eventInterpretorController.ts` | Per-invocation | DSL interpreter + queue frame handler. Routes effects through DerivedEventController domain methods. Reactive trigger evaluation via TriggerIndex after each DEC mutation. |
 | `CombatLoadoutController` | `combatLoadoutController.ts` | Persistent (React) | Manages operator/weapon/gear selection. Provides loadout context to the pipeline. |
-| `SkillPointController` | `skillPointController.ts` | Persistent (React) | SP resource timeline. `deriveSPRecoveryEvents` derives SP events; `sync` post-processes after pipeline. |
+| `SkillPointController` | `skillPointController.ts` | Persistent (React) | SP resource timeline. Receives SP costs/recoveries incrementally during the queue via `addCost`/`addRecovery`; `finalize` computes insufficiency zones after the queue drains. |
 | `StaggerController` | `staggerController.ts` | Persistent (React) | Stagger resource timeline. `sync` post-processes after pipeline. Generates frailty events (node/full stagger) with `STAGGER_FRAILTY` stat clauses. Frailty events are fed back into a second pipeline pass so `BECOME STAGGERED` triggers fire. |
 | `EventsQueryService` | `eventsQueryService.ts` | Per-invocation | Read-only query interface backed by DerivedEventController for damage calculation. |
 
@@ -120,8 +120,8 @@ processCombatSimulation(rawEvents, loadoutContext)
     │      ├─ Pass 2: time-stop extension, frame positions, validation
     │      └─ Pass 3: combo trigger resolution
     │
-    ├─ 3. SkillPointController.deriveSPRecoveryEvents → register SP events
-    │      collectEngineTriggerEntries → register talent events
+    ├─ 3. collectEngineTriggerEntries → register talent events
+    │      (SP recovery is reactive — no pre-pass.)
     │
     ├─ 4. runEventQueue(state, derivedEvents)
     │      ├─ Seed derived events (freeform inflictions/reactions) into queue

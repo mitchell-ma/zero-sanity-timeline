@@ -401,9 +401,6 @@ export function createEvent(
     id?: string;
     name?: string;
     segments?: EventSegmentData[];
-    ultimateEnergyGain?: number;
-    teamUltimateEnergyGain?: number;
-    ultimateEnergyGainByEnemies?: Record<number, number>;
     operatorPotential?: number;
     timeInteraction?: string;
     isPerfectDodge?: boolean;
@@ -446,9 +443,6 @@ export function createEvent(
     ...(isForced ? { isForced: true } : {}),
     // Stackable events (status stacks, enemy inflictions) allow overlap
     ...(span > 0 && !isStackable ? { nonOverlappableRange: span } : {}),
-    ...(defaultSkill?.ultimateEnergyGain ? { ultimateEnergyGain: defaultSkill.ultimateEnergyGain } : {}),
-    ...(defaultSkill?.teamUltimateEnergyGain ? { teamUltimateEnergyGain: defaultSkill.teamUltimateEnergyGain } : {}),
-    ...(defaultSkill?.ultimateEnergyGainByEnemies ? { ultimateEnergyGainByEnemies: defaultSkill.ultimateEnergyGainByEnemies } : {}),
     ...(defaultSkill?.operatorPotential != null ? { operatorPotential: defaultSkill.operatorPotential } : {}),
     ...(defaultSkill?.timeInteraction ? { timeInteraction: defaultSkill.timeInteraction } : {}),
     ...(defaultSkill?.isPerfectDodge ? { isPerfectDodge: defaultSkill.isPerfectDodge } : {}),

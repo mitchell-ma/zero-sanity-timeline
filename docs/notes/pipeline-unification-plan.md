@@ -366,10 +366,11 @@ Expected test drifts (document each in commit body):
 - `triggerIndex.ts` consumes the same cache (no second normalization pass).
 - `dataDrivenEventFrames.ts:buildSequencesFromOperatorJson` reuses the same clause parser as effect clauses — frame markers become clauses with an offset.
 
-### Phase 2 — Single column-ID resolver
-- New `src/controller/timeline/columnResolution.ts` exporting `resolveColumnId(effect|condition|trigger)`.
-- Migrate `eventInterpretorController.ts:resolveEffectColumnId`, `conditionEvaluator.ts` column logic, and `triggerIndex.ts:ELEMENT_TO_INFLICTION` to import it. Delete the three local copies.
-- Pin with a unit test in `src/tests/unit/columnResolution.test.ts`.
+### Phase 2 — Single column-ID resolver — RESOLVED 2026-04-08
+- `src/controller/timeline/columnResolution.ts` exports `resolveColumnId` (single-column dispatch) and `resolveColumnIds` (multi-column for scanners), plus the `ELEMENT_TO_INFLICTION_COLUMN`, `INFLICTION_COLUMN_TO_ELEMENT`, and `PHYSICAL_STATUS_VALUES` constants.
+- All four call sites import directly from `columnResolution`: `eventInterpretorController.ts` (`resolveColumnId as resolveEffectColumnId`), `conditionEvaluator.ts` (`resolveColumnIds`), `triggerIndex.ts` (`ELEMENT_TO_INFLICTION_COLUMN`), and `triggerMatch.ts` (`resolveColumnIds`, `ELEMENT_TO_INFLICTION_COLUMN`). The transitive re-export through `conditionEvaluator.ts` was deleted.
+- Pinned with `src/tests/unit/columnResolution.test.ts` (22 tests covering single + multi resolution, legacy direct INFLICTION form, status/reaction/physical paths, fallthrough, and reverse-mapping invariants).
+- Full `npx jest` passes (2230 tests, zero regressions).
 
 ### Phase 3 — Move grammar/value resolution into the parser (partial evaluation)
 **Key insight:** `src/controller/calculation/valueResolver.ts` already exists and is the unified API. `ValueResolutionContext` (`:18–37`) is already split into static fields (`skillLevel, potential, talentLevel, stats, suppliedParameters, sourceContext`) and runtime callbacks (`getStatusStacks, getEnemyStatusStacks, getEventStacks, consumedStacks`). The refactor is about *who calls it when*, not about building a new API.
@@ -527,7 +528,13 @@ Also: remove `DEAL` and `RESET` from `NOOP_VERBS` (`:167–171`); they mutate, s
 
 2. **SP perfect-dodge — RESOLVED: unify now.** All resource writes go through the same pipeline. Phase 0 must promote SP perfect-dodge to a synthetic `RECOVER SKILL_POINT` clause alongside the UE fix, not defer it to Phase 8. There is no parallel write path exception.
 
-3. **Interpreter calls ONLY DEC — RESOLVED: no sibling-controller references in the interpreter at all.** `EventInterpretorController` and `DerivedEventController` remain separate classes, but the interpreter's only collaborator is DEC. Every `hpController`, `shieldController`, and `statAccumulator` field is removed from `EventInterpretorController`; DEC owns those references internally. This covers both writes **and reads** — no "reads are fine" carve-out. All of the following sites in `eventInterpretorController.ts` get rewritten to `this.dec.*` calls:
+3. **Interpreter calls ONLY DEC — RESOLVED 2026-04-08.** `EventInterpretorController` and `DerivedEventController` remain separate classes, but the interpreter's only collaborator is DEC. Every `hpController`, `shieldController`, and `statAccumulator` field is removed from `EventInterpretorController`; DEC owns those references internally. This covers both writes **and reads** — no "reads are fine" carve-out.
+
+   **Implementation summary:** DEC gained 3 private fields (`hpController`, `shieldController`, `statAccumulator`) wired through `reset()`, plus 14 passthrough methods: writes (`applyStatDelta`, `applyStatMultiplier`, `pushStatSource`, `popStatSource`, `snapshotStatDeltas`, `applyShield`, `absorbShield`, `recoverHp`), reads (`getStat`, `getOperatorIds`, `getOperatorPercentageHp`), and presence guards (`hasStatAccumulator`, `hasHpController`, `hasShieldController`). `recoverHp` accepts negative values and routes to `hpController.applyHeal` (which already treats negative as damage). `absorbShield` returns the residual after shield absorption. `StatSource` is re-exported from DEC so the interpreter never imports `statAccumulator` even as a type.
+
+   All 15 sibling-controller call sites in `eventInterpretorController.ts` plus the 4 predicate-callback closures (lines 2191/2194, 3009/3011 historical) were rewritten to `this.controller.<method>()`. The 3 fields and 3 type imports were deleted from the interpreter, along with the matching `InterpretorOptions` declarations. `eventQueueController.ts:runEventQueue` no longer takes `hpController`/`shieldController`/`statAccumulator` parameters since they only fed the interpreter — they're now passed straight into `state.reset()` from `processCombatSimulation`.
+
+   Grep `(hpController|spController|ueController|shieldController|statAccumulator)` inside `eventInterpretorController.ts` returns **zero hits**. Full `npx jest` passes (2230 tests, zero regressions). Lint + tsc clean. All of the following sites in `eventInterpretorController.ts` get rewritten to `this.dec.*` calls:
 
    **Writes:**
    - `statAccumulator.applyStatDelta` — `:691` (stat reversal on status removal), `:1009` (stat buff application), `:2187` (per-frame delta replay)
@@ -559,6 +566,16 @@ Also: remove `DEAL` and `RESET` from `NOOP_VERBS` (`:167–171`); they mutate, s
 7. **`precomputeDamageByFrame` — RESOLVED: remove entirely.** Delete `precomputeDamageByFrame`, the module-level `_damageTicks` fallback, and the `getEnemyHpPercentage` free function at `calculationController.ts:52, :182`. The damage layer stops pre-computing; all damage resolution happens per-frame through `doDeal → DEC.dealDamage`.
 
 8. **Line range `:1877–1919` for `EVENT_START` — acknowledged.** Correct end is `:1927`. Spot-check other cited line ranges during implementation; do not trust them as authoritative deletion targets.
+
+9. **`processNewStatusEvent` inline dispatch — RESOLVED: keep inline, this is load-bearing.** When `doApply` creates a status event inside an effect loop, the status's creation-time lifecycle (onEntryClause, top-level `clause` APPLY STAT, DISABLE/ENABLE propagation, offset-0 segment frame markers) MUST run synchronously before the outer effect loop advances to effect `i+1`. Reason: effects within a clause run sequentially via a plain `for` loop in `dispatchClauseFrame`; effect `i+1` is expected to observe whatever state effect `i` wrote. If `APPLY STATUS X` at index `i` merely enqueued X's lifecycle as a same-frame `QueueFrame`, effect `i+1` would run **before** the queue resumed — the queue only drains between entries, never mid-entry. X's stat buffs would land "too late" from the perspective of the same-clause siblings, breaking the in-game semantic "applying a status takes effect immediately for the next action in the same effect chain."
+
+   Same-frame FIFO ordering in the queue does not solve this: it governs inter-entry order, not intra-entry order. The current effect loop is still executing — there is no hook to interleave newly-enqueued same-frame work into the middle of it.
+
+   Concretely: offset > 0 segment frames are correctly enqueued (`pendingExitFrames` → `PROCESS_FRAME`); offset-0 segment frames and clause lifecycle run inline and recurse (if an offset-0 frame applies another status Y, Y's creation lifecycle runs inline inside X's, same rules).
+
+   **Implications for Phase 4 (collapse all clause dispatch into the queue):** the inline path must survive as a synchronous re-entry into `dispatchClauseFrame`, not as a queue insertion. Acceptable shapes: (a) `dispatchClauseFrame` takes an optional "run these clauses now, in-process" parameter that short-circuits the queue for creation-time work; (b) a named helper `runStatusOnCreate(status, ctx)` that calls the same dispatch function with a synthetic in-process entry. What is NOT acceptable: enqueuing onEntryClause/clause/offset-0 frames as `QueueFrame`s with the expectation that same-frame FIFO will preserve ordering. It won't — same-frame FIFO is irrelevant here because the outer entry is still mid-execution.
+
+   Naming: `processNewStatusEvent` is a misleading name ("frame" vs "status event"). Rename to `runStatusCreationLifecycle` during Phase 4 to make the purpose explicit. It is NOT a general intra-frame dispatcher — only status creation (from `doApply` + physical status derivation in `registerEvents` → to be removed in Phase 8) routes through it.
 
 ## Rollout & verification strategy
 
@@ -659,26 +676,25 @@ listed for history.
 
 ### Carried over from Phase 0a (UE migration)
 
-- **`tacticalEventGenerator.ts` parallel `ultimateEnergyGains` flow.** Lines
-  `:47, :80, :110, :117` build a `{ frame, amount }[]` injected directly into
-  the UE pipeline as a side channel. Audited and intentionally left in 0a
-  because it never touched the deleted frame fields. Should still be folded
-  into the single ingress: tactical items that grant UE should emit a clause
-  on a synthesized first frame just like every other clause-driven gain.
+- **RESOLVED — `tacticalEventGenerator.ts` deleted (2026-04-08).** The
+  entire file was orphan code with zero callers anywhere in `src/`. Tactical
+  UE gain is already handled through the standard clause-driven path; this
+  generator was a relic from an earlier architecture and never re-wired
+  after the 0a migration. Deletion verified by `npx tsc --noEmit` (clean)
+  and full `npx jest` (2230 tests pass). No clause synthesis migration
+  needed — there was nothing to migrate.
 - **RESOLVED — `getSkillUltimateEnergyGains` / `SkillUltimateEnergyGains` /
   `findConditionalUltimateEnergyGains` / `getSkillCategoryData`** were
   verified orphaned and deleted from `dataDrivenEventFrames.ts`. The matching
   re-exports in `gameDataStore.ts` and `configStore.ts` were removed too.
-- **`inputEventController.allocateEvent` parameter type still declares
-  `ultimateEnergyGain?` / `teamUltimateEnergyGain?` /
-  `ultimateEnergyGainByEnemies?` on its `defaultSkill` argument** (around
-  `:386–388`) and spreads them into the result via conditional spread
-  (`:423–425`). tsc didn't catch this because excess properties from spread
-  through `Partial<>`-shaped intermediates aren't strict-rejected. Same shape
-  drift exists in the matching `useApp.ts` helper signature (`:1035`-ish).
-  Both should be cleaned up: delete the type fields and the conditional
-  spreads. The runtime impact today is "the spread does nothing" — the result
-  type doesn't carry those fields.
+- **RESOLVED — `allocateEvent` UE field drift cleaned up (2026-04-08).**
+  Deleted `ultimateEnergyGain?` / `teamUltimateEnergyGain?` /
+  `ultimateEnergyGainByEnemies?` from `inputEventController.createEvent`'s
+  `defaultSkill` parameter type and the matching conditional spreads in the
+  return object. Same fields removed from the `useApp.ts` `handleAddEvent`
+  helper signature. `tests/unit/sharing.test.ts` mock columns also stripped
+  of the dead fields (4 references). No real readers existed — the spread
+  was a no-op. Full `npx jest` passes (2230 tests).
 - **`chainRef` bundled type was deferred.** Plan called for a single
   `chainRef: { sourceSlotId, sourceOperatorId, sourceEventUid }` propagated
   through every derived event. Phase 0a-i used the existing scattered
@@ -715,11 +731,11 @@ listed for history.
   When a second generic mechanic shows up (parry bonus, on-defeat hook,
   guard-break SP, etc.), build the loader + JSON file and migrate
   perfect-dodge to load through it.
-- **`SkillPointController.deriveSPRecoveryEvents` is now a no-op stub.**
+- **RESOLVED — `SkillPointController.deriveSPRecoveryEvents` stub deleted.**
   Both fallback paths (basic-attack frame scan AND perfect-dodge synth) were
-  deleted in 0b. The function returns the input events unchanged and exists
-  only to keep `eventQueueController.ts:478` stable. Delete the function
-  entirely and the call site at the same time, in a small follow-up patch.
+  deleted in 0b. The no-op stub and its call site in `eventQueueController.ts`
+  were deleted in a follow-up patch. A comment at the former call site
+  documents the deletion.
 - **The plan's "basic attack final-strike SP migration" turned out to be
   unnecessary.** The plan said `basicAttackController.ts:71` writes a summed
   SP to `finalFrame.skillPointRecovery` and described migrating that to a
@@ -738,57 +754,34 @@ listed for history.
 
 ### Carried over from Phase 0d (Damage migration)
 
-- **Hardcoded skip for operator-owned `DEAL DAMAGE` in the dsl dispatch
-  loop.** `eventInterpretorController.ts:2165-2178` has a special case:
+- **RESOLVED — operator-owned `DEAL DAMAGE` subject-filter hack removed
+  (2026-04-08).** `checkReactiveTriggers` now performs per-entry subject
+  filtering based on the entry's own `subject` / `subjectDeterminer`,
+  honoring the actor-vs-recipient asymmetry of action verbs:
 
-  ```typescript
-  const isOperatorDealDamage = ef.dslEffect.verb === VerbType.DEAL
-    && ef.dslEffect.object === NounType.DAMAGE
-    && event.ownerId !== ENEMY_OWNER_ID;
-  if (!isOperatorDealDamage) {
-    this.reactiveTriggersForEffect(ef.dslEffect, ...);
-  }
-  ```
+  - **Action verbs (APPLY/CONSUME)**: `THIS/ANY/CONTROLLED OPERATOR`
+    subjects match against the ACTOR slot (eventOwnerId). `subject=ENEMY`
+    matches against the RECIPIENT slot (resolved from `effect.to` or the
+    status def's `properties.target`).
+  - **Non-action verbs (DEAL/PERFORM/BECOME/IS/HAVE)**: subject always
+    matches against the actor/stateful entity (slotId = eventOwnerId,
+    or the stat-owner entity for BECOME).
 
-  **Why it exists:** after 0d the parser pushes `DEAL DAMAGE` as a dsl
-  clause, so every operator damage frame now runs through the standard
-  `interpret() + reactiveTriggersForEffect` dispatch path. Ember's talent
-  `Pay The Ferric Price` has an `onTriggerClause` condition
-  `{ subject: ENEMY, verb: DEAL, object: DAMAGE }` — it should only fire
-  when the enemy deals damage to Ember. The runtime trigger dispatch
-  (`checkReactiveTriggers` → `handleEngineTrigger`) keys triggers by
-  `(verb, object)` only and does NOT evaluate `subject` / `subjectDeterminer`
-  filters before enqueuing engine triggers. So every Ember BS damage frame
-  would fire PFP as if the enemy had attacked her.
+  `reactiveTriggersForEffect` now resolves an optional `targetSlotId` from
+  the effect and passes both actor and target to `checkReactiveTriggers`;
+  the inline entry loop picks the right one per entry. The `isOperatorDealDamage`
+  skip in `dispatchClauseFrame` is deleted. The `BECOME` fire site in
+  `doApply` APPLY STAT now passes `ownerId` (the stat-owner entity) instead
+  of `ctx.sourceSlotId` so `BECOME <state>` subject=ENEMY triggers match
+  when an enemy-side stat transitions. The `CONSUME STATUS → BECOME_NOT`
+  fire site now resolves the status slot from `consumedDef.properties.target`
+  (ENEMY → `ENEMY_OWNER_ID`, otherwise `eventOwnerId`).
 
-  **The proper fix** belongs in the runtime trigger dispatch path. The
-  subject-filter logic already exists as `resolveOwnerFilter` in
-  `triggerMatch.ts` but only runs in the build-time index scanners
-  (`scanEvents`, `handleDeal`, etc.), not in the runtime path
-  `checkReactiveTriggers` uses. The runtime path should re-check the
-  `subject`/`subjectDeterminer` on each matching trigger condition before
-  enqueuing the engine trigger. When that lands, delete the
-  `isOperatorDealDamage` skip and verify PFP still fires from enemy
-  actions (via `enemyAction.test.ts`) and NOT from operator damage frames
-  (`operator damage frames do NOT fire DEAL DAMAGE trigger` case).
-
-  **Why it's a hack, not a fix:**
-  1. It's verb+object specific. Any future trigger keyed on a verb+object
-     whose `subject` filter matters has the same latent bug — this skip
-     doesn't cover them.
-  2. It encodes "operator-owned `DEAL DAMAGE` clauses never fire reactive
-     triggers via the dsl path" as a load-bearing assumption. Catcher's
-     `THIS OPERATOR DEAL DAMAGE source FINAL_HIT` trigger happens to route
-     through the `PERFORM FINAL_STRIKE` block at `:2288` instead, so it's
-     unaffected. A future JSON adding `THIS OPERATOR DEAL DAMAGE` without
-     the `source: FINAL_HIT` bit would silently not fire.
-  3. The fix target is `checkReactiveTriggers` / `handleEngineTrigger`,
-     not the dispatch loop. Placing it in the loop means every future
-     verb/object that hits the same gap will need a similar hardcoded skip.
-
-  **Suggested ownership:** Phase 1 (if it includes trigger index cleanup)
-  or Phase 4e (which already plans to route inline skill damage through
-  `interpret(DEAL DAMAGE TO ENEMY)` and collapse trigger dispatch paths).
+  Tests: full `npx jest` passes (2208 tests, zero regressions). Ember PFP
+  still fires from enemy actions and NOT from operator damage frames;
+  Fluorite T1 BECOME/BECOME_NOT SLOWED, Perlica P3 THIS OPERATOR APPLY
+  ELECTRIFICATION, and Gilberta Gravity Field BECOME LIFTED all still fire
+  correctly.
 
 - **`calculationController` and `damageTableBuilder` call
   `findDealDamageInClauses` per-frame.** This is a linear walk of the
@@ -865,12 +858,12 @@ listed for history.
   `DEFAULT_VALUE_CONTEXT` (skill level 12). In practice only
   `VARY_BY SKILL_LEVEL` values differ; all current callers query constants
   or `VARY_BY POTENTIAL`, and tests are green.
-- **`SkillPointController.deriveSPRecoveryEvents` stub** still exists as a
-  no-op `return events` after both fallback paths were deleted. The call
-  site at `eventQueueController.ts:478` is still live. Delete the function
-  and the call together in a small follow-up patch (estimated 5-minute
-  change, blocked only by not wanting to touch the queue controller during
-  the cache phase).
+- **RESOLVED — `SkillPointController.deriveSPRecoveryEvents` stub deleted.**
+  The function and its call at `eventQueueController.ts` are gone.
+  A comment at the former call site documents the deletion. SP recovery is
+  now driven entirely by `RECOVER`/`RETURN SKILL_POINT` clauses routed
+  through `interpret()` → `DEC.recordSkillPointRecovery`; perfect-dodge
+  gets a synthetic clause at `allocateEvent` time.
 
 ### Phase 5 — RESOLVED
 
@@ -888,54 +881,33 @@ nothing" — `DEAL` and `RESET` were always in the set despite mutating).
 The plan groups three items under 4e but they're substantively distinct
 and one (item 3) is multi-day work.
 
-**Item 1 — Combo trigger source duplication** (`handleProcessFrame
-:2077-2096`, ~20 lines). Today this is a direct `controller.applyEvent`
-call outside `interpret()`, violating the "single dispatch surface"
-invariant. The plan suggested moving it to parse time as a synthetic
-clause, but `comboTriggerColumnId` is set at runtime when the combo
-event is built (from whichever infliction/status the player triggered
-the combo against), not at JSON parse time — the parser doesn't know
-which combo triggered which clause. The realistic refactor is at
-runtime: synthesize an `APPLY` effect inside the dispatch loop and run
-it through `interpret() → doApply`. Two complications:
-  1. `INFLICTION_COLUMN_IDS` keys are element-named columns (e.g.
-     `INFLICTION_HEAT`); the synthetic effect needs `objectQualifier`
-     set to the element which requires reverse-mapping `INFLICTION_HEAT
-     → HEAT`. Either build a reverse map or special-case the loop.
-  2. `applyPhysicalStatus` for the physical-status branch already
-     exists as a private method; routing through `doApply` would have
-     to handle the same code path.
-Net cleanup is 20 lines deleted, but it's not a 5-minute change. Defer
-to a focused session that can verify the synthetic-clause path matches
-the existing applyEvent semantics exactly (combo chaining is
-test-sensitive — Wulfgard, Antal, Estella all use it).
+**Item 1 — Combo trigger source duplication — RESOLVED.** Now lives at
+`handleProcessFrame :2095-2138`. When `frame.duplicateTriggerSource` is
+set and `event.comboTriggerColumnId` is non-empty, the handler synthesizes
+an `APPLY` effect on the runtime-resolved trigger column and routes it
+through `this.interpret(synthEffect, ctx)` followed by
+`reactiveTriggersForEffect`. Both branches handled:
+- `INFLICTION_COLUMN_IDS` → `{verb: APPLY, object: INFLICTION, objectQualifier: <element>, to: ENEMY}`
+  using the `INFLICTION_COLUMN_TO_ELEMENT` reverse map exported from
+  `columnResolution.ts`.
+- `PHYSICAL_STATUS_COLUMN_IDS` → `{verb: APPLY, object: STATUS, objectId: PHYSICAL, objectQualifier: <triggerCol>, to: ENEMY}`.
 
-**Item 2 — Stat reversal scheduling** (`_statReversals` field +
-`:743-754` apply loop + `:2430-2432` push site + `:1169-1170` consume
-hook). Today `processNewStatusEvent` runs the status clause's `APPLY
-STAT` effects, snapshots the resulting deltas, and pushes
-`{frame: parentEventEnd, value: -delta}` entries to `_statReversals`.
-The queue processor flushes these per-frame at `:745-754` by directly
-calling `statAccumulator.applyStatDelta` and `popStatSource`.
+No direct `controller.applyEvent` / `applyPhysicalStatus` calls outside
+`interpret()` for the combo duplication path. The remaining direct
+`controller.applyEvent` call sites in `eventInterpretorController.ts`
+are inside `doApply` and `applyPhysicalStatus` (both interpret-dispatch
+chain) and the freeform event creation branch in `handleProcessFrame`
+(deliberately direct since freeform events have no DSL clauses to interpret).
 
-The plan wants to replace this with a synthetic `APPLY STAT with -delta`
-clause queued onto the `STATUS_EXIT` hook for the status. Two real
-problems:
-  1. The delta is **runtime-determined** — it depends on the resolved
-     ValueNode value at status-creation time (potential, talent level,
-     stat-stack interactions). The parser can't auto-emit a synthetic
-     effect at load time because it doesn't know the value.
-  2. The runtime alternative is "after computing the delta in
-     `processNewStatusEvent`, queue a synthetic `STATUS_EXIT` clause
-     with the inverse value". This requires plumbing the queued clause
-     through `handleStatusExit` and either: (a) extending the
-     `STATUS_EXIT` queue frame to carry synthetic effects alongside the
-     statusExitClauses field, or (b) restructuring `STATUS_EXIT` to
-     route through the unified dispatcher (which is Phase 4c-ii — also
-     deferred).
-
-Item 2 is essentially blocked on Phase 4c-ii's queue model
-restructuring. Defer together.
+**Item 2 — Stat reversal scheduling — CANCELLED 2026-04-08.** Subsumed
+by finding #9. The runtime delta capture in `runStatusCreationLifecycle`
+plus the inverse-apply at `processQueueFrame :737-756` is part of the
+same load-bearing inline status creation lifecycle and cannot be replaced
+with synthetic STATUS_EXIT clauses for the same reasons Phase 4c-ii is
+cancelled. The delta is runtime-determined (depends on the resolved
+ValueNode value at status-creation) and the inverse-apply must observe
+the same immediate-visibility semantics as the forward apply. The
+mechanism stays as-is; `_statReversals` is the correct shape for it.
 
 **Item 3 — HP threshold + damage routing through `interpret()`.** The
 biggest remaining architectural change. Currently:
@@ -988,64 +960,48 @@ three into a tail-end "while I'm here" cleanup.
 
 ### Phases 4c-ii + 4d — DEFERRED TOGETHER (queue model restructuring)
 
-Both sub-phases want the same kind of structural change: collapse a
-specialized `QueueFrameType` (`STATUS_EXIT` for 4c-ii, `ENGINE_TRIGGER`
-for 4d) into a `PROCESS_FRAME` carrying a `hookType`. The motivation is
-"one dispatch surface", but the actual code reduction is small and the
-risk is real.
+**Phase 4d — RESOLVED.** `QueueFrameType.ENGINE_TRIGGER` was already
+collapsed into `PROCESS_FRAME` with `hookType: FrameHookType.ON_TRIGGER`
+in a prior session. `processQueueFrame` (`eventInterpretorController.ts:745`)
+dispatches via `entry.hookType === FrameHookType.ON_TRIGGER ?
+this.handleEngineTrigger(entry) : this.handleProcessFrame(entry)`. The
+priority constant `PRIORITY.ENGINE_TRIGGER` is keyed as a string in
+`eventQueueTypes.ts` so both queue types and hook types share the
+priority table side-by-side. `handleEngineTrigger` itself was *not*
+inlined into `dispatchClauseFrame` — it remains a 200-line specialized
+handler for HAVE deferred eval, source-event lifecycle gating, cascade
+bookkeeping, etc. — but it now lives behind the unified PROCESS_FRAME
+dispatch surface. Net result: one queue type, one priority table, one
+entrypoint. The marginal architectural win of folding the handler into
+the shared dispatcher is not worth the risk and is explicitly not
+pursued (the `TriggerEffect` vs `FrameClauseEffect` shape mismatch
+makes a clean fold impossible without a separate conversion layer).
 
-**Phase 4c-ii — `processNewStatusEvent` deletion.** The plan wanted the
-function gone, replaced by queue handlers that pick up synthetic
-`STATUS_ENTRY` / `STATUS_PASSIVE` / per-frame `ON_FRAME` / `STATUS_EXIT`
-frames enqueued by the APPLY STATUS effect. To do this:
-1. `doApply` would need to return the new status event UID so the caller
-   can enqueue synthetic frames for it (currently returns `boolean`).
-2. The dsl dispatch loop would need to enqueue the synthetic frames after
-   each APPLY STATUS call.
-3. The status APPLY STAT delta tracking + expiry reversal scheduling
-   (currently inline at `processNewStatusEvent :2374-2417`) would need a
-   home — either a new `STATUS_PASSIVE` hook handler or a dedicated
-   helper that runs alongside the synthetic frame enqueue.
-4. The offset-0 vs offset-N split for status frame markers becomes
-   uniform — both enqueue, neither runs synchronously inline.
+**Phase 4c-ii — CANCELLED 2026-04-08 (subsumed by finding #9).** The
+plan originally wanted `processNewStatusEvent` deleted and replaced
+with queue-enqueued `STATUS_ENTRY` / `STATUS_PASSIVE` / `ON_FRAME`
+frames. Open review finding #9 (added 2026-04-08) establishes that
+this is **architecturally impossible**: the function is *load-bearing
+inline dispatch*. When `doApply` creates a status inside an effect
+loop, the status's onEntryClause / clause APPLY STAT / offset-0 frames
+MUST run synchronously before effect `i+1` in the same clause executes.
+Same-frame FIFO queue ordering does not solve this — the queue only
+resumes between entries, never mid-entry, so any queued lifecycle
+would land after the rest of the current effect loop. The function was
+renamed to `runStatusCreationLifecycle` (2026-04-08) and its docstring
+now documents the load-bearing rationale. Phase 4 acceptance criteria
+that mention `processNewStatusEvent` deletion are obsolete — the
+function stays, the name change makes intent explicit, and all status
+clause dispatch flows through it for creation-time lifecycle.
 
-The synchronous-inline-vs-queue subtlety is the real risk: changing
-when offset-0 status-frame effects execute relative to the parent
-APPLY call could shift effect ordering for any operator that relies on
-"my onEntry runs before my offset-0 frame fires". Need to audit all
-operators for ordering dependencies before flipping.
-
-**Phase 4d — `handleEngineTrigger` thin-shim conversion.** The 200-line
-function does HAVE condition deferred eval, parent event lifecycle
-gating, self-apply gate, source-event remaining-duration calc, trigger
-effects iteration with cascade depth bookkeeping, usage counter, and
-compound cascade collection. None of this fits `dispatchClauseFrame`'s
-contract. The plan's "thin shim" version still needs all 200 lines —
-they just live behind a `case FrameHookType.ON_TRIGGER` branch in
-`handleProcessFrame` instead of `case QueueFrameType.ENGINE_TRIGGER` in
-`processQueueFrame`. Net architecture win: marginal. Net risk: real
-(touching every reactive-trigger code path).
-
-**Recommendation:** do these together, in a dedicated session, with a
-specific operator-ordering audit pass beforehand (Avywenna pierce
-chains, Estella commiseration trigger chains, Gilberta cascading
-triggers — all are sensitive to dispatch order). Until then, the
-specialized loops stay; the dispatcher (`dispatchClauseFrame`) covers
-the 7 sites where it actually fits cleanly.
-
-### Phase 4d also blocked by
-
-- **`handleEngineTrigger` trigger effects iterate `TriggerEffect[]`, not
-  `FrameClauseEffect[]`.** The shapes are similar but distinct. Folding
-  4d into the dispatcher would require either a TriggerEffect → Effect
-  conversion at the trigger collector layer (preferred long-term) or a
-  dual-shape dispatcher that handles both (ugly). The trigger collector
-  conversion is itself a significant change.
-- **`processNewStatusEvent` statusDef.clause loop and the `runEventQueue`
-  talent passive loop** are both APPLY-STAT-only specialized loops with
-  delta tracking. Don't fit `dispatchClauseFrame`. Both would benefit
-  from a small `runStatusPassiveStats(def, ctx)` helper but neither
-  blocks anything; leave specialized.
+The stat reversal scheduling code (formerly Phase 4e item 2) is also
+cancelled by this finding for the same reason — the runtime delta
+capture in `runStatusCreationLifecycle` and the inverse-apply in
+`processQueueFrame` are part of the same load-bearing inline dispatch.
+They cannot be replaced with synthetic `STATUS_EXIT` clauses because
+the delta is runtime-determined (depends on resolved ValueNode) and
+needs the same immediate-visibility guarantee as other inline lifecycle
+work.
 
 ### Carried over from Phase 4b (skill-level lifecycle migration)
 
@@ -1151,14 +1107,12 @@ ends up with.
 - **RESOLVED — `FrameClauseEffect.type` union** collapsed to
   `{ type: 'dsl'; dslEffect?: Effect }` as its sole shape after Phase 0d.
   Zero non-dsl variants remain.
-- **`effectExecutor.ts` orphan** — 719-line file with its own column
-  resolver, stacking logic, and `MutationSet` dispatcher. Nothing imports
-  or calls anything from it at runtime; it's dead code left over from an
-  earlier refactor attempt. Plan options:
-  1. Activate it in Phase 3b (plan's original intent) by routing `doApply`
-     / `doConsume` branches through `effectExecutor.executeMutationSet`.
-  2. Delete the file outright and fold its stacking-capacity / merge /
-     refresh logic into the column strategy classes directly.
-  Either path needs to happen before Phase 4 starts assuming a live
-  MutationSet executor.
+- **RESOLVED — `effectExecutor.ts` orphan deleted (2026-04-08).** The
+  719-line file plus its 2 test files (`effectExecutor.test.ts` 1981
+  lines, `segmentedStatus.test.ts` 176 lines) were deleted outright per
+  finding #5. The two stale references — a comment in
+  `eventInterpretorController.ts:1292` ("RESET STACKS handled by
+  effectExecutor") and a docstring line in `overrideApplicator.ts:10` —
+  were also cleaned up. Test count dropped from 2230 → 2115 (115 tests
+  removed, all of which exercised only the orphan). Zero regressions.
 

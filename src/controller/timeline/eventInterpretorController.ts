@@ -28,7 +28,7 @@ import { TimelineEvent, eventDuration, setEventDuration } from '../../consts/vie
 import { CritMode, DamageScalingStatType, DamageType, ElementType, EventFrameType, EventStatusType, PERMANENT_DURATION, PhysicalStatusType, SegmentType, StackInteractionType, StatType, StatusType, UnitType } from '../../consts/enums';
 import { resolveEffectStat } from '../../model/enums/stats';
 import type { OverrideStore } from '../../consts/overrideTypes';
-import type { StatAccumulator, StatSource } from '../calculation/statAccumulator';
+import type { StatSource } from './derivedEventController';
 import { t } from '../../locales/locale';
 import { buildOverrideKey } from '../overrideController';
 import {
@@ -50,8 +50,6 @@ import { hasDealDamageClause, findDealDamageInClauses, buildDealDamageClause, pa
 import { getStatusConfig, getStatusDef } from './configCache';
 import { resolveColumnId as resolveEffectColumnId, PHYSICAL_STATUS_VALUES, INFLICTION_COLUMN_TO_ELEMENT } from './columnResolution';
 import type { ConditionContext } from './conditionEvaluator';
-import type { HPController } from '../calculation/hpController';
-import type { ShieldController } from '../calculation/shieldController';
 import { getPhysicalStatusBaseMultiplier, getShatterBaseMultiplier } from '../../model/calculation/damageFormulas';
 import type { StatusLevel } from '../../consts/types';
 import type { SlotTriggerWiring } from './eventQueueTypes';
@@ -226,9 +224,6 @@ export interface InterpretorOptions {
   getEnemyHpPercentage?: (frame: number) => number | null;
   getControlledSlotAtFrame?: (frame: number) => string;
   triggerIndex?: TriggerIndex;
-  hpController?: HPController;
-  shieldController?: ShieldController;
-  statAccumulator?: StatAccumulator;
   critMode?: CritMode;
   overrides?: OverrideStore;
 }
@@ -465,9 +460,6 @@ export class EventInterpretorController {
   private getEnemyHpPercentage?: (frame: number) => number | null;
   private getControlledSlotAtFrame?: (frame: number) => string;
   private triggerIndex?: TriggerIndex;
-  private hpController?: HPController;
-  private shieldController?: ShieldController;
-  private statAccumulator?: StatAccumulator;
   /** Pending stat reversals: negative deltas scheduled at status expiry frames. */
   _statReversals?: { frame: number; entityId: string; stat: import('../../consts/enums').StatType; value: number }[];
   /** Temporary frame-scoped stat reversals (reversed immediately after snapshot). */
@@ -541,7 +533,7 @@ export class EventInterpretorController {
    * the interpret + condition contexts appropriate for the hook type and
    * passes them in; this helper owns the filter + dispatch + reactive
    * trigger fan-out logic so the per-hook loops in `handleProcessFrame`,
-   * `processNewStatusEvent`, and friends can collapse onto one code path.
+   * `runStatusCreationLifecycle`, and friends can collapse onto one code path.
    *
    * The logic mirrors the existing `handleProcessFrame :2056` dispatch
    * loop — filterClauses, then for each accepted predicate iterate effects,
@@ -586,12 +578,12 @@ export class EventInterpretorController {
         // lifecycle / status / trigger hooks let stats persist.
         if (options.trackStatReversals
             && dsl.verb === VerbType.APPLY && dsl.object === NounType.STAT
-            && dsl.objectId && this.statAccumulator) {
+            && dsl.objectId && this.controller.hasStatAccumulator()) {
           const statKey = resolveEffectStat(NounType.STAT, dsl.objectId, dsl.objectQualifier);
           if (statKey) {
-            const before = this.statAccumulator.getStat(eventOwnerId, statKey);
+            const before = this.controller.getStat(eventOwnerId, statKey);
             this.interpret(dsl, interpretCtx);
-            const after = this.statAccumulator.getStat(eventOwnerId, statKey);
+            const after = this.controller.getStat(eventOwnerId, statKey);
             const diff = after - before;
             if (diff !== 0) {
               if (!this._frameStatReversals) this._frameStatReversals = [];
@@ -608,14 +600,10 @@ export class EventInterpretorController {
 
         this.interpret(dsl, interpretCtx);
         if (options.fireReactiveTriggers) {
-          // Skip reactive triggers for operator-emitted DEAL DAMAGE clauses
-          // (see the Phase 0d deferred hack in docs/notes/pipeline-unification-plan.md).
-          const isOperatorDealDamage = dsl.verb === VerbType.DEAL
-            && dsl.object === NounType.DAMAGE
-            && eventOwnerId !== ENEMY_OWNER_ID;
-          if (!isOperatorDealDamage) {
-            this.reactiveTriggersForEffect(dsl, interpretCtx.frame, eventOwnerId, eventId, out, this.lastConsumedStacks);
-          }
+          // Subject-based filtering now happens inside checkReactiveTriggers
+          // (ENEMY / ANY_OTHER / CONTROLLED / THIS OPERATOR), so operator-emitted
+          // DEAL DAMAGE clauses no longer need to be skipped here.
+          this.reactiveTriggersForEffect(dsl, interpretCtx.frame, eventOwnerId, eventId, out, this.lastConsumedStacks);
         }
         this.lastConsumedStacks = undefined;
         executedCount++;
@@ -676,9 +664,6 @@ export class EventInterpretorController {
     this.getEnemyHpPercentage = options?.getEnemyHpPercentage;
     this.getControlledSlotAtFrame = options?.getControlledSlotAtFrame;
     this.triggerIndex = options?.triggerIndex;
-    this.hpController = options?.hpController;
-    this.shieldController = options?.shieldController;
-    this.statAccumulator = options?.statAccumulator;
     this.critMode = options?.critMode;
     this.overrides = options?.overrides;
   }
@@ -740,14 +725,14 @@ export class EventInterpretorController {
 
   processQueueFrame(entry: QueueFrame): QueueFrame[] {
     // Apply pending stat reversals for statuses that expired at or before this frame
-    if (this._statReversals?.length && this.statAccumulator) {
+    if (this._statReversals?.length && this.controller.hasStatAccumulator()) {
       const currentFrame = entry.frame;
       let i = 0;
       while (i < this._statReversals.length) {
         const r = this._statReversals[i];
         if (r.frame <= currentFrame) {
-          this.statAccumulator.applyStatDelta(r.entityId, { [r.stat]: r.value });
-          this.statAccumulator.popStatSource(r.entityId, r.stat);
+          this.controller.applyStatDelta(r.entityId, { [r.stat]: r.value });
+          this.controller.popStatSource(r.entityId, r.stat);
           this._statReversals[i] = this._statReversals[this._statReversals.length - 1];
           this._statReversals.length--;
         } else {
@@ -775,7 +760,7 @@ export class EventInterpretorController {
     if (entry.type === QueueFrameType.PROCESS_FRAME) {
       this.maybeApplyHpThresholdStatuses(entry.frame, entry.ownerId, entry.sourceSkillName, result);
     }
-    // Flush any STATUS_EXIT frames queued by processNewStatusEvent
+    // Flush any STATUS_EXIT frames queued by runStatusCreationLifecycle
     if (this.pendingExitFrames.length > 0) {
       result = [...result, ...this.pendingExitFrames];
       this.pendingExitFrames.length = 0;
@@ -1051,7 +1036,7 @@ export class EventInterpretorController {
           uid: freeformUid && si === 0 ? freeformUid : derivedEventUid(columnId, source.ownerId, ctx.frame, stackCount > 1 ? `${si}` : undefined),
         });
         // Process each new status event's lifecycle clauses inline (onEntryClause, etc.)
-        this.processNewStatusEvent(effect.objectId, statusOwnerId, ctx);
+        this.runStatusCreationLifecycle(effect.objectId, statusOwnerId, ctx);
       }
 
       return true;
@@ -1059,23 +1044,25 @@ export class EventInterpretorController {
     // APPLY STAT — accumulate into the stat accumulator for the target entity.
     if (effect.object === NounType.STAT && effect.objectId) {
       const statKey = resolveEffectStat(NounType.STAT, effect.objectId, effect.objectQualifier);
-      if (statKey && this.statAccumulator) {
+      if (statKey && this.controller.hasStatAccumulator()) {
         // multiplier key → multiply existing aggregate (e.g. T2 Cryogenic Embrittlement)
         const m = this.resolveWith(effect.with?.multiplier, ctx);
         if (typeof m === 'number') {
-          this.statAccumulator.applyStatMultiplier(ownerId, statKey, m);
+          this.controller.applyStatMultiplier(ownerId, statKey, m);
         } else {
           // value key → additive delta (standard stat buff)
           const v = this.resolveWith(effect.with?.value, ctx);
           if (typeof v === 'number') {
             // Snapshot stat before delta to detect 0→positive transitions
-            const statBefore = this.statAccumulator.getStat(ownerId, statKey);
-            this.statAccumulator.applyStatDelta(ownerId, { [statKey]: v });
+            const statBefore = this.controller.getStat(ownerId, statKey);
+            this.controller.applyStatDelta(ownerId, { [statKey]: v });
             // Fire BECOME state trigger on 0→positive transition (not when already active)
             const stateAdj = STAT_TO_STATE_ADJECTIVE[statKey];
             if (stateAdj && (statBefore ?? 0) <= 0) {
               this._statTriggerOut.length = 0;
-              this.checkReactiveTriggers(VerbType.BECOME, stateAdj, ctx.frame, ctx.sourceSlotId ?? ctx.sourceOwnerId, ctx.sourceSkillName, undefined, this._statTriggerOut);
+              // slotId = ownerId: the entity that entered the state (matches BECOME_NOT semantics).
+              // This is the "subject" of `X BECOME SLOWED`, not the source operator that applied the stat.
+              this.checkReactiveTriggers(VerbType.BECOME, stateAdj, ctx.frame, ownerId, ctx.sourceSkillName, undefined, this._statTriggerOut);
               if (this._statTriggerOut.length > 0) this.pendingExitFrames.push(...this._statTriggerOut);
             }
           }
@@ -1088,14 +1075,14 @@ export class EventInterpretorController {
       this.controller.createStagger('stagger', ownerId, ctx.frame, typeof v === 'number' ? v : 0, source);
       return true;
     }
-    // APPLY SHIELD — record shield value on target operator via ShieldController.
+    // APPLY SHIELD — record shield value on target operator via DEC.
     if (effect.object === ObjectType.SHIELD) {
-      if (!this.shieldController) return true;
+      if (!this.controller.hasShieldController()) return true;
       const shieldValue = this.resolveWith(effect.with?.value, ctx);
       if (typeof shieldValue !== 'number' || shieldValue <= 0) return true;
       const targetOpId = this.resolveOperatorId(ownerId);
       const expirationFrame = ctx.parentEventEndFrame ?? (ctx.frame + 10 * FPS);
-      this.shieldController.applyShield(targetOpId, ctx.frame, shieldValue, expirationFrame);
+      this.controller.applyShield(targetOpId, ctx.frame, shieldValue, expirationFrame);
       return true;
     }
     // APPLY EVENT — create a new instance of the parent status definition on the target.
@@ -1243,16 +1230,31 @@ export class EventInterpretorController {
     if (effect.verb === VerbType.CONSUME && (consumedStacks == null || consumedStacks === 0)) return;
     const objectId = this.resolveObjectIdForTrigger(effect);
     if (!objectId) return;
-    this.checkReactiveTriggers(effect.verb, objectId, absFrame, eventOwnerId, eventName, undefined, out, consumedStacks);
+    // Resolve the target slot for this effect (recipient of APPLY/CONSUME). Actor slot is
+    // always eventOwnerId. The inline filter in checkReactiveTriggers decides per-entry
+    // whether to match against actor or target based on the entry's own subject semantics.
+    let targetSlotId: string | undefined;
+    if (effect.to === NounType.ENEMY) targetSlotId = ENEMY_OWNER_ID;
+    else if (effect.to === NounType.TEAM) targetSlotId = COMMON_OWNER_ID;
+    else if (effect.object === NounType.STATUS && effect.objectId) {
+      const def = getStatusDef(effect.objectId);
+      if (def?.properties.target === NounType.ENEMY) targetSlotId = ENEMY_OWNER_ID;
+      else if (def?.properties.target === NounType.TEAM) targetSlotId = COMMON_OWNER_ID;
+    }
+    this.checkReactiveTriggers(effect.verb, objectId, absFrame, eventOwnerId, eventName, undefined, out, consumedStacks, targetSlotId);
     // CONSUME a status with stat-based state clause → fire BECOME_NOT (stat may have ended)
     if (effect.verb === VerbType.CONSUME && effect.object === NounType.STATUS && effect.objectId) {
       const consumedDef = getStatusDef(effect.objectId);
       if (consumedDef?.clause) {
+        // The stat lives on the status-target entity, not the parent event's owner.
+        // Resolve from the consumed status def's target for the subject match.
+        const target = consumedDef.properties.target;
+        const statusSlotId = target === NounType.ENEMY ? ENEMY_OWNER_ID : eventOwnerId;
         for (const clause of consumedDef.clause as { effects?: { verb?: string; object?: string; objectId?: string }[] }[]) {
           for (const ef of clause.effects ?? []) {
             if (ef.verb === VerbType.APPLY && ef.object === NounType.STAT) {
               const adj = STAT_TO_STATE_ADJECTIVE[ef.objectId as StatType];
-              if (adj) this.checkReactiveTriggers(`${VerbType.BECOME}_NOT`, adj, absFrame, eventOwnerId, eventName, undefined, out);
+              if (adj) this.checkReactiveTriggers(`${VerbType.BECOME}_NOT`, adj, absFrame, statusSlotId, eventName, undefined, out);
             }
           }
         }
@@ -1287,7 +1289,6 @@ export class EventInterpretorController {
       }
       return true;
     }
-    // RESET STACKS handled by effectExecutor
     return true;
   }
 
@@ -1437,7 +1438,7 @@ export class EventInterpretorController {
     }
     // Only handle HP recovery — SP/UE handled above
     if (effect.object !== NounType.HP) return true;
-    if (!this.hpController) return true;
+    if (!this.controller.hasHpController()) return true;
 
     const wp = effect.with as Record<string, unknown> | undefined;
     if (!wp?.value) return true;
@@ -1460,13 +1461,13 @@ export class EventInterpretorController {
       targetOperatorId = controlledSlot ? this.resolveOperatorId(controlledSlot) : ctx.sourceOwnerId;
     } else if (toDeterminer === DeterminerType.ANY && filter?.objectQualifier === AdjectiveType.LOWEST) {
       // Find operator with lowest HP percentage; tie-break to controlled
-      const operatorIds = this.hpController.getOperatorIds();
+      const operatorIds = this.controller.getOperatorIds();
       const controlledSlot = this.getControlledSlotAtFrame?.(ctx.frame);
       const controlledOpId = controlledSlot ? this.resolveOperatorId(controlledSlot) : undefined;
       let lowestPct = Infinity;
       targetOperatorId = controlledOpId; // default tie-breaker
       for (const opId of operatorIds) {
-        const pct = this.hpController.getOperatorPercentageHp(opId, ctx.frame);
+        const pct = this.controller.getOperatorPercentageHp(opId, ctx.frame);
         if (pct < lowestPct) {
           lowestPct = pct;
           targetOperatorId = opId;
@@ -1484,7 +1485,7 @@ export class EventInterpretorController {
     const treatmentReceivedBonus = targetCtx?.stats?.TREATMENT_RECEIVED_BONUS ?? 0;
 
     const finalHeal = rawHeal * (1 + treatmentBonus) * (1 + treatmentReceivedBonus);
-    this.hpController.applyHeal(targetOperatorId, ctx.frame, finalHeal);
+    this.controller.recoverHp(targetOperatorId, ctx.frame, finalHeal);
     return true;
   }
 
@@ -1504,16 +1505,10 @@ export class EventInterpretorController {
 
     for (const slotId of targetSlots) {
       const opId = this.resolveOperatorId(slotId);
-      let remainingDamage = rawDamage;
-
-      // Shield absorbs first
-      if (this.shieldController) {
-        remainingDamage = this.shieldController.absorbDamage(opId, ctx.frame, remainingDamage);
-      }
-
-      // Overflow damage reduces HP
-      if (remainingDamage > 0 && this.hpController) {
-        this.hpController.applyHeal(opId, ctx.frame, -remainingDamage);
+      // Shield absorbs first; overflow damage routes to HP via DEC.
+      const remainingDamage = this.controller.absorbShield(opId, ctx.frame, rawDamage);
+      if (remainingDamage > 0) {
+        this.controller.recoverHp(opId, ctx.frame, -remainingDamage);
       }
     }
     return true;
@@ -1986,7 +1981,7 @@ export class EventInterpretorController {
 
       // Non-skill status events: clause processing (APPLY STAT, onEntryClause,
       // DISABLE/ENABLE propagation, segment frame markers) is handled by
-      // processNewStatusEvent in the synthetic PROCESS_FRAME path (section 3b).
+      // runStatusCreationLifecycle in the synthetic PROCESS_FRAME path (section 3b).
       // Do NOT process clauses here — it would double-fire stat triggers.
 
       return newEntries;
@@ -2175,10 +2170,10 @@ export class EventInterpretorController {
         potential: pot,
         suppliedParameters: resolvedParams,
         getControlledSlotAtFrame: this.getControlledSlotAtFrame,
-        getOperatorPercentageHp: this.hpController ? (opId, f) => this.hpController!.getOperatorPercentageHp(opId, f) : undefined,
+        getOperatorPercentageHp: this.controller.hasHpController() ? (opId, f) => this.controller.getOperatorPercentageHp(opId, f) : undefined,
         sourceEventUid: event.uid,
         getLinkStacks: (uid) => this.controller.getLinkStacks(uid),
-        getStatValue: this.statAccumulator ? (entityId, stat) => this.statAccumulator!.getStat(entityId, stat) : undefined,
+        getStatValue: this.controller.hasStatAccumulator() ? (entityId, stat) => this.controller.getStat(entityId, stat) : undefined,
       };
       const { anyMatched } = this.dispatchClauseFrame(
         frame.clauses, frame.clauseType, interpretCtx, condCtx,
@@ -2210,12 +2205,12 @@ export class EventInterpretorController {
           uid: event.uid, event: { segments: event.segments },
         });
         // Process status lifecycle (APPLY STAT clauses, onEntryClause, segment frames)
-        // same as doApply → processNewStatusEvent for skill-derived statuses.
+        // same as doApply → runStatusCreationLifecycle for skill-derived statuses.
         const physCtx: InterpretContext = {
           frame: absFrame, sourceOwnerId: source.ownerId,
           sourceSlotId: event.ownerId, sourceSkillName: event.id, potential: pot,
         };
-        this.processNewStatusEvent(event.id, event.ownerId, physCtx);
+        this.runStatusCreationLifecycle(event.id, event.ownerId, physCtx);
         this.checkReactiveTriggers(VerbType.APPLY, event.columnId, absFrame, event.ownerId, event.id, undefined, newEntries);
       } else if (event.ownerId === ENEMY_OWNER_ID || event.ownerId === COMMON_OWNER_ID) {
         this.controller.applyEvent(event.columnId, event.ownerId, absFrame, dur, source, {
@@ -2223,32 +2218,32 @@ export class EventInterpretorController {
           ...(event.susceptibility && { event: { susceptibility: event.susceptibility, segments: event.segments } }),
         });
         // Process status lifecycle (APPLY STAT clauses, onEntryClause, segment frames)
-        // same as doApply → processNewStatusEvent for skill-derived statuses.
+        // same as doApply → runStatusCreationLifecycle for skill-derived statuses.
         const enemyCtx: InterpretContext = {
           frame: absFrame, sourceOwnerId: source.ownerId,
           sourceSlotId: event.ownerId, sourceSkillName: event.id, potential: pot,
         };
-        this.processNewStatusEvent(event.id, event.ownerId, enemyCtx);
+        this.runStatusCreationLifecycle(event.id, event.ownerId, enemyCtx);
         this.checkReactiveTriggers(VerbType.APPLY, event.id ?? event.columnId, absFrame, event.ownerId, event.id, undefined, newEntries);
       }
     }
 
     // ── 3c. Snapshot stat deltas for damage frames (captures runtime APPLY STAT effects)
-    if (this.statAccumulator && hasDealDamageClause(frame.clauses) && !frame.frameSkipped) {
+    if (this.controller.hasStatAccumulator() && hasDealDamageClause(frame.clauses) && !frame.frameSkipped) {
       const frameKey = `${event.uid}:${si}:${fi}`;
-      this.statAccumulator.snapshotDeltas(frameKey, event.ownerId);
+      this.controller.snapshotStatDeltas(frameKey, event.ownerId);
     }
 
     // Reverse frame-scoped APPLY STAT deltas so they don't persist to later frames
-    if (this._frameStatReversals?.length && this.statAccumulator) {
+    if (this._frameStatReversals?.length && this.controller.hasStatAccumulator()) {
       for (const r of this._frameStatReversals) {
-        this.statAccumulator.applyStatDelta(event.ownerId, { [r.stat]: r.value });
+        this.controller.applyStatDelta(event.ownerId, { [r.stat]: r.value });
       }
       this._frameStatReversals = undefined;
     }
 
     // ── 3d. Crit resolution for damage frames (stat accumulator + trigger emission)
-    if (this.statAccumulator && hasDealDamageClause(frame.clauses)) {
+    if (this.controller.hasStatAccumulator() && hasDealDamageClause(frame.clauses)) {
       const isDot = frame.damageType === DamageType.DAMAGE_OVER_TIME;
       if (!isDot) {
         const pin = this.overrides?.[buildOverrideKey(event)]?.segments?.[si]?.frames?.[fi]?.isCritical;
@@ -2361,10 +2356,22 @@ export class EventInterpretorController {
   }
 
   /**
-   * Synchronously process a newly created status event's lifecycle clauses
-   * and segment frame markers. Called inline from doApply — no queueing.
+   * Run a newly created status event's creation-time lifecycle: onEntryClause,
+   * top-level `clause` APPLY STAT effects, DISABLE/ENABLE propagation, and
+   * offset-0 segment frame markers. Offset > 0 segment frames + STATUS_EXIT
+   * are deferred to the queue via `pendingExitFrames`.
+   *
+   * **Load-bearing inline dispatch.** This is called *synchronously* from
+   * inside `doApply`'s effect loop. It MUST NOT be migrated to the queue: a
+   * subsequent effect at index `i+1` in the same clause must observe the
+   * stat / status state written by `APPLY STATUS` at index `i`. Same-frame
+   * FIFO queue ordering does not solve this — the queue only resumes
+   * between entries, never mid-entry, so any queued lifecycle would land
+   * after the rest of the current effect loop runs. See the "Open review
+   * findings #9" entry in `docs/notes/pipeline-unification-plan.md` for the
+   * full rationale and the rejection of Phase 4c-ii.
    */
-  private processNewStatusEvent(statusId: string | undefined, statusOwnerId: string, ctx: InterpretContext) {
+  private runStatusCreationLifecycle(statusId: string | undefined, statusOwnerId: string, ctx: InterpretContext) {
     if (!statusId) return;
 
     // Find the newly created status event
@@ -2431,22 +2438,22 @@ export class EventInterpretorController {
           const raw = rawEffect as Record<string, unknown>;
           if (raw.verb !== VerbType.APPLY || raw.object !== NounType.STAT) continue;
           // Snapshot stat before interpret, then capture delta after
-          const trackStat = this.statAccumulator
+          const trackStat = this.controller.hasStatAccumulator()
             ? resolveEffectStat(NounType.STAT, raw.objectId as string, raw.objectQualifier as string)
             : undefined;
-          const statBefore = trackStat ? this.statAccumulator!.getStat(statusOwnerId, trackStat) : 0;
+          const statBefore = trackStat ? this.controller.getStat(statusOwnerId, trackStat) : 0;
           const effect = raw as unknown as Effect;
           this.interpret(effect, clauseCtx);
           // Track the applied delta for reversal at expiry
           if (trackStat) {
-            const statAfter = this.statAccumulator!.getStat(statusOwnerId, trackStat);
+            const statAfter = this.controller.getStat(statusOwnerId, trackStat);
             const delta = statAfter - statBefore;
             if (delta !== 0) {
               appliedStatDeltas.push({ entityId: statusOwnerId, stat: trackStat, value: delta });
               // Push source for breakdown display
               const statusName = statusDef.properties.name ?? statusId;
               const source = buildStatSource(statusName, delta, raw, clauseCtx);
-              this.statAccumulator!.pushStatSource(statusOwnerId, trackStat, source);
+              this.controller.pushStatSource(statusOwnerId, trackStat, source);
             }
           }
         }
@@ -2454,7 +2461,7 @@ export class EventInterpretorController {
     }
 
     // Schedule stat delta reversals at status expiry
-    if (appliedStatDeltas.length > 0 && this.statAccumulator) {
+    if (appliedStatDeltas.length > 0 && this.controller.hasStatAccumulator()) {
       const endFrame = parentEventEnd;
       if (!this._statReversals) this._statReversals = [];
       for (const d of appliedStatDeltas) {
@@ -2734,6 +2741,9 @@ export class EventInterpretorController {
     enhancementType?: string,
     out?: QueueFrame[],
     consumedStacks?: number,
+    /** Optional recipient slot for action verbs (APPLY/CONSUME). When undefined,
+     *  action-verb target filters fall back to the actor slotId. */
+    targetSlotId?: string,
   ) {
     if (!this.triggerIndex) return;
     const results = out!;
@@ -2790,12 +2800,31 @@ export class EventInterpretorController {
       // Owner filter: THIS OPERATOR triggers only match events from the same slot
       const det = entry.primaryCondition.subjectDeterminer ?? DeterminerType.THIS;
       const subj = entry.primaryCondition.subject;
-      if (det === DeterminerType.THIS && subj === NounType.OPERATOR && slotId !== entry.operatorSlotId) continue;
+      // Action verbs (APPLY/CONSUME) that describe a target differ from non-action verbs
+      // (DEAL/PERFORM/IS/HAVE/BECOME) in what "subject" refers to:
+      //   - THIS/ANY/CONTROLLED OPERATOR + APPLY/CONSUME → subject = ACTOR (the operator
+      //     performing the apply). Match against `slotId` (actor).
+      //   - subject=ENEMY + APPLY/CONSUME → "when something is applied TO the enemy" →
+      //     subject refers to the RECIPIENT. Match against `targetSlotId` if provided.
+      //   - DEAL/PERFORM/BECOME/IS/HAVE → subject = the acting/stateful entity = `slotId`.
+      const isActionVerb = verb === VerbType.APPLY || verb === VerbType.CONSUME;
+      const effectiveSlot =
+        isActionVerb && subj === NounType.ENEMY ? (targetSlotId ?? slotId)
+        : slotId;
+
+      if (det === DeterminerType.THIS && subj === NounType.OPERATOR && effectiveSlot !== entry.operatorSlotId) continue;
       if (det === DeterminerType.CONTROLLED && subj === NounType.OPERATOR) {
         const controlledSlot = this.getControlledSlotAtFrame?.(frame);
-        if (controlledSlot && slotId !== controlledSlot) continue;
-        if (!controlledSlot && slotId !== entry.operatorSlotId) continue;
+        if (controlledSlot && effectiveSlot !== controlledSlot) continue;
+        if (!controlledSlot && effectiveSlot !== entry.operatorSlotId) continue;
       }
+      // Subject=ENEMY: trigger only fires when the referenced entity is the enemy.
+      // For DEAL/PERFORM the referenced entity is the actor (slotId); for APPLY/CONSUME
+      // with subject=ENEMY the referenced entity is the recipient (targetSlotId).
+      // Replaces the old isOperatorDealDamage hack in dispatchClauseFrame.
+      if (subj === NounType.ENEMY && effectiveSlot !== ENEMY_OWNER_ID) continue;
+      // Subject=ANY_OTHER OPERATOR: trigger fires for any operator other than the trigger owner.
+      if (subj === NounType.OPERATOR && det === DeterminerType.ANY_OTHER && effectiveSlot === entry.operatorSlotId) continue;
 
       const entryEnhancement = entry.def.properties.enhancementTypes?.[0];
       if (entryEnhancement && entryEnhancement !== enhancementType) continue;
@@ -2971,9 +3000,9 @@ export class EventInterpretorController {
         sourceOwnerId: ctx.operatorSlotId,
         potential: ctx.potential,
         getEnemyHpPercentage: this.getEnemyHpPercentage,
-        getOperatorPercentageHp: this.hpController ? (opId, f) => this.hpController!.getOperatorPercentageHp(opId, f) : undefined,
+        getOperatorPercentageHp: this.controller.hasHpController() ? (opId, f) => this.controller.getOperatorPercentageHp(opId, f) : undefined,
         parentStatusOwnerId,
-        getStatValue: this.statAccumulator ? (entityId, stat) => this.statAccumulator!.getStat(entityId, stat) : undefined,
+        getStatValue: this.controller.hasStatAccumulator() ? (entityId, stat) => this.controller.getStat(entityId, stat) : undefined,
         previousStackCount: trigger.previousStackCount,
       };
       if (!evaluateConditions(ctx.haveConditions as unknown as import('../../dsl/semantics').Interaction[], condCtx)) return [];

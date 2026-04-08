@@ -29,6 +29,10 @@ import type { TriggerAssociation } from '../gameDataStore';
 import type { SkillPointController } from '../slot/skillPointController';
 import type { UltimateEnergyController } from './ultimateEnergyController';
 import { collectNoGainWindowsForEvent } from './ultimateEnergyController';
+import type { HPController } from '../calculation/hpController';
+import type { ShieldController } from '../calculation/shieldController';
+import type { StatAccumulator, StatSource } from '../calculation/statAccumulator';
+import type { StatType } from '../../consts/enums';
 import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../slot/commonSlotController';
 import GENERAL_MECHANICS from '../../model/game-data/generalMechanics.json';
 import { getStatusDef, getStatusConfig } from './configCache';
@@ -37,6 +41,7 @@ import { allocInputEvent } from './objectPool';
 import type { ColumnHost, EventSource, AddOptions, ConsumeOptions } from './columns/eventColumn';
 import { ColumnRegistry } from './columns/columnRegistry';
 export type { EventSource } from './columns/eventColumn';
+export type { StatSource } from '../calculation/statAccumulator';
 
 // ── Status stack limit cache (from operator status configs) ──────────────────
 
@@ -66,6 +71,9 @@ export class DerivedEventController implements ColumnHost {
   private slotWirings: SlotTriggerWiring[] = [];
   private spController: SkillPointController | null = null;
   private ueController: UltimateEnergyController | null = null;
+  private hpController: HPController | null = null;
+  private shieldController: ShieldController | null = null;
+  private statAccumulator: StatAccumulator | null = null;
   private loadoutProperties: Record<string, LoadoutProperties> = {};
   private slotOperatorMap: Record<string, string> = {};
   /** Event UIDs that consumed Link, mapped to their stack count at consumption time. */
@@ -106,6 +114,9 @@ export class DerivedEventController implements ColumnHost {
     ueController?: UltimateEnergyController,
     loadoutProperties?: Record<string, LoadoutProperties>,
     slotOperatorMap?: Record<string, string>,
+    hpController?: HPController,
+    shieldController?: ShieldController,
+    statAccumulator?: StatAccumulator,
   ) {
     this.stacks.clear();
     this.registry.clear();
@@ -122,6 +133,9 @@ export class DerivedEventController implements ColumnHost {
     this.slotWirings = slotWirings ?? [];
     this.spController = spController ?? null;
     this.ueController = ueController ?? null;
+    this.hpController = hpController ?? null;
+    this.shieldController = shieldController ?? null;
+    this.statAccumulator = statAccumulator ?? null;
     this.loadoutProperties = loadoutProperties ?? {};
     this.slotOperatorMap = slotOperatorMap ?? {};
   }
@@ -146,6 +160,76 @@ export class DerivedEventController implements ColumnHost {
     if (this.ueController && (selfGain > 0 || teamGain > 0)) {
       this.ueController.addUltimateEnergyGain(frame, slotId, selfGain, teamGain);
     }
+  }
+
+  // ── Stat accumulator passthroughs ──────────────────────────────────────
+  // The interpreter calls these so it doesn't need a direct StatAccumulator
+  // reference. All sites are no-ops if the accumulator hasn't been wired in.
+
+  applyStatDelta(entityId: string, delta: Record<string, number>) {
+    this.statAccumulator?.applyStatDelta(entityId, delta);
+  }
+
+  applyStatMultiplier(entityId: string, stat: StatType, multiplier: number) {
+    this.statAccumulator?.applyStatMultiplier(entityId, stat, multiplier);
+  }
+
+  pushStatSource(entityId: string, stat: StatType, source: StatSource) {
+    this.statAccumulator?.pushStatSource(entityId, stat, source);
+  }
+
+  popStatSource(entityId: string, stat: StatType) {
+    this.statAccumulator?.popStatSource(entityId, stat);
+  }
+
+  snapshotStatDeltas(frameKey: string, entityId: string) {
+    this.statAccumulator?.snapshotDeltas(frameKey, entityId);
+  }
+
+  getStat(entityId: string, stat: StatType): number {
+    return this.statAccumulator?.getStat(entityId, stat) ?? 0;
+  }
+
+  hasStatAccumulator(): boolean {
+    return this.statAccumulator !== null;
+  }
+
+  // ── HP / shield passthroughs ───────────────────────────────────────────
+
+  applyShield(operatorId: string, frame: number, value: number, expirationFrame: number) {
+    this.shieldController?.applyShield(operatorId, frame, value, expirationFrame);
+  }
+
+  /** Absorb damage through any active shields; returns the residual damage. */
+  absorbShield(operatorId: string, frame: number, damage: number): number {
+    return this.shieldController
+      ? this.shieldController.absorbDamage(operatorId, frame, damage)
+      : damage;
+  }
+
+  /**
+   * Apply HP healing or damage to an operator. Positive `value` heals,
+   * negative damages — the existing `hpController.applyHeal` API treats
+   * negative heals as damage so we delegate directly.
+   */
+  recoverHp(operatorId: string, frame: number, value: number) {
+    this.hpController?.applyHeal(operatorId, frame, value);
+  }
+
+  getOperatorIds(): string[] {
+    return this.hpController?.getOperatorIds() ?? [];
+  }
+
+  getOperatorPercentageHp(operatorId: string, frame: number): number {
+    return this.hpController?.getOperatorPercentageHp(operatorId, frame) ?? 1;
+  }
+
+  hasHpController(): boolean {
+    return this.hpController !== null;
+  }
+
+  hasShieldController(): boolean {
+    return this.shieldController !== null;
   }
 
   // ── Controlled operator seeding ──────────────────────────────────────────
