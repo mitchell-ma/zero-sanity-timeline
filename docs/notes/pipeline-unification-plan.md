@@ -449,7 +449,28 @@ Also: remove `DEAL` and `RESET` from `NOOP_VERBS` (`:167–171`); they mutate, s
 - Replace `STAT_TO_STATE_ADJECTIVE` (`:162–165`) and `ADJECTIVE_TO_STAT` (`conditionEvaluator.ts:20–23`) with one enum-keyed table in `consts/enums.ts`.
 - A `StatAccumulator` watcher fires the BECOME / BECOME_NOT transition automatically. Delete the inline checks in `EVENT_END` (`:1932–1946`) and any matching post-hooks in `doApply`/`doConsume`.
 
-### Phase 8 — Everything is a QueueFrame; delete `registerEvents` entirely
+### Phase 8 — Everything is a QueueFrame; delete `registerEvents` entirely — RESOLVED 2026-04-08
+
+**Landed state.** `DerivedEventController.createSkillEvent` is the sole event ingress. Control seed, user-placed input events, enemy actions, talent events, and post-drain queue-event re-registration all route through it one event at a time. `registerEvents`, `seedControlledOperator`, `extendedIds`, `markExtended`, `deriveComboActivationWindows`, and `resolveComboTriggerColumns` are deleted. `src/tests/unit/pipelineInvariants.test.ts` pins the deletions.
+
+Key architectural mechanisms:
+- **Per-segment raw store** (`rawSegmentDurations`) populated in `_pushToStorage` after deep-cloning segments/frames. Makes `extendSingleEvent` idempotent (reads raw, writes extended in place) and unblocks retroactive re-extension.
+- **Retroactive re-extension**: `_maybeRegisterStop` walks overlapping registered events and re-runs `extendSingleEvent` + `computeFramePositions` when a new stop lands. Handles the ordering case where a later user event contributes a stop that should extend earlier events' segments.
+- **Reactive queue shift**: `_shiftQueueForNewStop` walks the DEC-owned priority queue and shifts entries past newly-discovered stops. Works hand-in-hand with retroactive re-extension so already-inserted queue frames stay aligned with the new extended timeline.
+- **Per-event queue frame emission**: `createSkillEvent` pass 4 emits the event's own PROCESS_FRAME/SEGMENT/EVENT_END/COMBO_RESOLVE queue entries at ingress time. The bulk `flattenEvents` call in `runEventQueue` now handles only derived (freeform infliction/reaction/status) events that bypass `createSkillEvent` entirely.
+- **Reactive combo resolution**: `resolveComboTriggersInline` runs per-`createSkillEvent` call; each invocation clears all COMBO_WINDOW events and re-emits via `openComboWindow` (merge-on-insert). No batch pre/post pass.
+- **Chain-of-action uid refs** (step 7.5): `TriggerMatch.sourceEventUid` / `TimelineEvent.triggerEventUid` carry a direct event-to-event reference. `duplicateTriggerSource` looks up the source event live from `getAllEvents()` instead of consulting the denormalized `comboTriggerColumnId` string.
+
+**What was deferred:**
+- **7g** (post-queue UID / `creationInteractionMode` restoration loops): blocked on universal uid + creationInteractionMode propagation through every `applyEvent`/`create*` path. Loops are correct workarounds today.
+- **7h fold** (extendSingleEvent into computeFramePositions): cosmetic module-boundary shuffle with no behavior payoff. The `extendedIds` guard was the real win and it's deleted.
+- **isCrit write-back loop**: added as a new post-pipeline workaround because clone-on-`_pushToStorage` broke the raw-state mutation leak that previously made MANUAL pins persist across runs. Same blocker as 7g — fix is parser-level identity preservation.
+
+See `docs/notes/phase-8-plan.md` and `docs/notes/phase-8-progress.md` for the full sub-step history.
+
+---
+
+### Phase 8 — Original plan (historical reference)
 **Principle:** every event — user-placed skill, freeform infliction, derived status, talent passive, combo window, controlled-operator seed — is a sequence of synthetic `QueueFrame` entries produced by the parser. There is no distinction between "input" and "derived" events; the parser is the only thing that knows where an event came from.
 
 - Parser flattens every event source into `QueueFrame[]`:

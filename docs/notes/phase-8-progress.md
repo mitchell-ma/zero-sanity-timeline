@@ -2,11 +2,11 @@
 
 Reference: [`docs/notes/phase-8-plan.md`](./phase-8-plan.md)
 
-## Status: steps 1–7 substantially done (7g/7h deferred); step 8 pending
+## Status: Phase 8 RESOLVED (step 8 pinned, only 7g blocked)
 
 Every step gated on full jest suite + tsc + eslint on touched files.
 Baseline held green at every commit. Current baseline:
-**162 suites / 2106 tests**.
+**163 suites / 2113 tests** (+1 suite / +7 invariant tests after step 8).
 
 | Step | Commit | Description | Status |
 | --- | --- | --- | --- |
@@ -27,10 +27,10 @@ Baseline held green at every commit. Current baseline:
 | 7d | `c1efaca8` | Controlled-operator seed factory → `parser/buildControlSeed.ts` | ✅ |
 | 7e-prep+7e | `4db445f9` | Per-segment raw store, idempotent `extendSingleEvent`, retroactive re-extension, per-event ingress via `createSkillEvent` | ✅ |
 | 7f | `ffea8f0e` | Delete `registerEvents`, `seedControlledOperator`, `extendedIds`, `markExtended` | ✅ |
-| 7g | — | Delete post-queue UID / `creationInteractionMode` restoration loops | ⏸️ blocked on cloneAndSplit rewrite |
-| 7h | — | Fold `extendSingleEvent` into `computeFramePositions`; raw queue seeding | ⏸️ deferred (see below) |
-| 7.5 | — | `duplicateTriggerSource` chain-of-action uid ref | ⏸️ pending (independent) |
-| 8 | — | Invariant pin + engineSpec rewrite | ⏸️ pending |
+| 7g | — | Delete post-queue UID / `creationInteractionMode` restoration loops | ⏸️ blocked on cloneAndSplit rewrite (attempt 2026-04-08 confirmed) |
+| 7.5 | `4c0517a3` | `duplicateTriggerSource` chain-of-action uid ref | ✅ |
+| 7h | `e78ffbba` | Per-event queue frame emission from `createSkillEvent` | ✅ (fold deferred) |
+| 8 | `bc95f125` | Invariant pin test + engineSpec rewrite | ✅ |
 
 ## Session 2026-04-08 (continuation) — 7c through 7f
 
@@ -167,6 +167,94 @@ trumps micro-performance here. If it becomes a hotspot, the
 optimization is to make combo window emission incremental (open
 windows reactively on trigger match rather than re-scan-all on
 every ingress).
+
+## Session 2026-04-08 (continuation, part 2) — 7.5, 7h, step 8
+
+### 7.5 — duplicateTriggerSource uid ref (4c0517a3)
+
+Previously the handler read `event.comboTriggerColumnId` — a denormalized
+string set on combo events by `_applyComboWindowToCombos`. It mapped the
+column id to an element/status and synthesized an APPLY INFLICTION /
+APPLY STATUS effect.
+
+Replaced with a direct event-to-event uid ref:
+- `TriggerMatch.sourceEventUid` set in `makeMatch` from `ev.uid`
+- `TimelineEvent.triggerEventUid` propagated through `openComboWindow` →
+  `_applyComboWindowToCombos` onto the affected combo events
+- `resolveComboTriggersInline` clears `triggerEventUid` alongside
+  `comboTriggerColumnId` on rebuild
+- The handler looks up the source event from `getAllEvents()` via the
+  uid and reads `sourceEvent.columnId` live
+
+The column-id fallback is retained for transition — some manually-
+flagged battle-skill frames in tests set `duplicateTriggerSource: true`
+on events that never pass through a combo window, so their
+`triggerEventUid` is never populated. Temporarily forcing the uid path
+only (no fallback) fails 8 tests across laevatainInteractions and
+antalInteractions. The full removal is a follow-up once every
+duplicateTriggerSource path sets a uid ref.
+
+### 7h — Per-event queue frame emission (e78ffbba)
+
+The real content of 7h: registered skill events now emit their own
+PROCESS_FRAME / SEGMENT_START/END / EVENT_START/END / COMBO_RESOLVE
+queue entries at the end of `createSkillEvent` pass 2, using the
+current stops set.
+
+Subsequent stops discovered by later createSkillEvent calls:
+- retroactively re-extend earlier events' segment durations via
+  `_maybeRegisterStop` → `extendSingleEvent` (step 7e-prep)
+- reactively shift earlier events' already-inserted queue entries via
+  `_maybeRegisterStop` → `_shiftQueueForNewStop` (step 5)
+
+The bulk `flattenEvents` call in `runEventQueue` now only runs for
+`derivedEvents` (freeform inflictions/reactions/statuses from
+`cloneAndSplitEvents`), which never pass through `createSkillEvent` —
+the interpretor creates their actual event via `applyEvent` when
+their PROCESS_FRAME hook fires.
+
+`createSkillEvent` gained `opts.emitQueueFrames` (default true).
+Post-drain queue-event re-registration passes `false`: those events
+have already been fully interpreted during the drain, so re-emitting
+their frames would cause duplicate interpret work and potential
+double-effects.
+
+**What's deferred on 7h:** folding `extendSingleEvent` into
+`computeFramePositions`. Cosmetic module-boundary shuffle (the former
+is a DEC-private method reading `rawSegmentDurations`, the latter is a
+free function under `createSkillEvent/`). No behavior payoff — the
+`extendedIds` guard was the real win and it's already gone.
+
+### Step 8 — Invariant pin + engineSpec rewrite (bc95f125)
+
+New `src/tests/unit/pipelineInvariants.test.ts` walks all .ts/.tsx
+files under src/ (excluding tests) and fails if any forbidden Phase 8
+pattern reappears:
+
+1. `registerEvents(` — DEC batch ingress
+2. `seedControlledOperator` — pre-queue seeding
+3. `extendedIds` / `markExtended` — double-extension guard
+4. `cloneAndSplitEvents` as external API (allowed inside parser module)
+5. `deriveComboActivationWindows` — batch combo derive
+6. `resolveComboTriggerColumns` — orphan pure function
+7. `_statusConfigCache` / `clearStatusDefCache` — legacy caches
+
+Block + line comments are stripped before matching so stale JSDoc
+references don't trigger false positives.
+
+`engineSpec.md` rewritten:
+- Pipeline box reflects single createSkillEvent ingress
+- DerivedEventController section replaces "Two Paths" with the four
+  passes of createSkillEvent (discover / position / combo / emit)
+- Event Lifecycle diagram updated
+- Time-Stop Handling rewritten around retroactive re-extension +
+  reactive queue shift + idempotent extension
+- CONTROLLED determiner resolver thread updated
+- New "Chain-of-Action Refs" section documenting `triggerEventUid`
+
+Also cleaned up stale JSDoc in `derivedEventController.ts`,
+`parser/buildControlSeed.ts`, `parser/selectNewTalents.ts`, and
+`configCache.ts` that referenced deleted methods.
 
 ## Deferred items
 
