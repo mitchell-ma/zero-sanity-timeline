@@ -17,7 +17,7 @@
  */
 import { TimelineEvent, computeSegmentsSpan, getAnimationDuration, eventDuration, setEventDuration } from '../../consts/viewTypes';
 import { NounType, VerbType } from '../../dsl/semantics';
-import { EventStatusType, SegmentType, StatusType, TimeDependency } from '../../consts/enums';
+import { EventStatusType, SegmentType, StatType, StatusType, TimeDependency } from '../../consts/enums';
 import { TimeStopRegion, extendByTimeStops, isTimeStopEvent } from './processTimeStop';
 import { flattenEventsToQueueFrames } from './parser/flattenEvents';
 import { mergeReactions, attachReactionFrames } from './processInfliction';
@@ -41,7 +41,6 @@ import { collectNoGainWindowsForEvent } from './ultimateEnergyController';
 import type { HPController } from '../calculation/hpController';
 import type { ShieldController } from '../calculation/shieldController';
 import type { StatAccumulator, StatSource } from '../calculation/statAccumulator';
-import type { StatType } from '../../consts/enums';
 import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../slot/commonSlotController';
 import GENERAL_MECHANICS from '../../model/game-data/generalMechanics.json';
 import { getStatusDef, getStatusConfig } from './configCache';
@@ -178,9 +177,22 @@ export class DerivedEventController implements ColumnHost {
   }
 
   recordUltimateEnergyGain(frame: number, slotId: string, selfGain: number, teamGain = 0) {
-    if (this.ueController && (selfGain > 0 || teamGain > 0)) {
-      this.ueController.addUltimateEnergyGain(frame, slotId, selfGain, teamGain);
+    if (!this.ueController) return;
+    if (selfGain <= 0 && teamGain <= 0) return;
+    // Phase 9b: snapshot per-recipient ultimate gain efficiency from the stat
+    // accumulator AT THIS FRAME. Replaces the post-pipeline updateSlotEfficiency
+    // sweep (which retroactively scaled all gains by the final efficiency).
+    let slotEfficiencies: Map<string, number> | undefined;
+    if (this.statAccumulator) {
+      slotEfficiencies = new Map();
+      for (const recipientSlotId of Object.keys(this.slotOperatorMap)) {
+        slotEfficiencies.set(
+          recipientSlotId,
+          this.statAccumulator.getStat(recipientSlotId, StatType.ULTIMATE_GAIN_EFFICIENCY),
+        );
+      }
     }
+    this.ueController.addUltimateEnergyGain(frame, slotId, selfGain, teamGain, slotEfficiencies);
   }
 
   // ── Stat accumulator passthroughs ──────────────────────────────────────

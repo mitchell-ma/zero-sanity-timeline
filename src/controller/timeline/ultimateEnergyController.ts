@@ -29,6 +29,18 @@ export interface RawUltimateEnergyGainEvent {
   selfGain: number;
   /** Ultimate energy recovered for all operators on the team. */
   teamGain: number;
+  /**
+   * Phase 9b: per-recipient ultimate gain efficiency captured AT THE FRAME
+   * the gain occurred. Set by DEC.recordUltimateEnergyGain from the stat
+   * accumulator's current state during queue drain. Fixes the latent bug
+   * where post-pipeline `cfg.efficiency` retroactively scaled all gains
+   * regardless of when an efficiency boost activated.
+   *
+   * When undefined (e.g. tests constructing this directly), applyGainEfficiency
+   * falls back to the passed-in `efficiencyBonus` parameter — preserves the
+   * existing test behavior.
+   */
+  slotEfficiencies?: ReadonlyMap<string, number>;
 }
 
 // ── Slot config ──────────────────────────────────────────────────────────────
@@ -101,9 +113,15 @@ export class UltimateEnergyController {
    * @param teamGain Gain for all operators on the team.
    * @param sourceSlotId Slot that produced this gain.
    */
-  addUltimateEnergyGain(frame: number, sourceSlotId: string, selfGain: number, teamGain: number) {
+  addUltimateEnergyGain(
+    frame: number,
+    sourceSlotId: string,
+    selfGain: number,
+    teamGain: number,
+    slotEfficiencies?: ReadonlyMap<string, number>,
+  ) {
     if (selfGain <= 0 && teamGain <= 0) return;
-    this.rawUltimateEnergyGains.push({ frame, sourceSlotId, selfGain, teamGain });
+    this.rawUltimateEnergyGains.push({ frame, sourceSlotId, selfGain, teamGain, slotEfficiencies });
   }
 
   /**
@@ -239,7 +257,7 @@ export function applyGainEfficiency(
   ultActiveWindows: readonly { start: number; end: number }[],
   ignoreExternalGain = false,
 ): UltEnergyEvent[] {
-  const multiplier = 1 + efficiencyBonus;
+  const fallbackMultiplier = 1 + efficiencyBonus;
   const gains: UltEnergyEvent[] = [];
 
   for (const ge of ultimateEnergyEvents) {
@@ -252,6 +270,11 @@ export function applyGainEfficiency(
 
     const rawGain = (ge.sourceSlotId === slotId ? ge.selfGain : 0) + ge.teamGain;
     if (rawGain > 0) {
+      // Phase 9b: prefer the per-event slotEfficiencies snapshot captured at
+      // gain time. Falls back to fallbackMultiplier when absent (tests that
+      // construct RawUltimateEnergyGainEvent without snapshots).
+      const eff = ge.slotEfficiencies?.get(slotId);
+      const multiplier = eff != null ? 1 + eff : fallbackMultiplier;
       gains.push({
         frame: ge.frame,
         type: 'gain',

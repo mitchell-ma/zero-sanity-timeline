@@ -320,13 +320,11 @@ export function processCombatSimulation(
     spController.seedSlotCosts(allSlotSpCosts);
   }
   if (ueController) {
-    // Update efficiency from stat accumulator (picks up APPLY STAT deltas from talents like Gilberta's Messenger's Song)
-    if (_statAccumulator && slotOperatorMap) {
-      for (const slotId of Object.keys(slotOperatorMap)) {
-        const accumulated = _statAccumulator.getStat(slotId, StatType.ULTIMATE_GAIN_EFFICIENCY);
-        ueController.updateSlotEfficiency(slotId, accumulated);
-      }
-    }
+    // Phase 9b: post-pipeline updateSlotEfficiency sweep deleted. Per-event
+    // ultimate gain efficiency is now captured at the moment each gain
+    // fires (DEC.recordUltimateEnergyGain → addUltimateEnergyGain with
+    // slotEfficiencies snapshot), so the global multiplier no longer
+    // retroactively scales gains from earlier frames.
     const gainFrames = spController ? new Map(spController.getBattleSkillGainFrames()) : new Map<string, { frame: number; slotId: string }>();
     ueController.finalize(gainFrames);
   }
