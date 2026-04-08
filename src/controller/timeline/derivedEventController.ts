@@ -97,7 +97,7 @@ export class DerivedEventController implements ColumnHost {
     if (baseEvents) {
       this.registeredEvents = baseEvents;
       for (const ev of baseEvents) {
-        this.maybeRegisterStop(ev);
+        this._maybeRegisterStop(ev);
       }
     }
   }
@@ -274,47 +274,11 @@ export class DerivedEventController implements ColumnHost {
     // Pass 1: combo chaining, reaction segments, stop discovery
     for (let i = 0; i < deduped.length; i++) {
       let ev = deduped[i];
-
-      // Combo chaining: truncate overlapping combo animations
-      if (ev.columnId === NounType.COMBO && getAnimationDuration(ev) > 0) {
-        ev = this.handleComboChaining(ev);
-      }
-
-
-      // Auto-build reaction segments for freeform reaction events
-      if (REACTION_COLUMN_IDS.has(ev.columnId)) {
-        if (ev.columnId === REACTION_COLUMNS.CORROSION) {
-          const segs = buildCorrosionSegments(ev);
-          if (segs) ev.segments = segs;
-        } else {
-          // For already-extended events (re-registered from queue), use raw game-time
-          // duration so combustion ticks aren't inflated by time-stop extension.
-          // Pass foreign stops so consumed durations are contracted to game-time.
-          const raw = this.rawDurations.get(ev.uid);
-          const fStops = this.foreignStopsFor(ev);
-          const seg = buildReactionSegment(ev, raw, fStops);
-          if (seg) ev.segments = [seg];
-        }
-      }
-
-      // Controlled operator: clamp earlier CONTROL events on other owners
-      if (ev.id === NounType.CONTROL && ev.columnId === OPERATOR_COLUMNS.INPUT) {
-        for (let j = 0; j < this.registeredEvents.length; j++) {
-          const prev = this.registeredEvents[j];
-          if (prev.id !== NounType.CONTROL || prev.columnId !== OPERATOR_COLUMNS.INPUT) continue;
-          if (prev.ownerId === ev.ownerId) continue;
-          const prevEnd = prev.startFrame + computeSegmentsSpan(prev.segments);
-          if (prevEnd <= ev.startFrame) continue;
-          // Clamp: shorten to end at ev.startFrame
-          this.registeredEvents[j] = {
-            ...prev,
-            segments: [{ properties: { ...prev.segments[0]?.properties, duration: ev.startFrame - prev.startFrame } }],
-          };
-        }
-      }
-
-      this.maybeRegisterStop(ev);
-      this.registeredEvents.push(ev);
+      ev = this._chainComboPredecessor(ev);
+      ev = this._buildReactionSegments(ev);
+      this._clampPriorControlEvents(ev);
+      this._maybeRegisterStop(ev);
+      this._pushToStorage(ev);
     }
 
     // Pass 2: per-event extension, frame positions, validation, and SP/UE notification
@@ -639,7 +603,7 @@ export class DerivedEventController implements ColumnHost {
     existing.push(event);
     this.stacks.set(key, existing);
     this.output.push(event);
-    if (this.maybeRegisterStop(event)) {
+    if (this._maybeRegisterStop(event)) {
       this.reExtendQueueEvents();
     }
   }
@@ -733,7 +697,60 @@ export class DerivedEventController implements ColumnHost {
    * When a new combo is registered, its time-stop may overlap with existing
    * combo time-stops. Truncations are applied in both directions.
    */
-  private handleComboChaining(ev: TimelineEvent): TimelineEvent {
+  /**
+   * Combo chaining entry. If ev is a combo with animation, truncate overlapping
+   * combo animations in both directions. Otherwise passthrough.
+   */
+  private _chainComboPredecessor(ev: TimelineEvent): TimelineEvent {
+    if (ev.columnId !== NounType.COMBO || getAnimationDuration(ev) <= 0) return ev;
+    return this._chainComboPredecessorImpl(ev);
+  }
+
+  /**
+   * Build reaction segments for freeform reaction events (corrosion/combustion).
+   * Passthrough for non-reaction events.
+   */
+  private _buildReactionSegments(ev: TimelineEvent): TimelineEvent {
+    if (!REACTION_COLUMN_IDS.has(ev.columnId)) return ev;
+    if (ev.columnId === REACTION_COLUMNS.CORROSION) {
+      const segs = buildCorrosionSegments(ev);
+      if (segs) ev.segments = segs;
+    } else {
+      // For already-extended events (re-registered from queue), use raw game-time
+      // duration so combustion ticks aren't inflated by time-stop extension.
+      const raw = this.rawDurations.get(ev.uid);
+      const fStops = this.foreignStopsFor(ev);
+      const seg = buildReactionSegment(ev, raw, fStops);
+      if (seg) ev.segments = [seg];
+    }
+    return ev;
+  }
+
+  /**
+   * Controlled operator: clamp earlier CONTROL events on other owners to end
+   * at ev.startFrame. No-op if ev is not a CONTROL input event.
+   */
+  private _clampPriorControlEvents(ev: TimelineEvent) {
+    if (ev.id !== NounType.CONTROL || ev.columnId !== OPERATOR_COLUMNS.INPUT) return;
+    for (let j = 0; j < this.registeredEvents.length; j++) {
+      const prev = this.registeredEvents[j];
+      if (prev.id !== NounType.CONTROL || prev.columnId !== OPERATOR_COLUMNS.INPUT) continue;
+      if (prev.ownerId === ev.ownerId) continue;
+      const prevEnd = prev.startFrame + computeSegmentsSpan(prev.segments);
+      if (prevEnd <= ev.startFrame) continue;
+      this.registeredEvents[j] = {
+        ...prev,
+        segments: [{ properties: { ...prev.segments[0]?.properties, duration: ev.startFrame - prev.startFrame } }],
+      };
+    }
+  }
+
+  /** Append ev to the registered events array. */
+  private _pushToStorage(ev: TimelineEvent) {
+    this.registeredEvents.push(ev);
+  }
+
+  private _chainComboPredecessorImpl(ev: TimelineEvent): TimelineEvent {
     let animDur = getAnimationDuration(ev);
     const evEnd = ev.startFrame + animDur;
     let changed = false;
@@ -781,7 +798,7 @@ export class DerivedEventController implements ColumnHost {
 
   // ── Time-stop management ─────────────────────────────────────────────────
 
-  private maybeRegisterStop(ev: TimelineEvent): boolean {
+  private _maybeRegisterStop(ev: TimelineEvent): boolean {
     if (!isTimeStopEvent(ev)) return false;
     if (this.registeredStopIds.has(ev.uid)) return false;
     this.registeredStopIds.add(ev.uid);
@@ -965,7 +982,7 @@ export class DerivedEventController implements ColumnHost {
     existing.push(ev);
     this.stacks.set(key, existing);
     this.output.push(ev);
-    if (this.maybeRegisterStop(ev)) {
+    if (this._maybeRegisterStop(ev)) {
       this.reExtendQueueEvents();
     }
   }
