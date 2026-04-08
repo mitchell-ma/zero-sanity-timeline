@@ -195,6 +195,14 @@ export interface TimelineEvent {
   susceptibility?: Partial<Record<ElementType, number>>;
   /** For combo events: the trigger source's columnId (e.g. INFLICTION_COLUMNS.HEAT, PhysicalStatusType.BREACH). */
   comboTriggerColumnId?: string;
+  /**
+   * For combo events and COMBO_WINDOW events: uid of the source event that
+   * caused this combo to be triggered. Phase 8 step 7.5: direct chain-of-
+   * action ref. Lookups via getAllEvents() return the live source event so
+   * handlers like `duplicateTriggerSource` read column/id from the event
+   * itself rather than consulting a denormalized string.
+   */
+  triggerEventUid?: string;
   /** For combo events: the status level of the triggering physical status (= Vulnerability stacks consumed). */
   triggerStacks?: number;
   /** How this event interacts with other timelines (TIME_STOP for ultimates and perfect dodges, NONE otherwise). */

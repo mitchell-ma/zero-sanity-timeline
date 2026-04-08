@@ -374,6 +374,7 @@ export class DerivedEventController implements ColumnHost {
     for (const ev of this.registeredEvents) {
       if (ev.columnId !== NounType.COMBO) continue;
       ev.comboTriggerColumnId = undefined;
+      ev.triggerEventUid = undefined;
       ev.triggerStacks = undefined;
     }
 
@@ -393,6 +394,7 @@ export class DerivedEventController implements ColumnHost {
           match.sourceColumnId,
           match.originOwnerId,
           match.triggerStacks,
+          match.sourceEventUid,
         );
       }
     }
@@ -428,6 +430,7 @@ export class DerivedEventController implements ColumnHost {
     sourceColumnId: string | undefined,
     originOwnerId: string | undefined,
     triggerStacks: number | undefined,
+    triggerEventUid?: string,
   ): void {
     // Self-trigger skip
     if (originOwnerId === wiring.slotId) return;
@@ -517,6 +520,7 @@ export class DerivedEventController implements ColumnHost {
       sourceOwnerId: sourceOwnerId,
       sourceSkillName: sourceSkillName,
       comboTriggerColumnId: sourceColumnId,
+      triggerEventUid: triggerEventUid,
       triggerStacks: triggerStacks,
       maxSkills: info?.maxSkills ?? 1,
       segments: [{ properties: { duration: extDuration } }],
@@ -538,6 +542,9 @@ export class DerivedEventController implements ColumnHost {
       if (ev.startFrame < win.startFrame || ev.startFrame >= winEnd) continue;
       if (ev.comboTriggerColumnId == null && win.comboTriggerColumnId != null) {
         ev.comboTriggerColumnId = win.comboTriggerColumnId;
+      }
+      if (ev.triggerEventUid == null && win.triggerEventUid != null) {
+        ev.triggerEventUid = win.triggerEventUid;
       }
       if (ev.triggerStacks == null && win.triggerStacks != null) {
         ev.triggerStacks = win.triggerStacks;

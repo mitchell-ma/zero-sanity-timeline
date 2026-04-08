@@ -2084,10 +2084,18 @@ export class EventInterpretorController {
     // duplication uses the same dispatch surface as every other clause.
     // Replaces the legacy direct `controller.applyEvent` /
     // `applyPhysicalStatus` calls that bypassed `interpret()`.
-    if (frame.duplicateTriggerSource && event.comboTriggerColumnId) {
-      const triggerCol = event.comboTriggerColumnId;
+    // Phase 8 step 7.5: resolve trigger source via uid ref instead of the
+    // denormalized comboTriggerColumnId string. Falls back to the column id
+    // path only if the uid lookup fails (transitional safety net).
+    if (frame.duplicateTriggerSource && (event.triggerEventUid || event.comboTriggerColumnId)) {
+      let triggerCol: string | undefined;
+      if (event.triggerEventUid) {
+        const src = this.getAllEvents().find(e => e.uid === event.triggerEventUid);
+        triggerCol = src?.columnId;
+      }
+      if (triggerCol == null) triggerCol = event.comboTriggerColumnId;
       let synthEffect: Effect | undefined;
-      if (INFLICTION_COLUMN_IDS.has(triggerCol)) {
+      if (triggerCol && INFLICTION_COLUMN_IDS.has(triggerCol)) {
         const element = INFLICTION_COLUMN_TO_ELEMENT[triggerCol];
         if (element) {
           synthEffect = {
@@ -2097,7 +2105,7 @@ export class EventInterpretorController {
             to: NounType.ENEMY,
           } as Effect;
         }
-      } else if (PHYSICAL_STATUS_COLUMN_IDS.has(triggerCol)) {
+      } else if (triggerCol && PHYSICAL_STATUS_COLUMN_IDS.has(triggerCol)) {
         synthEffect = {
           verb: VerbType.APPLY,
           object: NounType.STATUS,

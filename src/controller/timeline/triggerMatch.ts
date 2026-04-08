@@ -89,6 +89,13 @@ export interface TriggerMatch {
   originOwnerId?: string;
   /** The column ID of the source event that matched this trigger. */
   sourceColumnId?: string;
+  /**
+   * UID of the source event that matched this trigger. Phase 8 step 7.5:
+   * direct event ref replaces the denormalized `sourceColumnId` for
+   * chain-of-action lookups (e.g. `duplicateTriggerSource` reads the live
+   * source event from `getAllEvents()` via this uid).
+   */
+  sourceEventUid?: string;
   /** Status level of the triggering physical status (= Vulnerability stacks consumed). */
   triggerStacks?: number;
   effects?: TriggerEffect[];
@@ -250,7 +257,7 @@ function checkSecondary(ctx: VerbHandlerContext, frame: number, triggerOwnerId?:
 }
 
 function makeMatch(frame: number, ev: TimelineEvent, effects?: TriggerEffect[]): TriggerMatch {
-  return { frame, sourceOwnerId: ev.ownerId, sourceSkillName: ev.id, originOwnerId: ev.sourceOwnerId, sourceColumnId: ev.columnId, triggerStacks: ev.stacks, effects };
+  return { frame, sourceOwnerId: ev.ownerId, sourceSkillName: ev.id, originOwnerId: ev.sourceOwnerId, sourceColumnId: ev.columnId, sourceEventUid: ev.uid, triggerStacks: ev.stacks, effects };
 }
 
 /**
