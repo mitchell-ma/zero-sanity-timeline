@@ -335,9 +335,6 @@ export function runEventQueue(
   state.setControlledSlotResolver(getControlledSlotAtFrame);
   state.registerEvents(queueEvents);
 
-  // Clamp combo cooldowns in multi-skill windows (after windows are registered)
-  state.clampMultiSkillComboCooldowns();
-
   state.validateAll();
 
   // Apply crit pin overrides to all derived event frames
@@ -489,15 +486,6 @@ export function processCombatSimulation(
     : (bossMaxHp != null ? getEnemyHpPercentage : undefined);
   runEventQueue(state, derivedEvents, loadoutProperties, slotWeapons, slotOperatorMap, slotGearSets,
     hpPercentageFn, getControlledSlotAtFrame, triggerIndex, critMode, overrides);
-
-  // ── 4b. Post-queue combo window clamp ────────────────────────────────────
-  // Reactive pass 3 emits windows based on CDs at emit time. If a combo's CD
-  // is reduced during the queue drain (e.g. Wulfgard P5 resetting combo CD on
-  // ult), the already-open window must be clamped to end at the combo's new
-  // end frame. This is the only surviving post-queue fixup — the re-derive
-  // block was removed in 6c since pass 3 now catches CD-reduction-unblocked
-  // windows on its final rerun.
-  state.clampComboWindowsToEventEnd();
 
   // ── 5. Finalize resource controllers ──────────────────────────────────────
   if (spController) {

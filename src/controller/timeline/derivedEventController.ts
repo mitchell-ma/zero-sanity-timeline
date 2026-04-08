@@ -428,6 +428,14 @@ export class DerivedEventController implements ColumnHost {
         );
       }
     }
+
+    // Phase 8 step 6d: after all windows are emitted for this pass, run the
+    // multi-skill CD clamp (truncates earlier combos' CDs to the next combo's
+    // start in multi-skill windows) and then clamp window durations to the
+    // earliest contained combo-event end. Order matches the former post-queue
+    // sequence: clampMultiSkillComboCooldowns → clampComboWindowsToEventEnd.
+    this.clampMultiSkillComboCooldowns();
+    this.clampComboWindowsToEventEnd();
   }
 
   /**
@@ -1181,12 +1189,13 @@ export class DerivedEventController implements ColumnHost {
   reduceCooldown(eventUid: string, newCooldownDuration: number) {
     for (let i = 0; i < this.registeredEvents.length; i++) {
       if (this.registeredEvents[i].uid !== eventUid) continue;
-      for (const s of this.registeredEvents[i].segments) {
+      const ev = this.registeredEvents[i];
+      for (const s of ev.segments) {
         if (s.properties.name === 'Cooldown') {
           s.properties.duration = Math.max(0, newCooldownDuration);
         }
       }
-      this.registeredEvents[i].nonOverlappableRange = computeSegmentsSpan(this.registeredEvents[i].segments);
+      ev.nonOverlappableRange = computeSegmentsSpan(ev.segments);
       return;
     }
   }
