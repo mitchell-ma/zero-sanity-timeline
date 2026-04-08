@@ -2,7 +2,7 @@
 
 Reference: [`docs/notes/phase-8-plan.md`](./phase-8-plan.md)
 
-## Status: steps 1–5 committed, step 6 substeps a–e committed, 7–8 pending
+## Status: steps 1–5 committed, step 6 complete (a–f), step 7 sub a–b committed, rest pending
 
 Every step gated on full jest suite (163 suites / 2125 tests) + tsc + eslint
 on touched files. Baseline held identical at every commit.
@@ -19,7 +19,10 @@ on touched files. Baseline held identical at every commit.
 | 6c | `9152d736` | Delete post-queue re-derive + thread controlled-slot resolver | ✅ |
 | 6d | `dbd6f1be` | Fold `clampMultiSkill` + `clampComboWindowsToEventEnd` into pass 3 tail | ✅ |
 | 6e | `b74d2648` | Delete dead `deriveComboActivationWindows` + `replaceComboWindows` | ✅ |
-| 6f | — | (Optional) `REDUCE_COOLDOWN` priority + delete orphan `resolveComboTriggerColumns` | ⏸️ deferred |
+| 6f | `f58725a9` | Delete orphan `resolveComboTriggerColumns` + 19 tests (→ 162 / 2106) | ✅ |
+| 7a | `eddf579c` | Scaffold `parser/` module, move `collectFrameEntries` → `flattenEvents.ts` | ✅ |
+| 7b | `ac681dbc` | Move `cloneAndSplitEvents` + segment clone cache → `parser/cloneAndSplit.ts` | ✅ |
+| 7c+ | — | Talent/control seed emission, `doApplySkill` handler, delete `registerEvents` dual path | ⏸️ pending |
 | 7 | — | Parser flattens all event sources to `QueueFrame[]` | ⏸️ pending |
 | 8 | — | Invariant pin + engineSpec rewrite | ⏸️ pending |
 
