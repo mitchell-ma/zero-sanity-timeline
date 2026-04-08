@@ -342,30 +342,6 @@ export function processCombatSimulation(
   // ── 6. Output ───────────────────────────────────────────────────────────────
   _lastController = state;
   const processed = state.getProcessedEvents();
-
-  // Phase 8 step 7e-prep: isCrit persists across pipeline runs. Previously
-  // segments on non-time-stop events were not cloned, so MANUAL-mode
-  // isCrit writes in the interpretor leaked back to raw state via shared
-  // frame references. With _pushToStorage now always cloning, raw state
-  // no longer receives those writes directly — so we sync them back here.
-  // Matched by uid; per-frame isCrit values from the processed (cloned)
-  // event are written onto the raw input event's frames if set.
-  const processedByUid = new Map<string, TimelineEvent>();
-  for (const ev of processed) processedByUid.set(ev.uid, ev);
-  for (const rawEv of rawEvents) {
-    const proc = processedByUid.get(rawEv.uid);
-    if (!proc) continue;
-    for (let si = 0; si < Math.min(rawEv.segments.length, proc.segments.length); si++) {
-      const rawFrames = rawEv.segments[si]?.frames;
-      const procFrames = proc.segments[si]?.frames;
-      if (!rawFrames || !procFrames) continue;
-      for (let fi = 0; fi < Math.min(rawFrames.length, procFrames.length); fi++) {
-        const procCrit = procFrames[fi]?.isCrit;
-        if (procCrit != null) rawFrames[fi].isCrit = procCrit;
-      }
-    }
-  }
-
   return processed;
 }
 

@@ -2287,9 +2287,20 @@ export class EventInterpretorController {
       if (!isDot) {
         const pin = this.overrides?.[buildOverrideKey(event)]?.segments?.[si]?.frames?.[fi]?.isCritical;
         const critMode = this.critMode ?? CritMode.EXPECTED;
-        // MANUAL mode: write isCrit from pin
+        // Phase 8 step 7g unblock: isCrit is a per-run display field
+        // resolved from the override store, not persistent state.
+        //   - MANUAL: explicit pin or false default (this is the user-input
+        //     mode where unpinned damage frames render as no-crit)
+        //   - NEVER/ALWAYS/EXPECTED: explicit pin only; unpinned frames have
+        //     no isCrit and the calculation mode drives the displayed total.
+        // The cross-run "persistence" needed by tests now flows naturally:
+        // explicit pins live in the override store, so a pin set in MANUAL
+        // is read back into frame.isCrit on every subsequent run regardless
+        // of mode. The post-pipeline write-back loop is no longer needed.
         if (critMode === CritMode.MANUAL) {
           frame.isCrit = pin ?? false;
+        } else if (pin != null) {
+          frame.isCrit = pin;
         }
         // Derive effective crit for trigger emission
         // NEVER/ALWAYS/EXPECTED override pins — the mode is authoritative

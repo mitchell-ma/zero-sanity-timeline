@@ -117,39 +117,65 @@ describe('Crit Mode Toggle — damage calculation per mode', () => {
     expect(never2).toBeCloseTo(never1, 2);
   });
 
-  it('isCrit is NOT modified by NEVER/ALWAYS/EXPECTED modes (persistent data)', () => {
+  it('Explicit MANUAL pins survive NEVER/ALWAYS/EXPECTED mode switches', () => {
     const { result } = setupWithBattleSkill();
 
-    // Pin crits in MANUAL mode to set isCrit values
+    // Enter MANUAL mode and pin a few damage frames explicitly. The pins
+    // live in the override store; isCrit on processed frames is a per-run
+    // display field resolved from the override.
     act(() => { result.current.setCritMode(CritMode.MANUAL); });
 
-    // Collect isCrit values
-    const critValues = new Map<string, boolean>();
+    const damageFrames: { eventUid: string; segmentIndex: number; frameIndex: number; value: boolean }[] = [];
     for (const ev of result.current.allProcessedEvents) {
-      for (const seg of ev.segments) {
+      for (let si = 0; si < ev.segments.length; si++) {
+        const seg = ev.segments[si];
         if (!seg.frames) continue;
         for (let fi = 0; fi < seg.frames.length; fi++) {
-          const f = seg.frames[fi];
-          if (f.isCrit != null) critValues.set(`${ev.uid}:${fi}`, f.isCrit);
+          if (!hasDealDamageClause(seg.frames[fi].clauses)) continue;
+          // Alternate true/false so we exercise both pin values
+          damageFrames.push({ eventUid: ev.uid, segmentIndex: si, frameIndex: fi, value: damageFrames.length % 2 === 0 });
+          if (damageFrames.length >= 4) break;
         }
+        if (damageFrames.length >= 4) break;
       }
+      if (damageFrames.length >= 4) break;
     }
-    expect(critValues.size).toBeGreaterThan(0);
+    expect(damageFrames.length).toBeGreaterThan(0);
 
-    // Switch to NEVER — isCrit should NOT be overwritten
-    act(() => { result.current.setCritMode(CritMode.NEVER); });
-
-    for (const ev of result.current.allProcessedEvents) {
-      for (const seg of ev.segments) {
-        if (!seg.frames) continue;
-        for (let fi = 0; fi < seg.frames.length; fi++) {
-          const key = `${ev.uid}:${fi}`;
-          if (!critValues.has(key)) continue;
-          // isCrit should still be the same value from MANUAL pin
-          // (NEVER mode doesn't modify isCrit, only affects calculation)
-          expect(seg.frames[fi].isCrit).toBe(critValues.get(key));
-        }
+    act(() => {
+      for (const f of damageFrames) {
+        result.current.handleSetCritPins(
+          [{ eventUid: f.eventUid, segmentIndex: f.segmentIndex, frameIndex: f.frameIndex }],
+          f.value,
+        );
       }
+    });
+
+    // Pins must show up in MANUAL mode
+    for (const f of damageFrames) {
+      const ev = result.current.allProcessedEvents.find(e => e.uid === f.eventUid);
+      expect(ev?.segments[f.segmentIndex].frames?.[f.frameIndex].isCrit).toBe(f.value);
+    }
+
+    // Switch to NEVER — explicit pins still come back from the override store
+    act(() => { result.current.setCritMode(CritMode.NEVER); });
+    for (const f of damageFrames) {
+      const ev = result.current.allProcessedEvents.find(e => e.uid === f.eventUid);
+      expect(ev?.segments[f.segmentIndex].frames?.[f.frameIndex].isCrit).toBe(f.value);
+    }
+
+    // Switch to ALWAYS — same
+    act(() => { result.current.setCritMode(CritMode.ALWAYS); });
+    for (const f of damageFrames) {
+      const ev = result.current.allProcessedEvents.find(e => e.uid === f.eventUid);
+      expect(ev?.segments[f.segmentIndex].frames?.[f.frameIndex].isCrit).toBe(f.value);
+    }
+
+    // Back to MANUAL — still preserved
+    act(() => { result.current.setCritMode(CritMode.MANUAL); });
+    for (const f of damageFrames) {
+      const ev = result.current.allProcessedEvents.find(e => e.uid === f.eventUid);
+      expect(ev?.segments[f.segmentIndex].frames?.[f.frameIndex].isCrit).toBe(f.value);
     }
   });
 });
