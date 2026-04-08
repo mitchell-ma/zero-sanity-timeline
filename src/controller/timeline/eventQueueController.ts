@@ -13,7 +13,6 @@ import type { Effect } from '../../dsl/semantics';
 import { LoadoutProperties } from '../../view/InformationPane';
 import { TimeStopRegion, absoluteFrame, foreignStopsFor } from './processTimeStop';
 import { DerivedEventController } from './derivedEventController';
-import { deriveComboActivationWindows } from './processComboSkill';
 import type { SlotTriggerWiring } from './eventQueueTypes';
 import { SkillPointController } from '../slot/skillPointController';
 import { PRIORITY, QueueFrameType, FrameHookType } from './eventQueueTypes';
@@ -331,6 +330,9 @@ export function runEventQueue(
   // net for CD-reduction cases and will be removed in 6c.
   const queueEvents = state.output;
   state.markExtended(queueEvents.map(ev => ev.uid));
+  // Wire the controlled-slot resolver so pass 3 can filter CONTROLLED
+  // OPERATOR combo triggers correctly when re-emitting windows.
+  state.setControlledSlotResolver(getControlledSlotAtFrame);
   state.registerEvents(queueEvents);
 
   // Clamp combo cooldowns in multi-skill windows (after windows are registered)
@@ -488,20 +490,14 @@ export function processCombatSimulation(
   runEventQueue(state, derivedEvents, loadoutProperties, slotWeapons, slotOperatorMap, slotGearSets,
     hpPercentageFn, getControlledSlotAtFrame, triggerIndex, critMode, overrides);
 
-  // ── 4b. Post-queue combo window fixup ─────────────────────────────────────
-  // After the queue run, combo CDs may have been reset. Two fixups:
-  // 1. Clamp existing windows so they don't extend past the combo's reduced end.
-  // 2. Re-derive windows using the now-reduced combo events to pick up windows
-  //    that were blocked by the original (unreduced) CD.
+  // ── 4b. Post-queue combo window clamp ────────────────────────────────────
+  // Reactive pass 3 emits windows based on CDs at emit time. If a combo's CD
+  // is reduced during the queue drain (e.g. Wulfgard P5 resetting combo CD on
+  // ult), the already-open window must be clamped to end at the combo's new
+  // end frame. This is the only surviving post-queue fixup — the re-derive
+  // block was removed in 6c since pass 3 now catches CD-reduction-unblocked
+  // windows on its final rerun.
   state.clampComboWindowsToEventEnd();
-  if (slotWirings && slotWirings.length > 0) {
-    // Re-derive windows using post-queue events (reduced CDs). Replace all
-    // combo windows with the fresh derivation, then re-clamp.
-    const postQueueEvents = [...state.getRegisteredEvents(), ...state.output];
-    const freshWindows = deriveComboActivationWindows(postQueueEvents, slotWirings, state.getStops(), getControlledSlotAtFrame);
-    state.replaceComboWindows(freshWindows);
-    state.clampComboWindowsToEventEnd();
-  }
 
   // ── 5. Finalize resource controllers ──────────────────────────────────────
   if (spController) {

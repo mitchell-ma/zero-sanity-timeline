@@ -81,6 +81,7 @@ export class DerivedEventController implements ColumnHost {
   private idCounter = 0;
   private triggerAssociations: TriggerAssociation[];
   private slotWirings: SlotTriggerWiring[] = [];
+  private controlledSlotResolver?: (frame: number) => string;
   private spController: SkillPointController | null = null;
   private ueController: UltimateEnergyController | null = null;
   private hpController: HPController | null = null;
@@ -142,6 +143,7 @@ export class DerivedEventController implements ColumnHost {
     (this.output as TimelineEvent[]).length = 0;
     this.idCounter = 0;
     this.linkConsumptions.clear();
+    this.controlledSlotResolver = undefined;
     this.triggerAssociations = triggerAssociations ?? [];
     this.slotWirings = slotWirings ?? [];
     this.spController = spController ?? null;
@@ -394,9 +396,13 @@ export class DerivedEventController implements ColumnHost {
    * still runs as a safety net and will be deleted in 6c.
    */
   private resolveComboTriggersInline() {
-    // Clear stale comboTriggerColumnId / triggerStacks on all combo events.
-    // openComboWindow re-sets them via first-wins semantics when matches are
-    // processed in frame order.
+    // Fully reconstruct combo windows and comboTriggerColumnId from the
+    // current event list. Clear all existing COMBO_WINDOW events and clear
+    // combo events' trigger column, then re-emit via openComboWindow so the
+    // resolver (if wired) applies to the latest pass.
+    this.registeredEvents = this.registeredEvents.filter(
+      ev => ev.columnId !== COMBO_WINDOW_COLUMN_ID,
+    );
     for (const ev of this.registeredEvents) {
       if (ev.columnId !== NounType.COMBO) continue;
       ev.comboTriggerColumnId = undefined;
@@ -406,7 +412,9 @@ export class DerivedEventController implements ColumnHost {
     for (const wiring of this.slotWirings) {
       const clause = getComboTriggerClause(wiring.operatorId);
       if (!clause?.length) continue;
-      const matches = findClauseTriggerMatches(clause, this.registeredEvents, wiring.slotId, this.stops);
+      const matches = findClauseTriggerMatches(
+        clause, this.registeredEvents, wiring.slotId, this.stops, this.controlledSlotResolver,
+      );
       // findClauseTriggerMatches already returns matches sorted by frame.
       for (const match of matches) {
         this.openComboWindow(
@@ -671,6 +679,16 @@ export class DerivedEventController implements ColumnHost {
   /** Get slot wirings (for combo window derivation). */
   getSlotWirings(): SlotTriggerWiring[] {
     return this.slotWirings;
+  }
+
+  /**
+   * Set the controlled-slot resolver used by pass 3 (resolveComboTriggersInline).
+   * Called by runEventQueue once the resolver has been computed from registered
+   * events, so the final registerEvents(queueEvents) pass 3 can filter CONTROLLED
+   * OPERATOR combo triggers to the correct slot.
+   */
+  setControlledSlotResolver(resolver?: (frame: number) => string) {
+    this.controlledSlotResolver = resolver;
   }
 
   /** Get discovered time-stop regions. */
