@@ -74,6 +74,12 @@ const FORBIDDEN: ForbiddenPattern[] = [
     reason: 'Status def caches should be consolidated into a single build-time cache.',
     allowedFiles: [],
   },
+  {
+    name: 'DEC.validateAll (sibling overlap post-pass)',
+    pattern: /\.validateAll\s*\(/,
+    reason: 'Sibling overlap is annotated per-event via _validateSiblingOverlap inside createSkillEvent. The post-pass validateAll method was deleted.',
+    allowedFiles: [],
+  },
 ];
 
 function walk(dir: string, out: string[]) {

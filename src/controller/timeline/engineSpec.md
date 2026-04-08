@@ -37,9 +37,8 @@ processCombatSimulation(rawEvents, loadoutContext...)
        ├─ Bulk flattenEventsToQueueFrames(derivedEvents, stops) → queue
        └─ Drain loop: state.popNextFrame → interpretor.processQueueFrame → state.insertQueueFrames
   7. Re-register queue events: createSkillEvent(ev, { emitQueueFrames: false })
-  8. state.validateAll() — sibling overlap warnings
-  9. state.getProcessedEvents()                    → final output (reactions merged)
- 10. StaggerController.sync → frailty events → re-run if any
+  8. state.getProcessedEvents()                    → final output (reactions merged)
+  9. StaggerController.sync → frailty events → re-run if any
 ```
 
 ### Components
@@ -133,8 +132,7 @@ processCombatSimulation(rawEvents, loadoutContext)
     │      │    (registered events' queue frames already emitted in step 2)
     │      ├─ drain loop: popNextFrame → processQueueFrame → insertQueueFrames
     │      │    Queue-created events (statuses/inflictions/reactions) via addEvent/pushEvent
-    │      ├─ re-register queue events via createSkillEvent(..., { emitQueueFrames: false })
-    │      └─ state.validateAll() — sibling overlap warnings
+    │      └─ re-register queue events via createSkillEvent(..., { emitQueueFrames: false })
     │
     └─ 4. state.getProcessedEvents()
            └─ mergeReactions + attachReactionFrames → returned to view

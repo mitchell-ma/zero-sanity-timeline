@@ -861,8 +861,8 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
 
   test('H8: Re-resolve fixes comboTriggerColumnId when Focus appears mid-pipeline', () => {
     // Simulates the real scenario: Focus is derived by the engine AFTER the first
-    // resolveComboTriggerColumns pass. The second pass (after engine) re-resolves
-    // the combo's trigger column so mirrored inflictions can be generated.
+    // pass 3 (resolveComboTriggersInline) runs. A subsequent createSkillEvent call
+    // re-resolves the combo's trigger column so mirrored inflictions can be generated.
     const SLOT_AKEKURI = 'slot-0';
 
     // Focus exists (as if engine-derived) + Akekuri heat infliction on enemy

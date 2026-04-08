@@ -319,6 +319,7 @@ export class DerivedEventController implements ColumnHost {
     out = this.validateTimeStopStart(out);
     const idx = this.registeredEvents.length - 1;
     this.registeredEvents[idx] = out;
+    this._validateSiblingOverlap(out);
     this.notifyResourceControllers(out);
 
     // Pass 3: re-resolve combo trigger columns across the full event set.
@@ -630,42 +631,49 @@ export class DerivedEventController implements ColumnHost {
     }
   }
 
+  // validateAll() (post-pass) deleted — sibling overlap is now annotated
+  // per-event in pass 2 via _validateSiblingOverlap.
+
   /**
-   * Validate sibling overlap: events in the same column must not overlap.
-   * Attaches warnings (read-only annotation, not bulk transformation).
-   * Time-stop start validation is handled inline during createSkillEvent.
+   * Per-event sibling overlap validation. Called from createSkillEvent pass 2.
+   * Walks already-registered events with the same (ownerId, columnId, id) and
+   * attaches an overlap warning to both `ev` and the sibling if their active
+   * ranges overlap. Read-only annotation, not a bulk transformation.
    */
-  validateAll() {
-    const byKey = new Map<string, TimelineEvent[]>();
-    for (const ev of this.registeredEvents) {
-      const k = `${ev.ownerId}:${ev.columnId}:${ev.id}`;
-      const arr = byKey.get(k) ?? [];
-      arr.push(ev);
-      byKey.set(k, arr);
+  private _validateSiblingOverlap(ev: TimelineEvent) {
+    if (!ev.nonOverlappableRange) {
+      // Even if ev itself has no nonOverlappableRange, we still need to check
+      // whether ev starts inside an existing sibling's overlap range.
+      this._checkOverlapAgainstPriors(ev, /* annotateNew */ true);
+      return;
     }
+    this._checkOverlapAgainstPriors(ev, /* annotateNew */ true);
+  }
 
-    const overlapIds = new Set<string>();
-    for (const group of Array.from(byKey.values())) {
-      if (group.length < 2) continue;
-      const sorted = [...group].sort((a, b) => a.startFrame - b.startFrame);
-      for (let i = 0; i < sorted.length - 1; i++) {
-        const cur = sorted[i];
-        const next = sorted[i + 1];
-        if (!cur.nonOverlappableRange) continue;
-        const curRange = computeSegmentsSpan(cur.segments);
-        if (curRange > 0 && cur.startFrame + curRange > next.startFrame) {
-          overlapIds.add(cur.uid);
-          overlapIds.add(next.uid);
-        }
-      }
+  private _checkOverlapAgainstPriors(ev: TimelineEvent, annotateNew: boolean) {
+    const evRange = computeSegmentsSpan(ev.segments);
+    const evEnd = ev.startFrame + evRange;
+    for (const prev of this.registeredEvents) {
+      if (prev === ev) continue;
+      if (prev.uid === ev.uid) continue;
+      if (prev.ownerId !== ev.ownerId || prev.columnId !== ev.columnId || prev.id !== ev.id) continue;
+      // Either side's nonOverlappableRange triggers the warning if the spans overlap.
+      const prevHasGuard = !!prev.nonOverlappableRange;
+      const evHasGuard = !!ev.nonOverlappableRange;
+      if (!prevHasGuard && !evHasGuard) continue;
+      const prevRange = computeSegmentsSpan(prev.segments);
+      const prevEnd = prev.startFrame + prevRange;
+      const overlap = prev.startFrame < evEnd && ev.startFrame < prevEnd;
+      if (!overlap) continue;
+      if (annotateNew) this._appendOverlapWarning(ev);
+      this._appendOverlapWarning(prev);
     }
+  }
 
-    if (overlapIds.size > 0) {
-      for (const ev of this.registeredEvents) {
-        if (!overlapIds.has(ev.uid)) continue;
-        ev.warnings = ev.warnings ? [...ev.warnings, 'Overlaps with another event in the same column'] : ['Overlaps with another event in the same column'];
-      }
-    }
+  private _appendOverlapWarning(ev: TimelineEvent) {
+    const msg = 'Overlaps with another event in the same column';
+    if (ev.warnings?.includes(msg)) return;
+    ev.warnings = ev.warnings ? [...ev.warnings, msg] : [msg];
   }
 
   /** Get all registered events (extended, with transforms applied). */

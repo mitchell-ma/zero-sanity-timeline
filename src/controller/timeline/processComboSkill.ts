@@ -5,10 +5,9 @@ import { TimeStopRegion, extendByTimeStops, foreignStopsFor } from './processTim
 export { COMBO_WINDOW_COLUMN_ID } from '../../model/channels';
 export type { SlotTriggerWiring } from './eventQueueTypes';
 
-// Phase 8 step 6: batch combo window derivation (`deriveComboActivationWindows`,
-// `resolveComboTriggerColumns`) was deleted. All combo window emission flows
-// through `DerivedEventController.openComboWindow` invoked from pass 3 of
-// `registerEvents`.
+// Phase 8 step 6: batch combo window derivation was deleted. All combo
+// window emission flows through `DerivedEventController.openComboWindow`
+// invoked from pass 3 of `createSkillEvent`.
 
 /**
  * Check if any event whose columnId is in `columnIds` is active at `frame`.

@@ -152,7 +152,6 @@ export function runEventQueue(
   // work and potential double-effects.
   for (const ev of queueEvents) state.createSkillEvent(ev, { checkCooldown: false, emitQueueFrames: false });
 
-  state.validateAll();
 
   // Apply crit pin overrides to all derived event frames. Phase 8 step
   // 7e-prep: registerEvents(queueEvents) now clones segments via
