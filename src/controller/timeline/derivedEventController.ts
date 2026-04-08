@@ -19,6 +19,7 @@ import { TimelineEvent, computeSegmentsSpan, getAnimationDuration, eventDuration
 import { NounType, VerbType } from '../../dsl/semantics';
 import { EventStatusType, SegmentType, StatusType, TimeDependency } from '../../consts/enums';
 import { TimeStopRegion, extendByTimeStops, isTimeStopEvent } from './processTimeStop';
+import { flattenEventsToQueueFrames } from './parser/flattenEvents';
 import { mergeReactions, attachReactionFrames } from './processInfliction';
 import { OPERATOR_COLUMNS, COMBO_WINDOW_COLUMN_ID } from '../../model/channels';
 import {
@@ -288,8 +289,12 @@ export class DerivedEventController implements ColumnHost {
    * Returns the registered event on success, or null if rejected by cooldown
    * or already registered (uid dedup).
    */
-  createSkillEvent(ev: TimelineEvent, opts: { checkCooldown?: boolean } = {}): TimelineEvent | null {
+  createSkillEvent(
+    ev: TimelineEvent,
+    opts: { checkCooldown?: boolean; emitQueueFrames?: boolean } = {},
+  ): TimelineEvent | null {
     const checkCooldown = opts.checkCooldown ?? true;
+    const emitQueueFrames = opts.emitQueueFrames ?? true;
     if (checkCooldown && this._checkCooldown(ev)) return null;
     // Dedup by uid — prevents double-registration from React strict-mode re-entry.
     if (this.registeredEvents.some(r => r.uid === ev.uid)) return null;
@@ -321,6 +326,16 @@ export class DerivedEventController implements ColumnHost {
     // reactively; the prior batch pass 3 is gone.
     if (this.slotWirings.length > 0) {
       this.resolveComboTriggersInline();
+    }
+
+    // Phase 8 step 7h: emit queue frames for the event as part of ingress,
+    // using the current stops set. Later stops discovered by subsequent
+    // createSkillEvent calls retroactively re-extend segments (via
+    // _maybeRegisterStop) AND reactively shift queued frames (via
+    // _shiftQueueForNewStop), so ordering does not matter.
+    if (emitQueueFrames) {
+      const entries = flattenEventsToQueueFrames([out], this.stops);
+      this.insertQueueFrames(entries);
     }
 
     return out;

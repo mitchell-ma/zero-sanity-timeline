@@ -118,8 +118,14 @@ export function runEventQueue(
     }
   }
 
-  // Seed one PROCESS_FRAME entry per frame marker — all events (registered + derived)
-  const frameEntries = flattenEventsToQueueFrames([...registeredEvents, ...derivedEvents], stops);
+  // Phase 8 step 7h: registered (skill/input) events now emit their own
+  // queue frames during createSkillEvent ingress using the current stops.
+  // Derived events (freeform inflictions/reactions/statuses from
+  // cloneAndSplitEvents) still go through the bulk flattenEvents call,
+  // because they never pass through createSkillEvent — the interpretor
+  // creates their actual event via applyEvent when their PROCESS_FRAME
+  // hook fires.
+  const frameEntries = flattenEventsToQueueFrames(derivedEvents, stops);
   state.insertQueueFrames(frameEntries);
 
   // ── Run the queue ─────────────────────────────────────────────────────────
@@ -139,7 +145,12 @@ export function runEventQueue(
   // Wire the controlled-slot resolver so pass 3 can filter CONTROLLED
   // OPERATOR combo triggers correctly when re-emitting windows.
   state.setControlledSlotResolver(getControlledSlotAtFrame);
-  for (const ev of queueEvents) state.createSkillEvent(ev, { checkCooldown: false });
+  // Post-drain re-registration: move queue-created events into
+  // registeredEvents so getProcessedEvents returns them. Skip queue-frame
+  // emission — these events have already been fully processed during the
+  // drain, so re-emitting their frames would cause duplicate interpret
+  // work and potential double-effects.
+  for (const ev of queueEvents) state.createSkillEvent(ev, { checkCooldown: false, emitQueueFrames: false });
 
   state.validateAll();
 
