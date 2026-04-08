@@ -18,7 +18,8 @@ import type { SlotTriggerWiring } from './eventQueueTypes';
 import { SkillPointController } from '../slot/skillPointController';
 import { PRIORITY, QueueFrameType, FrameHookType } from './eventQueueTypes';
 import type { QueueFrame } from './eventQueueTypes';
-import { EventInterpretorController, clearStatusDefCache } from './eventInterpretorController';
+import { EventInterpretorController } from './eventInterpretorController';
+import { invalidateConfigCache } from './configCache';
 import { PriorityQueue } from './priorityQueue';
 import { TriggerIndex } from './triggerIndex';
 import { SKILL_COLUMN_ORDER, ENEMY_OWNER_ID, ENEMY_ACTION_COLUMN_ID } from '../../model/channels';
@@ -398,9 +399,8 @@ export function getLastStatAccumulator(): StatAccumulator | null {
  *
  * 1. InputEventController.cloneAndSplitEvents → split input vs derived
  * 2. DerivedEventController.registerEvents → input events only
- * 3. SkillPointController.deriveSPRecoveryEvents → SP recovery events
- * 4. EventQueueController.runEventQueue → builds trigger index, seeds derived + talents, runs interpreter
- * 5. DerivedEventController.getProcessedEvents → final output
+ * 3. EventQueueController.runEventQueue → builds trigger index, seeds derived + talents, runs interpreter
+ * 4. DerivedEventController.getProcessedEvents → final output
  */
 export function processCombatSimulation(
   rawEvents: TimelineEvent[],
@@ -436,7 +436,7 @@ export function processCombatSimulation(
 ): TimelineEvent[] {
   // ── 0. Reset object pools and caches for this pipeline run ──────────────
   resetPools();
-  clearStatusDefCache();
+  invalidateConfigCache();
 
   // ── 0a. Initialize HP tracker for live HP% queries during queue processing
   if (hpController) {
@@ -474,12 +474,12 @@ export function processCombatSimulation(
   const enemyActionEvents = derivedEvents.filter(ev => ev.ownerId === ENEMY_OWNER_ID && ev.columnId === ENEMY_ACTION_COLUMN_ID);
   if (enemyActionEvents.length > 0) state.registerEvents(enemyActionEvents);
 
-  // ── 3. SP recovery + talent events ────────────────────────────────────────
-  const withSPRecovery = SkillPointController.deriveSPRecoveryEvents(state.getRegisteredEvents(), state.getStops());
-  const spEvents = withSPRecovery.slice(state.getRegisteredEvents().length);
-  state.registerEvents(spEvents);
-
-  // Talent events are now registered inside runEventQueue via the trigger index.
+  // ── 3. Talent events ──────────────────────────────────────────────────────
+  // SP recovery is now driven entirely by RECOVER/RETURN SKILL_POINT clauses
+  // routed through interpret() → DEC.recordSkillPointRecovery (perfect-dodge
+  // gets a synthetic clause attached at allocateEvent time). The legacy
+  // `SkillPointController.deriveSPRecoveryEvents` no-op stub was deleted.
+  // Talent events are registered inside runEventQueue via the trigger index.
 
   // ── 3b. Pre-compute damage by frame for HP threshold predicates ───────────
   if (bossMaxHp != null && enemyId && slotOperatorMap && loadoutProperties) {

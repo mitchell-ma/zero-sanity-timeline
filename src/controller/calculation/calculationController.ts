@@ -11,7 +11,7 @@
  */
 import { CritMode, DamageScalingStatType, PhysicalStatusType, StatType } from '../../consts/enums';
 import type { OverrideStore } from '../../consts/overrideTypes';
-import { NounType, VerbType, ObjectType } from '../../dsl/semantics';
+import { NounType } from '../../dsl/semantics';
 import type { ValueNode } from '../../dsl/semantics';
 import { resolveValueNode } from './valueResolver';
 import { TimelineEvent, Column, Enemy as ViewEnemy } from '../../consts/viewTypes';
@@ -20,6 +20,7 @@ import { getPhysicalStatusStagger, getDefenseMultiplier, getTotalAttack } from '
 import { LoadoutProperties, DEFAULT_LOADOUT_PROPERTIES } from '../../view/InformationPane';
 import { OperatorLoadoutState, EMPTY_LOADOUT } from '../../view/OperatorLoadoutHeader';
 import { aggregateLoadoutStats } from './loadoutAggregator';
+import { buildDealStaggerClause, stripStaggerClauses, findDealDamageInClauses, hasDealDamageClause } from '../timeline/clauseQueries';
 import { buildDamageTableRows, DamageTableRow } from './damageTableBuilder';
 import { getSkillMultiplier, isDamageSegment } from './jsonMultiplierEngine';
 import { getModelEnemy } from './enemyRegistry';
@@ -119,10 +120,14 @@ export function precomputeDamageByFrame(
 
           let multiplier: number | null = null;
 
-          // Inline DEAL DAMAGE multiplier
-          if (f.dealDamage && f.dealDamage.multipliers.length > 0) {
-            const idx = Math.min(skillLevel - 1, f.dealDamage.multipliers.length - 1);
-            multiplier = f.dealDamage.multipliers[idx];
+          // Inline DEAL DAMAGE multiplier (DSL clause)
+          const dealInfo = findDealDamageInClauses(f.clauses);
+          if (dealInfo && dealInfo.multipliers.length > 0) {
+            const idx = Math.min(skillLevel - 1, dealInfo.multipliers.length - 1);
+            multiplier = dealInfo.multipliers[idx];
+          } else if (dealInfo?.multiplierNode) {
+            const resolved = resolveValueNode(dealInfo.multiplierNode as ValueNode, { skillLevel, potential, stats: {} });
+            if (resolved != null && resolved > 0) multiplier = resolved;
           } else {
             // Segment multiplier divided by frame count
             const segMult = getSkillMultiplier(op.operatorId, ev.id, damageSegIdx, skillLevel, potential);
@@ -130,26 +135,10 @@ export function precomputeDamageByFrame(
               multiplier = maxFrames > 1 ? segMult / maxFrames : segMult;
             }
           }
-          // Fallback: extract multiplier from DSL clause DEAL DAMAGE effects
-          if (multiplier == null && f.clauses) {
-            for (const clause of f.clauses) {
-              for (const eff of clause.effects) {
-                const dsl = eff.dslEffect;
-                if (dsl && dsl.verb === VerbType.DEAL && dsl.object === ObjectType.DAMAGE && dsl.with) {
-                  const w = dsl.with as { value?: ValueNode };
-                  if (w.value) {
-                    const resolved = resolveValueNode(w.value, { skillLevel, potential, stats: {} });
-                    if (resolved != null && resolved > 0) { multiplier = resolved; break; }
-                  }
-                }
-              }
-              if (multiplier != null) break;
-            }
-          }
 
           if (multiplier != null && multiplier > 0) {
-            const mainStatValue = f.dealDamage?.mainStat === DamageScalingStatType.DEFENSE ? op.totalDefense
-              : f.dealDamage?.mainStat === DamageScalingStatType.HP ? op.effectiveHp
+            const mainStatValue = dealInfo?.mainStat === DamageScalingStatType.DEFENSE ? op.totalDefense
+              : dealInfo?.mainStat === DamageScalingStatType.HP ? op.effectiveHp
               : op.totalAttack;
             const damage = mainStatValue * multiplier * op.attributeBonus * defMult;
             ticks.push({ frame: absFrame, damage });
@@ -304,8 +293,11 @@ function resolvePhysicalStatusStagger(
     for (const seg of ev.segments) {
       if (!seg.frames) continue;
       for (const frame of seg.frames) {
-        if (frame.damageMultiplier != null) {
-          frame.stagger = stagger;
+        if (hasDealDamageClause(frame.clauses)) {
+          // Replace any existing DEAL STAGGER clause with the runtime-resolved
+          // value (depends on the source operator's arts intensity).
+          const stripped = stripStaggerClauses(frame.clauses);
+          frame.clauses = [...(stripped ?? []), buildDealStaggerClause(stagger)];
         }
       }
     }

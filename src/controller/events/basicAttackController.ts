@@ -5,6 +5,7 @@ import { FPS } from "../../utils/timeline";
 import { formatSegmentShortName } from "../../dsl/semanticsTranslation";
 import { NounType } from "../../dsl/semantics";
 import type { ValueResolutionContext } from "../calculation/valueResolver";
+import { findSkillPointRecoveryInClauses, findStaggerInClauses } from "../timeline/clauseQueries";
 
 /** Convert skill event sequences into view-layer segment data. */
 export class SkillSegmentBuilder {
@@ -18,7 +19,7 @@ export class SkillSegmentBuilder {
    */
   static buildSegments(
     sequences: readonly SkillEventSequence[],
-    options?: { labels?: string[]; ultimateEnergyGain?: number; teamUltimateEnergyGain?: number; ultimateEnergyGainByEnemies?: Record<number, number>; delayedHitLabel?: string; ctx?: ValueResolutionContext; useNumeralFallback?: boolean },
+    options?: { labels?: string[]; delayedHitLabel?: string; ctx?: ValueResolutionContext; useNumeralFallback?: boolean },
   ): {
     totalDurationFrames: number;
     segments: EventSegmentData[];
@@ -28,9 +29,16 @@ export class SkillSegmentBuilder {
     let totalDurationFrames = 0;
     const segments: EventSegmentData[] = [];
 
-    // Sum SP recovery across all sequences — only granted on final strike
-    const allSequenceTotalSP = sequences.reduce((sum, seq) =>
-      sum + seq.getFrames().reduce((s, f) => s + f.getSkillPointRecovery(), 0), 0);
+    // Sum SP recovery across all sequences — only granted on final strike.
+    // Source of truth is the parsed clauses on each frame.
+    let allSequenceTotalSP = 0;
+    for (const seq of sequences) {
+      for (const f of seq.getFrames()) {
+        const clauses = f.getClauses();
+        const sp = findSkillPointRecoveryInClauses(clauses, options?.ctx);
+        if (sp) allSequenceTotalSP += sp;
+      }
+    }
 
     for (let i = 0; i < sequences.length; i++) {
       const seq = sequences[i];
@@ -40,8 +48,6 @@ export class SkillSegmentBuilder {
       const frames = seqFrames.map((f) => {
         const marker: EventFrameMarker = {
           offsetFrame: Math.round(f.getOffsetSeconds() * FPS),
-          skillPointRecovery: 0,
-          stagger: f.getStagger(),
         };
         const dmgEl = f.getDamageElement();
         if (dmgEl) marker.damageElement = dmgEl;
@@ -52,29 +58,26 @@ export class SkillSegmentBuilder {
           const ct = f.getClauseType();
           if (ct) marker.clauseType = ct;
         }
-        const dd = f.getDealDamage();
-        if (dd) marker.dealDamage = dd;
-        const gg = f.getUltimateEnergyGain();
-        if (gg) marker.ultimateEnergyGain = gg;
         const deps = f.getDependencyTypes();
         if (deps.length > 0) marker.dependencyTypes = [...deps];
         const fts = f.getFrameTypes();
         if (fts.length > 0) marker.frameTypes = [...fts];
         const sp = (f as { getSuppliedParameters?: () => Record<string, { id: string; name: string; lowerRange: number; upperRange: number; default: number }[]> | undefined }).getSuppliedParameters?.();
         if (sp) marker.suppliedParameters = sp;
-        const ueNode = (f as { getUltimateEnergyGainNode?: () => import('../../dsl/semantics').ValueNode | undefined }).getUltimateEnergyGainNode?.();
-        if (ueNode) marker.ultimateEnergyGainNode = ueNode;
         return marker;
       });
 
       // Populate SP recovery and stagger templates on the final strike frame.
       // FINAL_STRIKE frameType is derived from PERFORM FINAL_STRIKE in the JSON config.
+      // The active SP value is carried by the parsed RECOVER SKILL_POINT clause
+      // already attached to the final frame from JSON; templateFinalStrikeSP is
+      // a separate display cache used by the input clamp logic when the basic
+      // attack chain is truncated and a different frame becomes the new final.
       if (isMulti && !customLabels && i === sequences.length - 1 && frames.length > 0) {
         const finalFrame = frames[frames.length - 1];
         if (finalFrame.frameTypes?.includes(EventFrameType.FINAL_STRIKE)) {
-          finalFrame.skillPointRecovery = allSequenceTotalSP;
           finalFrame.templateFinalStrikeSP = allSequenceTotalSP;
-          finalFrame.templateFinalStrikeStagger = finalFrame.stagger ?? 0;
+          finalFrame.templateFinalStrikeStagger = findStaggerInClauses(finalFrame.clauses) ?? 0;
         }
       }
 
@@ -84,13 +87,6 @@ export class SkillSegmentBuilder {
         for (const f of frames) f.frameTypes = [EventFrameType.FINISHER];
       } else if (segLabel === NounType.DIVE && frames.length > 0) {
         for (const f of frames) f.frameTypes = [EventFrameType.DIVE];
-      }
-
-      // Assign ultimate energy gain to the first frame of the first segment
-      if (i === 0 && frames.length > 0) {
-        if (options?.ultimateEnergyGain) frames[0].ultimateEnergyGain = options.ultimateEnergyGain;
-        if (options?.teamUltimateEnergyGain) frames[0].teamUltimateEnergyGain = options.teamUltimateEnergyGain;
-        if (options?.ultimateEnergyGainByEnemies) frames[0].ultimateEnergyGainByEnemies = options.ultimateEnergyGainByEnemies;
       }
 
       const seqName = 'segmentName' in seq ? (seq as SkillEventSequence & { segmentName?: string }).segmentName : undefined;

@@ -18,6 +18,7 @@ import { deriveReactions } from '../../controller/timeline/deriveReactions';
 import { TimelineEvent } from '../../consts/viewTypes';
 import { INFLICTION_COLUMNS, REACTION_COLUMNS, ENEMY_OWNER_ID, USER_ID } from '../../model/channels';
 import { getCorrosionBaseReduction, getCorrosionReductionMultiplier } from '../../model/calculation/damageFormulas';
+import { findStaggerInClauses } from '../../controller/timeline/clauseQueries';
 import { StatusLevel } from '../../consts/types';
 import { extendByTimeStops, TimeStopRegion } from '../../controller/timeline/processTimeStop';
 import { DerivedEventController } from '../../controller/timeline/derivedEventController';
@@ -288,7 +289,7 @@ describe('corrosion arts intensity', () => {
     expect(frame.damageElement).toBeDefined();
     // No multiplier, stagger, or other scaling on the frame itself
     expect(frame.statusLabel).toBeUndefined();
-    expect(frame.stagger).toBeUndefined();
+    expect(findStaggerInClauses(frame.clauses)).toBeUndefined();
   });
 
 });

@@ -1,5 +1,9 @@
 # Devlog
 
+## 2026-04-07
+- Estella's Commiseration SP refund moved into the battle skill itself — the talent now just grants the stack, and the skill checks for the stack and consumes it on use, fixing cases where the refund didn't fire reliably
+- Internal event pipeline unification pass — large engine cleanup with no intended player-facing change, but expect more consistent trigger and effect resolution across operators
+
 ## 2026-04-06
 - Avywenna fully verified — Thunderlance battle skill now models per-lance damage, stagger, and ultimate energy through new Pierce/Pierce-EX statuses applied to the enemy, with one frame fired per lance for accurate damage breakdown
 - Avywenna P5 Carrot and Sharp Stick now properly conditional — the 1.15× damage bonus only applies when the enemy has Electric Susceptibility, modeled directly through the susceptibility stack count rather than a flat multiplier
@@ -15,6 +19,11 @@
 - Many smaller config polish passes across Alesh Auger Angling, Ardelia Eruption Column, Gilberta Matrix Displacement, Laevatain Smouldering Fire Empowered, Perlica Instant Protocol Chain, Wulfgard Wolven Fury, Xaihi Stack Overflow, Hot Work / Pulser Labs gear sets, and Last Rite's full kit
 - 8 weapon infliction skills (Clannibal, Dreams of the Starry Beach, Finchaser-30, Navigator, Opus the Living, Twelve Questions, Wedge, White Night Nova) tightened up
 - Damage breakdown now resolves enemy-side susceptibility stack counts in value formulas, enabling damage multipliers that scale off how susceptible the target currently is
+- Inline value editing in the info pane — click any number on a freeform event's skill or status card to type in a custom value, with a one-click reset to revert. Overridden numbers glow yellow so you can see at a glance what's been hot-wired
+- Multi-column events now expand into adjacent empty space — when neighboring micro-columns have temporal gaps, an event widens to fill them for clearer reading, while still respecting other events' time ranges so nothing visually overlaps
+- Estella's "Survival is a Win" P5 self-triggering status now actually fires — previously the potential was being skipped at load time so the buff never came online
+- Estella Commiseration talent reworked — the SP refund on battle skill use is now properly gated on having a Commiseration stack, and the standalone status was folded back into the talent itself
+- Talent display names cleaned up across the roster — "(Talent)" suffixes replaced with shorter "T1"/"T2" tags so the timeline reads more cleanly
 
 ## 2026-04-05
 - Tangtang fully implemented — all skills, talents, potentials, and five statuses (Whirlpool, Waterspout, Olden Stare, Early Rogue Wave, Waterspout Ult) with full integration tests covering basic attack chains, battle skill, combo skill, ultimate, and status interactions

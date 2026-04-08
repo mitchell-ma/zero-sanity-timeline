@@ -18,6 +18,7 @@ import { ColumnType } from '../../../consts/enums';
 import { FPS } from '../../../utils/timeline';
 import { ENEMY_OWNER_ID, ENEMY_ACTION_COLUMN_ID } from '../../../model/channels';
 import { computeTimelinePresentation } from '../../../controller/timeline/eventPresentationController';
+import { findDealDamageInClauses } from '../../../controller/timeline/clauseQueries';
 import { getMenuPayload } from '../helpers';
 import type { AppResult } from '../helpers';
 import type { MiniTimeline } from '../../../consts/viewTypes';
@@ -84,8 +85,9 @@ describe('Enemy Action — Event Pipeline', () => {
     expect(events).toHaveLength(1);
     const frame = events[0].segments[0]?.frames?.[0];
     expect(frame).toBeDefined();
-    expect(frame!.dealDamage).toBeDefined();
-    expect(frame!.dealDamage!.element).toBeDefined();
+    const dealInfo = findDealDamageInClauses(frame!.clauses);
+    expect(dealInfo).toBeDefined();
+    expect(dealInfo!.element).toBeDefined();
   });
 
   it('multiple enemy actions can be placed at non-overlapping frames', () => {

@@ -17,10 +17,12 @@ import type { LoadoutProperties } from '../../view/InformationPane';
 import type { StatusEventDef } from './eventQueueTypes';
 import type { Predicate, TriggerEffect } from './triggerMatch';
 import type { ValueNode } from '../../dsl/semantics';
-import { VerbType, NounType, ObjectType, AdjectiveType, DeterminerType, THRESHOLD_MAX } from '../../dsl/semantics';
+import { VerbType, NounType, ObjectType, DeterminerType, THRESHOLD_MAX } from '../../dsl/semantics';
+import { ELEMENT_TO_INFLICTION_COLUMN as ELEMENT_TO_INFLICTION } from './columnResolution';
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from '../calculation/valueResolver';
 import { getAllOperatorIds, getSkillIds, getEnabledStatusEvents, getOperatorSkills } from '../gameDataStore';
 import { getWeaponTriggerDefs, getWeaponStatusTriggerDefs, getGearTriggerDefs, getGearStatusTriggerDefs, getConsumablePassiveDef, getTacticalTriggerDef } from '../gameDataStore';
+import { getStatusDef } from './configCache';
 import type { NormalizedEffectDef } from '../gameDataStore';
 import { ENEMY_OWNER_ID, ENEMY_ACTION_COLUMN_ID, REACTION_COLUMNS, INFLICTION_COLUMNS, PHYSICAL_STATUS_COLUMNS, PHYSICAL_STATUS_COLUMN_IDS, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID } from '../../model/channels';
 import { COMMON_OWNER_ID } from '../slot/commonSlotController';
@@ -51,13 +53,7 @@ export const STATE_TO_COLUMN: Record<string, string> = {
   [ObjectType.FULL_STAGGERED]: FULL_STAGGER_COLUMN_ID,
 };
 
-/** Maps APPLY INFLICTION element qualifiers to infliction column IDs. */
-const ELEMENT_TO_INFLICTION: Record<string, string> = {
-  [AdjectiveType.HEAT]: INFLICTION_COLUMNS.HEAT,
-  [AdjectiveType.CRYO]: INFLICTION_COLUMNS.CRYO,
-  [AdjectiveType.NATURE]: INFLICTION_COLUMNS.NATURE,
-  [AdjectiveType.ELECTRIC]: INFLICTION_COLUMNS.ELECTRIC,
-};
+// Element → infliction column mapping imported from `./columnResolution.ts` above.
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -364,13 +360,23 @@ export class TriggerIndex {
       }
     }
 
-    // Process operator status defs
+    // Process operator status defs. Reads serialized defs through configCache
+    // so triggerIndex and the interpreter share a single serialization pass
+    // per pipeline run. Enabled-filter still runs per operator (user can
+    // disable statuses in the UI), but each enabled status hits the cache.
     for (const opId of getAllOperatorIds()) {
-      const defs = getEnabledStatusEvents(opId).map(s => s.serialize() as unknown as StatusEventDef);
-      if (!defs.length) continue;
+      const enabled = getEnabledStatusEvents(opId);
+      if (!enabled.length) continue;
       const slotId = operatorSlotMap[opId];
       if (!slotId) continue;
-      idx.processDefsForSlot(slotId, opId, defs, false, loadoutProperties, operatorSlotMap, registeredEvents);
+      const defs: StatusEventDef[] = [];
+      for (const s of enabled) {
+        const cached = getStatusDef(s.id);
+        if (cached) defs.push(cached);
+      }
+      if (defs.length) {
+        idx.processDefsForSlot(slotId, opId, defs, false, loadoutProperties, operatorSlotMap, registeredEvents);
+      }
     }
 
     // Process operator skill onTriggerClause defs

@@ -17,6 +17,25 @@ import { hasEnableClauseAtFrame } from './eventValidator';
 import { isResetStatus } from './eventPresentationController';
 import type { CombatLoadoutController } from '../combat-loadout/combatLoadoutController';
 import { allocInputEvent, allocDerivedEvent } from './objectPool';
+import { hasSkillPointClause, buildSkillPointRecoveryClause, hasStaggerClause, buildDealStaggerClause, stripStaggerClauses } from './clauseQueries';
+import GENERAL_MECHANICS from '../../model/game-data/generalMechanics.json';
+
+/**
+ * Append a synthetic RECOVER SKILL_POINT clause for the perfect-dodge bonus
+ * onto the first frame of the first segment. If no first frame exists, one
+ * is added at offset 0. Returns a new segments array — does not mutate input.
+ */
+function attachPerfectDodgeSpClause(segments: EventSegmentData[]): EventSegmentData[] {
+  if (segments.length === 0) return segments;
+  const clause = buildSkillPointRecoveryClause(GENERAL_MECHANICS.skillPoints.perfectDodgeRecovery);
+  const out = [...segments];
+  const seg0 = out[0];
+  const frames = seg0.frames ? [...seg0.frames] : [{ offsetFrame: 0 }];
+  const f0 = frames[0];
+  frames[0] = { ...f0, clauses: [...(f0.clauses ?? []), clause] };
+  out[0] = { ...seg0, frames };
+  return out;
+}
 
 // ── Event classification ─────────────────────────────────────────────────────
 
@@ -403,7 +422,15 @@ export function createEvent(
   interactionMode?: import('../../consts/enums').InteractionModeType,
 ): TimelineEvent {
   const isForced = ownerId === ENEMY_OWNER_ID && REACTION_COLUMN_IDS.has(columnId);
-  const segments = defaultSkill?.segments ?? durationSegment(120);
+  let segments = defaultSkill?.segments ?? durationSegment(120);
+  // Perfect-dodge SP recovery is delivered via a RECOVER SKILL_POINT clause
+  // attached to the dash event's first frame at offset 0. The interpret() →
+  // doRecover → DEC.recordSkillPointRecovery path then routes the gain through
+  // the single SP ingress. Replaces the legacy synthetic 'sp-recovery' event
+  // scan that previously lived in skillPointController.deriveSPRecoveryEvents.
+  if (defaultSkill?.isPerfectDodge) {
+    segments = attachPerfectDodgeSpClause(segments);
+  }
   const span = computeSegmentsSpan(segments);
   const stackLimit = (defaultSkill?.stacks?.limit as { value?: number } | undefined)?.value ?? 1;
   const isStackable = stackLimit > 1 || (ownerId === ENEMY_OWNER_ID && INFLICTION_COLUMN_IDS.has(columnId));
@@ -574,17 +601,40 @@ export function validateUpdate(
         updated.frames = updated.frames
           .map((f) => {
             const clamped = { ...f, offsetFrame: Math.max(0, Math.min(maxOffset, f.offsetFrame)) };
-            // Populate final strike values from templates, clear for normal hits
+            // Populate final-strike templates onto the active stagger field; the
+            // active SP value rides on a RECOVER SKILL_POINT clause attached to
+            // whichever frame is currently the final strike. When a frame becomes
+            // FINAL_STRIKE, synthesize the clause from templateFinalStrikeSP. When
+            // a frame loses FINAL_STRIKE, strip any SP clause it carries.
             const types = clamped.frameTypes ?? [EventFrameType.NORMAL];
             if (types.includes(EventFrameType.FINAL_STRIKE)) {
-              if (clamped.skillPointRecovery === 0 && clamped.templateFinalStrikeSP) {
-                clamped.skillPointRecovery = clamped.templateFinalStrikeSP;
+              const hasSp = hasSkillPointClause(clamped.clauses);
+              if (!hasSp && clamped.templateFinalStrikeSP) {
+                clamped.clauses = [
+                  ...(clamped.clauses ?? []),
+                  buildSkillPointRecoveryClause(clamped.templateFinalStrikeSP),
+                ];
               }
-              if (clamped.stagger === 0 && clamped.templateFinalStrikeStagger) {
-                clamped.stagger = clamped.templateFinalStrikeStagger;
+              const hasStagger = hasStaggerClause(clamped.clauses);
+              if (!hasStagger && clamped.templateFinalStrikeStagger) {
+                clamped.clauses = [
+                  ...(clamped.clauses ?? []),
+                  buildDealStaggerClause(clamped.templateFinalStrikeStagger),
+                ];
               }
             } else if (!types.includes(EventFrameType.NORMAL)) {
-              clamped.skillPointRecovery = 0;
+              if (hasSkillPointClause(clamped.clauses)) {
+                clamped.clauses = (clamped.clauses ?? []).map(p => ({
+                  ...p,
+                  effects: p.effects.filter(e => {
+                    const dsl = (e as { dslEffect?: { verb?: string; object?: string } }).dslEffect;
+                    return !(dsl && (dsl.verb === 'RECOVER' || dsl.verb === 'RETURN') && dsl.object === 'SKILL_POINT');
+                  }),
+                })).filter(p => p.effects.length > 0);
+              }
+              if (hasStaggerClause(clamped.clauses)) {
+                clamped.clauses = stripStaggerClauses(clamped.clauses);
+              }
             }
             return clamped;
           });

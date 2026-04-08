@@ -39,6 +39,7 @@ import {
   findColumn, getMenuPayload, setUltimateEnergyToMax,
 } from '../../helpers';
 import type { AppResult } from '../../helpers';
+import { findStaggerInClauses, findDealDamageInClauses } from '../../../../controller/timeline/clauseQueries';
 
 // ── Game-data verified constants ────────────────────────────────────────────
 
@@ -242,14 +243,14 @@ describe('A. BS base hit (unconditional)', () => {
     expect(frames.length).toBeGreaterThanOrEqual(1);
 
     // At least one frame should have dealDamage (unconditional electric damage)
-    const damageFrame = frames.find(f => f.dealDamage);
+    const damageFrame = frames.find(f => findDealDamageInClauses(f.clauses));
     expect(damageFrame).toBeDefined();
-    expect(damageFrame!.dealDamage!.element).toBe(AdjectiveType.ELECTRIC);
+    expect(findDealDamageInClauses(damageFrame!.clauses)!.element).toBe(AdjectiveType.ELECTRIC);
 
     // At least one frame should have stagger
-    const staggerFrame = frames.find(f => f.stagger);
+    const staggerFrame = frames.find(f => findStaggerInClauses(f.clauses));
     expect(staggerFrame).toBeDefined();
-    expect(staggerFrame!.stagger).toBeGreaterThan(0);
+    expect(findStaggerInClauses(staggerFrame!.clauses)!).toBeGreaterThan(0);
 
     // No Thunderlance events should exist
     expect(getThunderlanceEvents(result.current)).toHaveLength(0);
@@ -342,10 +343,13 @@ describe('B. BS consumes Thunderlance — full effect chain', () => {
     // dealDamage and stagger live on the unconditional clause now (single merged dealDamage)
     const unconditional = clauseFrame!.clauses!.find(c => !c.conditions || c.conditions.length === 0);
     expect(unconditional).toBeDefined();
-    const dealEffect = unconditional!.effects.find(e => e.type === 'dealDamage');
-    expect(dealEffect).toBeDefined();
-    expect(dealEffect!.dealDamage!.element).toBe(AdjectiveType.ELECTRIC);
-    expect(unconditional!.effects.some(e => e.type === 'applyStagger')).toBe(true);
+    const dealInfo = findDealDamageInClauses([unconditional!]);
+    expect(dealInfo).toBeDefined();
+    expect(dealInfo!.element).toBe(AdjectiveType.ELECTRIC);
+    expect(unconditional!.effects.some(e => {
+      const dsl = (e as { dslEffect?: { verb?: string; object?: string } }).dslEffect;
+      return dsl?.verb === VerbType.DEAL && dsl?.object === NounType.STAGGER;
+    })).toBe(true);
   });
 });
 
@@ -458,12 +462,11 @@ describe('D. P5 Carrot and Sharp Stick — 1.15× BS damage', () => {
     );
     expect(unconditional).toBeDefined();
 
-    const dealEffect = unconditional!.effects.find(e => e.type === 'dealDamage');
-    expect(dealEffect).toBeDefined();
-    expect(dealEffect!.dealDamage).toBeDefined();
+    const dealInfo = findDealDamageInClauses([unconditional!]);
+    expect(dealInfo).toBeDefined();
 
     // multiplierNode: MULT(VARY_BY SL, ADD(1, MULT(VARY_BY POTENTIAL [0..0.15], MIN(1, STACKS))))
-    const node = dealEffect!.dealDamage!.multiplierNode as Record<string, unknown>;
+    const node = dealInfo!.multiplierNode as Record<string, unknown>;
     expect(node).toBeDefined();
     expect(node.operation).toBe('MULT');
     const right = node.right as Record<string, unknown>;
@@ -757,12 +760,13 @@ describe('I. Combo skill — damage multipliers and stagger', () => {
     expect(frames.length).toBeGreaterThanOrEqual(1);
 
     // Frame should have dealDamage with Electric element
-    const damageFrame = frames.find(f => f.dealDamage);
+    const damageFrame = frames.find(f => findDealDamageInClauses(f.clauses));
     expect(damageFrame).toBeDefined();
-    expect(damageFrame!.dealDamage!.element).toBe(AdjectiveType.ELECTRIC);
+    const damageInfo = findDealDamageInClauses(damageFrame!.clauses)!;
+    expect(damageInfo.element).toBe(AdjectiveType.ELECTRIC);
 
     // Multipliers should be the 12-entry skill level array
-    const multipliers = damageFrame!.dealDamage!.multipliers;
+    const multipliers = damageInfo.multipliers;
     expect(multipliers).toHaveLength(12);
     expect(multipliers[0]).toBe(1.69);   // SL1
     expect(multipliers[11]).toBe(3.8);   // SL12
@@ -788,9 +792,9 @@ describe('I. Combo skill — damage multipliers and stagger', () => {
     const frames = allFrames(comboEvents[0]);
 
     // Stagger on the frame marker
-    const staggerFrame = frames.find(f => f.stagger);
+    const staggerFrame = frames.find(f => findStaggerInClauses(f.clauses));
     expect(staggerFrame).toBeDefined();
-    expect(staggerFrame!.stagger).toBe(10);
+    expect(findStaggerInClauses(staggerFrame!.clauses)).toBe(10);
 
     // Frame clause should contain APPLY THUNDERLANCE with stacks 3
     const clauseFrame = frames.find(f => f.clauses && f.clauses.length > 0);
@@ -831,12 +835,13 @@ describe('J. Ultimate skill — damage multipliers and stagger', () => {
     expect(frames.length).toBeGreaterThanOrEqual(1);
 
     // Frame should have dealDamage with Electric element
-    const damageFrame = frames.find(f => f.dealDamage);
+    const damageFrame = frames.find(f => findDealDamageInClauses(f.clauses));
     expect(damageFrame).toBeDefined();
-    expect(damageFrame!.dealDamage!.element).toBe(AdjectiveType.ELECTRIC);
+    const damageInfo = findDealDamageInClauses(damageFrame!.clauses)!;
+    expect(damageInfo.element).toBe(AdjectiveType.ELECTRIC);
 
     // Multipliers should be the 12-entry skill level array
-    const multipliers = damageFrame!.dealDamage!.multipliers;
+    const multipliers = damageInfo.multipliers;
     expect(multipliers).toHaveLength(12);
     expect(multipliers[0]).toBe(4.22);   // SL1
     expect(multipliers[11]).toBe(9.5);   // SL12
@@ -863,9 +868,9 @@ describe('J. Ultimate skill — damage multipliers and stagger', () => {
     const frames = allFrames(ultEvents[0]);
 
     // Stagger on the frame marker (VARY_BY SL resolves to first value at parse time)
-    const staggerFrame = frames.find(f => f.stagger);
+    const staggerFrame = frames.find(f => findStaggerInClauses(f.clauses));
     expect(staggerFrame).toBeDefined();
-    expect(staggerFrame!.stagger).toBeGreaterThan(0);
+    expect(findStaggerInClauses(staggerFrame!.clauses)!).toBeGreaterThan(0);
 
     // Frame clause should contain APPLY THUNDERLANCE_EX with stacks 1
     const clauseFrame = frames.find(f => f.clauses && f.clauses.length > 0);

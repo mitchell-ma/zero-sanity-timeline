@@ -20,55 +20,6 @@
           "to": "OPERATOR"
         }
       ]
-    },
-    {
-      "conditions": [
-        {
-          "subjectDeterminer": "THIS",
-          "subject": "OPERATOR",
-          "verb": "PERFORM",
-          "object": "SKILL",
-          "objectId": "BATTLE"
-        },
-        {
-          "subjectDeterminer": "THIS",
-          "subject": "OPERATOR",
-          "verb": "HAVE",
-          "object": "STACKS",
-          "with": { "value": { "verb": "IS", "value": 1 } }
-        }
-      ],
-      "effects": [
-        {
-          "verb": "RETURN",
-          "object": "SKILL_POINT",
-          "with": {
-            "value": {
-              "verb": "VARY_BY",
-              "object": "TALENT_LEVEL",
-              "value": [
-                7.5,
-                15
-              ],
-              "of": {
-                "object": "OPERATOR",
-                "determiner": "THIS"
-              }
-            }
-          }
-        },
-        {
-          "verb": "CONSUME",
-          "object": "EVENT",
-          "objectDeterminer": "THIS",
-          "with": {
-            "stacks": {
-              "verb": "IS",
-              "value": 1
-            }
-          }
-        }
-      ]
     }
   ],
   "properties": {

@@ -3,6 +3,7 @@ import { frameToTimeLabelPrecise } from '../../utils/timeline';
 import type { DamageTableRow } from '../../controller/calculation/damageTableBuilder';
 import { buildMultiplierEntries, buildStatusMultiplierEntries } from '../../controller/info-pane/damageBreakdownController';
 import { DamageType, NumberFormatType } from '../../consts/enums';
+import { findUltimateEnergyGainInClauses, findSkillPointRecoveryInClauses, findStaggerInClauses, findDealDamageInClauses } from '../../controller/timeline/clauseQueries';
 import { loadSettings } from '../../consts/settings';
 import type { EventFrameMarker } from '../../consts/viewTypes';
 import { t } from '../../locales/locale';
@@ -64,11 +65,25 @@ function DamageBreakdownPane({ row, frame, onToggleCrit }: DamageBreakdownPanePr
             <span className="edit-section-label">Frame</span>
             <div className="edit-info-text">
               {frame.absoluteFrame != null && <div>Time: {frameToTimeLabelPrecise(frame.absoluteFrame)}</div>}
-              {frame.damageMultiplier != null && <div>Multiplier: {nf === NumberFormatType.DECIMAL ? frame.damageMultiplier.toFixed(dp) : `${(frame.damageMultiplier * 100).toFixed(dp)}%`}</div>}
-              {frame.skillPointRecovery != null && <div>SP Recovery: {frame.skillPointRecovery}</div>}
-              {frame.stagger != null && <div>Stagger: {frame.stagger}</div>}
-              {frame.ultimateEnergyGain != null && <div>Gauge: {frame.ultimateEnergyGain}</div>}
-              {frame.teamUltimateEnergyGain != null && <div>Team Gauge: {frame.teamUltimateEnergyGain}</div>}
+              {(() => {
+                const dmg = findDealDamageInClauses(frame.clauses);
+                const mul = dmg?.multipliers?.length === 1 ? dmg.multipliers[0] : undefined;
+                return mul != null
+                  ? <div>Multiplier: {nf === NumberFormatType.DECIMAL ? mul.toFixed(dp) : `${(mul * 100).toFixed(dp)}%`}</div>
+                  : null;
+              })()}
+              {(() => {
+                const sp = findSkillPointRecoveryInClauses(frame.clauses);
+                return sp != null ? <div>SP Recovery: {sp}</div> : null;
+              })()}
+              {(() => {
+                const stag = findStaggerInClauses(frame.clauses);
+                return stag != null ? <div>Stagger: {stag}</div> : null;
+              })()}
+              {(() => {
+                const gauge = findUltimateEnergyGainInClauses(frame.clauses);
+                return gauge != null ? <div>Gauge: {gauge}</div> : null;
+              })()}
             </div>
             {frame.damageType !== DamageType.DAMAGE_OVER_TIME && onToggleCrit && (
               <div className="edit-field">

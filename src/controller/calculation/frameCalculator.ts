@@ -1,5 +1,6 @@
 import { TimelineEvent } from "../../consts/viewTypes";
 import { NounType } from '../../dsl/semantics';
+import { findSkillPointRecoveryInClauses } from '../timeline/clauseQueries';
 
 // ── SP Return Summary ────────────────────────────────────────────────────────
 
@@ -21,7 +22,8 @@ export function computeSpReturnSummary(
     for (const seg of event.segments) {
       if (!seg.frames) continue;
       for (const f of seg.frames) {
-        if (f.skillPointRecovery) totalSpReturn += f.skillPointRecovery;
+        const sp = findSkillPointRecoveryInClauses(f.clauses);
+        if (sp) totalSpReturn += sp;
       }
     }
   }

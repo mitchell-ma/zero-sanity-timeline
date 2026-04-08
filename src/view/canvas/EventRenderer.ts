@@ -12,6 +12,7 @@ import { SegmentType, ELEMENT_COLORS, ElementType, CritMode, EventFrameType } fr
 import { getRuntimeCritMode } from '../../controller/combatStateController';
 import { VerbType, NounType, AdjectiveType } from '../../dsl/semantics';
 import { getStatusElementMap } from '../../controller/gameDataStore';
+import { hasDealDamageClause } from '../../controller/timeline/clauseQueries';
 import { formatSegmentShortName } from '../../dsl/semanticsTranslation';
 
 /** Match trailing roman numeral (I–XX) or arabic number at end of label. */
@@ -137,7 +138,7 @@ function getFrameElementColor(f: EventFrameMarker, skillElement?: string): numbe
 
 function isFrameVisualCrit(f: EventFrameMarker): boolean {
   const mode = getRuntimeCritMode();
-  if (mode === CritMode.ALWAYS || mode === CritMode.EXPECTED) return !!(f.damageMultiplier || f.dealDamage);
+  if (mode === CritMode.ALWAYS || mode === CritMode.EXPECTED) return hasDealDamageClause(f.clauses);
   if (mode === CritMode.NEVER) return false;
   return !!f.isCrit;
 }
@@ -501,7 +502,7 @@ export function renderEvent(
         const ox = diamondOrigin?.x ?? 0;
         const oy = diamondOrigin?.y ?? 0;
 
-        const isDealDamage = f.dealDamage != null;
+        const isDealDamage = hasDealDamageClause(f.clauses);
         if (isHorizontal) {
           const cx = framePx - segTopPx;
           const cy = inset + eventW + lateralShift;

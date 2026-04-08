@@ -22,6 +22,7 @@ import {
 import { DamageType } from '../../../../consts/enums';
 import { FPS } from '../../../../utils/timeline';
 import { buildOverrideKey } from '../../../../controller/overrideController';
+import { hasDealDamageClause } from '../../../../controller/timeline/clauseQueries';
 import { findColumn, getMenuPayload } from '../../helpers';
 import type { AppResult } from '../../helpers';
 
@@ -143,7 +144,7 @@ describe('Chen Qianyu — Crit pin on derived Lift event', () => {
         if (!seg.frames) continue;
         for (let fi = 0; fi < seg.frames.length; fi++) {
           const f = seg.frames[fi];
-          if (!f.damageMultiplier && !f.dealDamage) continue;
+          if (!hasDealDamageClause(f.clauses)) continue;
           if (f.damageType === DamageType.DAMAGE_OVER_TIME) continue;
           crittableFrames.push({ uid: ev.uid, si, fi });
         }

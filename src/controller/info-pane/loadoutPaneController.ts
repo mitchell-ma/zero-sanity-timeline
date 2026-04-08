@@ -538,8 +538,6 @@ export interface ComboTriggerDisplay {
 export interface UltimateEnergyDisplay {
   baseCost: number;
   adjustedCost: number;
-  ultimateEnergyGain?: number;
-  teamUltimateEnergyGain?: number;
 }
 
 const SKILL_TYPE_TO_JSON_KEY: Record<SkillType, string> = {
@@ -714,15 +712,8 @@ export function resolveComboTrigger(operatorId: string): ComboTriggerDisplay | n
 export function resolveUltimateEnergy(
   operatorId: string,
   potential: Potential,
-  ultimateEnergyGain?: number,
-  teamUltimateEnergyGain?: number,
 ): UltimateEnergyDisplay {
   const baseCost = getUltimateEnergyCost(operatorId);
   const adjustedCost = getUltimateEnergyCostForPotential(operatorId, potential) ?? baseCost;
-  return {
-    baseCost,
-    adjustedCost,
-    ultimateEnergyGain,
-    teamUltimateEnergyGain,
-  };
+  return { baseCost, adjustedCost };
 }

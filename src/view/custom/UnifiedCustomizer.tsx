@@ -1130,8 +1130,8 @@ function BuiltinOperatorSkillSection({ operatorId, skillType, skill, onExpandedC
   );
 
   const ultEnergy = useMemo(
-    () => skillType === NounType.ULTIMATE ? resolveUltimateEnergy(operatorId, 0, skill.ultimateEnergyGain, skill.teamUltimateEnergyGain) : null,
-    [operatorId, skillType, skill.ultimateEnergyGain, skill.teamUltimateEnergyGain],
+    () => skillType === NounType.ULTIMATE ? resolveUltimateEnergy(operatorId, 0) : null,
+    [operatorId, skillType],
   );
 
 
@@ -1179,11 +1179,7 @@ function BuiltinOperatorSkillSection({ operatorId, skillType, skill, onExpandedC
                 )}
                 {skill.skillPointCost != null && <ReadonlyField label="SP Cost" value={String(skill.skillPointCost)} />}
                 {ultEnergy && (
-                  <>
-                    <ReadonlyField label="Energy Cost" value={String(ultEnergy.adjustedCost)} />
-                    {ultEnergy.ultimateEnergyGain != null && ultEnergy.ultimateEnergyGain > 0 && <ReadonlyField label="Gauge Gain" value={String(ultEnergy.ultimateEnergyGain)} />}
-                    {ultEnergy.teamUltimateEnergyGain != null && ultEnergy.teamUltimateEnergyGain > 0 && <ReadonlyField label="Team Gauge" value={String(ultEnergy.teamUltimateEnergyGain)} />}
-                  </>
+                  <ReadonlyField label="Energy Cost" value={String(ultEnergy.adjustedCost)} />
                 )}
               </>} />
             )}
@@ -1987,8 +1983,6 @@ function BuiltinSkillView({ id }: { id: string }) {
       <GSection title="Resources">
         <div className="ev-field-grid">
           {skill.skillPointCost != null && <Field label="SP Cost" value={String(skill.skillPointCost)} />}
-          {skill.ultimateEnergyGain != null && <Field label="Gauge Gain" value={String(skill.ultimateEnergyGain)} />}
-          {skill.teamUltimateEnergyGain != null && <Field label="Team Gauge" value={String(skill.teamUltimateEnergyGain)} />}
         </div>
       </GSection>
 

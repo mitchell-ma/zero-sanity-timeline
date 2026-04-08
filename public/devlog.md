@@ -1,5 +1,9 @@
 # Devlog
 
+## 2026-04-07
+- Estella's Commiseration SP refund moved into the battle skill itself — the talent now just grants the stack, and the skill checks for the stack and consumes it on use, fixing cases where the refund didn't fire reliably
+- Internal event pipeline unification pass — large engine cleanup with no intended player-facing change, but expect more consistent trigger and effect resolution across operators
+
 ## 2026-04-06
 - Avywenna fully verified — Thunderlance battle skill now models per-lance damage, stagger, and ultimate energy through new Pierce/Pierce-EX statuses applied to the enemy, with one frame fired per lance for accurate damage breakdown
 - Avywenna P5 Carrot and Sharp Stick now properly conditional — the 1.15× damage bonus only applies when the enemy has Electric Susceptibility, modeled directly through the susceptibility stack count rather than a flat multiplier

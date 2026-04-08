@@ -25,6 +25,7 @@ import { FPS } from '../../../../utils/timeline';
 import { eventDuration } from '../../../../consts/viewTypes';
 import type { MiniTimeline } from '../../../../consts/viewTypes';
 import { computeTimelinePresentation } from '../../../../controller/timeline/eventPresentationController';
+import { findDealDamageInClauses } from '../../../../controller/timeline/clauseQueries';
 import { getUltimateEnergyCostForPotential } from '../../../../controller/operators/operatorRegistry';
 import { INFLICTION_COLUMNS, ENEMY_OWNER_ID, ENEMY_GROUP_COLUMNS, OPERATOR_STATUS_COLUMN_ID, COMBO_WINDOW_COLUMN_ID } from '../../../../model/channels';
 import { findColumn, buildContextMenu, getMenuPayload, setUltimateEnergyToMax } from '../../helpers';
@@ -692,8 +693,10 @@ describe('H. Ultimate — OLDEN STARE Application', () => {
     // Last frame (rogue wave) should have higher multiplier than DoT frames
     const dotFrame = seg.frames![0];
     const rogueFrame = seg.frames![8];
-    const dotNode = dotFrame.dealDamage?.multiplierNode ?? dotFrame.dealDamage;
-    const rogueNode = rogueFrame.dealDamage?.multiplierNode ?? rogueFrame.dealDamage;
+    const dotInfo = findDealDamageInClauses(dotFrame.clauses);
+    const rogueInfo = findDealDamageInClauses(rogueFrame.clauses);
+    const dotNode = dotInfo?.multiplierNode ?? dotInfo;
+    const rogueNode = rogueInfo?.multiplierNode ?? rogueInfo;
     expect(dotNode).toBeDefined();
     expect(rogueNode).toBeDefined();
   });

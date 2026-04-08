@@ -32,7 +32,7 @@ import type { StatAccumulator, StatSource } from '../calculation/statAccumulator
 import { t } from '../../locales/locale';
 import { buildOverrideKey } from '../overrideController';
 import {
-  BREACH_DURATION, ENEMY_OWNER_ID, ENEMY_ACTION_COLUMN_ID, ELEMENT_TO_INFLICTION_COLUMN,
+  BREACH_DURATION, ENEMY_OWNER_ID, ENEMY_ACTION_COLUMN_ID,
   INFLICTION_COLUMN_IDS, INFLICTION_DURATION,
   PHYSICAL_INFLICTION_COLUMN_IDS, PHYSICAL_INFLICTION_COLUMNS, PHYSICAL_INFLICTION_DURATION, PHYSICAL_STATUS_COLUMNS, PHYSICAL_STATUS_COLUMN_IDS,
   REACTION_COLUMNS, REACTION_COLUMN_IDS, REACTION_DURATION,
@@ -40,14 +40,15 @@ import {
   SHATTER_DURATION, SKILL_COLUMN_ORDER,
 } from '../../model/channels';
 import { FPS, TOTAL_FRAMES } from '../../utils/timeline';
-import { getAllOperatorStatuses, getOperatorStatuses, getStatusById } from '../gameDataStore';
+import { getOperatorStatuses, getStatusById } from '../gameDataStore';
 import { getOperatorBase } from '../../model/game-data/operatorsStore';
 import { getOperatorSkill } from '../../model/game-data/operatorSkillsStore';
-import { getAllWeaponStatuses } from '../../model/game-data/weaponStatusesStore';
-import { getAllGearStatuses } from '../../model/game-data/gearStatusesStore';
 import { getAllStatusLabels } from '../gameDataStore';
 import { COMMON_OWNER_ID } from '../slot/commonSlotController';
 import { evaluateConditions } from './conditionEvaluator';
+import { hasDealDamageClause, findDealDamageInClauses, buildDealDamageClause, parseJsonClauseArray } from './clauseQueries';
+import { getStatusConfig, getStatusDef } from './configCache';
+import { resolveColumnId as resolveEffectColumnId, PHYSICAL_STATUS_VALUES, INFLICTION_COLUMN_TO_ELEMENT } from './columnResolution';
 import type { ConditionContext } from './conditionEvaluator';
 import type { HPController } from '../calculation/hpController';
 import type { ShieldController } from '../calculation/shieldController';
@@ -107,43 +108,16 @@ export function filterClauses(
   return result;
 }
 
-// ── Column resolution (module-private helpers) ───────────────────────────
+// ── Column resolution ─────────────────────────────────────────────────────
+// Unified in `./columnResolution.ts` — see imports above. Both single
+// (`resolveColumnId` → `resolveEffectColumnId` alias) and the physical
+// status value set (`PHYSICAL_STATUS_VALUES`) come from there, along with
+// the shared `ELEMENT_TO_INFLICTION_COLUMN` constant.
 
-
-const PHYSICAL_STATUS_VALUES = new Set<string>(Object.values(PhysicalStatusType));
-
-
+/** Identity pass-through retained so call sites keep reading
+ *  `resolveQualifier(effect.objectQualifier)` without an import churn. */
 function resolveQualifier(objectQualifier?: AdjectiveType | NounType) {
   return objectQualifier;
-}
-
-/**
- * Resolve column ID from effect fields: object + objectId + objectQualifier.
- * Handles both legacy format (object=INFLICTION) and correct grammar (object=STATUS, objectId=INFLICTION).
- */
-function resolveEffectColumnId(object?: string, objectId?: string, objectQualifier?: AdjectiveType | NounType): string | undefined {
-  const qualifier = resolveQualifier(objectQualifier);
-
-  // Canonical grammar: object=STATUS, objectId is the category (REACTION/PHYSICAL/INFLICTION/custom-id)
-  if (object === NounType.STATUS && objectId) {
-    if (objectId === NounType.INFLICTION) {
-      return qualifier ? ELEMENT_TO_INFLICTION_COLUMN[qualifier] : undefined;
-    }
-    if (objectId === NounType.REACTION) {
-      return qualifier ? (REACTION_COLUMNS as Record<string, string>)[qualifier] : undefined;
-    }
-    if (objectId === AdjectiveType.PHYSICAL) {
-      return qualifier && PHYSICAL_STATUS_VALUES.has(qualifier) ? qualifier : undefined;
-    }
-    return objectId;
-  }
-
-  // Direct INFLICTION object (still used in JSON configs for inflictions).
-  if (object === NounType.INFLICTION) {
-    return qualifier ? ELEMENT_TO_INFLICTION_COLUMN[qualifier] : undefined;
-  }
-
-  return objectId;
 }
 
 // ── Lift constants ──────────────────────────────────────────────────────────
@@ -164,15 +138,27 @@ const STAT_TO_STATE_ADJECTIVE: Partial<Record<StatType, AdjectiveType>> = {
   [StatType.STAGGER_FRAILTY]: AdjectiveType.STAGGERED,
 };
 
-const NOOP_VERBS = new Set<string>([
-  VerbType.RETURN, VerbType.DEAL, VerbType.HIT,
-  VerbType.DEFEAT, VerbType.PERFORM, VerbType.IGNORE, VerbType.OVERHEAL,
-  VerbType.EXPERIENCE, VerbType.MERGE, VerbType.RESET,
+/**
+ * Verbs that bypass the standard `verb → object` validation in
+ * `validateVerbObject`. **Despite the name this is NOT a "verb does
+ * nothing" set** — it's a "skip the standard object-allowlist check"
+ * set. `DEAL` and `RESET` mutate via `doDeal` / `doReset` but their
+ * objects (DAMAGE, STAGGER, STACKS, etc.) don't sit cleanly in the
+ * `VERB_OBJECTS` schema; the no-op verbs (`HIT`, `DEFEAT`, `PERFORM`,
+ * `IGNORE`) appear here because they have no allowlist either.
+ *
+ * REFRESH / OVERHEAL / EXPERIENCE / MERGE were dropped: they have zero
+ * occurrences in the current JSON corpus, so the validation skip is
+ * dead. Add them back if a future JSON adds them as effect verbs.
+ */
+const SKIP_VERB_OBJECT_VALIDATION = new Set<string>([
+  VerbType.DEAL, VerbType.RESET,
+  VerbType.HIT, VerbType.DEFEAT, VerbType.PERFORM, VerbType.IGNORE,
 ]);
 
 function validateVerbObject(verb: VerbType, object?: string) {
   if (verb === VerbType.ALL || verb === VerbType.ANY) return true;
-  if (NOOP_VERBS.has(verb)) return true;
+  if (SKIP_VERB_OBJECT_VALIDATION.has(verb)) return true;
   const validObjects = VERB_OBJECTS[verb];
   if (!validObjects) return true;
   if (!object) {
@@ -194,71 +180,7 @@ function resolveCardinality(cardinality: ValueNode | typeof THRESHOLD_MAX | unde
   return defaultMax;
 }
 
-// ── Status config cache ──────────────────────────────────────────────────
-
-interface StatusConfig {
-  duration: number;
-  /** Raw duration ValueNode — stored for runtime resolution with operator-specific context (e.g. potential). */
-  durationNode?: import('../../dsl/semantics').ValueNode;
-  stackingMode?: string;
-  maxStacks?: number;
-  /** Raw ValueNode for maxStacks — stored when the limit is a runtime expression (e.g. status-dependent). */
-  maxStacksNode?: unknown;
-  cooldownFrames?: number;
-  segments?: import('../../consts/viewTypes').EventSegmentData[];
-  susceptibility?: Record<string, number>;
-}
-
-let _statusConfigCache: Map<string, StatusConfig> | null = null;
-
-function getStatusConfig(statusId?: string): StatusConfig | undefined {
-  if (!statusId) return undefined;
-  if (!_statusConfigCache) {
-    _statusConfigCache = new Map();
-    const allStatuses = [...getAllOperatorStatuses(), ...getAllWeaponStatuses(), ...getAllGearStatuses()];
-    for (const s of allStatuses) {
-      const dur = s.durationSeconds;
-      const durationFrames = dur === PERMANENT_DURATION || dur === 0 ? TOTAL_FRAMES : Math.round(dur * FPS);
-      const stackLimit = s.stacks?.limit;
-      const isExpression = stackLimit && typeof stackLimit === 'object' && 'operation' in stackLimit;
-      const maxStacks = stackLimit && !isExpression
-        ? (typeof stackLimit === 'number' ? stackLimit
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          : resolveValueNode(stackLimit as any, DEFAULT_VALUE_CONTEXT) ?? undefined)
-        : undefined;
-      const cdSecs = (s as unknown as { cooldownSeconds?: number }).cooldownSeconds;
-      const cfg: StatusConfig = {
-        duration: durationFrames,
-        ...(s.duration?.value ? { durationNode: s.duration.value as import('../../dsl/semantics').ValueNode } : {}),
-        stackingMode: s.stacks?.interactionType,
-        maxStacks: typeof maxStacks === 'number' ? maxStacks : undefined,
-        ...(isExpression ? { maxStacksNode: stackLimit } : {}),
-        cooldownFrames: cdSecs && cdSecs > 0 ? Math.round(cdSecs * FPS) : undefined,
-      };
-      _statusConfigCache.set(s.id, cfg);
-    }
-  }
-  return _statusConfigCache.get(statusId);
-}
-
-// ── Status def cache (for clause effect resolution) ─────────────────────
-
-let _statusDefCache: Map<string, StatusEventDef> | null = null;
-
-/** Clear the status def cache so it's rebuilt on next access. Called each pipeline run. */
-export function clearStatusDefCache() { _statusDefCache = null; }
-
-function getStatusDef(statusId?: string): StatusEventDef | undefined {
-  if (!statusId) return undefined;
-  if (!_statusDefCache) {
-    _statusDefCache = new Map();
-    const allDefs = [...getAllOperatorStatuses(), ...getAllWeaponStatuses(), ...getAllGearStatuses()];
-    for (const s of allDefs) {
-      _statusDefCache.set(s.id, s.serialize() as unknown as StatusEventDef);
-    }
-  }
-  return _statusDefCache.get(statusId);
-}
+// Status config / def caches live in `./configCache.ts` (imported above).
 
 // ── InterpretContext ─────────────────────────────────────────────────────
 
@@ -577,6 +499,132 @@ export class EventInterpretorController {
   }
 
   /**
+   * Resolve a routed source for a derived event whose ownerId is a target
+   * (e.g. enemy) but whose effects must dispatch to the source operator's slot.
+   * Returns { sourceSlotId, sourceOwnerId } for the InterpretContext.
+   * Falls back to the event's own ownerId when no routing applies.
+   */
+  private resolveRoutedSource(event: TimelineEvent): { sourceSlotId: string; sourceOwnerId: string } {
+    const defaultSlotId = event.ownerId;
+    const defaultOwnerId = this.resolveOperatorId(event.ownerId);
+    // Routing only triggers when ownerId is NOT a known slot (e.g. enemy target)
+    // AND the event has a sourceOwnerId we can map back to a real slot. The
+    // 'user' placeholder used by inputEventController for user-placed events
+    // must NOT be allowed to override the resolved operator id.
+    if (this.loadoutProperties?.[event.ownerId]) {
+      // ownerId is itself a known slot — no routing needed
+      return { sourceSlotId: defaultSlotId, sourceOwnerId: defaultOwnerId };
+    }
+    if (event.sourceOwnerId && event.sourceOwnerId !== event.ownerId) {
+      let sourceSlot: string | undefined = this.loadoutProperties?.[event.sourceOwnerId]
+        ? event.sourceOwnerId
+        : undefined;
+      if (!sourceSlot && this.slotOperatorMap) {
+        for (const [slotId, operatorId] of Object.entries(this.slotOperatorMap)) {
+          if (operatorId === event.sourceOwnerId) { sourceSlot = slotId; break; }
+        }
+      }
+      if (sourceSlot) {
+        return {
+          sourceSlotId: sourceSlot,
+          sourceOwnerId: this.slotOperatorMap?.[sourceSlot] ?? event.sourceOwnerId,
+        };
+      }
+    }
+    return { sourceSlotId: defaultSlotId, sourceOwnerId: defaultOwnerId };
+  }
+
+  /**
+   * Unified clause dispatcher for synthetic-frame queue hooks. Phase 4a lands
+   * this as infrastructure; call sites migrate in 4b (skill-level hooks),
+   * 4c (status lifecycle), and 4d (reactive triggers). The caller builds
+   * the interpret + condition contexts appropriate for the hook type and
+   * passes them in; this helper owns the filter + dispatch + reactive
+   * trigger fan-out logic so the per-hook loops in `handleProcessFrame`,
+   * `processNewStatusEvent`, and friends can collapse onto one code path.
+   *
+   * The logic mirrors the existing `handleProcessFrame :2056` dispatch
+   * loop — filterClauses, then for each accepted predicate iterate effects,
+   * special-case frame-scoped `APPLY STAT` for reversal tracking, skip
+   * reactive triggers for operator-emitted `DEAL DAMAGE` (see the deferred
+   * hack noted in the plan), and otherwise interpret + fan out.
+   *
+   * Returns the list of clause effects that actually executed, for
+   * callers that need to track e.g. `frameSkipped` state. When every
+   * conditional clause failed to match, the returned array is empty AND
+   * there were no unconditional effects to run.
+   */
+  private dispatchClauseFrame(
+    clauses: readonly FrameClausePredicate[] | undefined,
+    clauseType: string | undefined,
+    interpretCtx: InterpretContext,
+    condCtx: ConditionContext,
+    eventOwnerId: string,
+    eventId: string,
+    out: QueueFrame[],
+    options: {
+      /** ON_FRAME fires reactive triggers per effect; skill-lifecycle hooks don't. */
+      fireReactiveTriggers: boolean;
+      /** ON_FRAME tracks APPLY STAT deltas for per-frame reversal; other hooks don't. */
+      trackStatReversals: boolean;
+    },
+  ): { executedCount: number; anyMatched: boolean } {
+    if (!clauses || clauses.length === 0) {
+      return { executedCount: 0, anyMatched: false };
+    }
+    const accepted = filterClauses(clauses, clauseType, pred =>
+      evaluateConditions(pred.conditions as unknown as import('../../dsl/semantics').Interaction[], condCtx),
+    );
+    let executedCount = 0;
+    for (const pred of accepted) {
+      for (const ef of pred.effects) {
+        if (!ef.dslEffect) continue;
+        const dsl = ef.dslEffect;
+
+        // Frame-scoped APPLY STAT — track deltas so they reverse after
+        // the snapshot pass. Only enabled for the ON_FRAME hook; skill
+        // lifecycle / status / trigger hooks let stats persist.
+        if (options.trackStatReversals
+            && dsl.verb === VerbType.APPLY && dsl.object === NounType.STAT
+            && dsl.objectId && this.statAccumulator) {
+          const statKey = resolveEffectStat(NounType.STAT, dsl.objectId, dsl.objectQualifier);
+          if (statKey) {
+            const before = this.statAccumulator.getStat(eventOwnerId, statKey);
+            this.interpret(dsl, interpretCtx);
+            const after = this.statAccumulator.getStat(eventOwnerId, statKey);
+            const diff = after - before;
+            if (diff !== 0) {
+              if (!this._frameStatReversals) this._frameStatReversals = [];
+              this._frameStatReversals.push({ stat: statKey, value: -diff });
+            }
+            if (options.fireReactiveTriggers) {
+              this.reactiveTriggersForEffect(dsl, interpretCtx.frame, eventOwnerId, eventId, out, this.lastConsumedStacks);
+            }
+            this.lastConsumedStacks = undefined;
+            executedCount++;
+            continue;
+          }
+        }
+
+        this.interpret(dsl, interpretCtx);
+        if (options.fireReactiveTriggers) {
+          // Skip reactive triggers for operator-emitted DEAL DAMAGE clauses
+          // (see the Phase 0d deferred hack in docs/notes/pipeline-unification-plan.md).
+          const isOperatorDealDamage = dsl.verb === VerbType.DEAL
+            && dsl.object === NounType.DAMAGE
+            && eventOwnerId !== ENEMY_OWNER_ID;
+          if (!isOperatorDealDamage) {
+            this.reactiveTriggersForEffect(dsl, interpretCtx.frame, eventOwnerId, eventId, out, this.lastConsumedStacks);
+          }
+        }
+        this.lastConsumedStacks = undefined;
+        executedCount++;
+      }
+    }
+    return { executedCount, anyMatched: accepted.length > 0 };
+  }
+
+  /**
    * Return the merged baseEvents + output array, rebuilding only when either
    * array has grown (both are append-only during a queue run).
    */
@@ -651,16 +699,28 @@ export class EventInterpretorController {
       case VerbType.REDUCE:  return this.doReduce(effect, ctx);
 
       case VerbType.RECOVER: return this.doRecover(effect, ctx);
+      // RETURN SP/UE has the same engine semantics as RECOVER for resource graphs;
+      // the verb distinction is preserved at the JSON layer for description fidelity.
+      case VerbType.RETURN:  return this.doRecover(effect, ctx);
 
       case VerbType.EXTEND:  return this.doExtend(effect, ctx);
 
       case VerbType.DEAL:    return this.doDeal(effect, ctx);
 
-      case VerbType.REFRESH:
-      case VerbType.RETURN:
+      // ── No-op cases ────────────────────────────────────────────────
+      // HIT / DEFEAT / PERFORM are predicate-only verbs in current JSON
+      // (they appear inside `conditions`, never inside `effects`). They
+      // reach interpret() only if a future JSON authoring error puts
+      // them on the effect side; the no-op return is defensive.
       case VerbType.HIT: case VerbType.DEFEAT: case VerbType.PERFORM:
-      case VerbType.IGNORE: case VerbType.OVERHEAL: case VerbType.EXPERIENCE:
-      case VerbType.MERGE:
+        return true;
+      // IGNORE is a "tag verb": its presence in a status def's clause
+      // changes how DEC scans the status (e.g. IGNORE ULTIMATE_ENERGY
+      // sets the no-external-gain flag at registration time, see
+      // derivedEventController.ts notifyResourceControllers). interpret()
+      // explicitly does nothing when the tag fires per-frame — the work
+      // happens at scan time, not at dispatch time.
+      case VerbType.IGNORE:
         return true;
 
       default:
@@ -698,8 +758,14 @@ export class EventInterpretorController {
 
     let result: QueueFrame[];
     switch (entry.type) {
-      case QueueFrameType.PROCESS_FRAME:  result = this.handleProcessFrame(entry); break;
-      case QueueFrameType.ENGINE_TRIGGER: result = this.handleEngineTrigger(entry); break;
+      case QueueFrameType.PROCESS_FRAME:
+        // ON_TRIGGER hook collapsed from the legacy ENGINE_TRIGGER queue type
+        // (Phase 4d) — routes to the trigger handler instead of frame
+        // dispatch. Other hook types fall through to handleProcessFrame.
+        result = entry.hookType === FrameHookType.ON_TRIGGER
+          ? this.handleEngineTrigger(entry)
+          : this.handleProcessFrame(entry);
+        break;
       case QueueFrameType.COMBO_RESOLVE:  result = this.handleComboResolve(entry); break;
       case QueueFrameType.STATUS_EXIT:    result = this.handleStatusExit(entry); break;
       default: result = [];
@@ -1155,7 +1221,11 @@ export class EventInterpretorController {
       return resolveEffectColumnId(effect.object, effect.objectId, effect.objectQualifier);
     }
     if (verb === VerbType.PERFORM) return effect.object === NounType.SKILL ? effect.objectId : effect.object;
-    if (verb === VerbType.DEAL) return NounType.DAMAGE;
+    // DEAL triggers historically only ever match DEAL DAMAGE — STAGGER is a
+    // separate stat-meter mechanic that has no reactive trigger key today.
+    if (verb === VerbType.DEAL) {
+      return effect.object === NounType.DAMAGE ? NounType.DAMAGE : undefined;
+    }
     if (verb === VerbType.RECOVER) return effect.object;
     if (verb === VerbType.HIT) return ENEMY_ACTION_COLUMN_ID;
     if (verb === VerbType.DEFEAT) return NounType.ENEMY;
@@ -1347,7 +1417,25 @@ export class EventInterpretorController {
   }
 
   private doRecover(effect: Effect, ctx: InterpretContext) {
-    // Only handle HP recovery — SP/UE handled elsewhere
+    // SP recovery/return — route through DEC to the SP controller.
+    if (effect.object === NounType.SKILL_POINT) {
+      const amount = this.resolveWith(effect.with?.value, ctx);
+      if (amount && amount > 0) {
+        this.controller.recordSkillPointRecovery(
+          ctx.frame, amount, ctx.sourceOwnerId, ctx.sourceSkillName ?? '',
+        );
+      }
+      return true;
+    }
+    // Ultimate energy recovery — route through DEC to the UE controller.
+    if (effect.object === NounType.ULTIMATE_ENERGY) {
+      const amount = this.resolveWith(effect.with?.value, ctx);
+      if (amount && amount > 0) {
+        this.controller.recordUltimateEnergyGain(ctx.frame, ctx.sourceSlotId ?? ctx.sourceOwnerId, amount, 0);
+      }
+      return true;
+    }
+    // Only handle HP recovery — SP/UE handled above
     if (effect.object !== NounType.HP) return true;
     if (!this.hpController) return true;
 
@@ -1592,12 +1680,11 @@ export class EventInterpretorController {
             frames: [{
               offsetFrame: 0,
               damageElement: ElementType.PHYSICAL,
-              damageMultiplier: LIFT_KNOCK_DOWN_DAMAGE_MULTIPLIER,
-              dealDamage: {
+              clauses: [buildDealDamageClause({
+                multiplier: LIFT_KNOCK_DOWN_DAMAGE_MULTIPLIER,
                 element: ElementType.PHYSICAL,
-                multipliers: [LIFT_KNOCK_DOWN_DAMAGE_MULTIPLIER],
                 mainStat: 'ATTACK' as DamageScalingStatType,
-              },
+              })],
             }],
           }],
         },
@@ -1654,7 +1741,7 @@ export class EventInterpretorController {
             frames: [{
               offsetFrame: 0,
               damageElement: ElementType.PHYSICAL,
-              damageMultiplier,
+              clauses: [buildDealDamageClause({ multiplier: damageMultiplier, element: ElementType.PHYSICAL })],
             }],
           }],
         },
@@ -1714,7 +1801,7 @@ export class EventInterpretorController {
             frames: [{
               offsetFrame: 0,
               damageElement: ElementType.PHYSICAL,
-              damageMultiplier,
+              clauses: [buildDealDamageClause({ multiplier: damageMultiplier, element: ElementType.PHYSICAL })],
             }],
           }],
         },
@@ -1770,7 +1857,7 @@ export class EventInterpretorController {
         frames: [{
           offsetFrame: 0,
           damageElement: ElementType.PHYSICAL,
-          damageMultiplier: shatterMultiplier,
+          clauses: [buildDealDamageClause({ multiplier: shatterMultiplier, element: ElementType.PHYSICAL })],
         }],
       }];
     }
@@ -1812,7 +1899,10 @@ export class EventInterpretorController {
     const newEntries = this._processFrameOut;
     newEntries.length = 0;
 
-    const pot = this.loadoutProperties?.[event.ownerId]?.operator.potential ?? 0;
+    // For derived events whose ownerId is the target (enemy), pot/loadout
+    // properties must be read from the routed source slot.
+    const routedForPot = this.resolveRoutedSource(event);
+    const pot = this.loadoutProperties?.[routedForPot.sourceSlotId]?.operator.potential ?? 0;
 
     // ── 1. Lifecycle hooks (EVENT_START / EVENT_END) ─────────────────────
     if (entry.hookType === FrameHookType.EVENT_START) {
@@ -1852,6 +1942,7 @@ export class EventInterpretorController {
       this.checkReactiveTriggers(VerbType.PERFORM, event.columnId, absFrame, event.ownerId, event.id, event.enhancementType, newEntries);
 
       // Skill-level onEntryClause: look up the OperatorSkill and execute effects
+      // via the unified clause dispatcher (Phase 4b).
       const operatorId = this.slotOperatorMap?.[event.ownerId];
       const skillDef = operatorId ? getOperatorSkill(operatorId, event.id) : undefined;
       if (skillDef?.onEntryClause?.length) {
@@ -1878,24 +1969,19 @@ export class EventInterpretorController {
           parentEventEndFrame: eventEnd,
           ...(hasEntryParams ? { suppliedParameters: entryParams } : {}),
         };
-        for (const clause of skillDef.onEntryClause as { conditions?: unknown[]; effects?: unknown[] }[]) {
-          if (!clause.effects?.length) continue;
-          if (clause.conditions?.length) {
-            const condCtx: ConditionContext = {
-              events: this.getAllEvents(),
-              frame: absFrame,
-              sourceOwnerId: event.ownerId,
-              potential: pot,
-              ...(hasEntryParams ? { suppliedParameters: entryParams } : {}),
-            };
-            if (!evaluateConditions(clause.conditions as unknown as import('../../dsl/semantics').Interaction[], condCtx)) continue;
-          }
-          for (const rawEffect of clause.effects) {
-            const raw = rawEffect as Record<string, unknown>;
-            const effect = raw as unknown as Effect;
-            this.interpret(effect, entryCtx);
-          }
-        }
+        const entryCondCtx: ConditionContext = {
+          events: this.getAllEvents(),
+          frame: absFrame,
+          sourceOwnerId: event.ownerId,
+          potential: pot,
+          ...(hasEntryParams ? { suppliedParameters: entryParams } : {}),
+        };
+        const entryParsed = parseJsonClauseArray(skillDef.onEntryClause as { conditions?: unknown[]; effects?: unknown[] }[]);
+        this.dispatchClauseFrame(
+          entryParsed, undefined, entryCtx, entryCondCtx,
+          event.ownerId, event.id, newEntries,
+          { fireReactiveTriggers: false, trackStatReversals: false },
+        );
       }
 
       // Non-skill status events: clause processing (APPLY STAT, onEntryClause,
@@ -1924,7 +2010,7 @@ export class EventInterpretorController {
           }
         }
       }
-      // Skill-level onExitClause: look up the OperatorSkill and execute effects
+      // Skill-level onExitClause: dispatched via the unified helper.
       const exitOperatorId = this.slotOperatorMap?.[event.ownerId];
       const exitSkillDef = exitOperatorId ? getOperatorSkill(exitOperatorId, event.id) : undefined;
       if (exitSkillDef?.onExitClause?.length) {
@@ -1935,22 +2021,17 @@ export class EventInterpretorController {
           sourceSkillName: event.id,
           potential: pot,
         };
-        for (const clause of exitSkillDef.onExitClause as { conditions?: unknown[]; effects?: unknown[] }[]) {
-          if (!clause.effects?.length) continue;
-          if (clause.conditions?.length) {
-            const condCtx: ConditionContext = {
-              events: this.getAllEvents(),
-              frame: absFrame,
-              sourceOwnerId: event.ownerId,
-            };
-            if (!evaluateConditions(clause.conditions as unknown as import('../../dsl/semantics').Interaction[], condCtx)) continue;
-          }
-          for (const rawEffect of clause.effects) {
-            const raw = rawEffect as Record<string, unknown>;
-            const effect = raw as unknown as Effect;
-            this.interpret(effect, exitCtx);
-          }
-        }
+        const exitCondCtx: ConditionContext = {
+          events: this.getAllEvents(),
+          frame: absFrame,
+          sourceOwnerId: event.ownerId,
+        };
+        const exitParsed = parseJsonClauseArray(exitSkillDef.onExitClause as { conditions?: unknown[]; effects?: unknown[] }[]);
+        this.dispatchClauseFrame(
+          exitParsed, undefined, exitCtx, exitCondCtx,
+          event.ownerId, event.id, newEntries,
+          { fireReactiveTriggers: false, trackStatReversals: false },
+        );
       }
       return newEntries;
     }
@@ -1980,48 +2061,66 @@ export class EventInterpretorController {
           parentEventEndFrame: eventEnd,
           parentSegmentEndFrame: segEndFrame,
         };
-        for (const clause of segClauses) {
-          if (!clause.effects?.length) continue;
-          if (clause.conditions?.length) {
-            const condCtx: ConditionContext = {
-              events: this.getAllEvents(),
-              frame: absFrame,
-              sourceOwnerId: event.ownerId,
-              potential: pot,
-            };
-            if (!evaluateConditions(clause.conditions as unknown as import('../../dsl/semantics').Interaction[], condCtx)) continue;
-          }
-          for (const rawEffect of clause.effects) {
-            const raw = rawEffect as Record<string, unknown>;
-            const effect = raw as unknown as Effect;
-            this.interpret(effect, segCtx);
-          }
-        }
+        const segCondCtx: ConditionContext = {
+          events: this.getAllEvents(),
+          frame: absFrame,
+          sourceOwnerId: event.ownerId,
+          potential: pot,
+        };
+        const segParsed = parseJsonClauseArray(segClauses);
+        this.dispatchClauseFrame(
+          segParsed, undefined, segCtx, segCondCtx,
+          event.ownerId, event.id, newEntries,
+          { fireReactiveTriggers: false, trackStatReversals: false },
+        );
       }
       return newEntries;
     }
 
     if (!frame) return newEntries; // safety check
 
-    // ── 2. Combo trigger source duplication (runtime special case) ──────
+    // ── 2. Combo trigger source duplication ──────────────────────────────
+    // The parser flags frames with `objectDeterminer: TRIGGER` as wanting to
+    // duplicate the trigger source onto the combo. The combo's trigger
+    // column is set at runtime when the combo is built (it can't be known
+    // at parse time), so the synthetic effect is constructed here. The
+    // dispatch path is unified though: we synthesize a one-clause predicate
+    // and route it through `interpret() → reactiveTriggersForEffect` so the
+    // duplication uses the same dispatch surface as every other clause.
+    // Replaces the legacy direct `controller.applyEvent` /
+    // `applyPhysicalStatus` calls that bypassed `interpret()`.
     if (frame.duplicateTriggerSource && event.comboTriggerColumnId) {
       const triggerCol = event.comboTriggerColumnId;
+      let synthEffect: Effect | undefined;
       if (INFLICTION_COLUMN_IDS.has(triggerCol)) {
-        this.controller.applyEvent(
-          triggerCol, ENEMY_OWNER_ID, absFrame, INFLICTION_DURATION,
-          source, { uid: `${event.uid}-combo-inflict-${si}-${fi}` },
-        );
-        this.checkReactiveTriggers(VerbType.APPLY, triggerCol, absFrame, event.ownerId, event.id, undefined, newEntries);
+        const element = INFLICTION_COLUMN_TO_ELEMENT[triggerCol];
+        if (element) {
+          synthEffect = {
+            verb: VerbType.APPLY,
+            object: NounType.INFLICTION,
+            objectQualifier: element,
+            to: NounType.ENEMY,
+          } as Effect;
+        }
       } else if (PHYSICAL_STATUS_COLUMN_IDS.has(triggerCol)) {
-        const physEffect = {
+        synthEffect = {
           verb: VerbType.APPLY,
           object: NounType.STATUS,
           objectId: AdjectiveType.PHYSICAL,
           objectQualifier: triggerCol,
           to: NounType.ENEMY,
         } as Effect;
-        this.applyPhysicalStatus(physEffect, { frame: absFrame, sourceOwnerId: this.resolveOperatorId(event.ownerId), sourceSlotId: event.ownerId, sourceSkillName: event.id });
-        this.checkReactiveTriggers(VerbType.APPLY, triggerCol, absFrame, event.ownerId, event.id, undefined, newEntries);
+      }
+      if (synthEffect) {
+        const dupCtx: InterpretContext = {
+          frame: absFrame,
+          sourceOwnerId: this.resolveOperatorId(event.ownerId),
+          sourceSlotId: event.ownerId,
+          sourceSkillName: event.id,
+        };
+        this.interpret(synthEffect, dupCtx);
+        this.reactiveTriggersForEffect(synthEffect, absFrame, event.ownerId, event.id, newEntries, this.lastConsumedStacks);
+        this.lastConsumedStacks = undefined;
       }
     }
 
@@ -2050,16 +2149,21 @@ export class EventInterpretorController {
         }
       }
       const hasSuppliedParams = Object.keys(resolvedParams).length > 0;
+      // For derived events (e.g. THUNDERLANCE_PIERCE applied to enemy by
+      // Avywenna's BS), event.ownerId is the target (enemy) and event.sourceOwnerId
+      // is the source operator. UE gains from clauses on this frame must route
+      // back to the source operator's slot via resolveRoutedSource.
+      const routed = this.resolveRoutedSource(event);
       const interpretCtx: InterpretContext = {
         frame: absFrame,
-        sourceOwnerId: this.resolveOperatorId(event.ownerId),
-        sourceSlotId: event.ownerId,
+        sourceOwnerId: routed.sourceOwnerId,
+        sourceSlotId: routed.sourceSlotId,
         sourceSkillName: event.id,
         sourceEventUid: undefined,
         potential: pot,
         parentEventEndFrame: parentEventEnd,
         parentSegmentEndFrame: parentSegEnd,
-        sourceFrameKey: (frame.damageMultiplier || frame.dealDamage)
+        sourceFrameKey: hasDealDamageClause(frame.clauses)
           ? `${event.uid}:${si}:${fi}` : undefined,
         ...(hasSuppliedParams ? { suppliedParameters: resolvedParams } : {}),
         ...(event.consumedStacks != null ? { consumedStacks: event.consumedStacks } : {}),
@@ -2076,47 +2180,21 @@ export class EventInterpretorController {
         getLinkStacks: (uid) => this.controller.getLinkStacks(uid),
         getStatValue: this.statAccumulator ? (entityId, stat) => this.statAccumulator!.getStat(entityId, stat) : undefined,
       };
-      const accepted = filterClauses(frame.clauses, frame.clauseType, pred =>
-        evaluateConditions(pred.conditions as unknown as import('../../dsl/semantics').Interaction[], condCtx),
+      const { anyMatched } = this.dispatchClauseFrame(
+        frame.clauses, frame.clauseType, interpretCtx, condCtx,
+        event.ownerId, event.id, newEntries,
+        { fireReactiveTriggers: true, trackStatReversals: true },
       );
       // If no clause matched, mark frame as skipped so the damage table builder skips it
-      if (accepted.length === 0) {
+      if (!anyMatched) {
         frame.frameSkipped = true;
-      }
-      for (const pred of accepted) {
-        for (const ef of pred.effects) {
-          if (ef.dslEffect) {
-            // Track frame-level APPLY STAT for reversal after snapshot.
-            // Frame-level stats are frame-scoped — they only affect this frame's damage calc.
-            if (ef.dslEffect.verb === VerbType.APPLY && ef.dslEffect.object === NounType.STAT
-                && ef.dslEffect.objectId && this.statAccumulator) {
-              const statKey = resolveEffectStat(NounType.STAT, ef.dslEffect.objectId, ef.dslEffect.objectQualifier);
-              if (statKey) {
-                const before = this.statAccumulator.getStat(event.ownerId, statKey);
-                this.interpret(ef.dslEffect, interpretCtx);
-                const after = this.statAccumulator.getStat(event.ownerId, statKey);
-                const diff = after - before;
-                if (diff !== 0) {
-                  if (!this._frameStatReversals) this._frameStatReversals = [];
-                  this._frameStatReversals.push({ stat: statKey, value: -diff });
-                }
-                this.reactiveTriggersForEffect(ef.dslEffect, absFrame, event.ownerId, event.id, newEntries, this.lastConsumedStacks);
-                this.lastConsumedStacks = undefined;
-                continue;
-              }
-            }
-            this.interpret(ef.dslEffect, interpretCtx);
-            this.reactiveTriggersForEffect(ef.dslEffect, absFrame, event.ownerId, event.id, newEntries, this.lastConsumedStacks);
-            this.lastConsumedStacks = undefined;
-          }
-        }
       }
     }
 
     // ── 3b. Freeform event creation — synthetic frames on non-skill columns ──
     // Events with no DSL clauses on infliction/reaction/status columns are freeform-placed.
     // Route them through create* so they get the same stacking, segment building, etc.
-    if (!frame.clauses && !frame.dealDamage) {
+    if (!frame.clauses) {
       const dur = eventDuration(event);
       if (INFLICTION_COLUMN_IDS.has(event.columnId) || PHYSICAL_INFLICTION_COLUMN_IDS.has(event.columnId)) {
         this.controller.applyEvent(event.columnId, event.ownerId, absFrame, dur, source, { uid: event.uid });
@@ -2156,7 +2234,7 @@ export class EventInterpretorController {
     }
 
     // ── 3c. Snapshot stat deltas for damage frames (captures runtime APPLY STAT effects)
-    if (this.statAccumulator && (frame.damageMultiplier || frame.dealDamage) && !frame.frameSkipped) {
+    if (this.statAccumulator && hasDealDamageClause(frame.clauses) && !frame.frameSkipped) {
       const frameKey = `${event.uid}:${si}:${fi}`;
       this.statAccumulator.snapshotDeltas(frameKey, event.ownerId);
     }
@@ -2170,7 +2248,7 @@ export class EventInterpretorController {
     }
 
     // ── 3d. Crit resolution for damage frames (stat accumulator + trigger emission)
-    if (this.statAccumulator && (frame.damageMultiplier || frame.dealDamage)) {
+    if (this.statAccumulator && hasDealDamageClause(frame.clauses)) {
       const isDot = frame.damageType === DamageType.DAMAGE_OVER_TIME;
       if (!isDot) {
         const pin = this.overrides?.[buildOverrideKey(event)]?.segments?.[si]?.frames?.[fi]?.isCritical;
@@ -2191,27 +2269,34 @@ export class EventInterpretorController {
       }
     }
 
-    // ── 3e. Enemy action: DEAL DAMAGE to all operators + fire reactive triggers ──
-    // Enemy action frames use dealDamage (no DSL clause). The engine handles
-    // HP/shield reduction and reactive triggers directly.
-    if (event.ownerId === ENEMY_OWNER_ID && event.columnId === ENEMY_ACTION_COLUMN_ID && frame.dealDamage) {
-      const dealCtx: InterpretContext = {
-        frame: absFrame,
-        sourceOwnerId: this.resolveOperatorId(event.ownerId),
-        sourceSlotId: event.ownerId,
-        sourceSkillName: event.id,
-        potential: 0,
-      };
-      const dealEffect: Effect = {
-        verb: VerbType.DEAL,
-        objectQualifier: frame.dealDamage.element as Effect['objectQualifier'],
-        object: NounType.DAMAGE,
-        to: NounType.OPERATOR,
-        toDeterminer: DeterminerType.ALL,
-        with: { value: { verb: VerbType.IS, value: 1 } as unknown as import('../../dsl/semantics').ValueNode },
-      };
-      this.doDeal(dealEffect, dealCtx);
-      this.checkReactiveTriggers(VerbType.DEAL, NounType.DAMAGE, absFrame, event.ownerId, event.id, undefined, newEntries);
+    // ── 3e. Enemy action: actually apply damage to operators ──
+    // The DEAL DAMAGE clause attached to the enemy action frame routes through
+    // the dsl loop above for reactive trigger dispatch (PFP, etc.). This block
+    // handles the HP/shield reduction side: doDeal currently only fires for
+    // `to: OPERATOR`, so the parser-emitted clause (which has no `to`) is a
+    // no-op for HP. Synthesize a `to: OPERATOR, toDeterminer: ALL` Effect and
+    // run doDeal to apply damage to every operator slot. NOTE: this does NOT
+    // call checkReactiveTriggers — the dsl loop above already fired it.
+    if (event.ownerId === ENEMY_OWNER_ID && event.columnId === ENEMY_ACTION_COLUMN_ID) {
+      const dealInfo = findDealDamageInClauses(frame.clauses);
+      if (dealInfo) {
+        const dealCtx: InterpretContext = {
+          frame: absFrame,
+          sourceOwnerId: this.resolveOperatorId(event.ownerId),
+          sourceSlotId: event.ownerId,
+          sourceSkillName: event.id,
+          potential: 0,
+        };
+        const dealEffect: Effect = {
+          verb: VerbType.DEAL,
+          objectQualifier: dealInfo.element as Effect['objectQualifier'],
+          object: NounType.DAMAGE,
+          to: NounType.OPERATOR,
+          toDeterminer: DeterminerType.ALL,
+          with: { value: { verb: VerbType.IS, value: 1 } as unknown as import('../../dsl/semantics').ValueNode },
+        };
+        this.doDeal(dealEffect, dealCtx);
+      }
     }
 
     // ── 4. PERFORM triggers from frameTypes ─────────────────────────────
@@ -2227,7 +2312,7 @@ export class EventInterpretorController {
 
     // Propagate source frame key to all outgoing trigger entries so trigger-chain
     // statuses inherit the originating damage frame's identity.
-    const sourceFrameKey = (frame.damageMultiplier || frame.dealDamage)
+    const sourceFrameKey = hasDealDamageClause(frame.clauses)
       ? `${event.uid}:${si}:${fi}` : undefined;
     if (sourceFrameKey) {
       for (const ne of newEntries) ne.sourceFrameKey = sourceFrameKey;
@@ -2265,7 +2350,7 @@ export class EventInterpretorController {
         haveConditions: [], triggerEffects: entry.triggerEffects,
       };
       out.push({
-        frame, priority: PRIORITY.ENGINE_TRIGGER, type: QueueFrameType.ENGINE_TRIGGER,
+        frame, priority: PRIORITY.ENGINE_TRIGGER, type: QueueFrameType.PROCESS_FRAME, hookType: FrameHookType.ON_TRIGGER,
         statusId: entry.def.properties.id, columnId: '', ownerId: entry.operatorSlotId,
         sourceOwnerId: entry.operatorId, sourceSkillName, maxStacks: 0, durationFrames: 0,
         operatorSlotId: entry.operatorSlotId,
@@ -2294,9 +2379,11 @@ export class EventInterpretorController {
       ownerId: statusEv.sourceOwnerId ?? this.resolveOperatorId(statusEv.ownerId),
       skillName: statusEv.sourceSkillName ?? statusEv.name,
     };
-    const pot = this.loadoutProperties?.[statusEv.ownerId]?.operator.potential ?? 0;
+    // Read pot from the routed source slot for derived statuses (target=enemy).
+    const routedForStatusPot = this.resolveRoutedSource(statusEv);
+    const pot = this.loadoutProperties?.[routedForStatusPot.sourceSlotId]?.operator.potential ?? 0;
 
-    // ── onEntryClause: evaluate conditions and execute effects inline ────
+    // ── onEntryClause: dispatched via the unified helper (Phase 4c) ──────
     const statusDef = getStatusDef(statusId);
     if (statusDef?.onEntryClause?.length) {
       const parentSegEnd = statusEv.startFrame + (statusEv.segments[0]?.properties.duration ?? 0);
@@ -2308,22 +2395,17 @@ export class EventInterpretorController {
         parentStatusId: statusId,
         parentStatusOwnerId: statusOwnerId,
       };
-      for (const clause of statusDef.onEntryClause as { conditions: unknown[]; effects?: unknown[] }[]) {
-        if (!clause.effects?.length) continue;
-        const condCtx: ConditionContext = {
-          events: this.getAllEvents(),
-          frame: ctx.frame,
-          sourceOwnerId: statusOwnerId,
-        };
-        if (clause.conditions.length > 0 &&
-            !evaluateConditions(clause.conditions as unknown as import('../../dsl/semantics').Interaction[], condCtx)) continue;
-        for (const rawEffect of clause.effects) {
-          // Cast raw JSON effect to Effect (of clause is already nested OfClause)
-          const raw = rawEffect as Record<string, unknown>;
-          const effect = raw as unknown as Effect;
-          this.interpret(effect, entryCtx);
-        }
-      }
+      const entryCondCtx: ConditionContext = {
+        events: this.getAllEvents(),
+        frame: ctx.frame,
+        sourceOwnerId: statusOwnerId,
+      };
+      const parsedEntry = parseJsonClauseArray(statusDef.onEntryClause as { conditions?: unknown[]; effects?: unknown[] }[]);
+      this.dispatchClauseFrame(
+        parsedEntry, undefined, entryCtx, entryCondCtx,
+        statusOwnerId, statusId, this._processFrameOut,
+        { fireReactiveTriggers: false, trackStatReversals: false },
+      );
     }
 
     // ── clause: interpret APPLY STAT effects (e.g. talent passive stat buffs) ──
@@ -2444,10 +2526,13 @@ export class EventInterpretorController {
           const segAbsStart = statusEv.startFrame + cumOffset;
           const absFrame = segAbsStart;
           const segEnd = statusEv.startFrame + cumOffset + (seg.properties.duration ?? 0);
+          // Route source to the originating operator's slot for derived statuses
+          // (e.g. THUNDERLANCE_PIERCE on enemy → UE gain back to Avywenna's slot)
+          const routedInline = this.resolveRoutedSource(statusEv);
           const frameCtx: InterpretContext = {
             frame: absFrame,
-            sourceOwnerId: source.ownerId,
-            sourceSlotId: statusEv.ownerId,
+            sourceOwnerId: routedInline.sourceOwnerId,
+            sourceSlotId: routedInline.sourceSlotId,
             sourceSkillName: statusEv.name,
             sourceEventUid: undefined,
             potential: pot,
@@ -2462,13 +2547,16 @@ export class EventInterpretorController {
               sourceOwnerId: statusEv.ownerId,
               potential: pot,
             };
-            for (const clause of fm.clauses) {
-              if (clause.conditions.length > 0 &&
-                  !evaluateConditions(clause.conditions as unknown as import('../../dsl/semantics').Interaction[], condCtx)) continue;
-              for (const ef of clause.effects) {
-                if (ef.dslEffect) this.interpret(ef.dslEffect, frameCtx);
-              }
-            }
+            // Status-frame markers (offset 0) are dispatched via the unified
+            // helper. They don't fire reactive triggers per-effect (status
+            // events have their own dedicated trigger paths) and don't track
+            // frame-scoped stat reversals (status-clause stat tracking is
+            // separate and runs above against statusDef.clause).
+            this.dispatchClauseFrame(
+              fm.clauses, fm.clauseType, frameCtx, condCtx,
+              statusEv.ownerId, statusEv.id, this._processFrameOut,
+              { fireReactiveTriggers: false, trackStatReversals: false },
+            );
           }
         }
       }
@@ -2527,22 +2615,17 @@ export class EventInterpretorController {
       parentStatusId: entry.statusId,
       parentStatusOwnerId: statusOwnerId,
     };
-
-    for (const clause of clauses) {
-      if (!clause.effects?.length) continue;
-      const condCtx: ConditionContext = {
-        events: this.getAllEvents(),
-        frame: entry.frame,
-        sourceOwnerId: statusOwnerId,
-      };
-      if (clause.conditions.length > 0 &&
-          !evaluateConditions(clause.conditions as unknown as import('../../dsl/semantics').Interaction[], condCtx)) continue;
-      for (const rawEffect of clause.effects) {
-        const raw = rawEffect as Record<string, unknown>;
-        const effect = raw as unknown as Effect;
-        this.interpret(effect, exitCtx);
-      }
-    }
+    const exitCondCtx: ConditionContext = {
+      events: this.getAllEvents(),
+      frame: entry.frame,
+      sourceOwnerId: statusOwnerId,
+    };
+    const parsed = parseJsonClauseArray(clauses);
+    this.dispatchClauseFrame(
+      parsed, undefined, exitCtx, exitCondCtx,
+      statusOwnerId, entry.statusId ?? '', this._processFrameOut,
+      { fireReactiveTriggers: false, trackStatReversals: false },
+    );
     return [];
   }
 
@@ -2573,7 +2656,7 @@ export class EventInterpretorController {
       results.push({
         frame: absFrame,
         priority: PRIORITY.ENGINE_TRIGGER,
-        type: QueueFrameType.ENGINE_TRIGGER,
+        type: QueueFrameType.PROCESS_FRAME, hookType: FrameHookType.ON_TRIGGER,
         statusId: entry.def.properties.id,
         columnId: '',
         ownerId: entry.operatorSlotId,
@@ -2684,7 +2767,7 @@ export class EventInterpretorController {
         results.push({
           frame,
           priority: PRIORITY.ENGINE_TRIGGER,
-          type: QueueFrameType.ENGINE_TRIGGER,
+          type: QueueFrameType.PROCESS_FRAME, hookType: FrameHookType.ON_TRIGGER,
           statusId: lifecycle.def.properties.id,
           columnId: '',
           ownerId: slotId,
@@ -2747,7 +2830,7 @@ export class EventInterpretorController {
       results.push({
         frame,
         priority: PRIORITY.ENGINE_TRIGGER,
-        type: QueueFrameType.ENGINE_TRIGGER,
+        type: QueueFrameType.PROCESS_FRAME, hookType: FrameHookType.ON_TRIGGER,
         statusId: entry.def.properties.id,
         columnId: '',
         ownerId: entry.operatorSlotId,
@@ -2808,7 +2891,7 @@ export class EventInterpretorController {
       results.push({
         frame,
         priority: PRIORITY.ENGINE_TRIGGER,
-        type: QueueFrameType.ENGINE_TRIGGER,
+        type: QueueFrameType.PROCESS_FRAME, hookType: FrameHookType.ON_TRIGGER,
         statusId: selected.def.properties.id,
         columnId: '',
         ownerId: selected.operatorSlotId,

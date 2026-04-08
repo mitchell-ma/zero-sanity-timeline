@@ -127,17 +127,24 @@ export const MAX_INFLICTION_STACKS = 4;
 
 // ── Queue entry types ──────────────────────────────────────────────────────
 
-/** Priority values — lower fires first at the same frame. */
-export const PRIORITY = {
+/**
+ * Priority values — lower fires first at the same frame.
+ *
+ * Engine triggers (formerly `QueueFrameType.ENGINE_TRIGGER`) now ride
+ * `PROCESS_FRAME` with `hookType: ON_TRIGGER` and use `ENGINE_TRIGGER`
+ * priority value here. The constant is keyed by string so both queue
+ * types and hook types can register a priority side-by-side.
+ */
+export const PRIORITY: Record<string, number> = {
   /** Unified frame processing — all frame marker effects in config order. */
   [QueueFrameType.PROCESS_FRAME]: 5,
   /** Engine triggers seeded reactively by PROCESS_FRAME or lifecycle clauses. */
-  [QueueFrameType.ENGINE_TRIGGER]: 22,
+  ENGINE_TRIGGER: 22,
   /** Combo trigger resolution — fires after engine triggers so absorption resolves first. */
   [QueueFrameType.COMBO_RESOLVE]: 25,
   /** Status exit clause — fires after all frame processing at the exit frame. */
   [QueueFrameType.STATUS_EXIT]: 30,
-} as const;
+};
 
 export interface QueueFrame {
   frame: number;

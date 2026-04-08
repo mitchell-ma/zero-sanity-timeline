@@ -120,12 +120,20 @@ export const COMBO_WINDOW_COLUMN_ID = 'comboActivationWindow';
 
 // ── Infliction / Reaction domain constants ───────────────────────────────
 
-/** Maps element key (from frame data) → infliction columnId. */
+/**
+ * Maps element/physical qualifier → infliction columnId. Lives in the
+ * model/channels layer (not in controller/timeline/columnResolution.ts)
+ * because `columnResolution` imports from here — defining it here breaks
+ * the import cycle. `VULNERABLE` is mapped to the physical-infliction
+ * column so condition evaluators that match `INFLICTION qualifier=VULNERABLE`
+ * resolve to the right column alongside the arts elements.
+ */
 export const ELEMENT_TO_INFLICTION_COLUMN: Record<string, string> = {
   HEAT: INFLICTION_COLUMNS.HEAT,
   CRYO: INFLICTION_COLUMNS.CRYO,
   NATURE: INFLICTION_COLUMNS.NATURE,
   ELECTRIC: INFLICTION_COLUMNS.ELECTRIC,
+  VULNERABLE: PHYSICAL_INFLICTION_COLUMNS.VULNERABLE,
 };
 
 /** Maps forced reaction name → reaction columnId. */

@@ -41,6 +41,7 @@ import {
   getWeakenMultiplier,
 } from '../../model/calculation/damageFormulas';
 import { EventsQueryService } from '../timeline/eventsQueryService';
+import { hasDealDamageClause, findDealDamageInClauses } from '../timeline/clauseQueries';
 import { LoadoutProperties, DEFAULT_LOADOUT_PROPERTIES } from '../../view/InformationPane';
 import type { Slot } from '../timeline/columnBuilder';
 import { ENEMY_OWNER_ID, OPERATOR_COLUMNS, REACTION_COLUMN_IDS } from '../../model/channels';
@@ -390,7 +391,7 @@ export function buildDamageTableRows(
             const isDot = f.damageType === DamageType.DAMAGE_OVER_TIME;
             const key = `${ev.uid}:${si}:${fi}`;
             // All damage frames participate in intra-frame ordering
-            if (f.damageMultiplier || f.dealDamage) {
+            if (hasDealDamageClause(f.clauses)) {
               allDamageFrameKeys.push({ absFrame, key });
             }
             if (isDot) continue; // DOT can't crit
@@ -497,12 +498,13 @@ export function buildDamageTableRows(
               let isPerTick = false;
 
               // Check for inline DEAL DAMAGE multiplier (DSL v2 clause)
-              if (frame.dealDamage && frame.dealDamage.multipliers.length > 0) {
-                const levelIdx = Math.min(skillLevel - 1, frame.dealDamage.multipliers.length - 1);
-                multiplier = frame.dealDamage.multipliers[levelIdx];
+              const dealInfo = findDealDamageInClauses(frame.clauses);
+              if (dealInfo && dealInfo.multipliers.length > 0) {
+                const levelIdx = Math.min(skillLevel - 1, dealInfo.multipliers.length - 1);
+                multiplier = dealInfo.multipliers[levelIdx];
                 segmentMultiplier = null;
                 isPerTick = true;
-              } else if (frame.dealDamage?.multiplierNode) {
+              } else if (dealInfo?.multiplierNode) {
                 // Compound expression (MULT, ADD, etc.) — resolve with full context
                 const ctx = buildContextForSkillColumn(props, effectiveColumnId);
                 if (ctx) {
@@ -521,7 +523,7 @@ export function buildDamageTableRows(
                   }
                   return 0;
                 };
-                multiplier = resolveValueNode(frame.dealDamage.multiplierNode as ValueNode, ctx);
+                multiplier = resolveValueNode(dealInfo.multiplierNode as ValueNode, ctx);
                 segmentMultiplier = null;
                 isPerTick = true;
               } else {
@@ -557,7 +559,7 @@ export function buildDamageTableRows(
                 }
 
                 // Get element from inline DEAL DAMAGE, frame marker, or skill column
-                const frameElement = frame.dealDamage?.element
+                const frameElement = dealInfo?.element
                   ?? frame.damageElement
                   ?? col.skillElement;
                 const element = (frameElement as ElementType) ?? opData.element;
@@ -747,8 +749,8 @@ export function buildDamageTableRows(
                 const effectiveAttack = totalAtkDelta > 0
                   ? getTotalAttack(opData.operatorBaseAttack, opData.weaponBaseAttack, opData.atkBonusPct + totalAtkDelta, opData.flatAtkBonuses)
                   : opData.totalAttack;
-                const mainStatValue = frame.dealDamage?.mainStat === DamageScalingStatType.DEFENSE ? opData.totalDefense
-                  : frame.dealDamage?.mainStat === DamageScalingStatType.HP ? opData.effectiveHp
+                const mainStatValue = dealInfo?.mainStat === DamageScalingStatType.DEFENSE ? opData.totalDefense
+                  : dealInfo?.mainStat === DamageScalingStatType.HP ? opData.effectiveHp
                   : effectiveAttack;
 
                 params = {
@@ -777,7 +779,8 @@ export function buildDamageTableRows(
               }
             }
 
-            const rowElement = ((frame.dealDamage?.element ?? frame.damageElement ?? col.skillElement) as ElementType | undefined) ?? opData?.element;
+            const rowDealInfo = findDealDamageInClauses(frame.clauses);
+            const rowElement = ((rowDealInfo?.element ?? frame.damageElement ?? col.skillElement) as ElementType | undefined) ?? opData?.element;
             rows.push({
               key: `${ev.uid}-s${si}-f${fi}`,
               absoluteFrame: absFrame,

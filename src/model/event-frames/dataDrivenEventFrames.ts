@@ -1,13 +1,13 @@
-import { EventFrameType, SegmentType, DamageScalingStatType } from "../../consts/enums";
-import { NounType, VerbType, AdjectiveType, DeterminerType } from "../../dsl/semantics";
+import { EventFrameType, SegmentType } from "../../consts/enums";
+import { NounType, VerbType, DeterminerType } from "../../dsl/semantics";
 import type { Effect, ValueNode } from "../../dsl/semantics";
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT, type ValueResolutionContext } from "../../controller/calculation/valueResolver";
+import { parseJsonClauseArray, findFirstEffectValue } from "../../controller/timeline/clauseQueries";
 import {
   SkillEventFrame,
   FrameClausePredicate,
   FrameClauseEffect,
   FrameCondition,
-  FrameDealDamage,
 } from "./skillEventFrame";
 import { SkillEventSequence } from "./skillEventSequence";
 
@@ -126,103 +126,39 @@ interface JsonSkillCategory {
   dataSources?: string[];
 }
 
-// ── Element detection ───────────────────────────────────────────────────────
+// ── Skill-level clause queries ──────────────────────────────────────────
+//
+// Loader-time scalar metadata queries (cooldowns, SP costs, energy costs)
+// use the same clause-walking API as runtime frame consumers. Raw JSON
+// clause predicates are wrapped into `FrameClausePredicate[]` via
+// `parseJsonClauseArray` and queried via `findFirstEffectValue`. This
+// replaces the previous local `flattenClauseEffects` / `findEffectValue` /
+// `withValue` helpers that walked raw JSON directly — one query API now.
 
-// ── DSL effects → target mapping ─────────────────────────────────────────────
-
-/** Map DSL to + toDeterminer to target string. */
-function dslTargetToLegacy(to?: string, toDeterminer?: string): string | undefined {
-  if (to === NounType.TEAM) return 'TEAM';
-  if (to === NounType.OPERATOR) {
-    return toDeterminer === DeterminerType.ALL ? 'TEAM' : 'SELF';
-  }
-  if (to === NounType.ENEMY) return 'ENEMY';
-  return undefined;
-}
-
-// ── DSL effects → legacy resource interaction bridging ──────────────────────
-
-/** Extract a numeric value from a WITH preposition entry, optionally resolving VARY_BY with context. */
-function withValue(wv?: JsonWithValue, ctx?: ValueResolutionContext): number {
-  if (!wv) return 0;
-  if (typeof wv.value === 'number') return wv.value;
-  // ValueExpression (operation + left/right) — resolve via resolveValueNode
-  if (wv.operation) {
-    return resolveValueNode(wv as unknown as ValueNode, ctx ?? DEFAULT_VALUE_CONTEXT);
-  }
-  if (ctx && Array.isArray(wv.value) && wv.object) {
-    return resolveValueNode({ verb: wv.verb, object: wv.object, value: wv.value } as ValueNode, ctx);
-  }
-  return wv.value?.[0] ?? 0;
-}
-
-/**
- * Find a value from a DSL effects array.
- * Maps: object→resourceType, verb→interactionType, to→target.
- * Reads value from with.value.
- */
-function findEffectValue(
-  effects: JsonEffect[] | undefined,
-  object: string,
-  verb: string,
-  target?: string,
-  ctx?: ValueResolutionContext,
-): number | undefined {
-  if (!effects) return undefined;
-  for (const ef of effects) {
-    if (ef.object === object && ef.verb === verb) {
-      const efTarget = dslTargetToLegacy(ef.to, ef.toDeterminer);
-      if (target && efTarget !== target) continue;
-      return withValue(ef.with?.value, ctx);
-    }
-  }
-  return undefined;
-}
-
-/** Flatten all effects from a skill category's clause predicates. */
-function flattenClauseEffects(category: JsonSkillCategory | undefined): JsonEffect[] {
-  if (!category?.clause) return [];
-  return category.clause.flatMap(pred => pred.effects ?? []);
-}
-
-/** Find a value from a skill category's clause effects. */
-function findValue(
+/** Find a value from a skill category's parsed clause effects. */
+function findSkillValue(
   category: JsonSkillCategory | undefined,
   object: string,
   verb: string,
   target?: string,
   ctx?: ValueResolutionContext,
 ): number | undefined {
-  return findEffectValue(flattenClauseEffects(category), object, verb, target, ctx);
-}
-
-/** Get all conditional ultimate energy gains (by enemies hit) from clause effects. */
-function findConditionalUltimateEnergyGains(category: JsonSkillCategory | undefined, ctx?: ValueResolutionContext): Record<number, number> {
-  const byEnemies: Record<number, number> = {};
-  for (const ef of flattenClauseEffects(category)) {
-    if (ef.object === NounType.ULTIMATE_ENERGY && ef.verb === VerbType.RECOVER && ef.conditions?.enemiesHitThreshold) {
-      byEnemies[ef.conditions.enemiesHitThreshold] = withValue(ef.with?.value, ctx);
-    }
-  }
-  return byEnemies;
+  if (!category?.clause) return undefined;
+  const parsed = parseJsonClauseArray(category.clause);
+  return findFirstEffectValue(parsed, verb, object, target, ctx);
 }
 
 // ── DataDrivenSkillEventFrame ───────────────────────────────────────────────
 
 export class DataDrivenSkillEventFrame extends SkillEventFrame {
   private readonly _offsetSeconds: number;
-  private readonly _skillPointRecovery: number;
-  private readonly _stagger: number;
   private readonly _damageElement: string | null;
   private readonly _duplicateTriggerSource: boolean;
   private readonly _clauses: readonly FrameClausePredicate[];
   private readonly _clauseType: string | undefined;
-  private readonly _dealDamage: FrameDealDamage | null;
-  private readonly _ultimateEnergyGain: number;
   private readonly _dependencyTypes: readonly string[];
   private readonly _frameTypes: readonly EventFrameType[];
   private readonly _suppliedParameters?: Record<string, { id: string; name: string; lowerRange: number; upperRange: number; default: number }[]>;
-  private readonly _ultimateEnergyGainNode?: ValueNode;
 
   constructor(frame: JsonFrame) {
     super();
@@ -232,14 +168,9 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
     let duplicateSource = false;
     const frameTypes: EventFrameType[] = [];
 
-    let sp = 0;
-    let stagger = 0;
-    let ultimateEnergyGain = 0;
-    let ultimateEnergyGainNode: ValueNode | undefined;
 
     // ── Clause parsing ─────────────────────────────────────────────────────
     const clauses: FrameClausePredicate[] = [];
-    let dealDamage: FrameDealDamage | null = null;
 
     for (const pred of (frame.clause ?? [])) {
       const conditions: FrameCondition[] = (pred.conditions ?? []).map(c => {
@@ -262,20 +193,16 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
 
       const clauseEffects: FrameClauseEffect[] = [];
       for (const ef of pred.effects) {
-        const wp = ef.with;
-        const elementQualifier = ef.objectQualifier && [AdjectiveType.HEAT, AdjectiveType.CRYO, AdjectiveType.NATURE, AdjectiveType.ELECTRIC, AdjectiveType.PHYSICAL].includes(ef.objectQualifier as AdjectiveType)
-          ? ef.objectQualifier : undefined;
         const isSource = ef.objectDeterminer === DeterminerType.TRIGGER;
 
         switch (ef.verb) {
           case VerbType.RECOVER:
-            if (ef.object === NounType.SKILL_POINT) { sp = withValue(wp?.value); clauseEffects.push({ type: 'dsl', dslEffect: ef as unknown as Effect }); }
+          case VerbType.RETURN:
+            if (ef.object === NounType.SKILL_POINT) { clauseEffects.push({ type: 'dsl', dslEffect: ef as unknown as Effect }); }
             else if (ef.object === NounType.ULTIMATE_ENERGY) {
-              ultimateEnergyGain = withValue(wp?.value);
-              // Store raw ValueNode when it depends on VARY_BY (suppliedParameters) for runtime resolution
-              if (wp?.value && typeof wp.value === 'object' && !Array.isArray(wp.value)) {
-                ultimateEnergyGainNode = wp.value as ValueNode;
-              }
+              // Push as DSL clause so interpret() → doRecover routes UE through
+              // the single DEC.recordUltimateEnergyGain ingress.
+              clauseEffects.push({ type: 'dsl', dslEffect: ef as unknown as Effect });
             }
             else if (ef.object === NounType.HP) clauseEffects.push({ type: 'dsl', dslEffect: ef as unknown as Effect });
             break;
@@ -308,25 +235,8 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
             break;
 
           case VerbType.DEAL:
-            if (ef.object === NounType.DAMAGE) {
-              const multipliers = wp?.value;
-              // Simple VARY_BY nodes have a flat .value array; compound expressions
-              // (MULT, ADD) store the raw node for runtime resolution by the damage table builder.
-              const mulArr = multipliers && Array.isArray(multipliers.value) ? multipliers.value as number[] : [];
-              const mainStatNode = wp?.mainStat as Record<string, unknown> | undefined;
-              const mainStat = mainStatNode?.objectId as DamageScalingStatType | undefined;
-              const dd: FrameDealDamage = {
-                ...(elementQualifier ? { element: elementQualifier } : {}),
-                multipliers: mulArr,
-                ...(mainStat ? { mainStat } : {}),
-                // Store raw ValueNode for compound expressions (resolved at damage-table-build time)
-                ...(mulArr.length === 0 && multipliers ? { multiplierNode: multipliers } : {}),
-              };
-              dealDamage = dd;
-              clauseEffects.push({ type: 'dealDamage', dealDamage: dd });
-            } else if (ef.object === NounType.STAGGER) {
-              stagger = withValue(wp?.value);
-              clauseEffects.push({ type: 'applyStagger' });
+            if (ef.object === NounType.DAMAGE || ef.object === NounType.STAGGER) {
+              clauseEffects.push({ type: 'dsl', dslEffect: ef as unknown as Effect });
             }
             break;
 
@@ -353,10 +263,6 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
 
     this._clauses = clauses;
     this._clauseType = frame.clauseType;
-    this._dealDamage = dealDamage;
-    this._ultimateEnergyGain = ultimateEnergyGain;
-    this._skillPointRecovery = sp;
-    this._stagger = stagger;
     this._duplicateTriggerSource = duplicateSource;
     this._dependencyTypes = (frame.properties?.dependencyTypes ?? []) as string[];
     // Merge explicit frameTypes from JSON (e.g. "frameTypes": ["DIVE"]) with clause-derived ones
@@ -366,22 +272,16 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
       }
     }
     this._frameTypes = frameTypes;
-    this._ultimateEnergyGainNode = ultimateEnergyGainNode;
   }
 
   getOffsetSeconds(): number { return this._offsetSeconds; }
-  getSkillPointRecovery(): number { return this._skillPointRecovery; }
-  getStagger(): number { return this._stagger; }
   getDamageElement(): string | null { return this._damageElement; }
   getDuplicateTriggerSource(): boolean { return this._duplicateTriggerSource; }
   getClauses(): readonly FrameClausePredicate[] { return this._clauses; }
   getClauseType(): string | undefined { return this._clauseType; }
-  getDealDamage(): FrameDealDamage | null { return this._dealDamage; }
-  getUltimateEnergyGain(): number { return this._ultimateEnergyGain; }
   getDependencyTypes(): readonly string[] { return this._dependencyTypes; }
   getFrameTypes(): readonly EventFrameType[] { return this._frameTypes; }
   getSuppliedParameters(): Record<string, { id: string; name: string; lowerRange: number; upperRange: number; default: number }[]> | undefined { return this._suppliedParameters; }
-  getUltimateEnergyGainNode(): ValueNode | undefined { return this._ultimateEnergyGainNode; }
 }
 
 // ── DataDrivenSkillEventSequence ────────────────────────────────────────────
@@ -535,7 +435,7 @@ export function getSkillTimings(operatorJson: Record<string, unknown>, ctx?: Val
   const comboDur = dur(comboTopDur || ((comboSkill?.segments as JsonSegment[] | undefined)
     ?.filter(s => !s.properties.segmentTypes?.includes(SegmentType.COOLDOWN))
     .reduce((sum, s) => sum + resolveDur(s.properties?.duration, ctx), 0) ?? 0));
-  const comboCdFromClause = findValue(comboSkill, NounType.COOLDOWN, VerbType.CONSUME, undefined, ctx);
+  const comboCdFromClause = findSkillValue(comboSkill, NounType.COOLDOWN, VerbType.CONSUME, undefined, ctx);
   const comboCdSeg = (comboSkill?.segments as JsonSegment[] | undefined)
     ?.find(s => s.properties.segmentTypes?.includes(SegmentType.COOLDOWN));
   const comboCdFromSegment = comboCdSeg?.properties?.duration
@@ -567,7 +467,7 @@ export function getSkillTimings(operatorJson: Record<string, unknown>, ctx?: Val
     ultTotalDur = dur(catDuration(ultimate, ctx));
     const ultAnimRaw = catAnimationDur(ultimate, ctx);
     ultAnimDur = ultAnimRaw > 0 ? dur(ultAnimRaw) : ultTotalDur;
-    const ultCdRaw = findValue(ultimate, NounType.COOLDOWN, VerbType.CONSUME, undefined, ctx);
+    const ultCdRaw = findSkillValue(ultimate, NounType.COOLDOWN, VerbType.CONSUME, undefined, ctx);
     ultCdFrames = ultCdRaw != null ? dur(ultCdRaw) : 0;
   }
 
@@ -586,87 +486,14 @@ export function getSkillTimings(operatorJson: Record<string, unknown>, ctx?: Val
 export function getUltimateEnergyCost(operatorJson: Record<string, unknown>, ctx?: ValueResolutionContext): number {
   const skills = operatorJson.skills as Record<string, JsonSkillCategory>;
   const ultimate = skills?.[NounType.ULTIMATE];
-  return findValue(ultimate, NounType.ULTIMATE_ENERGY, VerbType.CONSUME, undefined, ctx) ?? 0;
-}
-
-export interface SkillUltimateEnergyGains {
-  battleUltimateEnergyGain: number;
-  battleTeamUltimateEnergyGain: number;
-  comboUltimateEnergyGain: number;
-  comboTeamUltimateEnergyGain: number;
-  comboUltimateEnergyGainByEnemies?: Record<number, number>;
-}
-
-export function getSkillUltimateEnergyGains(operatorJson: Record<string, unknown>, ctx?: ValueResolutionContext): SkillUltimateEnergyGains {
-  const skills = operatorJson.skills as Record<string, JsonSkillCategory>;
-  const result: SkillUltimateEnergyGains = { battleUltimateEnergyGain: 0, battleTeamUltimateEnergyGain: 0, comboUltimateEnergyGain: 0, comboTeamUltimateEnergyGain: 0 };
-
-  // Battle skill ultimate energy gains
-  const battleSkillId = NounType.BATTLE;
-  const bs = skills?.[battleSkillId];
-  if (bs?.clause) {
-    result.battleUltimateEnergyGain = findValue(bs, NounType.ULTIMATE_ENERGY, VerbType.RECOVER, 'SELF', ctx) ?? 0;
-    result.battleTeamUltimateEnergyGain = findValue(bs, NounType.ULTIMATE_ENERGY, VerbType.RECOVER, 'TEAM', ctx) ?? 0;
-  }
-
-  // Combo skill ultimate energy gains
-  const comboSkillId = NounType.COMBO;
-  const cs = skills?.[comboSkillId];
-  if (cs?.clause) {
-    const byEnemies = findConditionalUltimateEnergyGains(cs, ctx);
-    if (Object.keys(byEnemies).length > 0) {
-      result.comboUltimateEnergyGainByEnemies = byEnemies;
-      result.comboUltimateEnergyGain = byEnemies[1] ?? 0;
-    } else {
-      result.comboUltimateEnergyGain = findValue(cs, NounType.ULTIMATE_ENERGY, VerbType.RECOVER, 'SELF', ctx) ?? 0;
-    }
-    result.comboTeamUltimateEnergyGain = findValue(cs, NounType.ULTIMATE_ENERGY, VerbType.RECOVER, 'TEAM', ctx) ?? 0;
-  }
-
-  return result;
+  return findSkillValue(ultimate, NounType.ULTIMATE_ENERGY, VerbType.CONSUME, undefined, ctx) ?? 0;
 }
 
 /** Extract the SP cost for battle skill from merged operator JSON (skills keyed by skill ID). */
 export function getBattleSkillSpCost(operatorJson: Record<string, unknown>, ctx?: ValueResolutionContext): number {
   const skills = operatorJson.skills as Record<string, JsonSkillCategory> | undefined;
   const battleSkillId = NounType.BATTLE;
-  return findValue(skills?.[battleSkillId], NounType.SKILL_POINT, VerbType.CONSUME, undefined, ctx) ?? 0;
-}
-
-// ── Per-skill-category data extraction (raw seconds, for event files) ────────
-
-export interface SkillCategoryData {
-  duration: number;
-  spCost: number;
-  ultimateEnergyGain: number;
-  cooldown: number;
-  energyCost: number;
-}
-
-/**
- * Extract raw timing/cost data for a given skill category from operator JSON.
- * Falls back to BATTLE_SKILL effects for variants that share the same SP cost.
- */
-export function getSkillCategoryData(
-  operatorJson: Record<string, unknown>,
-  skillCategory: string,
-  ctx?: ValueResolutionContext,
-): SkillCategoryData {
-  const skills = operatorJson.skills as Record<string, JsonSkillCategory>;
-  const cat = skills?.[skillCategory];
-  const baseBattle = skills?.[NounType.BATTLE];
-
-  return {
-    duration: catDuration(cat, ctx),
-    spCost: findValue(cat, NounType.SKILL_POINT, VerbType.CONSUME, undefined, ctx)
-         ?? findValue(baseBattle, NounType.SKILL_POINT, VerbType.CONSUME, undefined, ctx)
-         ?? 0,
-    ultimateEnergyGain: findValue(cat, NounType.ULTIMATE_ENERGY, VerbType.RECOVER, 'SELF', ctx)
-            ?? findValue(baseBattle, NounType.ULTIMATE_ENERGY, VerbType.RECOVER, 'SELF', ctx)
-            ?? 0,
-    cooldown: findValue(cat, NounType.COOLDOWN, VerbType.CONSUME, undefined, ctx) ?? 0,
-    energyCost: findValue(cat, NounType.ULTIMATE_ENERGY, VerbType.CONSUME, undefined, ctx) ?? 0,
-  };
+  return findSkillValue(skills?.[battleSkillId], NounType.SKILL_POINT, VerbType.CONSUME, undefined, ctx) ?? 0;
 }
 
 /**

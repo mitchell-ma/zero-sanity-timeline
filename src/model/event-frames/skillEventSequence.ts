@@ -20,16 +20,6 @@ export abstract class SkillEventSequence {
   /** Get a specific frame by index (0-based). */
   getFrame(index: number): SkillEventFrame | undefined { return this.getFrames()[index]; }
 
-  /** Total skill points recovered across all frames in this sequence. */
-  getTotalSkillPointRecovery(): number {
-    return this.getFrames().reduce((sum, f) => sum + f.getSkillPointRecovery(), 0);
-  }
-
-  /** Total stagger damage across all frames in this sequence. */
-  getTotalStagger(): number {
-    return this.getFrames().reduce((sum, f) => sum + f.getStagger(), 0);
-  }
-
   /** Offset of the first damage frame, or 0 if no frames. */
   getFirstHitOffsetSeconds(): number {
     const frames = this.getFrames();

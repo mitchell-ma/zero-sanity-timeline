@@ -31,8 +31,7 @@ import type { UltimateEnergyController } from './ultimateEnergyController';
 import { collectNoGainWindowsForEvent } from './ultimateEnergyController';
 import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../slot/commonSlotController';
 import GENERAL_MECHANICS from '../../model/game-data/generalMechanics.json';
-import { getAllOperatorStatuses } from '../gameDataStore';
-import { resolveValueNode, buildContextForSkillColumn } from '../calculation/valueResolver';
+import { getStatusDef, getStatusConfig } from './configCache';
 import type { LoadoutProperties } from '../../view/InformationPane';
 import { allocInputEvent } from './objectPool';
 import type { ColumnHost, EventSource, AddOptions, ConsumeOptions } from './columns/eventColumn';
@@ -41,18 +40,15 @@ export type { EventSource } from './columns/eventColumn';
 
 // ── Status stack limit cache (from operator status configs) ──────────────────
 
-let _statusStackLimitCache: Map<string, number> | null = null;
-
+/**
+ * Resolved static stack limit for a status, looked up via `configCache` —
+ * the single source of truth for all status configuration. Returns
+ * `undefined` when the status has no stack limit at all AND when the limit
+ * is a runtime ValueExpression (e.g. status-dependent maxStacks); callers
+ * that need the runtime form consult `getStatusConfig(id).maxStacksNode`.
+ */
 export function getStatusStackLimit(statusId: string): number | undefined {
-  if (!_statusStackLimitCache) {
-    _statusStackLimitCache = new Map();
-    for (const s of getAllOperatorStatuses()) {
-      if (!s.stacks) continue;
-      _statusStackLimitCache.set(s.id, s.maxStacks);
-      if (s.name && s.name !== s.id) _statusStackLimitCache.set(s.name, s.maxStacks);
-    }
-  }
-  return _statusStackLimitCache.get(statusId);
+  return getStatusConfig(statusId)?.maxStacks;
 }
 
 export class DerivedEventController implements ColumnHost {
@@ -132,6 +128,24 @@ export class DerivedEventController implements ColumnHost {
 
   private key(columnId: string, ownerId: string) {
     return `${columnId}:${ownerId}`;
+  }
+
+  // ── Resource controller passthroughs (for the interpretor) ──────────────
+  //
+  // The interpretor reaches the SP/UE controllers via DEC so all effect
+  // application has a single hub. These methods are no-ops if the resource
+  // controller hasn't been wired in (e.g. cheap test setups).
+
+  recordSkillPointRecovery(frame: number, amount: number, sourceOwnerId: string, sourceSkillName: string) {
+    if (this.spController && amount > 0) {
+      this.spController.addRecovery(frame, amount, sourceOwnerId, sourceSkillName);
+    }
+  }
+
+  recordUltimateEnergyGain(frame: number, slotId: string, selfGain: number, teamGain = 0) {
+    if (this.ueController && (selfGain > 0 || teamGain > 0)) {
+      this.ueController.addUltimateEnergyGain(frame, slotId, selfGain, teamGain);
+    }
   }
 
   // ── Controlled operator seeding ──────────────────────────────────────────
@@ -288,21 +302,6 @@ export class DerivedEventController implements ColumnHost {
   }
 
   /** Build a ValueResolutionContext with loadout properties for runtime VARY_BY resolution. */
-  private buildUltimateEnergyValueContext(ev: TimelineEvent) {
-    const props = this.loadoutProperties[ev.ownerId];
-    const ctx = buildContextForSkillColumn(props, ev.columnId);
-    // Merge suppliedParameters if present
-    if (ev.suppliedParameters?.VARY_BY && ev.parameterValues) {
-      const resolved: Record<string, number> = {};
-      for (const d of ev.suppliedParameters.VARY_BY) {
-        const raw = ev.parameterValues[d.id] ?? d.lowerRange;
-        resolved[d.id] = raw - d.lowerRange;
-      }
-      ctx.suppliedParameters = resolved;
-    }
-    return ctx;
-  }
-
   /**
    * Notify SP and UE controllers about resource effects on a newly registered event.
    * Called per-event after extension and frame position computation in pass 2.
@@ -310,20 +309,13 @@ export class DerivedEventController implements ColumnHost {
   private notifyResourceControllers(ev: TimelineEvent) {
     // ── SP notifications ──────────────────────────────────────────────────
     if (this.spController) {
-      // Battle skill with SP cost → event-level cost + frame-level returns
+      // Battle skill with SP cost → event-level cost only.
+      // Frame-level RECOVER/RETURN SP is handled by interpret() via DEC.recordSkillPointRecovery
+      // when the frame's DSL clause runs; this loop would otherwise double-count it.
       if (ev.columnId === NounType.BATTLE && ev.skillPointCost) {
         const firstFrame = ev.segments[0]?.frames?.[0];
         const ultimateEnergyGainFrame = firstFrame?.absoluteFrame ?? ev.startFrame;
         this.spController.addCost(ev.uid, ev.startFrame, ev.skillPointCost, ev.ownerId, ultimateEnergyGainFrame);
-
-        // Frame-level SP recovery on battle skill frames
-        for (const seg of ev.segments) {
-          for (const f of seg.frames ?? []) {
-            if (f.skillPointRecovery && f.skillPointRecovery > 0 && f.absoluteFrame != null) {
-              this.spController.addRecovery(f.absoluteFrame, f.skillPointRecovery, ev.ownerId, ev.id);
-            }
-          }
-        }
       }
 
       // SP recovery events (derived from deriveSPRecoveryEvents)
@@ -341,107 +333,26 @@ export class DerivedEventController implements ColumnHost {
     }
 
     // ── UE notifications ──────────────────────────────────────────────────
+    // All frame-level UE gains are now routed via interpret() → doRecover →
+    // DEC.recordUltimateEnergyGain. The four scan blocks (combo/battle/ultimate
+    // frames) and the derived-status sourceOwnerId routing block were deleted
+    // as part of Phase 0a — they were the parallel write path that caused the
+    // double-UE-gain bug. The interpreter resolves the source slot from
+    // ev.sourceOwnerId at handleProcessFrame ctx-build time.
     if (this.ueController) {
-      // Combo skill → ultimate energy gain from frames
-      if (ev.columnId === NounType.COMBO) {
-        for (const seg of ev.segments) {
-          for (const f of seg.frames ?? []) {
-            // Re-resolve raw ValueNode with loadout context for VARY_BY TALENT_LEVEL / POTENTIAL
-            let selfGain = f.ultimateEnergyGain ?? 0;
-            if (f.ultimateEnergyGainNode) {
-              const ctx = this.buildUltimateEnergyValueContext(ev);
-              selfGain = resolveValueNode(f.ultimateEnergyGainNode, ctx);
-            }
-            const teamGain = f.teamUltimateEnergyGain ?? 0;
-            if ((selfGain > 0 || teamGain > 0) && f.absoluteFrame != null) {
-              this.ueController.addUltimateEnergyGain(f.absoluteFrame, ev.ownerId, selfGain, teamGain);
-            }
-          }
-        }
-      }
-
-      // Battle skill → frame-level ultimateEnergyGain markers (not SP-based)
-      if (ev.columnId === NounType.BATTLE) {
-        for (const seg of ev.segments) {
-          for (const f of seg.frames ?? []) {
-            let selfGain = f.ultimateEnergyGain ?? 0;
-            if (f.ultimateEnergyGainNode) {
-              const ctx = this.buildUltimateEnergyValueContext(ev);
-              selfGain = resolveValueNode(f.ultimateEnergyGainNode, ctx);
-            }
-            if (selfGain > 0 && f.absoluteFrame != null) {
-              this.ueController.addUltimateEnergyGain(f.absoluteFrame, ev.ownerId, selfGain, 0);
-            }
-          }
-        }
-      }
-
-      // Ultimate event → consume + no-gain windows + frame-level ultimateEnergyGain
+      // Ultimate event → consume + no-gain windows (event-level only,
+      // frame-level UE gain comes through the clause path)
       if (ev.columnId === NounType.ULTIMATE) {
         this.ueController.addConsume(ev.startFrame, ev.ownerId);
         const windows = collectNoGainWindowsForEvent(ev);
         for (const w of windows) {
           this.ueController.addNoGainWindow(w.start, w.end, ev.ownerId);
         }
-        // Frame-level ultimateEnergyGain (e.g. Avywenna ult throws thunderlance EX → talent UE recovery)
-        for (const seg of ev.segments) {
-          for (const f of seg.frames ?? []) {
-            let selfGain = f.ultimateEnergyGain ?? 0;
-            if (f.ultimateEnergyGainNode) {
-              const ctx = this.buildUltimateEnergyValueContext(ev);
-              selfGain = resolveValueNode(f.ultimateEnergyGainNode, ctx);
-            }
-            if (selfGain > 0 && f.absoluteFrame != null) {
-              this.ueController.addUltimateEnergyGain(f.absoluteFrame, ev.ownerId, selfGain, 0);
-            }
-          }
-        }
-      }
-
-      // Derived status event with a source operator (e.g. THUNDERLANCE_PIERCE
-       // applied to enemy by Avywenna's BS) → frame-level ultimateEnergyGain
-       // routed to the source operator, with VARY_BY TL/POT resolved against
-       // the source operator's loadout and multiplied by the event's stack count.
-      if (
-        ev.sourceOwnerId
-        && ev.sourceOwnerId !== ev.ownerId
-        && ev.columnId !== NounType.COMBO
-        && ev.columnId !== NounType.BATTLE
-        && ev.columnId !== NounType.ULTIMATE
-      ) {
-        // sourceOwnerId is an operator ID (set via interpretor.resolveOperatorId);
-        // resolve it back to the slot ID that owns the UE pool.
-        let sourceSlotId: string | undefined = this.loadoutProperties[ev.sourceOwnerId]
-          ? ev.sourceOwnerId
-          : undefined;
-        if (!sourceSlotId) {
-          for (const [slotId, operatorId] of Object.entries(this.slotOperatorMap)) {
-            if (operatorId === ev.sourceOwnerId) { sourceSlotId = slotId; break; }
-          }
-        }
-        if (sourceSlotId) {
-          const sourceProps = this.loadoutProperties[sourceSlotId];
-          const stackCount = ev.stacks ?? 1;
-          for (const seg of ev.segments) {
-            for (const f of seg.frames ?? []) {
-              let selfGain = f.ultimateEnergyGain ?? 0;
-              if (f.ultimateEnergyGainNode && sourceProps) {
-                const ctx = buildContextForSkillColumn(sourceProps, NounType.BATTLE);
-                selfGain = resolveValueNode(f.ultimateEnergyGainNode, ctx);
-              }
-              if (selfGain > 0 && f.absoluteFrame != null) {
-                this.ueController.addUltimateEnergyGain(
-                  f.absoluteFrame, sourceSlotId, selfGain * stackCount, 0,
-                );
-              }
-            }
-          }
-        }
       }
 
       // Status/talent events with IGNORE ULTIMATE_ENERGY clause → self-only UE gain
       if (ev.id && ev.columnId !== NounType.ULTIMATE) {
-        const statusDef = getAllOperatorStatuses().find(s => s.id === ev.id);
+        const statusDef = getStatusDef(ev.id);
         if (statusDef?.clause) {
           const hasIgnoreUE = (statusDef.clause as { effects?: { verb?: string; object?: string }[] }[])
             .some(c => c.effects?.some(e => e.verb === VerbType.IGNORE && e.object === NounType.ULTIMATE_ENERGY));

@@ -2,7 +2,6 @@ import { t } from '../locales/locale';
 
 export enum QueueFrameType {
   PROCESS_FRAME = 'PROCESS_FRAME',
-  ENGINE_TRIGGER = 'ENGINE_TRIGGER',
   COMBO_RESOLVE = 'COMBO_RESOLVE',
   STATUS_EXIT = 'STATUS_EXIT',
 }
@@ -12,6 +11,21 @@ export enum FrameHookType {
   EVENT_END = 'EVENT_END',
   SEGMENT_START = 'SEGMENT_START',
   SEGMENT_END = 'SEGMENT_END',
+  // Phase 4a — synthetic-frame hook surface for the unified dispatcher.
+  // These land as part of the dispatcher infrastructure; call sites are
+  // switched over in Phases 4b (skill-level) / 4c (status) / 4d (reactive).
+  /** Per-frame marker clause dispatch (replaces inline loops at :2155). */
+  ON_FRAME = 'ON_FRAME',
+  /** Reactive trigger firing (replaces handleEngineTrigger inline dispatch). */
+  ON_TRIGGER = 'ON_TRIGGER',
+  /** Status creation (onEntryClause) — runs once when a status event is applied. */
+  STATUS_ENTRY = 'STATUS_ENTRY',
+  /** Status passive clause — runs once per status instance at creation time. */
+  STATUS_PASSIVE = 'STATUS_PASSIVE',
+  /** Status expiry (onExitClause) — runs once when a status event ends. */
+  STATUS_EXIT = 'STATUS_EXIT',
+  /** Talent passive seed — runs at pipeline start to apply operator talent stats. */
+  TALENT_SEED = 'TALENT_SEED',
 }
 
 

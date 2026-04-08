@@ -10,9 +10,11 @@ import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from '../calculation/valueRes
 import { StatusType, UnitType } from '../../consts/enums';
 import { StatType } from '../../model/enums/stats';
 import { TimelineEvent } from '../../consts/viewTypes';
-import { ENEMY_OWNER_ID, INFLICTION_COLUMNS, PHYSICAL_INFLICTION_COLUMNS, PHYSICAL_STATUS_COLUMNS, PHYSICAL_STATUS_COLUMN_IDS, REACTION_COLUMNS, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID, SKILL_COLUMN_ORDER } from '../../model/channels';
+import { ENEMY_OWNER_ID, PHYSICAL_STATUS_COLUMNS, REACTION_COLUMNS, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID, SKILL_COLUMN_ORDER } from '../../model/channels';
 import { COMMON_OWNER_ID } from '../slot/commonSlotController';
 import { activeEventsAtFrame, activeCountAtFrame } from './timelineQueries';
+import { resolveColumnIds } from './columnResolution';
+export { resolveColumnIds };
 
 // ── Stat-based state adjective mapping ────────────────────────────────────
 // Maps state adjectives to their underlying stat for IS/BECOME evaluation.
@@ -23,14 +25,7 @@ const ADJECTIVE_TO_STAT: Partial<Record<string, StatType>> = {
 };
 
 // ── Column ID resolution ─────────────────────────────────────────────────
-
-const ELEMENT_TO_INFLICTION_COLUMN: Record<string, string> = {
-  HEAT:       INFLICTION_COLUMNS.HEAT,
-  CRYO:       INFLICTION_COLUMNS.CRYO,
-  NATURE:     INFLICTION_COLUMNS.NATURE,
-  ELECTRIC:   INFLICTION_COLUMNS.ELECTRIC,
-  VULNERABLE: PHYSICAL_INFLICTION_COLUMNS.VULNERABLE,
-};
+// Canonical `resolveColumnIds` lives in `./columnResolution.ts`.
 
 const SKILL_TYPE_TO_COLUMN: Record<string, string> = {
   BASIC_ATTACK:  NounType.BASIC_ATTACK,
@@ -99,35 +94,9 @@ function resolveOwnerId(subject: string, ctx: ConditionContext, determiner?: str
   }
 }
 
-// ── Column resolution for status/infliction objectId ─────────────────────
-
-export function resolveColumnIds(object: string, objectId?: string, qualifier?: string): string[] {
-  // Direct object form: object=INFLICTION qualifier=ARTS → all arts infliction columns
-  if (object === NounType.INFLICTION) {
-    if (qualifier === AdjectiveType.ARTS) return Object.values(INFLICTION_COLUMNS);
-    if (qualifier) { const c = ELEMENT_TO_INFLICTION_COLUMN[qualifier]; return c ? [c] : []; }
-    return Object.values(INFLICTION_COLUMNS);
-  }
-  if (object !== NounType.STATUS || !objectId) return [];
-
-  // Category-based: objectId is the category, qualifier narrows it
-  if (objectId === NounType.INFLICTION) {
-    if (qualifier === AdjectiveType.ARTS) return Object.values(INFLICTION_COLUMNS);
-    if (qualifier) { const c = ELEMENT_TO_INFLICTION_COLUMN[qualifier]; return c ? [c] : []; }
-    return Object.values(INFLICTION_COLUMNS);
-  }
-  if (objectId === NounType.REACTION) {
-    if (qualifier) { const c = (REACTION_COLUMNS as Record<string, string>)[qualifier]; return c ? [c] : []; }
-    return Object.values(REACTION_COLUMNS);
-  }
-  if (objectId === AdjectiveType.PHYSICAL) {
-    if (qualifier) return [qualifier];
-    return Array.from(PHYSICAL_STATUS_COLUMN_IDS);
-  }
-
-  // Specific status ID — qualifier doesn't affect column resolution
-  return [objectId];
-}
+// `resolveColumnIds` is canonical in `./columnResolution.ts` — imported at
+// the top of this file and re-exported there so existing imports from
+// conditionEvaluator keep working.
 
 // ── Threshold resolution ─────────────────────────────────────────────────
 

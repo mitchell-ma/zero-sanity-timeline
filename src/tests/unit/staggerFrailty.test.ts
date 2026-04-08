@@ -15,6 +15,7 @@ import { StaggerTimeline } from '../../controller/timeline/staggerTimeline';
 import { DerivedEventController } from '../../controller/timeline/derivedEventController';
 import { EventsQueryService } from '../../controller/timeline/eventsQueryService';
 import { StaggerController } from '../../controller/slot/staggerController';
+import { buildDealStaggerClause } from '../../controller/timeline/clauseQueries';
 import { NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID, ENEMY_OWNER_ID } from '../../model/channels';
 import { StatType, SegmentType, TimeDependency } from '../../consts/enums';
 import { getStaggerMultiplier } from '../../model/calculation/damageFormulas';
@@ -397,7 +398,7 @@ describe('F. StaggerController.sync', () => {
         properties: { duration: 120 },
         frames: [{
           offsetFrame: 0,
-          stagger: staggerValue,
+          clauses: [buildDealStaggerClause(staggerValue)],
         }],
       }],
     };
@@ -475,7 +476,7 @@ describe('F. StaggerController.sync', () => {
           properties: { duration: 200 },
           frames: [{
             offsetFrame: 20,
-            stagger: 35,
+            clauses: [buildDealStaggerClause(35)],
           }],
         },
       ],

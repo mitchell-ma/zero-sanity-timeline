@@ -10,6 +10,7 @@ import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../slot/commonSlotController
 import { FPS, TOTAL_FRAMES } from '../../utils/timeline';
 import GENERAL_MECHANICS from '../../model/game-data/generalMechanics.json';
 import { SkillSegmentBuilder } from '../events/basicAttackController';
+import { buildDealStaggerClause, stripStaggerClauses, buildDealDamageClause } from './clauseQueries';
 import { getFrameSequences, getSegmentLabels, getOperatorSkill, getOperatorSkills, getRawSkillTypeMap, getEnabledStatusEvents } from '../gameDataStore';
 import { getLinksForSlot } from '../custom/customSkillLinkController';
 import { getCustomSkills } from '../custom/customSkillController';
@@ -529,9 +530,6 @@ export function buildColumns(
               name: skill.name,
               segments: skill.defaultSegments,
               triggerCondition: skill.triggerCondition,
-              ultimateEnergyGain: skill.ultimateEnergyGain,
-              teamUltimateEnergyGain: skill.teamUltimateEnergyGain,
-              ...(skill.ultimateEnergyGainByEnemies ? { ultimateEnergyGainByEnemies: skill.ultimateEnergyGainByEnemies } : {}),
               ...(skillType === NounType.ULTIMATE && slot.potential != null ? { operatorPotential: slot.potential } : {}),
               ...(skillType === NounType.BATTLE && skill.skillPointCost != null ? { skillPointCost: skill.skillPointCost } : {}),
               ...(() => { const sp = op ? collectSuppliedParameters(getOperatorSkill(op.id, skill.name)?.suppliedParameters, skill.defaultSegments) : undefined; return sp ? { suppliedParameters: sp } : {}; })(),
@@ -592,7 +590,7 @@ export function buildColumns(
                   col.eventVariants.push({
                     id: categoryId,
                     name: categoryId,
-                    segments: [{ properties: { duration: fallbackFrames, name: label ?? categoryId }, frames: [{ offsetFrame: fallbackFrames, skillPointRecovery: 0, stagger: 0, frameTypes: [fallbackType] }] }],
+                    segments: [{ properties: { duration: fallbackFrames, name: label ?? categoryId }, frames: [{ offsetFrame: fallbackFrames, frameTypes: [fallbackType] }] }],
                   });
                   continue;
                 }
@@ -641,15 +639,13 @@ export function buildColumns(
             const bsLabels = getSegmentLabels(op.id, skill.name);
             const baseSeg = SkillSegmentBuilder.buildSegments(
               getFrameSequences(op.id, skill.name),
-              { labels: bsLabels, ultimateEnergyGain: skill.ultimateEnergyGain, teamUltimateEnergyGain: skill.teamUltimateEnergyGain, ctx: skillCtx },
+              { labels: bsLabels, ctx: skillCtx },
             );
             col.defaultEvent = {
               ...col.defaultEvent!,
               id: skill.name,
               name: skill.name,
               segments: baseSeg.segments,
-              ultimateEnergyGain: skill.ultimateEnergyGain,
-              teamUltimateEnergyGain: skill.teamUltimateEnergyGain,
             };
             const baseSkillObj = getOperatorSkill(op.id, skill.name);
             const baseBsParams = collectSuppliedParameters(baseSkillObj?.suppliedParameters, baseSeg.segments);
@@ -662,20 +658,18 @@ export function buildColumns(
               if (!varSkill) continue;
               const variantSeqs = getFrameSequences(op.id, varId);
               if (!variantSeqs?.length) continue;
-              // Enhanced variants default to 0 ultimate energy gain; empowered inherits base
-              const isEnhanced = suffix.includes('ENHANCED');
-              const gg = isEnhanced ? 0 : skill.ultimateEnergyGain;
-              const tgg = isEnhanced ? 0 : skill.teamUltimateEnergyGain;
               const varLabels = getSegmentLabels(op.id, varId);
-              const variantSeg = SkillSegmentBuilder.buildSegments(variantSeqs, { labels: varLabels, ultimateEnergyGain: gg, teamUltimateEnergyGain: tgg, ctx: skillCtx });
+              const variantSeg = SkillSegmentBuilder.buildSegments(variantSeqs, { labels: varLabels, ctx: skillCtx });
               // Apply frame modifications if defined on the variant
               if (varSkill.frameModifications) {
-                for (const fm of varSkill.frameModifications as { segmentIndex: number; frameIndex: number; stagger?: number; ultimateEnergyGain?: number; consumeStatus?: string; removeConsumeArtsInfliction?: boolean; spReturnP1?: number }[]) {
+                for (const fm of varSkill.frameModifications as { segmentIndex: number; frameIndex: number; stagger?: number; consumeStatus?: string; removeConsumeArtsInfliction?: boolean; spReturnP1?: number }[]) {
                   const seg = variantSeg.segments[fm.segmentIndex];
                   const frame = seg?.frames?.[fm.frameIndex];
                   if (frame) {
-                    if (fm.stagger != null) frame.stagger = fm.stagger;
-                    if (fm.ultimateEnergyGain != null) frame.ultimateEnergyGain = fm.ultimateEnergyGain;
+                    if (fm.stagger != null) {
+                      const stripped = stripStaggerClauses(frame.clauses);
+                      frame.clauses = [...(stripped ?? []), buildDealStaggerClause(fm.stagger)];
+                    }
                   }
                 }
               }
@@ -692,8 +686,6 @@ export function buildColumns(
                 segments: variantSeg.segments,
                 ...(varSkill.triggerCondition ? { triggerCondition: varSkill.triggerCondition as string } : {}),
                 ...(varSkill.activationClause ? { activationClause: varSkill.activationClause as Predicate[] } : {}),
-                ultimateEnergyGain: gg,
-                teamUltimateEnergyGain: tgg,
                 ...(varParams ? { suppliedParameters: varParams } : {}),
               });
             }
@@ -711,7 +703,7 @@ export function buildColumns(
           // Generic battle skill: data-driven frame sequences
           const battleSeqs = op && battleName ? getFrameSequences(op.id, battleName) : undefined;
           if (battleSeqs?.length && skillType === NounType.BATTLE && !hasBattleVariants) {
-            const seg = SkillSegmentBuilder.buildSegments(battleSeqs, { ultimateEnergyGain: skill.ultimateEnergyGain, teamUltimateEnergyGain: skill.teamUltimateEnergyGain, ctx: skillCtx });
+            const seg = SkillSegmentBuilder.buildSegments(battleSeqs, { ctx: skillCtx });
             // Only append cooldown if the data-driven segments don't already include one
             const hasBattleCdSegment = seg.segments.some(s => s.properties.segmentTypes?.includes(SegmentType.COOLDOWN));
             let battleSegments: import('../../consts/viewTypes').EventSegmentData[];
@@ -779,9 +771,7 @@ export function buildColumns(
                 const labels = getSegmentLabels(op.id, cs.id);
                 const eTypes = cs.enhancementTypes ?? [];
                 const isEnhanced = eTypes.includes(EnhancementType.ENHANCED);
-                const gg = isEnhanced ? 0 : skill.ultimateEnergyGain;
-                const tgg = isEnhanced ? 0 : skill.teamUltimateEnergyGain;
-                const seg = SkillSegmentBuilder.buildSegments(seqs, { labels, ultimateEnergyGain: gg, teamUltimateEnergyGain: tgg, ultimateEnergyGainByEnemies: skill.ultimateEnergyGainByEnemies, ctx: skillCtx });
+                const seg = SkillSegmentBuilder.buildSegments(seqs, { labels, ctx: skillCtx });
                 const enhancementType = eTypes.includes(EnhancementType.EMPOWERED) ? EnhancementType.EMPOWERED
                   : isEnhanced ? EnhancementType.ENHANCED
                   : EnhancementType.NORMAL;
@@ -795,8 +785,6 @@ export function buildColumns(
                   enhancementType,
                   segments: seg.segments,
                   ...(raw.activationClause ? { activationClause: raw.activationClause as Predicate[] } : {}),
-                  ultimateEnergyGain: gg,
-                  teamUltimateEnergyGain: tgg,
                   ...(comboParams ? { suppliedParameters: comboParams } : {}),
                 });
               }
@@ -958,7 +946,7 @@ export function buildColumns(
         properties: { duration: 240, name: `Deal ${objectQualifier} DMG`, element },
         frames: [{
           offsetFrame: 0,
-          dealDamage: { element, multipliers: [] },
+          clauses: [buildDealDamageClause({ multiplier: 1, element })],
         }],
       }],
     })),

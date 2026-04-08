@@ -16,7 +16,6 @@ import {
   getOperatorBase,
   getSkillTypeMap,
   getSkillTimings as loadSkillTimings,
-  getSkillUltimateEnergyGains as loadSkillUltimateEnergyGains,
   getUltimateEnergyCost as loadUltimateEnergyCost,
   getBattleSkillSpCost as loadBattleSkillSpCost,
 } from '../gameDataStore';
@@ -76,7 +75,6 @@ const PLACEHOLDER_EQUIPMENT = {
  */
 function buildViewOperatorFromJson(operatorId: string, opJson: Record<string, unknown>): ViewOperator {
   const timings = loadSkillTimings(opJson);
-  const gg = loadSkillUltimateEnergyGains(opJson);
   const elementType = opJson.elementType as string;
   const talents = opJson.talents as {
     one?: { name: string; maxLevel: number };
@@ -143,16 +141,6 @@ function buildViewOperatorFromJson(operatorId: string, opJson: Record<string, un
   if (skills[NounType.BATTLE]) {
     const spCost = loadBattleSkillSpCost(opJson);
     if (spCost > 0) skills[NounType.BATTLE] = { ...skills[NounType.BATTLE], skillPointCost: spCost };
-  }
-
-  // Ultimate energy gains
-  if (skills[NounType.COMBO]) {
-    skills[NounType.COMBO] = {
-      ...skills[NounType.COMBO],
-      ultimateEnergyGain: gg.comboUltimateEnergyGain,
-      teamUltimateEnergyGain: gg.comboTeamUltimateEnergyGain,
-      ...(gg.comboUltimateEnergyGainByEnemies ? { ultimateEnergyGainByEnemies: gg.comboUltimateEnergyGainByEnemies } : {}),
-    };
   }
 
   // SP return notes from JSON (resolve via skillTypeMap)

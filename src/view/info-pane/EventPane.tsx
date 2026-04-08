@@ -13,6 +13,7 @@ import { getOperatorSkill } from '../../controller/gameDataStore';
 import { DataCardBody, FrameCritState, EditState, EditableValue } from '../custom/DataCardComponents';
 import type { OverrideStore } from '../../consts/overrideTypes';
 import { buildOverrideKey } from '../../controller/overrideController';
+import { findUltimateEnergyGainInClauses, findSkillPointRecoveryInClauses, findStaggerInClauses } from '../../controller/timeline/clauseQueries';
 import { ENEMY_OWNER_ID, OPERATOR_COLUMNS, REACTION_COLUMN_IDS, SKILL_COLUMN_ORDER } from '../../model/channels';
 import { getLastController } from '../../controller/timeline/eventQueueController';
 import type { DamageTableRow } from '../../controller/calculation/damageTableBuilder';
@@ -305,40 +306,6 @@ function EventPane({
                 <span className="ops-field-value">
                   {event.isPerfectDodge ? 'Dodge \u2014 Time Stop, +7.5 SP' : 'Dash'}
                 </span>
-              </div>
-            );
-          }
-
-          if (event.ultimateEnergyGainByEnemies) {
-            const variants = Object.keys(event.ultimateEnergyGainByEnemies)
-              .map(Number)
-              .sort((a, b) => a - b);
-            skillRows.push(
-              <div key="enemiesHit" className="ops-field">
-                <span className="ops-field-label">Enemies Hit</span>
-                <select
-                  className="edit-input"
-                  style={{ width: '100%' }}
-                  value={event.enemiesHit ?? 1}
-                  disabled={readOnly}
-                  onChange={(e) => {
-                    const n = Number(e.target.value);
-                    const gain = event.ultimateEnergyGainByEnemies![n] ?? event.ultimateEnergyGainByEnemies![1] ?? 0;
-                    const segments = event.segments ? [...event.segments] : [];
-                    if (segments[0]?.frames?.[0]) {
-                      const updatedFrames = [...segments[0].frames];
-                      updatedFrames[0] = { ...updatedFrames[0], ultimateEnergyGain: gain };
-                      segments[0] = { ...segments[0], frames: updatedFrames };
-                    }
-                    onUpdate(event.uid, { enemiesHit: n, ultimateEnergyGain: gain, segments });
-                  }}
-                >
-                  {variants.map((n) => (
-                    <option key={n} value={n}>
-                      {n} \u2014 {event.ultimateEnergyGainByEnemies![n]} Ultimate Energy
-                    </option>
-                  ))}
-                </select>
               </div>
             );
           }
@@ -808,9 +775,18 @@ function DebugPane({ event, processedEvent, rawEvents, allProcessedEvents }: { e
                               })()}
                             </div>
                           )}
-                          {dFrame.skillPointRecovery != null && <div>sp: {dFrame.skillPointRecovery}</div>}
-                          {dFrame.stagger != null && <div>stagger: {dFrame.stagger}</div>}
-                          {dFrame.ultimateEnergyGain != null && <div>gauge: {dFrame.ultimateEnergyGain}</div>}
+                          {(() => {
+                            const sp = findSkillPointRecoveryInClauses(dFrame.clauses);
+                            return sp != null ? <div>sp: {sp}</div> : null;
+                          })()}
+                          {(() => {
+                            const stag = findStaggerInClauses(dFrame.clauses);
+                            return stag != null ? <div>stagger: {stag}</div> : null;
+                          })()}
+                          {(() => {
+                            const gauge = findUltimateEnergyGainInClauses(dFrame.clauses);
+                            return gauge != null ? <div>gauge: {gauge}</div> : null;
+                          })()}
                           {dFrame.isCrit != null && <div>isCrit: {String(dFrame.isCrit)}</div>}
                         </div>
                       );

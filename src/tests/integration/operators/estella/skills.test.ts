@@ -34,6 +34,8 @@ import {
 } from '../../../../model/channels';
 import { getUltimateEnergyCostForPotential } from '../../../../controller/operators/operatorRegistry';
 import { findColumn, buildContextMenu, getMenuPayload, getAddEventPayload, setUltimateEnergyToMax } from '../../helpers';
+import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../../../../controller/slot/commonSlotController';
+import { preConsumptionValue } from '../../../../controller/timeline/eventValidator';
 import type { AppResult } from '../../helpers';
 
 /* eslint-disable @typescript-eslint/no-require-imports */
@@ -555,12 +557,14 @@ describe('G. Commiseration SP return (Estella BS only)', () => {
       );
     });
 
-    // Battle skill fired — the status should have been consumed at/after the BS start
-    // frame. Look for any active Commiseration after the BS frame.
+    // Battle skill fired — the status should have been consumed during the BS animation
+    // (frame clause runs at offset 0.7s). Verify nothing is active well past BS end.
+    const checkFrame = 12 * FPS;
     const active = result.current.allProcessedEvents.filter(
       (ev) => ev.columnId === COMMISERATION_ID
         && ev.ownerId === SLOT_ESTELLA
-        && ev.startFrame + (ev.segments?.[0]?.properties?.duration ?? 0) > 8 * FPS,
+        && ev.startFrame <= checkFrame
+        && ev.startFrame + eventDuration(ev) > checkFrame,
     );
     expect(active.length).toBe(0);
   });
@@ -587,35 +591,44 @@ describe('G. Commiseration SP return (Estella BS only)', () => {
       );
     });
 
-    // After BS, no Commiseration event should remain active past the BS frame —
-    // CONSUME truncates the event so its end ≤ bsFrame.
+    // After BS animation, no Commiseration event should remain active —
+    // CONSUME truncates the event so its end ≤ frame at which the consume runs.
+    const checkFrame = bsFrame + 4 * FPS;
     const stillActive = result.current.allProcessedEvents.filter(
       (ev) => ev.columnId === COMMISERATION_ID
         && ev.ownerId === SLOT_ESTELLA
-        && ev.startFrame + eventDuration(ev) > bsFrame,
+        && ev.startFrame <= checkFrame
+        && ev.startFrame + eventDuration(ev) > checkFrame,
     );
     expect(stillActive.length).toBe(0);
   });
 
-  it('G4: Commiseration second clause carries RETURN SKILL_POINT VARY_BY TALENT_LEVEL [7.5, 15]', () => {
-    /* eslint-disable @typescript-eslint/no-require-imports */
-    const TALENT_JSON = require(
-      '../../../../model/game-data/operators/estella/talents/talent-commiseration-talent.json',
-    );
-    /* eslint-enable @typescript-eslint/no-require-imports */
-    const consumeClause = TALENT_JSON.onTriggerClause[1];
-    const returnEffect = consumeClause.effects.find(
-      (e: { verb: string; object: string }) => e.verb === 'RETURN' && e.object === 'SKILL_POINT',
-    );
-    expect(returnEffect).toBeDefined();
-    expect(returnEffect.with.value.verb).toBe('VARY_BY');
-    expect(returnEffect.with.value.object).toBe('TALENT_LEVEL');
-    expect(returnEffect.with.value.value).toEqual([7.5, 15]);
-    // The clause must also CONSUME the talent event so the SP return is gated.
-    const consumeEffect = consumeClause.effects.find(
-      (e: { verb: string; object: string }) => e.verb === 'CONSUME' && e.object === 'EVENT',
-    );
-    expect(consumeEffect).toBeDefined();
+  it('G4: Commiseration RETURN routes through DEC and adds SP to the graph at the BS frame', () => {
+    const SP_KEY = `${COMMON_OWNER_ID}-${COMMON_COLUMN_IDS.SKILL_POINTS}`;
+    const bsFrame = 8 * FPS;
+    // BS frame's RETURN clause runs at offset 0.7s after the BS placement frame.
+    const returnFrame = bsFrame + Math.round(0.7 * FPS);
+
+    const { result } = setupEstella();
+    act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
+    triggerCommiseration(result);
+    const bsCol = findColumn(result.current, SLOT_ESTELLA, NounType.BATTLE);
+    const bsPayload = getMenuPayload(result.current, bsCol!, bsFrame);
+    act(() => {
+      result.current.handleAddEvent(
+        bsPayload.ownerId, bsPayload.columnId, bsPayload.atFrame, bsPayload.defaultSkill,
+      );
+    });
+
+    const graph = result.current.resourceGraphs.get(SP_KEY);
+    const spJustBefore = preConsumptionValue(graph, returnFrame - 1)!;
+    const spJustAfter = preConsumptionValue(graph, returnFrame + 1)!;
+    // Default Estella loadout has talentOneLevel = maxTalentOneLevel = 2 → T2 → 15 SP.
+    // The instantaneous step at the RETURN frame should equal +15 (single-frame
+    // natural regen is < 0.1, well within tolerance).
+    // Tolerance accommodates ~0.13 SP of natural regen between the two sample frames.
+    expect(spJustAfter - spJustBefore).toBeGreaterThan(14.9);
+    expect(spJustAfter - spJustBefore).toBeLessThan(15.5);
   });
 });
 

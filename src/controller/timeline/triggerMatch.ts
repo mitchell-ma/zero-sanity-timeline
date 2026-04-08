@@ -21,6 +21,7 @@ import { STATE_TO_COLUMN } from './triggerIndex';
 import { FPS, TOTAL_FRAMES } from '../../utils/timeline';
 import { getFinalStrikeTriggerFrame } from './processComboSkill';
 import { evaluateInteraction } from './conditionEvaluator';
+import { hasSkillPointClause, findDealDamageInClauses } from './clauseQueries';
 import type { ConditionContext } from './conditionEvaluator';
 import type { TimeStopRegion } from './processTimeStop';
 import { VerbType, NounType, DeterminerType, CardinalityConstraintType } from '../../dsl/semantics';
@@ -393,7 +394,7 @@ function handleRecover(primaryCond: Predicate, ctx: VerbHandlerContext): Trigger
       for (const seg of ev.segments) {
         if (seg.frames) {
           for (const frame of seg.frames) {
-            if (frame.skillPointRecovery && frame.skillPointRecovery > 0) {
+            if (hasSkillPointClause(frame.clauses)) {
               const triggerFrame = ev.startFrame + cumulativeOffset + frame.offsetFrame;
               if (!checkSecondary(ctx, triggerFrame, ev.ownerId)) continue;
               matches.push(makeMatch(triggerFrame, ev, ctx.clauseEffects));
@@ -566,7 +567,10 @@ function handleDeal(primaryCond: Predicate, ctx: VerbHandlerContext): TriggerMat
       if (seg.frames) {
         for (const frame of seg.frames) {
           // Filter by damage element when qualifier is an element (CRYO, HEAT, etc.)
-          if (qualifier && frame.dealDamage?.element && frame.dealDamage.element !== qualifier) continue;
+          if (qualifier) {
+            const dealInfo = findDealDamageInClauses(frame.clauses);
+            if (dealInfo?.element && dealInfo.element !== qualifier) continue;
+          }
           const triggerFrame = ev.startFrame + cumulativeOffset + frame.offsetFrame;
           if (!checkSecondary(ctx, triggerFrame, ev.ownerId)) continue;
           matches.push(makeMatch(triggerFrame, ev, ctx.clauseEffects));

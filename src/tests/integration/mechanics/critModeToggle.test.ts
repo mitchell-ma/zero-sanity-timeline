@@ -16,6 +16,7 @@ import { NounType } from '../../../dsl/semantics';
 import { CritMode } from '../../../consts/enums';
 import { FPS } from '../../../utils/timeline';
 import { runCalculation } from '../../../controller/calculation/calculationController';
+import { hasDealDamageClause } from '../../../controller/timeline/clauseQueries';
 import { findColumn, getMenuPayload } from '../helpers';
 import type { AppResult } from '../helpers';
 
@@ -98,7 +99,7 @@ describe('Crit Mode Toggle — damage calculation per mode', () => {
       for (const seg of ev.segments) {
         if (!seg.frames) continue;
         for (const f of seg.frames) {
-          if (!f.damageMultiplier && !f.dealDamage) continue;
+          if (!hasDealDamageClause(f.clauses)) continue;
           expect(f.isCrit).toBe(false);
         }
       }

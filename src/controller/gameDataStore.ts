@@ -129,13 +129,9 @@ import {
   DataDrivenSkillEventSequence,
   getSkillTimings,
   getUltimateEnergyCost,
-  getSkillUltimateEnergyGains,
   getBattleSkillSpCost,
-  getSkillCategoryData,
   getBasicAttackDurations,
   type SkillTimings,
-  type SkillUltimateEnergyGains,
-  type SkillCategoryData,
 
   // Gear set data
   getGearSetData,
@@ -185,8 +181,6 @@ export type {
   ComboTriggerInfo,
   StatusIdEntry,
   SkillTimings,
-  SkillUltimateEnergyGains,
-  SkillCategoryData,
   GearSetData,
   GearPieceData,
 };
@@ -292,7 +286,7 @@ export { getTeamStatusIds };
 // ── Frame pipeline ──────────────────────────────────────────────────────────
 
 export { buildSequencesFromOperatorJson, DataDrivenSkillEventSequence };
-export { getSkillTimings, getUltimateEnergyCost, getSkillUltimateEnergyGains, getBattleSkillSpCost, getSkillCategoryData, getBasicAttackDurations };
+export { getSkillTimings, getUltimateEnergyCost, getBattleSkillSpCost, getBasicAttackDurations };
 
 // ── Gear set data ───────────────────────────────────────────────────────────
 

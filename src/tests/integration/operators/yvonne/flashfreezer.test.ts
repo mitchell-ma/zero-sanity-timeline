@@ -534,7 +534,10 @@ describe('I. Combo updates on loadout potential change', () => {
     expect(frame7.clauses).toBeDefined();
     expect(frame7.clauses!.length).toBeGreaterThanOrEqual(1);
     const effects = frame7.clauses![0].effects;
-    expect(effects.some(e => e.type === 'applyStagger')).toBe(true);
+    expect(effects.some(e => {
+      const dsl = (e as { dslEffect?: { verb?: string; object?: string } }).dslEffect;
+      return dsl?.verb === 'DEAL' && dsl?.object === 'STAGGER';
+    })).toBe(true);
   });
 
   it('I8: P0→P1→P0 round-trip preserves correct frame count and offsets', () => {

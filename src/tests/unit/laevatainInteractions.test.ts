@@ -78,6 +78,7 @@
 import { TimelineEvent } from '../../consts/viewTypes';
 import { EventFrameType, EventStatusType, StatusType } from '../../consts/enums';
 import { VerbType, ObjectType, NounType, AdjectiveType, DeterminerType } from '../../dsl/semantics';
+import { findStaggerInClauses } from '../../controller/timeline/clauseQueries';
 import { ENEMY_OWNER_ID, USER_ID, INFLICTION_COLUMNS } from '../../model/channels';
 import { buildSequencesFromOperatorJson, DataDrivenSkillEventSequence } from '../../controller/gameDataStore';
 import { wouldOverlapSiblings } from '../../controller/timeline/eventValidator';
@@ -327,7 +328,7 @@ describe('D. Combo Skill (Seethe) Triggers', () => {
     const frameSeq = sequences.find(s => s.getFrames().length > 0);
     expect(frameSeq).toBeDefined();
     const firstFrame = frameSeq!.getFrames()[0];
-    expect(firstFrame.getStagger()).toBe(10);
+    expect(findStaggerInClauses(firstFrame.getClauses())).toBe(10);
   });
 });
 
@@ -403,8 +404,14 @@ describe('E. Ultimate & Enhanced Variants', () => {
     const allFrames = sequences.flatMap(s => s.getFrames());
     expect(allFrames.length).toBe(11);
 
-    // Second frame (index 1) is a damage frame — it should not have ultimate energy gain
-    expect(allFrames[1].getUltimateEnergyGain()).toBe(0);
+    // Second frame (index 1) is a damage frame — it should not have a RECOVER
+    // ULTIMATE_ENERGY clause effect.
+    const clauses = allFrames[1].getClauses();
+    const hasUeRecover = clauses.some(p => p.effects.some(e => {
+      const dsl = (e as { dslEffect?: { verb?: string; object?: string } }).dslEffect;
+      return dsl?.verb === 'RECOVER' && dsl?.object === 'ULTIMATE_ENERGY';
+    }));
+    expect(hasUeRecover).toBe(false);
   });
 });
 
@@ -560,7 +567,7 @@ describe('K. Scorching Heart absorbs Antal combo mirrored heat', () => {
             segments: [
         { properties: { duration: 120, name: '1' } },
         { properties: { duration: 120, name: '2' } },
-        { properties: { duration: 120, name: '3' }, frames: [{ offsetFrame: 100, skillPointRecovery: 0, frameTypes: [EventFrameType.FINAL_STRIKE] }] },
+        { properties: { duration: 120, name: '3' }, frames: [{ offsetFrame: 100, frameTypes: [EventFrameType.FINAL_STRIKE] }] },
       ],
     });
 
@@ -628,7 +635,7 @@ describe('L. Freeform infliction + Final Strike absorption', () => {
             segments: [
         { properties: { duration: 120, name: '1' } },
         { properties: { duration: 120, name: '2' } },
-        { properties: { duration: 120, name: '3' }, frames: [{ offsetFrame: 100, skillPointRecovery: 0, frameTypes: [EventFrameType.FINAL_STRIKE] }] },
+        { properties: { duration: 120, name: '3' }, frames: [{ offsetFrame: 100, frameTypes: [EventFrameType.FINAL_STRIKE] }] },
       ],
     };
 
@@ -665,7 +672,7 @@ describe('M. Normal basic attack without external infliction', () => {
             segments: [
         { properties: { duration: 120, name: '1' } },
         { properties: { duration: 120, name: '2' } },
-        { properties: { duration: 120, name: '3' }, frames: [{ offsetFrame: 100, skillPointRecovery: 0, frameTypes: [EventFrameType.FINAL_STRIKE] }] },
+        { properties: { duration: 120, name: '3' }, frames: [{ offsetFrame: 100, frameTypes: [EventFrameType.FINAL_STRIKE] }] },
       ],
     };
 

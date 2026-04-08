@@ -13,6 +13,7 @@ import type { Orientation } from '../utils/axisMap';
 import { LoadoutProperties } from '../view/InformationPane';
 import { OperatorLoadoutState } from '../view/OperatorLoadoutHeader';
 import { ALL_OPERATORS, getUltimateEnergyCost } from '../controller/operators/operatorRegistry';
+import { hasDealDamageClause } from '../controller/timeline/clauseQueries';
 import { ALL_ENEMIES, DEFAULT_ENEMY } from '../utils/enemies';
 import { TimelineEvent, VisibleSkills, ContextMenuState, SkillType, SelectedFrame, ResourceConfig, MiniTimeline, computeSegmentsSpan, eventEndFrame } from '../consts/viewTypes';
 import type { DamageTableRow } from '../controller/calculation/damageTableBuilder';
@@ -1206,7 +1207,7 @@ export function useApp() {
         if (!seg.frames) continue;
         for (let fi = 0; fi < seg.frames.length; fi++) {
           const frame = seg.frames[fi];
-          if (!frame.damageMultiplier && !frame.dealDamage) continue;
+          if (!hasDealDamageClause(frame.clauses)) continue;
           if (frame.damageType === DamageType.DAMAGE_OVER_TIME) continue;
           const isCrit = Math.random() < critRate;
           (isCrit ? critTargets : noCritTargets).push({ target: ev, segmentIndex: si, frameIndex: fi });

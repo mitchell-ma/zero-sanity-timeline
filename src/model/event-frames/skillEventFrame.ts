@@ -1,6 +1,6 @@
-import { EventFrameType, DamageScalingStatType } from "../../consts/enums";
-
 // ── Clause/predicate types (DSL v2) ──────────────────────────────────────────
+
+import { EventFrameType } from "../../consts/enums";
 
 /** A condition within a frame clause predicate. */
 export interface FrameCondition {
@@ -18,23 +18,15 @@ export interface FrameCondition {
   of?: import('../../dsl/semantics').OfClause;
 }
 
-/** Inline damage data from a DEAL DAMAGE effect. */
-export interface FrameDealDamage {
-  element?: string;          // "NATURE", "HEAT", etc.
-  multipliers: number[];     // per skill level (12 entries) — empty for compound expressions
-  mainStat?: DamageScalingStatType;
-  /** Raw ValueNode for compound multiplier expressions (MULT, ADD, etc.).
-   *  Resolved at damage-table-build time with full skill level + potential context. */
-  multiplierNode?: unknown;
-}
-
-/** A single effect within a clause predicate. */
+/**
+ * A single effect within a clause predicate. After Phase 0d, the only shape
+ * is `{ type: 'dsl', dslEffect: Effect }` — every effect routes through
+ * `interpret()` and downstream consumers read clause data via the
+ * `clauseQueries` helpers (`findDealDamageInClauses`, etc.).
+ */
 export interface FrameClauseEffect {
-  type: 'dsl' | 'dealDamage' | 'recoverSP' | 'applyStagger';
-  /** DSL effect routed through interpret(). */
+  type: 'dsl';
   dslEffect?: import('../../dsl/semantics').Effect;
-  /** Inline damage data (display-only, not engine-processed here). */
-  dealDamage?: FrameDealDamage;
 }
 
 /** A predicate: conditions (AND'd) → effects. Empty conditions = unconditional. */
@@ -48,12 +40,6 @@ export abstract class SkillEventFrame {
   /** Offset in seconds from the start of the parent sequence. */
   abstract getOffsetSeconds(): number;
 
-  /** Skill points recovered on this frame. */
-  abstract getSkillPointRecovery(): number;
-
-  /** Stagger damage dealt on this frame. */
-  abstract getStagger(): number;
-
   /** Element of damage dealt by this frame (for coloring), or null. */
   getDamageElement(): string | null { return null; }
 
@@ -66,12 +52,6 @@ export abstract class SkillEventFrame {
   /** Clause evaluation mode: 'FIRST_MATCH' stops after first matching conditional clause; default is 'ALL'. */
   getClauseType(): string | undefined { return undefined; }
 
-  /** Inline DEAL DAMAGE data (element + per-level multiplier array), or null. */
-  getDealDamage(): FrameDealDamage | null { return null; }
-
-  /** Ultimate energy gained on this frame, or 0. */
-  getUltimateEnergyGain(): number { return 0; }
-
   /** Frame dependency types. */
   getDependencyTypes(): readonly string[] { return []; }
 
@@ -81,21 +61,10 @@ export abstract class SkillEventFrame {
   /** Whether this frame scored a critical hit (runtime state for simulation mode). */
   isCrit = false;
 
-  /** Whether this frame deals damage. */
-  hasDealDamage(): boolean { return this.getDealDamage() != null; }
-
-  /** Whether this frame grants any skill points. */
-  hasSkillPointRecovery(): boolean { return this.getSkillPointRecovery() > 0; }
-
-  /** Whether this frame deals stagger damage. */
-  hasStagger(): boolean { return this.getStagger() > 0; }
-
   /** Convert to a view-layer EventFrameMarker. */
   toMarker(fps: number): import('../../consts/viewTypes').EventFrameMarker {
     const marker: import('../../consts/viewTypes').EventFrameMarker = {
       offsetFrame: Math.round(this.getOffsetSeconds() * fps),
-      skillPointRecovery: this.getSkillPointRecovery() || undefined,
-      stagger: this.getStagger() || undefined,
     };
     const dmgEl = this.getDamageElement();
     if (dmgEl) marker.damageElement = dmgEl;
@@ -106,12 +75,6 @@ export abstract class SkillEventFrame {
       const ct = this.getClauseType();
       if (ct) marker.clauseType = ct;
     }
-    const dd = this.getDealDamage();
-    if (dd) marker.dealDamage = dd;
-    const gg = this.getUltimateEnergyGain();
-    if (gg) marker.ultimateEnergyGain = gg;
-    const ggNode = (this as { getUltimateEnergyGainNode?: () => import('../../dsl/semantics').ValueNode | undefined }).getUltimateEnergyGainNode?.();
-    if (ggNode) marker.ultimateEnergyGainNode = ggNode;
     const deps = this.getDependencyTypes();
     if (deps.length > 0) marker.dependencyTypes = [...deps];
     const fts = this.getFrameTypes();

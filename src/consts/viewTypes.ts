@@ -1,5 +1,5 @@
 import { DamageFactorType, DamageType, ElementType, EnhancementType, EventFrameType, EventStatusType, InteractionModeType, SegmentType, TimeDependency } from './enums';
-import type { FrameClausePredicate, FrameDealDamage } from '../model/event-frames/skillEventFrame';
+import type { FrameClausePredicate } from '../model/event-frames/skillEventFrame';
 
 /** String union for the four operator combat skills, matching the data keys in operators.ts. */
 /** @deprecated Use NounType skill values directly. */
@@ -14,12 +14,6 @@ export interface SkillDef {
   /** Default segments for this skill. Optional — defaults to a single segment with the activation duration. */
   defaultSegments?: EventSegmentData[];
   triggerCondition: string | null;
-  /** Ultimate energy gained by this operator when skill is used. */
-  ultimateEnergyGain?: number;
-  /** Ultimate energy gained by all team operators when skill is used. */
-  teamUltimateEnergyGain?: number;
-  /** Per-enemy-count ultimate energy gain map (e.g. {1: 25, 2: 30, 3: 35}). */
-  ultimateEnergyGainByEnemies?: Record<number, number>;
   /** SP cost for battle skills. */
   skillPointCost?: number;
   /** Description of SP return mechanics (potentials, talents, gear effects). */
@@ -91,16 +85,10 @@ export interface EventFrameMarker {
   derivedOffsetFrame?: number;
   /** Pre-computed absolute frame position (set by processCombatSimulation). */
   absoluteFrame?: number;
-  /** SP recovered on this frame hit. */
-  skillPointRecovery?: number;
-  /** Stagger dealt on this frame hit. */
-  stagger?: number;
   /** Damage type: NORMAL (default) or DAMAGE_OVER_TIME (cannot crit). */
   damageType?: DamageType;
   /** Element of damage dealt by this frame (for coloring when no infliction). */
   damageElement?: string;
-  /** ATK multiplier for damage dealt by this frame (e.g. 1.2 = 120%). */
-  damageMultiplier?: number;
   /** Label for status-effect frames (e.g. "-12.0 Res"). Non-null marks this as a status frame rather than a damage frame. */
   statusLabel?: string;
   /** Whether this frame re-applies the trigger source (infliction or physical status) that caused the combo. */
@@ -111,8 +99,6 @@ export interface EventFrameMarker {
   clauseType?: string;
   /** True when all conditional clauses were evaluated and none matched (frame produced no effects). */
   frameSkipped?: boolean;
-  /** Inline DEAL DAMAGE data (element + per-level multipliers). */
-  dealDamage?: FrameDealDamage;
   /** Frame type classifications (defaults to [NORMAL]). */
   frameTypes?: EventFrameType[];
   /** Frame dependency types. */
@@ -131,14 +117,6 @@ export interface EventFrameMarker {
   templateFinalStrikeSP?: number;
   /** Template stagger for this frame when it is the final strike (from model data). */
   templateFinalStrikeStagger?: number;
-  /** Ultimate energy gained by this operator on this frame. */
-  ultimateEnergyGain?: number;
-  /** Ultimate energy gained by all team operators on this frame. */
-  teamUltimateEnergyGain?: number;
-  /** Per-enemy-count ultimate energy gain map (e.g. {1: 25, 2: 30, 3: 35}). */
-  ultimateEnergyGainByEnemies?: Record<number, number>;
-  /** Raw ValueNode for ultimate energy gain — stored when the value depends on suppliedParameters (VARY_BY). Resolved at runtime. */
-  ultimateEnergyGainNode?: import('../dsl/semantics').ValueNode;
 }
 
 /** Identifies a specific frame within a sequenced event. */
@@ -207,13 +185,7 @@ export interface TimelineEvent {
    * Default is 0 (no restriction — events can always overlap).
    */
   nonOverlappableRange?: number;
-  /** Ultimate energy gained by this operator when event fires. */
-  ultimateEnergyGain?: number;
-  /** Ultimate energy gained by all team operators when event fires. */
-  teamUltimateEnergyGain?: number;
-  /** Per-enemy-count ultimate energy gain map (e.g. {1: 25, 2: 30, 3: 35}). */
-  ultimateEnergyGainByEnemies?: Record<number, number>;
-  /** Number of enemies hit (selectable in info pane when ultimateEnergyGainByEnemies exists). */
+  /** Number of enemies hit (selectable in info pane). */
   enemiesHit?: number;
   /** User-supplied parameters available as VARY_BY dimensions on this event. */
   suppliedParameters?: Record<string, { id: string; name: string; lowerRange: number; upperRange: number; default: number }[]>;
@@ -384,12 +356,6 @@ export type MiniTimeline = {
     triggerCondition?: string | null;
     /** Segment definitions for this event. */
     segments?: EventSegmentData[];
-    /** Ultimate energy gained by this operator. */
-    ultimateEnergyGain?: number;
-    /** Ultimate energy gained by all team operators. */
-    teamUltimateEnergyGain?: number;
-    /** Per-enemy-count ultimate energy gain map. */
-    ultimateEnergyGainByEnemies?: Record<number, number>;
     /** How this event interacts with other timelines. */
     timeInteraction?: string;
     /** If true, this is a perfect dodge. */
@@ -420,12 +386,6 @@ export type MiniTimeline = {
     disabled?: boolean;
     /** Reason shown when disabled. */
     disabledReason?: string;
-    /** Ultimate energy gained by this operator. */
-    ultimateEnergyGain?: number;
-    /** Ultimate energy gained by all team operators. */
-    teamUltimateEnergyGain?: number;
-    /** Per-enemy-count ultimate energy gain map. */
-    ultimateEnergyGainByEnemies?: Record<number, number>;
     /** How this event interacts with other timelines. */
     timeInteraction?: string;
     /** If true, this is a perfect dodge. */

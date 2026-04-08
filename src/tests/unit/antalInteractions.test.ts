@@ -55,9 +55,10 @@
  *    - Combo skill activation: 3s
  *    - Ultimate active duration: 12s, cooldown: 25s
  */
-import { TimelineEvent } from '../../consts/viewTypes';
+import { TimelineEvent, eventDuration } from '../../consts/viewTypes';
 import { StatusType, SegmentType, TimeDependency } from '../../consts/enums';
 import { VerbType, ObjectType, NounType, AdjectiveType, DeterminerType } from '../../dsl/semantics';
+import { findStaggerInClauses } from '../../controller/timeline/clauseQueries';
 import type { Effect } from '../../dsl/semantics';
 import { INFLICTION_COLUMNS, ENEMY_OWNER_ID, COMBO_WINDOW_COLUMN_ID } from '../../model/channels';
 import { buildSequencesFromOperatorJson, DataDrivenSkillEventSequence } from '../../controller/gameDataStore';
@@ -341,7 +342,7 @@ describe('C. Combo Skill (EMP Test Site)', () => {
     // segments[0] is ANIMATION (no frames), segments[1] has the actual frames, segments[2] is COOLDOWN
     expect(sequences.length).toBeGreaterThanOrEqual(2);
     const firstFrame = sequences[1].getFrames()[0];
-    expect(firstFrame.getStagger()).toBe(10);
+    expect(findStaggerInClauses(firstFrame.getClauses())).toBe(10);
   });
 
   test('C7: Combo animation is TIME_STOP (0.5s within 0.8s)', () => {
@@ -714,7 +715,15 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
     const wirings = [laevWiring(), antalWiring()];
 
     const processed = processCombatSimulation([focus, laevBattle, antalCombo], undefined, undefined, wirings);
-    const derived = processed.filter((e) => e.uid.startsWith(`${antalCombo.uid}-combo-inflict`));
+    // Phase 4e item 1 routed combo-source duplication through interpret() →
+    // doApply, so derived event uids no longer follow the combo-inflict pattern.
+    // Match by ownerId+columnId in the combo's frame span instead.
+    const _comboStart = antalCombo.startFrame;
+    const _comboEnd = _comboStart + eventDuration(antalCombo);
+    const derived = processed.filter((e) => e.ownerId === ENEMY_OWNER_ID
+      && (e.columnId === INFLICTION_COLUMNS.HEAT || e.columnId === INFLICTION_COLUMNS.ELECTRIC || e.columnId === INFLICTION_COLUMNS.CRYO || e.columnId === INFLICTION_COLUMNS.NATURE)
+      && e.startFrame >= _comboStart && e.startFrame <= _comboEnd
+      && e.sourceOwnerId === SLOT_ANTAL);
     expect(derived.length).toBeGreaterThan(0);
     expect(derived[0].columnId).toBe(INFLICTION_COLUMNS.HEAT);
     expect(derived[0].ownerId).toBe(ENEMY_OWNER_ID);
@@ -741,7 +750,15 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
     const wirings = [laevWiring(), antalWiring()];
 
     const processed = processCombatSimulation([laevBattle, antalCombo], undefined, undefined, wirings);
-    const derived = processed.filter((e) => e.uid.startsWith(`${antalCombo.uid}-combo-inflict`));
+    // Phase 4e item 1 routed combo-source duplication through interpret() →
+    // doApply, so derived event uids no longer follow the combo-inflict pattern.
+    // Match by ownerId+columnId in the combo's frame span instead.
+    const _comboStart = antalCombo.startFrame;
+    const _comboEnd = _comboStart + eventDuration(antalCombo);
+    const derived = processed.filter((e) => e.ownerId === ENEMY_OWNER_ID
+      && (e.columnId === INFLICTION_COLUMNS.HEAT || e.columnId === INFLICTION_COLUMNS.ELECTRIC || e.columnId === INFLICTION_COLUMNS.CRYO || e.columnId === INFLICTION_COLUMNS.NATURE)
+      && e.startFrame >= _comboStart && e.startFrame <= _comboEnd
+      && e.sourceOwnerId === SLOT_ANTAL);
     expect(derived.length).toBe(0);
   });
 
@@ -766,7 +783,15 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
     const processed = processCombatSimulation([focus, arcBattle, antalCombo], undefined, undefined, wirings);
     const combo = processed.find((e) => e.uid === antalCombo.uid);
     expect(combo!.comboTriggerColumnId).toBe(INFLICTION_COLUMNS.ELECTRIC);
-    const derived = processed.filter((e) => e.uid.startsWith(`${antalCombo.uid}-combo-inflict`));
+    // Phase 4e item 1 routed combo-source duplication through interpret() →
+    // doApply, so derived event uids no longer follow the combo-inflict pattern.
+    // Match by ownerId+columnId in the combo's frame span instead.
+    const _comboStart = antalCombo.startFrame;
+    const _comboEnd = _comboStart + eventDuration(antalCombo);
+    const derived = processed.filter((e) => e.ownerId === ENEMY_OWNER_ID
+      && (e.columnId === INFLICTION_COLUMNS.HEAT || e.columnId === INFLICTION_COLUMNS.ELECTRIC || e.columnId === INFLICTION_COLUMNS.CRYO || e.columnId === INFLICTION_COLUMNS.NATURE)
+      && e.startFrame >= _comboStart && e.startFrame <= _comboEnd
+      && e.sourceOwnerId === SLOT_ANTAL);
     expect(derived.length).toBeGreaterThan(0);
     expect(derived[0].columnId).toBe(INFLICTION_COLUMNS.ELECTRIC);
   });

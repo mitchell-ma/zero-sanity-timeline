@@ -60,6 +60,7 @@
 import { TimelineEvent } from '../../consts/viewTypes';
 import { SegmentType, StatusType, TimeDependency } from '../../consts/enums';
 import { VerbType, ObjectType, NounType, AdjectiveType, DeterminerType } from '../../dsl/semantics';
+import { findStaggerInClauses } from '../../controller/timeline/clauseQueries';
 import { ENEMY_OWNER_ID, COMBO_WINDOW_COLUMN_ID, INFLICTION_COLUMNS, PHYSICAL_INFLICTION_COLUMNS } from '../../model/channels';
 import { buildSequencesFromOperatorJson, DataDrivenSkillEventSequence } from '../../controller/gameDataStore';
 import { wouldOverlapSiblings } from '../../controller/timeline/eventValidator';
@@ -243,7 +244,7 @@ describe('B. Battle Skill (Dolly Rush)', () => {
   test('B4: Stagger recovery is 10', () => {
     const sequences = getSequences('BATTLE');
     const firstFrame = sequences[0].getFrames()[0];
-    expect(firstFrame.getStagger()).toBe(10);
+    expect(findStaggerInClauses(firstFrame.getClauses())).toBe(10);
   });
 
   test('B5: Vulnerability rate scales from 0.12 (lv1) to 0.20 (lv12)', () => {

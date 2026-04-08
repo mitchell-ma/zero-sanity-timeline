@@ -23,6 +23,7 @@ import { renderHook, act } from '@testing-library/react';
 import { NounType } from '../../../../dsl/semantics';
 import { useApp } from '../../../../app/useApp';
 import { ENEMY_OWNER_ID } from '../../../../model/channels';
+import { findStaggerInClauses, findDealDamageInClauses } from '../../../../controller/timeline/clauseQueries';
 import { EventStatusType, InteractionModeType } from '../../../../consts/enums';
 import { FPS } from '../../../../utils/timeline';
 import { eventDuration } from '../../../../consts/viewTypes';
@@ -293,8 +294,9 @@ describe('Combo skill consumes Steel Oath stacks', () => {
     const seg = harassEvents[0].segments[0];
     expect(seg.frames).toBeDefined();
     expect(seg.frames!.length).toBeGreaterThanOrEqual(1);
-    expect(seg.frames![0].dealDamage).toBeDefined();
-    expect(seg.frames![0].dealDamage!.multipliers.length).toBeGreaterThan(0);
+    const harassDamage = findDealDamageInClauses(seg.frames![0].clauses);
+    expect(harassDamage).toBeDefined();
+    expect(harassDamage!.multipliers.length).toBeGreaterThan(0);
 
     const assaultEvents = result.current.allProcessedEvents.filter(
       (ev) => ev.ownerId === ENEMY_OWNER_ID && ev.id === STEEL_OATH_DECISIVE_ASSAULT_ID,
@@ -356,10 +358,10 @@ describe('All stacks consumed → Harass and Decisive Assault mix', () => {
       const seg = ev.segments[0];
       expect(seg.frames).toBeDefined();
       expect(seg.frames!.length).toBeGreaterThanOrEqual(1);
-      expect(seg.frames![0].dealDamage).toBeDefined();
+      expect(findDealDamageInClauses(seg.frames![0].clauses)).toBeDefined();
     }
     // Decisive Assault should also have stagger
-    expect(assaultEvents[0].segments[0].frames![0].stagger).toBeGreaterThan(0);
+    expect(findStaggerInClauses(assaultEvents[0].segments[0].frames![0].clauses)!).toBeGreaterThan(0);
   });
 });
 
@@ -435,7 +437,7 @@ describe('Chen Qianyu BS consumes Steel Oath → 4 Harass + 1 Decisive Assault',
       const seg = ev.segments[0];
       expect(seg.frames).toBeDefined();
       expect(seg.frames!.length).toBeGreaterThanOrEqual(1);
-      expect(seg.frames![0].dealDamage).toBeDefined();
+      expect(findDealDamageInClauses(seg.frames![0].clauses)).toBeDefined();
     }
 
     // FIRST_MATCH: each trigger produces exactly one sub-status, never both

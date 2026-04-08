@@ -16,6 +16,7 @@ import { ResourceGraphListener, ResourcePoint } from '../timeline/resourceTimeli
 import { collectTimeStopRanges } from '../timeline/processTimeStop';
 import { FPS } from '../../utils/timeline';
 import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from './commonSlotController';
+import { findStaggerInClauses } from '../timeline/clauseQueries';
 
 export type { StaggerBreak };
 
@@ -89,7 +90,8 @@ export class StaggerController {
         if (seg.properties.segmentTypes?.includes(SegmentType.ANIMATION)) continue;
         if (seg.frames) {
           for (const f of seg.frames) {
-            if (f.stagger && f.stagger > 0) {
+            const stagger = findStaggerInClauses(f.clauses);
+            if (stagger && stagger > 0) {
               const frame = f.absoluteFrame ?? (ev.startFrame + animOffset + segOffset + f.offsetFrame);
               staggerEvents.push({
                 uid: `${ev.uid}-stagger-${frame}`,
@@ -98,7 +100,7 @@ export class StaggerController {
                 ownerId: ev.ownerId,
                 columnId: COMMON_COLUMN_IDS.STAGGER,
                 startFrame: frame,
-                segments: durationSegment(f.stagger),
+                segments: durationSegment(stagger),
               });
             }
           }

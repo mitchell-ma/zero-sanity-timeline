@@ -53,6 +53,7 @@
 import { TimelineEvent } from '../../consts/viewTypes';
 import { VerbType, ObjectType, NounType, AdjectiveType, DeterminerType } from '../../dsl/semantics';
 import { buildSequencesFromOperatorJson, DataDrivenSkillEventSequence } from '../../controller/gameDataStore';
+import { findStaggerInClauses } from '../../controller/timeline/clauseQueries';
 import { wouldOverlapSiblings } from '../../controller/timeline/eventValidator';
 
 jest.mock('../../model/game-data/weaponGameData', () => ({
@@ -240,7 +241,7 @@ describe('B. Battle Skill (Burst of Passion)', () => {
   test('B4: Battle skill stagger recovery is 10', () => {
     const sequences = getSequences('BATTLE');
     const firstFrame = sequences[0].getFrames()[0];
-    expect(firstFrame.getStagger()).toBe(10);
+    expect(findStaggerInClauses(firstFrame.getClauses())).toBe(10);
   });
 
   test('B5: Battle skill applies Heat infliction to enemy', () => {

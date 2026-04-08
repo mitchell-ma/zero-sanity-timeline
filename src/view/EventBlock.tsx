@@ -5,6 +5,7 @@ import { TimelineEvent, EventFrameMarker, EventSegmentData } from "../consts/vie
 import { ELEMENT_COLORS, CritMode, ElementType, EventFrameType, SegmentType } from '../consts/enums';
 import { getRuntimeCritMode } from '../controller/combatStateController';
 import { getStatusElementMap } from '../controller/gameDataStore';
+import { hasDealDamageClause } from '../controller/timeline/clauseQueries';
 import type { EventLayout } from '../controller/timeline/timelineLayout';
 // validateSegmentContiguity removed — no longer needed in render path
 import { VERTICAL_AXIS, segmentRadius, type AxisMap } from '../utils/axisMap';
@@ -300,7 +301,7 @@ function EventBlock({
   /** Resolve visual crit state for a frame based on runtime crit mode. */
   const isFrameVisualCrit = (f: EventFrameMarker): boolean => {
     const mode = getRuntimeCritMode();
-    if (mode === CritMode.ALWAYS || mode === CritMode.EXPECTED) return !!(f.damageMultiplier || f.dealDamage);
+    if (mode === CritMode.ALWAYS || mode === CritMode.EXPECTED) return hasDealDamageClause(f.clauses);
     if (mode === CritMode.NEVER) return false;
     return !!f.isCrit;
   };
@@ -497,7 +498,7 @@ function EventBlock({
         <div
           key={`f-${i}-${fi}`}
           data-frame-id={`${uid}-${i}-${fi}`}
-          className={`event-frame-diamond${isSelected ? ' event-frame-diamond--selected' : ''}${isHoverHighlight ? ' event-frame-diamond--hover-hit' : ''}${isFrameVisualCrit(f) ? ' event-frame-diamond--crit' : ''}${(f.frameTypes ?? []).includes(EventFrameType.FINISHER) ? ' event-frame-diamond--finisher' : ''}${(f.frameTypes ?? []).includes(EventFrameType.DIVE) ? ' event-frame-diamond--dive' : ''}${hasInflictionOrStatus(f) ? ' event-frame-diamond--infliction' : ''}${!f.dealDamage ? ' event-frame-diamond--status' : ''}`}
+          className={`event-frame-diamond${isSelected ? ' event-frame-diamond--selected' : ''}${isHoverHighlight ? ' event-frame-diamond--hover-hit' : ''}${isFrameVisualCrit(f) ? ' event-frame-diamond--crit' : ''}${(f.frameTypes ?? []).includes(EventFrameType.FINISHER) ? ' event-frame-diamond--finisher' : ''}${(f.frameTypes ?? []).includes(EventFrameType.DIVE) ? ' event-frame-diamond--dive' : ''}${hasInflictionOrStatus(f) ? ' event-frame-diamond--infliction' : ''}${!hasDealDamageClause(f.clauses) ? ' event-frame-diamond--status' : ''}`}
           style={elColor && !isSelected && !isHoverHighlight
             ? { ...baseStyle, background: elColor, boxShadow: `0 0 3px ${elColor}80` } as React.CSSProperties
             : baseStyle as React.CSSProperties}
