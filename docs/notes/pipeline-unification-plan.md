@@ -467,6 +467,7 @@ Key architectural mechanisms:
 
 **What's still deferred (not blocking):**
 - **7h fold** (extendSingleEvent into computeFramePositions): cosmetic module-boundary shuffle with no behavior payoff. The `extendedIds` guard was the real win and it's deleted.
+- **Storage unification** (collapse `state.output` + `stacks` into a single `registeredEvents` store, route `addEvent`/`pushEvent`/`pushEventDirect`/`pushToOutput` through `createSkillEvent`, delete the post-drain re-registration loop). Attempted 2026-04-08 and reverted — broke 17 tests across control swap resolution, MF absorption, freeform inflictions, and combo trigger paths. The clone-on-`_pushToStorage` interaction with shared event references is the core complication: skill events need the deep clone (raw React state protection), queue events don't (built fresh by interpretor/columns). The naive `if rawDurations.has(uid) skip clone` guard helped some tests but createSkillEvent's pass 3 (combo wipe) and pass 4 (queue frame emission) still ran for events whose lifecycle was already handled inline. Needs a focused dedicated session: define exactly which createSkillEvent passes apply per event type, audit all dual-storage consumers, possibly introduce a separate `createDerivedEvent` entry point. The IGNORE UE timing smell — the immediate trigger for this work — was fixed separately via `interpret()` dispatch (`85912595`).
 
 See `docs/notes/phase-8-plan.md` and `docs/notes/phase-8-progress.md` for the full sub-step history.
 
@@ -528,7 +529,42 @@ See `docs/notes/phase-8-plan.md` and `docs/notes/phase-8-progress.md` for the fu
 - DEC's public surface shrinks to: `createSkillEvent`, `createInfliction`, `createReaction`, `createStatus`, `createStagger`, `consumeInfliction`, `consumeStatus`, …, plus read-only query methods. No batch ingress, no `notifyResourceControllers`, no `markExtended`, no `validateAll`.
 - The pipeline becomes: **parser → queue → interpret → DEC**. There is no other path.
 
-### Phase 9 — Delete every `finalize` call
+### Phase 9 — Delete every `finalize` call — IN PROGRESS
+
+**Status (2026-04-08):** 9a + 9b done, 9c + 9d pending. Plus IGNORE UE timing smell fixed via `interpret()` dispatch. Storage unification (single `registeredEvents` source) attempted and reverted — see "Deferred items" below.
+
+**9a — `spController.finalize` deleted (`f50277aa`).** SP graph + stops + insufficiency zones + UE consumption notification all reactive:
+- `flushSpEvents()` sorts and pushes into the subtimeline on every `addCost`/`addRecovery`, so the SP graph stays current via the existing `subtimeline.subscribe → ResourceTimeline.recompute` path
+- `DEC._maybeRegisterStop` forwards stops to `spController.setTimeStops` immediately
+- `insufficiencyZones` map auto-rebuilds via an `onGraphChange` listener walking `slotSpCosts`
+- SP → UE consumption notification fires from the same `onGraphChange` listener; `UE.onNaturalSpConsumed` is now idempotent (clears entry on `naturalConsumed = 0`)
+- `seedSlotCosts` triggers a recompute so the zones map covers every slot
+
+**9b — `ueController.finalize` deleted (`09f31465` + `de64de3a`).** Two parts:
+
+*9b-1+2 — latent retroactive scaling bug fix.* Previously `eventQueueController` called `updateSlotEfficiency` once per slot at the END of the pipeline, reading the final accumulated `ULTIMATE_GAIN_EFFICIENCY` and applying it as a global multiplier to every gain — scaling gains at frames 0..199 by an efficiency boost that only activated at frame 200. Fixed by capturing per-recipient `slotEfficiencies` snapshots at the moment each gain fires:
+- `RawUltimateEnergyGainEvent` gains an optional `slotEfficiencies: ReadonlyMap<slotId, efficiency>` snapshot
+- `DEC.recordUltimateEnergyGain` populates the snapshot from the stat accumulator at the gain frame (current state IS the state at that frame because the queue drains chronologically)
+- `applyGainEfficiency` reads per-recipient from the snapshot when present
+- The post-pipeline `updateSlotEfficiency` sweep is deleted
+
+*9b-3+4 — reactive graph computation.* `_computeGraphs()` rebuilds `slotGraphs` from current state on every state change (`addUltimateEnergyGain`, `addConsume`, `addNoGainWindow`, `setBattleSkillGainFrame`, `onNaturalSpConsumed`, `setIgnoreExternalGain`). SP → UE conversion runs from `spController.addCost` pushing battle skill gain frames directly into UE via `setBattleSkillGainFrame`. SP-derived gains tagged with `spDerivedFromUid` for idempotent removal during recompute.
+
+**IGNORE UE timing smell (`85912595`).** Followup to 9b. `IGNORE ULTIMATE_ENERGY` clauses on derived statuses (e.g. Last Rite Vigil Services lockout) used to take effect only at post-drain re-registration via `notifyResourceControllers`'s status-def lookup — long after gains had been processed. The `_computeGraphs` recompute trick papered over it. Now `VerbType.IGNORE` is a real DSL effect dispatched via `interpret()`:
+- `VerbType.IGNORE` handler in `interpret()` calls `DEC.setIgnoreExternalGain` for `ULTIMATE_ENERGY`
+- `runStatusCreationLifecycle` clause loop accepts `IGNORE UE` alongside `APPLY STAT`
+- `runEventQueue` inline talent clause loop accepts both too — talent-typed lockouts fire at frame 0 before any gains process
+- `notifyResourceControllers`' status-def lookup deleted
+
+The flag now takes effect at the moment the status's clause is dispatched. No post-drain dependency.
+
+**9c — `hpController.finalize` — pending.**
+
+**9d — `shieldController.finalize` — pending.**
+
+---
+
+### Phase 9b — Crit pin overrides inline at frame creation
 **Principle:** if state is tracked per-frame in chronological order, then at any frame F it is correct. Anything you want from it is a point query (answer inline at frame F), a graph for rendering (view-layer projection over the per-frame array), or a reactive predicate (handled by the trigger index). There is no fourth case requiring a batch post-pass. Every `finalize` is design debt.
 
 - **`spController.finalize` → delete.** SP insufficiency markers are emitted inline at each battle skill's `EVENT_START` hook: check `getSp(frame) < cost` and tag the event right there. The "insufficiency zones" overlay becomes a view-layer projection over the per-frame SP array.
