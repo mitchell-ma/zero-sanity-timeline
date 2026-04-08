@@ -323,16 +323,15 @@ export function runEventQueue(
     state.insertQueueFrames(newEntries);
   }
 
-  // Register queue-created events + combo windows into DEC
+  // Register queue-created events into DEC. Phase 8 step 6b: pass 3 of
+  // registerEvents (resolveComboTriggersInline → openComboWindow) now
+  // reactively emits COMBO_WINDOW events from the full event list, replacing
+  // the previous post-queue deriveComboActivationWindows batch call. The
+  // post-queue re-derive in processCombatSimulation still runs as a safety
+  // net for CD-reduction cases and will be removed in 6c.
   const queueEvents = state.output;
   state.markExtended(queueEvents.map(ev => ev.uid));
-
-  const allEvents = [...registeredEvents, ...queueEvents];
-  const comboWindows = slotWirings && slotWirings.length > 0
-    ? deriveComboActivationWindows(allEvents, slotWirings, stops, getControlledSlotAtFrame)
-    : [];
-  state.markExtended(comboWindows.map(ev => ev.uid));
-  state.registerEvents([...queueEvents, ...comboWindows]);
+  state.registerEvents(queueEvents);
 
   // Clamp combo cooldowns in multi-skill windows (after windows are registered)
   state.clampMultiSkillComboCooldowns();
