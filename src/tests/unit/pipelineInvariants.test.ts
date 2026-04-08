@@ -98,6 +98,12 @@ const FORBIDDEN: ForbiddenPattern[] = [
     reason: 'Per-slot HP graph + heal summary rebuild reactively from addHeal via _rebuildSlotGraph. Deleted in Phase 9c.',
     allowedFiles: [],
   },
+  {
+    name: 'shieldController.finalize (Phase 9d)',
+    pattern: /shieldController\.finalize\s*\(/,
+    reason: 'Shield ticks arrive in frame order during the queue drain — the defensive sort was unnecessary. Deleted in Phase 9d.',
+    allowedFiles: [],
+  },
 ];
 
 function walk(dir: string, out: string[]) {

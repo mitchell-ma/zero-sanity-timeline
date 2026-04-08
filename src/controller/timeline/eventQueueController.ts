@@ -331,9 +331,8 @@ export function processCombatSimulation(
   // pushing battle skill gain frames into UE.
   // Phase 9c: hpController.finalize deleted — slot HP graphs rebuild
   // reactively from addHeal via _rebuildSlotGraph.
-  if (shieldController) {
-    shieldController.finalize();
-  }
+  // Phase 9d: shieldController.finalize deleted — ticks arrive in frame
+  // order during the queue drain, no sort needed.
 
   // ── 6. Output ───────────────────────────────────────────────────────────────
   _lastController = state;

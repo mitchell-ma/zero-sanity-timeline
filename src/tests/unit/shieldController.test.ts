@@ -58,9 +58,9 @@ describe('ShieldController', () => {
     expect(controller.getOperatorIds()).toHaveLength(0);
   });
 
-  it('finalize does not break queries', () => {
+  it('queries work after applyShield without any post-pass', () => {
+    // Phase 9d: shieldController.finalize deleted
     controller.applyShield('op1', 100, 500, 1300);
-    controller.finalize();
     expect(controller.getShieldValue('op1', 500)).toBe(500);
     expect(controller.getShieldValue('op1', 1300)).toBe(0);
   });

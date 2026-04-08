@@ -5,7 +5,9 @@
  * Each shield tick has a value and an expiration frame (from the parent status duration).
  * Multiple shields from different sources stack additively.
  *
- * Follows the HPController lifecycle: applyShield() → getShieldValue() → finalize() → clear().
+ * Phase 9d: finalize deleted. Ticks arrive in frame order during the queue
+ * drain, so the defensive sort is unnecessary. Lifecycle: applyShield() →
+ * getShieldValue() → clear().
  */
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -70,11 +72,6 @@ export class ShieldController {
   }
 
   // ── Lifecycle ─────────────────────────────────────────────────────────
-
-  finalize() {
-    // Sort ticks by frame for potential future optimizations
-    this.ticks.sort((a, b) => a.frame - b.frame);
-  }
 
   clear() {
     this.ticks.length = 0;
