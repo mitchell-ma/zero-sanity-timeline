@@ -1,8 +1,7 @@
 import { TimelineEvent, computeSegmentsSpan } from '../../consts/viewTypes';
 import { NounType } from '../../dsl/semantics';
-import { EventFrameType, SegmentType } from '../../consts/enums';
-import { COMBO_WINDOW_COLUMN_ID } from '../../model/channels';
-import { TimeStopRegion, isTimeStopEvent, extendByTimeStops, foreignStopsFor } from './processTimeStop';
+import { EventFrameType } from '../../consts/enums';
+import { TimeStopRegion, extendByTimeStops, foreignStopsFor } from './processTimeStop';
 import { findClauseTriggerMatches } from './triggerMatch';
 import { getComboTriggerClause, getComboTriggerInfo } from '../gameDataStore';
 import type { SlotTriggerWiring } from './eventQueueTypes';
@@ -10,155 +9,12 @@ import type { SlotTriggerWiring } from './eventQueueTypes';
 export { COMBO_WINDOW_COLUMN_ID } from '../../model/channels';
 export type { SlotTriggerWiring } from './eventQueueTypes';
 
-// ── Combo activation window derivation ──────────────────────────────────────
-
-/**
- * Derive combo activation window events from processed events + operator trigger capabilities.
- * Each window becomes a single-segment derived TimelineEvent.
- */
-export function deriveComboActivationWindows(
-  events: TimelineEvent[],
-  slotWirings: SlotTriggerWiring[],
-  stops: readonly TimeStopRegion[],
-  getControlledSlotAtFrame?: (frame: number) => string,
-): TimelineEvent[] {
-  // Intermediate accumulator: slotId → unsorted windows
-  const windowsBySlot = new Map<string, { startFrame: number; endFrame: number; sourceEventId: string; sourceOwnerId?: string; sourceSkillName?: string; sourceColumnId?: string; triggerStacks?: number }[]>();
-
-  // Build slotId → index for event ownership lookup
-  const slotIdToIndex = new Map<string, number>();
-  for (let i = 0; i < slotWirings.length; i++) {
-    slotIdToIndex.set(slotWirings[i].slotId, i);
-  }
-
-  // Build set of combo time-stop event IDs per slot, so a slot's own combo
-  // time stops don't extend its combo activation window duration.
-  const comboStopIdsBySlot = new Map<string, Set<string>>();
-  for (const ev of events) {
-    if (ev.columnId !== NounType.COMBO || !isTimeStopEvent(ev)) continue;
-    if (!comboStopIdsBySlot.has(ev.ownerId)) comboStopIdsBySlot.set(ev.ownerId, new Set());
-    comboStopIdsBySlot.get(ev.ownerId)!.add(ev.uid);
-  }
-
-  // Pre-index combo events per slot for cooldown checks
-  const comboEventsBySlot = new Map<string, TimelineEvent[]>();
-  for (const ev of events) {
-    if (ev.columnId !== NounType.COMBO) continue;
-    if (!comboEventsBySlot.has(ev.ownerId)) comboEventsBySlot.set(ev.ownerId, []);
-    comboEventsBySlot.get(ev.ownerId)!.push(ev);
-  }
-
-  const addWindowDirect = (
-    wiring: SlotTriggerWiring,
-    triggerFrame: number,
-    sourceOwnerId: string,
-    sourceSkillName: string,
-    originOwnerId?: string,
-    triggerStacks?: number,
-  ) => {
-    // Skip self-trigger: don't let an operator's own action trigger their combo.
-    if (originOwnerId === wiring.slotId) return;
-
-    // Skip if combo skill is on cooldown at trigger time.
-    const slotCombos = comboEventsBySlot.get(wiring.slotId);
-    if (slotCombos) {
-      const onCooldown = slotCombos.some((ce) => {
-        // Use computeSegmentsSpan which handles IMMEDIATE_COOLDOWN offset correctly
-        const eventSpan = computeSegmentsSpan(ce.segments);
-        let preCooldownDur = 0;
-        for (const s of ce.segments) {
-          if (s.properties.segmentTypes?.includes(SegmentType.COOLDOWN)) break;
-          // IMMEDIATE_COOLDOWN starts at offset 0 — active segments don't push cooldown later
-          if (s.properties.segmentTypes?.includes(SegmentType.IMMEDIATE_COOLDOWN)) break;
-          preCooldownDur += s.properties.duration;
-        }
-        const hasCooldown = ce.segments.some(s => s.properties.segmentTypes?.includes(SegmentType.COOLDOWN) || s.properties.segmentTypes?.includes(SegmentType.IMMEDIATE_COOLDOWN));
-        if (!hasCooldown) return false;
-        const isImmediate = ce.segments.some(s => s.properties.segmentTypes?.includes(SegmentType.IMMEDIATE_COOLDOWN));
-        const cooldownStart = isImmediate ? ce.startFrame : ce.startFrame + preCooldownDur;
-        const cooldownEnd = ce.startFrame + eventSpan;
-        return triggerFrame > cooldownStart && triggerFrame < cooldownEnd;
-      });
-      if (onCooldown) return;
-    }
-
-    const info = getComboTriggerInfo(wiring.operatorId);
-    const baseDuration = info?.windowFrames ?? 720;
-    const ownComboStops = comboStopIdsBySlot.get(wiring.slotId);
-    const windowStops = ownComboStops ? stops.filter((s) => !ownComboStops.has(s.eventUid)) : stops;
-    const extendedDuration = extendByTimeStops(triggerFrame, baseDuration, windowStops);
-
-    if (!windowsBySlot.has(wiring.slotId)) windowsBySlot.set(wiring.slotId, []);
-    windowsBySlot.get(wiring.slotId)!.push({
-      startFrame: triggerFrame,
-      endFrame: triggerFrame + extendedDuration,
-      sourceEventId: `trigger-${wiring.slotId}-${triggerFrame}`,
-      sourceOwnerId,
-      sourceSkillName,
-      sourceColumnId: sourceSkillName,
-      triggerStacks,
-    });
-  };
-
-  // Evaluate onTriggerClause from skills JSON via verb-handler registry.
-  for (const wiring of slotWirings) {
-    const clause = getComboTriggerClause(wiring.operatorId);
-    if (!clause?.length) continue;
-    const matches = findClauseTriggerMatches(clause, events, wiring.slotId, stops, getControlledSlotAtFrame);
-    for (const match of matches) {
-      addWindowDirect(wiring, match.frame, match.sourceOwnerId, match.sourceSkillName, match.originOwnerId, match.triggerStacks);
-    }
-  }
-
-  // Sort, merge, and convert to TimelineEvents
-  const derived: TimelineEvent[] = [];
-  windowsBySlot.forEach((wins, slotId) => {
-    wins.sort((a, b) => a.startFrame - b.startFrame);
-    // Merge overlapping, but don't merge across combo event boundaries.
-    // If a combo event (active + CD) ends between two windows, keep them separate.
-    const slotCombos = comboEventsBySlot.get(slotId) ?? [];
-    const merged: typeof wins = [];
-    for (const w of wins) {
-      const prev = merged.length > 0 ? merged[merged.length - 1] : null;
-      if (prev && w.startFrame <= prev.endFrame) {
-        // Check if a combo event's end falls between prev.startFrame and w.startFrame
-        const comboSplit = slotCombos.some(ce => {
-          const ceEnd = ce.startFrame + computeSegmentsSpan(ce.segments);
-          return ceEnd > prev!.startFrame && ceEnd <= w.startFrame;
-        });
-        if (comboSplit) {
-          merged.push({ ...w });
-        } else {
-          prev.endFrame = Math.max(prev.endFrame, w.endFrame);
-        }
-      } else {
-        merged.push({ ...w });
-      }
-    }
-    for (let i = 0; i < merged.length; i++) {
-      const w = merged[i];
-      const duration = w.endFrame - w.startFrame;
-      const wiring = slotWirings.find(sw => sw.slotId === slotId)!;
-      const triggerInfo = getComboTriggerInfo(wiring.operatorId);
-      derived.push({
-        uid: `combo-window-${slotId}-${i}`,
-        id: COMBO_WINDOW_COLUMN_ID,
-        name: COMBO_WINDOW_COLUMN_ID,
-        ownerId: slotId,
-        columnId: COMBO_WINDOW_COLUMN_ID,
-        startFrame: w.startFrame,
-        sourceOwnerId: w.sourceOwnerId,
-        sourceSkillName: w.sourceSkillName,
-        comboTriggerColumnId: w.sourceColumnId,
-        triggerStacks: w.triggerStacks,
-        maxSkills: triggerInfo?.maxSkills ?? 1,
-        segments: [{ properties: { duration } }],
-      });
-    }
-  });
-
-  return derived;
-}
+// Phase 8 step 6e: `deriveComboActivationWindows` (batch window derivation)
+// was deleted. All combo window emission now flows through
+// `DerivedEventController.openComboWindow` called from pass 3 of
+// `registerEvents`. `resolveComboTriggerColumns` below is retained only
+// because its unit tests (comboTriggerResolution.test.ts) still import it;
+// it is no longer on any production code path.
 
 /**
  * Check if any event whose columnId is in `columnIds` is active at `frame`.

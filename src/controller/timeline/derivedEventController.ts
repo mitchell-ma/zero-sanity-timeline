@@ -1200,17 +1200,6 @@ export class DerivedEventController implements ColumnHost {
     }
   }
 
-  /** Replace all combo activation windows with a fresh set. */
-  replaceComboWindows(freshWindows: TimelineEvent[]) {
-    // Remove old windows
-    this.registeredEvents = this.registeredEvents.filter(ev => ev.columnId !== COMBO_WINDOW_COLUMN_ID);
-    // Register new ones
-    for (const w of freshWindows) {
-      this.registeredEvents.push(w);
-      this.extendedIds.add(w.uid);
-    }
-  }
-
   /**
    * Clamp combo activation windows so they don't extend past the combo event's end.
    * Called after the queue run when CD resets may have shortened combo events.
