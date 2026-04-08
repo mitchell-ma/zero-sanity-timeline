@@ -71,6 +71,14 @@ export class DerivedEventController implements ColumnHost {
   private stops: TimeStopRegion[] = [];
   private registeredStopIds = new Set<string>();
   private rawDurations = new Map<string, number>();
+  /**
+   * Phase 8 step 7e-prep: per-segment raw (pre-extension) duration store for
+   * registered skill events. Populated in `_pushToStorage` after the segment
+   * deep-clone. `extendSingleEvent` reads raw values from here on every call,
+   * making extension idempotent — safe to re-run when a new stop retroactively
+   * lands on an already-registered event.
+   */
+  private rawSegmentDurations = new Map<string, number[]>();
   private extendedIds = new Set<string>();
   private comboStops: ComboStopEntry[] = [];
   private queue = new PriorityQueue<QueueFrame>(
@@ -136,6 +144,7 @@ export class DerivedEventController implements ColumnHost {
     this.stops.length = 0;
     this.registeredStopIds.clear();
     this.rawDurations.clear();
+    this.rawSegmentDurations.clear();
     this.extendedIds.clear();
     this.comboStops.length = 0;
     this.queue.clear();
@@ -285,8 +294,9 @@ export class DerivedEventController implements ColumnHost {
    * Currently delegates to `registerEvents([ev])` so batch time-stop
    * discovery semantics are preserved until step 5 makes stops reactive.
    */
-  createSkillEvent(ev: TimelineEvent): TimelineEvent | null {
-    if (this._checkCooldown(ev)) return null;
+  createSkillEvent(ev: TimelineEvent, opts: { checkCooldown?: boolean } = {}): TimelineEvent | null {
+    const checkCooldown = opts.checkCooldown ?? true;
+    if (checkCooldown && this._checkCooldown(ev)) return null;
     const beforeLen = this.registeredEvents.length;
     this.registerEvents([ev]);
     // registerEvents dedupes by uid, so the new ev may not have been appended
@@ -358,12 +368,12 @@ export class DerivedEventController implements ColumnHost {
       this._pushToStorage(ev);
     }
 
-    // Pass 2: per-event extension, frame positions, validation, and SP/UE notification
+    // Pass 2: per-event extension, frame positions, validation, and SP/UE notification.
+    // extendSingleEvent is idempotent (reads raw segment durations from the
+    // store populated in _pushToStorage), so no extendedIds guard needed.
     for (let i = startIdx; i < this.registeredEvents.length; i++) {
       let ev = this.registeredEvents[i];
-      if (this.stops.length > 0 && !this.extendedIds.has(ev.uid)) {
-        ev = this.extendSingleEvent(ev);
-      }
+      ev = this.extendSingleEvent(ev);
       ev = computeFramePositions(ev, this.stops);
       ev = this.validateTimeStopStart(ev);
       this.registeredEvents[i] = ev;
@@ -885,8 +895,28 @@ export class DerivedEventController implements ColumnHost {
   }
 
   /** Append ev to the registered events array. */
-  private _pushToStorage(ev: TimelineEvent) {
-    this.registeredEvents.push(ev);
+  private _pushToStorage(ev: TimelineEvent): TimelineEvent {
+    // Deep-clone segments (and frame markers) into DEC-owned copies so
+    // pipeline mutations (duration extension, frame marker positioning) do
+    // not leak back to the raw React state the event originated from.
+    // After this point the event is DEC-owned and may be mutated in place.
+    const segments = ev.segments.map(s => ({
+      ...s,
+      properties: { ...s.properties },
+      ...(s.frames ? { frames: s.frames.map(f => ({ ...f })) } : {}),
+    }));
+    const owned: TimelineEvent = { ...ev, segments };
+    // Capture raw (pre-extension) segment durations for fresh skill events
+    // only. Events already tracked by rawDurations (the single-total map)
+    // came in via pushEvent mid-queue — their durations may already be
+    // extended and/or consumption-truncated. For those, skip
+    // rawSegmentDurations entirely so extendSingleEvent is a no-op on them
+    // (pre-existing behavior: queue events are not re-extended here).
+    if (!this.rawDurations.has(owned.uid)) {
+      this.rawSegmentDurations.set(owned.uid, segments.map(s => s.properties.duration));
+    }
+    this.registeredEvents.push(owned);
+    return owned;
   }
 
   // ── Time-stop management ─────────────────────────────────────────────────
@@ -899,6 +929,25 @@ export class DerivedEventController implements ColumnHost {
     const durationFrames = getAnimationDuration(ev);
     this.stops.push({ startFrame, durationFrames, eventUid: ev.uid });
     this.stops.sort((a, b) => a.startFrame - b.startFrame);
+    // Phase 8 step 7e-prep: retroactive re-extension. When a new stop is
+    // registered after other skill events have already been pushed, walk
+    // events in rawSegmentDurations whose active range overlaps the new
+    // stop and re-run extendSingleEvent + computeFramePositions. Because
+    // extension reads raw from rawSegmentDurations and mutates in place
+    // idempotently, this is safe to run at any time.
+    if (durationFrames > 0) {
+      const stopEnd = startFrame + durationFrames;
+      for (let i = 0; i < this.registeredEvents.length; i++) {
+        const other = this.registeredEvents[i];
+        if (other.uid === ev.uid) continue;
+        if (!this.rawSegmentDurations.has(other.uid)) continue;
+        const otherEnd = other.startFrame + eventDuration(other);
+        if (other.startFrame < stopEnd && otherEnd > startFrame) {
+          this.extendSingleEvent(other);
+          computeFramePositions(other, this.stops);
+        }
+      }
+    }
     // Phase 8 step 5: reactive shift. When a stop is discovered while the
     // queue is mid-drain, every queued frame whose source event's active
     // range overlaps the stop AND whose current frame > startFrame must be
@@ -939,72 +988,68 @@ export class DerivedEventController implements ColumnHost {
    * Extend a single event's durations by foreign time-stops.
    * Handles segmented events, 3-phase events, and time-stop events.
    */
+  /**
+   * Phase 8 step 7e-prep: idempotent per-segment extension.
+   *
+   * Reads raw segment durations from `rawSegmentDurations` (populated in
+   * `_pushToStorage` after a deep clone), computes extended durations
+   * against the current stops list, and mutates the event's segments in
+   * place. Safe to re-run whenever a new stop retroactively lands on an
+   * already-registered event — always starts from raw.
+   */
   private extendSingleEvent(ev: TimelineEvent): TimelineEvent {
     // Control status is not affected by time-stops — its timer keeps ticking
     if (ev.id === NounType.CONTROL) return ev;
+
+    const raw = this.rawSegmentDurations.get(ev.uid);
+    if (!raw || ev.segments.length === 0) return ev;
 
     const isOwn = isTimeStopEvent(ev);
     const animDur = getAnimationDuration(ev);
     const foreignStops = isOwn
       ? this.stops.filter(s => s.eventUid !== ev.uid)
       : this.stops;
-    if (foreignStops.length === 0) return ev;
 
-    // ── Segmented events ───────────────────────────────────────────────
-    if (ev.segments.length > 0) {
-      let rawOffset = 0;
-      let derivedOffset = 0;
-      let changed = false;
-      // Deep-clone segments (including frame markers) before mutating — the
-      // source objects are shared with the raw state. Without cloning:
-      //   - seg.properties.duration mutations compound across pipeline runs
-      //   - f.derivedOffsetFrame / f.absoluteFrame mutations leak stale values
-      //     to the raw state, causing frame diamonds to render at wrong positions
-      //     between throttled drag ticks
-      const segments = ev.segments.map(s => ({
-        ...s,
-        properties: { ...s.properties },
-        ...(s.frames ? { frames: s.frames.map(f => ({ ...f })) } : {}),
-      }));
-      for (const seg of segments) {
-        const rawSegStart = rawOffset;
-        rawOffset += seg.properties.duration;
-
-        if (seg.properties.timeDependency === TimeDependency.REAL_TIME || seg.properties.duration === 0) {
-          derivedOffset += seg.properties.duration;
-          continue;
-        }
-
-        if (isOwn && animDur > 0 && rawSegStart + seg.properties.duration <= animDur) {
-          derivedOffset += seg.properties.duration;
-          continue;
-        }
-
-        let ext: number;
-        if (isOwn && animDur > 0 && rawSegStart < animDur) {
-          const animPortion = animDur - rawSegStart;
-          const postAnimPortion = seg.properties.duration - animPortion;
-          ext = animPortion + extendByTimeStops(ev.startFrame + animDur, postAnimPortion, foreignStops);
-        } else {
-          ext = extendByTimeStops(ev.startFrame + derivedOffset, seg.properties.duration, foreignStops);
-        }
-
-        derivedOffset += ext;
-        if (ext !== seg.properties.duration) {
-          changed = true;
-          seg.properties.duration = ext;
-        }
+    if (foreignStops.length === 0) {
+      // Restore raw durations (idempotent reset)
+      for (let i = 0; i < ev.segments.length; i++) {
+        ev.segments[i].properties.duration = raw[i];
       }
-
-      if (!changed) return ev;
-      this.extendedIds.add(ev.uid);
-      // Return a new event object — never mutate ev.segments in place, because
-      // ev may reference validEvents[] which is reused across React strict-mode
-      // double-invocations of useMemo. Mutating it compounds extensions.
-      return { ...ev, segments };
+      return ev;
     }
 
-    // All events should have segments at this point
+    let rawOffset = 0;
+    let derivedOffset = 0;
+    for (let i = 0; i < ev.segments.length; i++) {
+      const seg = ev.segments[i];
+      const rawDur = raw[i];
+      const rawSegStart = rawOffset;
+      rawOffset += rawDur;
+
+      if (seg.properties.timeDependency === TimeDependency.REAL_TIME || rawDur === 0) {
+        seg.properties.duration = rawDur;
+        derivedOffset += rawDur;
+        continue;
+      }
+
+      if (isOwn && animDur > 0 && rawSegStart + rawDur <= animDur) {
+        seg.properties.duration = rawDur;
+        derivedOffset += rawDur;
+        continue;
+      }
+
+      let ext: number;
+      if (isOwn && animDur > 0 && rawSegStart < animDur) {
+        const animPortion = animDur - rawSegStart;
+        const postAnimPortion = rawDur - animPortion;
+        ext = animPortion + extendByTimeStops(ev.startFrame + animDur, postAnimPortion, foreignStops);
+      } else {
+        ext = extendByTimeStops(ev.startFrame + derivedOffset, rawDur, foreignStops);
+      }
+
+      seg.properties.duration = ext;
+      derivedOffset += ext;
+    }
     return ev;
   }
 

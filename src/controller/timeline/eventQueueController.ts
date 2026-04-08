@@ -19,7 +19,7 @@ import { invalidateConfigCache } from './configCache';
 import { TriggerIndex } from './triggerIndex';
 import { ENEMY_OWNER_ID, ENEMY_ACTION_COLUMN_ID } from '../../model/channels';
 import { getAllTriggerAssociations } from '../gameDataStore';
-import { cloneAndSplitEvents, selectNewTalents } from './parser';
+import { cloneAndSplitEvents, selectNewTalents, buildControlSeed } from './parser';
 import { initHpTracker, getEnemyHpPercentage, precomputeDamageByFrame } from '../calculation/calculationController';
 import type { HPController } from '../calculation/hpController';
 import { StatAccumulator } from '../calculation/statAccumulator';
@@ -144,9 +144,15 @@ export function runEventQueue(
 
   state.validateAll();
 
-  // Apply crit pin overrides to all derived event frames
+  // Apply crit pin overrides to all derived event frames. Phase 8 step
+  // 7e-prep: registerEvents(queueEvents) now clones segments via
+  // _pushToStorage, so we must write pins to the cloned copies in
+  // registeredEvents, not the pre-clone references in state.output.
   if (overrides) {
-    for (const ev of queueEvents) {
+    const registeredByUid = new Map<string, TimelineEvent>();
+    for (const r of state.getRegisteredEvents()) registeredByUid.set(r.uid, r);
+    for (const orig of queueEvents) {
+      const ev = registeredByUid.get(orig.uid) ?? orig;
       const key = buildOverrideKey(ev);
       const evOverride = overrides[key];
       if (!evOverride?.segments) continue;
@@ -259,15 +265,21 @@ export function processCombatSimulation(
     hpController, shieldController, _statAccumulator,
   );
   const state = _decSingleton;
+  // Phase 8 step 7e: route every user-placed/input event through the single
+  // `createSkillEvent` entrypoint instead of batch `registerEvents`. Cooldown
+  // checks are suppressed for user-placed events (they are allowed to overlap
+  // prior CDs with a warning). Retroactive re-extension in _maybeRegisterStop
+  // ensures later stop-contributing events correctly re-extend earlier events.
   const slotIds = slotOperatorMap ? Object.keys(slotOperatorMap) : [];
   const firstSlotOperatorId = slotIds[0] && slotOperatorMap ? slotOperatorMap[slotIds[0]] : undefined;
-  state.seedControlledOperator(slotIds[0], firstSlotOperatorId);
-  state.registerEvents(inputEvents);
+  const controlSeed = buildControlSeed(slotIds[0], firstSlotOperatorId);
+  if (controlSeed) state.createSkillEvent(controlSeed, { checkCooldown: false });
+  for (const ev of inputEvents) state.createSkillEvent(ev, { checkCooldown: false });
 
   // Register enemy action events so they appear in processed output (for canvas rendering).
   // They're classified as derived (non-skill column) but need to be in the output like input events.
   const enemyActionEvents = derivedEvents.filter(ev => ev.ownerId === ENEMY_OWNER_ID && ev.columnId === ENEMY_ACTION_COLUMN_ID);
-  if (enemyActionEvents.length > 0) state.registerEvents(enemyActionEvents);
+  for (const ev of enemyActionEvents) state.createSkillEvent(ev, { checkCooldown: false });
 
   // ── 3. Talent events ──────────────────────────────────────────────────────
   // SP recovery is now driven entirely by RECOVER/RETURN SKILL_POINT clauses
@@ -320,6 +332,29 @@ export function processCombatSimulation(
   // ── 6. Output ───────────────────────────────────────────────────────────────
   _lastController = state;
   const processed = state.getProcessedEvents();
+
+  // Phase 8 step 7e-prep: isCrit persists across pipeline runs. Previously
+  // segments on non-time-stop events were not cloned, so MANUAL-mode
+  // isCrit writes in the interpretor leaked back to raw state via shared
+  // frame references. With _pushToStorage now always cloning, raw state
+  // no longer receives those writes directly — so we sync them back here.
+  // Matched by uid; per-frame isCrit values from the processed (cloned)
+  // event are written onto the raw input event's frames if set.
+  const processedByUid = new Map<string, TimelineEvent>();
+  for (const ev of processed) processedByUid.set(ev.uid, ev);
+  for (const rawEv of rawEvents) {
+    const proc = processedByUid.get(rawEv.uid);
+    if (!proc) continue;
+    for (let si = 0; si < Math.min(rawEv.segments.length, proc.segments.length); si++) {
+      const rawFrames = rawEv.segments[si]?.frames;
+      const procFrames = proc.segments[si]?.frames;
+      if (!rawFrames || !procFrames) continue;
+      for (let fi = 0; fi < Math.min(rawFrames.length, procFrames.length); fi++) {
+        const procCrit = procFrames[fi]?.isCrit;
+        if (procCrit != null) rawFrames[fi].isCrit = procCrit;
+      }
+    }
+  }
 
   // Propagate creationInteractionMode and original UID from user-placed seed events.
   // User-placed freeform events on derived columns are classified as "derived"
