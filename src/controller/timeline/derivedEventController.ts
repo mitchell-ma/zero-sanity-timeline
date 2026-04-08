@@ -633,7 +633,7 @@ export class DerivedEventController implements ColumnHost {
   /**
    * Validate sibling overlap: events in the same column must not overlap.
    * Attaches warnings (read-only annotation, not bulk transformation).
-   * Time-stop start validation is handled inline during registerEvents().
+   * Time-stop start validation is handled inline during createSkillEvent.
    */
   validateAll() {
     const byKey = new Map<string, TimelineEvent[]>();
@@ -681,8 +681,8 @@ export class DerivedEventController implements ColumnHost {
   /**
    * Set the controlled-slot resolver used by pass 3 (resolveComboTriggersInline).
    * Called by runEventQueue once the resolver has been computed from registered
-   * events, so the final registerEvents(queueEvents) pass 3 can filter CONTROLLED
-   * OPERATOR combo triggers to the correct slot.
+   * events, so per-event createSkillEvent pass 3 can filter CONTROLLED OPERATOR
+   * combo triggers to the correct slot.
    */
   setControlledSlotResolver(resolver?: (frame: number) => string) {
     this.controlledSlotResolver = resolver;

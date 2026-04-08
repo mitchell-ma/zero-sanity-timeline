@@ -1,9 +1,9 @@
 /**
  * Unified status configuration cache.
  *
- * Phase 1 consolidates the two private caches that previously lived in
- * `eventInterpretorController.ts` (`_statusConfigCache` + `_statusDefCache`)
- * into one module with a shared invalidation point. Both caches walk the same
+ * Phase 1 consolidated two legacy private caches from
+ * `eventInterpretorController.ts` into one module with a shared
+ * invalidation point. Both caches walk the same
  * merged status list (operator + weapon + gear statuses), so a single build
  * pass emits both projections.
  *

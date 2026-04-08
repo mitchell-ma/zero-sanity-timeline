@@ -2,10 +2,8 @@
  * Phase 8 step 7d — controlled-operator seed factory.
  *
  * Builds the synthetic CONTROL event used to initialize the controlled-
- * operator lane for the first occupied slot. Today the caller still
- * registers the returned event via `state.registerEvents([seed])`; step
- * 7e will route this through a parser-emitted APPLY CONTROL clause +
- * doApplyControl interpretor handler.
+ * operator lane for the first occupied slot. Caller routes the returned
+ * event through DEC.createSkillEvent (the sole ingress path).
  */
 import { TimelineEvent } from '../../../consts/viewTypes';
 import { NounType } from '../../../dsl/semantics';

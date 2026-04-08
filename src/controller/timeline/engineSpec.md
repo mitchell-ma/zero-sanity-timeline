@@ -19,19 +19,27 @@ Specifically prohibited:
 
 ## Pipeline
 
-`processCombatSimulation` is the pipeline entry point. All controller/interpreter instances are per-invocation (created fresh each run). The pipeline is a pure derivation: raw events + loadout context in → processed events out.
+`processCombatSimulation` is the pipeline entry point. The pipeline is a pure derivation: raw events + loadout context in → processed events out.
+
+**Single ingress contract (Phase 8):** every event enters `DerivedEventController` through `createSkillEvent(ev)`. There is no batch `registerEvents`, no `seedControlledOperator`, no `extendedIds` guard, no `markExtended`. Per-event ingress runs combo chaining, reaction segmentation, stop discovery (with retroactive re-extension of earlier events), idempotent time-stop extension, frame position computation, validation, combo-window re-resolution, and queue-frame emission — all for a single event.
 
 ```
 processCombatSimulation(rawEvents, loadoutContext...)
-  1. InputEventController.classifyEvents(rawEvents)     → { inputEvents (sorted by startFrame), derivedEvents }
-  2. new DerivedEventController(triggerAssociations)      → state
-  2b. state.seedControlledOperator(firstOccupiedSlotId)  → seeds CONTROL for first operator (full timeline)
-  3. state.registerEvents(inputEvents)                    → inline: extension, frame positions, combo triggers, CONTROL clamping, validation
-  4. (SP recovery is reactive — emitted via RECOVER/RETURN SKILL_POINT clauses during the queue; no pre-pass.)
-  5. runEventQueue(state, derivedEvents, ...)             → builds TriggerIndex, seeds talent + derived + triggers, runs EventInterpretorController
-  6. state.getProcessedEvents()                           → final output (reactions merged)
-  7. StaggerController.sync(result)                        → frailty events from stagger HP graph
-  8. If frailty events: re-run steps 1–6 with frailty events appended to rawEvents
+  1. parser/cloneAndSplitEvents(rawEvents)         → { inputEvents (sorted by startFrame), derivedEvents }
+  2. DerivedEventController.reset(...)             → state
+  3. Control seed:  parser/buildControlSeed(slot)  → state.createSkillEvent(seed, { checkCooldown: false })
+  4. For each inputEvent:                             state.createSkillEvent(ev, { checkCooldown: false })
+  5. For each enemy action event:                     state.createSkillEvent(ev, { checkCooldown: false })
+  6. runEventQueue(state, derivedEvents, ...)
+       ├─ builds TriggerIndex
+       ├─ parser/selectNewTalents → createSkillEvent loop
+       ├─ Interprets passive talent APPLY STAT clauses inline
+       ├─ Bulk flattenEventsToQueueFrames(derivedEvents, stops) → queue
+       └─ Drain loop: state.popNextFrame → interpretor.processQueueFrame → state.insertQueueFrames
+  7. Re-register queue events: createSkillEvent(ev, { emitQueueFrames: false })
+  8. state.validateAll() — sibling overlap warnings
+  9. state.getProcessedEvents()                    → final output (reactions merged)
+ 10. StaggerController.sync → frailty events → re-run if any
 ```
 
 ### Components
@@ -63,23 +71,18 @@ processCombatSimulation(rawEvents, loadoutContext...)
 
 ## DerivedEventController
 
-### Two Paths for Events
+### Single Ingress: `createSkillEvent`
 
-Events enter DEC through two paths with different time-stop handling:
+All skill / input / talent / enemy action events enter DEC via `createSkillEvent`. It runs three passes per event:
 
-**Path A: `registerEvents(events)` — input events, SP recovery, talents**
-- These are registered into `registeredEvents` with full inline processing:
-  - Pass 1: combo chaining, reaction segments, stop discovery
-  - Pass 2: time-stop extension (`extendSingleEvent`), frame positions (`computeFramePositions`), validation (`validateTimeStopStart`)
-  - Pass 3: combo trigger resolution
-- Events arrive fully adjusted — durations extended, frame positions computed.
+- **Pass 1 — discovery:** `chainComboPredecessor` (truncates prior combo CD on the same owner), `buildReactionSegments` (materializes corrosion/combustion segments from raw duration), `clampPriorControlEvents` (shortens earlier CONTROL events to end at `ev.startFrame`), `_maybeRegisterStop` (time-stop registration; also retroactively re-extends overlapping prior events and reactively shifts queued frames), `_pushToStorage` (deep-clones segments/frames into DEC-owned copies, captures per-segment raw durations in `rawSegmentDurations`, appends to `registeredEvents`).
+- **Pass 2 — positioning:** `extendSingleEvent` (idempotent — reads raw from `rawSegmentDurations`, writes extended to `seg.properties.duration` in place), `computeFramePositions` (sets `absoluteFrame` / `derivedOffsetFrame` on frame markers), `validateTimeStopStart`, `notifyResourceControllers`.
+- **Pass 3 — reactive combo resolution:** `resolveComboTriggersInline` wipes all COMBO_WINDOW events, clears combo events' `comboTriggerColumnId`/`triggerEventUid`, and re-emits windows via `openComboWindow` for the current trigger-match set. Runs every createSkillEvent call; kept correct by reactive merge-on-insert in `openComboWindow`.
+- **Pass 4 — queue frame emission:** `flattenEventsToQueueFrames([ev], this.stops)` emits `EVENT_START`, `SEGMENT_START/END`, `ON_FRAME`, `EVENT_END`, and (for combos without a resolved trigger column) `COMBO_RESOLVE` queue entries. Skipped via `opts.emitQueueFrames: false` for the post-drain re-registration of queue events.
 
-**Path B: `addEvent(ev)` — queue-created events (inflictions, reactions, statuses)**
-- Created by EventInterpretorController during queue processing.
-- Duration extended by time-stops inline (`extendDuration`).
-- Stored in `stacks` (for active queries) and `output` (for final output).
-- NOT in `registeredEvents` — no combo chaining, no frame position computation at this point.
-- After the queue completes, `state.registerEvents(queueEvents)` runs Pass 2 on them (frame positions, validation). Extension is skipped via `extendedIds` guard since `addEvent` already extended them.
+### Queue-created events: `addEvent` / `pushEvent`
+
+Created by `EventInterpretorController` during the queue drain (reactions, inflictions, statuses from `APPLY` clauses). Go directly into `stacks` (for active queries) and `output` (for final output). Duration extended inline via `extendDuration` using current stops; tracked in the single-total `rawDurations` map. `reExtendQueueEvents` re-applies extension when a new stop lands mid-drain. These events are **excluded from `rawSegmentDurations`** so the per-segment extension path no-ops on them. After the drain, they are re-registered via `createSkillEvent(..., { emitQueueFrames: false })` so `getProcessedEvents` returns them.
 
 ### Domain Controller API (used by EventInterpretorController)
 
@@ -113,38 +116,35 @@ Events enter DEC through two paths with different time-stop handling:
 ```
 processCombatSimulation(rawEvents, loadoutContext)
     │
-    ├─ 1. InputEventController.classifyEvents → { inputEvents, derivedEvents }
+    ├─ 1. parser/cloneAndSplitEvents → { inputEvents, derivedEvents }
     │
-    ├─ 2. DerivedEventController.registerEvents(inputEvents)
-    │      ├─ Pass 1: combo chaining, reaction segments, stop discovery
-    │      ├─ Pass 2: time-stop extension, frame positions, validation
-    │      └─ Pass 3: combo trigger resolution
+    ├─ 2. control seed + inputEvents + enemy action events
+    │      → loop state.createSkillEvent(ev, { checkCooldown: false })
+    │         per event: pass 1 (discover/chain/clamp/stop/clone-push)
+    │                    pass 2 (extend/positions/validate/notify)
+    │                    pass 3 (resolveComboTriggersInline)
+    │                    pass 4 (emit own queue frames into DEC queue)
     │
-    ├─ 3. collectEngineTriggerEntries → register talent events
-    │      (SP recovery is reactive — no pre-pass.)
+    ├─ 3. runEventQueue(state, derivedEvents)
+    │      ├─ build TriggerIndex
+    │      ├─ talent seeding via createSkillEvent loop
+    │      ├─ interpret passive talent APPLY STAT clauses inline
+    │      ├─ bulk flattenEvents(derivedEvents) → queue
+    │      │    (registered events' queue frames already emitted in step 2)
+    │      ├─ drain loop: popNextFrame → processQueueFrame → insertQueueFrames
+    │      │    Queue-created events (statuses/inflictions/reactions) via addEvent/pushEvent
+    │      ├─ re-register queue events via createSkillEvent(..., { emitQueueFrames: false })
+    │      └─ state.validateAll() — sibling overlap warnings
     │
-    ├─ 4. runEventQueue(state, derivedEvents)
-    │      ├─ Seed derived events (freeform inflictions/reactions) into queue
-    │      ├─ Seed frame markers from registered input events
-    │      ├─ Seed trigger contexts (exchange, absorption, engine)
-    │      ├─ EventInterpretorController.processQueueFrame() loop
-    │      │    └─ Pop entries in (frame, priority) order
-    │      │       Process effects via DEC domain methods (addEvent)
-    │      │       Queue-created events: duration extended inline, stored in stacks/output
-    │      ├─ state.registerEvents(queueEvents + comboWindows)
-    │      │    └─ Pass 2 runs: frame positions + validation (extension skipped — already done)
-    │      └─ state.validateAll() — sibling overlap check
-    │
-    └─ 5. DerivedEventController.getProcessedEvents()
+    └─ 4. state.getProcessedEvents()
            └─ mergeReactions + attachReactionFrames → returned to view
     │
     ▼
 Post-pipeline (app layer):
-    SkillPointController.sync(processedEvents) → SP resource timeline
-    StaggerController.sync(processedEvents) → stagger resource timeline + frailty events
-      If frailty events exist → re-run pipeline with frailty events included
-      (two-pass: pass 1 computes stagger damage, pass 2 fires BECOME STAGGERED triggers)
-    EventsQueryService(controller) → damage table queries
+    SkillPointController.sync → SP resource timeline
+    StaggerController.sync → stagger timeline + frailty events
+      If frailty exists → re-run pipeline
+    EventsQueryService(controller) → damage queries
 ```
 
 ---
@@ -205,18 +205,24 @@ Most stat effects use `value`. Only effects that scale existing accumulated valu
 
 ## Time-Stop Handling
 
-Time-stop adjustment happens in two places depending on the event path:
+Time-stop handling is **retroactive and reactive** — events arrive through `createSkillEvent` one at a time, which means a new stop can land on earlier events' queue frames and segment extensions after they've already been processed. Two mechanisms keep state consistent:
 
-### Input events (registerEvents → Path A)
-- **Discovery**: Per-event in Pass 1 via `isTimeStopEvent()` (combos, ultimates, perfect dodges with `animationDuration > 0`).
-- **Combo chaining**: When a combo's time-stop overlaps an existing combo's, the older is truncated at the newer's start frame. Per-event during registration.
-- **Extension**: Per-event in Pass 2. Each event's segment durations extended by foreign time-stops (game-time segments only — `REAL_TIME` segments and the stop event's own animation are never extended).
-- **Frame positions**: Per-event in Pass 2. `absoluteFrame` and `derivedOffsetFrame` computed on all frame markers.
+### Idempotent per-segment extension
+- `_pushToStorage` captures each segment's **raw** duration in `rawSegmentDurations` when the event is first ingressed.
+- `extendSingleEvent` is idempotent: it reads raw from `rawSegmentDurations`, walks foreign stops, and **writes extended durations in place** on the event's cloned segments. Safe to call any number of times.
+- The `extendedIds` double-extension guard is **deleted** — no longer needed by construction.
 
-### Queue-created events (addEvent → Path B)
-- **Duration extension**: Inline in `addEvent` via `extendDuration`. Duration extended by all known stops at the time of creation.
-- **Frame positions**: Computed later when queue events are registered post-queue (`state.registerEvents(queueEvents)`). Pass 2 runs `computeFramePositions` on each event. Extension is skipped (already done, marked in `extendedIds`).
-- **New stop discovery**: If a queue-created event is itself a time-stop, `addEvent` calls `maybeRegisterStop` + `reExtendQueueEvents` to adjust durations of previously-created queue events.
+### Retroactive re-extension on stop discovery
+- When `_maybeRegisterStop` registers a new stop `[S, E]`, it walks `registeredEvents` for entries tracked in `rawSegmentDurations` whose active range overlaps `[S, E]`, and re-runs `extendSingleEvent` + `computeFramePositions` on each. Mutates in place; no object identity change.
+
+### Reactive queue-entry shift
+- `_maybeRegisterStop` also calls `_shiftQueueForNewStop(S, E, ownStopEventUid)`, which walks the DEC-owned priority queue and shifts every entry whose `frame > S` (excluding the stop event's own entries) by `E - S` frames. Re-heapifies. Keeps already-inserted queue frames aligned with the new extended timeline.
+
+### Combo chaining
+- When a combo's time-stop overlaps an existing combo on the same owner, `chainComboPredecessor` truncates the earlier combo's CD segment at the newer's `startFrame`. Per-event during pass 1.
+
+### Queue-created events (addEvent / pushEvent)
+- Queue events (reactions/inflictions/statuses) bypass `rawSegmentDurations`. Their duration is extended inline at creation time via `extendDuration` + the single-total `rawDurations` map. `reExtendQueueEvents` handles mid-drain stop registration for them.
 
 ---
 
@@ -281,7 +287,13 @@ Combo trigger conditions with `subjectDeterminer: "CONTROLLED"` require the perf
 
 `triggerMatch.ts` → `resolveOwnerFilter` accepts `controlledSlotId` as either a static string or a `(frame: number) => string` function. For CONTROLLED determiners, `matchesOwner(ownerId, atFrame)` resolves the controlled slot at the candidate frame and checks ownership.
 
-`getControlledSlotAtFrame` is threaded from `eventQueueController.ts` → `deriveComboActivationWindows` → `findClauseTriggerMatches` → `VerbHandlerContext.controlledSlotId`.
+`getControlledSlotAtFrame` is threaded from `eventQueueController.ts` → `DEC.setControlledSlotResolver` → `resolveComboTriggersInline` → `findClauseTriggerMatches` → `VerbHandlerContext.controlledSlotId`.
+
+## Chain-of-Action Refs (Phase 8 step 7.5)
+
+`TriggerMatch.sourceEventUid` and `TimelineEvent.triggerEventUid` carry the uid of the source event that caused a trigger to fire. Set by `makeMatch` in `triggerMatch.ts` from `ev.uid`; propagated through `openComboWindow` → `_applyComboWindowToCombos` onto combo events.
+
+The `duplicateTriggerSource` handler (interpretor §3b) uses this uid to look up the live source event via `getAllEvents()` and read `columnId`/`id` directly, instead of consulting the denormalized `comboTriggerColumnId` string. A transitional fallback to `comboTriggerColumnId` is retained for the cases where uid propagation hasn't been wired through yet (some manually-flagged battle-skill frames in tests).
 
 ---
 
