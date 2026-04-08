@@ -264,6 +264,56 @@ export class DerivedEventController implements ColumnHost {
   // ── Registration ──────────────────────────────────────────────────────────
 
   /**
+   * Single-event entrypoint. Phase 8 step 3 bridge — introduces the public
+   * surface that step 7 will route parser-emitted events through, without
+   * yet changing batch semantics. Returns the registered event on success,
+   * or `null` if rejected by cooldown.
+   *
+   * Currently delegates to `registerEvents([ev])` so batch time-stop
+   * discovery semantics are preserved until step 5 makes stops reactive.
+   */
+  createSkillEvent(ev: TimelineEvent): TimelineEvent | null {
+    if (this._checkCooldown(ev)) return null;
+    const beforeLen = this.registeredEvents.length;
+    this.registerEvents([ev]);
+    // registerEvents dedupes by uid, so the new ev may not have been appended
+    if (this.registeredEvents.length === beforeLen) return null;
+    // Return the actually-registered reference (pass 2 may replace with a new object)
+    for (let i = this.registeredEvents.length - 1; i >= beforeLen; i--) {
+      if (this.registeredEvents[i].uid === ev.uid) return this.registeredEvents[i];
+    }
+    return null;
+  }
+
+  /**
+   * Returns true if ev should be rejected due to an active cooldown on the
+   * same owner + column at ev.startFrame. Used by reactive creators to
+   * silently drop impossible events (e.g. combo trigger firing while the
+   * target combo is still on CD).
+   */
+  private _checkCooldown(ev: TimelineEvent): boolean {
+    for (const prev of this.registeredEvents) {
+      if (prev.ownerId !== ev.ownerId || prev.columnId !== ev.columnId) continue;
+      if (prev.uid === ev.uid) continue;
+      const prevEnd = prev.startFrame + computeSegmentsSpan(prev.segments);
+      if (prev.startFrame <= ev.startFrame && ev.startFrame < prevEnd) {
+        // Only reject when the active range includes a COOLDOWN segment at ev.startFrame
+        let cursor = prev.startFrame;
+        for (const seg of prev.segments) {
+          const segEnd = cursor + seg.properties.duration;
+          if (ev.startFrame >= cursor && ev.startFrame < segEnd) {
+            if (seg.properties.segmentTypes?.includes(SegmentType.COOLDOWN)) return true;
+            break;
+          }
+          cursor = segEnd;
+        }
+      }
+    }
+    return false;
+  }
+
+
+  /**
    * Register events with inline combo chaining, time-stop discovery, and
    * time-stop extension. Two internal passes per batch:
    *   1. Combo chaining + reaction segments + stop discovery + push
