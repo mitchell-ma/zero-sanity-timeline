@@ -4,8 +4,10 @@ Reference: [`docs/notes/phase-8-plan.md`](./phase-8-plan.md)
 
 ## Status: steps 1–5 committed, step 6 complete (a–f), step 7 sub a–b committed, rest pending
 
-Every step gated on full jest suite (163 suites / 2125 tests) + tsc + eslint
-on touched files. Baseline held identical at every commit.
+Every step gated on full jest suite + tsc + eslint on touched files.
+Baseline held green at every commit. Current baseline after 6f:
+**162 suites / 2106 tests** (19 tests dropped in 6f with
+`resolveComboTriggerColumns`).
 
 | Step | Commit | Description | Status |
 | --- | --- | --- | --- |
@@ -330,6 +332,141 @@ and optional:
   mirrored inflictions). Routing this through `openComboWindow` would
   change the source-column resolution (base `windowFrames` vs.
   time-stop-extended). Left as-is.
+
+### Step 7 — Parser + final ingress collapse (in progress)
+
+**Landed so far (7a–7b)**: pure relocations. `src/controller/timeline/parser/`
+is now the canonical home for event ingress transformations, with two
+modules so far:
+
+- `flattenEvents.ts` — `flattenEventsToQueueFrames(events, stops)`,
+  formerly `collectFrameEntries` in eventQueueController.ts. Emits
+  PROCESS_FRAME entries (EVENT_START, SEGMENT_START/END, ON_FRAME,
+  EVENT_END) + COMBO_RESOLVE entries for combos without resolved
+  trigger columns.
+- `cloneAndSplit.ts` — `cloneAndSplitEvents(rawEvents)` +
+  `resetSegmentCloneCache()` + the `_segObjCache` clone cache,
+  formerly in inputEventController.ts. Splits raw events into
+  `{inputEvents, derivedEvents}`, deep-cloning segments so pipeline
+  mutation doesn't leak back to React raw state.
+- `index.ts` — barrel re-export.
+
+Neither relocation changed any semantics. The old callsites in
+`eventQueueController.ts` and `inputEventController.ts` now import from
+`./parser`. `inputEventController.ts` still re-exports both names for
+backwards compat (objectPool's dynamic `require('./inputEventController')`
+call depends on it).
+
+### Step 7 — Remaining work (7c onward)
+
+The hard part is still ahead: the architectural flip from "batch
+registerEvents pre-pass, then queue drain for frame markers" to "queue
+drain is the ONE ingress, user-placed skill events enter via synthetic
+APPLY SKILL clauses that call `DEC.createSkillEvent` from a
+`doApplySkill` interpretor handler".
+
+Proposed sub-step ordering (each a separate commit, each must be
+jest-green):
+
+**7c — Move talent event seeding into the parser.** Currently
+`runEventQueue` (lines ~253–261) pulls talents from the TriggerIndex
+and calls `state.registerEvents(newTalents)`. Move this into
+`parser/flattenTalents.ts` (new file) and have it emit parser-seeded
+entries. Tricky: talents currently need to be REGISTERED (for
+onTriggerClause presence queries), not just queue-entered. A
+half-measure: keep the `registerEvents(newTalents)` call but have the
+parser be the one that selects which talents are new. This is pure
+plumbing. Better approach once 7e lands: talents enter via a
+`TALENT_SEED` queue frame at frame 0.
+
+**7d — Move `seedControlledOperator` into a parser-emitted clause.**
+Currently `processCombatSimulation` calls `state.seedControlledOperator`
+which directly builds a synthetic CONTROL event and calls
+`registerEvents`. Replace with parser emission of an APPLY CONTROL
+clause at frame 0. Requires a `doApplyControl` interpretor handler
+(tiny — it just calls the existing seedControlledOperator internals).
+
+**7e — The big flip: doApplySkill + synthetic APPLY_SKILL hook.**
+Add a new `FrameHookType.APPLY_SKILL` (or reuse EVENT_START with a
+flag). Parser emits this for user-placed skill events at a priority
+that runs BEFORE PROCESS_FRAME. When drained, the interpretor calls
+`DEC.createSkillEvent(sourceEvent)` which runs the existing pass
+1/2/3 helpers on a single event. This means `registerEvents(inputEvents)`
+in processCombatSimulation (line 460) can be removed — user-placed
+events enter via the queue.
+Caveats to watch:
+- Pass 3 currently runs once at the end of every `registerEvents`
+  call, clearing + re-emitting combo windows from scratch. In the
+  reactive model, pass 3 needs to run at a different cadence —
+  probably once after the final APPLY_SKILL entry fires. Could model
+  as a final POST_INGRESS queue entry.
+- `clampMultiSkillComboCooldowns` + `clampComboWindowsToEventEnd` are
+  folded into pass 3 tail (from 6d). These currently re-run on every
+  registerEvents call. Moving to once-per-pipeline changes their
+  timing — verify no test regresses.
+- Combo events without `comboTriggerColumnId` currently get their
+  COMBO_RESOLVE queue frame seeded by the parser's flatten pass.
+  Deferred-resolution path (`handleComboResolve`) still works.
+  Should be unchanged.
+
+**7f — Delete dead ingress paths.** Once 7e is in:
+- Delete `DEC.registerEvents` (replaced by `createSkillEvent` loop).
+- Delete `DEC.addEvent` (fold into `createSkillEvent` or into the
+  ColumnHost `applyEvent` path).
+- Delete `cloneAndSplitEvents` as an external API — parser consumes
+  raw events directly.
+- Delete `markExtended` + the `extendedIds` guard (per step 5 deferred
+  list — works once ingress is single-path).
+- Delete `validateAll` as a post-pass (it's already validating
+  sibling overlap; convert to inline on each `createSkillEvent`).
+- Delete `seedControlledOperator` method (superseded by 7d).
+
+**7g — Delete post-queue restoration loops.** The
+`creationInteractionMode` and UID restoration loops in
+`processCombatSimulation` (lines ~540–553) exist because
+`cloneAndSplitEvents` drops these fields on the clone. With the
+parser owning ingress, these can be preserved upstream and the
+post-pass can go away.
+
+**7h — Step 5 deferred items.** Flip initial queue seeding to raw
+(unextended) frame positions. Delete `extendedIds`. Fold
+`extendSingleEvent` into `computeFramePositions`. These only become
+safe once the parser is the single ingress (each event is created
+exactly once, no double-extension risk).
+
+### Things to remember for next session (step 7 resumption)
+
+1. **The parser module currently has two sub-files**:
+   `flattenEvents.ts`, `cloneAndSplit.ts`. Add 7c's talent emitter as
+   `flattenTalents.ts` (or similar) to keep one concept per file.
+
+2. **`inputEventController.ts` still re-exports `cloneAndSplitEvents`
+   and `resetSegmentCloneCache`** for dynamic-require compat with
+   `objectPool.ts:45`. Don't remove the re-export until
+   `objectPool.ts` is updated to import from `./parser` directly.
+
+3. **Step 7e is where behavior changes.** Sub-steps 7a–7d are pure
+   plumbing. 7e is the one that actually routes user-placed events
+   through the queue. Expect the most regressions there — all the
+   combo-using operators (Wulfgard, Antal, Estella, Fluorite P5,
+   Akekuri, Avywenna) are high risk, as are the time-stop operators
+   (Akekuri again).
+
+4. **Pass 3 rerun cadence.** Currently pass 3 runs on every
+   `registerEvents` call and does clear+re-emit of all combo windows
+   from scratch. When 7e removes the batch `registerEvents(inputEvents)`
+   call, pass 3 won't run as early. Need to decide: run it once at
+   end of ingress drain, or on every `createSkillEvent`, or on
+   demand via a POST_INGRESS queue priority.
+
+5. **Time-stop reactive shift from step 5** only handles stops
+   discovered mid-drain. Step 5's minimal form still relies on the
+   pre-queue batch registerEvents discovering stops from user-placed
+   events. Once 7e removes that batch pre-pass, ALL stops must be
+   discovered via the reactive shift path. This should work because
+   `_maybeRegisterStop` already uses the reactive path when the
+   queue is non-empty — but worth double-checking with Akekuri
+   integration tests after 7e.
 
 ### Step 6 original plan — Reactive combo windows
 
