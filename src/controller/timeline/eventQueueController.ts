@@ -366,27 +366,6 @@ export function processCombatSimulation(
     }
   }
 
-  // Propagate creationInteractionMode and original UID from user-placed seed events.
-  // User-placed freeform events on derived columns are classified as "derived"
-  // in cloneAndSplitEvents. The engine recreates them (new uid), losing the field.
-  // Match by ownerId+columnId+startFrame and copy creationInteractionMode + uid.
-  // Preserving the original UID ensures drag handlers, override keys, and other
-  // UID-based lookups match between raw state and pipeline output.
-  const userDerived = derivedEvents.filter(ev => ev.creationInteractionMode != null);
-  if (userDerived.length > 0) {
-    const seedKeys = new Map<string, { mode: InteractionModeType; uid: string }>();
-    for (const ev of userDerived) {
-      seedKeys.set(`${ev.ownerId}\0${ev.columnId}\0${ev.startFrame}`, { mode: ev.creationInteractionMode!, uid: ev.uid });
-    }
-    for (const ev of processed) {
-      const seed = seedKeys.get(`${ev.ownerId}\0${ev.columnId}\0${ev.startFrame}`);
-      if (seed != null) {
-        ev.creationInteractionMode = seed.mode;
-        ev.uid = seed.uid;
-      }
-    }
-  }
-
   return processed;
 }
 

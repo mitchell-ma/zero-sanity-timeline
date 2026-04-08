@@ -1182,10 +1182,11 @@ describe('EventInterpretorController: APPLY BREACH STATUS (PHYSICAL)', () => {
 // ── sourceEventUid / freeformUid propagation ─────────────────────────────
 
 describe('EventInterpretorController: sourceEventUid uid propagation', () => {
-  test('sourceEventUid set: child inherits parent uid', () => {
+  test('sourceEventUid set with matching column: child inherits parent uid', () => {
     const interp = makeInterpretor();
     const ctx = makeCtx(interp, {
       sourceEventUid: 'parent-uid',
+      sourceEventColumnId: 'NATURE_INFLICTION',
     });
 
     const effect: Effect = {
@@ -1198,6 +1199,26 @@ describe('EventInterpretorController: sourceEventUid uid propagation', () => {
     interp.interpret(effect, ctx);
     expect(interp.controller.output).toHaveLength(1);
     expect(interp.controller.output[0].uid).toBe('parent-uid');
+  });
+
+  test('sourceEventUid set with mismatched column: child gets fresh derived uid', () => {
+    const interp = makeInterpretor();
+    const ctx = makeCtx(interp, {
+      sourceEventUid: 'parent-uid',
+      sourceEventColumnId: 'some-other-column',
+    });
+
+    const effect: Effect = {
+      verb: VerbType.APPLY,
+      object: ObjectType.INFLICTION,
+      objectQualifier: AdjectiveType.NATURE,
+      to: NounType.ENEMY,
+    };
+
+    interp.interpret(effect, ctx);
+    expect(interp.controller.output).toHaveLength(1);
+    expect(interp.controller.output[0].uid).not.toBe('parent-uid');
+    expect(interp.controller.output[0].uid).toContain('NATURE_INFLICTION');
   });
 
   test('no sourceEventUid: child gets unique derived uid', () => {
@@ -1216,10 +1237,11 @@ describe('EventInterpretorController: sourceEventUid uid propagation', () => {
     expect(interp.controller.output[0].uid).toContain('CRYO_INFLICTION');
   });
 
-  test('sourceEventUid set: status inherits parent uid', () => {
+  test('sourceEventUid set with matching column: status inherits parent uid', () => {
     const interp = makeInterpretor();
     const ctx = makeCtx(interp, {
       sourceEventUid: 'parent-status-uid',
+      sourceEventColumnId: 'FOCUS',
     });
 
     const effect: Effect = {

@@ -203,6 +203,19 @@ export interface InterpretContext {
   parentStatusOwnerId?: string;
   /** UID of the source event — passed to column add() so derived events can be matched back to their raw event. */
   sourceEventUid?: string;
+  /**
+   * Column ID of the source event. Used by doApply to guard uid propagation:
+   * only reuse `sourceEventUid` for child events on the SAME column as the
+   * source (i.e. the freeform event's visible form), never for cross-column
+   * side effects (e.g. IE → NATURE infliction) where uid reuse would collide.
+   */
+  sourceEventColumnId?: string;
+  /**
+   * Interaction mode the source event was created in (e.g. FREEFORM). Propagated
+   * onto child events created by doApply so freeform status events retain the
+   * flag for view-layer drag/edit handler lookup.
+   */
+  sourceCreationInteractionMode?: import('../../consts/enums').InteractionModeType;
   /** Source damage frame key ("eventUid:si:fi") for intra-frame ordering.
    *  Propagated to status events so the damage builder can exclude same-frame provenance. */
   sourceFrameKey?: string;
@@ -857,15 +870,23 @@ export class EventInterpretorController {
     const ownerId = this.resolveOwnerId(effectTo, ctx, effectToDeterminer);
     const source = { ownerId: ctx.sourceOwnerId, skillName: ctx.sourceSkillName };
 
-    // For freeform-derived events, carry the source uid so the created event can be matched to the raw event.
-    const freeformUid = ctx.sourceEventUid;
+    // For freeform-derived events, carry the source uid so the created event
+    // can be matched to the raw event. Phase 8 step 7g unblock: only reuse
+    // the uid when the child event lands on the SAME column as the source
+    // (i.e. the freeform event's visible form — e.g. MF status → MF column).
+    // Cross-column side effects (e.g. freeform IE → NATURE infliction) get
+    // a fresh derived uid to avoid collision at re-registration time.
+    const freeformUidFor = (childColumnId: string): string | undefined =>
+      ctx.sourceEventUid && ctx.sourceEventColumnId === childColumnId
+        ? ctx.sourceEventUid
+        : undefined;
 
     if (effect.object === NounType.INFLICTION) {
       const columnId = resolveEffectColumnId(effect.object, effect.objectId, effect.objectQualifier);
       if (!columnId) return false;
       const dv = this.resolveWith(effect.with?.duration, ctx);
       this.controller.applyEvent(columnId, ownerId, ctx.frame, typeof dv === 'number' ? Math.round(dv * FPS) : INFLICTION_DURATION, source,
-        { uid: freeformUid ?? derivedEventUid(columnId, source.ownerId, ctx.frame) });
+        { uid: freeformUidFor(columnId) ?? derivedEventUid(columnId, source.ownerId, ctx.frame) });
       return true;
     }
     if (effect.object === NounType.STATUS) {
@@ -890,7 +911,7 @@ export class EventInterpretorController {
         this.controller.applyEvent(columnId, ownerId, ctx.frame, defaultDuration, source, {
           stacks: typeof sl === 'number' ? sl : undefined,
           ...(isForced && { forcedReaction: true }),
-          uid: freeformUid ?? derivedEventUid(columnId, source.ownerId, ctx.frame),
+          uid: freeformUidFor(columnId) ?? derivedEventUid(columnId, source.ownerId, ctx.frame),
         });
         return true;
       }
@@ -1027,13 +1048,13 @@ export class EventInterpretorController {
         const runtimeMaxStacks = cfg?.maxStacksNode
           ? resolveValueNode(cfg.maxStacksNode as ValueNode, this.buildValueContext({ ...ctx, sourceSlotId: statusOwnerId }))
           : cfg?.maxStacks;
-        const eventOverrides = { ...eventProps, ...(applyStacks != null ? { stacks: applyStacks } : {}), ...(ctx.consumedStacks != null ? { consumedStacks: ctx.consumedStacks } : {}) };
+        const eventOverrides = { ...eventProps, ...(applyStacks != null ? { stacks: applyStacks } : {}), ...(ctx.consumedStacks != null ? { consumedStacks: ctx.consumedStacks } : {}), ...(ctx.sourceCreationInteractionMode != null ? { creationInteractionMode: ctx.sourceCreationInteractionMode } : {}) };
         this.controller.applyEvent(columnId, statusOwnerId, ctx.frame, duration, source, {
           statusId: effect.objectId,
           ...(cfg?.stackingMode ? { stackingMode: cfg.stackingMode } : {}),
           ...(runtimeMaxStacks != null ? { maxStacks: runtimeMaxStacks } : {}),
           ...(Object.keys(eventOverrides).length > 0 ? { event: eventOverrides } : {}),
-          uid: freeformUid && si === 0 ? freeformUid : derivedEventUid(columnId, source.ownerId, ctx.frame, stackCount > 1 ? `${si}` : undefined),
+          uid: (freeformUidFor(columnId) && si === 0) ? freeformUidFor(columnId)! : derivedEventUid(columnId, source.ownerId, ctx.frame, stackCount > 1 ? `${si}` : undefined),
         });
         // Process each new status event's lifecycle clauses inline (onEntryClause, etc.)
         this.runStatusCreationLifecycle(effect.objectId, statusOwnerId, ctx);
@@ -2157,12 +2178,22 @@ export class EventInterpretorController {
       // is the source operator. UE gains from clauses on this frame must route
       // back to the source operator's slot via resolveRoutedSource.
       const routed = this.resolveRoutedSource(event);
+      // Phase 8 step 7g unblock: propagate uid + creationInteractionMode from
+      // freeform/derived user-placed events into child events created by the
+      // clause loop (e.g. freeform MF → doApply → configDrivenStatusColumn.add).
+      // Guarded by (a) non-skill column (so skills creating child statuses get
+      // fresh derived uids — no uid collision) AND (b) creationInteractionMode
+      // set (so only user-placed freeform events trigger propagation).
+      const propagateUid = event.creationInteractionMode != null
+        && !SKILL_COLUMN_SET.has(event.columnId);
       const interpretCtx: InterpretContext = {
         frame: absFrame,
         sourceOwnerId: routed.sourceOwnerId,
         sourceSlotId: routed.sourceSlotId,
         sourceSkillName: event.id,
-        sourceEventUid: undefined,
+        sourceEventUid: propagateUid ? event.uid : undefined,
+        sourceEventColumnId: propagateUid ? event.columnId : undefined,
+        sourceCreationInteractionMode: propagateUid ? event.creationInteractionMode : undefined,
         potential: pot,
         parentEventEndFrame: parentEventEnd,
         parentSegmentEndFrame: parentSegEnd,
