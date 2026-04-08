@@ -10,3 +10,4 @@
 export { flattenEventsToQueueFrames } from './flattenEvents';
 export { cloneAndSplitEvents, resetSegmentCloneCache } from './cloneAndSplit';
 export { selectNewTalents } from './selectNewTalents';
+export { buildControlSeed } from './buildControlSeed';

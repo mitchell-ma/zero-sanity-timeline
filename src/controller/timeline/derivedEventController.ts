@@ -30,7 +30,6 @@ import {
 } from './createSkillEvent';
 import { PriorityQueue } from './priorityQueue';
 import type { QueueFrame } from './eventQueueTypes';
-import { TOTAL_FRAMES } from '../../utils/timeline';
 import type { SlotTriggerWiring } from './eventQueueTypes';
 import { findClauseTriggerMatches } from './triggerMatch';
 import { getComboTriggerClause, getComboTriggerInfo } from '../gameDataStore';
@@ -46,7 +45,7 @@ import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../slot/commonSlotController
 import GENERAL_MECHANICS from '../../model/game-data/generalMechanics.json';
 import { getStatusDef, getStatusConfig } from './configCache';
 import type { LoadoutProperties } from '../../view/InformationPane';
-import { allocInputEvent } from './objectPool';
+import { buildControlSeed } from './parser';
 import type { ColumnHost, EventSource, AddOptions, ConsumeOptions } from './columns/eventColumn';
 import { ColumnRegistry } from './columns/columnRegistry';
 export type { EventSource } from './columns/eventColumn';
@@ -255,18 +254,8 @@ export class DerivedEventController implements ColumnHost {
    * this seed during registration. No-op if no slots are occupied.
    */
   seedControlledOperator(firstOccupiedSlotId: string | undefined, operatorId?: string) {
-    if (!firstOccupiedSlotId) return;
-    const ev = allocInputEvent();
-    ev.uid = `controlled-seed-${firstOccupiedSlotId}`;
-    ev.id = NounType.CONTROL;
-    ev.name = NounType.CONTROL;
-    ev.ownerId = firstOccupiedSlotId;
-    ev.columnId = OPERATOR_COLUMNS.INPUT;
-    ev.startFrame = 0;
-    ev.segments = [{ properties: { duration: TOTAL_FRAMES } }];
-    ev.sourceOwnerId = operatorId ?? firstOccupiedSlotId;
-    ev.sourceSkillName = NounType.CONTROL;
-    this.registerEvents([ev]);
+    const ev = buildControlSeed(firstOccupiedSlotId, operatorId);
+    if (ev) this.registerEvents([ev]);
   }
 
   // ── Priority queue (Phase 8 step 4: ownership moved into DEC) ───────────
