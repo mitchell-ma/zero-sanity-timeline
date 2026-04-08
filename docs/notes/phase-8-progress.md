@@ -2,7 +2,7 @@
 
 Reference: [`docs/notes/phase-8-plan.md`](./phase-8-plan.md)
 
-## Status: steps 1–5 committed, step 6 substeps a–c committed, 6d–8 pending
+## Status: steps 1–5 committed, step 6 substeps a–e committed, 7–8 pending
 
 Every step gated on full jest suite (163 suites / 2125 tests) + tsc + eslint
 on touched files. Baseline held identical at every commit.
@@ -17,7 +17,9 @@ on touched files. Baseline held identical at every commit.
 | 6a | `6c778deb` | `DEC.openComboWindow` reactive entrypoint, pass 3 routes through it | ✅ |
 | 6b | `7399b9d0` | Delete post-queue batch `deriveComboActivationWindows` call | ✅ |
 | 6c | `9152d736` | Delete post-queue re-derive + thread controlled-slot resolver | ✅ |
-| 6d+ | — | `clampComboWindowsToEventEnd` reactive integration + dead-code removal | ⏸️ pending |
+| 6d | `dbd6f1be` | Fold `clampMultiSkill` + `clampComboWindowsToEventEnd` into pass 3 tail | ✅ |
+| 6e | `b74d2648` | Delete dead `deriveComboActivationWindows` + `replaceComboWindows` | ✅ |
+| 6f | — | (Optional) `REDUCE_COOLDOWN` priority + delete orphan `resolveComboTriggerColumns` | ⏸️ deferred |
 | 7 | — | Parser flattens all event sources to `QueueFrame[]` | ⏸️ pending |
 | 8 | — | Invariant pin + engineSpec rewrite | ⏸️ pending |
 
@@ -271,27 +273,60 @@ Fully reactive integration is a 6d task — likely via a
 
 ## Remaining steps (for next session)
 
-### Step 6d+ — Finish step 6 cleanup
+### Step 6d — Fold combo window clamps into pass 3 (dbd6f1be)
 
-- Make `clampComboWindowsToEventEnd` reactive: when `reduceCooldown`
-  fires on a combo event, walk overlapping COMBO_WINDOW events on the
-  same slot and clamp their segment duration. Then delete the post-queue
-  `state.clampComboWindowsToEventEnd()` call.
-- Move or re-implement `clampMultiSkillComboCooldowns` as a reactive
-  hook inside `openComboWindow` (or a new `createSkillEvent` step for
-  combo events that land inside existing windows).
-- Add `REDUCE_COOLDOWN` priority between `PROCESS_FRAME` (5) and
-  `ENGINE_TRIGGER` (22) so Fluorite P5's CD reduction fires before its
-  combo trigger evaluation at the same frame. Requires auditing whether
-  `doReduce` still works synchronously at PROCESS_FRAME time or needs
-  to be split into a queue entry.
-- Delete dead code: `deriveComboActivationWindows`,
-  `DEC.replaceComboWindows`, `clampComboWindowsToEventEnd` post-queue
-  call, possibly `DEC.clampMultiSkillComboCooldowns`.
-- `resolveComboTriggerColumns` in `processComboSkill.ts` is still used
-  only by `comboTriggerResolution.test.ts` — decide whether to delete
-  that test (since `openComboWindow` is the new path) or rewrite it to
-  exercise DEC directly.
+Moved `clampMultiSkillComboCooldowns` + `clampComboWindowsToEventEnd`
+from their post-queue call sites into the tail of
+`resolveComboTriggersInline`. Both now run after every `openComboWindow`
+loop in pass 3, in the same order as the former post-queue sequence:
+multi-skill CD truncation first, then window duration clamping.
+
+The final `registerEvents(queueEvents)` in `runEventQueue` triggers a
+full pass 3 rebuild (COMBO_WINDOW wipe + re-emit). Any mid-queue
+`reduceCooldown` effects are naturally reflected because the re-emit
+uses the reduced CD state, and the tail clamp truncates windows to
+current combo ends. An earlier attempt in this session added a reactive
+hook inside `reduceCooldown` / `resetCooldown` directly — that approach
+was discarded because pass 3's wipe erases in-place clamping anyway.
+
+### Step 6e — Delete dead combo window code (b74d2648)
+
+Removed `deriveComboActivationWindows` (batch window derivation) and
+`DEC.replaceComboWindows` (combo window wipe-and-replace helper). Both
+had zero callers after 6d.
+
+Retained `resolveComboTriggerColumns` in `processComboSkill.ts` — still
+imported by `comboTriggerResolution.test.ts` (5 test cases exercise it
+directly as a pure function). The production path does not use it, but
+the tests still do. Deleting function + tests together is the only
+clean removal and would drop the test count from 2125. Deferred.
+
+## Step 6 — What remains
+
+Step 6's substantive work is complete. The combo window pipeline is now
+fully reactive via `DEC.openComboWindow`. Remaining residue is minor
+and optional:
+
+- **`REDUCE_COOLDOWN` priority slot.** The original plan asked for a
+  new priority between `PROCESS_FRAME` (5) and `ENGINE_TRIGGER` (22)
+  so Fluorite P5's CD reduction fires before its combo trigger
+  evaluation at the same frame. No test currently requires it; the
+  reduce effect already runs inline during PROCESS_FRAME handling and
+  the final pass 3 sees the reduced state. Add only if a same-frame
+  ordering regression surfaces.
+- **Orphan `resolveComboTriggerColumns` + its unit tests.** The
+  function is no longer on any production code path but its test file
+  still imports it. Deleting both removes ~5 test cases. Hold until
+  test count invariants are relaxed or the tests are rewritten against
+  `DEC.openComboWindow`.
+- **`handleComboResolve` / `resolveComboTrigger` deferred path** in the
+  interpretor is still alive. It still has a real purpose: ensuring a
+  combo event's `comboTriggerColumnId` is set mid-queue before
+  PROCESS_FRAME handlers read it (line 2087 in
+  eventInterpretorController for `duplicateTriggerSource`-based
+  mirrored inflictions). Routing this through `openComboWindow` would
+  change the source-column resolution (base `windowFrames` vs.
+  time-stop-extended). Left as-is.
 
 ### Step 6 original plan — Reactive combo windows
 
