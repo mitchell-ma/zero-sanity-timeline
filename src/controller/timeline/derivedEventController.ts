@@ -15,12 +15,19 @@
  *
  * No external bulk passes — all processing is internal to DerivedEventController methods.
  */
-import { TimelineEvent, EventSegmentData, computeSegmentsSpan, getAnimationDuration, eventDuration, setEventDuration } from '../../consts/viewTypes';
+import { TimelineEvent, computeSegmentsSpan, getAnimationDuration, eventDuration, setEventDuration } from '../../consts/viewTypes';
 import { NounType, VerbType } from '../../dsl/semantics';
 import { EventStatusType, SegmentType, StatusType, TimeDependency } from '../../consts/enums';
 import { TimeStopRegion, extendByTimeStops, isTimeStopEvent } from './processTimeStop';
-import { buildReactionSegment, buildCorrosionSegments, mergeReactions, attachReactionFrames } from './processInfliction';
-import { OPERATOR_COLUMNS, REACTION_COLUMNS, REACTION_COLUMN_IDS, COMBO_WINDOW_COLUMN_ID } from '../../model/channels';
+import { mergeReactions, attachReactionFrames } from './processInfliction';
+import { OPERATOR_COLUMNS, COMBO_WINDOW_COLUMN_ID } from '../../model/channels';
+import {
+  chainComboPredecessor,
+  buildReactionSegments,
+  clampPriorControlEvents,
+  computeFramePositions,
+  type ComboStopEntry,
+} from './createSkillEvent';
 import { TOTAL_FRAMES } from '../../utils/timeline';
 import type { SlotTriggerWiring } from './eventQueueTypes';
 import { findClauseTriggerMatches } from './triggerMatch';
@@ -64,7 +71,7 @@ export class DerivedEventController implements ColumnHost {
   private registeredStopIds = new Set<string>();
   private rawDurations = new Map<string, number>();
   private extendedIds = new Set<string>();
-  private comboStops: { uid: string; startFrame: number; animDur: number }[] = [];
+  private comboStops: ComboStopEntry[] = [];
   readonly output: TimelineEvent[] = [];
   private idCounter = 0;
   private triggerAssociations: TriggerAssociation[];
@@ -274,9 +281,16 @@ export class DerivedEventController implements ColumnHost {
     // Pass 1: combo chaining, reaction segments, stop discovery
     for (let i = 0; i < deduped.length; i++) {
       let ev = deduped[i];
-      ev = this._chainComboPredecessor(ev);
-      ev = this._buildReactionSegments(ev);
-      this._clampPriorControlEvents(ev);
+      ev = chainComboPredecessor(ev, {
+        comboStops: this.comboStops,
+        registeredEvents: this.registeredEvents,
+        stops: this.stops,
+      });
+      ev = buildReactionSegments(ev, {
+        rawDurations: this.rawDurations,
+        foreignStops: this.foreignStopsFor(ev),
+      });
+      clampPriorControlEvents(ev, this.registeredEvents);
       this._maybeRegisterStop(ev);
       this._pushToStorage(ev);
     }
@@ -287,7 +301,7 @@ export class DerivedEventController implements ColumnHost {
       if (this.stops.length > 0 && !this.extendedIds.has(ev.uid)) {
         ev = this.extendSingleEvent(ev);
       }
-      ev = this.computeFramePositions(ev);
+      ev = computeFramePositions(ev, this.stops);
       ev = this.validateTimeStopStart(ev);
       this.registeredEvents[i] = ev;
       this.notifyResourceControllers(ev);
@@ -413,40 +427,6 @@ export class DerivedEventController implements ColumnHost {
   }
 
   /**
-   * Compute absoluteFrame and derivedOffsetFrame on a single event's frame markers.
-   * Called per-event during registration (inline, not as a bulk pass).
-   */
-  private computeFramePositions(ev: TimelineEvent): TimelineEvent {
-    const fStops = this.foreignStopsFor(ev);
-
-    let cumulativeOffset = 0;
-    for (const seg of ev.segments) {
-      const segStart = cumulativeOffset;
-      const segAbsStart = ev.startFrame + segStart;
-
-      // Bake absolute start frame onto each segment for view-layer positioning
-      seg.absoluteStartFrame = segAbsStart;
-
-      cumulativeOffset += seg.properties.duration;
-      if (!seg.frames) continue;
-      if (this.stops.length === 0) {
-        for (const f of seg.frames) {
-          f.derivedOffsetFrame = f.offsetFrame;
-          f.absoluteFrame = segAbsStart + f.offsetFrame;
-        }
-      } else {
-        for (const f of seg.frames) {
-          const extOffset = extendByTimeStops(segAbsStart, f.offsetFrame, fStops);
-          f.derivedOffsetFrame = extOffset;
-          f.absoluteFrame = segAbsStart + extOffset;
-        }
-      }
-    }
-    return ev;
-  }
-
-
-  /**
    * Validate sibling overlap: events in the same column must not overlap.
    * Attaches warnings (read-only annotation, not bulk transformation).
    * Time-stop start validation is handled inline during registerEvents().
@@ -524,7 +504,7 @@ export class DerivedEventController implements ColumnHost {
   }
 
   /** Get combo chaining state (debug). */
-  getComboStops(): readonly { uid: string; startFrame: number; animDur: number }[] {
+  getComboStops(): readonly ComboStopEntry[] {
     return this.comboStops;
   }
 
@@ -690,110 +670,9 @@ export class DerivedEventController implements ColumnHost {
     return this.linkConsumptions.get(eventUid) ?? 0;
   }
 
-  // ── Combo chaining ────────────────────────────────────────────────────────
-
-  /**
-   * Incremental combo chaining: truncate overlapping combo animations.
-   * When a new combo is registered, its time-stop may overlap with existing
-   * combo time-stops. Truncations are applied in both directions.
-   */
-  /**
-   * Combo chaining entry. If ev is a combo with animation, truncate overlapping
-   * combo animations in both directions. Otherwise passthrough.
-   */
-  private _chainComboPredecessor(ev: TimelineEvent): TimelineEvent {
-    if (ev.columnId !== NounType.COMBO || getAnimationDuration(ev) <= 0) return ev;
-    return this._chainComboPredecessorImpl(ev);
-  }
-
-  /**
-   * Build reaction segments for freeform reaction events (corrosion/combustion).
-   * Passthrough for non-reaction events.
-   */
-  private _buildReactionSegments(ev: TimelineEvent): TimelineEvent {
-    if (!REACTION_COLUMN_IDS.has(ev.columnId)) return ev;
-    if (ev.columnId === REACTION_COLUMNS.CORROSION) {
-      const segs = buildCorrosionSegments(ev);
-      if (segs) ev.segments = segs;
-    } else {
-      // For already-extended events (re-registered from queue), use raw game-time
-      // duration so combustion ticks aren't inflated by time-stop extension.
-      const raw = this.rawDurations.get(ev.uid);
-      const fStops = this.foreignStopsFor(ev);
-      const seg = buildReactionSegment(ev, raw, fStops);
-      if (seg) ev.segments = [seg];
-    }
-    return ev;
-  }
-
-  /**
-   * Controlled operator: clamp earlier CONTROL events on other owners to end
-   * at ev.startFrame. No-op if ev is not a CONTROL input event.
-   */
-  private _clampPriorControlEvents(ev: TimelineEvent) {
-    if (ev.id !== NounType.CONTROL || ev.columnId !== OPERATOR_COLUMNS.INPUT) return;
-    for (let j = 0; j < this.registeredEvents.length; j++) {
-      const prev = this.registeredEvents[j];
-      if (prev.id !== NounType.CONTROL || prev.columnId !== OPERATOR_COLUMNS.INPUT) continue;
-      if (prev.ownerId === ev.ownerId) continue;
-      const prevEnd = prev.startFrame + computeSegmentsSpan(prev.segments);
-      if (prevEnd <= ev.startFrame) continue;
-      this.registeredEvents[j] = {
-        ...prev,
-        segments: [{ properties: { ...prev.segments[0]?.properties, duration: ev.startFrame - prev.startFrame } }],
-      };
-    }
-  }
-
   /** Append ev to the registered events array. */
   private _pushToStorage(ev: TimelineEvent) {
     this.registeredEvents.push(ev);
-  }
-
-  private _chainComboPredecessorImpl(ev: TimelineEvent): TimelineEvent {
-    let animDur = getAnimationDuration(ev);
-    const evEnd = ev.startFrame + animDur;
-    let changed = false;
-
-    // Check if ev starts within an existing combo's stop → truncate the older combo
-    for (const cs of this.comboStops) {
-      const csEnd = cs.startFrame + cs.animDur;
-      if (ev.startFrame > cs.startFrame && ev.startFrame < csEnd) {
-        const truncated = ev.startFrame - cs.startFrame;
-        cs.animDur = truncated;
-        // Update the registered event
-        const regIdx = this.registeredEvents.findIndex(e => e.uid === cs.uid);
-        if (regIdx >= 0) {
-          const reg = this.registeredEvents[regIdx];
-          this.registeredEvents[regIdx] = {
-            ...reg,
-            segments: setAnimationSegmentDuration(reg.segments, truncated),
-          };
-        }
-        // Update the stop region
-        const stop = this.stops.find(s => s.eventUid === cs.uid);
-        if (stop) stop.durationFrames = truncated;
-      }
-    }
-
-    // Check if any existing combo starts within ev's stop → truncate ev
-    for (const cs of this.comboStops) {
-      if (cs.startFrame > ev.startFrame && cs.startFrame < evEnd) {
-        const truncated = cs.startFrame - ev.startFrame;
-        animDur = truncated;
-        changed = true;
-        break;
-      }
-    }
-
-    // Track for future chaining
-    this.comboStops.push({ uid: ev.uid, startFrame: ev.startFrame, animDur });
-    this.comboStops.sort((a, b) => a.startFrame - b.startFrame);
-
-    if (changed) {
-      ev.segments = setAnimationSegmentDuration(ev.segments, animDur);
-    }
-    return ev;
   }
 
   // ── Time-stop management ─────────────────────────────────────────────────
@@ -1168,11 +1047,4 @@ export class DerivedEventController implements ColumnHost {
       }
     }
   }
-}
-
-/** Set the ANIMATION segment's durationFrames, returning updated segments. */
-function setAnimationSegmentDuration(segments: EventSegmentData[], duration: number): EventSegmentData[] {
-  return segments.map(s =>
-    s.properties.segmentTypes?.includes(SegmentType.ANIMATION) ? { ...s, properties: { ...s.properties, duration } } : s,
-  );
 }
