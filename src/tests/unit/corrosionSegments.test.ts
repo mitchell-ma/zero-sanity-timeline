@@ -441,7 +441,7 @@ describe('corrosion time stop interaction', () => {
     };
 
     const controller = new DerivedEventController();
-    controller.registerEvents([freeformCorrosion]);
+    controller.createSkillEvent(freeformCorrosion, { checkCooldown: false });
     const registered = controller.getRegisteredEvents();
     const result = registered.find(ev => ev.uid === 'freeform-corr-1')!;
 

@@ -86,7 +86,7 @@ export function runEventQueue(
   // Dedup against already-registered events AND already-registered in this run
   // (strict mode double-invocation can re-register same TriggerIndex talent objects).
   const newTalents = selectNewTalents(triggerIdx, state.getRegisteredEvents());
-  if (newTalents.length > 0) state.registerEvents(newTalents);
+  for (const t of newTalents) state.createSkillEvent(t, { checkCooldown: false });
 
   // ── Priority queue (owned by DEC; reset() above already cleared it) ────
   // Reset interpreter (reuse singleton)
@@ -136,11 +136,10 @@ export function runEventQueue(
   // post-queue re-derive in processCombatSimulation still runs as a safety
   // net for CD-reduction cases and will be removed in 6c.
   const queueEvents = state.output;
-  state.markExtended(queueEvents.map(ev => ev.uid));
   // Wire the controlled-slot resolver so pass 3 can filter CONTROLLED
   // OPERATOR combo triggers correctly when re-emitting windows.
   state.setControlledSlotResolver(getControlledSlotAtFrame);
-  state.registerEvents(queueEvents);
+  for (const ev of queueEvents) state.createSkillEvent(ev, { checkCooldown: false });
 
   state.validateAll();
 

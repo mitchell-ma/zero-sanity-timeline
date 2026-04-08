@@ -45,7 +45,6 @@ import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../slot/commonSlotController
 import GENERAL_MECHANICS from '../../model/game-data/generalMechanics.json';
 import { getStatusDef, getStatusConfig } from './configCache';
 import type { LoadoutProperties } from '../../view/InformationPane';
-import { buildControlSeed } from './parser';
 import type { ColumnHost, EventSource, AddOptions, ConsumeOptions } from './columns/eventColumn';
 import { ColumnRegistry } from './columns/columnRegistry';
 export type { EventSource } from './columns/eventColumn';
@@ -79,7 +78,6 @@ export class DerivedEventController implements ColumnHost {
    * lands on an already-registered event.
    */
   private rawSegmentDurations = new Map<string, number[]>();
-  private extendedIds = new Set<string>();
   private comboStops: ComboStopEntry[] = [];
   private queue = new PriorityQueue<QueueFrame>(
     (a, b) => a.frame !== b.frame ? a.frame - b.frame : a.priority - b.priority,
@@ -145,7 +143,6 @@ export class DerivedEventController implements ColumnHost {
     this.registeredStopIds.clear();
     this.rawDurations.clear();
     this.rawSegmentDurations.clear();
-    this.extendedIds.clear();
     this.comboStops.length = 0;
     this.queue.clear();
     (this.output as TimelineEvent[]).length = 0;
@@ -262,11 +259,6 @@ export class DerivedEventController implements ColumnHost {
    * Must be called before registerEvents so that user-placed swaps clamp
    * this seed during registration. No-op if no slots are occupied.
    */
-  seedControlledOperator(firstOccupiedSlotId: string | undefined, operatorId?: string) {
-    const ev = buildControlSeed(firstOccupiedSlotId, operatorId);
-    if (ev) this.registerEvents([ev]);
-  }
-
   // ── Priority queue (Phase 8 step 4: ownership moved into DEC) ───────────
 
   /** Pop the next queue frame in priority order, or undefined if empty. */
@@ -286,26 +278,52 @@ export class DerivedEventController implements ColumnHost {
   // ── Registration ──────────────────────────────────────────────────────────
 
   /**
-   * Single-event entrypoint. Phase 8 step 3 bridge — introduces the public
-   * surface that step 7 will route parser-emitted events through, without
-   * yet changing batch semantics. Returns the registered event on success,
-   * or `null` if rejected by cooldown.
+   * Phase 8 step 7: single-event ingress. The only path through which events
+   * enter DEC's registered-event storage. Runs combo chaining, reaction
+   * segmentation, stop discovery (+ retroactive re-extension of overlapping
+   * prior events), push-to-storage with deep clone + raw duration capture,
+   * time-stop extension, frame position computation, validation, and
+   * resource-controller notification — all for a single event.
    *
-   * Currently delegates to `registerEvents([ev])` so batch time-stop
-   * discovery semantics are preserved until step 5 makes stops reactive.
+   * Returns the registered event on success, or null if rejected by cooldown
+   * or already registered (uid dedup).
    */
   createSkillEvent(ev: TimelineEvent, opts: { checkCooldown?: boolean } = {}): TimelineEvent | null {
     const checkCooldown = opts.checkCooldown ?? true;
     if (checkCooldown && this._checkCooldown(ev)) return null;
-    const beforeLen = this.registeredEvents.length;
-    this.registerEvents([ev]);
-    // registerEvents dedupes by uid, so the new ev may not have been appended
-    if (this.registeredEvents.length === beforeLen) return null;
-    // Return the actually-registered reference (pass 2 may replace with a new object)
-    for (let i = this.registeredEvents.length - 1; i >= beforeLen; i--) {
-      if (this.registeredEvents[i].uid === ev.uid) return this.registeredEvents[i];
+    // Dedup by uid — prevents double-registration from React strict-mode re-entry.
+    if (this.registeredEvents.some(r => r.uid === ev.uid)) return null;
+
+    // Pass 1: combo chaining, reaction segments, stop discovery
+    ev = chainComboPredecessor(ev, {
+      comboStops: this.comboStops,
+      registeredEvents: this.registeredEvents,
+      stops: this.stops,
+    });
+    ev = buildReactionSegments(ev, {
+      rawDurations: this.rawDurations,
+      foreignStops: this.foreignStopsFor(ev),
+    });
+    clampPriorControlEvents(ev, this.registeredEvents);
+    this._maybeRegisterStop(ev);
+    const owned = this._pushToStorage(ev);
+
+    // Pass 2: extension, frame positions, validation, resource notification
+    let out = this.extendSingleEvent(owned);
+    out = computeFramePositions(out, this.stops);
+    out = this.validateTimeStopStart(out);
+    const idx = this.registeredEvents.length - 1;
+    this.registeredEvents[idx] = out;
+    this.notifyResourceControllers(out);
+
+    // Pass 3: re-resolve combo trigger columns across the full event set.
+    // Runs every ingress because new events can open or merge combo windows
+    // reactively; the prior batch pass 3 is gone.
+    if (this.slotWirings.length > 0) {
+      this.resolveComboTriggersInline();
     }
-    return null;
+
+    return out;
   }
 
   /**
@@ -336,55 +354,6 @@ export class DerivedEventController implements ColumnHost {
   }
 
 
-  /**
-   * Register events with inline combo chaining, time-stop discovery, and
-   * time-stop extension. Two internal passes per batch:
-   *   1. Combo chaining + reaction segments + stop discovery + push
-   *   2. Extend newly-registered events by the now-complete stops list
-   * No separate extendAll() call needed.
-   */
-  registerEvents(events: TimelineEvent[]) {
-    // Dedup by UID — prevents double-registration when React strict mode
-    // double-invokes pipeline useMemo with cached TriggerIndex singletons.
-    const deduped = events.filter(ev => !this.registeredEvents.some(r => r.uid === ev.uid));
-    if (deduped.length === 0) return;
-
-    const startIdx = this.registeredEvents.length;
-
-    // Pass 1: combo chaining, reaction segments, stop discovery
-    for (let i = 0; i < deduped.length; i++) {
-      let ev = deduped[i];
-      ev = chainComboPredecessor(ev, {
-        comboStops: this.comboStops,
-        registeredEvents: this.registeredEvents,
-        stops: this.stops,
-      });
-      ev = buildReactionSegments(ev, {
-        rawDurations: this.rawDurations,
-        foreignStops: this.foreignStopsFor(ev),
-      });
-      clampPriorControlEvents(ev, this.registeredEvents);
-      this._maybeRegisterStop(ev);
-      this._pushToStorage(ev);
-    }
-
-    // Pass 2: per-event extension, frame positions, validation, and SP/UE notification.
-    // extendSingleEvent is idempotent (reads raw segment durations from the
-    // store populated in _pushToStorage), so no extendedIds guard needed.
-    for (let i = startIdx; i < this.registeredEvents.length; i++) {
-      let ev = this.registeredEvents[i];
-      ev = this.extendSingleEvent(ev);
-      ev = computeFramePositions(ev, this.stops);
-      ev = this.validateTimeStopStart(ev);
-      this.registeredEvents[i] = ev;
-      this.notifyResourceControllers(ev);
-    }
-
-    // Pass 3: resolve combo trigger columns (needs full event list + stops)
-    if (this.slotWirings.length > 0) {
-      this.resolveComboTriggersInline();
-    }
-  }
 
   /**
    * Resolve combo trigger columns inline during registration.
@@ -553,7 +522,6 @@ export class DerivedEventController implements ColumnHost {
       segments: [{ properties: { duration: extDuration } }],
     };
     this.registeredEvents.push(newWindow);
-    this.extendedIds.add(newWindow.uid);
 
     this._applyComboWindowToCombos(newWindow, wiring.slotId);
   }
@@ -763,11 +731,6 @@ export class DerivedEventController implements ColumnHost {
     other.rawDurations.forEach((dur, id) => {
       if (!this.rawDurations.has(id)) this.rawDurations.set(id, dur);
     });
-  }
-
-  /** Mark queue-created event IDs as extended (they're already in timeline-time). */
-  markExtended(ids: string[]) {
-    for (const id of ids) this.extendedIds.add(id);
   }
 
   /** Replace the registered events array (e.g. after late combo trigger resolution). */

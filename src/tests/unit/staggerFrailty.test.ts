@@ -60,7 +60,7 @@ function addStaggerDamage(sub: Subtimeline, frame: number, damage: number) {
 
 function buildQueryService(frailtyEvents: ReturnType<StaggerTimeline['generateFrailtyEvents']>, breaks: ReturnType<StaggerTimeline['getBreaks']>) {
   const ctrl = new DerivedEventController();
-  ctrl.registerEvents(frailtyEvents);
+  for (const ev of frailtyEvents) ctrl.createSkillEvent(ev, { checkCooldown: false });
   return new EventsQueryService(ctrl, breaks);
 }
 
