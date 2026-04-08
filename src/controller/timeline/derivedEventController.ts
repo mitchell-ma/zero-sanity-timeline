@@ -928,6 +928,9 @@ export class DerivedEventController implements ColumnHost {
     const durationFrames = getAnimationDuration(ev);
     this.stops.push({ startFrame, durationFrames, eventUid: ev.uid });
     this.stops.sort((a, b) => a.startFrame - b.startFrame);
+    // Phase 9a step 3: forward stops to spController so its timeline recomputes
+    // regen pauses immediately, without waiting for a finalize-time sweep.
+    if (this.spController) this.spController.setTimeStops(this.stops);
     // Phase 8 step 7e-prep: retroactive re-extension. When a new stop is
     // registered after other skill events have already been pushed, walk
     // events in rawSegmentDurations whose active range overlaps the new

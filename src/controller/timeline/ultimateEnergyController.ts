@@ -131,10 +131,15 @@ export class UltimateEnergyController {
   /**
    * Receives natural SP consumption data for a single battle skill.
    * The natural SP consumed converts to team-wide ultimate energy gain.
+   * Phase 9a step 5: idempotent — callable on every SP recompute. Setting
+   * naturalConsumed = 0 clears the entry so reactive updates can shrink
+   * the natural pool when more returns absorb prior natural consumption.
    */
   onNaturalSpConsumed(record: SkillPointConsumptionHistory) {
     if (record.naturalConsumed > 0) {
       this.naturalSpMap.set(record.eventUid, record.naturalConsumed);
+    } else {
+      this.naturalSpMap.delete(record.eventUid);
     }
   }
 

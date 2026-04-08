@@ -136,7 +136,7 @@ describe('Ultimate Energy Validation', () => {
     // Ultimate no-gain window (fallback: event duration + 1800 frames)
     ueController.addNoGainWindow(lastHitFrame + 249, lastHitFrame + 249 + 1800, SLOT_ID);
 
-    spController.finalize([]);
+    // Phase 9a: spController.finalize deleted — graph + UE notification flow reactively
     ueController.finalize(spController.getBattleSkillGainFrames());
 
     const graph = ueController.getGraph(SLOT_ID)!;
@@ -191,7 +191,7 @@ describe('Ultimate Energy Validation', () => {
     ueController.addConsume(lastHitFrame, SLOT_ID);
     ueController.addNoGainWindow(lastHitFrame + 249, lastHitFrame + 249 + 1800, SLOT_ID);
 
-    spController.finalize([]);
+    // Phase 9a: spController.finalize deleted — graph + UE notification flow reactively
     ueController.finalize(spController.getBattleSkillGainFrames());
 
     const graph = ueController.getGraph(SLOT_ID)!;
@@ -414,7 +414,7 @@ describe('UE ultimate energy gains — natural SP consumption via controllers', 
     ueController.configureSlot(SLOT, { max: 300, startValue: 0, chargePerFrame: 0, efficiency: 0 });
 
     spController.addCost('battle-1', 500, 100, SLOT, 500);
-    spController.finalize([]);
+    // Phase 9a: spController.finalize deleted — graph + UE notification flow reactively
     ueController.finalize(spController.getBattleSkillGainFrames());
 
     const graph = ueController.getGraph(SLOT)!;
@@ -436,7 +436,7 @@ describe('UE ultimate energy gains — natural SP consumption via controllers', 
     // Frame-level ultimateEnergyGain from a battle skill hit (selfGain only)
     ueController.addUltimateEnergyGain(500, SLOT, 15, 0);
 
-    spController.finalize([]);
+    // Phase 9a: spController.finalize deleted — graph + UE notification flow reactively
     ueController.finalize(spController.getBattleSkillGainFrames());
 
     const graph = ueController.getGraph(SLOT)!;
@@ -458,7 +458,7 @@ describe('UE ultimate energy gains — natural SP consumption via controllers', 
     // Second battle skill: costs 100 SP — 50 from returned pool, 50 from natural
     spController.addCost('battle-2', 200, 100, SLOT, 200);
 
-    spController.finalize([]);
+    // Phase 9a: spController.finalize deleted — graph + UE notification flow reactively
     ueController.finalize(spController.getBattleSkillGainFrames());
 
     const graph = ueController.getGraph(SLOT)!;

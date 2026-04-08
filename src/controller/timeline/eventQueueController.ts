@@ -316,9 +316,8 @@ export function processCombatSimulation(
     hpPercentageFn, getControlledSlotAtFrame, triggerIndex, critMode, overrides);
 
   // ── 5. Finalize resource controllers ──────────────────────────────────────
-  if (spController) {
-    if (allSlotSpCosts) spController.seedSlotCosts(allSlotSpCosts);
-    spController.finalize(state.getStops());
+  if (spController && allSlotSpCosts) {
+    spController.seedSlotCosts(allSlotSpCosts);
   }
   if (ueController) {
     // Update efficiency from stat accumulator (picks up APPLY STAT deltas from talents like Gilberta's Messenger's Song)

@@ -80,6 +80,12 @@ const FORBIDDEN: ForbiddenPattern[] = [
     reason: 'Sibling overlap is annotated per-event via _validateSiblingOverlap inside createSkillEvent. The post-pass validateAll method was deleted.',
     allowedFiles: [],
   },
+  {
+    name: 'spController.finalize (Phase 9a)',
+    pattern: /spController\.finalize\s*\(/,
+    reason: 'SP graph, stops, insufficiency zones, and UE notification flow reactively from addCost/addRecovery and DEC._maybeRegisterStop. The post-pipeline finalize method was deleted in Phase 9a.',
+    allowedFiles: [],
+  },
 ];
 
 function walk(dir: string, out: string[]) {
