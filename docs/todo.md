@@ -1,5 +1,40 @@
 # TODO
 
+## duplicateTriggerSource should use a chain-of-action ref
+
+Currently `eventInterpretorController.ts:2087` reads
+`event.comboTriggerColumnId` — a denormalized string stored on the combo
+event by pass 3 (`_applyComboWindowToCombos`) and the deferred
+`handleComboResolve` path. The code then maps the column ID to an
+element/status to synthesize an `APPLY INFLICTION`/`APPLY STATUS`
+effect and routes it through `interpret()`.
+
+Cleaner design: store a ref (uid) to the causing event on the combo
+event, e.g. `triggerEventUid`. The interpretor walks the ref back to
+the source event and reads `sourceEvent.columnId` / `.id` directly —
+single source of truth, no denormalized string to keep in sync, no
+"first-wins on merge" quirk.
+
+Steps if/when implemented:
+1. Extend `TriggerMatch` in `triggerMatch.ts` to include the source
+   event's uid (currently carries `sourceColumnId` / `sourceOwnerId` /
+   `sourceSkillName` but not the event itself).
+2. Add `triggerEventUid?: string` to `TimelineEvent` in `viewTypes.ts`.
+3. In `DEC._applyComboWindowToCombos`, set `combo.triggerEventUid =
+   match.eventUid` instead of (or in addition to) `comboTriggerColumnId`.
+4. In the `duplicateTriggerSource` handler, look up the trigger event
+   by uid from `getAllEvents()` and resolve element/status from its
+   `columnId` directly.
+5. Migrate / remove `comboTriggerColumnId` on combo events — may still
+   be needed on COMBO_WINDOW events for display.
+6. Audit `handleComboResolve` / `resolveComboTrigger` deferred path —
+   if the chain-of-action ref is set at pass 3 / `openComboWindow`
+   time, the deferred path becomes unnecessary.
+
+Touches DEC, interpretor, view layer, and tests. Probably a dedicated
+commit after Phase 8 step 7 (parser + final ingress collapse) lands,
+since step 7 naturally introduces chain-of-action concepts.
+
 ## Freeform combustion: 11 events created with colliding UIDs
 
 Placing a single freeform combustion at frame 0 via the context menu produces
