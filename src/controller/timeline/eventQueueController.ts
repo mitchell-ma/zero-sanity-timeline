@@ -329,9 +329,8 @@ export function processCombatSimulation(
   // Per-event efficiency is captured at gain time via slotEfficiencies
   // snapshots, and the SP → UE conversion runs from spController.addCost
   // pushing battle skill gain frames into UE.
-  if (hpController) {
-    hpController.finalize();
-  }
+  // Phase 9c: hpController.finalize deleted — slot HP graphs rebuild
+  // reactively from addHeal via _rebuildSlotGraph.
   if (shieldController) {
     shieldController.finalize();
   }

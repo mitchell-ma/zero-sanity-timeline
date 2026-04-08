@@ -71,9 +71,38 @@ export class HPController {
 
   // ── Accumulation (called during pipeline) ──────────────────────────────
 
-  /** Add a heal tick (e.g. from RESTORE HP effect). */
+  /**
+   * Add a heal tick (e.g. from RESTORE HP effect). Reactive — rebuilds the
+   * affected slot's HP graph and heal summary on every call so consumers
+   * never need a finalize step. O(N) per call where N is the slot's tick
+   * count; total O(N²) over a pipeline run, fine for hundreds of ticks.
+   */
   addHeal(tick: HealTick) {
     this.healTicks.push(tick);
+    this._rebuildSlotGraph(tick.targetSlotId);
+  }
+
+  private _rebuildSlotGraph(slotId: string) {
+    const maxHp = this.slotMaxHp.get(slotId) ?? 0;
+    if (maxHp <= 0) return;
+    // Collect this slot's heals in chronological order
+    const heals = this.healTicks
+      .filter(t => t.targetSlotId === slotId)
+      .sort((a, b) => a.frame - b.frame);
+    let currentHp = maxHp;
+    let totalHealing = 0;
+    let totalOverhealing = 0;
+    const graph: ResourcePoint[] = [{ frame: 0, value: currentHp }];
+    for (const heal of heals) {
+      const effectiveHeal = Math.min(heal.amount, maxHp - currentHp);
+      const overheal = heal.amount - effectiveHeal;
+      currentHp += effectiveHeal;
+      totalHealing += effectiveHeal;
+      totalOverhealing += overheal;
+      graph.push({ frame: heal.frame, value: currentHp });
+    }
+    this.slotHpGraphs.set(slotId, graph);
+    this.slotHealSummaries.set(slotId, { totalHealing, totalOverhealing });
   }
 
   /**
@@ -179,44 +208,8 @@ export class HPController {
     return this.slotHealSummaries.get(slotId);
   }
 
-  // ── Finalize ───────────────────────────────────────────────────────────
-
-  /** Compute operator HP graphs and heal summaries from accumulated ticks. */
-  finalize() {
-    // Sort heals by frame
-    this.healTicks.sort((a, b) => a.frame - b.frame);
-
-    // Group by target slot
-    const slotHeals = new Map<string, HealTick[]>();
-    for (const tick of this.healTicks) {
-      const list = slotHeals.get(tick.targetSlotId) ?? [];
-      list.push(tick);
-      slotHeals.set(tick.targetSlotId, list);
-    }
-
-    // Build HP graph + summary per slot
-    slotHeals.forEach((heals, slotId) => {
-      const maxHp = this.slotMaxHp.get(slotId) ?? 0;
-      if (maxHp <= 0) return;
-
-      let currentHp = maxHp;
-      let totalHealing = 0;
-      let totalOverhealing = 0;
-      const graph: ResourcePoint[] = [{ frame: 0, value: currentHp }];
-
-      for (const heal of heals) {
-        const effectiveHeal = Math.min(heal.amount, maxHp - currentHp);
-        const overheal = heal.amount - effectiveHeal;
-        currentHp += effectiveHeal;
-        totalHealing += effectiveHeal;
-        totalOverhealing += overheal;
-        graph.push({ frame: heal.frame, value: currentHp });
-      }
-
-      this.slotHpGraphs.set(slotId, graph);
-      this.slotHealSummaries.set(slotId, { totalHealing, totalOverhealing });
-    });
-  }
+  // Phase 9c: finalize() deleted. Per-slot HP graph + heal summary rebuild
+  // reactively from addHeal via _rebuildSlotGraph. No post-pipeline pass.
 
   // ── Clear ──────────────────────────────────────────────────────────────
 

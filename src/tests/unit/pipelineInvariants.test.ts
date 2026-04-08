@@ -92,6 +92,12 @@ const FORBIDDEN: ForbiddenPattern[] = [
     reason: 'UE graph computes reactively via _computeGraphs on every state change. Per-frame efficiency is captured at gain time via slotEfficiencies snapshots. Deleted in Phase 9b.',
     allowedFiles: [],
   },
+  {
+    name: 'hpController.finalize (Phase 9c)',
+    pattern: /hpController\.finalize\s*\(/,
+    reason: 'Per-slot HP graph + heal summary rebuild reactively from addHeal via _rebuildSlotGraph. Deleted in Phase 9c.',
+    allowedFiles: [],
+  },
 ];
 
 function walk(dir: string, out: string[]) {

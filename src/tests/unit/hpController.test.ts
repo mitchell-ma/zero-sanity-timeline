@@ -68,7 +68,7 @@ describe('HPController', () => {
       const hp = new HPController();
       hp.configureSlotHp('slot-0', 1000);
       hp.addHeal({ frame: 120, targetSlotId: 'slot-0', sourceSlotId: 'slot-0', amount: 200 });
-      hp.finalize();
+      // Phase 9c: hpController.finalize deleted — graph rebuilds reactively
 
       const summary = hp.getSlotHealSummary('slot-0');
       expect(summary).toBeDefined();
@@ -82,7 +82,7 @@ describe('HPController', () => {
       hp.configureSlotHp('slot-0', 1000);
       // Simulate HP at max — any heal is overheal since no damage mechanism yet
       hp.addHeal({ frame: 120, targetSlotId: 'slot-0', sourceSlotId: 'slot-1', amount: 500 });
-      hp.finalize();
+      // Phase 9c: hpController.finalize deleted — graph rebuilds reactively
 
       const summary = hp.getSlotHealSummary('slot-0');
       expect(summary!.totalOverhealing).toBe(500);
@@ -92,7 +92,7 @@ describe('HPController', () => {
       const hp = new HPController();
       hp.configureSlotHp('slot-0', 1000);
       hp.addHeal({ frame: 120, targetSlotId: 'slot-0', sourceSlotId: 'slot-1', amount: 100 });
-      hp.finalize();
+      // Phase 9c: hpController.finalize deleted — graph rebuilds reactively
 
       const graph = hp.getSlotHpGraph('slot-0');
       // Graph starts at (0, 1000) and heal at frame 120 keeps at 1000 (overheal)
@@ -107,7 +107,7 @@ describe('HPController', () => {
       hp.configureSlotHp('slot-1', 2000);
       hp.addHeal({ frame: 100, targetSlotId: 'slot-0', sourceSlotId: 'slot-2', amount: 50 });
       hp.addHeal({ frame: 200, targetSlotId: 'slot-1', sourceSlotId: 'slot-2', amount: 75 });
-      hp.finalize();
+      // Phase 9c: hpController.finalize deleted — graph rebuilds reactively
 
       expect(hp.getSlotHealSummary('slot-0')).toBeDefined();
       expect(hp.getSlotHealSummary('slot-1')).toBeDefined();
@@ -123,7 +123,7 @@ describe('HPController', () => {
       const hp = new HPController();
       hp.configureSlotHp('slot-0', 0);
       hp.addHeal({ frame: 100, targetSlotId: 'slot-0', sourceSlotId: 'slot-1', amount: 100 });
-      hp.finalize();
+      // Phase 9c: hpController.finalize deleted — graph rebuilds reactively
       expect(hp.getSlotHealSummary('slot-0')).toBeUndefined();
     });
   });
@@ -135,7 +135,7 @@ describe('HPController', () => {
       hp.initEnemyHp(10000);
       hp.setEnemyDamageTicks([{ frame: 100, damage: 500 }]);
       hp.addHeal({ frame: 120, targetSlotId: 'slot-0', sourceSlotId: 'slot-1', amount: 50 });
-      hp.finalize();
+      // Phase 9c: hpController.finalize deleted — graph rebuilds reactively
 
       hp.clear();
 
@@ -148,7 +148,7 @@ describe('HPController', () => {
       // But slot max HP is retained — can be re-used after reconfigure
       hp.initEnemyHp(10000);
       hp.addHeal({ frame: 100, targetSlotId: 'slot-0', sourceSlotId: 'slot-1', amount: 100 });
-      hp.finalize();
+      // Phase 9c: hpController.finalize deleted — graph rebuilds reactively
       expect(hp.getSlotHealSummary('slot-0')).toBeDefined();
     });
   });
