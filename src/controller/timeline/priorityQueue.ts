@@ -33,6 +33,14 @@ export class PriorityQueue<T> {
 
   peek(): T | undefined { return this.heap[0]; }
 
+  /** Direct access to the backing array (for in-place mutation + reheapify). */
+  toArray(): readonly T[] { return this.heap; }
+
+  /** Re-heapify after external in-place mutations to entry priorities. */
+  reheapify() {
+    for (let i = (this.heap.length >> 1) - 1; i >= 0; i--) this.sinkDown(i);
+  }
+
   private bubbleUp(i: number) {
     while (i > 0) {
       const parent = (i - 1) >> 1;

@@ -753,13 +753,37 @@ export class DerivedEventController implements ColumnHost {
     if (!isTimeStopEvent(ev)) return false;
     if (this.registeredStopIds.has(ev.uid)) return false;
     this.registeredStopIds.add(ev.uid);
-    this.stops.push({
-      startFrame: ev.startFrame,
-      durationFrames: getAnimationDuration(ev),
-      eventUid: ev.uid,
-    });
+    const startFrame = ev.startFrame;
+    const durationFrames = getAnimationDuration(ev);
+    this.stops.push({ startFrame, durationFrames, eventUid: ev.uid });
     this.stops.sort((a, b) => a.startFrame - b.startFrame);
+    // Phase 8 step 5: reactive shift. When a stop is discovered while the
+    // queue is mid-drain, every queued frame whose source event's active
+    // range overlaps the stop AND whose current frame > startFrame must be
+    // shifted by the stop duration so it lands at the correct extended time.
+    // No-op when the queue is empty (pre-pass registerEvents path), so
+    // existing batch behavior is preserved.
+    if (this.queue.size > 0 && durationFrames > 0) {
+      this._shiftQueueForNewStop(startFrame, durationFrames, ev.uid);
+    }
     return true;
+  }
+
+  /**
+   * Walk the queue and shift entries past a newly-registered stop.
+   * Excludes entries belonging to the stop's own event (a stop does not
+   * extend itself), and only shifts entries strictly after `startFrame`.
+   */
+  private _shiftQueueForNewStop(startFrame: number, durationFrames: number, ownStopEventUid: string) {
+    const entries = this.queue.toArray();
+    let shifted = false;
+    for (const e of entries) {
+      if (e.frame <= startFrame) continue;
+      if (e.sourceEvent && e.sourceEvent.uid === ownStopEventUid) continue;
+      e.frame += durationFrames;
+      shifted = true;
+    }
+    if (shifted) this.queue.reheapify();
   }
 
   private _extendDuration(startFrame: number, rawDuration: number, eventUid?: string) {
