@@ -2,20 +2,19 @@
 
 Reference: [`docs/notes/phase-8-plan.md`](./phase-8-plan.md)
 
-## Status: steps 1–5 committed, step 6 complete (a–f), step 7 sub a–b committed, rest pending
+## Status: steps 1–7 substantially done (7g/7h deferred); step 8 pending
 
 Every step gated on full jest suite + tsc + eslint on touched files.
-Baseline held green at every commit. Current baseline after 6f:
-**162 suites / 2106 tests** (19 tests dropped in 6f with
-`resolveComboTriggerColumns`).
+Baseline held green at every commit. Current baseline:
+**162 suites / 2106 tests**.
 
 | Step | Commit | Description | Status |
 | --- | --- | --- | --- |
-| 1 | `c4d1a29e` | Decompose `DEC.registerEvents` into named pure helpers | ✅ as planned |
-| 2 | `20e24b70` | Extract createSkillEvent helpers into free functions (+10 unit tests) | ✅ as planned |
-| 3 | `31b93637` | Add `DEC.createSkillEvent` single-event entrypoint | ✅ as planned |
-| 4 | `0aaca74e` | Move priority queue ownership into DEC | ✅ as planned |
-| 5 | `4b2e60ca` | Reactive time-stop re-positioning | ⚠️ minimal form — see below |
+| 1 | `c4d1a29e` | Decompose `DEC.registerEvents` into named pure helpers | ✅ |
+| 2 | `20e24b70` | Extract createSkillEvent helpers into free functions (+10 unit tests) | ✅ |
+| 3 | `31b93637` | Add `DEC.createSkillEvent` single-event entrypoint | ✅ |
+| 4 | `0aaca74e` | Move priority queue ownership into DEC | ✅ |
+| 5 | `4b2e60ca` | Reactive time-stop re-positioning (shift only; raw seeding deferred to 7h) | ⚠️ minimal |
 | 6a | `6c778deb` | `DEC.openComboWindow` reactive entrypoint, pass 3 routes through it | ✅ |
 | 6b | `7399b9d0` | Delete post-queue batch `deriveComboActivationWindows` call | ✅ |
 | 6c | `9152d736` | Delete post-queue re-derive + thread controlled-slot resolver | ✅ |
@@ -24,9 +23,230 @@ Baseline held green at every commit. Current baseline after 6f:
 | 6f | `f58725a9` | Delete orphan `resolveComboTriggerColumns` + 19 tests (→ 162 / 2106) | ✅ |
 | 7a | `eddf579c` | Scaffold `parser/` module, move `collectFrameEntries` → `flattenEvents.ts` | ✅ |
 | 7b | `ac681dbc` | Move `cloneAndSplitEvents` + segment clone cache → `parser/cloneAndSplit.ts` | ✅ |
-| 7c+ | — | Talent/control seed emission, `doApplySkill` handler, delete `registerEvents` dual path | ⏸️ pending |
-| 7 | — | Parser flattens all event sources to `QueueFrame[]` | ⏸️ pending |
+| 7c | `5054e816` | Talent selection → `parser/selectNewTalents.ts` | ✅ |
+| 7d | `c1efaca8` | Controlled-operator seed factory → `parser/buildControlSeed.ts` | ✅ |
+| 7e-prep+7e | `4db445f9` | Per-segment raw store, idempotent `extendSingleEvent`, retroactive re-extension, per-event ingress via `createSkillEvent` | ✅ |
+| 7f | `ffea8f0e` | Delete `registerEvents`, `seedControlledOperator`, `extendedIds`, `markExtended` | ✅ |
+| 7g | — | Delete post-queue UID / `creationInteractionMode` restoration loops | ⏸️ blocked on cloneAndSplit rewrite |
+| 7h | — | Fold `extendSingleEvent` into `computeFramePositions`; raw queue seeding | ⏸️ deferred (see below) |
+| 7.5 | — | `duplicateTriggerSource` chain-of-action uid ref | ⏸️ pending (independent) |
 | 8 | — | Invariant pin + engineSpec rewrite | ⏸️ pending |
+
+## Session 2026-04-08 (continuation) — 7c through 7f
+
+Landed in one session following the original 7c–7h roadmap. Key
+architectural shift: `createSkillEvent` is now the **sole event ingress
+path** into `DerivedEventController`. Control seed, user-placed input
+events, enemy actions, talent events, and queue-event re-registration
+all route through it one event at a time. The batch `registerEvents`
+method is deleted entirely.
+
+### 7c — Talent selection (5054e816)
+Pure plumbing. `runEventQueue`'s inline talent dedupe filter moved into
+`parser/selectNewTalents.ts` as a pure selector. Caller still invokes
+`createSkillEvent` per returned talent (after 7f). No behavior change.
+
+### 7d — Controlled-operator seed factory (c1efaca8)
+Extract the synthetic CONTROL event construction from
+`DEC.seedControlledOperator` into `parser/buildControlSeed.ts`. DEC
+method became a thin wrapper; then deleted entirely in 7f. The
+caller in `processCombatSimulation` now builds the seed via
+`buildControlSeed` and calls `createSkillEvent`.
+
+### 7e-prep + 7e — Per-segment raw store, per-event ingress (4db445f9)
+
+This is the load-bearing commit of the session. 7e as originally
+attempted (route user-placed events through `createSkillEvent` per
+event) broke 10 time-stop integration tests because pass 2's
+`extendSingleEvent` walked `this.stops` accumulated so far — with
+per-event ingress, event A's segments were extended before event B
+contributed its stop, and there was no mechanism to retroactively
+re-extend A. `rawDurations` stores only per-event totals, not
+per-segment, so a new store was required.
+
+**New field:** `private rawSegmentDurations = new Map<string, number[]>()`.
+
+**`_pushToStorage` rewrite:** deep-clones segments (and frame markers)
+into DEC-owned copies, then captures the raw per-segment durations into
+`rawSegmentDurations`. Queue events (already tracked by `rawDurations`
+from `pushEvent` mid-drain) are **excluded** from the new store, so
+`extendSingleEvent` no-ops on them — preserves pre-existing
+`pushEvent` extension + consumption-truncation semantics. Returns the
+owned event so callers reference the cloned copy, not the raw input.
+
+**`extendSingleEvent` rewrite:** reads raw durations from
+`rawSegmentDurations` and mutates `seg.properties.duration` in place.
+**Idempotent** — always starts from raw, so re-running on the same
+event with a changed stops list correctly produces extended-from-raw.
+Returns `ev` (self) instead of cloning a new event.
+
+**`extendedIds` deleted:** the guard that prevented double-extension
+is no longer needed. Pass 2 simply calls `extendSingleEvent` every
+time.
+
+**Retroactive re-extension in `_maybeRegisterStop`:** when a new stop
+`[S, E]` is registered, walk `registeredEvents` that are tracked in
+`rawSegmentDurations` and overlap `[S, E]`; re-run `extendSingleEvent`
+and `computeFramePositions` on each. Idempotent extension makes this
+safe to run any number of times.
+
+**isCrit write-back loop:** previously, non-time-stop events shared
+frame references with raw state (they were only cloned when extension
+was needed). MANUAL-mode `isCrit` writes during interpretation leaked
+back to raw state via those shared references, which is how isCrit
+persisted across pipeline re-runs. Clone-on-`_pushToStorage` breaks
+that path — raw state no longer receives the writes. A new
+`processCombatSimulation`-trailing loop syncs `isCrit` from the
+processed (cloned) events back to their raw-state siblings by
+matching on uid + segment index + frame index. The
+`critModeToggle.test.ts` "isCrit is NOT modified by NEVER/ALWAYS/
+EXPECTED modes (persistent data)" test is the canary for this.
+
+**Crit pin loop fix:** the post-drain crit pin loop at
+`runEventQueue` used to iterate `state.output` and write isCrit on
+pre-clone references. After `registerEvents(queueEvents)` now routes
+through `_pushToStorage`, the writes need to land on the cloned
+copies in `registeredEvents`. Loop now builds a uid → cloned-event
+map and writes through it.
+
+**Per-event ingress:** `createSkillEvent` gained
+`opts.checkCooldown` (defaulting to true; user-placed ingress passes
+`false` to preserve the "allowed to overlap with warning" semantics
+for freely-placed events). `processCombatSimulation` now loops
+`createSkillEvent` for the control seed, input events, and enemy
+action events.
+
+### 7f — Delete dead ingress paths (ffea8f0e)
+
+With per-event ingress in place and `extendSingleEvent` idempotent,
+the batch `registerEvents` method became pure overhead. Inlined its
+three passes into `createSkillEvent` and deleted the public method.
+
+- **`createSkillEvent` body** now contains: uid dedup check → pass 1
+  (chain combo predecessor, build reaction segments, clamp prior
+  control events, `_maybeRegisterStop`, `_pushToStorage`) → pass 2
+  (`extendSingleEvent`, `computeFramePositions`,
+  `validateTimeStopStart`, `notifyResourceControllers`) → pass 3
+  (`resolveComboTriggersInline` if slot wirings exist). All three
+  run per event.
+- **`seedControlledOperator` deleted.** Parser `buildControlSeed` +
+  `createSkillEvent` at the call site handles it.
+- **`extendedIds`, `markExtended`, the `markExtended(queueEvents)`
+  call at `runEventQueue:139`, and the `extendedIds.add(newWindow.uid)`
+  call in `_applyComboWindow` all deleted.** Combo window events
+  bypass `_pushToStorage` (pushed directly into `registeredEvents`),
+  so they were never entered into `rawSegmentDurations` and
+  `extendSingleEvent` no-ops on them by construction.
+- **Talent seeding** changed from `state.registerEvents(newTalents)`
+  to a `createSkillEvent` loop.
+- **Queue-event re-registration** (`state.registerEvents(queueEvents)`
+  at the end of `runEventQueue`) changed to a `createSkillEvent` loop.
+- **Two unit tests** (`staggerFrailty.test.ts`,
+  `corrosionSegments.test.ts`) updated to call `createSkillEvent`
+  directly instead of `registerEvents`.
+
+### Pass 3 cadence (design decision)
+
+When discussing step 7 with the user, the question came up: with
+per-event ingress, what's the trigger point for pass 3
+(`resolveComboTriggersInline`)? Three options considered:
+  (a) once at end of ingress drain via a `POST_INGRESS` priority,
+  (b) per-`createSkillEvent`,
+  (c) on demand.
+
+User pointed out that frames already drain chronologically by
+`frame → priority`, so each `createSkillEvent` can emit its own
+combo windows reactively at its own frame via `openComboWindow`
+(which already merges on insert). **No priority tier needed. Pass 3
+runs per-`createSkillEvent`.** Implemented in 7f.
+
+Cost: N² window re-emission (each `createSkillEvent` wipes all
+COMBO_WINDOW events and re-emits from the full registered list).
+Acceptable because N is small (hundreds at worst) and correctness
+trumps micro-performance here. If it becomes a hotspot, the
+optimization is to make combo window emission incremental (open
+windows reactively on trigger match rather than re-scan-all on
+every ingress).
+
+## Deferred items
+
+### 7g — Post-queue restoration loops — BLOCKED
+
+The `creationInteractionMode` / UID restoration loop at
+`processCombatSimulation:358–377` exists because `cloneAndSplitEvents`
+classifies user-placed freeform events on derived columns as
+"derived", and the engine recreates them mid-queue with a new uid,
+losing `creationInteractionMode`. The loop matches by
+`ownerId+columnId+startFrame` and restores both fields.
+
+Deleting the loop requires rewriting the parser path so freeform
+derived events retain their original uid end-to-end. That's a
+dedicated cloneAndSplit refactor, not a Phase 8 cleanup task.
+
+The new **isCrit write-back loop** added in 7e-prep is a similar
+post-queue restoration — it exists because clone-on-`_pushToStorage`
+breaks the raw-state mutation leak that previously made MANUAL pins
+persist across runs. It's structurally correct today but carries
+the same "real fix needs parser-level identity preservation" smell.
+
+### 7h — Fold + raw queue seeding — DEFERRED
+
+**Fold `extendSingleEvent` into `computeFramePositions`:** turns
+out to be more intrusive than the plan implied. `computeFramePositions`
+is a free function in `src/controller/timeline/createSkillEvent/`
+while `extendSingleEvent` is a DEC-private method reading
+`rawSegmentDurations`. A true fold requires either threading the raw
+store through the free function's signature or relocating
+`rawSegmentDurations` out of DEC. Both are cosmetic module-boundary
+shuffles with no behavior payoff. The `extendedIds` guard was the
+real Phase 8 win here, and it's already deleted.
+
+**Raw queue seeding:** substantial architectural change. Currently
+`flattenEventsToQueueFrames` runs post-ingress with the fully
+populated `stops` list and emits queue frames at extended positions.
+The plan wants raw seeding + reactive shift via
+`_shiftQueueForNewStop`. For raw seeding to be correct, queue-frame
+emission has to move from `flattenEvents` into `createSkillEvent`
+itself, so that (a) event A's queue frames are emitted at raw
+positions during its own `createSkillEvent` call, and (b) when
+event B's stop lands later, the existing `_shiftQueueForNewStop`
+path (already present from step 5) reactively shifts A's queued
+frames. This is a standalone ~1 day refactor. Deferred.
+
+## Things to remember for next session (step 7g/7h/8 resumption)
+
+1. **`createSkillEvent` is the sole ingress path.** Don't add new
+   callers of anything that bypasses it (no new direct
+   `registeredEvents.push`, no new `addEvent`/`pushEvent`-path
+   events outside the queue drain). The invariant test in step 8
+   should codify this.
+
+2. **`rawSegmentDurations` is populated only for skill events** (the
+   ones that enter via `createSkillEvent`). Queue events created
+   mid-drain via `pushEvent` use the older single-total `rawDurations`
+   map. `extendSingleEvent` no-ops on events absent from
+   `rawSegmentDurations`, which is intentional.
+
+3. **`_pushToStorage` returns the cloned owned event.** Callers must
+   use the returned reference, not the input `ev`. `createSkillEvent`
+   now does this correctly; any future caller must follow suit.
+
+4. **The isCrit write-back loop is load-bearing** for
+   `critModeToggle.test.ts`. Touching `_pushToStorage`'s clone
+   behavior or the frame-marker shape will likely require updating
+   this loop in lockstep.
+
+5. **Per-event pass 3 means N² window re-emission.** If a test
+   suddenly gets slow after a combo-related change, this is the
+   first place to look. The reactive `openComboWindow` path is
+   already idempotent; the batch wipe+re-emit inside
+   `resolveComboTriggersInline` is what wastes work.
+
+6. **`validateAll()` post-pass still exists.** It's a per-group
+   sibling-overlap annotation, read-only. Harmless but technically
+   violates "no post-passes". Could be inlined per-event inside
+   `createSkillEvent` if strictly needed for the step 8 invariant
+   test.
 
 ## Step-by-step notes
 
