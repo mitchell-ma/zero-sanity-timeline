@@ -463,9 +463,10 @@ Key architectural mechanisms:
 
 **Step 7g unblocked (32b40f02):** uid + `creationInteractionMode` now propagate through `doApply` for freeform user-placed events on derived columns. `InterpretContext` carries `sourceEventColumnId` so propagation is column-scoped — only the child event landing on the SAME column as the source reuses the parent uid (e.g. freeform MF status → MF column), while cross-column side effects (e.g. freeform IE → NATURE infliction) get fresh `derivedEventUid`s. The post-pipeline UID/`creationInteractionMode` restoration loop is **deleted**.
 
+**isCrit write-back loop unblocked (01dc02ed):** isCrit is now a per-run display field resolved from the override store on every pipeline pass. NEVER/ALWAYS/EXPECTED modes also read explicit pins from `overrides[buildOverrideKey(event)]?.segments?.[si]?.frames?.[fi]?.isCritical` and write them to the freshly-cloned frame, so explicit MANUAL pins survive any mode switch without raw-state mutation. The post-pipeline write-back loop is **deleted**. The previous test expectation that MANUAL's per-frame `false` defaults also persist across modes was an artifact of the raw-state leak, not a real UX requirement.
+
 **What's still deferred (not blocking):**
 - **7h fold** (extendSingleEvent into computeFramePositions): cosmetic module-boundary shuffle with no behavior payoff. The `extendedIds` guard was the real win and it's deleted.
-- **isCrit write-back loop**: 14-line per-event 1:1 sync that preserves cross-run isCrit state in MANUAL mode. Not actually a Phase 8 violation — fresh clones in each pipeline run need raw state to carry the prior MANUAL values forward. Marked won't-fix; alternatives are all worse than the current loop.
 
 See `docs/notes/phase-8-plan.md` and `docs/notes/phase-8-progress.md` for the full sub-step history.
 

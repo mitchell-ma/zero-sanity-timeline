@@ -2,7 +2,7 @@
 
 Reference: [`docs/notes/phase-8-plan.md`](./phase-8-plan.md)
 
-## Status: Phase 8 RESOLVED (step 8 pinned; 7h fold won't-fix; everything else done)
+## Status: Phase 8 RESOLVED (step 8 pinned; 7h fold won't-fix; all blockers cleared)
 
 Every step gated on full jest suite + tsc + eslint on touched files.
 Baseline held green at every commit. Current baseline:
@@ -296,32 +296,33 @@ Fix:
 The post-pipeline UID/`creationInteractionMode` restoration loop in
 `processCombatSimulation` is **deleted**.
 
-### isCrit write-back loop — won't fix
+### isCrit write-back loop — DELETED (01dc02ed)
 
-Investigated. The loop is **not** actually a Phase 8 violation — it's a
-14-line per-event 1:1 sync that preserves cross-run isCrit state. The
-flow:
-1. MANUAL mode resolves `frame.isCrit = pin ?? false` during
-   interpretation, writing to the cloned frame markers
-2. Test captures the values into a Map
-3. NEVER mode runs a fresh pipeline; clone-on-`_pushToStorage` creates
-   fresh frame markers from raw state; NEVER doesn't write isCrit
-4. Without the write-back loop syncing isCrit from clones back to raw,
-   the new run's clones have `undefined` and the test fails
+The earlier "won't-fix" assessment was wrong, called out by the user:
+MANUAL mode IS the user-input layer, so the persistence point should be
+the override store, not raw `frame.isCrit`. The override store already
+holds explicit pins. The fix:
 
-This is a real cross-run persistence requirement, not a workaround for
-Phase 8 cloning. The alternatives are all worse:
-- **Move isCrit into the override store**: requires schema change +
-  read-path rewrite + the override store currently only holds
-  *explicit* pins, not "MANUAL default false" values
-- **Skip cloning frame markers**: breaks the time-stop frame position
-  writes (`f.absoluteFrame`, `f.derivedOffsetFrame`) that motivated
-  cloning in the first place
-- **Read from override store on every read site**: wide blast radius
-  for marginal benefit
+- MANUAL mode keeps its existing semantics: `frame.isCrit = pin ?? false`
+  (user-input mode where unpinned damage frames render as no-crit)
+- NEVER/ALWAYS/EXPECTED modes now ALSO read pins: `frame.isCrit = pin`
+  when `pin != null`, otherwise leave undefined. Calculation mode drives
+  the displayed total; explicit pins still get reflected in frame state
+  for view-layer rendering.
+- Every pipeline run reads pins from the override store and writes them
+  onto freshly-cloned frames. Cross-run persistence flows naturally
+  through the override store; no raw-state mutation, no post-pipeline
+  sync.
 
-Marked as won't-fix; the loop is documented as intentional in the
-engineSpec section on isCrit persistence.
+The post-pipeline write-back loop is **deleted**.
+
+The previous test `isCrit is NOT modified by NEVER/ALWAYS/EXPECTED modes`
+was renamed to `Explicit MANUAL pins survive NEVER/ALWAYS/EXPECTED mode
+switches` and rewritten to set explicit pins via `handleSetCritPins`,
+then verify those pins survive NEVER → ALWAYS → MANUAL toggling. The
+old expectation (that MANUAL's per-frame `false` defaults persist across
+modes) was an artifact of the raw-state mutation leak, not a real UX
+requirement — the user only needs their *explicit* pins to survive.
 
 ## Deferred items
 
