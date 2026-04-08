@@ -2,7 +2,7 @@
 
 Reference: [`docs/notes/phase-8-plan.md`](./phase-8-plan.md)
 
-## Status: Phase 8 RESOLVED (step 8 pinned, only 7g blocked)
+## Status: Phase 8 RESOLVED (step 8 pinned; 7h fold won't-fix; everything else done)
 
 Every step gated on full jest suite + tsc + eslint on touched files.
 Baseline held green at every commit. Current baseline:
@@ -27,7 +27,7 @@ Baseline held green at every commit. Current baseline:
 | 7d | `c1efaca8` | Controlled-operator seed factory → `parser/buildControlSeed.ts` | ✅ |
 | 7e-prep+7e | `4db445f9` | Per-segment raw store, idempotent `extendSingleEvent`, retroactive re-extension, per-event ingress via `createSkillEvent` | ✅ |
 | 7f | `ffea8f0e` | Delete `registerEvents`, `seedControlledOperator`, `extendedIds`, `markExtended` | ✅ |
-| 7g | — | Delete post-queue UID / `creationInteractionMode` restoration loops | ⏸️ blocked on cloneAndSplit rewrite (attempt 2026-04-08 confirmed) |
+| 7g | `32b40f02` | Delete post-queue UID / `creationInteractionMode` restoration loops | ✅ unblocked via doApply uid + mode propagation |
 | 7.5 | `4c0517a3` | `duplicateTriggerSource` chain-of-action uid ref | ✅ |
 | 7h | `e78ffbba` | Per-event queue frame emission from `createSkillEvent` | ✅ (fold deferred) |
 | 8 | `bc95f125` | Invariant pin test + engineSpec rewrite | ✅ |
@@ -256,50 +256,84 @@ Also cleaned up stale JSDoc in `derivedEventController.ts`,
 `parser/buildControlSeed.ts`, `parser/selectNewTalents.ts`, and
 `configCache.ts` that referenced deleted methods.
 
+## Session 2026-04-08 (continuation, part 3) — 7g unblocked
+
+### 7g unblock — doApply uid + creationInteractionMode propagation (32b40f02)
+
+Root cause traced: user-placed freeform events on derived columns (MF
+status, freeform inflictions/reactions) lose their uid because:
+1. `cloneAndSplitEvents` classifies them as derived
+2. `flattenEvents` emits a `PROCESS_FRAME` entry pointing at the raw event
+3. The interpretor's clause loop fires the synthetic `APPLY STATUS` /
+   `APPLY INFLICTION` clause attached by `columnBuilder.buildStatusMicroColumn`
+4. `doApply` creates the visible event via `applyEvent` with a fresh
+   `derivedEventUid(...)`
+5. The original uid + `creationInteractionMode` get dropped
+
+A `freeformUid` constant in `doApply` already existed for inheriting
+`ctx.sourceEventUid`, but `processQueueFrame` set
+`sourceEventUid: undefined` unconditionally, so the path was dead code.
+
+Fix:
+- `InterpretContext` gains `sourceEventColumnId` +
+  `sourceCreationInteractionMode` alongside `sourceEventUid`
+- `processQueueFrame` populates them when the parent event has
+  `creationInteractionMode != null` AND its column is NOT a skill column
+  (so user-placed skills creating child statuses still get fresh
+  derived uids — no uid collision)
+- `doApply` replaces the unconditional `freeformUid` constant with a
+  per-column helper `freeformUidFor(childColumnId)` that **only reuses
+  the parent uid when the child's column matches**. Cross-column side
+  effects (e.g. freeform IE on enemy-status → NATURE infliction) get
+  a fresh `derivedEventUid` as before — the K2 fluorite reconciliation
+  test catches this.
+- `creationInteractionMode` propagates through `eventOverrides` →
+  column `add()` → `Object.assign` onto the created event
+- Two existing unit tests in `eventInterpretor.test.ts` updated to set
+  `sourceEventColumnId` alongside `sourceEventUid`; one new test added
+  for the cross-column case
+
+The post-pipeline UID/`creationInteractionMode` restoration loop in
+`processCombatSimulation` is **deleted**.
+
+### isCrit write-back loop — won't fix
+
+Investigated. The loop is **not** actually a Phase 8 violation — it's a
+14-line per-event 1:1 sync that preserves cross-run isCrit state. The
+flow:
+1. MANUAL mode resolves `frame.isCrit = pin ?? false` during
+   interpretation, writing to the cloned frame markers
+2. Test captures the values into a Map
+3. NEVER mode runs a fresh pipeline; clone-on-`_pushToStorage` creates
+   fresh frame markers from raw state; NEVER doesn't write isCrit
+4. Without the write-back loop syncing isCrit from clones back to raw,
+   the new run's clones have `undefined` and the test fails
+
+This is a real cross-run persistence requirement, not a workaround for
+Phase 8 cloning. The alternatives are all worse:
+- **Move isCrit into the override store**: requires schema change +
+  read-path rewrite + the override store currently only holds
+  *explicit* pins, not "MANUAL default false" values
+- **Skip cloning frame markers**: breaks the time-stop frame position
+  writes (`f.absoluteFrame`, `f.derivedOffsetFrame`) that motivated
+  cloning in the first place
+- **Read from override store on every read site**: wide blast radius
+  for marginal benefit
+
+Marked as won't-fix; the loop is documented as intentional in the
+engineSpec section on isCrit persistence.
+
 ## Deferred items
 
-### 7g — Post-queue restoration loops — BLOCKED
+### 7h fold — won't fix
 
-The `creationInteractionMode` / UID restoration loop at
-`processCombatSimulation:358–377` exists because `cloneAndSplitEvents`
-classifies user-placed freeform events on derived columns as
-"derived", and the engine recreates them mid-queue with a new uid,
-losing `creationInteractionMode`. The loop matches by
-`ownerId+columnId+startFrame` and restores both fields.
-
-Deleting the loop requires rewriting the parser path so freeform
-derived events retain their original uid end-to-end. That's a
-dedicated cloneAndSplit refactor, not a Phase 8 cleanup task.
-
-The new **isCrit write-back loop** added in 7e-prep is a similar
-post-queue restoration — it exists because clone-on-`_pushToStorage`
-breaks the raw-state mutation leak that previously made MANUAL pins
-persist across runs. It's structurally correct today but carries
-the same "real fix needs parser-level identity preservation" smell.
-
-### 7h — Fold + raw queue seeding — DEFERRED
-
-**Fold `extendSingleEvent` into `computeFramePositions`:** turns
-out to be more intrusive than the plan implied. `computeFramePositions`
-is a free function in `src/controller/timeline/createSkillEvent/`
-while `extendSingleEvent` is a DEC-private method reading
-`rawSegmentDurations`. A true fold requires either threading the raw
-store through the free function's signature or relocating
-`rawSegmentDurations` out of DEC. Both are cosmetic module-boundary
-shuffles with no behavior payoff. The `extendedIds` guard was the
-real Phase 8 win here, and it's already deleted.
-
-**Raw queue seeding:** substantial architectural change. Currently
-`flattenEventsToQueueFrames` runs post-ingress with the fully
-populated `stops` list and emits queue frames at extended positions.
-The plan wants raw seeding + reactive shift via
-`_shiftQueueForNewStop`. For raw seeding to be correct, queue-frame
-emission has to move from `flattenEvents` into `createSkillEvent`
-itself, so that (a) event A's queue frames are emitted at raw
-positions during its own `createSkillEvent` call, and (b) when
-event B's stop lands later, the existing `_shiftQueueForNewStop`
-path (already present from step 5) reactively shifts A's queued
-frames. This is a standalone ~1 day refactor. Deferred.
+Folding `extendSingleEvent` into `computeFramePositions` is a cosmetic
+module-boundary shuffle. `computeFramePositions` is a free function in
+`src/controller/timeline/createSkillEvent/` while `extendSingleEvent`
+is a DEC-private method reading `rawSegmentDurations`. A true fold
+requires threading the raw store through the free function's signature
+or relocating `rawSegmentDurations` out of DEC. No behavior payoff.
+The `extendedIds` guard — the real Phase 8 win — is already deleted.
 
 ## Things to remember for next session (step 7g/7h/8 resumption)
 

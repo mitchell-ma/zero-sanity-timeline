@@ -461,10 +461,11 @@ Key architectural mechanisms:
 - **Reactive combo resolution**: `resolveComboTriggersInline` runs per-`createSkillEvent` call; each invocation clears all COMBO_WINDOW events and re-emits via `openComboWindow` (merge-on-insert). No batch pre/post pass.
 - **Chain-of-action uid refs** (step 7.5): `TriggerMatch.sourceEventUid` / `TimelineEvent.triggerEventUid` carry a direct event-to-event reference. `duplicateTriggerSource` looks up the source event live from `getAllEvents()` instead of consulting the denormalized `comboTriggerColumnId` string.
 
-**What was deferred:**
-- **7g** (post-queue UID / `creationInteractionMode` restoration loops): blocked on universal uid + creationInteractionMode propagation through every `applyEvent`/`create*` path. Loops are correct workarounds today.
+**Step 7g unblocked (32b40f02):** uid + `creationInteractionMode` now propagate through `doApply` for freeform user-placed events on derived columns. `InterpretContext` carries `sourceEventColumnId` so propagation is column-scoped — only the child event landing on the SAME column as the source reuses the parent uid (e.g. freeform MF status → MF column), while cross-column side effects (e.g. freeform IE → NATURE infliction) get fresh `derivedEventUid`s. The post-pipeline UID/`creationInteractionMode` restoration loop is **deleted**.
+
+**What's still deferred (not blocking):**
 - **7h fold** (extendSingleEvent into computeFramePositions): cosmetic module-boundary shuffle with no behavior payoff. The `extendedIds` guard was the real win and it's deleted.
-- **isCrit write-back loop**: added as a new post-pipeline workaround because clone-on-`_pushToStorage` broke the raw-state mutation leak that previously made MANUAL pins persist across runs. Same blocker as 7g — fix is parser-level identity preservation.
+- **isCrit write-back loop**: 14-line per-event 1:1 sync that preserves cross-run isCrit state in MANUAL mode. Not actually a Phase 8 violation — fresh clones in each pipeline run need raw state to carry the prior MANUAL values forward. Marked won't-fix; alternatives are all worse than the current loop.
 
 See `docs/notes/phase-8-plan.md` and `docs/notes/phase-8-progress.md` for the full sub-step history.
 

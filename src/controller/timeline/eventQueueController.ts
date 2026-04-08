@@ -25,7 +25,7 @@ import type { HPController } from '../calculation/hpController';
 import { StatAccumulator } from '../calculation/statAccumulator';
 import type { OverrideStore } from '../../consts/overrideTypes';
 import { buildOverrideKey } from '../overrideController';
-import { CritMode, InteractionModeType, StatType } from '../../consts/enums';
+import { CritMode, StatType } from '../../consts/enums';
 import type { OperatorLoadoutState } from '../../view/OperatorLoadoutHeader';
 import type { EnemyStats } from '../appStateController';
 import { resolveControlledOperator } from './controlledOperatorResolver';
