@@ -25,7 +25,7 @@ import type { HPController } from '../calculation/hpController';
 import { StatAccumulator } from '../calculation/statAccumulator';
 import type { OverrideStore } from '../../consts/overrideTypes';
 import { buildOverrideKey } from '../overrideController';
-import { CritMode, StatType } from '../../consts/enums';
+import { CritMode } from '../../consts/enums';
 import type { OperatorLoadoutState } from '../../view/OperatorLoadoutHeader';
 import type { EnemyStats } from '../appStateController';
 import { resolveControlledOperator } from './controlledOperatorResolver';
@@ -319,15 +319,11 @@ export function processCombatSimulation(
   if (spController && allSlotSpCosts) {
     spController.seedSlotCosts(allSlotSpCosts);
   }
-  if (ueController) {
-    // Phase 9b: post-pipeline updateSlotEfficiency sweep deleted. Per-event
-    // ultimate gain efficiency is now captured at the moment each gain
-    // fires (DEC.recordUltimateEnergyGain → addUltimateEnergyGain with
-    // slotEfficiencies snapshot), so the global multiplier no longer
-    // retroactively scales gains from earlier frames.
-    const gainFrames = spController ? new Map(spController.getBattleSkillGainFrames()) : new Map<string, { frame: number; slotId: string }>();
-    ueController.finalize(gainFrames);
-  }
+  // Phase 9b: ueController.finalize deleted. UE graph computation is
+  // reactive — every state-change setter calls _computeGraphs internally.
+  // Per-event efficiency is captured at gain time via slotEfficiencies
+  // snapshots, and the SP → UE conversion runs from spController.addCost
+  // pushing battle skill gain frames into UE.
   if (hpController) {
     hpController.finalize();
   }

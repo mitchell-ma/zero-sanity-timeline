@@ -137,7 +137,7 @@ describe('Ultimate Energy Validation', () => {
     ueController.addNoGainWindow(lastHitFrame + 249, lastHitFrame + 249 + 1800, SLOT_ID);
 
     // Phase 9a: spController.finalize deleted — graph + UE notification flow reactively
-    ueController.finalize(spController.getBattleSkillGainFrames());
+    // Phase 9b: ueController.finalize deleted — graph computes reactively
 
     const graph = ueController.getGraph(SLOT_ID)!;
     const val = preConsumptionValue({ points: graph.points, min: 0, max: MAX_ENERGY }, lastHitFrame);
@@ -192,7 +192,7 @@ describe('Ultimate Energy Validation', () => {
     ueController.addNoGainWindow(lastHitFrame + 249, lastHitFrame + 249 + 1800, SLOT_ID);
 
     // Phase 9a: spController.finalize deleted — graph + UE notification flow reactively
-    ueController.finalize(spController.getBattleSkillGainFrames());
+    // Phase 9b: ueController.finalize deleted — graph computes reactively
 
     const graph = ueController.getGraph(SLOT_ID)!;
     const resourceGraphs = new Map();
@@ -415,7 +415,7 @@ describe('UE ultimate energy gains — natural SP consumption via controllers', 
 
     spController.addCost('battle-1', 500, 100, SLOT, 500);
     // Phase 9a: spController.finalize deleted — graph + UE notification flow reactively
-    ueController.finalize(spController.getBattleSkillGainFrames());
+    // Phase 9b: ueController.finalize deleted — graph computes reactively
 
     const graph = ueController.getGraph(SLOT)!;
     // SP starts at 200 (all natural), cost 100 → 100 natural consumed
@@ -437,7 +437,7 @@ describe('UE ultimate energy gains — natural SP consumption via controllers', 
     ueController.addUltimateEnergyGain(500, SLOT, 15, 0);
 
     // Phase 9a: spController.finalize deleted — graph + UE notification flow reactively
-    ueController.finalize(spController.getBattleSkillGainFrames());
+    // Phase 9b: ueController.finalize deleted — graph computes reactively
 
     const graph = ueController.getGraph(SLOT)!;
     // SP-based: 100 * 0.065 = 6.5 (team gain only) + frame-level selfGain: 15 = 21.5
@@ -459,7 +459,7 @@ describe('UE ultimate energy gains — natural SP consumption via controllers', 
     spController.addCost('battle-2', 200, 100, SLOT, 200);
 
     // Phase 9a: spController.finalize deleted — graph + UE notification flow reactively
-    ueController.finalize(spController.getBattleSkillGainFrames());
+    // Phase 9b: ueController.finalize deleted — graph computes reactively
 
     const graph = ueController.getGraph(SLOT)!;
     // First battle: 100 natural consumed → 100 * 0.065 = 6.5 (team gain only)
@@ -478,7 +478,7 @@ describe('UE ultimate energy gains — natural SP consumption via controllers', 
     ueController.configureSlot(SLOT, { max: 300, startValue: 0, chargePerFrame: 0, efficiency: 0 });
 
     ueController.addUltimateEnergyGain(350, SLOT, 20, 10);
-    ueController.finalize(new Map());
+    // Phase 9b: ueController.finalize deleted — graph computes reactively
 
     const graph = ueController.getGraph(SLOT)!;
     // selfGain=20 + teamGain=10 = 30 total for this slot

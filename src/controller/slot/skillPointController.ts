@@ -141,6 +141,11 @@ export class SkillPointController {
     if (!this.slotSpCosts.has(ownerId)) {
       this.slotSpCosts.set(ownerId, amount);
     }
+    // Phase 9b: push battle skill gain frame to UE so it can run the SP → UE
+    // conversion reactively without needing a finalize-time gainFrames param.
+    if (this.ueController) {
+      this.ueController.setBattleSkillGainFrame(eventUid, ultimateEnergyGainFrame, ownerId);
+    }
     this.flushSpEvents();
   }
 

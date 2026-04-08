@@ -86,6 +86,12 @@ const FORBIDDEN: ForbiddenPattern[] = [
     reason: 'SP graph, stops, insufficiency zones, and UE notification flow reactively from addCost/addRecovery and DEC._maybeRegisterStop. The post-pipeline finalize method was deleted in Phase 9a.',
     allowedFiles: [],
   },
+  {
+    name: 'ueController.finalize (Phase 9b)',
+    pattern: /ueController\.finalize\s*\(/,
+    reason: 'UE graph computes reactively via _computeGraphs on every state change. Per-frame efficiency is captured at gain time via slotEfficiencies snapshots. Deleted in Phase 9b.',
+    allowedFiles: [],
+  },
 ];
 
 function walk(dir: string, out: string[]) {

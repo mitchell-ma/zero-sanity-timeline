@@ -30,6 +30,12 @@ export interface RawUltimateEnergyGainEvent {
   /** Ultimate energy recovered for all operators on the team. */
   teamGain: number;
   /**
+   * Phase 9b: when set, this gain was synthesized by _computeGraphs from a
+   * SP cost event's natural consumption. Used as a key for idempotent
+   * removal during recompute (so re-runs don't double-count).
+   */
+  spDerivedFromUid?: string;
+  /**
    * Phase 9b: per-recipient ultimate gain efficiency captured AT THE FRAME
    * the gain occurred. Set by DEC.recordUltimateEnergyGain from the stat
    * accumulator's current state during queue drain. Fixes the latent bug
@@ -72,7 +78,14 @@ export class UltimateEnergyController {
   /** Natural SP consumption per battle skill event UID (from SPController). */
   private naturalSpMap = new Map<string, number>();
 
-  /** Computed per-slot UE graphs (after finalize). */
+  /**
+   * Phase 9b: battle skill gain frames pushed by SPController.addCost.
+   * Replaces the finalize-time `battleSkillGainFrames` parameter so the
+   * SP → UE conversion can run reactively.
+   */
+  private battleSkillGainFrames = new Map<string, { frame: number; slotId: string }>();
+
+  /** Computed per-slot UE graphs. Auto-rebuilt by _computeGraphs on state change. */
   private slotGraphs = new Map<string, UltimateEnergyResult>();
 
   // ── Configuration ────────────────────────────────────────────────────────
@@ -84,7 +97,10 @@ export class UltimateEnergyController {
   /** Mark a slot as ignoring external UE gains (driven by IGNORE ULTIMATE_ENERGY status clause). */
   setIgnoreExternalGain(slotId: string, ignore: boolean) {
     const cfg = this.slotConfigs.get(slotId);
-    if (cfg) cfg.ignoreExternalGain = ignore;
+    if (cfg && cfg.ignoreExternalGain !== ignore) {
+      cfg.ignoreExternalGain = ignore;
+      this._computeGraphs();
+    }
   }
 
   /** Update a slot's efficiency from the stat accumulator (after APPLY STAT deltas). */
@@ -100,6 +116,7 @@ export class UltimateEnergyController {
     this.noGainWindows.clear();
     this.consumeEvents.clear();
     this.naturalSpMap.clear();
+    this.battleSkillGainFrames.clear();
     this.slotGraphs.clear();
     // slotConfigs intentionally kept — reconfigured before each pipeline run
   }
@@ -122,6 +139,7 @@ export class UltimateEnergyController {
   ) {
     if (selfGain <= 0 && teamGain <= 0) return;
     this.rawUltimateEnergyGains.push({ frame, sourceSlotId, selfGain, teamGain, slotEfficiencies });
+    this._computeGraphs();
   }
 
   /**
@@ -132,6 +150,7 @@ export class UltimateEnergyController {
     const arr = this.consumeEvents.get(slotId) ?? [];
     arr.push({ frame, type: 'consume', amount: cfg?.max ?? 0 });
     this.consumeEvents.set(slotId, arr);
+    this._computeGraphs();
   }
 
   /**
@@ -142,6 +161,16 @@ export class UltimateEnergyController {
     const arr = this.noGainWindows.get(slotId) ?? [];
     arr.push({ start, end });
     this.noGainWindows.set(slotId, arr);
+    this._computeGraphs();
+  }
+
+  /**
+   * Phase 9b: receive battle skill gain frame info pushed by SPController.addCost.
+   * Replaces the finalize-time `battleSkillGainFrames` parameter.
+   */
+  setBattleSkillGainFrame(eventUid: string, frame: number, slotId: string) {
+    this.battleSkillGainFrames.set(eventUid, { frame, slotId });
+    this._computeGraphs();
   }
 
   // ── Called by SPController after its finalize ────────────────────────────
@@ -159,21 +188,34 @@ export class UltimateEnergyController {
     } else {
       this.naturalSpMap.delete(record.eventUid);
     }
+    this._computeGraphs();
   }
 
-  // ── Finalize (called after SPController.finalize) ────────────────────────
-
   /**
-   * Converts natural SP consumption to ultimate energy gains, applies per-slot
-   * efficiency, and computes per-slot UE graphs.
+   * Phase 9b: reactive per-slot UE graph computation. Called from every
+   * state-change setter so the slotGraphs map stays current without a
+   * post-pipeline finalize sweep.
    *
-   * @param battleSkillGainFrames Map of eventUid → frame where the ultimate energy gain
-   *   should be placed (the battle skill's first frame or startFrame).
+   * Builds the natural-SP-to-UE-gain conversion from the current
+   * naturalSpMap + battleSkillGainFrames maps each call (idempotent —
+   * we filter the SP-derived gains out of rawUltimateEnergyGains before
+   * appending the latest set so re-runs don't double-count).
    */
-  finalize(battleSkillGainFrames: ReadonlyMap<string, { frame: number; slotId: string }>) {
-    // Convert natural SP consumption to ultimate energy gains
+  private _computeGraphs() {
+    // Strip any prior SP-derived gains so we can rebuild them from the
+    // current naturalSpMap snapshot.
+    const naturalUids = new Set<string>();
+    this.naturalSpMap.forEach((_, uid) => naturalUids.add(uid));
+    const directGains: RawUltimateEnergyGainEvent[] = [];
+    for (const ge of this.rawUltimateEnergyGains) {
+      // SP-derived gains are tagged via spDerivedFromUid below.
+      if (!ge.spDerivedFromUid) directGains.push(ge);
+    }
+    this.rawUltimateEnergyGains = directGains;
+
+    // Append fresh SP-derived gains from the current natural SP snapshot.
     for (const [eventUid, naturalConsumed] of Array.from(this.naturalSpMap)) {
-      const info = battleSkillGainFrames.get(eventUid);
+      const info = this.battleSkillGainFrames.get(eventUid);
       if (!info) continue;
       const gain = naturalConsumed * NATURAL_SP_TO_ULTIMATE_RATIO;
       this.rawUltimateEnergyGains.push({
@@ -181,13 +223,13 @@ export class UltimateEnergyController {
         sourceSlotId: info.slotId,
         selfGain: 0,
         teamGain: gain,
+        spDerivedFromUid: eventUid,
       });
     }
 
-    // Sort raw gains
+    // Sort and recompute per-slot graphs
     this.rawUltimateEnergyGains.sort((a, b) => a.frame - b.frame);
 
-    // Compute per-slot graphs
     for (const [slotId, cfg] of Array.from(this.slotConfigs)) {
       const windows = this.noGainWindows.get(slotId) ?? [];
       const gains = applyGainEfficiency(this.rawUltimateEnergyGains, slotId, cfg.efficiency, windows, cfg.ignoreExternalGain);
