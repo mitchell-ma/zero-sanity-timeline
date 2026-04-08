@@ -221,6 +221,69 @@ Each function takes its dependencies explicitly (`stops`, `comboWindows`, `regis
 
 ---
 
+### Step 7.5 — duplicateTriggerSource chain-of-action ref
+
+**Why:** `eventInterpretorController.ts:2087` currently reads
+`event.comboTriggerColumnId` — a denormalized string stored on the combo
+event by pass 3 (`DEC._applyComboWindowToCombos`) and the deferred
+`handleComboResolve` path. The code maps the column ID to an element/status
+and synthesizes an `APPLY INFLICTION` / `APPLY STATUS` effect to route
+through `interpret()`. This is brittle: the stored string can drift out of
+sync with the true source event, has a "first-wins on merge" quirk, and
+forces the deferred `handleComboResolve` path to exist.
+
+After step 7 lands, the parser naturally introduces event-to-event refs
+(EVENT_START entries carry `sourceEvent`). This step builds on that to
+replace `comboTriggerColumnId` on combo events with a direct uid ref to
+the causing event.
+
+**Why after step 7 and not earlier:** Step 7's parser flatten already
+emits `sourceEvent` refs on queue frames; extending that concept to combo
+→ triggering-event refs is a natural follow-through. Doing it earlier
+would require threading refs through the batch path that step 7 is about
+to delete.
+
+**Files touched:** `src/controller/timeline/triggerMatch.ts`,
+`src/consts/viewTypes.ts`, `src/controller/timeline/derivedEventController.ts`
+(`openComboWindow` / `_applyComboWindowToCombos`),
+`src/controller/timeline/eventInterpretorController.ts`
+(`duplicateTriggerSource` handler + `handleComboResolve`), view-layer
+consumers of `comboTriggerColumnId`, tests.
+
+**Deliverables:**
+1. Extend `TriggerMatch` in `triggerMatch.ts` with the source event's uid
+   (currently carries `sourceColumnId` / `sourceOwnerId` / `sourceSkillName`
+   but not the event itself).
+2. Add `triggerEventUid?: string` to `TimelineEvent` in `viewTypes.ts`.
+3. In `DEC._applyComboWindowToCombos`, set `combo.triggerEventUid =
+   match.eventUid` (in addition to `comboTriggerColumnId` for one transitional
+   commit, then drop the column ID).
+4. Rewrite the `duplicateTriggerSource` handler
+   (`eventInterpretorController.ts:2087`) to look up the trigger event by
+   uid from `getAllEvents()` and read `sourceEvent.columnId` / `.id`
+   directly. Element/status resolution flows from the live event.
+5. Migrate or remove `comboTriggerColumnId` on combo events. May still be
+   needed on COMBO_WINDOW events for display (decide at implementation
+   time).
+6. Audit `handleComboResolve` / `resolveComboTrigger` deferred path in the
+   interpretor. If `triggerEventUid` is set at `openComboWindow` time from
+   pass 3, the deferred path becomes unnecessary — delete it and its
+   `COMBO_RESOLVE` queue priority.
+7. Update all view-layer consumers of `comboTriggerColumnId` to read from
+   the referenced event via a helper (e.g. `getComboTriggerSource(ev,
+   processedEvents)`).
+
+**Verification:**
+- `npx tsc --noEmit` clean
+- `npx jest` — baseline passes. Avywenna (controlled combo), Wulfgard
+  (mirrored inflictions from combo), and any operator with combo frame
+  markers carrying `duplicateTriggerSource: true` are the high-risk tests.
+- `npx eslint src/` — no warnings on touched files
+
+**Commit message:** "Phase 8 step 7.5: duplicateTriggerSource chain-of-action ref"
+
+---
+
 ### Step 8 — Cleanup and invariant pin
 
 **Files touched:** `src/tests/unit/pipelineInvariants.test.ts` (new), `engineSpec.md`.
@@ -270,9 +333,10 @@ Each function takes its dependencies explicitly (`stops`, `comboWindows`, `regis
 - Step 5: 2–3 days (time-stop is the hard one)
 - Step 6: 2 days (combo windows)
 - Step 7: 3–5 days (parser + final ingress collapse, expect operator edge cases)
+- Step 7.5: 1 day (duplicateTriggerSource chain-of-action ref)
 - Step 8: 1 day (invariant + spec)
 
-Total: roughly 11–14 days of focused work, spread over multiple sessions. **Do not attempt to compress this.**
+Total: roughly 12–15 days of focused work, spread over multiple sessions. **Do not attempt to compress this.**
 
 ## What this plan does NOT cover
 
