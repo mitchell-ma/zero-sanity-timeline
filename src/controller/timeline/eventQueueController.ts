@@ -12,7 +12,7 @@ import { NounType, VerbType } from '../../dsl/semantics';
 import type { Effect } from '../../dsl/semantics';
 import { LoadoutProperties } from '../../view/InformationPane';
 import { DerivedEventController } from './derivedEventController';
-import type { SlotTriggerWiring } from './eventQueueTypes';
+import type { SlotTriggerWiring, QueueFrame } from './eventQueueTypes';
 import { SkillPointController } from '../slot/skillPointController';
 import { EventInterpretorController } from './eventInterpretorController';
 import { invalidateConfigCache } from './configCache';

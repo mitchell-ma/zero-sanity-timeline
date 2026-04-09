@@ -5,9 +5,9 @@
  * The view layer (CombatSheet) receives pre-computed results and only handles
  * presentation (formatting, column visibility, rendering).
  *
- * Also provides live HP% tracking during event queue processing: pre-computes
- * estimated damage per frame from registered skill events, stores cumulative
- * damage by frame, and exposes getEnemyHpPercentage() for HP threshold predicates.
+ * Also exports the per-frame damage helpers (`computeFrameMarkerDamage`,
+ * `buildDamageOpCache`) used by the interpreter to push incremental
+ * enemy damage ticks to `hpController` during the queue drain.
  */
 import { CritMode, DamageScalingStatType, PhysicalStatusType, StatType } from '../../consts/enums';
 import type { OverrideStore } from '../../consts/overrideTypes';
@@ -15,15 +15,14 @@ import { NounType } from '../../dsl/semantics';
 import type { ValueNode } from '../../dsl/semantics';
 import { resolveValueNode } from './valueResolver';
 import { TimelineEvent, Column, Enemy as ViewEnemy } from '../../consts/viewTypes';
-import { PHYSICAL_STATUS_COLUMN_IDS, SKILL_COLUMN_ORDER, ENEMY_OWNER_ID } from '../../model/channels';
-import { getPhysicalStatusStagger, getDefenseMultiplier, getTotalAttack } from '../../model/calculation/damageFormulas';
+import { PHYSICAL_STATUS_COLUMN_IDS } from '../../model/channels';
+import { getPhysicalStatusStagger, getTotalAttack } from '../../model/calculation/damageFormulas';
 import { LoadoutProperties, DEFAULT_LOADOUT_PROPERTIES } from '../../view/InformationPane';
 import { OperatorLoadoutState, EMPTY_LOADOUT } from '../../view/OperatorLoadoutHeader';
 import { aggregateLoadoutStats } from './loadoutAggregator';
 import { buildDealStaggerClause, stripStaggerClauses, findDealDamageInClauses, hasDealDamageClause } from '../timeline/clauseQueries';
 import { buildDamageTableRows, DamageTableRow } from './damageTableBuilder';
-import { getSkillMultiplier, isDamageSegment } from './jsonMultiplierEngine';
-import { getModelEnemy } from './enemyRegistry';
+import { getSkillMultiplier } from './jsonMultiplierEngine';
 import {
   EventsQueryService,
   statToFragilityElements,

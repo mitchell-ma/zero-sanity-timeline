@@ -84,7 +84,7 @@ export class DerivedEventController implements ColumnHost {
   );
   // state.output removed — registeredEvents is the single source of storage.
   private idCounter = 0;
-  private triggerAssociations: TriggerAssociation[];
+  private triggerAssociations: TriggerAssociation[] = [];
   private slotWirings: SlotTriggerWiring[] = [];
   private controlledSlotResolver?: (frame: number) => string;
   private spController: SkillPointController | null = null;
@@ -97,27 +97,9 @@ export class DerivedEventController implements ColumnHost {
   /** Event UIDs that consumed Link, mapped to their stack count at consumption time. */
   private linkConsumptions = new Map<string, number>();
 
-  constructor(
-    baseEvents?: TimelineEvent[],
-    triggerAssociations?: TriggerAssociation[],
-    slotWirings?: SlotTriggerWiring[],
-    spController?: SkillPointController,
-    ueController?: UltimateEnergyController,
-    loadoutProperties?: Record<string, LoadoutProperties>,
-    slotOperatorMap?: Record<string, string>,
-  ) {
-    this.triggerAssociations = triggerAssociations ?? [];
-    this.slotWirings = slotWirings ?? [];
-    this.spController = spController ?? null;
-    this.ueController = ueController ?? null;
-    this.loadoutProperties = loadoutProperties ?? {};
-    this.slotOperatorMap = slotOperatorMap ?? {};
-    if (baseEvents) {
-      this.allEvents = baseEvents;
-      for (const ev of baseEvents) {
-        this._maybeRegisterStop(ev);
-      }
-    }
+  constructor() {
+    // All state is wired via reset() per pipeline run. Constructor takes
+    // no arguments — there's no "initial state" concept any more.
   }
 
   /**
@@ -783,13 +765,6 @@ export class DerivedEventController implements ColumnHost {
   /** Get the base (pre-time-stop) activation duration for an event, or undefined if not extended. */
   getBaseDuration(eventId: string): number | undefined {
     return this.rawDurations.get(eventId);
-  }
-
-  /** Merge raw durations from another controller (e.g. queue controller into main state). */
-  mergeRawDurations(other: DerivedEventController) {
-    other.rawDurations.forEach((dur, id) => {
-      if (!this.rawDurations.has(id)) this.rawDurations.set(id, dur);
-    });
   }
 
   /** Replace the registered events array (e.g. after late combo trigger resolution). */

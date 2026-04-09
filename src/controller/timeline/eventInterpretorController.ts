@@ -188,8 +188,6 @@ export interface InterpretContext {
   /** Slot ID for timeline queries and target resolution (e.g. "slot-pogranichnik"). Falls back to sourceOwnerId if not set. */
   sourceSlotId?: string;
   sourceSkillName: string;
-  /** @deprecated Unused — interpreter caches allEvents internally. Kept for test compat. */
-  allEvents?: () => readonly TimelineEvent[];
   potential?: number;
   parentEventEndFrame?: number;
   parentSegmentEndFrame?: number;

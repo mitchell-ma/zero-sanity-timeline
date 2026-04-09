@@ -11,7 +11,7 @@
  */
 
 import { TimelineEvent, eventDuration } from '../../consts/viewTypes';
-import { ElementType, EventStatusType, PhysicalStatusType } from '../../consts/enums';
+import { ElementType, EventStatusType } from '../../consts/enums';
 import { INFLICTION_COLUMNS, PHYSICAL_INFLICTION_COLUMNS, PHYSICAL_STATUS_COLUMNS, REACTION_COLUMNS, ENEMY_OWNER_ID } from '../../model/channels';
 import { DerivedEventController } from '../../controller/timeline/derivedEventController';
 import { EventInterpretorController } from '../../controller/timeline/eventInterpretorController';
@@ -38,12 +38,11 @@ function makeInterpretor() {
   return new EventInterpretorController(ctrl, []);
 }
 
-function makeCtx(interp: EventInterpretorController, overrides?: Partial<InterpretContext>): InterpretContext {
+function makeCtx(_interp: EventInterpretorController, overrides?: Partial<InterpretContext>): InterpretContext {
   return {
     frame: 100,
     sourceOwnerId: 'op-1',
     sourceSkillName: 'TEST_SKILL',
-    allEvents: () => [...interp.controller.getAllEvents(), ...interp.controller.getAllEvents()],
     ...overrides,
   };
 }
