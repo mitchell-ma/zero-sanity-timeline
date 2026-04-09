@@ -58,7 +58,7 @@ export class PhysicalStatusColumn implements EventColumn {
     ev.sourceSkillName = source.skillName;
     if (options?.event) Object.assign(ev, options.event);
 
-    this.host.pushEvent(ev, durationFrames);
+    this.host.pushEvent(ev);
     if (ev.stacks == null) ev.stacks = this.host.activeCount(this.columnId, ownerId, frame);
     return true;
   }

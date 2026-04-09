@@ -1,5 +1,10 @@
 # Devlog
 
+## 2026-04-09
+- Fixed a latent damage-calc bug affecting Wulfgard, Antal, Avywenna, and Last Rite — effects that referenced the "source" of a triggered event were silently resolving against the wrong operator's stats in some chained-trigger cases. Damage values for these operators in cascading interactions should now match in-game more closely.
+- Reactions caused by overlapping inflictions now correctly attribute back to every contributing source, not just the most recent — improves accuracy when multiple operators' inflictions feed into a single reaction.
+- Continued internal engine cleanup — no other player-facing changes today.
+
 ## 2026-04-08
 - Combo activation windows now flow through a single reactive path — windows open the moment a matching trigger event fires, and the sidebar stays in sync with combo cooldown reductions (e.g. Wulfgard P5 ult resetting the combo CD)
 - CONTROLLED-operator combo triggers resolve more consistently — Avywenna's combo window correctly ignores a non-controlled Akekuri's basic attack, matching the in-game behavior

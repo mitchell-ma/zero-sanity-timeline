@@ -115,7 +115,7 @@ describe('DEC — retroactive time-stop re-extension', () => {
 
     // Enter via the pushEvent path (the ColumnHost callback used by
     // configDrivenStatusColumn / inflictionColumn / physicalStatusColumn).
-    dec.pushEvent(statusEv, 300);
+    dec.pushEvent(statusEv);
 
     // No stops yet — duration stays at raw.
     expect(statusEv.segments[0].properties.duration).toBe(300);

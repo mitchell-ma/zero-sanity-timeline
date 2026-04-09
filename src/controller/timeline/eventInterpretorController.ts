@@ -34,6 +34,7 @@ import { CritMode, DamageScalingStatType, DamageType, ElementType, EventFrameTyp
 import { resolveEffectStat } from '../../model/enums/stats';
 import type { OverrideStore } from '../../consts/overrideTypes';
 import type { StatSource } from './derivedEventController';
+import type { EventSource, AddOptions } from './columns/eventColumn';
 import { t } from '../../locales/locale';
 import { buildOverrideKey } from '../overrideController';
 import {
@@ -510,39 +511,43 @@ export class EventInterpretorController {
   }
 
   /**
+   * Wrap `controller.applyEvent` to auto-inject causal parents from the
+   * current interpret context. Every derived event created during interpret()
+   * has the currently-interpreting event (`ctx.sourceEventUid`) as its
+   * immediate parent in the causality DAG — used by DeterminerType.TRIGGER
+   * and SOURCE resolution in Phase 3.
+   *
+   * Caller-supplied `options.parents` wins (for multi-parent cases like
+   * cross-element reactions, which compute their own parent list).
+   */
+  private applyEventFromCtx(
+    ctx: InterpretContext,
+    columnId: string, ownerId: string, frame: number,
+    durationFrames: number, source: EventSource,
+    options?: AddOptions,
+  ): boolean {
+    const ctxParents = ctx.sourceEventUid ? [ctx.sourceEventUid] : undefined;
+    return this.controller.applyEvent(columnId, ownerId, frame, durationFrames, source, {
+      ...options,
+      parents: options?.parents ?? ctxParents,
+    });
+  }
+
+  /**
    * Resolve a routed source for a derived event whose ownerId is a target
    * (e.g. enemy) but whose effects must dispatch to the source operator's slot.
    * Returns { sourceSlotId, sourceOwnerId } for the InterpretContext.
-   * Falls back to the event's own ownerId when no routing applies.
+   *
+   * Post-chainRef: this is a trivial passthrough — `ownerSlotId` /
+   * `ownerOperatorId` are populated at ingress by DEC's `_backfillOwnerIds`
+   * (Phase 1) and at real creation sites (Phase 2). The old O(slots)
+   * reverse-lookup loop is gone.
    */
   private resolveRoutedSource(event: TimelineEvent): { sourceSlotId: string; sourceOwnerId: string } {
-    const defaultSlotId = event.ownerId;
-    const defaultOwnerId = this.resolveOperatorId(event.ownerId);
-    // Routing only triggers when ownerId is NOT a known slot (e.g. enemy target)
-    // AND the event has a sourceOwnerId we can map back to a real slot. The
-    // 'user' placeholder used by inputEventController for user-placed events
-    // must NOT be allowed to override the resolved operator id.
-    if (this.loadoutProperties?.[event.ownerId]) {
-      // ownerId is itself a known slot — no routing needed
-      return { sourceSlotId: defaultSlotId, sourceOwnerId: defaultOwnerId };
-    }
-    if (event.sourceOwnerId && event.sourceOwnerId !== event.ownerId) {
-      let sourceSlot: string | undefined = this.loadoutProperties?.[event.sourceOwnerId]
-        ? event.sourceOwnerId
-        : undefined;
-      if (!sourceSlot && this.slotOperatorMap) {
-        for (const [slotId, operatorId] of Object.entries(this.slotOperatorMap)) {
-          if (operatorId === event.sourceOwnerId) { sourceSlot = slotId; break; }
-        }
-      }
-      if (sourceSlot) {
-        return {
-          sourceSlotId: sourceSlot,
-          sourceOwnerId: this.slotOperatorMap?.[sourceSlot] ?? event.sourceOwnerId,
-        };
-      }
-    }
-    return { sourceSlotId: defaultSlotId, sourceOwnerId: defaultOwnerId };
+    return {
+      sourceSlotId: event.ownerSlotId ?? event.ownerId,
+      sourceOwnerId: event.ownerOperatorId ?? this.resolveOperatorId(event.ownerId),
+    };
   }
 
   /**
@@ -842,8 +847,21 @@ export class EventInterpretorController {
         case DeterminerType.ANY: return ctx.targetOwnerId ?? slotId;
         case DeterminerType.CONTROLLED:
           return this.getControlledSlotAtFrame?.(ctx.frame) ?? slotId;
-        case DeterminerType.TRIGGER:
+        case DeterminerType.TRIGGER: {
+          // Causality DAG lookup: the "trigger" of an event is its primary
+          // (most-recent) parent in the chain. Fall back to ctx.targetOwnerId
+          // (the legacy threading) and then to slotId if the chain is
+          // unavailable — belt-and-suspenders for events not yet migrated in
+          // Phase 2 or edge cases where the determiner fires on a chain root.
+          if (ctx.sourceEventUid) {
+            const parentUid = this.controller.getCausality().primaryParentOf(ctx.sourceEventUid);
+            if (parentUid) {
+              const parent = this.controller.getEventByUid(parentUid);
+              if (parent?.ownerSlotId) return parent.ownerSlotId;
+            }
+          }
           return ctx.targetOwnerId ?? slotId;
+        }
         default: return slotId;
       }
     }
@@ -932,7 +950,7 @@ export class EventInterpretorController {
       const columnId = resolveEffectColumnId(effect.object, effect.objectId, effect.objectQualifier);
       if (!columnId) return false;
       const dv = this.resolveWith(effect.with?.duration, ctx);
-      this.controller.applyEvent(columnId, ownerId, ctx.frame, typeof dv === 'number' ? Math.round(dv * FPS) : INFLICTION_DURATION, source,
+      this.applyEventFromCtx(ctx, columnId, ownerId, ctx.frame, typeof dv === 'number' ? Math.round(dv * FPS) : INFLICTION_DURATION, source,
         { uid: freeformUidFor(columnId) ?? derivedEventUid(columnId, source.ownerId, ctx.frame) });
       return true;
     }
@@ -955,7 +973,7 @@ export class EventInterpretorController {
         const defaultDuration = typeof dv === 'number' ? Math.round(dv * FPS)
           : isForced ? (FORCED_REACTION_DURATION[columnId] ?? cfg?.duration ?? REACTION_DURATION)
           : cfg?.duration ?? REACTION_DURATION;
-        this.controller.applyEvent(columnId, ownerId, ctx.frame, defaultDuration, source, {
+        this.applyEventFromCtx(ctx, columnId, ownerId, ctx.frame, defaultDuration, source, {
           stacks: typeof sl === 'number' ? sl : undefined,
           ...(isForced && { forcedReaction: true }),
           uid: freeformUidFor(columnId) ?? derivedEventUid(columnId, source.ownerId, ctx.frame),
@@ -1096,7 +1114,7 @@ export class EventInterpretorController {
           ? resolveValueNode(cfg.maxStacksNode as ValueNode, this.buildValueContext({ ...ctx, sourceSlotId: statusOwnerId }))
           : cfg?.maxStacks;
         const eventOverrides = { ...eventProps, ...(applyStacks != null ? { stacks: applyStacks } : {}), ...(ctx.consumedStacks != null ? { consumedStacks: ctx.consumedStacks } : {}), ...(ctx.sourceCreationInteractionMode != null ? { creationInteractionMode: ctx.sourceCreationInteractionMode } : {}) };
-        this.controller.applyEvent(columnId, statusOwnerId, ctx.frame, duration, source, {
+        this.applyEventFromCtx(ctx, columnId, statusOwnerId, ctx.frame, duration, source, {
           statusId: effect.objectId,
           ...(cfg?.stackingMode ? { stackingMode: cfg.stackingMode } : {}),
           ...(runtimeMaxStacks != null ? { maxStacks: runtimeMaxStacks } : {}),
@@ -1375,6 +1393,29 @@ export class EventInterpretorController {
       return last.stacks != null ? last.stacks : active.length;
     };
     if (ctx.consumedStacks != null) baseCtx.consumedStacks = ctx.consumedStacks;
+
+    // Populate sourceContext via the causality DAG: walk the chain to the
+    // root event and build a value context for that operator. Resolves
+    // DeterminerType.SOURCE reads ("TALENT_LEVEL of SOURCE OPERATOR" etc.)
+    // to the operator who originated the chain, not the currently-interpreting
+    // operator. Used by status configs like avywenna's thunderlance-pierce.
+    if (ctx.sourceEventUid) {
+      const rootUid = this.controller.getCausality().rootOf(ctx.sourceEventUid);
+      if (rootUid) {
+        const rootEv = this.controller.getEventByUid(rootUid);
+        const rootSlotId = rootEv?.ownerSlotId;
+        // Only attach when the root is a different slot than the current
+        // context — otherwise SOURCE == THIS and the fallback in the resolver
+        // will use the main ctx anyway.
+        if (rootSlotId && rootSlotId !== ownerId) {
+          const rootLoadout = this.loadoutProperties?.[rootSlotId];
+          if (rootLoadout) {
+            baseCtx.sourceContext = buildContextForSkillColumn(rootLoadout, NounType.BATTLE);
+          }
+        }
+      }
+    }
+
     return baseCtx;
   }
 
@@ -1681,13 +1722,14 @@ export class EventInterpretorController {
 
     let result = false;
     const physCol = columnId as string;
+    const parentUid = ctx.sourceEventUid;
     if (physCol === PHYSICAL_STATUS_COLUMNS.LIFT
       || physCol === PHYSICAL_STATUS_COLUMNS.KNOCK_DOWN) {
-      result = this.applyLiftOrKnockDown(physCol, ctx.frame, source, isForced);
+      result = this.applyLiftOrKnockDown(physCol, ctx.frame, source, isForced, parentUid);
     } else if (physCol === PHYSICAL_STATUS_COLUMNS.CRUSH) {
-      result = this.applyCrush(ctx.frame, source);
+      result = this.applyCrush(ctx.frame, source, parentUid);
     } else if (physCol === PHYSICAL_STATUS_COLUMNS.BREACH) {
-      result = this.applyBreach(ctx.frame, source);
+      result = this.applyBreach(ctx.frame, source, parentUid);
     }
 
     // Check if a physical status event was created (not just Vulnerable)
@@ -1697,7 +1739,7 @@ export class EventInterpretorController {
 
     // Any physical status application consumes active Solidification → Shatter
     if (result) {
-      this.tryConsumeSolidification(ctx.frame, source, ctx.sourceSlotId ?? ctx.sourceOwnerId);
+      this.tryConsumeSolidification(ctx.frame, source, ctx.sourceSlotId ?? ctx.sourceOwnerId, ctx.sourceEventUid);
     }
 
     return result;
@@ -1712,7 +1754,9 @@ export class EventInterpretorController {
     frame: number,
     source: { ownerId: string; skillName: string },
     isForced: boolean,
+    parentEventUid?: string,
   ): boolean {
+    const parents = parentEventUid ? [parentEventUid] : undefined;
     const hasVulnerable = this.controller.activeCount(
       PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_OWNER_ID, frame,
     ) > 0;
@@ -1721,7 +1765,7 @@ export class EventInterpretorController {
     this.controller.applyEvent(
       PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_OWNER_ID, frame,
       PHYSICAL_INFLICTION_DURATION, source,
-      { uid: derivedEventUid(PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, source.ownerId, frame) },
+      { uid: derivedEventUid(PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, source.ownerId, frame), parents },
     );
 
     // Status only triggers if enemy had Vulnerable OR isForced
@@ -1736,6 +1780,7 @@ export class EventInterpretorController {
         stackingMode: StackInteractionType.RESET,
         maxStacks: 1,
         uid: derivedEventUid(columnId, source.ownerId, frame),
+        parents,
         event: {
           name: label,
           segments: [{
@@ -1768,7 +1813,9 @@ export class EventInterpretorController {
   private applyCrush(
     frame: number,
     source: { ownerId: string; skillName: string },
+    parentEventUid?: string,
   ): boolean {
+    const parents = parentEventUid ? [parentEventUid] : undefined;
     const vulnerableCount = this.controller.activeCount(
       PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_OWNER_ID, frame,
     );
@@ -1778,7 +1825,7 @@ export class EventInterpretorController {
       this.controller.applyEvent(
         PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_OWNER_ID, frame,
         PHYSICAL_INFLICTION_DURATION, source,
-        { uid: derivedEventUid(PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, source.ownerId, frame, 'crush') },
+        { uid: derivedEventUid(PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, source.ownerId, frame, 'crush'), parents },
       );
       return true;
     }
@@ -1797,6 +1844,7 @@ export class EventInterpretorController {
         stackingMode: StackInteractionType.RESET,
         maxStacks: 1,
         uid: derivedEventUid(PhysicalStatusType.CRUSH, source.ownerId, frame),
+        parents,
         event: {
           stacks: consumed,
           segments: [{
@@ -1828,7 +1876,9 @@ export class EventInterpretorController {
   private applyBreach(
     frame: number,
     source: { ownerId: string; skillName: string },
+    parentEventUid?: string,
   ): boolean {
+    const parents = parentEventUid ? [parentEventUid] : undefined;
     const vulnerableCount = this.controller.activeCount(
       PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_OWNER_ID, frame,
     );
@@ -1837,7 +1887,7 @@ export class EventInterpretorController {
       this.controller.applyEvent(
         PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_OWNER_ID, frame,
         PHYSICAL_INFLICTION_DURATION, source,
-        { uid: derivedEventUid(PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, source.ownerId, frame, 'breach') },
+        { uid: derivedEventUid(PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, source.ownerId, frame, 'breach'), parents },
       );
       return true;
     }
@@ -1857,6 +1907,7 @@ export class EventInterpretorController {
         stackingMode: StackInteractionType.RESET,
         maxStacks: 1,
         uid: derivedEventUid(PhysicalStatusType.BREACH, source.ownerId, frame),
+        parents,
         event: {
           stacks: stackCount,
           segments: [{
@@ -1883,6 +1934,7 @@ export class EventInterpretorController {
     frame: number,
     source: { ownerId: string; skillName: string },
     triggerSlotId: string,
+    parentEventUid?: string,
   ): void {
     const active = this.controller.getActiveEvents(
       REACTION_COLUMNS.SOLIDIFICATION, ENEMY_OWNER_ID, frame,
@@ -1897,12 +1949,19 @@ export class EventInterpretorController {
       REACTION_COLUMNS.SOLIDIFICATION, ENEMY_OWNER_ID, frame, source,
     );
 
-    // Create Shatter reaction with physical damage frame at offset 0
+    // Create Shatter reaction with physical damage frame at offset 0.
+    // Parents: [triggering event, solidification event consumed] — multi-parent
+    // because the shatter is caused by both the new physical hit AND the
+    // pre-existing solidification it just consumed.
     const shatterMultiplier = getShatterBaseMultiplier(stacks);
+    const shatterParents: string[] = [];
+    if (parentEventUid) shatterParents.push(parentEventUid);
+    shatterParents.push(solidEvent.uid);
     this.controller.applyEvent(
       REACTION_COLUMNS.SHATTER, ENEMY_OWNER_ID, frame, SHATTER_DURATION, source, {
         stacks,
         uid: derivedEventUid(REACTION_COLUMNS.SHATTER, source.ownerId, frame),
+        parents: shatterParents,
       },
     );
 

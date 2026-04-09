@@ -215,6 +215,18 @@ export interface TimelineEvent {
   timeDependency?: TimeDependency;
   /** Operator slot ID that originally produced this derived event. */
   sourceOwnerId?: string;
+  /**
+   * Slot id this event belongs to (e.g. "slot-pogranichnik"). Optional during
+   * the chainRef migration — backfilled in DEC._ingest from ownerId +
+   * slotOperatorMap. Will become required after Phase 4.
+   */
+  ownerSlotId?: string;
+  /**
+   * Operator id this event belongs to (e.g. "POGRANICHNIK"). Optional during
+   * the chainRef migration — backfilled in DEC._ingest. Will become required
+   * after Phase 4.
+   */
+  ownerOperatorId?: string;
   /** Skill name of the operator event that produced this derived event. */
   sourceSkillName?: string;
   /** Source damage frame identity ("eventUid:si:fi") for intra-frame ordering.

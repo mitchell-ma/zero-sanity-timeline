@@ -26,6 +26,14 @@ export interface AddOptions {
   stackingMode?: string;
   maxStacks?: number;
   event?: Partial<TimelineEvent>;
+  /**
+   * Causal parents for the event being created. First uid is the primary
+   * (most-recent triggering) parent — used by DeterminerType.TRIGGER.
+   * Additional uids capture multi-source causality (e.g. a reaction whose
+   * parents include the incoming infliction AND the active cross-element
+   * inflictions being consumed).
+   */
+  parents?: readonly string[];
 }
 
 export interface ConsumeOptions {
@@ -49,7 +57,7 @@ export interface ColumnHost {
   /** Register a raw (pre-extension) duration for later re-extension. */
   trackRawDuration(uid: string, rawDuration: number): void;
   /** Insert an event: extend duration, push to stacks + output, register stop if applicable. */
-  pushEvent(event: TimelineEvent, rawDuration: number): void;
+  pushEvent(event: TimelineEvent): void;
   /** Insert an already-extended event directly (no duration extension). */
   pushEventDirect(event: TimelineEvent): void;
   /** Push an event to output only (e.g. consumed copies for freeform state tracking). */
@@ -61,6 +69,12 @@ export interface ColumnHost {
   foreignStopsFor(event: TimelineEvent): readonly import('../processTimeStop').TimeStopRegion[];
   /** Get all time-stop regions discovered so far. */
   getStops(): readonly import('../processTimeStop').TimeStopRegion[];
+  /**
+   * Record causal parents for `childUid` in the side-car DAG. No-op if
+   * `parentUids` is empty. Called by column implementations after they
+   * insert a new event via pushEvent / pushEventDirect / applyToColumn.
+   */
+  linkCausality(childUid: string, parentUids: readonly string[]): void;
 }
 
 // ── EventColumn ──────────────────────────────────────────────────────────────

@@ -34,6 +34,10 @@ Baseline held green at every commit. Current baseline:
 
 ## Handoff for next agent (written 2026-04-08 end of day)
 
+**Read order before touching code:** `CLAUDE.md` → `MEMORY.md` → this handoff
+section → then the files this section points to (derivedEventController.ts,
+eventInterpretorController.ts, pipelineInvariants.test.ts, engineSpec.md).
+
 You're picking up after the createSkillEvent/createQueueEvent ingress merge
 landed in `b541acef`. The pipeline is in a good state — 2133/2133 tests green,
 no known correctness bugs, no parallel paths. Read this first before diving in.
@@ -79,35 +83,110 @@ no known correctness bugs, no parallel paths. Read this first before diving in.
 
 ### Deferred work — ranked by value/risk
 
-**(1) chainRef bundled type — HIGH VALUE, MEDIUM-HIGH RISK**
+**(1) chainRef migration — IN PROGRESS (Phases 1–3 landed 2026-04-09)**
 
-Replace scattered `sourceOwnerId` / `sourceSlotId` / `sourceEventUid` fields
-with a single `chainRef: { sourceSlotId, sourceOperatorId, sourceEventUid }`
-on `TimelineEvent`. Eliminates `resolveRoutedSource`'s per-frame O(slots)
-reverse lookup in `eventInterpretorController.ts`.
+Redesigned from "bundled type on event" to **side-car causality DAG on DEC**
+after realizing multi-parent cases (reactions with multiple source inflictions,
+Shatter triggered by solidification + physical hit) can't be expressed as a
+tree. See discussion below for the shape decision.
 
-- **51 files** touch these fields (`grep -r 'sourceOwnerId\|sourceSlotId\|sourceEventUid' src/`)
-- Core types to modify first: `src/consts/viewTypes.ts` (`TimelineEvent`),
-  `src/controller/timeline/eventQueueTypes.ts`, `triggerMatch.ts`,
-  `triggerIndex.ts`
-- Every column creation site touches `ev.sourceOwnerId = source.ownerId`
-- ~15 test files directly assert on these fields — will need updates
-- Recommended: incremental migration path. Add `chainRef` alongside the
-  existing fields first, migrate readers one subsystem at a time, delete
-  old fields last. Do NOT try big-bang — the previous merge worked because
-  the split was structural; this one is a type-shape change that propagates.
-- This is listed in `pipeline-unification-plan.md` "Carried over" section.
+**What's landed:**
 
-**(2) `pushEvent` rawDuration parameter cleanup — LOW VALUE, TRIVIAL RISK**
+- **Phase 1** (`causalityGraph.ts` + DEC wiring):
+  - `CausalityGraph` side-car store on DEC: `link`, `parentsOf`,
+    `primaryParentOf`, `rootOf` (cycle-guarded), `ancestorsOf` (BFS,
+    cycle-safe), `unlink`, `clear`, `size`
+  - Added optional `ownerSlotId` / `ownerOperatorId` to `TimelineEvent`
+  - `_backfillOwnerIds` in `_ingest` populates both fields from
+    `slotOperatorMap` + `sourceOwnerId` with 5-tier precedence; safety net
+    that makes readers trust the fields without null-checks
+  - `getCausality()` + `getEventByUid(uid)` accessors on DEC
+  - `causality.clear()` wired into `reset()`
+  - 17 new unit tests (`causalityGraph.test.ts`, `decChainRefBackfill.test.ts`)
 
-Drop the unused `rawDuration` parameter from `pushEvent`:
-- `ColumnHost.pushEvent` in `src/controller/timeline/columns/eventColumn.ts`
-- `DEC.pushEvent` in `derivedEventController.ts:823`
-- Three callers in `columns/inflictionColumn.ts:100`,
-  `columns/configDrivenStatusColumn.ts:74` and `:189`,
-  `columns/physicalStatusColumn.ts:61`
-- 4-file change, 15 minutes. No risk — the parameter is already unused and
-  extension runs via `extendSingleEvent` from `rawSegmentDurations`.
+- **Phase 2** (populate at real ingress sites):
+  - `AddOptions.parents?: readonly string[]` + `ColumnHost.linkCausality`
+    plumbed through columns
+  - **Reactions (cross-element):** multi-parent
+    `[incomingInfliction, ...activeOther]` at `inflictionColumn.ts:51`
+    (incoming is primary)
+  - **Shatter:** multi-parent `[triggeringEvent, solidification]` at
+    `tryConsumeSolidification`
+  - **APPLY INFLICTION / REACTION / STATUS** via new `applyEventFromCtx`
+    helper that auto-injects `parents: [ctx.sourceEventUid]` (3 main sites
+    in `doApply`)
+  - **Physical statuses** (Lift/Crush/Breach/Knock Down + Vulnerable prereqs):
+    `parentEventUid` threaded from `applyPhysicalStatus` through each helper
+  - **Combo windows:** link `[triggerEventUid]` in `openComboWindow`
+    (bypasses `_ingest`, so owner fields stamped inline)
+  - Note: latent `EventSource` clash with browser global was fixed — now
+    explicitly imported from `./columns/eventColumn`
+
+- **Phase 3** (reader migration):
+  - **3d — `damageTableBuilder.ts`:** deleted `opIdToSlot` reverse-lookup
+    map; reads `ev.ownerSlotId` directly
+  - **3a — `resolveRoutedSource`:** collapsed from ~30 lines of slot-map
+    reverse lookup to 3 lines of direct field reads
+  - **3b — `DeterminerType.TRIGGER`:** now walks
+    `causality.primaryParentOf(ctx.sourceEventUid)` → reads parent's
+    `ownerSlotId`; falls back to legacy `ctx.targetOwnerId ?? slotId` for
+    events not yet linked
+  - **3c — `DeterminerType.SOURCE`:** `buildValueContext` walks
+    `causality.rootOf` and populates `sourceContext` with the root
+    operator's value context. **This fixed a latent bug** — `sourceContext`
+    was only populated in tests before Phase 3c, so the 5 JSON configs
+    using `"determiner": "SOURCE"` (`wulfgard`, `antal`, `avywenna` ×2,
+    `last-rite`) were silently resolving against the wrong context. No test
+    regression, but worth spot-checking damage values for affected operators.
+
+**What's left — Phase 4 (delete the safety net):**
+
+Phase 4 is the risky "make fields required and delete legacy" commit. Do
+NOT interleave with other work — it touches ~15 test files that assert on
+old field names, plus core type definitions.
+
+1. Make `ownerSlotId` / `ownerOperatorId` required (drop `?`) on
+   `TimelineEvent`
+2. Delete `TimelineEvent.sourceOwnerId` (legacy stamping field)
+3. Delete `_backfillOwnerIds` in `_ingest` (safety net no longer needed)
+4. Delete `InterpretContext.sourceSlotId` / `sourceOwnerId` flat fields,
+   migrate callers to read from event directly
+5. Delete fallback chains in `resolveRoutedSource` and
+   `resolveOwnerId(TRIGGER)`
+6. Update the ~15 test files that directly assert on `ev.sourceOwnerId`
+   (grep `src/tests/` for `sourceOwnerId`)
+7. Update `engineSpec.md` to document the causality DAG as the canonical
+   causality mechanism
+
+**Invariants Phase 4 must preserve** (verify with existing pipeline
+invariants test + the two new ones):
+
+- Every event in `dec.allEvents` has `ownerSlotId` + `ownerOperatorId`
+  populated. Pinned in `decChainRefBackfill.test.ts`.
+- `causality.rootOf` is cycle-guarded. Pinned in `causalityGraph.test.ts`.
+- Multi-parent reaction case produces `parents = [incoming, ...activeOther]`.
+  Pinned in `eventColumn.test.ts`.
+
+**Design notes (locked 2026-04-09):**
+
+- **Side-car, not per-event field.** Tree-shaped per-event representations
+  (single-hop pointer OR full ancestry array) can't express A + B → C cases
+  (reactions, Shatter). Side-car DAG is natively multi-parent.
+- **Primary = most-recent.** Convention: ingress sites pass parents in
+  recency order, `parents[0]` is the primary. `DeterminerType.TRIGGER`
+  reads `primaryParentOf`; `DeterminerType.SOURCE` walks via `rootOf`.
+- **Events carry `ownerSlotId`/`ownerOperatorId` directly.** These describe
+  "who am I", not "who caused me" — stable across mutation/pooling. The
+  DAG holds the causality relationships separately.
+- **Cycle guards are cheap insurance.** Chains are acyclic by construction
+  but a malformed input shouldn't hang the engine. `rootOf` uses a `seen`
+  set; `ancestorsOf` is BFS with natural dedup.
+
+**(2) `pushEvent` rawDuration parameter cleanup — DONE 2026-04-09**
+
+Dropped the unused `rawDuration` parameter from `ColumnHost.pushEvent`,
+`DEC.pushEvent`, and all four caller sites (inflictionColumn,
+configDrivenStatusColumn x2, physicalStatusColumn).
 
 ### Landmines / things that will bite you
 

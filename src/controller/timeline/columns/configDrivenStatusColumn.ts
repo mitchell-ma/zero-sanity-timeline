@@ -71,7 +71,7 @@ export class ConfigDrivenStatusColumn implements EventColumn {
     if (options?.event) Object.assign(ev, options.event);
 
 
-    this.host.pushEvent(ev, durationFrames);
+    this.host.pushEvent(ev);
 
     // stacks field is stack VALUE (how many stacks this event represents), not position.
     // Position labels are derived in the view from event ordering.
@@ -186,7 +186,7 @@ export class ConfigDrivenStatusColumn implements EventColumn {
         ev.sourceOwnerId = templateEvent.sourceOwnerId;
         ev.sourceSkillName = templateEvent.sourceSkillName;
         ev.stacks = remaining;
-        this.host.pushEvent(ev, maxRemainingDuration);
+        this.host.pushEvent(ev);
       }
     }
 

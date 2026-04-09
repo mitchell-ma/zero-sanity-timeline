@@ -38,23 +38,32 @@ export class InflictionColumn implements EventColumn {
       if (otherActive.length > 0) {
         const reactionColumnId = INFLICTION_TO_REACTION[this.columnId];
         if (reactionColumnId) {
-          for (const consumed of otherActive) {
-            setEventDuration(consumed, frame - consumed.startFrame);
-            consumed.eventStatus = EventStatusType.CONSUMED;
-            consumed.eventStatusOwnerId = source.ownerId;
-            consumed.eventStatusSkillName = source.skillName;
+          for (const consumedOther of otherActive) {
+            setEventDuration(consumedOther, frame - consumedOther.startFrame);
+            consumedOther.eventStatus = EventStatusType.CONSUMED;
+            consumedOther.eventStatusOwnerId = source.ownerId;
+            consumedOther.eventStatusSkillName = source.skillName;
           }
+          // Precompute the incoming infliction's uid so we can both pass it
+          // as the primary causal parent of the reaction AND use it as the
+          // uid of the zero-dur consumed copy emitted below.
+          const incomingUid = options?.uid ?? `${this.columnId}-${genEventUid()}`;
           // Read reaction duration from JSON config via the resolved durationSeconds getter
           const reactionConfig = getStatusById(reactionColumnId);
           const reactionDurSec = reactionConfig?.durationSeconds ?? 20;
           const reactionDurFrames = Math.round(reactionDurSec * 120);
+          // Causal parents for the reaction: [incoming, ...activeOther].
+          // Incoming is primary (most recent triggering event); the consumed
+          // cross-element inflictions are additional sources.
+          const reactionParents = [incomingUid, ...otherActive.map(o => o.uid)];
           this.host.applyToColumn(reactionColumnId, ENEMY_OWNER_ID, frame, reactionDurFrames, source, {
-            uid: `${options?.uid ?? `${this.columnId}-${genEventUid()}`}-reaction`,
+            uid: `${incomingUid}-reaction`,
             stacks: otherActive.length,
+            parents: reactionParents,
           });
           // Emit a consumed copy of the incoming infliction for freeform state tracking
           const consumed = allocDerivedEvent();
-          consumed.uid = options?.uid ?? `${this.columnId}-${genEventUid()}`;
+          consumed.uid = incomingUid;
           consumed.id = this.columnId;
           consumed.name = this.columnId;
           consumed.ownerId = ownerId;
@@ -97,7 +106,7 @@ export class InflictionColumn implements EventColumn {
     ev.sourceSkillName = source.skillName;
     if (isArtsBurst) ev.isArtsBurst = true;
 
-    this.host.pushEvent(ev, durationFrames);
+    this.host.pushEvent(ev);
 
     // Record stack position at creation time
     const activeAfterCreation = this.host.activeEventsIn(this.columnId, ownerId, frame);

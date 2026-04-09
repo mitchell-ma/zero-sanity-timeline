@@ -47,6 +47,7 @@ import { getStatusConfig } from './configCache';
 import type { LoadoutProperties } from '../../view/InformationPane';
 import type { ColumnHost, EventSource, AddOptions, ConsumeOptions } from './columns/eventColumn';
 import { ColumnRegistry } from './columns/columnRegistry';
+import { CausalityGraph } from './causalityGraph';
 export type { EventSource } from './columns/eventColumn';
 export type { StatSource } from '../calculation/statAccumulator';
 
@@ -70,6 +71,14 @@ export class DerivedEventController implements ColumnHost {
   private stops: TimeStopRegion[] = [];
   private registeredStopIds = new Set<string>();
   private rawDurations = new Map<string, number>();
+  /**
+   * Causality DAG — child uid → ordered parent uids. Side-car to the event
+   * storage so events can be mutated/pooled without dangling references,
+   * and multi-parent cases (reactions with multiple source inflictions)
+   * are natively representable. Populated at ingress sites in Phase 2;
+   * Phase 1 leaves it empty and relies on the `_ingest` owner backfill.
+   */
+  private causality = new CausalityGraph();
   /**
    * per-segment raw (pre-extension) duration store for
    * registered skill events. Populated in `_pushToStorage` after the segment
@@ -122,6 +131,7 @@ export class DerivedEventController implements ColumnHost {
     this.registeredStopIds.clear();
     this.rawDurations.clear();
     this.rawSegmentDurations.clear();
+    this.causality.clear();
     this.comboStops.length = 0;
     this.queue.clear();
     this.linkConsumptions.clear();
@@ -539,6 +549,10 @@ export class DerivedEventController implements ColumnHost {
       startFrame: triggerFrame,
       sourceOwnerId: sourceOwnerId,
       sourceSkillName: sourceSkillName,
+      // Combo windows bypass _ingest (intentional — they're markers, not
+      // real events), so we stamp owner fields + causality link inline.
+      ownerSlotId: wiring.slotId,
+      ownerOperatorId: this.slotOperatorMap[wiring.slotId] ?? wiring.slotId,
       comboTriggerColumnId: sourceColumnId,
       triggerEventUid: triggerEventUid,
       triggerStacks: triggerStacks,
@@ -546,6 +560,7 @@ export class DerivedEventController implements ColumnHost {
       segments: [{ properties: { duration: extDuration } }],
     };
     this.allEvents.push(newWindow);
+    if (triggerEventUid) this.causality.link(newWindow.uid, [triggerEventUid]);
 
     this._applyComboWindowToCombos(newWindow, wiring.slotId);
   }
@@ -722,6 +737,18 @@ export class DerivedEventController implements ColumnHost {
     return this.allEvents;
   }
 
+  /**
+   * Look up an event by uid. Linear scan — fine for Phase 3 determiner
+   * resolution because chain walks are single-digit depth in practice.
+   * If a hot path appears, add a uid → event index alongside `stacks`.
+   */
+  getEventByUid(uid: string): TimelineEvent | undefined {
+    for (let i = 0; i < this.allEvents.length; i++) {
+      if (this.allEvents[i].uid === uid) return this.allEvents[i];
+    }
+    return undefined;
+  }
+
   /** Get combo chaining state (debug). */
   getComboStops(): readonly ComboStopEntry[] {
     return this.comboStops;
@@ -820,7 +847,7 @@ export class DerivedEventController implements ColumnHost {
    * shared `extendSingleEvent` path inside `createQueueEvent`, so callers
    * observe extended durations on return (same contract as before the merge).
    */
-  pushEvent(event: TimelineEvent, _rawDuration: number) {
+  pushEvent(event: TimelineEvent) {
     this.createQueueEvent(event);
   }
 
@@ -939,12 +966,73 @@ export class DerivedEventController implements ColumnHost {
       this.rawSegmentDurations.set(owned.uid, owned.segments.map(s => s.properties.duration));
     }
 
+    // Phase 1 chainRef backfill: every event entering DEC must have
+    // ownerSlotId + ownerOperatorId populated so readers can trust the
+    // fields without null-checking. Phase 2 will populate them at real
+    // ingress sites; this backfill guarantees the invariant in the meantime.
+    this._backfillOwnerIds(owned);
+
     this.allEvents.push(owned);
     const stackKey = this.key(owned.columnId, owned.ownerId);
     const stackArr = this.stacks.get(stackKey) ?? [];
     stackArr.push(owned);
     this.stacks.set(stackKey, stackArr);
     return owned;
+  }
+
+  /**
+   * Phase 1 backfill: derive `ownerSlotId` / `ownerOperatorId` from whatever
+   * fields the caller already populated. Precedence:
+   *   1. Already-set fields are left alone (Phase 2 call sites populate them directly).
+   *   2. If `ev.ownerId` is a known slot, it's the slot id; operator id
+   *      comes from slotOperatorMap.
+   *   3. Else if `ev.sourceOwnerId` is a known slot (legacy stamping), use that.
+   *   4. Else reverse-lookup `ev.sourceOwnerId` as an operator id in slotOperatorMap.
+   *   5. Fall back to `ev.ownerId` for both fields (enemy/common events — the
+   *      owner IS the enemy/common sentinel, not a slot).
+   */
+  private _backfillOwnerIds(ev: TimelineEvent): void {
+    if (ev.ownerSlotId && ev.ownerOperatorId) return;
+
+    let slotId: string | undefined;
+    let operatorId: string | undefined;
+
+    if (this.slotOperatorMap[ev.ownerId]) {
+      slotId = ev.ownerId;
+      operatorId = this.slotOperatorMap[ev.ownerId];
+    } else if (ev.sourceOwnerId && this.slotOperatorMap[ev.sourceOwnerId]) {
+      slotId = ev.sourceOwnerId;
+      operatorId = this.slotOperatorMap[ev.sourceOwnerId];
+    } else if (ev.sourceOwnerId) {
+      // sourceOwnerId might be a raw operator id — reverse-lookup to find its slot
+      for (const [sid, opId] of Object.entries(this.slotOperatorMap)) {
+        if (opId === ev.sourceOwnerId) { slotId = sid; operatorId = opId; break; }
+      }
+      if (!slotId) {
+        // Unrecognized sourceOwnerId (e.g. 'debugger', legacy 'user'): fall
+        // back to ownerId-based derivation so we match the old
+        // resolveRoutedSource semantics rather than letting an unknown string
+        // leak into owner fields.
+        slotId = ev.ownerId;
+        operatorId = ev.ownerId;
+      }
+    } else {
+      slotId = ev.ownerId;
+      operatorId = ev.ownerId;
+    }
+
+    if (!ev.ownerSlotId) ev.ownerSlotId = slotId;
+    if (!ev.ownerOperatorId) ev.ownerOperatorId = operatorId;
+  }
+
+  /** Expose the causality graph for reader migration in Phase 3. */
+  getCausality(): CausalityGraph {
+    return this.causality;
+  }
+
+  /** ColumnHost: record causal parents for a freshly-inserted event. */
+  linkCausality(childUid: string, parentUids: readonly string[]): void {
+    this.causality.link(childUid, parentUids);
   }
 
   // ── Time-stop management ─────────────────────────────────────────────────
@@ -1147,8 +1235,7 @@ export class DerivedEventController implements ColumnHost {
 
   /** Generic event insertion (used by tests). Routes through pushEvent. */
   addEvent(ev: TimelineEvent) {
-    const rawDur = eventDuration(ev);
-    if (rawDur > 0) this.pushEvent(ev, rawDur);
+    if (eventDuration(ev) > 0) this.pushEvent(ev);
     else this.pushToOutput(ev);
   }
 

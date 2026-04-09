@@ -107,6 +107,9 @@ export class ReactionColumn implements EventColumn {
 
     this.host.trackRawDuration(ev.uid, rawDur);
     this.host.pushEventDirect(ev);
+    if (options?.parents && options.parents.length > 0) {
+      this.host.linkCausality(ev.uid, options.parents);
+    }
     return true;
   }
 

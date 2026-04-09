@@ -31,8 +31,7 @@ function makeHost(): ColumnHost & { events: TimelineEvent[] } {
     },
     extendDuration(_start: number, raw: number) { return raw; },
     trackRawDuration() {},
-    pushEvent(ev: TimelineEvent, rawDur: number) {
-      ev.segments = [{ properties: { duration: rawDur } }];
+    pushEvent(ev: TimelineEvent) {
       events.push(ev);
     },
     pushEventDirect(ev: TimelineEvent) { events.push(ev); },
@@ -40,6 +39,7 @@ function makeHost(): ColumnHost & { events: TimelineEvent[] } {
     applyToColumn() { return true; },
     foreignStopsFor(): readonly TimeStopRegion[] { return []; },
     getStops(): readonly TimeStopRegion[] { return []; },
+    linkCausality() {},
   };
 }
 
@@ -91,6 +91,60 @@ describe('ConfigDrivenStatusColumn — unlimited stacks', () => {
     const rejected = col.add('enemy', 0, 1200, SOURCE, { maxStacks: 2, uid: 'c' });
     expect(rejected).toBe(false);
     expect(host.events.length).toBe(2);
+  });
+});
+
+describe('InflictionColumn — cross-element reaction causality', () => {
+  it('builds reaction parents = [incoming, ...activeOther] with incoming as primary', () => {
+    // Two pre-existing inflictions in a cross-element column + an incoming
+    // infliction of a different element. The column should dispatch to the
+    // reaction column with parents = [incomingUid, active1.uid, active2.uid].
+    const applyCalls: Array<{ columnId: string; options: import('../../controller/timeline/columns/eventColumn').AddOptions | undefined }> = [];
+    const linkCalls: Array<{ childUid: string; parents: readonly string[] }> = [];
+    const events: TimelineEvent[] = [
+      {
+        uid: 'active-1', id: INFLICTION_COLUMNS.CRYO, name: INFLICTION_COLUMNS.CRYO,
+        ownerId: 'enemy', columnId: INFLICTION_COLUMNS.CRYO, startFrame: 0,
+        segments: [{ properties: { duration: 1200 } }],
+      } as TimelineEvent,
+      {
+        uid: 'active-2', id: INFLICTION_COLUMNS.CRYO, name: INFLICTION_COLUMNS.CRYO,
+        ownerId: 'enemy', columnId: INFLICTION_COLUMNS.CRYO, startFrame: 50,
+        segments: [{ properties: { duration: 1200 } }],
+      } as TimelineEvent,
+    ];
+
+    const host: ColumnHost = {
+      activeEventsIn(columnId, ownerId, frame) {
+        return events.filter(ev =>
+          ev.columnId === columnId && ev.ownerId === ownerId &&
+          ev.startFrame <= frame && frame < ev.startFrame + (ev.segments?.[0]?.properties?.duration ?? 0),
+        );
+      },
+      activeCount(columnId, ownerId, frame) { return this.activeEventsIn(columnId, ownerId, frame).length; },
+      extendDuration(_s, r) { return r; },
+      trackRawDuration() {},
+      pushEvent(ev) { events.push(ev); },
+      pushEventDirect(ev) { events.push(ev); },
+      pushToOutput(ev) { events.push(ev); },
+      applyToColumn(columnId, _o, _f, _d, _s, options) {
+        applyCalls.push({ columnId, options });
+        return true;
+      },
+      foreignStopsFor(): readonly TimeStopRegion[] { return []; },
+      getStops(): readonly TimeStopRegion[] { return []; },
+      linkCausality(childUid, parents) { linkCalls.push({ childUid, parents }); },
+    };
+
+    const col = new InflictionColumn(INFLICTION_COLUMNS.HEAT, host);
+    col.add('enemy', 100, 1200, SOURCE, { uid: 'incoming-heat' });
+
+    // Reaction dispatched to the reaction column
+    expect(applyCalls.length).toBe(1);
+    expect(applyCalls[0].options?.parents).toEqual(['incoming-heat', 'active-1', 'active-2']);
+    // Primary parent = incoming (most recent); the consumed cross-element
+    // inflictions follow.
+    expect(applyCalls[0].options?.parents?.[0]).toBe('incoming-heat');
   });
 });
 
