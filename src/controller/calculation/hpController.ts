@@ -118,6 +118,20 @@ export class HPController {
     });
   }
 
+  /**
+   * Append one enemy damage tick incrementally during the queue drain.
+   * Phase 4e item 3: replaces the batch `precomputeDamageByFrame` pre-pass.
+   * Ticks arrive in frame order (queue is chronological), so a single append
+   * with cumulative running-total is sufficient — no re-sort needed.
+   */
+  addEnemyDamageTick(frame: number, damage: number) {
+    if (damage <= 0) return;
+    const prevCum = this.damageTicks.length > 0
+      ? this.damageTicks[this.damageTicks.length - 1].cumDamage
+      : 0;
+    this.damageTicks.push({ frame, cumDamage: prevCum + damage });
+  }
+
   // ── Enemy HP queries ───────────────────────────────────────────────────
 
   /**

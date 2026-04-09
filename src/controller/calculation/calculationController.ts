@@ -58,9 +58,95 @@ export function initHpTracker(bossMaxHp: number | null) {
   _damageTicks = [];
 }
 
+/** Per-operator static data used by the simplified damage formula. */
+export interface DamageOpData {
+  totalAttack: number;
+  totalDefense: number;
+  effectiveHp: number;
+  attributeBonus: number;
+  operatorId: string;
+}
+
+/** Build the per-slot operator data cache from loadouts. Called once per pipeline run. */
+export function buildDamageOpCache(
+  slots: readonly { slotId: string; operatorId?: string }[],
+  loadoutProperties: Record<string, LoadoutProperties>,
+  loadouts: Record<string, OperatorLoadoutState> | undefined,
+): Map<string, DamageOpData> {
+  const opData = new Map<string, DamageOpData>();
+  for (const slot of slots) {
+    if (!slot.operatorId) continue;
+    const props = loadoutProperties[slot.slotId] ?? DEFAULT_LOADOUT_PROPERTIES;
+    const loadout = loadouts?.[slot.slotId] ?? EMPTY_LOADOUT;
+    const agg = aggregateLoadoutStats(slot.operatorId, loadout, props);
+    if (!agg) continue;
+    const totalAttack = getTotalAttack(
+      agg.operatorBaseAttack, agg.weaponBaseAttack,
+      agg.stats[StatType.ATTACK_BONUS], agg.flatAttackBonuses,
+    );
+    opData.set(slot.slotId, {
+      totalAttack,
+      totalDefense: agg.totalDefense,
+      effectiveHp: agg.effectiveHp,
+      attributeBonus: agg.attributeBonus,
+      operatorId: slot.operatorId,
+    });
+  }
+  return opData;
+}
+
+/**
+ * Compute simplified damage for a single frame marker on a skill event.
+ *
+ * Used by both the legacy `precomputeDamageByFrame` pre-pass and (Phase 4e
+ * item 3) the inline incremental path in `handleProcessFrame`. Formula:
+ * `mainStat × multiplier × attributeBonus × defenseMultiplier`. Uses
+ * static loadout stats — runtime stat buffs / fragility / crit are
+ * intentionally excluded to match the existing HP-threshold behavior.
+ *
+ * Returns undefined when the frame has no damage multiplier.
+ */
+export function computeFrameMarkerDamage(
+  ev: TimelineEvent,
+  segmentIdx: number,
+  frameIdx: number,
+  damageSegIdx: number,
+  op: DamageOpData,
+  defMult: number,
+  skillLevel: SkillLevel,
+  potential: Potential,
+): number | undefined {
+  const seg = ev.segments[segmentIdx];
+  if (!seg.frames) return undefined;
+  const f = seg.frames[frameIdx];
+  if (!f) return undefined;
+  const maxFrames = seg.frames.length;
+  let multiplier: number | null = null;
+  const dealInfo = findDealDamageInClauses(f.clauses);
+  if (dealInfo && dealInfo.multipliers.length > 0) {
+    const idx = Math.min(skillLevel - 1, dealInfo.multipliers.length - 1);
+    multiplier = dealInfo.multipliers[idx];
+  } else if (dealInfo?.multiplierNode) {
+    const resolved = resolveValueNode(dealInfo.multiplierNode as ValueNode, { skillLevel, potential, stats: {} });
+    if (resolved != null && resolved > 0) multiplier = resolved;
+  } else {
+    const segMult = getSkillMultiplier(op.operatorId, ev.id, damageSegIdx, skillLevel, potential);
+    if (segMult != null) {
+      multiplier = maxFrames > 1 ? segMult / maxFrames : segMult;
+    }
+  }
+  if (multiplier == null || multiplier <= 0) return undefined;
+  const mainStatValue = dealInfo?.mainStat === DamageScalingStatType.DEFENSE ? op.totalDefense
+    : dealInfo?.mainStat === DamageScalingStatType.HP ? op.effectiveHp
+    : op.totalAttack;
+  return mainStatValue * multiplier * op.attributeBonus * defMult;
+}
+
+const SKILL_COLUMN_ID_SET = new Set<string>(SKILL_COLUMN_ORDER);
+
 /**
  * Pre-compute estimated damage per frame from registered skill events.
- * Uses a simplified formula: ATK × multiplier × attributeBonus × defenseMultiplier.
+ * Uses the simplified formula from `computeFrameMarkerDamage`.
  * Stores cumulative damage sorted by frame for O(log n) HP% lookups.
  */
 export function precomputeDamageByFrame(
@@ -76,29 +162,12 @@ export function precomputeDamageByFrame(
   const modelEnemy = getModelEnemy(enemyId);
   const enemyDef = modelEnemy ? modelEnemy.getDef() : 100;
   const defMult = getDefenseMultiplier(enemyDef);
+  const opData = buildDamageOpCache(slots, loadoutProperties, loadouts);
 
-  // Build operator data cache: slotId → { totalAttack, totalDefense, effectiveHp, attributeBonus, operatorId }
-  const opData = new Map<string, { totalAttack: number; totalDefense: number; effectiveHp: number; attributeBonus: number; operatorId: string }>();
-  for (const slot of slots) {
-    if (!slot.operatorId) continue;
-    const props = loadoutProperties[slot.slotId] ?? DEFAULT_LOADOUT_PROPERTIES;
-    const loadout = loadouts?.[slot.slotId] ?? EMPTY_LOADOUT;
-    const agg = aggregateLoadoutStats(slot.operatorId, loadout, props);
-    if (!agg) continue;
-    const totalAttack = getTotalAttack(
-      agg.operatorBaseAttack, agg.weaponBaseAttack,
-      agg.stats[StatType.ATTACK_BONUS], agg.flatAttackBonuses,
-    );
-    opData.set(slot.slotId, { totalAttack, totalDefense: agg.totalDefense, effectiveHp: agg.effectiveHp, attributeBonus: agg.attributeBonus, operatorId: slot.operatorId });
-  }
-
-  // Collect (frame, damage) pairs from all skill event frame markers
   const ticks: { frame: number; damage: number }[] = [];
-  const SKILL_COLUMN_IDS = new Set<string>(SKILL_COLUMN_ORDER);
-
   for (const ev of events) {
     if (ev.ownerId === ENEMY_OWNER_ID) continue;
-    if (!SKILL_COLUMN_IDS.has(ev.columnId)) continue;
+    if (!SKILL_COLUMN_ID_SET.has(ev.columnId)) continue;
     const op = opData.get(ev.ownerId);
     if (!op) continue;
 
@@ -113,34 +182,11 @@ export function precomputeDamageByFrame(
       const seg = ev.segments[si];
       const isDmgSeg = isDamageSegment(seg.properties.segmentTypes);
       if (seg.frames) {
-        const maxFrames = seg.frames.length;
         for (let fi = 0; fi < seg.frames.length; fi++) {
           const f = seg.frames[fi];
-          const absFrame = f.absoluteFrame ?? (ev.startFrame + segOffset + f.offsetFrame);
-
-          let multiplier: number | null = null;
-
-          // Inline DEAL DAMAGE multiplier (DSL clause)
-          const dealInfo = findDealDamageInClauses(f.clauses);
-          if (dealInfo && dealInfo.multipliers.length > 0) {
-            const idx = Math.min(skillLevel - 1, dealInfo.multipliers.length - 1);
-            multiplier = dealInfo.multipliers[idx];
-          } else if (dealInfo?.multiplierNode) {
-            const resolved = resolveValueNode(dealInfo.multiplierNode as ValueNode, { skillLevel, potential, stats: {} });
-            if (resolved != null && resolved > 0) multiplier = resolved;
-          } else {
-            // Segment multiplier divided by frame count
-            const segMult = getSkillMultiplier(op.operatorId, ev.id, damageSegIdx, skillLevel, potential);
-            if (segMult != null) {
-              multiplier = maxFrames > 1 ? segMult / maxFrames : segMult;
-            }
-          }
-
-          if (multiplier != null && multiplier > 0) {
-            const mainStatValue = dealInfo?.mainStat === DamageScalingStatType.DEFENSE ? op.totalDefense
-              : dealInfo?.mainStat === DamageScalingStatType.HP ? op.effectiveHp
-              : op.totalAttack;
-            const damage = mainStatValue * multiplier * op.attributeBonus * defMult;
+          const damage = computeFrameMarkerDamage(ev, si, fi, damageSegIdx, op, defMult, skillLevel, potential);
+          if (damage != null) {
+            const absFrame = f.absoluteFrame ?? (ev.startFrame + segOffset + f.offsetFrame);
             ticks.push({ frame: absFrame, damage });
           }
         }
