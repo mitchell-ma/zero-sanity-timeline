@@ -57,9 +57,6 @@ export interface ColumnHost {
   /** Delegate creation to another column (cross-column side effects). */
   applyToColumn(columnId: string, ownerId: string, frame: number, durationFrames: number,
     source: EventSource, options?: AddOptions): boolean;
-  /** Delegate consumption to another column. */
-  consumeFromColumn(columnId: string, ownerId: string, frame: number,
-    source: EventSource, options?: ConsumeOptions): number;
   /** Get foreign time-stop regions for reaction segment building. */
   foreignStopsFor(event: TimelineEvent): readonly import('../processTimeStop').TimeStopRegion[];
   /** Get all time-stop regions discovered so far. */

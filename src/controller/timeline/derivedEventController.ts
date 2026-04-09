@@ -854,12 +854,6 @@ export class DerivedEventController implements ColumnHost {
     return this.registry.get(columnId).add(ownerId, frame, durationFrames, source, options);
   }
 
-  /** Delegate consumption to another column. */
-  consumeFromColumn(columnId: string, ownerId: string, frame: number,
-    source: EventSource, options?: ConsumeOptions): number {
-    return this.registry.get(columnId).consume(ownerId, frame, source, options);
-  }
-
   /** Get foreign time-stop regions for reaction segment building. */
   foreignStopsFor(event: TimelineEvent): readonly TimeStopRegion[] {
     return isTimeStopEvent(event) ? this.stops.filter(s => s.eventUid !== event.uid) : this.stops;
@@ -1178,15 +1172,6 @@ export class DerivedEventController implements ColumnHost {
     }
   }
 
-  /** Clamp all active events in a column — set status and truncate duration. */
-  resetStatus(columnId: string, ownerId: string, frame: number, source: EventSource) {
-    this.clampActive(columnId, ownerId, frame, source, EventStatusType.REFRESHED);
-  }
-
-  /**
-   * Reset a skill event's cooldown segment at a given frame.
-   * Truncates the Cooldown segment so the event ends at resetFrame.
-   */
   /**
    * For each multi-skill activation window, clamp earlier combo cooldowns
    * so they end where the next combo starts. Called after windows are registered.
@@ -1277,54 +1262,18 @@ export class DerivedEventController implements ColumnHost {
 
   // ── Private helpers ────────────────────────────────────────────────────
 
-  /** Clamp all active events at frame in a column: truncate duration and set status. */
-  private clampActive(
-    columnId: string, ownerId: string, frame: number,
-    source: EventSource, status: EventStatusType,
-  ) {
-    const queueEvents = this.stacks.get(this.key(columnId, ownerId)) ?? [];
-    for (const ev of queueEvents) {
-      if (ev.eventStatus === EventStatusType.CONSUMED) continue;
-      const end = ev.startFrame + eventDuration(ev);
-      if (ev.startFrame <= frame && frame < end) {
-        setEventDuration(ev, frame - ev.startFrame);
-        ev.eventStatus = status;
-        ev.eventStatusOwnerId = source.ownerId;
-        ev.eventStatusSkillName = source.skillName;
-      }
-    }
-    for (const ev of this.allEvents) {
-      if (ev.columnId !== columnId || ev.ownerId !== ownerId) continue;
-      if (ev.eventStatus === EventStatusType.CONSUMED) continue;
-      const end = ev.startFrame + eventDuration(ev);
-      if (ev.startFrame <= frame && frame < end) {
-        setEventDuration(ev, frame - ev.startFrame);
-        ev.eventStatus = status;
-        ev.eventStatusOwnerId = source.ownerId;
-        ev.eventStatusSkillName = source.skillName;
-      }
-    }
-  }
-
-  /** Clamp only active events matching a predicate in a column. */
+  /**
+   * Clamp active events matching a predicate in a column: truncate their
+   * duration to `frame` and mark them with `status`. Uses the stacks index
+   * as the single source — stacks holds the same event references as
+   * allEvents, so one pass covers both.
+   */
   private clampActiveFiltered(
     columnId: string, ownerId: string, frame: number,
     source: EventSource, status: EventStatusType, predicate: (ev: TimelineEvent) => boolean,
   ) {
     const queueEvents = this.stacks.get(this.key(columnId, ownerId)) ?? [];
     for (const ev of queueEvents) {
-      if (!predicate(ev)) continue;
-      if (ev.eventStatus === EventStatusType.CONSUMED) continue;
-      const end = ev.startFrame + eventDuration(ev);
-      if (ev.startFrame <= frame && frame < end) {
-        setEventDuration(ev, frame - ev.startFrame);
-        ev.eventStatus = status;
-        ev.eventStatusOwnerId = source.ownerId;
-        ev.eventStatusSkillName = source.skillName;
-      }
-    }
-    for (const ev of this.allEvents) {
-      if (ev.columnId !== columnId || ev.ownerId !== ownerId) continue;
       if (!predicate(ev)) continue;
       if (ev.eventStatus === EventStatusType.CONSUMED) continue;
       const end = ev.startFrame + eventDuration(ev);

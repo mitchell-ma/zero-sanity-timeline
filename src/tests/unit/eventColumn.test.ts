@@ -38,7 +38,6 @@ function makeHost(): ColumnHost & { events: TimelineEvent[] } {
     pushEventDirect(ev: TimelineEvent) { events.push(ev); },
     pushToOutput(ev: TimelineEvent) { events.push(ev); },
     applyToColumn() { return true; },
-    consumeFromColumn() { return 0; },
     foreignStopsFor(): readonly TimeStopRegion[] { return []; },
     getStops(): readonly TimeStopRegion[] { return []; },
   };
