@@ -461,7 +461,7 @@ Key architectural mechanisms:
 - **Reactive combo resolution**: `resolveComboTriggersInline` runs per-`createSkillEvent` call; each invocation clears all COMBO_WINDOW events and re-emits via `openComboWindow` (merge-on-insert). No batch pre/post pass.
 - **Chain-of-action uid refs** (step 7.5): `TriggerMatch.sourceEventUid` / `TimelineEvent.triggerEventUid` carry a direct event-to-event reference. `duplicateTriggerSource` looks up the source event live from `getAllEvents()` instead of consulting the denormalized `comboTriggerColumnId` string.
 
-**Step 7g unblocked (32b40f02):** uid + `creationInteractionMode` now propagate through `doApply` for freeform user-placed events on derived columns. `InterpretContext` carries `sourceEventColumnId` so propagation is column-scoped — only the child event landing on the SAME column as the source reuses the parent uid (e.g. freeform MF status → MF column), while cross-column side effects (e.g. freeform IE → NATURE infliction) get fresh `derivedEventUid`s. The post-pipeline UID/`creationInteractionMode` restoration loop is **deleted**.
+**Step 7g unblocked (32b40f02):** uid + `creationInteractionMode` now propagate through `doApply` for freeform user-placed events on derived columns. `InterpretContext` carries `sourceEventColumnId` so propagation is column-scoped — only the child event landing on the SAME column as the source reuses the parent uid (e.g. freeform MF status → MF column), while cross-column side effects (e.g. freeform IE → NATURE infliction) get fresh `derivedEventUid`s. `creationInteractionMode` propagates regardless of column match (no collision risk — it's just a "user input" tag) via `ctx.sourceCreationInteractionMode` → `eventOverrides` → column `add()` → `Object.assign`. The post-pipeline UID/`creationInteractionMode` restoration loop is **deleted**.
 
 **isCrit write-back loop unblocked (01dc02ed):** isCrit is now a per-run display field resolved from the override store on every pipeline pass. NEVER/ALWAYS/EXPECTED modes also read explicit pins from `overrides[buildOverrideKey(event)]?.segments?.[si]?.frames?.[fi]?.isCritical` and write them to the freshly-cloned frame, so explicit MANUAL pins survive any mode switch without raw-state mutation. The post-pipeline write-back loop is **deleted**. The previous test expectation that MANUAL's per-frame `false` defaults also persist across modes was an artifact of the raw-state leak, not a real UX requirement.
 
@@ -558,9 +558,18 @@ See `docs/notes/phase-8-plan.md` and `docs/notes/phase-8-progress.md` for the fu
 
 The flag now takes effect at the moment the status's clause is dispatched. No post-drain dependency.
 
-**9c — `hpController.finalize` — pending.**
+**9c — `hpController.finalize` deleted (`9c60122d`).** The per-slot HP graph + heal summary now rebuild reactively from `addHeal` via a private `_rebuildSlotGraph` helper. Smaller scope than 9a/9b — HP controller has no cross-controller coupling and no global multipliers. `addHeal` calls `_rebuildSlotGraph(tick.targetSlotId)` after appending. Note: `addHeal`/`getSlotHpGraph`/`getSlotHealSummary` are currently only used by tests — production uses operator-keyed `applyHeal`/`getOperatorFlatHp`. The slot-keyed pipeline is dormant production code.
 
-**9d — `shieldController.finalize` — pending.**
+**9d — `shieldController.finalize` deleted (`7d286c99`).** Trivial — the defensive sort was unnecessary. Shield ticks arrive in frame order during the queue drain via `applyShield` calls dispatched by `interpret()`.
+
+**Phase 9 complete.** All four `finalize()` calls are gone. `processCombatSimulation`'s post-pipeline work after Phase 9 is exactly:
+
+```ts
+const processed = state.getProcessedEvents();
+return processed;
+```
+
+Zero post-pipeline transformation. Every resource controller is reactive. Every field propagates through `interpret()` ctx (uid + creationInteractionMode via the 7g unblock, isCrit via the override store, slot efficiencies via the 9b snapshot).
 
 ---
 
