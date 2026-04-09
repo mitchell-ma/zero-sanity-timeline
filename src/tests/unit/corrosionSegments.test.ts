@@ -49,7 +49,7 @@ function infliction(
     columnId,
     startFrame,
     segments: [{ properties: { duration: Math.round(durationSeconds * FPS) } }],
-    sourceOwnerId: 'slot-0',
+    ownerSlotId: 'slot-0',
   };
 }
 
@@ -68,7 +68,7 @@ function corrosionEvent(
     columnId: REACTION_COLUMNS.CORROSION,
     startFrame,
     segments: [{ properties: { duration: durationFrames } }],
-    sourceOwnerId: 'slot-0',
+    ownerSlotId: 'slot-0',
     ...opts,
   };
 }
@@ -435,7 +435,7 @@ describe('corrosion time stop interaction', () => {
       columnId: REACTION_COLUMNS.CORROSION,
       startFrame: 0,
       segments: [{ properties: { duration: 5 * FPS } }],
-      sourceOwnerId: USER_ID,
+      ownerSlotId: USER_ID,
       sourceSkillName: 'Freeform',
       // No stacks — freeform events don't set this
     };

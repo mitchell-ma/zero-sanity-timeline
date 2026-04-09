@@ -453,7 +453,7 @@ describe('D. P5 Expert Mechcrafter', () => {
     // Verify it's on the operator status column
     expect(expertStatus!.columnId).toBe(EXPERT_ID);
     // Verify it has the correct source
-    expect(expertStatus!.sourceOwnerId).toBeDefined();
+    expect(expertStatus!.ownerSlotId).toBeDefined();
   });
 
   it('D8: changing potential from P5 to P4 with ult already placed removes Expert Mechcrafter', () => {
