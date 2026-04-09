@@ -40,6 +40,8 @@ export class ReactionColumn implements EventColumn {
     ev.segments = [{ properties: { duration: durationFrames } }];
     ev.sourceOwnerId = source.ownerId;
     ev.sourceSkillName = source.skillName;
+    ev.ownerSlotId = source.slotId ?? source.ownerId;
+    ev.ownerOperatorId = source.operatorId ?? source.ownerId;
     ev.stacks = options?.stacks;
     ev.forcedReaction = options?.forcedReaction;
 

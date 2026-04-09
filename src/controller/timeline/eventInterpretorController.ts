@@ -934,7 +934,12 @@ export class EventInterpretorController {
       return true;
     }
     const ownerId = this.resolveOwnerId(effectTo, ctx, effectToDeterminer);
-    const source = { ownerId: ctx.sourceOwnerId, skillName: ctx.sourceSkillName };
+    const source = {
+      ownerId: ctx.sourceOwnerId,
+      skillName: ctx.sourceSkillName,
+      slotId: ctx.sourceSlotId ?? ctx.sourceOwnerId,
+      operatorId: ctx.sourceOwnerId,
+    };
 
     // For freeform-derived events, carry the source uid so the created
     // event can be matched to the raw event. Column-match guard: only
@@ -1186,7 +1191,12 @@ export class EventInterpretorController {
     const ownerId = this.resolveOwnerId(
       from, ctx, effect.fromDeterminer ?? effect.toDeterminer,
     );
-    const source = { ownerId: ctx.sourceOwnerId, skillName: ctx.sourceSkillName };
+    const source = {
+      ownerId: ctx.sourceOwnerId,
+      skillName: ctx.sourceSkillName,
+      slotId: ctx.sourceSlotId ?? ctx.sourceOwnerId,
+      operatorId: ctx.sourceOwnerId,
+    };
     const rawStacks = effect.with?.stacks as ValueNode | typeof THRESHOLD_MAX | number | undefined;
     if (rawStacks == null) console.warn(
       `[EventInterpretor] CONSUME ${effect.object} ${effect.objectId ?? effect.objectQualifier ?? '?'}: missing with.stacks`,
@@ -1714,7 +1724,12 @@ export class EventInterpretorController {
     if (!qualifier || !PHYSICAL_STATUS_VALUES.has(qualifier)) return false;
     const columnId = qualifier;
 
-    const source = { ownerId: ctx.sourceOwnerId, skillName: ctx.sourceSkillName };
+    const source = {
+      ownerId: ctx.sourceOwnerId,
+      skillName: ctx.sourceSkillName,
+      slotId: ctx.sourceSlotId ?? ctx.sourceOwnerId,
+      operatorId: ctx.sourceOwnerId,
+    };
     const isForced = this.resolveWith(effect.with?.isForced, ctx) === 1;
 
     // Track output count before to detect whether a physical status was actually created

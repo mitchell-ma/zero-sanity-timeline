@@ -12,8 +12,17 @@ import type { TimelineEvent } from '../../../consts/viewTypes';
 
 /** Source metadata for event mutations (who caused the event). */
 export interface EventSource {
+  /**
+   * Legacy owner id — historically populated with the slot id. Back-compat
+   * field still used by eventStatusOwnerId / sourceOwnerId stamping. New
+   * code should also populate `slotId` and `operatorId` explicitly.
+   */
   ownerId: string;
   skillName: string;
+  /** Slot id of the causing event (e.g. "slot-0"). Optional for back-compat. */
+  slotId?: string;
+  /** Operator id of the causing event (e.g. "laevatain"). Optional for back-compat. */
+  operatorId?: string;
 }
 
 // ── Options ──────────────────────────────────────────────────────────────────

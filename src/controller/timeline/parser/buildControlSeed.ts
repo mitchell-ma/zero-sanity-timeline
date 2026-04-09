@@ -24,5 +24,7 @@ export function buildControlSeed(
   ev.segments = [{ properties: { duration: TOTAL_FRAMES } }];
   ev.sourceOwnerId = operatorId ?? firstOccupiedSlotId;
   ev.sourceSkillName = NounType.CONTROL;
+  ev.ownerSlotId = firstOccupiedSlotId;
+  ev.ownerOperatorId = operatorId ?? firstOccupiedSlotId;
   return ev;
 }
