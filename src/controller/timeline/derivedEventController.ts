@@ -317,8 +317,7 @@ export class DerivedEventController implements ColumnHost {
       foreignStops: this.foreignStopsFor(ev),
     });
     clampPriorControlEvents(ev, this.allEvents);
-    this._maybeRegisterStop(ev);
-    const owned = this._pushToStorage(ev);
+    const owned = this._ingest(ev, { deepClone: true, captureRaw: true });
 
     // Pass 2: extension, frame positions, validation, resource notification
     let out = this.extendSingleEvent(owned);
@@ -787,57 +786,54 @@ export class DerivedEventController implements ColumnHost {
   }
 
   /**
-   * Queue-event ingress. Replaces the legacy pushEvent / pushEventDirect /
-   * pushToOutput / addEvent paths that lived on parallel `stacks` + `output`
-   * storage. Single source of storage now — registeredEvents is the linear
-   * list, stacks is the per-(column, owner) index.
-   *
-   * Queue events come from column code (fresh objects, not React raw state)
-   * so no deep clone is needed — tests and interpreter chains holding a
-   * reference still see mutations.
+   * Unified queue-event ingress. Single public entry point for events that
+   * enter DEC mid-queue (statuses, inflictions, reactions, freeform markers)
+   * — symmetric with `createSkillEvent` via the shared `_ingest` core.
    *
    * Skipped vs createSkillEvent's full pipeline:
    *   - combo chain / reaction segments / clamp controls (skill-specific)
-   *   - extendSingleEvent (rawSegmentDurations not populated for queue events)
    *   - notifyResourceControllers (queue events are statuses/inflictions/
    *     reactions — none of notifyResourceControllers' branches apply;
    *     IGNORE UE flows through interpret() dispatch since 85912595)
    *   - pass 3 resolveComboTriggersInline (run once post-drain instead)
    *   - pass 4 queue frame emission (lifecycle already handled inline)
+   *
+   * When `captureRaw` is true (the default), `_ingest` records per-segment
+   * raw durations and this method runs `extendSingleEvent` so the caller
+   * observes extended durations on return. Reaction events whose segments
+   * are already built with stops baked in must pass `captureRaw: false`.
    */
-  createQueueEvent(ev: TimelineEvent): TimelineEvent {
-    this._maybeRegisterStop(ev);
-    this.allEvents.push(ev);
-    const stackKey = this.key(ev.columnId, ev.ownerId);
-    const stackArr = this.stacks.get(stackKey) ?? [];
-    stackArr.push(ev);
-    this.stacks.set(stackKey, stackArr);
-    return ev;
+  createQueueEvent(
+    ev: TimelineEvent,
+    opts: { captureRaw?: boolean } = {},
+  ): TimelineEvent {
+    const captureRaw = opts.captureRaw ?? true;
+    const owned = this._ingest(ev, { deepClone: false, captureRaw });
+    if (captureRaw) this.extendSingleEvent(owned);
+    return owned;
   }
 
   /**
    * Insert an event with a raw duration to be extended by current stops.
    * Used by infliction / status / MF columns for freshly-built events whose
-   * segments carry the pre-extension duration.
+   * segments carry the pre-extension duration. Extension now runs via the
+   * shared `extendSingleEvent` path inside `createQueueEvent`, so callers
+   * observe extended durations on return (same contract as before the merge).
    */
-  pushEvent(event: TimelineEvent, rawDuration: number) {
-    const extDur = this._extendDuration(event.startFrame, rawDuration, event.uid);
-    setEventDuration(event, extDur);
-    this.rawDurations.set(event.uid, rawDuration);
+  pushEvent(event: TimelineEvent, _rawDuration: number) {
     this.createQueueEvent(event);
-    // reExtendQueueEvents handles the edge case where a mid-queue event
-    // registers a new stop that affects prior queue events' durations.
-    if (this.registeredStopIds.has(event.uid)) {
-      this.reExtendQueueEvents();
-    }
   }
 
   /** Insert an already-extended event directly (no duration extension). */
   pushEventDirect(event: TimelineEvent) {
+    // Reaction events arrive with stops baked into their segments (see
+    // reactionColumn.add → buildReactionSegment). Skip raw capture so the
+    // retroactive re-extension loop in `_maybeRegisterStop` doesn't treat
+    // already-extended durations as raw and double-extend on a later stop.
     if (!this.rawDurations.has(event.uid)) {
       this.rawDurations.set(event.uid, eventDuration(event));
     }
-    this.createQueueEvent(event);
+    this.createQueueEvent(event, { captureRaw: false });
   }
 
   /** Push a "marker" event (e.g. consumed copy for freeform state tracking). */
@@ -845,7 +841,7 @@ export class DerivedEventController implements ColumnHost {
     if (!this.rawDurations.has(event.uid)) {
       this.rawDurations.set(event.uid, eventDuration(event));
     }
-    this.createQueueEvent(event);
+    this.createQueueEvent(event, { captureRaw: false });
   }
 
   /** Delegate creation to another column (cross-column side effects). */
@@ -910,31 +906,40 @@ export class DerivedEventController implements ColumnHost {
     return this.linkConsumptions.get(eventUid) ?? 0;
   }
 
-  /** Append ev to the registered events array. */
-  private _pushToStorage(ev: TimelineEvent): TimelineEvent {
-    // Deep-clone segments (and frame markers) into DEC-owned copies so
-    // pipeline mutations (duration extension, frame marker positioning) do
-    // not leak back to the raw React state the event originated from.
-    // After this point the event is DEC-owned and may be mutated in place.
-    const segments = ev.segments.map(s => ({
-      ...s,
-      properties: { ...s.properties },
-      ...(s.frames ? { frames: s.frames.map(f => ({ ...f })) } : {}),
-    }));
-    const owned: TimelineEvent = { ...ev, segments };
-    // Capture raw (pre-extension) segment durations for fresh skill events
-    // only. Events already tracked by rawDurations (the single-total map)
-    // came in via createQueueEvent mid-queue — their durations may already
-    // be extended and/or consumption-truncated. For those, skip
-    // rawSegmentDurations entirely so extendSingleEvent is a no-op on them.
-    if (!this.rawDurations.has(owned.uid)) {
-      this.rawSegmentDurations.set(owned.uid, segments.map(s => s.properties.duration));
+  /**
+   * Shared ingress core — the single point where any event enters DEC storage.
+   * Runs stop registration (+ retroactive re-extension of prior events),
+   * optionally deep-clones segments (for skill events sourced from React raw
+   * state), optionally captures per-segment raw durations (for idempotent
+   * time-stop re-extension via extendSingleEvent), and pushes the event to
+   * both `allEvents` and the `stacks` index.
+   *
+   * Called by `createSkillEvent` ({deepClone:true, captureRaw:true}) and
+   * `createQueueEvent` (column-built events pass captureRaw depending on
+   * whether the event arrived pre-extended — reactions do, everything else
+   * does not).
+   */
+  private _ingest(
+    ev: TimelineEvent,
+    opts: { deepClone: boolean; captureRaw: boolean },
+  ): TimelineEvent {
+    this._maybeRegisterStop(ev);
+
+    let owned = ev;
+    if (opts.deepClone) {
+      const segments = ev.segments.map(s => ({
+        ...s,
+        properties: { ...s.properties },
+        ...(s.frames ? { frames: s.frames.map(f => ({ ...f })) } : {}),
+      }));
+      owned = { ...ev, segments };
     }
+
+    if (opts.captureRaw) {
+      this.rawSegmentDurations.set(owned.uid, owned.segments.map(s => s.properties.duration));
+    }
+
     this.allEvents.push(owned);
-    // Maintain the stacks index in sync with registeredEvents. Single source
-    // of storage — registeredEvents is the linear list, stacks is the
-    // per-(column, owner) index used by _activeEventsIn. Queue-created
-    // events enter via createQueueEvent which also populates stacks.
     const stackKey = this.key(owned.columnId, owned.ownerId);
     const stackArr = this.stacks.get(stackKey) ?? [];
     stackArr.push(owned);
@@ -1073,18 +1078,6 @@ export class DerivedEventController implements ColumnHost {
       derivedOffset += ext;
     }
     return ev;
-  }
-
-  private reExtendQueueEvents() {
-    this.stacks.forEach((events) => {
-      for (const ev of events) {
-        if (ev.eventStatus === EventStatusType.CONSUMED || ev.eventStatus === EventStatusType.REFRESHED) continue;
-        if (ev.eventStatus === EventStatusType.EXTENDED) continue;
-        const raw = this.rawDurations.get(ev.uid);
-        if (raw == null) continue;
-        setEventDuration(ev, this._extendDuration(ev.startFrame, raw, ev.uid));
-      }
-    });
   }
 
   /**

@@ -276,6 +276,7 @@ export function useApp() {
 
   const interactionModeRef = useRef(InteractionModeType.STRICT);
   interactionModeRef.current = interactionMode;
+  const slotOperatorMapRef = useRef<Record<string, string>>({});
   useEffect(() => {
     try { localStorage.setItem('zst-interaction-mode', interactionMode); } catch { /* ignore */ }
   }, [interactionMode]);
@@ -434,6 +435,7 @@ export function useApp() {
     }
     return map;
   }, [operators]);
+  slotOperatorMapRef.current = slotOperatorMap;
 
   const slotWeapons = useMemo(() => {
     const map: Record<string, string | undefined> = {};
@@ -1037,7 +1039,13 @@ export function useApp() {
   ) => {
     // Validate against controller-derived columns before adding
     if (!validColumnPairsRef.current.has(`${ownerId}:${columnId}`)) return;
-    const ev = createEvent(ownerId, columnId, atFrame, defaultSkill, interactionModeRef.current);
+    // Resolve sourceOwnerId from slot → operator id before allocation so the
+    // 'user' placeholder never enters the event graph.
+    const resolvedSource = defaultSkill?.sourceOwnerId
+      ?? slotOperatorMapRef.current[ownerId]
+      ?? ownerId;
+    const skillWithSource = { ...(defaultSkill ?? {}), sourceOwnerId: resolvedSource };
+    const ev = createEvent(ownerId, columnId, atFrame, skillWithSource, interactionModeRef.current);
     if (defaultSkill?.comboTriggerColumnId) ev.comboTriggerColumnId = defaultSkill.comboTriggerColumnId;
     setEvents((prev) => {
       // No total-event limit for statuses — the engine handles concurrent stack

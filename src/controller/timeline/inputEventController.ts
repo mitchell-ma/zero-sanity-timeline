@@ -9,7 +9,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { NounType } from '../../dsl/semantics';
 import { ColumnType, EnhancementType, EventFrameType } from '../../consts/enums';
 import { TimelineEvent, EventSegmentData, Operator, computeSegmentsSpan, getAnimationDuration, eventEndFrame, durationSegment } from '../../consts/viewTypes';
-import { ENEMY_OWNER_ID, USER_ID, REACTION_COLUMN_IDS, INFLICTION_COLUMN_IDS, COMBO_WINDOW_COLUMN_ID } from '../../model/channels';
+import { ENEMY_OWNER_ID, REACTION_COLUMN_IDS, INFLICTION_COLUMN_IDS, COMBO_WINDOW_COLUMN_ID } from '../../model/channels';
 
 import { TOTAL_FRAMES } from '../../utils/timeline';
 import { ComboSkillEventController } from './comboSkillEventController';
@@ -377,7 +377,7 @@ export function createEvent(
     ...(defaultSkill?.timeStop ? { timeStop: defaultSkill.timeStop } : {}),
     ...(defaultSkill?.timeDependency ? { timeDependency: defaultSkill.timeDependency } : {}),
     ...(defaultSkill?.skillPointCost != null ? { skillPointCost: defaultSkill.skillPointCost } : {}),
-    sourceOwnerId: defaultSkill?.sourceOwnerId ?? USER_ID,
+    sourceOwnerId: defaultSkill?.sourceOwnerId ?? ownerId,
     sourceSkillName: defaultSkill?.sourceSkillName ?? 'Freeform',
     ...(defaultSkill?.enhancementType ? { enhancementType: defaultSkill.enhancementType } : {}),
     ...(interactionMode ? { creationInteractionMode: interactionMode } : {}),

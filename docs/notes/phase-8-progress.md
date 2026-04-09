@@ -32,6 +32,40 @@ Baseline held green at every commit. Current baseline:
 | 7h | `e78ffbba` | Per-event queue frame emission from `createSkillEvent` | ✅ (fold deferred) |
 | 8 | `bc95f125` | Invariant pin test + engineSpec rewrite | ✅ |
 
+## Session 2026-04-08 (continuation, part 4) — ingress merge + backfill tests + USER_ID fix
+
+Three landed items, no new architectural work on top of what Phase 8/9 already
+closed out — just follow-through on deferred items from part 3.
+
+1. **`USER_ID` placeholder leak fixed.** `handleAddEvent` in `src/app/useApp.ts`
+   now resolves `sourceOwnerId` via a new `slotOperatorMapRef` before calling
+   `createEvent`. `inputEventController.ts` fallback changed from `USER_ID` to
+   `ownerId`; `USER_ID` import dropped. The `'user'` string no longer enters
+   the event graph.
+
+2. **Unit test backfill — 12 new tests across 2 files.** Previously the
+   reactive UE controller + retroactive time-stop extension paths were only
+   validated via the integration suite. Added targeted pins:
+   - `src/tests/unit/decRetroactiveTimeStop.test.ts` (5 tests) — per-segment
+     raw capture + idempotent `extendSingleEvent` under multiple overlapping
+     stops, self-stop exclusion, pushEvent-inserted event participation in
+     retroactive re-extension (post-merge pin).
+   - `src/tests/unit/ueControllerReactive.test.ts` (7 tests) — per-event
+     `slotEfficiencies` snapshot (no retroactive leak), `spDerivedFromUid`
+     idempotency, `onNaturalSpConsumed(0)` removal, reactive
+     `setIgnoreExternalGain` toggle, same-slot gain preservation.
+
+3. **`createSkillEvent` / `createQueueEvent` ingress merge.** Both paths now
+   share a private `_ingest(ev, {deepClone, captureRaw})` core. `pushEvent`
+   simplifies to `createQueueEvent(event)` — no more pre-extension. Deleted
+   `_pushToStorage` and `reExtendQueueEvents` (dead code). Bonus: pushEvent
+   events now participate in retroactive time-stop re-extension via
+   `rawSegmentDurations`, fixing a latent bug. 2133/2133 tests pass first try.
+
+**Deferred still:** `chainRef` bundled type (51 files), `pushEvent` rawDuration
+parameter cleanup (4 files, trivial but unmerged). Covered in the main plan's
+"Carried over" section — come back when starting fresh context.
+
 ## Session 2026-04-08 (continuation) — 7c through 7f
 
 Landed in one session following the original 7c–7h roadmap. Key
@@ -406,15 +440,20 @@ The `extendedIds` guard — the real Phase 8 win — is already deleted.
    events outside the queue drain). The invariant test in step 8
    should codify this.
 
-2. **`rawSegmentDurations` is populated only for skill events** (the
-   ones that enter via `createSkillEvent`). Queue events created
-   mid-drain via `pushEvent` use the older single-total `rawDurations`
+2. **`rawSegmentDurations` is populated for ALL skill events AND
+   pushEvent-routed queue events** (as of the 2026-04-08 createSkillEvent/
+   createQueueEvent merge). Both flow through `_ingest(..., {captureRaw:
+   true})`. Only `pushEventDirect` (reactions — segments pre-built with
+   stops baked in) and `pushToOutput` (zero-duration markers) pass
+   `captureRaw: false` and stay on the older single-total `rawDurations`
    map. `extendSingleEvent` no-ops on events absent from
-   `rawSegmentDurations`, which is intentional.
+   `rawSegmentDurations`, which is intentional for those two paths.
 
-3. **`_pushToStorage` returns the cloned owned event.** Callers must
-   use the returned reference, not the input `ev`. `createSkillEvent`
-   now does this correctly; any future caller must follow suit.
+3. **`_ingest` returns the (optionally cloned) owned event.** For skill
+   events (`deepClone: true`) the return reference differs from the input;
+   for queue events it's the same ref. Callers must use the returned
+   reference. `createSkillEvent` and `createQueueEvent` both do this.
+   (Formerly `_pushToStorage`, folded into `_ingest` in the merge.)
 
 4. **The isCrit write-back loop is load-bearing** for
    `critModeToggle.test.ts`. Touching `_pushToStorage`'s clone

@@ -3,6 +3,7 @@
 ## 2026-04-08
 - Combo activation windows now flow through a single reactive path — windows open the moment a matching trigger event fires, and the sidebar stays in sync with combo cooldown reductions (e.g. Wulfgard P5 ult resetting the combo CD)
 - CONTROLLED-operator combo triggers resolve more consistently — Avywenna's combo window correctly ignores a non-controlled Akekuri's basic attack, matching the in-game behavior
+- Enemy inflictions and operator statuses now correctly stretch through later time-stops — if an ultimate animation lands partway through an active infliction, the infliction's remaining duration is now extended by the animation, matching how skill events already behaved
 - Ongoing internal engine cleanup — event pipeline continues to be restructured incrementally for more predictable behavior in future operator updates
 
 ## 2026-04-07

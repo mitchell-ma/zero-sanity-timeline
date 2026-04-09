@@ -784,15 +784,14 @@ listed for history.
   in Phase 3, replace `resolveRoutedSource` with a `chainRef` populated at
   every derived-event-creation site (`columns/*.ts: ev.sourceOwnerId =
   source.ownerId`).
-- **`'user'` placeholder leak.** `inputEventController.ts:432` sets
-  `sourceOwnerId: defaultSkill?.sourceOwnerId ?? USER_ID` (`USER_ID = 'user'`)
-  for user-placed events. `resolveRoutedSource` defends against this by
-  bailing out when `event.ownerId` is itself a known slot, but the placeholder
-  still propagates onto child status events created from a user-placed BS,
-  where it's harmless only because the routing helper finds the right slot
-  via the slot map. Cleaner: at allocation time, resolve `USER_ID` to the
-  actual operator id from the loadout once, and never let `'user'` survive
-  past `allocateEvent`.
+- **RESOLVED — `'user'` placeholder leak (2026-04-08).** `handleAddEvent` in
+  `src/app/useApp.ts` now resolves `sourceOwnerId` via
+  `slotOperatorMapRef.current[ownerId]` before calling `createEvent`, so the
+  operator id is bound at allocation time. `createEvent`'s fallback in
+  `inputEventController.ts:380` was changed from `USER_ID` to `ownerId`, and
+  the `USER_ID` import was dropped from that file. The `'user'` placeholder
+  no longer enters the event graph at all. `resolveRoutedSource`'s defensive
+  slot-map reverse lookup is now strictly belt-and-suspenders.
 - **`addUltimateEnergyGain` calls in `ultimateEnergyValidation.test.ts`.**
   Tests call `ueController.addUltimateEnergyGain(...)` directly to seed the
   controller for unit-level checks. Acceptance grep allows this. If a future
@@ -1186,6 +1185,24 @@ ends up with.
 - **RESOLVED — `FrameClauseEffect.type` union** collapsed to
   `{ type: 'dsl'; dslEffect?: Effect }` as its sole shape after Phase 0d.
   Zero non-dsl variants remain.
+- **RESOLVED — `createSkillEvent` / `createQueueEvent` ingress merge (2026-04-08).**
+  The two public ingress paths now share a private `_ingest(ev, {deepClone,
+  captureRaw})` core in `derivedEventController.ts` that handles
+  `_maybeRegisterStop`, optional deep-clone of segments, optional
+  per-segment raw duration capture, and push to `allEvents` + `stacks`.
+  `_pushToStorage` was deleted (folded into `_ingest`). `createQueueEvent`
+  now runs `extendSingleEvent` inline after ingest so `pushEvent` callers
+  observe extended durations on return (same contract as before). `pushEvent`
+  simplifies to `this.createQueueEvent(event)` — no more pre-extension via
+  `_extendDuration` + `setEventDuration`. `pushEventDirect` (reactions) and
+  `pushToOutput` (0-duration markers) pass `captureRaw: false` since their
+  segments arrive pre-built. `reExtendQueueEvents` was deleted as dead code.
+  **Bonus correctness win:** pushEvent-inserted events (statuses, inflictions,
+  MF events) now participate in `_maybeRegisterStop`'s retroactive
+  re-extension loop via `rawSegmentDurations`, fixing a latent bug where
+  these events weren't re-extended when a later stop landed. Pinned by a
+  new test in `src/tests/unit/decRetroactiveTimeStop.test.ts`. 2133/2133
+  tests pass with zero regressions.
 - **RESOLVED — `effectExecutor.ts` orphan deleted (2026-04-08).** The
   719-line file plus its 2 test files (`effectExecutor.test.ts` 1981
   lines, `segmentedStatus.test.ts` 176 lines) were deleted outright per
