@@ -465,9 +465,20 @@ Key architectural mechanisms:
 
 **isCrit write-back loop unblocked (01dc02ed):** isCrit is now a per-run display field resolved from the override store on every pipeline pass. NEVER/ALWAYS/EXPECTED modes also read explicit pins from `overrides[buildOverrideKey(event)]?.segments?.[si]?.frames?.[fi]?.isCritical` and write them to the freshly-cloned frame, so explicit MANUAL pins survive any mode switch without raw-state mutation. The post-pipeline write-back loop is **deleted**. The previous test expectation that MANUAL's per-frame `false` defaults also persist across modes was an artifact of the raw-state leak, not a real UX requirement.
 
+**Storage unification (`85fd5f6f`).** Single source for events: `registeredEvents` is the linear list, `stacks` is the per-`(column, owner)` index. `state.output` is deleted. Queue-created events (statuses, inflictions, reactions) enter via a new `DEC.createQueueEvent(ev)` — a *separate* minimal ingress path (not `createSkillEvent` with flags). It registers stops, pushes to both `registeredEvents` and the `stacks` index, and skips everything skill-specific:
+- No deep clone (queue events come from column code, not React raw state; tests and interpreter chains holding references see mutations)
+- No combo chaining / reaction segments / clamp controls (skill-only)
+- No `extendSingleEvent` (queue events pre-populate `rawDurations`, keeping `extendSingleEvent` a no-op for them)
+- No `notifyResourceControllers` (queue events hit none of its branches; IGNORE UE flows via `interpret()` since `85912595`)
+- No pass 3 (run once post-drain via `resolveCombosNow()`)
+- No pass 4 queue frame emission (lifecycle handled inline)
+
+`pushEvent` / `pushEventDirect` / `pushToOutput` / `addEvent` are thin wrappers around `createQueueEvent`. The post-drain re-registration loop in `runEventQueue` is deleted, replaced by a single `state.resolveCombosNow()` call over the full event set to pick up combo windows triggered by queue-created inflictions.
+
+**The bug the earlier attempt missed:** `clampPriorControlEvents` used to do `registeredEvents[j] = { ...prev, segments: [...] }` — replacing the array slot with a new object. The old architecture got away with this because `_activeEventsIn` separately scanned `registeredEvents` and `stacks` (seeing both old and new views). With single-source storage, the stacks index still held the OLD reference and returned the un-truncated seed. `isControlledAt(slot-0, frameAfterSwap)` returned `true` when it should have been `false`. Fixed by mutating `prev.segments` in place via `setEventDuration`: since `_pushToStorage` deep-clones on entry, `prev` is DEC-owned and safe to mutate, and the mutation is visible through both `registeredEvents` and the `stacks` index. This single bug was behind all 17 test failures in the earlier attempt; once fixed, everything else fell into place.
+
 **What's still deferred (not blocking):**
 - **7h fold** (extendSingleEvent into computeFramePositions): cosmetic module-boundary shuffle with no behavior payoff. The `extendedIds` guard was the real win and it's deleted.
-- **Storage unification** (collapse `state.output` + `stacks` into a single `registeredEvents` store, route `addEvent`/`pushEvent`/`pushEventDirect`/`pushToOutput` through `createSkillEvent`, delete the post-drain re-registration loop). Attempted 2026-04-08 and reverted — broke 17 tests across control swap resolution, MF absorption, freeform inflictions, and combo trigger paths. The clone-on-`_pushToStorage` interaction with shared event references is the core complication: skill events need the deep clone (raw React state protection), queue events don't (built fresh by interpretor/columns). The naive `if rawDurations.has(uid) skip clone` guard helped some tests but createSkillEvent's pass 3 (combo wipe) and pass 4 (queue frame emission) still ran for events whose lifecycle was already handled inline. Needs a focused dedicated session: define exactly which createSkillEvent passes apply per event type, audit all dual-storage consumers, possibly introduce a separate `createDerivedEvent` entry point. The IGNORE UE timing smell — the immediate trigger for this work — was fixed separately via `interpret()` dispatch (`85912595`).
 
 See `docs/notes/phase-8-plan.md` and `docs/notes/phase-8-progress.md` for the full sub-step history.
 
@@ -562,14 +573,14 @@ The flag now takes effect at the moment the status's clause is dispatched. No po
 
 **9d — `shieldController.finalize` deleted (`7d286c99`).** Trivial — the defensive sort was unnecessary. Shield ticks arrive in frame order during the queue drain via `applyShield` calls dispatched by `interpret()`.
 
-**Phase 9 complete.** All four `finalize()` calls are gone. `processCombatSimulation`'s post-pipeline work after Phase 9 is exactly:
+**Phase 9 complete.** All four `finalize()` calls are gone. Combined with the storage unification (`85fd5f6f`), `processCombatSimulation`'s post-pipeline work is exactly:
 
 ```ts
 const processed = state.getProcessedEvents();
 return processed;
 ```
 
-Zero post-pipeline transformation. Every resource controller is reactive. Every field propagates through `interpret()` ctx (uid + creationInteractionMode via the 7g unblock, isCrit via the override store, slot efficiencies via the 9b snapshot).
+Zero post-pipeline transformation. Single event ingress (`createSkillEvent` for skills, `createQueueEvent` for queue-created derived events — both writing to the same `registeredEvents` store). Every resource controller is reactive. Every field propagates through `interpret()` ctx (uid + creationInteractionMode via the 7g unblock, isCrit via the override store, slot efficiencies via the 9b snapshot, IGNORE UE via interpret() dispatch).
 
 ---
 

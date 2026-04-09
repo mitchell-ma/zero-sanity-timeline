@@ -2,7 +2,7 @@
 
 Reference: [`docs/notes/phase-8-plan.md`](./phase-8-plan.md)
 
-## Status: Phase 8 RESOLVED (step 8 pinned; 7h fold won't-fix; all blockers cleared)
+## Status: Phase 8 + 9 + storage unification RESOLVED (only 7h fold cosmetic cleanup remains)
 
 Every step gated on full jest suite + tsc + eslint on touched files.
 Baseline held green at every commit. Current baseline:
@@ -323,6 +323,68 @@ then verify those pins survive NEVER → ALWAYS → MANUAL toggling. The
 old expectation (that MANUAL's per-frame `false` defaults persist across
 modes) was an artifact of the raw-state mutation leak, not a real UX
 requirement — the user only needs their *explicit* pins to survive.
+
+## Storage unification (`85fd5f6f`)
+
+Single source of storage achieved. `registeredEvents` is the linear list
+for every event (skills + queue-created); `stacks` is the per-`(column,
+ownerId)` index. `state.output` is deleted.
+
+Two ingress paths now write to the same store:
+
+- **`createSkillEvent(ev)`** — full pipeline for skill events from raw
+  React state. Deep clones in `_pushToStorage`, runs all 4 passes.
+- **`createQueueEvent(ev)`** — minimal path for queue-created events
+  from column code (`ConfigDrivenStatusColumn`, `InflictionColumn`,
+  `ReactionColumn`, etc.). No clone (events are freshly built, not
+  shared with React raw state). Only registers stops and pushes to
+  `registeredEvents` + `stacks`. Skips everything skill-specific.
+
+`pushEvent` / `pushEventDirect` / `pushToOutput` / `addEvent` are thin
+wrappers around `createQueueEvent`. The post-drain re-registration loop
+in `runEventQueue` is deleted — queue events are already in
+`registeredEvents` by the time the drain finishes. Replaced with a
+single `state.resolveCombosNow()` call to run pass 3 once over the full
+event set, picking up combos triggered by queue-created inflictions.
+
+### The bug the earlier attempt missed
+
+`clampPriorControlEvents` was doing `registeredEvents[j] = { ...prev,
+segments: [...] }` — creating a new object and replacing the array
+slot. The old architecture got away with this because `_activeEventsIn`
+scanned `registeredEvents` and `stacks` separately, seeing both views.
+
+With single-source storage, the `stacks` index still held the OLD
+reference after the replace, and queries returned the un-truncated
+seed. `isControlledAt(slot-0, frameAfterSwap)` returned `true` when it
+should have been `false`. `clampPriorControlEvents` now mutates
+`prev.segments` in place via `setEventDuration`: since `_pushToStorage`
+deep-clones on entry, `prev` is DEC-owned and safe to mutate, and the
+mutation is visible through both containers.
+
+This single bug was behind all 17 test failures in the earlier
+storage-unification attempt. Once identified, everything else worked
+on the first try.
+
+### What changed
+
+- New `DEC.createQueueEvent(ev)` — minimal mid-queue ingress
+- `_pushToStorage` now also populates the `stacks` index so skill
+  events are indexed alongside queue events
+- `_activeEventsIn` queries `stacks` only (single source)
+- `pushEvent` / `pushEventDirect` / `pushToOutput` / `addEvent`
+  rewritten as thin wrappers around `createQueueEvent`; each
+  pre-populates `rawDurations[uid]` so the skill-event
+  `extendSingleEvent` path no-ops on these entries
+- `state.output` field deleted; `getAllEvents` returns
+  `registeredEvents` directly; `getQueueOutput` deleted
+- Post-drain re-registration loop deleted, replaced with
+  `state.resolveCombosNow()` (new public method that runs pass 3 once)
+- Crit pin overrides loop iterates `getRegisteredEvents()` directly
+- `EventPane.tsx` PipelineTimeline debug view reads from
+  `getRegisteredEvents()` directly
+- `clampPriorControlEvents` mutates in place via `setEventDuration`
+- `pipelineInvariants` pin added for `state.output` / `getQueueOutput`
 
 ## Deferred items
 
