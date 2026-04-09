@@ -540,9 +540,9 @@ See `docs/notes/phase-8-plan.md` and `docs/notes/phase-8-progress.md` for the fu
 - DEC's public surface shrinks to: `createSkillEvent`, `createInfliction`, `createReaction`, `createStatus`, `createStagger`, `consumeInfliction`, `consumeStatus`, …, plus read-only query methods. No batch ingress, no `notifyResourceControllers`, no `markExtended`, no `validateAll`.
 - The pipeline becomes: **parser → queue → interpret → DEC**. There is no other path.
 
-### Phase 9 — Delete every `finalize` call — IN PROGRESS
+### Phase 9 — Delete every `finalize` call — RESOLVED 2026-04-08
 
-**Status (2026-04-08):** 9a + 9b done, 9c + 9d pending. Plus IGNORE UE timing smell fixed via `interpret()` dispatch. Storage unification (single `registeredEvents` source) attempted and reverted — see "Deferred items" below.
+All four sub-steps landed. `spController.finalize`, `ueController.finalize`, `hpController.finalize`, and `shieldController.finalize` are all deleted. Plus IGNORE UE timing smell fixed via `interpret()` dispatch. Plus storage unification (single `allEvents` source) landed as a follow-up.
 
 **9a — `spController.finalize` deleted (`f50277aa`).** SP graph + stops + insufficiency zones + UE consumption notification all reactive:
 - `flushSpEvents()` sorts and pushes into the subtimeline on every `addCost`/`addRecovery`, so the SP graph stays current via the existing `subtimeline.subscribe → ResourceTimeline.recompute` path
