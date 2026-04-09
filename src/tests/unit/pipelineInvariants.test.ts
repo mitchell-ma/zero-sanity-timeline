@@ -110,6 +110,12 @@ const FORBIDDEN: ForbiddenPattern[] = [
     reason: 'Parallel storage for queue-created events was collapsed into a single source. registeredEvents is the linear list, stacks is the per-(column, owner) index. Queue events enter via createQueueEvent.',
     allowedFiles: [],
   },
+  {
+    name: 'precomputeDamageByFrame / initHpTracker (batch HP pre-pass)',
+    pattern: /precomputeDamageByFrame|initHpTracker/,
+    reason: 'HP damage ticks flow incrementally via handleProcessFrame → DEC.addEnemyDamageTick during the queue drain. The batch pre-pass and global HP tracker fallback were deleted in Phase 4e item 3 step 2.',
+    allowedFiles: [],
+  },
 ];
 
 function walk(dir: string, out: string[]) {

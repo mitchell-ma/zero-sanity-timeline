@@ -38,25 +38,10 @@ import type { StaggerBreak } from '../timeline/staggerTimeline';
 import type { Potential, SkillLevel } from '../../consts/types';
 
 // ── Frame-indexed HP tracker ─────────────────────────────────────────────────
-
-/**
- * Pre-computed damage by frame for live HP% queries during event queue processing.
- *
- * Before the queue runs, `precomputeDamageByFrame()` scans registered events,
- * computes estimated damage per frame tick (ATK × multiplier × attributeBonus ×
- * defenseMultiplier), and builds a sorted cumulative damage timeline.
- *
- * `getEnemyHpPercentage(frame)` returns the HP% at any frame via binary search.
- */
-let _bossMaxHp: number | null = null;
-/** Sorted (frame, cumDamage) pairs. */
-let _damageTicks: { frame: number; cumDamage: number }[] = [];
-
-/** Initialize the HP tracker before the event queue runs. */
-export function initHpTracker(bossMaxHp: number | null) {
-  _bossMaxHp = bossMaxHp;
-  _damageTicks = [];
-}
+// Phase 4e item 3: all HP tracking now flows through `hpController` via
+// incremental `addEnemyDamageTick` calls during the queue drain. The legacy
+// global fallback (_bossMaxHp, _damageTicks, initHpTracker,
+// getEnemyHpPercentage, precomputeDamageByFrame) was deleted.
 
 /** Per-operator static data used by the simplified damage formula. */
 export interface DamageOpData {
@@ -142,102 +127,8 @@ export function computeFrameMarkerDamage(
   return mainStatValue * multiplier * op.attributeBonus * defMult;
 }
 
-const SKILL_COLUMN_ID_SET = new Set<string>(SKILL_COLUMN_ORDER);
-
-/**
- * Pre-compute estimated damage per frame from registered skill events.
- * Uses the simplified formula from `computeFrameMarkerDamage`.
- * Stores cumulative damage sorted by frame for O(log n) HP% lookups.
- */
-export function precomputeDamageByFrame(
-  events: readonly TimelineEvent[],
-  slots: readonly { slotId: string; operatorId?: string }[],
-  loadoutProperties: Record<string, LoadoutProperties>,
-  loadouts: Record<string, OperatorLoadoutState> | undefined,
-  enemyId: string,
-  hpController?: import('./hpController').HPController,
-) {
-  if (!hpController && _bossMaxHp == null) return;
-
-  const modelEnemy = getModelEnemy(enemyId);
-  const enemyDef = modelEnemy ? modelEnemy.getDef() : 100;
-  const defMult = getDefenseMultiplier(enemyDef);
-  const opData = buildDamageOpCache(slots, loadoutProperties, loadouts);
-
-  const ticks: { frame: number; damage: number }[] = [];
-  for (const ev of events) {
-    if (ev.ownerId === ENEMY_OWNER_ID) continue;
-    if (!SKILL_COLUMN_ID_SET.has(ev.columnId)) continue;
-    const op = opData.get(ev.ownerId);
-    if (!op) continue;
-
-    const props = loadoutProperties[ev.ownerId] ?? DEFAULT_LOADOUT_PROPERTIES;
-    const effectiveColumnId = ev.id.includes('_ENHANCED') ? NounType.ULTIMATE : ev.columnId;
-    const skillLevel = getSkillLevelForColumn(effectiveColumnId, props);
-    const potential = (props.operator.potential ?? 5) as Potential;
-
-    let segOffset = 0;
-    let damageSegIdx = 0;
-    for (let si = 0; si < ev.segments.length; si++) {
-      const seg = ev.segments[si];
-      const isDmgSeg = isDamageSegment(seg.properties.segmentTypes);
-      if (seg.frames) {
-        for (let fi = 0; fi < seg.frames.length; fi++) {
-          const f = seg.frames[fi];
-          const damage = computeFrameMarkerDamage(ev, si, fi, damageSegIdx, op, defMult, skillLevel, potential);
-          if (damage != null) {
-            const absFrame = f.absoluteFrame ?? (ev.startFrame + segOffset + f.offsetFrame);
-            ticks.push({ frame: absFrame, damage });
-          }
-        }
-      }
-      segOffset += seg.properties.duration;
-      if (isDmgSeg) damageSegIdx++;
-    }
-  }
-
-  // Sort by frame and build cumulative
-  if (hpController) {
-    hpController.setEnemyDamageTicks(ticks);
-  } else {
-    ticks.sort((a, b) => a.frame - b.frame);
-    let cum = 0;
-    _damageTicks = ticks.map(t => {
-      cum += t.damage;
-      return { frame: t.frame, cumDamage: cum };
-    });
-  }
-}
-
-/**
- * Get enemy HP as a percentage (0–100) at the given frame.
- * Uses binary search on pre-computed cumulative damage.
- * Returns null if no boss HP configured.
- */
-export function getEnemyHpPercentage(frame: number): number | null {
-  if (_bossMaxHp == null || _bossMaxHp <= 0) return null;
-  if (_damageTicks.length === 0) return 100;
-
-  // Binary search: find last tick at or before `frame`
-  let lo = 0;
-  let hi = _damageTicks.length - 1;
-  let result = -1;
-  while (lo <= hi) {
-    const mid = (lo + hi) >>> 1;
-    if (_damageTicks[mid].frame <= frame) {
-      result = mid;
-      lo = mid + 1;
-    } else {
-      hi = mid - 1;
-    }
-  }
-
-  const cumDamage = result >= 0 ? _damageTicks[result].cumDamage : 0;
-  return Math.max(0, (_bossMaxHp - cumDamage) / _bossMaxHp * 100);
-}
-
 /** Skill level lookup by column ID. */
-function getSkillLevelForColumn(columnId: string, props: LoadoutProperties): SkillLevel {
+export function getSkillLevelForColumn(columnId: string, props: LoadoutProperties): SkillLevel {
   switch (columnId) {
     case NounType.BASIC_ATTACK: return props.skills.basicAttackLevel as SkillLevel;
     case NounType.BATTLE: return props.skills.battleSkillLevel as SkillLevel;

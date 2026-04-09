@@ -20,7 +20,9 @@ import { TriggerIndex } from './triggerIndex';
 import { ENEMY_OWNER_ID, ENEMY_ACTION_COLUMN_ID } from '../../model/channels';
 import { getAllTriggerAssociations } from '../gameDataStore';
 import { cloneAndSplitEvents, selectNewTalents, buildControlSeed } from './parser';
-import { initHpTracker, getEnemyHpPercentage, precomputeDamageByFrame } from '../calculation/calculationController';
+import { buildDamageOpCache } from '../calculation/calculationController';
+import { getDefenseMultiplier } from '../../model/calculation/damageFormulas';
+import { getModelEnemy } from '../calculation/enemyRegistry';
 import type { HPController } from '../calculation/hpController';
 import { StatAccumulator } from '../calculation/statAccumulator';
 import type { OverrideStore } from '../../consts/overrideTypes';
@@ -70,6 +72,9 @@ export function runEventQueue(
   triggerIndex?: TriggerIndex,
   critMode?: CritMode,
   overrides?: OverrideStore,
+  /** Phase 4e item 3: op cache + defMult for inline damage tick push. */
+  damageOpCache?: ReadonlyMap<string, import('../calculation/calculationController').DamageOpData>,
+  enemyDefMult?: number,
 ): void {
   const slotWirings = state.getSlotWirings();
   const allEvents = state.getAllEvents();
@@ -94,6 +99,7 @@ export function runEventQueue(
   interpretor.resetWith(state, allEvents, {
     loadoutProperties, slotOperatorMap, slotWirings, getEnemyHpPercentage,
     getControlledSlotAtFrame, triggerIndex: triggerIdx, critMode, overrides,
+    damageOpCache, enemyDefMult,
   });
 
   // Interpret APPLY STAT effects from passive talent clauses (e.g. Gilberta Messenger's Song UE efficiency)
@@ -237,12 +243,10 @@ export function processCombatSimulation(
   resetPools();
   invalidateConfigCache();
 
-  // ── 0a. Initialize HP tracker for live HP% queries during queue processing
-  if (hpController) {
-    hpController.initEnemyHp(bossMaxHp ?? null);
-  } else {
-    initHpTracker(bossMaxHp ?? null);
-  }
+  // ── 0a. Initialize HP tracker for live HP% queries during queue processing.
+  // Phase 4e item 3: tests may call processCombatSimulation without hpController;
+  // in that case HP tracking is skipped entirely (damageOpCache stays undefined).
+  if (hpController) hpController.initEnemyHp(bossMaxHp ?? null);
 
   // ── 0b. Clear resource controllers for this pipeline run ──────────────────
   if (spController) spController.clearPending();
@@ -290,10 +294,18 @@ export function processCombatSimulation(
   // `SkillPointController.deriveSPRecoveryEvents` no-op stub was deleted.
   // Talent events are registered inside runEventQueue via the trigger index.
 
-  // ── 3b. Pre-compute damage by frame for HP threshold predicates ───────────
+  // ── 3b. Build damage op cache + enemy defMult for inline damage ticks ────
+  // Phase 4e item 3: replaces the batch precomputeDamageByFrame pre-pass.
+  // The interpretor pushes a damage tick to hpController as each damage
+  // frame fires during the queue drain via _pushEnemyDamageTickForFrame.
+  let damageOpCache: ReadonlyMap<string, import('../calculation/calculationController').DamageOpData> | undefined;
+  let enemyDefMult: number | undefined;
   if (bossMaxHp != null && enemyId && slotOperatorMap && loadoutProperties) {
     const slotInfo = Object.entries(slotOperatorMap).map(([slotId, opId]) => ({ slotId, operatorId: opId }));
-    precomputeDamageByFrame(state.getAllEvents(), slotInfo, loadoutProperties, loadouts, enemyId, hpController);
+    damageOpCache = buildDamageOpCache(slotInfo, loadoutProperties, loadouts);
+    const modelEnemy = getModelEnemy(enemyId);
+    const enemyDef = modelEnemy ? modelEnemy.getDef() : 100;
+    enemyDefMult = getDefenseMultiplier(enemyDef);
   }
 
   // ── 3c. Resolve controlled operator ──────────────────────────────────────
@@ -302,11 +314,10 @@ export function processCombatSimulation(
   );
 
   // ── 4. EventQueueController: seed derived + run queue ─────────────────────
-  const hpPercentageFn = hpController
-    ? hpController.getEnemyHpPercentage
-    : (bossMaxHp != null ? getEnemyHpPercentage : undefined);
+  const hpPercentageFn = hpController ? hpController.getEnemyHpPercentage : undefined;
   runEventQueue(state, derivedEvents, loadoutProperties, slotWeapons, slotOperatorMap, slotGearSets,
-    hpPercentageFn, getControlledSlotAtFrame, triggerIndex, critMode, overrides);
+    hpPercentageFn, getControlledSlotAtFrame, triggerIndex, critMode, overrides,
+    damageOpCache, enemyDefMult);
 
   // ── 5. Finalize resource controllers ──────────────────────────────────────
   if (spController && allSlotSpCosts) {

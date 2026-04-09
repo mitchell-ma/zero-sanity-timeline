@@ -23,6 +23,10 @@ import {
 } from '../../dsl/semantics';
 import type { Interaction, ValueNode, ValueExpression } from '../../dsl/semantics';
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT, buildContextForSkillColumn } from '../calculation/valueResolver';
+import { computeFrameMarkerDamage, getSkillLevelForColumn } from '../calculation/calculationController';
+import { DEFAULT_LOADOUT_PROPERTIES } from '../../view/InformationPane';
+import { isDamageSegment } from '../calculation/jsonMultiplierEngine';
+import type { Potential } from '../../consts/types';
 import type { ValueResolutionContext } from '../calculation/valueResolver';
 import { STAT_TO_STATE_ADJECTIVE } from './statStateMap';
 import { TimelineEvent, eventDuration, setEventDuration } from '../../consts/viewTypes';
@@ -233,6 +237,15 @@ export interface InterpretorOptions {
   triggerIndex?: TriggerIndex;
   critMode?: CritMode;
   overrides?: OverrideStore;
+  /**
+   * Phase 4e item 3: per-slot static operator data for inline enemy damage
+   * computation during handleProcessFrame. Replaces the precomputed bulk
+   * cache built by `precomputeDamageByFrame`. Undefined → skip the inline
+   * damage tick push (e.g. tests with no damage tracking).
+   */
+  damageOpCache?: ReadonlyMap<string, import('../calculation/calculationController').DamageOpData>;
+  /** Phase 4e item 3: enemy defense multiplier for the simplified damage formula. */
+  enemyDefMult?: number;
 }
 
 // ── Stat source helpers ─────────────────────────────────────────────────────
@@ -473,6 +486,8 @@ export class EventInterpretorController {
   private _frameStatReversals?: { stat: import('../../consts/enums').StatType; value: number }[];
   private critMode?: CritMode;
   private overrides?: OverrideStore;
+  private damageOpCache?: ReadonlyMap<string, import('../calculation/calculationController').DamageOpData>;
+  private enemyDefMult = 1;
   /** One-shot HP threshold triggers that have already fired this pipeline run. */
   private firedHpThresholds = new Set<string>();
   /** Pending STATUS_EXIT queue frames to be flushed into the queue. */
@@ -664,6 +679,49 @@ export class EventInterpretorController {
     this.applyOptions(options);
   }
 
+  /**
+   * Phase 4e item 3: incremental enemy damage tick push during queue drain.
+   * Replaces the bulk `precomputeDamageByFrame` pre-pass with a per-
+   * PROCESS_FRAME inline computation that feeds `hpController.addEnemyDamageTick`
+   * as each damage frame fires. Uses the same simplified formula
+   * (mainStat × multiplier × attributeBonus × defMult) so HP-threshold
+   * predicates continue to see the same accumulated damage they did with
+   * the pre-pass.
+   *
+   * No-op when the op cache isn't wired (tests with no damage tracking)
+   * or when the event isn't a skill-column event owned by an operator
+   * whose data is in the cache.
+   */
+  private _pushEnemyDamageTickForFrame(entry: QueueFrame) {
+    if (!this.damageOpCache || !this.controller.hasHpController()) return;
+    const event = entry.sourceEvent;
+    if (!event) return;
+    if (event.ownerId === ENEMY_OWNER_ID) return;
+    if (!SKILL_COLUMN_SET.has(event.columnId)) return;
+    const op = this.damageOpCache.get(event.ownerId);
+    if (!op) return;
+    const si = entry.segmentIndex ?? -1;
+    const fi = entry.frameIndex ?? -1;
+    if (si < 0 || fi < 0) return;
+    if (!event.segments[si]?.frames?.[fi]) return;
+
+    // Count damage segments before si to derive damageSegIdx
+    let damageSegIdx = 0;
+    for (let k = 0; k < si; k++) {
+      if (isDamageSegment(event.segments[k].properties.segmentTypes)) damageSegIdx++;
+    }
+
+    const props = this.loadoutProperties?.[event.ownerId] ?? DEFAULT_LOADOUT_PROPERTIES;
+    const effectiveColumnId = event.id.includes('_ENHANCED') ? NounType.ULTIMATE : event.columnId;
+    const skillLevel = getSkillLevelForColumn(effectiveColumnId, props);
+    const potential = (props.operator.potential ?? 5) as Potential;
+
+    const damage = computeFrameMarkerDamage(event, si, fi, damageSegIdx, op, this.enemyDefMult, skillLevel, potential);
+    if (damage != null && damage > 0) {
+      this.controller.addEnemyDamageTick(entry.frame, damage);
+    }
+  }
+
   private applyOptions(options?: InterpretorOptions) {
     this.loadoutProperties = options?.loadoutProperties;
     this.slotOperatorMap = options?.slotOperatorMap;
@@ -673,6 +731,8 @@ export class EventInterpretorController {
     this.triggerIndex = options?.triggerIndex;
     this.critMode = options?.critMode;
     this.overrides = options?.overrides;
+    this.damageOpCache = options?.damageOpCache;
+    this.enemyDefMult = options?.enemyDefMult ?? 1;
   }
 
   // ── DSL Effect interpretation ──────────────────────────────────────────
@@ -1900,6 +1960,11 @@ export class EventInterpretorController {
     if (event.eventStatus === EventStatusType.CONSUMED && event.startFrame + eventDuration(event) <= entry.frame) {
       return this._processFrameOut;
     }
+    // Phase 4e item 3: push an incremental enemy damage tick if this is a
+    // damage frame marker on a skill event. Replaces the bulk
+    // precomputeDamageByFrame pre-pass. No-op when the op cache isn't
+    // wired (e.g. tests) or the event/frame doesn't match.
+    this._pushEnemyDamageTickForFrame(entry);
     const frame = entry.frameMarker;
     const si = entry.segmentIndex ?? -1;
     const fi = entry.frameIndex ?? -1;

@@ -185,6 +185,16 @@ export class DerivedEventController implements ColumnHost {
     if (this.ueController) this.ueController.setIgnoreExternalGain(slotId, ignore);
   }
 
+  /**
+   * Phase 4e item 3: push an incremental enemy damage tick to the HP
+   * controller. Called from `handleProcessFrame` per damage frame marker
+   * as the queue drain reaches it — replaces the bulk `precomputeDamageByFrame`
+   * pre-pass.
+   */
+  addEnemyDamageTick(frame: number, damage: number) {
+    this.hpController?.addEnemyDamageTick(frame, damage);
+  }
+
   recordUltimateEnergyGain(frame: number, slotId: string, selfGain: number, teamGain = 0) {
     if (!this.ueController) return;
     if (selfGain <= 0 && teamGain <= 0) return;
