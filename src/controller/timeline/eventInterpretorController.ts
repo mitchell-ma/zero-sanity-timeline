@@ -692,18 +692,18 @@ export class EventInterpretorController {
    * or when the event isn't a skill-column event owned by an operator
    * whose data is in the cache.
    */
-  private _pushEnemyDamageTickForFrame(entry: QueueFrame) {
-    if (!this.damageOpCache || !this.controller.hasHpController()) return;
+  private _pushEnemyDamageTickForFrame(entry: QueueFrame, out: QueueFrame[]): boolean {
+    if (!this.damageOpCache || !this.controller.hasHpController()) return false;
     const event = entry.sourceEvent;
-    if (!event) return;
-    if (event.ownerId === ENEMY_OWNER_ID) return;
-    if (!SKILL_COLUMN_SET.has(event.columnId)) return;
+    if (!event) return false;
+    if (event.ownerId === ENEMY_OWNER_ID) return false;
+    if (!SKILL_COLUMN_SET.has(event.columnId)) return false;
     const op = this.damageOpCache.get(event.ownerId);
-    if (!op) return;
+    if (!op) return false;
     const si = entry.segmentIndex ?? -1;
     const fi = entry.frameIndex ?? -1;
-    if (si < 0 || fi < 0) return;
-    if (!event.segments[si]?.frames?.[fi]) return;
+    if (si < 0 || fi < 0) return false;
+    if (!event.segments[si]?.frames?.[fi]) return false;
 
     // Count damage segments before si to derive damageSegIdx
     let damageSegIdx = 0;
@@ -717,9 +717,15 @@ export class EventInterpretorController {
     const potential = (props.operator.potential ?? 5) as Potential;
 
     const damage = computeFrameMarkerDamage(event, si, fi, damageSegIdx, op, this.enemyDefMult, skillLevel, potential);
-    if (damage != null && damage > 0) {
-      this.controller.addEnemyDamageTick(entry.frame, damage);
-    }
+    if (damage == null || damage <= 0) return false;
+
+    this.controller.addEnemyDamageTick(entry.frame, damage);
+    // Phase 4e item 3 step 3: HP threshold check fires reactively here, only
+    // when damage is actually written. Replaces the polling call from
+    // processQueueFrame that ran on every PROCESS_FRAME regardless of
+    // whether HP changed.
+    this._checkHpThresholds(entry.frame, event.ownerId, event.sourceSkillName ?? event.id, out);
+    return true;
   }
 
   private applyOptions(options?: InterpretorOptions) {
@@ -824,11 +830,9 @@ export class EventInterpretorController {
       case QueueFrameType.STATUS_EXIT:    result = this.handleStatusExit(entry); break;
       default: result = [];
     }
-    // HP-threshold statuses: check after every PROCESS_FRAME since inline skill
-    // damage doesn't fire DEAL:DAMAGE reactive triggers.
-    if (entry.type === QueueFrameType.PROCESS_FRAME) {
-      this.maybeApplyHpThresholdStatuses(entry.frame, entry.ownerId, entry.sourceSkillName, result);
-    }
+    // HP threshold checks fire reactively from `_pushEnemyDamageTickForFrame`
+    // when damage is actually written (Phase 4e item 3 step 3). No more
+    // polling on every PROCESS_FRAME.
     // Flush any STATUS_EXIT frames queued by runStatusCreationLifecycle
     if (this.pendingExitFrames.length > 0) {
       result = [...result, ...this.pendingExitFrames];
@@ -1956,15 +1960,18 @@ export class EventInterpretorController {
    */
   private handleProcessFrame(entry: QueueFrame): QueueFrame[] {
     const event = entry.sourceEvent!;
+    // Reset the output buffer BEFORE any push (damage tick path can append
+    // HP threshold triggers to it before the main handler runs).
+    this._processFrameOut.length = 0;
     // Skip if the source event was consumed before this frame fires
     if (event.eventStatus === EventStatusType.CONSUMED && event.startFrame + eventDuration(event) <= entry.frame) {
       return this._processFrameOut;
     }
     // Phase 4e item 3: push an incremental enemy damage tick if this is a
     // damage frame marker on a skill event. Replaces the bulk
-    // precomputeDamageByFrame pre-pass. No-op when the op cache isn't
-    // wired (e.g. tests) or the event/frame doesn't match.
-    this._pushEnemyDamageTickForFrame(entry);
+    // precomputeDamageByFrame pre-pass. Also fires HP threshold checks
+    // reactively when damage is written — no more polling on every frame.
+    this._pushEnemyDamageTickForFrame(entry, this._processFrameOut);
     const frame = entry.frameMarker;
     const si = entry.segmentIndex ?? -1;
     const fi = entry.frameIndex ?? -1;
@@ -1974,7 +1981,9 @@ export class EventInterpretorController {
       skillName: event.sourceSkillName ?? event.id,
     };
     const newEntries = this._processFrameOut;
-    newEntries.length = 0;
+    // Note: _processFrameOut was already reset at the top of this function
+    // so the damage tick path can append HP threshold triggers before this
+    // point. Do NOT clear again here.
 
     // For derived events whose ownerId is the target (enemy), pot/loadout
     // properties must be read from the routed source slot.
@@ -2424,11 +2433,24 @@ export class EventInterpretorController {
   }
 
   /**
-   * Check HP-threshold status defs and apply them when the condition is first met.
-   * Inline skill damage doesn't fire DEAL:DAMAGE reactive triggers, so HP
-   * thresholds are checked after every PROCESS_FRAME instead.
+   * Run HP threshold checks at frame 0 (pipeline start) so conditions that
+   * are trivially satisfied by initial HP state (e.g. "HP ≥ 100%") fire
+   * before any damage has been written. Callable from runEventQueue after
+   * talent registration, before the queue drain begins.
    */
-  private maybeApplyHpThresholdStatuses(frame: number, slotId: string, sourceSkillName: string, out: QueueFrame[]) {
+  checkInitialHpThresholds(out: QueueFrame[]): QueueFrame[] {
+    this._checkHpThresholds(0, '', '', out);
+    return out;
+  }
+
+  /**
+   * Check HP-threshold status defs and enqueue their ON_TRIGGER frames when
+   * the HAVE conditions first match. Called reactively from
+   * `_pushEnemyDamageTickForFrame` immediately after each damage tick is
+   * written, and once at pipeline start via `checkInitialHpThresholds`.
+   * Dedupe set `firedHpThresholds` enforces one-shot semantics.
+   */
+  private _checkHpThresholds(frame: number, slotId: string, sourceSkillName: string, out: QueueFrame[]) {
     if (!this.triggerIndex || !this.getEnemyHpPercentage) return;
     for (const entry of this.triggerIndex.getHpThresholdDefs()) {
       const dedupKey = `hp-threshold:${entry.def.properties.id}:${entry.operatorSlotId}`;

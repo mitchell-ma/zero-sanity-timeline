@@ -116,6 +116,12 @@ const FORBIDDEN: ForbiddenPattern[] = [
     reason: 'HP damage ticks flow incrementally via handleProcessFrame → DEC.addEnemyDamageTick during the queue drain. The batch pre-pass and global HP tracker fallback were deleted in Phase 4e item 3 step 2.',
     allowedFiles: [],
   },
+  {
+    name: 'maybeApplyHpThresholdStatuses (per-frame polling)',
+    pattern: /maybeApplyHpThresholdStatuses/,
+    reason: 'HP threshold checks are now reactive — fired from _pushEnemyDamageTickForFrame when damage is actually written, plus a one-time check at pipeline start for initial-state conditions. The per-PROCESS_FRAME polling was deleted in Phase 4e item 3 step 3.',
+    allowedFiles: [],
+  },
 ];
 
 function walk(dir: string, out: string[]) {

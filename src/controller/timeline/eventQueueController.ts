@@ -129,6 +129,14 @@ export function runEventQueue(
     }
   }
 
+  // Phase 4e item 3 step 3: fire HP threshold checks once at pipeline start
+  // so initial-state conditions (e.g. "HP ≥ 100%") trigger at frame 0.
+  // Subsequent checks fire reactively from _pushEnemyDamageTickForFrame
+  // whenever a damage tick is written.
+  const initialHpTriggers: QueueFrame[] = [];
+  interpretor.checkInitialHpThresholds(initialHpTriggers);
+  if (initialHpTriggers.length > 0) state.insertQueueFrames(initialHpTriggers);
+
   // Phase 8 step 7h: registered (skill/input) events now emit their own
   // queue frames during createSkillEvent ingress using the current stops.
   // Derived events (freeform inflictions/reactions/statuses from
