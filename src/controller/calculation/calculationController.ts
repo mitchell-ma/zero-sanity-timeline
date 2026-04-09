@@ -36,10 +36,9 @@ import type { Slot } from '../timeline/columnBuilder';
 import type { StaggerBreak } from '../timeline/staggerTimeline';
 import type { Potential, SkillLevel } from '../../consts/types';
 
-// ── Frame-indexed HP tracker ─────────────────────────────────────────────────
-// Phase 4e item 3: all HP tracking now flows through `hpController` via
-// incremental `addEnemyDamageTick` calls during the queue drain. The legacy
-// global fallback (_bossMaxHp, _damageTicks, initHpTracker,
+// HP tracking flows through `hpController` via incremental
+// `addEnemyDamageTick` calls during the queue drain. The legacy global
+// fallback (_bossMaxHp, _damageTicks, initHpTracker, global
 // getEnemyHpPercentage, precomputeDamageByFrame) was deleted.
 
 /** Per-operator static data used by the simplified damage formula. */
@@ -82,11 +81,12 @@ export function buildDamageOpCache(
 /**
  * Compute simplified damage for a single frame marker on a skill event.
  *
- * Used by both the legacy `precomputeDamageByFrame` pre-pass and (Phase 4e
- * item 3) the inline incremental path in `handleProcessFrame`. Formula:
+ * Called from `handleProcessFrame` per damage frame during the queue drain
+ * to feed `hpController.addEnemyDamageTick`. Formula:
  * `mainStat × multiplier × attributeBonus × defenseMultiplier`. Uses
  * static loadout stats — runtime stat buffs / fragility / crit are
- * intentionally excluded to match the existing HP-threshold behavior.
+ * intentionally excluded to match HP-threshold behavior (the damage table
+ * builder uses the full formula separately for display).
  *
  * Returns undefined when the frame has no damage multiplier.
  */

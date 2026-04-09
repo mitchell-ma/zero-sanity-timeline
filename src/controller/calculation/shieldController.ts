@@ -2,12 +2,10 @@
  * ShieldController — tracks shield values for all operators over the timeline.
  *
  * Shield is an absorptive barrier: damage hits shield first before HP.
- * Each shield tick has a value and an expiration frame (from the parent status duration).
- * Multiple shields from different sources stack additively.
+ * Each shield tick has a value and an expiration frame (from the parent
+ * status duration). Multiple shields from different sources stack additively.
  *
- * Phase 9d: finalize deleted. Ticks arrive in frame order during the queue
- * drain, so the defensive sort is unnecessary. Lifecycle: applyShield() →
- * getShieldValue() → clear().
+ * Lifecycle: applyShield() → getShieldValue() / absorbDamage() → clear().
  */
 
 // ── Types ────────────────────────────────────────────────────────────────────

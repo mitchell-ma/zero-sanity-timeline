@@ -2,7 +2,7 @@
  * Clone + classify raw events into input events (strict-mode skills) and
  * derived events (freeform inflictions, reactions, statuses).
  *
- * Phase 8 step 7b: moved out of `inputEventController.ts` and into the parser
+ * moved out of `inputEventController.ts` and into the parser
  * module so all event ingress logic lives under `parser/`. Input events go
  * into `DEC.registerEvents`; derived events are seeded into the queue and
  * processed via `create*` methods.

@@ -1,16 +1,10 @@
 /**
- * Parser — input → QueueFrame[] flattener.
- *
- * Phase 8 step 7a: this module is the scaffolding for the final parser
- * architecture. Today it wraps the legacy `collectFrameEntries` logic,
- * which still takes already-registered events and emits PROCESS_FRAME
- * entries for their frame markers. Subsequent step-7 sub-commits will
- * migrate it toward taking raw events + context and emitting synthetic
- * `EVENT_START` (APPLY SKILL / APPLY CONTROL) clauses that route through
- * `interpret() → DEC.createSkillEvent`.
- *
- * Keep this file the single authority for "turn events into queue frames"
- * so future callers can find one entrypoint.
+ * Flatten TimelineEvents into priority-queue entries (PROCESS_FRAME
+ * hooks, COMBO_RESOLVE, etc.) for the interpretor to drain. Single
+ * authority for "turn events into queue frames" — called from
+ * `createSkillEvent` for per-event ingress and from `runEventQueue`
+ * for freeform derived events (inflictions/reactions/statuses that
+ * bypass createSkillEvent).
  */
 import { TimelineEvent, activeEndFrame } from '../../../consts/viewTypes';
 import { NounType } from '../../../dsl/semantics';

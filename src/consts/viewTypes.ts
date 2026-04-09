@@ -197,10 +197,10 @@ export interface TimelineEvent {
   comboTriggerColumnId?: string;
   /**
    * For combo events and COMBO_WINDOW events: uid of the source event that
-   * caused this combo to be triggered. Phase 8 step 7.5: direct chain-of-
-   * action ref. Lookups via getAllEvents() return the live source event so
-   * handlers like `duplicateTriggerSource` read column/id from the event
-   * itself rather than consulting a denormalized string.
+   * caused this combo to be triggered. Chain-of-action ref — lookups via
+   * getAllEvents() return the live source event so handlers like
+   * `duplicateTriggerSource` read column/id from the event itself rather
+   * than consulting a denormalized string.
    */
   triggerEventUid?: string;
   /** For combo events: the status level of the triggering physical status (= Vulnerability stacks consumed). */

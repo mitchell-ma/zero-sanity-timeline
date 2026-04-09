@@ -43,10 +43,9 @@ export class SkillPointController {
   constructor() {
     this.subtimeline = new Subtimeline(COMMON_OWNER_ID, COMMON_COLUMN_IDS.SKILL_POINTS);
     this.timeline = new SkillPointTimeline(this.subtimeline);
-    // Phase 9a step 4: insufficiencyZones map auto-rebuilds on every graph
-    // change. Eliminates the post-pipeline finalize-time computation.
-    // Phase 9a step 5: same listener also pushes natural-SP consumption to
-    // UE controller, so UE's naturalSpMap stays current without finalize.
+    // On every SP graph change, rebuild the per-slot insufficiency zones
+    // map AND push natural-SP consumption updates to UE controller. Both
+    // flow reactively from addCost/addRecovery — no finalize step.
     this.timeline.onGraphChange(() => {
       this._recomputeInsufficiencyZones();
       this._notifyUeNaturalConsumption();
@@ -92,11 +91,9 @@ export class SkillPointController {
   }
 
   /**
-   * Phase 9a step 3: receive time-stop ranges incrementally from DEC.
-   * Called by DEC._maybeRegisterStop when a new stop is registered. Replaces
-   * the full stops list each call (the caller passes the complete current
-   * set), so the SP timeline recomputes regen pauses against the latest
-   * stops without needing a separate finalize-time setTimeStops call.
+   * Receive the current time-stop ranges from DEC._maybeRegisterStop.
+   * The caller passes the complete set each call; the SP timeline
+   * recomputes regen pauses against the latest stops.
    */
   setTimeStops(stops: readonly TimeStopRegion[]) {
     this.timeline.setTimeStops(
@@ -141,8 +138,8 @@ export class SkillPointController {
     if (!this.slotSpCosts.has(ownerId)) {
       this.slotSpCosts.set(ownerId, amount);
     }
-    // Phase 9b: push battle skill gain frame to UE so it can run the SP → UE
-    // conversion reactively without needing a finalize-time gainFrames param.
+    // Push the battle skill gain frame to UE so the SP → UE conversion
+    // runs reactively without a finalize-time gainFrames param.
     if (this.ueController) {
       this.ueController.setBattleSkillGainFrame(eventUid, ultimateEnergyGainFrame, ownerId);
     }
@@ -181,10 +178,10 @@ export class SkillPointController {
   }
 
   /**
-   * Phase 9a step 1: push current pendingSpEvents into the subtimeline,
-   * sorted with cost-before-return tiebreaker at the same frame. Called on
-   * every addCost/addRecovery so the SP graph is always current — no
-   * separate finalize step needed for graph building.
+   * Push current pendingSpEvents into the subtimeline, sorted with
+   * cost-before-return tiebreaker at the same frame. Called on every
+   * addCost/addRecovery so the SP graph is always current — no separate
+   * finalize step needed for graph building.
    */
   private flushSpEvents() {
     this.pendingSpEvents.sort(
@@ -196,20 +193,15 @@ export class SkillPointController {
   // ── Clear (called at pipeline start) ────────────────────────────────────
 
   /**
-   * Reset accumulated state for a new pipeline run.
-   * Does NOT clear the subtimeline/graph — that happens in finalize.
+   * Reset accumulated state for a new pipeline run. Called once per run
+   * before the drain begins. Does NOT clear the subtimeline/graph — the
+   * next flushSpEvents replaces it.
    */
   clearPending() {
     this.pendingSpEvents = [];
     this.battleSkillGainFrames = new Map();
     this.slotSpCosts = new Map();
   }
-
-  // Phase 9a step 5: finalize() deleted entirely. The SP graph, stops,
-  // insufficiency zones, and UE consumption notification all flow reactively
-  // from addCost/addRecovery and DEC._maybeRegisterStop.
-
-  // ── Legacy clear / cleanup ──────────────────────────────────────────────
 
   clear(): void {
     this.subtimeline.clear();

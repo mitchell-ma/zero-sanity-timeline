@@ -90,9 +90,8 @@ export interface TriggerMatch {
   /** The column ID of the source event that matched this trigger. */
   sourceColumnId?: string;
   /**
-   * UID of the source event that matched this trigger. Phase 8 step 7.5:
-   * direct event ref replaces the denormalized `sourceColumnId` for
-   * chain-of-action lookups (e.g. `duplicateTriggerSource` reads the live
+   * UID of the source event that matched this trigger. Direct event ref used
+   * by chain-of-action lookups (e.g. `duplicateTriggerSource` reads the live
    * source event from `getAllEvents()` via this uid).
    */
   sourceEventUid?: string;

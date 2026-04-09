@@ -236,13 +236,12 @@ export interface InterpretorOptions {
   critMode?: CritMode;
   overrides?: OverrideStore;
   /**
-   * Phase 4e item 3: per-slot static operator data for inline enemy damage
-   * computation during handleProcessFrame. Replaces the precomputed bulk
-   * cache built by `precomputeDamageByFrame`. Undefined → skip the inline
-   * damage tick push (e.g. tests with no damage tracking).
+   * Per-slot static operator data for inline enemy damage computation during
+   * handleProcessFrame. Undefined → skip the inline damage tick push (tests
+   * with no damage tracking).
    */
   damageOpCache?: ReadonlyMap<string, import('../calculation/calculationController').DamageOpData>;
-  /** Phase 4e item 3: enemy defense multiplier for the simplified damage formula. */
+  /** Enemy defense multiplier for the simplified damage formula. */
   enemyDefMult?: number;
 }
 
@@ -547,16 +546,14 @@ export class EventInterpretorController {
   }
 
   /**
-   * Unified clause dispatcher for synthetic-frame queue hooks. Phase 4a lands
-   * this as infrastructure; call sites migrate in 4b (skill-level hooks),
-   * 4c (status lifecycle), and 4d (reactive triggers). The caller builds
+   * Unified clause dispatcher for synthetic-frame queue hooks. Callers build
    * the interpret + condition contexts appropriate for the hook type and
-   * passes them in; this helper owns the filter + dispatch + reactive
-   * trigger fan-out logic so the per-hook loops in `handleProcessFrame`,
-   * `runStatusCreationLifecycle`, and friends can collapse onto one code path.
+   * pass them in; this helper owns the filter + dispatch + reactive trigger
+   * fan-out logic so per-hook call sites in `handleProcessFrame`,
+   * `runStatusCreationLifecycle`, and friends share one code path.
    *
-   * The logic mirrors the existing `handleProcessFrame :2056` dispatch
-   * loop — filterClauses, then for each accepted predicate iterate effects,
+   * The logic mirrors the original handleProcessFrame dispatch loop —
+   * filterClauses, then for each accepted predicate iterate effects,
    * special-case frame-scoped `APPLY STAT` for reversal tracking, skip
    * reactive triggers for operator-emitted `DEAL DAMAGE` (see the deferred
    * hack noted in the plan), and otherwise interpret + fan out.
@@ -678,17 +675,16 @@ export class EventInterpretorController {
   }
 
   /**
-   * Phase 4e item 3: incremental enemy damage tick push during queue drain.
-   * Replaces the bulk `precomputeDamageByFrame` pre-pass with a per-
-   * PROCESS_FRAME inline computation that feeds `hpController.addEnemyDamageTick`
-   * as each damage frame fires. Uses the same simplified formula
-   * (mainStat × multiplier × attributeBonus × defMult) so HP-threshold
-   * predicates continue to see the same accumulated damage they did with
-   * the pre-pass.
+   * Incremental enemy damage tick push during the queue drain. Computes a
+   * simplified per-frame damage (mainStat × multiplier × attributeBonus ×
+   * defMult — no runtime fragility/susceptibility/crit) and pushes it to
+   * hpController as the frame fires. Same formula used by the damage
+   * builder for HP-threshold predicates.
    *
-   * No-op when the op cache isn't wired (tests with no damage tracking)
-   * or when the event isn't a skill-column event owned by an operator
-   * whose data is in the cache.
+   * Also fires reactive HP threshold checks when damage lands. Returns
+   * whether a tick was actually pushed. No-op when the op cache isn't
+   * wired (tests with no damage tracking) or the frame has no damage
+   * multiplier.
    */
   private _pushEnemyDamageTickForFrame(entry: QueueFrame, out: QueueFrame[]): boolean {
     if (!this.damageOpCache || !this.controller.hasHpController()) return false;
@@ -718,10 +714,8 @@ export class EventInterpretorController {
     if (damage == null || damage <= 0) return false;
 
     this.controller.addEnemyDamageTick(entry.frame, damage);
-    // Phase 4e item 3 step 3: HP threshold check fires reactively here, only
-    // when damage is actually written. Replaces the polling call from
-    // processQueueFrame that ran on every PROCESS_FRAME regardless of
-    // whether HP changed.
+    // HP threshold check fires reactively only when damage lands — since
+    // HP only decreases via damage writes, any crossed threshold is caught.
     this._checkHpThresholds(entry.frame, event.ownerId, event.sourceSkillName ?? event.id, out);
     return true;
   }
@@ -817,9 +811,8 @@ export class EventInterpretorController {
     let result: QueueFrame[];
     switch (entry.type) {
       case QueueFrameType.PROCESS_FRAME:
-        // ON_TRIGGER hook collapsed from the legacy ENGINE_TRIGGER queue type
-        // (Phase 4d) — routes to the trigger handler instead of frame
-        // dispatch. Other hook types fall through to handleProcessFrame.
+        // ON_TRIGGER hook routes to the trigger handler; other hook types
+        // fall through to handleProcessFrame.
         result = entry.hookType === FrameHookType.ON_TRIGGER
           ? this.handleEngineTrigger(entry)
           : this.handleProcessFrame(entry);
@@ -828,9 +821,6 @@ export class EventInterpretorController {
       case QueueFrameType.STATUS_EXIT:    result = this.handleStatusExit(entry); break;
       default: result = [];
     }
-    // HP threshold checks fire reactively from `_pushEnemyDamageTickForFrame`
-    // when damage is actually written (Phase 4e item 3 step 3). No more
-    // polling on every PROCESS_FRAME.
     // Flush any STATUS_EXIT frames queued by runStatusCreationLifecycle
     if (this.pendingExitFrames.length > 0) {
       result = [...result, ...this.pendingExitFrames];
@@ -928,12 +918,11 @@ export class EventInterpretorController {
     const ownerId = this.resolveOwnerId(effectTo, ctx, effectToDeterminer);
     const source = { ownerId: ctx.sourceOwnerId, skillName: ctx.sourceSkillName };
 
-    // For freeform-derived events, carry the source uid so the created event
-    // can be matched to the raw event. Phase 8 step 7g unblock: only reuse
-    // the uid when the child event lands on the SAME column as the source
-    // (i.e. the freeform event's visible form — e.g. MF status → MF column).
-    // Cross-column side effects (e.g. freeform IE → NATURE infliction) get
-    // a fresh derived uid to avoid collision at re-registration time.
+    // For freeform-derived events, carry the source uid so the created
+    // event can be matched to the raw event. Column-match guard: only
+    // reuse the uid when the child lands on the SAME column as the source
+    // (freeform MF status → MF column). Cross-column side effects (freeform
+    // IE → NATURE infliction) get a fresh derived uid to avoid collision.
     const freeformUidFor = (childColumnId: string): string | undefined =>
       ctx.sourceEventUid && ctx.sourceEventColumnId === childColumnId
         ? ctx.sourceEventUid
@@ -1965,10 +1954,9 @@ export class EventInterpretorController {
     if (event.eventStatus === EventStatusType.CONSUMED && event.startFrame + eventDuration(event) <= entry.frame) {
       return this._processFrameOut;
     }
-    // Phase 4e item 3: push an incremental enemy damage tick if this is a
-    // damage frame marker on a skill event. Replaces the bulk
-    // precomputeDamageByFrame pre-pass. Also fires HP threshold checks
-    // reactively when damage is written — no more polling on every frame.
+    // Push an incremental enemy damage tick if this frame has a damage
+    // multiplier on a skill event. Also fires HP threshold checks reactively
+    // (only runs when HP actually changed).
     this._pushEnemyDamageTickForFrame(entry, this._processFrameOut);
     const frame = entry.frameMarker;
     const si = entry.segmentIndex ?? -1;
@@ -2026,7 +2014,7 @@ export class EventInterpretorController {
       this.checkReactiveTriggers(VerbType.PERFORM, event.columnId, absFrame, event.ownerId, event.id, event.enhancementType, newEntries);
 
       // Skill-level onEntryClause: look up the OperatorSkill and execute effects
-      // via the unified clause dispatcher (Phase 4b).
+      // via the unified clause dispatcher.
       const operatorId = this.slotOperatorMap?.[event.ownerId];
       const skillDef = operatorId ? getOperatorSkill(operatorId, event.id) : undefined;
       if (skillDef?.onEntryClause?.length) {
@@ -2164,18 +2152,12 @@ export class EventInterpretorController {
     if (!frame) return newEntries; // safety check
 
     // ── 2. Combo trigger source duplication ──────────────────────────────
-    // The parser flags frames with `objectDeterminer: TRIGGER` as wanting to
-    // duplicate the trigger source onto the combo. The combo's trigger
-    // column is set at runtime when the combo is built (it can't be known
-    // at parse time), so the synthetic effect is constructed here. The
-    // dispatch path is unified though: we synthesize a one-clause predicate
-    // and route it through `interpret() → reactiveTriggersForEffect` so the
-    // duplication uses the same dispatch surface as every other clause.
-    // Replaces the legacy direct `controller.applyEvent` /
-    // `applyPhysicalStatus` calls that bypassed `interpret()`.
-    // Phase 8 step 7.5 / Task #14: resolve trigger source via uid ref. The
-    // column-id fallback was removed; every duplicateTriggerSource path must
-    // populate triggerEventUid via openComboWindow → _applyComboWindowToCombos.
+    // Frames marked with `duplicateTriggerSource` mirror the triggering
+    // source's infliction / physical status onto the combo's owner. The
+    // trigger source is resolved via the live uid ref on `event.triggerEventUid`
+    // (set by _applyComboWindowToCombos / resolveComboTrigger). We synthesize
+    // an APPLY clause and route it through interpret() so reactive triggers
+    // fire through the same path as every other clause.
     if (frame.duplicateTriggerSource && event.triggerEventUid) {
       const src = this.getAllEvents().find(e => e.uid === event.triggerEventUid);
       const triggerCol: string | undefined = src?.columnId;
@@ -2242,12 +2224,11 @@ export class EventInterpretorController {
       // is the source operator. UE gains from clauses on this frame must route
       // back to the source operator's slot via resolveRoutedSource.
       const routed = this.resolveRoutedSource(event);
-      // Phase 8 step 7g unblock: propagate uid + creationInteractionMode from
-      // freeform/derived user-placed events into child events created by the
-      // clause loop (e.g. freeform MF → doApply → configDrivenStatusColumn.add).
-      // Guarded by (a) non-skill column (so skills creating child statuses get
-      // fresh derived uids — no uid collision) AND (b) creationInteractionMode
-      // set (so only user-placed freeform events trigger propagation).
+      // Propagate uid + creationInteractionMode from freeform/derived user
+      // events into child events created by the clause loop (e.g. freeform
+      // MF → doApply → configDrivenStatusColumn.add). Guarded by non-skill
+      // column + creationInteractionMode so user-placed skill events whose
+      // clauses create child statuses still get fresh derived uids.
       const propagateUid = event.creationInteractionMode != null
         && !SKILL_COLUMN_SET.has(event.columnId);
       const interpretCtx: InterpretContext = {
@@ -2351,16 +2332,15 @@ export class EventInterpretorController {
       if (!isDot) {
         const pin = this.overrides?.[buildOverrideKey(event)]?.segments?.[si]?.frames?.[fi]?.isCritical;
         const critMode = this.critMode ?? CritMode.EXPECTED;
-        // Phase 8 step 7g unblock: isCrit is a per-run display field
-        // resolved from the override store, not persistent state.
-        //   - MANUAL: explicit pin or false default (this is the user-input
-        //     mode where unpinned damage frames render as no-crit)
-        //   - NEVER/ALWAYS/EXPECTED: explicit pin only; unpinned frames have
-        //     no isCrit and the calculation mode drives the displayed total.
-        // The cross-run "persistence" needed by tests now flows naturally:
-        // explicit pins live in the override store, so a pin set in MANUAL
-        // is read back into frame.isCrit on every subsequent run regardless
-        // of mode. The post-pipeline write-back loop is no longer needed.
+        // `frame.isCrit` is a per-run display field resolved from the
+        // override store, not persistent state:
+        //   MANUAL: user-input mode — pin ?? false (unpinned frames render
+        //     as no-crit; the user can click each one to toggle).
+        //   NEVER/ALWAYS/EXPECTED: write only when an explicit pin exists;
+        //     unpinned frames leave isCrit undefined, and the calculation
+        //     mode drives the displayed total via effectiveCrit below.
+        // Cross-run persistence flows naturally: explicit pins live in the
+        // override store and get re-read on every pipeline run.
         if (critMode === CritMode.MANUAL) {
           frame.isCrit = pin ?? false;
         } else if (pin != null) {
@@ -2488,15 +2468,13 @@ export class EventInterpretorController {
    * offset-0 segment frame markers. Offset > 0 segment frames + STATUS_EXIT
    * are deferred to the queue via `pendingExitFrames`.
    *
-   * **Load-bearing inline dispatch.** This is called *synchronously* from
-   * inside `doApply`'s effect loop. It MUST NOT be migrated to the queue: a
+   * **Load-bearing inline dispatch.** Called *synchronously* from inside
+   * `doApply`'s effect loop. Must NOT be migrated to the queue: a
    * subsequent effect at index `i+1` in the same clause must observe the
    * stat / status state written by `APPLY STATUS` at index `i`. Same-frame
-   * FIFO queue ordering does not solve this — the queue only resumes
+   * FIFO queue ordering doesn't solve this — the queue only resumes
    * between entries, never mid-entry, so any queued lifecycle would land
-   * after the rest of the current effect loop runs. See the "Open review
-   * findings #9" entry in `docs/notes/pipeline-unification-plan.md` for the
-   * full rationale and the rejection of Phase 4c-ii.
+   * after the rest of the current effect loop runs.
    */
   private runStatusCreationLifecycle(statusId: string | undefined, statusOwnerId: string, ctx: InterpretContext) {
     if (!statusId) return;
@@ -2517,7 +2495,7 @@ export class EventInterpretorController {
     const routedForStatusPot = this.resolveRoutedSource(statusEv);
     const pot = this.loadoutProperties?.[routedForStatusPot.sourceSlotId]?.operator.potential ?? 0;
 
-    // ── onEntryClause: dispatched via the unified helper (Phase 4c) ──────
+    // ── onEntryClause: dispatched via the unified helper ──────────────────
     const statusDef = getStatusDef(statusId);
     if (statusDef?.onEntryClause?.length) {
       const parentSegEnd = statusEv.startFrame + (statusEv.segments[0]?.properties.duration ?? 0);

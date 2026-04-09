@@ -1,10 +1,8 @@
 /**
- * Phase 8 step 7c — talent selection extracted from runEventQueue.
- *
- * Pure selector: takes the trigger index's talent events and filters out
- * ones already present in the registered-events list (matched by
- * columnId + ownerId). The caller routes the returned events through
- * DEC.createSkillEvent (the sole ingress path).
+ * Talent selection helper. Pure selector: takes the trigger index's
+ * talent events and filters out ones already present in the allEvents
+ * list (matched by columnId + ownerId). The caller routes the returned
+ * events through DEC.createSkillEvent (the sole ingress path).
  */
 import { TimelineEvent } from '../../../consts/viewTypes';
 import type { TriggerIndex } from '../triggerIndex';

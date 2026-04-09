@@ -19,7 +19,7 @@ import type { CombatLoadoutController } from '../combat-loadout/combatLoadoutCon
 import { hasSkillPointClause, buildSkillPointRecoveryClause, hasStaggerClause, buildDealStaggerClause, stripStaggerClauses } from './clauseQueries';
 import GENERAL_MECHANICS from '../../model/game-data/generalMechanics.json';
 
-// Phase 8 step 7b: `cloneAndSplitEvents` + `resetSegmentCloneCache` + the
+// `cloneAndSplitEvents` + `resetSegmentCloneCache` + the
 // segment clone cache moved into `./parser/cloneAndSplit.ts`. Re-exported
 // here for existing external callers; new callers should import from
 // `./parser` directly.

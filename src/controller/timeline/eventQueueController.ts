@@ -34,16 +34,15 @@ import { resolveControlledOperator } from './controlledOperatorResolver';
 import { resetPools } from './objectPool';
 import { flattenEventsToQueueFrames } from './parser';
 
-// TriggerIndex is now built and cached by CombatLoadoutController.syncSlots().
-// It is passed into the pipeline via the triggerIndex parameter.
+// TriggerIndex is built and cached by CombatLoadoutController.syncSlots()
+// and passed into the pipeline via the `triggerIndex` parameter.
 
-// Phase 8 step 7a: `collectFrameEntries` has been moved into
-// `./parser/flattenEvents.ts` as `flattenEventsToQueueFrames`. The parser
-// module is now the single authority for event → QueueFrame[] flattening.
+// Event → QueueFrame[] flattening lives in ./parser/flattenEvents.ts. The
+// parser module is the single authority for that transformation.
 
 // ── Reusable singletons for pipeline runs ────────────────────────────────
-// These are lazily created on first use to avoid circular dependency issues
-// at module initialization time. Once created, they are reused across ticks.
+// Lazily created on first use to avoid circular dependency issues at
+// module initialization time. Reused across ticks.
 
 let _interpretor: EventInterpretorController | null = null;
 
@@ -72,7 +71,7 @@ export function runEventQueue(
   triggerIndex?: TriggerIndex,
   critMode?: CritMode,
   overrides?: OverrideStore,
-  /** Phase 4e item 3: op cache + defMult for inline damage tick push. */
+  /** op cache + defMult for inline damage tick push. */
   damageOpCache?: ReadonlyMap<string, import('../calculation/calculationController').DamageOpData>,
   enemyDefMult?: number,
 ): void {
@@ -129,21 +128,20 @@ export function runEventQueue(
     }
   }
 
-  // Phase 4e item 3 step 3: fire HP threshold checks once at pipeline start
-  // so initial-state conditions (e.g. "HP ≥ 100%") trigger at frame 0.
-  // Subsequent checks fire reactively from _pushEnemyDamageTickForFrame
-  // whenever a damage tick is written.
+  // Fire HP threshold checks once at pipeline start so conditions that
+  // are trivially satisfied by initial HP state (e.g. "HP ≥ 100%") trigger
+  // at frame 0. Subsequent checks fire reactively from the damage tick
+  // push whenever HP actually changes.
   const initialHpTriggers: QueueFrame[] = [];
   interpretor.checkInitialHpThresholds(initialHpTriggers);
   if (initialHpTriggers.length > 0) state.insertQueueFrames(initialHpTriggers);
 
-  // Phase 8 step 7h: registered (skill/input) events now emit their own
-  // queue frames during createSkillEvent ingress using the current stops.
-  // Derived events (freeform inflictions/reactions/statuses from
-  // cloneAndSplitEvents) still go through the bulk flattenEvents call,
-  // because they never pass through createSkillEvent — the interpretor
-  // creates their actual event via applyEvent when their PROCESS_FRAME
-  // hook fires.
+  // Skill / input / enemy-action events emit their own queue frames during
+  // createSkillEvent ingress. The bulk flattenEvents call here is for
+  // derived events (freeform inflictions/reactions/statuses from
+  // cloneAndSplitEvents) that bypass createSkillEvent — the interpretor
+  // creates their actual visible event via applyEvent when their
+  // PROCESS_FRAME hook fires.
   const frameEntries = flattenEventsToQueueFrames(derivedEvents, stops);
   state.insertQueueFrames(frameEntries);
 
@@ -252,7 +250,7 @@ export function processCombatSimulation(
   invalidateConfigCache();
 
   // ── 0a. Initialize HP tracker for live HP% queries during queue processing.
-  // Phase 4e item 3: tests may call processCombatSimulation without hpController;
+  // tests may call processCombatSimulation without hpController;
   // in that case HP tracking is skipped entirely (damageOpCache stays undefined).
   if (hpController) hpController.initEnemyHp(bossMaxHp ?? null);
 

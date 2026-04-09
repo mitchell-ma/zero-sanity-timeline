@@ -120,9 +120,8 @@ export class HPController {
 
   /**
    * Append one enemy damage tick incrementally during the queue drain.
-   * Phase 4e item 3: replaces the batch `precomputeDamageByFrame` pre-pass.
-   * Ticks arrive in frame order (queue is chronological), so a single append
-   * with cumulative running-total is sufficient — no re-sort needed.
+   * Ticks arrive in frame order (queue is chronological), so a single
+   * append with cumulative running-total is sufficient — no re-sort needed.
    */
   addEnemyDamageTick(frame: number, damage: number) {
     if (damage <= 0) return;
@@ -222,8 +221,6 @@ export class HPController {
     return this.slotHealSummaries.get(slotId);
   }
 
-  // Phase 9c: finalize() deleted. Per-slot HP graph + heal summary rebuild
-  // reactively from addHeal via _rebuildSlotGraph. No post-pipeline pass.
 
   // ── Clear ──────────────────────────────────────────────────────────────
 

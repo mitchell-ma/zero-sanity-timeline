@@ -71,7 +71,7 @@ export class DerivedEventController implements ColumnHost {
   private registeredStopIds = new Set<string>();
   private rawDurations = new Map<string, number>();
   /**
-   * Phase 8 step 7e-prep: per-segment raw (pre-extension) duration store for
+   * per-segment raw (pre-extension) duration store for
    * registered skill events. Populated in `_pushToStorage` after the segment
    * deep-clone. `extendSingleEvent` reads raw values from here on every call,
    * making extension idempotent — safe to re-run when a new stop retroactively
@@ -83,7 +83,6 @@ export class DerivedEventController implements ColumnHost {
     (a, b) => a.frame !== b.frame ? a.frame - b.frame : a.priority - b.priority,
   );
   // state.output removed — registeredEvents is the single source of storage.
-  private idCounter = 0;
   private triggerAssociations: TriggerAssociation[] = [];
   private slotWirings: SlotTriggerWiring[] = [];
   private controlledSlotResolver?: (frame: number) => string;
@@ -97,10 +96,8 @@ export class DerivedEventController implements ColumnHost {
   /** Event UIDs that consumed Link, mapped to their stack count at consumption time. */
   private linkConsumptions = new Map<string, number>();
 
-  constructor() {
-    // All state is wired via reset() per pipeline run. Constructor takes
-    // no arguments — there's no "initial state" concept any more.
-  }
+  // No constructor — all state wired via reset() per pipeline run.
+
 
   /**
    * Reset all internal state for the next pipeline run (singleton reuse).
@@ -127,7 +124,6 @@ export class DerivedEventController implements ColumnHost {
     this.rawSegmentDurations.clear();
     this.comboStops.length = 0;
     this.queue.clear();
-    this.idCounter = 0;
     this.linkConsumptions.clear();
     this.controlledSlotResolver = undefined;
     this.triggerAssociations = triggerAssociations ?? [];
@@ -271,7 +267,7 @@ export class DerivedEventController implements ColumnHost {
    * Must be called before registerEvents so that user-placed swaps clamp
    * this seed during registration. No-op if no slots are occupied.
    */
-  // ── Priority queue (Phase 8 step 4: ownership moved into DEC) ───────────
+  // ── Priority queue (ownership moved into DEC) ───────────
 
   /** Pop the next queue frame in priority order, or undefined if empty. */
   popNextFrame(): QueueFrame | undefined {
@@ -290,7 +286,7 @@ export class DerivedEventController implements ColumnHost {
   // ── Registration ──────────────────────────────────────────────────────────
 
   /**
-   * Phase 8 step 7: single-event ingress. The only path through which events
+   * single-event ingress. The only path through which events
    * enter DEC's registered-event storage. Runs combo chaining, reaction
    * segmentation, stop discovery (+ retroactive re-extension of overlapping
    * prior events), push-to-storage with deep clone + raw duration capture,
@@ -383,7 +379,7 @@ export class DerivedEventController implements ColumnHost {
 
   /**
    * Resolve combo trigger columns inline during registration.
-   * Phase 8 step 6a: reactively emits COMBO_WINDOW events via openComboWindow
+   * reactively emits COMBO_WINDOW events via openComboWindow
    * (which merges overlap, handles time-stop extension, and sets
    * comboTriggerColumnId on covered combo events). This is the single source
    * of truth for pass 3; the post-queue batch re-derive in processCombatSimulation
@@ -701,7 +697,7 @@ export class DerivedEventController implements ColumnHost {
    * Update comboTriggerColumnId + triggerEventUid on a registered combo event
    * (deferred resolution path). Both fields are set together so the
    * `duplicateTriggerSource` interpreter handler can look up the source event
-   * by uid (Phase 8 step 7.5 chain-of-action ref).
+   * by uid .
    */
   setComboTriggerColumnId(eventUid: string, columnId: string, sourceEventUid?: string) {
     for (let i = 0; i < this.allEvents.length; i++) {
@@ -962,7 +958,7 @@ export class DerivedEventController implements ColumnHost {
     const durationFrames = getAnimationDuration(ev);
     this.stops.push({ startFrame, durationFrames, eventUid: ev.uid });
     this.stops.sort((a, b) => a.startFrame - b.startFrame);
-    // Phase 9a step 3: forward stops to spController so its timeline recomputes
+    // forward stops to spController so its timeline recomputes
     // regen pauses immediately, without waiting for a finalize-time sweep.
     if (this.spController) this.spController.setTimeStops(this.stops);
     // Retroactive re-extension: events already pushed whose active range
@@ -1021,7 +1017,7 @@ export class DerivedEventController implements ColumnHost {
    * Handles segmented events, 3-phase events, and time-stop events.
    */
   /**
-   * Phase 8 step 7e-prep: idempotent per-segment extension.
+   * idempotent per-segment extension.
    *
    * Reads raw segment durations from `rawSegmentDurations` (populated in
    * `_pushToStorage` after a deep clone), computes extended durations

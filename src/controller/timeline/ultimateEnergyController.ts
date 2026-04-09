@@ -30,13 +30,13 @@ export interface RawUltimateEnergyGainEvent {
   /** Ultimate energy recovered for all operators on the team. */
   teamGain: number;
   /**
-   * Phase 9b: when set, this gain was synthesized by _computeGraphs from a
+   * when set, this gain was synthesized by _computeGraphs from a
    * SP cost event's natural consumption. Used as a key for idempotent
    * removal during recompute (so re-runs don't double-count).
    */
   spDerivedFromUid?: string;
   /**
-   * Phase 9b: per-recipient ultimate gain efficiency captured AT THE FRAME
+   * per-recipient ultimate gain efficiency captured AT THE FRAME
    * the gain occurred. Set by DEC.recordUltimateEnergyGain from the stat
    * accumulator's current state during queue drain. Fixes the latent bug
    * where post-pipeline `cfg.efficiency` retroactively scaled all gains
@@ -79,7 +79,7 @@ export class UltimateEnergyController {
   private naturalSpMap = new Map<string, number>();
 
   /**
-   * Phase 9b: battle skill gain frames pushed by SPController.addCost.
+   * battle skill gain frames pushed by SPController.addCost.
    * Replaces the finalize-time `battleSkillGainFrames` parameter so the
    * SP → UE conversion can run reactively.
    */
@@ -165,7 +165,7 @@ export class UltimateEnergyController {
   }
 
   /**
-   * Phase 9b: receive battle skill gain frame info pushed by SPController.addCost.
+   * receive battle skill gain frame info pushed by SPController.addCost.
    * Replaces the finalize-time `battleSkillGainFrames` parameter.
    */
   setBattleSkillGainFrame(eventUid: string, frame: number, slotId: string) {
@@ -178,7 +178,7 @@ export class UltimateEnergyController {
   /**
    * Receives natural SP consumption data for a single battle skill.
    * The natural SP consumed converts to team-wide ultimate energy gain.
-   * Phase 9a step 5: idempotent — callable on every SP recompute. Setting
+   * idempotent — callable on every SP recompute. Setting
    * naturalConsumed = 0 clears the entry so reactive updates can shrink
    * the natural pool when more returns absorb prior natural consumption.
    */
@@ -192,20 +192,16 @@ export class UltimateEnergyController {
   }
 
   /**
-   * Phase 9b: reactive per-slot UE graph computation. Called from every
-   * state-change setter so the slotGraphs map stays current without a
-   * post-pipeline finalize sweep.
+   * Reactive per-slot UE graph computation. Called from every state-change
+   * setter so slotGraphs stays current without a post-pipeline finalize.
    *
-   * Builds the natural-SP-to-UE-gain conversion from the current
-   * naturalSpMap + battleSkillGainFrames maps each call (idempotent —
-   * we filter the SP-derived gains out of rawUltimateEnergyGains before
-   * appending the latest set so re-runs don't double-count).
+   * Idempotent: strips any prior SP-derived gains (tagged with
+   * spDerivedFromUid) before appending fresh ones from the current
+   * naturalSpMap snapshot, so repeated calls don't double-count.
    */
   private _computeGraphs() {
-    // Strip any prior SP-derived gains so we can rebuild them from the
-    // current naturalSpMap snapshot.
-    const naturalUids = new Set<string>();
-    this.naturalSpMap.forEach((_, uid) => naturalUids.add(uid));
+    // Strip prior SP-derived gains so we can rebuild them from the current
+    // naturalSpMap snapshot.
     const directGains: RawUltimateEnergyGainEvent[] = [];
     for (const ge of this.rawUltimateEnergyGains) {
       // SP-derived gains are tagged via spDerivedFromUid below.
@@ -312,7 +308,7 @@ export function applyGainEfficiency(
 
     const rawGain = (ge.sourceSlotId === slotId ? ge.selfGain : 0) + ge.teamGain;
     if (rawGain > 0) {
-      // Phase 9b: prefer the per-event slotEfficiencies snapshot captured at
+      // prefer the per-event slotEfficiencies snapshot captured at
       // gain time. Falls back to fallbackMultiplier when absent (tests that
       // construct RawUltimateEnergyGainEvent without snapshots).
       const eff = ge.slotEfficiencies?.get(slotId);

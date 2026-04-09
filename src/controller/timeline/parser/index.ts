@@ -1,11 +1,10 @@
 /**
- * Phase 8 step 7 parser module.
- *
- * Goal state: `flatten(rawEvents, loadoutContext)` takes raw user-placed
- * events + context and emits `QueueFrame[]` that the engine drains via
- * `interpret() → DEC.createSkillEvent`. Today it only exports the legacy
- * registered-event flattener; future sub-commits will add cloneAndSplit,
- * talent/control seed emission, and the `doApplySkill` route.
+ * Parser module. Turns raw events + loadout context into the queue-frame
+ * + DEC-ingress inputs the engine consumes. Single authority for:
+ *   - Raw event cloning + input/derived classification (cloneAndSplit)
+ *   - Event → QueueFrame[] flattening (flattenEventsToQueueFrames)
+ *   - Talent selection (selectNewTalents)
+ *   - Controlled-operator seed construction (buildControlSeed)
  */
 export { flattenEventsToQueueFrames } from './flattenEvents';
 export { cloneAndSplitEvents, resetSegmentCloneCache } from './cloneAndSplit';
