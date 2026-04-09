@@ -32,6 +32,163 @@ Baseline held green at every commit. Current baseline:
 | 7h | `e78ffbba` | Per-event queue frame emission from `createSkillEvent` | ✅ (fold deferred) |
 | 8 | `bc95f125` | Invariant pin test + engineSpec rewrite | ✅ |
 
+## Handoff for next agent (written 2026-04-08 end of day)
+
+You're picking up after the createSkillEvent/createQueueEvent ingress merge
+landed in `b541acef`. The pipeline is in a good state — 2133/2133 tests green,
+no known correctness bugs, no parallel paths. Read this first before diving in.
+
+### Current architecture invariants (do not violate)
+
+1. **Single ingress core.** All events enter DEC storage through
+   `_ingest(ev, {deepClone, captureRaw})` in `derivedEventController.ts`. The
+   two public entry points (`createSkillEvent`, `createQueueEvent`) both call
+   `_ingest`. Do NOT add a third ingress path. Do NOT push to `allEvents` or
+   `stacks` directly from anywhere else. `pipelineInvariants.test.ts` pins
+   several of these.
+
+2. **`rawSegmentDurations` is populated for skill events AND pushEvent-routed
+   queue events.** Both flow through `_ingest({captureRaw: true})` now — this
+   is a change from Phase 8 where only skill events had per-segment raw
+   tracking. Only `pushEventDirect` (reactions) and `pushToOutput` (zero-dur
+   markers) pass `captureRaw: false`. If you see a comment or doc claiming
+   "rawSegmentDurations is populated only for skill events", it's stale.
+
+3. **`_maybeRegisterStop`'s retroactive loop filters on
+   `rawSegmentDurations.has(uid)`.** Post-merge, this means skill events +
+   pushEvent-routed events participate in retroactive re-extension when a
+   later stop lands. Reactions do NOT — they use the older single-total
+   `rawDurations` + reaction segment rebuild path, and reactions with stops
+   baked into their tick markers would double-extend if the retroactive loop
+   touched them. Do not "unify" this further without understanding the
+   reaction segment shape (`processInfliction.ts:256` buildReactionSegment).
+
+4. **`pushEvent(event, _rawDuration)` ignores its second argument.** After
+   the merge, extension happens inside `createQueueEvent` via
+   `extendSingleEvent` reading from `rawSegmentDurations`. The rawDuration
+   parameter is kept on the signature only because `ColumnHost` still
+   declares it and three columns still pass it. **This is one of the two
+   deferred cleanups** (see below).
+
+5. **`USER_ID` never enters the event graph.** `handleAddEvent` in
+   `src/app/useApp.ts` resolves `sourceOwnerId` via `slotOperatorMapRef`
+   before calling `createEvent`. The fallback in `inputEventController.ts:380`
+   is `ownerId`, not `USER_ID`. The `USER_ID` import was removed from that
+   file. `resolveRoutedSource`'s slot-map reverse lookup is now purely
+   defensive belt-and-suspenders for any stray legacy path.
+
+### Deferred work — ranked by value/risk
+
+**(1) chainRef bundled type — HIGH VALUE, MEDIUM-HIGH RISK**
+
+Replace scattered `sourceOwnerId` / `sourceSlotId` / `sourceEventUid` fields
+with a single `chainRef: { sourceSlotId, sourceOperatorId, sourceEventUid }`
+on `TimelineEvent`. Eliminates `resolveRoutedSource`'s per-frame O(slots)
+reverse lookup in `eventInterpretorController.ts`.
+
+- **51 files** touch these fields (`grep -r 'sourceOwnerId\|sourceSlotId\|sourceEventUid' src/`)
+- Core types to modify first: `src/consts/viewTypes.ts` (`TimelineEvent`),
+  `src/controller/timeline/eventQueueTypes.ts`, `triggerMatch.ts`,
+  `triggerIndex.ts`
+- Every column creation site touches `ev.sourceOwnerId = source.ownerId`
+- ~15 test files directly assert on these fields — will need updates
+- Recommended: incremental migration path. Add `chainRef` alongside the
+  existing fields first, migrate readers one subsystem at a time, delete
+  old fields last. Do NOT try big-bang — the previous merge worked because
+  the split was structural; this one is a type-shape change that propagates.
+- This is listed in `pipeline-unification-plan.md` "Carried over" section.
+
+**(2) `pushEvent` rawDuration parameter cleanup — LOW VALUE, TRIVIAL RISK**
+
+Drop the unused `rawDuration` parameter from `pushEvent`:
+- `ColumnHost.pushEvent` in `src/controller/timeline/columns/eventColumn.ts`
+- `DEC.pushEvent` in `derivedEventController.ts:823`
+- Three callers in `columns/inflictionColumn.ts:100`,
+  `columns/configDrivenStatusColumn.ts:74` and `:189`,
+  `columns/physicalStatusColumn.ts:61`
+- 4-file change, 15 minutes. No risk — the parameter is already unused and
+  extension runs via `extendSingleEvent` from `rawSegmentDurations`.
+
+### Landmines / things that will bite you
+
+1. **Reaction segments are pre-built with stops baked in.** `reactionColumn.add`
+   at line 47 does `setEventDuration(ev, host.extendDuration(...))` BEFORE
+   calling `buildReactionSegment`, which uses the extended total to place
+   tick frame markers. If you try to make reactions flow through the
+   `captureRaw: true` path, extendSingleEvent will treat the already-extended
+   duration as "raw" and over-extend on any retroactive stop. Don't.
+
+2. **`_checkCooldown` walks `allEvents` looking for `COOLDOWN` segments at
+   `ev.startFrame`.** It's linear over all events per createSkillEvent call.
+   If a change causes skill-event ingress to slow down, this is the first
+   place to look. There's probably a reactive opportunity here but it's not
+   on any critical path.
+
+3. **`clampPriorControlEvents` mutates in place via `setEventDuration`.**
+   The previous "object replacement" approach broke the stacks index because
+   stacks held the old reference. Do not change this back to
+   `registeredEvents[j] = {...prev, segments: [...]}` or you'll silently
+   corrupt `isControlledAt` queries.
+
+4. **`_processFrameOut.length = 0` must stay at the TOP of
+   `handleProcessFrame` in `eventInterpretorController.ts`.** Moving it
+   after damage tick push (or any side-effect that appends to newEntries)
+   wipes HP threshold triggers and breaks the reactive HP threshold test.
+
+5. **Integration suite ordering sensitivity.** Queue entries at the same
+   frame use `a.priority - b.priority` as tiebreaker. If an integration
+   test fails after a change to queue seeding or priority assignment,
+   check whether same-frame entries are now interleaved differently.
+
+6. **`ultimateEnergyValidation.test.ts` constructs
+   `RawUltimateEnergyGainEvent` without `slotEfficiencies`.**
+   `applyGainEfficiency` falls back to the passed-in `efficiencyBonus`
+   parameter specifically to preserve this test. If you refactor
+   `RawUltimateEnergyGainEvent` to require the snapshot field, update
+   these tests in lockstep — don't "fix" the fallback.
+
+7. **`_decSingleton`, `_lastController`, `_statAccumulator` are module-level
+   singletons in `eventQueueController.ts`.** React strict mode double-invokes
+   `useMemo`, so the singletons get reused across effective re-renders.
+   `reset()` is called at every `processCombatSimulation` entry — make sure
+   any new state you add to these singletons has a corresponding clear in
+   `reset()` or you'll leak state across runs.
+
+### Good places to start reading
+
+- `derivedEventController.ts` — start at `_ingest` (~line 913) and walk
+  outward to `createSkillEvent`, `createQueueEvent`, `_maybeRegisterStop`,
+  `extendSingleEvent`. This is the hub.
+- `eventInterpretorController.ts` — `interpret()` verb dispatch around line
+  640. The sole mutation surface. Every effect resolution flows through here.
+- `src/tests/unit/pipelineInvariants.test.ts` — 15+ forbidden-pattern pins.
+  If you're about to add something that matches one of these patterns, you
+  probably want to do something else.
+- `src/controller/timeline/engineSpec.md` — the engine architecture doc.
+  Keep it in sync if you change hub-level invariants.
+
+### What's explicitly OUT of scope
+
+- Don't rename `allEvents` back to `registeredEvents` or vice versa — the
+  rename already happened (`b541acef` predecessor).
+- Don't add batch pre/post-processing passes. Everything is reactive via
+  the queue. CLAUDE.md item: "No batch bulk pre-processing or post-processing."
+- Don't create new enums for things existing config combinations can
+  express. See `feedback_no_new_enums_for_config.md` in memory.
+- Don't touch `effectExecutor.ts` — it was deleted in 2026-04-08. If you
+  see it referenced anywhere, that's a stale comment, delete the reference.
+
+### Verification before claiming done
+
+```
+npx tsc --noEmit
+npx eslint <changed files>
+npx jest src/tests/          # must stay at 2133 passing
+```
+
+Do not run `npx eslint src/` (whole-tree) — concurrent agents may have
+unrelated in-flight errors. Scope lint and tsc checks to files you changed.
+
 ## Session 2026-04-08 (continuation, part 4) — ingress merge + backfill tests + USER_ID fix
 
 Three landed items, no new architectural work on top of what Phase 8/9 already
