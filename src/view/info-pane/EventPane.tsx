@@ -886,8 +886,9 @@ function PipelineTimeline() {
 
   const stops = state.getStops();
   const comboStops = state.getComboStops();
-  const queueOutput = state.getQueueOutput();
   const registered = state.getRegisteredEvents();
+  // Single source of storage — registeredEvents is everything.
+  const queueOutput = registered;
 
   const fmt = (f: number) => `${framesToSeconds(f)}s`;
   const fmtRange = (start: number, dur: number) => `${fmt(start)}–${fmt(start + dur)} (${dur}f)`;

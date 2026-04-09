@@ -1,8 +1,10 @@
 /**
  * When ev is a CONTROL input event, clamp earlier CONTROL events on other
- * owners so they end at ev.startFrame. Mutates registeredEvents in place.
+ * owners so they end at ev.startFrame. Mutates the existing segment in
+ * place so both `registeredEvents` and the `stacks` index (which share
+ * the same event references after _pushToStorage clone) see the update.
  */
-import { TimelineEvent, computeSegmentsSpan } from '../../../consts/viewTypes';
+import { TimelineEvent, computeSegmentsSpan, setEventDuration } from '../../../consts/viewTypes';
 import { NounType } from '../../../dsl/semantics';
 import { OPERATOR_COLUMNS } from '../../../model/channels';
 
@@ -17,14 +19,9 @@ export function clampPriorControlEvents(
     if (prev.ownerId === ev.ownerId) continue;
     const prevEnd = prev.startFrame + computeSegmentsSpan(prev.segments);
     if (prevEnd <= ev.startFrame) continue;
-    registeredEvents[j] = {
-      ...prev,
-      segments: [{
-        properties: {
-          ...prev.segments[0]?.properties,
-          duration: ev.startFrame - prev.startFrame,
-        },
-      }],
-    };
+    // Prev is DEC-owned (cloned in _pushToStorage), so mutate its segment
+    // in place. The stacks index holds the same reference and sees the
+    // truncated duration automatically.
+    setEventDuration(prev, ev.startFrame - prev.startFrame);
   }
 }

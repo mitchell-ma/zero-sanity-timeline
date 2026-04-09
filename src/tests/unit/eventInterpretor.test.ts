@@ -43,7 +43,7 @@ function makeCtx(interp: EventInterpretorController, overrides?: Partial<Interpr
     frame: 100,
     sourceOwnerId: 'op-1',
     sourceSkillName: 'TEST_SKILL',
-    allEvents: () => [...interp.controller.getRegisteredEvents(), ...interp.controller.output],
+    allEvents: () => [...interp.controller.getRegisteredEvents(), ...interp.controller.getRegisteredEvents()],
     ...overrides,
   };
 }
@@ -89,10 +89,10 @@ describe('EventInterpretorController: APPLY', () => {
 
     const result = interp.interpret(effect, ctx);
     expect(result).toBe(true);
-    expect(interp.controller.output.length).toBe(1);
-    expect(interp.controller.output[0].columnId).toBe(INFLICTION_COLUMNS.HEAT);
-    expect(interp.controller.output[0].ownerId).toBe(ENEMY_OWNER_ID);
-    expect(interp.controller.output[0].startFrame).toBe(100);
+    expect(interp.controller.getRegisteredEvents().length).toBe(1);
+    expect(interp.controller.getRegisteredEvents()[0].columnId).toBe(INFLICTION_COLUMNS.HEAT);
+    expect(interp.controller.getRegisteredEvents()[0].ownerId).toBe(ENEMY_OWNER_ID);
+    expect(interp.controller.getRegisteredEvents()[0].startFrame).toBe(100);
   });
 
   test('APPLY STATUS creates status event', () => {
@@ -111,10 +111,10 @@ describe('EventInterpretorController: APPLY', () => {
 
     const result = interp.interpret(effect, ctx);
     expect(result).toBe(true);
-    expect(interp.controller.output.length).toBe(1);
-    expect(interp.controller.output[0].columnId).toBe('FOCUS');
-    expect(interp.controller.output[0].ownerId).toBe('op-1');
-    expect(eventDuration(interp.controller.output[0])).toBe(1200);
+    expect(interp.controller.getRegisteredEvents().length).toBe(1);
+    expect(interp.controller.getRegisteredEvents()[0].columnId).toBe('FOCUS');
+    expect(interp.controller.getRegisteredEvents()[0].ownerId).toBe('op-1');
+    expect(eventDuration(interp.controller.getRegisteredEvents()[0])).toBe(1200);
   });
 
   test('APPLY COMBUSTION REACTION creates reaction event', () => {
@@ -134,9 +134,9 @@ describe('EventInterpretorController: APPLY', () => {
 
     const result = interp.interpret(effect, ctx);
     expect(result).toBe(true);
-    expect(interp.controller.output.length).toBe(1);
-    expect(interp.controller.output[0].columnId).toBe(REACTION_COLUMNS.COMBUSTION);
-    expect(interp.controller.output[0].stacks).toBe(2);
+    expect(interp.controller.getRegisteredEvents().length).toBe(1);
+    expect(interp.controller.getRegisteredEvents()[0].columnId).toBe(REACTION_COLUMNS.COMBUSTION);
+    expect(interp.controller.getRegisteredEvents()[0].stacks).toBe(2);
   });
 
   test('APPLY with invalid object returns false', () => {
@@ -297,13 +297,13 @@ describe('EventInterpretorController: ALL', () => {
     expect(result).toBe(true);
 
     // Should consume 2 inflictions and create 2 statuses
-    const consumed = interp.controller.output.filter(ev =>
+    const consumed = interp.controller.getRegisteredEvents().filter(ev =>
       ev.columnId === INFLICTION_COLUMNS.HEAT && ev.eventStatus === EventStatusType.CONSUMED
     );
     expect(consumed.length).toBe(2);
 
     // The 2 MF statuses created
-    const mfStatuses = interp.controller.output.filter(ev =>
+    const mfStatuses = interp.controller.getRegisteredEvents().filter(ev =>
       ev.columnId === 'MELTING_FLAME'
     );
     expect(mfStatuses.length).toBe(2);
@@ -338,7 +338,7 @@ describe('EventInterpretorController: ALL', () => {
     interp.interpret(effect, ctx);
 
     // Only 1 consumed (single iteration)
-    const consumed = interp.controller.output.filter(ev =>
+    const consumed = interp.controller.getRegisteredEvents().filter(ev =>
       ev.columnId === INFLICTION_COLUMNS.HEAT && ev.eventStatus === EventStatusType.CONSUMED
     );
     expect(consumed.length).toBe(1);
@@ -381,7 +381,7 @@ describe('EventInterpretorController: ALL', () => {
 
     interp.interpret(effect, ctx);
 
-    const mfStatuses = interp.controller.output.filter(ev => ev.columnId === 'MELTING_FLAME');
+    const mfStatuses = interp.controller.getRegisteredEvents().filter(ev => ev.columnId === 'MELTING_FLAME');
     expect(mfStatuses.length).toBe(1); // Only 1, not 4
     consoleSpy.mockRestore();
   });
@@ -437,10 +437,10 @@ describe('EventInterpretorController: ANY', () => {
 
     interp.interpret(effect, ctx);
 
-    const statuses = interp.controller.output.filter(ev => ev.columnId === 'CRYO_STATUS');
+    const statuses = interp.controller.getRegisteredEvents().filter(ev => ev.columnId === 'CRYO_STATUS');
     expect(statuses.length).toBe(1);
     // No heat status should be created
-    const heatStatuses = interp.controller.output.filter(ev => ev.columnId === 'HEAT_STATUS');
+    const heatStatuses = interp.controller.getRegisteredEvents().filter(ev => ev.columnId === 'HEAT_STATUS');
     expect(heatStatuses.length).toBe(0);
     consoleSpy.mockRestore();
   });
@@ -471,7 +471,7 @@ describe('EventInterpretorController: ANY', () => {
 
     const result = interp.interpret(effect, ctx);
     expect(result).toBe(false);
-    expect(interp.controller.output.length).toBe(0);
+    expect(interp.controller.getRegisteredEvents().length).toBe(0);
   });
 });
 
@@ -513,7 +513,7 @@ describe('EventInterpretorController: Resource verbs', () => {
     const effect: Effect = { verb: verb };
     const result = interp.interpret(effect, ctx);
     expect(result).toBe(true);
-    expect(interp.controller.output.length).toBe(0);
+    expect(interp.controller.getRegisteredEvents().length).toBe(0);
   });
 });
 
@@ -541,9 +541,9 @@ describe('EventInterpretorController: interpretEffects', () => {
 
     const result = interp.interpretEffects(effects, ctx);
     expect(result).toBe(true);
-    expect(interp.controller.output.length).toBe(2);
-    expect(interp.controller.output[0].columnId).toBe(INFLICTION_COLUMNS.HEAT);
-    expect(interp.controller.output[1].columnId).toBe(INFLICTION_COLUMNS.HEAT);
+    expect(interp.controller.getRegisteredEvents().length).toBe(2);
+    expect(interp.controller.getRegisteredEvents()[0].columnId).toBe(INFLICTION_COLUMNS.HEAT);
+    expect(interp.controller.getRegisteredEvents()[1].columnId).toBe(INFLICTION_COLUMNS.HEAT);
   });
 });
 
@@ -565,10 +565,10 @@ describe('EventInterpretorController: APPLY LIFT STATUS (PHYSICAL)', () => {
     expect(result).toBe(true);
 
     // Should create 1 Vulnerable infliction, no Lift status
-    const vulnEvents = interp.controller.output.filter(
+    const vulnEvents = interp.controller.getRegisteredEvents().filter(
       ev => ev.columnId === PHYSICAL_INFLICTION_COLUMNS.VULNERABLE,
     );
-    const liftEvents = interp.controller.output.filter(
+    const liftEvents = interp.controller.getRegisteredEvents().filter(
       ev => ev.columnId === PHYSICAL_STATUS_COLUMNS.LIFT,
     );
     expect(vulnEvents.length).toBe(1);
@@ -588,10 +588,10 @@ describe('EventInterpretorController: APPLY LIFT STATUS (PHYSICAL)', () => {
     const result = interp.interpret(liftEffect, ctx);
     expect(result).toBe(true);
 
-    const vulnEvents = interp.controller.output.filter(
+    const vulnEvents = interp.controller.getRegisteredEvents().filter(
       ev => ev.columnId === PHYSICAL_INFLICTION_COLUMNS.VULNERABLE,
     );
-    const liftEvents = interp.controller.output.filter(
+    const liftEvents = interp.controller.getRegisteredEvents().filter(
       ev => ev.columnId === PHYSICAL_STATUS_COLUMNS.LIFT,
     );
 
@@ -613,7 +613,7 @@ describe('EventInterpretorController: APPLY LIFT STATUS (PHYSICAL)', () => {
     const ctx = makeCtx(interp);
     interp.interpret(liftEffect, ctx);
 
-    const liftEvents = interp.controller.output.filter(
+    const liftEvents = interp.controller.getRegisteredEvents().filter(
       ev => ev.columnId === PHYSICAL_STATUS_COLUMNS.LIFT,
     );
     expect(liftEvents.length).toBe(1);
@@ -641,10 +641,10 @@ describe('EventInterpretorController: APPLY LIFT STATUS (PHYSICAL)', () => {
     const result = interp.interpret(forcedLift, ctx);
     expect(result).toBe(true);
 
-    const vulnEvents = interp.controller.output.filter(
+    const vulnEvents = interp.controller.getRegisteredEvents().filter(
       ev => ev.columnId === PHYSICAL_INFLICTION_COLUMNS.VULNERABLE,
     );
-    const liftEvents = interp.controller.output.filter(
+    const liftEvents = interp.controller.getRegisteredEvents().filter(
       ev => ev.columnId === PHYSICAL_STATUS_COLUMNS.LIFT,
     );
 
@@ -669,7 +669,7 @@ describe('EventInterpretorController: APPLY LIFT STATUS (PHYSICAL)', () => {
     const ctx2 = makeCtx(interp, { frame: 160 });
     interp.interpret(liftEffect, ctx2);
 
-    const liftEvents = interp.controller.output.filter(
+    const liftEvents = interp.controller.getRegisteredEvents().filter(
       ev => ev.columnId === PHYSICAL_STATUS_COLUMNS.LIFT,
     );
 
@@ -695,7 +695,7 @@ describe('EventInterpretorController: APPLY LIFT STATUS (PHYSICAL)', () => {
     interp.interpret(liftEffect, ctx);
 
     // Count all Vulnerable events (pre-seeded + new from Lift)
-    const vulnEvents = interp.controller.output.filter(
+    const vulnEvents = interp.controller.getRegisteredEvents().filter(
       ev => ev.columnId === PHYSICAL_INFLICTION_COLUMNS.VULNERABLE,
     );
     expect(vulnEvents.length).toBe(2);
@@ -718,10 +718,10 @@ describe('EventInterpretorController: APPLY KNOCK_DOWN STATUS (PHYSICAL)', () =>
 
     interp.interpret(knockDownEffect, ctx);
 
-    const vulnEvents = interp.controller.output.filter(
+    const vulnEvents = interp.controller.getRegisteredEvents().filter(
       ev => ev.columnId === PHYSICAL_INFLICTION_COLUMNS.VULNERABLE,
     );
-    const kdEvents = interp.controller.output.filter(
+    const kdEvents = interp.controller.getRegisteredEvents().filter(
       ev => ev.columnId === PHYSICAL_STATUS_COLUMNS.KNOCK_DOWN,
     );
     expect(vulnEvents.length).toBe(1);
@@ -738,7 +738,7 @@ describe('EventInterpretorController: APPLY KNOCK_DOWN STATUS (PHYSICAL)', () =>
     const ctx = makeCtx(interp);
     interp.interpret(knockDownEffect, ctx);
 
-    const kdEvents = interp.controller.output.filter(
+    const kdEvents = interp.controller.getRegisteredEvents().filter(
       ev => ev.columnId === PHYSICAL_STATUS_COLUMNS.KNOCK_DOWN,
     );
     expect(kdEvents.length).toBe(1);
@@ -757,7 +757,7 @@ describe('EventInterpretorController: APPLY KNOCK_DOWN STATUS (PHYSICAL)', () =>
 
     interp.interpret(forced, ctx);
 
-    const kdEvents = interp.controller.output.filter(
+    const kdEvents = interp.controller.getRegisteredEvents().filter(
       ev => ev.columnId === PHYSICAL_STATUS_COLUMNS.KNOCK_DOWN,
     );
     expect(kdEvents.length).toBe(1);
@@ -773,7 +773,7 @@ describe('EventInterpretorController: APPLY KNOCK_DOWN STATUS (PHYSICAL)', () =>
     const ctx = makeCtx(interp);
     interp.interpret(knockDownEffect, ctx);
 
-    const kdEvents = interp.controller.output.filter(
+    const kdEvents = interp.controller.getRegisteredEvents().filter(
       ev => ev.columnId === PHYSICAL_STATUS_COLUMNS.KNOCK_DOWN,
     );
     const segments = kdEvents[0].segments;
@@ -799,7 +799,7 @@ describe('EventInterpretorController: APPLY KNOCK_DOWN STATUS (PHYSICAL)', () =>
     const ctx2 = makeCtx(interp, { frame: 160 });
     interp.interpret(knockDownEffect, ctx2);
 
-    const kdEvents = interp.controller.output.filter(
+    const kdEvents = interp.controller.getRegisteredEvents().filter(
       ev => ev.columnId === PHYSICAL_STATUS_COLUMNS.KNOCK_DOWN,
     );
     expect(kdEvents.length).toBe(2);
@@ -818,7 +818,7 @@ describe('EventInterpretorController: APPLY KNOCK_DOWN STATUS (PHYSICAL)', () =>
     const ctx = makeCtx(interp);
     interp.interpret(knockDownEffect, ctx);
 
-    const vulnEvents = interp.controller.output.filter(
+    const vulnEvents = interp.controller.getRegisteredEvents().filter(
       ev => ev.columnId === PHYSICAL_INFLICTION_COLUMNS.VULNERABLE,
     );
     expect(vulnEvents.length).toBe(2);
@@ -835,10 +835,10 @@ describe('EventInterpretorController: APPLY KNOCK_DOWN STATUS (PHYSICAL)', () =>
 
     interp.interpret(forced, ctx);
 
-    const vulnEvents = interp.controller.output.filter(
+    const vulnEvents = interp.controller.getRegisteredEvents().filter(
       ev => ev.columnId === PHYSICAL_INFLICTION_COLUMNS.VULNERABLE,
     );
-    const kdEvents = interp.controller.output.filter(
+    const kdEvents = interp.controller.getRegisteredEvents().filter(
       ev => ev.columnId === PHYSICAL_STATUS_COLUMNS.KNOCK_DOWN,
     );
     expect(vulnEvents.length).toBe(1);
@@ -862,10 +862,10 @@ describe('EventInterpretorController: APPLY CRUSH STATUS (PHYSICAL)', () => {
 
     interp.interpret(crushEffect, ctx);
 
-    const vulnEvents = interp.controller.output.filter(
+    const vulnEvents = interp.controller.getRegisteredEvents().filter(
       ev => ev.columnId === PHYSICAL_INFLICTION_COLUMNS.VULNERABLE,
     );
-    const crushEvents = interp.controller.output.filter(
+    const crushEvents = interp.controller.getRegisteredEvents().filter(
       ev => ev.columnId === PHYSICAL_STATUS_COLUMNS.CRUSH,
     );
     expect(vulnEvents.length).toBe(1);
@@ -883,13 +883,13 @@ describe('EventInterpretorController: APPLY CRUSH STATUS (PHYSICAL)', () => {
     interp.interpret(crushEffect, ctx);
 
     // Vulnerable consumed
-    const vulnEvents = interp.controller.output.filter(
+    const vulnEvents = interp.controller.getRegisteredEvents().filter(
       ev => ev.columnId === PHYSICAL_INFLICTION_COLUMNS.VULNERABLE,
     );
     expect(vulnEvents[0].eventStatus).toBe(EventStatusType.CONSUMED);
 
     // Crush created with 300% multiplier
-    const crushEvents = interp.controller.output.filter(
+    const crushEvents = interp.controller.getRegisteredEvents().filter(
       ev => ev.columnId === PHYSICAL_STATUS_COLUMNS.CRUSH,
     );
     expect(crushEvents.length).toBe(1);
@@ -909,7 +909,7 @@ describe('EventInterpretorController: APPLY CRUSH STATUS (PHYSICAL)', () => {
     const ctx = makeCtx(interp);
     interp.interpret(crushEffect, ctx);
 
-    const crushEvents = interp.controller.output.filter(
+    const crushEvents = interp.controller.getRegisteredEvents().filter(
       ev => ev.columnId === PHYSICAL_STATUS_COLUMNS.CRUSH,
     );
     expect(crushEvents.length).toBe(1);
@@ -929,7 +929,7 @@ describe('EventInterpretorController: APPLY CRUSH STATUS (PHYSICAL)', () => {
     const ctx = makeCtx(interp);
     interp.interpret(crushEffect, ctx);
 
-    const crushEvents = interp.controller.output.filter(
+    const crushEvents = interp.controller.getRegisteredEvents().filter(
       ev => ev.columnId === PHYSICAL_STATUS_COLUMNS.CRUSH,
     );
     expect(crushEvents.length).toBe(1);
@@ -949,7 +949,7 @@ describe('EventInterpretorController: APPLY CRUSH STATUS (PHYSICAL)', () => {
     const ctx = makeCtx(interp);
     interp.interpret(crushEffect, ctx);
 
-    const crushEvents = interp.controller.output.filter(
+    const crushEvents = interp.controller.getRegisteredEvents().filter(
       ev => ev.columnId === PHYSICAL_STATUS_COLUMNS.CRUSH,
     );
     expect(crushEvents.length).toBe(1);
@@ -968,7 +968,7 @@ describe('EventInterpretorController: APPLY CRUSH STATUS (PHYSICAL)', () => {
     interp.interpret(crushEffect, ctx);
 
     // Only the pre-seeded Vulnerable (now consumed), no new ones added
-    const vulnEvents = interp.controller.output.filter(
+    const vulnEvents = interp.controller.getRegisteredEvents().filter(
       ev => ev.columnId === PHYSICAL_INFLICTION_COLUMNS.VULNERABLE,
     );
     expect(vulnEvents.length).toBe(1);
@@ -985,7 +985,7 @@ describe('EventInterpretorController: APPLY CRUSH STATUS (PHYSICAL)', () => {
     const ctx = makeCtx(interp);
     interp.interpret(crushEffect, ctx);
 
-    const crushEvents = interp.controller.output.filter(
+    const crushEvents = interp.controller.getRegisteredEvents().filter(
       ev => ev.columnId === PHYSICAL_STATUS_COLUMNS.CRUSH,
     );
     const segments = crushEvents[0].segments;
@@ -1007,7 +1007,7 @@ describe('EventInterpretorController: APPLY CRUSH STATUS (PHYSICAL)', () => {
     const ctx = makeCtx(interp);
     interp.interpret(crushEffect, ctx);
 
-    const crushEvents = interp.controller.output.filter(
+    const crushEvents = interp.controller.getRegisteredEvents().filter(
       ev => ev.columnId === PHYSICAL_STATUS_COLUMNS.CRUSH,
     );
     expect(findStaggerInClauses(crushEvents[0].segments![0].frames![0].clauses)).toBeUndefined();
@@ -1030,10 +1030,10 @@ describe('EventInterpretorController: APPLY BREACH STATUS (PHYSICAL)', () => {
 
     interp.interpret(breachEffect, ctx);
 
-    const vulnEvents = interp.controller.output.filter(
+    const vulnEvents = interp.controller.getRegisteredEvents().filter(
       ev => ev.columnId === PHYSICAL_INFLICTION_COLUMNS.VULNERABLE,
     );
-    const breachEvents = interp.controller.output.filter(
+    const breachEvents = interp.controller.getRegisteredEvents().filter(
       ev => ev.columnId === PHYSICAL_STATUS_COLUMNS.BREACH,
     );
     expect(vulnEvents.length).toBe(1);
@@ -1050,7 +1050,7 @@ describe('EventInterpretorController: APPLY BREACH STATUS (PHYSICAL)', () => {
     const ctx = makeCtx(interp);
     interp.interpret(breachEffect, ctx);
 
-    const breachEvents = interp.controller.output.filter(
+    const breachEvents = interp.controller.getRegisteredEvents().filter(
       ev => ev.columnId === PHYSICAL_STATUS_COLUMNS.BREACH,
     );
     expect(breachEvents.length).toBe(1);
@@ -1072,7 +1072,7 @@ describe('EventInterpretorController: APPLY BREACH STATUS (PHYSICAL)', () => {
     const ctx = makeCtx(interp);
     interp.interpret(breachEffect, ctx);
 
-    const breachEvents = interp.controller.output.filter(
+    const breachEvents = interp.controller.getRegisteredEvents().filter(
       ev => ev.columnId === PHYSICAL_STATUS_COLUMNS.BREACH,
     );
     expect(breachEvents[0].stacks).toBe(2);
@@ -1092,7 +1092,7 @@ describe('EventInterpretorController: APPLY BREACH STATUS (PHYSICAL)', () => {
     const ctx = makeCtx(interp);
     interp.interpret(breachEffect, ctx);
 
-    const breachEvents = interp.controller.output.filter(
+    const breachEvents = interp.controller.getRegisteredEvents().filter(
       ev => ev.columnId === PHYSICAL_STATUS_COLUMNS.BREACH,
     );
     expect(breachEvents[0].stacks).toBe(3);
@@ -1112,7 +1112,7 @@ describe('EventInterpretorController: APPLY BREACH STATUS (PHYSICAL)', () => {
     const ctx = makeCtx(interp);
     interp.interpret(breachEffect, ctx);
 
-    const breachEvents = interp.controller.output.filter(
+    const breachEvents = interp.controller.getRegisteredEvents().filter(
       ev => ev.columnId === PHYSICAL_STATUS_COLUMNS.BREACH,
     );
     expect(breachEvents[0].stacks).toBe(4);
@@ -1132,7 +1132,7 @@ describe('EventInterpretorController: APPLY BREACH STATUS (PHYSICAL)', () => {
     const ctx = makeCtx(interp);
     interp.interpret(breachEffect, ctx);
 
-    const vulnEvents = interp.controller.output.filter(
+    const vulnEvents = interp.controller.getRegisteredEvents().filter(
       ev => ev.columnId === PHYSICAL_INFLICTION_COLUMNS.VULNERABLE,
     );
     // All 3 pre-seeded, all consumed, no new ones
@@ -1152,7 +1152,7 @@ describe('EventInterpretorController: APPLY BREACH STATUS (PHYSICAL)', () => {
     const ctx = makeCtx(interp);
     interp.interpret(breachEffect, ctx);
 
-    const breachEvents = interp.controller.output.filter(
+    const breachEvents = interp.controller.getRegisteredEvents().filter(
       ev => ev.columnId === PHYSICAL_STATUS_COLUMNS.BREACH,
     );
     const seg = breachEvents[0].segments![0];
@@ -1172,7 +1172,7 @@ describe('EventInterpretorController: APPLY BREACH STATUS (PHYSICAL)', () => {
     const ctx = makeCtx(interp);
     interp.interpret(breachEffect, ctx);
 
-    const breachEvents = interp.controller.output.filter(
+    const breachEvents = interp.controller.getRegisteredEvents().filter(
       ev => ev.columnId === PHYSICAL_STATUS_COLUMNS.BREACH,
     );
     expect(findStaggerInClauses(breachEvents[0].segments![0].frames![0].clauses)).toBeUndefined();
@@ -1197,8 +1197,8 @@ describe('EventInterpretorController: sourceEventUid uid propagation', () => {
     };
 
     interp.interpret(effect, ctx);
-    expect(interp.controller.output).toHaveLength(1);
-    expect(interp.controller.output[0].uid).toBe('parent-uid');
+    expect(interp.controller.getRegisteredEvents()).toHaveLength(1);
+    expect(interp.controller.getRegisteredEvents()[0].uid).toBe('parent-uid');
   });
 
   test('sourceEventUid set with mismatched column: child gets fresh derived uid', () => {
@@ -1216,9 +1216,9 @@ describe('EventInterpretorController: sourceEventUid uid propagation', () => {
     };
 
     interp.interpret(effect, ctx);
-    expect(interp.controller.output).toHaveLength(1);
-    expect(interp.controller.output[0].uid).not.toBe('parent-uid');
-    expect(interp.controller.output[0].uid).toContain('NATURE_INFLICTION');
+    expect(interp.controller.getRegisteredEvents()).toHaveLength(1);
+    expect(interp.controller.getRegisteredEvents()[0].uid).not.toBe('parent-uid');
+    expect(interp.controller.getRegisteredEvents()[0].uid).toContain('NATURE_INFLICTION');
   });
 
   test('no sourceEventUid: child gets unique derived uid', () => {
@@ -1233,8 +1233,8 @@ describe('EventInterpretorController: sourceEventUid uid propagation', () => {
     };
 
     interp.interpret(effect, ctx);
-    expect(interp.controller.output).toHaveLength(1);
-    expect(interp.controller.output[0].uid).toContain('CRYO_INFLICTION');
+    expect(interp.controller.getRegisteredEvents()).toHaveLength(1);
+    expect(interp.controller.getRegisteredEvents()[0].uid).toContain('CRYO_INFLICTION');
   });
 
   test('sourceEventUid set with matching column: status inherits parent uid', () => {
@@ -1255,7 +1255,7 @@ describe('EventInterpretorController: sourceEventUid uid propagation', () => {
     };
 
     interp.interpret(effect, ctx);
-    expect(interp.controller.output).toHaveLength(1);
-    expect(interp.controller.output[0].uid).toBe('parent-status-uid');
+    expect(interp.controller.getRegisteredEvents()).toHaveLength(1);
+    expect(interp.controller.getRegisteredEvents()[0].uid).toBe('parent-status-uid');
   });
 });

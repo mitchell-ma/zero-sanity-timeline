@@ -16,7 +16,7 @@
  * No external bulk passes — all processing is internal to DerivedEventController methods.
  */
 import { TimelineEvent, computeSegmentsSpan, getAnimationDuration, eventDuration, setEventDuration } from '../../consts/viewTypes';
-import { NounType, VerbType } from '../../dsl/semantics';
+import { NounType } from '../../dsl/semantics';
 import { EventStatusType, SegmentType, StatType, StatusType, TimeDependency } from '../../consts/enums';
 import { TimeStopRegion, extendByTimeStops, isTimeStopEvent } from './processTimeStop';
 import { flattenEventsToQueueFrames } from './parser/flattenEvents';
@@ -82,7 +82,7 @@ export class DerivedEventController implements ColumnHost {
   private queue = new PriorityQueue<QueueFrame>(
     (a, b) => a.frame !== b.frame ? a.frame - b.frame : a.priority - b.priority,
   );
-  readonly output: TimelineEvent[] = [];
+  // state.output removed — registeredEvents is the single source of storage.
   private idCounter = 0;
   private triggerAssociations: TriggerAssociation[];
   private slotWirings: SlotTriggerWiring[] = [];
@@ -145,7 +145,6 @@ export class DerivedEventController implements ColumnHost {
     this.rawSegmentDurations.clear();
     this.comboStops.length = 0;
     this.queue.clear();
-    (this.output as TimelineEvent[]).length = 0;
     this.idCounter = 0;
     this.linkConsumptions.clear();
     this.controlledSlotResolver = undefined;
@@ -740,9 +739,9 @@ export class DerivedEventController implements ColumnHost {
     return attachReactionFrames(mergeReactions(this.registeredEvents));
   }
 
-  /** Get all events (registered + queue-created). */
+  /** Get all events. Single source of storage — registeredEvents has everything. */
   getAllEvents(): TimelineEvent[] {
-    return [...this.registeredEvents, ...this.output];
+    return this.registeredEvents;
   }
 
   /** Get combo chaining state (debug). */
@@ -750,9 +749,14 @@ export class DerivedEventController implements ColumnHost {
     return this.comboStops;
   }
 
-  /** Get queue-created events (debug). */
-  getQueueOutput(): readonly TimelineEvent[] {
-    return this.output;
+  /**
+   * Public entrypoint for pass 3 (combo trigger resolution) — called once
+   * post-drain to pick up combo windows triggered by queue-created
+   * inflictions/statuses. Replaces the per-event pass 3 runs that used to
+   * happen during the post-drain re-registration loop.
+   */
+  resolveCombosNow() {
+    if (this.slotWirings.length > 0) this.resolveComboTriggersInline();
   }
 
   /**
@@ -810,33 +814,66 @@ export class DerivedEventController implements ColumnHost {
     this.rawDurations.set(uid, rawDuration);
   }
 
-  /** Insert an event: extend duration, push to stacks + output, register stop if applicable. */
+  /**
+   * Queue-event ingress. Replaces the legacy pushEvent / pushEventDirect /
+   * pushToOutput / addEvent paths that lived on parallel `stacks` + `output`
+   * storage. Single source of storage now — registeredEvents is the linear
+   * list, stacks is the per-(column, owner) index.
+   *
+   * Queue events come from column code (fresh objects, not React raw state)
+   * so no deep clone is needed — tests and interpreter chains holding a
+   * reference still see mutations.
+   *
+   * Skipped vs createSkillEvent's full pipeline:
+   *   - combo chain / reaction segments / clamp controls (skill-specific)
+   *   - extendSingleEvent (rawSegmentDurations not populated for queue events)
+   *   - notifyResourceControllers (queue events are statuses/inflictions/
+   *     reactions — none of notifyResourceControllers' branches apply;
+   *     IGNORE UE flows through interpret() dispatch since 85912595)
+   *   - pass 3 resolveComboTriggersInline (run once post-drain instead)
+   *   - pass 4 queue frame emission (lifecycle already handled inline)
+   */
+  createQueueEvent(ev: TimelineEvent): TimelineEvent {
+    this._maybeRegisterStop(ev);
+    this.registeredEvents.push(ev);
+    const stackKey = this.key(ev.columnId, ev.ownerId);
+    const stackArr = this.stacks.get(stackKey) ?? [];
+    stackArr.push(ev);
+    this.stacks.set(stackKey, stackArr);
+    return ev;
+  }
+
+  /**
+   * Insert an event with a raw duration to be extended by current stops.
+   * Used by infliction / status / MF columns for freshly-built events whose
+   * segments carry the pre-extension duration.
+   */
   pushEvent(event: TimelineEvent, rawDuration: number) {
     const extDur = this._extendDuration(event.startFrame, rawDuration, event.uid);
     setEventDuration(event, extDur);
     this.rawDurations.set(event.uid, rawDuration);
-    const key = this.key(event.columnId, event.ownerId);
-    const existing = this.stacks.get(key) ?? [];
-    existing.push(event);
-    this.stacks.set(key, existing);
-    this.output.push(event);
-    if (this._maybeRegisterStop(event)) {
+    this.createQueueEvent(event);
+    // reExtendQueueEvents handles the edge case where a mid-queue event
+    // registers a new stop that affects prior queue events' durations.
+    if (this.registeredStopIds.has(event.uid)) {
       this.reExtendQueueEvents();
     }
   }
 
   /** Insert an already-extended event directly (no duration extension). */
   pushEventDirect(event: TimelineEvent) {
-    const key = this.key(event.columnId, event.ownerId);
-    const existing = this.stacks.get(key) ?? [];
-    existing.push(event);
-    this.stacks.set(key, existing);
-    this.output.push(event);
+    if (!this.rawDurations.has(event.uid)) {
+      this.rawDurations.set(event.uid, eventDuration(event));
+    }
+    this.createQueueEvent(event);
   }
 
-  /** Push an event to output only (e.g. consumed copies for freeform state tracking). */
+  /** Push a "marker" event (e.g. consumed copy for freeform state tracking). */
   pushToOutput(event: TimelineEvent) {
-    this.output.push(event);
+    if (!this.rawDurations.has(event.uid)) {
+      this.rawDurations.set(event.uid, eventDuration(event));
+    }
+    this.createQueueEvent(event);
   }
 
   /** Delegate creation to another column (cross-column side effects). */
@@ -921,14 +958,21 @@ export class DerivedEventController implements ColumnHost {
     const owned: TimelineEvent = { ...ev, segments };
     // Capture raw (pre-extension) segment durations for fresh skill events
     // only. Events already tracked by rawDurations (the single-total map)
-    // came in via pushEvent mid-queue — their durations may already be
-    // extended and/or consumption-truncated. For those, skip
-    // rawSegmentDurations entirely so extendSingleEvent is a no-op on them
-    // (pre-existing behavior: queue events are not re-extended here).
+    // came in via createQueueEvent mid-queue — their durations may already
+    // be extended and/or consumption-truncated. For those, skip
+    // rawSegmentDurations entirely so extendSingleEvent is a no-op on them.
     if (!this.rawDurations.has(owned.uid)) {
       this.rawSegmentDurations.set(owned.uid, segments.map(s => s.properties.duration));
     }
     this.registeredEvents.push(owned);
+    // Maintain the stacks index in sync with registeredEvents. Single source
+    // of storage — registeredEvents is the linear list, stacks is the
+    // per-(column, owner) index used by _activeEventsIn. Queue-created
+    // events enter via createQueueEvent which also populates stacks.
+    const stackKey = this.key(owned.columnId, owned.ownerId);
+    const stackArr = this.stacks.get(stackKey) ?? [];
+    stackArr.push(owned);
+    this.stacks.set(stackKey, stackArr);
     return owned;
   }
 
@@ -1122,14 +1166,11 @@ export class DerivedEventController implements ColumnHost {
   // ── Active event queries ─────────────────────────────────────────────────
 
   private _activeEventsIn(columnId: string, ownerId: string, frame: number): TimelineEvent[] {
+    // Single source of storage — stacks is the per-(column, owner) index
+    // over registeredEvents, populated by _pushToStorage AND createQueueEvent.
     const result: TimelineEvent[] = [];
-    const queueEvents = this.stacks.get(this.key(columnId, ownerId)) ?? [];
-    for (const ev of queueEvents) {
-      if (ev.eventStatus === EventStatusType.CONSUMED) continue;
-      if (ev.startFrame <= frame && frame < ev.startFrame + eventDuration(ev)) result.push(ev);
-    }
-    for (const ev of this.registeredEvents) {
-      if (ev.columnId !== columnId || ev.ownerId !== ownerId) continue;
+    const events = this.stacks.get(this.key(columnId, ownerId)) ?? [];
+    for (const ev of events) {
       if (ev.eventStatus === EventStatusType.CONSUMED) continue;
       if (ev.startFrame <= frame && frame < ev.startFrame + eventDuration(ev)) result.push(ev);
     }
@@ -1149,20 +1190,11 @@ export class DerivedEventController implements ColumnHost {
 
   // ── Generic event insertion ──────────────────────────────────────────────
 
+  /** Generic event insertion (used by tests). Routes through pushEvent. */
   addEvent(ev: TimelineEvent) {
     const rawDur = eventDuration(ev);
-    if (rawDur > 0) {
-      setEventDuration(ev, this._extendDuration(ev.startFrame, rawDur, ev.uid));
-    }
-    this.rawDurations.set(ev.uid, rawDur);
-    const key = this.key(ev.columnId, ev.ownerId);
-    const existing = this.stacks.get(key) ?? [];
-    existing.push(ev);
-    this.stacks.set(key, existing);
-    this.output.push(ev);
-    if (this._maybeRegisterStop(ev)) {
-      this.reExtendQueueEvents();
-    }
+    if (rawDur > 0) this.pushEvent(ev, rawDur);
+    else this.pushToOutput(ev);
   }
 
   /** Clamp the oldest active event in a column to make room for a new stack. */

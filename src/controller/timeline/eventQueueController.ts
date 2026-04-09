@@ -140,33 +140,21 @@ export function runEventQueue(
     state.insertQueueFrames(newEntries);
   }
 
-  // Register queue-created events into DEC. Phase 8 step 6b: pass 3 of
-  // registerEvents (resolveComboTriggersInline → openComboWindow) now
-  // reactively emits COMBO_WINDOW events from the full event list, replacing
-  // the previous post-queue deriveComboActivationWindows batch call. The
-  // post-queue re-derive in processCombatSimulation still runs as a safety
-  // net for CD-reduction cases and will be removed in 6c.
-  const queueEvents = state.output;
   // Wire the controlled-slot resolver so pass 3 can filter CONTROLLED
-  // OPERATOR combo triggers correctly when re-emitting windows.
+  // OPERATOR combo triggers correctly.
   state.setControlledSlotResolver(getControlledSlotAtFrame);
-  // Post-drain re-registration: move queue-created events into
-  // registeredEvents so getProcessedEvents returns them. Skip queue-frame
-  // emission — these events have already been fully processed during the
-  // drain, so re-emitting their frames would cause duplicate interpret
-  // work and potential double-effects.
-  for (const ev of queueEvents) state.createSkillEvent(ev, { checkCooldown: false, emitQueueFrames: false });
 
+  // Post-drain re-registration loop deleted: queue-created events now enter
+  // registeredEvents directly via createQueueEvent (routed from
+  // pushEvent / pushEventDirect / pushToOutput / addEvent). No parallel
+  // storage paths. Run combo trigger resolution once over the full event
+  // set to pick up combos triggered by queue-created inflictions.
+  state.resolveCombosNow();
 
-  // Apply crit pin overrides to all derived event frames. Phase 8 step
-  // 7e-prep: registerEvents(queueEvents) now clones segments via
-  // _pushToStorage, so we must write pins to the cloned copies in
-  // registeredEvents, not the pre-clone references in state.output.
+  // Apply crit pin overrides to all derived event frames. registeredEvents
+  // is now the single source of storage — iterate it directly.
   if (overrides) {
-    const registeredByUid = new Map<string, TimelineEvent>();
-    for (const r of state.getRegisteredEvents()) registeredByUid.set(r.uid, r);
-    for (const orig of queueEvents) {
-      const ev = registeredByUid.get(orig.uid) ?? orig;
+    for (const ev of state.getRegisteredEvents()) {
       const key = buildOverrideKey(ev);
       const evOverride = overrides[key];
       if (!evOverride?.segments) continue;

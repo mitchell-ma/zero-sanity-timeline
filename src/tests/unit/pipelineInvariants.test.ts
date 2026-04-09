@@ -104,6 +104,12 @@ const FORBIDDEN: ForbiddenPattern[] = [
     reason: 'Shield ticks arrive in frame order during the queue drain — the defensive sort was unnecessary. Deleted in Phase 9d.',
     allowedFiles: [],
   },
+  {
+    name: 'state.output / getQueueOutput (parallel storage)',
+    pattern: /state\.output\b|getQueueOutput/,
+    reason: 'Parallel storage for queue-created events was collapsed into a single source. registeredEvents is the linear list, stacks is the per-(column, owner) index. Queue events enter via createQueueEvent.',
+    allowedFiles: [],
+  },
 ];
 
 function walk(dir: string, out: string[]) {
