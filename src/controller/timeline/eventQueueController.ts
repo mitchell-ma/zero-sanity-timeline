@@ -279,33 +279,29 @@ export function processCombatSimulation(
     hpController, shieldController, _statAccumulator,
   );
   const state = _decSingleton;
-  // Phase 8 step 7e: route every user-placed/input event through the single
-  // `createSkillEvent` entrypoint instead of batch `registerEvents`. Cooldown
-  // checks are suppressed for user-placed events (they are allowed to overlap
-  // prior CDs with a warning). Retroactive re-extension in _maybeRegisterStop
-  // ensures later stop-contributing events correctly re-extend earlier events.
+
+  // ── 2. Skill / input / enemy-action / control seed ingress ──────────────
+  // Every event enters DEC via createSkillEvent. Cooldown checks are
+  // suppressed for user-placed events (they're allowed to overlap with a
+  // warning). Retroactive re-extension in _maybeRegisterStop keeps earlier
+  // events correctly extended when later events contribute time-stops.
   const slotIds = slotOperatorMap ? Object.keys(slotOperatorMap) : [];
   const firstSlotOperatorId = slotIds[0] && slotOperatorMap ? slotOperatorMap[slotIds[0]] : undefined;
   const controlSeed = buildControlSeed(slotIds[0], firstSlotOperatorId);
   if (controlSeed) state.createSkillEvent(controlSeed, { checkCooldown: false });
   for (const ev of inputEvents) state.createSkillEvent(ev, { checkCooldown: false });
 
-  // Register enemy action events so they appear in processed output (for canvas rendering).
-  // They're classified as derived (non-skill column) but need to be in the output like input events.
+  // Enemy action events (derived-column, but need to appear in output)
   const enemyActionEvents = derivedEvents.filter(ev => ev.ownerId === ENEMY_OWNER_ID && ev.columnId === ENEMY_ACTION_COLUMN_ID);
   for (const ev of enemyActionEvents) state.createSkillEvent(ev, { checkCooldown: false });
 
-  // ── 3. Talent events ──────────────────────────────────────────────────────
-  // SP recovery is now driven entirely by RECOVER/RETURN SKILL_POINT clauses
-  // routed through interpret() → DEC.recordSkillPointRecovery (perfect-dodge
-  // gets a synthetic clause attached at allocateEvent time). The legacy
-  // `SkillPointController.deriveSPRecoveryEvents` no-op stub was deleted.
-  // Talent events are registered inside runEventQueue via the trigger index.
+  // Talent events are registered inside runEventQueue (they need the
+  // TriggerIndex to be built first, which depends on the slot map).
 
-  // ── 3b. Build damage op cache + enemy defMult for inline damage ticks ────
-  // Phase 4e item 3: replaces the batch precomputeDamageByFrame pre-pass.
-  // The interpretor pushes a damage tick to hpController as each damage
-  // frame fires during the queue drain via _pushEnemyDamageTickForFrame.
+  // ── 3. Damage op cache for inline enemy-damage tick push ─────────────────
+  // Built once per pipeline run; the interpretor consults it from
+  // _pushEnemyDamageTickForFrame to compute per-frame damage and push an
+  // incremental tick to hpController as each damage frame fires.
   let damageOpCache: ReadonlyMap<string, import('../calculation/calculationController').DamageOpData> | undefined;
   let enemyDefMult: number | undefined;
   if (bossMaxHp != null && enemyId && slotOperatorMap && loadoutProperties) {
@@ -316,30 +312,18 @@ export function processCombatSimulation(
     enemyDefMult = getDefenseMultiplier(enemyDef);
   }
 
-  // ── 3c. Resolve controlled operator ──────────────────────────────────────
-  const getControlledSlotAtFrame = resolveControlledOperator(
-    state.getAllEvents(), slotIds,
-  );
-
-  // ── 4. EventQueueController: seed derived + run queue ─────────────────────
+  // ── 4. Resolve controlled operator + run the queue ─────────────────────
+  const getControlledSlotAtFrame = resolveControlledOperator(state.getAllEvents(), slotIds);
   const hpPercentageFn = hpController ? hpController.getEnemyHpPercentage : undefined;
   runEventQueue(state, derivedEvents, loadoutProperties, slotWeapons, slotOperatorMap, slotGearSets,
     hpPercentageFn, getControlledSlotAtFrame, triggerIndex, critMode, overrides,
     damageOpCache, enemyDefMult);
 
-  // ── 5. Finalize resource controllers ──────────────────────────────────────
-  if (spController && allSlotSpCosts) {
-    spController.seedSlotCosts(allSlotSpCosts);
-  }
-  // Phase 9b: ueController.finalize deleted. UE graph computation is
-  // reactive — every state-change setter calls _computeGraphs internally.
-  // Per-event efficiency is captured at gain time via slotEfficiencies
-  // snapshots, and the SP → UE conversion runs from spController.addCost
-  // pushing battle skill gain frames into UE.
-  // Phase 9c: hpController.finalize deleted — slot HP graphs rebuild
-  // reactively from addHeal via _rebuildSlotGraph.
-  // Phase 9d: shieldController.finalize deleted — ticks arrive in frame
-  // order during the queue drain, no sort needed.
+  // ── 5. SP insufficiency-zone seeding ────────────────────────────────────
+  // SP graph, stops, zones, UE notifications, HP graph, shield, UE efficiency
+  // — all reactive. This is the only post-drain hook left: seed the cost map
+  // so the insufficiency-zones reactive recompute covers every slot.
+  if (spController && allSlotSpCosts) spController.seedSlotCosts(allSlotSpCosts);
 
   // ── 6. Output ───────────────────────────────────────────────────────────────
   _lastController = state;

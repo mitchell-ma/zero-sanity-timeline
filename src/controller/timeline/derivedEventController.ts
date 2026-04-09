@@ -168,10 +168,8 @@ export class DerivedEventController implements ColumnHost {
   }
 
   /**
-   * Phase 4e item 3: push an incremental enemy damage tick to the HP
-   * controller. Called from `handleProcessFrame` per damage frame marker
-   * as the queue drain reaches it — replaces the bulk `precomputeDamageByFrame`
-   * pre-pass.
+   * Push an incremental enemy damage tick to hpController. Called from
+   * `handleProcessFrame` per damage frame marker as the queue drains.
    */
   addEnemyDamageTick(frame: number, damage: number) {
     this.hpController?.addEnemyDamageTick(frame, damage);
@@ -180,9 +178,9 @@ export class DerivedEventController implements ColumnHost {
   recordUltimateEnergyGain(frame: number, slotId: string, selfGain: number, teamGain = 0) {
     if (!this.ueController) return;
     if (selfGain <= 0 && teamGain <= 0) return;
-    // Phase 9b: snapshot per-recipient ultimate gain efficiency from the stat
-    // accumulator AT THIS FRAME. Replaces the post-pipeline updateSlotEfficiency
-    // sweep (which retroactively scaled all gains by the final efficiency).
+    // Snapshot per-recipient ultimate gain efficiency from the stat accumulator
+    // AT THIS FRAME, so a boost activating at frame 200 doesn't retroactively
+    // scale gains from frames 0-199.
     let slotEfficiencies: Map<string, number> | undefined;
     if (this.statAccumulator) {
       slotEfficiencies = new Map();
@@ -342,11 +340,10 @@ export class DerivedEventController implements ColumnHost {
       this.resolveComboTriggersInline();
     }
 
-    // Phase 8 step 7h: emit queue frames for the event as part of ingress,
-    // using the current stops set. Later stops discovered by subsequent
-    // createSkillEvent calls retroactively re-extend segments (via
-    // _maybeRegisterStop) AND reactively shift queued frames (via
-    // _shiftQueueForNewStop), so ordering does not matter.
+    // Emit queue frames for this event using the current stops set. Stops
+    // discovered by later createSkillEvent calls retroactively re-extend
+    // segments (via _maybeRegisterStop) and reactively shift already-queued
+    // frames (via _shiftQueueForNewStop), so ingress order doesn't matter.
     if (emitQueueFrames) {
       const entries = flattenEventsToQueueFrames([out], this.stops);
       this.insertQueueFrames(entries);
@@ -428,18 +425,17 @@ export class DerivedEventController implements ColumnHost {
       }
     }
 
-    // Phase 8 step 6d: after all windows are emitted for this pass, run the
-    // multi-skill CD clamp (truncates earlier combos' CDs to the next combo's
-    // start in multi-skill windows) and then clamp window durations to the
-    // earliest contained combo-event end. Order matches the former post-queue
-    // sequence: clampMultiSkillComboCooldowns → clampComboWindowsToEventEnd.
+    // After all windows are emitted, run the multi-skill CD clamp
+    // (truncates earlier combos' CDs to the next combo's start in
+    // multi-skill windows) then clamp window durations to the earliest
+    // contained combo-event end.
     this.clampMultiSkillComboCooldowns();
     this.clampComboWindowsToEventEnd();
   }
 
   /**
    * Reactively open (or extend) a combo activation window on the given slot.
-   * Phase 8 step 6a: single source of truth for combo window emission.
+   * Single source of truth for combo window emission.
    *
    * - Silently drops self-triggers (originOwnerId === wiring.slotId).
    * - Silently drops if the slot's combo skill is on cooldown at triggerFrame.
@@ -969,12 +965,11 @@ export class DerivedEventController implements ColumnHost {
     // Phase 9a step 3: forward stops to spController so its timeline recomputes
     // regen pauses immediately, without waiting for a finalize-time sweep.
     if (this.spController) this.spController.setTimeStops(this.stops);
-    // Phase 8 step 7e-prep: retroactive re-extension. When a new stop is
-    // registered after other skill events have already been pushed, walk
-    // events in rawSegmentDurations whose active range overlaps the new
-    // stop and re-run extendSingleEvent + computeFramePositions. Because
-    // extension reads raw from rawSegmentDurations and mutates in place
-    // idempotently, this is safe to run at any time.
+    // Retroactive re-extension: events already pushed whose active range
+    // overlaps the new stop need extendSingleEvent + computeFramePositions
+    // re-run. extendSingleEvent reads raw from rawSegmentDurations and
+    // mutates in place idempotently, so this is safe to run any number of
+    // times.
     if (durationFrames > 0) {
       const stopEnd = startFrame + durationFrames;
       for (let i = 0; i < this.allEvents.length; i++) {
@@ -988,12 +983,9 @@ export class DerivedEventController implements ColumnHost {
         }
       }
     }
-    // Phase 8 step 5: reactive shift. When a stop is discovered while the
-    // queue is mid-drain, every queued frame whose source event's active
-    // range overlaps the stop AND whose current frame > startFrame must be
-    // shifted by the stop duration so it lands at the correct extended time.
-    // No-op when the queue is empty (pre-pass registerEvents path), so
-    // existing batch behavior is preserved.
+    // Reactive queue shift: queue frames whose source event's active range
+    // overlaps the new stop AND whose frame > startFrame must move forward
+    // by the stop duration so they fire at the correct extended time.
     if (this.queue.size > 0 && durationFrames > 0) {
       this._shiftQueueForNewStop(startFrame, durationFrames, ev.uid);
     }
