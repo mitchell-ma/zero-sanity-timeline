@@ -15,13 +15,9 @@ import { COMMON_OWNER_ID } from '../slot/commonSlotController';
 import { activeEventsAtFrame, activeCountAtFrame } from './timelineQueries';
 import { resolveColumnIds } from './columnResolution';
 
-// ── Stat-based state adjective mapping ────────────────────────────────────
-// Maps state adjectives to their underlying stat for IS/BECOME evaluation.
-
-const ADJECTIVE_TO_STAT: Partial<Record<string, StatType>> = {
-  [AdjectiveType.SLOWED]: StatType.SLOW,
-  [AdjectiveType.STAGGERED]: StatType.STAGGER_FRAILTY,
-};
+// Stat-based state adjective mapping — single source of truth lives in
+// ./statStateMap.ts. Imported for IS/BECOME predicate evaluation.
+import { ADJECTIVE_TO_STAT } from './statStateMap';
 
 // ── Column ID resolution ─────────────────────────────────────────────────
 // Canonical `resolveColumnIds` lives in `./columnResolution.ts`.
@@ -257,7 +253,7 @@ function evaluateIs(cond: Interaction, ctx: ConditionContext): boolean {
 
   // Stat-based states (SLOWED, STAGGERED): check stat accumulator for existence.
   // IS handles its own negation (line 512 skips negation for IS verb).
-  const isStatKey = ADJECTIVE_TO_STAT[cond.object as string];
+  const isStatKey = ADJECTIVE_TO_STAT[cond.object];
   if (isStatKey) {
     if (!ctx.getStatValue) return cond.negated ? true : false;
     const ownerId = resolveOwnerId(cond.subject, ctx, cond.subjectDeterminer);
@@ -345,7 +341,7 @@ function evaluateBecome(cond: Interaction, ctx: ConditionContext): boolean {
   // The transition is detected by the trigger firing logic (0→positive guard);
   // at evaluation time we just check whether the stat is currently non-zero.
   // Negation is handled by evaluateInteraction (line 512) for BECOME verb.
-  const becomeStatKey = ADJECTIVE_TO_STAT[cond.object as string];
+  const becomeStatKey = ADJECTIVE_TO_STAT[cond.object];
   if (becomeStatKey) {
     if (!ctx.getStatValue) return false;
     const ownerId = resolveOwnerId(cond.subject, ctx, cond.subjectDeterminer);

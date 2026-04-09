@@ -24,6 +24,7 @@ import {
 import type { Interaction, ValueNode, ValueExpression } from '../../dsl/semantics';
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT, buildContextForSkillColumn } from '../calculation/valueResolver';
 import type { ValueResolutionContext } from '../calculation/valueResolver';
+import { STAT_TO_STATE_ADJECTIVE } from './statStateMap';
 import { TimelineEvent, eventDuration, setEventDuration } from '../../consts/viewTypes';
 import { CritMode, DamageScalingStatType, DamageType, ElementType, EventFrameType, EventStatusType, PERMANENT_DURATION, PhysicalStatusType, SegmentType, StackInteractionType, StatType, StatusType, UnitType } from '../../consts/enums';
 import { resolveEffectStat } from '../../model/enums/stats';
@@ -126,15 +127,8 @@ const LIFT_KNOCK_DOWN_DURATION = 1 * FPS;
 /** Lift / Knock Down damage multiplier (120% ATK). */
 const LIFT_KNOCK_DOWN_DAMAGE_MULTIPLIER = 1.2;
 
-/**
- * Maps stat types to their BECOME state adjective for reactive triggers.
- * When a stat transitions 0→positive, the engine fires BECOME:<adjective>.
- * When it drops back to 0, the engine fires BECOME_NOT:<adjective>.
- */
-const STAT_TO_STATE_ADJECTIVE: Partial<Record<StatType, AdjectiveType>> = {
-  [StatType.SLOW]: AdjectiveType.SLOWED,
-  [StatType.STAGGER_FRAILTY]: AdjectiveType.STAGGERED,
-};
+// STAT_TO_STATE_ADJECTIVE now lives in `./statStateMap.ts` as the single
+// source of truth for the bidirectional stat↔state-adjective mapping.
 
 /**
  * Verbs that bypass the standard `verb → object` validation in
