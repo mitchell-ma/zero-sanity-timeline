@@ -66,7 +66,7 @@ export function getStatusStackLimit(statusId: string): number | undefined {
 export class DerivedEventController implements ColumnHost {
   private stacks = new Map<string, TimelineEvent[]>();
   private registry = new ColumnRegistry(this);
-  private registeredEvents: TimelineEvent[] = [];
+  private allEvents: TimelineEvent[] = [];
   private stops: TimeStopRegion[] = [];
   private registeredStopIds = new Set<string>();
   private rawDurations = new Map<string, number>();
@@ -113,7 +113,7 @@ export class DerivedEventController implements ColumnHost {
     this.loadoutProperties = loadoutProperties ?? {};
     this.slotOperatorMap = slotOperatorMap ?? {};
     if (baseEvents) {
-      this.registeredEvents = baseEvents;
+      this.allEvents = baseEvents;
       for (const ev of baseEvents) {
         this._maybeRegisterStop(ev);
       }
@@ -138,7 +138,7 @@ export class DerivedEventController implements ColumnHost {
   ) {
     this.stacks.clear();
     this.registry.clear();
-    this.registeredEvents.length = 0;
+    this.allEvents.length = 0;
     this.stops.length = 0;
     this.registeredStopIds.clear();
     this.rawDurations.clear();
@@ -318,19 +318,19 @@ export class DerivedEventController implements ColumnHost {
     const emitQueueFrames = opts.emitQueueFrames ?? true;
     if (checkCooldown && this._checkCooldown(ev)) return null;
     // Dedup by uid — prevents double-registration from React strict-mode re-entry.
-    if (this.registeredEvents.some(r => r.uid === ev.uid)) return null;
+    if (this.allEvents.some(r => r.uid === ev.uid)) return null;
 
     // Pass 1: combo chaining, reaction segments, stop discovery
     ev = chainComboPredecessor(ev, {
       comboStops: this.comboStops,
-      registeredEvents: this.registeredEvents,
+      allEvents: this.allEvents,
       stops: this.stops,
     });
     ev = buildReactionSegments(ev, {
       rawDurations: this.rawDurations,
       foreignStops: this.foreignStopsFor(ev),
     });
-    clampPriorControlEvents(ev, this.registeredEvents);
+    clampPriorControlEvents(ev, this.allEvents);
     this._maybeRegisterStop(ev);
     const owned = this._pushToStorage(ev);
 
@@ -338,8 +338,8 @@ export class DerivedEventController implements ColumnHost {
     let out = this.extendSingleEvent(owned);
     out = computeFramePositions(out, this.stops);
     out = this.validateTimeStopStart(out);
-    const idx = this.registeredEvents.length - 1;
-    this.registeredEvents[idx] = out;
+    const idx = this.allEvents.length - 1;
+    this.allEvents[idx] = out;
     this._validateSiblingOverlap(out);
     this.notifyResourceControllers(out);
 
@@ -370,7 +370,7 @@ export class DerivedEventController implements ColumnHost {
    * target combo is still on CD).
    */
   private _checkCooldown(ev: TimelineEvent): boolean {
-    for (const prev of this.registeredEvents) {
+    for (const prev of this.allEvents) {
       if (prev.ownerId !== ev.ownerId || prev.columnId !== ev.columnId) continue;
       if (prev.uid === ev.uid) continue;
       const prevEnd = prev.startFrame + computeSegmentsSpan(prev.segments);
@@ -405,10 +405,10 @@ export class DerivedEventController implements ColumnHost {
     // current event list. Clear all existing COMBO_WINDOW events and clear
     // combo events' trigger column, then re-emit via openComboWindow so the
     // resolver (if wired) applies to the latest pass.
-    this.registeredEvents = this.registeredEvents.filter(
+    this.allEvents = this.allEvents.filter(
       ev => ev.columnId !== COMBO_WINDOW_COLUMN_ID,
     );
-    for (const ev of this.registeredEvents) {
+    for (const ev of this.allEvents) {
       if (ev.columnId !== NounType.COMBO) continue;
       ev.comboTriggerColumnId = undefined;
       ev.triggerEventUid = undefined;
@@ -419,7 +419,7 @@ export class DerivedEventController implements ColumnHost {
       const clause = getComboTriggerClause(wiring.operatorId);
       if (!clause?.length) continue;
       const matches = findClauseTriggerMatches(
-        clause, this.registeredEvents, wiring.slotId, this.stops, this.controlledSlotResolver,
+        clause, this.allEvents, wiring.slotId, this.stops, this.controlledSlotResolver,
       );
       // findClauseTriggerMatches already returns matches sorted by frame.
       for (const match of matches) {
@@ -473,7 +473,7 @@ export class DerivedEventController implements ColumnHost {
     if (originOwnerId === wiring.slotId) return;
 
     // CD check: if any combo event on this slot is on cooldown at triggerFrame, drop.
-    for (const ce of this.registeredEvents) {
+    for (const ce of this.allEvents) {
       if (ce.columnId !== NounType.COMBO || ce.ownerId !== wiring.slotId) continue;
       const eventSpan = computeSegmentsSpan(ce.segments);
       let preCooldownDur = 0;
@@ -495,7 +495,7 @@ export class DerivedEventController implements ColumnHost {
 
     // Time-stop extension, excluding the slot's own combo-originated stops
     const ownComboStopIds = new Set<string>();
-    for (const ev of this.registeredEvents) {
+    for (const ev of this.allEvents) {
       if (ev.columnId === NounType.COMBO && ev.ownerId === wiring.slotId && isTimeStopEvent(ev)) {
         ownComboStopIds.add(ev.uid);
       }
@@ -511,7 +511,7 @@ export class DerivedEventController implements ColumnHost {
     // Find the latest existing COMBO_WINDOW event on this slot.
     let mergeTarget: TimelineEvent | null = null;
     let latestStart = -1;
-    for (const ev of this.registeredEvents) {
+    for (const ev of this.allEvents) {
       if (ev.columnId !== COMBO_WINDOW_COLUMN_ID || ev.ownerId !== wiring.slotId) continue;
       if (ev.startFrame > latestStart) {
         latestStart = ev.startFrame;
@@ -525,7 +525,7 @@ export class DerivedEventController implements ColumnHost {
         // strictly after the existing window's start and at-or-before the new
         // trigger frame, keep windows separate (matches batch-derive semantics).
         const mt = mergeTarget;
-        const comboSplit = this.registeredEvents.some(ce => {
+        const comboSplit = this.allEvents.some(ce => {
           if (ce.columnId !== NounType.COMBO || ce.ownerId !== wiring.slotId) return false;
           const ceEnd = ce.startFrame + computeSegmentsSpan(ce.segments);
           return ceEnd > mt.startFrame && ceEnd <= triggerFrame;
@@ -543,7 +543,7 @@ export class DerivedEventController implements ColumnHost {
     }
 
     // Create a new COMBO_WINDOW event and append to registered events.
-    const existingCount = this.registeredEvents.reduce(
+    const existingCount = this.allEvents.reduce(
       (n, ev) => (ev.columnId === COMBO_WINDOW_COLUMN_ID && ev.ownerId === wiring.slotId ? n + 1 : n),
       0,
     );
@@ -562,7 +562,7 @@ export class DerivedEventController implements ColumnHost {
       maxSkills: info?.maxSkills ?? 1,
       segments: [{ properties: { duration: extDuration } }],
     };
-    this.registeredEvents.push(newWindow);
+    this.allEvents.push(newWindow);
 
     this._applyComboWindowToCombos(newWindow, wiring.slotId);
   }
@@ -574,7 +574,7 @@ export class DerivedEventController implements ColumnHost {
    */
   private _applyComboWindowToCombos(win: TimelineEvent, slotId: string) {
     const winEnd = win.startFrame + computeSegmentsSpan(win.segments);
-    for (const ev of this.registeredEvents) {
+    for (const ev of this.allEvents) {
       if (ev.columnId !== NounType.COMBO || ev.ownerId !== slotId) continue;
       if (ev.startFrame < win.startFrame || ev.startFrame >= winEnd) continue;
       if (ev.comboTriggerColumnId == null && win.comboTriggerColumnId != null) {
@@ -666,7 +666,7 @@ export class DerivedEventController implements ColumnHost {
   private _checkOverlapAgainstPriors(ev: TimelineEvent, annotateNew: boolean) {
     const evRange = computeSegmentsSpan(ev.segments);
     const evEnd = ev.startFrame + evRange;
-    for (const prev of this.registeredEvents) {
+    for (const prev of this.allEvents) {
       if (prev === ev) continue;
       if (prev.uid === ev.uid) continue;
       if (prev.ownerId !== ev.ownerId || prev.columnId !== ev.columnId || prev.id !== ev.id) continue;
@@ -687,11 +687,6 @@ export class DerivedEventController implements ColumnHost {
     const msg = 'Overlaps with another event in the same column';
     if (ev.warnings?.includes(msg)) return;
     ev.warnings = ev.warnings ? [...ev.warnings, msg] : [msg];
-  }
-
-  /** Get all registered events (extended, with transforms applied). */
-  getRegisteredEvents(): TimelineEvent[] {
-    return this.registeredEvents;
   }
 
   /** Get slot wirings (for combo window derivation). */
@@ -721,11 +716,11 @@ export class DerivedEventController implements ColumnHost {
    * by uid (Phase 8 step 7.5 chain-of-action ref).
    */
   setComboTriggerColumnId(eventUid: string, columnId: string, sourceEventUid?: string) {
-    for (let i = 0; i < this.registeredEvents.length; i++) {
-      if (this.registeredEvents[i].uid === eventUid) {
+    for (let i = 0; i < this.allEvents.length; i++) {
+      if (this.allEvents[i].uid === eventUid) {
         // Mutate in-place so PROCESS_FRAME entries referencing this event see the update
-        this.registeredEvents[i].comboTriggerColumnId = columnId;
-        if (sourceEventUid != null) this.registeredEvents[i].triggerEventUid = sourceEventUid;
+        this.allEvents[i].comboTriggerColumnId = columnId;
+        if (sourceEventUid != null) this.allEvents[i].triggerEventUid = sourceEventUid;
         return;
       }
     }
@@ -736,12 +731,12 @@ export class DerivedEventController implements ColumnHost {
    * This is the final output for the view layer — replaces external mergeReactions + attachReactionFrames calls.
    */
   getProcessedEvents(): TimelineEvent[] {
-    return attachReactionFrames(mergeReactions(this.registeredEvents));
+    return attachReactionFrames(mergeReactions(this.allEvents));
   }
 
   /** Get all events. Single source of storage — registeredEvents has everything. */
   getAllEvents(): TimelineEvent[] {
-    return this.registeredEvents;
+    return this.allEvents;
   }
 
   /** Get combo chaining state (debug). */
@@ -789,7 +784,7 @@ export class DerivedEventController implements ColumnHost {
 
   /** Replace the registered events array (e.g. after late combo trigger resolution). */
   replaceEvents(events: TimelineEvent[]) {
-    this.registeredEvents = events;
+    this.allEvents = events;
   }
 
   // ── ColumnHost interface ────────────────────────────────────────────────
@@ -835,7 +830,7 @@ export class DerivedEventController implements ColumnHost {
    */
   createQueueEvent(ev: TimelineEvent): TimelineEvent {
     this._maybeRegisterStop(ev);
-    this.registeredEvents.push(ev);
+    this.allEvents.push(ev);
     const stackKey = this.key(ev.columnId, ev.ownerId);
     const stackArr = this.stacks.get(stackKey) ?? [];
     stackArr.push(ev);
@@ -964,7 +959,7 @@ export class DerivedEventController implements ColumnHost {
     if (!this.rawDurations.has(owned.uid)) {
       this.rawSegmentDurations.set(owned.uid, segments.map(s => s.properties.duration));
     }
-    this.registeredEvents.push(owned);
+    this.allEvents.push(owned);
     // Maintain the stacks index in sync with registeredEvents. Single source
     // of storage — registeredEvents is the linear list, stacks is the
     // per-(column, owner) index used by _activeEventsIn. Queue-created
@@ -997,8 +992,8 @@ export class DerivedEventController implements ColumnHost {
     // idempotently, this is safe to run at any time.
     if (durationFrames > 0) {
       const stopEnd = startFrame + durationFrames;
-      for (let i = 0; i < this.registeredEvents.length; i++) {
-        const other = this.registeredEvents[i];
+      for (let i = 0; i < this.allEvents.length; i++) {
+        const other = this.allEvents[i];
         if (other.uid === ev.uid) continue;
         if (!this.rawSegmentDurations.has(other.uid)) continue;
         const otherEnd = other.startFrame + eventDuration(other);
@@ -1138,7 +1133,7 @@ export class DerivedEventController implements ColumnHost {
       if (ev.startFrame <= stop.startFrame || ev.startFrame >= stopEnd) continue;
 
       // Look up source event to determine stop type
-      const source = this.registeredEvents.find(e => e.uid === stop.eventUid);
+      const source = this.allEvents.find(e => e.uid === stop.eventUid);
       if (!source) continue;
 
       // Control swap cannot occur during any time-stop (including dodge)
@@ -1225,7 +1220,7 @@ export class DerivedEventController implements ColumnHost {
    */
   clampMultiSkillComboCooldowns() {
     // Find all multi-skill windows
-    const windows = this.registeredEvents.filter(
+    const windows = this.allEvents.filter(
       (ev) => ev.columnId === COMBO_WINDOW_COLUMN_ID && (ev.maxSkills ?? 1) > 1,
     );
     if (windows.length === 0) return;
@@ -1233,7 +1228,7 @@ export class DerivedEventController implements ColumnHost {
     for (const win of windows) {
       const winEnd = win.startFrame + computeSegmentsSpan(win.segments);
       // Find all combo events in this window, sorted by startFrame
-      const combos = this.registeredEvents
+      const combos = this.allEvents
         .filter((ev) =>
           ev.columnId === NounType.COMBO &&
           ev.ownerId === win.ownerId &&
@@ -1250,9 +1245,9 @@ export class DerivedEventController implements ColumnHost {
   }
 
   resetCooldown(eventUid: string, resetFrame: number) {
-    for (let i = 0; i < this.registeredEvents.length; i++) {
-      if (this.registeredEvents[i].uid !== eventUid) continue;
-      const ev = this.registeredEvents[i];
+    for (let i = 0; i < this.allEvents.length; i++) {
+      if (this.allEvents[i].uid !== eventUid) continue;
+      const ev = this.allEvents[i];
       let preCooldownDur = 0;
       for (const s of ev.segments) {
         if (s.properties.name === 'Cooldown') {
@@ -1269,9 +1264,9 @@ export class DerivedEventController implements ColumnHost {
   }
 
   reduceCooldown(eventUid: string, newCooldownDuration: number) {
-    for (let i = 0; i < this.registeredEvents.length; i++) {
-      if (this.registeredEvents[i].uid !== eventUid) continue;
-      const ev = this.registeredEvents[i];
+    for (let i = 0; i < this.allEvents.length; i++) {
+      if (this.allEvents[i].uid !== eventUid) continue;
+      const ev = this.allEvents[i];
       for (const s of ev.segments) {
         if (s.properties.name === 'Cooldown') {
           s.properties.duration = Math.max(0, newCooldownDuration);
@@ -1287,10 +1282,10 @@ export class DerivedEventController implements ColumnHost {
    * Called after the queue run when CD resets may have shortened combo events.
    */
   clampComboWindowsToEventEnd() {
-    const windows = this.registeredEvents.filter(ev => ev.columnId === COMBO_WINDOW_COLUMN_ID);
+    const windows = this.allEvents.filter(ev => ev.columnId === COMBO_WINDOW_COLUMN_ID);
     for (const win of windows) {
       const winEnd = win.startFrame + computeSegmentsSpan(win.segments);
-      const combos = this.registeredEvents.filter(ev =>
+      const combos = this.allEvents.filter(ev =>
         ev.columnId === NounType.COMBO &&
         ev.ownerId === win.ownerId &&
         ev.startFrame >= win.startFrame &&
@@ -1325,7 +1320,7 @@ export class DerivedEventController implements ColumnHost {
         ev.eventStatusSkillName = source.skillName;
       }
     }
-    for (const ev of this.registeredEvents) {
+    for (const ev of this.allEvents) {
       if (ev.columnId !== columnId || ev.ownerId !== ownerId) continue;
       if (ev.eventStatus === EventStatusType.CONSUMED) continue;
       const end = ev.startFrame + eventDuration(ev);
@@ -1355,7 +1350,7 @@ export class DerivedEventController implements ColumnHost {
         ev.eventStatusSkillName = source.skillName;
       }
     }
-    for (const ev of this.registeredEvents) {
+    for (const ev of this.allEvents) {
       if (ev.columnId !== columnId || ev.ownerId !== ownerId) continue;
       if (!predicate(ev)) continue;
       if (ev.eventStatus === EventStatusType.CONSUMED) continue;

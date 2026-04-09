@@ -16,7 +16,7 @@ export type ComboStopEntry = { uid: string; startFrame: number; animDur: number 
 
 export interface ChainComboPredecessorState {
   comboStops: ComboStopEntry[];
-  registeredEvents: TimelineEvent[];
+  allEvents: TimelineEvent[];
   stops: TimeStopRegion[];
 }
 
@@ -30,19 +30,17 @@ export function chainComboPredecessor(
   const evEnd = ev.startFrame + animDur;
   let changed = false;
 
-  // Truncate older combos whose animation ev starts inside of
+  // Truncate older combos whose animation ev starts inside of. Mutate the
+  // existing segments in place so the stacks index (which holds the same
+  // reference after _pushToStorage clone) sees the truncation.
   for (const cs of state.comboStops) {
     const csEnd = cs.startFrame + cs.animDur;
     if (ev.startFrame > cs.startFrame && ev.startFrame < csEnd) {
       const truncated = ev.startFrame - cs.startFrame;
       cs.animDur = truncated;
-      const regIdx = state.registeredEvents.findIndex(e => e.uid === cs.uid);
-      if (regIdx >= 0) {
-        const reg = state.registeredEvents[regIdx];
-        state.registeredEvents[regIdx] = {
-          ...reg,
-          segments: setAnimationSegmentDuration(reg.segments, truncated),
-        };
+      const reg = state.allEvents.find(e => e.uid === cs.uid);
+      if (reg) {
+        reg.segments = setAnimationSegmentDuration(reg.segments, truncated);
       }
       const stop = state.stops.find(s => s.eventUid === cs.uid);
       if (stop) stop.durationFrames = truncated;

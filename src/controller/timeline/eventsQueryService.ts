@@ -118,7 +118,7 @@ export class EventsQueryService {
     this.talentFragility = talentFragility ?? [];
 
     // Pre-filter from DerivedEventController for O(n) per-column queries
-    const events = state.getRegisteredEvents();
+    const events = state.getAllEvents();
     this.susceptibilityEvents = events.filter(e => (e.columnId === StatusType.SUSCEPTIBILITY || e.columnId === StatusType.FOCUS || isQualifiedId(e.columnId, StatusType.SUSCEPTIBILITY)) && e.ownerId === ENEMY_OWNER_ID);
     this.linkEvents = events.filter(e => e.columnId === StatusType.LINK);
     this.artsAmpEvents = events.filter(e => e.damageFactorType === DamageFactorType.AMP);
@@ -215,7 +215,7 @@ export class EventsQueryService {
    */
   getActiveOperatorStatusStacks(frame: number, ownerId: string, statusId: string): number {
     let n = 0;
-    for (const ev of this.state.getRegisteredEvents()) {
+    for (const ev of this.state.getAllEvents()) {
       if (ev.ownerId !== ownerId || ev.columnId !== statusId) continue;
       if (!this.isActive(ev, frame)) continue;
       n += ev.stacks ?? 1;
@@ -265,7 +265,7 @@ export class EventsQueryService {
   getLinkBonus(frame: number, skillType: string): number {
     if (skillType !== NounType.BATTLE && skillType !== NounType.ULTIMATE) return 0;
     // Find the registered event that owns this frame and check if it consumed Link
-    const events = this.state.getRegisteredEvents();
+    const events = this.state.getAllEvents();
     for (const ev of events) {
       if (ev.columnId !== NounType.BATTLE && ev.columnId !== NounType.ULTIMATE) continue;
       if (ev.startFrame > frame || frame >= ev.startFrame + eventDuration(ev)) continue;
@@ -363,7 +363,7 @@ export class EventsQueryService {
 
   /** Get events for a given column ID. */
   getColumnEvents(columnId: string): TimelineEvent[] {
-    return this.state.getRegisteredEvents().filter(e => e.columnId === columnId);
+    return this.state.getAllEvents().filter(e => e.columnId === columnId);
   }
 
   /**
@@ -373,7 +373,7 @@ export class EventsQueryService {
    */
   getIntellectScaledDamageBonus(frame: number): number {
     let sum = 0;
-    for (const ev of this.state.getRegisteredEvents()) {
+    for (const ev of this.state.getAllEvents()) {
       if (ev.damageFactorType !== DamageFactorType.DAMAGE_BONUS) continue;
       if (!this.isActive(ev, frame)) continue;
       const perIntellect = ev.statusValue ?? 0;
@@ -502,7 +502,7 @@ export class EventsQueryService {
    */
   getIgnoredResistance(frame: number, _element: ElementType, attackerOwnerId: string): number {
     let sum = 0;
-    for (const ev of this.state.getRegisteredEvents()) {
+    for (const ev of this.state.getAllEvents()) {
       if (ev.damageFactorType !== DamageFactorType.RESISTANCE) continue;
       if (ev.ownerId !== attackerOwnerId) continue;
       if (!this.isActive(ev, frame)) continue;

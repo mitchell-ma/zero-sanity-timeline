@@ -11,10 +11,10 @@ import type { TriggerIndex } from '../triggerIndex';
 
 export function selectNewTalents(
   triggerIdx: TriggerIndex,
-  registeredEvents: readonly TimelineEvent[],
+  allEvents: readonly TimelineEvent[],
 ): TimelineEvent[] {
   const talentEvents = triggerIdx.getAllTalentEvents();
   return talentEvents.filter(
-    t => !registeredEvents.some(ev => ev.columnId === t.columnId && ev.ownerId === t.ownerId),
+    t => !allEvents.some(ev => ev.columnId === t.columnId && ev.ownerId === t.ownerId),
   );
 }

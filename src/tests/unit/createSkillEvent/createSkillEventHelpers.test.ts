@@ -46,7 +46,7 @@ describe('setAnimationSegmentDuration', () => {
 describe('chainComboPredecessor', () => {
   test('passthrough for non-combo event', () => {
     const ev = mkEvent({ uid: 'a', startFrame: 0, columnId: NounType.BATTLE });
-    const state = { comboStops: [] as ComboStopEntry[], registeredEvents: [], stops: [] as TimeStopRegion[] };
+    const state = { comboStops: [] as ComboStopEntry[], allEvents: [], stops: [] as TimeStopRegion[] };
     const out = chainComboPredecessor(ev, state);
     expect(out).toBe(ev);
     expect(state.comboStops).toHaveLength(0);
@@ -59,7 +59,7 @@ describe('chainComboPredecessor', () => {
       columnId: NounType.COMBO,
       segments: [{ properties: { duration: 60, segmentTypes: [SegmentType.ANIMATION] } }],
     });
-    const state = { comboStops: [] as ComboStopEntry[], registeredEvents: [ev], stops: [] as TimeStopRegion[] };
+    const state = { comboStops: [] as ComboStopEntry[], allEvents: [ev], stops: [] as TimeStopRegion[] };
     chainComboPredecessor(ev, state);
     expect(state.comboStops).toEqual([{ uid: 'c1', startFrame: 0, animDur: 60 }]);
   });
@@ -71,7 +71,7 @@ describe('chainComboPredecessor', () => {
     });
     const state = {
       comboStops: [{ uid: 'c1', startFrame: 0, animDur: 120 }],
-      registeredEvents: [older],
+      allEvents: [older],
       stops: [] as TimeStopRegion[],
     };
     const newer = mkEvent({
@@ -80,7 +80,7 @@ describe('chainComboPredecessor', () => {
     });
     chainComboPredecessor(newer, state);
     expect(state.comboStops.find(c => c.uid === 'c1')?.animDur).toBe(40);
-    expect(state.registeredEvents[0].segments[0].properties.duration).toBe(40);
+    expect(state.allEvents[0].segments[0].properties.duration).toBe(40);
   });
 
   test('truncates new combo when older combo starts inside its animation', () => {
@@ -90,7 +90,7 @@ describe('chainComboPredecessor', () => {
     });
     const state = {
       comboStops: [{ uid: 'c1', startFrame: 80, animDur: 60 }],
-      registeredEvents: [older],
+      allEvents: [older],
       stops: [] as TimeStopRegion[],
     };
     const newer = mkEvent({

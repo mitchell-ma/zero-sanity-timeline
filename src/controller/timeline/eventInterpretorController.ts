@@ -631,11 +631,11 @@ export class EventInterpretorController {
    */
   getAllEvents(): readonly TimelineEvent[] {
     const baseLen = this.baseEvents.length;
-    const outLen = this.controller.getRegisteredEvents().length;
+    const outLen = this.controller.getAllEvents().length;
     if (baseLen !== this._cachedBaseLen || outLen !== this._cachedOutputLen) {
       this._cachedAllEvents.length = 0;
       for (let i = 0; i < baseLen; i++) this._cachedAllEvents.push(this.baseEvents[i]);
-      for (let i = 0; i < outLen; i++) this._cachedAllEvents.push(this.controller.getRegisteredEvents()[i]);
+      for (let i = 0; i < outLen; i++) this._cachedAllEvents.push(this.controller.getAllEvents()[i]);
       this._cachedBaseLen = baseLen;
       this._cachedOutputLen = outLen;
     }
@@ -1360,7 +1360,7 @@ export class EventInterpretorController {
     const ownerId = this.resolveOwnerId(effect.of?.object ?? effect.to, ctx, effect.of?.determiner ?? effect.toDeterminer);
 
     // Extend active target events to persist until the resolved end frame
-    for (const ev of this.controller.getRegisteredEvents()) {
+    for (const ev of this.controller.getAllEvents()) {
       if (ev.columnId !== columnId) continue;
       if (ownerId != null && ev.ownerId !== ownerId) continue;
       if (ev.startFrame > ctx.frame) continue;
@@ -1555,15 +1555,15 @@ export class EventInterpretorController {
         if (!evaluateConditions(pred.conditions, condCtx)) continue;
         if (!pred.effects.every(e => e.verb === VerbType.ALL || e.verb === VerbType.ANY || this.canDo(e, ctx))) continue;
         // Track output and cascade frames before this iteration
-        const outputBefore = this.controller.getRegisteredEvents().length;
+        const outputBefore = this.controller.getAllEvents().length;
         const cascadeBefore = this._compoundCascadeFrames.length;
         for (const child of pred.effects) this.interpret(child, ctx);
         // Fire reactive triggers for events created in this iteration so downstream
         // BECOME conditions see incremental state (e.g. MF 3→4, not 0→4).
         // Stamp previousStackCount = iteration index (0-based) on the resulting
         // ENGINE_TRIGGER frames so BECOME compares against the pre-iteration count.
-        for (let j = outputBefore; j < this.controller.getRegisteredEvents().length; j++) {
-          const ev = this.controller.getRegisteredEvents()[j];
+        for (let j = outputBefore; j < this.controller.getAllEvents().length; j++) {
+          const ev = this.controller.getAllEvents()[j];
           this.checkReactiveTriggers(VerbType.APPLY, ev.columnId, ctx.frame, ev.ownerId, ctx.sourceSkillName, undefined, this._compoundCascadeFrames);
         }
         // Evaluate BECOME/HAVE conditions immediately with incremental stack count,
@@ -1632,7 +1632,7 @@ export class EventInterpretorController {
     const isForced = this.resolveWith(effect.with?.isForced, ctx) === 1;
 
     // Track output count before to detect whether a physical status was actually created
-    const outputBefore = this.controller.getRegisteredEvents().length;
+    const outputBefore = this.controller.getAllEvents().length;
 
     let result = false;
     const physCol = columnId as string;
@@ -1646,7 +1646,7 @@ export class EventInterpretorController {
     }
 
     // Check if a physical status event was created (not just Vulnerable)
-    this.lastPhysicalStatusCreated = this.controller.getRegisteredEvents().slice(outputBefore).some(
+    this.lastPhysicalStatusCreated = this.controller.getAllEvents().slice(outputBefore).some(
       ev => ev.columnId === columnId,
     );
 
@@ -2423,7 +2423,7 @@ export class EventInterpretorController {
     if (!statusId) return;
 
     // Find the newly created status event
-    const statusEvents = this.controller.getRegisteredEvents().filter(
+    const statusEvents = this.controller.getAllEvents().filter(
       ev => ev.id === statusId && ev.ownerId === statusOwnerId && ev.startFrame === ctx.frame,
     );
     const statusEv = statusEvents[statusEvents.length - 1];
@@ -3186,7 +3186,7 @@ export class EventInterpretorController {
 
     const cascadeFrames = this._engineTriggerOut;
     cascadeFrames.length = 0;
-    const outputBefore = this.controller.getRegisteredEvents().length;
+    const outputBefore = this.controller.getAllEvents().length;
     for (const te of triggerEffects) {
       const effect = this.triggerEffectToEffect(te);
       const applied = this.interpret(effect, interpretCtx);
@@ -3209,7 +3209,7 @@ export class EventInterpretorController {
     }
 
     // Increment usage counter for triggers with usageLimit (e.g. tacticals, gear sets)
-    if (this.controller.getRegisteredEvents().length > outputBefore) {
+    if (this.controller.getAllEvents().length > outputBefore) {
       const usageKey = `${ctx.def.properties.id}:${ctx.operatorSlotId}`;
       this.triggerUsageCount.set(usageKey, (this.triggerUsageCount.get(usageKey) ?? 0) + 1);
     }

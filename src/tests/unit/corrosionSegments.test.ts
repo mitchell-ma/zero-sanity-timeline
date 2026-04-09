@@ -442,7 +442,7 @@ describe('corrosion time stop interaction', () => {
 
     const controller = new DerivedEventController();
     controller.createSkillEvent(freeformCorrosion, { checkCooldown: false });
-    const registered = controller.getRegisteredEvents();
+    const registered = controller.getAllEvents();
     const result = registered.find(ev => ev.uid === 'freeform-corr-1')!;
 
     // Should have segments built

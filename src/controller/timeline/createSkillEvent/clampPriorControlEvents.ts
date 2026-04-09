@@ -1,7 +1,7 @@
 /**
  * When ev is a CONTROL input event, clamp earlier CONTROL events on other
  * owners so they end at ev.startFrame. Mutates the existing segment in
- * place so both `registeredEvents` and the `stacks` index (which share
+ * place so both `allEvents` and the `stacks` index (which share
  * the same event references after _pushToStorage clone) see the update.
  */
 import { TimelineEvent, computeSegmentsSpan, setEventDuration } from '../../../consts/viewTypes';
@@ -10,11 +10,11 @@ import { OPERATOR_COLUMNS } from '../../../model/channels';
 
 export function clampPriorControlEvents(
   ev: TimelineEvent,
-  registeredEvents: TimelineEvent[],
+  allEvents: TimelineEvent[],
 ) {
   if (ev.id !== NounType.CONTROL || ev.columnId !== OPERATOR_COLUMNS.INPUT) return;
-  for (let j = 0; j < registeredEvents.length; j++) {
-    const prev = registeredEvents[j];
+  for (let j = 0; j < allEvents.length; j++) {
+    const prev = allEvents[j];
     if (prev.id !== NounType.CONTROL || prev.columnId !== OPERATOR_COLUMNS.INPUT) continue;
     if (prev.ownerId === ev.ownerId) continue;
     const prevEnd = prev.startFrame + computeSegmentsSpan(prev.segments);

@@ -335,7 +335,7 @@ export class TriggerIndex {
     loadoutProperties?: Record<string, LoadoutProperties>,
     slotWeapons?: Record<string, string | undefined>,
     slotGearSets?: Record<string, string | undefined>,
-    registeredEvents?: readonly TimelineEvent[],
+    allEvents?: readonly TimelineEvent[],
     slotConsumables?: Record<string, string | undefined>,
     slotTacticals?: Record<string, string | undefined>,
   ): TriggerIndex {
@@ -349,11 +349,11 @@ export class TriggerIndex {
       }
     }
     // Fallback: scan events for operator slot detection
-    if (registeredEvents) {
+    if (allEvents) {
       for (const opId of getAllOperatorIds()) {
         if (operatorSlotMap[opId]) continue;
         const skillNames = getSkillIds(opId);
-        for (const ev of registeredEvents) {
+        for (const ev of allEvents) {
           if (ev.ownerId === ENEMY_OWNER_ID || ev.ownerId === COMMON_OWNER_ID) continue;
           if (skillNames.has(ev.id)) { operatorSlotMap[opId] = ev.ownerId; break; }
         }
@@ -375,7 +375,7 @@ export class TriggerIndex {
         if (cached) defs.push(cached);
       }
       if (defs.length) {
-        idx.processDefsForSlot(slotId, opId, defs, false, loadoutProperties, operatorSlotMap, registeredEvents);
+        idx.processDefsForSlot(slotId, opId, defs, false, loadoutProperties, operatorSlotMap, allEvents);
       }
     }
 
@@ -398,7 +398,7 @@ export class TriggerIndex {
         } as unknown as StatusEventDef);
       });
       if (skillTriggerDefs.length) {
-        idx.processDefsForSlot(slotId, opId, skillTriggerDefs, false, loadoutProperties, operatorSlotMap, registeredEvents);
+        idx.processDefsForSlot(slotId, opId, skillTriggerDefs, false, loadoutProperties, operatorSlotMap, allEvents);
       }
     }
 
@@ -407,9 +407,9 @@ export class TriggerIndex {
       for (const [slotId, weaponId] of Object.entries(slotWeapons)) {
         if (!weaponId) continue;
         const opId = slotOperatorMap?.[slotId] ?? '';
-        idx.processDefsForSlot(slotId, opId, getWeaponTriggerDefs(weaponId).map(normalizeEquipDef), true, loadoutProperties, operatorSlotMap, registeredEvents);
+        idx.processDefsForSlot(slotId, opId, getWeaponTriggerDefs(weaponId).map(normalizeEquipDef), true, loadoutProperties, operatorSlotMap, allEvents);
         // Weapon status triggers (e.g., BECOME STACKS on Wolven Blood)
-        idx.processDefsForSlot(slotId, opId, getWeaponStatusTriggerDefs(weaponId).map(normalizeEquipDef), true, loadoutProperties, operatorSlotMap, registeredEvents);
+        idx.processDefsForSlot(slotId, opId, getWeaponStatusTriggerDefs(weaponId).map(normalizeEquipDef), true, loadoutProperties, operatorSlotMap, allEvents);
       }
     }
 
@@ -418,9 +418,9 @@ export class TriggerIndex {
       for (const [slotId, gearSetType] of Object.entries(slotGearSets)) {
         if (!gearSetType) continue;
         const opId = slotOperatorMap?.[slotId] ?? '';
-        idx.processDefsForSlot(slotId, opId, getGearTriggerDefs(gearSetType).map(normalizeEquipDef), true, loadoutProperties, operatorSlotMap, registeredEvents);
+        idx.processDefsForSlot(slotId, opId, getGearTriggerDefs(gearSetType).map(normalizeEquipDef), true, loadoutProperties, operatorSlotMap, allEvents);
         // Gear status triggers
-        idx.processDefsForSlot(slotId, opId, getGearStatusTriggerDefs(gearSetType).map(normalizeEquipDef), true, loadoutProperties, operatorSlotMap, registeredEvents);
+        idx.processDefsForSlot(slotId, opId, getGearStatusTriggerDefs(gearSetType).map(normalizeEquipDef), true, loadoutProperties, operatorSlotMap, allEvents);
       }
     }
 
@@ -430,7 +430,7 @@ export class TriggerIndex {
         if (!consumableId) continue;
         const opId = slotOperatorMap?.[slotId] ?? '';
         const def = getConsumablePassiveDef(consumableId);
-        if (def) idx.processDefsForSlot(slotId, opId, [normalizeEquipDef(def)], true, loadoutProperties, operatorSlotMap, registeredEvents);
+        if (def) idx.processDefsForSlot(slotId, opId, [normalizeEquipDef(def)], true, loadoutProperties, operatorSlotMap, allEvents);
       }
     }
 
@@ -440,7 +440,7 @@ export class TriggerIndex {
         if (!tacticalId) continue;
         const opId = slotOperatorMap?.[slotId] ?? '';
         const def = getTacticalTriggerDef(tacticalId);
-        if (def) idx.processDefsForSlot(slotId, opId, [normalizeEquipDef(def)], true, loadoutProperties, operatorSlotMap, registeredEvents);
+        if (def) idx.processDefsForSlot(slotId, opId, [normalizeEquipDef(def)], true, loadoutProperties, operatorSlotMap, allEvents);
       }
     }
 
@@ -456,7 +456,7 @@ export class TriggerIndex {
     isEquip: boolean,
     loadoutProperties?: Record<string, LoadoutProperties>,
     operatorSlotMap?: Record<string, string>,
-    registeredEvents?: readonly TimelineEvent[],
+    allEvents?: readonly TimelineEvent[],
   ) {
     const props = loadoutProperties?.[slotId];
     const potential = props?.operator.potential ?? 0;
@@ -500,7 +500,7 @@ export class TriggerIndex {
           continue;
         } else {
           // Skip if already exists in registered events or already indexed in this build (any slot)
-          if (registeredEvents?.some(ev => ev.columnId === talentColumnId && ev.ownerId === talentOwnerId)) continue;
+          if (allEvents?.some(ev => ev.columnId === talentColumnId && ev.ownerId === talentOwnerId)) continue;
           let alreadyIndexed = false;
           this.talentsBySlot.forEach(entries => {
             if (alreadyIndexed) return;

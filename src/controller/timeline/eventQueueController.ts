@@ -72,26 +72,26 @@ export function runEventQueue(
   overrides?: OverrideStore,
 ): void {
   const slotWirings = state.getSlotWirings();
-  const registeredEvents = state.getRegisteredEvents();
+  const allEvents = state.getAllEvents();
   const stops = state.getStops();
 
   // Always build trigger index with registered events so runtime triggers
   // (e.g. ENEMY BECOME NODE_STAGGERED) can match user-placed events.
-  const triggerIdx = TriggerIndex.build(slotOperatorMap, loadoutProperties, slotWeapons, slotGearSets, registeredEvents);
+  const triggerIdx = TriggerIndex.build(slotOperatorMap, loadoutProperties, slotWeapons, slotGearSets, allEvents);
   _lastTriggerIndex = triggerIdx;
   // eslint-disable-next-line no-console
-  if (registeredEvents.some(e => e.columnId === 'node-stagger')) console.log('[PIPELINE] stagger events found in registeredEvents, triggerIndex has APPLY:node-stagger entries:', triggerIdx.matchEvent('APPLY', 'node-stagger').length);
+  if (allEvents.some(e => e.columnId === 'node-stagger')) console.log('[PIPELINE] stagger events found in allEvents, triggerIndex has APPLY:node-stagger entries:', triggerIdx.matchEvent('APPLY', 'node-stagger').length);
 
   // Register talent events (permanent presence) before queue processing.
   // Dedup against already-registered events AND already-registered in this run
   // (strict mode double-invocation can re-register same TriggerIndex talent objects).
-  const newTalents = selectNewTalents(triggerIdx, state.getRegisteredEvents());
+  const newTalents = selectNewTalents(triggerIdx, state.getAllEvents());
   for (const t of newTalents) state.createSkillEvent(t, { checkCooldown: false });
 
   // ── Priority queue (owned by DEC; reset() above already cleared it) ────
   // Reset interpreter (reuse singleton)
   const interpretor = getInterpretor();
-  interpretor.resetWith(state, registeredEvents, {
+  interpretor.resetWith(state, allEvents, {
     loadoutProperties, slotOperatorMap, slotWirings, getEnemyHpPercentage,
     getControlledSlotAtFrame, triggerIndex: triggerIdx, critMode, overrides,
   });
@@ -145,16 +145,16 @@ export function runEventQueue(
   state.setControlledSlotResolver(getControlledSlotAtFrame);
 
   // Post-drain re-registration loop deleted: queue-created events now enter
-  // registeredEvents directly via createQueueEvent (routed from
+  // allEvents directly via createQueueEvent (routed from
   // pushEvent / pushEventDirect / pushToOutput / addEvent). No parallel
   // storage paths. Run combo trigger resolution once over the full event
   // set to pick up combos triggered by queue-created inflictions.
   state.resolveCombosNow();
 
-  // Apply crit pin overrides to all derived event frames. registeredEvents
+  // Apply crit pin overrides to all derived event frames. allEvents
   // is now the single source of storage — iterate it directly.
   if (overrides) {
-    for (const ev of state.getRegisteredEvents()) {
+    for (const ev of state.getAllEvents()) {
       const key = buildOverrideKey(ev);
       const evOverride = overrides[key];
       if (!evOverride?.segments) continue;
@@ -293,12 +293,12 @@ export function processCombatSimulation(
   // ── 3b. Pre-compute damage by frame for HP threshold predicates ───────────
   if (bossMaxHp != null && enemyId && slotOperatorMap && loadoutProperties) {
     const slotInfo = Object.entries(slotOperatorMap).map(([slotId, opId]) => ({ slotId, operatorId: opId }));
-    precomputeDamageByFrame(state.getRegisteredEvents(), slotInfo, loadoutProperties, loadouts, enemyId, hpController);
+    precomputeDamageByFrame(state.getAllEvents(), slotInfo, loadoutProperties, loadouts, enemyId, hpController);
   }
 
   // ── 3c. Resolve controlled operator ──────────────────────────────────────
   const getControlledSlotAtFrame = resolveControlledOperator(
-    state.getRegisteredEvents(), slotIds,
+    state.getAllEvents(), slotIds,
   );
 
   // ── 4. EventQueueController: seed derived + run queue ─────────────────────

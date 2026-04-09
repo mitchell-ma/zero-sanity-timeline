@@ -886,7 +886,7 @@ function PipelineTimeline() {
 
   const stops = state.getStops();
   const comboStops = state.getComboStops();
-  const registered = state.getRegisteredEvents();
+  const registered = state.getAllEvents();
   // Single source of storage — registeredEvents is everything.
   const queueOutput = registered;
 
