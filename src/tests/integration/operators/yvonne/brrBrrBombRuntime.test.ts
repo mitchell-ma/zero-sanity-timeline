@@ -20,7 +20,7 @@ import { NounType } from '../../../../dsl/semantics';
 import { useApp } from '../../../../app/useApp';
 import { EventStatusType, InteractionModeType } from '../../../../consts/enums';
 import { FPS } from '../../../../utils/timeline';
-import { INFLICTION_COLUMNS, REACTION_COLUMNS, ENEMY_OWNER_ID } from '../../../../model/channels';
+import { INFLICTION_COLUMNS, REACTION_COLUMNS, ENEMY_ID } from '../../../../model/channels';
 import { findColumn, getMenuPayload } from '../../helpers';
 import type { AppResult } from '../../helpers';
 
@@ -48,20 +48,20 @@ function addBS(app: AppResult, atFrame: number) {
 
 function placeInfliction(app: AppResult, columnId: string, atFrame: number, durationSec = 20) {
   app.handleAddEvent(
-    ENEMY_OWNER_ID, columnId, atFrame,
+    ENEMY_ID, columnId, atFrame,
     { name: columnId, segments: [{ properties: { duration: durationSec * FPS } }] },
   );
 }
 
 function getSolidifications(app: AppResult) {
   return app.allProcessedEvents.filter(
-    ev => ev.columnId === REACTION_COLUMNS.SOLIDIFICATION && ev.ownerId === ENEMY_OWNER_ID,
+    ev => ev.columnId === REACTION_COLUMNS.SOLIDIFICATION && ev.ownerId === ENEMY_ID,
   );
 }
 
 function getInflictions(app: AppResult, columnId: string) {
   return app.allProcessedEvents.filter(
-    ev => ev.columnId === columnId && ev.ownerId === ENEMY_OWNER_ID,
+    ev => ev.columnId === columnId && ev.ownerId === ENEMY_ID,
   );
 }
 

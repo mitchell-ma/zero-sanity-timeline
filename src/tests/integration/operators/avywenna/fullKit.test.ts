@@ -32,7 +32,7 @@ import { computeTimelinePresentation } from '../../../../controller/timeline/eve
 import {
   OPERATOR_STATUS_COLUMN_ID,
   INFLICTION_COLUMNS,
-  ENEMY_OWNER_ID,
+  ENEMY_ID,
 } from '../../../../model/channels';
 import { ultimateGraphKey } from '../../../../model/channels';
 import {
@@ -379,7 +379,7 @@ describe('C. BS consumes Thunderlance EX — full effect chain', () => {
 
     // Electric Infliction should appear on enemy
     const inflictions = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === ENEMY_OWNER_ID && ev.columnId === INFLICTION_COLUMNS.ELECTRIC,
+      ev => ev.ownerId === ENEMY_ID && ev.columnId === INFLICTION_COLUMNS.ELECTRIC,
     );
     expect(inflictions.length).toBeGreaterThanOrEqual(1);
 
@@ -665,7 +665,7 @@ describe('G. T2 Tactful Approach — Electric Susceptibility', () => {
 
     // ELECTRIC_SUSCEPTIBILITY should appear on enemy
     const suscEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === ENEMY_OWNER_ID && ev.columnId === ELECTRIC_SUSCEPTIBILITY_ID,
+      ev => ev.ownerId === ENEMY_ID && ev.columnId === ELECTRIC_SUSCEPTIBILITY_ID,
     );
     expect(suscEvents.length).toBeGreaterThanOrEqual(1);
 
@@ -731,7 +731,7 @@ describe('G. T2 Tactful Approach — Electric Susceptibility', () => {
       placeUltimate(result, 5);
 
       const suscEvents = result.current.allProcessedEvents.filter(
-        ev => ev.ownerId === ENEMY_OWNER_ID && ev.columnId === ELECTRIC_SUSCEPTIBILITY_ID,
+        ev => ev.ownerId === ENEMY_ID && ev.columnId === ELECTRIC_SUSCEPTIBILITY_ID,
       );
       expect(suscEvents.length).toBeGreaterThanOrEqual(1);
       const elecValue = (suscEvents[0].susceptibility as Record<string, number>)[AdjectiveType.ELECTRIC];
@@ -985,7 +985,7 @@ describe('L. Full rotation — combo → BS → ult → BS', () => {
 
     // Electric Susceptibility should be on enemy from ult
     const suscEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === ENEMY_OWNER_ID && ev.columnId === ELECTRIC_SUSCEPTIBILITY_ID,
+      ev => ev.ownerId === ENEMY_ID && ev.columnId === ELECTRIC_SUSCEPTIBILITY_ID,
     );
     expect(suscEvents.length).toBeGreaterThanOrEqual(1);
 
@@ -1003,7 +1003,7 @@ describe('L. Full rotation — combo → BS → ult → BS', () => {
     expect(consumedEx.length).toBeGreaterThanOrEqual(1);
 
     const inflictions = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === ENEMY_OWNER_ID && ev.columnId === INFLICTION_COLUMNS.ELECTRIC,
+      ev => ev.ownerId === ENEMY_ID && ev.columnId === INFLICTION_COLUMNS.ELECTRIC,
     );
     expect(inflictions.length).toBeGreaterThanOrEqual(1);
 

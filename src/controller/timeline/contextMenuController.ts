@@ -12,8 +12,8 @@ import { getAllSkillLabels, getAllInflictionLabels } from '../gameDataStore';
 import { REACTION_LABELS } from '../../model/channels';
 import { t } from '../../locales/locale';
 import { formatSegmentShortName } from '../../dsl/semanticsTranslation';
-import { OPERATOR_COLUMNS, ENEMY_OWNER_ID } from '../../model/channels';
-import { COMMON_OWNER_ID } from '../slot/commonSlotController';
+import { OPERATOR_COLUMNS, ENEMY_ID } from '../../model/channels';
+import { TEAM_ID } from '../slot/commonSlotController';
 import { getLastController } from './eventQueueController';
 import { isColumnFull, isBeforeLastEvent } from './microColumnController';
 import {
@@ -50,7 +50,7 @@ export interface ColumnContextMenuContext {
  */
 /** Build "Set as Controlled Operator" item for operator-owned columns. */
 export function controlledItem(ownerId: string, atFrame: number, timeStopRegions?: TimeStopRegion[]): ContextMenuItem | null {
-  if (ownerId === ENEMY_OWNER_ID || ownerId === COMMON_OWNER_ID) return null;
+  if (ownerId === ENEMY_ID || ownerId === TEAM_ID) return null;
   const alreadyControlled = getLastController()?.isControlledAt(ownerId, atFrame) ?? false;
   const inTimeStop = timeStopRegions?.some(
     (stop) => atFrame > stop.startFrame && atFrame < stop.startFrame + stop.durationFrames,

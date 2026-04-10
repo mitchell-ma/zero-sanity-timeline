@@ -16,7 +16,7 @@ import { renderHook, act } from '@testing-library/react';
 import { useApp } from '../../../app/useApp';
 import { ColumnType } from '../../../consts/enums';
 import { FPS } from '../../../utils/timeline';
-import { ENEMY_OWNER_ID, ENEMY_ACTION_COLUMN_ID } from '../../../model/channels';
+import { ENEMY_ID, ENEMY_ACTION_COLUMN_ID } from '../../../model/channels';
 import { computeTimelinePresentation } from '../../../controller/timeline/eventPresentationController';
 import { findDealDamageInClauses } from '../../../controller/timeline/clauseQueries';
 import { getMenuPayload } from '../helpers';
@@ -33,7 +33,7 @@ function findEnemyActionCol(app: AppResult) {
   return app.columns.find(
     (c): c is MiniTimeline =>
       c.type === ColumnType.MINI_TIMELINE &&
-      c.ownerId === ENEMY_OWNER_ID &&
+      c.ownerId === ENEMY_ID &&
       c.columnId === ENEMY_ACTION_COLUMN_ID,
   );
 }
@@ -47,7 +47,7 @@ function addEnemyAction(app: AppResult, atFrame: number) {
 
 function getEnemyActionEvents(app: AppResult) {
   return app.allProcessedEvents.filter(
-    (ev) => ev.ownerId === ENEMY_OWNER_ID && ev.columnId === ENEMY_ACTION_COLUMN_ID,
+    (ev) => ev.ownerId === ENEMY_ID && ev.columnId === ENEMY_ACTION_COLUMN_ID,
   );
 }
 
@@ -59,7 +59,7 @@ describe('Enemy Action — Event Pipeline', () => {
 
     const events = getEnemyActionEvents(result.current);
     expect(events).toHaveLength(1);
-    expect(events[0].ownerId).toBe(ENEMY_OWNER_ID);
+    expect(events[0].ownerId).toBe(ENEMY_ID);
     expect(events[0].columnId).toBe(ENEMY_ACTION_COLUMN_ID);
   });
 
@@ -117,7 +117,7 @@ describe('Enemy Action — View Layer', () => {
     const vm = viewModels.get(col!.key);
     expect(vm).toBeDefined();
     expect(vm!.events).toHaveLength(1);
-    expect(vm!.events[0].ownerId).toBe(ENEMY_OWNER_ID);
+    expect(vm!.events[0].ownerId).toBe(ENEMY_ID);
     expect(vm!.events[0].columnId).toBe(ENEMY_ACTION_COLUMN_ID);
   });
 });

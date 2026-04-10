@@ -70,7 +70,7 @@ import { useCombatLoadout } from './useCombatLoadout';
 import { useResourceGraphs } from './useResourceGraphs';
 import { useAutoSave } from './useAutoSave';
 import { LOADOUT_ROW_HEIGHT, FPS, TOTAL_FRAMES, frameToPx } from '../utils/timeline';
-import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../controller/slot/commonSlotController';
+import { TEAM_ID, COMMON_COLUMN_IDS } from '../controller/slot/commonSlotController';
 import {
   CombatState,
   EnemyStats,
@@ -612,7 +612,7 @@ export function useApp() {
     return Math.min(TOTAL_FRAMES, Math.max(MIN_FRAMES, scrollFloorFrames, maxEnd + BUFFER_FRAMES));
   }, [allProcessedEvents, scrollFloorFrames]);
 
-  const spKey = `${COMMON_OWNER_ID}-${COMMON_COLUMN_IDS.SKILL_POINTS}`;
+  const spKey = `${TEAM_ID}-${COMMON_COLUMN_IDS.SKILL_POINTS}`;
   const staggerKey = `enemy-${COMMON_COLUMN_IDS.STAGGER}`;
 
   const editingEvent = editingEventId

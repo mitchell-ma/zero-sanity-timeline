@@ -27,7 +27,7 @@ import { computeTimelinePresentation } from '../../../../controller/timeline/eve
 import { getUltimateEnergyCostForPotential } from '../../../../controller/operators/operatorRegistry';
 import {
   INFLICTION_COLUMNS,
-  ENEMY_OWNER_ID,
+  ENEMY_ID,
 } from '../../../../model/channels';
 import { findColumn, buildContextMenu, getMenuPayload, setUltimateEnergyToMax } from '../../helpers';
 
@@ -187,7 +187,7 @@ describe('B. Battle Skill — Protection and Cryo Infliction', () => {
 
     // BS has cryo infliction frame at offset 3.57s
     const cryoInflictions = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === ENEMY_OWNER_ID
+      ev => ev.ownerId === ENEMY_ID
         && ev.columnId === INFLICTION_COLUMNS.CRYO,
     );
     expect(cryoInflictions.length).toBeGreaterThanOrEqual(1);

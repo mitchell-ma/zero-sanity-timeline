@@ -23,7 +23,7 @@
 import { renderHook, act } from '@testing-library/react';
 import { NounType } from '../../../../dsl/semantics';
 import { useApp } from '../../../../app/useApp';
-import { INFLICTION_COLUMNS, ENEMY_OWNER_ID, ENEMY_GROUP_COLUMNS, COMBO_WINDOW_COLUMN_ID } from '../../../../model/channels';
+import { INFLICTION_COLUMNS, ENEMY_ID, ENEMY_GROUP_COLUMNS, COMBO_WINDOW_COLUMN_ID } from '../../../../model/channels';
 import { InteractionModeType } from '../../../../consts/enums';
 import { FPS } from '../../../../utils/timeline';
 import { computeTimelinePresentation } from '../../../../controller/timeline/eventPresentationController';
@@ -48,7 +48,7 @@ function getInflictionPayload(app: AppResult, atFrame: number, inflictionColumnI
     app.setInteractionMode(InteractionModeType.FREEFORM);
   });
 
-  const enemyStatusCol = findColumn(app, ENEMY_OWNER_ID, ENEMY_GROUP_COLUMNS.ENEMY_STATUS);
+  const enemyStatusCol = findColumn(app, ENEMY_ID, ENEMY_GROUP_COLUMNS.ENEMY_STATUS);
   expect(enemyStatusCol).toBeDefined();
 
   const menuItems = buildContextMenu(app, enemyStatusCol!, atFrame);
@@ -83,7 +83,7 @@ describe('Chen Qianyu — freeform infliction must not trigger Slashing Edge', (
 
     // Controller layer: infliction exists, Slashing Edge does not
     const inflictions = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === INFLICTION_COLUMNS.NATURE && ev.ownerId === ENEMY_OWNER_ID,
+      (ev) => ev.columnId === INFLICTION_COLUMNS.NATURE && ev.ownerId === ENEMY_ID,
     );
     expect(inflictions.length).toBeGreaterThanOrEqual(1);
 
@@ -98,7 +98,7 @@ describe('Chen Qianyu — freeform infliction must not trigger Slashing Edge', (
     let foundSlashingEdge = false;
     for (const [, vm] of Array.from(vms.entries())) {
       for (const ev of vm.events) {
-        if (ev.columnId === INFLICTION_COLUMNS.NATURE && ev.ownerId === ENEMY_OWNER_ID) {
+        if (ev.columnId === INFLICTION_COLUMNS.NATURE && ev.ownerId === ENEMY_ID) {
           foundInfliction = true;
         }
         if (ev.columnId === SLASHING_EDGE_ID || ev.id === SLASHING_EDGE_ID) {

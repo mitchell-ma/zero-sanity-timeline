@@ -29,7 +29,7 @@ import { useApp } from '../../../../app/useApp';
 import {
   PHYSICAL_STATUS_COLUMNS,
   PHYSICAL_INFLICTION_COLUMNS,
-  ENEMY_OWNER_ID,
+  ENEMY_ID,
 } from '../../../../model/channels';
 import { ColumnType, InteractionModeType, SegmentType } from '../../../../consts/enums';
 import { FPS } from '../../../../utils/timeline';
@@ -185,13 +185,13 @@ describe('Da Pan Skills — battle skill Vulnerable and Lift', () => {
 
     // Vulnerable should exist on enemy
     const vulnEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === PHYSICAL_INFLICTION_COLUMNS.VULNERABLE && ev.ownerId === ENEMY_OWNER_ID,
+      (ev) => ev.columnId === PHYSICAL_INFLICTION_COLUMNS.VULNERABLE && ev.ownerId === ENEMY_ID,
     );
     expect(vulnEvents.length).toBeGreaterThanOrEqual(1);
 
     // No Lift yet — first BS has no pre-existing Vulnerable
     const liftEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === PHYSICAL_STATUS_COLUMNS.LIFT && ev.ownerId === ENEMY_OWNER_ID,
+      (ev) => ev.columnId === PHYSICAL_STATUS_COLUMNS.LIFT && ev.ownerId === ENEMY_ID,
     );
     expect(liftEvents).toHaveLength(0);
   });
@@ -218,13 +218,13 @@ describe('Da Pan Skills — battle skill Vulnerable and Lift', () => {
     });
 
     const liftEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === PHYSICAL_STATUS_COLUMNS.LIFT && ev.ownerId === ENEMY_OWNER_ID,
+      (ev) => ev.columnId === PHYSICAL_STATUS_COLUMNS.LIFT && ev.ownerId === ENEMY_ID,
     );
     expect(liftEvents.length).toBeGreaterThanOrEqual(1);
 
     // Vulnerable stacks should accumulate (each BS adds 1)
     const vulnEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === PHYSICAL_INFLICTION_COLUMNS.VULNERABLE && ev.ownerId === ENEMY_OWNER_ID,
+      (ev) => ev.columnId === PHYSICAL_INFLICTION_COLUMNS.VULNERABLE && ev.ownerId === ENEMY_ID,
     );
     expect(vulnEvents.length).toBeGreaterThanOrEqual(2);
   });
@@ -256,13 +256,13 @@ describe('Da Pan Skills — ultimate physical statuses', () => {
 
     // Knock Down should appear (Vulnerable exists from prior forced-Lift frame)
     const knockDownEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === PHYSICAL_STATUS_COLUMNS.KNOCK_DOWN && ev.ownerId === ENEMY_OWNER_ID,
+      (ev) => ev.columnId === PHYSICAL_STATUS_COLUMNS.KNOCK_DOWN && ev.ownerId === ENEMY_ID,
     );
     expect(knockDownEvents.length).toBeGreaterThanOrEqual(1);
 
     // Vulnerable stacks added by both Lift and KD frames
     const vulnEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === PHYSICAL_INFLICTION_COLUMNS.VULNERABLE && ev.ownerId === ENEMY_OWNER_ID,
+      (ev) => ev.columnId === PHYSICAL_INFLICTION_COLUMNS.VULNERABLE && ev.ownerId === ENEMY_ID,
     );
     expect(vulnEvents.length).toBeGreaterThanOrEqual(1);
   });

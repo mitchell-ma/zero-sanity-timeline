@@ -14,7 +14,7 @@
 import { renderHook, act } from '@testing-library/react';
 import { NounType } from '../../../../dsl/semantics';
 import { useApp } from '../../../../app/useApp';
-import { ENEMY_OWNER_ID, ENEMY_GROUP_COLUMNS } from '../../../../model/channels';
+import { ENEMY_ID, ENEMY_GROUP_COLUMNS } from '../../../../model/channels';
 import { ColumnType, EventStatusType } from '../../../../consts/enums';
 import type { MiniTimeline } from '../../../../consts/viewTypes';
 import { FPS } from '../../../../utils/timeline';
@@ -79,7 +79,7 @@ describe('F. Execute Process — Cryo Fragility', () => {
 
     // ── Controller layer: CRYO_FRAGILITY on enemy ──
     const fragilityEvents = result.current.allProcessedEvents.filter(
-      ev => ev.name === CRYO_FRAGILITY_ID && ev.ownerId === ENEMY_OWNER_ID,
+      ev => ev.name === CRYO_FRAGILITY_ID && ev.ownerId === ENEMY_ID,
     );
     expect(fragilityEvents.length).toBeGreaterThanOrEqual(1);
     // Should have statusValue (fragility percentage)
@@ -99,7 +99,7 @@ describe('F. Execute Process — Cryo Fragility', () => {
     const enemyStatusCol = result.current.columns.find(
       (c): c is MiniTimeline =>
         c.type === ColumnType.MINI_TIMELINE &&
-        c.ownerId === ENEMY_OWNER_ID &&
+        c.ownerId === ENEMY_ID &&
         c.columnId === ENEMY_GROUP_COLUMNS.ENEMY_STATUS,
     );
     expect(enemyStatusCol).toBeDefined();

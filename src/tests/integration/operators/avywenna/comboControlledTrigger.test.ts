@@ -24,7 +24,7 @@ import { useApp } from '../../../../app/useApp';
 import {
   COMBO_WINDOW_COLUMN_ID,
   REACTION_COLUMNS,
-  ENEMY_OWNER_ID,
+  ENEMY_ID,
 } from '../../../../model/channels';
 import { ColumnType, InteractionModeType } from '../../../../consts/enums';
 import type { MiniTimeline, ContextMenuItem } from '../../../../consts/viewTypes';
@@ -67,7 +67,7 @@ function placeElectrification(
   act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
   act(() => {
     result.current.handleAddEvent(
-      ENEMY_OWNER_ID, REACTION_COLUMNS.ELECTRIFICATION, startSec * FPS,
+      ENEMY_ID, REACTION_COLUMNS.ELECTRIFICATION, startSec * FPS,
       { name: REACTION_COLUMNS.ELECTRIFICATION, segments: [{ properties: { duration: durationSec * FPS } }] },
     );
   });

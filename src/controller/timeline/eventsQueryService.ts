@@ -12,7 +12,7 @@ import { DamageFactorType, ElementType, StatType, StatusType } from '../../const
 import { isQualifiedId } from '../../dsl/semantics';
 import { StaggerBreak } from './staggerTimeline';
 import {
-  ENEMY_OWNER_ID,
+  ENEMY_ID,
   FRAGILITY_COLUMN_PREFIX,
   INFLICTION_COLUMNS,
   NODE_STAGGER_COLUMN_ID,
@@ -119,20 +119,20 @@ export class EventsQueryService {
 
     // Pre-filter from DerivedEventController for O(n) per-column queries
     const events = state.getAllEvents();
-    this.susceptibilityEvents = events.filter(e => (e.columnId === StatusType.SUSCEPTIBILITY || e.columnId === StatusType.FOCUS || isQualifiedId(e.columnId, StatusType.SUSCEPTIBILITY)) && e.ownerId === ENEMY_OWNER_ID);
+    this.susceptibilityEvents = events.filter(e => (e.columnId === StatusType.SUSCEPTIBILITY || e.columnId === StatusType.FOCUS || isQualifiedId(e.columnId, StatusType.SUSCEPTIBILITY)) && e.ownerId === ENEMY_ID);
     this.linkEvents = events.filter(e => e.columnId === StatusType.LINK);
     this.artsAmpEvents = events.filter(e => e.damageFactorType === DamageFactorType.AMP);
     this.electrificationEvents = events.filter(e => e.columnId === REACTION_COLUMNS.ELECTRIFICATION);
     this.breachEvents = events.filter(e => e.columnId === PHYSICAL_STATUS_COLUMNS.BREACH);
-    this.corrosionEvents = events.filter(e => e.ownerId === ENEMY_OWNER_ID && e.columnId === REACTION_COLUMNS.CORROSION);
+    this.corrosionEvents = events.filter(e => e.ownerId === ENEMY_ID && e.columnId === REACTION_COLUMNS.CORROSION);
     this.weakenEvents = events.filter(e => e.columnId === StatusType.WEAKEN);
     this.dmgReductionEvents = events.filter(e => e.columnId === StatusType.DMG_REDUCTION);
     this.protectionEvents = events.filter(e => e.columnId === StatusType.PROTECTION);
     this.shieldEvents = events.filter(e => e.columnId === StatusType.SHIELD);
     this.weaponFragilityEvents = events.filter(e => e.columnId.startsWith(FRAGILITY_COLUMN_PREFIX));
-    this.cryoInflictionEvents = events.filter(e => e.ownerId === ENEMY_OWNER_ID && e.columnId === INFLICTION_COLUMNS.CRYO);
-    this.solidificationEvents = events.filter(e => e.ownerId === ENEMY_OWNER_ID && e.columnId === REACTION_COLUMNS.SOLIDIFICATION);
-    this.nodeStaggerEvents = events.filter(e => e.ownerId === ENEMY_OWNER_ID && e.columnId === NODE_STAGGER_COLUMN_ID);
+    this.cryoInflictionEvents = events.filter(e => e.ownerId === ENEMY_ID && e.columnId === INFLICTION_COLUMNS.CRYO);
+    this.solidificationEvents = events.filter(e => e.ownerId === ENEMY_ID && e.columnId === REACTION_COLUMNS.SOLIDIFICATION);
+    this.nodeStaggerEvents = events.filter(e => e.ownerId === ENEMY_ID && e.columnId === NODE_STAGGER_COLUMN_ID);
   }
 
   // ── Helpers ─────────────────────────────────────────────────────────────

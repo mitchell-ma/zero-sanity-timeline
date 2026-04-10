@@ -18,7 +18,7 @@ import { NounType, VerbType } from '../../../../dsl/semantics';
 import { useApp } from '../../../../app/useApp';
 import { EventStatusType, InteractionModeType, SegmentType } from '../../../../consts/enums';
 import { FPS } from '../../../../utils/timeline';
-import { ENEMY_OWNER_ID, INFLICTION_COLUMNS } from '../../../../model/channels';
+import { ENEMY_ID, INFLICTION_COLUMNS } from '../../../../model/channels';
 import {
   findColumn, buildContextMenu, getMenuPayload,
 } from '../../helpers';
@@ -43,7 +43,7 @@ function setupLr() {
 
 function placeCryoInfliction(app: AppResult, atFrame: number) {
   app.handleAddEvent(
-    ENEMY_OWNER_ID, INFLICTION_COLUMNS.CRYO, atFrame,
+    ENEMY_ID, INFLICTION_COLUMNS.CRYO, atFrame,
     { name: INFLICTION_COLUMNS.CRYO, segments: [{ properties: { duration: 20 * FPS } }] },
   );
 }
@@ -56,7 +56,7 @@ function placeCryoInflictions(app: AppResult, count: number, startFrame: number)
 
 function getCryoInflictions(app: AppResult) {
   return app.allProcessedEvents.filter(
-    ev => ev.columnId === INFLICTION_COLUMNS.CRYO && ev.ownerId === ENEMY_OWNER_ID
+    ev => ev.columnId === INFLICTION_COLUMNS.CRYO && ev.ownerId === ENEMY_ID
       && ev.startFrame > 0,
   );
 }

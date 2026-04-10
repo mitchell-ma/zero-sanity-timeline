@@ -44,7 +44,7 @@ import { EventsQueryService } from '../timeline/eventsQueryService';
 import { hasDealDamageClause, findDealDamageInClauses } from '../timeline/clauseQueries';
 import { LoadoutProperties, DEFAULT_LOADOUT_PROPERTIES } from '../../view/InformationPane';
 import type { Slot } from '../timeline/columnBuilder';
-import { ENEMY_OWNER_ID, OPERATOR_COLUMNS, REACTION_COLUMN_IDS } from '../../model/channels';
+import { ENEMY_ID, OPERATOR_COLUMNS, REACTION_COLUMN_IDS } from '../../model/channels';
 import { buildReactionDamageRows, ReactionOperatorContext } from './artsReactionController';
 import { buildCritExpectationModel, getFrameExpectation } from './critExpectationModel';
 import type { CritExpectationModel, CritFrameSnapshot, StatusStatContribution } from './critExpectationModel';
@@ -808,7 +808,7 @@ export function buildDamageTableRows(
   // Find reaction events on the enemy timeline and compute their damage
   // using the triggering operator's loadout.
   for (const ev of events) {
-    if (ev.ownerId !== ENEMY_OWNER_ID || !REACTION_COLUMN_IDS.has(ev.columnId)) continue;
+    if (ev.ownerId !== ENEMY_ID || !REACTION_COLUMN_IDS.has(ev.columnId)) continue;
     if (!ev.sourceOwnerId) continue;
 
     // Look up triggering operator's calc data

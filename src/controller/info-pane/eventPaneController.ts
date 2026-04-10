@@ -7,7 +7,7 @@ import type { Interaction, Effect, Predicate, ValueNode } from '../../dsl/semant
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT, getLeafValue } from '../../controller/calculation/valueResolver';
 import { translateEffect } from '../../dsl/semanticsTranslation';
 import type { TranslatedEffect } from '../../dsl/semanticsTranslation';
-import { ENEMY_OWNER_ID, OPERATOR_COLUMNS, REACTION_COLUMNS, PHYSICAL_STATUS_COLUMNS, PHYSICAL_STATUS_COLUMN_IDS, FRAGILITY_COLUMN_PREFIX, INFLICTION_COLUMN_IDS, PHYSICAL_INFLICTION_COLUMN_IDS, COMBO_WINDOW_COLUMN_ID } from '../../model/channels';
+import { ENEMY_ID, OPERATOR_COLUMNS, REACTION_COLUMNS, PHYSICAL_STATUS_COLUMNS, PHYSICAL_STATUS_COLUMN_IDS, FRAGILITY_COLUMN_PREFIX, INFLICTION_COLUMN_IDS, PHYSICAL_INFLICTION_COLUMN_IDS, COMBO_WINDOW_COLUMN_ID } from '../../model/channels';
 import { computeSpReturnSummary, SpReturnSummary } from '../calculation/frameCalculator';
 import { ELECTRIFICATION_ARTS_FRAGILITY, BREACH_PHYSICAL_FRAGILITY, DEFAULT_AMP_BONUS } from '../timeline/eventsQueryService';
 import { getOperatorSkill, getSkillTypeMap, getComboTriggerInfo } from '../gameDataStore';
@@ -98,7 +98,7 @@ export function resolveEventIdentity(
   let comboRequiresLabels: string[] = [];
   let columnLabel = '';
 
-  if (event.ownerId === ENEMY_OWNER_ID) {
+  if (event.ownerId === ENEMY_ID) {
     ownerName = enemy.name;
     const status = enemy.statuses.find((s) => s.id === event.columnId);
     const reaction = REACTION_LABELS[event.columnId];
@@ -268,7 +268,7 @@ export function resolveComboChain(
     // came from the same source operator — it has the original skill name.
     let bestMatch: TimelineEvent | undefined;
     for (const e of allProcessedEvents) {
-      if (e.ownerId !== ENEMY_OWNER_ID) continue;
+      if (e.ownerId !== ENEMY_ID) continue;
       if (e.columnId !== triggerCol) continue;
       if (e.sourceOwnerId !== window.sourceOwnerId) continue;
       if (e.startFrame > event.startFrame) continue;
@@ -367,7 +367,7 @@ export function resolveActiveModifiers(
   const midFrame = Math.floor((eventStartFrame + eventEndFrame) / 2);
 
   for (const ev of allProcessedEvents) {
-    if (ev.ownerId !== ENEMY_OWNER_ID) continue;
+    if (ev.ownerId !== ENEMY_ID) continue;
     if (!isActiveAt(ev, midFrame)) continue;
 
     // Susceptibility / Focus

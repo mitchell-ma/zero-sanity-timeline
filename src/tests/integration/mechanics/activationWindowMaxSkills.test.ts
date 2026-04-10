@@ -19,7 +19,7 @@ import { useApp } from '../../../app/useApp';
 import {
   COMBO_WINDOW_COLUMN_ID,
   INFLICTION_COLUMNS,
-  ENEMY_OWNER_ID,
+  ENEMY_ID,
 } from '../../../model/channels';
 import { InteractionModeType } from '../../../consts/enums';
 import { FPS } from '../../../utils/timeline';
@@ -47,7 +47,7 @@ function placeHeatInfliction(result: { current: AppResult }, startSec: number, d
   act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
   act(() => {
     result.current.handleAddEvent(
-      ENEMY_OWNER_ID, INFLICTION_COLUMNS.HEAT, startSec * FPS,
+      ENEMY_ID, INFLICTION_COLUMNS.HEAT, startSec * FPS,
       { name: INFLICTION_COLUMNS.HEAT, segments: [{ properties: { duration: durationSec * FPS } }] },
     );
   });

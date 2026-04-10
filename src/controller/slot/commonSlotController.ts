@@ -10,7 +10,7 @@ import { ShieldController } from '../calculation/shieldController';
 
 // ── Column IDs ───────────────────────────────────────────────────────────────
 
-export const COMMON_OWNER_ID = 'common';
+export const TEAM_ID = 'common';
 
 export const COMMON_COLUMN_IDS = {
   SKILL_POINTS: 'skill-points',
@@ -33,7 +33,7 @@ export type CommonSlotChangeListener = () => void;
  * - Team Status subtimeline: statuses that apply to all four operators
  */
 export class CommonSlotController {
-  readonly ownerId = COMMON_OWNER_ID;
+  readonly ownerId = TEAM_ID;
 
   readonly skillPoints: SkillPointController;
   readonly stagger: StaggerController;
@@ -52,7 +52,7 @@ export class CommonSlotController {
     this.hp = new HPController();
     this.shield = new ShieldController();
     this.skillPoints.setUltimateEnergyController(this.ultimateEnergy);
-    this.teamStatusSubtimeline = new Subtimeline(COMMON_OWNER_ID, COMMON_COLUMN_IDS.TEAM_STATUS);
+    this.teamStatusSubtimeline = new Subtimeline(TEAM_ID, COMMON_COLUMN_IDS.TEAM_STATUS);
   }
 
   // ── Subtimeline access ──────────────────────────────────────────────────
@@ -79,7 +79,7 @@ export class CommonSlotController {
   private getOrCreateTeamStatusSubtimeline(columnId: string): Subtimeline {
     let st = this.teamStatusSubtimelines.get(columnId);
     if (!st) {
-      st = new Subtimeline(COMMON_OWNER_ID, columnId);
+      st = new Subtimeline(TEAM_ID, columnId);
       this.teamStatusSubtimelines.set(columnId, st);
     }
     return st;
@@ -90,20 +90,20 @@ export class CommonSlotController {
   getColumns(): MiniTimeline[] {
     return [
       {
-        key: `${COMMON_OWNER_ID}-${COMMON_COLUMN_IDS.SKILL_POINTS}`,
+        key: `${TEAM_ID}-${COMMON_COLUMN_IDS.SKILL_POINTS}`,
         type: ColumnType.MINI_TIMELINE,
         source: TimelineSourceType.COMMON,
-        ownerId: COMMON_OWNER_ID,
+        ownerId: TEAM_ID,
         columnId: COMMON_COLUMN_IDS.SKILL_POINTS,
         label: ColumnLabel.SKILL_POINTS,
         color: '#ccaa33',
         headerVariant: HeaderVariant.SKILL,
       },
       {
-        key: `${COMMON_OWNER_ID}-${COMMON_COLUMN_IDS.TEAM_STATUS}`,
+        key: `${TEAM_ID}-${COMMON_COLUMN_IDS.TEAM_STATUS}`,
         type: ColumnType.MINI_TIMELINE,
         source: TimelineSourceType.COMMON,
-        ownerId: COMMON_OWNER_ID,
+        ownerId: TEAM_ID,
         columnId: COMMON_COLUMN_IDS.TEAM_STATUS,
         label: ColumnLabel.TEAM_STATUS,
         color: '#66aa88',

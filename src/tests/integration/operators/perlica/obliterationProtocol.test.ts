@@ -28,7 +28,7 @@ import { FPS } from '../../../../utils/timeline';
 import { eventDuration } from '../../../../consts/viewTypes';
 import { computeTimelinePresentation } from '../../../../controller/timeline/eventPresentationController';
 import {
-  ENEMY_OWNER_ID,
+  ENEMY_ID,
   NODE_STAGGER_COLUMN_ID,
   FULL_STAGGER_COLUMN_ID,
 } from '../../../../model/channels';
@@ -62,7 +62,7 @@ function setupPerlica() {
 
 function placeStagger(app: AppResult, columnId: string, atFrame: number, durationFrames: number) {
   app.handleAddEvent(
-    ENEMY_OWNER_ID, columnId, atFrame,
+    ENEMY_ID, columnId, atFrame,
     { name: columnId, segments: [{ properties: { duration: durationFrames } }] },
   );
 }
@@ -202,7 +202,7 @@ describe('C. Full stagger triggers talent via STAGGER_FRAILTY', () => {
     act(() => { placeStagger(result.current, FULL_STAGGER_COLUMN_ID, 5 * FPS, defaultDur); });
 
     const staggerEvs = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === FULL_STAGGER_COLUMN_ID && ev.ownerId === ENEMY_OWNER_ID,
+      ev => ev.columnId === FULL_STAGGER_COLUMN_ID && ev.ownerId === ENEMY_ID,
     );
     expect(staggerEvs).toHaveLength(1);
     const staggerDur = eventDuration(staggerEvs[0]);
@@ -228,7 +228,7 @@ describe('C. Full stagger triggers talent via STAGGER_FRAILTY', () => {
     act(() => { placeStagger(result.current, FULL_STAGGER_COLUMN_ID, 5 * FPS, defaultDur); });
 
     const staggerEvs = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === FULL_STAGGER_COLUMN_ID && ev.ownerId === ENEMY_OWNER_ID,
+      ev => ev.columnId === FULL_STAGGER_COLUMN_ID && ev.ownerId === ENEMY_ID,
     );
     expect(staggerEvs).toHaveLength(1);
 

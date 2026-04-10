@@ -6,7 +6,7 @@
  */
 import { TimelineEvent, EventSegmentData, computeSegmentsSpan, getAnimationDuration, eventDuration, eventEndFrame } from '../../consts/viewTypes';
 import { EnhancementType, TimeDependency } from '../../consts/enums';
-import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../slot/commonSlotController';
+import { TEAM_ID, COMMON_COLUMN_IDS } from '../slot/commonSlotController';
 import type { ResourceZone } from './skillPointTimeline';
 import { getOperatorSkill, getOperatorSkills, getComboTriggerClause } from '../gameDataStore';
 import { VerbType, NounType } from '../../dsl/semantics';
@@ -15,7 +15,7 @@ import { evaluateConditions } from './conditionEvaluator';
 import type { ConditionContext } from './conditionEvaluator';
 import { t } from '../../locales/locale';
 import { extendByTimeStops } from './processTimeStop';
-import { ENEMY_OWNER_ID, INFLICTION_COLUMN_IDS, OPERATOR_COLUMNS, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID, COMBO_WINDOW_COLUMN_ID } from '../../model/channels';
+import { ENEMY_ID, INFLICTION_COLUMN_IDS, OPERATOR_COLUMNS, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID, COMBO_WINDOW_COLUMN_ID } from '../../model/channels';
 import type { Slot } from './columnBuilder';
 import type { ResourceGraphData } from '../../app/useResourceGraphs';
 import { isClauseAlwaysAvailable } from './triggerMatch';
@@ -358,7 +358,7 @@ export function computeResourceZonesForDrag(
   // Build adjusted resource graphs
   const adjusted = new Map(resourceGraphs);
   if (spExclusions.length > 0) {
-    const spKey = `${COMMON_OWNER_ID}-${COMMON_COLUMN_IDS.SKILL_POINTS}`;
+    const spKey = `${TEAM_ID}-${COMMON_COLUMN_IDS.SKILL_POINTS}`;
     const spGraph = resourceGraphs.get(spKey);
     if (spGraph) {
       adjusted.set(spKey, {
@@ -394,7 +394,7 @@ export function computeResourceInsufficiencyZones(
   const zones = new Map<string, ResourceZone[]>();
 
   // SP zones for battle skills (shared graph, per-slot cost threshold)
-  const spKey = `${COMMON_OWNER_ID}-${COMMON_COLUMN_IDS.SKILL_POINTS}`;
+  const spKey = `${TEAM_ID}-${COMMON_COLUMN_IDS.SKILL_POINTS}`;
   const spGraph = resourceGraphs.get(spKey);
   if (spGraph && spGraph.points.length >= 2) {
     for (const slot of slots) {
@@ -531,7 +531,7 @@ export function checkResourceAvailability(
   } else if (columnId === NounType.BATTLE) {
     const slot = slots.find((s) => s.slotId === ownerId);
     const spCost = slot?.operator?.skills[NounType.BATTLE]?.skillPointCost ?? 100;
-    const spKey = `${COMMON_OWNER_ID}-${COMMON_COLUMN_IDS.SKILL_POINTS}`;
+    const spKey = `${TEAM_ID}-${COMMON_COLUMN_IDS.SKILL_POINTS}`;
     const spGraph = resourceGraphs.get(spKey);
     if (spGraph) {
       const val = preConsumptionValue(spGraph, atFrame);
@@ -1019,7 +1019,7 @@ export function validateResources(
   skipIds?: ReadonlySet<string>,
 ): Map<string, string> {
   const map = new Map<string, string>();
-  const spKey = `${COMMON_OWNER_ID}-${COMMON_COLUMN_IDS.SKILL_POINTS}`;
+  const spKey = `${TEAM_ID}-${COMMON_COLUMN_IDS.SKILL_POINTS}`;
 
   for (const ev of events) {
     if (skipIds?.has(ev.uid)) continue;
@@ -1411,7 +1411,7 @@ export function validateInflictionStacks(events: TimelineEvent[]): Map<string, s
 
   const inflictionsByColumn = new Map<string, TimelineEvent[]>();
   for (const ev of events) {
-    if (ev.ownerId === ENEMY_OWNER_ID && INFLICTION_COLUMN_IDS.has(ev.columnId)) {
+    if (ev.ownerId === ENEMY_ID && INFLICTION_COLUMN_IDS.has(ev.columnId)) {
       const group = inflictionsByColumn.get(ev.columnId) ?? [];
       group.push(ev);
       inflictionsByColumn.set(ev.columnId, group);

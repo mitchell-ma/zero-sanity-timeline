@@ -29,7 +29,7 @@ import { EventStatusType, InteractionModeType, StatusType } from '../../../const
 import { FPS } from '../../../utils/timeline';
 import { eventDuration } from '../../../consts/viewTypes';
 import type { TimelineEvent } from '../../../consts/viewTypes';
-import { COMMON_OWNER_ID } from '../../../controller/slot/commonSlotController';
+import { TEAM_ID } from '../../../controller/slot/commonSlotController';
 import { processCombatSimulation, getLastController } from '../../../controller/timeline/eventQueueController';
 import { findColumn, buildContextMenu, getMenuPayload, setUltimateEnergyToMax, type AppResult } from '../helpers';
 
@@ -49,7 +49,7 @@ function linkEvent(startFrame: number, durationFrames: number): TimelineEvent {
     uid: `link-integ-${linkIdCounter++}`,
     id: StatusType.LINK,
     name: StatusType.LINK,
-    ownerId: COMMON_OWNER_ID,
+    ownerId: TEAM_ID,
     columnId: StatusType.LINK,
     startFrame,
     segments: [{ properties: { duration: durationFrames } }],

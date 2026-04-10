@@ -24,7 +24,7 @@
 import { renderHook, act } from '@testing-library/react';
 import { NounType } from '../../../../dsl/semantics';
 import { useApp } from '../../../../app/useApp';
-import { NODE_STAGGER_COLUMN_ID, ENEMY_OWNER_ID, USER_ID, ultimateGraphKey } from '../../../../model/channels';
+import { NODE_STAGGER_COLUMN_ID, ENEMY_ID, USER_ID, ultimateGraphKey } from '../../../../model/channels';
 import { getUltimateEnergyCost } from '../../../../controller/operators/operatorRegistry';
 import { ColumnType, InteractionModeType } from '../../../../consts/enums';
 import { EnhancementType } from '../../../../consts/enums';
@@ -288,7 +288,7 @@ describe('Laevatain variant availability — integration through useApp', () => 
         result.current.setInteractionMode(InteractionModeType.FREEFORM);
       });
       // Find enemy stagger column (micro-column within enemy status) and place via context menu
-      const staggerCol = findMatchingColumn(result.current, ENEMY_OWNER_ID, NODE_STAGGER_COLUMN_ID);
+      const staggerCol = findMatchingColumn(result.current, ENEMY_ID, NODE_STAGGER_COLUMN_ID);
       expect(staggerCol).toBeDefined();
       const staggerMenu = buildContextMenu(result.current, staggerCol!, ACTIVE_FRAME - FPS);
       expect(staggerMenu).not.toBeNull();

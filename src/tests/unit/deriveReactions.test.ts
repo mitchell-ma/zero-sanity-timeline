@@ -13,7 +13,7 @@
 
 import { deriveReactions } from '../../controller/timeline/deriveReactions';
 import type { TimelineEvent } from '../../consts/viewTypes';
-import { INFLICTION_COLUMNS, REACTION_COLUMNS, ENEMY_OWNER_ID } from '../../model/channels';
+import { INFLICTION_COLUMNS, REACTION_COLUMNS, ENEMY_ID } from '../../model/channels';
 import { EventStatusType } from '../../consts/enums';
 
 const FPS = 120;
@@ -30,7 +30,7 @@ function infliction(
     uid,
     id: columnId,
     name: columnId,
-    ownerId: ENEMY_OWNER_ID,
+    ownerId: ENEMY_ID,
     columnId,
     startFrame,
     segments: [{ properties: { duration: Math.round(durationSeconds * FPS) } }],

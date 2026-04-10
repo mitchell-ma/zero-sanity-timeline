@@ -16,7 +16,7 @@ import { DerivedEventController } from '../../controller/timeline/derivedEventCo
 import { EventsQueryService } from '../../controller/timeline/eventsQueryService';
 import { StaggerController } from '../../controller/slot/staggerController';
 import { buildDealStaggerClause } from '../../controller/timeline/clauseQueries';
-import { NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID, ENEMY_OWNER_ID } from '../../model/channels';
+import { NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID, ENEMY_ID } from '../../model/channels';
 import { StatType, SegmentType, TimeDependency } from '../../consts/enums';
 import { getStaggerMultiplier } from '../../model/calculation/damageFormulas';
 import { FPS } from '../../utils/timeline';
@@ -41,7 +41,7 @@ jest.mock('../../utils/loadoutRegistry', () => ({
 const STAGGER_COLUMN = 'stagger';
 
 function makeStaggerTimeline(nodeCount: number, maxHp = 60, breakDurationSec = 5) {
-  const sub = new Subtimeline(ENEMY_OWNER_ID, STAGGER_COLUMN);
+  const sub = new Subtimeline(ENEMY_ID, STAGGER_COLUMN);
   const stagger = new StaggerTimeline(sub);
   stagger.updateConfig({ max: maxHp });
   stagger.setNodeCount(nodeCount);
@@ -141,20 +141,20 @@ describe('B. Frailty event generation', () => {
     const { sub, stagger } = makeStaggerTimeline(1, 60);
     addStaggerDamage(sub, 100, 35);
     const events = stagger.generateFrailtyEvents(
-      NODE_RECOVERY_FRAMES, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID, ENEMY_OWNER_ID, 'test',
+      NODE_RECOVERY_FRAMES, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID, ENEMY_ID, 'test',
     );
     const nodeEvents = events.filter(e => e.columnId === NODE_STAGGER_COLUMN_ID);
     expect(nodeEvents).toHaveLength(1);
     expect(nodeEvents[0].startFrame).toBe(100);
     expect(eventDuration(nodeEvents[0])).toBe(NODE_RECOVERY_FRAMES);
-    expect(nodeEvents[0].ownerId).toBe(ENEMY_OWNER_ID);
+    expect(nodeEvents[0].ownerId).toBe(ENEMY_ID);
   });
 
   test('B2: Full stagger break generates a frailty event with break duration', () => {
     const { sub, stagger } = makeStaggerTimeline(0, 60, 5);
     addStaggerDamage(sub, 100, 60); // hits max
     const events = stagger.generateFrailtyEvents(
-      NODE_RECOVERY_FRAMES, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID, ENEMY_OWNER_ID, 'test',
+      NODE_RECOVERY_FRAMES, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID, ENEMY_ID, 'test',
     );
     const fullEvents = events.filter(e => e.columnId === FULL_STAGGER_COLUMN_ID);
     expect(fullEvents).toHaveLength(1);
@@ -166,7 +166,7 @@ describe('B. Frailty event generation', () => {
     const { sub, stagger } = makeStaggerTimeline(1, 60, 5);
     addStaggerDamage(sub, 100, 60); // crosses node at 30, then hits max at 60
     const events = stagger.generateFrailtyEvents(
-      NODE_RECOVERY_FRAMES, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID, ENEMY_OWNER_ID, 'test',
+      NODE_RECOVERY_FRAMES, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID, ENEMY_ID, 'test',
     );
     expect(events.filter(e => e.columnId === NODE_STAGGER_COLUMN_ID)).toHaveLength(1);
     expect(events.filter(e => e.columnId === FULL_STAGGER_COLUMN_ID)).toHaveLength(1);
@@ -176,7 +176,7 @@ describe('B. Frailty event generation', () => {
     const { sub, stagger } = makeStaggerTimeline(1, 60);
     addStaggerDamage(sub, 200, 40);
     const events = stagger.generateFrailtyEvents(
-      NODE_RECOVERY_FRAMES, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID, ENEMY_OWNER_ID, 'stagger-frailty',
+      NODE_RECOVERY_FRAMES, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID, ENEMY_ID, 'stagger-frailty',
     );
     expect(events[0].uid).toBe('stagger-frailty-node-1-200');
   });
@@ -201,7 +201,7 @@ describe('C. EventsQueryService.isStaggered() includes node stagger', () => {
       uid: 'node-1',
       id: 'Node Stagger',
       name: 'Node Stagger',
-      ownerId: ENEMY_OWNER_ID,
+      ownerId: ENEMY_ID,
       columnId: NODE_STAGGER_COLUMN_ID,
       startFrame: 200,
       segments: [{ properties: { duration: 600 } }], // 5 seconds at 120fps
@@ -224,7 +224,7 @@ describe('C. EventsQueryService.isStaggered() includes node stagger', () => {
       uid: 'node-1',
       id: 'Node Stagger',
       name: 'Node Stagger',
-      ownerId: ENEMY_OWNER_ID,
+      ownerId: ENEMY_ID,
       columnId: NODE_STAGGER_COLUMN_ID,
       startFrame: 300,
       segments: [{ properties: { duration: 600 } }],
@@ -240,7 +240,7 @@ describe('C. EventsQueryService.isStaggered() includes node stagger', () => {
       uid: 'node-1',
       id: 'Node Stagger',
       name: 'Node Stagger',
-      ownerId: ENEMY_OWNER_ID,
+      ownerId: ENEMY_ID,
       columnId: NODE_STAGGER_COLUMN_ID,
       startFrame: 100,
       segments: [{ properties: { duration: 600 } }],
@@ -268,7 +268,7 @@ describe('D. Stagger frailty multiplier', () => {
       uid: 'node-1',
       id: 'Node Stagger',
       name: 'Node Stagger',
-      ownerId: ENEMY_OWNER_ID,
+      ownerId: ENEMY_ID,
       columnId: NODE_STAGGER_COLUMN_ID,
       startFrame: 100,
       segments: [{ properties: { duration: 600 } }],
@@ -283,7 +283,7 @@ describe('D. Stagger frailty multiplier', () => {
       uid: 'node-1',
       id: 'Node Stagger',
       name: 'Node Stagger',
-      ownerId: ENEMY_OWNER_ID,
+      ownerId: ENEMY_ID,
       columnId: NODE_STAGGER_COLUMN_ID,
       startFrame: 100,
       segments: [{ properties: { duration: 600 } }],
@@ -307,7 +307,7 @@ describe('E. End-to-end stagger frailty flow', () => {
     addStaggerDamage(sub, 240, 35);
 
     const frailtyEvents = stagger.generateFrailtyEvents(
-      nodeRecoveryFrames, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID, ENEMY_OWNER_ID, 'e2e',
+      nodeRecoveryFrames, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID, ENEMY_ID, 'e2e',
     );
     const breaks = stagger.getBreaks();
 
@@ -329,7 +329,7 @@ describe('E. End-to-end stagger frailty flow', () => {
     addStaggerDamage(sub, 300, 60); // hits max
 
     const frailtyEvents = stagger.generateFrailtyEvents(
-      0, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID, ENEMY_OWNER_ID, 'e2e',
+      0, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID, ENEMY_ID, 'e2e',
     );
     const breaks = stagger.getBreaks();
 
@@ -350,7 +350,7 @@ describe('E. End-to-end stagger frailty flow', () => {
     addStaggerDamage(sub, 1000, 30);  // 35 → 65, crosses 60
 
     const frailtyEvents = stagger.generateFrailtyEvents(
-      nodeRecoveryFrames, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID, ENEMY_OWNER_ID, 'e2e',
+      nodeRecoveryFrames, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID, ENEMY_ID, 'e2e',
     );
     const breaks = stagger.getBreaks();
     const query = buildQueryService(frailtyEvents, breaks);

@@ -18,7 +18,7 @@
 import { renderHook, act } from '@testing-library/react';
 import { NounType } from '../../../../dsl/semantics';
 import { useApp } from '../../../../app/useApp';
-import { OPERATOR_COLUMNS, OPERATOR_STATUS_COLUMN_ID, COMBO_WINDOW_COLUMN_ID, INFLICTION_COLUMNS, ENEMY_OWNER_ID, ENEMY_GROUP_COLUMNS } from '../../../../model/channels';
+import { OPERATOR_COLUMNS, OPERATOR_STATUS_COLUMN_ID, COMBO_WINDOW_COLUMN_ID, INFLICTION_COLUMNS, ENEMY_ID, ENEMY_GROUP_COLUMNS } from '../../../../model/channels';
 import { ColumnType, CritMode, EventStatusType, InteractionModeType } from '../../../../consts/enums';
 import type { MiniTimeline } from '../../../../consts/viewTypes';
 import { FPS } from '../../../../utils/timeline';
@@ -313,7 +313,7 @@ describe('D. Auxiliary Crystal targeting', () => {
 
     // Combo applies cryo infliction to enemy
     const cryoInflictions = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === INFLICTION_COLUMNS.CRYO && ev.ownerId === ENEMY_OWNER_ID
+      ev => ev.columnId === INFLICTION_COLUMNS.CRYO && ev.ownerId === ENEMY_ID
         && ev.startFrame > comboEvents[0].startFrame,
     );
     expect(cryoInflictions.length).toBeGreaterThanOrEqual(1);
@@ -331,7 +331,7 @@ describe('D. Auxiliary Crystal targeting', () => {
     const enemyStatusCol = result.current.columns.find(
       (c): c is MiniTimeline =>
         c.type === ColumnType.MINI_TIMELINE &&
-        c.ownerId === ENEMY_OWNER_ID &&
+        c.ownerId === ENEMY_ID &&
         c.columnId === ENEMY_GROUP_COLUMNS.ENEMY_STATUS,
     );
     expect(enemyStatusCol).toBeDefined();

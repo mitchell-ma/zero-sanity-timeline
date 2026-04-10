@@ -21,7 +21,7 @@ import { renderHook, act } from '@testing-library/react';
 import { NounType } from '../../../../dsl/semantics';
 import { useApp } from '../../../../app/useApp';
 import {
-  ENEMY_OWNER_ID, ENEMY_GROUP_COLUMNS,
+  ENEMY_ID, ENEMY_GROUP_COLUMNS,
   INFLICTION_COLUMNS, PHYSICAL_INFLICTION_COLUMNS,
   OPERATOR_STATUS_COLUMN_ID,
 } from '../../../../model/channels';
@@ -83,7 +83,7 @@ function findEnemyStatusColumn(app: AppResult) {
   return app.columns.find(
     (c): c is MiniTimeline =>
       c.type === ColumnType.MINI_TIMELINE &&
-      c.ownerId === ENEMY_OWNER_ID &&
+      c.ownerId === ENEMY_ID &&
       c.columnId === ENEMY_GROUP_COLUMNS.ENEMY_STATUS,
   );
 }
@@ -92,7 +92,7 @@ function placeVulnerableOnEnemy(result: { current: AppResult }, startSec: number
   act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
   act(() => {
     result.current.handleAddEvent(
-      ENEMY_OWNER_ID, PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, startSec * FPS,
+      ENEMY_ID, PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, startSec * FPS,
       { name: PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, segments: [{ properties: { duration: durationSec * FPS } }] },
     );
   });
@@ -284,7 +284,7 @@ describe('C. Battle Skill — Empowered', () => {
 
     // Razor Clawmark should appear on enemy
     const clawmarkEvents = result.current.allProcessedEvents.filter(
-      ev => ev.name === RAZOR_CLAWMARK_ID && ev.ownerId === ENEMY_OWNER_ID,
+      ev => ev.name === RAZOR_CLAWMARK_ID && ev.ownerId === ENEMY_ID,
     );
     expect(clawmarkEvents.length).toBeGreaterThanOrEqual(1);
 
@@ -381,7 +381,7 @@ describe('D. Ultimate', () => {
 
     // Heat infliction should appear on enemy
     const inflictionEvents = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerId === ENEMY_OWNER_ID,
+      ev => ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerId === ENEMY_ID,
     );
     expect(inflictionEvents.length).toBeGreaterThanOrEqual(1);
   });
@@ -467,7 +467,7 @@ describe('G. Physical Status — Lift', () => {
     });
 
     const liftEvents = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === PhysicalStatusType.LIFT && ev.ownerId === ENEMY_OWNER_ID,
+      ev => ev.columnId === PhysicalStatusType.LIFT && ev.ownerId === ENEMY_ID,
     );
     expect(liftEvents.length).toBeGreaterThanOrEqual(1);
   });
@@ -487,7 +487,7 @@ describe('G. Physical Status — Lift', () => {
     });
 
     const liftEvents = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === PhysicalStatusType.LIFT && ev.ownerId === ENEMY_OWNER_ID,
+      ev => ev.columnId === PhysicalStatusType.LIFT && ev.ownerId === ENEMY_ID,
     );
     expect(liftEvents.length).toBeGreaterThanOrEqual(1);
   });
@@ -513,7 +513,7 @@ describe('H. Razor Clawmark', () => {
     });
 
     const clawmarkEvents = result.current.allProcessedEvents.filter(
-      ev => ev.name === RAZOR_CLAWMARK_ID && ev.ownerId === ENEMY_OWNER_ID,
+      ev => ev.name === RAZOR_CLAWMARK_ID && ev.ownerId === ENEMY_ID,
     );
     expect(clawmarkEvents.length).toBeGreaterThanOrEqual(1);
     // Duration should be non-zero (scales with talent level: 0/15/25s)
@@ -571,7 +571,7 @@ describe('K. Cross-skill interaction chain', () => {
 
     // Verify Heat Infliction exists on enemy — this is the Arts Infliction needed for combo trigger
     const inflictions = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerId === ENEMY_OWNER_ID,
+      ev => ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerId === ENEMY_ID,
     );
     expect(inflictions.length).toBeGreaterThanOrEqual(1);
   });

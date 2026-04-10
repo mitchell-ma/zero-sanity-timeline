@@ -41,7 +41,7 @@ import { collectNoGainWindowsForEvent } from './ultimateEnergyController';
 import type { HPController } from '../calculation/hpController';
 import type { ShieldController } from '../calculation/shieldController';
 import type { StatAccumulator, StatSource } from '../calculation/statAccumulator';
-import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../slot/commonSlotController';
+import { TEAM_ID, COMMON_COLUMN_IDS } from '../slot/commonSlotController';
 import GENERAL_MECHANICS from '../../model/game-data/generalMechanics.json';
 import { getStatusConfig } from './configCache';
 import type { LoadoutProperties } from '../../view/InformationPane';
@@ -605,7 +605,7 @@ export class DerivedEventController implements ColumnHost {
       }
 
       // SP recovery events (derived from deriveSPRecoveryEvents)
-      if (ev.ownerId === COMMON_OWNER_ID && ev.columnId === COMMON_COLUMN_IDS.SKILL_POINTS) {
+      if (ev.ownerId === TEAM_ID && ev.columnId === COMMON_COLUMN_IDS.SKILL_POINTS) {
         this.spController.addSpRecoveryEvent(ev);
       }
 
@@ -920,10 +920,10 @@ export class DerivedEventController implements ColumnHost {
   consumeLink(eventUid: string, frame: number, source: EventSource): number {
     const linkColumnId = StatusType.LINK;
     const isLink = (ev: TimelineEvent) => ev.id === StatusType.LINK;
-    const linkEvents = this._activeEventsIn(linkColumnId, COMMON_OWNER_ID, frame)
+    const linkEvents = this._activeEventsIn(linkColumnId, TEAM_ID, frame)
       .filter(isLink);
     if (linkEvents.length === 0) return 0;
-    this.clampActiveFiltered(linkColumnId, COMMON_OWNER_ID, frame, source, EventStatusType.CONSUMED, isLink);
+    this.clampActiveFiltered(linkColumnId, TEAM_ID, frame, source, EventStatusType.CONSUMED, isLink);
     const clampedStacks = Math.min(linkEvents.length, 4);
     this.linkConsumptions.set(eventUid, clampedStacks);
     return clampedStacks;

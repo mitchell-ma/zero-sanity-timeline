@@ -20,7 +20,7 @@ import { useApp } from '../../../app/useApp';
 import {
   PHYSICAL_STATUS_COLUMNS,
   PHYSICAL_INFLICTION_COLUMNS,
-  ENEMY_OWNER_ID,
+  ENEMY_ID,
   ENEMY_GROUP_COLUMNS,
 } from '../../../model/channels';
 import { InteractionModeType } from '../../../consts/enums';
@@ -50,13 +50,13 @@ function addViaContextMenu(app: AppResult, slotId: string, columnId: string, atF
 
 function getLiftEvents(app: AppResult) {
   return app.allProcessedEvents.filter(
-    (ev) => ev.columnId === PHYSICAL_STATUS_COLUMNS.LIFT && ev.ownerId === ENEMY_OWNER_ID,
+    (ev) => ev.columnId === PHYSICAL_STATUS_COLUMNS.LIFT && ev.ownerId === ENEMY_ID,
   );
 }
 
 function getGravityFieldEvents(app: AppResult) {
   return app.allProcessedEvents.filter(
-    (ev) => ev.columnId === GRAVITY_FIELD_ID && ev.ownerId === ENEMY_OWNER_ID,
+    (ev) => ev.columnId === GRAVITY_FIELD_ID && ev.ownerId === ENEMY_ID,
   );
 }
 
@@ -99,7 +99,7 @@ describe('Gilberta Gravity Field + Chen Qianyu BS → Lift duration extension', 
 
     // Controller: Vulnerable infliction on enemy
     const vulnAfterFirst = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === PHYSICAL_INFLICTION_COLUMNS.VULNERABLE && ev.ownerId === ENEMY_OWNER_ID,
+      (ev) => ev.columnId === PHYSICAL_INFLICTION_COLUMNS.VULNERABLE && ev.ownerId === ENEMY_ID,
     );
     expect(vulnAfterFirst.length).toBeGreaterThanOrEqual(1);
 
@@ -120,7 +120,7 @@ describe('Gilberta Gravity Field + Chen Qianyu BS → Lift duration extension', 
 
     // ── View layer ─────────────────────────────────────────────────────
     // Lift is a micro-column inside the enemy status column
-    const enemyStatusCol = findColumn(result.current, ENEMY_OWNER_ID, ENEMY_GROUP_COLUMNS.ENEMY_STATUS);
+    const enemyStatusCol = findColumn(result.current, ENEMY_ID, ENEMY_GROUP_COLUMNS.ENEMY_STATUS);
     expect(enemyStatusCol).toBeDefined();
     const microIds = new Set(enemyStatusCol!.microColumns!.map(mc => mc.id));
     expect(microIds.has(PHYSICAL_STATUS_COLUMNS.LIFT)).toBe(true);
@@ -178,7 +178,7 @@ describe('Gilberta Gravity Field + Chen Qianyu BS → Lift duration extension', 
     expect(extendedDur).toBeGreaterThan(baseDur);
 
     // ── View layer ─────────────────────────────────────────────────────
-    const enemyStatusCol = findColumn(result.current, ENEMY_OWNER_ID, ENEMY_GROUP_COLUMNS.ENEMY_STATUS);
+    const enemyStatusCol = findColumn(result.current, ENEMY_ID, ENEMY_GROUP_COLUMNS.ENEMY_STATUS);
     expect(enemyStatusCol).toBeDefined();
 
     const viewModels = computeTimelinePresentation(

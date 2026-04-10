@@ -79,7 +79,7 @@ import { TimelineEvent } from '../../consts/viewTypes';
 import { EventFrameType, EventStatusType, StatusType } from '../../consts/enums';
 import { VerbType, ObjectType, NounType, AdjectiveType, DeterminerType } from '../../dsl/semantics';
 import { findStaggerInClauses } from '../../controller/timeline/clauseQueries';
-import { ENEMY_OWNER_ID, USER_ID, INFLICTION_COLUMNS } from '../../model/channels';
+import { ENEMY_ID, USER_ID, INFLICTION_COLUMNS } from '../../model/channels';
 import { buildSequencesFromOperatorJson, DataDrivenSkillEventSequence } from '../../controller/gameDataStore';
 import { wouldOverlapSiblings } from '../../controller/timeline/eventValidator';
 import { processCombatSimulation } from '../../controller/timeline/eventQueueController';
@@ -541,12 +541,12 @@ describe('K. Scorching Heart absorbs Antal combo mirrored heat', () => {
 
     // Focus on enemy (from Antal's battle skill)
     const focus = makeEv({
-      uid: 'focus-1', name: StatusType.FOCUS, ownerId: ENEMY_OWNER_ID,
+      uid: 'focus-1', name: StatusType.FOCUS, ownerId: ENEMY_ID,
       columnId: 'FOCUS', startFrame: 0, segments: [{ properties: { duration: 60 * FPS } }],
     });
     // Akekuri's heat infliction
     const akekuriHeat = makeEv({
-      uid: 'akekuri-heat-1', name: INFLICTION_COLUMNS.HEAT, ownerId: ENEMY_OWNER_ID,
+      uid: 'akekuri-heat-1', name: INFLICTION_COLUMNS.HEAT, ownerId: ENEMY_ID,
       columnId: INFLICTION_COLUMNS.HEAT, startFrame: 200, segments: [{ properties: { duration: 20 * FPS } }],
       sourceOwnerId: SLOT_AKEKURI, sourceSkillName: 'BURST_OF_PASSION',
     });
@@ -617,7 +617,7 @@ describe('L. Freeform infliction + Final Strike absorption', () => {
       uid: 'freeform-heat-l1',
       id: INFLICTION_COLUMNS.HEAT,
       name: INFLICTION_COLUMNS.HEAT,
-      ownerId: ENEMY_OWNER_ID,
+      ownerId: ENEMY_ID,
       columnId: INFLICTION_COLUMNS.HEAT,
       startFrame: 0,
       segments: [{ properties: { duration: 4800 } }],

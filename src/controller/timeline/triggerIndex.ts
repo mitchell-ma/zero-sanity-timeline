@@ -24,8 +24,8 @@ import { getAllOperatorIds, getSkillIds, getEnabledStatusEvents, getOperatorSkil
 import { getWeaponTriggerDefs, getWeaponStatusTriggerDefs, getGearTriggerDefs, getGearStatusTriggerDefs, getConsumablePassiveDef, getTacticalTriggerDef } from '../gameDataStore';
 import { getStatusDef } from './configCache';
 import type { NormalizedEffectDef } from '../gameDataStore';
-import { ENEMY_OWNER_ID, ENEMY_ACTION_COLUMN_ID, REACTION_COLUMNS, INFLICTION_COLUMNS, PHYSICAL_STATUS_COLUMNS, PHYSICAL_STATUS_COLUMN_IDS, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID } from '../../model/channels';
-import { COMMON_OWNER_ID } from '../slot/commonSlotController';
+import { ENEMY_ID, ENEMY_ACTION_COLUMN_ID, REACTION_COLUMNS, INFLICTION_COLUMNS, PHYSICAL_STATUS_COLUMNS, PHYSICAL_STATUS_COLUMN_IDS, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID } from '../../model/channels';
+import { TEAM_ID } from '../slot/commonSlotController';
 import { TOTAL_FRAMES, FPS } from '../../utils/timeline';
 import { TimelineEvent, durationSegment } from '../../consts/viewTypes';
 
@@ -163,11 +163,11 @@ function resolveTargetOwnerId(
   operatorSlotMap: Record<string, string>,
   determiner?: string,
 ): string {
-  if (target === NounType.ENEMY) return ENEMY_OWNER_ID;
-  if (target === NounType.TEAM) return COMMON_OWNER_ID;
+  if (target === NounType.ENEMY) return ENEMY_ID;
+  if (target === NounType.TEAM) return TEAM_ID;
   if (target === NounType.OPERATOR || !target) {
-    if (determiner === DeterminerType.ALL) return COMMON_OWNER_ID;
-    if (determiner === DeterminerType.OTHER) return COMMON_OWNER_ID;
+    if (determiner === DeterminerType.ALL) return TEAM_ID;
+    if (determiner === DeterminerType.OTHER) return TEAM_ID;
     return slotId;
   }
   // Named operator (e.g. 'LAEVATAIN') — resolve via slot map
@@ -354,7 +354,7 @@ export class TriggerIndex {
         if (operatorSlotMap[opId]) continue;
         const skillNames = getSkillIds(opId);
         for (const ev of allEvents) {
-          if (ev.ownerId === ENEMY_OWNER_ID || ev.ownerId === COMMON_OWNER_ID) continue;
+          if (ev.ownerId === ENEMY_ID || ev.ownerId === TEAM_ID) continue;
           if (skillNames.has(ev.id)) { operatorSlotMap[opId] = ev.ownerId; break; }
         }
       }

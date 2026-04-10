@@ -30,7 +30,7 @@ import { eventDuration } from '../../../../consts/viewTypes';
 import type { MiniTimeline } from '../../../../consts/viewTypes';
 import { computeTimelinePresentation } from '../../../../controller/timeline/eventPresentationController';
 import {
-  ENEMY_OWNER_ID,
+  ENEMY_ID,
   ENEMY_GROUP_COLUMNS,
   OPERATOR_STATUS_COLUMN_ID,
   COMBO_WINDOW_COLUMN_ID,
@@ -267,7 +267,7 @@ describe('B. Originium Crystal Cycle', () => {
 
     // Controller: Originium Crystal status generated on enemy
     const crystals = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === REALSPACE_STASIS_ID && ev.ownerId === ENEMY_OWNER_ID,
+      ev => ev.columnId === REALSPACE_STASIS_ID && ev.ownerId === ENEMY_ID,
     );
     expect(crystals.length).toBeGreaterThanOrEqual(1);
 
@@ -275,7 +275,7 @@ describe('B. Originium Crystal Cycle', () => {
     const enemyStatusCol = result.current.columns.find(
       (c): c is MiniTimeline =>
         c.type === ColumnType.MINI_TIMELINE
-        && c.ownerId === ENEMY_OWNER_ID
+        && c.ownerId === ENEMY_ID
         && c.columnId === ENEMY_GROUP_COLUMNS.ENEMY_STATUS,
     );
     expect(enemyStatusCol).toBeDefined();
@@ -307,7 +307,7 @@ describe('B. Originium Crystal Cycle', () => {
     // Verify crystal exists before battle skill
     const crystalsBefore = result.current.allProcessedEvents.filter(
       ev => ev.columnId === REALSPACE_STASIS_ID
-        && ev.ownerId === ENEMY_OWNER_ID
+        && ev.ownerId === ENEMY_ID
         && ev.eventStatus !== EventStatusType.CONSUMED,
     );
     expect(crystalsBefore.length).toBeGreaterThanOrEqual(1);
@@ -325,7 +325,7 @@ describe('B. Originium Crystal Cycle', () => {
     // Controller: Originium Crystal consumed
     const crystalsConsumed = result.current.allProcessedEvents.filter(
       ev => ev.columnId === REALSPACE_STASIS_ID
-        && ev.ownerId === ENEMY_OWNER_ID
+        && ev.ownerId === ENEMY_ID
         && ev.eventStatus === EventStatusType.CONSUMED,
     );
     expect(crystalsConsumed.length).toBeGreaterThanOrEqual(1);
@@ -358,7 +358,7 @@ describe('C. Ultimate', () => {
     // Verify crystal exists
     const crystalsBefore = result.current.allProcessedEvents.filter(
       ev => ev.columnId === REALSPACE_STASIS_ID
-        && ev.ownerId === ENEMY_OWNER_ID
+        && ev.ownerId === ENEMY_ID
         && ev.eventStatus !== EventStatusType.CONSUMED,
     );
     expect(crystalsBefore.length).toBeGreaterThanOrEqual(1);
@@ -376,7 +376,7 @@ describe('C. Ultimate', () => {
     // Controller: Originium Crystal consumed by ultimate
     const crystalsConsumed = result.current.allProcessedEvents.filter(
       ev => ev.columnId === REALSPACE_STASIS_ID
-        && ev.ownerId === ENEMY_OWNER_ID
+        && ev.ownerId === ENEMY_ID
         && ev.eventStatus === EventStatusType.CONSUMED,
     );
     expect(crystalsConsumed.length).toBeGreaterThanOrEqual(1);
@@ -543,7 +543,7 @@ describe('D2. Realspace Stasis', () => {
     });
 
     const crystals = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === REALSPACE_STASIS_ID && ev.ownerId === ENEMY_OWNER_ID,
+      ev => ev.columnId === REALSPACE_STASIS_ID && ev.ownerId === ENEMY_ID,
     );
     expect(crystals.length).toBeGreaterThanOrEqual(1);
   });
@@ -621,7 +621,7 @@ describe('D2. Realspace Stasis', () => {
     // Controller: Originium Crystals Shatter on enemy
     const shatterEvents = result.current.allProcessedEvents.filter(
       ev => ev.columnId === ORIGINIUM_CRYSTALS_SHATTER_ID
-        && ev.ownerId === ENEMY_OWNER_ID,
+        && ev.ownerId === ENEMY_ID,
     );
     expect(shatterEvents.length).toBeGreaterThanOrEqual(1);
 
@@ -659,7 +659,7 @@ describe('D2. Realspace Stasis', () => {
     // The ult's CONSUME doesn't go through REALSPACE_STASIS onTriggerClause — it's a direct CONSUME
     const shatterEvents = result.current.allProcessedEvents.filter(
       ev => ev.columnId === ORIGINIUM_CRYSTALS_SHATTER_ID
-        && ev.ownerId === ENEMY_OWNER_ID,
+        && ev.ownerId === ENEMY_ID,
     );
     // Ult consumes crystals directly — the shatter damage is baked into the ult's own bonus DMG multiplier
     // REALSPACE_STASIS onTriggerClause fires on physical status application, NOT on direct CONSUME

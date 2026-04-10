@@ -38,7 +38,7 @@ import type { EventSource, AddOptions } from './columns/eventColumn';
 import { t } from '../../locales/locale';
 import { buildOverrideKey } from '../overrideController';
 import {
-  BREACH_DURATION, ENEMY_OWNER_ID, ENEMY_ACTION_COLUMN_ID,
+  BREACH_DURATION, ENEMY_ID, ENEMY_ACTION_COLUMN_ID,
   INFLICTION_COLUMN_IDS, INFLICTION_DURATION,
   PHYSICAL_INFLICTION_COLUMN_IDS, PHYSICAL_INFLICTION_COLUMNS, PHYSICAL_INFLICTION_DURATION, PHYSICAL_STATUS_COLUMNS, PHYSICAL_STATUS_COLUMN_IDS,
   REACTION_COLUMNS, REACTION_COLUMN_IDS, REACTION_DURATION,
@@ -50,7 +50,7 @@ import { getOperatorStatuses, getStatusById } from '../gameDataStore';
 import { getOperatorBase } from '../../model/game-data/operatorsStore';
 import { getOperatorSkill } from '../../model/game-data/operatorSkillsStore';
 import { getAllStatusLabels } from '../gameDataStore';
-import { COMMON_OWNER_ID } from '../slot/commonSlotController';
+import { TEAM_ID } from '../slot/commonSlotController';
 import { evaluateConditions } from './conditionEvaluator';
 import { hasDealDamageClause, findDealDamageInClauses, buildDealDamageClause, parseJsonClauseArray } from './clauseQueries';
 import { getStatusConfig, getStatusDef } from './configCache';
@@ -714,7 +714,7 @@ export class EventInterpretorController {
     if (!this.damageOpCache || !this.controller.hasHpController()) return false;
     const event = entry.sourceEvent;
     if (!event) return false;
-    if (event.ownerId === ENEMY_OWNER_ID) return false;
+    if (event.ownerId === ENEMY_ID) return false;
     if (!SKILL_COLUMN_SET.has(event.columnId)) return false;
     const op = this.damageOpCache.get(event.ownerId);
     if (!op) return false;
@@ -861,7 +861,7 @@ export class EventInterpretorController {
       switch (determiner ?? DeterminerType.THIS) {
         case DeterminerType.THIS: return slotId;
         case DeterminerType.ALL: return slotId; // ALL is handled by doApply loop, not here
-        case DeterminerType.ALL_OTHER: return COMMON_OWNER_ID;
+        case DeterminerType.ALL_OTHER: return TEAM_ID;
         case DeterminerType.OTHER: return ctx.targetOwnerId ?? slotId;
         case DeterminerType.ANY: return ctx.targetOwnerId ?? slotId;
         case DeterminerType.CONTROLLED:
@@ -884,8 +884,8 @@ export class EventInterpretorController {
         default: return slotId;
       }
     }
-    if (target === NounType.ENEMY) return ENEMY_OWNER_ID;
-    if (target === NounType.TEAM) return COMMON_OWNER_ID;
+    if (target === NounType.ENEMY) return ENEMY_ID;
+    if (target === NounType.TEAM) return TEAM_ID;
     return slotId;
   }
 
@@ -899,7 +899,7 @@ export class EventInterpretorController {
       case VerbType.APPLY: {
         const col = resolveEffectColumnId(effect.object, effect.objectId, effect.objectQualifier);
         if (!col) return true;
-        const applyOwner = effect.to === NounType.TEAM ? COMMON_OWNER_ID : ownerId;
+        const applyOwner = effect.to === NounType.TEAM ? TEAM_ID : ownerId;
         return this.controller.canApplyEvent(col, applyOwner, ctx.frame);
       }
       case VerbType.CONSUME: {
@@ -913,7 +913,7 @@ export class EventInterpretorController {
         }
         const col = resolveEffectColumnId(effect.object, effect.objectId, effect.objectQualifier);
         if (!col) return true;
-        const consumeOwner = effect.to === NounType.TEAM ? COMMON_OWNER_ID : ownerId;
+        const consumeOwner = effect.to === NounType.TEAM ? TEAM_ID : ownerId;
         return this.controller.canConsumeEvent(col, consumeOwner, ctx.frame);
       }
       default:
@@ -1027,7 +1027,7 @@ export class EventInterpretorController {
         }
       }
       const isTeamTarget = effect.to === NounType.TEAM;
-      const statusOwnerId = isTeamTarget ? COMMON_OWNER_ID : ownerId;
+      const statusOwnerId = isTeamTarget ? TEAM_ID : ownerId;
       // Team statuses → team-status column; enemy statuses → raw objectId; operator statuses → name-based column
       const columnId = effect.objectId ?? '';
       const cfg = getStatusConfig(effect.objectId);
@@ -1265,7 +1265,7 @@ export class EventInterpretorController {
     }
     const consumeCol = resolveEffectColumnId(effect.object, effect.objectId, effect.objectQualifier);
     if (consumeCol) {
-      const statusOwner = effect.to === NounType.TEAM ? COMMON_OWNER_ID : ownerId;
+      const statusOwner = effect.to === NounType.TEAM ? TEAM_ID : ownerId;
       // For inflictions, pass explicit count; for statuses, let the controller handle stack semantics
       const isInflictionConsume = effect.object === NounType.INFLICTION
         || (effect.object === NounType.STATUS && effect.objectId === NounType.INFLICTION);
@@ -1349,12 +1349,12 @@ export class EventInterpretorController {
     // always eventOwnerId. The inline filter in checkReactiveTriggers decides per-entry
     // whether to match against actor or target based on the entry's own subject semantics.
     let targetSlotId: string | undefined;
-    if (effect.to === NounType.ENEMY) targetSlotId = ENEMY_OWNER_ID;
-    else if (effect.to === NounType.TEAM) targetSlotId = COMMON_OWNER_ID;
+    if (effect.to === NounType.ENEMY) targetSlotId = ENEMY_ID;
+    else if (effect.to === NounType.TEAM) targetSlotId = TEAM_ID;
     else if (effect.object === NounType.STATUS && effect.objectId) {
       const def = getStatusDef(effect.objectId);
-      if (def?.properties.target === NounType.ENEMY) targetSlotId = ENEMY_OWNER_ID;
-      else if (def?.properties.target === NounType.TEAM) targetSlotId = COMMON_OWNER_ID;
+      if (def?.properties.target === NounType.ENEMY) targetSlotId = ENEMY_ID;
+      else if (def?.properties.target === NounType.TEAM) targetSlotId = TEAM_ID;
     }
     this.checkReactiveTriggers(effect.verb, objectId, absFrame, eventOwnerId, eventName, undefined, out, consumedStacks, targetSlotId);
     // CONSUME a status with stat-based state clause → fire BECOME_NOT (stat may have ended)
@@ -1364,7 +1364,7 @@ export class EventInterpretorController {
         // The stat lives on the status-target entity, not the parent event's owner.
         // Resolve from the consumed status def's target for the subject match.
         const target = consumedDef.properties.target;
-        const statusSlotId = target === NounType.ENEMY ? ENEMY_OWNER_ID : eventOwnerId;
+        const statusSlotId = target === NounType.ENEMY ? ENEMY_ID : eventOwnerId;
         for (const clause of consumedDef.clause as { effects?: { verb?: string; object?: string; objectId?: string }[] }[]) {
           for (const ef of clause.effects ?? []) {
             if (ef.verb === VerbType.APPLY && ef.object === NounType.STAT) {
@@ -1792,12 +1792,12 @@ export class EventInterpretorController {
   ): boolean {
     const parents = parentEventUid ? [parentEventUid] : undefined;
     const hasVulnerable = this.controller.activeCount(
-      PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_OWNER_ID, frame,
+      PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_ID, frame,
     ) > 0;
 
     // Always add 1 Vulnerable stack
     this.controller.applyEvent(
-      PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_OWNER_ID, frame,
+      PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_ID, frame,
       PHYSICAL_INFLICTION_DURATION, source,
       { uid: derivedEventUid(PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, source.ownerId, frame), parents },
     );
@@ -1809,7 +1809,7 @@ export class EventInterpretorController {
     const label = STATUS_LABELS[statusId];
 
     this.controller.applyEvent(
-      columnId, ENEMY_OWNER_ID, frame, LIFT_KNOCK_DOWN_DURATION, source, {
+      columnId, ENEMY_ID, frame, LIFT_KNOCK_DOWN_DURATION, source, {
         statusId,
         stackingMode: StackInteractionType.RESET,
         maxStacks: 1,
@@ -1851,13 +1851,13 @@ export class EventInterpretorController {
   ): boolean {
     const parents = parentEventUid ? [parentEventUid] : undefined;
     const vulnerableCount = this.controller.activeCount(
-      PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_OWNER_ID, frame,
+      PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_ID, frame,
     );
 
     if (vulnerableCount === 0) {
       // No Vulnerable → just add 1 stack
       this.controller.applyEvent(
-        PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_OWNER_ID, frame,
+        PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_ID, frame,
         PHYSICAL_INFLICTION_DURATION, source,
         { uid: derivedEventUid(PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, source.ownerId, frame, 'crush'), parents },
       );
@@ -1866,14 +1866,14 @@ export class EventInterpretorController {
 
     // Consume all Vulnerable stacks
     const consumed = this.controller.consumeEvent(
-      PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_OWNER_ID, frame,
+      PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_ID, frame,
       source, { count: vulnerableCount },
     );
 
     const damageMultiplier = getPhysicalStatusBaseMultiplier(PhysicalStatusType.CRUSH, consumed);
 
     this.controller.applyEvent(
-      PHYSICAL_STATUS_COLUMNS.CRUSH, ENEMY_OWNER_ID, frame, LIFT_KNOCK_DOWN_DURATION, source, {
+      PHYSICAL_STATUS_COLUMNS.CRUSH, ENEMY_ID, frame, LIFT_KNOCK_DOWN_DURATION, source, {
         statusId: PhysicalStatusType.CRUSH,
         stackingMode: StackInteractionType.RESET,
         maxStacks: 1,
@@ -1914,12 +1914,12 @@ export class EventInterpretorController {
   ): boolean {
     const parents = parentEventUid ? [parentEventUid] : undefined;
     const vulnerableCount = this.controller.activeCount(
-      PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_OWNER_ID, frame,
+      PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_ID, frame,
     );
 
     if (vulnerableCount === 0) {
       this.controller.applyEvent(
-        PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_OWNER_ID, frame,
+        PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_ID, frame,
         PHYSICAL_INFLICTION_DURATION, source,
         { uid: derivedEventUid(PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, source.ownerId, frame, 'breach'), parents },
       );
@@ -1927,7 +1927,7 @@ export class EventInterpretorController {
     }
 
     const consumed = this.controller.consumeEvent(
-      PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_OWNER_ID, frame,
+      PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_ID, frame,
       source, { count: vulnerableCount },
     );
 
@@ -1936,7 +1936,7 @@ export class EventInterpretorController {
     const durationFrames = BREACH_DURATION[stackCount] ?? BREACH_DURATION[1];
 
     this.controller.applyEvent(
-      PHYSICAL_STATUS_COLUMNS.BREACH, ENEMY_OWNER_ID, frame, durationFrames, source, {
+      PHYSICAL_STATUS_COLUMNS.BREACH, ENEMY_ID, frame, durationFrames, source, {
         statusId: PhysicalStatusType.BREACH,
         stackingMode: StackInteractionType.RESET,
         maxStacks: 1,
@@ -1971,7 +1971,7 @@ export class EventInterpretorController {
     parentEventUid?: string,
   ): void {
     const active = this.controller.getActiveEvents(
-      REACTION_COLUMNS.SOLIDIFICATION, ENEMY_OWNER_ID, frame,
+      REACTION_COLUMNS.SOLIDIFICATION, ENEMY_ID, frame,
     );
     if (active.length === 0) return;
 
@@ -1980,7 +1980,7 @@ export class EventInterpretorController {
 
     // Consume the solidification
     this.controller.consumeEvent(
-      REACTION_COLUMNS.SOLIDIFICATION, ENEMY_OWNER_ID, frame, source,
+      REACTION_COLUMNS.SOLIDIFICATION, ENEMY_ID, frame, source,
     );
 
     // Create Shatter reaction with physical damage frame at offset 0.
@@ -1992,7 +1992,7 @@ export class EventInterpretorController {
     if (parentEventUid) shatterParents.push(parentEventUid);
     shatterParents.push(solidEvent.uid);
     this.controller.applyEvent(
-      REACTION_COLUMNS.SHATTER, ENEMY_OWNER_ID, frame, SHATTER_DURATION, source, {
+      REACTION_COLUMNS.SHATTER, ENEMY_ID, frame, SHATTER_DURATION, source, {
         stacks,
         uid: derivedEventUid(REACTION_COLUMNS.SHATTER, source.ownerId, frame),
         parents: shatterParents,
@@ -2002,7 +2002,7 @@ export class EventInterpretorController {
     // Attach segment with damage frame (createReaction builds a default segment,
     // but shatter needs a physical damage frame — rebuild segments here).
     const shatterEvents = this.controller.getActiveEvents(
-      REACTION_COLUMNS.SHATTER, ENEMY_OWNER_ID, frame,
+      REACTION_COLUMNS.SHATTER, ENEMY_ID, frame,
     );
     if (shatterEvents.length > 0) {
       const shatter = shatterEvents[shatterEvents.length - 1];
@@ -2389,7 +2389,7 @@ export class EventInterpretorController {
         };
         this.runStatusCreationLifecycle(event.id, event.ownerId, physCtx);
         this.checkReactiveTriggers(VerbType.APPLY, event.columnId, absFrame, event.ownerId, event.id, undefined, newEntries);
-      } else if (event.ownerId === ENEMY_OWNER_ID || event.ownerId === COMMON_OWNER_ID) {
+      } else if (event.ownerId === ENEMY_ID || event.ownerId === TEAM_ID) {
         this.controller.applyEvent(event.columnId, event.ownerId, absFrame, dur, source, {
           statusId: event.id, uid: event.uid,
           ...(event.susceptibility && { event: { susceptibility: event.susceptibility, segments: event.segments } }),
@@ -2459,7 +2459,7 @@ export class EventInterpretorController {
     // no-op for HP. Synthesize a `to: OPERATOR, toDeterminer: ALL` Effect and
     // run doDeal to apply damage to every operator slot. NOTE: this does NOT
     // call checkReactiveTriggers — the dsl loop above already fired it.
-    if (event.ownerId === ENEMY_OWNER_ID && event.columnId === ENEMY_ACTION_COLUMN_ID) {
+    if (event.ownerId === ENEMY_ID && event.columnId === ENEMY_ACTION_COLUMN_ID) {
       const dealInfo = findDealDamageInClauses(frame.clauses);
       if (dealInfo) {
         const dealCtx: InterpretContext = {
@@ -2929,7 +2929,7 @@ export class EventInterpretorController {
       const statuses = getOperatorStatuses(operatorId);
       const def = statuses.find(s => s.id === statusId);
       if (def) {
-        if (def.target === NounType.ENEMY) return { columnId, ownerId: ENEMY_OWNER_ID };
+        if (def.target === NounType.ENEMY) return { columnId, ownerId: ENEMY_ID };
         return { columnId, ownerId: eventOwnerId };
       }
     }
@@ -3027,7 +3027,7 @@ export class EventInterpretorController {
       // For DEAL/PERFORM the referenced entity is the actor (slotId); for APPLY/CONSUME
       // with subject=ENEMY the referenced entity is the recipient (targetSlotId).
       // Replaces the old isOperatorDealDamage hack in dispatchClauseFrame.
-      if (subj === NounType.ENEMY && effectiveSlot !== ENEMY_OWNER_ID) continue;
+      if (subj === NounType.ENEMY && effectiveSlot !== ENEMY_ID) continue;
       // Subject=ANY_OTHER OPERATOR: trigger fires for any operator other than the trigger owner.
       if (subj === NounType.OPERATOR && det === DeterminerType.ANY_OTHER && effectiveSlot === entry.operatorSlotId) continue;
 
@@ -3085,8 +3085,8 @@ export class EventInterpretorController {
       // Resolve parent status owner for HAVE condition evaluation
       const first = entries[0];
       const parentTarget = first.def.properties.target;
-      const parentStatusOwnerId = parentTarget === NounType.TEAM ? COMMON_OWNER_ID
-        : parentTarget === NounType.ENEMY ? ENEMY_OWNER_ID
+      const parentStatusOwnerId = parentTarget === NounType.TEAM ? TEAM_ID
+        : parentTarget === NounType.ENEMY ? ENEMY_ID
         : first.operatorSlotId;
 
       // Pick the first clause whose HAVE conditions pass (or has none)
@@ -3193,8 +3193,8 @@ export class EventInterpretorController {
 
     // Resolve parent status owner (for CONSUME THIS EVENT and HAVE condition evaluation)
     const parentTarget = ctx.def.properties.target;
-    const parentStatusOwnerId = parentTarget === NounType.TEAM ? COMMON_OWNER_ID
-      : parentTarget === NounType.ENEMY ? ENEMY_OWNER_ID
+    const parentStatusOwnerId = parentTarget === NounType.TEAM ? TEAM_ID
+      : parentTarget === NounType.ENEMY ? ENEMY_ID
       : ctx.operatorSlotId;
 
     // Check HAVE conditions first (deferred from collection time)

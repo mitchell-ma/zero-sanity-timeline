@@ -24,7 +24,7 @@ import { useApp } from '../../../../app/useApp';
 import {
   INFLICTION_COLUMNS,
   PHYSICAL_INFLICTION_COLUMNS,
-  ENEMY_OWNER_ID,
+  ENEMY_ID,
   ENEMY_GROUP_COLUMNS,
   PHYSICAL_STATUS_COLUMNS,
 } from '../../../../model/channels';
@@ -60,7 +60,7 @@ function setupGilberta() {
 
 /** Place a Vulnerable infliction on enemy so Lift can trigger. */
 function addVulnerableInfliction(app: AppResult, atFrame: number) {
-  const enemyStatusCol = findColumn(app, ENEMY_OWNER_ID, ENEMY_GROUP_COLUMNS.ENEMY_STATUS);
+  const enemyStatusCol = findColumn(app, ENEMY_ID, ENEMY_GROUP_COLUMNS.ENEMY_STATUS);
   expect(enemyStatusCol).toBeDefined();
   const menuItems = buildContextMenu(app, enemyStatusCol!, atFrame);
   expect(menuItems).not.toBeNull();
@@ -202,7 +202,7 @@ describe('Gilberta Skills — integration through useApp', () => {
 
     // Nature infliction should be derived on enemy
     const natureInflictions = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === INFLICTION_COLUMNS.NATURE && ev.ownerId === ENEMY_OWNER_ID,
+      (ev) => ev.columnId === INFLICTION_COLUMNS.NATURE && ev.ownerId === ENEMY_ID,
     );
     expect(natureInflictions.length).toBeGreaterThanOrEqual(1);
   });
@@ -238,7 +238,7 @@ describe('Gilberta Skills — integration through useApp', () => {
 
     // Combo should create a Lift physical status on enemy
     const liftEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === PHYSICAL_STATUS_COLUMNS.LIFT && ev.ownerId === ENEMY_OWNER_ID,
+      (ev) => ev.columnId === PHYSICAL_STATUS_COLUMNS.LIFT && ev.ownerId === ENEMY_ID,
     );
     expect(liftEvents.length).toBeGreaterThanOrEqual(1);
   });
@@ -263,7 +263,7 @@ describe('Gilberta Skills — integration through useApp', () => {
 
     // Anomalous Gravity Field status should appear on enemy
     const gravFieldEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === ANOMALOUS_GRAVITY_FIELD_ID && ev.ownerId === ENEMY_OWNER_ID,
+      (ev) => ev.columnId === ANOMALOUS_GRAVITY_FIELD_ID && ev.ownerId === ENEMY_ID,
     );
     expect(gravFieldEvents.length).toBeGreaterThanOrEqual(1);
 

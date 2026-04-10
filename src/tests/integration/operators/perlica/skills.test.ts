@@ -28,7 +28,7 @@ import { eventDuration } from '../../../../consts/viewTypes';
 import type { MiniTimeline } from '../../../../consts/viewTypes';
 import { computeTimelinePresentation } from '../../../../controller/timeline/eventPresentationController';
 import { getUltimateEnergyCostForPotential } from '../../../../controller/operators/operatorRegistry';
-import { INFLICTION_COLUMNS, REACTION_COLUMNS, ENEMY_OWNER_ID, NODE_STAGGER_COLUMN_ID } from '../../../../model/channels';
+import { INFLICTION_COLUMNS, REACTION_COLUMNS, ENEMY_ID, NODE_STAGGER_COLUMN_ID } from '../../../../model/channels';
 import {
   findColumn,
   buildContextMenu,
@@ -196,7 +196,7 @@ describe('B. Battle Skill — Electric Infliction', () => {
 
     // Battle skill should generate electric infliction on enemy
     const electricInflictions = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === INFLICTION_COLUMNS.ELECTRIC && ev.ownerId === ENEMY_OWNER_ID,
+      (ev) => ev.columnId === INFLICTION_COLUMNS.ELECTRIC && ev.ownerId === ENEMY_ID,
     );
     expect(electricInflictions.length).toBeGreaterThanOrEqual(1);
   });
@@ -399,7 +399,7 @@ describe('F0. T1 — Obliteration Protocol', () => {
     // Place stagger event on enemy (4s–8s = 4s duration)
     act(() => {
       result.current.handleAddEvent(
-        ENEMY_OWNER_ID, NODE_STAGGER_COLUMN_ID, 4 * FPS,
+        ENEMY_ID, NODE_STAGGER_COLUMN_ID, 4 * FPS,
         { name: NODE_STAGGER_COLUMN_ID, segments: [{ properties: { duration: 4 * FPS } }] },
       );
     });
@@ -466,7 +466,7 @@ describe('F0. T1 — Obliteration Protocol', () => {
     // 1. Add node stagger event at 4s, 4s duration
     act(() => {
       result.current.handleAddEvent(
-        ENEMY_OWNER_ID, NODE_STAGGER_COLUMN_ID, 4 * FPS,
+        ENEMY_ID, NODE_STAGGER_COLUMN_ID, 4 * FPS,
         { name: NODE_STAGGER_COLUMN_ID, segments: [{ properties: { duration: 4 * FPS } }] },
       );
     });
@@ -521,7 +521,7 @@ describe('F0. T1 — Obliteration Protocol', () => {
     // Place stagger event on enemy
     act(() => {
       result.current.handleAddEvent(
-        ENEMY_OWNER_ID, NODE_STAGGER_COLUMN_ID, 4 * FPS,
+        ENEMY_ID, NODE_STAGGER_COLUMN_ID, 4 * FPS,
         { name: NODE_STAGGER_COLUMN_ID, segments: [{ properties: { duration: 6 * FPS } }] },
       );
     });
@@ -574,7 +574,7 @@ describe('F. Combo Skill — Forced Electrification', () => {
 
     // Should produce forced Electrification reaction on enemy
     const electrification = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === REACTION_COLUMNS.ELECTRIFICATION && ev.ownerId === ENEMY_OWNER_ID,
+      ev => ev.columnId === REACTION_COLUMNS.ELECTRIFICATION && ev.ownerId === ENEMY_ID,
     );
     expect(electrification.length).toBeGreaterThanOrEqual(1);
     // Forced reaction should have duration (5s = 600 frames at P0)
@@ -594,7 +594,7 @@ describe('F. Combo Skill — Forced Electrification', () => {
     });
 
     const electrification = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === REACTION_COLUMNS.ELECTRIFICATION && ev.ownerId === ENEMY_OWNER_ID,
+      ev => ev.columnId === REACTION_COLUMNS.ELECTRIFICATION && ev.ownerId === ENEMY_ID,
     );
     expect(electrification.length).toBeGreaterThanOrEqual(1);
     // P1: 5s × 1.75 = 8.75s = 1050 frames
@@ -709,7 +709,7 @@ describe('H. P4 — Constant Guidance', () => {
     });
 
     const susc = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === ENEMY_OWNER_ID && ev.id === ARTS_SUSCEPTIBILITY_ID,
+      ev => ev.ownerId === ENEMY_ID && ev.id === ARTS_SUSCEPTIBILITY_ID,
     );
     expect(susc.length).toBeGreaterThanOrEqual(1);
     // Susceptibility value should be 0.33
@@ -729,7 +729,7 @@ describe('H. P4 — Constant Guidance', () => {
     });
 
     const susc = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === ENEMY_OWNER_ID && ev.id === ARTS_SUSCEPTIBILITY_ID,
+      ev => ev.ownerId === ENEMY_ID && ev.id === ARTS_SUSCEPTIBILITY_ID,
     );
     // Event may exist but with 0 susceptibility value (no gameplay effect)
     for (const ev of susc) {

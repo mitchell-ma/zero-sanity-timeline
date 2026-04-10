@@ -10,8 +10,8 @@ import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from '../calculation/valueRes
 import { StatusType, UnitType } from '../../consts/enums';
 import { StatType } from '../../model/enums/stats';
 import { TimelineEvent } from '../../consts/viewTypes';
-import { ENEMY_OWNER_ID, PHYSICAL_STATUS_COLUMNS, REACTION_COLUMNS, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID, SKILL_COLUMN_ORDER } from '../../model/channels';
-import { COMMON_OWNER_ID } from '../slot/commonSlotController';
+import { ENEMY_ID, PHYSICAL_STATUS_COLUMNS, REACTION_COLUMNS, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID, SKILL_COLUMN_ORDER } from '../../model/channels';
+import { TEAM_ID } from '../slot/commonSlotController';
 import { activeEventsAtFrame, activeCountAtFrame } from './timelineQueries';
 import { resolveColumnIds } from './columnResolution';
 
@@ -72,7 +72,7 @@ function resolveOwnerId(subject: string, ctx: ConditionContext, determiner?: str
   if (subject === NounType.OPERATOR) {
     switch (determiner ?? DeterminerType.THIS) {
       case DeterminerType.THIS: return ctx.sourceOwnerId;
-      case DeterminerType.ALL: return COMMON_OWNER_ID;
+      case DeterminerType.ALL: return TEAM_ID;
       case DeterminerType.OTHER: return ctx.targetOwnerId ?? undefined;
       case DeterminerType.ANY: return ctx.targetOwnerId ?? undefined; // wildcard if no target
       case DeterminerType.TRIGGER: return ctx.triggerOwnerId ?? ctx.sourceOwnerId;
@@ -83,8 +83,8 @@ function resolveOwnerId(subject: string, ctx: ConditionContext, determiner?: str
   }
   switch (subject) {
     case NounType.EVENT: return ctx.parentStatusOwnerId ?? ctx.sourceOwnerId;
-    case NounType.ENEMY: return ENEMY_OWNER_ID;
-    case NounType.TEAM: return COMMON_OWNER_ID;
+    case NounType.ENEMY: return ENEMY_ID;
+    case NounType.TEAM: return TEAM_ID;
     default: return ctx.sourceOwnerId;
   }
 }

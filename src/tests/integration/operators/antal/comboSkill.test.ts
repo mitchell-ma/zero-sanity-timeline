@@ -21,7 +21,7 @@
 import { renderHook, act } from '@testing-library/react';
 import { NounType } from '../../../../dsl/semantics';
 import { useApp } from '../../../../app/useApp';
-import { INFLICTION_COLUMNS, PHYSICAL_INFLICTION_COLUMNS, PHYSICAL_STATUS_COLUMNS, ENEMY_OWNER_ID } from '../../../../model/channels';
+import { INFLICTION_COLUMNS, PHYSICAL_INFLICTION_COLUMNS, PHYSICAL_STATUS_COLUMNS, ENEMY_ID } from '../../../../model/channels';
 import { ColumnType } from '../../../../consts/enums';
 import { FPS } from '../../../../utils/timeline';
 import type { MiniTimeline } from '../../../../consts/viewTypes';
@@ -91,7 +91,7 @@ describe('Antal combo skill — heat infliction mirroring after drag', () => {
     // ── Controller layer ────────────────────────────────────────────────
     // 4. Verify: enemy has 2 heat inflictions (one from Akekuri, one mirrored from Antal combo)
     const heatsWithCombo = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerId === ENEMY_OWNER_ID,
+      (ev) => ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerId === ENEMY_ID,
     );
     expect(heatsWithCombo).toHaveLength(2);
 
@@ -107,7 +107,7 @@ describe('Antal combo skill — heat infliction mirroring after drag', () => {
     const enemyHeatCol = result.current.columns.find(
       (c): c is MiniTimeline =>
         c.type === ColumnType.MINI_TIMELINE &&
-        c.ownerId === ENEMY_OWNER_ID &&
+        c.ownerId === ENEMY_ID &&
         (c.matchColumnIds?.includes(INFLICTION_COLUMNS.HEAT) ?? false),
     );
     expect(enemyHeatCol).toBeDefined();
@@ -120,7 +120,7 @@ describe('Antal combo skill — heat infliction mirroring after drag', () => {
     expect(vm).toBeDefined();
 
     const heatInVM = vm!.events.filter(
-      (ev) => ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerId === ENEMY_OWNER_ID,
+      (ev) => ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerId === ENEMY_ID,
     );
     expect(heatInVM).toHaveLength(2);
 
@@ -138,7 +138,7 @@ describe('Antal combo skill — heat infliction mirroring after drag', () => {
 
     // Sanity check: 2 heat inflictions before drag
     const heatsBefore = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerId === ENEMY_OWNER_ID,
+      (ev) => ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerId === ENEMY_ID,
     );
     expect(heatsBefore).toHaveLength(2);
 
@@ -161,7 +161,7 @@ describe('Antal combo skill — heat infliction mirroring after drag', () => {
 
     // 7. Verify: only 1 heat infliction remains (from Akekuri only, no mirrored combo infliction)
     const heatsAfterDrag = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerId === ENEMY_OWNER_ID,
+      (ev) => ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerId === ENEMY_ID,
     );
     expect(heatsAfterDrag).toHaveLength(1);
   });
@@ -219,7 +219,7 @@ describe('Antal combo skill — physical status (Lift) trigger', () => {
     // ── Controller layer ────────────────────────────────────────────────
     // Verify: enemy has Lift status
     const liftEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === PHYSICAL_STATUS_COLUMNS.LIFT && ev.ownerId === ENEMY_OWNER_ID,
+      (ev) => ev.columnId === PHYSICAL_STATUS_COLUMNS.LIFT && ev.ownerId === ENEMY_ID,
     );
     expect(liftEvents).toHaveLength(1);
 
@@ -290,7 +290,7 @@ describe('Antal combo skill — physical status (Lift) trigger', () => {
 
     // Count Vulnerable stacks before combo (2 from Chen's two battle skills)
     const vulnBefore = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === PHYSICAL_INFLICTION_COLUMNS.VULNERABLE && ev.ownerId === ENEMY_OWNER_ID,
+      (ev) => ev.columnId === PHYSICAL_INFLICTION_COLUMNS.VULNERABLE && ev.ownerId === ENEMY_ID,
     );
     expect(vulnBefore).toHaveLength(2);
 
@@ -308,13 +308,13 @@ describe('Antal combo skill — physical status (Lift) trigger', () => {
     // ── Controller layer ────────────────────────────────────────────────
     // Combo should duplicate the trigger source (Lift -> adds another Vulnerable stack)
     const vulnAfter = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === PHYSICAL_INFLICTION_COLUMNS.VULNERABLE && ev.ownerId === ENEMY_OWNER_ID,
+      (ev) => ev.columnId === PHYSICAL_INFLICTION_COLUMNS.VULNERABLE && ev.ownerId === ENEMY_ID,
     );
     expect(vulnAfter).toHaveLength(3);
 
     // No heat infliction should be created (combo was not triggered by infliction)
     const heatEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerId === ENEMY_OWNER_ID,
+      (ev) => ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerId === ENEMY_ID,
     );
     expect(heatEvents).toHaveLength(0);
   });

@@ -25,7 +25,7 @@ import {
   COMBO_WINDOW_COLUMN_ID,
   INFLICTION_COLUMNS,
   PHYSICAL_INFLICTION_COLUMNS,
-  ENEMY_OWNER_ID,
+  ENEMY_ID,
 } from '../../../../model/channels';
 import { InteractionModeType, EventStatusType, SegmentType } from '../../../../consts/enums';
 import { FPS } from '../../../../utils/timeline';
@@ -64,13 +64,13 @@ function placeComboTriggers(result: { current: AppResult }, startSec: number, du
   act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
   act(() => {
     result.current.handleAddEvent(
-      ENEMY_OWNER_ID, PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, startSec * FPS,
+      ENEMY_ID, PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, startSec * FPS,
       { name: PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, segments: [{ properties: { duration: durationSec * FPS } }] },
     );
   });
   act(() => {
     result.current.handleAddEvent(
-      ENEMY_OWNER_ID, INFLICTION_COLUMNS.HEAT, startSec * FPS,
+      ENEMY_ID, INFLICTION_COLUMNS.HEAT, startSec * FPS,
       { name: INFLICTION_COLUMNS.HEAT, segments: [{ properties: { duration: durationSec * FPS } }] },
     );
   });
@@ -443,7 +443,7 @@ describe('F. Razor Clawmark DOT ticks', () => {
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
     act(() => {
       result.current.handleAddEvent(
-        ENEMY_OWNER_ID, RAZOR_CLAWMARK_ID, 1 * FPS,
+        ENEMY_ID, RAZOR_CLAWMARK_ID, 1 * FPS,
         { name: RAZOR_CLAWMARK_ID, segments: [{ properties: { duration: 25 * FPS } }] },
       );
     });
@@ -451,7 +451,7 @@ describe('F. Razor Clawmark DOT ticks', () => {
 
     // Controller: Razor Clawmark event exists on enemy
     const rcEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === ENEMY_OWNER_ID && (ev.name === RAZOR_CLAWMARK_ID || ev.columnId === RAZOR_CLAWMARK_ID),
+      (ev) => ev.ownerId === ENEMY_ID && (ev.name === RAZOR_CLAWMARK_ID || ev.columnId === RAZOR_CLAWMARK_ID),
     );
     expect(rcEvents.length).toBeGreaterThanOrEqual(1);
   });
@@ -482,13 +482,13 @@ describe('G. Trigger order independence', () => {
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
     act(() => {
       result.current.handleAddEvent(
-        ENEMY_OWNER_ID, INFLICTION_COLUMNS.HEAT, 1 * FPS,
+        ENEMY_ID, INFLICTION_COLUMNS.HEAT, 1 * FPS,
         { name: INFLICTION_COLUMNS.HEAT, segments: [{ properties: { duration: 20 * FPS } }] },
       );
     });
     act(() => {
       result.current.handleAddEvent(
-        ENEMY_OWNER_ID, PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, 2 * FPS,
+        ENEMY_ID, PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, 2 * FPS,
         { name: PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, segments: [{ properties: { duration: 20 * FPS } }] },
       );
     });
@@ -515,13 +515,13 @@ describe('G. Trigger order independence', () => {
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
     act(() => {
       result.current.handleAddEvent(
-        ENEMY_OWNER_ID, PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, 1 * FPS,
+        ENEMY_ID, PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, 1 * FPS,
         { name: PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, segments: [{ properties: { duration: 20 * FPS } }] },
       );
     });
     act(() => {
       result.current.handleAddEvent(
-        ENEMY_OWNER_ID, INFLICTION_COLUMNS.HEAT, 2 * FPS,
+        ENEMY_ID, INFLICTION_COLUMNS.HEAT, 2 * FPS,
         { name: INFLICTION_COLUMNS.HEAT, segments: [{ properties: { duration: 20 * FPS } }] },
       );
     });

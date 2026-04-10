@@ -13,7 +13,7 @@
 import { renderHook, act } from '@testing-library/react';
 import { NounType } from '../../../../dsl/semantics';
 import { useApp } from '../../../../app/useApp';
-import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../../../../controller/slot/commonSlotController';
+import { TEAM_ID, COMMON_COLUMN_IDS } from '../../../../controller/slot/commonSlotController';
 import { ColumnType } from '../../../../consts/enums';
 import type { MiniTimeline } from '../../../../consts/viewTypes';
 import { FPS } from '../../../../utils/timeline';
@@ -88,7 +88,7 @@ describe('J. P2 — Ultimate Energy Cost', () => {
 
     // Cryo AMP and Nature AMP should still be derived at P2
     const ampEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === COMMON_OWNER_ID && (ev.name === NounType.CRYO_AMP || ev.name === NounType.NATURE_AMP),
+      ev => ev.ownerId === TEAM_ID && (ev.name === NounType.CRYO_AMP || ev.name === NounType.NATURE_AMP),
     );
     expect(ampEvents).toHaveLength(2);
 
@@ -164,7 +164,7 @@ describe('K. P5 — Ultimate AMP ×1.1', () => {
     const p0 = getMenuPayload(r0.current, col0!, 5 * FPS);
     act(() => { r0.current.handleAddEvent(p0.ownerId, p0.columnId, p0.atFrame, p0.defaultSkill); });
     const p0Amp = r0.current.allProcessedEvents.find(
-      ev => ev.ownerId === COMMON_OWNER_ID && ev.name === NounType.CRYO_AMP,
+      ev => ev.ownerId === TEAM_ID && ev.name === NounType.CRYO_AMP,
     );
     expect(p0Amp).toBeDefined();
     const p0Value = p0Amp!.statusValue as number;
@@ -178,7 +178,7 @@ describe('K. P5 — Ultimate AMP ×1.1', () => {
     const p5 = getMenuPayload(r5.current, col5!, 5 * FPS);
     act(() => { r5.current.handleAddEvent(p5.ownerId, p5.columnId, p5.atFrame, p5.defaultSkill); });
     const p5Amp = r5.current.allProcessedEvents.find(
-      ev => ev.ownerId === COMMON_OWNER_ID && ev.name === NounType.CRYO_AMP,
+      ev => ev.ownerId === TEAM_ID && ev.name === NounType.CRYO_AMP,
     );
     expect(p5Amp).toBeDefined();
     const p5Value = p5Amp!.statusValue as number;
@@ -194,7 +194,7 @@ describe('K. P5 — Ultimate AMP ×1.1', () => {
     const teamCol = r5.current.columns.find(
       (c): c is MiniTimeline =>
         c.type === ColumnType.MINI_TIMELINE &&
-        c.ownerId === COMMON_OWNER_ID &&
+        c.ownerId === TEAM_ID &&
         c.columnId === COMMON_COLUMN_IDS.TEAM_STATUS,
     );
     expect(teamCol).toBeDefined();

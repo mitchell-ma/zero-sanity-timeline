@@ -26,7 +26,7 @@ import { renderHook, act } from '@testing-library/react';
 import { NounType } from '../../../../dsl/semantics';
 import { useApp } from '../../../../app/useApp';
 import {
-  INFLICTION_COLUMNS, REACTION_COLUMNS, ENEMY_OWNER_ID,
+  INFLICTION_COLUMNS, REACTION_COLUMNS, ENEMY_ID,
   ENEMY_GROUP_COLUMNS,
 } from '../../../../model/channels';
 import { ColumnType, CritMode, ElementType, EnhancementType, EventStatusType, SegmentType } from '../../../../consts/enums';
@@ -67,7 +67,7 @@ function findEnemyStatusColumn(app: AppResult) {
   return app.columns.find(
     (c): c is MiniTimeline =>
       c.type === ColumnType.MINI_TIMELINE &&
-      c.ownerId === ENEMY_OWNER_ID &&
+      c.ownerId === ENEMY_ID &&
       c.columnId === ENEMY_GROUP_COLUMNS.ENEMY_STATUS,
   );
 }
@@ -147,7 +147,7 @@ describe('A. Core Skill Placement', () => {
     // Freeform: place heat infliction to satisfy combo trigger
     act(() => {
       result.current.handleAddEvent(
-        ENEMY_OWNER_ID, INFLICTION_COLUMNS.HEAT, 1 * FPS,
+        ENEMY_ID, INFLICTION_COLUMNS.HEAT, 1 * FPS,
         { name: INFLICTION_COLUMNS.HEAT, segments: [{ properties: { duration: 20 * FPS } }] },
       );
     });
@@ -206,7 +206,7 @@ describe('B. Infliction & Reaction Pipeline', () => {
     });
 
     const heats = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerId === ENEMY_OWNER_ID,
+      ev => ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerId === ENEMY_ID,
     );
     expect(heats.length).toBeGreaterThanOrEqual(1);
   });
@@ -225,7 +225,7 @@ describe('B. Infliction & Reaction Pipeline', () => {
     });
 
     const combustions = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === REACTION_COLUMNS.COMBUSTION && ev.ownerId === ENEMY_OWNER_ID,
+      ev => ev.columnId === REACTION_COLUMNS.COMBUSTION && ev.ownerId === ENEMY_ID,
     );
     expect(combustions.length).toBeGreaterThanOrEqual(1);
   });
@@ -236,7 +236,7 @@ describe('B. Infliction & Reaction Pipeline', () => {
     // Freeform: place heat infliction to open combo window
     act(() => {
       result.current.handleAddEvent(
-        ENEMY_OWNER_ID, INFLICTION_COLUMNS.HEAT, 1 * FPS,
+        ENEMY_ID, INFLICTION_COLUMNS.HEAT, 1 * FPS,
         { name: INFLICTION_COLUMNS.HEAT, segments: [{ properties: { duration: 20 * FPS } }] },
       );
     });
@@ -252,7 +252,7 @@ describe('B. Infliction & Reaction Pipeline', () => {
 
     // Combo's own heat infliction should appear (in addition to the freeform one)
     const heats = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerId === ENEMY_OWNER_ID,
+      ev => ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerId === ENEMY_ID,
     );
     expect(heats.length).toBeGreaterThanOrEqual(2);
   });
@@ -344,7 +344,7 @@ describe('D. Empowered Battle Skill', () => {
     // Freeform: place Combustion on enemy
     act(() => {
       result.current.handleAddEvent(
-        ENEMY_OWNER_ID, REACTION_COLUMNS.COMBUSTION, 1 * FPS,
+        ENEMY_ID, REACTION_COLUMNS.COMBUSTION, 1 * FPS,
         { name: REACTION_COLUMNS.COMBUSTION, segments: [{ properties: { duration: 20 * FPS } }] },
       );
     });
@@ -376,7 +376,7 @@ describe('D. Empowered Battle Skill', () => {
     // Freeform: place Combustion on enemy
     act(() => {
       result.current.handleAddEvent(
-        ENEMY_OWNER_ID, REACTION_COLUMNS.COMBUSTION, 1 * FPS,
+        ENEMY_ID, REACTION_COLUMNS.COMBUSTION, 1 * FPS,
         { name: REACTION_COLUMNS.COMBUSTION, segments: [{ properties: { duration: 20 * FPS } }] },
       );
     });
@@ -393,7 +393,7 @@ describe('D. Empowered Battle Skill', () => {
     // Controller: Combustion should be consumed
     const combustions = result.current.allProcessedEvents.filter(
       ev => ev.columnId === REACTION_COLUMNS.COMBUSTION &&
-        ev.ownerId === ENEMY_OWNER_ID &&
+        ev.ownerId === ENEMY_ID &&
         ev.eventStatus === EventStatusType.CONSUMED,
     );
     expect(combustions.length).toBeGreaterThanOrEqual(1);
@@ -452,7 +452,7 @@ describe('F. Code of Restraint (Talent 2)', () => {
     // Freeform: place Combustion on enemy
     act(() => {
       result.current.handleAddEvent(
-        ENEMY_OWNER_ID, REACTION_COLUMNS.COMBUSTION, 1 * FPS,
+        ENEMY_ID, REACTION_COLUMNS.COMBUSTION, 1 * FPS,
         { name: REACTION_COLUMNS.COMBUSTION, segments: [{ properties: { duration: 20 * FPS } }] },
       );
     });
@@ -499,7 +499,7 @@ describe('G. Potential Interactions', () => {
     // Freeform: heat infliction for combo trigger
     act(() => {
       result.current.handleAddEvent(
-        ENEMY_OWNER_ID, INFLICTION_COLUMNS.HEAT, 1 * FPS,
+        ENEMY_ID, INFLICTION_COLUMNS.HEAT, 1 * FPS,
         { name: INFLICTION_COLUMNS.HEAT, segments: [{ properties: { duration: 30 * FPS } }] },
       );
     });
@@ -548,7 +548,7 @@ describe('G. Potential Interactions', () => {
     // Freeform: heat infliction for combo trigger
     act(() => {
       result.current.handleAddEvent(
-        ENEMY_OWNER_ID, INFLICTION_COLUMNS.HEAT, 1 * FPS,
+        ENEMY_ID, INFLICTION_COLUMNS.HEAT, 1 * FPS,
         { name: INFLICTION_COLUMNS.HEAT, segments: [{ properties: { duration: 30 * FPS } }] },
       );
     });
@@ -600,7 +600,7 @@ describe('H. Cross-Mechanic Chains', () => {
     // Freeform: heat infliction for combo trigger
     act(() => {
       result.current.handleAddEvent(
-        ENEMY_OWNER_ID, INFLICTION_COLUMNS.HEAT, 1 * FPS,
+        ENEMY_ID, INFLICTION_COLUMNS.HEAT, 1 * FPS,
         { name: INFLICTION_COLUMNS.HEAT, segments: [{ properties: { duration: 30 * FPS } }] },
       );
     });
@@ -628,7 +628,7 @@ describe('H. Cross-Mechanic Chains', () => {
 
     // Verify: Combustion on enemy
     const combustions = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === REACTION_COLUMNS.COMBUSTION && ev.ownerId === ENEMY_OWNER_ID,
+      ev => ev.columnId === REACTION_COLUMNS.COMBUSTION && ev.ownerId === ENEMY_ID,
     );
     expect(combustions.length).toBeGreaterThanOrEqual(1);
 
@@ -686,7 +686,7 @@ describe('H. Cross-Mechanic Chains', () => {
     // Controller: Combustion consumed
     const consumed = result.current.allProcessedEvents.filter(
       ev => ev.columnId === REACTION_COLUMNS.COMBUSTION &&
-        ev.ownerId === ENEMY_OWNER_ID &&
+        ev.ownerId === ENEMY_ID &&
         ev.eventStatus === EventStatusType.CONSUMED,
     );
     expect(consumed.length).toBeGreaterThanOrEqual(1);
@@ -767,7 +767,7 @@ describe('I. Empowered Battle Skill — Activation & Consume Priority', () => {
   ) {
     act(() => {
       result.current.handleAddEvent(
-        ENEMY_OWNER_ID, reactionCol, startSec * FPS,
+        ENEMY_ID, reactionCol, startSec * FPS,
         { name: reactionCol, segments: [{ properties: { duration: durationSec * FPS } }] },
       );
     });
@@ -790,7 +790,7 @@ describe('I. Empowered Battle Skill — Activation & Consume Priority', () => {
   function consumedReactions(result: ReturnType<typeof setupWulfgard>['result'], reactionCol: string) {
     return result.current.allProcessedEvents.filter(
       ev => ev.columnId === reactionCol &&
-        ev.ownerId === ENEMY_OWNER_ID &&
+        ev.ownerId === ENEMY_ID &&
         ev.eventStatus === EventStatusType.CONSUMED,
     );
   }
@@ -1044,7 +1044,7 @@ describe('J. Normal vs Empowered — Mutual Exclusivity', () => {
     });
 
     const heats = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerId === ENEMY_OWNER_ID,
+      ev => ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerId === ENEMY_ID,
     );
     expect(heats.length).toBeGreaterThanOrEqual(1);
   });
@@ -1077,7 +1077,7 @@ describe('J. Normal vs Empowered — Mutual Exclusivity', () => {
     // Place Combustion so empowered fires
     act(() => {
       result.current.handleAddEvent(
-        ENEMY_OWNER_ID, REACTION_COLUMNS.COMBUSTION, 1 * FPS,
+        ENEMY_ID, REACTION_COLUMNS.COMBUSTION, 1 * FPS,
         { name: REACTION_COLUMNS.COMBUSTION, segments: [{ properties: { duration: 20 * FPS } }] },
       );
     });
@@ -1087,7 +1087,7 @@ describe('J. Normal vs Empowered — Mutual Exclusivity', () => {
 
     // Count heat inflictions BEFORE placing empowered BS
     const heatsBefore = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerId === ENEMY_OWNER_ID,
+      ev => ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerId === ENEMY_ID,
     ).length;
 
     act(() => {
@@ -1098,7 +1098,7 @@ describe('J. Normal vs Empowered — Mutual Exclusivity', () => {
 
     // Controller: empowered BS should NOT produce additional heat infliction
     const heatsAfter = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerId === ENEMY_OWNER_ID,
+      ev => ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerId === ENEMY_ID,
     ).length;
     expect(heatsAfter).toBe(heatsBefore);
 
@@ -1422,7 +1422,7 @@ describe('L. P5 Natural Predator — Combo Cooldown Reset', () => {
     // Place heat infliction to trigger combo
     act(() => {
       result.current.handleAddEvent(
-        ENEMY_OWNER_ID, INFLICTION_COLUMNS.HEAT, 1 * FPS,
+        ENEMY_ID, INFLICTION_COLUMNS.HEAT, 1 * FPS,
         { name: INFLICTION_COLUMNS.HEAT, segments: [{ properties: { duration: 20 * FPS } }] },
       );
     });
@@ -1470,7 +1470,7 @@ describe('L. P5 Natural Predator — Combo Cooldown Reset', () => {
     // Same setup as L1
     act(() => {
       result.current.handleAddEvent(
-        ENEMY_OWNER_ID, INFLICTION_COLUMNS.HEAT, 1 * FPS,
+        ENEMY_ID, INFLICTION_COLUMNS.HEAT, 1 * FPS,
         { name: INFLICTION_COLUMNS.HEAT, segments: [{ properties: { duration: 20 * FPS } }] },
       );
     });
@@ -1520,7 +1520,7 @@ describe('L. P5 Natural Predator — Combo Cooldown Reset', () => {
     // Heat infliction for combo trigger
     act(() => {
       result.current.handleAddEvent(
-        ENEMY_OWNER_ID, INFLICTION_COLUMNS.HEAT, 1 * FPS,
+        ENEMY_ID, INFLICTION_COLUMNS.HEAT, 1 * FPS,
         { name: INFLICTION_COLUMNS.HEAT, segments: [{ properties: { duration: 60 * FPS } }] },
       );
     });

@@ -20,7 +20,7 @@
 import { renderHook, act } from '@testing-library/react';
 import { useApp } from '../../../../app/useApp';
 import {
-  ENEMY_OWNER_ID,
+  ENEMY_ID,
   ENEMY_GROUP_COLUMNS,
 } from '../../../../model/channels';
 import { InteractionModeType } from '../../../../consts/enums';
@@ -63,7 +63,7 @@ function setupFluorite() {
 
 /** Place a freeform SLOW status on the enemy at the given frame. */
 function placeSlowOnEnemy(app: AppResult, atFrame: number) {
-  const enemyStatusCol = findColumn(app, ENEMY_OWNER_ID, ENEMY_GROUP_COLUMNS.ENEMY_STATUS);
+  const enemyStatusCol = findColumn(app, ENEMY_ID, ENEMY_GROUP_COLUMNS.ENEMY_STATUS);
   expect(enemyStatusCol).toBeDefined();
   const menuItems = buildContextMenu(app, enemyStatusCol!, atFrame);
   expect(menuItems).not.toBeNull();
@@ -88,7 +88,7 @@ function getT1Events(app: AppResult) {
 
 function getSlowEvents(app: AppResult) {
   return app.allProcessedEvents.filter(
-    (ev) => ev.name === SLOW_STATUS_ID && ev.ownerId === ENEMY_OWNER_ID,
+    (ev) => ev.name === SLOW_STATUS_ID && ev.ownerId === ENEMY_ID,
   );
 }
 
@@ -125,7 +125,7 @@ function assertTimingAlignment(app: AppResult) {
 
   // ── View layer ──────────────────────────────────────────────────
   const viewModels = computeTimelinePresentation(app.allProcessedEvents, app.columns);
-  const slowVm = findInView(viewModels, SLOW_STATUS_ID, ENEMY_OWNER_ID);
+  const slowVm = findInView(viewModels, SLOW_STATUS_ID, ENEMY_ID);
   const t1Vm = findInView(viewModels, T1_TALENT_ID, SLOT_FLUORITE);
   expect(slowVm).toBeDefined();
   expect(t1Vm).toBeDefined();
@@ -153,7 +153,7 @@ describe('Fluorite T1 talent triggered by freeform SLOW status', () => {
     expect(getT1Events(result.current)).toHaveLength(0);
 
     // ── Context menu: SLOW is available in the enemy-status column ─────
-    const enemyStatusCol = findColumn(result.current, ENEMY_OWNER_ID, ENEMY_GROUP_COLUMNS.ENEMY_STATUS);
+    const enemyStatusCol = findColumn(result.current, ENEMY_ID, ENEMY_GROUP_COLUMNS.ENEMY_STATUS);
     expect(enemyStatusCol).toBeDefined();
     const menuItems = buildContextMenu(result.current, enemyStatusCol!, 3 * FPS);
     expect(menuItems).not.toBeNull();

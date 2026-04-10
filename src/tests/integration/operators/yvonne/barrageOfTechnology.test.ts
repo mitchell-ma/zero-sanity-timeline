@@ -19,7 +19,7 @@ import { NounType, VerbType } from '../../../../dsl/semantics';
 import { useApp } from '../../../../app/useApp';
 import { InteractionModeType, StackInteractionType } from '../../../../consts/enums';
 import { FPS } from '../../../../utils/timeline';
-import { INFLICTION_COLUMNS, ENEMY_OWNER_ID } from '../../../../model/channels';
+import { INFLICTION_COLUMNS, ENEMY_ID } from '../../../../model/channels';
 import { findColumn, getMenuPayload, buildContextMenu } from '../../helpers';
 import { checkVariantAvailability } from '../../../../controller/timeline/eventValidator';
 import { computeAllValidations } from '../../../../controller/timeline/eventValidationController';
@@ -53,7 +53,7 @@ function addBS(app: AppResult, atFrame: number) {
 function triggerBarrage(app: AppResult, bsFrame: number) {
   act(() => {
     app.handleAddEvent(
-      ENEMY_OWNER_ID, INFLICTION_COLUMNS.CRYO, 1 * FPS,
+      ENEMY_ID, INFLICTION_COLUMNS.CRYO, 1 * FPS,
       { name: INFLICTION_COLUMNS.CRYO, segments: [{ properties: { duration: 20 * FPS } }] },
     );
   });
@@ -109,7 +109,7 @@ describe('B. Barrage trigger from BS Solidification', () => {
     const { result } = setup();
     act(() => {
       result.current.handleAddEvent(
-        ENEMY_OWNER_ID, INFLICTION_COLUMNS.CRYO, 1 * FPS,
+        ENEMY_ID, INFLICTION_COLUMNS.CRYO, 1 * FPS,
         { name: INFLICTION_COLUMNS.CRYO, segments: [{ properties: { duration: 20 * FPS } }] },
       );
     });

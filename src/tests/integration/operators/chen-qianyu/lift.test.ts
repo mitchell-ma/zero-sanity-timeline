@@ -26,7 +26,7 @@ import {
   PHYSICAL_INFLICTION_COLUMNS,
   PHYSICAL_STATUS_COLUMNS,
   PHYSICAL_STATUS_COLUMN_IDS,
-  ENEMY_OWNER_ID,
+  ENEMY_ID,
   ENEMY_GROUP_COLUMNS,
 } from '../../../../model/channels';
 import { FPS } from '../../../../utils/timeline';
@@ -77,13 +77,13 @@ describe('Chen Qianyu — Vulnerable → Lift physical status', () => {
 
     // Controller layer: Enemy should have exactly 1 Vulnerable infliction
     const vulnAfterFirst = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === PHYSICAL_INFLICTION_COLUMNS.VULNERABLE && ev.ownerId === ENEMY_OWNER_ID,
+      (ev) => ev.columnId === PHYSICAL_INFLICTION_COLUMNS.VULNERABLE && ev.ownerId === ENEMY_ID,
     );
     expect(vulnAfterFirst).toHaveLength(1);
 
     // Controller layer: Enemy should have NO physical statuses (Lift, Knock Down, Crush, Breach)
     const physStatusAfterFirst = result.current.allProcessedEvents.filter(
-      (ev) => PHYSICAL_STATUS_COLUMN_IDS.has(ev.columnId) && ev.ownerId === ENEMY_OWNER_ID,
+      (ev) => PHYSICAL_STATUS_COLUMN_IDS.has(ev.columnId) && ev.ownerId === ENEMY_ID,
     );
     expect(physStatusAfterFirst).toHaveLength(0);
 
@@ -94,18 +94,18 @@ describe('Chen Qianyu — Vulnerable → Lift physical status', () => {
 
     // Controller layer: Enemy should now have 2 Vulnerable infliction stacks
     const vulnAfterSecond = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === PHYSICAL_INFLICTION_COLUMNS.VULNERABLE && ev.ownerId === ENEMY_OWNER_ID,
+      (ev) => ev.columnId === PHYSICAL_INFLICTION_COLUMNS.VULNERABLE && ev.ownerId === ENEMY_ID,
     );
     expect(vulnAfterSecond).toHaveLength(2);
 
     // Controller layer: Enemy should now have Lift status
     const liftEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === PHYSICAL_STATUS_COLUMNS.LIFT && ev.ownerId === ENEMY_OWNER_ID,
+      (ev) => ev.columnId === PHYSICAL_STATUS_COLUMNS.LIFT && ev.ownerId === ENEMY_ID,
     );
     expect(liftEvents).toHaveLength(1);
 
     // ── View layer: computeTimelinePresentation shows Lift in enemy status column ──
-    const enemyStatusCol = findColumn(result.current, ENEMY_OWNER_ID, ENEMY_GROUP_COLUMNS.ENEMY_STATUS);
+    const enemyStatusCol = findColumn(result.current, ENEMY_ID, ENEMY_GROUP_COLUMNS.ENEMY_STATUS);
     expect(enemyStatusCol).toBeDefined();
 
     const viewModels = computeTimelinePresentation(

@@ -21,7 +21,7 @@ import {
 import { InteractionModeType } from '../../../../consts/enums';
 import { useApp } from '../../../../app/useApp';
 import { FPS } from '../../../../utils/timeline';
-import { INFLICTION_COLUMNS, ENEMY_OWNER_ID, REACTION_COLUMNS } from '../../../../model/channels';
+import { INFLICTION_COLUMNS, ENEMY_ID, REACTION_COLUMNS } from '../../../../model/channels';
 import { findColumn, getMenuPayload, setUltimateEnergyToMax } from '../../helpers';
 import type { AppResult } from '../../helpers';
 
@@ -97,14 +97,14 @@ describe('B. Freezing Point — two-part status system', () => {
 
   function placeCryoInfliction(app: AppResult, atFrame: number) {
     app.handleAddEvent(
-      ENEMY_OWNER_ID, INFLICTION_COLUMNS.CRYO, atFrame,
+      ENEMY_ID, INFLICTION_COLUMNS.CRYO, atFrame,
       { name: INFLICTION_COLUMNS.CRYO, segments: [{ properties: { duration: 20 * FPS } }] },
     );
   }
 
   function placeSolidification(app: AppResult, atFrame: number) {
     app.handleAddEvent(
-      ENEMY_OWNER_ID, REACTION_COLUMNS.SOLIDIFICATION, atFrame,
+      ENEMY_ID, REACTION_COLUMNS.SOLIDIFICATION, atFrame,
       { name: REACTION_COLUMNS.SOLIDIFICATION, segments: [{ properties: { duration: 5 * FPS } }] },
     );
   }
@@ -160,7 +160,7 @@ describe('B. Freezing Point — two-part status system', () => {
     const { result } = setup();
     act(() => {
       result.current.handleAddEvent(
-        ENEMY_OWNER_ID, INFLICTION_COLUMNS.HEAT, 1 * FPS,
+        ENEMY_ID, INFLICTION_COLUMNS.HEAT, 1 * FPS,
         { name: INFLICTION_COLUMNS.HEAT, segments: [{ properties: { duration: 20 * FPS } }] },
       );
     });
@@ -189,13 +189,13 @@ describe('B. Freezing Point — two-part status system', () => {
     const { result } = setup();
     act(() => {
       result.current.handleAddEvent(
-        ENEMY_OWNER_ID, INFLICTION_COLUMNS.CRYO, 1 * FPS,
+        ENEMY_ID, INFLICTION_COLUMNS.CRYO, 1 * FPS,
         { name: INFLICTION_COLUMNS.CRYO, segments: [{ properties: { duration: Math.round(5 * FPS) } }] },
       );
     });
 
     const infliction = result.current.allProcessedEvents.find(
-      ev => ev.columnId === INFLICTION_COLUMNS.CRYO && ev.ownerId === ENEMY_OWNER_ID,
+      ev => ev.columnId === INFLICTION_COLUMNS.CRYO && ev.ownerId === ENEMY_ID,
     )!;
     const status = result.current.allProcessedEvents.find(
       ev => ev.id === CRYO_STATUS_ID && ev.ownerId === SLOT,
@@ -218,7 +218,7 @@ describe('B. Freezing Point — two-part status system', () => {
     act(() => { placeSolidification(result.current, 1 * FPS); });
 
     const reaction = result.current.allProcessedEvents.find(
-      ev => ev.columnId === REACTION_COLUMNS.SOLIDIFICATION && ev.ownerId === ENEMY_OWNER_ID,
+      ev => ev.columnId === REACTION_COLUMNS.SOLIDIFICATION && ev.ownerId === ENEMY_ID,
     )!;
     const status = result.current.allProcessedEvents.find(
       ev => ev.id === SOLID_STATUS_ID && ev.ownerId === SLOT,
@@ -240,13 +240,13 @@ describe('B. Freezing Point — two-part status system', () => {
     const { result } = setup();
     act(() => {
       result.current.handleAddEvent(
-        ENEMY_OWNER_ID, INFLICTION_COLUMNS.CRYO, 2 * FPS,
+        ENEMY_ID, INFLICTION_COLUMNS.CRYO, 2 * FPS,
         { name: INFLICTION_COLUMNS.CRYO, segments: [{ properties: { duration: Math.round(10 * FPS) } }] },
       );
     });
 
     const infliction = result.current.allProcessedEvents.find(
-      ev => ev.columnId === INFLICTION_COLUMNS.CRYO && ev.ownerId === ENEMY_OWNER_ID,
+      ev => ev.columnId === INFLICTION_COLUMNS.CRYO && ev.ownerId === ENEMY_ID,
     )!;
     const status = result.current.allProcessedEvents.find(
       ev => ev.id === CRYO_STATUS_ID && ev.ownerId === SLOT,
@@ -274,13 +274,13 @@ describe('B. Freezing Point — two-part status system', () => {
     // Place cryo infliction at 2s with 5s duration — overlaps with TIME_STOP
     act(() => {
       result.current.handleAddEvent(
-        ENEMY_OWNER_ID, INFLICTION_COLUMNS.CRYO, 2 * FPS,
+        ENEMY_ID, INFLICTION_COLUMNS.CRYO, 2 * FPS,
         { name: INFLICTION_COLUMNS.CRYO, segments: [{ properties: { duration: Math.round(5 * FPS) } }] },
       );
     });
 
     const infliction = result.current.allProcessedEvents.find(
-      ev => ev.columnId === INFLICTION_COLUMNS.CRYO && ev.ownerId === ENEMY_OWNER_ID,
+      ev => ev.columnId === INFLICTION_COLUMNS.CRYO && ev.ownerId === ENEMY_ID,
     )!;
     const status = result.current.allProcessedEvents.find(
       ev => ev.id === CRYO_STATUS_ID && ev.ownerId === SLOT,

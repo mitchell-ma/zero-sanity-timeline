@@ -9,7 +9,7 @@
 import { NounType } from '../../../dsl/semantics';
 import { EventStatusType } from '../../../consts/enums';
 import { eventDuration, setEventDuration } from '../../../consts/viewTypes';
-import { ENEMY_OWNER_ID, INFLICTION_TO_REACTION } from '../../../model/channels';
+import { ENEMY_ID, INFLICTION_TO_REACTION } from '../../../model/channels';
 import { getStatusById } from '../../gameDataStore';
 import { allocDerivedEvent } from '../objectPool';
 import { genEventUid } from '../inputEventController';
@@ -56,7 +56,7 @@ export class InflictionColumn implements EventColumn {
           // Incoming is primary (most recent triggering event); the consumed
           // cross-element inflictions are additional sources.
           const reactionParents = [incomingUid, ...otherActive.map(o => o.uid)];
-          this.host.applyToColumn(reactionColumnId, ENEMY_OWNER_ID, frame, reactionDurFrames, source, {
+          this.host.applyToColumn(reactionColumnId, ENEMY_ID, frame, reactionDurFrames, source, {
             uid: `${incomingUid}-reaction`,
             stacks: otherActive.length,
             parents: reactionParents,

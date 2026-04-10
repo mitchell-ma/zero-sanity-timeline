@@ -28,7 +28,7 @@ import { renderHook, act } from '@testing-library/react';
 import { NounType } from '../../../../dsl/semantics';
 import { useApp } from '../../../../app/useApp';
 import { ColumnType, InteractionModeType, SegmentType } from '../../../../consts/enums';
-import { PHYSICAL_INFLICTION_COLUMNS, PHYSICAL_STATUS_COLUMNS, ENEMY_OWNER_ID } from '../../../../model/channels';
+import { PHYSICAL_INFLICTION_COLUMNS, PHYSICAL_STATUS_COLUMNS, ENEMY_ID } from '../../../../model/channels';
 import { FPS } from '../../../../utils/timeline';
 import type { MiniTimeline } from '../../../../consts/viewTypes';
 import { computeTimelinePresentation } from '../../../../controller/timeline/eventPresentationController';
@@ -88,7 +88,7 @@ describe('Chen Qianyu — combo skill placement and Lift', () => {
 
     // Controller layer: Vulnerable infliction on enemy (from combo's Lift application)
     const vulnEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === PHYSICAL_INFLICTION_COLUMNS.VULNERABLE && ev.ownerId === ENEMY_OWNER_ID,
+      (ev) => ev.columnId === PHYSICAL_INFLICTION_COLUMNS.VULNERABLE && ev.ownerId === ENEMY_ID,
     );
     expect(vulnEvents.length).toBeGreaterThanOrEqual(1);
 
@@ -107,7 +107,7 @@ describe('Chen Qianyu — combo skill placement and Lift', () => {
     const enemyStatusCol = result.current.columns.find(
       (c): c is MiniTimeline =>
         c.type === ColumnType.MINI_TIMELINE &&
-        c.ownerId === ENEMY_OWNER_ID &&
+        c.ownerId === ENEMY_ID &&
         (c.matchColumnIds?.includes(PHYSICAL_INFLICTION_COLUMNS.VULNERABLE) ?? false),
     );
     expect(enemyStatusCol).toBeDefined();
@@ -144,13 +144,13 @@ describe('Chen Qianyu — combo skill placement and Lift', () => {
 
     // Controller layer: at least 2 Vulnerable inflictions (1 from BS, 1 from combo)
     const vulnEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === PHYSICAL_INFLICTION_COLUMNS.VULNERABLE && ev.ownerId === ENEMY_OWNER_ID,
+      (ev) => ev.columnId === PHYSICAL_INFLICTION_COLUMNS.VULNERABLE && ev.ownerId === ENEMY_ID,
     );
     expect(vulnEvents.length).toBeGreaterThanOrEqual(2);
 
     // Controller layer: Lift status on enemy (combo applies Lift while Vulnerable exists)
     const liftEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === PHYSICAL_STATUS_COLUMNS.LIFT && ev.ownerId === ENEMY_OWNER_ID,
+      (ev) => ev.columnId === PHYSICAL_STATUS_COLUMNS.LIFT && ev.ownerId === ENEMY_ID,
     );
     expect(liftEvents.length).toBeGreaterThanOrEqual(1);
   });

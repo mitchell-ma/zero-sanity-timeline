@@ -2,11 +2,11 @@ import { Column, MiniTimeline, MicroColumn, Operator, Enemy, VisibleSkills, Even
 import { DeterminerType, NounType, VerbType, isQualifiedId, type Effect, type Predicate } from '../../dsl/semantics';
 import type { FrameClausePredicate } from '../../model/event-frames/skillEventFrame';
 import { ColumnType, DEFAULT_EVENT_COLOR, ELEMENT_COLORS, ElementType, EnhancementType, EventFrameType, HeaderVariant, MicroColumnAssignment, SegmentType, StackInteractionType, StatusType, TimeDependency, TimelineSourceType, UNLIMITED_STACKS } from '../../consts/enums';
-import { ENEMY_OWNER_ID, ENEMY_GROUP_COLUMNS, ENEMY_ACTION_COLUMN_ID, OPERATOR_COLUMNS, OPERATOR_STATUS_COLUMN_ID, PHYSICAL_INFLICTION_COLUMNS, PHYSICAL_STATUS_COLUMNS, SKILL_COLUMN_ORDER as SKILL_ORDER, COMBO_WINDOW_COLUMN_ID, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID } from '../../model/channels';
+import { ENEMY_ID, ENEMY_GROUP_COLUMNS, ENEMY_ACTION_COLUMN_ID, OPERATOR_COLUMNS, OPERATOR_STATUS_COLUMN_ID, PHYSICAL_INFLICTION_COLUMNS, PHYSICAL_STATUS_COLUMNS, SKILL_COLUMN_ORDER as SKILL_ORDER, COMBO_WINDOW_COLUMN_ID, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID } from '../../model/channels';
 import { isTeamStatus } from '../gameDataStore';
 import { SKILL_LABELS, ColumnLabel, STATUS_LABELS, REACTION_MICRO_COLUMNS } from '../../consts/timelineColumnLabels';
 import { getWeapon, getWeaponEffectDefs, getGearEffectDefs, getAllStatusLabels, getStatusById, getConsumablePassiveDef, getTacticalTriggerDef } from '../gameDataStore';
-import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../slot/commonSlotController';
+import { TEAM_ID, COMMON_COLUMN_IDS } from '../slot/commonSlotController';
 import { FPS, TOTAL_FRAMES } from '../../utils/timeline';
 import GENERAL_MECHANICS from '../../model/game-data/generalMechanics.json';
 import { SkillSegmentBuilder } from '../events/basicAttackController';
@@ -383,10 +383,10 @@ export function buildColumns(
 
   // Common (global) columns — before operator slots
   columns.push({
-    key: `${COMMON_OWNER_ID}-${COMMON_COLUMN_IDS.SKILL_POINTS}`,
+    key: `${TEAM_ID}-${COMMON_COLUMN_IDS.SKILL_POINTS}`,
     type: ColumnType.MINI_TIMELINE,
     source: TimelineSourceType.COMMON,
-    ownerId: COMMON_OWNER_ID,
+    ownerId: TEAM_ID,
     columnId: COMMON_COLUMN_IDS.SKILL_POINTS,
     label: ColumnLabel.SKILL_POINTS,
     color: '#ccaa33',
@@ -403,10 +403,10 @@ export function buildColumns(
     teamStatusMatchIds.push(statusId);
   }
   columns.push({
-    key: `${COMMON_OWNER_ID}-${COMMON_COLUMN_IDS.TEAM_STATUS}`,
+    key: `${TEAM_ID}-${COMMON_COLUMN_IDS.TEAM_STATUS}`,
     type: ColumnType.MINI_TIMELINE,
     source: TimelineSourceType.COMMON,
-    ownerId: COMMON_OWNER_ID,
+    ownerId: TEAM_ID,
     columnId: COMMON_COLUMN_IDS.TEAM_STATUS,
     label: ColumnLabel.TEAM_STATUS,
     color: '#66aa88',
@@ -423,10 +423,10 @@ export function buildColumns(
       buildStatusMicroColumn(tgb.statusId, tgb.color, { label: tgb.label }),
     );
     columns.push({
-      key: `${COMMON_OWNER_ID}-team-gear-status`,
+      key: `${TEAM_ID}-team-gear-status`,
       type: ColumnType.MINI_TIMELINE,
       source: TimelineSourceType.GEAR_EFFECT,
-      ownerId: COMMON_OWNER_ID,
+      ownerId: TEAM_ID,
       columnId: 'team-gear-status',
       label: ColumnLabel.GEAR_BUFF,
       color: '#88aa66',
@@ -933,7 +933,7 @@ export function buildColumns(
     key: `enemy-${ENEMY_ACTION_COLUMN_ID}`,
     type: ColumnType.MINI_TIMELINE,
     source: TimelineSourceType.ENEMY,
-    ownerId: ENEMY_OWNER_ID,
+    ownerId: ENEMY_ID,
     columnId: ENEMY_ACTION_COLUMN_ID,
     label: ColumnLabel.ACTION,
     color: '#cc4444',
@@ -957,7 +957,7 @@ export function buildColumns(
     key: `enemy-${COMMON_COLUMN_IDS.STAGGER}`,
     type: ColumnType.MINI_TIMELINE,
     source: TimelineSourceType.ENEMY,
-    ownerId: ENEMY_OWNER_ID,
+    ownerId: ENEMY_ID,
     columnId: COMMON_COLUMN_IDS.STAGGER,
     label: ColumnLabel.STAGGER,
     color: '#dd8844',
@@ -1032,7 +1032,7 @@ export function buildColumns(
     key: ENEMY_GROUP_COLUMNS.ENEMY_STATUS,
     type: ColumnType.MINI_TIMELINE,
     source: TimelineSourceType.ENEMY,
-    ownerId: ENEMY_OWNER_ID,
+    ownerId: ENEMY_ID,
     columnId: ENEMY_GROUP_COLUMNS.ENEMY_STATUS,
     label: ColumnLabel.STATUS,
     color: '#cc8866',

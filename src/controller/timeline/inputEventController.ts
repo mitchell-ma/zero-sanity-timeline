@@ -9,7 +9,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { NounType } from '../../dsl/semantics';
 import { ColumnType, EnhancementType, EventFrameType } from '../../consts/enums';
 import { TimelineEvent, EventSegmentData, Operator, computeSegmentsSpan, getAnimationDuration, eventEndFrame, durationSegment } from '../../consts/viewTypes';
-import { ENEMY_OWNER_ID, REACTION_COLUMN_IDS, INFLICTION_COLUMN_IDS, COMBO_WINDOW_COLUMN_ID } from '../../model/channels';
+import { ENEMY_ID, REACTION_COLUMN_IDS, INFLICTION_COLUMN_IDS, COMBO_WINDOW_COLUMN_ID } from '../../model/channels';
 
 import { TOTAL_FRAMES } from '../../utils/timeline';
 import { ComboSkillEventController } from './comboSkillEventController';
@@ -120,7 +120,7 @@ export function wouldOverlapNonOverlappable(
   processedEvents?: readonly TimelineEvent[],
 ): boolean {
   // Enemy inflictions are stackable — skip overlap check
-  if (ev.ownerId === ENEMY_OWNER_ID && INFLICTION_COLUMN_IDS.has(ev.columnId)) return false;
+  if (ev.ownerId === ENEMY_ID && INFLICTION_COLUMN_IDS.has(ev.columnId)) return false;
   const evIsReset = ev.id && isResetStatus(ev.id);
   // Combo skills in multi-skill activation windows bypass overlap against siblings in the same window
   const comboWindowBypass = ev.columnId === NounType.COMBO && processedEvents
@@ -346,7 +346,7 @@ export function createEvent(
   } | null,
   interactionMode?: import('../../consts/enums').InteractionModeType,
 ): TimelineEvent {
-  const isForced = ownerId === ENEMY_OWNER_ID && REACTION_COLUMN_IDS.has(columnId);
+  const isForced = ownerId === ENEMY_ID && REACTION_COLUMN_IDS.has(columnId);
   let segments = defaultSkill?.segments ?? durationSegment(120);
   // Perfect-dodge SP recovery is delivered via a RECOVER SKILL_POINT clause
   // attached to the dash event's first frame at offset 0. The interpret() →
@@ -358,7 +358,7 @@ export function createEvent(
   }
   const span = computeSegmentsSpan(segments);
   const stackLimit = (defaultSkill?.stacks?.limit as { value?: number } | undefined)?.value ?? 1;
-  const isStackable = stackLimit > 1 || (ownerId === ENEMY_OWNER_ID && INFLICTION_COLUMN_IDS.has(columnId));
+  const isStackable = stackLimit > 1 || (ownerId === ENEMY_ID && INFLICTION_COLUMN_IDS.has(columnId));
   const eventId = defaultSkill?.id ?? columnId;
   return {
     uid: genEventUid(),

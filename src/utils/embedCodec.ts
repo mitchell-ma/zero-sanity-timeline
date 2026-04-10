@@ -14,8 +14,8 @@ import { SheetData, cleanSheetData } from './sheetStorage';
 import { OperatorLoadoutState, EMPTY_LOADOUT } from '../view/OperatorLoadoutHeader';
 import { LoadoutProperties, DEFAULT_LOADOUT_PROPERTIES } from '../view/InformationPane';
 import { EnemyStats, getDefaultEnemyStats } from '../controller/appStateController';
-import { COMMON_OWNER_ID } from '../controller/slot/commonSlotController';
-import { ENEMY_OWNER_ID } from '../model/channels';
+import { TEAM_ID } from '../controller/slot/commonSlotController';
+import { ENEMY_ID } from '../model/channels';
 import { ALL_OPERATORS } from '../controller/operators/operatorRegistry';
 import { ALL_ENEMIES } from '../utils/enemies';
 import type { TimelineEvent, Column, EventSegmentData } from '../consts/viewTypes';
@@ -1000,8 +1000,8 @@ export async function encodeEmbed(
   for (let ei = 0; ei < cleaned.events.length; ei++) {
     const ev = cleaned.events[ei];
     const origEv = sheetData.events[ei];
-    const slotIdx = ev.ownerId === COMMON_OWNER_ID ? COMMON_OWNER_IDX
-      : ev.ownerId === ENEMY_OWNER_ID ? ENEMY_OWNER_IDX
+    const slotIdx = ev.ownerId === TEAM_ID ? COMMON_OWNER_IDX
+      : ev.ownerId === ENEMY_ID ? ENEMY_OWNER_IDX
       : SLOT_IDS.indexOf(ev.ownerId);
     const template = findEventTemplate(columns, ev.columnId, ev.name);
 
@@ -1400,8 +1400,8 @@ export async function decodeEmbed(
   const events: TimelineEvent[] = [];
   for (let i = 0; i < embed.evs.length; i++) {
     const compact = embed.evs[i];
-    const ownerId = compact.o === COMMON_OWNER_IDX ? COMMON_OWNER_ID
-      : compact.o === ENEMY_OWNER_IDX ? ENEMY_OWNER_ID
+    const ownerId = compact.o === COMMON_OWNER_IDX ? TEAM_ID
+      : compact.o === ENEMY_OWNER_IDX ? ENEMY_ID
       : SLOT_IDS[compact.o] ?? SLOT_IDS[0];
     const template = findEventTemplate(columns, compact.c, compact.s);
 

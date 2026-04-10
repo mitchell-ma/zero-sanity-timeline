@@ -17,7 +17,7 @@ import { NounType } from '../../../../dsl/semantics';
 import { useApp } from '../../../../app/useApp';
 import {
   PHYSICAL_STATUS_COLUMNS,
-  ENEMY_OWNER_ID,
+  ENEMY_ID,
 } from '../../../../model/channels';
 import { DamageType } from '../../../../consts/enums';
 import { FPS } from '../../../../utils/timeline';
@@ -51,7 +51,7 @@ function addViaContextMenu(app: AppResult, slotId: string, columnId: string, atF
 
 function getLiftEvents(app: AppResult) {
   return app.allProcessedEvents.filter(
-    (ev) => ev.columnId === PHYSICAL_STATUS_COLUMNS.LIFT && ev.ownerId === ENEMY_OWNER_ID,
+    (ev) => ev.columnId === PHYSICAL_STATUS_COLUMNS.LIFT && ev.ownerId === ENEMY_ID,
   );
 }
 

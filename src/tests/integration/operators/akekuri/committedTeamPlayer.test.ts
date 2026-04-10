@@ -25,7 +25,7 @@ import { useApp } from '../../../../app/useApp';
 import { ColumnType, InteractionModeType } from '../../../../consts/enums';
 import { FPS } from '../../../../utils/timeline';
 import type { MiniTimeline } from '../../../../consts/viewTypes';
-import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../../../../controller/slot/commonSlotController';
+import { TEAM_ID, COMMON_COLUMN_IDS } from '../../../../controller/slot/commonSlotController';
 import { computeTimelinePresentation } from '../../../../controller/timeline/eventPresentationController';
 import { findColumn, getMenuPayload } from '../../helpers';
 import type { AppResult } from '../../helpers';
@@ -42,7 +42,7 @@ function findTeamStatusColumn(app: AppResult) {
   return app.columns.find(
     (c): c is MiniTimeline =>
       c.type === ColumnType.MINI_TIMELINE &&
-      c.ownerId === COMMON_OWNER_ID &&
+      c.ownerId === TEAM_ID &&
       c.columnId === COMMON_COLUMN_IDS.TEAM_STATUS,
   );
 }
@@ -159,9 +159,9 @@ describe('Akekuri P3 — Committed Team Player', () => {
     // Add ultimate at t=1s
     act(() => { addUltimate(result.current, 1 * FPS); });
 
-    // Controller: COMMITTED_TEAM_PLAYER appears under COMMON_OWNER_ID
+    // Controller: COMMITTED_TEAM_PLAYER appears under TEAM_ID
     const p3Events = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === P3_STATUS_ID && ev.ownerId === COMMON_OWNER_ID,
+      (ev) => ev.columnId === P3_STATUS_ID && ev.ownerId === TEAM_ID,
     );
     expect(p3Events.length).toBeGreaterThanOrEqual(1);
 

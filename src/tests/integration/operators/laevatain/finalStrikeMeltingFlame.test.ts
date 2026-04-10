@@ -17,7 +17,7 @@ import { renderHook, act } from '@testing-library/react';
 import { NounType } from '../../../../dsl/semantics';
 import { useApp } from '../../../../app/useApp';
 import { buildColumnContextMenu, ColumnContextMenuContext } from '../../../../controller/timeline/contextMenuController';
-import { INFLICTION_COLUMNS, ENEMY_OWNER_ID } from '../../../../model/channels';
+import { INFLICTION_COLUMNS, ENEMY_ID } from '../../../../model/channels';
 import { ColumnType, InteractionModeType, EventStatusType } from '../../../../consts/enums';
 import { FPS } from '../../../../utils/timeline';
 import { eventDuration } from '../../../../consts/viewTypes';
@@ -75,7 +75,7 @@ function executeAddFromMenu(
 
 function getHeatInflictions(app: ReturnType<typeof useApp>) {
   return app.allProcessedEvents.filter(
-    (ev) => ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerId === ENEMY_OWNER_ID,
+    (ev) => ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerId === ENEMY_ID,
   );
 }
 

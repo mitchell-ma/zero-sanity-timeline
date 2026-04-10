@@ -14,7 +14,7 @@ import { DataCardBody, FrameCritState, EditState, EditableValue } from '../custo
 import type { OverrideStore } from '../../consts/overrideTypes';
 import { buildOverrideKey } from '../../controller/overrideController';
 import { findUltimateEnergyGainInClauses, findSkillPointRecoveryInClauses, findStaggerInClauses } from '../../controller/timeline/clauseQueries';
-import { ENEMY_OWNER_ID, OPERATOR_COLUMNS, REACTION_COLUMN_IDS, SKILL_COLUMN_ORDER } from '../../model/channels';
+import { ENEMY_ID, OPERATOR_COLUMNS, REACTION_COLUMN_IDS, SKILL_COLUMN_ORDER } from '../../model/channels';
 import { getLastController } from '../../controller/timeline/eventQueueController';
 import type { DamageTableRow } from '../../controller/calculation/damageTableBuilder';
 
@@ -361,7 +361,7 @@ function EventPane({
           // edit-panel-sections. Now they sit inside the Status Definition
           // card, sharing the hot-wire edit affordance. TimelineEvent-rooted
           // paths via jsonOverrides; freeform-only edits, auto reset.
-          const isReaction = event.ownerId === ENEMY_OWNER_ID && REACTION_COLUMN_IDS.has(event.columnId);
+          const isReaction = event.ownerId === ENEMY_ID && REACTION_COLUMN_IDS.has(event.columnId);
           const reactionElement = isReaction
             ? (getStatusElementMap()[event.columnId.toUpperCase()] as ElementType | undefined)
             : undefined;
@@ -622,7 +622,7 @@ function EventPane({
         </div>
 
         {(() => {
-          if (!allProcessedEvents || event.ownerId === ENEMY_OWNER_ID) return null;
+          if (!allProcessedEvents || event.ownerId === ENEMY_ID) return null;
           const totalDuration = computeSegmentsSpan(event.segments);
           const mods = resolveActiveModifiers(event.startFrame, event.startFrame + totalDuration, allProcessedEvents);
           if (mods.length === 0) return null;

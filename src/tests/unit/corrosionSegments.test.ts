@@ -16,7 +16,7 @@
 import { attachReactionFrames } from '../../controller/timeline/processInfliction';
 import { deriveReactions } from '../../controller/timeline/deriveReactions';
 import { TimelineEvent } from '../../consts/viewTypes';
-import { INFLICTION_COLUMNS, REACTION_COLUMNS, ENEMY_OWNER_ID, USER_ID } from '../../model/channels';
+import { INFLICTION_COLUMNS, REACTION_COLUMNS, ENEMY_ID, USER_ID } from '../../model/channels';
 import { getCorrosionBaseReduction, getCorrosionReductionMultiplier } from '../../model/calculation/damageFormulas';
 import { findStaggerInClauses } from '../../controller/timeline/clauseQueries';
 import { StatusLevel } from '../../consts/types';
@@ -45,7 +45,7 @@ function infliction(
     uid,
     id: columnId,
     name: columnId,
-    ownerId: ENEMY_OWNER_ID,
+    ownerId: ENEMY_ID,
     columnId,
     startFrame,
     segments: [{ properties: { duration: Math.round(durationSeconds * FPS) } }],
@@ -64,7 +64,7 @@ function corrosionEvent(
     uid,
     id: REACTION_COLUMNS.CORROSION,
     name: REACTION_COLUMNS.CORROSION,
-    ownerId: ENEMY_OWNER_ID,
+    ownerId: ENEMY_ID,
     columnId: REACTION_COLUMNS.CORROSION,
     startFrame,
     segments: [{ properties: { duration: durationFrames } }],
@@ -431,7 +431,7 @@ describe('corrosion time stop interaction', () => {
       uid: 'freeform-corr-1',
       id: REACTION_COLUMNS.CORROSION,
       name: REACTION_COLUMNS.CORROSION,
-      ownerId: ENEMY_OWNER_ID,
+      ownerId: ENEMY_ID,
       columnId: REACTION_COLUMNS.CORROSION,
       startFrame: 0,
       segments: [{ properties: { duration: 5 * FPS } }],

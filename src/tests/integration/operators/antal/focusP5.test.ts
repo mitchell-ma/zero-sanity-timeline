@@ -19,7 +19,7 @@ import { useApp } from '../../../../app/useApp';
 import { NounType } from '../../../../dsl/semantics';
 import { StatusType } from '../../../../consts/enums';
 import { FPS } from '../../../../utils/timeline';
-import { ENEMY_OWNER_ID } from '../../../../model/channels';
+import { ENEMY_ID } from '../../../../model/channels';
 import { DEFAULT_LOADOUT_PROPERTIES } from '../../../../view/InformationPane';
 import type { LoadoutProperties } from '../../../../view/InformationPane';
 import { findColumn, getMenuPayload } from '../../helpers';
@@ -59,7 +59,7 @@ describe('Antal — Focus P5 Empowered', () => {
     placeBattleSkill(result);
 
     const focusEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === ENEMY_OWNER_ID && ev.id === StatusType.FOCUS_EMPOWERED,
+      ev => ev.ownerId === ENEMY_ID && ev.id === StatusType.FOCUS_EMPOWERED,
     );
     expect(focusEvents).toHaveLength(1);
     const ev = focusEvents[0];
@@ -75,7 +75,7 @@ describe('Antal — Focus P5 Empowered', () => {
     placeBattleSkill(result);
 
     const focusEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === ENEMY_OWNER_ID && ev.id === StatusType.FOCUS,
+      ev => ev.ownerId === ENEMY_ID && ev.id === StatusType.FOCUS,
     );
     expect(focusEvents).toHaveLength(1);
     const ev = focusEvents[0];

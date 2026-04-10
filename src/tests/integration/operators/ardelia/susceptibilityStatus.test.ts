@@ -18,7 +18,7 @@
 
 import { renderHook, act } from '@testing-library/react';
 import { useApp } from '../../../../app/useApp';
-import { REACTION_COLUMNS, ENEMY_OWNER_ID, ENEMY_GROUP_COLUMNS } from '../../../../model/channels';
+import { REACTION_COLUMNS, ENEMY_ID, ENEMY_GROUP_COLUMNS } from '../../../../model/channels';
 import { ColumnType, InteractionModeType } from '../../../../consts/enums';
 import { NounType, AdjectiveType, isQualifiedId } from '../../../../dsl/semantics';
 import { FPS } from '../../../../utils/timeline';
@@ -80,7 +80,7 @@ describe('Ardelia Dolly Rush — Susceptibility Status', () => {
 
       // Verify corrosion exists on enemy before battle skill
       const corrosionBefore = result.current.allProcessedEvents.filter(
-        ev => ev.columnId === REACTION_COLUMNS.CORROSION && ev.ownerId === ENEMY_OWNER_ID,
+        ev => ev.columnId === REACTION_COLUMNS.CORROSION && ev.ownerId === ENEMY_ID,
       );
       expect(corrosionBefore.length).toBeGreaterThan(0);
 
@@ -95,7 +95,7 @@ describe('Ardelia Dolly Rush — Susceptibility Status', () => {
       // ── Controller layer ────────────────────────────────────────────
       // Verify susceptibility statuses on enemy
       const susceptEvents = result.current.allProcessedEvents.filter(
-        ev => isQualifiedId(ev.columnId, NounType.SUSCEPTIBILITY) && ev.ownerId === ENEMY_OWNER_ID,
+        ev => isQualifiedId(ev.columnId, NounType.SUSCEPTIBILITY) && ev.ownerId === ENEMY_ID,
       );
 
       // Should have 2 events: one Physical, one Arts
@@ -127,14 +127,14 @@ describe('Ardelia Dolly Rush — Susceptibility Status', () => {
       );
 
       // Find the enemy status column (unified column that matches susceptibility via matchColumnIds)
-      const enemyStatusCol = findMatchingColumn(result.current, ENEMY_OWNER_ID, NounType.SUSCEPTIBILITY);
+      const enemyStatusCol = findMatchingColumn(result.current, ENEMY_ID, NounType.SUSCEPTIBILITY);
       expect(enemyStatusCol).toBeDefined();
 
       const vm = viewModels.get(enemyStatusCol!.key);
       expect(vm).toBeDefined();
 
       const susceptInVM = vm!.events.filter(
-        ev => isQualifiedId(ev.columnId, NounType.SUSCEPTIBILITY) && ev.ownerId === ENEMY_OWNER_ID,
+        ev => isQualifiedId(ev.columnId, NounType.SUSCEPTIBILITY) && ev.ownerId === ENEMY_ID,
       );
       expect(susceptInVM).toHaveLength(2);
 
@@ -163,7 +163,7 @@ describe('Ardelia Dolly Rush — Susceptibility Status', () => {
 
       // No susceptibility should appear
       const susceptEvents = result.current.allProcessedEvents.filter(
-        ev => isQualifiedId(ev.columnId, NounType.SUSCEPTIBILITY) && ev.ownerId === ENEMY_OWNER_ID,
+        ev => isQualifiedId(ev.columnId, NounType.SUSCEPTIBILITY) && ev.ownerId === ENEMY_ID,
       );
       expect(susceptEvents).toHaveLength(0);
     });
@@ -206,7 +206,7 @@ describe('Ardelia Dolly Rush — Susceptibility Status', () => {
       });
 
       const susceptEvents = result.current.allProcessedEvents.filter(
-        ev => isQualifiedId(ev.columnId, NounType.SUSCEPTIBILITY) && ev.ownerId === ENEMY_OWNER_ID,
+        ev => isQualifiedId(ev.columnId, NounType.SUSCEPTIBILITY) && ev.ownerId === ENEMY_ID,
       );
       expect(susceptEvents).toHaveLength(2);
     });
@@ -225,7 +225,7 @@ describe('Ardelia Dolly Rush — Susceptibility Status', () => {
       });
 
       // Find the unified enemy status column
-      const enemyStatusCol = findColumn(result.current, ENEMY_OWNER_ID, ENEMY_GROUP_COLUMNS.ENEMY_STATUS);
+      const enemyStatusCol = findColumn(result.current, ENEMY_ID, ENEMY_GROUP_COLUMNS.ENEMY_STATUS);
       expect(enemyStatusCol).toBeDefined();
 
       // Build context menu — should expose corrosion as one of the micro-column entries
@@ -265,7 +265,7 @@ describe('Ardelia Dolly Rush — Susceptibility Status', () => {
       });
 
       const susceptEvents = result.current.allProcessedEvents.filter(
-        ev => isQualifiedId(ev.columnId, NounType.SUSCEPTIBILITY) && ev.ownerId === ENEMY_OWNER_ID,
+        ev => isQualifiedId(ev.columnId, NounType.SUSCEPTIBILITY) && ev.ownerId === ENEMY_ID,
       );
       expect(susceptEvents).toHaveLength(2);
     });
@@ -312,7 +312,7 @@ describe('Ardelia Dolly Rush — Susceptibility Status', () => {
       });
 
       const susceptEvents = result.current.allProcessedEvents.filter(
-        ev => isQualifiedId(ev.columnId, NounType.SUSCEPTIBILITY) && ev.ownerId === ENEMY_OWNER_ID,
+        ev => isQualifiedId(ev.columnId, NounType.SUSCEPTIBILITY) && ev.ownerId === ENEMY_ID,
       );
       expect(susceptEvents).toHaveLength(2);
 

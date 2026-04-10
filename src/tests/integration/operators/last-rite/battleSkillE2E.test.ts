@@ -20,7 +20,7 @@ import { NounType, VerbType, DeterminerType } from '../../../../dsl/semantics';
 import { useApp } from '../../../../app/useApp';
 import { ColumnType, EventStatusType } from '../../../../consts/enums';
 import { FPS } from '../../../../utils/timeline';
-import { ENEMY_OWNER_ID, INFLICTION_COLUMNS, ENEMY_GROUP_COLUMNS } from '../../../../model/channels';
+import { ENEMY_ID, INFLICTION_COLUMNS, ENEMY_GROUP_COLUMNS } from '../../../../model/channels';
 import { ultimateGraphKey } from '../../../../model/channels';
 import { computeTimelinePresentation } from '../../../../controller/timeline/eventPresentationController';
 import {
@@ -253,7 +253,7 @@ describe('E. Hypothermic Perfusion trigger (CONTROLLED OPERATOR PERFORM FINAL_ST
 
     // Check for cryo infliction on enemy (from Hypothermic Perfusion trigger effect)
     const cryoInflictions = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === INFLICTION_COLUMNS.CRYO && ev.ownerId === ENEMY_OWNER_ID
+      ev => ev.columnId === INFLICTION_COLUMNS.CRYO && ev.ownerId === ENEMY_ID
         && ev.startFrame > 0,
     );
     // Hypothermic Perfusion trigger should have applied cryo infliction
@@ -299,7 +299,7 @@ describe('E. Hypothermic Perfusion trigger (CONTROLLED OPERATOR PERFORM FINAL_ST
     act(() => { placeBasicAttack(result.current, 5 * FPS); });
 
     const cryoInflictions = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === INFLICTION_COLUMNS.CRYO && ev.ownerId === ENEMY_OWNER_ID
+      ev => ev.columnId === INFLICTION_COLUMNS.CRYO && ev.ownerId === ENEMY_ID
         && ev.startFrame > 0,
     );
     // Hypothermic Perfusion trigger applies 1 cryo infliction stack
@@ -434,7 +434,7 @@ describe('H. Hypothermic Perfusion (Mirage) — pipeline E2E', () => {
 
     const mirages = getMirageEvents(result.current);
     expect(mirages.length).toBeGreaterThanOrEqual(1);
-    expect(mirages[0].ownerId).toBe(ENEMY_OWNER_ID);
+    expect(mirages[0].ownerId).toBe(ENEMY_ID);
   });
 
   it('H6: mirage ownerOperatorId tracks back to Last Rite operator', () => {
@@ -454,7 +454,7 @@ describe('H. Hypothermic Perfusion (Mirage) — pipeline E2E', () => {
 
     // The mirage's frame at 0s offset should apply cryo infliction
     const cryoInflictions = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === INFLICTION_COLUMNS.CRYO && ev.ownerId === ENEMY_OWNER_ID
+      ev => ev.columnId === INFLICTION_COLUMNS.CRYO && ev.ownerId === ENEMY_ID
         && ev.startFrame > 0,
     );
     expect(cryoInflictions.length).toBeGreaterThanOrEqual(1);
@@ -467,7 +467,7 @@ describe('H. Hypothermic Perfusion (Mirage) — pipeline E2E', () => {
 
     const enemyStatusCol = result.current.columns.find(
       (c): c is MiniTimeline => c.type === ColumnType.MINI_TIMELINE
-        && c.ownerId === ENEMY_OWNER_ID && c.columnId === ENEMY_GROUP_COLUMNS.ENEMY_STATUS,
+        && c.ownerId === ENEMY_ID && c.columnId === ENEMY_GROUP_COLUMNS.ENEMY_STATUS,
     );
     if (!enemyStatusCol) return; // Column may not exist if no enemy statuses configured
 

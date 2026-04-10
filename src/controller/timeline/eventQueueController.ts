@@ -17,7 +17,7 @@ import { SkillPointController } from '../slot/skillPointController';
 import { EventInterpretorController } from './eventInterpretorController';
 import { invalidateConfigCache } from './configCache';
 import { TriggerIndex } from './triggerIndex';
-import { ENEMY_OWNER_ID, ENEMY_ACTION_COLUMN_ID } from '../../model/channels';
+import { ENEMY_ID, ENEMY_ACTION_COLUMN_ID } from '../../model/channels';
 import { getAllTriggerAssociations } from '../gameDataStore';
 import { cloneAndSplitEvents, selectNewTalents, buildControlSeed } from './parser';
 import { buildDamageOpCache } from '../calculation/calculationController';
@@ -290,7 +290,7 @@ export function processCombatSimulation(
   for (const ev of inputEvents) state.createSkillEvent(ev, { checkCooldown: false });
 
   // Enemy action events (derived-column, but need to appear in output)
-  const enemyActionEvents = derivedEvents.filter(ev => ev.ownerId === ENEMY_OWNER_ID && ev.columnId === ENEMY_ACTION_COLUMN_ID);
+  const enemyActionEvents = derivedEvents.filter(ev => ev.ownerId === ENEMY_ID && ev.columnId === ENEMY_ACTION_COLUMN_ID);
   for (const ev of enemyActionEvents) state.createSkillEvent(ev, { checkCooldown: false });
 
   // Talent events are registered inside runEventQueue (they need the

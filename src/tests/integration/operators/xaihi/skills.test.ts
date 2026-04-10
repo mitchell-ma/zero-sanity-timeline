@@ -15,7 +15,7 @@
 import { renderHook, act } from '@testing-library/react';
 import { NounType } from '../../../../dsl/semantics';
 import { useApp } from '../../../../app/useApp';
-import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../../../../controller/slot/commonSlotController';
+import { TEAM_ID, COMMON_COLUMN_IDS } from '../../../../controller/slot/commonSlotController';
 import { BasicAttackType, ColumnType, SegmentType } from '../../../../consts/enums';
 import { FPS } from '../../../../utils/timeline';
 import { computeTimelinePresentation } from '../../../../controller/timeline/eventPresentationController';
@@ -203,12 +203,12 @@ describe('C. Ultimate', () => {
     );
     expect(animSeg).toBeDefined();
 
-    // Cryo AMP and Nature AMP on COMMON_OWNER_ID (team status)
+    // Cryo AMP and Nature AMP on TEAM_ID (team status)
     const cryoAmp = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === COMMON_OWNER_ID && ev.name === NounType.CRYO_AMP,
+      ev => ev.ownerId === TEAM_ID && ev.name === NounType.CRYO_AMP,
     );
     const natureAmp = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === COMMON_OWNER_ID && ev.name === NounType.NATURE_AMP,
+      ev => ev.ownerId === TEAM_ID && ev.name === NounType.NATURE_AMP,
     );
     expect(cryoAmp).toHaveLength(1);
     expect(natureAmp).toHaveLength(1);
@@ -239,7 +239,7 @@ describe('C. Ultimate', () => {
     const teamCol = result.current.columns.find(
       (c): c is import('../../../../consts/viewTypes').MiniTimeline =>
         c.type === ColumnType.MINI_TIMELINE &&
-        c.ownerId === COMMON_OWNER_ID &&
+        c.ownerId === TEAM_ID &&
         c.columnId === COMMON_COLUMN_IDS.TEAM_STATUS,
     );
     expect(teamCol).toBeDefined();

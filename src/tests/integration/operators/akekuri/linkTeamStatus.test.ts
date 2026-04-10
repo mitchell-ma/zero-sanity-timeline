@@ -6,7 +6,7 @@
  * Akekuri Ultimate → Link Team Status — Integration Tests
  *
  * Tests the full pipeline: Akekuri's Ultimate produces LINK on its own column
- * (StatusType.LINK) under COMMON_OWNER_ID, and skills consume it.
+ * (StatusType.LINK) under TEAM_ID, and skills consume it.
  *
  * Also tests freeform-added LINK events stacking and consumption behavior.
  *
@@ -22,7 +22,7 @@ import { useApp } from '../../../../app/useApp';
 import { ColumnType, InteractionModeType, StatusType } from '../../../../consts/enums';
 import { FPS } from '../../../../utils/timeline';
 import type { MiniTimeline } from '../../../../consts/viewTypes';
-import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../../../../controller/slot/commonSlotController';
+import { TEAM_ID, COMMON_COLUMN_IDS } from '../../../../controller/slot/commonSlotController';
 import { getLastController } from '../../../../controller/timeline/eventQueueController';
 import { computeTimelinePresentation } from '../../../../controller/timeline/eventPresentationController';
 import { findColumn, buildContextMenu, getMenuPayload } from '../../helpers';
@@ -33,12 +33,12 @@ import type { AppResult } from '../../helpers';
 const SLOT_LAEVATAIN = 'slot-0';
 const SLOT_AKEKURI = 'slot-1';
 
-/** Find the team-status column under COMMON_OWNER_ID. */
+/** Find the team-status column under TEAM_ID. */
 function findTeamStatusColumn(app: AppResult) {
   return app.columns.find(
     (c): c is MiniTimeline =>
       c.type === ColumnType.MINI_TIMELINE &&
-      c.ownerId === COMMON_OWNER_ID &&
+      c.ownerId === TEAM_ID &&
       c.columnId === COMMON_COLUMN_IDS.TEAM_STATUS,
   );
 }
@@ -93,9 +93,9 @@ describe('Akekuri Ultimate → Link Team Status', () => {
       );
     });
 
-    // 2. Controller: LINK events appear under COMMON_OWNER_ID
+    // 2. Controller: LINK events appear under TEAM_ID
     const linkEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === COMMON_OWNER_ID && ev.columnId === StatusType.LINK,
+      (ev) => ev.ownerId === TEAM_ID && ev.columnId === StatusType.LINK,
     );
     expect(linkEvents.length).toBeGreaterThanOrEqual(1);
 
@@ -219,7 +219,7 @@ describe('Freeform LINK stacking', () => {
 
     // 2. Controller: both LINK events present
     const linkEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === COMMON_OWNER_ID && ev.columnId === StatusType.LINK,
+      (ev) => ev.ownerId === TEAM_ID && ev.columnId === StatusType.LINK,
     );
     expect(linkEvents).toHaveLength(2);
   });

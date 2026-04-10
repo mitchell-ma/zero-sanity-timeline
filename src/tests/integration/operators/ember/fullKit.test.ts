@@ -22,7 +22,7 @@ import { NounType } from '../../../../dsl/semantics';
 import { useApp } from '../../../../app/useApp';
 import { ColumnType, DEFAULT_EVENT_COLOR, ELEMENT_COLORS, ElementType, InteractionModeType, SegmentType } from '../../../../consts/enums';
 import { FPS } from '../../../../utils/timeline';
-import { OPERATOR_STATUS_COLUMN_ID, ENEMY_OWNER_ID, ENEMY_ACTION_COLUMN_ID } from '../../../../model/channels';
+import { OPERATOR_STATUS_COLUMN_ID, ENEMY_ID, ENEMY_ACTION_COLUMN_ID } from '../../../../model/channels';
 import { computeTimelinePresentation } from '../../../../controller/timeline/eventPresentationController';
 import { getUltimateEnergyCostForPotential } from '../../../../controller/operators/operatorRegistry';
 import { findColumn, getMenuPayload, setUltimateEnergyToMax, buildContextMenu } from '../../helpers';
@@ -75,7 +75,7 @@ function addEnemyAction(app: AppResult, atFrame: number) {
   const col = app.columns.find(
     (c): c is MiniTimeline =>
       c.type === ColumnType.MINI_TIMELINE &&
-      c.ownerId === ENEMY_OWNER_ID &&
+      c.ownerId === ENEMY_ID &&
       c.columnId === ENEMY_ACTION_COLUMN_ID,
   )!;
   const payload = getMenuPayload(app, col, atFrame);

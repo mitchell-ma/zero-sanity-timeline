@@ -24,7 +24,7 @@ import { NounType } from '../../../dsl/semantics';
 import { useApp } from '../../../app/useApp';
 import {
   PHYSICAL_INFLICTION_COLUMNS,
-  ENEMY_OWNER_ID,
+  ENEMY_ID,
   ENEMY_GROUP_COLUMNS,
 } from '../../../model/channels';
 import { EventStatusType, InteractionModeType } from '../../../consts/enums';
@@ -49,7 +49,7 @@ type AppRef = { current: AppResult };
  * item whose payload targets the Vulnerable micro-column.
  */
 function getVulnerableMenuPayload(app: AppResult, atFrame: number): AddEventPayload {
-  const enemyStatusCol = findColumn(app, ENEMY_OWNER_ID, ENEMY_GROUP_COLUMNS.ENEMY_STATUS);
+  const enemyStatusCol = findColumn(app, ENEMY_ID, ENEMY_GROUP_COLUMNS.ENEMY_STATUS);
   expect(enemyStatusCol).toBeDefined();
 
   const menuItems = buildContextMenu(app, enemyStatusCol!, atFrame);
@@ -102,7 +102,7 @@ function addBattleSkills(ref: AppRef, count: number, startSecond: number) {
 
 function getVulnerableEvents(app: AppResult) {
   return app.allProcessedEvents
-    .filter((ev) => ev.columnId === PHYSICAL_INFLICTION_COLUMNS.VULNERABLE && ev.ownerId === ENEMY_OWNER_ID)
+    .filter((ev) => ev.columnId === PHYSICAL_INFLICTION_COLUMNS.VULNERABLE && ev.ownerId === ENEMY_ID)
     .sort((a, b) => a.startFrame - b.startFrame);
 }
 
@@ -161,7 +161,7 @@ describe('Vulnerable stacking — freeform mode (user-placed inflictions)', () =
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
     // Context menu layer: verify Vulnerable menu item is available on enemy status
-    const enemyStatusCol = findColumn(result.current, ENEMY_OWNER_ID, ENEMY_GROUP_COLUMNS.ENEMY_STATUS);
+    const enemyStatusCol = findColumn(result.current, ENEMY_ID, ENEMY_GROUP_COLUMNS.ENEMY_STATUS);
     expect(enemyStatusCol).toBeDefined();
     const statusMenu = buildContextMenu(result.current, enemyStatusCol!, 2 * FPS);
     expect(statusMenu).not.toBeNull();

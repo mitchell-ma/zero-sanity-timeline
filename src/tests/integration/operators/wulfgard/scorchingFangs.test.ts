@@ -22,7 +22,7 @@ import { FPS } from '../../../../utils/timeline';
 import { eventDuration } from '../../../../consts/viewTypes';
 import { computeTimelinePresentation } from '../../../../controller/timeline/eventPresentationController';
 import {
-  REACTION_COLUMNS, ENEMY_OWNER_ID,
+  REACTION_COLUMNS, ENEMY_ID,
   OPERATOR_STATUS_COLUMN_ID,
 } from '../../../../model/channels';
 import { findColumn } from '../../helpers';
@@ -80,7 +80,7 @@ function placeReaction(
 ) {
   act(() => {
     result.current.handleAddEvent(
-      ENEMY_OWNER_ID, reactionCol, startSec * FPS,
+      ENEMY_ID, reactionCol, startSec * FPS,
       { name: reactionCol, segments: [{ properties: { duration: durationSec * FPS } }] },
     );
   });

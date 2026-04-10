@@ -20,7 +20,7 @@
 import { renderHook, act } from '@testing-library/react';
 import { useApp } from '../../../app/useApp';
 import {
-  ENEMY_OWNER_ID,
+  ENEMY_ID,
   ENEMY_GROUP_COLUMNS,
   INFLICTION_COLUMNS,
   REACTION_COLUMNS,
@@ -37,20 +37,20 @@ function findEnemyStatusColumn(app: ReturnType<typeof useApp>) {
   return app.columns.find(
     (c): c is MiniTimeline =>
       c.type === ColumnType.MINI_TIMELINE &&
-      c.ownerId === ENEMY_OWNER_ID &&
+      c.ownerId === ENEMY_ID &&
       c.columnId === ENEMY_GROUP_COLUMNS.ENEMY_STATUS,
   );
 }
 
 function getInflictions(app: ReturnType<typeof useApp>, columnId: string) {
   return app.allProcessedEvents.filter(
-    (ev) => ev.columnId === columnId && ev.ownerId === ENEMY_OWNER_ID,
+    (ev) => ev.columnId === columnId && ev.ownerId === ENEMY_ID,
   );
 }
 
 function getReactions(app: ReturnType<typeof useApp>, columnId: string) {
   return app.allProcessedEvents.filter(
-    (ev) => ev.columnId === columnId && ev.ownerId === ENEMY_OWNER_ID,
+    (ev) => ev.columnId === columnId && ev.ownerId === ENEMY_ID,
   );
 }
 

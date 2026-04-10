@@ -26,7 +26,7 @@ import { useApp } from '../../../app/useApp';
 import { ColumnType, InteractionModeType, StatusType } from '../../../consts/enums';
 import { FPS } from '../../../utils/timeline';
 import type { MiniTimeline } from '../../../consts/viewTypes';
-import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../../../controller/slot/commonSlotController';
+import { TEAM_ID, COMMON_COLUMN_IDS } from '../../../controller/slot/commonSlotController';
 import { computeTimelinePresentation } from '../../../controller/timeline/eventPresentationController';
 import { findColumn, buildContextMenu, getMenuPayload } from '../helpers';
 import type { AppResult } from '../helpers';
@@ -41,12 +41,12 @@ const LINK_ID: string = require('../../../model/game-data/generic/statuses/statu
 const SLOT_LAEVATAIN = 'slot-0';
 const SLOT_AKEKURI = 'slot-1';
 
-/** Find the team-status column under COMMON_OWNER_ID. */
+/** Find the team-status column under TEAM_ID. */
 function findCommonColumn(app: AppResult, columnId: string) {
   return app.columns.find(
     (c): c is MiniTimeline =>
       c.type === ColumnType.MINI_TIMELINE &&
-      c.ownerId === COMMON_OWNER_ID &&
+      c.ownerId === TEAM_ID &&
       c.columnId === columnId,
   );
 }
@@ -113,9 +113,9 @@ describe('Status target routing — effect to TEAM, config default TEAM', () => 
       );
     });
 
-    // 2. Controller: LINK should appear under COMMON_OWNER_ID with its own column ID
+    // 2. Controller: LINK should appear under TEAM_ID with its own column ID
     const teamLinkEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === COMMON_OWNER_ID && ev.columnId === StatusType.LINK,
+      (ev) => ev.ownerId === TEAM_ID && ev.columnId === StatusType.LINK,
     );
     expect(teamLinkEvents.length).toBeGreaterThanOrEqual(1);
 
@@ -162,7 +162,7 @@ describe('Status target routing — effect to OPERATOR, config default OPERATOR'
 
     // MELTING_FLAME should NOT appear on the team-status column
     const teamMfEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === COMMON_OWNER_ID && ev.name === MELTING_FLAME_ID,
+      (ev) => ev.ownerId === TEAM_ID && ev.name === MELTING_FLAME_ID,
     );
     expect(teamMfEvents).toHaveLength(0);
   });
@@ -189,9 +189,9 @@ describe('Status target routing — no effect target, uses config default', () =
       );
     });
 
-    // 2. Controller: Should appear under COMMON_OWNER_ID with LINK column ID
+    // 2. Controller: Should appear under TEAM_ID with LINK column ID
     const teamLinkEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === COMMON_OWNER_ID && ev.columnId === StatusType.LINK && ev.name === StatusType.LINK,
+      (ev) => ev.ownerId === TEAM_ID && ev.columnId === StatusType.LINK && ev.name === StatusType.LINK,
     );
     expect(teamLinkEvents.length).toBeGreaterThanOrEqual(1);
   });
@@ -222,7 +222,7 @@ describe('Status target routing — no effect target, uses config default', () =
 
     // Should NOT appear on the team column
     const teamMfEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === COMMON_OWNER_ID && ev.name === MELTING_FLAME_ID,
+      (ev) => ev.ownerId === TEAM_ID && ev.name === MELTING_FLAME_ID,
     );
     expect(teamMfEvents).toHaveLength(0);
   });
@@ -269,7 +269,7 @@ describe('Status target routing — cross-operator consistency', () => {
 
     // 2. Controller: LINK → team column
     const teamLinkEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === COMMON_OWNER_ID && ev.columnId === StatusType.LINK,
+      (ev) => ev.ownerId === TEAM_ID && ev.columnId === StatusType.LINK,
     );
     expect(teamLinkEvents.length).toBeGreaterThanOrEqual(1);
 
@@ -281,7 +281,7 @@ describe('Status target routing — cross-operator consistency', () => {
 
     // Neither status on the wrong owner
     const teamMf = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === COMMON_OWNER_ID && ev.name === MELTING_FLAME_ID,
+      (ev) => ev.ownerId === TEAM_ID && ev.name === MELTING_FLAME_ID,
     );
     const personalLink = result.current.allProcessedEvents.filter(
       (ev) => ev.ownerId === SLOT_AKEKURI && ev.name === LINK_ID,

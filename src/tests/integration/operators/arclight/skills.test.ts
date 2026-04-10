@@ -21,7 +21,7 @@ import { renderHook, act } from '@testing-library/react';
 import { NounType } from '../../../../dsl/semantics';
 import { useApp } from '../../../../app/useApp';
 import {
-  INFLICTION_COLUMNS, REACTION_COLUMNS, ENEMY_OWNER_ID,
+  INFLICTION_COLUMNS, REACTION_COLUMNS, ENEMY_ID,
 } from '../../../../model/channels';
 import { InteractionModeType } from '../../../../consts/enums';
 import { FPS } from '../../../../utils/timeline';
@@ -81,7 +81,7 @@ function placeElectricInfliction(
 ) {
   act(() => {
     result.current.handleAddEvent(
-      ENEMY_OWNER_ID, INFLICTION_COLUMNS.ELECTRIC, startFrame,
+      ENEMY_ID, INFLICTION_COLUMNS.ELECTRIC, startFrame,
       { name: INFLICTION_COLUMNS.ELECTRIC, segments: [{ properties: { duration: durationSec * FPS } }] },
     );
   });
@@ -95,7 +95,7 @@ function placeHeatInfliction(
 ) {
   act(() => {
     result.current.handleAddEvent(
-      ENEMY_OWNER_ID, INFLICTION_COLUMNS.HEAT, startFrame,
+      ENEMY_ID, INFLICTION_COLUMNS.HEAT, startFrame,
       { name: INFLICTION_COLUMNS.HEAT, segments: [{ properties: { duration: durationSec * FPS } }] },
     );
   });
@@ -153,7 +153,7 @@ describe('A. Core Skill Placement', () => {
 
     // Verify Electrification reaction was derived
     const electrifications = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === REACTION_COLUMNS.ELECTRIFICATION && ev.ownerId === ENEMY_OWNER_ID,
+      ev => ev.columnId === REACTION_COLUMNS.ELECTRIFICATION && ev.ownerId === ENEMY_ID,
     );
     expect(electrifications.length).toBeGreaterThanOrEqual(1);
 
@@ -276,7 +276,7 @@ describe('D. Wildland Trekker Talent', () => {
 
     // Verify Electrification is active
     const electrifications = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === REACTION_COLUMNS.ELECTRIFICATION && ev.ownerId === ENEMY_OWNER_ID,
+      ev => ev.columnId === REACTION_COLUMNS.ELECTRIFICATION && ev.ownerId === ENEMY_ID,
     );
     expect(electrifications.length).toBeGreaterThanOrEqual(1);
 

@@ -17,8 +17,8 @@ import { aggregateLoadoutStats } from './loadoutAggregator';
 import type { LoadoutProperties } from '../../view/InformationPane';
 import type { OperatorLoadoutState } from '../../view/OperatorLoadoutHeader';
 import type { EnemyStats } from '../appStateController';
-import { ENEMY_OWNER_ID } from '../../model/channels';
-import { COMMON_OWNER_ID } from '../slot/commonSlotController';
+import { ENEMY_ID } from '../../model/channels';
+import { TEAM_ID } from '../slot/commonSlotController';
 
 // ── Types ────────────────────────────────────────────────────────────────
 
@@ -130,10 +130,10 @@ export class StatAccumulator {
         }
       }
     }
-    this.current.set(ENEMY_OWNER_ID, enemySnap);
+    this.current.set(ENEMY_ID, enemySnap);
 
     // Common (team-level)
-    this.current.set(COMMON_OWNER_ID, emptySnapshot());
+    this.current.set(TEAM_ID, emptySnapshot());
   }
 
   // ── Delta application ──────────────────────────────────────────

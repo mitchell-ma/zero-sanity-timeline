@@ -18,7 +18,7 @@ import { NounType, VerbType } from '../../../../dsl/semantics';
 import { useApp } from '../../../../app/useApp';
 import { InteractionModeType, StatType } from '../../../../consts/enums';
 import { FPS } from '../../../../utils/timeline';
-import { ENEMY_OWNER_ID, INFLICTION_COLUMNS } from '../../../../model/channels';
+import { ENEMY_ID, INFLICTION_COLUMNS } from '../../../../model/channels';
 import { ultimateGraphKey } from '../../../../model/channels';
 import { getLastStatAccumulator } from '../../../../controller/timeline/eventQueueController';
 import { getUltimateEnergyCostForPotential } from '../../../../controller/operators/operatorRegistry';
@@ -202,7 +202,7 @@ describe('B. T1 Hypothermia — E2E interaction with combo', () => {
     for (let i = 0; i < 3; i++) {
       act(() => {
         result.current.handleAddEvent(
-          ENEMY_OWNER_ID, INFLICTION_COLUMNS.CRYO, (2 * FPS) + i * 10,
+          ENEMY_ID, INFLICTION_COLUMNS.CRYO, (2 * FPS) + i * 10,
           { name: INFLICTION_COLUMNS.CRYO, segments: [{ properties: { duration: 20 * FPS } }] },
         );
       });
@@ -217,7 +217,7 @@ describe('B. T1 Hypothermia — E2E interaction with combo', () => {
 
     // T1 should create a CRYO SUSCEPTIBILITY status on enemy
     const susceptibilityEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === ENEMY_OWNER_ID
+      ev => ev.ownerId === ENEMY_ID
         && ev.id?.includes('SUSCEPTIBILITY')
         && ev.startFrame > 0,
     );
@@ -233,7 +233,7 @@ describe('B. T1 Hypothermia — E2E interaction with combo', () => {
     for (let i = 0; i < 3; i++) {
       act(() => {
         result.current.handleAddEvent(
-          ENEMY_OWNER_ID, INFLICTION_COLUMNS.CRYO, (2 * FPS) + i * 10,
+          ENEMY_ID, INFLICTION_COLUMNS.CRYO, (2 * FPS) + i * 10,
           { name: INFLICTION_COLUMNS.CRYO, segments: [{ properties: { duration: 20 * FPS } }] },
         );
       });
@@ -247,7 +247,7 @@ describe('B. T1 Hypothermia — E2E interaction with combo', () => {
     });
 
     const susceptibilityEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === ENEMY_OWNER_ID
+      ev => ev.ownerId === ENEMY_ID
         && ev.id?.includes('SUSCEPTIBILITY')
         && ev.startFrame > 0,
     );
@@ -272,7 +272,7 @@ describe('B. T1 Hypothermia — E2E interaction with combo', () => {
     for (let i = 0; i < stacks; i++) {
       act(() => {
         result.current.handleAddEvent(
-          ENEMY_OWNER_ID, INFLICTION_COLUMNS.CRYO, (2 * FPS) + i * 10,
+          ENEMY_ID, INFLICTION_COLUMNS.CRYO, (2 * FPS) + i * 10,
           { name: INFLICTION_COLUMNS.CRYO, segments: [{ properties: { duration: 20 * FPS } }] },
         );
       });
@@ -287,7 +287,7 @@ describe('B. T1 Hypothermia — E2E interaction with combo', () => {
 
     // Verify a CRYO_SUSCEPTIBILITY status was applied
     const susceptibilityEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === ENEMY_OWNER_ID
+      ev => ev.ownerId === ENEMY_ID
         && ev.id?.includes('SUSCEPTIBILITY')
         && ev.startFrame > 0,
     );
@@ -315,7 +315,7 @@ describe('B. T1 Hypothermia — E2E interaction with combo', () => {
     // No CRYO_SUSCEPTIBILITY should be created — nothing was consumed, so Hypothermia
     // shouldn't fire (its trigger is gated on actual consumption now).
     const susceptibilityEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === ENEMY_OWNER_ID
+      ev => ev.ownerId === ENEMY_ID
         && ev.id?.includes('SUSCEPTIBILITY')
         && ev.startFrame > 0,
     );

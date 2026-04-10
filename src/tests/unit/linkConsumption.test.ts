@@ -13,7 +13,7 @@ import { TimelineEvent, eventDuration } from '../../consts/viewTypes';
 import { NounType } from '../../dsl/semantics';
 import { EventStatusType, StatusType } from '../../consts/enums';
 import { processCombatSimulation, getLastController } from '../../controller/timeline/eventQueueController';
-import { COMMON_OWNER_ID } from '../../controller/slot/commonSlotController';
+import { TEAM_ID } from '../../controller/slot/commonSlotController';
 
 // ── Mock require.context before importing modules that use it ────────────────
 
@@ -43,7 +43,7 @@ function linkStatusEvent(startFrame: number, durationFrames: number): TimelineEv
     uid: `link-${eventIdCounter++}`,
     id: StatusType.LINK,
     name: StatusType.LINK,
-    ownerId: COMMON_OWNER_ID,
+    ownerId: TEAM_ID,
     columnId: StatusType.LINK,
     startFrame,
     segments: [{ properties: { duration: durationFrames } }],

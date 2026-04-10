@@ -26,7 +26,7 @@ import { eventDuration } from '../../../../consts/viewTypes';
 import { computeTimelinePresentation } from '../../../../controller/timeline/eventPresentationController';
 import { getUltimateEnergyCostForPotential } from '../../../../controller/operators/operatorRegistry';
 import {
-  INFLICTION_COLUMNS, ENEMY_OWNER_ID,
+  INFLICTION_COLUMNS, ENEMY_ID,
 } from '../../../../model/channels';
 import { findColumn, getMenuPayload, setUltimateEnergyToMax } from '../../helpers';
 import type { AppResult } from '../../helpers';
@@ -68,7 +68,7 @@ function placeHeatInfliction(
 ) {
   act(() => {
     result.current.handleAddEvent(
-      ENEMY_OWNER_ID, INFLICTION_COLUMNS.HEAT, startSec * FPS,
+      ENEMY_ID, INFLICTION_COLUMNS.HEAT, startSec * FPS,
       { name: INFLICTION_COLUMNS.HEAT, segments: [{ properties: { duration: durationSec * FPS } }] },
     );
   });

@@ -25,7 +25,7 @@ import { NounType } from '../../../../dsl/semantics';
 import { useApp } from '../../../../app/useApp';
 import {
   INFLICTION_COLUMNS,
-  ENEMY_OWNER_ID,
+  ENEMY_ID,
   ENEMY_GROUP_COLUMNS,
   COMBO_WINDOW_COLUMN_ID,
 } from '../../../../model/channels';
@@ -127,7 +127,7 @@ function placeUltimate(ref: ResultRef, atFrame: number) {
 /** Place infliction stacks on enemy via freeform context menu. */
 function placeInfliction(ref: ResultRef, columnId: string, atFrame: number) {
   act(() => { ref.current.setInteractionMode(InteractionModeType.FREEFORM); });
-  const enemyStatusCol = findColumn(ref.current, ENEMY_OWNER_ID, ENEMY_GROUP_COLUMNS.ENEMY_STATUS);
+  const enemyStatusCol = findColumn(ref.current, ENEMY_ID, ENEMY_GROUP_COLUMNS.ENEMY_STATUS);
   expect(enemyStatusCol).toBeDefined();
   const menuItems = buildContextMenu(ref.current, enemyStatusCol!, atFrame);
   expect(menuItems).not.toBeNull();
@@ -156,7 +156,7 @@ describe('F. BS places IMPROVISED_EXPLOSIVE on enemy', () => {
 
     // IMPROVISED_EXPLOSIVE should appear as a derived event on enemy
     const ieEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.name === IMPROVISED_EXPLOSIVE_ID && ev.ownerId === ENEMY_OWNER_ID,
+      (ev) => ev.name === IMPROVISED_EXPLOSIVE_ID && ev.ownerId === ENEMY_ID,
     );
     expect(ieEvents.length).toBeGreaterThanOrEqual(1);
 
@@ -171,7 +171,7 @@ describe('F. BS places IMPROVISED_EXPLOSIVE on enemy', () => {
     placeBattleSkill(result, 5 * FPS);
 
     const ieEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.name === IMPROVISED_EXPLOSIVE_ID && ev.ownerId === ENEMY_OWNER_ID,
+      (ev) => ev.name === IMPROVISED_EXPLOSIVE_ID && ev.ownerId === ENEMY_ID,
     );
     expect(ieEvents.length).toBeGreaterThanOrEqual(1);
     expect(eventDuration(ieEvents[0])).toBe(Math.round(2.97 * FPS));
@@ -184,7 +184,7 @@ describe('F. BS places IMPROVISED_EXPLOSIVE on enemy', () => {
 
     // The explosion frame at 2.97s offset should create nature infliction on enemy
     const natureInflictions = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === INFLICTION_COLUMNS.NATURE && ev.ownerId === ENEMY_OWNER_ID,
+      (ev) => ev.columnId === INFLICTION_COLUMNS.NATURE && ev.ownerId === ENEMY_ID,
     );
     expect(natureInflictions.length).toBeGreaterThanOrEqual(1);
   });
@@ -230,7 +230,7 @@ describe('F. BS places IMPROVISED_EXPLOSIVE on enemy', () => {
     placeBattleSkill(result, 5 * FPS);
 
     const ieEvent = result.current.allProcessedEvents.find(
-      (ev) => ev.name === IMPROVISED_EXPLOSIVE_ID && ev.ownerId === ENEMY_OWNER_ID,
+      (ev) => ev.name === IMPROVISED_EXPLOSIVE_ID && ev.ownerId === ENEMY_ID,
     );
     expect(ieEvent).toBeDefined();
 
@@ -251,7 +251,7 @@ describe('F. BS places IMPROVISED_EXPLOSIVE on enemy', () => {
 
     // IE and NATURE_INFLICTION must have different uids
     const natureInfliction = result.current.allProcessedEvents.find(
-      (ev) => ev.columnId === INFLICTION_COLUMNS.NATURE && ev.ownerId === ENEMY_OWNER_ID,
+      (ev) => ev.columnId === INFLICTION_COLUMNS.NATURE && ev.ownerId === ENEMY_ID,
     );
     expect(natureInfliction).toBeDefined();
     expect(natureInfliction!.uid).not.toBe(ieEvent!.uid);
@@ -264,7 +264,7 @@ describe('F. BS places IMPROVISED_EXPLOSIVE on enemy', () => {
     placeBattleSkill(result, bsStartFrame);
 
     const ieEvent = result.current.allProcessedEvents.find(
-      (ev) => ev.name === IMPROVISED_EXPLOSIVE_ID && ev.ownerId === ENEMY_OWNER_ID,
+      (ev) => ev.name === IMPROVISED_EXPLOSIVE_ID && ev.ownerId === ENEMY_ID,
     );
     expect(ieEvent).toBeDefined();
 
@@ -288,7 +288,7 @@ describe('F. BS places IMPROVISED_EXPLOSIVE on enemy', () => {
 
     // Nature infliction should only exist at the explosion frame, not at BS hit
     const natureInflictions = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === INFLICTION_COLUMNS.NATURE && ev.ownerId === ENEMY_OWNER_ID,
+      (ev) => ev.columnId === INFLICTION_COLUMNS.NATURE && ev.ownerId === ENEMY_ID,
     );
     expect(natureInflictions.length).toBeGreaterThanOrEqual(1);
 
@@ -306,7 +306,7 @@ describe('F. BS places IMPROVISED_EXPLOSIVE on enemy', () => {
     // Check column builder creates the micro-column even before events are placed
     const enemyStatusCol = result.current.columns.find(
       (c): c is MiniTimeline => c.type === ColumnType.MINI_TIMELINE
-        && c.ownerId === ENEMY_OWNER_ID && c.columnId === ENEMY_GROUP_COLUMNS.ENEMY_STATUS,
+        && c.ownerId === ENEMY_ID && c.columnId === ENEMY_GROUP_COLUMNS.ENEMY_STATUS,
     );
     expect(enemyStatusCol).toBeDefined();
 
@@ -359,7 +359,7 @@ describe('F. BS places IMPROVISED_EXPLOSIVE on enemy', () => {
 
     // Place IE directly on enemy via freeform context menu
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
-    const enemyStatusCol = findColumn(result.current, ENEMY_OWNER_ID, ENEMY_GROUP_COLUMNS.ENEMY_STATUS);
+    const enemyStatusCol = findColumn(result.current, ENEMY_ID, ENEMY_GROUP_COLUMNS.ENEMY_STATUS);
     expect(enemyStatusCol).toBeDefined();
     const menuItems = buildContextMenu(result.current, enemyStatusCol!, 5 * FPS);
     expect(menuItems).not.toBeNull();
@@ -375,13 +375,13 @@ describe('F. BS places IMPROVISED_EXPLOSIVE on enemy', () => {
 
     // IE event should exist
     const ieEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.name === IMPROVISED_EXPLOSIVE_ID && ev.ownerId === ENEMY_OWNER_ID,
+      (ev) => ev.name === IMPROVISED_EXPLOSIVE_ID && ev.ownerId === ENEMY_ID,
     );
     expect(ieEvents.length).toBeGreaterThanOrEqual(1);
 
     // SLOW is a stat on IE (clause), not a separate event — no SLOW events
     const slowEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.name === SLOW_STATUS_ID && ev.ownerId === ENEMY_OWNER_ID,
+      (ev) => ev.name === SLOW_STATUS_ID && ev.ownerId === ENEMY_ID,
     );
     expect(slowEvents).toHaveLength(0);
 
@@ -444,7 +444,7 @@ describe('G. CS TRIGGER INFLICTION', () => {
 
     // TRIGGER INFLICTION should re-apply CRYO (the triggering element)
     const cryoInflictions = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === INFLICTION_COLUMNS.CRYO && ev.ownerId === ENEMY_OWNER_ID
+      (ev) => ev.columnId === INFLICTION_COLUMNS.CRYO && ev.ownerId === ENEMY_ID
         && ev.startFrame >= 5 * FPS,
     );
     expect(cryoInflictions.length).toBeGreaterThanOrEqual(1);
@@ -550,13 +550,13 @@ describe('H. ULT Mechanics', () => {
 
     // IMPROVISED_EXPLOSIVE should be consumed
     const ieEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.name === IMPROVISED_EXPLOSIVE_ID && ev.ownerId === ENEMY_OWNER_ID,
+      (ev) => ev.name === IMPROVISED_EXPLOSIVE_ID && ev.ownerId === ENEMY_ID,
     );
     expect(ieEvents.length).toBeGreaterThanOrEqual(1);
 
     // IMPROVISED_EXPLOSIVE_ULT should be created on enemy
     const ieUltEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.name === IMPROVISED_EXPLOSIVE_ULT_ID && ev.ownerId === ENEMY_OWNER_ID,
+      (ev) => ev.name === IMPROVISED_EXPLOSIVE_ULT_ID && ev.ownerId === ENEMY_ID,
     );
     expect(ieUltEvents.length).toBeGreaterThanOrEqual(1);
     // Duration should be 2s
@@ -564,7 +564,7 @@ describe('H. ULT Mechanics', () => {
 
     // Detonated status should create nature infliction (from frame 0 effect)
     const natureInflictions = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === INFLICTION_COLUMNS.NATURE && ev.ownerId === ENEMY_OWNER_ID,
+      (ev) => ev.columnId === INFLICTION_COLUMNS.NATURE && ev.ownerId === ENEMY_ID,
     );
     expect(natureInflictions.length).toBeGreaterThanOrEqual(1);
 
@@ -572,7 +572,7 @@ describe('H. ULT Mechanics', () => {
     // Filter for SLOW events created AFTER the ULT's detonation frame
     const ultStart = 3 * FPS;
     const slowFromDetonation = result.current.allProcessedEvents.filter(
-      (ev) => ev.name === SLOW_STATUS_ID && ev.ownerId === ENEMY_OWNER_ID
+      (ev) => ev.name === SLOW_STATUS_ID && ev.ownerId === ENEMY_ID
         && ev.startFrame >= ultStart,
     );
     expect(slowFromDetonation).toHaveLength(0);
@@ -606,7 +606,7 @@ describe('H. ULT Mechanics', () => {
 
     // Count inflictions before ULT
     const natureBefore = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === INFLICTION_COLUMNS.NATURE && ev.ownerId === ENEMY_OWNER_ID,
+      (ev) => ev.columnId === INFLICTION_COLUMNS.NATURE && ev.ownerId === ENEMY_ID,
     ).length;
 
     // Place ULT after infliction stacks
@@ -614,7 +614,7 @@ describe('H. ULT Mechanics', () => {
 
     // ULT last frame should add 1 more nature infliction (FIRST_MATCH: nature >= 2 → apply nature)
     const natureAfter = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === INFLICTION_COLUMNS.NATURE && ev.ownerId === ENEMY_OWNER_ID,
+      (ev) => ev.columnId === INFLICTION_COLUMNS.NATURE && ev.ownerId === ENEMY_ID,
     );
     expect(natureAfter.length).toBeGreaterThan(natureBefore);
   });
@@ -627,14 +627,14 @@ describe('H. ULT Mechanics', () => {
     placeInfliction(result, INFLICTION_COLUMNS.CRYO, 1 * FPS + 1);
 
     const cryoBefore = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === INFLICTION_COLUMNS.CRYO && ev.ownerId === ENEMY_OWNER_ID,
+      (ev) => ev.columnId === INFLICTION_COLUMNS.CRYO && ev.ownerId === ENEMY_ID,
     ).length;
 
     placeUltimate(result, 3 * FPS);
 
     // ULT last frame should add 1 more cryo infliction (FIRST_MATCH: cryo >= 2 → apply cryo)
     const cryoAfter = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === INFLICTION_COLUMNS.CRYO && ev.ownerId === ENEMY_OWNER_ID,
+      (ev) => ev.columnId === INFLICTION_COLUMNS.CRYO && ev.ownerId === ENEMY_ID,
     );
     expect(cryoAfter.length).toBeGreaterThan(cryoBefore);
   });
@@ -646,14 +646,14 @@ describe('H. ULT Mechanics', () => {
     placeInfliction(result, INFLICTION_COLUMNS.NATURE, 1 * FPS);
 
     const natureBefore = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === INFLICTION_COLUMNS.NATURE && ev.ownerId === ENEMY_OWNER_ID,
+      (ev) => ev.columnId === INFLICTION_COLUMNS.NATURE && ev.ownerId === ENEMY_ID,
     ).length;
 
     placeUltimate(result, 3 * FPS);
 
     // No new nature infliction should be added by ULT
     const natureAfter = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === INFLICTION_COLUMNS.NATURE && ev.ownerId === ENEMY_OWNER_ID,
+      (ev) => ev.columnId === INFLICTION_COLUMNS.NATURE && ev.ownerId === ENEMY_ID,
     ).length;
     expect(natureAfter).toBe(natureBefore);
   });
@@ -730,7 +730,7 @@ describe('I. T1 Damage Bonus (BECOME SLOWED trigger)', () => {
     // T1 active duration covers IE's full duration — T1 is permanent,
     // clamped only when IE natural expiry fires IS NOT SLOWED → CONSUME
     const ieEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.name === IMPROVISED_EXPLOSIVE_ID && ev.ownerId === ENEMY_OWNER_ID,
+      (ev) => ev.name === IMPROVISED_EXPLOSIVE_ID && ev.ownerId === ENEMY_ID,
     );
     expect(ieEvents).toHaveLength(1);
 
@@ -769,7 +769,7 @@ describe('I. T1 Damage Bonus (BECOME SLOWED trigger)', () => {
 
     // T1 end frame should match IE's consumed end frame (both end at detonation)
     const ieAfter = result.current.allProcessedEvents.find(
-      (ev) => ev.name === IMPROVISED_EXPLOSIVE_ID && ev.ownerId === ENEMY_OWNER_ID,
+      (ev) => ev.name === IMPROVISED_EXPLOSIVE_ID && ev.ownerId === ENEMY_ID,
     );
     expect(ieAfter).toBeDefined();
     const ieEndFrame = ieAfter!.startFrame + eventDuration(ieAfter!);
@@ -790,13 +790,13 @@ describe('J. SLOW as IE stat', () => {
 
     // SLOW should NOT be a separate event — it's a stat on the IE status
     const slowEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.name === SLOW_STATUS_ID && ev.ownerId === ENEMY_OWNER_ID,
+      (ev) => ev.name === SLOW_STATUS_ID && ev.ownerId === ENEMY_ID,
     );
     expect(slowEvents).toHaveLength(0);
 
     // IE should exist with correct duration
     const ieEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.name === IMPROVISED_EXPLOSIVE_ID && ev.ownerId === ENEMY_OWNER_ID,
+      (ev) => ev.name === IMPROVISED_EXPLOSIVE_ID && ev.ownerId === ENEMY_ID,
     );
     expect(ieEvents.length).toBeGreaterThanOrEqual(1);
     expect(eventDuration(ieEvents[0])).toBe(Math.round(2.97 * FPS));
@@ -810,7 +810,7 @@ describe('J. SLOW as IE stat', () => {
 
     // No separate SLOW event should exist
     const slowEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.name === SLOW_STATUS_ID && ev.ownerId === ENEMY_OWNER_ID,
+      (ev) => ev.name === SLOW_STATUS_ID && ev.ownerId === ENEMY_ID,
     );
     expect(slowEvents).toHaveLength(0);
   });
@@ -827,10 +827,10 @@ describe('K. Regression tests', () => {
     placeBattleSkill(result, 5 * FPS);
 
     const ieEvent = result.current.allProcessedEvents.find(
-      (ev) => ev.name === IMPROVISED_EXPLOSIVE_ID && ev.ownerId === ENEMY_OWNER_ID,
+      (ev) => ev.name === IMPROVISED_EXPLOSIVE_ID && ev.ownerId === ENEMY_ID,
     );
     const natureEvent = result.current.allProcessedEvents.find(
-      (ev) => ev.columnId === INFLICTION_COLUMNS.NATURE && ev.ownerId === ENEMY_OWNER_ID,
+      (ev) => ev.columnId === INFLICTION_COLUMNS.NATURE && ev.ownerId === ENEMY_ID,
     );
     expect(ieEvent).toBeDefined();
     expect(natureEvent).toBeDefined();
@@ -841,7 +841,7 @@ describe('K. Regression tests', () => {
     const { result } = setupFluorite();
 
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
-    const enemyStatusCol = findColumn(result.current, ENEMY_OWNER_ID, ENEMY_GROUP_COLUMNS.ENEMY_STATUS);
+    const enemyStatusCol = findColumn(result.current, ENEMY_ID, ENEMY_GROUP_COLUMNS.ENEMY_STATUS);
     const menu = buildContextMenu(result.current, enemyStatusCol!, 5 * FPS);
     const ieItem = menu?.find(
       (i) => i.actionId === 'addEvent'
@@ -854,7 +854,7 @@ describe('K. Regression tests', () => {
     });
 
     const natureEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === INFLICTION_COLUMNS.NATURE && ev.ownerId === ENEMY_OWNER_ID,
+      (ev) => ev.columnId === INFLICTION_COLUMNS.NATURE && ev.ownerId === ENEMY_ID,
     );
     expect(natureEvents).toHaveLength(1);
   });
@@ -870,7 +870,7 @@ describe('K. Regression tests', () => {
 
     // IE_ULT creates 1 nature infliction. Natural IE explosion should NOT fire (consumed).
     const natureAfter = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === INFLICTION_COLUMNS.NATURE && ev.ownerId === ENEMY_OWNER_ID,
+      (ev) => ev.columnId === INFLICTION_COLUMNS.NATURE && ev.ownerId === ENEMY_ID,
     );
     // Should have exactly 1: from IE_ULT detonation (natural explosion suppressed)
     expect(natureAfter).toHaveLength(1);
@@ -885,7 +885,7 @@ describe('K. Regression tests', () => {
     placeUltimate(result, 3 * FPS);
 
     const ieUltEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.name === IMPROVISED_EXPLOSIVE_ULT_ID && ev.ownerId === ENEMY_OWNER_ID,
+      (ev) => ev.name === IMPROVISED_EXPLOSIVE_ULT_ID && ev.ownerId === ENEMY_ID,
     );
     expect(ieUltEvents).toHaveLength(1);
 
@@ -894,14 +894,14 @@ describe('K. Regression tests', () => {
 
     // Creates nature infliction (from frame 0 effect)
     const natureFromUlt = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === INFLICTION_COLUMNS.NATURE && ev.ownerId === ENEMY_OWNER_ID
+      (ev) => ev.columnId === INFLICTION_COLUMNS.NATURE && ev.ownerId === ENEMY_ID
         && ev.sourceSkillName === IMPROVISED_EXPLOSIVE_ULT_ID,
     );
     expect(natureFromUlt).toHaveLength(1);
 
     // No SLOW event from detonation
     const slowEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.name === SLOW_STATUS_ID && ev.ownerId === ENEMY_OWNER_ID,
+      (ev) => ev.name === SLOW_STATUS_ID && ev.ownerId === ENEMY_ID,
     );
     expect(slowEvents).toHaveLength(0);
   });
@@ -933,7 +933,7 @@ describe('K. Regression tests', () => {
 
     // Nature infliction from explosion should be at the explosion frame
     const natureEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === INFLICTION_COLUMNS.NATURE && ev.ownerId === ENEMY_OWNER_ID,
+      (ev) => ev.columnId === INFLICTION_COLUMNS.NATURE && ev.ownerId === ENEMY_ID,
     );
     expect(natureEvents).toHaveLength(1);
     // Allow 1 frame tolerance for rounding

@@ -14,7 +14,7 @@
 
 import { renderHook, act } from '@testing-library/react';
 import { useApp } from '../../../app/useApp';
-import { ENEMY_OWNER_ID, ENEMY_GROUP_COLUMNS, INFLICTION_COLUMNS } from '../../../model/channels';
+import { ENEMY_ID, ENEMY_GROUP_COLUMNS, INFLICTION_COLUMNS } from '../../../model/channels';
 import { ColumnType, EventStatusType, InteractionModeType } from '../../../consts/enums';
 import type { MiniTimeline } from '../../../consts/viewTypes';
 import { FPS } from '../../../utils/timeline';
@@ -30,7 +30,7 @@ function findEnemyStatusColumn(app: ReturnType<typeof useApp>) {
   return app.columns.find(
     (c): c is MiniTimeline =>
       c.type === ColumnType.MINI_TIMELINE &&
-      c.ownerId === ENEMY_OWNER_ID &&
+      c.ownerId === ENEMY_ID &&
       c.columnId === ENEMY_GROUP_COLUMNS.ENEMY_STATUS,
   );
 }
@@ -45,7 +45,7 @@ describe('Susceptibility stacking — freeform same-element', () => {
     // ── Context menu: place cryo infliction first so cryo susceptibility column exists ──
     act(() => {
       result.current.handleAddEvent(
-        ENEMY_OWNER_ID, INFLICTION_COLUMNS.CRYO, 0,
+        ENEMY_ID, INFLICTION_COLUMNS.CRYO, 0,
         { name: INFLICTION_COLUMNS.CRYO, segments: [{ properties: { duration: 20 * FPS } }] },
       );
     });
@@ -64,7 +64,7 @@ describe('Susceptibility stacking — freeform same-element', () => {
       // Fallback: place directly
       act(() => {
         result.current.handleAddEvent(
-          ENEMY_OWNER_ID, CRYO_SUSC_ID, 0 * FPS,
+          ENEMY_ID, CRYO_SUSC_ID, 0 * FPS,
           { name: CRYO_SUSC_ID, id: CRYO_SUSC_ID, segments: [{ properties: { duration: 5 * FPS } }] },
         );
       });
@@ -76,14 +76,14 @@ describe('Susceptibility stacking — freeform same-element', () => {
     // ── Place cryo susceptibility at 1s ──
     act(() => {
       result.current.handleAddEvent(
-        ENEMY_OWNER_ID, CRYO_SUSC_ID, 1 * FPS,
+        ENEMY_ID, CRYO_SUSC_ID, 1 * FPS,
         { name: CRYO_SUSC_ID, id: CRYO_SUSC_ID, segments: [{ properties: { duration: 5 * FPS } }] },
       );
     });
 
     // ── Controller layer: 2 separate cryo susceptibility events, neither consumed ──
     const suscEvents = result.current.allProcessedEvents.filter(
-      ev => ev.name === CRYO_SUSC_ID && ev.ownerId === ENEMY_OWNER_ID,
+      ev => ev.name === CRYO_SUSC_ID && ev.ownerId === ENEMY_ID,
     );
     expect(suscEvents).toHaveLength(2);
     expect(suscEvents[0].startFrame).toBe(0 * FPS);

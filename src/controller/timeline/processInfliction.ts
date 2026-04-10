@@ -5,7 +5,7 @@ import { NounType } from '../../dsl/semantics';
 import { StatusLevel } from '../../consts/types';
 import { getCorrosionBaseReduction, getCorrosionReductionMultiplier } from '../../model/calculation/damageFormulas';
 import {
-  ENEMY_OWNER_ID, REACTION_COLUMN_IDS, REACTION_COLUMNS,
+  ENEMY_ID, REACTION_COLUMN_IDS, REACTION_COLUMNS,
 } from '../../model/channels';
 import { FPS } from '../../utils/timeline';
 import { contractByTimeStops, TimeStopRegion } from './processTimeStop';
@@ -70,7 +70,7 @@ export function resolveSusceptibility(
 export function mergeReactions(events: TimelineEvent[]): TimelineEvent[] {
   const reactionsByType = new Map<string, TimelineEvent[]>();
   for (const ev of events) {
-    if (ev.ownerId === ENEMY_OWNER_ID && REACTION_COLUMN_IDS.has(ev.columnId)
+    if (ev.ownerId === ENEMY_ID && REACTION_COLUMN_IDS.has(ev.columnId)
       && !ev.eventStatus) { // Skip already-processed (refreshed/consumed) events
       const group = reactionsByType.get(ev.columnId) ?? [];
       group.push(ev);
@@ -99,7 +99,7 @@ export function mergeReactions(events: TimelineEvent[]): TimelineEvent[] {
 
         clampMap.set(current.uid, {
           duration: Math.max(0, next.startFrame - current.startFrame),
-          source: { ownerId: next.sourceOwnerId ?? ENEMY_OWNER_ID, skillName: next.sourceSkillName },
+          source: { ownerId: next.sourceOwnerId ?? ENEMY_ID, skillName: next.sourceSkillName },
         });
 
         const currentStacks = mergeMap.get(current.uid)?.stacks ?? current.stacks ?? 1;
@@ -137,7 +137,7 @@ export function mergeReactions(events: TimelineEvent[]): TimelineEvent[] {
         // Clamp older event at the point the newer starts
         clampMap.set(current.uid, {
           duration: Math.max(0, next.startFrame - current.startFrame),
-          source: { ownerId: next.sourceOwnerId ?? ENEMY_OWNER_ID, skillName: next.sourceSkillName },
+          source: { ownerId: next.sourceOwnerId ?? ENEMY_ID, skillName: next.sourceSkillName },
         });
 
         // Newer inherits max stacks
@@ -229,7 +229,7 @@ const REACTION_DAMAGE_ELEMENT: Record<string, ElementType> = {
  */
 export function attachReactionFrames(events: TimelineEvent[]): TimelineEvent[] {
   for (const ev of events) {
-    if (ev.ownerId !== ENEMY_OWNER_ID || !REACTION_COLUMN_IDS.has(ev.columnId)) continue;
+    if (ev.ownerId !== ENEMY_ID || !REACTION_COLUMN_IDS.has(ev.columnId)) continue;
     // Skip if event already has rich segments (more than a single default duration segment)
     if (ev.segments.length > 1 || ev.segments[0]?.frames) continue;
 

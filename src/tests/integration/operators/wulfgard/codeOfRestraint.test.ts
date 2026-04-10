@@ -25,7 +25,7 @@ import { EnhancementType, EventStatusType } from '../../../../consts/enums';
 import { FPS } from '../../../../utils/timeline';
 import { computeTimelinePresentation } from '../../../../controller/timeline/eventPresentationController';
 import {
-  REACTION_COLUMNS, ENEMY_OWNER_ID,
+  REACTION_COLUMNS, ENEMY_ID,
 } from '../../../../model/channels';
 import { findColumn, getMenuPayload } from '../../helpers';
 import type { AppResult } from '../../helpers';
@@ -60,7 +60,7 @@ function setPotential(result: { current: AppResult }, potential: number) {
 function placeReaction(result: { current: AppResult }, reactionCol: string, startSec: number, durationSec = 20) {
   act(() => {
     result.current.handleAddEvent(
-      ENEMY_OWNER_ID, reactionCol, startSec * FPS,
+      ENEMY_ID, reactionCol, startSec * FPS,
       { name: reactionCol, segments: [{ properties: { duration: durationSec * FPS } }] },
     );
   });

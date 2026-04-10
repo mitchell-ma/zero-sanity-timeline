@@ -60,7 +60,7 @@ import { StatusType, SegmentType, TimeDependency } from '../../consts/enums';
 import { VerbType, ObjectType, NounType, AdjectiveType, DeterminerType } from '../../dsl/semantics';
 import { findStaggerInClauses } from '../../controller/timeline/clauseQueries';
 import type { Effect } from '../../dsl/semantics';
-import { INFLICTION_COLUMNS, ENEMY_OWNER_ID, COMBO_WINDOW_COLUMN_ID } from '../../model/channels';
+import { INFLICTION_COLUMNS, ENEMY_ID, COMBO_WINDOW_COLUMN_ID } from '../../model/channels';
 import { buildSequencesFromOperatorJson, DataDrivenSkillEventSequence } from '../../controller/gameDataStore';
 import { wouldOverlapSiblings } from '../../controller/timeline/eventValidator';
 import { processCombatSimulation } from '../../controller/timeline/eventQueueController';
@@ -673,7 +673,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
   }
 
   function makeFocus(startFrame: number, duration: number): TimelineEvent {
-    return makeEv({ uid: `focus-${startFrame}`, name: StatusType.FOCUS, ownerId: ENEMY_OWNER_ID, columnId: 'FOCUS', startFrame, segments: [{ properties: { duration: duration } }] });
+    return makeEv({ uid: `focus-${startFrame}`, name: StatusType.FOCUS, ownerId: ENEMY_ID, columnId: 'FOCUS', startFrame, segments: [{ properties: { duration: duration } }] });
   }
 
   function makeLaevBattle(startFrame: number): TimelineEvent {
@@ -720,13 +720,13 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
     // Match by ownerId+columnId in the combo's frame span instead.
     const _comboStart = antalCombo.startFrame;
     const _comboEnd = _comboStart + eventDuration(antalCombo);
-    const derived = processed.filter((e) => e.ownerId === ENEMY_OWNER_ID
+    const derived = processed.filter((e) => e.ownerId === ENEMY_ID
       && (e.columnId === INFLICTION_COLUMNS.HEAT || e.columnId === INFLICTION_COLUMNS.ELECTRIC || e.columnId === INFLICTION_COLUMNS.CRYO || e.columnId === INFLICTION_COLUMNS.NATURE)
       && e.startFrame >= _comboStart && e.startFrame <= _comboEnd
       && e.sourceOwnerId === SLOT_ANTAL);
     expect(derived.length).toBeGreaterThan(0);
     expect(derived[0].columnId).toBe(INFLICTION_COLUMNS.HEAT);
-    expect(derived[0].ownerId).toBe(ENEMY_OWNER_ID);
+    expect(derived[0].ownerId).toBe(ENEMY_ID);
     expect(derived[0].sourceOwnerId).toBe(SLOT_ANTAL);
   });
 
@@ -755,7 +755,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
     // Match by ownerId+columnId in the combo's frame span instead.
     const _comboStart = antalCombo.startFrame;
     const _comboEnd = _comboStart + eventDuration(antalCombo);
-    const derived = processed.filter((e) => e.ownerId === ENEMY_OWNER_ID
+    const derived = processed.filter((e) => e.ownerId === ENEMY_ID
       && (e.columnId === INFLICTION_COLUMNS.HEAT || e.columnId === INFLICTION_COLUMNS.ELECTRIC || e.columnId === INFLICTION_COLUMNS.CRYO || e.columnId === INFLICTION_COLUMNS.NATURE)
       && e.startFrame >= _comboStart && e.startFrame <= _comboEnd
       && e.sourceOwnerId === SLOT_ANTAL);
@@ -788,7 +788,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
     // Match by ownerId+columnId in the combo's frame span instead.
     const _comboStart = antalCombo.startFrame;
     const _comboEnd = _comboStart + eventDuration(antalCombo);
-    const derived = processed.filter((e) => e.ownerId === ENEMY_OWNER_ID
+    const derived = processed.filter((e) => e.ownerId === ENEMY_ID
       && (e.columnId === INFLICTION_COLUMNS.HEAT || e.columnId === INFLICTION_COLUMNS.ELECTRIC || e.columnId === INFLICTION_COLUMNS.CRYO || e.columnId === INFLICTION_COLUMNS.NATURE)
       && e.startFrame >= _comboStart && e.startFrame <= _comboEnd
       && e.sourceOwnerId === SLOT_ANTAL);
@@ -811,7 +811,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
     const focus = makeFocus(0, 120 * FPS);
     // Derived heat infliction on enemy (as if Laevatain's battle skill frame created it)
     const heatInfliction = makeEv({
-      uid: 'heat-inf-1', name: INFLICTION_COLUMNS.HEAT, ownerId: ENEMY_OWNER_ID,
+      uid: 'heat-inf-1', name: INFLICTION_COLUMNS.HEAT, ownerId: ENEMY_ID,
       columnId: INFLICTION_COLUMNS.HEAT, startFrame: 220, segments: [{ properties: { duration: 10 * FPS } }],
       sourceOwnerId: SLOT_LAEV, sourceSkillName: 'FLAMING_CINDERS_BATK',
     });
@@ -830,7 +830,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
     const focus = makeFocus(0, 120 * FPS);
     // Akekuri's battle skill applies heat infliction to enemy
     const akekuriHeatInfliction = makeEv({
-      uid: 'akekuri-heat-1', name: INFLICTION_COLUMNS.HEAT, ownerId: ENEMY_OWNER_ID,
+      uid: 'akekuri-heat-1', name: INFLICTION_COLUMNS.HEAT, ownerId: ENEMY_ID,
       columnId: INFLICTION_COLUMNS.HEAT, startFrame: 200, segments: [{ properties: { duration: 20 * FPS } }],
       sourceOwnerId: SLOT_AKEKURI, sourceSkillName: 'BURST_OF_PASSION',
     });
@@ -868,7 +868,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
     // Focus exists (as if engine-derived) + Akekuri heat infliction on enemy
     const focus = makeFocus(0, 120 * FPS);
     const akekuriHeat = makeEv({
-      uid: 'akekuri-heat-1', name: INFLICTION_COLUMNS.HEAT, ownerId: ENEMY_OWNER_ID,
+      uid: 'akekuri-heat-1', name: INFLICTION_COLUMNS.HEAT, ownerId: ENEMY_ID,
       columnId: INFLICTION_COLUMNS.HEAT, startFrame: 200, segments: [{ properties: { duration: 20 * FPS } }],
       sourceOwnerId: SLOT_AKEKURI, sourceSkillName: 'BURST_OF_PASSION',
     });
@@ -938,7 +938,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
       }],
     });
     const akekuriHeat = makeEv({
-      uid: 'akekuri-heat-1', name: INFLICTION_COLUMNS.HEAT, ownerId: ENEMY_OWNER_ID,
+      uid: 'akekuri-heat-1', name: INFLICTION_COLUMNS.HEAT, ownerId: ENEMY_ID,
       columnId: INFLICTION_COLUMNS.HEAT, startFrame: 200, segments: [{ properties: { duration: 20 * FPS } }],
       sourceOwnerId: 'slot-0', sourceSkillName: 'BURST_OF_PASSION',
     });
@@ -1177,7 +1177,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
 
     // No inflictions of any kind from Antal
     const antalInflictions = processed.filter(
-      (e) => e.ownerId === ENEMY_OWNER_ID && e.sourceOwnerId === SLOT_ANTAL
+      (e) => e.ownerId === ENEMY_ID && e.sourceOwnerId === SLOT_ANTAL
         && (e.columnId.includes('Infliction') || e.columnId.includes('vulnerable')),
     );
     expect(antalInflictions.length).toBe(0);

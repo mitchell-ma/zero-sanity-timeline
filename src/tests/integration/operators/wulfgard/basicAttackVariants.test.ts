@@ -24,7 +24,7 @@ import { BasicAttackType, ColumnType } from '../../../../consts/enums';
 import { FPS } from '../../../../utils/timeline';
 import { computeTimelinePresentation } from '../../../../controller/timeline/eventPresentationController';
 import {
-  INFLICTION_COLUMNS, ENEMY_OWNER_ID,
+  INFLICTION_COLUMNS, ENEMY_ID,
   ENEMY_GROUP_COLUMNS,
 } from '../../../../model/channels';
 import type { MiniTimeline } from '../../../../consts/viewTypes';
@@ -141,7 +141,7 @@ describe('A. Basic Attack Placement & Structure', () => {
 
     // Controller: no heat infliction events on enemy after BA only
     const heats = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerId === ENEMY_OWNER_ID,
+      ev => ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerId === ENEMY_ID,
     );
     expect(heats).toHaveLength(0);
 
@@ -149,7 +149,7 @@ describe('A. Basic Attack Placement & Structure', () => {
     const enemyStatusCol = result.current.columns.find(
       (c): c is MiniTimeline =>
         c.type === ColumnType.MINI_TIMELINE &&
-        c.ownerId === ENEMY_OWNER_ID &&
+        c.ownerId === ENEMY_ID &&
         c.columnId === ENEMY_GROUP_COLUMNS.ENEMY_STATUS,
     );
     expect(enemyStatusCol).toBeDefined();

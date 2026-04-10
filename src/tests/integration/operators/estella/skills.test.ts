@@ -29,12 +29,12 @@ import { eventDuration } from '../../../../consts/viewTypes';
 import type { MiniTimeline } from '../../../../consts/viewTypes';
 import { computeTimelinePresentation } from '../../../../controller/timeline/eventPresentationController';
 import {
-  INFLICTION_COLUMNS, REACTION_COLUMNS, ENEMY_OWNER_ID,
+  INFLICTION_COLUMNS, REACTION_COLUMNS, ENEMY_ID,
   ENEMY_GROUP_COLUMNS,
 } from '../../../../model/channels';
 import { getUltimateEnergyCostForPotential } from '../../../../controller/operators/operatorRegistry';
 import { findColumn, buildContextMenu, getMenuPayload, getAddEventPayload, setUltimateEnergyToMax } from '../../helpers';
-import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../../../../controller/slot/commonSlotController';
+import { TEAM_ID, COMMON_COLUMN_IDS } from '../../../../controller/slot/commonSlotController';
 import { preConsumptionValue } from '../../../../controller/timeline/eventValidator';
 import type { AppResult } from '../../helpers';
 
@@ -109,7 +109,7 @@ function placeCryoInfliction(
 ) {
   act(() => {
     result.current.handleAddEvent(
-      ENEMY_OWNER_ID, INFLICTION_COLUMNS.CRYO, startSec * FPS,
+      ENEMY_ID, INFLICTION_COLUMNS.CRYO, startSec * FPS,
       { name: INFLICTION_COLUMNS.CRYO, segments: [{ properties: { duration: durationSec * FPS } }] },
     );
   });
@@ -123,7 +123,7 @@ function placeSolidification(
 ) {
   act(() => {
     result.current.handleAddEvent(
-      ENEMY_OWNER_ID, REACTION_COLUMNS.SOLIDIFICATION, startSec * FPS,
+      ENEMY_ID, REACTION_COLUMNS.SOLIDIFICATION, startSec * FPS,
       { name: REACTION_COLUMNS.SOLIDIFICATION, segments: [{ properties: { duration: durationSec * FPS } }] },
     );
   });
@@ -245,7 +245,7 @@ describe('B. Battle Skill Cryo Infliction', () => {
 
     // Count cryo inflictions before battle skill
     const cryoBefore = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === INFLICTION_COLUMNS.CRYO && ev.ownerId === ENEMY_OWNER_ID,
+      (ev) => ev.columnId === INFLICTION_COLUMNS.CRYO && ev.ownerId === ENEMY_ID,
     ).length;
 
     const battleCol = findColumn(result.current, SLOT_ESTELLA, NounType.BATTLE);
@@ -258,7 +258,7 @@ describe('B. Battle Skill Cryo Infliction', () => {
 
     // Controller: additional cryo infliction from battle skill
     const cryoAfter = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === INFLICTION_COLUMNS.CRYO && ev.ownerId === ENEMY_OWNER_ID,
+      (ev) => ev.columnId === INFLICTION_COLUMNS.CRYO && ev.ownerId === ENEMY_ID,
     );
     expect(cryoAfter.length).toBeGreaterThan(cryoBefore);
 
@@ -266,7 +266,7 @@ describe('B. Battle Skill Cryo Infliction', () => {
     const enemyStatusCol = result.current.columns.find(
       (c): c is MiniTimeline =>
         c.type === ColumnType.MINI_TIMELINE
-        && c.ownerId === ENEMY_OWNER_ID
+        && c.ownerId === ENEMY_ID
         && c.columnId === ENEMY_GROUP_COLUMNS.ENEMY_STATUS,
     );
     expect(enemyStatusCol).toBeDefined();
@@ -604,7 +604,7 @@ describe('G. Commiseration SP return (Estella BS only)', () => {
   });
 
   it('G4: Commiseration RETURN routes through DEC and adds SP to the graph at the BS frame', () => {
-    const SP_KEY = `${COMMON_OWNER_ID}-${COMMON_COLUMN_IDS.SKILL_POINTS}`;
+    const SP_KEY = `${TEAM_ID}-${COMMON_COLUMN_IDS.SKILL_POINTS}`;
     const bsFrame = 8 * FPS;
     // BS frame's RETURN clause runs at offset 0.7s after the BS placement frame.
     const returnFrame = bsFrame + Math.round(0.7 * FPS);

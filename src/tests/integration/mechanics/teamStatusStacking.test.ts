@@ -27,7 +27,7 @@ import { ColumnType, EventStatusType, InteractionModeType, MicroColumnAssignment
 import { FPS } from '../../../utils/timeline';
 import { eventDuration } from '../../../consts/viewTypes';
 import type { MiniTimeline } from '../../../consts/viewTypes';
-import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../../../controller/slot/commonSlotController';
+import { TEAM_ID, COMMON_COLUMN_IDS } from '../../../controller/slot/commonSlotController';
 import { resolveEventLabel, computeStatusViewOverrides } from '../../../controller/timeline/eventPresentationController';
 import { findColumn, buildContextMenu, getMenuPayload } from '../helpers';
 import type { AppResult, AddEventPayload } from '../helpers';
@@ -40,12 +40,12 @@ const AMP_DISPLAY_NAME: string = OVERCLOCKED_MOMENT_AMP_STATUS.properties.name;
 
 const SLOT_ANTAL = 'slot-2';
 
-/** Find the team-status column under COMMON_OWNER_ID. */
+/** Find the team-status column under TEAM_ID. */
 function findCommonColumn(app: AppResult, columnId: string) {
   return app.columns.find(
     (c): c is MiniTimeline =>
       c.type === ColumnType.MINI_TIMELINE &&
-      c.ownerId === COMMON_OWNER_ID &&
+      c.ownerId === TEAM_ID &&
       c.columnId === columnId,
   );
 }
@@ -110,12 +110,12 @@ describe('Team-status column architecture', () => {
 
     // 2. Controller: LINK events appear with their own columnId
     const linkEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === COMMON_OWNER_ID && ev.columnId === StatusType.LINK,
+      (ev) => ev.ownerId === TEAM_ID && ev.columnId === StatusType.LINK,
     );
     expect(linkEvents.length).toBeGreaterThanOrEqual(1);
     // Should NOT be under the generic 'team-status' columnId
     const genericEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === COMMON_OWNER_ID && ev.columnId === COMMON_COLUMN_IDS.TEAM_STATUS,
+      (ev) => ev.ownerId === TEAM_ID && ev.columnId === COMMON_COLUMN_IDS.TEAM_STATUS,
     );
     expect(genericEvents).toHaveLength(0);
   });
@@ -158,7 +158,7 @@ describe('RESET stacking interaction', () => {
 
     // 2. Controller: Find Overclocked Moment AMP events
     const ampEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.id === AMP_ID && ev.ownerId === COMMON_OWNER_ID,
+      (ev) => ev.id === AMP_ID && ev.ownerId === TEAM_ID,
     );
     expect(ampEvents.length).toBeGreaterThanOrEqual(2);
 
@@ -193,7 +193,7 @@ describe('RESET stacking interaction', () => {
 
     // 2. Controller: both AMP events exist, earlier is clamped
     const ampEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.id === AMP_ID && ev.ownerId === COMMON_OWNER_ID,
+      (ev) => ev.id === AMP_ID && ev.ownerId === TEAM_ID,
     );
     expect(ampEvents).toHaveLength(2);
 
@@ -237,10 +237,10 @@ describe('Cross-status isolation in team-status column', () => {
 
     // 2. Controller: both statuses exist independently
     const linkEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.id === StatusType.LINK && ev.ownerId === COMMON_OWNER_ID,
+      (ev) => ev.id === StatusType.LINK && ev.ownerId === TEAM_ID,
     );
     const ampEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.id === AMP_ID && ev.ownerId === COMMON_OWNER_ID,
+      (ev) => ev.id === AMP_ID && ev.ownerId === TEAM_ID,
     );
 
     expect(linkEvents).toHaveLength(1);
@@ -276,7 +276,7 @@ describe('No total-event limit for status events', () => {
     }
 
     const linkEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.id === StatusType.LINK && ev.ownerId === COMMON_OWNER_ID,
+      (ev) => ev.id === StatusType.LINK && ev.ownerId === TEAM_ID,
     );
     expect(linkEvents).toHaveLength(6);
   });
@@ -288,13 +288,13 @@ describe('No total-event limit for status events', () => {
 
 describe('Stack labels and display name resolution', () => {
   it('resolveEventLabel translates status IDs to display names', () => {
-    const linkEvent = { uid: 'test', id: StatusType.LINK, name: StatusType.LINK, ownerId: COMMON_OWNER_ID, columnId: StatusType.LINK, startFrame: 0, segments: [] };
+    const linkEvent = { uid: 'test', id: StatusType.LINK, name: StatusType.LINK, ownerId: TEAM_ID, columnId: StatusType.LINK, startFrame: 0, segments: [] };
     const label = resolveEventLabel(linkEvent);
     expect(label).toBe('Link');
   });
 
   it('resolveEventLabel translates Overclocked Moment AMP to display name', () => {
-    const event = { uid: 'test', id: AMP_ID, name: AMP_ID, ownerId: COMMON_OWNER_ID, columnId: AMP_ID, startFrame: 0, segments: [] };
+    const event = { uid: 'test', id: AMP_ID, name: AMP_ID, ownerId: TEAM_ID, columnId: AMP_ID, startFrame: 0, segments: [] };
     const label = resolveEventLabel(event);
     expect(label).toBe(AMP_DISPLAY_NAME);
   });
@@ -333,7 +333,7 @@ describe('Stack labels and display name resolution', () => {
     );
 
     const linkEvents = result.current.allProcessedEvents
-      .filter((ev) => ev.id === StatusType.LINK && ev.ownerId === COMMON_OWNER_ID)
+      .filter((ev) => ev.id === StatusType.LINK && ev.ownerId === TEAM_ID)
       .sort((a, b) => a.startFrame - b.startFrame);
 
     expect(linkEvents).toHaveLength(5);
@@ -367,7 +367,7 @@ describe('Freeform event source defaults', () => {
 
     // Check raw events (not processed) for the source fields
     const rawLink = result.current.allProcessedEvents.find(
-      (ev) => ev.id === StatusType.LINK && ev.ownerId === COMMON_OWNER_ID,
+      (ev) => ev.id === StatusType.LINK && ev.ownerId === TEAM_ID,
     );
     expect(rawLink).toBeDefined();
     expect(rawLink!.ownerSlotId).toBeDefined();

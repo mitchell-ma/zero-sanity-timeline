@@ -20,7 +20,7 @@ import { renderHook, act } from '@testing-library/react';
 import { NounType } from '../../../dsl/semantics';
 import { useApp } from '../../../app/useApp';
 import {
-  PHYSICAL_INFLICTION_COLUMNS, ENEMY_OWNER_ID,
+  PHYSICAL_INFLICTION_COLUMNS, ENEMY_ID,
 } from '../../../model/channels';
 import {
   InteractionModeType,
@@ -62,7 +62,7 @@ function placeVulnerableOnEnemy(result: { current: AppResult }, startSec: number
   act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
   act(() => {
     result.current.handleAddEvent(
-      ENEMY_OWNER_ID, PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, startSec * FPS,
+      ENEMY_ID, PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, startSec * FPS,
       { name: PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, segments: [{ properties: { duration: durationSec * FPS } }] },
     );
   });

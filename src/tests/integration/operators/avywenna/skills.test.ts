@@ -30,7 +30,7 @@ import { getUltimateEnergyCostForPotential } from '../../../../controller/operat
 import {
   OPERATOR_STATUS_COLUMN_ID,
   INFLICTION_COLUMNS,
-  ENEMY_OWNER_ID,
+  ENEMY_ID,
 } from '../../../../model/channels';
 import {
   findColumn, buildContextMenu, getMenuPayload, setUltimateEnergyToMax,
@@ -578,7 +578,7 @@ describe('J. BS retrieval applies Electric Infliction from EX lances', () => {
 
     // Electric Infliction should appear on enemy
     const electricInflictions = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === ENEMY_OWNER_ID && ev.columnId === INFLICTION_COLUMNS.ELECTRIC,
+      ev => ev.ownerId === ENEMY_ID && ev.columnId === INFLICTION_COLUMNS.ELECTRIC,
     );
     expect(electricInflictions.length).toBeGreaterThanOrEqual(1);
   });
@@ -607,7 +607,7 @@ describe('K. Ultimate — T2 Electric Susceptibility', () => {
     // T2 is baked with VARY_BY TALENT_LEVEL [0, 0.06, 0.10] — at default talent level (≥1), value is non-zero
     const elecSuscId = flattenQualifiedId(AdjectiveType.ELECTRIC, NounType.SUSCEPTIBILITY);
     const suscEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === ENEMY_OWNER_ID
+      ev => ev.ownerId === ENEMY_ID
         && ev.columnId === elecSuscId,
     );
     expect(suscEvents.length).toBeGreaterThanOrEqual(1);

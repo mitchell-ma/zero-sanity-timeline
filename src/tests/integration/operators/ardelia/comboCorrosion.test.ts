@@ -19,7 +19,7 @@
 import { renderHook, act } from '@testing-library/react';
 import { NounType } from '../../../../dsl/semantics';
 import { useApp } from '../../../../app/useApp';
-import { REACTION_COLUMNS, ENEMY_OWNER_ID } from '../../../../model/channels';
+import { REACTION_COLUMNS, ENEMY_ID } from '../../../../model/channels';
 import { ColumnType } from '../../../../consts/enums';
 import { FPS } from '../../../../utils/timeline';
 import type { MiniTimeline } from '../../../../consts/viewTypes';
@@ -77,7 +77,7 @@ describe('Ardelia combo skill — Corrosion application', () => {
 
     // 4. Verify: enemy has a Corrosion reaction event
     const corrosionEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === REACTION_COLUMNS.CORROSION && ev.ownerId === ENEMY_OWNER_ID,
+      (ev) => ev.columnId === REACTION_COLUMNS.CORROSION && ev.ownerId === ENEMY_ID,
     );
     expect(corrosionEvents).toHaveLength(1);
 
@@ -93,7 +93,7 @@ describe('Ardelia combo skill — Corrosion application', () => {
     const enemyStatusCol = result.current.columns.find(
       (c): c is MiniTimeline =>
         c.type === ColumnType.MINI_TIMELINE &&
-        c.ownerId === ENEMY_OWNER_ID &&
+        c.ownerId === ENEMY_ID &&
         (c.matchColumnIds?.includes(REACTION_COLUMNS.CORROSION) ?? false),
     );
     expect(enemyStatusCol).toBeDefined();
@@ -106,7 +106,7 @@ describe('Ardelia combo skill — Corrosion application', () => {
     expect(vm).toBeDefined();
 
     const corrosionInVM = vm!.events.filter(
-      (ev) => ev.columnId === REACTION_COLUMNS.CORROSION && ev.ownerId === ENEMY_OWNER_ID,
+      (ev) => ev.columnId === REACTION_COLUMNS.CORROSION && ev.ownerId === ENEMY_ID,
     );
     expect(corrosionInVM).toHaveLength(1);
   });

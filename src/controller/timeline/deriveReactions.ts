@@ -13,7 +13,7 @@
 import type { TimelineEvent } from '../../consts/viewTypes';
 import { eventEndFrame, durationSegment, setEventDuration, eventDuration } from '../../consts/viewTypes';
 import { EventStatusType } from '../../consts/enums';
-import { ENEMY_OWNER_ID, INFLICTION_COLUMN_IDS, INFLICTION_TO_REACTION } from '../../model/channels';
+import { ENEMY_ID, INFLICTION_COLUMN_IDS, INFLICTION_TO_REACTION } from '../../model/channels';
 import { getStatusById } from '../gameDataStore';
 
 /** Default active duration for derived reaction events (20s at 120fps). */
@@ -33,7 +33,7 @@ interface StatusSource {
 export function deriveReactions(events: TimelineEvent[]): TimelineEvent[] {
   // Collect all enemy infliction events, sorted by start frame
   const inflictions = events
-    .filter((ev) => ev.ownerId === ENEMY_OWNER_ID && INFLICTION_COLUMN_IDS.has(ev.columnId))
+    .filter((ev) => ev.ownerId === ENEMY_ID && INFLICTION_COLUMN_IDS.has(ev.columnId))
     .sort((a, b) => a.startFrame - b.startFrame);
 
   if (inflictions.length === 0) return events;
@@ -78,7 +78,7 @@ export function deriveReactions(events: TimelineEvent[]): TimelineEvent[] {
         uid: `${incoming.uid}-reaction`,
         id: reactionColumnId,
         name: reactionColumnId,
-        ownerId: ENEMY_OWNER_ID,
+        ownerId: ENEMY_ID,
         columnId: reactionColumnId,
         startFrame: incoming.startFrame,
         segments: durationSegment(getReactionDurationFrames(reactionColumnId)),
@@ -91,7 +91,7 @@ export function deriveReactions(events: TimelineEvent[]): TimelineEvent[] {
       removedIds.add(incoming.uid);
 
       // Clamp ALL active other-element inflictions at the reaction frame
-      const reactionSource: StatusSource = { ownerId: incoming.sourceOwnerId ?? ENEMY_OWNER_ID, skillName: incoming.sourceSkillName };
+      const reactionSource: StatusSource = { ownerId: incoming.sourceOwnerId ?? ENEMY_ID, skillName: incoming.sourceSkillName };
       for (const consumed of activeOther) {
         clampMap.set(consumed.uid, { frame: incoming.startFrame, source: reactionSource });
       }

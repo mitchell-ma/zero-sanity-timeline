@@ -17,7 +17,7 @@
 import { renderHook, act } from '@testing-library/react';
 import { NounType } from '../../../../dsl/semantics';
 import { useApp } from '../../../../app/useApp';
-import { REACTION_COLUMNS, ENEMY_OWNER_ID, ENEMY_GROUP_COLUMNS } from '../../../../model/channels';
+import { REACTION_COLUMNS, ENEMY_ID, ENEMY_GROUP_COLUMNS } from '../../../../model/channels';
 import { FPS } from '../../../../utils/timeline';
 import { computeTimelinePresentation } from '../../../../controller/timeline/eventPresentationController';
 import { findColumn, getMenuPayload } from '../../helpers';
@@ -51,7 +51,7 @@ describe('Ardelia Dolly Rush — Corrosion consumption', () => {
 
     // ── Controller: verify corrosion exists on enemy ────────────────────
     const corrosionBefore = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === REACTION_COLUMNS.CORROSION && ev.ownerId === ENEMY_OWNER_ID,
+      ev => ev.columnId === REACTION_COLUMNS.CORROSION && ev.ownerId === ENEMY_ID,
     );
     expect(corrosionBefore).toHaveLength(1);
 
@@ -65,7 +65,7 @@ describe('Ardelia Dolly Rush — Corrosion consumption', () => {
     // Corrosion should be consumed (clamped) at that frame
     const allEvents = result.current.allProcessedEvents;
     const corrosionAfter = allEvents.filter(
-      ev => ev.columnId === REACTION_COLUMNS.CORROSION && ev.ownerId === ENEMY_OWNER_ID,
+      ev => ev.columnId === REACTION_COLUMNS.CORROSION && ev.ownerId === ENEMY_ID,
     );
 
     // Corrosion event should still exist but be clamped (consumed)

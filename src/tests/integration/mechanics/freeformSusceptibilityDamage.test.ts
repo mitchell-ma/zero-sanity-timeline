@@ -18,7 +18,7 @@ import { NounType } from '../../../dsl/semantics';
 import { CritMode, ElementType, InteractionModeType } from '../../../consts/enums';
 import { FPS } from '../../../utils/timeline';
 import { runCalculation } from '../../../controller/calculation/calculationController';
-import { ENEMY_OWNER_ID, ENEMY_GROUP_COLUMNS } from '../../../model/channels';
+import { ENEMY_ID, ENEMY_GROUP_COLUMNS } from '../../../model/channels';
 import { findColumn, getMenuPayload, buildContextMenu } from '../helpers';
 import type { AppResult, AddEventPayload } from '../helpers';
 
@@ -44,7 +44,7 @@ function placeBattleSkill(app: AppResult) {
 
 /** Place freeform HEAT_SUSCEPTIBILITY on enemy via context menu (value defaults to 0). */
 function placeSusceptibilityViaContextMenu(app: AppResult) {
-  const enemyStatusCol = findColumn(app, ENEMY_OWNER_ID, ENEMY_GROUP_COLUMNS.ENEMY_STATUS);
+  const enemyStatusCol = findColumn(app, ENEMY_ID, ENEMY_GROUP_COLUMNS.ENEMY_STATUS);
   expect(enemyStatusCol).toBeDefined();
 
   const menuItems = buildContextMenu(app, enemyStatusCol!, 0, 0.5);
@@ -61,7 +61,7 @@ function placeSusceptibilityViaContextMenu(app: AppResult) {
     app.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
   } else {
     // Fallback: place directly (column may not be visible until an infliction exists)
-    app.handleAddEvent(ENEMY_OWNER_ID, HEAT_SUSC_ID, 0, {
+    app.handleAddEvent(ENEMY_ID, HEAT_SUSC_ID, 0, {
       name: HEAT_SUSC_ID, id: HEAT_SUSC_ID,
       segments: [{ properties: { duration: 10 * FPS } }],
     });
@@ -70,7 +70,7 @@ function placeSusceptibilityViaContextMenu(app: AppResult) {
 
 function findSusceptibilityUid(app: AppResult): string {
   const suscEvent = app.allProcessedEvents.find(
-    ev => ev.id === HEAT_SUSC_ID && ev.ownerId === ENEMY_OWNER_ID,
+    ev => ev.id === HEAT_SUSC_ID && ev.ownerId === ENEMY_ID,
   );
   expect(suscEvent).toBeDefined();
   return suscEvent!.uid;

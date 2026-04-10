@@ -15,7 +15,7 @@ import { t } from '../../locales/locale';
 
 // ── Owner IDs ─────────────────────────────────────────────────────────────
 
-export const ENEMY_OWNER_ID = 'enemy';
+export const ENEMY_ID = 'enemy';
 export const USER_ID = 'user';
 
 // ── Skill columns ──────────────────────────────────────────────────────────

@@ -22,7 +22,7 @@ import { SegmentType } from '../../../../consts/enums';
 import { FPS } from '../../../../utils/timeline';
 import { computeTimelinePresentation } from '../../../../controller/timeline/eventPresentationController';
 import {
-  INFLICTION_COLUMNS, ENEMY_OWNER_ID,
+  INFLICTION_COLUMNS, ENEMY_ID,
   PHYSICAL_INFLICTION_COLUMNS,
   ENEMY_GROUP_COLUMNS,
 } from '../../../../model/channels';
@@ -61,7 +61,7 @@ function placeHeatInfliction(
 ) {
   act(() => {
     result.current.handleAddEvent(
-      ENEMY_OWNER_ID, INFLICTION_COLUMNS.HEAT, startSec * FPS,
+      ENEMY_ID, INFLICTION_COLUMNS.HEAT, startSec * FPS,
       { name: INFLICTION_COLUMNS.HEAT, segments: [{ properties: { duration: durationSec * FPS } }] },
     );
   });
@@ -182,7 +182,7 @@ describe('C. Combo Frame Effects', () => {
 
     // Count heat inflictions before combo
     const heatsBefore = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerId === ENEMY_OWNER_ID,
+      ev => ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerId === ENEMY_ID,
     ).length;
 
     const comboCol = findColumn(result.current, SLOT_WULFGARD, NounType.COMBO);
@@ -196,7 +196,7 @@ describe('C. Combo Frame Effects', () => {
 
     // Controller: additional heat infliction(s) from combo
     const heatsAfter = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerId === ENEMY_OWNER_ID,
+      ev => ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerId === ENEMY_ID,
     );
     expect(heatsAfter.length).toBeGreaterThan(heatsBefore);
 
@@ -204,7 +204,7 @@ describe('C. Combo Frame Effects', () => {
     const enemyStatusCol = result.current.columns.find(
       (c): c is MiniTimeline =>
         c.type === ColumnType.MINI_TIMELINE &&
-        c.ownerId === ENEMY_OWNER_ID &&
+        c.ownerId === ENEMY_ID &&
         c.columnId === ENEMY_GROUP_COLUMNS.ENEMY_STATUS,
     );
     expect(enemyStatusCol).toBeDefined();
@@ -257,7 +257,7 @@ describe('D. Negative Triggers', () => {
     // Place freeform Vulnerable (physical infliction, not Arts)
     act(() => {
       result.current.handleAddEvent(
-        ENEMY_OWNER_ID, PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, 1 * FPS,
+        ENEMY_ID, PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, 1 * FPS,
         {
           name: PHYSICAL_INFLICTION_COLUMNS.VULNERABLE,
           segments: [{ properties: { duration: 20 * FPS } }],

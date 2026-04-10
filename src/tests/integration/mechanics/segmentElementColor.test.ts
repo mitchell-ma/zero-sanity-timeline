@@ -30,7 +30,7 @@ import {
   findColumn, buildContextMenu, getMenuPayload,
 } from '../helpers';
 import type { AppResult } from '../helpers';
-import { ENEMY_OWNER_ID, PHYSICAL_INFLICTION_COLUMNS } from '../../../model/channels';
+import { ENEMY_ID, PHYSICAL_INFLICTION_COLUMNS } from '../../../model/channels';
 
 /* eslint-disable @typescript-eslint/no-require-imports */
 const ROSSI_ID: string = require('../../../model/game-data/operators/rossi/rossi.json').id;
@@ -56,7 +56,7 @@ function placeVulnerableOnEnemy(result: { current: AppResult }, startSec: number
   act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
   act(() => {
     result.current.handleAddEvent(
-      ENEMY_OWNER_ID, PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, startSec * FPS,
+      ENEMY_ID, PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, startSec * FPS,
       { name: PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, segments: [{ properties: { duration: 20 * FPS } }] },
     );
   });

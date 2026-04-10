@@ -21,7 +21,7 @@
 import { renderHook, act } from '@testing-library/react';
 import { NounType } from '../../../../dsl/semantics';
 import { useApp } from '../../../../app/useApp';
-import { INFLICTION_COLUMNS, ENEMY_OWNER_ID } from '../../../../model/channels';
+import { INFLICTION_COLUMNS, ENEMY_ID } from '../../../../model/channels';
 import { InteractionModeType } from '../../../../consts/enums';
 import { FPS } from '../../../../utils/timeline';
 import { eventDuration } from '../../../../consts/viewTypes';
@@ -210,7 +210,7 @@ describe('Alesh Skills — Ultimate', () => {
 
     // Verify cryo infliction was applied to enemy
     const cryoInflictions = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === INFLICTION_COLUMNS.CRYO && ev.ownerId === ENEMY_OWNER_ID,
+      (ev) => ev.columnId === INFLICTION_COLUMNS.CRYO && ev.ownerId === ENEMY_ID,
     );
     expect(cryoInflictions.length).toBeGreaterThanOrEqual(1);
   });

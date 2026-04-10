@@ -6,7 +6,7 @@
  * Pogranichnik Ultimate → Steel Oath Team Status — Integration Tests
  *
  * Tests the full pipeline: Pogranichnik's Ultimate (SHIELDGUARD_BANNER) produces
- * STEEL_OATH team status events under COMMON_OWNER_ID.
+ * STEEL_OATH team status events under TEAM_ID.
  *
  * Three-layer verification:
  * 1. Context menu: add-event items are available and enabled for each column
@@ -22,12 +22,12 @@
 import { renderHook, act } from '@testing-library/react';
 import { NounType } from '../../../../dsl/semantics';
 import { useApp } from '../../../../app/useApp';
-import { ENEMY_OWNER_ID } from '../../../../model/channels';
+import { ENEMY_ID } from '../../../../model/channels';
 import { findStaggerInClauses, findDealDamageInClauses } from '../../../../controller/timeline/clauseQueries';
 import { EventStatusType, InteractionModeType } from '../../../../consts/enums';
 import { FPS } from '../../../../utils/timeline';
 import { eventDuration } from '../../../../consts/viewTypes';
-import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../../../../controller/slot/commonSlotController';
+import { TEAM_ID, COMMON_COLUMN_IDS } from '../../../../controller/slot/commonSlotController';
 import { computeTimelinePresentation } from '../../../../controller/timeline/eventPresentationController';
 import { getTeamStatusIds } from '../../../../controller/gameDataStore';
 import { findColumn, buildContextMenu, getMenuPayload, setUltimateEnergyToMax } from '../../helpers';
@@ -94,7 +94,7 @@ describe('Data pipeline prerequisites', () => {
 
   it('team-status column matchColumnIds includes STEEL_OATH when Pog is slotted', () => {
     const { result } = setupPogranichnik();
-    const teamCol = findColumn(result.current, COMMON_OWNER_ID, COMMON_COLUMN_IDS.TEAM_STATUS);
+    const teamCol = findColumn(result.current, TEAM_ID, COMMON_COLUMN_IDS.TEAM_STATUS);
     expect(teamCol).toBeDefined();
     expect(teamCol!.matchColumnIds).toBeDefined();
     expect(teamCol!.matchColumnIds).toContain(STEEL_OATH_ID);
@@ -106,7 +106,7 @@ describe('Data pipeline prerequisites', () => {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 describe('Pogranichnik Ultimate → Steel Oath', () => {
-  it('ultimate produces at least one STEEL_OATH event under COMMON_OWNER_ID', () => {
+  it('ultimate produces at least one STEEL_OATH event under TEAM_ID', () => {
     const { result } = setupPogranichnik();
 
     // ── Context menu layer ──────────────────────────────────────────────
@@ -115,7 +115,7 @@ describe('Pogranichnik Ultimate → Steel Oath', () => {
 
     // ── Controller layer ────────────────────────────────────────────────
     const steelOathEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.id === STEEL_OATH_ID && ev.ownerId === COMMON_OWNER_ID,
+      (ev) => ev.id === STEEL_OATH_ID && ev.ownerId === TEAM_ID,
     );
     // Pog ultimate produces 5 stacks of Steel Oath, all active
     expect(steelOathEvents).toHaveLength(5);
@@ -130,7 +130,7 @@ describe('Pogranichnik Ultimate → Steel Oath', () => {
     addUltimate(result.current, 1 * FPS);
 
     const steelOathEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.id === STEEL_OATH_ID && ev.ownerId === COMMON_OWNER_ID,
+      (ev) => ev.id === STEEL_OATH_ID && ev.ownerId === TEAM_ID,
     );
     expect(steelOathEvents.length).toBeGreaterThanOrEqual(1);
 
@@ -166,7 +166,7 @@ describe('Pogranichnik STEEL_OATH → ColumnViewModel', () => {
     );
 
     // Find the team-status column's view model
-    const teamColKey = `${COMMON_OWNER_ID}-${COMMON_COLUMN_IDS.TEAM_STATUS}`;
+    const teamColKey = `${TEAM_ID}-${COMMON_COLUMN_IDS.TEAM_STATUS}`;
     const teamVM = viewModels.get(teamColKey);
     expect(teamVM).toBeDefined();
 
@@ -177,7 +177,7 @@ describe('Pogranichnik STEEL_OATH → ColumnViewModel', () => {
     // Verify the events are resolvable through the presentation layer
     // (event exists in the column's event list = it will render as an EventBlock)
     for (const ev of steelInVM) {
-      expect(ev.ownerId).toBe(COMMON_OWNER_ID);
+      expect(ev.ownerId).toBe(TEAM_ID);
       expect(ev.columnId).toBe(STEEL_OATH_ID);
     }
   });
@@ -202,7 +202,7 @@ describe('Pogranichnik two Ultimates → STEEL_OATH RESET stacking', () => {
     });
 
     const steelOathEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.id === STEEL_OATH_ID && ev.ownerId === COMMON_OWNER_ID,
+      (ev) => ev.id === STEEL_OATH_ID && ev.ownerId === TEAM_ID,
     );
     // Should have at least 2 STEEL_OATH events (one from each ultimate)
     expect(steelOathEvents.length).toBeGreaterThanOrEqual(2);
@@ -239,7 +239,7 @@ describe('Steel Oath without triggers stays active', () => {
     addUltimate(result.current, 1 * FPS);
 
     const steelOathEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.id === STEEL_OATH_ID && ev.ownerId === COMMON_OWNER_ID,
+      (ev) => ev.id === STEEL_OATH_ID && ev.ownerId === TEAM_ID,
     );
     expect(steelOathEvents).toHaveLength(5);
 
@@ -275,7 +275,7 @@ describe('Combo skill consumes Steel Oath stacks', () => {
     addComboSkill(result.current, 5 * FPS);
 
     const steelOathEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.id === STEEL_OATH_ID && ev.ownerId === COMMON_OWNER_ID,
+      (ev) => ev.id === STEEL_OATH_ID && ev.ownerId === TEAM_ID,
     );
 
     // All 5 original events consumed, 4 continuations created
@@ -286,7 +286,7 @@ describe('Combo skill consumes Steel Oath stacks', () => {
 
     // With 5 stacks remaining, HAVE STACKS=1 fails → Harass (not Decisive Assault)
     const harassEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === ENEMY_OWNER_ID && ev.id === STEEL_OATH_HARASS_ID,
+      (ev) => ev.ownerId === ENEMY_ID && ev.id === STEEL_OATH_HARASS_ID,
     );
     expect(harassEvents).toHaveLength(1);
 
@@ -299,7 +299,7 @@ describe('Combo skill consumes Steel Oath stacks', () => {
     expect(harassDamage!.multipliers.length).toBeGreaterThan(0);
 
     const assaultEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === ENEMY_OWNER_ID && ev.id === STEEL_OATH_DECISIVE_ASSAULT_ID,
+      (ev) => ev.ownerId === ENEMY_ID && ev.id === STEEL_OATH_DECISIVE_ASSAULT_ID,
     );
     expect(assaultEvents).toHaveLength(0);
   });
@@ -327,7 +327,7 @@ describe('All stacks consumed → Harass and Decisive Assault mix', () => {
     }
 
     const steelOathEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.id === STEEL_OATH_ID && ev.ownerId === COMMON_OWNER_ID,
+      (ev) => ev.id === STEEL_OATH_ID && ev.ownerId === TEAM_ID,
     );
 
     // All Steel Oath events should be consumed (each consumption clamps all active
@@ -344,12 +344,12 @@ describe('All stacks consumed → Harass and Decisive Assault mix', () => {
 
     // 4 Harass (stacks 5→4, 4→3, 3→2, 2→1) + 1 Decisive Assault (last stack 1→0)
     const harassEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === ENEMY_OWNER_ID && ev.id === STEEL_OATH_HARASS_ID,
+      (ev) => ev.ownerId === ENEMY_ID && ev.id === STEEL_OATH_HARASS_ID,
     );
     expect(harassEvents).toHaveLength(4);
 
     const assaultEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === ENEMY_OWNER_ID && ev.id === STEEL_OATH_DECISIVE_ASSAULT_ID,
+      (ev) => ev.ownerId === ENEMY_ID && ev.id === STEEL_OATH_DECISIVE_ASSAULT_ID,
     );
     expect(assaultEvents).toHaveLength(1);
 
@@ -406,7 +406,7 @@ describe('Chen Qianyu BS consumes Steel Oath → 4 Harass + 1 Decisive Assault',
     // ── Controller layer ────────────────────────────────────────────────
     // Steel Oath stacks: all 5 should be consumed
     const steelOathEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.id === STEEL_OATH_ID && ev.ownerId === COMMON_OWNER_ID,
+      (ev) => ev.id === STEEL_OATH_ID && ev.ownerId === TEAM_ID,
     );
     const activeStacks = steelOathEvents.filter(
       (ev) => !ev.eventStatus,
@@ -415,13 +415,13 @@ describe('Chen Qianyu BS consumes Steel Oath → 4 Harass + 1 Decisive Assault',
 
     // Enemy should have exactly 4 Harass (stacks 5→4, 4→3, 3→2, 2→1)
     const harassEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === ENEMY_OWNER_ID && ev.id === STEEL_OATH_HARASS_ID,
+      (ev) => ev.ownerId === ENEMY_ID && ev.id === STEEL_OATH_HARASS_ID,
     );
     expect(harassEvents).toHaveLength(4);
 
     // Enemy should have exactly 1 Decisive Assault (last stack: 1→0)
     const assaultEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === ENEMY_OWNER_ID && ev.id === STEEL_OATH_DECISIVE_ASSAULT_ID,
+      (ev) => ev.ownerId === ENEMY_ID && ev.id === STEEL_OATH_DECISIVE_ASSAULT_ID,
     );
     expect(assaultEvents).toHaveLength(1);
 
@@ -443,7 +443,7 @@ describe('Chen Qianyu BS consumes Steel Oath → 4 Harass + 1 Decisive Assault',
     // FIRST_MATCH: each trigger produces exactly one sub-status, never both
     // Group all enemy Steel Oath sub-statuses by frame
     const allSubStatuses = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === ENEMY_OWNER_ID &&
+      (ev) => ev.ownerId === ENEMY_ID &&
         (ev.id === STEEL_OATH_HARASS_ID || ev.id === STEEL_OATH_DECISIVE_ASSAULT_ID),
     );
     const byFrame = new Map<number, string[]>();
@@ -489,7 +489,7 @@ describe('FIRST_MATCH clause selection in reactive triggers', () => {
 
     // Verify exactly 1 active stack remains
     const steelOathBefore = result.current.allProcessedEvents.filter(
-      (ev) => ev.id === STEEL_OATH_ID && ev.ownerId === COMMON_OWNER_ID && !ev.eventStatus,
+      (ev) => ev.id === STEEL_OATH_ID && ev.ownerId === TEAM_ID && !ev.eventStatus,
     );
     expect(steelOathBefore).toHaveLength(1);
 
@@ -505,7 +505,7 @@ describe('FIRST_MATCH clause selection in reactive triggers', () => {
     });
 
     const allSubStatuses = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === ENEMY_OWNER_ID &&
+      (ev) => ev.ownerId === ENEMY_ID &&
         (ev.id === STEEL_OATH_HARASS_ID || ev.id === STEEL_OATH_DECISIVE_ASSAULT_ID),
     );
 
@@ -536,12 +536,12 @@ describe('FIRST_MATCH clause selection in reactive triggers', () => {
     addComboSkill(result.current, 5 * FPS);
 
     const harassEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === ENEMY_OWNER_ID && ev.id === STEEL_OATH_HARASS_ID,
+      (ev) => ev.ownerId === ENEMY_ID && ev.id === STEEL_OATH_HARASS_ID,
     );
     expect(harassEvents.length).toBeGreaterThanOrEqual(1);
 
     const assaultEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === ENEMY_OWNER_ID && ev.id === STEEL_OATH_DECISIVE_ASSAULT_ID,
+      (ev) => ev.ownerId === ENEMY_ID && ev.id === STEEL_OATH_DECISIVE_ASSAULT_ID,
     );
     expect(assaultEvents).toHaveLength(0);
   });
@@ -609,10 +609,10 @@ describe('H. Living Banner stacks from combo first frame', () => {
     const comboStart = comboEvents[0].startFrame;
 
     const harassEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === ENEMY_OWNER_ID && ev.id === STEEL_OATH_HARASS_ID,
+      ev => ev.ownerId === ENEMY_ID && ev.id === STEEL_OATH_HARASS_ID,
     );
     const assaultEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === ENEMY_OWNER_ID && ev.id === STEEL_OATH_DECISIVE_ASSAULT_ID,
+      ev => ev.ownerId === ENEMY_ID && ev.id === STEEL_OATH_DECISIVE_ASSAULT_ID,
     );
     const moraleEvents = result.current.allProcessedEvents.filter(
       ev => ev.columnId === FERVENT_MORALE_ID && ev.ownerId === SLOT_POG,
@@ -668,7 +668,7 @@ describe('H. Living Banner stacks from combo first frame', () => {
 
     // Harass or Decisive Assault should appear on enemy
     const harassOrAssault = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === ENEMY_OWNER_ID
+      ev => ev.ownerId === ENEMY_ID
         && (ev.id === STEEL_OATH_HARASS_ID || ev.id === STEEL_OATH_DECISIVE_ASSAULT_ID),
     );
     expect(harassOrAssault.length).toBeGreaterThanOrEqual(1);

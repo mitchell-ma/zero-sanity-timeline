@@ -61,7 +61,7 @@ import { TimelineEvent } from '../../consts/viewTypes';
 import { SegmentType, StatusType, TimeDependency } from '../../consts/enums';
 import { VerbType, ObjectType, NounType, AdjectiveType, DeterminerType } from '../../dsl/semantics';
 import { findStaggerInClauses } from '../../controller/timeline/clauseQueries';
-import { ENEMY_OWNER_ID, COMBO_WINDOW_COLUMN_ID, INFLICTION_COLUMNS, PHYSICAL_INFLICTION_COLUMNS } from '../../model/channels';
+import { ENEMY_ID, COMBO_WINDOW_COLUMN_ID, INFLICTION_COLUMNS, PHYSICAL_INFLICTION_COLUMNS } from '../../model/channels';
 import { buildSequencesFromOperatorJson, DataDrivenSkillEventSequence } from '../../controller/gameDataStore';
 import { wouldOverlapSiblings } from '../../controller/timeline/eventValidator';
 import { processCombatSimulation } from '../../controller/timeline/eventQueueController';
@@ -651,7 +651,7 @@ describe('J. Combo Activation Window Pipeline', () => {
     return makeEvent({
       uid: `inflict-${columnId}-${startFrame}`,
       name: columnId,
-      ownerId: ENEMY_OWNER_ID,
+      ownerId: ENEMY_ID,
       columnId,
       startFrame,
       segments: [{ properties: { duration: durationFrames } }],

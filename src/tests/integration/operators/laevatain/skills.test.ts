@@ -20,7 +20,7 @@
 import { renderHook, act } from '@testing-library/react';
 import { NounType } from '../../../../dsl/semantics';
 import { useApp } from '../../../../app/useApp';
-import { INFLICTION_COLUMNS, ENEMY_OWNER_ID, OPERATOR_STATUS_COLUMN_ID, ENEMY_GROUP_COLUMNS } from '../../../../model/channels';
+import { INFLICTION_COLUMNS, ENEMY_ID, OPERATOR_STATUS_COLUMN_ID, ENEMY_GROUP_COLUMNS } from '../../../../model/channels';
 import { EnhancementType, EventStatusType, InteractionModeType } from '../../../../consts/enums';
 import { FPS, TOTAL_FRAMES } from '../../../../utils/timeline';
 import { eventDuration } from '../../../../consts/viewTypes';
@@ -55,7 +55,7 @@ function buildMultiSegmentBasic(defaultEvent: AddEventPayload['defaultSkill']) {
 
 /** Add a heat infliction on enemy in freeform mode via context menu flow. */
 function addHeatInfliction(app: AppResult, atFrame: number) {
-  const enemyStatusCol = findColumn(app, ENEMY_OWNER_ID, ENEMY_GROUP_COLUMNS.ENEMY_STATUS);
+  const enemyStatusCol = findColumn(app, ENEMY_ID, ENEMY_GROUP_COLUMNS.ENEMY_STATUS);
   expect(enemyStatusCol).toBeDefined();
   const menuItems = buildContextMenu(app, enemyStatusCol!, atFrame);
   expect(menuItems).not.toBeNull();
@@ -235,7 +235,7 @@ describe('Laevatain Skills — integration through useApp', () => {
 
       // Verify heat inflictions exist before basic attack
       const heatsBefore = result.current.allProcessedEvents.filter(
-        (ev) => ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerId === ENEMY_OWNER_ID,
+        (ev) => ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerId === ENEMY_ID,
       );
       expect(heatsBefore).toHaveLength(heatCount);
 
@@ -259,7 +259,7 @@ describe('Laevatain Skills — integration through useApp', () => {
       // Heat inflictions should be consumed
       const heatsAfter = result.current.allProcessedEvents.filter(
         (ev) => ev.columnId === INFLICTION_COLUMNS.HEAT
-          && ev.ownerId === ENEMY_OWNER_ID
+          && ev.ownerId === ENEMY_ID
           && ev.eventStatus === EventStatusType.CONSUMED,
       );
       expect(heatsAfter).toHaveLength(heatCount);
@@ -422,7 +422,7 @@ describe('Laevatain Skills — integration through useApp', () => {
     // 4. Heat inflictions should NOT be consumed (ALL pre-validation fails: can't APPLY more MF)
     const heatsConsumed = result.current.allProcessedEvents.filter(
       (ev) => ev.columnId === INFLICTION_COLUMNS.HEAT
-        && ev.ownerId === ENEMY_OWNER_ID
+        && ev.ownerId === ENEMY_ID
         && ev.eventStatus === EventStatusType.CONSUMED,
     );
     expect(heatsConsumed).toHaveLength(0);

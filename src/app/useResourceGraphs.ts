@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { Operator, TimelineEvent, ResourceConfig } from '../consts/viewTypes';
 import { ResourcePoint } from '../controller/timeline/resourceTimeline';
 import { CombatLoadoutController } from '../controller/combat-loadout';
-import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../controller/slot/commonSlotController';
+import { TEAM_ID, COMMON_COLUMN_IDS } from '../controller/slot/commonSlotController';
 import { getUltimateEnergyCost } from '../controller/operators/operatorRegistry';
 import { ultimateGraphKey } from '../model/channels';
 
@@ -28,7 +28,7 @@ export function useResourceGraphs(
 
   useEffect(() => {
     const spCtrl = combatLoadout.commonSlot.skillPoints;
-    const key = `${COMMON_OWNER_ID}-${COMMON_COLUMN_IDS.SKILL_POINTS}`;
+    const key = `${TEAM_ID}-${COMMON_COLUMN_IDS.SKILL_POINTS}`;
     const update = (points: ReadonlyArray<ResourcePoint>) => {
       setSpGraphs((prev) => {
         const next = new Map(prev);

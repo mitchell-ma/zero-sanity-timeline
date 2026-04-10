@@ -19,7 +19,7 @@
 import { renderHook, act } from '@testing-library/react';
 import { NounType, isQualifiedId } from '../../../../dsl/semantics';
 import { useApp } from '../../../../app/useApp';
-import { REACTION_COLUMNS, ENEMY_OWNER_ID } from '../../../../model/channels';
+import { REACTION_COLUMNS, ENEMY_ID } from '../../../../model/channels';
 import { ColumnType, InteractionModeType } from '../../../../consts/enums';
 import { FPS } from '../../../../utils/timeline';
 import { eventDuration } from '../../../../consts/viewTypes';
@@ -188,7 +188,7 @@ describe('Ardelia Full Kit — Battle Skill', () => {
 
     // No susceptibility events on enemy
     const susceptEvents = result.current.allProcessedEvents.filter(
-      ev => isQualifiedId(ev.columnId, NounType.SUSCEPTIBILITY) && ev.ownerId === ENEMY_OWNER_ID,
+      ev => isQualifiedId(ev.columnId, NounType.SUSCEPTIBILITY) && ev.ownerId === ENEMY_ID,
     );
     expect(susceptEvents).toHaveLength(0);
   });
@@ -274,7 +274,7 @@ describe('Ardelia Full Kit — Combo Skill', () => {
     });
 
     const corrosionEvents = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === REACTION_COLUMNS.CORROSION && ev.ownerId === ENEMY_OWNER_ID,
+      ev => ev.columnId === REACTION_COLUMNS.CORROSION && ev.ownerId === ENEMY_ID,
     );
     expect(corrosionEvents).toHaveLength(1);
 
@@ -339,7 +339,7 @@ describe('Ardelia Full Kit — Combo Skill', () => {
     });
 
     const corrosionEvents = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === REACTION_COLUMNS.CORROSION && ev.ownerId === ENEMY_OWNER_ID,
+      ev => ev.columnId === REACTION_COLUMNS.CORROSION && ev.ownerId === ENEMY_ID,
     );
     expect(corrosionEvents).toHaveLength(1);
 
@@ -549,7 +549,7 @@ describe('Ardelia Full Kit — Corrosion → Susceptibility Pipeline', () => {
     // ── Controller layer ────────────────────────────────────────────────
     // Corrosion should exist but be consumed (clamped)
     const corrosion = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === REACTION_COLUMNS.CORROSION && ev.ownerId === ENEMY_OWNER_ID,
+      ev => ev.columnId === REACTION_COLUMNS.CORROSION && ev.ownerId === ENEMY_ID,
     );
     expect(corrosion).toHaveLength(1);
     const corrosionEnd = corrosion[0].startFrame + corrosion[0].segments.reduce(
@@ -560,7 +560,7 @@ describe('Ardelia Full Kit — Corrosion → Susceptibility Pipeline', () => {
 
     // Susceptibility should be applied
     const susceptEvents = result.current.allProcessedEvents.filter(
-      ev => isQualifiedId(ev.columnId, NounType.SUSCEPTIBILITY) && ev.ownerId === ENEMY_OWNER_ID,
+      ev => isQualifiedId(ev.columnId, NounType.SUSCEPTIBILITY) && ev.ownerId === ENEMY_ID,
     );
     expect(susceptEvents).toHaveLength(2);
 
@@ -569,7 +569,7 @@ describe('Ardelia Full Kit — Corrosion → Susceptibility Pipeline', () => {
     const enemyReactionCol = result.current.columns.find(
       (c): c is MiniTimeline =>
         c.type === ColumnType.MINI_TIMELINE &&
-        c.ownerId === ENEMY_OWNER_ID &&
+        c.ownerId === ENEMY_ID &&
         (c.matchColumnIds?.includes(REACTION_COLUMNS.CORROSION) ?? false),
     );
     expect(enemyReactionCol).toBeDefined();
@@ -583,13 +583,13 @@ describe('Ardelia Full Kit — Corrosion → Susceptibility Pipeline', () => {
     const corrosionVM = viewModels.get(enemyReactionCol!.key);
     expect(corrosionVM).toBeDefined();
     expect(corrosionVM!.events.some(
-      ev => ev.columnId === REACTION_COLUMNS.CORROSION && ev.ownerId === ENEMY_OWNER_ID,
+      ev => ev.columnId === REACTION_COLUMNS.CORROSION && ev.ownerId === ENEMY_ID,
     )).toBe(true);
 
     // Susceptibility events are present in the view model (may be grouped in a shared column)
     const allVMEvents = Array.from(viewModels.values()).flatMap(vm => vm.events);
     const susceptInVM = allVMEvents.filter(
-      ev => isQualifiedId(ev.columnId, NounType.SUSCEPTIBILITY) && ev.ownerId === ENEMY_OWNER_ID,
+      ev => isQualifiedId(ev.columnId, NounType.SUSCEPTIBILITY) && ev.ownerId === ENEMY_ID,
     );
     expect(susceptInVM.length).toBeGreaterThan(0);
   });
@@ -637,7 +637,7 @@ describe('Ardelia Full Kit — Corrosion → Susceptibility Pipeline', () => {
 
     // Still only 2 susceptibility events (from first battle skill)
     const susceptEvents = result.current.allProcessedEvents.filter(
-      ev => isQualifiedId(ev.columnId, NounType.SUSCEPTIBILITY) && ev.ownerId === ENEMY_OWNER_ID,
+      ev => isQualifiedId(ev.columnId, NounType.SUSCEPTIBILITY) && ev.ownerId === ENEMY_ID,
     );
     expect(susceptEvents).toHaveLength(2);
   });
@@ -776,13 +776,13 @@ describe('Ardelia Full Kit — Freeform Edge Cases', () => {
     });
     act(() => {
       result.current.handleAddEvent(
-        ENEMY_OWNER_ID,
+        ENEMY_ID,
         REACTION_COLUMNS.CORROSION,
         5 * FPS,
         {
           name: REACTION_COLUMNS.CORROSION,
           segments: [{ properties: { duration: 20 * FPS } }],
-          sourceOwnerId: ENEMY_OWNER_ID,
+          sourceOwnerId: ENEMY_ID,
         },
       );
     });
@@ -800,7 +800,7 @@ describe('Ardelia Full Kit — Freeform Edge Cases', () => {
     });
 
     const susceptEvents = result.current.allProcessedEvents.filter(
-      (ev: TimelineEvent) => isQualifiedId(ev.columnId, NounType.SUSCEPTIBILITY) && ev.ownerId === ENEMY_OWNER_ID,
+      (ev: TimelineEvent) => isQualifiedId(ev.columnId, NounType.SUSCEPTIBILITY) && ev.ownerId === ENEMY_ID,
     );
     expect(susceptEvents).toHaveLength(2);
   });

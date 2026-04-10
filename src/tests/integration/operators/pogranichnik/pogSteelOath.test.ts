@@ -20,8 +20,8 @@
 import { renderHook, act } from '@testing-library/react';
 import { NounType } from '../../../../dsl/semantics';
 import { useApp } from '../../../../app/useApp';
-import { ENEMY_OWNER_ID } from '../../../../model/channels';
-import { COMMON_OWNER_ID } from '../../../../controller/slot/commonSlotController';
+import { ENEMY_ID } from '../../../../model/channels';
+import { TEAM_ID } from '../../../../controller/slot/commonSlotController';
 import { EventStatusType, InteractionModeType } from '../../../../consts/enums';
 import { FPS } from '../../../../utils/timeline';
 import { eventDuration } from '../../../../consts/viewTypes';
@@ -94,7 +94,7 @@ describe('Pogranichnik Steel Oath — integration through useApp', () => {
 
     // ── Controller layer ────────────────────────────────────────────────
     const steelOathEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === COMMON_OWNER_ID && ev.id === STEEL_OATH_ID,
+      (ev) => ev.ownerId === TEAM_ID && ev.id === STEEL_OATH_ID,
     );
     expect(steelOathEvents.length).toBeGreaterThanOrEqual(1);
     // Steel Oath should have a positive duration (30s = 3600 frames from the APPLY with.duration)
@@ -136,7 +136,7 @@ describe('Pogranichnik Steel Oath — integration through useApp', () => {
     });
 
     const steelOathEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === COMMON_OWNER_ID && ev.id === STEEL_OATH_ID,
+      (ev) => ev.ownerId === TEAM_ID && ev.id === STEEL_OATH_ID,
     );
     expect(steelOathEvents.length).toBeGreaterThanOrEqual(1);
     // Steel Oath should still have a positive duration, not clamped to 0 by Laevatain ult
@@ -171,7 +171,7 @@ describe('Pogranichnik Steel Oath — integration through useApp', () => {
     });
 
     const harassEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === ENEMY_OWNER_ID && ev.id === STEEL_OATH_HARASS_ID,
+      (ev) => ev.ownerId === ENEMY_ID && ev.id === STEEL_OATH_HARASS_ID,
     );
     expect(harassEvents.length).toBeGreaterThanOrEqual(1);
     expect(harassEvents[0].startFrame).toBeGreaterThanOrEqual(5 * FPS);
@@ -205,7 +205,7 @@ describe('Pogranichnik Steel Oath — integration through useApp', () => {
     });
 
     const steelOathEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === COMMON_OWNER_ID && ev.id === STEEL_OATH_ID,
+      (ev) => ev.ownerId === TEAM_ID && ev.id === STEEL_OATH_ID,
     );
 
     // All 5 original events should be consumed (clamped at combo frame)
@@ -272,7 +272,7 @@ describe('Pogranichnik Steel Oath — integration through useApp', () => {
 
     // Steel Oath should be triggered by the second BS's physical status (LIFT)
     const harassEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === ENEMY_OWNER_ID && ev.id === STEEL_OATH_HARASS_ID,
+      (ev) => ev.ownerId === ENEMY_ID && ev.id === STEEL_OATH_HARASS_ID,
     );
     expect(harassEvents.length).toBeGreaterThanOrEqual(1);
   });
@@ -310,7 +310,7 @@ describe('Pogranichnik Steel Oath — integration through useApp', () => {
     });
 
     const steelOathEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === COMMON_OWNER_ID && ev.id === STEEL_OATH_ID,
+      (ev) => ev.ownerId === TEAM_ID && ev.id === STEEL_OATH_ID,
     );
 
     // Collect distinct stack counts in chronological order

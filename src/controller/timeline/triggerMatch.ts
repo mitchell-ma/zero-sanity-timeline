@@ -9,9 +9,9 @@
  */
 import { TimelineEvent, computeSegmentsSpan } from '../../consts/viewTypes';
 import { EventStatusType } from '../../consts/enums';
-import { COMMON_OWNER_ID } from '../slot/commonSlotController';
+import { TEAM_ID } from '../slot/commonSlotController';
 import {
-  ENEMY_OWNER_ID, ENEMY_ACTION_COLUMN_ID,
+  ENEMY_ID, ENEMY_ACTION_COLUMN_ID,
   REACTION_COLUMN_IDS, INFLICTION_COLUMN_IDS,
   PHYSICAL_STATUS_COLUMN_IDS,
 } from '../../model/channels';
@@ -226,24 +226,24 @@ function resolveOwnerFilter(cond: Predicate, operatorSlotId: string, verb?: stri
     isAnyOperator: isAnyOperator || isAnyOtherOperator,
     matchesOwner(ownerId: string, atFrame?: number) {
       if (isActionVerb && toObj) {
-        if (toObj === NounType.ENEMY) return ownerId === ENEMY_OWNER_ID;
+        if (toObj === NounType.ENEMY) return ownerId === ENEMY_ID;
         if (toObj === NounType.OPERATOR) {
-          if (toDet === DeterminerType.ANY) return ownerId !== ENEMY_OWNER_ID && ownerId !== COMMON_OWNER_ID;
+          if (toDet === DeterminerType.ANY) return ownerId !== ENEMY_ID && ownerId !== TEAM_ID;
           if (toDet === DeterminerType.ALL) return true;
-          if (toDet === DeterminerType.OTHER) return ownerId !== operatorSlotId && ownerId !== ENEMY_OWNER_ID && ownerId !== COMMON_OWNER_ID;
+          if (toDet === DeterminerType.OTHER) return ownerId !== operatorSlotId && ownerId !== ENEMY_ID && ownerId !== TEAM_ID;
           return ownerId === operatorSlotId;
         }
         return true;
       }
       if (isActionVerb) return true;
       // Subject-based filtering
-      if (cond.subject === NounType.ENEMY) return ownerId === ENEMY_OWNER_ID;
+      if (cond.subject === NounType.ENEMY) return ownerId === ENEMY_ID;
       if (isControlledOperator && controlledSlotId) {
         const resolved = typeof controlledSlotId === 'function' ? controlledSlotId(atFrame ?? 0) : controlledSlotId;
         return ownerId === resolved;
       }
-      if (isAnyOtherOperator) return ownerId !== operatorSlotId && ownerId !== ENEMY_OWNER_ID && ownerId !== COMMON_OWNER_ID;
-      if (isAnyOperator) return ownerId !== ENEMY_OWNER_ID && ownerId !== COMMON_OWNER_ID;
+      if (isAnyOtherOperator) return ownerId !== operatorSlotId && ownerId !== ENEMY_ID && ownerId !== TEAM_ID;
+      if (isAnyOperator) return ownerId !== ENEMY_ID && ownerId !== TEAM_ID;
       return ownerId === operatorSlotId;
     },
   };
@@ -330,7 +330,7 @@ function handlePerform(primaryCond: Predicate, ctx: VerbHandlerContext): Trigger
 
   for (const ev of ctx.events) {
     if (!isAnyOperator && ev.ownerId !== ctx.operatorSlotId) continue;
-    if (isAnyOperator && (ev.ownerId === ENEMY_OWNER_ID || ev.ownerId === COMMON_OWNER_ID)) continue;
+    if (isAnyOperator && (ev.ownerId === ENEMY_ID || ev.ownerId === TEAM_ID)) continue;
     if (ev.columnId !== matchingColumn) continue;
 
     const triggerFrame = getFirstEventFrame(ev);
@@ -592,7 +592,7 @@ function handleDeal(primaryCond: Predicate, ctx: VerbHandlerContext): TriggerMat
 
 function handleHit(primaryCond: Predicate, ctx: VerbHandlerContext): TriggerMatch[] {
   const hitEvents = ctx.events.filter(
-    (ev) => ev.ownerId === ENEMY_OWNER_ID && ev.columnId === ENEMY_ACTION_COLUMN_ID,
+    (ev) => ev.ownerId === ENEMY_ID && ev.columnId === ENEMY_ACTION_COLUMN_ID,
   );
   if (hitEvents.length > 0) {
     const matches: TriggerMatch[] = [];

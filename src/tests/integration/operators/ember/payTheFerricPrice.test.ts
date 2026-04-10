@@ -14,7 +14,7 @@ import { NounType } from '../../../../dsl/semantics';
 import { useApp } from '../../../../app/useApp';
 import { ColumnType, EventStatusType } from '../../../../consts/enums';
 import { FPS } from '../../../../utils/timeline';
-import { ENEMY_OWNER_ID, ENEMY_ACTION_COLUMN_ID } from '../../../../model/channels';
+import { ENEMY_ID, ENEMY_ACTION_COLUMN_ID } from '../../../../model/channels';
 import { findColumn, getMenuPayload } from '../../helpers';
 import type { AppResult } from '../../helpers';
 import type { MiniTimeline } from '../../../../consts/viewTypes';
@@ -49,7 +49,7 @@ function addEnemyAction(app: AppResult, atFrame: number) {
   const enemyCol = app.columns.find(
     (c): c is MiniTimeline =>
       c.type === ColumnType.MINI_TIMELINE &&
-      c.ownerId === ENEMY_OWNER_ID &&
+      c.ownerId === ENEMY_ID &&
       c.columnId === ENEMY_ACTION_COLUMN_ID,
   );
   expect(enemyCol).toBeDefined();
@@ -87,7 +87,7 @@ describe('Pay the Ferric Price — DEAL DAMAGE trigger', () => {
     const enemyActionCol = result.current.columns.find(
       (c): c is MiniTimeline =>
         c.type === ColumnType.MINI_TIMELINE &&
-        c.ownerId === ENEMY_OWNER_ID &&
+        c.ownerId === ENEMY_ID &&
         c.columnId === ENEMY_ACTION_COLUMN_ID,
     );
     expect(enemyActionCol).toBeDefined();

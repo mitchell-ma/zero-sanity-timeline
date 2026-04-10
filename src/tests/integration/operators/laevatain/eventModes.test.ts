@@ -23,7 +23,7 @@
 import { renderHook, act } from '@testing-library/react';
 import { NounType } from '../../../../dsl/semantics';
 import { useApp } from '../../../../app/useApp';
-import { INFLICTION_COLUMNS, ENEMY_OWNER_ID, ENEMY_GROUP_COLUMNS } from '../../../../model/channels';
+import { INFLICTION_COLUMNS, ENEMY_ID, ENEMY_GROUP_COLUMNS } from '../../../../model/channels';
 import { ColumnType, EnhancementType, EventStatusType, InteractionModeType } from '../../../../consts/enums';
 import { FPS, TOTAL_FRAMES } from '../../../../utils/timeline';
 import { eventDuration } from '../../../../consts/viewTypes';
@@ -100,7 +100,7 @@ function placeMfStacks(app: AppResult, count: number, startFrame: number) {
 
 /** Place N heat inflictions on the enemy starting at the given frame via context menu flow. */
 function placeHeatInflictions(app: AppResult, count: number, startFrame: number) {
-  const enemyStatusCol = findColumn(app, ENEMY_OWNER_ID, ENEMY_GROUP_COLUMNS.ENEMY_STATUS);
+  const enemyStatusCol = findColumn(app, ENEMY_ID, ENEMY_GROUP_COLUMNS.ENEMY_STATUS);
   expect(enemyStatusCol).toBeDefined();
 
   // Switch to freeform to enable add on derived enemy status column
@@ -199,7 +199,7 @@ describe('Freeform events — engine interactions', () => {
     // Freeform heat inflictions consumed by engine
     const heatsConsumed = result.current.allProcessedEvents.filter(
       (ev) => ev.columnId === INFLICTION_COLUMNS.HEAT
-        && ev.ownerId === ENEMY_OWNER_ID
+        && ev.ownerId === ENEMY_ID
         && ev.eventStatus === EventStatusType.CONSUMED,
     );
     expect(heatsConsumed).toHaveLength(3);
@@ -568,7 +568,7 @@ describe('Mixed freeform + strict — cross-mode interactions', () => {
     // Freeform heat consumed, MF generated at 1:1
     const heatsConsumed = result.current.allProcessedEvents.filter(
       (ev) => ev.columnId === INFLICTION_COLUMNS.HEAT
-        && ev.ownerId === ENEMY_OWNER_ID
+        && ev.ownerId === ENEMY_ID
         && ev.eventStatus === EventStatusType.CONSUMED,
     );
     expect(heatsConsumed).toHaveLength(3);
@@ -626,7 +626,7 @@ describe('Mixed freeform + strict — cross-mode interactions', () => {
     // Heat consumed
     const heatsConsumed = result.current.allProcessedEvents.filter(
       (ev) => ev.columnId === INFLICTION_COLUMNS.HEAT
-        && ev.ownerId === ENEMY_OWNER_ID
+        && ev.ownerId === ENEMY_ID
         && ev.eventStatus === EventStatusType.CONSUMED,
     );
     expect(heatsConsumed).toHaveLength(2);
@@ -643,7 +643,7 @@ describe('Freeform infliction default durations', () => {
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
     // Find the enemy status column that contains nature infliction via context menu
-    const enemyStatusCol = findColumn(result.current, ENEMY_OWNER_ID, ENEMY_GROUP_COLUMNS.ENEMY_STATUS);
+    const enemyStatusCol = findColumn(result.current, ENEMY_ID, ENEMY_GROUP_COLUMNS.ENEMY_STATUS);
     expect(enemyStatusCol).toBeDefined();
 
     // Build context menu and find nature infliction item
@@ -678,7 +678,7 @@ describe('Freeform infliction default durations', () => {
     const vm = viewModels.get(enemyStatusCol!.key);
     expect(vm).toBeDefined();
     const natureInVM = vm!.events.filter(
-      (ev) => ev.columnId === INFLICTION_COLUMNS.NATURE && ev.ownerId === ENEMY_OWNER_ID,
+      (ev) => ev.columnId === INFLICTION_COLUMNS.NATURE && ev.ownerId === ENEMY_ID,
     );
     expect(natureInVM).toHaveLength(1);
     expect(eventDuration(natureInVM[0])).toBe(20 * FPS);

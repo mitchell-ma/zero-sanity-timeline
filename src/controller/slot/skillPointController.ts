@@ -14,7 +14,7 @@ import type { TimeStopRegion } from '../timeline/processTimeStop';
 import { Subtimeline } from '../timeline/subtimeline';
 import { SkillPointTimeline, ResourceZone, SkillPointConsumptionHistory } from '../timeline/skillPointTimeline';
 import { ResourceGraphListener, ResourcePoint } from '../timeline/resourceTimeline';
-import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from './commonSlotController';
+import { TEAM_ID, COMMON_COLUMN_IDS } from './commonSlotController';
 import type { UltimateEnergyController } from '../timeline/ultimateEnergyController';
 
 export type { ResourceZone, SkillPointConsumptionHistory };
@@ -41,7 +41,7 @@ export class SkillPointController {
   private ueController: UltimateEnergyController | null = null;
 
   constructor() {
-    this.subtimeline = new Subtimeline(COMMON_OWNER_ID, COMMON_COLUMN_IDS.SKILL_POINTS);
+    this.subtimeline = new Subtimeline(TEAM_ID, COMMON_COLUMN_IDS.SKILL_POINTS);
     this.timeline = new SkillPointTimeline(this.subtimeline);
     // On every SP graph change, rebuild the per-slot insufficiency zones
     // map AND push natural-SP consumption updates to UE controller. Both
@@ -128,7 +128,7 @@ export class SkillPointController {
       uid: `${eventUid}-sp`,
       id: SP_COST_EVENT_ID,
       name: SP_COST_EVENT_ID,
-      ownerId: COMMON_OWNER_ID,
+      ownerId: TEAM_ID,
       columnId: COMMON_COLUMN_IDS.SKILL_POINTS,
       startFrame: frame,
       segments: durationSegment(amount),
@@ -159,7 +159,7 @@ export class SkillPointController {
       uid: `sp-return-${frame}-${this.pendingSpEvents.length}`,
       id: 'sp-return',
       name: 'sp-return',
-      ownerId: COMMON_OWNER_ID,
+      ownerId: TEAM_ID,
       columnId: COMMON_COLUMN_IDS.SKILL_POINTS,
       startFrame: frame,
       segments: [{ properties: { duration: amount } }],

@@ -22,7 +22,7 @@ import { NounType } from '../../../dsl/semantics';
 import { render } from '@testing-library/react';
 import React from 'react';
 import { useApp } from '../../../app/useApp';
-import { INFLICTION_COLUMNS, ENEMY_OWNER_ID } from '../../../model/channels';
+import { INFLICTION_COLUMNS, ENEMY_ID } from '../../../model/channels';
 import { InteractionModeType } from '../../../consts/enums';
 import { FPS, durationToPx } from '../../../utils/timeline';
 import { computeTimelinePresentation } from '../../../controller/timeline/eventPresentationController';
@@ -37,7 +37,7 @@ const noop3 = (_a: unknown, _b: unknown, _c: unknown) => {};
 
 function getHeatInflictions(app: AppResult) {
   return app.allProcessedEvents.filter(
-    (ev) => ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerId === ENEMY_OWNER_ID,
+    (ev) => ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerId === ENEMY_ID,
   );
 }
 
@@ -47,7 +47,7 @@ function getInflictionFromVM(app: AppResult) {
   // Find the enemy column that contains heat inflictions
   for (const [, vm] of Array.from(vms.entries())) {
     const match = vm.events.find(
-      ev => ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerId === ENEMY_OWNER_ID,
+      ev => ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerId === ENEMY_ID,
     );
     if (match) return match;
   }

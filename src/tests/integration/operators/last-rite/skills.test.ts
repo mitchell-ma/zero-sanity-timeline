@@ -31,7 +31,7 @@ import { eventDuration } from '../../../../consts/viewTypes';
 import { computeTimelinePresentation } from '../../../../controller/timeline/eventPresentationController';
 import { getUltimateEnergyCostForPotential } from '../../../../controller/operators/operatorRegistry';
 import { getLastStatAccumulator } from '../../../../controller/timeline/eventQueueController';
-import { ENEMY_OWNER_ID } from '../../../../model/channels';
+import { ENEMY_ID } from '../../../../model/channels';
 import {
   findColumn, buildContextMenu, getMenuPayload,
   setUltimateEnergyToMax,
@@ -589,7 +589,7 @@ describe('Last Rite — T2 Cryogenic Embrittlement DSL', () => {
     // Frame-level stats are reversed after each frame's snapshot.
     const accumulator = getLastStatAccumulator();
     expect(accumulator).not.toBeNull();
-    const susceptibility = accumulator!.getStat(ENEMY_OWNER_ID, StatType.SUSCEPTIBILITY);
+    const susceptibility = accumulator!.getStat(ENEMY_ID, StatType.SUSCEPTIBILITY);
     expect(susceptibility).toBe(0);
   });
 });

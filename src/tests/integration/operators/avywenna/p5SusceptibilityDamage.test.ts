@@ -16,7 +16,7 @@ import { NounType, AdjectiveType, flattenQualifiedId } from '../../../../dsl/sem
 import { CritMode, ElementType, InteractionModeType } from '../../../../consts/enums';
 import { FPS } from '../../../../utils/timeline';
 import { runCalculation } from '../../../../controller/calculation/calculationController';
-import { ENEMY_OWNER_ID } from '../../../../model/channels';
+import { ENEMY_ID } from '../../../../model/channels';
 import { findColumn, getMenuPayload, setUltimateEnergyToMax } from '../../helpers';
 import type { AppResult } from '../../helpers';
 
@@ -59,14 +59,14 @@ function placeCombo(app: AppResult, atFrame: number) {
 }
 
 function placeElectricSusceptibility(app: AppResult, atFrame: number, durationFrames = 30 * FPS) {
-  app.handleAddEvent(ENEMY_OWNER_ID, ELECTRIC_SUSC_ID, atFrame, {
+  app.handleAddEvent(ENEMY_ID, ELECTRIC_SUSC_ID, atFrame, {
     name: ELECTRIC_SUSC_ID, id: ELECTRIC_SUSC_ID,
     segments: [{ properties: { duration: durationFrames } }],
   });
 }
 
 function setSusceptibility(app: AppResult, value: number) {
-  const ev = app.allProcessedEvents.find(e => e.id === ELECTRIC_SUSC_ID && e.ownerId === ENEMY_OWNER_ID);
+  const ev = app.allProcessedEvents.find(e => e.id === ELECTRIC_SUSC_ID && e.ownerId === ENEMY_ID);
   expect(ev).toBeDefined();
   app.handleUpdateEvent(ev!.uid, { susceptibility: { [ElementType.ELECTRIC]: value } });
 }

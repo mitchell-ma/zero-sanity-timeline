@@ -9,13 +9,13 @@
 import { StatType, SegmentType } from '../../consts/enums';
 import { NounType } from '../../dsl/semantics';
 import { TimelineEvent, getAnimationDuration, durationSegment } from '../../consts/viewTypes';
-import { ENEMY_OWNER_ID, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID } from '../../model/channels';
+import { ENEMY_ID, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID } from '../../model/channels';
 import { Subtimeline } from '../timeline/subtimeline';
 import { StaggerTimeline, StaggerBreak } from '../timeline/staggerTimeline';
 import { ResourceGraphListener, ResourcePoint } from '../timeline/resourceTimeline';
 import { collectTimeStopRanges } from '../timeline/processTimeStop';
 import { FPS } from '../../utils/timeline';
-import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from './commonSlotController';
+import { TEAM_ID, COMMON_COLUMN_IDS } from './commonSlotController';
 import { findStaggerInClauses } from '../timeline/clauseQueries';
 
 export type { StaggerBreak };
@@ -39,7 +39,7 @@ export class StaggerController {
   breaks: readonly StaggerBreak[] = [];
 
   constructor() {
-    this.subtimeline = new Subtimeline(COMMON_OWNER_ID, COMMON_COLUMN_IDS.STAGGER);
+    this.subtimeline = new Subtimeline(TEAM_ID, COMMON_COLUMN_IDS.STAGGER);
     this.timeline = new StaggerTimeline(this.subtimeline);
   }
 
@@ -117,7 +117,7 @@ export class StaggerController {
       nodeRecoveryFrames,
       NODE_STAGGER_COLUMN_ID,
       FULL_STAGGER_COLUMN_ID,
-      ENEMY_OWNER_ID,
+      ENEMY_ID,
       'stagger-frailty',
     );
     this.breaks = this.timeline.getBreaks();

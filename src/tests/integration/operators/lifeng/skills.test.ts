@@ -30,7 +30,7 @@ import { getUltimateEnergyCostForPotential } from '../../../../controller/operat
 import {
   PHYSICAL_INFLICTION_COLUMNS,
   PHYSICAL_STATUS_COLUMNS,
-  ENEMY_OWNER_ID,
+  ENEMY_ID,
 } from '../../../../model/channels';
 import { findColumn, buildContextMenu, getMenuPayload, setUltimateEnergyToMax, type AppResult } from '../../helpers';
 
@@ -168,7 +168,7 @@ describe('B. Battle Skill — Knock Down and Susceptibility', () => {
 
     // Without prior Vulnerable, BS adds a Vulnerable stack (no Knock Down event yet)
     const vulnEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === ENEMY_OWNER_ID
+      ev => ev.ownerId === ENEMY_ID
         && ev.columnId === PHYSICAL_INFLICTION_COLUMNS.VULNERABLE,
     );
     expect(vulnEvents.length).toBeGreaterThanOrEqual(1);
@@ -197,7 +197,7 @@ describe('B. Battle Skill — Knock Down and Susceptibility', () => {
     });
 
     const knockDownEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === ENEMY_OWNER_ID
+      ev => ev.ownerId === ENEMY_ID
         && ev.columnId === PHYSICAL_STATUS_COLUMNS.KNOCK_DOWN,
     );
     expect(knockDownEvents.length).toBeGreaterThanOrEqual(1);
@@ -455,7 +455,7 @@ describe('F. Subduer of Evil Talent Chain', () => {
 
     // 1. Knock Down exists on ENEMY
     const knockDownEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === ENEMY_OWNER_ID
+      ev => ev.ownerId === ENEMY_ID
         && ev.columnId === PHYSICAL_STATUS_COLUMNS.KNOCK_DOWN,
     );
     expect(knockDownEvents.length).toBeGreaterThanOrEqual(1);
@@ -479,7 +479,7 @@ describe('F. Subduer of Evil Talent Chain', () => {
 
     // No Knock Down — no Vulnerable existed
     const knockDownEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === ENEMY_OWNER_ID
+      ev => ev.ownerId === ENEMY_ID
         && ev.columnId === PHYSICAL_STATUS_COLUMNS.KNOCK_DOWN,
     );
     expect(knockDownEvents).toHaveLength(0);
@@ -508,14 +508,14 @@ describe('F. Subduer of Evil Talent Chain', () => {
 
     // Knock Down exists
     const knockDownEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === ENEMY_OWNER_ID
+      ev => ev.ownerId === ENEMY_ID
         && ev.columnId === PHYSICAL_STATUS_COLUMNS.KNOCK_DOWN,
     );
     expect(knockDownEvents.length).toBeGreaterThanOrEqual(1);
 
     // P5 Subduer of Evil status should appear on ENEMY
     const p5Events = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === ENEMY_OWNER_ID
+      ev => ev.ownerId === ENEMY_ID
         && ev.columnId === SUBDUER_P5_STATUS_ID
         && ev.startFrame > 0,
     );
@@ -535,7 +535,7 @@ describe('F. Subduer of Evil Talent Chain', () => {
     );
     const enemyStatusCols = result.current.columns.filter(
       c => c.type === ColumnType.MINI_TIMELINE
-        && (c as MiniTimeline).ownerId === ENEMY_OWNER_ID,
+        && (c as MiniTimeline).ownerId === ENEMY_ID,
     );
     const p5InView = enemyStatusCols.some(col => {
       const vm = viewModels.get(col.key);
@@ -730,14 +730,14 @@ describe('H. Ultimate Knock Down requires Vulnerable', () => {
     // Ult has 2 Knock Down frames (seg 2 + seg 3).
     // First hit adds Vulnerable; second hit sees Vulnerable and fires Knock Down.
     const vulnEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === ENEMY_OWNER_ID
+      ev => ev.ownerId === ENEMY_ID
         && ev.columnId === PHYSICAL_INFLICTION_COLUMNS.VULNERABLE,
     );
     expect(vulnEvents.length).toBeGreaterThanOrEqual(1);
 
     // Second hit produces Knock Down (enemy has Vulnerable from first hit)
     const knockDownEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === ENEMY_OWNER_ID
+      ev => ev.ownerId === ENEMY_ID
         && ev.columnId === PHYSICAL_STATUS_COLUMNS.KNOCK_DOWN,
     );
     expect(knockDownEvents.length).toBeGreaterThanOrEqual(1);
@@ -767,7 +767,7 @@ describe('H. Ultimate Knock Down requires Vulnerable', () => {
     });
 
     const knockDownEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === ENEMY_OWNER_ID
+      ev => ev.ownerId === ENEMY_ID
         && ev.columnId === PHYSICAL_STATUS_COLUMNS.KNOCK_DOWN,
     );
     expect(knockDownEvents.length).toBeGreaterThanOrEqual(1);
@@ -813,7 +813,7 @@ describe('I. P1 — Susceptibility threshold', () => {
     // At P1, susceptibility should apply on both BSs (both within ≤2 threshold)
     const physSuscId = flattenQualifiedId(AdjectiveType.PHYSICAL, NounType.SUSCEPTIBILITY);
     const suscEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === ENEMY_OWNER_ID
+      ev => ev.ownerId === ENEMY_ID
         && ev.columnId === physSuscId,
     );
     expect(suscEvents.length).toBeGreaterThanOrEqual(2);
@@ -844,7 +844,7 @@ describe('I. P1 — Susceptibility threshold', () => {
 
     const physSuscId = flattenQualifiedId(AdjectiveType.PHYSICAL, NounType.SUSCEPTIBILITY);
     const suscEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === ENEMY_OWNER_ID
+      ev => ev.ownerId === ENEMY_ID
         && ev.columnId === physSuscId,
     );
     // Only first BS applies susceptibility at P0
@@ -872,7 +872,7 @@ describe('K. BS → Vulnerable + Susceptibility → BA → Combo Activation', ()
 
     // Verify Vulnerable I on enemy
     const vulnEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === ENEMY_OWNER_ID
+      ev => ev.ownerId === ENEMY_ID
         && ev.columnId === PHYSICAL_INFLICTION_COLUMNS.VULNERABLE,
     );
     expect(vulnEvents.length).toBeGreaterThanOrEqual(1);
@@ -880,7 +880,7 @@ describe('K. BS → Vulnerable + Susceptibility → BA → Combo Activation', ()
     // Verify Physical Susceptibility on enemy
     const physSuscId = flattenQualifiedId(AdjectiveType.PHYSICAL, NounType.SUSCEPTIBILITY);
     const suscEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === ENEMY_OWNER_ID && ev.columnId === physSuscId,
+      ev => ev.ownerId === ENEMY_ID && ev.columnId === physSuscId,
     );
     expect(suscEvents.length).toBeGreaterThanOrEqual(1);
   });
