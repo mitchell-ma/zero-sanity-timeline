@@ -550,10 +550,6 @@ export class DerivedEventController implements ColumnHost {
       startFrame: triggerFrame,
       sourceEntityId: sourceEntityId,
       sourceSkillName: sourceSkillName,
-      // Combo windows bypass _ingest (intentional — they're markers, not
-      // real events), so we stamp owner fields + causality link inline.
-      ownerSlotId: wiring.slotId,
-      ownerOperatorId: this.slotOperatorMap[wiring.slotId] ?? wiring.slotId,
       comboTriggerColumnId: sourceColumnId,
       triggerEventUid: triggerEventUid,
       triggerStacks: triggerStacks,
@@ -967,63 +963,12 @@ export class DerivedEventController implements ColumnHost {
       this.rawSegmentDurations.set(owned.uid, owned.segments.map(s => s.properties.duration));
     }
 
-    // Phase 1 chainRef backfill: every event entering DEC must have
-    // ownerSlotId + ownerOperatorId populated so readers can trust the
-    // fields without null-checking. Phase 2 will populate them at real
-    // ingress sites; this backfill guarantees the invariant in the meantime.
-    this._backfillOwnerIds(owned);
-
     this.allEvents.push(owned);
     const stackKey = this.key(owned.columnId, owned.ownerEntityId);
     const stackArr = this.stacks.get(stackKey) ?? [];
     stackArr.push(owned);
     this.stacks.set(stackKey, stackArr);
     return owned;
-  }
-
-  /**
-   * Phase 1 backfill: derive `ownerSlotId` / `ownerOperatorId` from whatever
-   * fields the caller already populated. Precedence:
-   *   1. Already-set fields are left alone (Phase 2 call sites populate them directly).
-   *   2. If `ev.ownerEntityId` is a known slot, it's the slot id; operator id
-   *      comes from slotOperatorMap.
-   *   3. Else if `ev.sourceEntityId` is a known slot (legacy stamping), use that.
-   *   4. Else reverse-lookup `ev.sourceEntityId` as an operator id in slotOperatorMap.
-   *   5. Fall back to `ev.ownerEntityId` for both fields (enemy/common events — the
-   *      owner IS the enemy/common sentinel, not a slot).
-   */
-  private _backfillOwnerIds(ev: TimelineEvent): void {
-    if (ev.ownerSlotId && ev.ownerOperatorId) return;
-
-    let slotId: string | undefined;
-    let operatorId: string | undefined;
-
-    if (this.slotOperatorMap[ev.ownerEntityId]) {
-      slotId = ev.ownerEntityId;
-      operatorId = this.slotOperatorMap[ev.ownerEntityId];
-    } else if (ev.sourceEntityId && this.slotOperatorMap[ev.sourceEntityId]) {
-      slotId = ev.sourceEntityId;
-      operatorId = this.slotOperatorMap[ev.sourceEntityId];
-    } else if (ev.sourceEntityId) {
-      // sourceEntityId might be a raw operator id — reverse-lookup to find its slot
-      for (const [sid, opId] of Object.entries(this.slotOperatorMap)) {
-        if (opId === ev.sourceEntityId) { slotId = sid; operatorId = opId; break; }
-      }
-      if (!slotId) {
-        // Unrecognized sourceEntityId (e.g. 'debugger', legacy 'user'): fall
-        // back to ownerEntityId-based derivation so we match the old
-        // resolveRoutedSource semantics rather than letting an unknown string
-        // leak into owner fields.
-        slotId = ev.ownerEntityId;
-        operatorId = ev.ownerEntityId;
-      }
-    } else {
-      slotId = ev.ownerEntityId;
-      operatorId = ev.ownerEntityId;
-    }
-
-    if (!ev.ownerSlotId) ev.ownerSlotId = slotId;
-    if (!ev.ownerOperatorId) ev.ownerOperatorId = operatorId;
   }
 
   /** Expose the causality graph for reader migration in Phase 3. */

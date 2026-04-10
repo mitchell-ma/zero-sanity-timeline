@@ -53,7 +53,6 @@ function linkEvent(startFrame: number, durationFrames: number): TimelineEvent {
     columnId: StatusType.LINK,
     startFrame,
     segments: [{ properties: { duration: durationFrames } }],
-    ownerSlotId: SLOT_LAEVATAIN,
     sourceSkillName: TEST_LINK_SOURCE,
   };
 }

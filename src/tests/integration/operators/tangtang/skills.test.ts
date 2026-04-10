@@ -561,7 +561,7 @@ describe('G. Battle Skill — Waterspout Creation', () => {
     );
     expect(waterspouts.length).toBeGreaterThanOrEqual(1);
     expect(waterspouts[0].sourceSkillName).toBe(BATTLE_SKILL_ID);
-    expect(waterspouts[0].ownerOperatorId).toBe(TANGTANG_ID);
+    expect(waterspouts[0].sourceEntityId).toBe(TANGTANG_ID);
 
     // ── View layer: waterspout in enemy status ──
     const enemyStatusCol = findMatchingColumn(result.current, ENEMY_ID, WATERSPOUT_ID)
@@ -711,7 +711,7 @@ describe('H. Ultimate — OLDEN STARE Application', () => {
     );
     expect(oldenStare.length).toBeGreaterThanOrEqual(1);
     expect(oldenStare[0].sourceSkillName).toBe(ULTIMATE_ID);
-    expect(oldenStare[0].ownerOperatorId).toBe(TANGTANG_ID);
+    expect(oldenStare[0].sourceEntityId).toBe(TANGTANG_ID);
   });
 
   it('H8: EARLY_ROGUE_WAVE sourceSkillName traces to ULTIMATE (not DIVE)', () => {
@@ -733,7 +733,7 @@ describe('H. Ultimate — OLDEN STARE Application', () => {
     expect(earlyWave.length).toBeGreaterThanOrEqual(1);
     // Attributed to ULTIMATE, not BASIC_ATTACK/DIVE
     expect(earlyWave[0].sourceSkillName).toBe(ULTIMATE_ID);
-    expect(earlyWave[0].ownerOperatorId).toBe(TANGTANG_ID);
+    expect(earlyWave[0].sourceEntityId).toBe(TANGTANG_ID);
   });
 
   it('H9: EARLY_ROGUE_WAVE has correct multipliers (atk_scale_3)', () => {
@@ -943,7 +943,7 @@ describe('I. Full Rotation Chain', () => {
 
     // No spurious TangTang-sourced statuses on operator timeline
     const operatorStatuses = result.current.allProcessedEvents.filter(
-      ev => ev.ownerEntityId === SLOT_TANGTANG && ev.ownerOperatorId === TANGTANG_ID
+      ev => ev.ownerEntityId === SLOT_TANGTANG
         && ev.columnId !== NounType.BASIC_ATTACK && ev.columnId !== NounType.BATTLE
         && ev.columnId !== NounType.COMBO && ev.columnId !== NounType.ULTIMATE
         && ev.columnId !== WHIRLPOOL_ID && ev.columnId !== COMBO_WINDOW_COLUMN_ID
@@ -1825,7 +1825,7 @@ describe('Q. Early Rogue Wave — Negative Trigger Tests', () => {
     expect(earlyWave.length).toBeGreaterThanOrEqual(1);
     // EARLY_ROGUE_WAVE is attributed to ULTIMATE (not DIVE/BASIC_ATTACK)
     expect(earlyWave[0].sourceSkillName).toBe(ULTIMATE_ID);
-    expect(earlyWave[0].ownerOperatorId).toBe(TANGTANG_ID);
+    expect(earlyWave[0].sourceEntityId).toBe(TANGTANG_ID);
 
     // ── View layer ──
     const enemyStatusCol = findMatchingColumn(result.current, ENEMY_ID, EARLY_ROGUE_WAVE_ID)

@@ -54,8 +54,6 @@ export class PhysicalStatusColumn implements EventColumn {
     ev.segments = [{ properties: { duration: durationFrames } }];
     ev.sourceEntityId = source.ownerEntityId;
     ev.sourceSkillName = source.skillName;
-    ev.ownerSlotId = source.slotId ?? source.ownerEntityId;
-    ev.ownerOperatorId = source.operatorId ?? source.ownerEntityId;
     if (options?.event) Object.assign(ev, options.event);
 
     this.host.pushEvent(ev);

@@ -112,7 +112,7 @@ describe('Weapon Trigger Firing — Status Applied on Ultimate', () => {
     const statusEvent = afterStatus[0];
     expect(statusEvent.startFrame).toBeGreaterThan(0);
     expect(statusEvent.ownerEntityId).toBe(SLOT_LAEVATAIN);
-    expect(statusEvent.ownerOperatorId).toBe(LAEVATAIN_OPERATOR_ID);
+    expect(statusEvent.sourceEntityId).toBe(LAEVATAIN_OPERATOR_ID);
   });
 
   it('WT3: Weapon status appears in the operator status column view', () => {

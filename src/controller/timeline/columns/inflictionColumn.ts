@@ -71,8 +71,6 @@ export class InflictionColumn implements EventColumn {
           consumed.segments = [{ properties: { duration: 0 } }];
           consumed.sourceEntityId = source.ownerEntityId;
           consumed.sourceSkillName = source.skillName;
-          consumed.ownerSlotId = source.slotId ?? source.ownerEntityId;
-          consumed.ownerOperatorId = source.operatorId ?? source.ownerEntityId;
           consumed.eventStatus = EventStatusType.CONSUMED;
           if (source.sourceEventUid) this.host.linkTransition(consumed.uid, source.sourceEventUid);
           this.host.pushToOutput(consumed);
@@ -103,8 +101,6 @@ export class InflictionColumn implements EventColumn {
     ev.segments = [{ properties: { duration: durationFrames } }];
     ev.sourceEntityId = source.ownerEntityId;
     ev.sourceSkillName = source.skillName;
-    ev.ownerSlotId = source.slotId ?? source.ownerEntityId;
-    ev.ownerOperatorId = source.operatorId ?? source.ownerEntityId;
     if (isArtsBurst) ev.isArtsBurst = true;
 
     this.host.pushEvent(ev);

@@ -47,7 +47,6 @@ function linkStatusEvent(startFrame: number, durationFrames: number): TimelineEv
     columnId: StatusType.LINK,
     startFrame,
     segments: [{ properties: { duration: durationFrames } }],
-    ownerSlotId: SLOT_ID,
     sourceSkillName: 'Test Link Source',
   };
 }

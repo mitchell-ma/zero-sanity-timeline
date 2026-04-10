@@ -119,7 +119,7 @@ export function runEventQueue(
             interpretor.interpret(effect, {
               frame: 0,
               sourceEntityId: talent.operatorId,
-              sourceSlotId: talent.operatorSlotId,
+              contextSlotId: talent.operatorSlotId,
               sourceSkillName: talent.def.properties.id,
             });
           }

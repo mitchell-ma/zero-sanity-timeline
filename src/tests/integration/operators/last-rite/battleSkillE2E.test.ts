@@ -437,14 +437,14 @@ describe('H. Hypothermic Perfusion (Mirage) — pipeline E2E', () => {
     expect(mirages[0].ownerEntityId).toBe(ENEMY_ID);
   });
 
-  it('H6: mirage ownerOperatorId tracks back to Last Rite operator', () => {
+  it('H6: mirage sourceEntityId tracks back to Last Rite operator', () => {
     const { result } = setupLrOnly();
     act(() => { placeBattleSkill(result.current, 2 * FPS); });
     act(() => { placeBasicAttack(result.current, 5 * FPS); });
 
     const mirages = getMirageEvents(result.current);
     expect(mirages.length).toBeGreaterThanOrEqual(1);
-    expect(mirages[0].ownerOperatorId).toBe(LAST_RITE_ID);
+    expect(mirages[0].sourceEntityId).toBe(LAST_RITE_ID);
   });
 
   it('H7: mirage triggers cryo infliction on enemy from its segment frame', () => {

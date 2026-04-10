@@ -263,8 +263,8 @@ function EventPane({
                     if (!sourceUid) return null;
                     const sourceEvent = dec?.getAllEvents().find(e => e.uid === sourceUid);
                     if (!sourceEvent) return null;
-                    const statusSlot = slots.find((s) => s.slotId === (sourceEvent.ownerSlotId ?? sourceEvent.sourceEntityId));
-                    const statusOpName = statusSlot?.operator?.name ?? sourceEvent.ownerOperatorId ?? sourceEvent.sourceEntityId ?? sourceUid;
+                    const statusSlot = slots.find((s) => s.slotId === sourceEvent.ownerEntityId) ?? slots.find((s) => s.slotId === sourceEvent.sourceEntityId);
+                    const statusOpName = statusSlot?.operator?.name ?? sourceEvent.sourceEntityId ?? sourceUid;
                     const statusOpColor = statusSlot?.operator?.color;
                     const statusSkillLabel = sourceEvent.sourceSkillName
                       ? getAllSkillLabels()[sourceEvent.sourceSkillName as string]

@@ -370,7 +370,7 @@ describe('Freeform event source defaults', () => {
       (ev) => ev.id === StatusType.LINK && ev.ownerEntityId === TEAM_ID,
     );
     expect(rawLink).toBeDefined();
-    expect(rawLink!.ownerSlotId).toBeDefined();
+    expect(rawLink!.ownerEntityId).toBeDefined();
     expect(rawLink!.sourceSkillName).toBeDefined();
   });
 });

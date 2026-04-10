@@ -67,8 +67,6 @@ export class ConfigDrivenStatusColumn implements EventColumn {
     ev.segments = [{ properties: { duration: durationFrames } }];
     ev.sourceEntityId = source.ownerEntityId;
     ev.sourceSkillName = source.skillName;
-    ev.ownerSlotId = source.slotId ?? source.ownerEntityId;
-    ev.ownerOperatorId = source.operatorId ?? source.ownerEntityId;
     if (options?.event) Object.assign(ev, options.event);
 
 
@@ -182,8 +180,6 @@ export class ConfigDrivenStatusColumn implements EventColumn {
         ev.segments = [{ properties: { duration: maxRemainingDuration } }];
         ev.sourceEntityId = templateEvent.sourceEntityId;
         ev.sourceSkillName = templateEvent.sourceSkillName;
-        ev.ownerSlotId = templateEvent.ownerSlotId ?? source.slotId ?? source.ownerEntityId;
-        ev.ownerOperatorId = templateEvent.ownerOperatorId ?? source.operatorId ?? source.ownerEntityId;
         ev.stacks = remaining;
         this.host.pushEvent(ev);
       }

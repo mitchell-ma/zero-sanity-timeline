@@ -341,6 +341,10 @@ export function buildDamageTableRows(
     opIdCache.set(slot.slotId, slot.operator.id);
   }
   // Reverse map: operatorId → slotId (for attributing enemy status damage to source operator)
+  const opToSlotCache = new Map<string, string>();
+  opIdCache.forEach((opId, slotId) => {
+    if (opId) opToSlotCache.set(opId, slotId);
+  });
 
   // Build crit expectation models per slot (all modes — needed for stat deltas)
   const critModels = new Map<string, CritExpectationModel>();
@@ -439,15 +443,17 @@ export function buildDamageTableRows(
     // Resolve skill type from the source skill's eventIdType so the damage row shows the
     // correct type (BATTLE_SKILL, not the status column ID).
     let resolvedEntityId = ev.ownerEntityId;
-    if (!col && ev.ownerSlotId && ev.ownerSlotId !== ev.ownerEntityId) {
-      // Use the source skill's column type (look up by sourceSkillName → eventIdType)
-      const sourceSlotId = ev.ownerSlotId;
-      const sourceSkillCol = ev.sourceSkillName
-        ? getSourceSkillColumnId(opIdCache.get(sourceSlotId) ?? '', ev.sourceSkillName)
-        : NounType.BATTLE;
-      col = colLookup.get(`${sourceSlotId}-${sourceSkillCol}`);
-      effectiveColumnId = sourceSkillCol;
-      resolvedEntityId = sourceSlotId;
+    if (!col && ev.sourceEntityId) {
+      // Reverse-lookup: source operator ID → slot ID via opToSlotCache
+      const sourceSlotId = opToSlotCache.get(ev.sourceEntityId);
+      if (sourceSlotId && sourceSlotId !== ev.ownerEntityId) {
+        const sourceSkillCol = ev.sourceSkillName
+          ? getSourceSkillColumnId(ev.sourceEntityId, ev.sourceSkillName)
+          : NounType.BATTLE;
+        col = colLookup.get(`${sourceSlotId}-${sourceSkillCol}`);
+        effectiveColumnId = sourceSkillCol;
+        resolvedEntityId = sourceSlotId;
+      }
     }
     if (!col) continue;
 
