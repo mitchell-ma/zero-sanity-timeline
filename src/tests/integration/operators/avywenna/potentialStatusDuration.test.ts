@@ -124,12 +124,12 @@ describe('B. Combo Thunderlance duration by potential', () => {
     const payload = getMenuPayload(result.current, comboCol!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const thunderlanceEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT && ev.columnId === THUNDERLANCE_STATUS_ID,
+      ev => ev.ownerEntityId === SLOT && ev.columnId === THUNDERLANCE_STATUS_ID,
     );
     expect(thunderlanceEvents.length).toBeGreaterThanOrEqual(1);
     expect(eventDuration(thunderlanceEvents[0])).toBe(BASE_DURATION * FPS);
@@ -142,12 +142,12 @@ describe('B. Combo Thunderlance duration by potential', () => {
     const payload = getMenuPayload(result.current, comboCol!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const thunderlanceEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT && ev.columnId === THUNDERLANCE_STATUS_ID,
+      ev => ev.ownerEntityId === SLOT && ev.columnId === THUNDERLANCE_STATUS_ID,
     );
     expect(thunderlanceEvents.length).toBeGreaterThanOrEqual(1);
     expect(eventDuration(thunderlanceEvents[0])).toBe((BASE_DURATION + P2_BONUS) * FPS);
@@ -160,12 +160,12 @@ describe('B. Combo Thunderlance duration by potential', () => {
     const payload = getMenuPayload(result.current, comboCol!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const thunderlanceEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT && ev.columnId === THUNDERLANCE_STATUS_ID,
+      ev => ev.ownerEntityId === SLOT && ev.columnId === THUNDERLANCE_STATUS_ID,
     );
     expect(thunderlanceEvents.length).toBeGreaterThanOrEqual(1);
     expect(eventDuration(thunderlanceEvents[0])).toBe((BASE_DURATION + P2_BONUS) * FPS);
@@ -185,12 +185,12 @@ describe('C. Ultimate Thunderlance EX duration by potential', () => {
     const payload = getMenuPayload(result.current, ultCol!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const exEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT && ev.columnId === THUNDERLANCE_EX_STATUS_ID,
+      ev => ev.ownerEntityId === SLOT && ev.columnId === THUNDERLANCE_EX_STATUS_ID,
     );
     expect(exEvents.length).toBeGreaterThanOrEqual(1);
     expect(eventDuration(exEvents[0])).toBe(BASE_DURATION * FPS);
@@ -204,12 +204,12 @@ describe('C. Ultimate Thunderlance EX duration by potential', () => {
     const payload = getMenuPayload(result.current, ultCol!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const exEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT && ev.columnId === THUNDERLANCE_EX_STATUS_ID,
+      ev => ev.ownerEntityId === SLOT && ev.columnId === THUNDERLANCE_EX_STATUS_ID,
     );
     expect(exEvents.length).toBeGreaterThanOrEqual(1);
     expect(eventDuration(exEvents[0])).toBe((BASE_DURATION + P2_BONUS) * FPS);
@@ -223,12 +223,12 @@ describe('C. Ultimate Thunderlance EX duration by potential', () => {
     const payload = getMenuPayload(result.current, ultCol!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const exEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT && ev.columnId === THUNDERLANCE_EX_STATUS_ID,
+      ev => ev.ownerEntityId === SLOT && ev.columnId === THUNDERLANCE_EX_STATUS_ID,
     );
     expect(exEvents.length).toBeGreaterThanOrEqual(1);
     expect(eventDuration(exEvents[0])).toBe((BASE_DURATION + P2_BONUS) * FPS);
@@ -250,7 +250,7 @@ describe('D. View layer: Thunderlance duration in presentation', () => {
       const payload = getMenuPayload(result.current, comboCol!, 5 * FPS);
       act(() => {
         result.current.handleAddEvent(
-          payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+          payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
         );
       });
     }
@@ -262,7 +262,7 @@ describe('D. View layer: Thunderlance duration in presentation', () => {
     );
     const statusColP0 = resultP0.current.columns.find(
       c => c.type === ColumnType.MINI_TIMELINE
-        && (c as MiniTimeline).ownerId === SLOT
+        && (c as MiniTimeline).ownerEntityId === SLOT
         && (c as MiniTimeline).columnId === OPERATOR_STATUS_COLUMN_ID,
     );
     expect(statusColP0).toBeDefined();
@@ -278,7 +278,7 @@ describe('D. View layer: Thunderlance duration in presentation', () => {
     );
     const statusColP5 = resultP5.current.columns.find(
       c => c.type === ColumnType.MINI_TIMELINE
-        && (c as MiniTimeline).ownerId === SLOT
+        && (c as MiniTimeline).ownerEntityId === SLOT
         && (c as MiniTimeline).columnId === OPERATOR_STATUS_COLUMN_ID,
     );
     expect(statusColP5).toBeDefined();

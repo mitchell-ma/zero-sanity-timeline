@@ -60,7 +60,7 @@ function addBasicAttack(app: AppResult, atFrame: number) {
   const baCol = findColumn(app, SLOT_ROSSI, NounType.BASIC_ATTACK);
   expect(baCol).toBeDefined();
   const payload = getMenuPayload(app, baCol!, atFrame);
-  app.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+  app.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
 }
 
 function calcForMode(app: AppResult, mode: CritMode) {
@@ -73,7 +73,7 @@ function calcForMode(app: AppResult, mode: CritMode) {
 function getDamageRows(app: AppResult, mode: CritMode) {
   const result = calcForMode(app, mode);
   return result.rows
-    .filter(r => r.damage != null && r.damage > 0 && r.ownerId === SLOT_ROSSI)
+    .filter(r => r.damage != null && r.damage > 0 && r.ownerEntityId === SLOT_ROSSI)
     .sort((a, b) => a.absoluteFrame - b.absoluteFrame);
 }
 

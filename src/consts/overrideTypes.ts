@@ -68,6 +68,6 @@ export interface EventOverride {
 }
 
 // ── The store ────────────────────────────────────────────────────────
-// Keyed by composite key: `${id}:${ownerId}:${columnId}:${startFrame}`
+// Keyed by composite key: `${id}:${ownerEntityId}:${columnId}:${startFrame}`
 
 export type OverrideStore = Record<string, EventOverride>;

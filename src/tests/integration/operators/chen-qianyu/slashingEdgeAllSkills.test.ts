@@ -41,11 +41,11 @@ const SLOT_CHEN = 'slot-0';
  * Find a column by owner whose columnId or matchColumnIds includes the given id.
  * Used for status columns that may collect events via matchColumnIds.
  */
-function findMatchingColumn(app: AppResult, ownerId: string, matchId: string) {
+function findMatchingColumn(app: AppResult, ownerEntityId: string, matchId: string) {
   return app.columns.find(
     (c): c is MiniTimeline =>
       c.type === ColumnType.MINI_TIMELINE &&
-      c.ownerId === ownerId &&
+      c.ownerEntityId === ownerEntityId &&
       (c.columnId === matchId || (c.matchColumnIds?.includes(matchId) ?? false)),
   );
 }
@@ -74,14 +74,14 @@ describe('Chen Qianyu — Slashing Edge from combo skill', () => {
     const bs1Payload = getMenuPayload(result.current, battleCol!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        bs1Payload.ownerId, bs1Payload.columnId, bs1Payload.atFrame, bs1Payload.defaultSkill,
+        bs1Payload.ownerEntityId, bs1Payload.columnId, bs1Payload.atFrame, bs1Payload.defaultSkill,
       );
     });
 
     const bs2Payload = getMenuPayload(result.current, battleCol!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        bs2Payload.ownerId, bs2Payload.columnId, bs2Payload.atFrame, bs2Payload.defaultSkill,
+        bs2Payload.ownerEntityId, bs2Payload.columnId, bs2Payload.atFrame, bs2Payload.defaultSkill,
       );
     });
 
@@ -97,7 +97,7 @@ describe('Chen Qianyu — Slashing Edge from combo skill', () => {
     const comboPayload = getMenuPayload(result.current, comboCol!, 10 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        comboPayload.ownerId, comboPayload.columnId, comboPayload.atFrame, comboPayload.defaultSkill,
+        comboPayload.ownerEntityId, comboPayload.columnId, comboPayload.atFrame, comboPayload.defaultSkill,
       );
     });
 
@@ -114,7 +114,7 @@ describe('Chen Qianyu — Slashing Edge from combo skill', () => {
     const vm = viewModels.get(statusCol!.key);
     expect(vm).toBeDefined();
     const seInVM = vm!.events.filter(
-      (ev) => ev.columnId === SLASHING_EDGE_ID && ev.ownerId === SLOT_CHEN
+      (ev) => ev.columnId === SLASHING_EDGE_ID && ev.ownerEntityId === SLOT_CHEN
         && ev.eventStatus !== EventStatusType.CONSUMED && ev.eventStatus !== EventStatusType.REFRESHED,
     );
     // At least 1 active stack from the combo skill (BS stacks may have been refreshed)
@@ -151,7 +151,7 @@ describe('Chen Qianyu — Slashing Edge from ultimate', () => {
     const ultPayload = getMenuPayload(result.current, ultCol!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        ultPayload.ownerId, ultPayload.columnId, ultPayload.atFrame, ultPayload.defaultSkill,
+        ultPayload.ownerEntityId, ultPayload.columnId, ultPayload.atFrame, ultPayload.defaultSkill,
       );
     });
 
@@ -168,7 +168,7 @@ describe('Chen Qianyu — Slashing Edge from ultimate', () => {
     const vm = viewModels.get(statusCol!.key);
     expect(vm).toBeDefined();
     const seInVM = vm!.events.filter(
-      (ev) => ev.columnId === SLASHING_EDGE_ID && ev.ownerId === SLOT_CHEN
+      (ev) => ev.columnId === SLASHING_EDGE_ID && ev.ownerEntityId === SLOT_CHEN
         && ev.eventStatus !== EventStatusType.CONSUMED && ev.eventStatus !== EventStatusType.REFRESHED,
     );
     expect(seInVM.length).toBeGreaterThanOrEqual(1);
@@ -199,7 +199,7 @@ describe('Chen Qianyu — Slashing Edge mixed rotation', () => {
     const bs1Payload = getMenuPayload(result.current, battleCol!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        bs1Payload.ownerId, bs1Payload.columnId, bs1Payload.atFrame, bs1Payload.defaultSkill,
+        bs1Payload.ownerEntityId, bs1Payload.columnId, bs1Payload.atFrame, bs1Payload.defaultSkill,
       );
     });
 
@@ -207,7 +207,7 @@ describe('Chen Qianyu — Slashing Edge mixed rotation', () => {
     const bs2Payload = getMenuPayload(result.current, battleCol!, 4 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        bs2Payload.ownerId, bs2Payload.columnId, bs2Payload.atFrame, bs2Payload.defaultSkill,
+        bs2Payload.ownerEntityId, bs2Payload.columnId, bs2Payload.atFrame, bs2Payload.defaultSkill,
       );
     });
 
@@ -218,7 +218,7 @@ describe('Chen Qianyu — Slashing Edge mixed rotation', () => {
     const comboPayload = getMenuPayload(result.current, comboCol!, 7 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        comboPayload.ownerId, comboPayload.columnId, comboPayload.atFrame, comboPayload.defaultSkill,
+        comboPayload.ownerEntityId, comboPayload.columnId, comboPayload.atFrame, comboPayload.defaultSkill,
       );
     });
 
@@ -229,7 +229,7 @@ describe('Chen Qianyu — Slashing Edge mixed rotation', () => {
     const ultPayload = getMenuPayload(result.current, ultCol!, 9 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        ultPayload.ownerId, ultPayload.columnId, ultPayload.atFrame, ultPayload.defaultSkill,
+        ultPayload.ownerEntityId, ultPayload.columnId, ultPayload.atFrame, ultPayload.defaultSkill,
       );
     });
 
@@ -250,7 +250,7 @@ describe('Chen Qianyu — Slashing Edge mixed rotation', () => {
     // Combo at t=7s → expires t=17s, Ult at t=9s ��� expires t=19s
     // Check at t=10s: all 4 should be active
     const allSE = vm!.events.filter(
-      (ev) => ev.columnId === SLASHING_EDGE_ID && ev.ownerId === SLOT_CHEN,
+      (ev) => ev.columnId === SLASHING_EDGE_ID && ev.ownerEntityId === SLOT_CHEN,
     );
     const checkFrame = 10 * FPS;
     const activeAtCheck = allSE.filter((ev) => {
@@ -292,14 +292,14 @@ describe('Chen Qianyu — Slashing Edge duration RESET', () => {
       const payload = getMenuPayload(result.current, battleCol!, (1 + i) * FPS);
       act(() => {
         result.current.handleAddEvent(
-          payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+          payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
         );
       });
     }
 
     // Controller layer: check processed events for Slashing Edge
     const seEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === SLASHING_EDGE_ID && ev.ownerId === SLOT_CHEN,
+      (ev) => ev.columnId === SLASHING_EDGE_ID && ev.ownerEntityId === SLOT_CHEN,
     );
     // Should have 5 events (one per BS)
     expect(seEvents.length).toBeGreaterThanOrEqual(5);

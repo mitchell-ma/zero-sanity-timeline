@@ -36,12 +36,12 @@ jest.mock('../../consts/gearSetEffects', () => ({
   getGearSetEffects: () => undefined,
 }));
 
-function miniTimeline(key: string, ownerId: string, columnId: string, label: string, opts?: { derived?: boolean }): Column {
+function miniTimeline(key: string, ownerEntityId: string, columnId: string, label: string, opts?: { derived?: boolean }): Column {
   return {
     key,
     type: ColumnType.MINI_TIMELINE,
     source: TimelineSourceType.OPERATOR,
-    ownerId,
+    ownerEntityId,
     columnId,
     label,
     color: '#fff',
@@ -50,13 +50,13 @@ function miniTimeline(key: string, ownerId: string, columnId: string, label: str
   } as MiniTimeline;
 }
 
-function row(key: string, absoluteFrame: number, columnKey: string, ownerId: string, damage: number | null): DamageTableRow {
+function row(key: string, absoluteFrame: number, columnKey: string, ownerEntityId: string, damage: number | null): DamageTableRow {
   return {
     key,
     absoluteFrame,
     label: `test-${key}`,
     columnKey,
-    ownerId,
+    ownerEntityId,
     columnId: 'basic',
     eventUid: `ev-${key}`,
     segmentIndex: 0,
@@ -197,9 +197,9 @@ describe('mergeRowsByFrame', () => {
 describe('buildCollapsedColumns', () => {
   it('creates one column per operator', () => {
     const tableColumns = [
-      { key: 's1-basic', label: 'BASIC', ownerId: 'slot1', columnId: 'basic', color: '#f00' },
-      { key: 's1-battle', label: 'BATTLE', ownerId: 'slot1', columnId: 'battle', color: '#f00' },
-      { key: 's2-basic', label: 'BASIC', ownerId: 'slot2', columnId: 'basic', color: '#0f0' },
+      { key: 's1-basic', label: 'BASIC', ownerEntityId: 'slot1', columnId: 'basic', color: '#f00' },
+      { key: 's1-battle', label: 'BATTLE', ownerEntityId: 'slot1', columnId: 'battle', color: '#f00' },
+      { key: 's2-basic', label: 'BASIC', ownerEntityId: 'slot2', columnId: 'basic', color: '#0f0' },
     ];
     const slots = [
       { slotId: 'slot1', operator: { id: 'LAEVATAIN', name: 'Laevatain', color: '#f00' } },
@@ -216,8 +216,8 @@ describe('buildCollapsedColumns', () => {
 
   it('preserves slot order', () => {
     const tableColumns = [
-      { key: 's2-basic', label: 'BASIC', ownerId: 'slot2', columnId: 'basic', color: '#0f0' },
-      { key: 's1-basic', label: 'BASIC', ownerId: 'slot1', columnId: 'basic', color: '#f00' },
+      { key: 's2-basic', label: 'BASIC', ownerEntityId: 'slot2', columnId: 'basic', color: '#0f0' },
+      { key: 's1-basic', label: 'BASIC', ownerEntityId: 'slot1', columnId: 'basic', color: '#f00' },
     ];
     const slots = [
       { slotId: 'slot1', operator: { id: 'LAEVATAIN', name: 'Laevatain', color: '#f00' } },
@@ -226,8 +226,8 @@ describe('buildCollapsedColumns', () => {
 
     const collapsed = buildCollapsedColumns(tableColumns, slots);
     // Column order follows iteration order of tableColumns (slot2 appears first)
-    expect(collapsed[0].ownerId).toBe('slot2');
-    expect(collapsed[1].ownerId).toBe('slot1');
+    expect(collapsed[0].ownerEntityId).toBe('slot2');
+    expect(collapsed[1].ownerEntityId).toBe('slot1');
   });
 
   it('returns empty for no columns', () => {

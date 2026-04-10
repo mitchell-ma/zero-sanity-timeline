@@ -51,7 +51,7 @@ function addUlt(app: AppResult, atFrame: number) {
   const col = findColumn(app, SLOT, NounType.ULTIMATE);
   const payload = getMenuPayload(app, col!, atFrame);
   act(() => {
-    app.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+    app.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
   });
 }
 
@@ -142,7 +142,7 @@ describe('D. Pipeline placement and EBATK gating', () => {
     addUlt(result.current, 5 * FPS);
 
     const ults = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT && ev.columnId === NounType.ULTIMATE,
+      ev => ev.ownerEntityId === SLOT && ev.columnId === NounType.ULTIMATE,
     );
     expect(ults).toHaveLength(1);
     expect(ults[0].name).toBe(ULT_ID);
@@ -153,7 +153,7 @@ describe('D. Pipeline placement and EBATK gating', () => {
     addUlt(result.current, 5 * FPS);
 
     const ult = result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT && ev.columnId === NounType.ULTIMATE,
+      ev => ev.ownerEntityId === SLOT && ev.columnId === NounType.ULTIMATE,
     )!;
     expect(ult.segments).toHaveLength(2);
   });
@@ -213,14 +213,14 @@ describe('D. Pipeline placement and EBATK gating', () => {
         && (i.actionPayload as { defaultSkill?: { id?: string } })?.defaultSkill?.id === EBATK_ID,
     )!;
     const payload = ebatkItem.actionPayload as {
-      ownerId: string; columnId: string; atFrame: number; defaultSkill: Record<string, unknown>;
+      ownerEntityId: string; columnId: string; atFrame: number; defaultSkill: Record<string, unknown>;
     };
     act(() => {
-      result.current.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+      result.current.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
     });
 
     const ebatk = result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT && ev.columnId === NounType.BASIC_ATTACK && ev.id === EBATK_ID,
+      ev => ev.ownerEntityId === SLOT && ev.columnId === NounType.BASIC_ATTACK && ev.id === EBATK_ID,
     );
     expect(ebatk).toBeDefined();
     expect(ebatk!.eventStatus).toBe(EventStatusType.CONSUMED);
@@ -247,14 +247,14 @@ describe('D. Pipeline placement and EBATK gating', () => {
     expect(ebatkItem).toBeDefined();
 
     const payload = ebatkItem!.actionPayload as {
-      ownerId: string; columnId: string; atFrame: number; defaultSkill: Record<string, unknown>;
+      ownerEntityId: string; columnId: string; atFrame: number; defaultSkill: Record<string, unknown>;
     };
     act(() => {
-      result.current.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+      result.current.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
     });
 
     const ebatk = result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT && ev.columnId === NounType.BASIC_ATTACK && ev.id === EBATK_ID,
+      ev => ev.ownerEntityId === SLOT && ev.columnId === NounType.BASIC_ATTACK && ev.id === EBATK_ID,
     );
     expect(ebatk).toBeDefined();
     const totalDuration = ebatk!.segments.reduce(

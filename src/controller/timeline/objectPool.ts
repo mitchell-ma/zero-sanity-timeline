@@ -11,7 +11,7 @@ import type { QueueFrame } from './eventQueueTypes';
 // ── TimelineEvent allocation ───────────────────────────────────────────────
 
 const EVENT_DEFAULTS: TimelineEvent = {
-  uid: '', id: '', name: '', ownerId: '', columnId: '',
+  uid: '', id: '', name: '', ownerEntityId: '', columnId: '',
   startFrame: 0, segments: [],
 };
 
@@ -30,8 +30,8 @@ export function allocDerivedEvent(): TimelineEvent {
 export function allocQueueFrame(): QueueFrame {
   return {
     frame: 0, priority: 0, type: QueueFrameType.PROCESS_FRAME,
-    statusId: '', columnId: '', ownerId: '',
-    sourceOwnerId: '', sourceSkillName: '',
+    statusId: '', columnId: '', ownerEntityId: '',
+    sourceEntityId: '', sourceSkillName: '',
     maxStacks: 0, durationFrames: 0, operatorSlotId: '',
   };
 }

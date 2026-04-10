@@ -45,7 +45,7 @@ function findAnyOperatorColumn(app: AppResult, slotId: string) {
   return app.columns.find(
     (c): c is MiniTimeline =>
       c.type === ColumnType.MINI_TIMELINE &&
-      c.ownerId === slotId &&
+      c.ownerEntityId === slotId &&
       c.columnId === NounType.BASIC_ATTACK,
   );
 }
@@ -97,12 +97,12 @@ describe('Control status × time-stop — integration through useApp', () => {
 
       const comboPayload = getMenuPayload(result.current, comboCol!, 0);
       act(() => {
-        result.current.handleAddEvent(comboPayload.ownerId, comboPayload.columnId, comboPayload.atFrame, comboPayload.defaultSkill);
+        result.current.handleAddEvent(comboPayload.ownerEntityId, comboPayload.columnId, comboPayload.atFrame, comboPayload.defaultSkill);
       });
 
       // Verify combo has animation duration (i.e. creates a time-stop)
       const comboEvent = result.current.allProcessedEvents.find(
-        (ev) => ev.ownerId === SLOT_0 && ev.columnId === NounType.COMBO,
+        (ev) => ev.ownerEntityId === SLOT_0 && ev.columnId === NounType.COMBO,
       )!;
       const animDur = getAnimationDuration(comboEvent);
       expect(animDur).toBeGreaterThan(0);
@@ -111,20 +111,20 @@ describe('Control status × time-stop — integration through useApp', () => {
       const controlPayload = getControlPayload(result.current, SLOT_1, 0);
       act(() => {
         result.current.handleAddEvent(
-          controlPayload.ownerId, controlPayload.columnId, controlPayload.atFrame, controlPayload.defaultSkill,
+          controlPayload.ownerEntityId, controlPayload.columnId, controlPayload.atFrame, controlPayload.defaultSkill,
         );
       });
 
       // Controller layer: slot-1 control event should NOT be extended by the combo time-stop
       const slot1Control = getControlEvents(result.current).find(
-        (ev) => ev.ownerId === SLOT_1,
+        (ev) => ev.ownerEntityId === SLOT_1,
       )!;
       expect(slot1Control).toBeDefined();
       expect(eventDuration(slot1Control)).toBe(TOTAL_FRAMES);
 
       // View layer: verify control events in ColumnViewModel
       const vmControls = getControlEventsFromVM(result.current);
-      const vmSlot1 = vmControls.find(ev => ev.ownerId === SLOT_1);
+      const vmSlot1 = vmControls.find(ev => ev.ownerEntityId === SLOT_1);
       expect(vmSlot1).toBeDefined();
       expect(eventDuration(vmSlot1!)).toBe(TOTAL_FRAMES);
     });
@@ -140,11 +140,11 @@ describe('Control status × time-stop — integration through useApp', () => {
       const ultFrame = 2 * FPS;
       const ultPayload = getMenuPayload(result.current, ultCol, ultFrame);
       act(() => {
-        result.current.handleAddEvent(ultPayload.ownerId, ultPayload.columnId, ultPayload.atFrame, ultPayload.defaultSkill);
+        result.current.handleAddEvent(ultPayload.ownerEntityId, ultPayload.columnId, ultPayload.atFrame, ultPayload.defaultSkill);
       });
 
       const ultEvent = result.current.allProcessedEvents.find(
-        (ev) => ev.ownerId === SLOT_0 && ev.columnId === NounType.ULTIMATE,
+        (ev) => ev.ownerEntityId === SLOT_0 && ev.columnId === NounType.ULTIMATE,
       )!;
       const ultAnim = getAnimationDuration(ultEvent);
       expect(ultAnim).toBeGreaterThan(0);
@@ -154,14 +154,14 @@ describe('Control status × time-stop — integration through useApp', () => {
       const controlPayload = getControlPayload(result.current, SLOT_1, swapFrame);
       act(() => {
         result.current.handleAddEvent(
-          controlPayload.ownerId, controlPayload.columnId, controlPayload.atFrame, controlPayload.defaultSkill,
+          controlPayload.ownerEntityId, controlPayload.columnId, controlPayload.atFrame, controlPayload.defaultSkill,
         );
       });
 
       // Controller layer: control event should NOT be extended
       const rawDuration = TOTAL_FRAMES - swapFrame;
       const slot1Control = getControlEvents(result.current).find(
-        (ev) => ev.ownerId === SLOT_1,
+        (ev) => ev.ownerEntityId === SLOT_1,
       )!;
       expect(slot1Control).toBeDefined();
       expect(eventDuration(slot1Control)).toBe(rawDuration);
@@ -179,11 +179,11 @@ describe('Control status × time-stop — integration through useApp', () => {
 
       const comboPayload = getMenuPayload(result.current, comboCol!, 0);
       act(() => {
-        result.current.handleAddEvent(comboPayload.ownerId, comboPayload.columnId, comboPayload.atFrame, comboPayload.defaultSkill);
+        result.current.handleAddEvent(comboPayload.ownerEntityId, comboPayload.columnId, comboPayload.atFrame, comboPayload.defaultSkill);
       });
 
       const comboEvent = result.current.allProcessedEvents.find(
-        (ev) => ev.ownerId === SLOT_0 && ev.columnId === NounType.COMBO,
+        (ev) => ev.ownerEntityId === SLOT_0 && ev.columnId === NounType.COMBO,
       )!;
       const animDur = getAnimationDuration(comboEvent);
       expect(animDur).toBeGreaterThan(0);
@@ -201,13 +201,13 @@ describe('Control status × time-stop — integration through useApp', () => {
       const controlPayload = controlItem!.actionPayload as AddEventPayload;
       act(() => {
         result.current.handleAddEvent(
-          controlPayload.ownerId, controlPayload.columnId, swapFrame, controlPayload.defaultSkill,
+          controlPayload.ownerEntityId, controlPayload.columnId, swapFrame, controlPayload.defaultSkill,
         );
       });
 
       // Controller layer: the control event should have a time-stop warning
       const slot1Control = result.current.allProcessedEvents.find(
-        (ev) => ev.id === NounType.CONTROL && ev.ownerId === SLOT_1,
+        (ev) => ev.id === NounType.CONTROL && ev.ownerEntityId === SLOT_1,
       )!;
       expect(slot1Control).toBeDefined();
       expect(slot1Control.warnings).toBeDefined();
@@ -227,11 +227,11 @@ describe('Control status × time-stop — integration through useApp', () => {
       const ultFrame = 3 * FPS;
       const ultPayload = getMenuPayload(result.current, ultCol, ultFrame);
       act(() => {
-        result.current.handleAddEvent(ultPayload.ownerId, ultPayload.columnId, ultPayload.atFrame, ultPayload.defaultSkill);
+        result.current.handleAddEvent(ultPayload.ownerEntityId, ultPayload.columnId, ultPayload.atFrame, ultPayload.defaultSkill);
       });
 
       const ultEvent = result.current.allProcessedEvents.find(
-        (ev) => ev.ownerId === SLOT_0 && ev.columnId === NounType.ULTIMATE,
+        (ev) => ev.ownerEntityId === SLOT_0 && ev.columnId === NounType.ULTIMATE,
       )!;
       const ultAnim = getAnimationDuration(ultEvent);
       expect(ultAnim).toBeGreaterThan(0);
@@ -241,13 +241,13 @@ describe('Control status × time-stop — integration through useApp', () => {
       const controlPayload = getControlPayload(result.current, SLOT_1, initialFrame);
       act(() => {
         result.current.handleAddEvent(
-          controlPayload.ownerId, controlPayload.columnId, controlPayload.atFrame, controlPayload.defaultSkill,
+          controlPayload.ownerEntityId, controlPayload.columnId, controlPayload.atFrame, controlPayload.defaultSkill,
         );
       });
 
       // Find the raw control event uid
       const slot1Control = result.current.allProcessedEvents.find(
-        (ev) => ev.id === NounType.CONTROL && ev.ownerId === SLOT_1
+        (ev) => ev.id === NounType.CONTROL && ev.ownerEntityId === SLOT_1
           && !ev.uid.startsWith('controlled-seed-'),
       )!;
       expect(slot1Control).toBeDefined();
@@ -279,7 +279,7 @@ describe('Control status × time-stop — integration through useApp', () => {
       const dodgeFrame = 3 * FPS;
       const dodgePayload = getMenuPayload(result.current, inputCol!, dodgeFrame, 'Dodge');
       act(() => {
-        result.current.handleAddEvent(dodgePayload.ownerId, dodgePayload.columnId, dodgePayload.atFrame, dodgePayload.defaultSkill);
+        result.current.handleAddEvent(dodgePayload.ownerEntityId, dodgePayload.columnId, dodgePayload.atFrame, dodgePayload.defaultSkill);
       });
 
       // Context menu layer: set slot-1 as controlled operator at 1s (before the dodge)
@@ -287,12 +287,12 @@ describe('Control status × time-stop — integration through useApp', () => {
       const controlPayload = getControlPayload(result.current, SLOT_1, initialFrame);
       act(() => {
         result.current.handleAddEvent(
-          controlPayload.ownerId, controlPayload.columnId, controlPayload.atFrame, controlPayload.defaultSkill,
+          controlPayload.ownerEntityId, controlPayload.columnId, controlPayload.atFrame, controlPayload.defaultSkill,
         );
       });
 
       const slot1Control = result.current.allProcessedEvents.find(
-        (ev) => ev.id === NounType.CONTROL && ev.ownerId === SLOT_1
+        (ev) => ev.id === NounType.CONTROL && ev.ownerEntityId === SLOT_1
           && !ev.uid.startsWith('controlled-seed-'),
       )!;
       expect(slot1Control).toBeDefined();

@@ -486,7 +486,7 @@ describe('G. Cooldown Interactions', () => {
     return {
       id: overrides.name ?? '',
       name: '',
-      ownerId: SLOT_ID,
+      ownerEntityId: SLOT_ID,
       segments: [{ properties: { duration: 0 } }],
       ...overrides,
     };
@@ -576,7 +576,7 @@ describe('G. Cooldown Interactions', () => {
   test('G6: Different owners can use combo at the same time (no cross-slot cooldown)', () => {
     const cs1 = makeEvent({
       uid: 'cs-1',
-      ownerId: 'slot-0',
+      ownerEntityId: 'slot-0',
       columnId: NounType.COMBO,
       startFrame: 0,
       segments: [{ properties: { duration: 152 } }],

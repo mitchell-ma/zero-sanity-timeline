@@ -93,7 +93,7 @@ function buildBaseParams(
   element: ElementType,
   statusQuery?: EventsQueryService,
   frame?: number,
-  sourceOwnerId?: string,
+  sourceEntityId?: string,
 ): Omit<StatusDamageParams, 'statusBaseMultiplier'> {
   return {
     attack: opCtx.totalAttack,
@@ -107,8 +107,8 @@ function buildBaseParams(
         if (corrosionReduction > 0) {
           res += corrosionReduction / 100;
         }
-        if (sourceOwnerId) {
-          const ignoredRes = statusQuery.getIgnoredResistance(frame, element, sourceOwnerId);
+        if (sourceEntityId) {
+          const ignoredRes = statusQuery.getIgnoredResistance(frame, element, sourceEntityId);
           if (ignoredRes > 0) {
             res += ignoredRes / 100;
           }
@@ -155,7 +155,7 @@ function buildInitialTick(
 
   const stackCount = reactionEvent.stacks ?? 1;
   const initialMultiplier = getArtsReactionBaseMultiplier(stackCount);
-  const base = buildBaseParams(opCtx, modelEnemy, element, statusQuery, reactionEvent.startFrame, reactionEvent.sourceOwnerId);
+  const base = buildBaseParams(opCtx, modelEnemy, element, statusQuery, reactionEvent.startFrame, reactionEvent.sourceEntityId);
   const params: StatusDamageParams = { ...base, statusBaseMultiplier: initialMultiplier };
   return {
     absoluteFrame: reactionEvent.startFrame,
@@ -192,7 +192,7 @@ export function computeCombustionDamage(
     const reactionEndFrame = eventEndFrame(reactionEvent);
     if (tickFrame > reactionEndFrame) break;
 
-    const dotBase = buildBaseParams(opCtx, modelEnemy, element, statusQuery, tickFrame, reactionEvent.sourceOwnerId);
+    const dotBase = buildBaseParams(opCtx, modelEnemy, element, statusQuery, tickFrame, reactionEvent.sourceEntityId);
     const dotParams: StatusDamageParams = { ...dotBase, statusBaseMultiplier: dotMultiplier };
     ticks.push({
       absoluteFrame: tickFrame,
@@ -230,7 +230,7 @@ export function computeSolidificationDamage(
 /**
  * Shatter: single physical damage tick at frame 0.
  * Multiplier = 120% + 120% per solidification stack level (240%/360%/480%/600%).
- * Uses the trigger operator's stats (sourceOwnerId on the shatter event).
+ * Uses the trigger operator's stats (sourceEntityId on the shatter event).
  */
 export function computeShatterDamage(
   reactionEvent: TimelineEvent,
@@ -241,7 +241,7 @@ export function computeShatterDamage(
   const element = REACTION_ELEMENT[reactionEvent.columnId] ?? ElementType.PHYSICAL;
   const stacks = getStacks(reactionEvent);
   const shatterMultiplier = getShatterBaseMultiplier(stacks);
-  const base = buildBaseParams(opCtx, modelEnemy, element, statusQuery, reactionEvent.startFrame, reactionEvent.sourceOwnerId);
+  const base = buildBaseParams(opCtx, modelEnemy, element, statusQuery, reactionEvent.startFrame, reactionEvent.sourceEntityId);
   const params: StatusDamageParams = { ...base, statusBaseMultiplier: shatterMultiplier };
   return [{
     absoluteFrame: reactionEvent.startFrame,
@@ -331,7 +331,7 @@ export function buildReactionDamageRows(
     absoluteFrame: tick.absoluteFrame,
     label: tick.label,
     columnKey,
-    ownerId: reactionEvent.sourceOwnerId ?? reactionEvent.ownerId,
+    ownerEntityId: reactionEvent.sourceEntityId ?? reactionEvent.ownerEntityId,
     columnId: reactionEvent.columnId,
     eventUid: reactionEvent.uid,
     segmentIndex: 0,

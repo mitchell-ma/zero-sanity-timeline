@@ -696,7 +696,7 @@ describe('I. Cooldown Interactions', () => {
   const SLOT_ID = 'slot-0';
 
   function makeEvent(overrides: Partial<TimelineEvent> & { uid: string; columnId: string; startFrame: number }): TimelineEvent {
-    return { id: overrides.name ?? '', name: '', ownerId: SLOT_ID, segments: [{ properties: { duration: 0 } }], ...overrides };
+    return { id: overrides.name ?? '', name: '', ownerEntityId: SLOT_ID, segments: [{ properties: { duration: 0 } }], ...overrides };
   }
 
   test('I1: Basic attack (Rapid Fire Akimbo) has no cooldown', () => {

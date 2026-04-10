@@ -20,11 +20,11 @@ function mkEvent(partial: Partial<TimelineEvent> & { uid: string; startFrame: nu
     uid: partial.uid,
     id: partial.id ?? 'TEST',
     name: partial.name ?? 'TEST',
-    ownerId: partial.ownerId ?? 'slot-1',
+    ownerEntityId: partial.ownerEntityId ?? 'slot-1',
     columnId: partial.columnId ?? NounType.BATTLE,
     startFrame: partial.startFrame,
     segments: partial.segments ?? [{ properties: { duration: 60 } }],
-    sourceOwnerId: partial.sourceOwnerId,
+    sourceEntityId: partial.sourceEntityId,
     sourceSkillName: partial.sourceSkillName,
   } as TimelineEvent;
 }
@@ -106,12 +106,12 @@ describe('clampPriorControlEvents', () => {
   test('clamps earlier CONTROL on different owner', () => {
     const prev = mkEvent({
       uid: 'p', startFrame: 0, id: NounType.CONTROL, columnId: OPERATOR_COLUMNS.INPUT,
-      ownerId: 'slot-1', segments: [{ properties: { duration: 600 } }],
+      ownerEntityId: 'slot-1', segments: [{ properties: { duration: 600 } }],
     });
     const registered = [prev];
     const ev = mkEvent({
       uid: 'n', startFrame: 100, id: NounType.CONTROL, columnId: OPERATOR_COLUMNS.INPUT,
-      ownerId: 'slot-2',
+      ownerEntityId: 'slot-2',
     });
     clampPriorControlEvents(ev, registered);
     expect(registered[0].segments[0].properties.duration).toBe(100);
@@ -120,12 +120,12 @@ describe('clampPriorControlEvents', () => {
   test('does not clamp same-owner CONTROL', () => {
     const prev = mkEvent({
       uid: 'p', startFrame: 0, id: NounType.CONTROL, columnId: OPERATOR_COLUMNS.INPUT,
-      ownerId: 'slot-1', segments: [{ properties: { duration: 600 } }],
+      ownerEntityId: 'slot-1', segments: [{ properties: { duration: 600 } }],
     });
     const registered = [prev];
     const ev = mkEvent({
       uid: 'n', startFrame: 100, id: NounType.CONTROL, columnId: OPERATOR_COLUMNS.INPUT,
-      ownerId: 'slot-1',
+      ownerEntityId: 'slot-1',
     });
     clampPriorControlEvents(ev, registered);
     expect(registered[0].segments[0].properties.duration).toBe(600);
@@ -134,7 +134,7 @@ describe('clampPriorControlEvents', () => {
   test('no-op for non-CONTROL events', () => {
     const prev = mkEvent({
       uid: 'p', startFrame: 0, id: NounType.CONTROL, columnId: OPERATOR_COLUMNS.INPUT,
-      ownerId: 'slot-1', segments: [{ properties: { duration: 600 } }],
+      ownerEntityId: 'slot-1', segments: [{ properties: { duration: 600 } }],
     });
     const registered = [prev];
     const ev = mkEvent({ uid: 'n', startFrame: 100 });

@@ -66,7 +66,7 @@ export interface TimeStopRegion {
   startFrame: number;
   /** Duration of the time-stop in frames. */
   durationFrames: number;
-  ownerId: string;
+  ownerEntityId: string;
   sourceColumnId: string;
 }
 
@@ -86,7 +86,7 @@ interface RawTimeStop {
   startFrame: number;
   durationFrames: number;
   eventUid: string;
-  ownerId: string;
+  ownerEntityId: string;
   sourceColumnId: string;
 }
 
@@ -104,7 +104,7 @@ function collectRawStops(events: TimelineEvent[]): RawTimeStop[] {
       startFrame: ev.startFrame,
       durationFrames: anim,
       eventUid: ev.uid,
-      ownerId: ev.ownerId,
+      ownerEntityId: ev.ownerEntityId,
       sourceColumnId: ev.columnId,
     });
   }
@@ -196,7 +196,7 @@ export function buildTimelineLayout(events: TimelineEvent[]): TimelineLayout {
   const timeStopRegions: TimeStopRegion[] = allStops.map((s) => ({
     startFrame: s.startFrame,
     durationFrames: s.durationFrames,
-    ownerId: s.ownerId,
+    ownerEntityId: s.ownerEntityId,
     sourceColumnId: s.sourceColumnId,
   }));
 

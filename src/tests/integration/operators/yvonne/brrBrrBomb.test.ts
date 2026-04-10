@@ -289,12 +289,12 @@ describe('G. Pipeline placement', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const bs = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT && ev.columnId === NounType.BATTLE,
+      ev => ev.ownerEntityId === SLOT && ev.columnId === NounType.BATTLE,
     );
     expect(bs).toHaveLength(1);
     expect(bs[0].name).toBe(BS_ID);
@@ -306,12 +306,12 @@ describe('G. Pipeline placement', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const bs = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT && ev.columnId === NounType.BATTLE,
+      ev => ev.ownerEntityId === SLOT && ev.columnId === NounType.BATTLE,
     );
     expect(bs[0].segments).toHaveLength(1);
   });
@@ -322,12 +322,12 @@ describe('G. Pipeline placement', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const bs = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT && ev.columnId === NounType.BATTLE,
+      ev => ev.ownerEntityId === SLOT && ev.columnId === NounType.BATTLE,
     );
     expect(bs[0].segments[0].properties.duration).toBe(Math.round(1.13 * FPS));
   });
@@ -370,12 +370,12 @@ describe('H. P4 SINGLE_TARGET supplied parameter', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const bs = result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT && ev.columnId === NounType.BATTLE,
+      ev => ev.ownerEntityId === SLOT && ev.columnId === NounType.BATTLE,
     );
     expect(bs).toBeDefined();
     expect(bs!.suppliedParameters).toBeDefined();

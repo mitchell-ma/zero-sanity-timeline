@@ -42,7 +42,7 @@ function addBattleSkills(app: AppResult, count: number, startAt: number, spacing
     const payload = getMenuPayload(app, col!, atFrame);
     act(() => {
       app.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
   }
@@ -59,14 +59,14 @@ function addEmpoweredBattleSkill(app: AppResult, atSecond: number) {
   const payload = getMenuPayload(app, col!, atFrame, empoweredVariant!.displayName);
   act(() => {
     app.handleAddEvent(
-      payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+      payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
     );
   });
 }
 
 function getMfEvents(app: AppResult) {
   return app.allProcessedEvents.filter(
-    (ev) => ev.columnId === MELTING_FLAME_ID && ev.ownerId === SLOT_LAEVATAIN,
+    (ev) => ev.columnId === MELTING_FLAME_ID && ev.ownerEntityId === SLOT_LAEVATAIN,
   );
 }
 
@@ -76,7 +76,7 @@ function getActiveMfEvents(app: AppResult) {
 
 function getShEvents(app: AppResult) {
   return app.allProcessedEvents.filter(
-    (ev) => ev.columnId === SH_COLUMN && ev.ownerId === SLOT_LAEVATAIN,
+    (ev) => ev.columnId === SH_COLUMN && ev.ownerEntityId === SLOT_LAEVATAIN,
   );
 }
 
@@ -110,7 +110,7 @@ describe('Scorching Heart — Basic Activation', () => {
 
     const sh = getShEvents(result.current);
     expect(sh).toHaveLength(1);
-    expect(sh[0].ownerId).toBe(SLOT_LAEVATAIN);
+    expect(sh[0].ownerEntityId).toBe(SLOT_LAEVATAIN);
 
     // ── View layer ──────────────────────────────────────────────────────
     const viewModels = computeTimelinePresentation(
@@ -126,13 +126,13 @@ describe('Scorching Heart — Basic Activation', () => {
 
     // MF events appear in the status column view model
     const mfVmEvents = statusVm!.events.filter(
-      (ev) => ev.columnId === MELTING_FLAME_ID && ev.ownerId === SLOT_LAEVATAIN,
+      (ev) => ev.columnId === MELTING_FLAME_ID && ev.ownerEntityId === SLOT_LAEVATAIN,
     );
     expect(mfVmEvents.length).toBeGreaterThanOrEqual(4);
 
     // SH event appears in the status column view model
     const shVmEvents = statusVm!.events.filter(
-      (ev) => ev.columnId === SH_COLUMN && ev.ownerId === SLOT_LAEVATAIN,
+      (ev) => ev.columnId === SH_COLUMN && ev.ownerEntityId === SLOT_LAEVATAIN,
     );
     expect(shVmEvents).toHaveLength(1);
     expect(shVmEvents[0].uid).toBe(sh[0].uid);
@@ -257,14 +257,14 @@ describe('Scorching Heart — Cross-operator Isolation', () => {
       const payload = getMenuPayload(result.current, akekuriCol!, atFrame);
       act(() => {
         result.current.handleAddEvent(
-          payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+          payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
         );
       });
     }
 
     // No MF from Akekuri
     const mfAkekuri = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === MELTING_FLAME_ID && ev.ownerId === SLOT_AKEKURI,
+      (ev) => ev.columnId === MELTING_FLAME_ID && ev.ownerEntityId === SLOT_AKEKURI,
     );
     expect(mfAkekuri).toHaveLength(0);
 
@@ -349,7 +349,7 @@ describe('Scorching Heart — RESET Stacking', () => {
     const statusVm = viewModels.get(statusCol!.key);
     expect(statusVm).toBeDefined();
     const shVmEvents = statusVm!.events.filter(
-      (ev) => ev.columnId === SH_COLUMN && ev.ownerId === SLOT_LAEVATAIN,
+      (ev) => ev.columnId === SH_COLUMN && ev.ownerEntityId === SLOT_LAEVATAIN,
     );
     // Both SH events exist in the view model (refreshed one is rendered dimmed)
     expect(shVmEvents).toHaveLength(2);

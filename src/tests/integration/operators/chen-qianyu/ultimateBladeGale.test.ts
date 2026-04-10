@@ -53,7 +53,7 @@ function placeUltimate(app: AppResult, atFrame: number) {
   if (!ultCol) throw new Error('Ultimate column not found for Chen Qianyu');
   const payload = getMenuPayload(app, ultCol, atFrame);
   act(() => {
-    app.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+    app.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
   });
 }
 
@@ -81,7 +81,7 @@ describe('Chen Qianyu — Blade Gale ultimate', () => {
 
     // Find the ultimate event in processed events
     const ultEvent = result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT_CHEN && ev.columnId === NounType.ULTIMATE,
+      ev => ev.ownerEntityId === SLOT_CHEN && ev.columnId === NounType.ULTIMATE,
     );
     expect(ultEvent).toBeDefined();
 
@@ -102,7 +102,7 @@ describe('Chen Qianyu — Blade Gale ultimate', () => {
     // Verify the ultimate creates a time-stop region (ultimates with animation are TIME_STOP)
     const timeStopRegions = computeTimeStopRegions(result.current.allProcessedEvents);
     const ultStop = timeStopRegions.find(
-      r => r.ownerId === SLOT_CHEN && r.sourceColumnId === NounType.ULTIMATE,
+      r => r.ownerEntityId === SLOT_CHEN && r.sourceColumnId === NounType.ULTIMATE,
     );
     expect(ultStop).toBeDefined();
     expect(ultStop!.startFrame).toBe(ultEvent!.startFrame);
@@ -115,7 +115,7 @@ describe('Chen Qianyu — Blade Gale ultimate', () => {
     placeUltimate(result.current, 2 * FPS);
 
     const ultEvent = result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT_CHEN && ev.columnId === NounType.ULTIMATE,
+      ev => ev.ownerEntityId === SLOT_CHEN && ev.columnId === NounType.ULTIMATE,
     );
     expect(ultEvent).toBeDefined();
 
@@ -165,7 +165,7 @@ describe('Chen Qianyu — Blade Gale ultimate', () => {
     placeUltimate(result.current, 2 * FPS);
 
     const ultEvent = result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT_CHEN && ev.columnId === NounType.ULTIMATE,
+      ev => ev.ownerEntityId === SLOT_CHEN && ev.columnId === NounType.ULTIMATE,
     );
     expect(ultEvent).toBeDefined();
 

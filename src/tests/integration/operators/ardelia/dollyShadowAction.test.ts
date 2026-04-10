@@ -78,13 +78,13 @@ describe('Ardelia — Mr. Dolly Shadow ACTION', () => {
     const payload = dollyItem!.actionPayload as any;
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     // ── Controller layer: event exists in processed events ──────────────
     const actionEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_ARDELIA && ev.columnId === OPERATOR_COLUMNS.INPUT && ev.name === DOLLY_SHADOW_ID,
+      ev => ev.ownerEntityId === SLOT_ARDELIA && ev.columnId === OPERATOR_COLUMNS.INPUT && ev.name === DOLLY_SHADOW_ID,
     );
     expect(actionEvents).toHaveLength(1);
 

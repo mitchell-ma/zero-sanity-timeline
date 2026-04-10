@@ -293,7 +293,7 @@ export function findEventDefaults(
   const col = (columns as MiniTimeline[]).find(
     (c) =>
       c.type === ColumnType.MINI_TIMELINE &&
-      c.ownerId === ev.ownerId &&
+      c.ownerEntityId === ev.ownerEntityId &&
       (c.columnId === ev.columnId || (c.matchColumnIds?.includes(ev.columnId) ?? false)),
   );
   if (!col) return null;
@@ -323,7 +323,7 @@ function findMicroColumnStacks(
   const col = (columns as MiniTimeline[]).find(
     (c) =>
       c.type === ColumnType.MINI_TIMELINE &&
-      c.ownerId === ev.ownerId &&
+      c.ownerEntityId === ev.ownerEntityId &&
       (c.columnId === ev.columnId || (c.matchColumnIds?.includes(ev.columnId) ?? false)),
   );
   if (col?.microColumns) {

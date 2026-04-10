@@ -76,12 +76,12 @@ describe('Yvonne Skills -- integration through useApp', () => {
     const payload = getAddEventPayload(menuItems!);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const battles = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_YVONNE && ev.columnId === NounType.BATTLE,
+      (ev) => ev.ownerEntityId === SLOT_YVONNE && ev.columnId === NounType.BATTLE,
     );
     expect(battles).toHaveLength(1);
   });
@@ -100,12 +100,12 @@ describe('Yvonne Skills -- integration through useApp', () => {
     const payload = getAddEventPayload(menuItems!);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const combos = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_YVONNE && ev.columnId === NounType.COMBO,
+      (ev) => ev.ownerEntityId === SLOT_YVONNE && ev.columnId === NounType.COMBO,
     );
     expect(combos).toHaveLength(1);
 
@@ -133,12 +133,12 @@ describe('Yvonne Skills -- integration through useApp', () => {
     const payload = getAddEventPayload(menuItems!);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const ultimates = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_YVONNE && ev.columnId === NounType.ULTIMATE,
+      (ev) => ev.ownerEntityId === SLOT_YVONNE && ev.columnId === NounType.ULTIMATE,
     );
     expect(ultimates).toHaveLength(1);
   });
@@ -155,12 +155,12 @@ describe('Yvonne Skills -- integration through useApp', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const battles = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_YVONNE && ev.columnId === NounType.BATTLE,
+      (ev) => ev.ownerEntityId === SLOT_YVONNE && ev.columnId === NounType.BATTLE,
     );
     expect(battles).toHaveLength(1);
     expect(battles[0].name).toBe(BS_ID);
@@ -200,12 +200,12 @@ describe('Yvonne Skills -- integration through useApp', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const combos = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_YVONNE && ev.columnId === NounType.COMBO,
+      (ev) => ev.ownerEntityId === SLOT_YVONNE && ev.columnId === NounType.COMBO,
     );
     expect(combos).toHaveLength(1);
     expect(combos[0].name).toBe(COMBO_ID);
@@ -230,12 +230,12 @@ describe('Yvonne Skills -- integration through useApp', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const ultimates = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_YVONNE && ev.columnId === NounType.ULTIMATE,
+      (ev) => ev.ownerEntityId === SLOT_YVONNE && ev.columnId === NounType.ULTIMATE,
     );
     expect(ultimates).toHaveLength(1);
     // Ultimate has animation + active segments = at least 2
@@ -267,7 +267,7 @@ describe('Yvonne Skills -- integration through useApp', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
@@ -278,7 +278,7 @@ describe('Yvonne Skills -- integration through useApp', () => {
     const bsVm = viewModels.get(col!.key);
     expect(bsVm).toBeDefined();
     const bsEvents = bsVm!.events.filter(
-      (ev) => ev.ownerId === SLOT_YVONNE && ev.columnId === NounType.BATTLE,
+      (ev) => ev.ownerEntityId === SLOT_YVONNE && ev.columnId === NounType.BATTLE,
     );
     expect(bsEvents).toHaveLength(1);
   });
@@ -293,7 +293,7 @@ describe('Yvonne Skills -- integration through useApp', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
@@ -304,7 +304,7 @@ describe('Yvonne Skills -- integration through useApp', () => {
     const ultVm = viewModels.get(col!.key);
     expect(ultVm).toBeDefined();
     const ultEvents = ultVm!.events.filter(
-      (ev) => ev.ownerId === SLOT_YVONNE && ev.columnId === NounType.ULTIMATE,
+      (ev) => ev.ownerEntityId === SLOT_YVONNE && ev.columnId === NounType.ULTIMATE,
     );
     expect(ultEvents).toHaveLength(1);
   });
@@ -325,7 +325,7 @@ describe('Yvonne Skills -- integration through useApp', () => {
     const bsCol = findColumn(result.current, SLOT_YVONNE, NounType.BATTLE)!;
     const bsPayload = getMenuPayload(result.current, bsCol, 5 * FPS);
     act(() => {
-      result.current.handleAddEvent(bsPayload.ownerId, bsPayload.columnId, bsPayload.atFrame, bsPayload.defaultSkill);
+      result.current.handleAddEvent(bsPayload.ownerEntityId, bsPayload.columnId, bsPayload.atFrame, bsPayload.defaultSkill);
     });
 
     const viewModels = computeTimelinePresentation(
@@ -334,7 +334,7 @@ describe('Yvonne Skills -- integration through useApp', () => {
     );
     // Find Barrage event in processed events
     const barrage = result.current.allProcessedEvents.find(
-      ev => ev.id === BARRAGE_ID && ev.ownerId === SLOT_YVONNE,
+      ev => ev.id === BARRAGE_ID && ev.ownerEntityId === SLOT_YVONNE,
     );
     expect(barrage).toBeDefined();
     // Barrage duration should be infinite (99999s)
@@ -361,7 +361,7 @@ describe('Yvonne Skills -- integration through useApp', () => {
     });
 
     const fpCryo = result.current.allProcessedEvents.find(
-      ev => ev.id === 'FREEZING_POINT_CRYO' && ev.ownerId === SLOT_YVONNE,
+      ev => ev.id === 'FREEZING_POINT_CRYO' && ev.ownerEntityId === SLOT_YVONNE,
     );
     expect(fpCryo).toBeDefined();
     const dur = fpCryo!.segments.reduce(
@@ -392,11 +392,11 @@ describe('Yvonne Skills -- integration through useApp', () => {
     const ultCol = findColumn(result.current, SLOT_YVONNE, NounType.ULTIMATE)!;
     const ultPayload = getMenuPayload(result.current, ultCol, 5 * FPS);
     act(() => {
-      result.current.handleAddEvent(ultPayload.ownerId, ultPayload.columnId, ultPayload.atFrame, ultPayload.defaultSkill);
+      result.current.handleAddEvent(ultPayload.ownerEntityId, ultPayload.columnId, ultPayload.atFrame, ultPayload.defaultSkill);
     });
 
     const expert = result.current.allProcessedEvents.find(
-      ev => ev.id === 'EXPERT_MECHCRAFTER' && ev.ownerId === SLOT_YVONNE,
+      ev => ev.id === 'EXPERT_MECHCRAFTER' && ev.ownerEntityId === SLOT_YVONNE,
     );
     expect(expert).toBeDefined();
     const dur = expert!.segments.reduce(
@@ -405,7 +405,7 @@ describe('Yvonne Skills -- integration through useApp', () => {
     expect(dur).toBe(Math.round(7 * FPS));
     // Starts at active segment start (after animation)
     const ult = result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT_YVONNE && ev.columnId === NounType.ULTIMATE,
+      ev => ev.ownerEntityId === SLOT_YVONNE && ev.columnId === NounType.ULTIMATE,
     )!;
     const animDur = ult.segments[0].properties.duration;
     expect(expert!.startFrame).toBe(ult.startFrame + animDur);
@@ -427,11 +427,11 @@ describe('Yvonne Skills -- integration through useApp', () => {
     const ultCol = findColumn(result.current, SLOT_YVONNE, NounType.ULTIMATE)!;
     const ultPayload = getMenuPayload(result.current, ultCol, 5 * FPS);
     act(() => {
-      result.current.handleAddEvent(ultPayload.ownerId, ultPayload.columnId, ultPayload.atFrame, ultPayload.defaultSkill);
+      result.current.handleAddEvent(ultPayload.ownerEntityId, ultPayload.columnId, ultPayload.atFrame, ultPayload.defaultSkill);
     });
 
     const expert = result.current.allProcessedEvents.filter(
-      ev => ev.id === 'EXPERT_MECHCRAFTER' && ev.ownerId === SLOT_YVONNE,
+      ev => ev.id === 'EXPERT_MECHCRAFTER' && ev.ownerEntityId === SLOT_YVONNE,
     );
     expect(expert).toHaveLength(0);
   });

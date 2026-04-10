@@ -93,7 +93,7 @@ interface CombatPlannerProps {
   orientation?: Orientation;
   onToggleOrientation?: () => void;
   onToggleSkill: (slotId: string, skillType: string) => void;
-  onAddEvent: (ownerId: string, columnId: string, atFrame: number, defaultSkill: object | null) => void;
+  onAddEvent: (ownerEntityId: string, columnId: string, atFrame: number, defaultSkill: object | null) => void;
   onMoveEvent: (id: string, newStartFrame: number, overlapExemptIds?: Set<string>, strictOverride?: boolean) => void;
   onMoveEvents?: (ids: string[], delta: number, overlapExemptIds?: Set<string>, strictOverride?: boolean) => void;
   onContextMenu: (state: ContextMenuState | null) => void;
@@ -504,7 +504,7 @@ export default React.memo(function CombatPlanner({
     for (const ev of events) {
       if (!draggingIds.has(ev.uid)) continue;
       if (ev.columnId !== NounType.BATTLE && ev.columnId !== NounType.ULTIMATE) continue;
-      const zones = dragZonesSnapshot.get(`${ev.ownerId}:${ev.columnId}`);
+      const zones = dragZonesSnapshot.get(`${ev.ownerEntityId}:${ev.columnId}`);
       if (!zones) continue;
       for (const zone of zones) {
         if (ev.startFrame >= zone.start && ev.startFrame < zone.end) {
@@ -635,7 +635,7 @@ export default React.memo(function CombatPlanner({
   let colIdx = 2 + commonColCount; // common columns come first
   for (const slot of slots) {
     // Count all columns belonging to this slot (operator skills + status + weapon buff + placeholders)
-    const slotCols = columns.filter((c) => c.ownerId === slot.slotId);
+    const slotCols = columns.filter((c) => c.ownerEntityId === slot.slotId);
     const count = Math.max(MIN_SLOT_COLS, slotCols.length);
     slotGroups.push({ slot, columnCount: count, startCol: colIdx });
     colIdx += count;
@@ -645,7 +645,7 @@ export default React.memo(function CombatPlanner({
   // Identify first column of each group (operator slots + enemy) for visual gap styling
   const groupStartKeys = new Set<string>();
   for (const group of slotGroups) {
-    const first = columns.find((c) => c.ownerId === group.slot.slotId);
+    const first = columns.find((c) => c.ownerEntityId === group.slot.slotId);
     if (first) groupStartKeys.add(first.key);
   }
   const firstEnemy = columns.find((c) => c.type === 'mini-timeline' && c.source === TimelineSourceType.ENEMY);
@@ -654,7 +654,7 @@ export default React.memo(function CombatPlanner({
   // Build fluid gridTemplateColumns: team:operator:enemy = 1:3:2
   // Pre-compute total weight per slot group
   const slotGroupWeights = slotGroups.map((g) => {
-    const slotCols = columns.filter((c) => c.ownerId === g.slot.slotId);
+    const slotCols = columns.filter((c) => c.ownerEntityId === g.slot.slotId);
     const totalWeight = slotCols.reduce((sum, c) => sum + getColWeight(c), 0);
     return { ...g, totalWeight, slotCols };
   });
@@ -941,10 +941,10 @@ export default React.memo(function CombatPlanner({
           setSelectedIds(new Set(events.map((ev) => ev.uid)));
         } else {
           const derivedCols = new Set(
-            columns.filter((c): c is MiniTimeline => c.type === 'mini-timeline' && !!c.derived).map((c) => `${c.ownerId}-${c.columnId}`),
+            columns.filter((c): c is MiniTimeline => c.type === 'mini-timeline' && !!c.derived).map((c) => `${c.ownerEntityId}-${c.columnId}`),
           );
           setSelectedIds(new Set(
-            events.filter((ev) => !derivedCols.has(`${ev.ownerId}-${ev.columnId}`)).map((ev) => ev.uid),
+            events.filter((ev) => !derivedCols.has(`${ev.ownerEntityId}-${ev.columnId}`)).map((ev) => ev.uid),
           ));
         }
       }
@@ -956,9 +956,9 @@ export default React.memo(function CombatPlanner({
           sources = events.filter((ev) => selectedIds.has(ev.uid));
         } else {
           const derivedCols = new Set(
-            columns.filter((c): c is MiniTimeline => c.type === 'mini-timeline' && !!c.derived).map((c) => `${c.ownerId}-${c.columnId}`),
+            columns.filter((c): c is MiniTimeline => c.type === 'mini-timeline' && !!c.derived).map((c) => `${c.ownerEntityId}-${c.columnId}`),
           );
-          sources = events.filter((ev) => selectedIds.has(ev.uid) && !derivedCols.has(`${ev.ownerId}-${ev.columnId}`));
+          sources = events.filter((ev) => selectedIds.has(ev.uid) && !derivedCols.has(`${ev.ownerEntityId}-${ev.columnId}`));
         }
         if (sources.length > 0) {
           dupSourceRef.current = sources;
@@ -1037,8 +1037,8 @@ export default React.memo(function CombatPlanner({
     const map = new Map<string, TimelineEvent[]>();
     for (const ev of events) {
       if (ev.columnId !== COMBO_WINDOW_COLUMN_ID) continue;
-      let arr = map.get(ev.ownerId);
-      if (!arr) { arr = []; map.set(ev.ownerId, arr); }
+      let arr = map.get(ev.ownerEntityId);
+      if (!arr) { arr = []; map.set(ev.ownerEntityId, arr); }
       arr.push(ev);
     }
     return map;
@@ -1052,7 +1052,7 @@ export default React.memo(function CombatPlanner({
     for (const ev of events) {
       // Resolve pixel bounds: check micro-column position first, fall back to column
       let evColPos: { left: number; right: number } | undefined;
-      const colBasePos = columnPositions.get(`${ev.ownerId}-${ev.columnId}`);
+      const colBasePos = columnPositions.get(`${ev.ownerEntityId}-${ev.columnId}`);
       // Look up micro-position from the column view model
       const vms = Array.from(columnViewModels.values());
       for (let vi = 0; vi < vms.length; vi++) {
@@ -1098,7 +1098,7 @@ export default React.memo(function CombatPlanner({
     const rectLaneEnd = isHorizontal ? rect.bottom : rect.right;
     for (const ev of events) {
       if (!ev.segments || ev.segments.length === 0) continue;
-      const colPos = columnPositions.get(`${ev.ownerId}-${ev.columnId}`);
+      const colPos = columnPositions.get(`${ev.ownerEntityId}-${ev.columnId}`);
       if (!colPos) continue;
       // Column (lane axis) must overlap
       if (colPos.right <= rectLaneStart || colPos.left >= rectLaneEnd) continue;
@@ -1484,7 +1484,7 @@ export default React.memo(function CombatPlanner({
     // Freeform-placed events (creationInteractionMode set) remain draggable.
     const ev = events.find((ev) => ev.uid === eventUid);
     if (ev && interactionMode === InteractionModeType.STRICT && ev.creationInteractionMode == null) {
-      const col = columns.find((c): c is MiniTimeline => c.type === 'mini-timeline' && c.ownerId === ev.ownerId && c.columnId === ev.columnId);
+      const col = columns.find((c): c is MiniTimeline => c.type === 'mini-timeline' && c.ownerEntityId === ev.ownerEntityId && c.columnId === ev.columnId);
       if (col?.derived) return;
     }
     e.preventDefault();
@@ -1690,16 +1690,16 @@ export default React.memo(function CombatPlanner({
     const resolvedInline = rest.inlineButtons?.map((btn) => {
       if (btn.action || !btn.actionId) return btn;
       if (btn.actionId === 'addEvent') {
-        const p = btn.actionPayload as { ownerId: string; columnId: string; atFrame: number; defaultSkill: object | null };
-        return { ...btn, action: () => onAddEvent(p.ownerId, p.columnId, p.atFrame, p.defaultSkill) };
+        const p = btn.actionPayload as { ownerEntityId: string; columnId: string; atFrame: number; defaultSkill: object | null };
+        return { ...btn, action: () => onAddEvent(p.ownerEntityId, p.columnId, p.atFrame, p.defaultSkill) };
       }
       return btn;
     });
     const resolved = resolvedInline ? { ...rest, inlineButtons: resolvedInline } : rest;
     switch (actionId) {
       case 'addEvent': {
-        const p = actionPayload as { ownerId: string; columnId: string; atFrame: number; defaultSkill: object | null };
-        return { ...resolved, action: () => onAddEvent(p.ownerId, p.columnId, p.atFrame, p.defaultSkill) };
+        const p = actionPayload as { ownerEntityId: string; columnId: string; atFrame: number; defaultSkill: object | null };
+        return { ...resolved, action: () => onAddEvent(p.ownerEntityId, p.columnId, p.atFrame, p.defaultSkill) };
       }
       case 'editResource':
         return { ...resolved, action: () => { onEditResource?.(actionPayload as string); onContextMenu(null); } };
@@ -1908,7 +1908,7 @@ export default React.memo(function CombatPlanner({
 
     // Control events: show remove + the column's add items (dash/dodge)
     if (ev.name === NounType.CONTROL) {
-      const col = columns.find((c): c is MiniTimeline => c.type === ColumnType.MINI_TIMELINE && c.ownerId === ev.ownerId && c.columnId === ev.columnId);
+      const col = columns.find((c): c is MiniTimeline => c.type === ColumnType.MINI_TIMELINE && c.ownerEntityId === ev.ownerEntityId && c.columnId === ev.columnId);
       const items: import('../consts/viewTypes').ContextMenuItem[] = [];
       if (onRemoveEvent) {
         items.push({ label: 'Remove Event', action: () => { onRemoveEvent(eventUid); onContextMenu(null); }, danger: true });
@@ -1937,7 +1937,7 @@ export default React.memo(function CombatPlanner({
 
     // Combo activation window: show combo skill column's add items (no remove/reset)
     if (ev.columnId === COMBO_WINDOW_COLUMN_ID) {
-      const comboCol = columns.find((c): c is MiniTimeline => c.type === ColumnType.MINI_TIMELINE && c.ownerId === ev.ownerId && c.columnId === NounType.COMBO);
+      const comboCol = columns.find((c): c is MiniTimeline => c.type === ColumnType.MINI_TIMELINE && c.ownerEntityId === ev.ownerEntityId && c.columnId === NounType.COMBO);
       if (comboCol) {
         const clickFrame = hoverFrameRef.current ?? ev.startFrame;
         const colMenu = buildColumnContextMenu(comboCol, clickFrame, undefined, {
@@ -1958,7 +1958,7 @@ export default React.memo(function CombatPlanner({
       return;
     }
     if (interactionMode === InteractionModeType.STRICT) {
-      const col = columns.find((c): c is MiniTimeline => c.type === ColumnType.MINI_TIMELINE && c.ownerId === ev.ownerId && c.columnId === ev.columnId);
+      const col = columns.find((c): c is MiniTimeline => c.type === ColumnType.MINI_TIMELINE && c.ownerEntityId === ev.ownerEntityId && c.columnId === ev.columnId);
       if (col?.derived) return;
     }
 
@@ -2351,7 +2351,7 @@ export default React.memo(function CombatPlanner({
             }
 
             const comboWindowEvts = col.columnId === NounType.COMBO
-              ? (comboWindowEventsByOwner.get(col.ownerId) ?? EMPTY_COMBO_WINDOW_EVENTS)
+              ? (comboWindowEventsByOwner.get(col.ownerEntityId) ?? EMPTY_COMBO_WINDOW_EVENTS)
               : EMPTY_COMBO_WINDOW_EVENTS;
 
             return (
@@ -2365,8 +2365,8 @@ export default React.memo(function CombatPlanner({
                 tlHeight={tlHeight}
                 isGroupStart={groupStartKeys.has(col.key)}
                 resourceGraph={resourceGraphs?.get(col.key)}
-                insufficiencyZones={resourceInsufficiencyZones.get(`${col.ownerId}:${NounType.BATTLE}`)}
-                alwaysAvailableCombo={alwaysAvailableComboSlots.has(col.ownerId)}
+                insufficiencyZones={resourceInsufficiencyZones.get(`${col.ownerEntityId}:${NounType.BATTLE}`)}
+                alwaysAvailableCombo={alwaysAvailableComboSlots.has(col.ownerEntityId)}
                 comboWindowEvents={comboWindowEvts}
                 enemyStaggerNodes={enemy.staggerNodes}
                 interactionMode={interactionMode}
@@ -2397,7 +2397,7 @@ export default React.memo(function CombatPlanner({
           const ghostFrame = src.startFrame + dupOffset;
           const colKey = columns.find((c) =>
             c.type === 'mini-timeline' &&
-            c.ownerId === src.ownerId &&
+            c.ownerEntityId === src.ownerEntityId &&
             (c.columnId === src.columnId || (c.matchColumnIds?.includes(src.columnId) ?? false)),
           )?.key;
           const colPos = colKey ? columnPositions.get(colKey) : undefined;

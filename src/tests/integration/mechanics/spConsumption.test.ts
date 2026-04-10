@@ -59,7 +59,7 @@ describe('SP Consumption — integration through useApp', () => {
     // Add the battle skill via the context menu payload
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId,
+        payload.ownerEntityId,
         payload.columnId,
         payload.atFrame,
         payload.defaultSkill,
@@ -68,7 +68,7 @@ describe('SP Consumption — integration through useApp', () => {
 
     // Verify the battle skill event exists in processed events
     const battleEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === NounType.BATTLE,
+      (ev) => ev.ownerEntityId === SLOT_AKEKURI && ev.columnId === NounType.BATTLE,
     );
     expect(battleEvents).toHaveLength(1);
     expect(battleEvents[0].skillPointCost).toBe(expectedSpCost);
@@ -90,7 +90,7 @@ describe('SP Consumption — integration through useApp', () => {
     expect(vm).toBeDefined();
 
     const battleEventsInVM = vm!.events.filter(
-      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === NounType.BATTLE,
+      (ev) => ev.ownerEntityId === SLOT_AKEKURI && ev.columnId === NounType.BATTLE,
     );
     expect(battleEventsInVM).toHaveLength(1);
     expect(battleEventsInVM[0].uid).toBe(battleEvents[0].uid);

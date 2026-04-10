@@ -48,7 +48,7 @@ function findAnyOperatorColumn(app: AppResult, slotId: string) {
   return app.columns.find(
     (c): c is MiniTimeline =>
       c.type === ColumnType.MINI_TIMELINE &&
-      c.ownerId === slotId &&
+      c.ownerEntityId === slotId &&
       c.columnId === NounType.BASIC_ATTACK,
   );
 }
@@ -95,7 +95,7 @@ describe('Controlled Operator — integration through useApp', () => {
     // Controller layer: verify seeded control event
     const controls = getControlEvents(result.current);
     expect(controls).toHaveLength(1);
-    expect(controls[0].ownerId).toBe(SLOT_0);
+    expect(controls[0].ownerEntityId).toBe(SLOT_0);
     expect(controls[0].startFrame).toBe(0);
     expect(eventDuration(controls[0])).toBe(TOTAL_FRAMES);
 
@@ -112,7 +112,7 @@ describe('Controlled Operator — integration through useApp', () => {
     // View layer: verify INPUT column ViewModel contains the control event
     const vmControls = getControlEventsFromVM(result.current);
     expect(vmControls).toHaveLength(1);
-    expect(vmControls[0].ownerId).toBe(SLOT_0);
+    expect(vmControls[0].ownerEntityId).toBe(SLOT_0);
   });
 
   it('user sets controlled operator on slot-1 at 5s — clamps slot-0', () => {
@@ -124,7 +124,7 @@ describe('Controlled Operator — integration through useApp', () => {
 
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
@@ -132,8 +132,8 @@ describe('Controlled Operator — integration through useApp', () => {
     const controls = getControlEvents(result.current);
     expect(controls).toHaveLength(2);
 
-    const slot0 = controls.find((ev) => ev.ownerId === SLOT_0)!;
-    const slot1 = controls.find((ev) => ev.ownerId === SLOT_1)!;
+    const slot0 = controls.find((ev) => ev.ownerEntityId === SLOT_0)!;
+    const slot1 = controls.find((ev) => ev.ownerEntityId === SLOT_1)!;
 
     expect(slot0).toBeDefined();
     expect(slot1).toBeDefined();
@@ -159,8 +159,8 @@ describe('Controlled Operator — integration through useApp', () => {
     // View layer: ColumnViewModel shows both control events
     const vmControls = getControlEventsFromVM(result.current);
     expect(vmControls).toHaveLength(2);
-    expect(vmControls.find(ev => ev.ownerId === SLOT_0)).toBeDefined();
-    expect(vmControls.find(ev => ev.ownerId === SLOT_1)).toBeDefined();
+    expect(vmControls.find(ev => ev.ownerEntityId === SLOT_0)).toBeDefined();
+    expect(vmControls.find(ev => ev.ownerEntityId === SLOT_1)).toBeDefined();
   });
 
   it('user adds slot-1 at 5s then slot-2 at 2.5s — all 3 clamped correctly', () => {
@@ -172,7 +172,7 @@ describe('Controlled Operator — integration through useApp', () => {
     const payload1 = getControlPayload(result.current, SLOT_1, swapSlot1);
     act(() => {
       result.current.handleAddEvent(
-        payload1.ownerId, payload1.columnId, payload1.atFrame, payload1.defaultSkill,
+        payload1.ownerEntityId, payload1.columnId, payload1.atFrame, payload1.defaultSkill,
       );
     });
 
@@ -180,7 +180,7 @@ describe('Controlled Operator — integration through useApp', () => {
     const payload2 = getControlPayload(result.current, SLOT_2, swapSlot2);
     act(() => {
       result.current.handleAddEvent(
-        payload2.ownerId, payload2.columnId, payload2.atFrame, payload2.defaultSkill,
+        payload2.ownerEntityId, payload2.columnId, payload2.atFrame, payload2.defaultSkill,
       );
     });
 
@@ -188,9 +188,9 @@ describe('Controlled Operator — integration through useApp', () => {
     const controls = getControlEvents(result.current);
     expect(controls).toHaveLength(3);
 
-    const slot0 = controls.find((ev) => ev.ownerId === SLOT_0)!;
-    const slot1 = controls.find((ev) => ev.ownerId === SLOT_1)!;
-    const slot2 = controls.find((ev) => ev.ownerId === SLOT_2)!;
+    const slot0 = controls.find((ev) => ev.ownerEntityId === SLOT_0)!;
+    const slot1 = controls.find((ev) => ev.ownerEntityId === SLOT_1)!;
+    const slot2 = controls.find((ev) => ev.ownerEntityId === SLOT_2)!;
 
     expect(slot0).toBeDefined();
     expect(slot1).toBeDefined();
@@ -221,7 +221,7 @@ describe('Controlled Operator — integration through useApp', () => {
     const payload = getControlPayload(result.current, SLOT_1, swapFrame);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 

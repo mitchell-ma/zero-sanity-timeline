@@ -16,7 +16,7 @@ export function clampPriorControlEvents(
   for (let j = 0; j < allEvents.length; j++) {
     const prev = allEvents[j];
     if (prev.id !== NounType.CONTROL || prev.columnId !== OPERATOR_COLUMNS.INPUT) continue;
-    if (prev.ownerId === ev.ownerId) continue;
+    if (prev.ownerEntityId === ev.ownerEntityId) continue;
     const prevEnd = prev.startFrame + computeSegmentsSpan(prev.segments);
     if (prevEnd <= ev.startFrame) continue;
     // Prev is DEC-owned (cloned in _pushToStorage), so mutate its segment

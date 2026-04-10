@@ -29,18 +29,18 @@ function makeEvent(overrides: Partial<TimelineEvent> & { uid: string; columnId: 
   return {
     id: overrides.name ?? 'TEST',
     name: 'TEST',
-    ownerId: 'op-1',
+    ownerEntityId: 'op-1',
     segments: [{ properties: { duration: 60 } }],
     ...overrides,
   };
 }
 
 function makeUltTimeStop(startFrame: number, durationFrames: number): TimeStopRegion {
-  return { startFrame, durationFrames, ownerId: 'op-1', sourceColumnId: NounType.ULTIMATE };
+  return { startFrame, durationFrames, ownerEntityId: 'op-1', sourceColumnId: NounType.ULTIMATE };
 }
 
 function makeComboTimeStop(startFrame: number, durationFrames: number): TimeStopRegion {
-  return { startFrame, durationFrames, ownerId: 'op-1', sourceColumnId: NounType.COMBO };
+  return { startFrame, durationFrames, ownerEntityId: 'op-1', sourceColumnId: NounType.COMBO };
 }
 
 // ── Tests ────────────────────────────────────────────────────────────────
@@ -88,13 +88,13 @@ describe('validateTimeStops', () => {
     const stops = [makeUltTimeStop(100, 30)];
 
     it('allows infliction at time-stop start', () => {
-      const events = [makeEvent({ uid: 'e1', columnId: INFLICTION_COLUMNS.HEAT, startFrame: 100, ownerId: 'enemy' })];
+      const events = [makeEvent({ uid: 'e1', columnId: INFLICTION_COLUMNS.HEAT, startFrame: 100, ownerEntityId: 'enemy' })];
       const map = validateTimeStops(events, stops);
       expect(map.has('e1')).toBe(false);
     });
 
     it('allows reaction at time-stop start', () => {
-      const events = [makeEvent({ uid: 'e1', columnId: REACTION_COLUMNS.COMBUSTION, startFrame: 100, ownerId: 'enemy' })];
+      const events = [makeEvent({ uid: 'e1', columnId: REACTION_COLUMNS.COMBUSTION, startFrame: 100, ownerEntityId: 'enemy' })];
       const map = validateTimeStops(events, stops);
       expect(map.has('e1')).toBe(false);
     });
@@ -106,7 +106,7 @@ describe('validateTimeStops', () => {
     });
 
     it('allows infliction mid time-stop', () => {
-      const events = [makeEvent({ uid: 'e1', columnId: INFLICTION_COLUMNS.CRYO, startFrame: 115, ownerId: 'enemy' })];
+      const events = [makeEvent({ uid: 'e1', columnId: INFLICTION_COLUMNS.CRYO, startFrame: 115, ownerEntityId: 'enemy' })];
       const map = validateTimeStops(events, stops);
       expect(map.has('e1')).toBe(false);
     });

@@ -55,7 +55,7 @@ function setup() {
 
 function getComboWindows(app: AppResult) {
   return app.allProcessedEvents.filter(
-    (ev) => ev.columnId === COMBO_WINDOW_COLUMN_ID && ev.ownerId === SLOT_AVYWENNA,
+    (ev) => ev.columnId === COMBO_WINDOW_COLUMN_ID && ev.ownerEntityId === SLOT_AVYWENNA,
   );
 }
 
@@ -79,7 +79,7 @@ function placeAkekuriBatk(result: { current: AppResult }, startSec: number) {
   if (!col) throw new Error('Akekuri basic attack column not found');
   const payload = getMenuPayload(result.current, col, startSec * FPS);
   act(() => {
-    result.current.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+    result.current.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
   });
 }
 
@@ -87,7 +87,7 @@ function findControlMenuItem(app: AppResult, slotId: string, atFrame: number): C
   const col = app.columns.find(
     (c): c is MiniTimeline =>
       c.type === ColumnType.MINI_TIMELINE &&
-      c.ownerId === slotId &&
+      c.ownerEntityId === slotId &&
       c.columnId === NounType.BASIC_ATTACK,
   );
   if (!col) throw new Error(`No column found for ${slotId}`);
@@ -102,7 +102,7 @@ function setControlled(result: { current: AppResult }, slotId: string, atFrame: 
   if (item.disabled) throw new Error(`"${CONTROL_LABEL}" disabled for ${slotId}: ${item.disabledReason}`);
   const payload = item.actionPayload as AddEventPayload;
   act(() => {
-    result.current.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+    result.current.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
   });
 }
 
@@ -144,7 +144,7 @@ describe('Avywenna combo — CONTROLLED operator trigger', () => {
     // Controller layer: combo activation window exists for Avywenna
     const windows = getComboWindows(result.current);
     expect(windows.length).toBeGreaterThanOrEqual(1);
-    expect(windows[0].ownerId).toBe(SLOT_AVYWENNA);
+    expect(windows[0].ownerEntityId).toBe(SLOT_AVYWENNA);
     expect(windows[0].columnId).toBe(COMBO_WINDOW_COLUMN_ID);
     expect(windows[0].maxSkills).toBe(1);
 

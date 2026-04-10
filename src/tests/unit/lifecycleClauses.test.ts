@@ -27,7 +27,7 @@ jest.mock('../../view/InformationPane', () => ({
 
 // ── Helpers ──────────────────────────────────────────────────────────────
 
-function makeEvent(overrides: Partial<TimelineEvent> & { uid: string; columnId: string; ownerId: string }): TimelineEvent {
+function makeEvent(overrides: Partial<TimelineEvent> & { uid: string; columnId: string; ownerEntityId: string }): TimelineEvent {
   return {
     id: overrides.name ?? 'TEST',
     name: 'TEST',
@@ -42,7 +42,7 @@ function makeCondCtx(overrides: Partial<ConditionContext> = {}): ConditionContex
   return {
     events: [],
     frame: 100,
-    sourceOwnerId: 'slot1',
+    sourceEntityId: 'slot1',
     ...overrides,
   };
 }
@@ -59,7 +59,7 @@ describe('RECEIVE condition', () => {
       uid: 'lift-1',
       name: 'LIFT',
       columnId: PhysicalStatusType.LIFT,
-      ownerId: 'enemy',
+      ownerEntityId: 'enemy',
       startFrame: 100,
       segments: [{ properties: { duration: 600 } }],
     });
@@ -80,7 +80,7 @@ describe('RECEIVE condition', () => {
       uid: 'lift-1',
       name: 'LIFT',
       columnId: PhysicalStatusType.LIFT,
-      ownerId: 'enemy',
+      ownerEntityId: 'enemy',
       startFrame: 50,
       segments: [{ properties: { duration: 600 } }],
     });
@@ -113,7 +113,7 @@ describe('RECEIVE condition', () => {
       uid: 'lift-1',
       name: 'LIFT',
       columnId: PhysicalStatusType.LIFT,
-      ownerId: 'enemy',
+      ownerEntityId: 'enemy',
       startFrame: 100,
       segments: [{ properties: { duration: 600 } }],
     });
@@ -121,7 +121,7 @@ describe('RECEIVE condition', () => {
       uid: 'lift-2',
       name: 'LIFT',
       columnId: PhysicalStatusType.LIFT,
-      ownerId: 'enemy',
+      ownerEntityId: 'enemy',
       startFrame: 100,
       segments: [{ properties: { duration: 300 } }],
     });
@@ -142,7 +142,7 @@ describe('RECEIVE condition', () => {
       uid: 'breach-1',
       name: 'BREACH',
       columnId: PhysicalStatusType.BREACH,
-      ownerId: 'enemy',
+      ownerEntityId: 'enemy',
       startFrame: 100,
       segments: [{ properties: { duration: 600 } }],
     });

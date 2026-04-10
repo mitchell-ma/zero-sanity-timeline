@@ -73,13 +73,13 @@ describe('A. Core Skill Placement', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId,
+        payload.ownerEntityId, payload.columnId,
         payload.atFrame, payload.defaultSkill,
       );
     });
 
     const events = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_CATCHER && ev.columnId === NounType.BATTLE,
+      ev => ev.ownerEntityId === SLOT_CATCHER && ev.columnId === NounType.BATTLE,
     );
     expect(events).toHaveLength(1);
     expect(events[0].name).toBe(BATTLE_SKILL_ID);
@@ -101,13 +101,13 @@ describe('A. Core Skill Placement', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId,
+        payload.ownerEntityId, payload.columnId,
         payload.atFrame, payload.defaultSkill,
       );
     });
 
     const events = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_CATCHER && ev.columnId === NounType.COMBO,
+      ev => ev.ownerEntityId === SLOT_CATCHER && ev.columnId === NounType.COMBO,
     );
     expect(events).toHaveLength(1);
     expect(events[0].name).toBe(COMBO_SKILL_ID);
@@ -130,13 +130,13 @@ describe('A. Core Skill Placement', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId,
+        payload.ownerEntityId, payload.columnId,
         payload.atFrame, payload.defaultSkill,
       );
     });
 
     const events = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_CATCHER && ev.columnId === NounType.ULTIMATE,
+      ev => ev.ownerEntityId === SLOT_CATCHER && ev.columnId === NounType.ULTIMATE,
     );
     expect(events).toHaveLength(1);
     expect(events[0].name).toBe(ULTIMATE_ID);
@@ -155,13 +155,13 @@ describe('B. Battle Skill -- Protection and Vulnerability', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId,
+        payload.ownerEntityId, payload.columnId,
         payload.atFrame, payload.defaultSkill,
       );
     });
 
     const events = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_CATCHER && ev.columnId === NounType.BATTLE,
+      ev => ev.ownerEntityId === SLOT_CATCHER && ev.columnId === NounType.BATTLE,
     );
     expect(events).toHaveLength(1);
 
@@ -179,13 +179,13 @@ describe('B. Battle Skill -- Protection and Vulnerability', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId,
+        payload.ownerEntityId, payload.columnId,
         payload.atFrame, payload.defaultSkill,
       );
     });
 
     const events = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_CATCHER && ev.columnId === NounType.BATTLE,
+      ev => ev.ownerEntityId === SLOT_CATCHER && ev.columnId === NounType.BATTLE,
     );
     expect(events).toHaveLength(1);
 
@@ -208,13 +208,13 @@ describe('C. Ultimate Mechanics', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId,
+        payload.ownerEntityId, payload.columnId,
         payload.atFrame, payload.defaultSkill,
       );
     });
 
     const events = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_CATCHER && ev.columnId === NounType.ULTIMATE,
+      ev => ev.ownerEntityId === SLOT_CATCHER && ev.columnId === NounType.ULTIMATE,
     );
     expect(events).toHaveLength(1);
 
@@ -234,13 +234,13 @@ describe('C. Ultimate Mechanics', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId,
+        payload.ownerEntityId, payload.columnId,
         payload.atFrame, payload.defaultSkill,
       );
     });
 
     const events = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_CATCHER && ev.columnId === NounType.ULTIMATE,
+      ev => ev.ownerEntityId === SLOT_CATCHER && ev.columnId === NounType.ULTIMATE,
     );
     expect(events).toHaveLength(1);
 
@@ -283,13 +283,13 @@ describe('D. Combo -- Shield', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId,
+        payload.ownerEntityId, payload.columnId,
         payload.atFrame, payload.defaultSkill,
       );
     });
 
     const events = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_CATCHER && ev.columnId === NounType.COMBO,
+      ev => ev.ownerEntityId === SLOT_CATCHER && ev.columnId === NounType.COMBO,
     );
     expect(events).toHaveLength(1);
     expect(eventDuration(events[0])).toBeGreaterThan(0);
@@ -316,7 +316,7 @@ describe('E. View Layer', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId,
+        payload.ownerEntityId, payload.columnId,
         payload.atFrame, payload.defaultSkill,
       );
     });
@@ -328,7 +328,7 @@ describe('E. View Layer', () => {
     const battleVM = viewModels.get(col!.key);
     expect(battleVM).toBeDefined();
     expect(battleVM!.events.some(
-      ev => ev.name === BATTLE_SKILL_ID && ev.ownerId === SLOT_CATCHER,
+      ev => ev.name === BATTLE_SKILL_ID && ev.ownerEntityId === SLOT_CATCHER,
     )).toBe(true);
   });
 
@@ -340,7 +340,7 @@ describe('E. View Layer', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId,
+        payload.ownerEntityId, payload.columnId,
         payload.atFrame, payload.defaultSkill,
       );
     });
@@ -352,7 +352,7 @@ describe('E. View Layer', () => {
     const comboVM = viewModels.get(col!.key);
     expect(comboVM).toBeDefined();
     expect(comboVM!.events.some(
-      ev => ev.name === COMBO_SKILL_ID && ev.ownerId === SLOT_CATCHER,
+      ev => ev.name === COMBO_SKILL_ID && ev.ownerEntityId === SLOT_CATCHER,
     )).toBe(true);
   });
 
@@ -364,7 +364,7 @@ describe('E. View Layer', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId,
+        payload.ownerEntityId, payload.columnId,
         payload.atFrame, payload.defaultSkill,
       );
     });
@@ -376,7 +376,7 @@ describe('E. View Layer', () => {
     const ultVM = viewModels.get(col!.key);
     expect(ultVM).toBeDefined();
     expect(ultVM!.events.some(
-      ev => ev.name === ULTIMATE_ID && ev.ownerId === SLOT_CATCHER,
+      ev => ev.name === ULTIMATE_ID && ev.ownerEntityId === SLOT_CATCHER,
     )).toBe(true);
   });
 });

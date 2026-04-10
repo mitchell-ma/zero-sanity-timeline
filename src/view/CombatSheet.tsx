@@ -822,7 +822,7 @@ export default React.memo(function CombatSheet({
         <div className="dmg-loadout-ops">
           {slots.map((slot) => {
             if (!slot.operator) return null;
-            const opStats = statistics.operators.find((o) => o.ownerId === slot.slotId);
+            const opStats = statistics.operators.find((o) => o.ownerEntityId === slot.slotId);
             return (
               <div
                 key={slot.slotId}
@@ -861,11 +861,11 @@ export default React.memo(function CombatSheet({
             </button>
             <div className="dmg-team-total-bars">
               {statistics.operators.map((op) => {
-                const slot = slots.find((s) => s.slotId === op.ownerId);
+                const slot = slots.find((s) => s.slotId === op.ownerEntityId);
                 if (!slot?.operator || op.totalDamage <= 0) return null;
                 return (
                   <div
-                    key={op.ownerId}
+                    key={op.ownerEntityId}
                     className="dmg-team-bar-segment"
                     style={{
                       width: `${op.teamPct * 100}%`,
@@ -1040,7 +1040,7 @@ export default React.memo(function CombatSheet({
                 <FlatRow
                   key={row.key}
                   row={row}
-                  opInfo={opInfoMap.get(row.ownerId)}
+                  opInfo={opInfoMap.get(row.ownerEntityId)}
                   top={top}
                   selected={selectedRowKeys.has(row.key)}
                   hovered={false}
@@ -1210,7 +1210,7 @@ function SheetCell({ def, row, opInfo, opColor, bossMaxHp, formatTime, onDamageC
       );
     }
     case SheetCol.ULT_CHARGE: {
-      const ultGraph = resourceGraphs?.get(ultimateGraphKey(row.ownerId));
+      const ultGraph = resourceGraphs?.get(ultimateGraphKey(row.ownerEntityId));
       const ultVal = ultGraph ? getResourceValueAfter(ultGraph.points, row.absoluteFrame) : null;
       return (
         <div className={`dmg-cell ${def.cellClass}`} style={style}

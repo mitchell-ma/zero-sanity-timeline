@@ -133,7 +133,7 @@ describe('B. Individual Segment Placement', () => {
     });
 
     const events = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT && ev.columnId === NounType.BASIC_ATTACK,
+      ev => ev.ownerEntityId === SLOT && ev.columnId === NounType.BASIC_ATTACK,
     );
     expect(events).toHaveLength(1);
     expect(events[0].segmentOrigin).toEqual([segIdx]);
@@ -156,7 +156,7 @@ describe('B. Individual Segment Placement', () => {
     });
 
     const events = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT && ev.columnId === NounType.BASIC_ATTACK,
+      ev => ev.ownerEntityId === SLOT && ev.columnId === NounType.BASIC_ATTACK,
     );
     expect(events[0].segments[0].properties.duration).toBe(expectedDuration);
   });
@@ -182,7 +182,7 @@ describe('B. Individual Segment Placement', () => {
     const vm = viewModels.get(basicCol.key);
     expect(vm).toBeDefined();
     expect(vm!.events.some(
-      ev => ev.ownerId === SLOT && ev.columnId === NounType.BASIC_ATTACK,
+      ev => ev.ownerEntityId === SLOT && ev.columnId === NounType.BASIC_ATTACK,
     )).toBe(true);
   });
 
@@ -225,7 +225,7 @@ describe('C. Reset to Default', () => {
     });
 
     const eventBefore = result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT && ev.columnId === NounType.BASIC_ATTACK,
+      ev => ev.ownerEntityId === SLOT && ev.columnId === NounType.BASIC_ATTACK,
     )!;
     expect(eventBefore.segments).toHaveLength(1);
 
@@ -233,7 +233,7 @@ describe('C. Reset to Default', () => {
     act(() => { result.current.handleResetEvent(eventBefore.uid); });
 
     const eventAfter = result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT && ev.columnId === NounType.BASIC_ATTACK,
+      ev => ev.ownerEntityId === SLOT && ev.columnId === NounType.BASIC_ATTACK,
     )!;
     // Should still be 1 segment — not the full chain
     expect(eventAfter.segments).toHaveLength(1);
@@ -255,7 +255,7 @@ describe('C. Reset to Default', () => {
     });
 
     const eventBefore = result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT && ev.columnId === NounType.BASIC_ATTACK,
+      ev => ev.ownerEntityId === SLOT && ev.columnId === NounType.BASIC_ATTACK,
     )!;
     expect(eventBefore.segments.length).toBe(fullSegmentCount);
     expect(eventBefore.segmentOrigin).toBeUndefined();
@@ -264,7 +264,7 @@ describe('C. Reset to Default', () => {
     act(() => { result.current.handleResetEvent(eventBefore.uid); });
 
     const eventAfter = result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT && ev.columnId === NounType.BASIC_ATTACK,
+      ev => ev.ownerEntityId === SLOT && ev.columnId === NounType.BASIC_ATTACK,
     )!;
     expect(eventAfter.segments).toHaveLength(fullSegmentCount);
     expect(eventAfter.segmentOrigin).toBeUndefined();
@@ -281,7 +281,7 @@ describe('D. No duplicate UIDs', () => {
     const payload = getMenuPayload(result.current, findColumn(result.current, SLOT, NounType.BASIC_ATTACK)!, 0);
 
     act(() => {
-      result.current.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+      result.current.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
     });
 
     const uids = result.current.allProcessedEvents.map(ev => ev.uid);
@@ -294,11 +294,11 @@ describe('D. No duplicate UIDs', () => {
     const payload = getMenuPayload(result.current, findColumn(result.current, SLOT, NounType.BASIC_ATTACK)!, 0);
 
     act(() => {
-      result.current.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+      result.current.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
     });
 
     const batkEvent = result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT && ev.columnId === NounType.BASIC_ATTACK,
+      ev => ev.ownerEntityId === SLOT && ev.columnId === NounType.BASIC_ATTACK,
     )!;
 
     act(() => { result.current.handleMoveEvent(batkEvent.uid, 120); });

@@ -1225,7 +1225,7 @@ function buildMockEvent(entry: { id: string; label: string; data: JsonSkillData 
     uid: `skill-preview-${operatorId}-${skillType}-${entry.id}`,
     id: entry.id,
     name: entry.label,
-    ownerId: operatorId,
+    ownerEntityId: operatorId,
     columnId: 'preview',
     startFrame: 0,
     segments: eventSegs,

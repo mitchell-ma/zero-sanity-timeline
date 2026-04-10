@@ -18,16 +18,16 @@ function makeHost(): ColumnHost & { events: TimelineEvent[] } {
   const events: TimelineEvent[] = [];
   return {
     events,
-    activeEventsIn(columnId: string, ownerId: string, frame: number) {
+    activeEventsIn(columnId: string, ownerEntityId: string, frame: number) {
       return events.filter(ev =>
         ev.columnId === columnId &&
-        ev.ownerId === ownerId &&
+        ev.ownerEntityId === ownerEntityId &&
         ev.startFrame <= frame &&
         frame < ev.startFrame + (ev.segments?.[0]?.properties?.duration ?? 0),
       );
     },
-    activeCount(columnId: string, ownerId: string, frame: number) {
-      return this.activeEventsIn(columnId, ownerId, frame).length;
+    activeCount(columnId: string, ownerEntityId: string, frame: number) {
+      return this.activeEventsIn(columnId, ownerEntityId, frame).length;
     },
     extendDuration(_start: number, raw: number) { return raw; },
     trackRawDuration() {},
@@ -43,7 +43,7 @@ function makeHost(): ColumnHost & { events: TimelineEvent[] } {
   };
 }
 
-const SOURCE: EventSource = { ownerId: 'op-1', skillName: 'TEST' };
+const SOURCE: EventSource = { ownerEntityId: 'op-1', skillName: 'TEST' };
 
 // ── Tests ────────────────────────────────────────────────────────────────────
 
@@ -104,24 +104,24 @@ describe('InflictionColumn — cross-element reaction causality', () => {
     const events: TimelineEvent[] = [
       {
         uid: 'active-1', id: INFLICTION_COLUMNS.CRYO, name: INFLICTION_COLUMNS.CRYO,
-        ownerId: 'enemy', columnId: INFLICTION_COLUMNS.CRYO, startFrame: 0,
+        ownerEntityId: 'enemy', columnId: INFLICTION_COLUMNS.CRYO, startFrame: 0,
         segments: [{ properties: { duration: 1200 } }],
       } as TimelineEvent,
       {
         uid: 'active-2', id: INFLICTION_COLUMNS.CRYO, name: INFLICTION_COLUMNS.CRYO,
-        ownerId: 'enemy', columnId: INFLICTION_COLUMNS.CRYO, startFrame: 50,
+        ownerEntityId: 'enemy', columnId: INFLICTION_COLUMNS.CRYO, startFrame: 50,
         segments: [{ properties: { duration: 1200 } }],
       } as TimelineEvent,
     ];
 
     const host: ColumnHost = {
-      activeEventsIn(columnId, ownerId, frame) {
+      activeEventsIn(columnId, ownerEntityId, frame) {
         return events.filter(ev =>
-          ev.columnId === columnId && ev.ownerId === ownerId &&
+          ev.columnId === columnId && ev.ownerEntityId === ownerEntityId &&
           ev.startFrame <= frame && frame < ev.startFrame + (ev.segments?.[0]?.properties?.duration ?? 0),
         );
       },
-      activeCount(columnId, ownerId, frame) { return this.activeEventsIn(columnId, ownerId, frame).length; },
+      activeCount(columnId, ownerEntityId, frame) { return this.activeEventsIn(columnId, ownerEntityId, frame).length; },
       extendDuration(_s, r) { return r; },
       trackRawDuration() {},
       pushEvent(ev) { events.push(ev); },

@@ -39,7 +39,7 @@ function setPotential(app: AppResult, potential: number) {
 function addUlt(app: AppResult, atFrame: number) {
   const col = findColumn(app, SLOT, NounType.ULTIMATE);
   const payload = getMenuPayload(app, col!, atFrame);
-  app.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+  app.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
 }
 
 describe('Shield Application — Ember Ultimate', () => {

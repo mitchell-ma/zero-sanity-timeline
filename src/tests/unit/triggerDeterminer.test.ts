@@ -23,7 +23,7 @@ const SLOT_B = 'slot-2';
 const STATUS_COLUMN = 'AMP';
 
 function makeEvent(overrides: Partial<TimelineEvent> & { uid: string; columnId: string; startFrame: number }): TimelineEvent {
-  return { id: overrides.name ?? '', name: '', ownerId: STATUS_OWNER, segments: [{ properties: { duration: 0 } }], ...overrides };
+  return { id: overrides.name ?? '', name: '', ownerEntityId: STATUS_OWNER, segments: [{ properties: { duration: 0 } }], ...overrides };
 }
 
 // ── Tests ───────────────────────────────────────────────────────────────────
@@ -44,33 +44,33 @@ describe('TRIGGER determiner resolves to the ANY operator that matched primary',
     const events = [
       // SLOT_A deals damage at frame 600
       makeEvent({
-        uid: 'skill-a', ownerId: SLOT_A,
+        uid: 'skill-a', ownerEntityId: SLOT_A,
         columnId: NounType.BASIC_ATTACK, startFrame: 600,
         segments: [{ properties: { duration: 2 * FPS }, frames: [{ offsetFrame: FPS }] }],
       }),
       // SLOT_A has AMP status active at frame 600
       makeEvent({
-        uid: 'amp-a', ownerId: SLOT_A,
+        uid: 'amp-a', ownerEntityId: SLOT_A,
         columnId: STATUS_COLUMN, startFrame: 0,
         segments: [{ properties: { duration: 10 * FPS } }],
       }),
     ];
     const matches = findClauseTriggerMatches(clause, events, STATUS_OWNER);
     expect(matches.length).toBe(1);
-    expect(matches[0].sourceOwnerId).toBe(SLOT_A);
+    expect(matches[0].sourceEntityId).toBe(SLOT_A);
   });
 
   test('does NOT match when a different operator has the status', () => {
     const events = [
       // SLOT_A deals damage at frame 600
       makeEvent({
-        uid: 'skill-a', ownerId: SLOT_A,
+        uid: 'skill-a', ownerEntityId: SLOT_A,
         columnId: NounType.BASIC_ATTACK, startFrame: 600,
         segments: [{ properties: { duration: 2 * FPS }, frames: [{ offsetFrame: FPS }] }],
       }),
       // SLOT_B has AMP status (not SLOT_A)
       makeEvent({
-        uid: 'amp-b', ownerId: SLOT_B,
+        uid: 'amp-b', ownerEntityId: SLOT_B,
         columnId: STATUS_COLUMN, startFrame: 0,
         segments: [{ properties: { duration: 10 * FPS } }],
       }),
@@ -83,46 +83,46 @@ describe('TRIGGER determiner resolves to the ANY operator that matched primary',
     const events = [
       // SLOT_A deals damage
       makeEvent({
-        uid: 'skill-a', ownerId: SLOT_A,
+        uid: 'skill-a', ownerEntityId: SLOT_A,
         columnId: NounType.BASIC_ATTACK, startFrame: 600,
         segments: [{ properties: { duration: 2 * FPS }, frames: [{ offsetFrame: FPS }] }],
       }),
       // SLOT_B deals damage
       makeEvent({
-        uid: 'skill-b', ownerId: SLOT_B,
+        uid: 'skill-b', ownerEntityId: SLOT_B,
         columnId: NounType.BASIC_ATTACK, startFrame: 900,
         segments: [{ properties: { duration: 2 * FPS }, frames: [{ offsetFrame: FPS }] }],
       }),
       // Only SLOT_B has AMP status
       makeEvent({
-        uid: 'amp-b', ownerId: SLOT_B,
+        uid: 'amp-b', ownerEntityId: SLOT_B,
         columnId: STATUS_COLUMN, startFrame: 0,
         segments: [{ properties: { duration: 60 * FPS } }],
       }),
     ];
     const matches = findClauseTriggerMatches(clause, events, STATUS_OWNER);
     expect(matches.length).toBe(1);
-    expect(matches[0].sourceOwnerId).toBe(SLOT_B);
+    expect(matches[0].sourceEntityId).toBe(SLOT_B);
   });
 
   test('does NOT match when status owner has the status but is not the dealer', () => {
     const events = [
       // SLOT_A deals damage
       makeEvent({
-        uid: 'skill-a', ownerId: SLOT_A,
+        uid: 'skill-a', ownerEntityId: SLOT_A,
         columnId: NounType.BASIC_ATTACK, startFrame: 600,
         segments: [{ properties: { duration: 2 * FPS }, frames: [{ offsetFrame: FPS }] }],
       }),
       // STATUS_OWNER (slot-0) has AMP — but slot-0 is not dealing damage
       makeEvent({
-        uid: 'amp-owner', ownerId: STATUS_OWNER,
+        uid: 'amp-owner', ownerEntityId: STATUS_OWNER,
         columnId: STATUS_COLUMN, startFrame: 0,
         segments: [{ properties: { duration: 10 * FPS } }],
       }),
     ];
     const matches = findClauseTriggerMatches(clause, events, STATUS_OWNER);
     // Without TRIGGER support, this would incorrectly match because
-    // TRIGGER would fall back to sourceOwnerId (STATUS_OWNER) which has the status.
+    // TRIGGER would fall back to sourceEntityId (STATUS_OWNER) which has the status.
     expect(matches.length).toBe(0);
   });
 });

@@ -107,7 +107,7 @@ export interface EngineTriggerContext {
 
 export interface EngineTriggerEntry {
   frame: number;
-  sourceOwnerId: string;
+  sourceEntityId: string;
   sourceSkillName: string;
   /** Slot ID of the operator that triggered this entry (for TRIGGER determiner resolution). */
   triggerSlotId?: string;
@@ -156,8 +156,8 @@ export interface QueueFrame {
   uid?: string;
   statusId: string;
   columnId: string;
-  ownerId: string;
-  sourceOwnerId: string;
+  ownerEntityId: string;
+  sourceEntityId: string;
   sourceSkillName: string;
   maxStacks: number;
   durationFrames: number;
@@ -188,8 +188,8 @@ export interface QueueFrame {
   // ── STATUS_EXIT fields ───────────────────────────────────────────────
   /** onExitClause effects to execute at the status end frame. */
   statusExitClauses?: { conditions: unknown[]; effects?: unknown[] }[];
-  /** Owner ID of the parent status (for resolveOwnerId context). */
-  statusExitOwnerId?: string;
+  /** Owner ID of the parent status (for resolveEntityId context). */
+  statusExitEntityId?: string;
 }
 
 /** Slot-level trigger wiring for the pipeline. */

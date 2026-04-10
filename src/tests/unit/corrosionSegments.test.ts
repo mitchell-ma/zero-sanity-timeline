@@ -45,11 +45,11 @@ function infliction(
     uid,
     id: columnId,
     name: columnId,
-    ownerId: ENEMY_OWNER_ID,
+    ownerEntityId: ENEMY_OWNER_ID,
     columnId,
     startFrame,
     segments: [{ properties: { duration: Math.round(durationSeconds * FPS) } }],
-    sourceOwnerId: 'slot-0',
+    sourceEntityId: 'slot-0',
   };
 }
 
@@ -64,11 +64,11 @@ function corrosionEvent(
     uid,
     id: REACTION_COLUMNS.CORROSION,
     name: REACTION_COLUMNS.CORROSION,
-    ownerId: ENEMY_OWNER_ID,
+    ownerEntityId: ENEMY_OWNER_ID,
     columnId: REACTION_COLUMNS.CORROSION,
     startFrame,
     segments: [{ properties: { duration: durationFrames } }],
-    sourceOwnerId: 'slot-0',
+    sourceEntityId: 'slot-0',
     ...opts,
   };
 }
@@ -431,11 +431,11 @@ describe('corrosion time stop interaction', () => {
       uid: 'freeform-corr-1',
       id: REACTION_COLUMNS.CORROSION,
       name: REACTION_COLUMNS.CORROSION,
-      ownerId: ENEMY_OWNER_ID,
+      ownerEntityId: ENEMY_OWNER_ID,
       columnId: REACTION_COLUMNS.CORROSION,
       startFrame: 0,
       segments: [{ properties: { duration: 5 * FPS } }],
-      sourceOwnerId: USER_ID,
+      sourceEntityId: USER_ID,
       sourceSkillName: 'Freeform',
       // No stacks — freeform events don't set this
     };

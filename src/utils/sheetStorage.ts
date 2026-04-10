@@ -96,6 +96,23 @@ function migrateSheetData(data: Record<string, unknown>): SheetData {
     }
     data.resourceConfigs = migrated;
   }
+  // Migrate legacy ownerId → ownerEntityId field names on events (chainRef 4d-2)
+  if (data.events && Array.isArray(data.events)) {
+    for (const ev of data.events as Record<string, unknown>[]) {
+      if ('ownerId' in ev && !('ownerEntityId' in ev)) {
+        ev.ownerEntityId = ev.ownerId;
+        delete ev.ownerId;
+      }
+      if ('sourceOwnerId' in ev && !('sourceEntityId' in ev)) {
+        ev.sourceEntityId = ev.sourceOwnerId;
+        delete ev.sourceOwnerId;
+      }
+      if ('eventStatusOwnerId' in ev && !('eventStatusEntityId' in ev)) {
+        ev.eventStatusEntityId = ev.eventStatusOwnerId;
+        delete ev.eventStatusOwnerId;
+      }
+    }
+  }
   return data as unknown as SheetData;
 }
 

@@ -56,7 +56,7 @@ function findMatchingColumn(app: AppResult, slotId: string, columnId: string) {
   return app.columns.find(
     (c): c is MiniTimeline =>
       c.type === ColumnType.MINI_TIMELINE &&
-      c.ownerId === slotId &&
+      c.ownerEntityId === slotId &&
       (c.columnId === columnId || (c.matchColumnIds?.includes(columnId) ?? false)),
   );
 }
@@ -98,7 +98,7 @@ function placeUltimate(ref: HookRef, atFrame: number) {
   const ultCol = findMatchingColumn(ref.current, SLOT, NounType.ULTIMATE);
   const payload = getMenuPayload(ref.current, ultCol!, atFrame);
   act(() => {
-    ref.current.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+    ref.current.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
   });
 }
 
@@ -117,9 +117,9 @@ function place4MfStacks(ref: HookRef, startFrame: number) {
         (item.actionPayload as { columnId?: string })?.columnId === MELTING_FLAME_ID,
     );
     expect(mfItem).toBeDefined();
-    const payload = mfItem!.actionPayload as { ownerId: string; columnId: string; atFrame: number; defaultSkill: Record<string, unknown> };
+    const payload = mfItem!.actionPayload as { ownerEntityId: string; columnId: string; atFrame: number; defaultSkill: Record<string, unknown> };
     act(() => {
-      ref.current.handleAddEvent(payload.ownerId, payload.columnId, startFrame + i * FPS, payload.defaultSkill);
+      ref.current.handleAddEvent(payload.ownerEntityId, payload.columnId, startFrame + i * FPS, payload.defaultSkill);
     });
   }
   // Restore strict mode for variant availability checks
@@ -298,11 +298,11 @@ describe('Laevatain variant availability — integration through useApp', () => 
           (item.actionPayload as { columnId?: string })?.columnId === NODE_STAGGER_COLUMN_ID,
       );
       expect(staggerItem).toBeDefined();
-      const staggerPayload = staggerItem!.actionPayload as { ownerId: string; columnId: string; atFrame: number; defaultSkill: Record<string, unknown> };
+      const staggerPayload = staggerItem!.actionPayload as { ownerEntityId: string; columnId: string; atFrame: number; defaultSkill: Record<string, unknown> };
       act(() => {
         result.current.handleAddEvent(
-          staggerPayload.ownerId, staggerPayload.columnId, ACTIVE_FRAME - FPS,
-          { ...staggerPayload.defaultSkill, name: NODE_STAGGER_COLUMN_ID, sourceOwnerId: USER_ID, segments: [{ properties: { duration: 5 * FPS } }] },
+          staggerPayload.ownerEntityId, staggerPayload.columnId, ACTIVE_FRAME - FPS,
+          { ...staggerPayload.defaultSkill, name: NODE_STAGGER_COLUMN_ID, sourceEntityId: USER_ID, segments: [{ properties: { duration: 5 * FPS } }] },
         );
       });
       // Switch back to strict for variant availability check
@@ -367,7 +367,7 @@ describe('Laevatain variant availability — integration through useApp', () => 
       const ultVm = viewModels.get(ultCol!.key);
       expect(ultVm).toBeDefined();
       const ultEvents = ultVm!.events.filter(
-        (ev) => ev.name === TWILIGHT_ID && ev.ownerId === SLOT,
+        (ev) => ev.name === TWILIGHT_ID && ev.ownerEntityId === SLOT,
       );
       expect(ultEvents).toHaveLength(1);
     });

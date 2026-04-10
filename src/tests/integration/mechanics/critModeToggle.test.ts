@@ -33,7 +33,7 @@ function setupWithBattleSkill() {
   expect(bsCol).toBeDefined();
   const payload = getMenuPayload(view.result.current, bsCol!, 2 * FPS);
   act(() => {
-    view.result.current.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+    view.result.current.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
   });
 
   return view;

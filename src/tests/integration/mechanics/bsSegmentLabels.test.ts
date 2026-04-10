@@ -97,13 +97,13 @@ describe('BS segment labels use properties.name, not Roman numerals', () => {
     expect(empItem!.disabled).toBeFalsy();
 
     // 2. Place empowered BS
-    const empPayload = empItem!.actionPayload as { ownerId: string; columnId: string; atFrame: number; defaultSkill: Record<string, unknown> };
+    const empPayload = empItem!.actionPayload as { ownerEntityId: string; columnId: string; atFrame: number; defaultSkill: Record<string, unknown> };
     act(() => {
-      result.current.handleAddEvent(empPayload.ownerId, empPayload.columnId, empPayload.atFrame, empPayload.defaultSkill);
+      result.current.handleAddEvent(empPayload.ownerEntityId, empPayload.columnId, empPayload.atFrame, empPayload.defaultSkill);
     });
 
     const events = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_ROSSI && ev.columnId === NounType.BATTLE,
+      ev => ev.ownerEntityId === SLOT_ROSSI && ev.columnId === NounType.BATTLE,
     );
     expect(events).toHaveLength(1);
     expect(events[0].name).toBe(BS_EMP_ID);
@@ -151,11 +151,11 @@ describe('BS segment labels use properties.name, not Roman numerals', () => {
     expect(baCol).toBeDefined();
     const payload = getMenuPayload(result.current, baCol!, 1 * FPS);
     act(() => {
-      result.current.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+      result.current.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
     });
 
     const baEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_ROSSI && ev.columnId === NounType.BASIC_ATTACK,
+      ev => ev.ownerEntityId === SLOT_ROSSI && ev.columnId === NounType.BASIC_ATTACK,
     );
     expect(baEvents).toHaveLength(1);
     // Rossi BA has multiple segments

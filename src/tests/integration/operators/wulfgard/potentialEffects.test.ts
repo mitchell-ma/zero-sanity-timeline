@@ -110,13 +110,13 @@ describe('B. P5 — Natural Predator', () => {
     const comboPayload = getMenuPayload(result.current, comboCol!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        comboPayload.ownerId, comboPayload.columnId,
+        comboPayload.ownerEntityId, comboPayload.columnId,
         comboPayload.atFrame, comboPayload.defaultSkill,
       );
     });
 
     const comboBefore = result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.COMBO,
+      ev => ev.ownerEntityId === SLOT_WULFGARD && ev.columnId === NounType.COMBO,
     );
     const durationBefore = eventDuration(comboBefore!);
 
@@ -126,13 +126,13 @@ describe('B. P5 — Natural Predator', () => {
     const ultPayload = getMenuPayload(result.current, ultCol!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        ultPayload.ownerId, ultPayload.columnId,
+        ultPayload.ownerEntityId, ultPayload.columnId,
         ultPayload.atFrame, ultPayload.defaultSkill,
       );
     });
 
     const comboAfter = result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.COMBO,
+      ev => ev.ownerEntityId === SLOT_WULFGARD && ev.columnId === NounType.COMBO,
     );
     expect(eventDuration(comboAfter!)).toBeLessThan(durationBefore);
   });
@@ -147,13 +147,13 @@ describe('B. P5 — Natural Predator', () => {
     const comboPayload = getMenuPayload(result.current, comboCol!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        comboPayload.ownerId, comboPayload.columnId,
+        comboPayload.ownerEntityId, comboPayload.columnId,
         comboPayload.atFrame, comboPayload.defaultSkill,
       );
     });
 
     const comboBefore = result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.COMBO,
+      ev => ev.ownerEntityId === SLOT_WULFGARD && ev.columnId === NounType.COMBO,
     );
     const durationBefore = eventDuration(comboBefore!);
 
@@ -163,14 +163,14 @@ describe('B. P5 — Natural Predator', () => {
     const ultPayload = getMenuPayload(result.current, ultCol!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        ultPayload.ownerId, ultPayload.columnId,
+        ultPayload.ownerEntityId, ultPayload.columnId,
         ultPayload.atFrame, ultPayload.defaultSkill,
       );
     });
 
     // Combo duration should be shorter after cooldown reset
     const comboAfter = result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.COMBO,
+      ev => ev.ownerEntityId === SLOT_WULFGARD && ev.columnId === NounType.COMBO,
     );
     const durationAfter = eventDuration(comboAfter!);
     expect(durationAfter).toBeLessThan(durationBefore);
@@ -182,7 +182,7 @@ describe('B. P5 — Natural Predator', () => {
     );
     const comboVM = viewModels.get(comboCol!.key);
     expect(comboVM).toBeDefined();
-    expect(comboVM!.events.some(ev => ev.ownerId === SLOT_WULFGARD)).toBe(true);
+    expect(comboVM!.events.some(ev => ev.ownerEntityId === SLOT_WULFGARD)).toBe(true);
   });
 });
 
@@ -196,7 +196,7 @@ describe('C. P0 — No Potential Effects', () => {
 
     // Controller: no P5 status at P0
     const npEvents = result.current.allProcessedEvents.filter(
-      ev => ev.name === P5_STATUS_ID && ev.ownerId === SLOT_WULFGARD,
+      ev => ev.name === P5_STATUS_ID && ev.ownerEntityId === SLOT_WULFGARD,
     );
     expect(npEvents).toHaveLength(0);
   });
@@ -211,13 +211,13 @@ describe('C. P0 — No Potential Effects', () => {
     const comboPayload = getMenuPayload(result.current, comboCol!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        comboPayload.ownerId, comboPayload.columnId,
+        comboPayload.ownerEntityId, comboPayload.columnId,
         comboPayload.atFrame, comboPayload.defaultSkill,
       );
     });
 
     const comboBefore = result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.COMBO,
+      ev => ev.ownerEntityId === SLOT_WULFGARD && ev.columnId === NounType.COMBO,
     );
     const durationBefore = eventDuration(comboBefore!);
 
@@ -227,13 +227,13 @@ describe('C. P0 — No Potential Effects', () => {
     const ultPayload = getMenuPayload(result.current, ultCol!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        ultPayload.ownerId, ultPayload.columnId,
+        ultPayload.ownerEntityId, ultPayload.columnId,
         ultPayload.atFrame, ultPayload.defaultSkill,
       );
     });
 
     const comboAfter = result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.COMBO,
+      ev => ev.ownerEntityId === SLOT_WULFGARD && ev.columnId === NounType.COMBO,
     );
     const durationAfter = eventDuration(comboAfter!);
 
@@ -247,9 +247,9 @@ describe('C. P0 — No Potential Effects', () => {
     );
     const comboVM = viewModels.get(comboCol!.key);
     expect(comboVM).toBeDefined();
-    expect(comboVM!.events.some(ev => ev.ownerId === SLOT_WULFGARD)).toBe(true);
+    expect(comboVM!.events.some(ev => ev.ownerEntityId === SLOT_WULFGARD)).toBe(true);
     const ultVM = viewModels.get(ultCol!.key);
     expect(ultVM).toBeDefined();
-    expect(ultVM!.events.some(ev => ev.ownerId === SLOT_WULFGARD)).toBe(true);
+    expect(ultVM!.events.some(ev => ev.ownerEntityId === SLOT_WULFGARD)).toBe(true);
   });
 });

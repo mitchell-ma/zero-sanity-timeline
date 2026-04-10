@@ -53,12 +53,12 @@ function addBattleSkill(app: AppResult, atFrame: number) {
   const col = findColumn(app, SLOT_EMBER, NounType.BATTLE);
   expect(col).toBeDefined();
   const payload = getMenuPayload(app, col!, atFrame);
-  app.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+  app.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
 }
 
 function getInflamedDuration(app: AppResult) {
   const inflamedEvents = app.allProcessedEvents.filter(
-    (ev) => ev.columnId === INFLAMED_ID && ev.ownerId === SLOT_EMBER,
+    (ev) => ev.columnId === INFLAMED_ID && ev.ownerEntityId === SLOT_EMBER,
   );
   expect(inflamedEvents.length).toBeGreaterThanOrEqual(1);
   return inflamedEvents[0].segments.reduce(

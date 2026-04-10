@@ -99,12 +99,12 @@ describe('A. Combo thunderlance UE recovery', () => {
     const payload = getMenuPayload(result.current, comboCol!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const combos = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT && ev.columnId === NounType.COMBO,
+      ev => ev.ownerEntityId === SLOT && ev.columnId === NounType.COMBO,
     );
     expect(combos).toHaveLength(1);
 
@@ -132,12 +132,12 @@ describe('B. Ultimate thunderlance EX UE recovery', () => {
     const payload = getMenuPayload(result.current, ultCol!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const ults = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT && ev.columnId === NounType.ULTIMATE,
+      ev => ev.ownerEntityId === SLOT && ev.columnId === NounType.ULTIMATE,
     );
     expect(ults).toHaveLength(1);
 
@@ -160,12 +160,12 @@ describe('C. PIERCE status UE recovery', () => {
     const comboCol = findColumn(result.current, SLOT, NounType.COMBO);
     act(() => {
       const p = getMenuPayload(result.current, comboCol!, 1 * FPS);
-      result.current.handleAddEvent(p.ownerId, p.columnId, p.atFrame, p.defaultSkill);
+      result.current.handleAddEvent(p.ownerEntityId, p.columnId, p.atFrame, p.defaultSkill);
     });
     const bsCol = findColumn(result.current, SLOT, NounType.BATTLE);
     act(() => {
       const p = getMenuPayload(result.current, bsCol!, 4 * FPS);
-      result.current.handleAddEvent(p.ownerId, p.columnId, p.atFrame, p.defaultSkill);
+      result.current.handleAddEvent(p.ownerEntityId, p.columnId, p.atFrame, p.defaultSkill);
     });
 
     const pierceEvents = result.current.allProcessedEvents.filter(
@@ -193,12 +193,12 @@ describe('C. PIERCE status UE recovery', () => {
     const ultCol = findColumn(result.current, SLOT, NounType.ULTIMATE);
     act(() => {
       const p = getMenuPayload(result.current, ultCol!, 1 * FPS);
-      result.current.handleAddEvent(p.ownerId, p.columnId, p.atFrame, p.defaultSkill);
+      result.current.handleAddEvent(p.ownerEntityId, p.columnId, p.atFrame, p.defaultSkill);
     });
     const bsCol = findColumn(result.current, SLOT, NounType.BATTLE);
     act(() => {
       const p = getMenuPayload(result.current, bsCol!, 5 * FPS);
-      result.current.handleAddEvent(p.ownerId, p.columnId, p.atFrame, p.defaultSkill);
+      result.current.handleAddEvent(p.ownerEntityId, p.columnId, p.atFrame, p.defaultSkill);
     });
 
     const pierceEvents = result.current.allProcessedEvents.filter(

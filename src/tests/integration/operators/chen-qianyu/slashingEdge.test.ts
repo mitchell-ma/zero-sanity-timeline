@@ -38,11 +38,11 @@ const SLOT_CHEN = 'slot-0';
  * Find a column by owner whose columnId or matchColumnIds includes the given id.
  * Used for status columns that may collect events via matchColumnIds.
  */
-function findMatchingColumn(app: AppResult, ownerId: string, matchId: string) {
+function findMatchingColumn(app: AppResult, ownerEntityId: string, matchId: string) {
   return app.columns.find(
     (c): c is MiniTimeline =>
       c.type === ColumnType.MINI_TIMELINE &&
-      c.ownerId === ownerId &&
+      c.ownerEntityId === ownerEntityId &&
       (c.columnId === matchId || (c.matchColumnIds?.includes(matchId) ?? false)),
   );
 }
@@ -71,7 +71,7 @@ describe('Chen Qianyu — Slashing Edge', () => {
 
     act(() => {
       result.current.handleAddEvent(
-        battlePayload.ownerId, battlePayload.columnId, battlePayload.atFrame, battlePayload.defaultSkill,
+        battlePayload.ownerEntityId, battlePayload.columnId, battlePayload.atFrame, battlePayload.defaultSkill,
       );
     });
 
@@ -88,7 +88,7 @@ describe('Chen Qianyu — Slashing Edge', () => {
     const vm = viewModels.get(statusCol!.key);
     expect(vm).toBeDefined();
     const seInVM = vm!.events.filter(
-      (ev) => ev.columnId === SLASHING_EDGE_ID && ev.ownerId === SLOT_CHEN
+      (ev) => ev.columnId === SLASHING_EDGE_ID && ev.ownerEntityId === SLOT_CHEN
         && ev.eventStatus !== EventStatusType.CONSUMED && ev.eventStatus !== EventStatusType.REFRESHED,
     );
     expect(seInVM).toHaveLength(1);
@@ -118,7 +118,7 @@ describe('Chen Qianyu — Slashing Edge', () => {
 
       act(() => {
         result.current.handleAddEvent(
-          payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+          payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
         );
       });
     }
@@ -135,7 +135,7 @@ describe('Chen Qianyu — Slashing Edge', () => {
     const vm = viewModels.get(statusCol!.key);
     expect(vm).toBeDefined();
     const seInVM = vm!.events.filter(
-      (ev) => ev.columnId === SLASHING_EDGE_ID && ev.ownerId === SLOT_CHEN,
+      (ev) => ev.columnId === SLASHING_EDGE_ID && ev.ownerEntityId === SLOT_CHEN,
     );
     expect(seInVM.length).toBeGreaterThanOrEqual(5);
 
@@ -167,7 +167,7 @@ describe('Chen Qianyu — Slashing Edge', () => {
 
       act(() => {
         result.current.handleAddEvent(
-          payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+          payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
         );
       });
     }
@@ -183,7 +183,7 @@ describe('Chen Qianyu — Slashing Edge', () => {
     // Active stacks at the last second-wave BS frame
     const lastFrame2 = (32 + 9 * 2) * FPS;
     const allSE2 = vm2!.events.filter(
-      (ev) => ev.columnId === SLASHING_EDGE_ID && ev.ownerId === SLOT_CHEN,
+      (ev) => ev.columnId === SLASHING_EDGE_ID && ev.ownerEntityId === SLOT_CHEN,
     );
     const activeAtLast2 = allSE2.filter((ev) => {
       if (ev.eventStatus === EventStatusType.CONSUMED || ev.eventStatus === EventStatusType.REFRESHED) return false;

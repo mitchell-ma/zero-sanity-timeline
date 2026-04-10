@@ -220,9 +220,9 @@ function resolvePhysicalStatusStagger(
 ): void {
   for (const ev of events) {
     if (!PHYSICAL_STATUS_COLUMN_IDS.has(ev.columnId)) continue;
-    if (!ev.sourceOwnerId) continue;
+    if (!ev.sourceEntityId) continue;
 
-    const artsIntensity = aggregatedStats[ev.sourceOwnerId]?.stats[StatType.ARTS_INTENSITY] ?? 0;
+    const artsIntensity = aggregatedStats[ev.sourceEntityId]?.stats[StatType.ARTS_INTENSITY] ?? 0;
     const stagger = getPhysicalStatusStagger(ev.columnId as PhysicalStatusType, artsIntensity);
     if (stagger === 0) continue;
 

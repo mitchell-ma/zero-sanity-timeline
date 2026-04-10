@@ -140,7 +140,7 @@ describe('New Loadout State Isolation', () => {
       ['LAEVATAIN', 'AKEKURI', 'ANTAL', 'ARDELIA'],
       'rhodagn',
       undefined,
-      [{ uid: 'e1', id: 'test', name: 'test', ownerId: 'slot-0', columnId: 'battle', startFrame: 0, segments: [{ properties: { duration: 264 } }] }],
+      [{ uid: 'e1', id: 'test', name: 'test', ownerEntityId: 'slot-0', columnId: 'battle', startFrame: 0, segments: [{ properties: { duration: 264 } }] }],
       {},
       {},
       {},

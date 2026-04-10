@@ -32,7 +32,7 @@ export function resolveControlledOperator(
 
   for (const ev of events) {
     if (ev.id === NounType.CONTROL) {
-      transferPoints.push({ frame: ev.startFrame, slotId: ev.ownerId });
+      transferPoints.push({ frame: ev.startFrame, slotId: ev.ownerEntityId });
     }
   }
 

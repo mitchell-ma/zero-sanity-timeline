@@ -80,14 +80,14 @@ describe('Segment Element Color — event-level dominant element', () => {
     expect(empItem).toBeDefined();
     expect(empItem!.disabled).toBeFalsy();
 
-    const empPayload = empItem!.actionPayload as { ownerId: string; columnId: string; atFrame: number; defaultSkill: Record<string, unknown> | null };
+    const empPayload = empItem!.actionPayload as { ownerEntityId: string; columnId: string; atFrame: number; defaultSkill: Record<string, unknown> | null };
     act(() => {
-      result.current.handleAddEvent(empPayload.ownerId, empPayload.columnId, empPayload.atFrame, empPayload.defaultSkill);
+      result.current.handleAddEvent(empPayload.ownerEntityId, empPayload.columnId, empPayload.atFrame, empPayload.defaultSkill);
     });
 
     // Find the placed empowered BS event
     const empEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_ROSSI && ev.id === BS_EMP_ID,
+      ev => ev.ownerEntityId === SLOT_ROSSI && ev.id === BS_EMP_ID,
     );
     expect(empEvents.length).toBeGreaterThan(0);
 
@@ -121,12 +121,12 @@ describe('Segment Element Color — event-level dominant element', () => {
     expect(bsCol).toBeDefined();
     const payload = getMenuPayload(result.current, bsCol!, 2 * FPS);
     act(() => {
-      result.current.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+      result.current.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
     });
 
     // Check placed events — either base or empowered BS
     const bsEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_ROSSI && ev.columnId === NounType.BATTLE,
+      ev => ev.ownerEntityId === SLOT_ROSSI && ev.columnId === NounType.BATTLE,
     );
     expect(bsEvents.length).toBeGreaterThan(0);
 
@@ -151,7 +151,7 @@ describe('Segment Element Color — presentation layer', () => {
     expect(bsCol).toBeDefined();
     const payload = getMenuPayload(result.current, bsCol!, 2 * FPS);
     act(() => {
-      result.current.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+      result.current.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
     });
 
     const viewModels = computeTimelinePresentation(
@@ -163,7 +163,7 @@ describe('Segment Element Color — presentation layer', () => {
     expect(bsVM).toBeDefined();
 
     // Events in the view model should exist
-    const bsViewEvents = bsVM!.events.filter(ev => ev.ownerId === SLOT_ROSSI);
+    const bsViewEvents = bsVM!.events.filter(ev => ev.ownerEntityId === SLOT_ROSSI);
     expect(bsViewEvents.length).toBeGreaterThan(0);
   });
 });

@@ -31,7 +31,7 @@ describe('Skill events appear in ColumnViewModel after adding', () => {
 
     const payload = getAddEventPayload(buildContextMenu(result.current, col, 0)!);
     act(() => {
-      result.current.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+      result.current.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
     });
 
     const vms = computeTimelinePresentation(result.current.allProcessedEvents, result.current.columns);
@@ -48,7 +48,7 @@ describe('Skill events appear in ColumnViewModel after adding', () => {
 
     const payload = getAddEventPayload(buildContextMenu(result.current, col, 0)!);
     act(() => {
-      result.current.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+      result.current.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
     });
 
     const vms = computeTimelinePresentation(result.current.allProcessedEvents, result.current.columns);

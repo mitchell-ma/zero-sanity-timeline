@@ -49,11 +49,11 @@ function setPotential(app: AppResult, potential: number) {
   });
 }
 
-function findMatchingColumn(app: AppResult, ownerId: string, matchId: string) {
+function findMatchingColumn(app: AppResult, ownerEntityId: string, matchId: string) {
   return app.columns.find(
     (c): c is MiniTimeline =>
       c.type === ColumnType.MINI_TIMELINE &&
-      c.ownerId === ownerId &&
+      c.ownerEntityId === ownerEntityId &&
       (c.columnId === matchId || (c.matchColumnIds?.includes(matchId) ?? false)),
   );
 }
@@ -62,7 +62,7 @@ function addBattleSkill(app: AppResult, atFrame: number) {
   const col = findColumn(app, SLOT_CHEN, NounType.BATTLE);
   expect(col).toBeDefined();
   const payload = getMenuPayload(app, col!, atFrame);
-  app.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+  app.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -105,7 +105,7 @@ describe('Chen Qianyu P1 — Shadowless', () => {
 
     // Controller: Shadowless status should appear on Chen
     const shadowlessEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === SHADOWLESS_ID && ev.ownerId === SLOT_CHEN,
+      (ev) => ev.columnId === SHADOWLESS_ID && ev.ownerEntityId === SLOT_CHEN,
     );
     expect(shadowlessEvents.length).toBeGreaterThanOrEqual(1);
 
@@ -116,7 +116,7 @@ describe('Chen Qianyu P1 — Shadowless', () => {
     );
     let foundInVM = false;
     viewModels.forEach(vm => {
-      if (vm.events.some(ev => ev.columnId === SHADOWLESS_ID && ev.ownerId === SLOT_CHEN)) foundInVM = true;
+      if (vm.events.some(ev => ev.columnId === SHADOWLESS_ID && ev.ownerEntityId === SLOT_CHEN)) foundInVM = true;
     });
     expect(foundInVM).toBe(true);
   });

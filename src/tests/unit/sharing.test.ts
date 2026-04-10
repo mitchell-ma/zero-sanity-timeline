@@ -151,7 +151,7 @@ describe('embedCodec', () => {
           {
             id: 'ev-1',
             name: 'FLAMING_CINDERS_BATK',
-            ownerId: 'slot-0',
+            ownerEntityId: 'slot-0',
             columnId: NounType.BATTLE,
             startFrame: 360,
             segments: [{ properties: { duration: 188 } }],
@@ -159,7 +159,7 @@ describe('embedCodec', () => {
           {
             id: 'ev-2',
             name: 'ERUPTION_COLUMN',
-            ownerId: 'slot-3',
+            ownerEntityId: 'slot-3',
             columnId: NounType.COMBO,
             startFrame: 720,
                         segments: [{ properties: { segmentTypes: ['ANIMATION'], duration: 60, timeDependency: 'REAL_TIME' } }],
@@ -176,7 +176,7 @@ describe('embedCodec', () => {
       expect(decoded.events[0].startFrame).toBe(360);
       expect(eventDuration(decoded.events[0])).toBe(188);
       expect(decoded.events[1].name).toBe('ERUPTION_COLUMN');
-      expect(decoded.events[1].ownerId).toBe('slot-3');
+      expect(decoded.events[1].ownerEntityId).toBe('slot-3');
       const animSeg = decoded.events[1].segments?.find(s => s.properties.segmentTypes?.includes('ANIMATION'));
       expect(animSeg?.properties.duration).toBe(60);
     });
@@ -237,7 +237,7 @@ describe('embedCodec', () => {
         columnId: NounType.BATTLE,
         label: 'Battle',
         color: '#fff',
-        ownerId: 'slot-0',
+        ownerEntityId: 'slot-0',
         defaultEvent: {
           name: 'FLAMING_CINDERS_BATK',
           defaultActivationDuration: 188,
@@ -250,7 +250,7 @@ describe('embedCodec', () => {
         events: [{
           id: 'ev-1',
           name: 'FLAMING_CINDERS_BATK',
-          ownerId: 'slot-0',
+          ownerEntityId: 'slot-0',
           columnId: NounType.BATTLE,
           startFrame: 360,
           segments: [{ properties: { duration: 188 } }],
@@ -289,7 +289,7 @@ describe('embedCodec', () => {
         events: [{
           id: 'ev-1',
           name: 'FLAMING_CINDERS_BATK',
-          ownerId: 'slot-0',
+          ownerEntityId: 'slot-0',
           columnId: NounType.BATTLE,
           startFrame: 99999,
           segments: [{ properties: { duration: -50 } }],
@@ -331,7 +331,7 @@ describe('embedCodec', () => {
       columnId: NounType.BASIC_ATTACK,
       label: 'Basic',
       color: '#fff',
-      ownerId: 'slot-0',
+      ownerEntityId: 'slot-0',
       headerVariant: 'skill',
       defaultEvent: {
         name: 'BASIC_N1',
@@ -351,7 +351,7 @@ describe('embedCodec', () => {
         events: [{
           id: 'ev-1',
           name: 'BASIC_N1',
-          ownerId: 'slot-0',
+          ownerEntityId: 'slot-0',
           columnId: NounType.BASIC_ATTACK,
           startFrame: 120,
           segments: [{ properties: { duration: 300 } }],
@@ -372,7 +372,7 @@ describe('embedCodec', () => {
       const key = 'BASIC_N1:slot-0:BASIC_ATTACK:120';
       const original = makeSheetData({
         events: [{
-          id: 'BASIC_N1', uid: 'ev-1', name: 'BASIC_N1', ownerId: 'slot-0',
+          id: 'BASIC_N1', uid: 'ev-1', name: 'BASIC_N1', ownerEntityId: 'slot-0',
           columnId: NounType.BASIC_ATTACK, startFrame: 120,
           segments: [{ properties: { duration: 300 } }],
         }],
@@ -392,7 +392,7 @@ describe('embedCodec', () => {
       const key = 'BASIC_N1:slot-0:BASIC_ATTACK:120';
       const original = makeSheetData({
         events: [{
-          id: 'BASIC_N1', uid: 'ev-1', name: 'BASIC_N1', ownerId: 'slot-0',
+          id: 'BASIC_N1', uid: 'ev-1', name: 'BASIC_N1', ownerEntityId: 'slot-0',
           columnId: NounType.BASIC_ATTACK, startFrame: 120,
           segments: [{ properties: { duration: 300 } }],
         }],
@@ -419,7 +419,7 @@ describe('embedCodec', () => {
       const key = 'BASIC_N1:slot-0:BASIC_ATTACK:0';
       const original = makeSheetData({
         events: [{
-          id: 'BASIC_N1', uid: 'ev-1', name: 'BASIC_N1', ownerId: 'slot-0',
+          id: 'BASIC_N1', uid: 'ev-1', name: 'BASIC_N1', ownerEntityId: 'slot-0',
           columnId: NounType.BASIC_ATTACK, startFrame: 0,
           segments: [{ properties: { duration: 300 } }],
         }],
@@ -439,7 +439,7 @@ describe('embedCodec', () => {
       const key = 'BASIC_N1:slot-0:BASIC_ATTACK:0';
       const sheet = makeSheetData({
         events: [{
-          id: 'BASIC_N1', uid: 'ev-1', name: 'BASIC_N1', ownerId: 'slot-0',
+          id: 'BASIC_N1', uid: 'ev-1', name: 'BASIC_N1', ownerEntityId: 'slot-0',
           columnId: NounType.BASIC_ATTACK, startFrame: 0,
           segments: [{ properties: { duration: 300 } }],
         }],
@@ -462,7 +462,7 @@ describe('embedCodec', () => {
       const key = 'BASIC_N1:slot-0:BASIC_ATTACK:0';
       const original = makeSheetData({
         events: [{
-          id: 'BASIC_N1', uid: 'ev-1', name: 'BASIC_N1', ownerId: 'slot-0',
+          id: 'BASIC_N1', uid: 'ev-1', name: 'BASIC_N1', ownerEntityId: 'slot-0',
           columnId: NounType.BASIC_ATTACK, startFrame: 0,
           segments: [{ properties: { duration: 300 } }],
         }],
@@ -482,7 +482,7 @@ describe('embedCodec', () => {
       const key = 'BASIC_N1:slot-0:BASIC_ATTACK:0';
       const original = makeSheetData({
         events: [{
-          id: 'BASIC_N1', uid: 'ev-1', name: 'BASIC_N1', ownerId: 'slot-0',
+          id: 'BASIC_N1', uid: 'ev-1', name: 'BASIC_N1', ownerEntityId: 'slot-0',
           columnId: NounType.BASIC_ATTACK, startFrame: 0,
           segments: [{ properties: { duration: 300 } }],
         }],
@@ -594,7 +594,7 @@ describe('full state round-trip (current state → share → load → assert equ
       type: ColumnType.MINI_TIMELINE,
       key: 'slot-0-basic',
       columnId: NounType.BASIC_ATTACK,
-      ownerId: 'slot-0',
+      ownerEntityId: 'slot-0',
       label: 'Basic',
       color: '#f0a040',
       headerVariant: 'skill',
@@ -617,7 +617,7 @@ describe('full state round-trip (current state → share → load → assert equ
       type: ColumnType.MINI_TIMELINE,
       key: 'slot-0-battle',
       columnId: NounType.BATTLE,
-      ownerId: 'slot-0',
+      ownerEntityId: 'slot-0',
       label: 'Battle',
       color: '#f0a040',
       headerVariant: 'skill',
@@ -641,7 +641,7 @@ describe('full state round-trip (current state → share → load → assert equ
       type: ColumnType.MINI_TIMELINE,
       key: 'slot-0-combo',
       columnId: NounType.COMBO,
-      ownerId: 'slot-0',
+      ownerEntityId: 'slot-0',
       label: 'Combo',
       color: '#f0a040',
       headerVariant: 'skill',
@@ -658,7 +658,7 @@ describe('full state round-trip (current state → share → load → assert equ
       type: ColumnType.MINI_TIMELINE,
       key: ultimateGraphKey('slot-0'),
       columnId: NounType.ULTIMATE,
-      ownerId: 'slot-0',
+      ownerEntityId: 'slot-0',
       label: 'Ultimate',
       color: '#f0a040',
       headerVariant: 'skill',
@@ -681,27 +681,27 @@ describe('full state round-trip (current state → share → load → assert equ
       events: [
         // Basic attack (raw, unedited segments — overrides stored separately)
         {
-          id: 'SWORD_OF_ASPIRATION_BATK', uid: 'ev-1', name: 'SWORD_OF_ASPIRATION_BATK', ownerId: 'slot-0',
+          id: 'SWORD_OF_ASPIRATION_BATK', uid: 'ev-1', name: 'SWORD_OF_ASPIRATION_BATK', ownerEntityId: 'slot-0',
           columnId: NounType.BASIC_ATTACK, startFrame: 0,
           segments: [{ properties: { duration: 300 } }],
         },
         // Battle skill with SP cost
         {
-          id: 'SMOULDERING_FIRE', uid: 'ev-2', name: 'SMOULDERING_FIRE', ownerId: 'slot-0',
+          id: 'SMOULDERING_FIRE', uid: 'ev-2', name: 'SMOULDERING_FIRE', ownerEntityId: 'slot-0',
           columnId: NounType.BATTLE, startFrame: 240,
           skillPointCost: 100,
           segments: [{ properties: { duration: 264 } }],
         },
         // Combo skill (has animation + time interaction)
         {
-          id: 'ERUPTION_COLUMN', uid: 'ev-3', name: 'ERUPTION_COLUMN', ownerId: 'slot-0',
+          id: 'ERUPTION_COLUMN', uid: 'ev-3', name: 'ERUPTION_COLUMN', ownerEntityId: 'slot-0',
           columnId: NounType.COMBO, startFrame: 600,
           segments: [{ properties: { segmentTypes: ['ANIMATION'], duration: 60, timeDependency: 'REAL_TIME' } }],
           timeInteraction: 'TIME_STOP',
         },
         // Unedited basic attack
         {
-          id: 'SWORD_OF_ASPIRATION_BATK', uid: 'ev-4', name: 'SWORD_OF_ASPIRATION_BATK', ownerId: 'slot-0',
+          id: 'SWORD_OF_ASPIRATION_BATK', uid: 'ev-4', name: 'SWORD_OF_ASPIRATION_BATK', ownerEntityId: 'slot-0',
           columnId: NounType.BASIC_ATTACK, startFrame: 720,
           segments: [{ properties: { duration: 240 } }],
         },
@@ -805,7 +805,7 @@ describe('animation + active duration round-trip', () => {
 
     const original = makeSheetData({
       events: [{
-        id: 'GRAVITY_FIELD', uid: 'ev-1', name: 'GRAVITY_FIELD', ownerId: 'slot-2',
+        id: 'GRAVITY_FIELD', uid: 'ev-1', name: 'GRAVITY_FIELD', ownerEntityId: 'slot-2',
         columnId: NounType.ULTIMATE, startFrame: 841,
         segments: [
           { properties: { segmentTypes: [SegmentType.ANIMATION], duration: animDuration, name: 'Animation', timeDependency: TimeDependency.REAL_TIME } },
@@ -839,7 +839,7 @@ describe('animation + active duration round-trip', () => {
   test('event with only active duration (no animation) is unaffected', async () => {
     const original = makeSheetData({
       events: [{
-        id: 'FLAMING_CINDERS_BATK', uid: 'ev-1', name: 'FLAMING_CINDERS_BATK', ownerId: 'slot-0',
+        id: 'FLAMING_CINDERS_BATK', uid: 'ev-1', name: 'FLAMING_CINDERS_BATK', ownerEntityId: 'slot-0',
         columnId: NounType.BATTLE, startFrame: 100,
         segments: [{ properties: { duration: 300 } }],
       }],
@@ -860,7 +860,7 @@ describe('animation + active duration round-trip', () => {
 
     const original = makeSheetData({
       events: [{
-        id: 'GRAVITY_FIELD', uid: 'ev-1', name: 'GRAVITY_FIELD', ownerId: 'slot-2',
+        id: 'GRAVITY_FIELD', uid: 'ev-1', name: 'GRAVITY_FIELD', ownerEntityId: 'slot-2',
         columnId: NounType.ULTIMATE, startFrame: 500,
         segments: [
           { properties: { segmentTypes: [SegmentType.ANIMATION], duration: animDuration, name: 'Animation', timeDependency: TimeDependency.REAL_TIME } },

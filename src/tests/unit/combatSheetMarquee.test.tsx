@@ -15,7 +15,7 @@ function mockMakeRow(key: string, absoluteFrame: number, damage: number | null) 
     absoluteFrame,
     label: `hit-${key}`,
     columnKey: 'slot0-battle',
-    ownerId: 'slot0',
+    ownerEntityId: 'slot0',
     columnId: 'BATTLE',
     eventUid: `ev-${key}`,
     segmentIndex: 0,
@@ -45,10 +45,10 @@ jest.mock('../../controller/calculation/damageTableBuilder', () => {
   const actual = jest.requireActual('../../controller/calculation/damageTableBuilder');
   return {
     ...actual,
-    buildDamageTableColumns: () => [{ key: 'slot0-battle', label: 'Battle', ownerId: 'slot0', columnId: 'BATTLE', color: '#f0a040' }],
+    buildDamageTableColumns: () => [{ key: 'slot0-battle', label: 'Battle', ownerEntityId: 'slot0', columnId: 'BATTLE', color: '#f0a040' }],
     computeDamageStatistics: () => ({
       teamTotalDamage: 10000,
-      operators: [{ ownerId: 'slot0', totalDamage: 10000, teamPct: 1 }],
+      operators: [{ ownerEntityId: 'slot0', totalDamage: 10000, teamPct: 1 }],
       columnTotals: new Map(),
       bossMaxHp: null,
       highestTick: null,

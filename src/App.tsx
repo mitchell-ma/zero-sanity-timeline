@@ -176,7 +176,7 @@ export default function App() {
     const errors = createCustomSkill(skill);
     if (errors.length > 0) return;
 
-    addSkillLink(event.ownerId, event.columnId as SkillType, id);
+    addSkillLink(event.ownerEntityId, event.columnId as SkillType, id);
     bumpContentRefresh();
     app.bumpCustomSkillVersion();
   }, [bumpContentRefresh, app.bumpCustomSkillVersion]); // eslint-disable-line react-hooks/exhaustive-deps

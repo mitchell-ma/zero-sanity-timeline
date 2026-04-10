@@ -27,7 +27,7 @@ function getStatusMicroColumn(
   for (const col of columns) {
     if (col.type !== ColumnType.MINI_TIMELINE) continue;
     const mt = col as MiniTimeline;
-    if (mt.ownerId !== slotId || mt.columnId !== OPERATOR_STATUS_COLUMN_ID) continue;
+    if (mt.ownerEntityId !== slotId || mt.columnId !== OPERATOR_STATUS_COLUMN_ID) continue;
     return mt.microColumns?.find(mc => mc.id === statusId);
   }
   return undefined;
@@ -84,7 +84,7 @@ describe('Status micro-column colors', () => {
     for (const col of result.current.columns) {
       if (col.type !== ColumnType.MINI_TIMELINE) continue;
       const mt = col as MiniTimeline;
-      if (mt.ownerId !== SLOT || mt.columnId !== OPERATOR_STATUS_COLUMN_ID) continue;
+      if (mt.ownerEntityId !== SLOT || mt.columnId !== OPERATOR_STATUS_COLUMN_ID) continue;
       for (const mc of mt.microColumns ?? []) {
         if (mc.color !== HEAT_COLOR) continue;
         // If a status uses HEAT color, it must have element: HEAT in its config

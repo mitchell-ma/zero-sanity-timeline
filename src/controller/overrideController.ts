@@ -20,7 +20,7 @@ import type {
 const KEY_SEP = ':';
 
 export function buildOverrideKey(event: TimelineEvent): string {
-  return `${event.id}${KEY_SEP}${event.ownerId}${KEY_SEP}${event.columnId}${KEY_SEP}${event.startFrame}`;
+  return `${event.id}${KEY_SEP}${event.ownerEntityId}${KEY_SEP}${event.columnId}${KEY_SEP}${event.startFrame}`;
 }
 
 // ── Internal helpers ─────────────────────────────────────────────────

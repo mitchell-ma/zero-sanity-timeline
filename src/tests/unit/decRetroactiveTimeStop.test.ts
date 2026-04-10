@@ -22,13 +22,13 @@ function mkStatus(uid: string, startFrame: number, rawDuration: number): Timelin
     uid,
     id: 'TEST_STATUS',
     name: 'TEST_STATUS',
-    ownerId: 'slot-0',
+    ownerEntityId: 'slot-0',
     columnId: NounType.BATTLE,
     startFrame,
     segments: [
       { properties: { duration: rawDuration } },
     ],
-    sourceOwnerId: 'slot-0',
+    sourceEntityId: 'slot-0',
     sourceSkillName: 'TEST',
   } as TimelineEvent;
 }
@@ -38,14 +38,14 @@ function mkUltimate(uid: string, startFrame: number, animDuration: number): Time
     uid,
     id: 'TEST_ULT',
     name: 'TEST_ULT',
-    ownerId: 'slot-0',
+    ownerEntityId: 'slot-0',
     columnId: NounType.ULTIMATE,
     startFrame,
     segments: [
       { properties: { duration: animDuration, segmentTypes: [SegmentType.ANIMATION] } },
       { properties: { duration: 60, segmentTypes: [SegmentType.ACTIVE] } },
     ],
-    sourceOwnerId: 'slot-0',
+    sourceEntityId: 'slot-0',
     sourceSkillName: 'TEST_ULT',
   } as TimelineEvent;
 }
@@ -105,11 +105,11 @@ describe('DEC — retroactive time-stop re-extension', () => {
       uid: 'pushed-status',
       id: 'TEST_PUSHED',
       name: 'TEST_PUSHED',
-      ownerId: 'slot-0',
+      ownerEntityId: 'slot-0',
       columnId: NounType.STATUS,
       startFrame: 0,
       segments: [{ properties: { duration: 300 } }],
-      sourceOwnerId: 'slot-0',
+      sourceEntityId: 'slot-0',
       sourceSkillName: 'TEST',
     } as TimelineEvent;
 

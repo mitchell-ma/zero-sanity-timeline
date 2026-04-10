@@ -59,7 +59,7 @@ describe('Status column layout — micro-column positioning', () => {
     const { result } = renderHook(() => useApp());
 
     const statusEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_LAEVATAIN &&
+      (ev) => ev.ownerEntityId === SLOT_LAEVATAIN &&
         (ev.columnId === SH_TALENT_COLUMN || ev.columnId === RE_IGNITION_COLUMN),
     );
     expect(statusEvents.length).toBeGreaterThanOrEqual(2);
@@ -93,7 +93,7 @@ describe('Status column layout — micro-column positioning', () => {
     const mfPayload = getStatusMenuPayload(result.current, MELTING_FLAME_ID, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        mfPayload.ownerId, mfPayload.columnId, mfPayload.atFrame, mfPayload.defaultSkill,
+        mfPayload.ownerEntityId, mfPayload.columnId, mfPayload.atFrame, mfPayload.defaultSkill,
       );
     });
 
@@ -101,7 +101,7 @@ describe('Status column layout — micro-column positioning', () => {
     const shPayload = getStatusMenuPayload(result.current, SH_EFFECT_COLUMN, 3 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        shPayload.ownerId, shPayload.columnId, shPayload.atFrame, shPayload.defaultSkill,
+        shPayload.ownerEntityId, shPayload.columnId, shPayload.atFrame, shPayload.defaultSkill,
       );
     });
 
@@ -117,7 +117,7 @@ describe('Status column layout — micro-column positioning', () => {
     expect(vm).toBeDefined();
 
     // All status events for this column should have micro-positions
-    const statusEvents = vm!.events.filter((ev) => ev.ownerId === SLOT_LAEVATAIN);
+    const statusEvents = vm!.events.filter((ev) => ev.ownerEntityId === SLOT_LAEVATAIN);
     expect(statusEvents.length).toBeGreaterThanOrEqual(4);
 
     // Collect unique slot positions (leftFrac values)

@@ -88,11 +88,11 @@ describe('Time-stop frame stability — frame diamonds must not drift on drag', 
     // Place combo at 2s — this creates a time-stop region at its animation start
     const comboPayload = getMenuPayload(result.current, comboCol, 2 * FPS);
     act(() => {
-      result.current.handleAddEvent(comboPayload.ownerId, comboPayload.columnId, comboPayload.atFrame, comboPayload.defaultSkill);
+      result.current.handleAddEvent(comboPayload.ownerEntityId, comboPayload.columnId, comboPayload.atFrame, comboPayload.defaultSkill);
     });
 
     const comboEvent = result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT_ROSSI && ev.columnId === NounType.COMBO,
+      ev => ev.ownerEntityId === SLOT_ROSSI && ev.columnId === NounType.COMBO,
     )!;
     const animDur = getAnimationDuration(comboEvent);
     expect(animDur).toBeGreaterThan(0);
@@ -101,11 +101,11 @@ describe('Time-stop frame stability — frame diamonds must not drift on drag', 
     const bsStartFrame = comboEvent.startFrame + animDur;
     const bsPayload = getMenuPayload(result.current, battleCol, bsStartFrame);
     act(() => {
-      result.current.handleAddEvent(bsPayload.ownerId, bsPayload.columnId, bsPayload.atFrame, bsPayload.defaultSkill);
+      result.current.handleAddEvent(bsPayload.ownerEntityId, bsPayload.columnId, bsPayload.atFrame, bsPayload.defaultSkill);
     });
 
     const bsEvent = result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT_ROSSI && ev.columnId === NounType.BATTLE,
+      ev => ev.ownerEntityId === SLOT_ROSSI && ev.columnId === NounType.BATTLE,
     )!;
     expect(bsEvent).toBeDefined();
     expect(bsEvent.name).toBe(BS_ID);
@@ -137,11 +137,11 @@ describe('Time-stop frame stability — frame diamonds must not drift on drag', 
     // Place combo at 2s
     const comboPayload = getMenuPayload(result.current, comboCol, 2 * FPS);
     act(() => {
-      result.current.handleAddEvent(comboPayload.ownerId, comboPayload.columnId, comboPayload.atFrame, comboPayload.defaultSkill);
+      result.current.handleAddEvent(comboPayload.ownerEntityId, comboPayload.columnId, comboPayload.atFrame, comboPayload.defaultSkill);
     });
 
     const comboEvent = result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT_ROSSI && ev.columnId === NounType.COMBO,
+      ev => ev.ownerEntityId === SLOT_ROSSI && ev.columnId === NounType.COMBO,
     )!;
     const animDur = getAnimationDuration(comboEvent);
     const timeStopEnd = comboEvent.startFrame + animDur;
@@ -149,11 +149,11 @@ describe('Time-stop frame stability — frame diamonds must not drift on drag', 
     // Place BS just after time-stop
     const bsPayload = getMenuPayload(result.current, battleCol, timeStopEnd);
     act(() => {
-      result.current.handleAddEvent(bsPayload.ownerId, bsPayload.columnId, bsPayload.atFrame, bsPayload.defaultSkill);
+      result.current.handleAddEvent(bsPayload.ownerEntityId, bsPayload.columnId, bsPayload.atFrame, bsPayload.defaultSkill);
     });
 
     const bsUid = result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT_ROSSI && ev.columnId === NounType.BATTLE,
+      ev => ev.ownerEntityId === SLOT_ROSSI && ev.columnId === NounType.BATTLE,
     )!.uid;
 
     // Record baseline absolute frames
@@ -183,11 +183,11 @@ describe('Time-stop frame stability — frame diamonds must not drift on drag', 
     // Place combo at 2s
     const comboPayload = getMenuPayload(result.current, comboCol, 2 * FPS);
     act(() => {
-      result.current.handleAddEvent(comboPayload.ownerId, comboPayload.columnId, comboPayload.atFrame, comboPayload.defaultSkill);
+      result.current.handleAddEvent(comboPayload.ownerEntityId, comboPayload.columnId, comboPayload.atFrame, comboPayload.defaultSkill);
     });
 
     const comboEvent = result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT_ROSSI && ev.columnId === NounType.COMBO,
+      ev => ev.ownerEntityId === SLOT_ROSSI && ev.columnId === NounType.COMBO,
     )!;
     const animDur = getAnimationDuration(comboEvent);
     const timeStopEnd = comboEvent.startFrame + animDur;
@@ -195,14 +195,14 @@ describe('Time-stop frame stability — frame diamonds must not drift on drag', 
     // Place BS at the time-stop boundary
     const bsPayload = getMenuPayload(result.current, battleCol, timeStopEnd);
     act(() => {
-      result.current.handleAddEvent(bsPayload.ownerId, bsPayload.columnId, bsPayload.atFrame, bsPayload.defaultSkill);
+      result.current.handleAddEvent(bsPayload.ownerEntityId, bsPayload.columnId, bsPayload.atFrame, bsPayload.defaultSkill);
     });
 
     // Record raw segment total (no time-stop overlap)
     const rawTotal = computeSegmentsSpan(battleCol.defaultEvent!.segments!);
 
     const bsUid = result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT_ROSSI && ev.columnId === NounType.BATTLE,
+      ev => ev.ownerEntityId === SLOT_ROSSI && ev.columnId === NounType.BATTLE,
     )!.uid;
 
     // Move BS into time-stop — total should be rawTotal + animDur

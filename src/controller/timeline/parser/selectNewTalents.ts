@@ -1,7 +1,7 @@
 /**
  * Talent selection helper. Pure selector: takes the trigger index's
  * talent events and filters out ones already present in the allEvents
- * list (matched by columnId + ownerId). The caller routes the returned
+ * list (matched by columnId + ownerEntityId). The caller routes the returned
  * events through DEC.createSkillEvent (the sole ingress path).
  */
 import { TimelineEvent } from '../../../consts/viewTypes';
@@ -13,6 +13,6 @@ export function selectNewTalents(
 ): TimelineEvent[] {
   const talentEvents = triggerIdx.getAllTalentEvents();
   return talentEvents.filter(
-    t => !allEvents.some(ev => ev.columnId === t.columnId && ev.ownerId === t.ownerId),
+    t => !allEvents.some(ev => ev.columnId === t.columnId && ev.ownerEntityId === t.ownerEntityId),
   );
 }
