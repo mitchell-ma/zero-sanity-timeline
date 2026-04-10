@@ -122,6 +122,12 @@ const FORBIDDEN: ForbiddenPattern[] = [
     reason: 'HP threshold checks are now reactive — fired from _pushEnemyDamageTickForFrame when damage is actually written, plus a one-time check at pipeline start for initial-state conditions. The per-PROCESS_FRAME polling was deleted in Phase 4e item 3 step 3.',
     allowedFiles: [],
   },
+  {
+    name: 'notifyResourceControllers (parallel resource write path)',
+    pattern: /\bnotifyResourceControllers\s*\(/,
+    reason: 'All resource writes flow through interpret() EVENT_START hooks → DEC wrapper methods (recordSkillPointCost, consumeUltimateEnergy, addNoGainWindow). The parallel notifyResourceControllers path was deleted.',
+    allowedFiles: [],
+  },
 ];
 
 function walk(dir: string, out: string[]) {
