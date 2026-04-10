@@ -348,7 +348,7 @@ export function buildCorrosionSegments(ev: TimelineEvent): EventSegmentData[] | 
 
     // Natural corrosion: initial damage hit on first segment
     const frames = (i === 0 && !forced)
-      ? [{ offsetFrame: 0, damageElement: element }]
+      ? [{ offsetFrame: 0, damageElement: element, clauses: buildReactionDealDamageClause(getArtsReactionBaseMultiplier(cappedStacks), element) }]
       : undefined;
 
     const ROMAN = ['I', 'II', 'III', 'IV'];
