@@ -4,7 +4,9 @@ import { EdgeKind, ElementType, EventFrameType, EventStatusType } from '../../co
 import { NounType } from '../../dsl/semantics';
 import type { CausalityGraph } from './causalityGraph';
 import { StatusLevel } from '../../consts/types';
-import { getCorrosionBaseReduction, getCorrosionReductionMultiplier } from '../../model/calculation/damageFormulas';
+import { getArtsReactionBaseMultiplier, getCombustionDotMultiplier, getShatterBaseMultiplier, getCorrosionBaseReduction, getCorrosionReductionMultiplier } from '../../model/calculation/damageFormulas';
+import { VerbType, AdjectiveType } from '../../dsl/semantics';
+import type { FrameClausePredicate } from '../../model/event-frames/skillEventFrame';
 import {
   ENEMY_ID, REACTION_COLUMN_IDS, REACTION_COLUMNS,
 } from '../../model/channels';
@@ -247,6 +249,23 @@ const REACTION_SEGMENT_LABEL: Record<string, string> = {
   shatter:         'Shatter',
 };
 
+/** Build an unconditional DEAL DAMAGE clause for a reaction frame marker. */
+function buildReactionDealDamageClause(multiplier: number, element: string): readonly FrameClausePredicate[] {
+  return [{
+    conditions: [],
+    effects: [{
+      type: 'dsl' as const,
+      dslEffect: {
+        verb: VerbType.DEAL,
+        object: NounType.DAMAGE,
+        objectQualifier: element as AdjectiveType,
+        to: NounType.ENEMY,
+        with: { value: { verb: VerbType.IS, value: multiplier } },
+      },
+    }],
+  }];
+}
+
 export function buildReactionSegment(ev: TimelineEvent, rawDuration?: number, foreignStops?: readonly TimeStopRegion[]): EventSegmentData | null {
   const element = REACTION_DAMAGE_ELEMENT[ev.columnId];
   if (!element) return null;
@@ -261,11 +280,17 @@ export function buildReactionSegment(ev: TimelineEvent, rawDuration?: number, fo
   const tickDur = rawDuration != null ? Math.min(rawDuration, gameTimeDur) : gameTimeDur;
 
   const forced = ev.isForced || ev.forcedReaction;
+  const stacks = (ev.stacks ?? 1) as StatusLevel;
   const frames: EventFrameMarker[] = [];
+
+  // Multiplier for the initial hit (all non-shatter arts reactions share the same formula)
+  const isShatter = ev.columnId === REACTION_COLUMNS.SHATTER;
+  const initialMult = isShatter ? getShatterBaseMultiplier(stacks) : getArtsReactionBaseMultiplier(stacks);
+  const initialClauses = buildReactionDealDamageClause(initialMult, element);
 
   // Initial reaction hit at frame 0 (skipped for forced reactions)
   if (!forced) {
-    frames.push({ offsetFrame: 0, damageElement: element });
+    frames.push({ offsetFrame: 0, damageElement: element, clauses: initialClauses });
   }
 
   const COMBUSTION_FRAME_TYPES = [EventFrameType.GUARANTEED_HIT, EventFrameType.DAMAGE_OVER_TIME, EventFrameType.PASSIVE];
@@ -273,9 +298,11 @@ export function buildReactionSegment(ev: TimelineEvent, rawDuration?: number, fo
     // Initial hit also gets combustion frame types
     if (frames.length > 0) frames[0].frameTypes = COMBUSTION_FRAME_TYPES;
     // DoT ticks at 1-second intervals, clamped to raw game-time duration
+    const dotMult = getCombustionDotMultiplier(stacks);
+    const dotClauses = buildReactionDealDamageClause(dotMult, element);
     const tickCount = Math.floor(tickDur / FPS);
     for (let i = 1; i <= tickCount; i++) {
-      frames.push({ offsetFrame: i * FPS, damageElement: element, frameTypes: COMBUSTION_FRAME_TYPES });
+      frames.push({ offsetFrame: i * FPS, damageElement: element, frameTypes: COMBUSTION_FRAME_TYPES, clauses: dotClauses });
     }
   }
   // Solidification: initial hit only — shatter is triggered by physical status consumption
