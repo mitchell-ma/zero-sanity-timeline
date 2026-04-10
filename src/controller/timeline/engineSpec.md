@@ -287,6 +287,29 @@ Combo trigger conditions with `subjectDeterminer: "CONTROLLED"` require the perf
 
 `getControlledSlotAtFrame` is threaded from `eventQueueController.ts` → `DEC.setControlledSlotResolver` → `resolveComboTriggersInline` → `findClauseTriggerMatches` → `VerbHandlerContext.controlledSlotId`.
 
+## Causality DAG (CausalityGraph)
+
+Side-car bidirectional DAG on DEC tracking all causal relationships between events. Two edge kinds:
+
+- **`EdgeKind.CREATION`** — "A caused B to exist." Reactions link their source inflictions as parents; Shatter links trigger + solidification (multi-parent A+B→C). `rootOf(uid)` walks CREATION edges to the chain root. `primaryParentOf(uid)` returns the first CREATION parent.
+- **`EdgeKind.TRANSITION`** — "A modified B's lifecycle." When a column consumes/refreshes/clamps an event, the consuming event is linked as a TRANSITION parent. `lastTransitionSource(uid)` returns the most recent TRANSITION parent. Used by EventPane to display "consumed by X's skill."
+
+### API
+
+- `link(child, parents, kind)` — add typed edges (both parent→child and child→parent for bidirectionality)
+- `parentsOf(uid, kind?)` / `childrenOf(uid, kind?)` — optional kind filter
+- `primaryParentOf(uid)` — first CREATION parent
+- `rootOf(uid)` — walks CREATION edges to chain root (cycle-guarded)
+- `ancestorsOf(uid)` — BFS upward across all edge kinds
+- `descendantsOf(uid)` — BFS downward across all edge kinds
+- `lastTransitionSource(uid)` — most recent TRANSITION parent
+
+### Invariants
+
+- The engine is **slot-free**. All identity fields use entity ids (operator id, `ENEMY_ID`, `TEAM_ID`). Slot ↔ entity mapping happens only at the loadout boundary via `loadoutController`/`slotOperatorMap`.
+- **`ownerEntityId`** = who has the event on their timeline. **`sourceEntityId`** = who created/triggered it. These are distinct — enemy-owned inflictions have `ownerEntityId = ENEMY_ID` but `sourceEntityId = <operator-id>`.
+- Every event entering DEC via `_ingest` must have `ownerEntityId` populated by the caller. There is no backfill safety net.
+
 ## Chain-of-Action Refs (Phase 8 step 7.5)
 
 `TriggerMatch.sourceEventUid` and `TimelineEvent.triggerEventUid` carry the uid of the source event that caused a trigger to fire. Set by `makeMatch` in `triggerMatch.ts` from `ev.uid`; propagated through `openComboWindow` → `_applyComboWindowToCombos` onto combo events.
