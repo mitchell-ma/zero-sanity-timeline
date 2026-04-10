@@ -53,8 +53,8 @@ export interface ConditionContext {
   getOperatorFlatHp?: (operatorId: string, frame: number) => number;
   /** Get operator HP as percentage (0–100) at frame. */
   getOperatorPercentageHp?: (operatorId: string, frame: number) => number;
-  /** Owner ID of the parent status event (for THIS EVENT resolution in trigger contexts). */
-  parentStatusEntityId?: string;
+  /** Callback to resolve the ownerEntityId of the parent status event via causality DAG lookup. */
+  getParentEventEntityId?: () => string | undefined;
   /** UID of the source skill event (for EVENT HAVE LINK — checks consumed LINK stacks). */
   sourceEventUid?: string;
   /** Query consumed LINK stacks for an event UID. */
@@ -82,7 +82,7 @@ function resolveEntityId(subject: string, ctx: ConditionContext, determiner?: st
     }
   }
   switch (subject) {
-    case NounType.EVENT: return ctx.parentStatusEntityId ?? ctx.sourceEntityId;
+    case NounType.EVENT: return ctx.getParentEventEntityId?.() ?? ctx.sourceEntityId;
     case NounType.ENEMY: return ENEMY_ID;
     case NounType.TEAM: return TEAM_ID;
     default: return ctx.sourceEntityId;

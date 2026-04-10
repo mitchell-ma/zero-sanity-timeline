@@ -196,8 +196,6 @@ export interface InterpretContext {
   /** Status ID of the parent status def when processing ENGINE_TRIGGER effects.
    *  Used by CONSUME THIS EVENT to identify which status to consume. */
   parentStatusId?: string;
-  /** Owner ID of the parent status (for column resolution). */
-  parentStatusEntityId?: string;
   /** UID of the source event — passed to column add() so derived events can be matched back to their raw event. */
   sourceEventUid?: string;
   /**
@@ -889,6 +887,30 @@ export class EventInterpretorController {
     return slotId;
   }
 
+  /**
+   * Resolve the ownerEntityId of the parent status event by walking the
+   * causality DAG. If ctx.sourceEventUid is set, looks up the primary parent
+   * and reads its ownerEntityId (ownerSlotId). When the DAG path is
+   * unavailable (no sourceEventUid), falls back to searching for an active
+   * event on the parentStatusId column at the current frame, then to
+   * `fallback`.
+   */
+  private resolveParentStatusEntityId(ctx: InterpretContext, fallback: string): string {
+    if (ctx.sourceEventUid) {
+      const parentUid = this.controller.getCausality().primaryParentOf(ctx.sourceEventUid);
+      if (parentUid) {
+        const parent = this.controller.getEventByUid(parentUid);
+        if (parent?.ownerSlotId) return parent.ownerSlotId;
+      }
+    }
+    // Fallback: find the active event on the parent status column
+    if (ctx.parentStatusId) {
+      const active = activeEventsAtFrame(this.getAllEvents(), ctx.parentStatusId, undefined, ctx.frame);
+      if (active.length > 0) return active[active.length - 1].ownerEntityId;
+    }
+    return fallback;
+  }
+
   private canDo(effect: Effect, ctx: InterpretContext) {
     const ownerEntityId = this.resolveEntityId(
       effect.to as string ?? effect.fromObject as string,
@@ -1284,7 +1306,7 @@ export class EventInterpretorController {
     // CONSUME THIS EVENT — consume one stack of the parent status (from ENGINE_TRIGGER context)
     if (effect.object === NounType.EVENT && ctx.parentStatusId) {
       const columnId = ctx.parentStatusId;
-      const statusEntityId = ctx.parentStatusEntityId ?? ownerEntityId;
+      const statusEntityId = this.resolveParentStatusEntityId(ctx, ownerEntityId);
       const consumed = this.controller.consumeEvent(columnId, statusEntityId, ctx.frame, source, { count, restack: true });
       this.lastConsumedParentStatusId = consumed > 0 ? columnId : undefined;
       if (consumed > 0) this.lastConsumedStacks = consumed;
@@ -1293,7 +1315,7 @@ export class EventInterpretorController {
     // CONSUME STACKS — self-consumption of the parent status stacks (e.g. Auxiliary Crystal)
     if (effect.object === NounType.STACKS && ctx.parentStatusId) {
       const columnId = ctx.parentStatusId;
-      const statusEntityId = ctx.parentStatusEntityId ?? ownerEntityId;
+      const statusEntityId = this.resolveParentStatusEntityId(ctx, ownerEntityId);
       const consumed = this.controller.consumeEvent(columnId, statusEntityId, ctx.frame, source, { count, restack: true });
       if (consumed > 0) this.lastConsumedStacks = consumed;
       return consumed > 0;
@@ -2598,7 +2620,6 @@ export class EventInterpretorController {
         parentEventEndFrame: parentEventEnd,
         parentSegmentEndFrame: parentSegEnd,
         parentStatusId: statusId,
-        parentStatusEntityId: statusEntityId,
       };
       const entryCondCtx: ConditionContext = {
         events: this.getAllEvents(),
@@ -2620,7 +2641,6 @@ export class EventInterpretorController {
         ...ctx,
         parentEventEndFrame: parentEventEnd,
         parentStatusId: statusId,
-        parentStatusEntityId: statusEntityId,
       };
       for (const clause of statusDef.clause as { conditions: unknown[]; effects?: unknown[] }[]) {
         if (!clause.effects?.length) continue;
@@ -2823,7 +2843,6 @@ export class EventInterpretorController {
       sourceSlotId: statusEntityId,
       sourceSkillName: entry.sourceSkillName,
       parentStatusId: entry.statusId,
-      parentStatusEntityId: statusEntityId,
     };
     const exitCondCtx: ConditionContext = {
       events: this.getAllEvents(),
@@ -3082,10 +3101,10 @@ export class EventInterpretorController {
       // Sort by clauseIndex to preserve declaration order
       entries.sort((a, b) => a.clauseIndex - b.clauseIndex);
 
-      // Resolve parent status owner for HAVE condition evaluation
+      // Resolve parent status entity for HAVE condition evaluation
       const first = entries[0];
       const parentTarget = first.def.properties.target;
-      const parentStatusEntityId = parentTarget === NounType.TEAM ? TEAM_ID
+      const statusEntityId = parentTarget === NounType.TEAM ? TEAM_ID
         : parentTarget === NounType.ENEMY ? ENEMY_ID
         : first.operatorSlotId;
 
@@ -3102,7 +3121,7 @@ export class EventInterpretorController {
           sourceEntityId: entry.operatorSlotId,
           potential: entry.potential,
           getEnemyHpPercentage: this.getEnemyHpPercentage,
-          parentStatusEntityId,
+          getParentEventEntityId: () => statusEntityId,
         };
         if (evaluateConditions(entry.haveConditions as unknown as import('../../dsl/semantics').Interaction[], condCtx)) {
           selected = entry;
@@ -3191,9 +3210,9 @@ export class EventInterpretorController {
     const { ctx } = trigger;
     const triggerEffects = ctx.triggerEffects ?? [];
 
-    // Resolve parent status owner (for CONSUME THIS EVENT and HAVE condition evaluation)
+    // Resolve parent status entity (for column queries and condition evaluation)
     const parentTarget = ctx.def.properties.target;
-    const parentStatusEntityId = parentTarget === NounType.TEAM ? TEAM_ID
+    const statusEntityId = parentTarget === NounType.TEAM ? TEAM_ID
       : parentTarget === NounType.ENEMY ? ENEMY_ID
       : ctx.operatorSlotId;
 
@@ -3206,7 +3225,7 @@ export class EventInterpretorController {
         potential: ctx.potential,
         getEnemyHpPercentage: this.getEnemyHpPercentage,
         getOperatorPercentageHp: this.controller.hasHpController() ? (opId, f) => this.controller.getOperatorPercentageHp(opId, f) : undefined,
-        parentStatusEntityId,
+        getParentEventEntityId: () => statusEntityId,
         getStatValue: this.controller.hasStatAccumulator() ? (entityId, stat) => this.controller.getStat(entityId, stat) : undefined,
         previousStackCount: trigger.previousStackCount,
       };
@@ -3215,7 +3234,7 @@ export class EventInterpretorController {
 
     // Compute parent status event end frames (for EXTEND UNTIL END OF SEGMENT/EVENT)
     const parentColumnId = ctx.def.properties.id;
-    const parentEvents = activeEventsAtFrame(this.getAllEvents(), parentColumnId, parentStatusEntityId, entry.frame);
+    const parentEvents = activeEventsAtFrame(this.getAllEvents(), parentColumnId, statusEntityId, entry.frame);
     const parentEv = parentEvents.length > 0 ? parentEvents[parentEvents.length - 1] : undefined;
 
     // Skill-status triggers require an active parent instance unless they are inherent
@@ -3325,7 +3344,6 @@ export class EventInterpretorController {
       sourceSkillName: resolvedSourceSkillName,
       potential: ctx.potential,
       parentStatusId: ctx.def.properties.id,
-      parentStatusEntityId,
       parentEventEndFrame,
       parentSegmentEndFrame,
       sourceFrameKey: entry.sourceFrameKey,
