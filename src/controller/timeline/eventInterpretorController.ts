@@ -55,6 +55,7 @@ import { evaluateConditions } from './conditionEvaluator';
 import { hasDealDamageClause, findDealDamageInClauses, buildDealDamageClause, parseJsonClauseArray } from './clauseQueries';
 import { getStatusConfig, getStatusDef } from './configCache';
 import { resolveColumnId as resolveEffectColumnId, PHYSICAL_STATUS_VALUES, INFLICTION_COLUMN_TO_ELEMENT } from './columnResolution';
+import { collectNoGainWindowsForEvent } from './ultimateEnergyController';
 import type { ConditionContext } from './conditionEvaluator';
 import { getPhysicalStatusBaseMultiplier, getShatterBaseMultiplier } from '../../model/calculation/damageFormulas';
 import type { StatusLevel } from '../../consts/types';
@@ -2134,6 +2135,22 @@ export class EventInterpretorController {
               }
             }
           }
+        }
+      }
+
+      // ── Resource controller notifications (event-level, not frame-level) ──
+      // Battle skill SP cost
+      if (event.columnId === NounType.BATTLE && event.skillPointCost) {
+        const firstFrame = event.segments[0]?.frames?.[0];
+        const ueGainFrame = firstFrame?.absoluteFrame ?? event.startFrame;
+        this.controller.recordSkillPointCost(event.uid, event.startFrame, event.skillPointCost, event.ownerEntityId, ueGainFrame);
+      }
+      // Ultimate: consume UE + register no-gain windows
+      if (event.columnId === NounType.ULTIMATE) {
+        this.controller.consumeUltimateEnergy(event.startFrame, event.ownerEntityId);
+        const windows = collectNoGainWindowsForEvent(event);
+        for (const w of windows) {
+          this.controller.addNoGainWindow(w.start, w.end, event.ownerEntityId);
         }
       }
 

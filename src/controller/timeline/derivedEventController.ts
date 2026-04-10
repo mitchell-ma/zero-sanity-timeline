@@ -37,12 +37,10 @@ import { getComboTriggerClause, getComboTriggerInfo } from '../gameDataStore';
 import type { TriggerAssociation } from '../gameDataStore';
 import type { SkillPointController } from '../slot/skillPointController';
 import type { UltimateEnergyController } from './ultimateEnergyController';
-import { collectNoGainWindowsForEvent } from './ultimateEnergyController';
 import type { HPController } from '../calculation/hpController';
 import type { ShieldController } from '../calculation/shieldController';
 import type { StatAccumulator, StatSource } from '../calculation/statAccumulator';
 import { TEAM_ID, COMMON_COLUMN_IDS } from '../slot/commonSlotController';
-import GENERAL_MECHANICS from '../../model/game-data/generalMechanics.json';
 import { getStatusConfig } from './configCache';
 import type { LoadoutProperties } from '../../view/InformationPane';
 import type { ColumnHost, EventSource, AddOptions, ConsumeOptions } from './columns/eventColumn';
@@ -161,6 +159,46 @@ export class DerivedEventController implements ColumnHost {
   recordSkillPointRecovery(frame: number, amount: number, sourceEntityId: string, sourceSkillName: string) {
     if (this.spController && amount > 0) {
       this.spController.addRecovery(frame, amount, sourceEntityId, sourceSkillName);
+    }
+  }
+
+  /**
+   * Register an SP cost for a battle skill event. Called from EVENT_START in
+   * the interpreter when a battle skill with skillPointCost fires.
+   */
+  recordSkillPointCost(uid: string, startFrame: number, cost: number, ownerId: string, ultimateEnergyGainFrame: number) {
+    if (this.spController && cost) {
+      this.spController.addCost(uid, startFrame, cost, ownerId, ultimateEnergyGainFrame);
+    }
+  }
+
+  /**
+   * Register an SP recovery event (team-level, derived from deriveSPRecoveryEvents).
+   * Called from createSkillEvent pass 2 when the event is a team SP-recovery event.
+   */
+  registerSpRecoveryEvent(ev: TimelineEvent) {
+    if (this.spController && ev.ownerEntityId === TEAM_ID && ev.columnId === COMMON_COLUMN_IDS.SKILL_POINTS) {
+      this.spController.addSpRecoveryEvent(ev);
+    }
+  }
+
+  /**
+   * Record ultimate energy consumption at event start. Called from EVENT_START
+   * in the interpreter when an ultimate skill fires.
+   */
+  consumeUltimateEnergy(startFrame: number, ownerId: string) {
+    if (this.ueController) {
+      this.ueController.addConsume(startFrame, ownerId);
+    }
+  }
+
+  /**
+   * Register a no-gain window for ultimate energy. Called from EVENT_START
+   * in the interpreter for ultimate skill events.
+   */
+  addNoGainWindow(start: number, end: number, ownerId: string) {
+    if (this.ueController) {
+      this.ueController.addNoGainWindow(start, end, ownerId);
     }
   }
 
@@ -336,7 +374,8 @@ export class DerivedEventController implements ColumnHost {
     const idx = this.allEvents.length - 1;
     this.allEvents[idx] = out;
     this._validateSiblingOverlap(out);
-    this.notifyResourceControllers(out);
+    // SP recovery event registration (structural metadata, not an interpret effect)
+    this.registerSpRecoveryEvent(out);
 
     // Pass 3: re-resolve combo trigger columns across the full event set.
     // Runs every ingress because new events can open or merge combo windows
@@ -588,55 +627,8 @@ export class DerivedEventController implements ColumnHost {
    * Notify SP and UE controllers about resource effects on a newly registered event.
    * Called per-event after extension and frame position computation in pass 2.
    */
-  private notifyResourceControllers(ev: TimelineEvent) {
-    // ── SP notifications ──────────────────────────────────────────────────
-    if (this.spController) {
-      // Battle skill with SP cost → event-level cost only.
-      // Frame-level RECOVER/RETURN SP is handled by interpret() via DEC.recordSkillPointRecovery
-      // when the frame's DSL clause runs; this loop would otherwise double-count it.
-      if (ev.columnId === NounType.BATTLE && ev.skillPointCost) {
-        const firstFrame = ev.segments[0]?.frames?.[0];
-        const ultimateEnergyGainFrame = firstFrame?.absoluteFrame ?? ev.startFrame;
-        this.spController.addCost(ev.uid, ev.startFrame, ev.skillPointCost, ev.ownerEntityId, ultimateEnergyGainFrame);
-      }
-
-      // SP recovery events (derived from deriveSPRecoveryEvents)
-      if (ev.ownerEntityId === TEAM_ID && ev.columnId === COMMON_COLUMN_IDS.SKILL_POINTS) {
-        this.spController.addSpRecoveryEvent(ev);
-      }
-
-      // Perfect dodge → SP recovery
-      if (ev.columnId === OPERATOR_COLUMNS.INPUT && ev.isPerfectDodge) {
-        this.spController.addRecovery(
-          ev.startFrame, GENERAL_MECHANICS.skillPoints.perfectDodgeRecovery,
-          ev.ownerEntityId, ev.id,
-        );
-      }
-    }
-
-    // ── UE notifications ──────────────────────────────────────────────────
-    // All frame-level UE gains are now routed via interpret() → doRecover →
-    // DEC.recordUltimateEnergyGain. The four scan blocks (combo/battle/ultimate
-    // frames) and the derived-status sourceEntityId routing block were deleted
-    // as part of Phase 0a — they were the parallel write path that caused the
-    // double-UE-gain bug. The interpreter resolves the source slot from
-    // ev.sourceEntityId at handleProcessFrame ctx-build time.
-    if (this.ueController) {
-      // Ultimate event → consume + no-gain windows (event-level only,
-      // frame-level UE gain comes through the clause path)
-      if (ev.columnId === NounType.ULTIMATE) {
-        this.ueController.addConsume(ev.startFrame, ev.ownerEntityId);
-        const windows = collectNoGainWindowsForEvent(ev);
-        for (const w of windows) {
-          this.ueController.addNoGainWindow(w.start, w.end, ev.ownerEntityId);
-        }
-      }
-      // IGNORE ULTIMATE_ENERGY: previously detected via status def lookup
-      // here (which only fired at post-drain re-registration). Now handled
-      // by the IGNORE verb in interpret() during runStatusCreationLifecycle,
-      // so the flag takes effect at status creation time.
-    }
-  }
+  // notifyResourceControllers deleted — all resource writes now flow through
+  // interpret() → DEC methods or structural registration in createSkillEvent/EVENT_START.
 
   // validateAll() (post-pass) deleted — sibling overlap is now annotated
   // per-event in pass 2 via _validateSiblingOverlap.
@@ -815,9 +807,8 @@ export class DerivedEventController implements ColumnHost {
    *
    * Skipped vs createSkillEvent's full pipeline:
    *   - combo chain / reaction segments / clamp controls (skill-specific)
-   *   - notifyResourceControllers (queue events are statuses/inflictions/
-   *     reactions — none of notifyResourceControllers' branches apply;
-   *     IGNORE UE flows through interpret() dispatch since 85912595)
+   *   - resource notifications (SP cost, UE consume, no-gain windows) — these
+   *     fire from EVENT_START in the interpreter for skill events only
    *   - pass 3 resolveComboTriggersInline (run once post-drain instead)
    *   - pass 4 queue frame emission (lifecycle already handled inline)
    *

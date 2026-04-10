@@ -75,7 +75,7 @@ processCombatSimulation(rawEvents, loadoutContext...)
 All skill / input / talent / enemy action events enter DEC via `createSkillEvent`. It runs three passes per event:
 
 - **Pass 1 — discovery:** `chainComboPredecessor` (truncates prior combo CD on the same owner), `buildReactionSegments` (materializes corrosion/combustion segments from raw duration), `clampPriorControlEvents` (shortens earlier CONTROL events to end at `ev.startFrame`), `_maybeRegisterStop` (time-stop registration; also retroactively re-extends overlapping prior events and reactively shifts queued frames), `_pushToStorage` (deep-clones segments/frames into DEC-owned copies, captures per-segment raw durations in `rawSegmentDurations`, appends to `registeredEvents`).
-- **Pass 2 — positioning:** `extendSingleEvent` (idempotent — reads raw from `rawSegmentDurations`, writes extended to `seg.properties.duration` in place), `computeFramePositions` (sets `absoluteFrame` / `derivedOffsetFrame` on frame markers), `validateTimeStopStart`, `notifyResourceControllers`.
+- **Pass 2 — positioning:** `extendSingleEvent` (idempotent — reads raw from `rawSegmentDurations`, writes extended to `seg.properties.duration` in place), `computeFramePositions` (sets `absoluteFrame` / `derivedOffsetFrame` on frame markers), `validateTimeStopStart`, `registerSpRecoveryEvent` (structural SP recovery event metadata only — all other resource notifications fire from EVENT_START in the interpreter).
 - **Pass 3 — reactive combo resolution:** `resolveComboTriggersInline` wipes all COMBO_WINDOW events, clears combo events' `comboTriggerColumnId`/`triggerEventUid`, and re-emits windows via `openComboWindow` for the current trigger-match set. Runs every createSkillEvent call; kept correct by reactive merge-on-insert in `openComboWindow`.
 - **Pass 4 — queue frame emission:** `flattenEventsToQueueFrames([ev], this.stops)` emits `EVENT_START`, `SEGMENT_START/END`, `ON_FRAME`, `EVENT_END`, and (for combos without a resolved trigger column) `COMBO_RESOLVE` queue entries. Skipped via `opts.emitQueueFrames: false` for the post-drain re-registration of queue events.
 
@@ -197,7 +197,7 @@ The stagger status defs (`status-stagger-node.json`, `status-stagger-full.json`)
 
 Most stat effects use `value`. Only effects that scale existing accumulated values use `multiplier` (currently only Last Rite T2 Cryogenic Embrittlement on ultimate frames).
 
-**IGNORE ULTIMATE_ENERGY:** Status clauses with `IGNORE ULTIMATE_ENERGY` are detected by `notifyResourceControllers` in `DerivedEventController`. When found on a talent/status event, the UE controller marks that slot as `ignoreExternalGain` — the operator only receives UE from their own skills (e.g. Last Rite's VIGIL_SERVICES_ULTIMATE_ENERGY_LOCKOUT status).
+**IGNORE ULTIMATE_ENERGY:** Status clauses with `IGNORE ULTIMATE_ENERGY` are detected by `interpret()` in the interpreter during `runStatusCreationLifecycle`. When found on a talent/status event, the UE controller marks that slot as `ignoreExternalGain` via `DEC.setIgnoreExternalGain()` — the operator only receives UE from their own skills (e.g. Last Rite's VIGIL_SERVICES_ULTIMATE_ENERGY_LOCKOUT status).
 
 ---
 
