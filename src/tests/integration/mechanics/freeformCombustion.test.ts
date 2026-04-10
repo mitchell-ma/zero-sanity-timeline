@@ -9,7 +9,7 @@
  * enemy via context menu, then verify:
  * 1. Exactly 1 combustion event in allProcessedEvents (not 11 spurious derived events)
  * 2. Frame markers at 1s intervals with correct DEAL DAMAGE clauses
- * 3. Label resolves to "Combustion" via resolveEventLabel
+ * 3. Label resolves to "Combustion I" via resolveEventLabel
  * 4. stacks defaults to 1 (or undefined, treated as 1)
  * 5. Natural combustion with correct statusLevel (skipped — complex setup)
  *
@@ -182,7 +182,7 @@ describe('Freeform Combustion Reaction', () => {
     }
   });
 
-  it('3. Label resolves to "Combustion"', () => {
+  it('3. Label resolves to "Combustion I"', () => {
     const { result } = renderHook(() => useApp());
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
     act(() => { placeFreeformCombustion(result.current, 0); });
@@ -191,7 +191,7 @@ describe('Freeform Combustion Reaction', () => {
     expect(combustionEvents).toHaveLength(1);
 
     const label = resolveEventLabel(combustionEvents[0]);
-    expect(label).toBe('Combustion');
+    expect(label).toBe('Combustion I');
   });
 
   it('4. stacks defaults to 1 (or undefined, treated as 1)', () => {
