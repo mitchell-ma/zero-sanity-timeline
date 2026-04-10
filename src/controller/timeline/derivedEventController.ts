@@ -17,7 +17,7 @@
  */
 import { TimelineEvent, computeSegmentsSpan, getAnimationDuration, eventDuration, setEventDuration } from '../../consts/viewTypes';
 import { NounType } from '../../dsl/semantics';
-import { EventStatusType, SegmentType, StatType, StatusType, TimeDependency } from '../../consts/enums';
+import { EventStatusType, SegmentType, StatType, StatusType } from '../../consts/enums';
 import { TimeStopRegion, extendByTimeStops, isTimeStopEvent } from './processTimeStop';
 import { flattenEventsToQueueFrames } from './parser/flattenEvents';
 import { mergeReactions, attachReactionFrames } from './processInfliction';
@@ -331,8 +331,7 @@ export class DerivedEventController implements ColumnHost {
     const owned = this._ingest(ev, { deepClone: true, captureRaw: true });
 
     // Pass 2: extension, frame positions, validation, resource notification
-    let out = this.extendSingleEvent(owned);
-    out = computeFramePositions(out, this.stops);
+    let out = computeFramePositions(owned, this.stops, this.rawSegmentDurations.get(owned.uid));
     out = this.validateTimeStopStart(out);
     const idx = this.allEvents.length - 1;
     this.allEvents[idx] = out;
@@ -833,7 +832,7 @@ export class DerivedEventController implements ColumnHost {
   ): TimelineEvent {
     const captureRaw = opts.captureRaw ?? true;
     const owned = this._ingest(ev, { deepClone: false, captureRaw });
-    if (captureRaw) this.extendSingleEvent(owned);
+    if (captureRaw) computeFramePositions(owned, this.stops, this.rawSegmentDurations.get(owned.uid));
     return owned;
   }
 
@@ -1012,8 +1011,7 @@ export class DerivedEventController implements ColumnHost {
         if (!this.rawSegmentDurations.has(other.uid)) continue;
         const otherEnd = other.startFrame + eventDuration(other);
         if (other.startFrame < stopEnd && otherEnd > startFrame) {
-          this.extendSingleEvent(other);
-          computeFramePositions(other, this.stops);
+          computeFramePositions(other, this.stops, this.rawSegmentDurations.get(other.uid));
         }
       }
     }
@@ -1054,71 +1052,6 @@ export class DerivedEventController implements ColumnHost {
    * Extend a single event's durations by foreign time-stops.
    * Handles segmented events, 3-phase events, and time-stop events.
    */
-  /**
-   * idempotent per-segment extension.
-   *
-   * Reads raw segment durations from `rawSegmentDurations` (populated in
-   * `_pushToStorage` after a deep clone), computes extended durations
-   * against the current stops list, and mutates the event's segments in
-   * place. Safe to re-run whenever a new stop retroactively lands on an
-   * already-registered event — always starts from raw.
-   */
-  private extendSingleEvent(ev: TimelineEvent): TimelineEvent {
-    // Control status is not affected by time-stops — its timer keeps ticking
-    if (ev.id === NounType.CONTROL) return ev;
-
-    const raw = this.rawSegmentDurations.get(ev.uid);
-    if (!raw || ev.segments.length === 0) return ev;
-
-    const isOwn = isTimeStopEvent(ev);
-    const animDur = getAnimationDuration(ev);
-    const foreignStops = isOwn
-      ? this.stops.filter(s => s.eventUid !== ev.uid)
-      : this.stops;
-
-    if (foreignStops.length === 0) {
-      // Restore raw durations (idempotent reset)
-      for (let i = 0; i < ev.segments.length; i++) {
-        ev.segments[i].properties.duration = raw[i];
-      }
-      return ev;
-    }
-
-    let rawOffset = 0;
-    let derivedOffset = 0;
-    for (let i = 0; i < ev.segments.length; i++) {
-      const seg = ev.segments[i];
-      const rawDur = raw[i];
-      const rawSegStart = rawOffset;
-      rawOffset += rawDur;
-
-      if (seg.properties.timeDependency === TimeDependency.REAL_TIME || rawDur === 0) {
-        seg.properties.duration = rawDur;
-        derivedOffset += rawDur;
-        continue;
-      }
-
-      if (isOwn && animDur > 0 && rawSegStart + rawDur <= animDur) {
-        seg.properties.duration = rawDur;
-        derivedOffset += rawDur;
-        continue;
-      }
-
-      let ext: number;
-      if (isOwn && animDur > 0 && rawSegStart < animDur) {
-        const animPortion = animDur - rawSegStart;
-        const postAnimPortion = rawDur - animPortion;
-        ext = animPortion + extendByTimeStops(ev.startFrame + animDur, postAnimPortion, foreignStops);
-      } else {
-        ext = extendByTimeStops(ev.startFrame + derivedOffset, rawDur, foreignStops);
-      }
-
-      seg.properties.duration = ext;
-      derivedOffset += ext;
-    }
-    return ev;
-  }
-
   /**
    * Per-event time-stop start validation. Checks if an event starts inside
    * a time-stop region and attaches warnings. Called inline during registration.

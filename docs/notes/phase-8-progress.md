@@ -2,7 +2,7 @@
 
 Reference: [`docs/notes/phase-8-plan.md`](./phase-8-plan.md)
 
-## Status: Phase 8 + 9 + storage unification RESOLVED (only 7h fold cosmetic cleanup remains)
+## Status: Phase 8 + 9 + storage unification + chainRef migration — ALL RESOLVED
 
 Every step gated on full jest suite + tsc + eslint on touched files.
 Baseline held green at every commit. Current baseline:
