@@ -196,8 +196,6 @@ export interface InterpretContext {
   /** Status ID of the parent status def when processing ENGINE_TRIGGER effects.
    *  Used by CONSUME THIS EVENT to identify which status to consume. */
   parentStatusId?: string;
-  /** Owner ID of the parent status (for column resolution). */
-  parentStatusEntityId?: string;
   /** UID of the source event — passed to column add() so derived events can be matched back to their raw event. */
   sourceEventUid?: string;
   /**
@@ -551,22 +549,22 @@ export class EventInterpretorController {
   }
 
   /**
-   * chainRef 4b: resolve source slot id from the current event (authoritative)
-   * with fallback to ctx flat fields for entry points (talent passives, trigger
-   * handlers) where `sourceEventUid` isn't populated.
+   * Resolve the parent status event's ownerEntityId via the causality DAG.
+   * Walks `sourceEventUid` → primary parent → that event's `ownerEntityId`.
+   * Falls back to `fallback` when no parent exists or the event is a chain root.
    */
-  private resolveSourceSlot(ctx: InterpretContext): string {
-    const ev = ctx.sourceEventUid ? this.controller.getEventByUid(ctx.sourceEventUid) : undefined;
-    return ev?.ownerSlotId ?? ctx.sourceSlotId ?? ctx.sourceEntityId;
-  }
-
-  /**
-   * chainRef 4b: resolve source operator id from the current event
-   * (authoritative) with fallback to ctx flat fields.
-   */
-  private resolveSourceOperator(ctx: InterpretContext): string {
-    const ev = ctx.sourceEventUid ? this.controller.getEventByUid(ctx.sourceEventUid) : undefined;
-    return ev?.ownerOperatorId ?? ctx.sourceEntityId;
+  private resolveParentStatusOwnerId(ctx: InterpretContext, fallback: string): string {
+    if (ctx.sourceEventUid) {
+      const parentUid = this.controller.getCausality().primaryParentOf(ctx.sourceEventUid);
+      if (parentUid) {
+        const parent = this.controller.getEventByUid(parentUid);
+        if (parent) return parent.ownerEntityId;
+      }
+      // sourceEventUid itself may be the parent status event (when set directly)
+      const self = this.controller.getEventByUid(ctx.sourceEventUid);
+      if (self) return self.ownerEntityId;
+    }
+    return fallback;
   }
 
   /**
@@ -794,7 +792,7 @@ export class EventInterpretorController {
       // The recipient slot is the status owner — sourceSlotId in ctx.
       case VerbType.IGNORE:
         if (effect.object === NounType.ULTIMATE_ENERGY) {
-          const slotId = this.resolveSourceSlot(ctx);
+          const slotId = ctx.sourceSlotId ?? ctx.sourceEntityId;
           this.controller.setIgnoreExternalGain(slotId, true);
         }
         return true;
@@ -856,7 +854,7 @@ export class EventInterpretorController {
   // ── DSL verb handlers (private) ────────────────────────────────────────
 
   private resolveEntityId(target: string | undefined, ctx: InterpretContext, determiner?: string) {
-    const slotId = this.resolveSourceSlot(ctx);
+    const slotId = ctx.sourceSlotId ?? ctx.sourceEntityId;
     if (target === NounType.OPERATOR) {
       switch (determiner ?? DeterminerType.THIS) {
         case DeterminerType.THIS: return slotId;
@@ -937,7 +935,7 @@ export class EventInterpretorController {
       && (effectToDeterminer === DeterminerType.ALL || effectToDeterminer === DeterminerType.ALL_OTHER)
       && this.slotOperatorMap) {
       const excludeSelf = effectToDeterminer === DeterminerType.ALL_OTHER;
-      const selfSlot = this.resolveSourceSlot(ctx);
+      const selfSlot = ctx.sourceSlotId ?? ctx.sourceEntityId;
       // Class filter: toClassFilter (typed) or toQualifier (raw JSON duck-typed)
       const classFilter = effect.toClassFilter ?? (effect as unknown as Record<string, unknown>).toQualifier as string | undefined;
       for (const slotId of Object.keys(this.slotOperatorMap)) {
@@ -953,12 +951,7 @@ export class EventInterpretorController {
       return true;
     }
     const ownerEntityId = this.resolveEntityId(effectTo, ctx, effectToDeterminer);
-    const source = {
-      ownerEntityId: ctx.sourceEntityId,
-      skillName: ctx.sourceSkillName,
-      slotId: ctx.sourceSlotId ?? ctx.sourceEntityId,
-      operatorId: ctx.sourceEntityId,
-    };
+    const source = { ownerEntityId: ctx.sourceEntityId, skillName: ctx.sourceSkillName };
 
     // For freeform-derived events, carry the source uid so the created
     // event can be matched to the raw event. Column-match guard: only
@@ -1053,7 +1046,7 @@ export class EventInterpretorController {
       // Resolve clause effects (susceptibility, statusValue) from the status def
       const eventProps: Partial<TimelineEvent> = {};
       if (def) {
-        const slotId = this.resolveSourceSlot(ctx);
+        const slotId = ctx.sourceSlotId ?? ctx.sourceEntityId;
         const operatorSlotMap: Record<string, string> = {};
         if (this.slotOperatorMap) {
           for (const [s, o] of Object.entries(this.slotOperatorMap)) operatorSlotMap[o] = s;
@@ -1210,12 +1203,7 @@ export class EventInterpretorController {
     const ownerEntityId = this.resolveEntityId(
       from, ctx, effect.fromDeterminer ?? effect.toDeterminer,
     );
-    const source = {
-      ownerEntityId: ctx.sourceEntityId,
-      skillName: ctx.sourceSkillName,
-      slotId: ctx.sourceSlotId ?? ctx.sourceEntityId,
-      operatorId: ctx.sourceEntityId,
-    };
+    const source = { ownerEntityId: ctx.sourceEntityId, skillName: ctx.sourceSkillName };
     const rawStacks = effect.with?.stacks as ValueNode | typeof THRESHOLD_MAX | number | undefined;
     if (rawStacks == null) console.warn(
       `[EventInterpretor] CONSUME ${effect.object} ${effect.objectId ?? effect.objectQualifier ?? '?'}: missing with.stacks`,
@@ -1284,7 +1272,7 @@ export class EventInterpretorController {
     // CONSUME THIS EVENT — consume one stack of the parent status (from ENGINE_TRIGGER context)
     if (effect.object === NounType.EVENT && ctx.parentStatusId) {
       const columnId = ctx.parentStatusId;
-      const statusEntityId = ctx.parentStatusEntityId ?? ownerEntityId;
+      const statusEntityId = this.resolveParentStatusOwnerId(ctx, ownerEntityId);
       const consumed = this.controller.consumeEvent(columnId, statusEntityId, ctx.frame, source, { count, restack: true });
       this.lastConsumedParentStatusId = consumed > 0 ? columnId : undefined;
       if (consumed > 0) this.lastConsumedStacks = consumed;
@@ -1293,7 +1281,7 @@ export class EventInterpretorController {
     // CONSUME STACKS — self-consumption of the parent status stacks (e.g. Auxiliary Crystal)
     if (effect.object === NounType.STACKS && ctx.parentStatusId) {
       const columnId = ctx.parentStatusId;
-      const statusEntityId = ctx.parentStatusEntityId ?? ownerEntityId;
+      const statusEntityId = this.resolveParentStatusOwnerId(ctx, ownerEntityId);
       const consumed = this.controller.consumeEvent(columnId, statusEntityId, ctx.frame, source, { count, restack: true });
       if (consumed > 0) this.lastConsumedStacks = consumed;
       return consumed > 0;
@@ -1382,7 +1370,7 @@ export class EventInterpretorController {
       const targetColumnId = effect.objectId;
       if (!targetColumnId || !SKILL_COLUMN_SET.has(targetColumnId)) return true;
 
-      const slotId = this.resolveSourceSlot(ctx);
+      const slotId = ctx.sourceSlotId ?? ctx.sourceEntityId;
       for (const ev of this.baseEvents) {
         if (ev.ownerEntityId !== slotId) continue;
         if (ev.columnId !== targetColumnId) continue;
@@ -1408,11 +1396,11 @@ export class EventInterpretorController {
   }
 
   private buildValueContext(ctx: InterpretContext): ValueResolutionContext {
-    const loadout = this.loadoutProperties?.[this.resolveSourceSlot(ctx)];
+    const loadout = this.loadoutProperties?.[ctx.sourceSlotId ?? ctx.sourceEntityId];
     const baseCtx = buildContextForSkillColumn(loadout, NounType.BATTLE);
     if (ctx.potential != null) baseCtx.potential = ctx.potential;
     if (ctx.suppliedParameters) baseCtx.suppliedParameters = ctx.suppliedParameters;
-    const ownerEntityId = this.resolveSourceSlot(ctx);
+    const ownerEntityId = ctx.sourceSlotId ?? ctx.sourceEntityId;
     const frame = ctx.frame;
     baseCtx.getStatusStacks = (statusId: string) => {
       const active = activeEventsAtFrame(this.getAllEvents(), statusId, ownerEntityId, frame);
@@ -1511,7 +1499,7 @@ export class EventInterpretorController {
     }
 
     // Find same-owner events in the target column that are in cooldown phase at ctx.frame
-    const slotId = this.resolveSourceSlot(ctx);
+    const slotId = ctx.sourceSlotId ?? ctx.sourceEntityId;
     for (const ev of this.baseEvents) {
       if (ev.ownerEntityId !== slotId) continue;
       if (ev.columnId !== targetColumnId) continue;
@@ -1570,7 +1558,7 @@ export class EventInterpretorController {
     if (effect.object === NounType.ULTIMATE_ENERGY) {
       const amount = this.resolveWith(effect.with?.value, ctx);
       if (amount && amount > 0) {
-        this.controller.recordUltimateEnergyGain(ctx.frame, this.resolveSourceSlot(ctx), amount, 0);
+        this.controller.recordUltimateEnergyGain(ctx.frame, ctx.sourceSlotId ?? ctx.sourceEntityId, amount, 0);
       }
       return true;
     }
@@ -1639,7 +1627,7 @@ export class EventInterpretorController {
     const toDeterminer = (effect as unknown as Record<string, unknown>).toDeterminer as string | undefined;
     const targetSlots = toDeterminer === DeterminerType.ALL
       ? Object.keys(this.slotOperatorMap ?? {})
-      : [this.resolveSourceSlot(ctx)];
+      : [ctx.sourceSlotId ?? ctx.sourceEntityId];
 
     for (const slotId of targetSlots) {
       const opId = this.slotToEntityId(slotId);
@@ -1743,12 +1731,7 @@ export class EventInterpretorController {
     if (!qualifier || !PHYSICAL_STATUS_VALUES.has(qualifier)) return false;
     const columnId = qualifier;
 
-    const source = {
-      ownerEntityId: ctx.sourceEntityId,
-      skillName: ctx.sourceSkillName,
-      slotId: ctx.sourceSlotId ?? ctx.sourceEntityId,
-      operatorId: ctx.sourceEntityId,
-    };
+    const source = { ownerEntityId: ctx.sourceEntityId, skillName: ctx.sourceSkillName };
     const isForced = this.resolveWith(effect.with?.isForced, ctx) === 1;
 
     // Track output count before to detect whether a physical status was actually created
@@ -1773,7 +1756,7 @@ export class EventInterpretorController {
 
     // Any physical status application consumes active Solidification → Shatter
     if (result) {
-      this.tryConsumeSolidification(ctx.frame, source, this.resolveSourceSlot(ctx), ctx.sourceEventUid);
+      this.tryConsumeSolidification(ctx.frame, source, ctx.sourceSlotId ?? ctx.sourceEntityId, ctx.sourceEventUid);
     }
 
     return result;
@@ -2056,7 +2039,7 @@ export class EventInterpretorController {
     const fi = entry.frameIndex ?? -1;
     const absFrame = entry.frame;
     const source = {
-      ownerEntityId: event.ownerOperatorId ?? event.sourceEntityId ?? this.slotToEntityId(event.ownerEntityId),
+      ownerEntityId: event.sourceEntityId ?? this.slotToEntityId(event.ownerEntityId),
       skillName: event.sourceSkillName ?? event.id,
     };
     const newEntries = this._processFrameOut;
@@ -2581,7 +2564,7 @@ export class EventInterpretorController {
 
     const parentEventEnd = statusEv.startFrame + eventDuration(statusEv);
     const source = {
-      ownerEntityId: statusEv.ownerOperatorId ?? statusEv.sourceEntityId ?? this.slotToEntityId(statusEv.ownerEntityId),
+      ownerEntityId: statusEv.sourceEntityId ?? this.slotToEntityId(statusEv.ownerEntityId),
       skillName: statusEv.sourceSkillName ?? statusEv.name,
     };
     // Read pot from the routed source slot for derived statuses (target=enemy).
@@ -2594,11 +2577,10 @@ export class EventInterpretorController {
       const parentSegEnd = statusEv.startFrame + (statusEv.segments[0]?.properties.duration ?? 0);
       const entryCtx: InterpretContext = {
         ...ctx,
-        sourceEventUid: undefined,
+        sourceEventUid: statusEv.uid,
         parentEventEndFrame: parentEventEnd,
         parentSegmentEndFrame: parentSegEnd,
         parentStatusId: statusId,
-        parentStatusEntityId: statusEntityId,
       };
       const entryCondCtx: ConditionContext = {
         events: this.getAllEvents(),
@@ -2618,9 +2600,9 @@ export class EventInterpretorController {
     if (statusDef?.clause?.length) {
       const clauseCtx: InterpretContext = {
         ...ctx,
+        sourceEventUid: statusEv.uid,
         parentEventEndFrame: parentEventEnd,
         parentStatusId: statusId,
-        parentStatusEntityId: statusEntityId,
       };
       for (const clause of statusDef.clause as { conditions: unknown[]; effects?: unknown[] }[]) {
         if (!clause.effects?.length) continue;
@@ -2823,7 +2805,6 @@ export class EventInterpretorController {
       sourceSlotId: statusEntityId,
       sourceSkillName: entry.sourceSkillName,
       parentStatusId: entry.statusId,
-      parentStatusEntityId: statusEntityId,
     };
     const exitCondCtx: ConditionContext = {
       events: this.getAllEvents(),
@@ -3085,7 +3066,7 @@ export class EventInterpretorController {
       // Resolve parent status owner for HAVE condition evaluation
       const first = entries[0];
       const parentTarget = first.def.properties.target;
-      const parentStatusEntityId = parentTarget === NounType.TEAM ? TEAM_ID
+      const parentStatusOwner = parentTarget === NounType.TEAM ? TEAM_ID
         : parentTarget === NounType.ENEMY ? ENEMY_ID
         : first.operatorSlotId;
 
@@ -3102,7 +3083,7 @@ export class EventInterpretorController {
           sourceEntityId: entry.operatorSlotId,
           potential: entry.potential,
           getEnemyHpPercentage: this.getEnemyHpPercentage,
-          parentStatusEntityId,
+          getParentEventEntityId: () => parentStatusOwner,
         };
         if (evaluateConditions(entry.haveConditions as unknown as import('../../dsl/semantics').Interaction[], condCtx)) {
           selected = entry;
@@ -3191,9 +3172,9 @@ export class EventInterpretorController {
     const { ctx } = trigger;
     const triggerEffects = ctx.triggerEffects ?? [];
 
-    // Resolve parent status owner (for CONSUME THIS EVENT and HAVE condition evaluation)
+    // Resolve parent status owner for locating the active parent event
     const parentTarget = ctx.def.properties.target;
-    const parentStatusEntityId = parentTarget === NounType.TEAM ? TEAM_ID
+    const parentStatusOwner = parentTarget === NounType.TEAM ? TEAM_ID
       : parentTarget === NounType.ENEMY ? ENEMY_ID
       : ctx.operatorSlotId;
 
@@ -3206,7 +3187,7 @@ export class EventInterpretorController {
         potential: ctx.potential,
         getEnemyHpPercentage: this.getEnemyHpPercentage,
         getOperatorPercentageHp: this.controller.hasHpController() ? (opId, f) => this.controller.getOperatorPercentageHp(opId, f) : undefined,
-        parentStatusEntityId,
+        getParentEventEntityId: () => parentStatusOwner,
         getStatValue: this.controller.hasStatAccumulator() ? (entityId, stat) => this.controller.getStat(entityId, stat) : undefined,
         previousStackCount: trigger.previousStackCount,
       };
@@ -3215,7 +3196,7 @@ export class EventInterpretorController {
 
     // Compute parent status event end frames (for EXTEND UNTIL END OF SEGMENT/EVENT)
     const parentColumnId = ctx.def.properties.id;
-    const parentEvents = activeEventsAtFrame(this.getAllEvents(), parentColumnId, parentStatusEntityId, entry.frame);
+    const parentEvents = activeEventsAtFrame(this.getAllEvents(), parentColumnId, parentStatusOwner, entry.frame);
     const parentEv = parentEvents.length > 0 ? parentEvents[parentEvents.length - 1] : undefined;
 
     // Skill-status triggers require an active parent instance unless they are inherent
@@ -3325,7 +3306,7 @@ export class EventInterpretorController {
       sourceSkillName: resolvedSourceSkillName,
       potential: ctx.potential,
       parentStatusId: ctx.def.properties.id,
-      parentStatusEntityId,
+      sourceEventUid: parentEv?.uid,
       parentEventEndFrame,
       parentSegmentEndFrame,
       sourceFrameKey: entry.sourceFrameKey,
