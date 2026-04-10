@@ -78,20 +78,20 @@ function placeBattleSkill(app: AppResult, atSecond: number) {
   expect(col).toBeDefined();
   const payload = getMenuPayload(app, col!, atSecond * FPS);
   act(() => {
-    app.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+    app.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
   });
 }
 
 function findWolvenBloodStacks(app: AppResult) {
   return app.allProcessedEvents.filter(
-    (ev) => ev.ownerId === SLOT_ROSSI && ev.name === WOLVEN_BLOOD_ID &&
+    (ev) => ev.ownerEntityId === SLOT_ROSSI && ev.name === WOLVEN_BLOOD_ID &&
       ev.eventStatus !== EventStatusType.CONSUMED,
   );
 }
 
 function findWolvenBloodMaxEvents(app: AppResult) {
   return app.allProcessedEvents.filter(
-    (ev) => ev.ownerId === SLOT_ROSSI && ev.name === WOLVEN_BLOOD_MAX_ID,
+    (ev) => ev.ownerEntityId === SLOT_ROSSI && ev.name === WOLVEN_BLOOD_MAX_ID,
   );
 }
 
@@ -99,7 +99,7 @@ function findStatusColumn(app: AppResult, slotId: string) {
   return app.columns.find(
     (c): c is MiniTimeline =>
       c.type === ColumnType.MINI_TIMELINE &&
-      c.ownerId === slotId &&
+      c.ownerEntityId === slotId &&
       (c.columnId === OPERATOR_STATUS_COLUMN_ID || (c.matchColumnIds?.includes(WOLVEN_BLOOD_ID) ?? false)),
   );
 }
@@ -200,7 +200,7 @@ describe('C. Max stacks triggers Wolven Blood Max', () => {
     // Place first BS normally to get the payload template
     placeBattleSkill(result.current, 2);
     const bsEvent = result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT_ROSSI && ev.columnId === NounType.BATTLE,
+      ev => ev.ownerEntityId === SLOT_ROSSI && ev.columnId === NounType.BATTLE,
     );
     expect(bsEvent).toBeDefined();
 
@@ -219,7 +219,7 @@ describe('C. Max stacks triggers Wolven Blood Max', () => {
 
     // Controller: exactly 16 wolven blood events (stack limit enforced, no uncapped leaks)
     const allWbEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_ROSSI && ev.name === WOLVEN_BLOOD_ID,
+      (ev) => ev.ownerEntityId === SLOT_ROSSI && ev.name === WOLVEN_BLOOD_ID,
     );
     expect(allWbEvents.length).toBe(16);
 
@@ -261,7 +261,7 @@ describe('C. Max stacks triggers Wolven Blood Max', () => {
     // Place enough BSes to reach 16 stacks
     placeBattleSkill(result.current, 2);
     const bsEvent = result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT_ROSSI && ev.columnId === NounType.BATTLE,
+      ev => ev.ownerEntityId === SLOT_ROSSI && ev.columnId === NounType.BATTLE,
     );
     expect(bsEvent).toBeDefined();
 
@@ -306,7 +306,7 @@ describe('C. Max stacks triggers Wolven Blood Max', () => {
     // Place first BS normally
     placeBattleSkill(result.current, 2);
     const bsEvent = result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT_ROSSI && ev.columnId === NounType.BATTLE,
+      ev => ev.ownerEntityId === SLOT_ROSSI && ev.columnId === NounType.BATTLE,
     );
     expect(bsEvent).toBeDefined();
 
@@ -332,7 +332,7 @@ describe('C. Max stacks triggers Wolven Blood Max', () => {
     // Check every Wolven Blood event in allProcessedEvents:
     // None should be active at maxEndFrame + 1
     const allWb = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_ROSSI && ev.name === WOLVEN_BLOOD_ID,
+      ev => ev.ownerEntityId === SLOT_ROSSI && ev.name === WOLVEN_BLOOD_ID,
     );
     expect(allWb.length).toBeGreaterThanOrEqual(16);
 

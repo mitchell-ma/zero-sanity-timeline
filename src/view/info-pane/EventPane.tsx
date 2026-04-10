@@ -96,11 +96,11 @@ function EventPane({
   // Raw serialized skill data for verbose DataCardBody rendering
   const skillCardData = useMemo(() => {
     if (verbose < InfoLevel.DETAILED) return null;
-    const slot = slots.find((s) => s.slotId === event.ownerId);
+    const slot = slots.find((s) => s.slotId === event.ownerEntityId);
     if (!slot?.operator?.id) return null;
     const skillObj = getOperatorSkill(slot.operator.id, event.name);
     return skillObj ? skillObj.serialize() as Record<string, unknown> : null;
-  }, [event.ownerId, event.name, slots, verbose]);
+  }, [event.ownerEntityId, event.name, slots, verbose]);
 
   // Raw serialized status data for verbose DataCardBody rendering
   const statusCardData = useMemo(() => {
@@ -256,9 +256,9 @@ function EventPane({
               {event.eventStatus && (
                 <>
                   <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>Event status: </span>{event.eventStatus.toUpperCase()}
-                  {event.eventStatusOwnerId && (() => {
-                    const statusSlot = slots.find((s) => s.slotId === event.eventStatusOwnerId);
-                    const statusOpName = statusSlot?.operator?.name ?? event.eventStatusOwnerId;
+                  {event.eventStatusEntityId && (() => {
+                    const statusSlot = slots.find((s) => s.slotId === event.eventStatusEntityId);
+                    const statusOpName = statusSlot?.operator?.name ?? event.eventStatusEntityId;
                     const statusOpColor = statusSlot?.operator?.color;
                     const statusSkillLabel = event.eventStatusSkillName
                       ? getAllSkillLabels()[event.eventStatusSkillName as string]
@@ -361,7 +361,7 @@ function EventPane({
           // edit-panel-sections. Now they sit inside the Status Definition
           // card, sharing the hot-wire edit affordance. TimelineEvent-rooted
           // paths via jsonOverrides; freeform-only edits, auto reset.
-          const isReaction = event.ownerId === ENEMY_ID && REACTION_COLUMN_IDS.has(event.columnId);
+          const isReaction = event.ownerEntityId === ENEMY_ID && REACTION_COLUMN_IDS.has(event.columnId);
           const reactionElement = isReaction
             ? (getStatusElementMap()[event.columnId.toUpperCase()] as ElementType | undefined)
             : undefined;
@@ -622,7 +622,7 @@ function EventPane({
         </div>
 
         {(() => {
-          if (!allProcessedEvents || event.ownerId === ENEMY_ID) return null;
+          if (!allProcessedEvents || event.ownerEntityId === ENEMY_ID) return null;
           const totalDuration = computeSegmentsSpan(event.segments);
           const mods = resolveActiveModifiers(event.startFrame, event.startFrame + totalDuration, allProcessedEvents);
           if (mods.length === 0) return null;
@@ -693,7 +693,7 @@ function DebugPane({ event, processedEvent, rawEvents, allProcessedEvents }: { e
         {event.timeDependency != null && <div>timeDependency: {event.timeDependency}</div>}
         {event.isPerfectDodge && <div>isPerfectDodge: true</div>}
         {event.nonOverlappableRange != null && <div>nonOverlappableRange: {fmt(event.nonOverlappableRange)}</div>}
-        {event.sourceOwnerId != null && <div>sourceOwnerId: {event.sourceOwnerId}</div>}
+        {event.sourceEntityId != null && <div>sourceEntityId: {event.sourceEntityId}</div>}
         {processedEvent.warnings && processedEvent.warnings.length > 0 && (
           <div style={{ color: 'var(--red)', marginTop: 2 }}>
             {processedEvent.warnings.map((w, i) => <div key={i}>WARNING: {w}</div>)}
@@ -813,7 +813,7 @@ function DebugPane({ event, processedEvent, rawEvents, allProcessedEvents }: { e
       {(rawEvents || allProcessedEvents) && (() => {
         const rawIds = rawEvents ? new Set(rawEvents.map((ev) => ev.uid)) : null;
         const allEvents = allProcessedEvents ?? [];
-        const derivedIds = new Set(allEvents.filter((ev) => rawIds ? !rawIds.has(ev.uid) : !!ev.sourceOwnerId).map((ev) => ev.uid));
+        const derivedIds = new Set(allEvents.filter((ev) => rawIds ? !rawIds.has(ev.uid) : !!ev.sourceEntityId).map((ev) => ev.uid));
         const rawList = allEvents.filter((ev) => !derivedIds.has(ev.uid));
         const derivedList = allEvents.filter((ev) => derivedIds.has(ev.uid));
 
@@ -850,7 +850,7 @@ function DebugPane({ event, processedEvent, rawEvents, allProcessedEvents }: { e
             <div key={ev.uid}>
               <div style={{ marginBottom: 1, fontFamily: 'var(--font-mono)', fontSize: 11 }}>
                 <span style={{ color: 'var(--text-muted)', whiteSpace: 'pre' }}>{prefix}</span>
-                <span style={{ color }}>{ev.ownerId}:{ev.columnId}</span>
+                <span style={{ color }}>{ev.ownerEntityId}:{ev.columnId}</span>
                 {' '}<span style={{ color: 'var(--text-muted)' }}>({label})</span>
                 {' '}@ {ev.startFrame}f
                 {' '}<span style={{ color: 'var(--text-muted)' }}>[{fmt(eventDuration(ev))}]</span>

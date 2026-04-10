@@ -39,7 +39,7 @@ function placeBattleSkill(app: AppResult) {
   const bsCol = findColumn(app, SLOT_AKEKURI, NounType.BATTLE);
   expect(bsCol).toBeDefined();
   const payload = getMenuPayload(app, bsCol!, BS_START_FRAME);
-  app.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+  app.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
 }
 
 /** Place freeform HEAT_SUSCEPTIBILITY on enemy via context menu (value defaults to 0). */
@@ -58,7 +58,7 @@ function placeSusceptibilityViaContextMenu(app: AppResult) {
 
   if (suscItem) {
     const payload = suscItem.actionPayload as AddEventPayload;
-    app.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+    app.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
   } else {
     // Fallback: place directly (column may not be visible until an infliction exists)
     app.handleAddEvent(ENEMY_ID, HEAT_SUSC_ID, 0, {
@@ -70,7 +70,7 @@ function placeSusceptibilityViaContextMenu(app: AppResult) {
 
 function findSusceptibilityUid(app: AppResult): string {
   const suscEvent = app.allProcessedEvents.find(
-    ev => ev.id === HEAT_SUSC_ID && ev.ownerId === ENEMY_ID,
+    ev => ev.id === HEAT_SUSC_ID && ev.ownerEntityId === ENEMY_ID,
   );
   expect(suscEvent).toBeDefined();
   return suscEvent!.uid;
@@ -82,7 +82,7 @@ function getBsDamageRows(app: AppResult) {
     app.loadoutProperties, app.loadouts, app.staggerBreaks, CritMode.NEVER, app.overrides,
   );
   return calc.rows.filter(
-    r => r.damage != null && r.damage > 0 && r.ownerId === SLOT_AKEKURI && r.columnId === NounType.BATTLE,
+    r => r.damage != null && r.damage > 0 && r.ownerEntityId === SLOT_AKEKURI && r.columnId === NounType.BATTLE,
   );
 }
 

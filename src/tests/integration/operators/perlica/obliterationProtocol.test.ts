@@ -69,7 +69,7 @@ function placeStagger(app: AppResult, columnId: string, atFrame: number, duratio
 
 function getTalentEvents(app: AppResult) {
   return app.allProcessedEvents.filter(
-    ev => ev.ownerId === SLOT_PERLICA && ev.name === TALENT_ID,
+    ev => ev.ownerEntityId === SLOT_PERLICA && ev.name === TALENT_ID,
   );
 }
 
@@ -165,7 +165,7 @@ describe('B. Node stagger triggers talent via STAGGER_FRAILTY', () => {
     const viewTalents: { startFrame: number; endFrame: number }[] = [];
     viewModels.forEach(vm => {
       for (const ev of vm.events) {
-        if (ev.name === TALENT_ID && ev.ownerId === SLOT_PERLICA) {
+        if (ev.name === TALENT_ID && ev.ownerEntityId === SLOT_PERLICA) {
           viewTalents.push({ startFrame: ev.startFrame, endFrame: ev.startFrame + eventDuration(ev) });
         }
       }
@@ -202,7 +202,7 @@ describe('C. Full stagger triggers talent via STAGGER_FRAILTY', () => {
     act(() => { placeStagger(result.current, FULL_STAGGER_COLUMN_ID, 5 * FPS, defaultDur); });
 
     const staggerEvs = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === FULL_STAGGER_COLUMN_ID && ev.ownerId === ENEMY_ID,
+      ev => ev.columnId === FULL_STAGGER_COLUMN_ID && ev.ownerEntityId === ENEMY_ID,
     );
     expect(staggerEvs).toHaveLength(1);
     const staggerDur = eventDuration(staggerEvs[0]);
@@ -228,7 +228,7 @@ describe('C. Full stagger triggers talent via STAGGER_FRAILTY', () => {
     act(() => { placeStagger(result.current, FULL_STAGGER_COLUMN_ID, 5 * FPS, defaultDur); });
 
     const staggerEvs = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === FULL_STAGGER_COLUMN_ID && ev.ownerId === ENEMY_ID,
+      ev => ev.columnId === FULL_STAGGER_COLUMN_ID && ev.ownerEntityId === ENEMY_ID,
     );
     expect(staggerEvs).toHaveLength(1);
 
@@ -430,7 +430,7 @@ function findViewTalent(app: AppResult) {
   const found: { startFrame: number; duration: number; endFrame: number }[] = [];
   viewModels.forEach(vm => {
     for (const ev of vm.events) {
-      if (ev.name === TALENT_ID && ev.ownerId === SLOT_PERLICA) {
+      if (ev.name === TALENT_ID && ev.ownerEntityId === SLOT_PERLICA) {
         const dur = eventDuration(ev);
         found.push({ startFrame: ev.startFrame, duration: dur, endFrame: ev.startFrame + dur });
       }
@@ -801,7 +801,7 @@ describe('E. STAGGER_DAMAGE_BONUS stat accumulation', () => {
     );
 
     const bsRows = calcResult.rows.filter(
-      r => r.ownerId === SLOT_PERLICA && r.columnId === NounType.BATTLE && r.damage != null,
+      r => r.ownerEntityId === SLOT_PERLICA && r.columnId === NounType.BATTLE && r.damage != null,
     );
     expect(bsRows.length).toBeGreaterThan(0);
     const row = bsRows.find(r => r.params?.sub);

@@ -38,7 +38,7 @@ describe('Akekuri battle skill — ultimate energy not double-counted', () => {
     const payload = getMenuPayload(result.current, bsCol!, 1 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId,
+        payload.ownerEntityId, payload.columnId,
         payload.atFrame, payload.defaultSkill,
       );
     });

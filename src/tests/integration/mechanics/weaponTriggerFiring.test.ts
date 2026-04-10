@@ -58,7 +58,7 @@ function castUltimate(app: AppResult, atSecond: number) {
   const payload = getMenuPayload(app, col!, atFrame);
   act(() => {
     app.handleAddEvent(
-      payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+      payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
     );
   });
 }
@@ -76,7 +76,7 @@ describe('Weapon Trigger Firing — Presence Event', () => {
     // Weapon statuses should NOT create a permanent presence event —
     // they only appear when their trigger condition fires.
     const presenceEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_LAEVATAIN && ev.name === WEAPON_SKILL_ID && ev.startFrame === 0,
+      ev => ev.ownerEntityId === SLOT_LAEVATAIN && ev.name === WEAPON_SKILL_ID && ev.startFrame === 0,
     );
 
     expect(presenceEvents).toHaveLength(0);
@@ -95,7 +95,7 @@ describe('Weapon Trigger Firing — Status Applied on Ultimate', () => {
 
     // No weapon status events before casting ultimate
     const beforeStatus = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === WEAPON_STATUS_ID && ev.ownerId === SLOT_LAEVATAIN,
+      ev => ev.columnId === WEAPON_STATUS_ID && ev.ownerEntityId === SLOT_LAEVATAIN,
     );
     expect(beforeStatus).toHaveLength(0);
 
@@ -105,13 +105,13 @@ describe('Weapon Trigger Firing — Status Applied on Ultimate', () => {
 
     // Weapon status event should now exist
     const afterStatus = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === WEAPON_STATUS_ID && ev.ownerId === SLOT_LAEVATAIN,
+      ev => ev.columnId === WEAPON_STATUS_ID && ev.ownerEntityId === SLOT_LAEVATAIN,
     );
     expect(afterStatus).toHaveLength(1);
 
     const statusEvent = afterStatus[0];
     expect(statusEvent.startFrame).toBeGreaterThan(0);
-    expect(statusEvent.ownerId).toBe(SLOT_LAEVATAIN);
+    expect(statusEvent.ownerEntityId).toBe(SLOT_LAEVATAIN);
     expect(statusEvent.ownerOperatorId).toBe(LAEVATAIN_OPERATOR_ID);
   });
 
@@ -127,7 +127,7 @@ describe('Weapon Trigger Firing — Status Applied on Ultimate', () => {
 
     // The weapon status event should be routed to the operator status column
     const weaponStatusEvents = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === WEAPON_STATUS_ID && ev.ownerId === SLOT_LAEVATAIN,
+      ev => ev.columnId === WEAPON_STATUS_ID && ev.ownerEntityId === SLOT_LAEVATAIN,
     );
     expect(weaponStatusEvents).toHaveLength(1);
     expect(weaponStatusEvents[0].startFrame).toBeGreaterThan(0);
@@ -144,12 +144,12 @@ describe('Weapon Trigger Firing — Status Applied on Ultimate', () => {
     const payload = getMenuPayload(result.current, bsCol!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const statusEvents = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === WEAPON_STATUS_ID && ev.ownerId === SLOT_LAEVATAIN,
+      ev => ev.columnId === WEAPON_STATUS_ID && ev.ownerEntityId === SLOT_LAEVATAIN,
     );
     expect(statusEvents).toHaveLength(0);
   });
@@ -159,7 +159,7 @@ describe('Weapon Trigger Firing — Status Applied on Ultimate', () => {
 
     // Default test env has no weapon — verify no presence event
     const presenceEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_LAEVATAIN && ev.name === WEAPON_SKILL_ID,
+      ev => ev.ownerEntityId === SLOT_LAEVATAIN && ev.name === WEAPON_SKILL_ID,
     );
     expect(presenceEvents).toHaveLength(0);
   });

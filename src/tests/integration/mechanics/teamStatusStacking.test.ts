@@ -45,7 +45,7 @@ function findCommonColumn(app: AppResult, columnId: string) {
   return app.columns.find(
     (c): c is MiniTimeline =>
       c.type === ColumnType.MINI_TIMELINE &&
-      c.ownerId === TEAM_ID &&
+      c.ownerEntityId === TEAM_ID &&
       c.columnId === columnId,
   );
 }
@@ -104,18 +104,18 @@ describe('Team-status column architecture', () => {
     // Add LINK event via context menu payload
     act(() => {
       result.current.handleAddEvent(
-        linkPayload.ownerId, linkPayload.columnId, linkPayload.atFrame, linkPayload.defaultSkill,
+        linkPayload.ownerEntityId, linkPayload.columnId, linkPayload.atFrame, linkPayload.defaultSkill,
       );
     });
 
     // 2. Controller: LINK events appear with their own columnId
     const linkEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === TEAM_ID && ev.columnId === StatusType.LINK,
+      (ev) => ev.ownerEntityId === TEAM_ID && ev.columnId === StatusType.LINK,
     );
     expect(linkEvents.length).toBeGreaterThanOrEqual(1);
     // Should NOT be under the generic 'team-status' columnId
     const genericEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === TEAM_ID && ev.columnId === COMMON_COLUMN_IDS.TEAM_STATUS,
+      (ev) => ev.ownerEntityId === TEAM_ID && ev.columnId === COMMON_COLUMN_IDS.TEAM_STATUS,
     );
     expect(genericEvents).toHaveLength(0);
   });
@@ -145,20 +145,20 @@ describe('RESET stacking interaction', () => {
     const ultPayload1 = getMenuPayload(result.current, ultCol, 1 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        ultPayload1.ownerId, ultPayload1.columnId, ultPayload1.atFrame, ultPayload1.defaultSkill,
+        ultPayload1.ownerEntityId, ultPayload1.columnId, ultPayload1.atFrame, ultPayload1.defaultSkill,
       );
     });
 
     const ultPayload2 = getMenuPayload(result.current, ultCol, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        ultPayload2.ownerId, ultPayload2.columnId, ultPayload2.atFrame, ultPayload2.defaultSkill,
+        ultPayload2.ownerEntityId, ultPayload2.columnId, ultPayload2.atFrame, ultPayload2.defaultSkill,
       );
     });
 
     // 2. Controller: Find Overclocked Moment AMP events
     const ampEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.id === AMP_ID && ev.ownerId === TEAM_ID,
+      (ev) => ev.id === AMP_ID && ev.ownerEntityId === TEAM_ID,
     );
     expect(ampEvents.length).toBeGreaterThanOrEqual(2);
 
@@ -180,20 +180,20 @@ describe('RESET stacking interaction', () => {
     // Place two overlapping AMP events via context menu
     act(() => {
       result.current.handleAddEvent(
-        ampPayload1.ownerId, ampPayload1.columnId, ampPayload1.atFrame, ampPayload1.defaultSkill,
+        ampPayload1.ownerEntityId, ampPayload1.columnId, ampPayload1.atFrame, ampPayload1.defaultSkill,
       );
     });
 
     const ampPayload2 = getTeamStatusMenuPayload(result.current, AMP_ID, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        ampPayload2.ownerId, ampPayload2.columnId, ampPayload2.atFrame, ampPayload2.defaultSkill,
+        ampPayload2.ownerEntityId, ampPayload2.columnId, ampPayload2.atFrame, ampPayload2.defaultSkill,
       );
     });
 
     // 2. Controller: both AMP events exist, earlier is clamped
     const ampEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.id === AMP_ID && ev.ownerId === TEAM_ID,
+      (ev) => ev.id === AMP_ID && ev.ownerEntityId === TEAM_ID,
     );
     expect(ampEvents).toHaveLength(2);
 
@@ -223,7 +223,7 @@ describe('Cross-status isolation in team-status column', () => {
     const linkPayload = getTeamStatusMenuPayload(result.current, StatusType.LINK, 1 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        linkPayload.ownerId, linkPayload.columnId, linkPayload.atFrame, linkPayload.defaultSkill,
+        linkPayload.ownerEntityId, linkPayload.columnId, linkPayload.atFrame, linkPayload.defaultSkill,
       );
     });
 
@@ -231,16 +231,16 @@ describe('Cross-status isolation in team-status column', () => {
     const ampPayload = getTeamStatusMenuPayload(result.current, AMP_ID, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        ampPayload.ownerId, ampPayload.columnId, ampPayload.atFrame, ampPayload.defaultSkill,
+        ampPayload.ownerEntityId, ampPayload.columnId, ampPayload.atFrame, ampPayload.defaultSkill,
       );
     });
 
     // 2. Controller: both statuses exist independently
     const linkEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.id === StatusType.LINK && ev.ownerId === TEAM_ID,
+      (ev) => ev.id === StatusType.LINK && ev.ownerEntityId === TEAM_ID,
     );
     const ampEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.id === AMP_ID && ev.ownerId === TEAM_ID,
+      (ev) => ev.id === AMP_ID && ev.ownerEntityId === TEAM_ID,
     );
 
     expect(linkEvents).toHaveLength(1);
@@ -270,13 +270,13 @@ describe('No total-event limit for status events', () => {
       const payload = getTeamStatusMenuPayload(result.current, StatusType.LINK, i * 10 * FPS);
       act(() => {
         result.current.handleAddEvent(
-          payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+          payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
         );
       });
     }
 
     const linkEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.id === StatusType.LINK && ev.ownerId === TEAM_ID,
+      (ev) => ev.id === StatusType.LINK && ev.ownerEntityId === TEAM_ID,
     );
     expect(linkEvents).toHaveLength(6);
   });
@@ -288,13 +288,13 @@ describe('No total-event limit for status events', () => {
 
 describe('Stack labels and display name resolution', () => {
   it('resolveEventLabel translates status IDs to display names', () => {
-    const linkEvent = { uid: 'test', id: StatusType.LINK, name: StatusType.LINK, ownerId: TEAM_ID, columnId: StatusType.LINK, startFrame: 0, segments: [] };
+    const linkEvent = { uid: 'test', id: StatusType.LINK, name: StatusType.LINK, ownerEntityId: TEAM_ID, columnId: StatusType.LINK, startFrame: 0, segments: [] };
     const label = resolveEventLabel(linkEvent);
     expect(label).toBe('Link');
   });
 
   it('resolveEventLabel translates Overclocked Moment AMP to display name', () => {
-    const event = { uid: 'test', id: AMP_ID, name: AMP_ID, ownerId: TEAM_ID, columnId: AMP_ID, startFrame: 0, segments: [] };
+    const event = { uid: 'test', id: AMP_ID, name: AMP_ID, ownerEntityId: TEAM_ID, columnId: AMP_ID, startFrame: 0, segments: [] };
     const label = resolveEventLabel(event);
     expect(label).toBe(AMP_DISPLAY_NAME);
   });
@@ -321,7 +321,7 @@ describe('Stack labels and display name resolution', () => {
       const payload = getTeamStatusMenuPayload(result.current, StatusType.LINK, (i + 1) * FPS);
       act(() => {
         result.current.handleAddEvent(
-          payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+          payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
         );
       });
     }
@@ -333,7 +333,7 @@ describe('Stack labels and display name resolution', () => {
     );
 
     const linkEvents = result.current.allProcessedEvents
-      .filter((ev) => ev.id === StatusType.LINK && ev.ownerId === TEAM_ID)
+      .filter((ev) => ev.id === StatusType.LINK && ev.ownerEntityId === TEAM_ID)
       .sort((a, b) => a.startFrame - b.startFrame);
 
     expect(linkEvents).toHaveLength(5);
@@ -346,11 +346,11 @@ describe('Stack labels and display name resolution', () => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// F. Freeform events have sourceOwnerId = USER_ID
+// F. Freeform events have sourceEntityId = USER_ID
 // ═══════════════════════════════════════════════════════════════════════════════
 
 describe('Freeform event source defaults', () => {
-  it('freeform events get sourceOwnerId and sourceSkillName by default', () => {
+  it('freeform events get sourceEntityId and sourceSkillName by default', () => {
     const { result } = renderHook(() => useApp());
 
     act(() => {
@@ -361,13 +361,13 @@ describe('Freeform event source defaults', () => {
     const linkPayload = getTeamStatusMenuPayload(result.current, StatusType.LINK, 1 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        linkPayload.ownerId, linkPayload.columnId, linkPayload.atFrame, linkPayload.defaultSkill,
+        linkPayload.ownerEntityId, linkPayload.columnId, linkPayload.atFrame, linkPayload.defaultSkill,
       );
     });
 
     // Check raw events (not processed) for the source fields
     const rawLink = result.current.allProcessedEvents.find(
-      (ev) => ev.id === StatusType.LINK && ev.ownerId === TEAM_ID,
+      (ev) => ev.id === StatusType.LINK && ev.ownerEntityId === TEAM_ID,
     );
     expect(rawLink).toBeDefined();
     expect(rawLink!.ownerSlotId).toBeDefined();

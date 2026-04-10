@@ -62,24 +62,24 @@ function setupLrOnly() {
 function placeBattleSkill(app: AppResult, atFrame: number) {
   const col = findColumn(app, SLOT_LR, NounType.BATTLE);
   const payload = getMenuPayload(app, col!, atFrame);
-  app.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+  app.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
 }
 
 function placeBasicAttack(app: AppResult, atFrame: number) {
   const col = findColumn(app, SLOT_LR, NounType.BASIC_ATTACK);
   const payload = getMenuPayload(app, col!, atFrame);
-  app.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+  app.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
 }
 
 function placeAkekuriBasicAttack(app: AppResult, atFrame: number) {
   const col = findColumn(app, SLOT_AKEKURI, NounType.BASIC_ATTACK);
   const payload = getMenuPayload(app, col!, atFrame);
-  app.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+  app.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
 }
 
 function swapControlTo(app: AppResult, slotId: string, atFrame: number) {
   const col = app.columns.find(
-    (c) => c.type === ColumnType.MINI_TIMELINE && (c as { ownerId: string }).ownerId === slotId
+    (c) => c.type === ColumnType.MINI_TIMELINE && (c as { ownerEntityId: string }).ownerEntityId === slotId
       && (c as { columnId: string }).columnId === NounType.BASIC_ATTACK,
   );
   if (!col) throw new Error(`No column found for ${slotId}`);
@@ -88,13 +88,13 @@ function swapControlTo(app: AppResult, slotId: string, atFrame: number) {
   const controlItem = items.find(i => i.label === CONTROL_LABEL);
   if (!controlItem || controlItem.disabled) throw new Error(`Control item not available for ${slotId}`);
   const payload = controlItem.actionPayload as AddEventPayload;
-  app.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+  app.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
 }
 
-function getPerfusionEvents(app: AppResult, ownerId?: string) {
+function getPerfusionEvents(app: AppResult, ownerEntityId?: string) {
   return app.allProcessedEvents.filter(
     ev => ev.id === PERFUSION_ID && ev.startFrame > 0
-      && (ownerId ? ev.ownerId === ownerId : true),
+      && (ownerEntityId ? ev.ownerEntityId === ownerEntityId : true),
   );
 }
 
@@ -123,7 +123,7 @@ describe('A. Hypothermic Perfusion target routing (CONTROLLED operator)', () => 
 
     const perfusions = getPerfusionEvents(result.current);
     expect(perfusions).toHaveLength(1);
-    expect(perfusions[0].ownerId).toBe(SLOT_LR);
+    expect(perfusions[0].ownerEntityId).toBe(SLOT_LR);
   });
 
   it('A2: swap control to Akekuri, then LR BS → Hypothermic Perfusion applied to Akekuri slot', () => {
@@ -135,7 +135,7 @@ describe('A. Hypothermic Perfusion target routing (CONTROLLED operator)', () => 
 
     const perfusions = getPerfusionEvents(result.current);
     expect(perfusions).toHaveLength(1);
-    expect(perfusions[0].ownerId).toBe(SLOT_AKEKURI);
+    expect(perfusions[0].ownerEntityId).toBe(SLOT_AKEKURI);
   });
 
   it('A3: swap control back to LR after Akekuri → Hypothermic Perfusion applied to LR', () => {
@@ -148,7 +148,7 @@ describe('A. Hypothermic Perfusion target routing (CONTROLLED operator)', () => 
 
     const perfusions = getPerfusionEvents(result.current);
     expect(perfusions).toHaveLength(1);
-    expect(perfusions[0].ownerId).toBe(SLOT_LR);
+    expect(perfusions[0].ownerEntityId).toBe(SLOT_LR);
   });
 });
 
@@ -205,7 +205,7 @@ describe('C. Battle Skill SP return', () => {
     act(() => { placeBattleSkill(result.current, 5 * FPS); });
 
     const bsEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_LR && ev.columnId === NounType.BATTLE,
+      ev => ev.ownerEntityId === SLOT_LR && ev.columnId === NounType.BATTLE,
     );
     expect(bsEvents).toHaveLength(1);
     expect(bsEvents[0].skillPointCost).toBe(100);
@@ -253,7 +253,7 @@ describe('E. Hypothermic Perfusion trigger (CONTROLLED OPERATOR PERFORM FINAL_ST
 
     // Check for cryo infliction on enemy (from Hypothermic Perfusion trigger effect)
     const cryoInflictions = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === INFLICTION_COLUMNS.CRYO && ev.ownerId === ENEMY_ID
+      ev => ev.columnId === INFLICTION_COLUMNS.CRYO && ev.ownerEntityId === ENEMY_ID
         && ev.startFrame > 0,
     );
     // Hypothermic Perfusion trigger should have applied cryo infliction
@@ -299,7 +299,7 @@ describe('E. Hypothermic Perfusion trigger (CONTROLLED OPERATOR PERFORM FINAL_ST
     act(() => { placeBasicAttack(result.current, 5 * FPS); });
 
     const cryoInflictions = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === INFLICTION_COLUMNS.CRYO && ev.ownerId === ENEMY_ID
+      ev => ev.columnId === INFLICTION_COLUMNS.CRYO && ev.ownerEntityId === ENEMY_ID
         && ev.startFrame > 0,
     );
     // Hypothermic Perfusion trigger applies 1 cryo infliction stack
@@ -434,7 +434,7 @@ describe('H. Hypothermic Perfusion (Mirage) — pipeline E2E', () => {
 
     const mirages = getMirageEvents(result.current);
     expect(mirages.length).toBeGreaterThanOrEqual(1);
-    expect(mirages[0].ownerId).toBe(ENEMY_ID);
+    expect(mirages[0].ownerEntityId).toBe(ENEMY_ID);
   });
 
   it('H6: mirage ownerOperatorId tracks back to Last Rite operator', () => {
@@ -454,7 +454,7 @@ describe('H. Hypothermic Perfusion (Mirage) — pipeline E2E', () => {
 
     // The mirage's frame at 0s offset should apply cryo infliction
     const cryoInflictions = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === INFLICTION_COLUMNS.CRYO && ev.ownerId === ENEMY_ID
+      ev => ev.columnId === INFLICTION_COLUMNS.CRYO && ev.ownerEntityId === ENEMY_ID
         && ev.startFrame > 0,
     );
     expect(cryoInflictions.length).toBeGreaterThanOrEqual(1);
@@ -467,7 +467,7 @@ describe('H. Hypothermic Perfusion (Mirage) — pipeline E2E', () => {
 
     const enemyStatusCol = result.current.columns.find(
       (c): c is MiniTimeline => c.type === ColumnType.MINI_TIMELINE
-        && c.ownerId === ENEMY_ID && c.columnId === ENEMY_GROUP_COLUMNS.ENEMY_STATUS,
+        && c.ownerEntityId === ENEMY_ID && c.columnId === ENEMY_GROUP_COLUMNS.ENEMY_STATUS,
     );
     if (!enemyStatusCol) return; // Column may not exist if no enemy statuses configured
 

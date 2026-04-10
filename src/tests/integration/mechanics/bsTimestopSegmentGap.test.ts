@@ -97,11 +97,11 @@ describe('BS + ULT timestop — segment gap must not appear on drag', () => {
     // Place ULT at 2s — creates a time-stop region
     const ultPayload = getMenuPayload(result.current, ultCol, 2 * FPS);
     act(() => {
-      result.current.handleAddEvent(ultPayload.ownerId, ultPayload.columnId, ultPayload.atFrame, ultPayload.defaultSkill);
+      result.current.handleAddEvent(ultPayload.ownerEntityId, ultPayload.columnId, ultPayload.atFrame, ultPayload.defaultSkill);
     });
 
     const ultEvent = result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT_ROSSI && ev.columnId === NounType.ULTIMATE,
+      ev => ev.ownerEntityId === SLOT_ROSSI && ev.columnId === NounType.ULTIMATE,
     )!;
     const animDur = getAnimationDuration(ultEvent);
     expect(animDur).toBeGreaterThan(0);
@@ -112,11 +112,11 @@ describe('BS + ULT timestop — segment gap must not appear on drag', () => {
     expect(batkCol).toBeDefined();
     const batkPayload = getMenuPayload(result.current, batkCol, timeStopEnd);
     act(() => {
-      result.current.handleAddEvent(batkPayload.ownerId, batkPayload.columnId, batkPayload.atFrame, batkPayload.defaultSkill);
+      result.current.handleAddEvent(batkPayload.ownerEntityId, batkPayload.columnId, batkPayload.atFrame, batkPayload.defaultSkill);
     });
 
     const batkEvent = result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT_ROSSI && ev.columnId === NounType.BASIC_ATTACK,
+      ev => ev.ownerEntityId === SLOT_ROSSI && ev.columnId === NounType.BASIC_ATTACK,
     )!;
     expect(batkEvent).toBeDefined();
     expect(batkEvent.segments.length).toBeGreaterThan(1);
@@ -153,11 +153,11 @@ describe('BS + ULT timestop — segment gap must not appear on drag', () => {
     // Place ULT at 2s
     const ultPayload = getMenuPayload(result.current, ultCol, 2 * FPS);
     act(() => {
-      result.current.handleAddEvent(ultPayload.ownerId, ultPayload.columnId, ultPayload.atFrame, ultPayload.defaultSkill);
+      result.current.handleAddEvent(ultPayload.ownerEntityId, ultPayload.columnId, ultPayload.atFrame, ultPayload.defaultSkill);
     });
 
     const ultEvent = result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT_ROSSI && ev.columnId === NounType.ULTIMATE,
+      ev => ev.ownerEntityId === SLOT_ROSSI && ev.columnId === NounType.ULTIMATE,
     )!;
     const animDur = getAnimationDuration(ultEvent);
 
@@ -166,11 +166,11 @@ describe('BS + ULT timestop — segment gap must not appear on drag', () => {
     expect(batkCol).toBeDefined();
     const batkPayload = getMenuPayload(result.current, batkCol, ultEvent.startFrame);
     act(() => {
-      result.current.handleAddEvent(batkPayload.ownerId, batkPayload.columnId, batkPayload.atFrame, batkPayload.defaultSkill);
+      result.current.handleAddEvent(batkPayload.ownerEntityId, batkPayload.columnId, batkPayload.atFrame, batkPayload.defaultSkill);
     });
 
     const batkEvent = result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT_ROSSI && ev.columnId === NounType.BASIC_ATTACK,
+      ev => ev.ownerEntityId === SLOT_ROSSI && ev.columnId === NounType.BASIC_ATTACK,
     )!;
     expect(batkEvent).toBeDefined();
     expect(batkEvent.segments.length).toBeGreaterThan(1);
@@ -195,11 +195,11 @@ describe('BS + ULT timestop — segment gap must not appear on drag', () => {
     // Place ULT
     const ultPayload = getMenuPayload(result.current, ultCol, 2 * FPS);
     act(() => {
-      result.current.handleAddEvent(ultPayload.ownerId, ultPayload.columnId, ultPayload.atFrame, ultPayload.defaultSkill);
+      result.current.handleAddEvent(ultPayload.ownerEntityId, ultPayload.columnId, ultPayload.atFrame, ultPayload.defaultSkill);
     });
 
     const ultEvent = result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT_ROSSI && ev.columnId === NounType.ULTIMATE,
+      ev => ev.ownerEntityId === SLOT_ROSSI && ev.columnId === NounType.ULTIMATE,
     )!;
     const animDur = getAnimationDuration(ultEvent);
     const timeStopEnd = ultEvent.startFrame + animDur;
@@ -209,7 +209,7 @@ describe('BS + ULT timestop — segment gap must not appear on drag', () => {
     expect(batkCol).toBeDefined();
     const batkPayload = getMenuPayload(result.current, batkCol, timeStopEnd);
     act(() => {
-      result.current.handleAddEvent(batkPayload.ownerId, batkPayload.columnId, batkPayload.atFrame, batkPayload.defaultSkill);
+      result.current.handleAddEvent(batkPayload.ownerEntityId, batkPayload.columnId, batkPayload.atFrame, batkPayload.defaultSkill);
     });
 
     // Record raw segment durations from the default event template
@@ -217,7 +217,7 @@ describe('BS + ULT timestop — segment gap must not appear on drag', () => {
 
     // Drag into time-stop — this should NOT mutate raw segment durations
     const batkUid = result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT_ROSSI && ev.columnId === NounType.BASIC_ATTACK,
+      ev => ev.ownerEntityId === SLOT_ROSSI && ev.columnId === NounType.BASIC_ATTACK,
     )!.uid;
 
     act(() => { result.current.handleMoveEvent(batkUid, ultEvent.startFrame); });

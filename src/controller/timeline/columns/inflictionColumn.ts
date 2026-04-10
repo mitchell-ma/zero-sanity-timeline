@@ -29,19 +29,19 @@ export class InflictionColumn implements EventColumn {
     this.maxStacks = (config?.stacks?.limit as { value?: number } | undefined)?.value ?? 4;
   }
 
-  add(ownerId: string, frame: number, durationFrames: number,
+  add(ownerEntityId: string, frame: number, durationFrames: number,
     source: EventSource, options?: AddOptions): boolean {
 
     // ── Cross-element reaction (arts inflictions only) ──────────────────
     if (this.isArts) {
-      const otherActive = this.collectCrossElementActive(ownerId, frame);
+      const otherActive = this.collectCrossElementActive(ownerEntityId, frame);
       if (otherActive.length > 0) {
         const reactionColumnId = INFLICTION_TO_REACTION[this.columnId];
         if (reactionColumnId) {
           for (const consumedOther of otherActive) {
             setEventDuration(consumedOther, frame - consumedOther.startFrame);
             consumedOther.eventStatus = EventStatusType.CONSUMED;
-            consumedOther.eventStatusOwnerId = source.ownerId;
+            consumedOther.eventStatusEntityId = source.ownerEntityId;
             consumedOther.eventStatusSkillName = source.skillName;
           }
           // Precompute the incoming infliction's uid so we can both pass it
@@ -66,16 +66,16 @@ export class InflictionColumn implements EventColumn {
           consumed.uid = incomingUid;
           consumed.id = this.columnId;
           consumed.name = this.columnId;
-          consumed.ownerId = ownerId;
+          consumed.ownerEntityId = ownerEntityId;
           consumed.columnId = this.columnId;
           consumed.startFrame = frame;
           consumed.segments = [{ properties: { duration: 0 } }];
-          consumed.sourceOwnerId = source.ownerId;
+          consumed.sourceEntityId = source.ownerEntityId;
           consumed.sourceSkillName = source.skillName;
-          consumed.ownerSlotId = source.slotId ?? source.ownerId;
-          consumed.ownerOperatorId = source.operatorId ?? source.ownerId;
+          consumed.ownerSlotId = source.slotId ?? source.ownerEntityId;
+          consumed.ownerOperatorId = source.operatorId ?? source.ownerEntityId;
           consumed.eventStatus = EventStatusType.CONSUMED;
-          consumed.eventStatusOwnerId = source.ownerId;
+          consumed.eventStatusEntityId = source.ownerEntityId;
           consumed.eventStatusSkillName = source.skillName;
           this.host.pushToOutput(consumed);
           return true;
@@ -84,14 +84,14 @@ export class InflictionColumn implements EventColumn {
     }
 
     // ── Deque stacking: evict oldest at cap ──────────────────────────────
-    const active = this.host.activeEventsIn(this.columnId, ownerId, frame);
+    const active = this.host.activeEventsIn(this.columnId, ownerEntityId, frame);
     const isArtsBurst = this.isArts && active.length > 0;
 
     if (active.length >= this.maxStacks) {
       const oldest = active[0];
       setEventDuration(oldest, frame - oldest.startFrame);
       oldest.eventStatus = EventStatusType.CONSUMED;
-      oldest.eventStatusOwnerId = source.ownerId;
+      oldest.eventStatusEntityId = source.ownerEntityId;
       oldest.eventStatusSkillName = source.skillName;
     }
 
@@ -100,20 +100,20 @@ export class InflictionColumn implements EventColumn {
     ev.uid = options?.uid ?? `${this.columnId}-${genEventUid()}`;
     ev.id = this.columnId;
     ev.name = this.columnId;
-    ev.ownerId = ownerId;
+    ev.ownerEntityId = ownerEntityId;
     ev.columnId = this.columnId;
     ev.startFrame = frame;
     ev.segments = [{ properties: { duration: durationFrames } }];
-    ev.sourceOwnerId = source.ownerId;
+    ev.sourceEntityId = source.ownerEntityId;
     ev.sourceSkillName = source.skillName;
-    ev.ownerSlotId = source.slotId ?? source.ownerId;
-    ev.ownerOperatorId = source.operatorId ?? source.ownerId;
+    ev.ownerSlotId = source.slotId ?? source.ownerEntityId;
+    ev.ownerOperatorId = source.operatorId ?? source.ownerEntityId;
     if (isArtsBurst) ev.isArtsBurst = true;
 
     this.host.pushEvent(ev);
 
     // Record stack position at creation time
-    const activeAfterCreation = this.host.activeEventsIn(this.columnId, ownerId, frame);
+    const activeAfterCreation = this.host.activeEventsIn(this.columnId, ownerEntityId, frame);
     ev.stacks = activeAfterCreation.length;
 
     // ── Extend co-active inflictions to match new end ────────────────────
@@ -124,7 +124,7 @@ export class InflictionColumn implements EventColumn {
       if (newEnd > actEnd) {
         setEventDuration(act, newEnd - act.startFrame);
         act.eventStatus = EventStatusType.EXTENDED;
-        act.eventStatusOwnerId = source.ownerId;
+        act.eventStatusEntityId = source.ownerEntityId;
         act.eventStatusSkillName = source.skillName;
       }
     }
@@ -132,16 +132,16 @@ export class InflictionColumn implements EventColumn {
     return true;
   }
 
-  consume(ownerId: string, frame: number, source: EventSource,
+  consume(ownerEntityId: string, frame: number, source: EventSource,
     options?: ConsumeOptions): number {
     const count = options?.count ?? Infinity;
-    const allActive = this.host.activeEventsIn(this.columnId, ownerId, frame)
+    const allActive = this.host.activeEventsIn(this.columnId, ownerEntityId, frame)
       .sort((a, b) => a.startFrame - b.startFrame);
     const toAbsorb = allActive.slice(0, count);
     for (const ev of toAbsorb) {
       setEventDuration(ev, frame - ev.startFrame);
       ev.eventStatus = EventStatusType.CONSUMED;
-      ev.eventStatusOwnerId = source.ownerId;
+      ev.eventStatusEntityId = source.ownerEntityId;
       ev.eventStatusSkillName = source.skillName;
     }
     return toAbsorb.length;
@@ -149,18 +149,18 @@ export class InflictionColumn implements EventColumn {
 
   canAdd(): boolean { return true; } // deque always accepts (evicts oldest)
 
-  canConsume(ownerId: string, frame: number): boolean {
-    return this.host.activeCount(this.columnId, ownerId, frame) > 0;
+  canConsume(ownerEntityId: string, frame: number): boolean {
+    return this.host.activeCount(this.columnId, ownerEntityId, frame) > 0;
   }
 
   // ── Private ────────────────────────────────────────────────────────────
 
-  private collectCrossElementActive(ownerId: string, frame: number) {
+  private collectCrossElementActive(ownerEntityId: string, frame: number) {
     const result: import('../../../consts/viewTypes').TimelineEvent[] = [];
     // Check all other infliction columns that map to reactions
     for (const otherCol of Object.keys(INFLICTION_TO_REACTION)) {
       if (otherCol === this.columnId) continue;
-      for (const ev of this.host.activeEventsIn(otherCol, ownerId, frame)) {
+      for (const ev of this.host.activeEventsIn(otherCol, ownerEntityId, frame)) {
         result.push(ev);
       }
     }

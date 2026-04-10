@@ -13,14 +13,14 @@ function genId(): string {
  * Events are kept sorted by startFrame at all times.
  */
 export class Subtimeline {
-  readonly ownerId: string;
+  readonly ownerEntityId: string;
   readonly columnId: string;
 
   private events: TimelineEvent[] = [];
   private listeners: Set<SubtimelineListener> = new Set();
 
-  constructor(ownerId: string, columnId: string) {
-    this.ownerId = ownerId;
+  constructor(ownerEntityId: string, columnId: string) {
+    this.ownerEntityId = ownerEntityId;
     this.columnId = columnId;
   }
 
@@ -55,7 +55,7 @@ export class Subtimeline {
       uid: genId(),
       id: params.name ?? this.columnId,
       name: params.name ?? this.columnId,
-      ownerId: this.ownerId,
+      ownerEntityId: this.ownerEntityId,
       columnId: this.columnId,
       startFrame: params.startFrame,
       segments: params.segments,
@@ -75,7 +75,7 @@ export class Subtimeline {
   }
 
   /** Update an event's fields. Re-sorts if startFrame changed. */
-  updateEvent(id: string, updates: Partial<Omit<TimelineEvent, "uid" | "ownerId" | "columnId">>): boolean {
+  updateEvent(id: string, updates: Partial<Omit<TimelineEvent, "uid" | "ownerEntityId" | "columnId">>): boolean {
     const idx = this.events.findIndex((ev) => ev.uid === id);
     if (idx === -1) return false;
     const ev = this.events[idx];

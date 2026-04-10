@@ -74,7 +74,7 @@ const allSkillsVisible = (slotId: string): VisibleSkills => ({
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
 const findStatusColumn = (columns: ReturnType<typeof buildColumns>, slotId: string) =>
-  columns.find(c => c.type === 'mini-timeline' && c.ownerId === slotId && c.columnId === 'operator-status') as MiniTimeline | undefined;
+  columns.find(c => c.type === 'mini-timeline' && c.ownerEntityId === slotId && c.columnId === 'operator-status') as MiniTimeline | undefined;
 
 // ── Tests ───────────────────────────────────────────────────────────────────
 

@@ -84,7 +84,7 @@ function placeNormalBS(result: { current: AppResult }, startSec: number) {
   const payload = getMenuPayload(result.current, battleCol!, startSec * FPS);
   act(() => {
     result.current.handleAddEvent(
-      payload.ownerId, payload.columnId,
+      payload.ownerEntityId, payload.columnId,
       payload.atFrame, payload.defaultSkill,
     );
   });
@@ -103,7 +103,7 @@ describe('A. Empowered BS Consumes Reaction', () => {
 
     // Controller: empowered BS placed
     const bsEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.BATTLE,
+      ev => ev.ownerEntityId === SLOT_WULFGARD && ev.columnId === NounType.BATTLE,
     );
     expect(bsEvents).toHaveLength(1);
     expect(bsEvents[0].enhancementType).toBe(EnhancementType.EMPOWERED);
@@ -135,7 +135,7 @@ describe('A. Empowered BS Consumes Reaction', () => {
 
     // Controller: empowered BS placed, reaction consumed
     const bsEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.BATTLE,
+      ev => ev.ownerEntityId === SLOT_WULFGARD && ev.columnId === NounType.BATTLE,
     );
     expect(bsEvents[0].enhancementType).toBe(EnhancementType.EMPOWERED);
 
@@ -158,7 +158,7 @@ describe('B. Negative — Normal BS', () => {
 
     // Controller: normal BS placed (not empowered)
     const bsEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.BATTLE,
+      ev => ev.ownerEntityId === SLOT_WULFGARD && ev.columnId === NounType.BATTLE,
     );
     expect(bsEvents).toHaveLength(1);
     expect(bsEvents[0].enhancementType).not.toBe(EnhancementType.EMPOWERED);
@@ -171,7 +171,7 @@ describe('B. Negative — Normal BS', () => {
     );
     const battleVM = viewModels.get(battleCol!.key);
     expect(battleVM).toBeDefined();
-    expect(battleVM!.events.some(ev => ev.ownerId === SLOT_WULFGARD)).toBe(true);
+    expect(battleVM!.events.some(ev => ev.ownerEntityId === SLOT_WULFGARD)).toBe(true);
   });
 });
 
@@ -188,7 +188,7 @@ describe('C. Potential Independence', () => {
     placeEmpoweredBS(result, 3);
 
     const bsEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.BATTLE,
+      ev => ev.ownerEntityId === SLOT_WULFGARD && ev.columnId === NounType.BATTLE,
     );
     expect(bsEvents[0].enhancementType).toBe(EnhancementType.EMPOWERED);
   });
@@ -201,7 +201,7 @@ describe('C. Potential Independence', () => {
     placeEmpoweredBS(result, 3);
 
     const bsEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.BATTLE,
+      ev => ev.ownerEntityId === SLOT_WULFGARD && ev.columnId === NounType.BATTLE,
     );
     expect(bsEvents[0].enhancementType).toBe(EnhancementType.EMPOWERED);
   });

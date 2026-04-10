@@ -113,10 +113,10 @@ export function computeStatusViewOverrides(
     if (col.type !== 'mini-timeline' || !col.microColumns) continue;
 
     const colEvents = col.matchAllExcept
-      ? events.filter(ev => ev.ownerId === col.ownerId && !col.matchAllExcept!.has(ev.columnId))
+      ? events.filter(ev => ev.ownerEntityId === col.ownerEntityId && !col.matchAllExcept!.has(ev.columnId))
       : (() => {
         const matchSet = col.matchColumnIds ? new Set(col.matchColumnIds) : null;
-        return events.filter(ev => ev.ownerId === col.ownerId &&
+        return events.filter(ev => ev.ownerEntityId === col.ownerEntityId &&
           (matchSet ? matchSet.has(ev.columnId) : ev.columnId === col.columnId));
       })();
 
@@ -211,10 +211,10 @@ function computeGreedySlotAssignments(
     const microCount = col.microColumns.length;
 
     const colEvents2 = col.matchAllExcept
-      ? events.filter(ev => ev.ownerId === col.ownerId && !col.matchAllExcept!.has(ev.columnId))
+      ? events.filter(ev => ev.ownerEntityId === col.ownerEntityId && !col.matchAllExcept!.has(ev.columnId))
       : (() => {
         const ms = col.matchColumnIds ? new Set(col.matchColumnIds) : null;
-        return events.filter(ev => ev.ownerId === col.ownerId &&
+        return events.filter(ev => ev.ownerEntityId === col.ownerEntityId &&
           (ms ? ms.has(ev.columnId) : ev.columnId === col.columnId));
       })();
     const sorted = [...colEvents2].sort((a, b) => a.startFrame - b.startFrame);
@@ -244,7 +244,7 @@ function isWindowConsumed(windowEv: TimelineEvent, events: readonly TimelineEven
   let count = 0;
   for (const ev of events) {
     if (ev.columnId === NounType.COMBO &&
-        ev.ownerId === windowEv.ownerId &&
+        ev.ownerEntityId === windowEv.ownerEntityId &&
         ev.startFrame >= windowEv.startFrame &&
         ev.startFrame < endFrame) {
       count++;
@@ -317,7 +317,7 @@ export function resolveEventColor(
   const elColor = dominant
     ? ELEMENT_COLORS[dominant as ElementType]
     : ELEMENT_COLORS[col.skillElement as ElementType];
-  return elColor ?? slotElementColors[col.ownerId] ?? DEFAULT_EVENT_COLOR;
+  return elColor ?? slotElementColors[col.ownerEntityId] ?? DEFAULT_EVENT_COLOR;
 }
 
 /**
@@ -442,21 +442,21 @@ export interface ColumnViewModel {
 // Used by external callers (e.g. tests, future incremental updates)
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function getEventsForColumn(col: MiniTimeline, events: TimelineEvent[]): TimelineEvent[] {
-  if (col.matchAllExcept) return events.filter(ev => ev.ownerId === col.ownerId && !col.matchAllExcept!.has(ev.columnId));
+  if (col.matchAllExcept) return events.filter(ev => ev.ownerEntityId === col.ownerEntityId && !col.matchAllExcept!.has(ev.columnId));
   if (col.matchColumnIds) {
     const matchSet = new Set(col.matchColumnIds);
     return events.filter(
-      (ev) => ev.ownerId === col.ownerId && matchSet.has(ev.columnId),
+      (ev) => ev.ownerEntityId === col.ownerEntityId && matchSet.has(ev.columnId),
     );
   }
   if (col.microColumns && col.microColumnAssignment === 'by-column-id') {
     const mcIds = new Set(col.microColumns.map((mc) => mc.id));
     return events.filter(
-      (ev) => ev.ownerId === col.ownerId && mcIds.has(ev.columnId),
+      (ev) => ev.ownerEntityId === col.ownerEntityId && mcIds.has(ev.columnId),
     );
   }
   return events.filter(
-    (ev) => ev.ownerId === col.ownerId && ev.columnId === col.columnId,
+    (ev) => ev.ownerEntityId === col.ownerEntityId && ev.columnId === col.columnId,
   );
 }
 
@@ -468,8 +468,8 @@ function getEventsForColumnGrouped(
   if (col.matchAllExcept) {
     const result: TimelineEvent[] = [];
     grouped.forEach((arr, key) => {
-      if (!key.startsWith(`${col.ownerId}\0`)) return;
-      const colId = key.slice(col.ownerId.length + 1);
+      if (!key.startsWith(`${col.ownerEntityId}\0`)) return;
+      const colId = key.slice(col.ownerEntityId.length + 1);
       if (!col.matchAllExcept!.has(colId)) result.push(...arr);
     });
     return result;
@@ -477,7 +477,7 @@ function getEventsForColumnGrouped(
   if (col.matchColumnIds) {
     const result: TimelineEvent[] = [];
     for (const cid of col.matchColumnIds) {
-      const arr = grouped.get(`${col.ownerId}\0${cid}`);
+      const arr = grouped.get(`${col.ownerEntityId}\0${cid}`);
       if (arr) result.push(...arr);
     }
     return result;
@@ -485,12 +485,12 @@ function getEventsForColumnGrouped(
   if (col.microColumns && col.microColumnAssignment === 'by-column-id') {
     const result: TimelineEvent[] = [];
     for (const mc of col.microColumns) {
-      const arr = grouped.get(`${col.ownerId}\0${mc.id}`);
+      const arr = grouped.get(`${col.ownerEntityId}\0${mc.id}`);
       if (arr) result.push(...arr);
     }
     return result;
   }
-  return grouped.get(`${col.ownerId}\0${col.columnId}`) ?? [];
+  return grouped.get(`${col.ownerEntityId}\0${col.columnId}`) ?? [];
 }
 
 /**
@@ -805,7 +805,7 @@ export function computeTimelinePresentation(
 
   const eventsByOwnerColumn = new Map<string, TimelineEvent[]>();
   for (const ev of events) {
-    const key = `${ev.ownerId}\0${ev.columnId}`;
+    const key = `${ev.ownerEntityId}\0${ev.columnId}`;
     let arr = eventsByOwnerColumn.get(key);
     if (!arr) { arr = []; eventsByOwnerColumn.set(key, arr); }
     arr.push(ev);

@@ -33,7 +33,7 @@ describe('Crit Mode Damage — NEVER vs ALWAYS produce different damage', () => 
     expect(bsCol).toBeDefined();
     const payload = getMenuPayload(result.current, bsCol!, 2 * FPS);
     act(() => {
-      result.current.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+      result.current.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
     });
 
     // Run calculation with NEVER
@@ -91,7 +91,7 @@ describe('Crit Mode Damage — NEVER vs ALWAYS produce different damage', () => 
     expect(bsCol).toBeDefined();
     const payload = getMenuPayload(result.current, bsCol!, 2 * FPS);
     act(() => {
-      result.current.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+      result.current.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
     });
 
     // NEVER
@@ -150,7 +150,7 @@ describe('Crit Mode Damage — NEVER vs ALWAYS produce different damage', () => 
     const bsCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE);
     const payload = getMenuPayload(result.current, bsCol!, 2 * FPS);
     act(() => {
-      result.current.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+      result.current.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
     });
 
     // NEVER: critMultiplier should be 1.0

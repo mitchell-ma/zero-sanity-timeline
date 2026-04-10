@@ -33,7 +33,7 @@ export type CommonSlotChangeListener = () => void;
  * - Team Status subtimeline: statuses that apply to all four operators
  */
 export class CommonSlotController {
-  readonly ownerId = TEAM_ID;
+  readonly ownerEntityId = TEAM_ID;
 
   readonly skillPoints: SkillPointController;
   readonly stagger: StaggerController;
@@ -93,7 +93,7 @@ export class CommonSlotController {
         key: `${TEAM_ID}-${COMMON_COLUMN_IDS.SKILL_POINTS}`,
         type: ColumnType.MINI_TIMELINE,
         source: TimelineSourceType.COMMON,
-        ownerId: TEAM_ID,
+        ownerEntityId: TEAM_ID,
         columnId: COMMON_COLUMN_IDS.SKILL_POINTS,
         label: ColumnLabel.SKILL_POINTS,
         color: '#ccaa33',
@@ -103,7 +103,7 @@ export class CommonSlotController {
         key: `${TEAM_ID}-${COMMON_COLUMN_IDS.TEAM_STATUS}`,
         type: ColumnType.MINI_TIMELINE,
         source: TimelineSourceType.COMMON,
-        ownerId: TEAM_ID,
+        ownerEntityId: TEAM_ID,
         columnId: COMMON_COLUMN_IDS.TEAM_STATUS,
         label: ColumnLabel.TEAM_STATUS,
         color: '#66aa88',

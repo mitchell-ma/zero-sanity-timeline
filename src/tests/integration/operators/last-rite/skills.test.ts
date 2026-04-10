@@ -86,12 +86,12 @@ describe('Last Rite Skills — Core Placement', () => {
     const payload = getMenuPayload(result.current, col!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const basics = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_LAST_RITE && ev.columnId === NounType.BASIC_ATTACK,
+      (ev) => ev.ownerEntityId === SLOT_LAST_RITE && ev.columnId === NounType.BASIC_ATTACK,
     );
     expect(basics.length).toBeGreaterThanOrEqual(1);
   });
@@ -108,12 +108,12 @@ describe('Last Rite Skills — Core Placement', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const battles = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_LAST_RITE && ev.columnId === NounType.BATTLE,
+      (ev) => ev.ownerEntityId === SLOT_LAST_RITE && ev.columnId === NounType.BATTLE,
     );
     expect(battles).toHaveLength(1);
     expect(battles[0].name).toBe(BATTLE_SKILL_ID);
@@ -134,12 +134,12 @@ describe('Last Rite Skills — Core Placement', () => {
     const payload = getMenuPayload(result.current, col!, 3 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const combos = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_LAST_RITE && ev.columnId === NounType.COMBO,
+      (ev) => ev.ownerEntityId === SLOT_LAST_RITE && ev.columnId === NounType.COMBO,
     );
     expect(combos).toHaveLength(1);
     expect(combos[0].name).toBe(COMBO_SKILL_ID);
@@ -159,12 +159,12 @@ describe('Last Rite Skills — Core Placement', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const ultimates = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_LAST_RITE && ev.columnId === NounType.ULTIMATE,
+      (ev) => ev.ownerEntityId === SLOT_LAST_RITE && ev.columnId === NounType.ULTIMATE,
     );
     expect(ultimates).toHaveLength(1);
     expect(ultimates[0].name).toBe(ULTIMATE_ID);
@@ -182,12 +182,12 @@ describe('Last Rite Skills — Battle Skill Hypothermic Perfusion', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const battles = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_LAST_RITE && ev.columnId === NounType.BATTLE,
+      (ev) => ev.ownerEntityId === SLOT_LAST_RITE && ev.columnId === NounType.BATTLE,
     );
     expect(battles).toHaveLength(1);
 
@@ -210,12 +210,12 @@ describe('Last Rite Skills — Combo Skill', () => {
     const payload = getMenuPayload(result.current, col!, 3 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const combos = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_LAST_RITE && ev.columnId === NounType.COMBO,
+      (ev) => ev.ownerEntityId === SLOT_LAST_RITE && ev.columnId === NounType.COMBO,
     );
     expect(combos).toHaveLength(1);
 
@@ -238,12 +238,12 @@ describe('Last Rite Skills — Combo Skill', () => {
     const payload = getMenuPayload(result.current, col!, 3 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const combos = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_LAST_RITE && ev.columnId === NounType.COMBO,
+      (ev) => ev.ownerEntityId === SLOT_LAST_RITE && ev.columnId === NounType.COMBO,
     );
     expect(combos).toHaveLength(1);
     expect(combos[0].eventStatus).not.toBe(EventStatusType.CONSUMED);
@@ -271,12 +271,12 @@ describe('Last Rite Skills — Ultimate Energy', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const ultimates = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_LAST_RITE && ev.columnId === NounType.ULTIMATE,
+      (ev) => ev.ownerEntityId === SLOT_LAST_RITE && ev.columnId === NounType.ULTIMATE,
     );
     expect(ultimates).toHaveLength(1);
 
@@ -301,7 +301,7 @@ describe('Last Rite Skills — View Layer', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
@@ -312,7 +312,7 @@ describe('Last Rite Skills — View Layer', () => {
     const vm = viewModels.get(col!.key);
     expect(vm).toBeDefined();
     const bsEvents = vm!.events.filter(
-      (ev) => ev.ownerId === SLOT_LAST_RITE && ev.columnId === NounType.BATTLE,
+      (ev) => ev.ownerEntityId === SLOT_LAST_RITE && ev.columnId === NounType.BATTLE,
     );
     expect(bsEvents).toHaveLength(1);
   });
@@ -325,7 +325,7 @@ describe('Last Rite Skills — View Layer', () => {
     const payload = getMenuPayload(result.current, col!, 3 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
@@ -336,7 +336,7 @@ describe('Last Rite Skills — View Layer', () => {
     const vm = viewModels.get(col!.key);
     expect(vm).toBeDefined();
     const comboEvents = vm!.events.filter(
-      (ev) => ev.ownerId === SLOT_LAST_RITE && ev.columnId === NounType.COMBO,
+      (ev) => ev.ownerEntityId === SLOT_LAST_RITE && ev.columnId === NounType.COMBO,
     );
     expect(comboEvents).toHaveLength(1);
   });
@@ -580,7 +580,7 @@ describe('Last Rite — T2 Cryogenic Embrittlement DSL', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 

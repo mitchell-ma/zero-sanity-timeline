@@ -119,20 +119,20 @@ export class EventsQueryService {
 
     // Pre-filter from DerivedEventController for O(n) per-column queries
     const events = state.getAllEvents();
-    this.susceptibilityEvents = events.filter(e => (e.columnId === StatusType.SUSCEPTIBILITY || e.columnId === StatusType.FOCUS || isQualifiedId(e.columnId, StatusType.SUSCEPTIBILITY)) && e.ownerId === ENEMY_ID);
+    this.susceptibilityEvents = events.filter(e => (e.columnId === StatusType.SUSCEPTIBILITY || e.columnId === StatusType.FOCUS || isQualifiedId(e.columnId, StatusType.SUSCEPTIBILITY)) && e.ownerEntityId === ENEMY_ID);
     this.linkEvents = events.filter(e => e.columnId === StatusType.LINK);
     this.artsAmpEvents = events.filter(e => e.damageFactorType === DamageFactorType.AMP);
     this.electrificationEvents = events.filter(e => e.columnId === REACTION_COLUMNS.ELECTRIFICATION);
     this.breachEvents = events.filter(e => e.columnId === PHYSICAL_STATUS_COLUMNS.BREACH);
-    this.corrosionEvents = events.filter(e => e.ownerId === ENEMY_ID && e.columnId === REACTION_COLUMNS.CORROSION);
+    this.corrosionEvents = events.filter(e => e.ownerEntityId === ENEMY_ID && e.columnId === REACTION_COLUMNS.CORROSION);
     this.weakenEvents = events.filter(e => e.columnId === StatusType.WEAKEN);
     this.dmgReductionEvents = events.filter(e => e.columnId === StatusType.DMG_REDUCTION);
     this.protectionEvents = events.filter(e => e.columnId === StatusType.PROTECTION);
     this.shieldEvents = events.filter(e => e.columnId === StatusType.SHIELD);
     this.weaponFragilityEvents = events.filter(e => e.columnId.startsWith(FRAGILITY_COLUMN_PREFIX));
-    this.cryoInflictionEvents = events.filter(e => e.ownerId === ENEMY_ID && e.columnId === INFLICTION_COLUMNS.CRYO);
-    this.solidificationEvents = events.filter(e => e.ownerId === ENEMY_ID && e.columnId === REACTION_COLUMNS.SOLIDIFICATION);
-    this.nodeStaggerEvents = events.filter(e => e.ownerId === ENEMY_ID && e.columnId === NODE_STAGGER_COLUMN_ID);
+    this.cryoInflictionEvents = events.filter(e => e.ownerEntityId === ENEMY_ID && e.columnId === INFLICTION_COLUMNS.CRYO);
+    this.solidificationEvents = events.filter(e => e.ownerEntityId === ENEMY_ID && e.columnId === REACTION_COLUMNS.SOLIDIFICATION);
+    this.nodeStaggerEvents = events.filter(e => e.ownerEntityId === ENEMY_ID && e.columnId === NODE_STAGGER_COLUMN_ID);
   }
 
   // ── Helpers ─────────────────────────────────────────────────────────────
@@ -213,10 +213,10 @@ export class EventsQueryService {
    * Count active operator-owned status events with the given columnId at the frame.
    * Returns the sum of stacks across active matching events.
    */
-  getActiveOperatorStatusStacks(frame: number, ownerId: string, statusId: string): number {
+  getActiveOperatorStatusStacks(frame: number, ownerEntityId: string, statusId: string): number {
     let n = 0;
     for (const ev of this.state.getAllEvents()) {
-      if (ev.ownerId !== ownerId || ev.columnId !== statusId) continue;
+      if (ev.ownerEntityId !== ownerEntityId || ev.columnId !== statusId) continue;
       if (!this.isActive(ev, frame)) continue;
       n += ev.stacks ?? 1;
     }
@@ -355,7 +355,7 @@ export class EventsQueryService {
     for (const ev of this.shieldEvents) {
       if (!this.isActive(ev, frame)) continue;
       if (ev.statusValue != null && ev.statusValue > 0) {
-        effects.push({ operatorId: ev.ownerId, value: ev.statusValue });
+        effects.push({ operatorId: ev.ownerEntityId, value: ev.statusValue });
       }
     }
     return effects;
@@ -369,7 +369,7 @@ export class EventsQueryService {
   /**
    * Compute intellect-scaled damage bonus from active status events.
    * Scans all events with DAMAGE_BONUS factor type that carry a per-intellect
-   * statusValue and a sourceOwnerId for stat lookup.
+   * statusValue and a sourceEntityId for stat lookup.
    */
   getIntellectScaledDamageBonus(frame: number): number {
     let sum = 0;
@@ -377,8 +377,8 @@ export class EventsQueryService {
       if (ev.damageFactorType !== DamageFactorType.DAMAGE_BONUS) continue;
       if (!this.isActive(ev, frame)) continue;
       const perIntellect = ev.statusValue ?? 0;
-      if (perIntellect === 0 || !ev.sourceOwnerId) continue;
-      const intellect = this.aggregatedStats?.[ev.sourceOwnerId]?.stats[StatType.INTELLECT] ?? 0;
+      if (perIntellect === 0 || !ev.sourceEntityId) continue;
+      const intellect = this.aggregatedStats?.[ev.sourceEntityId]?.stats[StatType.INTELLECT] ?? 0;
       sum += perIntellect * intellect;
     }
     return sum;
@@ -424,8 +424,8 @@ export class EventsQueryService {
       const cappedStacks = Math.min(ev.stacks ?? 1, 4) as StatusLevel;
       const elapsedSeconds = (frame - ev.startFrame) / FPS;
       let artsIntensity = 0;
-      if (ev.sourceOwnerId) {
-        const agg = this.aggregatedStats?.[ev.sourceOwnerId];
+      if (ev.sourceEntityId) {
+        const agg = this.aggregatedStats?.[ev.sourceEntityId];
         if (agg) artsIntensity = agg.stats[StatType.ARTS_INTENSITY] ?? 0;
       }
       maxReduction = Math.max(maxReduction, getCorrosionReduction(cappedStacks, elapsedSeconds, artsIntensity));
@@ -500,11 +500,11 @@ export class EventsQueryService {
    * whose element matches. The pipeline resolves IGNORE RESISTANCE clause effects
    * into statusValue at event creation time.
    */
-  getIgnoredResistance(frame: number, _element: ElementType, attackerOwnerId: string): number {
+  getIgnoredResistance(frame: number, _element: ElementType, attackerEntityId: string): number {
     let sum = 0;
     for (const ev of this.state.getAllEvents()) {
       if (ev.damageFactorType !== DamageFactorType.RESISTANCE) continue;
-      if (ev.ownerId !== attackerOwnerId) continue;
+      if (ev.ownerEntityId !== attackerEntityId) continue;
       if (!this.isActive(ev, frame)) continue;
       sum += ev.statusValue ?? 0;
     }

@@ -31,7 +31,7 @@ export class SkillPointController {
   /** Accumulated SP events (costs and recoveries) during pipeline. */
   private pendingSpEvents: TimelineEvent[] = [];
 
-  /** Map of battle skill event UID → { frame, ownerId } for UE ultimate energy gain placement. */
+  /** Map of battle skill event UID → { frame, ownerEntityId } for UE ultimate energy gain placement. */
   private battleSkillGainFrames = new Map<string, { frame: number; slotId: string }>();
 
   /** Per-slot SP cost tracking (for insufficiency zones). */
@@ -120,28 +120,28 @@ export class SkillPointController {
    * @param eventUid Original event UID (for UE natural SP tracking).
    * @param frame The frame at which SP is consumed.
    * @param amount SP cost amount.
-   * @param ownerId Slot that owns the battle skill.
+   * @param ownerEntityId Slot that owns the battle skill.
    * @param ultimateEnergyGainFrame Frame where UE ultimate energy gain should be placed for this BS.
    */
-  addCost(eventUid: string, frame: number, amount: number, ownerId: string, ultimateEnergyGainFrame: number) {
+  addCost(eventUid: string, frame: number, amount: number, ownerEntityId: string, ultimateEnergyGainFrame: number) {
     this.pendingSpEvents.push({
       uid: `${eventUid}-sp`,
       id: SP_COST_EVENT_ID,
       name: SP_COST_EVENT_ID,
-      ownerId: TEAM_ID,
+      ownerEntityId: TEAM_ID,
       columnId: COMMON_COLUMN_IDS.SKILL_POINTS,
       startFrame: frame,
       segments: durationSegment(amount),
     });
-    this.battleSkillGainFrames.set(eventUid, { frame: ultimateEnergyGainFrame, slotId: ownerId });
+    this.battleSkillGainFrames.set(eventUid, { frame: ultimateEnergyGainFrame, slotId: ownerEntityId });
     // Track per-slot SP cost for insufficiency zones
-    if (!this.slotSpCosts.has(ownerId)) {
-      this.slotSpCosts.set(ownerId, amount);
+    if (!this.slotSpCosts.has(ownerEntityId)) {
+      this.slotSpCosts.set(ownerEntityId, amount);
     }
     // Push the battle skill gain frame to UE so the SP → UE conversion
     // runs reactively without a finalize-time gainFrames param.
     if (this.ueController) {
-      this.ueController.setBattleSkillGainFrame(eventUid, ultimateEnergyGainFrame, ownerId);
+      this.ueController.setBattleSkillGainFrame(eventUid, ultimateEnergyGainFrame, ownerEntityId);
     }
     this.flushSpEvents();
   }
@@ -150,20 +150,20 @@ export class SkillPointController {
    * Called per frame or event that recovers/returns SP.
    * @param frame Absolute frame of the recovery.
    * @param amount SP amount recovered (positive).
-   * @param sourceOwnerId Owner of the skill that produced this recovery.
+   * @param sourceEntityId Owner of the skill that produced this recovery.
    * @param sourceSkillName Skill name that produced this recovery.
    */
-  addRecovery(frame: number, amount: number, sourceOwnerId: string, sourceSkillName: string) {
+  addRecovery(frame: number, amount: number, sourceEntityId: string, sourceSkillName: string) {
     if (amount <= 0) return;
     this.pendingSpEvents.push({
       uid: `sp-return-${frame}-${this.pendingSpEvents.length}`,
       id: 'sp-return',
       name: 'sp-return',
-      ownerId: TEAM_ID,
+      ownerEntityId: TEAM_ID,
       columnId: COMMON_COLUMN_IDS.SKILL_POINTS,
       startFrame: frame,
       segments: [{ properties: { duration: amount } }],
-      sourceOwnerId,
+      sourceEntityId,
       sourceSkillName,
     });
     this.flushSpEvents();

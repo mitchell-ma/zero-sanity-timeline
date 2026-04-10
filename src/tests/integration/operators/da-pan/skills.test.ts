@@ -93,12 +93,12 @@ describe('Da Pan Skills — core placement', () => {
     const payload = getAddEventPayload(menuItems!);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const battles = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_DA_PAN && ev.columnId === NounType.BATTLE,
+      (ev) => ev.ownerEntityId === SLOT_DA_PAN && ev.columnId === NounType.BATTLE,
     );
     expect(battles).toHaveLength(1);
     expect(battles[0].name).toBe(BATTLE_SKILL_ID);
@@ -118,12 +118,12 @@ describe('Da Pan Skills — core placement', () => {
     const payload = getAddEventPayload(menuItems!);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const combos = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_DA_PAN && ev.columnId === NounType.COMBO,
+      (ev) => ev.ownerEntityId === SLOT_DA_PAN && ev.columnId === NounType.COMBO,
     );
     expect(combos).toHaveLength(1);
     expect(combos[0].name).toBe(COMBO_SKILL_ID);
@@ -150,12 +150,12 @@ describe('Da Pan Skills — core placement', () => {
     const payload = getAddEventPayload(menuItems!);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const ultimates = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_DA_PAN && ev.columnId === NounType.ULTIMATE,
+      (ev) => ev.ownerEntityId === SLOT_DA_PAN && ev.columnId === NounType.ULTIMATE,
     );
     expect(ultimates).toHaveLength(1);
     expect(ultimates[0].name).toBe(ULTIMATE_ID);
@@ -179,19 +179,19 @@ describe('Da Pan Skills — battle skill Vulnerable and Lift', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     // Vulnerable should exist on enemy
     const vulnEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === PHYSICAL_INFLICTION_COLUMNS.VULNERABLE && ev.ownerId === ENEMY_ID,
+      (ev) => ev.columnId === PHYSICAL_INFLICTION_COLUMNS.VULNERABLE && ev.ownerEntityId === ENEMY_ID,
     );
     expect(vulnEvents.length).toBeGreaterThanOrEqual(1);
 
     // No Lift yet — first BS has no pre-existing Vulnerable
     const liftEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === PHYSICAL_STATUS_COLUMNS.LIFT && ev.ownerId === ENEMY_ID,
+      (ev) => ev.columnId === PHYSICAL_STATUS_COLUMNS.LIFT && ev.ownerEntityId === ENEMY_ID,
     );
     expect(liftEvents).toHaveLength(0);
   });
@@ -205,7 +205,7 @@ describe('Da Pan Skills — battle skill Vulnerable and Lift', () => {
     const payload1 = getMenuPayload(result.current, col!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload1.ownerId, payload1.columnId, payload1.atFrame, payload1.defaultSkill,
+        payload1.ownerEntityId, payload1.columnId, payload1.atFrame, payload1.defaultSkill,
       );
     });
 
@@ -213,18 +213,18 @@ describe('Da Pan Skills — battle skill Vulnerable and Lift', () => {
     const payload2 = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload2.ownerId, payload2.columnId, payload2.atFrame, payload2.defaultSkill,
+        payload2.ownerEntityId, payload2.columnId, payload2.atFrame, payload2.defaultSkill,
       );
     });
 
     const liftEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === PHYSICAL_STATUS_COLUMNS.LIFT && ev.ownerId === ENEMY_ID,
+      (ev) => ev.columnId === PHYSICAL_STATUS_COLUMNS.LIFT && ev.ownerEntityId === ENEMY_ID,
     );
     expect(liftEvents.length).toBeGreaterThanOrEqual(1);
 
     // Vulnerable stacks should accumulate (each BS adds 1)
     const vulnEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === PHYSICAL_INFLICTION_COLUMNS.VULNERABLE && ev.ownerId === ENEMY_ID,
+      (ev) => ev.columnId === PHYSICAL_INFLICTION_COLUMNS.VULNERABLE && ev.ownerEntityId === ENEMY_ID,
     );
     expect(vulnEvents.length).toBeGreaterThanOrEqual(2);
   });
@@ -250,19 +250,19 @@ describe('Da Pan Skills — ultimate physical statuses', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     // Knock Down should appear (Vulnerable exists from prior forced-Lift frame)
     const knockDownEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === PHYSICAL_STATUS_COLUMNS.KNOCK_DOWN && ev.ownerId === ENEMY_ID,
+      (ev) => ev.columnId === PHYSICAL_STATUS_COLUMNS.KNOCK_DOWN && ev.ownerEntityId === ENEMY_ID,
     );
     expect(knockDownEvents.length).toBeGreaterThanOrEqual(1);
 
     // Vulnerable stacks added by both Lift and KD frames
     const vulnEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === PHYSICAL_INFLICTION_COLUMNS.VULNERABLE && ev.ownerId === ENEMY_ID,
+      (ev) => ev.columnId === PHYSICAL_INFLICTION_COLUMNS.VULNERABLE && ev.ownerEntityId === ENEMY_ID,
     );
     expect(vulnEvents.length).toBeGreaterThanOrEqual(1);
   });
@@ -277,13 +277,13 @@ describe('Da Pan Skills — ultimate physical statuses', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     // Combo activation window should be generated (from Vulnerable application)
     const activationWindows = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === 'comboActivationWindow' && ev.ownerId === SLOT_DA_PAN,
+      (ev) => ev.columnId === 'comboActivationWindow' && ev.ownerEntityId === SLOT_DA_PAN,
     );
     expect(activationWindows.length).toBeGreaterThanOrEqual(1);
   });
@@ -305,12 +305,12 @@ describe('Da Pan Skills — potential effects', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const ultimates = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_DA_PAN && ev.columnId === NounType.ULTIMATE,
+      (ev) => ev.ownerEntityId === SLOT_DA_PAN && ev.columnId === NounType.ULTIMATE,
     );
     expect(ultimates).toHaveLength(1);
   });
@@ -326,12 +326,12 @@ describe('Da Pan Skills — potential effects', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const ultimates = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_DA_PAN && ev.columnId === NounType.ULTIMATE,
+      (ev) => ev.ownerEntityId === SLOT_DA_PAN && ev.columnId === NounType.ULTIMATE,
     );
     expect(ultimates).toHaveLength(1);
   });
@@ -346,12 +346,12 @@ describe('Da Pan Skills — potential effects', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const combos = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_DA_PAN && ev.columnId === NounType.COMBO,
+      (ev) => ev.ownerEntityId === SLOT_DA_PAN && ev.columnId === NounType.COMBO,
     );
     expect(combos).toHaveLength(1);
 
@@ -398,7 +398,7 @@ describe('Da Pan Skills — view layer presentation', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
@@ -410,7 +410,7 @@ describe('Da Pan Skills — view layer presentation', () => {
     const battleVm = viewModels.get(col!.key);
     expect(battleVm).toBeDefined();
     const battleEvents = battleVm!.events.filter(
-      (ev) => ev.ownerId === SLOT_DA_PAN && ev.columnId === NounType.BATTLE,
+      (ev) => ev.ownerEntityId === SLOT_DA_PAN && ev.columnId === NounType.BATTLE,
     );
     expect(battleEvents).toHaveLength(1);
   });
@@ -425,7 +425,7 @@ describe('Da Pan Skills — view layer presentation', () => {
     const comboPayload = getMenuPayload(result.current, comboCol!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        comboPayload.ownerId, comboPayload.columnId, comboPayload.atFrame, comboPayload.defaultSkill,
+        comboPayload.ownerEntityId, comboPayload.columnId, comboPayload.atFrame, comboPayload.defaultSkill,
       );
     });
 
@@ -437,7 +437,7 @@ describe('Da Pan Skills — view layer presentation', () => {
     const comboVm = viewModels.get(comboCol!.key);
     expect(comboVm).toBeDefined();
     const comboEvents = comboVm!.events.filter(
-      (ev) => ev.ownerId === SLOT_DA_PAN && ev.columnId === NounType.COMBO,
+      (ev) => ev.ownerEntityId === SLOT_DA_PAN && ev.columnId === NounType.COMBO,
     );
     expect(comboEvents).toHaveLength(1);
   });
@@ -452,7 +452,7 @@ describe('Da Pan Skills — view layer presentation', () => {
     const ultPayload = getMenuPayload(result.current, ultCol!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        ultPayload.ownerId, ultPayload.columnId, ultPayload.atFrame, ultPayload.defaultSkill,
+        ultPayload.ownerEntityId, ultPayload.columnId, ultPayload.atFrame, ultPayload.defaultSkill,
       );
     });
 
@@ -464,7 +464,7 @@ describe('Da Pan Skills — view layer presentation', () => {
     const ultVm = viewModels.get(ultCol!.key);
     expect(ultVm).toBeDefined();
     const ultEvents = ultVm!.events.filter(
-      (ev) => ev.ownerId === SLOT_DA_PAN && ev.columnId === NounType.ULTIMATE,
+      (ev) => ev.ownerEntityId === SLOT_DA_PAN && ev.columnId === NounType.ULTIMATE,
     );
     expect(ultEvents).toHaveLength(1);
   });

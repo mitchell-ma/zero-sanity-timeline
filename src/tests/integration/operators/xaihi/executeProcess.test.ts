@@ -41,14 +41,14 @@ function setupXaihiWithCombo() {
   // BS at 2s → AC on controlled (slot-0)
   const bsCol = findColumn(view.result.current, SLOT_XAIHI, NounType.BATTLE);
   const bsPayload = getMenuPayload(view.result.current, bsCol!, 2 * FPS);
-  act(() => { view.result.current.handleAddEvent(bsPayload.ownerId, bsPayload.columnId, bsPayload.atFrame, bsPayload.defaultSkill); });
+  act(() => { view.result.current.handleAddEvent(bsPayload.ownerEntityId, bsPayload.columnId, bsPayload.atFrame, bsPayload.defaultSkill); });
 
   // 2 BAs on slot-0 to consume both AC stacks → combo window
   const baCol = findColumn(view.result.current, SLOT_CONTROLLED, NounType.BASIC_ATTACK);
   const ba1 = getMenuPayload(view.result.current, baCol!, 5 * FPS);
-  act(() => { view.result.current.handleAddEvent(ba1.ownerId, ba1.columnId, ba1.atFrame, ba1.defaultSkill); });
+  act(() => { view.result.current.handleAddEvent(ba1.ownerEntityId, ba1.columnId, ba1.atFrame, ba1.defaultSkill); });
   const ba2 = getMenuPayload(view.result.current, baCol!, 10 * FPS);
-  act(() => { view.result.current.handleAddEvent(ba2.ownerId, ba2.columnId, ba2.atFrame, ba2.defaultSkill); });
+  act(() => { view.result.current.handleAddEvent(ba2.ownerEntityId, ba2.columnId, ba2.atFrame, ba2.defaultSkill); });
 
   // Place combo in the window
   const comboCol = findColumn(view.result.current, SLOT_XAIHI, NounType.COMBO);
@@ -58,7 +58,7 @@ function setupXaihiWithCombo() {
       .map(ev => ev.startFrame + ev.segments.reduce((s: number, seg: { properties: { duration: number } }) => s + seg.properties.duration, 0)),
   );
   const comboPayload = getMenuPayload(view.result.current, comboCol!, lastConsumed + 1 * FPS);
-  act(() => { view.result.current.handleAddEvent(comboPayload.ownerId, comboPayload.columnId, comboPayload.atFrame, comboPayload.defaultSkill); });
+  act(() => { view.result.current.handleAddEvent(comboPayload.ownerEntityId, comboPayload.columnId, comboPayload.atFrame, comboPayload.defaultSkill); });
 
   return view;
 }
@@ -73,13 +73,13 @@ describe('F. Execute Process — Cryo Fragility', () => {
 
     // ── Controller layer: combo event exists ──
     const comboEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_XAIHI && ev.columnId === NounType.COMBO,
+      ev => ev.ownerEntityId === SLOT_XAIHI && ev.columnId === NounType.COMBO,
     );
     expect(comboEvents).toHaveLength(1);
 
     // ── Controller layer: CRYO_FRAGILITY on enemy ──
     const fragilityEvents = result.current.allProcessedEvents.filter(
-      ev => ev.name === CRYO_FRAGILITY_ID && ev.ownerId === ENEMY_ID,
+      ev => ev.name === CRYO_FRAGILITY_ID && ev.ownerEntityId === ENEMY_ID,
     );
     expect(fragilityEvents.length).toBeGreaterThanOrEqual(1);
     // Should have statusValue (fragility percentage)
@@ -99,7 +99,7 @@ describe('F. Execute Process — Cryo Fragility', () => {
     const enemyStatusCol = result.current.columns.find(
       (c): c is MiniTimeline =>
         c.type === ColumnType.MINI_TIMELINE &&
-        c.ownerId === ENEMY_ID &&
+        c.ownerEntityId === ENEMY_ID &&
         c.columnId === ENEMY_GROUP_COLUMNS.ENEMY_STATUS,
     );
     expect(enemyStatusCol).toBeDefined();

@@ -35,7 +35,7 @@ const COMBO_CD_LEVEL_11_FRAMES = Math.round(18 * FPS);
 /** Find the COOLDOWN segment's duration in frames from a processed event. */
 function getCooldownDuration(events: ReturnType<typeof useApp>['allProcessedEvents'], slotId: string, columnId: string) {
   const ev = events.find(
-    (e) => e.ownerId === slotId && e.columnId === columnId,
+    (e) => e.ownerEntityId === slotId && e.columnId === columnId,
   );
   if (!ev) return undefined;
   const cdSeg = ev.segments.find(
@@ -61,7 +61,7 @@ describe('Skill Level → Cooldown Update — integration through useApp', () =>
     // Add combo skill event via context menu payload
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId,
+        payload.ownerEntityId,
         payload.columnId,
         payload.atFrame,
         payload.defaultSkill,
@@ -82,7 +82,7 @@ describe('Skill Level → Cooldown Update — integration through useApp', () =>
     const colVmBefore = vmBefore.get(comboCol!.key);
     expect(colVmBefore).toBeDefined();
     const comboEventsBefore = colVmBefore!.events.filter(
-      (ev) => ev.ownerId === SLOT_ARDELIA && ev.columnId === NounType.COMBO,
+      (ev) => ev.ownerEntityId === SLOT_ARDELIA && ev.columnId === NounType.COMBO,
     );
     expect(comboEventsBefore.length).toBe(1);
 
@@ -109,7 +109,7 @@ describe('Skill Level → Cooldown Update — integration through useApp', () =>
     const colVmAfter = vmAfter.get(comboCol!.key);
     expect(colVmAfter).toBeDefined();
     const comboEventsAfter = colVmAfter!.events.filter(
-      (ev) => ev.ownerId === SLOT_ARDELIA && ev.columnId === NounType.COMBO,
+      (ev) => ev.ownerEntityId === SLOT_ARDELIA && ev.columnId === NounType.COMBO,
     );
     expect(comboEventsAfter.length).toBe(1);
   });

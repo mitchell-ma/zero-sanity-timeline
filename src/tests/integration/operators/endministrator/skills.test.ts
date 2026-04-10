@@ -135,12 +135,12 @@ describe('A. Core Skill Placement', () => {
     const payload = getAddEventPayload(menuItems!);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const battles = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_ENDMINISTRATOR && ev.columnId === NounType.BATTLE,
+      ev => ev.ownerEntityId === SLOT_ENDMINISTRATOR && ev.columnId === NounType.BATTLE,
     );
     expect(battles).toHaveLength(1);
     expect(battles[0].name).toBe(BATTLE_SKILL_ID);
@@ -159,12 +159,12 @@ describe('A. Core Skill Placement', () => {
     const payload = getAddEventPayload(menuItems!);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const combos = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_ENDMINISTRATOR && ev.columnId === NounType.COMBO,
+      ev => ev.ownerEntityId === SLOT_ENDMINISTRATOR && ev.columnId === NounType.COMBO,
     );
     expect(combos).toHaveLength(1);
     expect(combos[0].name).toBe(COMBO_ID);
@@ -184,12 +184,12 @@ describe('A. Core Skill Placement', () => {
     const payload = getAddEventPayload(menuItems!);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const ultimates = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_ENDMINISTRATOR && ev.columnId === NounType.ULTIMATE,
+      ev => ev.ownerEntityId === SLOT_ENDMINISTRATOR && ev.columnId === NounType.ULTIMATE,
     );
     expect(ultimates).toHaveLength(1);
     expect(ultimates[0].name).toBe(ULTIMATE_ID);
@@ -212,15 +212,15 @@ describe('A2. Combo Activation (ANY_OTHER)', () => {
     const payload = getMenuPayload(result.current, otherComboCol!, 3 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     // Endministrator should have a combo activation window sourced from the other operator
     const windows = result.current.allProcessedEvents.filter(
       ev => ev.columnId === COMBO_WINDOW_COLUMN_ID
-        && ev.ownerId === SLOT_ENDMINISTRATOR
-        && ev.sourceOwnerId === SLOT_OTHER,
+        && ev.ownerEntityId === SLOT_ENDMINISTRATOR
+        && ev.sourceEntityId === SLOT_OTHER,
     );
     expect(windows.length).toBeGreaterThanOrEqual(1);
   });
@@ -233,15 +233,15 @@ describe('A2. Combo Activation (ANY_OTHER)', () => {
     const payload = getMenuPayload(result.current, comboCol!, 3 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     // Endministrator should NOT have combo windows sourced from own combo
     const windows = result.current.allProcessedEvents.filter(
       ev => ev.columnId === COMBO_WINDOW_COLUMN_ID
-        && ev.ownerId === SLOT_ENDMINISTRATOR
-        && ev.sourceOwnerId === SLOT_ENDMINISTRATOR,
+        && ev.ownerEntityId === SLOT_ENDMINISTRATOR
+        && ev.sourceEntityId === SLOT_ENDMINISTRATOR,
     );
     expect(windows).toHaveLength(0);
   });
@@ -261,13 +261,13 @@ describe('B. Originium Crystal Cycle', () => {
     const payload = getMenuPayload(result.current, comboCol!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     // Controller: Originium Crystal status generated on enemy
     const crystals = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === REALSPACE_STASIS_ID && ev.ownerId === ENEMY_ID,
+      ev => ev.columnId === REALSPACE_STASIS_ID && ev.ownerEntityId === ENEMY_ID,
     );
     expect(crystals.length).toBeGreaterThanOrEqual(1);
 
@@ -275,7 +275,7 @@ describe('B. Originium Crystal Cycle', () => {
     const enemyStatusCol = result.current.columns.find(
       (c): c is MiniTimeline =>
         c.type === ColumnType.MINI_TIMELINE
-        && c.ownerId === ENEMY_ID
+        && c.ownerEntityId === ENEMY_ID
         && c.columnId === ENEMY_GROUP_COLUMNS.ENEMY_STATUS,
     );
     expect(enemyStatusCol).toBeDefined();
@@ -299,7 +299,7 @@ describe('B. Originium Crystal Cycle', () => {
     const comboPayload = getMenuPayload(result.current, comboCol!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        comboPayload.ownerId, comboPayload.columnId,
+        comboPayload.ownerEntityId, comboPayload.columnId,
         comboPayload.atFrame, comboPayload.defaultSkill,
       );
     });
@@ -307,7 +307,7 @@ describe('B. Originium Crystal Cycle', () => {
     // Verify crystal exists before battle skill
     const crystalsBefore = result.current.allProcessedEvents.filter(
       ev => ev.columnId === REALSPACE_STASIS_ID
-        && ev.ownerId === ENEMY_ID
+        && ev.ownerEntityId === ENEMY_ID
         && ev.eventStatus !== EventStatusType.CONSUMED,
     );
     expect(crystalsBefore.length).toBeGreaterThanOrEqual(1);
@@ -317,7 +317,7 @@ describe('B. Originium Crystal Cycle', () => {
     const battlePayload = getMenuPayload(result.current, battleCol!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        battlePayload.ownerId, battlePayload.columnId,
+        battlePayload.ownerEntityId, battlePayload.columnId,
         battlePayload.atFrame, battlePayload.defaultSkill,
       );
     });
@@ -325,7 +325,7 @@ describe('B. Originium Crystal Cycle', () => {
     // Controller: Originium Crystal consumed
     const crystalsConsumed = result.current.allProcessedEvents.filter(
       ev => ev.columnId === REALSPACE_STASIS_ID
-        && ev.ownerId === ENEMY_ID
+        && ev.ownerEntityId === ENEMY_ID
         && ev.eventStatus === EventStatusType.CONSUMED,
     );
     expect(crystalsConsumed.length).toBeGreaterThanOrEqual(1);
@@ -350,7 +350,7 @@ describe('C. Ultimate', () => {
     const comboPayload = getMenuPayload(result.current, comboCol!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        comboPayload.ownerId, comboPayload.columnId,
+        comboPayload.ownerEntityId, comboPayload.columnId,
         comboPayload.atFrame, comboPayload.defaultSkill,
       );
     });
@@ -358,7 +358,7 @@ describe('C. Ultimate', () => {
     // Verify crystal exists
     const crystalsBefore = result.current.allProcessedEvents.filter(
       ev => ev.columnId === REALSPACE_STASIS_ID
-        && ev.ownerId === ENEMY_ID
+        && ev.ownerEntityId === ENEMY_ID
         && ev.eventStatus !== EventStatusType.CONSUMED,
     );
     expect(crystalsBefore.length).toBeGreaterThanOrEqual(1);
@@ -368,7 +368,7 @@ describe('C. Ultimate', () => {
     const ultPayload = getMenuPayload(result.current, ultCol!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        ultPayload.ownerId, ultPayload.columnId,
+        ultPayload.ownerEntityId, ultPayload.columnId,
         ultPayload.atFrame, ultPayload.defaultSkill,
       );
     });
@@ -376,7 +376,7 @@ describe('C. Ultimate', () => {
     // Controller: Originium Crystal consumed by ultimate
     const crystalsConsumed = result.current.allProcessedEvents.filter(
       ev => ev.columnId === REALSPACE_STASIS_ID
-        && ev.ownerId === ENEMY_ID
+        && ev.ownerEntityId === ENEMY_ID
         && ev.eventStatus === EventStatusType.CONSUMED,
     );
     expect(crystalsConsumed.length).toBeGreaterThanOrEqual(1);
@@ -397,7 +397,7 @@ describe('D. Talent-Derived Statuses', () => {
     const comboPayload = getMenuPayload(result.current, comboCol!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        comboPayload.ownerId, comboPayload.columnId,
+        comboPayload.ownerEntityId, comboPayload.columnId,
         comboPayload.atFrame, comboPayload.defaultSkill,
       );
     });
@@ -407,7 +407,7 @@ describe('D. Talent-Derived Statuses', () => {
     const battlePayload = getMenuPayload(result.current, battleCol!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        battlePayload.ownerId, battlePayload.columnId,
+        battlePayload.ownerEntityId, battlePayload.columnId,
         battlePayload.atFrame, battlePayload.defaultSkill,
       );
     });
@@ -415,7 +415,7 @@ describe('D. Talent-Derived Statuses', () => {
     // Controller: Essence Disintegration status on operator
     const essenceEvents = result.current.allProcessedEvents.filter(
       ev => ev.columnId === ESSENCE_DISINTEGRATION_ID
-        && ev.ownerId === SLOT_ENDMINISTRATOR,
+        && ev.ownerEntityId === SLOT_ENDMINISTRATOR,
     );
     expect(essenceEvents.length).toBeGreaterThanOrEqual(1);
 
@@ -435,7 +435,7 @@ describe('D. Talent-Derived Statuses', () => {
     expect(statusVM).toBeDefined();
     expect(statusVM!.events.some(
       ev => ev.columnId === ESSENCE_DISINTEGRATION_ID
-        && ev.ownerId === SLOT_ENDMINISTRATOR,
+        && ev.ownerEntityId === SLOT_ENDMINISTRATOR,
     )).toBe(true);
   });
 
@@ -448,7 +448,7 @@ describe('D. Talent-Derived Statuses', () => {
     const comboPayload = getMenuPayload(result.current, comboCol!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        comboPayload.ownerId, comboPayload.columnId,
+        comboPayload.ownerEntityId, comboPayload.columnId,
         comboPayload.atFrame, comboPayload.defaultSkill,
       );
     });
@@ -458,7 +458,7 @@ describe('D. Talent-Derived Statuses', () => {
     const battlePayload = getMenuPayload(result.current, battleCol!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        battlePayload.ownerId, battlePayload.columnId,
+        battlePayload.ownerEntityId, battlePayload.columnId,
         battlePayload.atFrame, battlePayload.defaultSkill,
       );
     });
@@ -466,14 +466,14 @@ describe('D. Talent-Derived Statuses', () => {
     // Controller: Essence Disintegration (full) on Endministrator
     const selfBuff = result.current.allProcessedEvents.filter(
       ev => ev.columnId === ESSENCE_DISINTEGRATION_ID
-        && ev.ownerId === SLOT_ENDMINISTRATOR,
+        && ev.ownerEntityId === SLOT_ENDMINISTRATOR,
     );
     expect(selfBuff.length).toBeGreaterThanOrEqual(1);
 
     // Controller: Essence Disintegration Minor (half) on teammate
     const teamBuff = result.current.allProcessedEvents.filter(
       ev => ev.columnId === ESSENCE_DISINTEGRATION_MINOR_ID
-        && ev.ownerId === SLOT_TEAMMATE,
+        && ev.ownerEntityId === SLOT_TEAMMATE,
     );
     expect(teamBuff.length).toBeGreaterThanOrEqual(1);
 
@@ -497,7 +497,7 @@ describe('D. Talent-Derived Statuses', () => {
     const comboPayload = getMenuPayload(result.current, comboCol!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        comboPayload.ownerId, comboPayload.columnId,
+        comboPayload.ownerEntityId, comboPayload.columnId,
         comboPayload.atFrame, comboPayload.defaultSkill,
       );
     });
@@ -505,7 +505,7 @@ describe('D. Talent-Derived Statuses', () => {
     const battlePayload = getMenuPayload(result.current, battleCol!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        battlePayload.ownerId, battlePayload.columnId,
+        battlePayload.ownerEntityId, battlePayload.columnId,
         battlePayload.atFrame, battlePayload.defaultSkill,
       );
     });
@@ -513,14 +513,14 @@ describe('D. Talent-Derived Statuses', () => {
     // P1: self buff exists
     const selfBuff = result.current.allProcessedEvents.filter(
       ev => ev.columnId === ESSENCE_DISINTEGRATION_ID
-        && ev.ownerId === SLOT_ENDMINISTRATOR,
+        && ev.ownerEntityId === SLOT_ENDMINISTRATOR,
     );
     expect(selfBuff.length).toBeGreaterThanOrEqual(1);
 
     // P1: NO team buff
     const teamBuff = result.current.allProcessedEvents.filter(
       ev => ev.columnId === ESSENCE_DISINTEGRATION_MINOR_ID
-        && ev.ownerId === SLOT_TEAMMATE,
+        && ev.ownerEntityId === SLOT_TEAMMATE,
     );
     expect(teamBuff).toHaveLength(0);
   });
@@ -538,12 +538,12 @@ describe('D2. Realspace Stasis', () => {
     const payload = getMenuPayload(result.current, comboCol!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const crystals = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === REALSPACE_STASIS_ID && ev.ownerId === ENEMY_ID,
+      ev => ev.columnId === REALSPACE_STASIS_ID && ev.ownerEntityId === ENEMY_ID,
     );
     expect(crystals.length).toBeGreaterThanOrEqual(1);
   });
@@ -603,7 +603,7 @@ describe('D2. Realspace Stasis', () => {
     const comboPayload = getMenuPayload(result.current, comboCol!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        comboPayload.ownerId, comboPayload.columnId,
+        comboPayload.ownerEntityId, comboPayload.columnId,
         comboPayload.atFrame, comboPayload.defaultSkill,
       );
     });
@@ -613,7 +613,7 @@ describe('D2. Realspace Stasis', () => {
     const battlePayload = getMenuPayload(result.current, battleCol!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        battlePayload.ownerId, battlePayload.columnId,
+        battlePayload.ownerEntityId, battlePayload.columnId,
         battlePayload.atFrame, battlePayload.defaultSkill,
       );
     });
@@ -621,7 +621,7 @@ describe('D2. Realspace Stasis', () => {
     // Controller: Originium Crystals Shatter on enemy
     const shatterEvents = result.current.allProcessedEvents.filter(
       ev => ev.columnId === ORIGINIUM_CRYSTALS_SHATTER_ID
-        && ev.ownerId === ENEMY_ID,
+        && ev.ownerEntityId === ENEMY_ID,
     );
     expect(shatterEvents.length).toBeGreaterThanOrEqual(1);
 
@@ -640,7 +640,7 @@ describe('D2. Realspace Stasis', () => {
     const comboPayload = getMenuPayload(result.current, comboCol!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        comboPayload.ownerId, comboPayload.columnId,
+        comboPayload.ownerEntityId, comboPayload.columnId,
         comboPayload.atFrame, comboPayload.defaultSkill,
       );
     });
@@ -650,7 +650,7 @@ describe('D2. Realspace Stasis', () => {
     const ultPayload = getMenuPayload(result.current, ultCol!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        ultPayload.ownerId, ultPayload.columnId,
+        ultPayload.ownerEntityId, ultPayload.columnId,
         ultPayload.atFrame, ultPayload.defaultSkill,
       );
     });
@@ -659,7 +659,7 @@ describe('D2. Realspace Stasis', () => {
     // The ult's CONSUME doesn't go through REALSPACE_STASIS onTriggerClause — it's a direct CONSUME
     const shatterEvents = result.current.allProcessedEvents.filter(
       ev => ev.columnId === ORIGINIUM_CRYSTALS_SHATTER_ID
-        && ev.ownerId === ENEMY_ID,
+        && ev.ownerEntityId === ENEMY_ID,
     );
     // Ult consumes crystals directly — the shatter damage is baked into the ult's own bonus DMG multiplier
     // REALSPACE_STASIS onTriggerClause fires on physical status application, NOT on direct CONSUME
@@ -681,7 +681,7 @@ describe('E. View Layer', () => {
     const payload = getMenuPayload(result.current, battleCol!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
@@ -692,7 +692,7 @@ describe('E. View Layer', () => {
     const battleVM = viewModels.get(battleCol!.key);
     expect(battleVM).toBeDefined();
     expect(battleVM!.events.some(
-      ev => ev.name === BATTLE_SKILL_ID && ev.ownerId === SLOT_ENDMINISTRATOR,
+      ev => ev.name === BATTLE_SKILL_ID && ev.ownerEntityId === SLOT_ENDMINISTRATOR,
     )).toBe(true);
   });
 
@@ -705,13 +705,13 @@ describe('E. View Layer', () => {
     const payload = getMenuPayload(result.current, comboCol!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     // Controller: combo has cooldown segment
     const combos = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_ENDMINISTRATOR && ev.columnId === NounType.COMBO,
+      ev => ev.ownerEntityId === SLOT_ENDMINISTRATOR && ev.columnId === NounType.COMBO,
     );
     expect(combos).toHaveLength(1);
     const cdSeg = combos[0].segments.find(
@@ -731,7 +731,7 @@ describe('E. View Layer', () => {
     const comboVM = viewModels.get(comboCol!.key);
     expect(comboVM).toBeDefined();
     expect(comboVM!.events.some(
-      ev => ev.name === COMBO_ID && ev.ownerId === SLOT_ENDMINISTRATOR,
+      ev => ev.name === COMBO_ID && ev.ownerEntityId === SLOT_ENDMINISTRATOR,
     )).toBe(true);
   });
 
@@ -745,7 +745,7 @@ describe('E. View Layer', () => {
     const payload = getMenuPayload(result.current, ultCol!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
@@ -756,7 +756,7 @@ describe('E. View Layer', () => {
     const ultVM = viewModels.get(ultCol!.key);
     expect(ultVM).toBeDefined();
     expect(ultVM!.events.some(
-      ev => ev.name === ULTIMATE_ID && ev.ownerId === SLOT_ENDMINISTRATOR,
+      ev => ev.name === ULTIMATE_ID && ev.ownerEntityId === SLOT_ENDMINISTRATOR,
     )).toBe(true);
   });
 });

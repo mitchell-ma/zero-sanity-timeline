@@ -60,7 +60,7 @@ function setupLrOnly() {
 function placeBattleSkill(app: AppResult, slotId: string, atFrame: number) {
   const col = findColumn(app, slotId, NounType.BATTLE);
   const payload = getMenuPayload(app, col!, atFrame);
-  app.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+  app.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
 }
 
 function setPotential(app: AppResult, slotId: string, potential: number) {
@@ -112,7 +112,7 @@ describe('A. Vigil Services UE Lockout — E2E pipeline', () => {
   it('A4: LR has UE lockout status at frame 0', () => {
     const { result } = setupLrOnly();
     const lockoutEvents = result.current.allProcessedEvents.filter(
-      ev => ev.id === UE_LOCKOUT_ID && ev.ownerId === SLOT_LR,
+      ev => ev.id === UE_LOCKOUT_ID && ev.ownerEntityId === SLOT_LR,
     );
     expect(lockoutEvents.length).toBeGreaterThanOrEqual(1);
     expect(lockoutEvents[0].startFrame).toBe(0);
@@ -212,12 +212,12 @@ describe('B. T1 Hypothermia — E2E interaction with combo', () => {
     const col = findColumn(result.current, SLOT_LR, NounType.COMBO);
     const payload = getMenuPayload(result.current, col!, 3 * FPS);
     act(() => {
-      result.current.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+      result.current.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
     });
 
     // T1 should create a CRYO SUSCEPTIBILITY status on enemy
     const susceptibilityEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === ENEMY_ID
+      ev => ev.ownerEntityId === ENEMY_ID
         && ev.id?.includes('SUSCEPTIBILITY')
         && ev.startFrame > 0,
     );
@@ -243,11 +243,11 @@ describe('B. T1 Hypothermia — E2E interaction with combo', () => {
     const col = findColumn(result.current, SLOT_LR, NounType.COMBO);
     const payload = getMenuPayload(result.current, col!, 3 * FPS);
     act(() => {
-      result.current.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+      result.current.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
     });
 
     const susceptibilityEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === ENEMY_ID
+      ev => ev.ownerEntityId === ENEMY_ID
         && ev.id?.includes('SUSCEPTIBILITY')
         && ev.startFrame > 0,
     );
@@ -282,12 +282,12 @@ describe('B. T1 Hypothermia — E2E interaction with combo', () => {
     const col = findColumn(result.current, SLOT_LR, NounType.COMBO);
     const payload = getMenuPayload(result.current, col!, 3 * FPS);
     act(() => {
-      result.current.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+      result.current.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
     });
 
     // Verify a CRYO_SUSCEPTIBILITY status was applied
     const susceptibilityEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === ENEMY_ID
+      ev => ev.ownerEntityId === ENEMY_ID
         && ev.id?.includes('SUSCEPTIBILITY')
         && ev.startFrame > 0,
     );
@@ -309,13 +309,13 @@ describe('B. T1 Hypothermia — E2E interaction with combo', () => {
     const col = findColumn(result.current, SLOT_LR, NounType.COMBO);
     const payload = getMenuPayload(result.current, col!, 3 * FPS);
     act(() => {
-      result.current.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+      result.current.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
     });
 
     // No CRYO_SUSCEPTIBILITY should be created — nothing was consumed, so Hypothermia
     // shouldn't fire (its trigger is gated on actual consumption now).
     const susceptibilityEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === ENEMY_ID
+      ev => ev.ownerEntityId === ENEMY_ID
         && ev.id?.includes('SUSCEPTIBILITY')
         && ev.startFrame > 0,
     );
@@ -471,7 +471,7 @@ describe('H. P5 — SP return and ult cost', () => {
     act(() => { placeBattleSkill(result.current, SLOT_LR, 5 * FPS); });
 
     const bsEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_LR && ev.columnId === NounType.BATTLE,
+      ev => ev.ownerEntityId === SLOT_LR && ev.columnId === NounType.BATTLE,
     );
     expect(bsEvents).toHaveLength(1);
     expect(bsEvents[0].skillPointCost).toBe(100);

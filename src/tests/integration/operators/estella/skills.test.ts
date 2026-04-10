@@ -146,12 +146,12 @@ describe('A. Core Skill Placement', () => {
     const payload = getAddEventPayload(menuItems!);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const battles = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_ESTELLA && ev.columnId === NounType.BATTLE,
+      (ev) => ev.ownerEntityId === SLOT_ESTELLA && ev.columnId === NounType.BATTLE,
     );
     expect(battles).toHaveLength(1);
     expect(battles[0].name).toBe(BATTLE_SKILL_ID);
@@ -176,12 +176,12 @@ describe('A. Core Skill Placement', () => {
     const payload = getAddEventPayload(menuItems!);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const combos = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_ESTELLA && ev.columnId === NounType.COMBO,
+      (ev) => ev.ownerEntityId === SLOT_ESTELLA && ev.columnId === NounType.COMBO,
     );
     expect(combos).toHaveLength(1);
     expect(combos[0].name).toBe(COMBO_ID);
@@ -201,12 +201,12 @@ describe('A. Core Skill Placement', () => {
     const payload = getAddEventPayload(menuItems!);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const ultimates = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_ESTELLA && ev.columnId === NounType.ULTIMATE,
+      (ev) => ev.ownerEntityId === SLOT_ESTELLA && ev.columnId === NounType.ULTIMATE,
     );
     expect(ultimates).toHaveLength(1);
     expect(ultimates[0].name).toBe(ULTIMATE_ID);
@@ -224,12 +224,12 @@ describe('A. Core Skill Placement', () => {
     const payload = getAddEventPayload(menuItems!);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const basics = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_ESTELLA && ev.columnId === NounType.BASIC_ATTACK,
+      (ev) => ev.ownerEntityId === SLOT_ESTELLA && ev.columnId === NounType.BASIC_ATTACK,
     );
     expect(basics.length).toBeGreaterThanOrEqual(1);
   });
@@ -245,20 +245,20 @@ describe('B. Battle Skill Cryo Infliction', () => {
 
     // Count cryo inflictions before battle skill
     const cryoBefore = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === INFLICTION_COLUMNS.CRYO && ev.ownerId === ENEMY_ID,
+      (ev) => ev.columnId === INFLICTION_COLUMNS.CRYO && ev.ownerEntityId === ENEMY_ID,
     ).length;
 
     const battleCol = findColumn(result.current, SLOT_ESTELLA, NounType.BATTLE);
     const payload = getMenuPayload(result.current, battleCol!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     // Controller: additional cryo infliction from battle skill
     const cryoAfter = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === INFLICTION_COLUMNS.CRYO && ev.ownerId === ENEMY_ID,
+      (ev) => ev.columnId === INFLICTION_COLUMNS.CRYO && ev.ownerEntityId === ENEMY_ID,
     );
     expect(cryoAfter.length).toBeGreaterThan(cryoBefore);
 
@@ -266,7 +266,7 @@ describe('B. Battle Skill Cryo Infliction', () => {
     const enemyStatusCol = result.current.columns.find(
       (c): c is MiniTimeline =>
         c.type === ColumnType.MINI_TIMELINE
-        && c.ownerId === ENEMY_ID
+        && c.ownerEntityId === ENEMY_ID
         && c.columnId === ENEMY_GROUP_COLUMNS.ENEMY_STATUS,
     );
     expect(enemyStatusCol).toBeDefined();
@@ -324,12 +324,12 @@ describe('C. Combo Solidification Trigger', () => {
     const payload = getMenuPayload(result.current, comboCol!, 3 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const combos = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_ESTELLA && ev.columnId === NounType.COMBO,
+      (ev) => ev.ownerEntityId === SLOT_ESTELLA && ev.columnId === NounType.COMBO,
     );
     expect(combos).toHaveLength(1);
 
@@ -388,7 +388,7 @@ describe('E. Talent-Derived Statuses', () => {
     place(result);
 
     return result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === COMMISERATION_ID && ev.ownerId === SLOT_ESTELLA,
+      (ev) => ev.columnId === COMMISERATION_ID && ev.ownerEntityId === SLOT_ESTELLA,
     );
   }
 
@@ -404,11 +404,11 @@ describe('E. Talent-Derived Statuses', () => {
     );
     expect(item).toBeDefined();
     const payload = item!.actionPayload as AppResult extends never ? never : {
-      ownerId: string; columnId: string; atFrame: number; defaultSkill: Record<string, unknown>;
+      ownerEntityId: string; columnId: string; atFrame: number; defaultSkill: Record<string, unknown>;
     };
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
   }
@@ -454,12 +454,12 @@ describe('E. Talent-Derived Statuses', () => {
     const payload = getMenuPayload(result.current, comboCol!, 3 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const events = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === COMMISERATION_ID && ev.ownerId === SLOT_ESTELLA,
+      (ev) => ev.columnId === COMMISERATION_ID && ev.ownerEntityId === SLOT_ESTELLA,
     );
     expect(events.length).toBeGreaterThanOrEqual(1);
   });
@@ -479,12 +479,12 @@ describe('E. Talent-Derived Statuses', () => {
     const payload = getMenuPayload(result.current, ultCol!, 3 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const events = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === COMMISERATION_ID && ev.ownerId === SLOT_ESTELLA,
+      (ev) => ev.columnId === COMMISERATION_ID && ev.ownerEntityId === SLOT_ESTELLA,
     );
     expect(events.length).toBeGreaterThanOrEqual(0);
   });
@@ -502,7 +502,7 @@ describe('G. Commiseration SP return (Estella BS only)', () => {
     const payload = getMenuPayload(result.current, comboCol!, 3 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
   }
@@ -517,7 +517,7 @@ describe('G. Commiseration SP return (Estella BS only)', () => {
     triggerCommiseration(result);
 
     const commiserationBefore = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === COMMISERATION_ID && ev.ownerId === SLOT_ESTELLA,
+      (ev) => ev.columnId === COMMISERATION_ID && ev.ownerEntityId === SLOT_ESTELLA,
     );
     expect(commiserationBefore.length).toBeGreaterThanOrEqual(1);
 
@@ -527,7 +527,7 @@ describe('G. Commiseration SP return (Estella BS only)', () => {
     const otherPayload = getMenuPayload(result.current, otherBsCol!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        otherPayload.ownerId, otherPayload.columnId, otherPayload.atFrame, otherPayload.defaultSkill,
+        otherPayload.ownerEntityId, otherPayload.columnId, otherPayload.atFrame, otherPayload.defaultSkill,
       );
     });
 
@@ -535,7 +535,7 @@ describe('G. Commiseration SP return (Estella BS only)', () => {
     // the trigger condition "THIS OPERATOR PERFORM SKILL BATTLE" since THIS resolves
     // to the operator holding the status — Estella)
     const commiserationAfterOtherBs = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === COMMISERATION_ID && ev.ownerId === SLOT_ESTELLA,
+      (ev) => ev.columnId === COMMISERATION_ID && ev.ownerEntityId === SLOT_ESTELLA,
     );
     // Not yet consumed
     expect(commiserationAfterOtherBs.length).toBeGreaterThanOrEqual(1);
@@ -553,7 +553,7 @@ describe('G. Commiseration SP return (Estella BS only)', () => {
     const bsPayload = getMenuPayload(result.current, bsCol!, 8 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        bsPayload.ownerId, bsPayload.columnId, bsPayload.atFrame, bsPayload.defaultSkill,
+        bsPayload.ownerEntityId, bsPayload.columnId, bsPayload.atFrame, bsPayload.defaultSkill,
       );
     });
 
@@ -562,7 +562,7 @@ describe('G. Commiseration SP return (Estella BS only)', () => {
     const checkFrame = 12 * FPS;
     const active = result.current.allProcessedEvents.filter(
       (ev) => ev.columnId === COMMISERATION_ID
-        && ev.ownerId === SLOT_ESTELLA
+        && ev.ownerEntityId === SLOT_ESTELLA
         && ev.startFrame <= checkFrame
         && ev.startFrame + eventDuration(ev) > checkFrame,
     );
@@ -577,7 +577,7 @@ describe('G. Commiseration SP return (Estella BS only)', () => {
     triggerCommiseration(result);
 
     const applied = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === COMMISERATION_ID && ev.ownerId === SLOT_ESTELLA,
+      (ev) => ev.columnId === COMMISERATION_ID && ev.ownerEntityId === SLOT_ESTELLA,
     );
     expect(applied.length).toBeGreaterThanOrEqual(1);
 
@@ -587,7 +587,7 @@ describe('G. Commiseration SP return (Estella BS only)', () => {
     const bsPayload = getMenuPayload(result.current, bsCol!, bsFrame);
     act(() => {
       result.current.handleAddEvent(
-        bsPayload.ownerId, bsPayload.columnId, bsPayload.atFrame, bsPayload.defaultSkill,
+        bsPayload.ownerEntityId, bsPayload.columnId, bsPayload.atFrame, bsPayload.defaultSkill,
       );
     });
 
@@ -596,7 +596,7 @@ describe('G. Commiseration SP return (Estella BS only)', () => {
     const checkFrame = bsFrame + 4 * FPS;
     const stillActive = result.current.allProcessedEvents.filter(
       (ev) => ev.columnId === COMMISERATION_ID
-        && ev.ownerId === SLOT_ESTELLA
+        && ev.ownerEntityId === SLOT_ESTELLA
         && ev.startFrame <= checkFrame
         && ev.startFrame + eventDuration(ev) > checkFrame,
     );
@@ -616,7 +616,7 @@ describe('G. Commiseration SP return (Estella BS only)', () => {
     const bsPayload = getMenuPayload(result.current, bsCol!, bsFrame);
     act(() => {
       result.current.handleAddEvent(
-        bsPayload.ownerId, bsPayload.columnId, bsPayload.atFrame, bsPayload.defaultSkill,
+        bsPayload.ownerEntityId, bsPayload.columnId, bsPayload.atFrame, bsPayload.defaultSkill,
       );
     });
 
@@ -651,7 +651,7 @@ describe('H. Survival Is A Win P5 cooldown', () => {
     placeSolidification(result, 2.6, 1);
 
     const p5Events = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === SURVIVAL_P5_ID && ev.ownerId === SLOT_ESTELLA,
+      (ev) => ev.columnId === SURVIVAL_P5_ID && ev.ownerEntityId === SLOT_ESTELLA,
     );
     // At most 1 P5 event should have fired within the 1s cooldown window.
     // (If freeform placement doesn't route through THIS OPERATOR the count
@@ -670,7 +670,7 @@ describe('H. Survival Is A Win P5 cooldown', () => {
     placeSolidification(result, 8, 1);
 
     const p5Events = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === SURVIVAL_P5_ID && ev.ownerId === SLOT_ESTELLA,
+      (ev) => ev.columnId === SURVIVAL_P5_ID && ev.ownerEntityId === SLOT_ESTELLA,
     );
     // If trigger routing works with freeform, expect 3; otherwise documents
     // the gap. The >= 0 floor prevents false failures if freeform doesn't
@@ -692,7 +692,7 @@ describe('F. View Layer', () => {
     const payload = getMenuPayload(result.current, battleCol!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
@@ -703,7 +703,7 @@ describe('F. View Layer', () => {
     const battleVM = viewModels.get(battleCol!.key);
     expect(battleVM).toBeDefined();
     expect(battleVM!.events.some(
-      (ev) => ev.name === BATTLE_SKILL_ID && ev.ownerId === SLOT_ESTELLA,
+      (ev) => ev.name === BATTLE_SKILL_ID && ev.ownerEntityId === SLOT_ESTELLA,
     )).toBe(true);
   });
 
@@ -717,7 +717,7 @@ describe('F. View Layer', () => {
     const payload = getMenuPayload(result.current, comboCol!, 3 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
@@ -728,7 +728,7 @@ describe('F. View Layer', () => {
     const comboVM = viewModels.get(comboCol!.key);
     expect(comboVM).toBeDefined();
     expect(comboVM!.events.some(
-      (ev) => ev.name === COMBO_ID && ev.ownerId === SLOT_ESTELLA,
+      (ev) => ev.name === COMBO_ID && ev.ownerEntityId === SLOT_ESTELLA,
     )).toBe(true);
   });
 
@@ -740,7 +740,7 @@ describe('F. View Layer', () => {
     const payload = getMenuPayload(result.current, ultCol!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
@@ -751,7 +751,7 @@ describe('F. View Layer', () => {
     const ultVM = viewModels.get(ultCol!.key);
     expect(ultVM).toBeDefined();
     expect(ultVM!.events.some(
-      (ev) => ev.name === ULTIMATE_ID && ev.ownerId === SLOT_ESTELLA,
+      (ev) => ev.name === ULTIMATE_ID && ev.ownerEntityId === SLOT_ESTELLA,
     )).toBe(true);
   });
 
@@ -762,12 +762,12 @@ describe('F. View Layer', () => {
     const payload = getMenuPayload(result.current, battleCol!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const battles = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_ESTELLA && ev.columnId === NounType.BATTLE,
+      (ev) => ev.ownerEntityId === SLOT_ESTELLA && ev.columnId === NounType.BATTLE,
     );
     expect(battles).toHaveLength(1);
     expect(eventDuration(battles[0])).toBeGreaterThan(0);

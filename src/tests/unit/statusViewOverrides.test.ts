@@ -29,24 +29,24 @@ jest.mock('../../view/InformationPane', () => ({
 
 const FPS = 120;
 
-function statusEvent(uid: string, columnId: string, name: string, ownerId: string, startFrame: number, durationFrames: number): TimelineEvent {
+function statusEvent(uid: string, columnId: string, name: string, ownerEntityId: string, startFrame: number, durationFrames: number): TimelineEvent {
   return {
     uid,
     id: name,
     name,
-    ownerId,
+    ownerEntityId,
     columnId,
     startFrame,
     segments: [{ properties: { duration: durationFrames } }],
   };
 }
 
-function statusColumn(ownerId: string, microColumnIds: string[]): Column {
+function statusColumn(ownerEntityId: string, microColumnIds: string[]): Column {
   return {
-    key: `${ownerId}-operator-status`,
+    key: `${ownerEntityId}-operator-status`,
     type: 'mini-timeline',
     source: TimelineSourceType.OPERATOR,
-    ownerId,
+    ownerEntityId,
     columnId: 'operator-status',
     label: 'STATUS',
     color: '#fff',

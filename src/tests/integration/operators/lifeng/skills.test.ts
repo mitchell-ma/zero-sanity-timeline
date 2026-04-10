@@ -77,12 +77,12 @@ describe('A. Core Skill Placement', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const battles = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_LIFENG && ev.columnId === NounType.BATTLE,
+      ev => ev.ownerEntityId === SLOT_LIFENG && ev.columnId === NounType.BATTLE,
     );
     expect(battles).toHaveLength(1);
     expect(battles[0].name).toBe(BS_ID);
@@ -104,12 +104,12 @@ describe('A. Core Skill Placement', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const combos = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_LIFENG && ev.columnId === NounType.COMBO,
+      ev => ev.ownerEntityId === SLOT_LIFENG && ev.columnId === NounType.COMBO,
     );
     expect(combos).toHaveLength(1);
     expect(combos[0].name).toBe(COMBO_ID);
@@ -136,12 +136,12 @@ describe('A. Core Skill Placement', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const ultimates = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_LIFENG && ev.columnId === NounType.ULTIMATE,
+      ev => ev.ownerEntityId === SLOT_LIFENG && ev.columnId === NounType.ULTIMATE,
     );
     expect(ultimates).toHaveLength(1);
     expect(ultimates[0].name).toBe(ULT_ID);
@@ -162,13 +162,13 @@ describe('B. Battle Skill — Knock Down and Susceptibility', () => {
     const payload = getMenuPayload(result.current, col!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     // Without prior Vulnerable, BS adds a Vulnerable stack (no Knock Down event yet)
     const vulnEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === ENEMY_ID
+      ev => ev.ownerEntityId === ENEMY_ID
         && ev.columnId === PHYSICAL_INFLICTION_COLUMNS.VULNERABLE,
     );
     expect(vulnEvents.length).toBeGreaterThanOrEqual(1);
@@ -184,7 +184,7 @@ describe('B. Battle Skill — Knock Down and Susceptibility', () => {
     const payload1 = getMenuPayload(result.current, col!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload1.ownerId, payload1.columnId, payload1.atFrame, payload1.defaultSkill,
+        payload1.ownerEntityId, payload1.columnId, payload1.atFrame, payload1.defaultSkill,
       );
     });
 
@@ -192,12 +192,12 @@ describe('B. Battle Skill — Knock Down and Susceptibility', () => {
     const payload2 = getMenuPayload(result.current, col!, 12 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload2.ownerId, payload2.columnId, payload2.atFrame, payload2.defaultSkill,
+        payload2.ownerEntityId, payload2.columnId, payload2.atFrame, payload2.defaultSkill,
       );
     });
 
     const knockDownEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === ENEMY_ID
+      ev => ev.ownerEntityId === ENEMY_ID
         && ev.columnId === PHYSICAL_STATUS_COLUMNS.KNOCK_DOWN,
     );
     expect(knockDownEvents.length).toBeGreaterThanOrEqual(1);
@@ -221,7 +221,7 @@ describe('C. Combo — LINK Status', () => {
     const payload = getMenuPayload(result.current, col!, 3 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
@@ -247,12 +247,12 @@ describe('C. Combo — LINK Status', () => {
     const payload = getMenuPayload(result.current, col!, 3 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const combos = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_LIFENG && ev.columnId === NounType.COMBO,
+      ev => ev.ownerEntityId === SLOT_LIFENG && ev.columnId === NounType.COMBO,
     );
     expect(combos).toHaveLength(1);
 
@@ -297,7 +297,7 @@ describe('D. Ultimate — Vajra Impact with LINK Consume', () => {
     const comboPayload = getMenuPayload(result.current, comboCol!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        comboPayload.ownerId, comboPayload.columnId,
+        comboPayload.ownerEntityId, comboPayload.columnId,
         comboPayload.atFrame, comboPayload.defaultSkill,
       );
     });
@@ -315,14 +315,14 @@ describe('D. Ultimate — Vajra Impact with LINK Consume', () => {
     const ultPayload = getMenuPayload(result.current, ultCol!, 10 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        ultPayload.ownerId, ultPayload.columnId,
+        ultPayload.ownerEntityId, ultPayload.columnId,
         ultPayload.atFrame, ultPayload.defaultSkill,
       );
     });
 
     // Ultimate should be placed alongside LINK
     const ults = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_LIFENG && ev.columnId === NounType.ULTIMATE,
+      ev => ev.ownerEntityId === SLOT_LIFENG && ev.columnId === NounType.ULTIMATE,
     );
     expect(ults).toHaveLength(1);
 
@@ -345,7 +345,7 @@ describe('E. View Layer', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
@@ -356,7 +356,7 @@ describe('E. View Layer', () => {
     const bsVm = viewModels.get(col!.key);
     expect(bsVm).toBeDefined();
     const bsEvents = bsVm!.events.filter(
-      ev => ev.ownerId === SLOT_LIFENG && ev.columnId === NounType.BATTLE,
+      ev => ev.ownerEntityId === SLOT_LIFENG && ev.columnId === NounType.BATTLE,
     );
     expect(bsEvents.length).toBeGreaterThanOrEqual(1);
   });
@@ -374,7 +374,7 @@ describe('E. View Layer', () => {
     const bsPayload = getMenuPayload(result.current, bsCol!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        bsPayload.ownerId, bsPayload.columnId, bsPayload.atFrame, bsPayload.defaultSkill,
+        bsPayload.ownerEntityId, bsPayload.columnId, bsPayload.atFrame, bsPayload.defaultSkill,
       );
     });
 
@@ -384,7 +384,7 @@ describe('E. View Layer', () => {
     const comboPayload = getMenuPayload(result.current, comboCol!, 10 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        comboPayload.ownerId, comboPayload.columnId,
+        comboPayload.ownerEntityId, comboPayload.columnId,
         comboPayload.atFrame, comboPayload.defaultSkill,
       );
     });
@@ -395,7 +395,7 @@ describe('E. View Layer', () => {
     const ultPayload = getMenuPayload(result.current, ultCol!, 30 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        ultPayload.ownerId, ultPayload.columnId,
+        ultPayload.ownerEntityId, ultPayload.columnId,
         ultPayload.atFrame, ultPayload.defaultSkill,
       );
     });
@@ -441,7 +441,7 @@ describe('F. Subduer of Evil Talent Chain', () => {
     const payload1 = getMenuPayload(result.current, col!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload1.ownerId, payload1.columnId, payload1.atFrame, payload1.defaultSkill,
+        payload1.ownerEntityId, payload1.columnId, payload1.atFrame, payload1.defaultSkill,
       );
     });
 
@@ -449,13 +449,13 @@ describe('F. Subduer of Evil Talent Chain', () => {
     const payload2 = getMenuPayload(result.current, col!, 12 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload2.ownerId, payload2.columnId, payload2.atFrame, payload2.defaultSkill,
+        payload2.ownerEntityId, payload2.columnId, payload2.atFrame, payload2.defaultSkill,
       );
     });
 
     // 1. Knock Down exists on ENEMY
     const knockDownEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === ENEMY_ID
+      ev => ev.ownerEntityId === ENEMY_ID
         && ev.columnId === PHYSICAL_STATUS_COLUMNS.KNOCK_DOWN,
     );
     expect(knockDownEvents.length).toBeGreaterThanOrEqual(1);
@@ -473,13 +473,13 @@ describe('F. Subduer of Evil Talent Chain', () => {
     const payload = getMenuPayload(result.current, col!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     // No Knock Down — no Vulnerable existed
     const knockDownEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === ENEMY_ID
+      ev => ev.ownerEntityId === ENEMY_ID
         && ev.columnId === PHYSICAL_STATUS_COLUMNS.KNOCK_DOWN,
     );
     expect(knockDownEvents).toHaveLength(0);
@@ -496,26 +496,26 @@ describe('F. Subduer of Evil Talent Chain', () => {
     const payload1 = getMenuPayload(result.current, col!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload1.ownerId, payload1.columnId, payload1.atFrame, payload1.defaultSkill,
+        payload1.ownerEntityId, payload1.columnId, payload1.atFrame, payload1.defaultSkill,
       );
     });
     const payload2 = getMenuPayload(result.current, col!, 12 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload2.ownerId, payload2.columnId, payload2.atFrame, payload2.defaultSkill,
+        payload2.ownerEntityId, payload2.columnId, payload2.atFrame, payload2.defaultSkill,
       );
     });
 
     // Knock Down exists
     const knockDownEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === ENEMY_ID
+      ev => ev.ownerEntityId === ENEMY_ID
         && ev.columnId === PHYSICAL_STATUS_COLUMNS.KNOCK_DOWN,
     );
     expect(knockDownEvents.length).toBeGreaterThanOrEqual(1);
 
     // P5 Subduer of Evil status should appear on ENEMY
     const p5Events = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === ENEMY_ID
+      ev => ev.ownerEntityId === ENEMY_ID
         && ev.columnId === SUBDUER_P5_STATUS_ID
         && ev.startFrame > 0,
     );
@@ -535,7 +535,7 @@ describe('F. Subduer of Evil Talent Chain', () => {
     );
     const enemyStatusCols = result.current.columns.filter(
       c => c.type === ColumnType.MINI_TIMELINE
-        && (c as MiniTimeline).ownerId === ENEMY_ID,
+        && (c as MiniTimeline).ownerEntityId === ENEMY_ID,
     );
     const p5InView = enemyStatusCols.some(col => {
       const vm = viewModels.get(col.key);
@@ -554,13 +554,13 @@ describe('F. Subduer of Evil Talent Chain', () => {
     const payload1 = getMenuPayload(result.current, col!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload1.ownerId, payload1.columnId, payload1.atFrame, payload1.defaultSkill,
+        payload1.ownerEntityId, payload1.columnId, payload1.atFrame, payload1.defaultSkill,
       );
     });
     const payload2 = getMenuPayload(result.current, col!, 12 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload2.ownerId, payload2.columnId, payload2.atFrame, payload2.defaultSkill,
+        payload2.ownerEntityId, payload2.columnId, payload2.atFrame, payload2.defaultSkill,
       );
     });
 
@@ -587,14 +587,14 @@ describe('G. Ultimate — Vajra Impact conditional on LINK', () => {
     const ultPayload = getMenuPayload(result.current, ultCol!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        ultPayload.ownerId, ultPayload.columnId,
+        ultPayload.ownerEntityId, ultPayload.columnId,
         ultPayload.atFrame, ultPayload.defaultSkill,
       );
     });
 
     // Controller: ult placed
     const ults = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_LIFENG && ev.columnId === NounType.ULTIMATE,
+      ev => ev.ownerEntityId === SLOT_LIFENG && ev.columnId === NounType.ULTIMATE,
     );
     expect(ults).toHaveLength(1);
     expect(ults[0].name).toBe(ULT_ID);
@@ -643,7 +643,7 @@ describe('G. Ultimate — Vajra Impact conditional on LINK', () => {
     const comboPayload = getMenuPayload(result.current, comboCol!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        comboPayload.ownerId, comboPayload.columnId,
+        comboPayload.ownerEntityId, comboPayload.columnId,
         comboPayload.atFrame, comboPayload.defaultSkill,
       );
     });
@@ -661,14 +661,14 @@ describe('G. Ultimate — Vajra Impact conditional on LINK', () => {
     const ultPayload = getMenuPayload(result.current, ultCol!, 10 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        ultPayload.ownerId, ultPayload.columnId,
+        ultPayload.ownerEntityId, ultPayload.columnId,
         ultPayload.atFrame, ultPayload.defaultSkill,
       );
     });
 
     // Controller: ult placed with 4 segments
     const ults = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_LIFENG && ev.columnId === NounType.ULTIMATE,
+      ev => ev.ownerEntityId === SLOT_LIFENG && ev.columnId === NounType.ULTIMATE,
     );
     expect(ults).toHaveLength(1);
     expect(ults[0].segments.length).toBe(4);
@@ -722,7 +722,7 @@ describe('H. Ultimate Knock Down requires Vulnerable', () => {
     const ultPayload = getMenuPayload(result.current, ultCol!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        ultPayload.ownerId, ultPayload.columnId,
+        ultPayload.ownerEntityId, ultPayload.columnId,
         ultPayload.atFrame, ultPayload.defaultSkill,
       );
     });
@@ -730,14 +730,14 @@ describe('H. Ultimate Knock Down requires Vulnerable', () => {
     // Ult has 2 Knock Down frames (seg 2 + seg 3).
     // First hit adds Vulnerable; second hit sees Vulnerable and fires Knock Down.
     const vulnEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === ENEMY_ID
+      ev => ev.ownerEntityId === ENEMY_ID
         && ev.columnId === PHYSICAL_INFLICTION_COLUMNS.VULNERABLE,
     );
     expect(vulnEvents.length).toBeGreaterThanOrEqual(1);
 
     // Second hit produces Knock Down (enemy has Vulnerable from first hit)
     const knockDownEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === ENEMY_ID
+      ev => ev.ownerEntityId === ENEMY_ID
         && ev.columnId === PHYSICAL_STATUS_COLUMNS.KNOCK_DOWN,
     );
     expect(knockDownEvents.length).toBeGreaterThanOrEqual(1);
@@ -751,7 +751,7 @@ describe('H. Ultimate Knock Down requires Vulnerable', () => {
     const bsPayload = getMenuPayload(result.current, bsCol!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        bsPayload.ownerId, bsPayload.columnId, bsPayload.atFrame, bsPayload.defaultSkill,
+        bsPayload.ownerEntityId, bsPayload.columnId, bsPayload.atFrame, bsPayload.defaultSkill,
       );
     });
 
@@ -761,13 +761,13 @@ describe('H. Ultimate Knock Down requires Vulnerable', () => {
     const ultPayload = getMenuPayload(result.current, ultCol!, 10 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        ultPayload.ownerId, ultPayload.columnId,
+        ultPayload.ownerEntityId, ultPayload.columnId,
         ultPayload.atFrame, ultPayload.defaultSkill,
       );
     });
 
     const knockDownEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === ENEMY_ID
+      ev => ev.ownerEntityId === ENEMY_ID
         && ev.columnId === PHYSICAL_STATUS_COLUMNS.KNOCK_DOWN,
     );
     expect(knockDownEvents.length).toBeGreaterThanOrEqual(1);
@@ -798,7 +798,7 @@ describe('I. P1 — Susceptibility threshold', () => {
     const payload1 = getMenuPayload(result.current, col!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload1.ownerId, payload1.columnId, payload1.atFrame, payload1.defaultSkill,
+        payload1.ownerEntityId, payload1.columnId, payload1.atFrame, payload1.defaultSkill,
       );
     });
 
@@ -806,14 +806,14 @@ describe('I. P1 — Susceptibility threshold', () => {
     const payload2 = getMenuPayload(result.current, col!, 12 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload2.ownerId, payload2.columnId, payload2.atFrame, payload2.defaultSkill,
+        payload2.ownerEntityId, payload2.columnId, payload2.atFrame, payload2.defaultSkill,
       );
     });
 
     // At P1, susceptibility should apply on both BSs (both within ≤2 threshold)
     const physSuscId = flattenQualifiedId(AdjectiveType.PHYSICAL, NounType.SUSCEPTIBILITY);
     const suscEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === ENEMY_ID
+      ev => ev.ownerEntityId === ENEMY_ID
         && ev.columnId === physSuscId,
     );
     expect(suscEvents.length).toBeGreaterThanOrEqual(2);
@@ -830,7 +830,7 @@ describe('I. P1 — Susceptibility threshold', () => {
     const payload1 = getMenuPayload(result.current, col!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload1.ownerId, payload1.columnId, payload1.atFrame, payload1.defaultSkill,
+        payload1.ownerEntityId, payload1.columnId, payload1.atFrame, payload1.defaultSkill,
       );
     });
 
@@ -838,13 +838,13 @@ describe('I. P1 — Susceptibility threshold', () => {
     const payload2 = getMenuPayload(result.current, col!, 12 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload2.ownerId, payload2.columnId, payload2.atFrame, payload2.defaultSkill,
+        payload2.ownerEntityId, payload2.columnId, payload2.atFrame, payload2.defaultSkill,
       );
     });
 
     const physSuscId = flattenQualifiedId(AdjectiveType.PHYSICAL, NounType.SUSCEPTIBILITY);
     const suscEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === ENEMY_ID
+      ev => ev.ownerEntityId === ENEMY_ID
         && ev.columnId === physSuscId,
     );
     // Only first BS applies susceptibility at P0
@@ -866,13 +866,13 @@ describe('K. BS → Vulnerable + Susceptibility → BA → Combo Activation', ()
     const bsPayload = getMenuPayload(result.current, bsCol!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        bsPayload.ownerId, bsPayload.columnId, bsPayload.atFrame, bsPayload.defaultSkill,
+        bsPayload.ownerEntityId, bsPayload.columnId, bsPayload.atFrame, bsPayload.defaultSkill,
       );
     });
 
     // Verify Vulnerable I on enemy
     const vulnEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === ENEMY_ID
+      ev => ev.ownerEntityId === ENEMY_ID
         && ev.columnId === PHYSICAL_INFLICTION_COLUMNS.VULNERABLE,
     );
     expect(vulnEvents.length).toBeGreaterThanOrEqual(1);
@@ -880,7 +880,7 @@ describe('K. BS → Vulnerable + Susceptibility → BA → Combo Activation', ()
     // Verify Physical Susceptibility on enemy
     const physSuscId = flattenQualifiedId(AdjectiveType.PHYSICAL, NounType.SUSCEPTIBILITY);
     const suscEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === ENEMY_ID && ev.columnId === physSuscId,
+      ev => ev.ownerEntityId === ENEMY_ID && ev.columnId === physSuscId,
     );
     expect(suscEvents.length).toBeGreaterThanOrEqual(1);
   });
@@ -893,32 +893,32 @@ describe('K. BS → Vulnerable + Susceptibility → BA → Combo Activation', ()
     const col = app.columns.find(
       (c): c is MiniTimeline =>
         c.type === ColumnType.MINI_TIMELINE
-        && c.ownerId === slotId
+        && c.ownerEntityId === slotId
         && c.columnId === NounType.BASIC_ATTACK,
     );
     if (!col) throw new Error(`No BA column for ${slotId}`);
     const items = buildContextMenu(app, col, atFrame);
     const item = items!.find(i => i.label === CONTROL_LABEL);
     if (!item || item.disabled) throw new Error(`Cannot set controlled to ${slotId} at ${atFrame}`);
-    const payload = item.actionPayload as { ownerId: string; columnId: string; atFrame: number; defaultSkill: Parameters<typeof app.handleAddEvent>[3] };
-    app.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+    const payload = item.actionPayload as { ownerEntityId: string; columnId: string; atFrame: number; defaultSkill: Parameters<typeof app.handleAddEvent>[3] };
+    app.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
   }
 
   function placeBS(app: AppResult, atSec: number) {
     const col = findColumn(app, SLOT_LIFENG, NounType.BATTLE)!;
     const p = getMenuPayload(app, col, atSec * FPS);
-    app.handleAddEvent(p.ownerId, p.columnId, p.atFrame, p.defaultSkill);
+    app.handleAddEvent(p.ownerEntityId, p.columnId, p.atFrame, p.defaultSkill);
   }
 
   function placeBA(app: AppResult, slotId: string, atSec: number) {
     const col = findColumn(app, slotId, NounType.BASIC_ATTACK)!;
     const p = getMenuPayload(app, col, atSec * FPS);
-    app.handleAddEvent(p.ownerId, p.columnId, p.atFrame, p.defaultSkill);
+    app.handleAddEvent(p.ownerEntityId, p.columnId, p.atFrame, p.defaultSkill);
   }
 
   function getComboCheckFrame(app: AppResult, slotId: string) {
     const ba = app.allProcessedEvents.find(
-      ev => ev.ownerId === slotId && ev.columnId === NounType.BASIC_ATTACK,
+      ev => ev.ownerEntityId === slotId && ev.columnId === NounType.BASIC_ATTACK,
     )!;
     const totalDur = ba.segments.reduce((s, seg) => s + seg.properties.duration, 0);
     return ba.startFrame + totalDur + 1 * FPS; // 1s after FINAL_STRIKE
@@ -949,14 +949,14 @@ describe('K. BS → Vulnerable + Susceptibility → BA → Combo Activation', ()
     const comboPayload = getMenuPayload(result.current, comboCol, checkFrame);
     act(() => {
       result.current.handleAddEvent(
-        comboPayload.ownerId, comboPayload.columnId,
+        comboPayload.ownerEntityId, comboPayload.columnId,
         comboPayload.atFrame, comboPayload.defaultSkill,
       );
     });
 
     // 3. Controller: combo event exists with correct properties
     const combos = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_LIFENG && ev.columnId === NounType.COMBO,
+      ev => ev.ownerEntityId === SLOT_LIFENG && ev.columnId === NounType.COMBO,
     );
     expect(combos).toHaveLength(1);
     expect(combos[0].name).toBe(COMBO_ID);
@@ -986,7 +986,7 @@ describe('K. BS → Vulnerable + Susceptibility → BA → Combo Activation', ()
 
     // 2. Controller: no combo window events should exist for Lifeng
     const comboWindows = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_LIFENG && ev.columnId === 'comboActivationWindow',
+      ev => ev.ownerEntityId === SLOT_LIFENG && ev.columnId === 'comboActivationWindow',
     );
     expect(comboWindows).toHaveLength(0);
   });
@@ -1009,14 +1009,14 @@ describe('K. BS → Vulnerable + Susceptibility → BA → Combo Activation', ()
     const comboPayload = getMenuPayload(result.current, comboCol, checkFrame);
     act(() => {
       result.current.handleAddEvent(
-        comboPayload.ownerId, comboPayload.columnId,
+        comboPayload.ownerEntityId, comboPayload.columnId,
         comboPayload.atFrame, comboPayload.defaultSkill,
       );
     });
 
     // 3. Controller: combo event exists
     const combos = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_LIFENG && ev.columnId === NounType.COMBO,
+      ev => ev.ownerEntityId === SLOT_LIFENG && ev.columnId === NounType.COMBO,
     );
     expect(combos).toHaveLength(1);
     expect(combos[0].name).toBe(COMBO_ID);

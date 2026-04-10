@@ -34,13 +34,13 @@ const SKILL_TYPE_TO_COLUMN: Record<string, string> = {
 export interface ConditionContext {
   events: readonly TimelineEvent[];
   frame: number;
-  sourceOwnerId: string;
+  sourceEntityId: string;
   /** Maps operator slot → operator columns (for resolving THIS_OPERATOR etc). */
   operatorSlotMap?: Record<string, string>;
   /** Target operator ID for OTHER/ANY determiner resolution. */
-  targetOwnerId?: string;
+  targetEntityId?: string;
   /** Operator who matched the primary trigger condition (for TRIGGER determiner). */
-  triggerOwnerId?: string;
+  triggerEntityId?: string;
   /** Live enemy HP percentage query (0–100). Provided by calculationController during queue processing. */
   getEnemyHpPercentage?: (frame: number) => number | null;
   /** Query which operator slot is controlled at a given frame. */
@@ -54,7 +54,7 @@ export interface ConditionContext {
   /** Get operator HP as percentage (0–100) at frame. */
   getOperatorPercentageHp?: (operatorId: string, frame: number) => number;
   /** Owner ID of the parent status event (for THIS EVENT resolution in trigger contexts). */
-  parentStatusOwnerId?: string;
+  parentStatusEntityId?: string;
   /** UID of the source skill event (for EVENT HAVE LINK — checks consumed LINK stacks). */
   sourceEventUid?: string;
   /** Query consumed LINK stacks for an event UID. */
@@ -68,24 +68,24 @@ export interface ConditionContext {
 
 // ── Subject resolution ───────────────────────────────────────────────────
 
-function resolveOwnerId(subject: string, ctx: ConditionContext, determiner?: string): string | undefined {
+function resolveEntityId(subject: string, ctx: ConditionContext, determiner?: string): string | undefined {
   if (subject === NounType.OPERATOR) {
     switch (determiner ?? DeterminerType.THIS) {
-      case DeterminerType.THIS: return ctx.sourceOwnerId;
+      case DeterminerType.THIS: return ctx.sourceEntityId;
       case DeterminerType.ALL: return TEAM_ID;
-      case DeterminerType.OTHER: return ctx.targetOwnerId ?? undefined;
-      case DeterminerType.ANY: return ctx.targetOwnerId ?? undefined; // wildcard if no target
-      case DeterminerType.TRIGGER: return ctx.triggerOwnerId ?? ctx.sourceOwnerId;
+      case DeterminerType.OTHER: return ctx.targetEntityId ?? undefined;
+      case DeterminerType.ANY: return ctx.targetEntityId ?? undefined; // wildcard if no target
+      case DeterminerType.TRIGGER: return ctx.triggerEntityId ?? ctx.sourceEntityId;
       case DeterminerType.CONTROLLED:
-        return ctx.getControlledSlotAtFrame?.(ctx.frame) ?? ctx.sourceOwnerId;
-      default: return ctx.sourceOwnerId;
+        return ctx.getControlledSlotAtFrame?.(ctx.frame) ?? ctx.sourceEntityId;
+      default: return ctx.sourceEntityId;
     }
   }
   switch (subject) {
-    case NounType.EVENT: return ctx.parentStatusOwnerId ?? ctx.sourceOwnerId;
+    case NounType.EVENT: return ctx.parentStatusEntityId ?? ctx.sourceEntityId;
     case NounType.ENEMY: return ENEMY_ID;
     case NounType.TEAM: return TEAM_ID;
-    default: return ctx.sourceOwnerId;
+    default: return ctx.sourceEntityId;
   }
 }
 
@@ -144,9 +144,9 @@ function evaluateHave(cond: Interaction, ctx: ConditionContext): boolean {
   if (cond.object === NounType.HP) {
     const qualifier = (cond as unknown as Record<string, unknown>).objectQualifier as string | undefined;
     if (qualifier === AdjectiveType.FULL) {
-      const ownerId = resolveOwnerId(cond.subject, ctx, cond.subjectDeterminer);
-      if (!ownerId || !ctx.getOperatorPercentageHp) return true; // default to full if no tracker
-      return ctx.getOperatorPercentageHp(ownerId, ctx.frame) >= 100;
+      const ownerEntityId = resolveEntityId(cond.subject, ctx, cond.subjectDeterminer);
+      if (!ownerEntityId || !ctx.getOperatorPercentageHp) return true; // default to full if no tracker
+      return ctx.getOperatorPercentageHp(ownerEntityId, ctx.frame) >= 100;
     }
     // Value+unit PERCENTAGE pattern: HAVE HP LESS_THAN_EQUAL/GREATER_THAN_EQUAL N (UNIT PERCENTAGE)
     const withBlock = (cond as unknown as Record<string, unknown>).with as Record<string, unknown> | undefined;
@@ -163,10 +163,10 @@ function evaluateHave(cond: Interaction, ctx: ConditionContext): boolean {
         if (pct == null) return false;
         hpPct = pct;
       } else {
-        const ownerId = resolveOwnerId(cond.subject, ctx, cond.subjectDeterminer);
+        const ownerEntityId = resolveEntityId(cond.subject, ctx, cond.subjectDeterminer);
         // Default to 100% HP when no tracker is available (assume full health)
-        if (!ownerId || !ctx.getOperatorPercentageHp) { hpPct = 100; }
-        else { hpPct = ctx.getOperatorPercentageHp(ownerId, ctx.frame); }
+        if (!ownerEntityId || !ctx.getOperatorPercentageHp) { hpPct = 100; }
+        else { hpPct = ctx.getOperatorPercentageHp(ownerEntityId, ctx.frame); }
       }
       switch (cond.cardinalityConstraint) {
         case CardinalityConstraintType.GREATER_THAN: return hpPct > target;
@@ -205,10 +205,10 @@ function evaluateHave(cond: Interaction, ctx: ConditionContext): boolean {
   const columnIds = resolveColumnIds(cond.object, cond.objectId, cond.objectQualifier);
   if (columnIds.length === 0) return false;
 
-  const ownerId = resolveOwnerId(cond.subject, ctx, cond.subjectDeterminer);
+  const ownerEntityId = resolveEntityId(cond.subject, ctx, cond.subjectDeterminer);
   let count = 0;
   for (const colId of columnIds) {
-    count += activeCountAtFrame(ctx.events, colId, ownerId, ctx.frame);
+    count += activeCountAtFrame(ctx.events, colId, ownerEntityId, ctx.frame);
   }
 
   // For LESS_THAN / LESS_THAN_EQUAL, count=0 is a valid result (0 ≤ N).
@@ -256,35 +256,35 @@ function evaluateIs(cond: Interaction, ctx: ConditionContext): boolean {
   const isStatKey = ADJECTIVE_TO_STAT[cond.object];
   if (isStatKey) {
     if (!ctx.getStatValue) return cond.negated ? true : false;
-    const ownerId = resolveOwnerId(cond.subject, ctx, cond.subjectDeterminer);
-    if (!ownerId) return cond.negated ? true : false;
-    const val = ctx.getStatValue(ownerId, isStatKey);
+    const ownerEntityId = resolveEntityId(cond.subject, ctx, cond.subjectDeterminer);
+    if (!ownerEntityId) return cond.negated ? true : false;
+    const val = ctx.getStatValue(ownerEntityId, isStatKey);
     const hasActive = val != null && val > 0;
     return cond.negated ? !hasActive : hasActive;
   }
 
   if (cond.object === NounType.ACTIVE) {
     // Check if the subject has any active skill events at this frame
-    const ownerId = resolveOwnerId(cond.subject, ctx, cond.subjectDeterminer);
+    const ownerEntityId = resolveEntityId(cond.subject, ctx, cond.subjectDeterminer);
     for (const col of SKILL_COLUMN_ORDER) {
-      if (activeCountAtFrame(ctx.events, col, ownerId, ctx.frame) > 0) return true;
+      if (activeCountAtFrame(ctx.events, col, ownerEntityId, ctx.frame) > 0) return true;
     }
     return false;
   }
 
   if (cond.object === NounType.CONTROLLED_STATE) {
     // "THIS OPERATOR IS CONTROLLED" — check if this operator is the controlled operator at this frame
-    const ownerId = resolveOwnerId(cond.subject, ctx, cond.subjectDeterminer);
-    if (!ctx.getControlledSlotAtFrame || !ownerId) return false;
-    const result = ctx.getControlledSlotAtFrame(ctx.frame) === ownerId;
+    const ownerEntityId = resolveEntityId(cond.subject, ctx, cond.subjectDeterminer);
+    if (!ctx.getControlledSlotAtFrame || !ownerEntityId) return false;
+    const result = ctx.getControlledSlotAtFrame(ctx.frame) === ownerEntityId;
     return cond.negated ? !result : result;
   }
 
   const columnId = stateToColumn[cond.object];
   if (!columnId) return false;
 
-  const ownerId = resolveOwnerId(cond.subject, ctx, cond.subjectDeterminer);
-  const active = activeEventsAtFrame(ctx.events, columnId, ownerId, ctx.frame);
+  const ownerEntityId = resolveEntityId(cond.subject, ctx, cond.subjectDeterminer);
+  const active = activeEventsAtFrame(ctx.events, columnId, ownerEntityId, ctx.frame);
   const result = active.length > 0;
   return cond.negated ? !result : result;
 }
@@ -301,7 +301,7 @@ function evaluateBecome(cond: Interaction, ctx: ConditionContext): boolean {
     // Use of clause for possessor resolution if available, otherwise fall back to subject
     const ownerSubject = cond.of?.object ?? cond.subject;
     const ownerDeterminer = cond.of?.determiner ?? cond.subjectDeterminer;
-    const ownerId = resolveOwnerId(ownerSubject as string, ctx, ownerDeterminer);
+    const ownerEntityId = resolveEntityId(ownerSubject as string, ctx, ownerDeterminer);
     let countNow = 0;
     let countBefore = 0;
     if (ctx.previousStackCount != null) {
@@ -310,12 +310,12 @@ function evaluateBecome(cond: Interaction, ctx: ConditionContext): boolean {
       countNow = ctx.previousStackCount + 1;
     } else {
       for (const colId of columnIds) {
-        const activeNow = activeEventsAtFrame(ctx.events, colId, ownerId, ctx.frame);
+        const activeNow = activeEventsAtFrame(ctx.events, colId, ownerEntityId, ctx.frame);
         for (const ev of activeNow) {
           countNow += ev.stacks ?? 1;
         }
         if (ctx.frame > 0) {
-          const activeBefore = activeEventsAtFrame(ctx.events, colId, ownerId, ctx.frame - 1);
+          const activeBefore = activeEventsAtFrame(ctx.events, colId, ownerEntityId, ctx.frame - 1);
           for (const ev of activeBefore) {
             countBefore += ev.stacks ?? 1;
           }
@@ -344,9 +344,9 @@ function evaluateBecome(cond: Interaction, ctx: ConditionContext): boolean {
   const becomeStatKey = ADJECTIVE_TO_STAT[cond.object];
   if (becomeStatKey) {
     if (!ctx.getStatValue) return false;
-    const ownerId = resolveOwnerId(cond.subject, ctx, cond.subjectDeterminer);
-    if (!ownerId) return false;
-    const val = ctx.getStatValue(ownerId, becomeStatKey);
+    const ownerEntityId = resolveEntityId(cond.subject, ctx, cond.subjectDeterminer);
+    if (!ownerEntityId) return false;
+    const val = ctx.getStatValue(ownerEntityId, becomeStatKey);
     return val != null && val > 0;
   }
 
@@ -365,13 +365,13 @@ function evaluateBecome(cond: Interaction, ctx: ConditionContext): boolean {
   };
 
   if (cond.object === NounType.ACTIVE) {
-    const ownerId = resolveOwnerId(cond.subject, ctx, cond.subjectDeterminer);
+    const ownerEntityId = resolveEntityId(cond.subject, ctx, cond.subjectDeterminer);
     const activeNow = SKILL_COLUMN_ORDER.some(
-      col => activeCountAtFrame(ctx.events, col, ownerId, ctx.frame) > 0,
+      col => activeCountAtFrame(ctx.events, col, ownerEntityId, ctx.frame) > 0,
     );
     if (!activeNow) return false;
     const activeBefore = ctx.frame > 0 && SKILL_COLUMN_ORDER.some(
-      col => activeCountAtFrame(ctx.events, col, ownerId, ctx.frame - 1) > 0,
+      col => activeCountAtFrame(ctx.events, col, ownerEntityId, ctx.frame - 1) > 0,
     );
     return !activeBefore;
   }
@@ -379,11 +379,11 @@ function evaluateBecome(cond: Interaction, ctx: ConditionContext): boolean {
   const columnId = stateToColumn[cond.object];
   if (!columnId) return false;
 
-  const ownerId = resolveOwnerId(cond.subject, ctx, cond.subjectDeterminer);
-  const activeNow = activeEventsAtFrame(ctx.events, columnId, ownerId, ctx.frame).length > 0;
+  const ownerEntityId = resolveEntityId(cond.subject, ctx, cond.subjectDeterminer);
+  const activeNow = activeEventsAtFrame(ctx.events, columnId, ownerEntityId, ctx.frame).length > 0;
   if (!activeNow) return false;
   const activeBefore = ctx.frame > 0
-    && activeEventsAtFrame(ctx.events, columnId, ownerId, ctx.frame - 1).length > 0;
+    && activeEventsAtFrame(ctx.events, columnId, ownerEntityId, ctx.frame - 1).length > 0;
   return !activeBefore;
 }
 
@@ -392,10 +392,10 @@ function evaluateReceive(cond: Interaction, ctx: ConditionContext): boolean {
   const columnIds = resolveColumnIds(cond.object, cond.objectId, cond.objectQualifier);
   if (columnIds.length === 0) return false;
 
-  const ownerId = resolveOwnerId(cond.subject, ctx, cond.subjectDeterminer);
+  const ownerEntityId = resolveEntityId(cond.subject, ctx, cond.subjectDeterminer);
   return ctx.events.some(ev =>
     columnIds.includes(ev.columnId) &&
-    (ownerId == null || ev.ownerId === ownerId) &&
+    (ownerEntityId == null || ev.ownerEntityId === ownerEntityId) &&
     ev.startFrame === ctx.frame
   );
 }
@@ -410,10 +410,10 @@ function evaluatePerform(cond: Interaction, ctx: ConditionContext): boolean {
     return true;
   }
 
-  const ownerId = resolveOwnerId(cond.subject, ctx, cond.subjectDeterminer);
+  const ownerEntityId = resolveEntityId(cond.subject, ctx, cond.subjectDeterminer);
   return ctx.events.some(ev =>
     ev.columnId === columnId &&
-    (ownerId == null || ev.ownerId === ownerId) &&
+    (ownerEntityId == null || ev.ownerEntityId === ownerEntityId) &&
     ev.startFrame <= ctx.frame
   );
 }
@@ -429,10 +429,10 @@ function evaluateStacksSubject(cond: Interaction, ctx: ConditionContext): boolea
   if (columnIds.length === 0) return false;
   const ownerSubject = ofClause?.of?.object ?? NounType.ENEMY;
   const ownerDeterminer = ofClause?.of?.determiner;
-  const ownerId = resolveOwnerId(ownerSubject as string, ctx, ownerDeterminer);
+  const ownerEntityId = resolveEntityId(ownerSubject as string, ctx, ownerDeterminer);
   let count = 0;
   for (const colId of columnIds) {
-    const active = activeEventsAtFrame(ctx.events, colId, ownerId, ctx.frame);
+    const active = activeEventsAtFrame(ctx.events, colId, ownerEntityId, ctx.frame);
     const last = active.length > 0 ? active[active.length - 1] : undefined;
     count += last?.stacks != null ? last.stacks : active.length;
   }

@@ -42,24 +42,24 @@ function addBattleSkill(app: AppResult, atFrame: number) {
   const col = findColumn(app, SLOT_EMBER, NounType.BATTLE);
   expect(col).toBeDefined();
   const payload = getMenuPayload(app, col!, atFrame);
-  app.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+  app.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
 }
 
 function addEnemyAction(app: AppResult, atFrame: number) {
   const enemyCol = app.columns.find(
     (c): c is MiniTimeline =>
       c.type === ColumnType.MINI_TIMELINE &&
-      c.ownerId === ENEMY_ID &&
+      c.ownerEntityId === ENEMY_ID &&
       c.columnId === ENEMY_ACTION_COLUMN_ID,
   );
   expect(enemyCol).toBeDefined();
   const payload = getMenuPayload(app, enemyCol!, atFrame);
-  app.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+  app.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
 }
 
 function getPftpEvents(app: AppResult) {
   return app.allProcessedEvents.filter(
-    (ev) => ev.columnId === PAY_THE_FERRIC_PRICE_ID && ev.ownerId === SLOT_EMBER,
+    (ev) => ev.columnId === PAY_THE_FERRIC_PRICE_ID && ev.ownerEntityId === SLOT_EMBER,
   );
 }
 
@@ -87,7 +87,7 @@ describe('Pay the Ferric Price — DEAL DAMAGE trigger', () => {
     const enemyActionCol = result.current.columns.find(
       (c): c is MiniTimeline =>
         c.type === ColumnType.MINI_TIMELINE &&
-        c.ownerId === ENEMY_ID &&
+        c.ownerEntityId === ENEMY_ID &&
         c.columnId === ENEMY_ACTION_COLUMN_ID,
     );
     expect(enemyActionCol).toBeDefined();

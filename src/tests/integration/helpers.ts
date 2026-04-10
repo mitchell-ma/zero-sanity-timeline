@@ -24,7 +24,7 @@ export type AppResult = ReturnType<typeof useApp>;
 
 /** The actionPayload shape used by all 'addEvent' context menu items. */
 export interface AddEventPayload {
-  ownerId: string;
+  ownerEntityId: string;
   columnId: string;
   atFrame: number;
   defaultSkill: Record<string, unknown>;
@@ -37,7 +37,7 @@ export function findColumn(app: AppResult, slotId: string, columnId: string) {
   return app.columns.find(
     (c): c is MiniTimeline =>
       c.type === ColumnType.MINI_TIMELINE &&
-      c.ownerId === slotId &&
+      c.ownerEntityId === slotId &&
       c.columnId === columnId,
   );
 }

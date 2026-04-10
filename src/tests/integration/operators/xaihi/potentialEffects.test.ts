@@ -74,21 +74,21 @@ describe('J. P2 — Ultimate Energy Cost', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId,
+        payload.ownerEntityId, payload.columnId,
         payload.atFrame, payload.defaultSkill,
       );
     });
 
     // ── Controller layer ──
     const events = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_XAIHI && ev.columnId === NounType.ULTIMATE,
+      ev => ev.ownerEntityId === SLOT_XAIHI && ev.columnId === NounType.ULTIMATE,
     );
     expect(events).toHaveLength(1);
     expect(events[0].name).toBe(ULTIMATE_ID);
 
     // Cryo AMP and Nature AMP should still be derived at P2
     const ampEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === TEAM_ID && (ev.name === NounType.CRYO_AMP || ev.name === NounType.NATURE_AMP),
+      ev => ev.ownerEntityId === TEAM_ID && (ev.name === NounType.CRYO_AMP || ev.name === NounType.NATURE_AMP),
     );
     expect(ampEvents).toHaveLength(2);
 
@@ -100,7 +100,7 @@ describe('J. P2 — Ultimate Energy Cost', () => {
     const ultVM = viewModels.get(col!.key);
     expect(ultVM).toBeDefined();
     expect(ultVM!.events.some(
-      ev => ev.name === ULTIMATE_ID && ev.ownerId === SLOT_XAIHI,
+      ev => ev.name === ULTIMATE_ID && ev.ownerEntityId === SLOT_XAIHI,
     )).toBe(true);
   });
 });
@@ -114,13 +114,13 @@ describe('I. P1 — BS Arts AMP +5%', () => {
     // Place BS at 2s
     const bsCol = findColumn(result.current, SLOT_XAIHI, NounType.BATTLE);
     const bsPayload = getMenuPayload(result.current, bsCol!, 2 * FPS);
-    act(() => { result.current.handleAddEvent(bsPayload.ownerId, bsPayload.columnId, bsPayload.atFrame, bsPayload.defaultSkill); });
+    act(() => { result.current.handleAddEvent(bsPayload.ownerEntityId, bsPayload.columnId, bsPayload.atFrame, bsPayload.defaultSkill); });
     // Place BA at 5s (final strike triggers AMP)
     const baCol = findColumn(result.current, SLOT_XAIHI, NounType.BASIC_ATTACK);
     const baPayload = getMenuPayload(result.current, baCol!, 5 * FPS);
-    act(() => { result.current.handleAddEvent(baPayload.ownerId, baPayload.columnId, baPayload.atFrame, baPayload.defaultSkill); });
+    act(() => { result.current.handleAddEvent(baPayload.ownerEntityId, baPayload.columnId, baPayload.atFrame, baPayload.defaultSkill); });
     return result.current.allProcessedEvents.find(
-      ev => ev.name === NounType.ARTS_AMP && ev.ownerId === SLOT_XAIHI,
+      ev => ev.name === NounType.ARTS_AMP && ev.ownerEntityId === SLOT_XAIHI,
     );
   }
 
@@ -146,7 +146,7 @@ describe('I. P1 — BS Arts AMP +5%', () => {
     // (BS AMP goes to operator status column, not team — column builder
     // needs status trigger scanning to add it to matchColumnIds; skip view
     // column assertion for now, verify controller layer value instead)
-    expect(p1Amp!.ownerId).toBe(SLOT_XAIHI);
+    expect(p1Amp!.ownerEntityId).toBe(SLOT_XAIHI);
   });
 });
 
@@ -162,9 +162,9 @@ describe('K. P5 — Ultimate AMP ×1.1', () => {
     act(() => { setUltimateEnergyToMax(r0.current, SLOT_XAIHI, 0); });
     const col0 = findColumn(r0.current, SLOT_XAIHI, NounType.ULTIMATE);
     const p0 = getMenuPayload(r0.current, col0!, 5 * FPS);
-    act(() => { r0.current.handleAddEvent(p0.ownerId, p0.columnId, p0.atFrame, p0.defaultSkill); });
+    act(() => { r0.current.handleAddEvent(p0.ownerEntityId, p0.columnId, p0.atFrame, p0.defaultSkill); });
     const p0Amp = r0.current.allProcessedEvents.find(
-      ev => ev.ownerId === TEAM_ID && ev.name === NounType.CRYO_AMP,
+      ev => ev.ownerEntityId === TEAM_ID && ev.name === NounType.CRYO_AMP,
     );
     expect(p0Amp).toBeDefined();
     const p0Value = p0Amp!.statusValue as number;
@@ -176,9 +176,9 @@ describe('K. P5 — Ultimate AMP ×1.1', () => {
     act(() => { setUltimateEnergyToMax(r5.current, SLOT_XAIHI, 0); });
     const col5 = findColumn(r5.current, SLOT_XAIHI, NounType.ULTIMATE);
     const p5 = getMenuPayload(r5.current, col5!, 5 * FPS);
-    act(() => { r5.current.handleAddEvent(p5.ownerId, p5.columnId, p5.atFrame, p5.defaultSkill); });
+    act(() => { r5.current.handleAddEvent(p5.ownerEntityId, p5.columnId, p5.atFrame, p5.defaultSkill); });
     const p5Amp = r5.current.allProcessedEvents.find(
-      ev => ev.ownerId === TEAM_ID && ev.name === NounType.CRYO_AMP,
+      ev => ev.ownerEntityId === TEAM_ID && ev.name === NounType.CRYO_AMP,
     );
     expect(p5Amp).toBeDefined();
     const p5Value = p5Amp!.statusValue as number;
@@ -194,7 +194,7 @@ describe('K. P5 — Ultimate AMP ×1.1', () => {
     const teamCol = r5.current.columns.find(
       (c): c is MiniTimeline =>
         c.type === ColumnType.MINI_TIMELINE &&
-        c.ownerId === TEAM_ID &&
+        c.ownerEntityId === TEAM_ID &&
         c.columnId === COMMON_COLUMN_IDS.TEAM_STATUS,
     );
     expect(teamCol).toBeDefined();

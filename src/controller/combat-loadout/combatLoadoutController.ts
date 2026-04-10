@@ -82,13 +82,13 @@ export class CombatLoadoutController {
 
   // ── SP queries ─────────────────────────────────────────────────────────
 
-  hasSufficientSP(ownerId: string, frame: number): boolean {
-    const cost = this.spCosts.get(ownerId) ?? 100;
+  hasSufficientSP(ownerEntityId: string, frame: number): boolean {
+    const cost = this.spCosts.get(ownerEntityId) ?? 100;
     return this.commonSlot.skillPoints.valueAt(frame) >= cost;
   }
 
-  getSpCost(ownerId: string): number {
-    return this.spCosts.get(ownerId) ?? 100;
+  getSpCost(ownerEntityId: string): number {
+    return this.spCosts.get(ownerEntityId) ?? 100;
   }
 
   getAllSpCosts(): ReadonlyMap<string, number> {

@@ -59,12 +59,12 @@ describe('Alesh Skills — Core Skill Placement', () => {
     const payload = getAddEventPayload(menuItems!);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const battles = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_ALESH && ev.columnId === NounType.BATTLE,
+      (ev) => ev.ownerEntityId === SLOT_ALESH && ev.columnId === NounType.BATTLE,
     );
     expect(battles).toHaveLength(1);
   });
@@ -85,12 +85,12 @@ describe('Alesh Skills — Core Skill Placement', () => {
     const payload = getAddEventPayload(menuItems!);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const combos = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_ALESH && ev.columnId === NounType.COMBO,
+      (ev) => ev.ownerEntityId === SLOT_ALESH && ev.columnId === NounType.COMBO,
     );
     expect(combos).toHaveLength(1);
   });
@@ -109,12 +109,12 @@ describe('Alesh Skills — Core Skill Placement', () => {
     const payload = getAddEventPayload(menuItems!);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const ultimates = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_ALESH && ev.columnId === NounType.ULTIMATE,
+      (ev) => ev.ownerEntityId === SLOT_ALESH && ev.columnId === NounType.ULTIMATE,
     );
     expect(ultimates).toHaveLength(1);
   });
@@ -133,12 +133,12 @@ describe('Alesh Skills — Battle Skill', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const battles = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_ALESH && ev.columnId === NounType.BATTLE,
+      (ev) => ev.ownerEntityId === SLOT_ALESH && ev.columnId === NounType.BATTLE,
     );
     expect(battles).toHaveLength(1);
     expect(battles[0].name).toBe(BATTLE_SKILL_ID);
@@ -162,12 +162,12 @@ describe('Alesh Skills — Combo Cooldown', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const combos = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_ALESH && ev.columnId === NounType.COMBO,
+      (ev) => ev.ownerEntityId === SLOT_ALESH && ev.columnId === NounType.COMBO,
     );
     expect(combos).toHaveLength(1);
 
@@ -204,13 +204,13 @@ describe('Alesh Skills — Ultimate', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     // Verify cryo infliction was applied to enemy
     const cryoInflictions = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === INFLICTION_COLUMNS.CRYO && ev.ownerId === ENEMY_ID,
+      (ev) => ev.columnId === INFLICTION_COLUMNS.CRYO && ev.ownerEntityId === ENEMY_ID,
     );
     expect(cryoInflictions.length).toBeGreaterThanOrEqual(1);
   });
@@ -229,7 +229,7 @@ describe('Alesh Skills — View Layer', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
@@ -240,7 +240,7 @@ describe('Alesh Skills — View Layer', () => {
     const battleVm = viewModels.get(col!.key);
     expect(battleVm).toBeDefined();
     const battleEvents = battleVm!.events.filter(
-      (ev) => ev.ownerId === SLOT_ALESH && ev.columnId === NounType.BATTLE,
+      (ev) => ev.ownerEntityId === SLOT_ALESH && ev.columnId === NounType.BATTLE,
     );
     expect(battleEvents).toHaveLength(1);
   });
@@ -255,7 +255,7 @@ describe('Alesh Skills — View Layer', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
@@ -266,7 +266,7 @@ describe('Alesh Skills — View Layer', () => {
     const ultVm = viewModels.get(col!.key);
     expect(ultVm).toBeDefined();
     const ultEvents = ultVm!.events.filter(
-      (ev) => ev.ownerId === SLOT_ALESH && ev.columnId === NounType.ULTIMATE,
+      (ev) => ev.ownerEntityId === SLOT_ALESH && ev.columnId === NounType.ULTIMATE,
     );
     expect(ultEvents).toHaveLength(1);
   });

@@ -30,7 +30,7 @@ function findEnemyStatusColumn(app: ReturnType<typeof useApp>) {
   return app.columns.find(
     (c): c is MiniTimeline =>
       c.type === ColumnType.MINI_TIMELINE &&
-      c.ownerId === ENEMY_ID &&
+      c.ownerEntityId === ENEMY_ID &&
       c.columnId === ENEMY_GROUP_COLUMNS.ENEMY_STATUS,
   );
 }
@@ -69,8 +69,8 @@ describe('Susceptibility stacking — freeform same-element', () => {
         );
       });
     } else {
-      const payload0 = suscItem0.actionPayload as { ownerId: string; columnId: string; atFrame: number; defaultSkill: Record<string, unknown> };
-      act(() => { result.current.handleAddEvent(payload0.ownerId, payload0.columnId, payload0.atFrame, payload0.defaultSkill); });
+      const payload0 = suscItem0.actionPayload as { ownerEntityId: string; columnId: string; atFrame: number; defaultSkill: Record<string, unknown> };
+      act(() => { result.current.handleAddEvent(payload0.ownerEntityId, payload0.columnId, payload0.atFrame, payload0.defaultSkill); });
     }
 
     // ── Place cryo susceptibility at 1s ──
@@ -83,7 +83,7 @@ describe('Susceptibility stacking — freeform same-element', () => {
 
     // ── Controller layer: 2 separate cryo susceptibility events, neither consumed ──
     const suscEvents = result.current.allProcessedEvents.filter(
-      ev => ev.name === CRYO_SUSC_ID && ev.ownerId === ENEMY_ID,
+      ev => ev.name === CRYO_SUSC_ID && ev.ownerEntityId === ENEMY_ID,
     );
     expect(suscEvents).toHaveLength(2);
     expect(suscEvents[0].startFrame).toBe(0 * FPS);

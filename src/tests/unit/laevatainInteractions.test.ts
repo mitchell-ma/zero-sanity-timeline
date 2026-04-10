@@ -436,7 +436,7 @@ describe('H. Cooldown Interactions', () => {
   const FPS = 120;
 
   function makeEvent(overrides: Partial<TimelineEvent> & { uid: string; columnId: string; startFrame: number }): TimelineEvent {
-    return { id: overrides.name ?? '', name: '', ownerId: SLOT_ID, segments: [{ properties: { duration: 0 } }], ...overrides };
+    return { id: overrides.name ?? '', name: '', ownerEntityId: SLOT_ID, segments: [{ properties: { duration: 0 } }], ...overrides };
   }
 
   test('H1: Battle skill (Smouldering Fire) has no COOLDOWN segment or effect', () => {
@@ -516,7 +516,7 @@ describe('K. Scorching Heart absorbs Antal combo mirrored heat', () => {
   const SLOT_ANTAL = 'slot-1';
   const SLOT_AKEKURI = 'slot-2';
 
-  function makeEv(overrides: Partial<TimelineEvent> & { uid: string; columnId: string; startFrame: number; ownerId: string }): TimelineEvent {
+  function makeEv(overrides: Partial<TimelineEvent> & { uid: string; columnId: string; startFrame: number; ownerEntityId: string }): TimelineEvent {
     return { id: overrides.name ?? '', name: '', segments: [{ properties: { duration: 0 } }], ...overrides };
   }
 
@@ -541,18 +541,18 @@ describe('K. Scorching Heart absorbs Antal combo mirrored heat', () => {
 
     // Focus on enemy (from Antal's battle skill)
     const focus = makeEv({
-      uid: 'focus-1', name: StatusType.FOCUS, ownerId: ENEMY_ID,
+      uid: 'focus-1', name: StatusType.FOCUS, ownerEntityId: ENEMY_ID,
       columnId: 'FOCUS', startFrame: 0, segments: [{ properties: { duration: 60 * FPS } }],
     });
     // Akekuri's heat infliction
     const akekuriHeat = makeEv({
-      uid: 'akekuri-heat-1', name: INFLICTION_COLUMNS.HEAT, ownerId: ENEMY_ID,
+      uid: 'akekuri-heat-1', name: INFLICTION_COLUMNS.HEAT, ownerEntityId: ENEMY_ID,
       columnId: INFLICTION_COLUMNS.HEAT, startFrame: 200, segments: [{ properties: { duration: 20 * FPS } }],
-      sourceOwnerId: SLOT_AKEKURI, sourceSkillName: 'BURST_OF_PASSION',
+      sourceEntityId: SLOT_AKEKURI, sourceSkillName: 'BURST_OF_PASSION',
     });
     // Antal combo with comboTriggerColumnId set (mirrors heat)
     const antalCombo = makeEv({
-      uid: 'antal-combo-1', name: 'EMP_TEST_SITE', ownerId: SLOT_ANTAL,
+      uid: 'antal-combo-1', name: 'EMP_TEST_SITE', ownerEntityId: SLOT_ANTAL,
       columnId: NounType.COMBO, startFrame: 400,
       comboTriggerColumnId: INFLICTION_COLUMNS.HEAT,
       segments: [{
@@ -562,7 +562,7 @@ describe('K. Scorching Heart absorbs Antal combo mirrored heat', () => {
     });
     // Laevatain final strike after both heat inflictions exist
     const laevBasic = makeEv({
-      uid: 'laev-basic-1', name: 'FLAMING_CINDERS_BATK', ownerId: SLOT_LAEV,
+      uid: 'laev-basic-1', name: 'FLAMING_CINDERS_BATK', ownerEntityId: SLOT_LAEV,
       columnId: NounType.BASIC_ATTACK, startFrame: 600,
             segments: [
         { properties: { duration: 120, name: '1' } },
@@ -578,7 +578,7 @@ describe('K. Scorching Heart absorbs Antal combo mirrored heat', () => {
 
     // Mirrored heat infliction should have been generated
     const mirroredHeat = processed.filter(
-      (e) => e.columnId === INFLICTION_COLUMNS.HEAT && e.sourceOwnerId === SLOT_ANTAL,
+      (e) => e.columnId === INFLICTION_COLUMNS.HEAT && e.sourceEntityId === SLOT_ANTAL,
     );
     expect(mirroredHeat.length).toBeGreaterThan(0);
 
@@ -592,7 +592,7 @@ describe('K. Scorching Heart absorbs Antal combo mirrored heat', () => {
 
     // Pre-existing heat infliction should be clamped by absorption.
     const preExistingHeat = processed.filter((e) =>
-      e.columnId === INFLICTION_COLUMNS.HEAT && e.sourceOwnerId === SLOT_AKEKURI
+      e.columnId === INFLICTION_COLUMNS.HEAT && e.sourceEntityId === SLOT_AKEKURI
     );
     expect(preExistingHeat.length).toBe(1);
     expect(preExistingHeat[0].eventStatus).toBe(EventStatusType.CONSUMED);
@@ -617,11 +617,11 @@ describe('L. Freeform infliction + Final Strike absorption', () => {
       uid: 'freeform-heat-l1',
       id: INFLICTION_COLUMNS.HEAT,
       name: INFLICTION_COLUMNS.HEAT,
-      ownerId: ENEMY_ID,
+      ownerEntityId: ENEMY_ID,
       columnId: INFLICTION_COLUMNS.HEAT,
       startFrame: 0,
       segments: [{ properties: { duration: 4800 } }],
-      sourceOwnerId: USER_ID,
+      sourceEntityId: USER_ID,
       sourceSkillName: 'Freeform',
     };
 
@@ -629,7 +629,7 @@ describe('L. Freeform infliction + Final Strike absorption', () => {
       uid: 'laev-basic-l1',
       id: 'FLAMING_CINDERS_BATK',
       name: 'FLAMING_CINDERS_BATK',
-      ownerId: LAEV_SLOT,
+      ownerEntityId: LAEV_SLOT,
       columnId: NounType.BASIC_ATTACK,
       startFrame: 100,
             segments: [
@@ -666,7 +666,7 @@ describe('M. Normal basic attack without external infliction', () => {
       uid: 'laev-basic-m1',
       id: 'FLAMING_CINDERS_BATK',
       name: 'FLAMING_CINDERS_BATK',
-      ownerId: LAEV_SLOT,
+      ownerEntityId: LAEV_SLOT,
       columnId: NounType.BASIC_ATTACK,
       startFrame: 92,
             segments: [
@@ -715,7 +715,7 @@ describe('N. Scorching Heart talent presence', () => {
     const shEvents = processed.filter(ev => ev.id === SH_TALENT_ID);
     expect(shEvents.length).toBe(1);
     expect(shEvents[0].startFrame).toBe(0);
-    expect(shEvents[0].ownerId).toBe(LAEV_SLOT);
+    expect(shEvents[0].ownerEntityId).toBe(LAEV_SLOT);
   });
 });
 

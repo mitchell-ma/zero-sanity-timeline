@@ -83,10 +83,10 @@ export interface TriggerSubEffect {
 
 export interface TriggerMatch {
   frame: number;
-  sourceOwnerId: string;
+  sourceEntityId: string;
   sourceSkillName: string;
   /** The operator that caused this event (e.g. who applied the infliction). */
-  originOwnerId?: string;
+  originEntityId?: string;
   /** The column ID of the source event that matched this trigger. */
   sourceColumnId?: string;
   /**
@@ -127,13 +127,13 @@ function checkPredicate(
   events: readonly TimelineEvent[],
   operatorSlotId: string,
   candidateFrame: number,
-  triggerOwnerId?: string,
+  triggerEntityId?: string,
 ): boolean {
   const ctx: ConditionContext = {
     events,
     frame: candidateFrame,
-    sourceOwnerId: operatorSlotId,
-    triggerOwnerId,
+    sourceEntityId: operatorSlotId,
+    triggerEntityId,
   };
   return evaluateInteraction(pred as unknown as Interaction, ctx);
 }
@@ -204,7 +204,7 @@ function resolveColumns(cond: Predicate): Set<string> | undefined {
 }
 
 /**
- * Resolve which ownerId to filter events by, based on verb semantics.
+ * Resolve which ownerEntityId to filter events by, based on verb semantics.
  *
  * For action verbs (APPLY, CONSUME), the subject is the actor and the target
  * (to) is the recipient. Timeline events are owned by the recipient.
@@ -219,44 +219,44 @@ function resolveOwnerFilter(cond: Predicate, operatorSlotId: string, verb?: stri
   const toObj = cond.to;
   const toDet = cond.toDeterminer;
 
-  // Action verbs: event ownerId = recipient (to), not subject
+  // Action verbs: event ownerEntityId = recipient (to), not subject
   const isActionVerb = verb === VerbType.APPLY || verb === VerbType.CONSUME;
 
   return {
     isAnyOperator: isAnyOperator || isAnyOtherOperator,
-    matchesOwner(ownerId: string, atFrame?: number) {
+    matchesOwner(ownerEntityId: string, atFrame?: number) {
       if (isActionVerb && toObj) {
-        if (toObj === NounType.ENEMY) return ownerId === ENEMY_ID;
+        if (toObj === NounType.ENEMY) return ownerEntityId === ENEMY_ID;
         if (toObj === NounType.OPERATOR) {
-          if (toDet === DeterminerType.ANY) return ownerId !== ENEMY_ID && ownerId !== TEAM_ID;
+          if (toDet === DeterminerType.ANY) return ownerEntityId !== ENEMY_ID && ownerEntityId !== TEAM_ID;
           if (toDet === DeterminerType.ALL) return true;
-          if (toDet === DeterminerType.OTHER) return ownerId !== operatorSlotId && ownerId !== ENEMY_ID && ownerId !== TEAM_ID;
-          return ownerId === operatorSlotId;
+          if (toDet === DeterminerType.OTHER) return ownerEntityId !== operatorSlotId && ownerEntityId !== ENEMY_ID && ownerEntityId !== TEAM_ID;
+          return ownerEntityId === operatorSlotId;
         }
         return true;
       }
       if (isActionVerb) return true;
       // Subject-based filtering
-      if (cond.subject === NounType.ENEMY) return ownerId === ENEMY_ID;
+      if (cond.subject === NounType.ENEMY) return ownerEntityId === ENEMY_ID;
       if (isControlledOperator && controlledSlotId) {
         const resolved = typeof controlledSlotId === 'function' ? controlledSlotId(atFrame ?? 0) : controlledSlotId;
-        return ownerId === resolved;
+        return ownerEntityId === resolved;
       }
-      if (isAnyOtherOperator) return ownerId !== operatorSlotId && ownerId !== ENEMY_ID && ownerId !== TEAM_ID;
-      if (isAnyOperator) return ownerId !== ENEMY_ID && ownerId !== TEAM_ID;
-      return ownerId === operatorSlotId;
+      if (isAnyOtherOperator) return ownerEntityId !== operatorSlotId && ownerEntityId !== ENEMY_ID && ownerEntityId !== TEAM_ID;
+      if (isAnyOperator) return ownerEntityId !== ENEMY_ID && ownerEntityId !== TEAM_ID;
+      return ownerEntityId === operatorSlotId;
     },
   };
 }
 
-function checkSecondary(ctx: VerbHandlerContext, frame: number, triggerOwnerId?: string): boolean {
+function checkSecondary(ctx: VerbHandlerContext, frame: number, triggerEntityId?: string): boolean {
   return ctx.secondaryConditions.every(sc =>
-    checkPredicate(sc, ctx.events, ctx.operatorSlotId, frame, triggerOwnerId)
+    checkPredicate(sc, ctx.events, ctx.operatorSlotId, frame, triggerEntityId)
   );
 }
 
 function makeMatch(frame: number, ev: TimelineEvent, effects?: TriggerEffect[]): TriggerMatch {
-  return { frame, sourceOwnerId: ev.ownerId, sourceSkillName: ev.id, originOwnerId: ev.sourceOwnerId, sourceColumnId: ev.columnId, sourceEventUid: ev.uid, triggerStacks: ev.stacks, effects };
+  return { frame, sourceEntityId: ev.ownerEntityId, sourceSkillName: ev.id, originEntityId: ev.sourceEntityId, sourceColumnId: ev.columnId, sourceEventUid: ev.uid, triggerStacks: ev.stacks, effects };
 }
 
 /**
@@ -278,8 +278,8 @@ function scanEvents(primaryCond: Predicate, ctx: VerbHandlerContext, verb: strin
     }
     // Arts Burst: only match infliction events flagged as same-element stacking
     if (primaryCond.object === NounType.ARTS_BURST && !ev.isArtsBurst) continue;
-    if (!matchesOwner(ev.ownerId)) continue;
-    if (!checkSecondary(ctx, ev.startFrame, ev.ownerId)) continue;
+    if (!matchesOwner(ev.ownerEntityId)) continue;
+    if (!checkSecondary(ctx, ev.startFrame, ev.ownerEntityId)) continue;
 
     matches.push(makeMatch(ev.startFrame, ev, ctx.clauseEffects));
   }
@@ -302,8 +302,8 @@ function handlePerform(primaryCond: Predicate, ctx: VerbHandlerContext): Trigger
 
       const triggerFrame = getFinalStrikeTriggerFrame(ev, ctx.stops);
       if (triggerFrame == null) continue;
-      if (!matchesOwner(ev.ownerId, triggerFrame)) continue;
-      if (!checkSecondary(ctx, triggerFrame, ev.ownerId)) continue;
+      if (!matchesOwner(ev.ownerEntityId, triggerFrame)) continue;
+      if (!checkSecondary(ctx, triggerFrame, ev.ownerEntityId)) continue;
 
       matches.push(makeMatch(triggerFrame, ev, ctx.clauseEffects));
     }
@@ -314,12 +314,12 @@ function handlePerform(primaryCond: Predicate, ctx: VerbHandlerContext): Trigger
   if (skillId === NounType.FINISHER || skillId === NounType.DIVE) {
     const targetName = skillId === NounType.FINISHER ? NounType.FINISHER : NounType.DIVE;
     for (const ev of ctx.events) {
-      if (!matchesOwner(ev.ownerId)) continue;
+      if (!matchesOwner(ev.ownerEntityId)) continue;
       if (ev.columnId !== NounType.BASIC_ATTACK) continue;
       if (ev.id !== targetName) continue;
 
       const triggerFrame = getFirstEventFrame(ev);
-      if (!checkSecondary(ctx, triggerFrame, ev.ownerId)) continue;
+      if (!checkSecondary(ctx, triggerFrame, ev.ownerEntityId)) continue;
 
       matches.push(makeMatch(triggerFrame, ev, ctx.clauseEffects));
     }
@@ -329,12 +329,12 @@ function handlePerform(primaryCond: Predicate, ctx: VerbHandlerContext): Trigger
   const matchingColumn = skillId;
 
   for (const ev of ctx.events) {
-    if (!isAnyOperator && ev.ownerId !== ctx.operatorSlotId) continue;
-    if (isAnyOperator && (ev.ownerId === ENEMY_ID || ev.ownerId === TEAM_ID)) continue;
+    if (!isAnyOperator && ev.ownerEntityId !== ctx.operatorSlotId) continue;
+    if (isAnyOperator && (ev.ownerEntityId === ENEMY_ID || ev.ownerEntityId === TEAM_ID)) continue;
     if (ev.columnId !== matchingColumn) continue;
 
     const triggerFrame = getFirstEventFrame(ev);
-    if (!checkSecondary(ctx, triggerFrame, ev.ownerId)) continue;
+    if (!checkSecondary(ctx, triggerFrame, ev.ownerEntityId)) continue;
 
     matches.push(makeMatch(triggerFrame, ev, ctx.clauseEffects));
   }
@@ -357,7 +357,7 @@ function handleHave(primaryCond: Predicate, ctx: VerbHandlerContext): TriggerMat
     const { matchesOwner } = resolveOwnerFilter(cond, ctx.operatorSlotId, VerbType.HAVE);
     for (const ev of ctx.events) {
       if (!colIds.has(ev.columnId)) continue;
-      if (!matchesOwner(ev.ownerId)) continue;
+      if (!matchesOwner(ev.ownerEntityId)) continue;
       candidateFrames.add(ev.startFrame);
     }
   }
@@ -375,7 +375,7 @@ function handleHave(primaryCond: Predicate, ctx: VerbHandlerContext): TriggerMat
     const { matchesOwner: primaryMatchesOwner } = resolveOwnerFilter(primaryCond, ctx.operatorSlotId, VerbType.HAVE);
     const sourceEv = ctx.events.find(ev =>
       ev.startFrame <= frame && frame < ev.startFrame + computeSegmentsSpan(ev.segments) &&
-      primaryColIds?.has(ev.columnId) && primaryMatchesOwner(ev.ownerId),
+      primaryColIds?.has(ev.columnId) && primaryMatchesOwner(ev.ownerEntityId),
     ) ?? ctx.events.find(ev => ev.startFrame === frame);
     if (sourceEv) {
       matches.push(makeMatch(frame, sourceEv, ctx.clauseEffects));
@@ -394,14 +394,14 @@ function handleRecover(primaryCond: Predicate, ctx: VerbHandlerContext): Trigger
 
   if (primaryCond.object === 'SKILL_POINT') {
     for (const ev of ctx.events) {
-      if (!matchesOwner(ev.ownerId)) continue;
+      if (!matchesOwner(ev.ownerEntityId)) continue;
       let cumulativeOffset = 0;
       for (const seg of ev.segments) {
         if (seg.frames) {
           for (const frame of seg.frames) {
             if (hasSkillPointClause(frame.clauses)) {
               const triggerFrame = ev.startFrame + cumulativeOffset + frame.offsetFrame;
-              if (!checkSecondary(ctx, triggerFrame, ev.ownerId)) continue;
+              if (!checkSecondary(ctx, triggerFrame, ev.ownerEntityId)) continue;
               matches.push(makeMatch(triggerFrame, ev, ctx.clauseEffects));
             }
           }
@@ -432,14 +432,14 @@ function handleIs(primaryCond: Predicate, ctx: VerbHandlerContext): TriggerMatch
     const candidateFrames = new Set<number>();
     for (const ev of ctx.events) {
       if (!columnIds.includes(ev.columnId)) continue;
-      if (!matchesOwner(ev.ownerId)) continue;
+      if (!matchesOwner(ev.ownerEntityId)) continue;
       candidateFrames.add(ev.startFrame);
     }
     for (const frame of Array.from(candidateFrames)) {
       if (!checkPredicate(primaryCond, ctx.events, ctx.operatorSlotId, frame)) continue;
       if (!checkSecondary(ctx, frame)) continue;
       const sourceEv = ctx.events.find(ev =>
-        columnIds.includes(ev.columnId) && matchesOwner(ev.ownerId) &&
+        columnIds.includes(ev.columnId) && matchesOwner(ev.ownerEntityId) &&
         ev.startFrame <= frame && frame < ev.startFrame + computeSegmentsSpan(ev.segments),
       );
       if (sourceEv) matches.push(makeMatch(frame, sourceEv, ctx.clauseEffects));
@@ -456,10 +456,10 @@ function handleIs(primaryCond: Predicate, ctx: VerbHandlerContext): TriggerMatch
 
   for (const ev of ctx.events) {
     if (ev.columnId !== colId) continue;
-    if (!matchesOwner(ev.ownerId)) continue;
+    if (!matchesOwner(ev.ownerEntityId)) continue;
     // Skip forced physical statuses — no Vulnerability was consumed
     if (isPhysicalStatus && (ev.isForced || ev.forcedReaction)) continue;
-    if (!checkSecondary(ctx, ev.startFrame, ev.ownerId)) continue;
+    if (!checkSecondary(ctx, ev.startFrame, ev.ownerEntityId)) continue;
     matches.push(makeMatch(ev.startFrame, ev, ctx.clauseEffects));
   }
   return matches;
@@ -489,7 +489,7 @@ function handleBecome(primaryCond: Predicate, ctx: VerbHandlerContext): TriggerM
     // Collect ALL relevant status events (including consumed — their clamped
     // duration is needed to detect consumption-based transitions).
     const statusEvents = ctx.events.filter(ev =>
-      ev.columnId === colId && matchesOwner(ev.ownerId),
+      ev.columnId === colId && matchesOwner(ev.ownerEntityId),
     );
     if (statusEvents.length === 0) return [];
 
@@ -531,7 +531,7 @@ function handleBecome(primaryCond: Predicate, ctx: VerbHandlerContext): TriggerM
         if (!wasConsumed) continue;
       }
       if (!checkSecondary(ctx, frame, ctx.operatorSlotId)) continue;
-      const synthetic = { ownerId: ctx.operatorSlotId, name: '' } as TimelineEvent;
+      const synthetic = { ownerEntityId: ctx.operatorSlotId, name: '' } as TimelineEvent;
       matches.push(makeMatch(frame, synthetic, ctx.clauseEffects));
     }
     return matches;
@@ -565,7 +565,7 @@ function handleDeal(primaryCond: Predicate, ctx: VerbHandlerContext): TriggerMat
   if (qualifier === NounType.ARTS_BURST) return matches;
 
   for (const ev of ctx.events) {
-    if (!matchesOwner(ev.ownerId)) continue;
+    if (!matchesOwner(ev.ownerEntityId)) continue;
 
     let cumulativeOffset = 0;
     for (const seg of ev.segments) {
@@ -577,7 +577,7 @@ function handleDeal(primaryCond: Predicate, ctx: VerbHandlerContext): TriggerMat
             if (dealInfo?.element && dealInfo.element !== qualifier) continue;
           }
           const triggerFrame = ev.startFrame + cumulativeOffset + frame.offsetFrame;
-          if (!checkSecondary(ctx, triggerFrame, ev.ownerId)) continue;
+          if (!checkSecondary(ctx, triggerFrame, ev.ownerEntityId)) continue;
           matches.push(makeMatch(triggerFrame, ev, ctx.clauseEffects));
         }
       }
@@ -592,7 +592,7 @@ function handleDeal(primaryCond: Predicate, ctx: VerbHandlerContext): TriggerMat
 
 function handleHit(primaryCond: Predicate, ctx: VerbHandlerContext): TriggerMatch[] {
   const hitEvents = ctx.events.filter(
-    (ev) => ev.ownerId === ENEMY_ID && ev.columnId === ENEMY_ACTION_COLUMN_ID,
+    (ev) => ev.ownerEntityId === ENEMY_ID && ev.columnId === ENEMY_ACTION_COLUMN_ID,
   );
   if (hitEvents.length > 0) {
     const matches: TriggerMatch[] = [];
@@ -611,7 +611,7 @@ function handleDefeat(primaryCond: Predicate, ctx: VerbHandlerContext): TriggerM
 
 function generatePeriodicTriggers(_primaryCond: Predicate, ctx: VerbHandlerContext): TriggerMatch[] {
   const matches: TriggerMatch[] = [];
-  const synthetic = { ownerId: ctx.operatorSlotId, name: '' } as TimelineEvent;
+  const synthetic = { ownerEntityId: ctx.operatorSlotId, name: '' } as TimelineEvent;
   for (let frame = 0; frame < TOTAL_FRAMES; frame += FPS) {
     if (!checkSecondary(ctx, frame, ctx.operatorSlotId)) continue;
     matches.push(makeMatch(frame, synthetic, ctx.clauseEffects));

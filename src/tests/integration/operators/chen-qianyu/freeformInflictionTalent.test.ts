@@ -77,13 +77,13 @@ describe('Chen Qianyu — freeform infliction must not trigger Slashing Edge', (
 
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     // Controller layer: infliction exists, Slashing Edge does not
     const inflictions = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === INFLICTION_COLUMNS.NATURE && ev.ownerId === ENEMY_ID,
+      (ev) => ev.columnId === INFLICTION_COLUMNS.NATURE && ev.ownerEntityId === ENEMY_ID,
     );
     expect(inflictions.length).toBeGreaterThanOrEqual(1);
 
@@ -98,7 +98,7 @@ describe('Chen Qianyu — freeform infliction must not trigger Slashing Edge', (
     let foundSlashingEdge = false;
     for (const [, vm] of Array.from(vms.entries())) {
       for (const ev of vm.events) {
-        if (ev.columnId === INFLICTION_COLUMNS.NATURE && ev.ownerId === ENEMY_ID) {
+        if (ev.columnId === INFLICTION_COLUMNS.NATURE && ev.ownerEntityId === ENEMY_ID) {
           foundInfliction = true;
         }
         if (ev.columnId === SLASHING_EDGE_ID || ev.id === SLASHING_EDGE_ID) {
@@ -122,7 +122,7 @@ describe('Chen Qianyu — freeform infliction must not trigger Slashing Edge', (
 
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
@@ -148,7 +148,7 @@ describe('Chen + Ardelia — freeform nature infliction blocks combo window', ()
 
     act(() => {
       result.current.handleAddEvent(
-        inflictionPayload.ownerId, inflictionPayload.columnId,
+        inflictionPayload.ownerEntityId, inflictionPayload.columnId,
         inflictionPayload.atFrame, inflictionPayload.defaultSkill,
       );
     });
@@ -166,13 +166,13 @@ describe('Chen + Ardelia — freeform nature infliction blocks combo window', ()
 
     act(() => {
       result.current.handleAddEvent(
-        basicPayload.ownerId, basicPayload.columnId, basicPayload.atFrame, basicPayload.defaultSkill,
+        basicPayload.ownerEntityId, basicPayload.columnId, basicPayload.atFrame, basicPayload.defaultSkill,
       );
     });
 
     // Controller layer: Ardelia's combo window must NOT open — nature infliction is active
     const comboWindows = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === COMBO_WINDOW_COLUMN_ID && ev.ownerId === SLOT_ARDELIA,
+      (ev) => ev.columnId === COMBO_WINDOW_COLUMN_ID && ev.ownerEntityId === SLOT_ARDELIA,
     );
     expect(comboWindows).toHaveLength(0);
 

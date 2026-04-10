@@ -79,7 +79,7 @@ export function applySheetData(data: SheetData) {
     events = events.map((ev) => {
       if (deduped.has(ev.uid)) {
         const newUid = genEventUid();
-        console.warn(`[zst]   ${ev.uid} (${ev.ownerId}/${ev.columnId}) → ${newUid}`);
+        console.warn(`[zst]   ${ev.uid} (${ev.ownerEntityId}/${ev.columnId}) → ${newUid}`);
         return { ...ev, uid: newUid };
       }
       deduped.add(ev.uid);

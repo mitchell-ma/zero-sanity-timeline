@@ -46,7 +46,7 @@ function setupAntalComboWithHeat(result: { current: AppResult }) {
 
   act(() => {
     result.current.handleAddEvent(
-      antalBattlePayload.ownerId, antalBattlePayload.columnId,
+      antalBattlePayload.ownerEntityId, antalBattlePayload.columnId,
       antalBattlePayload.atFrame, antalBattlePayload.defaultSkill,
     );
   });
@@ -59,7 +59,7 @@ function setupAntalComboWithHeat(result: { current: AppResult }) {
 
   act(() => {
     result.current.handleAddEvent(
-      akekuriBattlePayload.ownerId, akekuriBattlePayload.columnId,
+      akekuriBattlePayload.ownerEntityId, akekuriBattlePayload.columnId,
       akekuriBattlePayload.atFrame, akekuriBattlePayload.defaultSkill,
     );
   });
@@ -76,7 +76,7 @@ function setupAntalComboWithHeat(result: { current: AppResult }) {
 
   act(() => {
     result.current.handleAddEvent(
-      antalComboPayload.ownerId, antalComboPayload.columnId,
+      antalComboPayload.ownerEntityId, antalComboPayload.columnId,
       antalComboPayload.atFrame, antalComboPayload.defaultSkill,
     );
   });
@@ -91,13 +91,13 @@ describe('Antal combo skill — heat infliction mirroring after drag', () => {
     // ── Controller layer ────────────────────────────────────────────────
     // 4. Verify: enemy has 2 heat inflictions (one from Akekuri, one mirrored from Antal combo)
     const heatsWithCombo = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerId === ENEMY_ID,
+      (ev) => ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerEntityId === ENEMY_ID,
     );
     expect(heatsWithCombo).toHaveLength(2);
 
     // Verify the combo event has a comboTriggerColumnId pointing to heat
     const comboEvent = result.current.allProcessedEvents.find(
-      (ev) => ev.ownerId === SLOT_ANTAL && ev.columnId === NounType.COMBO,
+      (ev) => ev.ownerEntityId === SLOT_ANTAL && ev.columnId === NounType.COMBO,
     );
     expect(comboEvent).toBeDefined();
     expect(comboEvent!.comboTriggerColumnId).toBe(INFLICTION_COLUMNS.HEAT);
@@ -107,7 +107,7 @@ describe('Antal combo skill — heat infliction mirroring after drag', () => {
     const enemyHeatCol = result.current.columns.find(
       (c): c is MiniTimeline =>
         c.type === ColumnType.MINI_TIMELINE &&
-        c.ownerId === ENEMY_ID &&
+        c.ownerEntityId === ENEMY_ID &&
         (c.matchColumnIds?.includes(INFLICTION_COLUMNS.HEAT) ?? false),
     );
     expect(enemyHeatCol).toBeDefined();
@@ -120,7 +120,7 @@ describe('Antal combo skill — heat infliction mirroring after drag', () => {
     expect(vm).toBeDefined();
 
     const heatInVM = vm!.events.filter(
-      (ev) => ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerId === ENEMY_ID,
+      (ev) => ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerEntityId === ENEMY_ID,
     );
     expect(heatInVM).toHaveLength(2);
 
@@ -138,13 +138,13 @@ describe('Antal combo skill — heat infliction mirroring after drag', () => {
 
     // Sanity check: 2 heat inflictions before drag
     const heatsBefore = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerId === ENEMY_ID,
+      (ev) => ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerEntityId === ENEMY_ID,
     );
     expect(heatsBefore).toHaveLength(2);
 
     // 5. Drag Akekuri's battle skill to AFTER Antal's combo skill
     const akekuriBattle = result.current.allProcessedEvents.find(
-      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === NounType.BATTLE,
+      (ev) => ev.ownerEntityId === SLOT_AKEKURI && ev.columnId === NounType.BATTLE,
     );
     expect(akekuriBattle).toBeDefined();
 
@@ -154,14 +154,14 @@ describe('Antal combo skill — heat infliction mirroring after drag', () => {
 
     // 6. Verify: combo no longer has a trigger infliction
     const comboAfterDrag = result.current.allProcessedEvents.find(
-      (ev) => ev.ownerId === SLOT_ANTAL && ev.columnId === NounType.COMBO,
+      (ev) => ev.ownerEntityId === SLOT_ANTAL && ev.columnId === NounType.COMBO,
     );
     expect(comboAfterDrag).toBeDefined();
     expect(comboAfterDrag!.comboTriggerColumnId).toBeUndefined();
 
     // 7. Verify: only 1 heat infliction remains (from Akekuri only, no mirrored combo infliction)
     const heatsAfterDrag = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerId === ENEMY_ID,
+      (ev) => ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerEntityId === ENEMY_ID,
     );
     expect(heatsAfterDrag).toHaveLength(1);
   });
@@ -188,7 +188,7 @@ describe('Antal combo skill — physical status (Lift) trigger', () => {
 
     act(() => {
       result.current.handleAddEvent(
-        antalBattlePayload.ownerId, antalBattlePayload.columnId,
+        antalBattlePayload.ownerEntityId, antalBattlePayload.columnId,
         antalBattlePayload.atFrame, antalBattlePayload.defaultSkill,
       );
     });
@@ -202,7 +202,7 @@ describe('Antal combo skill — physical status (Lift) trigger', () => {
 
     act(() => {
       result.current.handleAddEvent(
-        chenPayload1.ownerId, chenPayload1.columnId,
+        chenPayload1.ownerEntityId, chenPayload1.columnId,
         chenPayload1.atFrame, chenPayload1.defaultSkill,
       );
     });
@@ -211,7 +211,7 @@ describe('Antal combo skill — physical status (Lift) trigger', () => {
 
     act(() => {
       result.current.handleAddEvent(
-        chenPayload2.ownerId, chenPayload2.columnId,
+        chenPayload2.ownerEntityId, chenPayload2.columnId,
         chenPayload2.atFrame, chenPayload2.defaultSkill,
       );
     });
@@ -219,7 +219,7 @@ describe('Antal combo skill — physical status (Lift) trigger', () => {
     // ── Controller layer ────────────────────────────────────────────────
     // Verify: enemy has Lift status
     const liftEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === PHYSICAL_STATUS_COLUMNS.LIFT && ev.ownerId === ENEMY_ID,
+      (ev) => ev.columnId === PHYSICAL_STATUS_COLUMNS.LIFT && ev.ownerEntityId === ENEMY_ID,
     );
     expect(liftEvents).toHaveLength(1);
 
@@ -236,7 +236,7 @@ describe('Antal combo skill — physical status (Lift) trigger', () => {
 
     act(() => {
       result.current.handleAddEvent(
-        comboPayload.ownerId, comboPayload.columnId,
+        comboPayload.ownerEntityId, comboPayload.columnId,
         comboPayload.atFrame, comboPayload.defaultSkill,
       );
     });
@@ -244,7 +244,7 @@ describe('Antal combo skill — physical status (Lift) trigger', () => {
     // ── Controller layer ────────────────────────────────────────────────
     // Verify: combo has a trigger pointing to the Lift column
     const comboEvent = result.current.allProcessedEvents.find(
-      (ev) => ev.ownerId === SLOT_ANTAL && ev.columnId === NounType.COMBO,
+      (ev) => ev.ownerEntityId === SLOT_ANTAL && ev.columnId === NounType.COMBO,
     );
     expect(comboEvent).toBeDefined();
     expect(comboEvent!.comboTriggerColumnId).toBe(PHYSICAL_STATUS_COLUMNS.LIFT);
@@ -264,7 +264,7 @@ describe('Antal combo skill — physical status (Lift) trigger', () => {
 
     act(() => {
       result.current.handleAddEvent(
-        antalBattlePayload.ownerId, antalBattlePayload.columnId,
+        antalBattlePayload.ownerEntityId, antalBattlePayload.columnId,
         antalBattlePayload.atFrame, antalBattlePayload.defaultSkill,
       );
     });
@@ -275,7 +275,7 @@ describe('Antal combo skill — physical status (Lift) trigger', () => {
     const chenPayload1 = getMenuPayload(result.current, chenBattleCol!, 0);
     act(() => {
       result.current.handleAddEvent(
-        chenPayload1.ownerId, chenPayload1.columnId,
+        chenPayload1.ownerEntityId, chenPayload1.columnId,
         chenPayload1.atFrame, chenPayload1.defaultSkill,
       );
     });
@@ -283,14 +283,14 @@ describe('Antal combo skill — physical status (Lift) trigger', () => {
     const chenPayload2 = getMenuPayload(result.current, chenBattleCol!, 15 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        chenPayload2.ownerId, chenPayload2.columnId,
+        chenPayload2.ownerEntityId, chenPayload2.columnId,
         chenPayload2.atFrame, chenPayload2.defaultSkill,
       );
     });
 
     // Count Vulnerable stacks before combo (2 from Chen's two battle skills)
     const vulnBefore = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === PHYSICAL_INFLICTION_COLUMNS.VULNERABLE && ev.ownerId === ENEMY_ID,
+      (ev) => ev.columnId === PHYSICAL_INFLICTION_COLUMNS.VULNERABLE && ev.ownerEntityId === ENEMY_ID,
     );
     expect(vulnBefore).toHaveLength(2);
 
@@ -300,7 +300,7 @@ describe('Antal combo skill — physical status (Lift) trigger', () => {
 
     act(() => {
       result.current.handleAddEvent(
-        comboPayload.ownerId, comboPayload.columnId,
+        comboPayload.ownerEntityId, comboPayload.columnId,
         comboPayload.atFrame, comboPayload.defaultSkill,
       );
     });
@@ -308,13 +308,13 @@ describe('Antal combo skill — physical status (Lift) trigger', () => {
     // ── Controller layer ────────────────────────────────────────────────
     // Combo should duplicate the trigger source (Lift -> adds another Vulnerable stack)
     const vulnAfter = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === PHYSICAL_INFLICTION_COLUMNS.VULNERABLE && ev.ownerId === ENEMY_ID,
+      (ev) => ev.columnId === PHYSICAL_INFLICTION_COLUMNS.VULNERABLE && ev.ownerEntityId === ENEMY_ID,
     );
     expect(vulnAfter).toHaveLength(3);
 
     // No heat infliction should be created (combo was not triggered by infliction)
     const heatEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerId === ENEMY_ID,
+      (ev) => ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerEntityId === ENEMY_ID,
     );
     expect(heatEvents).toHaveLength(0);
   });

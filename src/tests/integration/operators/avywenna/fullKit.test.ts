@@ -147,7 +147,7 @@ function placeCombo(result: { current: AppResult }, atSec: number) {
   const payload = getMenuPayload(result.current, col!, atSec * FPS);
   act(() => {
     result.current.handleAddEvent(
-      payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+      payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
     );
   });
 }
@@ -159,7 +159,7 @@ function placeBattleSkill(result: { current: AppResult }, atSec: number) {
   const payload = getMenuPayload(result.current, col!, atSec * FPS);
   act(() => {
     result.current.handleAddEvent(
-      payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+      payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
     );
   });
 }
@@ -171,7 +171,7 @@ function placeUltimate(result: { current: AppResult }, atSec: number) {
   const payload = getMenuPayload(result.current, col!, atSec * FPS);
   act(() => {
     result.current.handleAddEvent(
-      payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+      payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
     );
   });
 }
@@ -192,14 +192,14 @@ function getMaxUeInRange(app: AppResult, startFrame: number, endFrame: number) {
 /** Find Thunderlance status events on the operator. */
 function getThunderlanceEvents(app: AppResult) {
   return app.allProcessedEvents.filter(
-    ev => ev.ownerId === SLOT && ev.columnId === THUNDERLANCE_STATUS_ID,
+    ev => ev.ownerEntityId === SLOT && ev.columnId === THUNDERLANCE_STATUS_ID,
   );
 }
 
 /** Find Thunderlance EX status events on the operator. */
 function getThunderlanceExEvents(app: AppResult) {
   return app.allProcessedEvents.filter(
-    ev => ev.ownerId === SLOT && ev.columnId === THUNDERLANCE_EX_STATUS_ID,
+    ev => ev.ownerEntityId === SLOT && ev.columnId === THUNDERLANCE_EX_STATUS_ID,
   );
 }
 
@@ -210,7 +210,7 @@ function getOperatorStatusVM(app: AppResult) {
   );
   const statusCol = app.columns.find(
     c => c.type === ColumnType.MINI_TIMELINE
-      && (c as MiniTimeline).ownerId === SLOT
+      && (c as MiniTimeline).ownerEntityId === SLOT
       && (c as MiniTimeline).columnId === OPERATOR_STATUS_COLUMN_ID,
   );
   return statusCol ? viewModels.get(statusCol.key) : undefined;
@@ -233,7 +233,7 @@ describe('A. BS base hit (unconditional)', () => {
     placeBattleSkill(result, 5);
 
     const bsEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT && ev.columnId === NounType.BATTLE,
+      ev => ev.ownerEntityId === SLOT && ev.columnId === NounType.BATTLE,
     );
     expect(bsEvents).toHaveLength(1);
     expect(bsEvents[0].name).toBe(BATTLE_SKILL_ID);
@@ -285,7 +285,7 @@ describe('B. BS consumes Thunderlance — full effect chain', () => {
     placeBattleSkill(result, 8);
 
     const bsEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT && ev.columnId === NounType.BATTLE,
+      ev => ev.ownerEntityId === SLOT && ev.columnId === NounType.BATTLE,
     );
     expect(bsEvents).toHaveLength(1);
 
@@ -315,7 +315,7 @@ describe('B. BS consumes Thunderlance — full effect chain', () => {
     placeBattleSkill(result, 8);
 
     const bsEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT && ev.columnId === NounType.BATTLE,
+      ev => ev.ownerEntityId === SLOT && ev.columnId === NounType.BATTLE,
     );
     const frames = allFrames(bsEvents[0]);
 
@@ -379,7 +379,7 @@ describe('C. BS consumes Thunderlance EX — full effect chain', () => {
 
     // Electric Infliction should appear on enemy
     const inflictions = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === ENEMY_ID && ev.columnId === INFLICTION_COLUMNS.ELECTRIC,
+      ev => ev.ownerEntityId === ENEMY_ID && ev.columnId === INFLICTION_COLUMNS.ELECTRIC,
     );
     expect(inflictions.length).toBeGreaterThanOrEqual(1);
 
@@ -406,7 +406,7 @@ describe('C. BS consumes Thunderlance EX — full effect chain', () => {
     placeBattleSkill(result, 10);
 
     const bsEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT && ev.columnId === NounType.BATTLE,
+      ev => ev.ownerEntityId === SLOT && ev.columnId === NounType.BATTLE,
     );
     const frames = allFrames(bsEvents[0]);
 
@@ -450,7 +450,7 @@ describe('D. P5 Carrot and Sharp Stick — 1.15× BS damage', () => {
     placeBattleSkill(result, 5);
 
     const bsEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT && ev.columnId === NounType.BATTLE,
+      ev => ev.ownerEntityId === SLOT && ev.columnId === NounType.BATTLE,
     );
     const frames = allFrames(bsEvents[0]);
     const clauseFrame = frames.find(f => f.clauses && f.clauses.length > 0);
@@ -487,7 +487,7 @@ describe('D. P5 Carrot and Sharp Stick — 1.15× BS damage', () => {
     placeBattleSkill(result, 8);
 
     const bsEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT && ev.columnId === NounType.BATTLE,
+      ev => ev.ownerEntityId === SLOT && ev.columnId === NounType.BATTLE,
     );
     const frames = allFrames(bsEvents[0]);
     const clauseFrame = frames.find(f => f.clauses && f.clauses.length > 0);
@@ -513,7 +513,7 @@ describe('D. P5 Carrot and Sharp Stick — 1.15× BS damage', () => {
     placeBattleSkill(result, 10);
 
     const bsEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT && ev.columnId === NounType.BATTLE,
+      ev => ev.ownerEntityId === SLOT && ev.columnId === NounType.BATTLE,
     );
     const frames = allFrames(bsEvents[0]);
     const clauseFrame = frames.find(f => f.clauses && f.clauses.length > 0);
@@ -665,7 +665,7 @@ describe('G. T2 Tactful Approach — Electric Susceptibility', () => {
 
     // ELECTRIC_SUSCEPTIBILITY should appear on enemy
     const suscEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === ENEMY_ID && ev.columnId === ELECTRIC_SUSCEPTIBILITY_ID,
+      ev => ev.ownerEntityId === ENEMY_ID && ev.columnId === ELECTRIC_SUSCEPTIBILITY_ID,
     );
     expect(suscEvents.length).toBeGreaterThanOrEqual(1);
 
@@ -696,7 +696,7 @@ describe('G. T2 Tactful Approach — Electric Susceptibility', () => {
     placeUltimate(result, 5);
 
     const ultEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT && ev.columnId === NounType.ULTIMATE,
+      ev => ev.ownerEntityId === SLOT && ev.columnId === NounType.ULTIMATE,
     );
     const frames = allFrames(ultEvents[0]);
     const clauseFrame = frames.find(f => f.clauses && f.clauses.length > 0);
@@ -731,7 +731,7 @@ describe('G. T2 Tactful Approach — Electric Susceptibility', () => {
       placeUltimate(result, 5);
 
       const suscEvents = result.current.allProcessedEvents.filter(
-        ev => ev.ownerId === ENEMY_ID && ev.columnId === ELECTRIC_SUSCEPTIBILITY_ID,
+        ev => ev.ownerEntityId === ENEMY_ID && ev.columnId === ELECTRIC_SUSCEPTIBILITY_ID,
       );
       expect(suscEvents.length).toBeGreaterThanOrEqual(1);
       const elecValue = (suscEvents[0].susceptibility as Record<string, number>)[AdjectiveType.ELECTRIC];
@@ -751,7 +751,7 @@ describe('I. Combo skill — damage multipliers and stagger', () => {
     placeCombo(result, 5);
 
     const comboEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT && ev.columnId === NounType.COMBO,
+      ev => ev.ownerEntityId === SLOT && ev.columnId === NounType.COMBO,
     );
     expect(comboEvents).toHaveLength(1);
     expect(comboEvents[0].name).toBe(COMBO_SKILL_ID);
@@ -787,7 +787,7 @@ describe('I. Combo skill — damage multipliers and stagger', () => {
     placeCombo(result, 5);
 
     const comboEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT && ev.columnId === NounType.COMBO,
+      ev => ev.ownerEntityId === SLOT && ev.columnId === NounType.COMBO,
     );
     const frames = allFrames(comboEvents[0]);
 
@@ -826,7 +826,7 @@ describe('J. Ultimate skill — damage multipliers and stagger', () => {
     placeUltimate(result, 5);
 
     const ultEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT && ev.columnId === NounType.ULTIMATE,
+      ev => ev.ownerEntityId === SLOT && ev.columnId === NounType.ULTIMATE,
     );
     expect(ultEvents).toHaveLength(1);
     expect(ultEvents[0].name).toBe(ULTIMATE_ID);
@@ -863,7 +863,7 @@ describe('J. Ultimate skill — damage multipliers and stagger', () => {
     placeUltimate(result, 5);
 
     const ultEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT && ev.columnId === NounType.ULTIMATE,
+      ev => ev.ownerEntityId === SLOT && ev.columnId === NounType.ULTIMATE,
     );
     const frames = allFrames(ultEvents[0]);
 
@@ -901,7 +901,7 @@ describe('K. P1 Doubling Down — UE recovery per lance', () => {
     const { result: p0 } = setupAvywennaWithPotential(0);
     placeCombo(p0, 5);
     const p0Combo = p0.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT && ev.columnId === NounType.COMBO,
+      ev => ev.ownerEntityId === SLOT && ev.columnId === NounType.COMBO,
     );
     const p0End = p0Combo[0].startFrame + p0Combo[0].segments.reduce((s, seg) => s + seg.properties.duration, 0);
     const ueP0 = getMaxUeInRange(p0.current, 5 * FPS, p0End);
@@ -911,7 +911,7 @@ describe('K. P1 Doubling Down — UE recovery per lance', () => {
     const { result: p1 } = setupAvywennaWithPotential(1);
     placeCombo(p1, 5);
     const p1Combo = p1.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT && ev.columnId === NounType.COMBO,
+      ev => ev.ownerEntityId === SLOT && ev.columnId === NounType.COMBO,
     );
     const p1End = p1Combo[0].startFrame + p1Combo[0].segments.reduce((s, seg) => s + seg.properties.duration, 0);
     const ueP1 = getMaxUeInRange(p1.current, 5 * FPS, p1End);
@@ -925,7 +925,7 @@ describe('K. P1 Doubling Down — UE recovery per lance', () => {
     placeCombo(result, 5);
 
     const comboEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT && ev.columnId === NounType.COMBO,
+      ev => ev.ownerEntityId === SLOT && ev.columnId === NounType.COMBO,
     );
     const comboEnd = comboEvents[0].startFrame
       + comboEvents[0].segments.reduce((s, seg) => s + seg.properties.duration, 0);
@@ -950,7 +950,7 @@ describe('L. Full rotation — combo → BS → ult → BS', () => {
     placeCombo(result, 2);
 
     const comboEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT && ev.columnId === NounType.COMBO,
+      ev => ev.ownerEntityId === SLOT && ev.columnId === NounType.COMBO,
     );
     expect(comboEvents).toHaveLength(1);
     expect(comboEvents[0].name).toBe(COMBO_SKILL_ID);
@@ -962,7 +962,7 @@ describe('L. Full rotation — combo → BS → ult → BS', () => {
     placeBattleSkill(result, 8);
 
     const bs1Events = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT && ev.columnId === NounType.BATTLE,
+      ev => ev.ownerEntityId === SLOT && ev.columnId === NounType.BATTLE,
     );
     expect(bs1Events).toHaveLength(1);
 
@@ -975,7 +975,7 @@ describe('L. Full rotation — combo → BS → ult → BS', () => {
     placeUltimate(result, 15);
 
     const ultEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT && ev.columnId === NounType.ULTIMATE,
+      ev => ev.ownerEntityId === SLOT && ev.columnId === NounType.ULTIMATE,
     );
     expect(ultEvents).toHaveLength(1);
     expect(ultEvents[0].name).toBe(ULTIMATE_ID);
@@ -985,7 +985,7 @@ describe('L. Full rotation — combo → BS → ult → BS', () => {
 
     // Electric Susceptibility should be on enemy from ult
     const suscEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === ENEMY_ID && ev.columnId === ELECTRIC_SUSCEPTIBILITY_ID,
+      ev => ev.ownerEntityId === ENEMY_ID && ev.columnId === ELECTRIC_SUSCEPTIBILITY_ID,
     );
     expect(suscEvents.length).toBeGreaterThanOrEqual(1);
 
@@ -993,7 +993,7 @@ describe('L. Full rotation — combo → BS → ult → BS', () => {
     placeBattleSkill(result, 25);
 
     const bs2Events = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT && ev.columnId === NounType.BATTLE,
+      ev => ev.ownerEntityId === SLOT && ev.columnId === NounType.BATTLE,
     );
     expect(bs2Events).toHaveLength(2);
 
@@ -1003,7 +1003,7 @@ describe('L. Full rotation — combo → BS → ult → BS', () => {
     expect(consumedEx.length).toBeGreaterThanOrEqual(1);
 
     const inflictions = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === ENEMY_ID && ev.columnId === INFLICTION_COLUMNS.ELECTRIC,
+      ev => ev.ownerEntityId === ENEMY_ID && ev.columnId === INFLICTION_COLUMNS.ELECTRIC,
     );
     expect(inflictions.length).toBeGreaterThanOrEqual(1);
 

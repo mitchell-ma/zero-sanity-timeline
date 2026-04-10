@@ -147,7 +147,7 @@ describe('B. Frailty event generation', () => {
     expect(nodeEvents).toHaveLength(1);
     expect(nodeEvents[0].startFrame).toBe(100);
     expect(eventDuration(nodeEvents[0])).toBe(NODE_RECOVERY_FRAMES);
-    expect(nodeEvents[0].ownerId).toBe(ENEMY_ID);
+    expect(nodeEvents[0].ownerEntityId).toBe(ENEMY_ID);
   });
 
   test('B2: Full stagger break generates a frailty event with break duration', () => {
@@ -201,7 +201,7 @@ describe('C. EventsQueryService.isStaggered() includes node stagger', () => {
       uid: 'node-1',
       id: 'Node Stagger',
       name: 'Node Stagger',
-      ownerId: ENEMY_ID,
+      ownerEntityId: ENEMY_ID,
       columnId: NODE_STAGGER_COLUMN_ID,
       startFrame: 200,
       segments: [{ properties: { duration: 600 } }], // 5 seconds at 120fps
@@ -224,7 +224,7 @@ describe('C. EventsQueryService.isStaggered() includes node stagger', () => {
       uid: 'node-1',
       id: 'Node Stagger',
       name: 'Node Stagger',
-      ownerId: ENEMY_ID,
+      ownerEntityId: ENEMY_ID,
       columnId: NODE_STAGGER_COLUMN_ID,
       startFrame: 300,
       segments: [{ properties: { duration: 600 } }],
@@ -240,7 +240,7 @@ describe('C. EventsQueryService.isStaggered() includes node stagger', () => {
       uid: 'node-1',
       id: 'Node Stagger',
       name: 'Node Stagger',
-      ownerId: ENEMY_ID,
+      ownerEntityId: ENEMY_ID,
       columnId: NODE_STAGGER_COLUMN_ID,
       startFrame: 100,
       segments: [{ properties: { duration: 600 } }],
@@ -268,7 +268,7 @@ describe('D. Stagger frailty multiplier', () => {
       uid: 'node-1',
       id: 'Node Stagger',
       name: 'Node Stagger',
-      ownerId: ENEMY_ID,
+      ownerEntityId: ENEMY_ID,
       columnId: NODE_STAGGER_COLUMN_ID,
       startFrame: 100,
       segments: [{ properties: { duration: 600 } }],
@@ -283,7 +283,7 @@ describe('D. Stagger frailty multiplier', () => {
       uid: 'node-1',
       id: 'Node Stagger',
       name: 'Node Stagger',
-      ownerId: ENEMY_ID,
+      ownerEntityId: ENEMY_ID,
       columnId: NODE_STAGGER_COLUMN_ID,
       startFrame: 100,
       segments: [{ properties: { duration: 600 } }],
@@ -386,12 +386,12 @@ describe('F. StaggerController.sync', () => {
   }
 
   /** Create a minimal processed event with a single stagger frame. */
-  function makeStaggerEvent(uid: string, ownerId: string, startFrame: number, staggerValue: number): TimelineEvent {
+  function makeStaggerEvent(uid: string, ownerEntityId: string, startFrame: number, staggerValue: number): TimelineEvent {
     return {
       uid,
       id: 'test-skill',
       name: 'test-skill',
-      ownerId,
+      ownerEntityId,
       columnId: NounType.BASIC_ATTACK,
       startFrame,
             segments: [{
@@ -467,7 +467,7 @@ describe('F. StaggerController.sync', () => {
       uid: 'combo-1',
       id: 'test-combo',
       name: 'test-combo',
-      ownerId: 'slot-0',
+      ownerEntityId: 'slot-0',
       columnId: NounType.COMBO,
       startFrame: 100,
             segments: [
@@ -498,7 +498,7 @@ describe('F. StaggerController.sync', () => {
       uid: 'ev-1',
       id: 'no-stagger-skill',
       name: 'no-stagger-skill',
-      ownerId: 'slot-0',
+      ownerEntityId: 'slot-0',
       columnId: NounType.BASIC_ATTACK,
       startFrame: 100,
             segments: [{

@@ -37,7 +37,7 @@ const noop3 = (_a: unknown, _b: unknown, _c: unknown) => {};
 
 function getHeatInflictions(app: AppResult) {
   return app.allProcessedEvents.filter(
-    (ev) => ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerId === ENEMY_ID,
+    (ev) => ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerEntityId === ENEMY_ID,
   );
 }
 
@@ -47,7 +47,7 @@ function getInflictionFromVM(app: AppResult) {
   // Find the enemy column that contains heat inflictions
   for (const [, vm] of Array.from(vms.entries())) {
     const match = vm.events.find(
-      ev => ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerId === ENEMY_ID,
+      ev => ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerEntityId === ENEMY_ID,
     );
     if (match) return match;
   }
@@ -94,7 +94,7 @@ describe('Infliction follows drag — Akekuri battle skill heat infliction', () 
     const payload = getMenuPayload(result.current, battleCol!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
@@ -102,7 +102,7 @@ describe('Infliction follows drag — Akekuri battle skill heat infliction', () 
     expect(inflictions.length).toBeGreaterThanOrEqual(1);
 
     const battleEvent = result.current.allProcessedEvents.find(
-      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === NounType.BATTLE,
+      (ev) => ev.ownerEntityId === SLOT_AKEKURI && ev.columnId === NounType.BATTLE,
     )!;
     expect(inflictions[0].startFrame).toBeGreaterThanOrEqual(battleEvent.startFrame);
   });
@@ -116,12 +116,12 @@ describe('Infliction follows drag — Akekuri battle skill heat infliction', () 
     const payload = getMenuPayload(result.current, battleCol!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const battleUid = result.current.allProcessedEvents.find(
-      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === NounType.BATTLE,
+      (ev) => ev.ownerEntityId === SLOT_AKEKURI && ev.columnId === NounType.BATTLE,
     )!.uid;
 
     const inflictionStartBefore = getHeatInflictions(result.current)[0].startFrame;
@@ -141,12 +141,12 @@ describe('Infliction follows drag — Akekuri battle skill heat infliction', () 
     const payload = getMenuPayload(result.current, battleCol!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const battleUid = result.current.allProcessedEvents.find(
-      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === NounType.BATTLE,
+      (ev) => ev.ownerEntityId === SLOT_AKEKURI && ev.columnId === NounType.BATTLE,
     )!.uid;
 
     // Get infliction from ColumnViewModel at battle=2s
@@ -175,12 +175,12 @@ describe('Infliction follows drag — Akekuri battle skill heat infliction', () 
     const payload = getMenuPayload(result.current, battleCol!, 1 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const battleUid = result.current.allProcessedEvents.find(
-      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === NounType.BATTLE,
+      (ev) => ev.ownerEntityId === SLOT_AKEKURI && ev.columnId === NounType.BATTLE,
     )!.uid;
 
     // Get infliction from ColumnViewModel and render EventBlock (battle at 1s)

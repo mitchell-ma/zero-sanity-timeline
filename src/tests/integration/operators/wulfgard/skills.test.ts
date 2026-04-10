@@ -67,7 +67,7 @@ function findEnemyStatusColumn(app: AppResult) {
   return app.columns.find(
     (c): c is MiniTimeline =>
       c.type === ColumnType.MINI_TIMELINE &&
-      c.ownerId === ENEMY_ID &&
+      c.ownerEntityId === ENEMY_ID &&
       c.columnId === ENEMY_GROUP_COLUMNS.ENEMY_STATUS,
   );
 }
@@ -118,13 +118,13 @@ describe('A. Core Skill Placement', () => {
 
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId,
+        payload.ownerEntityId, payload.columnId,
         payload.atFrame, payload.defaultSkill,
       );
     });
 
     const events = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.BATTLE,
+      ev => ev.ownerEntityId === SLOT_WULFGARD && ev.columnId === NounType.BATTLE,
     );
     expect(events).toHaveLength(1);
     expect(events[0].name).toBe(BATTLE_SKILL_ID);
@@ -137,7 +137,7 @@ describe('A. Core Skill Placement', () => {
     const battleVM = viewModels.get(col!.key);
     expect(battleVM).toBeDefined();
     expect(battleVM!.events.some(
-      ev => ev.name === BATTLE_SKILL_ID && ev.ownerId === SLOT_WULFGARD,
+      ev => ev.name === BATTLE_SKILL_ID && ev.ownerEntityId === SLOT_WULFGARD,
     )).toBe(true);
   });
 
@@ -159,13 +159,13 @@ describe('A. Core Skill Placement', () => {
     const payload = getMenuPayload(result.current, col!, 3 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId,
+        payload.ownerEntityId, payload.columnId,
         payload.atFrame, payload.defaultSkill,
       );
     });
 
     const events = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.COMBO,
+      ev => ev.ownerEntityId === SLOT_WULFGARD && ev.columnId === NounType.COMBO,
     );
     expect(events).toHaveLength(1);
     // Should have a cooldown segment
@@ -181,7 +181,7 @@ describe('A. Core Skill Placement', () => {
     placeUlt(result, 5);
 
     const events = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.ULTIMATE,
+      ev => ev.ownerEntityId === SLOT_WULFGARD && ev.columnId === NounType.ULTIMATE,
     );
     expect(events).toHaveLength(1);
     expect(events[0].name).toBe(ULTIMATE_ID);
@@ -200,13 +200,13 @@ describe('B. Infliction & Reaction Pipeline', () => {
     const payload = getMenuPayload(result.current, col!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId,
+        payload.ownerEntityId, payload.columnId,
         payload.atFrame, payload.defaultSkill,
       );
     });
 
     const heats = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerId === ENEMY_ID,
+      ev => ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerEntityId === ENEMY_ID,
     );
     expect(heats.length).toBeGreaterThanOrEqual(1);
   });
@@ -219,13 +219,13 @@ describe('B. Infliction & Reaction Pipeline', () => {
     const payload = getMenuPayload(result.current, col!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId,
+        payload.ownerEntityId, payload.columnId,
         payload.atFrame, payload.defaultSkill,
       );
     });
 
     const combustions = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === REACTION_COLUMNS.COMBUSTION && ev.ownerId === ENEMY_ID,
+      ev => ev.columnId === REACTION_COLUMNS.COMBUSTION && ev.ownerEntityId === ENEMY_ID,
     );
     expect(combustions.length).toBeGreaterThanOrEqual(1);
   });
@@ -245,14 +245,14 @@ describe('B. Infliction & Reaction Pipeline', () => {
     const payload = getMenuPayload(result.current, col!, 3 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId,
+        payload.ownerEntityId, payload.columnId,
         payload.atFrame, payload.defaultSkill,
       );
     });
 
     // Combo's own heat infliction should appear (in addition to the freeform one)
     const heats = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerId === ENEMY_ID,
+      ev => ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerEntityId === ENEMY_ID,
     );
     expect(heats.length).toBeGreaterThanOrEqual(2);
   });
@@ -271,7 +271,7 @@ describe('C. Combo Trigger', () => {
     const battlePayload = getMenuPayload(result.current, battleCol!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        battlePayload.ownerId, battlePayload.columnId,
+        battlePayload.ownerEntityId, battlePayload.columnId,
         battlePayload.atFrame, battlePayload.defaultSkill,
       );
     });
@@ -281,13 +281,13 @@ describe('C. Combo Trigger', () => {
     const comboPayload = getMenuPayload(result.current, comboCol!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        comboPayload.ownerId, comboPayload.columnId,
+        comboPayload.ownerEntityId, comboPayload.columnId,
         comboPayload.atFrame, comboPayload.defaultSkill,
       );
     });
 
     const combos = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.COMBO,
+      ev => ev.ownerEntityId === SLOT_WULFGARD && ev.columnId === NounType.COMBO,
     );
     expect(combos).toHaveLength(1);
   });
@@ -303,7 +303,7 @@ describe('C. Combo Trigger', () => {
     const akekuriPayload = getMenuPayload(result.current, akekuriBattleCol!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        akekuriPayload.ownerId, akekuriPayload.columnId,
+        akekuriPayload.ownerEntityId, akekuriPayload.columnId,
         akekuriPayload.atFrame, akekuriPayload.defaultSkill,
       );
     });
@@ -313,13 +313,13 @@ describe('C. Combo Trigger', () => {
     const comboPayload = getMenuPayload(result.current, comboCol!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        comboPayload.ownerId, comboPayload.columnId,
+        comboPayload.ownerEntityId, comboPayload.columnId,
         comboPayload.atFrame, comboPayload.defaultSkill,
       );
     });
 
     const combos = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.COMBO,
+      ev => ev.ownerEntityId === SLOT_WULFGARD && ev.columnId === NounType.COMBO,
     );
     expect(combos).toHaveLength(1);
   });
@@ -360,7 +360,7 @@ describe('D. Empowered Battle Skill', () => {
     });
 
     const battles = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.BATTLE,
+      ev => ev.ownerEntityId === SLOT_WULFGARD && ev.columnId === NounType.BATTLE,
     );
     expect(battles).toHaveLength(1);
     // Empowered variant has 4 frames, normal has 3
@@ -393,7 +393,7 @@ describe('D. Empowered Battle Skill', () => {
     // Controller: Combustion should be consumed
     const combustions = result.current.allProcessedEvents.filter(
       ev => ev.columnId === REACTION_COLUMNS.COMBUSTION &&
-        ev.ownerId === ENEMY_ID &&
+        ev.ownerEntityId === ENEMY_ID &&
         ev.eventStatus === EventStatusType.CONSUMED,
     );
     expect(combustions.length).toBeGreaterThanOrEqual(1);
@@ -428,14 +428,14 @@ describe('E. Scorching Fangs (Talent 1)', () => {
     const payload = getMenuPayload(result.current, ultCol!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId,
+        payload.ownerEntityId, payload.columnId,
         payload.atFrame, payload.defaultSkill,
       );
     });
 
     // Scorching Fangs should appear as a status on Wulfgard
     const sfEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.name === TALENT1_ID,
+      ev => ev.ownerEntityId === SLOT_WULFGARD && ev.name === TALENT1_ID,
     );
     expect(sfEvents.length).toBeGreaterThanOrEqual(1);
   });
@@ -469,7 +469,7 @@ describe('F. Code of Restraint (Talent 2)', () => {
 
     // Controller: empowered BS placed and Combustion consumed
     const bsEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.BATTLE,
+      ev => ev.ownerEntityId === SLOT_WULFGARD && ev.columnId === NounType.BATTLE,
     );
     expect(bsEvents).toHaveLength(1);
     expect(bsEvents[0].enhancementType).toBe(EnhancementType.EMPOWERED);
@@ -509,13 +509,13 @@ describe('G. Potential Interactions', () => {
     const comboPayload = getMenuPayload(result.current, comboCol!, 3 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        comboPayload.ownerId, comboPayload.columnId,
+        comboPayload.ownerEntityId, comboPayload.columnId,
         comboPayload.atFrame, comboPayload.defaultSkill,
       );
     });
 
     const comboBefore = result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.COMBO,
+      ev => ev.ownerEntityId === SLOT_WULFGARD && ev.columnId === NounType.COMBO,
     );
     const durationBefore = eventDuration(comboBefore!);
 
@@ -525,13 +525,13 @@ describe('G. Potential Interactions', () => {
     const ultPayload = getMenuPayload(result.current, ultCol!, 10 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        ultPayload.ownerId, ultPayload.columnId,
+        ultPayload.ownerEntityId, ultPayload.columnId,
         ultPayload.atFrame, ultPayload.defaultSkill,
       );
     });
 
     const comboAfter = result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.COMBO,
+      ev => ev.ownerEntityId === SLOT_WULFGARD && ev.columnId === NounType.COMBO,
     );
     const durationAfter = eventDuration(comboAfter!);
 
@@ -558,13 +558,13 @@ describe('G. Potential Interactions', () => {
     const comboPayload = getMenuPayload(result.current, comboCol!, 3 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        comboPayload.ownerId, comboPayload.columnId,
+        comboPayload.ownerEntityId, comboPayload.columnId,
         comboPayload.atFrame, comboPayload.defaultSkill,
       );
     });
 
     const comboBefore = result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.COMBO,
+      ev => ev.ownerEntityId === SLOT_WULFGARD && ev.columnId === NounType.COMBO,
     );
     const durationBefore = eventDuration(comboBefore!);
 
@@ -574,13 +574,13 @@ describe('G. Potential Interactions', () => {
     const ultPayload = getMenuPayload(result.current, ultCol!, 10 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        ultPayload.ownerId, ultPayload.columnId,
+        ultPayload.ownerEntityId, ultPayload.columnId,
         ultPayload.atFrame, ultPayload.defaultSkill,
       );
     });
 
     const comboAfter = result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.COMBO,
+      ev => ev.ownerEntityId === SLOT_WULFGARD && ev.columnId === NounType.COMBO,
     );
     const durationAfter = eventDuration(comboAfter!);
 
@@ -610,7 +610,7 @@ describe('H. Cross-Mechanic Chains', () => {
     const comboPayload = getMenuPayload(result.current, comboCol!, 3 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        comboPayload.ownerId, comboPayload.columnId,
+        comboPayload.ownerEntityId, comboPayload.columnId,
         comboPayload.atFrame, comboPayload.defaultSkill,
       );
     });
@@ -621,26 +621,26 @@ describe('H. Cross-Mechanic Chains', () => {
     const ultPayload = getMenuPayload(result.current, ultCol!, 10 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        ultPayload.ownerId, ultPayload.columnId,
+        ultPayload.ownerEntityId, ultPayload.columnId,
         ultPayload.atFrame, ultPayload.defaultSkill,
       );
     });
 
     // Verify: Combustion on enemy
     const combustions = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === REACTION_COLUMNS.COMBUSTION && ev.ownerId === ENEMY_ID,
+      ev => ev.columnId === REACTION_COLUMNS.COMBUSTION && ev.ownerEntityId === ENEMY_ID,
     );
     expect(combustions.length).toBeGreaterThanOrEqual(1);
 
     // Verify: Scorching Fangs on Wulfgard
     const sfEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.name === TALENT1_ID,
+      ev => ev.ownerEntityId === SLOT_WULFGARD && ev.name === TALENT1_ID,
     );
     expect(sfEvents.length).toBeGreaterThanOrEqual(1);
 
     // Verify: combo cooldown was reset (duration shortened)
     const combo = result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.COMBO,
+      ev => ev.ownerEntityId === SLOT_WULFGARD && ev.columnId === NounType.COMBO,
     );
     // Combo total duration should end near the ult frame (10s), not at 3s + 1s + 20s = 24s
     const comboEnd = combo!.startFrame + eventDuration(combo!);
@@ -657,7 +657,7 @@ describe('H. Cross-Mechanic Chains', () => {
     const ultPayload = getMenuPayload(result.current, ultCol!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        ultPayload.ownerId, ultPayload.columnId,
+        ultPayload.ownerEntityId, ultPayload.columnId,
         ultPayload.atFrame, ultPayload.defaultSkill,
       );
     });
@@ -675,7 +675,7 @@ describe('H. Cross-Mechanic Chains', () => {
 
     // Controller: empowered has 4 frames
     const battles = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.BATTLE,
+      ev => ev.ownerEntityId === SLOT_WULFGARD && ev.columnId === NounType.BATTLE,
     );
     expect(battles).toHaveLength(1);
     const frames = battles[0].segments.flatMap(
@@ -686,7 +686,7 @@ describe('H. Cross-Mechanic Chains', () => {
     // Controller: Combustion consumed
     const consumed = result.current.allProcessedEvents.filter(
       ev => ev.columnId === REACTION_COLUMNS.COMBUSTION &&
-        ev.ownerId === ENEMY_ID &&
+        ev.ownerEntityId === ENEMY_ID &&
         ev.eventStatus === EventStatusType.CONSUMED,
     );
     expect(consumed.length).toBeGreaterThanOrEqual(1);
@@ -698,7 +698,7 @@ describe('H. Cross-Mechanic Chains', () => {
     );
     const battleVM = viewModels.get(battleCol!.key);
     expect(battleVM).toBeDefined();
-    expect(battleVM!.events.some(ev => ev.ownerId === SLOT_WULFGARD)).toBe(true);
+    expect(battleVM!.events.some(ev => ev.ownerEntityId === SLOT_WULFGARD)).toBe(true);
 
     const enemyStatusCol = findEnemyStatusColumn(result.current);
     expect(enemyStatusCol).toBeDefined();
@@ -723,7 +723,7 @@ describe('H. Cross-Mechanic Chains', () => {
 
     // Verify Scorching Fangs triggered from ult Combustion
     const sfBefore = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.name === TALENT1_ID,
+      ev => ev.ownerEntityId === SLOT_WULFGARD && ev.name === TALENT1_ID,
     );
     expect(sfBefore.length).toBeGreaterThanOrEqual(1);
 
@@ -741,14 +741,14 @@ describe('H. Cross-Mechanic Chains', () => {
 
     // Verify: Scorching Fangs on self should have been re-applied (reset duration)
     const sfAfter = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.name === TALENT1_ID,
+      ev => ev.ownerEntityId === SLOT_WULFGARD && ev.name === TALENT1_ID,
     );
     expect(sfAfter.length).toBeGreaterThanOrEqual(1);
 
     // Verify: Scorching Fangs Minor applied to other operators
     const sfMinorId = TALENT1_ID + '_MINOR';
     const sfMinor = result.current.allProcessedEvents.filter(
-      ev => ev.name === sfMinorId && ev.ownerId !== SLOT_WULFGARD,
+      ev => ev.name === sfMinorId && ev.ownerEntityId !== SLOT_WULFGARD,
     );
     expect(sfMinor.length).toBeGreaterThanOrEqual(1);
   });
@@ -790,7 +790,7 @@ describe('I. Empowered Battle Skill — Activation & Consume Priority', () => {
   function consumedReactions(result: ReturnType<typeof setupWulfgard>['result'], reactionCol: string) {
     return result.current.allProcessedEvents.filter(
       ev => ev.columnId === reactionCol &&
-        ev.ownerId === ENEMY_ID &&
+        ev.ownerEntityId === ENEMY_ID &&
         ev.eventStatus === EventStatusType.CONSUMED,
     );
   }
@@ -818,7 +818,7 @@ describe('I. Empowered Battle Skill — Activation & Consume Priority', () => {
 
     // The placed event should have a validation warning (activation not met)
     const battles = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.BATTLE,
+      ev => ev.ownerEntityId === SLOT_WULFGARD && ev.columnId === NounType.BATTLE,
     );
     expect(battles).toHaveLength(1);
     // Corrosion and Solidification should NOT be consumed
@@ -944,7 +944,7 @@ describe('I. Empowered Battle Skill — Activation & Consume Priority', () => {
 
     // EBS should exist and have no activation warnings
     const battles = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.BATTLE,
+      ev => ev.ownerEntityId === SLOT_WULFGARD && ev.columnId === NounType.BATTLE,
     );
     expect(battles).toHaveLength(1);
     expect(battles[0].enhancementType).toBe(EnhancementType.EMPOWERED);
@@ -958,7 +958,7 @@ describe('I. Empowered Battle Skill — Activation & Consume Priority', () => {
     placeEmpoweredBS(result, 3);
 
     const battles = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.BATTLE,
+      ev => ev.ownerEntityId === SLOT_WULFGARD && ev.columnId === NounType.BATTLE,
     );
     expect(battles).toHaveLength(1);
     expect(battles[0].enhancementType).toBe(EnhancementType.EMPOWERED);
@@ -978,7 +978,7 @@ describe('I. Empowered Battle Skill — Activation & Consume Priority', () => {
 
     // Controller: EBS event exists and has 4 frames
     const battles = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.BATTLE,
+      ev => ev.ownerEntityId === SLOT_WULFGARD && ev.columnId === NounType.BATTLE,
     );
     expect(battles).toHaveLength(1);
     expect(battles[0].enhancementType).toBe(EnhancementType.EMPOWERED);
@@ -1014,7 +1014,7 @@ describe('I. Empowered Battle Skill — Activation & Consume Priority', () => {
       result.current.overrides,
     );
     const ebsRows = calcResult.rows.filter(
-      r => r.ownerId === SLOT_WULFGARD && r.columnId === NounType.BATTLE,
+      r => r.ownerEntityId === SLOT_WULFGARD && r.columnId === NounType.BATTLE,
     );
     // Frames 1-3 produce damage; frame 4 row exists but with null damage (shown as "-")
     expect(ebsRows).toHaveLength(4);
@@ -1038,13 +1038,13 @@ describe('J. Normal vs Empowered — Mutual Exclusivity', () => {
     const payload = getMenuPayload(result.current, col!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId,
+        payload.ownerEntityId, payload.columnId,
         payload.atFrame, payload.defaultSkill,
       );
     });
 
     const heats = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerId === ENEMY_ID,
+      ev => ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerEntityId === ENEMY_ID,
     );
     expect(heats.length).toBeGreaterThanOrEqual(1);
   });
@@ -1057,13 +1057,13 @@ describe('J. Normal vs Empowered — Mutual Exclusivity', () => {
     const payload = getMenuPayload(result.current, col!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId,
+        payload.ownerEntityId, payload.columnId,
         payload.atFrame, payload.defaultSkill,
       );
     });
 
     const normalBattle = result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.BATTLE,
+      ev => ev.ownerEntityId === SLOT_WULFGARD && ev.columnId === NounType.BATTLE,
     );
     const normalFrames = normalBattle!.segments.flatMap(
       (s: { frames?: unknown[] }) => s.frames ?? [],
@@ -1087,7 +1087,7 @@ describe('J. Normal vs Empowered — Mutual Exclusivity', () => {
 
     // Count heat inflictions BEFORE placing empowered BS
     const heatsBefore = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerId === ENEMY_ID,
+      ev => ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerEntityId === ENEMY_ID,
     ).length;
 
     act(() => {
@@ -1098,7 +1098,7 @@ describe('J. Normal vs Empowered — Mutual Exclusivity', () => {
 
     // Controller: empowered BS should NOT produce additional heat infliction
     const heatsAfter = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerId === ENEMY_ID,
+      ev => ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerEntityId === ENEMY_ID,
     ).length;
     expect(heatsAfter).toBe(heatsBefore);
 
@@ -1134,13 +1134,13 @@ describe('K. Scorching Fangs — Detailed Behavior', () => {
     const payload = getMenuPayload(result.current, col!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId,
+        payload.ownerEntityId, payload.columnId,
         payload.atFrame, payload.defaultSkill,
       );
     });
 
     const sf = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.name === TALENT1_ID,
+      ev => ev.ownerEntityId === SLOT_WULFGARD && ev.name === TALENT1_ID,
     );
     expect(sf.length).toBeGreaterThanOrEqual(1);
     // Duration should be at least 10s (1200 frames) — may be slightly longer
@@ -1156,7 +1156,7 @@ describe('K. Scorching Fangs — Detailed Behavior', () => {
     placeUlt(result, 30);
 
     const sf = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD &&
+      ev => ev.ownerEntityId === SLOT_WULFGARD &&
         ev.name === TALENT1_ID &&
         ev.eventStatus !== EventStatusType.CONSUMED,
     );
@@ -1173,13 +1173,13 @@ describe('K. Scorching Fangs — Detailed Behavior', () => {
     const payload = getMenuPayload(result.current, col!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId,
+        payload.ownerEntityId, payload.columnId,
         payload.atFrame, payload.defaultSkill,
       );
     });
 
     const sf = result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.name === TALENT1_ID,
+      ev => ev.ownerEntityId === SLOT_WULFGARD && ev.name === TALENT1_ID,
     );
     expect(sf).toBeDefined();
     // The status config clause has APPLY STAT DAMAGE_BONUS (qualifier: HEAT)
@@ -1211,10 +1211,10 @@ describe('K. Scorching Fangs — Detailed Behavior', () => {
       ev => ev.name === SF_MINOR_ID && ev.startFrame > 0,
     );
     // Must NOT be on Wulfgard
-    expect(sfMinorAll.filter(ev => ev.ownerId === SLOT_WULFGARD)).toHaveLength(0);
+    expect(sfMinorAll.filter(ev => ev.ownerEntityId === SLOT_WULFGARD)).toHaveLength(0);
     // Must be on each individual teammate slot (not common)
     for (const slot of teammateSlots) {
-      const slotMinor = sfMinorAll.filter(ev => ev.ownerId === slot);
+      const slotMinor = sfMinorAll.filter(ev => ev.ownerEntityId === slot);
       expect(slotMinor.length).toBeGreaterThanOrEqual(1);
       // Each SF Minor has 10s duration
       expect(eventDuration(slotMinor[0])).toBeGreaterThanOrEqual(10 * FPS);
@@ -1228,8 +1228,8 @@ describe('K. Scorching Fangs — Detailed Behavior', () => {
     for (const slot of teammateSlots) {
       let found = false;
       viewModels.forEach(vm => {
-        if (vm.events.some((ev: { name: string; ownerId: string }) =>
-          ev.name === SF_MINOR_ID && ev.ownerId === slot)) {
+        if (vm.events.some((ev: { name: string; ownerEntityId: string }) =>
+          ev.name === SF_MINOR_ID && ev.ownerEntityId === slot)) {
           found = true;
         }
       });
@@ -1272,7 +1272,7 @@ describe('K. Scorching Fangs — Detailed Behavior', () => {
 
     // Verify SF Minor on Laevatain (slot-1)
     const sfMinorOnLaev = result.current.allProcessedEvents.filter(
-      ev => ev.name === SF_MINOR_ID && ev.ownerId === SLOT_AKEKURI && ev.startFrame > 0,
+      ev => ev.name === SF_MINOR_ID && ev.ownerEntityId === SLOT_AKEKURI && ev.startFrame > 0,
     );
     expect(sfMinorOnLaev.length).toBeGreaterThanOrEqual(1);
 
@@ -1298,7 +1298,7 @@ describe('K. Scorching Fangs — Detailed Behavior', () => {
       result.current.overrides,
     );
     const laevRows = calcResult.rows.filter(
-      r => r.ownerId === SLOT_AKEKURI && r.columnId === NounType.BATTLE && r.damage != null,
+      r => r.ownerEntityId === SLOT_AKEKURI && r.columnId === NounType.BATTLE && r.damage != null,
     );
     expect(laevRows.length).toBeGreaterThan(0);
 
@@ -1318,7 +1318,7 @@ describe('K. Scorching Fangs — Detailed Behavior', () => {
 
     // Verify SF on self
     const sf = result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.name === TALENT1_ID && ev.startFrame > 0,
+      ev => ev.ownerEntityId === SLOT_WULFGARD && ev.name === TALENT1_ID && ev.startFrame > 0,
     );
     expect(sf).toBeDefined();
 
@@ -1343,7 +1343,7 @@ describe('K. Scorching Fangs — Detailed Behavior', () => {
       result.current.overrides,
     );
     const wulfRows = calcResult.rows.filter(
-      r => r.ownerId === SLOT_WULFGARD && r.columnId === NounType.BATTLE && r.damage != null,
+      r => r.ownerEntityId === SLOT_WULFGARD && r.columnId === NounType.BATTLE && r.damage != null,
     );
     expect(wulfRows.length).toBeGreaterThan(0);
     const row = wulfRows.find(r => r.params?.sub);
@@ -1372,7 +1372,7 @@ describe('K. Scorching Fangs — Detailed Behavior', () => {
 
     // Verify SF Minor on Laevatain exists
     const sfMinor = result.current.allProcessedEvents.find(
-      ev => ev.name === SF_MINOR_ID && ev.ownerId === SLOT_AKEKURI && ev.startFrame > 0,
+      ev => ev.name === SF_MINOR_ID && ev.ownerEntityId === SLOT_AKEKURI && ev.startFrame > 0,
     );
     expect(sfMinor).toBeDefined();
     const sfMinorEnd = sfMinor!.startFrame + eventDuration(sfMinor!);
@@ -1399,7 +1399,7 @@ describe('K. Scorching Fangs — Detailed Behavior', () => {
       result.current.overrides,
     );
     const laevRows = calcResult.rows.filter(
-      r => r.ownerId === SLOT_AKEKURI && r.columnId === NounType.BATTLE
+      r => r.ownerEntityId === SLOT_AKEKURI && r.columnId === NounType.BATTLE
         && r.absoluteFrame >= afterExpirySec * FPS && r.damage != null,
     );
     expect(laevRows.length).toBeGreaterThan(0);
@@ -1432,7 +1432,7 @@ describe('L. P5 Natural Predator — Combo Cooldown Reset', () => {
     const comboPayload1 = getMenuPayload(result.current, comboCol!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        comboPayload1.ownerId, comboPayload1.columnId,
+        comboPayload1.ownerEntityId, comboPayload1.columnId,
         comboPayload1.atFrame, comboPayload1.defaultSkill,
       );
     });
@@ -1443,7 +1443,7 @@ describe('L. P5 Natural Predator — Combo Cooldown Reset', () => {
     const ultPayload = getMenuPayload(result.current, ultCol!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        ultPayload.ownerId, ultPayload.columnId,
+        ultPayload.ownerEntityId, ultPayload.columnId,
         ultPayload.atFrame, ultPayload.defaultSkill,
       );
     });
@@ -1458,7 +1458,7 @@ describe('L. P5 Natural Predator — Combo Cooldown Reset', () => {
     });
 
     const combos = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.COMBO,
+      ev => ev.ownerEntityId === SLOT_WULFGARD && ev.columnId === NounType.COMBO,
     );
     expect(combos).toHaveLength(2);
   });
@@ -1479,7 +1479,7 @@ describe('L. P5 Natural Predator — Combo Cooldown Reset', () => {
     const comboPayload = getMenuPayload(result.current, comboCol!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        comboPayload.ownerId, comboPayload.columnId,
+        comboPayload.ownerEntityId, comboPayload.columnId,
         comboPayload.atFrame, comboPayload.defaultSkill,
       );
     });
@@ -1489,7 +1489,7 @@ describe('L. P5 Natural Predator — Combo Cooldown Reset', () => {
     const ultPayload = getMenuPayload(result.current, ultCol!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        ultPayload.ownerId, ultPayload.columnId,
+        ultPayload.ownerEntityId, ultPayload.columnId,
         ultPayload.atFrame, ultPayload.defaultSkill,
       );
     });
@@ -1508,7 +1508,7 @@ describe('L. P5 Natural Predator — Combo Cooldown Reset', () => {
     });
 
     const combos = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.COMBO,
+      ev => ev.ownerEntityId === SLOT_WULFGARD && ev.columnId === NounType.COMBO,
     );
     // Only 1 combo — second was rejected or overlaps
     expect(combos).toHaveLength(1);
@@ -1543,13 +1543,13 @@ describe('L. P5 Natural Predator — Combo Cooldown Reset', () => {
 
     // Verify first combo placed
     const combos1 = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.COMBO,
+      ev => ev.ownerEntityId === SLOT_WULFGARD && ev.columnId === NounType.COMBO,
     );
     expect(combos1).toHaveLength(1);
 
     // Capture first activation window before ult
     const windowsBefore = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === COMBO_WINDOW_COLUMN_ID,
+      ev => ev.ownerEntityId === SLOT_WULFGARD && ev.columnId === COMBO_WINDOW_COLUMN_ID,
     );
     expect(windowsBefore).toHaveLength(1);
     const origWindowDur = eventDuration(windowsBefore[0]);
@@ -1559,7 +1559,7 @@ describe('L. P5 Natural Predator — Combo Cooldown Reset', () => {
 
     // Controller: combo CD was reset (event ends at or before ult frame)
     const comboAfterUlt = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.COMBO,
+      ev => ev.ownerEntityId === SLOT_WULFGARD && ev.columnId === NounType.COMBO,
     );
     expect(comboAfterUlt).toHaveLength(1);
     const comboEnd = comboAfterUlt[0].startFrame + eventDuration(comboAfterUlt[0]);
@@ -1567,7 +1567,7 @@ describe('L. P5 Natural Predator — Combo Cooldown Reset', () => {
 
     // Controller: first activation window was clamped to combo's reduced end
     const windowsAfterUlt = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === COMBO_WINDOW_COLUMN_ID,
+      ev => ev.ownerEntityId === SLOT_WULFGARD && ev.columnId === COMBO_WINDOW_COLUMN_ID,
     );
     const firstWindow = windowsAfterUlt[0];
     const clampedDur = eventDuration(firstWindow);
@@ -1586,7 +1586,7 @@ describe('L. P5 Natural Predator — Combo Cooldown Reset', () => {
 
     // Controller: second activation window exists (re-derived after CD reset)
     const windowsAfterTrigger = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === COMBO_WINDOW_COLUMN_ID,
+      ev => ev.ownerEntityId === SLOT_WULFGARD && ev.columnId === COMBO_WINDOW_COLUMN_ID,
     );
     expect(windowsAfterTrigger.length).toBeGreaterThanOrEqual(2);
 
@@ -1599,13 +1599,13 @@ describe('L. P5 Natural Predator — Combo Cooldown Reset', () => {
 
     // Controller: second combo placed
     const combos2 = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.COMBO,
+      ev => ev.ownerEntityId === SLOT_WULFGARD && ev.columnId === NounType.COMBO,
     );
     expect(combos2).toHaveLength(2);
 
     // Controller: first window is clamped, second window starts after first combo ends
     const finalWindows = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === COMBO_WINDOW_COLUMN_ID,
+      ev => ev.ownerEntityId === SLOT_WULFGARD && ev.columnId === COMBO_WINDOW_COLUMN_ID,
     );
     expect(finalWindows.length).toBeGreaterThanOrEqual(2);
     const sortedWindows = [...finalWindows].sort((a, b) => a.startFrame - b.startFrame);

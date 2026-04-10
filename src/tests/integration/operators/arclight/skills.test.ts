@@ -134,12 +134,12 @@ describe('A. Core Skill Placement', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const battles = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_ARCLIGHT && ev.columnId === NounType.BATTLE,
+      ev => ev.ownerEntityId === SLOT_ARCLIGHT && ev.columnId === NounType.BATTLE,
     );
     expect(battles).toHaveLength(1);
     expect(battles[0].name).toBe(BATTLE_SKILL_ID);
@@ -153,7 +153,7 @@ describe('A. Core Skill Placement', () => {
 
     // Verify Electrification reaction was derived
     const electrifications = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === REACTION_COLUMNS.ELECTRIFICATION && ev.ownerId === ENEMY_ID,
+      ev => ev.columnId === REACTION_COLUMNS.ELECTRIFICATION && ev.ownerEntityId === ENEMY_ID,
     );
     expect(electrifications.length).toBeGreaterThanOrEqual(1);
 
@@ -170,12 +170,12 @@ describe('A. Core Skill Placement', () => {
     const payload = getMenuPayload(result.current, comboCol!, 3 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const combos = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_ARCLIGHT && ev.columnId === NounType.COMBO,
+      ev => ev.ownerEntityId === SLOT_ARCLIGHT && ev.columnId === NounType.COMBO,
     );
     expect(combos).toHaveLength(1);
     expect(combos[0].name).toBe(COMBO_SKILL_ID);
@@ -195,12 +195,12 @@ describe('A. Core Skill Placement', () => {
     const payload = getMenuPayload(result.current, ultCol!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const ultimates = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_ARCLIGHT && ev.columnId === NounType.ULTIMATE,
+      ev => ev.ownerEntityId === SLOT_ARCLIGHT && ev.columnId === NounType.ULTIMATE,
     );
     expect(ultimates).toHaveLength(1);
     expect(ultimates[0].name).toBe(ULTIMATE_ID);
@@ -219,7 +219,7 @@ describe('B. Electric Infliction Pipeline', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
@@ -252,12 +252,12 @@ describe('C. Combo — Short Cooldown', () => {
     const payload = getMenuPayload(result.current, comboCol!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const combos = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_ARCLIGHT && ev.columnId === NounType.COMBO,
+      ev => ev.ownerEntityId === SLOT_ARCLIGHT && ev.columnId === NounType.COMBO,
     );
     expect(combos).toHaveLength(1);
   });
@@ -276,7 +276,7 @@ describe('D. Wildland Trekker Talent', () => {
 
     // Verify Electrification is active
     const electrifications = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === REACTION_COLUMNS.ELECTRIFICATION && ev.ownerId === ENEMY_ID,
+      ev => ev.columnId === REACTION_COLUMNS.ELECTRIFICATION && ev.ownerEntityId === ENEMY_ID,
     );
     expect(electrifications.length).toBeGreaterThanOrEqual(1);
 
@@ -284,13 +284,13 @@ describe('D. Wildland Trekker Talent', () => {
     const payload = getMenuPayload(result.current, battleCol!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     // Battle skill should be placed successfully
     const battleEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_ARCLIGHT && ev.columnId === NounType.BATTLE,
+      ev => ev.ownerEntityId === SLOT_ARCLIGHT && ev.columnId === NounType.BATTLE,
     );
     expect(battleEvents).toHaveLength(1);
 
@@ -323,12 +323,12 @@ describe('E. Ultimate', () => {
     const payload = getMenuPayload(result.current, ultCol!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const ult = result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT_ARCLIGHT && ev.columnId === NounType.ULTIMATE,
+      ev => ev.ownerEntityId === SLOT_ARCLIGHT && ev.columnId === NounType.ULTIMATE,
     );
     expect(ult).toBeDefined();
 
@@ -355,7 +355,7 @@ describe('F. View Layer', () => {
     const payload = getMenuPayload(result.current, battleCol!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
@@ -367,7 +367,7 @@ describe('F. View Layer', () => {
     const battleVm = viewModels.get(battleCol!.key);
     expect(battleVm).toBeDefined();
     const battleEvents = battleVm!.events.filter(
-      ev => ev.ownerId === SLOT_ARCLIGHT && ev.columnId === NounType.BATTLE,
+      ev => ev.ownerEntityId === SLOT_ARCLIGHT && ev.columnId === NounType.BATTLE,
     );
     expect(battleEvents).toHaveLength(1);
   });
@@ -382,7 +382,7 @@ describe('F. View Layer', () => {
     const payload = getMenuPayload(result.current, comboCol!, 3 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
@@ -394,7 +394,7 @@ describe('F. View Layer', () => {
     const comboVm = viewModels.get(comboCol!.key);
     expect(comboVm).toBeDefined();
     const comboEvents = comboVm!.events.filter(
-      ev => ev.ownerId === SLOT_ARCLIGHT && ev.columnId === NounType.COMBO,
+      ev => ev.ownerEntityId === SLOT_ARCLIGHT && ev.columnId === NounType.COMBO,
     );
     expect(comboEvents).toHaveLength(1);
   });

@@ -201,7 +201,7 @@ describe('Ultimate Energy Validation', () => {
     const ultEvent = {
       uid: 'ult-1',
       name: 'TWILIGHT',
-      ownerId: SLOT_ID,
+      ownerEntityId: SLOT_ID,
       columnId: NounType.ULTIMATE,
       startFrame: lastHitFrame,
       segments: [{ properties: { duration: 249 } }],
@@ -278,7 +278,7 @@ describe('preConsumptionValue — MAX-at-frame logic', () => {
 });
 
 // ── Helper to build minimal TimelineEvents ─────────────────────────────────
-function makeEvent(overrides: Partial<TimelineEvent> & { uid: string; ownerId: string; columnId: string; startFrame: number }): TimelineEvent {
+function makeEvent(overrides: Partial<TimelineEvent> & { uid: string; ownerEntityId: string; columnId: string; startFrame: number }): TimelineEvent {
   return {
     id: overrides.name ?? '',
     name: '',
@@ -311,7 +311,7 @@ describe('hasEnableClauseAtFrame', () => {
   function ultWithSegments(startFrame: number, segments: EventSegmentData[]): TimelineEvent {
     return makeEvent({
       uid: 'ult-1',
-      ownerId: SLOT,
+      ownerEntityId: SLOT,
       columnId: NounType.ULTIMATE,
       startFrame,
       segments,
@@ -348,7 +348,7 @@ describe('hasEnableClauseAtFrame', () => {
   });
 
   test('returns false when event has no segments', () => {
-    const ev = makeEvent({ uid: 'ult-1', ownerId: SLOT, columnId: NounType.ULTIMATE, startFrame: 0 });
+    const ev = makeEvent({ uid: 'ult-1', ownerEntityId: SLOT, columnId: NounType.ULTIMATE, startFrame: 0 });
     expect(hasEnableClauseAtFrame([ev], SLOT, 'FLAMING_CINDERS_BATK_ENHANCED', 0)).toBe(false);
   });
 });
@@ -359,7 +359,7 @@ describe('collectNoGainWindowsForEvent', () => {
 
   test('collects ACTIVE segment as no-gain window', () => {
     const ev = makeEvent({
-      uid: 'ult-1', ownerId: SLOT, columnId: NounType.ULTIMATE, startFrame: 0,
+      uid: 'ult-1', ownerEntityId: SLOT, columnId: NounType.ULTIMATE, startFrame: 0,
       segments: [
         { properties: { segmentTypes: [SegmentType.ANIMATION], duration: 249, name: 'Animation' } },
         { properties: { segmentTypes: [SegmentType.STASIS], duration: 36, name: 'Stasis' } },
@@ -375,7 +375,7 @@ describe('collectNoGainWindowsForEvent', () => {
 
   test('collects IGNORE ULTIMATE_ENERGY clause segment as no-gain window', () => {
     const ev = makeEvent({
-      uid: 'ult-1', ownerId: SLOT, columnId: NounType.ULTIMATE, startFrame: 0,
+      uid: 'ult-1', ownerEntityId: SLOT, columnId: NounType.ULTIMATE, startFrame: 0,
       segments: [
         {
           properties: { segmentTypes: [SegmentType.ANIMATION], duration: 249, name: 'Animation' },
@@ -393,7 +393,7 @@ describe('collectNoGainWindowsForEvent', () => {
 
   test('fallback for non-segmented ultimate events', () => {
     const ev = makeEvent({
-      uid: 'ult-1', ownerId: SLOT, columnId: NounType.ULTIMATE, startFrame: 100,
+      uid: 'ult-1', ownerEntityId: SLOT, columnId: NounType.ULTIMATE, startFrame: 100,
       segments: [{ properties: { duration: 249 } }],
     });
     const windows = collectNoGainWindowsForEvent(ev);
@@ -497,7 +497,7 @@ describe('ENABLE/DISABLE clause variant validation', () => {
 
   function ultEvent(startFrame: number): TimelineEvent {
     return makeEvent({
-      uid: 'ult-1', ownerId: SLOT, columnId: NounType.ULTIMATE, startFrame,
+      uid: 'ult-1', ownerEntityId: SLOT, columnId: NounType.ULTIMATE, startFrame,
       segments: twilightSegments,
     });
   }
@@ -554,7 +554,7 @@ describe('validateEnhanced and validateDisabledVariants', () => {
 
   function ultEvent(startFrame: number): TimelineEvent {
     return makeEvent({
-      uid: 'ult-1', ownerId: SLOT, columnId: NounType.ULTIMATE, startFrame,
+      uid: 'ult-1', ownerEntityId: SLOT, columnId: NounType.ULTIMATE, startFrame,
       segments: twilightSegments,
     });
   }
@@ -562,7 +562,7 @@ describe('validateEnhanced and validateDisabledVariants', () => {
   test('enhanced basic during ENABLE window: no warning', () => {
     const events = [
       ultEvent(0),
-      makeEvent({ uid: 'basic-1', ownerId: SLOT, columnId: NounType.BASIC_ATTACK, name: 'FLAMING_CINDERS_BATK_ENHANCED', startFrame: 500, enhancementType: EnhancementType.ENHANCED }),
+      makeEvent({ uid: 'basic-1', ownerEntityId: SLOT, columnId: NounType.BASIC_ATTACK, name: 'FLAMING_CINDERS_BATK_ENHANCED', startFrame: 500, enhancementType: EnhancementType.ENHANCED }),
     ];
     const warnings = validateEnhanced(events);
     expect(warnings.has('basic-1')).toBe(false);
@@ -571,7 +571,7 @@ describe('validateEnhanced and validateDisabledVariants', () => {
   test('enhanced basic outside ENABLE window: warning', () => {
     const events = [
       ultEvent(0),
-      makeEvent({ uid: 'basic-1', ownerId: SLOT, columnId: NounType.BASIC_ATTACK, name: 'FLAMING_CINDERS_BATK_ENHANCED', startFrame: totalDuration + 100, enhancementType: EnhancementType.ENHANCED }),
+      makeEvent({ uid: 'basic-1', ownerEntityId: SLOT, columnId: NounType.BASIC_ATTACK, name: 'FLAMING_CINDERS_BATK_ENHANCED', startFrame: totalDuration + 100, enhancementType: EnhancementType.ENHANCED }),
     ];
     const warnings = validateEnhanced(events);
     expect(warnings.has('basic-1')).toBe(true);
@@ -580,7 +580,7 @@ describe('validateEnhanced and validateDisabledVariants', () => {
   test('regular basic during DISABLE window: warning', () => {
     const events = [
       ultEvent(0),
-      makeEvent({ uid: 'basic-1', ownerId: SLOT, columnId: NounType.BASIC_ATTACK, name: 'FLAMING_CINDERS_BATK', startFrame: 500 }),
+      makeEvent({ uid: 'basic-1', ownerEntityId: SLOT, columnId: NounType.BASIC_ATTACK, name: 'FLAMING_CINDERS_BATK', startFrame: 500 }),
     ];
     const warnings = validateDisabledVariants(events);
     expect(warnings.has('basic-1')).toBe(true);
@@ -589,7 +589,7 @@ describe('validateEnhanced and validateDisabledVariants', () => {
   test('regular basic outside DISABLE window (past ultimate): no warning', () => {
     const events = [
       ultEvent(0),
-      makeEvent({ uid: 'basic-1', ownerId: SLOT, columnId: NounType.BASIC_ATTACK, name: 'FLAMING_CINDERS_BATK', startFrame: totalDuration + 100 }),
+      makeEvent({ uid: 'basic-1', ownerEntityId: SLOT, columnId: NounType.BASIC_ATTACK, name: 'FLAMING_CINDERS_BATK', startFrame: totalDuration + 100 }),
     ];
     const warnings = validateDisabledVariants(events);
     expect(warnings.has('basic-1')).toBe(false);
@@ -598,7 +598,7 @@ describe('validateEnhanced and validateDisabledVariants', () => {
   test('finisher during DISABLE window: warning (DISABLE FINISHER in Laevatain ultimate)', () => {
     const events = [
       ultEvent(0),
-      makeEvent({ uid: 'basic-1', ownerId: SLOT, columnId: NounType.BASIC_ATTACK, name: 'FINISHER', startFrame: 500 }),
+      makeEvent({ uid: 'basic-1', ownerEntityId: SLOT, columnId: NounType.BASIC_ATTACK, name: 'FINISHER', startFrame: 500 }),
     ];
     const warnings = validateDisabledVariants(events);
     expect(warnings.has('basic-1')).toBe(true);

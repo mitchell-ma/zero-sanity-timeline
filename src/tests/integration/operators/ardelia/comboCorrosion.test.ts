@@ -45,7 +45,7 @@ describe('Ardelia combo skill — Corrosion application', () => {
 
     act(() => {
       result.current.handleAddEvent(
-        basicPayload.ownerId, basicPayload.columnId,
+        basicPayload.ownerEntityId, basicPayload.columnId,
         basicPayload.atFrame, basicPayload.defaultSkill,
       );
     });
@@ -63,7 +63,7 @@ describe('Ardelia combo skill — Corrosion application', () => {
 
     act(() => {
       result.current.handleAddEvent(
-        comboPayload.ownerId, comboPayload.columnId,
+        comboPayload.ownerEntityId, comboPayload.columnId,
         comboPayload.atFrame, comboPayload.defaultSkill,
       );
     });
@@ -71,13 +71,13 @@ describe('Ardelia combo skill — Corrosion application', () => {
     // ── Controller layer ────────────────────────────────────────────────
     // 3. Verify: combo event exists
     const comboEvent = result.current.allProcessedEvents.find(
-      (ev) => ev.ownerId === SLOT_ARDELIA && ev.columnId === NounType.COMBO,
+      (ev) => ev.ownerEntityId === SLOT_ARDELIA && ev.columnId === NounType.COMBO,
     );
     expect(comboEvent).toBeDefined();
 
     // 4. Verify: enemy has a Corrosion reaction event
     const corrosionEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === REACTION_COLUMNS.CORROSION && ev.ownerId === ENEMY_ID,
+      (ev) => ev.columnId === REACTION_COLUMNS.CORROSION && ev.ownerEntityId === ENEMY_ID,
     );
     expect(corrosionEvents).toHaveLength(1);
 
@@ -93,7 +93,7 @@ describe('Ardelia combo skill — Corrosion application', () => {
     const enemyStatusCol = result.current.columns.find(
       (c): c is MiniTimeline =>
         c.type === ColumnType.MINI_TIMELINE &&
-        c.ownerId === ENEMY_ID &&
+        c.ownerEntityId === ENEMY_ID &&
         (c.matchColumnIds?.includes(REACTION_COLUMNS.CORROSION) ?? false),
     );
     expect(enemyStatusCol).toBeDefined();
@@ -106,7 +106,7 @@ describe('Ardelia combo skill — Corrosion application', () => {
     expect(vm).toBeDefined();
 
     const corrosionInVM = vm!.events.filter(
-      (ev) => ev.columnId === REACTION_COLUMNS.CORROSION && ev.ownerId === ENEMY_ID,
+      (ev) => ev.columnId === REACTION_COLUMNS.CORROSION && ev.ownerEntityId === ENEMY_ID,
     );
     expect(corrosionInVM).toHaveLength(1);
   });

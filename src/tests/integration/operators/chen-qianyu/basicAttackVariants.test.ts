@@ -98,13 +98,13 @@ describe('Chen Qianyu — basic attack variants', () => {
 
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     // Controller layer: event has the correct skill ID
     const basicEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_CHEN && ev.columnId === NounType.BASIC_ATTACK,
+      (ev) => ev.ownerEntityId === SLOT_CHEN && ev.columnId === NounType.BASIC_ATTACK,
     );
     expect(basicEvents.length).toBeGreaterThanOrEqual(1);
     expect(basicEvents[0].name).toBe(SOARING_BREAK_ID);
@@ -118,7 +118,7 @@ describe('Chen Qianyu — basic attack variants', () => {
     expect(vm).toBeDefined();
 
     const baViewEvents = vm!.events.filter(
-      (ev) => ev.ownerId === SLOT_CHEN && ev.columnId === NounType.BASIC_ATTACK,
+      (ev) => ev.ownerEntityId === SLOT_CHEN && ev.columnId === NounType.BASIC_ATTACK,
     );
     expect(baViewEvents.length).toBeGreaterThanOrEqual(1);
     expect(baViewEvents[0].name).toBe(SOARING_BREAK_ID);

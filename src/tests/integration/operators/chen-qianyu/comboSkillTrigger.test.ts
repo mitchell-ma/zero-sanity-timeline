@@ -76,19 +76,19 @@ describe('Chen Qianyu — combo skill placement and Lift', () => {
     const payload = getMenuPayload(result.current, comboCol!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     // Controller layer: combo event placed
     const comboEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_CHEN && ev.columnId === NounType.COMBO,
+      (ev) => ev.ownerEntityId === SLOT_CHEN && ev.columnId === NounType.COMBO,
     );
     expect(comboEvents).toHaveLength(1);
 
     // Controller layer: Vulnerable infliction on enemy (from combo's Lift application)
     const vulnEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === PHYSICAL_INFLICTION_COLUMNS.VULNERABLE && ev.ownerId === ENEMY_ID,
+      (ev) => ev.columnId === PHYSICAL_INFLICTION_COLUMNS.VULNERABLE && ev.ownerEntityId === ENEMY_ID,
     );
     expect(vulnEvents.length).toBeGreaterThanOrEqual(1);
 
@@ -100,14 +100,14 @@ describe('Chen Qianyu — combo skill placement and Lift', () => {
     const comboVM = viewModels.get(comboCol!.key);
     expect(comboVM).toBeDefined();
     expect(comboVM!.events.filter(
-      (ev) => ev.ownerId === SLOT_CHEN && ev.columnId === NounType.COMBO,
+      (ev) => ev.ownerEntityId === SLOT_CHEN && ev.columnId === NounType.COMBO,
     )).toHaveLength(1);
 
     // View layer: Vulnerable appears in enemy status presentation
     const enemyStatusCol = result.current.columns.find(
       (c): c is MiniTimeline =>
         c.type === ColumnType.MINI_TIMELINE &&
-        c.ownerId === ENEMY_ID &&
+        c.ownerEntityId === ENEMY_ID &&
         (c.matchColumnIds?.includes(PHYSICAL_INFLICTION_COLUMNS.VULNERABLE) ?? false),
     );
     expect(enemyStatusCol).toBeDefined();
@@ -128,7 +128,7 @@ describe('Chen Qianyu — combo skill placement and Lift', () => {
     const bsPayload = getMenuPayload(result.current, battleCol!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        bsPayload.ownerId, bsPayload.columnId, bsPayload.atFrame, bsPayload.defaultSkill,
+        bsPayload.ownerEntityId, bsPayload.columnId, bsPayload.atFrame, bsPayload.defaultSkill,
       );
     });
 
@@ -138,19 +138,19 @@ describe('Chen Qianyu — combo skill placement and Lift', () => {
     const comboPayload = getMenuPayload(result.current, comboCol!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        comboPayload.ownerId, comboPayload.columnId, comboPayload.atFrame, comboPayload.defaultSkill,
+        comboPayload.ownerEntityId, comboPayload.columnId, comboPayload.atFrame, comboPayload.defaultSkill,
       );
     });
 
     // Controller layer: at least 2 Vulnerable inflictions (1 from BS, 1 from combo)
     const vulnEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === PHYSICAL_INFLICTION_COLUMNS.VULNERABLE && ev.ownerId === ENEMY_ID,
+      (ev) => ev.columnId === PHYSICAL_INFLICTION_COLUMNS.VULNERABLE && ev.ownerEntityId === ENEMY_ID,
     );
     expect(vulnEvents.length).toBeGreaterThanOrEqual(2);
 
     // Controller layer: Lift status on enemy (combo applies Lift while Vulnerable exists)
     const liftEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === PHYSICAL_STATUS_COLUMNS.LIFT && ev.ownerId === ENEMY_ID,
+      (ev) => ev.columnId === PHYSICAL_STATUS_COLUMNS.LIFT && ev.ownerEntityId === ENEMY_ID,
     );
     expect(liftEvents.length).toBeGreaterThanOrEqual(1);
   });
@@ -166,13 +166,13 @@ describe('Chen Qianyu — combo cooldown', () => {
     const payload = getMenuPayload(result.current, comboCol!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     // Verify the combo event has a cooldown segment
     const comboEvent = result.current.allProcessedEvents.find(
-      (ev) => ev.ownerId === SLOT_CHEN && ev.columnId === NounType.COMBO,
+      (ev) => ev.ownerEntityId === SLOT_CHEN && ev.columnId === NounType.COMBO,
     );
     expect(comboEvent).toBeDefined();
     const cdSeg = comboEvent!.segments.find(
@@ -200,7 +200,7 @@ describe('Chen Qianyu — combo cooldown', () => {
     const payload = getMenuPayload(result.current, comboCol!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 

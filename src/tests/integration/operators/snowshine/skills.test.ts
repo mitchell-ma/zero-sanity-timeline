@@ -74,12 +74,12 @@ describe('A. Core Skill Placement', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const battles = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_SNOWSHINE && ev.columnId === NounType.BATTLE,
+      ev => ev.ownerEntityId === SLOT_SNOWSHINE && ev.columnId === NounType.BATTLE,
     );
     expect(battles).toHaveLength(1);
     expect(battles[0].name).toBe(BS_ID);
@@ -101,12 +101,12 @@ describe('A. Core Skill Placement', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const combos = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_SNOWSHINE && ev.columnId === NounType.COMBO,
+      ev => ev.ownerEntityId === SLOT_SNOWSHINE && ev.columnId === NounType.COMBO,
     );
     expect(combos).toHaveLength(1);
     expect(combos[0].name).toBe(COMBO_ID);
@@ -135,12 +135,12 @@ describe('A. Core Skill Placement', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const ultimates = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_SNOWSHINE && ev.columnId === NounType.ULTIMATE,
+      ev => ev.ownerEntityId === SLOT_SNOWSHINE && ev.columnId === NounType.ULTIMATE,
     );
     expect(ultimates).toHaveLength(1);
     expect(ultimates[0].name).toBe(ULT_ID);
@@ -161,7 +161,7 @@ describe('B. Battle Skill — Protection and Cryo Infliction', () => {
     const payload = getMenuPayload(result.current, col!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
@@ -181,13 +181,13 @@ describe('B. Battle Skill — Protection and Cryo Infliction', () => {
     const payload = getMenuPayload(result.current, col!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     // BS has cryo infliction frame at offset 3.57s
     const cryoInflictions = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === ENEMY_ID
+      ev => ev.ownerEntityId === ENEMY_ID
         && ev.columnId === INFLICTION_COLUMNS.CRYO,
     );
     expect(cryoInflictions.length).toBeGreaterThanOrEqual(1);
@@ -210,12 +210,12 @@ describe('C. Combo — Healing and Cooldown', () => {
     const payload = getMenuPayload(result.current, col!, 3 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const combos = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_SNOWSHINE && ev.columnId === NounType.COMBO,
+      ev => ev.ownerEntityId === SLOT_SNOWSHINE && ev.columnId === NounType.COMBO,
     );
     expect(combos).toHaveLength(1);
 
@@ -255,12 +255,12 @@ describe('D. Ultimate — Snow Zone and Energy', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const ultimates = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_SNOWSHINE && ev.columnId === NounType.ULTIMATE,
+      ev => ev.ownerEntityId === SLOT_SNOWSHINE && ev.columnId === NounType.ULTIMATE,
     );
     expect(ultimates).toHaveLength(1);
 
@@ -290,7 +290,7 @@ describe('E. View Layer', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
@@ -301,7 +301,7 @@ describe('E. View Layer', () => {
     const bsVm = viewModels.get(col!.key);
     expect(bsVm).toBeDefined();
     const bsEvents = bsVm!.events.filter(
-      ev => ev.ownerId === SLOT_SNOWSHINE && ev.columnId === NounType.BATTLE,
+      ev => ev.ownerEntityId === SLOT_SNOWSHINE && ev.columnId === NounType.BATTLE,
     );
     expect(bsEvents.length).toBeGreaterThanOrEqual(1);
   });
@@ -319,7 +319,7 @@ describe('E. View Layer', () => {
     const bsPayload = getMenuPayload(result.current, bsCol!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        bsPayload.ownerId, bsPayload.columnId, bsPayload.atFrame, bsPayload.defaultSkill,
+        bsPayload.ownerEntityId, bsPayload.columnId, bsPayload.atFrame, bsPayload.defaultSkill,
       );
     });
 
@@ -329,7 +329,7 @@ describe('E. View Layer', () => {
     const comboPayload = getMenuPayload(result.current, comboCol!, 10 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        comboPayload.ownerId, comboPayload.columnId,
+        comboPayload.ownerEntityId, comboPayload.columnId,
         comboPayload.atFrame, comboPayload.defaultSkill,
       );
     });
@@ -340,7 +340,7 @@ describe('E. View Layer', () => {
     const ultPayload = getMenuPayload(result.current, ultCol!, 30 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        ultPayload.ownerId, ultPayload.columnId,
+        ultPayload.ownerEntityId, ultPayload.columnId,
         ultPayload.atFrame, ultPayload.defaultSkill,
       );
     });

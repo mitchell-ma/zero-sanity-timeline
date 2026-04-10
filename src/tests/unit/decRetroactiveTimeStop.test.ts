@@ -22,7 +22,7 @@ function mkStatus(uid: string, startFrame: number, rawDuration: number): Timelin
     uid,
     id: 'TEST_STATUS',
     name: 'TEST_STATUS',
-    ownerId: 'slot-0',
+    ownerEntityId: 'slot-0',
     columnId: NounType.BATTLE,
     startFrame,
     segments: [
@@ -38,7 +38,7 @@ function mkUltimate(uid: string, startFrame: number, animDuration: number): Time
     uid,
     id: 'TEST_ULT',
     name: 'TEST_ULT',
-    ownerId: 'slot-0',
+    ownerEntityId: 'slot-0',
     columnId: NounType.ULTIMATE,
     startFrame,
     segments: [
@@ -105,7 +105,7 @@ describe('DEC — retroactive time-stop re-extension', () => {
       uid: 'pushed-status',
       id: 'TEST_PUSHED',
       name: 'TEST_PUSHED',
-      ownerId: 'slot-0',
+      ownerEntityId: 'slot-0',
       columnId: NounType.STATUS,
       startFrame: 0,
       segments: [{ properties: { duration: 300 } }],

@@ -80,11 +80,11 @@ describe('Freeform enhanced/empowered drag — no ultimate required', () => {
     // ── Controller layer: place empowered BS via context menu flow ──
     const payload = getMenuPayload(result.current, battleCol, startFrame, empoweredVariant.displayName);
     act(() => {
-      result.current.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+      result.current.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
     });
 
     const ev = result.current.events.find(
-      (e) => e.name === EMPOWERED_BS_ID && e.ownerId === SLOT,
+      (e) => e.name === EMPOWERED_BS_ID && e.ownerEntityId === SLOT,
     );
     expect(ev).toBeDefined();
     expect(ev!.startFrame).toBe(startFrame);
@@ -132,11 +132,11 @@ describe('Freeform enhanced/empowered drag — no ultimate required', () => {
     // ── Controller layer: place enhanced+empowered BS via context menu flow ──
     const payload = getMenuPayload(result.current, battleCol, startFrame, eeVariant.displayName);
     act(() => {
-      result.current.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+      result.current.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
     });
 
     const ev = result.current.events.find(
-      (e) => e.name === ENHANCED_EMPOWERED_BS_ID && e.ownerId === SLOT,
+      (e) => e.name === ENHANCED_EMPOWERED_BS_ID && e.ownerEntityId === SLOT,
     );
     expect(ev).toBeDefined();
 
@@ -192,7 +192,7 @@ describe('Freeform enhanced/empowered drag — no ultimate required', () => {
     // ── Controller layer: place enhanced BS via context menu flow in freeform ──
     const payload = getMenuPayload(result.current, battleCol, startFrame, enhancedVariant.displayName);
     act(() => {
-      result.current.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+      result.current.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
     });
 
     // Switch back to strict mode

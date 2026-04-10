@@ -43,7 +43,7 @@ function setup() {
 function addBS(app: AppResult, atFrame: number) {
   const col = findColumn(app, SLOT, NounType.BATTLE);
   const payload = getMenuPayload(app, col!, atFrame);
-  app.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+  app.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
 }
 
 function placeInfliction(app: AppResult, columnId: string, atFrame: number, durationSec = 20) {
@@ -55,13 +55,13 @@ function placeInfliction(app: AppResult, columnId: string, atFrame: number, dura
 
 function getSolidifications(app: AppResult) {
   return app.allProcessedEvents.filter(
-    ev => ev.columnId === REACTION_COLUMNS.SOLIDIFICATION && ev.ownerId === ENEMY_ID,
+    ev => ev.columnId === REACTION_COLUMNS.SOLIDIFICATION && ev.ownerEntityId === ENEMY_ID,
   );
 }
 
 function getInflictions(app: AppResult, columnId: string) {
   return app.allProcessedEvents.filter(
-    ev => ev.columnId === columnId && ev.ownerId === ENEMY_ID,
+    ev => ev.columnId === columnId && ev.ownerEntityId === ENEMY_ID,
   );
 }
 
@@ -223,7 +223,7 @@ describe('E. Multiple cryo infliction stacks', () => {
 describe('F. Barrage of Technology only from BS Solidification', () => {
   function getBarrages(app: AppResult) {
     return app.allProcessedEvents.filter(
-      ev => ev.id === 'BARRAGE_OF_TECHNOLOGY' && ev.ownerId === SLOT,
+      ev => ev.id === 'BARRAGE_OF_TECHNOLOGY' && ev.ownerEntityId === SLOT,
     );
   }
 

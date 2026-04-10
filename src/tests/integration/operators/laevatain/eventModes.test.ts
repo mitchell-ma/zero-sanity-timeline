@@ -50,7 +50,7 @@ function findMatchingColumn(app: AppResult, slotId: string, columnId: string) {
   return app.columns.find(
     (c): c is MiniTimeline =>
       c.type === ColumnType.MINI_TIMELINE &&
-      c.ownerId === slotId &&
+      c.ownerEntityId === slotId &&
       (c.columnId === columnId || (c.matchColumnIds?.includes(columnId) ?? false)),
   );
 }
@@ -92,7 +92,7 @@ function placeMfStacks(app: AppResult, count: number, startFrame: number) {
   for (let i = 0; i < count; i++) {
     act(() => {
       app.handleAddEvent(
-        mfPayload.ownerId, mfPayload.columnId, startFrame + i * FPS, mfPayload.defaultSkill,
+        mfPayload.ownerEntityId, mfPayload.columnId, startFrame + i * FPS, mfPayload.defaultSkill,
       );
     });
   }
@@ -119,7 +119,7 @@ function placeHeatInflictions(app: AppResult, count: number, startFrame: number)
   for (let i = 0; i < count; i++) {
     act(() => {
       app.handleAddEvent(
-        heatPayload.ownerId, heatPayload.columnId, startFrame + i, heatPayload.defaultSkill,
+        heatPayload.ownerEntityId, heatPayload.columnId, startFrame + i, heatPayload.defaultSkill,
       );
     });
   }
@@ -127,7 +127,7 @@ function placeHeatInflictions(app: AppResult, count: number, startFrame: number)
 
 function getMfEvents(app: AppResult) {
   return app.allProcessedEvents.filter(
-    (ev) => ev.columnId === MELTING_FLAME_ID && ev.ownerId === SLOT_LAEVATAIN,
+    (ev) => ev.columnId === MELTING_FLAME_ID && ev.ownerEntityId === SLOT_LAEVATAIN,
   );
 }
 
@@ -163,13 +163,13 @@ describe('Freeform events — engine interactions', () => {
     const payload1 = getMenuPayload(result.current, battleCol!, 10 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload1.ownerId, payload1.columnId, payload1.atFrame, payload1.defaultSkill,
+        payload1.ownerEntityId, payload1.columnId, payload1.atFrame, payload1.defaultSkill,
       );
     });
     const payload2 = getMenuPayload(result.current, battleCol!, 20 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload2.ownerId, payload2.columnId, payload2.atFrame, payload2.defaultSkill,
+        payload2.ownerEntityId, payload2.columnId, payload2.atFrame, payload2.defaultSkill,
       );
     });
 
@@ -192,14 +192,14 @@ describe('Freeform events — engine interactions', () => {
     const multiSegBasic = buildMultiSegmentBasic(basicPayload.defaultSkill);
     act(() => {
       result.current.handleAddEvent(
-        basicPayload.ownerId, basicPayload.columnId, basicPayload.atFrame, multiSegBasic,
+        basicPayload.ownerEntityId, basicPayload.columnId, basicPayload.atFrame, multiSegBasic,
       );
     });
 
     // Freeform heat inflictions consumed by engine
     const heatsConsumed = result.current.allProcessedEvents.filter(
       (ev) => ev.columnId === INFLICTION_COLUMNS.HEAT
-        && ev.ownerId === ENEMY_ID
+        && ev.ownerEntityId === ENEMY_ID
         && ev.eventStatus === EventStatusType.CONSUMED,
     );
     expect(heatsConsumed).toHaveLength(3);
@@ -219,7 +219,7 @@ describe('Freeform events — engine interactions', () => {
     const bsPayload = getMenuPayload(result.current, battleCol!, 10 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        bsPayload.ownerId, bsPayload.columnId, bsPayload.atFrame, bsPayload.defaultSkill,
+        bsPayload.ownerEntityId, bsPayload.columnId, bsPayload.atFrame, bsPayload.defaultSkill,
       );
     });
 
@@ -251,7 +251,7 @@ describe('Strict events — engine-driven chains', () => {
       const payload = getMenuPayload(result.current, battleCol!, atFrame);
       act(() => {
         result.current.handleAddEvent(
-          payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+          payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
         );
       });
     }
@@ -267,7 +267,7 @@ describe('Strict events — engine-driven chains', () => {
     );
     act(() => {
       result.current.handleAddEvent(
-        empPayload.ownerId, empPayload.columnId, empPayload.atFrame, empPayload.defaultSkill,
+        empPayload.ownerEntityId, empPayload.columnId, empPayload.atFrame, empPayload.defaultSkill,
       );
     });
     expect(getConsumedMf(result.current)).toHaveLength(4);
@@ -285,7 +285,7 @@ describe('Strict events — engine-driven chains', () => {
       const payload = getMenuPayload(result.current, battleCol!, atFrame);
       act(() => {
         result.current.handleAddEvent(
-          payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+          payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
         );
       });
     }
@@ -299,13 +299,13 @@ describe('Strict events — engine-driven chains', () => {
     const ultPayload = getMenuPayload(result.current, ultCol!, 50 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        ultPayload.ownerId, ultPayload.columnId, ultPayload.atFrame, ultPayload.defaultSkill,
+        ultPayload.ownerEntityId, ultPayload.columnId, ultPayload.atFrame, ultPayload.defaultSkill,
       );
     });
 
     // Find active phase start
     const ultEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === NounType.ULTIMATE,
+      (ev) => ev.ownerEntityId === SLOT_LAEVATAIN && ev.columnId === NounType.ULTIMATE,
     );
     const ultSegs = ultEvents[0].segments;
     const activationEnd = ultEvents[0].startFrame + ultSegs[0].properties.duration;
@@ -320,13 +320,13 @@ describe('Strict events — engine-driven chains', () => {
     );
     act(() => {
       result.current.handleAddEvent(
-        enhPayload.ownerId, enhPayload.columnId, enhPayload.atFrame, enhPayload.defaultSkill,
+        enhPayload.ownerEntityId, enhPayload.columnId, enhPayload.atFrame, enhPayload.defaultSkill,
       );
     });
 
     // Enhanced BS is accepted and has damage frames
     const enhancedBattles = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === NounType.BATTLE
+      (ev) => ev.ownerEntityId === SLOT_LAEVATAIN && ev.columnId === NounType.BATTLE
         && ev.enhancementType === EnhancementType.ENHANCED,
     );
     expect(enhancedBattles).toHaveLength(1);
@@ -350,7 +350,7 @@ describe('Strict events — engine-driven chains', () => {
       const payload = getMenuPayload(result.current, battleCol!, atFrame);
       act(() => {
         result.current.handleAddEvent(
-          payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+          payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
         );
       });
     }
@@ -372,12 +372,12 @@ describe('Strict events — engine-driven chains', () => {
     const ultPayload = getMenuPayload(result.current, ultCol!, 50 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        ultPayload.ownerId, ultPayload.columnId, ultPayload.atFrame, ultPayload.defaultSkill,
+        ultPayload.ownerEntityId, ultPayload.columnId, ultPayload.atFrame, ultPayload.defaultSkill,
       );
     });
 
     const ultEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === NounType.ULTIMATE,
+      (ev) => ev.ownerEntityId === SLOT_LAEVATAIN && ev.columnId === NounType.ULTIMATE,
     );
     const ultSegs = ultEvents[0].segments;
     const activationEnd = ultEvents[0].startFrame + ultSegs[0].properties.duration;
@@ -387,12 +387,12 @@ describe('Strict events — engine-driven chains', () => {
     );
     act(() => {
       result.current.handleAddEvent(
-        enhPayload.ownerId, enhPayload.columnId, enhPayload.atFrame, enhPayload.defaultSkill,
+        enhPayload.ownerEntityId, enhPayload.columnId, enhPayload.atFrame, enhPayload.defaultSkill,
       );
     });
 
     const enhancedBattles = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === NounType.BATTLE
+      (ev) => ev.ownerEntityId === SLOT_LAEVATAIN && ev.columnId === NounType.BATTLE
         && ev.enhancementType === EnhancementType.ENHANCED,
     );
     expect(enhancedBattles).toHaveLength(1);
@@ -409,7 +409,7 @@ describe('Strict events — engine-driven chains', () => {
     const payload1 = getMenuPayload(result.current, battleCol!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload1.ownerId, payload1.columnId, payload1.atFrame, payload1.defaultSkill,
+        payload1.ownerEntityId, payload1.columnId, payload1.atFrame, payload1.defaultSkill,
       );
     });
 
@@ -421,7 +421,7 @@ describe('Strict events — engine-driven chains', () => {
 
     // Only 1 battle skill → only 1 MF
     const battles = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === NounType.BATTLE,
+      (ev) => ev.ownerEntityId === SLOT_LAEVATAIN && ev.columnId === NounType.BATTLE,
     );
     expect(battles).toHaveLength(1);
     expect(getMfEvents(result.current)).toHaveLength(1);
@@ -454,7 +454,7 @@ describe('Mixed freeform + strict — cross-mode interactions', () => {
     );
     act(() => {
       result.current.handleAddEvent(
-        empPayload.ownerId, empPayload.columnId, empPayload.atFrame, empPayload.defaultSkill,
+        empPayload.ownerEntityId, empPayload.columnId, empPayload.atFrame, empPayload.defaultSkill,
       );
     });
 
@@ -473,7 +473,7 @@ describe('Mixed freeform + strict — cross-mode interactions', () => {
       const payload = getMenuPayload(result.current, battleCol!, atFrame);
       act(() => {
         result.current.handleAddEvent(
-          payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+          payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
         );
       });
     }
@@ -490,7 +490,7 @@ describe('Mixed freeform + strict — cross-mode interactions', () => {
     );
     act(() => {
       result.current.handleAddEvent(
-        empPayload.ownerId, empPayload.columnId, empPayload.atFrame, empPayload.defaultSkill,
+        empPayload.ownerEntityId, empPayload.columnId, empPayload.atFrame, empPayload.defaultSkill,
       );
     });
 
@@ -512,12 +512,12 @@ describe('Mixed freeform + strict — cross-mode interactions', () => {
     const ultPayload = getMenuPayload(result.current, ultCol!, 10 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        ultPayload.ownerId, ultPayload.columnId, ultPayload.atFrame, ultPayload.defaultSkill,
+        ultPayload.ownerEntityId, ultPayload.columnId, ultPayload.atFrame, ultPayload.defaultSkill,
       );
     });
 
     const ultEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === NounType.ULTIMATE,
+      (ev) => ev.ownerEntityId === SLOT_LAEVATAIN && ev.columnId === NounType.ULTIMATE,
     );
     const ultSegs = ultEvents[0].segments;
     const activationEnd = ultEvents[0].startFrame + ultSegs[0].properties.duration;
@@ -535,12 +535,12 @@ describe('Mixed freeform + strict — cross-mode interactions', () => {
     );
     act(() => {
       result.current.handleAddEvent(
-        enhPayload.ownerId, enhPayload.columnId, enhPayload.atFrame, enhPayload.defaultSkill,
+        enhPayload.ownerEntityId, enhPayload.columnId, enhPayload.atFrame, enhPayload.defaultSkill,
       );
     });
 
     const enhancedBattles = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === NounType.BATTLE
+      (ev) => ev.ownerEntityId === SLOT_LAEVATAIN && ev.columnId === NounType.BATTLE
         && ev.enhancementType === EnhancementType.ENHANCED,
     );
     expect(enhancedBattles).toHaveLength(1);
@@ -561,14 +561,14 @@ describe('Mixed freeform + strict — cross-mode interactions', () => {
     const multiSegBasic = buildMultiSegmentBasic(basicPayload.defaultSkill);
     act(() => {
       result.current.handleAddEvent(
-        basicPayload.ownerId, basicPayload.columnId, basicPayload.atFrame, multiSegBasic,
+        basicPayload.ownerEntityId, basicPayload.columnId, basicPayload.atFrame, multiSegBasic,
       );
     });
 
     // Freeform heat consumed, MF generated at 1:1
     const heatsConsumed = result.current.allProcessedEvents.filter(
       (ev) => ev.columnId === INFLICTION_COLUMNS.HEAT
-        && ev.ownerId === ENEMY_ID
+        && ev.ownerEntityId === ENEMY_ID
         && ev.eventStatus === EventStatusType.CONSUMED,
     );
     expect(heatsConsumed).toHaveLength(3);
@@ -591,7 +591,7 @@ describe('Mixed freeform + strict — cross-mode interactions', () => {
       const payload = getMenuPayload(result.current, battleCol!, atFrame);
       act(() => {
         result.current.handleAddEvent(
-          payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+          payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
         );
       });
     }
@@ -616,7 +616,7 @@ describe('Mixed freeform + strict — cross-mode interactions', () => {
     const multiSegBasic = buildMultiSegmentBasic(basicPayload.defaultSkill);
     act(() => {
       result.current.handleAddEvent(
-        basicPayload.ownerId, basicPayload.columnId, basicPayload.atFrame, multiSegBasic,
+        basicPayload.ownerEntityId, basicPayload.columnId, basicPayload.atFrame, multiSegBasic,
       );
     });
 
@@ -626,7 +626,7 @@ describe('Mixed freeform + strict — cross-mode interactions', () => {
     // Heat consumed
     const heatsConsumed = result.current.allProcessedEvents.filter(
       (ev) => ev.columnId === INFLICTION_COLUMNS.HEAT
-        && ev.ownerId === ENEMY_ID
+        && ev.ownerEntityId === ENEMY_ID
         && ev.eventStatus === EventStatusType.CONSUMED,
     );
     expect(heatsConsumed).toHaveLength(2);
@@ -666,7 +666,7 @@ describe('Freeform infliction default durations', () => {
     // Place freeform nature infliction at 2s via context menu payload
     act(() => {
       result.current.handleAddEvent(
-        naturePayload.ownerId, naturePayload.columnId, naturePayload.atFrame, naturePayload.defaultSkill,
+        naturePayload.ownerEntityId, naturePayload.columnId, naturePayload.atFrame, naturePayload.defaultSkill,
       );
     });
 
@@ -678,7 +678,7 @@ describe('Freeform infliction default durations', () => {
     const vm = viewModels.get(enemyStatusCol!.key);
     expect(vm).toBeDefined();
     const natureInVM = vm!.events.filter(
-      (ev) => ev.columnId === INFLICTION_COLUMNS.NATURE && ev.ownerId === ENEMY_ID,
+      (ev) => ev.columnId === INFLICTION_COLUMNS.NATURE && ev.ownerEntityId === ENEMY_ID,
     );
     expect(natureInVM).toHaveLength(1);
     expect(eventDuration(natureInVM[0])).toBe(20 * FPS);

@@ -91,13 +91,13 @@ describe('A. Core Skill Placement', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId,
+        payload.ownerEntityId, payload.columnId,
         payload.atFrame, payload.defaultSkill,
       );
     });
 
     const events = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_AVYWENNA && ev.columnId === NounType.BATTLE,
+      ev => ev.ownerEntityId === SLOT_AVYWENNA && ev.columnId === NounType.BATTLE,
     );
     expect(events).toHaveLength(1);
     expect(events[0].name).toBe(BATTLE_SKILL_ID);
@@ -114,13 +114,13 @@ describe('A. Core Skill Placement', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId,
+        payload.ownerEntityId, payload.columnId,
         payload.atFrame, payload.defaultSkill,
       );
     });
 
     const events = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_AVYWENNA && ev.columnId === NounType.COMBO,
+      ev => ev.ownerEntityId === SLOT_AVYWENNA && ev.columnId === NounType.COMBO,
     );
     expect(events).toHaveLength(1);
     expect(events[0].name).toBe(COMBO_SKILL_ID);
@@ -144,13 +144,13 @@ describe('A. Core Skill Placement', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId,
+        payload.ownerEntityId, payload.columnId,
         payload.atFrame, payload.defaultSkill,
       );
     });
 
     const events = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_AVYWENNA && ev.columnId === NounType.ULTIMATE,
+      ev => ev.ownerEntityId === SLOT_AVYWENNA && ev.columnId === NounType.ULTIMATE,
     );
     expect(events).toHaveLength(1);
     expect(events[0].name).toBe(ULTIMATE_ID);
@@ -169,13 +169,13 @@ describe('B. Battle Skill — Electric Damage', () => {
     const payload = getMenuPayload(result.current, col!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId,
+        payload.ownerEntityId, payload.columnId,
         payload.atFrame, payload.defaultSkill,
       );
     });
 
     const battles = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_AVYWENNA && ev.columnId === NounType.BATTLE,
+      ev => ev.ownerEntityId === SLOT_AVYWENNA && ev.columnId === NounType.BATTLE,
     );
     expect(battles).toHaveLength(1);
     expect(battles[0].name).toBe(BATTLE_SKILL_ID);
@@ -188,7 +188,7 @@ describe('B. Battle Skill — Electric Damage', () => {
     const battleVM = viewModels.get(col!.key);
     expect(battleVM).toBeDefined();
     expect(battleVM!.events.some(
-      ev => ev.name === BATTLE_SKILL_ID && ev.ownerId === SLOT_AVYWENNA,
+      ev => ev.name === BATTLE_SKILL_ID && ev.ownerEntityId === SLOT_AVYWENNA,
     )).toBe(true);
   });
 });
@@ -207,13 +207,13 @@ describe('C. Combo Cooldown', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId,
+        payload.ownerEntityId, payload.columnId,
         payload.atFrame, payload.defaultSkill,
       );
     });
 
     const events = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_AVYWENNA && ev.columnId === NounType.COMBO,
+      ev => ev.ownerEntityId === SLOT_AVYWENNA && ev.columnId === NounType.COMBO,
     );
     expect(events).toHaveLength(1);
 
@@ -249,13 +249,13 @@ describe('D. Ultimate Energy', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId,
+        payload.ownerEntityId, payload.columnId,
         payload.atFrame, payload.defaultSkill,
       );
     });
 
     const events = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_AVYWENNA && ev.columnId === NounType.ULTIMATE,
+      ev => ev.ownerEntityId === SLOT_AVYWENNA && ev.columnId === NounType.ULTIMATE,
     );
     expect(events).toHaveLength(1);
 
@@ -295,7 +295,7 @@ describe('F. View Layer', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId,
+        payload.ownerEntityId, payload.columnId,
         payload.atFrame, payload.defaultSkill,
       );
     });
@@ -307,7 +307,7 @@ describe('F. View Layer', () => {
     const battleVM = viewModels.get(col!.key);
     expect(battleVM).toBeDefined();
     expect(battleVM!.events.some(
-      ev => ev.name === BATTLE_SKILL_ID && ev.ownerId === SLOT_AVYWENNA,
+      ev => ev.name === BATTLE_SKILL_ID && ev.ownerEntityId === SLOT_AVYWENNA,
     )).toBe(true);
   });
 
@@ -320,7 +320,7 @@ describe('F. View Layer', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId,
+        payload.ownerEntityId, payload.columnId,
         payload.atFrame, payload.defaultSkill,
       );
     });
@@ -332,7 +332,7 @@ describe('F. View Layer', () => {
     const comboVM = viewModels.get(col!.key);
     expect(comboVM).toBeDefined();
     expect(comboVM!.events.some(
-      ev => ev.name === COMBO_SKILL_ID && ev.ownerId === SLOT_AVYWENNA,
+      ev => ev.name === COMBO_SKILL_ID && ev.ownerEntityId === SLOT_AVYWENNA,
     )).toBe(true);
   });
 });
@@ -353,20 +353,20 @@ describe('G. Combo deploys THUNDERLANCE status', () => {
     const payload = getMenuPayload(result.current, comboCol!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId,
+        payload.ownerEntityId, payload.columnId,
         payload.atFrame, payload.defaultSkill,
       );
     });
 
     // Verify combo placed
     const comboEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_AVYWENNA && ev.columnId === NounType.COMBO,
+      ev => ev.ownerEntityId === SLOT_AVYWENNA && ev.columnId === NounType.COMBO,
     );
     expect(comboEvents).toHaveLength(1);
 
     // Verify THUNDERLANCE status events appear on the operator's status column
     const thunderlanceEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_AVYWENNA && ev.columnId === THUNDERLANCE_STATUS_ID,
+      ev => ev.ownerEntityId === SLOT_AVYWENNA && ev.columnId === THUNDERLANCE_STATUS_ID,
     );
     expect(thunderlanceEvents.length).toBeGreaterThanOrEqual(1);
 
@@ -381,7 +381,7 @@ describe('G. Combo deploys THUNDERLANCE status', () => {
     );
     const statusCol = result.current.columns.find(
       c => c.type === ColumnType.MINI_TIMELINE
-        && (c as MiniTimeline).ownerId === SLOT_AVYWENNA
+        && (c as MiniTimeline).ownerEntityId === SLOT_AVYWENNA
         && (c as MiniTimeline).columnId === OPERATOR_STATUS_COLUMN_ID,
     );
     expect(statusCol).toBeDefined();
@@ -408,20 +408,20 @@ describe('H. Ultimate deploys THUNDERLANCE_EX status', () => {
     const payload = getMenuPayload(result.current, ultCol!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId,
+        payload.ownerEntityId, payload.columnId,
         payload.atFrame, payload.defaultSkill,
       );
     });
 
     // Verify ultimate placed
     const ultEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_AVYWENNA && ev.columnId === NounType.ULTIMATE,
+      ev => ev.ownerEntityId === SLOT_AVYWENNA && ev.columnId === NounType.ULTIMATE,
     );
     expect(ultEvents).toHaveLength(1);
 
     // Verify THUNDERLANCE_EX status events appear on the operator
     const thunderlanceExEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_AVYWENNA && ev.columnId === THUNDERLANCE_EX_STATUS_ID,
+      ev => ev.ownerEntityId === SLOT_AVYWENNA && ev.columnId === THUNDERLANCE_EX_STATUS_ID,
     );
     expect(thunderlanceExEvents.length).toBeGreaterThanOrEqual(1);
 
@@ -438,7 +438,7 @@ describe('H. Ultimate deploys THUNDERLANCE_EX status', () => {
     );
     const statusCol = result.current.columns.find(
       c => c.type === ColumnType.MINI_TIMELINE
-        && (c as MiniTimeline).ownerId === SLOT_AVYWENNA
+        && (c as MiniTimeline).ownerEntityId === SLOT_AVYWENNA
         && (c as MiniTimeline).columnId === OPERATOR_STATUS_COLUMN_ID,
     );
     expect(statusCol).toBeDefined();
@@ -464,14 +464,14 @@ describe('I. Battle skill consumes THUNDERLANCE', () => {
     const comboPayload = getMenuPayload(result.current, comboCol!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        comboPayload.ownerId, comboPayload.columnId,
+        comboPayload.ownerEntityId, comboPayload.columnId,
         comboPayload.atFrame, comboPayload.defaultSkill,
       );
     });
 
     // Verify THUNDERLANCE status created by combo
     const thunderlanceBefore = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_AVYWENNA && ev.columnId === THUNDERLANCE_STATUS_ID,
+      ev => ev.ownerEntityId === SLOT_AVYWENNA && ev.columnId === THUNDERLANCE_STATUS_ID,
     );
     expect(thunderlanceBefore.length).toBeGreaterThanOrEqual(1);
 
@@ -482,20 +482,20 @@ describe('I. Battle skill consumes THUNDERLANCE', () => {
     const battlePayload = getMenuPayload(result.current, battleCol!, 8 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        battlePayload.ownerId, battlePayload.columnId,
+        battlePayload.ownerEntityId, battlePayload.columnId,
         battlePayload.atFrame, battlePayload.defaultSkill,
       );
     });
 
     // Verify BS was placed
     const battleEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_AVYWENNA && ev.columnId === NounType.BATTLE,
+      ev => ev.ownerEntityId === SLOT_AVYWENNA && ev.columnId === NounType.BATTLE,
     );
     expect(battleEvents).toHaveLength(1);
 
     // Verify THUNDERLANCE events are consumed
     const thunderlanceAfter = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_AVYWENNA && ev.columnId === THUNDERLANCE_STATUS_ID,
+      ev => ev.ownerEntityId === SLOT_AVYWENNA && ev.columnId === THUNDERLANCE_STATUS_ID,
     );
     const consumedEvents = thunderlanceAfter.filter(
       ev => ev.eventStatus === EventStatusType.CONSUMED,
@@ -513,21 +513,21 @@ describe('I. Battle skill consumes THUNDERLANCE', () => {
     const payload = getMenuPayload(result.current, battleCol!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId,
+        payload.ownerEntityId, payload.columnId,
         payload.atFrame, payload.defaultSkill,
       );
     });
 
     // BS still works normally
     const battleEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_AVYWENNA && ev.columnId === NounType.BATTLE,
+      ev => ev.ownerEntityId === SLOT_AVYWENNA && ev.columnId === NounType.BATTLE,
     );
     expect(battleEvents).toHaveLength(1);
     expect(battleEvents[0].name).toBe(BATTLE_SKILL_ID);
 
     // No THUNDERLANCE status events should exist at all
     const thunderlanceEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_AVYWENNA && ev.columnId === THUNDERLANCE_STATUS_ID,
+      ev => ev.ownerEntityId === SLOT_AVYWENNA && ev.columnId === THUNDERLANCE_STATUS_ID,
     );
     expect(thunderlanceEvents).toHaveLength(0);
   });
@@ -549,13 +549,13 @@ describe('J. BS retrieval applies Electric Infliction from EX lances', () => {
     const ultPayload = getMenuPayload(result.current, ultCol!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        ultPayload.ownerId, ultPayload.columnId, ultPayload.atFrame, ultPayload.defaultSkill,
+        ultPayload.ownerEntityId, ultPayload.columnId, ultPayload.atFrame, ultPayload.defaultSkill,
       );
     });
 
     // Verify THUNDERLANCE_EX exists
     const exBefore = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_AVYWENNA && ev.columnId === THUNDERLANCE_EX_STATUS_ID,
+      ev => ev.ownerEntityId === SLOT_AVYWENNA && ev.columnId === THUNDERLANCE_EX_STATUS_ID,
     );
     expect(exBefore.length).toBeGreaterThanOrEqual(1);
 
@@ -565,20 +565,20 @@ describe('J. BS retrieval applies Electric Infliction from EX lances', () => {
     const bsPayload = getMenuPayload(result.current, bsCol!, 10 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        bsPayload.ownerId, bsPayload.columnId, bsPayload.atFrame, bsPayload.defaultSkill,
+        bsPayload.ownerEntityId, bsPayload.columnId, bsPayload.atFrame, bsPayload.defaultSkill,
       );
     });
 
     // THUNDERLANCE_EX should be consumed
     const exAfter = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_AVYWENNA && ev.columnId === THUNDERLANCE_EX_STATUS_ID,
+      ev => ev.ownerEntityId === SLOT_AVYWENNA && ev.columnId === THUNDERLANCE_EX_STATUS_ID,
     );
     const consumedEx = exAfter.filter(ev => ev.eventStatus === EventStatusType.CONSUMED);
     expect(consumedEx.length).toBeGreaterThanOrEqual(1);
 
     // Electric Infliction should appear on enemy
     const electricInflictions = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === ENEMY_ID && ev.columnId === INFLICTION_COLUMNS.ELECTRIC,
+      ev => ev.ownerEntityId === ENEMY_ID && ev.columnId === INFLICTION_COLUMNS.ELECTRIC,
     );
     expect(electricInflictions.length).toBeGreaterThanOrEqual(1);
   });
@@ -599,7 +599,7 @@ describe('K. Ultimate — T2 Electric Susceptibility', () => {
     const payload = getMenuPayload(result.current, ultCol!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
@@ -607,7 +607,7 @@ describe('K. Ultimate — T2 Electric Susceptibility', () => {
     // T2 is baked with VARY_BY TALENT_LEVEL [0, 0.06, 0.10] — at default talent level (≥1), value is non-zero
     const elecSuscId = flattenQualifiedId(AdjectiveType.ELECTRIC, NounType.SUSCEPTIBILITY);
     const suscEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === ENEMY_ID
+      ev => ev.ownerEntityId === ENEMY_ID
         && ev.columnId === elecSuscId,
     );
     expect(suscEvents.length).toBeGreaterThanOrEqual(1);

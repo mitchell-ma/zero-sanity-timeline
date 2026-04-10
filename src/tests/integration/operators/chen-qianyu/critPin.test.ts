@@ -46,12 +46,12 @@ function addViaContextMenu(app: AppResult, slotId: string, columnId: string, atF
   const col = findColumn(app, slotId, columnId);
   expect(col).toBeDefined();
   const payload = getMenuPayload(app, col!, atFrame);
-  app.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+  app.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
 }
 
 function getLiftEvents(app: AppResult) {
   return app.allProcessedEvents.filter(
-    (ev) => ev.columnId === PHYSICAL_STATUS_COLUMNS.LIFT && ev.ownerId === ENEMY_ID,
+    (ev) => ev.columnId === PHYSICAL_STATUS_COLUMNS.LIFT && ev.ownerEntityId === ENEMY_ID,
   );
 }
 
@@ -91,7 +91,7 @@ describe('Chen Qianyu — Crit pin on derived Lift event', () => {
 
     // ── Pipeline re-run: move the first battle skill — triggers pipeline re-run, crit should persist ──
     const firstBS = result.current.allProcessedEvents.find(
-      (ev) => ev.columnId === NounType.BATTLE && ev.ownerId === SLOT_CHEN && ev.startFrame === 2 * FPS,
+      (ev) => ev.columnId === NounType.BATTLE && ev.ownerEntityId === SLOT_CHEN && ev.startFrame === 2 * FPS,
     );
     expect(firstBS).toBeDefined();
     act(() => { result.current.handleMoveEvent(firstBS!.uid, 1 * FPS); });
@@ -223,7 +223,7 @@ describe('Chen Qianyu — Crit pin on derived Lift event', () => {
 
     // Remove the 2nd battle skill — Lift disappears (only 1 Vulnerable, no trigger)
     const secondBS = result.current.allProcessedEvents.find(
-      (ev) => ev.columnId === NounType.BATTLE && ev.ownerId === SLOT_CHEN && ev.startFrame === 4 * FPS,
+      (ev) => ev.columnId === NounType.BATTLE && ev.ownerEntityId === SLOT_CHEN && ev.startFrame === 4 * FPS,
     );
     expect(secondBS).toBeDefined();
 

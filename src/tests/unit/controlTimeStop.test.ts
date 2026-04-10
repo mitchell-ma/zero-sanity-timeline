@@ -25,19 +25,19 @@ function makeEvent(overrides: Partial<TimelineEvent> & { uid: string; columnId: 
   return {
     id: overrides.id ?? overrides.name ?? 'TEST',
     name: overrides.name ?? 'TEST',
-    ownerId: 'op-1',
+    ownerEntityId: 'op-1',
     segments: [{ properties: { duration: 120 } }],
     ...overrides,
   };
 }
 
-function makeControlEvent(startFrame: number, duration: number, ownerId = 'op-1'): TimelineEvent {
+function makeControlEvent(startFrame: number, duration: number, ownerEntityId = 'op-1'): TimelineEvent {
   return makeEvent({
     uid: uid(),
     id: NounType.CONTROL,
     name: NounType.CONTROL,
     columnId: OPERATOR_COLUMNS.INPUT,
-    ownerId,
+    ownerEntityId,
     startFrame,
     segments: [{ properties: { duration } }],
   });

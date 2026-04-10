@@ -49,7 +49,7 @@ The `toObjectType` field in frame effects supports:
 
 This is necessary because some statuses target a specific operator regardless of who triggers the effect. For example, any operator's Final Strike can grant Melting Flame to Laevatain via the Scorching Heart talent — the `toObjectType` must be `LAEVATAIN` so the engine knows to route the status to Laevatain's slot even when a different operator's frame is the source.
 
-**Implementation status**: ✅ `resolveOwnerId()` accepts `operatorSlotMap`, `FrameApplyStatus.targetOperatorId` stores the raw operator ID, DSL parser populates it for non-standard targets.
+**Implementation status**: ✅ `resolveEntityId()` accepts `operatorSlotMap`, `FrameApplyStatus.targetOperatorId` stores the raw operator ID, DSL parser populates it for non-standard targets.
 
 ## Exploration Strategy
 
@@ -111,7 +111,7 @@ All three sources feed the **same 4-stack pool**:
 
 1. **Max stack cap** — `deriveStatusEvents()` now counts active events at each trigger frame and skips if at `stack.max`.
 2. **HAVE predicate cardinality** — `checkPredicate()` and `findTriggerMatches()` now enforce `cardinalityConstraint` (EXACTLY, GREATER_THAN_EQUAL) on HAVE STATUS predicates instead of boolean "exists?" check.
-3. **Dedup broadened** — Dedup check uses columnId only (ignoring ownerId) and excludes CONSUMED events, preventing double-derivation while allowing post-consumption re-accumulation.
+3. **Dedup broadened** — Dedup check uses columnId only (ignoring ownerEntityId) and excludes CONSUMED events, preventing double-derivation while allowing post-consumption re-accumulation.
 4. **Threshold target resolution** — `evaluateThresholdClauses()` resolves target owner from the target status def's own `target` field (e.g. SCORCHING_HEART_EFFECT → THIS_OPERATOR) instead of the clause's `toObjectType`.
 5. **Consumption** — All status consumption uses frame-level `consumeStatus` markers processed by `consumeOperatorStatuses`. No engine-level consume logic.
 

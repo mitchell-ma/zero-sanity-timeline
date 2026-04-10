@@ -76,7 +76,7 @@ function addFreeformVulnerables(ref: AppRef, count: number, startSecond: number)
     const payload = getVulnerableMenuPayload(ref.current, atFrame);
     act(() => {
       ref.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
   }
@@ -94,7 +94,7 @@ function addBattleSkills(ref: AppRef, count: number, startSecond: number) {
     const payload = getMenuPayload(ref.current, col!, atFrame);
     act(() => {
       ref.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
   }
@@ -102,7 +102,7 @@ function addBattleSkills(ref: AppRef, count: number, startSecond: number) {
 
 function getVulnerableEvents(app: AppResult) {
   return app.allProcessedEvents
-    .filter((ev) => ev.columnId === PHYSICAL_INFLICTION_COLUMNS.VULNERABLE && ev.ownerId === ENEMY_ID)
+    .filter((ev) => ev.columnId === PHYSICAL_INFLICTION_COLUMNS.VULNERABLE && ev.ownerEntityId === ENEMY_ID)
     .sort((a, b) => a.startFrame - b.startFrame);
 }
 

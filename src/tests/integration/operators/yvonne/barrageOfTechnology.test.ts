@@ -46,7 +46,7 @@ function setup() {
 function addBS(app: AppResult, atFrame: number) {
   const col = findColumn(app, SLOT, NounType.BATTLE);
   const payload = getMenuPayload(app, col!, atFrame);
-  app.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+  app.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
 }
 
 /** Place cryo infliction + BS to trigger Barrage (BS only triggers Barrage when Solidification is applied) */
@@ -62,7 +62,7 @@ function triggerBarrage(app: AppResult, bsFrame: number) {
 
 function getBarrageEvents(app: AppResult) {
   return app.allProcessedEvents.filter(
-    ev => ev.columnId === BARRAGE_ID && ev.ownerId === SLOT,
+    ev => ev.columnId === BARRAGE_ID && ev.ownerEntityId === SLOT,
   );
 }
 
@@ -133,7 +133,7 @@ describe('B. Barrage trigger from BS Solidification', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
@@ -264,12 +264,12 @@ describe('D. Validation warnings for freeform placement', () => {
     const payload = getMenuPayload(result.current, col!, 8 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const batk = result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT && ev.columnId === NounType.BASIC_ATTACK && ev.id === BATK_ID,
+      ev => ev.ownerEntityId === SLOT && ev.columnId === NounType.BASIC_ATTACK && ev.id === BATK_ID,
     );
     expect(batk).toBeDefined();
 
@@ -301,11 +301,11 @@ describe('D. Validation warnings for freeform placement', () => {
     )!;
     const lastSegButton = batkItem.inlineButtons![4];
     const segPayload = lastSegButton.actionPayload as {
-      ownerId: string; columnId: string; atFrame: number; defaultSkill: Record<string, unknown>;
+      ownerEntityId: string; columnId: string; atFrame: number; defaultSkill: Record<string, unknown>;
     };
     act(() => {
       result.current.handleAddEvent(
-        segPayload.ownerId, segPayload.columnId, segPayload.atFrame, segPayload.defaultSkill,
+        segPayload.ownerEntityId, segPayload.columnId, segPayload.atFrame, segPayload.defaultSkill,
       );
     });
 
@@ -313,15 +313,15 @@ describe('D. Validation warnings for freeform placement', () => {
     const col2 = findColumn(result.current, SLOT, NounType.BASIC_ATTACK)!;
     const payload2 = getMenuPayload(result.current, col2, 15 * FPS);
     const batkCountBefore = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT && ev.columnId === NounType.BASIC_ATTACK,
+      ev => ev.ownerEntityId === SLOT && ev.columnId === NounType.BASIC_ATTACK,
     ).length;
     act(() => {
       result.current.handleAddEvent(
-        payload2.ownerId, payload2.columnId, payload2.atFrame, payload2.defaultSkill,
+        payload2.ownerEntityId, payload2.columnId, payload2.atFrame, payload2.defaultSkill,
       );
     });
     const batkCountAfter = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT && ev.columnId === NounType.BASIC_ATTACK,
+      ev => ev.ownerEntityId === SLOT && ev.columnId === NounType.BASIC_ATTACK,
     ).length;
     expect(batkCountAfter).toBe(batkCountBefore + 1);
   });
@@ -339,16 +339,16 @@ describe('D. Validation warnings for freeform placement', () => {
     );
     const lastSegButton = batkItem!.inlineButtons![4];
     const segPayload = lastSegButton.actionPayload as {
-      ownerId: string; columnId: string; atFrame: number; defaultSkill: Record<string, unknown>;
+      ownerEntityId: string; columnId: string; atFrame: number; defaultSkill: Record<string, unknown>;
     };
     act(() => {
       result.current.handleAddEvent(
-        segPayload.ownerId, segPayload.columnId, segPayload.atFrame, segPayload.defaultSkill,
+        segPayload.ownerEntityId, segPayload.columnId, segPayload.atFrame, segPayload.defaultSkill,
       );
     });
 
     const batk = result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT && ev.columnId === NounType.BASIC_ATTACK && ev.id === BATK_ID,
+      ev => ev.ownerEntityId === SLOT && ev.columnId === NounType.BASIC_ATTACK && ev.id === BATK_ID,
     );
     expect(batk).toBeDefined();
 

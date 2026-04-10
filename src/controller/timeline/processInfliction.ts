@@ -26,7 +26,7 @@ export {
 
 /** Source information for event status changes (consumed/refreshed). */
 export interface StatusSource {
-  ownerId: string;
+  ownerEntityId: string;
   skillName?: string;
 }
 
@@ -34,10 +34,10 @@ export interface StatusSource {
 export function resolveSusceptibility(
   raw: Partial<Record<ElementType, readonly number[]>>,
   sourceColumnId: string,
-  sourceOwnerId: string,
+  sourceEntityId: string,
   loadoutProperties?: Record<string, LoadoutProperties>,
 ): Partial<Record<ElementType, number>> {
-  const stats = loadoutProperties?.[sourceOwnerId] ?? DEFAULT_LOADOUT_PROPERTIES;
+  const stats = loadoutProperties?.[sourceEntityId] ?? DEFAULT_LOADOUT_PROPERTIES;
   let skillLevel: number;
   switch (sourceColumnId) {
     case NounType.COMBO: skillLevel = stats.skills.comboSkillLevel; break;
@@ -70,7 +70,7 @@ export function resolveSusceptibility(
 export function mergeReactions(events: TimelineEvent[]): TimelineEvent[] {
   const reactionsByType = new Map<string, TimelineEvent[]>();
   for (const ev of events) {
-    if (ev.ownerId === ENEMY_ID && REACTION_COLUMN_IDS.has(ev.columnId)
+    if (ev.ownerEntityId === ENEMY_ID && REACTION_COLUMN_IDS.has(ev.columnId)
       && !ev.eventStatus) { // Skip already-processed (refreshed/consumed) events
       const group = reactionsByType.get(ev.columnId) ?? [];
       group.push(ev);
@@ -99,7 +99,7 @@ export function mergeReactions(events: TimelineEvent[]): TimelineEvent[] {
 
         clampMap.set(current.uid, {
           duration: Math.max(0, next.startFrame - current.startFrame),
-          source: { ownerId: next.sourceOwnerId ?? ENEMY_ID, skillName: next.sourceSkillName },
+          source: { ownerEntityId: next.sourceEntityId ?? ENEMY_ID, skillName: next.sourceSkillName },
         });
 
         const currentStacks = mergeMap.get(current.uid)?.stacks ?? current.stacks ?? 1;
@@ -137,7 +137,7 @@ export function mergeReactions(events: TimelineEvent[]): TimelineEvent[] {
         // Clamp older event at the point the newer starts
         clampMap.set(current.uid, {
           duration: Math.max(0, next.startFrame - current.startFrame),
-          source: { ownerId: next.sourceOwnerId ?? ENEMY_ID, skillName: next.sourceSkillName },
+          source: { ownerEntityId: next.sourceEntityId ?? ENEMY_ID, skillName: next.sourceSkillName },
         });
 
         // Newer inherits max stacks
@@ -163,7 +163,7 @@ export function mergeReactions(events: TimelineEvent[]): TimelineEvent[] {
       const truncated = truncateSegments(ev.segments, clamp.duration);
       ev.segments = truncated ?? [{ properties: { duration: clamp.duration } }];
       ev.eventStatus = EventStatusType.REFRESHED;
-      ev.eventStatusOwnerId = clamp.source.ownerId;
+      ev.eventStatusEntityId = clamp.source.ownerEntityId;
       ev.eventStatusSkillName = clamp.source.skillName;
       return ev;
     }
@@ -229,7 +229,7 @@ const REACTION_DAMAGE_ELEMENT: Record<string, ElementType> = {
  */
 export function attachReactionFrames(events: TimelineEvent[]): TimelineEvent[] {
   for (const ev of events) {
-    if (ev.ownerId !== ENEMY_ID || !REACTION_COLUMN_IDS.has(ev.columnId)) continue;
+    if (ev.ownerEntityId !== ENEMY_ID || !REACTION_COLUMN_IDS.has(ev.columnId)) continue;
     // Skip if event already has rich segments (more than a single default duration segment)
     if (ev.segments.length > 1 || ev.segments[0]?.frames) continue;
 

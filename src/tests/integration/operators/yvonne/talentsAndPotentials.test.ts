@@ -61,7 +61,7 @@ function addUlt(app: AppResult, atFrame: number) {
   const col = findColumn(app, SLOT, NounType.ULTIMATE);
   const payload = getMenuPayload(app, col!, atFrame);
   act(() => {
-    app.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+    app.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
   });
 }
 
@@ -142,7 +142,7 @@ describe('B. Freezing Point — two-part status system', () => {
     act(() => { placeCryoInfliction(result.current, 1 * FPS); });
 
     const cryo = result.current.allProcessedEvents.filter(
-      ev => ev.id === CRYO_STATUS_ID && ev.ownerId === SLOT,
+      ev => ev.id === CRYO_STATUS_ID && ev.ownerEntityId === SLOT,
     );
     expect(cryo.length).toBeGreaterThanOrEqual(1);
   });
@@ -151,7 +151,7 @@ describe('B. Freezing Point — two-part status system', () => {
     const { result } = setup();
 
     const cryo = result.current.allProcessedEvents.filter(
-      ev => ev.id === CRYO_STATUS_ID && ev.ownerId === SLOT,
+      ev => ev.id === CRYO_STATUS_ID && ev.ownerEntityId === SLOT,
     );
     expect(cryo).toHaveLength(0);
   });
@@ -166,7 +166,7 @@ describe('B. Freezing Point — two-part status system', () => {
     });
 
     const cryo = result.current.allProcessedEvents.filter(
-      ev => ev.id === CRYO_STATUS_ID && ev.ownerId === SLOT,
+      ev => ev.id === CRYO_STATUS_ID && ev.ownerEntityId === SLOT,
     );
     expect(cryo).toHaveLength(0);
   });
@@ -178,7 +178,7 @@ describe('B. Freezing Point — two-part status system', () => {
     act(() => { placeSolidification(result.current, 1 * FPS); });
 
     const solid = result.current.allProcessedEvents.filter(
-      ev => ev.id === SOLID_STATUS_ID && ev.ownerId === SLOT,
+      ev => ev.id === SOLID_STATUS_ID && ev.ownerEntityId === SLOT,
     );
     expect(solid.length).toBeGreaterThanOrEqual(1);
   });
@@ -195,10 +195,10 @@ describe('B. Freezing Point — two-part status system', () => {
     });
 
     const infliction = result.current.allProcessedEvents.find(
-      ev => ev.columnId === INFLICTION_COLUMNS.CRYO && ev.ownerId === ENEMY_ID,
+      ev => ev.columnId === INFLICTION_COLUMNS.CRYO && ev.ownerEntityId === ENEMY_ID,
     )!;
     const status = result.current.allProcessedEvents.find(
-      ev => ev.id === CRYO_STATUS_ID && ev.ownerId === SLOT,
+      ev => ev.id === CRYO_STATUS_ID && ev.ownerEntityId === SLOT,
     )!;
     expect(infliction).toBeDefined();
     expect(status).toBeDefined();
@@ -218,10 +218,10 @@ describe('B. Freezing Point — two-part status system', () => {
     act(() => { placeSolidification(result.current, 1 * FPS); });
 
     const reaction = result.current.allProcessedEvents.find(
-      ev => ev.columnId === REACTION_COLUMNS.SOLIDIFICATION && ev.ownerId === ENEMY_ID,
+      ev => ev.columnId === REACTION_COLUMNS.SOLIDIFICATION && ev.ownerEntityId === ENEMY_ID,
     )!;
     const status = result.current.allProcessedEvents.find(
-      ev => ev.id === SOLID_STATUS_ID && ev.ownerId === SLOT,
+      ev => ev.id === SOLID_STATUS_ID && ev.ownerEntityId === SLOT,
     )!;
     expect(reaction).toBeDefined();
     expect(status).toBeDefined();
@@ -246,10 +246,10 @@ describe('B. Freezing Point — two-part status system', () => {
     });
 
     const infliction = result.current.allProcessedEvents.find(
-      ev => ev.columnId === INFLICTION_COLUMNS.CRYO && ev.ownerId === ENEMY_ID,
+      ev => ev.columnId === INFLICTION_COLUMNS.CRYO && ev.ownerEntityId === ENEMY_ID,
     )!;
     const status = result.current.allProcessedEvents.find(
-      ev => ev.id === CRYO_STATUS_ID && ev.ownerId === SLOT,
+      ev => ev.id === CRYO_STATUS_ID && ev.ownerEntityId === SLOT,
     )!;
 
     const inflictionEnd = infliction.startFrame + infliction.segments.reduce(
@@ -268,7 +268,7 @@ describe('B. Freezing Point — two-part status system', () => {
     const ultCol = findColumn(result.current, SLOT, NounType.ULTIMATE)!;
     const ultPayload = getMenuPayload(result.current, ultCol, 3 * FPS);
     act(() => {
-      result.current.handleAddEvent(ultPayload.ownerId, ultPayload.columnId, ultPayload.atFrame, ultPayload.defaultSkill);
+      result.current.handleAddEvent(ultPayload.ownerEntityId, ultPayload.columnId, ultPayload.atFrame, ultPayload.defaultSkill);
     });
 
     // Place cryo infliction at 2s with 5s duration — overlaps with TIME_STOP
@@ -280,10 +280,10 @@ describe('B. Freezing Point — two-part status system', () => {
     });
 
     const infliction = result.current.allProcessedEvents.find(
-      ev => ev.columnId === INFLICTION_COLUMNS.CRYO && ev.ownerId === ENEMY_ID,
+      ev => ev.columnId === INFLICTION_COLUMNS.CRYO && ev.ownerEntityId === ENEMY_ID,
     )!;
     const status = result.current.allProcessedEvents.find(
-      ev => ev.id === CRYO_STATUS_ID && ev.ownerId === SLOT,
+      ev => ev.id === CRYO_STATUS_ID && ev.ownerEntityId === SLOT,
     )!;
     expect(infliction).toBeDefined();
     expect(status).toBeDefined();
@@ -301,7 +301,7 @@ describe('B. Freezing Point — two-part status system', () => {
     const { result } = setup();
 
     const solid = result.current.allProcessedEvents.filter(
-      ev => ev.id === SOLID_STATUS_ID && ev.ownerId === SLOT,
+      ev => ev.id === SOLID_STATUS_ID && ev.ownerEntityId === SLOT,
     );
     expect(solid).toHaveLength(0);
   });
@@ -359,7 +359,7 @@ describe('D. P5 Expert Mechcrafter', () => {
     addUlt(result.current, 5 * FPS);
 
     const expertStatus = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === EXPERT_ID && ev.ownerId === SLOT,
+      ev => ev.columnId === EXPERT_ID && ev.ownerEntityId === SLOT,
     );
     expect(expertStatus.length).toBeGreaterThanOrEqual(1);
   });
@@ -370,10 +370,10 @@ describe('D. P5 Expert Mechcrafter', () => {
     addUlt(result.current, 5 * FPS);
 
     const ult = result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT && ev.columnId === NounType.ULTIMATE,
+      ev => ev.ownerEntityId === SLOT && ev.columnId === NounType.ULTIMATE,
     )!;
     const expertStatus = result.current.allProcessedEvents.find(
-      ev => ev.columnId === EXPERT_ID && ev.ownerId === SLOT,
+      ev => ev.columnId === EXPERT_ID && ev.ownerEntityId === SLOT,
     )!;
     // Status should start at the active segment start (after animation)
     const animDuration = ult.segments[0].properties.duration;
@@ -386,7 +386,7 @@ describe('D. P5 Expert Mechcrafter', () => {
     addUlt(result.current, 5 * FPS);
 
     const expertStatus = result.current.allProcessedEvents.find(
-      ev => ev.columnId === EXPERT_ID && ev.ownerId === SLOT,
+      ev => ev.columnId === EXPERT_ID && ev.ownerEntityId === SLOT,
     )!;
     const duration = expertStatus.segments.reduce(
       (sum: number, s: { properties: { duration: number } }) => sum + s.properties.duration, 0,
@@ -406,7 +406,7 @@ describe('D. P5 Expert Mechcrafter', () => {
     addUlt(result.current, 5 * FPS);
 
     const expertStatus = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === EXPERT_ID && ev.ownerId === SLOT,
+      ev => ev.columnId === EXPERT_ID && ev.ownerEntityId === SLOT,
     );
     expect(expertStatus).toHaveLength(0);
   });
@@ -417,7 +417,7 @@ describe('D. P5 Expert Mechcrafter', () => {
     addUlt(result.current, 5 * FPS);
 
     const expertStatus = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === EXPERT_ID && ev.ownerId === SLOT,
+      ev => ev.columnId === EXPERT_ID && ev.ownerEntityId === SLOT,
     );
     expect(expertStatus).toHaveLength(0);
   });
@@ -428,7 +428,7 @@ describe('D. P5 Expert Mechcrafter', () => {
 
     // No status at P0
     expect(result.current.allProcessedEvents.filter(
-      ev => ev.columnId === EXPERT_ID && ev.ownerId === SLOT,
+      ev => ev.columnId === EXPERT_ID && ev.ownerEntityId === SLOT,
     )).toHaveLength(0);
 
     // Change to P5
@@ -436,7 +436,7 @@ describe('D. P5 Expert Mechcrafter', () => {
 
     // Now status should appear
     const expertStatus = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === EXPERT_ID && ev.ownerId === SLOT,
+      ev => ev.columnId === EXPERT_ID && ev.ownerEntityId === SLOT,
     );
     expect(expertStatus.length).toBeGreaterThanOrEqual(1);
   });
@@ -447,7 +447,7 @@ describe('D. P5 Expert Mechcrafter', () => {
     addUlt(result.current, 5 * FPS);
 
     const expertStatus = result.current.allProcessedEvents.find(
-      ev => ev.id === EXPERT_ID && ev.ownerId === SLOT,
+      ev => ev.id === EXPERT_ID && ev.ownerEntityId === SLOT,
     );
     expect(expertStatus).toBeDefined();
     // Verify it's on the operator status column
@@ -463,7 +463,7 @@ describe('D. P5 Expert Mechcrafter', () => {
 
     // Status at P5
     expect(result.current.allProcessedEvents.filter(
-      ev => ev.columnId === EXPERT_ID && ev.ownerId === SLOT,
+      ev => ev.columnId === EXPERT_ID && ev.ownerEntityId === SLOT,
     ).length).toBeGreaterThanOrEqual(1);
 
     // Change to P4
@@ -471,7 +471,7 @@ describe('D. P5 Expert Mechcrafter', () => {
 
     // Status should be gone
     expect(result.current.allProcessedEvents.filter(
-      ev => ev.columnId === EXPERT_ID && ev.ownerId === SLOT,
+      ev => ev.columnId === EXPERT_ID && ev.ownerEntityId === SLOT,
     )).toHaveLength(0);
   });
 });
@@ -537,14 +537,14 @@ describe('E. Crit Stacks on EBATK', () => {
     if (!ebatkItem) return; // EBATK not available in menu — skip runtime test
 
     const payload = ebatkItem.actionPayload as {
-      ownerId: string; columnId: string; atFrame: number; defaultSkill: Record<string, unknown>;
+      ownerEntityId: string; columnId: string; atFrame: number; defaultSkill: Record<string, unknown>;
     };
     act(() => {
-      result.current.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+      result.current.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
     });
 
     const critStacks = result.current.allProcessedEvents.filter(
-      ev => ev.id === CRIT_STACKS_JSON.properties.id && ev.ownerId === SLOT,
+      ev => ev.id === CRIT_STACKS_JSON.properties.id && ev.ownerEntityId === SLOT,
     );
     // Should have at least 1 crit stack from the first segment's first frame
     expect(critStacks.length).toBeGreaterThanOrEqual(1);

@@ -49,7 +49,7 @@ function linkEvent(startFrame: number, durationFrames: number): TimelineEvent {
     uid: `link-integ-${linkIdCounter++}`,
     id: StatusType.LINK,
     name: StatusType.LINK,
-    ownerId: TEAM_ID,
+    ownerEntityId: TEAM_ID,
     columnId: StatusType.LINK,
     startFrame,
     segments: [{ properties: { duration: durationFrames } }],
@@ -114,13 +114,13 @@ describe('Link Consumption — Integration', () => {
     // Add battle skill via context menu payload
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     // Layer 2: Controller — verify event placed
     const battleEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === NounType.BATTLE,
+      (ev) => ev.ownerEntityId === SLOT_AKEKURI && ev.columnId === NounType.BATTLE,
     );
     expect(battleEvents).toHaveLength(1);
 
@@ -145,12 +145,12 @@ describe('Link Consumption — Integration', () => {
 
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const ultEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === NounType.ULTIMATE,
+      (ev) => ev.ownerEntityId === SLOT_AKEKURI && ev.columnId === NounType.ULTIMATE,
     );
     expect(ultEvents).toHaveLength(1);
 
@@ -174,12 +174,12 @@ describe('Link Consumption — Integration', () => {
 
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const basicEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === NounType.BASIC_ATTACK,
+      (ev) => ev.ownerEntityId === SLOT_AKEKURI && ev.columnId === NounType.BASIC_ATTACK,
     );
     expect(basicEvents).toHaveLength(1);
 
@@ -211,12 +211,12 @@ describe('Link Consumption — Integration', () => {
 
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const comboEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === NounType.COMBO,
+      (ev) => ev.ownerEntityId === SLOT_AKEKURI && ev.columnId === NounType.COMBO,
     );
     if (comboEvents.length === 0) return;
 
@@ -238,7 +238,7 @@ describe('Link Consumption — Integration', () => {
 
     act(() => {
       result.current.handleAddEvent(
-        payload1.ownerId, payload1.columnId, payload1.atFrame, payload1.defaultSkill,
+        payload1.ownerEntityId, payload1.columnId, payload1.atFrame, payload1.defaultSkill,
       );
     });
 
@@ -249,12 +249,12 @@ describe('Link Consumption — Integration', () => {
 
     act(() => {
       result.current.handleAddEvent(
-        payload2.ownerId, payload2.columnId, payload2.atFrame, payload2.defaultSkill,
+        payload2.ownerEntityId, payload2.columnId, payload2.atFrame, payload2.defaultSkill,
       );
     });
 
     const battleEvents = result.current.allProcessedEvents
-      .filter((ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === NounType.BATTLE)
+      .filter((ev) => ev.ownerEntityId === SLOT_AKEKURI && ev.columnId === NounType.BATTLE)
       .sort((a, b) => a.startFrame - b.startFrame);
     expect(battleEvents).toHaveLength(2);
 
@@ -280,12 +280,12 @@ describe('Link Consumption — Integration', () => {
 
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const battleEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === NounType.BATTLE,
+      (ev) => ev.ownerEntityId === SLOT_AKEKURI && ev.columnId === NounType.BATTLE,
     );
     expect(battleEvents).toHaveLength(1);
 
@@ -323,12 +323,12 @@ describe('Link Consumption — Freeform mode events', () => {
 
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const battleEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === NounType.BATTLE,
+      (ev) => ev.ownerEntityId === SLOT_AKEKURI && ev.columnId === NounType.BATTLE,
     );
     expect(battleEvents).toHaveLength(1);
 
@@ -356,12 +356,12 @@ describe('Link Consumption — Freeform mode events', () => {
 
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const ultEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === NounType.ULTIMATE,
+      (ev) => ev.ownerEntityId === SLOT_AKEKURI && ev.columnId === NounType.ULTIMATE,
     );
     expect(ultEvents).toHaveLength(1);
 
@@ -387,12 +387,12 @@ describe('Link Consumption — Freeform mode events', () => {
 
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const basicEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === NounType.BASIC_ATTACK,
+      (ev) => ev.ownerEntityId === SLOT_AKEKURI && ev.columnId === NounType.BASIC_ATTACK,
     );
     expect(basicEvents).toHaveLength(1);
 
@@ -425,12 +425,12 @@ describe('Link Consumption — Freeform mode events', () => {
 
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const comboEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === NounType.COMBO,
+      (ev) => ev.ownerEntityId === SLOT_AKEKURI && ev.columnId === NounType.COMBO,
     );
     if (comboEvents.length === 0) return;
 

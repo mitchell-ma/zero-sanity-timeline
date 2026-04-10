@@ -74,30 +74,30 @@ function placeSlowOnEnemy(app: AppResult, atFrame: number) {
   expect(slowItem).toBeDefined();
   expect(slowItem!.disabled).toBeFalsy();
   const payload = slowItem!.actionPayload as AddEventPayload;
-  app.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+  app.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
 }
 
 /** Get triggered T1 talent events (startFrame > 0 distinguishes from permanent presence). */
 function getT1Events(app: AppResult) {
   return app.allProcessedEvents.filter(
     (ev) => ev.name === T1_TALENT_ID
-      && ev.ownerId === SLOT_FLUORITE
+      && ev.ownerEntityId === SLOT_FLUORITE
       && ev.startFrame > 0,
   );
 }
 
 function getSlowEvents(app: AppResult) {
   return app.allProcessedEvents.filter(
-    (ev) => ev.name === SLOW_STATUS_ID && ev.ownerId === ENEMY_ID,
+    (ev) => ev.name === SLOW_STATUS_ID && ev.ownerEntityId === ENEMY_ID,
   );
 }
 
 /** Find events by name in any ColumnViewModel. */
-function findInView(viewModels: Map<string, ColumnViewModel>, name: string, ownerId: string) {
+function findInView(viewModels: Map<string, ColumnViewModel>, name: string, ownerEntityId: string) {
   let found: ReturnType<typeof getSlowEvents>[0] | undefined;
   viewModels.forEach((vm) => {
     if (found) return;
-    const match = vm.events.find((ev) => ev.name === name && ev.ownerId === ownerId && eventDuration(ev) > 0);
+    const match = vm.events.find((ev) => ev.name === name && ev.ownerEntityId === ownerEntityId && eventDuration(ev) > 0);
     if (match) found = match;
   });
   return found;
@@ -264,7 +264,7 @@ describe('Fluorite T1 talent triggered by freeform SLOW status', () => {
     const viewModels = computeTimelinePresentation(result.current.allProcessedEvents, result.current.columns);
     let t1ViewCount = 0;
     viewModels.forEach((vm) => {
-      t1ViewCount += vm.events.filter((ev) => ev.name === T1_TALENT_ID && ev.ownerId === SLOT_FLUORITE && eventDuration(ev) > 0).length;
+      t1ViewCount += vm.events.filter((ev) => ev.name === T1_TALENT_ID && ev.ownerEntityId === SLOT_FLUORITE && eventDuration(ev) > 0).length;
     });
     expect(t1ViewCount).toBe(1);
   });

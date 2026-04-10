@@ -37,7 +37,7 @@ export function computeInvalidSet(
   for (const de of draggedEvents) {
     // Resource zone: check live zones (includes the event's own contribution)
     if (de.columnId === NounType.BATTLE || de.columnId === NounType.ULTIMATE) {
-      const zones = resourceZones.get(`${de.ownerId}:${de.columnId}`);
+      const zones = resourceZones.get(`${de.ownerEntityId}:${de.columnId}`);
       if (zones?.some((z) => de.startFrame >= z.start && de.startFrame < z.end)) {
         invalid.add(de.uid);
       }
@@ -45,7 +45,7 @@ export function computeInvalidSet(
     // Combo window: check if event is outside all combo windows
     if (de.columnId === NounType.COMBO) {
       const windows = allEvents.filter(
-        (w) => w.columnId === COMBO_WINDOW_COLUMN_ID && w.ownerId === de.ownerId,
+        (w) => w.columnId === COMBO_WINDOW_COLUMN_ID && w.ownerEntityId === de.ownerEntityId,
       );
       const inWindow = windows.some((w) => {
         const duration = computeSegmentsSpan(w.segments);

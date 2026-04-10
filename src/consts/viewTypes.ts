@@ -170,7 +170,7 @@ export interface TimelineEvent {
   id: string;
   /** Display name. Not used for logic — use `id` for comparisons. */
   name: string;
-  ownerId: string;
+  ownerEntityId: string;
   columnId: string;
   startFrame: number;
   /** Required segment array — all event timing flows through segments. */
@@ -214,10 +214,10 @@ export interface TimelineEvent {
   /** Whether this event's duration is game-time or real-time dependent. Defaults to GAME_TIME. */
   timeDependency?: TimeDependency;
   /** Operator slot ID that originally produced this derived event. */
-  sourceOwnerId?: string;
+  sourceEntityId?: string;
   /**
    * Slot id this event belongs to (e.g. "slot-pogranichnik"). Optional during
-   * the chainRef migration — backfilled in DEC._ingest from ownerId +
+   * the chainRef migration — backfilled in DEC._ingest from ownerEntityId +
    * slotOperatorMap. Will become required after Phase 4.
    */
   ownerSlotId?: string;
@@ -235,7 +235,7 @@ export interface TimelineEvent {
   /** Outcome of a derived event: how it ended. */
   eventStatus?: EventStatusType;
   /** Operator slot ID responsible for this event status change. */
-  eventStatusOwnerId?: string;
+  eventStatusEntityId?: string;
   /** Skill name responsible for this event status change. */
   eventStatusSkillName?: string;
   /** True if this reaction was forced (bypassed infliction stacks). */
@@ -340,7 +340,7 @@ export interface MicroColumn {
     name?: string;
     segments?: EventSegmentData[];
     /** Source operator ID for manually-created events (e.g. 'debugger'). */
-    sourceOwnerId?: string;
+    sourceEntityId?: string;
     /** Source skill name for manually-created events (e.g. 'Debug'). */
     sourceSkillName?: string;
     /** Stacking config from status JSON (limit, interactionType, duration). */
@@ -353,7 +353,7 @@ export type MiniTimeline = {
   key: string;
   type: import("./enums").ColumnType.MINI_TIMELINE;
   source: import("./enums").TimelineSourceType;
-  ownerId: string;
+  ownerEntityId: string;
   columnId: string;
   label: string;
   color: string;
@@ -365,7 +365,7 @@ export type MiniTimeline = {
   microColumnAssignment?: import("./enums").MicroColumnAssignment;
   /** If set, collect events matching any of these columnIds (instead of col.columnId). */
   matchColumnIds?: string[];
-  /** If set, match all events on this ownerId EXCEPT those with columnIds in this set. */
+  /** If set, match all events on this ownerEntityId EXCEPT those with columnIds in this set. */
   matchAllExcept?: ReadonlySet<string>;
 
   /** Default durations for new events created in this mini-timeline. */
@@ -441,7 +441,7 @@ export type MiniTimeline = {
 export type PlaceholderColumn = {
   key: string;
   type: import("./enums").ColumnType.PLACEHOLDER;
-  ownerId: string;
+  ownerEntityId: string;
   color: string;
 };
 

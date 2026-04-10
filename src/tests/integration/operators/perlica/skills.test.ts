@@ -107,12 +107,12 @@ describe('A. Core Skill Placement', () => {
     const payload = getAddEventPayload(menuItems!);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const battles = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_PERLICA && ev.columnId === NounType.BATTLE,
+      (ev) => ev.ownerEntityId === SLOT_PERLICA && ev.columnId === NounType.BATTLE,
     );
     expect(battles).toHaveLength(1);
     expect(battles[0].name).toBe(BATTLE_SKILL_ID);
@@ -134,12 +134,12 @@ describe('A. Core Skill Placement', () => {
     const payload = getAddEventPayload(menuItems!);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const combos = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_PERLICA && ev.columnId === NounType.COMBO,
+      (ev) => ev.ownerEntityId === SLOT_PERLICA && ev.columnId === NounType.COMBO,
     );
     expect(combos).toHaveLength(1);
     expect(combos[0].name).toBe(COMBO_ID);
@@ -165,12 +165,12 @@ describe('A. Core Skill Placement', () => {
     const payload = getAddEventPayload(menuItems!);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const ultimates = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_PERLICA && ev.columnId === NounType.ULTIMATE,
+      (ev) => ev.ownerEntityId === SLOT_PERLICA && ev.columnId === NounType.ULTIMATE,
     );
     expect(ultimates).toHaveLength(1);
     expect(ultimates[0].name).toBe(ULTIMATE_ID);
@@ -190,13 +190,13 @@ describe('B. Battle Skill — Electric Infliction', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     // Battle skill should generate electric infliction on enemy
     const electricInflictions = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === INFLICTION_COLUMNS.ELECTRIC && ev.ownerId === ENEMY_ID,
+      (ev) => ev.columnId === INFLICTION_COLUMNS.ELECTRIC && ev.ownerEntityId === ENEMY_ID,
     );
     expect(electricInflictions.length).toBeGreaterThanOrEqual(1);
   });
@@ -247,12 +247,12 @@ describe('D. Ultimate — Energy Cost', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const ultimates = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_PERLICA && ev.columnId === NounType.ULTIMATE,
+      (ev) => ev.ownerEntityId === SLOT_PERLICA && ev.columnId === NounType.ULTIMATE,
     );
     expect(ultimates).toHaveLength(1);
 
@@ -281,7 +281,7 @@ describe('E. View Layer', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
@@ -294,7 +294,7 @@ describe('E. View Layer', () => {
     const battleCol = result.current.columns.find(
       (c): c is MiniTimeline =>
         c.type === ColumnType.MINI_TIMELINE
-        && c.ownerId === SLOT_PERLICA
+        && c.ownerEntityId === SLOT_PERLICA
         && c.columnId === NounType.BATTLE,
     );
     expect(battleCol).toBeDefined();
@@ -318,7 +318,7 @@ describe('E. View Layer', () => {
     const comboPayload = getMenuPayload(result.current, comboCol!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        comboPayload.ownerId, comboPayload.columnId, comboPayload.atFrame, comboPayload.defaultSkill,
+        comboPayload.ownerEntityId, comboPayload.columnId, comboPayload.atFrame, comboPayload.defaultSkill,
       );
     });
 
@@ -329,7 +329,7 @@ describe('E. View Layer', () => {
     const ultPayload = getMenuPayload(result.current, ultCol!, 30 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        ultPayload.ownerId, ultPayload.columnId, ultPayload.atFrame, ultPayload.defaultSkill,
+        ultPayload.ownerEntityId, ultPayload.columnId, ultPayload.atFrame, ultPayload.defaultSkill,
       );
     });
 
@@ -342,7 +342,7 @@ describe('E. View Layer', () => {
     const comboVmCol = result.current.columns.find(
       (c): c is MiniTimeline =>
         c.type === ColumnType.MINI_TIMELINE
-        && c.ownerId === SLOT_PERLICA
+        && c.ownerEntityId === SLOT_PERLICA
         && c.columnId === NounType.COMBO,
     );
     expect(comboVmCol).toBeDefined();
@@ -354,7 +354,7 @@ describe('E. View Layer', () => {
     const ultVmCol = result.current.columns.find(
       (c): c is MiniTimeline =>
         c.type === ColumnType.MINI_TIMELINE
-        && c.ownerId === SLOT_PERLICA
+        && c.ownerEntityId === SLOT_PERLICA
         && c.columnId === NounType.ULTIMATE,
     );
     expect(ultVmCol).toBeDefined();
@@ -374,7 +374,7 @@ describe('F0. T1 — Obliteration Protocol', () => {
 
     // No talent events at ALL — not even at frame 0
     const talentEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_PERLICA && ev.name === PERLICA_JSON.talents.one,
+      ev => ev.ownerEntityId === SLOT_PERLICA && ev.name === PERLICA_JSON.talents.one,
     );
     expect(talentEvents).toHaveLength(0);
 
@@ -385,8 +385,8 @@ describe('F0. T1 — Obliteration Protocol', () => {
     );
     viewModels.forEach(vm => {
       const talentVm = vm.events.filter(
-        (ev: { name: string; ownerId: string }) =>
-          ev.name === PERLICA_JSON.talents.one && ev.ownerId === SLOT_PERLICA,
+        (ev: { name: string; ownerEntityId: string }) =>
+          ev.name === PERLICA_JSON.talents.one && ev.ownerEntityId === SLOT_PERLICA,
       );
       expect(talentVm).toHaveLength(0);
     });
@@ -412,7 +412,7 @@ describe('F0. T1 — Obliteration Protocol', () => {
 
     // Talent should be triggered and active during stagger
     const talentEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_PERLICA && ev.name === PERLICA_JSON.talents.one,
+      ev => ev.ownerEntityId === SLOT_PERLICA && ev.name === PERLICA_JSON.talents.one,
     );
     expect(talentEvents.length).toBeGreaterThanOrEqual(1);
     // Duration should match the stagger event duration (4s = 480 frames)
@@ -436,8 +436,8 @@ describe('F0. T1 — Obliteration Protocol', () => {
     let viewTalentFound = false;
     viewModels.forEach(vm => {
       const talentVmEvents = vm.events.filter(
-        (ev: { name: string; ownerId: string }) =>
-          ev.name === PERLICA_JSON.talents.one && ev.ownerId === SLOT_PERLICA,
+        (ev: { name: string; ownerEntityId: string }) =>
+          ev.name === PERLICA_JSON.talents.one && ev.ownerEntityId === SLOT_PERLICA,
       );
       for (const ev of talentVmEvents) {
         viewTalentFound = true;
@@ -451,8 +451,8 @@ describe('F0. T1 — Obliteration Protocol', () => {
     // View: talent does NOT appear outside the stagger window
     viewModels.forEach(vm => {
       const outsideEvents = vm.events.filter(
-        (ev: { name: string; ownerId: string; startFrame: number }) =>
-          ev.name === PERLICA_JSON.talents.one && ev.ownerId === SLOT_PERLICA
+        (ev: { name: string; ownerEntityId: string; startFrame: number }) =>
+          ev.name === PERLICA_JSON.talents.one && ev.ownerEntityId === SLOT_PERLICA
           && (ev.startFrame < 4 * FPS || ev.startFrame >= 8 * FPS),
       );
       expect(outsideEvents).toHaveLength(0);
@@ -474,7 +474,7 @@ describe('F0. T1 — Obliteration Protocol', () => {
     // 2. Verify Obliteration Protocol talent is present and matches stagger
     const talentId = PERLICA_JSON.talents.one;
     let talent = result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT_PERLICA && ev.name === talentId,
+      ev => ev.ownerEntityId === SLOT_PERLICA && ev.name === talentId,
     );
     expect(talent).toBeDefined();
     expect(talent!.startFrame).toBe(4 * FPS);
@@ -490,7 +490,7 @@ describe('F0. T1 — Obliteration Protocol', () => {
 
     // 4. Verify talent has been resized to match new 6s stagger
     talent = result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT_PERLICA && ev.name === talentId,
+      ev => ev.ownerEntityId === SLOT_PERLICA && ev.name === talentId,
     );
     expect(talent).toBeDefined();
     expect(talent!.startFrame).toBe(4 * FPS);
@@ -504,7 +504,7 @@ describe('F0. T1 — Obliteration Protocol', () => {
     const viewTalents: { startFrame: number; endFrame: number }[] = [];
     viewModels.forEach(vm => {
       for (const ev of vm.events) {
-        if (ev.name === talentId && ev.ownerId === SLOT_PERLICA) {
+        if (ev.name === talentId && ev.ownerEntityId === SLOT_PERLICA) {
           viewTalents.push({ startFrame: ev.startFrame, endFrame: ev.startFrame + eventDuration(ev) });
         }
       }
@@ -547,7 +547,7 @@ describe('F0. T1 — Obliteration Protocol', () => {
     );
 
     const bsRows = calcResult.rows.filter(
-      r => r.ownerId === SLOT_PERLICA && r.columnId === NounType.BATTLE && r.damage != null,
+      r => r.ownerEntityId === SLOT_PERLICA && r.columnId === NounType.BATTLE && r.damage != null,
     );
     expect(bsRows.length).toBeGreaterThan(0);
     const row = bsRows.find(r => r.params?.sub);
@@ -574,7 +574,7 @@ describe('F. Combo Skill — Forced Electrification', () => {
 
     // Should produce forced Electrification reaction on enemy
     const electrification = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === REACTION_COLUMNS.ELECTRIFICATION && ev.ownerId === ENEMY_ID,
+      ev => ev.columnId === REACTION_COLUMNS.ELECTRIFICATION && ev.ownerEntityId === ENEMY_ID,
     );
     expect(electrification.length).toBeGreaterThanOrEqual(1);
     // Forced reaction should have duration (5s = 600 frames at P0)
@@ -594,7 +594,7 @@ describe('F. Combo Skill — Forced Electrification', () => {
     });
 
     const electrification = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === REACTION_COLUMNS.ELECTRIFICATION && ev.ownerId === ENEMY_ID,
+      ev => ev.columnId === REACTION_COLUMNS.ELECTRIFICATION && ev.ownerEntityId === ENEMY_ID,
     );
     expect(electrification.length).toBeGreaterThanOrEqual(1);
     // P1: 5s × 1.75 = 8.75s = 1050 frames
@@ -624,7 +624,7 @@ describe('G. P3 — Supervisory Duties', () => {
 
     // P3 status should appear on Perlica
     const p3Status = result.current.allProcessedEvents.filter(
-      ev => ev.name === P3_STATUS_ID && ev.ownerId === SLOT_PERLICA && ev.startFrame > 0,
+      ev => ev.name === P3_STATUS_ID && ev.ownerEntityId === SLOT_PERLICA && ev.startFrame > 0,
     );
     expect(p3Status.length).toBeGreaterThanOrEqual(1);
     // Duration should be 5s
@@ -653,7 +653,7 @@ describe('G. P3 — Supervisory Duties', () => {
 
     // Should have 2 P3 status applications
     const p3Statuses = result.current.allProcessedEvents.filter(
-      ev => ev.name === P3_STATUS_ID && ev.ownerId === SLOT_PERLICA && ev.startFrame > 0,
+      ev => ev.name === P3_STATUS_ID && ev.ownerEntityId === SLOT_PERLICA && ev.startFrame > 0,
     );
     expect(p3Statuses.length).toBeGreaterThanOrEqual(2);
   });
@@ -671,7 +671,7 @@ describe('G. P3 — Supervisory Duties', () => {
     });
 
     const p3Status = result.current.allProcessedEvents.filter(
-      ev => ev.name === P3_STATUS_ID && ev.ownerId === SLOT_PERLICA && ev.startFrame > 0,
+      ev => ev.name === P3_STATUS_ID && ev.ownerEntityId === SLOT_PERLICA && ev.startFrame > 0,
     );
     expect(p3Status).toHaveLength(0);
   });
@@ -709,7 +709,7 @@ describe('H. P4 — Constant Guidance', () => {
     });
 
     const susc = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === ENEMY_ID && ev.id === ARTS_SUSCEPTIBILITY_ID,
+      ev => ev.ownerEntityId === ENEMY_ID && ev.id === ARTS_SUSCEPTIBILITY_ID,
     );
     expect(susc.length).toBeGreaterThanOrEqual(1);
     // Susceptibility value should be 0.33
@@ -729,7 +729,7 @@ describe('H. P4 — Constant Guidance', () => {
     });
 
     const susc = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === ENEMY_ID && ev.id === ARTS_SUSCEPTIBILITY_ID,
+      ev => ev.ownerEntityId === ENEMY_ID && ev.id === ARTS_SUSCEPTIBILITY_ID,
     );
     // Event may exist but with 0 susceptibility value (no gameplay effect)
     for (const ev of susc) {

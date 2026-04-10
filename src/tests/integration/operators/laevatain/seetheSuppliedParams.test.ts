@@ -66,13 +66,13 @@ function placeSeetheAndGetUE(enemyHit: number) {
 
   act(() => {
     result.current.handleAddEvent(
-      payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+      payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
     );
   });
 
   // Verify the event was created with correct parameterValues
   const seetheEvents = result.current.allProcessedEvents.filter(
-    ev => ev.ownerId === SLOT && ev.columnId === NounType.COMBO && ev.id === SEETHE_ID,
+    ev => ev.ownerEntityId === SLOT && ev.columnId === NounType.COMBO && ev.id === SEETHE_ID,
   );
   expect(seetheEvents).toHaveLength(1);
   expect(seetheEvents[0].parameterValues).toEqual({ ENEMY_HIT: enemyHit });

@@ -24,7 +24,7 @@ function getSkillColumns(app: AppResult, slotId: string) {
   return app.columns.filter(
     (c): c is MiniTimeline =>
       c.type === ColumnType.MINI_TIMELINE &&
-      c.ownerId === slotId &&
+      c.ownerEntityId === slotId &&
       SKILL_COLUMN_IDS.includes(c.columnId as NounType),
   );
 }
@@ -67,7 +67,7 @@ describe('Embed roundtrip — skill columns preserved', () => {
     expect(bsCol).toBeDefined();
     const payload = getMenuPayload(result.current, bsCol!, 2 * FPS);
     act(() => {
-      result.current.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+      result.current.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
     });
 
     // Skill columns still exist

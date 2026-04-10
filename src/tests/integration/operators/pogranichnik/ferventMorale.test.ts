@@ -51,7 +51,7 @@ describe('A. Fervent Morale RESET stacking', () => {
     // Place ult → Steel Oath
     const ultCol = findColumn(result.current, SLOT_POG, NounType.ULTIMATE);
     const ultPayload = getMenuPayload(result.current, ultCol!, 0);
-    act(() => { result.current.handleAddEvent(ultPayload.ownerId, ultPayload.columnId, ultPayload.atFrame, ultPayload.defaultSkill); });
+    act(() => { result.current.handleAddEvent(ultPayload.ownerEntityId, ultPayload.columnId, ultPayload.atFrame, ultPayload.defaultSkill); });
 
     // Two combos → two Steel Oath consumptions → two Fervent Morale applications
     const comboCol = findColumn(result.current, SLOT_POG, NounType.COMBO);
@@ -59,7 +59,7 @@ describe('A. Fervent Morale RESET stacking', () => {
     act(() => { result.current.handleAddEvent(SLOT_POG, NounType.COMBO, 30 * FPS, comboCol!.defaultEvent!); });
 
     const moraleEvents = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === FERVENT_MORALE_ID && ev.ownerId === SLOT_POG,
+      ev => ev.columnId === FERVENT_MORALE_ID && ev.ownerEntityId === SLOT_POG,
     );
 
     // RESET: second application clamps (REFRESHES) the first
@@ -78,7 +78,7 @@ describe('A. Fervent Morale RESET stacking', () => {
 
     const ultCol = findColumn(result.current, SLOT_POG, NounType.ULTIMATE);
     const ultPayload = getMenuPayload(result.current, ultCol!, 0);
-    act(() => { result.current.handleAddEvent(ultPayload.ownerId, ultPayload.columnId, ultPayload.atFrame, ultPayload.defaultSkill); });
+    act(() => { result.current.handleAddEvent(ultPayload.ownerEntityId, ultPayload.columnId, ultPayload.atFrame, ultPayload.defaultSkill); });
 
     const comboCol = findColumn(result.current, SLOT_POG, NounType.COMBO);
     act(() => { result.current.handleAddEvent(SLOT_POG, NounType.COMBO, 3 * FPS, comboCol!.defaultEvent!); });
@@ -93,7 +93,7 @@ describe('A. Fervent Morale RESET stacking', () => {
     const statusVM = viewModels.get(statusCol!.key);
     expect(statusVM).toBeDefined();
     expect(statusVM!.events.some(
-      ev => ev.columnId === FERVENT_MORALE_ID && ev.ownerId === SLOT_POG,
+      ev => ev.columnId === FERVENT_MORALE_ID && ev.ownerEntityId === SLOT_POG,
     )).toBe(true);
   });
 });
@@ -108,10 +108,10 @@ describe('B. Living Banner rendering', () => {
 
     const baCol = findColumn(result.current, SLOT_POG, NounType.BASIC_ATTACK);
     const payload = getMenuPayload(result.current, baCol!, 2 * FPS);
-    act(() => { result.current.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill); });
+    act(() => { result.current.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill); });
 
     const bannerEvents = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === LIVING_BANNER_ID && ev.ownerId === SLOT_POG,
+      ev => ev.columnId === LIVING_BANNER_ID && ev.ownerEntityId === SLOT_POG,
     );
 
     // Single accumulator event with stacks = 20
@@ -124,10 +124,10 @@ describe('B. Living Banner rendering', () => {
 
     const comboCol = findColumn(result.current, SLOT_POG, NounType.COMBO);
     const payload = getMenuPayload(result.current, comboCol!, 3 * FPS);
-    act(() => { result.current.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill); });
+    act(() => { result.current.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill); });
 
     const bannerEvents = result.current.allProcessedEvents
-      .filter(ev => ev.columnId === LIVING_BANNER_ID && ev.ownerId === SLOT_POG)
+      .filter(ev => ev.columnId === LIVING_BANNER_ID && ev.ownerEntityId === SLOT_POG)
       .sort((a, b) => a.startFrame - b.startFrame);
 
     // 3 independent events with own stacks: 5, 7, 13 (status total 25)
@@ -144,7 +144,7 @@ describe('B. Living Banner rendering', () => {
 
     const baCol = findColumn(result.current, SLOT_POG, NounType.BASIC_ATTACK);
     const payload = getMenuPayload(result.current, baCol!, 2 * FPS);
-    act(() => { result.current.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill); });
+    act(() => { result.current.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill); });
 
     const statusCol = findColumn(result.current, SLOT_POG, OPERATOR_STATUS_COLUMN_ID);
     expect(statusCol).toBeDefined();
@@ -156,7 +156,7 @@ describe('B. Living Banner rendering', () => {
     const statusVM = viewModels.get(statusCol!.key);
     expect(statusVM).toBeDefined();
     expect(statusVM!.events.some(
-      ev => ev.columnId === LIVING_BANNER_ID && ev.ownerId === SLOT_POG,
+      ev => ev.columnId === LIVING_BANNER_ID && ev.ownerEntityId === SLOT_POG,
     )).toBe(true);
   });
 });
@@ -172,14 +172,14 @@ describe('C. No duplicate Fervent Morale', () => {
 
     const ultCol = findColumn(result.current, SLOT_POG, NounType.ULTIMATE);
     const ultPayload = getMenuPayload(result.current, ultCol!, 0);
-    act(() => { result.current.handleAddEvent(ultPayload.ownerId, ultPayload.columnId, ultPayload.atFrame, ultPayload.defaultSkill); });
+    act(() => { result.current.handleAddEvent(ultPayload.ownerEntityId, ultPayload.columnId, ultPayload.atFrame, ultPayload.defaultSkill); });
 
     // Single combo → 1 Steel Oath consumption
     const comboCol = findColumn(result.current, SLOT_POG, NounType.COMBO);
     act(() => { result.current.handleAddEvent(SLOT_POG, NounType.COMBO, 3 * FPS, comboCol!.defaultEvent!); });
 
     const moraleEvents = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === FERVENT_MORALE_ID && ev.ownerId === SLOT_POG,
+      ev => ev.columnId === FERVENT_MORALE_ID && ev.ownerEntityId === SLOT_POG,
     );
 
     // Exactly 1 Fervent Morale from this single consumption
@@ -197,7 +197,7 @@ function placeBasicAttack(result: { current: ReturnType<typeof useApp> }, atFram
   expect(baCol).toBeDefined();
   const payload = getMenuPayload(result.current, baCol!, atFrame);
   act(() => {
-    result.current.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+    result.current.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
   });
 }
 
@@ -208,7 +208,7 @@ function setPotential(app: ReturnType<typeof useApp>, slotId: string, potential:
 
 function getFmEvents(app: ReturnType<typeof useApp>) {
   return app.allProcessedEvents.filter(
-    ev => ev.columnId === FERVENT_MORALE_ID && ev.ownerId === SLOT_POG,
+    ev => ev.columnId === FERVENT_MORALE_ID && ev.ownerEntityId === SLOT_POG,
   );
 }
 

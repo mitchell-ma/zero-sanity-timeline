@@ -17,17 +17,17 @@ export function isActiveAtFrame(ev: TimelineEvent, frame: number) {
 
 /**
  * Get all active events in a specific column at a given frame.
- * Optionally filter by ownerId.
+ * Optionally filter by ownerEntityId.
  */
 export function activeEventsAtFrame(
   events: readonly TimelineEvent[],
   columnId: string,
-  ownerId: string | undefined,
+  ownerEntityId: string | undefined,
   frame: number,
 ) {
   return events.filter(ev =>
     ev.columnId === columnId &&
-    (ownerId == null || ev.ownerId === ownerId) &&
+    (ownerEntityId == null || ev.ownerEntityId === ownerEntityId) &&
     isActiveAtFrame(ev, frame)
   );
 }
@@ -38,10 +38,10 @@ export function activeEventsAtFrame(
 export function activeCountAtFrame(
   events: readonly TimelineEvent[],
   columnId: string,
-  ownerId: string | undefined,
+  ownerEntityId: string | undefined,
   frame: number,
 ) {
-  return activeEventsAtFrame(events, columnId, ownerId, frame).length;
+  return activeEventsAtFrame(events, columnId, ownerEntityId, frame).length;
 }
 
 /**
@@ -54,7 +54,7 @@ export function activeInflictionsOfElement(
   frame: number,
 ) {
   return events.filter(ev =>
-    ev.ownerId === 'enemy' &&
+    ev.ownerEntityId === 'enemy' &&
     ev.columnId === inflictionColumnId &&
     ev.eventStatus !== EventStatusType.CONSUMED &&
     isActiveAtFrame(ev, frame)
@@ -67,12 +67,12 @@ export function activeInflictionsOfElement(
 export function activeStatusesOfType(
   events: readonly TimelineEvent[],
   statusColumnId: string,
-  ownerId: string,
+  ownerEntityId: string,
   frame: number,
 ) {
   return events.filter(ev =>
     ev.columnId === statusColumnId &&
-    ev.ownerId === ownerId &&
+    ev.ownerEntityId === ownerEntityId &&
     ev.eventStatus !== EventStatusType.CONSUMED &&
     isActiveAtFrame(ev, frame)
   );

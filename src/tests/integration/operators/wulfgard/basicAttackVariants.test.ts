@@ -67,14 +67,14 @@ describe('A. Basic Attack Placement & Structure', () => {
     const payload = getMenuPayload(result.current, basicCol!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId,
+        payload.ownerEntityId, payload.columnId,
         payload.atFrame, payload.defaultSkill,
       );
     });
 
     // Controller: event has 4 segments (Seq 1-4)
     const events = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.BASIC_ATTACK,
+      ev => ev.ownerEntityId === SLOT_WULFGARD && ev.columnId === NounType.BASIC_ATTACK,
     );
     expect(events).toHaveLength(1);
     expect(events[0].name).toBe(BATK_ID);
@@ -88,7 +88,7 @@ describe('A. Basic Attack Placement & Structure', () => {
     const basicVM = viewModels.get(basicCol!.key);
     expect(basicVM).toBeDefined();
     expect(basicVM!.events.some(
-      ev => ev.name === BATK_ID && ev.ownerId === SLOT_WULFGARD,
+      ev => ev.name === BATK_ID && ev.ownerEntityId === SLOT_WULFGARD,
     )).toBe(true);
   });
 
@@ -99,14 +99,14 @@ describe('A. Basic Attack Placement & Structure', () => {
     const payload = getMenuPayload(result.current, basicCol!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId,
+        payload.ownerEntityId, payload.columnId,
         payload.atFrame, payload.defaultSkill,
       );
     });
 
     // Controller: the last segment (Final Strike) has frames with SP recovery
     const events = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.BASIC_ATTACK,
+      ev => ev.ownerEntityId === SLOT_WULFGARD && ev.columnId === NounType.BASIC_ATTACK,
     );
     expect(events).toHaveLength(1);
 
@@ -123,7 +123,7 @@ describe('A. Basic Attack Placement & Structure', () => {
     const basicVM = viewModels.get(basicCol!.key);
     expect(basicVM).toBeDefined();
     expect(basicVM!.events.some(
-      ev => ev.name === BATK_ID && ev.ownerId === SLOT_WULFGARD,
+      ev => ev.name === BATK_ID && ev.ownerEntityId === SLOT_WULFGARD,
     )).toBe(true);
   });
 
@@ -134,14 +134,14 @@ describe('A. Basic Attack Placement & Structure', () => {
     const payload = getMenuPayload(result.current, basicCol!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId,
+        payload.ownerEntityId, payload.columnId,
         payload.atFrame, payload.defaultSkill,
       );
     });
 
     // Controller: no heat infliction events on enemy after BA only
     const heats = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerId === ENEMY_ID,
+      ev => ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerEntityId === ENEMY_ID,
     );
     expect(heats).toHaveLength(0);
 
@@ -149,7 +149,7 @@ describe('A. Basic Attack Placement & Structure', () => {
     const enemyStatusCol = result.current.columns.find(
       (c): c is MiniTimeline =>
         c.type === ColumnType.MINI_TIMELINE &&
-        c.ownerId === ENEMY_ID &&
+        c.ownerEntityId === ENEMY_ID &&
         c.columnId === ENEMY_GROUP_COLUMNS.ENEMY_STATUS,
     );
     expect(enemyStatusCol).toBeDefined();
@@ -210,7 +210,7 @@ describe('B. Basic Attack Categories (DIVE, FINISHER)', () => {
 
     // Controller: dive event with 1 segment, 1 frame
     const events = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.BASIC_ATTACK,
+      ev => ev.ownerEntityId === SLOT_WULFGARD && ev.columnId === NounType.BASIC_ATTACK,
     );
     expect(events).toHaveLength(1);
     expect(events[0].segments).toHaveLength(1);
@@ -226,7 +226,7 @@ describe('B. Basic Attack Categories (DIVE, FINISHER)', () => {
     );
     const basicVM = viewModels.get(basicCol!.key);
     expect(basicVM).toBeDefined();
-    expect(basicVM!.events.some(ev => ev.ownerId === SLOT_WULFGARD)).toBe(true);
+    expect(basicVM!.events.some(ev => ev.ownerEntityId === SLOT_WULFGARD)).toBe(true);
   });
 
   it('B4: FINISHER placement produces event with correct structure', () => {
@@ -243,7 +243,7 @@ describe('B. Basic Attack Categories (DIVE, FINISHER)', () => {
 
     // Controller: finisher event with 1 segment, 1 frame
     const events = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.BASIC_ATTACK,
+      ev => ev.ownerEntityId === SLOT_WULFGARD && ev.columnId === NounType.BASIC_ATTACK,
     );
     expect(events).toHaveLength(1);
     expect(events[0].segments).toHaveLength(1);
@@ -259,6 +259,6 @@ describe('B. Basic Attack Categories (DIVE, FINISHER)', () => {
     );
     const basicVM = viewModels.get(basicCol!.key);
     expect(basicVM).toBeDefined();
-    expect(basicVM!.events.some(ev => ev.ownerId === SLOT_WULFGARD)).toBe(true);
+    expect(basicVM!.events.some(ev => ev.ownerEntityId === SLOT_WULFGARD)).toBe(true);
   });
 });

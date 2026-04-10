@@ -1032,20 +1032,20 @@ export function useApp() {
 
   // ─── Event handlers ──────────────────────────────────────────────────────
   const handleAddEvent = useCallback((
-    ownerId: string,
+    ownerEntityId: string,
     columnId: string,
     atFrame: number,
-    defaultSkill: { id?: string; name?: string; segments?: import('../consts/viewTypes').EventSegmentData[]; comboTriggerColumnId?: string; operatorPotential?: number; timeInteraction?: string; isPerfectDodge?: boolean; timeDilation?: number; timeDependency?: import('../consts/enums').TimeDependency; skillPointCost?: number; sourceOwnerId?: string; sourceSkillName?: string; enhancementType?: import('../consts/enums').EnhancementType; stacks?: Record<string, unknown>; segmentOrigin?: number[]; suppliedParameters?: Record<string, { id: string; name: string; lowerRange: number; upperRange: number; default: number }[]>; parameterValues?: Record<string, number> } | null,
+    defaultSkill: { id?: string; name?: string; segments?: import('../consts/viewTypes').EventSegmentData[]; comboTriggerColumnId?: string; operatorPotential?: number; timeInteraction?: string; isPerfectDodge?: boolean; timeDilation?: number; timeDependency?: import('../consts/enums').TimeDependency; skillPointCost?: number; sourceEntityId?: string; sourceSkillName?: string; enhancementType?: import('../consts/enums').EnhancementType; stacks?: Record<string, unknown>; segmentOrigin?: number[]; suppliedParameters?: Record<string, { id: string; name: string; lowerRange: number; upperRange: number; default: number }[]>; parameterValues?: Record<string, number> } | null,
   ) => {
     // Validate against controller-derived columns before adding
-    if (!validColumnPairsRef.current.has(`${ownerId}:${columnId}`)) return;
-    // Resolve sourceOwnerId from slot → operator id before allocation so the
+    if (!validColumnPairsRef.current.has(`${ownerEntityId}:${columnId}`)) return;
+    // Resolve sourceEntityId from slot → operator id before allocation so the
     // 'user' placeholder never enters the event graph.
-    const resolvedSource = defaultSkill?.sourceOwnerId
-      ?? slotOperatorMapRef.current[ownerId]
-      ?? ownerId;
-    const skillWithSource = { ...(defaultSkill ?? {}), sourceOwnerId: resolvedSource };
-    const ev = createEvent(ownerId, columnId, atFrame, skillWithSource, interactionModeRef.current);
+    const resolvedSource = defaultSkill?.sourceEntityId
+      ?? slotOperatorMapRef.current[ownerEntityId]
+      ?? ownerEntityId;
+    const skillWithSource = { ...(defaultSkill ?? {}), sourceEntityId: resolvedSource };
+    const ev = createEvent(ownerEntityId, columnId, atFrame, skillWithSource, interactionModeRef.current);
     if (defaultSkill?.comboTriggerColumnId) ev.comboTriggerColumnId = defaultSkill.comboTriggerColumnId;
     setEvents((prev) => {
       // No total-event limit for statuses — the engine handles concurrent stack
@@ -1053,17 +1053,17 @@ export function useApp() {
       if (interactionModeRef.current === InteractionModeType.STRICT) {
         if (wouldOverlapNonOverlappable(prev, ev, ev.startFrame, processedEventsRef.current)) return prev;
         // Check SP sufficiency for battle skills
-        if (columnId === NounType.BATTLE && !hasSufficientSP(ownerId, atFrame)) return prev;
+        if (columnId === NounType.BATTLE && !hasSufficientSP(ownerEntityId, atFrame)) return prev;
         // Enhanced skills require an active ultimate
         if (ev.enhancementType === EnhancementType.ENHANCED) {
           // Use processed events (full segments) for the ultimate check;
           // fall back to raw prev if a just-added ultimate isn't processed yet
           const eventsToCheck = processedEventsRef.current.some(
-            (e) => e.ownerId === ownerId && e.columnId === NounType.ULTIMATE,
+            (e) => e.ownerEntityId === ownerEntityId && e.columnId === NounType.ULTIMATE,
           ) ? processedEventsRef.current : prev;
           const ultActive = eventsToCheck.some(
             (e) => {
-              if (e.ownerId !== ownerId || e.columnId !== NounType.ULTIMATE) return false;
+              if (e.ownerEntityId !== ownerEntityId || e.columnId !== NounType.ULTIMATE) return false;
               // Ultimate segments: [animation, statis, active, cooldown]
               // "Active" phase starts after animation + statis
               const segs = e.segments;
@@ -1209,7 +1209,7 @@ export function useApp() {
     const noCritTargets: { target: TimelineEvent; segmentIndex: number; frameIndex: number }[] = [];
 
     for (const ev of all) {
-      const critRate = Math.min(Math.max(accumulator.getStat(ev.ownerId, StatType.CRITICAL_RATE), 0), 1);
+      const critRate = Math.min(Math.max(accumulator.getStat(ev.ownerEntityId, StatType.CRITICAL_RATE), 0), 1);
       for (let si = 0; si < ev.segments.length; si++) {
         const seg = ev.segments[si];
         if (!seg.frames) continue;
@@ -1238,7 +1238,7 @@ export function useApp() {
     const target = validEvents.find((ev) => ev.uid === eventUid);
     if (!target) return;
     const col = columns.find((c) =>
-      c.type === ColumnType.MINI_TIMELINE && c.ownerId === target.ownerId && c.columnId === target.columnId,
+      c.type === ColumnType.MINI_TIMELINE && c.ownerEntityId === target.ownerEntityId && c.columnId === target.columnId,
     );
     if (col?.type !== ColumnType.MINI_TIMELINE) return;
     const templateSegs = col.defaultEvent?.segments;
@@ -1259,7 +1259,7 @@ export function useApp() {
     const target = validEvents.find((ev) => ev.uid === eventUid);
     if (!target) return;
     const col = columns.find((c) =>
-      c.type === ColumnType.MINI_TIMELINE && c.ownerId === target.ownerId && c.columnId === target.columnId,
+      c.type === ColumnType.MINI_TIMELINE && c.ownerEntityId === target.ownerEntityId && c.columnId === target.columnId,
     );
     if (col?.type !== ColumnType.MINI_TIMELINE) return;
     const allDefaultSegs = col.defaultEvent?.segments;

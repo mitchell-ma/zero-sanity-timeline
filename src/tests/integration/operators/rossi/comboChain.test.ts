@@ -79,19 +79,19 @@ function placeComboTriggers(result: { current: AppResult }, startSec: number, du
 
 function findComboWindows(result: { current: AppResult }) {
   return result.current.allProcessedEvents.filter(
-    (ev) => ev.columnId === COMBO_WINDOW_COLUMN_ID && ev.ownerId === SLOT_ROSSI,
+    (ev) => ev.columnId === COMBO_WINDOW_COLUMN_ID && ev.ownerEntityId === SLOT_ROSSI,
   );
 }
 
 function findComboEvents(result: { current: AppResult }) {
   return result.current.allProcessedEvents.filter(
-    (ev) => ev.ownerId === SLOT_ROSSI && ev.columnId === NounType.COMBO,
+    (ev) => ev.ownerEntityId === SLOT_ROSSI && ev.columnId === NounType.COMBO,
   );
 }
 
 function findPerfectTimingEvents(result: { current: AppResult }) {
   return result.current.allProcessedEvents.filter(
-    (ev) => ev.ownerId === SLOT_ROSSI && ev.name === PERFECT_TIMING_ID,
+    (ev) => ev.ownerEntityId === SLOT_ROSSI && ev.name === PERFECT_TIMING_ID,
   );
 }
 
@@ -179,7 +179,7 @@ describe('C. Perfect Timing status lifecycle', () => {
     expect(comboCol).toBeDefined();
     const payload = getMenuPayload(result.current, comboCol!, 3 * FPS);
     act(() => {
-      result.current.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+      result.current.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
     });
 
     // Verify PERFECT_TIMING status was created
@@ -196,7 +196,7 @@ describe('C. Perfect Timing status lifecycle', () => {
     const comboCol = findColumn(result.current, SLOT_ROSSI, NounType.COMBO);
     const payload1 = getMenuPayload(result.current, comboCol!, 2 * FPS);
     act(() => {
-      result.current.handleAddEvent(payload1.ownerId, payload1.columnId, payload1.atFrame, payload1.defaultSkill);
+      result.current.handleAddEvent(payload1.ownerEntityId, payload1.columnId, payload1.atFrame, payload1.defaultSkill);
     });
 
     // Place empowered combo (consumes PERFECT_TIMING)
@@ -209,9 +209,9 @@ describe('C. Perfect Timing status lifecycle', () => {
     // Empowered variant must be available
     expect(empoweredItem).toBeDefined();
     expect(empoweredItem!.disabled).toBeFalsy();
-    const empPayload = empoweredItem!.actionPayload as { ownerId: string; columnId: string; atFrame: number; defaultSkill: Record<string, unknown> };
+    const empPayload = empoweredItem!.actionPayload as { ownerEntityId: string; columnId: string; atFrame: number; defaultSkill: Record<string, unknown> };
     act(() => {
-      result.current.handleAddEvent(empPayload.ownerId, empPayload.columnId, empPayload.atFrame, empPayload.defaultSkill);
+      result.current.handleAddEvent(empPayload.ownerEntityId, empPayload.columnId, empPayload.atFrame, empPayload.defaultSkill);
     });
 
     // Verify PERFECT_TIMING was consumed
@@ -254,7 +254,7 @@ describe('D. Chain validation — maxSkills enforcement', () => {
     // Place normal combo at 2s
     const payload1 = getMenuPayload(result.current, comboCol!, 2 * FPS);
     act(() => {
-      result.current.handleAddEvent(payload1.ownerId, payload1.columnId, payload1.atFrame, payload1.defaultSkill);
+      result.current.handleAddEvent(payload1.ownerEntityId, payload1.columnId, payload1.atFrame, payload1.defaultSkill);
     });
 
     // Empowered combo should be placeable during normal combo's cooldown (overlap bypass)
@@ -263,9 +263,9 @@ describe('D. Chain validation — maxSkills enforcement', () => {
     const empItem = menu!.find(i => i.actionId === 'addEvent' && i.label?.includes('Empowered'));
     expect(empItem).toBeDefined();
     expect(empItem!.disabled).toBeFalsy();
-    const empPayload = empItem!.actionPayload as { ownerId: string; columnId: string; atFrame: number; defaultSkill: Record<string, unknown> };
+    const empPayload = empItem!.actionPayload as { ownerEntityId: string; columnId: string; atFrame: number; defaultSkill: Record<string, unknown> };
     act(() => {
-      result.current.handleAddEvent(empPayload.ownerId, empPayload.columnId, empPayload.atFrame, empPayload.defaultSkill);
+      result.current.handleAddEvent(empPayload.ownerEntityId, empPayload.columnId, empPayload.atFrame, empPayload.defaultSkill);
     });
 
     // Both combos placed
@@ -279,7 +279,7 @@ describe('D. Chain validation — maxSkills enforcement', () => {
     );
     const comboVM = viewModels.get(comboCol!.key);
     expect(comboVM).toBeDefined();
-    const rossiCombos = comboVM!.events.filter(ev => ev.ownerId === SLOT_ROSSI);
+    const rossiCombos = comboVM!.events.filter(ev => ev.ownerEntityId === SLOT_ROSSI);
     expect(rossiCombos).toHaveLength(2);
   });
 
@@ -292,13 +292,13 @@ describe('D. Chain validation — maxSkills enforcement', () => {
     // Place first normal combo at 2s
     const payload1 = getMenuPayload(result.current, comboCol!, 2 * FPS);
     act(() => {
-      result.current.handleAddEvent(payload1.ownerId, payload1.columnId, payload1.atFrame, payload1.defaultSkill);
+      result.current.handleAddEvent(payload1.ownerEntityId, payload1.columnId, payload1.atFrame, payload1.defaultSkill);
     });
 
     // Second normal combo at 5s — should bypass overlap due to maxSkills=2 window
     const payload2 = getMenuPayload(result.current, comboCol!, 5 * FPS);
     act(() => {
-      result.current.handleAddEvent(payload2.ownerId, payload2.columnId, payload2.atFrame, payload2.defaultSkill);
+      result.current.handleAddEvent(payload2.ownerEntityId, payload2.columnId, payload2.atFrame, payload2.defaultSkill);
     });
 
     const combos = findComboEvents(result);
@@ -314,11 +314,11 @@ describe('D. Chain validation — maxSkills enforcement', () => {
     // Place two combos
     const payload1 = getMenuPayload(result.current, comboCol!, 2 * FPS);
     act(() => {
-      result.current.handleAddEvent(payload1.ownerId, payload1.columnId, payload1.atFrame, payload1.defaultSkill);
+      result.current.handleAddEvent(payload1.ownerEntityId, payload1.columnId, payload1.atFrame, payload1.defaultSkill);
     });
     const payload2 = getMenuPayload(result.current, comboCol!, 4 * FPS);
     act(() => {
-      result.current.handleAddEvent(payload2.ownerId, payload2.columnId, payload2.atFrame, payload2.defaultSkill);
+      result.current.handleAddEvent(payload2.ownerEntityId, payload2.columnId, payload2.atFrame, payload2.defaultSkill);
     });
 
     // Third combo should be disabled
@@ -338,7 +338,7 @@ describe('D. Chain validation — maxSkills enforcement', () => {
     // Place first combo at 2s
     const payload1 = getMenuPayload(result.current, comboCol!, 2 * FPS);
     act(() => {
-      result.current.handleAddEvent(payload1.ownerId, payload1.columnId, payload1.atFrame, payload1.defaultSkill);
+      result.current.handleAddEvent(payload1.ownerEntityId, payload1.columnId, payload1.atFrame, payload1.defaultSkill);
     });
 
     // Record first combo's full cooldown duration before placing second
@@ -354,7 +354,7 @@ describe('D. Chain validation — maxSkills enforcement', () => {
     // Place second combo at 5s
     const payload2 = getMenuPayload(result.current, comboCol!, 5 * FPS);
     act(() => {
-      result.current.handleAddEvent(payload2.ownerId, payload2.columnId, payload2.atFrame, payload2.defaultSkill);
+      result.current.handleAddEvent(payload2.ownerEntityId, payload2.columnId, payload2.atFrame, payload2.defaultSkill);
     });
 
     // First combo's cooldown should be clamped to end at 5s (second combo's start)
@@ -394,7 +394,7 @@ describe('E. Cooldown suppression', () => {
     const comboCol = findColumn(result.current, SLOT_ROSSI, NounType.COMBO);
     const payload = getMenuPayload(result.current, comboCol!, 2 * FPS);
     act(() => {
-      result.current.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+      result.current.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
     });
 
     // Place another set of trigger conditions at 15s (during cooldown)
@@ -451,7 +451,7 @@ describe('F. Razor Clawmark DOT ticks', () => {
 
     // Controller: Razor Clawmark event exists on enemy
     const rcEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === ENEMY_ID && (ev.name === RAZOR_CLAWMARK_ID || ev.columnId === RAZOR_CLAWMARK_ID),
+      (ev) => ev.ownerEntityId === ENEMY_ID && (ev.name === RAZOR_CLAWMARK_ID || ev.columnId === RAZOR_CLAWMARK_ID),
     );
     expect(rcEvents.length).toBeGreaterThanOrEqual(1);
   });
@@ -554,7 +554,7 @@ describe('H. IMMEDIATE_COOLDOWN handling', () => {
     const comboCol = findColumn(result.current, SLOT_ROSSI, NounType.COMBO);
     const payload = getMenuPayload(result.current, comboCol!, 2 * FPS);
     act(() => {
-      result.current.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+      result.current.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
     });
 
     const combos = findComboEvents(result);
@@ -591,11 +591,11 @@ describe('H. IMMEDIATE_COOLDOWN handling', () => {
     // Place first combo at 2s, second at 5s
     const payload1 = getMenuPayload(result.current, comboCol!, 2 * FPS);
     act(() => {
-      result.current.handleAddEvent(payload1.ownerId, payload1.columnId, payload1.atFrame, payload1.defaultSkill);
+      result.current.handleAddEvent(payload1.ownerEntityId, payload1.columnId, payload1.atFrame, payload1.defaultSkill);
     });
     const payload2 = getMenuPayload(result.current, comboCol!, 5 * FPS);
     act(() => {
-      result.current.handleAddEvent(payload2.ownerId, payload2.columnId, payload2.atFrame, payload2.defaultSkill);
+      result.current.handleAddEvent(payload2.ownerEntityId, payload2.columnId, payload2.atFrame, payload2.defaultSkill);
     });
 
     const combos = findComboEvents(result).sort((a, b) => a.startFrame - b.startFrame);
@@ -624,7 +624,7 @@ describe('H. IMMEDIATE_COOLDOWN handling', () => {
     const comboCol = findColumn(result.current, SLOT_ROSSI, NounType.COMBO);
     const payload = getMenuPayload(result.current, comboCol!, 2 * FPS);
     act(() => {
-      result.current.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+      result.current.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
     });
 
     // Determine when the combo's cooldown actually ends (IMMEDIATE_COOLDOWN starts at event start)

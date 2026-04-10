@@ -48,14 +48,14 @@ function placeBasicAttack(result: { current: ReturnType<typeof useApp> }, atFram
   const payload = getMenuPayload(result.current, baCol!, atFrame);
   act(() => {
     result.current.handleAddEvent(
-      payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+      payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
     );
   });
 }
 
 function getBannerEvents(result: { current: ReturnType<typeof useApp> }) {
   return result.current.allProcessedEvents
-    .filter(ev => ev.columnId === LIVING_BANNER_ID && ev.ownerId === SLOT_POG)
+    .filter(ev => ev.columnId === LIVING_BANNER_ID && ev.ownerEntityId === SLOT_POG)
     .sort((a, b) => a.startFrame - b.startFrame);
 }
 
@@ -64,7 +64,7 @@ function getBannerStatusTotal(result: { current: ReturnType<typeof useApp> }, fr
   return result.current.allProcessedEvents
     .filter(ev =>
       ev.columnId === LIVING_BANNER_ID
-      && ev.ownerId === SLOT_POG
+      && ev.ownerEntityId === SLOT_POG
       && ev.startFrame <= frame
       && frame < ev.startFrame + ev.segments.reduce((s, seg) => s + seg.properties.duration, 0)
       && ev.eventStatus !== EventStatusType.CONSUMED,
@@ -96,7 +96,7 @@ describe('A. Living Banner Counter', () => {
     // No Living Banner in presentation view
     const vm = getPresentationVM(result);
     const bannerInView = vm.events.filter(
-      ev => ev.columnId === LIVING_BANNER_ID && ev.ownerId === SLOT_POG,
+      ev => ev.columnId === LIVING_BANNER_ID && ev.ownerEntityId === SLOT_POG,
     );
     expect(bannerInView).toHaveLength(0);
   });
@@ -146,7 +146,7 @@ describe('A. Living Banner Counter', () => {
 
     // Fervent Morale should be applied
     const moraleEvents = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === FERVENT_MORALE_ID && ev.ownerId === SLOT_POG,
+      ev => ev.columnId === FERVENT_MORALE_ID && ev.ownerEntityId === SLOT_POG,
     );
     expect(moraleEvents.length).toBeGreaterThanOrEqual(1);
   });
@@ -173,7 +173,7 @@ describe('A. Living Banner Counter', () => {
 
     // Fervent Morale should be applied
     const moraleEvents = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === FERVENT_MORALE_ID && ev.ownerId === SLOT_POG,
+      ev => ev.columnId === FERVENT_MORALE_ID && ev.ownerEntityId === SLOT_POG,
     );
     expect(moraleEvents.length).toBeGreaterThanOrEqual(1);
   });
@@ -185,7 +185,7 @@ describe('A. Living Banner Counter', () => {
 
     const vm = getPresentationVM(result);
     const bannerInView = vm.events.filter(
-      ev => ev.columnId === LIVING_BANNER_ID && ev.ownerId === SLOT_POG,
+      ev => ev.columnId === LIVING_BANNER_ID && ev.ownerEntityId === SLOT_POG,
     );
     expect(bannerInView).toHaveLength(1);
 

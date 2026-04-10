@@ -283,7 +283,7 @@ Combo trigger conditions with `subjectDeterminer: "CONTROLLED"` require the perf
 
 ### Implementation
 
-`triggerMatch.ts` → `resolveOwnerFilter` accepts `controlledSlotId` as either a static string or a `(frame: number) => string` function. For CONTROLLED determiners, `matchesOwner(ownerId, atFrame)` resolves the controlled slot at the candidate frame and checks ownership.
+`triggerMatch.ts` → `resolveOwnerFilter` accepts `controlledSlotId` as either a static string or a `(frame: number) => string` function. For CONTROLLED determiners, `matchesOwner(ownerEntityId, atFrame)` resolves the controlled slot at the candidate frame and checks ownership.
 
 `getControlledSlotAtFrame` is threaded from `eventQueueController.ts` → `DEC.setControlledSlotResolver` → `resolveComboTriggersInline` → `findClauseTriggerMatches` → `VerbHandlerContext.controlledSlotId`.
 

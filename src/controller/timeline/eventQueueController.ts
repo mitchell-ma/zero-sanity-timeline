@@ -118,7 +118,7 @@ export function runEventQueue(
             const effect = raw as unknown as Effect;
             interpretor.interpret(effect, {
               frame: 0,
-              sourceOwnerId: talent.operatorId,
+              sourceEntityId: talent.operatorId,
               sourceSlotId: talent.operatorSlotId,
               sourceSkillName: talent.def.properties.id,
             });
@@ -290,7 +290,7 @@ export function processCombatSimulation(
   for (const ev of inputEvents) state.createSkillEvent(ev, { checkCooldown: false });
 
   // Enemy action events (derived-column, but need to appear in output)
-  const enemyActionEvents = derivedEvents.filter(ev => ev.ownerId === ENEMY_ID && ev.columnId === ENEMY_ACTION_COLUMN_ID);
+  const enemyActionEvents = derivedEvents.filter(ev => ev.ownerEntityId === ENEMY_ID && ev.columnId === ENEMY_ACTION_COLUMN_ID);
   for (const ev of enemyActionEvents) state.createSkillEvent(ev, { checkCooldown: false });
 
   // Talent events are registered inside runEventQueue (they need the

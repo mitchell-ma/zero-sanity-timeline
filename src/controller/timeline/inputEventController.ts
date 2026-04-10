@@ -54,8 +54,8 @@ export function setCombatLoadout(ctx: CombatLoadoutController | null): void {
   _combatLoadout = ctx;
 }
 
-export function hasSufficientSP(ownerId: string, frame: number): boolean {
-  return _combatLoadout?.hasSufficientSP(ownerId, frame) ?? true;
+export function hasSufficientSP(ownerEntityId: string, frame: number): boolean {
+  return _combatLoadout?.hasSufficientSP(ownerEntityId, frame) ?? true;
 }
 
 export function genEventUid(): string {
@@ -71,10 +71,10 @@ const _derivedSeq = new Map<string, number>();
 
 export function resetDerivedEventUids() { _derivedSeq.clear(); }
 
-export function derivedEventUid(columnId: string, sourceOwnerId: string, frame: number, disambiguator?: string) {
+export function derivedEventUid(columnId: string, sourceEntityId: string, frame: number, disambiguator?: string) {
   const prefix = disambiguator
-    ? `d-${columnId}-${sourceOwnerId}-${frame}-${disambiguator}`
-    : `d-${columnId}-${sourceOwnerId}-${frame}`;
+    ? `d-${columnId}-${sourceEntityId}-${frame}-${disambiguator}`
+    : `d-${columnId}-${sourceEntityId}-${frame}`;
   const seq = _derivedSeq.get(prefix) ?? 0;
   _derivedSeq.set(prefix, seq + 1);
   return seq === 0 ? prefix : `${prefix}-${seq}`;
@@ -120,15 +120,15 @@ export function wouldOverlapNonOverlappable(
   processedEvents?: readonly TimelineEvent[],
 ): boolean {
   // Enemy inflictions are stackable — skip overlap check
-  if (ev.ownerId === ENEMY_ID && INFLICTION_COLUMN_IDS.has(ev.columnId)) return false;
+  if (ev.ownerEntityId === ENEMY_ID && INFLICTION_COLUMN_IDS.has(ev.columnId)) return false;
   const evIsReset = ev.id && isResetStatus(ev.id);
   // Combo skills in multi-skill activation windows bypass overlap against siblings in the same window
   const comboWindowBypass = ev.columnId === NounType.COMBO && processedEvents
-    ? findMultiSkillWindow(ev.ownerId, startFrame, processedEvents)
+    ? findMultiSkillWindow(ev.ownerEntityId, startFrame, processedEvents)
     : undefined;
   const evRange = getSibRange(ev, processedEvents);
   for (const sib of allEvents) {
-    if (sib.uid === ev.uid || sib.ownerId !== ev.ownerId || sib.columnId !== ev.columnId) continue;
+    if (sib.uid === ev.uid || sib.ownerEntityId !== ev.ownerEntityId || sib.columnId !== ev.columnId) continue;
     // RESET statuses clamp same-id siblings — skip overlap check only for those
     if (evIsReset && sib.id === ev.id) continue;
     // Combo skills in the same multi-skill activation window bypass overlap
@@ -143,9 +143,9 @@ export function wouldOverlapNonOverlappable(
 }
 
 /** Find an activation window with maxSkills > 1 containing the given frame for this owner. */
-function findMultiSkillWindow(ownerId: string, frame: number, processedEvents: readonly TimelineEvent[]): TimelineEvent | undefined {
+function findMultiSkillWindow(ownerEntityId: string, frame: number, processedEvents: readonly TimelineEvent[]): TimelineEvent | undefined {
   for (const ev of processedEvents) {
-    if (ev.columnId !== COMBO_WINDOW_COLUMN_ID || ev.ownerId !== ownerId) continue;
+    if (ev.columnId !== COMBO_WINDOW_COLUMN_ID || ev.ownerEntityId !== ownerEntityId) continue;
     if ((ev.maxSkills ?? 1) <= 1) continue;
     if (frame >= ev.startFrame && frame < eventEndFrame(ev)) return ev;
   }
@@ -167,14 +167,14 @@ export function clampNonOverlappable(
 ): number {
   const evIsReset = ev.id && isResetStatus(ev.id);
   const comboWindowBypass = ev.columnId === NounType.COMBO && processedEvents
-    ? findMultiSkillWindow(ev.ownerId, desiredFrame, processedEvents)
+    ? findMultiSkillWindow(ev.ownerEntityId, desiredFrame, processedEvents)
     : undefined;
   const evRange = getSibRange(ev, processedEvents);
   if (evRange === 0) return desiredFrame;
   const movingForward = desiredFrame >= ev.startFrame;
   let result = desiredFrame;
   for (const sib of allEvents) {
-    if (sib.uid === ev.uid || sib.ownerId !== ev.ownerId || sib.columnId !== ev.columnId) continue;
+    if (sib.uid === ev.uid || sib.ownerEntityId !== ev.ownerEntityId || sib.columnId !== ev.columnId) continue;
     // RESET statuses clamp same-id siblings — skip overlap check only for those
     if (evIsReset && sib.id === ev.id) continue;
     if (comboWindowBypass && sib.columnId === NounType.COMBO &&
@@ -235,7 +235,7 @@ export function clampDeltaByOverlap(
   // Collect non-dragged siblings in the same column
   const siblings: { start: number; end: number }[] = [];
   for (const sib of allEvents) {
-    if (sib.uid === ev.uid || sib.ownerId !== ev.ownerId || sib.columnId !== ev.columnId) continue;
+    if (sib.uid === ev.uid || sib.ownerEntityId !== ev.ownerEntityId || sib.columnId !== ev.columnId) continue;
     if (draggedIds.has(sib.uid)) continue; // skip other dragged events
     // RESET statuses clamp same-id siblings — skip overlap check only for those
     if (evIsReset && sib.id === ev.id) continue;
@@ -322,7 +322,7 @@ export function clampDeltaByOverlap(
 // ── Event creation ──────────────────────────────────────────────────────────
 
 export function createEvent(
-  ownerId: string,
+  ownerEntityId: string,
   columnId: string,
   atFrame: number,
   defaultSkill: {
@@ -335,7 +335,7 @@ export function createEvent(
     timeStop?: number;
     timeDependency?: import('../../consts/enums').TimeDependency;
     skillPointCost?: number;
-    sourceOwnerId?: string;
+    sourceEntityId?: string;
     sourceSkillName?: string;
     enhancementType?: import('../../consts/enums').EnhancementType;
     stacks?: Record<string, unknown>;
@@ -346,7 +346,7 @@ export function createEvent(
   } | null,
   interactionMode?: import('../../consts/enums').InteractionModeType,
 ): TimelineEvent {
-  const isForced = ownerId === ENEMY_ID && REACTION_COLUMN_IDS.has(columnId);
+  const isForced = ownerEntityId === ENEMY_ID && REACTION_COLUMN_IDS.has(columnId);
   let segments = defaultSkill?.segments ?? durationSegment(120);
   // Perfect-dodge SP recovery is delivered via a RECOVER SKILL_POINT clause
   // attached to the dash event's first frame at offset 0. The interpret() →
@@ -358,13 +358,13 @@ export function createEvent(
   }
   const span = computeSegmentsSpan(segments);
   const stackLimit = (defaultSkill?.stacks?.limit as { value?: number } | undefined)?.value ?? 1;
-  const isStackable = stackLimit > 1 || (ownerId === ENEMY_ID && INFLICTION_COLUMN_IDS.has(columnId));
+  const isStackable = stackLimit > 1 || (ownerEntityId === ENEMY_ID && INFLICTION_COLUMN_IDS.has(columnId));
   const eventId = defaultSkill?.id ?? columnId;
   return {
     uid: genEventUid(),
     id: eventId,
     name: eventId,
-    ownerId,
+    ownerEntityId,
     columnId,
     startFrame: atFrame,
     segments,
@@ -377,7 +377,7 @@ export function createEvent(
     ...(defaultSkill?.timeStop ? { timeStop: defaultSkill.timeStop } : {}),
     ...(defaultSkill?.timeDependency ? { timeDependency: defaultSkill.timeDependency } : {}),
     ...(defaultSkill?.skillPointCost != null ? { skillPointCost: defaultSkill.skillPointCost } : {}),
-    sourceOwnerId: defaultSkill?.sourceOwnerId ?? ownerId,
+    sourceEntityId: defaultSkill?.sourceEntityId ?? ownerEntityId,
     sourceSkillName: defaultSkill?.sourceSkillName ?? 'Freeform',
     ...(defaultSkill?.enhancementType ? { enhancementType: defaultSkill.enhancementType } : {}),
     ...(interactionMode ? { creationInteractionMode: interactionMode } : {}),
@@ -489,7 +489,7 @@ function clampToEnableWindow(
   desiredFrame: number,
 ): number {
   // Find the ENABLE window by scanning for a frame that has the clause
-  if (!hasEnableClauseAtFrame(allEvents, target.ownerId, target.name, desiredFrame)) {
+  if (!hasEnableClauseAtFrame(allEvents, target.ownerEntityId, target.name, desiredFrame)) {
     return target.startFrame; // desired frame outside ENABLE window
   }
   return desiredFrame;
@@ -576,7 +576,7 @@ export function validateUpdate(
   // Enhanced skills require an active ultimate
   if (merged.enhancementType === EnhancementType.ENHANCED) {
     const ultActive = allEvents.some(
-      (e) => e.uid !== merged.uid && e.ownerId === merged.ownerId && e.columnId === NounType.ULTIMATE
+      (e) => e.uid !== merged.uid && e.ownerEntityId === merged.ownerEntityId && e.columnId === NounType.ULTIMATE
         && merged.startFrame >= e.startFrame + getAnimationDuration(e)
         && merged.startFrame < eventEndFrame(e),
     );
@@ -658,19 +658,19 @@ export function validateBatchMoveDelta(
 // ── Column-based event filtering ─────────────────────────────────────────
 
 /**
- * Build a Set of valid "ownerId:columnId" pairs from the controller-produced
+ * Build a Set of valid "ownerEntityId:columnId" pairs from the controller-produced
  * columns. Used both for filtering stale events and for gating new additions.
  */
 export function buildValidColumnPairs(
-  columns: readonly { type: string; ownerId: string; columnId?: string; matchColumnIds?: string[] }[],
+  columns: readonly { type: string; ownerEntityId: string; columnId?: string; matchColumnIds?: string[] }[],
 ): Set<string> {
   const pairs = new Set<string>();
   for (const col of columns) {
     if (col.type !== ColumnType.MINI_TIMELINE || !col.columnId) continue;
-    pairs.add(`${col.ownerId}:${col.columnId}`);
+    pairs.add(`${col.ownerEntityId}:${col.columnId}`);
     if (col.matchColumnIds) {
       for (const id of col.matchColumnIds) {
-        pairs.add(`${col.ownerId}:${id}`);
+        pairs.add(`${col.ownerEntityId}:${id}`);
       }
     }
   }
@@ -678,16 +678,16 @@ export function buildValidColumnPairs(
 }
 
 /**
- * Filter events to only those whose ownerId/columnId match a column produced
+ * Filter events to only those whose ownerEntityId/columnId match a column produced
  * by the controller. The columns array is the source of truth for what
  * subtimelines exist — events with no matching column are discarded.
  */
 export function filterEventsToColumns(
   events: TimelineEvent[],
-  columns: readonly { type: string; ownerId: string; columnId?: string; matchColumnIds?: string[] }[],
+  columns: readonly { type: string; ownerEntityId: string; columnId?: string; matchColumnIds?: string[] }[],
 ): TimelineEvent[] {
   const validPairs = buildValidColumnPairs(columns);
-  return events.filter((ev) => validPairs.has(`${ev.ownerId}:${ev.columnId}`));
+  return events.filter((ev) => validPairs.has(`${ev.ownerEntityId}:${ev.columnId}`));
 }
 
 // ── Operator swap validation ─────────────────────────────────────────────
@@ -706,5 +706,5 @@ export function filterEventsOnOperatorChange(
   newOperator: Operator | null,
 ): TimelineEvent[] {
   if (prevOperator?.id === newOperator?.id) return events;
-  return events.filter((ev) => ev.ownerId !== slotId);
+  return events.filter((ev) => ev.ownerEntityId !== slotId);
 }

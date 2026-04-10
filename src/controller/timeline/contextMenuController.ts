@@ -49,9 +49,9 @@ export interface ColumnContextMenuContext {
  * Returns null if no menu should be shown.
  */
 /** Build "Set as Controlled Operator" item for operator-owned columns. */
-export function controlledItem(ownerId: string, atFrame: number, timeStopRegions?: TimeStopRegion[]): ContextMenuItem | null {
-  if (ownerId === ENEMY_ID || ownerId === TEAM_ID) return null;
-  const alreadyControlled = getLastController()?.isControlledAt(ownerId, atFrame) ?? false;
+export function controlledItem(ownerEntityId: string, atFrame: number, timeStopRegions?: TimeStopRegion[]): ContextMenuItem | null {
+  if (ownerEntityId === ENEMY_ID || ownerEntityId === TEAM_ID) return null;
+  const alreadyControlled = getLastController()?.isControlledAt(ownerEntityId, atFrame) ?? false;
   const inTimeStop = timeStopRegions?.some(
     (stop) => atFrame > stop.startFrame && atFrame < stop.startFrame + stop.durationFrames,
   ) ?? false;
@@ -63,7 +63,7 @@ export function controlledItem(ownerId: string, atFrame: number, timeStopRegions
     label: t('ctx.setControlled'),
     actionId: 'addEvent',
     actionPayload: {
-      ownerId,
+      ownerEntityId,
       columnId: OPERATOR_COLUMNS.INPUT,
       atFrame,
       defaultSkill: { id: NounType.CONTROL, name: NounType.CONTROL, segments: [{ properties: { duration: TOTAL_FRAMES - atFrame, name: 'Control' } }] },
@@ -84,7 +84,7 @@ export function buildColumnContextMenu(
 
   const { events, slots, resourceGraphs, alwaysAvailableComboSlots, timeStopRegions, staggerBreaks, columnPositions, interactionMode } = ctx;
 
-  const ctrlItem = controlledItem(col.ownerId, atFrame, timeStopRegions);
+  const ctrlItem = controlledItem(col.ownerEntityId, atFrame, timeStopRegions);
 
   // Resource columns: show "Edit Resource" only
   if (col.noAdd && resourceGraphs?.has(col.key)) {
@@ -98,8 +98,8 @@ export function buildColumnContextMenu(
 
   const headerItem: ContextMenuItem = { label: t('ctx.header.add', { frame: frameToDetailLabel(atFrame) }), header: true };
 
-  const checkOverlap = (ownerId: string, columnId: string, range: number) =>
-    wouldOverlapSiblings(ownerId, columnId, atFrame, range, events);
+  const checkOverlap = (ownerEntityId: string, columnId: string, range: number) =>
+    wouldOverlapSiblings(ownerEntityId, columnId, atFrame, range, events);
 
   const timeStop = isBlockedByTimeStop(col.columnId, atFrame, timeStopRegions, getAnimationDurationFromSegments(col.defaultEvent?.segments));
   const inTimeStop = timeStop.blocked;
@@ -110,13 +110,13 @@ export function buildColumnContextMenu(
       // Check stack limit per micro-column
       const matchSet = col.matchColumnIds ? new Set(col.matchColumnIds) : null;
       const mcEvents = events.filter(
-        (ev) => ev.ownerId === col.ownerId && (matchSet ? ev.columnId === mc.id : ev.columnId === col.columnId),
+        (ev) => ev.ownerEntityId === col.ownerEntityId && (matchSet ? ev.columnId === mc.id : ev.columnId === col.columnId),
       );
       const mcFull = col.maxEvents != null && mcEvents.length >= col.maxEvents;
       return {
         label: REACTION_LABELS[mc.id]?.label ?? mc.label,
         actionId: 'addEvent' as const,
-        actionPayload: { ownerId: col.ownerId, columnId: mc.id, atFrame, defaultSkill: mc.defaultEvent ?? col.defaultEvent ?? null },
+        actionPayload: { ownerEntityId: col.ownerEntityId, columnId: mc.id, atFrame, defaultSkill: mc.defaultEvent ?? col.defaultEvent ?? null },
         disabled: mcFull || inTimeStop,
         disabledReason: mcFull ? t('ctx.stacksFull', { current: String(mcEvents.length), max: String(col.maxEvents ?? '?') }) : inTimeStop ? timeStopReason : undefined,
       };
@@ -139,7 +139,7 @@ export function buildColumnContextMenu(
       {
         label: mc.label,
         actionId: 'addEvent',
-        actionPayload: { ownerId: col.ownerId, columnId: mc.id, atFrame, defaultSkill: mc.defaultEvent ?? col.defaultEvent ?? null },
+        actionPayload: { ownerEntityId: col.ownerEntityId, columnId: mc.id, atFrame, defaultSkill: mc.defaultEvent ?? col.defaultEvent ?? null },
         disabled: inTimeStop,
         disabledReason: inTimeStop ? timeStopReason : undefined,
       },
@@ -152,7 +152,7 @@ export function buildColumnContextMenu(
     const beforePrev = isBeforeLastEvent(col, events, atFrame);
     const matchSet = col.matchColumnIds ? new Set(col.matchColumnIds) : null;
     const existing = events.filter(
-      (ev) => ev.ownerId === col.ownerId &&
+      (ev) => ev.ownerEntityId === col.ownerEntityId &&
         (matchSet ? matchSet.has(ev.columnId) : ev.columnId === col.columnId),
     );
 
@@ -161,7 +161,7 @@ export function buildColumnContextMenu(
         label: getAllInflictionLabels()[mc.id] ?? mc.label,
         actionId: 'addEvent' as const,
         actionPayload: {
-          ownerId: col.ownerId,
+          ownerEntityId: col.ownerEntityId,
           columnId: mc.id,
           atFrame,
           defaultSkill: mc.defaultEvent ?? (col.defaultEvent
@@ -195,7 +195,7 @@ export function buildColumnContextMenu(
       {
         label: eventName,
         actionId: 'addEvent',
-        actionPayload: { ownerId: col.ownerId, columnId: col.columnId, atFrame, defaultSkill: col.defaultEvent ?? null },
+        actionPayload: { ownerEntityId: col.ownerEntityId, columnId: col.columnId, atFrame, defaultSkill: col.defaultEvent ?? null },
         disabled,
         disabledReason: disabledReason || undefined,
       },
@@ -208,7 +208,7 @@ export function buildColumnContextMenu(
   const eventName = getAllSkillLabels()[rawName as string] ?? getAllInflictionLabels()[rawName] ?? col.defaultEvent?.name ?? rawName;
 
   if (col.columnId === NounType.COMBO) {
-    const comboAvail = checkComboWindowAvailability(col.ownerId, atFrame, events, alwaysAvailableComboSlots);
+    const comboAvail = checkComboWindowAvailability(col.ownerEntityId, atFrame, events, alwaysAvailableComboSlots);
     const variants = col.eventVariants && col.eventVariants.length > 1 ? col.eventVariants : null;
 
     if (variants) {
@@ -216,8 +216,8 @@ export function buildColumnContextMenu(
       return [
         headerItem,
         ...variants.map((v) => {
-          const availability = checkVariantAvailability(v.id, col.ownerId, events, atFrame, col.columnId, slots);
-          const overlap = checkOverlap(col.ownerId, col.columnId, computeProspectiveRange(v, atFrame, timeStopRegions));
+          const availability = checkVariantAvailability(v.id, col.ownerEntityId, events, atFrame, col.columnId, slots);
+          const overlap = checkOverlap(col.ownerEntityId, col.columnId, computeProspectiveRange(v, atFrame, timeStopRegions));
           const disabled = interactionMode === InteractionModeType.STRICT && (inTimeStop || !comboAvail.available || availability.disabled || overlap);
           const displayName = v.displayName ?? getAllSkillLabels()[v.id as string] ?? v.name ?? v.id;
           const reason = inTimeStop ? timeStopReason
@@ -234,7 +234,7 @@ export function buildColumnContextMenu(
                   label: `×${val}`,
                   actionId: 'addEvent' as const,
                   actionPayload: {
-                    ownerId: col.ownerId,
+                    ownerEntityId: col.ownerEntityId,
                     columnId: col.columnId,
                     atFrame,
                     defaultSkill: { ...v, comboTriggerColumnId: comboAvail.comboTriggerColumnId, parameterValues: { [param.id]: val } },
@@ -249,7 +249,7 @@ export function buildColumnContextMenu(
             label: displayName,
             actionId: 'addEvent' as const,
             actionPayload: {
-              ownerId: col.ownerId,
+              ownerEntityId: col.ownerEntityId,
               columnId: col.columnId,
               atFrame,
               defaultSkill: { ...v, comboTriggerColumnId: comboAvail.comboTriggerColumnId },
@@ -265,7 +265,7 @@ export function buildColumnContextMenu(
     }
 
     // Single combo variant — show as one item
-    const overlap = checkOverlap(col.ownerId, col.columnId, computeProspectiveRange(col.defaultEvent ?? null, atFrame, timeStopRegions));
+    const overlap = checkOverlap(col.ownerEntityId, col.columnId, computeProspectiveRange(col.defaultEvent ?? null, atFrame, timeStopRegions));
     const disabled = interactionMode === InteractionModeType.STRICT && (inTimeStop || !comboAvail.available || overlap);
     const reason = inTimeStop ? timeStopReason
       : !comboAvail.available ? comboAvail.reason
@@ -281,7 +281,7 @@ export function buildColumnContextMenu(
             label: `×${val}`,
             actionId: 'addEvent' as const,
             actionPayload: {
-              ownerId: col.ownerId,
+              ownerEntityId: col.ownerEntityId,
               columnId: col.columnId,
               atFrame,
               defaultSkill: { ...col.defaultEvent, comboTriggerColumnId: comboAvail.comboTriggerColumnId, parameterValues: { [param.id]: val } },
@@ -299,7 +299,7 @@ export function buildColumnContextMenu(
         label: eventName,
         actionId: 'addEvent',
         actionPayload: {
-          ownerId: col.ownerId,
+          ownerEntityId: col.ownerEntityId,
           columnId: col.columnId,
           atFrame,
           defaultSkill: { ...col.defaultEvent, comboTriggerColumnId: comboAvail.comboTriggerColumnId },
@@ -315,7 +315,7 @@ export function buildColumnContextMenu(
 
   if (col.eventVariants && col.eventVariants.length > 0) {
     const spAvail = resourceGraphs
-      ? checkResourceAvailability(col.columnId, col.ownerId, atFrame, resourceGraphs, slots)
+      ? checkResourceAvailability(col.columnId, col.ownerEntityId, atFrame, resourceGraphs, slots)
       : { sufficient: true };
     const spInsufficient = !spAvail.sufficient;
     const spReason = spAvail.reason;
@@ -323,9 +323,9 @@ export function buildColumnContextMenu(
     return [
       headerItem,
       ...col.eventVariants.map((v) => {
-        const availability = checkVariantAvailability(v.id, col.ownerId, events, atFrame, col.columnId, slots);
+        const availability = checkVariantAvailability(v.id, col.ownerEntityId, events, atFrame, col.columnId, slots);
         const variantStackLimit = (v.stacks?.limit as { value?: number } | undefined)?.value ?? 1;
-        const overlap = variantStackLimit > 1 ? false : checkOverlap(col.ownerId, col.columnId, computeProspectiveRange(v, atFrame, timeStopRegions));
+        const overlap = variantStackLimit > 1 ? false : checkOverlap(col.ownerEntityId, col.columnId, computeProspectiveRange(v, atFrame, timeStopRegions));
         let finisherBlock: string | undefined;
         if (v.id === NounType.FINISHER && staggerBreaks) {
           const effectiveBreaks = getEffectiveStaggerWindows(events, staggerBreaks);
@@ -359,7 +359,7 @@ export function buildColumnContextMenu(
           && v.id !== NounType.FINISHER && v.id !== NounType.DIVE;
         const inlineButtons = isBatkChain
           ? v.segments!.map((seg, segIdx) => {
-            const segOverlap = checkOverlap(col.ownerId, col.columnId, computeProspectiveRange({ segments: [seg] }, atFrame, timeStopRegions));
+            const segOverlap = checkOverlap(col.ownerEntityId, col.columnId, computeProspectiveRange({ segments: [seg] }, atFrame, timeStopRegions));
             const segStatusDisabled = availability.disabledSegments?.has(segIdx) ?? false;
             const segDisabled = interactionMode === InteractionModeType.STRICT && (inTimeStop || v.disabled || availability.disabled || segOverlap || spInsufficient || segStatusDisabled);
             const segReason = v.disabledReason
@@ -373,7 +373,7 @@ export function buildColumnContextMenu(
               label: formatSegmentShortName(seg.properties.name, segIdx),
               actionId: 'addEvent' as const,
               actionPayload: {
-                ownerId: col.ownerId,
+                ownerEntityId: col.ownerEntityId,
                 columnId: col.columnId,
                 atFrame,
                 defaultSkill: {
@@ -400,7 +400,7 @@ export function buildColumnContextMenu(
                 label: `×${val}`,
                 actionId: 'addEvent' as const,
                 actionPayload: {
-                  ownerId: col.ownerId,
+                  ownerEntityId: col.ownerEntityId,
                   columnId: col.columnId,
                   atFrame,
                   defaultSkill: {
@@ -433,7 +433,7 @@ export function buildColumnContextMenu(
           disabledReason: reason,
           actionId: 'addEvent' as const,
           actionPayload: {
-            ownerId: col.ownerId,
+            ownerEntityId: col.ownerEntityId,
             columnId: col.columnId,
             atFrame,
             defaultSkill: {
@@ -461,13 +461,13 @@ export function buildColumnContextMenu(
   }
 
   // Default: simple column
-  const overlap = checkOverlap(col.ownerId, col.columnId, computeProspectiveRange(col.defaultEvent ?? null, atFrame, timeStopRegions));
+  const overlap = checkOverlap(col.ownerEntityId, col.columnId, computeProspectiveRange(col.defaultEvent ?? null, atFrame, timeStopRegions));
   const resAvail = resourceGraphs
-    ? checkResourceAvailability(col.columnId, col.ownerId, atFrame, resourceGraphs, slots)
+    ? checkResourceAvailability(col.columnId, col.ownerEntityId, atFrame, resourceGraphs, slots)
     : { sufficient: true };
   const defaultName = col.defaultEvent?.id;
   const availability = defaultName
-    ? checkVariantAvailability(defaultName, col.ownerId, events, atFrame, col.columnId, slots)
+    ? checkVariantAvailability(defaultName, col.ownerEntityId, events, atFrame, col.columnId, slots)
     : { disabled: false } as VariantAvailability;
   const disabled = interactionMode === InteractionModeType.STRICT && (inTimeStop || overlap || !resAvail.sufficient || availability.disabled);
   const reason = inTimeStop ? timeStopReason : overlap ? t('ctx.overlap') : !resAvail.sufficient ? resAvail.reason : availability.disabled ? availability.reason : undefined;
@@ -486,7 +486,7 @@ export function buildColumnContextMenu(
             buttons.push({
               label: `×${val}`,
               actionId: 'addEvent' as const,
-              actionPayload: { ownerId: col.ownerId, columnId: col.columnId, atFrame, defaultSkill: { ...col.defaultEvent, parameterValues: { [param.id]: val } } },
+              actionPayload: { ownerEntityId: col.ownerEntityId, columnId: col.columnId, atFrame, defaultSkill: { ...col.defaultEvent, parameterValues: { [param.id]: val } } },
               disabled: false,
             });
           }
@@ -496,7 +496,7 @@ export function buildColumnContextMenu(
       return {
         label: eventName,
         actionId: 'addEvent' as const,
-        actionPayload: { ownerId: col.ownerId, columnId: col.columnId, atFrame, defaultSkill: col.defaultEvent ?? null },
+        actionPayload: { ownerEntityId: col.ownerEntityId, columnId: col.columnId, atFrame, defaultSkill: col.defaultEvent ?? null },
         disabled,
         disabledReason: reason,
         ...(defParamButtons && defs ? { inlineLabel: defs[0].name } : {}),
@@ -521,8 +521,8 @@ export function buildEventAddItems(
 ): ContextMenuItem[] {
   const col = columns.find((c) => {
     if (c.type !== ColumnType.MINI_TIMELINE || !c.microColumns || c.microColumnAssignment !== MicroColumnAssignment.BY_ORDER) return false;
-    if (c.matchColumnIds) return c.ownerId === ev.ownerId && c.matchColumnIds.includes(ev.columnId);
-    return c.ownerId === ev.ownerId && c.columnId === ev.columnId;
+    if (c.matchColumnIds) return c.ownerEntityId === ev.ownerEntityId && c.matchColumnIds.includes(ev.columnId);
+    return c.ownerEntityId === ev.ownerEntityId && c.columnId === ev.columnId;
   }) as MiniTimeline | undefined;
 
   if (!col) return [];
@@ -531,7 +531,7 @@ export function buildEventAddItems(
     return col.microColumns.map((mc) => ({
       label: t('ctx.addAt', { item: mc.label, location: label }),
       actionId: onAddEventActionId,
-      actionPayload: { ownerId: col.ownerId, columnId: mc.id, atFrame, defaultSkill: col.defaultEvent ?? null },
+      actionPayload: { ownerEntityId: col.ownerEntityId, columnId: mc.id, atFrame, defaultSkill: col.defaultEvent ?? null },
     }));
   }
 
@@ -541,7 +541,7 @@ export function buildEventAddItems(
   const disabled = interactionMode === InteractionModeType.STRICT && (full || beforePrev);
   const matchSet = col.matchColumnIds ? new Set(col.matchColumnIds) : null;
   const existing = events.filter(
-    (ev) => ev.ownerId === col.ownerId &&
+    (ev) => ev.ownerEntityId === col.ownerEntityId &&
       (matchSet ? matchSet.has(ev.columnId) : ev.columnId === col.columnId),
   );
   const maxLabel = col.maxEvents ?? '?';
@@ -555,7 +555,7 @@ export function buildEventAddItems(
   return [{
     label: t('ctx.addAt', { item: eventName, location: label }),
     actionId: onAddEventActionId,
-    actionPayload: { ownerId: col.ownerId, columnId: col.columnId, atFrame, defaultSkill: col.defaultEvent ?? null },
+    actionPayload: { ownerEntityId: col.ownerEntityId, columnId: col.columnId, atFrame, defaultSkill: col.defaultEvent ?? null },
     disabled,
     disabledReason,
   }];
@@ -573,7 +573,7 @@ export function buildSegmentAddItems(
   const ev = events.find((e) => e.uid === eventUid);
   if (!ev) return [];
   const col = columns.find((c): c is MiniTimeline =>
-    c.type === ColumnType.MINI_TIMELINE && c.ownerId === ev.ownerId && c.columnId === ev.columnId);
+    c.type === ColumnType.MINI_TIMELINE && c.ownerEntityId === ev.ownerEntityId && c.columnId === ev.columnId);
   const allSegments = col?.defaultEvent?.segments;
   if (!allSegments || allSegments.length <= 1) return [];
   const addable = allSegments.filter((s) => s.properties.name);
@@ -602,7 +602,7 @@ export function buildFrameAddItems(
   const ev = events.find((e) => e.uid === eventUid);
   if (!ev?.segments[segmentIndex]) return [];
   const col = columns.find((c): c is MiniTimeline =>
-    c.type === ColumnType.MINI_TIMELINE && c.ownerId === ev.ownerId && c.columnId === ev.columnId);
+    c.type === ColumnType.MINI_TIMELINE && c.ownerEntityId === ev.ownerEntityId && c.columnId === ev.columnId);
   const seg = ev.segments[segmentIndex];
   const allDefaultSegs = col?.defaultEvent?.segments;
   const defaultSeg = allDefaultSegs?.find((s) => s.properties.name === seg.properties.name) ?? allDefaultSegs?.[segmentIndex];

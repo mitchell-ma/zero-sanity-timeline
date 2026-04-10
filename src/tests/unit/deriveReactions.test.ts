@@ -30,11 +30,11 @@ function infliction(
     uid,
     id: columnId,
     name: columnId,
-    ownerId: ENEMY_ID,
+    ownerEntityId: ENEMY_ID,
     columnId,
     startFrame,
     segments: [{ properties: { duration: Math.round(durationSeconds * FPS) } }],
-    sourceOwnerId: 'slot-0',
+    sourceEntityId: 'slot-0',
     ...opts,
   };
 }
@@ -261,16 +261,16 @@ describe('deriveReactions', () => {
 
   // ── Source attribution ──────────────────────────────────────────────────
 
-  it('reaction inherits sourceOwnerId from incoming infliction', () => {
+  it('reaction inherits sourceEntityId from incoming infliction', () => {
     const events = [
-      infliction('h1', INFLICTION_COLUMNS.HEAT, 0, 10, { sourceOwnerId: 'slot-0' }),
-      infliction('n1', INFLICTION_COLUMNS.NATURE, FPS, 10, { sourceOwnerId: 'slot-1' }),
+      infliction('h1', INFLICTION_COLUMNS.HEAT, 0, 10, { sourceEntityId: 'slot-0' }),
+      infliction('n1', INFLICTION_COLUMNS.NATURE, FPS, 10, { sourceEntityId: 'slot-1' }),
     ];
 
     const result = deriveReactions(events);
     const reactions = findReactions(result);
 
-    expect(reactions[0].sourceOwnerId).toBe('slot-1');
+    expect(reactions[0].sourceEntityId).toBe('slot-1');
   });
 
   // ── Already-consumed inflictions are skipped ────────────────────────────
@@ -326,7 +326,7 @@ describe('deriveReactions', () => {
       uid: 'op-skill',
       id: 'SMOULDERING_FIRE',
       name: 'SMOULDERING_FIRE',
-      ownerId: 'slot-0',
+      ownerEntityId: 'slot-0',
       columnId: 'battle',
       startFrame: 0,
       segments: [{ properties: { duration: 240 } }],

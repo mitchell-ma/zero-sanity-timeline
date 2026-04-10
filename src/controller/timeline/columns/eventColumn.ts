@@ -14,10 +14,10 @@ import type { TimelineEvent } from '../../../consts/viewTypes';
 export interface EventSource {
   /**
    * Legacy owner id — historically populated with the slot id. Back-compat
-   * field still used by eventStatusOwnerId / sourceOwnerId stamping. New
+   * field still used by eventStatusEntityId / sourceEntityId stamping. New
    * code should also populate `slotId` and `operatorId` explicitly.
    */
-  ownerId: string;
+  ownerEntityId: string;
   skillName: string;
   /** Slot id of the causing event (e.g. "slot-0"). Optional for back-compat. */
   slotId?: string;
@@ -58,9 +58,9 @@ export interface ConsumeOptions {
  */
 export interface ColumnHost {
   /** Get all active (non-consumed) events for a column+owner at a frame. */
-  activeEventsIn(columnId: string, ownerId: string, frame: number): TimelineEvent[];
+  activeEventsIn(columnId: string, ownerEntityId: string, frame: number): TimelineEvent[];
   /** Count active events for a column+owner at a frame. */
-  activeCount(columnId: string, ownerId: string, frame: number): number;
+  activeCount(columnId: string, ownerEntityId: string, frame: number): number;
   /** Extend a raw game-time duration by active time-stop regions. */
   extendDuration(startFrame: number, rawDuration: number, eventUid?: string): number;
   /** Register a raw (pre-extension) duration for later re-extension. */
@@ -72,7 +72,7 @@ export interface ColumnHost {
   /** Push an event to output only (e.g. consumed copies for freeform state tracking). */
   pushToOutput(event: TimelineEvent): void;
   /** Delegate creation to another column (cross-column side effects). */
-  applyToColumn(columnId: string, ownerId: string, frame: number, durationFrames: number,
+  applyToColumn(columnId: string, ownerEntityId: string, frame: number, durationFrames: number,
     source: EventSource, options?: AddOptions): boolean;
   /** Get foreign time-stop regions for reaction segment building. */
   foreignStopsFor(event: TimelineEvent): readonly import('../processTimeStop').TimeStopRegion[];
@@ -97,7 +97,7 @@ export interface EventColumn {
    * and any cross-column side effects (e.g. infliction triggering a reaction).
    * Returns true if the event was accepted (false = rejected, e.g. NONE at capacity).
    */
-  add(ownerId: string, frame: number, durationFrames: number,
+  add(ownerEntityId: string, frame: number, durationFrames: number,
     source: EventSource, options?: AddOptions): boolean;
 
   /**
@@ -105,12 +105,12 @@ export interface EventColumn {
    * (FIFO for inflictions, clamp-all for reactions/statuses).
    * Returns the number of events consumed.
    */
-  consume(ownerId: string, frame: number, source: EventSource,
+  consume(ownerEntityId: string, frame: number, source: EventSource,
     options?: ConsumeOptions): number;
 
   /** Check if an add() would succeed at this frame. */
-  canAdd(ownerId: string, frame: number): boolean;
+  canAdd(ownerEntityId: string, frame: number): boolean;
 
   /** Check if a consume() would find any active events. */
-  canConsume(ownerId: string, frame: number): boolean;
+  canConsume(ownerEntityId: string, frame: number): boolean;
 }

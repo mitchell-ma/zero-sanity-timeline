@@ -47,7 +47,7 @@ function setupComboThenBasic(result: { current: AppResult }) {
   const comboPayload = getMenuPayload(result.current, comboCol!, 0);
   act(() => {
     result.current.handleAddEvent(
-      comboPayload.ownerId, comboPayload.columnId, comboPayload.atFrame, comboPayload.defaultSkill,
+      comboPayload.ownerEntityId, comboPayload.columnId, comboPayload.atFrame, comboPayload.defaultSkill,
     );
   });
 
@@ -56,7 +56,7 @@ function setupComboThenBasic(result: { current: AppResult }) {
   const basicPayload = getMenuPayload(result.current, basicCol!, 3 * FPS);
   act(() => {
     result.current.handleAddEvent(
-      basicPayload.ownerId, basicPayload.columnId, basicPayload.atFrame, basicPayload.defaultSkill,
+      basicPayload.ownerEntityId, basicPayload.columnId, basicPayload.atFrame, basicPayload.defaultSkill,
     );
   });
 }
@@ -68,7 +68,7 @@ function setupBasicThenComboOverlapping(result: { current: AppResult }) {
   const basicPayload = getMenuPayload(result.current, basicCol!, 0);
   act(() => {
     result.current.handleAddEvent(
-      basicPayload.ownerId, basicPayload.columnId, basicPayload.atFrame, basicPayload.defaultSkill,
+      basicPayload.ownerEntityId, basicPayload.columnId, basicPayload.atFrame, basicPayload.defaultSkill,
     );
   });
 
@@ -79,7 +79,7 @@ function setupBasicThenComboOverlapping(result: { current: AppResult }) {
   const comboPayload = getMenuPayload(result.current, comboCol!, Math.round(1.3 * FPS));
   act(() => {
     result.current.handleAddEvent(
-      comboPayload.ownerId, comboPayload.columnId, comboPayload.atFrame, comboPayload.defaultSkill,
+      comboPayload.ownerEntityId, comboPayload.columnId, comboPayload.atFrame, comboPayload.defaultSkill,
     );
   });
 }
@@ -91,10 +91,10 @@ describe('Time-stop layout positioning — no double-counting', () => {
 
     const events = result.current.allProcessedEvents;
     const comboEvent = events.find(
-      ev => ev.ownerId === SLOT_AKEKURI && ev.columnId === NounType.COMBO,
+      ev => ev.ownerEntityId === SLOT_AKEKURI && ev.columnId === NounType.COMBO,
     )!;
     const basicEvent = events.find(
-      ev => ev.ownerId === SLOT_AKEKURI && ev.columnId === NounType.BASIC_ATTACK,
+      ev => ev.ownerEntityId === SLOT_AKEKURI && ev.columnId === NounType.BASIC_ATTACK,
     )!;
     expect(comboEvent).toBeDefined();
     expect(basicEvent).toBeDefined();
@@ -149,7 +149,7 @@ describe('Time-stop layout positioning — no double-counting', () => {
 
     const events = result.current.allProcessedEvents;
     const basicEvent = events.find(
-      ev => ev.ownerId === SLOT_AKEKURI && ev.columnId === NounType.BASIC_ATTACK,
+      ev => ev.ownerEntityId === SLOT_AKEKURI && ev.columnId === NounType.BASIC_ATTACK,
     )!;
 
     const layout = buildTimelineLayout(events);
@@ -172,10 +172,10 @@ describe('Time-stop layout positioning — no double-counting', () => {
 
     const events = result.current.allProcessedEvents;
     const basicEvent = events.find(
-      ev => ev.ownerId === SLOT_AKEKURI && ev.columnId === NounType.BASIC_ATTACK,
+      ev => ev.ownerEntityId === SLOT_AKEKURI && ev.columnId === NounType.BASIC_ATTACK,
     )!;
     const comboEvent = events.find(
-      ev => ev.ownerId === SLOT_AKEKURI && ev.columnId === NounType.COMBO,
+      ev => ev.ownerEntityId === SLOT_AKEKURI && ev.columnId === NounType.COMBO,
     )!;
     expect(basicEvent).toBeDefined();
     expect(comboEvent).toBeDefined();
@@ -207,7 +207,7 @@ describe('Time-stop layout positioning — no double-counting', () => {
 
     const events = result.current.allProcessedEvents;
     const basicEvent = events.find(
-      ev => ev.ownerId === SLOT_AKEKURI && ev.columnId === NounType.BASIC_ATTACK,
+      ev => ev.ownerEntityId === SLOT_AKEKURI && ev.columnId === NounType.BASIC_ATTACK,
     )!;
 
     const layout = buildTimelineLayout(events);

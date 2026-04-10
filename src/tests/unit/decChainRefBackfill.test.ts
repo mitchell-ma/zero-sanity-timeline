@@ -12,16 +12,16 @@ import { DerivedEventController } from '../../controller/timeline/derivedEventCo
 import { TimelineEvent } from '../../consts/viewTypes';
 import { NounType } from '../../dsl/semantics';
 
-function mkSkillEvent(uid: string, ownerId: string, sourceOwnerId?: string): TimelineEvent {
+function mkSkillEvent(uid: string, ownerEntityId: string, sourceEntityId?: string): TimelineEvent {
   return {
     uid,
     id: 'TEST',
     name: 'TEST',
-    ownerId,
+    ownerEntityId,
     columnId: NounType.BATTLE,
     startFrame: 0,
     segments: [{ properties: { duration: 60 } }],
-    sourceOwnerId,
+    sourceEntityId,
     sourceSkillName: 'TEST',
   } as TimelineEvent;
 }
@@ -33,7 +33,7 @@ describe('DEC — Phase 1 chainRef backfill', () => {
     dec = new DerivedEventController();
   });
 
-  test('ownerId is a known slot → fields pulled from slotOperatorMap', () => {
+  test('ownerEntityId is a known slot → fields pulled from slotOperatorMap', () => {
     dec.reset(undefined, undefined, undefined, undefined, undefined,
       { 'slot-pogranichnik': 'POGRANICHNIK' });
     dec.createSkillEvent(mkSkillEvent('e1', 'slot-pogranichnik'), { checkCooldown: false });
@@ -43,7 +43,7 @@ describe('DEC — Phase 1 chainRef backfill', () => {
     expect(ev.ownerOperatorId).toBe('POGRANICHNIK');
   });
 
-  test('sourceOwnerId is a known slot → backfilled from it when ownerId is not', () => {
+  test('sourceEntityId is a known slot → backfilled from it when ownerEntityId is not', () => {
     dec.reset(undefined, undefined, undefined, undefined, undefined,
       { 'slot-foo': 'FOO_OP' });
     const ev = mkSkillEvent('e1', 'enemy', 'slot-foo');
@@ -54,7 +54,7 @@ describe('DEC — Phase 1 chainRef backfill', () => {
     expect(out.ownerOperatorId).toBe('FOO_OP');
   });
 
-  test('sourceOwnerId is an operator id → reverse-lookup finds the slot', () => {
+  test('sourceEntityId is an operator id → reverse-lookup finds the slot', () => {
     dec.reset(undefined, undefined, undefined, undefined, undefined,
       { 'slot-bar': 'BAR_OP' });
     const ev = mkSkillEvent('e1', 'enemy', 'BAR_OP');
@@ -65,7 +65,7 @@ describe('DEC — Phase 1 chainRef backfill', () => {
     expect(out.ownerOperatorId).toBe('BAR_OP');
   });
 
-  test('no slot map match → falls back to ownerId for both fields', () => {
+  test('no slot map match → falls back to ownerEntityId for both fields', () => {
     dec.reset();
     dec.createSkillEvent(mkSkillEvent('e1', 'enemy'), { checkCooldown: false });
 

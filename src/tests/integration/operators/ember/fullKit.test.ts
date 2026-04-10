@@ -56,37 +56,37 @@ function setPotential(app: AppResult, potential: number) {
 function addBS(app: AppResult, atFrame: number) {
   const col = findColumn(app, SLOT, NounType.BATTLE);
   const payload = getMenuPayload(app, col!, atFrame);
-  app.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+  app.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
 }
 
 function addCombo(app: AppResult, atFrame: number) {
   const col = findColumn(app, SLOT, NounType.COMBO);
   const payload = getMenuPayload(app, col!, atFrame);
-  app.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+  app.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
 }
 
 function addUlt(app: AppResult, atFrame: number) {
   const col = findColumn(app, SLOT, NounType.ULTIMATE);
   const payload = getMenuPayload(app, col!, atFrame);
-  app.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+  app.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
 }
 
 function addEnemyAction(app: AppResult, atFrame: number) {
   const col = app.columns.find(
     (c): c is MiniTimeline =>
       c.type === ColumnType.MINI_TIMELINE &&
-      c.ownerId === ENEMY_ID &&
+      c.ownerEntityId === ENEMY_ID &&
       c.columnId === ENEMY_ACTION_COLUMN_ID,
   )!;
   const payload = getMenuPayload(app, col, atFrame);
-  app.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+  app.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
 }
 
 function getStatusMicroColumn(app: AppResult, slotId: string, statusId: string) {
   for (const col of app.columns) {
     if (col.type !== ColumnType.MINI_TIMELINE) continue;
     const mt = col as MiniTimeline;
-    if (mt.ownerId !== slotId || mt.columnId !== OPERATOR_STATUS_COLUMN_ID) continue;
+    if (mt.ownerEntityId !== slotId || mt.columnId !== OPERATOR_STATUS_COLUMN_ID) continue;
     return mt.microColumns?.find(mc => mc.id === statusId);
   }
   return undefined;
@@ -102,7 +102,7 @@ describe('A. Forward March (BS)', () => {
     act(() => { addBS(result.current, 5 * FPS); });
 
     const bs = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT && ev.columnId === NounType.BATTLE,
+      ev => ev.ownerEntityId === SLOT && ev.columnId === NounType.BATTLE,
     );
     expect(bs).toHaveLength(1);
     const frames = bs[0].segments.flatMap(s => s.frames ?? []);
@@ -114,7 +114,7 @@ describe('A. Forward March (BS)', () => {
     act(() => { addBS(result.current, 5 * FPS); });
 
     const inflamed = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === INFLAMED_ID && ev.ownerId === SLOT,
+      ev => ev.columnId === INFLAMED_ID && ev.ownerEntityId === SLOT,
     );
     expect(inflamed.length).toBeGreaterThanOrEqual(1);
   });
@@ -124,7 +124,7 @@ describe('A. Forward March (BS)', () => {
     act(() => { addBS(result.current, 5 * FPS); });
 
     const inflamed = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === INFLAMED_ID && ev.ownerId === SLOT,
+      ev => ev.columnId === INFLAMED_ID && ev.ownerEntityId === SLOT,
     );
     expect(inflamed.length).toBeGreaterThanOrEqual(1);
     const dur = inflamed[0].segments.reduce(
@@ -139,7 +139,7 @@ describe('A. Forward March (BS)', () => {
     act(() => { addBS(result.current, 5 * FPS); });
 
     const inflamed = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === INFLAMED_ID && ev.ownerId === SLOT,
+      ev => ev.columnId === INFLAMED_ID && ev.ownerEntityId === SLOT,
     );
     expect(inflamed.length).toBeGreaterThanOrEqual(1);
     const dur = inflamed[0].segments.reduce(
@@ -169,7 +169,7 @@ describe('B. Frontline Support (Combo)', () => {
     act(() => { addCombo(result.current, 5 * FPS); });
 
     const combos = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT && ev.columnId === NounType.COMBO,
+      ev => ev.ownerEntityId === SLOT && ev.columnId === NounType.COMBO,
     );
     expect(combos).toHaveLength(1);
   });
@@ -180,7 +180,7 @@ describe('B. Frontline Support (Combo)', () => {
     act(() => { addCombo(result.current, 5 * FPS); });
 
     const combos = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT && ev.columnId === NounType.COMBO,
+      ev => ev.ownerEntityId === SLOT && ev.columnId === NounType.COMBO,
     );
     const cd = combos[0].segments.find(
       (s: { properties: { segmentTypes?: string[] } }) =>
@@ -195,7 +195,7 @@ describe('B. Frontline Support (Combo)', () => {
     act(() => { addCombo(result.current, 5 * FPS); });
 
     const inflamed = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === INFLAMED_ID && ev.ownerId === SLOT,
+      ev => ev.columnId === INFLAMED_ID && ev.ownerEntityId === SLOT,
     );
     expect(inflamed.length).toBeGreaterThanOrEqual(1);
   });
@@ -206,7 +206,7 @@ describe('B. Frontline Support (Combo)', () => {
     act(() => { addCombo(result.current, 5 * FPS); });
 
     const inflamed = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === INFLAMED_ID && ev.ownerId === SLOT,
+      ev => ev.columnId === INFLAMED_ID && ev.ownerEntityId === SLOT,
     );
     expect(inflamed.length).toBeGreaterThanOrEqual(1);
     const dur = inflamed[0].segments.reduce(
@@ -230,7 +230,7 @@ describe('C. Re-Ignited Oath (Ult)', () => {
     act(() => { addUlt(result.current, 5 * FPS); });
 
     const ults = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT && ev.columnId === NounType.ULTIMATE,
+      ev => ev.ownerEntityId === SLOT && ev.columnId === NounType.ULTIMATE,
     );
     expect(ults).toHaveLength(1);
   });
@@ -338,7 +338,7 @@ describe('D. Pay the Ferric Price', () => {
     act(() => { addEnemyAction(result.current, 5 * FPS); });
 
     const pftp = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === PAY_THE_FERRIC_PRICE_ID && ev.ownerId === SLOT,
+      ev => ev.columnId === PAY_THE_FERRIC_PRICE_ID && ev.ownerEntityId === SLOT,
     );
     expect(pftp.length).toBeGreaterThanOrEqual(1);
   });
@@ -348,7 +348,7 @@ describe('D. Pay the Ferric Price', () => {
     act(() => { addBS(result.current, 5 * FPS); });
 
     const pftp = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === PAY_THE_FERRIC_PRICE_ID && ev.ownerId === SLOT,
+      ev => ev.columnId === PAY_THE_FERRIC_PRICE_ID && ev.ownerEntityId === SLOT,
     );
     expect(pftp).toHaveLength(0);
   });
@@ -358,7 +358,7 @@ describe('D. Pay the Ferric Price', () => {
     act(() => { addEnemyAction(result.current, 5 * FPS); });
 
     const pftp = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === PAY_THE_FERRIC_PRICE_ID && ev.ownerId === SLOT,
+      ev => ev.columnId === PAY_THE_FERRIC_PRICE_ID && ev.ownerEntityId === SLOT,
     );
     expect(pftp.length).toBeGreaterThanOrEqual(1);
     const dur = pftp[0].segments.reduce(
@@ -375,7 +375,7 @@ describe('D. Pay the Ferric Price', () => {
     act(() => { addEnemyAction(result.current, 7 * FPS); });
 
     const pftp = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === PAY_THE_FERRIC_PRICE_ID && ev.ownerId === SLOT,
+      ev => ev.columnId === PAY_THE_FERRIC_PRICE_ID && ev.ownerEntityId === SLOT,
     );
     expect(pftp).toHaveLength(4);
     expect(pftp.filter(ev => !ev.eventStatus)).toHaveLength(3);
@@ -407,7 +407,7 @@ describe('E. Status Colors', () => {
     for (const col of result.current.columns) {
       if (col.type !== ColumnType.MINI_TIMELINE) continue;
       const mt = col as MiniTimeline;
-      if (mt.ownerId !== SLOT || mt.columnId !== OPERATOR_STATUS_COLUMN_ID) continue;
+      if (mt.ownerEntityId !== SLOT || mt.columnId !== OPERATOR_STATUS_COLUMN_ID) continue;
       for (const mc of mt.microColumns ?? []) {
         expect(mc.color).not.toBe(HEAT_COLOR);
       }

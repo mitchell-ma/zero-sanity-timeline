@@ -72,7 +72,7 @@ function addVulnerableInfliction(app: AppResult, atFrame: number) {
   expect(vulnItem!.disabled).toBeFalsy();
   const payload = vulnItem!.actionPayload as AddEventPayload;
   act(() => {
-    app.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+    app.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
   });
 }
 
@@ -93,12 +93,12 @@ describe('Gilberta Skills — integration through useApp', () => {
     const payload = getAddEventPayload(menuItems!);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const battles = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_GILBERTA && ev.columnId === NounType.BATTLE,
+      (ev) => ev.ownerEntityId === SLOT_GILBERTA && ev.columnId === NounType.BATTLE,
     );
     expect(battles).toHaveLength(1);
     expect(battles[0].name).toBe(BATTLE_SKILL_ID);
@@ -120,12 +120,12 @@ describe('Gilberta Skills — integration through useApp', () => {
     const payload = getAddEventPayload(menuItems!);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const combos = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_GILBERTA && ev.columnId === NounType.COMBO,
+      (ev) => ev.ownerEntityId === SLOT_GILBERTA && ev.columnId === NounType.COMBO,
     );
     expect(combos).toHaveLength(1);
     expect(combos[0].name).toBe(COMBO_SKILL_ID);
@@ -150,12 +150,12 @@ describe('Gilberta Skills — integration through useApp', () => {
     const payload = getAddEventPayload(menuItems!);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const ultimates = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_GILBERTA && ev.columnId === NounType.ULTIMATE,
+      (ev) => ev.ownerEntityId === SLOT_GILBERTA && ev.columnId === NounType.ULTIMATE,
     );
     expect(ultimates).toHaveLength(1);
     expect(ultimates[0].name).toBe(ULTIMATE_ID);
@@ -173,12 +173,12 @@ describe('Gilberta Skills — integration through useApp', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const battles = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_GILBERTA && ev.columnId === NounType.BATTLE,
+      (ev) => ev.ownerEntityId === SLOT_GILBERTA && ev.columnId === NounType.BATTLE,
     );
     expect(battles).toHaveLength(1);
 
@@ -196,13 +196,13 @@ describe('Gilberta Skills — integration through useApp', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     // Nature infliction should be derived on enemy
     const natureInflictions = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === INFLICTION_COLUMNS.NATURE && ev.ownerId === ENEMY_ID,
+      (ev) => ev.columnId === INFLICTION_COLUMNS.NATURE && ev.ownerEntityId === ENEMY_ID,
     );
     expect(natureInflictions.length).toBeGreaterThanOrEqual(1);
   });
@@ -226,19 +226,19 @@ describe('Gilberta Skills — integration through useApp', () => {
     const payload = getMenuPayload(result.current, comboCol!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     // Verify combo was added
     const combos = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_GILBERTA && ev.columnId === NounType.COMBO,
+      (ev) => ev.ownerEntityId === SLOT_GILBERTA && ev.columnId === NounType.COMBO,
     );
     expect(combos).toHaveLength(1);
 
     // Combo should create a Lift physical status on enemy
     const liftEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === PHYSICAL_STATUS_COLUMNS.LIFT && ev.ownerId === ENEMY_ID,
+      (ev) => ev.columnId === PHYSICAL_STATUS_COLUMNS.LIFT && ev.ownerEntityId === ENEMY_ID,
     );
     expect(liftEvents.length).toBeGreaterThanOrEqual(1);
   });
@@ -257,13 +257,13 @@ describe('Gilberta Skills — integration through useApp', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     // Anomalous Gravity Field status should appear on enemy
     const gravFieldEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === ANOMALOUS_GRAVITY_FIELD_ID && ev.ownerId === ENEMY_ID,
+      (ev) => ev.columnId === ANOMALOUS_GRAVITY_FIELD_ID && ev.ownerEntityId === ENEMY_ID,
     );
     expect(gravFieldEvents.length).toBeGreaterThanOrEqual(1);
 
@@ -295,7 +295,7 @@ describe('Gilberta Skills — integration through useApp', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
@@ -306,7 +306,7 @@ describe('Gilberta Skills — integration through useApp', () => {
     const vm = viewModels.get(col!.key);
     expect(vm).toBeDefined();
     const bsEvents = vm!.events.filter(
-      (ev) => ev.ownerId === SLOT_GILBERTA && ev.columnId === NounType.BATTLE,
+      (ev) => ev.ownerEntityId === SLOT_GILBERTA && ev.columnId === NounType.BATTLE,
     );
     expect(bsEvents).toHaveLength(1);
   });
@@ -322,7 +322,7 @@ describe('Gilberta Skills — integration through useApp', () => {
     const comboPayload = getMenuPayload(result.current, comboCol!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        comboPayload.ownerId, comboPayload.columnId, comboPayload.atFrame, comboPayload.defaultSkill,
+        comboPayload.ownerEntityId, comboPayload.columnId, comboPayload.atFrame, comboPayload.defaultSkill,
       );
     });
 
@@ -333,7 +333,7 @@ describe('Gilberta Skills — integration through useApp', () => {
     const ultPayload = getMenuPayload(result.current, ultCol!, 30 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        ultPayload.ownerId, ultPayload.columnId, ultPayload.atFrame, ultPayload.defaultSkill,
+        ultPayload.ownerEntityId, ultPayload.columnId, ultPayload.atFrame, ultPayload.defaultSkill,
       );
     });
 
@@ -346,7 +346,7 @@ describe('Gilberta Skills — integration through useApp', () => {
     const comboVm = viewModels.get(comboCol!.key);
     expect(comboVm).toBeDefined();
     const comboEvents = comboVm!.events.filter(
-      (ev) => ev.ownerId === SLOT_GILBERTA && ev.columnId === NounType.COMBO,
+      (ev) => ev.ownerEntityId === SLOT_GILBERTA && ev.columnId === NounType.COMBO,
     );
     expect(comboEvents).toHaveLength(1);
 
@@ -354,7 +354,7 @@ describe('Gilberta Skills — integration through useApp', () => {
     const ultVm = viewModels.get(ultCol!.key);
     expect(ultVm).toBeDefined();
     const ultEvents = ultVm!.events.filter(
-      (ev) => ev.ownerId === SLOT_GILBERTA && ev.columnId === NounType.ULTIMATE,
+      (ev) => ev.ownerEntityId === SLOT_GILBERTA && ev.columnId === NounType.ULTIMATE,
     );
     expect(ultEvents).toHaveLength(1);
   });

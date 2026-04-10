@@ -25,14 +25,14 @@ export function computeMonotonicBounds(
     const ev = events.find((e) => e.uid === eid);
     if (!ev) continue;
     const col = monotonicCols.find((c) => {
-      if (c.ownerId !== ev.ownerId) return false;
+      if (c.ownerEntityId !== ev.ownerEntityId) return false;
       if (c.matchColumnIds) return c.matchColumnIds.includes(ev.columnId);
       return c.columnId === ev.columnId;
     });
     if (!col) continue;
     const matchSet = col.matchColumnIds ? new Set(col.matchColumnIds) : null;
     const allInCol = events.filter((e) =>
-      e.ownerId === col.ownerId &&
+      e.ownerEntityId === col.ownerEntityId &&
       (matchSet ? matchSet.has(e.columnId) : e.columnId === col.columnId),
     );
     const idx = allInCol.findIndex((e) => e.uid === eid);
@@ -70,7 +70,7 @@ export function isColumnFull(
   const matchSet = col.matchColumnIds ? new Set(col.matchColumnIds) : null;
   if (col.reuseExpiredSlots && col.microColumns) {
     const activeAtFrame = events.filter(
-      (ev) => ev.ownerId === col.ownerId &&
+      (ev) => ev.ownerEntityId === col.ownerEntityId &&
         (matchSet ? matchSet.has(ev.columnId) : ev.columnId === col.columnId) &&
         ev.startFrame <= atFrame &&
         eventEndFrame(ev) > atFrame,
@@ -78,7 +78,7 @@ export function isColumnFull(
     return activeAtFrame.length >= col.microColumns.length;
   }
   const existing = events.filter(
-    (ev) => ev.ownerId === col.ownerId &&
+    (ev) => ev.ownerEntityId === col.ownerEntityId &&
       (matchSet ? matchSet.has(ev.columnId) : ev.columnId === col.columnId),
   );
   return col.maxEvents != null && existing.length >= col.maxEvents;
@@ -95,7 +95,7 @@ export function isBeforeLastEvent(
   if (!col.requiresMonotonicOrder) return false;
   const matchSet = col.matchColumnIds ? new Set(col.matchColumnIds) : null;
   const existing = events.filter(
-    (ev) => ev.ownerId === col.ownerId &&
+    (ev) => ev.ownerEntityId === col.ownerEntityId &&
       (matchSet ? matchSet.has(ev.columnId) : ev.columnId === col.columnId),
   );
   if (existing.length === 0) return false;

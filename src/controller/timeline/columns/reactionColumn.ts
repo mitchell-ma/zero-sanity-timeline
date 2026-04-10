@@ -27,21 +27,21 @@ export class ReactionColumn implements EventColumn {
     this.interactionType = config?.stacks?.interactionType as string ?? StackInteractionType.MERGE;
   }
 
-  add(ownerId: string, frame: number, durationFrames: number,
+  add(ownerEntityId: string, frame: number, durationFrames: number,
     source: EventSource, options?: AddOptions): boolean {
 
     const ev = allocDerivedEvent();
     ev.uid = options?.uid ?? `reaction-${this.columnId}-${genEventUid()}`;
     ev.id = this.columnId;
     ev.name = this.columnId;
-    ev.ownerId = ownerId;
+    ev.ownerEntityId = ownerEntityId;
     ev.columnId = this.columnId;
     ev.startFrame = frame;
     ev.segments = [{ properties: { duration: durationFrames } }];
-    ev.sourceOwnerId = source.ownerId;
+    ev.sourceEntityId = source.ownerEntityId;
     ev.sourceSkillName = source.skillName;
-    ev.ownerSlotId = source.slotId ?? source.ownerId;
-    ev.ownerOperatorId = source.operatorId ?? source.ownerId;
+    ev.ownerSlotId = source.slotId ?? source.ownerEntityId;
+    ev.ownerOperatorId = source.operatorId ?? source.ownerEntityId;
     ev.stacks = options?.stacks;
     ev.forcedReaction = options?.forcedReaction;
 
@@ -49,7 +49,7 @@ export class ReactionColumn implements EventColumn {
     setEventDuration(ev, this.host.extendDuration(ev.startFrame, rawDur));
 
     // ── Merge / refresh against active reactions ─────────────────────────
-    const active = this.host.activeEventsIn(this.columnId, ownerId, frame)
+    const active = this.host.activeEventsIn(this.columnId, ownerEntityId, frame)
       .filter(r =>
         r.eventStatus !== EventStatusType.CONSUMED &&
         r.eventStatus !== EventStatusType.REFRESHED
@@ -63,7 +63,7 @@ export class ReactionColumn implements EventColumn {
         // MERGE: max stacks, max duration, carry stats (corrosion carries reduction floor)
         setEventDuration(prev, ev.startFrame - prev.startFrame);
         prev.eventStatus = EventStatusType.REFRESHED;
-        prev.eventStatusOwnerId = source.ownerId;
+        prev.eventStatusEntityId = source.ownerEntityId;
         prev.eventStatusSkillName = source.skillName;
 
         const prevStacks = prev.stacks ?? 1;
@@ -89,7 +89,7 @@ export class ReactionColumn implements EventColumn {
         if (newEnd >= prevEnd) {
           setEventDuration(prev, ev.startFrame - prev.startFrame);
           prev.eventStatus = EventStatusType.REFRESHED;
-          prev.eventStatusOwnerId = source.ownerId;
+          prev.eventStatusEntityId = source.ownerEntityId;
           prev.eventStatusSkillName = source.skillName;
         }
       }
@@ -115,13 +115,13 @@ export class ReactionColumn implements EventColumn {
     return true;
   }
 
-  consume(ownerId: string, frame: number, source: EventSource,
+  consume(ownerEntityId: string, frame: number, source: EventSource,
     _options?: ConsumeOptions): number {
-    const active = this.host.activeEventsIn(this.columnId, ownerId, frame);
+    const active = this.host.activeEventsIn(this.columnId, ownerEntityId, frame);
     for (const ev of active) {
       setEventDuration(ev, frame - ev.startFrame);
       ev.eventStatus = EventStatusType.CONSUMED;
-      ev.eventStatusOwnerId = source.ownerId;
+      ev.eventStatusEntityId = source.ownerEntityId;
       ev.eventStatusSkillName = source.skillName;
     }
     return active.length;
@@ -129,7 +129,7 @@ export class ReactionColumn implements EventColumn {
 
   canAdd(): boolean { return true; }
 
-  canConsume(ownerId: string, frame: number): boolean {
-    return this.host.activeCount(this.columnId, ownerId, frame) > 0;
+  canConsume(ownerEntityId: string, frame: number): boolean {
+    return this.host.activeCount(this.columnId, ownerEntityId, frame) > 0;
   }
 }

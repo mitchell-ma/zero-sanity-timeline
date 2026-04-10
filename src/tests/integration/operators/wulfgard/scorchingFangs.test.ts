@@ -136,7 +136,7 @@ describe('A. Scorching Fangs Trigger & View Layer', () => {
 
     // Controller: SF event exists on Wulfgard
     const sfEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.name === TALENT1_ID,
+      ev => ev.ownerEntityId === SLOT_WULFGARD && ev.name === TALENT1_ID,
     );
     expect(sfEvents.length).toBeGreaterThanOrEqual(1);
 
@@ -152,7 +152,7 @@ describe('A. Scorching Fangs Trigger & View Layer', () => {
     expect(statusVM).toBeDefined();
 
     const sfInVM = statusVM!.events.filter(
-      ev => ev.name === TALENT1_ID && ev.ownerId === SLOT_WULFGARD,
+      ev => ev.name === TALENT1_ID && ev.ownerEntityId === SLOT_WULFGARD,
     );
     expect(sfInVM.length).toBeGreaterThanOrEqual(1);
 
@@ -168,7 +168,7 @@ describe('A. Scorching Fangs Trigger & View Layer', () => {
     placeUlt(result, 2);
 
     const sfEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.name === TALENT1_ID,
+      ev => ev.ownerEntityId === SLOT_WULFGARD && ev.name === TALENT1_ID,
     );
     expect(sfEvents.length).toBeGreaterThanOrEqual(1);
     expect(eventDuration(sfEvents[0])).toBeGreaterThanOrEqual(10 * FPS);
@@ -201,7 +201,7 @@ describe('B. Negative Triggers', () => {
 
     // Controller: no SF triggered (Electrification doesn't trigger SF)
     const sfAfter = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.name === TALENT1_ID,
+      ev => ev.ownerEntityId === SLOT_WULFGARD && ev.name === TALENT1_ID,
     );
     expect(sfAfter).toHaveLength(0);
 
@@ -228,7 +228,7 @@ describe('B. Negative Triggers', () => {
 
     // No SF should appear (no Combustion was applied)
     const triggeredSf = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.name === TALENT1_ID,
+      ev => ev.ownerEntityId === SLOT_WULFGARD && ev.name === TALENT1_ID,
     );
     expect(triggeredSf).toHaveLength(0);
   });
@@ -248,7 +248,7 @@ describe('C. Duration Refresh', () => {
 
     // Controller: SF events — first should be REFRESHED, second active
     const allSf = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.name === TALENT1_ID,
+      ev => ev.ownerEntityId === SLOT_WULFGARD && ev.name === TALENT1_ID,
     );
     expect(allSf.length).toBeGreaterThanOrEqual(1);
 
@@ -287,7 +287,7 @@ describe('D. P3 — Minor Scorching Fangs', () => {
 
     // Verify Scorching Fangs triggered from ult Combustion
     const sfBefore = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.name === TALENT1_ID,
+      ev => ev.ownerEntityId === SLOT_WULFGARD && ev.name === TALENT1_ID,
     );
     expect(sfBefore.length).toBeGreaterThanOrEqual(1);
 
@@ -307,7 +307,7 @@ describe('D. P3 — Minor Scorching Fangs', () => {
 
     // Controller: SF Minor applied to teammates (not self)
     const sfMinorOnTeammates = result.current.allProcessedEvents.filter(
-      ev => ev.name === SF_MINOR_ID && ev.ownerId !== SLOT_WULFGARD,
+      ev => ev.name === SF_MINOR_ID && ev.ownerEntityId !== SLOT_WULFGARD,
     );
     expect(sfMinorOnTeammates.length).toBeGreaterThanOrEqual(1);
 
@@ -402,7 +402,7 @@ describe('D. P3 — Minor Scorching Fangs', () => {
 
     // Controller: SF Minor on teammates should exist and be distinct from main SF
     const sfMinorOnTeammates = result.current.allProcessedEvents.filter(
-      ev => ev.name === SF_MINOR_ID && ev.ownerId !== SLOT_WULFGARD,
+      ev => ev.name === SF_MINOR_ID && ev.ownerEntityId !== SLOT_WULFGARD,
     );
     expect(sfMinorOnTeammates.length).toBeGreaterThanOrEqual(1);
 

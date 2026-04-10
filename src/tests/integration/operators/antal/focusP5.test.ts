@@ -49,7 +49,7 @@ function placeBattleSkill(result: { current: AppResult }) {
   expect(col).toBeDefined();
   const payload = getMenuPayload(result.current, col!, 2 * FPS);
   act(() => {
-    result.current.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+    result.current.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
   });
 }
 
@@ -59,7 +59,7 @@ describe('Antal — Focus P5 Empowered', () => {
     placeBattleSkill(result);
 
     const focusEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === ENEMY_ID && ev.id === StatusType.FOCUS_EMPOWERED,
+      ev => ev.ownerEntityId === ENEMY_ID && ev.id === StatusType.FOCUS_EMPOWERED,
     );
     expect(focusEvents).toHaveLength(1);
     const ev = focusEvents[0];
@@ -75,7 +75,7 @@ describe('Antal — Focus P5 Empowered', () => {
     placeBattleSkill(result);
 
     const focusEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === ENEMY_ID && ev.id === StatusType.FOCUS,
+      ev => ev.ownerEntityId === ENEMY_ID && ev.id === StatusType.FOCUS,
     );
     expect(focusEvents).toHaveLength(1);
     const ev = focusEvents[0];

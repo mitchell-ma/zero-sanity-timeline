@@ -86,13 +86,13 @@ describe('A. Core Skill Placement', () => {
     const payload = getAddEventPayload(menuItems!);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     // Controller layer
     const battles = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_EMBER && ev.columnId === NounType.BATTLE,
+      (ev) => ev.ownerEntityId === SLOT_EMBER && ev.columnId === NounType.BATTLE,
     );
     expect(battles).toHaveLength(1);
     expect(battles[0].name).toBe(BATTLE_SKILL_ID);
@@ -114,13 +114,13 @@ describe('A. Core Skill Placement', () => {
     const payload = getAddEventPayload(menuItems!);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     // Controller layer
     const combos = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_EMBER && ev.columnId === NounType.COMBO,
+      (ev) => ev.ownerEntityId === SLOT_EMBER && ev.columnId === NounType.COMBO,
     );
     expect(combos).toHaveLength(1);
     expect(combos[0].name).toBe(COMBO_SKILL_ID);
@@ -147,13 +147,13 @@ describe('A. Core Skill Placement', () => {
     const payload = getAddEventPayload(menuItems!);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     // Controller layer
     const ultimates = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_EMBER && ev.columnId === NounType.ULTIMATE,
+      (ev) => ev.ownerEntityId === SLOT_EMBER && ev.columnId === NounType.ULTIMATE,
     );
     expect(ultimates).toHaveLength(1);
     expect(ultimates[0].name).toBe(ULTIMATE_ID);
@@ -173,13 +173,13 @@ describe('B. Battle Skill Mechanics', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     // Controller: battle skill processed with frames intact
     const battles = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_EMBER && ev.columnId === NounType.BATTLE,
+      (ev) => ev.ownerEntityId === SLOT_EMBER && ev.columnId === NounType.BATTLE,
     );
     expect(battles).toHaveLength(1);
     // Frames carry the heat damage effects; verify they exist
@@ -197,13 +197,13 @@ describe('B. Battle Skill Mechanics', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     // Controller: battle skill event has frames that include knock_down effects
     const battles = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_EMBER && ev.columnId === NounType.BATTLE,
+      (ev) => ev.ownerEntityId === SLOT_EMBER && ev.columnId === NounType.BATTLE,
     );
     expect(battles).toHaveLength(1);
     // Verify the event was processed without crashing (knock down is applied via frames)
@@ -226,7 +226,7 @@ describe('C. Ultimate Mechanics', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
@@ -275,13 +275,13 @@ describe('D. Talent-Derived Statuses', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     // Controller: Inflamed for the Assault status on Ember
     const inflamedEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === INFLAMED_ID && ev.ownerId === SLOT_EMBER,
+      (ev) => ev.columnId === INFLAMED_ID && ev.ownerEntityId === SLOT_EMBER,
     );
     expect(inflamedEvents.length).toBeGreaterThanOrEqual(1);
 
@@ -295,7 +295,7 @@ describe('D. Talent-Derived Statuses', () => {
     const statusVm = viewModels.get(statusCol!.key);
     expect(statusVm).toBeDefined();
     const inflamedVm = statusVm!.events.filter(
-      (ev) => ev.columnId === INFLAMED_ID && ev.ownerId === SLOT_EMBER,
+      (ev) => ev.columnId === INFLAMED_ID && ev.ownerEntityId === SLOT_EMBER,
     );
     expect(inflamedVm.length).toBeGreaterThanOrEqual(1);
   });
@@ -312,13 +312,13 @@ describe('D. Talent-Derived Statuses', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     // Controller: Inflamed for the Assault status on Ember
     const inflamedEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === INFLAMED_ID && ev.ownerId === SLOT_EMBER,
+      (ev) => ev.columnId === INFLAMED_ID && ev.ownerEntityId === SLOT_EMBER,
     );
     expect(inflamedEvents.length).toBeGreaterThanOrEqual(1);
   });
@@ -337,7 +337,7 @@ describe('E. View Layer', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
@@ -348,7 +348,7 @@ describe('E. View Layer', () => {
     const battleVm = viewModels.get(col!.key);
     expect(battleVm).toBeDefined();
     expect(battleVm!.events.some(
-      (ev) => ev.name === BATTLE_SKILL_ID && ev.ownerId === SLOT_EMBER,
+      (ev) => ev.name === BATTLE_SKILL_ID && ev.ownerEntityId === SLOT_EMBER,
     )).toBe(true);
   });
 
@@ -362,7 +362,7 @@ describe('E. View Layer', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
@@ -373,7 +373,7 @@ describe('E. View Layer', () => {
     const ultVm = viewModels.get(col!.key);
     expect(ultVm).toBeDefined();
     expect(ultVm!.events.some(
-      (ev) => ev.name === ULTIMATE_ID && ev.ownerId === SLOT_EMBER,
+      (ev) => ev.name === ULTIMATE_ID && ev.ownerEntityId === SLOT_EMBER,
     )).toBe(true);
   });
 });

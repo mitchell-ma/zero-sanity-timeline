@@ -98,7 +98,7 @@ export function resolveEventIdentity(
   let comboRequiresLabels: string[] = [];
   let columnLabel = '';
 
-  if (event.ownerId === ENEMY_ID) {
+  if (event.ownerEntityId === ENEMY_ID) {
     ownerName = enemy.name;
     const status = enemy.statuses.find((s) => s.id === event.columnId);
     const reaction = REACTION_LABELS[event.columnId];
@@ -126,7 +126,7 @@ export function resolveEventIdentity(
       columnLabel = 'STATUS';
     }
   } else {
-    const slot = slots.find((s) => s.slotId === event.ownerId);
+    const slot = slots.find((s) => s.slotId === event.ownerEntityId);
     const op = slot?.operator;
     if (op) {
       ownerName = op.name;
@@ -171,8 +171,8 @@ export function resolveEventIdentity(
   let sourceName = '';
   let sourceColor = '';
   let sourceSkillLabel = '';
-  if (event.sourceOwnerId) {
-    const sourceSlot = slots.find((s) => s.slotId === event.sourceOwnerId);
+  if (event.sourceEntityId) {
+    const sourceSlot = slots.find((s) => s.slotId === event.sourceEntityId);
     if (sourceSlot?.operator) {
       sourceName = sourceSlot.operator.name;
       sourceColor = sourceSlot.operator.color;
@@ -243,15 +243,15 @@ export function resolveComboChain(
   // Find the combo activation window that contains this combo event
   const window = allProcessedEvents.find((e) =>
     e.columnId === COMBO_WINDOW_COLUMN_ID &&
-    e.ownerId === event.ownerId &&
+    e.ownerEntityId === event.ownerEntityId &&
     event.startFrame >= e.startFrame &&
     event.startFrame < eventEndFrame(e),
   );
-  if (!window?.sourceOwnerId) return null;
+  if (!window?.sourceEntityId) return null;
 
   const chain: ComboChainLink[] = [];
   const triggerCol = event.comboTriggerColumnId ?? window.comboTriggerColumnId;
-  const sourceSlot = slots.find((s) => s.slotId === window.sourceOwnerId);
+  const sourceSlot = slots.find((s) => s.slotId === window.sourceEntityId);
   const sourceOp = sourceSlot?.operator;
   if (!sourceOp) return null;
 
@@ -268,9 +268,9 @@ export function resolveComboChain(
     // came from the same source operator — it has the original skill name.
     let bestMatch: TimelineEvent | undefined;
     for (const e of allProcessedEvents) {
-      if (e.ownerId !== ENEMY_ID) continue;
+      if (e.ownerEntityId !== ENEMY_ID) continue;
       if (e.columnId !== triggerCol) continue;
-      if (e.sourceOwnerId !== window.sourceOwnerId) continue;
+      if (e.sourceEntityId !== window.sourceEntityId) continue;
       if (e.startFrame > event.startFrame) continue;
       if (!bestMatch || e.startFrame > bestMatch.startFrame) bestMatch = e;
     }
@@ -331,7 +331,7 @@ export function resolveSpReturn(
   if (event.skillPointCost == null) return null;
 
   const summary = computeSpReturnSummary(event, consumptionRecord);
-  const slot = slots.find((s) => s.slotId === event.ownerId);
+  const slot = slots.find((s) => s.slotId === event.ownerEntityId);
   const spNotes = slot?.operator?.skills[NounType.BATTLE]?.spReturnNotes ?? [];
 
   return { summary, spNotes };
@@ -367,7 +367,7 @@ export function resolveActiveModifiers(
   const midFrame = Math.floor((eventStartFrame + eventEndFrame) / 2);
 
   for (const ev of allProcessedEvents) {
-    if (ev.ownerId !== ENEMY_ID) continue;
+    if (ev.ownerEntityId !== ENEMY_ID) continue;
     if (!isActiveAt(ev, midFrame)) continue;
 
     // Susceptibility / Focus

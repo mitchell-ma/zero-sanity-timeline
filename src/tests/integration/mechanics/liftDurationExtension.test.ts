@@ -45,18 +45,18 @@ function addViaContextMenu(app: AppResult, slotId: string, columnId: string, atF
   const col = findColumn(app, slotId, columnId);
   expect(col).toBeDefined();
   const payload = getMenuPayload(app, col!, atFrame, variantLabel);
-  app.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+  app.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
 }
 
 function getLiftEvents(app: AppResult) {
   return app.allProcessedEvents.filter(
-    (ev) => ev.columnId === PHYSICAL_STATUS_COLUMNS.LIFT && ev.ownerId === ENEMY_ID,
+    (ev) => ev.columnId === PHYSICAL_STATUS_COLUMNS.LIFT && ev.ownerEntityId === ENEMY_ID,
   );
 }
 
 function getGravityFieldEvents(app: AppResult) {
   return app.allProcessedEvents.filter(
-    (ev) => ev.columnId === GRAVITY_FIELD_ID && ev.ownerId === ENEMY_ID,
+    (ev) => ev.columnId === GRAVITY_FIELD_ID && ev.ownerEntityId === ENEMY_ID,
   );
 }
 
@@ -99,7 +99,7 @@ describe('Gilberta Gravity Field + Chen Qianyu BS → Lift duration extension', 
 
     // Controller: Vulnerable infliction on enemy
     const vulnAfterFirst = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === PHYSICAL_INFLICTION_COLUMNS.VULNERABLE && ev.ownerId === ENEMY_ID,
+      (ev) => ev.columnId === PHYSICAL_INFLICTION_COLUMNS.VULNERABLE && ev.ownerEntityId === ENEMY_ID,
     );
     expect(vulnAfterFirst.length).toBeGreaterThanOrEqual(1);
 

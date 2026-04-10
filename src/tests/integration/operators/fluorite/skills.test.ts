@@ -100,13 +100,13 @@ describe('A. Core Skill Placement', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     // ── Controller layer ──
     const events = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_FLUORITE && ev.columnId === NounType.BATTLE,
+      (ev) => ev.ownerEntityId === SLOT_FLUORITE && ev.columnId === NounType.BATTLE,
     );
     expect(events).toHaveLength(1);
     expect(events[0].name).toBe(BATTLE_SKILL_ID);
@@ -119,7 +119,7 @@ describe('A. Core Skill Placement', () => {
     const battleVM = viewModels.get(col!.key);
     expect(battleVM).toBeDefined();
     expect(battleVM!.events.some(
-      (ev) => ev.name === BATTLE_SKILL_ID && ev.ownerId === SLOT_FLUORITE,
+      (ev) => ev.name === BATTLE_SKILL_ID && ev.ownerEntityId === SLOT_FLUORITE,
     )).toBe(true);
   });
 
@@ -139,13 +139,13 @@ describe('A. Core Skill Placement', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     // ── Controller layer ──
     const combos = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_FLUORITE && ev.columnId === NounType.COMBO,
+      (ev) => ev.ownerEntityId === SLOT_FLUORITE && ev.columnId === NounType.COMBO,
     );
     expect(combos).toHaveLength(1);
     expect(combos[0].name).toBe(COMBO_SKILL_ID);
@@ -174,13 +174,13 @@ describe('A. Core Skill Placement', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     // ── Controller layer ──
     const ultimates = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_FLUORITE && ev.columnId === NounType.ULTIMATE,
+      (ev) => ev.ownerEntityId === SLOT_FLUORITE && ev.columnId === NounType.ULTIMATE,
     );
     expect(ultimates).toHaveLength(1);
     expect(ultimates[0].name).toBe(ULTIMATE_ID);
@@ -203,14 +203,14 @@ describe('B. Battle Skill Effects', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     // BS has frame at 2.97s that applies nature infliction to enemy
     // The infliction should appear as a derived event in the processed events
     const battleEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_FLUORITE && ev.columnId === NounType.BATTLE,
+      (ev) => ev.ownerEntityId === SLOT_FLUORITE && ev.columnId === NounType.BATTLE,
     );
     expect(battleEvents).toHaveLength(1);
 
@@ -229,12 +229,12 @@ describe('B. Battle Skill Effects', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const battleEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_FLUORITE && ev.columnId === NounType.BATTLE,
+      (ev) => ev.ownerEntityId === SLOT_FLUORITE && ev.columnId === NounType.BATTLE,
     );
     expect(battleEvents).toHaveLength(1);
 
@@ -259,12 +259,12 @@ describe('C. Combo Cooldown', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const combos = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_FLUORITE && ev.columnId === NounType.COMBO,
+      (ev) => ev.ownerEntityId === SLOT_FLUORITE && ev.columnId === NounType.COMBO,
     );
     expect(combos).toHaveLength(1);
 
@@ -339,7 +339,7 @@ describe('E. View Layer', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
@@ -351,7 +351,7 @@ describe('E. View Layer', () => {
     expect(battleVM).toBeDefined();
     expect(battleVM!.events).toHaveLength(1);
     expect(battleVM!.events[0].name).toBe(BATTLE_SKILL_ID);
-    expect(battleVM!.events[0].ownerId).toBe(SLOT_FLUORITE);
+    expect(battleVM!.events[0].ownerEntityId).toBe(SLOT_FLUORITE);
   });
 });
 
@@ -361,7 +361,7 @@ function placeBS(app: ReturnType<typeof useApp>, frame: number) {
   const col = findColumn(app, SLOT_FLUORITE, NounType.BATTLE)!;
   const payload = getMenuPayload(app, col, frame);
   act(() => {
-    app.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+    app.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
   });
 }
 
@@ -369,7 +369,7 @@ function placeUlt(app: ReturnType<typeof useApp>, frame: number) {
   const col = findColumn(app, SLOT_FLUORITE, NounType.ULTIMATE)!;
   const payload = getMenuPayload(app, col, frame);
   act(() => {
-    app.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+    app.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
   });
 }
 
@@ -377,7 +377,7 @@ function placeCombo(app: ReturnType<typeof useApp>, frame: number) {
   const col = findColumn(app, SLOT_FLUORITE, NounType.COMBO)!;
   const payload = getMenuPayload(app, col, frame);
   act(() => {
-    app.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+    app.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
   });
 }
 
@@ -385,7 +385,7 @@ function findEnemyStatusCol(app: ReturnType<typeof useApp>) {
   return app.columns.find(
     (c): c is MiniTimeline =>
       c.type === ColumnType.MINI_TIMELINE &&
-      c.ownerId === ENEMY_ID &&
+      c.ownerEntityId === ENEMY_ID &&
       c.columnId === ENEMY_GROUP_COLUMNS.ENEMY_STATUS,
   );
 }
@@ -402,7 +402,7 @@ function placeInfliction(app: ReturnType<typeof useApp>, inflictionColumnId: str
   if (!item) return false;
   const payload = item.actionPayload as AddEventPayload;
   act(() => {
-    app.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+    app.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
   });
   return true;
 }
@@ -428,7 +428,7 @@ describe('F. BS Applies IMPROVISED_EXPLOSIVE', () => {
 
     // ── Controller layer ──
     const ieEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === ENEMY_ID && ev.columnId === IMPROVISED_EXPLOSIVE_ID,
+      (ev) => ev.ownerEntityId === ENEMY_ID && ev.columnId === IMPROVISED_EXPLOSIVE_ID,
     );
     expect(ieEvents.length).toBeGreaterThanOrEqual(1);
     const ie = ieEvents[0];
@@ -461,7 +461,7 @@ describe('F. BS Applies IMPROVISED_EXPLOSIVE', () => {
     placeBS(result.current, 6 * FPS);
 
     const ieEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === ENEMY_ID && ev.columnId === IMPROVISED_EXPLOSIVE_ID,
+      (ev) => ev.ownerEntityId === ENEMY_ID && ev.columnId === IMPROVISED_EXPLOSIVE_ID,
     );
     // RESET with limit 1: at most 1 active at any moment; we expect <= 2 instances total (chained)
     expect(ieEvents.length).toBeGreaterThanOrEqual(1);
@@ -484,7 +484,7 @@ describe('G. CS Trigger Predicates', () => {
     expect(placed1 && placed2).toBe(true);
 
     const natureEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === ENEMY_ID && ev.columnId === INFLICTION_COLUMNS.NATURE,
+      (ev) => ev.ownerEntityId === ENEMY_ID && ev.columnId === INFLICTION_COLUMNS.NATURE,
     );
     expect(natureEvents.length).toBeGreaterThanOrEqual(2);
 
@@ -542,20 +542,20 @@ describe('H. CS SOURCE INFLICTION dispatch', () => {
     placeInfliction(result.current, INFLICTION_COLUMNS.NATURE, 3 * FPS);
 
     const natureBefore = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === ENEMY_ID && ev.columnId === INFLICTION_COLUMNS.NATURE,
+      (ev) => ev.ownerEntityId === ENEMY_ID && ev.columnId === INFLICTION_COLUMNS.NATURE,
     ).length;
 
     placeCombo(result.current, 5 * FPS);
 
     const natureAfter = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === ENEMY_ID && ev.columnId === INFLICTION_COLUMNS.NATURE,
+      (ev) => ev.ownerEntityId === ENEMY_ID && ev.columnId === INFLICTION_COLUMNS.NATURE,
     ).length;
     // CS frame applies 1 additional NATURE infliction via objectDeterminer:TRIGGER → SOURCE-flavored
     expect(natureAfter).toBeGreaterThan(natureBefore);
 
     // No spurious CRYO infliction was added
     const cryo = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === ENEMY_ID && ev.columnId === INFLICTION_COLUMNS.CRYO,
+      (ev) => ev.ownerEntityId === ENEMY_ID && ev.columnId === INFLICTION_COLUMNS.CRYO,
     );
     expect(cryo.length).toBe(0);
   });
@@ -568,19 +568,19 @@ describe('H. CS SOURCE INFLICTION dispatch', () => {
     placeInfliction(result.current, INFLICTION_COLUMNS.CRYO, 3 * FPS);
 
     const cryoBefore = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === ENEMY_ID && ev.columnId === INFLICTION_COLUMNS.CRYO,
+      (ev) => ev.ownerEntityId === ENEMY_ID && ev.columnId === INFLICTION_COLUMNS.CRYO,
     ).length;
 
     placeCombo(result.current, 5 * FPS);
 
     const cryoAfter = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === ENEMY_ID && ev.columnId === INFLICTION_COLUMNS.CRYO,
+      (ev) => ev.ownerEntityId === ENEMY_ID && ev.columnId === INFLICTION_COLUMNS.CRYO,
     ).length;
     expect(cryoAfter).toBeGreaterThan(cryoBefore);
 
     // No spurious NATURE infliction
     const nature = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === ENEMY_ID && ev.columnId === INFLICTION_COLUMNS.NATURE,
+      (ev) => ev.ownerEntityId === ENEMY_ID && ev.columnId === INFLICTION_COLUMNS.NATURE,
     );
     expect(nature.length).toBe(0);
   });
@@ -595,11 +595,11 @@ describe('H. CS SOURCE INFLICTION dispatch', () => {
       placeCombo(result.current, 5 * FPS);
 
       const natureCount = result.current.allProcessedEvents.filter(
-        (ev) => ev.ownerId === ENEMY_ID && ev.columnId === INFLICTION_COLUMNS.NATURE,
+        (ev) => ev.ownerEntityId === ENEMY_ID && ev.columnId === INFLICTION_COLUMNS.NATURE,
       ).length;
       expect(natureCount).toBe(0);
       const cryoCount = result.current.allProcessedEvents.filter(
-        (ev) => ev.ownerId === ENEMY_ID && ev.columnId === INFLICTION_COLUMNS.CRYO,
+        (ev) => ev.ownerEntityId === ENEMY_ID && ev.columnId === INFLICTION_COLUMNS.CRYO,
       ).length;
       expect(cryoCount).toBeGreaterThanOrEqual(3);
     }
@@ -613,11 +613,11 @@ describe('H. CS SOURCE INFLICTION dispatch', () => {
       placeCombo(result.current, 5 * FPS);
 
       const cryoCount = result.current.allProcessedEvents.filter(
-        (ev) => ev.ownerId === ENEMY_ID && ev.columnId === INFLICTION_COLUMNS.CRYO,
+        (ev) => ev.ownerEntityId === ENEMY_ID && ev.columnId === INFLICTION_COLUMNS.CRYO,
       ).length;
       expect(cryoCount).toBe(0);
       const natureCount = result.current.allProcessedEvents.filter(
-        (ev) => ev.ownerId === ENEMY_ID && ev.columnId === INFLICTION_COLUMNS.NATURE,
+        (ev) => ev.ownerEntityId === ENEMY_ID && ev.columnId === INFLICTION_COLUMNS.NATURE,
       ).length;
       expect(natureCount).toBeGreaterThanOrEqual(3);
     }
@@ -632,19 +632,19 @@ describe('H. CS SOURCE INFLICTION dispatch', () => {
       placeInfliction(result.current, INFLICTION_COLUMNS.NATURE, 3 * FPS);
 
       const cryoBefore = result.current.allProcessedEvents.filter(
-        (ev) => ev.ownerId === ENEMY_ID && ev.columnId === INFLICTION_COLUMNS.CRYO,
+        (ev) => ev.ownerEntityId === ENEMY_ID && ev.columnId === INFLICTION_COLUMNS.CRYO,
       ).length;
       const natureBefore = result.current.allProcessedEvents.filter(
-        (ev) => ev.ownerId === ENEMY_ID && ev.columnId === INFLICTION_COLUMNS.NATURE,
+        (ev) => ev.ownerEntityId === ENEMY_ID && ev.columnId === INFLICTION_COLUMNS.NATURE,
       ).length;
 
       placeCombo(result.current, 5 * FPS);
 
       const cryoAfter = result.current.allProcessedEvents.filter(
-        (ev) => ev.ownerId === ENEMY_ID && ev.columnId === INFLICTION_COLUMNS.CRYO,
+        (ev) => ev.ownerEntityId === ENEMY_ID && ev.columnId === INFLICTION_COLUMNS.CRYO,
       ).length;
       const natureAfter = result.current.allProcessedEvents.filter(
-        (ev) => ev.ownerId === ENEMY_ID && ev.columnId === INFLICTION_COLUMNS.NATURE,
+        (ev) => ev.ownerEntityId === ENEMY_ID && ev.columnId === INFLICTION_COLUMNS.NATURE,
       ).length;
 
       // The CS SOURCE-based dispatch must not double-apply both elements.
@@ -669,7 +669,7 @@ describe('I. ULT vs IMPROVISED_EXPLOSIVE', () => {
     // BS first to apply IMPROVISED_EXPLOSIVE
     placeBS(result.current, 2 * FPS);
     const ieBefore = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === ENEMY_ID && ev.columnId === IMPROVISED_EXPLOSIVE_ID,
+      (ev) => ev.ownerEntityId === ENEMY_ID && ev.columnId === IMPROVISED_EXPLOSIVE_ID,
     );
     expect(ieBefore.length).toBeGreaterThanOrEqual(1);
 
@@ -678,7 +678,7 @@ describe('I. ULT vs IMPROVISED_EXPLOSIVE', () => {
 
     // IMPROVISED_EXPLOSIVE_ULT must appear on enemy
     const ieUlt = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === ENEMY_ID && ev.columnId === IMPROVISED_EXPLOSIVE_ULT_ID,
+      (ev) => ev.ownerEntityId === ENEMY_ID && ev.columnId === IMPROVISED_EXPLOSIVE_ULT_ID,
     );
     expect(ieUlt.length).toBeGreaterThanOrEqual(1);
     expect(ieUlt[0].sourceSkillName).toBe(ULTIMATE_ID);
@@ -700,7 +700,7 @@ describe('I. ULT vs IMPROVISED_EXPLOSIVE', () => {
     placeUlt(result.current, 4 * FPS);
 
     const ieUlt = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === ENEMY_ID && ev.columnId === IMPROVISED_EXPLOSIVE_ULT_ID,
+      (ev) => ev.ownerEntityId === ENEMY_ID && ev.columnId === IMPROVISED_EXPLOSIVE_ULT_ID,
     );
     expect(ieUlt.length).toBe(0);
   });
@@ -718,7 +718,7 @@ describe('I. ULT vs IMPROVISED_EXPLOSIVE', () => {
       );
       // Sum all damage rows that came from the ULTIMATE event on Fluorite's slot
       return rows
-        .filter((r) => r.ownerId === SLOT_FLUORITE && r.columnId === NounType.ULTIMATE)
+        .filter((r) => r.ownerEntityId === SLOT_FLUORITE && r.columnId === NounType.ULTIMATE)
         .reduce((sum, r) => sum + (r.damage ?? 0), 0);
     }
 
@@ -728,7 +728,7 @@ describe('I. ULT vs IMPROVISED_EXPLOSIVE', () => {
     placeBS(withIE.result.current, 2 * FPS);
     placeUlt(withIE.result.current, 4 * FPS);
     const ieEvts = withIE.result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === ENEMY_ID && ev.columnId === IMPROVISED_EXPLOSIVE_ID,
+      (ev) => ev.ownerEntityId === ENEMY_ID && ev.columnId === IMPROVISED_EXPLOSIVE_ID,
     );
     expect(ieEvts.length).toBeGreaterThanOrEqual(1);
     const damageWithIE = totalUltDamage(withIE.result.current);
@@ -760,13 +760,13 @@ describe('J. ULT Last Frame Re-Apply Infliction', () => {
     placeInfliction(result.current, INFLICTION_COLUMNS.NATURE, 2 * FPS);
     placeInfliction(result.current, INFLICTION_COLUMNS.NATURE, 3 * FPS);
     const natureBefore = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === ENEMY_ID && ev.columnId === INFLICTION_COLUMNS.NATURE,
+      (ev) => ev.ownerEntityId === ENEMY_ID && ev.columnId === INFLICTION_COLUMNS.NATURE,
     ).length;
 
     placeUlt(result.current, 5 * FPS);
 
     const natureAfter = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === ENEMY_ID && ev.columnId === INFLICTION_COLUMNS.NATURE,
+      (ev) => ev.ownerEntityId === ENEMY_ID && ev.columnId === INFLICTION_COLUMNS.NATURE,
     ).length;
     expect(natureAfter).toBeGreaterThan(natureBefore);
   });
@@ -779,13 +779,13 @@ describe('J. ULT Last Frame Re-Apply Infliction', () => {
     placeInfliction(result.current, INFLICTION_COLUMNS.CRYO, 2 * FPS);
     placeInfliction(result.current, INFLICTION_COLUMNS.CRYO, 3 * FPS);
     const cryoBefore = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === ENEMY_ID && ev.columnId === INFLICTION_COLUMNS.CRYO,
+      (ev) => ev.ownerEntityId === ENEMY_ID && ev.columnId === INFLICTION_COLUMNS.CRYO,
     ).length;
 
     placeUlt(result.current, 5 * FPS);
 
     const cryoAfter = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === ENEMY_ID && ev.columnId === INFLICTION_COLUMNS.CRYO,
+      (ev) => ev.ownerEntityId === ENEMY_ID && ev.columnId === INFLICTION_COLUMNS.CRYO,
     ).length;
     expect(cryoAfter).toBeGreaterThan(cryoBefore);
   });
@@ -797,10 +797,10 @@ describe('J. ULT Last Frame Re-Apply Infliction', () => {
 
     // No pre-existing infliction
     const natureBefore = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === ENEMY_ID && ev.columnId === INFLICTION_COLUMNS.NATURE,
+      (ev) => ev.ownerEntityId === ENEMY_ID && ev.columnId === INFLICTION_COLUMNS.NATURE,
     ).length;
     const cryoBefore = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === ENEMY_ID && ev.columnId === INFLICTION_COLUMNS.CRYO,
+      (ev) => ev.ownerEntityId === ENEMY_ID && ev.columnId === INFLICTION_COLUMNS.CRYO,
     ).length;
 
     placeUlt(result.current, 5 * FPS);
@@ -808,10 +808,10 @@ describe('J. ULT Last Frame Re-Apply Infliction', () => {
     // Last-frame conditional re-apply branches should not have fired.
     // (Other ULT frames may still emit damage, but no NEW infliction status events.)
     const natureAfter = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === ENEMY_ID && ev.columnId === INFLICTION_COLUMNS.NATURE,
+      (ev) => ev.ownerEntityId === ENEMY_ID && ev.columnId === INFLICTION_COLUMNS.NATURE,
     ).length;
     const cryoAfter = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === ENEMY_ID && ev.columnId === INFLICTION_COLUMNS.CRYO,
+      (ev) => ev.ownerEntityId === ENEMY_ID && ev.columnId === INFLICTION_COLUMNS.CRYO,
     ).length;
     expect(natureAfter).toBe(natureBefore);
     expect(cryoAfter).toBe(cryoBefore);
@@ -828,7 +828,7 @@ describe('K. T1 SLOWED-Conditional Talent', () => {
 
     // Baseline: no talent events before any BS
     const before = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_FLUORITE && ev.name === LOVE_THE_STAB_AND_TWIST_ID,
+      (ev) => ev.ownerEntityId === SLOT_FLUORITE && ev.name === LOVE_THE_STAB_AND_TWIST_ID,
     );
     expect(before.length).toBe(0);
 
@@ -836,13 +836,13 @@ describe('K. T1 SLOWED-Conditional Talent', () => {
 
     // Controller: talent status on fluorite appears during the IMPROVISED_EXPLOSIVE window
     const talentEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_FLUORITE && ev.name === LOVE_THE_STAB_AND_TWIST_ID,
+      (ev) => ev.ownerEntityId === SLOT_FLUORITE && ev.name === LOVE_THE_STAB_AND_TWIST_ID,
     );
     expect(talentEvents.length).toBeGreaterThanOrEqual(1);
 
     // Find the IMPROVISED_EXPLOSIVE window that BS produced to bound expectations
     const ieEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === ENEMY_ID && ev.columnId === IMPROVISED_EXPLOSIVE_ID,
+      (ev) => ev.ownerEntityId === ENEMY_ID && ev.columnId === IMPROVISED_EXPLOSIVE_ID,
     );
     expect(ieEvents.length).toBeGreaterThanOrEqual(1);
     const ieStart = ieEvents[0].startFrame;
@@ -862,7 +862,7 @@ describe('K. T1 SLOWED-Conditional Talent', () => {
     let viewHasTalent = false;
     viewModels.forEach((vm) => {
       if (vm.events.some(
-        (ev) => ev.ownerId === SLOT_FLUORITE && ev.name === LOVE_THE_STAB_AND_TWIST_ID,
+        (ev) => ev.ownerEntityId === SLOT_FLUORITE && ev.name === LOVE_THE_STAB_AND_TWIST_ID,
       )) viewHasTalent = true;
     });
     expect(viewHasTalent).toBe(true);
@@ -878,7 +878,7 @@ describe('K. T1 SLOWED-Conditional Talent', () => {
 describe('L. P5 Cooldown Reduction', () => {
   function comboCooldownDuration(app: ReturnType<typeof useApp>) {
     const combos = app.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_FLUORITE && ev.columnId === NounType.COMBO,
+      (ev) => ev.ownerEntityId === SLOT_FLUORITE && ev.columnId === NounType.COMBO,
     );
     expect(combos.length).toBeGreaterThanOrEqual(1);
     const seg = combos[0].segments.find(
@@ -899,7 +899,7 @@ describe('L. P5 Cooldown Reduction', () => {
     placeInfliction(p0.result.current, INFLICTION_COLUMNS.CRYO, 5 * FPS);
 
     const cravP0 = p0.result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_FLUORITE && ev.columnId === CRAVER_OF_CHAOS_ID,
+      (ev) => ev.ownerEntityId === SLOT_FLUORITE && ev.columnId === CRAVER_OF_CHAOS_ID,
     );
     expect(cravP0.length).toBe(0);
     const cdP0 = comboCooldownDuration(p0.result.current);
@@ -912,7 +912,7 @@ describe('L. P5 Cooldown Reduction', () => {
     placeInfliction(p5.result.current, INFLICTION_COLUMNS.CRYO, 5 * FPS);
 
     const cravP5 = p5.result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_FLUORITE && ev.columnId === CRAVER_OF_CHAOS_ID,
+      (ev) => ev.ownerEntityId === SLOT_FLUORITE && ev.columnId === CRAVER_OF_CHAOS_ID,
     );
     expect(cravP5.length).toBeGreaterThanOrEqual(1);
     const cdP5 = comboCooldownDuration(p5.result.current);
@@ -926,7 +926,7 @@ describe('L. P5 Cooldown Reduction', () => {
     let viewHasCraver = false;
     viewModels.forEach((vm) => {
       if (vm.events.some(
-        (ev) => ev.ownerId === SLOT_FLUORITE && ev.columnId === CRAVER_OF_CHAOS_ID,
+        (ev) => ev.ownerEntityId === SLOT_FLUORITE && ev.columnId === CRAVER_OF_CHAOS_ID,
       )) viewHasCraver = true;
     });
     expect(viewHasCraver).toBe(true);
@@ -942,7 +942,7 @@ describe('L. P5 Cooldown Reduction', () => {
     placeInfliction(dedupe.result.current, INFLICTION_COLUMNS.CRYO, 5 * FPS + Math.round(0.3 * FPS));
 
     const cravDedupe = dedupe.result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_FLUORITE && ev.columnId === CRAVER_OF_CHAOS_ID,
+      (ev) => ev.ownerEntityId === SLOT_FLUORITE && ev.columnId === CRAVER_OF_CHAOS_ID,
     );
     expect(cravDedupe.length).toBe(1);
   });

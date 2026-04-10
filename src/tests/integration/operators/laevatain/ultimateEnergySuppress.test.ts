@@ -54,14 +54,14 @@ describe('Laevatain — ultimate energy suppression during Twilight', () => {
     const ultPayload = getMenuPayload(result.current, ultCol!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        ultPayload.ownerId, ultPayload.columnId,
+        ultPayload.ownerEntityId, ultPayload.columnId,
         ultPayload.atFrame, ultPayload.defaultSkill,
       );
     });
 
     // Verify ultimate was placed
     const ultEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT && ev.name === TWILIGHT_ID,
+      (ev) => ev.ownerEntityId === SLOT && ev.name === TWILIGHT_ID,
     );
     expect(ultEvents).toHaveLength(1);
 
@@ -95,7 +95,7 @@ describe('Laevatain — ultimate energy suppression during Twilight', () => {
     const bsDuringPayload = getMenuPayload(result.current, bsCol!, bsDuringFrame);
     act(() => {
       result.current.handleAddEvent(
-        bsDuringPayload.ownerId, bsDuringPayload.columnId,
+        bsDuringPayload.ownerEntityId, bsDuringPayload.columnId,
         bsDuringPayload.atFrame, bsDuringPayload.defaultSkill,
       );
     });
@@ -117,7 +117,7 @@ describe('Laevatain — ultimate energy suppression during Twilight', () => {
     const bsAfterPayload = getMenuPayload(result.current, bsCol!, bsAfterFrame);
     act(() => {
       result.current.handleAddEvent(
-        bsAfterPayload.ownerId, bsAfterPayload.columnId,
+        bsAfterPayload.ownerEntityId, bsAfterPayload.columnId,
         bsAfterPayload.atFrame, bsAfterPayload.defaultSkill,
       );
     });
@@ -154,7 +154,7 @@ describe('Laevatain — ultimate energy suppression during Twilight', () => {
     const ultColAfter = findColumn(result.current, SLOT, NounType.ULTIMATE);
     expect(ultColAfter).toBeDefined();
     const ultEventsInCol = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT && ev.columnId === NounType.ULTIMATE,
+      (ev) => ev.ownerEntityId === SLOT && ev.columnId === NounType.ULTIMATE,
     );
     expect(ultEventsInCol).toHaveLength(1);
   });

@@ -35,13 +35,13 @@ function addMfEvent(ref: AppRef, atSecond: number) {
   );
   const payload = item!.actionPayload as AddEventPayload;
   act(() => {
-    ref.current.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+    ref.current.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
   });
 }
 
 function getMfEvents(app: AppResult) {
   return app.allProcessedEvents.filter(
-    (ev) => ev.columnId === MELTING_FLAME_ID && ev.ownerId === SLOT_LAEVATAIN,
+    (ev) => ev.columnId === MELTING_FLAME_ID && ev.ownerEntityId === SLOT_LAEVATAIN,
   );
 }
 

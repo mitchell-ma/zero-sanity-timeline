@@ -33,7 +33,7 @@ function findEnemyActionCol(app: AppResult) {
   return app.columns.find(
     (c): c is MiniTimeline =>
       c.type === ColumnType.MINI_TIMELINE &&
-      c.ownerId === ENEMY_ID &&
+      c.ownerEntityId === ENEMY_ID &&
       c.columnId === ENEMY_ACTION_COLUMN_ID,
   );
 }
@@ -42,12 +42,12 @@ function addEnemyAction(app: AppResult, atFrame: number) {
   const col = findEnemyActionCol(app);
   expect(col).toBeDefined();
   const payload = getMenuPayload(app, col!, atFrame);
-  app.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+  app.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
 }
 
 function getEnemyActionEvents(app: AppResult) {
   return app.allProcessedEvents.filter(
-    (ev) => ev.ownerId === ENEMY_ID && ev.columnId === ENEMY_ACTION_COLUMN_ID,
+    (ev) => ev.ownerEntityId === ENEMY_ID && ev.columnId === ENEMY_ACTION_COLUMN_ID,
   );
 }
 
@@ -59,7 +59,7 @@ describe('Enemy Action — Event Pipeline', () => {
 
     const events = getEnemyActionEvents(result.current);
     expect(events).toHaveLength(1);
-    expect(events[0].ownerId).toBe(ENEMY_ID);
+    expect(events[0].ownerEntityId).toBe(ENEMY_ID);
     expect(events[0].columnId).toBe(ENEMY_ACTION_COLUMN_ID);
   });
 
@@ -117,7 +117,7 @@ describe('Enemy Action — View Layer', () => {
     const vm = viewModels.get(col!.key);
     expect(vm).toBeDefined();
     expect(vm!.events).toHaveLength(1);
-    expect(vm!.events[0].ownerId).toBe(ENEMY_ID);
+    expect(vm!.events[0].ownerEntityId).toBe(ENEMY_ID);
     expect(vm!.events[0].columnId).toBe(ENEMY_ACTION_COLUMN_ID);
   });
 });
@@ -135,7 +135,7 @@ describe('Enemy Action — Reactive Triggers', () => {
     act(() => { addEnemyAction(result.current, 5 * FPS); });
 
     const pftpEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === PAY_THE_FERRIC_PRICE_ID && ev.ownerId === SLOT_0,
+      (ev) => ev.columnId === PAY_THE_FERRIC_PRICE_ID && ev.ownerEntityId === SLOT_0,
     );
     expect(pftpEvents.length).toBeGreaterThanOrEqual(1);
   });
@@ -156,12 +156,12 @@ describe('Enemy Action — Reactive Triggers', () => {
     const bsPayload = getMenuPayload(result.current, bsCol!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        bsPayload.ownerId, bsPayload.columnId, bsPayload.atFrame, bsPayload.defaultSkill,
+        bsPayload.ownerEntityId, bsPayload.columnId, bsPayload.atFrame, bsPayload.defaultSkill,
       );
     });
 
     const pftpEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === PAY_THE_FERRIC_PRICE_ID && ev.ownerId === SLOT_0,
+      (ev) => ev.columnId === PAY_THE_FERRIC_PRICE_ID && ev.ownerEntityId === SLOT_0,
     );
     expect(pftpEvents).toHaveLength(0);
   });

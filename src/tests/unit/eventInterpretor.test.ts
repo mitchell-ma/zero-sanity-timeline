@@ -41,7 +41,7 @@ function makeInterpretor() {
 function makeCtx(_interp: EventInterpretorController, overrides?: Partial<InterpretContext>): InterpretContext {
   return {
     frame: 100,
-    sourceOwnerId: 'op-1',
+    sourceEntityId: 'op-1',
     sourceSkillName: 'TEST_SKILL',
     ...overrides,
   };
@@ -52,20 +52,20 @@ function makeInflictionEvent(columnId: string, startFrame: number, duration = 12
     uid: `infliction-${columnId}-${startFrame}`,
     id: columnId,
     name: columnId,
-    ownerId: ENEMY_ID,
+    ownerEntityId: ENEMY_ID,
     columnId,
     startFrame,
     segments: [{ properties: { duration: duration } }],
   };
 }
 
-function makeStatusEvent(columnId: string, ownerId: string, startFrame: number, duration = 2400): TimelineEvent {
+function makeStatusEvent(columnId: string, ownerEntityId: string, startFrame: number, duration = 2400): TimelineEvent {
   const statusId = columnId.toUpperCase().replace(/-/g, '_');
   return {
     uid: `status-${columnId}-${startFrame}`,
     id: statusId,
     name: statusId,
-    ownerId,
+    ownerEntityId,
     columnId,
     startFrame,
     segments: [{ properties: { duration: duration } }],
@@ -90,7 +90,7 @@ describe('EventInterpretorController: APPLY', () => {
     expect(result).toBe(true);
     expect(interp.controller.getAllEvents().length).toBe(1);
     expect(interp.controller.getAllEvents()[0].columnId).toBe(INFLICTION_COLUMNS.HEAT);
-    expect(interp.controller.getAllEvents()[0].ownerId).toBe(ENEMY_ID);
+    expect(interp.controller.getAllEvents()[0].ownerEntityId).toBe(ENEMY_ID);
     expect(interp.controller.getAllEvents()[0].startFrame).toBe(100);
   });
 
@@ -112,7 +112,7 @@ describe('EventInterpretorController: APPLY', () => {
     expect(result).toBe(true);
     expect(interp.controller.getAllEvents().length).toBe(1);
     expect(interp.controller.getAllEvents()[0].columnId).toBe('FOCUS');
-    expect(interp.controller.getAllEvents()[0].ownerId).toBe('op-1');
+    expect(interp.controller.getAllEvents()[0].ownerEntityId).toBe('op-1');
     expect(eventDuration(interp.controller.getAllEvents()[0])).toBe(1200);
   });
 
@@ -580,7 +580,7 @@ describe('EventInterpretorController: APPLY LIFT STATUS (PHYSICAL)', () => {
     // Pre-seed a Vulnerable infliction on the enemy
     interp.controller.applyEvent(
       PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_ID, 50, 2400,
-      { ownerId: 'op-1', skillName: 'SETUP' },
+      { ownerEntityId: 'op-1', skillName: 'SETUP' },
     );
 
     const ctx = makeCtx(interp);
@@ -598,7 +598,7 @@ describe('EventInterpretorController: APPLY LIFT STATUS (PHYSICAL)', () => {
     expect(vulnEvents.length).toBe(2);
     // Lift status created
     expect(liftEvents.length).toBe(1);
-    expect(liftEvents[0].ownerId).toBe(ENEMY_ID);
+    expect(liftEvents[0].ownerEntityId).toBe(ENEMY_ID);
     expect(eventDuration(liftEvents[0])).toBe(120); // 1 second
   });
 
@@ -606,7 +606,7 @@ describe('EventInterpretorController: APPLY LIFT STATUS (PHYSICAL)', () => {
     const interp = makeInterpretor();
     interp.controller.applyEvent(
       PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_ID, 50, 2400,
-      { ownerId: 'op-1', skillName: 'SETUP' },
+      { ownerEntityId: 'op-1', skillName: 'SETUP' },
     );
 
     const ctx = makeCtx(interp);
@@ -657,7 +657,7 @@ describe('EventInterpretorController: APPLY LIFT STATUS (PHYSICAL)', () => {
     // Pre-seed Vulnerable
     interp.controller.applyEvent(
       PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_ID, 50, 2400,
-      { ownerId: 'op-1', skillName: 'SETUP' },
+      { ownerEntityId: 'op-1', skillName: 'SETUP' },
     );
 
     // First Lift at frame 100
@@ -687,7 +687,7 @@ describe('EventInterpretorController: APPLY LIFT STATUS (PHYSICAL)', () => {
     // Pre-seed 1 Vulnerable
     interp.controller.applyEvent(
       PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_ID, 50, 2400,
-      { ownerId: 'op-1', skillName: 'SETUP' },
+      { ownerEntityId: 'op-1', skillName: 'SETUP' },
     );
 
     const ctx = makeCtx(interp);
@@ -731,7 +731,7 @@ describe('EventInterpretorController: APPLY KNOCK_DOWN STATUS (PHYSICAL)', () =>
     const interp = makeInterpretor();
     interp.controller.applyEvent(
       PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_ID, 50, 2400,
-      { ownerId: 'op-1', skillName: 'SETUP' },
+      { ownerEntityId: 'op-1', skillName: 'SETUP' },
     );
 
     const ctx = makeCtx(interp);
@@ -766,7 +766,7 @@ describe('EventInterpretorController: APPLY KNOCK_DOWN STATUS (PHYSICAL)', () =>
     const interp = makeInterpretor();
     interp.controller.applyEvent(
       PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_ID, 50, 2400,
-      { ownerId: 'op-1', skillName: 'SETUP' },
+      { ownerEntityId: 'op-1', skillName: 'SETUP' },
     );
 
     const ctx = makeCtx(interp);
@@ -789,7 +789,7 @@ describe('EventInterpretorController: APPLY KNOCK_DOWN STATUS (PHYSICAL)', () =>
     const interp = makeInterpretor();
     interp.controller.applyEvent(
       PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_ID, 50, 2400,
-      { ownerId: 'op-1', skillName: 'SETUP' },
+      { ownerEntityId: 'op-1', skillName: 'SETUP' },
     );
 
     const ctx1 = makeCtx(interp, { frame: 100 });
@@ -811,7 +811,7 @@ describe('EventInterpretorController: APPLY KNOCK_DOWN STATUS (PHYSICAL)', () =>
     const interp = makeInterpretor();
     interp.controller.applyEvent(
       PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_ID, 50, 2400,
-      { ownerId: 'op-1', skillName: 'SETUP' },
+      { ownerEntityId: 'op-1', skillName: 'SETUP' },
     );
 
     const ctx = makeCtx(interp);
@@ -875,7 +875,7 @@ describe('EventInterpretorController: APPLY CRUSH STATUS (PHYSICAL)', () => {
     const interp = makeInterpretor();
     interp.controller.applyEvent(
       PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_ID, 50, 2400,
-      { ownerId: 'op-1', skillName: 'SETUP' },
+      { ownerEntityId: 'op-1', skillName: 'SETUP' },
     );
 
     const ctx = makeCtx(interp);
@@ -901,7 +901,7 @@ describe('EventInterpretorController: APPLY CRUSH STATUS (PHYSICAL)', () => {
     for (let i = 0; i < 2; i++) {
       interp.controller.applyEvent(
         PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_ID, 50 + i, 2400,
-        { ownerId: 'op-1', skillName: 'SETUP' },
+        { ownerEntityId: 'op-1', skillName: 'SETUP' },
       );
     }
 
@@ -921,7 +921,7 @@ describe('EventInterpretorController: APPLY CRUSH STATUS (PHYSICAL)', () => {
     for (let i = 0; i < 3; i++) {
       interp.controller.applyEvent(
         PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_ID, 50 + i, 2400,
-        { ownerId: 'op-1', skillName: 'SETUP' },
+        { ownerEntityId: 'op-1', skillName: 'SETUP' },
       );
     }
 
@@ -941,7 +941,7 @@ describe('EventInterpretorController: APPLY CRUSH STATUS (PHYSICAL)', () => {
     for (let i = 0; i < 4; i++) {
       interp.controller.applyEvent(
         PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_ID, 50 + i, 2400,
-        { ownerId: 'op-1', skillName: 'SETUP' },
+        { ownerEntityId: 'op-1', skillName: 'SETUP' },
       );
     }
 
@@ -960,7 +960,7 @@ describe('EventInterpretorController: APPLY CRUSH STATUS (PHYSICAL)', () => {
     const interp = makeInterpretor();
     interp.controller.applyEvent(
       PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_ID, 50, 2400,
-      { ownerId: 'op-1', skillName: 'SETUP' },
+      { ownerEntityId: 'op-1', skillName: 'SETUP' },
     );
 
     const ctx = makeCtx(interp);
@@ -978,7 +978,7 @@ describe('EventInterpretorController: APPLY CRUSH STATUS (PHYSICAL)', () => {
     const interp = makeInterpretor();
     interp.controller.applyEvent(
       PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_ID, 50, 2400,
-      { ownerId: 'op-1', skillName: 'SETUP' },
+      { ownerEntityId: 'op-1', skillName: 'SETUP' },
     );
 
     const ctx = makeCtx(interp);
@@ -1000,7 +1000,7 @@ describe('EventInterpretorController: APPLY CRUSH STATUS (PHYSICAL)', () => {
     const interp = makeInterpretor();
     interp.controller.applyEvent(
       PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_ID, 50, 2400,
-      { ownerId: 'op-1', skillName: 'SETUP' },
+      { ownerEntityId: 'op-1', skillName: 'SETUP' },
     );
 
     const ctx = makeCtx(interp);
@@ -1043,7 +1043,7 @@ describe('EventInterpretorController: APPLY BREACH STATUS (PHYSICAL)', () => {
     const interp = makeInterpretor();
     interp.controller.applyEvent(
       PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_ID, 50, 2400,
-      { ownerId: 'op-1', skillName: 'SETUP' },
+      { ownerEntityId: 'op-1', skillName: 'SETUP' },
     );
 
     const ctx = makeCtx(interp);
@@ -1064,7 +1064,7 @@ describe('EventInterpretorController: APPLY BREACH STATUS (PHYSICAL)', () => {
     for (let i = 0; i < 2; i++) {
       interp.controller.applyEvent(
         PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_ID, 50 + i, 2400,
-        { ownerId: 'op-1', skillName: 'SETUP' },
+        { ownerEntityId: 'op-1', skillName: 'SETUP' },
       );
     }
 
@@ -1084,7 +1084,7 @@ describe('EventInterpretorController: APPLY BREACH STATUS (PHYSICAL)', () => {
     for (let i = 0; i < 3; i++) {
       interp.controller.applyEvent(
         PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_ID, 50 + i, 2400,
-        { ownerId: 'op-1', skillName: 'SETUP' },
+        { ownerEntityId: 'op-1', skillName: 'SETUP' },
       );
     }
 
@@ -1104,7 +1104,7 @@ describe('EventInterpretorController: APPLY BREACH STATUS (PHYSICAL)', () => {
     for (let i = 0; i < 4; i++) {
       interp.controller.applyEvent(
         PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_ID, 50 + i, 2400,
-        { ownerId: 'op-1', skillName: 'SETUP' },
+        { ownerEntityId: 'op-1', skillName: 'SETUP' },
       );
     }
 
@@ -1124,7 +1124,7 @@ describe('EventInterpretorController: APPLY BREACH STATUS (PHYSICAL)', () => {
     for (let i = 0; i < 3; i++) {
       interp.controller.applyEvent(
         PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_ID, 50 + i, 2400,
-        { ownerId: 'op-1', skillName: 'SETUP' },
+        { ownerEntityId: 'op-1', skillName: 'SETUP' },
       );
     }
 
@@ -1145,7 +1145,7 @@ describe('EventInterpretorController: APPLY BREACH STATUS (PHYSICAL)', () => {
     const interp = makeInterpretor();
     interp.controller.applyEvent(
       PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_ID, 50, 2400,
-      { ownerId: 'op-1', skillName: 'SETUP' },
+      { ownerEntityId: 'op-1', skillName: 'SETUP' },
     );
 
     const ctx = makeCtx(interp);
@@ -1165,7 +1165,7 @@ describe('EventInterpretorController: APPLY BREACH STATUS (PHYSICAL)', () => {
     const interp = makeInterpretor();
     interp.controller.applyEvent(
       PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_ID, 50, 2400,
-      { ownerId: 'op-1', skillName: 'SETUP' },
+      { ownerEntityId: 'op-1', skillName: 'SETUP' },
     );
 
     const ctx = makeCtx(interp);

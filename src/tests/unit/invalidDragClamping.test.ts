@@ -29,7 +29,7 @@ function makeEvent(overrides: Partial<TimelineEvent> & { uid: string; columnId: 
   return {
     id: overrides.name ?? 'TEST',
     name: 'TEST',
-    ownerId: 'op-1',
+    ownerEntityId: 'op-1',
     segments: [{ properties: { duration: 60 } }],
     ...overrides,
   };
@@ -218,7 +218,7 @@ describe('clampDeltaByComboWindow — invalid at drag start', () => {
     uid: 'w1',
     columnId: COMBO_WINDOW_COLUMN_ID,
     startFrame: 100,
-    ownerId: 'op-1',
+    ownerEntityId: 'op-1',
     segments: [{ properties: { duration: 100 } }],
   });
   const processedEvents = [comboEvent, windowEvent];
@@ -268,7 +268,7 @@ describe('clampDeltaByComboWindow — normal clamping', () => {
     uid: 'w1',
     columnId: COMBO_WINDOW_COLUMN_ID,
     startFrame: 100,
-    ownerId: 'op-1',
+    ownerEntityId: 'op-1',
     segments: [{ properties: { duration: 100 } }],
   });
   const processedEvents = [comboEvent, windowEvent];
@@ -432,8 +432,8 @@ describe('clampDeltaByOverlap — edge cases', () => {
 
   test('different owners do not block each other', () => {
     const events = [
-      makeEvent({ uid: 'e1', columnId: NounType.BATTLE, startFrame: 50, ownerId: 'op-1', nonOverlappableRange: 60 }),
-      makeEvent({ uid: 'e2', columnId: NounType.BATTLE, startFrame: 80, ownerId: 'op-2', nonOverlappableRange: 60 }),
+      makeEvent({ uid: 'e1', columnId: NounType.BATTLE, startFrame: 50, ownerEntityId: 'op-1', nonOverlappableRange: 60 }),
+      makeEvent({ uid: 'e2', columnId: NounType.BATTLE, startFrame: 80, ownerEntityId: 'op-2', nonOverlappableRange: 60 }),
     ];
     // e1 moving to 80 would overlap e2 if same owner, but different owners → no block
     const result = clampDeltaByOverlap(30, 'e1', events, 50, new Set(['e1']));

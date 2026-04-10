@@ -185,19 +185,19 @@ function resolveCardinality(cardinality: ValueNode | typeof THRESHOLD_MAX | unde
 export interface InterpretContext {
   frame: number;
   /** Operator ID for event attribution (e.g. "POGRANICHNIK"). */
-  sourceOwnerId: string;
-  /** Slot ID for timeline queries and target resolution (e.g. "slot-pogranichnik"). Falls back to sourceOwnerId if not set. */
+  sourceEntityId: string;
+  /** Slot ID for timeline queries and target resolution (e.g. "slot-pogranichnik"). Falls back to sourceEntityId if not set. */
   sourceSlotId?: string;
   sourceSkillName: string;
   potential?: number;
   parentEventEndFrame?: number;
   parentSegmentEndFrame?: number;
-  targetOwnerId?: string;
+  targetEntityId?: string;
   /** Status ID of the parent status def when processing ENGINE_TRIGGER effects.
    *  Used by CONSUME THIS EVENT to identify which status to consume. */
   parentStatusId?: string;
   /** Owner ID of the parent status (for column resolution). */
-  parentStatusOwnerId?: string;
+  parentStatusEntityId?: string;
   /** UID of the source event — passed to column add() so derived events can be matched back to their raw event. */
   sourceEventUid?: string;
   /**
@@ -392,7 +392,7 @@ function resolveClauseEffectsFromClauses(
         const condCtx: ConditionContext = {
           events: ctx.events,
           frame: ev.startFrame,
-          sourceOwnerId: ctx.operatorSlotId,
+          sourceEntityId: ctx.operatorSlotId,
         };
         if (!evaluateConditions(clause.conditions as unknown as Interaction[], condCtx)) continue;
       } else {
@@ -506,7 +506,7 @@ export class EventInterpretorController {
   private _compoundCascadeFrames: QueueFrame[] = [];
 
   /** Resolve slot ID → operator ID. Returns the operator ID if mapped, or the input unchanged. */
-  private resolveOperatorId(slotId: string): string {
+  private slotToEntityId(slotId: string): string {
     return this.slotOperatorMap?.[slotId] ?? slotId;
   }
 
@@ -522,31 +522,31 @@ export class EventInterpretorController {
    */
   private applyEventFromCtx(
     ctx: InterpretContext,
-    columnId: string, ownerId: string, frame: number,
+    columnId: string, ownerEntityId: string, frame: number,
     durationFrames: number, source: EventSource,
     options?: AddOptions,
   ): boolean {
     const ctxParents = ctx.sourceEventUid ? [ctx.sourceEventUid] : undefined;
-    return this.controller.applyEvent(columnId, ownerId, frame, durationFrames, source, {
+    return this.controller.applyEvent(columnId, ownerEntityId, frame, durationFrames, source, {
       ...options,
       parents: options?.parents ?? ctxParents,
     });
   }
 
   /**
-   * Resolve a routed source for a derived event whose ownerId is a target
+   * Resolve a routed source for a derived event whose ownerEntityId is a target
    * (e.g. enemy) but whose effects must dispatch to the source operator's slot.
-   * Returns { sourceSlotId, sourceOwnerId } for the InterpretContext.
+   * Returns { sourceSlotId, sourceEntityId } for the InterpretContext.
    *
    * Post-chainRef: this is a trivial passthrough — `ownerSlotId` /
    * `ownerOperatorId` are populated at ingress by DEC's `_backfillOwnerIds`
    * (Phase 1) and at real creation sites (Phase 2). The old O(slots)
    * reverse-lookup loop is gone.
    */
-  private resolveRoutedSource(event: TimelineEvent): { sourceSlotId: string; sourceOwnerId: string } {
+  private resolveRoutedSource(event: TimelineEvent): { sourceSlotId: string; sourceEntityId: string } {
     return {
-      sourceSlotId: event.ownerSlotId ?? event.ownerId,
-      sourceOwnerId: event.ownerOperatorId ?? this.resolveOperatorId(event.ownerId),
+      sourceSlotId: event.ownerSlotId ?? event.ownerEntityId,
+      sourceEntityId: event.ownerOperatorId ?? this.slotToEntityId(event.ownerEntityId),
     };
   }
 
@@ -557,7 +557,7 @@ export class EventInterpretorController {
    */
   private resolveSourceSlot(ctx: InterpretContext): string {
     const ev = ctx.sourceEventUid ? this.controller.getEventByUid(ctx.sourceEventUid) : undefined;
-    return ev?.ownerSlotId ?? ctx.sourceSlotId ?? ctx.sourceOwnerId;
+    return ev?.ownerSlotId ?? ctx.sourceSlotId ?? ctx.sourceEntityId;
   }
 
   /**
@@ -566,7 +566,7 @@ export class EventInterpretorController {
    */
   private resolveSourceOperator(ctx: InterpretContext): string {
     const ev = ctx.sourceEventUid ? this.controller.getEventByUid(ctx.sourceEventUid) : undefined;
-    return ev?.ownerOperatorId ?? ctx.sourceOwnerId;
+    return ev?.ownerOperatorId ?? ctx.sourceEntityId;
   }
 
   /**
@@ -592,7 +592,7 @@ export class EventInterpretorController {
     clauseType: string | undefined,
     interpretCtx: InterpretContext,
     condCtx: ConditionContext,
-    eventOwnerId: string,
+    eventEntityId: string,
     eventId: string,
     out: QueueFrame[],
     options: {
@@ -622,16 +622,16 @@ export class EventInterpretorController {
             && dsl.objectId && this.controller.hasStatAccumulator()) {
           const statKey = resolveEffectStat(NounType.STAT, dsl.objectId, dsl.objectQualifier);
           if (statKey) {
-            const before = this.controller.getStat(eventOwnerId, statKey);
+            const before = this.controller.getStat(eventEntityId, statKey);
             this.interpret(dsl, interpretCtx);
-            const after = this.controller.getStat(eventOwnerId, statKey);
+            const after = this.controller.getStat(eventEntityId, statKey);
             const diff = after - before;
             if (diff !== 0) {
               if (!this._frameStatReversals) this._frameStatReversals = [];
               this._frameStatReversals.push({ stat: statKey, value: -diff });
             }
             if (options.fireReactiveTriggers) {
-              this.reactiveTriggersForEffect(dsl, interpretCtx.frame, eventOwnerId, eventId, out, this.lastConsumedStacks);
+              this.reactiveTriggersForEffect(dsl, interpretCtx.frame, eventEntityId, eventId, out, this.lastConsumedStacks);
             }
             this.lastConsumedStacks = undefined;
             executedCount++;
@@ -644,7 +644,7 @@ export class EventInterpretorController {
           // Subject-based filtering now happens inside checkReactiveTriggers
           // (ENEMY / ANY_OTHER / CONTROLLED / THIS OPERATOR), so operator-emitted
           // DEAL DAMAGE clauses no longer need to be skipped here.
-          this.reactiveTriggersForEffect(dsl, interpretCtx.frame, eventOwnerId, eventId, out, this.lastConsumedStacks);
+          this.reactiveTriggersForEffect(dsl, interpretCtx.frame, eventEntityId, eventId, out, this.lastConsumedStacks);
         }
         this.lastConsumedStacks = undefined;
         executedCount++;
@@ -714,9 +714,9 @@ export class EventInterpretorController {
     if (!this.damageOpCache || !this.controller.hasHpController()) return false;
     const event = entry.sourceEvent;
     if (!event) return false;
-    if (event.ownerId === ENEMY_ID) return false;
+    if (event.ownerEntityId === ENEMY_ID) return false;
     if (!SKILL_COLUMN_SET.has(event.columnId)) return false;
-    const op = this.damageOpCache.get(event.ownerId);
+    const op = this.damageOpCache.get(event.ownerEntityId);
     if (!op) return false;
     const si = entry.segmentIndex ?? -1;
     const fi = entry.frameIndex ?? -1;
@@ -729,7 +729,7 @@ export class EventInterpretorController {
       if (isDamageSegment(event.segments[k].properties.segmentTypes)) damageSegIdx++;
     }
 
-    const props = this.loadoutProperties?.[event.ownerId] ?? DEFAULT_LOADOUT_PROPERTIES;
+    const props = this.loadoutProperties?.[event.ownerEntityId] ?? DEFAULT_LOADOUT_PROPERTIES;
     const effectiveColumnId = event.id.includes('_ENHANCED') ? NounType.ULTIMATE : event.columnId;
     const skillLevel = getSkillLevelForColumn(effectiveColumnId, props);
     const potential = (props.operator.potential ?? 5) as Potential;
@@ -740,7 +740,7 @@ export class EventInterpretorController {
     this.controller.addEnemyDamageTick(entry.frame, damage);
     // HP threshold check fires reactively only when damage lands — since
     // HP only decreases via damage writes, any crossed threshold is caught.
-    this._checkHpThresholds(entry.frame, event.ownerId, event.sourceSkillName ?? event.id, out);
+    this._checkHpThresholds(entry.frame, event.ownerEntityId, event.sourceSkillName ?? event.id, out);
     return true;
   }
 
@@ -855,20 +855,20 @@ export class EventInterpretorController {
 
   // ── DSL verb handlers (private) ────────────────────────────────────────
 
-  private resolveOwnerId(target: string | undefined, ctx: InterpretContext, determiner?: string) {
+  private resolveEntityId(target: string | undefined, ctx: InterpretContext, determiner?: string) {
     const slotId = this.resolveSourceSlot(ctx);
     if (target === NounType.OPERATOR) {
       switch (determiner ?? DeterminerType.THIS) {
         case DeterminerType.THIS: return slotId;
         case DeterminerType.ALL: return slotId; // ALL is handled by doApply loop, not here
         case DeterminerType.ALL_OTHER: return TEAM_ID;
-        case DeterminerType.OTHER: return ctx.targetOwnerId ?? slotId;
-        case DeterminerType.ANY: return ctx.targetOwnerId ?? slotId;
+        case DeterminerType.OTHER: return ctx.targetEntityId ?? slotId;
+        case DeterminerType.ANY: return ctx.targetEntityId ?? slotId;
         case DeterminerType.CONTROLLED:
           return this.getControlledSlotAtFrame?.(ctx.frame) ?? slotId;
         case DeterminerType.TRIGGER: {
           // Causality DAG lookup: the "trigger" of an event is its primary
-          // (most-recent) parent in the chain. Fall back to ctx.targetOwnerId
+          // (most-recent) parent in the chain. Fall back to ctx.targetEntityId
           // (the legacy threading) and then to slotId if the chain is
           // unavailable — belt-and-suspenders for events not yet migrated in
           // Phase 2 or edge cases where the determiner fires on a chain root.
@@ -879,7 +879,7 @@ export class EventInterpretorController {
               if (parent?.ownerSlotId) return parent.ownerSlotId;
             }
           }
-          return ctx.targetOwnerId ?? slotId;
+          return ctx.targetEntityId ?? slotId;
         }
         default: return slotId;
       }
@@ -890,7 +890,7 @@ export class EventInterpretorController {
   }
 
   private canDo(effect: Effect, ctx: InterpretContext) {
-    const ownerId = this.resolveOwnerId(
+    const ownerEntityId = this.resolveEntityId(
       effect.to as string ?? effect.fromObject as string,
       ctx, effect.toDeterminer ?? effect.fromDeterminer,
     );
@@ -899,7 +899,7 @@ export class EventInterpretorController {
       case VerbType.APPLY: {
         const col = resolveEffectColumnId(effect.object, effect.objectId, effect.objectQualifier);
         if (!col) return true;
-        const applyOwner = effect.to === NounType.TEAM ? TEAM_ID : ownerId;
+        const applyOwner = effect.to === NounType.TEAM ? TEAM_ID : ownerEntityId;
         return this.controller.canApplyEvent(col, applyOwner, ctx.frame);
       }
       case VerbType.CONSUME: {
@@ -907,13 +907,13 @@ export class EventInterpretorController {
         if (resolveQualifier(effect.objectQualifier) === AdjectiveType.ARTS) {
           let canConsumeAny = false;
           INFLICTION_COLUMN_IDS.forEach(col => {
-            if (this.controller.canConsumeEvent(col, ownerId, ctx.frame)) canConsumeAny = true;
+            if (this.controller.canConsumeEvent(col, ownerEntityId, ctx.frame)) canConsumeAny = true;
           });
           return canConsumeAny;
         }
         const col = resolveEffectColumnId(effect.object, effect.objectId, effect.objectQualifier);
         if (!col) return true;
-        const consumeOwner = effect.to === NounType.TEAM ? TEAM_ID : ownerId;
+        const consumeOwner = effect.to === NounType.TEAM ? TEAM_ID : ownerEntityId;
         return this.controller.canConsumeEvent(col, consumeOwner, ctx.frame);
       }
       default:
@@ -952,12 +952,12 @@ export class EventInterpretorController {
       }
       return true;
     }
-    const ownerId = this.resolveOwnerId(effectTo, ctx, effectToDeterminer);
+    const ownerEntityId = this.resolveEntityId(effectTo, ctx, effectToDeterminer);
     const source = {
-      ownerId: ctx.sourceOwnerId,
+      ownerEntityId: ctx.sourceEntityId,
       skillName: ctx.sourceSkillName,
-      slotId: ctx.sourceSlotId ?? ctx.sourceOwnerId,
-      operatorId: ctx.sourceOwnerId,
+      slotId: ctx.sourceSlotId ?? ctx.sourceEntityId,
+      operatorId: ctx.sourceEntityId,
     };
 
     // For freeform-derived events, carry the source uid so the created
@@ -974,8 +974,8 @@ export class EventInterpretorController {
       const columnId = resolveEffectColumnId(effect.object, effect.objectId, effect.objectQualifier);
       if (!columnId) return false;
       const dv = this.resolveWith(effect.with?.duration, ctx);
-      this.applyEventFromCtx(ctx, columnId, ownerId, ctx.frame, typeof dv === 'number' ? Math.round(dv * FPS) : INFLICTION_DURATION, source,
-        { uid: freeformUidFor(columnId) ?? derivedEventUid(columnId, source.ownerId, ctx.frame) });
+      this.applyEventFromCtx(ctx, columnId, ownerEntityId, ctx.frame, typeof dv === 'number' ? Math.round(dv * FPS) : INFLICTION_DURATION, source,
+        { uid: freeformUidFor(columnId) ?? derivedEventUid(columnId, source.ownerEntityId, ctx.frame) });
       return true;
     }
     if (effect.object === NounType.STATUS) {
@@ -997,10 +997,10 @@ export class EventInterpretorController {
         const defaultDuration = typeof dv === 'number' ? Math.round(dv * FPS)
           : isForced ? (FORCED_REACTION_DURATION[columnId] ?? cfg?.duration ?? REACTION_DURATION)
           : cfg?.duration ?? REACTION_DURATION;
-        this.applyEventFromCtx(ctx, columnId, ownerId, ctx.frame, defaultDuration, source, {
+        this.applyEventFromCtx(ctx, columnId, ownerEntityId, ctx.frame, defaultDuration, source, {
           stacks: typeof sl === 'number' ? sl : undefined,
           ...(isForced && { forcedReaction: true }),
-          uid: freeformUidFor(columnId) ?? derivedEventUid(columnId, source.ownerId, ctx.frame),
+          uid: freeformUidFor(columnId) ?? derivedEventUid(columnId, source.ownerEntityId, ctx.frame),
         });
         return true;
       }
@@ -1027,7 +1027,7 @@ export class EventInterpretorController {
         }
       }
       const isTeamTarget = effect.to === NounType.TEAM;
-      const statusOwnerId = isTeamTarget ? TEAM_ID : ownerId;
+      const statusEntityId = isTeamTarget ? TEAM_ID : ownerEntityId;
       // Team statuses → team-status column; enemy statuses → raw objectId; operator statuses → name-based column
       const columnId = effect.objectId ?? '';
       const cfg = getStatusConfig(effect.objectId);
@@ -1060,7 +1060,7 @@ export class EventInterpretorController {
         }
         const deriveCtx: DeriveContext = {
           events: this.getAllEvents(),
-          operatorId: ctx.sourceOwnerId,
+          operatorId: ctx.sourceEntityId,
           operatorSlotId: slotId,
           potential: ctx.potential ?? 0,
           operatorSlotMap,
@@ -1113,7 +1113,7 @@ export class EventInterpretorController {
       if (cfg?.cooldownFrames) {
         const cooldownEvents = this.getAllEvents();
         const lastProc = cooldownEvents
-          .filter(ev => ev.columnId === columnId && ev.ownerId === statusOwnerId)
+          .filter(ev => ev.columnId === columnId && ev.ownerEntityId === statusEntityId)
           .reduce((latest, ev) => Math.max(latest, ev.startFrame), -Infinity);
         if (lastProc >= 0 && ctx.frame < lastProc + cfg.cooldownFrames) return true;
       }
@@ -1135,18 +1135,18 @@ export class EventInterpretorController {
 
       for (let si = 0; si < stackCount; si++) {
         const runtimeMaxStacks = cfg?.maxStacksNode
-          ? resolveValueNode(cfg.maxStacksNode as ValueNode, this.buildValueContext({ ...ctx, sourceSlotId: statusOwnerId }))
+          ? resolveValueNode(cfg.maxStacksNode as ValueNode, this.buildValueContext({ ...ctx, sourceSlotId: statusEntityId }))
           : cfg?.maxStacks;
         const eventOverrides = { ...eventProps, ...(applyStacks != null ? { stacks: applyStacks } : {}), ...(ctx.consumedStacks != null ? { consumedStacks: ctx.consumedStacks } : {}), ...(ctx.sourceCreationInteractionMode != null ? { creationInteractionMode: ctx.sourceCreationInteractionMode } : {}) };
-        this.applyEventFromCtx(ctx, columnId, statusOwnerId, ctx.frame, duration, source, {
+        this.applyEventFromCtx(ctx, columnId, statusEntityId, ctx.frame, duration, source, {
           statusId: effect.objectId,
           ...(cfg?.stackingMode ? { stackingMode: cfg.stackingMode } : {}),
           ...(runtimeMaxStacks != null ? { maxStacks: runtimeMaxStacks } : {}),
           ...(Object.keys(eventOverrides).length > 0 ? { event: eventOverrides } : {}),
-          uid: (freeformUidFor(columnId) && si === 0) ? freeformUidFor(columnId)! : derivedEventUid(columnId, source.ownerId, ctx.frame, stackCount > 1 ? `${si}` : undefined),
+          uid: (freeformUidFor(columnId) && si === 0) ? freeformUidFor(columnId)! : derivedEventUid(columnId, source.ownerEntityId, ctx.frame, stackCount > 1 ? `${si}` : undefined),
         });
         // Process each new status event's lifecycle clauses inline (onEntryClause, etc.)
-        this.runStatusCreationLifecycle(effect.objectId, statusOwnerId, ctx);
+        this.runStatusCreationLifecycle(effect.objectId, statusEntityId, ctx);
       }
 
       return true;
@@ -1158,21 +1158,21 @@ export class EventInterpretorController {
         // multiplier key → multiply existing aggregate (e.g. T2 Cryogenic Embrittlement)
         const m = this.resolveWith(effect.with?.multiplier, ctx);
         if (typeof m === 'number') {
-          this.controller.applyStatMultiplier(ownerId, statKey, m);
+          this.controller.applyStatMultiplier(ownerEntityId, statKey, m);
         } else {
           // value key → additive delta (standard stat buff)
           const v = this.resolveWith(effect.with?.value, ctx);
           if (typeof v === 'number') {
             // Snapshot stat before delta to detect 0→positive transitions
-            const statBefore = this.controller.getStat(ownerId, statKey);
-            this.controller.applyStatDelta(ownerId, { [statKey]: v });
+            const statBefore = this.controller.getStat(ownerEntityId, statKey);
+            this.controller.applyStatDelta(ownerEntityId, { [statKey]: v });
             // Fire BECOME state trigger on 0→positive transition (not when already active)
             const stateAdj = STAT_TO_STATE_ADJECTIVE[statKey];
             if (stateAdj && (statBefore ?? 0) <= 0) {
               this._statTriggerOut.length = 0;
-              // slotId = ownerId: the entity that entered the state (matches BECOME_NOT semantics).
+              // slotId = ownerEntityId: the entity that entered the state (matches BECOME_NOT semantics).
               // This is the "subject" of `X BECOME SLOWED`, not the source operator that applied the stat.
-              this.checkReactiveTriggers(VerbType.BECOME, stateAdj, ctx.frame, ownerId, ctx.sourceSkillName, undefined, this._statTriggerOut);
+              this.checkReactiveTriggers(VerbType.BECOME, stateAdj, ctx.frame, ownerEntityId, ctx.sourceSkillName, undefined, this._statTriggerOut);
               if (this._statTriggerOut.length > 0) this.pendingExitFrames.push(...this._statTriggerOut);
             }
           }
@@ -1182,7 +1182,7 @@ export class EventInterpretorController {
     }
     if (effect.object === NounType.STAGGER) {
       const v = this.resolveWith(effect.with?.staggerValue, ctx);
-      this.controller.createStagger('stagger', ownerId, ctx.frame, typeof v === 'number' ? v : 0, source);
+      this.controller.createStagger('stagger', ownerEntityId, ctx.frame, typeof v === 'number' ? v : 0, source);
       return true;
     }
     // APPLY SHIELD — record shield value on target operator via DEC.
@@ -1190,7 +1190,7 @@ export class EventInterpretorController {
       if (!this.controller.hasShieldController()) return true;
       const shieldValue = this.resolveWith(effect.with?.value, ctx);
       if (typeof shieldValue !== 'number' || shieldValue <= 0) return true;
-      const targetOpId = this.resolveOperatorId(ownerId);
+      const targetOpId = this.slotToEntityId(ownerEntityId);
       const expirationFrame = ctx.parentEventEndFrame ?? (ctx.frame + 10 * FPS);
       this.controller.applyShield(targetOpId, ctx.frame, shieldValue, expirationFrame);
       return true;
@@ -1207,19 +1207,19 @@ export class EventInterpretorController {
 
   private doConsume(effect: Effect, ctx: InterpretContext) {
     const from = effect.fromObject as string ?? (effect as unknown as { from?: string }).from ?? effect.fromDeterminer as string ?? effect.to as string;
-    const ownerId = this.resolveOwnerId(
+    const ownerEntityId = this.resolveEntityId(
       from, ctx, effect.fromDeterminer ?? effect.toDeterminer,
     );
     const source = {
-      ownerId: ctx.sourceOwnerId,
+      ownerEntityId: ctx.sourceEntityId,
       skillName: ctx.sourceSkillName,
-      slotId: ctx.sourceSlotId ?? ctx.sourceOwnerId,
-      operatorId: ctx.sourceOwnerId,
+      slotId: ctx.sourceSlotId ?? ctx.sourceEntityId,
+      operatorId: ctx.sourceEntityId,
     };
     const rawStacks = effect.with?.stacks as ValueNode | typeof THRESHOLD_MAX | number | undefined;
     if (rawStacks == null) console.warn(
       `[EventInterpretor] CONSUME ${effect.object} ${effect.objectId ?? effect.objectQualifier ?? '?'}: missing with.stacks`,
-      `\n  source: ${ctx.sourceSkillName} (owner: ${ctx.sourceOwnerId}, frame: ${ctx.frame})`,
+      `\n  source: ${ctx.sourceSkillName} (owner: ${ctx.sourceEntityId}, frame: ${ctx.frame})`,
       `\n  effect:`, JSON.stringify(effect, null, 2),
     );
     const isMax = rawStacks === THRESHOLD_MAX;
@@ -1230,7 +1230,7 @@ export class EventInterpretorController {
     if (resolveQualifier(effect.objectQualifier) === AdjectiveType.ARTS && (effect.objectId === NounType.INFLICTION || effect.object === NounType.INFLICTION)) {
       let totalConsumed = 0;
       INFLICTION_COLUMN_IDS.forEach(col => {
-        totalConsumed += this.controller.consumeEvent(col, ownerId, ctx.frame, source, { count });
+        totalConsumed += this.controller.consumeEvent(col, ownerEntityId, ctx.frame, source, { count });
       });
       this.lastConsumedStacks = totalConsumed > 0 ? totalConsumed : undefined;
       return true;
@@ -1246,7 +1246,7 @@ export class EventInterpretorController {
       const target = allEvents
         .filter(ev =>
           ev.columnId === columnId
-          && ev.ownerId === ownerId
+          && ev.ownerEntityId === ownerEntityId
           && ev.startFrame <= ctx.frame
           && ctx.frame <= ev.startFrame + eventDuration(ev)
           && ev.eventStatus !== EventStatusType.CONSUMED
@@ -1256,7 +1256,7 @@ export class EventInterpretorController {
       if (target) {
         setEventDuration(target, Math.max(0, ctx.frame - target.startFrame));
         target.eventStatus = EventStatusType.CONSUMED;
-        target.eventStatusOwnerId = source.ownerId;
+        target.eventStatusEntityId = source.ownerEntityId;
         target.eventStatusSkillName = source.skillName;
         this.lastConsumedStacks = 1;
         return true;
@@ -1265,7 +1265,7 @@ export class EventInterpretorController {
     }
     const consumeCol = resolveEffectColumnId(effect.object, effect.objectId, effect.objectQualifier);
     if (consumeCol) {
-      const statusOwner = effect.to === NounType.TEAM ? TEAM_ID : ownerId;
+      const statusOwner = effect.to === NounType.TEAM ? TEAM_ID : ownerEntityId;
       // For inflictions, pass explicit count; for statuses, let the controller handle stack semantics
       const isInflictionConsume = effect.object === NounType.INFLICTION
         || (effect.object === NounType.STATUS && effect.objectId === NounType.INFLICTION);
@@ -1284,8 +1284,8 @@ export class EventInterpretorController {
     // CONSUME THIS EVENT — consume one stack of the parent status (from ENGINE_TRIGGER context)
     if (effect.object === NounType.EVENT && ctx.parentStatusId) {
       const columnId = ctx.parentStatusId;
-      const statusOwnerId = ctx.parentStatusOwnerId ?? ownerId;
-      const consumed = this.controller.consumeEvent(columnId, statusOwnerId, ctx.frame, source, { count, restack: true });
+      const statusEntityId = ctx.parentStatusEntityId ?? ownerEntityId;
+      const consumed = this.controller.consumeEvent(columnId, statusEntityId, ctx.frame, source, { count, restack: true });
       this.lastConsumedParentStatusId = consumed > 0 ? columnId : undefined;
       if (consumed > 0) this.lastConsumedStacks = consumed;
       return consumed > 0;
@@ -1293,8 +1293,8 @@ export class EventInterpretorController {
     // CONSUME STACKS — self-consumption of the parent status stacks (e.g. Auxiliary Crystal)
     if (effect.object === NounType.STACKS && ctx.parentStatusId) {
       const columnId = ctx.parentStatusId;
-      const statusOwnerId = ctx.parentStatusOwnerId ?? ownerId;
-      const consumed = this.controller.consumeEvent(columnId, statusOwnerId, ctx.frame, source, { count, restack: true });
+      const statusEntityId = ctx.parentStatusEntityId ?? ownerEntityId;
+      const consumed = this.controller.consumeEvent(columnId, statusEntityId, ctx.frame, source, { count, restack: true });
       if (consumed > 0) this.lastConsumedStacks = consumed;
       return consumed > 0;
     }
@@ -1340,13 +1340,13 @@ export class EventInterpretorController {
   /**
    * Fire reactive triggers for a clause effect. Generic for all verb types.
    */
-  private reactiveTriggersForEffect(effect: Effect, absFrame: number, eventOwnerId: string, eventName: string, out: QueueFrame[], consumedStacks?: number) {
+  private reactiveTriggersForEffect(effect: Effect, absFrame: number, eventEntityId: string, eventName: string, out: QueueFrame[], consumedStacks?: number) {
     // Skip CONSUME triggers when nothing was actually consumed (no stacks present to consume).
     if (effect.verb === VerbType.CONSUME && (consumedStacks == null || consumedStacks === 0)) return;
     const objectId = this.resolveObjectIdForTrigger(effect);
     if (!objectId) return;
     // Resolve the target slot for this effect (recipient of APPLY/CONSUME). Actor slot is
-    // always eventOwnerId. The inline filter in checkReactiveTriggers decides per-entry
+    // always eventEntityId. The inline filter in checkReactiveTriggers decides per-entry
     // whether to match against actor or target based on the entry's own subject semantics.
     let targetSlotId: string | undefined;
     if (effect.to === NounType.ENEMY) targetSlotId = ENEMY_ID;
@@ -1356,7 +1356,7 @@ export class EventInterpretorController {
       if (def?.properties.target === NounType.ENEMY) targetSlotId = ENEMY_ID;
       else if (def?.properties.target === NounType.TEAM) targetSlotId = TEAM_ID;
     }
-    this.checkReactiveTriggers(effect.verb, objectId, absFrame, eventOwnerId, eventName, undefined, out, consumedStacks, targetSlotId);
+    this.checkReactiveTriggers(effect.verb, objectId, absFrame, eventEntityId, eventName, undefined, out, consumedStacks, targetSlotId);
     // CONSUME a status with stat-based state clause → fire BECOME_NOT (stat may have ended)
     if (effect.verb === VerbType.CONSUME && effect.object === NounType.STATUS && effect.objectId) {
       const consumedDef = getStatusDef(effect.objectId);
@@ -1364,12 +1364,12 @@ export class EventInterpretorController {
         // The stat lives on the status-target entity, not the parent event's owner.
         // Resolve from the consumed status def's target for the subject match.
         const target = consumedDef.properties.target;
-        const statusSlotId = target === NounType.ENEMY ? ENEMY_ID : eventOwnerId;
+        const statusEntityId = target === NounType.ENEMY ? ENEMY_ID : eventEntityId;
         for (const clause of consumedDef.clause as { effects?: { verb?: string; object?: string; objectId?: string }[] }[]) {
           for (const ef of clause.effects ?? []) {
             if (ef.verb === VerbType.APPLY && ef.object === NounType.STAT) {
               const adj = STAT_TO_STATE_ADJECTIVE[ef.objectId as StatType];
-              if (adj) this.checkReactiveTriggers(`${VerbType.BECOME}_NOT`, adj, absFrame, statusSlotId, eventName, undefined, out);
+              if (adj) this.checkReactiveTriggers(`${VerbType.BECOME}_NOT`, adj, absFrame, statusEntityId, eventName, undefined, out);
             }
           }
         }
@@ -1384,7 +1384,7 @@ export class EventInterpretorController {
 
       const slotId = this.resolveSourceSlot(ctx);
       for (const ev of this.baseEvents) {
-        if (ev.ownerId !== slotId) continue;
+        if (ev.ownerEntityId !== slotId) continue;
         if (ev.columnId !== targetColumnId) continue;
 
         let preCooldownDur = 0;
@@ -1412,10 +1412,10 @@ export class EventInterpretorController {
     const baseCtx = buildContextForSkillColumn(loadout, NounType.BATTLE);
     if (ctx.potential != null) baseCtx.potential = ctx.potential;
     if (ctx.suppliedParameters) baseCtx.suppliedParameters = ctx.suppliedParameters;
-    const ownerId = this.resolveSourceSlot(ctx);
+    const ownerEntityId = this.resolveSourceSlot(ctx);
     const frame = ctx.frame;
     baseCtx.getStatusStacks = (statusId: string) => {
-      const active = activeEventsAtFrame(this.getAllEvents(), statusId, ownerId, frame);
+      const active = activeEventsAtFrame(this.getAllEvents(), statusId, ownerEntityId, frame);
       if (active.length === 0) return 0;
       // If the latest event has an explicit stacks field, use it; otherwise count events
       const last = active[active.length - 1];
@@ -1436,7 +1436,7 @@ export class EventInterpretorController {
         // Only attach when the root is a different slot than the current
         // context — otherwise SOURCE == THIS and the fallback in the resolver
         // will use the main ctx anyway.
-        if (rootSlotId && rootSlotId !== ownerId) {
+        if (rootSlotId && rootSlotId !== ownerEntityId) {
           const rootLoadout = this.loadoutProperties?.[rootSlotId];
           if (rootLoadout) {
             baseCtx.sourceContext = buildContextForSkillColumn(rootLoadout, NounType.BATTLE);
@@ -1472,12 +1472,12 @@ export class EventInterpretorController {
     // Resolve target column and owner
     const columnId = resolveEffectColumnId(effect.object, effect.objectId, effect.objectQualifier);
     if (!columnId) return true;
-    const ownerId = this.resolveOwnerId(effect.of?.object ?? effect.to, ctx, effect.of?.determiner ?? effect.toDeterminer);
+    const ownerEntityId = this.resolveEntityId(effect.of?.object ?? effect.to, ctx, effect.of?.determiner ?? effect.toDeterminer);
 
     // Extend active target events to persist until the resolved end frame
     for (const ev of this.controller.getAllEvents()) {
       if (ev.columnId !== columnId) continue;
-      if (ownerId != null && ev.ownerId !== ownerId) continue;
+      if (ownerEntityId != null && ev.ownerEntityId !== ownerEntityId) continue;
       if (ev.startFrame > ctx.frame) continue;
       const currentEnd = ev.startFrame + eventDuration(ev);
       if (currentEnd > ctx.frame) {
@@ -1513,7 +1513,7 @@ export class EventInterpretorController {
     // Find same-owner events in the target column that are in cooldown phase at ctx.frame
     const slotId = this.resolveSourceSlot(ctx);
     for (const ev of this.baseEvents) {
-      if (ev.ownerId !== slotId) continue;
+      if (ev.ownerEntityId !== slotId) continue;
       if (ev.columnId !== targetColumnId) continue;
 
       let preCooldownDur = 0;
@@ -1561,7 +1561,7 @@ export class EventInterpretorController {
       const amount = this.resolveWith(effect.with?.value, ctx);
       if (amount && amount > 0) {
         this.controller.recordSkillPointRecovery(
-          ctx.frame, amount, ctx.sourceOwnerId, ctx.sourceSkillName ?? '',
+          ctx.frame, amount, ctx.sourceEntityId, ctx.sourceSkillName ?? '',
         );
       }
       return true;
@@ -1592,38 +1592,38 @@ export class EventInterpretorController {
     // Resolve target operator
     const toDeterminer = (effect as unknown as Record<string, unknown>).toDeterminer as string | undefined;
     const filter = wp.filter as { objectQualifier?: string; objectId?: string; object?: string } | undefined;
-    let targetOperatorId: string | undefined;
+    let targetEntityId: string | undefined;
 
     if (toDeterminer === DeterminerType.CONTROLLED) {
       const controlledSlot = this.getControlledSlotAtFrame?.(ctx.frame);
-      targetOperatorId = controlledSlot ? this.resolveOperatorId(controlledSlot) : ctx.sourceOwnerId;
+      targetEntityId = controlledSlot ? this.slotToEntityId(controlledSlot) : ctx.sourceEntityId;
     } else if (toDeterminer === DeterminerType.ANY && filter?.objectQualifier === AdjectiveType.LOWEST) {
       // Find operator with lowest HP percentage; tie-break to controlled
       const operatorIds = this.controller.getOperatorIds();
       const controlledSlot = this.getControlledSlotAtFrame?.(ctx.frame);
-      const controlledOpId = controlledSlot ? this.resolveOperatorId(controlledSlot) : undefined;
+      const controlledOpId = controlledSlot ? this.slotToEntityId(controlledSlot) : undefined;
       let lowestPct = Infinity;
-      targetOperatorId = controlledOpId; // default tie-breaker
+      targetEntityId = controlledOpId; // default tie-breaker
       for (const opId of operatorIds) {
         const pct = this.controller.getOperatorPercentageHp(opId, ctx.frame);
         if (pct < lowestPct) {
           lowestPct = pct;
-          targetOperatorId = opId;
+          targetEntityId = opId;
         }
       }
     } else {
-      targetOperatorId = ctx.sourceOwnerId;
+      targetEntityId = ctx.sourceEntityId;
     }
 
-    if (!targetOperatorId) return true;
+    if (!targetEntityId) return true;
 
     // Apply Treatment Received Bonus from target
-    const targetSlot = Object.entries(this.slotOperatorMap ?? {}).find(([, opId]) => opId === targetOperatorId)?.[0];
+    const targetSlot = Object.entries(this.slotOperatorMap ?? {}).find(([, opId]) => opId === targetEntityId)?.[0];
     const targetCtx = targetSlot ? buildContextForSkillColumn(this.loadoutProperties?.[targetSlot], NounType.BATTLE) : undefined;
     const treatmentReceivedBonus = targetCtx?.stats?.TREATMENT_RECEIVED_BONUS ?? 0;
 
     const finalHeal = rawHeal * (1 + treatmentBonus) * (1 + treatmentReceivedBonus);
-    this.controller.recoverHp(targetOperatorId, ctx.frame, finalHeal);
+    this.controller.recoverHp(targetEntityId, ctx.frame, finalHeal);
     return true;
   }
 
@@ -1642,7 +1642,7 @@ export class EventInterpretorController {
       : [this.resolveSourceSlot(ctx)];
 
     for (const slotId of targetSlots) {
-      const opId = this.resolveOperatorId(slotId);
+      const opId = this.slotToEntityId(slotId);
       // Shield absorbs first; overflow damage routes to HP via DEC.
       const remainingDamage = this.controller.absorbShield(opId, ctx.frame, rawDamage);
       if (remainingDamage > 0) {
@@ -1666,7 +1666,7 @@ export class EventInterpretorController {
     for (let i = 0; i < maxIter; i++) {
       let ran = false;
       for (const pred of preds) {
-        const condCtx: ConditionContext = { events: this.getAllEvents(), frame: ctx.frame, sourceOwnerId: ctx.sourceOwnerId, targetOwnerId: ctx.targetOwnerId, getControlledSlotAtFrame: this.getControlledSlotAtFrame };
+        const condCtx: ConditionContext = { events: this.getAllEvents(), frame: ctx.frame, sourceEntityId: ctx.sourceEntityId, targetEntityId: ctx.targetEntityId, getControlledSlotAtFrame: this.getControlledSlotAtFrame };
         if (!evaluateConditions(pred.conditions, condCtx)) continue;
         if (!pred.effects.every(e => e.verb === VerbType.ALL || e.verb === VerbType.ANY || this.canDo(e, ctx))) continue;
         // Track output and cascade frames before this iteration
@@ -1679,7 +1679,7 @@ export class EventInterpretorController {
         // ENGINE_TRIGGER frames so BECOME compares against the pre-iteration count.
         for (let j = outputBefore; j < this.controller.getAllEvents().length; j++) {
           const ev = this.controller.getAllEvents()[j];
-          this.checkReactiveTriggers(VerbType.APPLY, ev.columnId, ctx.frame, ev.ownerId, ctx.sourceSkillName, undefined, this._compoundCascadeFrames);
+          this.checkReactiveTriggers(VerbType.APPLY, ev.columnId, ctx.frame, ev.ownerEntityId, ctx.sourceSkillName, undefined, this._compoundCascadeFrames);
         }
         // Evaluate BECOME/HAVE conditions immediately with incremental stack count,
         // filtering out triggers that don't pass at this iteration.
@@ -1689,7 +1689,7 @@ export class EventInterpretorController {
           if (qf.engineTrigger?.ctx.haveConditions.length) {
             const condCtx: ConditionContext = {
               events: this.getAllEvents(), frame: ctx.frame,
-              sourceOwnerId: ctx.sourceOwnerId, previousStackCount: i,
+              sourceEntityId: ctx.sourceEntityId, previousStackCount: i,
             };
             if (!evaluateConditions(qf.engineTrigger.ctx.haveConditions as unknown as Interaction[], condCtx)) {
               this._compoundCascadeFrames[k] = this._compoundCascadeFrames[this._compoundCascadeFrames.length - 1];
@@ -1708,7 +1708,7 @@ export class EventInterpretorController {
 
   private doAny(effect: Effect, ctx: InterpretContext) {
     const preds = effect.predicates ?? [];
-    const condCtx: ConditionContext = { events: this.getAllEvents(), frame: ctx.frame, sourceOwnerId: ctx.sourceOwnerId, targetOwnerId: ctx.targetOwnerId, getControlledSlotAtFrame: this.getControlledSlotAtFrame };
+    const condCtx: ConditionContext = { events: this.getAllEvents(), frame: ctx.frame, sourceEntityId: ctx.sourceEntityId, targetEntityId: ctx.targetEntityId, getControlledSlotAtFrame: this.getControlledSlotAtFrame };
     for (const pred of preds) {
       if (!evaluateConditions(pred.conditions, condCtx)) continue;
       for (const child of pred.effects) this.interpret(child, ctx);
@@ -1744,10 +1744,10 @@ export class EventInterpretorController {
     const columnId = qualifier;
 
     const source = {
-      ownerId: ctx.sourceOwnerId,
+      ownerEntityId: ctx.sourceEntityId,
       skillName: ctx.sourceSkillName,
-      slotId: ctx.sourceSlotId ?? ctx.sourceOwnerId,
-      operatorId: ctx.sourceOwnerId,
+      slotId: ctx.sourceSlotId ?? ctx.sourceEntityId,
+      operatorId: ctx.sourceEntityId,
     };
     const isForced = this.resolveWith(effect.with?.isForced, ctx) === 1;
 
@@ -1786,7 +1786,7 @@ export class EventInterpretorController {
   private applyLiftOrKnockDown(
     columnId: string,
     frame: number,
-    source: { ownerId: string; skillName: string },
+    source: { ownerEntityId: string; skillName: string },
     isForced: boolean,
     parentEventUid?: string,
   ): boolean {
@@ -1799,7 +1799,7 @@ export class EventInterpretorController {
     this.controller.applyEvent(
       PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_ID, frame,
       PHYSICAL_INFLICTION_DURATION, source,
-      { uid: derivedEventUid(PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, source.ownerId, frame), parents },
+      { uid: derivedEventUid(PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, source.ownerEntityId, frame), parents },
     );
 
     // Status only triggers if enemy had Vulnerable OR isForced
@@ -1813,7 +1813,7 @@ export class EventInterpretorController {
         statusId,
         stackingMode: StackInteractionType.RESET,
         maxStacks: 1,
-        uid: derivedEventUid(columnId, source.ownerId, frame),
+        uid: derivedEventUid(columnId, source.ownerEntityId, frame),
         parents,
         event: {
           name: label,
@@ -1846,7 +1846,7 @@ export class EventInterpretorController {
    */
   private applyCrush(
     frame: number,
-    source: { ownerId: string; skillName: string },
+    source: { ownerEntityId: string; skillName: string },
     parentEventUid?: string,
   ): boolean {
     const parents = parentEventUid ? [parentEventUid] : undefined;
@@ -1859,7 +1859,7 @@ export class EventInterpretorController {
       this.controller.applyEvent(
         PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_ID, frame,
         PHYSICAL_INFLICTION_DURATION, source,
-        { uid: derivedEventUid(PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, source.ownerId, frame, 'crush'), parents },
+        { uid: derivedEventUid(PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, source.ownerEntityId, frame, 'crush'), parents },
       );
       return true;
     }
@@ -1877,7 +1877,7 @@ export class EventInterpretorController {
         statusId: PhysicalStatusType.CRUSH,
         stackingMode: StackInteractionType.RESET,
         maxStacks: 1,
-        uid: derivedEventUid(PhysicalStatusType.CRUSH, source.ownerId, frame),
+        uid: derivedEventUid(PhysicalStatusType.CRUSH, source.ownerEntityId, frame),
         parents,
         event: {
           stacks: consumed,
@@ -1909,7 +1909,7 @@ export class EventInterpretorController {
    */
   private applyBreach(
     frame: number,
-    source: { ownerId: string; skillName: string },
+    source: { ownerEntityId: string; skillName: string },
     parentEventUid?: string,
   ): boolean {
     const parents = parentEventUid ? [parentEventUid] : undefined;
@@ -1921,7 +1921,7 @@ export class EventInterpretorController {
       this.controller.applyEvent(
         PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_ID, frame,
         PHYSICAL_INFLICTION_DURATION, source,
-        { uid: derivedEventUid(PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, source.ownerId, frame, 'breach'), parents },
+        { uid: derivedEventUid(PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, source.ownerEntityId, frame, 'breach'), parents },
       );
       return true;
     }
@@ -1940,7 +1940,7 @@ export class EventInterpretorController {
         statusId: PhysicalStatusType.BREACH,
         stackingMode: StackInteractionType.RESET,
         maxStacks: 1,
-        uid: derivedEventUid(PhysicalStatusType.BREACH, source.ownerId, frame),
+        uid: derivedEventUid(PhysicalStatusType.BREACH, source.ownerEntityId, frame),
         parents,
         event: {
           stacks: stackCount,
@@ -1966,7 +1966,7 @@ export class EventInterpretorController {
    */
   private tryConsumeSolidification(
     frame: number,
-    source: { ownerId: string; skillName: string },
+    source: { ownerEntityId: string; skillName: string },
     triggerSlotId: string,
     parentEventUid?: string,
   ): void {
@@ -1994,7 +1994,7 @@ export class EventInterpretorController {
     this.controller.applyEvent(
       REACTION_COLUMNS.SHATTER, ENEMY_ID, frame, SHATTER_DURATION, source, {
         stacks,
-        uid: derivedEventUid(REACTION_COLUMNS.SHATTER, source.ownerId, frame),
+        uid: derivedEventUid(REACTION_COLUMNS.SHATTER, source.ownerEntityId, frame),
         parents: shatterParents,
       },
     );
@@ -2020,7 +2020,7 @@ export class EventInterpretorController {
 
     // Fire reactive triggers for the derived Shatter event so talents like
     // Commiseration (THIS OPERATOR APPLY STATUS REACTION SHATTER) can match.
-    // Use source.ownerId (the operator that caused the shatter) so THIS OPERATOR
+    // Use source.ownerEntityId (the operator that caused the shatter) so THIS OPERATOR
     // subject filters resolve to that slot, mirroring how clause-based APPLY
     // REACTION effects route through reactiveTriggersForEffect with the parent
     // event's owner. Queue directly into _processFrameOut so the main
@@ -2056,7 +2056,7 @@ export class EventInterpretorController {
     const fi = entry.frameIndex ?? -1;
     const absFrame = entry.frame;
     const source = {
-      ownerId: event.ownerOperatorId ?? event.sourceOwnerId ?? this.resolveOperatorId(event.ownerId),
+      ownerEntityId: event.ownerOperatorId ?? event.sourceEntityId ?? this.slotToEntityId(event.ownerEntityId),
       skillName: event.sourceSkillName ?? event.id,
     };
     const newEntries = this._processFrameOut;
@@ -2064,7 +2064,7 @@ export class EventInterpretorController {
     // so the damage tick path can append HP threshold triggers before this
     // point. Do NOT clear again here.
 
-    // For derived events whose ownerId is the target (enemy), pot/loadout
+    // For derived events whose ownerEntityId is the target (enemy), pot/loadout
     // properties must be read from the routed source slot.
     const routedForPot = this.resolveRoutedSource(event);
     const pot = this.loadoutProperties?.[routedForPot.sourceSlotId]?.operator.potential ?? 0;
@@ -2080,10 +2080,10 @@ export class EventInterpretorController {
         // At event creation time getEventStacks wasn't available — re-resolve now.
         const linkStacks = this.controller.getLinkStacks(event.uid);
         if (linkStacks > 0) {
-          const operatorIdForLink = this.slotOperatorMap?.[event.ownerId];
+          const operatorIdForLink = this.slotOperatorMap?.[event.ownerEntityId];
           const skillDefForLink = operatorIdForLink ? getOperatorSkill(operatorIdForLink, event.id) : undefined;
           if (skillDefForLink?.segments) {
-            const skillCtx = this.buildValueContext({ frame: absFrame, sourceOwnerId: source.ownerId, sourceSlotId: event.ownerId, sourceSkillName: event.id, potential: pot });
+            const skillCtx = this.buildValueContext({ frame: absFrame, sourceEntityId: source.ownerEntityId, sourceSlotId: event.ownerEntityId, sourceSkillName: event.id, potential: pot });
             const eventCtx: ValueResolutionContext = {
               ...skillCtx,
               getEventStacks: (statusId) => statusId === StatusType.LINK ? linkStacks : 0,
@@ -2104,11 +2104,11 @@ export class EventInterpretorController {
       }
 
       // Generic PERFORM trigger (PERFORM BATTLE_SKILL, etc.)
-      this.checkReactiveTriggers(VerbType.PERFORM, event.columnId, absFrame, event.ownerId, event.id, event.enhancementType, newEntries);
+      this.checkReactiveTriggers(VerbType.PERFORM, event.columnId, absFrame, event.ownerEntityId, event.id, event.enhancementType, newEntries);
 
       // Skill-level onEntryClause: look up the OperatorSkill and execute effects
       // via the unified clause dispatcher.
-      const operatorId = this.slotOperatorMap?.[event.ownerId];
+      const operatorId = this.slotOperatorMap?.[event.ownerEntityId];
       const skillDef = operatorId ? getOperatorSkill(operatorId, event.id) : undefined;
       if (skillDef?.onEntryClause?.length) {
         const eventEnd = event.startFrame + eventDuration(event);
@@ -2127,8 +2127,8 @@ export class EventInterpretorController {
         const hasEntryParams = Object.keys(entryParams).length > 0;
         const entryCtx: InterpretContext = {
           frame: absFrame,
-          sourceOwnerId: source.ownerId,
-          sourceSlotId: event.ownerId,
+          sourceEntityId: source.ownerEntityId,
+          sourceSlotId: event.ownerEntityId,
           sourceSkillName: event.id,
           potential: pot,
           parentEventEndFrame: eventEnd,
@@ -2137,14 +2137,14 @@ export class EventInterpretorController {
         const entryCondCtx: ConditionContext = {
           events: this.getAllEvents(),
           frame: absFrame,
-          sourceOwnerId: event.ownerId,
+          sourceEntityId: event.ownerEntityId,
           potential: pot,
           ...(hasEntryParams ? { suppliedParameters: entryParams } : {}),
         };
         const entryParsed = parseJsonClauseArray(skillDef.onEntryClause as { conditions?: unknown[]; effects?: unknown[] }[]);
         this.dispatchClauseFrame(
           entryParsed, undefined, entryCtx, entryCondCtx,
-          event.ownerId, event.id, newEntries,
+          event.ownerEntityId, event.id, newEntries,
           { fireReactiveTriggers: false, trackStatReversals: false },
         );
       }
@@ -2161,7 +2161,7 @@ export class EventInterpretorController {
       // Fire IS_NOT column triggers for non-skill status events (e.g. MF stack expiry).
       // Stat-based BECOME_NOT triggers (SLOWED, STAGGERED) are fired separately below.
       if (!SKILL_COLUMN_SET.has(event.columnId)) {
-        this.checkReactiveTriggers(`${VerbType.IS}_NOT`, event.columnId, absFrame, event.ownerId, event.id, undefined, newEntries);
+        this.checkReactiveTriggers(`${VerbType.IS}_NOT`, event.columnId, absFrame, event.ownerEntityId, event.id, undefined, newEntries);
         // Generic stat-based: fire BECOME_NOT for each stat-adjective the status provides
         const statusDef = getStatusDef(event.id);
         if (statusDef?.clause) {
@@ -2169,32 +2169,32 @@ export class EventInterpretorController {
             for (const ef of clause.effects ?? []) {
               if (ef.verb === VerbType.APPLY && ef.object === NounType.STAT) {
                 const adj = STAT_TO_STATE_ADJECTIVE[ef.objectId as StatType];
-                if (adj) this.checkReactiveTriggers(`${VerbType.BECOME}_NOT`, adj, absFrame, event.ownerId, event.id, undefined, newEntries);
+                if (adj) this.checkReactiveTriggers(`${VerbType.BECOME}_NOT`, adj, absFrame, event.ownerEntityId, event.id, undefined, newEntries);
               }
             }
           }
         }
       }
       // Skill-level onExitClause: dispatched via the unified helper.
-      const exitOperatorId = this.slotOperatorMap?.[event.ownerId];
-      const exitSkillDef = exitOperatorId ? getOperatorSkill(exitOperatorId, event.id) : undefined;
+      const exitEntityId = this.slotOperatorMap?.[event.ownerEntityId];
+      const exitSkillDef = exitEntityId ? getOperatorSkill(exitEntityId, event.id) : undefined;
       if (exitSkillDef?.onExitClause?.length) {
         const exitCtx: InterpretContext = {
           frame: absFrame,
-          sourceOwnerId: source.ownerId,
-          sourceSlotId: event.ownerId,
+          sourceEntityId: source.ownerEntityId,
+          sourceSlotId: event.ownerEntityId,
           sourceSkillName: event.id,
           potential: pot,
         };
         const exitCondCtx: ConditionContext = {
           events: this.getAllEvents(),
           frame: absFrame,
-          sourceOwnerId: event.ownerId,
+          sourceEntityId: event.ownerEntityId,
         };
         const exitParsed = parseJsonClauseArray(exitSkillDef.onExitClause as { conditions?: unknown[]; effects?: unknown[] }[]);
         this.dispatchClauseFrame(
           exitParsed, undefined, exitCtx, exitCondCtx,
-          event.ownerId, event.id, newEntries,
+          event.ownerEntityId, event.id, newEntries,
           { fireReactiveTriggers: false, trackStatReversals: false },
         );
       }
@@ -2203,7 +2203,7 @@ export class EventInterpretorController {
 
     // ── Segment lifecycle hooks (SEGMENT_START / SEGMENT_END) ──────────
     if (entry.hookType === FrameHookType.SEGMENT_START || entry.hookType === FrameHookType.SEGMENT_END) {
-      const segOperatorId = this.slotOperatorMap?.[event.ownerId];
+      const segOperatorId = this.slotOperatorMap?.[event.ownerEntityId];
       const segSkillDef = segOperatorId ? getOperatorSkill(segOperatorId, event.id) : undefined;
       const segIdx = entry.segmentIndex ?? -1;
       const segJson = (segSkillDef?.segments as unknown as Record<string, unknown>[] | undefined)?.[segIdx];
@@ -2219,8 +2219,8 @@ export class EventInterpretorController {
         const eventEnd = event.startFrame + eventDuration(event);
         const segCtx: InterpretContext = {
           frame: absFrame,
-          sourceOwnerId: source.ownerId,
-          sourceSlotId: event.ownerId,
+          sourceEntityId: source.ownerEntityId,
+          sourceSlotId: event.ownerEntityId,
           sourceSkillName: event.id,
           potential: pot,
           parentEventEndFrame: eventEnd,
@@ -2229,13 +2229,13 @@ export class EventInterpretorController {
         const segCondCtx: ConditionContext = {
           events: this.getAllEvents(),
           frame: absFrame,
-          sourceOwnerId: event.ownerId,
+          sourceEntityId: event.ownerEntityId,
           potential: pot,
         };
         const segParsed = parseJsonClauseArray(segClauses);
         this.dispatchClauseFrame(
           segParsed, undefined, segCtx, segCondCtx,
-          event.ownerId, event.id, newEntries,
+          event.ownerEntityId, event.id, newEntries,
           { fireReactiveTriggers: false, trackStatReversals: false },
         );
       }
@@ -2277,12 +2277,12 @@ export class EventInterpretorController {
       if (synthEffect) {
         const dupCtx: InterpretContext = {
           frame: absFrame,
-          sourceOwnerId: this.resolveOperatorId(event.ownerId),
-          sourceSlotId: event.ownerId,
+          sourceEntityId: this.slotToEntityId(event.ownerEntityId),
+          sourceSlotId: event.ownerEntityId,
           sourceSkillName: event.id,
         };
         this.interpret(synthEffect, dupCtx);
-        this.reactiveTriggersForEffect(synthEffect, absFrame, event.ownerId, event.id, newEntries, this.lastConsumedStacks);
+        this.reactiveTriggersForEffect(synthEffect, absFrame, event.ownerEntityId, event.id, newEntries, this.lastConsumedStacks);
         this.lastConsumedStacks = undefined;
       }
     }
@@ -2313,7 +2313,7 @@ export class EventInterpretorController {
       }
       const hasSuppliedParams = Object.keys(resolvedParams).length > 0;
       // For derived events (e.g. THUNDERLANCE_PIERCE applied to enemy by
-      // Avywenna's BS), event.ownerId is the target (enemy) and event.sourceOwnerId
+      // Avywenna's BS), event.ownerEntityId is the target (enemy) and event.sourceEntityId
       // is the source operator. UE gains from clauses on this frame must route
       // back to the source operator's slot via resolveRoutedSource.
       const routed = this.resolveRoutedSource(event);
@@ -2326,7 +2326,7 @@ export class EventInterpretorController {
         && !SKILL_COLUMN_SET.has(event.columnId);
       const interpretCtx: InterpretContext = {
         frame: absFrame,
-        sourceOwnerId: routed.sourceOwnerId,
+        sourceEntityId: routed.sourceEntityId,
         sourceSlotId: routed.sourceSlotId,
         sourceSkillName: event.id,
         sourceEventUid: propagateUid ? event.uid : undefined,
@@ -2343,7 +2343,7 @@ export class EventInterpretorController {
       const condCtx: ConditionContext = {
         events: this.getAllEvents(),
         frame: absFrame,
-        sourceOwnerId: event.ownerId,
+        sourceEntityId: event.ownerEntityId,
         potential: pot,
         suppliedParameters: resolvedParams,
         getControlledSlotAtFrame: this.getControlledSlotAtFrame,
@@ -2354,7 +2354,7 @@ export class EventInterpretorController {
       };
       const { anyMatched } = this.dispatchClauseFrame(
         frame.clauses, frame.clauseType, interpretCtx, condCtx,
-        event.ownerId, event.id, newEntries,
+        event.ownerEntityId, event.id, newEntries,
         { fireReactiveTriggers: true, trackStatReversals: true },
       );
       // If no clause matched, mark frame as skipped so the damage table builder skips it
@@ -2369,52 +2369,52 @@ export class EventInterpretorController {
     if (!frame.clauses) {
       const dur = eventDuration(event);
       if (INFLICTION_COLUMN_IDS.has(event.columnId) || PHYSICAL_INFLICTION_COLUMN_IDS.has(event.columnId)) {
-        this.controller.applyEvent(event.columnId, event.ownerId, absFrame, dur, source, { uid: event.uid });
-        this.checkReactiveTriggers(VerbType.APPLY, event.columnId, absFrame, event.ownerId, event.id, undefined, newEntries);
+        this.controller.applyEvent(event.columnId, event.ownerEntityId, absFrame, dur, source, { uid: event.uid });
+        this.checkReactiveTriggers(VerbType.APPLY, event.columnId, absFrame, event.ownerEntityId, event.id, undefined, newEntries);
       } else if (REACTION_COLUMN_IDS.has(event.columnId)) {
-        this.controller.applyEvent(event.columnId, event.ownerId, absFrame, dur, source, {
+        this.controller.applyEvent(event.columnId, event.ownerEntityId, absFrame, dur, source, {
           stacks: event.stacks, forcedReaction: event.forcedReaction || event.isForced, uid: event.uid,
         });
-        this.checkReactiveTriggers(VerbType.APPLY, event.columnId, absFrame, event.ownerId, event.id, undefined, newEntries);
+        this.checkReactiveTriggers(VerbType.APPLY, event.columnId, absFrame, event.ownerEntityId, event.id, undefined, newEntries);
       } else if (PHYSICAL_STATUS_COLUMN_IDS.has(event.columnId)) {
-        this.controller.applyEvent(event.columnId, event.ownerId, absFrame, dur, source, {
+        this.controller.applyEvent(event.columnId, event.ownerEntityId, absFrame, dur, source, {
           statusId: event.id, stackingMode: StackInteractionType.RESET, maxStacks: 1,
           uid: event.uid, event: { segments: event.segments },
         });
         // Process status lifecycle (APPLY STAT clauses, onEntryClause, segment frames)
         // same as doApply → runStatusCreationLifecycle for skill-derived statuses.
         const physCtx: InterpretContext = {
-          frame: absFrame, sourceOwnerId: source.ownerId,
-          sourceSlotId: event.ownerId, sourceSkillName: event.id, potential: pot,
+          frame: absFrame, sourceEntityId: source.ownerEntityId,
+          sourceSlotId: event.ownerEntityId, sourceSkillName: event.id, potential: pot,
         };
-        this.runStatusCreationLifecycle(event.id, event.ownerId, physCtx);
-        this.checkReactiveTriggers(VerbType.APPLY, event.columnId, absFrame, event.ownerId, event.id, undefined, newEntries);
-      } else if (event.ownerId === ENEMY_ID || event.ownerId === TEAM_ID) {
-        this.controller.applyEvent(event.columnId, event.ownerId, absFrame, dur, source, {
+        this.runStatusCreationLifecycle(event.id, event.ownerEntityId, physCtx);
+        this.checkReactiveTriggers(VerbType.APPLY, event.columnId, absFrame, event.ownerEntityId, event.id, undefined, newEntries);
+      } else if (event.ownerEntityId === ENEMY_ID || event.ownerEntityId === TEAM_ID) {
+        this.controller.applyEvent(event.columnId, event.ownerEntityId, absFrame, dur, source, {
           statusId: event.id, uid: event.uid,
           ...(event.susceptibility && { event: { susceptibility: event.susceptibility, segments: event.segments } }),
         });
         // Process status lifecycle (APPLY STAT clauses, onEntryClause, segment frames)
         // same as doApply → runStatusCreationLifecycle for skill-derived statuses.
         const enemyCtx: InterpretContext = {
-          frame: absFrame, sourceOwnerId: source.ownerId,
-          sourceSlotId: event.ownerId, sourceSkillName: event.id, potential: pot,
+          frame: absFrame, sourceEntityId: source.ownerEntityId,
+          sourceSlotId: event.ownerEntityId, sourceSkillName: event.id, potential: pot,
         };
-        this.runStatusCreationLifecycle(event.id, event.ownerId, enemyCtx);
-        this.checkReactiveTriggers(VerbType.APPLY, event.id ?? event.columnId, absFrame, event.ownerId, event.id, undefined, newEntries);
+        this.runStatusCreationLifecycle(event.id, event.ownerEntityId, enemyCtx);
+        this.checkReactiveTriggers(VerbType.APPLY, event.id ?? event.columnId, absFrame, event.ownerEntityId, event.id, undefined, newEntries);
       }
     }
 
     // ── 3c. Snapshot stat deltas for damage frames (captures runtime APPLY STAT effects)
     if (this.controller.hasStatAccumulator() && hasDealDamageClause(frame.clauses) && !frame.frameSkipped) {
       const frameKey = `${event.uid}:${si}:${fi}`;
-      this.controller.snapshotStatDeltas(frameKey, event.ownerId);
+      this.controller.snapshotStatDeltas(frameKey, event.ownerEntityId);
     }
 
     // Reverse frame-scoped APPLY STAT deltas so they don't persist to later frames
     if (this._frameStatReversals?.length && this.controller.hasStatAccumulator()) {
       for (const r of this._frameStatReversals) {
-        this.controller.applyStatDelta(event.ownerId, { [r.stat]: r.value });
+        this.controller.applyStatDelta(event.ownerEntityId, { [r.stat]: r.value });
       }
       this._frameStatReversals = undefined;
     }
@@ -2446,7 +2446,7 @@ export class EventInterpretorController {
           : (pin ?? false);
         // ── 3d. Emit PERFORM CRITICAL_HIT for crit damage frames ──────
         if (effectiveCrit === true) {
-          this.checkReactiveTriggers(VerbType.PERFORM, NounType.CRITICAL_HIT, absFrame, event.ownerId, event.id, undefined, newEntries);
+          this.checkReactiveTriggers(VerbType.PERFORM, NounType.CRITICAL_HIT, absFrame, event.ownerEntityId, event.id, undefined, newEntries);
         }
       }
     }
@@ -2459,13 +2459,13 @@ export class EventInterpretorController {
     // no-op for HP. Synthesize a `to: OPERATOR, toDeterminer: ALL` Effect and
     // run doDeal to apply damage to every operator slot. NOTE: this does NOT
     // call checkReactiveTriggers — the dsl loop above already fired it.
-    if (event.ownerId === ENEMY_ID && event.columnId === ENEMY_ACTION_COLUMN_ID) {
+    if (event.ownerEntityId === ENEMY_ID && event.columnId === ENEMY_ACTION_COLUMN_ID) {
       const dealInfo = findDealDamageInClauses(frame.clauses);
       if (dealInfo) {
         const dealCtx: InterpretContext = {
           frame: absFrame,
-          sourceOwnerId: this.resolveOperatorId(event.ownerId),
-          sourceSlotId: event.ownerId,
+          sourceEntityId: this.slotToEntityId(event.ownerEntityId),
+          sourceSlotId: event.ownerEntityId,
           sourceSkillName: event.id,
           potential: 0,
         };
@@ -2487,7 +2487,7 @@ export class EventInterpretorController {
         if (ft === EventFrameType.FINAL_STRIKE || ft === EventFrameType.FINISHER || ft === EventFrameType.DIVE) {
           const performObject = ft === EventFrameType.FINAL_STRIKE ? NounType.FINAL_STRIKE
             : ft === EventFrameType.FINISHER ? NounType.FINISHER : NounType.DIVE;
-          this.checkReactiveTriggers(VerbType.PERFORM, performObject, absFrame, event.ownerId, event.id, undefined, newEntries);
+          this.checkReactiveTriggers(VerbType.PERFORM, performObject, absFrame, event.ownerEntityId, event.id, undefined, newEntries);
         }
       }
     }
@@ -2530,7 +2530,7 @@ export class EventInterpretorController {
       const condCtx: ConditionContext = {
         events: this.getAllEvents(),
         frame,
-        sourceOwnerId: entry.operatorSlotId,
+        sourceEntityId: entry.operatorSlotId,
         potential: entry.potential,
         getEnemyHpPercentage: this.getEnemyHpPercentage,
       };
@@ -2546,10 +2546,10 @@ export class EventInterpretorController {
       };
       out.push({
         frame, priority: PRIORITY.ENGINE_TRIGGER, type: QueueFrameType.PROCESS_FRAME, hookType: FrameHookType.ON_TRIGGER,
-        statusId: entry.def.properties.id, columnId: '', ownerId: entry.operatorSlotId,
-        sourceOwnerId: entry.operatorId, sourceSkillName, maxStacks: 0, durationFrames: 0,
+        statusId: entry.def.properties.id, columnId: '', ownerEntityId: entry.operatorSlotId,
+        sourceEntityId: entry.operatorId, sourceSkillName, maxStacks: 0, durationFrames: 0,
         operatorSlotId: entry.operatorSlotId,
-        engineTrigger: { frame, sourceOwnerId: entry.operatorId, triggerSlotId: slotId,
+        engineTrigger: { frame, sourceEntityId: entry.operatorId, triggerSlotId: slotId,
           sourceSkillName, ctx: triggerCtx, isEquip: entry.isEquip ?? false },
       });
     }
@@ -2569,19 +2569,19 @@ export class EventInterpretorController {
    * between entries, never mid-entry, so any queued lifecycle would land
    * after the rest of the current effect loop runs.
    */
-  private runStatusCreationLifecycle(statusId: string | undefined, statusOwnerId: string, ctx: InterpretContext) {
+  private runStatusCreationLifecycle(statusId: string | undefined, statusEntityId: string, ctx: InterpretContext) {
     if (!statusId) return;
 
     // Find the newly created status event
     const statusEvents = this.controller.getAllEvents().filter(
-      ev => ev.id === statusId && ev.ownerId === statusOwnerId && ev.startFrame === ctx.frame,
+      ev => ev.id === statusId && ev.ownerEntityId === statusEntityId && ev.startFrame === ctx.frame,
     );
     const statusEv = statusEvents[statusEvents.length - 1];
     if (!statusEv) return;
 
     const parentEventEnd = statusEv.startFrame + eventDuration(statusEv);
     const source = {
-      ownerId: statusEv.ownerOperatorId ?? statusEv.sourceOwnerId ?? this.resolveOperatorId(statusEv.ownerId),
+      ownerEntityId: statusEv.ownerOperatorId ?? statusEv.sourceEntityId ?? this.slotToEntityId(statusEv.ownerEntityId),
       skillName: statusEv.sourceSkillName ?? statusEv.name,
     };
     // Read pot from the routed source slot for derived statuses (target=enemy).
@@ -2598,17 +2598,17 @@ export class EventInterpretorController {
         parentEventEndFrame: parentEventEnd,
         parentSegmentEndFrame: parentSegEnd,
         parentStatusId: statusId,
-        parentStatusOwnerId: statusOwnerId,
+        parentStatusEntityId: statusEntityId,
       };
       const entryCondCtx: ConditionContext = {
         events: this.getAllEvents(),
         frame: ctx.frame,
-        sourceOwnerId: statusOwnerId,
+        sourceEntityId: statusEntityId,
       };
       const parsedEntry = parseJsonClauseArray(statusDef.onEntryClause as { conditions?: unknown[]; effects?: unknown[] }[]);
       this.dispatchClauseFrame(
         parsedEntry, undefined, entryCtx, entryCondCtx,
-        statusOwnerId, statusId, this._processFrameOut,
+        statusEntityId, statusId, this._processFrameOut,
         { fireReactiveTriggers: false, trackStatReversals: false },
       );
     }
@@ -2620,7 +2620,7 @@ export class EventInterpretorController {
         ...ctx,
         parentEventEndFrame: parentEventEnd,
         parentStatusId: statusId,
-        parentStatusOwnerId: statusOwnerId,
+        parentStatusEntityId: statusEntityId,
       };
       for (const clause of statusDef.clause as { conditions: unknown[]; effects?: unknown[] }[]) {
         if (!clause.effects?.length) continue;
@@ -2628,7 +2628,7 @@ export class EventInterpretorController {
           const condCtx: ConditionContext = {
             events: this.getAllEvents(),
             frame: ctx.frame,
-            sourceOwnerId: statusOwnerId,
+            sourceEntityId: statusEntityId,
           };
           if (!evaluateConditions(clause.conditions as unknown as import('../../dsl/semantics').Interaction[], condCtx)) continue;
         }
@@ -2644,19 +2644,19 @@ export class EventInterpretorController {
           const trackStat = isApplyStat && this.controller.hasStatAccumulator()
             ? resolveEffectStat(NounType.STAT, raw.objectId as string, raw.objectQualifier as string)
             : undefined;
-          const statBefore = trackStat ? this.controller.getStat(statusOwnerId, trackStat) : 0;
+          const statBefore = trackStat ? this.controller.getStat(statusEntityId, trackStat) : 0;
           const effect = raw as unknown as Effect;
           this.interpret(effect, clauseCtx);
           // Track the applied delta for reversal at expiry
           if (trackStat) {
-            const statAfter = this.controller.getStat(statusOwnerId, trackStat);
+            const statAfter = this.controller.getStat(statusEntityId, trackStat);
             const delta = statAfter - statBefore;
             if (delta !== 0) {
-              appliedStatDeltas.push({ entityId: statusOwnerId, stat: trackStat, value: delta });
+              appliedStatDeltas.push({ entityId: statusEntityId, stat: trackStat, value: delta });
               // Push source for breakdown display
               const statusName = statusDef.properties.name ?? statusId;
               const source = buildStatSource(statusName, delta, raw, clauseCtx);
-              this.controller.pushStatSource(statusOwnerId, trackStat, source);
+              this.controller.pushStatSource(statusEntityId, trackStat, source);
             }
           }
         }
@@ -2720,10 +2720,10 @@ export class EventInterpretorController {
             qf.type = QueueFrameType.PROCESS_FRAME;
             qf.statusId = statusId;
             qf.columnId = statusEv.columnId;
-            qf.ownerId = statusEv.ownerId;
-            qf.sourceOwnerId = source.ownerId;
+            qf.ownerEntityId = statusEv.ownerEntityId;
+            qf.sourceEntityId = source.ownerEntityId;
             qf.sourceSkillName = source.skillName;
-            qf.operatorSlotId = statusEv.ownerId;
+            qf.operatorSlotId = statusEv.ownerEntityId;
             qf.frameMarker = fm;
             qf.sourceEvent = statusEv;
             qf.segmentIndex = si;
@@ -2741,7 +2741,7 @@ export class EventInterpretorController {
           const routedInline = this.resolveRoutedSource(statusEv);
           const frameCtx: InterpretContext = {
             frame: absFrame,
-            sourceOwnerId: routedInline.sourceOwnerId,
+            sourceEntityId: routedInline.sourceEntityId,
             sourceSlotId: routedInline.sourceSlotId,
             sourceSkillName: statusEv.name,
             sourceEventUid: undefined,
@@ -2754,7 +2754,7 @@ export class EventInterpretorController {
             const condCtx: ConditionContext = {
               events: this.getAllEvents(),
               frame: absFrame,
-              sourceOwnerId: statusEv.ownerId,
+              sourceEntityId: statusEv.ownerEntityId,
               potential: pot,
             };
             // Status-frame markers (offset 0) are dispatched via the unified
@@ -2764,7 +2764,7 @@ export class EventInterpretorController {
             // separate and runs above against statusDef.clause).
             this.dispatchClauseFrame(
               fm.clauses, fm.clauseType, frameCtx, condCtx,
-              statusEv.ownerId, statusEv.id, this._processFrameOut,
+              statusEv.ownerEntityId, statusEv.id, this._processFrameOut,
               { fireReactiveTriggers: false, trackStatReversals: false },
             );
           }
@@ -2783,10 +2783,10 @@ export class EventInterpretorController {
       endHook.hookType = FrameHookType.EVENT_END;
       endHook.statusId = statusId;
       endHook.columnId = statusEv.columnId;
-      endHook.ownerId = statusEv.ownerId;
-      endHook.sourceOwnerId = source.ownerId;
+      endHook.ownerEntityId = statusEv.ownerEntityId;
+      endHook.sourceEntityId = source.ownerEntityId;
       endHook.sourceSkillName = source.skillName;
-      endHook.operatorSlotId = statusEv.ownerId;
+      endHook.operatorSlotId = statusEv.ownerEntityId;
       endHook.sourceEvent = statusEv;
       endHook.segmentIndex = -1;
       endHook.frameIndex = -1;
@@ -2801,12 +2801,12 @@ export class EventInterpretorController {
       exitFrame.priority = PRIORITY[QueueFrameType.STATUS_EXIT];
       exitFrame.type = QueueFrameType.STATUS_EXIT;
       exitFrame.statusId = statusId;
-      exitFrame.ownerId = statusOwnerId;
-      exitFrame.sourceOwnerId = source.ownerId;
+      exitFrame.ownerEntityId = statusEntityId;
+      exitFrame.sourceEntityId = source.ownerEntityId;
       exitFrame.sourceSkillName = source.skillName;
-      exitFrame.operatorSlotId = statusOwnerId;
+      exitFrame.operatorSlotId = statusEntityId;
       exitFrame.statusExitClauses = statusDef.onExitClause as { conditions: unknown[]; effects?: unknown[] }[];
-      exitFrame.statusExitOwnerId = statusOwnerId;
+      exitFrame.statusExitEntityId = statusEntityId;
       this.pendingExitFrames.push(exitFrame);
     }
   }
@@ -2816,24 +2816,24 @@ export class EventInterpretorController {
     const clauses = entry.statusExitClauses;
     if (!clauses?.length) return [];
 
-    const statusOwnerId = entry.statusExitOwnerId ?? entry.ownerId;
+    const statusEntityId = entry.statusExitEntityId ?? entry.ownerEntityId;
     const exitCtx: InterpretContext = {
       frame: entry.frame,
-      sourceOwnerId: entry.sourceOwnerId,
-      sourceSlotId: statusOwnerId,
+      sourceEntityId: entry.sourceEntityId,
+      sourceSlotId: statusEntityId,
       sourceSkillName: entry.sourceSkillName,
       parentStatusId: entry.statusId,
-      parentStatusOwnerId: statusOwnerId,
+      parentStatusEntityId: statusEntityId,
     };
     const exitCondCtx: ConditionContext = {
       events: this.getAllEvents(),
       frame: entry.frame,
-      sourceOwnerId: statusOwnerId,
+      sourceEntityId: statusEntityId,
     };
     const parsed = parseJsonClauseArray(clauses);
     this.dispatchClauseFrame(
       parsed, undefined, exitCtx, exitCondCtx,
-      statusOwnerId, entry.statusId ?? '', this._processFrameOut,
+      statusEntityId, entry.statusId ?? '', this._processFrameOut,
       { fireReactiveTriggers: false, trackStatReversals: false },
     );
     return [];
@@ -2849,9 +2849,9 @@ export class EventInterpretorController {
       if (!isAny) {
         if (det === DeterminerType.CONTROLLED) {
           const controlledSlot = this.getControlledSlotAtFrame?.(absFrame);
-          if (controlledSlot && event.ownerId !== controlledSlot) continue;
-          if (!controlledSlot && event.ownerId !== entry.operatorSlotId) continue;
-        } else if (event.ownerId !== entry.operatorSlotId) continue;
+          if (controlledSlot && event.ownerEntityId !== controlledSlot) continue;
+          if (!controlledSlot && event.ownerEntityId !== entry.operatorSlotId) continue;
+        } else if (event.ownerEntityId !== entry.operatorSlotId) continue;
       }
       const triggerCtx: EngineTriggerContext = {
         def: entry.def,
@@ -2869,13 +2869,13 @@ export class EventInterpretorController {
         type: QueueFrameType.PROCESS_FRAME, hookType: FrameHookType.ON_TRIGGER,
         statusId: entry.def.properties.id,
         columnId: '',
-        ownerId: entry.operatorSlotId,
-        sourceOwnerId: this.resolveOperatorId(event.ownerId),
+        ownerEntityId: entry.operatorSlotId,
+        sourceEntityId: this.slotToEntityId(event.ownerEntityId),
         sourceSkillName: event.id,
         maxStacks: 0,
         durationFrames: 0,
         operatorSlotId: entry.operatorSlotId,
-        engineTrigger: { frame: absFrame, sourceOwnerId: this.resolveOperatorId(event.ownerId), triggerSlotId: event.ownerId, sourceSkillName: event.id, ctx: triggerCtx, isEquip: entry.isEquip },
+        engineTrigger: { frame: absFrame, sourceEntityId: this.slotToEntityId(event.ownerEntityId), triggerSlotId: event.ownerEntityId, sourceSkillName: event.id, ctx: triggerCtx, isEquip: entry.isEquip },
       });
     }
     return results;
@@ -2887,7 +2887,7 @@ export class EventInterpretorController {
    */
   private resolveComboTrigger(combo: TimelineEvent, absFrame: number, newEntries: QueueFrame[]) {
     if (!this.slotWirings) return;
-    const wiring = this.slotWirings.find(w => w.slotId === combo.ownerId);
+    const wiring = this.slotWirings.find(w => w.slotId === combo.ownerEntityId);
     if (!wiring) return;
     const clause = getComboTriggerClause(wiring.operatorId);
     if (!clause?.length) return;
@@ -2899,7 +2899,7 @@ export class EventInterpretorController {
     let triggerCol: string | undefined;
     let triggerEventUid: string | undefined;
     for (const match of matches) {
-      if (match.originOwnerId === combo.ownerId) continue;
+      if (match.originEntityId === combo.ownerEntityId) continue;
       if (combo.startFrame >= match.frame && combo.startFrame < match.frame + windowFrames) {
         triggerCol = match.sourceColumnId;
         triggerEventUid = match.sourceEventUid;
@@ -2922,18 +2922,18 @@ export class EventInterpretorController {
   }
 
   /** Resolve a consumeStatus target's column ID and owner from the status definition. */
-  private resolveConsumeTarget(statusId: string, eventOwnerId: string): { columnId: string; ownerId: string } {
+  private resolveConsumeTarget(statusId: string, eventEntityId: string): { columnId: string; ownerEntityId: string } {
     const columnId = statusId;
-    const operatorId = this.slotOperatorMap?.[eventOwnerId];
+    const operatorId = this.slotOperatorMap?.[eventEntityId];
     if (operatorId) {
       const statuses = getOperatorStatuses(operatorId);
       const def = statuses.find(s => s.id === statusId);
       if (def) {
-        if (def.target === NounType.ENEMY) return { columnId, ownerId: ENEMY_ID };
-        return { columnId, ownerId: eventOwnerId };
+        if (def.target === NounType.ENEMY) return { columnId, ownerEntityId: ENEMY_ID };
+        return { columnId, ownerEntityId: eventEntityId };
       }
     }
-    return { columnId, ownerId: eventOwnerId };
+    return { columnId, ownerEntityId: eventEntityId };
   }
 
   /**
@@ -2985,13 +2985,13 @@ export class EventInterpretorController {
           type: QueueFrameType.PROCESS_FRAME, hookType: FrameHookType.ON_TRIGGER,
           statusId: lifecycle.def.properties.id,
           columnId: '',
-          ownerId: slotId,
-          sourceOwnerId: this.resolveOperatorId(slotId),
+          ownerEntityId: slotId,
+          sourceEntityId: this.slotToEntityId(slotId),
           sourceSkillName,
           maxStacks: 0,
           durationFrames: 0,
           operatorSlotId: slotId,
-          engineTrigger: { frame, sourceOwnerId: this.resolveOperatorId(slotId), triggerSlotId: slotId, sourceSkillName, ctx: triggerCtx, isEquip: false },
+          engineTrigger: { frame, sourceEntityId: this.slotToEntityId(slotId), triggerSlotId: slotId, sourceSkillName, ctx: triggerCtx, isEquip: false },
         });
     }
 
@@ -3067,13 +3067,13 @@ export class EventInterpretorController {
         type: QueueFrameType.PROCESS_FRAME, hookType: FrameHookType.ON_TRIGGER,
         statusId: entry.def.properties.id,
         columnId: '',
-        ownerId: entry.operatorSlotId,
-        sourceOwnerId: this.resolveOperatorId(slotId),
+        ownerEntityId: entry.operatorSlotId,
+        sourceEntityId: this.slotToEntityId(slotId),
         sourceSkillName,
         maxStacks: 0,
         durationFrames: 0,
         operatorSlotId: entry.operatorSlotId,
-        engineTrigger: { frame, sourceOwnerId: this.resolveOperatorId(slotId), triggerSlotId: slotId, sourceSkillName, ctx: triggerCtx, isEquip: entry.isEquip, triggerObjectId: objectId, consumedStacks },
+        engineTrigger: { frame, sourceEntityId: this.slotToEntityId(slotId), triggerSlotId: slotId, sourceSkillName, ctx: triggerCtx, isEquip: entry.isEquip, triggerObjectId: objectId, consumedStacks },
       });
     }
 
@@ -3085,7 +3085,7 @@ export class EventInterpretorController {
       // Resolve parent status owner for HAVE condition evaluation
       const first = entries[0];
       const parentTarget = first.def.properties.target;
-      const parentStatusOwnerId = parentTarget === NounType.TEAM ? TEAM_ID
+      const parentStatusEntityId = parentTarget === NounType.TEAM ? TEAM_ID
         : parentTarget === NounType.ENEMY ? ENEMY_ID
         : first.operatorSlotId;
 
@@ -3099,10 +3099,10 @@ export class EventInterpretorController {
         const condCtx: ConditionContext = {
           events: this.getAllEvents(),
           frame,
-          sourceOwnerId: entry.operatorSlotId,
+          sourceEntityId: entry.operatorSlotId,
           potential: entry.potential,
           getEnemyHpPercentage: this.getEnemyHpPercentage,
-          parentStatusOwnerId,
+          parentStatusEntityId,
         };
         if (evaluateConditions(entry.haveConditions as unknown as import('../../dsl/semantics').Interaction[], condCtx)) {
           selected = entry;
@@ -3128,13 +3128,13 @@ export class EventInterpretorController {
         type: QueueFrameType.PROCESS_FRAME, hookType: FrameHookType.ON_TRIGGER,
         statusId: selected.def.properties.id,
         columnId: '',
-        ownerId: selected.operatorSlotId,
-        sourceOwnerId: this.resolveOperatorId(slotId),
+        ownerEntityId: selected.operatorSlotId,
+        sourceEntityId: this.slotToEntityId(slotId),
         sourceSkillName,
         maxStacks: 0,
         durationFrames: 0,
         operatorSlotId: selected.operatorSlotId,
-        engineTrigger: { frame, sourceOwnerId: this.resolveOperatorId(slotId), triggerSlotId: slotId, sourceSkillName, ctx: triggerCtx, isEquip: selected.isEquip, triggerObjectId: objectId },
+        engineTrigger: { frame, sourceEntityId: this.slotToEntityId(slotId), triggerSlotId: slotId, sourceSkillName, ctx: triggerCtx, isEquip: selected.isEquip, triggerObjectId: objectId },
       });
     }
   }
@@ -3193,7 +3193,7 @@ export class EventInterpretorController {
 
     // Resolve parent status owner (for CONSUME THIS EVENT and HAVE condition evaluation)
     const parentTarget = ctx.def.properties.target;
-    const parentStatusOwnerId = parentTarget === NounType.TEAM ? TEAM_ID
+    const parentStatusEntityId = parentTarget === NounType.TEAM ? TEAM_ID
       : parentTarget === NounType.ENEMY ? ENEMY_ID
       : ctx.operatorSlotId;
 
@@ -3202,11 +3202,11 @@ export class EventInterpretorController {
       const condCtx: ConditionContext = {
         events: this.getAllEvents(),
         frame: entry.frame,
-        sourceOwnerId: ctx.operatorSlotId,
+        sourceEntityId: ctx.operatorSlotId,
         potential: ctx.potential,
         getEnemyHpPercentage: this.getEnemyHpPercentage,
         getOperatorPercentageHp: this.controller.hasHpController() ? (opId, f) => this.controller.getOperatorPercentageHp(opId, f) : undefined,
-        parentStatusOwnerId,
+        parentStatusEntityId,
         getStatValue: this.controller.hasStatAccumulator() ? (entityId, stat) => this.controller.getStat(entityId, stat) : undefined,
         previousStackCount: trigger.previousStackCount,
       };
@@ -3215,7 +3215,7 @@ export class EventInterpretorController {
 
     // Compute parent status event end frames (for EXTEND UNTIL END OF SEGMENT/EVENT)
     const parentColumnId = ctx.def.properties.id;
-    const parentEvents = activeEventsAtFrame(this.getAllEvents(), parentColumnId, parentStatusOwnerId, entry.frame);
+    const parentEvents = activeEventsAtFrame(this.getAllEvents(), parentColumnId, parentStatusEntityId, entry.frame);
     const parentEv = parentEvents.length > 0 ? parentEvents[parentEvents.length - 1] : undefined;
 
     // Skill-status triggers require an active parent instance unless they are inherent
@@ -3320,16 +3320,16 @@ export class EventInterpretorController {
 
     const interpretCtx: InterpretContext = {
       frame: entry.frame,
-      sourceOwnerId: ctx.operatorId,
+      sourceEntityId: ctx.operatorId,
       sourceSlotId: ctx.operatorSlotId,
       sourceSkillName: resolvedSourceSkillName,
       potential: ctx.potential,
       parentStatusId: ctx.def.properties.id,
-      parentStatusOwnerId,
+      parentStatusEntityId,
       parentEventEndFrame,
       parentSegmentEndFrame,
       sourceFrameKey: entry.sourceFrameKey,
-      targetOwnerId: trigger.triggerSlotId,
+      targetEntityId: trigger.triggerSlotId,
       sourceEventRemainingDuration,
       consumedStacks: trigger.consumedStacks,
     };

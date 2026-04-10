@@ -157,7 +157,7 @@ function normalizeEquipDef(raw: NormalizedEffectDef): StatusEventDef {
 
 // ── Resolve helpers ─────────────────────────────────────────────────────────
 
-function resolveTargetOwnerId(
+function resolveTargetEntityId(
   target: string | undefined,
   slotId: string,
   operatorSlotMap: Record<string, string>,
@@ -354,8 +354,8 @@ export class TriggerIndex {
         if (operatorSlotMap[opId]) continue;
         const skillNames = getSkillIds(opId);
         for (const ev of allEvents) {
-          if (ev.ownerId === ENEMY_ID || ev.ownerId === TEAM_ID) continue;
-          if (skillNames.has(ev.id)) { operatorSlotMap[opId] = ev.ownerId; break; }
+          if (ev.ownerEntityId === ENEMY_ID || ev.ownerEntityId === TEAM_ID) continue;
+          if (skillNames.has(ev.id)) { operatorSlotMap[opId] = ev.ownerEntityId; break; }
         }
       }
     }
@@ -474,7 +474,7 @@ export class TriggerIndex {
 
         const talentDuration = def.properties.duration;
         const talentDurationFrames = talentDuration ? getDurationFrames(talentDuration) : TOTAL_FRAMES;
-        const talentOwnerId = resolveTargetOwnerId(def.properties.target, slotId, opSlotMap, def.properties.targetDeterminer);
+        const talentEntityId = resolveTargetEntityId(def.properties.target, slotId, opSlotMap, def.properties.targetDeterminer);
         const talentColumnId = def.properties.id;
 
         // Trigger-only talents create instances via APPLY EVENT / CONSUME EVENT
@@ -500,11 +500,11 @@ export class TriggerIndex {
           continue;
         } else {
           // Skip if already exists in registered events or already indexed in this build (any slot)
-          if (allEvents?.some(ev => ev.columnId === talentColumnId && ev.ownerId === talentOwnerId)) continue;
+          if (allEvents?.some(ev => ev.columnId === talentColumnId && ev.ownerEntityId === talentEntityId)) continue;
           let alreadyIndexed = false;
           this.talentsBySlot.forEach(entries => {
             if (alreadyIndexed) return;
-            if (entries.some(t => t.talentEvent?.columnId === talentColumnId && t.talentEvent?.ownerId === talentOwnerId)) alreadyIndexed = true;
+            if (entries.some(t => t.talentEvent?.columnId === talentColumnId && t.talentEvent?.ownerEntityId === talentEntityId)) alreadyIndexed = true;
           });
           if (alreadyIndexed) continue;
 
@@ -526,11 +526,11 @@ export class TriggerIndex {
             uid: `${def.properties.id.toLowerCase()}-talent-${slotId}`,
             id: def.properties.id,
             name: def.properties.id,
-            ownerId: talentOwnerId,
+            ownerEntityId: talentEntityId,
             columnId: talentColumnId,
             startFrame: 0,
             segments: durationSegment(talentDurationFrames),
-            sourceOwnerId: operatorId,
+            sourceEntityId: operatorId,
             sourceSkillName: def.properties.id,
           };
 
@@ -554,16 +554,16 @@ export class TriggerIndex {
           let presenceEvent: TimelineEvent | null = null;
           if (ect === NounType.CONSUMABLE) {
             const dur = def.properties.duration ? getDurationFrames(def.properties.duration) : TOTAL_FRAMES;
-            const ownerId = resolveTargetOwnerId(def.properties.target, slotId, opSlotMap, def.properties.targetDeterminer);
+            const ownerEntityId = resolveTargetEntityId(def.properties.target, slotId, opSlotMap, def.properties.targetDeterminer);
             presenceEvent = {
               uid: `${def.properties.id.toLowerCase()}-consumable-${slotId}`,
               id: def.properties.id,
               name: def.properties.id,
-              ownerId,
+              ownerEntityId,
               columnId: NounType.CONSUMABLE,
               startFrame: 0,
               segments: durationSegment(dur),
-              sourceOwnerId: operatorId,
+              sourceEntityId: operatorId,
               sourceSkillName: def.properties.id,
             };
           }

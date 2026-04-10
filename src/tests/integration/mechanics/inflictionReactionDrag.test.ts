@@ -37,20 +37,20 @@ function findEnemyStatusColumn(app: ReturnType<typeof useApp>) {
   return app.columns.find(
     (c): c is MiniTimeline =>
       c.type === ColumnType.MINI_TIMELINE &&
-      c.ownerId === ENEMY_ID &&
+      c.ownerEntityId === ENEMY_ID &&
       c.columnId === ENEMY_GROUP_COLUMNS.ENEMY_STATUS,
   );
 }
 
 function getInflictions(app: ReturnType<typeof useApp>, columnId: string) {
   return app.allProcessedEvents.filter(
-    (ev) => ev.columnId === columnId && ev.ownerId === ENEMY_ID,
+    (ev) => ev.columnId === columnId && ev.ownerEntityId === ENEMY_ID,
   );
 }
 
 function getReactions(app: ReturnType<typeof useApp>, columnId: string) {
   return app.allProcessedEvents.filter(
-    (ev) => ev.columnId === columnId && ev.ownerId === ENEMY_ID,
+    (ev) => ev.columnId === columnId && ev.ownerEntityId === ENEMY_ID,
   );
 }
 
@@ -79,15 +79,15 @@ function placeInfliction(
           || (i.actionPayload as Record<string, Record<string, unknown>>)?.defaultSkill?.id === inflictionColumnId),
     );
     expect(fallback).toBeDefined();
-    const payload = fallback!.actionPayload as { ownerId: string; columnId: string; atFrame: number; defaultSkill: Record<string, unknown> | null };
+    const payload = fallback!.actionPayload as { ownerEntityId: string; columnId: string; atFrame: number; defaultSkill: Record<string, unknown> | null };
     act(() => {
-      result.current.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+      result.current.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
     });
     return;
   }
-  const payload = item.actionPayload as { ownerId: string; columnId: string; atFrame: number; defaultSkill: Record<string, unknown> | null };
+  const payload = item.actionPayload as { ownerEntityId: string; columnId: string; atFrame: number; defaultSkill: Record<string, unknown> | null };
   act(() => {
-    result.current.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+    result.current.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
   });
 }
 

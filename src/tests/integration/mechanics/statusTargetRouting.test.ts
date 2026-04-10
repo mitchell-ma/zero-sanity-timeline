@@ -46,7 +46,7 @@ function findCommonColumn(app: AppResult, columnId: string) {
   return app.columns.find(
     (c): c is MiniTimeline =>
       c.type === ColumnType.MINI_TIMELINE &&
-      c.ownerId === TEAM_ID &&
+      c.ownerEntityId === TEAM_ID &&
       c.columnId === columnId,
   );
 }
@@ -59,7 +59,7 @@ function findMatchingColumn(app: AppResult, slotId: string, columnId: string) {
   return app.columns.find(
     (c): c is MiniTimeline =>
       c.type === ColumnType.MINI_TIMELINE &&
-      c.ownerId === slotId &&
+      c.ownerEntityId === slotId &&
       (c.columnId === columnId || (c.matchColumnIds?.includes(columnId) ?? false)),
   );
 }
@@ -83,7 +83,7 @@ function getLinkMenuPayload(app: AppResult, atFrame: number) {
   expect(linkItem).toBeDefined();
   expect(linkItem!.disabled).toBeFalsy();
 
-  return linkItem!.actionPayload as { ownerId: string; columnId: string; atFrame: number; defaultSkill: Record<string, unknown> };
+  return linkItem!.actionPayload as { ownerEntityId: string; columnId: string; atFrame: number; defaultSkill: Record<string, unknown> };
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -109,19 +109,19 @@ describe('Status target routing — effect to TEAM, config default TEAM', () => 
     const ultPayload = getMenuPayload(result.current, ultCol!, 1 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        ultPayload.ownerId, ultPayload.columnId, ultPayload.atFrame, ultPayload.defaultSkill,
+        ultPayload.ownerEntityId, ultPayload.columnId, ultPayload.atFrame, ultPayload.defaultSkill,
       );
     });
 
     // 2. Controller: LINK should appear under TEAM_ID with its own column ID
     const teamLinkEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === TEAM_ID && ev.columnId === StatusType.LINK,
+      (ev) => ev.ownerEntityId === TEAM_ID && ev.columnId === StatusType.LINK,
     );
     expect(teamLinkEvents.length).toBeGreaterThanOrEqual(1);
 
     // LINK should NOT appear on Akekuri's personal status columns
     const personalLinkEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_AKEKURI && ev.name === LINK_ID,
+      (ev) => ev.ownerEntityId === SLOT_AKEKURI && ev.name === LINK_ID,
     );
     expect(personalLinkEvents).toHaveLength(0);
   });
@@ -150,19 +150,19 @@ describe('Status target routing — effect to OPERATOR, config default OPERATOR'
     const battlePayload = getMenuPayload(result.current, battleCol!, 1 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        battlePayload.ownerId, battlePayload.columnId, battlePayload.atFrame, battlePayload.defaultSkill,
+        battlePayload.ownerEntityId, battlePayload.columnId, battlePayload.atFrame, battlePayload.defaultSkill,
       );
     });
 
     // 2. Controller: MELTING_FLAME should appear on Laevatain's personal column
     const mfEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === MELTING_FLAME_ID,
+      (ev) => ev.ownerEntityId === SLOT_LAEVATAIN && ev.columnId === MELTING_FLAME_ID,
     );
     expect(mfEvents.length).toBeGreaterThanOrEqual(1);
 
     // MELTING_FLAME should NOT appear on the team-status column
     const teamMfEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === TEAM_ID && ev.name === MELTING_FLAME_ID,
+      (ev) => ev.ownerEntityId === TEAM_ID && ev.name === MELTING_FLAME_ID,
     );
     expect(teamMfEvents).toHaveLength(0);
   });
@@ -185,13 +185,13 @@ describe('Status target routing — no effect target, uses config default', () =
 
     act(() => {
       result.current.handleAddEvent(
-        linkPayload.ownerId, linkPayload.columnId, linkPayload.atFrame, linkPayload.defaultSkill,
+        linkPayload.ownerEntityId, linkPayload.columnId, linkPayload.atFrame, linkPayload.defaultSkill,
       );
     });
 
     // 2. Controller: Should appear under TEAM_ID with LINK column ID
     const teamLinkEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === TEAM_ID && ev.columnId === StatusType.LINK && ev.name === StatusType.LINK,
+      (ev) => ev.ownerEntityId === TEAM_ID && ev.columnId === StatusType.LINK && ev.name === StatusType.LINK,
     );
     expect(teamLinkEvents.length).toBeGreaterThanOrEqual(1);
   });
@@ -210,19 +210,19 @@ describe('Status target routing — no effect target, uses config default', () =
     const battlePayload = getMenuPayload(result.current, battleCol!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        battlePayload.ownerId, battlePayload.columnId, battlePayload.atFrame, battlePayload.defaultSkill,
+        battlePayload.ownerEntityId, battlePayload.columnId, battlePayload.atFrame, battlePayload.defaultSkill,
       );
     });
 
     // 2. Controller: MELTING_FLAME should appear on Laevatain's personal column
     const personalMfEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === MELTING_FLAME_ID,
+      (ev) => ev.ownerEntityId === SLOT_LAEVATAIN && ev.columnId === MELTING_FLAME_ID,
     );
     expect(personalMfEvents.length).toBeGreaterThanOrEqual(1);
 
     // Should NOT appear on the team column
     const teamMfEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === TEAM_ID && ev.name === MELTING_FLAME_ID,
+      (ev) => ev.ownerEntityId === TEAM_ID && ev.name === MELTING_FLAME_ID,
     );
     expect(teamMfEvents).toHaveLength(0);
   });
@@ -255,7 +255,7 @@ describe('Status target routing — cross-operator consistency', () => {
     const ultPayload = getMenuPayload(result.current, ultCol!, 1 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        ultPayload.ownerId, ultPayload.columnId, ultPayload.atFrame, ultPayload.defaultSkill,
+        ultPayload.ownerEntityId, ultPayload.columnId, ultPayload.atFrame, ultPayload.defaultSkill,
       );
     });
 
@@ -263,28 +263,28 @@ describe('Status target routing — cross-operator consistency', () => {
     const battlePayload = getMenuPayload(result.current, battleCol!, 1 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        battlePayload.ownerId, battlePayload.columnId, battlePayload.atFrame, battlePayload.defaultSkill,
+        battlePayload.ownerEntityId, battlePayload.columnId, battlePayload.atFrame, battlePayload.defaultSkill,
       );
     });
 
     // 2. Controller: LINK → team column
     const teamLinkEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === TEAM_ID && ev.columnId === StatusType.LINK,
+      (ev) => ev.ownerEntityId === TEAM_ID && ev.columnId === StatusType.LINK,
     );
     expect(teamLinkEvents.length).toBeGreaterThanOrEqual(1);
 
     // Controller: MELTING_FLAME → Laevatain personal column
     const mfEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === MELTING_FLAME_ID,
+      (ev) => ev.ownerEntityId === SLOT_LAEVATAIN && ev.columnId === MELTING_FLAME_ID,
     );
     expect(mfEvents.length).toBeGreaterThanOrEqual(1);
 
     // Neither status on the wrong owner
     const teamMf = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === TEAM_ID && ev.name === MELTING_FLAME_ID,
+      (ev) => ev.ownerEntityId === TEAM_ID && ev.name === MELTING_FLAME_ID,
     );
     const personalLink = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_AKEKURI && ev.name === LINK_ID,
+      (ev) => ev.ownerEntityId === SLOT_AKEKURI && ev.name === LINK_ID,
     );
     expect(teamMf).toHaveLength(0);
     expect(personalLink).toHaveLength(0);

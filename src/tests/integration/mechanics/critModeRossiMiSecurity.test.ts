@@ -54,12 +54,12 @@ function addSkillEvents(app: AppResult) {
   const baCol = findColumn(app, SLOT_ROSSI, NounType.BASIC_ATTACK);
   expect(baCol).toBeDefined();
   const baPayload = getMenuPayload(app, baCol!, 1 * FPS);
-  app.handleAddEvent(baPayload.ownerId, baPayload.columnId, baPayload.atFrame, baPayload.defaultSkill);
+  app.handleAddEvent(baPayload.ownerEntityId, baPayload.columnId, baPayload.atFrame, baPayload.defaultSkill);
 
   const bsCol = findColumn(app, SLOT_ROSSI, NounType.BATTLE);
   expect(bsCol).toBeDefined();
   const bsPayload = getMenuPayload(app, bsCol!, 5 * FPS);
-  app.handleAddEvent(bsPayload.ownerId, bsPayload.columnId, bsPayload.atFrame, bsPayload.defaultSkill);
+  app.handleAddEvent(bsPayload.ownerEntityId, bsPayload.columnId, bsPayload.atFrame, bsPayload.defaultSkill);
 }
 
 function calcForMode(app: AppResult, mode: CritMode) {
@@ -75,7 +75,7 @@ function totalDamage(result: ReturnType<typeof runCalculation>) {
 
 function getDamageRows(app: AppResult, mode: CritMode) {
   return calcForMode(app, mode).rows
-    .filter(r => r.damage != null && r.damage > 0 && r.ownerId === SLOT_ROSSI)
+    .filter(r => r.damage != null && r.damage > 0 && r.ownerEntityId === SLOT_ROSSI)
     .sort((a, b) => a.absoluteFrame - b.absoluteFrame);
 }
 

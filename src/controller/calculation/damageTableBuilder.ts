@@ -58,7 +58,7 @@ export interface DamageTableRow {
   absoluteFrame: number;
   label: string;
   columnKey: string;
-  ownerId: string;
+  ownerEntityId: string;
   columnId: string;
   eventUid: string;
   segmentIndex: number;
@@ -89,7 +89,7 @@ export interface DamageTableRow {
 export interface DamageTableColumn {
   key: string;
   label: string;
-  ownerId: string;
+  ownerEntityId: string;
   columnId: string;
   color: string;
 }
@@ -106,7 +106,7 @@ export interface ColumnDamageStats {
 
 /** Per-operator damage statistics. */
 export interface OperatorDamageStats {
-  ownerId: string;
+  ownerEntityId: string;
   totalDamage: number;
   /** Percentage of team total. */
   teamPct: number;
@@ -123,7 +123,7 @@ export interface DamageStatistics {
   /** Boss max HP (null if enemy has no HP data). */
   bossMaxHp: number | null;
   /** Highest single-tick damage across all rows. */
-  highestTick: { damage: number; label: string; ownerId: string } | null;
+  highestTick: { damage: number; label: string; ownerEntityId: string } | null;
   /** Team DPS (total damage / last tick time in seconds). */
   teamDps: number | null;
   /** Frame at which boss HP reaches 0 (null if no boss or never killed). */
@@ -317,11 +317,11 @@ export function buildDamageTableRows(
   const rows: DamageTableRow[] = [];
   const resolvedCritMode = critMode ?? CritMode.EXPECTED;
 
-  // Build column lookup: ownerId-columnId → Column
+  // Build column lookup: ownerEntityId-columnId → Column
   const colLookup = new Map<string, MiniTimeline>();
   for (const col of columns) {
     if (col.type === ColumnType.MINI_TIMELINE && col.source === TimelineSourceType.OPERATOR) {
-      colLookup.set(`${col.ownerId}-${col.columnId}`, col);
+      colLookup.set(`${col.ownerEntityId}-${col.columnId}`, col);
     }
   }
 
@@ -393,8 +393,8 @@ export function buildDamageTableRows(
               allDamageFrameKeys.push({ absFrame, key });
             }
             if (isDot) continue; // DOT can't crit
-            let arr = ownerFrames.get(ev.ownerId);
-            if (!arr) { arr = []; ownerFrames.set(ev.ownerId, arr); }
+            let arr = ownerFrames.get(ev.ownerEntityId);
+            if (!arr) { arr = []; ownerFrames.set(ev.ownerEntityId, arr); }
             arr.push({ absFrame, key, isCrit: f.isCrit, isDot });
           }
         }
@@ -402,8 +402,8 @@ export function buildDamageTableRows(
       }
     }
     // Sort each owner's frames chronologically and step the model
-    ownerFrames.forEach((frames, ownerId) => {
-      const model = critModels.get(ownerId);
+    ownerFrames.forEach((frames, ownerEntityId) => {
+      const model = critModels.get(ownerEntityId);
       if (!model) return;
       frames.sort((a, b) => a.absFrame - b.absFrame);
       for (const fr of frames) {
@@ -431,15 +431,15 @@ export function buildDamageTableRows(
 
   for (const ev of events) {
     let effectiveColumnId = isUltEnhanced(ev.id) ? NounType.ULTIMATE : ev.columnId;
-    let col = colLookup.get(`${ev.ownerId}-${effectiveColumnId}`)
-      ?? colLookup.get(`${ev.ownerId}-${ev.columnId}`);
+    let col = colLookup.get(`${ev.ownerEntityId}-${effectiveColumnId}`)
+      ?? colLookup.get(`${ev.ownerEntityId}-${ev.columnId}`);
 
     // Enemy/status events with an operator source: attribute to the source operator's slot
     // (e.g. IMPROVISED_EXPLOSIVE explosion frame deals damage using source operator's stats).
     // Resolve skill type from the source skill's eventIdType so the damage row shows the
     // correct type (BATTLE_SKILL, not the status column ID).
-    let resolvedOwnerId = ev.ownerId;
-    if (!col && ev.ownerSlotId && ev.ownerSlotId !== ev.ownerId) {
+    let resolvedEntityId = ev.ownerEntityId;
+    if (!col && ev.ownerSlotId && ev.ownerSlotId !== ev.ownerEntityId) {
       // Use the source skill's column type (look up by sourceSkillName → eventIdType)
       const sourceSlotId = ev.ownerSlotId;
       const sourceSkillCol = ev.sourceSkillName
@@ -447,14 +447,14 @@ export function buildDamageTableRows(
         : NounType.BATTLE;
       col = colLookup.get(`${sourceSlotId}-${sourceSkillCol}`);
       effectiveColumnId = sourceSkillCol;
-      resolvedOwnerId = sourceSlotId;
+      resolvedEntityId = sourceSlotId;
     }
     if (!col) continue;
 
     const eventName = getEventDisplayName(ev.name);
-    const opData = opCache.get(resolvedOwnerId);
-    const operatorId = opIdCache.get(resolvedOwnerId);
-    const props = loadoutStats[resolvedOwnerId] ?? DEFAULT_LOADOUT_PROPERTIES;
+    const opData = opCache.get(resolvedEntityId);
+    const operatorId = opIdCache.get(resolvedEntityId);
+    const props = loadoutStats[resolvedEntityId] ?? DEFAULT_LOADOUT_PROPERTIES;
     const skillLevel = getSkillLevel(effectiveColumnId, props);
     const potential = (props.operator.potential ?? 5) as Potential;
 
@@ -485,7 +485,7 @@ export function buildDamageTableRows(
             // Runtime stat deltas from status effects (e.g. SF Minor APPLY STAT DAMAGE_BONUS HEAT)
             const accumulator = getLastStatAccumulator();
             const currentFrameKey = `${ev.uid}:${si}:${fi}`;
-            const runtimeDeltas = accumulator?.getFrameStatDeltas(currentFrameKey, ev.ownerId);
+            const runtimeDeltas = accumulator?.getFrameStatDeltas(currentFrameKey, ev.ownerEntityId);
 
             if (frame.frameSkipped) {
               // All conditional clauses evaluated and none matched — row shows "-"
@@ -508,7 +508,7 @@ export function buildDamageTableRows(
                 }
                 ctx.getStatusStacks = (statusId: string) => {
                   if (!statusQuery) return 0;
-                  return statusQuery.getActiveOperatorStatusStacks(absFrame, ev.ownerId, statusId);
+                  return statusQuery.getActiveOperatorStatusStacks(absFrame, ev.ownerEntityId, statusId);
                 };
                 ctx.getEnemyStatusStacks = (statusId: string) => {
                   if (!statusQuery) return 0;
@@ -648,7 +648,7 @@ export function buildDamageTableRows(
                   if (subCorrosionReduction > 0) {
                     resMultiplier += subCorrosionReduction / 100;
                   }
-                  subIgnoredRes = statusQuery.getIgnoredResistance(absFrame, element, ev.ownerId);
+                  subIgnoredRes = statusQuery.getIgnoredResistance(absFrame, element, ev.ownerEntityId);
                   if (subIgnoredRes > 0) {
                     resMultiplier += subIgnoredRes / 100;
                   }
@@ -720,8 +720,8 @@ export function buildDamageTableRows(
                   allFragilitySources: statusQuery ? buildAllElementSources(absFrame, statusQuery, 'fragility') : {},
                   susceptibilitySources: statusQuery?.getSusceptibilitySources(absFrame, element) ?? [],
                   allSusceptibilitySources: statusQuery ? buildAllElementSources(absFrame, statusQuery, 'susceptibility') : {},
-                  ampSources: buildAmpSources(statusQuery?.getAmpSources(absFrame) ?? [], rd, accumulator?.getFrameStatSources(currentFrameKey, ev.ownerId, StatType.AMP)),
-                  allAmpSources: { [ElementType.ARTS]: buildAmpSources(statusQuery?.getAmpSources(absFrame) ?? [], rd, accumulator?.getFrameStatSources(currentFrameKey, ev.ownerId, StatType.AMP)) },
+                  ampSources: buildAmpSources(statusQuery?.getAmpSources(absFrame) ?? [], rd, accumulator?.getFrameStatSources(currentFrameKey, ev.ownerEntityId, StatType.AMP)),
+                  allAmpSources: { [ElementType.ARTS]: buildAmpSources(statusQuery?.getAmpSources(absFrame) ?? [], rd, accumulator?.getFrameStatSources(currentFrameKey, ev.ownerEntityId, StatType.AMP)) },
                   weakenEffects: subWeakenEffects,
                   weakenSources: statusQuery?.getWeakenSources(absFrame) ?? [],
                   dmgReductionEffects: subDmgReductionEffects,
@@ -782,7 +782,7 @@ export function buildDamageTableRows(
               absoluteFrame: absFrame,
               label: `${eventName} > ${segLabel} > Frame ${fi + 1}`,
               columnKey: col.key,
-              ownerId: resolvedOwnerId,
+              ownerEntityId: resolvedEntityId,
               columnId: effectiveColumnId,
               eventUid: ev.uid,
               segmentIndex: si,
@@ -808,15 +808,15 @@ export function buildDamageTableRows(
   // Find reaction events on the enemy timeline and compute their damage
   // using the triggering operator's loadout.
   for (const ev of events) {
-    if (ev.ownerId !== ENEMY_ID || !REACTION_COLUMN_IDS.has(ev.columnId)) continue;
-    if (!ev.sourceOwnerId) continue;
+    if (ev.ownerEntityId !== ENEMY_ID || !REACTION_COLUMN_IDS.has(ev.columnId)) continue;
+    if (!ev.sourceEntityId) continue;
 
     // Look up triggering operator's calc data
-    const sourceOpData = opCache.get(ev.sourceOwnerId);
-    const sourceProps = loadoutStats[ev.sourceOwnerId] ?? DEFAULT_LOADOUT_PROPERTIES;
+    const sourceOpData = opCache.get(ev.sourceEntityId);
+    const sourceProps = loadoutStats[ev.sourceEntityId] ?? DEFAULT_LOADOUT_PROPERTIES;
     if (!sourceOpData || !modelEnemy) continue;
 
-    const sourceOperatorId = opIdCache.get(ev.sourceOwnerId) ?? undefined;
+    const sourceOperatorId = opIdCache.get(ev.sourceEntityId) ?? undefined;
     const opCtx: ReactionOperatorContext = {
       totalAttack: sourceOpData.totalAttack,
       artsIntensity: sourceOpData.stats[StatType.ARTS_INTENSITY] ?? 0,
@@ -826,9 +826,9 @@ export function buildDamageTableRows(
     };
 
     // Find a column key for this reaction — use the source operator's OTHER column
-    const sourceCol = colLookup.get(`${ev.sourceOwnerId}-${OPERATOR_COLUMNS.OTHER}`)
-      ?? colLookup.get(`${ev.sourceOwnerId}-basic`);
-    const columnKey = sourceCol ? sourceCol.key : `${ev.sourceOwnerId}-${ev.columnId}`;
+    const sourceCol = colLookup.get(`${ev.sourceEntityId}-${OPERATOR_COLUMNS.OTHER}`)
+      ?? colLookup.get(`${ev.sourceEntityId}-basic`);
+    const columnKey = sourceCol ? sourceCol.key : `${ev.sourceEntityId}-${ev.columnId}`;
 
     const reactionRows = buildReactionDamageRows(
       ev, opCtx, modelEnemy, columnKey, statusQuery,
@@ -867,7 +867,7 @@ export function buildDamageTableColumns(columns: Column[]): DamageTableColumn[] 
     result.push({
       key: col.key,
       label: col.label,
-      ownerId: col.ownerId,
+      ownerEntityId: col.ownerEntityId,
       columnId: col.columnId,
       color: col.color,
     });
@@ -921,7 +921,7 @@ export function mergeRowsByFrame(rows: DamageTableRow[]): MergedDamageRow[] {
 /** Collapsed column descriptor — one per operator, aggregating all skill columns. */
 export interface CollapsedColumn {
   key: string;
-  ownerId: string;
+  ownerEntityId: string;
   label: string;
   color: string;
   /** Original column keys that are collapsed into this one. */
@@ -933,19 +933,19 @@ export function buildCollapsedColumns(tableColumns: DamageTableColumn[], slots: 
   const ownerOrder: string[] = [];
   const ownerMap = new Map<string, DamageTableColumn[]>();
   for (const col of tableColumns) {
-    if (!ownerMap.has(col.ownerId)) {
-      ownerOrder.push(col.ownerId);
-      ownerMap.set(col.ownerId, []);
+    if (!ownerMap.has(col.ownerEntityId)) {
+      ownerOrder.push(col.ownerEntityId);
+      ownerMap.set(col.ownerEntityId, []);
     }
-    ownerMap.get(col.ownerId)!.push(col);
+    ownerMap.get(col.ownerEntityId)!.push(col);
   }
-  return ownerOrder.map((ownerId) => {
-    const cols = ownerMap.get(ownerId)!;
-    const slot = slots.find((s) => s.slotId === ownerId);
+  return ownerOrder.map((ownerEntityId) => {
+    const cols = ownerMap.get(ownerEntityId)!;
+    const slot = slots.find((s) => s.slotId === ownerEntityId);
     return {
-      key: `collapsed-${ownerId}`,
-      ownerId,
-      label: slot?.operator?.name ?? ownerId,
+      key: `collapsed-${ownerEntityId}`,
+      ownerEntityId,
+      label: slot?.operator?.name ?? ownerEntityId,
       color: cols[0]?.color ?? '#666',
       sourceColumnKeys: cols.map((c) => c.key),
     };
@@ -991,17 +991,17 @@ export function computeDamageStatistics(
   // Per-operator stats
   const operatorMap = new Map<string, { total: number; columns: Array<[string, number]> }>();
   for (const col of tableColumns) {
-    if (!operatorMap.has(col.ownerId)) {
-      operatorMap.set(col.ownerId, { total: 0, columns: [] });
+    if (!operatorMap.has(col.ownerEntityId)) {
+      operatorMap.set(col.ownerEntityId, { total: 0, columns: [] });
     }
     const colTotal = columnTotals.get(col.key) ?? 0;
-    const opEntry = operatorMap.get(col.ownerId)!;
+    const opEntry = operatorMap.get(col.ownerEntityId)!;
     opEntry.total += colTotal;
     opEntry.columns.push([col.key, colTotal]);
   }
 
   const operators: OperatorDamageStats[] = [];
-  operatorMap.forEach((data, ownerId) => {
+  operatorMap.forEach((data, ownerEntityId) => {
     const columns: ColumnDamageStats[] = [];
     for (const [colKey, colTotal] of data.columns) {
       columns.push({
@@ -1012,7 +1012,7 @@ export function computeDamageStatistics(
       });
     }
     operators.push({
-      ownerId,
+      ownerEntityId,
       totalDamage: data.total,
       teamPct: teamTotalDamage > 0 ? data.total / teamTotalDamage : 0,
       columns,
@@ -1024,7 +1024,7 @@ export function computeDamageStatistics(
   let highestTick: DamageStatistics['highestTick'] = null;
   for (const row of filteredRows) {
     if (row.damage != null && (highestTick === null || row.damage > highestTick.damage)) {
-      highestTick = { damage: row.damage, label: row.label, ownerId: row.ownerId };
+      highestTick = { damage: row.damage, label: row.label, ownerEntityId: row.ownerEntityId };
     }
   }
 

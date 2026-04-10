@@ -14,10 +14,10 @@ export class ComboSkillEventController {
     return event.columnId === NounType.COMBO;
   }
 
-  /** Get combo activation window events for a given ownerId from processed events. */
-  private static getWindows(ownerId: string, processedEvents: TimelineEvent[]): TimelineEvent[] {
+  /** Get combo activation window events for a given ownerEntityId from processed events. */
+  private static getWindows(ownerEntityId: string, processedEvents: TimelineEvent[]): TimelineEvent[] {
     return processedEvents.filter(
-      (ev) => ev.columnId === COMBO_WINDOW_COLUMN_ID && ev.ownerId === ownerId,
+      (ev) => ev.columnId === COMBO_WINDOW_COLUMN_ID && ev.ownerEntityId === ownerEntityId,
     );
   }
 
@@ -26,11 +26,11 @@ export class ComboSkillEventController {
    * Returns the window event or undefined if none matches.
    */
   static findWindowAt(
-    ownerId: string,
+    ownerEntityId: string,
     frame: number,
     processedEvents: TimelineEvent[],
   ): TimelineEvent | undefined {
-    const windows = this.getWindows(ownerId, processedEvents);
+    const windows = this.getWindows(ownerEntityId, processedEvents);
     for (const w of windows) {
       const endFrame = comboWindowEndFrame(w);
       if (frame >= w.startFrame && frame < endFrame) return w;
@@ -57,7 +57,7 @@ export class ComboSkillEventController {
   ): number {
     if (!this.isCombo(target) || !processedEvents) return newStartFrame;
 
-    const windows = this.getWindows(target.ownerId, processedEvents);
+    const windows = this.getWindows(target.ownerEntityId, processedEvents);
     if (windows.length === 0) return newStartFrame;
 
     // If already inside a window, allow it
@@ -94,7 +94,7 @@ export class ComboSkillEventController {
     processedEvents: TimelineEvent[] | null,
   ): string | undefined {
     if (!this.isCombo(target) || !processedEvents) return target.comboTriggerColumnId;
-    const window = this.findWindowAt(target.ownerId, atFrame, processedEvents);
+    const window = this.findWindowAt(target.ownerEntityId, atFrame, processedEvents);
     return window?.comboTriggerColumnId ?? target.comboTriggerColumnId;
   }
 

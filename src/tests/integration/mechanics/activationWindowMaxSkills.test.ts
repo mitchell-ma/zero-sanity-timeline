@@ -84,7 +84,7 @@ describe('B. maxSkills=1 enforcement', () => {
     placeHeatInfliction(result, 1);
 
     const windows = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === COMBO_WINDOW_COLUMN_ID && ev.ownerId === SLOT_WULFGARD,
+      (ev) => ev.columnId === COMBO_WINDOW_COLUMN_ID && ev.ownerEntityId === SLOT_WULFGARD,
     );
     expect(windows.length).toBeGreaterThanOrEqual(1);
     expect(windows[0].maxSkills).toBe(1);
@@ -107,12 +107,12 @@ describe('B. maxSkills=1 enforcement', () => {
     // Place the combo
     const payload = getMenuPayload(result.current, comboCol!, 3 * FPS);
     act(() => {
-      result.current.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+      result.current.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
     });
 
     // Verify combo exists
     const combos = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.COMBO,
+      (ev) => ev.ownerEntityId === SLOT_WULFGARD && ev.columnId === NounType.COMBO,
     );
     expect(combos).toHaveLength(1);
   });
@@ -126,7 +126,7 @@ describe('B. maxSkills=1 enforcement', () => {
     // Place first combo
     const payload = getMenuPayload(result.current, comboCol!, 3 * FPS);
     act(() => {
-      result.current.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+      result.current.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
     });
 
     // Second combo at different frame within window — should be disabled

@@ -125,14 +125,14 @@ describe('B. Cooldown', () => {
     const payload = getMenuPayload(result.current, comboCol!, 3 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId,
+        payload.ownerEntityId, payload.columnId,
         payload.atFrame, payload.defaultSkill,
       );
     });
 
     // Controller: cooldown segment exists and is ~20s (2400 frames)
     const combos = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.COMBO,
+      ev => ev.ownerEntityId === SLOT_WULFGARD && ev.columnId === NounType.COMBO,
     );
     expect(combos).toHaveLength(1);
     const cdSeg = combos[0].segments.find(
@@ -154,7 +154,7 @@ describe('B. Cooldown', () => {
     const payload = getMenuPayload(result.current, comboCol!, 3 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId,
+        payload.ownerEntityId, payload.columnId,
         payload.atFrame, payload.defaultSkill,
       );
     });
@@ -182,21 +182,21 @@ describe('C. Combo Frame Effects', () => {
 
     // Count heat inflictions before combo
     const heatsBefore = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerId === ENEMY_ID,
+      ev => ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerEntityId === ENEMY_ID,
     ).length;
 
     const comboCol = findColumn(result.current, SLOT_WULFGARD, NounType.COMBO);
     const payload = getMenuPayload(result.current, comboCol!, 3 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId,
+        payload.ownerEntityId, payload.columnId,
         payload.atFrame, payload.defaultSkill,
       );
     });
 
     // Controller: additional heat infliction(s) from combo
     const heatsAfter = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerId === ENEMY_ID,
+      ev => ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerEntityId === ENEMY_ID,
     );
     expect(heatsAfter.length).toBeGreaterThan(heatsBefore);
 
@@ -204,7 +204,7 @@ describe('C. Combo Frame Effects', () => {
     const enemyStatusCol = result.current.columns.find(
       (c): c is MiniTimeline =>
         c.type === ColumnType.MINI_TIMELINE &&
-        c.ownerId === ENEMY_ID &&
+        c.ownerEntityId === ENEMY_ID &&
         c.columnId === ENEMY_GROUP_COLUMNS.ENEMY_STATUS,
     );
     expect(enemyStatusCol).toBeDefined();
@@ -228,7 +228,7 @@ describe('C. Combo Frame Effects', () => {
     const payload = getMenuPayload(result.current, comboCol!, 3 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId,
+        payload.ownerEntityId, payload.columnId,
         payload.atFrame, payload.defaultSkill,
       );
     });
@@ -241,7 +241,7 @@ describe('C. Combo Frame Effects', () => {
     const comboVM = viewModels.get(comboCol!.key);
     expect(comboVM).toBeDefined();
     expect(comboVM!.events.some(
-      ev => ev.name === COMBO_ID && ev.ownerId === SLOT_WULFGARD,
+      ev => ev.name === COMBO_ID && ev.ownerEntityId === SLOT_WULFGARD,
     )).toBe(true);
   });
 });
@@ -294,7 +294,7 @@ describe('E. Multi-Operator Trigger', () => {
     const akekuriPayload = getMenuPayload(result.current, akekuriBattleCol, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        akekuriPayload.ownerId, akekuriPayload.columnId,
+        akekuriPayload.ownerEntityId, akekuriPayload.columnId,
         akekuriPayload.atFrame, akekuriPayload.defaultSkill,
       );
     });
@@ -304,14 +304,14 @@ describe('E. Multi-Operator Trigger', () => {
     const comboPayload = getMenuPayload(result.current, comboCol!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        comboPayload.ownerId, comboPayload.columnId,
+        comboPayload.ownerEntityId, comboPayload.columnId,
         comboPayload.atFrame, comboPayload.defaultSkill,
       );
     });
 
     // Controller: combo placed
     const combos = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_WULFGARD && ev.columnId === NounType.COMBO,
+      ev => ev.ownerEntityId === SLOT_WULFGARD && ev.columnId === NounType.COMBO,
     );
     expect(combos).toHaveLength(1);
 
@@ -322,6 +322,6 @@ describe('E. Multi-Operator Trigger', () => {
     );
     const comboVM = viewModels.get(comboCol!.key);
     expect(comboVM).toBeDefined();
-    expect(comboVM!.events.some(ev => ev.ownerId === SLOT_WULFGARD)).toBe(true);
+    expect(comboVM!.events.some(ev => ev.ownerEntityId === SLOT_WULFGARD)).toBe(true);
   });
 });

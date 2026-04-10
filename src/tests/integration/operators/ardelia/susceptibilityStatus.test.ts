@@ -33,11 +33,11 @@ const SLOT_ARDELIA = 'slot-3';
  * Find a column by owner whose matchColumnIds includes the given columnId.
  * Used for unified columns (enemy status) that collect events via matchColumnIds.
  */
-function findMatchingColumn(app: AppResult, ownerId: string, matchId: string) {
+function findMatchingColumn(app: AppResult, ownerEntityId: string, matchId: string) {
   return app.columns.find(
     (c): c is MiniTimeline =>
       c.type === ColumnType.MINI_TIMELINE &&
-      c.ownerId === ownerId &&
+      c.ownerEntityId === ownerEntityId &&
       (c.matchColumnIds?.includes(matchId) ?? false),
   );
 }
@@ -66,7 +66,7 @@ describe('Ardelia Dolly Rush — Susceptibility Status', () => {
       const basicPayload = getMenuPayload(result.current, basicCol!, 0);
       act(() => {
         result.current.handleAddEvent(
-          basicPayload.ownerId, basicPayload.columnId, basicPayload.atFrame, basicPayload.defaultSkill,
+          basicPayload.ownerEntityId, basicPayload.columnId, basicPayload.atFrame, basicPayload.defaultSkill,
         );
       });
 
@@ -74,13 +74,13 @@ describe('Ardelia Dolly Rush — Susceptibility Status', () => {
       const comboPayload = getMenuPayload(result.current, comboCol!, 10 * FPS);
       act(() => {
         result.current.handleAddEvent(
-          comboPayload.ownerId, comboPayload.columnId, comboPayload.atFrame, comboPayload.defaultSkill,
+          comboPayload.ownerEntityId, comboPayload.columnId, comboPayload.atFrame, comboPayload.defaultSkill,
         );
       });
 
       // Verify corrosion exists on enemy before battle skill
       const corrosionBefore = result.current.allProcessedEvents.filter(
-        ev => ev.columnId === REACTION_COLUMNS.CORROSION && ev.ownerId === ENEMY_ID,
+        ev => ev.columnId === REACTION_COLUMNS.CORROSION && ev.ownerEntityId === ENEMY_ID,
       );
       expect(corrosionBefore.length).toBeGreaterThan(0);
 
@@ -88,14 +88,14 @@ describe('Ardelia Dolly Rush — Susceptibility Status', () => {
       const battlePayload = getMenuPayload(result.current, battleCol!, 15 * FPS);
       act(() => {
         result.current.handleAddEvent(
-          battlePayload.ownerId, battlePayload.columnId, battlePayload.atFrame, battlePayload.defaultSkill,
+          battlePayload.ownerEntityId, battlePayload.columnId, battlePayload.atFrame, battlePayload.defaultSkill,
         );
       });
 
       // ── Controller layer ────────────────────────────────────────────
       // Verify susceptibility statuses on enemy
       const susceptEvents = result.current.allProcessedEvents.filter(
-        ev => isQualifiedId(ev.columnId, NounType.SUSCEPTIBILITY) && ev.ownerId === ENEMY_ID,
+        ev => isQualifiedId(ev.columnId, NounType.SUSCEPTIBILITY) && ev.ownerEntityId === ENEMY_ID,
       );
 
       // Should have 2 events: one Physical, one Arts
@@ -134,7 +134,7 @@ describe('Ardelia Dolly Rush — Susceptibility Status', () => {
       expect(vm).toBeDefined();
 
       const susceptInVM = vm!.events.filter(
-        ev => isQualifiedId(ev.columnId, NounType.SUSCEPTIBILITY) && ev.ownerId === ENEMY_ID,
+        ev => isQualifiedId(ev.columnId, NounType.SUSCEPTIBILITY) && ev.ownerEntityId === ENEMY_ID,
       );
       expect(susceptInVM).toHaveLength(2);
 
@@ -157,13 +157,13 @@ describe('Ardelia Dolly Rush — Susceptibility Status', () => {
       // Battle skill without prior corrosion
       act(() => {
         result.current.handleAddEvent(
-          battlePayload.ownerId, battlePayload.columnId, battlePayload.atFrame, battlePayload.defaultSkill,
+          battlePayload.ownerEntityId, battlePayload.columnId, battlePayload.atFrame, battlePayload.defaultSkill,
         );
       });
 
       // No susceptibility should appear
       const susceptEvents = result.current.allProcessedEvents.filter(
-        ev => isQualifiedId(ev.columnId, NounType.SUSCEPTIBILITY) && ev.ownerId === ENEMY_ID,
+        ev => isQualifiedId(ev.columnId, NounType.SUSCEPTIBILITY) && ev.ownerEntityId === ENEMY_ID,
       );
       expect(susceptEvents).toHaveLength(0);
     });
@@ -187,26 +187,26 @@ describe('Ardelia Dolly Rush — Susceptibility Status', () => {
       const basicPayload = getMenuPayload(result.current, basicCol!, 0);
       act(() => {
         result.current.handleAddEvent(
-          basicPayload.ownerId, basicPayload.columnId, basicPayload.atFrame, basicPayload.defaultSkill,
+          basicPayload.ownerEntityId, basicPayload.columnId, basicPayload.atFrame, basicPayload.defaultSkill,
         );
       });
 
       const comboPayload = getMenuPayload(result.current, comboCol!, 10 * FPS);
       act(() => {
         result.current.handleAddEvent(
-          comboPayload.ownerId, comboPayload.columnId, comboPayload.atFrame, comboPayload.defaultSkill,
+          comboPayload.ownerEntityId, comboPayload.columnId, comboPayload.atFrame, comboPayload.defaultSkill,
         );
       });
 
       const battlePayload = getMenuPayload(result.current, battleCol!, 15 * FPS);
       act(() => {
         result.current.handleAddEvent(
-          battlePayload.ownerId, battlePayload.columnId, battlePayload.atFrame, battlePayload.defaultSkill,
+          battlePayload.ownerEntityId, battlePayload.columnId, battlePayload.atFrame, battlePayload.defaultSkill,
         );
       });
 
       const susceptEvents = result.current.allProcessedEvents.filter(
-        ev => isQualifiedId(ev.columnId, NounType.SUSCEPTIBILITY) && ev.ownerId === ENEMY_ID,
+        ev => isQualifiedId(ev.columnId, NounType.SUSCEPTIBILITY) && ev.ownerEntityId === ENEMY_ID,
       );
       expect(susceptEvents).toHaveLength(2);
     });
@@ -241,13 +241,13 @@ describe('Ardelia Dolly Rush — Susceptibility Status', () => {
       expect(corrosionItem!.disabled).toBeFalsy();
 
       const corrosionPayload = corrosionItem!.actionPayload as {
-        ownerId: string; columnId: string; atFrame: number; defaultSkill: Record<string, unknown>;
+        ownerEntityId: string; columnId: string; atFrame: number; defaultSkill: Record<string, unknown>;
       };
 
       // Place corrosion via freeform context menu
       act(() => {
         result.current.handleAddEvent(
-          corrosionPayload.ownerId, corrosionPayload.columnId, corrosionPayload.atFrame, corrosionPayload.defaultSkill,
+          corrosionPayload.ownerEntityId, corrosionPayload.columnId, corrosionPayload.atFrame, corrosionPayload.defaultSkill,
         );
       });
 
@@ -260,12 +260,12 @@ describe('Ardelia Dolly Rush — Susceptibility Status', () => {
       const battlePayload = getMenuPayload(result.current, battleCol!, 12 * FPS);
       act(() => {
         result.current.handleAddEvent(
-          battlePayload.ownerId, battlePayload.columnId, battlePayload.atFrame, battlePayload.defaultSkill,
+          battlePayload.ownerEntityId, battlePayload.columnId, battlePayload.atFrame, battlePayload.defaultSkill,
         );
       });
 
       const susceptEvents = result.current.allProcessedEvents.filter(
-        ev => isQualifiedId(ev.columnId, NounType.SUSCEPTIBILITY) && ev.ownerId === ENEMY_ID,
+        ev => isQualifiedId(ev.columnId, NounType.SUSCEPTIBILITY) && ev.ownerEntityId === ENEMY_ID,
       );
       expect(susceptEvents).toHaveLength(2);
     });
@@ -293,26 +293,26 @@ describe('Ardelia Dolly Rush — Susceptibility Status', () => {
       const basicPayload = getMenuPayload(result.current, basicCol!, 0);
       act(() => {
         result.current.handleAddEvent(
-          basicPayload.ownerId, basicPayload.columnId, basicPayload.atFrame, basicPayload.defaultSkill,
+          basicPayload.ownerEntityId, basicPayload.columnId, basicPayload.atFrame, basicPayload.defaultSkill,
         );
       });
 
       const comboPayload = getMenuPayload(result.current, comboCol!, 10 * FPS);
       act(() => {
         result.current.handleAddEvent(
-          comboPayload.ownerId, comboPayload.columnId, comboPayload.atFrame, comboPayload.defaultSkill,
+          comboPayload.ownerEntityId, comboPayload.columnId, comboPayload.atFrame, comboPayload.defaultSkill,
         );
       });
 
       const battlePayload = getMenuPayload(result.current, battleCol!, 15 * FPS);
       act(() => {
         result.current.handleAddEvent(
-          battlePayload.ownerId, battlePayload.columnId, battlePayload.atFrame, battlePayload.defaultSkill,
+          battlePayload.ownerEntityId, battlePayload.columnId, battlePayload.atFrame, battlePayload.defaultSkill,
         );
       });
 
       const susceptEvents = result.current.allProcessedEvents.filter(
-        ev => isQualifiedId(ev.columnId, NounType.SUSCEPTIBILITY) && ev.ownerId === ENEMY_ID,
+        ev => isQualifiedId(ev.columnId, NounType.SUSCEPTIBILITY) && ev.ownerEntityId === ENEMY_ID,
       );
       expect(susceptEvents).toHaveLength(2);
 

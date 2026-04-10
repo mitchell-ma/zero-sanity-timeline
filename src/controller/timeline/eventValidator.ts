@@ -24,7 +24,7 @@ import { getLastController } from './eventQueueController';
 export type TimeStopRegion = {
   startFrame: number;
   durationFrames: number;
-  ownerId: string;
+  ownerEntityId: string;
   sourceColumnId: string;
 };
 
@@ -34,12 +34,12 @@ export type TimeStopRegion = {
  */
 export function hasEnableClauseAtFrame(
   events: readonly TimelineEvent[],
-  ownerId: string,
+  ownerEntityId: string,
   variantId: string,
   atFrame: number,
 ): boolean {
   for (const ev of events) {
-    if (ev.ownerId !== ownerId) continue;
+    if (ev.ownerEntityId !== ownerEntityId) continue;
     let cursor = ev.startFrame;
     for (const seg of ev.segments) {
       const segEnd = cursor + seg.properties.duration;
@@ -61,11 +61,11 @@ export function hasEnableClauseAtFrame(
  */
 function isEnableGated(
   events: readonly TimelineEvent[],
-  ownerId: string,
+  ownerEntityId: string,
   variantId: string,
   slots?: Slot[],
 ): boolean {
-  const slot = slots?.find(s => s.slotId === ownerId);
+  const slot = slots?.find(s => s.slotId === ownerEntityId);
   const opId = slot?.operator?.id;
   if (opId) {
     const skillMap = getOperatorSkills(opId);
@@ -85,7 +85,7 @@ function isEnableGated(
   }
   // Fallback: check placed events (for non-operator-owned events or custom skills)
   for (const ev of events) {
-    if (ev.ownerId !== ownerId) continue;
+    if (ev.ownerEntityId !== ownerEntityId) continue;
     for (const seg of ev.segments) {
       if (!seg.clause) continue;
       if (seg.clause.some(c => c.effects.some(e =>
@@ -104,12 +104,12 @@ function isEnableGated(
  */
 function hasDisableAtFrame(
   events: readonly TimelineEvent[],
-  ownerId: string,
+  ownerEntityId: string,
   variantId: string,
   atFrame: number,
 ): boolean {
   for (const ev of events) {
-    if (ev.ownerId !== ownerId) continue;
+    if (ev.ownerEntityId !== ownerEntityId) continue;
     let cursor = ev.startFrame;
     for (const seg of ev.segments) {
       const segEnd = cursor + seg.properties.duration;
@@ -134,13 +134,13 @@ function hasDisableAtFrame(
  */
 export function getDisabledSegmentIndices(
   events: readonly TimelineEvent[],
-  ownerId: string,
+  ownerEntityId: string,
   variantId: string,
   atFrame: number,
 ): Set<number> {
   const disabled = new Set<number>();
   for (const ev of events) {
-    if (ev.ownerId !== ownerId) continue;
+    if (ev.ownerEntityId !== ownerEntityId) continue;
     let cursor = ev.startFrame;
     for (const seg of ev.segments) {
       const segEnd = cursor + seg.properties.duration;
@@ -169,7 +169,7 @@ export function computeTimeStopRegions(events: TimelineEvent[]): TimeStopRegion[
     const isTimeStop = ev.columnId === NounType.ULTIMATE || ev.columnId === NounType.COMBO ||
       (ev.columnId === OPERATOR_COLUMNS.INPUT && ev.isPerfectDodge);
     if (!isTimeStop) continue;
-    stops.push({ startFrame: ev.startFrame, durationFrames: anim, ownerId: ev.ownerId, sourceColumnId: ev.columnId });
+    stops.push({ startFrame: ev.startFrame, durationFrames: anim, ownerEntityId: ev.ownerEntityId, sourceColumnId: ev.columnId });
   }
   return stops;
 }
@@ -345,7 +345,7 @@ export function computeResourceZonesForDrag(
   for (const ev of events) {
     if (!draggedIds.has(ev.uid)) continue;
     if (ev.columnId === NounType.ULTIMATE) {
-      const ultKey = `${ev.ownerId}-${NounType.ULTIMATE}`;
+      const ultKey = `${ev.ownerEntityId}-${NounType.ULTIMATE}`;
       const graph = resourceGraphs.get(ultKey);
       if (graph) {
         const arr = ultExclusions.get(ultKey) ?? [];
@@ -440,7 +440,7 @@ export function clampDeltaByResourceZones(
 ): number {
   const ev = events.find((e) => e.uid === eventUid);
   if (!ev || (ev.columnId !== NounType.BATTLE && ev.columnId !== NounType.ULTIMATE)) return clampedDelta;
-  const zones = resourceZones.get(`${ev.ownerId}:${ev.columnId}`);
+  const zones = resourceZones.get(`${ev.ownerEntityId}:${ev.columnId}`);
   if (!zones || zones.length === 0) return clampedDelta;
 
   const target = startFrame + clampedDelta;
@@ -514,13 +514,13 @@ export type ResourceAvailability = {
  */
 export function checkResourceAvailability(
   columnId: string,
-  ownerId: string,
+  ownerEntityId: string,
   atFrame: number,
   resourceGraphs: Map<string, ResourceGraphData>,
   slots: Slot[],
 ): ResourceAvailability {
   if (columnId === NounType.ULTIMATE) {
-    const ultKey = `${ownerId}-${NounType.ULTIMATE}`;
+    const ultKey = `${ownerEntityId}-${NounType.ULTIMATE}`;
     const graph = resourceGraphs.get(ultKey);
     if (graph) {
       const val = preConsumptionValue(graph, atFrame);
@@ -529,7 +529,7 @@ export function checkResourceAvailability(
       }
     }
   } else if (columnId === NounType.BATTLE) {
-    const slot = slots.find((s) => s.slotId === ownerId);
+    const slot = slots.find((s) => s.slotId === ownerEntityId);
     const spCost = slot?.operator?.skills[NounType.BATTLE]?.skillPointCost ?? 100;
     const spKey = `${TEAM_ID}-${COMMON_COLUMN_IDS.SKILL_POINTS}`;
     const spGraph = resourceGraphs.get(spKey);
@@ -558,7 +558,7 @@ export function wouldSegmentAdditionOverlap(
   const newRange = currentRange + addedDurationFrames;
 
   return events.some((sib) => {
-    if (sib.uid === event.uid || sib.ownerId !== event.ownerId || sib.columnId !== event.columnId) return false;
+    if (sib.uid === event.uid || sib.ownerEntityId !== event.ownerEntityId || sib.columnId !== event.columnId) return false;
     const sibRange = sib.nonOverlappableRange
       ?? (sib.segments ? computeSegmentsSpan(sib.segments) : 0);
     if (sibRange > 0 && event.startFrame >= sib.startFrame && event.startFrame < sib.startFrame + sibRange) return true;
@@ -579,7 +579,7 @@ export function isDuplicatePlacementInResourceZone(
   resourceZones: Map<string, ResourceZone[]>,
 ): boolean {
   if (event.columnId !== NounType.BATTLE && event.columnId !== NounType.ULTIMATE) return false;
-  const zones = resourceZones.get(`${event.ownerId}:${event.columnId}`);
+  const zones = resourceZones.get(`${event.ownerEntityId}:${event.columnId}`);
   if (!zones) return false;
   return zones.some((z) => ghostFrame >= z.start && ghostFrame < z.end);
 }
@@ -612,7 +612,7 @@ export function clampDeltaByComboWindow(
   }
 
   const windows = processedEvents.filter(
-    (e) => e.columnId === COMBO_WINDOW_COLUMN_ID && e.ownerId === ev.ownerId,
+    (e) => e.columnId === COMBO_WINDOW_COLUMN_ID && e.ownerEntityId === ev.ownerEntityId,
   );
   if (windows.length === 0) return clampedDelta;
 
@@ -666,7 +666,7 @@ export function clampDeltaByComboWindow(
  * events in the same column, using nonOverlappableRange from segments.
  */
 export function wouldOverlapSiblings(
-  ownerId: string,
+  ownerEntityId: string,
   columnId: string,
   atFrame: number,
   range: number,
@@ -678,7 +678,7 @@ export function wouldOverlapSiblings(
   let windowEnd = -1;
   if (columnId === NounType.COMBO) {
     for (const w of events) {
-      if (w.columnId !== COMBO_WINDOW_COLUMN_ID || w.ownerId !== ownerId) continue;
+      if (w.columnId !== COMBO_WINDOW_COLUMN_ID || w.ownerEntityId !== ownerEntityId) continue;
       if ((w.maxSkills ?? 1) <= 1) continue;
       const wEnd = eventEndFrame(w);
       if (atFrame >= w.startFrame && atFrame < wEnd) {
@@ -689,7 +689,7 @@ export function wouldOverlapSiblings(
     }
   }
   return events.some((sib) => {
-    if (sib.ownerId !== ownerId || sib.columnId !== columnId) return false;
+    if (sib.ownerEntityId !== ownerEntityId || sib.columnId !== columnId) return false;
     if (windowEnd > 0 && sib.columnId === NounType.COMBO &&
         sib.startFrame >= windowStart && sib.startFrame < windowEnd) return false;
     const sibRange = sib.nonOverlappableRange ?? computeSegmentsSpan(sib.segments);
@@ -778,17 +778,17 @@ export type ComboWindowAvailability = {
  * - Always-available combo operators bypass window checks
  */
 export function checkComboWindowAvailability(
-  ownerId: string,
+  ownerEntityId: string,
   atFrame: number,
   events: TimelineEvent[],
   alwaysAvailableSlots: Set<string>,
 ): ComboWindowAvailability {
-  if (alwaysAvailableSlots.has(ownerId)) {
+  if (alwaysAvailableSlots.has(ownerEntityId)) {
     return { available: true };
   }
 
   const windowEvents = events.filter(
-    (ev) => ev.columnId === COMBO_WINDOW_COLUMN_ID && ev.ownerId === ownerId,
+    (ev) => ev.columnId === COMBO_WINDOW_COLUMN_ID && ev.ownerEntityId === ownerEntityId,
   );
   const matchingWindow = windowEvents.find((w) => {
     const endFrame = eventEndFrame(w);
@@ -803,7 +803,7 @@ export function checkComboWindowAvailability(
   // Count only combos whose event (including CD) hasn't ended before atFrame
   let activeCount = 0;
   for (const ev of events) {
-    if (ev.columnId === NounType.COMBO && ev.ownerId === ownerId &&
+    if (ev.columnId === NounType.COMBO && ev.ownerEntityId === ownerEntityId &&
         ev.startFrame >= matchingWindow.startFrame && ev.startFrame < windowEnd &&
         eventEndFrame(ev) > atFrame) {
       activeCount++;
@@ -895,13 +895,13 @@ export type VariantAvailability = {
  */
 export function checkVariantAvailability(
   variantName: string,
-  ownerId: string,
+  ownerEntityId: string,
   events: TimelineEvent[],
   atFrame: number,
   columnId?: string,
   slots?: Slot[],
 ): VariantAvailability {
-  const slot = slots?.find((s) => s.slotId === ownerId);
+  const slot = slots?.find((s) => s.slotId === ownerEntityId);
   const opId = slot?.operator?.id;
 
   // Evaluate segment clause conditions (e.g. variant-specific activation rules)
@@ -910,7 +910,7 @@ export function checkVariantAvailability(
     if (clause) {
       const dec = getLastController();
       const result = evaluateActivationClause(
-        clause, events, ownerId, atFrame,
+        clause, events, ownerEntityId, atFrame,
         dec ? (id, frame) => dec.isControlledAt(id, frame) : undefined,
       );
       if (!result.pass) return { disabled: true, reason: result.reason };
@@ -920,19 +920,19 @@ export function checkVariantAvailability(
   // ENABLE-gated variant: if any skill definition has an ENABLE clause for this variant,
   // require an active ENABLE at the current frame. This replaces enhancementType checks —
   // the ENABLE/DISABLE system on segment clauses is the sole gating mechanism.
-  if (isEnableGated(events, ownerId, variantName, slots)) {
-    if (!hasEnableClauseAtFrame(events, ownerId, variantName, atFrame)) {
+  if (isEnableGated(events, ownerEntityId, variantName, slots)) {
+    if (!hasEnableClauseAtFrame(events, ownerEntityId, variantName, atFrame)) {
       return { disabled: true, reason: t('ctx.activationNotMet') };
     }
   }
 
   // Any variant blocked by a DISABLE clause targeting this variant ID
-  if (hasDisableAtFrame(events, ownerId, variantName, atFrame)) {
+  if (hasDisableAtFrame(events, ownerEntityId, variantName, atFrame)) {
     return { disabled: true, reason: `${variantName} disabled during this window` };
   }
 
   // Segment-level DISABLE: collect indices that are individually disabled
-  const disabledSegments = getDisabledSegmentIndices(events, ownerId, variantName, atFrame);
+  const disabledSegments = getDisabledSegmentIndices(events, ownerEntityId, variantName, atFrame);
 
   return { disabled: false, ...(disabledSegments.size > 0 ? { disabledSegments } : {}) };
 }
@@ -956,8 +956,8 @@ export function validateComboWindows(
   for (const ev of events) {
     if (draggingIds?.has(ev.uid)) continue;
     if (ev.columnId !== NounType.COMBO) continue;
-    if (alwaysAvailable.has(ev.ownerId)) continue;
-    const ownerWindows = windowEvents.filter((w) => w.ownerId === ev.ownerId);
+    if (alwaysAvailable.has(ev.ownerEntityId)) continue;
+    const ownerWindows = windowEvents.filter((w) => w.ownerEntityId === ev.ownerEntityId);
     if (ownerWindows.length === 0) {
       map.set(ev.uid, 'No combo trigger window available');
       continue;
@@ -986,8 +986,8 @@ export function validateComboWindows(
     for (const ev of events) {
       if (!draggingIds.has(ev.uid)) continue;
       if (ev.columnId !== NounType.COMBO) continue;
-      if (alwaysAvailable.has(ev.ownerId)) continue;
-      const ownerWindows = windowEvents.filter((w) => w.ownerId === ev.ownerId);
+      if (alwaysAvailable.has(ev.ownerEntityId)) continue;
+      const ownerWindows = windowEvents.filter((w) => w.ownerEntityId === ev.ownerEntityId);
       if (ownerWindows.length === 0) {
         map.set(ev.uid, 'No combo trigger window available');
         continue;
@@ -1024,7 +1024,7 @@ export function validateResources(
   for (const ev of events) {
     if (skipIds?.has(ev.uid)) continue;
     if (ev.columnId === NounType.ULTIMATE) {
-      const ultKey = `${ev.ownerId}-${NounType.ULTIMATE}`;
+      const ultKey = `${ev.ownerEntityId}-${NounType.ULTIMATE}`;
       const graph = resourceGraphs.get(ultKey);
       if (!graph) continue;
       const val = preConsumptionValue(graph, ev.startFrame);
@@ -1048,7 +1048,7 @@ export function validateEmpowered(events: TimelineEvent[], slots: Slot[]): Map<s
   const map = new Map<string, string>();
   for (const ev of events) {
     if (ev.enhancementType !== EnhancementType.EMPOWERED) continue;
-    const slot = slots.find((s) => s.slotId === ev.ownerId);
+    const slot = slots.find((s) => s.slotId === ev.ownerEntityId);
     const opId = slot?.operator?.id;
     if (!opId) continue;
     // Empowered activation is governed by activationClause on the skill JSON
@@ -1056,7 +1056,7 @@ export function validateEmpowered(events: TimelineEvent[], slots: Slot[]): Map<s
     if (clause) {
       const dec = getLastController();
       const result = evaluateActivationClause(
-        clause, events, ev.ownerId, ev.startFrame,
+        clause, events, ev.ownerEntityId, ev.startFrame,
         dec ? (id, frame) => dec.isControlledAt(id, frame) : undefined,
       );
       if (!result.pass) {
@@ -1072,7 +1072,7 @@ export function validateEnhanced(events: TimelineEvent[], slots?: Slot[]): Map<s
   for (const ev of events) {
     if (ev.columnId === NounType.ULTIMATE) continue;
     // Only validate ENABLE-gated variants (those with an ENABLE clause somewhere)
-    if (!isEnableGated(events, ev.ownerId, ev.id, slots)) continue;
+    if (!isEnableGated(events, ev.ownerEntityId, ev.id, slots)) continue;
 
     // Collect all segment start frames; fall back to event start if no segments
     const segStarts: number[] = [];
@@ -1088,7 +1088,7 @@ export function validateEnhanced(events: TimelineEvent[], slots?: Slot[]): Map<s
 
     // Every segment start must fall within an active ENABLE clause targeting this variant
     for (const frame of segStarts) {
-      if (!hasEnableClauseAtFrame(events, ev.ownerId, ev.id, frame)) {
+      if (!hasEnableClauseAtFrame(events, ev.ownerEntityId, ev.id, frame)) {
         map.set(ev.uid, 'Enhanced skill must be within an active ENABLE effect');
         break;
       }
@@ -1120,12 +1120,12 @@ export function validateDisabledVariants(events: TimelineEvent[]): Map<string, s
 
     for (const frame of segStarts) {
       // Full variant DISABLE
-      if (hasDisableAtFrame(events, ev.ownerId, ev.id, frame)) {
+      if (hasDisableAtFrame(events, ev.ownerEntityId, ev.id, frame)) {
         map.set(ev.uid, t('ctx.variantDisabled'));
         break;
       }
       // Segment-level DISABLE: check if the placed segment(s) are in the disabled set
-      const disabledSegs = getDisabledSegmentIndices(events, ev.ownerId, ev.id, frame);
+      const disabledSegs = getDisabledSegmentIndices(events, ev.ownerEntityId, ev.id, frame);
       if (disabledSegs.size > 0) {
         const origins = ev.segmentOrigin;
         if (origins) {
@@ -1181,21 +1181,21 @@ function getVariantClause(operatorId: string, variantName: string): Predicate[] 
 function evaluateActivationClause(
   clause: Predicate[],
   events: readonly TimelineEvent[],
-  ownerId: string,
+  ownerEntityId: string,
   atFrame: number,
   isControlledAt?: (id: string, frame: number) => boolean,
 ): { pass: boolean; reason?: string } {
   // Build unique owner IDs from events for controlled-slot resolution
-  const ownerIds = isControlledAt ? Array.from(new Set(events.map(ev => ev.ownerId))) : undefined;
+  const ownerIds = isControlledAt ? Array.from(new Set(events.map(ev => ev.ownerEntityId))) : undefined;
   const condCtx: ConditionContext = {
     events,
     frame: atFrame,
-    sourceOwnerId: ownerId,
+    sourceEntityId: ownerEntityId,
     getControlledSlotAtFrame: isControlledAt && ownerIds ? (frame) => {
       for (const id of ownerIds) {
         if (isControlledAt(id, frame)) return id;
       }
-      return ownerId;
+      return ownerEntityId;
     } : undefined,
   };
 
@@ -1229,7 +1229,7 @@ export function validateVariantClauses(
 
   for (const ev of events) {
     if (!ev.id) continue;
-    const operatorId = slotOperatorId.get(ev.ownerId);
+    const operatorId = slotOperatorId.get(ev.ownerEntityId);
     if (!operatorId) continue;
 
     const clause = getVariantClause(operatorId, ev.id);
@@ -1238,7 +1238,7 @@ export function validateVariantClauses(
     const dec = getLastController();
 
     const result = evaluateActivationClause(
-      clause, events, ev.ownerId, ev.startFrame,
+      clause, events, ev.ownerEntityId, ev.startFrame,
       dec ? (id, frame) => dec.isControlledAt(id, frame) : undefined,
     );
     if (!result.pass) {
@@ -1411,7 +1411,7 @@ export function validateInflictionStacks(events: TimelineEvent[]): Map<string, s
 
   const inflictionsByColumn = new Map<string, TimelineEvent[]>();
   for (const ev of events) {
-    if (ev.ownerId === ENEMY_ID && INFLICTION_COLUMN_IDS.has(ev.columnId)) {
+    if (ev.ownerEntityId === ENEMY_ID && INFLICTION_COLUMN_IDS.has(ev.columnId)) {
       const group = inflictionsByColumn.get(ev.columnId) ?? [];
       group.push(ev);
       inflictionsByColumn.set(ev.columnId, group);

@@ -83,7 +83,7 @@ function findEnemyStatusColumn(app: AppResult) {
   return app.columns.find(
     (c): c is MiniTimeline =>
       c.type === ColumnType.MINI_TIMELINE &&
-      c.ownerId === ENEMY_ID &&
+      c.ownerEntityId === ENEMY_ID &&
       c.columnId === ENEMY_GROUP_COLUMNS.ENEMY_STATUS,
   );
 }
@@ -111,11 +111,11 @@ describe('A. Basic Attack', () => {
 
     const payload = getMenuPayload(result.current, col!, 1 * FPS);
     act(() => {
-      result.current.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+      result.current.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
     });
 
     const events = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_ROSSI && ev.columnId === NounType.BASIC_ATTACK,
+      ev => ev.ownerEntityId === SLOT_ROSSI && ev.columnId === NounType.BASIC_ATTACK,
     );
     expect(events).toHaveLength(1);
     expect(events[0].name).toBe(BA_ID);
@@ -151,13 +151,13 @@ describe('A. Basic Attack', () => {
     const diveItem = menu!.find(i => i.actionId === 'addEvent' && i.label?.includes('Dive'));
     expect(diveItem).toBeDefined();
     expect(diveItem!.disabled).toBeFalsy();
-    const divePayload = diveItem!.actionPayload as { ownerId: string; columnId: string; atFrame: number; defaultSkill: Record<string, unknown> };
+    const divePayload = diveItem!.actionPayload as { ownerEntityId: string; columnId: string; atFrame: number; defaultSkill: Record<string, unknown> };
     act(() => {
-      result.current.handleAddEvent(divePayload.ownerId, divePayload.columnId, divePayload.atFrame, divePayload.defaultSkill);
+      result.current.handleAddEvent(divePayload.ownerEntityId, divePayload.columnId, divePayload.atFrame, divePayload.defaultSkill);
     });
 
     const events = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_ROSSI && ev.columnId === NounType.BASIC_ATTACK,
+      ev => ev.ownerEntityId === SLOT_ROSSI && ev.columnId === NounType.BASIC_ATTACK,
     );
     expect(events).toHaveLength(1);
   });
@@ -175,11 +175,11 @@ describe('B. Battle Skill — Base', () => {
 
     const payload = getMenuPayload(result.current, col!, 2 * FPS);
     act(() => {
-      result.current.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+      result.current.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
     });
 
     const events = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_ROSSI && ev.columnId === NounType.BATTLE,
+      ev => ev.ownerEntityId === SLOT_ROSSI && ev.columnId === NounType.BATTLE,
     );
     expect(events).toHaveLength(1);
     expect(events[0].name).toBe(BS_ID);
@@ -193,11 +193,11 @@ describe('B. Battle Skill — Base', () => {
     const col = findColumn(result.current, SLOT_ROSSI, NounType.BATTLE);
     const payload = getMenuPayload(result.current, col!, 2 * FPS);
     act(() => {
-      result.current.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+      result.current.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
     });
 
     const events = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_ROSSI && ev.columnId === NounType.BATTLE,
+      ev => ev.ownerEntityId === SLOT_ROSSI && ev.columnId === NounType.BATTLE,
     );
     expect(events[0].segments[0].frames).toHaveLength(3);
   });
@@ -207,7 +207,7 @@ describe('B. Battle Skill — Base', () => {
     const col = findColumn(result.current, SLOT_ROSSI, NounType.BATTLE);
     const payload = getMenuPayload(result.current, col!, 2 * FPS);
     act(() => {
-      result.current.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+      result.current.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
     });
 
     const viewModels = computeTimelinePresentation(result.current.allProcessedEvents, result.current.columns);
@@ -255,13 +255,13 @@ describe('C. Battle Skill — Empowered', () => {
     const empItem = menu!.find(i => i.actionId === 'addEvent' && i.label?.includes('Empowered'));
     expect(empItem).toBeDefined();
     expect(empItem!.disabled).toBeFalsy();
-    const empPayload = empItem!.actionPayload as { ownerId: string; columnId: string; atFrame: number; defaultSkill: Record<string, unknown> };
+    const empPayload = empItem!.actionPayload as { ownerEntityId: string; columnId: string; atFrame: number; defaultSkill: Record<string, unknown> };
     act(() => {
-      result.current.handleAddEvent(empPayload.ownerId, empPayload.columnId, empPayload.atFrame, empPayload.defaultSkill);
+      result.current.handleAddEvent(empPayload.ownerEntityId, empPayload.columnId, empPayload.atFrame, empPayload.defaultSkill);
     });
 
     const events = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_ROSSI && ev.columnId === NounType.BATTLE,
+      ev => ev.ownerEntityId === SLOT_ROSSI && ev.columnId === NounType.BATTLE,
     );
     expect(events).toHaveLength(1);
     expect(events[0].name).toBe(BS_EMP_ID);
@@ -277,14 +277,14 @@ describe('C. Battle Skill — Empowered', () => {
     const empItem = menu!.find(i => i.actionId === 'addEvent' && i.label?.includes('Empowered'));
     expect(empItem).toBeDefined();
     expect(empItem!.disabled).toBeFalsy();
-    const empPayload = empItem!.actionPayload as { ownerId: string; columnId: string; atFrame: number; defaultSkill: Record<string, unknown> };
+    const empPayload = empItem!.actionPayload as { ownerEntityId: string; columnId: string; atFrame: number; defaultSkill: Record<string, unknown> };
     act(() => {
-      result.current.handleAddEvent(empPayload.ownerId, empPayload.columnId, empPayload.atFrame, empPayload.defaultSkill);
+      result.current.handleAddEvent(empPayload.ownerEntityId, empPayload.columnId, empPayload.atFrame, empPayload.defaultSkill);
     });
 
     // Razor Clawmark should appear on enemy
     const clawmarkEvents = result.current.allProcessedEvents.filter(
-      ev => ev.name === RAZOR_CLAWMARK_ID && ev.ownerId === ENEMY_ID,
+      ev => ev.name === RAZOR_CLAWMARK_ID && ev.ownerEntityId === ENEMY_ID,
     );
     expect(clawmarkEvents.length).toBeGreaterThanOrEqual(1);
 
@@ -312,11 +312,11 @@ describe('D. Ultimate', () => {
 
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
-      result.current.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+      result.current.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
     });
 
     const events = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_ROSSI && ev.columnId === NounType.ULTIMATE,
+      ev => ev.ownerEntityId === SLOT_ROSSI && ev.columnId === NounType.ULTIMATE,
     );
     expect(events).toHaveLength(1);
     expect(events[0].name).toBe(ULT_ID);
@@ -328,11 +328,11 @@ describe('D. Ultimate', () => {
     const col = findColumn(result.current, SLOT_ROSSI, NounType.ULTIMATE);
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
-      result.current.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+      result.current.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
     });
 
     const events = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_ROSSI && ev.columnId === NounType.ULTIMATE,
+      ev => ev.ownerEntityId === SLOT_ROSSI && ev.columnId === NounType.ULTIMATE,
     );
     expect(events[0].segments).toHaveLength(ULT_JSON.segments.length);
   });
@@ -343,11 +343,11 @@ describe('D. Ultimate', () => {
     const col = findColumn(result.current, SLOT_ROSSI, NounType.ULTIMATE);
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
-      result.current.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+      result.current.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
     });
 
     const events = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_ROSSI && ev.columnId === NounType.ULTIMATE,
+      ev => ev.ownerEntityId === SLOT_ROSSI && ev.columnId === NounType.ULTIMATE,
     );
     // Segment 0 = animation (no frames), segment 1 = stab flurry with 25 frames
     expect(events[0].segments[0].frames ?? []).toHaveLength(0);
@@ -360,11 +360,11 @@ describe('D. Ultimate', () => {
     const col = findColumn(result.current, SLOT_ROSSI, NounType.ULTIMATE);
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
-      result.current.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+      result.current.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
     });
 
     const events = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_ROSSI && ev.columnId === NounType.ULTIMATE,
+      ev => ev.ownerEntityId === SLOT_ROSSI && ev.columnId === NounType.ULTIMATE,
     );
     // Segment 2 = slash with 3 frames
     expect(events[0].segments[2].frames).toHaveLength(3);
@@ -376,12 +376,12 @@ describe('D. Ultimate', () => {
     const col = findColumn(result.current, SLOT_ROSSI, NounType.ULTIMATE);
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
-      result.current.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+      result.current.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
     });
 
     // Heat infliction should appear on enemy
     const inflictionEvents = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerId === ENEMY_ID,
+      ev => ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerEntityId === ENEMY_ID,
     );
     expect(inflictionEvents.length).toBeGreaterThanOrEqual(1);
   });
@@ -392,7 +392,7 @@ describe('D. Ultimate', () => {
     const col = findColumn(result.current, SLOT_ROSSI, NounType.ULTIMATE);
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
-      result.current.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+      result.current.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
     });
 
     const viewModels = computeTimelinePresentation(result.current.allProcessedEvents, result.current.columns);
@@ -416,11 +416,11 @@ describe('E. Potential Effects', () => {
     const col = findColumn(result.current, SLOT_ROSSI, NounType.ULTIMATE);
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
-      result.current.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+      result.current.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
     });
 
     const eventsP0 = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_ROSSI && ev.columnId === NounType.ULTIMATE,
+      ev => ev.ownerEntityId === SLOT_ROSSI && ev.columnId === NounType.ULTIMATE,
     );
     const costP0 = eventsP0[0].skillPointCost;
 
@@ -428,7 +428,7 @@ describe('E. Potential Effects', () => {
     setPotential(result, 4);
 
     const eventsP4 = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_ROSSI && ev.columnId === NounType.ULTIMATE,
+      ev => ev.ownerEntityId === SLOT_ROSSI && ev.columnId === NounType.ULTIMATE,
     );
     const costP4 = eventsP4[0].skillPointCost;
 
@@ -463,11 +463,11 @@ describe('G. Physical Status — Lift', () => {
     const col = findColumn(result.current, SLOT_ROSSI, NounType.BATTLE);
     const payload = getMenuPayload(result.current, col!, 2 * FPS);
     act(() => {
-      result.current.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+      result.current.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
     });
 
     const liftEvents = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === PhysicalStatusType.LIFT && ev.ownerId === ENEMY_ID,
+      ev => ev.columnId === PhysicalStatusType.LIFT && ev.ownerEntityId === ENEMY_ID,
     );
     expect(liftEvents.length).toBeGreaterThanOrEqual(1);
   });
@@ -481,13 +481,13 @@ describe('G. Physical Status — Lift', () => {
     const empItem = menu!.find(i => i.actionId === 'addEvent' && i.label?.includes('Empowered'));
     expect(empItem).toBeDefined();
     expect(empItem!.disabled).toBeFalsy();
-    const empPayload = empItem!.actionPayload as { ownerId: string; columnId: string; atFrame: number; defaultSkill: Record<string, unknown> };
+    const empPayload = empItem!.actionPayload as { ownerEntityId: string; columnId: string; atFrame: number; defaultSkill: Record<string, unknown> };
     act(() => {
-      result.current.handleAddEvent(empPayload.ownerId, empPayload.columnId, empPayload.atFrame, empPayload.defaultSkill);
+      result.current.handleAddEvent(empPayload.ownerEntityId, empPayload.columnId, empPayload.atFrame, empPayload.defaultSkill);
     });
 
     const liftEvents = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === PhysicalStatusType.LIFT && ev.ownerId === ENEMY_ID,
+      ev => ev.columnId === PhysicalStatusType.LIFT && ev.ownerEntityId === ENEMY_ID,
     );
     expect(liftEvents.length).toBeGreaterThanOrEqual(1);
   });
@@ -507,13 +507,13 @@ describe('H. Razor Clawmark', () => {
     const empItem = menu!.find(i => i.actionId === 'addEvent' && i.label?.includes('Empowered'));
     expect(empItem).toBeDefined();
     expect(empItem!.disabled).toBeFalsy();
-    const empPayload = empItem!.actionPayload as { ownerId: string; columnId: string; atFrame: number; defaultSkill: Record<string, unknown> };
+    const empPayload = empItem!.actionPayload as { ownerEntityId: string; columnId: string; atFrame: number; defaultSkill: Record<string, unknown> };
     act(() => {
-      result.current.handleAddEvent(empPayload.ownerId, empPayload.columnId, empPayload.atFrame, empPayload.defaultSkill);
+      result.current.handleAddEvent(empPayload.ownerEntityId, empPayload.columnId, empPayload.atFrame, empPayload.defaultSkill);
     });
 
     const clawmarkEvents = result.current.allProcessedEvents.filter(
-      ev => ev.name === RAZOR_CLAWMARK_ID && ev.ownerId === ENEMY_ID,
+      ev => ev.name === RAZOR_CLAWMARK_ID && ev.ownerEntityId === ENEMY_ID,
     );
     expect(clawmarkEvents.length).toBeGreaterThanOrEqual(1);
     // Duration should be non-zero (scales with talent level: 0/15/25s)
@@ -566,12 +566,12 @@ describe('K. Cross-skill interaction chain', () => {
     const ultCol = findColumn(result.current, SLOT_ROSSI, NounType.ULTIMATE);
     const ultPayload = getMenuPayload(result.current, ultCol!, 1 * FPS);
     act(() => {
-      result.current.handleAddEvent(ultPayload.ownerId, ultPayload.columnId, ultPayload.atFrame, ultPayload.defaultSkill);
+      result.current.handleAddEvent(ultPayload.ownerEntityId, ultPayload.columnId, ultPayload.atFrame, ultPayload.defaultSkill);
     });
 
     // Verify Heat Infliction exists on enemy — this is the Arts Infliction needed for combo trigger
     const inflictions = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerId === ENEMY_ID,
+      ev => ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerEntityId === ENEMY_ID,
     );
     expect(inflictions.length).toBeGreaterThanOrEqual(1);
   });
@@ -585,9 +585,9 @@ describe('K. Cross-skill interaction chain', () => {
     const empItem = menu!.find(i => i.actionId === 'addEvent' && i.label?.includes('Empowered'));
     expect(empItem).toBeDefined();
     expect(empItem!.disabled).toBeFalsy();
-    const empPayload = empItem!.actionPayload as { ownerId: string; columnId: string; atFrame: number; defaultSkill: Record<string, unknown> };
+    const empPayload = empItem!.actionPayload as { ownerEntityId: string; columnId: string; atFrame: number; defaultSkill: Record<string, unknown> };
     act(() => {
-      result.current.handleAddEvent(empPayload.ownerId, empPayload.columnId, empPayload.atFrame, empPayload.defaultSkill);
+      result.current.handleAddEvent(empPayload.ownerEntityId, empPayload.columnId, empPayload.atFrame, empPayload.defaultSkill);
     });
 
     // Three-layer: verify Razor Clawmark in view
@@ -622,13 +622,13 @@ describe('L. BA Finisher', () => {
     expect(finisherItem).toBeDefined();
     // Finisher may require preceding BA segments — skip placement if disabled
     if (finisherItem!.disabled) return;
-    const payload = finisherItem!.actionPayload as { ownerId: string; columnId: string; atFrame: number; defaultSkill: Record<string, unknown> };
+    const payload = finisherItem!.actionPayload as { ownerEntityId: string; columnId: string; atFrame: number; defaultSkill: Record<string, unknown> };
     act(() => {
-      result.current.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+      result.current.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
     });
 
     const events = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_ROSSI && ev.columnId === NounType.BASIC_ATTACK,
+      ev => ev.ownerEntityId === SLOT_ROSSI && ev.columnId === NounType.BASIC_ATTACK,
     );
     expect(events).toHaveLength(1);
     // Finisher has 1 segment with 3 frames (10:10:80 weight)

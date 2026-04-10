@@ -68,7 +68,7 @@ function getCooldownDuration(
   columnId: string,
 ) {
   const ev = events.find(
-    (e) => e.ownerId === slotId && e.columnId === columnId,
+    (e) => e.ownerEntityId === slotId && e.columnId === columnId,
   );
   if (!ev) return undefined;
   const cdSeg = ev.segments.find(
@@ -155,13 +155,13 @@ describe('Chen Qianyu — P3 damage multiplier', () => {
 
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     // Controller layer: event was placed
     const bsEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_CHEN && ev.columnId === NounType.BATTLE,
+      (ev) => ev.ownerEntityId === SLOT_CHEN && ev.columnId === NounType.BATTLE,
     );
     expect(bsEvents).toHaveLength(1);
 
@@ -173,7 +173,7 @@ describe('Chen Qianyu — P3 damage multiplier', () => {
     const colVm = viewModels.get(battleCol!.key);
     expect(colVm).toBeDefined();
     expect(colVm!.events.filter(
-      (ev) => ev.ownerId === SLOT_CHEN && ev.columnId === NounType.BATTLE,
+      (ev) => ev.ownerEntityId === SLOT_CHEN && ev.columnId === NounType.BATTLE,
     )).toHaveLength(1);
   });
 });
@@ -191,7 +191,7 @@ describe('Chen Qianyu — P5 combo cooldown reduction', () => {
     const payload = getMenuPayload(result.current, comboCol!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
@@ -209,7 +209,7 @@ describe('Chen Qianyu — P5 combo cooldown reduction', () => {
     const colVm = viewModels.get(comboCol!.key);
     expect(colVm).toBeDefined();
     expect(colVm!.events.filter(
-      (ev) => ev.ownerId === SLOT_CHEN && ev.columnId === NounType.COMBO,
+      (ev) => ev.ownerEntityId === SLOT_CHEN && ev.columnId === NounType.COMBO,
     )).toHaveLength(1);
   });
 
@@ -224,7 +224,7 @@ describe('Chen Qianyu — P5 combo cooldown reduction', () => {
     const payload = getMenuPayload(result.current, comboCol!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
@@ -242,7 +242,7 @@ describe('Chen Qianyu — P5 combo cooldown reduction', () => {
     const colVm = viewModels.get(comboCol!.key);
     expect(colVm).toBeDefined();
     expect(colVm!.events.filter(
-      (ev) => ev.ownerId === SLOT_CHEN && ev.columnId === NounType.COMBO,
+      (ev) => ev.ownerEntityId === SLOT_CHEN && ev.columnId === NounType.COMBO,
     )).toHaveLength(1);
   });
 
@@ -257,7 +257,7 @@ describe('Chen Qianyu — P5 combo cooldown reduction', () => {
     const payload = getMenuPayload(result.current, comboCol!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 

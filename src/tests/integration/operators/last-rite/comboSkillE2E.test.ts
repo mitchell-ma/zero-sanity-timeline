@@ -56,14 +56,14 @@ function placeCryoInflictions(app: AppResult, count: number, startFrame: number)
 
 function getCryoInflictions(app: AppResult) {
   return app.allProcessedEvents.filter(
-    ev => ev.columnId === INFLICTION_COLUMNS.CRYO && ev.ownerId === ENEMY_ID
+    ev => ev.columnId === INFLICTION_COLUMNS.CRYO && ev.ownerEntityId === ENEMY_ID
       && ev.startFrame > 0,
   );
 }
 
 function getComboEvents(app: AppResult) {
   return app.allProcessedEvents.filter(
-    ev => ev.ownerId === SLOT_LR && ev.columnId === NounType.COMBO,
+    ev => ev.ownerEntityId === SLOT_LR && ev.columnId === NounType.COMBO,
   );
 }
 
@@ -118,7 +118,7 @@ describe('B. Combo activation window — sufficient inflictions', () => {
     expect(col).toBeDefined();
     const payload = getMenuPayload(result.current, col!, 3 * FPS);
     act(() => {
-      result.current.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+      result.current.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
     });
 
     const combos = getComboEvents(result.current);
@@ -163,7 +163,7 @@ describe('C. Combo consumes cryo infliction stacks', () => {
     const col = findColumn(result.current, SLOT_LR, NounType.COMBO);
     const payload = getMenuPayload(result.current, col!, 3 * FPS);
     act(() => {
-      result.current.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+      result.current.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
     });
 
     // After combo, cryo inflictions should be consumed

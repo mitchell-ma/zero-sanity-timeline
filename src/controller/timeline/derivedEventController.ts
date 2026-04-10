@@ -147,8 +147,8 @@ export class DerivedEventController implements ColumnHost {
     this.slotOperatorMap = slotOperatorMap ?? {};
   }
 
-  private key(columnId: string, ownerId: string) {
-    return `${columnId}:${ownerId}`;
+  private key(columnId: string, ownerEntityId: string) {
+    return `${columnId}:${ownerEntityId}`;
   }
 
   // ── Resource controller passthroughs (for the interpretor) ──────────────
@@ -157,9 +157,9 @@ export class DerivedEventController implements ColumnHost {
   // application has a single hub. These methods are no-ops if the resource
   // controller hasn't been wired in (e.g. cheap test setups).
 
-  recordSkillPointRecovery(frame: number, amount: number, sourceOwnerId: string, sourceSkillName: string) {
+  recordSkillPointRecovery(frame: number, amount: number, sourceEntityId: string, sourceSkillName: string) {
     if (this.spController && amount > 0) {
-      this.spController.addRecovery(frame, amount, sourceOwnerId, sourceSkillName);
+      this.spController.addRecovery(frame, amount, sourceEntityId, sourceSkillName);
     }
   }
 
@@ -365,7 +365,7 @@ export class DerivedEventController implements ColumnHost {
    */
   private _checkCooldown(ev: TimelineEvent): boolean {
     for (const prev of this.allEvents) {
-      if (prev.ownerId !== ev.ownerId || prev.columnId !== ev.columnId) continue;
+      if (prev.ownerEntityId !== ev.ownerEntityId || prev.columnId !== ev.columnId) continue;
       if (prev.uid === ev.uid) continue;
       const prevEnd = prev.startFrame + computeSegmentsSpan(prev.segments);
       if (prev.startFrame <= ev.startFrame && ev.startFrame < prevEnd) {
@@ -420,10 +420,10 @@ export class DerivedEventController implements ColumnHost {
         this.openComboWindow(
           wiring,
           match.frame,
-          match.sourceOwnerId,
+          match.sourceEntityId,
           match.sourceSkillName,
           match.sourceColumnId,
-          match.originOwnerId,
+          match.originEntityId,
           match.triggerStacks,
           match.sourceEventUid,
         );
@@ -442,7 +442,7 @@ export class DerivedEventController implements ColumnHost {
    * Reactively open (or extend) a combo activation window on the given slot.
    * Single source of truth for combo window emission.
    *
-   * - Silently drops self-triggers (originOwnerId === wiring.slotId).
+   * - Silently drops self-triggers (originEntityId === wiring.slotId).
    * - Silently drops if the slot's combo skill is on cooldown at triggerFrame.
    * - Extends an existing COMBO_WINDOW event on the same slot when the match
    *   overlaps it (respecting combo-event-end boundary splits — if a combo
@@ -455,19 +455,19 @@ export class DerivedEventController implements ColumnHost {
   openComboWindow(
     wiring: SlotTriggerWiring,
     triggerFrame: number,
-    sourceOwnerId: string,
+    sourceEntityId: string,
     sourceSkillName: string,
     sourceColumnId: string | undefined,
-    originOwnerId: string | undefined,
+    originEntityId: string | undefined,
     triggerStacks: number | undefined,
     triggerEventUid?: string,
   ): void {
     // Self-trigger skip
-    if (originOwnerId === wiring.slotId) return;
+    if (originEntityId === wiring.slotId) return;
 
     // CD check: if any combo event on this slot is on cooldown at triggerFrame, drop.
     for (const ce of this.allEvents) {
-      if (ce.columnId !== NounType.COMBO || ce.ownerId !== wiring.slotId) continue;
+      if (ce.columnId !== NounType.COMBO || ce.ownerEntityId !== wiring.slotId) continue;
       const eventSpan = computeSegmentsSpan(ce.segments);
       let preCooldownDur = 0;
       for (const s of ce.segments) {
@@ -489,7 +489,7 @@ export class DerivedEventController implements ColumnHost {
     // Time-stop extension, excluding the slot's own combo-originated stops
     const ownComboStopIds = new Set<string>();
     for (const ev of this.allEvents) {
-      if (ev.columnId === NounType.COMBO && ev.ownerId === wiring.slotId && isTimeStopEvent(ev)) {
+      if (ev.columnId === NounType.COMBO && ev.ownerEntityId === wiring.slotId && isTimeStopEvent(ev)) {
         ownComboStopIds.add(ev.uid);
       }
     }
@@ -505,7 +505,7 @@ export class DerivedEventController implements ColumnHost {
     let mergeTarget: TimelineEvent | null = null;
     let latestStart = -1;
     for (const ev of this.allEvents) {
-      if (ev.columnId !== COMBO_WINDOW_COLUMN_ID || ev.ownerId !== wiring.slotId) continue;
+      if (ev.columnId !== COMBO_WINDOW_COLUMN_ID || ev.ownerEntityId !== wiring.slotId) continue;
       if (ev.startFrame > latestStart) {
         latestStart = ev.startFrame;
         mergeTarget = ev;
@@ -519,7 +519,7 @@ export class DerivedEventController implements ColumnHost {
         // trigger frame, keep windows separate (matches batch-derive semantics).
         const mt = mergeTarget;
         const comboSplit = this.allEvents.some(ce => {
-          if (ce.columnId !== NounType.COMBO || ce.ownerId !== wiring.slotId) return false;
+          if (ce.columnId !== NounType.COMBO || ce.ownerEntityId !== wiring.slotId) return false;
           const ceEnd = ce.startFrame + computeSegmentsSpan(ce.segments);
           return ceEnd > mt.startFrame && ceEnd <= triggerFrame;
         });
@@ -537,17 +537,17 @@ export class DerivedEventController implements ColumnHost {
 
     // Create a new COMBO_WINDOW event and append to registered events.
     const existingCount = this.allEvents.reduce(
-      (n, ev) => (ev.columnId === COMBO_WINDOW_COLUMN_ID && ev.ownerId === wiring.slotId ? n + 1 : n),
+      (n, ev) => (ev.columnId === COMBO_WINDOW_COLUMN_ID && ev.ownerEntityId === wiring.slotId ? n + 1 : n),
       0,
     );
     const newWindow: TimelineEvent = {
       uid: `combo-window-${wiring.slotId}-${existingCount}-${triggerFrame}`,
       id: COMBO_WINDOW_COLUMN_ID,
       name: COMBO_WINDOW_COLUMN_ID,
-      ownerId: wiring.slotId,
+      ownerEntityId: wiring.slotId,
       columnId: COMBO_WINDOW_COLUMN_ID,
       startFrame: triggerFrame,
-      sourceOwnerId: sourceOwnerId,
+      sourceEntityId: sourceEntityId,
       sourceSkillName: sourceSkillName,
       // Combo windows bypass _ingest (intentional — they're markers, not
       // real events), so we stamp owner fields + causality link inline.
@@ -573,7 +573,7 @@ export class DerivedEventController implements ColumnHost {
   private _applyComboWindowToCombos(win: TimelineEvent, slotId: string) {
     const winEnd = win.startFrame + computeSegmentsSpan(win.segments);
     for (const ev of this.allEvents) {
-      if (ev.columnId !== NounType.COMBO || ev.ownerId !== slotId) continue;
+      if (ev.columnId !== NounType.COMBO || ev.ownerEntityId !== slotId) continue;
       if (ev.startFrame < win.startFrame || ev.startFrame >= winEnd) continue;
       if (ev.comboTriggerColumnId == null && win.comboTriggerColumnId != null) {
         ev.comboTriggerColumnId = win.comboTriggerColumnId;
@@ -601,11 +601,11 @@ export class DerivedEventController implements ColumnHost {
       if (ev.columnId === NounType.BATTLE && ev.skillPointCost) {
         const firstFrame = ev.segments[0]?.frames?.[0];
         const ultimateEnergyGainFrame = firstFrame?.absoluteFrame ?? ev.startFrame;
-        this.spController.addCost(ev.uid, ev.startFrame, ev.skillPointCost, ev.ownerId, ultimateEnergyGainFrame);
+        this.spController.addCost(ev.uid, ev.startFrame, ev.skillPointCost, ev.ownerEntityId, ultimateEnergyGainFrame);
       }
 
       // SP recovery events (derived from deriveSPRecoveryEvents)
-      if (ev.ownerId === TEAM_ID && ev.columnId === COMMON_COLUMN_IDS.SKILL_POINTS) {
+      if (ev.ownerEntityId === TEAM_ID && ev.columnId === COMMON_COLUMN_IDS.SKILL_POINTS) {
         this.spController.addSpRecoveryEvent(ev);
       }
 
@@ -613,7 +613,7 @@ export class DerivedEventController implements ColumnHost {
       if (ev.columnId === OPERATOR_COLUMNS.INPUT && ev.isPerfectDodge) {
         this.spController.addRecovery(
           ev.startFrame, GENERAL_MECHANICS.skillPoints.perfectDodgeRecovery,
-          ev.ownerId, ev.id,
+          ev.ownerEntityId, ev.id,
         );
       }
     }
@@ -621,18 +621,18 @@ export class DerivedEventController implements ColumnHost {
     // ── UE notifications ──────────────────────────────────────────────────
     // All frame-level UE gains are now routed via interpret() → doRecover →
     // DEC.recordUltimateEnergyGain. The four scan blocks (combo/battle/ultimate
-    // frames) and the derived-status sourceOwnerId routing block were deleted
+    // frames) and the derived-status sourceEntityId routing block were deleted
     // as part of Phase 0a — they were the parallel write path that caused the
     // double-UE-gain bug. The interpreter resolves the source slot from
-    // ev.sourceOwnerId at handleProcessFrame ctx-build time.
+    // ev.sourceEntityId at handleProcessFrame ctx-build time.
     if (this.ueController) {
       // Ultimate event → consume + no-gain windows (event-level only,
       // frame-level UE gain comes through the clause path)
       if (ev.columnId === NounType.ULTIMATE) {
-        this.ueController.addConsume(ev.startFrame, ev.ownerId);
+        this.ueController.addConsume(ev.startFrame, ev.ownerEntityId);
         const windows = collectNoGainWindowsForEvent(ev);
         for (const w of windows) {
-          this.ueController.addNoGainWindow(w.start, w.end, ev.ownerId);
+          this.ueController.addNoGainWindow(w.start, w.end, ev.ownerEntityId);
         }
       }
       // IGNORE ULTIMATE_ENERGY: previously detected via status def lookup
@@ -647,7 +647,7 @@ export class DerivedEventController implements ColumnHost {
 
   /**
    * Per-event sibling overlap validation. Called from createSkillEvent pass 2.
-   * Walks already-registered events with the same (ownerId, columnId, id) and
+   * Walks already-registered events with the same (ownerEntityId, columnId, id) and
    * attaches an overlap warning to both `ev` and the sibling if their active
    * ranges overlap. Read-only annotation, not a bulk transformation.
    */
@@ -667,7 +667,7 @@ export class DerivedEventController implements ColumnHost {
     for (const prev of this.allEvents) {
       if (prev === ev) continue;
       if (prev.uid === ev.uid) continue;
-      if (prev.ownerId !== ev.ownerId || prev.columnId !== ev.columnId || prev.id !== ev.id) continue;
+      if (prev.ownerEntityId !== ev.ownerEntityId || prev.columnId !== ev.columnId || prev.id !== ev.id) continue;
       // Either side's nonOverlappableRange triggers the warning if the spans overlap.
       const prevHasGuard = !!prev.nonOverlappableRange;
       const evHasGuard = !!ev.nonOverlappableRange;
@@ -793,13 +793,13 @@ export class DerivedEventController implements ColumnHost {
   // ── ColumnHost interface ────────────────────────────────────────────────
 
   /** Get all active (non-consumed) events for a column+owner at a frame. */
-  activeEventsIn(columnId: string, ownerId: string, frame: number): TimelineEvent[] {
-    return this._activeEventsIn(columnId, ownerId, frame);
+  activeEventsIn(columnId: string, ownerEntityId: string, frame: number): TimelineEvent[] {
+    return this._activeEventsIn(columnId, ownerEntityId, frame);
   }
 
   /** Count active events for a column+owner at a frame. */
-  activeCount(columnId: string, ownerId: string, frame: number) {
-    return this._activeEventsIn(columnId, ownerId, frame).length;
+  activeCount(columnId: string, ownerEntityId: string, frame: number) {
+    return this._activeEventsIn(columnId, ownerEntityId, frame).length;
   }
 
   /** Extend a raw game-time duration by active time-stop regions. */
@@ -872,9 +872,9 @@ export class DerivedEventController implements ColumnHost {
   }
 
   /** Delegate creation to another column (cross-column side effects). */
-  applyToColumn(columnId: string, ownerId: string, frame: number, durationFrames: number,
+  applyToColumn(columnId: string, ownerEntityId: string, frame: number, durationFrames: number,
     source: EventSource, options?: AddOptions): boolean {
-    return this.registry.get(columnId).add(ownerId, frame, durationFrames, source, options);
+    return this.registry.get(columnId).add(ownerEntityId, frame, durationFrames, source, options);
   }
 
   /** Get foreign time-stop regions for reaction segment building. */
@@ -886,29 +886,29 @@ export class DerivedEventController implements ColumnHost {
 
   /** Apply (create) an event on a column. Routes to the appropriate EventColumn. */
   applyEvent(
-    columnId: string, ownerId: string, frame: number,
+    columnId: string, ownerEntityId: string, frame: number,
     durationFrames: number, source: EventSource,
     options?: AddOptions,
   ): boolean {
-    return this.registry.get(columnId).add(ownerId, frame, durationFrames, source, options);
+    return this.registry.get(columnId).add(ownerEntityId, frame, durationFrames, source, options);
   }
 
   /** Consume events on a column. Routes to the appropriate EventColumn. */
   consumeEvent(
-    columnId: string, ownerId: string, frame: number,
+    columnId: string, ownerEntityId: string, frame: number,
     source: EventSource, options?: ConsumeOptions,
   ): number {
-    return this.registry.get(columnId).consume(ownerId, frame, source, options);
+    return this.registry.get(columnId).consume(ownerEntityId, frame, source, options);
   }
 
   /** Check if an event can be applied on a column. */
-  canApplyEvent(columnId: string, ownerId: string, frame: number): boolean {
-    return this.registry.get(columnId).canAdd(ownerId, frame);
+  canApplyEvent(columnId: string, ownerEntityId: string, frame: number): boolean {
+    return this.registry.get(columnId).canAdd(ownerEntityId, frame);
   }
 
   /** Check if events can be consumed on a column. */
-  canConsumeEvent(columnId: string, ownerId: string, frame: number): boolean {
-    return this.registry.get(columnId).canConsume(ownerId, frame);
+  canConsumeEvent(columnId: string, ownerEntityId: string, frame: number): boolean {
+    return this.registry.get(columnId).canConsume(ownerEntityId, frame);
   }
 
   /** No-op — stagger is display-only. */
@@ -973,7 +973,7 @@ export class DerivedEventController implements ColumnHost {
     this._backfillOwnerIds(owned);
 
     this.allEvents.push(owned);
-    const stackKey = this.key(owned.columnId, owned.ownerId);
+    const stackKey = this.key(owned.columnId, owned.ownerEntityId);
     const stackArr = this.stacks.get(stackKey) ?? [];
     stackArr.push(owned);
     this.stacks.set(stackKey, stackArr);
@@ -984,11 +984,11 @@ export class DerivedEventController implements ColumnHost {
    * Phase 1 backfill: derive `ownerSlotId` / `ownerOperatorId` from whatever
    * fields the caller already populated. Precedence:
    *   1. Already-set fields are left alone (Phase 2 call sites populate them directly).
-   *   2. If `ev.ownerId` is a known slot, it's the slot id; operator id
+   *   2. If `ev.ownerEntityId` is a known slot, it's the slot id; operator id
    *      comes from slotOperatorMap.
-   *   3. Else if `ev.sourceOwnerId` is a known slot (legacy stamping), use that.
-   *   4. Else reverse-lookup `ev.sourceOwnerId` as an operator id in slotOperatorMap.
-   *   5. Fall back to `ev.ownerId` for both fields (enemy/common events — the
+   *   3. Else if `ev.sourceEntityId` is a known slot (legacy stamping), use that.
+   *   4. Else reverse-lookup `ev.sourceEntityId` as an operator id in slotOperatorMap.
+   *   5. Fall back to `ev.ownerEntityId` for both fields (enemy/common events — the
    *      owner IS the enemy/common sentinel, not a slot).
    */
   private _backfillOwnerIds(ev: TimelineEvent): void {
@@ -997,28 +997,28 @@ export class DerivedEventController implements ColumnHost {
     let slotId: string | undefined;
     let operatorId: string | undefined;
 
-    if (this.slotOperatorMap[ev.ownerId]) {
-      slotId = ev.ownerId;
-      operatorId = this.slotOperatorMap[ev.ownerId];
-    } else if (ev.sourceOwnerId && this.slotOperatorMap[ev.sourceOwnerId]) {
-      slotId = ev.sourceOwnerId;
-      operatorId = this.slotOperatorMap[ev.sourceOwnerId];
-    } else if (ev.sourceOwnerId) {
-      // sourceOwnerId might be a raw operator id — reverse-lookup to find its slot
+    if (this.slotOperatorMap[ev.ownerEntityId]) {
+      slotId = ev.ownerEntityId;
+      operatorId = this.slotOperatorMap[ev.ownerEntityId];
+    } else if (ev.sourceEntityId && this.slotOperatorMap[ev.sourceEntityId]) {
+      slotId = ev.sourceEntityId;
+      operatorId = this.slotOperatorMap[ev.sourceEntityId];
+    } else if (ev.sourceEntityId) {
+      // sourceEntityId might be a raw operator id — reverse-lookup to find its slot
       for (const [sid, opId] of Object.entries(this.slotOperatorMap)) {
-        if (opId === ev.sourceOwnerId) { slotId = sid; operatorId = opId; break; }
+        if (opId === ev.sourceEntityId) { slotId = sid; operatorId = opId; break; }
       }
       if (!slotId) {
-        // Unrecognized sourceOwnerId (e.g. 'debugger', legacy 'user'): fall
-        // back to ownerId-based derivation so we match the old
+        // Unrecognized sourceEntityId (e.g. 'debugger', legacy 'user'): fall
+        // back to ownerEntityId-based derivation so we match the old
         // resolveRoutedSource semantics rather than letting an unknown string
         // leak into owner fields.
-        slotId = ev.ownerId;
-        operatorId = ev.ownerId;
+        slotId = ev.ownerEntityId;
+        operatorId = ev.ownerEntityId;
       }
     } else {
-      slotId = ev.ownerId;
-      operatorId = ev.ownerId;
+      slotId = ev.ownerEntityId;
+      operatorId = ev.ownerEntityId;
     }
 
     if (!ev.ownerSlotId) ev.ownerSlotId = slotId;
@@ -1208,11 +1208,11 @@ export class DerivedEventController implements ColumnHost {
 
   // ── Active event queries ─────────────────────────────────────────────────
 
-  private _activeEventsIn(columnId: string, ownerId: string, frame: number): TimelineEvent[] {
+  private _activeEventsIn(columnId: string, ownerEntityId: string, frame: number): TimelineEvent[] {
     // Single source of storage — stacks is the per-(column, owner) index
     // over registeredEvents, populated by _pushToStorage AND createQueueEvent.
     const result: TimelineEvent[] = [];
-    const events = this.stacks.get(this.key(columnId, ownerId)) ?? [];
+    const events = this.stacks.get(this.key(columnId, ownerEntityId)) ?? [];
     for (const ev of events) {
       if (ev.eventStatus === EventStatusType.CONSUMED) continue;
       if (ev.startFrame <= frame && frame < ev.startFrame + eventDuration(ev)) result.push(ev);
@@ -1221,13 +1221,13 @@ export class DerivedEventController implements ColumnHost {
   }
 
   /** Public query: get active events at a frame for a column+owner. */
-  getActiveEvents(columnId: string, ownerId: string, frame: number): TimelineEvent[] {
-    return this._activeEventsIn(columnId, ownerId, frame);
+  getActiveEvents(columnId: string, ownerEntityId: string, frame: number): TimelineEvent[] {
+    return this._activeEventsIn(columnId, ownerEntityId, frame);
   }
 
   /** Check if a given operator is the controlled operator at a given frame. */
-  isControlledAt(ownerId: string, frame: number): boolean {
-    return this._activeEventsIn(OPERATOR_COLUMNS.INPUT, ownerId, frame)
+  isControlledAt(ownerEntityId: string, frame: number): boolean {
+    return this._activeEventsIn(OPERATOR_COLUMNS.INPUT, ownerEntityId, frame)
       .some((ev) => ev.id === NounType.CONTROL);
   }
 
@@ -1240,14 +1240,14 @@ export class DerivedEventController implements ColumnHost {
   }
 
   /** Clamp the oldest active event in a column to make room for a new stack. */
-  private resetOldest(columnId: string, ownerId: string, frame: number, source: EventSource) {
-    const active = this._activeEventsIn(columnId, ownerId, frame)
+  private resetOldest(columnId: string, ownerEntityId: string, frame: number, source: EventSource) {
+    const active = this._activeEventsIn(columnId, ownerEntityId, frame)
       .sort((a, b) => a.startFrame - b.startFrame);
     if (active.length > 0) {
       const oldest = active[0];
       setEventDuration(oldest, frame - oldest.startFrame);
       oldest.eventStatus = EventStatusType.REFRESHED;
-      oldest.eventStatusOwnerId = source.ownerId;
+      oldest.eventStatusEntityId = source.ownerEntityId;
       oldest.eventStatusSkillName = source.skillName;
     }
   }
@@ -1269,7 +1269,7 @@ export class DerivedEventController implements ColumnHost {
       const combos = this.allEvents
         .filter((ev) =>
           ev.columnId === NounType.COMBO &&
-          ev.ownerId === win.ownerId &&
+          ev.ownerEntityId === win.ownerEntityId &&
           ev.startFrame >= win.startFrame &&
           ev.startFrame < winEnd,
         )
@@ -1325,7 +1325,7 @@ export class DerivedEventController implements ColumnHost {
       const winEnd = win.startFrame + computeSegmentsSpan(win.segments);
       const combos = this.allEvents.filter(ev =>
         ev.columnId === NounType.COMBO &&
-        ev.ownerId === win.ownerId &&
+        ev.ownerEntityId === win.ownerEntityId &&
         ev.startFrame >= win.startFrame &&
         ev.startFrame < winEnd,
       );
@@ -1349,10 +1349,10 @@ export class DerivedEventController implements ColumnHost {
    * allEvents, so one pass covers both.
    */
   private clampActiveFiltered(
-    columnId: string, ownerId: string, frame: number,
+    columnId: string, ownerEntityId: string, frame: number,
     source: EventSource, status: EventStatusType, predicate: (ev: TimelineEvent) => boolean,
   ) {
-    const queueEvents = this.stacks.get(this.key(columnId, ownerId)) ?? [];
+    const queueEvents = this.stacks.get(this.key(columnId, ownerEntityId)) ?? [];
     for (const ev of queueEvents) {
       if (!predicate(ev)) continue;
       if (ev.eventStatus === EventStatusType.CONSUMED) continue;
@@ -1360,7 +1360,7 @@ export class DerivedEventController implements ColumnHost {
       if (ev.startFrame <= frame && frame < end) {
         setEventDuration(ev, frame - ev.startFrame);
         ev.eventStatus = status;
-        ev.eventStatusOwnerId = source.ownerId;
+        ev.eventStatusEntityId = source.ownerEntityId;
         ev.eventStatusSkillName = source.skillName;
       }
     }

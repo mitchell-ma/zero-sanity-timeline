@@ -1000,9 +1000,9 @@ export async function encodeEmbed(
   for (let ei = 0; ei < cleaned.events.length; ei++) {
     const ev = cleaned.events[ei];
     const origEv = sheetData.events[ei];
-    const slotIdx = ev.ownerId === TEAM_ID ? COMMON_OWNER_IDX
-      : ev.ownerId === ENEMY_ID ? ENEMY_OWNER_IDX
-      : SLOT_IDS.indexOf(ev.ownerId);
+    const slotIdx = ev.ownerEntityId === TEAM_ID ? COMMON_OWNER_IDX
+      : ev.ownerEntityId === ENEMY_ID ? ENEMY_OWNER_IDX
+      : SLOT_IDS.indexOf(ev.ownerEntityId);
     const template = findEventTemplate(columns, ev.columnId, ev.name);
 
     const compact: EventCompact = {
@@ -1400,7 +1400,7 @@ export async function decodeEmbed(
   const events: TimelineEvent[] = [];
   for (let i = 0; i < embed.evs.length; i++) {
     const compact = embed.evs[i];
-    const ownerId = compact.o === COMMON_OWNER_IDX ? TEAM_ID
+    const ownerEntityId = compact.o === COMMON_OWNER_IDX ? TEAM_ID
       : compact.o === ENEMY_OWNER_IDX ? ENEMY_ID
       : SLOT_IDS[compact.o] ?? SLOT_IDS[0];
     const template = findEventTemplate(columns, compact.c, compact.s);
@@ -1411,7 +1411,7 @@ export async function decodeEmbed(
       uid: `ev-${i + 1}`,
       id: compact.s,
       name: compact.s,
-      ownerId,
+      ownerEntityId,
       columnId: compact.c,
       startFrame: compact.f,
       segments: durationSegment(totalDuration),

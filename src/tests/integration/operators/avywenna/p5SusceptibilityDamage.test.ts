@@ -49,13 +49,13 @@ function setup() {
 function placeBs(app: AppResult, atFrame: number) {
   const col = findColumn(app, SLOT, NounType.BATTLE);
   const payload = getMenuPayload(app, col!, atFrame);
-  app.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+  app.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
 }
 
 function placeCombo(app: AppResult, atFrame: number) {
   const col = findColumn(app, SLOT, NounType.COMBO);
   const payload = getMenuPayload(app, col!, atFrame);
-  app.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+  app.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
 }
 
 function placeElectricSusceptibility(app: AppResult, atFrame: number, durationFrames = 30 * FPS) {
@@ -66,7 +66,7 @@ function placeElectricSusceptibility(app: AppResult, atFrame: number, durationFr
 }
 
 function setSusceptibility(app: AppResult, value: number) {
-  const ev = app.allProcessedEvents.find(e => e.id === ELECTRIC_SUSC_ID && e.ownerId === ENEMY_ID);
+  const ev = app.allProcessedEvents.find(e => e.id === ELECTRIC_SUSC_ID && e.ownerEntityId === ENEMY_ID);
   expect(ev).toBeDefined();
   app.handleUpdateEvent(ev!.uid, { susceptibility: { [ElementType.ELECTRIC]: value } });
 }
@@ -156,7 +156,7 @@ describe('Avywenna P5 — BS damage gated on Electric Susceptibility', () => {
     act(() => { setUltimateEnergyToMax(result.current, SLOT, 0); });
     const ultCol = findColumn(result.current, SLOT, NounType.ULTIMATE);
     const ultPayload = getMenuPayload(result.current, ultCol!, 1 * FPS);
-    act(() => { result.current.handleAddEvent(ultPayload.ownerId, ultPayload.columnId, ultPayload.atFrame, ultPayload.defaultSkill); });
+    act(() => { result.current.handleAddEvent(ultPayload.ownerEntityId, ultPayload.columnId, ultPayload.atFrame, ultPayload.defaultSkill); });
     act(() => { placeBs(result.current, 5 * FPS); });
 
     const calc = runCalculation(
@@ -177,7 +177,7 @@ describe('Avywenna P5 — BS damage gated on Electric Susceptibility', () => {
     act(() => { setUltimateEnergyToMax(result.current, SLOT, 0); });
     const ultCol = findColumn(result.current, SLOT, NounType.ULTIMATE);
     const ultPayload = getMenuPayload(result.current, ultCol!, 1 * FPS);
-    act(() => { result.current.handleAddEvent(ultPayload.ownerId, ultPayload.columnId, ultPayload.atFrame, ultPayload.defaultSkill); });
+    act(() => { result.current.handleAddEvent(ultPayload.ownerEntityId, ultPayload.columnId, ultPayload.atFrame, ultPayload.defaultSkill); });
     act(() => { placeBs(result.current, 5 * FPS); });
 
     const calc = runCalculation(

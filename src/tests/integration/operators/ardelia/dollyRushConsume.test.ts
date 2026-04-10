@@ -40,32 +40,32 @@ describe('Ardelia Dolly Rush — Corrosion consumption', () => {
     // 1. Basic attack at frame 0 (provides FINAL_STRIKE for combo trigger)
     const basicPayload = getMenuPayload(result.current, basicCol!, 0);
     act(() => {
-      result.current.handleAddEvent(basicPayload.ownerId, basicPayload.columnId, basicPayload.atFrame, basicPayload.defaultSkill);
+      result.current.handleAddEvent(basicPayload.ownerEntityId, basicPayload.columnId, basicPayload.atFrame, basicPayload.defaultSkill);
     });
 
     // 2. Combo skill at 10s (applies forced Corrosion to enemy)
     const comboPayload = getMenuPayload(result.current, comboCol!, 10 * FPS);
     act(() => {
-      result.current.handleAddEvent(comboPayload.ownerId, comboPayload.columnId, comboPayload.atFrame, comboPayload.defaultSkill);
+      result.current.handleAddEvent(comboPayload.ownerEntityId, comboPayload.columnId, comboPayload.atFrame, comboPayload.defaultSkill);
     });
 
     // ── Controller: verify corrosion exists on enemy ────────────────────
     const corrosionBefore = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === REACTION_COLUMNS.CORROSION && ev.ownerId === ENEMY_ID,
+      ev => ev.columnId === REACTION_COLUMNS.CORROSION && ev.ownerEntityId === ENEMY_ID,
     );
     expect(corrosionBefore).toHaveLength(1);
 
     // 3. Battle skill at 15s (should consume corrosion)
     const battlePayload = getMenuPayload(result.current, battleCol!, 15 * FPS);
     act(() => {
-      result.current.handleAddEvent(battlePayload.ownerId, battlePayload.columnId, battlePayload.atFrame, battlePayload.defaultSkill);
+      result.current.handleAddEvent(battlePayload.ownerEntityId, battlePayload.columnId, battlePayload.atFrame, battlePayload.defaultSkill);
     });
 
     // The battle skill frame hits at offset 1.07s = frame 15*120 + 128 = 1928
     // Corrosion should be consumed (clamped) at that frame
     const allEvents = result.current.allProcessedEvents;
     const corrosionAfter = allEvents.filter(
-      ev => ev.columnId === REACTION_COLUMNS.CORROSION && ev.ownerId === ENEMY_ID,
+      ev => ev.columnId === REACTION_COLUMNS.CORROSION && ev.ownerEntityId === ENEMY_ID,
     );
 
     // Corrosion event should still exist but be clamped (consumed)

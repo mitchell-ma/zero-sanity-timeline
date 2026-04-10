@@ -554,7 +554,7 @@ describe('I. Cooldown Interactions', () => {
   const SLOT_ID = 'slot-0';
 
   function makeEvent(overrides: Partial<TimelineEvent> & { uid: string; columnId: string; startFrame: number }): TimelineEvent {
-    return { id: overrides.name ?? '', name: '', ownerId: SLOT_ID, segments: [{ properties: { duration: 0 } }], ...overrides };
+    return { id: overrides.name ?? '', name: '', ownerEntityId: SLOT_ID, segments: [{ properties: { duration: 0 } }], ...overrides };
   }
 
   test('H1: Basic attack (Rocky Whispers) has no cooldown', () => {
@@ -619,7 +619,7 @@ describe('J. Combo Activation Window Pipeline', () => {
   const SLOT_ARDELIA = 'slot-0';
   const SLOT_OTHER = 'slot-1';
 
-  function makeEvent(overrides: Partial<TimelineEvent> & { uid: string; columnId: string; startFrame: number; ownerId: string }): TimelineEvent {
+  function makeEvent(overrides: Partial<TimelineEvent> & { uid: string; columnId: string; startFrame: number; ownerEntityId: string }): TimelineEvent {
     return { id: overrides.name ?? '', name: '', segments: [{ properties: { duration: 0 } }], ...overrides };
   }
 
@@ -635,7 +635,7 @@ describe('J. Combo Activation Window Pipeline', () => {
     return makeEvent({
       uid: `ba-${slotId}-${startFrame}`,
       name: 'ROCKY_WHISPERS_BATK',
-      ownerId: slotId,
+      ownerEntityId: slotId,
       columnId: NounType.BASIC_ATTACK,
       startFrame,
             segments: [
@@ -651,11 +651,11 @@ describe('J. Combo Activation Window Pipeline', () => {
     return makeEvent({
       uid: `inflict-${columnId}-${startFrame}`,
       name: columnId,
-      ownerId: ENEMY_ID,
+      ownerEntityId: ENEMY_ID,
       columnId,
       startFrame,
       segments: [{ properties: { duration: durationFrames } }],
-      sourceOwnerId: SLOT_OTHER,
+      sourceEntityId: SLOT_OTHER,
     });
   }
 
@@ -665,7 +665,7 @@ describe('J. Combo Activation Window Pipeline', () => {
 
     const processed = processCombatSimulation([ba], undefined, undefined, wirings);
     const windows = processed.filter(
-      (e) => e.columnId === COMBO_WINDOW_COLUMN_ID && e.ownerId === SLOT_ARDELIA,
+      (e) => e.columnId === COMBO_WINDOW_COLUMN_ID && e.ownerEntityId === SLOT_ARDELIA,
     );
     // Final strike of basic attack triggers Ardelia's combo window
     expect(windows.length).toBe(1);
@@ -679,7 +679,7 @@ describe('J. Combo Activation Window Pipeline', () => {
 
     const processed = processCombatSimulation([ba, heat], undefined, undefined, wirings);
     const windows = processed.filter(
-      (e) => e.columnId === COMBO_WINDOW_COLUMN_ID && e.ownerId === SLOT_ARDELIA,
+      (e) => e.columnId === COMBO_WINDOW_COLUMN_ID && e.ownerEntityId === SLOT_ARDELIA,
     );
     expect(windows.length).toBe(0);
   });
@@ -691,7 +691,7 @@ describe('J. Combo Activation Window Pipeline', () => {
 
     const processed = processCombatSimulation([ba, nature], undefined, undefined, wirings);
     const windows = processed.filter(
-      (e) => e.columnId === COMBO_WINDOW_COLUMN_ID && e.ownerId === SLOT_ARDELIA,
+      (e) => e.columnId === COMBO_WINDOW_COLUMN_ID && e.ownerEntityId === SLOT_ARDELIA,
     );
     expect(windows.length).toBe(0);
   });
@@ -704,7 +704,7 @@ describe('J. Combo Activation Window Pipeline', () => {
 
     const processed = processCombatSimulation([ba, heat], undefined, undefined, wirings);
     const windows = processed.filter(
-      (e) => e.columnId === COMBO_WINDOW_COLUMN_ID && e.ownerId === SLOT_ARDELIA,
+      (e) => e.columnId === COMBO_WINDOW_COLUMN_ID && e.ownerEntityId === SLOT_ARDELIA,
     );
     // Infliction expired before trigger frame, so combo window opens
     expect(windows.length).toBe(1);
@@ -717,7 +717,7 @@ describe('J. Combo Activation Window Pipeline', () => {
 
     const processed = processCombatSimulation([ba, vuln], undefined, undefined, wirings);
     const windows = processed.filter(
-      (e) => e.columnId === COMBO_WINDOW_COLUMN_ID && e.ownerId === SLOT_ARDELIA,
+      (e) => e.columnId === COMBO_WINDOW_COLUMN_ID && e.ownerEntityId === SLOT_ARDELIA,
     );
     expect(windows.length).toBe(0);
   });
@@ -728,7 +728,7 @@ describe('J. Combo Activation Window Pipeline', () => {
 
     const processed = processCombatSimulation([otherBa], undefined, undefined, wirings);
     const windows = processed.filter(
-      (e) => e.columnId === COMBO_WINDOW_COLUMN_ID && e.ownerId === SLOT_ARDELIA,
+      (e) => e.columnId === COMBO_WINDOW_COLUMN_ID && e.ownerEntityId === SLOT_ARDELIA,
     );
     // Other operator's final strike triggers Ardelia's combo window
     expect(windows.length).toBe(1);
@@ -745,7 +745,7 @@ describe('J. Combo Activation Window Pipeline', () => {
     const ba = makeEvent({
       uid: 'ba-timestop',
       name: 'ROCKY_WHISPERS_BATK',
-      ownerId: SLOT_OTHER,
+      ownerEntityId: SLOT_OTHER,
       columnId: NounType.BASIC_ATTACK,
       startFrame: 0,
             segments: [
@@ -759,7 +759,7 @@ describe('J. Combo Activation Window Pipeline', () => {
     const combo = makeEvent({
       uid: 'combo-ts',
       name: 'SOME_COMBO',
-      ownerId: SLOT_OTHER,
+      ownerEntityId: SLOT_OTHER,
       columnId: NounType.COMBO,
       startFrame: 350,
             segments: [{ properties: { segmentTypes: [SegmentType.ANIMATION], duration: 120, timeDependency: TimeDependency.REAL_TIME } }],
@@ -770,7 +770,7 @@ describe('J. Combo Activation Window Pipeline', () => {
 
     const processed = processCombatSimulation([ba, combo, heat], undefined, undefined, wirings);
     const windows = processed.filter(
-      (e) => e.columnId === COMBO_WINDOW_COLUMN_ID && e.ownerId === SLOT_ARDELIA,
+      (e) => e.columnId === COMBO_WINDOW_COLUMN_ID && e.ownerEntityId === SLOT_ARDELIA,
     );
     // With correct timestop handling, infliction has expired at the adjusted
     // trigger frame → negated HAVE condition passes → window opens
@@ -783,7 +783,7 @@ describe('J. Combo Activation Window Pipeline', () => {
     const ba = makeEvent({
       uid: 'ba-timestop-blocked',
       name: 'ROCKY_WHISPERS_BATK',
-      ownerId: SLOT_OTHER,
+      ownerEntityId: SLOT_OTHER,
       columnId: NounType.BASIC_ATTACK,
       startFrame: 0,
             segments: [
@@ -796,7 +796,7 @@ describe('J. Combo Activation Window Pipeline', () => {
     const combo = makeEvent({
       uid: 'combo-ts2',
       name: 'SOME_COMBO',
-      ownerId: SLOT_OTHER,
+      ownerEntityId: SLOT_OTHER,
       columnId: NounType.COMBO,
       startFrame: 350,
             segments: [{ properties: { segmentTypes: [SegmentType.ANIMATION], duration: 120, timeDependency: TimeDependency.REAL_TIME } }],
@@ -807,7 +807,7 @@ describe('J. Combo Activation Window Pipeline', () => {
 
     const processed = processCombatSimulation([ba, combo, heat], undefined, undefined, wirings);
     const windows = processed.filter(
-      (e) => e.columnId === COMBO_WINDOW_COLUMN_ID && e.ownerId === SLOT_ARDELIA,
+      (e) => e.columnId === COMBO_WINDOW_COLUMN_ID && e.ownerEntityId === SLOT_ARDELIA,
     );
     expect(windows.length).toBe(0);
   });
@@ -820,7 +820,7 @@ describe('J. Combo Activation Window Pipeline', () => {
     const ba = makeEvent({
       uid: 'ba-no-timestop',
       name: 'ROCKY_WHISPERS_BATK',
-      ownerId: SLOT_OTHER,
+      ownerEntityId: SLOT_OTHER,
       columnId: NounType.BASIC_ATTACK,
       startFrame: 0,
             segments: [
@@ -836,7 +836,7 @@ describe('J. Combo Activation Window Pipeline', () => {
 
     const processed = processCombatSimulation([ba, heat], undefined, undefined, wirings);
     const windows = processed.filter(
-      (e) => e.columnId === COMBO_WINDOW_COLUMN_ID && e.ownerId === SLOT_ARDELIA,
+      (e) => e.columnId === COMBO_WINDOW_COLUMN_ID && e.ownerEntityId === SLOT_ARDELIA,
     );
     // Without timestop, raw trigger at 496 is within infliction [0,497) → blocked
     expect(windows.length).toBe(0);

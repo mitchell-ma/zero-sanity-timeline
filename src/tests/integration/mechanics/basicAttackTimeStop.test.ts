@@ -37,7 +37,7 @@ function setupBasicAndCombo(result: { current: AppResult }) {
   const basicPayload = getMenuPayload(result.current, basicCol!, 0);
   act(() => {
     result.current.handleAddEvent(
-      basicPayload.ownerId, basicPayload.columnId, basicPayload.atFrame, basicPayload.defaultSkill,
+      basicPayload.ownerEntityId, basicPayload.columnId, basicPayload.atFrame, basicPayload.defaultSkill,
     );
   });
 
@@ -52,7 +52,7 @@ function setupBasicAndCombo(result: { current: AppResult }) {
   const comboPayload = getMenuPayload(result.current, comboCol!, Math.round(1.3 * FPS));
   act(() => {
     result.current.handleAddEvent(
-      comboPayload.ownerId, comboPayload.columnId, comboPayload.atFrame, comboPayload.defaultSkill,
+      comboPayload.ownerEntityId, comboPayload.columnId, comboPayload.atFrame, comboPayload.defaultSkill,
     );
   });
 }
@@ -73,10 +73,10 @@ describe('Basic attack time-stop extension — Akekuri basic + combo overlap', (
 
     // --- Controller layer: verify processed events ---
     const basicEvent = result.current.allProcessedEvents.find(
-      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === NounType.BASIC_ATTACK,
+      (ev) => ev.ownerEntityId === SLOT_AKEKURI && ev.columnId === NounType.BASIC_ATTACK,
     );
     const comboEvent = result.current.allProcessedEvents.find(
-      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === NounType.COMBO,
+      (ev) => ev.ownerEntityId === SLOT_AKEKURI && ev.columnId === NounType.COMBO,
     );
     expect(basicEvent).toBeDefined();
     expect(comboEvent).toBeDefined();
@@ -107,12 +107,12 @@ describe('Basic attack time-stop extension — Akekuri basic + combo overlap', (
     setupBasicAndCombo(result);
 
     const basicEvent = result.current.allProcessedEvents.find(
-      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === NounType.BASIC_ATTACK,
+      (ev) => ev.ownerEntityId === SLOT_AKEKURI && ev.columnId === NounType.BASIC_ATTACK,
     );
     expect(basicEvent).toBeDefined();
 
     const comboEvent = result.current.allProcessedEvents.find(
-      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === NounType.COMBO,
+      (ev) => ev.ownerEntityId === SLOT_AKEKURI && ev.columnId === NounType.COMBO,
     )!;
     const animDur = getAnimationDuration(comboEvent);
 
@@ -152,7 +152,7 @@ describe('Basic attack time-stop extension — Akekuri basic + combo overlap', (
     setupBasicAndCombo(result);
 
     const basicEvent = result.current.allProcessedEvents.find(
-      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === NounType.BASIC_ATTACK,
+      (ev) => ev.ownerEntityId === SLOT_AKEKURI && ev.columnId === NounType.BASIC_ATTACK,
     )!;
 
     // Build segment boundaries from processed event (same logic as EventBlock hover)
@@ -197,14 +197,14 @@ describe('Basic attack time-stop extension — Akekuri basic + combo overlap', (
     setupBasicAndCombo(result);
 
     const comboEvent = result.current.allProcessedEvents.find(
-      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === NounType.COMBO,
+      (ev) => ev.ownerEntityId === SLOT_AKEKURI && ev.columnId === NounType.COMBO,
     )!;
     const animDur = getAnimationDuration(comboEvent);
     const rawSeg3Duration = basicCol!.defaultEvent!.segments![2].properties.duration;
 
     // Capture seg3 duration after first pipeline run
     const seg3First = result.current.allProcessedEvents.find(
-      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === NounType.BASIC_ATTACK,
+      (ev) => ev.ownerEntityId === SLOT_AKEKURI && ev.columnId === NounType.BASIC_ATTACK,
     )!.segments[2];
     expect(seg3First.properties.duration).toBe(rawSeg3Duration + animDur);
 
@@ -215,7 +215,7 @@ describe('Basic attack time-stop extension — Akekuri basic + combo overlap', (
 
     // Seg3 duration must still be rawDuration + animDur — NOT double-extended
     const seg3Second = result.current.allProcessedEvents.find(
-      (ev) => ev.ownerId === SLOT_AKEKURI && ev.columnId === NounType.BASIC_ATTACK,
+      (ev) => ev.ownerEntityId === SLOT_AKEKURI && ev.columnId === NounType.BASIC_ATTACK,
     )!.segments[2];
     expect(seg3Second.properties.duration).toBe(rawSeg3Duration + animDur);
   });

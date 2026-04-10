@@ -11,7 +11,7 @@
  *
  * Three-layer verification:
  * 1. Context menu: BS add-event is available on Xaihi's column
- * 2. Controller: AC status events appear in allProcessedEvents with correct ownerId
+ * 2. Controller: AC status events appear in allProcessedEvents with correct ownerEntityId
  * 3. View: AC events render in the correct operator's status column ViewModel
  */
 
@@ -58,7 +58,7 @@ function findStatusColumn(app: AppResult, slotId: string) {
   return app.columns.find(
     (c): c is MiniTimeline =>
       c.type === ColumnType.MINI_TIMELINE &&
-      c.ownerId === slotId &&
+      c.ownerEntityId === slotId &&
       c.columnId === OPERATOR_STATUS_COLUMN_ID,
   );
 }
@@ -76,7 +76,7 @@ describe('D. Auxiliary Crystal targeting', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId,
+        payload.ownerEntityId, payload.columnId,
         payload.atFrame, payload.defaultSkill,
       );
     });
@@ -87,7 +87,7 @@ describe('D. Auxiliary Crystal targeting', () => {
     );
     expect(acEvents.length).toBe(2);
     for (const ev of acEvents) {
-      expect(ev.ownerId).toBe(SLOT_DEFAULT_CONTROLLED);
+      expect(ev.ownerEntityId).toBe(SLOT_DEFAULT_CONTROLLED);
     }
 
     // ── View layer ──
@@ -125,14 +125,14 @@ describe('D. Auxiliary Crystal targeting', () => {
     const bsPayload = getMenuPayload(result.current, bsCol!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        bsPayload.ownerId, bsPayload.columnId,
+        bsPayload.ownerEntityId, bsPayload.columnId,
         bsPayload.atFrame, bsPayload.defaultSkill,
       );
     });
 
     // Verify 2 AC stacks on controlled operator with labels "I" and "II"
     const acBefore = result.current.allProcessedEvents.filter(
-      ev => ev.name === AC_STATUS_ID && ev.ownerId === SLOT_DEFAULT_CONTROLLED,
+      ev => ev.name === AC_STATUS_ID && ev.ownerEntityId === SLOT_DEFAULT_CONTROLLED,
     );
     expect(acBefore.length).toBe(2);
 
@@ -157,14 +157,14 @@ describe('D. Auxiliary Crystal targeting', () => {
     const baPayload = getMenuPayload(result.current, baCol!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        baPayload.ownerId, baPayload.columnId,
+        baPayload.ownerEntityId, baPayload.columnId,
         baPayload.atFrame, baPayload.defaultSkill,
       );
     });
 
     // ── Controller layer: restack clamps all active and re-creates remaining ──
     const acAfter = result.current.allProcessedEvents.filter(
-      ev => ev.name === AC_STATUS_ID && ev.ownerId === SLOT_DEFAULT_CONTROLLED,
+      ev => ev.name === AC_STATUS_ID && ev.ownerEntityId === SLOT_DEFAULT_CONTROLLED,
     );
     // 2 original (clamped) + 1 restacked = 3 total
     const consumed = acAfter.filter(ev => ev.eventStatus === EventStatusType.CONSUMED);
@@ -199,7 +199,7 @@ describe('D. Auxiliary Crystal targeting', () => {
     const bsPayload = getMenuPayload(result.current, bsCol!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        bsPayload.ownerId, bsPayload.columnId,
+        bsPayload.ownerEntityId, bsPayload.columnId,
         bsPayload.atFrame, bsPayload.defaultSkill,
       );
     });
@@ -210,7 +210,7 @@ describe('D. Auxiliary Crystal targeting', () => {
     const ba1Payload = getMenuPayload(result.current, baCol!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        ba1Payload.ownerId, ba1Payload.columnId,
+        ba1Payload.ownerEntityId, ba1Payload.columnId,
         ba1Payload.atFrame, ba1Payload.defaultSkill,
       );
     });
@@ -219,14 +219,14 @@ describe('D. Auxiliary Crystal targeting', () => {
     const ba2Payload = getMenuPayload(result.current, baCol!, 10 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        ba2Payload.ownerId, ba2Payload.columnId,
+        ba2Payload.ownerEntityId, ba2Payload.columnId,
         ba2Payload.atFrame, ba2Payload.defaultSkill,
       );
     });
 
     // ── Controller layer: restack produces clamped + restacked events per consumption ──
     const acEvents = result.current.allProcessedEvents.filter(
-      ev => ev.name === AC_STATUS_ID && ev.ownerId === SLOT_DEFAULT_CONTROLLED,
+      ev => ev.name === AC_STATUS_ID && ev.ownerEntityId === SLOT_DEFAULT_CONTROLLED,
     );
     const consumed = acEvents.filter(ev => ev.eventStatus === EventStatusType.CONSUMED);
     const active = acEvents.filter(ev => ev.eventStatus !== EventStatusType.CONSUMED);
@@ -257,7 +257,7 @@ describe('D. Auxiliary Crystal targeting', () => {
     const bsPayload = getMenuPayload(result.current, bsCol!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        bsPayload.ownerId, bsPayload.columnId,
+        bsPayload.ownerEntityId, bsPayload.columnId,
         bsPayload.atFrame, bsPayload.defaultSkill,
       );
     });
@@ -268,21 +268,21 @@ describe('D. Auxiliary Crystal targeting', () => {
     const ba1Payload = getMenuPayload(result.current, baCol!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        ba1Payload.ownerId, ba1Payload.columnId,
+        ba1Payload.ownerEntityId, ba1Payload.columnId,
         ba1Payload.atFrame, ba1Payload.defaultSkill,
       );
     });
     const ba2Payload = getMenuPayload(result.current, baCol!, 10 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        ba2Payload.ownerId, ba2Payload.columnId,
+        ba2Payload.ownerEntityId, ba2Payload.columnId,
         ba2Payload.atFrame, ba2Payload.defaultSkill,
       );
     });
 
     // ── Controller layer: combo activation window should exist ──
     const comboWindows = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === COMBO_WINDOW_COLUMN_ID && ev.ownerId === SLOT_XAIHI,
+      ev => ev.columnId === COMBO_WINDOW_COLUMN_ID && ev.ownerEntityId === SLOT_XAIHI,
     );
     expect(comboWindows.length).toBeGreaterThanOrEqual(1);
 
@@ -300,20 +300,20 @@ describe('D. Auxiliary Crystal targeting', () => {
     const comboPayload = getMenuPayload(result.current, comboCol!, lastConsumedFrame + 1 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        comboPayload.ownerId, comboPayload.columnId,
+        comboPayload.ownerEntityId, comboPayload.columnId,
         comboPayload.atFrame, comboPayload.defaultSkill,
       );
     });
 
     // ── Controller layer: combo event exists with correct effects ──
     const comboEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_XAIHI && ev.columnId === NounType.COMBO,
+      ev => ev.ownerEntityId === SLOT_XAIHI && ev.columnId === NounType.COMBO,
     );
     expect(comboEvents).toHaveLength(1);
 
     // Combo applies cryo infliction to enemy
     const cryoInflictions = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === INFLICTION_COLUMNS.CRYO && ev.ownerId === ENEMY_ID
+      ev => ev.columnId === INFLICTION_COLUMNS.CRYO && ev.ownerEntityId === ENEMY_ID
         && ev.startFrame > comboEvents[0].startFrame,
     );
     expect(cryoInflictions.length).toBeGreaterThanOrEqual(1);
@@ -331,7 +331,7 @@ describe('D. Auxiliary Crystal targeting', () => {
     const enemyStatusCol = result.current.columns.find(
       (c): c is MiniTimeline =>
         c.type === ColumnType.MINI_TIMELINE &&
-        c.ownerId === ENEMY_ID &&
+        c.ownerEntityId === ENEMY_ID &&
         c.columnId === ENEMY_GROUP_COLUMNS.ENEMY_STATUS,
     );
     expect(enemyStatusCol).toBeDefined();
@@ -355,7 +355,7 @@ describe('D. Auxiliary Crystal targeting', () => {
     const baPayload = getMenuPayload(result.current, baCol!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        baPayload.ownerId, baPayload.columnId,
+        baPayload.ownerEntityId, baPayload.columnId,
         baPayload.atFrame, baPayload.defaultSkill,
       );
     });
@@ -400,7 +400,7 @@ describe('D. Auxiliary Crystal targeting', () => {
     const bsPayload = getMenuPayload(result.current, bsCol!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        bsPayload.ownerId, bsPayload.columnId,
+        bsPayload.ownerEntityId, bsPayload.columnId,
         bsPayload.atFrame, bsPayload.defaultSkill,
       );
     });
@@ -415,7 +415,7 @@ describe('D. Auxiliary Crystal targeting', () => {
     const baPayload = getMenuPayload(result.current, baCol!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        baPayload.ownerId, baPayload.columnId,
+        baPayload.ownerEntityId, baPayload.columnId,
         baPayload.atFrame, baPayload.defaultSkill,
       );
     });
@@ -423,7 +423,7 @@ describe('D. Auxiliary Crystal targeting', () => {
     // ── Controller layer ──
     // AC should have 1 stack consumed, 1 remaining
     const acEvents = result.current.allProcessedEvents.filter(
-      ev => ev.name === AC_STATUS_ID && ev.ownerId === SLOT_DEFAULT_CONTROLLED,
+      ev => ev.name === AC_STATUS_ID && ev.ownerEntityId === SLOT_DEFAULT_CONTROLLED,
     );
     const acActive = acEvents.filter(ev => ev.eventStatus !== EventStatusType.CONSUMED);
     expect(acActive.length).toBe(1);
@@ -431,7 +431,7 @@ describe('D. Auxiliary Crystal targeting', () => {
 
     // DDA_AMP should be applied to the controlled operator
     const ddaEvents = result.current.allProcessedEvents.filter(
-      ev => ev.name === DDA_STATUS_ID && ev.ownerId === SLOT_DEFAULT_CONTROLLED,
+      ev => ev.name === DDA_STATUS_ID && ev.ownerEntityId === SLOT_DEFAULT_CONTROLLED,
     );
     expect(ddaEvents.length).toBe(1);
     expect(ddaEvents[0].startFrame).toBeGreaterThan(0);
@@ -468,10 +468,10 @@ describe('D. Auxiliary Crystal targeting', () => {
     );
     expect(controlItem).toBeDefined();
     expect(controlItem!.disabled).toBeFalsy();
-    const controlPayload = controlItem!.actionPayload as { ownerId: string; columnId: string; atFrame: number; defaultSkill: Record<string, unknown> };
+    const controlPayload = controlItem!.actionPayload as { ownerEntityId: string; columnId: string; atFrame: number; defaultSkill: Record<string, unknown> };
     act(() => {
       result.current.handleAddEvent(
-        controlPayload.ownerId, controlPayload.columnId,
+        controlPayload.ownerEntityId, controlPayload.columnId,
         controlPayload.atFrame, controlPayload.defaultSkill,
       );
     });
@@ -482,7 +482,7 @@ describe('D. Auxiliary Crystal targeting', () => {
     const bsPayload = getMenuPayload(result.current, bsCol!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        bsPayload.ownerId, bsPayload.columnId,
+        bsPayload.ownerEntityId, bsPayload.columnId,
         bsPayload.atFrame, bsPayload.defaultSkill,
       );
     });
@@ -493,7 +493,7 @@ describe('D. Auxiliary Crystal targeting', () => {
     );
     expect(acEvents.length).toBe(2);
     for (const ev of acEvents) {
-      expect(ev.ownerId).toBe(SLOT_XAIHI);
+      expect(ev.ownerEntityId).toBe(SLOT_XAIHI);
     }
 
     // ── View layer ──
@@ -536,14 +536,14 @@ describe('E. Auxiliary Crystal — Laevatain cross-operator damage', () => {
     const bsPayload = getMenuPayload(result.current, bsCol!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        bsPayload.ownerId, bsPayload.columnId,
+        bsPayload.ownerEntityId, bsPayload.columnId,
         bsPayload.atFrame, bsPayload.defaultSkill,
       );
     });
 
     // Verify 2 AC stacks on Laevatain
     const acBefore = result.current.allProcessedEvents.filter(
-      ev => ev.name === AC_STATUS_ID && ev.ownerId === SLOT_LAEV,
+      ev => ev.name === AC_STATUS_ID && ev.ownerEntityId === SLOT_LAEV,
     );
     expect(acBefore.length).toBe(2);
 
@@ -553,21 +553,21 @@ describe('E. Auxiliary Crystal — Laevatain cross-operator damage', () => {
     const ba1Payload = getMenuPayload(result.current, baCol!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        ba1Payload.ownerId, ba1Payload.columnId,
+        ba1Payload.ownerEntityId, ba1Payload.columnId,
         ba1Payload.atFrame, ba1Payload.defaultSkill,
       );
     });
 
     // ── Controller layer: AC consumed II→I, DDA Amp applied ──
     const acAfter1 = result.current.allProcessedEvents.filter(
-      ev => ev.name === AC_STATUS_ID && ev.ownerId === SLOT_LAEV,
+      ev => ev.name === AC_STATUS_ID && ev.ownerEntityId === SLOT_LAEV,
     );
     const acActive1 = acAfter1.filter(ev => ev.eventStatus !== EventStatusType.CONSUMED);
     expect(acActive1.length).toBe(1);
     expect(acActive1[0].stacks).toBe(1);
 
     const ddaAfter1 = result.current.allProcessedEvents.filter(
-      ev => ev.name === DDA_STATUS_ID && ev.ownerId === SLOT_LAEV,
+      ev => ev.name === DDA_STATUS_ID && ev.ownerEntityId === SLOT_LAEV,
     );
     expect(ddaAfter1.length).toBe(1);
 
@@ -575,14 +575,14 @@ describe('E. Auxiliary Crystal — Laevatain cross-operator damage', () => {
     const ba2Payload = getMenuPayload(result.current, baCol!, 10 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        ba2Payload.ownerId, ba2Payload.columnId,
+        ba2Payload.ownerEntityId, ba2Payload.columnId,
         ba2Payload.atFrame, ba2Payload.defaultSkill,
       );
     });
 
     // ── Controller layer: AC fully consumed, second DDA Amp applied ──
     const acAfter2 = result.current.allProcessedEvents.filter(
-      ev => ev.name === AC_STATUS_ID && ev.ownerId === SLOT_LAEV
+      ev => ev.name === AC_STATUS_ID && ev.ownerEntityId === SLOT_LAEV
         && ev.eventStatus !== EventStatusType.CONSUMED,
     );
     expect(acAfter2.length).toBe(0);
@@ -602,7 +602,7 @@ describe('E. Auxiliary Crystal — Laevatain cross-operator damage', () => {
 
     // Filter Laevatain BA damage rows
     const laevatainBaRows = calcResult.rows.filter(
-      r => r.ownerId === SLOT_LAEV
+      r => r.ownerEntityId === SLOT_LAEV
         && r.columnId === NounType.BASIC_ATTACK
         && r.damage != null && r.damage > 0,
     );
@@ -630,14 +630,14 @@ describe('E. Auxiliary Crystal — Laevatain cross-operator damage', () => {
     const bsPayload = getMenuPayload(result.current, bsCol!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        bsPayload.ownerId, bsPayload.columnId,
+        bsPayload.ownerEntityId, bsPayload.columnId,
         bsPayload.atFrame, bsPayload.defaultSkill,
       );
     });
 
     // ── Controller layer: verify AC II before consumption ──
     const acBefore = result.current.allProcessedEvents.filter(
-      ev => ev.name === AC_STATUS_ID && ev.ownerId === SLOT_LAEV,
+      ev => ev.name === AC_STATUS_ID && ev.ownerEntityId === SLOT_LAEV,
     );
     expect(acBefore.length).toBe(2);
 
@@ -661,21 +661,21 @@ describe('E. Auxiliary Crystal — Laevatain cross-operator damage', () => {
     const baPayload = getMenuPayload(result.current, baCol!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        baPayload.ownerId, baPayload.columnId,
+        baPayload.ownerEntityId, baPayload.columnId,
         baPayload.atFrame, baPayload.defaultSkill,
       );
     });
     const ba2Payload = getMenuPayload(result.current, baCol!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        ba2Payload.ownerId, ba2Payload.columnId,
+        ba2Payload.ownerEntityId, ba2Payload.columnId,
         ba2Payload.atFrame, ba2Payload.defaultSkill,
       );
     });
 
     // ── Controller layer: AC fully consumed — no active stacks remain ──
     const acAfter = result.current.allProcessedEvents.filter(
-      ev => ev.name === AC_STATUS_ID && ev.ownerId === SLOT_LAEV,
+      ev => ev.name === AC_STATUS_ID && ev.ownerEntityId === SLOT_LAEV,
     );
     const acActive = acAfter.filter(ev => ev.eventStatus !== EventStatusType.CONSUMED);
     expect(acActive.length).toBe(0);

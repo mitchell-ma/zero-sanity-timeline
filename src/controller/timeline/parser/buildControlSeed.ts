@@ -18,11 +18,11 @@ export function buildControlSeed(
   ev.uid = `controlled-seed-${firstOccupiedSlotId}`;
   ev.id = NounType.CONTROL;
   ev.name = NounType.CONTROL;
-  ev.ownerId = firstOccupiedSlotId;
+  ev.ownerEntityId = firstOccupiedSlotId;
   ev.columnId = OPERATOR_COLUMNS.INPUT;
   ev.startFrame = 0;
   ev.segments = [{ properties: { duration: TOTAL_FRAMES } }];
-  ev.sourceOwnerId = operatorId ?? firstOccupiedSlotId;
+  ev.sourceEntityId = operatorId ?? firstOccupiedSlotId;
   ev.sourceSkillName = NounType.CONTROL;
   ev.ownerSlotId = firstOccupiedSlotId;
   ev.ownerOperatorId = operatorId ?? firstOccupiedSlotId;

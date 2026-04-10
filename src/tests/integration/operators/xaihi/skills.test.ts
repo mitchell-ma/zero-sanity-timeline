@@ -63,14 +63,14 @@ describe('A. Basic Attack', () => {
     const payload = getMenuPayload(result.current, col!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId,
+        payload.ownerEntityId, payload.columnId,
         payload.atFrame, payload.defaultSkill,
       );
     });
 
     // ── Controller layer ──
     const events = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_XAIHI && ev.columnId === NounType.BASIC_ATTACK,
+      ev => ev.ownerEntityId === SLOT_XAIHI && ev.columnId === NounType.BASIC_ATTACK,
     );
     expect(events).toHaveLength(1);
     expect(events[0].segments).toHaveLength(5);
@@ -83,7 +83,7 @@ describe('A. Basic Attack', () => {
     const baVM = viewModels.get(col!.key);
     expect(baVM).toBeDefined();
     expect(baVM!.events.some(
-      ev => ev.ownerId === SLOT_XAIHI && ev.columnId === NounType.BASIC_ATTACK,
+      ev => ev.ownerEntityId === SLOT_XAIHI && ev.columnId === NounType.BASIC_ATTACK,
     )).toBe(true);
   });
 
@@ -110,7 +110,7 @@ describe('A. Basic Attack', () => {
 
     // ── Controller layer ──
     const events = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_XAIHI && ev.columnId === NounType.BASIC_ATTACK,
+      ev => ev.ownerEntityId === SLOT_XAIHI && ev.columnId === NounType.BASIC_ATTACK,
     );
     expect(events).toHaveLength(1);
 
@@ -142,14 +142,14 @@ describe('B. Battle Skill', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId,
+        payload.ownerEntityId, payload.columnId,
         payload.atFrame, payload.defaultSkill,
       );
     });
 
     // ── Controller layer ──
     const events = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_XAIHI && ev.columnId === NounType.BATTLE,
+      ev => ev.ownerEntityId === SLOT_XAIHI && ev.columnId === NounType.BATTLE,
     );
     expect(events).toHaveLength(1);
     expect(events[0].name).toBe(BATTLE_SKILL_ID);
@@ -162,7 +162,7 @@ describe('B. Battle Skill', () => {
     const battleVM = viewModels.get(col!.key);
     expect(battleVM).toBeDefined();
     expect(battleVM!.events.some(
-      ev => ev.name === BATTLE_SKILL_ID && ev.ownerId === SLOT_XAIHI,
+      ev => ev.name === BATTLE_SKILL_ID && ev.ownerEntityId === SLOT_XAIHI,
     )).toBe(true);
   });
 });
@@ -185,14 +185,14 @@ describe('C. Ultimate', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId,
+        payload.ownerEntityId, payload.columnId,
         payload.atFrame, payload.defaultSkill,
       );
     });
 
     // ── Controller layer ──
     const events = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_XAIHI && ev.columnId === NounType.ULTIMATE,
+      ev => ev.ownerEntityId === SLOT_XAIHI && ev.columnId === NounType.ULTIMATE,
     );
     expect(events).toHaveLength(1);
     expect(events[0].name).toBe(ULTIMATE_ID);
@@ -205,10 +205,10 @@ describe('C. Ultimate', () => {
 
     // Cryo AMP and Nature AMP on TEAM_ID (team status)
     const cryoAmp = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === TEAM_ID && ev.name === NounType.CRYO_AMP,
+      ev => ev.ownerEntityId === TEAM_ID && ev.name === NounType.CRYO_AMP,
     );
     const natureAmp = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === TEAM_ID && ev.name === NounType.NATURE_AMP,
+      ev => ev.ownerEntityId === TEAM_ID && ev.name === NounType.NATURE_AMP,
     );
     expect(cryoAmp).toHaveLength(1);
     expect(natureAmp).toHaveLength(1);
@@ -233,13 +233,13 @@ describe('C. Ultimate', () => {
     const ultVM = viewModels.get(col!.key);
     expect(ultVM).toBeDefined();
     expect(ultVM!.events.some(
-      ev => ev.name === ULTIMATE_ID && ev.ownerId === SLOT_XAIHI,
+      ev => ev.name === ULTIMATE_ID && ev.ownerEntityId === SLOT_XAIHI,
     )).toBe(true);
     // AMP events in team status column
     const teamCol = result.current.columns.find(
       (c): c is import('../../../../consts/viewTypes').MiniTimeline =>
         c.type === ColumnType.MINI_TIMELINE &&
-        c.ownerId === TEAM_ID &&
+        c.ownerEntityId === TEAM_ID &&
         c.columnId === COMMON_COLUMN_IDS.TEAM_STATUS,
     );
     expect(teamCol).toBeDefined();

@@ -70,13 +70,13 @@ describe('Ardelia Full Kit — Basic Attack', () => {
 
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId,
+        payload.ownerEntityId, payload.columnId,
         payload.atFrame, payload.defaultSkill,
       );
     });
 
     const events = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_ARDELIA && ev.columnId === NounType.BASIC_ATTACK,
+      ev => ev.ownerEntityId === SLOT_ARDELIA && ev.columnId === NounType.BASIC_ATTACK,
     );
     expect(events).toHaveLength(1);
   });
@@ -88,13 +88,13 @@ describe('Ardelia Full Kit — Basic Attack', () => {
     const payload = getMenuPayload(result.current, basicCol!, 0);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId,
+        payload.ownerEntityId, payload.columnId,
         payload.atFrame, payload.defaultSkill,
       );
     });
 
     const ev = result.current.allProcessedEvents.find(
-      e => e.ownerId === SLOT_ARDELIA && e.columnId === NounType.BASIC_ATTACK,
+      e => e.ownerEntityId === SLOT_ARDELIA && e.columnId === NounType.BASIC_ATTACK,
     )!;
     expect(ev.segments).toHaveLength(4);
   });
@@ -106,13 +106,13 @@ describe('Ardelia Full Kit — Basic Attack', () => {
     const payload = getMenuPayload(result.current, basicCol!, 0);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId,
+        payload.ownerEntityId, payload.columnId,
         payload.atFrame, payload.defaultSkill,
       );
     });
 
     const ev = result.current.allProcessedEvents.find(
-      e => e.ownerId === SLOT_ARDELIA && e.columnId === NounType.BASIC_ATTACK,
+      e => e.ownerEntityId === SLOT_ARDELIA && e.columnId === NounType.BASIC_ATTACK,
     )!;
     // Final strike is the last segment — should have frames that recover SP
     const finalSeg = ev.segments[ev.segments.length - 1];
@@ -139,13 +139,13 @@ describe('Ardelia Full Kit — Battle Skill', () => {
 
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId,
+        payload.ownerEntityId, payload.columnId,
         payload.atFrame, payload.defaultSkill,
       );
     });
 
     const events = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_ARDELIA && ev.columnId === NounType.BATTLE,
+      ev => ev.ownerEntityId === SLOT_ARDELIA && ev.columnId === NounType.BATTLE,
     );
     expect(events).toHaveLength(1);
   });
@@ -163,13 +163,13 @@ describe('Ardelia Full Kit — Battle Skill', () => {
     const payload = getMenuPayload(result.current, battleCol!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId,
+        payload.ownerEntityId, payload.columnId,
         payload.atFrame, payload.defaultSkill,
       );
     });
 
     const ev = result.current.allProcessedEvents.find(
-      e => e.ownerId === SLOT_ARDELIA && e.columnId === NounType.BATTLE,
+      e => e.ownerEntityId === SLOT_ARDELIA && e.columnId === NounType.BATTLE,
     )!;
     expect(ev.skillPointCost).toBe(expectedSpCost);
   });
@@ -181,14 +181,14 @@ describe('Ardelia Full Kit — Battle Skill', () => {
     const payload = getMenuPayload(result.current, battleCol!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId,
+        payload.ownerEntityId, payload.columnId,
         payload.atFrame, payload.defaultSkill,
       );
     });
 
     // No susceptibility events on enemy
     const susceptEvents = result.current.allProcessedEvents.filter(
-      ev => isQualifiedId(ev.columnId, NounType.SUSCEPTIBILITY) && ev.ownerId === ENEMY_ID,
+      ev => isQualifiedId(ev.columnId, NounType.SUSCEPTIBILITY) && ev.ownerEntityId === ENEMY_ID,
     );
     expect(susceptEvents).toHaveLength(0);
   });
@@ -200,13 +200,13 @@ describe('Ardelia Full Kit — Battle Skill', () => {
     const payload = getMenuPayload(result.current, battleCol!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId,
+        payload.ownerEntityId, payload.columnId,
         payload.atFrame, payload.defaultSkill,
       );
     });
 
     const ev = result.current.allProcessedEvents.find(
-      e => e.ownerId === SLOT_ARDELIA && e.columnId === NounType.BATTLE,
+      e => e.ownerEntityId === SLOT_ARDELIA && e.columnId === NounType.BATTLE,
     )!;
     const totalDur = eventDuration(ev);
     expect(totalDur).toBe(BATTLE_SKILL_DURATION);
@@ -226,7 +226,7 @@ describe('Ardelia Full Kit — Combo Skill', () => {
     const basicPayload = getMenuPayload(result.current, basicCol!, 0);
     act(() => {
       result.current.handleAddEvent(
-        basicPayload.ownerId, basicPayload.columnId,
+        basicPayload.ownerEntityId, basicPayload.columnId,
         basicPayload.atFrame, basicPayload.defaultSkill,
       );
     });
@@ -241,13 +241,13 @@ describe('Ardelia Full Kit — Combo Skill', () => {
 
     act(() => {
       result.current.handleAddEvent(
-        comboPayload.ownerId, comboPayload.columnId,
+        comboPayload.ownerEntityId, comboPayload.columnId,
         comboPayload.atFrame, comboPayload.defaultSkill,
       );
     });
 
     const events = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_ARDELIA && ev.columnId === NounType.COMBO,
+      ev => ev.ownerEntityId === SLOT_ARDELIA && ev.columnId === NounType.COMBO,
     );
     expect(events).toHaveLength(1);
   });
@@ -260,7 +260,7 @@ describe('Ardelia Full Kit — Combo Skill', () => {
     const basicPayload = getMenuPayload(result.current, basicCol!, 0);
     act(() => {
       result.current.handleAddEvent(
-        basicPayload.ownerId, basicPayload.columnId,
+        basicPayload.ownerEntityId, basicPayload.columnId,
         basicPayload.atFrame, basicPayload.defaultSkill,
       );
     });
@@ -268,13 +268,13 @@ describe('Ardelia Full Kit — Combo Skill', () => {
     const comboPayload = getMenuPayload(result.current, comboCol!, 10 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        comboPayload.ownerId, comboPayload.columnId,
+        comboPayload.ownerEntityId, comboPayload.columnId,
         comboPayload.atFrame, comboPayload.defaultSkill,
       );
     });
 
     const corrosionEvents = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === REACTION_COLUMNS.CORROSION && ev.ownerId === ENEMY_ID,
+      ev => ev.columnId === REACTION_COLUMNS.CORROSION && ev.ownerEntityId === ENEMY_ID,
     );
     expect(corrosionEvents).toHaveLength(1);
 
@@ -292,7 +292,7 @@ describe('Ardelia Full Kit — Combo Skill', () => {
     const basicPayload = getMenuPayload(result.current, basicCol!, 0);
     act(() => {
       result.current.handleAddEvent(
-        basicPayload.ownerId, basicPayload.columnId,
+        basicPayload.ownerEntityId, basicPayload.columnId,
         basicPayload.atFrame, basicPayload.defaultSkill,
       );
     });
@@ -300,13 +300,13 @@ describe('Ardelia Full Kit — Combo Skill', () => {
     const comboPayload = getMenuPayload(result.current, comboCol!, 10 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        comboPayload.ownerId, comboPayload.columnId,
+        comboPayload.ownerEntityId, comboPayload.columnId,
         comboPayload.atFrame, comboPayload.defaultSkill,
       );
     });
 
     const ev = result.current.allProcessedEvents.find(
-      e => e.ownerId === SLOT_ARDELIA && e.columnId === NounType.COMBO,
+      e => e.ownerEntityId === SLOT_ARDELIA && e.columnId === NounType.COMBO,
     )!;
     // 4 segments: Animation + Eruption Column + Delayed Explosion + Cooldown
     expect(ev.segments.length).toBeGreaterThanOrEqual(3);
@@ -325,7 +325,7 @@ describe('Ardelia Full Kit — Combo Skill', () => {
     const basicPayload = getMenuPayload(result.current, basicCol!, 0);
     act(() => {
       result.current.handleAddEvent(
-        basicPayload.ownerId, basicPayload.columnId,
+        basicPayload.ownerEntityId, basicPayload.columnId,
         basicPayload.atFrame, basicPayload.defaultSkill,
       );
     });
@@ -333,13 +333,13 @@ describe('Ardelia Full Kit — Combo Skill', () => {
     const comboPayload = getMenuPayload(result.current, comboCol!, 10 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        comboPayload.ownerId, comboPayload.columnId,
+        comboPayload.ownerEntityId, comboPayload.columnId,
         comboPayload.atFrame, comboPayload.defaultSkill,
       );
     });
 
     const corrosionEvents = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === REACTION_COLUMNS.CORROSION && ev.ownerId === ENEMY_ID,
+      ev => ev.columnId === REACTION_COLUMNS.CORROSION && ev.ownerEntityId === ENEMY_ID,
     );
     expect(corrosionEvents).toHaveLength(1);
 
@@ -393,13 +393,13 @@ describe('Ardelia Full Kit — Ultimate', () => {
 
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId,
+        payload.ownerEntityId, payload.columnId,
         payload.atFrame, payload.defaultSkill,
       );
     });
 
     const events = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_ARDELIA && ev.columnId === NounType.ULTIMATE,
+      ev => ev.ownerEntityId === SLOT_ARDELIA && ev.columnId === NounType.ULTIMATE,
     );
     expect(events).toHaveLength(1);
   });
@@ -412,13 +412,13 @@ describe('Ardelia Full Kit — Ultimate', () => {
     const payload = getMenuPayload(result.current, ultCol!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId,
+        payload.ownerEntityId, payload.columnId,
         payload.atFrame, payload.defaultSkill,
       );
     });
 
     const ev = result.current.allProcessedEvents.find(
-      e => e.ownerId === SLOT_ARDELIA && e.columnId === NounType.ULTIMATE,
+      e => e.ownerEntityId === SLOT_ARDELIA && e.columnId === NounType.ULTIMATE,
     )!;
     expect(ev.segments).toHaveLength(2);
     expect(ev.segments.every(s => s.properties.name !== 'Delay')).toBe(true);
@@ -432,13 +432,13 @@ describe('Ardelia Full Kit — Ultimate', () => {
     const payload = getMenuPayload(result.current, ultCol!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId,
+        payload.ownerEntityId, payload.columnId,
         payload.atFrame, payload.defaultSkill,
       );
     });
 
     const ev = result.current.allProcessedEvents.find(
-      e => e.ownerId === SLOT_ARDELIA && e.columnId === NounType.ULTIMATE,
+      e => e.ownerEntityId === SLOT_ARDELIA && e.columnId === NounType.ULTIMATE,
     )!;
     const activeSeg = ev.segments.find(s => s.properties.name === WOOLY_PARTY_SEGMENT_NAME);
     expect(activeSeg).toBeDefined();
@@ -455,13 +455,13 @@ describe('Ardelia Full Kit — Ultimate', () => {
     const payload = getMenuPayload(result.current, ultCol!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId,
+        payload.ownerEntityId, payload.columnId,
         payload.atFrame, payload.defaultSkill,
       );
     });
 
     const ev = result.current.allProcessedEvents.find(
-      e => e.ownerId === SLOT_ARDELIA && e.columnId === NounType.ULTIMATE,
+      e => e.ownerEntityId === SLOT_ARDELIA && e.columnId === NounType.ULTIMATE,
     )!;
     const activeSeg = ev.segments.find(s => s.properties.name === WOOLY_PARTY_SEGMENT_NAME);
     expect(activeSeg).toBeDefined();
@@ -478,12 +478,12 @@ describe('Ardelia Full Kit — Ultimate', () => {
     const payload0 = getMenuPayload(result.current, ultCol0!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload0.ownerId, payload0.columnId,
+        payload0.ownerEntityId, payload0.columnId,
         payload0.atFrame, payload0.defaultSkill,
       );
     });
     const evP0 = result.current.allProcessedEvents.find(
-      e => e.ownerId === SLOT_ARDELIA && e.columnId === NounType.ULTIMATE,
+      e => e.ownerEntityId === SLOT_ARDELIA && e.columnId === NounType.ULTIMATE,
     )!;
     const durP0 = eventDuration(evP0);
 
@@ -496,12 +496,12 @@ describe('Ardelia Full Kit — Ultimate', () => {
     const payload3 = getMenuPayload(result.current, ultCol3!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload3.ownerId, payload3.columnId,
+        payload3.ownerEntityId, payload3.columnId,
         payload3.atFrame, payload3.defaultSkill,
       );
     });
     const evP3 = result.current.allProcessedEvents.find(
-      e => e.ownerId === SLOT_ARDELIA && e.columnId === NounType.ULTIMATE,
+      e => e.ownerEntityId === SLOT_ARDELIA && e.columnId === NounType.ULTIMATE,
     )!;
     const durP3 = eventDuration(evP3);
 
@@ -523,7 +523,7 @@ describe('Ardelia Full Kit — Corrosion → Susceptibility Pipeline', () => {
     const basicPayload = getMenuPayload(result.current, basicCol!, 0);
     act(() => {
       result.current.handleAddEvent(
-        basicPayload.ownerId, basicPayload.columnId,
+        basicPayload.ownerEntityId, basicPayload.columnId,
         basicPayload.atFrame, basicPayload.defaultSkill,
       );
     });
@@ -532,7 +532,7 @@ describe('Ardelia Full Kit — Corrosion → Susceptibility Pipeline', () => {
     const comboPayload = getMenuPayload(result.current, comboCol!, 10 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        comboPayload.ownerId, comboPayload.columnId,
+        comboPayload.ownerEntityId, comboPayload.columnId,
         comboPayload.atFrame, comboPayload.defaultSkill,
       );
     });
@@ -541,7 +541,7 @@ describe('Ardelia Full Kit — Corrosion → Susceptibility Pipeline', () => {
     const battlePayload = getMenuPayload(result.current, battleCol!, 15 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        battlePayload.ownerId, battlePayload.columnId,
+        battlePayload.ownerEntityId, battlePayload.columnId,
         battlePayload.atFrame, battlePayload.defaultSkill,
       );
     });
@@ -549,7 +549,7 @@ describe('Ardelia Full Kit — Corrosion → Susceptibility Pipeline', () => {
     // ── Controller layer ────────────────────────────────────────────────
     // Corrosion should exist but be consumed (clamped)
     const corrosion = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === REACTION_COLUMNS.CORROSION && ev.ownerId === ENEMY_ID,
+      ev => ev.columnId === REACTION_COLUMNS.CORROSION && ev.ownerEntityId === ENEMY_ID,
     );
     expect(corrosion).toHaveLength(1);
     const corrosionEnd = corrosion[0].startFrame + corrosion[0].segments.reduce(
@@ -560,7 +560,7 @@ describe('Ardelia Full Kit — Corrosion → Susceptibility Pipeline', () => {
 
     // Susceptibility should be applied
     const susceptEvents = result.current.allProcessedEvents.filter(
-      ev => isQualifiedId(ev.columnId, NounType.SUSCEPTIBILITY) && ev.ownerId === ENEMY_ID,
+      ev => isQualifiedId(ev.columnId, NounType.SUSCEPTIBILITY) && ev.ownerEntityId === ENEMY_ID,
     );
     expect(susceptEvents).toHaveLength(2);
 
@@ -569,7 +569,7 @@ describe('Ardelia Full Kit — Corrosion → Susceptibility Pipeline', () => {
     const enemyReactionCol = result.current.columns.find(
       (c): c is MiniTimeline =>
         c.type === ColumnType.MINI_TIMELINE &&
-        c.ownerId === ENEMY_ID &&
+        c.ownerEntityId === ENEMY_ID &&
         (c.matchColumnIds?.includes(REACTION_COLUMNS.CORROSION) ?? false),
     );
     expect(enemyReactionCol).toBeDefined();
@@ -583,13 +583,13 @@ describe('Ardelia Full Kit — Corrosion → Susceptibility Pipeline', () => {
     const corrosionVM = viewModels.get(enemyReactionCol!.key);
     expect(corrosionVM).toBeDefined();
     expect(corrosionVM!.events.some(
-      ev => ev.columnId === REACTION_COLUMNS.CORROSION && ev.ownerId === ENEMY_ID,
+      ev => ev.columnId === REACTION_COLUMNS.CORROSION && ev.ownerEntityId === ENEMY_ID,
     )).toBe(true);
 
     // Susceptibility events are present in the view model (may be grouped in a shared column)
     const allVMEvents = Array.from(viewModels.values()).flatMap(vm => vm.events);
     const susceptInVM = allVMEvents.filter(
-      ev => isQualifiedId(ev.columnId, NounType.SUSCEPTIBILITY) && ev.ownerId === ENEMY_ID,
+      ev => isQualifiedId(ev.columnId, NounType.SUSCEPTIBILITY) && ev.ownerEntityId === ENEMY_ID,
     );
     expect(susceptInVM.length).toBeGreaterThan(0);
   });
@@ -605,7 +605,7 @@ describe('Ardelia Full Kit — Corrosion → Susceptibility Pipeline', () => {
     const basicPayload = getMenuPayload(result.current, basicCol!, 0);
     act(() => {
       result.current.handleAddEvent(
-        basicPayload.ownerId, basicPayload.columnId,
+        basicPayload.ownerEntityId, basicPayload.columnId,
         basicPayload.atFrame, basicPayload.defaultSkill,
       );
     });
@@ -613,7 +613,7 @@ describe('Ardelia Full Kit — Corrosion → Susceptibility Pipeline', () => {
     const comboPayload = getMenuPayload(result.current, comboCol!, 10 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        comboPayload.ownerId, comboPayload.columnId,
+        comboPayload.ownerEntityId, comboPayload.columnId,
         comboPayload.atFrame, comboPayload.defaultSkill,
       );
     });
@@ -621,7 +621,7 @@ describe('Ardelia Full Kit — Corrosion → Susceptibility Pipeline', () => {
     const battlePayload1 = getMenuPayload(result.current, battleCol!, 15 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        battlePayload1.ownerId, battlePayload1.columnId,
+        battlePayload1.ownerEntityId, battlePayload1.columnId,
         battlePayload1.atFrame, battlePayload1.defaultSkill,
       );
     });
@@ -630,14 +630,14 @@ describe('Ardelia Full Kit — Corrosion → Susceptibility Pipeline', () => {
     const battlePayload2 = getMenuPayload(result.current, battleCol!, 30 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        battlePayload2.ownerId, battlePayload2.columnId,
+        battlePayload2.ownerEntityId, battlePayload2.columnId,
         battlePayload2.atFrame, battlePayload2.defaultSkill,
       );
     });
 
     // Still only 2 susceptibility events (from first battle skill)
     const susceptEvents = result.current.allProcessedEvents.filter(
-      ev => isQualifiedId(ev.columnId, NounType.SUSCEPTIBILITY) && ev.ownerId === ENEMY_ID,
+      ev => isQualifiedId(ev.columnId, NounType.SUSCEPTIBILITY) && ev.ownerEntityId === ENEMY_ID,
     );
     expect(susceptEvents).toHaveLength(2);
   });
@@ -657,7 +657,7 @@ describe('Ardelia Full Kit — Potential Progression', () => {
     const basicPayload = getMenuPayload(result.current, basicCol!, 0);
     act(() => {
       result.current.handleAddEvent(
-        basicPayload.ownerId, basicPayload.columnId,
+        basicPayload.ownerEntityId, basicPayload.columnId,
         basicPayload.atFrame, basicPayload.defaultSkill,
       );
     });
@@ -665,14 +665,14 @@ describe('Ardelia Full Kit — Potential Progression', () => {
     const comboPayload = getMenuPayload(result.current, comboCol!, 10 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        comboPayload.ownerId, comboPayload.columnId,
+        comboPayload.ownerEntityId, comboPayload.columnId,
         comboPayload.atFrame, comboPayload.defaultSkill,
       );
     });
 
     // Combo event should exist and be processed without errors
     const comboEv = result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT_ARDELIA && ev.columnId === NounType.COMBO,
+      ev => ev.ownerEntityId === SLOT_ARDELIA && ev.columnId === NounType.COMBO,
     );
     expect(comboEv).toBeDefined();
   });
@@ -689,13 +689,13 @@ describe('Ardelia Full Kit — Potential Progression', () => {
       const payload = getMenuPayload(result.current, ultCol!, 5 * FPS);
       act(() => {
         result.current.handleAddEvent(
-          payload.ownerId, payload.columnId,
+          payload.ownerEntityId, payload.columnId,
           payload.atFrame, payload.defaultSkill,
         );
       });
 
       const ev = result.current.allProcessedEvents.find(
-        e => e.ownerId === SLOT_ARDELIA && e.columnId === NounType.ULTIMATE,
+        e => e.ownerEntityId === SLOT_ARDELIA && e.columnId === NounType.ULTIMATE,
       );
       expect(ev).toBeDefined();
       expect(ev!.segments.length).toBe(2);
@@ -713,13 +713,13 @@ describe('Ardelia Full Kit — Potential Progression', () => {
       const payload = getMenuPayload(result.current, battleCol!, 5 * FPS);
       act(() => {
         result.current.handleAddEvent(
-          payload.ownerId, payload.columnId,
+          payload.ownerEntityId, payload.columnId,
           payload.atFrame, payload.defaultSkill,
         );
       });
 
       const ev = result.current.allProcessedEvents.find(
-        e => e.ownerId === SLOT_ARDELIA && e.columnId === NounType.BATTLE,
+        e => e.ownerEntityId === SLOT_ARDELIA && e.columnId === NounType.BATTLE,
       );
       expect(ev).toBeDefined();
     }
@@ -740,7 +740,7 @@ describe('Ardelia Full Kit — Freeform Edge Cases', () => {
     const payload1 = getMenuPayload(result.current, battleCol!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload1.ownerId, payload1.columnId,
+        payload1.ownerEntityId, payload1.columnId,
         payload1.atFrame, payload1.defaultSkill,
       );
     });
@@ -748,7 +748,7 @@ describe('Ardelia Full Kit — Freeform Edge Cases', () => {
     const payload2 = getMenuPayload(result.current, battleCol!, 10 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload2.ownerId, payload2.columnId,
+        payload2.ownerEntityId, payload2.columnId,
         payload2.atFrame, payload2.defaultSkill,
       );
     });
@@ -756,13 +756,13 @@ describe('Ardelia Full Kit — Freeform Edge Cases', () => {
     const payload3 = getMenuPayload(result.current, battleCol!, 15 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload3.ownerId, payload3.columnId,
+        payload3.ownerEntityId, payload3.columnId,
         payload3.atFrame, payload3.defaultSkill,
       );
     });
 
     const events = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_ARDELIA && ev.columnId === NounType.BATTLE,
+      ev => ev.ownerEntityId === SLOT_ARDELIA && ev.columnId === NounType.BATTLE,
     );
     expect(events).toHaveLength(3);
   });
@@ -782,7 +782,7 @@ describe('Ardelia Full Kit — Freeform Edge Cases', () => {
         {
           name: REACTION_COLUMNS.CORROSION,
           segments: [{ properties: { duration: 20 * FPS } }],
-          sourceOwnerId: ENEMY_ID,
+          sourceEntityId: ENEMY_ID,
         },
       );
     });
@@ -794,13 +794,13 @@ describe('Ardelia Full Kit — Freeform Edge Cases', () => {
     const battlePayload = getMenuPayload(result.current, battleCol!, 8 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        battlePayload.ownerId, battlePayload.columnId,
+        battlePayload.ownerEntityId, battlePayload.columnId,
         battlePayload.atFrame, battlePayload.defaultSkill,
       );
     });
 
     const susceptEvents = result.current.allProcessedEvents.filter(
-      (ev: TimelineEvent) => isQualifiedId(ev.columnId, NounType.SUSCEPTIBILITY) && ev.ownerId === ENEMY_ID,
+      (ev: TimelineEvent) => isQualifiedId(ev.columnId, NounType.SUSCEPTIBILITY) && ev.ownerEntityId === ENEMY_ID,
     );
     expect(susceptEvents).toHaveLength(2);
   });

@@ -38,7 +38,7 @@ function findTeamStatusColumn(app: AppResult) {
   return app.columns.find(
     (c): c is MiniTimeline =>
       c.type === ColumnType.MINI_TIMELINE &&
-      c.ownerId === TEAM_ID &&
+      c.ownerEntityId === TEAM_ID &&
       c.columnId === COMMON_COLUMN_IDS.TEAM_STATUS,
   );
 }
@@ -62,7 +62,7 @@ function getLinkMenuPayload(app: AppResult, atFrame: number) {
   expect(linkItem).toBeDefined();
   expect(linkItem!.disabled).toBeFalsy();
 
-  return linkItem!.actionPayload as { ownerId: string; columnId: string; atFrame: number; defaultSkill: Record<string, unknown> };
+  return linkItem!.actionPayload as { ownerEntityId: string; columnId: string; atFrame: number; defaultSkill: Record<string, unknown> };
 }
 
 
@@ -89,13 +89,13 @@ describe('Akekuri Ultimate → Link Team Status', () => {
     const ultPayload = getMenuPayload(result.current, ultCol!, 1 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        ultPayload.ownerId, ultPayload.columnId, ultPayload.atFrame, ultPayload.defaultSkill,
+        ultPayload.ownerEntityId, ultPayload.columnId, ultPayload.atFrame, ultPayload.defaultSkill,
       );
     });
 
     // 2. Controller: LINK events appear under TEAM_ID
     const linkEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === TEAM_ID && ev.columnId === StatusType.LINK,
+      (ev) => ev.ownerEntityId === TEAM_ID && ev.columnId === StatusType.LINK,
     );
     expect(linkEvents.length).toBeGreaterThanOrEqual(1);
 
@@ -131,7 +131,7 @@ describe('Akekuri Ultimate → Link Team Status', () => {
     const ultPayload = getMenuPayload(result.current, ultCol!, 1 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        ultPayload.ownerId, ultPayload.columnId, ultPayload.atFrame, ultPayload.defaultSkill,
+        ultPayload.ownerEntityId, ultPayload.columnId, ultPayload.atFrame, ultPayload.defaultSkill,
       );
     });
 
@@ -139,14 +139,14 @@ describe('Akekuri Ultimate → Link Team Status', () => {
     const battlePayload = getMenuPayload(result.current, battleCol!, 4 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        battlePayload.ownerId, battlePayload.columnId, battlePayload.atFrame, battlePayload.defaultSkill,
+        battlePayload.ownerEntityId, battlePayload.columnId, battlePayload.atFrame, battlePayload.defaultSkill,
       );
     });
 
     // 2. Controller: Battle skill consumed 1 Link stack
     const controller = getLastController();
     const battleEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === NounType.BATTLE,
+      (ev) => ev.ownerEntityId === SLOT_LAEVATAIN && ev.columnId === NounType.BATTLE,
     );
     expect(battleEvents).toHaveLength(1);
     expect(controller.getLinkStacks(battleEvents[0].uid)).toBe(1);
@@ -168,7 +168,7 @@ describe('Akekuri Ultimate → Link Team Status', () => {
     const ultPayload = getMenuPayload(result.current, ultCol!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        ultPayload.ownerId, ultPayload.columnId, ultPayload.atFrame, ultPayload.defaultSkill,
+        ultPayload.ownerEntityId, ultPayload.columnId, ultPayload.atFrame, ultPayload.defaultSkill,
       );
     });
 
@@ -176,14 +176,14 @@ describe('Akekuri Ultimate → Link Team Status', () => {
     const battlePayload = getMenuPayload(result.current, battleCol!, 1 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        battlePayload.ownerId, battlePayload.columnId, battlePayload.atFrame, battlePayload.defaultSkill,
+        battlePayload.ownerEntityId, battlePayload.columnId, battlePayload.atFrame, battlePayload.defaultSkill,
       );
     });
 
     // 2. Controller: no Link consumed
     const controller = getLastController();
     const battleEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === NounType.BATTLE,
+      (ev) => ev.ownerEntityId === SLOT_LAEVATAIN && ev.columnId === NounType.BATTLE,
     );
     expect(battleEvents).toHaveLength(1);
     expect(controller.getLinkStacks(battleEvents[0].uid)).toBe(0);
@@ -206,20 +206,20 @@ describe('Freeform LINK stacking', () => {
     const linkPayload1 = getLinkMenuPayload(result.current, 1 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        linkPayload1.ownerId, linkPayload1.columnId, linkPayload1.atFrame, linkPayload1.defaultSkill,
+        linkPayload1.ownerEntityId, linkPayload1.columnId, linkPayload1.atFrame, linkPayload1.defaultSkill,
       );
     });
 
     const linkPayload2 = getLinkMenuPayload(result.current, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        linkPayload2.ownerId, linkPayload2.columnId, linkPayload2.atFrame, linkPayload2.defaultSkill,
+        linkPayload2.ownerEntityId, linkPayload2.columnId, linkPayload2.atFrame, linkPayload2.defaultSkill,
       );
     });
 
     // 2. Controller: both LINK events present
     const linkEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === TEAM_ID && ev.columnId === StatusType.LINK,
+      (ev) => ev.ownerEntityId === TEAM_ID && ev.columnId === StatusType.LINK,
     );
     expect(linkEvents).toHaveLength(2);
   });
@@ -238,14 +238,14 @@ describe('Freeform LINK stacking', () => {
     const linkPayload1 = getLinkMenuPayload(result.current, 1 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        linkPayload1.ownerId, linkPayload1.columnId, linkPayload1.atFrame, linkPayload1.defaultSkill,
+        linkPayload1.ownerEntityId, linkPayload1.columnId, linkPayload1.atFrame, linkPayload1.defaultSkill,
       );
     });
 
     const linkPayload2 = getLinkMenuPayload(result.current, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        linkPayload2.ownerId, linkPayload2.columnId, linkPayload2.atFrame, linkPayload2.defaultSkill,
+        linkPayload2.ownerEntityId, linkPayload2.columnId, linkPayload2.atFrame, linkPayload2.defaultSkill,
       );
     });
 
@@ -253,14 +253,14 @@ describe('Freeform LINK stacking', () => {
     const battlePayload = getMenuPayload(result.current, battleCol!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        battlePayload.ownerId, battlePayload.columnId, battlePayload.atFrame, battlePayload.defaultSkill,
+        battlePayload.ownerEntityId, battlePayload.columnId, battlePayload.atFrame, battlePayload.defaultSkill,
       );
     });
 
     // 2. Controller: 2 Link stacks consumed
     const controller = getLastController();
     const battleEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === NounType.BATTLE,
+      (ev) => ev.ownerEntityId === SLOT_LAEVATAIN && ev.columnId === NounType.BATTLE,
     );
     expect(battleEvents).toHaveLength(1);
     expect(controller.getLinkStacks(battleEvents[0].uid)).toBe(2);

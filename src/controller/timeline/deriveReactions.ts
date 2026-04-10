@@ -26,14 +26,14 @@ function getReactionDurationFrames(reactionColumnId: string): number {
 }
 
 interface StatusSource {
-  ownerId: string;
+  ownerEntityId: string;
   skillName?: string;
 }
 
 export function deriveReactions(events: TimelineEvent[]): TimelineEvent[] {
   // Collect all enemy infliction events, sorted by start frame
   const inflictions = events
-    .filter((ev) => ev.ownerId === ENEMY_ID && INFLICTION_COLUMN_IDS.has(ev.columnId))
+    .filter((ev) => ev.ownerEntityId === ENEMY_ID && INFLICTION_COLUMN_IDS.has(ev.columnId))
     .sort((a, b) => a.startFrame - b.startFrame);
 
   if (inflictions.length === 0) return events;
@@ -78,11 +78,11 @@ export function deriveReactions(events: TimelineEvent[]): TimelineEvent[] {
         uid: `${incoming.uid}-reaction`,
         id: reactionColumnId,
         name: reactionColumnId,
-        ownerId: ENEMY_ID,
+        ownerEntityId: ENEMY_ID,
         columnId: reactionColumnId,
         startFrame: incoming.startFrame,
         segments: durationSegment(getReactionDurationFrames(reactionColumnId)),
-        sourceOwnerId: incoming.sourceOwnerId,
+        sourceEntityId: incoming.sourceEntityId,
         sourceSkillName: incoming.sourceSkillName,
         stacks: Math.min(activeOther.length, 2),
       });
@@ -91,7 +91,7 @@ export function deriveReactions(events: TimelineEvent[]): TimelineEvent[] {
       removedIds.add(incoming.uid);
 
       // Clamp ALL active other-element inflictions at the reaction frame
-      const reactionSource: StatusSource = { ownerId: incoming.sourceOwnerId ?? ENEMY_ID, skillName: incoming.sourceSkillName };
+      const reactionSource: StatusSource = { ownerEntityId: incoming.sourceEntityId ?? ENEMY_ID, skillName: incoming.sourceSkillName };
       for (const consumed of activeOther) {
         clampMap.set(consumed.uid, { frame: incoming.startFrame, source: reactionSource });
       }
@@ -126,7 +126,7 @@ export function deriveReactions(events: TimelineEvent[]): TimelineEvent[] {
       result.push({
         ...clamped,
         eventStatus: EventStatusType.CONSUMED,
-        eventStatusOwnerId: clamp.source.ownerId,
+        eventStatusEntityId: clamp.source.ownerEntityId,
         eventStatusSkillName: clamp.source.skillName,
       });
     } else {

@@ -300,12 +300,12 @@ describe('H. Pipeline placement', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const combos = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT && ev.columnId === NounType.COMBO,
+      ev => ev.ownerEntityId === SLOT && ev.columnId === NounType.COMBO,
     );
     expect(combos).toHaveLength(1);
     expect(combos[0].name).toBe(COMBO_ID);
@@ -317,12 +317,12 @@ describe('H. Pipeline placement', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const combos = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT && ev.columnId === NounType.COMBO,
+      ev => ev.ownerEntityId === SLOT && ev.columnId === NounType.COMBO,
     );
     expect(combos[0].segments).toHaveLength(3);
   });
@@ -333,12 +333,12 @@ describe('H. Pipeline placement', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const combo = result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT && ev.columnId === NounType.COMBO,
+      ev => ev.ownerEntityId === SLOT && ev.columnId === NounType.COMBO,
     )!;
     // segments[0] = animation, segments[1] = active
     expect(combo.segments[1].properties.duration).toBe(Math.round(2.5 * FPS));
@@ -355,12 +355,12 @@ describe('H. Pipeline placement', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const combo = result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT && ev.columnId === NounType.COMBO,
+      ev => ev.ownerEntityId === SLOT && ev.columnId === NounType.COMBO,
     )!;
     expect(combo.segments[1].properties.duration).toBe(Math.round(3.5 * FPS));
   });
@@ -371,12 +371,12 @@ describe('H. Pipeline placement', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const combo = result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT && ev.columnId === NounType.COMBO,
+      ev => ev.ownerEntityId === SLOT && ev.columnId === NounType.COMBO,
     )!;
     const activeFrames = combo.segments[1].frames ?? [];
     // At P0 (duration 2.5s): frames at offsets 0.5, 1.0, 1.5, 2.0, 2.5 survive
@@ -395,12 +395,12 @@ describe('H. Pipeline placement', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const combo = result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT && ev.columnId === NounType.COMBO,
+      ev => ev.ownerEntityId === SLOT && ev.columnId === NounType.COMBO,
     )!;
     const activeFrames = combo.segments[1].frames ?? [];
     // At P1 (duration 3.5s): all 7 frames survive duration filter
@@ -418,14 +418,14 @@ describe('I. Combo updates on loadout potential change', () => {
     const payload = getMenuPayload(result.current, col!, atFrame);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
   }
 
   function getCombo(result: { current: AppResult }) {
     return result.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT && ev.columnId === NounType.COMBO,
+      ev => ev.ownerEntityId === SLOT && ev.columnId === NounType.COMBO,
     )!;
   }
 

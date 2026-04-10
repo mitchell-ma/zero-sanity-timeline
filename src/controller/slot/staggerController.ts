@@ -97,7 +97,7 @@ export class StaggerController {
                 uid: `${ev.uid}-stagger-${frame}`,
                 id: 'stagger',
                 name: 'stagger',
-                ownerId: ev.ownerId,
+                ownerEntityId: ev.ownerEntityId,
                 columnId: COMMON_COLUMN_IDS.STAGGER,
                 startFrame: frame,
                 segments: durationSegment(stagger),

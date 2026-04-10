@@ -68,7 +68,7 @@ function addHeatInfliction(app: AppResult, atFrame: number) {
   expect(heatItem!.disabled).toBeFalsy();
   const payload = heatItem!.actionPayload as AddEventPayload;
   act(() => {
-    app.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+    app.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
   });
 }
 
@@ -90,12 +90,12 @@ describe('Laevatain Skills — integration through useApp', () => {
     const payload = getAddEventPayload(menuItems!);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const basics = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === NounType.BASIC_ATTACK,
+      (ev) => ev.ownerEntityId === SLOT_LAEVATAIN && ev.columnId === NounType.BASIC_ATTACK,
     );
     expect(basics.length).toBeGreaterThanOrEqual(1);
   });
@@ -113,12 +113,12 @@ describe('Laevatain Skills — integration through useApp', () => {
     const payload = getAddEventPayload(menuItems!);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const battles = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === NounType.BATTLE,
+      (ev) => ev.ownerEntityId === SLOT_LAEVATAIN && ev.columnId === NounType.BATTLE,
     );
     expect(battles).toHaveLength(1);
   });
@@ -140,12 +140,12 @@ describe('Laevatain Skills — integration through useApp', () => {
     const payload = getAddEventPayload(menuItems!);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const combos = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === NounType.COMBO,
+      (ev) => ev.ownerEntityId === SLOT_LAEVATAIN && ev.columnId === NounType.COMBO,
     );
     expect(combos).toHaveLength(1);
   });
@@ -164,12 +164,12 @@ describe('Laevatain Skills — integration through useApp', () => {
     const payload = getAddEventPayload(menuItems!);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     const ultimates = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === NounType.ULTIMATE,
+      (ev) => ev.ownerEntityId === SLOT_LAEVATAIN && ev.columnId === NounType.ULTIMATE,
     );
     expect(ultimates).toHaveLength(1);
   });
@@ -186,13 +186,13 @@ describe('Laevatain Skills — integration through useApp', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
 
     // Controller layer: MF event generated
     const mfProcessed = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === MELTING_FLAME_ID && ev.ownerId === SLOT_LAEVATAIN,
+      (ev) => ev.columnId === MELTING_FLAME_ID && ev.ownerEntityId === SLOT_LAEVATAIN,
     );
     expect(mfProcessed).toHaveLength(1);
     expect(mfProcessed[0].sourceSkillName).toBe(SMOULDERING_FIRE_ID);
@@ -207,7 +207,7 @@ describe('Laevatain Skills — integration through useApp', () => {
     const statusVm = viewModels.get(statusCol!.key);
     expect(statusVm).toBeDefined();
     const mfVmEvents = statusVm!.events.filter(
-      (ev) => ev.columnId === MELTING_FLAME_ID && ev.ownerId === SLOT_LAEVATAIN,
+      (ev) => ev.columnId === MELTING_FLAME_ID && ev.ownerEntityId === SLOT_LAEVATAIN,
     );
     expect(mfVmEvents).toHaveLength(1);
   });
@@ -235,7 +235,7 @@ describe('Laevatain Skills — integration through useApp', () => {
 
       // Verify heat inflictions exist before basic attack
       const heatsBefore = result.current.allProcessedEvents.filter(
-        (ev) => ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerId === ENEMY_ID,
+        (ev) => ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerEntityId === ENEMY_ID,
       );
       expect(heatsBefore).toHaveLength(heatCount);
 
@@ -246,20 +246,20 @@ describe('Laevatain Skills — integration through useApp', () => {
       const multiSegBasic = buildMultiSegmentBasic(basicPayload.defaultSkill);
       act(() => {
         result.current.handleAddEvent(
-          basicPayload.ownerId, basicPayload.columnId, basicPayload.atFrame, multiSegBasic,
+          basicPayload.ownerEntityId, basicPayload.columnId, basicPayload.atFrame, multiSegBasic,
         );
       });
 
       // Controller layer: Melting Flames generated at 1:1 ratio with absorbed heat inflictions
       const mfEvents = result.current.allProcessedEvents.filter(
-        (ev) => ev.columnId === MELTING_FLAME_ID && ev.ownerId === SLOT_LAEVATAIN,
+        (ev) => ev.columnId === MELTING_FLAME_ID && ev.ownerEntityId === SLOT_LAEVATAIN,
       );
       expect(mfEvents).toHaveLength(heatCount);
 
       // Heat inflictions should be consumed
       const heatsAfter = result.current.allProcessedEvents.filter(
         (ev) => ev.columnId === INFLICTION_COLUMNS.HEAT
-          && ev.ownerId === ENEMY_ID
+          && ev.ownerEntityId === ENEMY_ID
           && ev.eventStatus === EventStatusType.CONSUMED,
       );
       expect(heatsAfter).toHaveLength(heatCount);
@@ -276,7 +276,7 @@ describe('Laevatain Skills — integration through useApp', () => {
       const statusVm = viewModels.get(statusCol!.key);
       expect(statusVm).toBeDefined();
       const mfVmEvents = statusVm!.events.filter(
-        (ev) => ev.columnId === MELTING_FLAME_ID && ev.ownerId === SLOT_LAEVATAIN,
+        (ev) => ev.columnId === MELTING_FLAME_ID && ev.ownerEntityId === SLOT_LAEVATAIN,
       );
       expect(mfVmEvents).toHaveLength(heatCount);
     },
@@ -302,12 +302,12 @@ describe('Laevatain Skills — integration through useApp', () => {
     const multiSegBasic = buildMultiSegmentBasic(basicPayload.defaultSkill);
     act(() => {
       result.current.handleAddEvent(
-        basicPayload.ownerId, basicPayload.columnId, basicPayload.atFrame, multiSegBasic,
+        basicPayload.ownerEntityId, basicPayload.columnId, basicPayload.atFrame, multiSegBasic,
       );
     });
 
     const mfEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === MELTING_FLAME_ID && ev.ownerId === SLOT_LAEVATAIN,
+      (ev) => ev.columnId === MELTING_FLAME_ID && ev.ownerEntityId === SLOT_LAEVATAIN,
     );
     expect(mfEvents.length).toBeGreaterThanOrEqual(1);
     for (const ev of mfEvents) {
@@ -330,20 +330,20 @@ describe('Laevatain Skills — integration through useApp', () => {
       const payload = getMenuPayload(result.current, battleCol!, atFrame);
       act(() => {
         result.current.handleAddEvent(
-          payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+          payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
         );
       });
     }
 
     // Verify all 4 battle skills were added
     const battleEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === NounType.BATTLE,
+      (ev) => ev.ownerEntityId === SLOT_LAEVATAIN && ev.columnId === NounType.BATTLE,
     );
     expect(battleEvents).toHaveLength(4);
 
     // Verify 4 MF stacks exist
     const mfBefore = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === MELTING_FLAME_ID && ev.ownerId === SLOT_LAEVATAIN
+      (ev) => ev.columnId === MELTING_FLAME_ID && ev.ownerEntityId === SLOT_LAEVATAIN
         && ev.eventStatus !== EventStatusType.CONSUMED,
     );
     expect(mfBefore).toHaveLength(4);
@@ -360,13 +360,13 @@ describe('Laevatain Skills — integration through useApp', () => {
     );
     act(() => {
       result.current.handleAddEvent(
-        empPayload.ownerId, empPayload.columnId, empPayload.atFrame, empPayload.defaultSkill,
+        empPayload.ownerEntityId, empPayload.columnId, empPayload.atFrame, empPayload.defaultSkill,
       );
     });
 
     // All 4 MF stacks should be consumed
     const mfAfter = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === MELTING_FLAME_ID && ev.ownerId === SLOT_LAEVATAIN,
+      (ev) => ev.columnId === MELTING_FLAME_ID && ev.ownerEntityId === SLOT_LAEVATAIN,
     );
     const consumed = mfAfter.filter((ev) => ev.eventStatus === EventStatusType.CONSUMED);
     expect(consumed).toHaveLength(4);
@@ -391,14 +391,14 @@ describe('Laevatain Skills — integration through useApp', () => {
       const payload = getMenuPayload(result.current, battleCol!, atFrame);
       act(() => {
         result.current.handleAddEvent(
-          payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+          payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
         );
       });
     }
 
     // Verify 4 MF stacks (max)
     const mfStacks = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === MELTING_FLAME_ID && ev.ownerId === SLOT_LAEVATAIN
+      (ev) => ev.columnId === MELTING_FLAME_ID && ev.ownerEntityId === SLOT_LAEVATAIN
         && ev.eventStatus !== EventStatusType.CONSUMED,
     );
     expect(mfStacks).toHaveLength(4);
@@ -415,21 +415,21 @@ describe('Laevatain Skills — integration through useApp', () => {
     const multiSegBasic = buildMultiSegmentBasic(basicPayload.defaultSkill);
     act(() => {
       result.current.handleAddEvent(
-        basicPayload.ownerId, basicPayload.columnId, basicPayload.atFrame, multiSegBasic,
+        basicPayload.ownerEntityId, basicPayload.columnId, basicPayload.atFrame, multiSegBasic,
       );
     });
 
     // 4. Heat inflictions should NOT be consumed (ALL pre-validation fails: can't APPLY more MF)
     const heatsConsumed = result.current.allProcessedEvents.filter(
       (ev) => ev.columnId === INFLICTION_COLUMNS.HEAT
-        && ev.ownerId === ENEMY_ID
+        && ev.ownerEntityId === ENEMY_ID
         && ev.eventStatus === EventStatusType.CONSUMED,
     );
     expect(heatsConsumed).toHaveLength(0);
 
     // 5. MF stacks should still be exactly 4 (unchanged)
     const mfAfter = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === MELTING_FLAME_ID && ev.ownerId === SLOT_LAEVATAIN
+      (ev) => ev.columnId === MELTING_FLAME_ID && ev.ownerEntityId === SLOT_LAEVATAIN
         && ev.eventStatus !== EventStatusType.CONSUMED,
     );
     expect(mfAfter).toHaveLength(4);

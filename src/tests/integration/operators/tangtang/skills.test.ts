@@ -94,21 +94,21 @@ function setupTangtang() {
 function placeBS(app: AppResult, frame: number) {
   const col = findColumn(app, SLOT_TANGTANG, NounType.BATTLE)!;
   const payload = getMenuPayload(app, col, frame);
-  act(() => { app.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill); });
+  act(() => { app.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill); });
 }
 
 /** Place a combo skill in freeform mode at the given frame. */
 function placeCombo(app: AppResult, frame: number) {
   const col = findColumn(app, SLOT_TANGTANG, NounType.COMBO)!;
   const payload = getMenuPayload(app, col, frame);
-  act(() => { app.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill); });
+  act(() => { app.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill); });
 }
 
 /** Place an ultimate at the given frame (energy must be set first). */
 function placeUlt(app: AppResult, frame: number) {
   const col = findColumn(app, SLOT_TANGTANG, NounType.ULTIMATE)!;
   const payload = getMenuPayload(app, col, frame);
-  act(() => { app.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill); });
+  act(() => { app.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill); });
 }
 
 /** Place a specific BA variant by matching defaultSkill.id in the menu. */
@@ -127,11 +127,11 @@ function placeBAVariant(app: AppResult, frame: number, variantId: string) {
     const freeItem = freeItems!.find(matchById);
     expect(freeItem).toBeDefined();
     const payload = freeItem!.actionPayload as AddEventPayload;
-    act(() => { app.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill); });
+    act(() => { app.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill); });
     return;
   }
   const payload = item!.actionPayload as AddEventPayload;
-  act(() => { app.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill); });
+  act(() => { app.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill); });
 }
 
 /** Change potential level for TangTang. */
@@ -143,9 +143,9 @@ function setPotential(app: AppResult, potential: number) {
 }
 
 /** Find a matching column for status events (checks columnId and matchColumnIds). */
-function findMatchingColumn(app: AppResult, ownerId: string, matchId: string) {
+function findMatchingColumn(app: AppResult, ownerEntityId: string, matchId: string) {
   return app.columns.find((c): c is MiniTimeline =>
-    c.type === ColumnType.MINI_TIMELINE && c.ownerId === ownerId
+    c.type === ColumnType.MINI_TIMELINE && c.ownerEntityId === ownerEntityId
     && (c.columnId === matchId || (c.matchColumnIds?.includes(matchId) ?? false)));
 }
 
@@ -167,14 +167,14 @@ describe('A. Core Skill Placement', () => {
     const payload = getMenuPayload(result.current, col!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId,
+        payload.ownerEntityId, payload.columnId,
         payload.atFrame, payload.defaultSkill,
       );
     });
 
     // ── Controller layer ──
     const events = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_TANGTANG && ev.columnId === NounType.BASIC_ATTACK,
+      ev => ev.ownerEntityId === SLOT_TANGTANG && ev.columnId === NounType.BASIC_ATTACK,
     );
     expect(events).toHaveLength(1);
 
@@ -186,7 +186,7 @@ describe('A. Core Skill Placement', () => {
     const baVM = viewModels.get(col!.key);
     expect(baVM).toBeDefined();
     expect(baVM!.events.some(
-      ev => ev.ownerId === SLOT_TANGTANG && ev.columnId === NounType.BASIC_ATTACK,
+      ev => ev.ownerEntityId === SLOT_TANGTANG && ev.columnId === NounType.BASIC_ATTACK,
     )).toBe(true);
   });
 
@@ -203,14 +203,14 @@ describe('A. Core Skill Placement', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId,
+        payload.ownerEntityId, payload.columnId,
         payload.atFrame, payload.defaultSkill,
       );
     });
 
     // ── Controller layer ──
     const events = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_TANGTANG && ev.columnId === NounType.BATTLE,
+      ev => ev.ownerEntityId === SLOT_TANGTANG && ev.columnId === NounType.BATTLE,
     );
     expect(events).toHaveLength(1);
     expect(events[0].name).toBe(BATTLE_SKILL_ID);
@@ -223,7 +223,7 @@ describe('A. Core Skill Placement', () => {
     const battleVM = viewModels.get(col!.key);
     expect(battleVM).toBeDefined();
     expect(battleVM!.events.some(
-      ev => ev.name === BATTLE_SKILL_ID && ev.ownerId === SLOT_TANGTANG,
+      ev => ev.name === BATTLE_SKILL_ID && ev.ownerEntityId === SLOT_TANGTANG,
     )).toBe(true);
   });
 
@@ -243,14 +243,14 @@ describe('A. Core Skill Placement', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId,
+        payload.ownerEntityId, payload.columnId,
         payload.atFrame, payload.defaultSkill,
       );
     });
 
     // ── Controller layer ──
     const combos = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_TANGTANG && ev.columnId === NounType.COMBO,
+      ev => ev.ownerEntityId === SLOT_TANGTANG && ev.columnId === NounType.COMBO,
     );
     expect(combos).toHaveLength(1);
     expect(combos[0].name).toBe(COMBO_ID);
@@ -280,14 +280,14 @@ describe('A. Core Skill Placement', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId,
+        payload.ownerEntityId, payload.columnId,
         payload.atFrame, payload.defaultSkill,
       );
     });
 
     // ── Controller layer ──
     const events = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_TANGTANG && ev.columnId === NounType.ULTIMATE,
+      ev => ev.ownerEntityId === SLOT_TANGTANG && ev.columnId === NounType.ULTIMATE,
     );
     expect(events).toHaveLength(1);
     expect(events[0].name).toBe(ULTIMATE_ID);
@@ -304,21 +304,21 @@ describe('B. Battle Skill — Cryo Infliction', () => {
 
     // Count cryo inflictions before BS
     const cryoBefore = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === INFLICTION_COLUMNS.CRYO && ev.ownerId === ENEMY_ID,
+      ev => ev.columnId === INFLICTION_COLUMNS.CRYO && ev.ownerEntityId === ENEMY_ID,
     ).length;
 
     const col = findColumn(result.current, SLOT_TANGTANG, NounType.BATTLE);
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId,
+        payload.ownerEntityId, payload.columnId,
         payload.atFrame, payload.defaultSkill,
       );
     });
 
     // ── Controller layer: cryo infliction generated ──
     const cryoAfter = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === INFLICTION_COLUMNS.CRYO && ev.ownerId === ENEMY_ID,
+      ev => ev.columnId === INFLICTION_COLUMNS.CRYO && ev.ownerEntityId === ENEMY_ID,
     );
     expect(cryoAfter.length).toBeGreaterThan(cryoBefore);
 
@@ -326,7 +326,7 @@ describe('B. Battle Skill — Cryo Infliction', () => {
     const enemyStatusCol = result.current.columns.find(
       (c): c is MiniTimeline =>
         c.type === ColumnType.MINI_TIMELINE &&
-        c.ownerId === ENEMY_ID &&
+        c.ownerEntityId === ENEMY_ID &&
         c.columnId === ENEMY_GROUP_COLUMNS.ENEMY_STATUS,
     );
     expect(enemyStatusCol).toBeDefined();
@@ -355,14 +355,14 @@ describe('C. Combo Cooldown', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId,
+        payload.ownerEntityId, payload.columnId,
         payload.atFrame, payload.defaultSkill,
       );
     });
 
     // ── Controller layer ──
     const combos = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_TANGTANG && ev.columnId === NounType.COMBO,
+      ev => ev.ownerEntityId === SLOT_TANGTANG && ev.columnId === NounType.COMBO,
     );
     expect(combos).toHaveLength(1);
 
@@ -398,14 +398,14 @@ describe('D. Ultimate Energy Cost', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId,
+        payload.ownerEntityId, payload.columnId,
         payload.atFrame, payload.defaultSkill,
       );
     });
 
     // ── Controller layer ──
     const events = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_TANGTANG && ev.columnId === NounType.ULTIMATE,
+      ev => ev.ownerEntityId === SLOT_TANGTANG && ev.columnId === NounType.ULTIMATE,
     );
     expect(events).toHaveLength(1);
 
@@ -427,7 +427,7 @@ describe('D. Ultimate Energy Cost', () => {
     const ultVM = viewModels.get(col!.key);
     expect(ultVM).toBeDefined();
     expect(ultVM!.events.some(
-      ev => ev.name === ULTIMATE_ID && ev.ownerId === SLOT_TANGTANG,
+      ev => ev.name === ULTIMATE_ID && ev.ownerEntityId === SLOT_TANGTANG,
     )).toBe(true);
   });
 });
@@ -444,7 +444,7 @@ describe('E. View Layer', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId,
+        payload.ownerEntityId, payload.columnId,
         payload.atFrame, payload.defaultSkill,
       );
     });
@@ -456,7 +456,7 @@ describe('E. View Layer', () => {
     const battleVM = viewModels.get(col!.key);
     expect(battleVM).toBeDefined();
     expect(battleVM!.events.filter(
-      ev => ev.ownerId === SLOT_TANGTANG && ev.columnId === NounType.BATTLE,
+      ev => ev.ownerEntityId === SLOT_TANGTANG && ev.columnId === NounType.BATTLE,
     ).length).toBeGreaterThanOrEqual(1);
   });
 
@@ -468,7 +468,7 @@ describe('E. View Layer', () => {
     const payload = getMenuPayload(result.current, col!, 5 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerId, payload.columnId,
+        payload.ownerEntityId, payload.columnId,
         payload.atFrame, payload.defaultSkill,
       );
     });
@@ -480,7 +480,7 @@ describe('E. View Layer', () => {
     const comboVM = viewModels.get(col!.key);
     expect(comboVM).toBeDefined();
     expect(comboVM!.events.some(
-      ev => ev.name === COMBO_ID && ev.ownerId === SLOT_TANGTANG,
+      ev => ev.name === COMBO_ID && ev.ownerEntityId === SLOT_TANGTANG,
     )).toBe(true);
   });
 });
@@ -497,7 +497,7 @@ describe('F. Combo Skill — Whirlpool Creation', () => {
 
     // ── Controller layer: whirlpool event on operator ──
     const whirlpools = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === WHIRLPOOL_ID && ev.ownerId === SLOT_TANGTANG && ev.startFrame > 0,
+      ev => ev.columnId === WHIRLPOOL_ID && ev.ownerEntityId === SLOT_TANGTANG && ev.startFrame > 0,
     );
     expect(whirlpools.length).toBeGreaterThanOrEqual(1);
     expect(whirlpools[0].sourceSkillName).toBe(COMBO_ID);
@@ -520,7 +520,7 @@ describe('F. Combo Skill — Whirlpool Creation', () => {
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
     const cryoBefore = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === INFLICTION_COLUMNS.CRYO && ev.ownerId === ENEMY_ID,
+      ev => ev.columnId === INFLICTION_COLUMNS.CRYO && ev.ownerEntityId === ENEMY_ID,
     ).length;
 
     placeCombo(result.current, 2 * FPS);
@@ -528,7 +528,7 @@ describe('F. Combo Skill — Whirlpool Creation', () => {
     // Combo deals Cryo DMG and creates Whirlpool — but does NOT apply cryo infliction.
     // Cryo infliction is the TRIGGER condition, not an effect of the combo itself.
     const cryoAfter = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === INFLICTION_COLUMNS.CRYO && ev.ownerId === ENEMY_ID,
+      ev => ev.columnId === INFLICTION_COLUMNS.CRYO && ev.ownerEntityId === ENEMY_ID,
     );
     expect(cryoAfter.length).toBe(cryoBefore);
   });
@@ -540,7 +540,7 @@ describe('F. Combo Skill — Whirlpool Creation', () => {
     placeCombo(result.current, 5 * FPS);
 
     const whirlpools = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === WHIRLPOOL_ID && ev.ownerId === SLOT_TANGTANG && ev.startFrame > 0,
+      ev => ev.columnId === WHIRLPOOL_ID && ev.ownerEntityId === SLOT_TANGTANG && ev.startFrame > 0,
     );
     expect(whirlpools.length).toBe(2);
   });
@@ -557,7 +557,7 @@ describe('G. Battle Skill — Waterspout Creation', () => {
 
     // ── Controller layer: waterspout on enemy ──
     const waterspouts = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === WATERSPOUT_ID && ev.ownerId === ENEMY_ID && ev.startFrame > 0,
+      ev => ev.columnId === WATERSPOUT_ID && ev.ownerEntityId === ENEMY_ID && ev.startFrame > 0,
     );
     expect(waterspouts.length).toBeGreaterThanOrEqual(1);
     expect(waterspouts[0].sourceSkillName).toBe(BATTLE_SKILL_ID);
@@ -567,7 +567,7 @@ describe('G. Battle Skill — Waterspout Creation', () => {
     const enemyStatusCol = findMatchingColumn(result.current, ENEMY_ID, WATERSPOUT_ID)
       ?? result.current.columns.find(
         (c): c is MiniTimeline => c.type === ColumnType.MINI_TIMELINE
-          && c.ownerId === ENEMY_ID && c.columnId === ENEMY_GROUP_COLUMNS.ENEMY_STATUS,
+          && c.ownerEntityId === ENEMY_ID && c.columnId === ENEMY_GROUP_COLUMNS.ENEMY_STATUS,
       );
     expect(enemyStatusCol).toBeDefined();
     const viewModels = computeTimelinePresentation(
@@ -584,7 +584,7 @@ describe('G. Battle Skill — Waterspout Creation', () => {
     placeBS(result.current, 5 * FPS);
 
     const waterspouts = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === WATERSPOUT_ID && ev.ownerId === ENEMY_ID && ev.startFrame > 0,
+      ev => ev.columnId === WATERSPOUT_ID && ev.ownerEntityId === ENEMY_ID && ev.startFrame > 0,
     );
     expect(waterspouts.length).toBeGreaterThanOrEqual(1);
     expect(eventDuration(waterspouts[0])).toBe(3 * FPS);
@@ -603,7 +603,7 @@ describe('H. Ultimate — OLDEN STARE Application', () => {
 
     // ── Controller layer: OLDEN_STARE on enemy ──
     const oldenStare = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === OLDEN_STARE_ID && ev.ownerId === ENEMY_ID && ev.startFrame > 0,
+      ev => ev.columnId === OLDEN_STARE_ID && ev.ownerEntityId === ENEMY_ID && ev.startFrame > 0,
     );
     expect(oldenStare.length).toBeGreaterThanOrEqual(1);
     expect(oldenStare[0].sourceSkillName).toBe(ULTIMATE_ID);
@@ -612,7 +612,7 @@ describe('H. Ultimate — OLDEN STARE Application', () => {
     const enemyStatusCol = findMatchingColumn(result.current, ENEMY_ID, OLDEN_STARE_ID)
       ?? result.current.columns.find(
         (c): c is MiniTimeline => c.type === ColumnType.MINI_TIMELINE
-          && c.ownerId === ENEMY_ID && c.columnId === ENEMY_GROUP_COLUMNS.ENEMY_STATUS,
+          && c.ownerEntityId === ENEMY_ID && c.columnId === ENEMY_GROUP_COLUMNS.ENEMY_STATUS,
       );
     expect(enemyStatusCol).toBeDefined();
     const viewModels = computeTimelinePresentation(
@@ -630,7 +630,7 @@ describe('H. Ultimate — OLDEN STARE Application', () => {
     placeUlt(result.current, 5 * FPS);
 
     const oldenStare = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === OLDEN_STARE_ID && ev.ownerId === ENEMY_ID && ev.startFrame > 0,
+      ev => ev.columnId === OLDEN_STARE_ID && ev.ownerEntityId === ENEMY_ID && ev.startFrame > 0,
     );
     expect(oldenStare.length).toBeGreaterThanOrEqual(1);
     expect(eventDuration(oldenStare[0])).toBe(4 * FPS);
@@ -681,7 +681,7 @@ describe('H. Ultimate — OLDEN STARE Application', () => {
     placeUlt(result.current, 5 * FPS);
 
     const oldenStare = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === OLDEN_STARE_ID && ev.ownerId === ENEMY_ID && ev.startFrame > 0,
+      ev => ev.columnId === OLDEN_STARE_ID && ev.ownerEntityId === ENEMY_ID && ev.startFrame > 0,
     );
     expect(oldenStare.length).toBeGreaterThanOrEqual(1);
 
@@ -707,7 +707,7 @@ describe('H. Ultimate — OLDEN STARE Application', () => {
     placeUlt(result.current, 5 * FPS);
 
     const oldenStare = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === OLDEN_STARE_ID && ev.ownerId === ENEMY_ID && ev.startFrame > 0,
+      ev => ev.columnId === OLDEN_STARE_ID && ev.ownerEntityId === ENEMY_ID && ev.startFrame > 0,
     );
     expect(oldenStare.length).toBeGreaterThanOrEqual(1);
     expect(oldenStare[0].sourceSkillName).toBe(ULTIMATE_ID);
@@ -720,7 +720,7 @@ describe('H. Ultimate — OLDEN STARE Application', () => {
 
     placeUlt(result.current, 3 * FPS);
     const oldenStare = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === OLDEN_STARE_ID && ev.ownerId === ENEMY_ID && ev.startFrame > 0,
+      ev => ev.columnId === OLDEN_STARE_ID && ev.ownerEntityId === ENEMY_ID && ev.startFrame > 0,
     );
     expect(oldenStare.length).toBeGreaterThanOrEqual(1);
 
@@ -728,7 +728,7 @@ describe('H. Ultimate — OLDEN STARE Application', () => {
     placeBAVariant(result.current, oldenStareStart + 1 * FPS, NounType.DIVE);
 
     const earlyWave = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === EARLY_ROGUE_WAVE_ID && ev.ownerId === ENEMY_ID && ev.startFrame > 0,
+      ev => ev.columnId === EARLY_ROGUE_WAVE_ID && ev.ownerEntityId === ENEMY_ID && ev.startFrame > 0,
     );
     expect(earlyWave.length).toBeGreaterThanOrEqual(1);
     // Attributed to ULTIMATE, not BASIC_ATTACK/DIVE
@@ -766,7 +766,7 @@ describe('I. Full Rotation Chain', () => {
 
     // Whirlpools should exist
     const whirlpoolsBefore = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === WHIRLPOOL_ID && ev.ownerId === SLOT_TANGTANG && ev.startFrame > 0,
+      ev => ev.columnId === WHIRLPOOL_ID && ev.ownerEntityId === SLOT_TANGTANG && ev.startFrame > 0,
     );
     expect(whirlpoolsBefore.length).toBe(2);
 
@@ -775,13 +775,13 @@ describe('I. Full Rotation Chain', () => {
 
     // Waterspouts on enemy
     const waterspouts = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === WATERSPOUT_ID && ev.ownerId === ENEMY_ID && ev.startFrame > 0,
+      ev => ev.columnId === WATERSPOUT_ID && ev.ownerEntityId === ENEMY_ID && ev.startFrame > 0,
     );
     expect(waterspouts.length).toBeGreaterThanOrEqual(1);
 
     // Cryo infliction on enemy
     const cryo = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === INFLICTION_COLUMNS.CRYO && ev.ownerId === ENEMY_ID,
+      ev => ev.columnId === INFLICTION_COLUMNS.CRYO && ev.ownerEntityId === ENEMY_ID,
     );
     expect(cryo.length).toBeGreaterThanOrEqual(1);
 
@@ -792,7 +792,7 @@ describe('I. Full Rotation Chain', () => {
     );
     const enemyStatusCol = result.current.columns.find(
       (c): c is MiniTimeline => c.type === ColumnType.MINI_TIMELINE
-        && c.ownerId === ENEMY_ID && c.columnId === ENEMY_GROUP_COLUMNS.ENEMY_STATUS,
+        && c.ownerEntityId === ENEMY_ID && c.columnId === ENEMY_GROUP_COLUMNS.ENEMY_STATUS,
     );
     expect(enemyStatusCol).toBeDefined();
     const enemyVM = viewModels.get(enemyStatusCol!.key);
@@ -808,7 +808,7 @@ describe('I. Full Rotation Chain', () => {
     placeCombo(result.current, 2 * FPS);
 
     const whirlpools = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === WHIRLPOOL_ID && ev.ownerId === SLOT_TANGTANG && ev.startFrame > 0,
+      ev => ev.columnId === WHIRLPOOL_ID && ev.ownerEntityId === SLOT_TANGTANG && ev.startFrame > 0,
     );
     expect(whirlpools.length).toBeGreaterThanOrEqual(1);
 
@@ -817,7 +817,7 @@ describe('I. Full Rotation Chain', () => {
 
     // OLDEN_STARE on enemy
     const oldenStare = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === OLDEN_STARE_ID && ev.ownerId === ENEMY_ID && ev.startFrame > 0,
+      ev => ev.columnId === OLDEN_STARE_ID && ev.ownerEntityId === ENEMY_ID && ev.startFrame > 0,
     );
     expect(oldenStare.length).toBeGreaterThanOrEqual(1);
   });
@@ -834,7 +834,7 @@ describe('I. Full Rotation Chain', () => {
     // BS at 10s consumes both whirlpools and creates 3 waterspouts (1 base + 2 from whirlpools)
     placeBS(result.current, 10 * FPS);
     const waterspoutsAfterBS = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === WATERSPOUT_ID && ev.ownerId === ENEMY_ID && ev.startFrame > 0,
+      ev => ev.columnId === WATERSPOUT_ID && ev.ownerEntityId === ENEMY_ID && ev.startFrame > 0,
     );
     expect(waterspoutsAfterBS).toHaveLength(3);
 
@@ -843,7 +843,7 @@ describe('I. Full Rotation Chain', () => {
 
     // DIVE during OLDEN_STARE triggers early rogue wave + T2 effects
     const oldenStare = result.current.allProcessedEvents.find(
-      ev => ev.columnId === OLDEN_STARE_ID && ev.ownerId === ENEMY_ID && ev.startFrame > 0,
+      ev => ev.columnId === OLDEN_STARE_ID && ev.ownerEntityId === ENEMY_ID && ev.startFrame > 0,
     );
     expect(oldenStare).toBeDefined();
     placeBAVariant(result.current, oldenStare!.startFrame + 1 * FPS, NounType.DIVE);
@@ -852,7 +852,7 @@ describe('I. Full Rotation Chain', () => {
     // BUT whirlpools were already consumed by BS — STACKS of WHIRLPOOL = 0
     // So additional waterspout-ults from whirlpools = 0
     const waterspoutUlts = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === WATERSPOUT_ULT_ID && ev.ownerId === ENEMY_ID && ev.startFrame > 0,
+      ev => ev.columnId === WATERSPOUT_ULT_ID && ev.ownerEntityId === ENEMY_ID && ev.startFrame > 0,
     );
     // Should be exactly 1 (base T2 waterspout only, no whirlpool extras)
     expect(waterspoutUlts).toHaveLength(1);
@@ -871,7 +871,7 @@ describe('I. Full Rotation Chain', () => {
     placeUlt(result.current, 10 * FPS);
 
     const oldenStare = result.current.allProcessedEvents.find(
-      ev => ev.columnId === OLDEN_STARE_ID && ev.ownerId === ENEMY_ID && ev.startFrame > 0,
+      ev => ev.columnId === OLDEN_STARE_ID && ev.ownerEntityId === ENEMY_ID && ev.startFrame > 0,
     );
     expect(oldenStare).toBeDefined();
 
@@ -880,7 +880,7 @@ describe('I. Full Rotation Chain', () => {
 
     // T2 creates: 1 base waterspout-ult + 2 from whirlpools = 3
     const waterspoutUlts = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === WATERSPOUT_ULT_ID && ev.ownerId === ENEMY_ID && ev.startFrame > 0,
+      ev => ev.columnId === WATERSPOUT_ULT_ID && ev.ownerEntityId === ENEMY_ID && ev.startFrame > 0,
     );
     expect(waterspoutUlts).toHaveLength(3);
   });
@@ -898,7 +898,7 @@ describe('I. Full Rotation Chain', () => {
 
     // Place DIVE during OLDEN_STARE
     const oldenStare = result.current.allProcessedEvents.find(
-      ev => ev.columnId === OLDEN_STARE_ID && ev.ownerId === ENEMY_ID && ev.startFrame > 0,
+      ev => ev.columnId === OLDEN_STARE_ID && ev.ownerEntityId === ENEMY_ID && ev.startFrame > 0,
     );
     expect(oldenStare).toBeDefined();
     placeBAVariant(result.current, oldenStare!.startFrame + 1 * FPS, NounType.DIVE);
@@ -906,44 +906,44 @@ describe('I. Full Rotation Chain', () => {
     // Place BATK
     const baCol = findColumn(result.current, SLOT_TANGTANG, NounType.BASIC_ATTACK)!;
     const baPayload = getMenuPayload(result.current, baCol, 25 * FPS);
-    act(() => { result.current.handleAddEvent(baPayload.ownerId, baPayload.columnId, baPayload.atFrame, baPayload.defaultSkill); });
+    act(() => { result.current.handleAddEvent(baPayload.ownerEntityId, baPayload.columnId, baPayload.atFrame, baPayload.defaultSkill); });
 
     // ── Verify no crashes and correct event counts ──
 
     // Whirlpools: 2 created, both consumed by BS
     const whirlpools = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === WHIRLPOOL_ID && ev.ownerId === SLOT_TANGTANG && ev.startFrame > 0,
+      ev => ev.columnId === WHIRLPOOL_ID && ev.ownerEntityId === SLOT_TANGTANG && ev.startFrame > 0,
     );
     expect(whirlpools.length).toBe(2);
 
     // Waterspouts on enemy from BS (1 base + 2 from whirlpools = 3)
     const waterspouts = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === WATERSPOUT_ID && ev.ownerId === ENEMY_ID && ev.startFrame > 0,
+      ev => ev.columnId === WATERSPOUT_ID && ev.ownerEntityId === ENEMY_ID && ev.startFrame > 0,
     );
     expect(waterspouts.length).toBe(3);
 
     // OLDEN_STARE on enemy
     const oldenStares = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === OLDEN_STARE_ID && ev.ownerId === ENEMY_ID && ev.startFrame > 0,
+      ev => ev.columnId === OLDEN_STARE_ID && ev.ownerEntityId === ENEMY_ID && ev.startFrame > 0,
     );
     expect(oldenStares.length).toBeGreaterThanOrEqual(1);
 
     // EARLY_ROGUE_WAVE on enemy (from dive during OLDEN_STARE)
     const earlyWaves = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === EARLY_ROGUE_WAVE_ID && ev.ownerId === ENEMY_ID && ev.startFrame > 0,
+      ev => ev.columnId === EARLY_ROGUE_WAVE_ID && ev.ownerEntityId === ENEMY_ID && ev.startFrame > 0,
     );
     expect(earlyWaves.length).toBeGreaterThanOrEqual(1);
     expect(earlyWaves[0].sourceSkillName).toBe(ULTIMATE_ID);
 
     // Cryo infliction from BS
     const cryoInflictions = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === INFLICTION_COLUMNS.CRYO && ev.ownerId === ENEMY_ID,
+      ev => ev.columnId === INFLICTION_COLUMNS.CRYO && ev.ownerEntityId === ENEMY_ID,
     );
     expect(cryoInflictions.length).toBeGreaterThanOrEqual(1);
 
     // No spurious TangTang-sourced statuses on operator timeline
     const operatorStatuses = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_TANGTANG && ev.ownerOperatorId === TANGTANG_ID
+      ev => ev.ownerEntityId === SLOT_TANGTANG && ev.ownerOperatorId === TANGTANG_ID
         && ev.columnId !== NounType.BASIC_ATTACK && ev.columnId !== NounType.BATTLE
         && ev.columnId !== NounType.COMBO && ev.columnId !== NounType.ULTIMATE
         && ev.columnId !== WHIRLPOOL_ID && ev.columnId !== COMBO_WINDOW_COLUMN_ID
@@ -971,7 +971,7 @@ describe('J. Whirlpool Lifecycle', () => {
     placeCombo(result.current, 2 * FPS);
 
     const whirlpools = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === WHIRLPOOL_ID && ev.ownerId === SLOT_TANGTANG && ev.startFrame > 0,
+      ev => ev.columnId === WHIRLPOOL_ID && ev.ownerEntityId === SLOT_TANGTANG && ev.startFrame > 0,
     );
     expect(whirlpools.length).toBeGreaterThanOrEqual(1);
     expect(eventDuration(whirlpools[0])).toBe(30 * FPS);
@@ -985,7 +985,7 @@ describe('J. Whirlpool Lifecycle', () => {
     placeCombo(result.current, 8 * FPS);
 
     const whirlpools = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === WHIRLPOOL_ID && ev.ownerId === SLOT_TANGTANG && ev.startFrame > 0,
+      ev => ev.columnId === WHIRLPOOL_ID && ev.ownerEntityId === SLOT_TANGTANG && ev.startFrame > 0,
     );
     // With RESET at limit 2, the third combo resets the oldest — still at most 2 active
     // (may be 3 total events if the engine doesn't consume old ones, but active ≤ 2)
@@ -1062,7 +1062,7 @@ describe('J. Whirlpool Lifecycle', () => {
     placeCombo(result.current, 3 * FPS);
 
     const whirlpools = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === WHIRLPOOL_ID && ev.ownerId === SLOT_TANGTANG && ev.startFrame > 0,
+      ev => ev.columnId === WHIRLPOOL_ID && ev.ownerEntityId === SLOT_TANGTANG && ev.startFrame > 0,
     );
     expect(whirlpools.length).toBe(2);
 
@@ -1134,13 +1134,13 @@ describe('J. Whirlpool Lifecycle', () => {
     placeBS(result.current, 5 * FPS);
 
     const waterspouts = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === WATERSPOUT_ID && ev.ownerId === ENEMY_ID && ev.startFrame > 0,
+      ev => ev.columnId === WATERSPOUT_ID && ev.ownerEntityId === ENEMY_ID && ev.startFrame > 0,
     );
     expect(waterspouts).toHaveLength(1);
 
     // Exactly 1 cryo infliction from the waterspout's frame at offset 0s
     const cryoInflictions = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === INFLICTION_COLUMNS.CRYO && ev.ownerId === ENEMY_ID,
+      ev => ev.columnId === INFLICTION_COLUMNS.CRYO && ev.ownerEntityId === ENEMY_ID,
     );
     expect(cryoInflictions).toHaveLength(1);
   });
@@ -1155,7 +1155,7 @@ describe('J. Whirlpool Lifecycle', () => {
 
     // ── Whirlpool II: 2 whirlpools on operator, labeled I and II ──
     const whirlpools = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === WHIRLPOOL_ID && ev.ownerId === SLOT_TANGTANG && ev.startFrame > 0,
+      ev => ev.columnId === WHIRLPOOL_ID && ev.ownerEntityId === SLOT_TANGTANG && ev.startFrame > 0,
     );
     expect(whirlpools).toHaveLength(2);
 
@@ -1175,20 +1175,20 @@ describe('J. Whirlpool Lifecycle', () => {
     placeBS(result.current, 8 * FPS);
 
     const waterspouts = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === WATERSPOUT_ID && ev.ownerId === ENEMY_ID && ev.startFrame > 0,
+      ev => ev.columnId === WATERSPOUT_ID && ev.ownerEntityId === ENEMY_ID && ev.startFrame > 0,
     );
     expect(waterspouts).toHaveLength(3);
 
     // ── 3 cryo inflictions from waterspout frames → Cryo III ──
     const cryoInflictions = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === INFLICTION_COLUMNS.CRYO && ev.ownerId === ENEMY_ID,
+      ev => ev.columnId === INFLICTION_COLUMNS.CRYO && ev.ownerEntityId === ENEMY_ID,
     );
     expect(cryoInflictions.length).toBeGreaterThanOrEqual(3);
 
     // ── View layer: cryo infliction label shows "III" (3 stacks) ──
     const enemyStatusCol = result.current.columns.find(
       (c): c is MiniTimeline => c.type === ColumnType.MINI_TIMELINE
-        && c.ownerId === ENEMY_ID && c.columnId === ENEMY_GROUP_COLUMNS.ENEMY_STATUS,
+        && c.ownerEntityId === ENEMY_ID && c.columnId === ENEMY_GROUP_COLUMNS.ENEMY_STATUS,
     );
     expect(enemyStatusCol).toBeDefined();
     const vmAfter = computeTimelinePresentation(
@@ -1239,7 +1239,7 @@ describe('K. Potential Effects', () => {
 
     // Whirlpool at P0
     const whirlpoolsP0 = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === WHIRLPOOL_ID && ev.ownerId === SLOT_TANGTANG && ev.startFrame > 0,
+      ev => ev.columnId === WHIRLPOOL_ID && ev.ownerEntityId === SLOT_TANGTANG && ev.startFrame > 0,
     );
     expect(whirlpoolsP0.length).toBeGreaterThanOrEqual(1);
 
@@ -1248,7 +1248,7 @@ describe('K. Potential Effects', () => {
 
     // Whirlpool still exists after potential change
     const whirlpoolsP3 = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === WHIRLPOOL_ID && ev.ownerId === SLOT_TANGTANG && ev.startFrame > 0,
+      ev => ev.columnId === WHIRLPOOL_ID && ev.ownerEntityId === SLOT_TANGTANG && ev.startFrame > 0,
     );
     expect(whirlpoolsP3.length).toBeGreaterThanOrEqual(1);
   });
@@ -1267,7 +1267,7 @@ describe('L. BS Whirlpool Consumption', () => {
     placeCombo(result.current, 2 * FPS);
 
     const whirlpoolsBefore = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === WHIRLPOOL_ID && ev.ownerId === SLOT_TANGTANG && ev.startFrame > 0,
+      ev => ev.columnId === WHIRLPOOL_ID && ev.ownerEntityId === SLOT_TANGTANG && ev.startFrame > 0,
     );
     expect(whirlpoolsBefore.length).toBeGreaterThanOrEqual(1);
     const beforeDuration = eventDuration(whirlpoolsBefore[0]);
@@ -1278,7 +1278,7 @@ describe('L. BS Whirlpool Consumption', () => {
 
     // Whirlpool should be clamped (consumed) — duration shortened
     const whirlpoolsAfter = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === WHIRLPOOL_ID && ev.ownerId === SLOT_TANGTANG && ev.startFrame > 0,
+      ev => ev.columnId === WHIRLPOOL_ID && ev.ownerEntityId === SLOT_TANGTANG && ev.startFrame > 0,
     );
     expect(whirlpoolsAfter.length).toBeGreaterThanOrEqual(1);
     const afterDuration = eventDuration(whirlpoolsAfter[0]);
@@ -1293,13 +1293,13 @@ describe('L. BS Whirlpool Consumption', () => {
 
     // No whirlpools should exist at all
     const whirlpools = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === WHIRLPOOL_ID && ev.ownerId === SLOT_TANGTANG && ev.startFrame > 0,
+      ev => ev.columnId === WHIRLPOOL_ID && ev.ownerEntityId === SLOT_TANGTANG && ev.startFrame > 0,
     );
     expect(whirlpools).toHaveLength(0);
 
     // BS should still place successfully
     const bs = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_TANGTANG && ev.columnId === NounType.BATTLE,
+      ev => ev.ownerEntityId === SLOT_TANGTANG && ev.columnId === NounType.BATTLE,
     );
     expect(bs).toHaveLength(1);
   });
@@ -1312,7 +1312,7 @@ describe('L. BS Whirlpool Consumption', () => {
     placeCombo(result.current, 4 * FPS);
 
     const whirlpoolsBefore = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === WHIRLPOOL_ID && ev.ownerId === SLOT_TANGTANG && ev.startFrame > 0,
+      ev => ev.columnId === WHIRLPOOL_ID && ev.ownerEntityId === SLOT_TANGTANG && ev.startFrame > 0,
     );
     expect(whirlpoolsBefore.length).toBe(2);
 
@@ -1321,7 +1321,7 @@ describe('L. BS Whirlpool Consumption', () => {
 
     // Both whirlpools should be consumed (clamped)
     const whirlpoolsAfter = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === WHIRLPOOL_ID && ev.ownerId === SLOT_TANGTANG && ev.startFrame > 0,
+      ev => ev.columnId === WHIRLPOOL_ID && ev.ownerEntityId === SLOT_TANGTANG && ev.startFrame > 0,
     );
     for (const wp of whirlpoolsAfter) {
       expect(eventDuration(wp)).toBeLessThan(30 * FPS);
@@ -1339,7 +1339,7 @@ describe('M. BS Waterspout Stacking with Whirlpools', () => {
     const { result: r0 } = setupTangtang();
     placeBS(r0.current, 5 * FPS);
     const ws0 = r0.current.allProcessedEvents.filter(
-      ev => ev.columnId === WATERSPOUT_ID && ev.ownerId === ENEMY_ID && ev.startFrame > 0,
+      ev => ev.columnId === WATERSPOUT_ID && ev.ownerEntityId === ENEMY_ID && ev.startFrame > 0,
     );
     expect(ws0).toHaveLength(1);
 
@@ -1349,7 +1349,7 @@ describe('M. BS Waterspout Stacking with Whirlpools', () => {
     placeCombo(r1.current, 2 * FPS);
     placeBS(r1.current, 5 * FPS);
     const ws1 = r1.current.allProcessedEvents.filter(
-      ev => ev.columnId === WATERSPOUT_ID && ev.ownerId === ENEMY_ID && ev.startFrame > 0,
+      ev => ev.columnId === WATERSPOUT_ID && ev.ownerEntityId === ENEMY_ID && ev.startFrame > 0,
     );
     expect(ws1.length).toBeGreaterThan(ws0.length);
   });
@@ -1363,7 +1363,7 @@ describe('M. BS Waterspout Stacking with Whirlpools', () => {
 
     // Each waterspout is a separate event (not accumulated into one)
     const waterspouts = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === WATERSPOUT_ID && ev.ownerId === ENEMY_ID && ev.startFrame > 0,
+      ev => ev.columnId === WATERSPOUT_ID && ev.ownerEntityId === ENEMY_ID && ev.startFrame > 0,
     );
     // 1 base + 2 whirlpools = 3 separate waterspout events
     expect(waterspouts).toHaveLength(3);
@@ -1376,7 +1376,7 @@ describe('M. BS Waterspout Stacking with Whirlpools', () => {
     const enemyStatusCol = findMatchingColumn(result.current, ENEMY_ID, WATERSPOUT_ID)
       ?? result.current.columns.find(
         (c): c is MiniTimeline => c.type === ColumnType.MINI_TIMELINE
-          && c.ownerId === ENEMY_ID && c.columnId === ENEMY_GROUP_COLUMNS.ENEMY_STATUS,
+          && c.ownerEntityId === ENEMY_ID && c.columnId === ENEMY_GROUP_COLUMNS.ENEMY_STATUS,
       );
     expect(enemyStatusCol).toBeDefined();
     const viewModels = computeTimelinePresentation(
@@ -1420,7 +1420,7 @@ describe('N. P1 Combo Improvements', () => {
     act(() => { r0.current.setInteractionMode(InteractionModeType.FREEFORM); });
     placeCombo(r0.current, 2 * FPS);
     const combo0 = r0.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT_TANGTANG && ev.columnId === NounType.COMBO,
+      ev => ev.ownerEntityId === SLOT_TANGTANG && ev.columnId === NounType.COMBO,
     )!;
     const cd0 = combo0.segments.find(
       (s: { properties: { segmentTypes?: SegmentType[] } }) =>
@@ -1434,7 +1434,7 @@ describe('N. P1 Combo Improvements', () => {
     act(() => { r1.current.setInteractionMode(InteractionModeType.FREEFORM); });
     placeCombo(r1.current, 2 * FPS);
     const combo1 = r1.current.allProcessedEvents.find(
-      ev => ev.ownerId === SLOT_TANGTANG && ev.columnId === NounType.COMBO,
+      ev => ev.ownerEntityId === SLOT_TANGTANG && ev.columnId === NounType.COMBO,
     )!;
     const cd1 = combo1.segments.find(
       (s: { properties: { segmentTypes?: SegmentType[] } }) =>
@@ -1466,7 +1466,7 @@ describe('O. T2 Riot Bringer — Dive During OLDEN_STARE', () => {
     placeCombo(result.current, 2 * FPS);
 
     const whirlpoolsBefore = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === WHIRLPOOL_ID && ev.ownerId === SLOT_TANGTANG && ev.startFrame > 0,
+      ev => ev.columnId === WHIRLPOOL_ID && ev.ownerEntityId === SLOT_TANGTANG && ev.startFrame > 0,
     );
     expect(whirlpoolsBefore.length).toBeGreaterThanOrEqual(1);
     const beforeDuration = eventDuration(whirlpoolsBefore[0]);
@@ -1476,7 +1476,7 @@ describe('O. T2 Riot Bringer — Dive During OLDEN_STARE', () => {
     // Whirlpool should NOT be consumed by ULT alone — T2 effects fire on dive
     // Duration may increase slightly due to ULT time-stop, but should NOT decrease (consumed)
     const whirlpoolsAfter = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === WHIRLPOOL_ID && ev.ownerId === SLOT_TANGTANG && ev.startFrame > 0,
+      ev => ev.columnId === WHIRLPOOL_ID && ev.ownerEntityId === SLOT_TANGTANG && ev.startFrame > 0,
     );
     expect(whirlpoolsAfter.length).toBeGreaterThanOrEqual(1);
     expect(eventDuration(whirlpoolsAfter[0])).toBeGreaterThanOrEqual(beforeDuration);
@@ -1488,12 +1488,12 @@ describe('O. T2 Riot Bringer — Dive During OLDEN_STARE', () => {
     placeUlt(result.current, 5 * FPS);
 
     const oldenStare = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === OLDEN_STARE_ID && ev.ownerId === ENEMY_ID && ev.startFrame > 0,
+      ev => ev.columnId === OLDEN_STARE_ID && ev.ownerEntityId === ENEMY_ID && ev.startFrame > 0,
     );
     expect(oldenStare.length).toBeGreaterThanOrEqual(1);
 
     const whirlpools = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === WHIRLPOOL_ID && ev.ownerId === SLOT_TANGTANG && ev.startFrame > 0,
+      ev => ev.columnId === WHIRLPOOL_ID && ev.ownerEntityId === SLOT_TANGTANG && ev.startFrame > 0,
     );
     expect(whirlpools).toHaveLength(0);
   });
@@ -1673,7 +1673,7 @@ describe('S. DIVE/FINISHER — No Spurious Operator Statuses', () => {
 
     // Snapshot operator statuses before
     const statusesBefore = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_TANGTANG && ev.columnId !== NounType.BASIC_ATTACK
+      ev => ev.ownerEntityId === SLOT_TANGTANG && ev.columnId !== NounType.BASIC_ATTACK
         && ev.columnId !== NounType.BATTLE && ev.columnId !== NounType.COMBO
         && ev.columnId !== NounType.ULTIMATE && ev.startFrame > 0,
     );
@@ -1683,7 +1683,7 @@ describe('S. DIVE/FINISHER — No Spurious Operator Statuses', () => {
 
     // No new statuses should appear on TangTang's timeline
     const statusesAfter = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_TANGTANG && ev.columnId !== NounType.BASIC_ATTACK
+      ev => ev.ownerEntityId === SLOT_TANGTANG && ev.columnId !== NounType.BASIC_ATTACK
         && ev.columnId !== NounType.BATTLE && ev.columnId !== NounType.COMBO
         && ev.columnId !== NounType.ULTIMATE && ev.startFrame > 0,
     );
@@ -1694,7 +1694,7 @@ describe('S. DIVE/FINISHER — No Spurious Operator Statuses', () => {
     const { result } = setupTangtang();
 
     const statusesBefore = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_TANGTANG && ev.columnId !== NounType.BASIC_ATTACK
+      ev => ev.ownerEntityId === SLOT_TANGTANG && ev.columnId !== NounType.BASIC_ATTACK
         && ev.columnId !== NounType.BATTLE && ev.columnId !== NounType.COMBO
         && ev.columnId !== NounType.ULTIMATE && ev.startFrame > 0,
     );
@@ -1703,7 +1703,7 @@ describe('S. DIVE/FINISHER — No Spurious Operator Statuses', () => {
     placeBAVariant(result.current, 5 * FPS, NounType.FINISHER);
 
     const statusesAfter = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_TANGTANG && ev.columnId !== NounType.BASIC_ATTACK
+      ev => ev.ownerEntityId === SLOT_TANGTANG && ev.columnId !== NounType.BASIC_ATTACK
         && ev.columnId !== NounType.BATTLE && ev.columnId !== NounType.COMBO
         && ev.columnId !== NounType.ULTIMATE && ev.startFrame > 0,
     );
@@ -1719,20 +1719,20 @@ describe('S. DIVE/FINISHER — No Spurious Operator Statuses', () => {
 
     // Snapshot statuses on TangTang AFTER ult (whirlpool, talent effects, etc.)
     const statusesAfterUlt = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_TANGTANG && ev.columnId !== NounType.BASIC_ATTACK
+      ev => ev.ownerEntityId === SLOT_TANGTANG && ev.columnId !== NounType.BASIC_ATTACK
         && ev.columnId !== NounType.BATTLE && ev.columnId !== NounType.COMBO
         && ev.columnId !== NounType.ULTIMATE && ev.startFrame > 0,
     );
     // Place DIVE after ULT
     const oldenStare = result.current.allProcessedEvents.find(
-      ev => ev.columnId === OLDEN_STARE_ID && ev.ownerId === ENEMY_ID && ev.startFrame > 0,
+      ev => ev.columnId === OLDEN_STARE_ID && ev.ownerEntityId === ENEMY_ID && ev.startFrame > 0,
     );
     const diveFrame = oldenStare ? oldenStare.startFrame + 1 * FPS : 10 * FPS;
     placeBAVariant(result.current, diveFrame, NounType.DIVE);
 
     // No NEW statuses should appear on TangTang's personal timeline from the DIVE
     const statusesAfterDive = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_TANGTANG && ev.columnId !== NounType.BASIC_ATTACK
+      ev => ev.ownerEntityId === SLOT_TANGTANG && ev.columnId !== NounType.BASIC_ATTACK
         && ev.columnId !== NounType.BATTLE && ev.columnId !== NounType.COMBO
         && ev.columnId !== NounType.ULTIMATE && ev.startFrame > 0,
     );
@@ -1742,7 +1742,7 @@ describe('S. DIVE/FINISHER — No Spurious Operator Statuses', () => {
     );
     // Filter to only TangTang-sourced statuses (ignore cross-operator talent procs)
     const tangTangNewStatuses = newStatuses.filter(
-      ev => ev.sourceOwnerId === TANGTANG_ID,
+      ev => ev.sourceEntityId === TANGTANG_ID,
     );
     expect(tangTangNewStatuses).toHaveLength(0);
   });
@@ -1751,14 +1751,14 @@ describe('S. DIVE/FINISHER — No Spurious Operator Statuses', () => {
     const { result } = setupTangtang();
 
     const enemyStatusesBefore = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === ENEMY_ID && ev.startFrame > 0,
+      ev => ev.ownerEntityId === ENEMY_ID && ev.startFrame > 0,
     );
     const countBefore = enemyStatusesBefore.length;
 
     placeBAVariant(result.current, 5 * FPS, NounType.DIVE);
 
     const enemyStatusesAfter = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === ENEMY_ID && ev.startFrame > 0,
+      ev => ev.ownerEntityId === ENEMY_ID && ev.startFrame > 0,
     );
     expect(enemyStatusesAfter.length).toBe(countBefore);
   });
@@ -1776,7 +1776,7 @@ describe('Q. Early Rogue Wave — Negative Trigger Tests', () => {
     placeBAVariant(result.current, 5 * FPS, NounType.DIVE);
 
     const earlyWave = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === EARLY_ROGUE_WAVE_ID && ev.ownerId === ENEMY_ID && ev.startFrame > 0,
+      ev => ev.columnId === EARLY_ROGUE_WAVE_ID && ev.ownerEntityId === ENEMY_ID && ev.startFrame > 0,
     );
     expect(earlyWave).toHaveLength(0);
   });
@@ -1786,7 +1786,7 @@ describe('Q. Early Rogue Wave — Negative Trigger Tests', () => {
     placeBAVariant(result.current, 5 * FPS, NounType.FINISHER);
 
     const earlyWave = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === EARLY_ROGUE_WAVE_ID && ev.ownerId === ENEMY_ID && ev.startFrame > 0,
+      ev => ev.columnId === EARLY_ROGUE_WAVE_ID && ev.ownerEntityId === ENEMY_ID && ev.startFrame > 0,
     );
     expect(earlyWave).toHaveLength(0);
   });
@@ -1796,7 +1796,7 @@ describe('Q. Early Rogue Wave — Negative Trigger Tests', () => {
     placeBAVariant(result.current, 5 * FPS, TANGTANG_BATK_ID);
 
     const earlyWave = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === EARLY_ROGUE_WAVE_ID && ev.ownerId === ENEMY_ID && ev.startFrame > 0,
+      ev => ev.columnId === EARLY_ROGUE_WAVE_ID && ev.ownerEntityId === ENEMY_ID && ev.startFrame > 0,
     );
     expect(earlyWave).toHaveLength(0);
   });
@@ -1809,7 +1809,7 @@ describe('Q. Early Rogue Wave — Negative Trigger Tests', () => {
 
     placeUlt(result.current, 3 * FPS);
     const oldenStare = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === OLDEN_STARE_ID && ev.ownerId === ENEMY_ID && ev.startFrame > 0,
+      ev => ev.columnId === OLDEN_STARE_ID && ev.ownerEntityId === ENEMY_ID && ev.startFrame > 0,
     );
     expect(oldenStare.length).toBeGreaterThanOrEqual(1);
 
@@ -1820,7 +1820,7 @@ describe('Q. Early Rogue Wave — Negative Trigger Tests', () => {
 
     // ── Controller layer: EARLY_ROGUE_WAVE should exist ──
     const earlyWave = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === EARLY_ROGUE_WAVE_ID && ev.ownerId === ENEMY_ID && ev.startFrame > 0,
+      ev => ev.columnId === EARLY_ROGUE_WAVE_ID && ev.ownerEntityId === ENEMY_ID && ev.startFrame > 0,
     );
     expect(earlyWave.length).toBeGreaterThanOrEqual(1);
     // EARLY_ROGUE_WAVE is attributed to ULTIMATE (not DIVE/BASIC_ATTACK)
@@ -1831,7 +1831,7 @@ describe('Q. Early Rogue Wave — Negative Trigger Tests', () => {
     const enemyStatusCol = findMatchingColumn(result.current, ENEMY_ID, EARLY_ROGUE_WAVE_ID)
       ?? result.current.columns.find(
         (c): c is MiniTimeline => c.type === ColumnType.MINI_TIMELINE
-          && c.ownerId === ENEMY_ID && c.columnId === ENEMY_GROUP_COLUMNS.ENEMY_STATUS,
+          && c.ownerEntityId === ENEMY_ID && c.columnId === ENEMY_GROUP_COLUMNS.ENEMY_STATUS,
       );
     expect(enemyStatusCol).toBeDefined();
     const viewModels = computeTimelinePresentation(
@@ -1849,7 +1849,7 @@ describe('Q. Early Rogue Wave — Negative Trigger Tests', () => {
 
     placeUlt(result.current, 3 * FPS);
     const oldenStare = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === OLDEN_STARE_ID && ev.ownerId === ENEMY_ID && ev.startFrame > 0,
+      ev => ev.columnId === OLDEN_STARE_ID && ev.ownerEntityId === ENEMY_ID && ev.startFrame > 0,
     );
     expect(oldenStare.length).toBeGreaterThanOrEqual(1);
 
@@ -1857,7 +1857,7 @@ describe('Q. Early Rogue Wave — Negative Trigger Tests', () => {
     placeBAVariant(result.current, oldenStareStart + 1 * FPS, NounType.FINISHER);
 
     const earlyWave = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === EARLY_ROGUE_WAVE_ID && ev.ownerId === ENEMY_ID && ev.startFrame > 0,
+      ev => ev.columnId === EARLY_ROGUE_WAVE_ID && ev.ownerEntityId === ENEMY_ID && ev.startFrame > 0,
     );
     expect(earlyWave).toHaveLength(0);
   });
@@ -1868,7 +1868,7 @@ describe('Q. Early Rogue Wave — Negative Trigger Tests', () => {
 
     placeUlt(result.current, 3 * FPS);
     const oldenStare = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === OLDEN_STARE_ID && ev.ownerId === ENEMY_ID && ev.startFrame > 0,
+      ev => ev.columnId === OLDEN_STARE_ID && ev.ownerEntityId === ENEMY_ID && ev.startFrame > 0,
     );
     expect(oldenStare.length).toBeGreaterThanOrEqual(1);
 
@@ -1876,7 +1876,7 @@ describe('Q. Early Rogue Wave — Negative Trigger Tests', () => {
     placeBAVariant(result.current, oldenStareStart + 1 * FPS, TANGTANG_BATK_ID);
 
     const earlyWave = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === EARLY_ROGUE_WAVE_ID && ev.ownerId === ENEMY_ID && ev.startFrame > 0,
+      ev => ev.columnId === EARLY_ROGUE_WAVE_ID && ev.ownerEntityId === ENEMY_ID && ev.startFrame > 0,
     );
     expect(earlyWave).toHaveLength(0);
   });
@@ -1897,11 +1897,11 @@ describe('R. Combo Activation Window — Trigger Conditions', () => {
     // Place BATK — deals CRYO DAMAGE but does NOT apply cryo infliction
     const baCol = findColumn(result.current, SLOT_TANGTANG, NounType.BASIC_ATTACK)!;
     const payload = getMenuPayload(result.current, baCol, 2 * FPS);
-    act(() => { result.current.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill); });
+    act(() => { result.current.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill); });
 
     // Check combo activation windows — should be NONE
     const activationWindows = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_TANGTANG && ev.columnId === COMBO_WINDOW_COLUMN_ID,
+      ev => ev.ownerEntityId === SLOT_TANGTANG && ev.columnId === COMBO_WINDOW_COLUMN_ID,
     );
     expect(activationWindows).toHaveLength(0);
   });
@@ -1913,7 +1913,7 @@ describe('R. Combo Activation Window — Trigger Conditions', () => {
 
     // BS applies cryo infliction → should open combo activation window
     const activationWindows = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_TANGTANG && ev.columnId === COMBO_WINDOW_COLUMN_ID,
+      ev => ev.ownerEntityId === SLOT_TANGTANG && ev.columnId === COMBO_WINDOW_COLUMN_ID,
     );
     expect(activationWindows.length).toBeGreaterThanOrEqual(1);
   });
@@ -1925,7 +1925,7 @@ describe('R. Combo Activation Window — Trigger Conditions', () => {
     // Place a cryo infliction directly on enemy
     const enemyStatusCol = result.current.columns.find(
       (c): c is MiniTimeline => c.type === ColumnType.MINI_TIMELINE
-        && c.ownerId === ENEMY_ID && c.columnId === ENEMY_GROUP_COLUMNS.ENEMY_STATUS,
+        && c.ownerEntityId === ENEMY_ID && c.columnId === ENEMY_GROUP_COLUMNS.ENEMY_STATUS,
     );
     expect(enemyStatusCol).toBeDefined();
     const inflictionMenu = buildContextMenu(result.current, enemyStatusCol!, 3 * FPS);
@@ -1935,10 +1935,10 @@ describe('R. Combo Activation Window — Trigger Conditions', () => {
     );
     expect(cryoItem).toBeDefined();
     const cryoPayload = cryoItem!.actionPayload as AddEventPayload;
-    act(() => { result.current.handleAddEvent(cryoPayload.ownerId, cryoPayload.columnId, cryoPayload.atFrame, cryoPayload.defaultSkill); });
+    act(() => { result.current.handleAddEvent(cryoPayload.ownerEntityId, cryoPayload.columnId, cryoPayload.atFrame, cryoPayload.defaultSkill); });
 
     const activationWindows = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_TANGTANG && ev.columnId === COMBO_WINDOW_COLUMN_ID,
+      ev => ev.ownerEntityId === SLOT_TANGTANG && ev.columnId === COMBO_WINDOW_COLUMN_ID,
     );
     expect(activationWindows.length).toBeGreaterThanOrEqual(1);
   });
@@ -1949,7 +1949,7 @@ describe('R. Combo Activation Window — Trigger Conditions', () => {
     placeBS(result.current, 2 * FPS);
 
     const activationWindows = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_TANGTANG && ev.columnId === COMBO_WINDOW_COLUMN_ID,
+      ev => ev.ownerEntityId === SLOT_TANGTANG && ev.columnId === COMBO_WINDOW_COLUMN_ID,
     );
     expect(activationWindows.length).toBeGreaterThanOrEqual(1);
     expect(eventDuration(activationWindows[0])).toBe(6 * FPS);
@@ -1967,7 +1967,7 @@ describe('R. Combo Activation Window — Trigger Conditions', () => {
     // Place cryo infliction on enemy at 3s
     const enemyStatusCol = result.current.columns.find(
       (c): c is MiniTimeline => c.type === ColumnType.MINI_TIMELINE
-        && c.ownerId === ENEMY_ID && c.columnId === ENEMY_GROUP_COLUMNS.ENEMY_STATUS,
+        && c.ownerEntityId === ENEMY_ID && c.columnId === ENEMY_GROUP_COLUMNS.ENEMY_STATUS,
     )!;
     const menu = buildContextMenu(result.current, enemyStatusCol, 3 * FPS)!;
     const cryoItem = menu.find(
@@ -1975,17 +1975,17 @@ describe('R. Combo Activation Window — Trigger Conditions', () => {
         && (i.actionPayload as { defaultSkill?: { id?: string } })?.defaultSkill?.id === INFLICTION_COLUMNS.CRYO,
     )!;
     const payload = cryoItem.actionPayload as AddEventPayload;
-    act(() => { result.current.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill); });
+    act(() => { result.current.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill); });
 
     // ── Controller layer: cryo infliction exists on enemy ──
     const cryoEvents = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === INFLICTION_COLUMNS.CRYO && ev.ownerId === ENEMY_ID,
+      ev => ev.columnId === INFLICTION_COLUMNS.CRYO && ev.ownerEntityId === ENEMY_ID,
     );
     expect(cryoEvents.length).toBeGreaterThanOrEqual(1);
 
     // ── Controller layer: activation window opened ──
     const windows = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_TANGTANG && ev.columnId === COMBO_WINDOW_COLUMN_ID,
+      ev => ev.ownerEntityId === SLOT_TANGTANG && ev.columnId === COMBO_WINDOW_COLUMN_ID,
     );
     expect(windows.length).toBe(1);
     expect(eventDuration(windows[0])).toBe(6 * FPS);
@@ -2010,7 +2010,7 @@ describe('R. Combo Activation Window — Trigger Conditions', () => {
 
     const enemyStatusCol = result.current.columns.find(
       (c): c is MiniTimeline => c.type === ColumnType.MINI_TIMELINE
-        && c.ownerId === ENEMY_ID && c.columnId === ENEMY_GROUP_COLUMNS.ENEMY_STATUS,
+        && c.ownerEntityId === ENEMY_ID && c.columnId === ENEMY_GROUP_COLUMNS.ENEMY_STATUS,
     )!;
 
     // Place first cryo infliction at 3s → window covers 3s–9s
@@ -2020,10 +2020,10 @@ describe('R. Combo Activation Window — Trigger Conditions', () => {
         && (i.actionPayload as { defaultSkill?: { id?: string } })?.defaultSkill?.id === INFLICTION_COLUMNS.CRYO,
     )!;
     const p1 = cryo1.actionPayload as AddEventPayload;
-    act(() => { result.current.handleAddEvent(p1.ownerId, p1.columnId, p1.atFrame, p1.defaultSkill); });
+    act(() => { result.current.handleAddEvent(p1.ownerEntityId, p1.columnId, p1.atFrame, p1.defaultSkill); });
 
     const windowsAfter1 = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_TANGTANG && ev.columnId === COMBO_WINDOW_COLUMN_ID,
+      ev => ev.ownerEntityId === SLOT_TANGTANG && ev.columnId === COMBO_WINDOW_COLUMN_ID,
     );
     expect(windowsAfter1.length).toBe(1);
     expect(eventDuration(windowsAfter1[0])).toBe(6 * FPS);
@@ -2035,11 +2035,11 @@ describe('R. Combo Activation Window — Trigger Conditions', () => {
         && (i.actionPayload as { defaultSkill?: { id?: string } })?.defaultSkill?.id === INFLICTION_COLUMNS.CRYO,
     )!;
     const p2 = cryo2.actionPayload as AddEventPayload;
-    act(() => { result.current.handleAddEvent(p2.ownerId, p2.columnId, p2.atFrame, p2.defaultSkill); });
+    act(() => { result.current.handleAddEvent(p2.ownerEntityId, p2.columnId, p2.atFrame, p2.defaultSkill); });
 
     // ── Controller layer: 2 activation windows ──
     const windowsAfter2 = result.current.allProcessedEvents.filter(
-      ev => ev.ownerId === SLOT_TANGTANG && ev.columnId === COMBO_WINDOW_COLUMN_ID,
+      ev => ev.ownerEntityId === SLOT_TANGTANG && ev.columnId === COMBO_WINDOW_COLUMN_ID,
     );
     expect(windowsAfter2.length).toBe(2);
 

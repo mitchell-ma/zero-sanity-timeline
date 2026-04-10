@@ -45,7 +45,7 @@ function findAnyOperatorColumn(app: AppResult, slotId: string) {
   return app.columns.find(
     (c): c is MiniTimeline =>
       c.type === ColumnType.MINI_TIMELINE &&
-      c.ownerId === slotId &&
+      c.ownerEntityId === slotId &&
       c.columnId === NounType.BASIC_ATTACK,
   );
 }
@@ -71,7 +71,7 @@ function getControlPayload(app: AppResult, slotId: string, atFrame: number): Add
 function swapControlTo(app: AppResult, slotId: string, atFrame: number) {
   const payload = getControlPayload(app, slotId, atFrame);
   act(() => {
-    app.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+    app.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
   });
 }
 
@@ -210,14 +210,14 @@ describe('Laevatain ultimate controlled activation — integration through useAp
       const payload = getMenuPayload(result.current, ultCol!, 5 * FPS, TWILIGHT_NAME);
 
       act(() => {
-        result.current.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+        result.current.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
       });
 
       const warnings = validateVariantClauses(
         [...result.current.allProcessedEvents], result.current.slots,
       );
       const ultEvent = result.current.allProcessedEvents.find(
-        (ev) => ev.ownerId === SLOT_0 && ev.columnId === NounType.ULTIMATE,
+        (ev) => ev.ownerEntityId === SLOT_0 && ev.columnId === NounType.ULTIMATE,
       );
       expect(ultEvent).toBeDefined();
       expect(warnings.has(ultEvent!.uid)).toBe(false);
@@ -225,7 +225,7 @@ describe('Laevatain ultimate controlled activation — integration through useAp
       // View layer: verify control events appear in INPUT column
       const vmControls = getControlEventsFromVM(result.current);
       expect(vmControls.length).toBeGreaterThanOrEqual(1);
-      expect(vmControls.find(ev => ev.ownerId === SLOT_0)).toBeDefined();
+      expect(vmControls.find(ev => ev.ownerEntityId === SLOT_0)).toBeDefined();
     });
 
     it('warning when ultimate is placed at a frame where Laevatain is not controlled', () => {
@@ -243,14 +243,14 @@ describe('Laevatain ultimate controlled activation — integration through useAp
       const payload = getMenuPayload(result.current, ultCol!, 5 * FPS, TWILIGHT_NAME);
 
       act(() => {
-        result.current.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+        result.current.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
       });
 
       const warnings = validateVariantClauses(
         [...result.current.allProcessedEvents], result.current.slots,
       );
       const ultEvent = result.current.allProcessedEvents.find(
-        (ev) => ev.ownerId === SLOT_0 && ev.columnId === NounType.ULTIMATE,
+        (ev) => ev.ownerEntityId === SLOT_0 && ev.columnId === NounType.ULTIMATE,
       );
       expect(ultEvent).toBeDefined();
       expect(warnings.has(ultEvent!.uid)).toBe(true);
@@ -259,8 +259,8 @@ describe('Laevatain ultimate controlled activation — integration through useAp
       // View layer: verify both control events in INPUT column ViewModel
       const vmControls = getControlEventsFromVM(result.current);
       expect(vmControls).toHaveLength(2);
-      expect(vmControls.find(ev => ev.ownerId === SLOT_0)).toBeDefined();
-      expect(vmControls.find(ev => ev.ownerId === SLOT_1)).toBeDefined();
+      expect(vmControls.find(ev => ev.ownerEntityId === SLOT_0)).toBeDefined();
+      expect(vmControls.find(ev => ev.ownerEntityId === SLOT_1)).toBeDefined();
     });
   });
 });

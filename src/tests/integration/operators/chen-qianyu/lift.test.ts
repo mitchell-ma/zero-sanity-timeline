@@ -54,7 +54,7 @@ function addViaContextMenu(app: AppResult, slotId: string, columnId: string, atF
   const col = findColumn(app, slotId, columnId);
   expect(col).toBeDefined();
   const payload = getMenuPayload(app, col!, atFrame, variantLabel);
-  app.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+  app.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
 }
 
 describe('Chen Qianyu — Vulnerable → Lift physical status', () => {
@@ -77,13 +77,13 @@ describe('Chen Qianyu — Vulnerable → Lift physical status', () => {
 
     // Controller layer: Enemy should have exactly 1 Vulnerable infliction
     const vulnAfterFirst = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === PHYSICAL_INFLICTION_COLUMNS.VULNERABLE && ev.ownerId === ENEMY_ID,
+      (ev) => ev.columnId === PHYSICAL_INFLICTION_COLUMNS.VULNERABLE && ev.ownerEntityId === ENEMY_ID,
     );
     expect(vulnAfterFirst).toHaveLength(1);
 
     // Controller layer: Enemy should have NO physical statuses (Lift, Knock Down, Crush, Breach)
     const physStatusAfterFirst = result.current.allProcessedEvents.filter(
-      (ev) => PHYSICAL_STATUS_COLUMN_IDS.has(ev.columnId) && ev.ownerId === ENEMY_ID,
+      (ev) => PHYSICAL_STATUS_COLUMN_IDS.has(ev.columnId) && ev.ownerEntityId === ENEMY_ID,
     );
     expect(physStatusAfterFirst).toHaveLength(0);
 
@@ -94,13 +94,13 @@ describe('Chen Qianyu — Vulnerable → Lift physical status', () => {
 
     // Controller layer: Enemy should now have 2 Vulnerable infliction stacks
     const vulnAfterSecond = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === PHYSICAL_INFLICTION_COLUMNS.VULNERABLE && ev.ownerId === ENEMY_ID,
+      (ev) => ev.columnId === PHYSICAL_INFLICTION_COLUMNS.VULNERABLE && ev.ownerEntityId === ENEMY_ID,
     );
     expect(vulnAfterSecond).toHaveLength(2);
 
     // Controller layer: Enemy should now have Lift status
     const liftEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === PHYSICAL_STATUS_COLUMNS.LIFT && ev.ownerId === ENEMY_ID,
+      (ev) => ev.columnId === PHYSICAL_STATUS_COLUMNS.LIFT && ev.ownerEntityId === ENEMY_ID,
     );
     expect(liftEvents).toHaveLength(1);
 

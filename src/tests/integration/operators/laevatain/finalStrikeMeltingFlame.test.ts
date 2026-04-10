@@ -39,7 +39,7 @@ function findColumn(app: ReturnType<typeof useApp>, slotId: string, columnId: st
   return app.columns.find(
     (c): c is MiniTimeline =>
       c.type === ColumnType.MINI_TIMELINE &&
-      c.ownerId === slotId &&
+      c.ownerEntityId === slotId &&
       c.columnId === columnId,
   );
 }
@@ -69,19 +69,19 @@ function executeAddFromMenu(
   const item = menuItems.find(i => i.actionId === 'addEvent');
   expect(item).toBeDefined();
   expect(item!.disabled).toBeFalsy();
-  const payload = item!.actionPayload as { ownerId: string; columnId: string; atFrame: number; defaultSkill: Parameters<typeof app.handleAddEvent>[3] };
-  app.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+  const payload = item!.actionPayload as { ownerEntityId: string; columnId: string; atFrame: number; defaultSkill: Parameters<typeof app.handleAddEvent>[3] };
+  app.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
 }
 
 function getHeatInflictions(app: ReturnType<typeof useApp>) {
   return app.allProcessedEvents.filter(
-    (ev) => ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerId === ENEMY_ID,
+    (ev) => ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerEntityId === ENEMY_ID,
   );
 }
 
 function getMeltingFlameEvents(app: ReturnType<typeof useApp>) {
   return app.allProcessedEvents.filter(
-    (ev) => ev.columnId === MF_COLUMN_ID && ev.ownerId === SLOT_LAEVATAIN,
+    (ev) => ev.columnId === MF_COLUMN_ID && ev.ownerEntityId === SLOT_LAEVATAIN,
   );
 }
 
@@ -89,7 +89,7 @@ function findStatusColumn(app: ReturnType<typeof useApp>) {
   return app.columns.find(
     (c): c is MiniTimeline =>
       c.type === ColumnType.MINI_TIMELINE &&
-      c.ownerId === SLOT_LAEVATAIN &&
+      c.ownerEntityId === SLOT_LAEVATAIN &&
       c.columnId === 'operator-status',
   );
 }
@@ -194,7 +194,7 @@ describe('4 Akekuri BS + BATK Final Strike → Melting Flame IV → Scorching He
 
     // Controller: Scorching Heart activates (MF reached max 4 stacks)
     const shEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === SH_COLUMN_ID && ev.ownerId === SLOT_LAEVATAIN,
+      (ev) => ev.columnId === SH_COLUMN_ID && ev.ownerEntityId === SLOT_LAEVATAIN,
     );
     expect(shEvents).toHaveLength(1);
     expect(eventDuration(shEvents[0])).toBe(20 * FPS);
@@ -270,7 +270,7 @@ describe('4 Akekuri BS + BATK Final Strike → Melting Flame IV → Scorching He
 
     // Controller: no Scorching Heart
     const shEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === SH_COLUMN_ID && ev.ownerId === SLOT_LAEVATAIN,
+      (ev) => ev.columnId === SH_COLUMN_ID && ev.ownerEntityId === SLOT_LAEVATAIN,
     );
     expect(shEvents).toHaveLength(0);
 

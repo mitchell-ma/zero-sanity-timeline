@@ -42,7 +42,7 @@ function findTeamStatusColumn(app: AppResult) {
   return app.columns.find(
     (c): c is MiniTimeline =>
       c.type === ColumnType.MINI_TIMELINE &&
-      c.ownerId === TEAM_ID &&
+      c.ownerEntityId === TEAM_ID &&
       c.columnId === COMMON_COLUMN_IDS.TEAM_STATUS,
   );
 }
@@ -51,14 +51,14 @@ function addCombo(app: AppResult, atFrame: number) {
   const comboCol = findColumn(app, SLOT_AKEKURI, NounType.COMBO);
   expect(comboCol).toBeDefined();
   const payload = getMenuPayload(app, comboCol!, atFrame);
-  app.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+  app.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
 }
 
 function addUltimate(app: AppResult, atFrame: number) {
   const ultCol = findColumn(app, SLOT_AKEKURI, NounType.ULTIMATE);
   expect(ultCol).toBeDefined();
   const payload = getMenuPayload(app, ultCol!, atFrame);
-  app.handleAddEvent(payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill);
+  app.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
 }
 
 function setPotential(app: AppResult, potential: number) {
@@ -96,7 +96,7 @@ describe('Akekuri P1 — Positive Feedback', () => {
 
     // Combo has 2 RECOVER SKILL_POINT frames → should produce Positive Feedback stacks
     const p1Events = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === P1_STATUS_ID && ev.ownerId === SLOT_AKEKURI,
+      (ev) => ev.columnId === P1_STATUS_ID && ev.ownerEntityId === SLOT_AKEKURI,
     );
     expect(p1Events.length).toBeGreaterThanOrEqual(1);
 
@@ -107,7 +107,7 @@ describe('Akekuri P1 — Positive Feedback', () => {
     );
     let foundInVM = false;
     viewModels.forEach(vm => {
-      if (vm.events.some(ev => ev.columnId === P1_STATUS_ID && ev.ownerId === SLOT_AKEKURI)) foundInVM = true;
+      if (vm.events.some(ev => ev.columnId === P1_STATUS_ID && ev.ownerEntityId === SLOT_AKEKURI)) foundInVM = true;
     });
     expect(foundInVM).toBe(true);
   });
@@ -121,7 +121,7 @@ describe('Akekuri P1 — Positive Feedback', () => {
 
     // Ultimate has 3 RECOVER SKILL_POINT frames → should produce Positive Feedback stacks
     const p1Events = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === P1_STATUS_ID && ev.ownerId === SLOT_AKEKURI,
+      (ev) => ev.columnId === P1_STATUS_ID && ev.ownerEntityId === SLOT_AKEKURI,
     );
     expect(p1Events.length).toBeGreaterThanOrEqual(1);
   });
@@ -161,7 +161,7 @@ describe('Akekuri P3 — Committed Team Player', () => {
 
     // Controller: COMMITTED_TEAM_PLAYER appears under TEAM_ID
     const p3Events = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === P3_STATUS_ID && ev.ownerId === TEAM_ID,
+      (ev) => ev.columnId === P3_STATUS_ID && ev.ownerEntityId === TEAM_ID,
     );
     expect(p3Events.length).toBeGreaterThanOrEqual(1);
 

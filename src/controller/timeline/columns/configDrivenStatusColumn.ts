@@ -27,7 +27,7 @@ export class ConfigDrivenStatusColumn implements EventColumn {
     this.maxStacks = getStatusStackLimit(columnId);
   }
 
-  add(ownerId: string, frame: number, durationFrames: number,
+  add(ownerEntityId: string, frame: number, durationFrames: number,
     source: EventSource, options?: AddOptions): boolean {
 
     const statusId = options?.statusId ?? this.columnId;
@@ -36,21 +36,21 @@ export class ConfigDrivenStatusColumn implements EventColumn {
 
     // MERGE: subsume all active instances
     if (mode === StackInteractionType.MERGE) {
-      const active = this.host.activeEventsIn(this.columnId, ownerId, frame);
+      const active = this.host.activeEventsIn(this.columnId, ownerEntityId, frame);
       for (const act of active) {
         setEventDuration(act, frame - act.startFrame);
         act.eventStatus = EventStatusType.CONSUMED;
-        act.eventStatusOwnerId = source.ownerId;
+        act.eventStatusEntityId = source.ownerEntityId;
         act.eventStatusSkillName = source.skillName;
       }
     }
 
     // Enforce stack limit
     if (limit != null) {
-      const activeCount = this.host.activeCount(this.columnId, ownerId, frame);
+      const activeCount = this.host.activeCount(this.columnId, ownerEntityId, frame);
       if (activeCount >= limit) {
         if (mode === StackInteractionType.RESET) {
-          this.resetOldest(ownerId, frame, source);
+          this.resetOldest(ownerEntityId, frame, source);
         } else if (!mode || mode === StackInteractionType.NONE) {
           return false;
         }
@@ -62,14 +62,14 @@ export class ConfigDrivenStatusColumn implements EventColumn {
     ev.uid = options?.uid ?? `${statusId.toLowerCase()}-${genEventUid()}`;
     ev.id = statusId;
     ev.name = statusId;
-    ev.ownerId = ownerId;
+    ev.ownerEntityId = ownerEntityId;
     ev.columnId = this.columnId;
     ev.startFrame = frame;
     ev.segments = [{ properties: { duration: durationFrames } }];
-    ev.sourceOwnerId = source.ownerId;
+    ev.sourceEntityId = source.ownerEntityId;
     ev.sourceSkillName = source.skillName;
-    ev.ownerSlotId = source.slotId ?? source.ownerId;
-    ev.ownerOperatorId = source.operatorId ?? source.ownerId;
+    ev.ownerSlotId = source.slotId ?? source.ownerEntityId;
+    ev.ownerOperatorId = source.operatorId ?? source.ownerEntityId;
     if (options?.event) Object.assign(ev, options.event);
 
 
@@ -81,62 +81,62 @@ export class ConfigDrivenStatusColumn implements EventColumn {
     return true;
   }
 
-  consume(ownerId: string, frame: number, source: EventSource,
+  consume(ownerEntityId: string, frame: number, source: EventSource,
     options?: ConsumeOptions): number {
 
     if (options?.restack) {
-      return this.consumeWithRestack(ownerId, frame, options.count ?? 1, source);
+      return this.consumeWithRestack(ownerEntityId, frame, options.count ?? 1, source);
     }
 
     if (options?.count != null) {
-      return this.consumeOldestN(ownerId, frame, options.count, source);
+      return this.consumeOldestN(ownerEntityId, frame, options.count, source);
     }
 
     // Default: clamp all active
-    const active = this.host.activeEventsIn(this.columnId, ownerId, frame);
+    const active = this.host.activeEventsIn(this.columnId, ownerEntityId, frame);
     for (const ev of active) {
       setEventDuration(ev, frame - ev.startFrame);
       ev.eventStatus = EventStatusType.CONSUMED;
-      ev.eventStatusOwnerId = source.ownerId;
+      ev.eventStatusEntityId = source.ownerEntityId;
       ev.eventStatusSkillName = source.skillName;
     }
     return active.length;
   }
 
-  canAdd(ownerId: string, frame: number): boolean {
+  canAdd(ownerEntityId: string, frame: number): boolean {
     if (this.maxStacks == null) return true;
     const mode = this.stackingMode;
     if (mode === StackInteractionType.RESET || mode === StackInteractionType.MERGE) return true;
-    return this.host.activeCount(this.columnId, ownerId, frame) < this.maxStacks;
+    return this.host.activeCount(this.columnId, ownerEntityId, frame) < this.maxStacks;
   }
 
-  canConsume(ownerId: string, frame: number): boolean {
-    return this.host.activeCount(this.columnId, ownerId, frame) > 0;
+  canConsume(ownerEntityId: string, frame: number): boolean {
+    return this.host.activeCount(this.columnId, ownerEntityId, frame) > 0;
   }
 
   // ── Private ────────────────────────────────────────────────────────────
 
-  private resetOldest(ownerId: string, frame: number, source: EventSource) {
-    const active = this.host.activeEventsIn(this.columnId, ownerId, frame)
+  private resetOldest(ownerEntityId: string, frame: number, source: EventSource) {
+    const active = this.host.activeEventsIn(this.columnId, ownerEntityId, frame)
       .sort((a, b) => a.startFrame - b.startFrame);
     if (active.length > 0) {
       const oldest = active[0];
       setEventDuration(oldest, frame - oldest.startFrame);
       oldest.eventStatus = EventStatusType.REFRESHED;
-      oldest.eventStatusOwnerId = source.ownerId;
+      oldest.eventStatusEntityId = source.ownerEntityId;
       oldest.eventStatusSkillName = source.skillName;
     }
   }
 
-  private consumeOldestN(ownerId: string, frame: number, count: number, source: EventSource) {
-    const allActive = this.host.activeEventsIn(this.columnId, ownerId, frame)
+  private consumeOldestN(ownerEntityId: string, frame: number, count: number, source: EventSource) {
+    const allActive = this.host.activeEventsIn(this.columnId, ownerEntityId, frame)
       .sort((a, b) => a.startFrame - b.startFrame);
     let stacksConsumed = 0;
     for (const ev of allActive) {
       if (stacksConsumed >= count) break;
       setEventDuration(ev, frame - ev.startFrame);
       ev.eventStatus = EventStatusType.CONSUMED;
-      ev.eventStatusOwnerId = source.ownerId;
+      ev.eventStatusEntityId = source.ownerEntityId;
       ev.eventStatusSkillName = source.skillName;
       stacksConsumed += ev.stacks ?? 1;
     }
@@ -151,8 +151,8 @@ export class ConfigDrivenStatusColumn implements EventColumn {
    * Consume N oldest with restacking — clamps ALL active, re-creates remaining
    * events to produce a visual stack-count split (e.g. Steel Oath V → IV → III).
    */
-  private consumeWithRestack(ownerId: string, frame: number, count: number, source: EventSource) {
-    const allActive = this.host.activeEventsIn(this.columnId, ownerId, frame)
+  private consumeWithRestack(ownerEntityId: string, frame: number, count: number, source: EventSource) {
+    const allActive = this.host.activeEventsIn(this.columnId, ownerEntityId, frame)
       .sort((a, b) => a.startFrame - b.startFrame);
     if (allActive.length === 0) return 0;
 
@@ -170,7 +170,7 @@ export class ConfigDrivenStatusColumn implements EventColumn {
     for (const ev of allActive) {
       setEventDuration(ev, frame - ev.startFrame);
       ev.eventStatus = EventStatusType.CONSUMED;
-      ev.eventStatusOwnerId = source.ownerId;
+      ev.eventStatusEntityId = source.ownerEntityId;
       ev.eventStatusSkillName = source.skillName;
       ev.stacks = allActive.length;
     }
@@ -178,17 +178,17 @@ export class ConfigDrivenStatusColumn implements EventColumn {
     if (remaining > 0 && maxRemainingDuration > 0) {
       for (let i = 0; i < remaining; i++) {
         const ev = allocDerivedEvent();
-        ev.uid = derivedEventUid(this.columnId, templateEvent.sourceOwnerId ?? ownerId, frame, `restack-${i}`);
+        ev.uid = derivedEventUid(this.columnId, templateEvent.sourceEntityId ?? ownerEntityId, frame, `restack-${i}`);
         ev.id = templateEvent.id;
         ev.name = templateEvent.id;
-        ev.ownerId = ownerId;
+        ev.ownerEntityId = ownerEntityId;
         ev.columnId = this.columnId;
         ev.startFrame = frame;
         ev.segments = [{ properties: { duration: maxRemainingDuration } }];
-        ev.sourceOwnerId = templateEvent.sourceOwnerId;
+        ev.sourceEntityId = templateEvent.sourceEntityId;
         ev.sourceSkillName = templateEvent.sourceSkillName;
-        ev.ownerSlotId = templateEvent.ownerSlotId ?? source.slotId ?? source.ownerId;
-        ev.ownerOperatorId = templateEvent.ownerOperatorId ?? source.operatorId ?? source.ownerId;
+        ev.ownerSlotId = templateEvent.ownerSlotId ?? source.slotId ?? source.ownerEntityId;
+        ev.ownerOperatorId = templateEvent.ownerOperatorId ?? source.operatorId ?? source.ownerEntityId;
         ev.stacks = remaining;
         this.host.pushEvent(ev);
       }

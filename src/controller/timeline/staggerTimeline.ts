@@ -252,14 +252,14 @@ export class StaggerTimeline extends ResourceTimeline {
    * @param nodeRecoveryFrames Duration of node stagger frailty in frames.
    * @param nodeColumnId Column ID for node stagger events.
    * @param fullColumnId Column ID for full stagger events.
-   * @param ownerId Owner of the generated events.
+   * @param ownerEntityId Owner of the generated events.
    * @param idPrefix Prefix for generated event IDs (must be stable for override persistence).
    */
   generateFrailtyEvents(
     nodeRecoveryFrames: number,
     nodeColumnId: string,
     fullColumnId: string,
-    ownerId: string,
+    ownerEntityId: string,
     idPrefix: string,
   ): TimelineEvent[] {
     const events: TimelineEvent[] = [];
@@ -271,7 +271,7 @@ export class StaggerTimeline extends ResourceTimeline {
         uid: `${idPrefix}-node-${crossing.nodeIndex}-${crossing.frame}`,
         id: nodeColumnId,
         name: nodeColumnId,
-        ownerId,
+        ownerEntityId,
         columnId: nodeColumnId,
         startFrame: crossing.frame,
         segments: durationSegment(activationDuration),
@@ -284,7 +284,7 @@ export class StaggerTimeline extends ResourceTimeline {
         uid: `${idPrefix}-full-${brk.startFrame}`,
         id: fullColumnId,
         name: fullColumnId,
-        ownerId,
+        ownerEntityId,
         columnId: fullColumnId,
         startFrame: brk.startFrame,
         segments: durationSegment(duration),

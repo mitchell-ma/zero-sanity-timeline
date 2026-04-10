@@ -65,7 +65,7 @@ function addMfStacks(ref: AppRef, count: number, startSecond: number) {
     const payload = getMfMenuPayload(ref.current, atFrame);
     act(() => {
       ref.current.handleAddEvent(
-        payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
       );
     });
   }
@@ -83,14 +83,14 @@ function addEmpoweredBattleSkill(ref: AppRef, atSecond: number) {
   const payload = getMenuPayload(ref.current, col!, atFrame, empoweredVariant!.displayName);
   act(() => {
     ref.current.handleAddEvent(
-      payload.ownerId, payload.columnId, payload.atFrame, payload.defaultSkill,
+      payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
     );
   });
 }
 
 function getMfEvents(app: AppResult) {
   return app.allProcessedEvents.filter(
-    (ev) => ev.columnId === MELTING_FLAME_ID && ev.ownerId === SLOT_LAEVATAIN,
+    (ev) => ev.columnId === MELTING_FLAME_ID && ev.ownerEntityId === SLOT_LAEVATAIN,
   );
 }
 
@@ -141,7 +141,7 @@ describe('Melting Flame stacking — freeform add', () => {
 
     // MF events appear in the status column view model
     const mfVmEvents = vm!.events.filter(
-      (ev) => ev.columnId === MELTING_FLAME_ID && ev.ownerId === SLOT_LAEVATAIN,
+      (ev) => ev.columnId === MELTING_FLAME_ID && ev.ownerEntityId === SLOT_LAEVATAIN,
     );
     expect(mfVmEvents).toHaveLength(2);
   });
@@ -223,7 +223,7 @@ describe('Melting Flame stacking — freeform add', () => {
 
     // Verify empowered BS was undone
     const battleAfterUndo = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === NounType.BATTLE,
+      (ev) => ev.ownerEntityId === SLOT_LAEVATAIN && ev.columnId === NounType.BATTLE,
     );
     expect(battleAfterUndo).toHaveLength(0);
 
