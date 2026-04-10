@@ -21,10 +21,7 @@ import { VerbType, NounType } from '../../dsl/semantics';
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from './valueResolver';
 import type { ValueNode } from '../../dsl/semantics';
 import type { TriggerIndex, TriggerDefEntry } from '../timeline/triggerIndex';
-import type { StatusEventDef } from '../timeline/eventQueueTypes';
-import { getAllOperatorStatuses } from '../../controller/gameDataStore';
-import { getAllWeaponStatuses } from '../../model/game-data/weaponStatusesStore';
-import { getAllGearStatuses } from '../../model/game-data/gearStatusesStore';
+import { getStatusDef } from '../../controller/timeline/configCache';
 import { FPS } from '../../utils/timeline';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -111,20 +108,7 @@ function decodeFrame(key: number): number {
   return (key % FRAME_MULTIPLIER) - 1;
 }
 
-// ── Status config loading ────────────────────────────────────────────────────
-
-let _statusDefCache: Map<string, StatusEventDef> | undefined;
-
-function getStatusDef(statusId: string): StatusEventDef | undefined {
-  if (!_statusDefCache) {
-    _statusDefCache = new Map();
-    const allDefs = [...getAllOperatorStatuses(), ...getAllWeaponStatuses(), ...getAllGearStatuses()];
-    for (const s of allDefs) {
-      _statusDefCache.set(s.id, s.serialize() as unknown as StatusEventDef);
-    }
-  }
-  return _statusDefCache.get(statusId);
-}
+// Status config loaded via unified configCache (getStatusDef imported above).
 
 function resolveValue(node: ValueNode): number {
   return resolveValueNode(node, DEFAULT_VALUE_CONTEXT);
