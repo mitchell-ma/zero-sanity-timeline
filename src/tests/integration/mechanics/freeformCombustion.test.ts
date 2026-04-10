@@ -155,6 +155,7 @@ describe('Freeform Combustion Reaction', () => {
     expect(ev.segments.length).toBeGreaterThanOrEqual(1);
     const segment = ev.segments[0];
     expect(segment.frames).toBeDefined();
+    // Freeform combustion: initial hit at offset 0 + 10 DoT ticks = 11 frames
     expect(segment.frames!).toHaveLength(EXPECTED_FRAME_COUNT);
 
     // Verify frame offsets: 0, FPS, 2*FPS, ..., 10*FPS
@@ -162,21 +163,16 @@ describe('Freeform Combustion Reaction', () => {
       expect(segment.frames![i].offsetFrame).toBe(i * FPS);
     }
 
-    // Initial hit (offset 0): uses getArtsReactionBaseMultiplier(1)
-    const defaultStacks = (ev.stacks ?? 1) as 1 | 2 | 3 | 4;
-    const initialFrame = segment.frames![0];
-    const initialDamage = findDealDamageInClauses(initialFrame.clauses);
-    expect(initialDamage).not.toBeNull();
-    expect(initialDamage!.multipliers[0]).toBeCloseTo(
-      getArtsReactionBaseMultiplier(defaultStacks),
-      6,
-    );
+    // Initial hit (offset 0): uses getArtsReactionBaseMultiplier
+    const level = (ev.statusLevel ?? 1) as 1 | 2 | 3 | 4;
+    const initialDmg = findDealDamageInClauses(segment.frames![0].clauses);
+    expect(initialDmg).not.toBeNull();
+    expect(initialDmg!.multipliers[0]).toBeCloseTo(getArtsReactionBaseMultiplier(level), 6);
 
-    // DoT ticks (offsets 1*FPS..10*FPS): use getCombustionDotMultiplier(1)
-    const expectedDotMult = getCombustionDotMultiplier(defaultStacks);
+    // DoT ticks (offsets FPS..10*FPS): use getCombustionDotMultiplier
+    const expectedDotMult = getCombustionDotMultiplier(level);
     for (let i = 1; i < EXPECTED_FRAME_COUNT; i++) {
-      const dotFrame = segment.frames![i];
-      const dotDamage = findDealDamageInClauses(dotFrame.clauses);
+      const dotDamage = findDealDamageInClauses(segment.frames![i].clauses);
       expect(dotDamage).not.toBeNull();
       expect(dotDamage!.multipliers[0]).toBeCloseTo(expectedDotMult, 6);
     }
@@ -212,15 +208,32 @@ describe('Freeform Combustion Reaction', () => {
     expect(segment.properties.name).toContain('I');
   });
 
-  // Natural combustion requires a complex setup: placing Laevatain with battle skills
-  // that create heat inflictions, accumulating 2+ stacks to trigger a natural combustion.
-  // The derived combustion event's stacks should match the consumed infliction count.
-  it.skip('5. Natural combustion with correct statusLevel from consumed inflictions', () => {
-    // To implement this test:
-    // 1. Add Laevatain to a slot
-    // 2. Place battle skills that create heat inflictions on the enemy
-    // 3. Wait for enough inflictions (2+) to trigger a natural combustion
-    // 4. Verify the derived combustion event has stacks matching the consumed infliction count
-    // 5. Verify frame markers use the correct multipliers for that stack level
+  it('5. Freeform combustion has initial 0s DEAL DAMAGE frame + DoT ticks', () => {
+    const { result } = renderHook(() => useApp());
+    act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
+    act(() => { placeFreeformCombustion(result.current, 0); });
+
+    const combustionEvents = getCombustionEvents(result.current);
+    expect(combustionEvents).toHaveLength(1);
+    const ev = combustionEvents[0];
+
+    const segment = ev.segments[0];
+    expect(segment.frames).toBeDefined();
+
+    // Initial hit at offset 0 has DEAL DAMAGE with initial-hit multiplier
+    const initialFrame = segment.frames![0];
+    expect(initialFrame.offsetFrame).toBe(0);
+    const initialDmg = findDealDamageInClauses(initialFrame.clauses);
+    expect(initialDmg).not.toBeNull();
+    const level = (ev.statusLevel ?? 1) as 1 | 2 | 3 | 4;
+    expect(initialDmg!.multipliers[0]).toBeCloseTo(getArtsReactionBaseMultiplier(level), 6);
+
+    // Remaining frames are DoT ticks with DoT multiplier
+    const dotMult = getCombustionDotMultiplier(level);
+    for (let i = 1; i < segment.frames!.length; i++) {
+      const dotDmg = findDealDamageInClauses(segment.frames![i].clauses);
+      expect(dotDmg).not.toBeNull();
+      expect(dotDmg!.multipliers[0]).toBeCloseTo(dotMult, 6);
+    }
   });
 });
