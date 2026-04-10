@@ -3,7 +3,8 @@
 ## 2026-04-09
 - Fixed a latent damage-calc bug affecting Wulfgard, Antal, Avywenna, and Last Rite — effects that referenced the "source" of a triggered event were silently resolving against the wrong operator's stats in some chained-trigger cases. Damage values for these operators in cascading interactions should now match in-game more closely.
 - Reactions caused by overlapping inflictions now correctly attribute back to every contributing source, not just the most recent — improves accuracy when multiple operators' inflictions feed into a single reaction.
-- Continued internal engine cleanup — no other player-facing changes today.
+- The info panel now shows which operator consumed or refreshed an infliction/status, traced through the event chain rather than a stored snapshot — more accurate when multiple operators interact with the same status.
+- Large internal engine overhaul — event identity tracking, resource accounting, and effect processing all consolidated into a single unified pipeline. No intended player-facing behavior changes beyond the fixes above, but the engine is significantly more robust for future operator updates.
 
 ## 2026-04-08
 - Combo activation windows now flow through a single reactive path — windows open the moment a matching trigger event fires, and the sidebar stays in sync with combo cooldown reductions (e.g. Wulfgard P5 ult resetting the combo CD)
