@@ -613,9 +613,14 @@ export class EventInterpretorController {
     if (!clauses || clauses.length === 0) {
       return { executedCount: 0, anyMatched: false };
     }
-    const accepted = filterClauses(clauses, clauseType, pred =>
-      evaluateConditions(pred.conditions as unknown as import('../../dsl/semantics').Interaction[], condCtx),
-    );
+    // Fast path: when no clause has conditions, skip filterClauses entirely.
+    // The hasConditionalClauses flag is pre-computed at parse time on DataDrivenSkillEventFrame.
+    const hasConditional = clauses.some(p => p.conditions.length > 0);
+    const accepted = hasConditional
+      ? filterClauses(clauses, clauseType, pred =>
+        evaluateConditions(pred.conditions as unknown as import('../../dsl/semantics').Interaction[], condCtx),
+      )
+      : clauses;
     let executedCount = 0;
     for (const pred of accepted) {
       for (const ef of pred.effects) {
@@ -1054,9 +1059,13 @@ export class EventInterpretorController {
           && effect.objectId !== NounType.INFLICTION
           && effect.objectId !== NounType.REACTION
           && effect.objectId !== AdjectiveType.PHYSICAL) {
-        const qualifiedId = flattenQualifiedId(effect.objectQualifier as string, effect.objectId);
+        // Use pre-composed ID from parse time when available, else compose at runtime
+        const qualifiedId = (effect as { _composedQualifiedId?: string })._composedQualifiedId
+          ?? flattenQualifiedId(effect.objectQualifier as string, effect.objectId);
         if (getStatusById(qualifiedId)) {
-          return this.doApply({ ...effect, objectId: qualifiedId }, ctx);
+          // Strip qualifier + cached composed ID to prevent infinite re-entry
+          const { objectQualifier: _q, _composedQualifiedId: _c, ...rest } = effect as Effect & { _composedQualifiedId?: string };
+          return this.doApply({ ...rest, objectId: qualifiedId } as Effect, ctx);
         }
       }
       const isTeamTarget = effect.to === NounType.TEAM;

@@ -5,7 +5,7 @@
  * All dependencies are static loadout values — no runtime state.
  */
 import {
-  NounType, ValueNode, ValueOperation, DeterminerType,
+  NounType, VerbType, ValueNode, ValueOperation, DeterminerType,
   isValueLiteral, isValueVariable, isValueStat, isValueStatus, isValueExpression,
   flattenQualifiedId,
 } from '../../dsl/semantics';
@@ -153,6 +153,58 @@ export function resolveValueNode(node: ValueNode, ctx: ValueResolutionContext): 
   }
 
   return 0;
+}
+
+// ── Parse-time constant collapse ────────────────────────────────────────────
+
+/**
+ * Collapse constant sub-expressions at parse time.
+ *
+ * - IS literals → returned as-is (already constant).
+ * - VARY_BY (level-dependent) → returned as-is.
+ * - STAT / STATUS → returned as-is (runtime-dependent).
+ * - Expression: recursively collapse children. If both resolve to IS literals,
+ *   compute the result and return a new IS literal.
+ *
+ * This eliminates runtime recursion for expressions composed entirely of
+ * IS-literal operands (the most common case in JSON configs).
+ */
+export function collapseConstantExpressions(node: ValueNode): ValueNode {
+  if (node == null) return node;
+
+  // Leaf nodes — return unchanged
+  if (isValueLiteral(node)) return node;
+  if (isValueVariable(node)) return node;
+  if (isValueStat(node)) return node;
+  if (isValueStatus(node)) return node;
+
+  // Expression: recurse into children, then try to collapse
+  if (isValueExpression(node)) {
+    const left = collapseConstantExpressions(node.left);
+    const right = collapseConstantExpressions(node.right);
+
+    // Both children are IS literals → compute at parse time
+    if (isValueLiteral(left) && isValueLiteral(right)) {
+      let result: number;
+      switch (node.operation) {
+        case ValueOperation.MULT:        result = left.value * right.value; break;
+        case ValueOperation.ADD:         result = left.value + right.value; break;
+        case ValueOperation.SUB:         result = left.value - right.value; break;
+        case ValueOperation.INTEGER_DIV: result = right.value !== 0 ? Math.floor(left.value / right.value) : 0; break;
+        case ValueOperation.MIN:         result = Math.min(left.value, right.value); break;
+        case ValueOperation.MAX:         result = Math.max(left.value, right.value); break;
+        default:                         result = 0;
+      }
+      return { verb: VerbType.IS, value: result };
+    }
+
+    // At least one child was non-constant — return expression with collapsed children
+    if (left !== node.left || right !== node.right) {
+      return { ...node, left, right };
+    }
+  }
+
+  return node;
 }
 
 // ── Convenience helpers ─────────────────────────────────────────────────────

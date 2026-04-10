@@ -1,7 +1,7 @@
 import { EventFrameType, SegmentType } from "../../consts/enums";
-import { NounType, VerbType, DeterminerType } from "../../dsl/semantics";
+import { NounType, VerbType, DeterminerType, AdjectiveType, flattenQualifiedId } from "../../dsl/semantics";
 import type { Effect, ValueNode } from "../../dsl/semantics";
-import { resolveValueNode, DEFAULT_VALUE_CONTEXT, type ValueResolutionContext } from "../../controller/calculation/valueResolver";
+import { resolveValueNode, DEFAULT_VALUE_CONTEXT, collapseConstantExpressions, type ValueResolutionContext } from "../../controller/calculation/valueResolver";
 import { parseJsonClauseArray, findFirstEffectValue } from "../../controller/timeline/clauseQueries";
 import {
   SkillEventFrame,
@@ -156,6 +156,7 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
   private readonly _duplicateTriggerSource: boolean;
   private readonly _clauses: readonly FrameClausePredicate[];
   private readonly _clauseType: string | undefined;
+  private readonly _hasConditionalClauses: boolean;
   private readonly _dependencyTypes: readonly string[];
   private readonly _frameTypes: readonly EventFrameType[];
   private readonly _suppliedParameters?: Record<string, { id: string; name: string; lowerRange: number; upperRange: number; default: number }[]>;
@@ -258,11 +259,45 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
           }
         }
       }
+      // ── Parse-time optimizations ──────────────────────────────────────────
+      // 1. Collapse constant ValueNode expressions in effect WITH blocks
+      // 2. Pre-compose qualified status IDs (objectQualifier + objectId → flat ID)
+      for (const ce of clauseEffects) {
+        if (!ce.dslEffect) continue;
+        const dsl = ce.dslEffect;
+        // (1) Collapse constant expressions in WITH properties
+        if (dsl.with) {
+          const w = dsl.with as Record<string, ValueNode>;
+          for (const key of Object.keys(w)) {
+            if (w[key] != null) {
+              w[key] = collapseConstantExpressions(w[key]) as ValueNode;
+            }
+          }
+        }
+        // Also collapse the top-level `value` if it's a ValueNode expression
+        if (dsl.value != null && typeof dsl.value === 'object' && 'operation' in (dsl.value as object)) {
+          (dsl as { value: ValueNode }).value = collapseConstantExpressions(dsl.value as ValueNode);
+        }
+        // (2) Pre-compose qualified status IDs at parse time
+        // Caches the flattened qualifier+objectId so the interpreter can skip
+        // the runtime flattenQualifiedId call. Keeps objectQualifier intact for
+        // other consumers (column resolution, susceptibility handling, etc.).
+        if (dsl.object === NounType.STATUS && dsl.objectId && dsl.objectQualifier
+            && dsl.objectId !== NounType.INFLICTION
+            && dsl.objectId !== NounType.REACTION
+            && dsl.objectId !== AdjectiveType.PHYSICAL) {
+          (dsl as { _composedQualifiedId?: string })._composedQualifiedId =
+            flattenQualifiedId(dsl.objectQualifier as string, dsl.objectId);
+        }
+      }
+
       clauses.push({ conditions, effects: clauseEffects });
     }
 
     this._clauses = clauses;
     this._clauseType = frame.clauseType;
+    // (3) Pre-compute whether any clause has conditions for fast-path in interpreter
+    this._hasConditionalClauses = clauses.some(p => p.conditions.length > 0);
     this._duplicateTriggerSource = duplicateSource;
     this._dependencyTypes = (frame.properties?.dependencyTypes ?? []) as string[];
     // Merge explicit frameTypes from JSON (e.g. "frameTypes": ["DIVE"]) with clause-derived ones
@@ -279,6 +314,8 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
   getDuplicateTriggerSource(): boolean { return this._duplicateTriggerSource; }
   getClauses(): readonly FrameClausePredicate[] { return this._clauses; }
   getClauseType(): string | undefined { return this._clauseType; }
+  /** True if any clause has conditions; false = all clauses are unconditional (skip filterClauses). */
+  getHasConditionalClauses(): boolean { return this._hasConditionalClauses; }
   getDependencyTypes(): readonly string[] { return this._dependencyTypes; }
   getFrameTypes(): readonly EventFrameType[] { return this._frameTypes; }
   getSuppliedParameters(): Record<string, { id: string; name: string; lowerRange: number; upperRange: number; default: number }[]> | undefined { return this._suppliedParameters; }
