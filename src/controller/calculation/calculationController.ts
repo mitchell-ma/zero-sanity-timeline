@@ -155,7 +155,7 @@ export function computeReactionFrameDamage(
   modelEnemy: ModelEnemy,
   sourceProps: LoadoutProperties,
 ): number | undefined {
-  const stacks = Math.min(ev.stacks ?? 1, 4) as StatusLevel;
+  const stacks = Math.min(ev.statusLevel ?? 1, 4) as StatusLevel;
   const forced = !!(ev.isForced || ev.forcedReaction);
 
   // Determine the base multiplier based on reaction type and frame position

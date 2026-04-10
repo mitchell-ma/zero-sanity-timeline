@@ -63,7 +63,7 @@ describe('deriveReactions', () => {
 
     expect(reactions).toHaveLength(1);
     expect(reactions[0].columnId).toBe(REACTION_COLUMNS.CORROSION);
-    expect(reactions[0].stacks).toBe(1);
+    expect(reactions[0].statusLevel).toBe(1);
     expect(reactions[0].startFrame).toBe(FPS);
   });
 
@@ -79,7 +79,7 @@ describe('deriveReactions', () => {
 
     expect(reactions).toHaveLength(1);
     expect(reactions[0].columnId).toBe(REACTION_COLUMNS.CORROSION);
-    expect(reactions[0].stacks).toBe(2);
+    expect(reactions[0].statusLevel).toBe(2);
   });
 
   it('4 heat + 1 nature = corrosion level 2 (capped)', () => {
@@ -96,7 +96,7 @@ describe('deriveReactions', () => {
 
     expect(reactions).toHaveLength(1);
     expect(reactions[0].columnId).toBe(REACTION_COLUMNS.CORROSION);
-    expect(reactions[0].stacks).toBe(2);
+    expect(reactions[0].statusLevel).toBe(2);
   });
 
   // ── Reaction type determined by incoming element ────────────────────────
@@ -112,7 +112,7 @@ describe('deriveReactions', () => {
 
     expect(reactions).toHaveLength(1);
     expect(reactions[0].columnId).toBe(REACTION_COLUMNS.COMBUSTION);
-    expect(reactions[0].stacks).toBe(1);
+    expect(reactions[0].statusLevel).toBe(1);
   });
 
   it('1 heat + 1 electric = electrification level 1', () => {
@@ -126,7 +126,7 @@ describe('deriveReactions', () => {
 
     expect(reactions).toHaveLength(1);
     expect(reactions[0].columnId).toBe(REACTION_COLUMNS.ELECTRIFICATION);
-    expect(reactions[0].stacks).toBe(1);
+    expect(reactions[0].statusLevel).toBe(1);
   });
 
   it('1 heat + 1 cryo = solidification level 1', () => {
@@ -140,7 +140,7 @@ describe('deriveReactions', () => {
 
     expect(reactions).toHaveLength(1);
     expect(reactions[0].columnId).toBe(REACTION_COLUMNS.SOLIDIFICATION);
-    expect(reactions[0].stacks).toBe(1);
+    expect(reactions[0].statusLevel).toBe(1);
   });
 
   // ── All inflictions consumed ────────────────────────────────────────────
@@ -256,7 +256,7 @@ describe('deriveReactions', () => {
     const result = deriveReactions(events);
     const reactions = findReactions(result);
 
-    expect(reactions[0].stacks).toBe(2); // 2 active heat consumed, incoming not counted
+    expect(reactions[0].statusLevel).toBe(2); // 2 active heat consumed, incoming not counted
   });
 
   // ── Source attribution ──────────────────────────────────────────────────
@@ -298,7 +298,7 @@ describe('deriveReactions', () => {
     const reactions = findReactions(result);
 
     expect(reactions).toHaveLength(1);
-    expect(reactions[0].stacks).toBe(1); // only h2 counts, h1 was already consumed
+    expect(reactions[0].statusLevel).toBe(1); // only h2 counts, h1 was already consumed
   });
 
   // ── Multiple sequential reactions ───────────────────────────────────────

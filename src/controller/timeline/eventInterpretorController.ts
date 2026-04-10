@@ -36,6 +36,7 @@ import type { OverrideStore } from '../../consts/overrideTypes';
 import type { StatSource } from './derivedEventController';
 import type { EventSource, AddOptions } from './columns/eventColumn';
 import { t } from '../../locales/locale';
+import { resolveEventLabel } from './eventPresentationController';
 import { buildOverrideKey } from '../overrideController';
 import {
   BREACH_DURATION, ENEMY_ID, ENEMY_ACTION_COLUMN_ID,
@@ -2040,7 +2041,7 @@ export class EventInterpretorController {
     if (active.length === 0) return;
 
     const solidEvent = active[active.length - 1];
-    const stacks = Math.min(solidEvent.stacks ?? 1, 4) as StatusLevel;
+    const stacks = Math.min(solidEvent.statusLevel ?? 1, 4) as StatusLevel;
 
     // Consume the solidification
     this.controller.consumeEvent(
@@ -2071,9 +2072,8 @@ export class EventInterpretorController {
     if (shatterEvents.length > 0) {
       const shatter = shatterEvents[shatterEvents.length - 1];
       const dur = eventDuration(shatter);
-      const roman = ['I', 'II', 'III', 'IV'][stacks - 1] ?? `${stacks}`;
       shatter.segments = [{
-        properties: { duration: dur, name: `Shatter ${roman}` },
+        properties: { duration: dur, name: resolveEventLabel(shatter) },
         frames: [{
           offsetFrame: 0,
           damageElement: ElementType.PHYSICAL,

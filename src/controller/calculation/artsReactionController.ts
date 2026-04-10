@@ -14,8 +14,10 @@
 
 import { DamageType, ElementType } from '../../consts/enums';
 import { REACTION_COLUMNS } from '../../model/channels';
-import { StatusLevel } from '../../consts/types';
+import type { StatusLevel } from '../../consts/types';
 import { TimelineEvent, eventEndFrame } from '../../consts/viewTypes';
+import { resolveEventLabel } from '../timeline/eventPresentationController';
+import { t } from '../../locales/locale';
 import {
   StatusDamageParams,
   calculateStatusDamage,
@@ -40,10 +42,6 @@ import { FPS } from '../../utils/timeline';
 
 const COMBUSTION_TICKS = 10; // 1 per second for 10 seconds
 const MAX_STATUS_LEVEL: StatusLevel = 4;
-const ROMAN = ['I', 'II', 'III', 'IV'] as const;
-function reactionLabel(name: string, stacks: number): string {
-  return `${name} ${ROMAN[stacks - 1] ?? stacks}`;
-}
 
 /** Maps reaction columnId to the element it deals damage as. */
 const REACTION_ELEMENT: Record<string, ElementType> = {
@@ -140,7 +138,7 @@ function isForced(ev: TimelineEvent): boolean {
 }
 
 function getStacks(ev: TimelineEvent): StatusLevel {
-  return Math.min(ev.stacks ?? 1, MAX_STATUS_LEVEL) as StatusLevel;
+  return Math.min(ev.statusLevel ?? 1, MAX_STATUS_LEVEL) as StatusLevel;
 }
 
 /**
@@ -149,7 +147,6 @@ function getStacks(ev: TimelineEvent): StatusLevel {
  */
 function buildInitialTick(
   reactionEvent: TimelineEvent,
-  reactionLabel: string,
   opCtx: ReactionOperatorContext,
   modelEnemy: Enemy,
   element: ElementType,
@@ -157,13 +154,13 @@ function buildInitialTick(
 ): ReactionDamageTick | null {
   if (isForced(reactionEvent)) return null;
 
-  const stackCount = reactionEvent.stacks ?? 1;
+  const stackCount = reactionEvent.statusLevel ?? 1;
   const initialMultiplier = getArtsReactionBaseMultiplier(stackCount);
   const base = buildBaseParams(opCtx, modelEnemy, element, statusQuery, reactionEvent.startFrame, reactionEvent.sourceEntityId);
   const params: StatusDamageParams = { ...base, statusBaseMultiplier: initialMultiplier };
   return {
     absoluteFrame: reactionEvent.startFrame,
-    label: `${reactionLabel} > Initial`,
+    label: `${resolveEventLabel(reactionEvent)} > ${t('reaction.initial')}`,
     damage: calculateStatusDamage(params),
     params,
   };
@@ -185,7 +182,7 @@ export function computeCombustionDamage(
   const ticks: ReactionDamageTick[] = [];
 
 
-  const initial = buildInitialTick(reactionEvent, reactionLabel('Combustion', stacks), opCtx, modelEnemy, element, statusQuery);
+  const initial = buildInitialTick(reactionEvent, opCtx, modelEnemy, element, statusQuery);
   if (initial) {
     ticks.push(initial);
   }
@@ -200,7 +197,7 @@ export function computeCombustionDamage(
     const dotParams: StatusDamageParams = { ...dotBase, statusBaseMultiplier: dotMultiplier };
     ticks.push({
       absoluteFrame: tickFrame,
-      label: `${reactionLabel('Combustion', stacks)} > DoT Tick ${i}`,
+      label: `${resolveEventLabel(reactionEvent)} > ${t('reaction.dotTick', { n: i })}`,
       damage: calculateStatusDamage(dotParams),
       params: dotParams,
       damageType: DamageType.DAMAGE_OVER_TIME,
@@ -225,7 +222,7 @@ export function computeSolidificationDamage(
   const element = REACTION_ELEMENT[reactionEvent.columnId] ?? ElementType.CRYO;
   const ticks: ReactionDamageTick[] = [];
 
-  const initial = buildInitialTick(reactionEvent, reactionLabel('Solidification', getStacks(reactionEvent)), opCtx, modelEnemy, element, statusQuery);
+  const initial = buildInitialTick(reactionEvent, opCtx, modelEnemy, element, statusQuery);
   if (initial) ticks.push(initial);
 
   return ticks;
@@ -249,7 +246,7 @@ export function computeShatterDamage(
   const params: StatusDamageParams = { ...base, statusBaseMultiplier: shatterMultiplier };
   return [{
     absoluteFrame: reactionEvent.startFrame,
-    label: reactionLabel('Shatter', stacks),
+    label: resolveEventLabel(reactionEvent),
     damage: calculateStatusDamage(params),
     params,
   }];
@@ -269,7 +266,7 @@ export function computeCorrosionDamage(
   const element = REACTION_ELEMENT[reactionEvent.columnId] ?? ElementType.NATURE;
   const ticks: ReactionDamageTick[] = [];
 
-  const initial = buildInitialTick(reactionEvent, reactionLabel('Corrosion', getStacks(reactionEvent)), opCtx, modelEnemy, element, statusQuery);
+  const initial = buildInitialTick(reactionEvent, opCtx, modelEnemy, element, statusQuery);
   if (initial) ticks.push(initial);
 
   return ticks;
@@ -289,7 +286,7 @@ export function computeElectrificationDamage(
   const element = REACTION_ELEMENT[reactionEvent.columnId] ?? ElementType.ELECTRIC;
   const ticks: ReactionDamageTick[] = [];
 
-  const initial = buildInitialTick(reactionEvent, reactionLabel('Electrification', getStacks(reactionEvent)), opCtx, modelEnemy, element, statusQuery);
+  const initial = buildInitialTick(reactionEvent, opCtx, modelEnemy, element, statusQuery);
   if (initial) ticks.push(initial);
 
   return ticks;

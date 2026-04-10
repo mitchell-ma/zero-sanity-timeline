@@ -121,7 +121,7 @@ describe('corrosion segments', () => {
   });
 
   it('first segment has visual label with roman numeral status level', () => {
-    const ev = corrosionEvent('c1', 0, 3 * FPS, { stacks: 2 });
+    const ev = corrosionEvent('c1', 0, 3 * FPS, { statusLevel: 2 });
     const [result] = attachReactionFrames([ev]);
 
     expect(result.segments![0].properties.name).toBe('Corrosion II');
@@ -133,7 +133,7 @@ describe('corrosion segments', () => {
   // ── Resistance reduction ramping ───────────────────────────────────────
 
   it('each segment carries statusLabel with resistance reduction', () => {
-    const ev = corrosionEvent('c1', 0, 5 * FPS, { stacks: 1 });
+    const ev = corrosionEvent('c1', 0, 5 * FPS, { statusLevel: 1 });
     const [result] = attachReactionFrames([ev]);
 
     for (let i = 0; i < 5; i++) {
@@ -144,7 +144,7 @@ describe('corrosion segments', () => {
   });
 
   it('reduction ramps from initial to maximum over 10 seconds (level 1)', () => {
-    const ev = corrosionEvent('c1', 0, 15 * FPS, { stacks: 1 });
+    const ev = corrosionEvent('c1', 0, 15 * FPS, { statusLevel: 1 });
     const [result] = attachReactionFrames([ev]);
     const segs = result.segments!;
 
@@ -156,7 +156,7 @@ describe('corrosion segments', () => {
   });
 
   it('reduction ramps correctly for level 2', () => {
-    const ev = corrosionEvent('c1', 0, 12 * FPS, { stacks: 2 });
+    const ev = corrosionEvent('c1', 0, 12 * FPS, { statusLevel: 2 });
     const [result] = attachReactionFrames([ev]);
     const segs = result.segments!;
 
@@ -167,7 +167,7 @@ describe('corrosion segments', () => {
   });
 
   it('reduction reaches maximum at 10 seconds and stays flat', () => {
-    const ev = corrosionEvent('c1', 0, 15 * FPS, { stacks: 1 });
+    const ev = corrosionEvent('c1', 0, 15 * FPS, { statusLevel: 1 });
     const [result] = attachReactionFrames([ev]);
     const segs = result.segments!;
 
@@ -210,7 +210,7 @@ describe('corrosion segments', () => {
   });
 
   it('forced corrosion still has reduction segments', () => {
-    const ev = corrosionEvent('c1', 0, 5 * FPS, { isForced: true, forcedReaction: true, stacks: 3 });
+    const ev = corrosionEvent('c1', 0, 5 * FPS, { isForced: true, forcedReaction: true, statusLevel: 3 });
     const [result] = attachReactionFrames([ev]);
 
     expect(result.segments).toBeDefined();
@@ -225,7 +225,7 @@ describe('corrosion segments', () => {
   // ── Status level capping ──────────────────────────────────────────────
 
   it('stacks > 4 caps status level at 4', () => {
-    const ev = corrosionEvent('c1', 0, 3 * FPS, { stacks: 6 });
+    const ev = corrosionEvent('c1', 0, 3 * FPS, { statusLevel: 4 });
     const [result] = attachReactionFrames([ev]);
 
     // Should use level 4 values
@@ -242,7 +242,7 @@ describe('corrosion arts intensity', () => {
 
   it('arts intensity increases both initial and maximum reduction', () => {
     const ai = 300; // multiplier = 1 + 2*300/(300+300) = 2.0
-    const ev = corrosionEvent('c1', 0, 12 * FPS, { stacks: 1, artsIntensity: ai });
+    const ev = corrosionEvent('c1', 0, 12 * FPS, { statusLevel: 1, artsIntensity: ai });
     const [result] = attachReactionFrames([ev]);
     const segs = result.segments!;
 
@@ -262,7 +262,7 @@ describe('corrosion arts intensity', () => {
   });
 
   it('zero arts intensity uses base reduction values', () => {
-    const ev = corrosionEvent('c1', 0, 3 * FPS, { stacks: 1, artsIntensity: 0 });
+    const ev = corrosionEvent('c1', 0, 3 * FPS, { statusLevel: 1, artsIntensity: 0 });
     const [result] = attachReactionFrames([ev]);
     const segs = result.segments!;
 
@@ -277,7 +277,7 @@ describe('corrosion arts intensity', () => {
 
   it('arts intensity does not affect the initial damage frame', () => {
     // Natural corrosion with high arts intensity
-    const ev = corrosionEvent('c1', 0, 5 * FPS, { stacks: 1, artsIntensity: 600 });
+    const ev = corrosionEvent('c1', 0, 5 * FPS, { statusLevel: 1, artsIntensity: 600 });
     const [result] = attachReactionFrames([ev]);
 
     // First segment has an initial damage frame — it should be a plain
@@ -337,7 +337,7 @@ describe('corrosion time stop interaction', () => {
   });
 
   it('reduction labels are preserved after time stop extension', () => {
-    const ev = corrosionEvent('c1', 0, 3 * FPS, { stacks: 1 });
+    const ev = corrosionEvent('c1', 0, 3 * FPS, { statusLevel: 1 });
     const [withSegs] = attachReactionFrames([ev]);
     const stop: TimeStopRegion = { startFrame: FPS, durationFrames: FPS, eventUid: 'ult-1' };
     const result = applyTimeStop(withSegs, [stop]);

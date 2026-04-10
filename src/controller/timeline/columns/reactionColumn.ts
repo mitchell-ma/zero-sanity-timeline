@@ -40,7 +40,7 @@ export class ReactionColumn implements EventColumn {
     ev.segments = [{ properties: { duration: durationFrames } }];
     ev.sourceEntityId = source.ownerEntityId;
     ev.sourceSkillName = source.skillName;
-    ev.stacks = options?.stacks;
+    ev.statusLevel = options?.stacks as StatusLevel;
     ev.forcedReaction = options?.forcedReaction;
 
     const rawDur = durationFrames;
@@ -63,7 +63,7 @@ export class ReactionColumn implements EventColumn {
         prev.eventStatus = EventStatusType.REFRESHED;
         if (source.sourceEventUid) this.host.linkTransition(prev.uid, source.sourceEventUid);
 
-        const prevStacks = prev.stacks ?? 1;
+        const prevStacks = prev.statusLevel ?? 1;
         const remainingOldDuration = prevEnd - ev.startFrame;
 
         // Corrosion-specific: carry forward reduction floor from elapsed damage
@@ -79,7 +79,7 @@ export class ReactionColumn implements EventColumn {
         }
 
         setEventDuration(ev, Math.max(remainingOldDuration, eventDuration(ev)));
-        ev.stacks = Math.max(prevStacks, ev.stacks ?? 1);
+        ev.statusLevel = Math.max(prevStacks, ev.statusLevel ?? 1) as StatusLevel;
       } else {
         // RESET/REFRESH: clamp older if new extends past
         const newEnd = ev.startFrame + eventDuration(ev);

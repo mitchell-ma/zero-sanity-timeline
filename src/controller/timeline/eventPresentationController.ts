@@ -271,6 +271,7 @@ export interface EventPresentation {
 
 /**
  * Resolves the display label for an event.
+ * For reaction events, appends the roman numeral level (e.g. "Combustion II").
  */
 const ROMAN = ['I', 'II', 'III', 'IV'] as const;
 
@@ -280,9 +281,9 @@ export function resolveEventLabel(ev: TimelineEvent): string {
     ?? getAllInflictionLabels()[ev.name]
     ?? getAllStatusLabels()[ev.name]
     ?? translateDslToken(ev.name);
-  // Reactions: append level roman numeral (Combustion → Combustion II)
-  if (REACTION_COLUMN_IDS.has(ev.columnId) && ev.stacks) {
-    return `${base} ${ROMAN[ev.stacks - 1] ?? ev.stacks}`;
+  if (REACTION_COLUMN_IDS.has(ev.columnId)) {
+    const level = ev.statusLevel ?? 1;
+    return `${base} ${ROMAN[level - 1] ?? level}`;
   }
   return base;
 }

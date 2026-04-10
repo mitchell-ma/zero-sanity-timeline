@@ -1,4 +1,5 @@
 import { DamageFactorType, DamageType, ElementType, EnhancementType, EventFrameType, EventStatusType, InteractionModeType, SegmentType, TimeDependency } from './enums';
+import type { StatusLevel } from './types';
 import type { FrameClausePredicate } from '../model/event-frames/skillEventFrame';
 
 /** String union for the four operator combat skills, matching the data keys in operators.ts. */
@@ -179,6 +180,8 @@ export interface TimelineEvent {
   isForced?: boolean;
   /** Stack count (e.g. infliction stacks consumed for reactions, operator status stacks). */
   stacks?: number;
+  /** Power tier of a reaction (I–IV), determined by consumed infliction stacks at creation time. */
+  statusLevel?: StatusLevel;
   /**
    * Frame count from startFrame during which no other event in the same
    * mini-timeline or micro-timeline column may overlap.

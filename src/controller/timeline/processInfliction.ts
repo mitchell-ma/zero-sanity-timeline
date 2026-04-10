@@ -3,7 +3,8 @@ import { LoadoutProperties, DEFAULT_LOADOUT_PROPERTIES } from '../../view/Inform
 import { EdgeKind, ElementType, EventFrameType, EventStatusType } from '../../consts/enums';
 import { NounType } from '../../dsl/semantics';
 import type { CausalityGraph } from './causalityGraph';
-import { StatusLevel } from '../../consts/types';
+import type { StatusLevel } from '../../consts/types';
+import { resolveEventLabel } from './eventPresentationController';
 import { getArtsReactionBaseMultiplier, getCombustionDotMultiplier, getShatterBaseMultiplier, getCorrosionBaseReduction, getCorrosionReductionMultiplier } from '../../model/calculation/damageFormulas';
 import { VerbType, AdjectiveType } from '../../dsl/semantics';
 import type { FrameClausePredicate } from '../../model/event-frames/skillEventFrame';
@@ -99,8 +100,8 @@ export function mergeReactions(events: TimelineEvent[], causality?: CausalityGra
           sourceEventUid: next.uid,
         });
 
-        const currentStacks = mergeMap.get(current.uid)?.stacks ?? current.stacks ?? 1;
-        const nextStacks = next.stacks ?? 1;
+        const currentStacks = mergeMap.get(current.uid)?.stacks ?? current.statusLevel ?? 1;
+        const nextStacks = next.statusLevel ?? 1;
 
         const remainingOldDuration = currentEnd - next.startFrame;
         const newDuration = eventDuration(next);
@@ -138,8 +139,8 @@ export function mergeReactions(events: TimelineEvent[], causality?: CausalityGra
         });
 
         // Newer inherits max stacks
-        const currentStacks = mergeMap.get(current.uid)?.stacks ?? current.stacks ?? 1;
-        const nextStacks = next.stacks ?? 1;
+        const currentStacks = mergeMap.get(current.uid)?.stacks ?? current.statusLevel ?? 1;
+        const nextStacks = next.statusLevel ?? 1;
 
         mergeMap.set(next.uid, {
           duration: eventDuration(next),
@@ -166,7 +167,7 @@ export function mergeReactions(events: TimelineEvent[], causality?: CausalityGra
     if (merge !== undefined) {
       // Rebuild segments with merged stats (inherited max stacks)
       ev.segments = [{ properties: { duration: merge.duration } }];
-      ev.stacks = merge.stacks;
+      ev.statusLevel = merge.stacks as StatusLevel;
       ev.reductionFloor = merge.reductionFloor;
       attachReactionFrames([ev]);
       return ev;
@@ -240,15 +241,6 @@ export function attachReactionFrames(events: TimelineEvent[]): TimelineEvent[] {
   return events;
 }
 
-/** Label lookup for reaction segments. */
-const REACTION_SEGMENT_LABEL: Record<string, string> = {
-  combustion:      'Combustion',
-  solidification:  'Solidification',
-  corrosion:       'Corrosion',
-  electrification: 'Electrification',
-  shatter:         'Shatter',
-};
-
 /** Build an unconditional DEAL DAMAGE clause for a reaction frame marker. */
 function buildReactionDealDamageClause(multiplier: number, element: string): readonly FrameClausePredicate[] {
   return [{
@@ -280,7 +272,7 @@ export function buildReactionSegment(ev: TimelineEvent, rawDuration?: number, fo
   const tickDur = rawDuration != null ? Math.min(rawDuration, gameTimeDur) : gameTimeDur;
 
   const forced = ev.isForced || ev.forcedReaction;
-  const stacks = (ev.stacks ?? 1) as StatusLevel;
+  const stacks = (ev.statusLevel ?? 1) as StatusLevel;
   const frames: EventFrameMarker[] = [];
 
   // Multiplier for the initial hit (all non-shatter arts reactions share the same formula)
@@ -310,12 +302,8 @@ export function buildReactionSegment(ev: TimelineEvent, rawDuration?: number, fo
   // Electrification: initial hit only (no additional frames)
   // Shatter: frames are set at creation time in eventInterpretorController
 
-  const baseName = REACTION_SEGMENT_LABEL[ev.columnId] ?? ev.columnId;
-  const level = ev.stacks ?? 1;
-  const roman = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX'][level - 1] ?? `${level}`;
-
   return {
-    properties: { duration: dur, name: `${baseName} ${roman}` },
+    properties: { duration: dur, name: resolveEventLabel(ev) },
     frames,
   };
 }
@@ -329,7 +317,7 @@ export function buildCorrosionSegments(ev: TimelineEvent): EventSegmentData[] | 
   const element = REACTION_DAMAGE_ELEMENT[ev.columnId];
   if (!element) return null;
 
-  const cappedStacks = Math.min(ev.stacks ?? 1, 4) as StatusLevel;
+  const cappedStacks = Math.min(ev.statusLevel ?? 1, 4) as StatusLevel;
   const totalDuration = eventDuration(ev);
   const durationSeconds = Math.floor(totalDuration / FPS);
   const segments: EventSegmentData[] = [];
@@ -351,11 +339,10 @@ export function buildCorrosionSegments(ev: TimelineEvent): EventSegmentData[] | 
       ? [{ offsetFrame: 0, damageElement: element, clauses: buildReactionDealDamageClause(getArtsReactionBaseMultiplier(cappedStacks), element) }]
       : undefined;
 
-    const ROMAN = ['I', 'II', 'III', 'IV'];
     segments.push({
       properties: {
         duration: segDuration,
-        name: i === 0 ? `Corrosion ${ROMAN[cappedStacks - 1]}` : undefined,
+        name: i === 0 ? resolveEventLabel(ev) : undefined,
       },
       unknown: { statusLabel: `-${reduction.toFixed(1)} Res` },
       frames,

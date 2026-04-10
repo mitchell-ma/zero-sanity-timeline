@@ -15,12 +15,13 @@ import { OperatorLoadoutState, EMPTY_LOADOUT } from '../view/OperatorLoadoutHead
 import { LoadoutProperties, DEFAULT_LOADOUT_PROPERTIES } from '../view/InformationPane';
 import { EnemyStats, getDefaultEnemyStats } from '../controller/appStateController';
 import { TEAM_ID } from '../controller/slot/commonSlotController';
-import { ENEMY_ID } from '../model/channels';
+import { ENEMY_ID, REACTION_COLUMN_IDS } from '../model/channels';
 import { ALL_OPERATORS } from '../controller/operators/operatorRegistry';
 import { ALL_ENEMIES } from '../utils/enemies';
 import type { TimelineEvent, Column, EventSegmentData } from '../consts/viewTypes';
 import { eventDuration, durationSegment, computeSegmentsSpan } from '../consts/viewTypes';
 import { ColumnType, SegmentType } from '../consts/enums';
+import type { StatusLevel } from '../consts/types';
 import type { OverrideStore, EventOverride } from '../consts/overrideTypes';
 import { buildOverrideKey } from '../controller/overrideController';
 
@@ -1021,7 +1022,8 @@ export async function encodeEmbed(
     }
 
     if (ev.enemiesHit != null) compact.eh = ev.enemiesHit;
-    if (ev.stacks != null) compact.sl = ev.stacks;
+    if (ev.statusLevel != null) compact.sl = ev.statusLevel;
+    else if (ev.stacks != null) compact.sl = ev.stacks;
     if (ev.isPerfectDodge) compact.pd = true;
     if (ev.isForced) compact.fc = true;
     if (ev.timeInteraction) compact.ti = ev.timeInteraction;
@@ -1432,7 +1434,14 @@ export async function decodeEmbed(
     }
 
     if (compact.eh != null) ev.enemiesHit = compact.eh;
-    if (compact.sl != null) ev.stacks = compact.sl;
+    if (compact.sl != null) {
+      // Migration: reaction events use statusLevel instead of stacks
+      if (REACTION_COLUMN_IDS.has(ev.columnId)) {
+        ev.statusLevel = compact.sl as StatusLevel;
+      } else {
+        ev.stacks = compact.sl;
+      }
+    }
     if (compact.pd) ev.isPerfectDodge = true;
     if (compact.fc) ev.isForced = true;
     if (compact.ti) ev.timeInteraction = compact.ti;

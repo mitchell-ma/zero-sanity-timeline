@@ -280,6 +280,8 @@
   "reaction.corrosion": "Corrosion",
   "reaction.electrification": "Electrification",
   "reaction.shatter": "Shatter",
+  "reaction.initial": "Initial",
+  "reaction.dotTick": "DoT Tick {n}",
   "reaction.micro.combustion": "COMB",
   "reaction.micro.solidification": "SOLID",
   "reaction.micro.corrosion": "CORR",

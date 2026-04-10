@@ -135,7 +135,7 @@ describe('EventInterpretorController: APPLY', () => {
     expect(result).toBe(true);
     expect(interp.controller.getAllEvents().length).toBe(1);
     expect(interp.controller.getAllEvents()[0].columnId).toBe(REACTION_COLUMNS.COMBUSTION);
-    expect(interp.controller.getAllEvents()[0].stacks).toBe(2);
+    expect(interp.controller.getAllEvents()[0].statusLevel).toBe(2);
   });
 
   test('APPLY with invalid object returns false', () => {

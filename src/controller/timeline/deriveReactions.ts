@@ -12,6 +12,7 @@
  */
 import type { TimelineEvent } from '../../consts/viewTypes';
 import { eventEndFrame, durationSegment, setEventDuration, eventDuration } from '../../consts/viewTypes';
+import type { StatusLevel } from '../../consts/types';
 import { EventStatusType } from '../../consts/enums';
 import { ENEMY_ID, INFLICTION_COLUMN_IDS, INFLICTION_TO_REACTION } from '../../model/channels';
 import { getStatusById } from '../gameDataStore';
@@ -79,7 +80,7 @@ export function deriveReactions(events: TimelineEvent[]): TimelineEvent[] {
         segments: durationSegment(getReactionDurationFrames(reactionColumnId)),
         sourceEntityId: incoming.sourceEntityId,
         sourceSkillName: incoming.sourceSkillName,
-        stacks: Math.min(activeOther.length, 2),
+        statusLevel: Math.min(activeOther.length, 2) as StatusLevel,
       });
 
       // Remove the triggering infliction

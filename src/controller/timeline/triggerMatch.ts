@@ -256,7 +256,7 @@ function checkSecondary(ctx: VerbHandlerContext, frame: number, triggerEntityId?
 }
 
 function makeMatch(frame: number, ev: TimelineEvent, effects?: TriggerEffect[]): TriggerMatch {
-  return { frame, sourceEntityId: ev.ownerEntityId, sourceSkillName: ev.id, originEntityId: ev.sourceEntityId, sourceColumnId: ev.columnId, sourceEventUid: ev.uid, triggerStacks: ev.stacks, effects };
+  return { frame, sourceEntityId: ev.ownerEntityId, sourceSkillName: ev.id, originEntityId: ev.sourceEntityId, sourceColumnId: ev.columnId, sourceEventUid: ev.uid, triggerStacks: ev.statusLevel ?? ev.stacks, effects };
 }
 
 /**
