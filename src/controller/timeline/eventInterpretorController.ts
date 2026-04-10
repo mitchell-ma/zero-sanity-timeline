@@ -23,7 +23,7 @@ import {
 } from '../../dsl/semantics';
 import type { Interaction, ValueNode, ValueExpression } from '../../dsl/semantics';
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT, buildContextForSkillColumn } from '../calculation/valueResolver';
-import { computeFrameMarkerDamage, getSkillLevelForColumn } from '../calculation/calculationController';
+import { computeFrameMarkerDamage, computeReactionFrameDamage, getSkillLevelForColumn } from '../calculation/calculationController';
 import { DEFAULT_LOADOUT_PROPERTIES } from '../../view/InformationPane';
 import { isDamageSegment } from '../calculation/jsonMultiplierEngine';
 import type { Potential } from '../../consts/types';
@@ -249,6 +249,8 @@ export interface InterpretorOptions {
   damageOpCache?: ReadonlyMap<string, import('../calculation/calculationController').DamageOpData>;
   /** Enemy defense multiplier for the simplified damage formula. */
   enemyDefMult?: number;
+  /** Model enemy for reaction damage computation (resistance, defense). */
+  modelEnemy?: import('../../model/enemies/enemy').Enemy;
 }
 
 // ── Stat source helpers ─────────────────────────────────────────────────────
@@ -491,6 +493,7 @@ export class EventInterpretorController {
   private overrides?: OverrideStore;
   private damageOpCache?: ReadonlyMap<string, import('../calculation/calculationController').DamageOpData>;
   private enemyDefMult = 1;
+  private modelEnemy?: import('../../model/enemies/enemy').Enemy;
   /** One-shot HP threshold triggers that have already fired this pipeline run. */
   private firedHpThresholds = new Set<string>();
   /** Pending STATUS_EXIT queue frames to be flushed into the queue. */
@@ -727,14 +730,31 @@ export class EventInterpretorController {
     if (!this.damageOpCache || !this.controller.hasHpController()) return false;
     const event = entry.sourceEvent;
     if (!event) return false;
-    if (event.ownerEntityId === ENEMY_ID) return false;
-    if (!SKILL_COLUMN_SET.has(event.columnId)) return false;
-    const op = this.damageOpCache.get(event.ownerEntityId);
-    if (!op) return false;
     const si = entry.segmentIndex ?? -1;
     const fi = entry.frameIndex ?? -1;
     if (si < 0 || fi < 0) return false;
     if (!event.segments[si]?.frames?.[fi]) return false;
+
+    // Reaction columns: owned by ENEMY_ID but source operator deals the damage
+    if (event.ownerEntityId === ENEMY_ID && REACTION_COLUMN_IDS.has(event.columnId)) {
+      if (!this.modelEnemy || !event.sourceEntityId) return false;
+      const sourceOp = this.damageOpCache.get(event.sourceEntityId);
+      if (!sourceOp) return false;
+      const sourceProps = this.loadoutProperties?.[event.sourceEntityId] ?? DEFAULT_LOADOUT_PROPERTIES;
+      const damage = computeReactionFrameDamage(event, fi, sourceOp, this.modelEnemy, sourceProps);
+      if (damage == null || damage <= 0) return false;
+      this.controller.addEnemyDamageTick(entry.frame, damage);
+      this._checkHpThresholds(entry.frame, event.sourceEntityId, event.sourceSkillName ?? event.id, out);
+      return true;
+    }
+
+    // Non-reaction enemy-owned events don't deal player damage
+    if (event.ownerEntityId === ENEMY_ID) return false;
+
+    // Skill columns: existing path
+    if (!SKILL_COLUMN_SET.has(event.columnId)) return false;
+    const op = this.damageOpCache.get(event.ownerEntityId);
+    if (!op) return false;
 
     // Count damage segments before si to derive damageSegIdx
     let damageSegIdx = 0;
@@ -768,6 +788,7 @@ export class EventInterpretorController {
     this.overrides = options?.overrides;
     this.damageOpCache = options?.damageOpCache;
     this.enemyDefMult = options?.enemyDefMult ?? 1;
+    this.modelEnemy = options?.modelEnemy;
   }
 
   // ── DSL Effect interpretation ──────────────────────────────────────────

@@ -74,6 +74,8 @@ export function runEventQueue(
   /** op cache + defMult for inline damage tick push. */
   damageOpCache?: ReadonlyMap<string, import('../calculation/calculationController').DamageOpData>,
   enemyDefMult?: number,
+  /** Model enemy for reaction damage computation. */
+  modelEnemy?: import('../../model/enemies/enemy').Enemy,
 ): void {
   const slotWirings = state.getSlotWirings();
   const allEvents = state.getAllEvents();
@@ -98,7 +100,7 @@ export function runEventQueue(
   interpretor.resetWith(state, allEvents, {
     loadoutProperties, slotOperatorMap, slotWirings, getEnemyHpPercentage,
     getControlledSlotAtFrame, triggerIndex: triggerIdx, critMode, overrides,
-    damageOpCache, enemyDefMult,
+    damageOpCache, enemyDefMult, modelEnemy,
   });
 
   // Interpret APPLY STAT effects from passive talent clauses (e.g. Gilberta Messenger's Song UE efficiency)
@@ -302,10 +304,11 @@ export function processCombatSimulation(
   // incremental tick to hpController as each damage frame fires.
   let damageOpCache: ReadonlyMap<string, import('../calculation/calculationController').DamageOpData> | undefined;
   let enemyDefMult: number | undefined;
+  let modelEnemy: import('../../model/enemies/enemy').Enemy | undefined;
   if (bossMaxHp != null && enemyId && slotOperatorMap && loadoutProperties) {
     const slotInfo = Object.entries(slotOperatorMap).map(([slotId, opId]) => ({ slotId, operatorId: opId }));
     damageOpCache = buildDamageOpCache(slotInfo, loadoutProperties, loadouts);
-    const modelEnemy = getModelEnemy(enemyId);
+    modelEnemy = getModelEnemy(enemyId) ?? undefined;
     const enemyDef = modelEnemy ? modelEnemy.getDef() : 100;
     enemyDefMult = getDefenseMultiplier(enemyDef);
   }
@@ -315,7 +318,7 @@ export function processCombatSimulation(
   const hpPercentageFn = hpController ? hpController.getEnemyHpPercentage : undefined;
   runEventQueue(state, derivedEvents, loadoutProperties, slotWeapons, slotOperatorMap, slotGearSets,
     hpPercentageFn, getControlledSlotAtFrame, triggerIndex, critMode, overrides,
-    damageOpCache, enemyDefMult);
+    damageOpCache, enemyDefMult, modelEnemy);
 
   // ── 5. SP insufficiency-zone seeding ────────────────────────────────────
   // SP graph, stops, zones, UE notifications, HP graph, shield, UE efficiency

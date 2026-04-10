@@ -9,14 +9,21 @@
  * `buildDamageOpCache`) used by the interpreter to push incremental
  * enemy damage ticks to `hpController` during the queue drain.
  */
-import { CritMode, DamageScalingStatType, PhysicalStatusType, StatType } from '../../consts/enums';
+import { CritMode, DamageScalingStatType, ElementType, PhysicalStatusType, StatType } from '../../consts/enums';
 import type { OverrideStore } from '../../consts/overrideTypes';
 import { NounType } from '../../dsl/semantics';
 import type { ValueNode } from '../../dsl/semantics';
 import { resolveValueNode } from './valueResolver';
 import { TimelineEvent, Column, Enemy as ViewEnemy } from '../../consts/viewTypes';
-import { PHYSICAL_STATUS_COLUMN_IDS } from '../../model/channels';
-import { getPhysicalStatusStagger, getTotalAttack } from '../../model/calculation/damageFormulas';
+import { PHYSICAL_STATUS_COLUMN_IDS, REACTION_COLUMN_IDS, REACTION_COLUMNS } from '../../model/channels';
+import {
+  getPhysicalStatusStagger, getTotalAttack,
+  getArtsReactionBaseMultiplier, getCombustionDotMultiplier, getShatterBaseMultiplier,
+  getArtsIntensityMultiplier, getArtsHiddenMultiplier,
+  getDefenseMultiplier as getDamageDefenseMultiplier, getResistanceMultiplier,
+  calculateStatusDamage,
+} from '../../model/calculation/damageFormulas';
+import { Enemy as ModelEnemy } from '../../model/enemies/enemy';
 import { LoadoutProperties, DEFAULT_LOADOUT_PROPERTIES } from '../../view/InformationPane';
 import { OperatorLoadoutState, EMPTY_LOADOUT } from '../../view/OperatorLoadoutHeader';
 import { aggregateLoadoutStats } from './loadoutAggregator';
@@ -34,7 +41,7 @@ import { getWeapon, getWeaponEffectDefs, resolveTargetDisplay } from '../gameDat
 
 import type { Slot } from '../timeline/columnBuilder';
 import type { StaggerBreak } from '../timeline/staggerTimeline';
-import type { Potential, SkillLevel } from '../../consts/types';
+import type { Potential, SkillLevel, StatusLevel } from '../../consts/types';
 
 // HP tracking flows through `hpController` via incremental
 // `addEnemyDamageTick` calls during the queue drain. The legacy global
@@ -48,6 +55,8 @@ export interface DamageOpData {
   effectiveHp: number;
   attributeBonus: number;
   operatorId: string;
+  /** Arts Intensity stat — needed for reaction damage formula. */
+  artsIntensity: number;
 }
 
 /** Build the per-slot operator data cache from loadouts. Called once per pipeline run. */
@@ -73,6 +82,7 @@ export function buildDamageOpCache(
       effectiveHp: agg.effectiveHp,
       attributeBonus: agg.attributeBonus,
       operatorId: slot.operatorId,
+      artsIntensity: agg.stats[StatType.ARTS_INTENSITY] ?? 0,
     });
   }
   return opData;
@@ -124,6 +134,79 @@ export function computeFrameMarkerDamage(
     : dealInfo?.mainStat === DamageScalingStatType.HP ? op.effectiveHp
     : op.totalAttack;
   return mainStatValue * multiplier * op.attributeBonus * defMult;
+}
+
+/**
+ * Compute simplified reaction damage for a single frame on a reaction event.
+ *
+ * Called from `_pushEnemyDamageTickForFrame` for reaction columns during the
+ * queue drain to feed `hpController.addEnemyDamageTick`. Uses static loadout
+ * stats only — runtime susceptibility / weaken / fragility / dmgReduction
+ * are set to neutral (1.0), matching the simplified approach for skill damage.
+ *
+ * Formula: attack × statusBaseMultiplier × artsIntensityMult × hiddenMult × defMult × resMult
+ *
+ * Returns undefined when no damage applies (e.g. forced reaction's initial frame).
+ */
+export function computeReactionFrameDamage(
+  ev: TimelineEvent,
+  frameIdx: number,
+  sourceOp: DamageOpData,
+  modelEnemy: ModelEnemy,
+  sourceProps: LoadoutProperties,
+): number | undefined {
+  const stacks = Math.min(ev.stacks ?? 1, 4) as StatusLevel;
+  const forced = !!(ev.isForced || ev.forcedReaction);
+
+  // Determine the base multiplier based on reaction type and frame position
+  let statusBaseMultiplier: number;
+
+  if (ev.columnId === REACTION_COLUMNS.SHATTER) {
+    // Shatter: single physical damage tick
+    statusBaseMultiplier = getShatterBaseMultiplier(stacks);
+  } else if (ev.columnId === REACTION_COLUMNS.COMBUSTION) {
+    if (frameIdx === 0 && !forced) {
+      // Combustion initial hit
+      statusBaseMultiplier = getArtsReactionBaseMultiplier(stacks);
+    } else {
+      // Combustion DoT tick
+      statusBaseMultiplier = getCombustionDotMultiplier(stacks);
+    }
+  } else if (REACTION_COLUMN_IDS.has(ev.columnId)) {
+    // Solidification, Corrosion, Electrification: initial hit only
+    if (frameIdx === 0 && !forced) {
+      statusBaseMultiplier = getArtsReactionBaseMultiplier(stacks);
+    } else {
+      return undefined; // No damage on subsequent frames for these reactions
+    }
+  } else {
+    return undefined;
+  }
+
+  const operatorLevel = sourceProps.operator.level;
+  const element = ev.columnId === REACTION_COLUMNS.SHATTER
+    ? ElementType.PHYSICAL
+    : ev.columnId === REACTION_COLUMNS.COMBUSTION ? ElementType.HEAT
+    : ev.columnId === REACTION_COLUMNS.SOLIDIFICATION ? ElementType.CRYO
+    : ev.columnId === REACTION_COLUMNS.CORROSION ? ElementType.NATURE
+    : ev.columnId === REACTION_COLUMNS.ELECTRIFICATION ? ElementType.ELECTRIC
+    : ElementType.HEAT; // fallback
+
+  const damage = calculateStatusDamage({
+    attack: sourceOp.totalAttack,
+    statusBaseMultiplier,
+    artsIntensityMultiplier: getArtsIntensityMultiplier(sourceOp.artsIntensity),
+    hiddenMultiplier: getArtsHiddenMultiplier(operatorLevel),
+    defenseMultiplier: getDamageDefenseMultiplier(modelEnemy.getDef()),
+    resistanceMultiplier: getResistanceMultiplier(modelEnemy, element),
+    // Runtime-dependent multipliers use neutral values in the simplified pipeline
+    susceptibilityMultiplier: 1,
+    weakenMultiplier: 1,
+    fragilityMultiplier: 1,
+    dmgReductionMultiplier: 1,
+  });
+
+  return damage > 0 ? damage : undefined;
 }
 
 /** Skill level lookup by column ID. */
