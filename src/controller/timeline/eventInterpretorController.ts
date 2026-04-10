@@ -2421,7 +2421,9 @@ export class EventInterpretorController {
     // ── 3b. Freeform event creation — synthetic frames on non-skill columns ──
     // Events with no DSL clauses on infliction/reaction/status columns are freeform-placed.
     // Route them through create* so they get the same stacking, segment building, etc.
-    if (!frame.clauses) {
+    // Only fires on the FIRST frame marker (si=0, fi=0) — subsequent frame markers are
+    // damage-tick visuals inside the existing event, not new event creation triggers.
+    if (!frame.clauses && si === 0 && fi === 0) {
       const dur = eventDuration(event);
       if (INFLICTION_COLUMN_IDS.has(event.columnId) || PHYSICAL_INFLICTION_COLUMN_IDS.has(event.columnId)) {
         this.controller.applyEvent(event.columnId, event.ownerEntityId, absFrame, dur, source, { uid: event.uid });

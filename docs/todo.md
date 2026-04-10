@@ -1,35 +1,5 @@
 # TODO
 
-## Freeform combustion: 11 events created with colliding UIDs
-
-Placing a single freeform combustion at frame 0 via the context menu produces
-11 events in `allProcessedEvents`: the user's freeform event at frame 0, plus
-10 derived combustion events at frames 120, 240, 360, ..., 1200 (one per
-1-second DoT tick across the 10s duration).
-
-All 10 derived events share the **same UID** `d-COMBUSTION-enemy-0`, because
-`derivedEventUid(COMBUSTION, enemy, ctx.frame)` is called with `ctx.frame === 0`
-for every tick — only the resulting event's `startFrame` differs. The React
-reconciler picks one to render, so visually you see the freeform event at 0s
-plus one derived event at 10s.
-
-Two distinct issues to fix:
-1. **Find the function that creates one combustion derived-event per tick.**
-   It's somewhere in the reaction-status creation lifecycle (likely treating
-   each combustion DoT tick frame as an `APPLY STATUS REACTION` call). The
-   damage diamonds should be frame markers *inside* the freeform event's
-   single segment (already produced by `buildReactionSegment`), not standalone
-   timeline events.
-2. **`derivedEventUid` collision.** Even if 10 separate events were correct,
-   they should not share a UID. Either pass the actual tick frame to
-   `derivedEventUid`, or include a tick index disambiguator.
-
-Repro: place freeform combustion at frame 0 via context menu on the enemy
-status column → screenshot shows two blocks (0s + 10s) instead of one
-10-second block with tick diamonds.
-
-This is a pre-existing bug, not introduced by Phase 8.
-
 ## DSL: IGNORE INFLICTION and elemental MITIGATE/DAMAGE_TAKEN_REDUCTION
 
 Estella T2 "Laziness Pays Off Now" requires:
