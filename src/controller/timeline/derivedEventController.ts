@@ -48,6 +48,7 @@ import type { LoadoutProperties } from '../../view/InformationPane';
 import type { ColumnHost, EventSource, AddOptions, ConsumeOptions } from './columns/eventColumn';
 import { ColumnRegistry } from './columns/columnRegistry';
 import { CausalityGraph } from './causalityGraph';
+import { EdgeKind } from '../../consts/enums';
 export type { EventSource } from './columns/eventColumn';
 export type { StatSource } from '../calculation/statAccumulator';
 
@@ -560,7 +561,7 @@ export class DerivedEventController implements ColumnHost {
       segments: [{ properties: { duration: extDuration } }],
     };
     this.allEvents.push(newWindow);
-    if (triggerEventUid) this.causality.link(newWindow.uid, [triggerEventUid]);
+    if (triggerEventUid) this.causality.link(newWindow.uid, [triggerEventUid], EdgeKind.CREATION);
 
     this._applyComboWindowToCombos(newWindow, wiring.slotId);
   }
@@ -729,7 +730,7 @@ export class DerivedEventController implements ColumnHost {
    * This is the final output for the view layer — replaces external mergeReactions + attachReactionFrames calls.
    */
   getProcessedEvents(): TimelineEvent[] {
-    return attachReactionFrames(mergeReactions(this.allEvents));
+    return attachReactionFrames(mergeReactions(this.allEvents, this.causality));
   }
 
   /** Get all events. Single source of storage — registeredEvents has everything. */
@@ -1032,7 +1033,12 @@ export class DerivedEventController implements ColumnHost {
 
   /** ColumnHost: record causal parents for a freshly-inserted event. */
   linkCausality(childUid: string, parentUids: readonly string[]): void {
-    this.causality.link(childUid, parentUids);
+    this.causality.link(childUid, parentUids, EdgeKind.CREATION);
+  }
+
+  /** ColumnHost: record a TRANSITION edge (status transition caused by source event). */
+  linkTransition(targetEventUid: string, sourceEventUid: string): void {
+    this.causality.link(targetEventUid, [sourceEventUid], EdgeKind.TRANSITION);
   }
 
   // ── Time-stop management ─────────────────────────────────────────────────
@@ -1247,8 +1253,7 @@ export class DerivedEventController implements ColumnHost {
       const oldest = active[0];
       setEventDuration(oldest, frame - oldest.startFrame);
       oldest.eventStatus = EventStatusType.REFRESHED;
-      oldest.eventStatusEntityId = source.ownerEntityId;
-      oldest.eventStatusSkillName = source.skillName;
+      if (source.sourceEventUid) this.causality.link(oldest.uid, [source.sourceEventUid], EdgeKind.TRANSITION);
     }
   }
 
@@ -1360,8 +1365,7 @@ export class DerivedEventController implements ColumnHost {
       if (ev.startFrame <= frame && frame < end) {
         setEventDuration(ev, frame - ev.startFrame);
         ev.eventStatus = status;
-        ev.eventStatusEntityId = source.ownerEntityId;
-        ev.eventStatusSkillName = source.skillName;
+        if (source.sourceEventUid) this.causality.link(ev.uid, [source.sourceEventUid], EdgeKind.TRANSITION);
       }
     }
   }

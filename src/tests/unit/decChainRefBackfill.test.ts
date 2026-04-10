@@ -10,6 +10,7 @@
 
 import { DerivedEventController } from '../../controller/timeline/derivedEventController';
 import { TimelineEvent } from '../../consts/viewTypes';
+import { EdgeKind } from '../../consts/enums';
 import { NounType } from '../../dsl/semantics';
 
 function mkSkillEvent(uid: string, ownerEntityId: string, sourceEntityId?: string): TimelineEvent {
@@ -103,7 +104,7 @@ describe('DEC — Phase 1 chainRef backfill', () => {
 
   test('causality graph is cleared on reset()', () => {
     dec.reset();
-    dec.getCausality().link('child', ['parent']);
+    dec.getCausality().link('child', ['parent'], EdgeKind.CREATION);
     expect(dec.getCausality().size()).toBe(1);
     dec.reset();
     expect(dec.getCausality().size()).toBe(0);

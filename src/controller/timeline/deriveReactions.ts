@@ -25,11 +25,6 @@ function getReactionDurationFrames(reactionColumnId: string): number {
   return cfg?.durationSeconds ? Math.round(cfg.durationSeconds * 120) : REACTION_DURATION;
 }
 
-interface StatusSource {
-  ownerEntityId: string;
-  skillName?: string;
-}
-
 export function deriveReactions(events: TimelineEvent[]): TimelineEvent[] {
   // Collect all enemy infliction events, sorted by start frame
   const inflictions = events
@@ -41,7 +36,7 @@ export function deriveReactions(events: TimelineEvent[]): TimelineEvent[] {
   // Track which infliction IDs are consumed (triggering infliction removed,
   // consumed inflictions clamped)
   const removedIds = new Set<string>();
-  const clampMap = new Map<string, { frame: number; source: StatusSource }>();
+  const clampMap = new Map<string, { frame: number }>();
   const generatedReactions: TimelineEvent[] = [];
 
   // Walk through inflictions in chronological order
@@ -91,9 +86,8 @@ export function deriveReactions(events: TimelineEvent[]): TimelineEvent[] {
       removedIds.add(incoming.uid);
 
       // Clamp ALL active other-element inflictions at the reaction frame
-      const reactionSource: StatusSource = { ownerEntityId: incoming.sourceEntityId ?? ENEMY_ID, skillName: incoming.sourceSkillName };
       for (const consumed of activeOther) {
-        clampMap.set(consumed.uid, { frame: incoming.startFrame, source: reactionSource });
+        clampMap.set(consumed.uid, { frame: incoming.startFrame });
       }
 
       // Also consume any active same-element inflictions at the reaction frame
@@ -104,7 +98,7 @@ export function deriveReactions(events: TimelineEvent[]): TimelineEvent[] {
         if (prev.eventStatus === EventStatusType.CONSUMED) continue;
         const endFrame = eventEndFrame(prev);
         if (endFrame > incoming.startFrame) {
-          clampMap.set(prev.uid, { frame: incoming.startFrame, source: reactionSource });
+          clampMap.set(prev.uid, { frame: incoming.startFrame });
         }
       }
     }
@@ -126,8 +120,6 @@ export function deriveReactions(events: TimelineEvent[]): TimelineEvent[] {
       result.push({
         ...clamped,
         eventStatus: EventStatusType.CONSUMED,
-        eventStatusEntityId: clamp.source.ownerEntityId,
-        eventStatusSkillName: clamp.source.skillName,
       });
     } else {
       result.push(ev);

@@ -33,15 +33,13 @@ export class PhysicalStatusColumn implements EventColumn {
         const oldest = active[0];
         setEventDuration(oldest, frame - oldest.startFrame);
         oldest.eventStatus = EventStatusType.REFRESHED;
-        oldest.eventStatusEntityId = source.ownerEntityId;
-        oldest.eventStatusSkillName = source.skillName;
+        if (source.sourceEventUid) this.host.linkTransition(oldest.uid, source.sourceEventUid);
       } else if (this.interactionType === StackInteractionType.MERGE) {
         // MERGE: subsume all active (Breach behavior)
         for (const act of active) {
           setEventDuration(act, frame - act.startFrame);
           act.eventStatus = EventStatusType.CONSUMED;
-          act.eventStatusEntityId = source.ownerEntityId;
-          act.eventStatusSkillName = source.skillName;
+          if (source.sourceEventUid) this.host.linkTransition(act.uid, source.sourceEventUid);
         }
       }
     }
@@ -71,8 +69,7 @@ export class PhysicalStatusColumn implements EventColumn {
     for (const ev of active) {
       setEventDuration(ev, frame - ev.startFrame);
       ev.eventStatus = EventStatusType.CONSUMED;
-      ev.eventStatusEntityId = source.ownerEntityId;
-      ev.eventStatusSkillName = source.skillName;
+      if (source.sourceEventUid) this.host.linkTransition(ev.uid, source.sourceEventUid);
     }
     return active.length;
   }

@@ -23,6 +23,8 @@ export interface EventSource {
   slotId?: string;
   /** Operator id of the causing event (e.g. "laevatain"). Optional for back-compat. */
   operatorId?: string;
+  /** UID of the source event that caused this mutation (for TRANSITION edge linking). */
+  sourceEventUid?: string;
 }
 
 // ── Options ──────────────────────────────────────────────────────────────────
@@ -84,6 +86,12 @@ export interface ColumnHost {
    * insert a new event via pushEvent / pushEventDirect / applyToColumn.
    */
   linkCausality(childUid: string, parentUids: readonly string[]): void;
+  /**
+   * Record a TRANSITION edge from `sourceEventUid` to `targetEventUid`.
+   * Used when a source event causes a status transition (consume, refresh,
+   * extend, clamp) on a target event.
+   */
+  linkTransition(targetEventUid: string, sourceEventUid: string): void;
 }
 
 // ── EventColumn ──────────────────────────────────────────────────────────────

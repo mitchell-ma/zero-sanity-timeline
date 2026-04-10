@@ -1,7 +1,8 @@
 import { TimelineEvent, EventFrameMarker, EventSegmentData, eventDuration } from '../../consts/viewTypes';
 import { LoadoutProperties, DEFAULT_LOADOUT_PROPERTIES } from '../../view/InformationPane';
-import { ElementType, EventFrameType, EventStatusType } from '../../consts/enums';
+import { EdgeKind, ElementType, EventFrameType, EventStatusType } from '../../consts/enums';
 import { NounType } from '../../dsl/semantics';
+import type { CausalityGraph } from './causalityGraph';
 import { StatusLevel } from '../../consts/types';
 import { getCorrosionBaseReduction, getCorrosionReductionMultiplier } from '../../model/calculation/damageFormulas';
 import {
@@ -23,12 +24,6 @@ export {
   BREACH_DURATION,
   PHYSICAL_INFLICTION_DURATION,
 } from '../../model/channels';
-
-/** Source information for event status changes (consumed/refreshed). */
-export interface StatusSource {
-  ownerEntityId: string;
-  skillName?: string;
-}
 
 /** Resolves per-level susceptibility array to a scalar using the source operator's skill level. */
 export function resolveSusceptibility(
@@ -67,7 +62,7 @@ export function resolveSusceptibility(
  *
  * Segment arrays are rebuilt after merge/clamp to reflect new durations.
  */
-export function mergeReactions(events: TimelineEvent[]): TimelineEvent[] {
+export function mergeReactions(events: TimelineEvent[], causality?: CausalityGraph): TimelineEvent[] {
   const reactionsByType = new Map<string, TimelineEvent[]>();
   for (const ev of events) {
     if (ev.ownerEntityId === ENEMY_ID && REACTION_COLUMN_IDS.has(ev.columnId)
@@ -80,7 +75,7 @@ export function mergeReactions(events: TimelineEvent[]): TimelineEvent[] {
 
   if (reactionsByType.size === 0) return events;
 
-  const clampMap = new Map<string, { duration: number; source: StatusSource }>();
+  const clampMap = new Map<string, { duration: number; sourceEventUid: string }>();
   const mergeMap = new Map<string, { duration: number; stacks: number; reductionFloor?: number }>();
 
   reactionsByType.forEach((group, columnId) => {
@@ -99,7 +94,7 @@ export function mergeReactions(events: TimelineEvent[]): TimelineEvent[] {
 
         clampMap.set(current.uid, {
           duration: Math.max(0, next.startFrame - current.startFrame),
-          source: { ownerEntityId: next.sourceEntityId ?? ENEMY_ID, skillName: next.sourceSkillName },
+          sourceEventUid: next.uid,
         });
 
         const currentStacks = mergeMap.get(current.uid)?.stacks ?? current.stacks ?? 1;
@@ -137,7 +132,7 @@ export function mergeReactions(events: TimelineEvent[]): TimelineEvent[] {
         // Clamp older event at the point the newer starts
         clampMap.set(current.uid, {
           duration: Math.max(0, next.startFrame - current.startFrame),
-          source: { ownerEntityId: next.sourceEntityId ?? ENEMY_ID, skillName: next.sourceSkillName },
+          sourceEventUid: next.uid,
         });
 
         // Newer inherits max stacks
@@ -163,8 +158,7 @@ export function mergeReactions(events: TimelineEvent[]): TimelineEvent[] {
       const truncated = truncateSegments(ev.segments, clamp.duration);
       ev.segments = truncated ?? [{ properties: { duration: clamp.duration } }];
       ev.eventStatus = EventStatusType.REFRESHED;
-      ev.eventStatusEntityId = clamp.source.ownerEntityId;
-      ev.eventStatusSkillName = clamp.source.skillName;
+      if (causality) causality.link(ev.uid, [clamp.sourceEventUid], EdgeKind.TRANSITION);
       return ev;
     }
     if (merge !== undefined) {

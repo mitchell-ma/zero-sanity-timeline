@@ -41,8 +41,7 @@ export class InflictionColumn implements EventColumn {
           for (const consumedOther of otherActive) {
             setEventDuration(consumedOther, frame - consumedOther.startFrame);
             consumedOther.eventStatus = EventStatusType.CONSUMED;
-            consumedOther.eventStatusEntityId = source.ownerEntityId;
-            consumedOther.eventStatusSkillName = source.skillName;
+            if (source.sourceEventUid) this.host.linkTransition(consumedOther.uid, source.sourceEventUid);
           }
           // Precompute the incoming infliction's uid so we can both pass it
           // as the primary causal parent of the reaction AND use it as the
@@ -75,8 +74,7 @@ export class InflictionColumn implements EventColumn {
           consumed.ownerSlotId = source.slotId ?? source.ownerEntityId;
           consumed.ownerOperatorId = source.operatorId ?? source.ownerEntityId;
           consumed.eventStatus = EventStatusType.CONSUMED;
-          consumed.eventStatusEntityId = source.ownerEntityId;
-          consumed.eventStatusSkillName = source.skillName;
+          if (source.sourceEventUid) this.host.linkTransition(consumed.uid, source.sourceEventUid);
           this.host.pushToOutput(consumed);
           return true;
         }
@@ -91,8 +89,7 @@ export class InflictionColumn implements EventColumn {
       const oldest = active[0];
       setEventDuration(oldest, frame - oldest.startFrame);
       oldest.eventStatus = EventStatusType.CONSUMED;
-      oldest.eventStatusEntityId = source.ownerEntityId;
-      oldest.eventStatusSkillName = source.skillName;
+      if (source.sourceEventUid) this.host.linkTransition(oldest.uid, source.sourceEventUid);
     }
 
     // ── Create event ─────────────────────────────────────────────────────
@@ -124,8 +121,7 @@ export class InflictionColumn implements EventColumn {
       if (newEnd > actEnd) {
         setEventDuration(act, newEnd - act.startFrame);
         act.eventStatus = EventStatusType.EXTENDED;
-        act.eventStatusEntityId = source.ownerEntityId;
-        act.eventStatusSkillName = source.skillName;
+        if (source.sourceEventUid) this.host.linkTransition(act.uid, source.sourceEventUid);
       }
     }
 
@@ -141,8 +137,7 @@ export class InflictionColumn implements EventColumn {
     for (const ev of toAbsorb) {
       setEventDuration(ev, frame - ev.startFrame);
       ev.eventStatus = EventStatusType.CONSUMED;
-      ev.eventStatusEntityId = source.ownerEntityId;
-      ev.eventStatusSkillName = source.skillName;
+      if (source.sourceEventUid) this.host.linkTransition(ev.uid, source.sourceEventUid);
     }
     return toAbsorb.length;
   }

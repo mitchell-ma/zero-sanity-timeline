@@ -85,6 +85,11 @@ export enum EventFrameType {
   INTERRUPTIBLE = "INTERRUPTIBLE",
 }
 
+export enum EdgeKind {
+  CREATION = 'CREATION',
+  TRANSITION = 'TRANSITION',
+}
+
 export enum EventStatusType {
   EXPIRED = "EXPIRED",
   CONSUMED = "CONSUMED",

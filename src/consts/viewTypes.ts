@@ -234,10 +234,6 @@ export interface TimelineEvent {
   sourceFrameKey?: string;
   /** Outcome of a derived event: how it ended. */
   eventStatus?: EventStatusType;
-  /** Operator slot ID responsible for this event status change. */
-  eventStatusEntityId?: string;
-  /** Skill name responsible for this event status change. */
-  eventStatusSkillName?: string;
   /** True if this reaction was forced (bypassed infliction stacks). */
   forcedReaction?: boolean;
   /** True if this infliction event was a same-element stack (Arts Burst). */

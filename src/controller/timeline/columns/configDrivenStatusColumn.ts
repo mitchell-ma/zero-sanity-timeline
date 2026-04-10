@@ -40,8 +40,7 @@ export class ConfigDrivenStatusColumn implements EventColumn {
       for (const act of active) {
         setEventDuration(act, frame - act.startFrame);
         act.eventStatus = EventStatusType.CONSUMED;
-        act.eventStatusEntityId = source.ownerEntityId;
-        act.eventStatusSkillName = source.skillName;
+        if (source.sourceEventUid) this.host.linkTransition(act.uid, source.sourceEventUid);
       }
     }
 
@@ -97,8 +96,7 @@ export class ConfigDrivenStatusColumn implements EventColumn {
     for (const ev of active) {
       setEventDuration(ev, frame - ev.startFrame);
       ev.eventStatus = EventStatusType.CONSUMED;
-      ev.eventStatusEntityId = source.ownerEntityId;
-      ev.eventStatusSkillName = source.skillName;
+      if (source.sourceEventUid) this.host.linkTransition(ev.uid, source.sourceEventUid);
     }
     return active.length;
   }
@@ -123,8 +121,7 @@ export class ConfigDrivenStatusColumn implements EventColumn {
       const oldest = active[0];
       setEventDuration(oldest, frame - oldest.startFrame);
       oldest.eventStatus = EventStatusType.REFRESHED;
-      oldest.eventStatusEntityId = source.ownerEntityId;
-      oldest.eventStatusSkillName = source.skillName;
+      if (source.sourceEventUid) this.host.linkTransition(oldest.uid, source.sourceEventUid);
     }
   }
 
@@ -136,8 +133,7 @@ export class ConfigDrivenStatusColumn implements EventColumn {
       if (stacksConsumed >= count) break;
       setEventDuration(ev, frame - ev.startFrame);
       ev.eventStatus = EventStatusType.CONSUMED;
-      ev.eventStatusEntityId = source.ownerEntityId;
-      ev.eventStatusSkillName = source.skillName;
+      if (source.sourceEventUid) this.host.linkTransition(ev.uid, source.sourceEventUid);
       stacksConsumed += ev.stacks ?? 1;
     }
     return stacksConsumed;
@@ -170,8 +166,7 @@ export class ConfigDrivenStatusColumn implements EventColumn {
     for (const ev of allActive) {
       setEventDuration(ev, frame - ev.startFrame);
       ev.eventStatus = EventStatusType.CONSUMED;
-      ev.eventStatusEntityId = source.ownerEntityId;
-      ev.eventStatusSkillName = source.skillName;
+      if (source.sourceEventUid) this.host.linkTransition(ev.uid, source.sourceEventUid);
       ev.stacks = allActive.length;
     }
 

@@ -40,6 +40,7 @@ function makeHost(): ColumnHost & { events: TimelineEvent[] } {
     foreignStopsFor(): readonly TimeStopRegion[] { return []; },
     getStops(): readonly TimeStopRegion[] { return []; },
     linkCausality() {},
+    linkTransition() {},
   };
 }
 
@@ -134,6 +135,7 @@ describe('InflictionColumn — cross-element reaction causality', () => {
       foreignStopsFor(): readonly TimeStopRegion[] { return []; },
       getStops(): readonly TimeStopRegion[] { return []; },
       linkCausality(childUid, parents) { linkCalls.push({ childUid, parents }); },
+      linkTransition() {},
     };
 
     const col = new InflictionColumn(INFLICTION_COLUMNS.HEAT, host);

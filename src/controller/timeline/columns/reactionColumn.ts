@@ -63,8 +63,7 @@ export class ReactionColumn implements EventColumn {
         // MERGE: max stacks, max duration, carry stats (corrosion carries reduction floor)
         setEventDuration(prev, ev.startFrame - prev.startFrame);
         prev.eventStatus = EventStatusType.REFRESHED;
-        prev.eventStatusEntityId = source.ownerEntityId;
-        prev.eventStatusSkillName = source.skillName;
+        if (source.sourceEventUid) this.host.linkTransition(prev.uid, source.sourceEventUid);
 
         const prevStacks = prev.stacks ?? 1;
         const remainingOldDuration = prevEnd - ev.startFrame;
@@ -89,8 +88,7 @@ export class ReactionColumn implements EventColumn {
         if (newEnd >= prevEnd) {
           setEventDuration(prev, ev.startFrame - prev.startFrame);
           prev.eventStatus = EventStatusType.REFRESHED;
-          prev.eventStatusEntityId = source.ownerEntityId;
-          prev.eventStatusSkillName = source.skillName;
+          if (source.sourceEventUid) this.host.linkTransition(prev.uid, source.sourceEventUid);
         }
       }
     }
@@ -121,8 +119,7 @@ export class ReactionColumn implements EventColumn {
     for (const ev of active) {
       setEventDuration(ev, frame - ev.startFrame);
       ev.eventStatus = EventStatusType.CONSUMED;
-      ev.eventStatusEntityId = source.ownerEntityId;
-      ev.eventStatusSkillName = source.skillName;
+      if (source.sourceEventUid) this.host.linkTransition(ev.uid, source.sourceEventUid);
     }
     return active.length;
   }

@@ -256,14 +256,20 @@ function EventPane({
               {event.eventStatus && (
                 <>
                   <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>Event status: </span>{event.eventStatus.toUpperCase()}
-                  {event.eventStatusEntityId && (() => {
-                    const statusSlot = slots.find((s) => s.slotId === event.eventStatusEntityId);
-                    const statusOpName = statusSlot?.operator?.name ?? event.eventStatusEntityId;
+                  {(() => {
+                    const dec = getLastController();
+                    const causalityGraph = dec?.getCausality();
+                    const sourceUid = causalityGraph?.lastTransitionSource(event.uid);
+                    if (!sourceUid) return null;
+                    const sourceEvent = dec?.getAllEvents().find(e => e.uid === sourceUid);
+                    if (!sourceEvent) return null;
+                    const statusSlot = slots.find((s) => s.slotId === (sourceEvent.ownerSlotId ?? sourceEvent.sourceEntityId));
+                    const statusOpName = statusSlot?.operator?.name ?? sourceEvent.ownerOperatorId ?? sourceEvent.sourceEntityId ?? sourceUid;
                     const statusOpColor = statusSlot?.operator?.color;
-                    const statusSkillLabel = event.eventStatusSkillName
-                      ? getAllSkillLabels()[event.eventStatusSkillName as string]
-                        ?? getAllStatusLabels()[event.eventStatusSkillName as StatusType]
-                        ?? event.eventStatusSkillName
+                    const statusSkillLabel = sourceEvent.sourceSkillName
+                      ? getAllSkillLabels()[sourceEvent.sourceSkillName as string]
+                        ?? getAllStatusLabels()[sourceEvent.sourceSkillName as StatusType]
+                        ?? sourceEvent.sourceSkillName
                       : null;
                     return (
                       <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>

@@ -1,11 +1,14 @@
 /**
  * CausalityGraph — side-car DAG store tracking which events caused which.
  *
- * Each event uid maps to an ordered list of parent uids. The first parent
- * (parents[0]) is the "primary" / most-recent triggering event — this is
- * what `DeterminerType.TRIGGER` resolves to. Additional parents capture
- * multi-source causality (e.g. a reaction whose parents are the incoming
- * infliction AND the active other-element inflictions it consumed).
+ * Bidirectional with typed edges (CREATION / TRANSITION). Each event uid
+ * maps to ordered parent edges and child edges. The first CREATION parent
+ * (parents filtered by CREATION, [0]) is the "primary" / most-recent
+ * triggering event — this is what `DeterminerType.TRIGGER` resolves to.
+ *
+ * TRANSITION edges replace the old eventStatusEntityId / eventStatusSkillName
+ * denormalized fields — they record which source event caused a status
+ * transition (consume, refresh, extend, clamp) on a target event.
  *
  * The graph is a side-car (owned by DEC) rather than a field on
  * TimelineEvent for three reasons:
@@ -17,41 +20,77 @@
  *      instead of per-event array copies.
  */
 
+import { EdgeKind } from '../../consts/enums';
+
+export interface CausalEdge {
+  uid: string;
+  kind: EdgeKind;
+}
+
 export class CausalityGraph {
-  /** child uid → ordered parent uids (parents[0] = primary/most-recent). */
-  private parents = new Map<string, readonly string[]>();
+  /** child uid → ordered parent edges (parents[0] = primary/most-recent). */
+  private parents = new Map<string, readonly CausalEdge[]>();
+  /** parent uid → ordered child edges. */
+  private children = new Map<string, readonly CausalEdge[]>();
 
   /**
-   * Record that `childUid` was caused by `parentUids`. First uid in the
-   * array is the primary parent by convention — ingress sites should pass
-   * the most-recent triggering event first.
+   * Record that `childUid` was caused by `parentUids` with the given edge kind.
+   * First uid in the array is the primary parent by convention — ingress sites
+   * should pass the most-recent triggering event first.
    *
    * No-op if `parentUids` is empty (chain root).
    */
-  link(childUid: string, parentUids: readonly string[]): void {
+  link(childUid: string, parentUids: readonly string[], kind: EdgeKind): void {
     if (parentUids.length === 0) return;
-    this.parents.set(childUid, parentUids);
+    const parentEdges = parentUids.map(uid => ({ uid, kind }));
+    // Append to existing parent edges (a node can have both CREATION and TRANSITION parents)
+    const existing = this.parents.get(childUid);
+    this.parents.set(childUid, existing ? [...existing, ...parentEdges] : parentEdges);
+    // Bidirectional: add child edges on each parent
+    for (const pUid of parentUids) {
+      const childEdge: CausalEdge = { uid: childUid, kind };
+      const existingChildren = this.children.get(pUid);
+      this.children.set(pUid, existingChildren ? [...existingChildren, childEdge] : [childEdge]);
+    }
   }
 
-  /** All parent uids for `uid` in primary-first order. Empty = chain root. */
-  parentsOf(uid: string): readonly string[] {
-    return this.parents.get(uid) ?? [];
+  /**
+   * All parent uids for `uid`, optionally filtered by edge kind.
+   * Without filter, returns all parents. Empty = chain root.
+   */
+  parentsOf(uid: string, kind?: EdgeKind): readonly string[] {
+    const edges = this.parents.get(uid) ?? [];
+    if (kind === undefined) return edges.map(e => e.uid);
+    return edges.filter(e => e.kind === kind).map(e => e.uid);
+  }
+
+  /**
+   * All child uids for `uid`, optionally filtered by edge kind.
+   * Without filter, returns all children.
+   */
+  childrenOf(uid: string, kind?: EdgeKind): readonly string[] {
+    const edges = this.children.get(uid) ?? [];
+    if (kind === undefined) return edges.map(e => e.uid);
+    return edges.filter(e => e.kind === kind).map(e => e.uid);
   }
 
   /**
    * The "main" parent of `uid` — used by `DeterminerType.TRIGGER`.
-   * Returns null when `uid` is a chain root.
+   * Returns the first CREATION parent, or null when `uid` is a chain root.
    */
   primaryParentOf(uid: string): string | null {
-    const arr = this.parents.get(uid);
-    return arr && arr.length > 0 ? arr[0] : null;
+    const edges = this.parents.get(uid);
+    if (!edges) return null;
+    for (const e of edges) {
+      if (e.kind === EdgeKind.CREATION) return e.uid;
+    }
+    return null;
   }
 
   /**
-   * Walk primary-parent edges to the chain root. Used by
+   * Walk primary-parent (CREATION) edges to the chain root. Used by
    * `DeterminerType.SOURCE`. Returns null if `uid` is itself the root
-   * (no parents). Cycle-guarded by a `seen` set — chains are acyclic by
-   * construction but the guard is cheap insurance against malformed input.
+   * (no CREATION parents). Cycle-guarded by a `seen` set.
    */
   rootOf(uid: string): string | null {
     let current: string | null = this.primaryParentOf(uid);
@@ -68,7 +107,7 @@ export class CausalityGraph {
   }
 
   /**
-   * Full ancestor set across all parent edges (BFS across the DAG).
+   * Full ancestor set across ALL edge kinds (BFS across the DAG).
    * Used for "is X descended from Y" queries. Cycle-safe via the `out` set.
    */
   ancestorsOf(uid: string): ReadonlySet<string> {
@@ -83,14 +122,45 @@ export class CausalityGraph {
     return out;
   }
 
+  /**
+   * Full descendant set (BFS down children edges, all kinds). Cycle-safe.
+   */
+  descendantsOf(uid: string): ReadonlySet<string> {
+    const out = new Set<string>();
+    const stack: string[] = [...this.childrenOf(uid)];
+    while (stack.length > 0) {
+      const cur = stack.pop()!;
+      if (out.has(cur)) continue;
+      out.add(cur);
+      for (const c of this.childrenOf(cur)) stack.push(c);
+    }
+    return out;
+  }
+
+  /**
+   * Convenience: returns the uid of the most recent TRANSITION parent.
+   * Returns null if none exist.
+   */
+  lastTransitionSource(uid: string): string | null {
+    const edges = this.parents.get(uid);
+    if (!edges) return null;
+    let last: string | null = null;
+    for (const e of edges) {
+      if (e.kind === EdgeKind.TRANSITION) last = e.uid;
+    }
+    return last;
+  }
+
   /** Drop an event from the graph (called when an event is evicted). */
   unlink(uid: string): void {
     this.parents.delete(uid);
+    this.children.delete(uid);
   }
 
   /** Reset for the next pipeline run. Called from DEC.reset(). */
   clear(): void {
     this.parents.clear();
+    this.children.clear();
   }
 
   /** Number of events with parent records. Primarily for tests / invariants. */

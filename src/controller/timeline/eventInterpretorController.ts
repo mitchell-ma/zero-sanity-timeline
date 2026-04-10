@@ -980,6 +980,7 @@ export class EventInterpretorController {
       skillName: ctx.sourceSkillName,
       slotId: ctx.sourceSlotId ?? ctx.sourceEntityId,
       operatorId: ctx.sourceEntityId,
+      sourceEventUid: ctx.sourceEventUid,
     };
 
     // For freeform-derived events, carry the source uid so the created
@@ -1237,6 +1238,7 @@ export class EventInterpretorController {
       skillName: ctx.sourceSkillName,
       slotId: ctx.sourceSlotId ?? ctx.sourceEntityId,
       operatorId: ctx.sourceEntityId,
+      sourceEventUid: ctx.sourceEventUid,
     };
     const rawStacks = effect.with?.stacks as ValueNode | typeof THRESHOLD_MAX | number | undefined;
     if (rawStacks == null) console.warn(
@@ -1278,8 +1280,7 @@ export class EventInterpretorController {
       if (target) {
         setEventDuration(target, Math.max(0, ctx.frame - target.startFrame));
         target.eventStatus = EventStatusType.CONSUMED;
-        target.eventStatusEntityId = source.ownerEntityId;
-        target.eventStatusSkillName = source.skillName;
+        if (source.sourceEventUid) this.controller.linkTransition(target.uid, source.sourceEventUid);
         this.lastConsumedStacks = 1;
         return true;
       }
@@ -1770,6 +1771,7 @@ export class EventInterpretorController {
       skillName: ctx.sourceSkillName,
       slotId: ctx.sourceSlotId ?? ctx.sourceEntityId,
       operatorId: ctx.sourceEntityId,
+      sourceEventUid: ctx.sourceEventUid,
     };
     const isForced = this.resolveWith(effect.with?.isForced, ctx) === 1;
 
@@ -1808,7 +1810,7 @@ export class EventInterpretorController {
   private applyLiftOrKnockDown(
     columnId: string,
     frame: number,
-    source: { ownerEntityId: string; skillName: string },
+    source: EventSource,
     isForced: boolean,
     parentEventUid?: string,
   ): boolean {
@@ -1868,7 +1870,7 @@ export class EventInterpretorController {
    */
   private applyCrush(
     frame: number,
-    source: { ownerEntityId: string; skillName: string },
+    source: EventSource,
     parentEventUid?: string,
   ): boolean {
     const parents = parentEventUid ? [parentEventUid] : undefined;
@@ -1931,7 +1933,7 @@ export class EventInterpretorController {
    */
   private applyBreach(
     frame: number,
-    source: { ownerEntityId: string; skillName: string },
+    source: EventSource,
     parentEventUid?: string,
   ): boolean {
     const parents = parentEventUid ? [parentEventUid] : undefined;
@@ -1988,7 +1990,7 @@ export class EventInterpretorController {
    */
   private tryConsumeSolidification(
     frame: number,
-    source: { ownerEntityId: string; skillName: string },
+    source: EventSource,
     triggerSlotId: string,
     parentEventUid?: string,
   ): void {
@@ -2080,6 +2082,7 @@ export class EventInterpretorController {
     const source = {
       ownerEntityId: event.ownerOperatorId ?? event.sourceEntityId ?? this.slotToEntityId(event.ownerEntityId),
       skillName: event.sourceSkillName ?? event.id,
+      sourceEventUid: event.uid,
     };
     const newEntries = this._processFrameOut;
     // Note: _processFrameOut was already reset at the top of this function
@@ -2605,6 +2608,7 @@ export class EventInterpretorController {
     const source = {
       ownerEntityId: statusEv.ownerOperatorId ?? statusEv.sourceEntityId ?? this.slotToEntityId(statusEv.ownerEntityId),
       skillName: statusEv.sourceSkillName ?? statusEv.name,
+      sourceEventUid: statusEv.uid,
     };
     // Read pot from the routed source slot for derived statuses (target=enemy).
     const routedForStatusPot = this.resolveRoutedSource(statusEv);
