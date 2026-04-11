@@ -134,6 +134,7 @@
                           "verb": "VARY_BY",
                           "object": "TALENT_LEVEL",
                           "value": [
+                            0,
                             0.15,
                             0.25
                           ],
@@ -243,6 +244,7 @@
                           "verb": "VARY_BY",
                           "object": "TALENT_LEVEL",
                           "value": [
+                            0,
                             0.15,
                             0.25
                           ],
@@ -352,6 +354,7 @@
                           "verb": "VARY_BY",
                           "object": "TALENT_LEVEL",
                           "value": [
+                            0,
                             0.15,
                             0.25
                           ],
@@ -461,6 +464,7 @@
                           "verb": "VARY_BY",
                           "object": "TALENT_LEVEL",
                           "value": [
+                            0,
                             0.15,
                             0.25
                           ],
