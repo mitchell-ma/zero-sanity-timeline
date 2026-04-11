@@ -51,7 +51,8 @@
             "offset": {
               "value": 0,
               "unit": "SECOND"
-            }
+            },
+            "element": "CRYO"
           },
           "clause": [
             {
@@ -109,7 +110,8 @@
             "offset": {
               "value": 0.5,
               "unit": "SECOND"
-            }
+            },
+            "element": "CRYO"
           },
           "clause": [
             {
@@ -167,7 +169,8 @@
             "offset": {
               "value": 1.0,
               "unit": "SECOND"
-            }
+            },
+            "element": "CRYO"
           },
           "clause": [
             {
@@ -225,7 +228,8 @@
             "offset": {
               "value": 1.5,
               "unit": "SECOND"
-            }
+            },
+            "element": "CRYO"
           },
           "clause": [
             {
@@ -283,7 +287,8 @@
             "offset": {
               "value": 2.0,
               "unit": "SECOND"
-            }
+            },
+            "element": "CRYO"
           },
           "clause": [
             {
@@ -341,7 +346,8 @@
             "offset": {
               "value": 2.5,
               "unit": "SECOND"
-            }
+            },
+            "element": "CRYO"
           },
           "clause": [
             {
@@ -399,7 +405,8 @@
             "offset": {
               "value": 3.0,
               "unit": "SECOND"
-            }
+            },
+            "element": "CRYO"
           },
           "clause": [
             {
@@ -457,7 +464,8 @@
             "offset": {
               "value": 3.5,
               "unit": "SECOND"
-            }
+            },
+            "element": "CRYO"
           },
           "clause": [
             {
@@ -515,7 +523,8 @@
             "offset": {
               "value": 4.0,
               "unit": "SECOND"
-            }
+            },
+            "element": "CRYO"
           },
           "clause": [
             {
@@ -573,7 +582,8 @@
             "offset": {
               "value": 4.5,
               "unit": "SECOND"
-            }
+            },
+            "element": "CRYO"
           },
           "clause": [
             {
@@ -631,7 +641,8 @@
             "offset": {
               "value": 5.0,
               "unit": "SECOND"
-            }
+            },
+            "element": "CRYO"
           },
           "clause": [
             {

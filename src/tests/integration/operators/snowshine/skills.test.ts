@@ -22,7 +22,7 @@
 import { renderHook, act } from '@testing-library/react';
 import { NounType } from '../../../../dsl/semantics';
 import { useApp } from '../../../../app/useApp';
-import { ColumnType, InteractionModeType, SegmentType, StatusType } from '../../../../consts/enums';
+import { ColumnType, ElementType, InteractionModeType, SegmentType, StatusType } from '../../../../consts/enums';
 import { FPS } from '../../../../utils/timeline';
 import { computeTimelinePresentation } from '../../../../controller/timeline/eventPresentationController';
 import { getUltimateEnergyCostForPotential } from '../../../../controller/operators/operatorRegistry';
@@ -527,6 +527,14 @@ describe('E. Ultimate — Snow Zone', () => {
       0.5 * FPS, 1.0 * FPS, 1.5 * FPS, 2.0 * FPS, 2.5 * FPS,
       3.0 * FPS, 3.5 * FPS, 4.0 * FPS, 4.5 * FPS, 5.0 * FPS,
     ]);
+
+    // Every frame must carry a damageElement so the canvas renderer
+    // picks the CRYO color for the diamond fill — otherwise it falls
+    // back to white. The element field is read from the frame's own
+    // properties.element by dataDrivenEventFrames.ts:167.
+    for (const frame of seg.frames!) {
+      expect(frame.damageElement).toBe(ElementType.CRYO);
+    }
   });
 
   it('E1b: Snow Zone DoT ticks produce combat sheet damage rows attributed to Snowshine Ult', () => {

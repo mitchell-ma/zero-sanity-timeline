@@ -22,7 +22,7 @@
 ### Combo Skill: Polar Rescue (healing, no damage)
 - Trigger: controlled operator attacked below 60% HP
 - Healing skill (initial + continuous treatment)
-- Cooldown: VARY_BY SKILL_LEVEL [25×8, 24×2, 23×2]
+- Cooldown: VARY_BY SKILL_LEVEL [25×8, 24×3, 23] — L1-L8: 25s, L9-L11: 24s, L12: 23s (per endfield.wiki.gg)
 
 ### Ultimate: Frigid Snowfield (80 energy)
 - Animation: 1.983s TIME_STOP
