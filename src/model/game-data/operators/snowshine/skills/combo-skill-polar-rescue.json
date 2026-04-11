@@ -133,7 +133,7 @@
   "metadata": {
     "originId": "SNOWSHINE",
     "icon": "skills/combo_snowshine.png",
-    "dataStatus": "VERIFIED"
+    "dataStatus": "RECONCILED"
   },
   "clauseType": "ALL",
   "activationWindow": {
