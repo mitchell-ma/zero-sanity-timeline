@@ -1,5 +1,30 @@
 # TODO
 
+## Audit: every damage / status frame should set `properties.element`
+
+Frame-level diamond colors are driven by `frame.properties.element`
+(`dataDrivenEventFrames.ts:167` populates `_damageElement` from it). When
+the field is missing, the canvas renderer falls back to a segment-level
+element via a secondary path that doesn't cover every render site (info
+pane card, hover tooltips, micro-column color stripes), leaving frames
+rendered as white/grey instead of the correct element color. Snowshine's
+Snow Zone DoT frames had this bug — fixed in commit 9461b779.
+
+Audit task: walk every operator's skill and status JSONs and ensure each
+frame inside a damage- or element-tinted segment carries
+`"element": "<ELEMENT>"` in its `properties` block. Cross-check against
+the segment's element when present. Add the field where missing.
+
+Files to scan:
+- `src/model/game-data/operators/*/skills/*.json`
+- `src/model/game-data/operators/*/statuses/*.json`
+- `src/model/game-data/generic/statuses/*.json`
+
+Acceptance: a unit test that walks all parsed status defs / operator
+skills and asserts every frame whose clauses contain DEAL DAMAGE,
+APPLY INFLICTION, or APPLY REACTION carries a non-null
+`getDamageElement()`.
+
 ## DSL: IGNORE INFLICTION and elemental MITIGATE/DAMAGE_TAKEN_REDUCTION
 
 Estella T2 "Laziness Pays Off Now" requires:
@@ -23,11 +48,15 @@ Blocked operators (description-only until both primitives land):
 ## Spatial mechanics (radius / area buffs)
 
 The engine has no spatial model — operators and enemies are abstract slots, not positioned
-entities. Several effects depend on real spatial radii:
+entities. Several effects depend on real spatial radii, range, or first-enemy-hit:
 
 - Snowshine P2 (Storm Region) — Ult effect radius +20%
 - Snowshine P3 (Polar Survival Guide) — partial: the duration component is baked into the
   SNOW_ZONE status, but any radius bonus on the spatial Snow Zone effect is not modelled
+- Estella P3 (Delayed Work) — partial: battle skill Onomatopoeia damage multiplier is baked
+  via `VARY_BY POTENTIAL`, but the "+50% range" and "first enemy hit bonus damage" portions
+  of the potential are not modelled
+- Ardelia T1 (Friendly Presence) — see "Unimplemented mechanics — Ardelia T1" below
 - Antal / others (pre-existing notes if applicable)
 
 ## Remove weaponSkillEffects.ts and related weapon effect infrastructure
@@ -187,16 +216,6 @@ These sets have HP-threshold conditions but are metadata-only with zero clauses:
 - Arclight Hannabit Wisdom (50% Arts Infliction ignore)
 - Ardelia Mountainpeak Surfer (spatial recast)
 - Snowshine SAR Professional (RETALIATE verb — no DSL equivalent)
-
-## Spatial / targeting mechanics
-
-Features that depend on range, first-enemy-hit, or proximity are not modellable in the
-current timeline-based engine:
-
-- **Estella P3 Delayed Work** — battle skill Onomatopoeia damage multiplier is baked via
-  `VARY_BY POTENTIAL`, but the "+50% range" and "first enemy hit bonus damage" portions of
-  the potential are not modelled (no spatial awareness in the engine).
-- **Ardelia T1 Friendly Presence** — see "Unimplemented mechanics — Ardelia T1" below.
 
 ## Integration tests — deeper mechanics (remaining)
 
