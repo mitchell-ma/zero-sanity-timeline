@@ -3385,10 +3385,17 @@ export class EventInterpretorController {
       }
     }
 
-    // For enemy-targeted statuses with an active parent, inherit the parent's sourceSkillName
-    // so derived events (e.g. EARLY_ROGUE_WAVE from OLDEN_STARE) are attributed to the
-    // originating skill (ULTIMATE) rather than the triggering event (DIVE).
-    const resolvedSourceSkillName = (parentEv?.sourceSkillName && parentTarget === NounType.ENEMY)
+    // For statuses with an active parent whose source is a skill, inherit the parent's
+    // sourceSkillName so derived events are attributed to the originating skill rather
+    // than the triggering event. Examples:
+    //   - EARLY_ROGUE_WAVE from OLDEN_STARE (enemy-targeted) is attributed to ULTIMATE,
+    //     not the DIVE that fired the trigger.
+    //   - SATURATED_DEFENSE_RETALIATION_BURST from SATURATED_DEFENSE_RETALIATION
+    //     (operator-targeted) is attributed to SATURATED_DEFENSE (BS), not the enemy
+    //     attack that fired the trigger.
+    // Skip inheritance when the parent is TEAM-targeted — team statuses don't have a
+    // single skill-owner relationship that should override the triggering event's source.
+    const resolvedSourceSkillName = (parentEv?.sourceSkillName && parentTarget !== NounType.TEAM)
       ? parentEv.sourceSkillName
       : trigger.sourceSkillName;
 

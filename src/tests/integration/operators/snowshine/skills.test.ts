@@ -26,6 +26,8 @@ import { ColumnType, InteractionModeType, SegmentType, StatusType } from '../../
 import { FPS } from '../../../../utils/timeline';
 import { computeTimelinePresentation } from '../../../../controller/timeline/eventPresentationController';
 import { getUltimateEnergyCostForPotential } from '../../../../controller/operators/operatorRegistry';
+import { buildDamageTableRows } from '../../../../controller/calculation/damageTableBuilder';
+import { DEFAULT_LOADOUT_PROPERTIES } from '../../../../view/InformationPane';
 import {
   INFLICTION_COLUMNS,
   REACTION_COLUMNS,
@@ -349,6 +351,43 @@ describe('C. BS Retaliation Chain', () => {
     placeEnemyAction(result, 5 * FPS);
     placeEnemyAction(result, 7.5 * FPS);
     expect(getRetaliationBursts(result).length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('C6: Retaliation burst damage lands in the combat sheet attributed to Snowshine BS', () => {
+    const { result } = setupSnowshine();
+    placeBS(result, 5 * FPS);
+    placeEnemyAction(result, 5 * FPS);
+    placeEnemyAction(result, 7.5 * FPS);
+
+    const bursts = getRetaliationBursts(result);
+    expect(bursts.length).toBeGreaterThanOrEqual(2);
+
+    const loadoutStats: Record<string, typeof DEFAULT_LOADOUT_PROPERTIES> = {};
+    for (const slot of result.current.slots) {
+      loadoutStats[slot.slotId] = DEFAULT_LOADOUT_PROPERTIES;
+    }
+    const rows = buildDamageTableRows(
+      result.current.allProcessedEvents,
+      result.current.columns,
+      result.current.slots,
+      result.current.enemy,
+      loadoutStats,
+    );
+
+    // The retaliation burst's DEAL CRYO DAMAGE frame should produce combat sheet
+    // rows attributed to Snowshine's battle skill column (the originating skill).
+    const burstRows = rows.filter(
+      r => r.ownerEntityId === SLOT_SNOWSHINE
+        && r.columnId === NounType.BATTLE
+        && r.eventUid != null
+        && bursts.some(b => b.uid === r.eventUid),
+    );
+    expect(burstRows.length).toBeGreaterThanOrEqual(2);
+
+    // Every burst row should have a positive damage value.
+    for (const row of burstRows) {
+      expect(row.damage ?? 0).toBeGreaterThan(0);
+    }
   });
 });
 

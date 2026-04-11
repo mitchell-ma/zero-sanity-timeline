@@ -438,15 +438,19 @@ export function buildDamageTableRows(
     let col = colLookup.get(`${ev.ownerEntityId}-${effectiveColumnId}`)
       ?? colLookup.get(`${ev.ownerEntityId}-${ev.columnId}`);
 
-    // Enemy/status events with an operator source: attribute to the source operator's slot
-    // (e.g. IMPROVISED_EXPLOSIVE explosion frame deals damage using source operator's stats).
-    // Resolve skill type from the source skill's eventIdType so the damage row shows the
-    // correct type (BATTLE_SKILL, not the status column ID).
+    // Status events with an operator source: attribute to the source operator's slot
+    // via the source skill's eventIdType. Examples:
+    //  - IMPROVISED_EXPLOSIVE explosion frame (enemy-owned) → source operator's BATTLE col
+    //  - SATURATED_DEFENSE_RETALIATION_BURST (operator-owned, burst column) → same source
+    //    operator's BATTLE col (the burst is triggered by the operator's BS shield)
+    // The fallback runs whenever the primary columnId lookup failed — we don't gate on
+    // "owner != source slot" because an operator-owned status column (e.g. the burst)
+    // still needs routing through its source skill to find a valid mini-timeline column.
     let resolvedEntityId = ev.ownerEntityId;
     if (!col && ev.sourceEntityId) {
       // Reverse-lookup: source operator ID → slot ID via opToSlotCache
       const sourceSlotId = opToSlotCache.get(ev.sourceEntityId);
-      if (sourceSlotId && sourceSlotId !== ev.ownerEntityId) {
+      if (sourceSlotId) {
         const sourceSkillCol = ev.sourceSkillName
           ? getSourceSkillColumnId(ev.sourceEntityId, ev.sourceSkillName)
           : NounType.BATTLE;
