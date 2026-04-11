@@ -37,7 +37,7 @@
         "duration": {
           "value": {
             "verb": "IS",
-            "value": 0.2
+            "value": 2
           },
           "unit": "SECOND"
         },
