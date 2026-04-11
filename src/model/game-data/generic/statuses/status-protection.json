@@ -1,0 +1,28 @@
+{
+  "properties": {
+    "id": "PROTECTION",
+    "name": "Protection",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": 5
+      },
+      "unit": "SECOND"
+    },
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 1
+      },
+      "interactionType": "RESET"
+    },
+    "eventType": "STATUS",
+    "eventIdType": "STATUS",
+    "description": "Reduces incoming damage by a percentage."
+  },
+  "metadata": {
+    "originId": "generic"
+  }
+}

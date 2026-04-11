@@ -217,14 +217,23 @@ describe('A. Core Skill Placement', () => {
 // =============================================================================
 
 describe('B. Battle Skill — Protection + Retaliation Marker', () => {
-  it('B1: BS applies Protection status to operators', () => {
+  it('B1: BS applies Protection status to operators, scoped to the 4.5s shield window', () => {
     const { result } = setupSnowshine();
     placeBS(result, 2 * FPS);
 
     const protectionEvents = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === StatusType.PROTECTION,
+      ev => ev.columnId === StatusType.PROTECTION && ev.startFrame > 0,
     );
     expect(protectionEvents.length).toBeGreaterThanOrEqual(1);
+
+    // Snowshine overrides the generic PROTECTION default (5s) with a 4.5s
+    // duration so the Protection status disappears when the shield drops.
+    for (const ev of protectionEvents) {
+      const totalDuration = ev.segments.reduce(
+        (sum: number, s: { properties: { duration: number } }) => sum + s.properties.duration, 0,
+      );
+      expect(totalDuration).toBe(4.5 * FPS);
+    }
   });
 
   it('B2: BS applies SATURATED_DEFENSE_RETALIATION on Snowshine for the shield window', () => {
