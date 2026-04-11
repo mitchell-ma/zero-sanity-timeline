@@ -238,7 +238,11 @@ These sets have HP-threshold conditions but are metadata-only with zero clauses:
 - Antal Subconscious Act (30% DMG immunity)
 - Arclight Hannabit Wisdom (50% Arts Infliction ignore)
 - Ardelia Mountainpeak Surfer (spatial recast)
-- Snowshine SAR Professional (RETALIATE verb — no DSL equivalent)
+- ~~Snowshine SAR Professional (RETALIATE verb — no DSL equivalent)~~ DONE — replaced
+  the placeholder RETALIATE verb with a two-stage SATURATED_DEFENSE_RETALIATION →
+  _BURST status chain that fires on ENEMY DEAL DAMAGE during the shield window
+  (commit c155c871). T2 talent now description-only because the UE recovery is
+  baked into the burst's frame clause.
 
 ## Integration tests — deeper mechanics (remaining)
 
@@ -260,7 +264,7 @@ The following deeper mechanic-specific tests remain:
 | Tangtang | Waterspout/Whirlpool status application, Fam of Honor team Haste |
 | Yvonne | Empowered basic attack variant, Crit Stacks accumulation (10 max), Barrage of Technology consume interaction |
 | Last Rite | MITIGATE DAMAGE during ult (damage immunity), Cryogenic Embrittlement E2E (frame-level susceptibility stat resolution) |
-| Snowshine | P1 Protection blocks Arts Inflictions, P5 retaliation SP return |
+| Snowshine | DONE — full reconcile (commits c155c871 → f7090022): 25 E2E tests covering BS retaliation chain (single/multi-hit, P0/P5 sanity, combat-sheet attribution), SAR Assistance per-slot heal, Snow Zone DoT + forced Solidification + P3 duration extension, view layer, frame element coverage. P1 Protection-blocks-Arts-Inflictions remains DSL-blocked (IGNORE INFLICTION + enemy→operator infliction); P5 SP-return delta verification still pending engine support for the resource-graph assertion |
 
 ### Engine blockers for some deeper tests
 - ~~`isForced: true` as raw boolean — FIXED: migrated all to `{"verb":"IS","value":1}` ValueNode + added store validator~~
