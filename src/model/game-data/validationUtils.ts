@@ -4,7 +4,7 @@ import {
   CONSUME_TARGET_MAPPING, OBJECT_QUALIFIER_MAPPING,
 } from '../../dsl/semantics';
 import type { ObjectType } from '../../dsl/semantics';
-import { ArtsReactionType, ElementType, OperatorClassType } from '../../consts/enums';
+import { ArtsReactionType, ElementType, OperatorClassType, SegmentType } from '../../consts/enums';
 
 // ── Enum value sets for validation ──────────────────────────────────────────
 const VALID_DETERMINERS = new Set<string>(Object.values(DeterminerType));
@@ -165,6 +165,51 @@ export function validateFrameShape(frame: Record<string, unknown>, path: string)
 }
 
 /**
+ * For a COOLDOWN segment whose duration is `VARY_BY SKILL_LEVEL [...]`, check
+ * that the L12 entry differs from L11. When the two are equal, the L12 tier
+ * was almost certainly missed during reconcile (either copied from L11 or the
+ * reduction was rolled one level early — Snowshine's Polar Rescue had the
+ * latter, fixed in commit 9461b779).
+ *
+ * Tracked in docs/todo.md → "Audit: VARY_BY SKILL_LEVEL cooldown arrays".
+ */
+function validateCooldownSkillLevelMonotonicity(
+  seg: Record<string, unknown>,
+  path: string,
+): string[] {
+  const props = seg.properties as Record<string, unknown> | undefined;
+  if (!props) return [];
+
+  // Only inspect segments tagged as COOLDOWN.
+  const segmentTypes = props.segmentTypes as string[] | undefined;
+  if (!Array.isArray(segmentTypes) || !segmentTypes.includes(SegmentType.COOLDOWN)) {
+    return [];
+  }
+
+  // Duration must be `{ value: <ValueNode>, unit: ... }` with the value being
+  // a VARY_BY SKILL_LEVEL ValueNode carrying an array.
+  const dur = props.duration as Record<string, unknown> | undefined;
+  const durValue = dur?.value as Record<string, unknown> | undefined;
+  if (!durValue) return [];
+  if (durValue.verb !== VerbType.VARY_BY) return [];
+  if (durValue.object !== NounType.SKILL_LEVEL) return [];
+  const arr = durValue.value;
+  if (!Array.isArray(arr) || arr.length < 2) return [];
+
+  const last = arr[arr.length - 1];
+  const prev = arr[arr.length - 2];
+  if (last === prev) {
+    return [
+      `${path}.properties.duration.value: VARY_BY SKILL_LEVEL cooldown ` +
+      `[..., ${prev}, ${last}] — L12 (${last}) equals L11 (${prev}). ` +
+      `Cross-check against endfield.wiki.gg; the L12 tier is usually a ` +
+      `further reduction.`,
+    ];
+  }
+  return [];
+}
+
+/**
  * Validate a segment's shape (metadata + properties keys + frames). Walks
  * frames via `validateFrameShape`.
  */
@@ -180,6 +225,8 @@ export function validateSegmentShape(seg: Record<string, unknown>, path: string)
   if (meta) {
     errors.push(...checkKeys(meta, VALID_SEGMENT_METADATA_KEYS, `${path}.metadata`));
   }
+
+  errors.push(...validateCooldownSkillLevelMonotonicity(seg, path));
 
   const frames = seg.frames as Record<string, unknown>[] | undefined;
   if (Array.isArray(frames)) {

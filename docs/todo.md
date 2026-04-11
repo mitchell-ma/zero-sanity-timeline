@@ -1,27 +1,23 @@
 # TODO
 
-## Audit: VARY_BY SKILL_LEVEL cooldown arrays — L12 should differ from L11
+## Cooldown reconcile: cross-check L11 vs L12 outliers against wiki
 
-Most combo/battle/ultimate cooldowns reduce at max skill level (L12),
-which means a correctly-reconciled `VARY_BY SKILL_LEVEL` cooldown array
-should have `array[11] < array[10]`. When the two are equal, it's
-usually a sign the L12 tier was missed during reconcile (either copied
-from the L11 value, or the reduction was rolled one level early).
-Snowshine's Polar Rescue had the opposite mistake — the L11 value was
-pulled forward to 23s — fixed in commit 9461b779.
+The `validateCooldownSkillLevelMonotonicity` rule in
+`validationUtils.ts` warns at parse time whenever a `VARY_BY SKILL_LEVEL`
+cooldown array on a `COOLDOWN` segment has its last two entries equal —
+that's usually a reconcile miss (L12 tier copied from L11 instead of
+the further reduction). Snowshine's Polar Rescue had the opposite
+flavour and was fixed in commit 9461b779.
 
-Audit task: walk every skill JSON, find each `VARY_BY SKILL_LEVEL`
-array on a segment with `segmentTypes` containing `COOLDOWN`, and flag
-any whose last two entries are equal. Cross-check against
-`endfield.wiki.gg` for the correct per-level values before editing.
-Add a test that enumerates every COOLDOWN segment with a
-`VARY_BY SKILL_LEVEL` array and reports the outliers (doesn't have to
-fail, but should produce a clear audit list).
+Currently flagged at parse time:
+- `MOMENT_OF_BLAZING_SHADOW` (Rossi combo) — `[..., 14, 14]`
+- `MOMENT_OF_BLAZING_SHADOW_EMPOWERED` (Rossi combo empowered) — `[..., 14, 14]`
 
-Files to scan:
-- `src/model/game-data/operators/*/skills/battle-skill-*.json`
-- `src/model/game-data/operators/*/skills/combo-skill-*.json`
-- `src/model/game-data/operators/*/skills/ultimate-*.json`
+Action: cross-check each against `endfield.wiki.gg` for the correct
+per-level values. Either fix the data so L12 < L11, or — if the wiki
+confirms the L12 tier really doesn't reduce — leave as-is and note it
+on the warning rule (TODO: support a per-skill exemption marker once
+we have a confirmed "no reduction at L12" case).
 
 ## DSL: IGNORE INFLICTION and elemental MITIGATE/DAMAGE_TAKEN_REDUCTION
 
