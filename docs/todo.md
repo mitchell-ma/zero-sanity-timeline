@@ -190,11 +190,6 @@ These sets have HP-threshold conditions but are metadata-only with zero clauses:
 - Antal Subconscious Act (30% DMG immunity)
 - Arclight Hannabit Wisdom (50% Arts Infliction ignore)
 - Ardelia Mountainpeak Surfer (spatial recast)
-- ~~Snowshine SAR Professional (RETALIATE verb — no DSL equivalent)~~ DONE — replaced
-  the placeholder RETALIATE verb with a two-stage SATURATED_DEFENSE_RETALIATION →
-  _BURST status chain that fires on ENEMY DEAL DAMAGE during the shield window
-  (commit c155c871). T2 talent now description-only because the UE recovery is
-  baked into the burst's frame clause.
 
 ## Integration tests — deeper mechanics (remaining)
 
@@ -207,19 +202,16 @@ The following deeper mechanic-specific tests remain:
 | Ember | P5 Steel Oath Empowered (shield ×1.2 + ATK +10%), Pay the Ferric Price 3-stack accumulation, Protection duration extension on hit |
 | Catcher | RETURN vs RECOVER SP distinction, P1 DEF-scaling bonus damage on BS/ult hit, Weaken status from ult |
 | Da Pan | Reduce & Thicken multi-stack accumulation (4 stacks), Vulnerability 4-stack combo trigger in strict mode, P5 extra Vulnerability stack |
-| ~~Lifeng~~ | ~~DONE — 25 E2E tests covering all skills, potentials, talents, combo activation~~ |
 | Arclight | Wildland Trekker counter accumulation + buff activation, empowered battle skill variant, Tactful Approach status |
 | Fluorite | T2 (Unpredictable) chance probability gate + Antal immunity — implement together |
 | Gilberta | Arts Reaction combo trigger in strict mode, Gravity Field Lift extension, Messenger's Song UE gain buff |
 | Alesh | Flash-frozen talent (Cryo→Solidification chain), arts reaction consume combo trigger in strict mode |
-| Avywenna | ~~Thunderlance deploy/retrieve~~ DONE — per-lance damage, T1 UE baked, E2E tests. Remaining: P5 conditional (1.15× on Electric Susceptible — condition not modeled) |
+| Avywenna | P5 conditional 1.15× damage on Electric Susceptible (HAVE STATUS condition not yet modeled in trigger pipeline) |
 | Tangtang | Waterspout/Whirlpool status application, Fam of Honor team Haste |
 | Yvonne | Empowered basic attack variant, Crit Stacks accumulation (10 max), Barrage of Technology consume interaction |
 | Last Rite | MITIGATE DAMAGE during ult (damage immunity), Cryogenic Embrittlement E2E (frame-level susceptibility stat resolution) |
-| Snowshine | DONE — full reconcile (commits c155c871 → f7090022): 25 E2E tests covering BS retaliation chain (single/multi-hit, P0/P5 sanity, combat-sheet attribution), SAR Assistance per-slot heal, Snow Zone DoT + forced Solidification + P3 duration extension, view layer, frame element coverage. P1 Protection-blocks-Arts-Inflictions remains DSL-blocked (IGNORE INFLICTION + enemy→operator infliction); P5 SP-return delta verification still pending engine support for the resource-graph assertion |
 
 ### Engine blockers for some deeper tests
-- ~~`isForced: true` as raw boolean — FIXED: migrated all to `{"verb":"IS","value":1}` ValueNode + added store validator~~
 - Strict-mode combo triggering requires the engine to evaluate `onTriggerClause` conditions against pipeline state
 - HP threshold conditions not supported (affects Alesh P5, Chen Qianyu P1, Catcher combo trigger)
 - Remove priority registry from `triggerMatch.ts` — predicates are independent bools evaluated left-to-right, not primary/secondary. Each condition should produce candidate frames independently, then ALL conditions are AND'd at each candidate. The current priority-based system couples conditions and has caused bugs where the "primary" handler's scanning logic doesn't match secondary condition semantics.
