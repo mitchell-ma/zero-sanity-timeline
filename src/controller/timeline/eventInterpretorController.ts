@@ -1059,7 +1059,7 @@ export class EventInterpretorController {
           : cfg?.duration ?? REACTION_DURATION;
         this.applyEventFromCtx(ctx, columnId, ownerEntityId, ctx.frame, defaultDuration, source, {
           stacks: typeof sl === 'number' ? sl : undefined,
-          ...(isForced && { forcedReaction: true }),
+          ...(isForced && { isForced: true }),
           uid: freeformUidFor(columnId) ?? derivedEventUid(columnId, source.ownerEntityId, ctx.frame),
         });
         return true;
@@ -2451,7 +2451,7 @@ export class EventInterpretorController {
         this.checkReactiveTriggers(VerbType.APPLY, event.columnId, absFrame, event.ownerEntityId, event.id, undefined, newEntries);
       } else if (REACTION_COLUMN_IDS.has(event.columnId)) {
         this.controller.applyEvent(event.columnId, event.ownerEntityId, absFrame, dur, source, {
-          stacks: event.stacks, forcedReaction: event.forcedReaction || event.isForced, uid: event.uid,
+          stacks: event.stacks, isForced: event.isForced, uid: event.uid,
         });
         this.checkReactiveTriggers(VerbType.APPLY, event.columnId, absFrame, event.ownerEntityId, event.id, undefined, newEntries);
       } else if (PHYSICAL_STATUS_COLUMN_IDS.has(event.columnId)) {

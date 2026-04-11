@@ -134,7 +134,7 @@ function buildBaseParams(
 }
 
 function isForced(ev: TimelineEvent): boolean {
-  return !!(ev.isForced || ev.forcedReaction);
+  return !!ev.isForced;
 }
 
 function getStacks(ev: TimelineEvent): StatusLevel {

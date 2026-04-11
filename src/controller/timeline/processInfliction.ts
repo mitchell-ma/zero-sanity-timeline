@@ -271,7 +271,7 @@ export function buildReactionSegment(ev: TimelineEvent, rawDuration?: number, fo
   // Clamp to raw game-time duration to prevent inflation from time-stop extension.
   const tickDur = rawDuration != null ? Math.min(rawDuration, gameTimeDur) : gameTimeDur;
 
-  const forced = ev.isForced || ev.forcedReaction;
+  const forced = ev.isForced;
   const stacks = (ev.statusLevel ?? 1) as StatusLevel;
   const frames: EventFrameMarker[] = [];
 
@@ -324,7 +324,7 @@ export function buildCorrosionSegments(ev: TimelineEvent): EventSegmentData[] | 
   const floor = ev.reductionFloor ?? 0;
   const aiMultiplier = getCorrosionReductionMultiplier(ev.artsIntensity ?? 0);
 
-  const forced = ev.isForced || ev.forcedReaction;
+  const forced = ev.isForced;
 
   for (let i = 0; i < durationSeconds; i++) {
     const segDuration = Math.min(FPS, totalDuration - i * FPS);

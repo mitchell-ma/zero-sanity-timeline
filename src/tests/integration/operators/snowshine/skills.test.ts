@@ -522,6 +522,11 @@ describe('E. Ultimate — Snow Zone', () => {
       ev => ev.ownerEntityId === ENEMY_ID && ev.columnId === REACTION_COLUMNS.SOLIDIFICATION,
     );
     expect(solidificationEvents.length).toBeGreaterThanOrEqual(1);
+    // Engine-forced Solidification must carry isForced so the info pane shows
+    // the "Forced" badge / toggle.
+    for (const ev of solidificationEvents) {
+      expect(ev.isForced).toBe(true);
+    }
   });
 
   it('E3: P3 potential extends Snow Zone duration to 7s', () => {

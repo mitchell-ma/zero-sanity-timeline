@@ -237,7 +237,7 @@ function EventPane({
               )}
             </>
           ))()}
-          {(event.eventStatus || event.forcedReaction) && (
+          {(event.eventStatus || event.isForced) && (
             <div style={{
               fontSize: 10,
               fontFamily: 'var(--font-mono)',
@@ -250,7 +250,7 @@ function EventPane({
                 : event.eventStatus === EventStatusType.EXTENDED ? '#88cc44'
                 : 'var(--text-muted)',
             }}>
-              {event.forcedReaction && (
+              {event.isForced && (
                 <span style={{ color: 'var(--red)' }}>FORCED{event.eventStatus ? ' · ' : ''}</span>
               )}
               {event.eventStatus && (
@@ -435,7 +435,7 @@ function EventPane({
                     type="checkbox"
                     checked={!!event.isForced}
                     disabled={isAutoReaction || readOnly}
-                    onChange={(e) => onUpdate(event.uid, { isForced: e.target.checked, forcedReaction: e.target.checked })}
+                    onChange={(e) => onUpdate(event.uid, { isForced: e.target.checked })}
                     style={{ accentColor: elColor }}
                   />
                   <span style={{ fontSize: 11, color: event.isForced ? '#ff5522' : 'var(--text-muted)' }}>

@@ -176,7 +176,9 @@ export interface TimelineEvent {
   startFrame: number;
   /** Required segment array — all event timing flows through segments. */
   segments: EventSegmentData[];
-  /** True for manually-added arts reaction events (not derived from infliction interactions). */
+  /** True if this reaction bypassed the usual infliction-stack requirement.
+   *  Set for manually-added reactions (freeform mode) and engine-forced
+   *  reactions (e.g. Snowshine Ult's Snow Zone Solidification). */
   isForced?: boolean;
   /** Stack count (e.g. infliction stacks consumed for reactions, operator status stacks). */
   stacks?: number;
@@ -225,8 +227,6 @@ export interface TimelineEvent {
   sourceFrameKey?: string;
   /** Outcome of a derived event: how it ended. */
   eventStatus?: EventStatusType;
-  /** True if this reaction was forced (bypassed infliction stacks). */
-  forcedReaction?: boolean;
   /** True if this infliction event was a same-element stack (Arts Burst). */
   isArtsBurst?: boolean;
   /** Inherited reduction floor from a merged corrosion (resistance points). */

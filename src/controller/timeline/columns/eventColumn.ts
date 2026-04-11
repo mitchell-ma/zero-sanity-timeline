@@ -23,7 +23,9 @@ export interface EventSource {
 export interface AddOptions {
   uid?: string;
   stacks?: number;
-  forcedReaction?: boolean;
+  /** True when this reaction bypassed the usual infliction-stack requirement
+   *  (e.g. ult-forced Solidification, user-added reactions in freeform mode). */
+  isForced?: boolean;
   statusId?: string;
   stackingMode?: string;
   maxStacks?: number;

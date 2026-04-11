@@ -41,7 +41,8 @@ export class ReactionColumn implements EventColumn {
     ev.sourceEntityId = source.ownerEntityId;
     ev.sourceSkillName = source.skillName;
     ev.statusLevel = options?.stacks as StatusLevel;
-    ev.forcedReaction = options?.forcedReaction;
+    ev.isForced = options?.isForced;
+    if (options?.event) Object.assign(ev, options.event);
 
     const rawDur = durationFrames;
     setEventDuration(ev, this.host.extendDuration(ev.startFrame, rawDur));

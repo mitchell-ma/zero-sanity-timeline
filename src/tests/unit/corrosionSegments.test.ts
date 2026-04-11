@@ -201,7 +201,7 @@ describe('corrosion segments', () => {
   // ── Forced corrosion ──────────────────────────────────────────────────
 
   it('forced corrosion has no frame markers (no initial damage)', () => {
-    const ev = corrosionEvent('c1', 0, 5 * FPS, { isForced: true, forcedReaction: true });
+    const ev = corrosionEvent('c1', 0, 5 * FPS, { isForced: true });
     const [result] = attachReactionFrames([ev]);
 
     for (const seg of result.segments!) {
@@ -210,7 +210,7 @@ describe('corrosion segments', () => {
   });
 
   it('forced corrosion still has reduction segments', () => {
-    const ev = corrosionEvent('c1', 0, 5 * FPS, { isForced: true, forcedReaction: true, statusLevel: 3 });
+    const ev = corrosionEvent('c1', 0, 5 * FPS, { isForced: true, statusLevel: 3 });
     const [result] = attachReactionFrames([ev]);
 
     expect(result.segments).toBeDefined();

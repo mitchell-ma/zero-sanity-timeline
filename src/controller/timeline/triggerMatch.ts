@@ -458,7 +458,7 @@ function handleIs(primaryCond: Predicate, ctx: VerbHandlerContext): TriggerMatch
     if (ev.columnId !== colId) continue;
     if (!matchesOwner(ev.ownerEntityId)) continue;
     // Skip forced physical statuses — no Vulnerability was consumed
-    if (isPhysicalStatus && (ev.isForced || ev.forcedReaction)) continue;
+    if (isPhysicalStatus && ev.isForced) continue;
     if (!checkSecondary(ctx, ev.startFrame, ev.ownerEntityId)) continue;
     matches.push(makeMatch(ev.startFrame, ev, ctx.clauseEffects));
   }
