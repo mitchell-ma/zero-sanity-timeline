@@ -150,7 +150,16 @@
                   "verb": "APPLY",
                   "object": "STATUS",
                   "objectId": "SNOW_ZONE",
-                  "to": "ENEMY"
+                  "to": "ENEMY",
+                  "with": {
+                    "duration": {
+                      "value": {
+                        "verb": "IS",
+                        "value": 5
+                      },
+                      "unit": "SECOND"
+                    }
+                  }
                 }
               ]
             }
