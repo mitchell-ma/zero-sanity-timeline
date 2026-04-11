@@ -150,19 +150,8 @@
                   "verb": "APPLY",
                   "object": "STATUS",
                   "objectId": "SNOW_ZONE",
-                  "to": "ENEMY"
-                },
-                {
-                  "verb": "APPLY",
-                  "object": "STATUS",
-                  "objectId": "REACTION",
-                  "objectQualifier": "SOLIDIFICATION",
                   "to": "ENEMY",
                   "with": {
-                    "isForced": {
-                      "verb": "IS",
-                      "value": 1
-                    },
                     "duration": {
                       "value": {
                         "operation": "ADD",

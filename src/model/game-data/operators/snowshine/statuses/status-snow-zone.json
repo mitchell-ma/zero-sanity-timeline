@@ -5,27 +5,8 @@
     "to": "ENEMY",
     "duration": {
       "value": {
-        "operation": "ADD",
-        "left": {
-          "verb": "IS",
-          "value": 5
-        },
-        "right": {
-          "verb": "VARY_BY",
-          "object": "POTENTIAL",
-          "value": [
-            0,
-            0,
-            0,
-            2,
-            2,
-            2
-          ],
-          "of": {
-            "object": "OPERATOR",
-            "determiner": "SOURCE"
-          }
-        }
+        "verb": "IS",
+        "value": 5
       },
       "unit": "SECOND"
     },
@@ -39,11 +20,64 @@
     "eventType": "STATUS",
     "eventIdType": "SKILL_STATUS",
     "element": "CRYO",
-    "description": "A freezing zone that forcibly applies Solidification to enemies caught within. Duration extends by 2s at potential 3+."
+    "description": "A freezing zone that forcibly applies Solidification to enemies caught within. Duration is set by the skill that creates it (base 5s, +2s at P3+)."
   },
   "metadata": {
     "originId": "SNOWSHINE",
     "dataStatus": "RECONCILED"
   },
+  "segments": [
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT"
+      },
+      "properties": {
+        "name": "Snow Zone",
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 5
+          },
+          "unit": "SECOND"
+        },
+        "element": "CRYO"
+      },
+      "frames": [
+        {
+          "metadata": {
+            "eventComponentType": "FRAME"
+          },
+          "properties": {
+            "offset": {
+              "value": 0,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "REACTION",
+                  "objectQualifier": "SOLIDIFICATION",
+                  "to": "ENEMY",
+                  "inheritDuration": true,
+                  "with": {
+                    "isForced": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
+        }
+      ]
+    }
+  ],
   "clauseType": "ALL"
 }

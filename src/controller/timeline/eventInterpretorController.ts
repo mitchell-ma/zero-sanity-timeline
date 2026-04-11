@@ -1137,13 +1137,35 @@ export class EventInterpretorController {
         if (tempEv.statusValue != null) eventProps.statusValue = tempEv.statusValue;
         // Deep-clone parsed segments (with frame markers) from the game data layer.
         // Must clone to avoid shared-reference mutation when consumption clamps duration/frames.
+        //
+        // Three cases:
+        //  1. No runtime duration override (typeof dv !== 'number'): clone segments
+        //     with their static parse-time durations. Event total = cfgDur.
+        //  2. Runtime duration override on a single-segment status: clone the one
+        //     segment but replace its duration with the runtime-resolved `duration`,
+        //     preserving frames. This lets callers like Snowshine Ult pass a
+        //     potential-aware `with.duration` while still firing the segment's
+        //     offset-0 frame (e.g. APPLY FORCED SOLIDIFICATION).
+        //  3. Runtime duration override on a multi-segment status: fall through
+        //     to the single-segment placeholder set by column.add() — legacy
+        //     behaviour for backwards compatibility; no status currently relies
+        //     on both multi-segment shape AND runtime duration override.
         const statusObj = effect.objectId ? getStatusById(effect.objectId) : undefined;
-        if (statusObj && statusObj.segments.length > 0 && typeof dv !== 'number') {
-          eventProps.segments = statusObj.segments.map(seg => ({
-            ...seg,
-            properties: { ...seg.properties },
-            ...(seg.frames ? { frames: seg.frames.map(f => ({ ...f })) } : {}),
-          }));
+        if (statusObj && statusObj.segments.length > 0) {
+          if (typeof dv !== 'number') {
+            eventProps.segments = statusObj.segments.map(seg => ({
+              ...seg,
+              properties: { ...seg.properties },
+              ...(seg.frames ? { frames: seg.frames.map(f => ({ ...f })) } : {}),
+            }));
+          } else if (statusObj.segments.length === 1) {
+            const seg = statusObj.segments[0];
+            eventProps.segments = [{
+              ...seg,
+              properties: { ...seg.properties, duration },
+              ...(seg.frames ? { frames: seg.frames.map(f => ({ ...f })) } : {}),
+            }];
+          }
         }
       }
 

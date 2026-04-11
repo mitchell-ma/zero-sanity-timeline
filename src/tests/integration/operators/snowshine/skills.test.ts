@@ -511,6 +511,14 @@ describe('E. Ultimate — Snow Zone', () => {
       (sum: number, s: { properties: { duration: number } }) => sum + s.properties.duration, 0,
     );
     expect(totalDuration).toBe(5 * FPS);
+
+    // Snow Zone's single segment carries the frame that applies forced
+    // Solidification at offset 0. Verify the cloned frame survived the
+    // with.duration override path.
+    const seg = snowZones[0].segments[0];
+    expect(seg.frames).toBeDefined();
+    expect(seg.frames!.length).toBe(1);
+    expect(seg.frames![0].offsetFrame).toBe(0);
   });
 
   it('E2: Snow Zone applies forced Solidification on enemy reaction column', () => {
