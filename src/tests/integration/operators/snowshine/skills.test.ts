@@ -512,13 +512,57 @@ describe('E. Ultimate — Snow Zone', () => {
     );
     expect(totalDuration).toBe(5 * FPS);
 
-    // Snow Zone's single segment carries the frame that applies forced
-    // Solidification at offset 0. Verify the cloned frame survived the
+    // Snow Zone's single segment carries:
+    //  - a solidification-application frame at offset 0
+    //  - ten DoT damage frames at 0.5s intervals (offsets 0.5..5.0)
+    // Total = 11 frames. Verify the cloned frames survived the
     // with.duration override path.
     const seg = snowZones[0].segments[0];
     expect(seg.frames).toBeDefined();
-    expect(seg.frames!.length).toBe(1);
+    expect(seg.frames!.length).toBe(11);
     expect(seg.frames![0].offsetFrame).toBe(0);
+    // DoT ticks at 0.5s..5.0s = 60 frames..600 frames at 120 FPS.
+    const tickOffsets = seg.frames!.slice(1).map(f => f.offsetFrame);
+    expect(tickOffsets).toEqual([
+      0.5 * FPS, 1.0 * FPS, 1.5 * FPS, 2.0 * FPS, 2.5 * FPS,
+      3.0 * FPS, 3.5 * FPS, 4.0 * FPS, 4.5 * FPS, 5.0 * FPS,
+    ]);
+  });
+
+  it('E1b: Snow Zone DoT ticks produce combat sheet damage rows attributed to Snowshine Ult', () => {
+    const { result } = setupSnowshine();
+    act(() => { setUltimateEnergyToMax(result.current, SLOT_SNOWSHINE, 0); });
+    placeUlt(result, 5 * FPS);
+
+    const snowZones = result.current.allProcessedEvents.filter(
+      ev => ev.columnId === SNOW_ZONE_STATUS_ID && ev.startFrame > 0,
+    );
+    expect(snowZones).toHaveLength(1);
+
+    const loadoutStats: Record<string, typeof DEFAULT_LOADOUT_PROPERTIES> = {};
+    for (const slot of result.current.slots) {
+      loadoutStats[slot.slotId] = DEFAULT_LOADOUT_PROPERTIES;
+    }
+    const rows = buildDamageTableRows(
+      result.current.allProcessedEvents,
+      result.current.columns,
+      result.current.slots,
+      result.current.enemy,
+      loadoutStats,
+    );
+
+    // The 10 DoT ticks should each produce a damage-bearing row attributed
+    // to Snowshine's ULTIMATE column (routed via the source-skill fallback).
+    // The 11th row belongs to the offset-0 Solidification-apply frame which
+    // has no DEAL DAMAGE and so gets a null-damage placeholder row.
+    const zoneUid = snowZones[0].uid;
+    const dotRows = rows.filter(
+      r => r.eventUid === zoneUid
+        && r.columnId === NounType.ULTIMATE
+        && r.damage != null
+        && r.damage > 0,
+    );
+    expect(dotRows.length).toBe(10);
   });
 
   it('E2: Snow Zone applies forced Solidification on enemy reaction column', () => {

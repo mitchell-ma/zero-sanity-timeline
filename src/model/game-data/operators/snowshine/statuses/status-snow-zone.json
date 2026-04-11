@@ -20,7 +20,7 @@
     "eventType": "STATUS",
     "eventIdType": "SKILL_STATUS",
     "element": "CRYO",
-    "description": "A freezing zone that forcibly applies Solidification to enemies caught within. Duration is set by the skill that creates it (base 5s, +2s at P3+)."
+    "description": "A freezing zone created by Frigid Snowfield. Deals Cryo DMG over time (10 ticks at 0.5s intervals over 5s) and forcibly applies Solidification to enemies caught within. At P3+ the Solidification lasts 2s longer than the zone itself."
   },
   "metadata": {
     "originId": "SNOWSHINE",
@@ -93,6 +93,586 @@
                         }
                       },
                       "unit": "SECOND"
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
+        },
+        {
+          "metadata": {
+            "eventComponentType": "FRAME"
+          },
+          "properties": {
+            "offset": {
+              "value": 0.5,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "objectQualifier": "CRYO",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.29,
+                        0.32,
+                        0.35,
+                        0.38,
+                        0.41,
+                        0.44,
+                        0.46,
+                        0.49,
+                        0.52,
+                        0.56,
+                        0.6,
+                        0.65
+                      ],
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "SOURCE"
+                      }
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "SOURCE"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
+        },
+        {
+          "metadata": {
+            "eventComponentType": "FRAME"
+          },
+          "properties": {
+            "offset": {
+              "value": 1.0,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "objectQualifier": "CRYO",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.29,
+                        0.32,
+                        0.35,
+                        0.38,
+                        0.41,
+                        0.44,
+                        0.46,
+                        0.49,
+                        0.52,
+                        0.56,
+                        0.6,
+                        0.65
+                      ],
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "SOURCE"
+                      }
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "SOURCE"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
+        },
+        {
+          "metadata": {
+            "eventComponentType": "FRAME"
+          },
+          "properties": {
+            "offset": {
+              "value": 1.5,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "objectQualifier": "CRYO",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.29,
+                        0.32,
+                        0.35,
+                        0.38,
+                        0.41,
+                        0.44,
+                        0.46,
+                        0.49,
+                        0.52,
+                        0.56,
+                        0.6,
+                        0.65
+                      ],
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "SOURCE"
+                      }
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "SOURCE"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
+        },
+        {
+          "metadata": {
+            "eventComponentType": "FRAME"
+          },
+          "properties": {
+            "offset": {
+              "value": 2.0,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "objectQualifier": "CRYO",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.29,
+                        0.32,
+                        0.35,
+                        0.38,
+                        0.41,
+                        0.44,
+                        0.46,
+                        0.49,
+                        0.52,
+                        0.56,
+                        0.6,
+                        0.65
+                      ],
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "SOURCE"
+                      }
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "SOURCE"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
+        },
+        {
+          "metadata": {
+            "eventComponentType": "FRAME"
+          },
+          "properties": {
+            "offset": {
+              "value": 2.5,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "objectQualifier": "CRYO",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.29,
+                        0.32,
+                        0.35,
+                        0.38,
+                        0.41,
+                        0.44,
+                        0.46,
+                        0.49,
+                        0.52,
+                        0.56,
+                        0.6,
+                        0.65
+                      ],
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "SOURCE"
+                      }
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "SOURCE"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
+        },
+        {
+          "metadata": {
+            "eventComponentType": "FRAME"
+          },
+          "properties": {
+            "offset": {
+              "value": 3.0,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "objectQualifier": "CRYO",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.29,
+                        0.32,
+                        0.35,
+                        0.38,
+                        0.41,
+                        0.44,
+                        0.46,
+                        0.49,
+                        0.52,
+                        0.56,
+                        0.6,
+                        0.65
+                      ],
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "SOURCE"
+                      }
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "SOURCE"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
+        },
+        {
+          "metadata": {
+            "eventComponentType": "FRAME"
+          },
+          "properties": {
+            "offset": {
+              "value": 3.5,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "objectQualifier": "CRYO",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.29,
+                        0.32,
+                        0.35,
+                        0.38,
+                        0.41,
+                        0.44,
+                        0.46,
+                        0.49,
+                        0.52,
+                        0.56,
+                        0.6,
+                        0.65
+                      ],
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "SOURCE"
+                      }
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "SOURCE"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
+        },
+        {
+          "metadata": {
+            "eventComponentType": "FRAME"
+          },
+          "properties": {
+            "offset": {
+              "value": 4.0,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "objectQualifier": "CRYO",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.29,
+                        0.32,
+                        0.35,
+                        0.38,
+                        0.41,
+                        0.44,
+                        0.46,
+                        0.49,
+                        0.52,
+                        0.56,
+                        0.6,
+                        0.65
+                      ],
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "SOURCE"
+                      }
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "SOURCE"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
+        },
+        {
+          "metadata": {
+            "eventComponentType": "FRAME"
+          },
+          "properties": {
+            "offset": {
+              "value": 4.5,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "objectQualifier": "CRYO",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.29,
+                        0.32,
+                        0.35,
+                        0.38,
+                        0.41,
+                        0.44,
+                        0.46,
+                        0.49,
+                        0.52,
+                        0.56,
+                        0.6,
+                        0.65
+                      ],
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "SOURCE"
+                      }
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "SOURCE"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
+        },
+        {
+          "metadata": {
+            "eventComponentType": "FRAME"
+          },
+          "properties": {
+            "offset": {
+              "value": 5.0,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "objectQualifier": "CRYO",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.29,
+                        0.32,
+                        0.35,
+                        0.38,
+                        0.41,
+                        0.44,
+                        0.46,
+                        0.49,
+                        0.52,
+                        0.56,
+                        0.6,
+                        0.65
+                      ],
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "SOURCE"
+                      }
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "SOURCE"
+                      }
                     }
                   }
                 }
