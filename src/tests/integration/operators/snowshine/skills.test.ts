@@ -537,21 +537,53 @@ describe('E. Ultimate — Snow Zone', () => {
     }
   });
 
-  it('E3: P3 potential extends Snow Zone duration to 7s', () => {
-    const { result } = setupSnowshine();
-    setPotential(result, 3);
-    act(() => { setUltimateEnergyToMax(result.current, SLOT_SNOWSHINE, 0); });
-    placeUlt(result, 5 * FPS);
+  it('E3: Snow Zone duration stays at 5s regardless of potential (P3 does NOT affect the zone itself)', () => {
+    for (const potential of [0, 3, 5]) {
+      const { result } = setupSnowshine();
+      setPotential(result, potential);
+      act(() => { setUltimateEnergyToMax(result.current, SLOT_SNOWSHINE, 0); });
+      placeUlt(result, 5 * FPS);
 
-    const snowZones = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === SNOW_ZONE_STATUS_ID && ev.startFrame > 0,
+      const snowZones = result.current.allProcessedEvents.filter(
+        ev => ev.columnId === SNOW_ZONE_STATUS_ID && ev.startFrame > 0,
+      );
+      expect(snowZones).toHaveLength(1);
+
+      const totalDuration = snowZones[0].segments.reduce(
+        (sum: number, s: { properties: { duration: number } }) => sum + s.properties.duration, 0,
+      );
+      expect(totalDuration).toBe(5 * FPS);
+    }
+  });
+
+  it('E3b: P3 potential extends the forced Solidification duration to zone+2s (5s→7s), Snow Zone stays 5s', () => {
+    // P0 — Solidification duration = 5s (base 5 + P0 bonus 0)
+    const { result: resultP0 } = setupSnowshine();
+    setPotential(resultP0, 0);
+    act(() => { setUltimateEnergyToMax(resultP0.current, SLOT_SNOWSHINE, 0); });
+    placeUlt(resultP0, 5 * FPS);
+    const solP0 = resultP0.current.allProcessedEvents.filter(
+      ev => ev.ownerEntityId === ENEMY_ID && ev.columnId === REACTION_COLUMNS.SOLIDIFICATION,
     );
-    expect(snowZones).toHaveLength(1);
-
-    const totalDuration = snowZones[0].segments.reduce(
+    expect(solP0.length).toBeGreaterThanOrEqual(1);
+    const solDurP0 = solP0[0].segments.reduce(
       (sum: number, s: { properties: { duration: number } }) => sum + s.properties.duration, 0,
     );
-    expect(totalDuration).toBe(7 * FPS);
+    expect(solDurP0).toBe(5 * FPS);
+
+    // P3 — Solidification duration = 7s (base 5 + P3 bonus 2)
+    const { result: resultP3 } = setupSnowshine();
+    setPotential(resultP3, 3);
+    act(() => { setUltimateEnergyToMax(resultP3.current, SLOT_SNOWSHINE, 0); });
+    placeUlt(resultP3, 5 * FPS);
+    const solP3 = resultP3.current.allProcessedEvents.filter(
+      ev => ev.ownerEntityId === ENEMY_ID && ev.columnId === REACTION_COLUMNS.SOLIDIFICATION,
+    );
+    expect(solP3.length).toBeGreaterThanOrEqual(1);
+    const solDurP3 = solP3[0].segments.reduce(
+      (sum: number, s: { properties: { duration: number } }) => sum + s.properties.duration, 0,
+    );
+    expect(solDurP3).toBe(7 * FPS);
   });
 
   it('E4: Ultimate energy cost is 80 at all potential levels (no UE-cost reduction)', () => {
