@@ -203,7 +203,16 @@ export function translateCondition(c: Record<string, unknown>): string {
   }
   if (c.cardinalityConstraint) {
     parts.push(translateDslToken(String(c.cardinalityConstraint)).toLowerCase());
-    if (c.value != null) parts.push(displayValue(c.value));
+    // The threshold can live in either `c.value` (direct form) or
+    // `c.with.value` (extended ValueNode form). The engine's condition
+    // evaluator supports both (conditionEvaluator.ts:resolveConditionThreshold),
+    // and this translator must mirror it — otherwise the info-pane card for
+    // a condition like `HAVE POTENTIAL GREATER_THAN_EQUAL with.value=5` would
+    // render as "source Operator Have Potential at least" with no number.
+    const directValue = c.value;
+    const withBlock = c.with as Record<string, unknown> | undefined;
+    const thresholdValue = directValue ?? withBlock?.value;
+    if (thresholdValue != null) parts.push(displayValue(thresholdValue));
   }
   return parts.join(' ');
 }
