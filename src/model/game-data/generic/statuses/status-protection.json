@@ -23,6 +23,7 @@
     "description": "Reduces incoming damage by a percentage."
   },
   "metadata": {
-    "originId": "generic"
+    "originId": "generic",
+    "dataStatus": "VERIFIED"
   }
 }
