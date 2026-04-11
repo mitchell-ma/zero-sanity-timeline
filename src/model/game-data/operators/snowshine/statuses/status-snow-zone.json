@@ -1,0 +1,49 @@
+{
+  "properties": {
+    "id": "SNOW_ZONE",
+    "name": "Snow Zone",
+    "to": "ENEMY",
+    "duration": {
+      "value": {
+        "operation": "ADD",
+        "left": {
+          "verb": "IS",
+          "value": 5
+        },
+        "right": {
+          "verb": "VARY_BY",
+          "object": "POTENTIAL",
+          "value": [
+            0,
+            0,
+            0,
+            2,
+            2,
+            2
+          ],
+          "of": {
+            "object": "OPERATOR",
+            "determiner": "SOURCE"
+          }
+        }
+      },
+      "unit": "SECOND"
+    },
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 1
+      },
+      "interactionType": "RESET"
+    },
+    "eventType": "STATUS",
+    "eventIdType": "SKILL_STATUS",
+    "element": "CRYO",
+    "description": "A freezing zone that forcibly applies Solidification to enemies caught within. Duration extends by 2s at potential 3+."
+  },
+  "metadata": {
+    "originId": "SNOWSHINE",
+    "dataStatus": "VERIFIED"
+  },
+  "clauseType": "ALL"
+}

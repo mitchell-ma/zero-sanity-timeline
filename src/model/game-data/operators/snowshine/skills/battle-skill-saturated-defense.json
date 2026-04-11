@@ -27,7 +27,7 @@
   "metadata": {
     "originId": "SNOWSHINE",
     "icon": "skills/skill_snowshine.png",
-    "dataStatus": "RECONCILED"
+    "dataStatus": "VERIFIED"
   },
   "segments": [
     {
@@ -68,119 +68,13 @@
                       "value": 30
                     }
                   }
-                }
-              ]
-            }
-          ],
-          "clauseType": "ALL"
-        },
-        {
-          "metadata": {
-            "eventComponentType": "FRAME",
-            "dataSources": [
-              "END_AXIS"
-            ]
-          },
-          "properties": {
-            "offset": {
-              "value": 3.57,
-              "unit": "SECOND"
-            }
-          },
-          "clause": [
-            {
-              "conditions": [],
-              "effects": [
-                {
-                  "verb": "DEAL",
-                  "object": "STAGGER",
-                  "to": "ENEMY",
-                  "with": {
-                    "value": {
-                      "verb": "IS",
-                      "value": 20
-                    }
-                  }
                 },
                 {
                   "verb": "APPLY",
-                  "object": "INFLICTION",
-                  "objectQualifier": "CRYO",
-                  "to": "ENEMY",
-                  "with": {
-                    "stacks": {
-                      "verb": "IS",
-                      "value": 1
-                    }
-                  }
-                },
-                {
-                  "verb": "DEAL",
-                  "objectQualifier": "CRYO",
-                  "object": "DAMAGE",
-                  "to": "ENEMY",
-                  "with": {
-                    "value": {
-                      "verb": "VARY_BY",
-                      "object": "SKILL_LEVEL",
-                      "value": [
-                        2,
-                        2.2,
-                        2.4,
-                        2.6,
-                        2.8,
-                        3,
-                        3.2,
-                        3.4,
-                        3.6,
-                        3.85,
-                        4.15,
-                        4.5
-                      ],
-                      "of": {
-                        "object": "OPERATOR",
-                        "determiner": "THIS"
-                      }
-                    },
-                    "mainStat": {
-                      "verb": "IS",
-                      "object": "STAT",
-                      "objectId": "ATTACK",
-                      "of": {
-                        "object": "OPERATOR",
-                        "determiner": "THIS"
-                      }
-                    }
-                  }
-                }
-              ]
-            },
-            {
-              "conditions": [
-                {
-                  "subjectDeterminer": "THIS",
-                  "subject": "OPERATOR",
-                  "verb": "HAVE",
-                  "object": "POTENTIAL",
-                  "cardinalityConstraint": "GREATER_THAN_EQUAL",
-                  "with": {
-                    "value": {
-                      "verb": "IS",
-                      "value": 5
-                    }
-                  }
-                }
-              ],
-              "effects": [
-                {
-                  "verb": "RETURN",
-                  "object": "SKILL_POINT",
-                  "with": {
-                    "value": {
-                      "verb": "IS",
-                      "value": 10
-                    }
-                  }
+                  "object": "STATUS",
+                  "objectId": "SATURATED_DEFENSE_RETALIATION",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR"
                 }
               ]
             }

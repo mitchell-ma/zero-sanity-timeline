@@ -1,0 +1,425 @@
+{
+  "properties": {
+    "id": "SNOWFIELD_SAR_ASSISTANCE",
+    "name": "Snowfield SAR Assistance",
+    "to": "OPERATOR",
+    "toDeterminer": "ALL",
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": 3
+      },
+      "unit": "SECOND"
+    },
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 1
+      },
+      "interactionType": "RESET"
+    },
+    "eventType": "STATUS",
+    "eventIdType": "SKILL_STATUS",
+    "description": "Snowfield SAR Assistant: instant HP Treatment followed by continuous HP Treatment over 3 seconds. Treatment values are scaled by Polar Survival (T1)."
+  },
+  "metadata": {
+    "originId": "SNOWSHINE",
+    "dataStatus": "VERIFIED"
+  },
+  "segments": [
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT"
+      },
+      "properties": {
+        "name": "SAR Assistance",
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 3
+          },
+          "unit": "SECOND"
+        }
+      },
+      "frames": [
+        {
+          "metadata": {
+            "eventComponentType": "FRAME"
+          },
+          "properties": {
+            "offset": {
+              "value": 0,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "APPLY",
+                  "object": "STAT",
+                  "objectId": "TREATMENT",
+                  "toDeterminer": "ALL",
+                  "to": "OPERATOR",
+                  "with": {
+                    "healBase": {
+                      "operation": "MULT",
+                      "left": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          96,
+                          115,
+                          134,
+                          154,
+                          163,
+                          173,
+                          182,
+                          192,
+                          202,
+                          206,
+                          211,
+                          216
+                        ],
+                        "of": {
+                          "object": "OPERATOR",
+                          "determiner": "SOURCE"
+                        }
+                      },
+                      "right": {
+                        "operation": "ADD",
+                        "left": {
+                          "verb": "IS",
+                          "value": 1
+                        },
+                        "right": {
+                          "verb": "VARY_BY",
+                          "object": "TALENT_LEVEL",
+                          "value": [
+                            0.15,
+                            0.25
+                          ],
+                          "of": {
+                            "object": "OPERATOR",
+                            "determiner": "SOURCE"
+                          }
+                        }
+                      }
+                    },
+                    "willAdditive": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.22,
+                        0.27,
+                        0.31,
+                        0.36,
+                        0.38,
+                        0.4,
+                        0.43,
+                        0.45,
+                        0.47,
+                        0.48,
+                        0.49,
+                        0.5
+                      ],
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "SOURCE"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
+        },
+        {
+          "metadata": {
+            "eventComponentType": "FRAME"
+          },
+          "properties": {
+            "offset": {
+              "value": 1,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "APPLY",
+                  "object": "STAT",
+                  "objectId": "TREATMENT",
+                  "toDeterminer": "ALL",
+                  "to": "OPERATOR",
+                  "with": {
+                    "healBase": {
+                      "operation": "MULT",
+                      "left": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          24,
+                          29,
+                          34,
+                          38,
+                          41,
+                          43,
+                          46,
+                          48,
+                          50,
+                          52,
+                          53,
+                          54
+                        ],
+                        "of": {
+                          "object": "OPERATOR",
+                          "determiner": "SOURCE"
+                        }
+                      },
+                      "right": {
+                        "operation": "ADD",
+                        "left": {
+                          "verb": "IS",
+                          "value": 1
+                        },
+                        "right": {
+                          "verb": "VARY_BY",
+                          "object": "TALENT_LEVEL",
+                          "value": [
+                            0.15,
+                            0.25
+                          ],
+                          "of": {
+                            "object": "OPERATOR",
+                            "determiner": "SOURCE"
+                          }
+                        }
+                      }
+                    },
+                    "willAdditive": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.06,
+                        0.07,
+                        0.08,
+                        0.09,
+                        0.1,
+                        0.1,
+                        0.11,
+                        0.11,
+                        0.12,
+                        0.12,
+                        0.12,
+                        0.13
+                      ],
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "SOURCE"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
+        },
+        {
+          "metadata": {
+            "eventComponentType": "FRAME"
+          },
+          "properties": {
+            "offset": {
+              "value": 2,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "APPLY",
+                  "object": "STAT",
+                  "objectId": "TREATMENT",
+                  "toDeterminer": "ALL",
+                  "to": "OPERATOR",
+                  "with": {
+                    "healBase": {
+                      "operation": "MULT",
+                      "left": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          24,
+                          29,
+                          34,
+                          38,
+                          41,
+                          43,
+                          46,
+                          48,
+                          50,
+                          52,
+                          53,
+                          54
+                        ],
+                        "of": {
+                          "object": "OPERATOR",
+                          "determiner": "SOURCE"
+                        }
+                      },
+                      "right": {
+                        "operation": "ADD",
+                        "left": {
+                          "verb": "IS",
+                          "value": 1
+                        },
+                        "right": {
+                          "verb": "VARY_BY",
+                          "object": "TALENT_LEVEL",
+                          "value": [
+                            0.15,
+                            0.25
+                          ],
+                          "of": {
+                            "object": "OPERATOR",
+                            "determiner": "SOURCE"
+                          }
+                        }
+                      }
+                    },
+                    "willAdditive": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.06,
+                        0.07,
+                        0.08,
+                        0.09,
+                        0.1,
+                        0.1,
+                        0.11,
+                        0.11,
+                        0.12,
+                        0.12,
+                        0.12,
+                        0.13
+                      ],
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "SOURCE"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
+        },
+        {
+          "metadata": {
+            "eventComponentType": "FRAME"
+          },
+          "properties": {
+            "offset": {
+              "value": 3,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "APPLY",
+                  "object": "STAT",
+                  "objectId": "TREATMENT",
+                  "toDeterminer": "ALL",
+                  "to": "OPERATOR",
+                  "with": {
+                    "healBase": {
+                      "operation": "MULT",
+                      "left": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          24,
+                          29,
+                          34,
+                          38,
+                          41,
+                          43,
+                          46,
+                          48,
+                          50,
+                          52,
+                          53,
+                          54
+                        ],
+                        "of": {
+                          "object": "OPERATOR",
+                          "determiner": "SOURCE"
+                        }
+                      },
+                      "right": {
+                        "operation": "ADD",
+                        "left": {
+                          "verb": "IS",
+                          "value": 1
+                        },
+                        "right": {
+                          "verb": "VARY_BY",
+                          "object": "TALENT_LEVEL",
+                          "value": [
+                            0.15,
+                            0.25
+                          ],
+                          "of": {
+                            "object": "OPERATOR",
+                            "determiner": "SOURCE"
+                          }
+                        }
+                      }
+                    },
+                    "willAdditive": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.06,
+                        0.07,
+                        0.08,
+                        0.09,
+                        0.1,
+                        0.1,
+                        0.11,
+                        0.11,
+                        0.12,
+                        0.12,
+                        0.12,
+                        0.13
+                      ],
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "SOURCE"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
+        }
+      ]
+    }
+  ],
+  "clauseType": "ALL"
+}

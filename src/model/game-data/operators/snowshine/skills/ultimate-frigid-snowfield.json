@@ -150,12 +150,42 @@
                   "verb": "APPLY",
                   "object": "STATUS",
                   "objectId": "SNOW_ZONE",
+                  "to": "ENEMY"
+                },
+                {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "REACTION",
+                  "objectQualifier": "SOLIDIFICATION",
                   "to": "ENEMY",
                   "with": {
+                    "isForced": {
+                      "verb": "IS",
+                      "value": 1
+                    },
                     "duration": {
                       "value": {
-                        "verb": "IS",
-                        "value": 5
+                        "operation": "ADD",
+                        "left": {
+                          "verb": "IS",
+                          "value": 5
+                        },
+                        "right": {
+                          "verb": "VARY_BY",
+                          "object": "POTENTIAL",
+                          "value": [
+                            0,
+                            0,
+                            0,
+                            2,
+                            2,
+                            2
+                          ],
+                          "of": {
+                            "object": "OPERATOR",
+                            "determiner": "THIS"
+                          }
+                        }
                       },
                       "unit": "SECOND"
                     }
@@ -172,7 +202,7 @@
   "metadata": {
     "originId": "SNOWSHINE",
     "icon": "skills/ult_snowshine.png",
-    "dataStatus": "RECONCILED"
+    "dataStatus": "VERIFIED"
   },
   "clauseType": "ALL"
 }

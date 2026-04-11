@@ -12,6 +12,24 @@ The talent file is currently description-only. Once the DSL is added, bake the e
 into `src/model/game-data/operators/estella/talents/talent-laziness-pays-off-now-talent.json`
 using `VARY_BY TALENT_LEVEL`.
 
+Blocked operators (description-only until both primitives land):
+- Estella T2 — Cryo IGNORE INFLICTION + Cryo MITIGATE
+- Snowshine P1 (Cold Shelter) — Arts IGNORE INFLICTION on operators with Protection
+- Snowshine P1 — also requires enemy→operator infliction application mechanics (currently
+  inflictions only flow operator→enemy in the engine)
+- Arclight T2 — IGNORE INFLICTION + elemental MITIGATE
+- Antal / Fluorite (pre-existing notes)
+
+## Spatial mechanics (radius / area buffs)
+
+The engine has no spatial model — operators and enemies are abstract slots, not positioned
+entities. Several effects depend on real spatial radii:
+
+- Snowshine P2 (Storm Region) — Ult effect radius +20%
+- Snowshine P3 (Polar Survival Guide) — partial: the duration component is baked into the
+  SNOW_ZONE status, but any radius bonus on the spatial Snow Zone effect is not modelled
+- Antal / others (pre-existing notes if applicable)
+
 ## Remove weaponSkillEffects.ts and related weapon effect infrastructure
 
 The weapon status timeline columns have been removed from the column builder and view.
@@ -169,6 +187,16 @@ These sets have HP-threshold conditions but are metadata-only with zero clauses:
 - Arclight Hannabit Wisdom (50% Arts Infliction ignore)
 - Ardelia Mountainpeak Surfer (spatial recast)
 - Snowshine SAR Professional (RETALIATE verb — no DSL equivalent)
+
+## Spatial / targeting mechanics
+
+Features that depend on range, first-enemy-hit, or proximity are not modellable in the
+current timeline-based engine:
+
+- **Estella P3 Delayed Work** — battle skill Onomatopoeia damage multiplier is baked via
+  `VARY_BY POTENTIAL`, but the "+50% range" and "first enemy hit bonus damage" portions of
+  the potential are not modelled (no spatial awareness in the engine).
+- **Ardelia T1 Friendly Presence** — see "Unimplemented mechanics — Ardelia T1" below.
 
 ## Integration tests — deeper mechanics (remaining)
 

@@ -1,0 +1,52 @@
+{
+  "properties": {
+    "id": "SATURATED_DEFENSE_RETALIATION",
+    "name": "Saturated Defense Retaliation",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": 4.5
+      },
+      "unit": "SECOND"
+    },
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 1
+      },
+      "interactionType": "RESET"
+    },
+    "eventType": "STATUS",
+    "eventIdType": "SKILL_STATUS",
+    "description": "While the Saturated Defense shield is up, retaliates against attackers with Cryo DMG, Cryo Infliction, and stagger. Each retaliation also recovers Ultimate Energy via SAR Professional (T2)."
+  },
+  "metadata": {
+    "originId": "SNOWSHINE",
+    "dataStatus": "VERIFIED"
+  },
+  "onTriggerClause": [
+    {
+      "conditions": [
+        {
+          "subject": "ENEMY",
+          "verb": "DEAL",
+          "object": "DAMAGE",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "SATURATED_DEFENSE_RETALIATION_BURST",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
+        }
+      ]
+    }
+  ],
+  "clauseType": "ALL"
+}

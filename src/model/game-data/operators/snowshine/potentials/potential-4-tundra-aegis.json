@@ -1,14 +1,48 @@
 {
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STAT",
+          "objectId": "BASE_DEFENSE",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": 20
+            }
+          }
+        },
+        {
+          "verb": "APPLY",
+          "object": "STAT",
+          "objectId": "WILL",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": 20
+            }
+          }
+        }
+      ]
+    }
+  ],
   "properties": {
     "id": "SNOWSHINE_POTENTIAL_4",
     "name": "Tundra Aegis (P4)",
     "level": 4,
     "eventType": "POTENTIAL_EVENT",
     "eventIdType": "POTENTIAL",
-    "description": "DEF +{Def:0}, Will +{Will:0}."
+    "description": "DEF +20, Will +20."
   },
   "metadata": {
     "originId": "SNOWSHINE",
-    "dataStatus": "RECONCILED"
-  }
+    "dataStatus": "VERIFIED"
+  },
+  "clauseType": "ALL"
 }

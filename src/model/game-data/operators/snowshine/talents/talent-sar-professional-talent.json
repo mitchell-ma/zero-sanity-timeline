@@ -1,38 +1,4 @@
 {
-  "onTriggerClause": [
-    {
-      "conditions": [
-        {
-          "subjectDeterminer": "THIS",
-          "subject": "OPERATOR",
-          "verb": "RETALIATE",
-          "object": "ENEMY"
-        }
-      ],
-      "effects": [
-        {
-          "verb": "RECOVER",
-          "object": "ULTIMATE_ENERGY",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR",
-          "with": {
-            "value": {
-              "verb": "VARY_BY",
-              "object": "TALENT_LEVEL",
-              "value": [
-                6,
-                10
-              ],
-              "of": {
-                "object": "OPERATOR",
-                "determiner": "THIS"
-              }
-            }
-          }
-        }
-      ]
-    }
-  ],
   "properties": {
     "id": "SAR_PROFESSIONAL_TALENT",
     "maxLevel": {
@@ -44,7 +10,7 @@
     "toDeterminer": "THIS",
     "eventType": "STATUS",
     "eventIdType": "TALENT",
-    "description": "Battle skill Saturated Defense improved: After successfully retaliating an enemy attack, Snowshine gains another 10 Ultimate Energy. (RETALIATE is a placeholder verb \u2014 no DSL equivalent yet)"
+    "description": "After each successful retaliation while Saturated Defense's shield is active, Snowshine gains 6 (T1) / 10 (T2) Ultimate Energy. Effect is baked into the Saturated Defense Retaliation status."
   },
   "metadata": {
     "originId": "SNOWSHINE",
@@ -52,6 +18,6 @@
       "ENDFIELD_WIKI"
     ],
     "icon": "skills/snowshine_talent_2_icon.png",
-    "dataStatus": "RECONCILED"
+    "dataStatus": "VERIFIED"
   }
 }

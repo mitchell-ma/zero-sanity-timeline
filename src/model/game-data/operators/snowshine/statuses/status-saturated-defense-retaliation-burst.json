@@ -1,0 +1,181 @@
+{
+  "properties": {
+    "id": "SATURATED_DEFENSE_RETALIATION_BURST",
+    "name": "Saturated Defense Retaliation Burst",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": 0.2
+      },
+      "unit": "SECOND"
+    },
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 1
+      },
+      "interactionType": "RESET"
+    },
+    "eventType": "STATUS",
+    "eventIdType": "SKILL_STATUS",
+    "element": "CRYO",
+    "description": "Single retaliation hit fired by Saturated Defense Retaliation. Deals Cryo DMG, applies Cryo Infliction and stagger, recovers Ultimate Energy via SAR Professional, and at P5+ returns Skill Points."
+  },
+  "metadata": {
+    "originId": "SNOWSHINE",
+    "dataStatus": "VERIFIED"
+  },
+  "segments": [
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT"
+      },
+      "properties": {
+        "name": "Retaliation",
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 0.2
+          },
+          "unit": "SECOND"
+        },
+        "element": "CRYO"
+      },
+      "frames": [
+        {
+          "metadata": {
+            "eventComponentType": "FRAME"
+          },
+          "properties": {
+            "offset": {
+              "value": 0,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "object": "STAGGER",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 20
+                    }
+                  }
+                },
+                {
+                  "verb": "APPLY",
+                  "object": "INFLICTION",
+                  "objectQualifier": "CRYO",
+                  "to": "ENEMY",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  }
+                },
+                {
+                  "verb": "DEAL",
+                  "objectQualifier": "CRYO",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        2,
+                        2.2,
+                        2.4,
+                        2.6,
+                        2.8,
+                        3,
+                        3.2,
+                        3.4,
+                        3.6,
+                        3.85,
+                        4.15,
+                        4.5
+                      ],
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "SOURCE"
+                      }
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "SOURCE"
+                      }
+                    }
+                  }
+                },
+                {
+                  "verb": "RECOVER",
+                  "object": "ULTIMATE_ENERGY",
+                  "toDeterminer": "SOURCE",
+                  "to": "OPERATOR",
+                  "with": {
+                    "value": {
+                      "verb": "VARY_BY",
+                      "object": "TALENT_LEVEL",
+                      "value": [
+                        6,
+                        10
+                      ],
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "SOURCE"
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "conditions": [
+                {
+                  "subjectDeterminer": "SOURCE",
+                  "subject": "OPERATOR",
+                  "verb": "HAVE",
+                  "object": "POTENTIAL",
+                  "cardinalityConstraint": "GREATER_THAN_EQUAL",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 5
+                    }
+                  }
+                }
+              ],
+              "effects": [
+                {
+                  "verb": "RETURN",
+                  "object": "SKILL_POINT",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 10
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
+        }
+      ]
+    }
+  ],
+  "clauseType": "ALL"
+}

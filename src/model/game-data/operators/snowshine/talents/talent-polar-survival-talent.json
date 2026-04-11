@@ -1,57 +1,4 @@
 {
-  "clause": [
-    {
-      "conditions": [
-        {
-          "subject": "OPERATOR",
-          "verb": "HAVE",
-          "object": "HP",
-          "cardinalityConstraint": "LESS_THAN_EQUAL",
-          "with": {
-            "value": {
-              "verb": "IS",
-              "value": {
-                "verb": "VARY_BY",
-                "object": "TALENT_LEVEL",
-                "value": [
-                  0.45,
-                  0.55
-                ],
-                "of": {
-                  "object": "OPERATOR",
-                  "determiner": "THIS"
-                }
-              },
-              "unit": "PERCENTAGE"
-            }
-          }
-        }
-      ],
-      "effects": [
-        {
-          "verb": "APPLY",
-          "object": "STAT",
-          "objectId": "TREATMENT_BONUS",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR",
-          "with": {
-            "value": {
-              "verb": "VARY_BY",
-              "object": "TALENT_LEVEL",
-              "value": [
-                0.15,
-                0.25
-              ],
-              "of": {
-                "object": "OPERATOR",
-                "determiner": "THIS"
-              }
-            }
-          }
-        }
-      ]
-    }
-  ],
   "properties": {
     "id": "POLAR_SURVIVAL_TALENT",
     "maxLevel": {
@@ -63,7 +10,7 @@
     "toDeterminer": "THIS",
     "eventType": "STATUS",
     "eventIdType": "TALENT",
-    "description": "Treatment Effect +25% for targets of 55% HP or below."
+    "description": "Snowfield SAR Assistance treatment values are increased by 15% / 25% at talent level 1 / 2."
   },
   "metadata": {
     "originId": "SNOWSHINE",
@@ -72,7 +19,6 @@
       "ENDFIELD_WIKI"
     ],
     "icon": "skills/snowshine_talent_1_icon.png",
-    "dataStatus": "RECONCILED"
-  },
-  "clauseType": "ALL"
+    "dataStatus": "VERIFIED"
+  }
 }
