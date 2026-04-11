@@ -189,6 +189,25 @@ export enum PhysicalStatusType {
   CRUSH = "CRUSH",
 }
 
+/**
+ * Enemy action IDs — event variants the user can place on the enemy-action
+ * column via the context menu. Each action corresponds to one `eventVariant`
+ * in the enemy-action column definition.
+ *
+ * - `AOE_*`: elemental AOE damage actions (generate damage on placement).
+ * - `CHARGE`: wind-up / telegraph state before a big attack. No damage on
+ *   placement; used as a trigger source for operator combo activation
+ *   windows (e.g. Catcher's Timely Suppression on `ENEMY PERFORM STATUS CHARGE`).
+ */
+export enum EnemyActionType {
+  AOE_PHYSICAL = "AOE_PHYSICAL",
+  AOE_HEAT = "AOE_HEAT",
+  AOE_CRYO = "AOE_CRYO",
+  AOE_NATURE = "AOE_NATURE",
+  AOE_ELECTRIC = "AOE_ELECTRIC",
+  CHARGE = "CHARGE",
+}
+
 /** All built-in reaction types = arts reactions + physical statuses. */
 export type ReactionType = ArtsReactionType | PhysicalStatusType;
 
@@ -214,7 +233,11 @@ enum _StatusType {
   FOCUS_EMPOWERED = "FOCUS_EMPOWERED",
   SUSCEPTIBILITY = "SUSCEPTIBILITY",
   FRAGILITY = "FRAGILITY",
-  WEAKEN = "WEAKEN",
+  /** Damage-dealt-reduction debuff applied to the enemy. Applied with a
+   *  multiplicative factor (`with.multiplier`) — the stored `statusValue`
+   *  is the raw multiplier, and the damage calc layer composes it into the
+   *  final damage formula multiplicatively. */
+  WEAKNESS = "WEAKNESS",
   DMG_REDUCTION = "DMG_REDUCTION",
   PROTECTION = "PROTECTION",
 }
@@ -230,7 +253,7 @@ export enum DamageFactorType {
   AMP = "AMP",
   STAGGER = "STAGGER",
   LINK = "LINK",
-  WEAKEN = "WEAKEN",
+  WEAKNESS = "WEAKNESS",
   SUSCEPTIBILITY = "SUSCEPTIBILITY",
   FRAGILITY = "FRAGILITY",
   DMG_REDUCTION = "DMG_REDUCTION",
@@ -256,7 +279,7 @@ export const STATUS_DAMAGE_FACTOR: Partial<Record<string, DamageFactorType>> = {
   [StatusType.FOCUS]: DamageFactorType.SUSCEPTIBILITY,
   [StatusType.SUSCEPTIBILITY]: DamageFactorType.SUSCEPTIBILITY,
   [StatusType.FRAGILITY]: DamageFactorType.FRAGILITY,
-  [StatusType.WEAKEN]: DamageFactorType.WEAKEN,
+  [StatusType.WEAKNESS]: DamageFactorType.WEAKNESS,
   [StatusType.DMG_REDUCTION]: DamageFactorType.DMG_REDUCTION,
   [StatusType.PROTECTION]: DamageFactorType.PROTECTION,
   // Arts reactions

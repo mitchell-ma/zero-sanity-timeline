@@ -27,6 +27,7 @@ import {
 } from '../../../model/channels';
 import {
   resolveEventLabel,
+  computeEventPresentation,
   computeTimelinePresentation,
 } from '../../../controller/timeline/eventPresentationController';
 import { findDealDamageInClauses } from '../../../controller/timeline/clauseQueries';
@@ -208,7 +209,35 @@ describe('Freeform Combustion Reaction', () => {
     expect(segment.properties.name).toContain('I');
   });
 
-  it('5. Freeform combustion has initial 0s DEAL DAMAGE frame + DoT ticks', () => {
+  it('5. Freeform combustion has creationInteractionMode and is draggable', () => {
+    const { result } = renderHook(() => useApp());
+    act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
+    act(() => { placeFreeformCombustion(result.current, 0); });
+
+    const combustionEvents = getCombustionEvents(result.current);
+    expect(combustionEvents).toHaveLength(1);
+    const ev = combustionEvents[0];
+
+    // creationInteractionMode must be propagated through the reaction pipeline
+    expect(ev.creationInteractionMode).toBe(InteractionModeType.FREEFORM);
+
+    // View layer: presentation should NOT be notDraggable
+    const enemyCol = findEnemyStatusColumn(result.current);
+    expect(enemyCol).toBeDefined();
+    const emptyMap = new Map<string, string>();
+    const pres = computeEventPresentation(ev, enemyCol!, {
+      slotElementColors: {},
+      autoFinisherIds: new Set(),
+      validationMaps: {
+        combo: emptyMap, resource: emptyMap, empowered: emptyMap,
+        enhanced: emptyMap, regularBasic: emptyMap, clause: emptyMap,
+        finisherStagger: emptyMap, timeStop: emptyMap, infliction: emptyMap,
+      },
+    });
+    expect(pres.notDraggable).toBe(false);
+  });
+
+  it('6. Freeform combustion has initial 0s DEAL DAMAGE frame + DoT ticks', () => {
     const { result } = renderHook(() => useApp());
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
     act(() => { placeFreeformCombustion(result.current, 0); });

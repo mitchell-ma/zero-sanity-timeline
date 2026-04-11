@@ -247,9 +247,9 @@ export interface TimelineEvent {
   comboChainFreezeEnd?: number;
   /** Validation warnings (e.g. event starts inside an invalid time-stop period). */
   warnings?: string[];
-  /** Magnitude of a status effect (e.g. 0.15 for 15% amp, 0.30 for 30% link bonus, 0.10 for 10% weaken). */
+  /** Magnitude of a status effect (e.g. 0.15 for 15% amp, 0.30 for 30% link bonus, 0.10 for 10% weakness). */
   statusValue?: number;
-  /** Damage formula factor this status contributes to (e.g. AMP, WEAKEN, SUSCEPTIBILITY). */
+  /** Damage formula factor this status contributes to (e.g. AMP, WEAKNESS, SUSCEPTIBILITY). */
   damageFactorType?: DamageFactorType;
   /** Interaction mode at creation time — determines pipeline routing (strict = input, freeform = derived). */
   creationInteractionMode?: InteractionModeType;

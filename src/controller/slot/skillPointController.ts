@@ -194,13 +194,16 @@ export class SkillPointController {
 
   /**
    * Reset accumulated state for a new pipeline run. Called once per run
-   * before the drain begins. Does NOT clear the subtimeline/graph — the
-   * next flushSpEvents replaces it.
+   * before the drain begins. Empties the subtimeline eagerly so that a run
+   * with zero battle-skill events (e.g. a fresh loadout) doesn't inherit
+   * the previous run's SP consumption graph — later addCost/addRecovery
+   * calls will repopulate it via flushSpEvents.
    */
   clearPending() {
     this.pendingSpEvents = [];
     this.battleSkillGainFrames = new Map();
     this.slotSpCosts = new Map();
+    this.subtimeline.setEvents([]);
   }
 
   clear(): void {

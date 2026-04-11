@@ -8,6 +8,7 @@ export const DEFAULT_STATS: Readonly<Record<StatType, number>> = {
   [StatType.BASE_HP]: 0,
   [StatType.BASE_DEFENSE]: 0,
   [StatType.BASE_ATTACK]: 0,
+  [StatType.FLAT_ATTACK]: 0,
   [StatType.ATTACK_BONUS]: 0,
   [StatType.STRENGTH]: 0,
   [StatType.STRENGTH_BONUS]: 0,
@@ -17,6 +18,10 @@ export const DEFAULT_STATS: Readonly<Record<StatType, number>> = {
   [StatType.INTELLECT_BONUS]: 0,
   [StatType.WILL]: 0,
   [StatType.WILL_BONUS]: 0,
+  // Virtual aliases — never stored under these keys; loadout aggregator
+  // translates them to the operator's actual main/secondary attribute.
+  [StatType.MAIN_ATTRIBUTE]: 0,
+  [StatType.SECONDARY_ATTRIBUTE]: 0,
   [StatType.CRITICAL_RATE]: 0.05,
   [StatType.CRITICAL_DAMAGE]: 0.5,
   [StatType.ARTS_INTENSITY]: 0,
@@ -65,6 +70,10 @@ export const DEFAULT_STATS: Readonly<Record<StatType, number>> = {
   [StatType.FINISHER_SP_GAIN]: 0,
   [StatType.ATTACK_RANGE]: 0,
   [StatType.WEIGHT]: 0,
+  // WEAKNESS stat starts at 1 (identity for multiplicative stacking): the enemy's
+  // damage-output multiplier. Each APPLY STAT WEAKNESS uses with.multiplier which
+  // multiplies this value (e.g. 0.8 × 0.8 = 0.64 for two 20% weakness sources).
+  [StatType.WEAKNESS]: 1,
   [StatType.SLOW]: 0,
   [StatType.STAGGER_FRAILTY]: 0,
 };

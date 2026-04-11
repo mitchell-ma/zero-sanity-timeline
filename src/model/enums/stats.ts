@@ -4,6 +4,10 @@ export enum StatType {
   BASE_HP = "BASE_HP",
   BASE_DEFENSE = "BASE_DEFENSE",
   BASE_ATTACK = "BASE_ATTACK",
+  /** Flat ATK additions from APPLY STAT effects (weapon skills, gear, consumables).
+   *  Distinct from BASE_ATTACK (operator/weapon level-table base) and ATTACK_BONUS
+   *  (percentage). Summed into totalAttack as a pure flat addition. */
+  FLAT_ATTACK = "FLAT_ATTACK",
   ATTACK_BONUS = "ATTACK_BONUS",
   STRENGTH = "STRENGTH",
   STRENGTH_BONUS = "STRENGTH_BONUS",
@@ -13,6 +17,11 @@ export enum StatType {
   INTELLECT_BONUS = "INTELLECT_BONUS",
   WILL = "WILL",
   WILL_BONUS = "WILL_BONUS",
+  /** Virtual alias — resolves to the operator's main attribute (STR/AGI/INT/WILL)
+   *  at the loadout aggregator. Never stored as itself; always translated. */
+  MAIN_ATTRIBUTE = "MAIN_ATTRIBUTE",
+  /** Virtual alias — resolves to the operator's secondary attribute. */
+  SECONDARY_ATTRIBUTE = "SECONDARY_ATTRIBUTE",
   // ── Combat stats ─────────────────────────────────────────────────────────────
   CRITICAL_RATE = "CRITICAL_RATE",
   CRITICAL_DAMAGE = "CRITICAL_DAMAGE",
@@ -60,6 +69,8 @@ export enum StatType {
   ELECTRIC_SUSCEPTIBILITY = "ELECTRIC_SUSCEPTIBILITY",
   PHYSICAL_SUSCEPTIBILITY = "PHYSICAL_SUSCEPTIBILITY",
   // ── Debuff stats ─────────────────────────────────────────────────────────────
+  /** Damage dealt reduction debuff on enemy (percentage). Damage formula uses (1 - WEAKNESS). */
+  WEAKNESS = "WEAKNESS",
   /** Movement speed reduction (percentage). Applied by statuses with SLOW effects. */
   SLOW = "SLOW",
   /** Stagger frailty — non-zero while enemy is in any stagger state. Stat-based trigger source. */
@@ -87,6 +98,7 @@ export const STAT_ATTRIBUTION: Record<StatType, StatOwnerType[]> = {
   [StatType.FLAT_HP]: [StatOwnerType.OPERATOR, StatOwnerType.ENEMY],
   [StatType.HP_BONUS]: [StatOwnerType.OPERATOR, StatOwnerType.ENEMY],
   [StatType.BASE_ATTACK]: [StatOwnerType.OPERATOR, StatOwnerType.ENEMY, StatOwnerType.WEAPON],
+  [StatType.FLAT_ATTACK]: [StatOwnerType.OPERATOR, StatOwnerType.WEAPON, StatOwnerType.SKILL],
   [StatType.BASE_DEFENSE]: [StatOwnerType.OPERATOR, StatOwnerType.ENEMY],
   [StatType.PHYSICAL_RESISTANCE]: [StatOwnerType.OPERATOR, StatOwnerType.ENEMY],
   [StatType.ARTS_RESISTANCE]: [StatOwnerType.OPERATOR],
@@ -105,6 +117,10 @@ export const STAT_ATTRIBUTION: Record<StatType, StatOwnerType[]> = {
   [StatType.INTELLECT_BONUS]: [StatOwnerType.OPERATOR, StatOwnerType.WEAPON],
   [StatType.WILL]: [StatOwnerType.OPERATOR],
   [StatType.WILL_BONUS]: [StatOwnerType.OPERATOR, StatOwnerType.WEAPON, StatOwnerType.SKILL],
+  // Virtual aliases — translated to the operator's main/secondary attribute
+  // by the loadout aggregator. No real owner; never persisted under these keys.
+  [StatType.MAIN_ATTRIBUTE]: [],
+  [StatType.SECONDARY_ATTRIBUTE]: [],
   // ── Combat stats ──────────────────────────────────────────────────────────
   [StatType.ATTACK_BONUS]: [StatOwnerType.OPERATOR, StatOwnerType.WEAPON, StatOwnerType.SKILL],
   [StatType.CRITICAL_RATE]: [StatOwnerType.OPERATOR, StatOwnerType.WEAPON, StatOwnerType.SKILL],
@@ -146,6 +162,7 @@ export const STAT_ATTRIBUTION: Record<StatType, StatOwnerType[]> = {
   [StatType.FINISHER_SP_GAIN]: [StatOwnerType.ENEMY],
   [StatType.ATTACK_RANGE]: [StatOwnerType.ENEMY],
   [StatType.WEIGHT]: [StatOwnerType.ENEMY],
+  [StatType.WEAKNESS]: [StatOwnerType.ENEMY],
   [StatType.SLOW]: [StatOwnerType.ENEMY],
   [StatType.STAGGER_FRAILTY]: [StatOwnerType.ENEMY],
 };

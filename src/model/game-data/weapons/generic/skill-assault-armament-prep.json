@@ -6,7 +6,7 @@
         {
           "verb": "APPLY",
           "object": "STAT",
-          "objectId": "MAIN_ATTRIBUTE",
+          "objectId": "FLAT_ATTACK",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
@@ -19,9 +19,9 @@
                 26,
                 34,
                 42,
-                50,
-                58,
-                66,
+                51,
+                59,
+                67,
                 79
               ],
               "of": {
@@ -30,34 +30,6 @@
               }
             }
           }
-        },
-        {
-          "verb": "APPLY",
-          "object": "STAT",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR",
-          "with": {
-            "value": {
-              "verb": "VARY_BY",
-              "object": "SKILL_LEVEL",
-              "value": [
-                0.12,
-                0.144,
-                0.168,
-                0.192,
-                0.216,
-                0.24,
-                0.264,
-                0.288,
-                0.336
-              ],
-              "of": {
-                "object": "OPERATOR",
-                "determiner": "THIS"
-              }
-            }
-          },
-          "objectId": "ATTACK_BONUS"
         }
       ]
     }
@@ -65,7 +37,7 @@
   "properties": {
     "id": "ASSAULT_ARMAMENT_PREP",
     "name": "Assault: Armament Prep",
-    "description": "Main attribute + ATK +"
+    "description": "ATK +"
   },
   "metadata": {
     "originId": "game",

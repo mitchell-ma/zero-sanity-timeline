@@ -59,6 +59,7 @@ export class InflictionColumn implements EventColumn {
             uid: `${incomingUid}-reaction`,
             stacks: otherActive.length,
             parents: reactionParents,
+            ...(options?.event ? { event: options.event } : {}),
           });
           // Emit a consumed copy of the incoming infliction for freeform state tracking
           const consumed = allocDerivedEvent();
@@ -72,6 +73,7 @@ export class InflictionColumn implements EventColumn {
           consumed.sourceEntityId = source.ownerEntityId;
           consumed.sourceSkillName = source.skillName;
           consumed.eventStatus = EventStatusType.CONSUMED;
+          if (options?.event) Object.assign(consumed, options.event);
           if (source.sourceEventUid) this.host.linkTransition(consumed.uid, source.sourceEventUid);
           this.host.pushToOutput(consumed);
           return true;
@@ -102,6 +104,7 @@ export class InflictionColumn implements EventColumn {
     ev.sourceEntityId = source.ownerEntityId;
     ev.sourceSkillName = source.skillName;
     if (isArtsBurst) ev.isArtsBurst = true;
+    if (options?.event) Object.assign(ev, options.event);
 
     this.host.pushEvent(ev);
 

@@ -186,16 +186,22 @@ export class OperatorStatus {
       const durationFrames = durConfig
         ? Math.round(resolveValueNode(durConfig.value as import('../../dsl/semantics').ValueNode, DEFAULT_VALUE_CONTEXT) * FPS)
         : 0;
+      const segElement = segProps?.element as string | undefined;
       const segData: EventSegmentData = {
         properties: {
           duration: durationFrames,
           name: segProps?.name as string | undefined,
+          element: segElement,
         },
       };
       if (seg.frames && seg.frames.length > 0) {
-        segData.frames = seg.frames.map(
-          f => new DataDrivenSkillEventFrame(f as Record<string, unknown>).toMarker(FPS) as EventFrameMarker,
-        );
+        segData.frames = seg.frames.map(f => {
+          const marker = new DataDrivenSkillEventFrame(f as Record<string, unknown>).toMarker(FPS) as EventFrameMarker;
+          // Inherit segment element for frame diamond coloring when the frame
+          // doesn't specify its own.
+          if (!marker.damageElement && segElement) marker.damageElement = segElement;
+          return marker;
+        });
       }
       return segData;
     });

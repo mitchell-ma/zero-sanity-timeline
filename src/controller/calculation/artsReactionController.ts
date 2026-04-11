@@ -8,12 +8,13 @@
  * Status damage formula:
  *   StatusDamage = Attack × StatusBaseMultiplier × ArtsIntensityMultiplier
  *               × HiddenMultiplier × DefenseMultiplier × ResistanceMultiplier
- *               × SusceptibilityMultiplier × WeakenMultiplier
+ *               × SusceptibilityMultiplier × WeaknessMultiplier
  *               × FragilityMultiplier × DMGReductionMultiplier
  */
 
-import { DamageType, ElementType } from '../../consts/enums';
-import { REACTION_COLUMNS } from '../../model/channels';
+import { DamageType, ElementType, StatType } from '../../consts/enums';
+import { ENEMY_ID, REACTION_COLUMNS } from '../../model/channels';
+import { getLastStatAccumulator } from '../timeline/eventQueueController';
 import type { StatusLevel } from '../../consts/types';
 import { TimelineEvent, eventEndFrame } from '../../consts/viewTypes';
 import { resolveEventLabel } from '../timeline/eventPresentationController';
@@ -31,7 +32,7 @@ import {
   getResistanceMultiplier,
   getSusceptibilityMultiplier,
   getFragilityMultiplier,
-  getWeakenMultiplier,
+  getWeaknessMultiplier,
 } from '../../model/calculation/damageFormulas';
 import { Enemy } from '../../model/enemies/enemy';
 import type { DamageTableRow } from './damageTableBuilder';
@@ -121,8 +122,8 @@ function buildBaseParams(
     susceptibilityMultiplier: getSusceptibilityMultiplier(
       statusQuery && frame != null ? statusQuery.getSusceptibilityBonus(frame, element) : 0,
     ),
-    weakenMultiplier: getWeakenMultiplier(
-      statusQuery && frame != null ? statusQuery.getWeakenEffects(frame) : [],
+    weaknessMultiplier: getWeaknessMultiplier(
+      getLastStatAccumulator()?.getStat(ENEMY_ID, StatType.WEAKNESS) ?? 1,
     ),
     fragilityMultiplier: getFragilityMultiplier(
       statusQuery && frame != null ? statusQuery.getFragilityBonus(frame, element) : 0,

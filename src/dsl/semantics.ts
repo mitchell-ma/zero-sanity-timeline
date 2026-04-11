@@ -136,8 +136,6 @@ export enum NounType {
   DAMAGE_TAKEN_BONUS = "DAMAGE_TAKEN_BONUS",
   /** Damage reduction buff on operator. */
   PROTECTED = "PROTECTED",
-  /** Damage dealt reduction debuff on enemy. */
-  WEAKENED = "WEAKENED",
   /** Damage reduction debuff on enemy. Qualified by element. Separate damage factor from SUSCEPTIBILITY. */
   FRAGILITY = "FRAGILITY",
   /** Damage reduction buff on operator (in-game: Sanctuary). */
@@ -1123,7 +1121,6 @@ export const OBJECT_TARGET_MAPPING: Partial<Record<ObjectType, SubjectType[]>> =
   [ObjectType.SUSCEPTIBILITY]: [SubjectType.ENEMY],
   [ObjectType.FRAGILITY]:      [SubjectType.ENEMY],
   [ObjectType.PROTECTED]:      [SubjectType.OPERATOR, NounType.TEAM],
-  [ObjectType.WEAKENED]:       [SubjectType.ENEMY],
   [ObjectType.SANCTUARY]:      [SubjectType.OPERATOR],
   [ObjectType.SHIELD]:         [SubjectType.OPERATOR],
   [ObjectType.WEAKNESS]:       [SubjectType.ENEMY],
@@ -1156,7 +1153,7 @@ export const OBJECT_FORCED_TARGET: Partial<Record<ObjectType, SubjectType>> = Ob
  */
 export const VERB_OBJECT_WITH_PROPERTIES: Record<string, Record<string, string[]>> = {
   [VerbType.APPLY]: {
-    [ObjectType.STATUS]:          ['duration', 'stacks', 'value'],
+    [ObjectType.STATUS]:          ['duration', 'stacks', 'value', 'multiplier'],
     [ObjectType.STAT]:            ['value', 'multiplier'],
     [ObjectType.INFLICTION]:      ['stacks'],
     [ObjectType.REACTION]:        [...Reaction.EDITABLE_PROPERTIES],

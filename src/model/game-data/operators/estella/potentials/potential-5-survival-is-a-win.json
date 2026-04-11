@@ -10,14 +10,6 @@
           "objectId": "REACTION",
           "objectQualifier": "SOLIDIFICATION",
           "to": "ENEMY"
-        },
-        {
-          "subjectDeterminer": "THIS",
-          "subject": "OPERATOR",
-          "verb": "HAVE",
-          "negated": true,
-          "object": "STATUS",
-          "objectId": "SURVIVAL_IS_A_WIN_P5"
         }
       ],
       "effects": [
@@ -115,7 +107,7 @@
     "duration": {
       "value": {
         "verb": "IS",
-        "value": 1
+        "value": 2
       },
       "unit": "SECOND"
     },

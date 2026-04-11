@@ -485,33 +485,63 @@ function ValueLeaf({ node, label }: { node: Record<string, unknown>; label?: str
   if (node.verb === VerbType.VARY_BY && Array.isArray(node.value)) return <VaryByLeaf node={node} label={label} />;
   if (node.object && node.of) {
     const stackOfClause = node.of as { object?: string; objectId?: string; determiner?: string };
-    const ofLabel = stackOfClause.objectId ? ` of ${String(stackOfClause.objectId).replace(/_/g, ' ').toLowerCase()}` : '';
-    return <span className="ops-vt-leaf">{String(node.object).toLowerCase()}{ofLabel}</span>;
+    // Render the `of` phrase from whichever of determiner/objectId/object are present,
+    // e.g. `of this status`, `of whirlpool`, `of cryo infliction`.
+    const ofParts = [
+      stackOfClause.determiner ? String(stackOfClause.determiner).replace(/_/g, ' ').toLowerCase() : undefined,
+      stackOfClause.objectId ? String(stackOfClause.objectId).replace(/_/g, ' ').toLowerCase() : undefined,
+      stackOfClause.object && !stackOfClause.objectId
+        ? String(stackOfClause.object).replace(/_/g, ' ').toLowerCase()
+        : undefined,
+    ].filter(Boolean);
+    const ofLabel = ofParts.length > 0 ? ` of ${ofParts.join(' ')}` : '';
+    return <span className="ops-vt-leaf">{label && <span className="ops-prop-tree-leaf-label">{label}</span>} {String(node.object).toLowerCase()}{ofLabel}</span>;
   }
   if (node.object) return <span className="ops-vt-leaf">{String(node.object).toLowerCase()} stacks</span>;
   return <span className="ops-vt-leaf">{JSON.stringify(node)}</span>;
 }
 
 function ValueNodeTree({ node, depth = 0, label }: { node: Record<string, unknown>; depth?: number; label?: string }) {
+  // Leaf: render inline with the label prefix (e.g. `VALUE vary by skill level`).
   if (!node.operation) return <ValueLeaf node={node} label={label} />;
 
   const op = String(node.operation);
   const left = node.left as Record<string, unknown>;
   const right = node.right as Record<string, unknown>;
 
-  return (
+  // Compound: render the operation tree. Recurse WITHOUT `label` so the label
+  // isn't duplicated on every leaf of the subtree.
+  const tree = (
     <div className="ops-vt-expr">
       <span className="ops-vt-op">{op}</span>
       <div className="ops-vt-children">
         <div className="ops-vt-branch ops-vt-branch--mid">
-          <ValueNodeTree node={left} depth={depth + 1} label={label} />
+          <ValueNodeTree node={left} depth={depth + 1} />
         </div>
         <div className="ops-vt-branch ops-vt-branch--last">
-          <ValueNodeTree node={right} depth={depth + 1} label={label} />
+          <ValueNodeTree node={right} depth={depth + 1} />
         </div>
       </div>
     </div>
   );
+
+  // When called with a label on a compound node (e.g. `with.value = ADD(..,..)`),
+  // show the label once as a parent wrapper and nest the whole operation tree
+  // underneath. Without this, the label would be dropped entirely (bad) or
+  // threaded to every leaf (worse — what the old recursion did).
+  if (label) {
+    return (
+      <div className="ops-vt-labeled">
+        <span className="ops-prop-tree-leaf-label">{label}</span>
+        <div className="ops-prop-tree-children">
+          <div className="ops-vt-branch ops-vt-branch--last">
+            {tree}
+          </div>
+        </div>
+      </div>
+    );
+  }
+  return tree;
 }
 
 // ── Clause rendering ───────────────────────────────────────────────────────

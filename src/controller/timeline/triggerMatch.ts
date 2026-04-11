@@ -292,6 +292,26 @@ function handlePerform(primaryCond: Predicate, ctx: VerbHandlerContext): Trigger
   const matches: TriggerMatch[] = [];
   const { matchesOwner, isAnyOperator } = resolveOwnerFilter(primaryCond, ctx.operatorSlotId, VerbType.PERFORM, ctx.controlledSlotId);
 
+  // Enemy action triggers: `ENEMY PERFORM STATUS <action-id>` matches events
+  // on the enemy-action column whose `id` equals the objectId. This is how
+  // enemy behaviors like CHARGE (wind-up before a big attack) surface as
+  // triggers for operator combo activation windows (e.g. Catcher's Timely
+  // Suppression opening on ENEMY PERFORM STATUS CHARGE).
+  if (primaryCond.subject === NounType.ENEMY
+      && primaryCond.object === NounType.STATUS
+      && primaryCond.objectId) {
+    const targetId = primaryCond.objectId;
+    for (const ev of ctx.events) {
+      if (ev.ownerEntityId !== ENEMY_ID) continue;
+      if (ev.columnId !== ENEMY_ACTION_COLUMN_ID) continue;
+      if (ev.id !== targetId) continue;
+      const triggerFrame = getFirstEventFrame(ev);
+      if (!checkSecondary(ctx, triggerFrame, ev.ownerEntityId)) continue;
+      matches.push(makeMatch(triggerFrame, ev, ctx.clauseEffects));
+    }
+    return matches;
+  }
+
   // Resolve the effective skill ID: for normalized SKILL objects, use objectId
   const skillId = primaryCond.object === NounType.SKILL ? primaryCond.objectId : primaryCond.object;
 

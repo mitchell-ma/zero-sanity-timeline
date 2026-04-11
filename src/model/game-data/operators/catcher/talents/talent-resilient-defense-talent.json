@@ -6,20 +6,31 @@
         {
           "verb": "APPLY",
           "object": "STAT",
-          "objectId": "DEFENSE",
+          "objectId": "BASE_DEFENSE",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
             "value": {
-              "verb": "VARY_BY",
-              "object": "TALENT_LEVEL",
-              "value": [
-                0.1,
-                0.12
-              ],
-              "of": {
-                "object": "OPERATOR",
-                "determiner": "THIS"
+              "operation": "MULT",
+              "left": {
+                "operation": "INTEGER_DIV",
+                "left": {
+                  "verb": "IS",
+                  "object": "STAT",
+                  "objectId": "WILL",
+                  "of": {
+                    "object": "OPERATOR",
+                    "determiner": "THIS"
+                  }
+                },
+                "right": {
+                  "verb": "IS",
+                  "value": 10
+                }
+              },
+              "right": {
+                "verb": "IS",
+                "value": 1.2
               }
             }
           }
@@ -47,7 +58,7 @@
       "ENDFIELD_WIKI"
     ],
     "icon": "skills/catcher_talent_1_icon.png",
-    "dataStatus": "RECONCILED"
+    "dataStatus": "VERIFIED"
   },
   "clauseType": "ALL"
 }

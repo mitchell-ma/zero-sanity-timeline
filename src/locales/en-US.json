@@ -225,7 +225,7 @@
   "status.SUSCEPTIBILITY": "Susceptibility",
   "status.FRAGILITY": "Fragility",
   "status.REALSPACE_STASIS_TALENT": "Originium Crystals",
-  "status.WEAKEN": "Weaken",
+  "status.WEAKNESS": "Weakness",
   "status.DMG_REDUCTION": "DMG Reduction",
   "status.PROTECTION": "Protection",
   "status.LINK": "Link",
@@ -272,6 +272,7 @@
   "enemyAction.AOE_CRYO": "Deal CRYO damage",
   "enemyAction.AOE_NATURE": "Deal NATURE damage",
   "enemyAction.AOE_ELECTRIC": "Deal ELEC damage",
+  "enemyAction.CHARGE": "Charge",
 
   "column.action": "ACTION",
 
@@ -402,8 +403,6 @@
   "dsl.with.source": "Source",
   "dsl.with.stagger": "Stagger",
   "dsl.with.healBase": "Heal Base",
-  "dsl.with.shieldBase": "Shield Base",
-  "dsl.with.defAdditive": "DEF Additive",
   "dsl.with.willAdditive": "WILL Additive",
   "dsl.with.poiseExtra": "Extra Stagger",
   "dsl.with.damageMultiplierIncrement": "DMG Multiplier Increment",
@@ -464,6 +463,7 @@
   "stat.FINISHER_SP_GAIN": "Finisher SP Gain",
   "stat.ATTACK_RANGE": "Attack Range",
   "stat.WEIGHT": "Weight",
+  "stat.WEAKNESS": "Weakness",
 
   "customizer.category.operators": "Operators",
   "customizer.category.weapons": "Weapons",

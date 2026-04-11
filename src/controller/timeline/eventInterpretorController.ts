@@ -30,7 +30,7 @@ import type { Potential } from '../../consts/types';
 import type { ValueResolutionContext } from '../calculation/valueResolver';
 import { STAT_TO_STATE_ADJECTIVE } from './statStateMap';
 import { TimelineEvent, eventDuration, setEventDuration } from '../../consts/viewTypes';
-import { CritMode, DamageScalingStatType, DamageType, ElementType, EventFrameType, EventStatusType, PERMANENT_DURATION, PhysicalStatusType, SegmentType, StackInteractionType, StatType, StatusType, UnitType } from '../../consts/enums';
+import { CritMode, DamageScalingStatType, DamageType, ElementType, EventFrameType, EventStatusType, InteractionModeType, PERMANENT_DURATION, PhysicalStatusType, SegmentType, StackInteractionType, StatType, StatusType, UnitType } from '../../consts/enums';
 import { resolveEffectStat } from '../../model/enums/stats';
 import type { OverrideStore } from '../../consts/overrideTypes';
 import type { StatSource } from './derivedEventController';
@@ -218,7 +218,7 @@ export interface InterpretContext {
    * onto child events created by doApply so freeform status events retain the
    * flag for view-layer drag/edit handler lookup.
    */
-  sourceCreationInteractionMode?: import('../../consts/enums').InteractionModeType;
+  sourceCreationInteractionMode?: InteractionModeType;
   /** Source damage frame key ("eventUid:si:fi") for intra-frame ordering.
    *  Propagated to status events so the damage builder can exclude same-frame provenance. */
   sourceFrameKey?: string;
@@ -1035,7 +1035,9 @@ export class EventInterpretorController {
       if (!columnId) return false;
       const dv = this.resolveWith(effect.with?.duration, ctx);
       this.applyEventFromCtx(ctx, columnId, ownerEntityId, ctx.frame, typeof dv === 'number' ? Math.round(dv * FPS) : INFLICTION_DURATION, source,
-        { uid: freeformUidFor(columnId) ?? derivedEventUid(columnId, source.ownerEntityId, ctx.frame) });
+        { uid: freeformUidFor(columnId) ?? derivedEventUid(columnId, source.ownerEntityId, ctx.frame),
+          ...(ctx.sourceCreationInteractionMode != null ? { event: { creationInteractionMode: ctx.sourceCreationInteractionMode } } : {}),
+        });
       return true;
     }
     if (effect.object === NounType.STATUS) {
@@ -1061,6 +1063,7 @@ export class EventInterpretorController {
           stacks: typeof sl === 'number' ? sl : undefined,
           ...(isForced && { isForced: true }),
           uid: freeformUidFor(columnId) ?? derivedEventUid(columnId, source.ownerEntityId, ctx.frame),
+          ...(ctx.sourceCreationInteractionMode != null ? { event: { creationInteractionMode: ctx.sourceCreationInteractionMode } } : {}),
         });
         return true;
       }
@@ -1192,6 +1195,15 @@ export class EventInterpretorController {
         const inlineValue = this.resolveWith(effect.with.value, ctx);
         if (typeof inlineValue === 'number') {
           eventProps.statusValue = inlineValue;
+        }
+      }
+
+      // Inline status multiplier: resolve with.multiplier into statusValue for any status
+      // (e.g. WEAKNESS — damage reduction expressed as a multiplicative factor)
+      if (effect.with?.multiplier && eventProps.statusValue == null) {
+        const inlineMultiplier = this.resolveWith(effect.with.multiplier, ctx);
+        if (typeof inlineMultiplier === 'number') {
+          eventProps.statusValue = inlineMultiplier;
         }
       }
 
@@ -1761,21 +1773,26 @@ export class EventInterpretorController {
         for (const child of pred.effects) this.interpret(child, ctx);
         // Fire reactive triggers for events created in this iteration so downstream
         // BECOME conditions see incremental state (e.g. MF 3→4, not 0→4).
-        // Stamp previousStackCount = iteration index (0-based) on the resulting
-        // ENGINE_TRIGGER frames so BECOME compares against the pre-iteration count.
         for (let j = outputBefore; j < this.controller.getAllEvents().length; j++) {
           const ev = this.controller.getAllEvents()[j];
           this.checkReactiveTriggers(VerbType.APPLY, ev.columnId, ctx.frame, ev.ownerEntityId, ctx.sourceSkillName, undefined, this._compoundCascadeFrames);
         }
-        // Evaluate BECOME/HAVE conditions immediately with incremental stack count,
-        // filtering out triggers that don't pass at this iteration.
+        // Evaluate BECOME/HAVE conditions immediately, filtering out triggers
+        // that don't pass at this iteration. The condition evaluator uses
+        // activeEventsAtFrame to count stacks, so it correctly sees
+        // pre-existing stacks from earlier compound invocations — essential
+        // for the case where a status reaches its cap across multiple
+        // talent fires (e.g. MF reaching 4 stacks across several basic
+        // attack finishers, each consuming 1 heat infliction). Owner resolution
+        // uses `contextSlotId` (slot ID) — not `sourceEntityId` (operator ID) —
+        // because events are stored by slot ID, not operator JSON ID.
         let k = cascadeBefore;
         while (k < this._compoundCascadeFrames.length) {
           const qf = this._compoundCascadeFrames[k];
           if (qf.engineTrigger?.ctx.haveConditions.length) {
             const condCtx: ConditionContext = {
               events: this.getAllEvents(), frame: ctx.frame,
-              sourceEntityId: ctx.sourceEntityId, previousStackCount: i,
+              sourceEntityId: ctx.contextSlotId ?? ctx.sourceEntityId,
             };
             if (!evaluateConditions(qf.engineTrigger.ctx.haveConditions as unknown as Interaction[], condCtx)) {
               this._compoundCascadeFrames[k] = this._compoundCascadeFrames[this._compoundCascadeFrames.length - 1];
@@ -1846,11 +1863,11 @@ export class EventInterpretorController {
     const parentUid = ctx.sourceEventUid;
     if (physCol === PHYSICAL_STATUS_COLUMNS.LIFT
       || physCol === PHYSICAL_STATUS_COLUMNS.KNOCK_DOWN) {
-      result = this.applyLiftOrKnockDown(physCol, ctx.frame, source, isForced, parentUid);
+      result = this.applyLiftOrKnockDown(physCol, ctx.frame, source, isForced, parentUid, ctx.sourceCreationInteractionMode);
     } else if (physCol === PHYSICAL_STATUS_COLUMNS.CRUSH) {
-      result = this.applyCrush(ctx.frame, source, parentUid);
+      result = this.applyCrush(ctx.frame, source, parentUid, ctx.sourceCreationInteractionMode);
     } else if (physCol === PHYSICAL_STATUS_COLUMNS.BREACH) {
-      result = this.applyBreach(ctx.frame, source, parentUid);
+      result = this.applyBreach(ctx.frame, source, parentUid, ctx.sourceCreationInteractionMode);
     }
 
     // Check if a physical status event was created (not just Vulnerable)
@@ -1860,7 +1877,7 @@ export class EventInterpretorController {
 
     // Any physical status application consumes active Solidification → Shatter
     if (result) {
-      this.tryConsumeSolidification(ctx.frame, source, this.ctxSlot(ctx), ctx.sourceEventUid);
+      this.tryConsumeSolidification(ctx.frame, source, this.ctxSlot(ctx), ctx.sourceEventUid, ctx.sourceCreationInteractionMode);
     }
 
     return result;
@@ -1876,6 +1893,7 @@ export class EventInterpretorController {
     source: EventSource,
     isForced: boolean,
     parentEventUid?: string,
+    creationInteractionMode?: InteractionModeType,
   ): boolean {
     const parents = parentEventUid ? [parentEventUid] : undefined;
     const hasVulnerable = this.controller.activeCount(
@@ -1886,7 +1904,9 @@ export class EventInterpretorController {
     this.controller.applyEvent(
       PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_ID, frame,
       PHYSICAL_INFLICTION_DURATION, source,
-      { uid: derivedEventUid(PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, source.ownerEntityId, frame), parents },
+      { uid: derivedEventUid(PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, source.ownerEntityId, frame), parents,
+        ...(creationInteractionMode != null ? { event: { creationInteractionMode } } : {}),
+      },
     );
 
     // Status only triggers if enemy had Vulnerable OR isForced
@@ -1903,6 +1923,7 @@ export class EventInterpretorController {
         uid: derivedEventUid(columnId, source.ownerEntityId, frame),
         parents,
         event: {
+          ...(creationInteractionMode != null ? { creationInteractionMode } : {}),
           name: label,
           segments: [{
             properties: { duration: LIFT_KNOCK_DOWN_DURATION, name: label },
@@ -1935,6 +1956,7 @@ export class EventInterpretorController {
     frame: number,
     source: EventSource,
     parentEventUid?: string,
+    creationInteractionMode?: InteractionModeType,
   ): boolean {
     const parents = parentEventUid ? [parentEventUid] : undefined;
     const vulnerableCount = this.controller.activeCount(
@@ -1946,7 +1968,9 @@ export class EventInterpretorController {
       this.controller.applyEvent(
         PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_ID, frame,
         PHYSICAL_INFLICTION_DURATION, source,
-        { uid: derivedEventUid(PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, source.ownerEntityId, frame, 'crush'), parents },
+        { uid: derivedEventUid(PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, source.ownerEntityId, frame, 'crush'), parents,
+          ...(creationInteractionMode != null ? { event: { creationInteractionMode } } : {}),
+        },
       );
       return true;
     }
@@ -1967,6 +1991,7 @@ export class EventInterpretorController {
         uid: derivedEventUid(PhysicalStatusType.CRUSH, source.ownerEntityId, frame),
         parents,
         event: {
+          ...(creationInteractionMode != null ? { creationInteractionMode } : {}),
           stacks: consumed,
           segments: [{
             properties: { duration: LIFT_KNOCK_DOWN_DURATION, name: STATUS_LABELS[PhysicalStatusType.CRUSH] },
@@ -1998,6 +2023,7 @@ export class EventInterpretorController {
     frame: number,
     source: EventSource,
     parentEventUid?: string,
+    creationInteractionMode?: InteractionModeType,
   ): boolean {
     const parents = parentEventUid ? [parentEventUid] : undefined;
     const vulnerableCount = this.controller.activeCount(
@@ -2008,7 +2034,9 @@ export class EventInterpretorController {
       this.controller.applyEvent(
         PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_ID, frame,
         PHYSICAL_INFLICTION_DURATION, source,
-        { uid: derivedEventUid(PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, source.ownerEntityId, frame, 'breach'), parents },
+        { uid: derivedEventUid(PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, source.ownerEntityId, frame, 'breach'), parents,
+          ...(creationInteractionMode != null ? { event: { creationInteractionMode } } : {}),
+        },
       );
       return true;
     }
@@ -2030,6 +2058,7 @@ export class EventInterpretorController {
         uid: derivedEventUid(PhysicalStatusType.BREACH, source.ownerEntityId, frame),
         parents,
         event: {
+          ...(creationInteractionMode != null ? { creationInteractionMode } : {}),
           stacks: stackCount,
           segments: [{
             properties: { duration: durationFrames, name: STATUS_LABELS[PhysicalStatusType.BREACH] },
@@ -2056,6 +2085,7 @@ export class EventInterpretorController {
     source: EventSource,
     triggerSlotId: string,
     parentEventUid?: string,
+    creationInteractionMode?: InteractionModeType,
   ): void {
     const active = this.controller.getActiveEvents(
       REACTION_COLUMNS.SOLIDIFICATION, ENEMY_ID, frame,
@@ -2083,6 +2113,7 @@ export class EventInterpretorController {
         stacks,
         uid: derivedEventUid(REACTION_COLUMNS.SHATTER, source.ownerEntityId, frame),
         parents: shatterParents,
+        ...(creationInteractionMode != null ? { event: { creationInteractionMode } } : {}),
       },
     );
 
@@ -2155,6 +2186,7 @@ export class EventInterpretorController {
     // properties must be read from the routed source slot.
     const routedForPot = this.resolveRoutedSource(event);
     const pot = this.loadoutProperties?.[routedForPot.sourceSlotId]?.operator.potential ?? 0;
+    const talentLvl = this.loadoutProperties?.[routedForPot.sourceSlotId]?.operator.talentOneLevel ?? 0;
 
     // ── 1. Lifecycle hooks (EVENT_START / EVENT_END) ─────────────────────
     if (entry.hookType === FrameHookType.EVENT_START) {
@@ -2443,6 +2475,7 @@ export class EventInterpretorController {
         frame: absFrame,
         sourceEntityId: event.ownerEntityId,
         potential: pot,
+        talentLevel: talentLvl,
         suppliedParameters: resolvedParams,
         getControlledSlotAtFrame: this.getControlledSlotAtFrame,
         getOperatorPercentageHp: this.controller.hasHpController() ? (opId, f) => this.controller.getOperatorPercentageHp(opId, f) : undefined,
@@ -2509,6 +2542,9 @@ export class EventInterpretorController {
     if (this.controller.hasStatAccumulator() && hasDealDamageClause(frame.clauses) && !frame.frameSkipped) {
       const frameKey = `${event.uid}:${si}:${fi}`;
       this.controller.snapshotStatDeltas(frameKey, event.ownerEntityId);
+      // Also snapshot enemy deltas so the damage formula can read enemy-side
+      // factor stats (e.g. WEAKNESS) at frame resolution.
+      this.controller.snapshotStatDeltas(frameKey, ENEMY_ID);
     }
 
     // Reverse frame-scoped APPLY STAT deltas so they don't persist to later frames
@@ -2743,7 +2779,21 @@ export class EventInterpretorController {
             ? resolveEffectStat(NounType.STAT, raw.objectId as string, raw.objectQualifier as string)
             : undefined;
           const statBefore = trackStat ? this.controller.getStat(statusEntityId, trackStat) : 0;
-          const effect = raw as unknown as Effect;
+          // Inherit the status event's magnitude into the inner APPLY STAT when the
+          // clause didn't specify its own `with.value`/`with.multiplier`. This lets a
+          // status file declare "APPLY STAT X to ENEMY" without re-referencing the
+          // value supplied by the outer APPLY STATUS — the statusValue captured from
+          // that outer effect's `with` flows straight into the inner clause.
+          let effect = raw as unknown as Effect;
+          if (isApplyStat && statusEv.statusValue != null) {
+            const rawWith = (raw.with ?? {}) as Record<string, unknown>;
+            if (!('multiplier' in rawWith) && !('value' in rawWith)) {
+              effect = {
+                ...raw,
+                with: { ...rawWith, multiplier: { verb: VerbType.IS, value: statusEv.statusValue } },
+              } as unknown as Effect;
+            }
+          }
           this.interpret(effect, clauseCtx);
           // Track the applied delta for reversal at expiry
           if (trackStat) {

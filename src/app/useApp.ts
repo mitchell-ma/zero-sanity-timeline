@@ -364,6 +364,9 @@ export function useApp() {
     [events, columns, overrides],
   );
 
+  const spKey = `${TEAM_ID}-${COMMON_COLUMN_IDS.SKILL_POINTS}`;
+  const staggerKey = `enemy-${COMMON_COLUMN_IDS.STAGGER}`;
+
   // ─── Embed URL loading (one-time on mount) ─────────────────────────────
   const embedLoadedRef = useRef(false);
   useEffect(() => {
@@ -462,6 +465,18 @@ export function useApp() {
 
   const processedEvents = useMemo(
     () => {
+      // Configure SP before pipeline run — fall back to default so a fresh
+      // loadout (empty resourceConfigs) doesn't inherit the previous loadout's
+      // SP state from the persistent controller.
+      const spCfg = resourceConfigs?.[spKey] ?? computeDefaultResourceConfig(
+        operators, loadoutProperties, SLOT_IDS, spKey, spKey, staggerKey, enemyStats[StatType.STAGGER_HP],
+      );
+      combatLoadout.commonSlot.skillPoints.updateConfig({
+        startValue: spCfg.startValue,
+        max: spCfg.max,
+        regenPerFrame: spCfg.regenPerSecond / FPS,
+      });
+
       // Configure UE slots before pipeline run
       const ue = combatLoadout.commonSlot.ultimateEnergy;
       const base = resolveGainEfficiencies(operators, SLOT_IDS, loadouts, loadoutProperties);
@@ -612,9 +627,6 @@ export function useApp() {
     return Math.min(TOTAL_FRAMES, Math.max(MIN_FRAMES, scrollFloorFrames, maxEnd + BUFFER_FRAMES));
   }, [allProcessedEvents, scrollFloorFrames]);
 
-  const spKey = `${TEAM_ID}-${COMMON_COLUMN_IDS.SKILL_POINTS}`;
-  const staggerKey = `enemy-${COMMON_COLUMN_IDS.STAGGER}`;
-
   const editingEvent = editingEventId
     ? validEvents.find((e) => e.uid === editingEventId)
       ?? allProcessedEvents.find((e) => e.uid === editingEventId)
@@ -703,18 +715,6 @@ export function useApp() {
 
   // ─── Keyboard shortcuts ──────────────────────────────────────────────────
   useKeyboardShortcuts(undoWithScroll, redoWithScroll, treeUndo, treeRedo, sidebarRef);
-
-  // ─── SP sync effects ─────────────────────────────────────────────────────
-  useEffect(() => {
-    const cfg = resourceConfigs[spKey];
-    if (!cfg) return;
-    combatLoadout.commonSlot.skillPoints.updateConfig({
-      startValue: cfg.startValue,
-      max: cfg.max,
-      regenPerFrame: cfg.regenPerSecond / FPS,
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [resourceConfigs, combatLoadout, spKey]);
 
   // ─── Sync combat context to event controller ────────────────────────────
   useEffect(() => {

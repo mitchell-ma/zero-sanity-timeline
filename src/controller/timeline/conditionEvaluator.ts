@@ -47,6 +47,9 @@ export interface ConditionContext {
   getControlledSlotAtFrame?: (frame: number) => string;
   /** Operator potential level (0–5) for HAVE POTENTIAL conditions. */
   potential?: number;
+  /** Operator talent level for HAVE TALENT_LEVEL conditions. Defaults to
+   *  talentOneLevel from the loadout (matches valueResolver convention). */
+  talentLevel?: number;
   /** User-supplied parameter values (e.g. { ENEMY_HIT: 2 }). */
   suppliedParameters?: Record<string, number>;
   /** Get operator flat HP at frame. */
@@ -125,6 +128,21 @@ function evaluateParameter(cond: Interaction, ctx: ConditionContext): boolean {
 }
 
 function evaluateHave(cond: Interaction, ctx: ConditionContext): boolean {
+  // TALENT_LEVEL: check operator talent level (defaults to talentOneLevel —
+  // matches valueResolver.buildContextForSkillColumn's resolution rule).
+  if (cond.object === NounType.TALENT_LEVEL) {
+    const tl = ctx.talentLevel ?? 0;
+    const { target, constraint } = resolveConditionThreshold(cond);
+    switch (constraint) {
+      case CardinalityConstraintType.GREATER_THAN: return tl > target;
+      case CardinalityConstraintType.GREATER_THAN_EQUAL: return tl >= target;
+      case CardinalityConstraintType.LESS_THAN: return tl < target;
+      case CardinalityConstraintType.LESS_THAN_EQUAL: return tl <= target;
+      case CardinalityConstraintType.EXACTLY: return tl === target;
+    }
+    return tl >= target;
+  }
+
   // POTENTIAL: check operator potential level
   if (cond.object === NounType.POTENTIAL) {
     const pot = ctx.potential ?? 0;

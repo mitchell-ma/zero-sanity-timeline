@@ -196,130 +196,66 @@
                   "verb": "APPLY",
                   "object": "STATUS",
                   "objectId": "SHIELD",
-                  "toDeterminer": "THIS",
+                  "toDeterminer": "ALL",
                   "to": "OPERATOR",
                   "with": {
-                    "shieldBase": {
-                      "verb": "VARY_BY",
-                      "object": "SKILL_LEVEL",
-                      "value": [
-                        360,
-                        432,
-                        504,
-                        576,
-                        612,
-                        648,
-                        684,
-                        720,
-                        756,
-                        774,
-                        792,
-                        810
-                      ],
-                      "of": {
-                        "object": "OPERATOR",
-                        "determiner": "THIS"
-                      }
-                    },
-                    "defAdditive": {
-                      "verb": "VARY_BY",
-                      "object": "SKILL_LEVEL",
-                      "value": [
-                        2.25,
-                        2.7,
-                        3.15,
-                        3.6,
-                        3.825,
-                        4.05,
-                        4.275,
-                        4.5,
-                        4.725,
-                        4.84,
-                        4.95,
-                        5.06
-                      ],
-                      "of": {
-                        "object": "OPERATOR",
-                        "determiner": "THIS"
-                      }
-                    },
-                    "duration": {
-                      "value": {
-                        "operation": "ADD",
+                    "value": {
+                      "operation": "ADD",
+                      "left": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          360,
+                          432,
+                          504,
+                          576,
+                          612,
+                          648,
+                          684,
+                          720,
+                          756,
+                          774,
+                          792,
+                          810
+                        ],
+                        "of": {
+                          "object": "OPERATOR",
+                          "determiner": "THIS"
+                        }
+                      },
+                      "right": {
+                        "operation": "MULT",
                         "left": {
-                          "verb": "IS",
-                          "value": 10
-                        },
-                        "right": {
                           "verb": "VARY_BY",
-                          "object": "POTENTIAL",
+                          "object": "SKILL_LEVEL",
                           "value": [
-                            0,
-                            0,
-                            0,
-                            5,
-                            5,
-                            5
+                            2.25,
+                            2.7,
+                            3.15,
+                            3.6,
+                            3.825,
+                            4.05,
+                            4.275,
+                            4.5,
+                            4.725,
+                            4.84,
+                            4.95,
+                            5.06
                           ],
                           "of": {
                             "object": "OPERATOR",
                             "determiner": "THIS"
                           }
+                        },
+                        "right": {
+                          "verb": "IS",
+                          "object": "STAT",
+                          "objectId": "DEFENSE",
+                          "of": {
+                            "object": "OPERATOR",
+                            "determiner": "THIS"
+                          }
                         }
-                      },
-                      "unit": "SECOND"
-                    }
-                  }
-                },
-                {
-                  "verb": "APPLY",
-                  "object": "STATUS",
-                  "objectId": "SHIELD",
-                  "toDeterminer": "CONTROLLED",
-                  "to": "OPERATOR",
-                  "with": {
-                    "shieldBase": {
-                      "verb": "VARY_BY",
-                      "object": "SKILL_LEVEL",
-                      "value": [
-                        360,
-                        432,
-                        504,
-                        576,
-                        612,
-                        648,
-                        684,
-                        720,
-                        756,
-                        774,
-                        792,
-                        810
-                      ],
-                      "of": {
-                        "object": "OPERATOR",
-                        "determiner": "THIS"
-                      }
-                    },
-                    "defAdditive": {
-                      "verb": "VARY_BY",
-                      "object": "SKILL_LEVEL",
-                      "value": [
-                        2.25,
-                        2.7,
-                        3.15,
-                        3.6,
-                        3.825,
-                        4.05,
-                        4.275,
-                        4.5,
-                        4.725,
-                        4.84,
-                        4.95,
-                        5.06
-                      ],
-                      "of": {
-                        "object": "OPERATOR",
-                        "determiner": "THIS"
                       }
                     },
                     "duration": {
@@ -400,7 +336,7 @@
   "metadata": {
     "originId": "CATCHER",
     "icon": "skills/combo_catcher.png",
-    "dataStatus": "RECONCILED"
+    "dataStatus": "VERIFIED"
   },
   "clauseType": "ALL",
   "activationWindow": {

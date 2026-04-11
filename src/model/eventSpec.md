@@ -459,7 +459,7 @@ Enemy-specific stat types applied by debuff statuses. Each maps to a `DamageFact
 | `PHYSICAL_FRAGILITY`       | `FRAGILITY`        | Extra physical damage taken (%)                | Breach |
 | `ARMOR_REDUCTION`          | `RESISTANCE`       | Reduce enemy defense/armor                     | Corrosion |
 | `ELEMENT_SUSCEPTIBILITY`   | `SUSCEPTIBILITY`   | Element-specific weakness                      | Focus, Susceptibility |
-| `WEAKEN`                   | `WEAKEN`           | General damage reduction on enemy              | Weaken |
+| `WEAKNESS`                 | `WEAKNESS`         | General damage reduction on enemy              | Weakness |
 | `DMG_REDUCTION`            | `DMG_REDUCTION`    | Damage reduction modifier                      | DmgReduction |
 | `PROTECTION`               | `PROTECTION`       | Damage mitigation                              | Protection |
 

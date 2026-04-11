@@ -1,0 +1,293 @@
+{
+  "properties": {
+    "id": "RIGID_INTERDICTION_RETALIATION_BURST",
+    "name": "Rigid Interdiction Retaliation Burst",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": 0.2
+      },
+      "unit": "SECOND"
+    },
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 1
+      },
+      "interactionType": "RESET"
+    },
+    "eventType": "STATUS",
+    "eventIdType": "SKILL_STATUS",
+    "element": "PHYSICAL",
+    "description": "Single retaliation hit fired by Rigid Interdiction Retaliation. Deals Physical DMG, applies Vulnerable infliction and stagger. P1+ adds a DEF-scaling bonus strike at +0.1s. P5+ returns Skill Points."
+  },
+  "metadata": {
+    "originId": "CATCHER",
+    "dataStatus": "VERIFIED"
+  },
+  "segments": [
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT"
+      },
+      "properties": {
+        "name": "Retaliation",
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 0.2
+          },
+          "unit": "SECOND"
+        },
+        "element": "PHYSICAL"
+      },
+      "frames": [
+        {
+          "metadata": {
+            "eventComponentType": "FRAME"
+          },
+          "properties": {
+            "offset": {
+              "value": 0,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "object": "STAGGER",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 20
+                    }
+                  }
+                },
+                {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "INFLICTION",
+                  "objectQualifier": "VULNERABLE",
+                  "to": "ENEMY",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  }
+                },
+                {
+                  "verb": "DEAL",
+                  "objectQualifier": "PHYSICAL",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        1.78,
+                        1.96,
+                        2.13,
+                        2.31,
+                        2.49,
+                        2.67,
+                        2.85,
+                        3.02,
+                        3.2,
+                        3.42,
+                        3.69,
+                        4
+                      ],
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "SOURCE"
+                      }
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "SOURCE"
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "conditions": [
+                {
+                  "subjectDeterminer": "SOURCE",
+                  "subject": "OPERATOR",
+                  "verb": "HAVE",
+                  "object": "POTENTIAL",
+                  "cardinalityConstraint": "GREATER_THAN_EQUAL",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  }
+                }
+              ],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "objectQualifier": "PHYSICAL",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "operation": "ADD",
+                      "left": {
+                        "verb": "IS",
+                        "value": 300
+                      },
+                      "right": {
+                        "operation": "MULT",
+                        "left": {
+                          "verb": "IS",
+                          "value": 5
+                        },
+                        "right": {
+                          "verb": "IS",
+                          "objectId": "BASE_DEFENSE",
+                          "object": "STAT",
+                          "of": {
+                            "object": "OPERATOR",
+                            "determiner": "SOURCE"
+                          }
+                        }
+                      }
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "DEFENSE",
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "SOURCE"
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "conditions": [
+                {
+                  "subjectDeterminer": "SOURCE",
+                  "subject": "OPERATOR",
+                  "verb": "HAVE",
+                  "object": "POTENTIAL",
+                  "cardinalityConstraint": "GREATER_THAN_EQUAL",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 5
+                    }
+                  }
+                }
+              ],
+              "effects": [
+                {
+                  "verb": "RETURN",
+                  "object": "SKILL_POINT",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 10
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
+        },
+        {
+          "metadata": {
+            "eventComponentType": "FRAME"
+          },
+          "properties": {
+            "offset": {
+              "value": 0.1,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [
+                {
+                  "subjectDeterminer": "SOURCE",
+                  "subject": "OPERATOR",
+                  "verb": "HAVE",
+                  "object": "POTENTIAL",
+                  "cardinalityConstraint": "GREATER_THAN_EQUAL",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  }
+                }
+              ],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "objectQualifier": "PHYSICAL",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        1.78,
+                        1.96,
+                        2.13,
+                        2.31,
+                        2.49,
+                        2.67,
+                        2.85,
+                        3.02,
+                        3.2,
+                        3.42,
+                        3.69,
+                        4
+                      ],
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "SOURCE"
+                      }
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "SOURCE"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
+        }
+      ]
+    }
+  ],
+  "clauseType": "ALL"
+}

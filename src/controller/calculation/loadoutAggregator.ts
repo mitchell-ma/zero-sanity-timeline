@@ -147,9 +147,10 @@ export function weaponSkillStat(
   }
 }
 
-/** Maps a clause effect object name to a StatType, resolving MAIN_ATTRIBUTE. */
-function resolveClauseStatType(object: string, mainAttr: StatType): StatType | null {
-  if (object === 'MAIN_ATTRIBUTE') return mainAttr;
+/** Maps a clause effect object name to a StatType, resolving MAIN_ATTRIBUTE / SECONDARY_ATTRIBUTE. */
+function resolveClauseStatType(object: string, mainAttr: StatType, secondaryAttr: StatType): StatType | null {
+  if (object === StatType.MAIN_ATTRIBUTE) return mainAttr;
+  if (object === StatType.SECONDARY_ATTRIBUTE) return secondaryAttr;
   // Check if it's a valid StatType
   if (Object.values(StatType).includes(object as StatType)) return object as StatType;
   return null;
@@ -216,15 +217,35 @@ export function aggregateLoadoutStats(
     trackSource(model.attributeIncreaseAttribute, 'Attr Increase', attrIncreaseValue);
   }
 
-  // Helper: add a stat value, routing flat ATK/HP to separate counters
+  // Helper: add a stat value.
+  //
+  // - Translates MAIN_ATTRIBUTE / SECONDARY_ATTRIBUTE aliases to the operator's
+  //   actual attribute. Aliases are never stored under their virtual keys.
+  // - Flat ATK contributions (FLAT_ATTACK, plus the legacy `BASE_ATTACK`-as-
+  //   flat-bonus convention used by gear/consumables) are tracked as their
+  //   own stat entries in `stats[FLAT_ATTACK]` AND mirrored into the
+  //   `flatAttackBonuses` counter that feeds the totalAttack formula.
+  // - Flat HP follows the same pattern via `stats[FLAT_HP]` + `flatHpBonuses`.
+  // This separation lets the info pane render flat contributions distinctly
+  // from BASE_ATTACK (operator/weapon level-table base) and ATTACK_BONUS
+  // (percentage), and tracks per-source contributions through the normal
+  // statSources path.
   function addStat(stat: StatType, value: number, source?: string): void {
-    if (stat === StatType.BASE_ATTACK) {
+    if (stat === StatType.MAIN_ATTRIBUTE) stat = model.mainAttributeType;
+    else if (stat === StatType.SECONDARY_ATTRIBUTE) stat = model.secondaryAttributeType;
+    if (stat === StatType.BASE_ATTACK || stat === StatType.FLAT_ATTACK) {
       flatAttackBonuses += value;
-    } else if (stat === StatType.FLAT_HP) {
-      flatHpBonuses += value;
-    } else {
-      stats[stat] += value;
+      stats[StatType.FLAT_ATTACK] += value;
+      if (source && value !== 0) trackSource(StatType.FLAT_ATTACK, source, value);
+      return;
     }
+    if (stat === StatType.FLAT_HP) {
+      flatHpBonuses += value;
+      stats[StatType.FLAT_HP] += value;
+      if (source && value !== 0) trackSource(StatType.FLAT_HP, source, value);
+      return;
+    }
+    stats[stat] += value;
     if (source && value !== 0) trackSource(stat, source, value);
   }
 
@@ -249,11 +270,8 @@ export function aggregateLoadoutStats(
         const genericResults = getGenericSkillStats(skillId, level);
         if (genericResults.length > 0) {
           for (const { stat, value } of genericResults) {
-            const statType = resolveClauseStatType(stat, model.mainAttributeType);
-            if (statType != null) {
-              stats[statType] += value;
-              trackSource(statType, weaponPiece.name, value);
-            }
+            const statType = resolveClauseStatType(stat, model.mainAttributeType, model.secondaryAttributeType);
+            if (statType != null) addStat(statType, value, weaponPiece.name);
           }
           continue;
         }
@@ -261,10 +279,8 @@ export function aggregateLoadoutStats(
         // Named skill — get passive stats from weapon skill controller
         const namedStats = getNamedSkillPassiveStats(weaponPiece.id, level);
         for (const { stat, value } of namedStats) {
-          const resolvedStat = resolveClauseStatType(stat, model.mainAttributeType);
-          if (resolvedStat != null) {
-            addStat(resolvedStat, value, weaponPiece.name);
-          }
+          const resolvedStat = resolveClauseStatType(stat, model.mainAttributeType, model.secondaryAttributeType);
+          if (resolvedStat != null) addStat(resolvedStat, value, weaponPiece.name);
         }
       }
     }

@@ -38,7 +38,6 @@ import {
   getStaggerMultiplier,
   getSusceptibilityMultiplier,
   getTotalAttack,
-  getWeakenMultiplier,
 } from '../../model/calculation/damageFormulas';
 import { EventsQueryService } from '../timeline/eventsQueryService';
 import { hasDealDamageClause, findDealDamageInClauses } from '../timeline/clauseQueries';
@@ -496,6 +495,8 @@ export function buildDamageTableRows(
             const accumulator = getLastStatAccumulator();
             const currentFrameKey = `${ev.uid}:${si}:${fi}`;
             const runtimeDeltas = accumulator?.getFrameStatDeltas(currentFrameKey, ev.ownerEntityId);
+            // Enemy-side runtime stat deltas (e.g. WEAKNESS applied by status clauses).
+            const enemyRuntimeDeltas = accumulator?.getFrameStatDeltas(currentFrameKey, ENEMY_ID);
 
             if (frame.frameSkipped) {
               // All conditional clauses evaluated and none matched — row shows "-"
@@ -696,7 +697,9 @@ export function buildDamageTableRows(
                 const linkBonus = statusQuery?.getLinkBonus(absFrame, skillType) ?? 0;
 
                 // Sub-component arrays for multiplicative multipliers
-                const subWeakenEffects = statusQuery?.getWeakenEffects(absFrame) ?? [];
+                // WEAKNESS is read from the enemy's runtime stat delta (base 1, multiplied
+                // by each APPLY STAT WEAKNESS from status clauses). Current value = 1 + delta.
+                const weaknessStatValue = 1 + (enemyRuntimeDeltas?.[StatType.WEAKNESS] ?? 0);
                 const subDmgReductionEffects = statusQuery?.getDmgReductionEffects(absFrame) ?? [];
                 const subProtectionEffects = statusQuery?.getProtectionEffects(absFrame) ?? [];
                 const subFragilityBonus = statusQuery?.getFragilityBonus(absFrame, element) ?? 0;
@@ -732,8 +735,12 @@ export function buildDamageTableRows(
                   allSusceptibilitySources: statusQuery ? buildAllElementSources(absFrame, statusQuery, 'susceptibility') : {},
                   ampSources: buildAmpSources(statusQuery?.getAmpSources(absFrame) ?? [], rd, accumulator?.getFrameStatSources(currentFrameKey, ev.ownerEntityId, StatType.AMP)),
                   allAmpSources: { [ElementType.ARTS]: buildAmpSources(statusQuery?.getAmpSources(absFrame) ?? [], rd, accumulator?.getFrameStatSources(currentFrameKey, ev.ownerEntityId, StatType.AMP)) },
-                  weakenEffects: subWeakenEffects,
-                  weakenSources: statusQuery?.getWeakenSources(absFrame) ?? [],
+                  weaknessStatValue,
+                  weaknessSources: (accumulator?.getFrameStatSources(currentFrameKey, ENEMY_ID, StatType.WEAKNESS) ?? []).map(s => ({
+                    label: s.label,
+                    value: s.value,
+                    category: NounType.WEAKNESS,
+                  })),
                   dmgReductionEffects: subDmgReductionEffects,
                   dmgReductionSources: statusQuery?.getDmgReductionSources(absFrame) ?? [],
                   protectionEffects: subProtectionEffects,
@@ -769,7 +776,7 @@ export function buildDamageTableRows(
                   staggerMultiplier: getStaggerMultiplier(isStaggered),
                   finisherMultiplier: getFinisherMultiplier(enemyTier, isFinisher),
                   linkMultiplier: getLinkMultiplier(linkBonus, linkBonus > 0),
-                  weakenMultiplier: getWeakenMultiplier(subWeakenEffects),
+                  weaknessMultiplier: weaknessStatValue,
                   susceptibilityMultiplier: getSusceptibilityMultiplier(statusQuery?.getSusceptibilityBonus(absFrame, element) ?? 0),
                   fragilityMultiplier: getFragilityMultiplier(subFragilityBonus),
                   dmgReductionMultiplier: getDmgReductionMultiplier(subDmgReductionEffects),

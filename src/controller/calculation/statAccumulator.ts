@@ -41,7 +41,7 @@ const DEFAULT_FACTORS: Readonly<Record<DamageFactorType, number>> = {
   [DamageFactorType.AMP]: 0,
   [DamageFactorType.STAGGER]: 0,
   [DamageFactorType.LINK]: 0,
-  [DamageFactorType.WEAKEN]: 0,
+  [DamageFactorType.WEAKNESS]: 0,
   [DamageFactorType.SUSCEPTIBILITY]: 0,
   [DamageFactorType.FRAGILITY]: 0,
   [DamageFactorType.DMG_REDUCTION]: 0,
@@ -131,6 +131,9 @@ export class StatAccumulator {
       }
     }
     this.current.set(ENEMY_ID, enemySnap);
+    // Record enemy base snapshot so snapshotDeltas can compute frame-level
+    // deltas for enemy stats (e.g. WEAKNESS applied during combat).
+    this.base.set(ENEMY_ID, { ...enemySnap.stats });
 
     // Common (team-level)
     this.current.set(TEAM_ID, emptySnapshot());

@@ -1,4 +1,17 @@
 {
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STAT",
+          "objectId": "WEAKNESS",
+          "to": "ENEMY"
+        }
+      ]
+    }
+  ],
   "properties": {
     "id": "WEAKNESS",
     "name": "Weakness",
@@ -12,7 +25,14 @@
     },
     "eventType": "STATUS",
     "eventIdType": "STATUS",
-    "description": "Reduces damage dealt by enemy."
+    "description": "Reduces the affected target's DMG dealt.",
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": 5
+      },
+      "unit": "SECOND"
+    }
   },
   "metadata": {
     "originId": "generic",

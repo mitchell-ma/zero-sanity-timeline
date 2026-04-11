@@ -141,7 +141,7 @@ export function computeFrameMarkerDamage(
  *
  * Called from `_pushEnemyDamageTickForFrame` for reaction columns during the
  * queue drain to feed `hpController.addEnemyDamageTick`. Uses static loadout
- * stats only — runtime susceptibility / weaken / fragility / dmgReduction
+ * stats only — runtime susceptibility / weakness / fragility / dmgReduction
  * are set to neutral (1.0), matching the simplified approach for skill damage.
  *
  * Formula: attack × statusBaseMultiplier × artsIntensityMult × hiddenMult × defMult × resMult
@@ -201,7 +201,7 @@ export function computeReactionFrameDamage(
     resistanceMultiplier: getResistanceMultiplier(modelEnemy, element),
     // Runtime-dependent multipliers use neutral values in the simplified pipeline
     susceptibilityMultiplier: 1,
-    weakenMultiplier: 1,
+    weaknessMultiplier: 1,
     fragilityMultiplier: 1,
     dmgReductionMultiplier: 1,
   });

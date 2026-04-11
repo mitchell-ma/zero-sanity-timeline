@@ -236,7 +236,7 @@ Read-only interface backed by DerivedEventController. Pre-filters events by colu
 | `getAmpBonus(frame)` | Sum of active arts amp effects |
 | `getCorrosionResistanceReduction(frame)` | Max active corrosion resistance reduction |
 | `getIgnoredResistance(frame, element, attacker)` | Ignored resistance from active status effects |
-| `getWeakenEffects(frame)` | Active weaken fractions |
+| `getWeaknessEffects(frame)` | Active weakness fractions |
 | `getDmgReductionEffects(frame)` | Active damage reduction fractions |
 | `getProtectionEffects(frame)` | Active protection fractions |
 | `is*Active(frame)` | Boolean status checks (stagger, cryo, solidification, link, amp) |

@@ -1,4 +1,4 @@
-import { PhysicalStatusType, StatusType, ELEMENT_COLORS, ElementType } from './enums';
+import { EnemyActionType, PhysicalStatusType, StatusType, ELEMENT_COLORS, ElementType } from './enums';
 import { NounType } from '../dsl/semantics';
 import { getAllSkillLabels, getAllStatusLabels } from '../controller/gameDataStore';
 import { t } from '../locales/locale';
@@ -44,7 +44,7 @@ const GAME_MECHANIC_STATUS_LABELS: Record<string, string> = {
   [StatusType.FOCUS]:           t('status.FOCUS'),
   [StatusType.SUSCEPTIBILITY]:  t('status.SUSCEPTIBILITY'),
   [StatusType.FRAGILITY]:       t('status.FRAGILITY'),
-  [StatusType.WEAKEN]:          t('status.WEAKEN'),
+  [StatusType.WEAKNESS]:        t('status.WEAKNESS'),
   [StatusType.DMG_REDUCTION]:   t('status.DMG_REDUCTION'),
   [StatusType.PROTECTION]:      t('status.PROTECTION'),
   [StatusType.LINK]:            t('status.LINK'),
@@ -102,11 +102,25 @@ export const INFLICTION_EVENT_LABELS: Record<string, string> = {
   [NODE_STAGGER_COLUMN_ID]:     t('infliction.STAGGER_NODE'),
   [FULL_STAGGER_COLUMN_ID]:     t('infliction.STAGGER'),
   // Enemy actions
-  AOE_PHYSICAL:         t('enemyAction.AOE_PHYSICAL'),
-  AOE_HEAT:             t('enemyAction.AOE_HEAT'),
-  AOE_CRYO:             t('enemyAction.AOE_CRYO'),
-  AOE_NATURE:           t('enemyAction.AOE_NATURE'),
-  AOE_ELECTRIC:         t('enemyAction.AOE_ELECTRIC'),
+  [EnemyActionType.AOE_PHYSICAL]: t('enemyAction.AOE_PHYSICAL'),
+  [EnemyActionType.AOE_HEAT]:     t('enemyAction.AOE_HEAT'),
+  [EnemyActionType.AOE_CRYO]:     t('enemyAction.AOE_CRYO'),
+  [EnemyActionType.AOE_NATURE]:   t('enemyAction.AOE_NATURE'),
+  [EnemyActionType.AOE_ELECTRIC]: t('enemyAction.AOE_ELECTRIC'),
+  [EnemyActionType.CHARGE]:       t('enemyAction.CHARGE'),
+};
+
+/**
+ * Enemy action display labels keyed by `EnemyActionType`. Used by the column
+ * builder to populate `displayName` on enemy-action event variants.
+ */
+export const ENEMY_ACTION_LABELS: Record<EnemyActionType, string> = {
+  [EnemyActionType.AOE_PHYSICAL]: t('enemyAction.AOE_PHYSICAL'),
+  [EnemyActionType.AOE_HEAT]:     t('enemyAction.AOE_HEAT'),
+  [EnemyActionType.AOE_CRYO]:     t('enemyAction.AOE_CRYO'),
+  [EnemyActionType.AOE_NATURE]:   t('enemyAction.AOE_NATURE'),
+  [EnemyActionType.AOE_ELECTRIC]: t('enemyAction.AOE_ELECTRIC'),
+  [EnemyActionType.CHARGE]:       t('enemyAction.CHARGE'),
 };
 
 // ── Reaction labels & micro-columns ─────────────────────────────────────────

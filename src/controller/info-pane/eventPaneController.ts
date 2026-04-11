@@ -355,7 +355,7 @@ function isActiveAt(ev: TimelineEvent, frame: number): boolean {
 
 /**
  * Finds active enemy damage modifiers at the given frame range.
- * Returns modifiers like susceptibility, fragility, weaken, etc. that would
+ * Returns modifiers like susceptibility, fragility, weakness, etc. that would
  * affect damage dealt by an operator event at this time.
  */
 export function resolveActiveModifiers(
@@ -430,7 +430,7 @@ export function resolveActiveModifiers(
     }
   }
 
-  // Team-wide modifiers (weaken, amp, etc.)
+  // Team-wide modifiers (weakness, amp, etc.)
   for (const ev of allProcessedEvents) {
     if (!isActiveAt(ev, midFrame)) continue;
 
@@ -444,13 +444,13 @@ export function resolveActiveModifiers(
       });
     }
 
-    if (ev.columnId === StatusType.WEAKEN) {
+    if (ev.columnId === StatusType.WEAKNESS) {
       const val = ev.statusValue ?? 0;
       modifiers.push({
-        label: 'Weaken',
+        label: 'Weakness',
         color: '#cc6666',
         formattedValue: val > 0 ? `-${Math.round(val * 100)}% DMG` : 'Active',
-        source: 'Weaken',
+        source: 'Weakness',
       });
     }
   }

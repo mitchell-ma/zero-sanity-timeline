@@ -190,6 +190,7 @@ export function resolveWeaponBreakdown(
   const opConfig = getOperatorConfig(operatorId);
   const operatorModel = opConfig ? new DataDrivenOperator(opConfig, stats.operator.level) : null;
   const mainAttr = operatorModel?.mainAttributeType ?? StatType.STRENGTH;
+  const secondaryAttr = operatorModel?.secondaryAttributeType ?? StatType.AGILITY;
 
   const levelValues = [stats.weapon.skill1Level, stats.weapon.skill2Level, stats.weapon.skill3Level];
   const skills: WeaponBreakdown['skills'] = [];
@@ -211,7 +212,9 @@ export function resolveWeaponBreakdown(
     const genericResults = getGenericSkillStats(skillId, level);
     if (genericResults.length > 0) {
       for (const { stat, value } of genericResults) {
-        const resolvedStat = stat === 'MAIN_ATTRIBUTE' ? mainAttr : stat as StatType;
+        const resolvedStat = stat === StatType.MAIN_ATTRIBUTE ? mainAttr
+          : stat === StatType.SECONDARY_ATTRIBUTE ? secondaryAttr
+          : stat as StatType;
         if (value !== 0) statContributions.push({ skillIndex: i, stat: resolvedStat, value });
       }
       continue;

@@ -27,7 +27,7 @@
   "metadata": {
     "originId": "CATCHER",
     "icon": "skills/skill_catcher.png",
-    "dataStatus": "RECONCILED"
+    "dataStatus": "VERIFIED"
   },
   "segments": [
     {
@@ -56,6 +56,13 @@
                     "value": {
                       "verb": "IS",
                       "value": 0.9
+                    },
+                    "duration": {
+                      "value": {
+                        "verb": "IS",
+                        "value": 3.17
+                      },
+                      "unit": "SECOND"
                     }
                   }
                 },
@@ -68,179 +75,13 @@
                       "value": 30
                     }
                   }
-                }
-              ]
-            }
-          ],
-          "clauseType": "ALL"
-        },
-        {
-          "metadata": {
-            "eventComponentType": "FRAME",
-            "dataSources": [
-              "END_AXIS"
-            ]
-          },
-          "properties": {
-            "offset": {
-              "value": 2.77,
-              "unit": "SECOND"
-            }
-          },
-          "clause": [
-            {
-              "conditions": [],
-              "effects": [
-                {
-                  "verb": "DEAL",
-                  "object": "STAGGER",
-                  "to": "ENEMY",
-                  "with": {
-                    "value": {
-                      "verb": "IS",
-                      "value": 20
-                    }
-                  }
                 },
                 {
                   "verb": "APPLY",
                   "object": "STATUS",
-                  "objectId": "INFLICTION",
-                  "objectQualifier": "VULNERABLE",
-                  "to": "ENEMY",
-                  "with": {
-                    "stacks": {
-                      "verb": "IS",
-                      "value": 1
-                    }
-                  }
-                },
-                {
-                  "verb": "DEAL",
-                  "objectQualifier": "PHYSICAL",
-                  "object": "DAMAGE",
-                  "to": "ENEMY",
-                  "with": {
-                    "value": {
-                      "verb": "VARY_BY",
-                      "object": "SKILL_LEVEL",
-                      "value": [
-                        1.78,
-                        1.96,
-                        2.13,
-                        2.31,
-                        2.49,
-                        2.67,
-                        2.85,
-                        3.02,
-                        3.2,
-                        3.42,
-                        3.69,
-                        4
-                      ],
-                      "of": {
-                        "object": "OPERATOR",
-                        "determiner": "THIS"
-                      }
-                    },
-                    "mainStat": {
-                      "verb": "IS",
-                      "object": "STAT",
-                      "objectId": "ATTACK",
-                      "of": {
-                        "object": "OPERATOR",
-                        "determiner": "THIS"
-                      }
-                    }
-                  }
-                }
-              ]
-            },
-            {
-              "conditions": [
-                {
-                  "subjectDeterminer": "THIS",
-                  "subject": "OPERATOR",
-                  "verb": "HAVE",
-                  "object": "POTENTIAL",
-                  "cardinalityConstraint": "GREATER_THAN_EQUAL",
-                  "with": {
-                    "value": {
-                      "verb": "IS",
-                      "value": 1
-                    }
-                  }
-                }
-              ],
-              "effects": [
-                {
-                  "verb": "DEAL",
-                  "objectQualifier": "PHYSICAL",
-                  "object": "DAMAGE",
-                  "to": "ENEMY",
-                  "with": {
-                    "value": {
-                      "operation": "ADD",
-                      "left": {
-                        "verb": "IS",
-                        "value": 300
-                      },
-                      "right": {
-                        "operation": "MULT",
-                        "left": {
-                          "verb": "IS",
-                          "value": 5
-                        },
-                        "right": {
-                          "verb": "IS",
-                          "objectId": "BASE_DEFENSE",
-                          "object": "STAT",
-                          "of": {
-                            "object": "OPERATOR",
-                            "determiner": "THIS"
-                          }
-                        }
-                      }
-                    },
-                    "mainStat": {
-                      "verb": "IS",
-                      "object": "STAT",
-                      "objectId": "DEFENSE",
-                      "of": {
-                        "object": "OPERATOR",
-                        "determiner": "THIS"
-                      }
-                    }
-                  }
-                }
-              ]
-            },
-            {
-              "conditions": [
-                {
-                  "subjectDeterminer": "THIS",
-                  "subject": "OPERATOR",
-                  "verb": "HAVE",
-                  "object": "POTENTIAL",
-                  "cardinalityConstraint": "GREATER_THAN_EQUAL",
-                  "with": {
-                    "value": {
-                      "verb": "IS",
-                      "value": 5
-                    }
-                  }
-                }
-              ],
-              "effects": [
-                {
-                  "verb": "RETURN",
-                  "object": "SKILL_POINT",
-                  "with": {
-                    "value": {
-                      "verb": "IS",
-                      "value": 10
-                    }
-                  }
+                  "objectId": "RIGID_INTERDICTION_RETALIATION",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR"
                 }
               ]
             }

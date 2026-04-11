@@ -343,7 +343,7 @@ export function getAllStatusLabels(): Record<string, string> {
     [StatusType.FOCUS]:           t('status.FOCUS'),
     [StatusType.SUSCEPTIBILITY]:  t('status.SUSCEPTIBILITY'),
     [StatusType.FRAGILITY]:       t('status.FRAGILITY'),
-    [StatusType.WEAKEN]:          t('status.WEAKEN'),
+    [StatusType.WEAKNESS]:        t('status.WEAKNESS'),
     [StatusType.DMG_REDUCTION]:   t('status.DMG_REDUCTION'),
     [StatusType.PROTECTION]:      t('status.PROTECTION'),
     [StatusType.LINK]:            t('status.LINK'),

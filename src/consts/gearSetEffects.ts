@@ -156,7 +156,7 @@ export const GEAR_SET_EFFECTS: GearSetEffectsEntry[] = [
   },
 
   // ── Eternal Xiranite ───────────────────────────────────────────────────────
-  // After applying Amp/Protected/Susceptibility/Weakened, other teammates
+  // After applying Amp/Protected/Susceptibility/Weakness, other teammates
   // gain DMG +16% for 15s.
   {
     gearSetType: GearSetType.ETERNAL_XIRANITE,

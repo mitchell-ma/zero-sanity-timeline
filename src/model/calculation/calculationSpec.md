@@ -113,7 +113,7 @@ Damage = EffectiveATK
        × (1 - Resistance)
        × (1 + Fragility)
        × Susceptibility
-       × (1 - Weaken)
+       × (1 - Weakness)
        × (1 - DmgReduction)
        × (1 - Protection)
        × AmpBonus

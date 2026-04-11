@@ -394,15 +394,13 @@ export function buildMultiplierEntries(params: DamageParams, foldedFrames?: Dama
       source: params.linkMultiplier > 1.001 ? 'Link attack active' : 'No link buff',
     },
     {
-      label: 'Weaken',
-      value: params.weakenMultiplier,
+      label: 'Weakness',
+      value: params.weaknessMultiplier,
       format: 'multiplier',
-      source: params.weakenMultiplier < 0.999 ? 'Enemy weakened' : 'No weaken debuff',
-      subEntries: sub && sub.weakenSources.length > 0
-        ? sub.weakenSources.map((s) => makeSubEntry(s.label, s.value, `Reduces DMG by ${formatPercent(s.value)}`))
-        : sub && sub.weakenEffects.length > 0
-          ? sub.weakenEffects.map((eff, i) => makeSubEntry(`Weaken #${i + 1}`, eff, `Reduces DMG by ${formatPercent(eff)}`))
-          : undefined,
+      source: params.weaknessMultiplier < 0.999 ? 'Enemy has weakness debuff' : 'No weakness debuff',
+      subEntries: sub && sub.weaknessSources.length > 0
+        ? sub.weaknessSources.map((s) => makeSubEntry(s.label, -s.value, `Reduces DMG by ${formatPercent(-s.value)}`))
+        : undefined,
     },
     {
       label: 'Susceptibility',
@@ -527,10 +525,10 @@ export function buildStatusMultiplierEntries(params: StatusDamageParams, decimal
       source: params.susceptibilityMultiplier > 1.001 ? 'Element susceptibility active' : 'No susceptibility',
     },
     {
-      label: 'Weaken',
-      value: params.weakenMultiplier,
+      label: 'Weakness',
+      value: params.weaknessMultiplier,
       format: 'multiplier',
-      source: params.weakenMultiplier < 0.999 ? 'Enemy weakened' : 'No weaken debuff',
+      source: params.weaknessMultiplier < 0.999 ? 'Enemy has weakness debuff' : 'No weakness debuff',
     },
     {
       label: 'Fragility',

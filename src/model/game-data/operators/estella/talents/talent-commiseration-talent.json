@@ -46,7 +46,7 @@
     "description": "When triggering Shatter, the next battle skill Onomatopoeia cast returns 7.5 SP. This effect cannot stack."
   },
   "metadata": {
-    "originId": "COMMISERATION_TALENT",
+    "originId": "ESTELLA",
     "dataSources": [
       "ENDFIELD_WIKI"
     ],

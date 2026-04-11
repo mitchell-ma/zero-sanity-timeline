@@ -48,13 +48,14 @@ const BLACKBOARD_KEY_TO_STAT: Record<string, string> = {
   second_attr_up: 'SECONDARY_ATTRIBUTE_BONUS', // resolves at runtime
   all_attr_up: 'ALL_ATTRIBUTE_BONUS',         // all four attributes
 
-  // ── Attack / ATK ──────────────────────────────────────────────────────────
-  atk: 'ATTACK_BONUS',                       // percentage (0.05 = 5%)
-  atk_up: 'ATTACK_BONUS',                    // alt key, same meaning
-
-  // ── HP ────────────────────────────────────────────────────────────────────
-  hp: 'HP_BONUS',                             // percentage
-  hp_up: 'HP_BONUS',                          // alt key
+  // NOTE: `atk` / `atk_up` and `hp` / `hp_up` are NOT in this table — they are
+  // ambiguous in warfarin's flattened blackboard because the same key can mean
+  // either flat addition or a percentage bonus depending on the underlying
+  // game-data `cardAttributeModifier.formulaItem` (`BaseFinalAddition` = flat,
+  // `BaseFinalMultiplication` = percentage) which warfarin strips out. These
+  // four keys are resolved by `resolveAmbiguousStatKey()` below using a
+  // magnitude heuristic: warfarin percentage values are always fractional
+  // (< 1), while flat values are always integer (≥ 1).
 
   // ── Critical ──────────────────────────────────────────────────────────────
   crirate: 'CRITICAL_RATE',
@@ -104,6 +105,65 @@ const BLACKBOARD_KEY_TO_STAT: Record<string, string> = {
 const NON_STAT_KEYS = new Set([
   'duration', 'max_stack', 'cd', 'lv', 'cooldown',
 ]);
+
+// ── Ambiguous stat keys (flat vs percentage) ────────────────────────────────
+// Keys whose resolution depends on the raw game-data formulaItem field.
+// Warfarin flattens the blackboard and drops formulaItem, so we infer the
+// flat-vs-percent distinction from the numeric magnitude (see comment above
+// BLACKBOARD_KEY_TO_STAT).
+
+const AMBIGUOUS_STAT_KEYS: Record<string, { flat: string; percent: string }> = {
+  atk:    { flat: 'FLAT_ATTACK', percent: 'ATTACK_BONUS' },
+  atk_up: { flat: 'FLAT_ATTACK', percent: 'ATTACK_BONUS' },
+  hp:     { flat: 'FLAT_HP',     percent: 'HP_BONUS'     },
+  hp_up:  { flat: 'FLAT_HP',     percent: 'HP_BONUS'     },
+};
+
+/**
+ * Per-skill map from raw warfarin blackboard key → resolved StatType.
+ * Built once per skill so ambiguous flat-vs-percent keys are classified
+ * consistently across all 9 skill levels even if a particular level happens
+ * to be 0 (which would misclassify under a per-level magnitude check).
+ */
+type KeyResolution = Map<string, string>;
+
+/**
+ * Build a blackboard-key → StatType resolution map for a single skill.
+ *
+ * - Unambiguous keys use `BLACKBOARD_KEY_TO_STAT` directly.
+ * - Ambiguous keys (`atk`/`atk_up`/`hp`/`hp_up`) are resolved by the max
+ *   absolute value across all levels: if the largest value the skill ever
+ *   reaches is `≥ 1`, the key is flat (`FLAT_ATTACK` / `FLAT_HP`); otherwise
+ *   percent (`ATTACK_BONUS` / `HP_BONUS`). Warfarin percentages are stored
+ *   as fractions (e.g. `0.05` = 5%), and no in-game skill has a flat bonus
+ *   < 1 or a percentage bonus ≥ 100%, so the 1.0 split point is safe.
+ * - Unknown keys pass through unchanged.
+ */
+export function buildKeyResolution(levels: SkillLevelEntry[]): KeyResolution {
+  const resolution: KeyResolution = new Map();
+  const seenKeys = new Set<string>();
+  for (const lv of levels) {
+    for (const entry of lv.blackboard) {
+      seenKeys.add(entry.key);
+    }
+  }
+  seenKeys.forEach((key) => {
+    if (NON_STAT_KEYS.has(key)) return;
+    const ambiguous = AMBIGUOUS_STAT_KEYS[key];
+    if (ambiguous) {
+      let maxAbs = 0;
+      for (const lv of levels) {
+        for (const entry of lv.blackboard) {
+          if (entry.key === key) maxAbs = Math.max(maxAbs, Math.abs(entry.value));
+        }
+      }
+      resolution.set(key, maxAbs >= 1 ? ambiguous.flat : ambiguous.percent);
+    } else {
+      resolution.set(key, BLACKBOARD_KEY_TO_STAT[key] ?? key);
+    }
+  });
+  return resolution;
+}
 
 // ── Warfarin skill ID → WeaponSkillType mapping ─────────────────────────────
 // Stat boost skill IDs follow: wpn_attr_<stat>_<size> / wpn_sp_attr_<stat>_<size>
@@ -289,7 +349,7 @@ const TRIGGER_PATTERNS: { pattern: RegExp; trigger: string }[] = [
   { pattern: /applies? an Arts Burst/i, trigger: 'APPLY_ARTS_BURST' },
   { pattern: /applies? Lifted/i, trigger: 'APPLY_LIFTED' },
   { pattern: /applies? Knocked Down/i, trigger: 'APPLY_KNOCKED_DOWN' },
-  { pattern: /applies? Weakened/i, trigger: 'APPLY_KNOCKED_DOWN' },
+  { pattern: /applies? Weakness/i, trigger: 'APPLY_WEAKNESS' },
   { pattern: /applies? Cryo Infliction/i, trigger: 'APPLY_CRYO_INFLICTION' },
   { pattern: /applies? Heat Infliction/i, trigger: 'APPLY_HEAT_INFLICTION' },
   { pattern: /applies? Electric Infliction/i, trigger: 'APPLY_ELECTRIC_INFLICTION' },
@@ -483,6 +543,7 @@ function buildNamedLevelEntry(
   triggerSources: string[],
   durationValue: number | undefined,
   maxStacks: number | undefined,
+  resolution: KeyResolution,
 ) {
   const entry: Record<string, unknown> = { level };
 
@@ -490,7 +551,7 @@ function buildNamedLevelEntry(
   for (const { key, value } of bb) {
     if (NON_STAT_KEYS.has(key)) continue;
     if (permanentVarRefs.has(key)) {
-      const statKey = BLACKBOARD_KEY_TO_STAT[key] ?? key;
+      const statKey = resolution.get(key) ?? key;
       entry[statKey] = value;
     }
   }
@@ -512,7 +573,7 @@ function buildNamedLevelEntry(
     for (const { key, value } of bb) {
       if (NON_STAT_KEYS.has(key)) continue;
       if (conditionalVarRefs.has(key)) {
-        const statKey = BLACKBOARD_KEY_TO_STAT[key] ?? key;
+        const statKey = resolution.get(key) ?? key;
         conditional[statKey] = value;
       }
     }
@@ -535,10 +596,10 @@ function classifySkill(skillId: string, tagId: string): string {
   return 'NAMED';
 }
 
-function flattenBlackboard(bb: BlackboardEntry[]): Record<string, number> {
+function flattenBlackboard(bb: BlackboardEntry[], resolution: KeyResolution): Record<string, number> {
   const result: Record<string, number> = {};
   for (const entry of bb) {
-    const key = BLACKBOARD_KEY_TO_STAT[entry.key] ?? entry.key;
+    const key = resolution.get(entry.key) ?? entry.key;
     result[key] = entry.value;
   }
   return result;
@@ -558,6 +619,10 @@ function parseWeaponSkill(
     console.warn(`    Unmapped skill ID: ${skillId} (${first.skillName})`);
   }
 
+  // Build blackboard-key → StatType resolution once per skill so ambiguous
+  // keys (`atk`/`hp` flat-vs-percent) classify consistently across all levels.
+  const keyResolution = buildKeyResolution(levels);
+
   // ── Stat boost skills: simple flatten ───────────────────────────────────
   if (skillCategory === 'STAT_BOOST') {
     return {
@@ -567,7 +632,7 @@ function parseWeaponSkill(
       skillSlot: slot,
       skillCategory,
       allLevels: levels.map(lv => {
-        const flat = flattenBlackboard(lv.blackboard);
+        const flat = flattenBlackboard(lv.blackboard, keyResolution);
         return { level: lv.level, ...flat };
       }),
     };
@@ -613,6 +678,7 @@ function parseWeaponSkill(
       triggerSources,
       durationEntry?.value,
       maxStackEntry?.value,
+      keyResolution,
     )),
   };
 }

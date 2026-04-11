@@ -87,7 +87,6 @@ export class EventsQueryService {
   private electrificationEvents: TimelineEvent[];
   private breachEvents: TimelineEvent[];
   private corrosionEvents: TimelineEvent[];
-  private weakenEvents: TimelineEvent[];
   private dmgReductionEvents: TimelineEvent[];
   private protectionEvents: TimelineEvent[];
   private shieldEvents: TimelineEvent[];
@@ -125,7 +124,6 @@ export class EventsQueryService {
     this.electrificationEvents = events.filter(e => e.columnId === REACTION_COLUMNS.ELECTRIFICATION);
     this.breachEvents = events.filter(e => e.columnId === PHYSICAL_STATUS_COLUMNS.BREACH);
     this.corrosionEvents = events.filter(e => e.ownerEntityId === ENEMY_ID && e.columnId === REACTION_COLUMNS.CORROSION);
-    this.weakenEvents = events.filter(e => e.columnId === StatusType.WEAKEN);
     this.dmgReductionEvents = events.filter(e => e.columnId === StatusType.DMG_REDUCTION);
     this.protectionEvents = events.filter(e => e.columnId === StatusType.PROTECTION);
     this.shieldEvents = events.filter(e => e.columnId === StatusType.SHIELD);
@@ -288,26 +286,6 @@ export class EventsQueryService {
       sum += ev.statusValue ?? DEFAULT_AMP_BONUS;
     }
     return sum;
-  }
-
-  getWeakenEffects(frame: number): number[] {
-    const effects: number[] = [];
-    for (const ev of this.weakenEvents) {
-      if (!this.isActive(ev, frame)) continue;
-      if (ev.statusValue != null && ev.statusValue > 0) effects.push(ev.statusValue);
-    }
-    return effects;
-  }
-
-  getWeakenSources(frame: number): MultiplierSource[] {
-    const sources: MultiplierSource[] = [];
-    for (const ev of this.weakenEvents) {
-      if (!this.isActive(ev, frame)) continue;
-      if (ev.statusValue != null && ev.statusValue > 0) {
-        sources.push({ label: ev.name ?? ev.columnId, value: ev.statusValue });
-      }
-    }
-    return sources;
   }
 
   getDmgReductionEffects(frame: number): number[] {

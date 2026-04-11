@@ -1,7 +1,7 @@
 {
   "properties": {
     "name": "Textbook Assault",
-    "description": "Swings the greatsword to perform 2 consecutive slashes to deal Physical DMG and apply Weaken, followed by a powerful downward slam that deals massive Physical DMG and applies Knock Down to all enemies within the area of effect.",
+    "description": "Swings the greatsword to perform 2 consecutive slashes to deal Physical DMG and apply Weakness, followed by a powerful downward slam that deals massive Physical DMG and applies Knock Down to all enemies within the area of effect.",
     "eventType": "SKILL",
     "eventIdType": "ULTIMATE",
     "element": "PHYSICAL",
@@ -70,10 +70,11 @@
         "eventComponentType": "SEGMENT"
       },
       "properties": {
+        "name": "Slash I",
         "duration": {
           "value": {
             "verb": "IS",
-            "value": 2.13
+            "value": 0.83
           },
           "unit": "SECOND"
         },
@@ -150,29 +151,33 @@
                 {
                   "verb": "APPLY",
                   "object": "STATUS",
-                  "objectId": "WEAKEN",
+                  "objectId": "WEAKNESS",
                   "to": "ENEMY",
                   "with": {
-                    "value": {
-                      "verb": "VARY_BY",
-                      "object": "SKILL_LEVEL",
-                      "value": [
-                        0.2,
-                        0.2,
-                        0.2,
-                        0.2,
-                        0.2,
-                        0.25,
-                        0.25,
-                        0.25,
-                        0.25,
-                        0.3,
-                        0.3,
-                        0.3
-                      ],
-                      "of": {
-                        "object": "OPERATOR",
-                        "determiner": "THIS"
+                    "multiplier": {
+                      "operation": "SUB",
+                      "left": { "verb": "IS", "value": 1 },
+                      "right": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.2,
+                          0.2,
+                          0.2,
+                          0.2,
+                          0.2,
+                          0.25,
+                          0.25,
+                          0.25,
+                          0.25,
+                          0.3,
+                          0.3,
+                          0.3
+                        ],
+                        "of": {
+                          "object": "OPERATOR",
+                          "determiner": "THIS"
+                        }
                       }
                     },
                     "duration": {
@@ -185,7 +190,21 @@
                   }
                 }
               ]
-            },
+            }
+          ],
+          "clauseType": "ALL"
+        },
+        {
+          "metadata": {
+            "eventComponentType": "FRAME"
+          },
+          "properties": {
+            "offset": {
+              "value": 0.33,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
             {
               "conditions": [
                 {
@@ -247,7 +266,25 @@
             }
           ],
           "clauseType": "ALL"
+        }
+      ]
+    },
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT"
+      },
+      "properties": {
+        "name": "Slash II",
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 0.7
+          },
+          "unit": "SECOND"
         },
+        "element": "PHYSICAL"
+      },
+      "frames": [
         {
           "metadata": {
             "eventComponentType": "FRAME",
@@ -257,7 +294,7 @@
           },
           "properties": {
             "offset": {
-              "value": 0.83,
+              "value": 0,
               "unit": "SECOND"
             }
           },
@@ -316,7 +353,21 @@
                   }
                 }
               ]
-            },
+            }
+          ],
+          "clauseType": "ALL"
+        },
+        {
+          "metadata": {
+            "eventComponentType": "FRAME"
+          },
+          "properties": {
+            "offset": {
+              "value": 0.1,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
             {
               "conditions": [
                 {
@@ -378,7 +429,25 @@
             }
           ],
           "clauseType": "ALL"
+        }
+      ]
+    },
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT"
+      },
+      "properties": {
+        "name": "Final Slam",
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 0.67
+          },
+          "unit": "SECOND"
         },
+        "element": "PHYSICAL"
+      },
+      "frames": [
         {
           "metadata": {
             "eventComponentType": "FRAME",
@@ -388,7 +457,7 @@
           },
           "properties": {
             "offset": {
-              "value": 1.53,
+              "value": 0,
               "unit": "SECOND"
             }
           },
@@ -454,7 +523,21 @@
                   }
                 }
               ]
-            },
+            }
+          ],
+          "clauseType": "ALL"
+        },
+        {
+          "metadata": {
+            "eventComponentType": "FRAME"
+          },
+          "properties": {
+            "offset": {
+              "value": 0.1,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
             {
               "conditions": [
                 {
@@ -516,6 +599,186 @@
             }
           ],
           "clauseType": "ALL"
+        },
+        {
+          "metadata": {
+            "eventComponentType": "FRAME"
+          },
+          "properties": {
+            "offset": {
+              "value": 0.2,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [
+                {
+                  "subjectDeterminer": "THIS",
+                  "subject": "OPERATOR",
+                  "verb": "HAVE",
+                  "object": "TALENT_LEVEL",
+                  "cardinalityConstraint": "GREATER_THAN_EQUAL",
+                  "value": {
+                    "verb": "IS",
+                    "value": 1
+                  }
+                }
+              ],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "objectQualifier": "PHYSICAL",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "VARY_BY",
+                      "object": "TALENT_LEVEL",
+                      "value": [
+                        0.3,
+                        0.45
+                      ],
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
+        },
+        {
+          "metadata": {
+            "eventComponentType": "FRAME"
+          },
+          "properties": {
+            "offset": {
+              "value": 0.3,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [
+                {
+                  "subjectDeterminer": "THIS",
+                  "subject": "OPERATOR",
+                  "verb": "HAVE",
+                  "object": "TALENT_LEVEL",
+                  "cardinalityConstraint": "GREATER_THAN_EQUAL",
+                  "value": {
+                    "verb": "IS",
+                    "value": 1
+                  }
+                }
+              ],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "objectQualifier": "PHYSICAL",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "VARY_BY",
+                      "object": "TALENT_LEVEL",
+                      "value": [
+                        0.3,
+                        0.45
+                      ],
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
+        },
+        {
+          "metadata": {
+            "eventComponentType": "FRAME"
+          },
+          "properties": {
+            "offset": {
+              "value": 0.4,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [
+                {
+                  "subjectDeterminer": "THIS",
+                  "subject": "OPERATOR",
+                  "verb": "HAVE",
+                  "object": "TALENT_LEVEL",
+                  "cardinalityConstraint": "GREATER_THAN_EQUAL",
+                  "value": {
+                    "verb": "IS",
+                    "value": 2
+                  }
+                }
+              ],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "objectQualifier": "PHYSICAL",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "VARY_BY",
+                      "object": "TALENT_LEVEL",
+                      "value": [
+                        0.3,
+                        0.45
+                      ],
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
         }
       ]
     }
@@ -523,7 +786,7 @@
   "metadata": {
     "originId": "CATCHER",
     "icon": "skills/ult_catcher.png",
-    "dataStatus": "RECONCILED"
+    "dataStatus": "VERIFIED"
   },
   "clauseType": "ALL"
 }

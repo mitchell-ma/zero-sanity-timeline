@@ -199,15 +199,13 @@ export function getAmpMultiplier(ampBonuses: number): number {
   return 1 + ampBonuses;
 }
 
-// ── Weaken ──────────────────────────────────────────────────────────────────
+// ── Weakness ────────────────────────────────────────────────────────────────
 
-/** WeakenMultiplier = ∏(1 − weakenEffect) (multiplicative stacking). */
-export function getWeakenMultiplier(weakenEffects: number[]): number {
-  let result = 1;
-  for (const effect of weakenEffects) {
-    result *= (1 - effect);
-  }
-  return result;
+/** WeaknessMultiplier — the enemy's WEAKNESS stat, which is itself a multiplier that
+ *  starts at 1 and is multiplied by each APPLY STAT WEAKNESS (multiplicative stacking).
+ *  Passed straight through to the damage formula. */
+export function getWeaknessMultiplier(weaknessStatValue: number): number {
+  return weaknessStatValue;
 }
 
 // ── Susceptibility ──────────────────────────────────────────────────────────
@@ -508,9 +506,9 @@ export interface DamageSubComponents {
   ampSources: MultiplierSource[];
   /** Per-element Amp sources for full breakdown. */
   allAmpSources: Partial<Record<ElementType, MultiplierSource[]>>;
-  // Weaken sub-components
-  weakenEffects: number[];
-  weakenSources: MultiplierSource[];
+  // Weakness sub-components (WEAKNESS stat value, default 1, multiplied by each source).
+  weaknessStatValue: number;
+  weaknessSources: MultiplierSource[];
   // DMG Reduction sub-components
   dmgReductionEffects: number[];
   dmgReductionSources: MultiplierSource[];
@@ -550,8 +548,8 @@ export interface DamageParams {
   finisherMultiplier: number;
   /** 1 + linkBonus or 1. */
   linkMultiplier: number;
-  /** ∏(1 − weaken). */
-  weakenMultiplier: number;
+  /** Enemy's WEAKNESS stat — starts at 1 and is multiplied by each APPLY STAT WEAKNESS. */
+  weaknessMultiplier: number;
   /** 1 + ∑susceptibility. */
   susceptibilityMultiplier: number;
   /** 1 + ∑fragility. */
@@ -578,7 +576,7 @@ export interface DamageParams {
  * Damage = Attack × BaseMultiplier × AttributeBonus × MultiplierGroup
  *        × CritMultiplier × ChanceMultiplier × AmpMultiplier
  *        × StaggerMultiplier × FinisherMultiplier × LinkMultiplier
- *        × WeakenMultiplier × SusceptibilityMultiplier
+ *        × WeaknessMultiplier × SusceptibilityMultiplier
  *        × IncreasedDMGTakenMultiplier × DMGReductionMultiplier
  *        × ProtectionMultiplier × DefenseMultiplier × ResistanceMultiplier
  */
@@ -594,7 +592,7 @@ export function calculateDamage(params: DamageParams): number {
     params.staggerMultiplier *
     params.finisherMultiplier *
     params.linkMultiplier *
-    params.weakenMultiplier *
+    params.weaknessMultiplier *
     params.susceptibilityMultiplier *
     params.fragilityMultiplier *
     params.dmgReductionMultiplier *
@@ -610,7 +608,7 @@ export function calculateDamage(params: DamageParams): number {
  *
  * StatusDamage = Attack × StatusBaseMultiplier × ArtsIntensityMultiplier
  *             × HiddenMultiplier × DefenseMultiplier × ResistanceMultiplier
- *             × SusceptibilityMultiplier × WeakenMultiplier
+ *             × SusceptibilityMultiplier × WeaknessMultiplier
  *             × IncreasedDMGTakenMultiplier × DMGReductionMultiplier
  */
 export interface StatusDamageParams {
@@ -621,7 +619,7 @@ export interface StatusDamageParams {
   defenseMultiplier: number;
   resistanceMultiplier: number;
   susceptibilityMultiplier: number;
-  weakenMultiplier: number;
+  weaknessMultiplier: number;
   fragilityMultiplier: number;
   dmgReductionMultiplier: number;
 }
@@ -635,7 +633,7 @@ export function calculateStatusDamage(params: StatusDamageParams): number {
     params.defenseMultiplier *
     params.resistanceMultiplier *
     params.susceptibilityMultiplier *
-    params.weakenMultiplier *
+    params.weaknessMultiplier *
     params.fragilityMultiplier *
     params.dmgReductionMultiplier
   );

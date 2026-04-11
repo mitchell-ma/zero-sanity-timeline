@@ -151,6 +151,55 @@ describe('Scorching Heart — Basic Activation', () => {
 });
 
 // ═════════════════════════════════════════════════════════════════════════════
+// Regression: MF accumulated across multiple talent fires (compound loop path)
+// ═════════════════════════════════════════════════════════════════════════════
+
+describe('Scorching Heart — Cross-invocation MF accumulation', () => {
+  it('SH11: MF stacks accumulated across separate finishers fire SH when total reaches 4', () => {
+    // Reproduces the bug where basic attack finishers trigger the talent's
+    // compound ALL UP_TO 4 loop repeatedly, each invocation creating 1 MF.
+    // The compound cascade filter used to use an iteration-index override
+    // for BECOME STACKS, which ignored pre-existing stacks — so the trigger
+    // would see countNow=1 each time and never match EXACTLY 4.
+    const { result } = renderHook(() => useApp());
+    act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
+
+    const akekuriBattleCol = findColumn(result.current, SLOT_AKEKURI, NounType.BATTLE);
+    const basicCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BASIC_ATTACK);
+    expect(akekuriBattleCol).toBeDefined();
+    expect(basicCol).toBeDefined();
+
+    // 4 Akekuri BSes create 4 Heat Inflictions on the enemy, spaced so that
+    // a single basic attack finisher only has 1 infliction to consume at a time.
+    // Structure: 1 Akekuri BS → 1 BATK finisher → talent compound loop runs i=0 only.
+    for (let cycle = 0; cycle < 4; cycle++) {
+      const baseSec = 2 + cycle * 8;
+      const akekuriPayload = getMenuPayload(result.current, akekuriBattleCol!, baseSec * FPS);
+      act(() => {
+        result.current.handleAddEvent(
+          akekuriPayload.ownerEntityId, akekuriPayload.columnId,
+          akekuriPayload.atFrame, akekuriPayload.defaultSkill,
+        );
+      });
+      const basicPayload = getMenuPayload(result.current, basicCol!, (baseSec + 2) * FPS);
+      act(() => {
+        result.current.handleAddEvent(
+          basicPayload.ownerEntityId, basicPayload.columnId,
+          basicPayload.atFrame, basicPayload.defaultSkill,
+        );
+      });
+    }
+
+    const mf = getActiveMfEvents(result.current);
+    expect(mf.length).toBeGreaterThanOrEqual(4);
+
+    const sh = getShEvents(result.current);
+    expect(sh).toHaveLength(1);
+    expect(sh[0].ownerEntityId).toBe(SLOT_LAEVATAIN);
+  });
+});
+
+// ═════════════════════════════════════════════════════════════════════════════
 // Re-activation after consumption
 // ═════════════════════════════════════════════════════════════════════════════
 

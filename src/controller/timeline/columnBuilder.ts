@@ -1,10 +1,10 @@
 import { Column, MiniTimeline, MicroColumn, Operator, Enemy, VisibleSkills, EventFrameMarker, EventSegmentData } from '../../consts/viewTypes';
 import { DeterminerType, NounType, VerbType, isQualifiedId, type Effect, type Predicate } from '../../dsl/semantics';
 import type { FrameClausePredicate } from '../../model/event-frames/skillEventFrame';
-import { ColumnType, DEFAULT_EVENT_COLOR, ELEMENT_COLORS, ElementType, EnhancementType, EventFrameType, HeaderVariant, MicroColumnAssignment, SegmentType, StackInteractionType, StatusType, TimeDependency, TimelineSourceType, UNLIMITED_STACKS } from '../../consts/enums';
+import { ColumnType, DEFAULT_EVENT_COLOR, ELEMENT_COLORS, ElementType, EnemyActionType, EnhancementType, EventFrameType, HeaderVariant, MicroColumnAssignment, SegmentType, StackInteractionType, StatusType, TimeDependency, TimelineSourceType, UNLIMITED_STACKS } from '../../consts/enums';
 import { ENEMY_ID, ENEMY_GROUP_COLUMNS, ENEMY_ACTION_COLUMN_ID, OPERATOR_COLUMNS, OPERATOR_STATUS_COLUMN_ID, PHYSICAL_INFLICTION_COLUMNS, PHYSICAL_STATUS_COLUMNS, SKILL_COLUMN_ORDER as SKILL_ORDER, COMBO_WINDOW_COLUMN_ID, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID } from '../../model/channels';
 import { isTeamStatus } from '../gameDataStore';
-import { SKILL_LABELS, ColumnLabel, STATUS_LABELS, REACTION_MICRO_COLUMNS } from '../../consts/timelineColumnLabels';
+import { SKILL_LABELS, ColumnLabel, STATUS_LABELS, REACTION_MICRO_COLUMNS, ENEMY_ACTION_LABELS } from '../../consts/timelineColumnLabels';
 import { getWeapon, getWeaponEffectDefs, getGearEffectDefs, getAllStatusLabels, getStatusById, getConsumablePassiveDef, getTacticalTriggerDef } from '../gameDataStore';
 import { TEAM_ID, COMMON_COLUMN_IDS } from '../slot/commonSlotController';
 import { FPS, TOTAL_FRAMES } from '../../utils/timeline';
@@ -922,12 +922,12 @@ export function buildColumns(
   }
 
   // ── Enemy action timeline ──────────────────────────────────────────────────
-  const ENEMY_AOE_ELEMENTS: { element: ElementType; objectQualifier: string }[] = [
-    { element: ElementType.PHYSICAL, objectQualifier: 'PHYSICAL' },
-    { element: ElementType.HEAT,     objectQualifier: 'HEAT' },
-    { element: ElementType.CRYO,     objectQualifier: 'CRYO' },
-    { element: ElementType.NATURE,   objectQualifier: 'NATURE' },
-    { element: ElementType.ELECTRIC, objectQualifier: 'ELECTRIC' },
+  const ENEMY_AOE_ELEMENTS: { element: ElementType; id: EnemyActionType }[] = [
+    { element: ElementType.PHYSICAL, id: EnemyActionType.AOE_PHYSICAL },
+    { element: ElementType.HEAT,     id: EnemyActionType.AOE_HEAT },
+    { element: ElementType.CRYO,     id: EnemyActionType.AOE_CRYO },
+    { element: ElementType.NATURE,   id: EnemyActionType.AOE_NATURE },
+    { element: ElementType.ELECTRIC, id: EnemyActionType.AOE_ELECTRIC },
   ];
   columns.push({
     key: `enemy-${ENEMY_ACTION_COLUMN_ID}`,
@@ -938,18 +938,46 @@ export function buildColumns(
     label: ColumnLabel.ACTION,
     color: '#cc4444',
     headerVariant: HeaderVariant.SKILL,
-    eventVariants: ENEMY_AOE_ELEMENTS.map(({ element, objectQualifier }) => ({
-      id: `AOE_${objectQualifier}`,
-      name: `AOE_${objectQualifier}`,
-      displayName: `Deal ${objectQualifier} damage`,
-      segments: [{
-        properties: { duration: 240, name: `Deal ${objectQualifier} DMG`, element },
-        frames: [{
-          offsetFrame: 0,
-          clauses: [buildDealDamageClause({ multiplier: 1, element })],
+    eventVariants: [
+      ...ENEMY_AOE_ELEMENTS.map(({ element, id }) => ({
+        id,
+        name: id,
+        displayName: ENEMY_ACTION_LABELS[id],
+        segments: [{
+          properties: { duration: 240, name: ENEMY_ACTION_LABELS[id], element },
+          frames: [{
+            offsetFrame: 0,
+            clauses: [buildDealDamageClause({ multiplier: 1, element })],
+          }],
         }],
-      }],
-    })),
+      })),
+      // CHARGE — enemy wind-up state. No damage, no status application — just
+      // a timeline marker that satisfies `ENEMY PERFORM STATUS CHARGE` triggers
+      // (e.g. Catcher's Timely Suppression combo activation window). Listed
+      // last so existing tests that pick the first variant by default still
+      // get a damage-dealing AOE_PHYSICAL.
+      //
+      // The segment carries an explicit frame with an empty `clauses` array
+      // so `flattenEventsToQueueFrames` does NOT synthesize a placeholder
+      // frame (which would drop into the `!frame.clauses` branch of
+      // `handleProcessFrame` → `applyEvent` and duplicate the event on the
+      // enemy-action column, stripping `creationInteractionMode` from the
+      // duplicate and making the resulting event non-draggable in the view).
+      // An empty-array `clauses: []` is truthy, so `!frame.clauses` is false
+      // and the synthesis / re-apply path is skipped.
+      {
+        id: EnemyActionType.CHARGE,
+        name: EnemyActionType.CHARGE,
+        displayName: ENEMY_ACTION_LABELS[EnemyActionType.CHARGE],
+        segments: [{
+          properties: { duration: 240, name: ENEMY_ACTION_LABELS[EnemyActionType.CHARGE], element: ElementType.PHYSICAL },
+          frames: [{
+            offsetFrame: 0,
+            clauses: [],
+          }],
+        }],
+      },
+    ],
   });
 
   // ── Enemy stagger resource ─────────────────────────────────────────────────
