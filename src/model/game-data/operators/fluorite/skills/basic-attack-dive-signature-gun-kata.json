@@ -27,7 +27,11 @@
             "offset": {
               "value": 1,
               "unit": "SECOND"
-            }
+            },
+            "element": "NATURE",
+            "frameTypes": [
+              "DIVE"
+            ]
           },
           "clause": [
             {
@@ -74,9 +78,6 @@
                 }
               ]
             }
-          ],
-          "frameTypes": [
-            "DIVE"
           ],
           "clauseType": "ALL"
         }

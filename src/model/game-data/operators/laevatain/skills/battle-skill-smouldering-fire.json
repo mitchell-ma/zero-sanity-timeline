@@ -46,12 +46,13 @@
             "offset": {
               "value": 0.73,
               "unit": "SECOND"
-            }
+            },
+            "element": "HEAT",
+            "frameTypes": [
+              "GUARANTEED_HIT",
+              "PASSIVE"
+            ]
           },
-          "frameTypes": [
-            "GUARANTEED_HIT",
-            "PASSIVE"
-          ],
           "clause": [
             {
               "conditions": [],
@@ -146,12 +147,13 @@
             },
             "dependencyTypes": [
               "PREVIOUS_FRAME"
+            ],
+            "element": "HEAT",
+            "frameTypes": [
+              "GUARANTEED_HIT",
+              "PASSIVE"
             ]
           },
-          "frameTypes": [
-            "GUARANTEED_HIT",
-            "PASSIVE"
-          ],
           "clause": [
             {
               "conditions": [],
@@ -222,12 +224,13 @@
             },
             "dependencyTypes": [
               "PREVIOUS_FRAME"
+            ],
+            "element": "HEAT",
+            "frameTypes": [
+              "GUARANTEED_HIT",
+              "PASSIVE"
             ]
           },
-          "frameTypes": [
-            "GUARANTEED_HIT",
-            "PASSIVE"
-          ],
           "clause": [
             {
               "conditions": [],
@@ -290,12 +293,13 @@
             },
             "dependencyTypes": [
               "PREVIOUS_FRAME"
+            ],
+            "element": "HEAT",
+            "frameTypes": [
+              "GUARANTEED_HIT",
+              "PASSIVE"
             ]
           },
-          "frameTypes": [
-            "GUARANTEED_HIT",
-            "PASSIVE"
-          ],
           "clause": [
             {
               "conditions": [],
@@ -358,12 +362,13 @@
             },
             "dependencyTypes": [
               "PREVIOUS_FRAME"
+            ],
+            "element": "HEAT",
+            "frameTypes": [
+              "GUARANTEED_HIT",
+              "PASSIVE"
             ]
           },
-          "frameTypes": [
-            "GUARANTEED_HIT",
-            "PASSIVE"
-          ],
           "clause": [
             {
               "conditions": [],
@@ -426,12 +431,13 @@
             },
             "dependencyTypes": [
               "PREVIOUS_FRAME"
+            ],
+            "element": "HEAT",
+            "frameTypes": [
+              "GUARANTEED_HIT",
+              "PASSIVE"
             ]
           },
-          "frameTypes": [
-            "GUARANTEED_HIT",
-            "PASSIVE"
-          ],
           "clause": [
             {
               "conditions": [],
@@ -494,12 +500,13 @@
             },
             "dependencyTypes": [
               "PREVIOUS_FRAME"
+            ],
+            "element": "HEAT",
+            "frameTypes": [
+              "GUARANTEED_HIT",
+              "PASSIVE"
             ]
           },
-          "frameTypes": [
-            "GUARANTEED_HIT",
-            "PASSIVE"
-          ],
           "clause": [
             {
               "conditions": [],
@@ -562,12 +569,13 @@
             },
             "dependencyTypes": [
               "PREVIOUS_FRAME"
+            ],
+            "element": "HEAT",
+            "frameTypes": [
+              "GUARANTEED_HIT",
+              "PASSIVE"
             ]
           },
-          "frameTypes": [
-            "GUARANTEED_HIT",
-            "PASSIVE"
-          ],
           "clause": [
             {
               "conditions": [],
@@ -630,12 +638,13 @@
             },
             "dependencyTypes": [
               "PREVIOUS_FRAME"
+            ],
+            "element": "HEAT",
+            "frameTypes": [
+              "GUARANTEED_HIT",
+              "PASSIVE"
             ]
           },
-          "frameTypes": [
-            "GUARANTEED_HIT",
-            "PASSIVE"
-          ],
           "clause": [
             {
               "conditions": [],
@@ -698,12 +707,13 @@
             },
             "dependencyTypes": [
               "PREVIOUS_FRAME"
+            ],
+            "element": "HEAT",
+            "frameTypes": [
+              "GUARANTEED_HIT",
+              "PASSIVE"
             ]
           },
-          "frameTypes": [
-            "GUARANTEED_HIT",
-            "PASSIVE"
-          ],
           "clause": [
             {
               "conditions": [],
@@ -766,12 +776,13 @@
             },
             "dependencyTypes": [
               "PREVIOUS_FRAME"
+            ],
+            "element": "HEAT",
+            "frameTypes": [
+              "GUARANTEED_HIT",
+              "PASSIVE"
             ]
           },
-          "frameTypes": [
-            "GUARANTEED_HIT",
-            "PASSIVE"
-          ],
           "clause": [
             {
               "conditions": [],

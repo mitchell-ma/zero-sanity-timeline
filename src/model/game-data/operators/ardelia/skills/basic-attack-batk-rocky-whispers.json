@@ -29,7 +29,8 @@
             "offset": {
               "value": 0.2,
               "unit": "SECOND"
-            }
+            },
+            "element": "NATURE"
           },
           "clause": [
             {
@@ -110,7 +111,8 @@
             "offset": {
               "value": 0.267,
               "unit": "SECOND"
-            }
+            },
+            "element": "NATURE"
           },
           "clause": [
             {
@@ -171,7 +173,8 @@
             "offset": {
               "value": 0.33,
               "unit": "SECOND"
-            }
+            },
+            "element": "NATURE"
           },
           "clause": [
             {
@@ -252,7 +255,8 @@
             "offset": {
               "value": 0.367,
               "unit": "SECOND"
-            }
+            },
+            "element": "NATURE"
           },
           "clause": [
             {
@@ -313,7 +317,8 @@
             "offset": {
               "value": 0.43,
               "unit": "SECOND"
-            }
+            },
+            "element": "NATURE"
           },
           "clause": [
             {
@@ -374,7 +379,8 @@
             "offset": {
               "value": 1.3,
               "unit": "SECOND"
-            }
+            },
+            "element": "NATURE"
           },
           "clause": [
             {
@@ -455,7 +461,8 @@
             "offset": {
               "value": 2.167,
               "unit": "SECOND"
-            }
+            },
+            "element": "NATURE"
           },
           "clause": [
             {

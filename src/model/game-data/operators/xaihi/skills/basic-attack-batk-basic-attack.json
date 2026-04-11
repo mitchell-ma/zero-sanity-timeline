@@ -29,7 +29,8 @@
             "offset": {
               "value": 0.33,
               "unit": "SECOND"
-            }
+            },
+            "element": "CRYO"
           },
           "clause": [
             {
@@ -110,7 +111,8 @@
             "offset": {
               "value": 0.23,
               "unit": "SECOND"
-            }
+            },
+            "element": "CRYO"
           },
           "clause": [
             {
@@ -191,7 +193,8 @@
             "offset": {
               "value": 0.267,
               "unit": "SECOND"
-            }
+            },
+            "element": "CRYO"
           },
           "clause": [
             {
@@ -272,7 +275,8 @@
             "offset": {
               "value": 0.23,
               "unit": "SECOND"
-            }
+            },
+            "element": "CRYO"
           },
           "clause": [
             {
@@ -333,7 +337,8 @@
             "offset": {
               "value": 0.4,
               "unit": "SECOND"
-            }
+            },
+            "element": "CRYO"
           },
           "clause": [
             {
@@ -414,7 +419,8 @@
             "offset": {
               "value": 0.63,
               "unit": "SECOND"
-            }
+            },
+            "element": "CRYO"
           },
           "clause": [
             {

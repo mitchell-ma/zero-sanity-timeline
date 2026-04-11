@@ -29,7 +29,8 @@
             "offset": {
               "value": 0.267,
               "unit": "SECOND"
-            }
+            },
+            "element": "ELECTRIC"
           },
           "clause": [
             {
@@ -110,7 +111,8 @@
             "offset": {
               "value": 0.4,
               "unit": "SECOND"
-            }
+            },
+            "element": "ELECTRIC"
           },
           "clause": [
             {
@@ -191,7 +193,8 @@
             "offset": {
               "value": 0.467,
               "unit": "SECOND"
-            }
+            },
+            "element": "ELECTRIC"
           },
           "clause": [
             {
@@ -252,7 +255,8 @@
             "offset": {
               "value": 0.6,
               "unit": "SECOND"
-            }
+            },
+            "element": "ELECTRIC"
           },
           "clause": [
             {
@@ -333,7 +337,8 @@
             "offset": {
               "value": 0.9,
               "unit": "SECOND"
-            }
+            },
+            "element": "ELECTRIC"
           },
           "clause": [
             {

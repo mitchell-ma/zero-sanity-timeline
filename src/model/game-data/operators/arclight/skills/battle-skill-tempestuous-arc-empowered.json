@@ -170,7 +170,8 @@
             "offset": {
               "value": 1.2,
               "unit": "SECOND"
-            }
+            },
+            "element": "ELECTRIC"
           },
           "clause": [
             {

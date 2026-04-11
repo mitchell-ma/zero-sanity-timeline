@@ -42,13 +42,16 @@
         {
           "metadata": {
             "eventComponentType": "FRAME",
-            "dataSources": ["END_AXIS"]
+            "dataSources": [
+              "END_AXIS"
+            ]
           },
           "properties": {
             "offset": {
               "value": 0,
               "unit": "SECOND"
-            }
+            },
+            "element": "NATURE"
           },
           "clause": [
             {
@@ -88,7 +91,20 @@
                       "left": {
                         "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
-                        "value": [1.87, 2.06, 2.24, 2.43, 2.62, 2.8, 2.99, 3.18, 3.36, 3.6, 3.88, 4.2],
+                        "value": [
+                          1.87,
+                          2.06,
+                          2.24,
+                          2.43,
+                          2.62,
+                          2.8,
+                          2.99,
+                          3.18,
+                          3.36,
+                          3.6,
+                          3.88,
+                          4.2
+                        ],
                         "of": {
                           "object": "OPERATOR",
                           "determiner": "SOURCE"
@@ -120,7 +136,10 @@
   ],
   "metadata": {
     "originId": "FLUORITE",
-    "dataSources": ["END_AXIS", "ENDFIELD_WIKI"],
+    "dataSources": [
+      "END_AXIS",
+      "ENDFIELD_WIKI"
+    ],
     "dataStatus": "VERIFIED"
   },
   "clauseType": "ALL"

@@ -23,31 +23,6 @@ Files to scan:
 - `src/model/game-data/operators/*/skills/combo-skill-*.json`
 - `src/model/game-data/operators/*/skills/ultimate-*.json`
 
-## Audit: every damage / status frame should set `properties.element`
-
-Frame-level diamond colors are driven by `frame.properties.element`
-(`dataDrivenEventFrames.ts:167` populates `_damageElement` from it). When
-the field is missing, the canvas renderer falls back to a segment-level
-element via a secondary path that doesn't cover every render site (info
-pane card, hover tooltips, micro-column color stripes), leaving frames
-rendered as white/grey instead of the correct element color. Snowshine's
-Snow Zone DoT frames had this bug — fixed in commit 9461b779.
-
-Audit task: walk every operator's skill and status JSONs and ensure each
-frame inside a damage- or element-tinted segment carries
-`"element": "<ELEMENT>"` in its `properties` block. Cross-check against
-the segment's element when present. Add the field where missing.
-
-Files to scan:
-- `src/model/game-data/operators/*/skills/*.json`
-- `src/model/game-data/operators/*/statuses/*.json`
-- `src/model/game-data/generic/statuses/*.json`
-
-Acceptance: a unit test that walks all parsed status defs / operator
-skills and asserts every frame whose clauses contain DEAL DAMAGE,
-APPLY INFLICTION, or APPLY REACTION carries a non-null
-`getDamageElement()`.
-
 ## DSL: IGNORE INFLICTION and elemental MITIGATE/DAMAGE_TAKEN_REDUCTION
 
 Estella T2 "Laziness Pays Off Now" requires:

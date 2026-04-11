@@ -29,7 +29,8 @@
             "offset": {
               "value": 0.23,
               "unit": "SECOND"
-            }
+            },
+            "element": "NATURE"
           },
           "clause": [
             {
@@ -110,7 +111,8 @@
             "offset": {
               "value": 0.13,
               "unit": "SECOND"
-            }
+            },
+            "element": "NATURE"
           },
           "clause": [
             {
@@ -171,7 +173,8 @@
             "offset": {
               "value": 0.267,
               "unit": "SECOND"
-            }
+            },
+            "element": "NATURE"
           },
           "clause": [
             {
@@ -252,7 +255,8 @@
             "offset": {
               "value": 0.233,
               "unit": "SECOND"
-            }
+            },
+            "element": "NATURE"
           },
           "clause": [
             {
@@ -313,7 +317,8 @@
             "offset": {
               "value": 0.333,
               "unit": "SECOND"
-            }
+            },
+            "element": "NATURE"
           },
           "clause": [
             {
@@ -374,7 +379,8 @@
             "offset": {
               "value": 0.467,
               "unit": "SECOND"
-            }
+            },
+            "element": "NATURE"
           },
           "clause": [
             {
@@ -455,7 +461,8 @@
             "offset": {
               "value": 0.767,
               "unit": "SECOND"
-            }
+            },
+            "element": "NATURE"
           },
           "clause": [
             {
@@ -516,7 +523,8 @@
             "offset": {
               "value": 0.833,
               "unit": "SECOND"
-            }
+            },
+            "element": "NATURE"
           },
           "clause": [
             {
@@ -577,7 +585,8 @@
             "offset": {
               "value": 0.9,
               "unit": "SECOND"
-            }
+            },
+            "element": "NATURE"
           },
           "clause": [
             {

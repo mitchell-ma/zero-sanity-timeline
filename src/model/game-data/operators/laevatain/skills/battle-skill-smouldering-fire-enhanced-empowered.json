@@ -42,7 +42,8 @@
             "offset": {
               "value": 0.43,
               "unit": "SECOND"
-            }
+            },
+            "element": "HEAT"
           },
           "clause": [
             {
@@ -147,7 +148,8 @@
             "offset": {
               "value": 0.77,
               "unit": "SECOND"
-            }
+            },
+            "element": "HEAT"
           },
           "clause": [
             {

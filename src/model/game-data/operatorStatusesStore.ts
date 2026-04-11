@@ -12,7 +12,7 @@ import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from '../../controller/calcul
 import { DataDrivenSkillEventFrame } from '../event-frames/dataDrivenEventFrames';
 
 import { FPS } from '../../utils/timeline';
-import { checkKeys, VALID_VALUE_NODE_KEYS, VALID_CLAUSE_KEYS, VALID_METADATA_KEYS, VALID_EFFECT_KEYS, VALID_EFFECT_WITH_KEYS, VALID_TRIGGER_CONDITION_KEYS, validateEffect } from './validationUtils';
+import { checkKeys, VALID_VALUE_NODE_KEYS, VALID_CLAUSE_KEYS, VALID_METADATA_KEYS, VALID_EFFECT_KEYS, VALID_EFFECT_WITH_KEYS, VALID_TRIGGER_CONDITION_KEYS, validateEffect, validateSegmentShape } from './validationUtils';
 
 // ── Trigger clause type ─────────────────────────────────────────────────────
 
@@ -47,7 +47,6 @@ interface StatusSegment {
 
 const VALID_DURATION_KEYS = new Set(['value', 'unit', 'modifier']);
 const VALID_STATUS_LEVEL_KEYS = new Set(['limit', 'interactionType', 'level']);
-const VALID_SEGMENT_KEYS = new Set(['metadata', 'properties', 'clause', 'clauseType', 'frames']);
 const VALID_PROPERTIES_KEYS = new Set(['id', 'name', 'description', 'type', 'element', 'target', 'targetDeterminer', 'to', 'toDeterminer', 'duration', 'stacks', 'enhancementType', 'enhancementTypes', 'eventType', 'eventIdType', 'maxLevel', 'crowdControls']);
 const VALID_TOP_KEYS = new Set(['clause', 'clauseType', 'onTriggerClause', 'onEntryClause', 'onExitClause', 'segments', 'properties', 'metadata']);
 
@@ -109,7 +108,7 @@ export function validateOperatorStatus(json: Record<string, unknown>): string[] 
 
   if (json.segments) {
     if (!Array.isArray(json.segments)) errors.push('root.segments: must be an array');
-    else (json.segments as Record<string, unknown>[]).forEach((s, i) => errors.push(...checkKeys(s, VALID_SEGMENT_KEYS, `segments[${i}]`)));
+    else (json.segments as Record<string, unknown>[]).forEach((s, i) => errors.push(...validateSegmentShape(s, `segments[${i}]`)));
   }
 
   const props = json.properties as Record<string, unknown> | undefined;

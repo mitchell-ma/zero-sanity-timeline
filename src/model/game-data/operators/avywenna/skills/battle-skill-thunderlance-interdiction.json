@@ -43,7 +43,8 @@
             "offset": {
               "value": 0.6,
               "unit": "SECOND"
-            }
+            },
+            "element": "ELECTRIC"
           },
           "clause": [
             {
@@ -53,7 +54,12 @@
                   "verb": "DEAL",
                   "object": "STAGGER",
                   "to": "ENEMY",
-                  "with": { "value": { "verb": "IS", "value": 5 } }
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 5
+                    }
+                  }
                 },
                 {
                   "verb": "DEAL",
@@ -66,23 +72,55 @@
                       "left": {
                         "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
-                        "value": [0.67, 0.73, 0.8, 0.87, 0.93, 1, 1.07, 1.13, 1.2, 1.28, 1.38, 1.5],
-                        "of": { "object": "OPERATOR", "determiner": "THIS" }
+                        "value": [
+                          0.67,
+                          0.73,
+                          0.8,
+                          0.87,
+                          0.93,
+                          1,
+                          1.07,
+                          1.13,
+                          1.2,
+                          1.28,
+                          1.38,
+                          1.5
+                        ],
+                        "of": {
+                          "object": "OPERATOR",
+                          "determiner": "THIS"
+                        }
                       },
                       "right": {
                         "operation": "ADD",
-                        "left": { "verb": "IS", "value": 1 },
+                        "left": {
+                          "verb": "IS",
+                          "value": 1
+                        },
                         "right": {
                           "operation": "MULT",
                           "left": {
                             "verb": "VARY_BY",
                             "object": "POTENTIAL",
-                            "value": [0, 0, 0, 0, 0, 0.15],
-                            "of": { "object": "OPERATOR", "determiner": "THIS" }
+                            "value": [
+                              0,
+                              0,
+                              0,
+                              0,
+                              0,
+                              0.15
+                            ],
+                            "of": {
+                              "object": "OPERATOR",
+                              "determiner": "THIS"
+                            }
                           },
                           "right": {
                             "operation": "MIN",
-                            "left": { "verb": "IS", "value": 1 },
+                            "left": {
+                              "verb": "IS",
+                              "value": 1
+                            },
                             "right": {
                               "verb": "IS",
                               "object": "STACKS",
@@ -90,7 +128,10 @@
                                 "object": "STATUS",
                                 "objectId": "SUSCEPTIBILITY",
                                 "objectQualifier": "ELECTRIC",
-                                "of": { "object": "ENEMY", "determiner": "THIS" }
+                                "of": {
+                                  "object": "ENEMY",
+                                  "determiner": "THIS"
+                                }
                               }
                             }
                           }
@@ -101,7 +142,10 @@
                       "verb": "IS",
                       "object": "STAT",
                       "objectId": "ATTACK",
-                      "of": { "object": "OPERATOR", "determiner": "THIS" }
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     }
                   }
                 }
@@ -130,7 +174,10 @@
                       "of": {
                         "object": "STATUS",
                         "objectId": "THUNDERLANCE",
-                        "of": { "object": "OPERATOR", "determiner": "THIS" }
+                        "of": {
+                          "object": "OPERATOR",
+                          "determiner": "THIS"
+                        }
                       }
                     }
                   }
@@ -141,7 +188,9 @@
                   "objectId": "THUNDERLANCE",
                   "from": "OPERATOR",
                   "fromDeterminer": "THIS",
-                  "with": { "stacks": "MAX" }
+                  "with": {
+                    "stacks": "MAX"
+                  }
                 }
               ]
             },
@@ -168,7 +217,10 @@
                       "of": {
                         "object": "STATUS",
                         "objectId": "THUNDERLANCE_EX",
-                        "of": { "object": "OPERATOR", "determiner": "THIS" }
+                        "of": {
+                          "object": "OPERATOR",
+                          "determiner": "THIS"
+                        }
                       }
                     }
                   }
@@ -179,7 +231,9 @@
                   "objectId": "THUNDERLANCE_EX",
                   "from": "OPERATOR",
                   "fromDeterminer": "THIS",
-                  "with": { "stacks": "MAX" }
+                  "with": {
+                    "stacks": "MAX"
+                  }
                 }
               ]
             }

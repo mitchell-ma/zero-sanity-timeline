@@ -1,6 +1,6 @@
 {
   "properties": {
-    "name": "Flashfreezer \u03c537",
+    "name": "Flashfreezer υ37",
     "description": "When the controlled operator performs a Final Strike on an enemy with Solidification. Immediately deploys Frost-e-Bytee next to the enemy. While active, Frost-e-Bytee constantly releases energy to attack nearby enemies, deals Cryo DMG to them, and pulls them towards itself. After Frost-e-Bytee expires, it explodes to forcibly apply Solidification and deal Cryo DMG to nearby enemies. After the combo skill successfully hits the enemy, Yvonne gains additional Ultimate Energy. This Ultimate Energy Gain effect can only trigger 1 time, even if the skill hits multiple enemies.",
     "eventType": "SKILL",
     "eventIdType": "COMBO",
@@ -52,7 +52,7 @@
           },
           "unit": "SECOND"
         },
-        "name": "Flashfreezer \u03c537"
+        "name": "Flashfreezer υ37"
       },
       "frames": [
         {
@@ -63,7 +63,8 @@
             "offset": {
               "value": 0.5,
               "unit": "SECOND"
-            }
+            },
+            "element": "CRYO"
           },
           "clause": [
             {
@@ -152,7 +153,8 @@
             "offset": {
               "value": 1,
               "unit": "SECOND"
-            }
+            },
+            "element": "CRYO"
           },
           "clause": [
             {
@@ -210,7 +212,8 @@
             "offset": {
               "value": 1.5,
               "unit": "SECOND"
-            }
+            },
+            "element": "CRYO"
           },
           "clause": [
             {
@@ -268,7 +271,8 @@
             "offset": {
               "value": 2,
               "unit": "SECOND"
-            }
+            },
+            "element": "CRYO"
           },
           "clause": [
             {
@@ -326,7 +330,8 @@
             "offset": {
               "value": 2.5,
               "unit": "SECOND"
-            }
+            },
+            "element": "CRYO"
           },
           "clause": [
             {
@@ -425,7 +430,8 @@
             "offset": {
               "value": 3,
               "unit": "SECOND"
-            }
+            },
+            "element": "CRYO"
           },
           "clause": [
             {
@@ -495,7 +501,8 @@
             "offset": {
               "value": 3.5,
               "unit": "SECOND"
-            }
+            },
+            "element": "CRYO"
           },
           "clause": [
             {

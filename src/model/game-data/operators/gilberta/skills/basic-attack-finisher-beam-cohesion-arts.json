@@ -27,7 +27,11 @@
             "offset": {
               "value": 1.5,
               "unit": "SECOND"
-            }
+            },
+            "element": "NATURE",
+            "frameTypes": [
+              "FINISHER"
+            ]
           },
           "clause": [
             {
@@ -84,9 +88,6 @@
                 }
               ]
             }
-          ],
-          "frameTypes": [
-            "FINISHER"
           ],
           "clauseType": "ALL"
         }

@@ -43,7 +43,8 @@
             "offset": {
               "value": 0.97,
               "unit": "SECOND"
-            }
+            },
+            "element": "NATURE"
           },
           "clause": [
             {
@@ -104,7 +105,8 @@
             "offset": {
               "value": 1.53,
               "unit": "SECOND"
-            }
+            },
+            "element": "NATURE"
           },
           "clause": [
             {
@@ -165,7 +167,8 @@
             "offset": {
               "value": 2.067,
               "unit": "SECOND"
-            }
+            },
+            "element": "NATURE"
           },
           "clause": [
             {
@@ -226,7 +229,8 @@
             "offset": {
               "value": 2.6,
               "unit": "SECOND"
-            }
+            },
+            "element": "NATURE"
           },
           "clause": [
             {
@@ -298,7 +302,8 @@
                   "default": 1
                 }
               ]
-            }
+            },
+            "element": "NATURE"
           },
           "clause": [
             {

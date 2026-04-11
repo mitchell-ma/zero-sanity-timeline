@@ -140,7 +140,8 @@
             "offset": {
               "value": 7,
               "unit": "SECOND"
-            }
+            },
+            "element": "CRYO"
           },
           "clause": [
             {
@@ -219,7 +220,8 @@
             "offset": {
               "value": 7,
               "unit": "SECOND"
-            }
+            },
+            "element": "CRYO"
           },
           "clause": [
             {

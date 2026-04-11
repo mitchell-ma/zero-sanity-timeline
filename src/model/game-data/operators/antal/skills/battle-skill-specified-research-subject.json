@@ -43,7 +43,8 @@
             "offset": {
               "value": 0.67,
               "unit": "SECOND"
-            }
+            },
+            "element": "ELECTRIC"
           },
           "clauseType": "FIRST_MATCH",
           "clause": [

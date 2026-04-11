@@ -78,7 +78,8 @@
             "offset": {
               "value": 0,
               "unit": "SECOND"
-            }
+            },
+            "element": "NATURE"
           },
           "clause": [
             {
@@ -176,12 +177,13 @@
             "offset": {
               "value": 1.63,
               "unit": "SECOND"
-            }
+            },
+            "element": "NATURE",
+            "frameTypes": [
+              "GUARANTEED_HIT",
+              "PASSIVE"
+            ]
           },
-          "frameTypes": [
-            "GUARANTEED_HIT",
-            "PASSIVE"
-          ],
           "clause": [
             {
               "conditions": [],

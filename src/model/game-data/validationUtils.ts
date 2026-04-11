@@ -1,10 +1,10 @@
 import {
-  VerbType, DeterminerType,
+  AdjectiveType, NounType, VerbType, DeterminerType,
   VERB_OBJECTS, OBJECT_QUALIFIERS, OBJECT_REQUIRED_QUALIFIER, OBJECT_TARGET_MAPPING,
   CONSUME_TARGET_MAPPING, OBJECT_QUALIFIER_MAPPING,
 } from '../../dsl/semantics';
-import type { ObjectType, NounType } from '../../dsl/semantics';
-import { OperatorClassType } from '../../consts/enums';
+import type { ObjectType } from '../../dsl/semantics';
+import { ArtsReactionType, ElementType, OperatorClassType } from '../../consts/enums';
 
 // ── Enum value sets for validation ──────────────────────────────────────────
 const VALID_DETERMINERS = new Set<string>(Object.values(DeterminerType));
@@ -48,6 +48,147 @@ export const VALID_TRIGGER_CONDITION_KEYS = new Set([
   'element', 'negated', 'cardinalityConstraint', 'value', 'to', 'toDeterminer', 'from', 'fromDeterminer', 'with',
   'of',
 ]);
+
+// ── Segment / frame shape ────────────────────────────────────────────────────
+
+export const VALID_SEGMENT_KEYS = new Set([
+  'metadata', 'properties', 'frames',
+  // Segment-level clause + lifecycle hooks (parsed in
+  // eventInterpretorController.ts:2337 SEGMENT_START / SEGMENT_END handlers
+  // and dataDrivenEventFrames.ts JsonSegment.clause).
+  'clause', 'clauseType', 'onEntryClause', 'onExitClause',
+  // Documented comment field used in some files (e.g. pogranichnik); ignored
+  // by the parser. Keeping it whitelisted so editors can leave inline notes.
+  '_note',
+]);
+
+export const VALID_SEGMENT_PROPERTIES_KEYS = new Set([
+  'segmentTypes', 'duration', 'name', 'element', 'delayedHitLabel',
+  'timeDependency', 'timeInteractionType', 'suppliedParameters',
+]);
+
+export const VALID_SEGMENT_METADATA_KEYS = new Set([
+  'eventComponentType', 'dataSources',
+]);
+
+export const VALID_FRAME_KEYS = new Set([
+  'metadata', 'properties', 'clause', 'clauseType', 'damageElement',
+  // Comment field; same rationale as VALID_SEGMENT_KEYS._note.
+  '_note',
+]);
+
+export const VALID_FRAME_PROPERTIES_KEYS = new Set([
+  'offset', 'element', 'frameTypes', 'dependencyTypes', 'suppliedParameters',
+]);
+
+export const VALID_FRAME_METADATA_KEYS = new Set([
+  'eventComponentType', 'dataSources',
+]);
+
+/** Reaction → element mapping (mirrors src/model/channels REACTION_MICRO_COLUMNS). */
+const REACTION_QUALIFIER_TO_ELEMENT: Partial<Record<ArtsReactionType, ElementType>> = {
+  [ArtsReactionType.COMBUSTION]: ElementType.HEAT,
+  [ArtsReactionType.SOLIDIFICATION]: ElementType.CRYO,
+  [ArtsReactionType.CORROSION]: ElementType.NATURE,
+  [ArtsReactionType.ELECTRIFICATION]: ElementType.ELECTRIC,
+  [ArtsReactionType.SHATTER]: ElementType.CRYO,
+};
+
+/**
+ * Inspect a frame's clause and return the element the frame should declare in
+ * `properties.element`, or null if the frame has no element-tinted effect.
+ * Used by `validateFrameShape` to enforce that damage/infliction/reaction
+ * frames carry an explicit element so the renderer can color the diamond
+ * correctly.
+ *
+ * Mirrors the audit in `src/tests/unit/auditFrameElements.test.ts`.
+ */
+function frameClauseElementRequirement(frame: Record<string, unknown>): string | null {
+  const clauses = (frame.clause ?? []) as Record<string, unknown>[];
+  for (const pred of clauses) {
+    const effects = (pred.effects ?? []) as Record<string, unknown>[];
+    for (const ef of effects) {
+      const verb = ef.verb as VerbType | undefined;
+      const obj = ef.object as NounType | undefined;
+      const objId = ef.objectId as NounType | undefined;
+      const qual = ef.objectQualifier as AdjectiveType | ArtsReactionType | undefined;
+
+      // DEAL <ELEMENT> DAMAGE — qual is the element. PHYSICAL is not "tinted".
+      if (verb === VerbType.DEAL && obj === NounType.DAMAGE && qual && qual !== AdjectiveType.PHYSICAL) {
+        return qual;
+      }
+      // APPLY <ELEMENT> INFLICTION — qual is the element.
+      if (verb === VerbType.APPLY && obj === NounType.INFLICTION && qual) {
+        return qual;
+      }
+      // APPLY STATUS REACTION <REACTION_NAME> — qual is the reaction name.
+      if (verb === VerbType.APPLY && obj === NounType.STATUS && objId === NounType.REACTION && qual) {
+        return REACTION_QUALIFIER_TO_ELEMENT[qual as ArtsReactionType] ?? null;
+      }
+    }
+  }
+  return null;
+}
+
+/**
+ * Validate a single frame: check key whitelists on the frame itself, its
+ * `properties` block, its `metadata` block, and enforce that frames whose
+ * clauses contain element-tinted effects (DEAL <element> DAMAGE, APPLY
+ * <element> INFLICTION, APPLY REACTION <name>) carry `properties.element`.
+ *
+ * The element requirement is critical: the canvas renderer reads
+ * `frame.properties.element` directly via `dataDrivenEventFrames.ts:167` to
+ * populate `damageElement`. Without it the frame diamond renders white/grey.
+ */
+export function validateFrameShape(frame: Record<string, unknown>, path: string): string[] {
+  const errors: string[] = [];
+  errors.push(...checkKeys(frame, VALID_FRAME_KEYS, path));
+
+  const props = frame.properties as Record<string, unknown> | undefined;
+  if (props) {
+    errors.push(...checkKeys(props, VALID_FRAME_PROPERTIES_KEYS, `${path}.properties`));
+  }
+
+  const meta = frame.metadata as Record<string, unknown> | undefined;
+  if (meta) {
+    errors.push(...checkKeys(meta, VALID_FRAME_METADATA_KEYS, `${path}.metadata`));
+  }
+
+  const requiredElement = frameClauseElementRequirement(frame);
+  if (requiredElement && !(props?.element)) {
+    errors.push(
+      `${path}.properties.element: required (frame deals/applies ${requiredElement}, ` +
+      `must set "element": "${requiredElement}" so the renderer colors the diamond)`,
+    );
+  }
+  return errors;
+}
+
+/**
+ * Validate a segment's shape (metadata + properties keys + frames). Walks
+ * frames via `validateFrameShape`.
+ */
+export function validateSegmentShape(seg: Record<string, unknown>, path: string): string[] {
+  const errors: string[] = [];
+  errors.push(...checkKeys(seg, VALID_SEGMENT_KEYS, path));
+
+  const props = seg.properties as Record<string, unknown> | undefined;
+  if (props) {
+    errors.push(...checkKeys(props, VALID_SEGMENT_PROPERTIES_KEYS, `${path}.properties`));
+  }
+  const meta = seg.metadata as Record<string, unknown> | undefined;
+  if (meta) {
+    errors.push(...checkKeys(meta, VALID_SEGMENT_METADATA_KEYS, `${path}.metadata`));
+  }
+
+  const frames = seg.frames as Record<string, unknown>[] | undefined;
+  if (Array.isArray(frames)) {
+    for (let fi = 0; fi < frames.length; fi++) {
+      errors.push(...validateFrameShape(frames[fi], `${path}.frames[${fi}]`));
+    }
+  }
+  return errors;
+}
 
 // ── Effect validation (all checks driven by semantics.ts mappings) ──────────
 

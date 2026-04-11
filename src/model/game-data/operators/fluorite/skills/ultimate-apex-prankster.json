@@ -91,7 +91,8 @@
             "offset": {
               "value": 0.103,
               "unit": "SECOND"
-            }
+            },
+            "element": "NATURE"
           },
           "clause": [
             {
@@ -187,7 +188,8 @@
             "offset": {
               "value": 0.233,
               "unit": "SECOND"
-            }
+            },
+            "element": "NATURE"
           },
           "clause": [
             {
@@ -259,7 +261,8 @@
             "offset": {
               "value": 0.363,
               "unit": "SECOND"
-            }
+            },
+            "element": "NATURE"
           },
           "clause": [
             {
@@ -331,7 +334,8 @@
             "offset": {
               "value": 0.533,
               "unit": "SECOND"
-            }
+            },
+            "element": "NATURE"
           },
           "clause": [
             {
@@ -397,11 +401,16 @@
                     "object": "STATUS",
                     "objectId": "INFLICTION",
                     "objectQualifier": "CRYO",
-                    "of": { "object": "ENEMY" }
+                    "of": {
+                      "object": "ENEMY"
+                    }
                   },
                   "verb": "IS",
                   "cardinalityConstraint": "GREATER_THAN_EQUAL",
-                  "value": { "verb": "IS", "value": 2 }
+                  "value": {
+                    "verb": "IS",
+                    "value": 2
+                  }
                 }
               ],
               "effects": [
@@ -427,11 +436,16 @@
                     "object": "STATUS",
                     "objectId": "INFLICTION",
                     "objectQualifier": "NATURE",
-                    "of": { "object": "ENEMY" }
+                    "of": {
+                      "object": "ENEMY"
+                    }
                   },
                   "verb": "IS",
                   "cardinalityConstraint": "GREATER_THAN_EQUAL",
-                  "value": { "verb": "IS", "value": 2 }
+                  "value": {
+                    "verb": "IS",
+                    "value": 2
+                  }
                 }
               ],
               "effects": [

@@ -29,7 +29,8 @@
             "offset": {
               "value": 0.4,
               "unit": "SECOND"
-            }
+            },
+            "element": "HEAT"
           },
           "clause": [
             {
@@ -129,7 +130,8 @@
             "offset": {
               "value": 0.33,
               "unit": "SECOND"
-            }
+            },
+            "element": "HEAT"
           },
           "clause": [
             {
@@ -209,7 +211,8 @@
             "offset": {
               "value": 0.7,
               "unit": "SECOND"
-            }
+            },
+            "element": "HEAT"
           },
           "clause": [
             {
@@ -309,7 +312,8 @@
             "offset": {
               "value": 0.3,
               "unit": "SECOND"
-            }
+            },
+            "element": "HEAT"
           },
           "clause": [
             {
@@ -421,7 +425,8 @@
             "offset": {
               "value": 0.73,
               "unit": "SECOND"
-            }
+            },
+            "element": "HEAT"
           },
           "clause": [
             {
@@ -501,7 +506,8 @@
             "offset": {
               "value": 0.87,
               "unit": "SECOND"
-            }
+            },
+            "element": "HEAT"
           },
           "clause": [
             {

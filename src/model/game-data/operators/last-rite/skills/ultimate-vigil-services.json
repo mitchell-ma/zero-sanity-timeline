@@ -91,7 +91,8 @@
             "offset": {
               "value": 0.003,
               "unit": "SECOND"
-            }
+            },
+            "element": "CRYO"
           },
           "clause": [
             {
@@ -176,7 +177,10 @@
                     "multiplier": {
                       "verb": "VARY_BY",
                       "object": "TALENT_LEVEL",
-                      "value": [1.2, 1.5],
+                      "value": [
+                        1.2,
+                        1.5
+                      ],
                       "of": {
                         "object": "OPERATOR",
                         "determiner": "THIS"
@@ -200,7 +204,8 @@
             "offset": {
               "value": 0.633,
               "unit": "SECOND"
-            }
+            },
+            "element": "CRYO"
           },
           "clause": [
             {
@@ -285,7 +290,10 @@
                     "multiplier": {
                       "verb": "VARY_BY",
                       "object": "TALENT_LEVEL",
-                      "value": [1.2, 1.5],
+                      "value": [
+                        1.2,
+                        1.5
+                      ],
                       "of": {
                         "object": "OPERATOR",
                         "determiner": "THIS"
@@ -309,7 +317,8 @@
             "offset": {
               "value": 1.603,
               "unit": "SECOND"
-            }
+            },
+            "element": "CRYO"
           },
           "clause": [
             {
@@ -394,7 +403,10 @@
                     "multiplier": {
                       "verb": "VARY_BY",
                       "object": "TALENT_LEVEL",
-                      "value": [1.2, 1.5],
+                      "value": [
+                        1.2,
+                        1.5
+                      ],
                       "of": {
                         "object": "OPERATOR",
                         "determiner": "THIS"

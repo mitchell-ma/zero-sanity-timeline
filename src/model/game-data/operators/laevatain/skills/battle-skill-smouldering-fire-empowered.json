@@ -44,7 +44,8 @@
             "offset": {
               "value": 0.73,
               "unit": "SECOND"
-            }
+            },
+            "element": "HEAT"
           },
           "frameTypes": [
             "GUARANTEED_HIT",
@@ -120,7 +121,8 @@
             },
             "dependencyTypes": [
               "PREVIOUS_FRAME"
-            ]
+            ],
+            "element": "HEAT"
           },
           "frameTypes": [
             "GUARANTEED_HIT",
@@ -196,7 +198,8 @@
             },
             "dependencyTypes": [
               "PREVIOUS_FRAME"
-            ]
+            ],
+            "element": "HEAT"
           },
           "frameTypes": [
             "GUARANTEED_HIT",
@@ -264,7 +267,8 @@
             },
             "dependencyTypes": [
               "PREVIOUS_FRAME"
-            ]
+            ],
+            "element": "HEAT"
           },
           "frameTypes": [
             "GUARANTEED_HIT",
@@ -332,7 +336,8 @@
             },
             "dependencyTypes": [
               "PREVIOUS_FRAME"
-            ]
+            ],
+            "element": "HEAT"
           },
           "frameTypes": [
             "GUARANTEED_HIT",
@@ -400,7 +405,8 @@
             },
             "dependencyTypes": [
               "PREVIOUS_FRAME"
-            ]
+            ],
+            "element": "HEAT"
           },
           "frameTypes": [
             "GUARANTEED_HIT",
@@ -468,7 +474,8 @@
             },
             "dependencyTypes": [
               "PREVIOUS_FRAME"
-            ]
+            ],
+            "element": "HEAT"
           },
           "frameTypes": [
             "GUARANTEED_HIT",
@@ -536,7 +543,8 @@
             },
             "dependencyTypes": [
               "PREVIOUS_FRAME"
-            ]
+            ],
+            "element": "HEAT"
           },
           "frameTypes": [
             "INTERRUPTIBLE"

@@ -359,7 +359,9 @@ describe('C. Combo Skill (Eruption Column)', () => {
 
   test('C5b: Combo delayed explosion frame is GUARANTEED_HIT and PASSIVE', () => {
     const explosionFrame = mockJson.skills.COMBO.segments[2].frames[0];
-    expect(explosionFrame.frameTypes).toEqual(['GUARANTEED_HIT', 'PASSIVE']);
+    // frameTypes lives inside frame.properties (alongside offset/element/etc.)
+    // for consistency with the rest of the frame metadata fields.
+    expect(explosionFrame.properties.frameTypes).toEqual(['GUARANTEED_HIT', 'PASSIVE']);
   });
 
   test('C6: Combo delayed explosion deals 10 stagger', () => {

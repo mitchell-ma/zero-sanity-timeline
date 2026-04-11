@@ -27,7 +27,10 @@
             "offset": {
               "value": 2.5,
               "unit": "SECOND"
-            }
+            },
+            "frameTypes": [
+              "FINISHER"
+            ]
           },
           "clause": [
             {
@@ -74,9 +77,6 @@
                 }
               ]
             }
-          ],
-          "frameTypes": [
-            "FINISHER"
           ],
           "clauseType": "ALL"
         }

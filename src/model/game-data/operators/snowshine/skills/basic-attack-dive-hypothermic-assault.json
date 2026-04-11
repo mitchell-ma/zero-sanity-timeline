@@ -27,7 +27,10 @@
             "offset": {
               "value": 1,
               "unit": "SECOND"
-            }
+            },
+            "frameTypes": [
+              "DIVE"
+            ]
           },
           "clause": [
             {
@@ -74,9 +77,6 @@
                 }
               ]
             }
-          ],
-          "frameTypes": [
-            "DIVE"
           ],
           "clauseType": "ALL"
         }

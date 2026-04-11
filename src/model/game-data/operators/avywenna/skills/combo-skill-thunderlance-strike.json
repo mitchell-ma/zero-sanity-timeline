@@ -57,7 +57,8 @@
             "offset": {
               "value": 0,
               "unit": "SECOND"
-            }
+            },
+            "element": "ELECTRIC"
           },
           "clause": [
             {
@@ -83,14 +84,33 @@
                     "value": {
                       "verb": "VARY_BY",
                       "object": "SKILL_LEVEL",
-                      "value": [1.69, 1.86, 2.03, 2.19, 2.36, 2.53, 2.7, 2.87, 3.04, 3.25, 3.5, 3.8],
-                      "of": { "object": "OPERATOR", "determiner": "THIS" }
+                      "value": [
+                        1.69,
+                        1.86,
+                        2.03,
+                        2.19,
+                        2.36,
+                        2.53,
+                        2.7,
+                        2.87,
+                        3.04,
+                        3.25,
+                        3.5,
+                        3.8
+                      ],
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     },
                     "mainStat": {
                       "verb": "IS",
                       "object": "STAT",
                       "objectId": "ATTACK",
-                      "of": { "object": "OPERATOR", "determiner": "THIS" }
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     }
                   }
                 },
@@ -100,7 +120,12 @@
                   "objectId": "THUNDERLANCE",
                   "toDeterminer": "THIS",
                   "to": "OPERATOR",
-                  "with": { "stacks": { "verb": "IS", "value": 3 } }
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 3
+                    }
+                  }
                 },
                 {
                   "verb": "RECOVER",
@@ -115,17 +140,37 @@
                         "left": {
                           "verb": "VARY_BY",
                           "object": "TALENT_LEVEL",
-                          "value": [0, 3, 4],
-                          "of": { "object": "OPERATOR", "determiner": "THIS" }
+                          "value": [
+                            0,
+                            3,
+                            4
+                          ],
+                          "of": {
+                            "object": "OPERATOR",
+                            "determiner": "THIS"
+                          }
                         },
                         "right": {
                           "verb": "VARY_BY",
                           "object": "POTENTIAL",
-                          "value": [0, 2, 2, 2, 2, 2],
-                          "of": { "object": "OPERATOR", "determiner": "THIS" }
+                          "value": [
+                            0,
+                            2,
+                            2,
+                            2,
+                            2,
+                            2
+                          ],
+                          "of": {
+                            "object": "OPERATOR",
+                            "determiner": "THIS"
+                          }
                         }
                       },
-                      "right": { "verb": "IS", "value": 3 }
+                      "right": {
+                        "verb": "IS",
+                        "value": 3
+                      }
                     }
                   }
                 }

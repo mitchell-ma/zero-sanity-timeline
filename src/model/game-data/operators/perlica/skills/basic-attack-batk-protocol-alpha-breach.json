@@ -29,7 +29,8 @@
             "offset": {
               "value": 0.267,
               "unit": "SECOND"
-            }
+            },
+            "element": "ELECTRIC"
           },
           "clause": [
             {
@@ -110,7 +111,8 @@
             "offset": {
               "value": 0.3,
               "unit": "SECOND"
-            }
+            },
+            "element": "ELECTRIC"
           },
           "clause": [
             {
@@ -171,7 +173,8 @@
             "offset": {
               "value": 0.4,
               "unit": "SECOND"
-            }
+            },
+            "element": "ELECTRIC"
           },
           "clause": [
             {
@@ -252,7 +255,8 @@
             "offset": {
               "value": 0.53,
               "unit": "SECOND"
-            }
+            },
+            "element": "ELECTRIC"
           },
           "clause": [
             {
@@ -313,7 +317,8 @@
             "offset": {
               "value": 0.63,
               "unit": "SECOND"
-            }
+            },
+            "element": "ELECTRIC"
           },
           "clause": [
             {
@@ -374,7 +379,8 @@
             "offset": {
               "value": 0.73,
               "unit": "SECOND"
-            }
+            },
+            "element": "ELECTRIC"
           },
           "clause": [
             {
@@ -455,7 +461,8 @@
             "offset": {
               "value": 0.9,
               "unit": "SECOND"
-            }
+            },
+            "element": "ELECTRIC"
           },
           "clause": [
             {

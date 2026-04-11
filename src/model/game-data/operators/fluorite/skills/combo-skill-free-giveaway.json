@@ -75,7 +75,8 @@
             "offset": {
               "value": 0,
               "unit": "SECOND"
-            }
+            },
+            "element": "NATURE"
           },
           "clause": [
             {
@@ -209,11 +210,16 @@
               "object": "STATUS",
               "objectId": "INFLICTION",
               "objectQualifier": "CRYO",
-              "of": { "object": "ENEMY" }
+              "of": {
+                "object": "ENEMY"
+              }
             },
             "verb": "IS",
             "cardinalityConstraint": "GREATER_THAN_EQUAL",
-            "value": { "verb": "IS", "value": 2 }
+            "value": {
+              "verb": "IS",
+              "value": 2
+            }
           }
         ]
       },
@@ -225,11 +231,16 @@
               "object": "STATUS",
               "objectId": "INFLICTION",
               "objectQualifier": "NATURE",
-              "of": { "object": "ENEMY" }
+              "of": {
+                "object": "ENEMY"
+              }
             },
             "verb": "IS",
             "cardinalityConstraint": "GREATER_THAN_EQUAL",
-            "value": { "verb": "IS", "value": 2 }
+            "value": {
+              "verb": "IS",
+              "value": 2
+            }
           }
         ]
       }

@@ -7,7 +7,7 @@
  */
 import { EventType } from '../../consts/enums';
 import type { Interaction, ValueNode } from '../../dsl/semantics';
-import { checkKeys, validateEffect } from './validationUtils';
+import { checkKeys, validateEffect, validateSegmentShape } from './validationUtils';
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -89,6 +89,8 @@ export function validateOperatorSkill(json: Record<string, unknown>, skillId: st
   if (Array.isArray(json.segments)) {
     for (let si = 0; si < (json.segments as unknown[]).length; si++) {
       const seg = (json.segments as Record<string, unknown>[])[si];
+      // Whitelist segment / frame shape (keys + frame.properties.element).
+      errors.push(...validateSegmentShape(seg, `${path}.segments[${si}]`));
       const frames = seg.frames as Record<string, unknown>[] | undefined;
       if (!Array.isArray(frames)) continue;
       for (let fi = 0; fi < frames.length; fi++) {

@@ -27,7 +27,11 @@
             "offset": {
               "value": 0.1,
               "unit": "SECOND"
-            }
+            },
+            "element": "ELECTRIC",
+            "frameTypes": [
+              "DIVE"
+            ]
           },
           "clause": [
             {
@@ -74,9 +78,6 @@
                 }
               ]
             }
-          ],
-          "frameTypes": [
-            "DIVE"
           ],
           "clauseType": "ALL"
         }

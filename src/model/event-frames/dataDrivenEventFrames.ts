@@ -94,10 +94,20 @@ interface JsonOffset {
 
 interface JsonFrame {
   metadata?: { eventComponentType?: string; dataSources?: string[] };
-  properties?: { offset?: JsonOffset; element?: string; dependencyTypes?: string[]; suppliedParameters?: Record<string, { id: string; name: string; lowerRange: number; upperRange: number; default: number }[]> };
+  properties?: {
+    offset?: JsonOffset;
+    element?: string;
+    dependencyTypes?: string[];
+    /**
+     * Tags this frame as a particular variant (FINAL_STRIKE, FINISHER, DIVE).
+     * Lives in `properties` alongside the other frame metadata fields
+     * (offset/element/dependencyTypes) for consistency.
+     */
+    frameTypes?: string[];
+    suppliedParameters?: Record<string, { id: string; name: string; lowerRange: number; upperRange: number; default: number }[]>;
+  };
   clause?: JsonClausePredicate[];
   clauseType?: string;
-  frameTypes?: string[];
   damageElement?: string;
 }
 
@@ -300,9 +310,14 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
     this._hasConditionalClauses = clauses.some(p => p.conditions.length > 0);
     this._duplicateTriggerSource = duplicateSource;
     this._dependencyTypes = (frame.properties?.dependencyTypes ?? []) as string[];
-    // Merge explicit frameTypes from JSON (e.g. "frameTypes": ["DIVE"]) with clause-derived ones
-    if (frame.frameTypes) {
-      for (const ft of frame.frameTypes as EventFrameType[]) {
+    // Merge explicit frameTypes from JSON (e.g. "frameTypes": ["DIVE"]) with
+    // clause-derived ones. The canonical location is `frame.properties.frameTypes`
+    // (alongside offset/element). The legacy top-level `frame.frameTypes` is also
+    // accepted for backwards compatibility but should be migrated.
+    const explicitFrameTypes = (frame.properties?.frameTypes
+      ?? (frame as { frameTypes?: string[] }).frameTypes) as EventFrameType[] | undefined;
+    if (explicitFrameTypes) {
+      for (const ft of explicitFrameTypes) {
         if (!frameTypes.includes(ft)) frameTypes.push(ft);
       }
     }

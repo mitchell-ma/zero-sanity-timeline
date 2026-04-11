@@ -62,7 +62,8 @@
             "offset": {
               "value": 0.9,
               "unit": "SECOND"
-            }
+            },
+            "element": "CRYO"
           },
           "clause": [
             {
@@ -201,7 +202,8 @@
                 {
                   "verb": "APPLY",
                   "objectQualifier": "ARTS",
-                  "object": "STATUS", "objectId": "SUSCEPTIBILITY",
+                  "object": "STATUS",
+                  "objectId": "SUSCEPTIBILITY",
                   "to": "ENEMY",
                   "with": {
                     "value": {

@@ -70,7 +70,8 @@
             "offset": {
               "value": 1,
               "unit": "SECOND"
-            }
+            },
+            "element": "HEAT"
           },
           "clause": [
             {

@@ -43,7 +43,8 @@
             "offset": {
               "value": 0.7,
               "unit": "SECOND"
-            }
+            },
+            "element": "CRYO"
           },
           "clause": [
             {
