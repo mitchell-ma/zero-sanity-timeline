@@ -1,24 +1,5 @@
 # TODO
 
-## Cooldown reconcile: cross-check L11 vs L12 outliers against wiki
-
-The `validateCooldownSkillLevelMonotonicity` rule in
-`validationUtils.ts` warns at parse time whenever a `VARY_BY SKILL_LEVEL`
-cooldown array on a `COOLDOWN` segment has its last two entries equal —
-that's usually a reconcile miss (L12 tier copied from L11 instead of
-the further reduction). Snowshine's Polar Rescue had the opposite
-flavour and was fixed in commit 9461b779.
-
-Currently flagged at parse time:
-- `MOMENT_OF_BLAZING_SHADOW` (Rossi combo) — `[..., 14, 14]`
-- `MOMENT_OF_BLAZING_SHADOW_EMPOWERED` (Rossi combo empowered) — `[..., 14, 14]`
-
-Action: cross-check each against `endfield.wiki.gg` for the correct
-per-level values. Either fix the data so L12 < L11, or — if the wiki
-confirms the L12 tier really doesn't reduce — leave as-is and note it
-on the warning rule (TODO: support a per-skill exemption marker once
-we have a confirmed "no reduction at L12" case).
-
 ## DSL: IGNORE INFLICTION and elemental MITIGATE/DAMAGE_TAKEN_REDUCTION
 
 Estella T2 "Laziness Pays Off Now" requires:
