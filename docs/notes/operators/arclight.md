@@ -4,61 +4,34 @@
 
 ## Skills
 
-- Basic Attack: Seek and Hunt
-- Battle Skill: Tempestuous Arc (base + Empowered variant when enemy has Electrification)
+- Basic Attack: Seek and Hunt (5-seq physical)
+- Battle Skill: Tempestuous Arc — 2 physical slashes + conditional 3rd frame when
+  enemy has Electrification (consume + electric DMG + SP recovery with P1 baked via
+  `ADD(VARY_BY SKILL_LEVEL, VARY_BY POTENTIAL [0,10,10,10,10,10])` + stagger + apply
+  Wildland Trekker talent stacks)
 - Combo Skill: Peal of Thunder
-- Ultimate: Exploding Blitz
+- Ultimate: Exploding Blitz — 2 segments: Exploding Blitz (electric damage + stagger +
+  apply Electric Infliction OR consume infliction + forced Electrification) and
+  Arc Explosion (electric damage + stagger). All per-level values from Warfarin.
 
-## Wildland Trekker Counter Pipeline (wired)
+## Wildland Trekker (T1)
 
-1. Tempestuous Arc's conditional third frame fires when the enemy has Electrification
-   (`ENEMY HAVE STATUS REACTION ELECTRIFICATION`). It consumes the Electrification,
-   deals Electric DMG, recovers SP, and `APPLY STATUS WILDLAND_TREKKER_TALENT` to
-   Arclight with stacks +1.
-2. The Wildland Trekker T1 talent itself is the counter — no separate trigger status.
-   `stacks.interactionType: NONE` accumulates, and its `onTriggerClause` fires when
-   `EVENT STACKS BECOME GREATER_THAN_EQUAL` the P-dependent threshold (3 at P0–P4,
-   2 at P5, VARY_BY POTENTIAL `[3,3,3,3,3,2]`).
-3. On threshold hit: `CONSUME THIS EVENT` (drops stacks back to 0) + `APPLY STATUS
-   WILDLAND_TREKKER_BUFF to: TEAM`.
-4. `WILDLAND_TREKKER_BUFF` lives on the team column (`to: TEAM`) and fans out
-   `APPLY ELECTRIC DAMAGE_BONUS` to each operator (`toDeterminer: ALL`). Per-Intellect
-   scaling with P3+ improvement is handled via `VARY_BY [POTENTIAL, INTELLECT]`.
+The talent itself is the stacking counter (Living Banner pattern). Each BS
+Electrification-consume applies +1 stack. `onTriggerClause` fires when stacks reach the
+P-dependent threshold (`VARY_BY POTENTIAL [3,3,3,3,3,2]`) → consumes stacks + applies
+`WILDLAND_TREKKER_BUFF` to team.
 
-This follows Pogranichnik's Living Banner counter-talent pattern — the talent def
-carries both the stacks limit and the trigger clause, so there's no orphan "trigger
-status" file alongside it.
+Buff value: `MULT(VARY_BY TALENT_LEVEL [0, 0.0005, 0.0008], VARY_BY POTENTIAL [1,1,1,1.3,1.3,1.3], INTELLECT)`.
 
-## Changes Applied
+## Potentials
 
-- Fixed vanilla BS second slash multiplier (was mistakenly set to the Electric additional-attack
-  values; now matches the first slash at 0.45–1.01 per level).
-- Empowered BS activation condition switched from `WILDLAND_TREKKER_TRIGGER = MAX` (wrong
-  semantic) to `ENEMY HAS STATUS ELECTRIFICATION`.
-- Empowered BS 3rd frame now applies `WILDLAND_TREKKER_TRIGGER` directly — removed the
-  redundant `onTriggerClause` from the trigger status.
-- Trigger / buff status targeting migrated from legacy `target`/`targetDeterminer` to
-  canonical `to`/`toDeterminer`.
-- Buff status now sits on `TEAM` column with inner stat fan-out via `toDeterminer: ALL`.
-- Deleted misfiled `status-tactful-approach.json` — this status belongs to Avywenna,
-  not Arclight (Arclight has no Tactful Approach talent; see
-  `src/model/game-data/operators/avywenna/talents/talent-tactful-approach-talent.json`).
+- P1 Child of the Storm: baked into BS SP recovery as ADD + VARY_BY POTENTIAL
+- P2 Speed Battler: concrete clause — APPLY STAT AGI +15, INT +15
+- P3 "Hanna": baked into buff MULT expression (1.3× at P3+)
+- P4 Aldertone's Teachings: baked into ult CONSUME ULTIMATE_ENERGY (MULT with 0.85 at P4+)
+- P5 Servant of the Wildlands: baked into talent onTriggerClause threshold (2 at P5)
 
-## Remaining Work
+## Remaining
 
-- **Ultimate Exploding Blitz** — current segments only cover stagger + damage at the
-  2.03s frame and a stagger-only DELAYED segment. Per the wiki description the ult should
-  also: (a) apply Electric Infliction to enemies in the dash path at the first frame,
-  (b) deal Electric DMG on the delayed explosion frame, and (c) consume Electric
-  Infliction → forcibly apply Electrification when one is already present. These effects
-  are not yet in the JSON. The damage frame also still uses an End-Axis–style
-  `damageMultiplierIncrement + value` shape that should be collapsed.
-- **Hannabit Wisdom (T2)** — description-only; requires CHANCE + IGNORE INFLICTION DSL
-  support. Blocked, left RECONCILED.
-- **Integration test coverage** — existing `skills.test.ts` is smoke-style. Still missing
-  the E2E scenarios in `.claude-temp/reconcile-plans/05-arclight.md`: trigger-counter
-  accumulation across 3 BS casts, P5 threshold=2, buff fan-out Intellect scaling,
-  buff refresh/non-stack behavior, and the ult Electrification chain once the ult is
-  reworked.
-- **dataStatus flip** — all Arclight files remain RECONCILED pending the ult rework and
-  awaiting user sign-off per the never-flip-verified rule.
+- **Hannabit Wisdom (T2)** — description-only, blocked on IGNORE INFLICTION engine support
+- **dataStatus** — all files RECONCILED

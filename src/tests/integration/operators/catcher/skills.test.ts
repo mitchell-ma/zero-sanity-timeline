@@ -679,7 +679,7 @@ describe('F. CS Activation Window', () => {
       infliction: new Map<string, string>(),
     };
     for (const ev of chargeEvents) {
-      const pres = computeEventPresentation(ev, enemyCol!, {
+      const pres = computeEventPresentation(ev, {
         slotElementColors: {},
         autoFinisherIds: new Set(),
         validationMaps: EMPTY_VALIDATION_MAPS,

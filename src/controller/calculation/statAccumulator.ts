@@ -137,6 +137,7 @@ export class StatAccumulator {
 
     // Common (team-level)
     this.current.set(TEAM_ID, emptySnapshot());
+    this.base.set(TEAM_ID, { ...emptySnapshot().stats });
   }
 
   // ── Delta application ──────────────────────────────────────────

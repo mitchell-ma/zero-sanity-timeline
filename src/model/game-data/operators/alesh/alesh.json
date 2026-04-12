@@ -10,7 +10,7 @@
   "mainAttributeType": "STRENGTH",
   "secondaryAttributeType": "INTELLECT",
   "talents": {
-    "one": "FLASH_FROZEN_TALENT",
+    "one": "FLASH_FROZEN_FOR_FRESHNESS",
     "two": "VETERAN_ANGLER_TALENT",
     "attributeIncrease": {
       "id": "FORGED"
@@ -1671,6 +1671,6 @@
     "dataSources": [
       "WARFARIN"
     ],
-    "dataStatus": "RECONCILED"
+    "dataStatus": "VERIFIED"
   }
 }

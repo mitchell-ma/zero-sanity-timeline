@@ -24,7 +24,8 @@ import {
   INFLICTION_COLUMNS, REACTION_COLUMNS, ENEMY_ID,
 } from '../../../../model/channels';
 import { TEAM_ID } from '../../../../controller/slot/commonSlotController';
-import { EventStatusType, InteractionModeType } from '../../../../consts/enums';
+import { CritMode, ElementType, EventStatusType, InteractionModeType } from '../../../../consts/enums';
+import { runCalculation } from '../../../../controller/calculation/calculationController';
 import { FPS } from '../../../../utils/timeline';
 import { computeTimelinePresentation } from '../../../../controller/timeline/eventPresentationController';
 import { getUltimateEnergyCostForPotential } from '../../../../controller/operators/operatorRegistry';
@@ -695,5 +696,74 @@ describe('H. Wildland Trekker counter pipeline', () => {
     expect(talentLabels.length).toBeGreaterThanOrEqual(2);
     expect(talentLabels.some(l => l.endsWith(' I'))).toBe(true);
     expect(talentLabels.some(l => l.endsWith(' II'))).toBe(true);
+  });
+
+  it('H4: Wildland Trekker TEAM buff Electric DMG Bonus is reflected in damage calculation', () => {
+    const { result } = setupArclight();
+
+    // At default P5 the counter threshold is 2 — need 2 BS casts on
+    // electrified enemy to trigger the team buff. Each BS consumes
+    // the active Electrification, so place a fresh one before each cast.
+    act(() => {
+      result.current.handleAddEvent(
+        ENEMY_ID, REACTION_COLUMNS.ELECTRIFICATION, 1 * FPS,
+        { name: REACTION_COLUMNS.ELECTRIFICATION, segments: [{ properties: { duration: 20 * FPS } }] },
+      );
+    });
+    placeBSE2E(result, 3);
+
+    act(() => {
+      result.current.handleAddEvent(
+        ENEMY_ID, REACTION_COLUMNS.ELECTRIFICATION, 8 * FPS,
+        { name: REACTION_COLUMNS.ELECTRIFICATION, segments: [{ properties: { duration: 20 * FPS } }] },
+      );
+    });
+    placeBSE2E(result, 10);
+
+    // Verify the Wildland Trekker buff event appeared on TEAM
+    const buffs = getBuffEvents(result.current);
+    expect(buffs.length).toBeGreaterThanOrEqual(1);
+
+    // Place a 3rd BS AFTER the buff is active — its electric damage frames
+    // should have an Electric DMG Bonus from the team stat delta.
+    // Place another Electrification for the 3rd BS to consume.
+    act(() => {
+      result.current.handleAddEvent(
+        ENEMY_ID, REACTION_COLUMNS.ELECTRIFICATION, 18 * FPS,
+        { name: REACTION_COLUMNS.ELECTRIFICATION, segments: [{ properties: { duration: 20 * FPS } }] },
+      );
+    });
+    placeBSE2E(result, 20);
+
+    const calcResult = runCalculation(
+      result.current.allProcessedEvents,
+      result.current.columns,
+      result.current.slots,
+      result.current.enemy,
+      result.current.loadoutProperties,
+      result.current.loadouts,
+      result.current.staggerBreaks,
+      CritMode.NEVER,
+      result.current.overrides,
+    );
+
+    // The 3rd BS's electric frame (conditional on Electrification) should
+    // show a positive Electric DMG Bonus from the Wildland Trekker team buff.
+    // Physical frames should also show the bonus in allElementDmgBonuses.
+    const thirdBsStart = 20 * FPS;
+    const thirdBsRows = calcResult.rows.filter(
+      r =>
+        r.ownerEntityId === SLOT_ARCLIGHT
+        && r.columnId === NounType.BATTLE
+        && r.absoluteFrame >= thirdBsStart
+        && r.damage != null,
+    );
+    expect(thirdBsRows.length).toBeGreaterThan(0);
+
+    // At least one row must show the TEAM electric DMG bonus
+    const hasTeamElectricBonus = thirdBsRows.some(
+      r => (r.params?.sub?.allElementDmgBonuses?.[ElementType.ELECTRIC] ?? 0) > 0,
+    );
+    expect(hasTeamElectricBonus).toBe(true);
   });
 });

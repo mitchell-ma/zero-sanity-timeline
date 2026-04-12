@@ -9,6 +9,7 @@
 
 import type { Effect, Interaction, Predicate, ValueNode, WithPreposition } from '../dsl/semantics';
 import { isValueLiteral, isValueVariable, isValueStat, isValueExpression, NounType, VerbType } from '../dsl/semantics';
+import { UnitType } from '../consts/enums';
 import { t } from '../locales/locale';
 
 // ── Output ───────────────────────────────────────────────────────────────────
@@ -29,6 +30,12 @@ const titleCase = (s: string) =>
 function displayValue(v: unknown): string {
   if (v == null) return '?';
   if (typeof v === 'number' || typeof v === 'string') return String(v);
+  // Handle unit-wrapped values like { unit: "PERCENTAGE", value: { verb: "IS", value: 50 } }
+  const rec = v as Record<string, unknown>;
+  if (rec.unit && rec.value != null) {
+    const inner = displayValue(rec.value);
+    return rec.unit === UnitType.PERCENTAGE ? `${inner}%` : `${inner} ${String(rec.unit).toLowerCase()}`;
+  }
   const node = v as ValueNode;
   if (isValueLiteral(node)) return String(node.value);
   if (isValueVariable(node)) {

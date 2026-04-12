@@ -1,91 +1,30 @@
 # TODO
 
-## DSL: IGNORE INFLICTION, CHANCE gate, elemental MITIGATE
+## DSL: IGNORE INFLICTION + elemental MITIGATE
 
-Three engine primitives are missing and together block a cluster of defensive/probabilistic
-talents. They can be built independently but are grouped here because several operators
-need two of them at once.
+CHANCE is implemented (used by Alesh combo skill). Two primitives remain:
 
-### Primitive 1 — `VerbType.CHANCE` interpreter
+### IGNORE STATUS INFLICTION
 
-`VerbType.CHANCE` is declared in `src/dsl/semantics.ts:229` and the `elseEffects` field is
-documented at `semantics.ts:840–847` with four execution modes (EXPECTED / ALWAYS / NEVER /
-MANUAL). But `eventInterpretorController.ts::interpret()` has no `case VerbType.CHANCE` —
-any CHANCE effect would fall through to the `default` warn branch. Zero JSON files currently
-use `"verb": "CHANCE"`.
+Extend `case VerbType.IGNORE` in `eventInterpretorController.ts` to handle
+`object: STATUS, objectId: INFLICTION, objectQualifier: <element>`. Register a per-slot
+passive flag; check it at the `APPLY STATUS INFLICTION → OPERATOR` site and drop the
+application. Route through CHANCE when the effect wraps IGNORE in a probability gate.
 
-Work:
-- Add `case VerbType.CHANCE` to the interpret switch.
-- Roll/execute main effects on pass, execute `elseEffects` on fail.
-- Honor EXPECTED mode so timeline visualization can display the frame at fractional
-  intensity without a per-run dice roll (same conceptual slot as the crit expectation
-  model in `combatStateController`, but generic — CHANCE must not piggyback on `isCrit`).
-- ALWAYS / NEVER / MANUAL modes per the semantics.ts docstring.
+### Elemental MITIGATE / DAMAGE_TAKEN_REDUCTION
 
-### Primitive 2 — `IGNORE STATUS` with infliction object
+Incoming damage reduction scoped to an element. Either a new verb or a per-element stat
+(`StatType.HEAT_DAMAGE_TAKEN_REDUCTION`). Plugs into the damage formula layer.
 
-`VerbType.IGNORE`'s permitted objects (`semantics.ts:390`) include `STATUS`, but the
-interpretor at `eventInterpretorController.ts:830` only handles `IGNORE ULTIMATE_ENERGY`.
-`IGNORE STAT` for resistance is handled downstream in the damage formula layer; there is
-no path that says "when an INFLICTION would be applied to this operator, drop it."
+### Blocked operators
 
-Work:
-- Extend `case VerbType.IGNORE` to handle `object: STATUS`, `objectId: INFLICTION`, with
-  `objectQualifier` selecting the element (ARTS, CRYO, HEAT, ELECTRIC, NATURE, PHYSICAL).
-- Register a per-slot passive flag (analogous to `setIgnoreExternalGain` for UE). The flag
-  should honor the lifecycle of the status/talent that declared it — applied when the
-  clause is interpreted, reverted when the parent event ends.
-- Add a check at the `APPLY STATUS INFLICTION → OPERATOR` site in the interpretor that
-  consults the flag and drops the application. Route through Primitive 1 when the declaring
-  effect wraps IGNORE in a CHANCE gate.
-
-Design decision to make before implementing: inline resistance check at the APPLY site
-vs. a generic pre-apply interceptor list keyed by `(object, objectQualifier, target)`.
-The generic interceptor is more work now but would also serve Fluorite T2 and Antal's
-immunity, which are grouped under the same "reactive/immunity" pattern.
-
-### Primitive 3 — elemental MITIGATE / DAMAGE_TAKEN_REDUCTION
-
-Incoming damage reduction scoped to an element (e.g. −10%/−20% Cryo damage taken). This
-is orthogonal to IGNORE INFLICTION — it affects the damage formula, not the status
-application path. Needs to plug into whichever layer currently resolves incoming damage
-against operator defense/resistance.
-
-Work:
-- Decide whether MITIGATE is a new verb (`VerbType.MITIGATE`) or a new stat
-  (`StatType.HEAT_DAMAGE_TAKEN_REDUCTION` × per-element), then wire it into the damage
-  formula consumer.
-- Update `src/dsl/semantics.ts` and `src/consts/enums.ts` accordingly.
-- For the stat-based approach, the existing `APPLY STAT` path already handles per-element
-  stat buffs with `objectQualifier`; this would be the lowest-churn option.
-
-### Blocked operators (description-only until the needed primitives land)
-
-| Operator / effect | Needs P1 (CHANCE) | Needs P2 (IGNORE INFL) | Needs P3 (MITIGATE) | Other |
-|---|---|---|---|---|
-| Arclight T2 (Hannabit Wisdom) — 50% Arts Infliction ignore | ✓ | ✓ (ARTS) | | |
-| Estella T2 (Laziness Pays Off Now) — Cryo infliction ignore + Cryo damage taken −10/−20% | | ✓ (CRYO) | ✓ (CRYO) | |
-| Snowshine P1 (Cold Shelter) — Arts infliction ignore on operators with Protection | | ✓ (ARTS) | | Requires enemy→operator infliction flow (engine currently only flows operator→enemy) |
-| Fluorite T2 (Unpredictable) — chance probability gate | ✓ | | | Implement with Antal's immunity, same pattern |
-| Antal immunity (pre-existing note) | | ✓ (see existing notes) | | Grouped with Fluorite T2 |
-
-### Suggested implementation order
-
-1. **P1 (CHANCE) first** — smallest scope, no cross-layer coupling, unlocks Fluorite T2
-   independently, and is a prerequisite for Arclight T2's probabilistic wrapper.
-2. **P2 (IGNORE INFLICTION) second** — unlocks Arclight T2 (combined with P1), Estella
-   T2's infliction half, and Snowshine P1's infliction half.
-3. **P3 (MITIGATE) last** — needed only for Estella T2's damage-reduction half; keeps it
-   isolated from the reactive-passive work.
-
-Once each primitive lands, bake the operator-level effects into:
-- `operators/arclight/talents/talent-hannabit-wisdom-talent.json`
-- `operators/estella/talents/talent-laziness-pays-off-now-talent.json`
-- `operators/snowshine/potentials/potential-1-cold-shelter.json`
-- `operators/fluorite/talents/talent-unpredictable-talent.json` (or wherever it lives)
-
-using `VARY_BY TALENT_LEVEL` or `VARY_BY POTENTIAL` as appropriate, and flip the
-blockers off the list above.
+| Operator / effect | Needs IGNORE INFL | Needs MITIGATE | Other |
+|---|---|---|---|
+| Arclight T2 (Hannabit Wisdom) — 50% Arts Infliction ignore | ✓ (ARTS) + CHANCE | | |
+| Estella T2 (Laziness Pays Off Now) — Cryo infliction ignore + Cryo −10/−20% | ✓ (CRYO) | ✓ (CRYO) | |
+| Snowshine P1 (Cold Shelter) — Arts infliction ignore on operators with Protection | ✓ (ARTS) | | enemy→operator infliction flow needed |
+| Fluorite T2 (Unpredictable) — chance Arts DMG immunity | ✓ (ARTS) | | |
+| Antal Subconscious Act — 30% Physical DMG immunity | ✓ (PHYSICAL) | | |
 
 ## Spatial mechanics (radius / area buffs)
 
@@ -267,17 +206,15 @@ These sets have HP-threshold conditions but are metadata-only with zero clauses:
 
 #### Structural / Data Issues
 
-4. **Arclight empowered battle skill** — Damage multiplier values [0.45...1.01] for the two Physical slashes were taken from the normal variant. Verify these are correct for the empowered version (wiki doesn't distinguish normal vs empowered BS multipliers for Arclight).
+4. **Endministrator basic attack SEQ 3/4** — Rounding discrepancies (1-2%) vs wiki at several skill levels due to per-hit division. Per-hit values from Warfarin `atk_scale` are correct for damage calc; wiki `display_atk_scale` is a rounded sum.
 
-5. **Endministrator basic attack SEQ 3/4** — Rounding discrepancies (1-2%) vs wiki at several skill levels due to per-hit division. Per-hit values from Warfarin `atk_scale` are correct for damage calc; wiki `display_atk_scale` is a rounded sum.
-
-6. **Arclight combo** — Total multiplier 1% over across all levels (156% vs wiki 155%). Per-hit values may need slight adjustment.
+5. **Arclight combo** — Total multiplier 1% over across all levels (156% vs wiki 155%). Per-hit values may need slight adjustment.
 
 7. **Yvonne empowered basic attack** — Segment 0 has 3 frames with empty `effects: []`. These serve no purpose and should be removed or populated.
 
 8. **Multiple operators** — Description template placeholders unresolved ({trigger_hp_ratio:0%}, {extra_scaling}, {duration-1:0%}, etc.). Cosmetic only but should be filled in.
 
-9. **Multiple operators** — Status descriptions copied from skill descriptions instead of describing the status itself (Arclight Wildland Trekker trigger/buff, Avywenna Thunderlance).
+9. **Multiple operators** — Status descriptions copied from skill descriptions instead of describing the status itself (Avywenna Thunderlance).
 
 ## Engine fixes
 
@@ -315,7 +252,7 @@ The following deeper mechanic-specific tests remain:
 | Ember | P5 Steel Oath Empowered (shield ×1.2 + ATK +10%), Pay the Ferric Price 3-stack accumulation, Protection duration extension on hit |
 | Catcher | RETURN vs RECOVER SP distinction, P1 DEF-scaling bonus damage on BS/ult hit, Weaken status from ult |
 | Da Pan | Reduce & Thicken multi-stack accumulation (4 stacks), Vulnerability 4-stack combo trigger in strict mode, P5 extra Vulnerability stack |
-| Arclight | Wildland Trekker counter accumulation (3 BS casts → team buff, blocked on a test helper that can place N fresh Electrifications — `setupElectrification` produces one reaction that the first BS consumes, subsequent calls don't re-react reliably), P5 threshold reduction (3 → 2), buff fan-out Intellect scaling, buff refresh/non-stack. Single-cast empowered BS variant activation via Electrification, and ult Electric Infliction → forced Electrification branch — DONE (see `operators/arclight/skills.test.ts` G1–H2). |
+| Arclight | Multi-cast counter accumulation (3 BS → team buff) blocked on test fixture for N fresh Electrifications. P5 threshold=2, buff Intellect scaling, buff refresh/non-stack. Single-cast BS + ult branch tests DONE (G1–H3). |
 | Fluorite | T2 (Unpredictable) chance probability gate + Antal immunity — implement together |
 | Gilberta | Arts Reaction combo trigger in strict mode, Gravity Field Lift extension, Messenger's Song UE gain buff |
 | Alesh | Flash-frozen talent (Cryo→Solidification chain), arts reaction consume combo trigger in strict mode |

@@ -458,9 +458,11 @@ export function useApp() {
   }, [enemy.id]);
 
   // Pipeline crit mode: EXPECTED and ALWAYS produce identical pipeline events
-  // (both fire PERFORM CRITICAL_HIT on every damage frame). Normalizing avoids
-  // a full pipeline recompute when toggling between them — only the damage table
-  // in CombatSheet needs the actual critMode for multiplier calculation.
+  // for crit (both fire PERFORM CRITICAL_HIT on every damage frame). Normalizing
+  // avoids a full pipeline recompute when toggling between them — only the damage
+  // table needs the actual critMode for multiplier calculation.
+  // CHANCE reads the runtime crit mode directly via getRuntimeCritMode() in
+  // doChance, so it sees ALWAYS even when the pipeline is normalized to EXPECTED.
   const pipelineCritMode = critMode === CritMode.ALWAYS ? CritMode.EXPECTED : critMode;
 
   const processedEvents = useMemo(

@@ -313,7 +313,7 @@
   "metadata": {
     "originId": "ARCLIGHT",
     "icon": "skills/combo_arclight.png",
-    "dataStatus": "RECONCILED"
+    "dataStatus": "VERIFIED"
   },
   "clauseType": "ALL",
   "activationWindow": {

@@ -267,6 +267,10 @@ function scanEvents(primaryCond: Predicate, ctx: VerbHandlerContext, verb: strin
   const matches: TriggerMatch[] = [];
   const columns = resolveColumns(primaryCond);
   const { matchesOwner } = resolveOwnerFilter(primaryCond, ctx.operatorSlotId, verb);
+  // CONSUME triggers should only match events that were actually consumed
+  // (eventStatus === CONSUMED), not merely present. APPLY / RECEIVE match
+  // any event on the column regardless of status.
+  const requireConsumed = verb === VerbType.CONSUME;
   for (const ev of ctx.events) {
     if (columns) {
       if (!columns.has(ev.columnId)) continue;
@@ -276,12 +280,20 @@ function scanEvents(primaryCond: Predicate, ctx: VerbHandlerContext, verb: strin
       if (INFLICTION_COLUMN_IDS.has(ev.columnId)) continue;
       if (SKIP_COLUMNS.has(ev.columnId)) continue;
     }
+    if (requireConsumed && ev.eventStatus !== EventStatusType.CONSUMED) continue;
     // Arts Burst: only match infliction events flagged as same-element stacking
     if (primaryCond.object === NounType.ARTS_BURST && !ev.isArtsBurst) continue;
     if (!matchesOwner(ev.ownerEntityId)) continue;
-    if (!checkSecondary(ctx, ev.startFrame, ev.ownerEntityId)) continue;
+    // For CONSUME, the trigger fires at the consumption frame (event end after
+    // duration clamping), not the event's original startFrame. The engine clamps
+    // a consumed event's duration to the consumption point, so startFrame +
+    // eventDuration = the frame at which the consume action happened.
+    const triggerFrame = requireConsumed
+      ? ev.startFrame + computeSegmentsSpan(ev.segments)
+      : ev.startFrame;
+    if (!checkSecondary(ctx, triggerFrame, ev.ownerEntityId)) continue;
 
-    matches.push(makeMatch(ev.startFrame, ev, ctx.clauseEffects));
+    matches.push(makeMatch(triggerFrame, ev, ctx.clauseEffects));
   }
   return matches;
 }

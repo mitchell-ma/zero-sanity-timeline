@@ -106,7 +106,6 @@ describe('Segment Element Color — event-level dominant element', () => {
     // Event color should resolve to HEAT (dominant by frame count)
     const color = resolveEventColor(
       ev,
-      bsCol! as MiniTimeline,
       { [SLOT_ROSSI]: ELEMENT_COLORS[ElementType.PHYSICAL] },
     );
     expect(color).toBe(ELEMENT_COLORS[ElementType.HEAT]);

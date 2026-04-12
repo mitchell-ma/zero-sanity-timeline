@@ -998,13 +998,12 @@ export default React.memo(function CombatPlanner({
       mergedValidationMaps = { ...validationMaps, resource: merged };
     }
     for (const [colKey, vm] of Array.from(columnViewModels.entries())) {
-      const col = vm.column;
       const opts = {
         slotElementColors, alwaysAvailableComboSlots, autoFinisherIds,
         validationMaps: mergedValidationMaps, interactionMode, statusViewOverrides: vm.statusOverrides, events,
       };
       for (const ev of vm.events) {
-        map.set(`${colKey}:${ev.uid}`, computeEventPresentation(ev, col, opts));
+        map.set(`${colKey}:${ev.uid}`, computeEventPresentation(ev, opts));
       }
     }
     return map;
@@ -2062,8 +2061,8 @@ export default React.memo(function CombatPlanner({
       const chanceTarget = !allHit;
       items.push({
         label: isBatch
-          ? (allHit ? `Set ${chanceFrames.length} Frames Chance Miss` : `Set ${chanceFrames.length} Frames Chance Hit`)
-          : (allHit ? 'Set Chance Miss' : 'Set Chance Hit'),
+          ? (allHit ? `Set ${chanceFrames.length} Frames No Chance` : `Set ${chanceFrames.length} Frames Chance`)
+          : (allHit ? 'Set No Chance' : 'Set Chance'),
         action: () => {
           for (const sf of chanceFrames) {
             const el = document.querySelector(`[data-frame-id="${sf.eventUid}-${sf.segmentIndex}-${sf.frameIndex}"]`);

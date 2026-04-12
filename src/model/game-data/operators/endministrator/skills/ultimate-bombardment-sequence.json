@@ -136,14 +136,14 @@
                   "subject": "ENEMY",
                   "verb": "HAVE",
                   "object": "STATUS",
-                  "objectId": "REALSPACE_STASIS_TALENT"
+                  "objectId": "ORIGINIUM_CRYSTAL"
                 }
               ],
               "effects": [
                 {
                   "verb": "CONSUME",
                   "object": "STATUS",
-                  "objectId": "REALSPACE_STASIS_TALENT",
+                  "objectId": "ORIGINIUM_CRYSTAL",
                   "from": "ENEMY",
                   "with": {
                     "stacks": "MAX"

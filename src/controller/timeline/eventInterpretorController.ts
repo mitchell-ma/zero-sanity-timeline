@@ -52,7 +52,8 @@ import { getOperatorSkill } from '../../model/game-data/operatorSkillsStore';
 import { getAllStatusLabels } from '../gameDataStore';
 import { TEAM_ID } from '../slot/commonSlotController';
 import { evaluateConditions } from './conditionEvaluator';
-import { hasDealDamageClause, findDealDamageInClauses, buildDealDamageClause, parseJsonClauseArray, shouldFireChance } from './clauseQueries';
+import { hasDealDamageClause, findDealDamageInClauses, buildDealDamageClause, parseJsonClauseArray, shouldFireChance, hasChanceClause } from './clauseQueries';
+import { getRuntimeCritMode } from '../combatStateController';
 import { getStatusConfig, getStatusDef } from './configCache';
 import { resolveColumnId as resolveEffectColumnId, PHYSICAL_STATUS_VALUES, INFLICTION_COLUMN_TO_ELEMENT } from './columnResolution';
 import { collectNoGainWindowsForEvent } from './ultimateEnergyController';
@@ -236,6 +237,10 @@ export interface InterpretContext {
    * spawned event's own clauses can later read it.
    */
   triggerEntityId?: string;
+  /** Pre-resolved CHANCE pin for the current frame (from override store).
+   *  Set by handleProcessFrame before clause dispatch so doChance reads it
+   *  directly — same pattern as isCrit. */
+  chancePin?: boolean;
 }
 
 // ══════════════════════════════════════════════════════════════════════════
@@ -620,9 +625,9 @@ export class EventInterpretorController {
       /** ON_FRAME tracks APPLY STAT deltas for per-frame reversal; other hooks don't. */
       trackStatReversals: boolean;
     },
-  ): { executedCount: number; anyMatched: boolean } {
+  ): { executedCount: number; anyMatched: boolean; acceptedClauses: readonly FrameClausePredicate[] } {
     if (!clauses || clauses.length === 0) {
-      return { executedCount: 0, anyMatched: false };
+      return { executedCount: 0, anyMatched: false, acceptedClauses: [] };
     }
     // Fast path: when no clause has conditions, skip filterClauses entirely.
     // The hasConditionalClauses flag is pre-computed at parse time on DataDrivenSkillEventFrame.
@@ -674,7 +679,7 @@ export class EventInterpretorController {
         executedCount++;
       }
     }
-    return { executedCount, anyMatched: accepted.length > 0 };
+    return { executedCount, anyMatched: accepted.length > 0, acceptedClauses: accepted };
   }
 
   /**
@@ -1576,11 +1581,15 @@ export class EventInterpretorController {
   }
 
   private buildValueContext(ctx: InterpretContext): ValueResolutionContext {
-    const loadout = this.loadoutProperties?.[this.ctxSlot(ctx)];
-    const baseCtx = buildContextForSkillColumn(loadout, NounType.BATTLE);
+    const ownerEntityId = this.ctxSlot(ctx);
+    const loadout = this.loadoutProperties?.[ownerEntityId];
+    // Populate stats from the stat accumulator when available (includes
+    // base stats + runtime deltas like ATK buffs). This lets value nodes
+    // reference operator stats (e.g. INTELLECT) during interpret time.
+    const accStats = this.controller.getStatSnapshot(ownerEntityId);
+    const baseCtx = buildContextForSkillColumn(loadout, NounType.BATTLE, accStats);
     if (ctx.potential != null) baseCtx.potential = ctx.potential;
     if (ctx.suppliedParameters) baseCtx.suppliedParameters = ctx.suppliedParameters;
-    const ownerEntityId = this.ctxSlot(ctx);
     const frame = ctx.frame;
     baseCtx.getStatusStacks = (statusId: string) => {
       const active = activeEventsAtFrame(this.getAllEvents(), statusId, ownerEntityId, frame);
@@ -1607,7 +1616,8 @@ export class EventInterpretorController {
         if (rootSlotId && rootSlotId !== ownerEntityId) {
           const rootLoadout = this.loadoutProperties?.[rootSlotId];
           if (rootLoadout) {
-            baseCtx.sourceContext = buildContextForSkillColumn(rootLoadout, NounType.BATTLE);
+            const rootStats = this.controller.getStatSnapshot(rootSlotId);
+            baseCtx.sourceContext = buildContextForSkillColumn(rootLoadout, NounType.BATTLE, rootStats);
           }
         }
       }
@@ -1905,37 +1915,23 @@ export class EventInterpretorController {
    * doesn't. Spawned statuses from CHANCE branches carry no `expectedUptime`.
    */
   private doChance(effect: Effect, ctx: InterpretContext): boolean {
-    const pin = this.lookupChancePin(ctx);
-    const hit = shouldFireChance(this.critMode ?? CritMode.MANUAL, pin);
+    // chancePin is pre-resolved from the override store in handleProcessFrame
+    // (same pattern as isCrit). Runtime crit mode provides the unpinned default.
+    const hit = shouldFireChance(getRuntimeCritMode(), ctx.chancePin);
 
-    const branch = hit ? (effect.effects ?? []) : (effect.elseEffects ?? []);
-    for (const child of branch) this.interpret(child, ctx);
+    if (hit) {
+      // Support both predicated (conditions + effects) and flat (effects only) forms.
+      const preds = effect.predicates ??
+        (effect.effects?.length ? [{ conditions: [] as readonly Interaction[], effects: effect.effects }] : []);
+      const condCtx: ConditionContext = { events: this.getAllEvents(), frame: ctx.frame, sourceEntityId: ctx.sourceEntityId, targetEntityId: ctx.targetEntityId, potential: ctx.potential, getControlledSlotAtFrame: this.getControlledSlotAtFrame };
+      for (const pred of preds) {
+        if (pred.conditions.length > 0 && !evaluateConditions(pred.conditions, condCtx)) continue;
+        for (const child of pred.effects) this.interpret(child, ctx);
+      }
+    } else {
+      for (const child of effect.elseEffects ?? []) this.interpret(child, ctx);
+    }
     return true;
-  }
-
-  /**
-   * Look up the CHANCE pin for the currently-interpreting frame via the override store.
-   * Falls back to undefined when no frame context or no pin is recorded.
-   *
-   * The pin is keyed by (event uid, segment index, frame index) via FrameOverride.isChance —
-   * the same per-frame shape as isCritical. Frames without a CHANCE compound never show
-   * the UI pin option, so the field is only meaningful for CHANCE-carrying frames.
-   */
-  private lookupChancePin(ctx: InterpretContext): boolean | undefined {
-    if (!this.overrides || !ctx.sourceEventUid) return undefined;
-    const frameKey = ctx.sourceFrameKey;
-    if (!frameKey) return undefined;
-    // sourceFrameKey is "eventUid:si:fi" — split and read FrameOverride.isChance
-    const parts = frameKey.split(':');
-    if (parts.length !== 3) return undefined;
-    const [uid, siStr, fiStr] = parts;
-    const si = Number(siStr);
-    const fi = Number(fiStr);
-    if (!Number.isFinite(si) || !Number.isFinite(fi)) return undefined;
-    // Find the event by uid — use base events first, then controller output.
-    const ev = this.getAllEvents().find(e => e.uid === uid);
-    if (!ev) return undefined;
-    return this.overrides[buildOverrideKey(ev)]?.segments?.[si]?.frames?.[fi]?.isChance;
   }
 
   // ── Physical status logic (hardcoded engine mechanics) ─────────────────
@@ -2573,6 +2569,11 @@ export class EventInterpretorController {
       // clauses create child statuses still get fresh derived uids.
       const propagateUid = event.creationInteractionMode != null
         && !SKILL_COLUMN_SET.has(event.columnId);
+      // Pre-resolve the CHANCE pin from the override store (same as isCrit pin
+      // at line ~2700). doChance reads ctx.chancePin directly — no UID lookup.
+      const resolvedChancePin = hasChanceClause(frame.clauses)
+        ? this.overrides?.[buildOverrideKey(event)]?.segments?.[si]?.frames?.[fi]?.isChance
+        : undefined;
       const interpretCtx: InterpretContext = {
         frame: absFrame,
         sourceEntityId: routed.sourceEntityId,
@@ -2585,6 +2586,7 @@ export class EventInterpretorController {
         parentSegmentEndFrame: parentSegEnd,
         sourceFrameKey: hasDealDamageClause(frame.clauses)
           ? `${event.uid}:${si}:${fi}` : undefined,
+        ...(resolvedChancePin != null ? { chancePin: resolvedChancePin } : {}),
         ...(hasSuppliedParams ? { suppliedParameters: resolvedParams } : {}),
         ...(event.consumedStacks != null ? { consumedStacks: event.consumedStacks } : {}),
       };
@@ -2597,15 +2599,21 @@ export class EventInterpretorController {
         suppliedParameters: resolvedParams,
         getControlledSlotAtFrame: this.getControlledSlotAtFrame,
         getOperatorPercentageHp: this.controller.hasHpController() ? (opId, f) => this.controller.getOperatorPercentageHp(opId, f) : undefined,
+        getEnemyHpPercentage: this.getEnemyHpPercentage,
         sourceEventUid: event.uid,
         getLinkStacks: (uid) => this.controller.getLinkStacks(uid),
         getStatValue: this.controller.hasStatAccumulator() ? (entityId, stat) => this.controller.getStat(entityId, stat) : undefined,
       };
-      const { anyMatched } = this.dispatchClauseFrame(
+      const { anyMatched, acceptedClauses } = this.dispatchClauseFrame(
         frame.clauses, frame.clauseType, interpretCtx, condCtx,
         event.ownerEntityId, event.id, newEntries,
         { fireReactiveTriggers: true, trackStatReversals: true },
       );
+      // Narrow frame clauses to only matched predicates so the damage table
+      // builder sees the correct multiplier (e.g. HP-gated NOT clauses).
+      if (acceptedClauses !== frame.clauses) {
+        (frame as { clauses: readonly FrameClausePredicate[] }).clauses = acceptedClauses;
+      }
       // If no clause matched, mark frame as skipped so the damage table builder skips it
       if (!anyMatched) {
         frame.frameSkipped = true;
@@ -2667,9 +2675,17 @@ export class EventInterpretorController {
         });
         // Process status lifecycle (APPLY STAT clauses, onEntryClause, segment frames)
         // same as doApply → runStatusCreationLifecycle for skill-derived statuses.
+        // For derived TEAM/ENEMY statuses, use the event's sourceEntityId
+        // (the operator who created the status) so buildValueContext can
+        // resolve the source operator's slot for stat/talent/potential
+        // lookups. User-placed events (FOCUS, LINK, stagger) have no
+        // source operator — use ownerEntityId (ENEMY_ID/TEAM_ID) which
+        // gives an empty stat context (correct: no operator to reference).
         const enemyCtx: InterpretContext = {
-          frame: absFrame, sourceEntityId: this.slotToEntityId(event.ownerEntityId),
+          frame: absFrame,
+          sourceEntityId: event.sourceEntityId ?? event.ownerEntityId,
           sourceSkillName: event.id, potential: pot,
+          sourceEventUid: event.uid,
         };
         this.runStatusCreationLifecycle(event.id, event.ownerEntityId, enemyCtx);
         this.checkReactiveTriggers(VerbType.APPLY, event.id ?? event.columnId, absFrame, event.ownerEntityId, event.id, undefined, newEntries);
@@ -2683,6 +2699,9 @@ export class EventInterpretorController {
       // Also snapshot enemy deltas so the damage formula can read enemy-side
       // factor stats (e.g. WEAKNESS) at frame resolution.
       this.controller.snapshotStatDeltas(frameKey, ENEMY_ID);
+      // Snapshot TEAM deltas so team-wide APPLY STAT effects (e.g. Wildland
+      // Trekker electric DMG bonus) are visible to the damage formula.
+      this.controller.snapshotStatDeltas(frameKey, TEAM_ID);
     }
 
     // Reverse frame-scoped APPLY STAT deltas so they don't persist to later frames
@@ -2713,6 +2732,20 @@ export class EventInterpretorController {
         } else if (pin != null) {
           frame.isCrit = pin;
         }
+        // Populate frame.isChance from the override store (same pattern as isCrit).
+        // Only written when the frame carries a CHANCE compound.
+        if (hasChanceClause(frame.clauses)) {
+          const chancePin = this.overrides?.[buildOverrideKey(event)]?.segments?.[si]?.frames?.[fi]?.isChance;
+          // Same pattern as isCrit: explicit pin always persists (settable in
+          // any mode). Mode only provides the default for unpinned frames.
+          const runtimeMode = getRuntimeCritMode();
+          if (runtimeMode === CritMode.MANUAL) {
+            frame.isChance = chancePin ?? false;
+          } else if (chancePin != null) {
+            frame.isChance = chancePin;
+          }
+        }
+
         // Derive effective crit for trigger emission
         // NEVER/ALWAYS/EXPECTED override pins — the mode is authoritative
         const effectiveCrit = critMode === CritMode.ALWAYS || critMode === CritMode.EXPECTED ? true

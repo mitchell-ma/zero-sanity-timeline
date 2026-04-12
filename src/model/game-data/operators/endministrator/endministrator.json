@@ -11,7 +11,7 @@
   "secondaryAttributeType": "STRENGTH",
   "talents": {
     "one": "ESSENCE_DISINTEGRATION_TALENT",
-    "two": "REALSPACE_STASIS_TALENT",
+    "two": "ORIGINIUM_CRYSTAL",
     "attributeIncrease": {
       "id": "SKIRMISHER"
     }

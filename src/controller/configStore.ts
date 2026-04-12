@@ -11,7 +11,7 @@
 import type { EventSegmentData } from '../consts/viewTypes';
 import type { FrameClausePredicate } from '../model/event-frames/skillEventFrame';
 import { StackInteractionType, UnitType } from '../consts/enums';
-import { VerbType, NounType, DeterminerType } from '../dsl/semantics';
+import { VerbType, NounType, DeterminerType, flattenQualifiedId } from '../dsl/semantics';
 import type { Interaction, ValueNode } from '../dsl/semantics';
 import { buildSkillTypeMap, type SkillTypeMap } from '../utils/skillTypeMap';
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from './calculation/valueResolver';
@@ -483,10 +483,10 @@ export function getTeamStatusIds(operatorId: string): string[] {
           for (const pred of frame.clause ?? []) {
             for (const ef of pred.effects ?? []) {
               if (ef.to === NounType.TEAM && ef.object === NounType.STATUS && ef.objectId) {
-                // Qualified status columns are first-class objectIds — no
-                // runtime flatten. The deprecated `{objectId: base,
-                // objectQualifier: X}` form is rejected at parse time.
-                ids.add(ef.objectId as string);
+                const statusId = ef.objectQualifier
+                  ? flattenQualifiedId(ef.objectQualifier as string, ef.objectId as string)
+                  : ef.objectId as string;
+                ids.add(statusId);
               }
             }
           }

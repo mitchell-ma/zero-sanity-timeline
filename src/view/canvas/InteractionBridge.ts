@@ -168,12 +168,12 @@ export class InteractionBridge {
       } else if (hitLabel === 'warning') {
         setCursor('help');
       } else {
-        // Set cursor based on event draggability — set on both wrapper div AND
-        // the PixiJS canvas element (PixiJS's EventBoundary also sets canvas cursor,
-        // so we must override it at the same level).
+        // Draggability = the event was user-placed (has creationInteractionMode).
+        // Engine-derived events (no creationInteractionMode) are not draggable.
         const data = this.getData();
-        const pres = data ? this.findPresentation(data, uid) : null;
-        setCursor(pres?.notDraggable ? 'default' : 'grab');
+        const ev = data ? this.findEvent(data, uid) : null;
+        const isDraggable = ev && (ev as { creationInteractionMode?: unknown }).creationInteractionMode != null;
+        setCursor(isDraggable ? 'grab' : 'default');
       }
     }
   };
@@ -211,11 +211,11 @@ export class InteractionBridge {
     this.lastClickUid = uid;
     this.lastClickTime = now;
 
-    // Skip selection for non-draggable (natural derived) events,
+    // Skip selection for engine-derived (non-user-placed) events,
     // but still record click uid/time above so double-click detection works.
     const data2 = this.getData();
-    const pres2 = data2 ? this.findPresentation(data2, uid) : null;
-    if (pres2?.notDraggable) return;
+    const ev2 = data2 ? this.findEvent(data2, uid) : null;
+    if (ev2 && (ev2 as { creationInteractionMode?: unknown }).creationInteractionMode == null) return;
 
     this.getCallbacks().onEventSelect(toSynthetic(e), uid);
   };
@@ -260,13 +260,13 @@ export class InteractionBridge {
       return;
     }
 
-    // Event body → event drag start (only if draggable)
+    // Event body → event drag start (only if user-placed)
     const data = this.getData();
     const ev = data ? this.findEvent(data, uid) : null;
     if (ev) {
-      const pres = data ? this.findPresentation(data, uid) : null;
-      if (pres?.notDraggable) {
-        // Not draggable — treat as click on empty space (marquee)
+      const isUserPlaced = (ev as { creationInteractionMode?: unknown }).creationInteractionMode != null;
+      if (!isUserPlaced) {
+        // Engine-derived event — not draggable, treat as marquee
         this.getCallbacks().onMarqueeStart(se);
         return;
       }

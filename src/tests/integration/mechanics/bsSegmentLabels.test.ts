@@ -114,7 +114,7 @@ describe('BS segment labels use properties.name, not Roman numerals', () => {
 
     // 3. View layer — compute presentation and verify allSegmentLabels
     const slotElementColors = computeSlotElementColors(result.current.slots);
-    const presentation = computeEventPresentation(events[0], col!, {
+    const presentation = computeEventPresentation(events[0], {
       slotElementColors,
       autoFinisherIds: new Set(),
       validationMaps: emptyValidationMaps(),

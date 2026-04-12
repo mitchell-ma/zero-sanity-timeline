@@ -279,10 +279,13 @@ export class EventsQueryService {
     return this.artsAmpEvents.some(ev => this.isActive(ev, frame));
   }
 
-  getAmpBonus(frame: number): number {
+  getAmpBonus(frame: number, element?: ElementType): number {
     let sum = 0;
     for (const ev of this.artsAmpEvents) {
       if (!this.isActive(ev, frame)) continue;
+      // Element-specific AMP (e.g. ELECTRIC_AMP) only applies to matching damage.
+      // Unqualified AMP (no dslObjectQualifier) is a wildcard — applies to all elements.
+      if (element && ev.dslObjectQualifier && ev.dslObjectQualifier !== element) continue;
       sum += ev.statusValue ?? DEFAULT_AMP_BONUS;
     }
     return sum;
@@ -349,18 +352,7 @@ export class EventsQueryService {
    * Scans all events with DAMAGE_BONUS factor type that carry a per-intellect
    * statusValue and a sourceEntityId for stat lookup.
    */
-  getIntellectScaledDamageBonus(frame: number): number {
-    let sum = 0;
-    for (const ev of this.state.getAllEvents()) {
-      if (ev.damageFactorType !== DamageFactorType.DAMAGE_BONUS) continue;
-      if (!this.isActive(ev, frame)) continue;
-      const perIntellect = ev.statusValue ?? 0;
-      if (perIntellect === 0 || !ev.sourceEntityId) continue;
-      const intellect = this.aggregatedStats?.[ev.sourceEntityId]?.stats[StatType.INTELLECT] ?? 0;
-      sum += perIntellect * intellect;
-    }
-    return sum;
-  }
+
 
   getFragilityBonus(frame: number, element: ElementType): number {
     let sum = 0;
@@ -464,10 +456,11 @@ export class EventsQueryService {
     return sources;
   }
 
-  getAmpSources(frame: number): MultiplierSource[] {
+  getAmpSources(frame: number, element?: ElementType): MultiplierSource[] {
     const sources: MultiplierSource[] = [];
     for (const ev of this.artsAmpEvents) {
       if (!this.isActive(ev, frame)) continue;
+      if (element && ev.dslObjectQualifier && ev.dslObjectQualifier !== element) continue;
       sources.push({ label: ev.name ?? NounType.ARTS_AMP, value: ev.statusValue ?? DEFAULT_AMP_BONUS, category: ev.name ?? NounType.ARTS_AMP });
     }
     return sources;
@@ -478,12 +471,15 @@ export class EventsQueryService {
    * whose element matches. The pipeline resolves IGNORE RESISTANCE clause effects
    * into statusValue at event creation time.
    */
-  getIgnoredResistance(frame: number, _element: ElementType, attackerEntityId: string): number {
+  getIgnoredResistance(frame: number, element: ElementType, attackerEntityId: string): number {
     let sum = 0;
     for (const ev of this.state.getAllEvents()) {
       if (ev.damageFactorType !== DamageFactorType.RESISTANCE) continue;
       if (ev.ownerEntityId !== attackerEntityId) continue;
       if (!this.isActive(ev, frame)) continue;
+      // Element-specific ignored resistance only applies to matching damage.
+      // Unqualified (no dslObjectQualifier) is a wildcard.
+      if (ev.dslObjectQualifier && ev.dslObjectQualifier !== element) continue;
       sum += ev.statusValue ?? 0;
     }
     return sum;

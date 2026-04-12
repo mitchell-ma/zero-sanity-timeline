@@ -7,7 +7,7 @@
           "subject": "OPERATOR",
           "verb": "CONSUME",
           "object": "STATUS",
-          "objectId": "REALSPACE_STASIS_TALENT",
+          "objectId": "ORIGINIUM_CRYSTAL",
           "with": {
             "stacks": "MAX"
           }
@@ -43,7 +43,7 @@
           "subject": "OPERATOR",
           "verb": "CONSUME",
           "object": "STATUS",
-          "objectId": "REALSPACE_STASIS_TALENT",
+          "objectId": "ORIGINIUM_CRYSTAL",
           "with": {
             "stacks": "MAX"
           }

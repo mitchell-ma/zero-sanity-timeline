@@ -392,29 +392,27 @@ export function getAllInflictionLabels(): Record<string, string> {
   if (_inflictionLabels) return _inflictionLabels;
   _inflictionLabels = {
     // Arts inflictions
-    [INFLICTION_COLUMNS.HEAT]:     t('infliction.heatInfliction'),
-    [INFLICTION_COLUMNS.CRYO]:     t('infliction.cryoInfliction'),
-    [INFLICTION_COLUMNS.NATURE]:   t('infliction.natureInfliction'),
-    [INFLICTION_COLUMNS.ELECTRIC]: t('infliction.electricInfliction'),
+    [INFLICTION_COLUMNS.HEAT]:     t('infliction.heat'),
+    [INFLICTION_COLUMNS.CRYO]:     t('infliction.cryo'),
+    [INFLICTION_COLUMNS.NATURE]:   t('infliction.nature'),
+    [INFLICTION_COLUMNS.ELECTRIC]: t('infliction.electric'),
     // Physical inflictions
-    [PHYSICAL_INFLICTION_COLUMNS.VULNERABLE]: t('infliction.vulnerableInfliction'),
+    [PHYSICAL_INFLICTION_COLUMNS.VULNERABLE]: t('infliction.vulnerable'),
     // Arts reactions
-    [REACTION_COLUMNS.COMBUSTION]:       t('infliction.combustion'),
-    [REACTION_COLUMNS.SOLIDIFICATION]:   t('infliction.solidification'),
-    [REACTION_COLUMNS.CORROSION]:        t('infliction.corrosion'),
-    [REACTION_COLUMNS.ELECTRIFICATION]:  t('infliction.electrification'),
+    [REACTION_COLUMNS.COMBUSTION]:       t('reaction.combustion'),
+    [REACTION_COLUMNS.SOLIDIFICATION]:   t('reaction.solidification'),
+    [REACTION_COLUMNS.CORROSION]:        t('reaction.corrosion'),
+    [REACTION_COLUMNS.ELECTRIFICATION]:  t('reaction.electrification'),
     // Physical statuses
-    [PhysicalStatusType.BREACH]:  t('infliction.breach'),
-    // Enemy statuses
-    [StatusType.FOCUS]:           t('infliction.FOCUS'),
-    [StatusType.SUSCEPTIBILITY]:  t('infliction.SUSCEPTIBILITY'),
-    // Team statuses
-    [StatusType.SHIELD]:          t('infliction.SHIELD'),
-    // Enemy debuffs
-    [StatusType.FRAGILITY]:       t('infliction.FRAGILITY'),
-    // Stagger status events
-    [NODE_STAGGER_COLUMN_ID]:     t('infliction.STAGGER_NODE'),
-    [FULL_STAGGER_COLUMN_ID]:     t('infliction.STAGGER'),
+    [PhysicalStatusType.BREACH]:  t('physicalStatus.BREACH'),
+    // Combat statuses
+    [StatusType.FOCUS]:           t('status.FOCUS'),
+    [StatusType.SUSCEPTIBILITY]:  t('status.SUSCEPTIBILITY'),
+    [StatusType.SHIELD]:          t('status.SHIELD'),
+    [StatusType.FRAGILITY]:       t('status.FRAGILITY'),
+    // Stagger
+    [NODE_STAGGER_COLUMN_ID]:     t('stagger.node'),
+    [FULL_STAGGER_COLUMN_ID]:     t('stagger.full'),
     // Enemy actions
     [ENEMY_ACTION_COLUMN_ID]:     t('enemyAction.AOE_PHYSICAL'),
   };

@@ -119,11 +119,12 @@ export function resolveValueNode(node: ValueNode, ctx: ValueResolutionContext): 
     }
     const ofClause = node.of;
     if (ofClause) {
-      // Qualified status columns (`PHYSICAL_SUSCEPTIBILITY`, etc.) are
-      // authored directly in JSON as the full `objectId` — no runtime
-      // flattening. The deprecated `{objectId: base, objectQualifier: X}`
-      // form is rejected at parse time by `warnDeprecatedQualifiedBase`.
-      const statusId = ofClause.objectId;
+      // DSL grammar uses objectQualifier + objectId (e.g. ELECTRIC + SUSCEPTIBILITY).
+      // The storage column ID is the composed form (ELECTRIC_SUSCEPTIBILITY).
+      const qualifier = (ofClause as { objectQualifier?: string }).objectQualifier;
+      const statusId = ofClause.objectId && qualifier
+        ? `${qualifier}_${ofClause.objectId}`
+        : ofClause.objectId;
       if (!statusId) return 0;
       // STACKS of <STATUS> of EVENT → consumed stacks on the current event
       if (ofClause.object === NounType.EVENT && ctx.getEventStacks) {

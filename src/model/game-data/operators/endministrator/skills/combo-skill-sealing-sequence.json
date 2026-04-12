@@ -134,7 +134,7 @@
                 {
                   "verb": "APPLY",
                   "object": "STATUS",
-                  "objectId": "REALSPACE_STASIS_TALENT",
+                  "objectId": "ORIGINIUM_CRYSTAL",
                   "to": "ENEMY",
                   "with": {
                     "duration": {

@@ -225,7 +225,7 @@ describe('Freeform Combustion Reaction', () => {
     const enemyCol = findEnemyStatusColumn(result.current);
     expect(enemyCol).toBeDefined();
     const emptyMap = new Map<string, string>();
-    const pres = computeEventPresentation(ev, enemyCol!, {
+    const pres = computeEventPresentation(ev, {
       slotElementColors: {},
       autoFinisherIds: new Set(),
       validationMaps: {

@@ -31,12 +31,15 @@ export interface DealDamageInfo {
   mainStat?: DamageScalingStatType;
   multiplierNode?: unknown;
   /**
-   * True when this DEAL DAMAGE was found nested inside a CHANCE compound. The
-   * damage builder gates row emission on the frame's `isChance` pin (via
-   * `shouldFireChance`) when this flag is set. The probability ValueNode on
-   * the CHANCE wrapper is display-only and does NOT weight the damage.
+   * True when this DEAL DAMAGE was found in the CHANCE hit branch (effects/predicates).
+   * The damage builder skips this row when shouldFireChance returns false (miss).
    */
   insideChance?: boolean;
+  /**
+   * True when this DEAL DAMAGE was found in the CHANCE else branch (elseEffects).
+   * The damage builder skips this row when shouldFireChance returns true (hit).
+   */
+  insideChanceElse?: boolean;
 }
 
 /**
@@ -45,30 +48,33 @@ export interface DealDamageInfo {
  * choose between hit / else branches and by the damage builder to gate
  * CHANCE-wrapped damage rows.
  *
- *   ALWAYS  — always hit
- *   NEVER   — always miss
- *   MANUAL  — per-frame pin, default miss when unpinned
- *   EXPECTED — same as MANUAL (CHANCE is not expectation-weighted; the
- *              EXPECTED mode has no special behavior for CHANCE)
+ * An explicit pin ALWAYS wins — settable and honored in any mode.
+ * The mode only provides the default for unpinned frames:
+ *   ALWAYS  — unpinned default: hit
+ *   NEVER / MANUAL / EXPECTED — unpinned default: miss
  */
 export function shouldFireChance(
   critMode: CritMode,
   pin: boolean | undefined,
 ): boolean {
+  if (pin != null) return pin;
   if (critMode === CritMode.ALWAYS) return true;
-  if (critMode === CritMode.NEVER) return false;
-  return pin ?? false;
+  return false;
 }
 
 /**
  * Sum the resolved value of every clause effect matching the given verb set
- * and object. Used by both RECOVER/RETURN resource queries and DEAL STAGGER.
+ * and object. Descends into CHANCE/ALL/ANY compound wrappers so effects
+ * nested inside compounds are visible to all clause query helpers.
+ * For CHANCE, `chanceHit` selects which branch (true=hit, false=else,
+ * undefined=all).
  */
 function sumVerbObject(
   clauses: readonly FrameClausePredicate[] | undefined,
   verbs: ReadonlySet<string>,
   object: string,
   ctx: ValueResolutionContext,
+  chanceHit?: boolean,
 ): number | undefined {
   if (!clauses || clauses.length === 0) return undefined;
   let total = 0;
@@ -77,17 +83,49 @@ function sumVerbObject(
     for (const ef of pred.effects) {
       const dsl = ef.dslEffect as Effect | undefined;
       if (!dsl) continue;
-      if (!verbs.has(dsl.verb as string) || dsl.object !== object) continue;
-      const node = (dsl.with as { value?: ValueNode } | undefined)?.value;
-      if (node == null) continue;
-      const v = typeof node === 'number' ? node : resolveValueNode(node as ValueNode, ctx);
-      if (typeof v === 'number' && !Number.isNaN(v)) {
-        total += v;
-        found = true;
-      }
+      const r = sumEffectTree(dsl, verbs, object, ctx, chanceHit);
+      if (r != null) { total += r; found = true; }
     }
   }
   return found ? total : undefined;
+}
+
+/** Recursively walk an effect tree summing matching verb+object leaves. */
+function sumEffectTree(
+  dsl: Effect,
+  verbs: ReadonlySet<string>,
+  object: string,
+  ctx: ValueResolutionContext,
+  chanceHit?: boolean,
+): number | null {
+  // Compound wrappers: descend into children
+  if (dsl.verb === VerbType.CHANCE || dsl.verb === VerbType.ALL || dsl.verb === VerbType.ANY) {
+    let total = 0;
+    let found = false;
+    const add = (child: Effect) => {
+      const r = sumEffectTree(child, verbs, object, ctx, chanceHit);
+      if (r != null) { total += r; found = true; }
+    };
+    const isChance = dsl.verb === VerbType.CHANCE;
+    // Hit branch (effects + predicates): skip when chanceHit === false
+    if (!isChance || chanceHit !== false) {
+      for (const child of dsl.effects ?? []) add(child);
+      for (const pred of dsl.predicates ?? []) {
+        for (const child of pred.effects) add(child as Effect);
+      }
+    }
+    // Else branch: skip when chanceHit === true
+    if (isChance && chanceHit !== true) {
+      for (const child of dsl.elseEffects ?? []) add(child);
+    }
+    return found ? total : null;
+  }
+  // Leaf: check verb + object match
+  if (!verbs.has(dsl.verb as string) || dsl.object !== object) return null;
+  const node = (dsl.with as { value?: ValueNode } | undefined)?.value;
+  if (node == null) return null;
+  const v = typeof node === 'number' ? node : resolveValueNode(node as ValueNode, ctx);
+  return typeof v === 'number' && !Number.isNaN(v) ? v : null;
 }
 
 const RECOVER_VERBS: ReadonlySet<string> = new Set([VerbType.RECOVER, VerbType.RETURN]);
@@ -126,7 +164,7 @@ export function findSkillPointRecoveryInClauses(
   return sumRecoverObject(clauses, NounType.SKILL_POINT, ctx);
 }
 
-/** True when any clause effect on this frame is a RECOVER/RETURN SKILL_POINT. */
+/** True when any clause effect on this frame is a RECOVER/RETURN SKILL_POINT (descends into compounds). */
 export function hasSkillPointClause(
   clauses: readonly FrameClausePredicate[] | undefined,
 ): boolean {
@@ -135,8 +173,22 @@ export function hasSkillPointClause(
     for (const ef of pred.effects) {
       const dsl = ef.dslEffect as Effect | undefined;
       if (!dsl) continue;
-      if ((dsl.verb === VerbType.RECOVER || dsl.verb === VerbType.RETURN)
-        && dsl.object === NounType.SKILL_POINT) return true;
+      if (effectContainsVerbObject(dsl, RECOVER_VERBS, NounType.SKILL_POINT)) return true;
+    }
+  }
+  return false;
+}
+
+/** Recursively check if an effect tree contains a matching verb+object leaf. */
+function effectContainsVerbObject(dsl: Effect, verbs: ReadonlySet<string>, object: string): boolean {
+  if (verbs.has(dsl.verb as string) && dsl.object === object) return true;
+  if (dsl.verb === VerbType.CHANCE || dsl.verb === VerbType.ALL || dsl.verb === VerbType.ANY) {
+    for (const child of dsl.effects ?? []) { if (effectContainsVerbObject(child, verbs, object)) return true; }
+    for (const pred of dsl.predicates ?? []) {
+      for (const child of pred.effects) { if (effectContainsVerbObject(child as Effect, verbs, object)) return true; }
+    }
+    if (dsl.verb === VerbType.CHANCE) {
+      for (const child of dsl.elseEffects ?? []) { if (effectContainsVerbObject(child, verbs, object)) return true; }
     }
   }
   return false;
@@ -310,17 +362,21 @@ const ELEMENT_QUALIFIERS = new Set<string>([
  * uniformly without caring whether the clause came from JSON parser
  * extraction or from a runtime-attached synthetic clause (Crush/Breach/etc.).
  */
+/**
+ * @param chanceHit When defined, selects the CHANCE branch to search:
+ *   true → hit branch only (predicates/effects), false → else branch only.
+ *   undefined → returns the first DEAL DAMAGE found in any branch.
+ */
 export function findDealDamageInClauses(
   clauses: readonly FrameClausePredicate[] | undefined,
+  chanceHit?: boolean,
 ): DealDamageInfo | null {
   if (!clauses || clauses.length === 0) return null;
   for (const pred of clauses) {
     for (const ef of pred.effects) {
       const dsl = ef.dslEffect as Effect | undefined;
       if (!dsl) continue;
-      // Descend into CHANCE wrappers: the wrapped DEAL DAMAGE inherits the
-      // wrapper's probability as a chanceNode for the damage builder to resolve.
-      const found = extractDealDamageFromEffect(dsl);
+      const found = extractDealDamageFromEffect(dsl, ChanceBranch.NONE, chanceHit);
       if (found) return found;
     }
   }
@@ -334,25 +390,44 @@ export function findDealDamageInClauses(
  * builder gates row emission on the frame's pin. Returns null if no DEAL
  * DAMAGE is found.
  */
+const enum ChanceBranch { NONE, HIT, ELSE }
+
 function extractDealDamageFromEffect(
   dsl: Effect,
-  insideChance = false,
+  chanceBranch = ChanceBranch.NONE,
+  preferBranch?: boolean,
 ): DealDamageInfo | null {
   if (dsl.verb === VerbType.CHANCE) {
-    for (const child of dsl.effects ?? []) {
-      const res = extractDealDamageFromEffect(child, true);
-      if (res) return res;
+    // When caller specifies a branch preference, only walk that branch.
+    // undefined = walk all branches (first match wins).
+    if (preferBranch !== false) {
+      for (const child of dsl.effects ?? []) {
+        const res = extractDealDamageFromEffect(child, ChanceBranch.HIT, preferBranch);
+        if (res) return res;
+      }
+      for (const pred of dsl.predicates ?? []) {
+        for (const child of pred.effects) {
+          const res = extractDealDamageFromEffect(child as Effect, ChanceBranch.HIT, preferBranch);
+          if (res) return res;
+        }
+      }
+    }
+    if (preferBranch !== true) {
+      for (const child of dsl.elseEffects ?? []) {
+        const res = extractDealDamageFromEffect(child, ChanceBranch.ELSE, preferBranch);
+        if (res) return res;
+      }
     }
     return null;
   }
   if (dsl.verb === VerbType.ALL || dsl.verb === VerbType.ANY) {
     for (const child of dsl.effects ?? []) {
-      const res = extractDealDamageFromEffect(child, insideChance);
+      const res = extractDealDamageFromEffect(child, chanceBranch);
       if (res) return res;
     }
     for (const pred of dsl.predicates ?? []) {
       for (const child of pred.effects) {
-        const res = extractDealDamageFromEffect(child as Effect, insideChance);
+        const res = extractDealDamageFromEffect(child as Effect, chanceBranch);
         if (res) return res;
       }
     }
@@ -387,7 +462,8 @@ function extractDealDamageFromEffect(
     multipliers,
     ...(mainStat ? { mainStat } : {}),
     ...(multipliers.length === 0 && multiplierNode ? { multiplierNode } : {}),
-    ...(insideChance ? { insideChance: true } : {}),
+    ...(chanceBranch === ChanceBranch.HIT ? { insideChance: true } : {}),
+    ...(chanceBranch === ChanceBranch.ELSE ? { insideChanceElse: true } : {}),
   };
 }
 
@@ -415,6 +491,9 @@ function effectContainsDealDamage(dsl: Effect): boolean {
       for (const child of pred.effects) {
         if (effectContainsDealDamage(child as Effect)) return true;
       }
+    }
+    for (const child of dsl.elseEffects ?? []) {
+      if (effectContainsDealDamage(child)) return true;
     }
   }
   return false;

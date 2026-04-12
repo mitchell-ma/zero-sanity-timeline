@@ -31,7 +31,18 @@
       "react-app/jest"
     ],
     "rules": {
-      "@typescript-eslint/no-explicit-any": "warn"
+      "@typescript-eslint/no-explicit-any": "warn",
+      "no-restricted-syntax": [
+        "warn",
+        {
+          "selector": "BinaryExpression[operator='==='] > Literal[value=/^[A-Z][A-Z0-9_]+$/]",
+          "message": "Use enum/const instead of UPPER_SNAKE_CASE string literal in comparison. Import from enums.ts, semantics.ts, or load from JSON via require()."
+        },
+        {
+          "selector": "BinaryExpression[operator='!=='] > Literal[value=/^[A-Z][A-Z0-9_]+$/]",
+          "message": "Use enum/const instead of UPPER_SNAKE_CASE string literal in comparison. Import from enums.ts, semantics.ts, or load from JSON via require()."
+        }
+      ]
     }
   },
   "browserslist": {

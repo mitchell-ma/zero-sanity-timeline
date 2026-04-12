@@ -645,7 +645,7 @@ describe('D2. Realspace Stasis', () => {
       );
     });
 
-    // Place ultimate — explicit CONSUME REALSPACE_STASIS_TALENT
+    // Place ultimate — explicit CONSUME ORIGINIUM_CRYSTAL
     const ultCol = findColumn(result.current, SLOT_ENDMINISTRATOR, NounType.ULTIMATE);
     const ultPayload = getMenuPayload(result.current, ultCol!, 5 * FPS);
     act(() => {

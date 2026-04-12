@@ -21,8 +21,8 @@
 import { renderHook, act } from '@testing-library/react';
 import { NounType } from '../../../../dsl/semantics';
 import { useApp } from '../../../../app/useApp';
-import { INFLICTION_COLUMNS, ENEMY_ID, REACTION_COLUMNS, COMBO_WINDOW_COLUMN_ID } from '../../../../model/channels';
-import { InteractionModeType, CritMode, EventStatusType } from '../../../../consts/enums';
+import { INFLICTION_COLUMNS, ENEMY_ID, REACTION_COLUMNS, COMBO_WINDOW_COLUMN_ID, PHYSICAL_INFLICTION_COLUMNS } from '../../../../model/channels';
+import { InteractionModeType, CritMode, EventStatusType, ElementType } from '../../../../consts/enums';
 import { FPS } from '../../../../utils/timeline';
 import { eventDuration } from '../../../../consts/viewTypes';
 import { computeTimelinePresentation } from '../../../../controller/timeline/eventPresentationController';
@@ -31,10 +31,19 @@ import { findColumn, buildContextMenu, getMenuPayload, setUltimateEnergyToMax, g
 import type { AppResult } from '../../helpers';
 import { setRuntimeCritMode } from '../../../../controller/combatStateController';
 import { hasChanceClause, findDealDamageInClauses } from '../../../../controller/timeline/clauseQueries';
+import { runCalculation } from '../../../../controller/calculation/calculationController';
 
 /* eslint-disable @typescript-eslint/no-require-imports */
 const ALESH_ID: string = require('../../../../model/game-data/operators/alesh/alesh.json').id;
 const BATTLE_SKILL_ID: string = require('../../../../model/game-data/operators/alesh/skills/battle-skill-unconventional-lure.json').properties.id;
+const FLASH_FROZEN_ID: string = require('../../../../model/game-data/operators/alesh/talents/talent-flash-frozen-talent.json').properties.id;
+const MAY_THE_WILLING_BITE_ID: string = require('../../../../model/game-data/operators/alesh/statuses/status-may-the-willing-bite.json').properties.id;
+const WULFGARD_ID: string = require('../../../../model/game-data/operators/wulfgard/wulfgard.json').id;
+const WULFGARD_EMP_BS_ID: string = require('../../../../model/game-data/operators/wulfgard/skills/battle-skill-thermite-tracers-empowered.json').properties.id;
+const ENDMIN_ID: string = require('../../../../model/game-data/operators/endministrator/endministrator.json').id;
+const ORIGINIUM_CRYSTAL_ID: string = require('../../../../model/game-data/operators/endministrator/talents/talent-realspace-stasis.json').properties.id;
+const ULT_JSON = require('../../../../model/game-data/operators/alesh/skills/ultimate-one-monster-catch.json');
+const ENEMY_DEFEATED_PARAM_ID: string = ULT_JSON.properties.suppliedParameters.VARY_BY[0].id;
 /* eslint-enable @typescript-eslint/no-require-imports */
 
 const SLOT_ALESH = 'slot-0';
@@ -361,32 +370,21 @@ describe('Alesh Skills — Combo CHANCE gate', () => {
     expect(combos).toHaveLength(1);
     const combo = combos[0];
 
-    // The damage segment should carry exactly two sibling damage frames at the
-    // same offset: the unconditional base hit and the CHANCE-wrapped rare-fin hit.
+    // Single merged damage frame with CHANCE wrapping both branches.
     const damageSeg = combo.segments.find(
-      seg => seg.properties.element === 'PHYSICAL' && (seg.frames?.length ?? 0) >= 2,
+      seg => seg.properties.element === ElementType.PHYSICAL && (seg.frames?.length ?? 0) >= 1,
     );
     expect(damageSeg).toBeDefined();
+    expect(damageSeg!.frames).toHaveLength(1);
 
-    const frames = damageSeg!.frames ?? [];
-    const damageFrames = frames.filter(f => findDealDamageInClauses(f.clauses) != null);
-    expect(damageFrames.length).toBe(2);
-    // Sibling frames co-located at offset 0.77s (per the current data source).
-    expect(damageFrames[0].offsetFrame).toBe(damageFrames[1].offsetFrame);
+    const frame = damageSeg!.frames![0];
+    expect(hasChanceClause(frame.clauses)).toBe(true);
 
-    // Exactly one of the sibling frames carries the CHANCE compound (the rare
-    // fin branch); the other is the unconditional base hit.
-    const chanceBearing = damageFrames.filter(f => hasChanceClause(f.clauses));
-    expect(chanceBearing.length).toBe(1);
-    const baseOnly = damageFrames.filter(f => !hasChanceClause(f.clauses));
-    expect(baseOnly.length).toBe(1);
-
-    // The CHANCE-wrapped frame's DealDamageInfo should be marked insideChance;
-    // the base frame's should not be.
-    const chanceDealInfo = findDealDamageInClauses(chanceBearing[0].clauses);
-    const baseDealInfo = findDealDamageInClauses(baseOnly[0].clauses);
-    expect(chanceDealInfo?.insideChance).toBe(true);
-    expect(baseDealInfo?.insideChance).toBeUndefined();
+    // The DEAL DAMAGE inside CHANCE hit branch (via elseEffects fallback for
+    // base-only) is found by findDealDamageInClauses descending into CHANCE.
+    const dealInfo = findDealDamageInClauses(frame.clauses);
+    expect(dealInfo).not.toBeNull();
+    expect(dealInfo!.insideChance).toBe(true);
   });
 });
 
@@ -415,38 +413,81 @@ describe('Alesh Skills — Ult suppliedParameter + P5 gating', () => {
     expect(params).toBeDefined();
     const varyBy = (params as Record<string, unknown>)?.VARY_BY as Array<{ id: string }> | undefined;
     expect(varyBy).toBeDefined();
-    expect(varyBy!.some(p => p.id === 'ENEMY_DEFEATED')).toBe(true);
+    expect(varyBy!.some(p => p.id === ENEMY_DEFEATED_PARAM_ID)).toBe(true);
   });
 
-  it('H2: ultimate has two damage frames — base + P5 low-HP bonus', () => {
+  it('H2: ult at full HP gets base mult, ult after HP drops below 50% gets P5 1.5x mult', () => {
+    // Use lowest-HP enemy so BS spam can push HP below 50%
     const { result } = setupAlesh();
-    act(() => { setUltimateEnergyToMax(result.current, SLOT_ALESH, 0); });
+    act(() => { result.current.handleSwapEnemy('mudflow_delta'); });
 
-    const col = findColumn(result.current, SLOT_ALESH, NounType.ULTIMATE);
-    const payload = getMenuPayload(result.current, col!, 5 * FPS);
+    // Place ult early (HP still full) → HP >= 50% clause fires → base mult
+    act(() => { setUltimateEnergyToMax(result.current, SLOT_ALESH, 0); });
+    const ultCol = findColumn(result.current, SLOT_ALESH, NounType.ULTIMATE);
+    const ultPayload = getMenuPayload(result.current, ultCol!, 2 * FPS);
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        ultPayload.ownerEntityId, ultPayload.columnId, ultPayload.atFrame, ultPayload.defaultSkill,
       );
     });
 
-    const ult = result.current.allProcessedEvents.find(
-      ev => ev.ownerEntityId === SLOT_ALESH && ev.columnId === NounType.ULTIMATE,
+    const calcEarly = runCalculation(
+      result.current.allProcessedEvents, result.current.columns,
+      result.current.slots, result.current.enemy,
+      result.current.loadoutProperties, result.current.loadouts,
+      result.current.staggerBreaks, CritMode.NEVER, result.current.overrides,
     );
-    expect(ult).toBeDefined();
+    const ultRowEarly = calcEarly.rows.find(
+      r => r.ownerEntityId === SLOT_ALESH && r.columnId === NounType.ULTIMATE && r.multiplier != null && r.multiplier > 0,
+    );
+    expect(ultRowEarly).toBeDefined();
+    const baseMult = ultRowEarly!.multiplier!;
 
-    // The damage segment should carry two CRYO damage frames at the same offset.
-    // One fires unconditionally, the other fires only at P5 + enemy HP < 50%.
-    const damageSeg = ult!.segments.find(seg => (seg.frames?.length ?? 0) >= 2 && seg.properties.element === 'CRYO');
-    expect(damageSeg).toBeDefined();
-    expect(damageSeg!.frames!.length).toBeGreaterThanOrEqual(2);
+    // Now remove the early ult, spam BS to drain HP below 50%, then place ult late
+    act(() => {
+      const earlyUlt = result.current.allProcessedEvents.find(
+        ev => ev.ownerEntityId === SLOT_ALESH && ev.columnId === NounType.ULTIMATE,
+      );
+      if (earlyUlt) result.current.handleRemoveEvent(earlyUlt.uid);
+    });
 
-    // Both frames should carry CRYO DEAL DAMAGE in their clauses.
-    const damageFrameCount = (damageSeg!.frames ?? []).filter(f => {
-      const info = findDealDamageInClauses(f.clauses);
-      return info != null;
-    }).length;
-    expect(damageFrameCount).toBeGreaterThanOrEqual(2);
+    // Switch to freeform to bypass SP constraints
+    act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
+
+    // Spam BS to drain enemy HP
+    const bsCol = findColumn(result.current, SLOT_ALESH, NounType.BATTLE);
+    for (let i = 0; i < 55; i++) {
+      const bsPayload = getMenuPayload(result.current, bsCol!, (3 + i * 2) * FPS);
+      act(() => {
+        result.current.handleAddEvent(
+          bsPayload.ownerEntityId, bsPayload.columnId, bsPayload.atFrame, bsPayload.defaultSkill,
+        );
+      });
+    }
+
+    // Place ult after the BS spam
+    act(() => { setUltimateEnergyToMax(result.current, SLOT_ALESH, 0); });
+    const latePayload = getMenuPayload(result.current, ultCol!, 115 * FPS);
+    act(() => {
+      result.current.handleAddEvent(
+        latePayload.ownerEntityId, latePayload.columnId, latePayload.atFrame, latePayload.defaultSkill,
+      );
+    });
+
+    const calcLate = runCalculation(
+      result.current.allProcessedEvents, result.current.columns,
+      result.current.slots, result.current.enemy,
+      result.current.loadoutProperties, result.current.loadouts,
+      result.current.staggerBreaks, CritMode.NEVER, result.current.overrides,
+    );
+    const ultRowLate = calcLate.rows.find(
+      r => r.ownerEntityId === SLOT_ALESH && r.columnId === NounType.ULTIMATE && r.multiplier != null && r.multiplier > 0,
+    );
+    expect(ultRowLate).toBeDefined();
+
+    // P5 + HP < 50% → 1.5x base multiplier and 1.5x damage
+    expect(ultRowLate!.multiplier!).toBeCloseTo(baseMult * 1.5, 2);
+    expect(ultRowLate!.damage!).toBeCloseTo(ultRowEarly!.damage! * 1.5, 0);
   });
 });
 
@@ -469,7 +510,7 @@ describe('Alesh Skills — T1 Flash-frozen self-trigger', () => {
     // The T1 talent status event should exist on Alesh's timeline with the
     // trigger operator stamped (Alesh himself, since he triggered it via the BS).
     const t1Events = result.current.allProcessedEvents.filter(
-      ev => ev.id === 'FLASH_FROZEN_TALENT' && ev.ownerEntityId === SLOT_ALESH,
+      ev => ev.id === FLASH_FROZEN_ID && ev.ownerEntityId === SLOT_ALESH,
     );
     expect(t1Events.length).toBeGreaterThanOrEqual(1);
     const t1 = t1Events[0];
@@ -494,7 +535,7 @@ describe('Alesh Skills — T1 Flash-frozen self-trigger', () => {
     act(() => { placeBsAlesh(result.current, 4 * FPS); });
 
     const t1Events = result.current.allProcessedEvents.filter(
-      ev => ev.id === 'FLASH_FROZEN_TALENT' && ev.ownerEntityId === SLOT_ALESH,
+      ev => ev.id === FLASH_FROZEN_ID && ev.ownerEntityId === SLOT_ALESH,
     );
     // Only the first trigger should spawn a T1 event; the second is cooldown-gated
     // via configCache's IMMEDIATE_COOLDOWN → cooldownFrames derivation.
@@ -513,7 +554,7 @@ describe('Alesh Skills — T1 Flash-frozen self-trigger', () => {
     act(() => { placeBsAlesh(result.current, 10 * FPS); });
 
     const t1Events = result.current.allProcessedEvents.filter(
-      ev => ev.id === 'FLASH_FROZEN_TALENT' && ev.ownerEntityId === SLOT_ALESH,
+      ev => ev.id === FLASH_FROZEN_ID && ev.ownerEntityId === SLOT_ALESH,
     );
     expect(t1Events.length).toBe(2);
   });
@@ -524,7 +565,7 @@ describe('Alesh Skills — T1 Flash-frozen self-trigger', () => {
     act(() => { placeBsAlesh(result.current, 5 * FPS); });
 
     const t1 = result.current.allProcessedEvents.find(
-      ev => ev.id === 'FLASH_FROZEN_TALENT' && ev.ownerEntityId === SLOT_ALESH,
+      ev => ev.id === FLASH_FROZEN_ID && ev.ownerEntityId === SLOT_ALESH,
     );
     expect(t1).toBeDefined();
     // Two segments: active (2s) and IMMEDIATE_COOLDOWN (3s).
@@ -558,64 +599,219 @@ describe('Alesh Skills — T1 Flash-frozen self-trigger', () => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// K. Combo Activation Window — triggered by arts reaction / originium crystal consume
+// K. Combo Activation Window — triggered by arts reaction consume
 // ═══════════════════════════════════════════════════════════════════════════════
 
 describe('Alesh Skills — Combo activation window', () => {
-  it('K1: consuming an arts reaction on the enemy opens Alesh combo window', () => {
+  it('K1: applied-but-not-consumed reaction does NOT open Alesh combo window', () => {
     const { result } = setupAlesh();
-    // Place a solidification reaction on the enemy (freeform), then consume it.
+    // Freeform: place a combustion reaction on the enemy. This is an APPLY, not CONSUME.
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
     act(() => {
       result.current.handleAddEvent(
-        ENEMY_ID, REACTION_COLUMNS.SOLIDIFICATION, 2 * FPS,
-        { name: REACTION_COLUMNS.SOLIDIFICATION, segments: [{ properties: { duration: 10 * FPS } }] },
-      );
-    });
-    // Place cryo infliction to trigger a consume — when a 2nd solidification is placed,
-    // the 1st is consumed by the reaction stacking logic. But simpler: just place a
-    // Wulfgard BS that consumes combustion. Except we don't have Wulfgard set up.
-    //
-    // Simplest approach: place the reaction, then have Alesh BS consume it.
-    // But Alesh BS doesn't consume reactions — it consumes cryo infliction.
-    //
-    // Instead: directly place a consumed reaction. The combo trigger scans for
-    // CONSUME events on reaction columns. A consumed reaction event has
-    // eventStatus=CONSUMED. But the trigger matcher uses scanEvents which
-    // scans by column + owner for events at a frame.
-    //
-    // Alternate: the trigger fires when the engine processes a CONSUME verb
-    // targeting a reaction column. We can manufacture this by placing two
-    // solidification reactions at the same frame — the 2nd one overwrites the
-    // 1st via stacking (RESET), which triggers a CONSUME on the old event.
-    act(() => {
-      result.current.handleAddEvent(
-        ENEMY_ID, REACTION_COLUMNS.SOLIDIFICATION, 2 * FPS + 1,
-        { name: REACTION_COLUMNS.SOLIDIFICATION, segments: [{ properties: { duration: 10 * FPS } }] },
+        ENEMY_ID, REACTION_COLUMNS.COMBUSTION, 2 * FPS,
+        { name: REACTION_COLUMNS.COMBUSTION, segments: [{ properties: { duration: 10 * FPS } }] },
       );
     });
 
-    // Check if a combo window opened for Alesh
-    const comboWindows = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === COMBO_WINDOW_COLUMN_ID && ev.ownerEntityId === SLOT_ALESH,
-    );
-    expect(comboWindows.length).toBeGreaterThanOrEqual(1);
-  });
-
-  it('K2: no reaction/crystal consume → no combo window in strict mode', () => {
-    const { result } = setupAlesh();
-    // In strict mode with no reaction consumes, combo should not be available.
     const comboWindows = result.current.allProcessedEvents.filter(
       ev => ev.columnId === COMBO_WINDOW_COLUMN_ID && ev.ownerEntityId === SLOT_ALESH,
     );
     expect(comboWindows).toHaveLength(0);
   });
+
+  it('K2: activation window config has correct CONSUME REACTION trigger conditions', () => {
+    /* eslint-disable @typescript-eslint/no-require-imports */
+    const csJson = require('../../../../model/game-data/operators/alesh/skills/combo-skill-auger-angling.json');
+    /* eslint-enable @typescript-eslint/no-require-imports */
+    const aw = csJson.activationWindow;
+    expect(aw).toBeDefined();
+    expect(aw.onTriggerClause).toHaveLength(2);
+
+    const c1 = aw.onTriggerClause[0].conditions[0];
+    expect(c1.verb).toBe('CONSUME');
+    expect(c1.objectId).toBe('REACTION');
+    expect(c1.objectQualifier).toBeUndefined();
+
+    const c2 = aw.onTriggerClause[1].conditions[0];
+    expect(c2.verb).toBe('CONSUME');
+    expect(c2.objectId).toBe('ORIGINIUM_CRYSTAL');
+  });
+
+  it('K3: Wulfgard EBS consuming combustion opens Alesh combo window', () => {
+    const { result } = setupAlesh();
+    const SLOT_WULFGARD = 'slot-1';
+    act(() => { result.current.handleSwapOperator(SLOT_WULFGARD, WULFGARD_ID); });
+
+    // Place combustion on enemy at 2s.
+    act(() => {
+      result.current.handleAddEvent(
+        ENEMY_ID, REACTION_COLUMNS.COMBUSTION, 2 * FPS,
+        { name: REACTION_COLUMNS.COMBUSTION, segments: [{ properties: { duration: 20 * FPS } }] },
+      );
+    });
+
+    // Place Wulfgard empowered BS at 5s. Key: pass `id` (not `name`) so
+    // createEvent sets event.id = THERMITE_TRACERS_EMPOWERED and the
+    // interpreter loads the empowered skill's frame data, which has
+    // CONSUME COMBUSTION REACTION on frame 3.
+    const bsCol = findColumn(result.current, SLOT_WULFGARD, NounType.BATTLE);
+    expect(bsCol).toBeDefined();
+    const empVariant = bsCol!.eventVariants?.find(v => v.id === WULFGARD_EMP_BS_ID);
+    expect(empVariant).toBeDefined();
+    act(() => {
+      result.current.handleAddEvent(
+        SLOT_WULFGARD, NounType.BATTLE, 5 * FPS,
+        { id: WULFGARD_EMP_BS_ID, segments: empVariant!.segments! },
+      );
+    });
+
+    // Combustion should be consumed by Wulfgard's empowered BS.
+    const combustions = result.current.allProcessedEvents.filter(
+      ev => ev.columnId === REACTION_COLUMNS.COMBUSTION && ev.ownerEntityId === ENEMY_ID,
+    );
+    expect(combustions.some(ev => ev.eventStatus === EventStatusType.CONSUMED)).toBe(true);
+
+    // Alesh's combo activation window should have opened.
+    const comboWindows = result.current.allProcessedEvents.filter(
+      ev => ev.columnId === COMBO_WINDOW_COLUMN_ID && ev.ownerEntityId === SLOT_ALESH,
+    );
+    expect(comboWindows).toHaveLength(1);
+    const window = comboWindows[0];
+
+    // The combo window starts at the consumption frame, not the combustion's
+    // original placement. The engine clamps consumed events' duration to the
+    // consume point, so the consumption frame = combustion.startFrame +
+    // eventDuration(combustion). Wulfgard EBS frame 3 fires at 5s + 2.07s.
+    const consumedCombustion = combustions.find(ev => ev.eventStatus === EventStatusType.CONSUMED)!;
+    const consumptionFrame = consumedCombustion.startFrame + eventDuration(consumedCombustion);
+    expect(window.startFrame).toBe(consumptionFrame);
+
+    // Window duration = 6s (from activationWindow.segments[0].properties.duration).
+    expect(eventDuration(window)).toBe(6 * FPS);
+
+    // Window ends at consumptionFrame + 6s.
+    const windowEnd = window.startFrame + eventDuration(window);
+    expect(windowEnd).toBe(consumptionFrame + 6 * FPS);
+  });
+
+  it('K4: Endmin originium crystal consumed via Vulnerable → Alesh combo window opens', () => {
+    const { result } = setupAlesh();
+    const SLOT_ENDMIN = 'slot-2';
+    act(() => { result.current.handleSwapOperator(SLOT_ENDMIN, ENDMIN_ID); });
+
+    // Freeform: place originium crystal on enemy at 2s.
+    act(() => {
+      result.current.handleAddEvent(
+        ENEMY_ID, ORIGINIUM_CRYSTAL_ID, 2 * FPS,
+        { name: ORIGINIUM_CRYSTAL_ID, segments: [{ properties: { duration: 10 * FPS } }] },
+      );
+    });
+
+    // Freeform: place Vulnerable infliction on enemy at 5s.
+    // Endmin T2's onTriggerClause fires on ANY OPERATOR APPLY VULNERABLE →
+    // CONSUME THIS EVENT (the originium crystal) + APPLY ORIGINIUM_CRYSTALS_SHATTER.
+    act(() => {
+      result.current.handleAddEvent(
+        ENEMY_ID, PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, 5 * FPS,
+        { name: PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, segments: [{ properties: { duration: 10 * FPS } }] },
+      );
+    });
+
+    // The originium crystal should be consumed.
+    const crystals = result.current.allProcessedEvents.filter(
+      ev => ev.columnId === ORIGINIUM_CRYSTAL_ID && ev.ownerEntityId === ENEMY_ID,
+    );
+    expect(crystals.some(ev => ev.eventStatus === EventStatusType.CONSUMED)).toBe(true);
+
+    // Alesh's combo activation window should have opened.
+    const comboWindows = result.current.allProcessedEvents.filter(
+      ev => ev.columnId === COMBO_WINDOW_COLUMN_ID && ev.ownerEntityId === SLOT_ALESH,
+    );
+    expect(comboWindows.length).toBeGreaterThanOrEqual(1);
+  });
 });
 
-describe('Alesh Skills — CHANCE pin override', () => {
+describe('Alesh Skills — CHANCE pin + P3 MAY_THE_WILLING_BITE', () => {
   afterEach(() => { setRuntimeCritMode(CritMode.NEVER); });
 
-  it('I1: handleSetChancePins writes the pin to the combat state override store', () => {
+  it('I0: CHANCE branch selects correct SP values — miss=base, hit=base+bonus', () => {
+    // NEVER mode (unpinned → miss): base SP recovery per wiki
+    const { result: r1 } = setupAlesh();
+    act(() => { r1.current.setCritMode(CritMode.NEVER); });
+    setRuntimeCritMode(CritMode.NEVER);
+    act(() => { r1.current.setInteractionMode(InteractionModeType.FREEFORM); });
+
+    const col1 = findColumn(r1.current, SLOT_ALESH, NounType.COMBO);
+    const payload1 = getMenuPayload(r1.current, col1!, 5 * FPS);
+    act(() => {
+      r1.current.handleAddEvent(payload1.ownerEntityId, payload1.columnId, payload1.atFrame, payload1.defaultSkill);
+    });
+
+    const combo1 = r1.current.allProcessedEvents.find(
+      ev => ev.ownerEntityId === SLOT_ALESH && ev.columnId === NounType.COMBO,
+    )!;
+    const dmgSeg1 = combo1.segments.find(s => s.frames && s.frames.length > 0)!;
+    const frame1 = dmgSeg1.frames![0];
+    // Miss branch: elseEffects fires. The DEAL DAMAGE from elseEffects has
+    // base-only multipliers; findDealDamageInClauses(clauses, false) finds it.
+    const dealMiss = findDealDamageInClauses(frame1.clauses, false);
+    expect(dealMiss).not.toBeNull();
+    expect(dealMiss!.insideChanceElse).toBe(true);
+    // Base multiplier at L12 = 0.75 (from the elseEffects VARY_BY array)
+    expect(dealMiss!.multipliers).toContain(0.75);
+
+    // ALWAYS mode (unpinned → hit): combined SP recovery per wiki
+    const { result: r2 } = setupAlesh();
+    act(() => { r2.current.setCritMode(CritMode.ALWAYS); });
+    setRuntimeCritMode(CritMode.ALWAYS);
+    act(() => { r2.current.setInteractionMode(InteractionModeType.FREEFORM); });
+
+    const col2 = findColumn(r2.current, SLOT_ALESH, NounType.COMBO);
+    const payload2 = getMenuPayload(r2.current, col2!, 5 * FPS);
+    act(() => {
+      r2.current.handleAddEvent(payload2.ownerEntityId, payload2.columnId, payload2.atFrame, payload2.defaultSkill);
+    });
+
+    const combo2 = r2.current.allProcessedEvents.find(
+      ev => ev.ownerEntityId === SLOT_ALESH && ev.columnId === NounType.COMBO,
+    )!;
+    const dmgSeg2 = combo2.segments.find(s => s.frames && s.frames.length > 0)!;
+    const frame2 = dmgSeg2.frames![0];
+    // Hit branch: predicates fire. DEAL DAMAGE has ADD(base, bonus) multipliers.
+    const dealHit = findDealDamageInClauses(frame2.clauses, true);
+    expect(dealHit).not.toBeNull();
+    expect(dealHit!.insideChance).toBe(true);
+    // Hit damage is a compound expression (ADD of two VARY_BY arrays), so
+    // multiplierNode is set instead of multipliers[].
+    expect(dealHit!.multiplierNode).toBeDefined();
+  });
+
+  it('I1: CHANCE pinned to hit at P3+ applies MAY_THE_WILLING_BITE to team', () => {
+    const { result } = setupAlesh();
+    // Set both React state and runtime global — pipeline reads pipelineCritMode
+    // (normalized to EXPECTED), but doChance reads getRuntimeCritMode() (ALWAYS).
+    act(() => { result.current.setCritMode(CritMode.ALWAYS); });
+    setRuntimeCritMode(CritMode.ALWAYS);
+    act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
+
+    const col = findColumn(result.current, SLOT_ALESH, NounType.COMBO);
+    const payload = getMenuPayload(result.current, col!, 5 * FPS);
+    act(() => {
+      result.current.handleAddEvent(
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
+      );
+    });
+
+    // In ALWAYS mode, CHANCE fires → P3 predicate evaluates → APPLY STATUS
+    // Default loadout is P5, so the P3 condition passes.
+    const mtwb = result.current.allProcessedEvents.filter(
+      ev => ev.id === MAY_THE_WILLING_BITE_ID,
+    );
+    expect(mtwb.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('I2: handleSetChancePins writes the pin to the combat state override store', () => {
     const { result } = setupAlesh();
     act(() => { setRuntimeCritMode(CritMode.MANUAL); });
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });

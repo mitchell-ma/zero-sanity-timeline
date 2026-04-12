@@ -44,10 +44,39 @@ import { hasDealDamageClause, findDealDamageInClauses, shouldFireChance } from '
 import { LoadoutProperties, DEFAULT_LOADOUT_PROPERTIES } from '../../view/InformationPane';
 import type { Slot } from '../timeline/columnBuilder';
 import { ENEMY_ID, OPERATOR_COLUMNS, REACTION_COLUMN_IDS } from '../../model/channels';
+import { TEAM_ID } from '../slot/commonSlotController';
 import { buildReactionDamageRows, ReactionOperatorContext } from './artsReactionController';
 import { buildCritExpectationModel, getFrameExpectation } from './critExpectationModel';
 import type { CritExpectationModel, CritFrameSnapshot, StatusStatContribution } from './critExpectationModel';
 import { getLastTriggerIndex, getLastStatAccumulator } from '../timeline/eventQueueController';
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
+/** Merge two partial stat delta maps, summing values for shared keys. */
+function mergeStatDeltas(
+  a: Partial<Record<StatType, number>> | undefined,
+  b: Partial<Record<StatType, number>> | undefined,
+): Partial<Record<StatType, number>> | undefined {
+  if (!a && !b) return undefined;
+  if (!a) return b;
+  if (!b) return a;
+  const merged = { ...a };
+  for (const key of Object.keys(b) as StatType[]) {
+    merged[key] = (merged[key] ?? 0) + (b[key] ?? 0);
+  }
+  return merged;
+}
+
+/** Merge two stat source arrays (for display breakdown). */
+function mergeStatSources(
+  a: readonly import('./statAccumulator').StatSource[] | undefined,
+  b: readonly import('./statAccumulator').StatSource[] | undefined,
+): readonly import('./statAccumulator').StatSource[] | undefined {
+  if (!a && !b) return undefined;
+  if (!a) return b;
+  if (!b) return a;
+  return [...a, ...b];
+}
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -296,6 +325,34 @@ function buildAmpSources(
   return [...eventSources, { label: NounType.ARTS_AMP, value: ampDelta, category: NounType.ARTS_AMP }];
 }
 
+/** Build per-element amp source breakdown for display. */
+function buildAllAmpSources(
+  frame: number,
+  activeElement: ElementType,
+  query: EventsQueryService | undefined,
+  rd: Partial<Record<StatType, number>> | undefined,
+  accumulator: import('./statAccumulator').StatAccumulator | null | undefined,
+  frameKey: string,
+  ownerEntityId: string,
+): Partial<Record<ElementType, MultiplierSource[]>> {
+  const result: Partial<Record<ElementType, MultiplierSource[]>> = {};
+  const ampStatSources = mergeStatSources(
+    accumulator?.getFrameStatSources(frameKey, ownerEntityId, StatType.AMP),
+    accumulator?.getFrameStatSources(frameKey, TEAM_ID, StatType.AMP),
+  );
+  for (const el of ALL_DISPLAY_ELEMENTS) {
+    // Per-element: event-based AMP only (element-filtered), no runtime stat AMP
+    const eventSources = query?.getAmpSources(frame, el) ?? [];
+    if (eventSources.length > 0) result[el] = eventSources;
+  }
+  // Runtime stat AMP (not element-qualified) shown under the active element
+  const statSources = buildAmpSources([], rd, ampStatSources);
+  if (statSources.length > 0) {
+    result[activeElement] = [...(result[activeElement] ?? []), ...statSources];
+  }
+  return result;
+}
+
 // ── Main builder functions ───────────────────────────────────────────────────
 
 /**
@@ -494,7 +551,11 @@ export function buildDamageTableRows(
             // Runtime stat deltas from status effects (e.g. SF Minor APPLY STAT DAMAGE_BONUS HEAT)
             const accumulator = getLastStatAccumulator();
             const currentFrameKey = `${ev.uid}:${si}:${fi}`;
-            const runtimeDeltas = accumulator?.getFrameStatDeltas(currentFrameKey, ev.ownerEntityId);
+            const operatorDeltas = accumulator?.getFrameStatDeltas(currentFrameKey, ev.ownerEntityId);
+            // Team-wide stat deltas (e.g. Wildland Trekker APPLY STAT DAMAGE_BONUS ELECTRIC to TEAM)
+            const teamDeltas = accumulator?.getFrameStatDeltas(currentFrameKey, TEAM_ID);
+            // Merge operator + team deltas so team-wide buffs affect individual operators
+            const runtimeDeltas = mergeStatDeltas(operatorDeltas, teamDeltas);
             // Enemy-side runtime stat deltas (e.g. WEAKNESS applied by status clauses).
             const enemyRuntimeDeltas = accumulator?.getFrameStatDeltas(currentFrameKey, ENEMY_ID);
 
@@ -504,8 +565,11 @@ export function buildDamageTableRows(
               let segmentMultiplier: number | null;
               let isPerTick = false;
 
-              // Check for inline DEAL DAMAGE multiplier (DSL v2 clause)
-              const dealInfo = findDealDamageInClauses(frame.clauses);
+              // Resolve which CHANCE branch to show: pin wins, mode is default.
+              const chancePin = overrides?.[buildOverrideKey(ev)]?.segments?.[si]?.frames?.[fi]?.isChance;
+              const chanceHit = shouldFireChance(resolvedCritMode, chancePin);
+              // Find the DEAL DAMAGE from the active branch (hit or else).
+              const dealInfo = findDealDamageInClauses(frame.clauses, chanceHit);
               if (dealInfo && dealInfo.multipliers.length > 0) {
                 const levelIdx = Math.min(skillLevel - 1, dealInfo.multipliers.length - 1);
                 multiplier = dealInfo.multipliers[levelIdx];
@@ -603,11 +667,6 @@ export function buildDamageTableRows(
                   [ElementType.NATURE]: stat(StatType.NATURE_DAMAGE_BONUS),
                   [ElementType.ELECTRIC]: stat(StatType.ELECTRIC_DAMAGE_BONUS),
                 } as Record<ElementType, number>;
-                // Intellect-scaled damage bonus (e.g. Wildland Trekker talent)
-                const intellectDmgBonus = statusQuery?.getIntellectScaledDamageBonus(absFrame) ?? 0;
-                if (intellectDmgBonus > 0) {
-                  allElementDmgBonuses[ElementType.ELECTRIC] = (allElementDmgBonuses[ElementType.ELECTRIC] ?? 0) + intellectDmgBonus;
-                }
                 // Add crit-dependent element DMG deltas to the per-element map
                 if (critDeltas) {
                   const elementStatMap: Partial<Record<ElementType, StatType>> = {
@@ -628,9 +687,7 @@ export function buildDamageTableRows(
 
                 // Element and skill damage bonuses (with runtime + crit-dependent deltas)
                 const critElementDelta = critDeltas?.[elementBonusStat] ?? 0;
-                const subElementDmg = (element === ElementType.ELECTRIC)
-                  ? stat(elementBonusStat) + intellectDmgBonus + critElementDelta
-                  : stat(elementBonusStat) + critElementDelta;
+                const subElementDmg = stat(elementBonusStat) + critElementDelta;
                 const critSkillTypeDelta = critDeltas?.[skillTypeBonusStat] ?? 0;
                 const subSkillTypeDmg = stat(skillTypeBonusStat) + critSkillTypeDelta;
                 const critSkillDelta = critDeltas?.[StatType.SKILL_DAMAGE_BONUS] ?? 0;
@@ -733,8 +790,8 @@ export function buildDamageTableRows(
                   allFragilitySources: statusQuery ? buildAllElementSources(absFrame, statusQuery, 'fragility') : {},
                   susceptibilitySources: statusQuery?.getSusceptibilitySources(absFrame, element) ?? [],
                   allSusceptibilitySources: statusQuery ? buildAllElementSources(absFrame, statusQuery, 'susceptibility') : {},
-                  ampSources: buildAmpSources(statusQuery?.getAmpSources(absFrame) ?? [], rd, accumulator?.getFrameStatSources(currentFrameKey, ev.ownerEntityId, StatType.AMP)),
-                  allAmpSources: { [ElementType.ARTS]: buildAmpSources(statusQuery?.getAmpSources(absFrame) ?? [], rd, accumulator?.getFrameStatSources(currentFrameKey, ev.ownerEntityId, StatType.AMP)) },
+                  ampSources: buildAmpSources(statusQuery?.getAmpSources(absFrame, element) ?? [], rd, mergeStatSources(accumulator?.getFrameStatSources(currentFrameKey, ev.ownerEntityId, StatType.AMP), accumulator?.getFrameStatSources(currentFrameKey, TEAM_ID, StatType.AMP))),
+                  allAmpSources: buildAllAmpSources(absFrame, element, statusQuery, rd, accumulator, currentFrameKey, ev.ownerEntityId),
                   weaknessStatValue,
                   weaknessSources: (accumulator?.getFrameStatSources(currentFrameKey, ENEMY_ID, StatType.WEAKNESS) ?? []).map(s => ({
                     label: s.label,
@@ -772,12 +829,9 @@ export function buildDamageTableRows(
                 // entirely (no damage, no multiplier dilution). Pure pin-driven;
                 // the probability in the CHANCE wrapper is display-only and has
                 // no effect here.
-                if (dealInfo?.insideChance) {
-                  const chancePin = overrides?.[buildOverrideKey(ev)]?.segments?.[si]?.frames?.[fi]?.isChance;
-                  if (!shouldFireChance(resolvedCritMode, chancePin)) {
-                    continue;
-                  }
-                }
+                // No per-row CHANCE gating needed — findDealDamageInClauses
+                // already selected the right branch (hit or else) based on
+                // the chanceHit parameter above.
 
                 params = {
                   attack: mainStatValue,
@@ -785,7 +839,7 @@ export function buildDamageTableRows(
                   attributeBonus: opData.attributeBonus,
                   multiplierGroup,
                   critMultiplier: expectedCrit,
-                  ampMultiplier: getAmpMultiplier((statusQuery?.getAmpBonus(absFrame) ?? 0) + (rd?.[StatType.AMP] ?? 0)),
+                  ampMultiplier: getAmpMultiplier((statusQuery?.getAmpBonus(absFrame, element) ?? 0) + (rd?.[StatType.AMP] ?? 0)),
                   staggerMultiplier: getStaggerMultiplier(isStaggered),
                   finisherMultiplier: getFinisherMultiplier(enemyTier, isFinisher),
                   linkMultiplier: getLinkMultiplier(linkBonus, linkBonus > 0),
@@ -805,7 +859,8 @@ export function buildDamageTableRows(
               }
             }
 
-            const rowDealInfo = findDealDamageInClauses(frame.clauses);
+            const chancePin2 = overrides?.[buildOverrideKey(ev)]?.segments?.[si]?.frames?.[fi]?.isChance;
+            const rowDealInfo = findDealDamageInClauses(frame.clauses, shouldFireChance(resolvedCritMode, chancePin2));
             const rowElement = ((rowDealInfo?.element ?? frame.damageElement ?? col.skillElement) as ElementType | undefined) ?? opData?.element;
             rows.push({
               key: `${ev.uid}-s${si}-f${fi}`,

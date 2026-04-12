@@ -456,7 +456,8 @@ function VaryByLeaf({ node, label, editState, basePath }: {
   const vals = node.value as number[];
   const axis = String(node.object ?? 'LEVEL').replace(/_/g, ' ').toLowerCase();
   const ofClause = node.of as { determiner?: string; object?: string } | undefined;
-  const of = ofClause ? ` of ${(ofClause.determiner ?? '').toLowerCase()} ${(ofClause.object ?? 'OPERATOR').toLowerCase()}`.trim() : '';
+  const ofParts = ofClause ? [ofClause.determiner, ofClause.object ?? 'OPERATOR'].filter(Boolean).map(s => String(s).toLowerCase()).join(' ') : '';
+  const of = ofParts ? ` of ${ofParts}` : '';
   const labelFn = VARY_AXIS_LABELS[String(node.object)] ?? ((i: number) => String(i + 1));
 
   return (
@@ -566,6 +567,22 @@ function EffectView({ effect: ef, editState, basePath }: {
   const nestedEffects = Array.isArray(ef.effects) ? ef.effects as Record<string, unknown>[] : null;
   const nestedPredicates = Array.isArray(ef.predicates) ? ef.predicates as Record<string, unknown>[] : null;
   const nestedElseEffects = Array.isArray(ef.elseEffects) ? ef.elseEffects as Record<string, unknown>[] : null;
+
+  // Collapse ALL/ANY with a single predicate and no flat effects into plain IF.
+  // "ALL with one branch" = just a conditional, the compound header adds no meaning.
+  const isCollapsibleCompound = nestedPredicates && nestedPredicates.length === 1
+    && !nestedEffects && !nestedElseEffects
+    && (String(ef.verb) === VerbType.ALL || String(ef.verb) === VerbType.ANY);
+  if (isCollapsibleCompound) {
+    return (
+      <ClausePredicateView
+        predicate={nestedPredicates[0]}
+        editState={editState}
+        basePath={basePath ? `${basePath}.predicates[0]` : undefined}
+      />
+    );
+  }
+
   if (nestedEffects || nestedPredicates) {
     const constraint = ef.cardinalityConstraint as string | undefined;
     const val = ef.value as string | number | undefined;
@@ -579,42 +596,63 @@ function EffectView({ effect: ef, editState, basePath }: {
           <span className="ops-frame-effect-verb">{String(ef.verb).replace(/_/g, ' ')}</span>
           {constraintLabel && <span className="ops-frame-effect-prep">{constraintLabel}</span>}
         </div>
-        {/* CHANCE probability display */}
-        {chanceWith && (
-          <div className="ops-prop-tree-children">
+        {/* All children in ONE tree container so branch lines connect */}
+        <div className="ops-prop-tree-children">
+          {/* CHANCE probability display */}
+          {chanceWith && (
             <div className="ops-vt-branch ops-vt-branch--mid">
               <ValueNodeTree node={chanceWith} label="probability" />
             </div>
-          </div>
-        )}
-        {/* Predicated branches (ALL/ANY with conditions + effects) */}
-        {nestedPredicates && (
-          <div className="ops-prop-tree-children">
-            {nestedPredicates.map((pred, pi) => (
-              <div key={`p-${pi}`} className={`ops-vt-branch${!nestedEffects && pi === nestedPredicates.length - 1 && !nestedElseEffects ? '' : ' ops-vt-branch--mid'}`}>
+          )}
+          {/* Predicated branches (CHANCE/ALL/ANY with conditions + effects) */}
+          {nestedPredicates && nestedPredicates.flatMap((pred, pi) => {
+            const conditions = ((pred as Record<string, unknown>).conditions ?? []) as unknown[];
+            const effects = ((pred as Record<string, unknown>).effects ?? []) as Record<string, unknown>[];
+            const isLastPred = !nestedEffects && pi === nestedPredicates.length - 1;
+
+            // Unconditional predicates: flatten effects into the parent container
+            // so they render at the same level as conditional predicates (siblings
+            // of CHANCE, not nested one level deeper).
+            if (conditions.length === 0) {
+              return effects.map((ef, ei) => {
+                const isLast = isLastPred && ei === effects.length - 1;
+                return (
+                  <div key={`p-${pi}-e-${ei}`} className={`ops-vt-branch${isLast ? '' : ' ops-vt-branch--mid'}`}>
+                    <EffectView
+                      effect={ef}
+                      editState={editState}
+                      basePath={basePath ? `${basePath}.predicates[${pi}].effects[${ei}]` : undefined}
+                    />
+                  </div>
+                );
+              });
+            }
+
+            // Conditional predicates: render as IF block via ClausePredicateView
+            return [(
+              <div key={`p-${pi}`} className={`ops-vt-branch${isLastPred ? '' : ' ops-vt-branch--mid'}`}>
                 <ClausePredicateView
                   predicate={pred}
                   editState={editState}
                   basePath={basePath ? `${basePath}.predicates[${pi}]` : undefined}
                 />
               </div>
-            ))}
-          </div>
-        )}
-        {/* Flat effects (hit branch for CHANCE, unconditional for ALL/ANY) */}
-        {nestedEffects && (
-          <div className="ops-prop-tree-children">
-            {nestedEffects.map((nested, ni) => (
-              <div key={ni} className={`ops-vt-branch${ni === nestedEffects.length - 1 && !nestedElseEffects ? '' : ' ops-vt-branch--mid'}`}>
+            )];
+          })}
+          {/* Flat effects (hit branch for CHANCE, unconditional for ALL/ANY) */}
+          {nestedEffects && nestedEffects.map((nested, ni) => {
+            const isLast = ni === nestedEffects.length - 1;
+            return (
+              <div key={ni} className={`ops-vt-branch${isLast ? '' : ' ops-vt-branch--mid'}`}>
                 <EffectView
                   effect={nested}
                   editState={editState}
                   basePath={basePath ? `${basePath}.effects[${ni}]` : undefined}
                 />
               </div>
-            ))}
-          </div>
-        )}
+            );
+          })}
+        </div>
         {/* CHANCE else branch */}
         {nestedElseEffects && nestedElseEffects.length > 0 && (
           <>

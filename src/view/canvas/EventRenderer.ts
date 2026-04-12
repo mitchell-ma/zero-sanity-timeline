@@ -381,11 +381,17 @@ export function renderEvent(
     } else if (isSingleSeg) {
       const fullLabel = presentation.label;
       if (fullLabel) {
-        // Try full label first; fall back to trailing numeral (stack indicator) if too wide
-        const trailingMatch = fullLabel.match(TRAILING_NUMERAL_RE);
-        segLabelText = (fullLabel.length * 6 + 8 <= segH)
-          ? fullLabel
-          : (trailingMatch?.[1] ?? fullLabel);
+        const isClamped = presentation.visualActivationDuration != null;
+        if (isClamped) {
+          // Clamped (stacked) events may be very short — fall back to trailing numeral if too wide
+          const trailingMatch = fullLabel.match(TRAILING_NUMERAL_RE);
+          segLabelText = (fullLabel.length * 6 + 8 <= segH)
+            ? fullLabel
+            : (trailingMatch?.[1] ?? fullLabel);
+        } else {
+          // Single unclamped event — always show full name, never shorten to "I"
+          segLabelText = fullLabel;
+        }
       }
     } else if (seg.properties.name) {
       const segName = seg.properties.name;

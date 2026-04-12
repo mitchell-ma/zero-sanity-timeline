@@ -49,7 +49,7 @@
         "eventComponentType": "SEGMENT"
       },
       "properties": {
-        "name": "Flash-frozen",
+        "name": "Flash-frozen for Freshness",
         "duration": {
           "value": {
             "verb": "IS",
@@ -158,7 +158,7 @@
     }
   ],
   "properties": {
-    "id": "FLASH_FROZEN_TALENT",
+    "id": "FLASH_FROZEN_FOR_FRESHNESS",
     "maxLevel": {
       "verb": "IS",
       "value": 2
@@ -190,6 +190,6 @@
       "ENDFIELD_WIKI"
     ],
     "icon": "skills/alesh_talent_1_icon.png",
-    "dataStatus": "RECONCILED"
+    "dataStatus": "VERIFIED"
   }
 }

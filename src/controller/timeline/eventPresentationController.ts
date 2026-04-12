@@ -14,8 +14,9 @@
  */
 import { TimelineEvent, Column, MiniTimeline, EventSegmentData, eventEndFrame } from '../../consts/viewTypes';
 import { NounType } from '../../dsl/semantics';
-import { TimelineSourceType, ELEMENT_COLORS, ElementType, InteractionModeType, EventStatusType, DEFAULT_EVENT_COLOR } from '../../consts/enums';
+import { ELEMENT_COLORS, ElementType, InteractionModeType, EventStatusType, DEFAULT_EVENT_COLOR } from '../../consts/enums';
 import { getAllSkillLabels, getAllStatusLabels, getAllInflictionLabels, getStatusById } from '../gameDataStore';
+import { getOperatorSkill } from '../../model/game-data/operatorSkillsStore';
 import { StackInteractionType } from '../../consts/enums';
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from '../calculation/valueResolver';
 import type { ValueNode } from '../../dsl/semantics';
@@ -305,23 +306,19 @@ function getDominantSegmentElement(ev: TimelineEvent): string | undefined {
 }
 
 /**
- * Resolves the color for an event based on column config and sequencing.
- * Uses the dominant element across the event's segments when available.
+ * Resolves the color for an event from its own segment data.
+ * Priority: dominant element across segments → slot's operator element → default.
  */
 export function resolveEventColor(
   ev: TimelineEvent,
-  col: Column,
   slotElementColors: Record<string, string>,
 ): string {
-  if (col.type !== 'mini-timeline') return col.color;
-  // Non-skill columns (ACTION, status) always use their own column color
-  if (!col.skillElement) return col.color;
-  // Skill columns: prefer the dominant element from the event's own segments
   const dominant = getDominantSegmentElement(ev);
-  const elColor = dominant
-    ? ELEMENT_COLORS[dominant as ElementType]
-    : ELEMENT_COLORS[col.skillElement as ElementType];
-  return elColor ?? slotElementColors[col.ownerEntityId] ?? DEFAULT_EVENT_COLOR;
+  if (dominant) {
+    const elColor = ELEMENT_COLORS[dominant as ElementType];
+    if (elColor) return elColor;
+  }
+  return slotElementColors[ev.ownerEntityId] ?? DEFAULT_EVENT_COLOR;
 }
 
 /**
@@ -342,7 +339,6 @@ export function computeSlotElementColors(slots: Slot[]): Record<string, string> 
  */
 export function computeEventPresentation(
   ev: TimelineEvent,
-  col: Column,
   options: {
     slotElementColors: Record<string, string>;
     autoFinisherIds: Set<string>;
@@ -354,16 +350,13 @@ export function computeEventPresentation(
 ): EventPresentation {
   const { slotElementColors, autoFinisherIds, validationMaps, interactionMode, statusViewOverrides, events } = options;
   const isWindow = ev.columnId === COMBO_WINDOW_COLUMN_ID;
-  const isDerivedCol = col.type === 'mini-timeline' && !!col.derived;
-  const isEnemy = col.type === 'mini-timeline' && col.source === TimelineSourceType.ENEMY;
-  // User-placed events (any creationInteractionMode) are draggable; engine-derived events are not
   const isUserPlaced = ev.creationInteractionMode != null;
 
   const statusOverride = statusViewOverrides?.get(ev.uid);
   const label = isWindow
     ? (events && isWindowConsumed(ev, events) ? '' : 'COMBO ACTIVATION WINDOW')
     : (statusOverride?.label ?? resolveEventLabel(ev));
-  const color = resolveEventColor(ev, col, slotElementColors);
+  const color = resolveEventColor(ev, slotElementColors);
 
   const validationWarning = isWindow
     ? null
@@ -376,22 +369,26 @@ export function computeEventPresentation(
     : validationWarning ?? eventWarnings;
 
   const passive = isWindow;
-  const notDraggable = isWindow || (isDerivedCol && !isUserPlaced) || (isEnemy && !isUserPlaced);
-  const derived = isDerivedCol && interactionMode === InteractionModeType.STRICT && !isUserPlaced;
+  const notDraggable = isWindow || !isUserPlaced;
+  const derived = !isUserPlaced && interactionMode === InteractionModeType.STRICT;
   const isAutoFinisher = autoFinisherIds.has(ev.uid);
 
-  const skillElement = isWindow
-    ? undefined
-    : col.type === 'mini-timeline' ? col.skillElement : undefined;
+  // Segment labels from the skill definition (for segment name display).
+  // The event's own segments carry frame data; the skill def carries names.
+  const srcEntity = ev.sourceEntityId ?? '';
+  const skillDef = ev.sourceSkillName
+    ? (getOperatorSkill(srcEntity, ev.sourceSkillName)
+      ?? getOperatorSkill(srcEntity, ev.id))
+    : null;
+  const defSegs = skillDef?.segments as EventSegmentData[] | undefined;
+  const allSegmentLabels = defSegs?.map((s) => s.properties.name!);
+  const allDefaultSegments = defSegs;
 
-  let allSegmentLabels: string[] | undefined;
-  let allDefaultSegments: EventSegmentData[] | undefined;
-  if (!isWindow && col.type === 'mini-timeline') {
-    const variantSegs = col.eventVariants?.find((v) => v.id === ev.id)?.segments
-      ?? col.defaultEvent?.segments;
-    allSegmentLabels = variantSegs?.map((s) => s.properties.name!);
-    allDefaultSegments = variantSegs;
-  }
+  // Fallback element for frame diamond coloring when the frame doesn't
+  // declare its own — the operator's element via slotElementColors.
+  const skillElement = slotElementColors[ev.ownerEntityId]
+    ? getDominantSegmentElement(ev) ?? undefined
+    : undefined;
 
   return {
     label,

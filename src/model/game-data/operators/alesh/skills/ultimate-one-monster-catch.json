@@ -174,7 +174,28 @@
                       "value": 1
                     }
                   }
-                },
+                }
+              ]
+            },
+            {
+              "conditions": [
+                {
+                  "subject": "ENEMY",
+                  "verb": "HAVE",
+                  "object": "HP",
+                  "cardinalityConstraint": "GREATER_THAN_EQUAL",
+                  "with": {
+                    "value": {
+                      "unit": "PERCENTAGE",
+                      "value": {
+                        "verb": "IS",
+                        "value": 50
+                      }
+                    }
+                  }
+                }
+              ],
+              "effects": [
                 {
                   "verb": "DEAL",
                   "objectQualifier": "CRYO",
@@ -215,37 +236,9 @@
                   }
                 }
               ]
-            }
-          ],
-          "clauseType": "ALL"
-        },
-        {
-          "metadata": {
-            "eventComponentType": "FRAME"
-          },
-          "properties": {
-            "offset": {
-              "value": 0.417,
-              "unit": "SECOND"
             },
-            "element": "CRYO"
-          },
-          "clause": [
             {
               "conditions": [
-                {
-                  "subjectDeterminer": "THIS",
-                  "subject": "OPERATOR",
-                  "verb": "HAVE",
-                  "object": "POTENTIAL",
-                  "cardinalityConstraint": "GREATER_THAN_EQUAL",
-                  "with": {
-                    "value": {
-                      "verb": "IS",
-                      "value": 5
-                    }
-                  }
-                },
                 {
                   "subject": "ENEMY",
                   "verb": "HAVE",
@@ -294,8 +287,20 @@
                         }
                       },
                       "right": {
-                        "verb": "IS",
-                        "value": 0.5
+                        "verb": "VARY_BY",
+                        "object": "POTENTIAL",
+                        "value": [
+                          1,
+                          1,
+                          1,
+                          1,
+                          1,
+                          1.5
+                        ],
+                        "of": {
+                          "object": "OPERATOR",
+                          "determiner": "THIS"
+                        }
                       }
                     },
                     "mainStat": {
@@ -320,7 +325,7 @@
   "metadata": {
     "originId": "ALESH",
     "icon": "skills/ult_alesh.png",
-    "dataStatus": "RECONCILED"
+    "dataStatus": "VERIFIED"
   },
   "clauseType": "ALL"
 }

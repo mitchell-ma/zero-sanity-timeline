@@ -484,6 +484,39 @@ function warnReactionPhysicalIdMisuse(shape: Record<string, unknown>, path: stri
   return [];
 }
 
+// ── TEAM target + THIS OPERATOR value resolution ──────────────────────────
+
+/**
+ * Walk a value node tree and flag any `of.determiner: THIS` with
+ * `of.object: OPERATOR`. When the parent effect targets TEAM, value
+ * resolution runs against the team entity — which has no stats, skill
+ * level, talent level, or potential. The correct form is
+ * `"determiner": "SOURCE"` so the resolver picks the casting operator's
+ * context.
+ */
+export function collectThisOperatorInValueNode(node: unknown, path: string): string[] {
+  if (node === null || typeof node !== 'object' || Array.isArray(node)) return [];
+  const obj = node as Record<string, unknown>;
+  const errors: string[] = [];
+
+  // Check the `of` clause on this node
+  const of = obj.of as Record<string, unknown> | undefined;
+  if (of && of.determiner === DeterminerType.THIS && of.object === NounType.OPERATOR) {
+    errors.push(
+      `${path}.of: "determiner": "THIS" resolves against the TEAM entity (no stats/levels). `
+      + `Use "determiner": "SOURCE" to resolve against the casting operator.`,
+    );
+  }
+
+  // Recurse into expression children and nested of clauses
+  for (const key of ['left', 'right', 'of'] as const) {
+    if (obj[key] && typeof obj[key] === 'object') {
+      errors.push(...collectThisOperatorInValueNode(obj[key], `${path}.${key}`));
+    }
+  }
+  return errors;
+}
+
 // ── Flattenable-base qualifier consistency ─────────────────────────────────
 
 /**

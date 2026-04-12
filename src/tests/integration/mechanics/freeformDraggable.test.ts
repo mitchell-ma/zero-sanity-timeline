@@ -123,7 +123,7 @@ function assertDraggable(
         (c.matchColumnIds?.includes(columnId) ?? false)),
   );
   expect(col).toBeDefined();
-  const pres = computeEventPresentation(ev, col!, {
+  const pres = computeEventPresentation(ev, {
     slotElementColors: {},
     autoFinisherIds: new Set(),
     validationMaps: EMPTY_VALIDATION_MAPS,
@@ -205,7 +205,7 @@ describe('Freeform-placed events are draggable', () => {
     expect(combustions[0].creationInteractionMode).toBe(InteractionModeType.FREEFORM);
 
     // Presentation: not notDraggable
-    const pres = computeEventPresentation(combustions[0], enemyCol, {
+    const pres = computeEventPresentation(combustions[0], {
       slotElementColors: {},
       autoFinisherIds: new Set(),
       validationMaps: EMPTY_VALIDATION_MAPS,
@@ -265,7 +265,7 @@ describe('Freeform-placed events are draggable', () => {
     expect(combustions.length).toBeGreaterThanOrEqual(1);
     expect(combustions[0].creationInteractionMode).toBe(InteractionModeType.FREEFORM);
 
-    const pres = computeEventPresentation(combustions[0], enemyCol, {
+    const pres = computeEventPresentation(combustions[0], {
       slotElementColors: {},
       autoFinisherIds: new Set(),
       validationMaps: EMPTY_VALIDATION_MAPS,
@@ -311,7 +311,7 @@ describe('Freeform-placed events are draggable', () => {
     // overlap timing. If one exists, it MUST not be draggable.
     for (const c of combustions) {
       expect(c.creationInteractionMode).toBeUndefined();
-      const pres = computeEventPresentation(c, enemyCol, {
+      const pres = computeEventPresentation(c, {
         slotElementColors: {},
         autoFinisherIds: new Set(),
         validationMaps: EMPTY_VALIDATION_MAPS,

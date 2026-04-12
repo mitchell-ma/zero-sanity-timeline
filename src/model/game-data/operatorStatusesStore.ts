@@ -6,13 +6,14 @@
  * Each file contains an array of operator status entries sharing an originId.
  */
 import { EventType, UNLIMITED_STACKS } from '../../consts/enums';
+import { NounType } from '../../dsl/semantics';
 import type { EventSegmentData, EventFrameMarker } from '../../consts/viewTypes';
 import type { ClauseEffect, ClausePredicate, StacksConfig, DurationConfig } from './weaponStatusesStore';
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from '../../controller/calculation/valueResolver';
 import { DataDrivenSkillEventFrame } from '../event-frames/dataDrivenEventFrames';
 
 import { FPS } from '../../utils/timeline';
-import { checkKeys, VALID_VALUE_NODE_KEYS, VALID_CLAUSE_KEYS, VALID_METADATA_KEYS, VALID_EFFECT_KEYS, VALID_EFFECT_WITH_KEYS, VALID_TRIGGER_CONDITION_KEYS, validateEffect, validateInteraction, validateSegmentShape } from './validationUtils';
+import { checkKeys, VALID_VALUE_NODE_KEYS, VALID_CLAUSE_KEYS, VALID_METADATA_KEYS, VALID_EFFECT_KEYS, VALID_EFFECT_WITH_KEYS, VALID_TRIGGER_CONDITION_KEYS, validateEffect, validateInteraction, validateSegmentShape, collectThisOperatorInValueNode } from './validationUtils';
 
 // ── Trigger clause type ─────────────────────────────────────────────────────
 
@@ -124,6 +125,37 @@ export function validateOperatorStatus(json: Record<string, unknown>): string[] 
 
   // Status configs must specify a target — this determines default routing
   if (!props.to && !props.target) errors.push('properties.to: required (TEAM, OPERATOR, or ENEMY)');
+
+  // When the status itself targets TEAM (properties.to === TEAM), value
+  // resolution runs against the team entity which has no stats, skill level,
+  // talent level, or potential. Flag any value nodes using THIS OPERATOR —
+  // they should use SOURCE OPERATOR to resolve against the casting operator.
+  if (props.to === NounType.TEAM) {
+    const walkEffectsForTeamThis = (clauses: unknown[], clausePath: string) => {
+      if (!Array.isArray(clauses)) return;
+      for (let ci = 0; ci < clauses.length; ci++) {
+        const clause = clauses[ci] as Record<string, unknown>;
+        const effects = clause.effects as Record<string, unknown>[] | undefined;
+        if (!Array.isArray(effects)) continue;
+        for (let ei = 0; ei < effects.length; ei++) {
+          const ef = effects[ei];
+          const w = ef.with as Record<string, unknown> | undefined;
+          if (!w) continue;
+          for (const key of Object.keys(w)) {
+            if (w[key] && typeof w[key] === 'object') {
+              errors.push(...collectThisOperatorInValueNode(
+                w[key], `${clausePath}[${ci}].effects[${ei}].with.${key}`,
+              ));
+            }
+          }
+        }
+      }
+    };
+    if (json.clause) walkEffectsForTeamThis(json.clause as unknown[], 'clause');
+    if (json.onTriggerClause) walkEffectsForTeamThis(json.onTriggerClause as unknown[], 'onTriggerClause');
+    if (json.onEntryClause) walkEffectsForTeamThis(json.onEntryClause as unknown[], 'onEntryClause');
+    if (json.onExitClause) walkEffectsForTeamThis(json.onExitClause as unknown[], 'onExitClause');
+  }
 
   if (props.duration) {
     const dur = props.duration as Record<string, unknown>;

@@ -24,7 +24,7 @@
                   ],
                   "of": {
                     "object": "OPERATOR",
-                    "determiner": "THIS"
+                    "determiner": "SOURCE"
                   }
                 },
                 "right": {
@@ -40,7 +40,7 @@
                   ],
                   "of": {
                     "object": "OPERATOR",
-                    "determiner": "THIS"
+                    "determiner": "SOURCE"
                   }
                 }
               },
@@ -50,7 +50,7 @@
                 "objectId": "INTELLECT",
                 "of": {
                   "object": "OPERATOR",
-                  "determiner": "THIS"
+                  "determiner": "SOURCE"
                 }
               }
             }
@@ -61,7 +61,7 @@
   ],
   "properties": {
     "id": "WILDLAND_TREKKER_BUFF",
-    "name": "Wildland Trekker",
+    "name": "Wildland Trekker (Buff)",
     "to": "TEAM",
     "element": "ELECTRIC",
     "stacks": {
@@ -84,7 +84,7 @@
   },
   "metadata": {
     "originId": "ARCLIGHT",
-    "dataStatus": "RECONCILED"
+    "dataStatus": "VERIFIED"
   },
   "clauseType": "ALL"
 }

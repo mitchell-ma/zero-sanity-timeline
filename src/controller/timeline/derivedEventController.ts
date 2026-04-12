@@ -267,6 +267,12 @@ export class DerivedEventController implements ColumnHost {
     return this.statAccumulator?.getStat(entityId, stat) ?? 0;
   }
 
+  /** Get the full stats snapshot for an entity (for value resolution contexts). */
+  getStatSnapshot(entityId: string): Partial<Record<string, number>> | undefined {
+    const snap = this.statAccumulator?.getSnapshot(entityId);
+    return snap?.stats;
+  }
+
   hasStatAccumulator(): boolean {
     return this.statAccumulator !== null;
   }
@@ -303,6 +309,10 @@ export class DerivedEventController implements ColumnHost {
 
   hasHpController(): boolean {
     return this.hpController !== null;
+  }
+
+  getEnemyHpPercentage(frame: number): number | null {
+    return this.hpController?.getEnemyHpPercentage(frame) ?? null;
   }
 
   hasShieldController(): boolean {
