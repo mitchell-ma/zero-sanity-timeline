@@ -123,7 +123,7 @@ function TimelineColumn({
               const returnedFillStr = `${natLineStr} ${totalReversed}`;
               return (
                 <>
-                  <polygon points={returnedFillStr} fill="#66ccaa" fillOpacity="0.25" stroke="none" />
+                  <polygon points={returnedFillStr} fill="#cc4444" fillOpacity="0.25" stroke="none" />
                   <polyline points={natLineStr} fill="none" stroke={col.color} strokeWidth="0.3" strokeDasharray="3 2" vectorEffect="non-scaling-stroke" strokeOpacity="0.6" />
                 </>
               );
