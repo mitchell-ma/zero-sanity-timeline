@@ -96,39 +96,53 @@ mechanics) have `dataStatus: VERIFIED`.
 
 ## Integration tests
 
-`src/tests/integration/operators/estella/skills.test.ts` — 26 E2E tests
+`src/tests/integration/operators/estella/skills.test.ts` — 28 E2E tests
 across:
 
 - A. Core skill placement (BS / CS / ULT / BA)
 - B. BS Cryo Infliction
 - C. Combo Solidification trigger gate (freeform vs strict)
 - D. Ultimate energy cost at P0/P2/P5
-- E. Talent-derived Commiseration. E1–E3 are negative assertions: BA
-  variants on a solidified enemy must produce zero Commiseration events
-  (raw physical damage doesn't shatter Solidification). E4 (CS via
-  forced LIFT) is the only natural positive — Distortion's forced Lift
-  applies a physical status, which triggers Shatter → Commiseration.
-  E5 is also a negative: Tremolo's Lift is conditional on the enemy
-  already having PHYSICAL_SUSCEPTIBILITY, which the ULT alone doesn't
-  stage, so a self-contained ULT cast on a solidified enemy produces
-  zero Commiseration events.
+- E. Talent-derived Commiseration and ULT conditional LIFT:
+  - E1–E3: negative — BA variants on solidified enemy produce zero
+    Commiseration (raw physical damage doesn't shatter Solidification).
+  - E4: positive (E2E via context menu) — CS forced LIFT → Shatter →
+    Commiseration. Verifies event in allProcessedEvents, micro-column
+    in status column, and view model inclusion.
+  - E5: negative — ULT in isolation doesn't trigger Commiseration
+    (conditional LIFT needs pre-existing Physical Susceptibility).
+  - E6: positive — ULT with freeform PHYSICAL_SUSCEPTIBILITY on enemy
+    applies forced LIFT (Tremolo conditional clause verified).
 - G. Commiseration BS-only consumption — Estella's own Onomatopoeia
   consumes the status and routes the SP return through the resource
   graph; another operator's BS does not. Includes G4 which asserts the
   exact +15 SP delta at the BS frame at default talent level 2.
-- H. Survival Is A Win P5 1s cooldown enforcement — three Solidifications
-  within 1s produce ≤1 P5 trigger; spacing them >1s apart allows
-  multiple triggers.
+- H. Survival Is A Win P5 E2E via BS-triggered Solidification:
+  - H1: Estella BS + freeform Electric → Solidification on enemy.
+  - H2: P5 fires at potential 5 AND Commiseration does NOT fire (no
+    Shatter in this setup — only Solidification from cross-element).
+  - H3: P5 does NOT fire at potential < 5.
 - F. View layer — BS / CS / ULT visible in computed timeline
   presentation, BS event has nonzero duration.
 
 ## Engine fixes from this reconcile
 
-- `eventInterpretorController.ts` `handleEngineTrigger` now resolves and
-  passes `talentLevel` into the condition context built for
-  `onTriggerClause` haveConditions, so `HAVE TALENT_LEVEL >= N` gates
-  evaluate correctly for trigger-bound talents/statuses (was previously
-  defaulting to 0, blocking all such gates from ever passing).
+- `handleEngineTrigger`: resolves and passes `talentLevel` into condCtx
+  for `onTriggerClause` haveConditions, so `HAVE TALENT_LEVEL >= N`
+  gates evaluate correctly (was defaulting to 0).
+- `doApply` INFLICTION path: after `applyEventFromCtx`, fires reactive
+  triggers for any cross-element reaction created by
+  `inflictionColumn.add()` as a side effect. Without this, talents
+  watching `THIS OPERATOR APPLY SOLIDIFICATION` (P5) were never
+  notified because the reaction was created inside the column, not by
+  the interpretor's effect dispatch.
+- `checkReactiveTriggers`: qualifier filter for category-matched triggers
+  — when a trigger registers under `APPLY:REACTION` but its condition
+  specifies `objectQualifier: SHATTER`, only fire if the actual event
+  column matches SHATTER (not SOLIDIFICATION or other reactions).
+- `resolveColumnIds`: `tryFlattenQualifiedStatusId` resolves
+  `(SUSCEPTIBILITY, PHYSICAL)` → `PHYSICAL_SUSCEPTIBILITY` for the
+  columnId fallback path in `eventMatchesStatusPredicate`.
 
 ## Known TODOs (not Estella-specific)
 
