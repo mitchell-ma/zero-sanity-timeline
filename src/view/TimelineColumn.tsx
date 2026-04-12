@@ -20,6 +20,10 @@ interface ResourceGraph {
   min: number;
   max: number;
   wasted?: number;
+  /** Natural-only SP line (excludes returned SP). When present, the view
+   *  renders the area between `points` (total) and `naturalPoints` as the
+   *  returned SP region. */
+  naturalPoints?: ReadonlyArray<ResourcePoint>;
 }
 
 export interface TimelineColumnProps {
@@ -106,6 +110,24 @@ function TimelineColumn({
           >
             <polygon points={fillStr} fill={col.color} fillOpacity="0.15" stroke="none" />
             <polyline points={lineStr} fill="none" stroke={col.color} strokeWidth="0.5" vectorEffect="non-scaling-stroke" />
+            {/* Returned SP: fill between total line and natural line */}
+            {resourceGraph.naturalPoints && resourceGraph.naturalPoints.length >= 2 && (() => {
+              const natPts = resourceGraph.naturalPoints.map((pt) => {
+                const val = ((pt.value - rMin) / range) * 100;
+                const fpx = frameToPx(pt.frame, zoom);
+                return isHorizontal ? { x: fpx, y: 100 - val } : { x: val, y: fpx };
+              });
+              const natLineStr = natPts.map((p) => `${p.x},${p.y}`).join(' ');
+              // Build a closed polygon: total line forward, then natural line backward
+              const totalReversed = [...svgPoints].reverse().map((p) => `${p.x},${p.y}`).join(' ');
+              const returnedFillStr = `${natLineStr} ${totalReversed}`;
+              return (
+                <>
+                  <polygon points={returnedFillStr} fill="#66ccaa" fillOpacity="0.25" stroke="none" />
+                  <polyline points={natLineStr} fill="none" stroke={col.color} strokeWidth="0.3" strokeDasharray="3 2" vectorEffect="non-scaling-stroke" strokeOpacity="0.6" />
+                </>
+              );
+            })()}
             {col.columnId === COMMON_COLUMN_IDS.STAGGER && enemyStaggerNodes > 0 && (() => {
               const lines: React.ReactElement[] = [];
               for (let i = 1; i <= enemyStaggerNodes; i++) {

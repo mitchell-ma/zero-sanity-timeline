@@ -77,6 +77,9 @@ export class SkillPointController {
 
   getSubtimeline(): Subtimeline { return this.subtimeline; }
   getGraph(): ReadonlyArray<ResourcePoint> { return this.timeline.getGraph(); }
+  /** Natural-only SP graph (excludes returned SP). The gap between this
+   *  and getGraph() represents returned SP at each frame. */
+  getNaturalGraph(): ReadonlyArray<ResourcePoint> { return this.timeline.naturalGraph; }
   onGraphChange(listener: ResourceGraphListener): () => void { return this.timeline.onGraphChange(listener); }
   valueAt(frame: number): number { return this.timeline.valueAt(frame); }
 

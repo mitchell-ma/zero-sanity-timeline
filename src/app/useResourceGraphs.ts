@@ -13,6 +13,9 @@ export type ResourceGraphData = {
   max: number;
   /** Total resource wasted due to overflow (gains/regen exceeding max). */
   wasted?: number;
+  /** Secondary line graph — natural-only SP (excludes returned SP). The
+   *  area between `points` (total) and `naturalPoints` represents returned SP. */
+  naturalPoints?: ReadonlyArray<ResourcePoint>;
 };
 
 /** Computes and merges SP + stagger + ultimate energy resource graphs. */
@@ -32,7 +35,13 @@ export function useResourceGraphs(
     const update = (points: ReadonlyArray<ResourcePoint>) => {
       setSpGraphs((prev) => {
         const next = new Map(prev);
-        next.set(key, { points, min: spCtrl.min, max: spCtrl.max, wasted: spCtrl.wastedSP });
+        next.set(key, {
+          points,
+          min: spCtrl.min,
+          max: spCtrl.max,
+          wasted: spCtrl.wastedSP,
+          naturalPoints: spCtrl.getNaturalGraph(),
+        });
         return next;
       });
     };

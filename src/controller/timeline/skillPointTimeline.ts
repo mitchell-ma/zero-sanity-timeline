@@ -35,6 +35,9 @@ export class SkillPointTimeline extends ResourceTimeline {
   consumptionHistory: SkillPointConsumptionHistory[] = [];
   /** Total SP wasted due to regen or return overflow (would exceed max). */
   wastedSP = 0;
+  /** Natural-only SP graph (regen without returned SP). The gap between
+   *  the total graph and this line represents returned SP at each frame. */
+  naturalGraph: ResourcePoint[] = [];
 
   constructor(subtimeline: Subtimeline) {
     super(subtimeline);
@@ -45,6 +48,7 @@ export class SkillPointTimeline extends ResourceTimeline {
   protected recompute(): void {
     const events = this.subtimeline.getEvents();
     const points: ResourcePoint[] = [];
+    const natPoints: ResourcePoint[] = [];
     const log: SkillPointConsumptionHistory[] = [];
 
     // Natural pool starts at startValue; returned pool starts at 0
@@ -54,6 +58,7 @@ export class SkillPointTimeline extends ResourceTimeline {
     let wasted = 0;
 
     points.push({ frame: 0, value: naturalPool + returnedPool });
+    natPoints.push({ frame: 0, value: naturalPool });
 
     for (const ev of events) {
       // Regen natural pool from lastFrame to this event
@@ -68,6 +73,7 @@ export class SkillPointTimeline extends ResourceTimeline {
       const preTotal = naturalPool + returnedPool;
       if (preTotal !== points[points.length - 1].value || ev.startFrame !== points[points.length - 1].frame) {
         points.push({ frame: ev.startFrame, value: preTotal });
+        natPoints.push({ frame: ev.startFrame, value: naturalPool });
       }
 
       if (ev.id === 'sp-return') {
@@ -97,6 +103,7 @@ export class SkillPointTimeline extends ResourceTimeline {
 
       const postTotal = naturalPool + returnedPool;
       points.push({ frame: ev.startFrame, value: postTotal });
+      natPoints.push({ frame: ev.startFrame, value: naturalPool });
 
       lastFrame = ev.startFrame;
     }
@@ -117,15 +124,19 @@ export class SkillPointTimeline extends ResourceTimeline {
         const maxFrame = this.frameAfterEffectiveFrames(lastFrame, framesToMax);
         if (maxFrame < TOTAL_FRAMES) {
           points.push({ frame: maxFrame, value: this.max });
+          natPoints.push({ frame: maxFrame, value: naturalPool });
         }
       }
     }
     points.push({ frame: TOTAL_FRAMES, value: endValue });
+    natPoints.push({ frame: TOTAL_FRAMES, value: naturalPool });
 
     // Insert time-stop boundary points
     const finalPoints = this.insertTimeStopPoints(points);
+    const finalNatPoints = this.insertTimeStopPoints(natPoints);
 
     this.cachedGraph = finalPoints;
+    this.naturalGraph = finalNatPoints;
     this.consumptionHistory = log;
     this.wastedSP = wasted;
     this.graphListeners.forEach((cb) => cb(finalPoints));
