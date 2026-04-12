@@ -1042,10 +1042,30 @@ export class EventInterpretorController {
       const columnId = resolveEffectColumnId(effect.object, effect.objectId, effect.objectQualifier);
       if (!columnId) return false;
       const dv = this.resolveWith(effect.with?.duration, ctx);
+      // Snapshot allEvents length before applying — a cross-element reaction
+      // may be created as a side effect inside inflictionColumn.add().
+      const eventsBefore = this.getAllEvents().length;
       this.applyEventFromCtx(ctx, columnId, ownerEntityId, ctx.frame, typeof dv === 'number' ? Math.round(dv * FPS) : INFLICTION_DURATION, source,
         { uid: freeformUidFor(columnId) ?? derivedEventUid(columnId, source.ownerEntityId, ctx.frame),
           ...(ctx.sourceCreationInteractionMode != null ? { event: { creationInteractionMode: ctx.sourceCreationInteractionMode } } : {}),
         });
+      // If inflictionColumn.add() created a cross-element reaction as a side
+      // effect, fire reactive triggers for it so talents watching for
+      // `THIS OPERATOR APPLY SOLIDIFICATION` (e.g. Estella P5) get notified.
+      // Use the operator's SLOT ID for the owner (not the operator ID) so
+      // trigger matching resolves `THIS OPERATOR` correctly.
+      const allEvs = this.getAllEvents();
+      const sourceSlotId = this.ctxSlot(ctx);
+      for (let i = eventsBefore; i < allEvs.length; i++) {
+        const newEv = allEvs[i];
+        if (REACTION_COLUMN_IDS.has(newEv.columnId)) {
+          this.checkReactiveTriggers(
+            VerbType.APPLY, newEv.columnId, ctx.frame,
+            sourceSlotId, ctx.sourceSkillName, undefined,
+            this._processFrameOut,
+          );
+        }
+      }
       return true;
     }
     if (effect.object === NounType.STATUS) {
@@ -3266,6 +3286,24 @@ export class EventInterpretorController {
     // For FIRST_MATCH defs, group clauses and select the first matching one.
     const firstMatchGroups = new Map<string, TriggerDefEntry[]>();
     for (const entry of this.triggerIndex.matchEvent(verb, objectId)) {
+      // Qualifier filter for category-matched triggers: when a trigger
+      // registers under a CATEGORY key (e.g. `APPLY:REACTION`) but its
+      // primary condition specifies a specific qualifier (e.g. SHATTER),
+      // only fire if the actual event column matches the qualified column.
+      // Without this, `APPLY:REACTION` entries fire on ANY reaction
+      // regardless of qualifier. Only applies to REACTION/INFLICTION
+      // category objectIds — other objectIds (statuses, skills) use exact
+      // matching and don't need qualifier disambiguation.
+      const entryObjId = entry.primaryCondition.objectId;
+      if (entryObjId === NounType.REACTION || entryObjId === NounType.INFLICTION) {
+        const entryQualifier = entry.primaryCondition.objectQualifier ?? (entry.primaryCondition as { element?: string }).element;
+        if (entryQualifier) {
+          const qualifiedCol = resolveEffectColumnId(
+            entry.primaryCondition.object, entryObjId, entryQualifier,
+          );
+          if (qualifiedCol && qualifiedCol !== objectId) continue;
+        }
+      }
       // Enhancement type filter: entries for enhanced/empowered variants only match
       // events with the corresponding enhancement type.
       // Owner filter: THIS OPERATOR triggers only match events from the same slot

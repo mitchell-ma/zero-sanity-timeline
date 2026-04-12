@@ -730,47 +730,120 @@ describe('G. Commiseration SP return (Estella BS only)', () => {
 // H. Survival Is A Win (P5) — 1s Cooldown
 // =============================================================================
 
-describe('H. Survival Is A Win P5 cooldown', () => {
-  it('H1: multiple Solidifications within 1s do not retrigger the P5 UE gain', () => {
+describe('H. Survival Is A Win P5 — E2E via BS-triggered Solidification', () => {
+  /**
+   * Helper: place Electric Infliction via enemy context menu, then place
+   * Estella BS at the same frame. BS applies Cryo Infliction → Cryo +
+   * Electric → Solidification reaction with source = Estella. P5 fires
+   * because THIS OPERATOR APPLY SOLIDIFICATION matches.
+   */
+  function triggerSolidificationViaBS(
+    result: { current: AppResult },
+    atSec: number,
+  ) {
+    // Freeform Electric Infliction on enemy at atSec
+    const enemyCol = result.current.columns.find(
+      (c): c is MiniTimeline =>
+        c.type === ColumnType.MINI_TIMELINE
+        && c.ownerEntityId === ENEMY_ID
+        && c.columnId === ENEMY_GROUP_COLUMNS.ENEMY_STATUS,
+    )!;
+    const elecMenu = buildContextMenu(result.current, enemyCol, atSec * FPS);
+    const elecItem = elecMenu!.find(
+      (i) => i.actionId === 'addEvent'
+        && (i.actionPayload as { columnId?: string })?.columnId === INFLICTION_COLUMNS.ELECTRIC,
+    );
+    expect(elecItem).toBeDefined();
+    const elecPayload = elecItem!.actionPayload as { ownerEntityId: string; columnId: string; atFrame: number; defaultSkill: Record<string, unknown> };
+    act(() => {
+      result.current.handleAddEvent(
+        elecPayload.ownerEntityId, elecPayload.columnId,
+        elecPayload.atFrame, elecPayload.defaultSkill,
+      );
+    });
+
+    // Estella BS at same frame — Cryo Infliction at +0.7s offset hits
+    // while Electric is active → cross-element → Solidification
+    const bsCol = findColumn(result.current, SLOT_ESTELLA, NounType.BATTLE);
+    const bsPayload = getMenuPayload(result.current, bsCol!, atSec * FPS);
+    act(() => {
+      result.current.handleAddEvent(
+        bsPayload.ownerEntityId, bsPayload.columnId,
+        bsPayload.atFrame, bsPayload.defaultSkill,
+      );
+    });
+  }
+
+  it('H1: Estella BS + freeform Electric → Solidification applied on enemy (E2E)', () => {
     const { result } = setupEstella();
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
-    setPotential(result, SLOT_ESTELLA, 5);
 
-    // Place 3 Solidifications close together (0.3s apart) on the enemy.
-    // The P5 talent self-applies once per 1s; the cooldown segment should
-    // prevent retrigger within the 1s window regardless of how many
-    // Solidification events are applied.
-    placeSolidification(result, 2, 1);
-    placeSolidification(result, 2.3, 1);
-    placeSolidification(result, 2.6, 1);
+    triggerSolidificationViaBS(result, 0);
 
-    const p5Events = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === SURVIVAL_P5_ID && ev.ownerEntityId === SLOT_ESTELLA,
+    // Solidification should exist on the enemy
+    const solidEvents = result.current.allProcessedEvents.filter(
+      (ev) => ev.columnId === REACTION_COLUMNS.SOLIDIFICATION
+        && ev.ownerEntityId === ENEMY_ID
+        && ev.startFrame > 0,
     );
-    // At most 1 P5 event should have fired within the 1s cooldown window.
-    // (If freeform placement doesn't route through THIS OPERATOR the count
-    // may be 0 — in either case it must not exceed 1.)
-    expect(p5Events.length).toBeLessThanOrEqual(1);
+    expect(solidEvents.length).toBeGreaterThanOrEqual(1);
   });
 
-  it('H2: Solidifications spaced >1s apart trigger P5 multiple times', () => {
+  it('H2: P5 fires when Estella triggers Solidification — gains 5 UE, T1 does NOT fire (E2E)', () => {
     const { result } = setupEstella();
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
     setPotential(result, SLOT_ESTELLA, 5);
 
-    // Place Solidifications 3s apart — should be outside the 1s cooldown each time
-    placeSolidification(result, 2, 1);
-    placeSolidification(result, 5, 1);
-    placeSolidification(result, 8, 1);
+    triggerSolidificationViaBS(result, 2);
 
+    // P5 status event should exist on Estella
     const p5Events = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === SURVIVAL_P5_ID && ev.ownerEntityId === SLOT_ESTELLA,
+      (ev) => ev.columnId === SURVIVAL_P5_ID && ev.ownerEntityId === SLOT_ESTELLA
+        && ev.startFrame > 0,
     );
-    // If trigger routing works with freeform, expect 3; otherwise documents
-    // the gap. The >= 0 floor prevents false failures if freeform doesn't
-    // route to THIS OPERATOR yet — upgrade to toBeGreaterThanOrEqual(3)
-    // once the engine supports it.
-    expect(p5Events.length).toBeGreaterThanOrEqual(0);
+    expect(p5Events.length).toBeGreaterThanOrEqual(1);
+    expect(eventDuration(p5Events[0])).toBeGreaterThan(0);
+
+    // T1 Commiseration must NOT fire — this setup produces Solidification
+    // (Cryo + Electric reaction), not Shatter (physical status on solidified
+    // enemy). No LIFT/KNOCK_DOWN/CRUSH/BREACH is applied, so no Shatter,
+    // so Commiseration's `THIS OPERATOR APPLY SHATTER` trigger never matches.
+    const commEvents = result.current.allProcessedEvents.filter(
+      (ev) => ev.columnId === COMMISERATION_ID && ev.ownerEntityId === SLOT_ESTELLA
+        && ev.startFrame > 0,
+    );
+    expect(commEvents).toHaveLength(0);
+
+    // P5 should be visible in Estella's status column view model
+    const statusCol = result.current.columns.find(
+      (c): c is MiniTimeline =>
+        c.type === ColumnType.MINI_TIMELINE
+        && c.ownerEntityId === SLOT_ESTELLA
+        && c.columnId === 'operator-status',
+    );
+    expect(statusCol).toBeDefined();
+    const viewModels = computeTimelinePresentation(
+      result.current.allProcessedEvents,
+      result.current.columns,
+    );
+    const statusVM = viewModels.get(statusCol!.key);
+    expect(statusVM).toBeDefined();
+    expect(statusVM!.events.some(ev => ev.columnId === SURVIVAL_P5_ID)).toBe(true);
+  });
+
+  it('H3: P5 does NOT fire at potential < 5', () => {
+    const { result } = setupEstella();
+    act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
+    setPotential(result, SLOT_ESTELLA, 4);
+
+    triggerSolidificationViaBS(result, 2);
+
+    // P5 status should NOT exist — potential too low
+    const p5Events = result.current.allProcessedEvents.filter(
+      (ev) => ev.columnId === SURVIVAL_P5_ID && ev.ownerEntityId === SLOT_ESTELLA
+        && ev.startFrame > 0,
+    );
+    expect(p5Events).toHaveLength(0);
   });
 });
 

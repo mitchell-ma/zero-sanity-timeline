@@ -10,6 +10,17 @@
           "objectId": "REACTION",
           "objectQualifier": "SOLIDIFICATION",
           "to": "ENEMY"
+        },
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "HAVE",
+          "object": "POTENTIAL",
+          "cardinalityConstraint": "GREATER_THAN_EQUAL",
+          "value": {
+            "verb": "IS",
+            "value": 5
+          }
         }
       ],
       "effects": [
