@@ -298,7 +298,6 @@ These sets have HP-threshold conditions but are metadata-only with zero clauses:
 - Pogranichnik Tactical Instruction (Fervent Morale from Steel Oath)
 - Ardelia Friendly Presence (simplified HP recovery on hit)
 - Estella Laziness Pays Off Now (Cryo Infliction ignore + DMG reduction)
-- Estella Commiseration (APPLY SHATTER → COMMISERATION, consumed on combo for SP return)
 
 ### Talents left as description-only (passive/probabilistic/spatial)
 - Antal Subconscious Act (30% DMG immunity)

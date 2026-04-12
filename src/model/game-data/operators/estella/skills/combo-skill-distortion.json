@@ -268,8 +268,7 @@
                       },
                       "unit": "SECOND"
                     }
-                  },
-                  "objectQualifier": "PHYSICAL"
+                  }
                 }
               ]
             }
@@ -321,7 +320,7 @@
   "metadata": {
     "originId": "ESTELLA",
     "icon": "skills/combo_estella.png",
-    "dataStatus": "RECONCILED"
+    "dataStatus": "VERIFIED"
   },
   "clauseType": "ALL",
   "activationWindow": {

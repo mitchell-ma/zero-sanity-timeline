@@ -2,9 +2,9 @@
 
 4-star Guard | Cryo | Polearm
 
-Reconcile status: RECONCILED. Plan `01-estella.md`. Hold off on flipping
-`dataStatus` to VERIFIED until per-operator sign-off (per
-`feedback_never_flip_verified.md`).
+Reconcile status: **VERIFIED**. All skills, talents (except T2 Laziness —
+blocked on DSL), and potentials (except P3 Delayed Work — spatial
+mechanics) have `dataStatus: VERIFIED`.
 
 ## Skills
 
