@@ -3,102 +3,158 @@
     {
       "conditions": [
         {
-          "subject": "ENEMY",
-          "verb": "RECEIVE",
-          "objectQualifier": "SOLIDIFICATION",
-          "object": "STATUS",
-          "objectId": "REACTION"
-        }
-      ],
-      "effects": [
-        {
-          "verb": "RECOVER",
-          "object": "ULTIMATE_ENERGY",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR",
-          "with": {
-            "value": {
-              "verb": "VARY_BY",
-              "object": "TALENT_LEVEL",
-              "value": [
-                3,
-                4
-              ],
-              "of": {
-                "object": "OPERATOR",
-                "determiner": "THIS"
-              }
-            }
-          }
-        }
-      ]
-    },
-    {
-      "conditions": [
-        {
-          "subject": "ENEMY",
-          "verb": "RECEIVE",
-          "object": "STATUS",
-          "objectId": "ORIGINIUM_CRYSTAL"
-        }
-      ],
-      "effects": [
-        {
-          "verb": "RECOVER",
-          "object": "ULTIMATE_ENERGY",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR",
-          "with": {
-            "value": {
-              "verb": "VARY_BY",
-              "object": "TALENT_LEVEL",
-              "value": [
-                3,
-                4
-              ],
-              "of": {
-                "object": "OPERATOR",
-                "determiner": "THIS"
-              }
-            }
-          }
-        }
-      ]
-    },
-    {
-      "conditions": [
-        {
-          "subjectDeterminer": "THIS",
+          "subjectDeterminer": "ANY",
           "subject": "OPERATOR",
           "verb": "APPLY",
-          "objectQualifier": "SOLIDIFICATION",
           "object": "STATUS",
-          "to": "ENEMY",
-          "objectId": "REACTION"
+          "objectId": "SOLIDIFICATION",
+          "to": "ENEMY"
         }
       ],
       "effects": [
         {
-          "verb": "RECOVER",
-          "object": "ULTIMATE_ENERGY",
+          "verb": "APPLY",
+          "object": "EVENT",
+          "objectDeterminer": "THIS",
           "toDeterminer": "THIS",
-          "to": "OPERATOR",
-          "with": {
-            "value": {
-              "verb": "VARY_BY",
-              "object": "TALENT_LEVEL",
-              "value": [
-                6,
-                8
-              ],
-              "of": {
-                "object": "OPERATOR",
-                "determiner": "THIS"
-              }
-            }
-          }
+          "to": "OPERATOR"
         }
       ]
+    },
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "ANY",
+          "subject": "OPERATOR",
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "ORIGINIUM_CRYSTAL",
+          "to": "ENEMY"
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "EVENT",
+          "objectDeterminer": "THIS",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
+        }
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT"
+      },
+      "properties": {
+        "name": "Flash-frozen",
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 2
+          },
+          "unit": "SECOND"
+        },
+        "element": "CRYO"
+      },
+      "frames": [
+        {
+          "metadata": {
+            "eventComponentType": "FRAME"
+          },
+          "properties": {
+            "offset": {
+              "value": 0,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "RECOVER",
+                  "object": "ULTIMATE_ENERGY",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "value": {
+                      "verb": "VARY_BY",
+                      "object": "TALENT_LEVEL",
+                      "value": [
+                        0,
+                        3,
+                        4
+                      ],
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "conditions": [
+                {
+                  "subjectDeterminer": "THIS",
+                  "subject": "OPERATOR",
+                  "verb": "IS",
+                  "objectDeterminer": "TRIGGER",
+                  "object": "OPERATOR"
+                }
+              ],
+              "effects": [
+                {
+                  "verb": "RECOVER",
+                  "object": "ULTIMATE_ENERGY",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "value": {
+                      "verb": "VARY_BY",
+                      "object": "TALENT_LEVEL",
+                      "value": [
+                        0,
+                        6,
+                        8
+                      ],
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
+        }
+      ]
+    },
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT"
+      },
+      "properties": {
+        "segmentTypes": [
+          "IMMEDIATE_COOLDOWN"
+        ],
+        "name": "Cooldown",
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 3
+          },
+          "unit": "SECOND"
+        },
+        "timeDependency": "REAL_TIME"
+      },
+      "frames": []
     }
   ],
   "properties": {
@@ -110,9 +166,23 @@
     "name": "Flash-frozen for Freshness (T1)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": 2
+      },
+      "unit": "SECOND"
+    },
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 1
+      },
+      "interactionType": "NONE"
+    },
     "eventType": "STATUS",
     "eventIdType": "TALENT",
-    "description": "After Solidification or Originium Crystals are applied to a nearby enemy, Alesh gains 3 Ultimate Energy. If the said Solidification is applied by Alesh, he gains an additional 6 Ultimate Energy. This effect can only trigger once every 3s."
+    "description": "After a nearby enemy is Solidified or hit with Originium Crystals, Alesh gains 3/4 Ultimate Energy (L1/L2). If Alesh himself triggered the Solidification, he gains an additional 6/8 Ultimate Energy. Per-wiki: this effect can only trigger once every 3s — not yet enforced by the engine."
   },
   "metadata": {
     "originId": "ALESH",

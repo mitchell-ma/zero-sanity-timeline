@@ -4,7 +4,7 @@
  *
  * Auto-discovers operators/*-operator.json via require.context.
  */
-import { checkKeys, VALID_METADATA_KEYS } from './validationUtils';
+import { checkKeys, VALID_METADATA_KEYS, validateTalentLevelArrays } from './validationUtils';
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -341,11 +341,39 @@ for (const key of operatorContext.keys()) {
   // Resolve talent string IDs from talent JSON files
   // Clone talents to avoid mutating the shared JSON module
   let resolvedJson: Record<string, unknown> = json;
+  let talentMap: Map<string, TalentEntry> | undefined;
   if (json.talents) {
-    const talentMap = loadTalentsFromFiles(operatorContext, dirName);
+    talentMap = loadTalentsFromFiles(operatorContext, dirName);
     const resolvedTalents = { ...(json.talents as Record<string, unknown>) };
     resolveTalentRefs(resolvedTalents, talentMap);
     resolvedJson = { ...json, talents: resolvedTalents };
+  }
+
+  // VARY_BY TALENT_LEVEL array shape audit. Builds the set of allowed array
+  // lengths from the operator's talent maxLevels (each maxLevel + 1) and
+  // walks every file in the operator's subdirectories, checking that each
+  // VARY_BY TALENT_LEVEL array has a length matching one of those values.
+  // Catches missing-leading-zero bugs (`feedback_talent_levels_zero_indexed.md`).
+  if (talentMap && talentMap.size > 0) {
+    const allowedLengths = new Set<number>();
+    talentMap.forEach((entry) => allowedLengths.add(entry.maxLevel + 1));
+    if (allowedLengths.size > 0) {
+      for (const fileKey of operatorContext.keys()) {
+        const fileMatch = fileKey.match(
+          new RegExp(`^\\./${dirName}/(skills|statuses|talents|potentials)/([^/]+\\.json)$`),
+        );
+        if (!fileMatch) continue;
+        const fileJson = operatorContext(fileKey) as Record<string, unknown>;
+        const sourceKey = `${dirName}/${fileMatch[1]}/${fileMatch[2]}`;
+        const arrErrors = validateTalentLevelArrays(fileJson, allowedLengths, sourceKey);
+        if (arrErrors.length > 0) {
+          console.warn(
+            `[OperatorsStore] TALENT_LEVEL array shape errors in ${sourceKey}:\n  `
+            + arrErrors.join('\n  '),
+          );
+        }
+      }
+    }
   }
 
   const operator = new OperatorBase(resolvedJson);

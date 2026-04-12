@@ -12,7 +12,7 @@ import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from '../../controller/calcul
 import { DataDrivenSkillEventFrame } from '../event-frames/dataDrivenEventFrames';
 
 import { FPS } from '../../utils/timeline';
-import { checkKeys, VALID_VALUE_NODE_KEYS, VALID_CLAUSE_KEYS, VALID_METADATA_KEYS, VALID_EFFECT_KEYS, VALID_EFFECT_WITH_KEYS, VALID_TRIGGER_CONDITION_KEYS, validateEffect, validateSegmentShape } from './validationUtils';
+import { checkKeys, VALID_VALUE_NODE_KEYS, VALID_CLAUSE_KEYS, VALID_METADATA_KEYS, VALID_EFFECT_KEYS, VALID_EFFECT_WITH_KEYS, VALID_TRIGGER_CONDITION_KEYS, validateEffect, validateInteraction, validateSegmentShape } from './validationUtils';
 
 // ── Trigger clause type ─────────────────────────────────────────────────────
 
@@ -74,6 +74,7 @@ function validateStatusEffect(ef: Record<string, unknown>, path: string): string
 function validateClause(clause: Record<string, unknown>, path: string): string[] {
   const errors = checkKeys(clause, VALID_CLAUSE_KEYS, path);
   if (!Array.isArray(clause.conditions)) errors.push(`${path}.conditions: must be an array`);
+  else (clause.conditions as Record<string, unknown>[]).forEach((c, i) => errors.push(...validateInteraction(c, `${path}.conditions[${i}]`)));
   if (!Array.isArray(clause.effects)) errors.push(`${path}.effects: must be an array`);
   else (clause.effects as Record<string, unknown>[]).forEach((ef, i) => errors.push(...validateStatusEffect(ef, `${path}.effects[${i}]`)));
   return errors;
@@ -82,7 +83,12 @@ function validateClause(clause: Record<string, unknown>, path: string): string[]
 function validateTriggerClause(clause: Record<string, unknown>, path: string): string[] {
   const errors = checkKeys(clause, VALID_CLAUSE_KEYS, path);
   if (!Array.isArray(clause.conditions)) errors.push(`${path}.conditions: must be an array`);
-  else (clause.conditions as Record<string, unknown>[]).forEach((c, i) => errors.push(...checkKeys(c, VALID_TRIGGER_CONDITION_KEYS, `${path}.conditions[${i}]`)));
+  else {
+    (clause.conditions as Record<string, unknown>[]).forEach((c, i) => {
+      errors.push(...checkKeys(c, VALID_TRIGGER_CONDITION_KEYS, `${path}.conditions[${i}]`));
+      errors.push(...validateInteraction(c, `${path}.conditions[${i}]`));
+    });
+  }
   if (clause.effects) {
     if (!Array.isArray(clause.effects)) errors.push(`${path}.effects: must be an array`);
     else (clause.effects as Record<string, unknown>[]).forEach((ef, i) => errors.push(...validateStatusEffect(ef, `${path}.effects[${i}]`)));
@@ -192,6 +198,13 @@ export class OperatorStatus {
           duration: durationFrames,
           name: segProps?.name as string | undefined,
           element: segElement,
+          // Preserve segment-type classifications (ANIMATION, COOLDOWN,
+          // IMMEDIATE_COOLDOWN, etc.) from the raw config — the layout,
+          // renderer, and combo-cooldown gate all read segmentTypes to
+          // decide how to handle the segment.
+          ...(segProps?.segmentTypes ? { segmentTypes: segProps.segmentTypes as import('../../consts/enums').SegmentType[] } : {}),
+          ...(segProps?.timeDependency ? { timeDependency: segProps.timeDependency as import('../../consts/enums').TimeDependency } : {}),
+          ...(segProps?.timeInteractionType ? { timeInteractionType: segProps.timeInteractionType as string } : {}),
         },
       };
       if (seg.frames && seg.frames.length > 0) {

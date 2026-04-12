@@ -530,10 +530,10 @@ describe('Last Rite — T1 Hypothermia DSL', () => {
     expect(val.left.object).toBe(NounType.STACKS);
     expect(val.left.of.objectId).toBe(NounType.INFLICTION);
     expect(val.left.of.objectQualifier).toBe(AdjectiveType.CRYO);
-    // Right: VARY_BY TALENT_LEVEL [0.02, 0.04]
+    // Right: VARY_BY TALENT_LEVEL [0, 0.02, 0.04] (leading 0 = level 0 no benefit)
     expect(val.right.verb).toBe(VerbType.VARY_BY);
     expect(val.right.object).toBe(NounType.TALENT_LEVEL);
-    expect(val.right.value).toEqual([0.02, 0.04]);
+    expect(val.right.value).toEqual([0, 0.02, 0.04]);
   });
 
   it('I4: properties — 2s duration, 1 limit, NONE interaction', () => {
@@ -563,7 +563,8 @@ describe('Last Rite — T2 Cryogenic Embrittlement DSL', () => {
       // multiplier key — this multiplies existing cryo susceptibility, not a flat value
       expect(applyStat.with.multiplier.verb).toBe(VerbType.VARY_BY);
       expect(applyStat.with.multiplier.object).toBe(NounType.TALENT_LEVEL);
-      expect(applyStat.with.multiplier.value).toEqual([1.2, 1.5]);
+      // [1, 1.2, 1.5] — talent level 0 = neutral multiplier (1), L1 = 1.2, L2 = 1.5
+      expect(applyStat.with.multiplier.value).toEqual([1, 1.2, 1.5]);
     }
   });
 

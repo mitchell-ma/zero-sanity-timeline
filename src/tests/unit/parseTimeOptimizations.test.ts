@@ -104,8 +104,6 @@ describe('qualified status-ID pre-composition', () => {
   });
 
   test('INFLICTION objectId is excluded from pre-composition', () => {
-    // objectId = INFLICTION is special (it's not a status name), so
-    // _composedQualifiedId should NOT be set.
     const frame = buildFrame([{
       conditions: [],
       effects: [{
@@ -120,8 +118,6 @@ describe('qualified status-ID pre-composition', () => {
 
     const parsed = new DataDrivenSkillEventFrame(frame as never);
     const clauses = parsed.getClauses();
-    // INFLICTION object is handled as a DSL clause (APPLY INFLICTION), not APPLY STATUS,
-    // so it may not appear in clauseEffects. If it does, verify no composed ID.
     const effect = clauses[0]?.effects[0]?.dslEffect;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     expect((effect as any)?._composedQualifiedId).toBeUndefined();

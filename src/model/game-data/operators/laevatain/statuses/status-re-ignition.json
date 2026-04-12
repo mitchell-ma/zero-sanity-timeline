@@ -42,6 +42,7 @@
         "verb": "VARY_BY",
         "object": "TALENT_LEVEL",
         "value": [
+          0,
           4,
           8
         ],

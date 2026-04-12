@@ -23,7 +23,7 @@
 import { renderHook, act } from '@testing-library/react';
 import { NounType } from '../../../../dsl/semantics';
 import { useApp } from '../../../../app/useApp';
-import { SegmentType, InteractionModeType, ColumnType } from '../../../../consts/enums';
+import { SegmentType, InteractionModeType, ColumnType, PhysicalStatusType } from '../../../../consts/enums';
 import { FPS } from '../../../../utils/timeline';
 import { eventDuration } from '../../../../consts/viewTypes';
 import type { MiniTimeline } from '../../../../consts/viewTypes';
@@ -414,62 +414,115 @@ describe('E. Talent-Derived Statuses', () => {
   }
 
   /**
-   * Engine note: Shatter is only auto-derived when a physical STATUS
-   * (LIFT/KNOCK_DOWN/CRUSH/BREACH) is applied to a solidified enemy — plain
-   * physical damage does not consume solidification. So Estella's BA variants
-   * (pure physical damage) will not trigger Shatter → Commiseration in the
-   * current engine. Her combo (forced LIFT) and ultimate (LIFT on Physical
-   * Susceptibility) are the only skills that naturally produce Shatter.
+   * Game rule: Shatter consumes Solidification ONLY when a physical status
+   * (LIFT / KNOCK_DOWN / CRUSH / BREACH) or VULNERABLE infliction is applied
+   * to the solidified enemy. Raw physical damage does NOT consume
+   * Solidification — confirmed against in-game behavior. The engine's
+   * physical-status derivation matches this rule.
    *
-   * E1–E3 document the current BA gap (placement succeeds, count ≥ 0).
-   * E4 (combo) and E5 (ultimate + preset susceptibility) assert ≥ 1.
+   * Estella's BA variants (BATK / DIVE / FINISHER) deal pure physical damage
+   * and apply no statuses, so they CANNOT shatter a solidified enemy and
+   * therefore CANNOT trigger Commiseration. E1–E3 are negative assertions:
+   * the Commiseration pipeline must produce zero status events for these BAs.
+   *
+   * E4 (combo, forced LIFT) is the only natural positive: Distortion's
+   * forced Lift applies a physical status, which triggers Shatter →
+   * Commiseration.
+   *
+   * E5 (ultimate fired in isolation) is also a negative: Tremolo's Lift is
+   * conditional on the enemy already having PHYSICAL_SUSCEPTIBILITY, which
+   * the ULT alone doesn't stage. Without a prior CS the conditional Lift
+   * never fires and there's no Shatter. (The CS → ULT chain is exercised
+   * implicitly via E4 + cooldowns.)
    */
-  it('E1: Estella BATK placement does not crash the Commiseration pipeline', () => {
+  it('E1: Estella BATK on solidified enemy does NOT trigger Commiseration (raw physical damage rule)', () => {
     const events = runCommiserationScenario((res) => {
       addBaVariant(res, NounType.BATK, AUDIO_NOISE_BATK_ID, 3);
     });
-    expect(events.length).toBeGreaterThanOrEqual(0);
+    expect(events).toHaveLength(0);
   });
 
-  it('E2: Estella DIVE placement does not crash the Commiseration pipeline', () => {
+  it('E2: Estella DIVE on solidified enemy does NOT trigger Commiseration (raw physical damage rule)', () => {
     const events = runCommiserationScenario((res) => {
       addBaVariant(res, NounType.DIVE, AUDIO_NOISE_DIVE_ID, 3);
     });
-    expect(events.length).toBeGreaterThanOrEqual(0);
+    expect(events).toHaveLength(0);
   });
 
-  it('E3: Estella FINISHER placement does not crash the Commiseration pipeline', () => {
+  it('E3: Estella FINISHER on solidified enemy does NOT trigger Commiseration (raw physical damage rule)', () => {
     const events = runCommiserationScenario((res) => {
       addBaVariant(res, NounType.FINISHER, AUDIO_NOISE_FINISHER_ID, 3);
     });
-    expect(events.length).toBeGreaterThanOrEqual(0);
+    expect(events).toHaveLength(0);
   });
 
-  it('E4: Commiseration applied when Estella combo skill shatters solidified enemy', () => {
+  it('E4: Commiseration applied when Estella combo skill shatters solidified enemy (E2E via context menu)', () => {
     const { result } = setupEstella();
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
-    placeSolidification(result, 1, 60);
 
-    const comboCol = findColumn(result.current, SLOT_ESTELLA, NounType.COMBO);
-    const payload = getMenuPayload(result.current, comboCol!, 3 * FPS);
+    // ── Place Solidification via context menu (not hand-built) ──
+    const enemyCol = result.current.columns.find(
+      (c): c is MiniTimeline =>
+        c.type === ColumnType.MINI_TIMELINE
+        && c.ownerEntityId === ENEMY_ID
+        && c.columnId === ENEMY_GROUP_COLUMNS.ENEMY_STATUS,
+    );
+    expect(enemyCol).toBeDefined();
+    const solidMenu = buildContextMenu(result.current, enemyCol!, 1 * FPS);
+    expect(solidMenu).not.toBeNull();
+    const solidItem = solidMenu!.find(
+      (i) => i.actionId === 'addEvent'
+        && (i.actionPayload as { columnId?: string })?.columnId === REACTION_COLUMNS.SOLIDIFICATION,
+    );
+    expect(solidItem).toBeDefined();
+    const solidPayload = solidItem!.actionPayload as { ownerEntityId: string; columnId: string; atFrame: number; defaultSkill: Record<string, unknown> };
     act(() => {
       result.current.handleAddEvent(
-        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        solidPayload.ownerEntityId, solidPayload.columnId,
+        solidPayload.atFrame, solidPayload.defaultSkill,
       );
     });
 
+    // ── Place Estella combo via context menu ──
+    const comboCol = findColumn(result.current, SLOT_ESTELLA, NounType.COMBO);
+    const comboPayload = getMenuPayload(result.current, comboCol!, 3 * FPS);
+    act(() => {
+      result.current.handleAddEvent(
+        comboPayload.ownerEntityId, comboPayload.columnId,
+        comboPayload.atFrame, comboPayload.defaultSkill,
+      );
+    });
+
+    // ── Controller: Commiseration event exists ──
     const events = result.current.allProcessedEvents.filter(
-      (ev) => ev.columnId === COMMISERATION_ID && ev.ownerEntityId === SLOT_ESTELLA,
+      (ev) => ev.columnId === COMMISERATION_ID && ev.ownerEntityId === SLOT_ESTELLA
+        && ev.startFrame > 0,
     );
     expect(events.length).toBeGreaterThanOrEqual(1);
+    // Duration must be non-zero — zero-duration events are invisible
+    expect(eventDuration(events[0])).toBeGreaterThan(0);
+
+    // ── View: status column has COMMISERATION micro-column ──
+    const statusCol = result.current.columns.find(
+      (c): c is MiniTimeline =>
+        c.type === ColumnType.MINI_TIMELINE
+        && c.ownerEntityId === SLOT_ESTELLA
+        && c.columnId === 'operator-status',
+    );
+    expect(statusCol).toBeDefined();
+    expect(statusCol!.microColumns?.some(mc => mc.id === COMMISERATION_ID)).toBe(true);
+
+    // ── View: Commiseration visible in computed view model ──
+    const viewModels = computeTimelinePresentation(
+      result.current.allProcessedEvents,
+      result.current.columns,
+    );
+    const statusVM = viewModels.get(statusCol!.key);
+    expect(statusVM).toBeDefined();
+    expect(statusVM!.events.some(ev => ev.columnId === COMMISERATION_ID)).toBe(true);
   });
 
-  it('E5: Estella ultimate placement does not crash the Commiseration pipeline', () => {
-    // The ULT only applies LIFT conditionally on enemy Physical Susceptibility,
-    // which Estella's own CS applies as its bonus clause. A self-contained ULT
-    // test without a prior CS does not naturally produce Shatter → Commiseration.
-    // This test documents that the ULT placement runs through the pipeline
-    // cleanly; the natural Shatter → Commiseration path is covered by E4 (CS).
+  it('E5: Estella ultimate fired in isolation does NOT trigger Commiseration (Lift is conditional on Physical Susceptibility)', () => {
     const { result } = setupEstella();
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
     placeSolidification(result, 1, 60);
@@ -486,7 +539,48 @@ describe('E. Talent-Derived Statuses', () => {
     const events = result.current.allProcessedEvents.filter(
       (ev) => ev.columnId === COMMISERATION_ID && ev.ownerEntityId === SLOT_ESTELLA,
     );
-    expect(events.length).toBeGreaterThanOrEqual(0);
+    expect(events).toHaveLength(0);
+  });
+
+  it('E6: Estella ultimate applies forced LIFT when enemy has PHYSICAL_SUSCEPTIBILITY (Tremolo conditional clause)', () => {
+    // Tremolo's conditional clause:
+    //   IF ENEMY HAVE STATUS SUSCEPTIBILITY PHYSICAL → APPLY LIFT (forced).
+    // The susceptibility event lives on the `PHYSICAL_SUSCEPTIBILITY` column
+    // (flattened by doApply), so the condition must resolve there too —
+    // tracked by the columnResolution flatten fix.
+    const { result } = setupEstella();
+    act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
+
+    // Freeform-place a long-duration PHYSICAL_SUSCEPTIBILITY directly on the
+    // enemy so the ULT's HAVE check finds it.
+    act(() => {
+      result.current.handleAddEvent(
+        ENEMY_ID, 'PHYSICAL_SUSCEPTIBILITY', 1 * FPS,
+        {
+          name: 'PHYSICAL_SUSCEPTIBILITY',
+          segments: [{ properties: { duration: 60 * FPS } }],
+        },
+      );
+    });
+
+    // Cast the ULT at 3s — the conditional clause should fire APPLY LIFT.
+    act(() => { setUltimateEnergyToMax(result.current, SLOT_ESTELLA, 0); });
+    const ultCol = findColumn(result.current, SLOT_ESTELLA, NounType.ULTIMATE);
+    const payload = getMenuPayload(result.current, ultCol!, 3 * FPS);
+    act(() => {
+      result.current.handleAddEvent(
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
+      );
+    });
+
+    // LIFT events on the enemy should include at least one spawned by the ULT
+    // after frame 3 (the ULT's active-segment frame fires after its animation).
+    const liftEvents = result.current.allProcessedEvents.filter(
+      (ev) => ev.columnId === PhysicalStatusType.LIFT
+        && ev.ownerEntityId === ENEMY_ID
+        && ev.startFrame >= 3 * FPS,
+    );
+    expect(liftEvents.length).toBeGreaterThanOrEqual(1);
   });
 });
 

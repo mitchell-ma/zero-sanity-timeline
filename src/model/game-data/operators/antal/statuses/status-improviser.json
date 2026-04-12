@@ -44,6 +44,7 @@
                           "determiner": "SOURCE"
                         },
                         "value": [
+                          0,
                           72,
                           108
                         ]
@@ -58,6 +59,7 @@
                             "determiner": "SOURCE"
                           },
                           "value": [
+                            0,
                             0.6,
                             0.9
                           ]

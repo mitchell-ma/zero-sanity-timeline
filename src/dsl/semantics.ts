@@ -838,11 +838,17 @@ export interface Effect {
   effects?: Effect[];
 
   /**
-   * Alternative effects for CHANCE — executed when the probability gate fails.
-   * EXPECTED mode: executed with (1 - chance) multiplier.
-   * ALWAYS: never executed (main path always fires).
-   * NEVER: always executed (main path never fires).
-   * MANUAL: executed when isCrit is false (chance doesn't fire).
+   * Alternative effects for CHANCE — executed when the pin resolves to miss.
+   * CHANCE execution is pin-driven, not probability-weighted:
+   *   ALWAYS              — main `effects` fire; `elseEffects` skipped
+   *   NEVER               — `elseEffects` fire; main `effects` skipped
+   *   MANUAL / EXPECTED   — per-frame `isChance` pin drives the branch, with
+   *                         unpinned frames defaulting to MISS (elseEffects)
+   *
+   * The probability ValueNode in `with.value` is display-only — it's shown in
+   * the UI to tell the user the chance of the hit branch firing, but does NOT
+   * weight the effects. Resource side-effects in the fired branch apply at
+   * full strength; binary side-effects fire fully when their branch fires.
    */
   elseEffects?: Effect[];
 
@@ -970,6 +976,13 @@ export function flattenQualifiedId(qualifier: string, baseId: string): string {
 /**
  * Check if an ID is a qualified variant of a base noun.
  * e.g. isQualifiedId("CRYO_AMP", "AMP") → true
+ *
+ * Used by the damage formula layer (`damageTableBuilder.ts`) to detect
+ * which element a qualified susceptibility id refers to.
+ *
+ * NOTE: there is no `unflattenQualifiedId`. The engine does not split
+ * qualified status IDs back into components — qualified IDs are
+ * first-class column IDs throughout the pipeline.
  */
 export function isQualifiedId(id: string, baseId: string): boolean {
   return id.endsWith(`_${baseId}`) && id.length > baseId.length + 1;

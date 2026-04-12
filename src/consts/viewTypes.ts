@@ -259,6 +259,30 @@ export interface TimelineEvent {
   expectedUptime?: number;
   /** Number of stacks consumed by the CONSUME effect that triggered this event's creation (for STACKS CONSUMED resolution). */
   consumedStacks?: number;
+  /**
+   * For status events spawned from an onTriggerClause: the slot ID of the
+   * operator whose action matched the trigger conditions. Carried on the
+   * spawned event so its own frame clauses can evaluate `THIS OPERATOR IS
+   * TRIGGER OPERATOR`-style comparisons against the original trigger.
+   * Alesh T1 uses this to discriminate between "I solidified the enemy myself"
+   * and "someone else solidified the enemy."
+   */
+  triggerEntityId?: string;
+  /**
+   * DSL identity — the `objectId` from the effect that created this event.
+   * For qualified status events (e.g. `APPLY STATUS SUSCEPTIBILITY PHYSICAL`),
+   * `dslObjectId` = `"SUSCEPTIBILITY"` (the base) while `columnId` =
+   * `"PHYSICAL_SUSCEPTIBILITY"` (the per-element storage routing key).
+   * Queries compare by `(dslObjectId, dslObjectQualifier)` so predicates
+   * match events regardless of the columnId encoding.
+   */
+  dslObjectId?: string;
+  /**
+   * DSL qualifier — the `objectQualifier` from the effect that created this
+   * event. See `dslObjectId`. For the example above,
+   * `dslObjectQualifier = "PHYSICAL"`.
+   */
+  dslObjectQualifier?: string;
 }
 
 export interface ContextMenuItem {

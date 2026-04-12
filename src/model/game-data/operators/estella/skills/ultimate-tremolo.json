@@ -185,7 +185,10 @@
                   "objectQualifier": "LIFT",
                   "to": "ENEMY",
                   "with": {
-                    "isForced": { "verb": "IS", "value": 1 }
+                    "isForced": {
+                      "verb": "IS",
+                      "value": 1
+                    }
                   }
                 }
               ]

@@ -9,6 +9,17 @@
           "object": "STATUS",
           "objectId": "REACTION",
           "objectQualifier": "SHATTER"
+        },
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "HAVE",
+          "object": "TALENT_LEVEL",
+          "cardinalityConstraint": "GREATER_THAN_EQUAL",
+          "value": {
+            "verb": "IS",
+            "value": 1
+          }
         }
       ],
       "effects": [
@@ -24,6 +35,10 @@
   ],
   "properties": {
     "id": "COMMISERATION_TALENT",
+    "maxLevel": {
+      "verb": "IS",
+      "value": 2
+    },
     "name": "Commiseration (T1)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",

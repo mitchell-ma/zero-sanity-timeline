@@ -1,6 +1,10 @@
 {
   "properties": {
     "id": "WULFGARD_TALENT1_SCORCHING_FANGS_MINOR",
+    "maxLevel": {
+      "verb": "IS",
+      "value": 2
+    },
     "name": "Scorching Fangs (Minor) (T1)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
@@ -46,6 +50,7 @@
               "verb": "VARY_BY",
               "object": "TALENT_LEVEL",
               "value": [
+                0,
                 0.1,
                 0.15
               ],

@@ -181,8 +181,10 @@ describe('B. T1 Hypothermia — DSL structure', () => {
     expect(valueNode.left.objectQualifier).toBe('CONSUMED');
     expect(valueNode.left.object).toBe(NounType.STACKS);
     expect(valueNode.right.object).toBe('TALENT_LEVEL');
-    expect(valueNode.right.value[0]).toBe(0.02);
-    expect(valueNode.right.value[1]).toBe(0.04);
+    // Zero-indexed: index 0 = talent level 0 (no benefit), L1 = 0.02, L2 = 0.04
+    expect(valueNode.right.value[0]).toBe(0);
+    expect(valueNode.right.value[1]).toBe(0.02);
+    expect(valueNode.right.value[2]).toBe(0.04);
   });
 
   it('B4: susceptibility duration = 15s', () => {
@@ -342,15 +344,16 @@ describe('C. T2 Cryogenic Embrittlement — DSL structure', () => {
     }
   });
 
-  it('C2: multiplier VARY_BY TALENT_LEVEL [1.2, 1.5]', () => {
+  it('C2: multiplier VARY_BY TALENT_LEVEL [1, 1.2, 1.5]', () => {
     const mainSegment = ULTIMATE_JSON.segments[1];
     const firstFrame = mainSegment.frames[0];
     const applySusc = firstFrame.clause[0].effects.find(
       (e: { verb: string; objectId?: string }) =>
         e.verb === VerbType.APPLY && e.objectId === 'SUSCEPTIBILITY',
     );
-    expect(applySusc.with.multiplier.value[0]).toBe(1.2); // Talent level 1
-    expect(applySusc.with.multiplier.value[1]).toBe(1.5); // Talent level 2
+    expect(applySusc.with.multiplier.value[0]).toBe(1); // Talent level 0 — neutral (no multiplier)
+    expect(applySusc.with.multiplier.value[1]).toBe(1.2); // Talent level 1
+    expect(applySusc.with.multiplier.value[2]).toBe(1.5); // Talent level 2
   });
 });
 

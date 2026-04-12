@@ -111,19 +111,19 @@ describe('B. Freezing Point — two-part status system', () => {
 
   // -- JSON structure --
 
-  it('B1: Cryo status has CRITICAL_DAMAGE with base values (TL [0.1, 0.2] + P3 [0..0.1])', () => {
+  it('B1: Cryo status has CRITICAL_DAMAGE with base values (TL [0, 0.1, 0.2] + P3 [0..0.1])', () => {
     const effect = CRYO_STATUS_JSON.clause[0].effects[0];
     expect(effect.objectId).toBe('CRITICAL_DAMAGE');
     expect(effect.with.value.operation).toBe(ValueOperation.ADD);
-    expect(effect.with.value.left.value).toEqual([0.1, 0.2]);
+    expect(effect.with.value.left.value).toEqual([0, 0.1, 0.2]);
     expect(effect.with.value.right.value).toEqual([0, 0, 0, 0.1, 0.1, 0.1]);
   });
 
-  it('B2: Solidification status has CRITICAL_DAMAGE with doubled values (TL [0.2, 0.4] + P3 [0..0.2])', () => {
+  it('B2: Solidification status has CRITICAL_DAMAGE with doubled values (TL [0, 0.2, 0.4] + P3 [0..0.2])', () => {
     const effect = SOLID_STATUS_JSON.clause[0].effects[0];
     expect(effect.objectId).toBe('CRITICAL_DAMAGE');
     expect(effect.with.value.operation).toBe(ValueOperation.ADD);
-    expect(effect.with.value.left.value).toEqual([0.2, 0.4]);
+    expect(effect.with.value.left.value).toEqual([0, 0.2, 0.4]);
     expect(effect.with.value.right.value).toEqual([0, 0, 0, 0.2, 0.2, 0.2]);
   });
 

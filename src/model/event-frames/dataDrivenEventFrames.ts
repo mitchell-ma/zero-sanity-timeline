@@ -81,6 +81,7 @@ interface JsonClauseCondition {
   objectQualifier?: string;
   object?: string;
   objectId?: string;
+  objectDeterminer?: string;
   cardinalityConstraint?: string;
   value?: unknown;
   with?: Record<string, unknown>;
@@ -195,6 +196,7 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
           ...(c.objectQualifier && { objectQualifier: c.objectQualifier }),
           ...(c.object && { object: c.object }),
           ...(c.objectId && { objectId: c.objectId }),
+          ...(c.objectDeterminer && { objectDeterminer: c.objectDeterminer }),
           ...(c.cardinalityConstraint && { cardinalityConstraint: c.cardinalityConstraint }),
           ...(c.value != null && { value: c.value }),
           ...(c.with && { with: c.with }),
@@ -253,6 +255,16 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
 
           case VerbType.REDUCE:
             // REDUCE COOLDOWN (and any other REDUCE effects) — pass through to interpret() at frame time
+            clauseEffects.push({ type: 'dsl', dslEffect: ef as unknown as Effect });
+            break;
+
+          case VerbType.CHANCE:
+          case VerbType.ALL:
+          case VerbType.ANY:
+            // Compound wrappers — pushed through intact. Runtime interpret() walks their
+            // nested `effects`/`predicates`/`elseEffects`. clauseQueries helpers
+            // (findDealDamageInClauses / hasChanceClause / hasDealDamageClause) also
+            // descend into these wrappers to discover damage effects / chance gates.
             clauseEffects.push({ type: 'dsl', dslEffect: ef as unknown as Effect });
             break;
 

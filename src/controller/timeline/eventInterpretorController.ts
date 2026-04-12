@@ -17,7 +17,6 @@ import {
   VERB_OBJECTS,
   THRESHOLD_MAX,
   ClauseEvaluationType,
-  flattenQualifiedId,
   isQualifiedId,
   isValueExpression,
 } from '../../dsl/semantics';
@@ -53,7 +52,7 @@ import { getOperatorSkill } from '../../model/game-data/operatorSkillsStore';
 import { getAllStatusLabels } from '../gameDataStore';
 import { TEAM_ID } from '../slot/commonSlotController';
 import { evaluateConditions } from './conditionEvaluator';
-import { hasDealDamageClause, findDealDamageInClauses, buildDealDamageClause, parseJsonClauseArray } from './clauseQueries';
+import { hasDealDamageClause, findDealDamageInClauses, buildDealDamageClause, parseJsonClauseArray, shouldFireChance } from './clauseQueries';
 import { getStatusConfig, getStatusDef } from './configCache';
 import { resolveColumnId as resolveEffectColumnId, PHYSICAL_STATUS_VALUES, INFLICTION_COLUMN_TO_ELEMENT } from './columnResolution';
 import { collectNoGainWindowsForEvent } from './ultimateEnergyController';
@@ -229,6 +228,14 @@ export interface InterpretContext {
   sourceEventRemainingDuration?: number;
   /** Number of stacks consumed by the triggering CONSUME effect (for STACKS CONSUMED resolution). */
   consumedStacks?: number;
+  /**
+   * Slot ID of the operator whose action matched the onTriggerClause that
+   * spawned this interpret flow. Threaded through to (a) the condition
+   * evaluator via DeterminerType.TRIGGER lookups and (b) any status events
+   * spawned via APPLY EVENT / APPLY STATUS inside the trigger flow, so the
+   * spawned event's own clauses can later read it.
+   */
+  triggerEntityId?: string;
 }
 
 // ══════════════════════════════════════════════════════════════════════════
@@ -801,6 +808,7 @@ export class EventInterpretorController {
     switch (effect.verb) {
       case VerbType.ALL:     return this.doAll(effect, ctx);
       case VerbType.ANY:     return this.doAny(effect, ctx);
+      case VerbType.CHANCE:  return this.doChance(effect, ctx);
       case VerbType.APPLY:   return this.doApply(effect, ctx);
       case VerbType.CONSUME: return this.doConsume(effect, ctx);
 
@@ -1078,19 +1086,35 @@ export class EventInterpretorController {
         return true;
       }
       // Qualified status: resolve objectId + objectQualifier → element-specific ID
-      // (e.g. CRYO + AMP → CRYO_AMP, CRYO + FRAGILITY → CRYO_FRAGILITY)
-      // Skip nouns with dedicated handling (SUSCEPTIBILITY, INFLICTION, REACTION, PHYSICAL).
+      // (e.g. CRYO + AMP → CRYO_AMP, CRYO + FRAGILITY → CRYO_FRAGILITY).
+      // The canonical DSL form in configs is the struct
+      // `{objectId: <BASE>, objectQualifier: <X>}`. The storage columnId
+      // for these is the flattened form `<X>_<BASE>` so stacking,
+      // view columns, and stat accumulator maps key by a single string.
+      // Events carry BOTH forms: `columnId` = flattened (storage key),
+      // `dslObjectId`/`dslObjectQualifier` = original struct (query key).
+      // Conditions in the struct form match via `dslObjectId`/`dslObjectQualifier`;
+      // conditions in the flat form match via `columnId`. Either works.
+      //
+      // INFLICTION / REACTION / PHYSICAL are NOT flattenable — they're handled
+      // by dedicated branches above.
       if (effect.objectId && effect.objectQualifier
           && effect.objectId !== NounType.INFLICTION
           && effect.objectId !== NounType.REACTION
           && effect.objectId !== AdjectiveType.PHYSICAL) {
-        // Use pre-composed ID from parse time when available, else compose at runtime
         const qualifiedId = (effect as { _composedQualifiedId?: string })._composedQualifiedId
-          ?? flattenQualifiedId(effect.objectQualifier as string, effect.objectId);
+          ?? `${effect.objectQualifier}_${effect.objectId}`;
         if (getStatusById(qualifiedId)) {
-          // Strip qualifier + cached composed ID to prevent infinite re-entry
+          // Strip qualifier + cached composed ID to prevent infinite re-entry,
+          // but stash the pre-flatten struct so the event-write path can
+          // persist it as dslObjectId/dslObjectQualifier on the event.
           const { objectQualifier: _q, _composedQualifiedId: _c, ...rest } = effect as Effect & { _composedQualifiedId?: string };
-          return this.doApply({ ...rest, objectId: qualifiedId } as Effect, ctx);
+          return this.doApply({
+            ...rest,
+            objectId: qualifiedId,
+            _dslObjectId: effect.objectId,
+            _dslObjectQualifier: effect.objectQualifier,
+          } as Effect & { _dslObjectId?: string; _dslObjectQualifier?: string }, ctx);
         }
       }
       const isTeamTarget = effect.to === NounType.TEAM;
@@ -1175,6 +1199,14 @@ export class EventInterpretorController {
       // Intra-frame ordering: stamp status with the damage frame that created it
       if (ctx.sourceFrameKey) eventProps.sourceFrameKey = ctx.sourceFrameKey;
 
+      // Trigger propagation: when this APPLY STATUS / APPLY EVENT fires from
+      // inside an onTriggerClause flow, the spawned event carries the trigger
+      // operator so its own frame clauses can evaluate `THIS OPERATOR IS
+      // TRIGGER OPERATOR`-style comparisons (e.g. Alesh T1 self-trigger bonus).
+      if (ctx.triggerEntityId) {
+        eventProps.triggerEntityId = ctx.triggerEntityId;
+      }
+
       // Susceptibility status: extract inline value + qualifier into event.susceptibility
       // Matches both base (SUSCEPTIBILITY + qualifier) and qualified (PHYSICAL_SUSCEPTIBILITY) objectIds
       const isSusceptibility = effect.objectId === NounType.SUSCEPTIBILITY
@@ -1231,11 +1263,29 @@ export class EventInterpretorController {
       const stackCount = isAccumulatorApply ? 1 : (typeof sv === 'number' && sv > 1 ? sv : 1);
       const applyStacks = isAccumulatorApply ? sv : undefined;
 
+      // DSL identity for struct-based matching — if doApply flattened a
+      // qualified status (e.g. `STATUS SUSCEPTIBILITY PHYSICAL` →
+      // `PHYSICAL_SUSCEPTIBILITY`), the pre-flatten struct was stashed on
+      // the recursed effect as `_dslObjectId` / `_dslObjectQualifier`.
+      // Otherwise this path handles an unflattened status apply — the
+      // effect's own objectId/objectQualifier ARE the DSL identity.
+      const effectWithDsl = effect as Effect & { _dslObjectId?: string; _dslObjectQualifier?: string };
+      const dslObjectIdFromEffect = effectWithDsl._dslObjectId ?? effect.objectId;
+      const dslObjectQualifierFromEffect = effectWithDsl._dslObjectQualifier ?? effect.objectQualifier;
+
       for (let si = 0; si < stackCount; si++) {
         const runtimeMaxStacks = cfg?.maxStacksNode
           ? resolveValueNode(cfg.maxStacksNode as ValueNode, this.buildValueContext({ ...ctx, contextSlotId: statusEntityId }))
           : cfg?.maxStacks;
-        const eventOverrides = { ...eventProps, ...(applyStacks != null ? { stacks: applyStacks } : {}), ...(ctx.consumedStacks != null ? { consumedStacks: ctx.consumedStacks } : {}), ...(ctx.sourceCreationInteractionMode != null ? { creationInteractionMode: ctx.sourceCreationInteractionMode } : {}) };
+        const eventOverrides = {
+          ...eventProps,
+          ...(applyStacks != null ? { stacks: applyStacks } : {}),
+          ...(ctx.consumedStacks != null ? { consumedStacks: ctx.consumedStacks } : {}),
+          ...(ctx.sourceCreationInteractionMode != null && ctx.sourceEventColumnId === columnId
+            ? { creationInteractionMode: ctx.sourceCreationInteractionMode } : {}),
+          ...(dslObjectIdFromEffect != null ? { dslObjectId: dslObjectIdFromEffect } : {}),
+          ...(dslObjectQualifierFromEffect != null ? { dslObjectQualifier: dslObjectQualifierFromEffect } : {}),
+        };
         this.applyEventFromCtx(ctx, columnId, statusEntityId, ctx.frame, duration, source, {
           statusId: effect.objectId,
           ...(cfg?.stackingMode ? { stackingMode: cfg.stackingMode } : {}),
@@ -1818,6 +1868,54 @@ export class EventInterpretorController {
       return true;
     }
     return false;
+  }
+
+  /**
+   * CHANCE effect — pin-gated wrapper around child effects. Pure user-driven:
+   * the probability ValueNode in `effect.with.value` is display-only (UI reads
+   * it to show "Rare Fin: 12%"), it does NOT drive execution.
+   *
+   * Execution is deterministic per CritMode + per-frame `isChance` pin:
+   *   ALWAYS   — hit branch (effects) fires, miss branch skipped
+   *   NEVER    — miss branch (elseEffects) fires, hit branch skipped
+   *   MANUAL / EXPECTED — per-frame pin drives it; unpinned defaults to MISS
+   *
+   * There is no probability-weighted expectation. Resource side-effects in the
+   * hit branch fire at full strength if the branch fires, and not at all if it
+   * doesn't. Spawned statuses from CHANCE branches carry no `expectedUptime`.
+   */
+  private doChance(effect: Effect, ctx: InterpretContext): boolean {
+    const pin = this.lookupChancePin(ctx);
+    const hit = shouldFireChance(this.critMode ?? CritMode.MANUAL, pin);
+
+    const branch = hit ? (effect.effects ?? []) : (effect.elseEffects ?? []);
+    for (const child of branch) this.interpret(child, ctx);
+    return true;
+  }
+
+  /**
+   * Look up the CHANCE pin for the currently-interpreting frame via the override store.
+   * Falls back to undefined when no frame context or no pin is recorded.
+   *
+   * The pin is keyed by (event uid, segment index, frame index) via FrameOverride.isChance —
+   * the same per-frame shape as isCritical. Frames without a CHANCE compound never show
+   * the UI pin option, so the field is only meaningful for CHANCE-carrying frames.
+   */
+  private lookupChancePin(ctx: InterpretContext): boolean | undefined {
+    if (!this.overrides || !ctx.sourceEventUid) return undefined;
+    const frameKey = ctx.sourceFrameKey;
+    if (!frameKey) return undefined;
+    // sourceFrameKey is "eventUid:si:fi" — split and read FrameOverride.isChance
+    const parts = frameKey.split(':');
+    if (parts.length !== 3) return undefined;
+    const [uid, siStr, fiStr] = parts;
+    const si = Number(siStr);
+    const fi = Number(fiStr);
+    if (!Number.isFinite(si) || !Number.isFinite(fi)) return undefined;
+    // Find the event by uid — use base events first, then controller output.
+    const ev = this.getAllEvents().find(e => e.uid === uid);
+    if (!ev) return undefined;
+    return this.overrides[buildOverrideKey(ev)]?.segments?.[si]?.frames?.[fi]?.isChance;
   }
 
   // ── Physical status logic (hardcoded engine mechanics) ─────────────────
@@ -2499,20 +2597,37 @@ export class EventInterpretorController {
     // Route them through create* so they get the same stacking, segment building, etc.
     // Only fires on the FIRST frame marker (si=0, fi=0) — subsequent frame markers are
     // damage-tick visuals inside the existing event, not new event creation triggers.
+    //
+    // All branches propagate `creationInteractionMode` from the source raw
+    // event so the column-created event remains user-draggable. This is the
+    // canonical point where a freeform placement's identity flows into the
+    // engine-owned event — every branch must preserve it.
     if (!frame.clauses && si === 0 && fi === 0) {
       const dur = eventDuration(event);
+      // Base event overrides shared by all branches: carry forward source
+      // identity so the column-created event is recognized as user-placed.
+      const sourceEventOverrides: Partial<TimelineEvent> = {};
+      if (event.creationInteractionMode != null) {
+        sourceEventOverrides.creationInteractionMode = event.creationInteractionMode;
+      }
+      const hasSourceOverrides = Object.keys(sourceEventOverrides).length > 0;
       if (INFLICTION_COLUMN_IDS.has(event.columnId) || PHYSICAL_INFLICTION_COLUMN_IDS.has(event.columnId)) {
-        this.controller.applyEvent(event.columnId, event.ownerEntityId, absFrame, dur, source, { uid: event.uid });
+        this.controller.applyEvent(event.columnId, event.ownerEntityId, absFrame, dur, source, {
+          uid: event.uid,
+          ...(hasSourceOverrides ? { event: sourceEventOverrides } : {}),
+        });
         this.checkReactiveTriggers(VerbType.APPLY, event.columnId, absFrame, event.ownerEntityId, event.id, undefined, newEntries);
       } else if (REACTION_COLUMN_IDS.has(event.columnId)) {
         this.controller.applyEvent(event.columnId, event.ownerEntityId, absFrame, dur, source, {
           stacks: event.stacks, isForced: event.isForced, uid: event.uid,
+          ...(hasSourceOverrides ? { event: sourceEventOverrides } : {}),
         });
         this.checkReactiveTriggers(VerbType.APPLY, event.columnId, absFrame, event.ownerEntityId, event.id, undefined, newEntries);
       } else if (PHYSICAL_STATUS_COLUMN_IDS.has(event.columnId)) {
         this.controller.applyEvent(event.columnId, event.ownerEntityId, absFrame, dur, source, {
           statusId: event.id, stackingMode: StackInteractionType.RESET, maxStacks: 1,
-          uid: event.uid, event: { segments: event.segments },
+          uid: event.uid,
+          event: { segments: event.segments, ...sourceEventOverrides },
         });
         // Process status lifecycle (APPLY STAT clauses, onEntryClause, segment frames)
         // same as doApply → runStatusCreationLifecycle for skill-derived statuses.
@@ -2525,7 +2640,10 @@ export class EventInterpretorController {
       } else if (event.ownerEntityId === ENEMY_ID || event.ownerEntityId === TEAM_ID) {
         this.controller.applyEvent(event.columnId, event.ownerEntityId, absFrame, dur, source, {
           statusId: event.id, uid: event.uid,
-          ...(event.susceptibility && { event: { susceptibility: event.susceptibility, segments: event.segments } }),
+          event: {
+            ...(event.susceptibility ? { susceptibility: event.susceptibility, segments: event.segments } : {}),
+            ...sourceEventOverrides,
+          },
         });
         // Process status lifecycle (APPLY STAT clauses, onEntryClause, segment frames)
         // same as doApply → runStatusCreationLifecycle for skill-derived statuses.
@@ -2896,6 +3014,7 @@ export class EventInterpretorController {
             parentEventEndFrame: parentEventEnd,
             parentSegmentEndFrame: segEnd,
             ...(statusEv.consumedStacks != null ? { consumedStacks: statusEv.consumedStacks } : {}),
+            ...(statusEv.triggerEntityId != null ? { triggerEntityId: statusEv.triggerEntityId } : {}),
           };
           if (fm.clauses) {
             const condCtx: ConditionContext = {
@@ -2903,6 +3022,7 @@ export class EventInterpretorController {
               frame: absFrame,
               sourceEntityId: statusEv.ownerEntityId,
               potential: pot,
+              ...(statusEv.triggerEntityId != null ? { triggerEntityId: statusEv.triggerEntityId } : {}),
             };
             // Status-frame markers (offset 0) are dispatched via the unified
             // helper. They don't fire reactive triggers per-effect (status
@@ -3337,6 +3457,8 @@ export class EventInterpretorController {
     const { ctx } = trigger;
     const triggerEffects = ctx.triggerEffects ?? [];
 
+
+
     // Resolve parent status entity (for column queries and condition evaluation)
     const parentTarget = ctx.def.properties.target;
     const statusEntityId = parentTarget === NounType.TEAM ? TEAM_ID
@@ -3345,11 +3467,19 @@ export class EventInterpretorController {
 
     // Check HAVE conditions first (deferred from collection time)
     if (ctx.haveConditions.length > 0) {
+      // Resolve talent level for the status def's owning talent slot so
+      // `HAVE TALENT_LEVEL >= N` gates evaluate correctly for trigger-bound
+      // talents/statuses (e.g. Estella Commiseration gating at level >= 1).
+      const talentLvl = resolveTalentLevel(ctx.def, {
+        operatorId: this.slotOperatorMap?.[ctx.operatorSlotId],
+        loadoutProperties: this.loadoutProperties?.[ctx.operatorSlotId],
+      } as DeriveContext);
       const condCtx: ConditionContext = {
         events: this.getAllEvents(),
         frame: entry.frame,
         sourceEntityId: ctx.operatorSlotId,
         potential: ctx.potential,
+        talentLevel: talentLvl,
         getEnemyHpPercentage: this.getEnemyHpPercentage,
         getOperatorPercentageHp: this.controller.hasHpController() ? (opId, f) => this.controller.getOperatorPercentageHp(opId, f) : undefined,
         getParentEventEntityId: () => statusEntityId,
@@ -3482,6 +3612,7 @@ export class EventInterpretorController {
       parentSegmentEndFrame,
       sourceFrameKey: entry.sourceFrameKey,
       targetEntityId: trigger.triggerSlotId,
+      triggerEntityId: trigger.triggerSlotId,
       sourceEventRemainingDuration,
       consumedStacks: trigger.consumedStacks,
     };

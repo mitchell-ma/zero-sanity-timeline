@@ -620,7 +620,7 @@ describe('F. Scorching Fangs (Talent)', () => {
     expect(effect.to).toBe(NounType.OPERATOR);
     expect(effect.with.value.verb).toBe(VerbType.VARY_BY);
     expect(effect.with.value.object).toBe(NounType.TALENT_LEVEL);
-    expect(effect.with.value.value).toEqual([0.2, 0.3]);
+    expect(effect.with.value.value).toEqual([0, 0.2, 0.3]);
   });
 
   test('F6: Duration is 10 seconds', () => {

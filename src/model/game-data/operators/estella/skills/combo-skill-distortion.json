@@ -79,6 +79,7 @@
           },
           "clause": [
             {
+              "_note": "Unconditional: stagger + forced Lift always fire.",
               "conditions": [],
               "effects": [
                 {
@@ -99,9 +100,27 @@
                   "objectQualifier": "LIFT",
                   "to": "ENEMY",
                   "with": {
-                    "isForced": { "verb": "IS", "value": 1 }
+                    "isForced": {
+                      "verb": "IS",
+                      "value": 1
+                    }
                   }
-                },
+                }
+              ]
+            },
+            {
+              "_note": "Path A — enemy NOT solidified: single base physical hit.",
+              "conditions": [
+                {
+                  "subject": "ENEMY",
+                  "verb": "HAVE",
+                  "object": "STATUS",
+                  "objectId": "REACTION",
+                  "objectQualifier": "SOLIDIFICATION",
+                  "negated": true
+                }
+              ],
+              "effects": [
                 {
                   "verb": "DEAL",
                   "objectQualifier": "PHYSICAL",
@@ -144,6 +163,7 @@
               ]
             },
             {
+              "_note": "Path B — enemy IS solidified: single bigger physical hit + Physical Susceptibility. Mutually exclusive with Path A.",
               "conditions": [
                 {
                   "subject": "ENEMY",
@@ -164,18 +184,18 @@
                       "verb": "VARY_BY",
                       "object": "SKILL_LEVEL",
                       "value": [
-                        1.2,
-                        1.32,
-                        1.44,
-                        1.56,
-                        1.68,
-                        1.8,
-                        1.92,
-                        2.04,
-                        2.16,
-                        2.31,
-                        2.49,
-                        2.7
+                        2.8,
+                        3.08,
+                        3.36,
+                        3.64,
+                        3.92,
+                        4.2,
+                        4.48,
+                        4.76,
+                        5.04,
+                        5.39,
+                        5.81,
+                        6.3
                       ],
                       "of": {
                         "object": "OPERATOR",
@@ -248,7 +268,8 @@
                       },
                       "unit": "SECOND"
                     }
-                  }
+                  },
+                  "objectQualifier": "PHYSICAL"
                 }
               ]
             }

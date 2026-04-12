@@ -1,24 +1,91 @@
 # TODO
 
-## DSL: IGNORE INFLICTION and elemental MITIGATE/DAMAGE_TAKEN_REDUCTION
+## DSL: IGNORE INFLICTION, CHANCE gate, elemental MITIGATE
 
-Estella T2 "Laziness Pays Off Now" requires:
-- `IGNORE` verb for operator-held status ignoring incoming `INFLICTION` of a given element
-  (e.g. Estella ignores Cryo Infliction stacks).
-- An elemental damage MITIGATE/DAMAGE_TAKEN_REDUCTION DSL construct for reducing incoming
-  damage of a given element (e.g. -10%/-20% Cryo damage taken at T1/T2).
+Three engine primitives are missing and together block a cluster of defensive/probabilistic
+talents. They can be built independently but are grouped here because several operators
+need two of them at once.
 
-The talent file is currently description-only. Once the DSL is added, bake the effects
-into `src/model/game-data/operators/estella/talents/talent-laziness-pays-off-now-talent.json`
-using `VARY_BY TALENT_LEVEL`.
+### Primitive 1 — `VerbType.CHANCE` interpreter
 
-Blocked operators (description-only until both primitives land):
-- Estella T2 — Cryo IGNORE INFLICTION + Cryo MITIGATE
-- Snowshine P1 (Cold Shelter) — Arts IGNORE INFLICTION on operators with Protection
-- Snowshine P1 — also requires enemy→operator infliction application mechanics (currently
-  inflictions only flow operator→enemy in the engine)
-- Arclight T2 — IGNORE INFLICTION + elemental MITIGATE
-- Antal / Fluorite (pre-existing notes)
+`VerbType.CHANCE` is declared in `src/dsl/semantics.ts:229` and the `elseEffects` field is
+documented at `semantics.ts:840–847` with four execution modes (EXPECTED / ALWAYS / NEVER /
+MANUAL). But `eventInterpretorController.ts::interpret()` has no `case VerbType.CHANCE` —
+any CHANCE effect would fall through to the `default` warn branch. Zero JSON files currently
+use `"verb": "CHANCE"`.
+
+Work:
+- Add `case VerbType.CHANCE` to the interpret switch.
+- Roll/execute main effects on pass, execute `elseEffects` on fail.
+- Honor EXPECTED mode so timeline visualization can display the frame at fractional
+  intensity without a per-run dice roll (same conceptual slot as the crit expectation
+  model in `combatStateController`, but generic — CHANCE must not piggyback on `isCrit`).
+- ALWAYS / NEVER / MANUAL modes per the semantics.ts docstring.
+
+### Primitive 2 — `IGNORE STATUS` with infliction object
+
+`VerbType.IGNORE`'s permitted objects (`semantics.ts:390`) include `STATUS`, but the
+interpretor at `eventInterpretorController.ts:830` only handles `IGNORE ULTIMATE_ENERGY`.
+`IGNORE STAT` for resistance is handled downstream in the damage formula layer; there is
+no path that says "when an INFLICTION would be applied to this operator, drop it."
+
+Work:
+- Extend `case VerbType.IGNORE` to handle `object: STATUS`, `objectId: INFLICTION`, with
+  `objectQualifier` selecting the element (ARTS, CRYO, HEAT, ELECTRIC, NATURE, PHYSICAL).
+- Register a per-slot passive flag (analogous to `setIgnoreExternalGain` for UE). The flag
+  should honor the lifecycle of the status/talent that declared it — applied when the
+  clause is interpreted, reverted when the parent event ends.
+- Add a check at the `APPLY STATUS INFLICTION → OPERATOR` site in the interpretor that
+  consults the flag and drops the application. Route through Primitive 1 when the declaring
+  effect wraps IGNORE in a CHANCE gate.
+
+Design decision to make before implementing: inline resistance check at the APPLY site
+vs. a generic pre-apply interceptor list keyed by `(object, objectQualifier, target)`.
+The generic interceptor is more work now but would also serve Fluorite T2 and Antal's
+immunity, which are grouped under the same "reactive/immunity" pattern.
+
+### Primitive 3 — elemental MITIGATE / DAMAGE_TAKEN_REDUCTION
+
+Incoming damage reduction scoped to an element (e.g. −10%/−20% Cryo damage taken). This
+is orthogonal to IGNORE INFLICTION — it affects the damage formula, not the status
+application path. Needs to plug into whichever layer currently resolves incoming damage
+against operator defense/resistance.
+
+Work:
+- Decide whether MITIGATE is a new verb (`VerbType.MITIGATE`) or a new stat
+  (`StatType.HEAT_DAMAGE_TAKEN_REDUCTION` × per-element), then wire it into the damage
+  formula consumer.
+- Update `src/dsl/semantics.ts` and `src/consts/enums.ts` accordingly.
+- For the stat-based approach, the existing `APPLY STAT` path already handles per-element
+  stat buffs with `objectQualifier`; this would be the lowest-churn option.
+
+### Blocked operators (description-only until the needed primitives land)
+
+| Operator / effect | Needs P1 (CHANCE) | Needs P2 (IGNORE INFL) | Needs P3 (MITIGATE) | Other |
+|---|---|---|---|---|
+| Arclight T2 (Hannabit Wisdom) — 50% Arts Infliction ignore | ✓ | ✓ (ARTS) | | |
+| Estella T2 (Laziness Pays Off Now) — Cryo infliction ignore + Cryo damage taken −10/−20% | | ✓ (CRYO) | ✓ (CRYO) | |
+| Snowshine P1 (Cold Shelter) — Arts infliction ignore on operators with Protection | | ✓ (ARTS) | | Requires enemy→operator infliction flow (engine currently only flows operator→enemy) |
+| Fluorite T2 (Unpredictable) — chance probability gate | ✓ | | | Implement with Antal's immunity, same pattern |
+| Antal immunity (pre-existing note) | | ✓ (see existing notes) | | Grouped with Fluorite T2 |
+
+### Suggested implementation order
+
+1. **P1 (CHANCE) first** — smallest scope, no cross-layer coupling, unlocks Fluorite T2
+   independently, and is a prerequisite for Arclight T2's probabilistic wrapper.
+2. **P2 (IGNORE INFLICTION) second** — unlocks Arclight T2 (combined with P1), Estella
+   T2's infliction half, and Snowshine P1's infliction half.
+3. **P3 (MITIGATE) last** — needed only for Estella T2's damage-reduction half; keeps it
+   isolated from the reactive-passive work.
+
+Once each primitive lands, bake the operator-level effects into:
+- `operators/arclight/talents/talent-hannabit-wisdom-talent.json`
+- `operators/estella/talents/talent-laziness-pays-off-now-talent.json`
+- `operators/snowshine/potentials/potential-1-cold-shelter.json`
+- `operators/fluorite/talents/talent-unpredictable-talent.json` (or wherever it lives)
+
+using `VARY_BY TALENT_LEVEL` or `VARY_BY POTENTIAL` as appropriate, and flip the
+blockers off the list above.
 
 ## Spatial mechanics (radius / area buffs)
 
@@ -33,6 +100,33 @@ entities. Several effects depend on real spatial radii, range, or first-enemy-hi
   of the potential are not modelled
 - Ardelia T1 (Friendly Presence) — see "Unimplemented mechanics — Ardelia T1" below
 - Antal / others (pre-existing notes if applicable)
+
+## VARY_BY TALENT_LEVEL arrays needing wiki data
+
+Talent-level arrays must be zero-indexed with length = `maxLevel + 1`
+(per `feedback_talent_levels_zero_indexed.md`). The shape audit
+`src/tests/unit/talentLevelArrayShape.test.ts` enforces this, but the
+following files have arrays whose missing L0 / Lmax entries can't be
+inferred from existing data — they need a wiki lookup before being fixed
+and added back to the audit. They are currently in the test's
+`KNOWN_AMBIGUOUS` skip list.
+
+- `laevatain/statuses/status-scorching-heart.json` — Heat Resistance ignore
+  values, current `[10, 15, 20]` (length 3); Scorching Heart talent
+  `maxLevel=3` so we need a 4-entry `[L0, L1, L2, L3]` array. Wiki
+  needed: confirm L0/L1/L2/L3 ignore values.
+- `yvonne/statuses/status-barrage-of-technology.json` — Final Strike basic
+  attack DAMAGE_BONUS, current `[0, 0.5]` (length 2). Barrage of
+  Technology talent `maxLevel=2` so we need a 3-entry `[0, L1, L2]`
+  array. Wiki needed: L2 damage bonus value.
+- `ardelia/talents/talent-friendly-presence-talent.json` — RECOVER HP base
+  currently `[63, 63, 63]` (length 3, all identical). Friendly Presence
+  `maxLevel=3` so we need a 4-entry zero-indexed array, OR refactor to
+  a constant `IS 63` gated by a `HAVE TALENT_LEVEL >= 1` condition.
+- `ardelia/skills/action-mr-dolly-shadow.json` — `healBase=[45, 63, 90]`
+  and `willAdditive=[0.38, 0.53, 0.75]` (length 3). Friendly Presence
+  `maxLevel=3` so each needs a 4-entry array. Wiki needed: L0/L1/L2/L3
+  values for both fields.
 
 ## Remove weaponSkillEffects.ts and related weapon effect infrastructure
 
@@ -65,6 +159,26 @@ Proposed mapping:
 - `poise` → `STAGGER`
 - `duration` → `DURATION`
 - `atb` → `SKILL_POINT`
+
+## Re-express Laevatain/Last-Rite multi-hit damage after bad-key cleanup
+
+The End-Axis import keys `damageMultiplierIncrement`, `poiseExtra`, and `count` were
+stripped from the corpus (store validator rejects them; see `validationUtils.ts::warnInvalidWithKeys`).
+The numeric data they carried was not migrated, so the following files now model their
+skills as single-hit with no extra stagger — which is less accurate than the intended
+multi-hit behavior:
+
+- `operators/last-rite/skills/combo-skill-winters-devourer.json`
+- `operators/laevatain/skills/battle-skill-smouldering-fire.json`
+- `operators/laevatain/skills/battle-skill-smouldering-fire-empowered.json`
+- `operators/laevatain/skills/battle-skill-smouldering-fire-enhanced.json`
+- `operators/laevatain/skills/battle-skill-smouldering-fire-enhanced-empowered.json`
+
+Re-express each as proper per-hit frames (or per-hit predicates) using authoritative
+per-level values from Warfarin's `skillPatchTable.<skill_id>.SkillPatchDataBundle[].blackboard`
+(`atk_scale`, `atk_scale_2`, `poise`, etc.) or the upstream `.claude-secrets/SkillData/`
+End-Axis blobs. The extra stagger that lived in `poiseExtra` becomes a separate
+`DEAL STAGGER` effect per hit; the `count` becomes explicit frame repetition.
 
 ## Wire up `damageFactorType` on TimelineEvent
 
@@ -202,7 +316,7 @@ The following deeper mechanic-specific tests remain:
 | Ember | P5 Steel Oath Empowered (shield ×1.2 + ATK +10%), Pay the Ferric Price 3-stack accumulation, Protection duration extension on hit |
 | Catcher | RETURN vs RECOVER SP distinction, P1 DEF-scaling bonus damage on BS/ult hit, Weaken status from ult |
 | Da Pan | Reduce & Thicken multi-stack accumulation (4 stacks), Vulnerability 4-stack combo trigger in strict mode, P5 extra Vulnerability stack |
-| Arclight | Wildland Trekker counter accumulation + buff activation, empowered battle skill variant, Tactful Approach status |
+| Arclight | Wildland Trekker counter accumulation (3 BS casts → team buff, blocked on a test helper that can place N fresh Electrifications — `setupElectrification` produces one reaction that the first BS consumes, subsequent calls don't re-react reliably), P5 threshold reduction (3 → 2), buff fan-out Intellect scaling, buff refresh/non-stack. Single-cast empowered BS variant activation via Electrification, and ult Electric Infliction → forced Electrification branch — DONE (see `operators/arclight/skills.test.ts` G1–H2). |
 | Fluorite | T2 (Unpredictable) chance probability gate + Antal immunity — implement together |
 | Gilberta | Arts Reaction combo trigger in strict mode, Gravity Field Lift extension, Messenger's Song UE gain buff |
 | Alesh | Flash-frozen talent (Cryo→Solidification chain), arts reaction consume combo trigger in strict mode |

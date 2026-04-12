@@ -7,7 +7,6 @@
 import {
   NounType, VerbType, ValueNode, ValueOperation, DeterminerType,
   isValueLiteral, isValueVariable, isValueStat, isValueStatus, isValueExpression,
-  flattenQualifiedId,
 } from '../../dsl/semantics';
 import type { ValueVariable as ValueVariableType, ValueStat as ValueStatType } from '../../dsl/semantics';
 import type { LoadoutProperties } from '../../view/InformationPane';
@@ -120,9 +119,11 @@ export function resolveValueNode(node: ValueNode, ctx: ValueResolutionContext): 
     }
     const ofClause = node.of;
     if (ofClause) {
-      const statusId = ofClause.objectQualifier && ofClause.objectId
-        ? flattenQualifiedId(String(ofClause.objectQualifier), ofClause.objectId)
-        : ofClause.objectId;
+      // Qualified status columns (`PHYSICAL_SUSCEPTIBILITY`, etc.) are
+      // authored directly in JSON as the full `objectId` — no runtime
+      // flattening. The deprecated `{objectId: base, objectQualifier: X}`
+      // form is rejected at parse time by `warnDeprecatedQualifiedBase`.
+      const statusId = ofClause.objectId;
       if (!statusId) return 0;
       // STACKS of <STATUS> of EVENT → consumed stacks on the current event
       if (ofClause.object === NounType.EVENT && ctx.getEventStacks) {

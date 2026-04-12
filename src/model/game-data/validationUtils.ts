@@ -4,7 +4,7 @@ import {
   CONSUME_TARGET_MAPPING, OBJECT_QUALIFIER_MAPPING,
 } from '../../dsl/semantics';
 import type { ObjectType } from '../../dsl/semantics';
-import { ArtsReactionType, ElementType, OperatorClassType, SegmentType } from '../../consts/enums';
+import { ArtsReactionType, ElementType, OperatorClassType, PhysicalStatusType, SegmentType } from '../../consts/enums';
 
 // ── Enum value sets for validation ──────────────────────────────────────────
 const VALID_DETERMINERS = new Set<string>(Object.values(DeterminerType));
@@ -210,6 +210,90 @@ function validateCooldownSkillLevelMonotonicity(
 }
 
 /**
+ * VARY_BY TALENT_LEVEL array shape validator.
+ *
+ * Resolvers index TALENT_LEVEL arrays as zero-based:
+ *   - `valueResolver.ts:57` (`ctx.talentLevel ?? 0`)
+ *   - `eventInterpretorController.ts` `resolveClauseDimensionKey` (numeric key match)
+ * So a talent with `maxLevel = N` requires an array of length `N + 1` whose
+ * leading entry is the neutral value at talent level 0 (0 for additive
+ * bonuses, 1 for multiplicative ones — both are accepted; the validator only
+ * checks length, not the specific neutral value).
+ *
+ * A length-2 array on a `maxLevel=2` talent silently grants L1 benefits at
+ * talent level 0 — see `feedback_talent_levels_zero_indexed.md`.
+ *
+ * Some files have arrays we can't yet fix without wiki data; they're listed
+ * in `KNOWN_AMBIGUOUS_TALENT_LEVEL_FILES` and skipped here.
+ *
+ * @param json — the parsed JSON file content
+ * @param allowedLengths — set of acceptable array lengths for this operator,
+ *   typically `{maxLevelTalentOne + 1, maxLevelTalentTwo + 1}`. Empty set
+ *   means the operator has no talents (e.g. generic statuses) — the
+ *   validator passes anything in that case.
+ * @param sourceKey — relative file path used for matching against
+ *   KNOWN_AMBIGUOUS_TALENT_LEVEL_FILES and for error messages.
+ */
+export function validateTalentLevelArrays(
+  json: unknown,
+  allowedLengths: Set<number>,
+  sourceKey: string,
+): string[] {
+  if (KNOWN_AMBIGUOUS_TALENT_LEVEL_FILES.has(sourceKey)) return [];
+  if (allowedLengths.size === 0) return [];
+
+  const errors: string[] = [];
+
+  function walk(node: unknown, path: string): void {
+    if (Array.isArray(node)) {
+      for (let i = 0; i < node.length; i++) walk(node[i], `${path}[${i}]`);
+      return;
+    }
+    if (node === null || typeof node !== 'object') return;
+    const obj = node as Record<string, unknown>;
+    if (
+      obj.verb === VerbType.VARY_BY
+      && obj.object === NounType.TALENT_LEVEL
+      && Array.isArray(obj.value)
+    ) {
+      const arr = obj.value as unknown[];
+      if (!allowedLengths.has(arr.length)) {
+        const allowedStr = Array.from(allowedLengths).sort((a, b) => a - b).join(' or ');
+        errors.push(
+          `${path}: VARY_BY TALENT_LEVEL array length ${arr.length} (allowed: ${allowedStr}) `
+          + `— [${arr.join(',')}]. Arrays must be zero-indexed with length = talent maxLevel + 1; `
+          + `index 0 is the neutral value at talent level 0 (0 for additive bonuses, 1 for multiplicative).`,
+        );
+      }
+    }
+    for (const [k, v] of Object.entries(obj)) {
+      walk(v, `${path}.${k}`);
+    }
+  }
+
+  walk(json, '');
+  return errors;
+}
+
+/**
+ * Files with VARY_BY TALENT_LEVEL arrays whose missing L0/Lmax entries can't
+ * be inferred from existing data — they need a wiki lookup before being
+ * fixed. Tracked in `docs/todo.md` under
+ * "VARY_BY TALENT_LEVEL arrays needing wiki data".
+ *
+ * Path format: `<operator-dir>/<subfolder>/<filename>.json` (relative to
+ * `src/model/game-data/operators/`).
+ *
+ * Mirrored by `src/tests/unit/talentLevelArrayShape.test.ts`'s skip list.
+ */
+export const KNOWN_AMBIGUOUS_TALENT_LEVEL_FILES = new Set<string>([
+  'laevatain/statuses/status-scorching-heart.json',
+  'yvonne/statuses/status-barrage-of-technology.json',
+  'ardelia/talents/talent-friendly-presence-talent.json',
+  'ardelia/skills/action-mr-dolly-shadow.json',
+]);
+
+/**
  * Validate a segment's shape (metadata + properties keys + frames). Walks
  * frames via `validateFrameShape`.
  */
@@ -328,6 +412,157 @@ function warnRawBooleanIsForced(ef: Record<string, unknown>, path: string): stri
 }
 
 /**
+ * Reject End-Axis import artifacts inside `with`: `damageMultiplierIncrement`,
+ * `poiseExtra`, and `count` are not valid DSL keys — no interpretor code reads
+ * them, so any values written here are silently dropped. The patterns they
+ * encoded must be re-expressed in the DSL:
+ *   - `damageMultiplierIncrement` — escalating damage → ValueNode arithmetic on `value`.
+ *   - `poiseExtra` — extra stagger per hit → a separate `DEAL STAGGER` effect.
+ *   - `count` — multi-hit → unroll into explicit frames or per-hit predicates.
+ */
+const INVALID_WITH_KEYS: Record<string, string> = {
+  damageMultiplierIncrement:
+    'not a valid DSL key — no interpreter reads this field. '
+    + 'Express multi-hit or escalating damage via separate frames, predicates, or arithmetic on "value".',
+  poiseExtra:
+    'not a valid DSL key — no interpreter reads this field. '
+    + 'Express extra stagger via a separate DEAL STAGGER effect.',
+  count:
+    'not a valid DSL key — no interpreter reads this field. '
+    + 'Unroll multi-hit attacks into explicit frames or per-hit predicates.',
+};
+
+function warnInvalidWithKeys(ef: Record<string, unknown>, path: string): string[] {
+  const w = ef.with as Record<string, unknown> | undefined;
+  if (!w) return [];
+  const errors: string[] = [];
+  for (const [key, message] of Object.entries(INVALID_WITH_KEYS)) {
+    if (w[key] !== undefined) {
+      errors.push(`${path}.with.${key}: ${message}`);
+    }
+  }
+  return errors;
+}
+
+// ── Reaction / physical-status ID shape check ───────────────────────────────
+
+/**
+ * Arts reaction names (COMBUSTION, ELECTRIFICATION, …) and physical-status
+ * names (LIFT, CRUSH, …) are `objectQualifier` values, not `objectId` values.
+ * The canonical shape is:
+ *   { object: STATUS, objectId: REACTION,  objectQualifier: <ArtsReactionType> }
+ *   { object: STATUS, objectId: PHYSICAL,  objectQualifier: <PhysicalStatusType> }
+ * Writing the reaction/physical name directly as `objectId` silently breaks
+ * trigger matching and status consumption because the interpretor keys on the
+ * (objectId, objectQualifier) pair.
+ */
+const ARTS_REACTION_NAMES = new Set<string>(Object.values(ArtsReactionType));
+const PHYSICAL_STATUS_NAMES = new Set<string>(Object.values(PhysicalStatusType));
+
+/**
+ * Flag effects/conditions that write an arts-reaction or physical-status name
+ * into `objectId` instead of `objectQualifier`. Runs against any shape with
+ * the `{ object, objectId, objectQualifier }` triple — effects and conditions
+ * share the same key layout, so this validator covers both.
+ */
+function warnReactionPhysicalIdMisuse(shape: Record<string, unknown>, path: string): string[] {
+  const objId = shape.objectId as string | undefined;
+  if (!objId) return [];
+
+  if (ARTS_REACTION_NAMES.has(objId)) {
+    return [
+      `${path}: "${objId}" is an arts reaction — it must be an objectQualifier, `
+      + `not an objectId. Use { "object": "STATUS", "objectId": "REACTION", "objectQualifier": "${objId}" }.`,
+    ];
+  }
+  if (PHYSICAL_STATUS_NAMES.has(objId)) {
+    return [
+      `${path}: "${objId}" is a physical status — it must be an objectQualifier, `
+      + `not an objectId. Use { "object": "STATUS", "objectId": "PHYSICAL", "objectQualifier": "${objId}" }.`,
+    ];
+  }
+  return [];
+}
+
+// ── Flattenable-base qualifier consistency ─────────────────────────────────
+
+/**
+ * Nouns whose canonical DSL form is `{object: STATUS, objectId: X,
+ * objectQualifier: Y}` and which represent per-element status columns
+ * (e.g. `SUSCEPTIBILITY + PHYSICAL` → Physical Susceptibility).
+ *
+ * Using the base without a qualifier is legal ONLY for pure stat
+ * modifications (SUSCEPTIBILITY / FRAGILITY base applies are handled by
+ * the stat accumulator with no timeline event). For AMP and any case
+ * where the apply creates an event, the qualifier is required — an
+ * unqualified apply would write to an orphan column.
+ */
+const FLATTENABLE_STATUS_BASES_FOR_VALIDATION = new Set<string>([
+  NounType.AMP,
+]);
+
+/**
+ * Flag an effect or condition whose `{object: STATUS, objectId: X}` uses
+ * a flattenable base without a qualifier where a qualifier is required.
+ * The canonical authoring form is
+ * `{object: STATUS, objectId: <BASE>, objectQualifier: <X>}`.
+ */
+function warnFlattenableBaseMissingQualifier(shape: Record<string, unknown>, path: string): string[] {
+  const object = shape.object as string | undefined;
+  const objectId = shape.objectId as string | undefined;
+  const objectQualifier = shape.objectQualifier as string | undefined;
+  if (object !== NounType.STATUS) return [];
+  if (!objectId) return [];
+  if (!FLATTENABLE_STATUS_BASES_FOR_VALIDATION.has(objectId)) return [];
+  if (objectQualifier) return [];
+  return [
+    `${path}: STATUS ${objectId} without objectQualifier — requires an `
+    + `element qualifier (PHYSICAL/CRYO/HEAT/ELECTRIC/NATURE/ARTS).`,
+  ];
+}
+
+// ── Subject-side triple shape validation ───────────────────────────────────
+
+/**
+ * Valid verbs on the condition side of the DSL: state assertions (HAVE, IS,
+ * BECOME, RECEIVE), skill-performance triggers (PERFORM, DEFEAT), action
+ * triggers (APPLY, CONSUME, DEAL, RECOVER, RETURN) used inside
+ * `onTriggerClause` to react to other actors' actions. Anything outside
+ * this set is almost certainly a typo — the interpretor's switch will
+ * silently fall through and the condition returns false.
+ *
+ * Sourced from `triggerIndex.ts` priority map + `conditionEvaluator.ts`
+ * verb switch. Keep in sync with both.
+ */
+const CONDITION_VERBS = new Set<string>([
+  VerbType.HAVE, VerbType.IS, VerbType.BECOME, VerbType.RECEIVE,
+  VerbType.PERFORM, VerbType.DEFEAT,
+  VerbType.APPLY, VerbType.CONSUME, VerbType.DEAL,
+  VerbType.RECOVER, VerbType.RETURN,
+]);
+
+/**
+ * Validate a condition's subject+object triple shape:
+ *   - `subject` must be a valid NounType
+ *   - `subjectDeterminer`, `objectDeterminer`, `fromDeterminer` must each
+ *     be valid DeterminerType values
+ *   - `verb` must be in the condition-verb allowlist
+ *   - `objectId` / `objectQualifier` must pass the same qualifier-mapping
+ *     check as effects
+ *   - flattenable bases must carry a qualifier
+ *
+ * Existing checks (`warnReactionPhysicalIdMisuse`) are retained.
+ */
+function warnInvalidConditionVerb(cond: Record<string, unknown>, path: string): string[] {
+  const verb = cond.verb as string | undefined;
+  if (!verb) return [`${path}: condition missing "verb"`];
+  if (!CONDITION_VERBS.has(verb)) {
+    return [`${path}: condition verb "${verb}" is not allowed — valid: ${Array.from(CONDITION_VERBS).sort().join(', ')}`];
+  }
+  return [];
+}
+
+/**
  * Run all effect validations against DSL semantics mappings.
  * Single entry point — replaces individual warnX calls at each call site.
  */
@@ -340,5 +575,24 @@ export function validateEffect(ef: Record<string, unknown>, path: string): strin
     ...warnInvalidApplyTarget(ef, path),
     ...warnInvalidConsumeTarget(ef, path),
     ...warnRawBooleanIsForced(ef, path),
+    ...warnInvalidWithKeys(ef, path),
+    ...warnReactionPhysicalIdMisuse(ef, path),
+    ...warnFlattenableBaseMissingQualifier(ef, path),
+  ];
+}
+
+/**
+ * Validate a single interaction (condition) — conditions share the
+ * `{ object, objectId, objectQualifier }` shape with effects. Runs the
+ * qualifier / determiner / flattenable-base checks (shared with effects)
+ * plus the condition-verb allowlist.
+ */
+export function validateInteraction(shape: Record<string, unknown>, path: string): string[] {
+  return [
+    ...warnReactionPhysicalIdMisuse(shape, path),
+    ...warnInvalidConditionVerb(shape, path),
+    ...warnInvalidQualifier(shape, path),
+    ...warnInvalidDeterminers(shape, path),
+    ...warnFlattenableBaseMissingQualifier(shape, path),
   ];
 }

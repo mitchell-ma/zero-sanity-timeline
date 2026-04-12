@@ -7,13 +7,13 @@
           "verb": "APPLY",
           "object": "STATUS",
           "objectId": "FRAGILITY",
-          "objectQualifier": "PHYSICAL",
           "to": "ENEMY",
           "with": {
             "value": {
               "verb": "VARY_BY",
               "object": "TALENT_LEVEL",
               "value": [
+                0,
                 0.1,
                 0.2
               ],
@@ -22,7 +22,8 @@
                 "determiner": "THIS"
               }
             }
-          }
+          },
+          "objectQualifier": "PHYSICAL"
         }
       ]
     }
@@ -151,6 +152,10 @@
   ],
   "properties": {
     "id": "REALSPACE_STASIS_TALENT",
+    "maxLevel": {
+      "verb": "IS",
+      "value": 2
+    },
     "name": "Originium Crystals (T2)",
     "to": "ENEMY",
     "stacks": {

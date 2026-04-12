@@ -559,7 +559,7 @@ describe('D2. Realspace Stasis', () => {
       (e: Record<string, unknown>) => e.objectId === NounType.FRAGILITY && e.objectQualifier === AdjectiveType.PHYSICAL,
     );
     expect(fragilityEffect).toBeDefined();
-    expect(fragilityEffect.with.value.value).toEqual([0.10, 0.20]);
+    expect(fragilityEffect.with.value.value).toEqual([0, 0.1, 0.2]);
   });
 
   it('D2c: Realspace Stasis has onTriggerClause for physical status shattering', () => {

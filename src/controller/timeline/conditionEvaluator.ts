@@ -220,6 +220,11 @@ function evaluateHave(cond: Interaction, ctx: ConditionContext): boolean {
     return ctx.getLinkStacks(ctx.sourceEventUid) > 0;
   }
 
+  // Resolve the condition's `{object, objectId, objectQualifier}` triple to
+  // a set of matching column IDs via `resolveColumnIds`, which handles
+  // umbrella expansions (INFLICTION/ARTS fan-out, REACTION wildcard,
+  // PHYSICAL wildcard) and flattens struct-form `(SUSCEPTIBILITY, PHYSICAL)`
+  // to the qualified column `PHYSICAL_SUSCEPTIBILITY` for the match.
   const columnIds = resolveColumnIds(cond.object, cond.objectId, cond.objectQualifier);
   if (columnIds.length === 0) return false;
 
@@ -254,6 +259,20 @@ function evaluateHave(cond: Interaction, ctx: ConditionContext): boolean {
 }
 
 function evaluateIs(cond: Interaction, ctx: ConditionContext): boolean {
+  // Entity equality — "SUBJECT_OPERATOR IS OBJECT_OPERATOR" compares the
+  // resolved subject and object entities. Used by talents that discriminate
+  // based on the originator (e.g. Alesh T1: "THIS OPERATOR IS TRIGGER OPERATOR"
+  // fires the self-applied solidification bonus only when the talent owner
+  // and the trigger operator are the same entity).
+  if (cond.subject === NounType.OPERATOR && cond.object === NounType.OPERATOR) {
+    const subjectEntity = resolveEntityId(cond.subject, ctx, cond.subjectDeterminer);
+    const objectDeterminer = (cond as unknown as { objectDeterminer?: string }).objectDeterminer;
+    const objectEntity = resolveEntityId(cond.object, ctx, objectDeterminer);
+    if (!subjectEntity || !objectEntity) return cond.negated === true;
+    const equal = subjectEntity === objectEntity;
+    return cond.negated ? !equal : equal;
+  }
+
   // State assertions: check if the subject is in the specified state.
   // Map object qualifier states to their corresponding status columns.
   const stateToColumn: Record<string, string> = {

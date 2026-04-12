@@ -23,6 +23,7 @@
 import { renderHook, act } from '@testing-library/react';
 import { useApp } from '../../../app/useApp';
 import { ColumnType, InteractionModeType } from '../../../consts/enums';
+import { NounType } from '../../../dsl/semantics';
 import { FPS } from '../../../utils/timeline';
 import {
   ENEMY_ID,
@@ -35,13 +36,18 @@ import {
   computeEventPresentation,
 } from '../../../controller/timeline/eventPresentationController';
 import type { MiniTimeline } from '../../../consts/viewTypes';
-import { buildContextMenu, findColumn } from '../helpers';
+import { buildContextMenu, findColumn, getAddEventPayload } from '../helpers';
 import type { AppResult, AddEventPayload } from '../helpers';
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports
+/* eslint-disable @typescript-eslint/no-require-imports */
 const MELTING_FLAME_ID: string = require('../../../model/game-data/operators/laevatain/statuses/status-melting-flame.json').properties.id;
+const ESTELLA_ID: string = require('../../../model/game-data/operators/estella/estella.json').id;
+const WULFGARD_ID: string = require('../../../model/game-data/operators/wulfgard/wulfgard.json').id;
+/* eslint-enable @typescript-eslint/no-require-imports */
 
 const SLOT_LAEVATAIN = 'slot-0';
+const SLOT_ESTELLA = 'slot-0';
+const SLOT_WULFGARD = 'slot-0';
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -162,6 +168,16 @@ describe('Freeform-placed events are draggable', () => {
     assertDraggable(result, INFLICTION_COLUMNS.HEAT, ENEMY_ID, 'heat infliction');
   });
 
+  it('direct freeform qualified status (Physical Susceptibility) is draggable', () => {
+    const { result } = renderHook(() => useApp());
+    act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
+
+    const enemyCol = findEnemyStatusColumn(result.current)!;
+    placeViaContextMenu(result, enemyCol, 'PHYSICAL_SUSCEPTIBILITY', 2 * FPS);
+
+    assertDraggable(result, 'PHYSICAL_SUSCEPTIBILITY', ENEMY_ID, 'physical susceptibility');
+  });
+
   it('freeform operator status (Melting Flame) is draggable', () => {
     const { result } = renderHook(() => useApp());
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
@@ -172,7 +188,7 @@ describe('Freeform-placed events are draggable', () => {
     assertDraggable(result, MELTING_FLAME_ID, SLOT_LAEVATAIN, 'Melting Flame');
   });
 
-  it('derived reaction from freeform inflictions inherits draggability', () => {
+  it('derived reaction from freeform inflictions inherits draggability (both freeform)', () => {
     const { result } = renderHook(() => useApp());
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
@@ -195,5 +211,112 @@ describe('Freeform-placed events are draggable', () => {
       validationMaps: EMPTY_VALIDATION_MAPS,
     });
     expect(pres.notDraggable).toBe(false);
+  });
+
+  /** Place a skill via the battle-skill column context menu. */
+  function placeBattleSkill(
+    result: { current: AppResult },
+    slotId: string,
+    atFrame: number,
+  ) {
+    const bsCol = findColumn(result.current, slotId, NounType.BATTLE);
+    expect(bsCol).toBeDefined();
+    const menu = buildContextMenu(result.current, bsCol!, atFrame);
+    expect(menu).not.toBeNull();
+    const payload = getAddEventPayload(menu!);
+    act(() => {
+      result.current.handleAddEvent(
+        payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
+      );
+    });
+  }
+
+  it('reaction triggered by freeform second element is draggable (strict skill first, freeform trigger)', () => {
+    // Scenario: a skill cast in STRICT mode applies the FIRST element
+    // infliction; then the user switches to FREEFORM and manually adds the
+    // SECOND element, which triggers the reaction. Per the rule — if the
+    // freeform infliction is the second (triggering) element, the reaction
+    // inherits draggability from the user's placement.
+    const { result } = renderHook(() => useApp());
+
+    // Swap in Estella. Estella's BS Onomatopoeia applies CRYO INFLICTION at
+    // +0.7s into the animation. Placed in default STRICT mode: the derived
+    // cryo infliction has no creationInteractionMode (skill-derived).
+    act(() => { result.current.handleSwapOperator(SLOT_ESTELLA, ESTELLA_ID); });
+    placeBattleSkill(result, SLOT_ESTELLA, 1 * FPS);
+
+    // Verify the derived cryo infliction is on the enemy and NOT tagged
+    // freeform (so we know this is the mixed-mode case, not both-freeform)
+    const cryoInflictions = getEvents(result.current, INFLICTION_COLUMNS.CRYO, ENEMY_ID);
+    expect(cryoInflictions.length).toBeGreaterThanOrEqual(1);
+    expect(cryoInflictions[0].creationInteractionMode).toBeUndefined();
+
+    // Switch to FREEFORM and add the second element (HEAT), which becomes
+    // the triggering second element for combustion.
+    act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
+    const enemyCol = findEnemyStatusColumn(result.current)!;
+    // Place heat while the strict-derived cryo is still active (the BS cryo
+    // default duration covers several seconds)
+    placeViaContextMenu(result, enemyCol, INFLICTION_COLUMNS.HEAT, 3 * FPS);
+
+    // Assert: the derived combustion inherits creationInteractionMode from
+    // the freeform heat (triggering second element) and is draggable.
+    const combustions = getEvents(result.current, REACTION_COLUMNS.COMBUSTION, ENEMY_ID);
+    expect(combustions.length).toBeGreaterThanOrEqual(1);
+    expect(combustions[0].creationInteractionMode).toBe(InteractionModeType.FREEFORM);
+
+    const pres = computeEventPresentation(combustions[0], enemyCol, {
+      slotElementColors: {},
+      autoFinisherIds: new Set(),
+      validationMaps: EMPTY_VALIDATION_MAPS,
+    });
+    expect(pres.notDraggable).toBe(false);
+
+    // Controller: handleMoveEvent succeeds (full three-layer proof)
+    const originalFrame = combustions[0].startFrame;
+    const newFrame = originalFrame + FPS;
+    act(() => { result.current.handleMoveEvent(combustions[0].uid, newFrame); });
+    const moved = getEvents(result.current, REACTION_COLUMNS.COMBUSTION, ENEMY_ID);
+    const movedEv = moved.find((e) => e.uid === combustions[0].uid);
+    expect(movedEv).toBeDefined();
+    expect(movedEv!.startFrame).toBe(newFrame);
+  });
+
+  it('reaction triggered by strict-mode skill second element is NOT draggable (freeform first, strict trigger)', () => {
+    // Mirror of the previous test: the FIRST element comes from freeform,
+    // but the SECOND (triggering) element comes from a strict-mode skill.
+    // Per the rule — the reaction inherits from the incoming triggering
+    // infliction, so a skill-derived trigger makes the reaction NOT
+    // draggable regardless of how the first element was placed.
+    const { result } = renderHook(() => useApp());
+
+    // Swap in Wulfgard. His BS Thermite Tracers applies HEAT INFLICTION.
+    act(() => { result.current.handleSwapOperator(SLOT_WULFGARD, WULFGARD_ID); });
+
+    // Start in FREEFORM, place CRYO at 1s
+    act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
+    const enemyCol = findEnemyStatusColumn(result.current)!;
+    placeViaContextMenu(result, enemyCol, INFLICTION_COLUMNS.CRYO, 1 * FPS);
+
+    // Switch back to STRICT and cast Wulfgard's BS — its frame applies
+    // HEAT INFLICTION a short time later, triggering combustion
+    act(() => { result.current.setInteractionMode(InteractionModeType.STRICT); });
+    placeBattleSkill(result, SLOT_WULFGARD, 2 * FPS);
+
+    // The derived combustion should exist but have NO creationInteractionMode
+    // — the trigger came from a skill-derived heat, not a freeform user
+    // action, so the reaction must be locked.
+    const combustions = getEvents(result.current, REACTION_COLUMNS.COMBUSTION, ENEMY_ID);
+    // Combustion may or may not have been derived depending on infliction
+    // overlap timing. If one exists, it MUST not be draggable.
+    for (const c of combustions) {
+      expect(c.creationInteractionMode).toBeUndefined();
+      const pres = computeEventPresentation(c, enemyCol, {
+        slotElementColors: {},
+        autoFinisherIds: new Set(),
+        validationMaps: EMPTY_VALIDATION_MAPS,
+      });
+      expect(pres.notDraggable).toBe(true);
+    }
   });
 });
